@@ -50,6 +50,20 @@ type DUTPDInfo struct {
 	portCount  int         // Total number of PD ports on the DUT
 }
 
+func (pdInfo *DUTPDInfo) getVersionString() string {
+	switch pdInfo.version {
+	case 0:
+		return "Unknown"
+	case TCPMv1:
+		return "TCPMv1"
+	case TCPMv2:
+		return "TCPMv2"
+	case PDC:
+		return "PDC"
+	}
+	return "Invalid"
+}
+
 // RequireDUTPDInfo allocates and caches the fixed information about the PD port under test.
 func (s *Servo) RequireDUTPDInfo(ctx context.Context) error {
 	if s.dutPDInfo != nil {
@@ -113,8 +127,9 @@ func (s *Servo) RequireDUTPDInfo(ctx context.Context) error {
 	}
 	pdInfo.activePort = pdPort
 
-	testing.ContextLogf(ctx, "DUT PD Port info: TCPMv%d, testing port %d, port count %d",
-		pdInfo.version, pdInfo.activePort, pdInfo.portCount)
+	versionString := pdInfo.getVersionString()
+	testing.ContextLogf(ctx, "DUT PD Port info: %s, testing port %d, port count %d",
+		versionString, pdInfo.activePort, pdInfo.portCount)
 
 	s.dutPDInfo = pdInfo
 
@@ -145,7 +160,16 @@ func (s *Servo) SendRequestSourceVoltage(ctx context.Context, voltage int) error
 
 // SetDualroleState sets the dual-role state of the DUT
 func (s *Servo) SetDualroleState(ctx context.Context, drs string) error {
-	cmd := fmt.Sprintf("pd %d dualrole %s", s.dutPDInfo.activePort, drs)
+	var cmd string
+
+	switch s.dutPDInfo.version {
+	case TCPMv1, TCPMv2:
+		cmd = fmt.Sprintf("pd %d dualrole %s", s.dutPDInfo.activePort, drs)
+	case PDC:
+		cmd = fmt.Sprintf("pdc dualrole %d %s", s.dutPDInfo.activePort, drs)
+	default:
+		panic("Unknown TCPM version")
+	}
 
 	testing.ContextLog(ctx, "Sending request: ", cmd)
 	if err := s.RunECCommand(ctx, cmd); err != nil {
@@ -157,7 +181,16 @@ func (s *Servo) SetDualroleState(ctx context.Context, drs string) error {
 
 // SendPowerSwapRequest sends power swap request to be initiated by the DUT.
 func (s *Servo) SendPowerSwapRequest(ctx context.Context) error {
-	cmd := fmt.Sprintf("pd %d swap power", s.dutPDInfo.activePort)
+	var cmd string
+
+	switch s.dutPDInfo.version {
+	case TCPMv1, TCPMv2:
+		cmd = fmt.Sprintf("pd %d swap power", s.dutPDInfo.activePort)
+	case PDC:
+		cmd = fmt.Sprintf("pdc prs %d", s.dutPDInfo.activePort)
+	default:
+		panic("Unknown TCPM version")
+	}
 
 	s.EnablePDConsoleDebug(ctx)
 	defer s.DisablePDConsoleDebug(ctx)
@@ -176,7 +209,16 @@ func (s *Servo) SendPowerSwapRequest(ctx context.Context) error {
 
 // SendDataSwapRequest sends data swap request to be initiated by the DUT.
 func (s *Servo) SendDataSwapRequest(ctx context.Context) error {
-	cmd := fmt.Sprintf("pd %d swap data", s.dutPDInfo.activePort)
+	var cmd string
+
+	switch s.dutPDInfo.version {
+	case TCPMv1, TCPMv2:
+		cmd = fmt.Sprintf("pd %d swap data", s.dutPDInfo.activePort)
+	case PDC:
+		cmd = fmt.Sprintf("pdc drs %d", s.dutPDInfo.activePort)
+	default:
+		panic("Unknown TCPM version")
+	}
 
 	s.EnablePDConsoleDebug(ctx)
 	defer s.DisablePDConsoleDebug(ctx)
@@ -225,7 +267,10 @@ func (s *Servo) SetPDPowerRole(ctx context.Context, role string) error {
 
 	if string(pdState.PowerRole) != role {
 		if err := s.SendPowerSwapRequest(ctx); err != nil {
-			return errors.Wrap(err, "send power swap failed")
+			// PDC does not send receive message over console, so the err msg is always fail.
+			if s.dutPDInfo.version != PDC {
+				return errors.Wrap(err, "send power swap failed")
+			}
 		}
 
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
@@ -233,6 +278,10 @@ func (s *Servo) SetPDPowerRole(ctx context.Context, role string) error {
 				testing.ContextLogf(ctx, "PD state after: %#v", pdState)
 				testing.ContextLog(ctx, "PD Role after: ", pdState.PowerRole)
 				if role != string(pdState.PowerRole) {
+					// Because PDC does not send recv msg, retry swap if it is not successful.
+					if s.dutPDInfo.version == PDC {
+						s.SendPowerSwapRequest(ctx)
+					}
 					return errors.Wrap(err, "failed to switch power role")
 				}
 			} else {
@@ -399,27 +448,39 @@ func (s *Servo) GetDUTDualRoleState(ctx context.Context, port int) (USBPdDualRol
 		port = s.dutPDInfo.activePort
 	}
 
+	var outState string
+
 	matchList := []string{`dual-role toggling:\s+([\w ]+)[\r\n]`}
 
 	// Try modern `pd N dualrole` command
 	cmd := fmt.Sprintf("pd %d dualrole", port)
+
 	out, err := s.RunECCommandGetOutputNoConsoleLogs(ctx, cmd, matchList)
 	if err != nil {
 		testing.ContextLogf(
 			ctx, "EC command %q failed. Trying older version. (%q)",
 			cmd, err,
 		)
-		// Older DUTs running firmware from before cl:1096654 don't have per-port
-		// dualrole settings. Fall back to the old command.
-		out, err = s.RunECCommandGetOutputNoConsoleLogs(ctx, "pd dualrole", matchList)
-		if err != nil {
-			// DUT does not support DRP
-			return "", errors.Wrapf(err, "ec command %q failed. No way to check dual role state", cmd)
+
+		// PDC does not currently support check DRP status, default to on.
+		if s.dutPDInfo.version == PDC {
+			outState = string(USBPdDualRoleOn)
+		} else {
+			// Older DUTs running firmware from before cl:1096654 don't have per-port
+			// dualrole settings. Fall back to the old command.
+			out, err = s.RunECCommandGetOutputNoConsoleLogs(ctx, "pd dualrole", matchList)
+			if err != nil {
+				// DUT does not support DRP
+				return "", errors.Wrapf(err, "ec command %q failed. No way to check dual role state", cmd)
+			}
+			outState = out[0][1]
 		}
+	} else {
+		outState = out[0][1]
 	}
 
-	testing.ContextLogf(ctx, "Port %d DRP status: %q", port, out[0][1])
-	return USBPdDualRoleValue(out[0][1]), nil
+	testing.ContextLogf(ctx, "Port %d DRP status: %q", port, outState)
+	return USBPdDualRoleValue(outState), nil
 }
 
 // SetDUTDualRole accepts a port ID and sets the PD DRP status of this port
