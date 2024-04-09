@@ -307,6 +307,7 @@ func testPolicyEnforcement(ctx context.Context, tconn *chrome.TestConn, a *arc.A
 		return err
 	}
 
+	testing.ContextLogf(ctx, "Testing policy %q", policy)
 	return testing.Poll(ctx, func(ctx context.Context) error {
 		btnTest := d.Object(ui.ID(testButtonID))
 		if err := btnTest.Click(ctx); err != nil {
@@ -319,6 +320,7 @@ func testPolicyEnforcement(ctx context.Context, tconn *chrome.TestConn, a *arc.A
 		}
 
 		if result == fmt.Sprintf("%v", shouldSucceed) {
+			testing.ContextLog(ctx, "Policy test succeeded with expected result: ", shouldSucceed)
 			return nil
 		}
 
@@ -341,6 +343,7 @@ func getPolicyTestResult(ctx context.Context, d *ui.Device) (string, error) {
 
 	var output string
 	var err error
+	testing.ContextLog(ctx, "Waiting for policy test result")
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		txtOutput := d.Object(ui.ID(outputTextID))
 
