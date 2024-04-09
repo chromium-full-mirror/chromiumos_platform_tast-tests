@@ -579,6 +579,7 @@ const (
 
 // Manager kP2PGroupInfosProperty dictionary key names.
 const (
+	P2PGroupInfoInterfaceProperty   = "interface"
 	P2PGroupInfoShillIDProperty     = "shill_id"
 	P2PGroupInfoStateProperty       = "state"
 	P2PGroupInfoSSIDProperty        = "ssid"
@@ -611,6 +612,7 @@ const (
 
 // Manager kP2PClientInfoProperty dictionary key names.
 const (
+	P2PClientInfoInterfaceProperty   = "interface"
 	P2PClientInfoShillIDProperty     = "shill_id"
 	P2PClientInfoStateProperty       = "state"
 	P2PClientInfoSSIDProperty        = "ssid"

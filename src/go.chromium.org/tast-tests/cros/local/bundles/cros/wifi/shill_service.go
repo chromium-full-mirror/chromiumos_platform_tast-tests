@@ -20,7 +20,6 @@ import (
 
 	"github.com/godbus/dbus/v5"
 	"github.com/golang/protobuf/ptypes/empty"
-	"golang.org/x/exp/slices"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/durationpb"
 
@@ -3329,25 +3328,20 @@ func (s *ShillService) p2pGroupCreateShillAPI(ctx context.Context, request *wifi
 	}(cleanupCtx)
 
 	// Check if the group is active.
-	p2pGOSsid, p2pGOKey, p2pGOFreq, err := waitForP2PGroupActive(ctx, manager, shillID)
+	params, err := waitForP2PGroupActive(ctx, manager, shillID)
 	if err != nil {
 		return nil, err
 	}
 
-	// TODO(b/327688693): pull the interface name straight from dbus once this gets implemented in shill.
-	p2pGOIface, err := findP2PIface(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	testing.ContextLogf(ctx, "P2P Group owner (GO) %s: Configured on %s", p2pGOSsid, p2pGOIface)
+	testing.ContextLogf(ctx, "P2P Group owner (GO) %s: Configured on %s",
+		params[shillconst.P2PGroupInfoSSIDProperty].(string), params[shillconst.P2PGroupInfoInterfaceProperty].(string))
 	ret = &wifi.P2PGroupCreateResponse{
 		Id:     strconv.Itoa(int(shillID)),
-		IfName: p2pGOIface,
+		IfName: params[shillconst.P2PGroupInfoInterfaceProperty].(string),
 		Data: &wifi.P2PData{
-			Ssid: p2pGOSsid,
-			Key:  p2pGOKey,
-			Freq: uint32(p2pGOFreq)},
+			Ssid: params[shillconst.P2PGroupInfoSSIDProperty].(string),
+			Key:  params[shillconst.P2PGroupInfoPassphraseProperty].(string),
+			Freq: uint32(params[shillconst.P2PGroupInfoFrequencyProperty].(int32))},
 	}
 	return
 }
@@ -3450,30 +3444,29 @@ func (s *ShillService) p2pGroupConnectShillAPI(ctx context.Context, request *wif
 	}(cleanupCtx)
 
 	// Check if the group is connected.
-	ssid, key, freq, err := waitForP2PClientConnected(ctx, manager, shillID)
+	params, err := waitForP2PClientConnected(ctx, manager, shillID)
 	if err != nil {
 		return nil, err
 	}
+	// Here we reuse params more often, extract them.
+	ssid := params[shillconst.P2PClientInfoSSIDProperty].(string)
+	key := params[shillconst.P2PClientInfoPassphraseProperty].(string)
+	ifName := params[shillconst.P2PClientInfoInterfaceProperty].(string)
+	freq := params[shillconst.P2PClientInfoFrequencyProperty].(int32)
 	if ssid != string(request.Data.Ssid) {
 		return nil, errors.Errorf("p2p client connected to wrong ssid, got %q want %q", ssid, string(request.Data.Ssid))
 	}
 	if key != string(request.Data.Key) {
 		return nil, errors.Errorf("p2p client connected but key mismatch, got %q want %q", key, string(request.Data.Key))
 	}
-	if request.Data.Freq != 0 && freq != int(request.Data.Freq) {
+	if request.Data.Freq != 0 && freq != int32(request.Data.Freq) {
 		return nil, errors.Errorf("p2p client connected but freq mismatch, got %v want %v", freq, request.Data.Freq)
 	}
 
-	// TODO(b/327688693): pull the interface name straight from dbus once this gets implemented in shill.
-	p2pClientIface, err := findP2PIface(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	testing.ContextLogf(ctx, "P2P Client: Connected to %s on %s", ssid, p2pClientIface)
+	testing.ContextLogf(ctx, "P2P Client: Connected to %s on %s", ssid, ifName)
 	ret = &wifi.P2PGroupConnectResponse{
 		Id:     strconv.Itoa(int(shillID)),
-		IfName: p2pClientIface,
+		IfName: ifName,
 	}
 	return
 }
@@ -3503,7 +3496,7 @@ func (s *ShillService) p2pGroupDisconnectShillAPI(ctx context.Context, request *
 
 // waitForP2PGroupActive polls P2PGroupInfos until the status is correct.
 func waitForP2PGroupActive(ctx context.Context, manager *shill.Manager, shillID uint32) (
-	p2pGOSsid, p2pGOKey string, p2pGOFreq int, retErr error) {
+	retParams map[string]interface{}, retErr error) {
 	const waitForP2PGroupStartedTimeout = 30 * time.Second
 	const waitForP2PGroupStartedInterval = 500 * time.Millisecond
 	var groupInfo *dbusutil.Properties
@@ -3545,31 +3538,37 @@ func waitForP2PGroupActive(ctx context.Context, manager *shill.Manager, shillID 
 		Timeout:  waitForP2PGroupStartedTimeout,
 		Interval: waitForP2PGroupStartedInterval,
 	}); err != nil {
-		return "", "", 0, err
+		return nil, err
 	}
 
 	ssid, err := groupInfo.Get(shillconst.P2PGroupInfoSSIDProperty)
 	if err != nil {
-		return "", "", 0, errors.Wrap(err, "ssid not found in properties")
+		return nil, errors.Wrap(err, "ssid not found in properties")
 	}
 	key, err := groupInfo.Get(shillconst.P2PGroupInfoPassphraseProperty)
 	if err != nil {
-		return "", "", 0, errors.Wrap(err, "passphrase not found in properties")
+		return nil, errors.Wrap(err, "passphrase not found in properties")
+	}
+	ifName, err := groupInfo.Get(shillconst.P2PGroupInfoInterfaceProperty)
+	if err != nil {
+		return nil, errors.Wrap(err, "interface name not found in properties")
 	}
 	freq, err := groupInfo.Get(shillconst.P2PGroupInfoFrequencyProperty)
 	if err != nil {
-		return "", "", 0, errors.Wrap(err, "frequency not found in properties")
+		return nil, errors.Wrap(err, "frequency not found in properties")
 	}
 
-	p2pGOSsid = ssid.(string)
-	p2pGOKey = key.(string)
-	p2pGOFreq = int(freq.(int32))
+	retParams = make(map[string]interface{})
+	retParams[shillconst.P2PGroupInfoSSIDProperty] = ssid
+	retParams[shillconst.P2PGroupInfoPassphraseProperty] = key
+	retParams[shillconst.P2PGroupInfoInterfaceProperty] = ifName
+	retParams[shillconst.P2PGroupInfoFrequencyProperty] = freq
 	return
 }
 
 // waitForP2PClientConnected polls P2PClientInfos until the status is correct.
 func waitForP2PClientConnected(ctx context.Context, manager *shill.Manager, shillID uint32) (
-	p2pGOSsid, p2pGOKey string, p2pGOFreq int, retErr error) {
+	retParams map[string]interface{}, retErr error) {
 	const waitForP2PClientConnectedTimeout = 30 * time.Second
 	const waitForP2PClientConnectedInterval = 500 * time.Millisecond
 	var clientInfo *dbusutil.Properties
@@ -3608,38 +3607,32 @@ func waitForP2PClientConnected(ctx context.Context, manager *shill.Manager, shil
 		Timeout:  waitForP2PClientConnectedTimeout,
 		Interval: waitForP2PClientConnectedInterval,
 	}); err != nil {
-		return "", "", 0, err
+		return nil, err
 	}
 
 	ssid, err := clientInfo.Get(shillconst.P2PClientInfoSSIDProperty)
 	if err != nil {
-		return "", "", 0, errors.Wrap(err, "ssid not found in properties")
+		return nil, errors.Wrap(err, "ssid not found in properties")
 	}
 	key, err := clientInfo.Get(shillconst.P2PClientInfoPassphraseProperty)
 	if err != nil {
-		return "", "", 0, errors.Wrap(err, "passphrase not found in properties")
+		return nil, errors.Wrap(err, "passphrase not found in properties")
+	}
+	ifName, err := clientInfo.Get(shillconst.P2PClientInfoInterfaceProperty)
+	if err != nil {
+		return nil, errors.Wrap(err, "interface name not found in properties")
 	}
 	freq, err := clientInfo.Get(shillconst.P2PClientInfoFrequencyProperty)
 	if err != nil {
-		return "", "", 0, errors.Wrap(err, "frequency not found in properties")
+		return nil, errors.Wrap(err, "frequency not found in properties")
 	}
 
-	p2pGOSsid = ssid.(string)
-	p2pGOKey = key.(string)
-	p2pGOFreq = int(freq.(int32))
+	retParams = make(map[string]interface{})
+	retParams[shillconst.P2PClientInfoSSIDProperty] = ssid
+	retParams[shillconst.P2PClientInfoPassphraseProperty] = key
+	retParams[shillconst.P2PClientInfoInterfaceProperty] = ifName
+	retParams[shillconst.P2PClientInfoFrequencyProperty] = freq
 	return
-}
-
-func findP2PIface(ctx context.Context) (string, error) {
-	ifaces, err := net.Interfaces()
-	if err != nil {
-		return "", err
-	}
-	index := slices.IndexFunc(ifaces, func(i net.Interface) bool { return strings.HasPrefix(i.Name, "p2p") })
-	if index == -1 {
-		return "", errors.Errorf("p2p interface not found in %+v", ifaces)
-	}
-	return ifaces[index].Name, nil
 }
 
 // StartTethering attempts to start a tethering session.
