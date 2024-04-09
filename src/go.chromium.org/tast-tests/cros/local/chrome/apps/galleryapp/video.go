@@ -68,7 +68,7 @@ func (g *Gallery) SetPIP(isPIP bool) uiauto.Action {
 		return uiauto.IfSuccessThen(ui.Gone(pipWindow),
 			uiauto.NamedCombine("enter picture in picture mode",
 				g.OpenPlaybackOptions(),
-				ui.LeftClickUntil(pipCheckBox,
+				ui.DoDefaultUntil(pipCheckBox,
 					ui.WaitUntilCheckedState(pipCheckBox, isPIP)),
 				ui.WaitUntilExists(pipWindow),
 			))
@@ -77,7 +77,7 @@ func (g *Gallery) SetPIP(isPIP bool) uiauto.Action {
 	return uiauto.IfSuccessThen(ui.Exists(pipWindow),
 		uiauto.NamedCombine("exit picture in picture mode",
 			g.OpenPlaybackOptions(),
-			ui.LeftClickUntil(pipCheckBox,
+			ui.DoDefaultUntil(pipCheckBox,
 				ui.WaitUntilCheckedState(pipCheckBox, isPIP)),
 			ui.WaitUntilGone(pipWindow),
 		))
@@ -86,15 +86,23 @@ func (g *Gallery) SetPIP(isPIP bool) uiauto.Action {
 // OpenPlaybackOptions returns a function that open playback option.
 func (g *Gallery) OpenPlaybackOptions() uiauto.Action {
 	ui := g.ui
-	playbackOptions := nodewith.Name("Playback options").Ancestor(RootFinder)
-	playbackOptionsButton := playbackOptions.Role(role.PopUpButton)
-	playbackOptionsMenu := playbackOptions.Role(role.Menu)
+	playbackOptionsFinder := nodewith.Name("Playback options").Ancestor(RootFinder)
+	playbackOptionsMenu := nodewith.Role(role.Menu).Ancestor(RootFinder)
+	openPlaybackOptionsMenu := func(ctx context.Context) error {
+		playbackOptionsButton, err := ui.FindAnyExists(ctx,
+			playbackOptionsFinder.Role(role.PopUpButton),
+			playbackOptionsFinder.Role(role.ToggleButton))
+		if err != nil {
+			return err
+		}
+		return ui.DoDefaultUntil(playbackOptionsButton,
+			ui.WithTimeout(5*time.Second).WaitUntilExists(playbackOptionsMenu))(ctx)
+	}
 
 	return uiauto.IfFailThen(ui.Exists(playbackOptionsMenu),
 		uiauto.Retry(3, uiauto.NamedCombine("open playback options",
 			g.showSeekSlider(),
-			ui.DoDefaultUntil(playbackOptionsButton,
-				ui.WithTimeout(5*time.Second).WaitUntilExists(playbackOptionsMenu)))))
+			openPlaybackOptionsMenu)))
 }
 
 // NavigateNext returns a function that clicks 'Navigate next' button.

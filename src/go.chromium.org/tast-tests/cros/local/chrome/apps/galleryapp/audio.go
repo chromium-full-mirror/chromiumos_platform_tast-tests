@@ -18,7 +18,14 @@ import (
 // via clicking the 'Toggle play pause' button.
 func (g *Gallery) TogglePlayPause(play bool) uiauto.Action {
 	return func(ctx context.Context) error {
-		togglePlayPauseButton := nodewith.Name("Toggle play pause").Role(role.ToggleButton).Ancestor(RootFinder)
+		togglePlayPauseFinder := nodewith.Name("Toggle play pause").Ancestor(RootFinder)
+		togglePlayPauseButton, err := g.ui.FindAnyExists(ctx,
+			togglePlayPauseFinder.Role(role.Button),
+			togglePlayPauseFinder.Role(role.ToggleButton))
+		if err != nil {
+			return err
+		}
+
 		playing, err := g.IsPlaying(ctx)
 		if err != nil {
 			return err
@@ -103,13 +110,28 @@ const (
 // SetPlaybackSpeed returns a function that sets audio playback speed to the
 // specified speed.
 func (g *Gallery) SetPlaybackSpeed(s Speed) uiauto.Action {
-	playbackSpeed := nodewith.Name("Playback speed").Ancestor(RootFinder)
-	playbackSpeedButton := playbackSpeed.Role(role.PopUpButton)
-	playbackSpeedMenu := playbackSpeed.Role(role.Menu)
-	playbackSpeedItem := nodewith.Name(string(s)).Role(role.MenuItemRadio).Ancestor(RootFinder)
-	return uiauto.NamedCombine(fmt.Sprintf("set playback speed to %s", s),
-		g.ui.LeftClickUntil(playbackSpeedButton,
-			g.ui.WithTimeout(5*time.Second).WaitUntilExists(playbackSpeedMenu)),
-		g.ui.LeftClick(playbackSpeedItem),
-	)
+	return func(ctx context.Context) error {
+		playbackSpeedFinder := nodewith.Name("Playback speed").Ancestor(RootFinder)
+		playbackSpeedMenu := nodewith.Role(role.Menu).Ancestor(RootFinder)
+		playbackSpeedButton, err := g.ui.FindAnyExists(ctx,
+			playbackSpeedFinder.Role(role.PopUpButton),
+			playbackSpeedFinder.Role(role.ToggleButton))
+		if err != nil {
+			return err
+		}
+		if err := g.ui.LeftClickUntil(playbackSpeedButton,
+			g.ui.WithTimeout(5*time.Second).WaitUntilExists(playbackSpeedMenu))(ctx); err != nil {
+			return err
+		}
+		itemFinder := nodewith.Name(string(s)).Ancestor(RootFinder)
+		playbackSpeedItem, err := g.ui.FindAnyExists(ctx,
+			itemFinder.Role(role.MenuItemRadio),
+			itemFinder.Role(role.MenuItem))
+		if err != nil {
+			return err
+		}
+		return uiauto.NamedAction(fmt.Sprintf("set playback speed to %s", s),
+			g.ui.LeftClick(playbackSpeedItem),
+		)(ctx)
+	}
 }

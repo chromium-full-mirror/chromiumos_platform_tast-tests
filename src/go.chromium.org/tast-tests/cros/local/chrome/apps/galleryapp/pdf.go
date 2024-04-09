@@ -5,6 +5,7 @@
 package galleryapp
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -112,10 +113,19 @@ func (g *Gallery) DrawOnPDF(points []coords.Point) uiauto.Action {
 // OpenPDFViewer returns a function that opens PDF viewer from Gallery.
 func (g *Gallery) OpenPDFViewer() uiauto.Action {
 	ui := g.ui
-	moreOptionsButton := nodewith.Name("More options").Role(role.PopUpButton).Ancestor(RootFinder)
+	openMoreOptions := func(ctx context.Context) error {
+		moreOptionsFinder := nodewith.Name("More options").Ancestor(RootFinder)
+		moreOptionsButton, err := ui.FindAnyExists(ctx,
+			moreOptionsFinder.Role(role.PopUpButton),
+			moreOptionsFinder.Role(role.ToggleButton))
+		if err != nil {
+			return err
+		}
+		return ui.DoDefault(moreOptionsButton)(ctx)
+	}
 	openInPDFViewerItem := nodewith.Name("Open in PDF viewer").Role(role.MenuItem)
 	return uiauto.NamedCombine("open in PDF viewer",
-		ui.DoDefault(moreOptionsButton),
+		openMoreOptions,
 		ui.DoDefault(openInPDFViewerItem),
 		g.WaitPDFViewerOpened(),
 	)
