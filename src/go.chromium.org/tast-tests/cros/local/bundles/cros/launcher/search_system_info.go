@@ -18,7 +18,7 @@ import (
 const cpuPattern = `^Showing CPU information. CPU usage snapshot, (\d+)\%. Temperature (\d+)\s+degrees celsius, current speed: ([\d.]+)GHz.`
 const memoryPattern = `^Showing memory information\. Memory\s+([\d.]+)\s+GB available out of\s+([\d.]+)\s+GB total`
 const batteryPattern = `^Showing battery information\. Current battery level\s+(\d+)%.\s+`
-const storagePattern = `^Showing storage space information\. Storage\s+([\d.]+)\s+GB in use out of \d+ GB +total*`
+const storagePattern = `^Showing storage space information\. Storage\s+([\d.]+)\s+GB in use out of\s+([\d.]+)\s+GB total\.(?:.*)$`
 const versionPattern = `^Showing OS version information\. Current version\s+(\d+\.\d+\.\d+\.\d+)\s+.*`
 
 // systemAnswerCardTestCase struct encapsulates parameters for test.
