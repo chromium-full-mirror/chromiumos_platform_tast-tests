@@ -8,7 +8,6 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -40,7 +39,7 @@ func init() {
 		},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
-			Fixture: fixture.ChromeLoggedInWithGaia,
+			Fixture: quickanswers.BasicFixture,
 			Val:     browser.TypeAsh,
 		}, {
 			Name:              "lacros",

@@ -8,7 +8,6 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
@@ -38,7 +37,7 @@ func init() {
 		},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
-			Fixture: fixture.ChromeLoggedInWithGaia,
+			Fixture: quickanswers.BasicFixture,
 			Val:     browser.TypeAsh,
 		}, {
 			Name:              "lacros",
@@ -98,7 +97,7 @@ func SettingsButton(ctx context.Context, s *testing.State) {
 	// Right click the selected units and ensure the Quick Answers UI shows up
 	// with the settings button and the conversion result in pounds.
 	quickAnswers := nodewith.ClassName("QuickAnswersView")
-	settingsButton := nodewith.ClassName("ImageButton").Name("Quick answers settings")
+	settingsButton := nodewith.ClassName("ImageButton").Name("Open Quick Answers settings")
 	unitConversionResult := nodewith.NameContaining("110.231").ClassName("QuickAnswersTextLabel")
 	if err := uiauto.Combine("Show context menu",
 		ui.RightClick(units),
