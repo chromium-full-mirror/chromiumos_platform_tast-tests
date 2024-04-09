@@ -10,8 +10,6 @@ import (
 
 	"github.com/godbus/dbus/v5"
 
-	rmpb "go.chromium.org/chromiumos/system_api/resource_manager_proto"
-
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -295,14 +293,6 @@ func (c *Client) SetProcessState(ctx context.Context, pid uint32, state uint8) e
 func (c *Client) SetThreadState(ctx context.Context, pid, tid uint32, state uint8) error {
 	if err := c.obj.Call(ctx, "SetThreadState", pid, tid, state).Err; err != nil {
 		return errors.Wrap(err, "failed to call method SetThreadState")
-	}
-	return nil
-}
-
-// ReportBackgroundProcesses reports the list of the background processes of a component (Ash or Lacros).
-func (c *Client) ReportBackgroundProcesses(ctx context.Context, component rmpb.ReportBackgroundProcesses_Component, pids []int32) error {
-	if err := dbusutil.CallProtoMethod(ctx, c.obj.Obj(), dbusInterface+".ReportBackgroundProcesses", &rmpb.ReportBackgroundProcesses{Component: component, Pids: pids}, nil); err != nil {
-		return errors.Wrap(err, "failed to call method ReportBackgroundProcesses")
 	}
 	return nil
 }

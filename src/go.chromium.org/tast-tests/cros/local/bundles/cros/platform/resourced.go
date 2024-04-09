@@ -13,8 +13,6 @@ import (
 	"strings"
 	"time"
 
-	rmpb "go.chromium.org/chromiumos/system_api/resource_manager_proto"
-
 	"go.chromium.org/tast-tests/cros/local/memory/kernelmeter"
 	"go.chromium.org/tast-tests/cros/local/resourced"
 	"go.chromium.org/tast-tests/cros/local/sched"
@@ -430,15 +428,6 @@ func checkSetMemoryMargins(ctx context.Context, rm *resourced.Client) (resErr er
 	return nil
 }
 
-func checkReportBackgroundProcesses(ctx context.Context, rm *resourced.Client) (resErr error) {
-	// Check ReportBackgroundProcesses method can be called successfully.
-	if err := rm.ReportBackgroundProcesses(ctx, rmpb.ReportBackgroundProcesses_ASH, []int32{101, 102, 103}); err != nil {
-		return errors.Wrap(err, "failed to call report background processes")
-	}
-
-	return nil
-}
-
 func checkSchedQoS(ctx context.Context, rm *resourced.Client) error {
 	p, err := sched.CreateSampleProcessThreadPair(ctx, nil)
 	if err != nil {
@@ -514,9 +503,5 @@ func Resourced(ctx context.Context, s *testing.State) {
 
 	if err := checkSetGameModeWithTimeout(ctx, rm, true, true); err != nil {
 		s.Fatal("Checking swappiness/THP tuning with SetGameModeWithTimeout failed: ", err)
-	}
-
-	if err := checkReportBackgroundProcesses(ctx, rm); err != nil {
-		s.Fatal("Checking ReportBackgroundProcesses failed: ", err)
 	}
 }
