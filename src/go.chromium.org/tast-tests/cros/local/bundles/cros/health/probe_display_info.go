@@ -35,7 +35,7 @@ func init() {
 		},
 		BugComponent: "b:982097", // ChromeOS > Platform > Enablement > Health
 		// TODO(b/326832237): Promote to critical.
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"diagnostics"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Fixture:      "crosHealthdRunning",
@@ -43,13 +43,13 @@ func init() {
 			Val: displayInfoTestParams{
 				hasPrivacyScreen: false,
 			},
-			ExtraAttr:         []string{"group:criticalstaging"},
 			ExtraHardwareDeps: hwdep.D(hwdep.NoPrivacyScreen()),
 		}, {
 			Name: "has_privacy_screen",
 			Val: displayInfoTestParams{
 				hasPrivacyScreen: true,
 			},
+			ExtraAttr:         []string{"group:criticalstaging", "informational"},
 			ExtraHardwareDeps: hwdep.D(hwdep.PrivacyScreen()),
 		}},
 	})
