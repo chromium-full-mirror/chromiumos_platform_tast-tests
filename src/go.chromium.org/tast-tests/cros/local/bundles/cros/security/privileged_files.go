@@ -82,9 +82,9 @@ func PrivilegedFiles(ctx context.Context, s *testing.State) {
 	// are missing or have no capabilities, but if they exist and have capabilities, they
 	// must exactly match the ones specified here.
 	capsBaseline := map[string]fscaps.Caps{
-		"/bin/arping": {Effective: fscaps.NET_RAW, Permitted: fscaps.NET_RAW},
-		"/bin/ping":   {Effective: fscaps.NET_RAW, Permitted: fscaps.NET_RAW},
-		"/bin/ping6":  {Effective: fscaps.NET_RAW, Permitted: fscaps.NET_RAW},
+		"/usr/bin/arping": {Effective: fscaps.NET_RAW, Permitted: fscaps.NET_RAW},
+		"/usr/bin/ping":   {Effective: fscaps.NET_RAW, Permitted: fscaps.NET_RAW},
+		"/usr/bin/ping6":  {Effective: fscaps.NET_RAW, Permitted: fscaps.NET_RAW},
 		"/opt/google/containers/android/rootfs/root/system/bin/logd": {
 			Effective: fscaps.SETGID | fscaps.AUDIT_CONTROL,
 			Permitted: fscaps.SETGID | fscaps.AUDIT_CONTROL,
