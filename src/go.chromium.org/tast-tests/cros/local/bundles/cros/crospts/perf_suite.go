@@ -29,6 +29,7 @@ func init() {
 			"darrenwu@google.com",
 		},
 		BugComponent: "b:167279", // ChromeOS > Software > baseOS > Performance
+		Attr:         []string{"group:crospts"},
 		Params: []testing.Param{{
 			Name:    "leveldb_cros_x86",
 			Fixture: "mountUnmountPtsWorldForCrOSx86",
@@ -37,7 +38,8 @@ func init() {
 				suiteName:     "leveldb-1.0.2",
 				resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
 			},
-			Timeout: 40 * time.Minute,
+			ExtraAttr: []string{"crospts_x86"},
+			Timeout:   40 * time.Minute,
 		}, {
 			Name:    "leveldb_cros_arm64",
 			Fixture: "mountUnmountPtsWorldForCrOSarm64",
@@ -46,6 +48,7 @@ func init() {
 				suiteName:     "leveldb-1.0.2",
 				resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
 			},
+			ExtraAttr: []string{"crospts_arm64"},
 			// TODO(darrenwu): The test time was tested on cherry. Need to run the
 			// test on other low end DUT.
 			Timeout: 1 * time.Hour,
@@ -58,7 +61,8 @@ func init() {
 				suiteName:     "mbw-1.0.0",
 				resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
 			},
-			Timeout: 4 * time.Hour,
+			ExtraAttr: []string{"crospts_x86"},
+			Timeout:   4 * time.Hour,
 		}, {
 			Name:    "mbw_cros_arm64",
 			Fixture: "mountUnmountPtsWorldForCrOSarm64",
@@ -67,6 +71,7 @@ func init() {
 				suiteName:     "mbw-1.0.0",
 				resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
 			},
+			ExtraAttr: []string{"crospts_arm64"},
 			// TODO(darrenwu): The test time was tested on cherry. Need to run the
 			// test on other low end DUT.
 			Timeout: 4 * time.Hour,
@@ -78,7 +83,8 @@ func init() {
 				suiteName:     "cachebench-1.1.2",
 				resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
 			},
-			Timeout: 1 * time.Hour,
+			ExtraAttr: []string{"crospts_x86"},
+			Timeout:   1 * time.Hour,
 		}, {
 			Name:    "cachebench_cros_arm64",
 			Fixture: "mountUnmountPtsWorldForCrOSarm64",
@@ -87,7 +93,8 @@ func init() {
 				suiteName:     "cachebench-1.1.2",
 				resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
 			},
-			Timeout: 1 * time.Hour,
+			ExtraAttr: []string{"crospts_arm64"},
+			Timeout:   1 * time.Hour,
 		}, {
 			Name:    "compress7zip_cros_x86",
 			Fixture: "mountUnmountPtsWorldForCrOSx86",
@@ -96,7 +103,8 @@ func init() {
 				suiteName:     "compress-7zip-1.10.0",
 				resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
 			},
-			Timeout: 30 * time.Minute,
+			ExtraAttr: []string{"crospts_x86"},
+			Timeout:   30 * time.Minute,
 		}, {
 			Name:    "compress7zip_cros_arm64",
 			Fixture: "mountUnmountPtsWorldForCrOSarm64",
@@ -105,7 +113,8 @@ func init() {
 				suiteName:     "compress-7zip-1.10.0",
 				resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
 			},
-			Timeout: 30 * time.Minute,
+			ExtraAttr: []string{"crospts_arm64"},
+			Timeout:   30 * time.Minute,
 		}, {
 			Name:    "openssl_cros_x86",
 			Fixture: "mountUnmountPtsWorldForCrOSx86",
@@ -115,7 +124,8 @@ func init() {
 				resultsParser:  metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
 				blockReinstall: true,
 			},
-			Timeout: 90 * time.Minute,
+			ExtraAttr: []string{"crospts_x86"},
+			Timeout:   90 * time.Minute,
 		}, {
 			Name:    "openssl_cros_arm64",
 			Fixture: "mountUnmountPtsWorldForCrOSarm64",
@@ -125,7 +135,8 @@ func init() {
 				resultsParser:  metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
 				blockReinstall: true,
 			},
-			Timeout: 90 * time.Minute,
+			ExtraAttr: []string{"crospts_arm64"},
+			Timeout:   90 * time.Minute,
 		}, {
 			Name:    "tjbench_cros_x86",
 			Fixture: "mountUnmountPtsWorldForCrOSx86",
@@ -134,7 +145,8 @@ func init() {
 				suiteName:     "tjbench-1.2.0",
 				resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
 			},
-			Timeout: 10 * time.Minute,
+			ExtraAttr: []string{"crospts_x86"},
+			Timeout:   10 * time.Minute,
 		}, {
 			Name:    "tjbench_cros_arm64",
 			Fixture: "mountUnmountPtsWorldForCrOSarm64",
@@ -143,7 +155,8 @@ func init() {
 				suiteName:     "tjbench-1.2.0",
 				resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
 			},
-			Timeout: 10 * time.Minute,
+			ExtraAttr: []string{"crospts_arm64"},
+			Timeout:   10 * time.Minute,
 		}, {
 			// TODO(b/316035777): The compress lz4 benchmark cannot finish test in 1 hour on octopus
 			Name:    "compresslz4_cros_x86",
@@ -154,7 +167,8 @@ func init() {
 				resultsParser:  metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
 				blockReinstall: true,
 			},
-			Timeout: 30 * time.Minute,
+			ExtraAttr: []string{"crospts_x86"},
+			Timeout:   30 * time.Minute,
 		}, {
 			Name:    "compresslz4_cros_arm64",
 			Fixture: "mountUnmountPtsWorldForCrOSarm64",
@@ -164,7 +178,8 @@ func init() {
 				resultsParser:  metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
 				blockReinstall: true,
 			},
-			Timeout: 30 * time.Minute,
+			ExtraAttr: []string{"crospts_arm64"},
+			Timeout:   30 * time.Minute,
 		}, {
 			Name:    "encodemp3_cros_x86",
 			Fixture: "mountUnmountPtsWorldForCrOSx86",
@@ -173,7 +188,8 @@ func init() {
 				suiteName:     "encode-mp3-1.7.4",
 				resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
 			},
-			Timeout: 10 * time.Minute,
+			ExtraAttr: []string{"crospts_x86"},
+			Timeout:   10 * time.Minute,
 		}, {
 			Name:    "encodemp3_cros_arm64",
 			Fixture: "mountUnmountPtsWorldForCrOSarm64",
@@ -182,7 +198,8 @@ func init() {
 				suiteName:     "encode-mp3-1.7.4",
 				resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
 			},
-			Timeout: 10 * time.Minute,
+			ExtraAttr: []string{"crospts_arm64"},
+			Timeout:   10 * time.Minute,
 		}, {
 			Name:    "vpxenc_cros_x86",
 			Fixture: "mountUnmountPtsWorldForCrOSx86",
@@ -192,7 +209,8 @@ func init() {
 				resultsParser:  metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
 				blockReinstall: true,
 			},
-			Timeout: 60 * time.Minute,
+			ExtraAttr: []string{"crospts_x86"},
+			Timeout:   60 * time.Minute,
 		}, {
 			Name:    "vpxenc_cros_arm64",
 			Fixture: "mountUnmountPtsWorldForCrOSarm64",
@@ -202,7 +220,8 @@ func init() {
 				resultsParser:  metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
 				blockReinstall: true,
 			},
-			Timeout: 60 * time.Minute,
+			ExtraAttr: []string{"crospts_arm64"},
+			Timeout:   60 * time.Minute,
 		}, {
 			Name:    "tensorflowlite_cros_x86",
 			Fixture: "mountUnmountPtsWorldForCrOSx86",
@@ -212,7 +231,8 @@ func init() {
 				resultsParser:  metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
 				blockReinstall: true,
 			},
-			Timeout: 120 * time.Minute,
+			ExtraAttr: []string{"crospts_x86"},
+			Timeout:   120 * time.Minute,
 		}, {
 			Name:    "tensorflowlite_cros_arm64",
 			Fixture: "mountUnmountPtsWorldForCrOSarm64",
@@ -222,7 +242,8 @@ func init() {
 				resultsParser:  metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
 				blockReinstall: true,
 			},
-			Timeout: 120 * time.Minute,
+			ExtraAttr: []string{"crospts_arm64"},
+			Timeout:   120 * time.Minute,
 		}, {
 			Name:    "rnnoise_cros_x86",
 			Fixture: "mountUnmountPtsWorldForCrOSx86",
@@ -231,7 +252,8 @@ func init() {
 				suiteName:     "rnnoise-1.0.2",
 				resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
 			},
-			Timeout: 30 * time.Minute,
+			ExtraAttr: []string{"crospts_x86"},
+			Timeout:   30 * time.Minute,
 		}, {
 			Name:    "rnnoise_cros_arm64",
 			Fixture: "mountUnmountPtsWorldForCrOSarm64",
@@ -240,7 +262,8 @@ func init() {
 				suiteName:     "rnnoise-1.0.2",
 				resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
 			},
-			Timeout: 30 * time.Minute,
+			ExtraAttr: []string{"crospts_arm64"},
+			Timeout:   30 * time.Minute,
 		}, {
 			Name:    "cythonbench_cros_x86",
 			Fixture: "mountUnmountPtsWorldForCrOSx86",
@@ -249,7 +272,8 @@ func init() {
 				suiteName:     "cython-bench-1.1.0",
 				resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
 			},
-			Timeout: 30 * time.Minute,
+			ExtraAttr: []string{"crospts_x86"},
+			Timeout:   30 * time.Minute,
 		}, {
 			Name:    "cythonbench_cros_arm64",
 			Fixture: "mountUnmountPtsWorldForCrOSarm64",
@@ -258,7 +282,8 @@ func init() {
 				suiteName:     "cython-bench-1.1.0",
 				resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
 			},
-			Timeout: 30 * time.Minute,
+			ExtraAttr: []string{"crospts_arm64"},
+			Timeout:   30 * time.Minute,
 		}, {
 			Name:    "pyperf_cros_x86",
 			Fixture: "mountUnmountPtsWorldForCrOSx86",
@@ -267,7 +292,8 @@ func init() {
 				suiteName:     "pyperformance-1.0.2",
 				resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
 			},
-			Timeout: 90 * time.Minute,
+			ExtraAttr: []string{"crospts_x86"},
+			Timeout:   90 * time.Minute,
 		}, {
 			Name:    "pyperf_cros_arm64",
 			Fixture: "mountUnmountPtsWorldForCrOSarm64",
@@ -276,7 +302,8 @@ func init() {
 				suiteName:     "pyperformance-1.0.2",
 				resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
 			},
-			Timeout: 90 * time.Minute,
+			ExtraAttr: []string{"crospts_arm64"},
+			Timeout:   90 * time.Minute,
 		}, {
 			Name:    "ctxclock_cros_x86",
 			Fixture: "mountUnmountPtsWorldForCrOSx86",
@@ -285,7 +312,8 @@ func init() {
 				suiteName:     "ctx-clock-1.0.0",
 				resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
 			},
-			Timeout: 15 * time.Minute,
+			ExtraAttr: []string{"crospts_x86"},
+			Timeout:   15 * time.Minute,
 		}, {
 			Name:    "mutex_cros_x86",
 			Fixture: "mountUnmountPtsWorldForCrOSx86",
@@ -294,7 +322,8 @@ func init() {
 				suiteName:     "mutex-1.0.0",
 				resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
 			},
-			Timeout: 90 * time.Minute,
+			ExtraAttr: []string{"crospts_x86"},
+			Timeout:   90 * time.Minute,
 		},
 		},
 	})
