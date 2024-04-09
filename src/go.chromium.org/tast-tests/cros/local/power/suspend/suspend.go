@@ -16,7 +16,9 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	upstartcommon "go.chromium.org/tast-tests/cros/common/upstart"
 	"go.chromium.org/tast-tests/cros/local/syslog"
+	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -237,6 +239,15 @@ func Request(ctx context.Context, params ...Param) (ResumeInfo, error) {
 	}
 	defer powerdReader.Close()
 
+	goal, state, _, err := upstart.JobStatus(ctx, "powerd")
+	if err != nil {
+		testing.ContextLog(ctx, "Unable to get powerd job status: ", err)
+		return ResumeInfo{}, err
+	}
+	if goal != upstartcommon.StartGoal || state != upstartcommon.RunningState {
+		testing.ContextLogf(ctx, "Powerd is not in state start/running: %v/%v", goal, state)
+		return ResumeInfo{}, errors.Errorf("Powerd is not in state start/running, it is in state %v/%v", goal, state)
+	}
 	testing.ContextLogf(ctx, "Running powerd_dbus_suspend %s", strings.Join(args, " "))
 	cmd := testexec.CommandContext(ctx, "powerd_dbus_suspend", args...)
 	err = cmd.Run(testexec.DumpLogOnError)
