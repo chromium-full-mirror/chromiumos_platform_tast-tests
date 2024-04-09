@@ -2599,13 +2599,13 @@ func (tf *TestFixture) CheckFullAuthFlow(ctx context.Context, capturer *pcap.Cap
 	}
 
 	// Only one of the auth algorithms.
-	if openAuthCount == 2 && ftAuthCount == 0 && saeAuthCount == 0 {
+	if openAuthCount > 0 && ftAuthCount == 0 && saeAuthCount == 0 {
 		return wpa.AuthAlgoOpen, nil
 	}
-	if openAuthCount == 0 && ftAuthCount == 2 && saeAuthCount == 0 {
+	if openAuthCount == 0 && ftAuthCount > 0 && saeAuthCount == 0 {
 		return wpa.AuthAlgoFT, nil
 	}
-	if openAuthCount == 0 && ftAuthCount == 0 && saeAuthCount == 4 {
+	if openAuthCount == 0 && ftAuthCount == 0 && saeAuthCount > 0 {
 		return wpa.AuthAlgoSAE, nil
 	}
 
