@@ -31,7 +31,6 @@ func init() {
 		BugComponent: "b:776546",
 		Attr: []string{
 			"group:mainline",
-			"group:video_conference", "video_conference_per_build",
 			"group:cbx", "cbx_feature_enabled", "cbx_stable",
 		},
 		Fixture:      fixture.AloopLoaded{Channels: 2}.Instance(),
