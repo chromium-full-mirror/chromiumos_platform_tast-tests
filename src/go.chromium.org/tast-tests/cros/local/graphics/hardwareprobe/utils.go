@@ -29,38 +29,41 @@ type pciDevice struct {
 type gpuInfo struct {
 	Family string `json:"Family"`
 	Vendor string `json:"GPUVendor"`
+	ID     string `json:"ID"`
 }
 
 type disk struct {
 	SizeGb int `json:"size_gb"`
 }
 
-type hardwareProbeResult struct {
-	VGADevice []pciDevice `json:"VGA_Devices"`
-	GPUInfo   []gpuInfo   `json:"GPU_Family"`
-	CPUFamily string      `json:"CPU_SOC_Family"`
-	Memory    int         `json:"Memory"`
-	Disk      *disk       `json:"Disk"`
+// Result is the result of the hardware_probe binary.
+type Result struct {
+	VGADevice       []pciDevice       `json:"VGA_Devices"`
+	GPUInfo         []gpuInfo         `json:"GPU_Family"`
+	CPUFamily       string            `json:"CPU_SOC_Family"`
+	Memory          int               `json:"Memory"`
+	Disk            *disk             `json:"Disk"`
+	LabelsReporting map[string]string `json:"LabelsReporting"`
 }
 
 // GetHardwareProbeResult saves the information to path and returns detailed information gathered by hardware_probe binaries in the DUT.
-func GetHardwareProbeResult(ctx context.Context) (hardwareProbeResult, error) {
+func GetHardwareProbeResult(ctx context.Context) (Result, error) {
 	outDir, ok := testing.ContextOutDir(ctx)
 	if !ok {
-		return hardwareProbeResult{}, errors.New("failed to get outDir")
+		return Result{}, errors.New("failed to get outDir")
 	}
 	file := filepath.Join(outDir, "hardware_probe.json")
 	out, err := testexec.CommandContext(ctx, hardwareProbeBinary, "-output", file).CombinedOutput(testexec.DumpLogOnError)
 	if err != nil {
-		return hardwareProbeResult{}, errors.Wrapf(err, "failed to run %v, output: %v", hardwareProbeBinary, string(out))
+		return Result{}, errors.Wrapf(err, "failed to run %v, output: %v", hardwareProbeBinary, string(out))
 	}
 	b, err := os.ReadFile(file)
 	if err != nil {
-		return hardwareProbeResult{}, errors.Wrap(err, "failed to read json")
+		return Result{}, errors.Wrap(err, "failed to read json")
 	}
-	var result hardwareProbeResult
+	var result Result
 	if err := json.Unmarshal(b, &result); err != nil {
-		return hardwareProbeResult{}, errors.Wrapf(err, "failed to unmarshal data: %v", string(out))
+		return Result{}, errors.Wrapf(err, "failed to unmarshal data: %v", string(out))
 	}
 	return result, nil
 }
