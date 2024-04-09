@@ -76,8 +76,10 @@ func UpdateDutFirmware(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to read DUT EC Chip: ", err)
 	} else if strings.HasPrefix(ecChip, "it8") { // TODO(b/307797049) Remove this condition once the issue with flash_ec is resolved
 		// Flashing EC blocked for ite chips due to b/268108518
+		s.Log("Found it8 EC Chip, skipping ec firmware flashing due to b/307797049 : ", ecChip)
 		flashEC = false
 	}
+	s.Log("DUT EC Chip: ", ecChip)
 
 	if err := h.RequireConfig(ctx); err != nil {
 		s.Fatal("Failed to get config: ", err)
@@ -230,11 +232,13 @@ func UpdateDutFirmware(ctx context.Context, s *testing.State) {
 		if _, err := linuxssh.PutFiles(ctx, s.DUT().Conn(), dutFileMap, linuxssh.PreserveSymlinks); err != nil {
 			s.Fatal("Failed to copy files to dut: ", err)
 		}
+		if flashEC {
+			flashECFirmware(ctx, s, h, tmpFwDir, tmpDir, ecChip)
+			flashECFirmwareFromDut(ctx, s, h, tmpFwDir, tmpDir, ecBinToFlash, monitorBinToFlash)
+		}
 	}
 	flashAPFirmwareFromDut(ctx, s, h, tmpFwDir, tmpDir, firmwarePathVal, initialROFwid, initialRwFwid)
 	flashAPFirmware(ctx, s, h, tmpFwDir, firmwarePathVal, ecChip, initialROFwid, initialRwFwid)
-	flashECFirmware(ctx, s, h, tmpFwDir, tmpDir, firmwarePathVal, ecChip, flashEC)
-	flashECFirmwareFromDut(ctx, s, h, tmpFwDir, tmpDir, firmwarePathVal, ecBinToFlash, monitorBinToFlash)
 }
 
 // untarLocalFirmwareFile untars the provided local firmware file to extract AP and EC images
@@ -276,10 +280,7 @@ func untarLocalFirmwareFile(ctx context.Context, s *testing.State, tmpDir, firmw
 }
 
 // flashECFirmware flashes the provided EC firmware on the DUT and restores the original EC firmware in the end.
-func flashECFirmware(ctx context.Context, s *testing.State, h *firmware.Helper, servoTmpDir, localTmpDir, firmwarePathVal, ecChip string, flashEC bool) {
-	if !flashEC || firmwarePathVal == "" {
-		return
-	}
+func flashECFirmware(ctx context.Context, s *testing.State, h *firmware.Helper, servoTmpDir, localTmpDir, ecChip string) {
 	backupECFirmware(ctx, s, h, servoTmpDir)
 
 	// Check that the DUT has initial fw in the end
@@ -398,10 +399,7 @@ func flashAPFirmwareFromDut(ctx context.Context, s *testing.State, h *firmware.H
 }
 
 // flashECFirmwareFromDut flashes the provided EC firmware on the DUT and restores the original EC firmware in the end.
-func flashECFirmwareFromDut(ctx context.Context, s *testing.State, h *firmware.Helper, tmpFwDir, localTmpDir, firmwarePathVal, ecBinToFlash, monitorBinToFlash string) {
-	if firmwarePathVal == "" {
-		return
-	}
+func flashECFirmwareFromDut(ctx context.Context, s *testing.State, h *firmware.Helper, tmpFwDir, localTmpDir, ecBinToFlash, monitorBinToFlash string) {
 	s.Log("Backing up EC firmware")
 	backupECFirmware(ctx, s, h, tmpFwDir)
 	s.Log("Completed backup of existing EC fw")
