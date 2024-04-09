@@ -231,7 +231,7 @@ func (c *cryptohomeBinary) startAuthSession(ctx context.Context, username string
 
 // authenticateAuthFactor calls "cryptohome --action=authenticate_auth_factor".
 func (c *cryptohomeBinary) authenticateAuthFactor(ctx context.Context, authSessionID, label, password string) ([]byte, error) {
-	args := []string{"--action=authenticate_auth_factor", "--output-format=binary-protobuf", "--auth_session_id=" + authSessionID, "--key_label=" + label, "--password=" + password}
+	args := []string{"--action=authenticate_auth_factor", "--output-format=binary-protobuf", "--auth_session_id=" + authSessionID, "--key_labels=" + label, "--password=" + password}
 	return c.call(ctx, args...)
 }
 
@@ -244,7 +244,7 @@ func (c *cryptohomeBinary) removeAuthFactor(ctx context.Context, authSessionID, 
 // authenticatePinAuthFactorWithStatusUpdate calls "cryptohome --action=authenticate_with_status_update --pin=<pin>" and gets the output in a delimited format so it could be
 // parsed to get both AuthenticateAuthFactorReply and AuthFactorStatusUpdateReply.
 func (c *cryptohomeBinary) authenticatePinAuthFactorWithStatusUpdate(ctx context.Context, authSessionID, label, pin string, broadcastID []byte) ([]byte, error) {
-	args := []string{"--action=authenticate_with_status_update", "--output-format=delimited-binary-protobuf", "--auth_session_id=" + authSessionID, "--broadcast_id=" + hex.EncodeToString(broadcastID), "--key_label=" + label, "--pin=" + pin}
+	args := []string{"--action=authenticate_with_status_update", "--output-format=delimited-binary-protobuf", "--auth_session_id=" + authSessionID, "--broadcast_id=" + hex.EncodeToString(broadcastID), "--key_labels=" + label, "--pin=" + pin}
 	return c.call(ctx, args...)
 }
 
@@ -265,13 +265,13 @@ func (c *cryptohomeBinary) fetchStatusUpdateSignal(ctx context.Context, broadcas
 
 // authenticatePinAuthFactor calls "cryptohome --action=authenticate_auth_factor --pin=<pin>".
 func (c *cryptohomeBinary) authenticatePinAuthFactor(ctx context.Context, authSessionID, label, pin string) ([]byte, error) {
-	args := []string{"--action=authenticate_auth_factor", "--output-format=binary-protobuf", "--auth_session_id=" + authSessionID, "--key_label=" + label, "--pin=" + pin}
+	args := []string{"--action=authenticate_auth_factor", "--output-format=binary-protobuf", "--auth_session_id=" + authSessionID, "--key_labels=" + label, "--pin=" + pin}
 	return c.call(ctx, args...)
 }
 
 // authenticateKioskAuthFactor calls "cryptohome --action=authenticate_auth_factor --public_mount".
 func (c *cryptohomeBinary) authenticateKioskAuthFactor(ctx context.Context, authSessionID, label string) ([]byte, error) {
-	args := []string{"--action=authenticate_auth_factor", "--auth_session_id=" + authSessionID, "--key_label=" + label, "--public_mount"}
+	args := []string{"--action=authenticate_auth_factor", "--auth_session_id=" + authSessionID, "--key_labels=" + label, "--public_mount"}
 	return c.call(ctx, args...)
 }
 
@@ -279,7 +279,7 @@ func (c *cryptohomeBinary) authenticateKioskAuthFactor(ctx context.Context, auth
 func (c *cryptohomeBinary) authenticateRecoveryAuthFactor(ctx context.Context, authSessionID, label, epochResponseHex, recoveryResponseHex, ledgerName, ledgerPubKeyHash, ledgerPubKey string) ([]byte, error) {
 	args := []string{"--action=authenticate_auth_factor",
 		"--auth_session_id=" + authSessionID,
-		"--key_label=" + label,
+		"--key_labels=" + label,
 		"--recovery_epoch_response=" + epochResponseHex,
 		"--recovery_response=" + recoveryResponseHex,
 		"--recovery_ledger_name=" + ledgerName,
@@ -299,7 +299,7 @@ func (c *cryptohomeBinary) fetchRecoveryIDs(ctx context.Context, username, label
 
 // authenticateSmartCardAuthFactor calls "cryptohome --action=authenticate_auth_factor --challenge_response_algo=<algorithm>".
 func (c *cryptohomeBinary) authenticateSmartCardAuthFactor(ctx context.Context, authSessionID, label string, extraFlags []string) ([]byte, error) {
-	args := []string{"--action=authenticate_auth_factor", "--output-format=binary-protobuf", "--auth_session_id=" + authSessionID, "--key_label=" + label}
+	args := []string{"--action=authenticate_auth_factor", "--output-format=binary-protobuf", "--auth_session_id=" + authSessionID, "--key_labels=" + label}
 	args = append(args, extraFlags...)
 	return c.call(ctx, args...)
 }
