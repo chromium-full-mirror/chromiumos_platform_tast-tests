@@ -31,21 +31,21 @@ type vpnIncorrectCredsTestParam struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:           VPNIncorrectCreds,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
-		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		Desc:           "Verify that device fails to connect to VPN with incorrect credentials",
+		Func:         VPNIncorrectCreds,
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Desc:         "Verify that device fails to connect to VPN with incorrect credentials",
 		Contacts: []string{
-			// "cros-connectivity@google.com",
-			// "chromeos-connectivity-engprod@google.com",
-			"ryan.liu@cienet.com",
-			"chromeos-connectivity-cienet-external@google.com",
+			"cros-connectivity@google.com",
+			"chromeos-connectivity-engprod@google.com",
+			"shijinabraham@google.com",
+			"chadduffin@chromium.org",
 		},
-		BugComponent: "b:1131913", // ChromeOS > Software > System Services > Connectivity > VPN
-		Attr:         []string{"group:network", "network_e2e_unstable"},
-		SoftwareDeps: []string{"chrome"},
-		Fixture:      "vpnEnvWithCertsAndChromeLoggedIn",
-		Timeout:      4 * time.Minute,
+		BugComponent:   "b:1131913", // ChromeOS > Software > System Services > Connectivity > VPN
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Attr:           []string{"group:network", "network_e2e"},
+		SoftwareDeps:   []string{"chrome"},
+		Fixture:        "vpnEnvWithCertsAndChromeLoggedIn",
+		Timeout:        4 * time.Minute,
 		Params: []testing.Param{{
 			Name: "username",
 			Val: &vpnIncorrectCredsTestParam{
