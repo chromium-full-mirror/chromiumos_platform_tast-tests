@@ -75,6 +75,11 @@ func init() {
 			Fixture:   "ccaTestBridgeReadyWithFakeHALCamera",
 			Timeout:   5 * time.Minute,
 		}, {
+			Name:      "vcd_utility",
+			ExtraAttr: []string{"group:mainline", "informational", "group:camera-libcamera"},
+			Fixture:   "ccaTestBridgeReadyWithVCDInUtilityProcess",
+			Timeout:   5 * time.Minute,
+		}, {
 			// For stress testing manually with real camera and longer timeout.
 			Name:              "manual",
 			ExtraSoftwareDeps: []string{caps.BuiltinCamera},

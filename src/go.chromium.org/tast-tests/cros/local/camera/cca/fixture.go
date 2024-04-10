@@ -382,6 +382,17 @@ func init() {
 		ResetTimeout:    testBridgeSetUpTimeout,
 		TearDownTimeout: powerTearDownTimeout,
 	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:            "ccaTestBridgeReadyWithVCDInUtilityProcess",
+		Desc:            "Set up test bridge for CCA with VCD running in the utility process",
+		Contacts:        []string{"chromeos-camera-eng@google.com", "seannli@google.com"},
+		BugComponent:    "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
+		Impl:            &fixture{runVCDInUtility: true},
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    testBridgeSetUpTimeout,
+		TearDownTimeout: tearDownTimeout,
+	})
 }
 
 // DebugParams defines some useful flags for debug CCA tests.
@@ -465,6 +476,7 @@ type fixture struct {
 	powerTest              bool
 	powerReview            bool
 	requireAudioLoopback   bool
+	runVCDInUtility        bool
 	debugParams            DebugParams
 	enableFeatures         []feature
 	disableFeatures        []feature
@@ -536,6 +548,11 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	}
 	if f.forceEnableSuperRes {
 		chromeOpts = append(chromeOpts, chrome.ExtraArgs("--camera-super-res-override=force-enabled"))
+	}
+
+	if f.runVCDInUtility {
+		// ChromeOS VCD runs in the browser process by default. Disable it to make VCD run in the utility process.
+		chromeOpts = append(chromeOpts, chrome.DisableFeatures("RunVideoCaptureServiceInBrowserProcess"))
 	}
 
 	// Enable assistant verbose logging for the CCAUIAssistant test. Since
