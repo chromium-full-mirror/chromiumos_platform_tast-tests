@@ -257,7 +257,7 @@ func ChromeStackDecoder(ctx context.Context, s *testing.State) {
 	}
 	params := s.Param().(chromeStackDecoderTestParam)
 
-	if err := decoding.RunAccelVideoTest(ctx, s.OutDir(), s.DataPath(params.dataPath), decoding.TestParams{DecoderType: decoding.VD}, params.enabledFeatures); err != nil {
+	if err := decoding.RunAccelVideoTest(ctx, s.OutDir(), s.DataPath(params.dataPath), decoding.TestParams{}, params.enabledFeatures); err != nil {
 		if expErr := expectation.ReportError("test failed: ", err); expErr != nil {
 			s.Fatal("Unexpected error: ", expErr)
 		}

@@ -24,20 +24,25 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-// DecoderType represents the different video decoder types.
-type DecoderType int
+// MediaDecoderInterface represents the Chrome media:: interface used to access
+// the accelerated stack.
+type MediaDecoderInterface int
 
 const (
-	// VDA is the video decoder type based on the VideoDecodeAccelerator
-	// interface. These are set to be deprecrated.
-	VDA DecoderType = iota
-	// VD is the video decoder type based on the VideoDecoder interface. These
-	// will replace the current VDAs.
-	VD
-	// VDVDA refers to an adapter between the arc.mojom VideoDecodeAccelerator
-	// and the VideoDecoder-based video decode accelerator. This entry is used
-	// to test interaction with older interface that expected the VDA interface.
-	VDVDA
+	// Chrome current interface, media::VideoDecoder.
+	// https://source.chromium.org/chromium/chromium/src/+/main:media/base/video_decoder.h;drc=9f7e05d16d893bc9c542f027a2be74fba1773aa4
+	Current MediaDecoderInterface = iota
+	// Chrome legacy interface, media::VideoDecodeAccelerator.
+	// https://source.chromium.org/chromium/chromium/src/+/main:media/base/video_decode_accelerator.h;drc=9f7e05d16d893bc9c542f027a2be74fba1773aa4
+	Legacy
+	// Certain clients like ARCVM have not migrated to the current
+	// media::VideoDecoder interface and still use the legacy
+	// media::VideoDecodeAccelerator for out of process decoding. They are
+	// temporarily allowed to keep using the legacy out of process interface and
+	// they use an in-process adapter (VDVideoDecodeAccelerator) to the current
+	// media::VideoDecoder. This entry represents that.
+	// https://source.chromium.org/chromium/chromium/src/+/main:media/gpu/chromeos/vd_video_decode_accelerator.h;drc=83786cefc38b3e9cc29275b975ed091bf706a7ae
+	AdapterFromLegacyToCurrent
 )
 
 // ValidatorType represents the validator types used in video_decode_accelerator_tests.
@@ -72,7 +77,7 @@ const (
 
 // TestParams allows adjusting some of the test arguments passed in.
 type TestParams struct {
-	DecoderType            DecoderType
+	MediaDecoderInterface  MediaDecoderInterface
 	LinearOutput           bool
 	DisableGlobalVaapiLock bool
 	TestCases              TestCaseBitmask
@@ -84,9 +89,9 @@ func generateCmdArgs(outDir, filename string, parameters TestParams) []string {
 		filename + ".json",
 		"--output_folder=" + outDir,
 	}
-	if parameters.DecoderType == VDVDA {
+	if parameters.MediaDecoderInterface == AdapterFromLegacyToCurrent {
 		args = append(args, "--use_vd_vda")
-	} else if parameters.DecoderType == VDA {
+	} else if parameters.MediaDecoderInterface == Legacy {
 		args = append(args, "--use-legacy")
 	}
 	if parameters.LinearOutput {
@@ -169,7 +174,7 @@ func RunAccelVideoTestWithTestVectors(ctx context.Context, outDir string, testVe
 	const exec = "video_decode_accelerator_tests"
 	var filenamesToReport []string
 	for _, file := range testVectors {
-		args := generateCmdArgs(outDir, file, TestParams{DecoderType: VD, LinearOutput: false})
+		args := generateCmdArgs(outDir, file, TestParams{MediaDecoderInterface: Current, LinearOutput: false})
 		args = append(args, logging.ChromeVmoduleFlag())
 		args = append(args, "--single-process-tests")
 		if validatorType == SSIM {

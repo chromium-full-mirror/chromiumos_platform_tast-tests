@@ -321,7 +321,6 @@ func init() {
 func ChromeStackDecoderPerf(ctx context.Context, s *testing.State) {
 	param := s.Param().(chromeStackDecoderPerfParams)
 	processedParam := decoding.TestParams{
-		DecoderType:            decoding.VD,
 		DisableGlobalVaapiLock: param.disableGlobalVaapiLock,
 	}
 	if param.runConcurrentDecodersOnly {

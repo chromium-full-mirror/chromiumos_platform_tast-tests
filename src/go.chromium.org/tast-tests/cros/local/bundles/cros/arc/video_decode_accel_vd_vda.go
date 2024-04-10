@@ -193,7 +193,7 @@ func init() {
 
 func VideoDecodeAccelVDVDA(ctx context.Context, s *testing.State) {
 	param := s.Param().(videoDecodeAccelVDVDATestParam)
-	if err := decoding.RunAccelVideoTest(ctx, s.OutDir(), s.DataPath(param.dataPath), decoding.TestParams{DecoderType: decoding.VDVDA, LinearOutput: param.useLinearOutput}, []string{}); err != nil {
+	if err := decoding.RunAccelVideoTest(ctx, s.OutDir(), s.DataPath(param.dataPath), decoding.TestParams{MediaDecoderInterface: decoding.AdapterFromLegacyToCurrent, LinearOutput: param.useLinearOutput}, []string{}); err != nil {
 		s.Fatal("test failed: ", err)
 	}
 }
