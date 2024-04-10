@@ -1,0 +1,6 @@
+set noparent
+# Tast team for bulk/emergencies
+include /OWNERS.tast
+
+# FWUPD team owns all the code in this dir
+include chromiumos/third_party/fwupd:fwupd-1.9.15:/OWNERS
