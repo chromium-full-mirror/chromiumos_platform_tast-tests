@@ -6,6 +6,7 @@ package firmware
 
 import (
 	"context"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
@@ -27,10 +28,11 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_ec"},
-		Fixture:      fixture.DevMode,
+		Fixture:      fixture.DevModeGBB,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Requirements: []string{"sys-fw-0022-v02"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
+		Timeout:      12 * time.Minute,
 	})
 }
 
@@ -45,84 +47,102 @@ func ECSystemLocked(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get config")
 	}
 
-	state, err := h.Servo.GetString(ctx, servo.FWWPState)
-	if err != nil {
-		s.Fatal("Failed to get initial write protect state: ", err)
-	}
-	initialState, err := verifyFWWriteProtectState(state)
-	if err != nil {
-		s.Fatal("Failed to recognize initial FW WP state: ", err)
-	}
+	// WP should be disabled at test end.
 	defer func() {
-		s.Log("Restore the original FW write protect state")
-		setFWWriteProtectStateAndReboot(ctx, h, s, initialState)
+		s.Log("Restore the FW write protect to disabled")
+		if err := setWPState(ctx, h, false); err != nil {
+			s.Fatal("Failed to disable wp at test end: ", err)
+		}
 	}()
-	s.Log("FW initial write protect state: ", state)
-	if err = verifyECWPStatus(ctx, h, initialState); err != nil {
-		s.Error("EC lockstate wrong: ", err)
+
+	s.Log("Test wp state with WP disabled")
+	if err := verifyECWPStatus(ctx, h, false); err != nil {
+		s.Fatal("EC lockstate wrong: ", err)
 	}
 
-	setFWWriteProtectStateAndReboot(ctx, h, s, !initialState)
-	if err = verifyECWPStatus(ctx, h, !initialState); err != nil {
-		s.Error("EC lockstate wrong: ", err)
+	s.Log("Test wp state with WP enabled")
+	if err := verifyECWPStatus(ctx, h, true); err != nil {
+		s.Fatal("EC lockstate wrong: ", err)
 	}
 }
 
-func setFWWriteProtectStateAndReboot(ctx context.Context, h *firmware.Helper, s *testing.State, newFWWriteProtectState bool) {
+func setWPState(ctx context.Context, h *firmware.Helper, newState bool) error {
 	ms, err := firmware.NewModeSwitcher(ctx, h)
 	if err != nil {
-		s.Fatal("Creating mode switcher: ", err)
+		return errors.Wrap(err, "creating mode switcher")
 	}
 
-	if newFWWriteProtectState {
-		// enable SW WP before hardware WP
+	/*
+		Some ITE ECs can only clear their WP status on a power-on reset,
+		so changing HW WP requires hard ec reboot to take effect, possible cases:
+		init HW | init SW | desired | Steps
+		    0   |    0    |    0    |  Return
+			0   |    0    |    1    |  SW on -> HW on -> Reboot -> Return
+			0   |    1    |    0    |  SW off -> Return
+			0   |    1    |    1    |  HW on -> Reboot -> Return
+			1   |    0    |    0    |  HW off -> Reboot -> Return
+			1   |    0    |    1    |  HW off -> Reboot -> SW on -> HW on -> Reboot -> Return
+			1   |    1    |    0    |  HW off -> Reboot -> SW off -> Return
+			1   |    1    |    1    |  Return
+		Case 6 would require 2 reboots here, but since hw and sw wp should always match,
+		and both should be disabled at test start/end, we assume they always correspond.
+		Then, we only need to consider cases 1, 2, 7, 8.
+	*/
+
+	initialState, err := isHWWPEnabled(ctx, h)
+	if err != nil {
+		return errors.Wrap(err, "failed to get initial write protect state")
+	}
+	if initialState == newState {
+		testing.ContextLogf(ctx, "WP State already %v, no action required", initialState)
+		return nil
+	} else if newState { // Need to enable WP from disabled state.
+		// Enable SW WP before hardware WP.
+		testing.ContextLog(ctx, "Setting sw wp to enable")
 		if err := h.Servo.RunECCommand(ctx, "flashwp enable"); err != nil {
-			s.Fatal("Failed to enable flashwp: ", err)
+			return errors.Wrap(err, "failed to set flashwp enable")
 		}
 		if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateOn); err != nil {
-			s.Fatal("Failed to disable firmware write protect: ", err)
+			return errors.Wrap(err, "failed to enable hw write protect")
 		}
-		s.Log("Rebooting the EC")
-		if err := h.Servo.RunECCommand(ctx, "reboot hard"); err != nil {
-			s.Fatal("Failed to reboot ec: ", err)
+		testing.ContextLog(ctx, "Rebooting the DUT")
+		if err := ms.ModeAwareReboot(ctx, firmware.ColdReset, firmware.AllowGBBForce); err != nil {
+			return errors.Wrap(err, "failed to perform mode aware reboot")
 		}
-	} else {
+	} else { // Need to disable WP from enabled state.
 		if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateOff); err != nil {
-			s.Fatal("Failed to disable firmware write protect: ", err)
+			return errors.Wrap(err, "failed to disable hw write protect")
 		}
-		s.Log("Rebooting the DUT")
 		// Reboot after deasserting hardware write protect pin to deactivate
 		// write protect. And then remove software write protect flag.
-		// Some ITE ECs can only clear their WP status on a power-on reset,
-		// no software-initiated reset will do.
-		if err := ms.ModeAwareReboot(ctx, firmware.ColdReset); err != nil {
-			s.Fatal("Failed to perform mode aware reboot: ", err)
+		testing.ContextLog(ctx, "Rebooting the DUT")
+		if err := ms.ModeAwareReboot(ctx, firmware.ColdReset, firmware.AllowGBBForce); err != nil {
+			return errors.Wrap(err, "failed to perform mode aware reboot")
 		}
-		// disable SW WP after hardware WP
+		// Disable SW WP after hardware WP.
+		testing.ContextLog(ctx, "Setting sw wp to disable")
 		if err := h.Servo.RunECCommand(ctx, "flashwp disable"); err != nil {
-			s.Fatal("Failed to disable flashwp: ", err)
+			return errors.Wrap(err, "failed to set flashwp disable")
 		}
 	}
-	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
-	defer cancelWaitConnect()
-	if err := h.WaitConnect(waitConnectCtx); err != nil {
-		s.Fatal("Failed to reconnect to the DUT: ", err)
-	}
-	state, err := h.Servo.GetString(ctx, servo.FWWPState)
+
+	currState, err := isHWWPEnabled(ctx, h)
 	if err != nil {
-		s.Fatal("Failed to get write protect state: ", err)
+		return errors.Wrap(err, "failed to get new write protect state")
 	}
-	stateAfterReboot, err := verifyFWWriteProtectState(state)
-	if err != nil {
-		s.Fatal("Failed to recognize FW WP state after reboot: ", err)
+
+	if currState != newState {
+		return errors.Errorf("fw wp state after reboot was %v, want %v", currState, newState)
 	}
-	if stateAfterReboot != newFWWriteProtectState {
-		s.Fatalf("FW WP state after reboot got %q, want %v", state, newFWWriteProtectState)
-	}
-	s.Log("FW write protect state has been successfully set to ", state)
+	testing.ContextLog(ctx, "FW write protect state has been successfully set to ", currState)
+	return nil
 }
 
-func verifyFWWriteProtectState(state string) (bool, error) {
+func isHWWPEnabled(ctx context.Context, h *firmware.Helper) (bool, error) {
+	state, err := h.Servo.GetString(ctx, servo.FWWPState)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to get initial write protect state")
+	}
 	switch servo.FWWPStateValue(state) {
 	case servo.FWWPStateOn:
 		return true, nil
@@ -133,15 +153,19 @@ func verifyFWWriteProtectState(state string) (bool, error) {
 	}
 }
 
-func verifyECWPStatus(ctx context.Context, h *firmware.Helper, expectLocked bool) error {
+func verifyECWPStatus(ctx context.Context, h *firmware.Helper, wp bool) error {
+	if err := setWPState(ctx, h, wp); err != nil {
+		return errors.Wrapf(err, "failed to set wp to %v", wp)
+	}
+
 	out, err := h.Servo.RunECCommandGetOutput(ctx, "sysinfo", []string{`Flags:\s+(locked|unlocked)[^\n]*\n`})
 	if err != nil {
 		return errors.Wrap(err, "sysinfo failed")
 	}
-	if expectLocked && out[0][1] != "locked" {
+	if wp && out[0][1] != "locked" {
 		return errors.Errorf("sysinfo reported wrong flags, got %v want %v", out[0][1], "locked")
 	}
-	if !expectLocked && out[0][1] != "unlocked" {
+	if !wp && out[0][1] != "unlocked" {
 		return errors.Errorf("sysinfo reported wrong flags, got %v want %v", out[0][1], "unlocked")
 	}
 
@@ -149,10 +173,10 @@ func verifyECWPStatus(ctx context.Context, h *firmware.Helper, expectLocked bool
 	if err != nil {
 		return errors.Wrap(err, "flashinfo failed")
 	}
-	if expectLocked && out[0][1] != "ON" {
+	if wp && out[0][1] != "ON" {
 		return errors.New("flashinfo reported wp_gpio_asserted OFF when expecting ON, check wp gpio config")
 	}
-	if !expectLocked && out[0][1] != "OFF" {
+	if !wp && out[0][1] != "OFF" {
 		return errors.New("flashinfo reported wp_gpio_asserted ON when expecting OFF, check wp gpio config")
 	}
 	return nil
