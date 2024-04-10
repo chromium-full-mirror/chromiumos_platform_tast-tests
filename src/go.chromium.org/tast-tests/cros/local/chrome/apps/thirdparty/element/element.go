@@ -250,7 +250,7 @@ func (e *Element) dismissEncryptionAlert(ctx context.Context) error {
 	}
 
 	alert := e.d.Object(ui.ResourceID(elementIDPrefix + "llAlertBackground"))
-	skipButton := e.d.Object(ui.TextMatches("(?i)SKIP"), ui.ClassName(textClass), ui.PackageName(elementPackage))
+	skipButton := e.d.Object(ui.TextMatches("(?i)SKIP"), ui.PackageName(elementPackage))
 	dismissAlert := uiauto.NamedCombine("dismiss encryption alert",
 		apputil.FindAndClick(alert, defaultUITimeout),
 		apputil.WaitUntilGone(alert, defaultUITimeout),
