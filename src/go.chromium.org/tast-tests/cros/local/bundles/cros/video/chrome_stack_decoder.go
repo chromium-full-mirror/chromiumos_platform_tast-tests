@@ -19,6 +19,7 @@ type chromeStackDecoderTestParam struct {
 	dataPath string
 	// List of Chrome Features to enable, if any.
 	enabledFeatures []string
+	clientInterface decoding.MediaDecoderInterface
 }
 
 func init() {
@@ -245,6 +246,27 @@ func init() {
 			ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
 			ExtraData:         []string{"test-25fps-321x241.vp9", "test-25fps-321x241.vp9.json"},
 			Timeout:           4 * time.Minute,
+		}, {
+			Name:              "v4l2_flat_h264_vdvda",
+			Val:               chromeStackDecoderTestParam{dataPath: "test-25fps.h264", enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"}, clientInterface: decoding.AdapterFromLegacyToCurrent},
+			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
+			ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
+			ExtraData:         []string{"test-25fps.h264", "test-25fps.h264.json"},
+			Timeout:           4 * time.Minute,
+		}, {
+			Name:              "v4l2_flat_vp8_vdvda",
+			Val:               chromeStackDecoderTestParam{dataPath: "test-25fps.vp8", enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"}, clientInterface: decoding.AdapterFromLegacyToCurrent},
+			ExtraSoftwareDeps: []string{caps.HWDecodeVP8},
+			ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
+			ExtraData:         []string{"test-25fps.vp8", "test-25fps.vp8.json"},
+			Timeout:           4 * time.Minute,
+		}, {
+			Name:              "v4l2_flat_vp9_vdvda",
+			Val:               chromeStackDecoderTestParam{dataPath: "test-25fps.vp9", enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"}, clientInterface: decoding.AdapterFromLegacyToCurrent},
+			ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
+			ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
+			ExtraData:         []string{"test-25fps.vp9", "test-25fps.vp9.json"},
+			Timeout:           4 * time.Minute,
 		},
 		},
 	})
@@ -257,7 +279,7 @@ func ChromeStackDecoder(ctx context.Context, s *testing.State) {
 	}
 	params := s.Param().(chromeStackDecoderTestParam)
 
-	if err := decoding.RunAccelVideoTest(ctx, s.OutDir(), s.DataPath(params.dataPath), decoding.TestParams{}, params.enabledFeatures); err != nil {
+	if err := decoding.RunAccelVideoTest(ctx, s.OutDir(), s.DataPath(params.dataPath), decoding.TestParams{MediaDecoderInterface: params.clientInterface}, params.enabledFeatures); err != nil {
 		if expErr := expectation.ReportError("test failed: ", err); expErr != nil {
 			s.Fatal("Unexpected error: ", expErr)
 		}
