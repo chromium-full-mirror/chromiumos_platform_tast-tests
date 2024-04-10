@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -67,6 +68,7 @@ func init() {
 				Name:              "os_settings__cellular",
 				ExtraAttr:         []string{"group:cellular", "cellular_unstable"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Cellular()),
+				ExtraTestBedDeps:  []string{tbdep.CellularModemState("NORMAL")},
 				Val: &connectivitySurfacesTestCase{
 					name: osSettingsSurfaceName,
 					openSurface: func(ctx context.Context, tconn *chrome.TestConn) (func(context.Context), error) {
