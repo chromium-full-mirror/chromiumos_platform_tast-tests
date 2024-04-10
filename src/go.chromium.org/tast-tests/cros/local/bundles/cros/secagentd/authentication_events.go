@@ -14,6 +14,7 @@ import (
 	rep "go.chromium.org/chromiumos/reporting"
 	xdr "go.chromium.org/chromiumos/xdr/secagentd"
 
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/secagentd/secagentdaffiliation"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/secagentd/secagentdcommon"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/secagentd/secagentddbusmonitor"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/secagentd/secagentdupstart"
@@ -53,8 +54,8 @@ func init() {
 		Params: []testing.Param{
 			{
 				Name: "mainline",
-				// TODO(b/332768539): Remove "boot_perf_info" so it runs on reven.
-				ExtraSoftwareDeps: []string{"secagentd_auth_stable", "boot_perf_info"},
+				// TODO(b/334955129): Promote all boards to mainline.
+				ExtraSoftwareDeps: []string{"secagentd_auth_stable"},
 			}, {
 				Name:      "informational",
 				ExtraAttr: []string{"informational", "group:criticalstaging"},
@@ -115,6 +116,18 @@ func AuthenticationEvents(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to log in: ", err)
 	}
 
+	// Poll for signedInUser affiliation directory being created.
+	signedInUser, hash, err := secagentdaffiliation.GetSignedInUser(ctx)
+	if err != nil {
+		s.Error("Failed to get signed in user: ", err)
+	}
+	deviceUser := ""
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		_, deviceUser, err = secagentdaffiliation.GetAffiliationStatus(signedInUser, hash)
+		return err
+	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
+	}
+
 	// 2: Lock.
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -145,7 +158,6 @@ func AuthenticationEvents(ctx context.Context, s *testing.State) {
 
 	login, lock, unlock, logout := false, false, false, false
 	actFailures := 0
-	deviceUser := ""
 
 	for {
 		events, err := checkAuthenticationEventWatcher(s, ew)
@@ -155,42 +167,35 @@ func AuthenticationEvents(ctx context.Context, s *testing.State) {
 		}
 
 		for _, event := range events.GetBatchedEvents() {
-			if err := secagentdcommon.CheckCommon(event.GetCommon()); err != nil {
-				s.Errorf("Invalid common field: %s\t Event: %s", err, event)
-			} else if *event.Common.DeviceUser == "" {
-				s.Error("Device user is empty")
-			} else if !strings.HasPrefix(*event.Common.DeviceUser, "UnaffiliatedUser-") {
-				s.Errorf("Device user does not have unaffiliated prefix. Actual: %s", *event.Common.DeviceUser)
-			} else if _, err := uuid.Parse((*event.Common.DeviceUser)[len("UnaffiliatedUser-"):]); err != nil {
-				s.Errorf("Device user does not contain valid UUID. Actual: %s", *event.Common.DeviceUser)
-			}
-
-			// Verify that all device users UUID are the same because it is same account.
-			if deviceUser == "" {
-				if *event.Common.DeviceUser != "Unknown" {
-					deviceUser = *event.Common.DeviceUser
-				}
-			} else {
-				if deviceUser != *event.Common.DeviceUser {
-					s.Errorf("Device user does not match. Actual: %s, Expected: %s", *event.Common.DeviceUser, deviceUser)
-				}
-			}
+			checkAuthCommon(s, event, deviceUser)
 
 			if event.GetLogon() != nil {
+				if login {
+					s.Errorf("Extra Login event found: %s", event)
+				}
 				login = true
 				// The auth factor will sometimes report password and sometimes new user depending on the existing state of the device.
 				if len(event.GetLogon().Authentication.AuthFactor) == 0 ||
 					(event.GetLogon().Authentication.AuthFactor[0] != xdr.Authentication_AUTH_NEW_USER && event.GetLogon().Authentication.AuthFactor[0] != xdr.Authentication_AUTH_PASSWORD) {
-					s.Errorf("Logon event failed to match. Actual: %s, Expected: AUTH_NEW_USER or AUTH_PASSWORD", event.String())
+					s.Errorf("Logon event failed to match. Got: %s, Want: AUTH_NEW_USER or AUTH_PASSWORD", event.String())
 				}
 			} else if event.GetLock() != nil {
+				if lock {
+					s.Errorf("Extra Lock event found: %s", event)
+				}
 				lock = true
 			} else if event.GetUnlock() != nil {
+				if unlock {
+					s.Errorf("Extra Unlock event found: %s", event)
+				}
 				unlock = true
 				if !proto.Equal(event.GetUnlock(), &expUnlock) {
-					s.Errorf("Unlock event failed to match. Actual: %s, Expected: %s", event.String(), expUnlock.String())
+					s.Errorf("Unlock event failed to match. Got: %s, Want: %s", event.String(), expUnlock.String())
 				}
 			} else if event.GetLogoff() != nil {
+				if logout {
+					s.Errorf("Extra Logout event found: %s", event)
+				}
 				logout = true
 			} else if event.GetFailure() != nil {
 				// Because of the short batch interval the auth failures might be split.
@@ -208,7 +213,7 @@ func AuthenticationEvents(ctx context.Context, s *testing.State) {
 	}
 
 	if actFailures != expFailures {
-		s.Errorf("Incorrect number of failure events. Actual: %d, Expected: %d", actFailures, expFailures)
+		s.Errorf("Incorrect number of failure events. Got: %d, Want: %d", actFailures, expFailures)
 	}
 
 	if !logout || !unlock || !lock || !login {
@@ -216,10 +221,28 @@ func AuthenticationEvents(ctx context.Context, s *testing.State) {
 	}
 }
 
+func checkAuthCommon(s *testing.State, event *xdr.UserEventAtomicVariant, deviceUser string) {
+	if err := secagentdcommon.CheckCommon(event.GetCommon()); err != nil {
+		s.Errorf("Invalid common field: %s\t Event: %s", err, event.String())
+	} else if *event.Common.DeviceUser == "" {
+		s.Error("Device user is empty")
+	} else if !strings.HasPrefix(*event.Common.DeviceUser, "UnaffiliatedUser-") {
+		s.Errorf("Device user does not have unaffiliated prefix. Got: %s", *event.Common.DeviceUser)
+	} else if _, err := uuid.Parse((*event.Common.DeviceUser)[len("UnaffiliatedUser-"):]); err != nil {
+		s.Errorf("Device user does not contain valid UUID. Got: %s", *event.Common.DeviceUser)
+	}
+
+	// Verify that all device users UUID are the same because it is same account.
+	if deviceUser != *event.Common.DeviceUser {
+		s.Errorf("Device user does not match. Got: %s, Want: %s", *event.Common.DeviceUser, deviceUser)
+	}
+
+}
+
 func checkAuthenticationEventWatcher(s *testing.State, ew *dbusutil.EventWatcher) (*xdr.XdrUserEvent, error) {
 	event, ok := <-ew.Events()
 	if !ok {
-		return nil, errors.New("Timed out waiting for expected events")
+		return nil, errors.New("Timed out waiting for Want events")
 	}
 	if len(event.Arguments) == 0 {
 		return nil, nil
