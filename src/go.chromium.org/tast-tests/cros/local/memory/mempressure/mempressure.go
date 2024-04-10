@@ -228,6 +228,7 @@ func (t *tab) wiggle(ctx context.Context) error {
 		if err := t.conn.Call(ctx, nil, `(dy) => window.scrollBy(0, dy)`, scrollAmount); err != nil {
 			return errors.Wrap(err, "scroll down failed")
 		}
+		// GoBigSleepLint: Wait for page content loading after scrolling.
 		if err := testing.Sleep(ctx, scrollDelay); err != nil {
 			return err
 		}
@@ -235,6 +236,7 @@ func (t *tab) wiggle(ctx context.Context) error {
 	if err := t.conn.Call(ctx, nil, `(dy) => window.scrollBy(0, dy)`, -scrollAmount*scrollCount); err != nil {
 		return errors.Wrap(err, "scroll up failed")
 	}
+	// GoBigSleepLint: Wait for page content loading after scrolling.
 	if err := testing.Sleep(ctx, scrollDelay); err != nil {
 		return err
 	}
@@ -386,6 +388,7 @@ func cycleTabs(ctx context.Context, tabs []*tab, pause time.Duration, wiggle boo
 				return times, errors.Wrapf(err, "cannot wiggle tab %d", t.id)
 			}
 		} else {
+			// GoBigSleepLint: Waiting page content loading after tab switching.
 			if err := testing.Sleep(ctx, pause); err != nil {
 				return times, err
 			}
@@ -662,12 +665,13 @@ func runPhase1(ctx context.Context, outDir string, br *browser.Browser, p *RunPa
 		if p.Mode == wpr.Record {
 			// When recording, add extra time in case the quiesce
 			// test had a false positive.
+			// GoBigSleepLint: See above comment.
 			if err := testing.Sleep(ctx, 10*time.Second); err != nil {
 				return nil, nil, 0, 0, errors.Wrap(err, "timed out")
 			}
 		}
 	}
-	// Wait a bit so we will notice any additional tab discards.
+	// GoBigSleepLint: Wait a bit so we will notice any additional tab discards.
 	if err := testing.Sleep(ctx, 10*time.Second); err != nil {
 		return nil, nil, 0, 0, errors.Wrap(err, "timed out")
 	}
@@ -727,7 +731,7 @@ func runPhase2(ctx context.Context, outDir string, workTabs []*tab, coldTabSetSi
 
 // runPhase3 runs the third phase of the test, quiesce.
 func runPhase3(ctx context.Context, outDir string, pinnedTabs []*tab, tabSwitchRepeatCount int, fullMeter *kernelmeter.Meter, perfValues *perf.Values) error {
-	// Wait a bit to help the system stabilize.
+	// GoBigSleepLint: Wait a bit to help the system stabilize.
 	if err := testing.Sleep(ctx, 10*time.Second); err != nil {
 		return errors.Wrap(err, "timed out")
 	}
@@ -972,7 +976,7 @@ type TestEnv struct {
 }
 
 // NewTestEnv creates a new TestEnv, creating new WPR, Chrome, and ARC instances to use.
-func NewTestEnv(ctx context.Context, outDir string, enableARC, useHugePages bool, useVulkan bool, bt browser.Type, archive string) (_ *TestEnv, errRet error) {
+func NewTestEnv(ctx context.Context, outDir string, enableARC, useHugePages, useVulkan bool, bt browser.Type, archive string) (_ *TestEnv, errRet error) {
 	te := &TestEnv{}
 
 	success := false
