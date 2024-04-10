@@ -283,9 +283,9 @@ func ecryptfsVaultExists(ctx context.Context, cryptohome *hwsec.CryptohomeClient
 }
 
 // setInstallAttributes sets the install attributes for preparing install_attributes.pb
-func setInstallAttributes(ctx context.Context, cryptohome *hwsec.CryptohomeClient) error {
+func setInstallAttributes(ctx context.Context, deviceManagement *hwsec.DeviceManagementClient) error {
 	for name, value := range InstallAttrsContents {
-		if err := cryptohome.InstallAttributesSet(ctx, name, value); err != nil {
+		if err := deviceManagement.InstallAttributesSet(ctx, name, value); err != nil {
 			return errors.Wrapf(err, "failed to set install attributes %s to value %s", name, value)
 		}
 	}
@@ -317,6 +317,7 @@ func preparePinWeaverData(ctx context.Context, helper hwsec.CmdHelper) (*util.Pi
 // PrepareCrossVersionLoginData prepares the login data and config for CrossVersionLogin and saves them to dataPath and configPath respectively
 func PrepareCrossVersionLoginData(ctx context.Context, lf hwsec.LogFunc, helper hwsec.CmdHelper, dataPath, configPath, webauthnURL string) (retErr error) {
 	daemonController := helper.DaemonController()
+	deviceManagement := helper.DeviceManagementClient()
 	cryptohome := helper.CryptohomeClient()
 
 	var configList []CrossVersionLoginConfig
@@ -334,7 +335,7 @@ func PrepareCrossVersionLoginData(ctx context.Context, lf hwsec.LogFunc, helper 
 		}
 	}()
 
-	if err := setInstallAttributes(ctx, cryptohome); err != nil {
+	if err := setInstallAttributes(ctx, deviceManagement); err != nil {
 		return errors.Wrap(err, "failed to populate install attributes")
 	}
 
