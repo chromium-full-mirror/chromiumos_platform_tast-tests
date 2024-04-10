@@ -22,37 +22,51 @@ func ClearServoAccumulators(ctx context.Context, s *Servo, clearCtrls []IntContr
 	return nil
 }
 
-func findAccumRails(ctx context.Context, s *Servo) ([]FloatControl, []IntControl, error) {
-	ctrlStrs, err := s.GetStringArray(ctx, "avg_power_rails")
-	if err != nil {
-		return []FloatControl{}, []IntControl{}, errors.Wrap(err, "failed to get response from servo instance")
-	}
-	clearCtrlStrs, err := s.GetStringArray(ctx, "accum_clear_ctrls")
-	if err != nil {
-		return []FloatControl{}, []IntControl{}, errors.Wrap(err, "failed to get response from servo instance")
-	}
-	if (len(ctrlStrs) == 0) || (len(clearCtrlStrs) == 0) || len(ctrlStrs) != len(clearCtrlStrs) {
-		return []FloatControl{}, []IntControl{}, errors.New("failed to detect support for accum rails")
+func findPowerRails(ctx context.Context, s *Servo, useAccum bool) ([]FloatControl, []IntControl, error) {
+	railType := "avg_power_rails"
+	if !useAccum {
+		railType = "power_rails"
 	}
 
+	ctrlStrs, err := s.GetStringArray(ctx, railType)
+	if err != nil {
+		return []FloatControl{}, []IntControl{}, errors.Wrap(err, "failed to get response from servo instance")
+	}
+	if len(ctrlStrs) == 0 {
+		return []FloatControl{}, []IntControl{}, errors.Errorf("failed to detect support for rails with tag: %q", railType)
+	}
 	var ctrls []FloatControl
 	for _, c := range ctrlStrs {
 		ctrls = append(ctrls, FloatControl(c))
 	}
 
+	// Return early if using power_rails.
+	if !useAccum {
+		return ctrls, []IntControl{}, nil
+	}
+
+	// Collect accumulator rails.
+	clearCtrlStrs, err := s.GetStringArray(ctx, "accum_clear_ctrls")
+	if err != nil {
+		return []FloatControl{}, []IntControl{}, errors.Wrap(err, "failed to get response from servo instance")
+	}
+	if (len(clearCtrlStrs) == 0) || len(ctrlStrs) != len(clearCtrlStrs) {
+		return []FloatControl{}, []IntControl{}, errors.New("failed to detect support for accum rails")
+	}
 	var clearCtrls []IntControl
 	for _, c := range clearCtrlStrs {
 		clearCtrls = append(clearCtrls, IntControl(c))
 	}
-
 	return ctrls, clearCtrls, nil
 }
 
-// FindAccumRailsWithFilter gets result from 'avg_power_rails' and applies given filter to results.
-func FindAccumRailsWithFilter(ctx context.Context, s *Servo, filters []*regexp.Regexp) ([]FloatControl, []IntControl, error) {
-	ctrls, clearCtrls, err := findAccumRails(ctx, s)
+// FindPowerRailsWithFilter gets results for power rails and applies given filter to results.
+//
+// If useAccumulators is false then this will fallback to using 'power_rails' rather than 'avg_power_rails'
+func FindPowerRailsWithFilter(ctx context.Context, s *Servo, useAccumulators bool, filters []*regexp.Regexp) ([]FloatControl, []IntControl, error) {
+	ctrls, clearCtrls, err := findPowerRails(ctx, s, useAccumulators)
 	if err != nil {
-		return []FloatControl{}, []IntControl{}, errors.Wrap(err, "failed to get accum rails")
+		return []FloatControl{}, []IntControl{}, errors.Wrap(err, "failed to get power rails")
 	}
 	if len(filters) == 0 {
 		return ctrls, clearCtrls, nil

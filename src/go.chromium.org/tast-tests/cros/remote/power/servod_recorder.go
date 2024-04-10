@@ -12,7 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/perf"
 	cp "go.chromium.org/tast-tests/cros/common/power"
 	"go.chromium.org/tast-tests/cros/common/servo"
-
 	"go.chromium.org/tast/core/errors"
 )
 
@@ -27,8 +26,8 @@ type ServodRecorder struct {
 
 // NewServodRecorder creates and returns a new ServodRecorder.
 // Note: If also using the power recorder, it is recommended to use the same/similar interval.
-func NewServodRecorder(ctx context.Context, interval time.Duration, svo *servo.Servo, cpd bool, filters ...*regexp.Regexp) (*ServodRecorder, error) {
-	sm, err := cp.NewServodMetrics(ctx, svo, cpd, filters...)
+func NewServodRecorder(ctx context.Context, interval time.Duration, svo *servo.Servo, cpd, useAccumulators bool, filters ...*regexp.Regexp) (*ServodRecorder, error) {
+	sm, err := cp.NewServodMetrics(ctx, svo, cpd, useAccumulators, filters...)
 	if err != nil {
 		return nil, errors.Wrap(err, "setting up servod metrics")
 	}

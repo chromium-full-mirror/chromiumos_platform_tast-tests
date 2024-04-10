@@ -196,7 +196,7 @@ func PowerServodWrapper(ctx context.Context, s *testing.State) {
 		s.Error("Failed to get local DUT info: ", err)
 	}
 
-	servodRecorder, err := rp.NewServodRecorder(servoCtx, servoPowerMeasureInterval, pxy.Servo(), param.cpd, filters...)
+	servodRecorder, err := rp.NewServodRecorder(servoCtx, servoPowerMeasureInterval, pxy.Servo(), param.cpd, true, filters...)
 	if err != nil {
 		s.Fatal("Failed to create servod recorder: ", err)
 	}
