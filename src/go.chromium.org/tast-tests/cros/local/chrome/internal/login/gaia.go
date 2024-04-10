@@ -57,7 +57,8 @@ func waitForGaiaSigninScreen(ctx context.Context, oobeConn *driver.Conn, timeout
 
 	js := `(function() {
 		gaiaSignin = $('gaia-signin');
-		return !gaiaSignin.hidden && gaiaSignin.uiStep === 'online-gaia';
+		return !gaiaSignin.hidden && gaiaSignin.uiStep === 'online-gaia' &&
+			!gaiaSignin.loadingFrameContents && gaiaSignin.showViewProcessed;
 	})()`
 
 	var last bool
