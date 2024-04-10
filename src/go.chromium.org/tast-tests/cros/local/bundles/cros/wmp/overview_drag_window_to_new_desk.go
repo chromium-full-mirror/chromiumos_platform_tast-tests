@@ -119,7 +119,10 @@ func OverviewDragWindowToNewDesk(ctx context.Context, s *testing.State) {
 	// Drag the window to the new location without dropping
 	// it, desk bar should be transformed to expanded state
 	// immediately at the beginning of drag.
-	startLoc := bw.BoundsInRoot.CenterPoint()
+	if bw.OverviewInfo == nil {
+		s.Fatal("Expected window to have overview info")
+	}
+	startLoc := bw.OverviewInfo.Bounds.CenterPoint()
 	newLoc := coords.NewPoint(startLoc.X+10, startLoc.Y-10)
 	if err := uiauto.Combine("move mouse on the chrome window and then drag the window",
 		mouse.Move(tconn, startLoc, 0),
@@ -184,8 +187,9 @@ func OverviewDragWindowToNewDesk(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to activate the new desk button, expected a value greater than %d", deskIconButtonExpandedStateWidth)
 	}
 
-	// Release the drag.
+	// The desk button has now expanded in width so we'll move the cursor to the centerpoint of its new location and finally release the drag.
 	if err := uiauto.Combine("release the drag and wait for the animation of new desk button to be done",
+		mouse.Move(tconn, newDeskButtonViewLoc.CenterPoint(), time.Second),
 		mouse.Release(tconn, mouse.LeftButton),
 		ac.WaitForLocation(newDeskButtonView),
 	)(ctx); err != nil {
