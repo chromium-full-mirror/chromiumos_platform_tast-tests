@@ -8,6 +8,7 @@ import (
 	"context"
 	"strings"
 
+	"go.chromium.org/tast-tests/cros/local/graphics"
 	"go.chromium.org/tast-tests/cros/local/graphics/hardwareprobe"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -23,7 +24,7 @@ func init() {
 		},
 		BugComponent: "b:995569", // ChromeOS > Platform > Graphics > GPU
 		Attr:         []string{"group:graphics", "graphics_perbuild", "group:mainline"},
-		Fixture:      "gpuWatchDog",
+		Fixture:      "gpuWatchHangs",
 		Params: []testing.Param{{
 			Val:       false,
 			ExtraAttr: []string{"group:cq-medium", "group:crosbolt", "crosbolt_fsi_check"},
@@ -37,6 +38,9 @@ func init() {
 
 // HardwareProbe verifies we can successfully retrieve various device information via hardware_probe.
 func HardwareProbe(ctx context.Context, s *testing.State) {
+	// TODO(b:296993394): re-enable the check once IOMMU errors is fixed.
+	graphics.DisableSysLogCheck(s.TestName(), graphics.SysLogMediatekIOMMUErrors)
+
 	result, err := hardwareprobe.GetHardwareProbeResult(ctx)
 	if err != nil {
 		s.Fatal("Failed to run hardware_probe: ", err)
