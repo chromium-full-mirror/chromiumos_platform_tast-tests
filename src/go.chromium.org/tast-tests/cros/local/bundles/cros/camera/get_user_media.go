@@ -14,7 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
-	"go.chromium.org/tast-tests/cros/local/media/pre"
 	"go.chromium.org/tast-tests/cros/local/media/vm"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/testing"
@@ -33,21 +32,21 @@ func init() {
 		Params: []testing.Param{
 			{
 				Name:              "real",
-				Pre:               pre.ChromeVideo(),
+				Fixture:           "chromeVideo",
 				ExtraAttr:         []string{"informational"},
 				ExtraSoftwareDeps: []string{caps.BuiltinCamera},
 				Val:               browser.TypeAsh,
 			},
 			{
 				Name:              "vivid",
-				Pre:               pre.ChromeVideo(),
+				Fixture:           "chromeVideo",
 				ExtraAttr:         []string{"informational"},
 				ExtraSoftwareDeps: []string{caps.VividCamera},
 				Val:               browser.TypeAsh,
 			},
 			{
 				Name:      "fake",
-				Pre:       pre.ChromeVideoWithFakeWebcam(),
+				Fixture:   "chromeVideoWithFakeWebcam",
 				ExtraAttr: []string{"informational"},
 				Val:       browser.TypeAsh,
 			},
@@ -65,6 +64,21 @@ func init() {
 				// TODO(b/283215565): Promote to critical.
 				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
 				ExtraSoftwareDeps: []string{"lacros"},
+				Timeout:           7 * time.Minute, // A lenient limit for launching Lacros Chrome.
+				Val:               browser.TypeLacros,
+			},
+			{
+				Name:              "vcd_utility",
+				Fixture:           "chromeVideoWithVCDInUtilityProcess",
+				ExtraAttr:         []string{"informational"},
+				ExtraSoftwareDeps: []string{caps.BuiltinCamera},
+				Val:               browser.TypeAsh,
+			},
+			{
+				Name:              "lacros_vcd_utility",
+				Fixture:           "chromeVideoLacrosWithVCDInUtilityProcess",
+				ExtraAttr:         []string{"informational"},
+				ExtraSoftwareDeps: []string{caps.BuiltinCamera, "lacros"},
 				Timeout:           7 * time.Minute, // A lenient limit for launching Lacros Chrome.
 				Val:               browser.TypeLacros,
 			},
@@ -105,7 +119,7 @@ func GetUserMedia(ctx context.Context, s *testing.State) {
 		}
 		defer ci.Close(ctx)
 	} else {
-		ci = s.PreValue().(*chrome.Chrome)
+		ci = s.FixtValue().(chrome.HasChrome).Chrome()
 	}
 
 	_, err := os.ReadFile(s.DataPath("third_party/ssim.js"))

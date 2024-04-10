@@ -284,6 +284,22 @@ func initChromeVideoBaseFixtures() {
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
+	testing.AddFixture(&testing.Fixture{
+		Name:     "chromeVideoWithVCDInUtilityProcess",
+		Desc:     "Similar to chromeVideo fixture but running VCD in the utility process",
+		Contacts: []string{"chromeos-gfx-video@google.com", "seannli@google.com"},
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return []chrome.Option{
+				chrome.ExtraArgs(chromeVideoArgs...),
+				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
+				chrome.DisableFeatures("RunVideoCaptureServiceInBrowserProcess"),
+			}, nil
+		}),
+		Parent:          "gpuWatchDog",
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
 }
 
 func initChromeVideoLacrosFixtures() {
@@ -422,6 +438,24 @@ func initChromeVideoLacrosFixtures() {
 		}),
 		Parent:          "gpuWatchDog",
 		SetUpTimeout:    chrome.FixtureSetUpTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:     "chromeVideoLacrosWithVCDInUtilityProcess",
+		Desc:     "Similar to chromeVideoLacros fixture but running VCD in the utility process",
+		Contacts: []string{"chromeos-gfx-video@google.com", "seannli@google.com"},
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(
+				chrome.ExtraArgs(chromeVideoArgs...),
+				chrome.LacrosExtraArgs(chromeVideoArgs...),
+				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
+				chrome.LacrosExtraArgs(chromeBypassPermissionsArgs...),
+				chrome.DisableFeatures("RunVideoCaptureServiceInBrowserProcess"))).Opts()
+		}),
+		Parent:          "gpuWatchDog",
+		SetUpTimeout:    chrome.FixtureSetUpTimeout + 7*time.Minute,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
