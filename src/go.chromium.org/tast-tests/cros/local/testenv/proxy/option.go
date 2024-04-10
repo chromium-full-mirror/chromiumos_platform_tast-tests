@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"go.chromium.org/tast/core/errors"
+	"gopkg.in/yaml.v2"
 )
 
 // Option is a function that can be used to config MitmProxy.
@@ -103,6 +104,44 @@ func URLRedirect(urlMap map[string]string) Option {
 func DumpFull(enable bool) Option {
 	return func(mp *MitmProxy) error {
 		mp.dumpFull = enable
+		return nil
+	}
+}
+
+// Allowlist configures HTTP flow filtering rules for MitmProxy.
+// It accepts a list of hostnames.
+//
+// Filter follows these rules:
+// 1. Only traffic to the specified hosts is allowed.
+// 2. Otherwise, the traffic is blocked and return 500.
+//
+// Sample for hosts:
+//
+//	"www.example.com", "api.google.com"
+//
+// TODO(b/319732303): remove trafficFilterAddonPath later.
+func Allowlist(hosts []string, trafficFilterAddonPath string) Option {
+	return func(mp *MitmProxy) error {
+		if len(hosts) == 0 {
+			return errors.New("failed to filter HTTP flow since allowedHosts is empty")
+		}
+
+		if len(trafficFilterAddonPath) == 0 {
+			return errors.New("failed to filter HTTP flow since trafficFilterAddonPath is empty")
+		}
+
+		mp.allowedHosts = append(mp.allowedHosts, hosts...)
+		mp.scriptPaths = append(mp.scriptPaths, trafficFilterAddonPath)
+
+		config := map[string][]string{
+			"allowedHosts": hosts,
+		}
+
+		yamlConfig, err := yaml.Marshal(&config)
+		if err != nil {
+			return errors.Wrapf(err, "fail to marshal allowedHosts: %s", hosts)
+		}
+		mp.options = append(mp.options, string(yamlConfig))
 		return nil
 	}
 }

@@ -6,7 +6,6 @@ package testenv
 
 import (
 	"context"
-	"fmt"
 	"strings"
 	"time"
 
@@ -21,12 +20,10 @@ import (
 )
 
 const (
-	hostRedirect     = "mitmproxy_redirect_requests.py"
-	httpErrorInject  = "mitmproxy_inject_500_requests.py"
-	allowedEndpoints = "allowed_endpoints.py"
-	extraConfig      = "allowed_endpoints_yaml.py"
-	endpoints        = "endpoints.yml"
-	dumphttpflow     = "dump_http_flow.py"
+	hostRedirectPy    = "mitmproxy_redirect_requests.py"
+	httpErrorInjectPy = "mitmproxy_inject_500_requests.py"
+	dumpHTTPFlowPy    = "dump_http_flow.py"
+	httpFlowFilterPy  = "http_flow_filter.py"
 )
 
 func init() {
@@ -45,7 +42,7 @@ func init() {
 		Params: []testing.Param{{
 			Name:      "hostredirect",
 			Val:       "hostredirect",
-			ExtraData: []string{hostRedirect},
+			ExtraData: []string{hostRedirectPy},
 		}, {
 			Name: "urlredirect",
 			Val:  "urlredirect",
@@ -55,15 +52,15 @@ func init() {
 		}, {
 			Name:      "error",
 			Val:       "error",
-			ExtraData: []string{httpErrorInject},
+			ExtraData: []string{httpErrorInjectPy},
 		}, {
 			Name:      "dumphttpflow",
 			Val:       "dumphttpflow",
-			ExtraData: []string{dumphttpflow},
+			ExtraData: []string{dumpHTTPFlowPy},
 		}, {
-			Name:      "diff",
-			Val:       "diff",
-			ExtraData: []string{allowedEndpoints, extraConfig, endpoints},
+			Name:      "httpflowfilter",
+			Val:       "httpflowfilter",
+			ExtraData: []string{httpFlowFilterPy},
 		}},
 	})
 }
@@ -86,21 +83,21 @@ func NetworkManipulateMitmproxy(ctx context.Context, s *testing.State) {
 	}
 	defer reset(cleanupCtx, cr)
 
+	if err := verify(ctx, s, cr, mp); err != nil {
+		s.Fatal("Failed to verify page: ", err)
+	}
+}
+
+func verify(ctx context.Context, s *testing.State, cr *chrome.Chrome, mp proxy.Proxy) error {
+
 	conn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, "https://www.example.com")
 	if err != nil {
 		s.Fatal("Failed to open test page: ", err)
 	}
+	defer closeBrowser(ctx)
+	defer conn.Close()
 	br.ReloadActiveTab(ctx)
 
-	if err := verify(ctx, s, conn, mp); err != nil {
-		s.Fatal("Failed to verify page: ", err)
-	}
-
-	defer closeBrowser(cleanupCtx)
-	defer conn.Close()
-}
-
-func verify(ctx context.Context, s *testing.State, conn *chrome.Conn, mp proxy.Proxy) error {
 	switch s.Param().(string) {
 	case "hostredirect":
 		return verifyPageContent(ctx, conn, "google")
@@ -126,8 +123,13 @@ func verify(ctx context.Context, s *testing.State, conn *chrome.Conn, mp proxy.P
 		if !foundURL {
 			return errors.New("fail to find URl or Hostname")
 		}
-
 		return nil
+	case "httpflowfilter":
+		err := conn.Navigate(ctx, "https://www.google.com")
+		if err != nil {
+			return errors.Wrap(err, "failed to open new tab")
+		}
+		return verifyPageContent(ctx, conn, "503")
 	default:
 		return nil
 	}
@@ -156,23 +158,22 @@ func proxyOpts(s *testing.State) []proxy.Option {
 	var opts []proxy.Option
 	switch testCase {
 	case "hostredirect":
-		opts = append(opts, proxy.ScriptPath(s.DataPath(hostRedirect)))
+		opts = append(opts, proxy.ScriptPath(s.DataPath(hostRedirectPy)))
 	case "urlredirect":
 		urlMap := map[string]string{
 			`//www.example.com/`: `//www.google.com/`, // replace the hostname in the URL
 		}
 		opts = append(opts, proxy.URLRedirect(urlMap))
 	case "error":
-		opts = append(opts, proxy.ScriptPath(s.DataPath(httpErrorInject)))
-	case "diff":
+		opts = append(opts, proxy.ScriptPath(s.DataPath(httpErrorInjectPy)))
+	case "httpflowfilter":
 		opts = append(opts,
-			proxy.ScriptPath(s.DataPath(allowedEndpoints), s.DataPath(extraConfig)),
-			proxy.CustomOptions(fmt.Sprintf("allowed_endpoints_yaml: %s", s.DataPath(endpoints))),
+			proxy.Allowlist([]string{"www.example.com", "www.example.org"}, s.DataPath(httpFlowFilterPy)),
 			proxy.HealthCheck(false), // Disable health check as it uses the local domain that won't work with the allowlist set for this test.
 		)
 	case "dumphttpflow":
 		opts = append(opts,
-			proxy.DumpHTTPFlow(true, s.DataPath(dumphttpflow)),
+			proxy.DumpHTTPFlow(true, s.DataPath(dumpHTTPFlowPy)),
 		)
 	}
 	return opts

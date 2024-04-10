@@ -61,6 +61,7 @@ type MitmProxy struct {
 	lifelineFD            *os.File // Used by pathcpanel to track the lifetime of the proxy server.
 	dumpHTTPFlowEnabled   bool
 	dumpHTTPFlowAddonPath string
+	allowedHosts          []string
 }
 
 // NewMitmProxy creates a new MitmProxy instance with default configuration and option overrides.
