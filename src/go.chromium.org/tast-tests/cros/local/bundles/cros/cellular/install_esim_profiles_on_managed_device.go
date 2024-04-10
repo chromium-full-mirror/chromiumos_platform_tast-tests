@@ -37,10 +37,9 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test that managed eSIM profile can be installed from device policy via the esim_manager Mojo API",
 		Contacts: []string{
-			"cros-network-health-team@google.com",
-			"khegde@google.com",
-			"chadduffin@google.com",
 			"cros-connectivity@google.com",
+			"chadduffin@google.com",
+			"khegde@google.com",
 		},
 		BugComponent: "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular
 		SoftwareDeps: []string{"chrome"},

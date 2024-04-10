@@ -28,10 +28,9 @@ func init() {
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "An API test that performs SMDS eSIM operations on a test eSIM to validate the logic for the subset of functions in the esim_manager Mojo API (RequestAvailableProfiles, InstallProfileFromActivationCode)",
 		Contacts: []string{
-			"cros-network-health-team@google.com",
-			"khegde@google.com",
-			"chadduffin@google.com",
 			"cros-connectivity@google.com",
+			"chadduffin@google.com",
+			"khegde@google.com",
 		},
 		BugComponent: "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular
 		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_test_esim"},
