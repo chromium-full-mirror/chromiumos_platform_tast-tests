@@ -62,6 +62,8 @@ func PNPGoogleMeet(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
+	pnpRoutine := pnp.Routine{}
+	defer pnpRoutine.Close(cleanupCtx)
 	if err := pnp.Cooldown(ctx); err != nil {
 		s.Fatal("Failed to run pnp cooldown routine: ", err)
 	}
@@ -149,7 +151,7 @@ func PNPGoogleMeet(ctx context.Context, s *testing.State) {
 	if err := pnp.WarmUp(ctx); err != nil {
 		s.Fatal("Failed to run pnp warm up routine: ", err)
 	}
-	if err := pnp.MeasurePower(ctx, cleanupCtx, s.OutDir(), s.TestName()); err != nil {
+	if err := pnpRoutine.MeasurePower(ctx, cleanupCtx, s.OutDir(), s.TestName(), true); err != nil {
 		s.Fatal("Failed to run pnp power measuring routine: ", err)
 	}
 }

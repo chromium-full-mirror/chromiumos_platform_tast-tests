@@ -122,6 +122,7 @@ func parseYavtaEnumFormats(ctx context.Context, videoNode string) ([]captureMeta
 
 func PNPDirectOffUSBCameraPower(ctx context.Context, s *testing.State) {
 	// Reserve some time for the cleanup, even if it fails due to ctx timeout.
+	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
@@ -148,6 +149,8 @@ func PNPDirectOffUSBCameraPower(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start metrics: ", err)
 	}
 
+	pnpRoutine := pnp.Routine{}
+	defer pnpRoutine.Close(cleanupCtx)
 	perfValue := perf.NewValues()
 	if err := pnp.Cooldown(ctx); err != nil {
 		s.Fatal("Failed to run pnp cooldown routine: ", err)

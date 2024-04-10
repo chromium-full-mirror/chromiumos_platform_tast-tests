@@ -7,10 +7,14 @@ package pnp
 
 import (
 	"context"
+	"fmt"
 	"os"
+	"regexp"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/action"
+	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/camera/testutil"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
@@ -22,22 +26,22 @@ import (
 )
 
 const (
-	// StablePowerNoUI provide fixture with no UI
+	// StablePowerNoUI provides fixture with no UI.
 	StablePowerNoUI = "stablePowerNoUI"
-	// StablePowerAsh provide fixture with ash chrome
+	// StablePowerAsh provides fixture with ash chrome.
 	StablePowerAsh = "stablePowerAsh"
-	// StablePowerAshGAIA provide fixture with ash chrome with GAIA login
+	// StablePowerAshGAIA provides fixture with ash chrome with GAIA login.
 	StablePowerAshGAIA = "stablePowerAshGAIA"
-	// StablePowerAshGAIAFakeHAL provide fixture with ash chrome with GAIA login and use fake HAL
+	// StablePowerAshGAIAFakeHAL provides fixture with ash chrome with GAIA login and use fake HAL.
 	StablePowerAshGAIAFakeHAL = "stablePowerAshGAIAFakeHAL"
-	// StablePowerLacros provide fixture with lacros chrome
+	// StablePowerLacros provides fixture with lacros chrome.
 	StablePowerLacros = "stablePowerLacros"
-	// StablePowerLacrosGAIA provide fixture with lacros chrome with GAIA login
-	StablePowerLacrosGAIA = "stablePowerLacrosGAIA"
-	// StablePowerLacrosGAIAFakeHAL provide fixture with lacros chrome with GAIA login and use fake HAL
+	// StablePowerLacrosGAIA provides fixture with lacros chrome with GAIA login.
+	StablePowerLacrosGAIA = "stablePoweracrosGAIA"
+	// StablePowerLacrosGAIAFakeHAL provides fixture with lacros chrome with GAIA login and use fake HAL.
 	StablePowerLacrosGAIAFakeHAL = "stablePowerLacrosGAIAFakeHAL"
 
-	// cameraService is the parent fixture of the StablePower fixtures
+	// cameraService is the parent fixture of the StablePower fixtures.
 	cameraService = "cameraService"
 
 	fakeHALImageInput = "generic-person-office.jpg"
@@ -46,10 +50,19 @@ const (
 	PNPWarmUpTime = 15 * time.Second
 )
 
-// PNPTimeParams provide the probing frequency and total times.
+// FunctionMetric is parsed from a metric JSON file.
+type FunctionMetric struct {
+	FunctionName   string `json:"function_name"`
+	MetricName     string `json:"metric_name"`
+	Unit           string `json:"unit"`
+	Value          int64  `json:"value"`
+	BiggerIsBetter bool   `json:"bigger_is_better"`
+}
+
+// PNPTimeParams provides the probing frequency and total times.
 var PNPTimeParams = power.TimeParams{Interval: 5 * time.Second, Total: 5 * time.Minute}
 
-// MinPowerTestOptions provide an unified stable power environment.
+// MinPowerTestOptions provides an unified stable power environment.
 var MinPowerTestOptions = powersetup.PowerTestOptions{
 	Wifi:               powersetup.DisableWifiInterfaces,
 	NightLight:         powersetup.DisableNightLight,
@@ -316,13 +329,17 @@ func WarmUp(ctx context.Context) error {
 	return nil
 }
 
-// MeasurePower records the power and saves the data.
-func MeasurePower(ctx, cleanupCtx context.Context, outDir, testName string) error {
-	testing.ContextLog(ctx, "[Record Phase] Start recording trace for ", PNPTimeParams.Total)
-	rec := power.NewRecorder(ctx, PNPTimeParams.Interval, outDir, testName)
-	defer rec.Close(cleanupCtx)
+// Routine provides a standard way of running PNP measurement.
+type Routine struct {
+	rec *power.Recorder
+}
 
-	if err := rec.Start(ctx); err != nil {
+// MeasurePower records the power and saves the data.
+func (f *Routine) MeasurePower(ctx, cleanupCtx context.Context, outDir, testName string, upload bool) error {
+	testing.ContextLog(ctx, "[Record Phase] Start recording trace for ", PNPTimeParams.Total)
+	f.rec = power.NewRecorder(ctx, PNPTimeParams.Interval, outDir, testName)
+
+	if err := f.rec.Start(ctx); err != nil {
 		return errors.Wrap(err, "cannot start collecting power metrics")
 	}
 
@@ -331,9 +348,57 @@ func MeasurePower(ctx, cleanupCtx context.Context, outDir, testName string) erro
 		return errors.Wrap(err, "failed to sleep to collect power metrics")
 	}
 
-	if err := rec.Finish(ctx); err != nil {
+	if upload {
+		if err := f.rec.Finish(ctx); err != nil {
+			return errors.Wrap(err, "cannot finish collecting power metrics")
+		}
+	} else {
+		if _, err := f.rec.Stop(ctx); err != nil {
+			return errors.Wrap(err, "cannot stop collecting power metrics")
+		}
+
+	}
+	return nil
+}
+
+// UploadMetrics uploads the data and closes the recorder.
+func (f *Routine) UploadMetrics(ctx, cleanupCtx context.Context, extraPerfValues ...*perf.Values) error {
+	if err := f.rec.Finish(ctx, extraPerfValues...); err != nil {
 		return errors.Wrap(err, "cannot finish collecting power metrics")
 	}
-
 	return nil
+}
+
+// Close closes the owned recorder.
+func (f *Routine) Close(cleanupCtx context.Context) error {
+	if f.rec != nil {
+		return f.rec.Close(cleanupCtx)
+	}
+	return nil
+}
+
+// SetMetric adds a metric to a perf value.
+func SetMetric(pv *perf.Values, name, unit string, value float64, direction bool) {
+	// perf.Values valid metric names only allow "^[a-zA-Z0-9._-]{1,256}$".
+	name = strings.Replace(name, "~", "Destructor-", -1)
+	re := regexp.MustCompile("[^a-zA-Z0-9._-]")
+	name = re.ReplaceAllString(name, "-")
+
+	perfDirection := perf.SmallerIsBetter
+	if direction {
+		perfDirection = perf.BiggerIsBetter
+	}
+
+	pv.Set(perf.Metric{
+		Name:      name,
+		Unit:      unit,
+		Direction: perfDirection,
+	}, value)
+}
+
+// SetMetricFromFunction adds a metric from pnp.FunctionMetric to a perf value.
+func SetMetricFromFunction(pv *perf.Values, fm FunctionMetric, prefix string) {
+	SetMetric(
+		pv, fmt.Sprintf("%s%s_%s", prefix, fm.FunctionName, fm.MetricName),
+		fm.Unit, float64(fm.Value), fm.BiggerIsBetter)
 }

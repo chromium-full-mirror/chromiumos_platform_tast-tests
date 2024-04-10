@@ -6,14 +6,19 @@ package camera
 
 import (
 	"context"
+	"encoding/json"
+	"os"
+	"path/filepath"
 	"strconv"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/media/caps"
+	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/camera/pnp"
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -21,9 +26,10 @@ const (
 	initTimePNPFeatureBenchmark                = 1 * time.Minute
 	featureBenchamrkExecutableExtraRunningTime = 10 * time.Second
 
-	benchmarkExec              = "cros_camera_feature_benchmark"
-	faceDetectionTestImageFile = "person_4032x3024.nv12"
-	faceDetectionConfig        = "feature_benchmark_face_detection_config.json"
+	benchmarkExec                   = "cros_camera_feature_benchmark"
+	featureBenchmarkMetricsJSONFile = "feature_benchmark_metrics.json"
+	faceDetectionTestImageFile      = "person_4032x3024.nv12"
+	faceDetectionConfig             = "feature_benchmark_face_detection_config.json"
 )
 
 type featureBenchmarkParams struct {
@@ -67,22 +73,44 @@ func init() {
 	})
 }
 
+func parseFeatureBenchmarkMetrics(ctx context.Context, pv *perf.Values, metricPath string) error {
+	metricByte, err := os.ReadFile(metricPath)
+	if err != nil {
+		return errors.Wrap(err, "failed to read file: "+metricPath)
+	}
+
+	var metrics []pnp.FunctionMetric
+	err = json.Unmarshal([]byte(metricByte), &metrics)
+	if err != nil {
+		return errors.Wrap(err, "failed to parse JSON")
+	}
+
+	for _, metric := range metrics {
+		pnp.SetMetricFromFunction(pv, metric, "")
+	}
+	return nil
+}
+
 func PNPFeatureBenchmark(ctx context.Context, s *testing.State) {
 	// Reserve some time to cleanup, even if it fails due to ctx timeout.
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
+	pnpRoutine := pnp.Routine{}
+	defer pnpRoutine.Close(cleanupCtx)
 	if err := pnp.Cooldown(ctx); err != nil {
 		s.Fatal("Failed to run pnp cooldown routine: ", err)
 	}
 
 	testing.ContextLog(ctx, "[Start Work Phase]")
+	featureBenchmarkMetricsJSONPath := filepath.Join(s.OutDir(), featureBenchmarkMetricsJSONFile)
 	cmd := testexec.CommandContext(
 		ctx, benchmarkExec,
 		"--test_config_file_path="+s.DataPath(s.Param().(featureBenchmarkParams).benchmarkConfig),
 		"--test_case_name="+s.Param().(featureBenchmarkParams).testCaseName,
-		"--min_running_time_sec="+strconv.Itoa(int((pnp.PNPWarmUpTime+pnp.PNPTimeParams.Total+featureBenchamrkExecutableExtraRunningTime).Seconds())))
+		"--min_running_time_sec="+strconv.Itoa(int((pnp.PNPWarmUpTime+pnp.PNPTimeParams.Total+featureBenchamrkExecutableExtraRunningTime).Seconds())),
+		"--metrics_output_json_path="+featureBenchmarkMetricsJSONPath)
 
 	err := cmd.Start()
 	if err != nil {
@@ -92,7 +120,7 @@ func PNPFeatureBenchmark(ctx context.Context, s *testing.State) {
 	if err := pnp.WarmUp(ctx); err != nil {
 		s.Fatal("Failed to run pnp warm up routine: ", err)
 	}
-	if err := pnp.MeasurePower(ctx, cleanupCtx, s.OutDir(), s.TestName()); err != nil {
+	if err := pnpRoutine.MeasurePower(ctx, cleanupCtx, s.OutDir(), s.TestName(), false); err != nil {
 		s.Fatal("Failed to run pnp power measuring routine: ", err)
 	}
 
@@ -103,4 +131,14 @@ func PNPFeatureBenchmark(ctx context.Context, s *testing.State) {
 
 	// Collect information of logs from benchmark binary.
 	cmd.DumpLog(ctx)
+
+	pv := perf.NewValues()
+	if err := parseFeatureBenchmarkMetrics(ctx, pv, featureBenchmarkMetricsJSONPath); err != nil {
+		s.Fatal("Failed to parse metrics from path ", featureBenchmarkMetricsJSONPath, ": ", err)
+	}
+
+	if err := pnpRoutine.UploadMetrics(ctx, cleanupCtx, pv); err != nil {
+		s.Fatal("Failed to upload metrics: ", err)
+	}
+
 }

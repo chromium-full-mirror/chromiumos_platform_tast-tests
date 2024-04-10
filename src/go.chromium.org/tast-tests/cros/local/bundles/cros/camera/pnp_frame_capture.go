@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"golang.org/x/sys/unix"
@@ -35,21 +34,13 @@ const (
 	initTimePNPFrameCapture  = 1 * time.Minute
 )
 
-type functionMetric struct {
-	FunctionName   string `json:"function_name"`
-	MetricName     string `json:"metric_name"`
-	Unit           string `json:"unit"`
-	Value          int64  `json:"value"`
-	BiggerIsBetter bool   `json:"direction"`
-}
-
 type traceMetrics struct {
 	PerfettoProtosCameraCoreMetrics struct {
 		SessionMetrics []struct {
-			Sid             int              `json:"sid"`
-			FunctionMetrics []functionMetric `json:"function_metrics"`
+			Sid             int                  `json:"sid"`
+			FunctionMetrics []pnp.FunctionMetric `json:"function_metrics"`
 			ConfigMetrics   []struct {
-				FunctionMetrics     []functionMetric `json:"function_metrics"`
+				FunctionMetrics     []pnp.FunctionMetric `json:"function_metrics"`
 				ResultBufferMetrics []struct {
 					Stream struct {
 						StreamID int64 `json:"stream_id"`
@@ -57,7 +48,7 @@ type traceMetrics struct {
 						Height   int   `json:"height"`
 						Format   int   `json:"format"`
 					} `json:"stream"`
-					FunctionMetrics []functionMetric `json:"function_metrics"`
+					FunctionMetrics []pnp.FunctionMetric `json:"function_metrics"`
 				} `json:"result_buffer_metrics"`
 			} `json:"config_metrics"`
 		} `json:"session_metrics"`
@@ -76,29 +67,6 @@ func init() {
 		Fixture:      pnp.StablePowerLacros,
 		Timeout:      initTimePNPFrameCapture + traceTimePNPFrameCapture + power.RecorderTimeout,
 	})
-}
-
-func setMetric(pv *perf.Values, name, unit string, value float64, direction bool) {
-	// perf.Values valid metric names only allow "^[a-zA-Z0-9._-]{1,256}$"
-	name = strings.Replace(name, "::", "-", -1)
-	name = strings.Replace(name, " ", "-", -1)
-	name = strings.Replace(name, "~", "Destructor-", -1)
-	perfDirection := perf.SmallerIsBetter
-	if direction {
-		perfDirection = perf.BiggerIsBetter
-	}
-
-	pv.Set(perf.Metric{
-		Name:      name,
-		Unit:      unit,
-		Direction: perfDirection,
-	}, value)
-}
-
-func setMetricFromFunction(pv *perf.Values, fm functionMetric, prefix string) {
-	setMetric(
-		pv, fmt.Sprintf("%s%s_%s", prefix, fm.FunctionName, fm.MetricName),
-		fm.Unit, float64(fm.Value), fm.BiggerIsBetter)
 }
 
 func parseMetrics(ctx context.Context, pv *perf.Values, traceDataAbsPath, outDir string) error {
@@ -131,7 +99,7 @@ func parseMetrics(ctx context.Context, pv *perf.Values, traceDataAbsPath, outDir
 	}
 	session := metrics.PerfettoProtosCameraCoreMetrics.SessionMetrics[len(metrics.PerfettoProtosCameraCoreMetrics.SessionMetrics)-1]
 	for _, functionMetric := range session.FunctionMetrics {
-		setMetricFromFunction(pv, functionMetric, "")
+		pnp.SetMetricFromFunction(pv, functionMetric, "")
 	}
 
 	// If there are multiple configurations, only use the last subsession to
@@ -141,16 +109,16 @@ func parseMetrics(ctx context.Context, pv *perf.Values, traceDataAbsPath, outDir
 	}
 	stream := session.ConfigMetrics[len(session.ConfigMetrics)-1]
 	for _, functionMetric := range stream.FunctionMetrics {
-		setMetricFromFunction(pv, functionMetric, "")
+		pnp.SetMetricFromFunction(pv, functionMetric, "")
 	}
 
 	for i, resultBuffer := range stream.ResultBufferMetrics {
-		setMetric(pv, fmt.Sprintf("ResultBuffer_%d_streamID", i), "id", float64(resultBuffer.Stream.StreamID), false)
-		setMetric(pv, fmt.Sprintf("ResultBuffer_%d_width", i), "pix", float64(resultBuffer.Stream.Width), false)
-		setMetric(pv, fmt.Sprintf("ResultBuffer_%d_height", i), "pix", float64(resultBuffer.Stream.Height), false)
-		setMetric(pv, fmt.Sprintf("ResultBuffer_%d_format", i), "category", float64(resultBuffer.Stream.Format), false)
+		pnp.SetMetric(pv, fmt.Sprintf("ResultBuffer_%d_streamID", i), "id", float64(resultBuffer.Stream.StreamID), false)
+		pnp.SetMetric(pv, fmt.Sprintf("ResultBuffer_%d_width", i), "pix", float64(resultBuffer.Stream.Width), false)
+		pnp.SetMetric(pv, fmt.Sprintf("ResultBuffer_%d_height", i), "pix", float64(resultBuffer.Stream.Height), false)
+		pnp.SetMetric(pv, fmt.Sprintf("ResultBuffer_%d_format", i), "category", float64(resultBuffer.Stream.Format), false)
 		for _, functionMetric := range resultBuffer.FunctionMetrics {
-			setMetricFromFunction(pv, functionMetric, fmt.Sprintf("ResultBuffer_%d_", i))
+			pnp.SetMetricFromFunction(pv, functionMetric, fmt.Sprintf("ResultBuffer_%d_", i))
 		}
 	}
 
@@ -162,6 +130,8 @@ func PNPFrameCapture(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
+	pnpRoutine := pnp.Routine{}
+	defer pnpRoutine.Close(cleanupCtx)
 	if err := pnp.Cooldown(ctx); err != nil {
 		s.Fatal("Failed to run pnp cooldown routine: ", err)
 	}
