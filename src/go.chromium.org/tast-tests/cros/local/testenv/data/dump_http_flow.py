@@ -28,7 +28,7 @@ def request(flow: http.HTTPFlow):
 app = Flask("proxy_traffic_recorder")
 
 
-# Please change URL in mitmproxy.DumpHTTPFlow if change the following line.
+# Please change testenv.DumpHTTPFlowURL if change the following line.
 @app.route("/traffic")
 def validate_allow_list() -> str:
     """
@@ -63,7 +63,7 @@ def validate_allow_list() -> str:
 
 
 addons = [
-    # Please change URL in mitmproxy.DumpHTTPFlow if change the following line.
+    # Please change testenv.DumpHTTPFlowURL if change the following line.
     asgiapp.WSGIApp(app, "proxy_server", 8080),
 ]
 

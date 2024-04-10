@@ -88,7 +88,7 @@ func NewMitmProxy(ctx context.Context, opts ...Option) (Proxy, error) {
 	// It's crucial to add the dump HTTP flow addon as the first script.
 	// MitmProxy executes addon scripts sequentially, so order directly impacts functionality.
 	if mp.dumpHTTPFlowEnabled {
-		mp.scriptPaths = []string{mp.dumpHTTPFlowAddonPath}
+		mp.scriptPaths = append([]string{mp.dumpHTTPFlowAddonPath}, mp.scriptPaths...)
 	}
 
 	// Set OutDir for saving per-test logs and dump files.
@@ -466,13 +466,12 @@ func (mp *MitmProxy) DumpHTTPFlow(ctx context.Context, reset, saveToFile bool) (
 		return nil, err
 	}
 
-	baseURL := "http://proxy_server:8080/traffic"
 	params := url.Values{}
 	params.Set("reset", strconv.FormatBool(reset))
 	if saveToFile {
 		params.Set("outDir", mp.outDir)
 	}
-	fullURL := baseURL + "?" + params.Encode()
+	fullURL := testenv.DumpHTTPFlowURL + "?" + params.Encode()
 
 	req, err := http.NewRequest("GET", fullURL, nil)
 	if err != nil {
