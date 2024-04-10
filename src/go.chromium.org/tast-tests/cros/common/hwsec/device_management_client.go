@@ -13,6 +13,8 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+const installAttributesFinalizeSuccessOutput = "InstallAttributesFinalize(): 1"
+
 // DeviceManagementClient wraps and the functions of deviceManagementBinary and parses the outputs to
 // structured data.
 type DeviceManagementClient struct {

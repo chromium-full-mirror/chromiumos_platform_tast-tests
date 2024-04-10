@@ -70,60 +70,6 @@ func (c *cryptohomeBinary) removeFile(ctx context.Context, filename string) erro
 	return err
 }
 
-// installAttributesGetStatus calls "cryptohome --action=install_attributes_get_status".
-func (c *cryptohomeBinary) installAttributesGetStatus(ctx context.Context) (string, error) {
-	out, err := c.call(ctx, "--action=install_attributes_get_status")
-	return string(out), err
-}
-
-// installAttributesGet calls "cryptohome --action=install_attributes_get".
-func (c *cryptohomeBinary) installAttributesGet(ctx context.Context, attributeName string) (string, error) {
-	out, err := c.call(ctx, "--action=install_attributes_get", "--name="+attributeName)
-	return string(out), err
-}
-
-// installAttributesSet calls "cryptohome --action=install_attributes_set".
-func (c *cryptohomeBinary) installAttributesSet(ctx context.Context, attributeName, attributeValue string) (string, error) {
-	out, err := c.call(ctx, "--action=install_attributes_set", "--name="+attributeName, "--value="+attributeValue)
-	return string(out), err
-}
-
-// installAttributesFinalize calls "cryptohome --action=install_attributes_finalize".
-func (c *cryptohomeBinary) installAttributesFinalize(ctx context.Context) (string, error) {
-	out, err := c.call(ctx, "--action=install_attributes_finalize")
-	return string(out), err
-}
-
-// installAttributesCount calls "cryptohome --action=install_attributes_count".
-func (c *cryptohomeBinary) installAttributesCount(ctx context.Context) (string, error) {
-	out, err := c.call(ctx, "--action=install_attributes_count")
-	return string(out), err
-}
-
-// installAttributesIsReady calls "cryptohome --action=install_attributes_is_ready".
-func (c *cryptohomeBinary) installAttributesIsReady(ctx context.Context) (string, error) {
-	out, err := c.call(ctx, "--action=install_attributes_is_ready")
-	return string(out), err
-}
-
-// installAttributesIsSecure calls "cryptohome --action=install_attributes_is_secure".
-func (c *cryptohomeBinary) installAttributesIsSecure(ctx context.Context) (string, error) {
-	out, err := c.call(ctx, "--action=install_attributes_is_secure")
-	return string(out), err
-}
-
-// installAttributesIsInvalid calls "cryptohome --action=install_attributes_is_invalid".
-func (c *cryptohomeBinary) installAttributesIsInvalid(ctx context.Context) (string, error) {
-	out, err := c.call(ctx, "--action=install_attributes_is_invalid")
-	return string(out), err
-}
-
-// installAttributesIsFirstInstall calls "cryptohome --action=install_attributes_is_first_install".
-func (c *cryptohomeBinary) installAttributesIsFirstInstall(ctx context.Context) (string, error) {
-	out, err := c.call(ctx, "--action=install_attributes_is_first_install")
-	return string(out), err
-}
-
 // isMounted calls "cryptohome --action=is_mounted".
 func (c *cryptohomeBinary) isMounted(ctx context.Context) ([]byte, error) {
 	return c.call(ctx, "--action=is_mounted")
@@ -193,21 +139,6 @@ func (c *cryptohomeBinary) pkcs11UserTokenInfo(ctx context.Context, username str
 // pkcs11Terminate calls "cryptohome --action=pkcs11_terminate"
 func (c *cryptohomeBinary) pkcs11Terminate(ctx context.Context, username string) ([]byte, error) {
 	return c.call(ctx, "--action=pkcs11_terminate", "--user="+username)
-}
-
-// getFirmwareManagementParameters calls "cryptohome --action=get_firmware_management_parameters".
-func (c *cryptohomeBinary) getFirmwareManagementParameters(ctx context.Context) ([]byte, error) {
-	return c.call(ctx, "--action=get_firmware_management_parameters")
-}
-
-// setFirmwareManagementParameters calls "cryptohome --action=set_firmware_management_parameters".
-func (c *cryptohomeBinary) setFirmwareManagementParameters(ctx context.Context, flags, hash string) ([]byte, error) {
-	return c.call(ctx, "--action=set_firmware_management_parameters", "--flags="+flags, "--developer_key_hash="+hash)
-}
-
-// removeFirmwareManagementParameters calls "cryptohome --action=remove_firmware_management_parameters".
-func (c *cryptohomeBinary) removeFirmwareManagementParameters(ctx context.Context) ([]byte, error) {
-	return c.call(ctx, "--action=remove_firmware_management_parameters")
 }
 
 // getAccountDiskUsage calls "cryptohome --action=get_account_disk_usage".
