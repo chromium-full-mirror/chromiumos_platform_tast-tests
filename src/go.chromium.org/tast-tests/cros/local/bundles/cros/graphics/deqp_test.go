@@ -9,6 +9,7 @@ package graphics
 
 import (
 	"bytes"
+	"strings"
 	"testing"
 	"text/template"
 	"time"
@@ -17,18 +18,19 @@ import (
 )
 
 type dEQPGenParamData struct {
-	Name       string        // Name of the subtest
-	Timeout    time.Duration // Timeout of the subtest or each fraction of the subtest.
-	Attr       []string      // Extra Attr for the subtest's test attribution
-	ShardCount int           // Number of fractions for the subtest. If none is set, it default to 1.
-	API        string        // string representation of graphics.APIType to run.
-	IsParallel bool          // If set, run with the parallel_runner.
-	IsSmoke    bool          // If set, run with the handpicked subset of tests.
-
-	HardwareModels []string // Models to run the test against.
+	Name           string        // Name of the subtest
+	Timeout        time.Duration // Timeout of the subtest or each fraction of the subtest.
+	Attr           []string      // Extra Attr for the subtest's test attribution
+	ShardCount     int           // Number of fractions for the subtest. If none is set, it default to 1.
+	API            string        // string representation of graphics.APIType to run.
+	IsParallel     bool          // If set, run with the parallel_runner.
+	IsSmoke        bool          // If set, run with the handpicked subset of tests.
+	HardwareModels []string      // Models to run the test against.
+	SkipGPUFamily  []string      // GPU Families to skip it on.
 
 	// The following should be autogen. Do not fill values.
-	ShardNum int // Index of the fractions for the subtest. Should only be generated.
+	ShardNum     int    // Index of the fractions for the subtest. Should only be generated.
+	HardwareDeps string // The formatted HardwareDeps string.
 }
 
 // This is selective models from each board. We tries to limit our deqp test run to these selective models to test running tast version of deqp in our lab whiling minimizing the impacts to others.
@@ -42,11 +44,9 @@ var selectiveModels = []string{
 	"ponyta",    // corsola
 	"boton",     // dedede
 	"drallion",  // drallion
-	"elm",       // elm
 	"sion",      // fizz
 	"ciri",      // geralt
 	"kasumi",    // grunt
-	"hana",      // hana
 	"kohaku",    // hatch
 	"cozmo",     // jacuzzi
 	"karma",     // kalista
@@ -76,6 +76,21 @@ func addTests(t *testing.T, p dEQPGenParamData) []dEQPGenParamData {
 		t.Fatalf("Failed to parse template: %v", err)
 	}
 
+	var deps []string
+	for _, ts := range []string{
+		`{{ if .HardwareModels }}hwdep.Model({{range $i := .HardwareModels }}{{$i|fmt}},{{end}}){{end}}`,
+		`{{ if .SkipGPUFamily }}hwdep.SkipGPUFamily({{range $i := .SkipGPUFamily }}{{$i|fmt}},{{end}}){{end}}`,
+	} {
+		condition := genparams.Template(t, ts, p)
+		if condition == "" {
+			continue
+		}
+		deps = append(deps, condition)
+	}
+	if len(deps) > 0 {
+		p.HardwareDeps = "hwdep.D(" + strings.Join(deps, ",") + ")"
+	}
+
 	for i := 0; i < p.ShardCount; i++ {
 		newParam := dEQPGenParamData{
 			Name:           p.Name,
@@ -87,6 +102,7 @@ func addTests(t *testing.T, p dEQPGenParamData) []dEQPGenParamData {
 			HardwareModels: p.HardwareModels,
 			ShardCount:     p.ShardCount,
 			ShardNum:       i + 1,
+			HardwareDeps:   p.HardwareDeps,
 		}
 		// Replace the name field
 		var tpl bytes.Buffer
@@ -132,6 +148,7 @@ func TestDEQPParams(t *testing.T) {
 		ShardCount:     20,
 		IsParallel:     true,
 		HardwareModels: selectiveModels,
+		SkipGPUFamily:  []string{"rogue"},
 	}, {
 		Name:       `gles2`,
 		Timeout:    30 * time.Minute,
@@ -186,8 +203,8 @@ func TestDEQPParams(t *testing.T) {
 		{{ if .Attr }}
 		ExtraAttr: {{ .Attr | fmt }},
 		{{ end }}
-		{{ if .HardwareModels }}
-		ExtraHardwareDeps: hwdep.D(hwdep.Model({{ range $val := .HardwareModels }}{{$val|fmt}},{{ end }})),
+		{{ if .HardwareDeps }}
+		ExtraHardwareDeps: {{ .HardwareDeps }},
 		{{ end }}
 		Val: deqpParams {
 			{{ if .API }} api: {{ .API }}, {{ end }}
