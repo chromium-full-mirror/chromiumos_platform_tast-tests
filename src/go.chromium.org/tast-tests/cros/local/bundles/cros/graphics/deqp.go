@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/graphics"
 	"go.chromium.org/tast-tests/cros/local/graphics/deqprunner"
@@ -698,12 +699,25 @@ func deqpParallel(ctx context.Context, s *testing.State, opts deqpParams) {
 	command.Env = deqpEnv
 	s.Log("Running command: ", command.Args)
 	stdout, stderr, err := command.SeparatedOutput(testexec.DumpLogOnError)
-	if stdout != nil {
-		s.Logf("DEQP output : %s ", string(stdout))
-	}
+	s.Logf("DEQP stdout: %s ", string(stdout))
+	// Test failed, we have to parse the result from the failures.csv.
 	if err != nil {
-		s.Fatalf("Failed to run deqp-runner %s : %s ", string(stderr), err)
+		s.Log("DEQP stderr: ", string(stderr))
+		result, parseErr := deqprunner.Parse(deqpLogDir)
+		if parseErr != nil {
+			s.Fatal("Failed to run deqp-runner ", errors.Wrap(parseErr, err.Error()))
+		}
+		// Report the number of failures
+		pv := perf.NewValues()
+		pv.Set(perf.Metric{
+			Name:      "failures",
+			Unit:      "count",
+			Direction: perf.SmallerIsBetter,
+		}, float64(len(result.Failures)))
+		defer pv.Save(s.OutDir())
+		s.Fatal(result.Summary)
 	}
+	return
 }
 
 func DEQP(ctx context.Context, s *testing.State) {
