@@ -38,7 +38,8 @@ func init() {
 			"chromeos-fwupd@google.com",  // Owning team mailing list
 			"denis.pynkin@collabora.com", // Optional test contact
 		},
-		Attr:         []string{"group:mainline", "informational"},
+		// Do not schedule this in the lab; it is only for local use.
+		Attr:         []string{},
 		SoftwareDeps: []string{"fwupd"},
 		Vars: []string{
 			"fwupd.deviceId",
