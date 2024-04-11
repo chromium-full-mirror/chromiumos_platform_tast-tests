@@ -235,7 +235,7 @@ func RunAccelVideoTestWithTestVectors(ctx context.Context, outDir string, testVe
 // The test binary is run twice. The first time the test is run in isolation,
 // creating its own output JSON file. The second time it's run cyclically to
 // measure system wide metrics (e.g. CPU usage, power consumption).
-func RunAccelVideoPerfTest(ctx context.Context, outDir, filename string, parameters TestParams) error {
+func RunAccelVideoPerfTest(ctx context.Context, outDir, filename string, parameters TestParams, enabledFeatures []string) error {
 	const (
 		// Binary name.
 		exec = "video_decode_accelerator_perf_tests"
@@ -281,6 +281,9 @@ func RunAccelVideoPerfTest(ctx context.Context, outDir, filename string, paramet
 		testing.ContextLogf(ctx, "Running %s", test.gTestName)
 
 		args := generateCmdArgs(outDir, filename, parameters)
+		if len(enabledFeatures) > 0 {
+			args = append(args, "--enable-features="+strings.Join(enabledFeatures, `,`))
+		}
 		if report, err := runAccelVideoTestCmd(ctx, exec,
 			fmt.Sprintf("*%s", test.gTestName),
 			filepath.Join(outDir, exec+"."+test.gTestName+".log"), args); err != nil {

@@ -19,6 +19,7 @@ type chromeStackDecoderPerfParams struct {
 	dataPath                  string
 	disableGlobalVaapiLock    bool
 	runConcurrentDecodersOnly bool
+	enabledFeatures           []string
 }
 
 func init() {
@@ -44,6 +45,7 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/av1/1080p_30fps_300frames.av1.ivf",
 					runConcurrentDecodersOnly: false,
+					enabledFeatures:           []string{},
 				},
 				Timeout:           2 * time.Minute,
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_av1_1080_30"},
@@ -55,6 +57,7 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/av1/1080p_60fps_600frames.av1.ivf",
 					runConcurrentDecodersOnly: false,
+					enabledFeatures:           []string{},
 				},
 				Timeout:           2 * time.Minute,
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_av1_1080_60"},
@@ -66,6 +69,7 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/av1/2160p_30fps_300frames.av1.ivf",
 					runConcurrentDecodersOnly: false,
+					enabledFeatures:           []string{},
 				},
 				Timeout:           4 * time.Minute,
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_av1_2160_30"},
@@ -77,6 +81,7 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/av1/2160p_60fps_600frames.av1.ivf",
 					runConcurrentDecodersOnly: false,
+					enabledFeatures:           []string{},
 				},
 				Timeout:           4 * time.Minute,
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_av1_2160_60"},
@@ -88,6 +93,7 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/h264/1080p_30fps_300frames.h264",
 					runConcurrentDecodersOnly: false,
+					enabledFeatures:           []string{},
 				},
 				Timeout:           2 * time.Minute,
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_h264_1080_30", "proprietary_codecs"},
@@ -99,6 +105,7 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/h264/1080p_60fps_600frames.h264",
 					runConcurrentDecodersOnly: false,
+					enabledFeatures:           []string{},
 				},
 				Timeout:           2 * time.Minute,
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_h264_1080_60", "proprietary_codecs"},
@@ -110,6 +117,7 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/h264/2160p_30fps_300frames.h264",
 					runConcurrentDecodersOnly: false,
+					enabledFeatures:           []string{},
 				},
 				Timeout:           4 * time.Minute,
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_h264_2160_30", "proprietary_codecs"},
@@ -121,6 +129,7 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/h264/2160p_60fps_600frames.h264",
 					runConcurrentDecodersOnly: false,
+					enabledFeatures:           []string{},
 				},
 				Timeout:           4 * time.Minute,
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_h264_2160_60", "proprietary_codecs"},
@@ -132,6 +141,7 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/hevc/1080p_30fps_300frames.hevc",
 					runConcurrentDecodersOnly: false,
+					enabledFeatures:           []string{},
 				},
 				Timeout:           2 * time.Minute,
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_hevc_1080_30", "proprietary_codecs"},
@@ -143,6 +153,7 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/hevc/1080p_60fps_600frames.hevc",
 					runConcurrentDecodersOnly: false,
+					enabledFeatures:           []string{},
 				},
 				Timeout:           2 * time.Minute,
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_hevc_1080_60", "proprietary_codecs"},
@@ -154,6 +165,7 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/hevc/2160p_30fps_300frames.hevc",
 					runConcurrentDecodersOnly: false,
+					enabledFeatures:           []string{},
 				},
 				Timeout:           4 * time.Minute,
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_hevc_2160_30", "proprietary_codecs"},
@@ -165,6 +177,7 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/hevc/2160p_60fps_600frames.hevc",
 					runConcurrentDecodersOnly: false,
+					enabledFeatures:           []string{},
 				},
 				Timeout:           4 * time.Minute,
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_hevc_2160_60", "proprietary_codecs"},
@@ -176,6 +189,7 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/vp8/1080p_30fps_300frames.vp8.ivf",
 					runConcurrentDecodersOnly: false,
+					enabledFeatures:           []string{},
 				},
 				Timeout:           2 * time.Minute,
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp8_1080_30"},
@@ -187,6 +201,7 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/vp8/1080p_60fps_600frames.vp8.ivf",
 					runConcurrentDecodersOnly: false,
+					enabledFeatures:           []string{},
 				},
 				Timeout:           2 * time.Minute,
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp8_1080_60"},
@@ -198,6 +213,7 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/vp8/2160p_30fps_300frames.vp8.ivf",
 					runConcurrentDecodersOnly: false,
+					enabledFeatures:           []string{},
 				},
 				Timeout:           4 * time.Minute,
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp8_2160_30"},
@@ -209,6 +225,7 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/vp8/2160p_60fps_600frames.vp8.ivf",
 					runConcurrentDecodersOnly: false,
+					enabledFeatures:           []string{},
 				},
 				Timeout:           4 * time.Minute,
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp8_2160_60"},
@@ -220,6 +237,7 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/vp9/1080p_30fps_300frames.vp9.ivf",
 					runConcurrentDecodersOnly: false,
+					enabledFeatures:           []string{},
 				},
 				Timeout:           2 * time.Minute,
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_1080_30"},
@@ -231,6 +249,7 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/vp9/1080p_60fps_600frames.vp9.ivf",
 					runConcurrentDecodersOnly: false,
+					enabledFeatures:           []string{},
 				},
 				Timeout:           2 * time.Minute,
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_1080_60"},
@@ -242,6 +261,7 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/vp9/2160p_30fps_300frames.vp9.ivf",
 					runConcurrentDecodersOnly: false,
+					enabledFeatures:           []string{},
 				},
 				Timeout:           4 * time.Minute,
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_2160_30"},
@@ -253,9 +273,250 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/vp9/2160p_60fps_600frames.vp9.ivf",
 					runConcurrentDecodersOnly: false,
+					enabledFeatures:           []string{},
 				},
 				Timeout:           4 * time.Minute,
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_2160_60"},
+				ExtraData:         []string{"perf/vp9/2160p_60fps_600frames.vp9.ivf", "perf/vp9/2160p_60fps_600frames.vp9.ivf.json"},
+				ExtraAttr:         []string{"graphics_video_decodeaccel"},
+			},
+			{
+				Name: "v4l2_flat_av1_1080p_30fps",
+				Val: chromeStackDecoderPerfParams{
+					dataPath:                  "perf/av1/1080p_30fps_300frames.av1.ivf",
+					runConcurrentDecodersOnly: false,
+					enabledFeatures:           []string{"V4L2FlatVideoDecoder"},
+				},
+				Timeout:           2 * time.Minute,
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_av1_1080_30", "v4l2_codec"},
+				ExtraData:         []string{"perf/av1/1080p_30fps_300frames.av1.ivf", "perf/av1/1080p_30fps_300frames.av1.ivf.json"},
+				ExtraAttr:         []string{"graphics_video_decodeaccel"},
+			},
+			{
+				Name: "v4l2_flat_av1_1080p_60fps",
+				Val: chromeStackDecoderPerfParams{
+					dataPath:                  "perf/av1/1080p_60fps_600frames.av1.ivf",
+					runConcurrentDecodersOnly: false,
+					enabledFeatures:           []string{"V4L2FlatVideoDecoder"},
+				},
+				Timeout:           2 * time.Minute,
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_av1_1080_60", "v4l2_codec"},
+				ExtraData:         []string{"perf/av1/1080p_60fps_600frames.av1.ivf", "perf/av1/1080p_60fps_600frames.av1.ivf.json"},
+				ExtraAttr:         []string{"graphics_video_decodeaccel"},
+			},
+			{
+				Name: "v4l2_flat_av1_2160p_30fps",
+				Val: chromeStackDecoderPerfParams{
+					dataPath:                  "perf/av1/2160p_30fps_300frames.av1.ivf",
+					runConcurrentDecodersOnly: false,
+					enabledFeatures:           []string{"V4L2FlatVideoDecoder"},
+				},
+				Timeout:           4 * time.Minute,
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_av1_2160_30", "v4l2_codec"},
+				ExtraData:         []string{"perf/av1/2160p_30fps_300frames.av1.ivf", "perf/av1/2160p_30fps_300frames.av1.ivf.json"},
+				ExtraAttr:         []string{"graphics_video_decodeaccel"},
+			},
+			{
+				Name: "v4l2_flat_av1_2160p_60fps",
+				Val: chromeStackDecoderPerfParams{
+					dataPath:                  "perf/av1/2160p_60fps_600frames.av1.ivf",
+					runConcurrentDecodersOnly: false,
+					enabledFeatures:           []string{"V4L2FlatVideoDecoder"},
+				},
+				Timeout:           4 * time.Minute,
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_av1_2160_60", "v4l2_codec"},
+				ExtraData:         []string{"perf/av1/2160p_60fps_600frames.av1.ivf", "perf/av1/2160p_60fps_600frames.av1.ivf.json"},
+				ExtraAttr:         []string{"graphics_video_decodeaccel"},
+			},
+			{
+				Name: "v4l2_flat_h264_1080p_30fps",
+				Val: chromeStackDecoderPerfParams{
+					dataPath:                  "perf/h264/1080p_30fps_300frames.h264",
+					runConcurrentDecodersOnly: false,
+					enabledFeatures:           []string{"V4L2FlatVideoDecoder"},
+				},
+				Timeout:           2 * time.Minute,
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_h264_1080_30", "proprietary_codecs", "v4l2_codec"},
+				ExtraData:         []string{"perf/h264/1080p_30fps_300frames.h264", "perf/h264/1080p_30fps_300frames.h264.json"},
+				ExtraAttr:         []string{"graphics_video_decodeaccel"},
+			},
+			{
+				Name: "v4l2_flat_h264_1080p_60fps",
+				Val: chromeStackDecoderPerfParams{
+					dataPath:                  "perf/h264/1080p_60fps_600frames.h264",
+					runConcurrentDecodersOnly: false,
+					enabledFeatures:           []string{"V4L2FlatVideoDecoder"},
+				},
+				Timeout:           2 * time.Minute,
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_h264_1080_60", "proprietary_codecs", "v4l2_codec"},
+				ExtraData:         []string{"perf/h264/1080p_60fps_600frames.h264", "perf/h264/1080p_60fps_600frames.h264.json"},
+				ExtraAttr:         []string{"graphics_video_decodeaccel"},
+			},
+			{
+				Name: "v4l2_flat_h264_2160p_30fps",
+				Val: chromeStackDecoderPerfParams{
+					dataPath:                  "perf/h264/2160p_30fps_300frames.h264",
+					runConcurrentDecodersOnly: false,
+					enabledFeatures:           []string{"V4L2FlatVideoDecoder"},
+				},
+				Timeout:           4 * time.Minute,
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_h264_2160_30", "proprietary_codecs", "v4l2_codec"},
+				ExtraData:         []string{"perf/h264/2160p_30fps_300frames.h264", "perf/h264/2160p_30fps_300frames.h264.json"},
+				ExtraAttr:         []string{"graphics_video_decodeaccel"},
+			},
+			{
+				Name: "v4l2_flat_h264_2160p_60fps",
+				Val: chromeStackDecoderPerfParams{
+					dataPath:                  "perf/h264/2160p_60fps_600frames.h264",
+					runConcurrentDecodersOnly: false,
+					enabledFeatures:           []string{"V4L2FlatVideoDecoder"},
+				},
+				Timeout:           4 * time.Minute,
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_h264_2160_60", "proprietary_codecs", "v4l2_codec"},
+				ExtraData:         []string{"perf/h264/2160p_60fps_600frames.h264", "perf/h264/2160p_60fps_600frames.h264.json"},
+				ExtraAttr:         []string{"graphics_video_decodeaccel"},
+			},
+			{
+				Name: "v4l2_flat_hevc_1080p_30fps",
+				Val: chromeStackDecoderPerfParams{
+					dataPath:                  "perf/hevc/1080p_30fps_300frames.hevc",
+					runConcurrentDecodersOnly: false,
+					enabledFeatures:           []string{"V4L2FlatVideoDecoder"},
+				},
+				Timeout:           2 * time.Minute,
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_hevc_1080_30", "proprietary_codecs", "v4l2_codec"},
+				ExtraData:         []string{"perf/hevc/1080p_30fps_300frames.hevc", "perf/hevc/1080p_30fps_300frames.hevc.json"},
+				ExtraAttr:         []string{"graphics_video_decodeaccel"},
+			},
+			{
+				Name: "v4l2_flat_hevc_1080p_60fps",
+				Val: chromeStackDecoderPerfParams{
+					dataPath:                  "perf/hevc/1080p_60fps_600frames.hevc",
+					runConcurrentDecodersOnly: false,
+					enabledFeatures:           []string{"V4L2FlatVideoDecoder"},
+				},
+				Timeout:           2 * time.Minute,
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_hevc_1080_60", "proprietary_codecs", "v4l2_codec"},
+				ExtraData:         []string{"perf/hevc/1080p_60fps_600frames.hevc", "perf/hevc/1080p_60fps_600frames.hevc.json"},
+				ExtraAttr:         []string{"graphics_video_decodeaccel"},
+			},
+			{
+				Name: "v4l2_flat_hevc_2160p_30fps",
+				Val: chromeStackDecoderPerfParams{
+					dataPath:                  "perf/hevc/2160p_30fps_300frames.hevc",
+					runConcurrentDecodersOnly: false,
+					enabledFeatures:           []string{"V4L2FlatVideoDecoder"},
+				},
+				Timeout:           4 * time.Minute,
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_hevc_2160_30", "proprietary_codecs", "v4l2_codec"},
+				ExtraData:         []string{"perf/hevc/2160p_30fps_300frames.hevc", "perf/hevc/2160p_30fps_300frames.hevc.json"},
+				ExtraAttr:         []string{"graphics_video_decodeaccel"},
+			},
+			{
+				Name: "v4l2_flat_hevc_2160p_60fps",
+				Val: chromeStackDecoderPerfParams{
+					dataPath:                  "perf/hevc/2160p_60fps_600frames.hevc",
+					runConcurrentDecodersOnly: false,
+					enabledFeatures:           []string{"V4L2FlatVideoDecoder"},
+				},
+				Timeout:           4 * time.Minute,
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_hevc_2160_60", "proprietary_codecs", "v4l2_codec"},
+				ExtraData:         []string{"perf/hevc/2160p_60fps_600frames.hevc", "perf/hevc/2160p_60fps_600frames.hevc.json"},
+				ExtraAttr:         []string{"graphics_video_decodeaccel"},
+			},
+			{
+				Name: "v4l2_flat_vp8_1080p_30fps",
+				Val: chromeStackDecoderPerfParams{
+					dataPath:                  "perf/vp8/1080p_30fps_300frames.vp8.ivf",
+					runConcurrentDecodersOnly: false,
+					enabledFeatures:           []string{"V4L2FlatVideoDecoder"},
+				},
+				Timeout:           2 * time.Minute,
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp8_1080_30", "v4l2_codec"},
+				ExtraData:         []string{"perf/vp8/1080p_30fps_300frames.vp8.ivf", "perf/vp8/1080p_30fps_300frames.vp8.ivf.json"},
+				ExtraAttr:         []string{"graphics_video_decodeaccel"},
+			},
+			{
+				Name: "v4l2_flat_vp8_1080p_60fps",
+				Val: chromeStackDecoderPerfParams{
+					dataPath:                  "perf/vp8/1080p_60fps_600frames.vp8.ivf",
+					runConcurrentDecodersOnly: false,
+					enabledFeatures:           []string{"V4L2FlatVideoDecoder"},
+				},
+				Timeout:           2 * time.Minute,
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp8_1080_60", "v4l2_codec"},
+				ExtraData:         []string{"perf/vp8/1080p_60fps_600frames.vp8.ivf", "perf/vp8/1080p_60fps_600frames.vp8.ivf.json"},
+				ExtraAttr:         []string{"graphics_video_decodeaccel"},
+			},
+			{
+				Name: "v4l2_flat_vp8_2160p_30fps",
+				Val: chromeStackDecoderPerfParams{
+					dataPath:                  "perf/vp8/2160p_30fps_300frames.vp8.ivf",
+					runConcurrentDecodersOnly: false,
+					enabledFeatures:           []string{"V4L2FlatVideoDecoder"},
+				},
+				Timeout:           4 * time.Minute,
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp8_2160_30", "v4l2_codec"},
+				ExtraData:         []string{"perf/vp8/2160p_30fps_300frames.vp8.ivf", "perf/vp8/2160p_30fps_300frames.vp8.ivf.json"},
+				ExtraAttr:         []string{"graphics_video_decodeaccel"},
+			},
+			{
+				Name: "v4l2_flat_vp8_2160p_60fps",
+				Val: chromeStackDecoderPerfParams{
+					dataPath:                  "perf/vp8/2160p_60fps_600frames.vp8.ivf",
+					runConcurrentDecodersOnly: false,
+					enabledFeatures:           []string{"V4L2FlatVideoDecoder"},
+				},
+				Timeout:           4 * time.Minute,
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp8_2160_60", "v4l2_codec"},
+				ExtraData:         []string{"perf/vp8/2160p_60fps_600frames.vp8.ivf", "perf/vp8/2160p_60fps_600frames.vp8.ivf.json"},
+				ExtraAttr:         []string{"graphics_video_decodeaccel"},
+			},
+			{
+				Name: "v4l2_flat_vp9_1080p_30fps",
+				Val: chromeStackDecoderPerfParams{
+					dataPath:                  "perf/vp9/1080p_30fps_300frames.vp9.ivf",
+					runConcurrentDecodersOnly: false,
+					enabledFeatures:           []string{"V4L2FlatVideoDecoder"},
+				},
+				Timeout:           2 * time.Minute,
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_1080_30", "v4l2_codec"},
+				ExtraData:         []string{"perf/vp9/1080p_30fps_300frames.vp9.ivf", "perf/vp9/1080p_30fps_300frames.vp9.ivf.json"},
+				ExtraAttr:         []string{"graphics_video_decodeaccel"},
+			},
+			{
+				Name: "v4l2_flat_vp9_1080p_60fps",
+				Val: chromeStackDecoderPerfParams{
+					dataPath:                  "perf/vp9/1080p_60fps_600frames.vp9.ivf",
+					runConcurrentDecodersOnly: false,
+					enabledFeatures:           []string{"V4L2FlatVideoDecoder"},
+				},
+				Timeout:           2 * time.Minute,
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_1080_60", "v4l2_codec"},
+				ExtraData:         []string{"perf/vp9/1080p_60fps_600frames.vp9.ivf", "perf/vp9/1080p_60fps_600frames.vp9.ivf.json"},
+				ExtraAttr:         []string{"graphics_video_decodeaccel"},
+			},
+			{
+				Name: "v4l2_flat_vp9_2160p_30fps",
+				Val: chromeStackDecoderPerfParams{
+					dataPath:                  "perf/vp9/2160p_30fps_300frames.vp9.ivf",
+					runConcurrentDecodersOnly: false,
+					enabledFeatures:           []string{"V4L2FlatVideoDecoder"},
+				},
+				Timeout:           4 * time.Minute,
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_2160_30", "v4l2_codec"},
+				ExtraData:         []string{"perf/vp9/2160p_30fps_300frames.vp9.ivf", "perf/vp9/2160p_30fps_300frames.vp9.ivf.json"},
+				ExtraAttr:         []string{"graphics_video_decodeaccel"},
+			},
+			{
+				Name: "v4l2_flat_vp9_2160p_60fps",
+				Val: chromeStackDecoderPerfParams{
+					dataPath:                  "perf/vp9/2160p_60fps_600frames.vp9.ivf",
+					runConcurrentDecodersOnly: false,
+					enabledFeatures:           []string{"V4L2FlatVideoDecoder"},
+				},
+				Timeout:           4 * time.Minute,
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_2160_60", "v4l2_codec"},
 				ExtraData:         []string{"perf/vp9/2160p_60fps_600frames.vp9.ivf", "perf/vp9/2160p_60fps_600frames.vp9.ivf.json"},
 				ExtraAttr:         []string{"graphics_video_decodeaccel"},
 			},
@@ -264,6 +525,7 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/av1/1080p_60fps_600frames.av1.ivf",
 					runConcurrentDecodersOnly: true,
+					enabledFeatures:           []string{},
 				},
 				Timeout:           2 * time.Minute,
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_av1_1080_60", "thread_safe_libva_backend"},
@@ -275,6 +537,7 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/h264/1080p_60fps_600frames.h264",
 					runConcurrentDecodersOnly: true,
+					enabledFeatures:           []string{},
 				},
 				Timeout:           2 * time.Minute,
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_h264_1080_60", "proprietary_codecs", "thread_safe_libva_backend"},
@@ -286,6 +549,7 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/hevc/1080p_60fps_600frames.hevc",
 					runConcurrentDecodersOnly: true,
+					enabledFeatures:           []string{},
 				},
 				Timeout:           2 * time.Minute,
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_hevc_1080_60", "proprietary_codecs", "thread_safe_libva_backend"},
@@ -297,6 +561,7 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/vp8/1080p_60fps_600frames.vp8.ivf",
 					runConcurrentDecodersOnly: true,
+					enabledFeatures:           []string{},
 				},
 				Timeout:           2 * time.Minute,
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp8_1080_60", "thread_safe_libva_backend"},
@@ -308,6 +573,7 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/vp9/1080p_60fps_600frames.vp9.ivf",
 					runConcurrentDecodersOnly: true,
+					enabledFeatures:           []string{},
 				},
 				Timeout:           2 * time.Minute,
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_1080_60", "thread_safe_libva_backend"},
@@ -329,7 +595,7 @@ func ChromeStackDecoderPerf(ctx context.Context, s *testing.State) {
 		processedParam.TestCases = decoding.CappedFlag | decoding.UncappedFlag
 	}
 
-	if err := decoding.RunAccelVideoPerfTest(ctx, s.OutDir(), s.DataPath(param.dataPath), processedParam); err != nil {
+	if err := decoding.RunAccelVideoPerfTest(ctx, s.OutDir(), s.DataPath(param.dataPath), processedParam, param.enabledFeatures); err != nil {
 		s.Fatal("test failed: ", err)
 	}
 }

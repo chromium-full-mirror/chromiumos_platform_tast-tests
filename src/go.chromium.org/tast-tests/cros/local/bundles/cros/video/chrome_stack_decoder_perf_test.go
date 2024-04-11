@@ -6,6 +6,7 @@ package video
 
 import (
 	"fmt"
+	"sort"
 	"testing"
 	"time"
 
@@ -50,31 +51,53 @@ func TestChromeStackDecoderPerfParams(t *testing.T) {
 		Metadata           []string
 		Attr               []string
 		Timeout            time.Duration
+		EnabledFeatures    []string
 	}
 	const defaultTimeout = 2 * time.Minute
 
 	var params []paramData
 
+	groups := map[string]paramData{
+		"": paramData{},
+		"v4l2_flat_": paramData{
+			SoftwareDeps:    []string{"v4l2_codec"},
+			EnabledFeatures: []string{"V4L2FlatVideoDecoder"},
+		},
+	}
+
+	// Sort the keys because map traversal is not deterministic.
+	groupsKeys := make([]string, 0, len(groups))
+	for k := range groups {
+		groupsKeys = append(groupsKeys, k)
+	}
+	sort.Strings(groupsKeys)
+
 	var codecs = []string{"av1", "h264", "hevc", "vp8", "vp9"}
 	var resolutions = []string{"1080", "2160"}
 	var frameRates = []string{"30", "60"}
-	for _, codec := range codecs {
-		for _, resolution := range resolutions {
-			for _, frameRate := range frameRates {
-				dataPath := genDataPath(codec, resolution, frameRate)
-				param := paramData{
-					Name:         fmt.Sprintf("%s_%sp_%sfps", codec, resolution, frameRate),
-					File:         dataPath,
-					SoftwareDeps: fillSwDeps(codec, resolution, frameRate),
-					Metadata:     []string{dataPath, dataPath + ".json"},
-					Attr:         []string{"graphics_video_decodeaccel"},
+	for _, groupPrefix := range groupsKeys {
+		groupParam := groups[groupPrefix]
+		for _, codec := range codecs {
+			for _, resolution := range resolutions {
+				for _, frameRate := range frameRates {
+					dataPath := genDataPath(codec, resolution, frameRate)
+					param := paramData{
+						Name:         fmt.Sprintf("%s%s_%sp_%sfps", groupPrefix, codec, resolution, frameRate),
+						File:         dataPath,
+						SoftwareDeps: fillSwDeps(codec, resolution, frameRate),
+						Metadata:     []string{dataPath, dataPath + ".json"},
+						Attr:         []string{"graphics_video_decodeaccel"},
+					}
+					if resolution == "2160" {
+						param.Timeout = 4 * time.Minute
+					} else {
+						param.Timeout = defaultTimeout
+					}
+					param.EnabledFeatures = append(param.EnabledFeatures, groupParam.EnabledFeatures...)
+					param.SoftwareDeps = append(param.SoftwareDeps, groupParam.SoftwareDeps...)
+
+					params = append(params, param)
 				}
-				if resolution == "2160" {
-					param.Timeout = 4 * time.Minute
-				} else {
-					param.Timeout = defaultTimeout
-				}
-				params = append(params, param)
 			}
 		}
 	}
@@ -102,6 +125,7 @@ func TestChromeStackDecoderPerfParams(t *testing.T) {
 		Val:  chromeStackDecoderPerfParams{
 			dataPath: {{ .File | fmt }},
 			runConcurrentDecodersOnly: {{ .ConcurrentDecoders | fmt }},
+			enabledFeatures: {{ .EnabledFeatures | fmt }},
 		},
 		Timeout: {{ .Timeout | fmt }},
 		{{ if .SoftwareDeps }}
