@@ -40,6 +40,7 @@ import (
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/nearbyshare"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/network"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/network/allowlist"
+	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/networkui"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/osinstall"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/platform"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/policy"

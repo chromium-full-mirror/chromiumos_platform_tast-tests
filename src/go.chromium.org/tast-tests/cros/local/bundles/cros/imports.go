@@ -92,6 +92,7 @@ import (
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/netperf"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/network"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/network/shill"
+	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/networkui"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/notifications"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/ocr"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/oobe"

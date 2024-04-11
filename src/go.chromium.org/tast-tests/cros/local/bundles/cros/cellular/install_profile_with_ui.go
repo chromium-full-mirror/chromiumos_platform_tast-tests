@@ -16,7 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/hermes"
-	"go.chromium.org/tast-tests/cros/local/network/netconfig"
+	"go.chromium.org/tast-tests/cros/local/networkui/netconfig"
 	"go.chromium.org/tast-tests/cros/local/stork"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"

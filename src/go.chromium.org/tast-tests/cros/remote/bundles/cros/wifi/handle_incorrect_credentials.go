@@ -25,7 +25,7 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/wificell"
 	"go.chromium.org/tast-tests/cros/remote/wificell/hostapd"
 	"go.chromium.org/tast-tests/cros/services/cros/chrome/uiauto/quicksettings"
-	"go.chromium.org/tast-tests/cros/services/cros/network"
+	"go.chromium.org/tast-tests/cros/services/cros/networkui"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
 )
 
@@ -80,7 +80,7 @@ func init() {
 			wificell.ShillServiceName,
 			"tast.cros.browser.ChromeService",
 			"tast.cros.browser.LacrosService",
-			"tast.cros.network.CertificateService",
+			"tast.cros.networkui.CertificateService",
 			wifiutil.FaillogServiceName,
 		),
 		SoftwareDeps: []string{"chrome"},
@@ -263,10 +263,10 @@ func HandleIncorrectCredentials(ctx context.Context, s *testing.State) {
 
 	// The certificates couldn't be imported on OOBE, and the Certificates Manager is only available when DUT is logged in.
 	if isLoggedIn {
-		certSvc := network.NewCertificateServiceClient(rpcClient.Conn)
-		if _, err := certSvc.Init(ctx, &network.InitRequest{
+		certSvc := networkui.NewCertificateServiceClient(rpcClient.Conn)
+		if _, err := certSvc.Init(ctx, &networkui.InitRequest{
 			IsLacros: isLacros,
-			InitType: network.InitRequest_LAUNCH,
+			InitType: networkui.InitRequest_LAUNCH,
 		}); err != nil {
 			s.Fatal("Failed to set up resource and launch the certificates manager: ", err)
 		}
@@ -300,7 +300,7 @@ func HandleIncorrectCredentials(ctx context.Context, s *testing.State) {
 
 // importCerts imports the CA and client certificates of certificate.TestCert2() to the DUT,
 // and returns a cleanup function to remove them.
-func importCerts(ctx context.Context, certSvc network.CertificateServiceClient, dutConn *ssh.Conn) (cleanup func(context.Context) error, retErr error) {
+func importCerts(ctx context.Context, certSvc networkui.CertificateServiceClient, dutConn *ssh.Conn) (cleanup func(context.Context) error, retErr error) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second+deleteCertTimeout)
 	defer cancel()
@@ -321,12 +321,12 @@ func importCerts(ctx context.Context, certSvc network.CertificateServiceClient, 
 	}
 	defer cleanUpClientCert(cleanupCtx)
 
-	caImportReq := &network.ImportRequest{
-		ImportDetail: &network.ImportRequest_Ca{
-			Ca: &network.ImportRequest_CaImportDetail{},
+	caImportReq := &networkui.ImportRequest{
+		ImportDetail: &networkui.ImportRequest_Ca{
+			Ca: &networkui.ImportRequest_CaImportDetail{},
 		},
-		Certificate: &network.Certificate{
-			Type: network.Certificate_CA,
+		Certificate: &networkui.Certificate{
+			Type: networkui.Certificate_CA,
 			Name: certificate.TestCert2().CACred.Info.CommonName,
 			// Organization info isn't available in this certs, ChromeOS will use its common name instead.
 			Organization: certificate.TestCert2().CACred.Info.CommonName,
@@ -342,14 +342,14 @@ func importCerts(ctx context.Context, certSvc network.CertificateServiceClient, 
 		}
 	}(cleanupCtx)
 
-	clientImportReq := &network.ImportRequest{
-		ImportDetail: &network.ImportRequest_Client{
-			Client: &network.ImportRequest_ClientImportDetail{
-				ImportType: network.ImportRequest_ClientImportDetail_IMPORT_AND_BIND,
+	clientImportReq := &networkui.ImportRequest{
+		ImportDetail: &networkui.ImportRequest_Client{
+			Client: &networkui.ImportRequest_ClientImportDetail{
+				ImportType: networkui.ImportRequest_ClientImportDetail_IMPORT_AND_BIND,
 			},
 		},
-		Certificate: &network.Certificate{
-			Type: network.Certificate_CLIENT,
+		Certificate: &networkui.Certificate{
+			Type: networkui.Certificate_CLIENT,
 			Name: certificate.TestCert2().ClientCred.Info.CommonName,
 			// Organization info isn't available in this certs, ChromeOS will use its common name instead.
 			Organization: certificate.TestCert2().ClientCred.Info.CommonName,

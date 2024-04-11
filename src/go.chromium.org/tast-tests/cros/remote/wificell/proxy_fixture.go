@@ -11,7 +11,7 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/protobuf/types/known/emptypb"
 
-	"go.chromium.org/tast-tests/cros/services/cros/network"
+	"go.chromium.org/tast-tests/cros/services/cros/networkui"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -26,7 +26,7 @@ const (
 	// ProxyFixtServiceDepsChromeBrowser is the service needed for proxyFixtureImpl.
 	ProxyFixtServiceDepsChromeBrowser = "tast.cros.browser.ChromeService"
 	// ProxyFixtServiceDepsProxySetting is the service needed for proxyFixtureImpl.
-	ProxyFixtServiceDepsProxySetting = "tast.cros.network.ProxySettingService"
+	ProxyFixtServiceDepsProxySetting = "tast.cros.networkui.ProxySettingService"
 
 	// Boot the DUT then log in could takes up to 90 seconds.
 	loginTimeout = 90 * time.Second
@@ -76,10 +76,10 @@ func init() {
 }
 
 // DefaultProxyConfig returns a default proxy config for manual proxy configuration.
-func DefaultProxyConfig(ssid string) *network.ProxyConfigs {
-	return &network.ProxyConfigs{
-		NetworkInfo:         &network.NetworkInfo{Value: &network.NetworkInfo_WifiSsid{WifiSsid: ssid}},
-		ProxyConnectionType: network.ProxyConnectionType_ManualProxyConfiguration,
+func DefaultProxyConfig(ssid string) *networkui.ProxyConfigs {
+	return &networkui.ProxyConfigs{
+		NetworkInfo:         &networkui.NetworkInfo{Value: &networkui.NetworkInfo_WifiSsid{WifiSsid: ssid}},
+		ProxyConnectionType: networkui.ProxyConnectionType_ManualProxyConfiguration,
 		HttpHost:            "localhost",
 		HttpPort:            "123",
 		HttpsHost:           "localhost",
@@ -89,11 +89,11 @@ func DefaultProxyConfig(ssid string) *network.ProxyConfigs {
 	}
 }
 
-// DefaultProxyConfigForEthernet returns a default proxy config for manual proxy configuration on Ethernet network.
-func DefaultProxyConfigForEthernet() *network.ProxyConfigs {
-	return &network.ProxyConfigs{
-		NetworkInfo:         &network.NetworkInfo{Value: &network.NetworkInfo_Ethernet{}},
-		ProxyConnectionType: network.ProxyConnectionType_ManualProxyConfiguration,
+// DefaultProxyConfigForEthernet returns a default proxy config for manual proxy configuration on Ethernet networkui.
+func DefaultProxyConfigForEthernet() *networkui.ProxyConfigs {
+	return &networkui.ProxyConfigs{
+		NetworkInfo:         &networkui.NetworkInfo{Value: &networkui.NetworkInfo_Ethernet{}},
+		ProxyConnectionType: networkui.ProxyConnectionType_ManualProxyConfiguration,
 		HttpHost:            "localhost",
 		HttpPort:            "123",
 		HttpsHost:           "localhost",
@@ -107,7 +107,7 @@ func DefaultProxyConfigForEthernet() *network.ProxyConfigs {
 type ProxyFixtureData struct {
 	WifiTestFixture  *TestFixture
 	AP               *APIface
-	ProxySettingsSvc network.ProxySettingServiceClient
+	ProxySettingsSvc networkui.ProxySettingServiceClient
 	CrSvc            ui.ChromeServiceClient
 }
 
@@ -131,7 +131,7 @@ func (f *ProxyFixtureData) Reboot(ctx context.Context, manifestKey string) error
 		return errors.Wrap(err, "failed to start chrome")
 	}
 
-	f.ProxySettingsSvc = network.NewProxySettingServiceClient(f.WifiTestFixture.DUTRPC(DefaultDUT).Conn)
+	f.ProxySettingsSvc = networkui.NewProxySettingServiceClient(f.WifiTestFixture.DUTRPC(DefaultDUT).Conn)
 
 	return nil
 }
@@ -190,7 +190,7 @@ func (f *proxyFixtureImpl) Reset(ctx context.Context) error {
 // PreTest performs the action before each proxy test.
 // It initiates proxy settings service client, configures an AP and connects to the AP.
 func (f *proxyFixtureImpl) PreTest(ctx context.Context, s *testing.FixtTestState) {
-	f.data.ProxySettingsSvc = network.NewProxySettingServiceClient(f.data.WifiTestFixture.DUTRPC(DefaultDUT).Conn)
+	f.data.ProxySettingsSvc = networkui.NewProxySettingServiceClient(f.data.WifiTestFixture.DUTRPC(DefaultDUT).Conn)
 
 	ap, err := f.data.WifiTestFixture.DefaultOpenNetworkAP(ctx)
 	if err != nil {

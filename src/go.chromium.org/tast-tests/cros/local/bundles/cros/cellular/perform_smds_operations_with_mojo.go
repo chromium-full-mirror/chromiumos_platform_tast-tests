@@ -11,7 +11,7 @@ import (
 	"golang.org/x/exp/slices"
 
 	"go.chromium.org/tast-tests/cros/local/cellular/esim/mojo"
-	"go.chromium.org/tast-tests/cros/local/network/netconfig"
+	"go.chromium.org/tast-tests/cros/local/networkui/netconfig"
 	"go.chromium.org/tast-tests/cros/local/stork"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"

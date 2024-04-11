@@ -12,10 +12,10 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
 
-	"go.chromium.org/tast-tests/cros/common/network/netconfigtypes"
+	"go.chromium.org/tast-tests/cros/common/networkui/netconfigtypes"
 	"go.chromium.org/tast-tests/cros/common/rollback"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	nc "go.chromium.org/tast-tests/cros/local/network/netconfig"
+	nc "go.chromium.org/tast-tests/cros/local/networkui/netconfig"
 	rpb "go.chromium.org/tast-tests/cros/services/cros/rollback"
 
 	"go.chromium.org/tast/core/ctxutil"

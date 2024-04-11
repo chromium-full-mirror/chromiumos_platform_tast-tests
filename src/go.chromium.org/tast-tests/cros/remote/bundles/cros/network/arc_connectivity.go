@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/network/allowlist"
 	"go.chromium.org/tast-tests/cros/remote/policyutil"
 	"go.chromium.org/tast-tests/cros/services/cros/network"
+	"go.chromium.org/tast-tests/cros/services/cros/networkui"
 	pspb "go.chromium.org/tast-tests/cros/services/cros/policy"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/rpc"
@@ -37,7 +38,7 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		Data:         []string{"allowlist_ssl_inspection.json"},
 		ServiceDeps: []string{"tast.cros.network.AllowlistService",
-			"tast.cros.network.ProxyService",
+			"tast.cros.networkui.ProxyService",
 			"tast.cros.tape.Service"},
 		Timeout:      arcConnectivityTestTimeout,
 		SoftwareDeps: []string{"reboot", "chrome", "chrome_internal", "tpm2"},
@@ -84,9 +85,9 @@ func ArcConnectivity(ctx context.Context, s *testing.State) {
 
 	// Start an HTTP proxy instance on the DUT which only allows connections to
 	// the allowlisted hostnames.
-	proxyClient := network.NewProxyServiceClient(cl.Conn)
+	proxyClient := networkui.NewProxyServiceClient(cl.Conn)
 	response, err := proxyClient.StartServer(ctx,
-		&network.StartServerRequest{
+		&networkui.StartServerRequest{
 			Allowlist: allowlist,
 		})
 

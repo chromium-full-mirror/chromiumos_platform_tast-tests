@@ -1,0 +1,185 @@
+// Copyright 2022 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+syntax = "proto3";
+
+package tast.cros.networkui;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/any.proto";
+import "google/protobuf/wrappers.proto";
+
+option go_package = "go.chromium.org/tast-tests/cros/services/cros/networkui";
+
+// ProxySettingService allows to remotely start, configure and verify proxy
+// settings on the DUT.
+service ProxySettingService {
+  // ResetConnectionType resets the proxy setting connection type, can be used
+  // to cleanup the proxy settings.
+  rpc ResetConnectionType(ResetConnectionTypeRequest)
+      returns (google.protobuf.Empty) {}
+
+  // SetProxySettings sets up proxy values.
+  // Not specifying the SameHost/SamePort will ensure the toggle button "Use the
+  // same proxy for all protocols" being disabled. Note: It can not include
+  // other proxies when specifying the SameHost/SamePort.
+  rpc SetProxySettings(SetProxySettingsRequest)
+      returns (google.protobuf.Empty) {}
+
+  // FetchProxySettings returns proxy configurations. By default this method
+  // will retrieve proxy configurations using OS Settings.
+  rpc FetchProxySettings(FetchProxySettingsRequest) returns (ProxyConfigs) {}
+
+  // SetException interacts/controls the proxy exception domains of the
+  // specified network.
+  rpc SetException(SetExceptionRequest) returns (google.protobuf.Empty) {}
+
+  // FetchException returns exception settings.
+  rpc FetchException(FetchExceptionRequest) returns (FetchExceptionResponse) {}
+
+  // AllowProxiesForSharedNetwork allows or disallows proxies for shared
+  // networks by toggling the "Allow proxies for shared networks" toggle button.
+  rpc AllowProxiesForSharedNetwork(AllowProxiesForSharedNetworkRequest)
+      returns (google.protobuf.Empty) {}
+
+  // IsProxySettingsRestricted checks whether or not the proxy settings section
+  // is restricted by checking the restriction state of a dropdown menu
+  // within the proxy settings section.
+  // This method should be called when DUT is Logged in.
+  rpc IsProxySettingsRestricted(IsProxySettingsRestrictedRequest)
+      returns (google.protobuf.BoolValue) {}
+
+  // Deprecated: this RPC is deprecated.
+  // Initialize initializes the resources proxy settings service needs.
+  // Call Close to close the resources and the proxy-settings page.
+  rpc Initialize(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
+  // Deprecated: this RPC is deprecated.
+  // New starts up a new proxy setting service instance.
+  // Close must be called later to clean up the associated resources.
+  rpc New(NewRequest) returns (google.protobuf.Empty) {}
+
+  // Deprecated: this RPC is deprecated.
+  // Close releases the resources obtained by New and closes the proxy-settings
+  // page.
+  rpc Close(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
+  // Deprecated: use SetupProxy instead.
+  // Setup sets up proxy values.
+  // Not specifying the SameHost/SamePort will ensure the toggle button "Use the
+  // same proxy for all protocols" being disabled. Note: It can not include
+  // other proxies when specifying the SameHost/SamePort.
+  rpc Setup(ProxyConfigs) returns (google.protobuf.Empty) {}
+
+  // Deprecated: use FetchProxySettings instead.
+  // FetchConfigurations returns proxy hosts and ports.
+  rpc FetchConfigurations(google.protobuf.Empty) returns (ProxyConfigs) {}
+}
+
+message NewRequest {
+  // ManifestKey is the key used to create testing connection while in OOBE.
+  string ManifestKey = 1;
+}
+
+message ResetConnectionTypeRequest {
+  NetworkInfo network_info = 1;
+  // login_mode indicates the login mode of the DUT. This is required since
+  // the proxy page must be opened differently depending on the login mode.
+  LoginMode login_mode = 2;
+}
+
+message SetProxySettingsRequest {
+  ProxyConfigs configs = 1;
+  // login_mode indicates the login mode of the DUT. This is required since
+  // the proxy page must be opened differently depending on the login mode.
+  LoginMode login_mode = 2;
+}
+
+message ProxyConfigs {
+  string http_host = 1;
+  string http_port = 2;
+  string https_host = 3;
+  string https_port = 4;
+  string socks_host = 5;
+  string socks_port = 6;
+  NetworkInfo network_info = 7;
+  ProxyConnectionType proxy_connection_type = 8;
+  string same_host = 9;
+  string same_port = 10;
+}
+
+message SetExceptionRequest {
+  enum Action {
+    ADD = 0;
+    REMOVE = 1;
+  }
+  NetworkInfo network_info = 1;
+  string host = 2;
+  Action action = 3;
+  // login_mode indicates the login mode of the DUT. This is required since
+  // the proxy page must be opened differently depending on the login mode.
+  LoginMode login_mode = 4;
+}
+
+message FetchProxySettingsRequest {
+  enum FetchSource {
+    // OSSettings is the default source of the proxy settings data to fetch.
+    OSSettings = 0;
+    // CrosNetworkConfig is the source of the proxy settings data to fetch.
+    CrosNetworkConfig = 1;
+  }
+  NetworkInfo network_info = 1;
+  FetchSource fetch_source = 2;
+  // login_mode indicates the login mode of the DUT. This is required since
+  // the proxy page must be opened differently depending on the login mode.
+  LoginMode login_mode = 3;
+}
+
+message FetchExceptionRequest {
+  NetworkInfo network_info = 1;
+  // login_mode indicates the login mode of the DUT. This is required since
+  // the proxy page must be opened differently depending on the login mode.
+  LoginMode login_mode = 2;
+}
+
+message FetchExceptionResponse { repeated string exception = 1; }
+
+message NetworkInfo {
+  oneof value {
+    google.protobuf.Any ethernet = 1;
+    string wifi_ssid = 2;
+  }
+}
+
+enum ProxyConnectionType {
+  // DirectInternetConnection is the proxy connect type of direct internet
+  // connection.
+  DirectInternetConnection = 0;
+  // ManualProxyConfiguration is the proxy connect type of manual proxy
+  // configuration.
+  ManualProxyConfiguration = 1;
+}
+
+message AllowProxiesForSharedNetworkRequest {
+  // allow is the option that specifies to allow or disallow the proxies for
+  // shared networks.
+  bool allow = 1;
+  NetworkInfo network_info = 2;
+  // login_mode indicates the login mode of the DUT. This is required since
+  // the proxy page must be opened differently depending on the login mode.
+  LoginMode login_mode = 3;
+}
+
+message IsProxySettingsRestrictedRequest {
+  NetworkInfo network_info = 1;
+  // login_mode indicates the login mode of the DUT. This is required since
+  // the proxy page must be opened differently depending on the login mode.
+  LoginMode login_mode = 2;
+}
+
+enum LoginMode {
+  OOBE = 0;
+  SignInScreen = 1;
+  LoggedIn = 2;
+}

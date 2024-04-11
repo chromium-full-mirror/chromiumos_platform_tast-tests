@@ -1,0 +1,94 @@
+// Copyright 2023 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+syntax = "proto3";
+
+package tast.cros.networkui;
+
+import "google/protobuf/empty.proto";
+
+option go_package = "go.chromium.org/tast-tests/cros/services/cros/networkui";
+
+// CertificateService allows performing certificate-related operations through
+// the Certificates Manager.
+service CertificateService {
+  // Init initializes the certificate service by creating the essential
+  // resources. The user must call the Init function before calling any other
+  // interfaces.
+  rpc Init(InitRequest) returns (google.protobuf.Empty) {}
+
+  // Close cleans up the resources created by the service.
+  rpc Close(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
+  // ImportCert imports the specified certificate through the Certificates
+  // Manager.
+  rpc ImportCert(ImportRequest) returns (google.protobuf.Empty) {}
+
+  // DeleteCert deletes the specified certificate from the Certificates Manager.
+  rpc DeleteCert(Certificate) returns (google.protobuf.Empty) {}
+
+  // IsCertImported returns whether a specified certificate has been installed
+  // in the Certificates Manager.
+  rpc IsCertImported(Certificate) returns (IsCertImportedResponse) {}
+}
+
+message InitRequest {
+  // Type indicates how to initialize the Certificates Manager.
+  // Use LAUNCH if the Certificates Manager hasn't launched, use CONNECT
+  // otherwise.
+  enum Type {
+    UNSPECIFIED = 0;
+    LAUNCH = 1;
+    CONNECT = 2;
+  }
+
+  bool is_lacros = 1;
+  Type init_type = 2;
+}
+
+message ImportRequest {
+  message ClientImportDetail {
+    // Type is a required option that indicates how should the Client
+    // certificate be imported.
+    enum Type {
+      UNSPECIFIED = 0;
+      IMPORT = 1;
+      IMPORT_AND_BIND = 2;
+    }
+
+    Type import_type = 1;
+  }
+
+  message CaImportDetail {
+    // These are optional trust-setting options when importing a CA certificate.
+    optional bool trust_website = 1;
+    optional bool trust_email_user = 2;
+    optional bool trust_software_maker = 3;
+  }
+
+  Certificate certificate = 1;
+  string file_path = 2;
+  oneof import_detail {
+    ClientImportDetail client = 3;
+    CaImportDetail ca = 4;
+  }
+}
+
+message Certificate {
+  enum Type {
+    UNSPECIFIED = 0;
+    CLIENT = 1;
+    CA = 2;
+  }
+
+  Type type = 1;
+  string name = 2;
+  string organization = 3;
+
+  // password is the corresponding credential of the certificate file,
+  // specify an empty string if the certificate file isn't password protected.
+  string password = 4;
+}
+
+message IsCertImportedResponse { bool is_imported = 1; }

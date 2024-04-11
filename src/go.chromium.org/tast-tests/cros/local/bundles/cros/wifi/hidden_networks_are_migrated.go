@@ -8,8 +8,8 @@ import (
 	"context"
 	"time"
 
-	types "go.chromium.org/tast-tests/cros/common/network/netconfigtypes"
-	"go.chromium.org/tast-tests/cros/local/network/netconfig"
+	types "go.chromium.org/tast-tests/cros/common/networkui/netconfigtypes"
+	"go.chromium.org/tast-tests/cros/local/networkui/netconfig"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	f "go.chromium.org/tast-tests/cros/local/wifi"
 

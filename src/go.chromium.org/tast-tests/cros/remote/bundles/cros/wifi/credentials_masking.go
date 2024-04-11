@@ -19,7 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/wificell/hostapd"
 	"go.chromium.org/tast-tests/cros/services/cros/chrome/uiauto/quicksettings"
 	"go.chromium.org/tast-tests/cros/services/cros/inputs"
-	"go.chromium.org/tast-tests/cros/services/cros/network"
+	"go.chromium.org/tast-tests/cros/services/cros/networkui"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast-tests/cros/services/cros/wifi"
 	"go.chromium.org/tast/core/ctxutil"
@@ -67,7 +67,7 @@ func init() {
 			"tast.cros.browser.ChromeService",
 			"tast.cros.ui.AutomationService",
 			"tast.cros.wifi.WifiService",
-			"tast.cros.network.CrosNetworkConfigService",
+			"tast.cros.networkui.CrosNetworkConfigService",
 		),
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "wificellFixt",
@@ -137,7 +137,7 @@ func CredentialsMasking(ctx context.Context, s *testing.State) {
 	defer cr.Close(cleanupCtx, &emptypb.Empty{})
 
 	wifiSvcClient := wifi.NewWifiServiceClient(rpcClient.Conn)
-	netconfigSvc := network.NewCrosNetworkConfigServiceClient(rpcClient.Conn)
+	netconfigSvc := networkui.NewCrosNetworkConfigServiceClient(rpcClient.Conn)
 	// Setup all networks before starting test.
 	for _, testNetwork := range testNetworks {
 		// Setup known network by joining the WiFi network with the correct credential.
@@ -152,12 +152,12 @@ func CredentialsMasking(ctx context.Context, s *testing.State) {
 		}
 
 		// Updating the credential and disable auto-connect to meet the test needs.
-		if _, err := netconfigSvc.ConfigureNetwork(ctx, &network.ConfigureNetworkRequest{
-			ConfigProperties: &network.NetworkTypeConfigProperties{
-				ConfigProperties: &network.NetworkTypeConfigProperties_WifiConfigProperties{
-					WifiConfigProperties: &network.WiFiConfigProperties{
+		if _, err := netconfigSvc.ConfigureNetwork(ctx, &networkui.ConfigureNetworkRequest{
+			ConfigProperties: &networkui.NetworkTypeConfigProperties{
+				ConfigProperties: &networkui.NetworkTypeConfigProperties_WifiConfigProperties{
+					WifiConfigProperties: &networkui.WiFiConfigProperties{
 						Ssid:     testNetwork.ap.Config().SSID,
-						Security: &network.WiFiConfigProperties_Psk{Psk: testNetwork.psk.value},
+						Security: &networkui.WiFiConfigProperties_Psk{Psk: testNetwork.psk.value},
 					},
 				},
 				AutoConnect: &wrapperspb.BoolValue{Value: false},

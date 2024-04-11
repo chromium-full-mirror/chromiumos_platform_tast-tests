@@ -15,7 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/cellular/esim/mojo"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/hermes"
-	"go.chromium.org/tast-tests/cros/local/network/netconfig"
+	"go.chromium.org/tast-tests/cros/local/networkui/netconfig"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast-tests/cros/local/policyutil/fixtures"
 	"go.chromium.org/tast-tests/cros/local/stork"

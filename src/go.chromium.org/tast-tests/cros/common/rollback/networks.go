@@ -7,7 +7,7 @@ package rollback
 import (
 	"context"
 
-	types "go.chromium.org/tast-tests/cros/common/network/netconfigtypes"
+	types "go.chromium.org/tast-tests/cros/common/networkui/netconfigtypes"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

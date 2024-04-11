@@ -8,10 +8,9 @@ import (
 	"context"
 	"time"
 
-	types "go.chromium.org/tast-tests/cros/common/network/netconfigtypes"
+	types "go.chromium.org/tast-tests/cros/common/networkui/netconfigtypes"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/network/netconfig"
-	nc "go.chromium.org/tast-tests/cros/local/network/netconfig"
+	"go.chromium.org/tast-tests/cros/local/networkui/netconfig"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -77,7 +76,7 @@ func ConfigBaseline(ctx context.Context, s *testing.State) {
 
 	// How we connect to the API depends on if we are in the OOBE or have access
 	// to a chrome instance after login.
-	var api *nc.CrosNetworkConfig
+	var api *netconfig.CrosNetworkConfig
 	if param.login {
 		// Connect using chrome.
 		api, err = netconfig.CreateLoggedInCrosNetworkConfig(ctx, cr)

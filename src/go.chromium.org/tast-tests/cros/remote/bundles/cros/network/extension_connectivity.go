@@ -10,6 +10,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/network/allowlist"
 	"go.chromium.org/tast-tests/cros/services/cros/network"
+	"go.chromium.org/tast-tests/cros/services/cros/networkui"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
 )
@@ -33,7 +34,7 @@ func init() {
 		// },
 		Data:         []string{"allowlist_ssl_inspection.json"},
 		SoftwareDeps: []string{"reboot", "chrome", "chrome_internal"},
-		ServiceDeps:  []string{"tast.cros.network.AllowlistService", "tast.cros.network.ProxyService"},
+		ServiceDeps:  []string{"tast.cros.network.AllowlistService", "tast.cros.networkui.ProxyService"},
 		VarDeps: []string{
 			"allowlist.ext_username",
 			"allowlist.ext_password",
@@ -66,9 +67,9 @@ func ExtensionConnectivity(ctx context.Context, s *testing.State) {
 	const port uint32 = 3129
 
 	// Start an HTTP proxy instance on the DUT which only allows connections to allowlisted hostnames.
-	proxyClient := network.NewProxyServiceClient(cl.Conn)
+	proxyClient := networkui.NewProxyServiceClient(cl.Conn)
 	response, err := proxyClient.StartServer(ctx,
-		&network.StartServerRequest{
+		&networkui.StartServerRequest{
 			Port:      port,
 			Allowlist: a,
 		})
