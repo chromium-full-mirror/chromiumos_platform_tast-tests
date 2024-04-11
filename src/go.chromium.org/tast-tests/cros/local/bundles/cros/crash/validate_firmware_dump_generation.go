@@ -43,6 +43,12 @@ const (
 	// expiration to make sure the operation finishes.
 	firmwareDumpExpirationOpsTimeout = 10 * time.Second
 	firmwareDumpExpirationTimeout    = 2 * (firmwareDumpExpirationTimeConfig + firmwareDumpExpirationOpsTimeout)
+	// Retry number for Chrome Gaia login attempts.
+	firmwareDumpValidatorChromeLoginMaxRetry = 2
+	// Timeout for a user session, including Chrome enrollment/login and
+	// miscellaneous configuration/operations. Firmware dump enablement is
+	// controlled by user policy and CUJs are related to user sessions.
+	firmwareDumpValidatorPerSessionTimeout = chrome.EnrollmentAndLoginTimeout*firmwareDumpValidatorChromeLoginMaxRetry + time.Minute
 )
 
 type validateFirmwareDumpGenerationTestCase struct {
@@ -75,21 +81,21 @@ func init() {
 				policy:         "wifi",
 				isMultiSession: false,
 			},
-			Timeout: chrome.EnrollmentAndLoginTimeout + firmwareDumpExpirationTimeout,
+			Timeout: firmwareDumpValidatorPerSessionTimeout + firmwareDumpExpirationTimeout,
 		}, {
 			Name: "policy_all",
 			Val: validateFirmwareDumpGenerationTestCase{
 				policy:         "all",
 				isMultiSession: false,
 			},
-			Timeout: chrome.EnrollmentAndLoginTimeout + firmwareDumpExpirationTimeout,
+			Timeout: firmwareDumpValidatorPerSessionTimeout + firmwareDumpExpirationTimeout,
 		}, {
 			Name: "policy_none",
 			Val: validateFirmwareDumpGenerationTestCase{
 				policy:         "none",
 				isMultiSession: false,
 			},
-			Timeout: chrome.EnrollmentAndLoginTimeout,
+			Timeout: firmwareDumpValidatorPerSessionTimeout,
 		}, {
 			Name: "multi_session_policy_all",
 			Val: validateFirmwareDumpGenerationTestCase{
@@ -97,14 +103,14 @@ func init() {
 				isMultiSession: true,
 			},
 			// Includes two user login events
-			Timeout: 2 * chrome.EnrollmentAndLoginTimeout,
+			Timeout: 2 * firmwareDumpValidatorPerSessionTimeout,
 		}},
 	})
 }
 
 func ValidateFirmwareDumpGeneration(ctx context.Context, s *testing.State) {
 	rl := &retry.Loop{Attempts: 1,
-		MaxAttempts: 2,
+		MaxAttempts: firmwareDumpValidatorChromeLoginMaxRetry,
 		DoRetries:   true,
 		Errorf:      s.Errorf,
 		Logf:        s.Logf}
