@@ -25,6 +25,7 @@ import (
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/camera"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/cbx"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/cellular"
+	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/cleanupchecks"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/clipboardhistory"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/crash"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/crosca"

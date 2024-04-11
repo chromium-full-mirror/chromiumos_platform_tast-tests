@@ -1,0 +1,52 @@
+// Copyright 2024 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+syntax = "proto3";
+
+package tast.cros.cleanupchecks;
+
+option go_package = "go.chromium.org/tast-tests/cros/services/cros/cleanupchecks";
+
+// CleanUpChecksService provides functions to check if a DUT is in a clean
+// state.
+service CleanUpChecksService {
+  // RecordStateBeforeTestFromDUT calls the DUT to perform the cleanupchecks.
+  rpc RecordStateBeforeTestFromDUT(RecordStateBeforeTestFromDUTRequest)
+      returns (RecordStateBeforeTestFromDUTResponse) {}
+
+  // ExecuteCleanUpChecksOnDUT calls the DUT to perform the cleanupchecks.
+  rpc ExecuteCleanUpChecksOnDUT(ExecuteCleanUpChecksOnDUTRequest)
+      returns (ExecuteCleanUpChecksOnDUTResponse) {}
+}
+
+message RecordStateBeforeTestFromDUTRequest {}
+
+message RecordStateBeforeTestFromDUTResponse {
+  map<string, PreTestData> preTestDataMap = 1;
+}
+
+message ExecuteCleanUpChecksOnDUTRequest {
+  map<string, PreTestData> preTestDataMap = 1;
+}
+
+message ExecuteCleanUpChecksOnDUTResponse {}
+
+message PreTestData {
+  oneof data {
+    bool boolData = 1;
+    int32 intData = 2;
+    double floatData = 3;
+    string stringData = 4;
+    IntMap intMapData = 5;
+    FloatMap floatMapData = 6;
+    StringMap stringMapData = 7;
+    bytes byteData = 8;
+  }
+}
+
+message IntMap { map<string, int32> map = 1; }
+
+message FloatMap { map<string, double> map = 1; }
+
+message StringMap { map<string, string> map = 1; }

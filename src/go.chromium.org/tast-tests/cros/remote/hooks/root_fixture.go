@@ -31,6 +31,9 @@ func init() {
 		PreTestTimeout:  2 * time.Minute,
 		PostTestTimeout: 2 * time.Minute,
 		TearDownTimeout: 5 * time.Minute,
+		ServiceDeps: []string{
+			"tast.cros.cleanupchecks.CleanUpChecksService",
+		},
 	})
 }
 
@@ -76,6 +79,7 @@ var hooks map[string]*Hook
 var orderedHooks []string = []string{
 	"exampleHook",
 	"diskThrottler",
+	"cleanupChecksHook",
 }
 
 // HookState includes certain fixture state information that is
@@ -287,7 +291,7 @@ func (rf *rootFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
 		}
 		startTime := time.Now()
 		if err := h.Impl.PostTest(ctx, hs); err != nil {
-			s.Errorf("Failed to run PreTest for hook %s before running test %s: %v",
+			s.Errorf("Failed to run PostTest for hook %s before running test %s: %v",
 				s.TestName(), h.Name, err)
 		}
 		s.Logf("Remote root fixture hook %s completed PostTest for %s in %dms",
