@@ -45,6 +45,7 @@ import (
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/network/ehide"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/networkui"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/osinstall"
+	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/osperf"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/platform"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/policy"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/power"

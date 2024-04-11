@@ -1,0 +1,25 @@
+{
+  "action": {},
+  "background": {
+    "service_worker": "background.js"
+  },
+  "description": "A ChromiumOS benchmark from browser perspective",
+  "host_permissions": [
+    "file://*/",
+    "http://*/",
+    "https://*/"
+  ],
+  "key": "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDmxClP0X5BDqNOvQ7G9tagwuk61pPpyoj1xHNLhTS30T272iJhUJ1YyCD2QRp4GkNgorWEc5KNFBMWq7l0fkvM9mJEvrlJaiWWUIASFOhII1ImpetFNjDlQ4hm97Dz6P+fymIFNLlJ6UyPkITBLFeDHwOYEraCu64+FFmKaRueVQIDAQAB",
+  "manifest_version": 3,
+  "name": "bluebench",
+  "permissions": [
+    "power",
+    "scripting",
+    "system.cpu",
+    "system.display",
+    "system.memory",
+    "system.storage",
+    "tabs"
+  ],
+  "version": "1.0"
+}

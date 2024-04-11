@@ -1,0 +1,10 @@
+set noparent
+
+# ChromeOS Core Performance Team Members
+hikalium@chromium.org
+kawasin@google.com
+mhiramat@google.com
+sxm@google.com
+
+# Tast team for bulk/emergencies
+include /OWNERS.tast
