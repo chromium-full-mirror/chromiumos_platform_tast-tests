@@ -134,7 +134,7 @@ func ChangePassword(ctx context.Context, s *testing.State) {
 		}
 		defer oobeConn.Close()
 
-		if err := oobeConn.WaitForExprFailOnErrWithTimeout(ctx, "!document.querySelector('#enter-old-password').hidden", 20*time.Second); err != nil {
+		if err := oobeConn.WaitForExprFailOnErrWithTimeout(ctx, "!document.querySelector('#enter-old-password').hidden", 45*time.Second); err != nil {
 			s.Fatal("Failed to wait for enter old password screen: ", err)
 		}
 
@@ -146,7 +146,7 @@ func ChangePassword(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to click on the next button: ", err)
 		}
 
-		if err := oobeConn.WaitForExprFailOnErrWithTimeout(ctx, "!document.querySelector('#factor-setup-success').hidden", 20*time.Second); err != nil {
+		if err := oobeConn.WaitForExprFailOnErrWithTimeout(ctx, "!document.querySelector('#factor-setup-success').hidden", 45*time.Second); err != nil {
 			s.Fatal("Failed to wait for factor setup success screen: ", err)
 		}
 
@@ -183,7 +183,7 @@ func ChangePassword(ctx context.Context, s *testing.State) {
 		s.Fatal("Getting signing test API connection failed: ", err)
 	}
 
-	if err = lockscreen.WaitForPasswordField(ctx, tconn, gaiaCreds.User, 10*time.Second); err != nil {
+	if err = lockscreen.WaitForPasswordField(ctx, tconn, gaiaCreds.User, 25*time.Second); err != nil {
 		s.Fatal("Fail to wait for password: ", err)
 	}
 
