@@ -19,16 +19,25 @@ import (
 
 func TestPmTestParams(t *testing.T) {
 	type param struct {
-		Name        string
-		Attr        []string
-		LoopCount   int
-		PmMode      string
-		SuspendMode string
-		Timeout     time.Duration
-		Fixture     string
+		Name         string
+		Attr         []string
+		LoopCount    int
+		PmMode       string
+		SuspendMode  string
+		Timeout      time.Duration
+		Fixture      string
+		HardwareDeps string
 	}
-	var pmtestParams []param
+	inList := func(str graphics.PmTestMode, list []graphics.PmTestMode) bool {
+		for _, l := range list {
+			if str == l {
+				return true
+			}
+		}
+		return false
+	}
 
+	var pmtestParams []param
 	for _, b := range []string{"", "bringup"} {
 		idx := 0
 		for _, variant := range []string{"", "chrome", "webglaquarium"} {
@@ -42,6 +51,10 @@ func TestPmTestParams(t *testing.T) {
 			suffix := strings.Join(s, "_")
 			for _, pm := range []graphics.PmTestMode{graphics.PmTestNone, graphics.PmTestFreezer, graphics.PmTestDevices, graphics.PmTestPlatform, graphics.PmTestProcessors, graphics.PmTestCore} {
 				for _, suspendMode := range []string{"graphics.SuspendS0ix", "graphics.SuspendS3"} {
+					// In S0, Processors and Core are not supported.
+					if suspendMode == "graphics.SuspendS0ix" && inList(pm, []graphics.PmTestMode{graphics.PmTestProcessors, graphics.PmTestCore}) {
+						continue
+					}
 					mode := "s0"
 					if suspendMode == "graphics.SuspendS3" {
 						mode = "s3"
@@ -66,6 +79,11 @@ func TestPmTestParams(t *testing.T) {
 						timeout = 20 * time.Minute
 					}
 
+					hardwareDeps := "hwdep.SuspendToIdle()"
+					if suspendMode == "graphics.SuspendS3" {
+						hardwareDeps = "hwdep.SuspendToMem()"
+					}
+
 					fixture := "graphicsNoChrome"
 					if suffix == "webglaquarium" {
 						fixture = "chromeGraphicsWebContent.webglaquarium"
@@ -73,13 +91,14 @@ func TestPmTestParams(t *testing.T) {
 						fixture = "chromeGraphics"
 					}
 					pmtestParams = append(pmtestParams, param{
-						Name:        name,
-						Attr:        attr,
-						SuspendMode: suspendMode,
-						PmMode:      string(pm),
-						LoopCount:   loopCount,
-						Timeout:     timeout,
-						Fixture:     fixture,
+						Name:         name,
+						Attr:         attr,
+						SuspendMode:  suspendMode,
+						PmMode:       string(pm),
+						LoopCount:    loopCount,
+						Timeout:      timeout,
+						Fixture:      fixture,
+						HardwareDeps: hardwareDeps,
 					})
 					idx++
 				}
@@ -93,6 +112,7 @@ func TestPmTestParams(t *testing.T) {
 		suspendMode: {{ .SuspendMode }},
 		count:  {{ .LoopCount | fmt }},
 	},
+	{{ if .HardwareDeps }} ExtraHardwareDeps: hwdep.D({{ .HardwareDeps }}), {{ end }}
 	{{ if .Fixture }} Fixture: {{ .Fixture | fmt }}, {{ end }}
 	{{ if .Attr }}ExtraAttr: {{ .Attr | fmt }}, {{ end }}
 	Timeout: {{ .Timeout | fmt}},

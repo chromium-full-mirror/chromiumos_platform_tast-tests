@@ -93,10 +93,6 @@ const (
 	SuspendS0ix             = 1
 )
 
-const (
-	suspend2IdlePath = "/var/lib/power_manager/suspend_to_idle"
-)
-
 func (m SuspendMode) String() string {
 	if m == SuspendS3 {
 		return "S3"
