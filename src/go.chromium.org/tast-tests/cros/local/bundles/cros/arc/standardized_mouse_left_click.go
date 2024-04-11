@@ -10,7 +10,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/android/ui"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/arc/standardizedtestutil"
-	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -33,12 +32,18 @@ func init() {
 		Timeout:      10 * time.Minute,
 		Fixture:      "arcBooted",
 		Params: []testing.Param{{
-			Val:               standardizedtestutil.GetClamshellTest(runStandardizedMouseLeftClickTest),
+			Val: standardizedtestutil.GetClamshellTest(
+				runStandardizedMouseLeftClickTest,
+				standardizedtestutil.WithMouse(),
+			),
 			ExtraSoftwareDeps: []string{"android_container"},
 			ExtraHardwareDeps: hwdep.D(standardizedtestutil.ClamshellHardwareDep),
 		}, {
-			Name:              "vm",
-			Val:               standardizedtestutil.GetClamshellTest(runStandardizedMouseLeftClickTest),
+			Name: "vm",
+			Val: standardizedtestutil.GetClamshellTest(
+				runStandardizedMouseLeftClickTest,
+				standardizedtestutil.WithMouse(),
+			),
 			ExtraSoftwareDeps: []string{"android_vm"},
 			ExtraHardwareDeps: hwdep.D(standardizedtestutil.ClamshellHardwareDep),
 		}},
@@ -62,13 +67,6 @@ func runStandardizedMouseLeftClickTest(ctx context.Context, testParameters stand
 	btnLeftClickID := testParameters.AppPkgName + ":id/btnLeftClick"
 	btnLeftClickSelector := testParameters.Device.Object(ui.ID(btnLeftClickID))
 
-	// Setup the mouse
-	mouse, err := input.Mouse(ctx)
-	if err != nil {
-		return errors.Wrap(err, "unable to setup the mouse")
-	}
-	defer mouse.Close(ctx)
-
 	if err := btnLeftClickSelector.WaitForExists(ctx, standardizedtestutil.ShortUITimeout); err != nil {
 		return errors.Wrap(err, "unable to find the button to click")
 	}
@@ -77,7 +75,7 @@ func runStandardizedMouseLeftClickTest(ctx context.Context, testParameters stand
 		return errors.Wrap(err, "the success label should not yet exist")
 	}
 
-	if err := standardizedtestutil.MouseClickObject(ctx, testParameters, btnLeftClickSelector, mouse, standardizedtestutil.LeftPointerButton); err != nil {
+	if err := standardizedtestutil.MouseClickObject(ctx, testParameters, btnLeftClickSelector, testParameters.Mouse, standardizedtestutil.LeftPointerButton); err != nil {
 		return errors.Wrap(err, "unable to click the button")
 	}
 

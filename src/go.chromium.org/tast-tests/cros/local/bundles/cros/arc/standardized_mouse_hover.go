@@ -10,7 +10,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/android/ui"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/arc/standardizedtestutil"
-	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -34,12 +33,18 @@ func init() {
 		Fixture:      "arcBooted",
 		Params: []testing.Param{
 			{
-				Val:               standardizedtestutil.GetClamshellTest(runStandardizedMouseHoverTest),
+				Val: standardizedtestutil.GetClamshellTest(
+					runStandardizedMouseHoverTest,
+					standardizedtestutil.WithMouse(),
+				),
 				ExtraSoftwareDeps: []string{"android_container"},
 				ExtraHardwareDeps: hwdep.D(standardizedtestutil.ClamshellHardwareDep),
 			}, {
-				Name:              "vm",
-				Val:               standardizedtestutil.GetClamshellTest(runStandardizedMouseHoverTest),
+				Name: "vm",
+				Val: standardizedtestutil.GetClamshellTest(
+					runStandardizedMouseHoverTest,
+					standardizedtestutil.WithMouse(),
+				),
 				ExtraSoftwareDeps: []string{"android_vm"},
 				ExtraHardwareDeps: hwdep.D(standardizedtestutil.ClamshellHardwareDep),
 			}},
@@ -60,12 +65,7 @@ func StandardizedMouseHover(ctx context.Context, s *testing.State) {
 func runStandardizedMouseHoverTest(ctx context.Context, testParameters standardizedtestutil.TestFuncParams) error {
 	const intentStartHoverTest = "org.chromium.arc.testapp.arcstandardizedinputtest.ACTION_START_HOVER_TEST"
 
-	// Setup the mouse.
-	mouse, err := input.Mouse(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to setup the mouse")
-	}
-	defer mouse.Close(ctx)
+	mouse := testParameters.Mouse
 
 	// Setup selectors.
 	txtHoverEnterID := testParameters.AppPkgName + ":id/txtHoverEnterState"

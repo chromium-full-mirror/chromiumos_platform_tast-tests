@@ -59,6 +59,7 @@ type TestFuncParams struct {
 	AppPkgName      string
 	AppActivityName string
 	Activity        *arc.Activity
+	Mouse           *input.MouseEventWriter
 }
 
 // TestFunc represents the test function.
@@ -75,6 +76,8 @@ type Test struct {
 	Fn           TestFunc
 	InTabletMode bool
 	WindowStates []WindowState
+
+	useMouse bool
 }
 
 // ZoomType represents the zoom type to perform.
@@ -130,33 +133,49 @@ func (ts *StandardizedTouchscreen) Close(ctx context.Context) error {
 	return ts.ts.Close(ctx)
 }
 
-// GetClamshellTest returns the test cases required for clamshell devices.
-func GetClamshellTest(fn TestFunc) Test {
-	return Test{
-		Fn: fn,
-		WindowStates: []WindowState{
-			{Name: "Full Screen", WindowStateType: ash.WindowStateFullscreen},
-			{Name: "Normal", WindowStateType: ash.WindowStateNormal},
-			{Name: "Snapped primary", WindowStateType: ash.WindowStatePrimarySnapped},
-			{Name: "Snapped secondary", WindowStateType: ash.WindowStateSecondarySnapped},
-		},
-		InTabletMode: false,
+// TestOption is used to pass optional paramaeters to Test struct.
+type TestOption func(*Test)
+
+// WithMouse specifies that the test uses mouse device and it should be prepared in the setup.
+func WithMouse() TestOption {
+	return func(t *Test) {
+		t.useMouse = true
 	}
+}
+
+// InitTest initializes the Test parameter.
+func InitTest(fn TestFunc, ws []WindowState, tabletMode bool, opts ...TestOption) Test {
+	t := Test{
+		Fn:           fn,
+		WindowStates: ws,
+		InTabletMode: tabletMode,
+		useMouse:     false,
+	}
+	for _, option := range opts {
+		option(&t)
+	}
+	return t
+}
+
+// GetClamshellTest returns the test cases required for clamshell devices.
+func GetClamshellTest(fn TestFunc, opts ...TestOption) Test {
+	return InitTest(fn, []WindowState{
+		{Name: "Full Screen", WindowStateType: ash.WindowStateFullscreen},
+		{Name: "Normal", WindowStateType: ash.WindowStateNormal},
+		{Name: "Snapped primary", WindowStateType: ash.WindowStatePrimarySnapped},
+		{Name: "Snapped secondary", WindowStateType: ash.WindowStateSecondarySnapped},
+	}, false, opts...)
 }
 
 // ClamshellHardwareDep returns the hardware dependencies all clamshell tests share.
 var ClamshellHardwareDep = hwdep.SkipOnModel(TabletOnlyModels...)
 
 // GetTabletTest returns the test cases required for tablet devices.
-func GetTabletTest(fn TestFunc) Test {
-	return Test{
-		Fn: fn,
-		WindowStates: []WindowState{
-			{Name: "Full Screen", WindowStateType: ash.WindowStateFullscreen},
-			{Name: "Maximized", WindowStateType: ash.WindowStateMaximized},
-		},
-		InTabletMode: true,
-	}
+func GetTabletTest(fn TestFunc, opts ...TestOption) Test {
+	return InitTest(fn, []WindowState{
+		{Name: "Full Screen", WindowStateType: ash.WindowStateFullscreen},
+		{Name: "Maximized", WindowStateType: ash.WindowStateMaximized},
+	}, true)
 }
 
 // TabletHardwareDep returns the hardware dependencies all tablet tests share.
@@ -215,6 +234,16 @@ func runTest(ctx context.Context, s *testing.State, apkName, appPkgName, appActi
 	// Ensure that default (English US) IME is installed and activated.
 	if err := ime.AddAndSetInputMethod(ctx, tconn, ime.ChromeIMEPrefix+ime.DefaultInputMethod.ID); err != nil {
 		s.Fatalf("Failed to set default ime %q: %v", ime.DefaultInputMethod, err)
+	}
+
+	// Setup the mouse.
+	var mouse *input.MouseEventWriter
+	if t.useMouse {
+		mouse, err = input.Mouse(ctx)
+		if err != nil {
+			s.Fatal("Failed to setup the mouse: ", err)
+		}
+		defer mouse.Close(cleanupCtx)
 	}
 
 	// Run the different test cases.
@@ -332,6 +361,7 @@ func runTest(ctx context.Context, s *testing.State, apkName, appPkgName, appActi
 				AppPkgName:      appPkgName,
 				AppActivityName: appActivity,
 				Activity:        act,
+				Mouse:           mouse,
 			}); err != nil {
 				s.Fatal("Test run failed: ", err)
 			}

@@ -11,12 +11,12 @@ import (
 	"go.chromium.org/tast-tests/cros/common/android/ui"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/arc/standardizedtestutil"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
+// TODO(b/333834686): Migrate to standardizedtestutil.Test's optional argument.
 type standardizedMouseScrollArgs struct {
 	test              standardizedtestutil.Test
 	resizeLockEnabled bool
@@ -41,7 +41,10 @@ func init() {
 		Params: []testing.Param{
 			{
 				Val: &standardizedMouseScrollArgs{
-					test:              standardizedtestutil.GetClamshellTest(runStandardizedMouseScrollTest),
+					test: standardizedtestutil.GetClamshellTest(
+						runStandardizedMouseScrollTest,
+						standardizedtestutil.WithMouse(),
+					),
 					resizeLockEnabled: false,
 				},
 				ExtraSoftwareDeps: []string{"android_container"},
@@ -50,7 +53,10 @@ func init() {
 			{
 				Name: "vm",
 				Val: &standardizedMouseScrollArgs{
-					test:              standardizedtestutil.GetClamshellTest(runStandardizedMouseScrollTest),
+					test: standardizedtestutil.GetClamshellTest(
+						runStandardizedMouseScrollTest,
+						standardizedtestutil.WithMouse(),
+					),
 					resizeLockEnabled: false,
 				},
 				ExtraSoftwareDeps: []string{"android_vm"},
@@ -59,13 +65,14 @@ func init() {
 			{
 				Name: "resize_lock_smooth_scroll_vm",
 				Val: &standardizedMouseScrollArgs{
-					test: standardizedtestutil.Test{
-						Fn:           runStandardizedMouseScrollTest,
-						InTabletMode: false,
-						WindowStates: []standardizedtestutil.WindowState{
+					test: standardizedtestutil.InitTest(
+						runStandardizedMouseScrollTest,
+						[]standardizedtestutil.WindowState{
 							{Name: "Normal", WindowStateType: ash.WindowStateNormal},
 						},
-					},
+						false,
+						standardizedtestutil.WithMouse(),
+					),
 					resizeLockEnabled: true,
 				},
 				ExtraAttr:         []string{"informational"},
@@ -117,12 +124,7 @@ func runMouseScroll(ctx context.Context, testParameters standardizedtestutil.Tes
 	txtScrollableContentID := testParameters.AppPkgName + ":id/txtScrollableContent"
 	txtScrollableContentSelector := testParameters.Device.Object(ui.ID(txtScrollableContentID))
 
-	// Setup the mouse.
-	mouse, err := input.Mouse(ctx)
-	if err != nil {
-		return errors.Wrap(err, "unable to setup the mouse")
-	}
-	defer mouse.Close(ctx)
+	mouse := testParameters.Mouse
 
 	if err := txtScrollableContentSelector.WaitForExists(ctx, standardizedtestutil.ShortUITimeout); err != nil {
 		return errors.Wrap(err, "failed to find the scrollable content")
@@ -137,7 +139,7 @@ func runMouseScroll(ctx context.Context, testParameters standardizedtestutil.Tes
 	}
 
 	// Scroll multiple times, if the threshold is reached early, the test passes.
-	testPassed := false
+	var lastErr error
 	for i := 0; i < maxNumScrollIterations; i++ {
 		// Perform the scroll.
 		if err := standardizedtestutil.MouseScroll(ctx, testParameters, scrollDirection, mouse); err != nil {
@@ -145,16 +147,13 @@ func runMouseScroll(ctx context.Context, testParameters standardizedtestutil.Tes
 		}
 
 		// Check to see if the test is done.
-		if err := txtSuccessSelector.WaitForExists(ctx, 1*time.Second); err == nil {
-			testPassed = true
-			break
+		if err := txtSuccessSelector.WaitForExists(ctx, 1*time.Second); err != nil {
+			lastErr = err
+		} else {
+			// Test passes.
+			return nil
 		}
 	}
 
-	// Error out if the test did not pass.
-	if testPassed == false {
-		return errors.Wrapf(err, "failed to scroll the content past the threshold after %v iterations", maxNumScrollIterations)
-	}
-
-	return nil
+	return errors.Wrapf(lastErr, "failed to scroll the content past the threshold after %v iterations", maxNumScrollIterations)
 }

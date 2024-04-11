@@ -10,7 +10,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/android/ui"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/arc/standardizedtestutil"
-	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -33,12 +32,18 @@ func init() {
 		Timeout:      10 * time.Minute,
 		Fixture:      "arcBooted",
 		Params: []testing.Param{{
-			Val:               standardizedtestutil.GetClamshellTest(runStandardizedMouseRightClickTest),
+			Val: standardizedtestutil.GetClamshellTest(
+				runStandardizedMouseRightClickTest,
+				standardizedtestutil.WithMouse(),
+			),
 			ExtraSoftwareDeps: []string{"android_container"},
 			ExtraHardwareDeps: hwdep.D(standardizedtestutil.ClamshellHardwareDep),
 		}, {
-			Name:              "vm",
-			Val:               standardizedtestutil.GetClamshellTest(runStandardizedMouseRightClickTest),
+			Name: "vm",
+			Val: standardizedtestutil.GetClamshellTest(
+				runStandardizedMouseRightClickTest,
+				standardizedtestutil.WithMouse(),
+			),
 			ExtraSoftwareDeps: []string{"android_vm"},
 			ExtraHardwareDeps: hwdep.D(standardizedtestutil.ClamshellHardwareDep),
 		}},
@@ -61,11 +66,7 @@ func runStandardizedMouseRightClickTest(ctx context.Context, testParameters stan
 	btnRightClickSelector := testParameters.Device.Object(ui.ID(btnRightClickID))
 
 	// Setup the mouse.
-	mouse, err := input.Mouse(ctx)
-	if err != nil {
-		return errors.Wrap(err, "unable to setup the mouse")
-	}
-	defer mouse.Close(ctx)
+	mouse := testParameters.Mouse
 
 	if err := btnRightClickSelector.WaitForExists(ctx, standardizedtestutil.ShortUITimeout); err != nil {
 		return errors.Wrap(err, "unable to find the button to click")
