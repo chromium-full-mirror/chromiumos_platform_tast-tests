@@ -207,15 +207,11 @@ func setupCr50Image(ctx context.Context, s TestingState, board *remoteTi50.DUTCo
 	if imageVer.Less(rw) {
 		testing.ContextLogf(ctx, "Rollback required for flashing %s to %s", rw, imageVer)
 
-		debugImageURL, err := findGSCDebugImage(ctx, testbedProperties, "cr50")
-		if err != nil {
-			s.Fatal("find cr50 debug image failed: ", err)
-		}
+		debugImage, efiImage, err := DownloadGSCTestImages(ctx, testbedProperties, "cr50")
+		mustSucceed(s, err, "failed to download debug and efi image")
 
-		debugImage, err := downloadToTempFile(ctx, "debug image", debugImageURL)
-		mustSucceed(s, err, "download debug image")
-
-		mustSucceed(s, board.RollbackUpdate(ctx, i, imagePath, debugImage), "rollback update to image")
+		err = board.RollbackAndRunEraseflashinfoUpdate(ctx, i, imagePath, efiImage, debugImage)
+		mustSucceed(s, err, "failed efi rollback update to image")
 	} else {
 		testing.ContextLogf(ctx, "Direct gsctool update for %s to %s", rw, imageVer)
 		mustSucceed(s, board.DirectUpdate(ctx, i, imagePath), "direct updateto image")
