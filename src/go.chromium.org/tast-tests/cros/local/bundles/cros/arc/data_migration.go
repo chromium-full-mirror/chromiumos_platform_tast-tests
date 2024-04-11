@@ -254,15 +254,13 @@ func tryDataMigration(ctx context.Context, creds chrome.Creds, params dataMigrat
 	}
 	defer cleanupFunc(cleanupCtx)
 
-	args := append(arc.DisableSyncFlags(), "--disable-arc-data-wipe")
-
 	opts := []chrome.Option{
 		chrome.GAIALogin(creds),
 		chrome.ARCSupported(),
 		chrome.KeepState(),
 		chrome.UnRestrictARCCPU(),
 		chrome.DisableFeatures("ArcEnableVirtioBlkForData"),
-		chrome.ExtraArgs(args...),
+		chrome.ExtraArgs(arc.DisableSyncFlags()...),
 	}
 
 	if params.managed {

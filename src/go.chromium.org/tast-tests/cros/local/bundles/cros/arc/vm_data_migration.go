@@ -540,7 +540,6 @@ func proceedMigrationScreens(ctx context.Context, cr *chrome.Chrome, tconn *chro
 }
 
 func reSignInChrome(ctx context.Context, creds chrome.Creds) (*chrome.Chrome, error) {
-	args := append(arc.DisableSyncFlags(), "--disable-arc-data-wipe")
 	return chrome.New(ctx,
 		chrome.GAIALogin(creds),
 		chrome.ARCSupported(),
@@ -548,7 +547,7 @@ func reSignInChrome(ctx context.Context, creds chrome.Creds) (*chrome.Chrome, er
 		chrome.UnRestrictARCCPU(),
 		chrome.DisableFeatures("ArcEnableVirtioBlkForData"),
 		chrome.RemoveNotification(false),
-		chrome.ExtraArgs(args...),
+		chrome.ExtraArgs(arc.DisableSyncFlags()...),
 	)
 }
 
