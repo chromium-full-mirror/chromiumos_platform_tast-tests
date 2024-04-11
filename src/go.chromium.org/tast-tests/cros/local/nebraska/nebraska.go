@@ -19,7 +19,6 @@ import (
 	"golang.org/x/sys/unix"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
-
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -277,6 +276,21 @@ func (n *Nebraska) SetCriticalUpdate(ctx context.Context, value bool) error {
 	return configureNebraska(ctx, n.Port, "critical_update", fmt.Sprint(value))
 }
 
+// SetEolDate sets the end of life date Nebraska sends on update requests.
+func (n *Nebraska) SetEolDate(ctx context.Context, eolDate time.Time) error {
+	return configureNebraska(ctx, n.Port, "eol_date", fmt.Sprint(toDaysSinceUnixEpoch(eolDate)))
+}
+
+// SetExtendedDate sets the extended date for extended auto updates that Nebraska sends on update requests.
+func (n *Nebraska) SetExtendedDate(ctx context.Context, extendedDate time.Time) error {
+	return configureNebraska(ctx, n.Port, "extended_date", fmt.Sprint(toDaysSinceUnixEpoch(extendedDate)))
+}
+
+// SetExtendedOptInRequired sets the extended opt in required boolean Nebraska sends on update requests.
+func (n *Nebraska) SetExtendedOptInRequired(ctx context.Context, value bool) error {
+	return configureNebraska(ctx, n.Port, "extended_opt_in_required", fmt.Sprint(value))
+}
+
 func configureNebraska(ctx context.Context, port int, key, value string) error {
 	command := fmt.Sprintf("curl -X POST -d '{%q: %v}' %s", key, value, configURL(port))
 
@@ -289,4 +303,9 @@ func configureNebraska(ctx context.Context, port int, key, value string) error {
 
 func configURL(port int) string {
 	return fmt.Sprintf("%s:%d/update_config", localhost, port)
+}
+
+func toDaysSinceUnixEpoch(date time.Time) int64 {
+	// Omaha sends days since unix epoch instead of seconds. Convert by dividing by seconds * minutes * hours.
+	return date.Unix() / (60 * 60 * 24)
 }
