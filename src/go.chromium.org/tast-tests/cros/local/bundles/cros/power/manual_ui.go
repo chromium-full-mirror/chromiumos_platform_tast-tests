@@ -108,6 +108,13 @@ func ManualUI(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect Test API: ", err)
 	}
 
+	testing.ContextLog(ctx, "Start setting up the power recorder")
+	r := power.NewRecorder(ctx, time.Second, s.OutDir(), s.TestName(), power.DischargeWatchdogOption(discharge))
+	defer r.Close(cleanupCtx)
+	if err := r.Cooldown(ctx); err != nil {
+		s.Error("Failed to cooldown before the manual setup: ", err)
+	}
+
 	startSetupMsg := fmt.Sprintf(setupTestUsedTimeMsgFormat, manualSetupDuration, manualCompletionMsg)
 	s.Log(startSetupMsg)
 
@@ -116,13 +123,6 @@ func ManualUI(ctx context.Context, s *testing.State) {
 		"Manual Power Test Setup",
 		startSetupMsg); err != nil {
 		s.Log("Failed to create test start setup notification: ", err)
-	}
-
-	testing.ContextLog(ctx, "Start setting up the power recorder")
-	r := power.NewRecorder(ctx, time.Second, s.OutDir(), s.TestName(), power.DischargeWatchdogOption(discharge))
-	defer r.Close(cleanupCtx)
-	if err := r.Cooldown(ctx); err != nil {
-		s.Error("Failed to cooldown before the manual setup: ", err)
 	}
 
 	// Give a few minutes for testers to do manual testing setup.
