@@ -37,8 +37,8 @@ func ConcurrentSessions(ctx context.Context, s *testing.State) {
 		password1Label = "online-password"
 		userPassword2  = "doublesecret"
 		password2Label = "offline-password"
-		userPin        = "12345"
-		pinLabel       = "luggage-pin"
+		userPassword3  = "12345"
+		password3Label = "password-3"
 	)
 
 	ctxForCleanUp := ctx
@@ -91,13 +91,13 @@ func ConcurrentSessions(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to authenticate session #2: ", err)
 	}
 
-	// Add a PIN auth factor to the user via session #2.
-	if err := client.AddPinAuthFactor(ctx, authSession2ID, pinLabel, userPin); err != nil {
+	// Add password #3 to the user via session #2.
+	if err := client.AddAuthFactor(ctx, authSession2ID, password3Label, userPassword3); err != nil {
 		s.Fatal("Failed to add password auth factor: ", err)
 	}
 
-	// Now re-authenticate session #1 using the PIN added via session #2.
-	if _, err := client.AuthenticatePinAuthFactor(ctx, authSession1ID, pinLabel, userPin); err != nil {
+	// Now re-authenticate session #1 using the password added via session #2.
+	if _, err := client.AuthenticateAuthFactor(ctx, authSession1ID, password3Label, userPassword3); err != nil {
 		s.Fatal("Failed to re-authenticate session #1: ", err)
 	}
 }
