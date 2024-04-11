@@ -88,7 +88,7 @@ func (r *Reporter) GetDisplayedFWScreens(ctx context.Context, logType ...CBMEMLo
 		// the id of this firmware screen would get recorded twice in the cbmem
 		// logs. Change the duplicate record to firmware.LegacyDebugInfo.
 		matchPrefix := strings.Split(match[0], ":")[0]
-		if matchPrefix != "vb2ex_display_ui" && prevMatch != "" && fwScreenID == prevMatchFwScreenID {
+		if matchPrefix != "vb2ex_display_ui" && matchPrefix != "ui_display" && prevMatch != "" && fwScreenID == prevMatchFwScreenID {
 			// For LCUI machines, the duplicate record starts with the
 			// "vboot_draw_ui" prefix. For LMUI machines, the exact same
 			// log is printed again.

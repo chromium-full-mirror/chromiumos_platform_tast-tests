@@ -36,6 +36,38 @@ type Event struct {
 	Index     int
 }
 
+// DiagType is a int representing the DUT's diagnostic type found
+// from 'elogtool list'.
+type DiagType int
+
+// Names for the different diagnostic type.
+const (
+	StorageHealth DiagType = iota + 1
+	StorageTestShort
+	StorageTestShortExtended
+	MemoryQuick
+	MemoryFull
+)
+
+// DiagResult is a int representing the DUT's diagnostic result
+// found from 'elogtool list'.
+type DiagResult int
+
+// Names for the different diagnostic result.
+const (
+	MiniDiagPassed DiagResult = iota + 1
+	MiniDiagError
+	MiniDiagFailed
+	MiniDiagAborted
+)
+
+// DiagLog contains the contents of diagnostics mode information from
+// `elogtool list`.
+type DiagLog struct {
+	TypeMsg DiagType
+	Result  DiagResult
+}
+
 func parseEventTime(input string) (time.Time, error) {
 	var err error
 	for _, timeFmt := range []string{"2006-01-02 15:04:05", "2006-01-02 15:04:05-0700"} {
@@ -140,7 +172,7 @@ func checkFirmwareVbootInfo(eventMessage string) bool {
 func findBootModeFromEvents(events []Event) (EventlogBootMode, error) {
 	var (
 		reFirmwareBootMode   *regexp.Regexp = regexp.MustCompile(`boot_mode=([\w ]+)`)
-		reDeprecatedBootMode *regexp.Regexp = regexp.MustCompile(`(Diagnostics Mode|Chrome\s?OS[\w ]+)`)
+		reDeprecatedBootMode *regexp.Regexp = regexp.MustCompile(`(Launch Diagnostics|Chrome\s?OS[\w ]+)`)
 	)
 	bootModesMap := map[string]EventlogBootMode{
 		// Listed below are some supported boot modes, as documented in the
@@ -154,7 +186,7 @@ func findBootModeFromEvents(events []Event) (EventlogBootMode, error) {
 		// 'coreboot/util/cbfstool/eventlog.c' file.
 		"ChromeOS Developer Mode": DeveloperMode,
 		"ChromeOS Recovery Mode":  manualRecoveryOrBrokenScreen,
-		"Diagnostics Mode":        Diagnostic,
+		"Launch Diagnostics":      Diagnostic,
 	}
 	var bootModes []EventlogBootMode
 	hasVbootInfo := false
@@ -200,17 +232,26 @@ func findBootModeFromEvents(events []Event) (EventlogBootMode, error) {
 	return 0, errors.Errorf("unable to identify boot modes from elog events, found boot modes: %v", bootModes)
 }
 
-// CheckBootModes checks for boot modes found from 'elogtool list'
-// against the expected ones.
-func (r *Reporter) CheckBootModes(ctx context.Context, newEvents []Event, expectedBootModes []EventlogBootMode) error {
+// GetBootModes gets the boot modes found from 'elogtool list'.
+func (r *Reporter) GetBootModes(ctx context.Context, newEvents []Event) ([]EventlogBootMode, error) {
 	groups := groupEventsByBoots(newEvents)
 	var foundBootModes []EventlogBootMode
 	for _, events := range groups {
 		bootMode, err := findBootModeFromEvents(events)
 		if err != nil {
-			return errors.Wrap(err, "failed to find boot mode")
+			return foundBootModes, errors.Wrap(err, "failed to find boot mode")
 		}
 		foundBootModes = append(foundBootModes, bootMode)
+	}
+	return foundBootModes, nil
+}
+
+// CheckBootModes checks for boot modes found from 'elogtool list'
+// against the expected ones.
+func (r *Reporter) CheckBootModes(ctx context.Context, newEvents []Event, expectedBootModes []EventlogBootMode) error {
+	foundBootModes, err := r.GetBootModes(ctx, newEvents)
+	if err != nil {
+		return errors.Wrap(err, "failed to get boot modes")
 	}
 	if len(foundBootModes) != len(expectedBootModes) {
 		return errors.Errorf("found %d boot modes from the event log, but expected %d, found boot modes: %v", len(foundBootModes), len(expectedBootModes), foundBootModes)
@@ -285,6 +326,76 @@ func (r *Reporter) CheckRecoveryEventsInEventLog(ctx context.Context, newEvents 
 			continue
 		}
 		return errors.Errorf("found %v, but expected %v", val, expectedRecoveryReasonString)
+	}
+	return nil
+}
+
+// findDiagnosticsLogsFromEvents takes a slice of events and returns
+// diagnostics logs found.
+func findDiagnosticsLogsFromEvents(events []Event) ([]DiagLog, error) {
+	var (
+		reDiagnosticsLogs   *regexp.Regexp = regexp.MustCompile(`Diagnostics Mode`)
+		reDiagTypeAndResult *regexp.Regexp = regexp.MustCompile(`type=([\w (\w)]+), result=(\w+)`)
+	)
+	diagnosticsTypesMap := map[string]DiagType{
+		"Storage health info":          StorageHealth,
+		"Storage self-test (short)":    StorageTestShort,
+		"Storage self-test (extended)": StorageTestShortExtended,
+		"Memory check (quick)":         MemoryQuick,
+		"Memory check (full)":          MemoryFull,
+	}
+	diagnosticsResultsMap := map[string]DiagResult{
+		"Passed":  MiniDiagPassed,
+		"Error":   MiniDiagError,
+		"Failed":  MiniDiagFailed,
+		"Aborted": MiniDiagAborted,
+	}
+	var results []DiagLog
+	var diagEvent Event
+	for _, event := range events {
+		hasDiagnosticsLogs := reDiagnosticsLogs.MatchString(event.Message)
+		if hasDiagnosticsLogs {
+			if diagEvent != (Event{}) {
+				return results, errors.Errorf("more than 1 diagnostics event found: %s, %s", diagEvent.Message, event.Message)
+			}
+			diagEvent = event
+		}
+	}
+	if diagEvent == (Event{}) {
+		return results, errors.New("no diagnostics event found")
+	}
+	/*
+		Below is one example event log from running pre-boot diagnostics:
+		"Diagnostics Mode | Diagnostics Logs | type=Storage health info, result=Passed, time=0m0s | type=Memory check (quick), result=Aborted, time=0m0s".
+		After splitting the string by "|", the diagnostic logs begin from the 2nd entry to the last.
+	*/
+	diagLogs := strings.Split(diagEvent.Message, "|")[2:]
+	for _, logTypeResult := range diagLogs {
+		out := reDiagTypeAndResult.FindStringSubmatch(logTypeResult)
+		if len(out) != 3 {
+			return results, errors.New("did not get expected numbers of match for diagnostics logs")
+		}
+		results = append(results, DiagLog{TypeMsg: diagnosticsTypesMap[out[1]], Result: diagnosticsResultsMap[out[2]]})
+	}
+	return results, nil
+}
+
+// CheckDiagnosticsLogs checks for diagnostics logs found from 'elogtool list'
+// against the expected ones.
+func (r *Reporter) CheckDiagnosticsLogs(ctx context.Context, newEvents []Event, expectedLogs []DiagLog) error {
+	groups := groupEventsByBoots(newEvents)
+	prevBootEvents := groups[len(groups)-2]
+	diagLogs, err := findDiagnosticsLogsFromEvents(prevBootEvents)
+	if err != nil {
+		return errors.Wrap(err, "failed to find diagnostics logs from events")
+	}
+	if len(diagLogs) != len(expectedLogs) {
+		return errors.Errorf("found %d diagnostics logs from the event log, but expected %d, found logs: %v", len(diagLogs), len(expectedLogs), diagLogs)
+	}
+	for idx, val := range diagLogs {
+		if val != expectedLogs[idx] {
+			return errors.Errorf("found %v, but expected %v", val, expectedLogs[idx])
+		}
 	}
 	return nil
 }
