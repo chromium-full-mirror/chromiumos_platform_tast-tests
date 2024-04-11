@@ -274,6 +274,17 @@ func firmwareDumpValidator(ctx context.Context, rl *retry.Loop, s *testing.State
 		s.Fatal("Failed to create shill manager proxy: ", err)
 	}
 
+	s.Log("Ensuring WiFi device is enabled")
+	if enabled, err := m.IsEnabled(ctx, shill.TechnologyWifi); err != nil {
+		s.Fatal("Failed to check the enablement status of WiFi device: ", err)
+	} else if !enabled {
+		s.Log("WiFi device was not enabled, start enabling")
+		e := m.EnableTechnology(ctx, shill.TechnologyWifi)
+		if e != nil {
+			s.Fatal("Failed to enable WiFi: ", e)
+		}
+	}
+
 	ifaceName, err := shill.WifiInterface(ctx, m, 5*time.Second)
 	if err != nil {
 		s.Fatal("Failed to get the WiFi interface: ", err)
