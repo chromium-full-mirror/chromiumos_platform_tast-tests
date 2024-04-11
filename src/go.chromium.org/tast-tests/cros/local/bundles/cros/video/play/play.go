@@ -118,7 +118,11 @@ func playVideo(ctx context.Context, cs ash.ConnSource, videoFile, url string, un
 		return false, errors.Wrap(err, "failed to retrieve a media DevTools observer")
 	}
 
-	if err := conn.Call(ctx, nil, "playUntilEnd", videoFile, unmutePlayer); err != nil {
+	if err := conn.Call(ctx, nil, "startPlaying", videoFile, unmutePlayer); err != nil {
+		return false, err
+	}
+
+	if err := conn.WaitForExpr(ctx, "document.getElementsByTagName('video')[0].ended"); err != nil {
 		return false, err
 	}
 

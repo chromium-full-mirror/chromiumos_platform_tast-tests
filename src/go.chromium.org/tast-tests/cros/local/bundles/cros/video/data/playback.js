@@ -35,15 +35,17 @@ function setGridSize(width, height) {
   }
 }
 
-async function playUntilEnd(videoSourcePath, unmutePlayer) {
+async function startPlaying(videoSourcePath, unmutePlayer) {
+  console.log('Loading url: ', videoSourcePath, '...');
   let videos = Array.from(document.getElementsByClassName(videoClass));
-  videos.forEach(async video => {
-    video.src = videoSourcePath;
-    video.muted = !unmutePlayer;
-    await video.play();
+  // This method only supports 1 <video>.
+  if(videos.length > 1) {
+    throw new Error("Too many videos")
   }
-  );
-  console.log('Loaded url: ', videoSourcePath);
+  let video = videos[0];
+  video.src = videoSourcePath;
+  video.muted = !unmutePlayer;
+  return video.play();
 }
 
 async function playRepeatedly(videoSourcePath) {
