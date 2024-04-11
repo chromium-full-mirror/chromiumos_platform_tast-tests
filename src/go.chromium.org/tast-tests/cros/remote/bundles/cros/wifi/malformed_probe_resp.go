@@ -6,16 +6,16 @@ package wifi
 
 import (
 	"context"
+	"encoding/hex"
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/remote/network/ip"
-	"go.chromium.org/tast-tests/cros/remote/wifi/iw"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
 	"go.chromium.org/tast-tests/cros/remote/wificell/framesender"
-	"go.chromium.org/tast-tests/cros/remote/wificell/hostapd"
 	"go.chromium.org/tast-tests/cros/remote/wificell/router/common"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -76,11 +76,6 @@ func MalformedProbeResp(ctx context.Context, s *testing.State) {
 	}(ctx)
 	ctx, cancel := tf.ReserveForDeconfigAP(ctx, ap)
 	defer cancel()
-	// Get frequency for later scan.
-	freq, err := hostapd.ChannelToFrequency(ap.Config().Channel)
-	if err != nil {
-		s.Fatal("Failed to get frequency of the AP: ", err)
-	}
 
 	s.Log("Connecting")
 	if _, err := tf.ConnectWifiAP(ctx, ap); err != nil {
@@ -148,18 +143,21 @@ func MalformedProbeResp(ctx context.Context, s *testing.State) {
 
 		start := time.Now()
 		received := 0
-		iwr := iw.NewRemoteRunner(s.DUT().Conn())
+		// Framesender fills in SSID with "0"s.
+		ssid := ssidPrefix + "00000000"
 		for round := 1; time.Since(start) < scanLoopTime; round++ {
 			s.Logf("Scan %d", round)
-			result, err := iwr.TimedScan(ctx, iface, []int{freq}, nil)
+			err = tf.DUTWifiClient(wificell.DefaultDUT).RequestScan(ctx)
 			if err != nil {
 				return errors.Wrap(err, "failed to scan")
 			}
-			for _, bss := range result.BSSList {
-				s.Log("Found BSS: ", bss.SSID)
-				if strings.HasPrefix(bss.SSID, ssidPrefix) {
-					received++
-				}
+			path, err := tf.DUTWifiClient(wificell.DefaultDUT).GetServicePath(ctx, map[string]interface{}{
+				shillconst.ServicePropertyType:        shillconst.TypeWifi,
+				shillconst.ServicePropertyWiFiHexSSID: strings.ToUpper(hex.EncodeToString([]byte(ssid))),
+			})
+			if err == nil {
+				s.Logf("Found BSS %q in service: %v", ssid, path)
+				received++
 			}
 			// GoBigSleepLint this sleep is the part of the test design.
 			if err := testing.Sleep(ctx, scanLoopInterval); err != nil {
@@ -174,6 +172,6 @@ func MalformedProbeResp(ctx context.Context, s *testing.State) {
 	}
 
 	if err := tf.AssertNoDisconnect(ctx, wificell.DefaultDUT, runOnce); err != nil {
-		s.Fatal("Scan failed: ", err)
+		s.Fatal("Disconnection event found: ", err)
 	}
 }
