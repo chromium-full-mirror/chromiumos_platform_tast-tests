@@ -187,6 +187,7 @@ func downloadImage(ctx context.Context, testbedProperties remoteTi50.TestbedProp
 			return nil, err
 		}
 		inputURL = downloadedFile
+		testing.ContextLogf(ctx, "Downloaded: %s", inputURL)
 	}
 
 	// For inputURL that is still in gs://, it should now be either a build folder or .bin file
@@ -344,10 +345,10 @@ Loop:
 
 // downloadToTempFile downloads url (gs) to a temp file.
 func downloadToTempFile(ctx context.Context, desc, url string) (string, error) {
-	ext := filepath.Ext(url)
-	f, err := os.CreateTemp("", "*"+ext)
+	baseName := filepath.Base(url)
+	f, err := os.CreateTemp("", "*."+baseName)
 	if err != nil {
-		return "", errors.Wrap(err, "create temp file for "+desc)
+		return "", errors.Wrapf(err, "Unable to download %s to: %s ", desc, baseName)
 	}
 	f.Close()
 
