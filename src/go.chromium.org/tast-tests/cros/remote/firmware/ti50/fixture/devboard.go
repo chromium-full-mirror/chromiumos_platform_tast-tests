@@ -240,7 +240,7 @@ func setupCr50Image(ctx context.Context, s TestingState, board *remoteTi50.DUTCo
 	if imageVer.Less(rw) {
 		testing.ContextLogf(ctx, "Rollback required for flashing %s to %s", rw, imageVer)
 
-		debugImage, efiImage, err := DownloadGSCTestImages(ctx, testbedProperties, "cr50")
+		debugImage, efiImage, err := DownloadGSCTestImages(ctx, testbedProperties)
 		mustSucceed(s, err, "failed to download debug and efi image")
 
 		err = board.RollbackAndRunEraseflashinfoUpdate(ctx, i, imagePath, efiImage, debugImage)

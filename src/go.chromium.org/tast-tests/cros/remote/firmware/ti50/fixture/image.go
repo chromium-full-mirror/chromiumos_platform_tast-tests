@@ -413,41 +413,52 @@ func findGSCImage(ctx context.Context, gsTemplate string) (string, error) {
 }
 
 // findGSCDebugImage finds the debug image for cr50 board.
-func findGSCDebugImage(ctx context.Context, testbedProperties remoteTi50.TestbedProperties, fwName string) (string, error) {
+func findGSCDebugImage(ctx context.Context, testbedProperties remoteTi50.TestbedProperties) (string, error) {
 	devIds := strings.Split(testbedProperties.UsbSerial, "-")
 	if len(devIds) != 2 {
 		return "", errors.New("usb_serial parse error " + testbedProperties.UsbSerial)
 	}
 
+	fwName := findFwName(testbedProperties.TestbedType)
 	debugImageGlob := fmt.Sprintf(debugImageTemplate, fwName, strings.ToLower(devIds[0]), strings.ToLower(devIds[1]))
 	return findGSCImage(ctx, debugImageGlob)
 }
 
 // findGSCEFIImage finds the eraseflashinfo image for cr50 board.
-func findGSCEFIImage(ctx context.Context, testbedProperties remoteTi50.TestbedProperties, fwName string) (string, error) {
+func findGSCEFIImage(ctx context.Context, testbedProperties remoteTi50.TestbedProperties) (string, error) {
 	efiDevidStr := strings.ToLower(testbedProperties.UsbSerial)
+	fwName := findFwName(testbedProperties.TestbedType)
 	efiImageGlob := fmt.Sprintf(efiImageTemplate, fwName, efiDevidStr)
 	return findGSCImage(ctx, efiImageGlob)
 }
 
-// DownloadGSCTestImages finds the debug and eraseflashinfo images for gsc board.
-func DownloadGSCTestImages(ctx context.Context, testbedProperties remoteTi50.TestbedProperties, fwName string) (string, string, error) {
-	// Download the debug image.
-	debugImageURL, err := findGSCDebugImage(ctx, testbedProperties, fwName)
+// DownloadEfiImage finds the eraseflashinfo image for gsc board.
+func DownloadEfiImage(ctx context.Context, testbedProperties remoteTi50.TestbedProperties) (string, error) {
+	efiImageURL, err := findGSCEFIImage(ctx, testbedProperties)
 	if err != nil {
-		return "", "", errors.Wrap(err, "failed to find gsc debug image")
+		return "", errors.Wrap(err, "failed to find gsc efi image")
 	}
-	debugImage, err := DownloadToTempFile(ctx, "debug image", debugImageURL)
+	return DownloadToTempFile(ctx, "efi image", efiImageURL)
+}
+
+// DownloadDebugImage finds the debug image for gsc board.
+func DownloadDebugImage(ctx context.Context, testbedProperties remoteTi50.TestbedProperties) (string, error) {
+	debugImageURL, err := findGSCDebugImage(ctx, testbedProperties)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to find gsc debug image")
+	}
+	return DownloadToTempFile(ctx, "debug image", debugImageURL)
+}
+
+// DownloadGSCTestImages finds the debug and eraseflashinfo images for gsc board.
+func DownloadGSCTestImages(ctx context.Context, testbedProperties remoteTi50.TestbedProperties) (string, string, error) {
+
+	debugImage, err := DownloadDebugImage(ctx, testbedProperties)
 	if err != nil {
 		return "", "", errors.Wrap(err, "failed to download the debug image")
 	}
 
-	// Download the eraseflashinfo image.
-	efiImageURL, err := findGSCEFIImage(ctx, testbedProperties, fwName)
-	if err != nil {
-		return "", "", errors.Wrap(err, "failed to find gsc efi image")
-	}
-	efiImage, err := DownloadToTempFile(ctx, "efi image", efiImageURL)
+	efiImage, err := DownloadEfiImage(ctx, testbedProperties)
 	if err != nil {
 		return "", "", errors.Wrap(err, "failed to download the efi image")
 	}
@@ -552,6 +563,14 @@ func ti50ImageDirectory(t ti50.TestbedType, i ImageType) (string, error) {
 	}
 }
 
+// findFwName returns the firmware name for the board.
+func findFwName(t ti50.TestbedType) string {
+	if t == ti50.GscH1Shield {
+		return "cr50"
+	}
+	return "ti50"
+}
+
 // ti50ImageTypeToProject returns the project.
 func ti50ImageTypeToProject(i ImageType) string {
 	if i == SystemImage {
@@ -579,11 +598,7 @@ func defaultConfigPath(s *testing.FixtState, testbedType ti50.TestbedType, image
 
 	switch imageType {
 	case SystemImage, SystemTestAutoImage, SystemTestAuto2Image:
-		if c == "h1" {
-			fw = "cr50"
-		} else {
-			fw = "ti50"
-		}
+		fw = findFwName(testbedType)
 	default:
 		s.Fatal("Unknown image type: ", string(imageType))
 	}
