@@ -291,9 +291,15 @@ func RestartChromeForTesting(ctx context.Context, cfg *config.Config, extArgs, l
 	//   --enable-features=Feature1,Feature2
 	//   --disable-features=Feature3
 	//   --foo=bar
+	lacrosEnabledFeatures := cfg.LacrosEnableFeatures()
+
+	// Native occlusion is enabled in prod, but disabled by CHROME_HEADLESS in tast tests.
+	// This should be enabled for end to end tests, so enable it in tast tests.
+	lacrosEnabledFeatures = append(lacrosEnabledFeatures, "AlwaysTrackNativeWindowOcclusionForTest")
+
 	var largs []string
-	if fs := cfg.LacrosEnableFeatures(); len(fs) != 0 {
-		largs = append(largs, "--enable-features="+strings.Join(fs, ","))
+	if len(lacrosEnabledFeatures) != 0 {
+		largs = append(largs, "--enable-features="+strings.Join(lacrosEnabledFeatures, ","))
 	}
 	if fs := cfg.LacrosDisableFeatures(); len(fs) != 0 {
 		largs = append(largs, "--disable-features="+strings.Join(fs, ","))
