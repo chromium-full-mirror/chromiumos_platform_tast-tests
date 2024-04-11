@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast/core/errors"
@@ -74,6 +75,29 @@ func (s *Servo) ServoSendPowerSwapRequest(ctx context.Context) (pdControlMsgType
 	}
 
 	return PDCtrlReserved, errors.Errorf("unknown PD control message value %q", replyValue)
+}
+
+// ServoSetDUTDualRole sets the PD DRP status of this port
+func (s *Servo) ServoSetDUTDualRole(ctx context.Context, val USBPdDualRoleValue) error {
+	// USBPdDualRoleSink and Source contain "force " prefix, strip this from the command
+	// sent to servo
+	action := strings.TrimPrefix(string(val), "force ")
+
+	cmd := fmt.Sprintf("pd 1 dualrole %s", action)
+
+	if err := s.RunServoCommand(ctx, cmd); err != nil {
+		testing.ContextLogf(
+			ctx, "EC command %q failed. Trying older version. (%q)",
+			cmd, err,
+		)
+		cmd := fmt.Sprintf("pd dualrole %s", action)
+
+		if err := s.RunServoCommand(ctx, cmd); err != nil {
+			return errors.Wrapf(err, "ec command %q failed", cmd)
+		}
+	}
+
+	return nil
 }
 
 // RequireChargerAttached verifies that the Servo charger port (#0) is an active sink
@@ -368,4 +392,47 @@ func (s *Servo) ServoCcOff(ctx context.Context) error {
 	}
 
 	return err
+}
+
+// ServoGetConnectedStateAfterCCReconnect get the connected state after disconnect/reconnect using PDTester
+//
+// PDTester supports a feature which simulates a USB Type C disconnect
+// and reconnect. It returns the first connected state (either source or
+// sink) after reconnect.
+//
+// @param disconnectTime: Time in seconds for disconnect period.
+// @returns: The connected PD state.
+func (s *Servo) ServoGetConnectedStateAfterCCReconnect(ctx context.Context, disconnectTime int) (string, error) {
+	discDelay := 100
+	port := 1
+	cmd := fmt.Sprintf("fakedisconnect %d %d", discDelay, disconnectTime*1000)
+
+	srcConnect := []string{"SRC_READY"}
+	snkConnect := []string{"SNK_READY"}
+	srcDisc := "SRC_DISCONNECTED"
+	sinkDisc := "SNK_DISCONNECTED"
+	drpAutoToggle := "DRP_AUTO_TOGGLE"
+
+	stateExp := `(C%d)\s+[\w]+:?\s(%s)`
+
+	disconnectedStates := strings.Join([]string{srcDisc, sinkDisc, drpAutoToggle}, `|`)
+	disconnectedExp := fmt.Sprintf(stateExp, port, disconnectedStates)
+
+	connectedStates := strings.Join(append(srcConnect, snkConnect...), `|`)
+	connectedExp := fmt.Sprintf(stateExp, port, connectedStates)
+
+	if err := s.EnableServoPDConsoleDebug(ctx); err != nil {
+		return "", errors.Wrap(err, "could not enable Servo's PD debug logs")
+	}
+
+	// Go back to `pd dump 0` after.
+	defer s.DisableServoPDConsoleDebug(ctx)
+
+	output, err := s.RunServoCommandGetOutput(ctx, cmd, []string{disconnectedExp, connectedExp})
+
+	if err != nil {
+		return "", errors.New("failed to run fakedisconnect cmd")
+	}
+
+	return output[1][2], nil
 }

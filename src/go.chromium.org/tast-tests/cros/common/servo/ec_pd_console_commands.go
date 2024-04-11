@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast/core/errors"
@@ -423,4 +424,79 @@ func (s *Servo) GetDUTDualRoleState(ctx context.Context, port int) (USBPdDualRol
 success:
 	testing.ContextLogf(ctx, "Port %d DRP status: %q", port, out[0][1])
 	return USBPdDualRoleValue(out[0][1]), nil
+}
+
+// SetDUTDualRole accepts a port ID and sets the PD DRP status of this port
+func (s *Servo) SetDUTDualRole(ctx context.Context, val USBPdDualRoleValue) error {
+	// USBPdDualRoleSink and Source contains "force " prefix, strip this from the command
+	// sent to EC
+	action := strings.TrimPrefix(string(val), "force ")
+
+	cmd := fmt.Sprintf("pd %d dualrole %s", s.dutPDInfo.activePort, action)
+
+	if err := s.RunECCommand(ctx, cmd); err != nil {
+		testing.ContextLogf(
+			ctx, "EC command %q failed. Trying older version. (%q)",
+			cmd, err,
+		)
+		cmd := fmt.Sprintf("pd dualrole %s", action)
+
+		if err := s.RunECCommand(ctx, cmd); err != nil {
+			return errors.Wrapf(err, "ec command %q failed", cmd)
+		}
+	}
+
+	state, _ := s.GetDUTDualRoleState(ctx, s.dutPDInfo.activePort)
+
+	if state != val {
+		return errors.Errorf("failed to set dual role to %q", val)
+	}
+	return nil
+}
+
+// SetPDTrySrc attempts to set PD TrySrc enable or disabled.
+// returns True is setting was successful, False if feature not supported
+// by the device, or not set as desired.
+func (s *Servo) SetPDTrySrc(ctx context.Context, enable int) (bool, error) {
+	// TCPMv1 indicates Try.SRC is on by returning 'on'
+	// TCPMv2 indicates Try.SRC is on by returning 'Forced ON'
+	onVals := []string{"on", "Forced ON"}
+
+	// TCPMv1 indicates Try.SRC is off by returning 'off'
+	// TCPMv2 indicates Try.SRC is off by returning 'Forced OFF'
+	offVals := []string{"off", "Forced OFF"}
+
+	// Try.SRC on/off is output, if supported feature
+	values := strings.Join(append(onVals, offVals...), `|`)
+	regex := fmt.Sprintf(`Try\.SRC\s(%s)|(Parameter)`, values)
+
+	matchList := []string{regex}
+	cmd := fmt.Sprintf("pd trysrc %d", enable)
+	out, err := s.RunECCommandGetOutputNoConsoleLogs(ctx, cmd, matchList)
+
+	if err != nil {
+		return false, errors.Wrapf(err, "ec command %q failed", cmd)
+	}
+
+	if !strings.Contains(out[0][0], "Try.Src") {
+		return false, errors.Wrap(err, "Try.SRC not supported on this PD device")
+	}
+
+	trySrcVal := out[0][1]
+	testing.ContextLogf(ctx, "Try.SRC mode = %s", trySrcVal)
+
+	findStrings := onVals
+	if enable == 0 {
+		findStrings = offVals
+	}
+
+	found := false
+	for _, str := range findStrings {
+		if strings.Contains(trySrcVal, str) {
+			found = true
+			break
+		}
+	}
+
+	return found, nil
 }
