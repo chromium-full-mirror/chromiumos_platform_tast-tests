@@ -42,7 +42,7 @@ var (
 	// Regex to wait until ccd testlab mode is disabled
 	testlabEnabledRE = regexp.MustCompile("Updating testlab to true|CCD test lab mode enabled")
 	// GSC version strings
-	verRWCr50StrRE = `cr50_([0-9_vpm\.]*)\.[0-9]*-([[:xdigit:]]+)`
+	verRWCr50StrRE = `cr50_([0-9_vpmefi\.]*)\.[0-9]*-([[:xdigit:]]+)`
 	verRWTi50StrRE = `ti50_common_([a-z]+)\S*:(\S+)`
 	verRWGSCStrRE  = verRWCr50StrRE + `|` + verRWTi50StrRE
 	// GSC board properties
@@ -117,6 +117,7 @@ const (
 	ToT GscBranch = iota
 	PrePvt
 	MP
+	EFI
 	Unknown
 )
 
@@ -663,6 +664,8 @@ func getBranch(s string) GscBranch {
 		return MP
 	case "v4.11_mp":
 		return MP
+	case "v4.11_28_efi":
+		return EFI
 	default:
 		return Unknown
 	}
