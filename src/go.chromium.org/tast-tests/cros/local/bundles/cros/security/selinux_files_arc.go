@@ -14,7 +14,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/security/selinux"
-	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -33,14 +32,17 @@ func init() {
 		SoftwareDeps: []string{"selinux", "chrome"},
 		Attr:         []string{"group:mainline"},
 		Timeout:      5 * time.Minute,
-		Params: []testing.Param{
-			{
+		Params: []testing.Param{{
+				Name:              "arcpp_user",
+				Fixture:           "arcBooted",
 				ExtraSoftwareDeps: []string{"android_container"},
+				Val:               "arcpp-user",
 			}, {
-				Name:              "vm",
+				Name:              "arcvm_user",
+				Fixture:           "arcBooted",
 				ExtraSoftwareDeps: []string{"android_vm"},
-			},
-		},
+				Val:               "arcvm-user",
+			}},
 	})
 }
 
@@ -54,19 +56,6 @@ type arcFileTestCase struct {
 }
 
 func SELinuxFilesARC(ctx context.Context, s *testing.State) {
-	// Side effect of other tests in the same arc.Booted() may cause this
-	// test more flaky.
-	cr, err := chrome.New(ctx, chrome.ARCEnabled(), chrome.UnRestrictARCCPU())
-	if err != nil {
-		s.Fatal("Chrome login failed: ", err)
-	}
-	defer cr.Close(ctx)
-	a, err := arc.New(ctx, s.OutDir(), cr.NormalizedUser())
-	if err != nil {
-		s.Fatal("Failed to start ARC: ", err)
-	}
-	defer a.Close(ctx)
-
 	vmEnabled, err := arc.VMEnabled()
 	if err != nil {
 		s.Fatal("Failed to check whether ARCVM is enabled: ", err)
