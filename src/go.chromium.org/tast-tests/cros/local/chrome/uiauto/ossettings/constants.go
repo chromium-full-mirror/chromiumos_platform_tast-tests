@@ -145,7 +145,7 @@ var SavedDevicesSubpageLink = nodewith.Role(role.Link).NameStartingWith("Devices
 // Elements in "Saved devices subpage"
 var (
 	// SavedDeviceRows is the finder for saved device rows in the Saved devices subpage.
-	SavedDeviceRows = nodewith.NameRegex(regexp.MustCompile("^Device [0-9] of [0-9],.*")).HasClass("list-item")
+	SavedDeviceRows = nodewith.NameRegex(regexp.MustCompile("^Device [0-9]* of [0-9]*,.*")).HasClass("list-item")
 
 	// SavedDeviceMoreActionsBtn is the finder for the more actions buttons on the Saved devices subpage.
 	SavedDeviceMoreActionsBtn = nodewith.HasClass("icon-more-vert").Role(role.Button)
