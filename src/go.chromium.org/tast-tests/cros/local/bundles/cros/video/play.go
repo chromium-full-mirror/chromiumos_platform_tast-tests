@@ -515,6 +515,67 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "v4l2_codec"},
 			ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()), // E.g. MT8173 Hana and QC SC7180 Trogdor.
 			Fixture:           "chromeVideoWithV4L2FlatDecoder",
+		}, {
+			Name: "h264_hw_switch",
+			Val: playParams{
+				fileName:    "smpte_bars_resolution_ladder.h264.mp4",
+				videoType:   play.NormalVideo,
+				verifyMode:  play.VerifyHWAcceleratorUsed,
+				browserType: browser.TypeAsh,
+			},
+			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
+			ExtraData:         []string{"smpte_bars_resolution_ladder.h264.mp4"},
+			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
+			Fixture:           "chromeVideo",
+		}, {
+			Name: "vp8_hw_switch",
+			Val: playParams{
+				fileName:    "smpte_bars_resolution_ladder.vp8.webm",
+				videoType:   play.NormalVideo,
+				verifyMode:  play.VerifyHWAcceleratorUsed,
+				browserType: browser.TypeAsh,
+			},
+			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
+			ExtraData:         []string{"smpte_bars_resolution_ladder.vp8.webm"},
+			ExtraSoftwareDeps: []string{caps.HWDecodeVP8},
+			Fixture:           "chromeVideo",
+		}, {
+			Name: "vp9_hw_switch",
+			Val: playParams{
+				fileName:    "smpte_bars_resolution_ladder.vp9.webm",
+				videoType:   play.NormalVideo,
+				verifyMode:  play.VerifyHWAcceleratorUsed,
+				browserType: browser.TypeAsh,
+			},
+			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
+			ExtraData:         []string{"smpte_bars_resolution_ladder.vp9.webm"},
+			ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
+			Fixture:           "chromeVideo",
+		}, {
+			Name: "hevc_hw_switch",
+			Val: playParams{
+				fileName:    "smpte_bars_resolution_ladder.hevc.mp4",
+				videoType:   play.NormalVideo,
+				verifyMode:  play.VerifyHWAcceleratorUsed,
+				browserType: browser.TypeAsh,
+			},
+			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
+			ExtraData:         []string{"smpte_bars_resolution_ladder.hevc.mp4"},
+			ExtraHardwareDeps: hwdep.D(hwdep.SupportsHEVCVideoDecodingInChrome()),
+			ExtraSoftwareDeps: []string{caps.HWDecodeHEVC, "proprietary_codecs"},
+			Fixture:           "chromeVideo",
+		}, {
+			Name: "av1_hw_switch",
+			Val: playParams{
+				fileName:    "smpte_bars_resolution_ladder.av1.webm",
+				videoType:   play.NormalVideo,
+				verifyMode:  play.VerifyHWAcceleratorUsed,
+				browserType: browser.TypeAsh,
+			},
+			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
+			ExtraData:         []string{"smpte_bars_resolution_ladder.av1.webm"},
+			ExtraSoftwareDeps: []string{caps.HWDecodeAV1},
+			Fixture:           "chromeVideo",
 		}},
 	})
 }
