@@ -181,8 +181,11 @@ func ZeroTouchEnrollment(ctx context.Context, s *testing.State) {
 }
 
 func setVpdValuesForInitialEnrollment(ctx context.Context, dutConn *ssh.Conn) error {
-	if err := dutConn.CommandContext(ctx, "vpd", "-i", "RW_VPD", "-d", "check_enrollment").Run(exec.DumpLogOnError); err != nil {
-		return errors.Wrap(err, "failed to delete check_enrollment")
+	// Delete check_enrollment from vpd if it exists.
+	if err := dutConn.CommandContext(ctx, "vpd", "-i", "RW_VPD", "-g", "check_enrollment").Run(); err == nil {
+		if err := dutConn.CommandContext(ctx, "vpd", "-i", "RW_VPD", "-d", "check_enrollment").Run(exec.DumpLogOnError); err != nil {
+			return errors.Wrap(err, "failed to delete check_enrollment")
+		}
 	}
 
 	// Setting the RLZ ping embargo end date to one month ago.
