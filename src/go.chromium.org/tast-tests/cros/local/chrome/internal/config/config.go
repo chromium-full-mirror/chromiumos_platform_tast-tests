@@ -222,9 +222,6 @@ func (c *Config) ForceLaunchBrowser() bool { return c.m.ForceLaunchBrowser }
 // EphemeralUser returns true if user mount should be validated to be ephemeral, e.g. for guest user.
 func (c *Config) EphemeralUser() bool { return c.m.EphemeralUser }
 
-// EnablePersonalizationHub returns true if the Personalization Hub is enabled.
-func (c *Config) EnablePersonalizationHub() bool { return c.m.EnablePersonalizationHub }
-
 // UseSandboxGaia returns true if the sandbox instance of Gaia should be used.
 func (c *Config) UseSandboxGaia() bool { return c.m.UseSandboxGaia }
 
@@ -307,7 +304,6 @@ type MutableConfig struct {
 	HideCrashRestoreBubble          bool             `reuse_match:"true"`
 	ForceLaunchBrowser              bool             `reuse_match:"true"`
 	EphemeralUser                   bool             `reuse_match:"true"`
-	EnablePersonalizationHub        bool             `reuse_match:"true"`
 	UseSandboxGaia                  bool             `reuse_match:"true"`
 	TestExtOAuthClientID            string           `reuse_match:"true"`
 	EnableHIDScreenOnOOBE           bool             `reuse_match:"true"`
@@ -349,7 +345,6 @@ func NewConfig(opts []Option) (*Config, error) {
 			HideCrashRestoreBubble:          false,
 			ForceLaunchBrowser:              false,
 			EphemeralUser:                   false,
-			EnablePersonalizationHub:        true,
 			UseSandboxGaia:                  false,
 			EnableHIDScreenOnOOBE:           false,
 			EnableStackSampledMetrics:       false,

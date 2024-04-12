@@ -307,12 +307,6 @@ func RestartChromeForTesting(ctx context.Context, cfg *config.Config, extArgs, l
 	largs = append(largs, stackProfilerArg(cfg.EnableLacrosStackSampledMetrics()))
 	args = append(args, "--lacros-chrome-additional-args="+strings.Join(largs, "####"))
 
-	if cfg.EnablePersonalizationHub() {
-		args = append(args, "--enable-features=PersonalizationHub")
-	} else {
-		args = append(args, "--disable-features=PersonalizationHub")
-	}
-
 	args = append(args, cfg.ExtraArgs()...)
 	var envVars []string
 	if cfg.BreakpadTestMode() {
