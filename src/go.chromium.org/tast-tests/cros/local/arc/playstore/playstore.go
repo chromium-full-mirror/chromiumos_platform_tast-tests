@@ -72,8 +72,9 @@ func FindActionButton(ctx context.Context, d *ui.Device, actionText string, time
 
 	textViewClass := ui.ClassName("android.widget.TextView")
 	actionTextView := d.Object(textViewClass, ui.DescriptionMatches("(?i)"+actionText), ui.Enabled(true))
+	actionTextView2 := d.Object(textViewClass, ui.TextMatches("(?i)"+actionText), ui.Enabled(true))
 
-	result, err := findAnyExists(ctx, timeout, actionButton, actionView, actionTextView)
+	result, err := findAnyExists(ctx, timeout, actionTextView2, actionTextView, actionView, actionButton)
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not find the button %q", actionText)
 	}
