@@ -45,9 +45,8 @@ func init() {
 		VarDeps: []string{
 			"ui.signinProfileTestExtensionManifestKey",
 		},
-		// the test performs 5 log-ins and some additional operations.
-		// We also reserve some time for clean-up and some time for slower devices.
-		Timeout: 5*chrome.LoginTimeout + 2*time.Minute,
+		// the test performs 5 log-ins and some additional operations. we also reserve some time for clean-up
+		Timeout: 5*chrome.LoginTimeout + 45*time.Second,
 	})
 }
 
