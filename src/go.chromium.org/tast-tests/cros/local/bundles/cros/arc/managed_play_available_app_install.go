@@ -65,7 +65,7 @@ func init() {
 func ManagedPlayAvailableAppInstall(ctx context.Context, s *testing.State) {
 	const (
 		bootTimeout      = 4 * time.Minute
-		testPackage      = "com.google.android.calculator"
+		testPackage      = "com.google.android.keep"
 		defaultUITimeout = time.Minute
 	)
 

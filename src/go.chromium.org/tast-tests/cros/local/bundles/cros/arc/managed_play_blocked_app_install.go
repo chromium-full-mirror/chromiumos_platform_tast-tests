@@ -72,7 +72,7 @@ func ManagedPlayBlockedAppInstall(ctx context.Context, s *testing.State) {
 	const (
 		bootTimeout           = 4 * time.Minute
 		installButtonText     = "install"
-		testPackage           = "com.google.android.calculator"
+		testPackage           = "com.google.android.keep"
 		defaultUITimeout      = 1 * time.Minute
 		appUnavailableMessage = "Your administrator has not given you access to this item."
 	)

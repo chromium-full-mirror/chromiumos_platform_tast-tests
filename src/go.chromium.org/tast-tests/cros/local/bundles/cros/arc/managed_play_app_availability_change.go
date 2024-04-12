@@ -72,7 +72,7 @@ func init() {
 func ManagedPlayAppAvailabilityChange(ctx context.Context, s *testing.State) {
 	const (
 		bootTimeout = 4 * time.Minute
-		testPackage = "com.google.android.calculator"
+		testPackage = "com.google.android.keep"
 	)
 
 	rl := &retry.Loop{Attempts: 1,

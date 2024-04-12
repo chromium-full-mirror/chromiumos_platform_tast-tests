@@ -34,7 +34,7 @@ const (
 	apkCacheFilesDir       = "/mnt/stateful_partition/unencrypted/apkcache/files"
 	createdSessionPrefix   = "CacheManager: Created session: "
 	closedSessionPrefix    = "CacheManager: Closed session: "
-	testPackage            = "com.google.android.calculator"
+	testPackage            = "com.google.android.keep"
 )
 
 func init() {

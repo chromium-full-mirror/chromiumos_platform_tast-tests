@@ -75,7 +75,7 @@ func init() {
 
 func PlayStore(ctx context.Context, s *testing.State) {
 	const (
-		pkgName             = "com.google.android.calculator"
+		pkgName             = "com.google.android.keep"
 		installationTimeout = 10 * time.Minute
 	)
 

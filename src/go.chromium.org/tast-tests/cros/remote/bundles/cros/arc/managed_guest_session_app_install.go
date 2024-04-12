@@ -60,7 +60,7 @@ func init() {
 // ManagedGuestSessionAppInstall verifies that an app is force installed in MGS.
 func ManagedGuestSessionAppInstall(ctx context.Context, s *testing.State) {
 	const (
-		testPackage = "com.google.android.calculator"
+		testPackage = "com.google.android.keep"
 	)
 
 	cleanupCtx := ctx

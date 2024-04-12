@@ -171,7 +171,7 @@ const (
 // - verify all expected install events are logged.
 func ManagedAppInstallLogging(ctx context.Context, s *testing.State) {
 	const (
-		testPackage         = "com.google.android.calculator"
+		testPackage         = "com.google.android.keep"
 		poolID              = "arc_logging_test"
 		provisioningTimeout = 4 * time.Minute
 	)
