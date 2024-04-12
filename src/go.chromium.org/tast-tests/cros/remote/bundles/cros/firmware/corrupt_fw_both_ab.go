@@ -7,11 +7,11 @@ package firmware
 import (
 	"context"
 	"fmt"
-	"os"
 	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/firmware/bios"
+	"go.chromium.org/tast-tests/cros/common/firmware/futility"
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
@@ -19,7 +19,6 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
-	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -45,7 +44,7 @@ func init() {
 		Params: []testing.Param{
 			{
 				Name:              "body_normal",
-				Fixture:           fixture.NormalMode,
+				Fixture:           fixture.BootModeFixtureWithAPBackup(fixture.NormalMode),
 				ExtraAttr:         []string{"firmware_bios", "firmware_level3"},
 				ExtraRequirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
 				Val: &corruptTestVal{
@@ -54,7 +53,7 @@ func init() {
 			},
 			{
 				Name:              "body_dev",
-				Fixture:           fixture.DevModeGBB,
+				Fixture:           fixture.BootModeFixtureWithAPBackup(fixture.DevModeGBB),
 				ExtraAttr:         []string{"firmware_bios", "firmware_level3"},
 				ExtraRequirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
 				Val: &corruptTestVal{
@@ -63,7 +62,7 @@ func init() {
 			},
 			{
 				Name:      "sig_normal",
-				Fixture:   fixture.NormalMode,
+				Fixture:   fixture.BootModeFixtureWithAPBackup(fixture.NormalMode),
 				ExtraAttr: []string{"firmware_unstable"},
 				Val: &corruptTestVal{
 					bios.FWSignAImageSection, bios.FWSignBImageSection,
@@ -71,7 +70,7 @@ func init() {
 			},
 			{
 				Name:      "sig_dev",
-				Fixture:   fixture.DevModeGBB,
+				Fixture:   fixture.BootModeFixtureWithAPBackup(fixture.DevModeGBB),
 				ExtraAttr: []string{"firmware_unstable"},
 				Val: &corruptTestVal{
 					bios.FWSignAImageSection, bios.FWSignBImageSection,
@@ -91,8 +90,12 @@ func CorruptFWBodySection(ctx context.Context, s *testing.State, h *firmware.Hel
 	}
 
 	for _, section := range []string{string(bios.FWBodyAImageSection), string(bios.FWBodyBImageSection)} {
-		_, err := h.DUT.Conn().CommandContext(ctx, "cbfstool", corruptBiosRemoteImage, "remove", "-r", section, "-n", "fallback/payload").Output(ssh.DumpLogOnError)
-		if err != nil {
+		if _, err := h.DUT.Conn().CommandContext(ctx, "cbfstool", corruptBiosRemoteImage, "remove", "-r", section, "-n", "fallback/payload").Output(ssh.DumpLogOnError); err != nil {
+			s.Error("Failed to corrupt ", section, " section: ", err)
+			return err
+		}
+		// Add new file to make sure checksum will differ
+		if _, err := h.DUT.Conn().CommandContext(ctx, "cbfstool", corruptBiosRemoteImage, "add-int", "-r", section, "-n", "fallback/new_int", "-i", "6677").Output(ssh.DumpLogOnError); err != nil {
 			s.Error("Failed to corrupt ", section, " section: ", err)
 			return err
 		}
@@ -105,9 +108,15 @@ func CorruptFWBothAB(ctx context.Context, s *testing.State) {
 }
 
 func corruptFWSectionTest(ctx context.Context, s *testing.State, corruptFMAPSection func(context.Context, *testing.State, *firmware.Helper, string, string, string) error, failureReason string) {
+	b := s.FixtValue().(*fixture.Value).BackupManager
 	h := s.FixtValue().(*fixture.Value).Helper
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to init servo: ", err)
+	}
+
+	futilityInstance, err := futility.NewLocalBuilder(h.DUT).Build()
+	if err != nil {
+		s.Fatal("Failed to setup futility instance: ", err)
 	}
 
 	sectionA := string(s.Param().(*corruptTestVal).sectionA)
@@ -117,7 +126,6 @@ func corruptFWSectionTest(ctx context.Context, s *testing.State, corruptFMAPSect
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Minute)
 	defer cancel()
 
-	s.Log("Backup AP firmware")
 	out, err := h.DUT.Conn().CommandContext(ctx, "mktemp", "-d", "-p", "/var/tmp", "-t", "fwimgXXXXXX").Output(ssh.DumpLogOnError)
 	if err != nil {
 		s.Fatal("Failed creating remote temp dir: ", err)
@@ -131,9 +139,10 @@ func corruptFWSectionTest(ctx context.Context, s *testing.State, corruptFMAPSect
 	}()
 
 	backupBiosRemoteImage := fmt.Sprintf("%s/bios_backup.bin", remoteTempDir)
-	if err := h.DUT.Conn().CommandContext(ctx, "futility", "read", backupBiosRemoteImage).Run(ssh.DumpLogOnError); err != nil {
-		s.Fatal("Failed taking bios backup: ", err)
+	if err := b.CopyBackupToDut(ctx, h.DUT, fixture.FirmwareAP, backupBiosRemoteImage); err != nil {
+		s.Fatal("Failed to copy firmware backup image to DUT: ", err)
 	}
+
 	out, err = h.ServoProxy.OutputCommand(ctx, false, "mktemp", "-d", "-p", "/var/tmp", "-t", "fwservoXXXXXX")
 	if err != nil {
 		s.Fatal("Failed to create servo temp dir")
@@ -144,21 +153,6 @@ func corruptFWSectionTest(ctx context.Context, s *testing.State, corruptFMAPSect
 			s.Fatal("Failed deleting servo temp dir: ", err)
 		}
 	}()
-	localTempDir, err := os.MkdirTemp("", "fwlocal*")
-	if err != nil {
-		s.Fatal("Failed to create local temp dir")
-	}
-
-	s.Log("Downloading backup to ", localTempDir)
-	if err := linuxssh.GetFile(ctx, h.DUT.Conn(), backupBiosRemoteImage, fmt.Sprintf("%s/bios_backup.bin", localTempDir), linuxssh.DereferenceSymlinks); err != nil {
-		s.Fatal("Failed to download: ", err)
-	}
-	s.Log("Copying file to servohost ", servoTempDir)
-	if err := h.ServoProxy.PutFiles(ctx, false, map[string]string{
-		fmt.Sprintf("%s/bios_backup.bin", localTempDir): fmt.Sprintf("%s/bios_backup.bin", servoTempDir),
-	}); err != nil {
-		s.Fatal("Failed to copy files to servo host: ", err)
-	}
 
 	if err := h.Reporter.ClearEventlog(ctx); err != nil {
 		s.Fatal("Failed to clear event log: ", err)
@@ -167,8 +161,13 @@ func corruptFWSectionTest(ctx context.Context, s *testing.State, corruptFMAPSect
 	restoreFirmware := func(ctx context.Context) {
 		s.Log("Restoring AP firmware via servo")
 
+		backupOnServoProxy := fmt.Sprintf("%s/bios_backup.bin", servoTempDir)
+		if err := b.CopyBackupToServoProxy(ctx, h.ServoProxy, fixture.FirmwareAP, backupOnServoProxy); err != nil {
+			s.Fatal("Failed to copy backup to ServoProxy: ", err)
+		}
+
 		if err := h.ServoProxy.RunCommand(ctx, true, "futility", "update", "--servo", fmt.Sprintf("--servo_port=%d", h.ServoProxy.GetPort()),
-			"--mode=recovery", "--wp=1", "--host_only", "-i", fmt.Sprintf("%s/bios_backup.bin", servoTempDir)); err != nil {
+			"--mode=recovery", "--wp=1", "--host_only", "-i", backupOnServoProxy); err != nil {
 			s.Error("Failed restoring firmware via servo: ", err)
 		}
 		// In b/314059450 it was discovered that some devices don't come back on after futility update. Explicitly reset to prevent this problem.
@@ -198,35 +197,32 @@ func corruptFWSectionTest(ctx context.Context, s *testing.State, corruptFMAPSect
 		s.Fatal("Failed to corrupt FMAP sections: ", err)
 	}
 
-	s.Log("Signing corrupt image")
 	// - Sign it.
-	err = h.DUT.Conn().CommandContext(ctx, "futility", "sign", "--type", "bios", corruptBiosRemoteImage).Run(ssh.DumpLogOnError)
-	if err != nil {
-		s.Fatal("Failed futility sign: ", err)
+	if out, err := futilityInstance.SignBIOS(ctx, futility.NewSignBIOSOptions(corruptBiosRemoteImage)); err != nil {
+		s.Fatal("Failed to sign corrupted firmware image: ", err, "\nOutput:\n", string(out))
 	}
 
 	// - Extract the sections we want to test
-	err = h.DUT.Conn().CommandContext(ctx, "futility", "dump_fmap", "-x", corruptBiosRemoteImage,
-		fmt.Sprintf("%s:%s/%s.bin", sectionA, remoteTempDir, sectionA),
-		fmt.Sprintf("%s:%s/%s.bin", sectionB, remoteTempDir, sectionB),
-	).Run(ssh.DumpLogOnError)
-	if err != nil {
-		s.Fatal("Failed getting corrupt sections: ", err)
+	if out, err := futilityInstance.DumpFmapExtract(ctx, corruptBiosRemoteImage, map[string]string{
+		sectionA: fmt.Sprintf("%s/%s.bin", remoteTempDir, sectionA),
+		sectionB: fmt.Sprintf("%s/%s.bin", remoteTempDir, sectionB),
+	}); err != nil {
+		s.Fatal("Failed to extract sections from corrupted firmware image: ", err, "\nOutput:\n", string(out))
 	}
 
 	// - Create yet another image that contains those sections
-	err = h.DUT.Conn().CommandContext(ctx, "futility", "load_fmap", "-o", fmt.Sprintf("%s/corrupt.bin", remoteTempDir), backupBiosRemoteImage,
-		fmt.Sprintf("%s:%s/%s.bin", sectionA, remoteTempDir, sectionA),
-		fmt.Sprintf("%s:%s/%s.bin", sectionB, remoteTempDir, sectionB),
-	).Run(ssh.DumpLogOnError)
-	if err != nil {
-		s.Fatal("Failed futility load_fmap: ", err)
+	allCorruptBiosImageOnDut := fmt.Sprintf("%s/corrupt.bin", remoteTempDir)
+	if out, err := futilityInstance.LoadFmap(ctx, backupBiosRemoteImage, allCorruptBiosImageOnDut, map[string]string{
+		sectionA: fmt.Sprintf("%s/%s.bin", remoteTempDir, sectionA),
+		sectionB: fmt.Sprintf("%s/%s.bin", remoteTempDir, sectionB),
+	}); err != nil {
+		s.Fatal("Failed to load corrupted sections into fimrware image: ", err, "\nOutput:\n", string(out))
 	}
 
 	s.Logf("Flashing corrupt sections: %q %q", sectionA, sectionB)
 	// - Flash it.
 	shouldRestoreFirmware = true
-	err = h.DUT.Conn().CommandContext(ctx, "futility", "update", "--mode=recovery", "--wp=1", "--host_only", "-i", fmt.Sprintf("%s/corrupt.bin", remoteTempDir)).Run(ssh.DumpLogOnError)
+	err = h.DUT.Conn().CommandContext(ctx, "futility", "update", "--wp=1", "--host_only", "-i", allCorruptBiosImageOnDut).Run(ssh.DumpLogOnError)
 	if err != nil {
 		s.Fatal("Failed flashing corrupt fw: ", err)
 	}

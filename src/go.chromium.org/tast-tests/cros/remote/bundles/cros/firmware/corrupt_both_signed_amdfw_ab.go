@@ -6,14 +6,14 @@ package firmware
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/firmware/bios"
+	"go.chromium.org/tast-tests/cros/common/firmware/futility"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -39,19 +39,19 @@ func init() {
 		Timeout:      50 * time.Minute,
 		Vars:         []string{"firmware.skipFlashUSB"},
 		SoftwareDeps: []string{"crossystem", "flashrom", "amd_cpu"},
-		ServiceDeps:  []string{"tast.cros.firmware.BiosService", "tast.cros.firmware.UtilsService"},
+		ServiceDeps:  []string{"tast.cros.firmware.UtilsService"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{
 			{
 				Name:    "normal_mode",
-				Fixture: fixture.NormalMode,
+				Fixture: fixture.BootModeFixtureWithAPBackup(fixture.NormalMode),
 				Val: &corruptTestVal{
 					bios.SignedAMDFWAImageSection, bios.SignedAMDFWBImageSection,
 				},
 			},
 			{
 				Name:    "dev_mode",
-				Fixture: fixture.DevMode,
+				Fixture: fixture.BootModeFixtureWithAPBackup(fixture.DevMode),
 				Val: &corruptTestVal{
 					bios.SignedAMDFWAImageSection, bios.SignedAMDFWBImageSection,
 				},
@@ -62,35 +62,39 @@ func init() {
 
 func CorruptSignedAMDFWSection(ctx context.Context, s *testing.State, h *firmware.Helper, corruptBiosRemoteImage, backupBiosRemoteImage, remoteTempDir string) error {
 	s.Log("Corrupting SIGNED_AMDFW sections")
-	// - Get the body sizes
-	out, err := h.DUT.Conn().CommandContext(ctx, "futility", "dump_fmap", "-p", backupBiosRemoteImage, string(bios.SignedAMDFWAImageSection), string(bios.SignedAMDFWBImageSection)).Output(ssh.DumpLogOnError)
+
+	futilityInstance, err := futility.NewLocalBuilder(h.DUT).Build()
 	if err != nil {
-		s.Error("Failed getting section sizes: ", err)
+		s.Fatal("Failed to setup futility instance: ", err)
+	}
+
+	// - Get the body sizes
+	sections, out, err := futilityInstance.DumpFmap(ctx, backupBiosRemoteImage, []string{string(bios.SignedAMDFWAImageSection), string(bios.SignedAMDFWBImageSection)})
+	if err != nil {
+		s.Error("Failed getting section sizes: ", err, "\nOutput:\n", string(out))
 		return err
 	}
 
-	fmapRe := regexp.MustCompile(`(?m)^(\S+) \d+ (\d+)`)
-	matches := fmapRe.FindAllSubmatch(out, -1)
-	if matches == nil {
+	if len(sections) == 0 {
 		s.Error("Output doesn't match regex: ", string(out))
-		return errors.New("No sections matching SignedAMDFW")
+		return errors.New("no sections matching SignedAMDFW")
 	}
 
 	// - Create corrupt bodies for A & B
-	for _, m := range matches {
-		out, err = h.DUT.Conn().CommandContext(ctx, "dd", fmt.Sprintf("of=%s/%s_corrupt.bin", remoteTempDir, string(m[1])), "if=/dev/random", fmt.Sprintf("bs=%s", string(m[2])), "count=1").Output(ssh.DumpLogOnError)
+	for _, m := range sections {
+		out, err = h.DUT.Conn().CommandContext(ctx, "dd", fmt.Sprintf("of=%s/%s_corrupt.bin", remoteTempDir, m.Name), "if=/dev/random", fmt.Sprintf("bs=%d", m.Size), "count=1").Output(ssh.DumpLogOnError)
 		if err != nil {
 			s.Error("Failed creating corrupt file: ", err)
 			return err
 		}
 	}
 	// - Generate a new image that contains those bodies
-	err = h.DUT.Conn().CommandContext(ctx, "futility", "load_fmap", "-o", corruptBiosRemoteImage, backupBiosRemoteImage,
-		fmt.Sprintf("%s:%s/%s_corrupt.bin", bios.SignedAMDFWAImageSection, remoteTempDir, bios.SignedAMDFWAImageSection),
-		fmt.Sprintf("%s:%s/%s_corrupt.bin", bios.SignedAMDFWBImageSection, remoteTempDir, bios.SignedAMDFWBImageSection),
-	).Run(ssh.DumpLogOnError)
+	out, err = futilityInstance.LoadFmap(ctx, backupBiosRemoteImage, corruptBiosRemoteImage, map[string]string{
+		string(bios.SignedAMDFWAImageSection): fmt.Sprintf("%s/%s_corrupt.bin", remoteTempDir, bios.SignedAMDFWAImageSection),
+		string(bios.SignedAMDFWBImageSection): fmt.Sprintf("%s/%s_corrupt.bin", remoteTempDir, bios.SignedAMDFWBImageSection),
+	})
 	if err != nil {
-		s.Error("Failed futility load_fmap: ", err)
+		s.Error("Failed to load flashmap sections: ", err, "\nOutput:\n", string(out))
 		return err
 	}
 	return nil

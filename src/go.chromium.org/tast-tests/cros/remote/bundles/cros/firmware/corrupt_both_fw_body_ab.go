@@ -30,7 +30,7 @@ func init() {
 		Params: []testing.Param{
 			{
 				Name:    "normal_mode",
-				Fixture: fixture.NormalMode,
+				Fixture: fixture.BootModeFixtureWithAPBackup(fixture.NormalMode),
 				Val: &corruptTestVal{
 					bios.FWBodyAImageSection, bios.FWBodyBImageSection,
 				},
