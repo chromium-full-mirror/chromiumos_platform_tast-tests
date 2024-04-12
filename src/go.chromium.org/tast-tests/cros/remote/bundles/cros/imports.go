@@ -72,6 +72,7 @@ import (
 	_ "go.chromium.org/tast-tests/cros/remote/cryptohome"       // import fixture for cryptohome tests
 	_ "go.chromium.org/tast-tests/cros/remote/demomode"         // import fixture for local-only demo mode tests
 	_ "go.chromium.org/tast-tests/cros/remote/graphics"         // import fixture for graphics tests
+	_ "go.chromium.org/tast-tests/cros/remote/hooks"            // import fixture for Tast root fixture
 	_ "go.chromium.org/tast-tests/cros/remote/meta"             // import fixture for meta tests
 	_ "go.chromium.org/tast-tests/cros/remote/tape"
 	_ "go.chromium.org/tast-tests/cros/remote/uwb" // import fixture for local uwb tests
