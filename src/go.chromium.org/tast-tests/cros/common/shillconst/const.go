@@ -131,7 +131,6 @@ const (
 	ManagerPropertyDefaultTechnology                  = "DefaultTechnology"
 	ManagerPropertyTetheringConfig                    = "TetheringConfig"
 	ManagerPropertyEnableDHCPQos                      = "EnableDHCPQoS"
-	ManagerPropertyBlockedDevices                     = "BlockedDevices"
 	ManagerPropertyP2PAllowed                         = "P2PAllowed"
 	ManagerPropertyP2PCapabilities                    = "P2PCapabilities"
 	ManagerPropertyP2PGroupInfos                      = "P2PGroupInfos"

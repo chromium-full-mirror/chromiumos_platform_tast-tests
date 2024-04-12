@@ -271,18 +271,10 @@ func (f *fixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
 // getShillManagedInterfaces provides the list of Wi-Fi interfaces managed, ie
 // the Wi-Fi interfaces owned and not blocked.
 func (f *fixture) getShillManagedInterfaces(ctx context.Context, hwsimIfaces []net.Interface) ([]string, error) {
-	// Get the list of interfaces already blocked in Shill.
-	blockedDevices, err := f.m.GetBlockedDevices(ctx)
-	if err != nil {
-		return nil, err
-	}
-
 	// Build a list of the interfaces expected to be managed by Shill.
 	var expectedIfaces []string
 	for _, iface := range hwsimIfaces {
-		if !slices.Contains(blockedDevices, iface.Name) {
-			expectedIfaces = append(expectedIfaces, iface.Name)
-		}
+		expectedIfaces = append(expectedIfaces, iface.Name)
 	}
 
 	// Obtain the list of Wi-Fi interfaces managed by Shill.
