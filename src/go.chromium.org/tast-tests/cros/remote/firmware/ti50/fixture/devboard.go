@@ -94,6 +94,8 @@ type Value struct {
 	ImagePath         string
 	FwConfigJsons     []string
 	TestbedProperties remoteTi50.TestbedProperties
+	EfiImagePath      string
+	DebugImagePath    string
 }
 
 // DevBoard returns the existing DevBoard connection instance.
@@ -154,7 +156,7 @@ func (i *devboardFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	}
 	testing.ContextLog(ctx, "Setting up image: ", imagePath)
 	if i.v.TestbedProperties.TestbedType == "gsc_h1_shield" {
-		setupCr50Image(ctx, s, i.v.devboard, imagePath, fwConfigJsons, i.v.TestbedProperties)
+		setupCr50Image(ctx, s, i.v.devboard, imagePath, fwConfigJsons, i.v.TestbedProperties, false)
 	} else if err := i.v.devboard.Setup(ctx, imagePath, fwConfigJsons); err != nil {
 		s.Fatal("Setup: ", err)
 	}
@@ -189,7 +191,7 @@ func (i *devboardFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 // The GSC UART must be closed before calling this method since it opens it to issue commands to the board.
 // TODO(b/140534392): Support changing the board id.
 func setupCr50Image(ctx context.Context, s TestingState, board *remoteTi50.DUTControlAndreiboard, imagePath string, fwConfigJsons []string,
-	testbedProperties remoteTi50.TestbedProperties) {
+	testbedProperties remoteTi50.TestbedProperties, runEraseflashinfo bool) {
 	if err := board.Setup(ctx, "", fwConfigJsons); err != nil {
 		s.Fatal("Setup: ", err)
 	}
@@ -203,10 +205,11 @@ func setupCr50Image(ctx context.Context, s TestingState, board *remoteTi50.DUTCo
 		}
 	}()
 
-	gpioApplyStrap(ctx, s, board, ti50.CcdSuzyQ)
 	if imagePath == "" {
 		return
 	}
+
+	gpioApplyStrap(ctx, s, board, ti50.CcdSuzyQ)
 
 	// Sometimes cr50 does not show up on the USB bus until it is reset.
 	gpioSet(ctx, s, board, ti50.GpioTi50ResetL, false)
@@ -231,18 +234,20 @@ func setupCr50Image(ctx context.Context, s TestingState, board *remoteTi50.DUTCo
 	isRunningRelease, err := i.CheckRunningVersion(ctx, imageVer.String(), false, true)
 	if err != nil {
 		testing.ContextLogf(ctx, "Unable to get the cr50 version: %s", err)
-	} else if isRunningRelease {
+	} else if isRunningRelease && !runEraseflashinfo {
 		testing.ContextLog(ctx, "Cr50 is already running the release")
 		return
 	}
 	testing.ContextLog(ctx, "Updating Cr50")
 
-	if imageVer.Less(rw) {
+	if imageVer.Less(rw) || runEraseflashinfo {
 		testing.ContextLogf(ctx, "Rollback required for flashing %s to %s", rw, imageVer)
-
 		debugImage, efiImage, err := DownloadGSCTestImages(ctx, testbedProperties)
 		mustSucceed(s, err, "failed to download debug and efi image")
 
+		if debugImage == "" || efiImage == "" {
+			s.Fatal("Supply EFI and debug image to rollback with ccd")
+		}
 		err = board.RollbackAndRunEraseflashinfoUpdate(ctx, i, imagePath, efiImage, debugImage)
 		mustSucceed(s, err, "failed efi rollback update to image")
 	} else {

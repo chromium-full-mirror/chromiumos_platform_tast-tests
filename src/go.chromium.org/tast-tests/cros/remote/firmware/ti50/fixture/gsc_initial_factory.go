@@ -7,9 +7,6 @@ package fixture
 
 import (
 	"context"
-	"fmt"
-	"os"
-	"os/exec"
 	"strings"
 	"time"
 
@@ -47,8 +44,7 @@ func init() {
 }
 
 type initialFactoryImpl struct {
-	v            *Value
-	efiImagePath string
+	v *Value
 }
 
 func (c *initialFactoryImpl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
@@ -63,21 +59,19 @@ func (c *initialFactoryImpl) SetUp(ctx context.Context, s *testing.FixtState) in
 		s.Fatal("InitialFactory fixture must specify a image (i.e. through buildurl var)")
 	}
 
-	// Create and close temp file immediately so we can overwrite it
-	file, err := os.CreateTemp("", fmt.Sprintf(tmpEfiLocation, c.v.TestbedProperties.UsbSerial))
+	efiImage, err := DownloadEfiImage(ctx, c.v.TestbedProperties)
 	if err != nil {
-		s.Fatal("Could not open temp file for efi: ", err)
+		s.Fatal(err, "failed to download the efi image")
 	}
-	file.Close()
-	c.efiImagePath = file.Name()
-	gsEfiLocation := fmt.Sprintf(gsEfiLocation, c.v.TestbedProperties.UsbSerial)
-
-	testing.ContextLogf(ctx, "Copying EFI from %q to %q ", gsEfiLocation, c.efiImagePath)
-	cmd := exec.CommandContext(ctx, "gsutil", "cp", gsEfiLocation, c.efiImagePath)
-	if err := cmd.Run(); err != nil {
-		s.Fatal("Could not download efi image: ", err)
+	debugImage, err := DownloadDebugImage(ctx, c.v.TestbedProperties)
+	if err != nil {
+		if c.v.TestbedProperties.TestbedType == ti50.GscH1Shield {
+			s.Fatal(err, "failed to download the debug image")
+		}
+		debugImage = ""
 	}
-
+	c.v.DebugImagePath = debugImage
+	c.v.EfiImagePath = efiImage
 	return c.v
 }
 
@@ -133,17 +127,20 @@ func (c *initialFactoryImpl) PreTest(ctx context.Context, s *testing.FixtTestSta
 	}
 
 	b := c.v.devboard
-
 	mustSucceed(s, b.EndSession(ctx), "End image under test session")
 
-	testing.ContextLog(ctx, "Flashing EFI image")
-	mustSucceed(s, b.Setup(ctx, c.efiImagePath, []string{}), "Setup EFI image")
-	c.eraseInfoPage(ctx, s)
+	if c.v.TestbedProperties.TestbedType == ti50.GscH1Shield {
+		setupCr50Image(ctx, s, c.v.devboard, c.v.ImagePath, c.v.FwConfigJsons, c.v.TestbedProperties, true)
+	} else {
+		testing.ContextLog(ctx, "Flashing EFI image")
+		mustSucceed(s, b.Setup(ctx, c.v.EfiImagePath, []string{}), "Setup EFI image")
+		c.eraseInfoPage(ctx, s)
 
-	testing.ContextLog(ctx, "Flashing image under test")
-	mustSucceed(s, b.Setup(ctx, c.v.ImagePath, c.v.FwConfigJsons), "Setup for image under test")
+		testing.ContextLog(ctx, "Flashing image under test")
+		mustSucceed(s, b.Setup(ctx, c.v.ImagePath, c.v.FwConfigJsons), "Setup for image under test")
 
-	c.eraseAPROVerificationSettings(ctx, s)
+		c.eraseAPROVerificationSettings(ctx, s)
+	}
 
 	mustSucceed(s, b.StartSession(ctx, ti50.StrapReset), "Start testing session")
 
@@ -158,10 +155,4 @@ func (c *initialFactoryImpl) Reset(ctx context.Context) error {
 }
 
 func (c *initialFactoryImpl) TearDown(ctx context.Context, s *testing.FixtState) {
-	if c.efiImagePath != "" {
-		if err := os.Remove(c.efiImagePath); err != nil {
-			s.Errorf("Failed to delete EFI image %q: %v", c.efiImagePath, err)
-		}
-		c.efiImagePath = ""
-	}
 }
