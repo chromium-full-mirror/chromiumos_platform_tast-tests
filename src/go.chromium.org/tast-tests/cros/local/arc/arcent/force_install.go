@@ -205,7 +205,6 @@ func EnsurePlayStoreState(ctx context.Context, tconn *chrome.TestConn, cr *chrom
 		}
 
 		faillog.SaveScreenshotToFileOnError(cleanupCtx, cr, outDir, func() bool { return true }, fmt.Sprintf("play_store_%d_%d.png", runID, attempts))
-		a.DumpUIHierarchyOnError(cleanupCtx, outDir, func() bool { return true })
 
 		testing.ContextLog(ctx, message)
 		return errors.New(message)
