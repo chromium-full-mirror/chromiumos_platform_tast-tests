@@ -87,4 +87,45 @@ func addFlossBasicOnlineFixtures() {
 		PreTestTimeout:  resetTimeout,
 		PostTestTimeout: resetTimeout,
 	})
+
+	// Fixtures for BLE V2 tests.
+	// TODO(b/333602803): Remove fixtures after BLE V2 is launched.
+	testing.AddFixture(&testing.Fixture{
+		Name:     "nearbyShareAllContactsBleV2Floss",
+		Desc:     "Fixture for Nearby Share's CB -> CB tests. 'Visibility' set to 'All Contacts', BLE V2 flag enabled.",
+		Impl:     NewNearbyShareFixture(nearbycommon.DataUsageOnline, nearbycommon.VisibilityAllContacts /*skipReceiverOnboarding=*/, true /*enabledFeatures=*/, []string{floss, "EnableNearbyBleV2"} /*disabledFeatures=*/, []string{}),
+		Contacts: []string{"chromeos-sw-engprod@google.com"},
+		Vars: []string{
+			"nearbyshare.cros_username",
+			"nearbyshare.cros_password",
+			"nearbyshare.cros2_username",
+			"nearbyshare.cros2_password",
+			nearbycommon.KeepStateVar,
+		},
+		ServiceDeps:     []string{"tast.cros.nearbyservice.NearbyShareService"},
+		SetUpTimeout:    3 * time.Minute,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  resetTimeout,
+		PostTestTimeout: resetTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name:     "nearbyShareNoOneBleV2Floss",
+		Desc:     "Fixture for Nearby Share's CB -> CB tests. 'Visibility' set to 'No One', BLE V2 flag enabled.",
+		Impl:     NewNearbyShareFixture(nearbycommon.DataUsageOnline, nearbycommon.VisibilityNoOne /*skipReceiverOnboarding=*/, true /*enabledFeatures=*/, []string{floss, "EnableNearbyBleV2"} /*disabledFeatures=*/, []string{}),
+		Contacts: []string{"chromeos-sw-engprod@google.com"},
+		Vars: []string{
+			"nearbyshare.cros_username",
+			"nearbyshare.cros_password",
+			"nearbyshare.cros2_username",
+			"nearbyshare.cros2_password",
+			nearbycommon.KeepStateVar,
+		},
+		ServiceDeps:     []string{"tast.cros.nearbyservice.NearbyShareService"},
+		SetUpTimeout:    3 * time.Minute,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  resetTimeout,
+		PostTestTimeout: resetTimeout,
+	})
 }
