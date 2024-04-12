@@ -50,7 +50,7 @@ func GlobalActionsMenu(ctx context.Context, s *testing.State) {
 	}
 
 	// Close global action menu
-	if err := a.Command(ctx, "am", "broadcast", "-a", "android.intent.action.CLOSE_SYSTEM_DIALOGS").Run(); err != nil {
+	if err := a.CloseSystemDialogs(ctx); err != nil {
 		s.Fatal("Failed to close global actions menu via ADB command: ", err)
 	}
 

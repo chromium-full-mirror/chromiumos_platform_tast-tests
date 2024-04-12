@@ -488,10 +488,12 @@ func checkSoftwareDeps(ctx context.Context) error {
 // ResetOutDir updates the outDir field of ARC object.
 func (a *ARC) ResetOutDir(ctx context.Context, outDir string) error {
 	a.outDir = outDir
-	if err := a.setLogcatFile(filepath.Join(a.outDir, logcatName)); err != nil {
-		return err
-	}
-	return nil
+	return a.setLogcatFile(filepath.Join(a.outDir, logcatName))
+}
+
+// CloseSystemDialogs sends CLOSE_SYSTEM_DIALOGS intent to close ARC system dialogs.
+func (a *ARC) CloseSystemDialogs(ctx context.Context) error {
+	return a.Command(ctx, "am", "broadcast", "-a", "android.intent.action.CLOSE_SYSTEM_DIALOGS").Run(testexec.DumpLogOnError)
 }
 
 // setLogcatFile creates a new logcat output file at p and opens it as a.logcatFile.

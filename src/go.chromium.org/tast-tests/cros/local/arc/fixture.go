@@ -22,8 +22,8 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-// PreTestTimeout is the timeout duration to reset output directory before each test.
-const PreTestTimeout = 15 * time.Second
+// PreTestTimeout is the timeout duration before each test.
+const PreTestTimeout = 30 * time.Second
 
 // PostTestTimeout is the timeout duration to save logs after each test.
 // It's intentionally set longer than ResetTimeout because dumping 'dumpsys' takes around 20 seconds.
@@ -40,6 +40,7 @@ func init() {
 		Impl:            NewArcBootedFixture(DefaultBootedFixtureConfig()),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,
+		PreTestTimeout:  PreTestTimeout,
 		PostTestTimeout: PostTestTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -57,6 +58,7 @@ func init() {
 		Impl:            NewArcBootedFixture(DefaultBootedFixtureConfig()),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,
+		PreTestTimeout:  PreTestTimeout,
 		PostTestTimeout: PostTestTimeout,
 		TearDownTimeout: ResetTimeout,
 		Parent:          "removeBindMountFixture",
@@ -76,6 +78,7 @@ func init() {
 		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout,
 		ResetTimeout:    ResetTimeout,
+		PreTestTimeout:  PreTestTimeout,
 		PostTestTimeout: PostTestTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -102,6 +105,7 @@ func init() {
 		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,
+		PreTestTimeout:  PreTestTimeout,
 		PostTestTimeout: PostTestTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -129,6 +133,7 @@ func init() {
 		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,
+		PreTestTimeout:  PreTestTimeout,
 		PostTestTimeout: PostTestTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -152,6 +157,7 @@ func init() {
 		Impl:            NewArcBootedFixtureWithPvSchedEnabled(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,
+		PreTestTimeout:  PreTestTimeout,
 		PostTestTimeout: PostTestTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -176,6 +182,7 @@ func init() {
 		Impl:            NewArcBootedFixtureWithPvSchedEnabled(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,
+		PreTestTimeout:  PreTestTimeout,
 		PostTestTimeout: PostTestTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -199,6 +206,7 @@ func init() {
 		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,
+		PreTestTimeout:  PreTestTimeout,
 		PostTestTimeout: PostTestTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -224,6 +232,7 @@ func init() {
 		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,
+		PreTestTimeout:  PreTestTimeout,
 		PostTestTimeout: PostTestTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -248,6 +257,7 @@ func init() {
 		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,
+		PreTestTimeout:  PreTestTimeout,
 		PostTestTimeout: PostTestTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -275,6 +285,7 @@ func init() {
 		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + BootTimeout + 2*time.Minute,
 		ResetTimeout:    ResetTimeout,
+		PreTestTimeout:  PreTestTimeout,
 		PostTestTimeout: PostTestTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -304,6 +315,7 @@ func init() {
 		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + BootTimeout + 2*time.Minute,
 		ResetTimeout:    ResetTimeout,
+		PreTestTimeout:  PreTestTimeout,
 		PostTestTimeout: PostTestTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -335,6 +347,7 @@ func init() {
 		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + BootTimeout + 2*time.Minute,
 		ResetTimeout:    ResetTimeout,
+		PreTestTimeout:  PreTestTimeout,
 		PostTestTimeout: PostTestTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -359,6 +372,7 @@ func init() {
 		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,
+		PreTestTimeout:  PreTestTimeout,
 		PostTestTimeout: PostTestTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -389,6 +403,7 @@ func init() {
 		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,
+		PreTestTimeout:  PreTestTimeout,
 		PostTestTimeout: PostTestTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -415,6 +430,7 @@ func init() {
 		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,
+		PreTestTimeout:  PreTestTimeout,
 		PostTestTimeout: PostTestTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -447,6 +463,7 @@ func init() {
 		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,
+		PreTestTimeout:  PreTestTimeout,
 		PostTestTimeout: PostTestTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -478,6 +495,7 @@ func init() {
 		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,
+		PreTestTimeout:  PreTestTimeout,
 		PostTestTimeout: PostTestTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -498,6 +516,7 @@ func init() {
 		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,
+		PreTestTimeout:  PreTestTimeout,
 		PostTestTimeout: PostTestTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -518,6 +537,7 @@ func init() {
 		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,
+		PreTestTimeout:  PreTestTimeout,
 		PostTestTimeout: PostTestTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -544,6 +564,7 @@ func init() {
 		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + BootTimeout + 2*time.Minute,
 		ResetTimeout:    ResetTimeout,
+		PreTestTimeout:  PreTestTimeout,
 		PostTestTimeout: PostTestTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -568,6 +589,7 @@ func init() {
 		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,
+		PreTestTimeout:  PreTestTimeout,
 		PostTestTimeout: PostTestTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -593,6 +615,7 @@ func init() {
 		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,
+		PreTestTimeout:  PreTestTimeout,
 		PostTestTimeout: PostTestTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -619,6 +642,7 @@ func init() {
 		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,
+		PreTestTimeout:  PreTestTimeout,
 		PostTestTimeout: PostTestTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -645,6 +669,7 @@ func init() {
 		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + swap.UnrestrictedTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,
+		PreTestTimeout:  PreTestTimeout,
 		PostTestTimeout: PostTestTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -668,6 +693,7 @@ func init() {
 		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,
+		PreTestTimeout:  PreTestTimeout,
 		PostTestTimeout: PostTestTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -691,6 +717,7 @@ func init() {
 		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,
+		PreTestTimeout:  PreTestTimeout,
 		PostTestTimeout: PostTestTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
@@ -961,18 +988,16 @@ func (f *bootedFixture) Reset(ctx context.Context) error {
 }
 
 func (f *bootedFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
-	// TODO(crbug.com/1136382): Support per-test logcat once we get pre/post-test
-	// hooks in fixtures.
-
 	if err := f.arc.ResetOutDir(ctx, s.OutDir()); err != nil {
 		s.Error("Failed to to reset outDir field of ARC object: ", err)
+	}
+
+	if err := f.arc.CloseSystemDialogs(ctx); err != nil {
+		s.Error("Failed to close ARC system dialogs: ", err)
 	}
 }
 
 func (f *bootedFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
-	// TODO(crbug.com/1136382): Support per-test logcat once we get pre/post-test
-	// hooks in fixtures.
-
 	if err := f.arc.SaveLogFiles(ctx); err != nil {
 		s.Error("Failed to to save ARC-related log files: ", err)
 	}
