@@ -93,18 +93,24 @@ func ZeroTouchEnrollment(ctx context.Context, s *testing.State) {
 	customerID := s.RequiredVar(param.CustomerID)
 	batchKey := s.RequiredVar(param.BatchKey)
 
-	if err := preProvisionDevice(ctx, serialNumber, hardwareModel, deviceProvisionToken, customerID, batchKey); err != nil {
-		s.Fatal("Failed to pre-provision device: ", err)
-	}
-
-	if err := setVpdValuesForInitialEnrollment(ctx, s.DUT().Conn()); err != nil {
-		s.Fatal("Failed to get VPD ready for ZTE: ", err)
-	}
-
 	// Shorten deadline to leave time separately for logging and cleanup.
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, 20*time.Second)
 	defer cancel()
+
+	name, err := preProvisionDevice(ctx, serialNumber, hardwareModel, deviceProvisionToken, customerID, batchKey)
+	if err != nil {
+		s.Fatal("Failed to pre-provision device: ", err)
+	}
+	defer func(ctx context.Context) {
+		if err := deletePreProvisioningRecord(ctx, name, batchKey); err != nil {
+			s.Log("Failed to delete pre-provisioning record: ", err)
+		}
+	}(cleanupCtx)
+
+	if err := setVpdValuesForInitialEnrollment(ctx, s.DUT().Conn()); err != nil {
+		s.Fatal("Failed to get VPD ready for ZTE: ", err)
+	}
 
 	cl, err := rpc.Dial(ctx, s.DUT(), s.RPCHint())
 	if err != nil {
@@ -201,43 +207,60 @@ func setVpdValuesForInitialEnrollment(ctx context.Context, dutConn *ssh.Conn) er
 	return nil
 }
 
-func preProvisionDevice(ctx context.Context, serialNumber, hardwareModel, deviceProvisionToken, customerID, batchKey string) error {
+func preProvisionDevice(ctx context.Context, serialNumber, hardwareModel, deviceProvisionToken, customerID, batchKey string) (name string, err error) {
 	// Prepare and issue a request.
-	bodyCommand := fmt.Sprintf("{\"requests\": [ {\"preProvisionedDevice\":{serialNumber:\"%s\",hardwareModel:\"%s\",devicePreProvisioningToken:\"%s\",attestedDeviceId:\"%s\",customer_id:\"%s\"}}]}", serialNumber, hardwareModel, deviceProvisionToken, serialNumber, customerID)
-	urlWithBatchKey := fmt.Sprintf("https://chromecommercial.googleapis.com/v1/preProvisionedDevices:batchCreate?key=%s", batchKey)
+	bodyCommand := fmt.Sprintf(`{"serialNumber": "%s", "hardwareModel": "%s", "devicePreProvisioningToken": "%s", "attestedDeviceId": "%s", "customerId": "%s"}`, serialNumber, hardwareModel, deviceProvisionToken, serialNumber, customerID)
+	urlWithBatchKey := fmt.Sprintf("https://chromecommercial.googleapis.com/v1/preProvisionedDevices?key=%s", batchKey)
 	body := strings.NewReader(bodyCommand)
 	req, err := http.NewRequest("POST", urlWithBatchKey, body)
 	if err != nil {
-		return errors.Wrap(err, "failed to create request")
+		return "", errors.Wrap(err, "failed to create request")
 	}
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return errors.Wrap(err, "failed to issue request")
+		return "", errors.Wrap(err, "failed to issue request")
 	}
 	defer resp.Body.Close()
 
 	// Validate response.
 	respBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return errors.Wrap(err, "failed to read response")
+		return "", errors.Wrap(err, "failed to read response")
 	}
-	type preProvisionResponse struct {
-		PreProvisionedDevice interface{}
-		Status               interface{}
+	type preProvisionedDevice struct {
+		Name string
 	}
-	type preProvisionResponseList struct {
-		Responses []preProvisionResponse
-	}
-	var parsedResponse preProvisionResponseList
+	var parsedResponse preProvisionedDevice
 	if err := json.Unmarshal(respBytes, &parsedResponse); err != nil {
-		return errors.Wrap(err, "failed to parse response")
+		return "", errors.Wrapf(err, "failed to parse response (status code %d): %s", resp.StatusCode, string(respBytes))
 	}
-	if len(parsedResponse.Responses) != 1 ||
-		parsedResponse.Responses[0].Status != nil ||
-		parsedResponse.Responses[0].PreProvisionedDevice == nil {
-		return errors.Errorf("unsuccessful response: %s", string(respBytes))
+	if resp.StatusCode != http.StatusOK || len(parsedResponse.Name) == 0 || !strings.HasPrefix(parsedResponse.Name, "preProvisionedDevices/") {
+		return "", errors.Errorf("unsuccessful response (status code %d): %s", resp.StatusCode, string(respBytes))
 	}
-	testing.ContextLog(ctx, "Succesfully pre-provisioned device")
+	testing.ContextLogf(ctx, "Succesfully pre-provisioned device with name %s", parsedResponse.Name)
+	return parsedResponse.Name, nil
+}
+
+func deletePreProvisioningRecord(ctx context.Context, name, batchKey string) error {
+	urlWithBatchKey := fmt.Sprintf("https://chromecommercial.googleapis.com/v1/%s?key=%s", name, batchKey)
+	deleteReq, err := http.NewRequest("DELETE", urlWithBatchKey, strings.NewReader(""))
+	if err != nil {
+		return errors.Wrap(err, "failed to create DELETE request")
+	}
+	deleteResp, err := http.DefaultClient.Do(deleteReq)
+	if err != nil {
+		return errors.Wrap(err, "failed to issue DELETE request")
+	}
+	defer deleteResp.Body.Close()
+
+	if deleteResp.StatusCode != http.StatusOK {
+		respBytes, err := io.ReadAll(deleteResp.Body)
+		if err != nil {
+			return errors.Wrapf(err, "failed to read unsuccessful DELETE response (status code %d)", deleteResp.StatusCode)
+		}
+		return errors.Errorf("unsuccessful DELETE response (status code %d): %s", deleteResp.StatusCode, string(respBytes))
+	}
+	testing.ContextLogf(ctx, "Succesfully deleted pre-provisioning record for %s", name)
 	return nil
 }
