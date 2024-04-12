@@ -111,7 +111,7 @@ const (
 // specified speed.
 func (g *Gallery) SetPlaybackSpeed(s Speed) uiauto.Action {
 	return func(ctx context.Context) error {
-		playbackSpeedFinder := nodewith.Name("Playback speed").Ancestor(RootFinder)
+		playbackSpeedFinder := nodewith.NameStartingWith("Playback speed").Ancestor(RootFinder)
 		playbackSpeedMenu := nodewith.Role(role.Menu).Ancestor(RootFinder)
 		playbackSpeedButton, err := g.ui.FindAnyExists(ctx,
 			playbackSpeedFinder.Role(role.PopUpButton),
