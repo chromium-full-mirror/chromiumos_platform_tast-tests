@@ -77,11 +77,11 @@ func ManagedPlayAvailableAppInstall(ctx context.Context, s *testing.State) {
 		Errorf:      s.Errorf,
 		Logf:        s.Logf}
 
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
-	defer cancel()
-
 	if err := testing.Poll(ctx, func(ctx context.Context) (retErr error) {
+		cleanupCtx := ctx
+		ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+		defer cancel()
+
 		creds, err := credconfig.PickRandomCreds(s.RequiredVar(arcent.LoginPoolVar))
 		if err != nil {
 			return rl.Exit("get login creds", err)
@@ -125,20 +125,27 @@ func ManagedPlayAvailableAppInstall(ctx context.Context, s *testing.State) {
 			return rl.Retry("wait for provisioning", err)
 		}
 
+		defer a.DumpUIHierarchyOnError(cleanupCtx, s.OutDir(), func() bool {
+			return s.HasError() || retErr != nil
+		})
+
 		d, err := a.NewUIDevice(ctx)
 		if err != nil {
 			return rl.Exit("initialize UI Automator", err)
 		}
 		defer d.Close(cleanupCtx)
 
+		s.Log("Ensuring Play Store is not empty")
 		if err := arcent.EnsurePlayStoreNotEmpty(ctx, tconn, cr, a, d, s.OutDir(), rl.Attempts); err != nil {
 			return rl.Exit("verify Play Store is not empty", err)
 		}
 
+		s.Log("Opening app details page")
 		if err := playstore.OpenAppPage(ctx, a, testPackage); err != nil {
 			return rl.Exit("open app page", err)
 		}
 
+		s.Log("Looking for install button")
 		if _, err := playstore.FindInstallButton(ctx, d, 15*time.Second); err != nil {
 			return rl.Exit("find the install button", err)
 		}
