@@ -106,6 +106,7 @@ func init() {
 			"jiangzp@google.com",
 			"chromeos-bt-team@google.com",
 		},
+		BugComponent: "b:167317", // ChromeOS > Platform > Connectivity > Bluetooth
 		Impl: newFixture(&fixtureFeatures{
 			EnableChromeUI: false,
 			BTPeerCount:    1,
@@ -135,6 +136,7 @@ func init() {
 			"jiangzp@google.com",
 			"chromeos-bt-team@google.com",
 		},
+		BugComponent: "b:167317", // ChromeOS > Platform > Connectivity > Bluetooth
 		Impl: newFixture(&fixtureFeatures{
 			EnableChromeUI: true,
 			BTPeerCount:    1,
@@ -165,6 +167,7 @@ func init() {
 			"jiangzp@google.com",
 			"chromeos-bt-team@google.com",
 		},
+		BugComponent: "b:167317", // ChromeOS > Platform > Connectivity > Bluetooth
 		Impl: newFixture(&fixtureFeatures{
 			EnableChromeUI: true,
 			BTPeerCount:    1,
@@ -195,6 +198,7 @@ func init() {
 			"jiangzp@google.com",
 			"chromeos-bt-team@google.com",
 		},
+		BugComponent: "b:167317", // ChromeOS > Platform > Connectivity > Bluetooth
 		Impl: newFixture(&fixtureFeatures{
 			EnableChromeUI: false,
 			BTPeerCount:    1,
@@ -224,6 +228,7 @@ func init() {
 			"jiangzp@google.com",
 			"chromeos-bt-team@google.com",
 		},
+		BugComponent: "b:167317", // ChromeOS > Platform > Connectivity > Bluetooth
 		Impl: newFixture(&fixtureFeatures{
 			EnableChromeUI: true,
 			BTPeerCount:    1,
@@ -253,6 +258,7 @@ func init() {
 			"jiangzp@google.com",
 			"chromeos-bt-team@google.com",
 		},
+		BugComponent: "b:167317", // ChromeOS > Platform > Connectivity > Bluetooth
 		Impl: newFixture(&fixtureFeatures{
 			EnableChromeUI: true,
 			BTPeerCount:    1,
@@ -282,6 +288,7 @@ func init() {
 			"jiangzp@google.com",
 			"chromeos-bt-team@google.com",
 		},
+		BugComponent: "b:167317", // ChromeOS > Platform > Connectivity > Bluetooth
 		Impl: newFixture(&fixtureFeatures{
 			EnableChromeUI: false,
 			BTPeerCount:    2,
@@ -311,6 +318,7 @@ func init() {
 			"jiangzp@google.com",
 			"chromeos-bt-team@google.com",
 		},
+		BugComponent: "b:167317", // ChromeOS > Platform > Connectivity > Bluetooth
 		Impl: newFixture(&fixtureFeatures{
 			EnableChromeUI: false,
 			BTPeerCount:    2,
@@ -859,6 +867,7 @@ func init() {
 			"jiangzp@google.com",
 			"chromeos-bt-team@google.com",
 		},
+		BugComponent: "b:167317", // ChromeOS > Platform > Connectivity > Bluetooth
 		Impl: newFixture(&fixtureFeatures{
 			EnableChromeUI: true,
 			BTPeerCount:    1,
@@ -898,6 +907,7 @@ func init() {
 			"jiangzp@google.com",
 			"chromeos-bt-team@google.com",
 		},
+		BugComponent: "b:167317", // ChromeOS > Platform > Connectivity > Bluetooth
 		Impl: newFixture(&fixtureFeatures{
 			EnableChromeUI: true,
 			BTPeerCount:    1,
