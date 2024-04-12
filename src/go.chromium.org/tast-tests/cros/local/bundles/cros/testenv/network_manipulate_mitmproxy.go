@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	httpRedirect     = "mitmproxy_redirect_requests.py"
+	hostRedirect     = "mitmproxy_redirect_requests.py"
 	httpErrorInject  = "mitmproxy_inject_500_requests.py"
 	allowedEndpoints = "allowed_endpoints.py"
 	extraConfig      = "allowed_endpoints_yaml.py"
@@ -43,9 +43,12 @@ func init() {
 		Timeout:      5 * time.Minute,
 		Fixture:      fixture.ChromeLoggedIn,
 		Params: []testing.Param{{
-			Name:      "redirect",
-			Val:       "redirect",
-			ExtraData: []string{httpRedirect},
+			Name:      "hostredirect",
+			Val:       "hostredirect",
+			ExtraData: []string{hostRedirect},
+		}, {
+			Name: "urlredirect",
+			Val:  "urlredirect",
 		}, {
 			Name: "dump",
 			Val:  "dump",
@@ -99,7 +102,9 @@ func NetworkManipulateMitmproxy(ctx context.Context, s *testing.State) {
 
 func verify(ctx context.Context, s *testing.State, conn *chrome.Conn, mp proxy.Proxy) error {
 	switch s.Param().(string) {
-	case "redirect":
+	case "hostredirect":
+		return verifyPageContent(ctx, conn, "google")
+	case "urlredirect":
 		return verifyPageContent(ctx, conn, "google")
 	case "error":
 		return verifyPageContent(ctx, conn, "error injected by proxy")
@@ -139,7 +144,7 @@ func verifyPageContent(ctx context.Context, conn *chrome.Conn, expected string) 
 		}
 
 		return nil
-	}, &testing.PollOptions{Timeout: 3 * time.Second, Interval: 1 * time.Second}); err != nil {
+	}, &testing.PollOptions{Timeout: 15 * time.Second, Interval: 2 * time.Second}); err != nil {
 		return err
 	}
 
@@ -150,8 +155,13 @@ func proxyOpts(s *testing.State) []proxy.Option {
 	testCase := s.Param().(string)
 	var opts []proxy.Option
 	switch testCase {
-	case "redirect":
-		opts = append(opts, proxy.ScriptPath(s.DataPath(httpRedirect)))
+	case "hostredirect":
+		opts = append(opts, proxy.ScriptPath(s.DataPath(hostRedirect)))
+	case "urlredirect":
+		urlMap := map[string]string{
+			`//www.example.com/`: `//www.google.com/`, // replace the hostname in the URL
+		}
+		opts = append(opts, proxy.URLRedirect(urlMap))
 	case "error":
 		opts = append(opts, proxy.ScriptPath(s.DataPath(httpErrorInject)))
 	case "diff":

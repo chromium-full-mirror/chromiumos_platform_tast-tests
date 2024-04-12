@@ -4,7 +4,12 @@
 
 package proxy
 
-import "go.chromium.org/tast/core/errors"
+import (
+	"fmt"
+	"strings"
+
+	"go.chromium.org/tast/core/errors"
+)
 
 // Option is a function that can be used to config MitmProxy.
 type Option func(*MitmProxy) error
@@ -23,7 +28,9 @@ func ScriptPath(paths ...string) Option {
 func CustomOptions(opts ...string) Option {
 	return func(mp *MitmProxy) error {
 		for _, opt := range opts {
-			mp.options = append(mp.options, opt)
+			if opt != "" {
+				mp.options = append(mp.options, opt)
+			}
 		}
 		return nil
 	}
@@ -67,4 +74,26 @@ func DumpHTTPFlow(allow bool, dumpHTTPFlowAddonPath string) Option {
 		mp.dumpHTTPFlowAddonPath = dumpHTTPFlowAddonPath
 		return nil
 	}
+}
+
+// URLRedirect is an option to set up the `map_remote` proxy option that redirects remote destination to another remote URL.
+//
+// The simple format is a map of { urlregexp: replacement }, where
+//
+//	`urlregexp` is a regexp that defines what gets placed in the request URLs. It matches the full URL string including schema, host, port, path and all URL components.
+//	`replacement` is a string liternal that gets replaced in.
+//
+// Examples:
+//
+//	{ `.*\.org$`: `https://foo.bar/about` } - Map all requests ending with .org to https://foo.bar/about
+//	{ `//foo.org/`: `//bar.org/` } - Map all requests from foo.org to bar.org
+func URLRedirect(urlMap map[string]string) Option {
+	var lines []string
+	if len(urlMap) > 0 {
+		lines = append(lines, "map_remote: ")
+		for pattern, replacement := range urlMap {
+			lines = append(lines, fmt.Sprintf(` - '|%s|%s'`, pattern, replacement))
+		}
+	}
+	return CustomOptions(strings.Join(lines, "\n"))
 }
