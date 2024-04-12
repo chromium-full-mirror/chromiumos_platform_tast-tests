@@ -1,4 +1,8 @@
 {
+  "anraggar360-TXfc2c": {
+    "bus_info": "pci:pci0000:00",
+    "out_entity": "Intel IPU6 BE SOC capture 0"
+  },
   "atlas": {
     "bus_info": "PCI:0000:00:14.3",
     "out_entity": "ipu3-cio2 0"

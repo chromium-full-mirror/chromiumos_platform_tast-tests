@@ -32,6 +32,7 @@ const (
 func configFiles() []string {
 	return []string{
 		modelConfigFile,
+		"kernel_smoke_mipi/anraggar360-TXfc2c.yaml",
 		"kernel_smoke_mipi/atlas.yaml",
 		"kernel_smoke_mipi/aviko-KC4eb5.yaml",
 		"kernel_smoke_mipi/brya.yaml",
