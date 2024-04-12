@@ -23,7 +23,7 @@ func init() {
 		Desc:         "Runs the TFLite stable delegate test suite",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "shik@chromium.org"},
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"ml_service"},
 		Vars:         []string{"settings", "accel_config"},
 	})
