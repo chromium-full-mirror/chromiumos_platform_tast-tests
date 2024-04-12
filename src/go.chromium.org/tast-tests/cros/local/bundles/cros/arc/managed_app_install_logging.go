@@ -55,6 +55,7 @@ func init() {
 		Params: []testing.Param{
 			{
 				// TODO(b/306175841): remove this test once the UseEncryptedReportingPipelineToReportArcAppInstallEvents experiment is rolled out.
+				ExtraAttr:         []string{"informational"},
 				ExtraSoftwareDeps: []string{"android_container", "no_qemu"},
 				Val: managedAppInstallLoggingParam{
 					UseEncryptedReportingPipelineToReportArcAppInstallEvents: false,

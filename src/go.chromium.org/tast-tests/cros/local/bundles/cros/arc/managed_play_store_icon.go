@@ -64,6 +64,7 @@ func init() {
 				arcEnabled:  &policy.ArcEnabled{Val: false},
 				wantEnabled: false,
 			},
+			ExtraAttr:         []string{"informational"},
 			ExtraSoftwareDeps: []string{"android_container", "no_qemu"},
 		}, {
 			Name: "disabled_betty",
