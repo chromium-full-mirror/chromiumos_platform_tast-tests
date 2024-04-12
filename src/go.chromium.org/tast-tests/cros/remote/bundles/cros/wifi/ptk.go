@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/common/wifi/security/wpa"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wifi/wifiutil"
 	remoteping "go.chromium.org/tast-tests/cros/remote/network/ping"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
 	"go.chromium.org/tast-tests/cros/remote/wificell/hostapd"
@@ -140,12 +141,9 @@ func PTK(ctx context.Context, s *testing.State) {
 		s.Error("Failed to wait for rekey events: ", err)
 	}
 
-	for _, ph := range monitorResult {
-		if ph.Name == shillconst.ServicePropertyIsConnected {
-			if !ph.Value.(bool) {
-				s.Error("Failed to stay connected during rekey process")
-			}
-		}
+	// Assert there was no disconnection during rekey process.
+	if err := wifiutil.VerifyNoDisconnections(monitorResult); err != nil {
+		s.Fatal("DUT: failed to stay connected during rekey process: ", err)
 	}
 
 	pv := perf.NewValues()

@@ -7,6 +7,8 @@ package wifiutil
 import (
 	"context"
 
+	"go.chromium.org/tast-tests/cros/common/network/protoutil"
+	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
 	"go.chromium.org/tast-tests/cros/remote/wificell/hostapd"
 	"go.chromium.org/tast/core/errors"
@@ -66,4 +68,17 @@ func TryConnect(ctx context.Context, tf *wificell.TestFixture, ops []hostapd.Opt
 	}
 
 	return servicePath, nil
+}
+
+// VerifyNoDisconnections checks whether there were any disconnections during
+// the monitored period.
+func VerifyNoDisconnections(monitorResult []protoutil.ShillPropertyHolder) error {
+	for _, ph := range monitorResult {
+		if ph.Name == shillconst.ServicePropertyIsConnected {
+			if !ph.Value.(bool) {
+				return errors.New("DUT: failed to stay connected")
+			}
+		}
+	}
+	return nil
 }

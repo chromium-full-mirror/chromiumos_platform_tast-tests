@@ -257,12 +257,8 @@ func MARBSSIDRoam(ctx context.Context, s *testing.State) {
 	}(ctx)
 
 	// Assert there was no disconnection during roaming.
-	for _, ph := range monitorResult {
-		if ph.Name == shillconst.ServicePropertyIsConnected {
-			if !ph.Value.(bool) {
-				s.Fatal("DUT: failed to stay connected during the roaming process")
-			}
-		}
+	if err := wifiutil.VerifyNoDisconnections(monitorResult); err != nil {
+		s.Fatal("DUT: failed to stay connected during the roaming process: ", err)
 	}
 
 	roamMAC, err := ipr.MAC(ctx, iface)

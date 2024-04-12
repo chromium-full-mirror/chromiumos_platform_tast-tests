@@ -16,11 +16,11 @@ import (
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 
 	"go.chromium.org/tast-tests/cros/common/crypto/certificate"
-	"go.chromium.org/tast-tests/cros/common/shillconst"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/common/wifi/security"
 	"go.chromium.org/tast-tests/cros/common/wifi/security/wpa"
 	"go.chromium.org/tast-tests/cros/common/wifi/security/wpaeap"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wifi/wifiutil"
 	"go.chromium.org/tast-tests/cros/remote/wifi/iw"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
 	"go.chromium.org/tast-tests/cros/remote/wificell/dutcfg"
@@ -314,12 +314,8 @@ func RoamFT(ctx context.Context, s *testing.State) {
 		}(ctx)
 		// Check that we don't disconnect along the way here, in case we're ping-ponging around APs --
 		// and after the first (failed) roam, the second re-connection will not be testing FT at all.
-		for _, ph := range monitorResult {
-			if ph.Name == shillconst.ServicePropertyIsConnected {
-				if !ph.Value.(bool) {
-					s.Error("Failed to stay connected during the roaming process")
-				}
-			}
+		if err := wifiutil.VerifyNoDisconnections(monitorResult); err != nil {
+			s.Fatal("DUT: failed to stay connected during the roaming process: ", err)
 		}
 
 		// Verify the L3 connectivity and make sure that the DUT stays connected to the second AP.

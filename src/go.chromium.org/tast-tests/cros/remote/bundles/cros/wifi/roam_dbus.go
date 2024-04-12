@@ -8,14 +8,14 @@ import (
 	"context"
 	"time"
 
-	"github.com/golang/protobuf/ptypes/empty"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 
-	"go.chromium.org/tast-tests/cros/common/shillconst"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
+
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wifi/wifiutil"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
 	"go.chromium.org/tast-tests/cros/remote/wificell/hostapd"
-	"go.chromium.org/tast-tests/cros/services/cros/wifi"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -37,155 +37,80 @@ func init() {
 }
 
 func RoamDbus(ctx context.Context, s *testing.State) {
-	// This test seeks to associate the DUT with an AP with a set of
-	// association parameters. Then it creates a second AP with a different
-	// set of association parameters but the same SSID, and sends roam
-	// command to shill. After receiving the roam command, shill sends a D-Bus
-	// roam command to wpa_supplicant. The test expects that the DUT
-	// successfully connects to the second AP within a reasonable amount of time.
+	/*
+		This test checks a DUT's ability to force a roam between APs using the
+		following steps:
+		1 - Turn off foreground and background scans, and set ScanAllowRoam
+		    shill property to false.
+		2 - Configure AP1.
+		3 - Connect DUT to AP1.
+		4 - Configure AP2 on the same SSID as AP1.
+		5 - Send dbus roam command on the DUT so that it roams to AP2.
+		6 - Verify the DUT roams to the AP2 in a reasonable amount of time.
+		7 - Verify there were no disconnections during the roam.
+	*/
 	tf := s.FixtValue().(*wificell.TestFixture)
 
-	allowRoamResp, err := tf.WifiClient().GetScanAllowRoamProperty(ctx, &empty.Empty{})
+	// Configure AP1 and connect the DUT to it, then configure AP2.
+	ap1Config := hostapd.ApConfig{ApOpts: []hostapd.Option{hostapd.Mode(hostapd.Mode80211nPure), hostapd.Channel(48), hostapd.HTCaps(hostapd.HTCapHT20)}}
+	ap2Config := hostapd.ApConfig{ApOpts: []hostapd.Option{hostapd.Mode(hostapd.Mode80211nPure), hostapd.Channel(1), hostapd.HTCaps(hostapd.HTCapHT20)}}
+	ctx, rt, finish, err := wifiutil.SimpleRoamInitialSetup(ctx, tf, wificell.DefaultDUT, ap1Config, ap2Config, false)
 	if err != nil {
-		s.Fatal("Failed to get the ScanAllowRoam property: ", err)
-	}
-	if allowRoamResp.Allow {
-		if _, err := tf.WifiClient().SetScanAllowRoamProperty(ctx, &wifi.SetScanAllowRoamPropertyRequest{Allow: false}); err != nil {
-			s.Error("Failed to set ScanAllowRoam property to false: ", err)
-		}
-		defer func(ctx context.Context) {
-			if _, err := tf.WifiClient().SetScanAllowRoamProperty(ctx, &wifi.SetScanAllowRoamPropertyRequest{Allow: allowRoamResp.Allow}); err != nil {
-				s.Errorf("Failed to set ScanAllowRoam property back to %v: %v", allowRoamResp.Allow, err)
-			}
-		}(ctx)
-	}
-
-	ctx, restoreBgAndFg, err := tf.WifiClient().TurnOffBgAndFgscan(ctx)
-	if err != nil {
-		s.Fatal("Failed to turn off the background and/or foreground scan: ", err)
+		s.Fatal("Failed initial setup of the test: ", err)
 	}
 	defer func() {
-		if err := restoreBgAndFg(); err != nil {
-			s.Error("Failed to restore the background and/or foreground scan config: ", err)
+		if err := finish(); err != nil {
+			s.Error("Error while tearing down test setup: ", err)
 		}
 	}()
-
-	const (
-		ap1Channel = 48
-		ap2Channel = 1
-	)
-	// Generate BSSIDs for the two APs.
-	mac1, err := hostapd.RandomMAC()
-	if err != nil {
-		s.Fatal("Failed to generate BSSID: ", err)
-	}
-	mac2, err := hostapd.RandomMAC()
-	if err != nil {
-		s.Fatal("Failed to generate BSSID: ", err)
-	}
-	ap1BSSID := mac1.String()
-	ap2BSSID := mac2.String()
-
-	// Configure the initial AP.
-	optionsAP1 := []hostapd.Option{hostapd.Mode(hostapd.Mode80211nPure), hostapd.Channel(ap1Channel), hostapd.HTCaps(hostapd.HTCapHT20), hostapd.BSSID(ap1BSSID)}
-	ap1, err := tf.ConfigureAP(ctx, optionsAP1, nil)
-	if err != nil {
-		s.Fatal("Failed to configure the AP: ", err)
-	}
-	defer func(ctx context.Context) {
-		if err := tf.DeconfigAP(ctx, ap1); err != nil {
-			s.Error("Failed to deconfig the AP: ", err)
-		}
-	}(ctx)
-	ctx, cancel := tf.ReserveForDeconfigAP(ctx, ap1)
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
+	rt.SetRoamSucceeded(false)
 
-	ap1SSID := ap1.Config().SSID
-
-	// Connect to the initial AP.
-	var servicePath string
-	if resp, err := tf.ConnectWifiAP(ctx, ap1); err != nil {
-		s.Fatal("DUT: failed to connect to WiFi: ", err)
-	} else {
-		servicePath = resp.ServicePath
-	}
-	roamSucceeded := false
-	defer func(ctx context.Context) {
-		if roamSucceeded {
-			return
-		}
-		if err := tf.CleanDisconnectWifi(ctx); err != nil {
-			s.Error("Failed to disconnect WiFi: ", err)
-		}
-	}(ctx)
-	ctx, cancel = tf.ReserveForDisconnect(ctx)
-	defer cancel()
-
-	if err := tf.VerifyConnection(ctx, ap1); err != nil {
-		s.Fatal("DUT: failed to verify connection: ", err)
-	}
-
+	// Generate a property watcher for changes in roam state and WiFi.BSSID.
 	waitCtx, cancel := context.WithTimeout(ctx, 60*time.Second)
 	defer cancel()
-	waitForProps, err := tf.WifiClient().GenerateRoamPropertyWatcher(waitCtx, ap2BSSID, servicePath)
+	waitForProps, err := tf.DUTWifiClient(wificell.DefaultDUT).GenerateRoamPropertyWatcher(waitCtx, rt.AP2BSSID(), rt.ServicePath())
 	if err != nil {
 		s.Fatal("DUT: failed to create a property watcher, err: ", err)
 	}
 
-	// Set up the second AP interface on the same device with the same
-	// SSID, but on different band (5 GHz for AP1 and 2.4 GHz for AP2).
-	optionsAP2 := []hostapd.Option{hostapd.Mode(hostapd.Mode80211nPure), hostapd.Channel(ap2Channel), hostapd.HTCaps(hostapd.HTCapHT20), hostapd.SSID(ap1SSID), hostapd.BSSID(ap2BSSID)}
-	ap2, err := tf.ConfigureAP(ctx, optionsAP2, nil)
-	if err != nil {
-		s.Fatal("Failed to configure the AP: ", err)
-	}
-	defer func(ctx context.Context) {
-		if err := tf.DeconfigAP(ctx, ap2); err != nil {
-			s.Error("Failed to deconfig the AP: ", err)
-		}
-	}(ctx)
-	ctx, cancel = tf.ReserveForDeconfigAP(ctx, ap2)
-	defer cancel()
-
-	iface, err := tf.ClientInterface(ctx)
+	// Send a scan-only request to shill so that the DUT discovers AP2BSSID.
+	iface, err := tf.DUTClientInterface(ctx, wificell.DefaultDUT)
 	if err != nil {
 		s.Fatal("DUT: ", err)
 	}
-
 	discCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
-	if err := tf.WifiClient().DiscoverBSSID(discCtx, ap2BSSID, iface, []byte(ap1SSID)); err != nil {
-		s.Fatalf("DUT: failed to find the BSSID %s: %v", ap2BSSID, err)
+	if err := tf.DUTWifiClient(wificell.DefaultDUT).DiscoverBSSID(discCtx, rt.AP2BSSID(), iface, []byte(rt.AP1SSID())); err != nil {
+		s.Fatalf("DUT: failed to find the BSSID %s: %v", rt.AP2BSSID(), err)
 	}
 
 	// Send roam command to shill, and shill will send D-Bus roam command to wpa_supplicant.
-	s.Logf("Requesting roam from %s to %s", ap1BSSID, ap2BSSID)
-	if err := tf.WifiClient().RequestRoam(ctx, iface, ap2BSSID, 30*time.Second); err != nil {
-		s.Errorf("DUT: failed to roam from %s to %s: %v", ap1BSSID, ap2BSSID, err)
+	s.Logf("Requesting roam from %s to %s", rt.AP2BSSID(), rt.AP2BSSID())
+	if err := tf.DUTWifiClient(wificell.DefaultDUT).RequestRoam(ctx, iface, rt.AP2BSSID(), 30*time.Second); err != nil {
+		s.Errorf("DUT: failed to roam from %s to %s: %v", rt.AP2BSSID(), rt.AP2BSSID(), err)
 	}
 
+	// Verify that the DUT has roamed successfully.
 	monitorResult, err := waitForProps()
 	if err != nil {
 		s.Fatal("DUT: failed to wait for the properties, err: ", err)
 	}
 	s.Log("DUT: roamed")
-	roamSucceeded = true
+	rt.SetRoamSucceeded(true)
 	defer func(ctx context.Context) {
-		if err := tf.CleanDisconnectWifi(ctx); err != nil {
+		if err := tf.CleanDisconnectDUTFromWifi(ctx, wificell.DefaultDUT); err != nil {
 			s.Error("Failed to disconnect WiFi: ", err)
 		}
 	}(ctx)
 
 	// Assert there was no disconnection during roaming.
-	for _, ph := range monitorResult {
-		if ph.Name == shillconst.ServicePropertyIsConnected {
-			if !ph.Value.(bool) {
-				s.Fatal("DUT: failed to stay connected during the roaming process")
-			}
-		}
+	if err := wifiutil.VerifyNoDisconnections(monitorResult); err != nil {
+		s.Fatal("DUT: failed to stay connected during the roaming process: ", err)
 	}
 
-	if err := tf.VerifyConnection(ctx, ap2); err != nil {
+	if err := tf.VerifyConnection(ctx, rt.AP2()); err != nil {
 		s.Fatal("DUT: failed to verify connection: ", err)
 	}
 }

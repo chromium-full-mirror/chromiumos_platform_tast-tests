@@ -11,6 +11,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wifi/wifiutil"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
 	"go.chromium.org/tast-tests/cros/remote/wificell/hostapd"
 	"go.chromium.org/tast-tests/cros/services/cros/wifi"
@@ -131,12 +132,8 @@ func CSAReconnect(ctx context.Context, s *testing.State) {
 	s.Log("DUT: switched channel")
 
 	// Assert there was no disconnection during channel switching.
-	for _, ph := range monitorResult {
-		if ph.Name == shillconst.ServicePropertyIsConnected {
-			if !ph.Value.(bool) {
-				s.Fatal("DUT: failed to stay connected during the channel switching process")
-			}
-		}
+	if err := wifiutil.VerifyNoDisconnections(monitorResult); err != nil {
+		s.Fatal("DUT: failed to stay connected during the channel switching process: ", err)
 	}
 
 	// Assert connection.

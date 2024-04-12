@@ -8,16 +8,15 @@ import (
 	"context"
 	"time"
 
-	"github.com/golang/protobuf/ptypes/empty"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 
-	"go.chromium.org/tast-tests/cros/common/shillconst"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/common/wifi/security"
 	"go.chromium.org/tast-tests/cros/common/wifi/security/wpa"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wifi/wifiutil"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
 	"go.chromium.org/tast-tests/cros/remote/wificell/hostapd"
-	"go.chromium.org/tast-tests/cros/services/cros/wifi"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -33,14 +32,14 @@ const (
 type bssTMReqTestCase struct {
 	// requestParams defines the parameters for the BSS Transition Management Request.
 	requestParams hostapd.BSSTMReqParams
-	// secConfFac0 is the security configuration factory for the first AP.
-	secConfFac0 security.ConfigFactory
-	// secConfFac1 is the security configuration factory for the second AP.
+	// secConfFac1 is the security configuration factory for the first AP.
 	secConfFac1 security.ConfigFactory
-	// pmfRequiredAP0 indicates whether AP 0 should enable the Hostapd config |PMFRequired|.
-	pmfRequiredAP0 bool
+	// secConfFac2 is the security configuration factory for the second AP.
+	secConfFac2 security.ConfigFactory
 	// pmfRequiredAP1 indicates whether AP 1 should enable the Hostapd config |PMFRequired|.
 	pmfRequiredAP1 bool
+	// pmfRequiredAP2 indicates whether AP 2 should enable the Hostapd config |PMFRequired|.
+	pmfRequiredAP2 bool
 }
 
 func init() {
@@ -84,9 +83,9 @@ func init() {
 				// Verifies that DUT can roam from a BSS with PSK key management to a BSS with SAE key management and back.
 				Name: "psk_to_sae",
 				Val: bssTMReqTestCase{
-					secConfFac0:    wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherCCMP)),
-					secConfFac1:    wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
-					pmfRequiredAP1: true,
+					secConfFac1:    wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherCCMP)),
+					secConfFac2:    wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+					pmfRequiredAP2: true,
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiNotMarvell()),
 				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel"}`,
@@ -95,9 +94,9 @@ func init() {
 				// Verifies that DUT can roam from a BSS with SAE key management to a BSS with PSK key management and back.
 				Name: "sae_to_psk",
 				Val: bssTMReqTestCase{
-					secConfFac0:    wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
-					secConfFac1:    wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherCCMP)),
-					pmfRequiredAP0: true,
+					secConfFac1:    wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+					secConfFac2:    wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherCCMP)),
+					pmfRequiredAP1: true,
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiNotMarvell()),
 				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel"}`,
@@ -118,154 +117,88 @@ func init() {
 	1- Disallow roaming from locally requested scans and turn off background
 		scans to ensure that the only roams that happen are those triggered by the
 		BSSTM Request
-	2- Set up an AP "AP0" using security configs from |secConfFac0| if present.
-	3- Connect to AP0.
-	4- Set up another AP "AP1" using security configs from |secConfFac1| if present.
-	5- Add the BSSID at AP0 into the DUT's ignorelist.
-	6- Send a BSSTM request from AP0.
+	2- Set up an AP "AP1" using security configs from |secConfFac1| if present.
+	3- Connect to AP1.
+	4- Set up another AP "AP2" using security configs from |secConfFac2| if present.
+	5- Add the BSSID at AP1 into the DUT's ignorelist.
+	6- Send a BSSTM request from AP1.
 	7- Assert that the Shill property RoamState transitions from configuration
 		-> ready -> idle, which indicates a roam has occurred.
-	8- Assert that the BSSID property in Shill is equal to the BSSID from AP1.
-	9- Conduct a ping test to ensure we are connected to AP1.
-	10- If "disassoc_imminent" is enabled, send another BSSTM Request from AP1,
+	8- Assert that the BSSID property in Shill is equal to the BSSID from AP2.
+	9- Conduct a ping test to ensure we are connected to AP2.
+	10- If "disassoc_imminent" is enabled, send another BSSTM Request from AP2,
 		but this time assert that the roam fails due to the reassociation
 		delay.
-	11- Send a BSSTM Request from AP1 without dissasoc imminent.
+	11- Send a BSSTM Request from AP2 without dissasoc imminent.
 	12- Assert that the Shill property RoamState transitions from configuration
 		-> ready -> idle, which indicates a roam has occurred.
-	13- Assert that the BSSID property in Shill is equal to the BSSID from AP0.
-	14- Conduct a ping test to ensure we are connected to AP0.
+	13- Assert that the BSSID property in Shill is equal to the BSSID from AP1.
+	14- Conduct a ping test to ensure we are connected to AP1.
 	15- Clean up state and revert the steps from (1).
 */
 
 func BSSTMRequest(ctx context.Context, s *testing.State) {
 	tf := s.FixtValue().(*wificell.TestFixture)
 
-	allowRoamResp, err := tf.WifiClient().GetScanAllowRoamProperty(ctx, &empty.Empty{})
-	if err != nil {
-		s.Fatal("Failed to get the ScanAllowRoam property: ", err)
-	}
-	if allowRoamResp.Allow {
-		if _, err := tf.WifiClient().SetScanAllowRoamProperty(ctx, &wifi.SetScanAllowRoamPropertyRequest{Allow: false}); err != nil {
-			s.Error("Failed to set ScanAllowRoam property to false: ", err)
-		}
-		defer func(ctx context.Context) {
-			if _, err := tf.WifiClient().SetScanAllowRoamProperty(ctx, &wifi.SetScanAllowRoamPropertyRequest{Allow: allowRoamResp.Allow}); err != nil {
-				s.Errorf("Failed to set ScanAllowRoam property back to %v: %v", allowRoamResp.Allow, err)
-			}
-		}(ctx)
-	}
-
-	ctx, restoreBgAndFg, err := tf.WifiClient().TurnOffBgAndFgscan(ctx)
-	if err != nil {
-		s.Fatal("Failed to turn off the background and/or foreground scan: ", err)
-	}
-	defer func() {
-		if err := restoreBgAndFg(); err != nil {
-			s.Error("Failed to restore the background and/or foreground scan config: ", err)
-		}
-	}()
-
 	runTest := func(ctx context.Context, s *testing.State, waitForScan bool) {
-		// Generate BSSIDs for the two APs.
-		mac0, err := hostapd.RandomMAC()
-		if err != nil {
-			s.Fatal("Failed to generate BSSID: ", err)
-		}
-		mac1, err := hostapd.RandomMAC()
-		if err != nil {
-			s.Fatal("Failed to generate BSSID: ", err)
-		}
-		fromBSSID := mac0.String()
-		roamBSSID := mac1.String()
-		s.Log("AP 0 BSSID: ", fromBSSID)
-		s.Log("AP 1 BSSID: ", roamBSSID)
-
-		testSSID := hostapd.RandomSSID("BSS_TM_")
-		apOpts0 := []hostapd.Option{hostapd.SSID(testSSID), hostapd.Mode(hostapd.Mode80211nMixed), hostapd.HTCaps(hostapd.HTCapHT20), hostapd.Channel(1), hostapd.BSSID(fromBSSID)}
-		apOpts1 := []hostapd.Option{hostapd.SSID(testSSID), hostapd.Mode(hostapd.Mode80211nMixed), hostapd.HTCaps(hostapd.HTCapHT20), hostapd.Channel(48), hostapd.BSSID(roamBSSID)}
+		apOpts1 := []hostapd.Option{hostapd.Mode(hostapd.Mode80211nMixed), hostapd.HTCaps(hostapd.HTCapHT20), hostapd.Channel(1)}
+		apOpts2 := []hostapd.Option{hostapd.Mode(hostapd.Mode80211nMixed), hostapd.HTCaps(hostapd.HTCapHT20), hostapd.Channel(48)}
 		params := s.Param().(bssTMReqTestCase)
 		requestParams := params.requestParams
 		if requestParams.DisassocImminent {
-			apOpts0 = append(apOpts0, hostapd.MBO())
 			apOpts1 = append(apOpts1, hostapd.MBO())
+			apOpts2 = append(apOpts2, hostapd.MBO())
 		}
 
-		if params.pmfRequiredAP0 {
-			apOpts0 = append(apOpts0, hostapd.PMF(hostapd.PMFRequired))
-		}
 		if params.pmfRequiredAP1 {
 			apOpts1 = append(apOpts1, hostapd.PMF(hostapd.PMFRequired))
 		}
-
-		// Configure the first AP.
-		s.Log("Configuring AP 0")
-		ap0, err := tf.ConfigureAP(ctx, apOpts0, params.secConfFac0)
-		if err != nil {
-			s.Fatal("Failed to configure AP 0: ", err)
-		}
-		defer func(ctx context.Context) {
-			if err := tf.DeconfigAP(ctx, ap0); err != nil {
-				s.Error("Failed to deconfig AP 0: ", err)
-			}
-		}(ctx)
-		ctx, cancel := tf.ReserveForDeconfigAP(ctx, ap0)
-		defer cancel()
-
-		// Connect to the first AP.
-		s.Log("Connecting to AP 0")
-		cleanupCtx := ctx
-		ctx, cancel = tf.ReserveForDisconnect(ctx)
-		defer cancel()
-		connectResp, err := tf.ConnectWifiAP(ctx, ap0)
-		if err != nil {
-			s.Fatal("Failed to connect to AP 0: ", err)
-		}
-		servicePath := connectResp.ServicePath
-		defer func(ctx context.Context) {
-			if err := tf.CleanDisconnectWifi(ctx); err != nil {
-				s.Error("Failed to disconnect WiFi: ", err)
-			}
-		}(cleanupCtx)
-		s.Log("Verifying connection to AP 0")
-		if err := tf.VerifyConnection(ctx, ap0); err != nil {
-			s.Fatal("Failed to verify connection: ", err)
+		if params.pmfRequiredAP2 {
+			apOpts2 = append(apOpts2, hostapd.PMF(hostapd.PMFRequired))
 		}
 
-		// Set up a second AP with the same SSID.
-		s.Log("Configuring AP 1")
-		ap1, err := tf.ConfigureAP(ctx, apOpts1, params.secConfFac1)
+		// Configure AP1, connect the DUT to it, then configure AP2.
+		ap1Config := hostapd.ApConfig{ApOpts: apOpts1, SecConfFac: params.secConfFac1}
+		ap2Config := hostapd.ApConfig{ApOpts: apOpts2, SecConfFac: params.secConfFac2}
+		ctx, rt, finish, err := wifiutil.SimpleRoamInitialSetup(ctx, tf, wificell.DefaultDUT, ap1Config, ap2Config, false)
 		if err != nil {
-			s.Fatal("Failed to configure AP 1: ", err)
+			s.Fatal("Failed initial setup of the test: ", err)
 		}
-		defer func(ctx context.Context) {
-			if err := tf.DeconfigAP(ctx, ap1); err != nil {
-				s.Error("Failed to deconfig AP 1: ", err)
+		defer func() {
+			if err := finish(); err != nil {
+				s.Error("Error while tearing down test setup: ", err)
 			}
-		}(ctx)
-		ctx, cancel = tf.ReserveForDeconfigAP(ctx, ap1)
+		}()
+		ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 		defer cancel()
+
+		fromBSSID := rt.AP1BSSID()
+		roamBSSID := rt.AP2BSSID()
+		testSSID := rt.AP1SSID()
+		s.Log("AP 1 BSSID: ", fromBSSID)
+		s.Log("AP 2 BSSID: ", roamBSSID)
 
 		// Get the name and MAC address of the DUT WiFi interface.
-		clientIface, err := tf.ClientInterface(ctx)
+		clientIface, err := tf.DUTClientInterface(ctx, wificell.DefaultDUT)
 		if err != nil {
 			s.Fatal("Unable to get DUT interface name: ", err)
 		}
-		clientMAC, err := tf.ClientHardwareAddr(ctx)
+		clientMACAddr, err := tf.DUTHardwareAddr(ctx, wificell.DefaultDUT)
 		if err != nil {
 			s.Fatal("Unable to get DUT MAC address: ", err)
 		}
+		clientMAC := clientMACAddr.String()
 
 		// Flush all scanned BSS from wpa_supplicant so that test behavior is consistent.
 		s.Log("Flushing BSS cache")
-		if err := tf.WifiClient().FlushBSS(ctx, clientIface, 0); err != nil {
+		if err := tf.DUTWifiClient(wificell.DefaultDUT).FlushBSS(ctx, clientIface, 0); err != nil {
 			s.Fatal("Failed to flush BSS list: ", err)
 		}
 
 		// Wait for roamBSSID to be discovered if waitForScan is set.
 		if waitForScan {
 			s.Logf("Waiting for roamBSSID: %s", roamBSSID)
-			if err := tf.WifiClient().DiscoverBSSID(ctx, roamBSSID, clientIface, []byte(testSSID)); err != nil {
+			if err := tf.DUTWifiClient(wificell.DefaultDUT).DiscoverBSSID(ctx, roamBSSID, clientIface, []byte(testSSID)); err != nil {
 				s.Fatal("Unable to discover roam BSSID: ", err)
 			}
 		}
@@ -273,7 +206,7 @@ func BSSTMRequest(ctx context.Context, s *testing.State) {
 		// Set up a watcher for the Shill WiFi BSSID property.
 		waitCtx, cancel := context.WithTimeout(ctx, bssTMRoamTimeout)
 		defer cancel()
-		waitForProps, err := tf.WifiClient().GenerateRoamPropertyWatcher(waitCtx, roamBSSID, servicePath)
+		waitForProps, err := tf.DUTWifiClient(wificell.DefaultDUT).GenerateRoamPropertyWatcher(waitCtx, roamBSSID, rt.ServicePath())
 
 		sendReqAndWaitConnected := func(from, to string, fromAP, toAP *wificell.APIface, req hostapd.BSSTMReqParams, expectConnectFail bool) {
 			// Send BSS Transition Management Request to client.
@@ -296,14 +229,9 @@ func BSSTMRequest(ctx context.Context, s *testing.State) {
 			if expectConnectFail {
 				s.Fatal("Expected roam to fail but it succeeded")
 			}
-			for _, ph := range monitorResult {
-				if ph.Name == shillconst.ServicePropertyIsConnected {
-					if !ph.Value.(bool) {
-						s.Fatal("Failed to stay connected during the roaming process")
-					}
-				}
+			if err := wifiutil.VerifyNoDisconnections(monitorResult); err != nil {
+				s.Fatal("DUT: failed to stay connected during the roaming process: ", err)
 			}
-
 			// Just for good measure make sure we're properly connected.
 			s.Log("Verifying connection to AP ", to)
 			if err := tf.VerifyConnection(ctx, toAP); err != nil {
@@ -338,12 +266,12 @@ func BSSTMRequest(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to add wpa BSSID_IGNORE: ", err)
 		}
-		sendReqAndWaitConnected(fromBSSID, roamBSSID, ap0, ap1, req, false)
+		sendReqAndWaitConnected(fromBSSID, roamBSSID, rt.AP1(), rt.AP2(), req, false)
 		t := time.Now()
 
 		waitCtx, cancel = context.WithTimeout(ctx, bssTMRoamTimeout)
 		defer cancel()
-		waitForProps, err = tf.WifiClient().GenerateRoamPropertyWatcher(waitCtx, fromBSSID, servicePath)
+		waitForProps, err = tf.DUTWifiClient(wificell.DefaultDUT).GenerateRoamPropertyWatcher(waitCtx, fromBSSID, rt.ServicePath())
 		if err != nil {
 			s.Fatal("Failed to create Shill property watcher: ", err)
 		}
@@ -360,7 +288,7 @@ func BSSTMRequest(ctx context.Context, s *testing.State) {
 			// without any additional parameters to test that the
 			// connection fails. Otherwise, the reassoc delay will
 			// disable the current AP as well and trigger a deauth.
-			sendReqAndWaitConnected(roamBSSID, fromBSSID, ap1, ap0, hostapd.BSSTMReqParams{Neighbors: []string{fromBSSID}}, true)
+			sendReqAndWaitConnected(roamBSSID, fromBSSID, rt.AP2(), rt.AP1(), hostapd.BSSTMReqParams{Neighbors: []string{fromBSSID}}, true)
 			if sleepDur := requestParams.ReassocDelay + bssTMReassocBuffer - time.Now().Sub(t); sleepDur > 0 {
 				s.Log("Sleeping for ", sleepDur)
 				// GoBigSleepLint this sleep is the part of the test design.
@@ -371,7 +299,7 @@ func BSSTMRequest(ctx context.Context, s *testing.State) {
 
 			waitCtx, cancel = context.WithTimeout(ctx, bssTMRoamTimeout)
 			defer cancel()
-			waitForProps, err = tf.WifiClient().GenerateRoamPropertyWatcher(waitCtx, fromBSSID, servicePath)
+			waitForProps, err = tf.DUTWifiClient(wificell.DefaultDUT).GenerateRoamPropertyWatcher(waitCtx, fromBSSID, rt.ServicePath())
 			if err != nil {
 				s.Fatal("Failed to create Shill property watcher: ", err)
 			}
@@ -389,7 +317,7 @@ func BSSTMRequest(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to add wpa BSSID_IGNORE: ", err)
 		}
-		sendReqAndWaitConnected(roamBSSID, fromBSSID, ap1, ap0, req, false)
+		sendReqAndWaitConnected(roamBSSID, fromBSSID, rt.AP2(), rt.AP1(), req, false)
 		err = tf.ClearBSSIDIgnoreDUT(ctx, wificell.DefaultDUT)
 		if err != nil {
 			s.Fatal("Failed to clear wpa BSSID_IGNORE: ", err)
