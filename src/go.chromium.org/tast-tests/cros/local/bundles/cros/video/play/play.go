@@ -306,7 +306,7 @@ func playSeekVideo(ctx context.Context, cs ash.ConnSource, videoFile, baseURL, o
 		return errors.Wrap(err, "failed to retrieve DevTools Media messages")
 	}
 
-	if err := conn.Call(ctx, nil, "playRepeatedly", videoFile); err != nil {
+	if err := conn.Call(ctx, nil, "playOnLoop", videoFile); err != nil {
 		return err
 	}
 
@@ -564,7 +564,7 @@ func TestPlayAndScreenshot(ctx context.Context, s *testing.State, tconn *chrome.
 	}
 
 	// Start playing the video indefinitely.
-	if err := conn.Call(ctx, nil, "playRepeatedly", filename); err != nil {
+	if err := conn.Call(ctx, nil, "playOnLoop", filename); err != nil {
 		return errors.Wrapf(err, "failed to play %v", filename)
 	}
 

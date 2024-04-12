@@ -48,15 +48,16 @@ async function startPlaying(videoSourcePath, unmutePlayer) {
   return video.play();
 }
 
-async function playRepeatedly(videoSourcePath) {
+async function playOnLoop(videoSourcePath) {
+  console.log('Loading url: ', videoSourcePath, '...');
   let videos = Array.from(document.getElementsByClassName(videoClass));
-  videos.forEach(async video => {
-    video.src = videoSourcePath;
-    video.loop = true;
-    await video.play();
-  }
-  );
-  console.log('Loaded url: ', videoSourcePath);
+  videos.forEach(
+    (video) => {
+      video.src = videoSourcePath;
+      video.loop = true;
+    }
+  )
+  return Promise.allSettled(videos.map((v) => v.play()))
 }
 
 // Quick and dirty randomizer that returns the same sequence of numbers provided

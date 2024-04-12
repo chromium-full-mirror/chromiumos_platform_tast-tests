@@ -174,7 +174,7 @@ func RunTest(ctx context.Context, s *testing.State, tconn *chrome.TestConn, conf
 	}
 
 	// Start playing the video.
-	if err := conn.Call(ctx, nil, "playRepeatedly", config.FileName); err != nil {
+	if err := conn.Call(ctx, nil, "playOnLoop", config.FileName); err != nil {
 		s.Fatal("Failed to start video: ", err)
 	}
 
