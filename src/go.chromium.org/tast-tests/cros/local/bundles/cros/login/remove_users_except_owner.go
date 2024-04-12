@@ -176,10 +176,19 @@ func RemoveUsersExceptOwner(ctx context.Context, s *testing.State) {
 		}
 
 		// Cryptohome of a deleted user should not exist.
-		if _, err := getCryptohomeFileInfo(ctx, additionalUser1); err == nil {
-			s.Fatalf("Cryptohome directory for %s still exists", additionalUser1)
-		} else if !os.IsNotExist(err) {
-			s.Fatal("Unexpected error: ", err)
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			if _, err := getCryptohomeFileInfo(ctx, additionalUser1); err == nil {
+				return errors.New("Cryptohome directory still exists")
+			} else if os.IsNotExist(err) {
+				return nil
+			} else {
+				return testing.PollBreak(errors.Wrap(err, "unexpected error"))
+			}
+		}, &testing.PollOptions{
+			Timeout:  4 * time.Second,
+			Interval: time.Second,
+		}); err != nil {
+			s.Fatalf("Removal of user %s failed: %v", additionalUser1, err)
 		}
 
 		// Cryptohome of the device owner should still be available.
