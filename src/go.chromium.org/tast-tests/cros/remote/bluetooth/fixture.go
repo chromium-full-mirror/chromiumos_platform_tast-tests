@@ -47,6 +47,12 @@ const (
 	// resolved based on the DUT hostname.
 	fixtureVarBTPeers = "bluetooth.BTPeers"
 
+	// Optional vars used when specifying a custom username/password for debugging, e.g.
+	// "--var=cros_username=XXXX", which is exclusively used
+	// for local testing. If these variables aren't set, attempt to use other login methods.
+	fixtureVarCustomChromeUsername = "cros_username"
+	fixtureVarCustomChromePassword = "cros_password"
+
 	fixtureVarSigninKey = "ui.signinProfileTestExtensionManifestKey"
 
 	// If cleanup is not called for the OTAs leased by Tape for the duration of the
@@ -56,12 +62,6 @@ const (
 	// TODO(b/264412597): This timeout must be kept in sync with the total timeouts of all tests that
 	// can run on the fixtures that use Tast.
 	fixtureVarFastPairTapeCleanupTimeout = 15 * time.Minute
-
-	// These variables can be overridden by specifying a custom value in the command
-	// line, e.g. "--vars=bluetooth.FastPairChromeUsername=XXXX", which can be used
-	// for local testing. Otherwise uses the default value for GAIA login.
-	fixtureVarFastPairChromeUsername = "bluetooth.FastPairChromeUsername"
-	fixtureVarFastPairChromePassword = "bluetooth.FastPairChromePassword"
 )
 
 // Non-const Fixture variable keys.
@@ -187,11 +187,6 @@ type fixtureFeatures struct {
 	// UseFastPairTapeAccount uses an OTA to login, selected by TAPE from the Fast
 	// Pair OTA pool.
 	UseFastPairTapeAccount bool
-
-	// RequireFastPairUserVars enables retrieving chrome user credentials from
-	// fixture vars, and requires that they are provided. Required for all Fast
-	// Pair tests that use a GAIA login.
-	RequireFastPairUserVars bool
 
 	// RequireCompanionDUT enables logging in on a second Chromebook with the same
 	// user account, which is necessary for Fast Pair Multi-DUT tests. Enforces that
@@ -751,8 +746,11 @@ func (tf *fixture) TearDown(ctx context.Context, s *testing.FixtState) {
 		btpeer.StopLogCollection(ctx)
 	}
 
-	// Clean up Tape helpers if it was used for credentials.
-	if tf.features.UseFastPairTapeAccount {
+	// Clean up Tape helpers if it was used for credentials. We lease from
+	// Tape only if there are no provided credentials.
+	_, userOk := s.Var(fixtureVarCustomChromeUsername)
+	_, passOk := s.Var(fixtureVarCustomChromePassword)
+	if !(userOk && passOk) && tf.features.UseFastPairTapeAccount {
 		s.Log("Cleaning up Fast Pair OTA provisioned with Tape: ", tf.fv.tapeAccount.Username)
 		if err := tf.fv.tapeAccountManager.CleanUp(ctx); err != nil {
 			s.Error("Failed to clean up Tape OTA: ", err)
@@ -950,12 +948,13 @@ func (tf *fixture) cleanupAllDuts(ctx context.Context) {
 func (tf *fixture) resolveChromeCredentials(ctx context.Context, s *testing.FixtState) {
 	s.Log("[BLUETOOTH_FIXTURE] resolveChromeCredentials :: START")
 	defer s.Log("[BLUETOOTH_FIXTURE] resolveChromeCredentials :: END")
-	if tf.features.RequireFastPairUserVars {
-		// Fast Pair tests require GAIA credentials to be provided, which can be
-		// passed via CLI or will use the default credentials.
-		tf.fv.chromeUsername = s.RequiredVar(fixtureVarFastPairChromeUsername)
-		tf.fv.chromePassword = s.RequiredVar(fixtureVarFastPairChromePassword)
-		s.Logf("Using Fast Pair test chrome user credentials for user %q", tf.fv.chromeUsername)
+	// First check if we manually specified Chrome credentials via CLI.
+	customUser, userOk := s.Var(fixtureVarCustomChromeUsername)
+	customPass, passOk := s.Var(fixtureVarCustomChromePassword)
+	if userOk && passOk {
+		tf.fv.chromeUsername = customUser
+		tf.fv.chromePassword = customPass
+		s.Logf("Using provided credentials for user %q", tf.fv.chromeUsername)
 	} else if tf.features.UseFastPairTapeAccount {
 		// Create a tape account manager and lease a test account for the duration
 		// of the fixture.

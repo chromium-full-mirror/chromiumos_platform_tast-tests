@@ -36,6 +36,10 @@ func init() {
 			LoginMode:       ui.LoginMode_LOGIN_MODE_FAKE_LOGIN,
 			FlossEnabled:    false,
 		}),
+		Vars: []string{
+			fixtureVarCustomChromeUsername,
+			fixtureVarCustomChromePassword,
+		},
 		SetUpTimeout:    setUpTimeout + enableChromeUISetUpAndResetBuffer,
 		ResetTimeout:    resetTimeout + enableChromeUISetUpAndResetBuffer,
 		TearDownTimeout: tearDownTimeout,
@@ -61,6 +65,10 @@ func init() {
 			LoginMode:       ui.LoginMode_LOGIN_MODE_FAKE_LOGIN,
 			FlossEnabled:    true,
 		}),
+		Vars: []string{
+			fixtureVarCustomChromeUsername,
+			fixtureVarCustomChromePassword,
+		},
 		SetUpTimeout:    setUpTimeout + enableChromeUISetUpAndResetBuffer,
 		ResetTimeout:    resetTimeout + enableChromeUISetUpAndResetBuffer,
 		TearDownTimeout: tearDownTimeout,
@@ -87,6 +95,8 @@ func init() {
 		}),
 		Vars: []string{
 			fixtureVarBTPeers,
+			fixtureVarCustomChromeUsername,
+			fixtureVarCustomChromePassword,
 		},
 		SetUpTimeout:    setUpTimeout + btpeerSetUpBuffer,
 		ResetTimeout:    resetTimeout + btpeerResetBuffer,
@@ -115,6 +125,8 @@ func init() {
 		}),
 		Vars: []string{
 			fixtureVarBTPeers,
+			fixtureVarCustomChromeUsername,
+			fixtureVarCustomChromePassword,
 		},
 		SetUpTimeout:    setUpTimeout + btpeerSetUpBuffer + BluetoothCooldownTimeout,
 		ResetTimeout:    resetTimeout + btpeerResetBuffer,
@@ -145,6 +157,8 @@ func init() {
 		}),
 		Vars: []string{
 			fixtureVarBTPeers,
+			fixtureVarCustomChromeUsername,
+			fixtureVarCustomChromePassword,
 		},
 		SetUpTimeout:    setUpTimeout + btpeerSetUpBuffer + BluetoothCooldownTimeout + enableChromeUISetUpAndResetBuffer,
 		ResetTimeout:    resetTimeout + btpeerResetBuffer + enableChromeUISetUpAndResetBuffer,
@@ -176,6 +190,8 @@ func init() {
 		}),
 		Vars: []string{
 			fixtureVarBTPeers,
+			fixtureVarCustomChromeUsername,
+			fixtureVarCustomChromePassword,
 		},
 		SetUpTimeout:    setUpTimeout + btpeerSetUpBuffer + BluetoothCooldownTimeout + enableChromeUISetUpAndResetBuffer,
 		ResetTimeout:    resetTimeout + btpeerResetBuffer + enableChromeUISetUpAndResetBuffer,
@@ -207,6 +223,8 @@ func init() {
 		}),
 		Vars: []string{
 			fixtureVarBTPeers,
+			fixtureVarCustomChromeUsername,
+			fixtureVarCustomChromePassword,
 		},
 		SetUpTimeout:    setUpTimeout + btpeerSetUpBuffer + BluetoothCooldownTimeout,
 		ResetTimeout:    resetTimeout + btpeerResetBuffer,
@@ -237,6 +255,8 @@ func init() {
 		}),
 		Vars: []string{
 			fixtureVarBTPeers,
+			fixtureVarCustomChromeUsername,
+			fixtureVarCustomChromePassword,
 		},
 		SetUpTimeout:    setUpTimeout + btpeerSetUpBuffer + BluetoothCooldownTimeout + enableChromeUISetUpAndResetBuffer,
 		ResetTimeout:    resetTimeout + btpeerResetBuffer + enableChromeUISetUpAndResetBuffer,
@@ -267,6 +287,8 @@ func init() {
 		}),
 		Vars: []string{
 			fixtureVarBTPeers,
+			fixtureVarCustomChromeUsername,
+			fixtureVarCustomChromePassword,
 		},
 		SetUpTimeout:    setUpTimeout + btpeerSetUpBuffer + BluetoothCooldownTimeout + enableChromeUISetUpAndResetBuffer,
 		ResetTimeout:    resetTimeout + btpeerResetBuffer + enableChromeUISetUpAndResetBuffer,
@@ -297,6 +319,8 @@ func init() {
 		}),
 		Vars: []string{
 			fixtureVarBTPeers,
+			fixtureVarCustomChromeUsername,
+			fixtureVarCustomChromePassword,
 		},
 		SetUpTimeout:    setUpTimeout + 2*btpeerSetUpBuffer + BluetoothCooldownTimeout,
 		ResetTimeout:    resetTimeout + 2*btpeerResetBuffer,
@@ -327,6 +351,8 @@ func init() {
 		}),
 		Vars: []string{
 			fixtureVarBTPeers,
+			fixtureVarCustomChromeUsername,
+			fixtureVarCustomChromePassword,
 		},
 		SetUpTimeout:    setUpTimeout + 2*btpeerSetUpBuffer + BluetoothCooldownTimeout,
 		ResetTimeout:    resetTimeout + 2*btpeerResetBuffer,
@@ -356,6 +382,8 @@ func init() {
 		}),
 		Vars: []string{
 			fixtureVarBTPeers,
+			fixtureVarCustomChromeUsername,
+			fixtureVarCustomChromePassword,
 		},
 		SetUpTimeout:    setUpTimeout + btpeerSetUpBuffer,
 		ResetTimeout:    resetTimeout + btpeerResetBuffer,
@@ -383,6 +411,8 @@ func init() {
 		}),
 		Vars: []string{
 			fixtureVarBTPeers,
+			fixtureVarCustomChromeUsername,
+			fixtureVarCustomChromePassword,
 		},
 		SetUpTimeout:    setUpTimeout + 2*btpeerSetUpBuffer,
 		ResetTimeout:    resetTimeout + 2*btpeerResetBuffer,
@@ -410,6 +440,8 @@ func init() {
 		}),
 		Vars: []string{
 			fixtureVarBTPeers,
+			fixtureVarCustomChromeUsername,
+			fixtureVarCustomChromePassword,
 		},
 		SetUpTimeout:    setUpTimeout + 2*btpeerSetUpBuffer,
 		ResetTimeout:    resetTimeout + 2*btpeerResetBuffer,
@@ -437,6 +469,8 @@ func init() {
 		}),
 		Vars: []string{
 			fixtureVarBTPeers,
+			fixtureVarCustomChromeUsername,
+			fixtureVarCustomChromePassword,
 		},
 		SetUpTimeout:    setUpTimeout + 3*btpeerSetUpBuffer,
 		ResetTimeout:    resetTimeout + 3*btpeerResetBuffer,
@@ -464,6 +498,8 @@ func init() {
 		}),
 		Vars: []string{
 			fixtureVarBTPeers,
+			fixtureVarCustomChromeUsername,
+			fixtureVarCustomChromePassword,
 		},
 		SetUpTimeout:    setUpTimeout + 3*btpeerSetUpBuffer,
 		ResetTimeout:    resetTimeout + 3*btpeerResetBuffer,
@@ -491,6 +527,8 @@ func init() {
 		}),
 		Vars: []string{
 			fixtureVarBTPeers,
+			fixtureVarCustomChromeUsername,
+			fixtureVarCustomChromePassword,
 		},
 		SetUpTimeout:    setUpTimeout + 4*btpeerSetUpBuffer,
 		ResetTimeout:    resetTimeout + 4*btpeerResetBuffer,
@@ -518,6 +556,8 @@ func init() {
 		}),
 		Vars: []string{
 			fixtureVarBTPeers,
+			fixtureVarCustomChromeUsername,
+			fixtureVarCustomChromePassword,
 		},
 		SetUpTimeout:    setUpTimeout + 4*btpeerSetUpBuffer,
 		ResetTimeout:    resetTimeout + 4*btpeerResetBuffer,
@@ -547,6 +587,8 @@ func init() {
 		}),
 		Vars: []string{
 			fixtureVarBTPeers,
+			fixtureVarCustomChromeUsername,
+			fixtureVarCustomChromePassword,
 		},
 		SetUpTimeout:    setUpTimeout + btpeerSetUpBuffer + enableChromeUISetUpAndResetBuffer,
 		ResetTimeout:    resetTimeout + btpeerResetBuffer + enableChromeUISetUpAndResetBuffer,
@@ -576,6 +618,8 @@ func init() {
 		}),
 		Vars: []string{
 			fixtureVarBTPeers,
+			fixtureVarCustomChromeUsername,
+			fixtureVarCustomChromePassword,
 		},
 		SetUpTimeout:    setUpTimeout + btpeerSetUpBuffer + enableChromeUISetUpAndResetBuffer,
 		ResetTimeout:    resetTimeout + btpeerResetBuffer + enableChromeUISetUpAndResetBuffer,
@@ -605,6 +649,8 @@ func init() {
 		}),
 		Vars: []string{
 			fixtureVarBTPeers,
+			fixtureVarCustomChromeUsername,
+			fixtureVarCustomChromePassword,
 		},
 		SetUpTimeout:    setUpTimeout + 2*btpeerSetUpBuffer + enableChromeUISetUpAndResetBuffer,
 		ResetTimeout:    resetTimeout + 2*btpeerResetBuffer + enableChromeUISetUpAndResetBuffer,
@@ -634,6 +680,8 @@ func init() {
 		}),
 		Vars: []string{
 			fixtureVarBTPeers,
+			fixtureVarCustomChromeUsername,
+			fixtureVarCustomChromePassword,
 		},
 		SetUpTimeout:    setUpTimeout + 2*btpeerSetUpBuffer + enableChromeUISetUpAndResetBuffer,
 		ResetTimeout:    resetTimeout + 2*btpeerResetBuffer + enableChromeUISetUpAndResetBuffer,
@@ -663,6 +711,8 @@ func init() {
 		}),
 		Vars: []string{
 			fixtureVarBTPeers,
+			fixtureVarCustomChromeUsername,
+			fixtureVarCustomChromePassword,
 		},
 		SetUpTimeout:    setUpTimeout + 3*btpeerSetUpBuffer + enableChromeUISetUpAndResetBuffer,
 		ResetTimeout:    resetTimeout + 3*btpeerResetBuffer + enableChromeUISetUpAndResetBuffer,
@@ -692,6 +742,8 @@ func init() {
 		}),
 		Vars: []string{
 			fixtureVarBTPeers,
+			fixtureVarCustomChromeUsername,
+			fixtureVarCustomChromePassword,
 		},
 		SetUpTimeout:    setUpTimeout + 3*btpeerSetUpBuffer + enableChromeUISetUpAndResetBuffer,
 		ResetTimeout:    resetTimeout + 3*btpeerResetBuffer + enableChromeUISetUpAndResetBuffer,
@@ -721,6 +773,8 @@ func init() {
 		}),
 		Vars: []string{
 			fixtureVarBTPeers,
+			fixtureVarCustomChromeUsername,
+			fixtureVarCustomChromePassword,
 		},
 		SetUpTimeout:    setUpTimeout + 4*btpeerSetUpBuffer + enableChromeUISetUpAndResetBuffer,
 		ResetTimeout:    resetTimeout + 4*btpeerResetBuffer + enableChromeUISetUpAndResetBuffer,
@@ -750,6 +804,8 @@ func init() {
 		}),
 		Vars: []string{
 			fixtureVarBTPeers,
+			fixtureVarCustomChromeUsername,
+			fixtureVarCustomChromePassword,
 		},
 		SetUpTimeout:    setUpTimeout + 4*btpeerSetUpBuffer + enableChromeUISetUpAndResetBuffer,
 		ResetTimeout:    resetTimeout + 4*btpeerResetBuffer + enableChromeUISetUpAndResetBuffer,
@@ -780,6 +836,8 @@ func init() {
 		}),
 		Vars: []string{
 			fixtureVarBTPeers,
+			fixtureVarCustomChromeUsername,
+			fixtureVarCustomChromePassword,
 			fixtureVarSigninKey,
 		},
 		SetUpTimeout:    setUpTimeout + btpeerSetUpBuffer + enableChromeUISetUpAndResetBuffer,
@@ -811,6 +869,8 @@ func init() {
 		}),
 		Vars: []string{
 			fixtureVarBTPeers,
+			fixtureVarCustomChromeUsername,
+			fixtureVarCustomChromePassword,
 			fixtureVarSigninKey,
 		},
 		SetUpTimeout:    setUpTimeout + btpeerSetUpBuffer + enableChromeUISetUpAndResetBuffer,
@@ -845,8 +905,8 @@ func init() {
 		}),
 		Vars: []string{
 			fixtureVarBTPeers,
-			fixtureVarFastPairChromeUsername,
-			fixtureVarFastPairChromePassword,
+			fixtureVarCustomChromeUsername,
+			fixtureVarCustomChromePassword,
 			tape.ServiceAccountVar,
 		},
 		SetUpTimeout:    setUpTimeout + btpeerSetUpBuffer + enableChromeUISetUpAndResetBuffer,
@@ -883,8 +943,8 @@ func init() {
 		}),
 		Vars: []string{
 			fixtureVarBTPeers,
-			fixtureVarFastPairChromeUsername,
-			fixtureVarFastPairChromePassword,
+			fixtureVarCustomChromeUsername,
+			fixtureVarCustomChromePassword,
 			tape.ServiceAccountVar,
 		},
 		SetUpTimeout:    setUpTimeout + btpeerSetUpBuffer + BluetoothCooldownTimeout + enableChromeUISetUpAndResetBuffer,
@@ -923,8 +983,8 @@ func init() {
 		}),
 		Vars: []string{
 			fixtureVarBTPeers,
-			fixtureVarFastPairChromeUsername,
-			fixtureVarFastPairChromePassword,
+			fixtureVarCustomChromeUsername,
+			fixtureVarCustomChromePassword,
 			tape.ServiceAccountVar,
 		},
 		SetUpTimeout:    setUpTimeout + btpeerSetUpBuffer + BluetoothCooldownTimeout + enableChromeUISetUpAndResetBuffer,
@@ -962,8 +1022,8 @@ func init() {
 		}),
 		Vars: []string{
 			fixtureVarBTPeers,
-			fixtureVarFastPairChromeUsername,
-			fixtureVarFastPairChromePassword,
+			fixtureVarCustomChromeUsername,
+			fixtureVarCustomChromePassword,
 			tape.ServiceAccountVar,
 		},
 		SetUpTimeout:    setUpTimeout + btpeerSetUpBuffer + enableChromeUISetUpAndResetBuffer,
@@ -1000,8 +1060,8 @@ func init() {
 		}),
 		Vars: []string{
 			fixtureVarBTPeers,
-			fixtureVarFastPairChromeUsername,
-			fixtureVarFastPairChromePassword,
+			fixtureVarCustomChromeUsername,
+			fixtureVarCustomChromePassword,
 			tape.ServiceAccountVar,
 		},
 		SetUpTimeout:    2*setUpTimeout + btpeerSetUpBuffer + enableChromeUISetUpAndResetBuffer,
@@ -1038,8 +1098,8 @@ func init() {
 		}),
 		Vars: []string{
 			fixtureVarBTPeers,
-			fixtureVarFastPairChromeUsername,
-			fixtureVarFastPairChromePassword,
+			fixtureVarCustomChromeUsername,
+			fixtureVarCustomChromePassword,
 			tape.ServiceAccountVar,
 		},
 		SetUpTimeout:    2*setUpTimeout + btpeerSetUpBuffer + enableChromeUISetUpAndResetBuffer,
@@ -1070,6 +1130,8 @@ func init() {
 		}),
 		Vars: []string{
 			fixtureVarBTPeers,
+			fixtureVarCustomChromeUsername,
+			fixtureVarCustomChromePassword,
 		},
 		SetUpTimeout:    setUpTimeout + 2*btpeerSetUpBuffer + enableChromeUISetUpAndResetBuffer,
 		ResetTimeout:    resetTimeout + 2*btpeerResetBuffer + enableChromeUISetUpAndResetBuffer,
@@ -1099,6 +1161,8 @@ func init() {
 		}),
 		Vars: []string{
 			fixtureVarBTPeers,
+			fixtureVarCustomChromeUsername,
+			fixtureVarCustomChromePassword,
 		},
 		SetUpTimeout:    setUpTimeout + 2*btpeerSetUpBuffer + enableChromeUISetUpAndResetBuffer,
 		ResetTimeout:    resetTimeout + 2*btpeerResetBuffer + enableChromeUISetUpAndResetBuffer,
