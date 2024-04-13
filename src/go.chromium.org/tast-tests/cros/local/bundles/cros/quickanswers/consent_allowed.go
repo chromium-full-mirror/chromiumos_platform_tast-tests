@@ -12,9 +12,8 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/event"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/quickanswers"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -50,48 +49,39 @@ func init() {
 
 // ConsentAllowed tests Quick Answers consent flow.
 func ConsentAllowed(ctx context.Context, s *testing.State) {
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	const queryWord = "icosahedron"
+	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(
+		ctx, cr, s.Param().(browser.Type),
+		quickanswers.BuildDataURL(queryWord))
+	if err != nil {
+		s.Fatal("Failed to open a browser: ", err)
+	}
+	defer closeBrowser(cleanupCtx)
+	defer conn.Close()
+
+	// Stacked defers are executed in last-in first-out order.
+	// DumpUITreeWithScreenshotOnError should be after a defer of closing a
+	// browser as we want to capture browser UI.
+	defer faillog.DumpUITreeWithScreenshotOnError(
+		ctx, s.OutDir(), s.HasError, cr, "ui")
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
-	// Setup a browser.
-	bt := s.Param().(browser.Type)
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, bt)
+	query, err := quickanswers.SelectQueryWord(ctx, tconn, queryWord)
 	if err != nil {
-		s.Fatal("Failed to open the browser: ", err)
+		s.Fatal("Failed to select a query word: ", err)
 	}
-	defer closeBrowser(cleanupCtx)
-
-	// Open page with the query word on it.
-	const queryWord = "icosahedron"
-	conn, err := br.NewConn(ctx, "https://google.com/search?q="+queryWord)
-	if err != nil {
-		s.Fatal("Failed to create new Chrome connection: ", err)
-	}
-	defer conn.Close()
-	defer conn.CloseTarget(ctx)
 
 	ui := uiauto.New(tconn)
-	// Wait for the query word to appear.
-	query := nodewith.Name(queryWord).Role(role.StaticText).First()
-	if err := ui.WaitUntilExists(query)(ctx); err != nil {
-		s.Fatal("Failed to wait for query to load: ", err)
-	}
-
-	// Select the word and setup watcher to wait for text selection event.
-	if err := ui.WaitForEvent(nodewith.Root(),
-		event.TextSelectionChanged,
-		ui.Select(query, 0 /*startOffset*/, query, 2 /*endOffset*/))(ctx); err != nil {
-		s.Fatal("Failed to select query: ", err)
-	}
-
 	// Right click the selected word and ensure the consent UI shows up.
 	userConsent := nodewith.ClassName("UserConsentView")
 	allowButton := nodewith.Name("Allow").ClassName("CustomizedLabelButton")
@@ -101,7 +91,8 @@ func ConsentAllowed(ctx context.Context, s *testing.State) {
 		s.Fatal("Quick Answers consent UI not showing up: ", err)
 	}
 
-	// Left click the allow button and ensure the Quick Answers UI shows up with the query result.
+	// Left click the allow button and ensure the Quick Answers UI shows up
+	// with the query result.
 	quickAnswers := nodewith.ClassName("QuickAnswersView")
 	definitionResult := nodewith.NameContaining("twenty plane faces").ClassName("QuickAnswersTextLabel")
 	if err := uiauto.Combine("Show Quick Answers query result",
