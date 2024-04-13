@@ -159,11 +159,8 @@ func (mp *MitmProxy) start(ctx context.Context) (retErr error) {
 	nowStr := time.Now().Format("20060102-150405")
 	dumpFileName := fmt.Sprintf("mitmproxy_%s.dump", nowStr)
 	dumpFilePath := filepath.Join(mp.outDir, dumpFileName)
-	logFileName := fmt.Sprintf("mitmproxy_%s.log", nowStr)
-	logFilePath := filepath.Join(mp.outDir, logFileName)
-
-	proxyCommands := fmt.Sprintf("/sbin/minijail0 -e -- %s --set confdir=%s -w %s > %s", mp.binaryPath, mp.confDir, dumpFilePath, logFilePath)
-	cmd := testexec.CommandContext(ctx, "bash", "-c", proxyCommands)
+	cmd := testexec.CommandContext(ctx,
+		"/sbin/minijail0", "-e", "--", mp.binaryPath, "--set", fmt.Sprintf("confdir=%s", mp.confDir), "-w", dumpFilePath)
 	testing.ContextLogf(ctx, "mitmproxy: starting with cmd: %s", cmd)
 
 	// Required for remote tast tests. mitmproxy is written in Python and uses the PyInstaller
