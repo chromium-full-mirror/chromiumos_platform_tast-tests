@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/printer/printer_add_hwasung_printer_rastertohwasung_20240415.ppd.gz",
+  "size": 2267,
+  "sha256sum": "a7a7a75033154922b697e4762468443c91664205549233fe3eacd33a667dc386"
+}
