@@ -14,13 +14,21 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/testenv"
+	"go.chromium.org/tast-tests/cros/local/testenv/proxy"
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
 type optinTestArgs struct {
 	preprod          bool // whether to run against preprod versions of dependencies (default: false)
 	fieldTrialConfig int  // Value for FieldTrialConfig Chrome parameter
+}
+
+// playTermsURLRedirects is a map used to redirect the Play ToS in the currently used domain (play.google.com/) to the one in the new domain (play.google/) to be tested.
+// TODO(b/315504831): Switch to a staging version of the Play ToS once it is readily accessible from the test.
+var playTermsURLRedirects = map[string]string{
+	"//play.google/play-terms": "//play.google.com/about/play-terms",
 }
 
 func init() {
@@ -83,8 +91,11 @@ func init() {
 				Name:              "preprod",
 				ExtraAttr:         []string{"group:external-dependency", "group:hw_agnostic"},
 				ExtraSoftwareDeps: []string{"android_vm"},
-				ExtraSearchFlags:  []*testing.StringPair{testenv.SearchFlag(testenv.GFEPreprod)},
-				Val:               optinTestArgs{preprod: true, fieldTrialConfig: chrome.FieldTrialConfigDefault},
+				ExtraSearchFlags: []*testing.StringPair{
+					testenv.SearchFlag(testenv.GFEPreprod),
+					testenv.SearchFlag(testenv.PlayTermsProd),
+				},
+				Val: optinTestArgs{preprod: true, fieldTrialConfig: chrome.FieldTrialConfigDefault},
 			}},
 		Timeout: chrome.LoginTimeout + arc.BootTimeout + 3*time.Minute,
 	})
@@ -117,13 +128,12 @@ func Optin(ctx context.Context, s *testing.State) {
 	defer cr.Close(cleanupCtx)
 
 	// Set up the test environment to test the opt-in against external dependencies.
-	// This will redirect *.google.com and *.googleapis.com to the preprod of Google frontend.
-	if args.preprod {
-		env, err := testenv.NewPreprodEnv(ctx, testenv.RedirectMap(arc.PassThroughPreprodGFE))
+	if s.Param().(optinTestArgs).preprod {
+		cleanup, err := preprodRedirects(ctx, cr)
 		if err != nil {
-			s.Fatal("Failed to redirect to preprod: ", err)
+			s.Fatal("Failed to setup preprod test environment: ", err)
 		}
-		defer env.Close(cleanupCtx)
+		defer cleanup(cleanupCtx)
 	}
 
 	s.Log("Performing optin")
@@ -131,4 +141,46 @@ func Optin(ctx context.Context, s *testing.State) {
 	if err := optin.PerformWithRetry(ctx, cr, maxAttempts); err != nil {
 		s.Fatal("Failed to optin: ", err)
 	}
+}
+
+// preprodRedirects sets up the test environment redirecting to preprod hosts/URLs of external dependencies.
+func preprodRedirects(ctx context.Context, cr *chrome.Chrome) (cleanup func(context.Context), retErr error) {
+	var cleanups []func(context.Context) error
+	cleanup = func(ctx context.Context) {
+		for i := len(cleanups) - 1; i >= 0; i-- {
+			cleanups[i](ctx)
+		}
+	}
+	defer func() {
+		if retErr != nil {
+			cleanup(ctx)
+		}
+	}()
+
+	// Redirect all the hosts of *.google.com and *.googleapis.com to the preprod of Google frontend.
+	env, err := testenv.NewPreprodEnv(ctx, testenv.RedirectMap(arc.PassThroughPreprodGFE))
+	if err != nil {
+		return cleanup, errors.Wrap(err, "failed to redirect to preprod GFE")
+	}
+	cleanups = append(cleanups, env.Close)
+
+	// Redirect to preprod URLs of content or services used in ARC++.
+	popts := []proxy.Option{
+		proxy.URLRedirect(playTermsURLRedirects), // Redirect to Play ToS page to be tested for ARC++
+		proxy.CustomCA(true),                     // Use the system level CA cert
+		proxy.DumpFull(true),
+		proxy.ForceRestartChromeToUnsetOnClose(),
+		proxy.IgnorelistExceptFor([]string{
+			`play.google`, // Use proxy for the Play domain only, ignoring all other traffic
+		}),
+	}
+	mp, err := proxy.NewMitmProxy(ctx, popts...)
+	if err != nil {
+		return cleanup, errors.New("failed to start a proxy for new terms page")
+	}
+	cleanups = append(cleanups, mp.Close)
+	if err := mp.Connect(ctx, cr); err != nil {
+		return cleanup, errors.Wrap(err, "failed to configure chrome for proxy")
+	}
+	return cleanup, nil
 }

@@ -44,6 +44,10 @@ const (
 
 	// OnePlatform OAuth service
 	OAuthPreprod ServiceDepName = "OAuth.preprod"
+
+	// Play Terms
+	// TODO(b/315504831): Add staging dependency of Play ToS when readily accessible.
+	PlayTermsProd ServiceDepName = "PlayTerms.prod"
 )
 
 // SearchFlag generates a StringPair based on the given ServiceDepName.
