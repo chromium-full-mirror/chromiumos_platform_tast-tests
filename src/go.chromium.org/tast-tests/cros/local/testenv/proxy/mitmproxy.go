@@ -22,10 +22,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/shirou/gopsutil/v3/process"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	patchpanel "go.chromium.org/tast-tests/cros/local/network/patchpanel_client"
-	"go.chromium.org/tast-tests/cros/local/procutil"
 	"go.chromium.org/tast-tests/cros/local/testenv"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -52,6 +50,7 @@ type MitmProxy struct {
 	dumpFileName          string
 	dumpFilePath          string
 	confDir               string
+	pid                   int // pid of the proxy server process
 	compressDump          bool
 	cmd                   *testexec.Cmd
 	isRunning             bool // Is the proxy running? It is set to true on starting proxy.
@@ -119,7 +118,8 @@ func (mp *MitmProxy) IsRunning() bool {
 
 // start launches the mitmproxy.
 func (mp *MitmProxy) start(ctx context.Context) (retErr error) {
-	if err := killProcesses(ctx); err != nil {
+	// Ensure that no proxy process has been running before this start.
+	if err := forceKill(ctx); err != nil {
 		return errors.Wrap(err, "failed to kill running mitmproxy processes")
 	}
 
@@ -161,7 +161,6 @@ func (mp *MitmProxy) start(ctx context.Context) (retErr error) {
 	dumpFilePath := filepath.Join(mp.outDir, dumpFileName)
 	cmd := testexec.CommandContext(ctx,
 		"/sbin/minijail0", "-e", "--", mp.binaryPath, "--set", fmt.Sprintf("confdir=%s", mp.confDir), "-w", dumpFilePath)
-	testing.ContextLogf(ctx, "mitmproxy: starting with cmd: %s", cmd)
 
 	// Required for remote tast tests. mitmproxy is written in Python and uses the PyInstaller
 	// to bundle the mitmproxy scripts and all its dependencies into a single file. The file
@@ -172,8 +171,9 @@ func (mp *MitmProxy) start(ctx context.Context) (retErr error) {
 	// has to be manually changed.
 	cmd.Env = append(cmd.Env, "TMPDIR=/usr/local/tmp")
 
+	testing.ContextLogf(ctx, "mitmproxy: starting with cmd: %s", cmd)
 	if err := cmd.Start(); err != nil {
-		return errors.Wrap(err, "failed to launch proxy server")
+		return errors.Wrap(err, "failed to start proxy server")
 	}
 
 	if err = mp.configureNetwork(ctx, pidPath); err != nil {
@@ -241,6 +241,7 @@ func (mp *MitmProxy) configureNetwork(ctx context.Context, pidPath string) error
 	if err != nil {
 		return errors.Wrap(err, "failed to get mitmproxy process pid")
 	}
+	mp.pid = pid
 
 	if err != nil {
 		return errors.Wrap(err, "failed to fetch the mitmproxy processes")
@@ -403,10 +404,12 @@ func (mp *MitmProxy) Close(ctx context.Context) error {
 
 	var cleanupErrs []error
 
-	// Terminate mitmproxy.
-	// TODO(b/302244608): Figure out how to terminate all forked processes gracefully.
-	if err := mp.cmd.Kill(); err != nil {
-		cleanupErrs = append(cleanupErrs, errors.Wrap(err, "failed to terminate mitmproxy"))
+	// Terminate the proxy processes.
+	if mp.cmd != nil {
+		if err := killCmd(ctx, mp.cmd, mp.pid); err != nil {
+			cleanupErrs = append(cleanupErrs, errors.Wrap(err, "failed to stop proxy command"))
+		}
+		mp.cmd = nil
 	}
 
 	// Closing the fd will signal to patchpanel that it needs to tear down the network namespace
@@ -521,38 +524,5 @@ func (mp *MitmProxy) removeCertDir() error {
 	if _, err := os.Stat(mp.confDir); err == nil {
 		return os.RemoveAll(mp.confDir)
 	}
-	return nil
-}
-
-func processes(ctx context.Context) ([]*process.Process, error) {
-	return procutil.FindAll(func(p *process.Process) bool {
-		exe, err := p.Exe()
-		// Both mitmdump and mitmproxy are process of mitmproxy.
-		// mitmdump is often used in automation test.
-		// mitmproxy is often used in manual test.
-		// Besides, we only try best but not guarantee to kill any proxy process.
-		// because I believe the error is highly likely from other unrelated processes.
-		return err == nil && (strings.HasSuffix(exe, "mitmdump") || strings.HasSuffix(exe, "mitmproxy"))
-	})
-}
-
-func killProcesses(ctx context.Context) error {
-	procs, err := processes(ctx)
-	// ErrNotFound is returned when no proc is found.
-	if err == procutil.ErrNotFound {
-		return nil
-	} else if err != nil {
-		return errors.Wrap(err, "fail to get mitmproxy processes")
-	}
-
-	for _, proc := range procs {
-		if err := proc.Kill(); err != nil {
-			return errors.Wrapf(err, "fail to send kill signal %s", proc.String())
-		}
-		if err := procutil.WaitForTerminated(ctx, proc, 10*time.Second); err != nil {
-			return errors.Wrapf(err, "fail to kill mitmproxy process %s", proc.String())
-		}
-	}
-
 	return nil
 }
