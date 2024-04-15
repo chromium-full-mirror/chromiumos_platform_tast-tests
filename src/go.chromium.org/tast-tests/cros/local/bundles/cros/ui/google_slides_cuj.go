@@ -190,9 +190,14 @@ func GoogleSlidesCUJ(ctx context.Context, s *testing.State) {
 
 			// At fixed intervals, stop scrolling and click a menu item
 			// to ensure we collect mouse metrics.
+			understandBtn := nodewith.Name("I understand").Role(role.Button)
 			fileMenu := nodewith.Name("File").HasClass("menu-button")
 			if err := action.Combine(
 				"open and close the file menu and then refocus on the presentation",
+				uiauto.IfSuccessThen(
+					ac.WithTimeout(5*time.Second).WaitUntilExists(understandBtn),
+					ac.LeftClick(understandBtn),
+				),
 				// Open file menu.
 				ac.MouseMoveTo(fileMenu, 500*time.Millisecond),
 				ac.LeftClick(fileMenu),
