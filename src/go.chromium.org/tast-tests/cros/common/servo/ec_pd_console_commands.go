@@ -478,7 +478,7 @@ func (s *Servo) SetPDTrySrc(ctx context.Context, enable int) (bool, error) {
 		return false, errors.Wrapf(err, "ec command %q failed", cmd)
 	}
 
-	if !strings.Contains(out[0][0], "Try.Src") {
+	if !strings.Contains(out[0][0], "Try.SRC") {
 		return false, errors.Wrap(err, "Try.SRC not supported on this PD device")
 	}
 

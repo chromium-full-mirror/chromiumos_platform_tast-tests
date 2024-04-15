@@ -118,8 +118,8 @@ func ECPDTrysrc(ctx context.Context, s *testing.State) {
 		if trySrcSupported {
 			// Run disconnect/connect sequence with Try.SRC enabled
 			snkOn, srcOn := executeConnectSequence(ctx, s, true)
-			totalOn := snkOn + srcOn
-			trySrcOn := float32(snkOn) * 100.0 / float32(totalOn)
+			totalOn := float32(snkOn + srcOn)
+			trySrcOn := float32(snkOn) * 100.0 / totalOn
 			testing.ContextLogf(ctx, "SNK ratio with Try.SRC enabled = %f", trySrcOn)
 
 			if trySrcOn < pdTrySrcOnThreshold {
@@ -129,8 +129,8 @@ func ECPDTrysrc(ctx context.Context, s *testing.State) {
 
 		// Run disconnect/connect sequence with Try.SRC disabled
 		snkOff, srcOff := executeConnectSequence(ctx, s, false)
-		totalOff := snkOff + srcOff
-		trySrcOff := float32(snkOff) * 100.0 / float32(totalOff)
+		totalOff := float32(snkOff + srcOff)
+		trySrcOff := float32(snkOff) * 100.0 / totalOff
 
 		// When Try.SRC is off, ideally the SNK/SRC ratio will be close to
 		// 50%. However, in practice there is a wide range related to the
