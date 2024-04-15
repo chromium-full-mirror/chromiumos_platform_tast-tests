@@ -23,9 +23,11 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/secagentd/secagentddbusmonitor"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/secagentd/secagentdprocfsscraper"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/secagentd/secagentdupstart"
+	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast-tests/cros/local/network/routing"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/l4server"
+	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -34,8 +36,7 @@ import (
 )
 
 type networkProtocolDetails struct {
-	senderCmds        []*testexec.Cmd
-	receiverCmd       *testexec.Cmd
+	cmds              []*testexec.Cmd
 	protocol          xdr.NetworkProtocol
 	expectedDirection xdr.NetworkFlow_Direction
 	ipAddr            string
@@ -47,20 +48,17 @@ type networkType string
 type networkTypeParams struct {
 	protocol     networkType
 	family       l4server.Family
+	isListenTest bool
 	processCount uint
 }
 
-type server struct {
-	port int
-	addr net.IP
-}
-
 const (
-	icmp  networkType = "ICMP"
-	tcp   networkType = "TCP"
-	tcpV6 networkType = "TCPV6"
-	udp   networkType = "UDP"
-	udpV6 networkType = "UDPV6"
+	icmp        networkType = "ICMP"
+	tcp         networkType = "TCP"
+	tcpV6       networkType = "TCPV6"
+	udp         networkType = "UDP"
+	udpV6       networkType = "UDPV6"
+	defaultPort int         = 65535
 )
 
 func init() {
@@ -86,6 +84,7 @@ func init() {
 			Val: networkTypeParams{
 				protocol:     icmp,
 				family:       l4server.TCP4,
+				isListenTest: false,
 				processCount: 1,
 			},
 			ExtraAttr: []string{"group:mainline", "informational"},
@@ -94,6 +93,7 @@ func init() {
 			Val: networkTypeParams{
 				protocol:     tcp,
 				family:       l4server.TCP4,
+				isListenTest: false,
 				processCount: 1,
 			},
 			ExtraAttr: []string{"group:mainline", "informational"},
@@ -102,6 +102,7 @@ func init() {
 			Val: networkTypeParams{
 				protocol:     tcpV6,
 				family:       l4server.TCP6,
+				isListenTest: false,
 				processCount: 1,
 			},
 			ExtraAttr: []string{"group:mainline", "informational"},
@@ -110,6 +111,7 @@ func init() {
 			Val: networkTypeParams{
 				protocol:     udp,
 				family:       l4server.UDP4,
+				isListenTest: false,
 				processCount: 1,
 			},
 			ExtraAttr: []string{"group:mainline", "informational"},
@@ -118,6 +120,7 @@ func init() {
 			Val: networkTypeParams{
 				protocol:     udpV6,
 				family:       l4server.UDP6,
+				isListenTest: false,
 				processCount: 1,
 			},
 			ExtraAttr: []string{"group:mainline", "informational"},
@@ -126,6 +129,7 @@ func init() {
 			Val: networkTypeParams{
 				protocol:     icmp,
 				family:       l4server.TCP4,
+				isListenTest: false,
 				processCount: 100,
 			},
 			ExtraAttr: []string{"group:mainline", "group:criticalstaging", "informational"},
@@ -134,6 +138,7 @@ func init() {
 			Val: networkTypeParams{
 				protocol:     tcp,
 				family:       l4server.TCP4,
+				isListenTest: false,
 				processCount: 100,
 			},
 			ExtraAttr: []string{"group:mainline", "group:criticalstaging", "informational"},
@@ -142,6 +147,7 @@ func init() {
 			Val: networkTypeParams{
 				protocol:     tcpV6,
 				family:       l4server.TCP6,
+				isListenTest: false,
 				processCount: 100,
 			},
 			ExtraAttr: []string{"group:mainline", "group:criticalstaging", "informational"},
@@ -150,6 +156,7 @@ func init() {
 			Val: networkTypeParams{
 				protocol:     udp,
 				family:       l4server.UDP4,
+				isListenTest: false,
 				processCount: 100,
 			},
 			ExtraAttr: []string{"group:mainline", "group:criticalstaging", "informational"},
@@ -158,10 +165,32 @@ func init() {
 			Val: networkTypeParams{
 				protocol:     udpV6,
 				family:       l4server.UDP6,
+				isListenTest: false,
 				processCount: 100,
 			},
 			ExtraAttr: []string{"group:mainline", "group:criticalstaging", "informational"},
-		}},
+		},
+			{
+				Name: "listen_tcp",
+				Val: networkTypeParams{
+					protocol:     tcp,
+					family:       l4server.TCP,
+					isListenTest: true,
+					processCount: 1,
+				},
+				ExtraAttr: []string{"group:mainline", "group:criticalstaging", "informational"},
+			},
+			{
+				Name: "listen_tcp_v6",
+				Val: networkTypeParams{
+					protocol:     tcpV6,
+					family:       l4server.TCP,
+					isListenTest: true,
+					processCount: 1,
+				},
+				ExtraAttr: []string{"group:mainline", "group:criticalstaging", "informational"},
+			},
+		},
 	})
 }
 
@@ -181,14 +210,14 @@ func NetworkEvents(ctx context.Context, s *testing.State) {
 	}()
 	// Restart with default parameter.
 	defer secagentdupstart.RestartSecagentd(cleanupCtx, false)
-
-	localAddress := map[string]bool{}
+	localAddrs := map[string]bool{}
 	addrs, err := net.InterfaceAddrs()
 	for _, addr := range addrs {
 		if ipnet, ok := addr.(*net.IPNet); ok {
-			localAddress[ipnet.IP.String()] = true
+			localAddrs[ipnet.IP.String()] = true
 		}
 	}
+
 	// Clear out old entries from the kernel trace to make an easier failure
 	// analysis.
 	if err := secagentdcommon.ClearKernelTrace(ctx); err != nil {
@@ -202,6 +231,7 @@ func NetworkEvents(ctx context.Context, s *testing.State) {
 		upstart.WithArg("BYPASS_POLICY_FOR_TESTING", "true"),
 		upstart.WithArg("BYPASS_ENQ_OK_WAIT_FOR_TESTING", "true"),
 		upstart.WithArg("PLUGIN_BATCH_INTERVAL_S_FOR_TESTING", strconv.Itoa(batchIntervalS)))
+
 	if err != nil {
 		s.Fatal("Failed to restart secagentd: ", err)
 	}
@@ -210,7 +240,7 @@ func NetworkEvents(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to verify secagentd is ready to test: ", err)
 	}
 
-	stop, err := secagentddbusmonitor.SetupDbusMonitor(ctx, agentPid)
+	stopDbusMonitoring, err := secagentddbusmonitor.SetupDbusMonitor(ctx, agentPid)
 	if err != nil {
 		s.Fatal("Failed to setup dbus monitoring: ", err)
 	}
@@ -218,48 +248,53 @@ func NetworkEvents(ctx context.Context, s *testing.State) {
 	netType := s.Param().(networkTypeParams).protocol
 	netFam := s.Param().(networkTypeParams).family
 	processCount := s.Param().(networkTypeParams).processCount
-	var svr *server
+	isListenTest := s.Param().(networkTypeParams).isListenTest
 	var testEnv *routing.SimpleNetworkEnv
-	var port = ""
-	var addrStr = ""
+	var addr *net.IP
 
 	// Set up virtual network.
-	testEnv, svr, err = setupL4server(ctx, netType, netFam)
+	testEnv, addr, err = setupTestNetwork(ctx, netType)
 	if err != nil {
-		s.Fatal("Failed to setup router: ", err)
+		s.Fatal("Failed to setup and verify test network")
 	}
-	addrStr = svr.addr.String()
-	port = strconv.Itoa(svr.port)
 	defer func(ctx context.Context) {
 		if err := testEnv.TearDown(ctx); err != nil {
-			s.Error("Failed to tear down routing test env: ", err)
+			s.Error("Failed to tear down test network: ", err)
 		}
 	}(cleanupCtx)
+	var portStr = strconv.Itoa(defaultPort)
+	var addrStr string
+	if !isListenTest {
+		// Install L4 server in the virtual network.
+		addrStr = addr.String()
+		err = setupL4server(ctx, netFam, testEnv, addr)
+		if err != nil {
+			s.Fatal("Failed to setup router: ", err)
+		}
+	} else {
+		addrStr, err = getPrimaryDeviceAddress(ctx, netType)
+		if err != nil {
+			s.Fatal("Failed to determine listen address: ", err)
+		}
+	}
 
-	// Get details of sender.
-	details, err := getNetworkProtocolDetails(ctx, netType, addrStr, port, processCount)
+	// Get traffic generator (e.g nc, ping) or traffic receiver (e.g nc)
+	// program details.
+	details, err := getNetworkProtocolDetails(ctx, netType, addrStr, portStr, processCount, isListenTest)
 	if err != nil {
 		s.Fatal("Fail to get NetworkProtocolDetails: ", err)
 	}
 
-	senderCmds := details.senderCmds
-	receiverCmd := details.receiverCmd
-
-	if receiverCmd != nil {
-		if err := receiverCmd.Start(); err != nil {
-			s.Fatalf("Error starting %q: %v ", receiverCmd, err)
-		}
-	}
-
+	var cmds []*testexec.Cmd = details.cmds
 	cmdPids := make(map[uint64]bool)
 	pidText := ""
-	for _, cmd := range senderCmds {
+	for _, cmd := range cmds {
 		stdin, err := cmd.StdinPipe()
 		if err != nil {
 			s.Fatalf("Unable to attach to the pipe of %q:%v", cmd.String(), err)
 		}
 		if err := cmd.Start(); err != nil {
-			s.Fatalf("Error starting %q: %v ", senderCmds, err)
+			s.Fatalf("Error starting %q: %v ", cmd.String(), err)
 		}
 		stdin.Write([]byte(details.pipeInText))
 		pid := uint64(cmd.Process.Pid)
@@ -269,7 +304,6 @@ func NetworkEvents(ctx context.Context, s *testing.State) {
 	}
 	pidText = strings.TrimSuffix(pidText, ",")
 	s.Logf("pids=[%s]", pidText)
-
 	// Wait for the current batch to be flushed.
 	// GoBigSleepLint: Using poll here doesn't make sense. There is no particular
 	// condition we can poll for. This is simply giving secagentd ample time to
@@ -280,173 +314,249 @@ func NetworkEvents(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to sleep: ", err)
 	}
 
-	for _, cmd := range senderCmds {
+	for _, cmd := range cmds {
 		if err := cmd.Kill(); err != nil {
-			s.Fatalf("Failed to kill %q: %v", senderCmds, err)
+			s.Fatalf("Failed to kill %q: %v", cmd, err)
 		}
 	}
-	for _, cmd := range senderCmds {
+	for _, cmd := range cmds {
 		// Don't check the error here because it will likely just say
 		// "signal: Killed"
 		cmd.Wait()
 	}
-
-	if receiverCmd != nil {
-		if err := receiverCmd.Kill(); err != nil {
-			s.Fatalf("Failed to kill %q: %v", receiverCmd, err)
-		}
-		receiverCmd.Wait()
-	}
-
-	// Collect the log of EnqueueRecord dbus calls to Missived.
-	calledMethods, err := stop()
-	if err != nil {
-		s.Fatal("Failed to capture EnqueueRecord dbus calls to missived: ", err)
-	}
-	s.Logf("secagentd enqueued %d events", len(calledMethods))
-
-	badRemoteAddress := false
-	matchCount := 0
-	var failedFields []string
 	var bFlows []*xdr.NetworkFlowEvent
-	bExecs := make(map[uint64]*xdr.ProcessExecEvent)
-	for _, method := range calledMethods {
-		if len(method.Arguments) == 0 {
-			continue
-		}
-		arg, ok := method.Arguments[0].([]byte)
-		if !ok {
-			continue
-		}
-		enq := &rep.EnqueueRecordRequest{}
-		if err := proto.Unmarshal(arg, enq); err != nil {
-			s.Fatal("Failed to unmarshal an EnqueueRecordRequest: ", err)
-		}
-
-		s.Logf("Destination is %s", enq.GetRecord().GetDestination())
-
-		// Save off matching ProcessExecs.
-		if enq.GetRecord().GetDestination() == rep.Destination_CROS_SECURITY_PROCESS {
-			pe := &xdr.XdrProcessEvent{}
-			if err := proto.Unmarshal(enq.GetRecord().GetData(), pe); err != nil {
-				s.Fatal("Failed to unmarshal data for a Destination_CROS_SECURITY_PROCESS record: ", err)
-			}
-			for _, v := range pe.GetBatchedEvents() {
-				if v.GetProcessExec() != nil {
-					pid := v.GetProcessExec().GetSpawnProcess().GetCanonicalPid()
-					if _, ok := cmdPids[pid]; ok {
-						bExecs[pid] = v.GetProcessExec()
-					}
-				}
-			}
-		}
-		// Save off network event data.
-		if enq.GetRecord().GetDestination() == rep.Destination_CROS_SECURITY_NETWORK {
-			ne := &xdr.XdrNetworkEvent{}
-			if err := proto.Unmarshal(enq.GetRecord().GetData(), ne); err != nil {
-				s.Fatal("Failed to unmarshal data for a Destination_CROS_SECURITY_NETWORK record: ", err)
-			}
-			for _, v := range ne.GetBatchedEvents() {
-				if v.GetNetworkFlow() != nil {
-					bFlows = append(bFlows, v.GetNetworkFlow())
-				}
-				if err := secagentdcommon.CheckCommon(v.GetCommon()); err != nil {
-					s.Error("Invalid common field: ", err)
-				}
-			}
-
-		}
+	var bListens []*xdr.NetworkSocketListenEvent
+	var bExecs map[uint64]*xdr.ProcessExecEvent
+	bExecs, bFlows, bListens, err = collectDbusMessages(ctx, s, cmdPids, stopDbusMonitoring)
+	if err != nil {
+		s.Fatalf("%v", err)
 	}
-
-	pidFound := false
-	var txHigh, txLow, rxHigh, rxLow uint64 = 0, ^uint64(0), 0, ^uint64(0)
-	for _, flow := range bFlows {
-		failedFields = nil
-		pidFound = false
-		if localAddress[flow.NetworkFlow.GetRemoteIp()] {
-			s.Log("Detected an event flow that has a local ip address as its remote address:", flow.NetworkFlow.String())
-			badRemoteAddress = true
-		}
-		if flow.GetProcess() != nil {
-			pid := flow.GetProcess().GetCanonicalPid()
-			if _, ok := cmdPids[pid]; ok {
-				if _, ok := bExecs[pid]; ok {
-					// MetaFirstAppearance from an exec and a network event
-					// are typically different. If you catch a process exec
-					// then MetaFirstAppearance is probably true.
-					// A process principle in a network event shouldn't even contain
-					// MetaFirstAppearance.
-					bExecs[pid].GetSpawnProcess().MetaFirstAppearance = nil
-					flow.GetProcess().MetaFirstAppearance = nil
-					if proto.Equal(flow.GetProcess(), bExecs[pid].GetSpawnProcess()) {
-						pidFound = true
-					} else {
-						s.Logf("PID matched but processes did not match: Expected %s, Actual:%s", bExecs[pid].GetSpawnProcess(), flow.GetProcess())
-					}
-				}
-				delete(cmdPids, pid)
-			}
-		}
-		if pidFound {
-			if *flow.NetworkFlow.Protocol != details.protocol {
-				failedFields = append(failedFields, fmt.Sprintf("Protocol=%s expected %s", *flow.NetworkFlow.Protocol, details.protocol))
-			}
-			if details.ipAddr != "" && *flow.NetworkFlow.RemoteIp != details.ipAddr {
-				failedFields = append(failedFields, fmt.Sprintf("IP Address=%q expected %q", *flow.NetworkFlow.RemoteIp, details.ipAddr))
-			}
-			if *flow.NetworkFlow.Direction != details.expectedDirection {
-				failedFields = append(failedFields, fmt.Sprintf("Direction=%s expected %s", flow.NetworkFlow.Direction.String(), details.expectedDirection.String()))
-			}
-			if len(failedFields) == 0 {
-				txBytes := *flow.NetworkFlow.TxBytes
-				rxBytes := *flow.NetworkFlow.RxBytes
-				if txBytes > txHigh {
-					txHigh = txBytes
-				} else if txBytes < txLow {
-					txLow = txBytes
-				}
-				if rxBytes > rxHigh {
-					rxHigh = rxBytes
-				} else if rxBytes < rxLow {
-					rxLow = rxBytes
-				}
-				matchCount++
-			} else {
-				s.Logf("Match failure:%s :%s", strings.Join(failedFields, ","), flow)
-			}
-		}
+	var logs []string
+	if !isListenTest {
+		logs, err = doNetworkFlowTest(&bFlows, &bExecs, &cmdPids, details, localAddrs)
+	} else {
+		logs, err = doNetworkListenTest(&bListens, &bExecs, &cmdPids, details)
 	}
-
-	if badRemoteAddress {
-		s.Error("Found one or more flows where the remote address in the flow is the same as a local ip address")
+	for _, log := range logs {
+		s.Log(log)
 	}
-	if matchCount == 0 {
-		s.Errorf("Could not find a network flow event that matches expectations pid:%s remote IP Address:%s protocol:%s direction:%s",
-			pidText, details.ipAddr, details.protocol.String(), details.expectedDirection.String())
+	if err != nil {
+		s.Fatal("test failed: ", err)
 	}
-	s.Logf("Matched %d/%d", matchCount, processCount)
-	s.Logf("maxTx:%d minTx:%d maxRx:%d minRx:%d", txHigh, txLow, rxHigh, rxLow)
 }
 
-func setupL4server(ctx context.Context, network networkType, networkFam l4server.Family) (*routing.SimpleNetworkEnv, *server, error) {
+func max(arg0, arg1 uint64) uint64 {
+	if arg1 > arg0 {
+		return arg1
+	}
+	return arg0
+}
+
+func min(arg0, arg1 uint64) uint64 {
+	if arg1 < arg0 {
+		return arg1
+	}
+	return arg0
+}
+
+func getPrimaryDeviceAddress(ctx context.Context, netType networkType) (string, error) {
+	typeIsIpv4 := map[networkType]bool{icmp: true, tcp: true, udp: true,
+		tcpV6: false, udpV6: false}
+	var listenAddr string = ""
+
+	/* use shill to grab the ipconfigs for the current active device. */
+	manager, err := shill.NewManager(ctx)
+	if err != nil {
+		return "", errors.Wrap(err, "unable to connect to shill manager")
+	}
+	service, err := manager.GetDefaultService(ctx)
+	if err != nil {
+		return "", errors.Wrap(err, "unable to retrieve default network service from shill manager")
+	}
+	device, err := service.GetDevice(ctx)
+	if err != nil {
+		return "", errors.Wrapf(err, "unable to retrieve device from default service %q", service)
+	}
+
+	properties, err := device.GetProperties(ctx)
+	if err != nil {
+		return "", errors.Wrapf(err, "unable to retrieve properties for the device %q of service %q", device, service)
+	}
+	ipconfigPaths, err := properties.GetObjectPaths("IPConfigs")
+	if err != nil {
+		return "", errors.Wrapf(err, "unable to retrieve IPConfigs from device %q of service %q", device, service)
+	}
+
+	if len(ipconfigPaths) != 2 { // only expect an ipv4 and ipv6 address
+		return "", errors.Errorf("%d ip configs found for %q, expected two", len(ipconfigPaths), device)
+	}
+
+	for _, ifPath := range ipconfigPaths {
+		ipConfig, err := shill.NewIPConfig(ctx, ifPath)
+		if err != nil {
+			return "", errors.Wrapf(err, "could not create an ip config from interface %q", ifPath)
+		}
+		ipConfigProperties, err := ipConfig.GetIPProperties(ctx)
+		if err != nil {
+			return "", errors.Wrapf(err, "unable to grab all properties from ipConfig %q", ipConfig)
+		}
+		listenAddr = ipConfigProperties.Address
+		// make sure that the string parses into an ipv4 or ipv6 address.
+		ip := net.ParseIP(listenAddr)
+		if ip == nil {
+			return "", errors.Errorf("%q is not a valid ip address", listenAddr)
+		}
+		if typeIsIpv4[netType] && ip.To4() != nil { // To4 succeeds on ipv4 address strings only.
+			break
+		} else if ip.To4() == nil {
+			break
+		}
+	}
+	return listenAddr, nil
+}
+
+func doNetworkListenTest(bListens *[]*xdr.NetworkSocketListenEvent, bExecs *map[uint64]*xdr.ProcessExecEvent, cmdPids *map[uint64]bool, details networkProtocolDetails) (
+	[]string, error) {
+	var log []string
+	var err error
+	log = append(log, fmt.Sprintf("Looking to match a socket listen with protocol=%s bind addr=%s bind port=%d",
+		details.protocol, details.ipAddr, defaultPort))
+	for _, listen := range *bListens {
+		var matchPid *uint64 = nil
+		matchPid, err = matchesProcess(listen.GetProcess(), cmdPids, bExecs)
+		if matchPid != nil {
+			if err != nil {
+				log = append(log, fmt.Sprintf("flow process matching failed: %v", err))
+			} else {
+				err = verifyNetworkSocketListen(listen, details)
+				if err != nil {
+					log = append(log, fmt.Sprintf("Match failure: %v", err))
+				} else {
+					log = append(log, fmt.Sprintf("found a match: %s", listen.String()))
+					return log, nil
+				}
+			}
+		}
+	}
+	return log, errors.New("no socket listen matches found")
+}
+
+func doNetworkFlowTest(bFlows *[]*xdr.NetworkFlowEvent, bExecs *map[uint64]*xdr.ProcessExecEvent, cmdPids *map[uint64]bool, details networkProtocolDetails, localAddrs map[string]bool) ([]string, error) {
+	// testing network flows.
+
+	matchCount := 0
+	processCount := len(*cmdPids)
+	var err error = nil
+	var txHigh, txLow, rxHigh, rxLow uint64 = 0, ^uint64(0), 0, ^uint64(0)
+	badRemoteAddress := false
+
+	var log []string
+	for _, flow := range *bFlows {
+		if localAddrs[flow.NetworkFlow.GetRemoteIp()] {
+			log = append(log, fmt.Sprintf("Detected an event flow that has a local ip address as its remote address:%s Process: %s", flow.NetworkFlow.String(), flow.Process.String()))
+			badRemoteAddress = true
+		}
+		var matchPid *uint64 = nil
+		matchPid, err = matchesProcess(flow.GetProcess(), cmdPids, bExecs)
+		if matchPid != nil {
+			if err != nil {
+				log = append(log, fmt.Sprintf("flow process matching failed: %v", err))
+			} else {
+				err = verifyNetworkFlow(flow, details)
+				if err != nil {
+					log = append(log, fmt.Sprintf("Match failure: %v", err))
+				} else {
+					matchCount++
+					txHigh = max(*flow.NetworkFlow.TxBytes, txHigh)
+					txLow = min(*flow.NetworkFlow.TxBytes, txLow)
+					rxHigh = max(*flow.NetworkFlow.RxBytes, rxHigh)
+					rxLow = min(*flow.NetworkFlow.RxBytes, rxLow)
+				}
+			}
+			delete(*cmdPids, *matchPid)
+		}
+	}
+	log = append(log, fmt.Sprintf("Matched %d/%d", matchCount, processCount))
+	log = append(log, fmt.Sprintf("maxTx:%d minTx:%d maxRx:%d minRx:%d", txHigh, txLow, rxHigh, rxLow))
+	if matchCount == 0 {
+		return log, errors.Errorf("could not find a network flow event that matches expectations remote IP Address:%s protocol:%s direction:%s",
+			details.ipAddr, details.protocol.String(), details.expectedDirection.String())
+	}
+	if badRemoteAddress {
+		return log, errors.New("found one or more flows where the remote address in the flow is the same as a local ip address")
+	}
+	return log, nil
+}
+
+func verifyNetworkSocketListen(listen *xdr.NetworkSocketListenEvent, details networkProtocolDetails) error {
+	var failedFields []string
+	socket := listen.GetSocket()
+	if socket.GetProtocol() != details.protocol {
+		failedFields = append(failedFields, fmt.Sprintf("Protocol=%s expected %s", socket.GetProtocol(), details.protocol))
+	}
+	if socket.GetBindAddr() != details.ipAddr {
+		failedFields = append(failedFields, fmt.Sprintf("IP Address=%q expected %q", socket.GetBindAddr(), details.ipAddr))
+	}
+	if socket.GetBindPort() != uint64(defaultPort) {
+		failedFields = append(failedFields, fmt.Sprintf("Port=%d expected=%d", socket.GetBindPort(), defaultPort))
+	}
+	if len(failedFields) > 0 {
+		return errors.Errorf("%s :%s", strings.Join(failedFields, ","), listen)
+	}
+	return nil
+}
+
+func verifyNetworkFlow(flow *xdr.NetworkFlowEvent, details networkProtocolDetails) error {
+	var failedFields []string
+
+	if *flow.NetworkFlow.Protocol != details.protocol {
+		failedFields = append(failedFields, fmt.Sprintf("Protocol=%s expected %s", *flow.NetworkFlow.Protocol, details.protocol))
+	}
+	if details.ipAddr != "" && *flow.NetworkFlow.RemoteIp != details.ipAddr {
+		failedFields = append(failedFields, fmt.Sprintf("IP Address=%q expected %q", *flow.NetworkFlow.RemoteIp, details.ipAddr))
+	}
+	if *flow.NetworkFlow.Direction != details.expectedDirection {
+		failedFields = append(failedFields, fmt.Sprintf("Direction=%s expected %s", flow.NetworkFlow.Direction.String(), details.expectedDirection.String()))
+	}
+	if len(failedFields) > 0 {
+		return errors.Errorf("%s :%s", strings.Join(failedFields, ","), flow)
+	}
+	return nil
+}
+
+func matchesProcess(processFromEvent *xdr.Process, cmdPids *map[uint64]bool, execMap *map[uint64]*xdr.ProcessExecEvent) (*uint64, error) {
+	if processFromEvent != nil {
+		pid := processFromEvent.GetCanonicalPid()
+		if _, ok := (*cmdPids)[pid]; ok {
+			if _, ok := (*execMap)[pid]; ok {
+				// MetaFirstAppearance from an exec and a network event
+				// are typically different. If you catch a process exec
+				// then MetaFirstAppearance is probably true.
+				// A process principle in a network event shouldn't even contain
+				// MetaFirstAppearance.
+				(*execMap)[pid].GetSpawnProcess().MetaFirstAppearance = nil
+				processFromEvent.MetaFirstAppearance = nil
+				if proto.Equal(processFromEvent, (*execMap)[pid].GetSpawnProcess()) {
+					return &pid, nil
+				}
+				return &pid, errors.Errorf("PID matched but processes did not match: Expected %s, Actual:%s", (*execMap)[pid].GetSpawnProcess(), processFromEvent)
+			}
+			return &pid, nil // pid match but also no corresponding exec start.
+		}
+		return nil, nil //no pid match so not a process of interest.
+	}
+	return nil, errors.New("process to examine is nil")
+}
+
+func setupTestNetwork(ctx context.Context, network networkType) (*routing.SimpleNetworkEnv, *net.IP, error) {
 	testEnv := routing.NewSimpleNetworkEnv(true, true, true, true)
 	if err := testEnv.SetUp(ctx); err != nil {
 		return nil, nil, errors.Wrap(err, "failed to set up routing test env")
 	}
 
-	success := false
-	defer func(ctx context.Context) {
-		if success {
-			return
-		}
-		if err := testEnv.TearDown(ctx); err != nil {
-			testing.ContextLog(ctx, "Failed to tear down routing test env in setupL4server: ", err)
-		}
-	}(ctx)
-
 	// Wait for online and verify topology in host.
 	if err := testEnv.ShillService.WaitForProperty(ctx, shillconst.ServicePropertyState, shillconst.ServiceStateOnline, 10*time.Second); err != nil {
-		return nil, nil, errors.Wrap(err, "failed to wait for service online")
+		return nil, nil, errors.Wrap(err, "failed to wait for shill service to come online")
 	}
 	routerAddrs, err := testEnv.Router.WaitForVethInAddrs(ctx, true, true)
 	if err != nil {
@@ -482,22 +592,19 @@ func setupL4server(ctx context.Context, network networkType, networkFam l4server
 	} else {
 		addr = routerAddrs.IPv4Addr
 	}
-	port := 65535
-	newServer := l4server.New(networkFam, port, l4server.WithAddr(addr.String()), l4server.WithMsgHandler(l4server.Reflector()))
-	if err := testEnv.Router.StartServer(ctx, networkFam.String(), newServer); err != nil {
-		return nil, nil, errors.Wrapf(err, "failed to start %s server, error", networkFam)
-	}
-	svr := &server{
-		port: port,
-		addr: addr,
-	}
-	success = true
+	return testEnv, &addr, nil
+}
 
-	return testEnv, svr, nil
+func setupL4server(ctx context.Context, networkFam l4server.Family, testEnv *routing.SimpleNetworkEnv, addr *net.IP) error {
+	newServer := l4server.New(networkFam, defaultPort, l4server.WithAddr(addr.String()), l4server.WithMsgHandler(l4server.Reflector()))
+	if err := testEnv.Router.StartServer(ctx, networkFam.String(), newServer); err != nil {
+		return errors.Wrapf(err, "failed to start %s server, error", networkFam)
+	}
+	return nil
 }
 
 func getNetworkProtocolDetails(ctx context.Context, network networkType,
-	externIP, externPort string, count uint) (networkProtocolDetails, error) {
+	externIP, externPort string, count uint, isListen bool) (networkProtocolDetails, error) {
 	ncCmd, err := exec.LookPath("nc")
 	if err != nil {
 		return networkProtocolDetails{}, errors.Wrap(err, "unable to find nc command")
@@ -508,73 +615,166 @@ func getNetworkProtocolDetails(ctx context.Context, network networkType,
 		return networkProtocolDetails{}, errors.Wrap(err, "unable to find ping command")
 	}
 
+	var cmd []*testexec.Cmd
+	var pipeIn string = ""
 	switch network {
 	case icmp:
 		ipAddr := externIP
-		var cmd []*testexec.Cmd
-		for i := uint(0); i < count; i++ {
-			cmd = append(cmd, testexec.CommandContext(ctx, pingCmd, ipAddr))
+		if isListen {
+			cmd = nil
+		} else {
+			for i := uint(0); i < count; i++ {
+				cmd = append(cmd, testexec.CommandContext(ctx, pingCmd, ipAddr))
+			}
 		}
 		return networkProtocolDetails{
-			senderCmds:        cmd,
-			receiverCmd:       nil,
+			cmds:              cmd,
 			protocol:          xdr.NetworkProtocol_ICMP,
 			expectedDirection: xdr.NetworkFlow_DIRECTION_UNKNOWN,
 			ipAddr:            externIP,
-			pipeInText:        "",
+			pipeInText:        pipeIn,
 		}, nil
 	case tcp:
-		var cmd []*testexec.Cmd
-		for i := uint(0); i < count; i++ {
-			cmd = append(cmd, testexec.CommandContext(ctx, ncCmd, "-v", externIP, externPort))
+		if isListen {
+			cmd = append(cmd, testexec.CommandContext(ctx, ncCmd, "-l", "-s", externIP, "-p", externPort))
+		} else {
+			for i := uint(0); i < count; i++ {
+				cmd = append(cmd, testexec.CommandContext(ctx, ncCmd, "-v", externIP, externPort))
+			}
+			pipeIn = "Hello TCP"
 		}
 		return networkProtocolDetails{
-			senderCmds:        cmd,
-			receiverCmd:       nil,
+			cmds:              cmd,
 			protocol:          xdr.NetworkProtocol_TCP,
 			expectedDirection: xdr.NetworkFlow_OUTGOING,
 			ipAddr:            externIP,
-			pipeInText:        "Hello, TCP",
+			pipeInText:        pipeIn,
 		}, nil
 	case tcpV6:
-		var cmd []*testexec.Cmd
-		for i := uint(0); i < count; i++ {
-			cmd = append(cmd, testexec.CommandContext(ctx, ncCmd, "-6", externIP, externPort))
+		if isListen {
+			cmd = append(cmd, testexec.CommandContext(ctx, ncCmd, "-l", "-6", "-s", externIP, "-p", externPort))
+		} else {
+			for i := uint(0); i < count; i++ {
+				cmd = append(cmd, testexec.CommandContext(ctx, ncCmd, "-6", externIP, externPort))
+				pipeIn = "Hello TCP v6"
+			}
 		}
 		return networkProtocolDetails{
-			senderCmds:        cmd,
-			receiverCmd:       nil,
+			cmds:              cmd,
 			protocol:          xdr.NetworkProtocol_TCP,
 			expectedDirection: xdr.NetworkFlow_OUTGOING,
 			ipAddr:            externIP,
-			pipeInText:        "Hello TCPv6",
+			pipeInText:        pipeIn,
 		}, nil
 	case udp:
-		var cmd []*testexec.Cmd
-		for i := uint(0); i < count; i++ {
-			cmd = append(cmd, testexec.CommandContext(ctx, ncCmd, "-u", externIP, externPort))
+		if isListen {
+			cmd = append(cmd, testexec.CommandContext(ctx, ncCmd, "-l", "-u", "-s", externIP, "-p", externPort))
+		} else {
+			for i := uint(0); i < count; i++ {
+				cmd = append(cmd, testexec.CommandContext(ctx, ncCmd, "-u", externIP, externPort))
+				pipeIn = "Hello UDP"
+			}
+
 		}
 		return networkProtocolDetails{
-			senderCmds:        cmd,
-			receiverCmd:       nil,
+			cmds:              cmd,
 			protocol:          xdr.NetworkProtocol_UDP,
 			expectedDirection: xdr.NetworkFlow_DIRECTION_UNKNOWN, // UDP is directionless.
 			ipAddr:            externIP,
-			pipeInText:        "Hello UDP",
+			pipeInText:        pipeIn,
 		}, nil
 	case udpV6:
-		var cmd []*testexec.Cmd
-		for i := uint(0); i < count; i++ {
-			cmd = append(cmd, testexec.CommandContext(ctx, ncCmd, "-6", "-u", externIP, externPort))
+		if isListen {
+			cmd = append(cmd, testexec.CommandContext(ctx, ncCmd, "-l", "-u", "-6", "-s", externIP, "-p", externPort))
+		} else {
+			for i := uint(0); i < count; i++ {
+				cmd = append(cmd, testexec.CommandContext(ctx, ncCmd, "-6", "-u", externIP, externPort))
+			}
+			pipeIn = "Hello UDPv6"
 		}
 		return networkProtocolDetails{
-			senderCmds:        cmd,
-			receiverCmd:       nil,
+			cmds:              cmd,
 			protocol:          xdr.NetworkProtocol_UDP,
 			expectedDirection: xdr.NetworkFlow_DIRECTION_UNKNOWN, // UDP is directionless.
 			ipAddr:            externIP,
-			pipeInText:        "Hello UDPv6",
+			pipeInText:        pipeIn,
 		}, nil
 	}
 	return networkProtocolDetails{}, errors.Errorf("An unexpected network type is received: %s", network)
+}
+
+func collectDbusMessages(ctx context.Context, s *testing.State,
+	pids map[uint64]bool, stopDbusMonitoring func() ([]dbusutil.CalledMethod, error)) (
+	map[uint64]*xdr.ProcessExecEvent, []*xdr.NetworkFlowEvent,
+	[]*xdr.NetworkSocketListenEvent, error) {
+	// Collect the log of EnqueueRecord dbus calls to Missived.
+	calledMethods, err := stopDbusMonitoring()
+	if err != nil {
+		return nil, nil, nil,
+			errors.Wrap(err, "failed to capture EnqueueRecord dbus calls to missived")
+	}
+	s.Logf("secagentd enqueued %d events", len(calledMethods))
+
+	var bFlows []*xdr.NetworkFlowEvent
+	var bListens []*xdr.NetworkSocketListenEvent
+	bExecs := make(map[uint64]*xdr.ProcessExecEvent)
+	for _, method := range calledMethods {
+		if len(method.Arguments) == 0 {
+			continue
+		}
+		arg, ok := method.Arguments[0].([]byte)
+		if !ok {
+			continue
+		}
+		enq := &rep.EnqueueRecordRequest{}
+		if err := proto.Unmarshal(arg, enq); err != nil {
+			return nil, nil, nil,
+				errors.Wrap(err, "failed to unmarshal an EnqueueRecordRequest")
+		}
+
+		s.Logf("Destination is %s", enq.GetRecord().GetDestination())
+
+		// Save off matching ProcessExecs.
+		if enq.GetRecord().GetDestination() == rep.Destination_CROS_SECURITY_PROCESS {
+			pe := &xdr.XdrProcessEvent{}
+			if err := proto.Unmarshal(enq.GetRecord().GetData(), pe); err != nil {
+				return nil, nil, nil,
+					errors.Wrap(err, "failed to unmarshal data for a CROS_SECURITY_PROCESS record")
+			}
+			for _, v := range pe.GetBatchedEvents() {
+				if v.GetProcessExec() != nil {
+					pid := v.GetProcessExec().GetSpawnProcess().GetCanonicalPid()
+					if _, ok := pids[pid]; ok {
+						bExecs[pid] = v.GetProcessExec()
+						if err := secagentdcommon.CheckCommon(v.GetCommon()); err != nil {
+							errors.Wrap(err, "CROS_SECURITY_PROCESS process exec has an invalid common field")
+						}
+					}
+				}
+			}
+		}
+		// Save off network event data.
+		networkEventType := ""
+		if enq.GetRecord().GetDestination() == rep.Destination_CROS_SECURITY_NETWORK {
+			ne := &xdr.XdrNetworkEvent{}
+			if err := proto.Unmarshal(enq.GetRecord().GetData(), ne); err != nil {
+				return nil, nil, nil,
+					errors.Wrap(err, "failed to unmarshal data for a CROS_SECURITY_NETWORK record")
+			}
+			for _, v := range ne.GetBatchedEvents() {
+				if v.GetNetworkFlow() != nil {
+					bFlows = append(bFlows, v.GetNetworkFlow())
+					networkEventType = "Network Flow"
+				}
+				if v.GetNetworkSocketListen() != nil {
+					bListens = append(bListens, v.GetNetworkSocketListen())
+					networkEventType = "Network Socket Listen"
+				}
+				if err := secagentdcommon.CheckCommon(v.GetCommon()); err != nil {
+					errors.Wrapf(err, "CROS_SECURITY_NETWORK %v has an invalid common field", networkEventType)
+				}
+			}
+		}
+	}
+	return bExecs, bFlows, bListens, nil
 }
