@@ -36,12 +36,16 @@ func init() {
 		BugComponent: "b:1040049",
 		SoftwareDeps: []string{"selinux", "chrome"},
 		Attr:         []string{"group:mainline"},
-		Pre:          arc.Booted(),
 		Params: []testing.Param{{
+			Name:              "arcpp_user",
+			Fixture:           "arcBooted",
 			ExtraSoftwareDeps: []string{"android_container"},
+			Val:               "arcpp-user",
 		}, {
-			Name:              "vm",
+			Name:              "arcvm_user",
+			Fixture:           "arcBooted",
 			ExtraSoftwareDeps: []string{"android_vm"},
+			Val:               "arcvm-user",
 		}},
 		Timeout: 5 * time.Minute,
 	})
@@ -157,7 +161,7 @@ func verifyDirSELinuxContext(ctx context.Context, directoryPath, outDir string) 
 }
 
 func SELinuxFilesDataDir(ctx context.Context, s *testing.State) {
-	cr := s.PreValue().(arc.PreData).Chrome
+	cr := s.FixtValue().(*arc.PreData).Chrome
 
 	// Create the temporarySELinux policy file.
 	s.Log("Creating the temporary SELinux context file for matchpathcon command")
