@@ -26,7 +26,7 @@ func init() {
 		Contacts: []string{
 			"chromeos-cross-device-eng@google.com",
 			"chromeos-sw-engprod@google.com",
-			"cclem@google.com",
+			"hansberry@google.com",
 		},
 		BugComponent: "b:1131772",
 		Attr:         []string{"group:cross-device", "cross-device_smartlock"},
