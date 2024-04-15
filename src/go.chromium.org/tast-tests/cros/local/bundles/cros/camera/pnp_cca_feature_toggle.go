@@ -10,11 +10,14 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast-tests/cros/local/camera/cca"
+	"go.chromium.org/tast-tests/cros/local/camera/features"
 	"go.chromium.org/tast-tests/cros/local/camera/pnp"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/power"
+	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 const (
@@ -22,7 +25,8 @@ const (
 )
 
 type pnpCCAParams struct {
-	Mode cca.Mode
+	Mode              cca.Mode
+	FeatureToggleConf features.FeatureToggleConf
 }
 
 func init() {
@@ -59,6 +63,58 @@ func init() {
 			Val: pnpCCAParams{
 				Mode: cca.Video,
 			},
+		}, {
+			Name:              "face_gcamae_hdrnet_all_off",
+			Fixture:           "ccaPowerTest",
+			ExtraHardwareDeps: hwdep.D(hwdep.CameraFeature(features.HDRnet, features.GcamAE)),
+			ExtraSoftwareDeps: []string{caps.BuiltinMIPICamera},
+			Val: pnpCCAParams{
+				Mode: cca.Video,
+				FeatureToggleConf: features.FeatureToggleConf{
+					features.HDRnet:        false,
+					features.GcamAE:        false,
+					features.FaceDetection: false,
+				},
+			},
+		}, {
+			Name:              "face_on_gcamae_hdrnet_off",
+			Fixture:           "ccaPowerTest",
+			ExtraHardwareDeps: hwdep.D(hwdep.CameraFeature(features.HDRnet, features.GcamAE)),
+			ExtraSoftwareDeps: []string{caps.BuiltinMIPICamera},
+			Val: pnpCCAParams{
+				Mode: cca.Video,
+				FeatureToggleConf: features.FeatureToggleConf{
+					features.HDRnet:        false,
+					features.GcamAE:        false,
+					features.FaceDetection: true,
+				},
+			},
+		}, {
+			Name:              "gcamae_on_face_hdrnet_off",
+			Fixture:           "ccaPowerTest",
+			ExtraHardwareDeps: hwdep.D(hwdep.CameraFeature(features.HDRnet, features.GcamAE)),
+			ExtraSoftwareDeps: []string{caps.BuiltinMIPICamera},
+			Val: pnpCCAParams{
+				Mode: cca.Video,
+				FeatureToggleConf: features.FeatureToggleConf{
+					features.HDRnet:        false,
+					features.GcamAE:        true,
+					features.FaceDetection: false,
+				},
+			},
+		}, {
+			Name:              "hdrnet_on_face_gcamae_off",
+			Fixture:           "ccaPowerTest",
+			ExtraHardwareDeps: hwdep.D(hwdep.CameraFeature(features.HDRnet, features.GcamAE)),
+			ExtraSoftwareDeps: []string{caps.BuiltinMIPICamera},
+			Val: pnpCCAParams{
+				Mode: cca.Video,
+				FeatureToggleConf: features.FeatureToggleConf{
+					features.HDRnet:        true,
+					features.GcamAE:        false,
+					features.FaceDetection: false,
+				},
+			},
 		}},
 	})
 }
@@ -76,6 +132,22 @@ func PNPCCAFeatureToggle(ctx context.Context, s *testing.State) {
 	}
 
 	testing.ContextLog(ctx, "[Start Work Phase]")
+	if s.Param().(pnpCCAParams).FeatureToggleConf != nil {
+		featureToggler, err := features.NewFeatureToggler(ctx)
+		if err != nil {
+			s.Fatal("Cannot create feature toggler: ", err)
+		}
+		defer func() {
+			if err := featureToggler.CleanUp(); err != nil {
+				s.Error("Cannot close feature toggler: ", err)
+			}
+		}()
+		featureToggler.Toggle(ctx, s.Param().(pnpCCAParams).FeatureToggleConf)
+		if err := upstart.RestartJob(ctx, "cros-camera"); err != nil {
+			s.Fatal("Failed to restart cros-camera service: ", err)
+		}
+	}
+
 	startApp := s.FixtValue().(cca.FixtureData).StartApp
 	stopApp := s.FixtValue().(cca.FixtureData).StopApp
 	cr := s.FixtValue().(cca.FixtureData).Chrome
@@ -98,7 +170,6 @@ func PNPCCAFeatureToggle(ctx context.Context, s *testing.State) {
 	if err := app.FullscreenWindow(ctx); err != nil {
 		s.Fatal("Failed to enter full screen of CCA: ", err)
 	}
-
 	mode := s.Param().(pnpCCAParams).Mode
 	if err := app.SwitchMode(ctx, mode); err != nil {
 		s.Error("Failed to switch mode ", mode, ": ", err)
