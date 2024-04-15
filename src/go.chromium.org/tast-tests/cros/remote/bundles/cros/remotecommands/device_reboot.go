@@ -42,6 +42,7 @@ func init() {
 			"group:golden_tier",
 			"group:medium_low_tier",
 			"group:complementary",
+			"group:hw_agnostic",
 		},
 		SoftwareDeps: []string{"reboot", "chrome"},
 		ServiceDeps: []string{

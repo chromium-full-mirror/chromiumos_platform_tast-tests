@@ -40,6 +40,7 @@ func init() {
 			"group:medium_low_tier",
 			"group:hardware",
 			"group:complementary",
+			"group:hw_agnostic",
 		},
 		Fixture: fixture.FakeDMS,
 		Data:    []string{"extension_policy/policy.json", "extension_policy/background.js", "extension_policy/manifest.json", "extension_policy/schema.json"},

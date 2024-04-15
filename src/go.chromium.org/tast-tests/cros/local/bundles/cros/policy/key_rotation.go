@@ -38,6 +38,7 @@ func init() {
 			"group:medium_low_tier",
 			"group:hardware",
 			"group:complementary",
+			"group:hw_agnostic",
 		},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.ChromeOsLockOnIdleSuspend{}, pci.Served),

@@ -45,7 +45,7 @@ func init() {
 				// User is managed, but device is not.
 				Name:      "ash_managed",
 				Fixture:   fixture.ChromePolicyLoggedIn,
-				ExtraAttr: []string{"group:golden_tier"},
+				ExtraAttr: []string{"group:golden_tier", "group:hw_agnostic"},
 				Val: testParams{
 					boxNames:    []string{"User policies"},
 					browserType: browser.TypeAsh,
@@ -53,9 +53,10 @@ func init() {
 			},
 			{
 				// Both user and device are managed.
-				Name:      "ash_enrolled",
-				Fixture:   fixture.ChromeEnrolledLoggedIn,
-				ExtraAttr: []string{"group:golden_tier"},
+				Name:              "ash_enrolled",
+				Fixture:           fixture.ChromeEnrolledLoggedIn,
+				ExtraAttr:         []string{"group:golden_tier", "group:hw_agnostic"},
+				ExtraSoftwareDeps: []string{"vpd"},
 				Val: testParams{
 					boxNames:    []string{"User policies", "Device policies"},
 					browserType: browser.TypeAsh,
@@ -67,7 +68,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"lacros"},
 				Fixture:           fixture.LacrosPolicyLoggedIn,
 				// TODO(b/307688738): Enable test.
-				// ExtraAttr: []string{"group:golden_tier"},
+				// ExtraAttr: []string{"group:golden_tier", "group:hw_agnostic"},
 				Val: testParams{
 					boxNames:    []string{"User policies"},
 					browserType: browser.TypeLacros,
@@ -76,9 +77,9 @@ func init() {
 			{
 				// Both user and device are managed.
 				Name:              "lacros_enrolled",
-				ExtraSoftwareDeps: []string{"lacros"},
+				ExtraSoftwareDeps: []string{"lacros", "vpd"},
 				Fixture:           fixture.LacrosEnrolledLoggedIn,
-				ExtraAttr:         []string{"group:golden_tier"},
+				ExtraAttr:         []string{"group:golden_tier", "group:hw_agnostic"},
 				Val: testParams{
 					boxNames: []string{
 						"User policies",

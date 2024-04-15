@@ -38,6 +38,7 @@ func init() {
 			"group:medium_low_tier",
 			"group:hardware",
 			"group:complementary",
+			"group:hw_agnostic",
 		},
 		VarDeps: []string{tape.ServiceAccountVar},
 		Timeout: 20 * time.Minute,

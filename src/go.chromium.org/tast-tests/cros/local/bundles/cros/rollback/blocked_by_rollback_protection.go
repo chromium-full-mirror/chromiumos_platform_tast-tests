@@ -37,8 +37,8 @@ func init() {
 			"mpolzer@google.com",
 		},
 		BugComponent: "b:1031231",
-		SoftwareDeps: []string{"vpd"}, // Do not run on VM. Test needs NVRAM flash storage to work.
-		Attr:         []string{"group:mainline", "informational"},
+		SoftwareDeps: []string{"vpd"}, // Test needs both VPD and NVRAM flash storage to work properly on VMs.
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		Timeout:      4 * time.Minute,
 		Fixture:      fixture.ChromeUpdateEngineEnrolledLoggedIn,
 		Params: []testing.Param{{
