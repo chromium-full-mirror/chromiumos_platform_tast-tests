@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/memory/kernelmeter"
 	"go.chromium.org/tast-tests/cros/local/resourced"
 	"go.chromium.org/tast-tests/cros/local/sched"
+	"go.chromium.org/tast-tests/cros/local/sysutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -429,6 +430,16 @@ func checkSetMemoryMargins(ctx context.Context, rm *resourced.Client) (resErr er
 }
 
 func checkSchedQoS(ctx context.Context, rm *resourced.Client) error {
+	version, _, err := sysutil.KernelVersionAndArch()
+	if err != nil {
+		return errors.Wrap(err, "failed to get kernel version to check that schedqos is supported")
+	}
+	// schedqos is only supported on ChromeOS Kernels 5.4 and later.
+	if !version.IsOrLater(5, 4) {
+		testing.ContextLogf(ctx, "Skipping schedqos verification because kernel version is %q", version.String())
+		return nil
+	}
+
 	p, err := sched.CreateSampleProcessThreadPair(ctx, nil)
 	if err != nil {
 		return errors.Wrap(err, "failed to create process")
