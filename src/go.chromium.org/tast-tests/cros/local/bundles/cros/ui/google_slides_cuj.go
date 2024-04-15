@@ -144,6 +144,22 @@ func GoogleSlidesCUJ(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait for valid account in cookie jar: ", err)
 	}
 
+	windows, err := ash.GetAllWindows(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to get all windows: ", err)
+	}
+
+	if len(windows) != 1 {
+		s.Fatalf("Unexpected number of open windows, got %d, expected 1", len(windows))
+	}
+
+	if windows[0].State != ash.WindowStateNormal {
+		s.Logf("Window state was originally %s; will update to WindowStateNormal", windows[0].State)
+		if err := ash.SetWindowStateAndWait(ctx, tconn, windows[0].ID, ash.WindowStateNormal); err != nil {
+			s.Fatal("Failed to set window state normal: ", err)
+		}
+	}
+
 	if err := recorder.Run(ctx, func(ctx context.Context) (retErr error) {
 		// Open Google Slides file.
 		if err := slidesConn.Navigate(ctx, slidesURL); err != nil {

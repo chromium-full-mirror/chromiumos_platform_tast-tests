@@ -93,6 +93,22 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, outDir, sy
 		return nil, errors.Wrap(err, "failed to connect to browser test API connection")
 	}
 
+	windows, err := ash.GetAllWindows(ctx, tconn)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get all windows")
+	}
+
+	if len(windows) != 1 {
+		return nil, errors.Errorf("unexpected number of open windows, got %d, expected 1", len(windows))
+	}
+
+	if windows[0].State != ash.WindowStateNormal {
+		testing.ContextLogf(ctx, "Window state was originally %s; will update to WindowStateNormal", windows[0].State)
+		if err := ash.SetWindowStateAndWait(ctx, tconn, windows[0].ID, ash.WindowStateNormal); err != nil {
+			return nil, errors.Wrap(err, "failed to set window state normal")
+		}
+	}
+
 	inTabletMode, err := ash.TabletModeEnabled(ctx, tconn)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to detect it is in tablet-mode or not")
