@@ -101,6 +101,7 @@ func init() {
 			"group:medium_low_tier",
 			"group:hardware",
 			"group:complementary",
+			"group:hw_agnostic",
 		},
 		SoftwareDeps: []string{"chrome", "lacros", "lacros_stable"},
 		Fixture:      "lacros",

@@ -29,7 +29,7 @@ func init() {
 			"acostinas@google.com",                      // Test author
 		},
 		BugComponent: "b:1000044",
-		SoftwareDeps: []string{"reboot", "chrome"},
+		SoftwareDeps: []string{"reboot", "chrome", "vpd"},
 		Attr: []string{
 			"group:golden_tier",
 			"group:medium_low_tier",
@@ -75,7 +75,7 @@ func SystemProxySettings(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to update policies: ", err)
 	}
 
-	// Wait for 5 seconds to allow system-proxy to start the worker processe which authenticate OS level traffic.
+	// GoBigSleepLint: Wait for 5 seconds to allow system-proxy to start the worker processe which authenticate OS level traffic.
 	testing.Sleep(ctx, 5*time.Second)
 
 	const (

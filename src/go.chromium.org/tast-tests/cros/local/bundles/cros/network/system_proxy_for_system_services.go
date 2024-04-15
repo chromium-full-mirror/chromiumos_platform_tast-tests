@@ -33,12 +33,13 @@ func init() {
 			"acostinas@google.com",                      // Test author
 		},
 		BugComponent: "b:1000044",
-		SoftwareDeps: []string{"reboot", "chrome"},
+		SoftwareDeps: []string{"reboot", "chrome", "vpd"},
 		Attr: []string{
 			"group:golden_tier",
 			"group:medium_low_tier",
 			"group:hardware",
 			"group:complementary",
+			"group:hw_agnostic",
 			//"group:cq-medium",
 		},
 		Fixture: "chromeEnrolledLoggedIn",
