@@ -16,7 +16,6 @@ import (
 	ps "go.chromium.org/tast-tests/cros/common/power/powerpb"
 	"go.chromium.org/tast-tests/cros/common/servo"
 	rp "go.chromium.org/tast-tests/cros/remote/power"
-	sp "go.chromium.org/tast-tests/cros/services/cros/power"
 
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/meta/tastrun"
 
@@ -130,7 +129,6 @@ func PowerServodWrapper(ctx context.Context, s *testing.State) {
 	servoCtx, servoCancel := context.WithCancel(ctx)
 	defer servoCancel()
 
-	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 1*time.Minute)
 	defer cancel()
 
@@ -197,20 +195,6 @@ func PowerServodWrapper(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Error("Failed to get local DUT info: ", err)
 	}
-
-	s.Log("Disabling AC charging")
-	batteryClient := sp.NewBatteryServiceClient(cl.Conn)
-	if _, err := batteryClient.DisableBatteryCharging(ctx, &empty.Empty{}); err != nil {
-		s.Fatal("Unable to disable charging: ", err)
-	}
-
-	defer func() {
-		// Enable charging.
-		s.Log("Re-enabling AC charging")
-		if _, err := batteryClient.AllowBatteryCharging(cleanupCtx, &empty.Empty{}); err != nil {
-			s.Fatal("Unable to enable charging: ", err)
-		}
-	}()
 
 	servodRecorder, err := rp.NewServodRecorder(servoCtx, servoPowerMeasureInterval, pxy.Servo(), param.cpd, filters...)
 	if err != nil {

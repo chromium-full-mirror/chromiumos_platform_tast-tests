@@ -48,7 +48,7 @@ type powerLogJSON struct {
 // findSubtestStartTimeFromPowerLog gets the start timestamp (seconds since January 1, 1970)
 // of a test from the power_log.json file.
 func findSubtestStartTimeFromPowerLog(subtestDir string) (time.Time, error) {
-	rf, err := os.Open(filepath.Join(subtestDir, "power_log.json"))
+	rf, err := os.Open(filepath.Join(subtestDir, "power_log_1.json"))
 	if err != nil {
 		return time.Time{}, errors.Wrap(err, "couldn't open power log file")
 	}
