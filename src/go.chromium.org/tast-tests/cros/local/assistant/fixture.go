@@ -17,13 +17,15 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/cpu"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
 const (
 	setUpTimeout    = time.Minute
 	tearDownTimeout = time.Minute
-	preTestTimeout  = time.Minute
+	// Additional one minute as enabledFixture.PreTest performs a test query.
+	preTestTimeout  = 2 * time.Minute
 	postTestTimeout = time.Minute
 )
 
@@ -415,6 +417,34 @@ func (f *enabledFixture) PreTest(ctx context.Context, s *testing.FixtTestState) 
 	if err := EnableAndWaitForReady(ctx, tconn); err != nil {
 		s.Fatal("Failed to enable Assistant: ", err)
 	}
+
+	// Perform a test query to confirm that Assistant is working correctly.
+	// This is done to distinguish test failures from infra issues,
+	// e.g., network issue, server is not responding, etc.
+	performTestQuery := func() error {
+		_, err := SendTextQuery(ctx, tconn, "What time is it now")
+		if err != nil {
+			return errors.Wrap(
+				err, "failed to send a test query")
+		}
+
+		if err := ToggleUIWithHotkey(
+			ctx, tconn, AccelSearchPlusA); err != nil {
+			return errors.Wrap(err,
+				"failed to clean up UI for a test query")
+		}
+
+		return nil
+	}
+
+	s.Log("Performing a test query to check Assistant availability")
+	if err := performTestQuery(); err != nil {
+		// Disables Assistant as PostTest is not executed if PreTest failed.
+		Disable(ctx, tconn)
+		s.Fatal("Failed to perform a test query. Reference b/329376326: ", err)
+	}
+
+	s.Log("Confirmed Assistant availability")
 }
 
 func (f *enabledFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
