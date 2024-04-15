@@ -513,7 +513,7 @@ func (vkbCtx *VirtualKeyboardContext) SwitchToHandwriting(ctx context.Context) (
 		return nil, errors.Wrap(err, "failed to set local storage")
 	}
 
-	if err := vkbCtx.leftClickIfExist(NodeFinder.NameRegex(regexp.MustCompile("(switch to handwriting.*)|(handwriting)")))(ctx); err != nil {
+	if err := vkbCtx.leftClickIfExist(NodeFinder.Name("handwriting"))(ctx); err != nil {
 		return nil, err
 	}
 
