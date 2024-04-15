@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package camera
+package tflite
 
 import (
 	"context"
@@ -18,11 +18,11 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         TFLiteDTS,
+		Func:         DTS,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Runs the TFLite stable delegate test suite",
-		Contacts:     []string{"chromeos-camera-eng@google.com", "shik@chromium.org"},
-		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
+		Contacts:     []string{"cros-odml-foundations-eng@google.com", "shik@chromium.org"},
+		BugComponent: "b:1445284", // ChromeOS > Platform > Technologies > Machine Learning > On-Device ML
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"ml_service"},
 		Vars:         []string{"settings", "accel_config"},
@@ -85,8 +85,8 @@ FloatSubOpModel/VariousInputShapes
 // TODO(shik): Consider enable it for vendor delegate if it's supported.
 const gtestFilter = "-*MultiDimBroadcastSubshard*"
 
-// TFLiteDTS runs the Tensorflow Lite Stable Delegate Test Suite (DTS).
-func TFLiteDTS(ctx context.Context, s *testing.State) {
+// DTS runs the Tensorflow Lite Stable Delegate Test Suite (DTS).
+func DTS(ctx context.Context, s *testing.State) {
 	settingsPath := filepath.Join(s.OutDir(), "settings.json")
 	accelConfigPath := filepath.Join(s.OutDir(), "accel.conf")
 	gtestLogPath := filepath.Join(s.OutDir(), "gtest.log")
