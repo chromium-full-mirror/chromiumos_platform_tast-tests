@@ -1,5 +1,5 @@
 {
-  "url": "gs://chromiumos-test-assets-public/tast/cros/video/media3_exoplayer_20240123.apk",
-  "size": 11048132,
-  "sha256sum": "be6bb19474f963b73c7538fca021e515e2b2d206d528531335965df92dea54f0"
+  "url": "gs://chromiumos-test-assets-public/tast/cros/video/media3_exoplayer_20240416.apk",
+  "size": 11131895,
+  "sha256sum": "0c52e9407c1bccf130c368b7c9a42439d61703e1f5c9aaf41d1433d51c3e0a79"
 }

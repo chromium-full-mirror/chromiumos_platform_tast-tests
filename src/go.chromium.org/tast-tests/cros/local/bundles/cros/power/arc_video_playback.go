@@ -322,11 +322,7 @@ func ARCVideoPlayback(ctx context.Context, s *testing.State) {
 		videoApp.Close(ctx)
 	}(cleanupCtx)
 
-	if exoPlayer, isExoPlayer := videoApp.(*arcvpb.ExoPlayerApp); isExoPlayer {
-		exoPlayer.SetTotalVideoCount(total)
-		videoName = fileName
-	}
-	if err := videoApp.PlayVideoInFullScreen(videoName)(ctx); err != nil {
+	if err := videoApp.PlayVideoInFullScreen(fileName)(ctx); err != nil {
 		s.Fatal("Failed to enter full screen and play video: ", err)
 	}
 

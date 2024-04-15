@@ -39,25 +39,23 @@ const (
 
 // ExoPlayerApp defines the members related to ExoPlayer.
 type ExoPlayerApp struct {
-	tconn           *chrome.TestConn
-	kb              *input.KeyboardEventWriter
-	a               *arc.ARC
-	d               *androidui.Device
-	cr              *chrome.Chrome
-	dataPath        func(string) string
-	totalVideoCount int // The total count of videos that will be added to the playlist.
+	tconn    *chrome.TestConn
+	kb       *input.KeyboardEventWriter
+	a        *arc.ARC
+	d        *androidui.Device
+	cr       *chrome.Chrome
+	dataPath func(string) string
 }
 
 // NewExoPlayerApp creates an instance of ExoPlayer app.
 func NewExoPlayerApp(cr *chrome.Chrome, tconn *chrome.TestConn, kb *input.KeyboardEventWriter, a *arc.ARC, d *androidui.Device, dataPath func(string) string) VideoApp {
 	return &ExoPlayerApp{
-		tconn:           tconn,
-		kb:              kb,
-		a:               a,
-		d:               d,
-		cr:              cr,
-		dataPath:        dataPath,
-		totalVideoCount: 1,
+		tconn:    tconn,
+		kb:       kb,
+		a:        a,
+		d:        d,
+		cr:       cr,
+		dataPath: dataPath,
 	}
 }
 
@@ -116,24 +114,13 @@ func (e *ExoPlayerApp) PlayVideoInFullScreen(videoFileName string) uiauto.Action
 	)
 }
 
-// SetTotalVideoCount sets the total count of videos to determine how many videos should be
-// added to the playlist and ensures that the playlist's total duration exceeds the test duration.
-func (e *ExoPlayerApp) SetTotalVideoCount(testDuration time.Duration) {
-	// The testing videos for the arcvideoplayback test are all 5 minutes long.
-	const videoLength = 5 * time.Minute
-	e.totalVideoCount = int(testDuration/videoLength) + 1
-}
-
-// PlayVideoInLoop loops the video playback by adding videos to the playlist |totalVideoCount| times to
-// ensure the playlist's total duration exceeds the test duration. Assume the video file has been already
-// pushed to Android temp directory and |totalVideoCount| has been set.
+// PlayVideoInLoop plays the video in loop.
 func (e *ExoPlayerApp) PlayVideoInLoop(videoFileName string) uiauto.Action {
 	return func(ctx context.Context) error {
-		args := []string{"start", "-a", "androidx.media3.demo.main.action.VIEW_LIST"}
+		args := []string{"start", "-a", "androidx.media3.demo.main.action.VIEW", "-d"}
 		videoPath := fmt.Sprintf("file:///%s", path.Join(adb.AndroidTmpDirPath, videoFileName))
-		for videoCnt := 0; videoCnt < e.totalVideoCount; videoCnt++ {
-			args = append(args, "--es", fmt.Sprintf("uri_%d", videoCnt), videoPath)
-		}
+		args = append(args, videoPath, "--es", "repeat_mode", "ALL")
+
 		if _, err := e.a.Command(ctx, "am", args...).Output(testexec.DumpLogOnError); err != nil {
 			return err
 		}

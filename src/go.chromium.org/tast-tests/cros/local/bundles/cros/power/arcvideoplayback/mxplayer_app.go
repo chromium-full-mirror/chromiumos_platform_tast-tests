@@ -155,7 +155,8 @@ func (m *MxPlayerApp) DismissPrompts(ctx context.Context) error {
 }
 
 // PlayVideoInFullScreen plays the video in full screen.
-func (m *MxPlayerApp) PlayVideoInFullScreen(videoName string) uiauto.Action {
+func (m *MxPlayerApp) PlayVideoInFullScreen(videoFileName string) uiauto.Action {
+	videoName := strings.TrimSuffix(videoFileName, filepath.Ext(videoFileName))
 	return uiauto.Combine("play the video in full screen",
 		m.DismissPrompts,
 		m.EnterFullScreen,
