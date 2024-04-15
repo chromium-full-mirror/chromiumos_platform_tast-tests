@@ -49,12 +49,12 @@ func init() {
 			Val:               playStoreTestArgs{preprod: false},
 		}, {
 			Name:              "vm",
-			ExtraAttr:         []string{"informational"},
+			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			ExtraSoftwareDeps: []string{"android_vm", "no_qemu", "no_android_vm_t"},
 			Val:               playStoreTestArgs{preprod: false},
 		}, {
 			Name:              "x",
-			ExtraAttr:         []string{"informational"},
+			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			ExtraSoftwareDeps: []string{"android_vm", "no_qemu", "android_vm_t"},
 			Val:               playStoreTestArgs{preprod: false},
 		}, {
