@@ -21,6 +21,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast-tests/cros/local/disk"
+	mem_metrics "go.chromium.org/tast-tests/cros/local/memory/metrics"
 	"go.chromium.org/tast-tests/cros/local/power/metrics"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
 
@@ -38,6 +39,7 @@ type TestConfig struct {
 	WifiInterfacesMode setup.WifiInterfacesMode
 	ApkPath            string
 	OutDir             string
+	CollectPsiStats    bool
 }
 
 const (
@@ -161,6 +163,16 @@ func RunTest(ctx context.Context, config *TestConfig, a *arc.ARC, cr *chrome.Chr
 
 	var avgScore float64
 	for i := 0; i < config.Iterations; i++ {
+		var basemem *mem_metrics.BaseMemoryStats
+		if config.CollectPsiStats {
+			// For collecting metrics such as smaps_rollup per process, zram usage,
+			// adb dumpsys meminfo and PSI memory metrics.
+			basemem, err = mem_metrics.NewBaseMemoryStats(ctx, a)
+			if err != nil {
+				return 0, errors.Wrap(err, "failed to start collection of extra memory stats")
+			}
+		}
+
 		out, err := a.Command(ctx, "am", "instrument", "-w", "-e", "class", testName, packageName).CombinedOutput()
 		if err != nil {
 			return 0, errors.Wrap(err, "failed to execute test")
@@ -181,6 +193,12 @@ func RunTest(ctx context.Context, config *TestConfig, a *arc.ARC, cr *chrome.Chr
 			return 0, errors.Wrapf(err, "error while analyzing results, see: %s", outputFile)
 		}
 		avgScore += score
+
+		if basemem != nil {
+			if err := mem_metrics.LogMemoryStats(ctx, basemem, a, config.PerfValues, config.OutDir, "."+config.Prefix+iterationSuffix); err != nil {
+				return 0, errors.Wrap(err, "failed to dump memory stats")
+			}
+		}
 	}
 	avgScore /= float64(config.Iterations)
 

@@ -16,7 +16,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/arc/nethelper"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/memory/metrics"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast-tests/cros/local/sysutil"
 	"go.chromium.org/tast/core/ctxutil"
@@ -184,14 +183,16 @@ func AppLoadingPerf(ctx context.Context, s *testing.State) {
 	// tests where group is not defined will be computed separately using the
 	// geometric means from other groups.
 	tests := []struct {
-		name       string
-		prefix     string
-		subtest    string
-		group      string
-		iterations int
+		name            string
+		prefix          string
+		subtest         string
+		group           string
+		iterations      int
+		collectPsiStats bool
 	}{{
-		name:   memoryTestName,
-		prefix: "memory",
+		name:            memoryTestName,
+		prefix:          "memory",
+		collectPsiStats: true,
 	}, {
 		name:    fileTestName,
 		prefix:  "file_obb",
@@ -261,20 +262,11 @@ func AppLoadingPerf(ctx context.Context, s *testing.State) {
 	}(cleanupCtx)
 
 	for _, test := range tests {
-		var basemem *metrics.BaseMemoryStats
-		if test.name == memoryTestName {
-			// For collecting metrics such as smaps_rollup per process, zram usage,
-			// adb dumpsys meminfo and PSI memory metrics.
-			basemem, err = metrics.NewBaseMemoryStats(ctx, a)
-			if err != nil {
-				s.Error("Failed to retrieve base memory stats: ", err)
-			}
-		}
-
 		config.ClassName = test.name
 		config.Prefix = test.prefix
 		config.Subtest = test.subtest
 		config.Iterations = test.iterations
+		config.CollectPsiStats = test.collectPsiStats
 		if config.Iterations < 1 {
 			if config.Iterations < 0 {
 				s.Fatal("Invalid number of iterations used: ", config.Iterations)
@@ -292,12 +284,6 @@ func AppLoadingPerf(ctx context.Context, s *testing.State) {
 			groups[test.group] = append(groups[test.group], score)
 		} else {
 			scores = append(scores, score)
-		}
-
-		if basemem != nil {
-			if err := metrics.LogMemoryStats(ctx, basemem, a, finalPerfValues, s.OutDir(), "."+test.prefix); err != nil {
-				s.Error("Failed to collect memory metrics: ", err)
-			}
 		}
 	}
 
