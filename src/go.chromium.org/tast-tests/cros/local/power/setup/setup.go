@@ -440,6 +440,10 @@ func PowerTest(ctx context.Context, c *chrome.TestConn, options PowerTestOptions
 		if options.DPTF == DisableDPTF {
 			s.Add(DisableServiceIfExists(ctx, "dptf"))
 		}
+		// Note that since `SetBacklightLux` is run before
+		// `batteryDischarge.fulfill`, `batteryDischarge.discharge` here
+		// represents the intention to discharge the device, but the discharge
+		// action may fail.
 		if options.Backlight == SetBacklight {
 			s.Add(SetBacklightLux(ctx, 150, batteryDischarge.discharge))
 		}
