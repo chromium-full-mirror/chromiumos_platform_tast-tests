@@ -28,6 +28,7 @@ import (
 	"go.chromium.org/tast-tests/cros/services/cros/wifi"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -73,24 +74,24 @@ func reserveForRelease(ctx context.Context) (context.Context, func()) {
 	return ctxutil.Shorten(ctx, 10*time.Second)
 }
 
-func hasFTSupport(ctx context.Context, s *testing.State) bool {
-	phys, _, err := iw.NewRemoteRunner(s.DUT().Conn()).ListPhys(ctx)
+func hasFTSupport(ctx context.Context, conn *ssh.Conn) (bool, error) {
+	phys, _, err := iw.NewRemoteRunner(conn).ListPhys(ctx)
 	if err != nil {
-		s.Fatal("Failed to check SME capability: ", err)
+		return false, errors.Wrap(err, "failed to check SME capability")
 	}
 	for _, p := range phys {
 		for _, c := range p.Commands {
 			// A DUT which has SME capability should support FT.
 			if c == "authenticate" {
-				return true
+				return true, nil
 			}
 			// A full-mac driver that supports update_ft_ies functions also supports FT.
 			if c == "update_ft_ies" {
-				return true
+				return true, nil
 			}
 		}
 	}
-	return false
+	return false, nil
 }
 
 func setupPcapOnRouter(ctx context.Context, r support.Capture,
@@ -103,8 +104,8 @@ func setupPcapOnRouter(ctx context.Context, r support.Capture,
 	if err != nil {
 		return errors.Wrap(err, "failed to start capturer")
 	}
-	ds.push(func() {
-		r.StopCapture(ctx, capturer)
+	ds.push(func() error {
+		return r.StopCapture(ctx, capturer)
 	})
 	return nil
 }
@@ -115,7 +116,7 @@ func ServerIP() string {
 }
 
 // ContinuityTestInitialSetup performs the initial setup of the test environment.
-func ContinuityTestInitialSetup(ctx context.Context, s *testing.State, tf *wificell.TestFixture) (context.Context, *ContTest, func()) {
+func ContinuityTestInitialSetup(ctx context.Context, tf *wificell.TestFixture, param ContParam) (context.Context, *ContTest, DestructorStackDestroyF, error) {
 	ct := &ContTest{tf: tf}
 	ds, destroyIfNotExported := newDestructorStack()
 	defer destroyIfNotExported()
@@ -123,58 +124,64 @@ func ContinuityTestInitialSetup(ctx context.Context, s *testing.State, tf *wific
 	var err error
 	ctx, ct.restoreBgAndFg, err = ct.tf.WifiClient().TurnOffBgAndFgscan(ctx)
 	if err != nil {
-		s.Fatal("Failed to turn off the background and/or foreground scan: ", err)
+		return ctx, nil, nil, errors.Wrap(err, "failed to turn off the background and/or foreground scan")
 	}
-	ds.push(func() {
+	ds.push(func() (err error) {
 		if err := ct.restoreBgAndFg(); err != nil {
-			s.Error("Failed to restore the background and/or foreground scan config: ", err)
+			return errors.Wrap(err, "failed to restore the background and/or foreground scan config")
 		}
+		return nil
 	})
 
 	ct.clientMAC, err = tf.ClientHardwareAddr(ctx)
 	if err != nil {
-		s.Fatal("Unable to get DUT MAC address: ", err)
+		return ctx, nil, nil, errors.Wrap(err, "unable to get DUT MAC address")
 	}
 
 	ftResp, err := ct.tf.WifiClient().GetGlobalFTProperty(ctx, &empty.Empty{})
 	if err != nil {
-		s.Fatal("Failed to get the global FT property: ", err)
+		return ctx, nil, nil, errors.Wrap(err, "failed to get the global FT property")
 	}
 	ct.ftEnabled = ftResp.Enabled
 
-	param := s.Param().(ContParam)
-
 	// TODO(b/190630644): Add HWDeps to cover such devices.
-	if param.EnableFT && !hasFTSupport(ctx, s) {
-		s.Fatal("Unable to run FT test on device not supporting FT")
+	if param.EnableFT {
+		supported, err := hasFTSupport(ctx, tf.DUTConn(wificell.DefaultDUT))
+		if err != nil {
+			return ctx, nil, nil, errors.Wrap(err, "failed to check FT support")
+		}
+		if !supported {
+			return ctx, nil, nil, errors.New("unable to run FT test on device not supporting FT")
+		}
 	}
 
 	// Turn on the global FT.
 	if _, err := tf.WifiClient().SetGlobalFTProperty(ctx, &wifi.SetGlobalFTPropertyRequest{Enabled: param.EnableFT}); err != nil {
-		s.Fatal("Failed to set the global FT property: ", err)
+		return ctx, nil, nil, errors.Wrap(err, "failed to set the global FT property")
 	}
-	ds.push(func() {
+	ds.push(func() (err error) {
 		if _, err := ct.tf.WifiClient().SetGlobalFTProperty(ctx, &wifi.SetGlobalFTPropertyRequest{Enabled: ct.ftEnabled}); err != nil {
-			s.Errorf("Failed to set global FT property back to %v: %v", ct.ftEnabled, err)
+			return errors.Wrapf(err, "failed to set global FT property back to %v", ct.ftEnabled)
 		}
+		return nil
 	})
 
 	ct.r, err = tf.StandardRouter()
 	if err != nil {
-		s.Fatal("Failed to get router: ", err)
+		return ctx, nil, nil, errors.Wrap(err, "failed to get router")
 	}
 	ct.pcap = tf.PcapRouter()
 
 	br, err := tf.GetBridgesOnRouterID(wificell.DefaultRouter)
 	if err != nil {
-		s.Fatal("Failed to get bridge names on router: ", err)
+		return ctx, nil, nil, errors.Wrap(err, "failed to get bridge names on router")
 	}
 
 	// Bind the two ends of the veth to the two bridges.
 	for i := 0; i < 2; i++ {
 		ct.mac[i], err = hostapd.RandomMAC()
 		if err != nil {
-			s.Fatal("Failed to get a random mac address: ", err)
+			return ctx, nil, nil, errors.Wrap(err, "failed to get a random mac address")
 		}
 	}
 
@@ -210,118 +217,122 @@ func ContinuityTestInitialSetup(ctx context.Context, s *testing.State, tf *wific
 	if param.SecConfFac != nil {
 		ap0SecConf, err := param.SecConfFac.Gen()
 		if err != nil {
-			s.Fatal("Failed to generate security config: ", err)
+			return ctx, nil, nil, errors.Wrap(err, "failed to generate security config")
 		}
 		ct.apOps[0] = append(ct.apOps[0], hostapd.SecurityConfig(ap0SecConf))
 		ap1SecConf, err := param.SecConfFac.Gen()
 		if err != nil {
-			s.Fatal("Failed to generate security config: ", err)
+			return ctx, nil, nil, errors.Wrap(err, "failed to generate security config")
 		}
 		ct.apOps[1] = append(ct.apOps[1], hostapd.SecurityConfig(ap1SecConf))
 	}
 
 	ap0Conf, err := hostapd.NewConfig(ct.apOps[0]...)
 	if err != nil {
-		s.Fatal("Failed to generate the hostapd config for AP0: ", err)
+		return ctx, nil, nil, errors.Wrap(err, "failed to generate the hostapd config for AP0")
 	}
 	ap0Name := tf.UniqueAPName()
 	if err = setupPcapOnRouter(ctx, ct.r, ap0Name, ap0Conf, ds); err != nil {
-		s.Fatal("Failed to setup pcap: ", err)
+		return ctx, nil, nil, errors.Wrap(err, "failed to setup pcap")
 	}
 
 	if err = setupPcapOnRouter(ctx, ct.pcap, "monitor"+ap0Name, ap0Conf, ds); err != nil {
-		s.Fatal("Failed to setup monitor: ", err)
+		return ctx, nil, nil, errors.Wrap(err, "failed to setup monitor")
 	}
 
 	ct.iface, err = ct.tf.DUTWifiClient(wificell.DefaultDUT).Interface(ctx)
 	if err != nil {
-		s.Fatal("Failed to get interface from the DUT: ", err)
+		return ctx, nil, nil, errors.Wrap(err, "failed to get interface from the DUT")
 	}
 
-	dutCapturer, err := pcap.StartCapturer(ctx, s.DUT().Conn(), "dut", ct.iface, "/var/log/")
+	dutCapturer, err := pcap.StartCapturer(ctx, tf.DUTConn(wificell.DefaultDUT), "dut", ct.iface, "/var/log/")
 	if err != nil {
-		s.Fatal("Failed to start DUT capturer: ", err)
+		return ctx, nil, nil, errors.Wrap(err, "failed to start DUT capturer")
 	}
-	ds.push(func() {
-		dutCapturer.Close(ctx)
+	ds.push(func() error {
+		return dutCapturer.Close(ctx)
 	})
 
-	s.Log("Starting the first AP on ", br[0])
+	testing.ContextLog(ctx, "Starting the first AP on ", br[0])
 
 	ct.ap[0], err = ct.r.StartHostapd(ctx, ap0Name, ap0Conf)
 	if err != nil {
-		s.Fatal("Failed to start the hostapd server on the first AP: ", err)
+		return ctx, nil, nil, errors.Wrap(err, "failed to start the hostapd server on the first AP")
 	}
-	ds.push(func() {
+	ds.push(func() error {
 		if err := ct.r.StopHostapd(ctx, ct.ap[0]); err != nil {
-			s.Error("Failed to stop the hostapd server on the first AP: ", err)
+			return errors.Wrap(err, "failed to stop the hostapd server on the first AP")
 		}
+		return nil
 	})
 
-	s.Logf("Starting the DHCP server on %s, serverIP=%s", br[0], serverIP)
+	testing.ContextLogf(ctx, "Starting the DHCP server on %s, serverIP=%s", br[0], serverIP)
 	ct.dserv, err = ct.r.StartDHCP(ctx, ap0Name, br[0], startIP, endIP, serverIP, broadcastIP, mask, nil)
 	if err != nil {
-		s.Fatal("Failed to start the DHCP server: ", err)
+		return ctx, nil, nil, errors.Wrap(err, "failed to start the DHCP server")
 	}
-	ds.push(func() {
+	ds.push(func() error {
 		if err := ct.r.StopDHCP(ctx, ct.dserv); err != nil {
-			s.Error("Failed to stop the DHCP server: ", err)
+			return errors.Wrap(err, "failed to stop the DHCP server")
 		}
+		return nil
 	})
 
 	connResp, err := tf.ConnectWifi(ctx, ct.ap[0].Config().SSID, dutcfg.ConnSecurity(ct.ap[0].Config().SecurityConfig))
 	if err != nil {
-		s.Fatal("Failed to connect to the AP: ", err)
+		return ctx, nil, nil, errors.Wrap(err, "failed to connect to the AP")
 	}
-	ds.push(func() {
+	ds.push(func() error {
 		if err := ct.tf.CleanDisconnectWifi(ctx); err != nil {
-			s.Error("Failed to disconnect from the AP: ", err)
+			return errors.Wrap(err, "failed to disconnect from the AP")
 		}
+		return nil
 	})
 	ct.servicePath = connResp.ServicePath
 
 	if err := tf.PingFromDUT(ctx, serverIP.String(), ping.Count(3), ping.Interval(0.3)); err != nil {
-		s.Fatal("Failed to ping from the DUT: ", err)
+		return ctx, nil, nil, errors.Wrap(err, "failed to ping from the DUT")
 	}
-	s.Log("Connected to the first AP")
+	testing.ContextLog(ctx, "Connected to the first AP")
 
-	return ctx, ct, ds.export().destroy
+	return ctx, ct, ds.export().destroy, nil
 }
 
 // ContinuityTestSetupFinalize finalizes the setup of the test environment.
-func (ct *ContTest) ContinuityTestSetupFinalize(ctx context.Context, s *testing.State) (context.Context, func()) {
-	s.Log("Starting the second AP")
+func (ct *ContTest) ContinuityTestSetupFinalize(ctx context.Context) (context.Context, DestructorStackDestroyF, error) {
+	testing.ContextLog(ctx, "Starting the second AP")
 	ds, destroyIfNotExported := newDestructorStack()
 	defer destroyIfNotExported()
 	ap1Name := ct.tf.UniqueAPName()
 	ap1Conf, err := hostapd.NewConfig(ct.apOps[1]...)
 	if err != nil {
-		s.Fatal("Failed to generate the hostapd config for AP1: ", err)
+		return ctx, nil, errors.Wrap(err, "failed to generate the hostapd config for AP1")
 	}
 
 	if err = setupPcapOnRouter(ctx, ct.r, ap1Name, ap1Conf, ds); err != nil {
-		s.Fatal("Failed to setup pcap: ", err)
+		return ctx, nil, errors.Wrap(err, "failed to setup pcap")
 	}
 
 	if err = setupPcapOnRouter(ctx, ct.pcap, "monitor"+ap1Name, ap1Conf, ds); err != nil {
-		s.Fatal("Failed to setup monitor: ", err)
+		return ctx, nil, errors.Wrap(err, "failed to setup monitor")
 	}
 
 	ct.ap[1], err = ct.r.StartHostapd(ctx, ap1Name, ap1Conf)
 	if err != nil {
-		s.Fatal("Failed to start the hostapd server on the second AP: ", err)
+		return ctx, nil, errors.Wrap(err, "failed to start the hostapd server on the second AP")
 	}
-	ds.push(func() {
+	ds.push(func() error {
 		if err := ct.r.StopHostapd(ctx, ct.ap[1]); err != nil {
-			s.Error("Failed to stop the hostapd server on the second AP: ", err)
+			return errors.Wrap(err, "failed to stop the hostapd server on the second AP")
 		}
+		return nil
 	})
 
-	return ctx, ds.export().destroy
+	return ctx, ds.export().destroy, nil
 }
 
 // ContinuityRound runs one round of the test: scans if necessary and attempts roaming.
-func (ct *ContTest) ContinuityRound(ctx context.Context, s *testing.State, round int) {
+func (ct *ContTest) ContinuityRound(ctx context.Context, round int) error {
 	var props [][]*wificell.ShillProperty = [][]*wificell.ShillProperty{{{
 		Property:       shillconst.ServicePropertyWiFiRoamState,
 		ExpectedValues: []interface{}{shillconst.RoamStateConfiguration},
@@ -360,37 +371,38 @@ func (ct *ContTest) ContinuityRound(ctx context.Context, s *testing.State, round
 	defer cancel()
 	waitForProps, err := ct.tf.WifiClient().ExpectShillProperty(waitCtx, ct.servicePath, props[round%2], []string{shillconst.ServicePropertyIsConnected})
 	if err != nil {
-		s.Fatal("Failed to create a property watcher: ", err)
+		return errors.Wrap(err, "failed to create a property watcher")
 	}
-	s.Logf("Round %d. Requesting roam from %s to %s", round+1, ct.mac[round%2], ct.mac[(round+1)%2])
+	testing.ContextLogf(ctx, "Round %d. Requesting roam from %s to %s", round+1, ct.mac[round%2], ct.mac[(round+1)%2])
 
-	s.Logf("Sending BSS TM Request from AP %s to DUT %s", ct.mac[round%2], ct.clientMAC)
+	testing.ContextLogf(ctx, "Sending BSS TM Request from AP %s to DUT %s", ct.mac[round%2], ct.clientMAC)
 	req := hostapd.BSSTMReqParams{Neighbors: []string{ct.mac[(round+1)%2].String()}}
 	if err := ct.ap[round%2].SendBSSTMRequest(ctx, ct.clientMAC, req); err != nil {
-		s.Fatal("Failed to send BSS TM Request: ", err)
+		return errors.Wrap(err, "failed to send BSS TM Request")
 	}
 
 	monitorResult, err := waitForProps()
 	if err != nil {
-		s.Fatal("Failed to wait for the properties: ", err)
+		return errors.Wrap(err, "failed to wait for the properties")
 	}
 
 	// Check that we don't disconnect along the way here, in case we're ping-ponging around APs.
 	for _, ph := range monitorResult {
 		if ph.Name == shillconst.ServicePropertyIsConnected {
 			if !ph.Value.(bool) {
-				s.Error("Failed to stay connected during the roaming process")
+				return errors.Wrap(err, "failed to stay connected during the roaming process")
 			}
 		}
 	}
 
 	dutState, err := ct.tf.WifiClient().QueryService(ctx)
 	if err != nil {
-		s.Fatal("Failed to query service: ", err)
+		return errors.Wrap(err, "failed to query service")
 	}
 	if dutState.Wifi.Bssid != ct.mac[(round+1)%2].String() {
-		s.Fatalf("Unexpected BSSID: got %s, want %s", dutState.Wifi.Bssid, ct.mac[(round+1)%2])
+		return errors.Wrapf(err, "unexpected BSSID: got %s, want %s", dutState.Wifi.Bssid, ct.mac[(round+1)%2])
 	}
+	return nil
 }
 
 // Router returns current router object.

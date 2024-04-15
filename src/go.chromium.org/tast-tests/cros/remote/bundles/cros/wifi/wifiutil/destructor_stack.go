@@ -4,6 +4,8 @@
 
 package wifiutil
 
+import "go.chromium.org/tast/core/errors"
+
 // Destructor Stack mimics language's defer() mechanics with the main difference
 // that its destructor can be exported outside the function where it was created
 // to be called at a later time (e.g. deferred).
@@ -15,9 +17,12 @@ package wifiutil
 // (2) Be careful when using local variables in deferred functions. Treat
 // them like they would be evaluated at the end of function.
 
+// DestructorStackDestroyF describes destroy function used for destructor stack.
+type DestructorStackDestroyF func() error
+
 // destructorStack holds the stack of functions to be called.
 type destructorStack struct {
-	stack    []func()
+	stack    []DestructorStackDestroyF
 	exported bool
 }
 
@@ -28,17 +33,18 @@ func newDestructorStack() (*destructorStack, func()) {
 }
 
 // push a function to be deferred.
-func (ds *destructorStack) push(f func()) {
+func (ds *destructorStack) push(f DestructorStackDestroyF) {
 	ds.stack = append(ds.stack, f)
 }
 
 // destroy is an unconditional destructor.
-func (ds *destructorStack) destroy() {
+func (ds *destructorStack) destroy() (err error) {
 	for stackLen := (len(ds.stack)); stackLen > 0; stackLen-- {
 		idx := stackLen - 1
-		ds.stack[idx]()
+		err = errors.Join(ds.stack[idx]())
 		ds.stack = ds.stack[:idx]
 	}
+	return
 }
 
 // destroyIfNotExported is a conditional destructor - it will trigger

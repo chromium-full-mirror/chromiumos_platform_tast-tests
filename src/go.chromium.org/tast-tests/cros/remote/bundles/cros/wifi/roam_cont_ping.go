@@ -153,8 +153,15 @@ func RoamContPing(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	ctx, ct, finish := wifiutil.ContinuityTestInitialSetup(ctx, s, tf)
-	defer finish()
+	ctx, ct, finish, err := wifiutil.ContinuityTestInitialSetup(ctx, tf, param)
+	if err != nil {
+		s.Fatal("Failed initial setup of the test: ", err)
+	}
+	defer func() {
+		if err := finish(); err != nil {
+			s.Error("Error while tearing down test setup: ", err)
+		}
+	}()
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
@@ -204,15 +211,24 @@ func RoamContPing(ctx context.Context, s *testing.State) {
 	ctx, cancel = ctxutil.Shorten(ctx, time.Second)
 	defer cancel()
 
-	ctx, destroy := ct.ContinuityTestSetupFinalize(ctx, s)
-	defer destroy()
+	ctx, destroy, err := ct.ContinuityTestSetupFinalize(ctx)
+	if err != nil {
+		s.Fatal("Failed finalization of the setup of the test: ", err)
+	}
+	defer func() {
+		if err := destroy(); err != nil {
+			s.Error("Error while tearing down test setup: ", err)
+		}
+	}()
 	ctx, cancel = ctxutil.Shorten(ctx, time.Second)
 	defer cancel()
 
 	vf.StartJob()
 
 	for i := 0; i < rounds; i++ {
-		ct.ContinuityRound(ctx, s, i)
+		if err := ct.ContinuityRound(ctx, i); err != nil {
+			s.Fatal("Error in continuity round: ", err)
+		}
 	}
 	results, err := vf.StopJob()
 	if err != nil {
