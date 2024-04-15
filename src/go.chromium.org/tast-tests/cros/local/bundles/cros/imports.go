@@ -135,6 +135,7 @@ import (
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/telemetryextension"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/terminal"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/testenv"
+	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/tflite"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/timberslide"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/touchpad"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/typec"
