@@ -339,6 +339,26 @@ func init() {
 		PostTestTimeout: ccaTearDownTimeout,
 		TearDownTimeout: powerTearDownTimeout,
 	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:            "ccaPowerTest",
+		Desc:            "Set up test bridge for CCA for a power Test",
+		Contacts:        []string{"chromeos-camera-eng@google.com", "kamchonlathorn@chromium.org"},
+		Impl:            &fixture{powerTest: true},
+		SetUpTimeout:    powerSetUpTimeout,
+		ResetTimeout:    testBridgeSetUpTimeout,
+		TearDownTimeout: powerTearDownTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:            "ccaPowerTestWithDigitalZoomSuperResEnabled",
+		Desc:            "Set up test bridge for CCA with digital zoom and super resolution enabled for a power Test",
+		Contacts:        []string{"chromeos-camera-eng@google.com", "kamchonlathorn@chromium.org"},
+		Impl:            &fixture{powerTest: true, forceEnableSuperRes: true, enableFeatures: []feature{digitalZoom}},
+		SetUpTimeout:    powerSetUpTimeout,
+		ResetTimeout:    testBridgeSetUpTimeout,
+		TearDownTimeout: powerTearDownTimeout,
+	})
 }
 
 // DebugParams defines some useful flags for debug CCA tests.

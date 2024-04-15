@@ -25,6 +25,8 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
+	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/screenshot"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/ctxutil"
@@ -191,6 +193,9 @@ type PTZSettings struct {
 	Tilt float64 `json:"tilt"`
 	Zoom float64 `json:"zoom"`
 }
+
+// PowerTimeParams are time parameters used in power recording in CCA.
+var PowerTimeParams = power.TimeParams{Interval: 5 * time.Second, Total: 15 * time.Second}
 
 // Equal returns if PTZ settings a and b are equal.
 func (a *PTZSettings) Equal(b *PTZSettings) bool {
@@ -1666,4 +1671,39 @@ func (a *App) ClickPTZButtonAndWaitSettingsUpdate(ctx context.Context, ui UIComp
 	}, &testing.PollOptions{Timeout: 5 * time.Second})
 
 	return newSettings, err
+}
+
+// ZoomInFromPTZPanel performs zoom-in by opening PTZ panel, clicking on zoom-in
+// button, and closing PTZ panel.
+func (a *App) ZoomInFromPTZPanel(ctx context.Context) error {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
+	// Create keyboard to close the PTZ panel.
+	keyboard, err := input.Keyboard(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to create a keyboard")
+	}
+	defer keyboard.Close(cleanupCtx)
+
+	if err := a.Click(ctx, OpenPTZPanelButton); err != nil {
+		return errors.Wrap(err, "failed to open the PTZ panel")
+	}
+
+	ptz, err := a.ClickPTZButtonAndWaitSettingsUpdate(ctx, ZoomInButton)
+	if err != nil {
+		return errors.Wrap(err, "failed to click the zoom-in button")
+	}
+	testing.ContextLogf(ctx, "Zoom ratio is updated to %.1fx", ptz.Zoom)
+
+	if err := keyboard.Accel(ctx, "Esc"); err != nil {
+		return errors.Wrap(err, "failed to close the PTZ panel")
+	}
+
+	if err = a.WaitForState(ctx, "view-ptz-panel", false); err != nil {
+		return errors.Wrap(err, "failed to wait for PTZ panel to close")
+	}
+
+	return nil
 }
