@@ -52,8 +52,7 @@ func init() {
 					isOOBE:           true,
 					fieldTrialConfig: chrome.FieldTrialConfigEnable,
 				},
-				// TODO(b/321306051): Promote to critical.
-				ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
+				ExtraAttr: []string{"group:mainline"},
 			}, {
 				Name:              "oobe_unstable",
 				ExtraHardwareDeps: hwdep.D(pre.AppsUnstableModels),
@@ -79,8 +78,7 @@ func init() {
 					isOOBE:           false,
 					fieldTrialConfig: chrome.FieldTrialConfigEnable,
 				},
-				// TODO(b/321306051): Promote to critical.
-				ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
+				ExtraAttr: []string{"group:mainline"},
 			}, {
 				Name:              "logged_in_unstable",
 				ExtraHardwareDeps: hwdep.D(pre.AppsUnstableModels),

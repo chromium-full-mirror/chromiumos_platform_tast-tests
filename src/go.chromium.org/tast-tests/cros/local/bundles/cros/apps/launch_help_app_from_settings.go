@@ -38,9 +38,8 @@ func init() {
 			}, {
 				Name:              "stable_fieldtrial_testing_config_on",
 				ExtraHardwareDeps: hwdep.D(pre.AppsStableModels),
-				// TODO(b/321306051): Promote to critical.
-				ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
-				Fixture:   fixture.LoggedInFieldTrialConfigEnable,
+				ExtraAttr:         []string{"group:mainline"},
+				Fixture:           fixture.LoggedInFieldTrialConfigEnable,
 			}, {
 				Name:              "unstable",
 				ExtraHardwareDeps: hwdep.D(pre.AppsUnstableModels),

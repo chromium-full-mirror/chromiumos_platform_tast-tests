@@ -52,8 +52,7 @@ func init() {
 			}, {
 				Name:              "clamshell_oobe_stable_fieldtrial_testing_config_on",
 				ExtraHardwareDeps: hwdep.D(pre.AppsStableModels),
-				// TODO(b/321306051): Promote to critical.
-				ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
+				ExtraAttr:         []string{"group:mainline"},
 				Val: testParameters{
 					tabletMode:       false,
 					oobe:             true,
@@ -97,9 +96,8 @@ func init() {
 			}, {
 				Name:              "clamshell_logged_in_stable_fieldtrial_testing_config_on",
 				ExtraHardwareDeps: hwdep.D(pre.AppsStableModels),
-				// TODO(b/321306051): Promote to critical.
-				ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
-				Fixture:   fixture.LoggedInFieldTrialConfigEnable,
+				ExtraAttr:         []string{"group:mainline"},
+				Fixture:           fixture.LoggedInFieldTrialConfigEnable,
 				Val: testParameters{
 					tabletMode: false,
 					oobe:       false,
@@ -148,8 +146,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(pre.AppsStableModels),
 				Fixture:           fixture.LacrosLoggedInFieldTrialConfigEnable,
 				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				// TODO(b/321306051): Promote to critical.
-				ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
+				ExtraAttr:         []string{"group:mainline"},
 				Val: testParameters{
 					tabletMode: false,
 					oobe:       false,
