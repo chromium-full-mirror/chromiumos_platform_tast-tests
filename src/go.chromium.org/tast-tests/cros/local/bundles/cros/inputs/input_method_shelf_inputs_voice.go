@@ -1,4 +1,4 @@
-// Copyright 2022 The ChromiumOS Authors
+// Copyright 2024 The ChromiumOS Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/testrunner"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -17,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vkb"
 	"go.chromium.org/tast-tests/cros/local/chrome/useractions"
+	"go.chromium.org/tast-tests/cros/local/input/voice"
 	"go.chromium.org/tast-tests/cros/local/inputs/data"
 	"go.chromium.org/tast-tests/cros/local/inputs/fixture"
 	"go.chromium.org/tast-tests/cros/local/inputs/pre"
@@ -24,18 +26,17 @@ import (
 	"go.chromium.org/tast-tests/cros/local/inputs/util"
 
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
-var testMessages = []data.Message{
-	data.HandwritingMessageHello,
+var testMessagesVoice = []data.Message{
+	data.VoiceMessageHello,
 }
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         InputMethodShelfInputs,
+		Func:         InputMethodShelfInputsVoice,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Test input functions triggered from IME tray",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
@@ -49,12 +50,12 @@ func init() {
 				"screenplay-3d7cd04b-6f65-4667-ab65-5991602b7b8a",
 				"screenplay-7eb022ee-5490-4196-a8b5-ae23c9673a1f",
 			}),
-		Data:    data.ExtractExternalFiles(testMessages, []ime.InputMethod{ime.DefaultInputMethod}),
+		Data:    data.ExtractExternalFiles(testMessagesVoice, []ime.InputMethod{ime.DefaultInputMethod}),
 		Timeout: 5 * time.Minute,
 		Params: []testing.Param{
 			{
 				Fixture:           fixture.ClamshellNonVKStereoAloopLoaded,
-				ExtraAttr:         []string{"group:input-tools-upstream"},
+				ExtraAttr:         []string{"informational"},
 				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
 			},
 			{
@@ -68,13 +69,13 @@ func init() {
 				Fixture:           fixture.LacrosClamshellNonVKStereoAloopLoaded,
 				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
 				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				ExtraAttr:         []string{"group:input-tools-upstream"},
+				ExtraAttr:         []string{"informational"},
 			},
 		},
 	})
 }
 
-func InputMethodShelfInputs(ctx context.Context, s *testing.State) {
+func InputMethodShelfInputsVoice(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(fixture.FixtData).Chrome
 	tconn := s.FixtValue().(fixture.FixtData).TestAPIConn
 	uc := s.FixtValue().(fixture.FixtData).UserContext
@@ -84,6 +85,12 @@ func InputMethodShelfInputs(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
+
+	// Setup CRAS Aloop for audio test.
+	err := voice.ActivateAloopNodes(ctx, tconn, voice.LoopbackPlayBack, voice.LoopbackCapture)
+	if err != nil {
+		s.Fatal("Failed to load Aloop: ", err)
+	}
 
 	if err := imesettings.EnableInputOptionsInShelf(uc, true)(ctx); err != nil {
 		s.Fatal("Failed to show input options in shelf: ", err)
@@ -100,44 +107,32 @@ func InputMethodShelfInputs(ctx context.Context, s *testing.State) {
 	testIME := ime.DefaultInputMethod
 
 	imeMenuTrayButtonFinder := nodewith.Name("IME menu button").Role(role.Button)
-	handwritingInputItem := nodewith.Name("Handwriting").HasClass("SystemMenuButton")
-	handwritingPrivacyConfirmButton := nodewith.Name("Got it").HasClass("button")
-	emojiInputMenuItem := nodewith.Name("Emojis").HasClass("SystemMenuButton")
+	voiceInputItem := nodewith.Name("Voice").HasClass("SystemMenuButton")
+	voicePrivacyConfirmButton := nodewith.Name("Got it").HasClass("voice-got-it")
 
-	hwInputData, ok := data.HandwritingMessageHello.GetInputData(testIME)
+	voiceInputData, ok := data.VoiceMessageHello.GetInputData(testIME)
 	if !ok {
-		s.Fatal("Failed to get handwriting test data of input method: ", testIME)
+		s.Fatal("Failed to get voice test data of input method: ", testIME)
 	}
 
-	handwritingInputUserAction := func() uiauto.Action {
-		scenario := "Verify handwriting input triggered from IME tray"
+	voiceInputUserAction := func() uiauto.Action {
+		scenario := "Voice input triggered from IME tray"
 
-		hwFilePath := s.DataPath(hwInputData.HandwritingFile)
-		verifyHandWritingInputAction := uiauto.Combine(scenario,
+		verifyAudioInputAction := uiauto.Combine(scenario,
 			its.Clear(inputField),
 			its.ClickFieldAndWaitForActive(inputField),
 			ui.LeftClick(imeMenuTrayButtonFinder),
-			ui.LeftClick(handwritingInputItem),
-			// The privacy dialog does not appear on all devices.
-			uiauto.IfSuccessThen(
-				ui.WithTimeout(5*time.Second).WaitUntilExists(handwritingPrivacyConfirmButton),
-				ui.DoDefaultUntil(handwritingPrivacyConfirmButton, ui.WithTimeout(2*time.Second).WaitUntilGone(handwritingPrivacyConfirmButton)),
-			),
+			ui.LeftClick(voiceInputItem),
+			ui.DoDefaultUntil(voicePrivacyConfirmButton, ui.WithTimeout(2*time.Second).WaitUntilGone(voicePrivacyConfirmButton)),
+			uiauto.Sleep(time.Second),
 			func(ctx context.Context) error {
-				hwCtx, err := vkb.NewContext(cr, tconn).NewHandwritingContext(ctx)
-				if err != nil {
-					return errors.Wrap(err, "failed to initiate handwriting context")
-				}
-				return uiauto.Combine(scenario,
-					its.WaitForHandwritingEngineReadyOnField(hwCtx, inputField, hwFilePath),
-					hwCtx.DrawStrokesFromFile(hwFilePath),
-					util.WaitForFieldTextToBeIgnoringCase(tconn, inputField.Finder(), hwInputData.ExpectedText),
-				)(ctx)
+				return audio.PlayWavToPCM(ctx, s.DataPath(voiceInputData.VoiceFile), "hw:Loopback,0")
 			},
+			util.WaitForFieldTextToBeIgnoringCase(tconn, inputField.Finder(), voiceInputData.ExpectedText),
 		)
 
-		return uiauto.UserAction("Handwriting",
-			verifyHandWritingInputAction,
+		return uiauto.UserAction("Voice input",
+			verifyAudioInputAction,
 			uc,
 			&useractions.UserActionCfg{
 				Callback: func(ctx context.Context, actionErr error) error {
@@ -147,51 +142,18 @@ func InputMethodShelfInputs(ctx context.Context, s *testing.State) {
 				Attributes: map[string]string{
 					useractions.AttributeInputField:   string(inputField),
 					useractions.AttributeTestScenario: scenario,
-					useractions.AttributeFeature:      useractions.FeatureHandWriting,
+					useractions.AttributeFeature:      useractions.FeatureVoiceInput,
 				},
 				Tags: []useractions.ActionTag{useractions.ActionTagIMEShelf},
 			},
 		)
 	}
 
-	emojiInputUserAction := func() uiauto.Action {
-		scenario := "Verify emoji input triggered from IME tray"
-
-		inputEmoji := "😄"
-		emojiPickerFinder := nodewith.Name("Emoji Picker").Role(role.RootWebArea)
-		emojiItem := nodewith.Name(inputEmoji).Ancestor(emojiPickerFinder).First()
-
-		verifyEmojiInputAction := uiauto.Combine(scenario,
-			its.Clear(inputField),
-			its.ClickFieldAndWaitForActive(inputField),
-			ui.LeftClick(imeMenuTrayButtonFinder),
-			ui.LeftClick(emojiInputMenuItem),
-			ui.WithTimeout(30*time.Second).WaitUntilExists(emojiPickerFinder),
-			its.DismissGifNudgeOverlay(),
-			ui.WithTimeout(30*time.Second).LeftClick(emojiItem),
-			util.WaitForFieldTextToBeIgnoringCase(tconn, inputField.Finder(), inputEmoji),
-		)
-
-		return uiauto.UserAction(
-			"Input Emoji with Emoji Picker",
-			verifyEmojiInputAction,
-			uc,
-			&useractions.UserActionCfg{
-				Attributes: map[string]string{
-					useractions.AttributeInputField:   string(inputField),
-					useractions.AttributeTestScenario: scenario,
-					useractions.AttributeFeature:      useractions.FeatureEmojiPicker,
-				},
-				Tags: []useractions.ActionTag{useractions.ActionTagIMEShelf},
-			})
-	}
-
 	subTests := []struct {
 		name   string
 		action uiauto.Action
 	}{
-		{"handwriting", handwritingInputUserAction()},
-		{"emoji", emojiInputUserAction()},
+		{"voice", voiceInputUserAction()},
 	}
 
 	for _, subtest := range subTests {
