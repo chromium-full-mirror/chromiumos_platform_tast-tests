@@ -28,8 +28,8 @@ func (rl *Loop) Exit(desc string, err error) error {
 	return testing.PollBreak(errors.New("failed all attempts"))
 }
 
-// RetryForAll retries the loop even if retries are disabled. This is used for unrelated failures.
-func (rl *Loop) RetryForAll(desc string, err error) error {
+// MustRetry retries the loop even if retries are disabled. This is used for unrelated failures.
+func (rl *Loop) MustRetry(desc string, err error) error {
 	if rl.Attempts < rl.MaxAttempts {
 		rl.Attempts++
 		err = errors.Wrap(err, "failed to "+desc)
@@ -43,7 +43,7 @@ func (rl *Loop) RetryForAll(desc string, err error) error {
 // Retry retries the loop. This is used for temporary retires to stabilize the test.
 func (rl *Loop) Retry(desc string, err error) error {
 	if rl.DoRetries {
-		return rl.RetryForAll(desc, err)
+		return rl.MustRetry(desc, err)
 	}
 	return rl.Exit(desc, err)
 }
