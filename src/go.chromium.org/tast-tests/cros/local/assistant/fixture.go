@@ -117,8 +117,9 @@ func init() {
 		Vars:            []string{"assistant.username", "assistant.password"},
 		Impl:            arc.NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
-		PostTestTimeout: arc.PostTestTimeout,
 		ResetTimeout:    arc.ResetTimeout,
+		PreTestTimeout:  arc.PreTestTimeout,
+		PostTestTimeout: arc.PostTestTimeout,
 		TearDownTimeout: arc.ResetTimeout,
 	})
 

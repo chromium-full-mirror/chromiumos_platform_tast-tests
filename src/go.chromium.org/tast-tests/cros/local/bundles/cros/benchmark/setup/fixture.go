@@ -57,8 +57,9 @@ func init() {
 		Contacts: []string{"xliu@cienet.com"},
 		Impl:     arc.NewArcBootedFixture(fixtureConfig),
 		// Add two minutes to setup time to allow extra Play Store UI operations.
-		SetUpTimeout: chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
-		ResetTimeout: chrome.ResetTimeout,
+		SetUpTimeout:   chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
+		ResetTimeout:   chrome.ResetTimeout,
+		PreTestTimeout: arc.PreTestTimeout,
 		// Provide a longer enough PostTestTimeout value to fixture when ARC will try to dump ARCVM message.
 		// Or there might be error of "context deadline exceeded".
 		PostTestTimeout: 5 * time.Second,

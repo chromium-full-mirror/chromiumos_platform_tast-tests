@@ -132,6 +132,7 @@ func init() {
 		Impl:            arc.NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + arc.BootTimeout + ui.StartTimeout,
 		ResetTimeout:    arc.ResetTimeout,
+		PreTestTimeout:  arc.PreTestTimeout,
 		PostTestTimeout: arc.PostTestTimeout,
 		TearDownTimeout: arc.ResetTimeout,
 	})

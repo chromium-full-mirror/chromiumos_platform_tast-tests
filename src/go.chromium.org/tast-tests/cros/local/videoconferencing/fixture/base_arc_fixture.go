@@ -43,6 +43,7 @@ func init() {
 		Parent:          fixture.AloopLoaded{Channels: 2}.Instance(),
 		SetUpTimeout:    chrome.LoginTimeout + arc.BootTimeout + ui.StartTimeout,
 		ResetTimeout:    arc.ResetTimeout,
+		PreTestTimeout:  arc.PreTestTimeout,
 		PostTestTimeout: arc.PostTestTimeout,
 		TearDownTimeout: arc.ResetTimeout,
 	})
