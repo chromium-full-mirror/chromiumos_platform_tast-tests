@@ -54,6 +54,7 @@ const (
 	countHistogram histogramType = iota
 	enumHistogram
 	cumulativeHistogram
+	distributionHistogram
 )
 
 const (
@@ -156,6 +157,13 @@ func NewCumulativeMetricConfig(histogramName, unit string, direction perf.Direct
 	return MetricConfig{histogramName: histogramName, unit: unit, direction: direction, bootAndShutdown: false, histogramType: cumulativeHistogram}
 }
 
+// NewDistributionMetricConfig creates a new MetricConfig instance for
+// metrics having large variance. This outputs median and 90/99 percentile
+// values in addition to the average.
+func NewDistributionMetricConfig(histogramName, unit string, direction perf.Direction) MetricConfig {
+	return MetricConfig{histogramName: histogramName, unit: unit, direction: direction, bootAndShutdown: false, histogramType: distributionHistogram}
+}
+
 // NewCustomMetricConfig creates a new MetricConfig for the given histogram
 // name, unit, and direction. The data are reported as-is but
 // not aggregated with other histograms.
@@ -212,7 +220,7 @@ func (rec *record) combine(newRec *record) error {
 }
 
 // saveMetric records the metric into the perf values.
-func (rec *record) saveMetric(pv *perf.Values, name string) {
+func (rec *record) saveMetric(ctx context.Context, pv *perf.Values, name string) {
 	if rec.totalCount == 0 {
 		return
 	}
@@ -243,6 +251,51 @@ func (rec *record) saveMetric(pv *perf.Values, name string) {
 			Unit:      rec.config.unit,
 			Direction: rec.config.direction,
 		}, float64(maxValue))
+	case distributionHistogram:
+		pv.Set(perf.Metric{
+			Name:      name,
+			Unit:      "count",
+			Variant:   "count",
+			Direction: rec.config.direction,
+		}, float64(rec.totalCount))
+
+		hist := histogram.Histogram{
+			Name:    name,
+			Sum:     rec.Sum,
+			Buckets: rec.Buckets,
+		}
+
+		if median, err := hist.Percentile(50); err == nil {
+			pv.Set(perf.Metric{
+				Name:      name,
+				Unit:      rec.config.unit,
+				Variant:   "median",
+				Direction: rec.config.direction,
+			}, median)
+		} else {
+			testing.ContextLog(ctx, "Failed to get median for", name, ":", err)
+		}
+		if p90, err := hist.Percentile(90); err == nil {
+			pv.Set(perf.Metric{
+				Name:      name,
+				Unit:      rec.config.unit,
+				Variant:   "p90",
+				Direction: rec.config.direction,
+			}, p90)
+		} else {
+			testing.ContextLog(ctx, "Failed to get p90 for", name, ":", err)
+		}
+		if p99, err := hist.Percentile(99); err == nil {
+			pv.Set(perf.Metric{
+				Name:      name,
+				Unit:      rec.config.unit,
+				Variant:   "p99",
+				Direction: rec.config.direction,
+			}, p99)
+		} else {
+			testing.ContextLog(ctx, "Failed to get p99 for", name, ":", err)
+		}
+		fallthrough
 	case countHistogram:
 		fallthrough
 	default:
@@ -1527,7 +1580,7 @@ func (r *Recorder) stopMetrics(ctx context.Context) error {
 		// Metric name recorded is the original histogram name. For example:
 		// - EventLatency.TotalLatency
 		// - PageLoad.InteractiveTiming.InputDelay3
-		rec.saveMetric(r.pv, name)
+		rec.saveMetric(ctx, r.pv, name)
 	}
 
 	// Derive Cras.UnderrunsPerDevicePerMinute. Ideally, the audio playing time and number of CRAS audio device
@@ -1838,7 +1891,7 @@ func (r *Recorder) StartSnapshot(ctx context.Context, prefix string, ashMetrics,
 
 				// Save the new histogram with the existing histogram name
 				// prefixed with |prefix|.
-				newRecord.saveMetric(r.pv, prefix+hist.Name)
+				newRecord.saveMetric(ctx, r.pv, prefix+hist.Name)
 			}
 		}
 
