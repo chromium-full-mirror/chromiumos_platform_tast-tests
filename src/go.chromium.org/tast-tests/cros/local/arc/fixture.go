@@ -783,6 +783,9 @@ func DefaultBootedFixtureConfig() BootedFixtureConfig {
 // since it is necessary to use this option to enable the Play Store. Otherwise,
 // ARCEnabled() will be appended, which will enable ARC without the Play Store
 // and works for fake logins.
+// Fixtures using this implementation should have minimum arc.ResetTimeout, arc.PreTestTimeout,
+// arc.PostTestTimeout, and arc.ResetTimeout.
+// Also SetUpTimeout should have at least chrome.LoginTimeout + arc.BootTimeout + ui.StartTimeout.
 func NewArcBootedFixture(arcBootedFixtureConfig BootedFixtureConfig) testing.FixtureImpl {
 	return &bootedFixture{
 		parentStateProvider: arcBootedFixtureConfig.ParentStateProvider,
