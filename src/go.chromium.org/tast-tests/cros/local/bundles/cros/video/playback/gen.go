@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/coords"
+	"go.chromium.org/tast-tests/cros/local/graphics"
 )
 
 // ParamData is used for video.Playback* tests to generate parameterized subtests.
@@ -26,6 +27,8 @@ type ParamData struct {
 	MeasureSteadyStateMetrics bool
 	MeasureRoughness          bool
 	SuspendResume             bool
+	PmTestMode                graphics.PmTestMode
+	SuspendMode               string
 	Duration                  time.Duration
 
 	SoftwareDeps []string

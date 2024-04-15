@@ -57,12 +57,6 @@ const (
 
 	// Video Element in the page to play a video.
 	videoElement = "document.getElementsByTagName('video')[0]"
-
-	// SuspendSystemTimeout is the timeout to do a single suspend, chrome reconnection, and additional checks.
-	// SuspendSystem usually finishes within 10 seconds. Give it 30 seconds max to finish suspend/resume cycle.
-	SuspendSystemTimeout = 30 * time.Second
-	// SuspendSystemInterval is the interval between each suspendSystem call.
-	SuspendSystemInterval = 15 * time.Second
 )
 
 type contextSwitchStat struct {
@@ -89,10 +83,12 @@ type Config struct {
 	Grid coords.Size
 	// If set, run performance measurement while playing the video.
 	PerfMeasurement bool
-	// Setting to configure additional performance measurements.
+	// PerfSetting to configure additional performance measurements.
 	PerfSetting PerfSetting
 	// If set, let whole system go to suspend state while playing the video.
 	SuspendResume bool
+	// SuspendSetting to configure suspend settings.
+	SuspendSetting SuspendSetting
 	// The video playback duration, if set to 0, it runs indefinitely or until global timeout is hit.
 	Duration time.Duration
 }

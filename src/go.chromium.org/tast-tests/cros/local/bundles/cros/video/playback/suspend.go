@@ -21,9 +21,24 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-type suspendConfig struct {
-	suspendMode graphics.SuspendMode
-	pmTestMode  graphics.PmTestMode
+const (
+	// DefaultSuspendSystemTimeout is the timeout to do a single suspend, Chrome reconnection, and additional checks.
+	// SuspendSystem usually finishes within 10 seconds. Give it 30 seconds max to finish suspend/resume cycle.
+	DefaultSuspendSystemTimeout = 30 * time.Second
+	// DefaultSuspendSystemInterval is the interval between each suspendSystem call. It is calculated after we check the video is playing.
+	DefaultSuspendSystemInterval = 5 * time.Second
+
+	// suspendSystemVideoPollingTimeout is the timeout to check if the video is playing after the suspend.
+	suspendSystemVideoPollingTimeout = 2 * time.Second
+)
+
+// SuspendSetting holds the settings for the suspend playback tests.
+type SuspendSetting struct {
+	PmTestMode  graphics.PmTestMode
+	SuspendMode graphics.SuspendMode
+
+	timeout  time.Duration // timeout is the time to do a single suspend, Chrome reconnection, and additional checks.
+	interval time.Duration // interval is the time between each suspendSystem function call.
 }
 
 func reconnectToBrowser(ctx context.Context, cr *chrome.Chrome, browserType browser.Type) (*chrome.Conn, error) {
@@ -48,18 +63,15 @@ func reconnectToBrowser(ctx context.Context, cr *chrome.Chrome, browserType brow
 }
 
 // suspendSystem suspends the system and checks the validity of syslog and video after system resumes.
-func suspendSystem(ctx context.Context, cr *chrome.Chrome, reader *syslog.Reader, config Config, sConfig suspendConfig, testName string) error {
+func suspendSystem(ctx context.Context, cr *chrome.Chrome, reader *syslog.Reader, config Config, testName string) error {
 	// Check syslog for GPU hangs and decoding errors before we start suspend/resume.
 	if err := graphics.CheckSysLog(ctx, testName, reader); err != nil {
 		return errors.Wrap(err, "syslog signature found")
 	}
-	if err := graphics.SetPMTest(ctx, sConfig.pmTestMode); err != nil {
-		return errors.Wrap(err, "failed to set pm_test")
-	}
-	cmd := testexec.CommandContext(ctx, "powerd_dbus_suspend", "--deplay=0", "--suspend_for_sec=5", "--timeout=60")
+	cmd := testexec.CommandContext(ctx, "powerd_dbus_suspend", "--delay=0", "--suspend_for_sec=5", "--timeout=60")
 	testing.ContextLog(ctx, "Running: ", cmd)
 	if err := cmd.Run(testexec.DumpLogOnError); err != nil {
-		return errors.Wrapf(err, "suspend to %v failed", sConfig.suspendMode)
+		return errors.Wrapf(err, "suspend to %v failed", config.SuspendSetting.SuspendMode)
 	}
 	conn, err := reconnectToBrowser(ctx, cr, config.BrowserType)
 	// Check |currentTime| variable is changing.
@@ -76,7 +88,7 @@ func suspendSystem(ctx context.Context, cr *chrome.Chrome, reader *syslog.Reader
 			return errors.Errorf("playing time %v is the same as original time %v", playingTime, originalPlayingTime)
 		}
 		return nil
-	}, nil); err != nil {
+	}, &testing.PollOptions{Timeout: suspendSystemVideoPollingTimeout}); err != nil {
 		return errors.Wrap(err, "video playing time is not advancing")
 	}
 	// Check syslog for GPU hangs and decoding errors after the video starts playing.
@@ -102,9 +114,15 @@ func suspendResume(ctx context.Context, cr *chrome.Chrome, config Config, testNa
 	// Always try set the mode back to original.
 	defer graphics.SetPMTest(ctx, origPmMode.Current)
 
-	suspendMode := graphics.GetSuspendState(ctx)
-	testing.ContextLog(ctx, "DUT will suspend to ", suspendMode)
-
+	if err := graphics.SetPMTest(ctx, config.SuspendSetting.PmTestMode); err != nil {
+		return errors.Wrap(err, "failed to set pm_test")
+	}
+	if config.SuspendSetting.timeout == 0 {
+		config.SuspendSetting.timeout = DefaultSuspendSystemTimeout
+	}
+	if config.SuspendSetting.interval == 0 {
+		config.SuspendSetting.interval = DefaultSuspendSystemInterval
+	}
 	// Start reading the syslog so we can stop the tests as soon as any GPU hangs/decode errors are found.
 	reader, err := syslog.NewReader(ctx, syslog.Severities(syslog.Info, syslog.Warning, syslog.Err))
 	if err != nil {
@@ -121,25 +139,19 @@ func suspendResume(ctx context.Context, cr *chrome.Chrome, config Config, testNa
 				testing.ContextLogf(ctx, "Executing [%v] suspend ", i)
 			}
 
-			suspendCtx, cancel := context.WithTimeout(ctx, SuspendSystemTimeout)
+			suspendCtx, cancel := context.WithTimeout(ctx, config.SuspendSetting.timeout)
 			defer cancel()
 
-			// We tried to putting system into different pm_test state to help reveal problems.
-			// This switch the mode for every 2 suspend.
-			sConfig := suspendConfig{
-				suspendMode: suspendMode,
-				pmTestMode:  graphics.PmTestNone,
-			}
-			if err := suspendSystem(suspendCtx, cr, reader, config, sConfig, testName); err != nil {
-				errChan <- errors.Wrapf(err, "suspend [%v] failed with pm_test mode [%v]", i, sConfig.pmTestMode)
+			if err := suspendSystem(suspendCtx, cr, reader, config, testName); err != nil {
+				errChan <- errors.Wrapf(err, "suspend [%v] failed", i)
 				return
 			}
 			if suspendCtx.Err() != nil {
-				errChan <- errors.Wrapf(err, "suspend/resume cycle took more than %v", SuspendSystemTimeout)
+				errChan <- errors.Wrapf(err, "suspend/resume cycle took more than %v", config.SuspendSetting.timeout)
 				return
 			}
-			// GoBigSleepLint: Add a suspend intervals so video can progress.
-			if err := testing.Sleep(ctx, SuspendSystemInterval); err != nil {
+			// GoBigSleepLint: Add a suspend interval so video can progress.
+			if err := testing.Sleep(ctx, config.SuspendSetting.interval); err != nil {
 				errChan <- errors.Wrap(err, "failed to sleep after suspend")
 				return
 			}
