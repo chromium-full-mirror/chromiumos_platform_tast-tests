@@ -97,3 +97,12 @@ func URLRedirect(urlMap map[string]string) Option {
 	}
 	return CustomOptions(strings.Join(lines, "\n"))
 }
+
+// DumpFull is an option to write out a full dump of mitmproxy to a file.
+// It defaults to false as it may use up a lot of space for every one unless really necessary.
+func DumpFull(enable bool) Option {
+	return func(mp *MitmProxy) error {
+		mp.dumpFull = enable
+		return nil
+	}
+}

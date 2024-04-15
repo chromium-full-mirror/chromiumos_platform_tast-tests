@@ -47,11 +47,11 @@ type MitmProxy struct {
 	port                  int
 	host                  string
 	outDir                string
+	dumpFull              bool // True only if a tcpdump-like full dump is needed, default: False
 	dumpFileName          string
 	dumpFilePath          string
 	confDir               string
 	pid                   int // pid of the proxy server process
-	compressDump          bool
 	cmd                   *testexec.Cmd
 	isRunning             bool // Is the proxy running? It is set to true on starting proxy.
 	removeCert            bool // Should remove cert after test is completed?
@@ -69,7 +69,6 @@ func NewMitmProxy(ctx context.Context, opts ...Option) (Proxy, error) {
 		binaryPath:          DefaultBinaryPath,
 		port:                DefaultListenPort,
 		confDir:             defaultConfDir,
-		compressDump:        true,
 		removeCert:          true,
 		healthCheck:         true,
 		dumpHTTPFlowEnabled: false,
@@ -157,11 +156,17 @@ func (mp *MitmProxy) start(ctx context.Context) (retErr error) {
 
 	// Run a proxy server process in non-interactive mode (mitmdump).
 	nowStr := time.Now().Format("20060102-150405")
-	dumpFileName := fmt.Sprintf("mitmproxy_%s.dump", nowStr)
-	dumpFilePath := filepath.Join(mp.outDir, dumpFileName)
 	logFilePath := filepath.Join(mp.outDir, fmt.Sprintf("mitmproxy_%s.log", nowStr))
-	proxyCmd := fmt.Sprintf(
-		`/sbin/minijail0 -e -- "%s" --set confdir="%s" -w "%s" &> "%s"`, mp.binaryPath, mp.confDir, dumpFilePath, logFilePath)
+	var proxyCmd string
+	if mp.dumpFull {
+		mp.dumpFileName = fmt.Sprintf("mitmproxy_full_%s.dump", nowStr)
+		mp.dumpFilePath = filepath.Join(mp.outDir, mp.dumpFileName)
+		proxyCmd = fmt.Sprintf(
+			`/sbin/minijail0 -e -- "%s" --set confdir="%s" -w "%s" &> "%s"`, mp.binaryPath, mp.confDir, mp.dumpFilePath, logFilePath)
+	} else {
+		proxyCmd = fmt.Sprintf(
+			`/sbin/minijail0 -e -- "%s" --set confdir="%s" &> "%s"`, mp.binaryPath, mp.confDir, logFilePath)
+	}
 	cmd := testexec.CommandContext(ctx, "bash", "-c", proxyCmd)
 
 	// Required for remote tast tests. mitmproxy is written in Python and uses the PyInstaller
@@ -188,10 +193,8 @@ func (mp *MitmProxy) start(ctx context.Context) (retErr error) {
 		}
 	}
 
-	testing.ContextLog(ctx, "mitmproxy: started successfully, stream to: ", dumpFilePath)
+	testing.ContextLog(ctx, "mitmproxy: started successfully")
 	mp.cmd = cmd
-	mp.dumpFileName = dumpFileName
-	mp.dumpFilePath = dumpFilePath
 	mp.isRunning = true
 	return nil
 }
@@ -421,8 +424,8 @@ func (mp *MitmProxy) Close(ctx context.Context) error {
 		mp.lifelineFD = nil
 	}
 
-	// Compress dump file.
-	if mp.compressDump {
+	// Save a compressed full dump file.
+	if mp.dumpFull {
 		if _, err := os.Stat(mp.dumpFilePath); err == nil {
 			targetTar := mp.dumpFilePath + ".tar.gz"
 			if err := testexec.CommandContext(ctx, "tar", "-czf", targetTar, "-C", mp.outDir, mp.dumpFileName, "--remove-files").Run(testexec.DumpLogOnError); err != nil {
