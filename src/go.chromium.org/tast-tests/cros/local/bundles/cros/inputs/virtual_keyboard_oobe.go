@@ -47,6 +47,9 @@ func VirtualKeyboardOOBE(ctx context.Context, s *testing.State) {
 	}
 	defer cr.Close(ctx)
 
+	stopRecording := uiauto.RecordVNCVideo(ctx, s, uiauto.RecordingFramerate(5))
+	defer stopRecording()
+
 	tconn, err := cr.SigninProfileTestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Creating test API connection failed: ", err)
