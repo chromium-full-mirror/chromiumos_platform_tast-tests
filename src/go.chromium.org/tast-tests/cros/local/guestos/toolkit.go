@@ -76,8 +76,8 @@ func Toolkit(ctx context.Context, scriptPath, outDir string, conf *ToolkitConfig
 		testing.ContextLog(ctx, "Failed to check or close \"Google Play Store isn't responding\" dialog: ", err)
 	}
 
-	// The toolkit applications will render a magenta window.
-	if err := MatchScreenshotDominantColor(ctx, cr, colorcmp.RGB(255, 0, 255), filepath.Join(outDir, "screenshot.png")); err != nil {
+	// The toolkit applications will render a window filled with a specific shade of blue to disambiguate the color channels and catch potential format/swizzling/endianness bugs.
+	if err := MatchScreenshotDominantColor(ctx, cr, colorcmp.RGB(0x12, 0x78, 0xEF), filepath.Join(outDir, "screenshot.png")); err != nil {
 		return errors.Wrap(err, "failed during screenshot check")
 	}
 

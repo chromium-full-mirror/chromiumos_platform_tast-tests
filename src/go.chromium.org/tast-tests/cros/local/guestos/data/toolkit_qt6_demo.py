@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-# This applications brings up a maximized window and fills it with magenta.
+# This applications brings up a maximized window and fills it with blue.
 
 import sys
 from PyQt6.QtWidgets import QApplication, QWidget
@@ -17,7 +17,7 @@ s = app.primaryScreen().size()
 w.setGeometry(0, 0, s.width(), s.height())
 
 p = w.palette()
-p.setColor(w.backgroundRole(), QColor(255, 0, 255))
+p.setColor(w.backgroundRole(), QColor(0x12, 0x78, 0xEF))
 w.setPalette(p)
 
 w.show()

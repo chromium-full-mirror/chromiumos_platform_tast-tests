@@ -2,12 +2,12 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-# This applications brings up a maximized window and fills it with magenta.
+# This applications brings up a maximized window and fills it with blue.
 
 from tkinter import Tk
 
 root = Tk(className="tkinter_demo")
-root["bg"] = "#FF00FF"
+root["bg"] = "#1278EF"
 
 # TODO(crbug.com/994009): Prefer to use maximize, which doesn't work currently.
 # This workaround will break if tast tests start running on multi-monitor.

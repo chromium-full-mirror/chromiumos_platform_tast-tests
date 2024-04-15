@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-# This applications brings up a maximized window and fills it with magenta.
+# This applications brings up a maximized window and fills it with blue.
 
 import gi
 
@@ -11,7 +11,7 @@ from gi.repository import Gtk, Gdk
 
 STYLESHEET = """
 window {
-  background-color: #FF00FF;
+  background-color: #1278EF;
 }
 """
 
