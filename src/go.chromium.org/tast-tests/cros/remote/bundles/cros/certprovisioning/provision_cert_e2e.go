@@ -53,7 +53,10 @@ func init() {
 			"miersh@google.com",
 		},
 		BugComponent: "b:1000044",
-		Attr:         []string{"group:tape-daily"},
+		Attr: []string{
+			"group:tape-daily",
+			"group:golden_tier", // TODO: Keep golden_tier suite until b/321909589 is resolved.
+		},
 		SoftwareDeps: []string{"reboot", "chrome"},
 		ServiceDeps: []string{
 			"tast.cros.hwsec.OwnershipService",
