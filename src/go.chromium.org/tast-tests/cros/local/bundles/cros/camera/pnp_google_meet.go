@@ -10,22 +10,31 @@ import (
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 
 	"go.chromium.org/tast-tests/cros/common/bond"
 	"go.chromium.org/tast-tests/cros/common/media/caps"
+	"go.chromium.org/tast-tests/cros/local/camera/features"
 	"go.chromium.org/tast-tests/cros/local/camera/pnp"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/apps/thirdparty/googlemeet"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vctray"
 	"go.chromium.org/tast-tests/cros/local/power"
 	powersetup "go.chromium.org/tast-tests/cros/local/power/setup"
+	"go.chromium.org/tast-tests/cros/local/upstart"
 )
 
 const (
 	initTimePNPGoogleMeet = 1 * time.Minute
 )
+
+type pnpGoogleMeetParams struct {
+	FeatureToggleConf features.FeatureToggleConf
+	EffectsConf       *pnp.EffectsParams
+}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -42,16 +51,98 @@ func init() {
 			Name:              "ash",
 			Fixture:           pnp.StablePowerAshGAIA,
 			ExtraSoftwareDeps: []string{caps.BuiltinCamera},
+			Val:               pnpGoogleMeetParams{},
 		}, {
 			Name:    "ash_fake_hal",
 			Fixture: pnp.StablePowerAshGAIAFakeHAL,
+			Val:     pnpGoogleMeetParams{},
 		}, {
 			Name:              "lacros",
 			Fixture:           pnp.StablePowerLacrosGAIA,
 			ExtraSoftwareDeps: []string{caps.BuiltinCamera},
+			Val:               pnpGoogleMeetParams{},
 		}, {
 			Name:    "lacros_fake_hal",
 			Fixture: pnp.StablePowerLacrosGAIAFakeHAL,
+			Val:     pnpGoogleMeetParams{},
+		}, {
+			Name:              "lacros_face_gcamae_hdrnet_all_off",
+			Fixture:           pnp.StablePowerLacrosGAIA,
+			ExtraHardwareDeps: hwdep.D(hwdep.CameraFeature(features.HDRnet, features.GcamAE)),
+			ExtraSoftwareDeps: []string{caps.BuiltinMIPICamera},
+			Val: pnpGoogleMeetParams{
+				FeatureToggleConf: features.FeatureToggleConf{
+					features.HDRnet:        false,
+					features.GcamAE:        false,
+					features.FaceDetection: false,
+				},
+			},
+		}, {
+			Name:              "lacros_face_on_gcamae_hdrnet_off",
+			Fixture:           pnp.StablePowerLacrosGAIA,
+			ExtraHardwareDeps: hwdep.D(hwdep.CameraFeature(features.HDRnet, features.GcamAE)),
+			ExtraSoftwareDeps: []string{caps.BuiltinMIPICamera},
+			Val: pnpGoogleMeetParams{
+				FeatureToggleConf: features.FeatureToggleConf{
+					features.HDRnet:        false,
+					features.GcamAE:        false,
+					features.FaceDetection: true,
+				},
+			},
+		}, {
+			Name:              "lacros_gcamae_on_face_hdrnet_off",
+			Fixture:           pnp.StablePowerLacrosGAIA,
+			ExtraHardwareDeps: hwdep.D(hwdep.CameraFeature(features.HDRnet, features.GcamAE)),
+			ExtraSoftwareDeps: []string{caps.BuiltinMIPICamera},
+			Val: pnpGoogleMeetParams{
+				FeatureToggleConf: features.FeatureToggleConf{
+					features.HDRnet:        false,
+					features.GcamAE:        true,
+					features.FaceDetection: false,
+				},
+			},
+		}, {
+			Name:              "lacros_hdrnet_on_face_gcamae_off",
+			Fixture:           pnp.StablePowerLacrosGAIA,
+			ExtraHardwareDeps: hwdep.D(hwdep.CameraFeature(features.HDRnet, features.GcamAE)),
+			ExtraSoftwareDeps: []string{caps.BuiltinMIPICamera},
+			Val: pnpGoogleMeetParams{
+				FeatureToggleConf: features.FeatureToggleConf{
+					features.HDRnet:        true,
+					features.GcamAE:        false,
+					features.FaceDetection: false,
+				},
+			},
+		}, {
+			Name:              "lacros_vc_backgroun_blur_on",
+			Fixture:           pnp.StablePowerLacrosGAIA,
+			ExtraSoftwareDeps: []string{caps.BuiltinMIPICamera, "camera_feature_effects"},
+			Val: pnpGoogleMeetParams{
+				EffectsConf: &pnp.EffectsParams{
+					BlurLevel:      vctray.BackgroundBlurFull,
+					RelightEnabled: false,
+				},
+			},
+		}, {
+			Name:              "lacros_vc_relight_on",
+			Fixture:           pnp.StablePowerLacrosGAIA,
+			ExtraSoftwareDeps: []string{caps.BuiltinMIPICamera, "camera_feature_effects"},
+			Val: pnpGoogleMeetParams{
+				EffectsConf: &pnp.EffectsParams{
+					BlurLevel:      vctray.BackgroundBlurOff,
+					RelightEnabled: true,
+				},
+			},
+		}, {
+			Name:              "lacros_vc_background_blur_relight_on",
+			Fixture:           pnp.StablePowerLacrosGAIA,
+			ExtraSoftwareDeps: []string{caps.BuiltinMIPICamera, "camera_feature_effects"},
+			Val: pnpGoogleMeetParams{
+				EffectsConf: &pnp.EffectsParams{
+					BlurLevel:      vctray.BackgroundBlurFull,
+					RelightEnabled: true,
+				},
+			},
 		}},
 	})
 }
@@ -83,6 +174,22 @@ func PNPGoogleMeet(ctx context.Context, s *testing.State) {
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to get ash tconn: ", err)
+	}
+
+	if s.Param().(pnpGoogleMeetParams).FeatureToggleConf != nil {
+		featureToggler, err := features.NewFeatureToggler(ctx)
+		if err != nil {
+			s.Fatal("Cannot create feature toggler: ", err)
+		}
+		defer func() {
+			if err := featureToggler.CleanUp(); err != nil {
+				s.Error("Cannot close feature toggler: ", err)
+			}
+		}()
+		featureToggler.Toggle(ctx, s.Param().(pnpGoogleMeetParams).FeatureToggleConf)
+		if err := upstart.RestartJob(ctx, "cros-camera"); err != nil {
+			s.Fatal("Failed to restart cros-camera service: ", err)
+		}
 	}
 
 	w, err := ash.WaitForAnyWindow(ctx, tconn, ash.BrowserTypeMatch(browserType))
@@ -131,6 +238,19 @@ func PNPGoogleMeet(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to join a meeting: ", err)
 	}
 	defer gm.Close(cleanupCtx)
+
+	if effectsConf := s.Param().(pnpGoogleMeetParams).EffectsConf; effectsConf != nil {
+		if err != nil {
+			s.Fatal("Failed to connect to the test API: ", err)
+		}
+		vcTray := vctray.New(ctx, tconn)
+
+		// Set camera effects.
+		if err := vcTray.SetCameraEffects(effectsConf.BlurLevel, effectsConf.RelightEnabled)(ctx); err != nil {
+			s.Fatalf("Failed to set camera effects to BackgroundBlur %v; PortraitRelighting %v: %v",
+				effectsConf.BlurLevel, effectsConf.RelightEnabled, err)
+		}
+	}
 
 	// Configure Meeting.
 	if err := uiauto.Combine("Configure Google Meet",

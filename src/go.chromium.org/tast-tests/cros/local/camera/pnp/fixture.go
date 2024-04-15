@@ -18,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/camera/testutil"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vctray"
 	"go.chromium.org/tast-tests/cros/local/power"
 	powersetup "go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast-tests/cros/local/upstart"
@@ -59,8 +60,14 @@ type FunctionMetric struct {
 	BiggerIsBetter bool   `json:"bigger_is_better"`
 }
 
-// PNPTimeParams provides the probing frequency and total times.
-var PNPTimeParams = power.TimeParams{Interval: 5 * time.Second, Total: 5 * time.Minute}
+// PNPTimeParams provides the probing frequency and total time.
+var PNPTimeParams = power.TimeParams{Interval: 5 * time.Second, Total: 1 * time.Minute}
+
+// EffectsParams holds the config for toggling video conferencing panel.
+type EffectsParams struct {
+	BlurLevel      vctray.BackgroundBlurLevel
+	RelightEnabled bool
+}
 
 // MinPowerTestOptions provides an unified stable power environment.
 var MinPowerTestOptions = powersetup.PowerTestOptions{

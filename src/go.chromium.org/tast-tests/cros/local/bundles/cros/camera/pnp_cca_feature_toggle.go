@@ -25,14 +25,10 @@ const (
 	initTimePNPCCA = 1 * time.Minute
 )
 
-type effectsParams struct {
-	blurLevel      vctray.BackgroundBlurLevel
-	relightEnabled bool
-}
 type pnpCCAParams struct {
 	Mode              cca.Mode
 	FeatureToggleConf features.FeatureToggleConf
-	EffectsConf       *effectsParams
+	EffectsConf       *pnp.EffectsParams
 }
 
 func init() {
@@ -127,9 +123,9 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.BuiltinMIPICamera, "camera_feature_effects"},
 			Val: pnpCCAParams{
 				Mode: cca.Video,
-				EffectsConf: &effectsParams{
-					blurLevel:      vctray.BackgroundBlurFull,
-					relightEnabled: false,
+				EffectsConf: &pnp.EffectsParams{
+					BlurLevel:      vctray.BackgroundBlurFull,
+					RelightEnabled: false,
 				},
 			},
 		}, {
@@ -138,9 +134,9 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.BuiltinMIPICamera, "camera_feature_effects"},
 			Val: pnpCCAParams{
 				Mode: cca.Video,
-				EffectsConf: &effectsParams{
-					blurLevel:      vctray.BackgroundBlurOff,
-					relightEnabled: true,
+				EffectsConf: &pnp.EffectsParams{
+					BlurLevel:      vctray.BackgroundBlurOff,
+					RelightEnabled: true,
 				},
 			},
 		}, {
@@ -149,9 +145,9 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.BuiltinMIPICamera, "camera_feature_effects"},
 			Val: pnpCCAParams{
 				Mode: cca.Video,
-				EffectsConf: &effectsParams{
-					blurLevel:      vctray.BackgroundBlurFull,
-					relightEnabled: true,
+				EffectsConf: &pnp.EffectsParams{
+					BlurLevel:      vctray.BackgroundBlurFull,
+					RelightEnabled: true,
 				},
 			},
 		}},
@@ -215,9 +211,9 @@ func PNPCCAFeatureToggle(ctx context.Context, s *testing.State) {
 		vcTray := vctray.New(ctx, tconn)
 
 		// Set camera effects.
-		if err := vcTray.SetCameraEffects(effectsConf.blurLevel, effectsConf.relightEnabled)(ctx); err != nil {
+		if err := vcTray.SetCameraEffects(effectsConf.BlurLevel, effectsConf.RelightEnabled)(ctx); err != nil {
 			s.Fatalf("Failed to set camera effects to BackgroundBlur %v; PortraitRelighting %v: %v",
-				effectsConf.blurLevel, effectsConf.relightEnabled, err)
+				effectsConf.BlurLevel, effectsConf.RelightEnabled, err)
 		}
 	}
 
