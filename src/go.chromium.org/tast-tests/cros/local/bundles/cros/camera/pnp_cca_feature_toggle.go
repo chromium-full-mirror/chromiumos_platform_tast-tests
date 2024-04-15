@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/camera/features"
 	"go.chromium.org/tast-tests/cros/local/camera/pnp"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vctray"
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/ctxutil"
@@ -24,9 +25,14 @@ const (
 	initTimePNPCCA = 1 * time.Minute
 )
 
+type effectsParams struct {
+	blurLevel      vctray.BackgroundBlurLevel
+	relightEnabled bool
+}
 type pnpCCAParams struct {
 	Mode              cca.Mode
 	FeatureToggleConf features.FeatureToggleConf
+	EffectsConf       *effectsParams
 }
 
 func init() {
@@ -115,6 +121,39 @@ func init() {
 					features.FaceDetection: false,
 				},
 			},
+		}, {
+			Name:              "vc_background_blur_on",
+			Fixture:           "ccaPowerTest",
+			ExtraSoftwareDeps: []string{caps.BuiltinMIPICamera, "camera_feature_effects"},
+			Val: pnpCCAParams{
+				Mode: cca.Video,
+				EffectsConf: &effectsParams{
+					blurLevel:      vctray.BackgroundBlurFull,
+					relightEnabled: false,
+				},
+			},
+		}, {
+			Name:              "vc_relight_on",
+			Fixture:           "ccaPowerTest",
+			ExtraSoftwareDeps: []string{caps.BuiltinMIPICamera, "camera_feature_effects"},
+			Val: pnpCCAParams{
+				Mode: cca.Video,
+				EffectsConf: &effectsParams{
+					blurLevel:      vctray.BackgroundBlurOff,
+					relightEnabled: true,
+				},
+			},
+		}, {
+			Name:              "vc_background_blur_relight_on",
+			Fixture:           "ccaPowerTest",
+			ExtraSoftwareDeps: []string{caps.BuiltinMIPICamera, "camera_feature_effects"},
+			Val: pnpCCAParams{
+				Mode: cca.Video,
+				EffectsConf: &effectsParams{
+					blurLevel:      vctray.BackgroundBlurFull,
+					relightEnabled: true,
+				},
+			},
 		}},
 	})
 }
@@ -167,6 +206,21 @@ func PNPCCAFeatureToggle(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
+	if effectsConf := s.Param().(pnpCCAParams).EffectsConf; effectsConf != nil {
+		cr := s.FixtValue().(cca.FixtureData).Chrome
+		tconn, err := cr.TestAPIConn(ctx)
+		if err != nil {
+			s.Fatal("Failed to connect to the test API: ", err)
+		}
+		vcTray := vctray.New(ctx, tconn)
+
+		// Set camera effects.
+		if err := vcTray.SetCameraEffects(effectsConf.blurLevel, effectsConf.relightEnabled)(ctx); err != nil {
+			s.Fatalf("Failed to set camera effects to BackgroundBlur %v; PortraitRelighting %v: %v",
+				effectsConf.blurLevel, effectsConf.relightEnabled, err)
+		}
+	}
+
 	if err := app.FullscreenWindow(ctx); err != nil {
 		s.Fatal("Failed to enter full screen of CCA: ", err)
 	}
@@ -181,5 +235,4 @@ func PNPCCAFeatureToggle(ctx context.Context, s *testing.State) {
 	if err := pnpRoutine.MeasurePower(ctx, cleanupCtx, s.OutDir(), s.TestName(), true); err != nil {
 		s.Fatal("Failed to run pnp power measuring routine: ", err)
 	}
-
 }
