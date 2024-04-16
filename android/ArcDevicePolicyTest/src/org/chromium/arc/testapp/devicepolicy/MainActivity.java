@@ -16,7 +16,6 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.ToggleButton;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -32,7 +31,6 @@ public class MainActivity extends Activity {
     private TextView txtOutput;
     private Button btnTest;
     private Spinner lstPolicies;
-    private ToggleButton btnEnabled;
     private TextView txtError;
     private Map<String, Supplier<Boolean>> arcPolicies;
 
@@ -44,7 +42,6 @@ public class MainActivity extends Activity {
         txtOutput = findViewById(R.id.txtOutput);
         btnTest = findViewById(R.id.btnTest);
         lstPolicies = findViewById(R.id.lstPolicies);
-        btnEnabled = findViewById(R.id.btnEnabled);
         txtError = findViewById(R.id.txtError);
 
         btnTest.setOnClickListener((View view) -> runTest());
@@ -80,7 +77,6 @@ public class MainActivity extends Activity {
 
     private void runTest() {
         final String policy = lstPolicies.getSelectedItem().toString();
-        final boolean enabled = btnEnabled.isChecked();
         txtOutput.setText("");
         txtError.setText("");
 
@@ -91,8 +87,7 @@ public class MainActivity extends Activity {
             logError("Unrecognized policy: " + policy, null);
             result = false;
         }
-        final boolean success = result && enabled;
-        txtOutput.setText(String.valueOf(success));
+        txtOutput.setText(String.valueOf(result));
     }
 
     private Boolean getCameraDisabled() {
@@ -103,7 +98,6 @@ public class MainActivity extends Activity {
         }
         return !isCameraDisabled;
     }
-
 
     private Boolean setWallpaper() {
         final WallpaperManager manager = WallpaperManager.getInstance(getApplicationContext());

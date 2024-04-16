@@ -16,15 +16,6 @@
       android:layout_height="wrap_content"
       android:entries="@array/policies" />
 
-    <ToggleButton
-        android:id="@+id/btnEnabled"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:checked="true"
-        android:textOff="@string/enable_button_disabled"
-        android:textOn="@string/enable_button_enabled" />
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

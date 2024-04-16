@@ -11,7 +11,5 @@
         <item>setWallpaper</item>
     </string-array>
     <string name="test_button_text">Test</string>
-    <string name="enable_button_enabled">Enabled</string>
-    <string name="enable_button_disabled">Disabled</string>
     <string name="app_name">ARC DevicePolicy Test</string>
 </resources>
