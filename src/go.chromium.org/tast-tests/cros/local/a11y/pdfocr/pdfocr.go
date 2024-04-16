@@ -120,13 +120,18 @@ func SetUpDlcFailure(ctx context.Context) (DlcFailureSetUpData, error) {
 	if err := wifiManager.Enable(ctx, false); err != nil {
 		return DlcFailureSetUpData{}, errors.Wrap(err, "failed to disable Wi-Fi")
 	}
+	// WiFi needs to be enabled again after this test; otherwise, tests relying
+	// on WiFi would fail if they are scheduled after this test.
+	setupData.TDown.Append(func() error {
+		return wifiManager.Enable(ctx, true)
+	})
 
 	if err := dlc.Purge(ctx, ScreenAiDlcID); err != nil {
-		return DlcFailureSetUpData{}, errors.Wrapf(err, "failed to purge dlc %q", ScreenAiDlcID)
+		return setupData, errors.Wrapf(err, "failed to purge dlc %q", ScreenAiDlcID)
 	}
 
 	if err := upstart.StopJob(ctx, dlc.JobName); err != nil {
-		return DlcFailureSetUpData{}, errors.Wrapf(err, "failed to stop %q", dlc.JobName)
+		return setupData, errors.Wrapf(err, "failed to stop %q", dlc.JobName)
 	}
 
 	// Ensure the test restores the dlcservice state.
