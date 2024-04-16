@@ -38,7 +38,7 @@ func init() {
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Timeout:      10 * time.Minute,
 		HardwareDeps: hwdep.D(pre.InputsStableModels),
-		Fixture:      fixture.ClamshellVKWithHandWritingLegacyRecognitionOn,
+		Fixture:      fixture.ClamshellVK,
 	})
 }
 

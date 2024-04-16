@@ -41,7 +41,6 @@ const (
 	assistMultiWord
 	autocorrectToggle
 	diacriticsOnPhysicalKeyboardLongpress
-	handwritingLegacyRecognition
 	emojiPickerGifSupport
 	firstPartyVietnameseInput
 	altClickAndSixPackCustomization
@@ -67,9 +66,7 @@ const (
 	ClamshellNonVKWithOrca                            = "clamshellNonVKWithOrca"
 	ClamshellNonVKWithPicker                          = "clamshellNonVKWithPicker"
 	ClamshellNonVKInGAIA                              = "clamshellNonVKInGAIA"
-	ClamshellVKWithHandWritingLegacyRecognitionOn     = "clamshellVKWithHandWritingLegacyRecognitionOn"
 	TabletVK                                          = "tabletVK"
-	TabletVKWithHandWritingLegacyRecognitionOn        = "tabletVKWithHandWritingLegacyRecognitionOn"
 	TabletVKStereoAloopLoaded                         = "tabletVKStereoAloopLoaded"
 	TabletVKRestart                                   = "tabletVKRestart"
 	TabletVKInGuest                                   = "tabletVKInGuest"
@@ -78,7 +75,6 @@ const (
 	LacrosAnyVKInGuest                                      = "lacrosAnyVKInGuest"
 	LacrosAnyVKInGAIA                                       = "lacrosAnyVKInGaia"
 	LacrosClamshellVK                                       = "lacrosClamshellVK"
-	LacrosClamshellVKWithHandWritingLegacyRecognitionOn     = "lacrosclamshellVKWithHandWritingLegacyRecognitionOn"
 	LacrosClamshellNonVK                                    = "lacrosClamshellNonVK"
 	LacrosClamshellNonVKStereoAloopLoaded                   = "lacrosClamshellNonVKStereoAloopLoaded"
 	LacrosClamshellNonVKInGuest                             = "lacrosClamshellNonVKInGuest"
@@ -90,7 +86,6 @@ const (
 	LacrosClamshellNonVKWithDiacriticsOnPKLongpress         = "lacrosClamshellWithDiacriticsOnPKLongpress"
 	LacrosClamshellNonVKWithFirstPartyVietnamese            = "lacrosClamshellNonVKWithFirstPartyVietnamese"
 	LacrosTabletVK                                          = "lacrosTabletVK"
-	LacrosTabletVKWithHandWritingLegacyRecognitionOn        = "lacrostabletVKWithHandWritingLegacyRecognitionOn"
 	LacrosTabletVKStereoAloopLoaded                         = "lacrosTabletVKStereoAloopLoaded"
 	LacrosTabletVKInGuest                                   = "lacrosTabletVKInGuest"
 	LacrosTabletVKRestart                                   = "lacrosTabletVKRestart"
@@ -384,34 +379,6 @@ func init() {
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
-	testing.AddFixture(&testing.Fixture{
-		Name: ClamshellVKWithHandWritingLegacyRecognitionOn,
-		Desc: "Clamshell mode with handwriting legacy recognition on",
-		Contacts: []string{
-			"essential-inputs-team@google.com",
-			"xiuwen@google.com",
-		},
-		Impl:            inputsFixture(clamshellMode, true, false, browser.TypeAsh, handwritingLegacyRecognition),
-		SetUpTimeout:    chrome.LoginTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: TabletVKWithHandWritingLegacyRecognitionOn,
-		Desc: "Tablelet mode with handwriting legacy recognition on",
-		Contacts: []string{
-			"essential-inputs-team@google.com",
-			"xiuwen@google.com",
-		},
-		Impl:            inputsFixture(clamshellMode, true, false, browser.TypeAsh, handwritingLegacyRecognition),
-		SetUpTimeout:    chrome.LoginTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
 
 	//--------------Lacros Fixtures--------------------------------------------
 	testing.AddFixture(&testing.Fixture{
@@ -672,34 +639,6 @@ func init() {
 		TearDownTimeout: chrome.ResetTimeout,
 		Vars:            []string{"ui.gaiaPoolDefault"},
 	})
-	testing.AddFixture(&testing.Fixture{
-		Name: LacrosClamshellVKWithHandWritingLegacyRecognitionOn,
-		Desc: "Lacros variant: Clamshell mode with handwriting legacy recognition on",
-		Contacts: []string{
-			"essential-inputs-team@google.com",
-			"xiuwen@google.com",
-		},
-		Impl:            inputsFixture(clamshellMode, true, false, browser.TypeLacros, handwritingLegacyRecognition),
-		SetUpTimeout:    chrome.LoginTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: LacrosTabletVKWithHandWritingLegacyRecognitionOn,
-		Desc: "Lacros variant: Tablelet mode with handwriting legacy recognition on",
-		Contacts: []string{
-			"essential-inputs-team@google.com",
-			"xiuwen@google.com",
-		},
-		Impl:            inputsFixture(clamshellMode, true, false, browser.TypeLacros, handwritingLegacyRecognition),
-		SetUpTimeout:    chrome.LoginTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
 }
 
 // FixtData is the data returned by SetUp and passed to tests.
@@ -753,8 +692,6 @@ func (f *inputsFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) int
 			opts = append(opts, chrome.ExtraArgs("--enable-features=DiacriticsOnPhysicalKeyboardLongpress,DiacriticsOnPhysicalKeyboardLongpressDefaultOn"))
 		case firstPartyVietnameseInput:
 			opts = append(opts, chrome.ExtraArgs("--enable-features=FirstPartyVietnameseInput"))
-		case handwritingLegacyRecognition:
-			opts = append(opts, chrome.ExtraArgs("--enable-features=HandwritingLegacyRecognition"))
 		case emojiPickerGifSupport:
 			opts = append(opts, chrome.ExtraArgs(("--enable-features=SystemEmojiPickerGIFSupport")))
 		case altClickAndSixPackCustomization:
