@@ -7,18 +7,16 @@
 package org.chromium.arc.testapp.devicepolicy;
 
 import android.app.Activity;
-import android.app.WallpaperManager;
 import android.app.admin.DevicePolicyManager;
 import android.content.Context;
 import android.os.Bundle;
+import android.os.UserManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
 
@@ -33,6 +31,8 @@ public class MainActivity extends Activity {
     private Spinner lstPolicies;
     private TextView txtError;
     private Map<String, Supplier<Boolean>> arcPolicies;
+    private DevicePolicyManager devicePolicyManager;
+    private UserManager userManager;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -44,15 +44,17 @@ public class MainActivity extends Activity {
         lstPolicies = findViewById(R.id.lstPolicies);
         txtError = findViewById(R.id.txtError);
 
+        devicePolicyManager = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
+        userManager = (UserManager) getSystemService(Context.USER_SERVICE);
+
         btnTest.setOnClickListener((View view) -> runTest());
 
         arcPolicies =
-                new HashMap<>() {
-                    {
-                        put("setWallpaper", () -> setWallpaper());
-                        put("cameraDisabled", () -> getCameraDisabled());
-                    }
-                };
+                Map.ofEntries(
+                        Map.entry(
+                                "setWallpaper",
+                                () -> isRestrictionUnapplied(UserManager.DISALLOW_SET_WALLPAPER)),
+                        Map.entry("cameraDisabled", this::isCameraEnabled));
     }
 
     @Override
@@ -90,34 +92,16 @@ public class MainActivity extends Activity {
         txtOutput.setText(String.valueOf(result));
     }
 
-    private Boolean getCameraDisabled() {
-        final var dpm = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
-        final boolean isCameraDisabled = dpm.getCameraDisabled(null);
+    private boolean isCameraEnabled() {
+        final boolean isCameraDisabled = devicePolicyManager.getCameraDisabled(null);
         if (isCameraDisabled) {
             logError("Camera is disabled", null);
         }
         return !isCameraDisabled;
     }
 
-    private Boolean setWallpaper() {
-        final WallpaperManager manager = WallpaperManager.getInstance(getApplicationContext());
-        if (!manager.isSetWallpaperAllowed()) {
-            logError("Changing wallpaper not allowed", null);
-            return false;
-        }
-
-        final int previousId = manager.getWallpaperId(WallpaperManager.FLAG_SYSTEM);
-        try {
-            manager.setResource(R.drawable.wallpaper);
-        } catch (IOException e) {
-            logError("Failed to set wallpaper", e);
-            return false;
-        }
-        final int currentId = manager.getWallpaperId(WallpaperManager.FLAG_SYSTEM);
-        if (previousId == currentId) {
-            logError("Wallpaper did not change", null);
-        }
-        return previousId != currentId;
+    private boolean isRestrictionUnapplied(String restrictionKey) {
+        return !userManager.hasUserRestriction(restrictionKey);
     }
 
     private void logError(String message, Exception e) {
