@@ -31,10 +31,21 @@ func init() {
 		},
 		BugComponent: "b:1188704",
 		Attr:         []string{"hwsec_destructive_crosbolt_perbuild", "group:hwsec_destructive_crosbolt"},
-		SoftwareDeps: []string{"android_vm", "tpm_clear_allowed", "chrome"},
+		SoftwareDeps: []string{"tpm_clear_allowed", "chrome", "selinux"},
 		Vars: []string{
 			"cryptohome.MountPerfWithArc.mountOperations",
 		},
+		Params: []testing.Param{{
+			ExtraSoftwareDeps: []string{"android_container"},
+		}, {
+			Name: "vm",
+			ExtraSoftwareDeps: []string{
+				"android_vm",
+				// Skip the test when ARCVM virtio-blk /data is enabled.
+				// ARC's /data directory is encapsulated in a disk image when it is enabled.
+				"no_arcvm_virtio_blk_data",
+			},
+		}},
 		VarDeps: []string{"ui.gaiaPoolDefault"},
 		Timeout: 12 * time.Minute,
 	})
