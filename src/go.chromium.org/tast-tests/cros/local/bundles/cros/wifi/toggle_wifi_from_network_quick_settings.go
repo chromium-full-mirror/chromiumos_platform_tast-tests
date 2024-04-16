@@ -31,7 +31,7 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedIn",
-		Timeout:      3 * time.Minute,
+		Timeout:      4 * time.Minute,
 	})
 }
 
@@ -46,20 +46,26 @@ func ToggleWifiFromNetworkQuickSettings(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
-	// Reserve ten seconds for cleanup.
+	// Reserve one minute for cleanup.
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, 1*time.Minute)
 	defer cancel()
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
-	// Enable Wifi in shill.
+	// Disable Wifi in shill.
 	wifiManager, err := shill.NewWifiManager(ctx, nil)
 	if err != nil {
 		s.Fatal("Failed to create shill Wi-Fi manager: ", err)
 	}
 	if err := wifiManager.Enable(ctx, false); err != nil {
-		s.Fatal("Failed to enable Wi-Fi: ", err)
+		s.Fatal("Failed to disable Wi-Fi: ", err)
 	}
+	// Restore WiFi after test.
+	defer func(ctx context.Context) {
+		if err := wifiManager.Enable(ctx, true); err != nil {
+			s.Fatal("Failed to enable Wi-Fi: ", err)
+		}
+	}(cleanupCtx)
 
 	if err := quicksettings.NavigateToNetworkDetailedView(ctx, tconn); err != nil {
 		s.Fatal("Failed to navigate to the detailed Network view: ", err)
