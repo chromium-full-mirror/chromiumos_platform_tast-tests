@@ -16,6 +16,7 @@ import (
 
 type stressSystemAction struct {
 	schedule
+	cpuLoad int // 1-100, cpu load percentage
 }
 
 var _ Action = stressSystemAction{}
@@ -29,9 +30,13 @@ func (a stressSystemAction) Do(ctx context.Context, s *testing.State, t *tester)
 	defer cancel()
 
 	cmd := testexec.CommandContext(
-		stressCtx, "stressapptest",
-		"-s", strconv.Itoa(a.endSec-a.startSec),
-		"-W",
+		stressCtx, "stress-ng",
+		"--sched", "other", // Simulate Chrome priority. SCHED_OTHER
+		"--cpu-load", strconv.Itoa(a.cpuLoad),
+		"--cpu", "-1", // all cpu
+		"--memcpy", "-1",
+		"--timeout", strconv.Itoa(a.endSec-a.startSec),
+		"--temp-path", "/tmp",
 	)
 	err := cmd.Run()
 	t.logAction(ctx, a.endSec, "end stressing", false)
@@ -50,5 +55,6 @@ func (a stressSystemAction) maybeLogSchedule(ctx context.Context, t *tester) {
 func StressSystem(startSec, endSec int) Action {
 	return &stressSystemAction{
 		schedule: schedule{startSec, endSec},
+		cpuLoad:  60,
 	}
 }
