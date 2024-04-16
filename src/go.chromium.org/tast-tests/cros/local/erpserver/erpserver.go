@@ -81,7 +81,7 @@ type ResponseEncryptionSettings struct {
 // JSON response.
 type ResponseConfigFile struct {
 	Version             int           `json:"version"`
-	EventConfigs        []EventConfig `json:"eventConfigs"`
+	BlockedEventConfigs []EventConfig `json:"blockedEventConfigs"`
 	ConfigFileSignature string        `json:"configFileSignature"`
 }
 
@@ -216,6 +216,7 @@ func (erpserver *ErpServer) handleUpload(ctx context.Context, w http.ResponseWri
 	if request.ConfigurationFileVersion != nil {
 		if erpserver.fakeConfigFile != nil && *request.ConfigurationFileVersion != erpserver.fakeConfigFile.Version {
 			testing.ContextLog(ctx, "ERP attach configuration file requested, with version= ", *request.ConfigurationFileVersion)
+			testing.ContextLog(ctx, "Returning fake configuration file = ", erpserver.fakeConfigFile)
 			response.ConfigurationFile = erpserver.fakeConfigFile
 		}
 	}
