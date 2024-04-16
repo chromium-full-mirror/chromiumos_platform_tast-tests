@@ -23,7 +23,7 @@ import (
 )
 
 // PreTestTimeout is the timeout duration before each test.
-const PreTestTimeout = 30 * time.Second
+const PreTestTimeout = 60 * time.Second
 
 // PostTestTimeout is the timeout duration to save logs after each test.
 // It's intentionally set longer than ResetTimeout because dumping 'dumpsys' takes around 20 seconds.
