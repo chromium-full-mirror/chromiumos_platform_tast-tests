@@ -35,7 +35,7 @@ func init() {
 		},
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		Attr:         []string{"group:wificell_cross_device"},
-		TestBedDeps:  []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.PeripheralWifiStateWorking},
+		TestBedDeps:  []string{tbdep.Wificell, tbdep.PeripheralWifiStateWorking},
 		Fixture:      wificell.FixtureID(wificell.TFFeaturesCompanionDUT | wificell.TFFeaturesSelfManagedAP),
 		Requirements: []string{tdreq.WiFiGenSupportWiFi, tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
 		ServiceDeps:  []string{wificell.ShillServiceName},

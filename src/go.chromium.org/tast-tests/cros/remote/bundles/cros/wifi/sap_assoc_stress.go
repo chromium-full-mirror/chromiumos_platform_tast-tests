@@ -41,7 +41,7 @@ func init() {
 		},
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		Attr:         []string{"group:wificell_cross_device", "wificell_cross_device_sap"},
-		TestBedDeps:  []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.PeripheralWifiStateWorking},
+		TestBedDeps:  []string{tbdep.Wificell, tbdep.PeripheralWifiStateWorking},
 		Fixture:      wificell.FixtureID(wificell.TFFeaturesCompanionDUT | wificell.TFFeaturesSelfManagedAP),
 		Requirements: []string{tdreq.WiFiGenSupportWiFi, tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates},
 		Timeout:      time.Minute + 8*sapAssocRounds*10*time.Second, // Default: 10 minutes, typically test runs in half that time.
