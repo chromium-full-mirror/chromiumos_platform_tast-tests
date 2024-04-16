@@ -6,13 +6,16 @@ package firmware
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/common/firmware/bios"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
-	pb "go.chromium.org/tast-tests/cros/services/cros/firmware"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -27,7 +30,7 @@ func init() {
 		},
 		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level4"},
 		Requirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
-		Fixture:      fixture.NormalMode,
+		Fixture:      fixture.BootModeFixtureWithAPBackup(fixture.NormalMode),
 		ServiceDeps:  []string{"tast.cros.firmware.BiosService"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
@@ -39,23 +42,31 @@ func APBmpblk(ctx context.Context, s *testing.State) {
 	const applicabilityIndicator string = "vbgfx.bin"
 	const misconfigurationIndicator string = "vbgfx_not_scaled"
 
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
+	backupManager := s.FixtValue().(*fixture.Value).BackupManager
 	h := s.FixtValue().(*fixture.Value).Helper
 
 	if err := h.RequireBiosServiceClient(ctx); err != nil {
 		s.Fatal("Requiring BiosServiceClient: ", err)
 	}
-	bs := h.BiosServiceClient
 
-	coreboot, err := bs.BackupImageSection(ctx, &pb.FWSectionInfo{
-		Programmer: pb.Programmer_BIOSProgrammer,
-		Section:    pb.ImageSection_EmptyImageSection,
-	})
+	out, err := h.DUT.Conn().CommandContext(ctx, "mktemp", "-d", "-p", "/var/tmp", "-t", "fwimgXXXXXX").Output(ssh.DumpLogOnError)
 	if err != nil {
-		s.Fatal("Failed to backup the firmware image: ", err)
+		s.Fatal("Failed creating remote temp dir: ", err)
 	}
-	s.Log("A portion of the firmware ROM containing Coreboot is stored at: ", coreboot.Path)
+	dutTempDir := strings.TrimSuffix(string(out), "\n")
+	defer func(ctx context.Context) {
+		h.DUT.Conn().CommandContext(ctx, "rm", "-r", dutTempDir)
+	}(cleanupCtx)
+	backupOnDut := fmt.Sprintf("%s/bios_backup.bin", dutTempDir)
+	if err := backupManager.CopyBackupToDut(ctx, h.DUT, fixture.FirmwareAP, backupOnDut); err != nil {
+		s.Fatal("Failed to copy firmware image to DUT: ", err)
+	}
 
-	layout, err := h.DUT.Conn().CommandContext(ctx, "cbfstool", coreboot.Path, "layout").Output()
+	layout, err := h.DUT.Conn().CommandContext(ctx, "cbfstool", backupOnDut, "layout").Output()
 	if err != nil {
 		s.Log(layout)
 		s.Fatal("Failed to execute cbfstool: ", err)
@@ -68,7 +79,7 @@ func APBmpblk(ctx context.Context, s *testing.State) {
 		region = bios.BOOTSTUBImageSection
 	}
 
-	out, err := h.DUT.Conn().CommandContext(ctx, "cbfstool", coreboot.Path, "print", "-r", string(region)).Output()
+	out, err = h.DUT.Conn().CommandContext(ctx, "cbfstool", backupOnDut, "print", "-r", string(region)).Output()
 	if err != nil {
 		s.Log(out)
 		s.Fatal("Failed to execute cbfstool: ", err)
