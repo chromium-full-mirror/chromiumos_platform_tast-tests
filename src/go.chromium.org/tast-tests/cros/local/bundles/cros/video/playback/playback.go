@@ -124,7 +124,7 @@ func RunTest(ctx context.Context, s *testing.State, tconn *chrome.TestConn, conf
 		// Connection maybe tampered (e.g. suspend/resume) and we need to re-establish connection.
 		conn, err := reconnectToBrowser(ctx, cr, config.BrowserType)
 		if err != nil {
-			s.Fatal("Failed to reconnect to browser")
+			s.Fatal("Failed to reconnect to browser: ", err)
 		}
 		conn.CloseTarget(ctx)
 		conn.Close()
