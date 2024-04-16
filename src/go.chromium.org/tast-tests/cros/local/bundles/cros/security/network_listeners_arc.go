@@ -23,21 +23,25 @@ func init() {
 		// ChromeOS > Security > Hardening
 		BugComponent: "b:1040049",
 		SoftwareDeps: []string{"chrome"},
-		Pre:          arc.Booted(),
 		Timeout:      arc.BootTimeout,
 		Attr:         []string{"group:mainline"},
 		Params: []testing.Param{{
+			Name:              "arcpp_user",
+			Fixture:           "arcBooted",
 			ExtraSoftwareDeps: []string{"android_container"},
+			Val:               "arcpp-user",
 		}, {
-			Name:              "vm",
+			Name:              "arcvm_user",
+			Fixture:           "arcBooted",
 			ExtraSoftwareDeps: []string{"android_vm"},
 			ExtraAttr:         []string{"informational"},
+			Val:               "arcvm-user",
 		}},
 	})
 }
 
 func NetworkListenersARC(ctx context.Context, s *testing.State) {
-	ls := netlisten.Common(s.PreValue().(arc.PreData).Chrome)
+	ls := netlisten.Common(s.FixtValue().(*arc.PreData).Chrome)
 	ls["127.0.0.1:5037"] = "/usr/bin/adb"
 	// patchpaneld runs an ADB proxy server on port 5555 whenever ARC is running. The proxy end listens only when ADB sideloading or ADB debugging on dev mode is enabled.
 	ls["*:5555"] = "/usr/bin/patchpaneld"
