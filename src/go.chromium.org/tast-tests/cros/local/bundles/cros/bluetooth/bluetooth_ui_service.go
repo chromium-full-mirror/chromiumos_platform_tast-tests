@@ -152,7 +152,7 @@ func (bui *BtUIService) CloseNotifications(ctx context.Context, empty *emptypb.E
 // on the Saved Devices subpage. The array of devices should be in the expected
 // order. Fails if the list of Saved Devices doesn't match the one provided.
 func (bui *BtUIService) ConfirmSavedDevicesState(ctx context.Context, request *pb.ConfirmSavedDevicesStateRequest) (_ *emptypb.Empty, retErr error) {
-	cr, tconn, err := bui.crAndTestAPIConn(ctx)
+	_, tconn, err := bui.crAndTestAPIConn(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain the Chrome instance and Test API connection")
 	}
@@ -161,7 +161,7 @@ func (bui *BtUIService) ConfirmSavedDevicesState(ctx context.Context, request *p
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	app, err := ossettings.NavigateToBluetoothSavedDevicesSubpage(ctx, tconn, cr)
+	app, err := ossettings.NavigateToBluetoothSavedDevicesSubpage(ctx, tconn)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to navigate to Bluetooth Saved Devices subpage")
 	}
@@ -193,7 +193,7 @@ func (bui *BtUIService) ConfirmSavedDevicesState(ctx context.Context, request *p
 
 // RemoveAllSavedDevices will attempt to remove all the devices from the Saved Devices subpage.
 func (bui *BtUIService) RemoveAllSavedDevices(ctx context.Context, request *emptypb.Empty) (_ *emptypb.Empty, retErr error) {
-	cr, tconn, err := bui.crAndTestAPIConn(ctx)
+	_, tconn, err := bui.crAndTestAPIConn(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain the Chrome instance and Test API connection")
 	}
@@ -202,7 +202,7 @@ func (bui *BtUIService) RemoveAllSavedDevices(ctx context.Context, request *empt
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	app, err := ossettings.NavigateToBluetoothSavedDevicesSubpage(ctx, tconn, cr)
+	app, err := ossettings.NavigateToBluetoothSavedDevicesSubpage(ctx, tconn)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to navigate to Bluetooth Saved Devices subpage")
 	}

@@ -95,18 +95,15 @@ func NavigateToBluetoothDeviceDetailsPage(ctx context.Context, tconn *chrome.Tes
 // NavigateToBluetoothSavedDevicesSubpage will navigate to the Bluetooth Saved Devices subpage
 // within the OS Settings by clicking the subpage button on the Bluetooth Settings subpage.
 // This is safe to call when the OS Settings are already open.
-func NavigateToBluetoothSavedDevicesSubpage(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome) (*OSSettings, error) {
-	app, err := Launch(ctx, tconn)
+func NavigateToBluetoothSavedDevicesSubpage(ctx context.Context, tconn *chrome.TestConn) (*OSSettings, error) {
+	app, err := LaunchAtPage(ctx, tconn, Bluetooth)
 	if err != nil {
 		return nil, err
 	}
 
-	ui := uiauto.New(tconn)
-
 	if err := uiauto.Combine("Navigate to the Bluetooth Saved Devices subpage",
-		ui.FocusAndWait(BluetoothSettingsSubpageButton),
-		ui.LeftClick(BluetoothSettingsSubpageButton),
-		ui.LeftClick(SavedDevicesSubpageLink),
+		app.FocusAndWait(SavedDevicesSubpageLink),
+		app.LeftClick(SavedDevicesSubpageLink),
 	)(ctx); err != nil {
 		return nil, err
 	}
