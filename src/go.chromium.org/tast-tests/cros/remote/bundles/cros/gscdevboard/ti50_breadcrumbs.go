@@ -95,6 +95,16 @@ func Ti50Breadcrumbs(ctx context.Context, s *testing.State) {
 
 	expected = append(expected, projectMain, pmuPreInit, projectStart, projectRun)
 	checkBreadcrumbs(ctx, s, i, expected)
+
+	i.Command(ctx, "reboot")
+	th.MustSucceed(i.WaitUntilRoBoot(ctx, time.Second), "console reboot")
+	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
+
+	expected = append(expected, pmuTriggerHardReset, pmuTriggerSoftReset, projectMain, pmuPreInit, projectStart, projectRun)
+	// We keep the most recent 16 events (u64 / 4 bits per event).
+	expected = expected[len(expected)-16:]
+	checkBreadcrumbs(ctx, s, i, expected)
+
 }
 
 var breadcrumbsRegexp = regexp.MustCompile(`Breadcrumbs: *0x([0-9a-fA-F]+)`)
