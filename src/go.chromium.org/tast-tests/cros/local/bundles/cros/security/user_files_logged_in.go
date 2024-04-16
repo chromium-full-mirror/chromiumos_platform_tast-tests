@@ -22,12 +22,12 @@ func init() {
 		},
 		BugComponent: "b:1040049",
 		SoftwareDeps: []string{"chrome"},
-		Pre:          chrome.LoggedIn(),
 		Attr:         []string{"group:mainline"},
+		Fixture:      "chromeLoggedIn",
 	})
 }
 
 func UserFilesLoggedIn(ctx context.Context, s *testing.State) {
-	cr := s.PreValue().(*chrome.Chrome)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	userfiles.Check(ctx, s, cr.NormalizedUser())
 }
