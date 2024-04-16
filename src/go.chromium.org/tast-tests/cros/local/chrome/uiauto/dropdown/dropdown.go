@@ -22,7 +22,7 @@ func getValueNodeInfos(ctx context.Context, tconn *chrome.TestConn, dropdown *no
 	ui := uiauto.New(tconn)
 	// Click on the dropdown and wait for it to expand.
 	if err := uiauto.Combine("open dropdown",
-		ui.MakeVisible(dropdown),
+		ui.FocusAndWait(dropdown),
 		ui.DoDefault(dropdown),
 		ui.WaitUntilExists(dropdown.State("expanded", true)))(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to expand dropdown")
@@ -66,7 +66,7 @@ func SelectDropDownOption(tconn *chrome.TestConn, dropdown *nodewith.Finder, opt
 	option := nodewith.Name(optionName).Role(role.ListBoxOption).Ancestor(dropdown)
 	return uiauto.Combine(fmt.Sprintf("select option %q", optionName),
 		ui.WaitUntilExists(dropdown),
-		ui.MakeVisible(dropdown),
+		ui.FocusAndWait(dropdown),
 		ui.LeftClickUntil(dropdown, ui.Exists(option)),
 		ui.LeftClickUntil(option, ui.Gone(option)),
 	)
@@ -79,7 +79,7 @@ func SelectCustomizePeripheralButtonsDropdown(tconn *chrome.TestConn, dropdown *
 	option := nodewith.Name(optionName).First()
 	return uiauto.Combine(fmt.Sprintf("select option %q", optionName),
 		ui.WaitUntilExists(dropdown),
-		ui.MakeVisible(dropdown),
+		ui.FocusAndWait(dropdown),
 		ui.LeftClickUntil(dropdown, ui.Exists(option)),
 		ui.LeftClick(option),
 	)
