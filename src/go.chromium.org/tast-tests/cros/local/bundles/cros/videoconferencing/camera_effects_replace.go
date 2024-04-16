@@ -169,7 +169,7 @@ func CameraEffectsReplace(ctx context.Context, s *testing.State) {
 	}
 
 	// Clicking on "Create with AI" and then agree with terms of service.
-	agreeButton := nodewith.Name("I agree").Role(role.Button).Ancestor(nodewith.Role(role.Dialog))
+	agreeButton := nodewith.Name("Got it").Role(role.Button).Ancestor(nodewith.Role(role.Dialog))
 	if err := uiauto.NamedCombine("Open VcBackgroundApp",
 		vcTray.OpenVcBackgroundApp(),
 		ui.WaitUntilExists(agreeButton),
