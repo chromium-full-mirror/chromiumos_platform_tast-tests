@@ -282,9 +282,6 @@ func setWriteProtect(ctx context.Context, h *firmware.Helper, target wpTarget, e
 		return errors.Wrap(err, "failed to perform mode aware reboot")
 	}
 
-	out, _ := h.Servo.RunECCommandGetOutput(ctx, "flashinfo", []string{`(.*\r\n){23}`})
-	testing.ContextLog(ctx, "flashinfo: ", out)
-
 	if err := h.RequireBiosServiceClient(ctx); err != nil {
 		testing.ContextLog(ctx, "Failed requiring BiosServiceClient: ", err)
 	}
