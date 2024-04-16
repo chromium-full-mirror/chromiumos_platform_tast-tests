@@ -23,6 +23,8 @@ import (
 	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
+
+	"golang.org/x/sync/errgroup"
 )
 
 const (
@@ -61,6 +63,18 @@ func init() {
 			Name: "photo_back",
 			Val: cameraParams{
 				mode:   camera.CameraMode_PHOTO,
+				facing: camera.Facing_FACING_BACK,
+			},
+		}, {
+			Name: "video_front",
+			Val: cameraParams{
+				mode:   camera.CameraMode_VIDEO,
+				facing: camera.Facing_FACING_FRONT,
+			},
+		}, {
+			Name: "video_back",
+			Val: cameraParams{
+				mode:   camera.CameraMode_VIDEO,
 				facing: camera.Facing_FACING_BACK,
 			},
 		}},
@@ -108,12 +122,54 @@ func takePhotoWithCCA(ctx context.Context, dutConn *ssh.Conn, cp cameraParams, c
 	return path, nil
 }
 
-// getFilenameByUTC returns a filename based on UTC
-func getFilenameByUTC(ctx context.Context) string {
+// activateLightControl activates light control unit with specified intensities, light-temperature, and intervals
+func activateLightControl(ctx context.Context, dutConn *ssh.Conn) error {
+	script := "/usr/local/autotest/bin/light_control_ccvp.py"
+	// the intervals are hard-coded for now since we only have fixed scenario.
+	intervals := "0,0, 1000,30000, 25000,10000, 65535,50000, 3000,500, 0,0"
+	err := dutConn.CommandContext(ctx, "python3", script, "jump", "1", intervals, "3").Run()
+	if err != nil {
+		testing.ContextLogf(ctx, "Unable to activate light control: %s", err)
+		return err
+	}
+	return nil
+}
+
+// recordVideoWithCCA record video with CCA service on DUT
+func recordVideoWithCCA(ctx context.Context, dutConn *ssh.Conn, cp cameraParams, cr camera.CCAServiceClient) (string, error) {
+	defaultVideoOutputPath := "/tmp/test_recording_10s.mp4"
+	testOpenCameraRequest := &camera.CameraTestRequest{
+		Mode:   cp.mode,
+		Facing: cp.facing,
+	}
+	_, err := cr.OpenCamera(ctx, testOpenCameraRequest)
+	if err != nil {
+		return "", err
+	}
+	defer cr.CloseCamera(ctx, &empty.Empty{})
+
+	eg := errgroup.Group{}
+	eg.Go(func() error {
+		return activateLightControl(ctx, dutConn)
+	})
+	eg.Go(func() error {
+		return dutConn.CommandContext(ctx, "cca", "record-video", "--duration=10", "--output="+defaultVideoOutputPath).Run()
+	})
+	if err := eg.Wait(); err != nil {
+		testing.ContextLogf(ctx, "Unable to take video with light control: %s", err)
+		return "", err
+	}
+	testing.ContextLogf(ctx, "Source file Path on DUT: %s", defaultVideoOutputPath)
+
+	return defaultVideoOutputPath, nil
+}
+
+// getCurrentTimeInUTC returns a filename based on UTC
+func getCurrentTimeInUTC(ctx context.Context) string {
 	currentTime := time.Now().UTC().Format(time.RFC3339)
 	testing.ContextLogf(ctx, "Current time in UTC: %s", currentTime)
-	filename := strings.Replace(strings.Replace(currentTime, ":", "", -1), "-", "", -1)
-	return "iq-" + filename + ".jpg"
+	currentTimeInUTC := strings.Replace(strings.Replace(currentTime, ":", "", -1), "-", "", -1)
+	return currentTimeInUTC
 }
 
 // uploadArtifactToGS uploads the IQ artifacts to GS bucket
@@ -131,9 +187,9 @@ func uploadArtifactToGS(ctx context.Context, artifactPath, artifactName string) 
 // A photo (or video) taken under specific light environment and selected chart.
 //
 // TODO: Add Tast argument of JSON file that provides Compass parameters (e.g. mode, chart...etc.)
-// TODO: Add Tast argument to choose video mode
 func PrepareCompassAnalysis(ctx context.Context, s *testing.State) {
 	dutConn := s.DUT().Conn()
+	params := s.Param().(cameraParams)
 
 	// Bootstrap Light Control
 	if err := checkLightControlRequirements(ctx, dutConn); err != nil {
@@ -153,17 +209,25 @@ func PrepareCompassAnalysis(ctx context.Context, s *testing.State) {
 	}
 	defer cr.CloseChrome(ctx, &empty.Empty{})
 
-	// TODO: Add the light control executable and trigger it before take photo
-
-	// Take photo in DUT
-	artifactPathInDUT, err := takePhotoWithCCA(ctx, dutConn, s.Param().(cameraParams), cr)
-	if err != nil {
-		s.Fatal("Failed to take photo with CCA: ", err)
+	var artifactPathInDUT, fileExtension string
+	if params.mode == camera.CameraMode_PHOTO {
+		fileExtension = ".jpg"
+		artifactPathInDUT, err = takePhotoWithCCA(ctx, dutConn, s.Param().(cameraParams), cr)
+		if err != nil {
+			s.Fatal("Failed to take photo with CCA: ", err)
+		}
+	} else {
+		fileExtension = ".mp4"
+		artifactPathInDUT, err = recordVideoWithCCA(ctx, dutConn, s.Param().(cameraParams), cr)
+		if err != nil {
+			s.Fatal("Failed to record video with CCA: ", err)
+		}
 	}
 	defer dutConn.CommandContext(ctx, "rm", artifactPathInDUT).Output()
 
 	// Move the file from DUT to Drone
-	artifactName := getFilenameByUTC(ctx)
+	currentTimeInUTC := getCurrentTimeInUTC(ctx)
+	artifactName := "iq-" + currentTimeInUTC + fileExtension
 	artifactPathInDrone := filepath.Join(s.OutDir(), artifactName)
 	if err = linuxssh.GetFile(ctx, dutConn, artifactPathInDUT, artifactPathInDrone, linuxssh.PreserveSymlinks); err != nil {
 		s.Fatal("Failed to copy the file from DUT to Drone: ", err)
