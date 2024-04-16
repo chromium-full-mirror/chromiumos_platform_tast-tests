@@ -87,7 +87,7 @@ func init() {
 		}, {
 			Name: "portalsuspected",
 			Val: &params{
-				serviceState:         shillconst.ServiceStatePortalSuspected,
+				serviceState:         shillconst.ServiceStateRedirectFound,
 				httpResponseHandler:  captiveportalconsts.OkResponseHandler("portal login page"),
 				httpsResponseHandler: nil,
 				oncSource:            "",

@@ -105,15 +105,13 @@ func init() {
 		}, {
 			Name: "portalsuspected",
 			Val: &healthCaptivePortalHTTPParams{
-				serviceState:         shillconst.ServiceStatePortalSuspected,
+				serviceState:         shillconst.ServiceStateRedirectFound,
 				httpResponseHandler:  captiveportalconsts.OkResponseHandler("portal login page"),
 				httpsResponseHandler: nil,
 				oncSource:            "",
 				checkPortal:          true,
 				networkState:         health.NetworkStatePortal,
-				// Chrome portal detection will override PortalSuspected with Portal
-				// in this cases. TODO(b/292141089): Fix the Chrome behavior.
-				portalState: health.PortalStatePortal,
+				portalState:          health.PortalStatePortal,
 			},
 		}, {
 			Name: "online",

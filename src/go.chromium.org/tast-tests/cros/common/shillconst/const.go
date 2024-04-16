@@ -242,7 +242,6 @@ const (
 	ServiceStatePortal            = "portal"
 	ServiceStateNoConnectivity    = "no-connectivity"
 	ServiceStateRedirectFound     = "redirect-found"
-	ServiceStatePortalSuspected   = "portal-suspected"
 	ServiceStateOffline           = "offline"
 	ServiceStateOnline            = "online"
 	ServiceStateDisconnect        = "disconnecting"
@@ -279,7 +278,6 @@ var ServiceConnectedStates = []interface{}{
 	ServiceStatePortal,
 	ServiceStateNoConnectivity,
 	ServiceStateRedirectFound,
-	ServiceStatePortalSuspected,
 	ServiceStateOnline,
 	ServiceStateReady,
 }
