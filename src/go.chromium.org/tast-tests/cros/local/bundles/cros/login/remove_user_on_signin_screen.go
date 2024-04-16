@@ -6,6 +6,7 @@ package login
 
 import (
 	"context"
+	"os"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -14,7 +15,9 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/userutil"
+	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -94,28 +97,49 @@ func RemoveUserOnSigninScreen(ctx context.Context, s *testing.State) {
 		defer faillog.DumpUITreeOnError(cleanUpCtx, s.OutDir(), s.HasError, tconn)
 		ui := uiauto.New(tconn)
 
-		removeDialog := nodewith.Name("Open remove dialog for " + secondUser).Role(role.Button)
-		removeButton := nodewith.Name("Remove account").Role(role.Button)
-		clickRemoveButton := uiauto.Combine(
-			"click on remove button for second user",
-			// Focus second user pod.
+		clickSecondUser := uiauto.Combine(
+			"click on second user to focus",
+			// Focus second user pod as ui.RemoveUseronLoginScreen requirs that.
 			ui.LeftClick(nodewith.Name(secondUser).Role(role.Button)),
-			// Open remove dialog.
-			ui.LeftClick(removeDialog),
-			// Check that we can find still find reference to second user somewhere.
-			ui.WaitUntilExists(nodewith.Name(secondUser).First()),
-			// Click on remove button for the first time.
-			ui.LeftClick(removeButton),
-			// Click on remove button again to confirm.
-			ui.LeftClick(removeButton))
+		)
 
-		if err := clickRemoveButton(ctx); err != nil {
-			s.Fatal("Failed to click on remove button for second user: ", err)
+		// Second user need to be brought to focus.
+		if err := clickSecondUser(ctx); err != nil {
+			s.Fatal("Failed to click on second user to bring it to focus: ", err)
+		}
+
+		if err := userutil.RemoveUserOnLoginScreen(ctx, tconn, cr, secondUser); err != nil {
+			s.Fatal("Failed to remove user on login screen: ", err)
+		}
+
+		// Check that cryptohome has gone.
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			if _, err := getCryptohomeInfo(ctx, secondUser); err == nil {
+				return errors.New("Cryptohome directory still exists")
+			} else if os.IsNotExist(err) {
+				return nil
+			} else {
+				return testing.PollBreak(errors.Wrap(err, "unexpected error"))
+			}
+		}, &testing.PollOptions{
+			Timeout:  20 * time.Second,
+			Interval: time.Second,
+		}); err != nil {
+			s.Fatalf("Removal of user %s failed: %v", secondUser, err)
 		}
 
 		// Check that second user is gone.
 		if err := ui.WaitUntilGone(nodewith.Name(secondUser))(ctx); err != nil {
 			s.Fatal("Second user pod has not disappeared: ", err)
+		}
+
+		// Check that the local state is gone as well.
+		knownEmails, err := userutil.GetKnownEmailsFromLocalState()
+		if err != nil {
+			s.Fatal("Failed to get known emails from local state: ", err)
+		}
+		if knownEmails[secondUser] {
+			s.Fatal("Removed user is still in LoggedInUsers list")
 		}
 	}()
 
@@ -149,4 +173,13 @@ func RemoveUserOnSigninScreen(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to ensure that second user is gone: ", err)
 		}
 	}()
+}
+
+func getCryptohomeInfo(ctx context.Context, user string) (os.FileInfo, error) {
+	path, err := cryptohome.UserPath(ctx, user)
+	if err != nil {
+		return nil, errors.Wrapf(err, "cannot get path to %s's cryptohome", user)
+	}
+
+	return os.Stat(path)
 }
