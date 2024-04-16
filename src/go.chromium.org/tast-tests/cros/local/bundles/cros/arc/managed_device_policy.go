@@ -46,7 +46,8 @@ func init() {
 		Data: []string{"wallpaper_image.jpeg"},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.ArcEnabled{}, pci.VerifiedFunctionalityOS),
-			pci.SearchFlag(&policy.WallpaperImage{}, pci.VerifiedFunctionalityUI),
+			pci.SearchFlag(&policy.VideoCaptureAllowed{}, pci.VerifiedFunctionalityOS),
+			pci.SearchFlag(&policy.WallpaperImage{}, pci.VerifiedFunctionalityOS),
 		},
 		Params: []testing.Param{
 			{
@@ -91,6 +92,7 @@ func ManagedDevicePolicy(ctx context.Context, s *testing.State) {
 		"setWallpaper": func() (policy.Policy, func(ctx context.Context), error) {
 			return createWallpaperPolicy(ctx, s.DataPath("wallpaper_image.jpeg"))
 		},
+		"cameraDisabled": createCameraPolicy,
 	}
 
 	creds, err := credconfig.PickRandomCreds(s.RequiredVar(arcent.LoginPoolVar))
@@ -205,6 +207,10 @@ func ManagedDevicePolicy(ctx context.Context, s *testing.State) {
 	}
 }
 
+func createCameraPolicy() (policy.Policy, func(ctx context.Context), error) {
+	return &policy.VideoCaptureAllowed{Val: false}, func(ctx context.Context) {}, nil
+}
+
 func createWallpaperPolicy(ctx context.Context, imgPath string) (policy.Policy, func(ctx context.Context), error) {
 	jpegBytes, err := imagehelpers.GetJPEGBytesFromFilePath(imgPath)
 	if err != nil {
@@ -307,7 +313,7 @@ func testPolicyEnforcement(ctx context.Context, tconn *chrome.TestConn, a *arc.A
 		return err
 	}
 
-	testing.ContextLogf(ctx, "Testing policy %q", policy)
+	testing.ContextLogf(ctx, "Testing policy %q and expecting success=%v", policy, shouldSucceed)
 	return testing.Poll(ctx, func(ctx context.Context) error {
 		btnTest := d.Object(ui.ID(testButtonID))
 		if err := btnTest.Click(ctx); err != nil {
@@ -329,7 +335,7 @@ func testPolicyEnforcement(ctx context.Context, tconn *chrome.TestConn, a *arc.A
 		if err != nil {
 			return rl.Exit("get error message", err)
 		}
-		return rl.Retry(fmt.Sprintf("get expected result: %s, error: %s", result, errMessage), nil)
+		return rl.Retry(fmt.Sprintf("get expected result: %v, got %s, error: %s", shouldSucceed, result, errMessage), nil)
 	}, &testing.PollOptions{Timeout: testTimeout, Interval: time.Second})
 }
 

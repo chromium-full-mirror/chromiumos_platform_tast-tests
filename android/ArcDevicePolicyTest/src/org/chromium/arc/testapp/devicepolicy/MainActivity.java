@@ -8,6 +8,8 @@ package org.chromium.arc.testapp.devicepolicy;
 
 import android.app.Activity;
 import android.app.WallpaperManager;
+import android.app.admin.DevicePolicyManager;
+import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -51,6 +53,7 @@ public class MainActivity extends Activity {
                 new HashMap<>() {
                     {
                         put("setWallpaper", () -> setWallpaper());
+                        put("cameraDisabled", () -> getCameraDisabled());
                     }
                 };
     }
@@ -91,6 +94,16 @@ public class MainActivity extends Activity {
         final boolean success = result && enabled;
         txtOutput.setText(String.valueOf(success));
     }
+
+    private Boolean getCameraDisabled() {
+        final var dpm = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
+        final boolean isCameraDisabled = dpm.getCameraDisabled(null);
+        if (isCameraDisabled) {
+            logError("Camera is disabled", null);
+        }
+        return !isCameraDisabled;
+    }
+
 
     private Boolean setWallpaper() {
         final WallpaperManager manager = WallpaperManager.getInstance(getApplicationContext());
