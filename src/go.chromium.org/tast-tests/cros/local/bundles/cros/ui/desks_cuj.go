@@ -42,7 +42,7 @@ func init() {
 				Val: deskscuj.TestParam{
 					BrowserType: browser.TypeAsh,
 				},
-				ExtraAttr: []string{"group:cuj"},
+				ExtraAttr: []string{"group:cuj", "group:crosbolt", "crosbolt_release_gates"},
 				Fixture:   "loggedInToCUJUser",
 			}, {
 				Name:         "pvsched",
