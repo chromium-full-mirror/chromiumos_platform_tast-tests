@@ -237,7 +237,7 @@ func Ti50Sleep(ctx context.Context, s *testing.State) {
 	)
 
 	// Wake source and pin values for OT chip.
-	if b.TestbedType == ti50.GscOTShield {
+	if b.TestbedType == ti50.GscOTShield || b.TestbedType == ti50.GscOpentitanCw310Fpga {
 		wakeSourceGpio = "00000004"
 		wakeSourceRbox = "00000001"
 		wakeSourceAdc = "00000002"
@@ -271,10 +271,10 @@ func Ti50Sleep(ctx context.Context, s *testing.State) {
 	b.ResetWithStraps(ctx, testParams.servoMicroStrapping, ti50.CcdDisconnected, testParams.tpmStrapping)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
 	var gpioMonitor utils.GpioMonitorSession
-	if b.TestbedType == ti50.GscOTShield {
-		gpioMonitor = b.GpioMonitorStart(ctx, ti50.GpioTi50EcRstL)
-	} else {
+	if b.GscProperties().HasEcRstFet() {
 		gpioMonitor = b.GpioMonitorStart(ctx, ti50.GpioTi50EcRstL, ti50.GpioTi50EcRstFet)
+	} else {
+		gpioMonitor = b.GpioMonitorStart(ctx, ti50.GpioTi50EcRstL)
 	}
 
 	logCurrent(ctx, s, b, pv, "Awake")

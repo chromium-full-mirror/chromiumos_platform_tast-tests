@@ -53,10 +53,10 @@ func Ti50BootTime(ctx context.Context, s *testing.State) {
 	prefix := "ColdReset_"
 	b.GpioSet(ctx, ti50.GpioTi50ResetL, false)
 	var gpioMonitor utils.GpioMonitorSession
-	if b.TestbedType == ti50.GscOTShield {
-		gpioMonitor = b.GpioMonitorStart(ctx, ti50.GpioTi50ResetL, ti50.GpioTi50EcRstL)
-	} else {
+	if b.GscProperties().HasEcRstFet() {
 		gpioMonitor = b.GpioMonitorStart(ctx, ti50.GpioTi50ResetL, ti50.GpioTi50EcRstL, ti50.GpioTi50EcRstFet)
+	} else {
+		gpioMonitor = b.GpioMonitorStart(ctx, ti50.GpioTi50ResetL, ti50.GpioTi50EcRstL)
 	}
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
 	b.GpioSet(ctx, ti50.GpioTi50ResetL, true)
@@ -75,10 +75,10 @@ func Ti50BootTime(ctx context.Context, s *testing.State) {
 	b.GpioApplyStrap(ctx, ti50.CcdDisconnected)
 	s.Log("Waiting for deep sleep")
 	th.MustSucceed(i.WaitUntilDeepSleep(ctx, 70*time.Second), "deep sleep")
-	if b.TestbedType == ti50.GscOTShield {
-		gpioMonitor = b.GpioMonitorStart(ctx, ti50.GpioTi50PltRstL, ti50.GpioTi50EcRstL)
-	} else {
+	if b.GscProperties().HasEcRstFet() {
 		gpioMonitor = b.GpioMonitorStart(ctx, ti50.GpioTi50PltRstL, ti50.GpioTi50EcRstL, ti50.GpioTi50EcRstFet)
+	} else {
+		gpioMonitor = b.GpioMonitorStart(ctx, ti50.GpioTi50PltRstL, ti50.GpioTi50EcRstL)
 	}
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
@@ -109,10 +109,7 @@ func checkGpioMonitor(ctx context.Context, s *testing.State, b utils.DevboardHel
 	// Measure time from the rising edge of the triggerGpio.
 	start := events.FindFirst(triggerGpio, utils.GpioEdgeRising)
 	var end uint64
-	if b.TestbedType == ti50.GscOTShield {
-		ecRstReleased := events.FindFirst(ti50.GpioTi50EcRstL, utils.GpioEdgeRising)
-		end = ecRstReleased.TimestampUS
-	} else {
+	if b.GscProperties().HasEcRstFet() {
 		// The EC may be released by EcRstL multiple times (due to DT bug), so we want the last edge.
 		// We also want the later of EcRstL rising and EcRstFet falling since both are necessary to
 		// release the EC from reset.
@@ -123,6 +120,9 @@ func checkGpioMonitor(ctx context.Context, s *testing.State, b utils.DevboardHel
 		if ecFetReleased != nil && ecFetReleased.TimestampUS > end {
 			end = ecFetReleased.TimestampUS
 		}
+	} else {
+		ecRstReleased := events.FindFirst(ti50.GpioTi50EcRstL, utils.GpioEdgeRising)
+		end = ecRstReleased.TimestampUS
 	}
 	ecReleaseTime := (end - start.TimestampUS) / 1000
 	logTime(s, pv, prefix+"EcRstGpioDeasserted", uint32(ecReleaseTime))
