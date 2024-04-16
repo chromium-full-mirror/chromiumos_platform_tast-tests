@@ -226,24 +226,35 @@ func toggleHiddenNetworkOn(ctx context.Context, conn *grpc.ClientConn, ssid stri
 		osSettingsSvc.Close(ctx, &emptypb.Empty{})
 	}(cleanupCtx)
 
+	networkSection := ui.Node().Name("Show network address settings").Role(ui.Role_ROLE_BUTTON).Finder()
+	hiddenNetworkToggle := ui.Node().Name("Hidden network").Role(ui.Role_ROLE_TOGGLE_BUTTON).Finder()
+
 	uiSvc := ui.NewAutomationServiceClient(conn)
+	// The "Network" section usually show at the bottom of the page.
+	// So, we need to ensure it focused on the node before clicking on it.
+	if _, err := uiSvc.EnsureFocused(ctx, &ui.EnsureFocusedRequest{
+		Finder: networkSection,
+	}); err != nil {
+		return errors.Wrap(err, `failed to focus on the "Network" section`)
+	}
+
 	// The "Hidden network" option is located within the expandable "Network" section.
 	if _, err := uiSvc.LeftClick(ctx, &ui.LeftClickRequest{
-		Finder: ui.Node().Name("Show network address settings").Role(ui.Role_ROLE_BUTTON).Finder(),
+		Finder: networkSection,
 	}); err != nil {
 		return errors.Wrap(err, `failed to expand the "Network" section`)
 	}
 
 	// The location of the node could not be stabilized immediately after expanding the network section.
 	if _, err := uiSvc.WaitForLocation(ctx, &ui.WaitForLocationRequest{
-		Finder: ui.Node().Name("Hidden network").Role(ui.Role_ROLE_TOGGLE_BUTTON).Finder(),
+		Finder: hiddenNetworkToggle,
 	}); err != nil {
 		return errors.Wrap(err, "failed to wait until the node is stabilized")
 	}
 
 	// Ensure the "Hidden network" toggle button is visible before interacting with it.
 	if _, err := uiSvc.MakeVisible(ctx, &ui.MakeVisibleRequest{
-		Finder: ui.Node().Name("Hidden network").Role(ui.Role_ROLE_TOGGLE_BUTTON).Finder(),
+		Finder: hiddenNetworkToggle,
 	}); err != nil {
 		return errors.Wrap(err, "failed to make node visible")
 	}
