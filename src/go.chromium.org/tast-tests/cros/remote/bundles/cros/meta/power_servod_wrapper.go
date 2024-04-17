@@ -27,7 +27,7 @@ import (
 
 /**
 Example:
-tast run -var "subtest=power.ExampleUI.ash_kbbl" $DUT_IP meta.PowerServodWrapper.cpd_manual
+tast run -var "subtest=power.ExampleUI.ash" $DUT_IP meta.PowerServodWrapper.cpd_manual
 
 To specify a servo port, use: -var "servo=<servo-host>:<servo-port>"
 
@@ -42,13 +42,12 @@ type testParams struct {
 	// subtest specifies the test to be run within.
 	// If provided, the command line subtest will overwrite testParams.
 	subtest string
+	// useAccum specifies whether hardware accumulator measurement should be used.
+	useAccum bool
+	// interval is the number of seconds between metric snapshots.
+	// If provided, the command line interval will overwrite testParams.
+	interval time.Duration
 }
-
-var servoPowerMeasureIntervalVar = testing.RegisterVarString(
-	"meta.PowerServodWrapper.interval",
-	defaultServoPowerMeasureInterval,
-	"interval defines seconds between servo power measurements",
-)
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -67,64 +66,71 @@ func init() {
 			{
 				Name: "cpd_manual",
 				Val: testParams{
-					cpd: true,
+					cpd:      true,
+					useAccum: true,
 				},
 			},
 			{
 				Name: "cpd_vp_h264_1080_30fps",
 				Val: testParams{
-					cpd:     true,
-					subtest: "power.VideoPlayback.h264_1080_30fps_ash",
+					cpd:      true,
+					subtest:  "power.VideoPlayback.h264_1080_30fps_ash",
+					useAccum: true,
 				},
 				ExtraAttr: []string{"group:power", "power_cpd"},
 			},
 			{
 				Name: "cpd_vp_vp9_1080_30fps",
 				Val: testParams{
-					cpd:     true,
-					subtest: "power.VideoPlayback.vp9_1080_30fps_ash",
+					cpd:      true,
+					subtest:  "power.VideoPlayback.vp9_1080_30fps_ash",
+					useAccum: true,
 				},
 				ExtraAttr: []string{"group:power", "power_cpd"},
 			},
 			{
 				Name: "cpd_vc_25m",
 				Val: testParams{
-					cpd:     true,
-					subtest: "power.VideoCall.25m_ash",
+					cpd:      true,
+					subtest:  "power.VideoCall.25m_ash",
+					useAccum: true,
 				},
 				ExtraAttr: []string{"group:power", "power_cpd"},
 			},
 			{
 				Name: "cpd_browsing",
 				Val: testParams{
-					cpd:     true,
-					subtest: "power.Browsing.ash",
+					cpd:      true,
+					subtest:  "power.Browsing.ash",
+					useAccum: true,
 				},
 				ExtraAttr: []string{"group:power", "power_cpd"},
 			},
 			{
 				Name: "cpd_browsing_heavy",
 				Val: testParams{
-					cpd:     true,
-					subtest: "power.Browsing.heavy_ash",
+					cpd:      true,
+					subtest:  "power.Browsing.heavy_ash",
+					useAccum: true,
 				},
 				ExtraAttr: []string{"group:power", "power_cpd"},
 			},
 		},
-		Vars: []string{"servo", "subtest"},
+		Vars: []string{"servo", "subtest", "meta.PowerServodWrapper.interval"},
 		ServiceDeps: []string{"tast.common.power.powerpb.LocalInfoService",
 			"tast.cros.power.BatteryService"},
 	})
 }
 
-const (
-	// defaultServoPowerMeasureInterval in seconds.
-	// Note: Do not set the interval too low as this will cause the snapshots to fail.
-	defaultServoPowerMeasureInterval = "4"
-	chargeTarget                     = 75.
-)
-
 func PowerServodWrapper(ctx context.Context, s *testing.State) {
+
+	const (
+		// Note: Do not set the defaultServodWrapperInterval too low as this
+		// will cause the power recorder snapshots to fail.
+		defaultServodWrapperInterval = 15 * time.Second
+		chargeTarget                 = 75.
+	)
+
 	// servoCtx is used for async function measuring power.
 	servoCtx, servoCancel := context.WithCancel(ctx)
 	defer servoCancel()
@@ -155,12 +161,18 @@ func PowerServodWrapper(ctx context.Context, s *testing.State) {
 	s.Log("Subtest: ", subtest)
 
 	// Determine Servo measurement interval.
-	intervalStrVal := servoPowerMeasureIntervalVar.Value()
-	intervalIntVal, err := strconv.Atoi(intervalStrVal)
-	if err != nil || intervalIntVal <= 0 {
-		s.Fatal("Failed to parse meta.PowerServodWrapper.interval: ", err)
+	interval := defaultServodWrapperInterval
+	if param.interval != 0 {
+		interval = param.interval
 	}
-	servoPowerMeasureInterval := time.Duration(intervalIntVal) * time.Second
+
+	if varValue, ok := s.Var("meta.PowerServodWrapper.interval"); ok {
+		value, err := strconv.Atoi(varValue)
+		if err != nil || value <= 0 {
+			s.Fatal("Failed to parse meta.PowerServodWrapper.interval: ", err)
+		}
+		interval = time.Duration(value) * time.Second
+	}
 
 	// Connect to Servo.
 	dut := s.DUT()
@@ -196,7 +208,8 @@ func PowerServodWrapper(ctx context.Context, s *testing.State) {
 		s.Error("Failed to get local DUT info: ", err)
 	}
 
-	servodRecorder, err := rp.NewServodRecorder(servoCtx, servoPowerMeasureInterval, pxy.Servo(), param.cpd, true, filters...)
+	servodRecorder, err := rp.NewServodRecorder(servoCtx, interval, pxy.Servo(),
+		param.cpd, param.useAccum, filters...)
 	if err != nil {
 		s.Fatal("Failed to create servod recorder: ", err)
 	}

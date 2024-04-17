@@ -25,8 +25,9 @@ Each hardware can measure:
 
     > Note: \* requires hardware reworking
 
-    > Note: INA chips (without built-in accumulators) are not supported in
-    `PowerServodWrapper` right now.
+    > Note: INA chips (without built-in accumulators) should set the test param
+    `useAccum=false`. The wrapper will query from `power_rails` instead of
+    `avg_power_rails`.
 
 2. A running instance of `servod`, with its host and port provided.
 
