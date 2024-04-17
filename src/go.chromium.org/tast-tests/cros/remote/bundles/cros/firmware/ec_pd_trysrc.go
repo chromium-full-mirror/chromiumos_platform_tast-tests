@@ -6,6 +6,7 @@ package firmware
 
 import (
 	"context"
+	"math/rand"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/servo"
@@ -31,18 +32,21 @@ func init() {
 		Timeout:      20 * time.Minute,
 		Params: firmware.AddPDPorts([]testing.Param{{
 			Name: "normal",
-			Val:  firmware.PDTestParams{},
+			Val: firmware.PDTestParams{
+				DTS: firmware.DTSModeOff,
+			},
 		}, {
 			Name: "flipcc",
 			Val: firmware.PDTestParams{
-				CC: firmware.CCPolarityFlipped,
+				CC:  firmware.CCPolarityFlipped,
+				DTS: firmware.DTSModeOff,
 			},
 		}}, []string{"group:firmware", "firmware_pd_unstable"}),
 	})
 }
 
 const (
-	pdDisconnectTime    int           = 1
+	pdDisconnectTime    time.Duration = 1 * time.Second
 	pdConnectTime       time.Duration = 4 * time.Second
 	pdConnectIterations int           = 20
 	pdStableDelayTime   time.Duration = 3 * time.Second
@@ -55,29 +59,36 @@ func executeConnectSequence(ctx context.Context, s *testing.State, trySrcSupport
 	h := s.FixtValue().(*fixture.Value).Helper
 	snkStats := 0
 	srcStats := 0
-	srcConnect := []string{"SRC_READY"}
-	snkConnect := []string{"SNK_READY"}
+	srcConnect := "SRC_READY"
+	snkConnect := "SNK_READY"
+	var trySrcInt int
+
+	trySrcInt = 0
+	if trySrcSupported {
+		trySrcInt = 1
+	}
 
 	for i := 0; i < pdConnectIterations; i++ {
-		if trySrcSupported {
-			h.Servo.SetPDTrySrc(ctx, 1)
-		} else {
-			h.Servo.SetPDTrySrc(ctx, 0)
+		if _, err := h.Servo.SetPDTrySrc(ctx, trySrcInt); err != nil {
+			testing.ContextLogf(ctx, "Failed Enabling TrySrc: %q", err)
 		}
-		if state, err := h.Servo.ServoGetConnectedStateAfterCCReconnect(ctx, pdDisconnectTime); err != nil {
-			s.Fatal("Failed to get connected state after reconnect: ", err)
+		// Disconnect time from 1 to 1.5 seconds
+		randDisconnectTime := pdDisconnectTime + time.Duration(rand.Float32()*float32(time.Second)/2)
+		testing.ContextLogf(ctx, "Disconnect time = %s", randDisconnectTime)
+		if state, err := h.Servo.ServoGetConnectedStateAfterCCReconnect(ctx, randDisconnectTime); err != nil {
+			testing.ContextLogf(ctx, "Failed to get connected state after reconnect: %q", err)
 		} else {
-			if state == snkConnect[0] {
+			if state == snkConnect {
 				snkStats++
 				testing.ContextLog(ctx, "Power Role = SNK")
-			} else if state == srcConnect[0] {
+			} else if state == srcConnect {
 				srcStats++
 				testing.ContextLog(ctx, "Power Role = SRC")
 			}
-			// GoBigSleepLint: Wait a bit before the next iteration, in case any PR_Swap
-			if err := testing.Sleep(ctx, pdStableDelayTime); err != nil {
-				s.Fatal("Failed to sleep: ", err)
-			}
+		}
+		// GoBigSleepLint: Wait a bit before the next iteration, in case any PR_Swap
+		if err := testing.Sleep(ctx, pdStableDelayTime); err != nil {
+			s.Fatal("Failed to sleep: ", err)
 		}
 	}
 	testing.ContextLogf(ctx, "SNK = %d: SRC = %d: Total = %d",
@@ -98,11 +109,15 @@ func ECPDTrysrc(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to configure Servo for PD testing: ", err)
 	}
 
+	if err := h.Servo.EnableServoConsoleChannel(ctx, "usbpd"); err != nil {
+		s.Fatal("Failed to enable usbpd console channel: ", err)
+	}
+
 	if err := h.Servo.SetDUTDualRole(ctx, servo.USBPdDualRoleOn); err != nil {
 		s.Fatal("Could not enable DRP on EC")
 	}
 
-	if err := h.Servo.ServoSetDUTDualRole(ctx, servo.USBPdDualRoleOn); err != nil {
+	if err := h.Servo.ServoSetDualRole(ctx, servo.USBPdDualRoleOn); err != nil {
 		s.Fatal("Could not enable DRP on Servo")
 	}
 
@@ -131,6 +146,7 @@ func ECPDTrysrc(ctx context.Context, s *testing.State) {
 		snkOff, srcOff := executeConnectSequence(ctx, s, false)
 		totalOff := float32(snkOff + srcOff)
 		trySrcOff := float32(snkOff) * 100.0 / totalOff
+		testing.ContextLogf(ctx, "SNK ratio with Try.SRC disabled = %f", trySrcOff)
 
 		// When Try.SRC is off, ideally the SNK/SRC ratio will be close to
 		// 50%. However, in practice there is a wide range related to the

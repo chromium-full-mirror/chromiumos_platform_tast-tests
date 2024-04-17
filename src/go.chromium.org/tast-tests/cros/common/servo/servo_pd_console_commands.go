@@ -77,24 +77,99 @@ func (s *Servo) ServoSendPowerSwapRequest(ctx context.Context) (pdControlMsgType
 	return PDCtrlReserved, errors.Errorf("unknown PD control message value %q", replyValue)
 }
 
-// ServoSetDUTDualRole sets the PD DRP status of this port
-func (s *Servo) ServoSetDUTDualRole(ctx context.Context, val USBPdDualRoleValue) error {
-	// USBPdDualRoleSink and Source contain "force " prefix, strip this from the command
-	// sent to servo
-	action := strings.TrimPrefix(string(val), "force ")
+// ServoGetDualRoleState accepts a port ID and checks for the PD DRP status of this port.
+func (s *Servo) ServoGetDualRoleState(ctx context.Context) (USBPdDualRoleValue, error) {
+	port := 1
 
-	cmd := fmt.Sprintf("pd 1 dualrole %s", action)
+	matchList := []string{`dual-role toggling:\s+([\w ]+)[\r\n]`}
 
-	if err := s.RunServoCommand(ctx, cmd); err != nil {
+	// Try modern `pd N dualrole` command
+	cmd := fmt.Sprintf("pd %d dualrole", port)
+	out, err := s.RunServoCommandGetOutput(ctx, cmd, matchList)
+	if err != nil {
 		testing.ContextLogf(
 			ctx, "EC command %q failed. Trying older version. (%q)",
 			cmd, err,
 		)
-		cmd := fmt.Sprintf("pd dualrole %s", action)
-
-		if err := s.RunServoCommand(ctx, cmd); err != nil {
-			return errors.Wrapf(err, "ec command %q failed", cmd)
+		// Older DUTs running firmware from before cl:1096654 don't have per-port
+		// dualrole settings. Fall back to the old command.
+		out, err = s.RunServoCommandGetOutput(ctx, "pd dualrole", matchList)
+		if err != nil {
+			// Servo does not support DRP
+			return "", errors.Wrapf(err, "ec command %q failed. No way to check dual role state", cmd)
 		}
+	}
+	testing.ContextLogf(ctx, "Port %d DRP status: %q", port, out[0][1])
+	return USBPdDualRoleValue(out[0][1]), nil
+}
+
+func (s *Servo) toggleServoDualRole(ctx context.Context) (int, error) {
+	drpCmd := "usbc_action drp"
+	drpRe := []string{`DRP\s=\s(\d)`}
+
+	// Send DRP toggle command to PDTester and get value of 'drp_enable'
+	testing.ContextLogf(ctx, "PD Tester running: %s", drpCmd)
+	out, err := s.RunServoCommandGetOutput(ctx, drpCmd, drpRe)
+	if err != nil {
+		return 0, errors.Wrapf(err, "command %q failed", drpCmd)
+	}
+	i, err := strconv.Atoi(out[0][1])
+	if err != nil {
+		return 0, errors.Wrap(err, "failed to convert string to int")
+	}
+	return i, nil
+}
+
+func (s *Servo) enableServoDualRole(ctx context.Context) error {
+	for i := 0; i < 2; i++ {
+		if r, _ := s.toggleServoDualRole(ctx); r == 1 {
+			testing.ContextLog(ctx, "PDTester DRP mode enabled")
+			return nil
+		}
+	}
+	testing.ContextLog(ctx, "PDTester DRP mode set failure")
+	return nil
+}
+
+// ServoSetDualRole sets the PD DRP status of this port
+func (s *Servo) ServoSetDualRole(ctx context.Context, val USBPdDualRoleValue) error {
+	// USBPdDualRoleSink and Source contain "force " prefix, strip this from the command
+	// sent to servo
+	action := strings.TrimPrefix(string(val), "force ")
+
+	state, _ := s.ServoGetDualRoleState(ctx)
+
+	if state == val {
+		return nil
+	}
+
+	if val == USBPdDualRoleOn {
+		s.enableServoDualRole(ctx)
+	} else {
+		if state == USBPdDualRoleOn {
+			_, err := s.toggleServoDualRole(ctx)
+			return err
+		}
+
+		cmd := fmt.Sprintf("pd 1 dualrole %s", action)
+		testing.ContextLogf(ctx, "PD Tester running: %s", cmd)
+		if err := s.RunServoCommand(ctx, cmd); err != nil {
+			testing.ContextLogf(
+				ctx, "EC command %q failed. Trying older version. (%q)",
+				cmd, err,
+			)
+			cmd := fmt.Sprintf("pd dualrole %s", action)
+
+			if err := s.RunServoCommand(ctx, cmd); err != nil {
+				return errors.Wrapf(err, "ec command %q failed", cmd)
+			}
+		}
+	}
+
+	state, _ = s.ServoGetDualRoleState(ctx)
+
+	if state != val {
+		return errors.Errorf("failed to set dual role to %q", val)
 	}
 
 	return nil
@@ -402,10 +477,10 @@ func (s *Servo) ServoCcOff(ctx context.Context) error {
 //
 // @param disconnectTime: Time in seconds for disconnect period.
 // @returns: The connected PD state.
-func (s *Servo) ServoGetConnectedStateAfterCCReconnect(ctx context.Context, disconnectTime int) (string, error) {
+func (s *Servo) ServoGetConnectedStateAfterCCReconnect(ctx context.Context, disconnectTime time.Duration) (string, error) {
 	discDelay := 100
 	port := 1
-	cmd := fmt.Sprintf("fakedisconnect %d %d", discDelay, disconnectTime*1000)
+	cmd := fmt.Sprintf("fakedisconnect %d %d", discDelay, disconnectTime.Milliseconds())
 
 	srcConnect := []string{"SRC_READY"}
 	snkConnect := []string{"SNK_READY"}
@@ -431,7 +506,7 @@ func (s *Servo) ServoGetConnectedStateAfterCCReconnect(ctx context.Context, disc
 	output, err := s.RunServoCommandGetOutput(ctx, cmd, []string{disconnectedExp, connectedExp})
 
 	if err != nil {
-		return "", errors.New("failed to run fakedisconnect cmd")
+		return "", errors.Wrap(err, "failed to run fakedisconnect cmd")
 	}
 
 	return output[1][2], nil
