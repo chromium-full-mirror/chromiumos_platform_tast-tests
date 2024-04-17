@@ -23,6 +23,7 @@ func init() {
 		},
 		BugComponent: "b:1032353", // Chrome Operations > Fleet > Software > OS Fleet Automation
 		Attr:         []string{"group:labqual_informational", "group:labqual_stable"},
+		SoftwareDeps: []string{"gsc"},
 		Fixture:      fixture.NormalMode,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
@@ -45,10 +46,6 @@ func ServoGSCFlags(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to servo: ", err)
 	}
 
-	if err := h.Servo.RequireCCD(ctx); err != nil {
-		s.Fatal("Servo does not have CCD: ", err)
-	}
-
 	// read cr50_ccd_level
 	if val, err := h.Servo.GetString(ctx, servo.GSCCCDLevel); err != nil {
 		s.Fatal("Failed to get gsc_ccd_level")
@@ -57,7 +54,6 @@ func ServoGSCFlags(ctx context.Context, s *testing.State) {
 		if err := h.Servo.SetString(ctx, servo.CR50Testlab, servo.Open); err != nil {
 			s.Fatal("Failed to unlock CCD")
 		}
-		s.Logf("GSC CCD Level from Servo : %s", val)
 	}
 
 	// read servo type
@@ -81,12 +77,19 @@ func ServoGSCFlags(ctx context.Context, s *testing.State) {
 	}
 	s.Log("Servo has cr50_reboot control : ", hasCR50Reboot)
 
-	// read ccd serial number
-	ccdSerial, err := h.Servo.GetCCDSerial(ctx)
+	hasCCD, err := h.Servo.HasCCD(ctx)
 	if err != nil {
-		s.Fatal("Failed to get servo serials: ", err)
+		s.Fatal("Error while checking if servo has a CCD connection: ", err)
 	}
-	s.Logf("CCD serial read from Servo : %s", ccdSerial)
+	s.Log("Servo has ccd : ", hasCCD)
+	if hasCCD {
+		// read ccd serial number
+		ccdSerial, err := h.Servo.GetCCDSerial(ctx)
+		if err != nil {
+			s.Fatal("Failed to get servo serials: ", err)
+		}
+		s.Logf("CCD serial read from Servo : %s", ccdSerial)
+	}
 
 	// read cr50_ccd_state_flags
 	val, err := h.Servo.HasControl(ctx, cr50CcdStateFlags)
