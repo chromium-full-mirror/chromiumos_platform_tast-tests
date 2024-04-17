@@ -26,7 +26,6 @@ func init() {
 			"tote-eng@google.com",
 			"cros-system-ui-eng@google.com",
 			"chromeos-sw-engprod@google.com",
-			"angusmclean@google.com",
 			"dmblack@google.com",
 		},
 		Attr:         []string{"group:mainline", "informational"},
