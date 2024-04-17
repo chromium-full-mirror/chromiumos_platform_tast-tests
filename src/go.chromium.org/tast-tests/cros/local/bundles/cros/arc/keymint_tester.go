@@ -34,8 +34,7 @@ func init() {
 		BugComponent: "b:1487630",
 		Attr:         []string{"group:mainline", "informational"},
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
-		// TODO(b/301629757): Switch back to |arcBooted|, when KeyMint is fully launched on ARC-T.
-		Fixture: "arcBootedWithKeyMintOn",
+		Fixture:      "arcBooted",
 		// TODO(b/301347001): Enable this test for ARC T+.
 		SoftwareDeps: []string{"android_vm_t", "chrome"},
 		VarDeps:      []string{"ui.gaiaPoolDefault"},

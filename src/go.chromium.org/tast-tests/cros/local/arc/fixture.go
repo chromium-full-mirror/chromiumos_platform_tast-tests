@@ -211,57 +211,6 @@ func init() {
 		TearDownTimeout: ResetTimeout,
 	})
 
-	// TODO(b/301629757): Remove arcBootedWithKeyMintOn/arcBootedWithKeyMintOff when KeyMint is fully launched on ARC-T.
-	fixtureConfig = DefaultBootedFixtureConfig()
-	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-		return []chrome.Option{
-			chrome.ARCSupported(),
-			chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
-			chrome.EnableFeatures("ArcSwitchToKeyMintOnT", "ArcSwitchToKeyMintOnTOverride"),
-			chrome.ExtraArgs(DisableSyncFlags()...),
-		}, nil
-	}
-	testing.AddFixture(&testing.Fixture{
-		Name: "arcBootedWithKeyMintOn",
-		Desc: "ARC is booted, with KeyMint turned on",
-		Contacts: []string{
-			"yaohuali@google.com",
-			"arc-commercial@google.com",
-		},
-		Vars:            []string{"ui.gaiaPoolDefault"},
-		Impl:            NewArcBootedFixture(fixtureConfig),
-		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
-		ResetTimeout:    ResetTimeout,
-		PreTestTimeout:  PreTestTimeout,
-		PostTestTimeout: PostTestTimeout,
-		TearDownTimeout: ResetTimeout,
-	})
-
-	fixtureConfig = DefaultBootedFixtureConfig()
-	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-		return []chrome.Option{
-			chrome.ARCSupported(),
-			chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
-			chrome.DisableFeatures("ArcSwitchToKeyMintOnT", "ArcSwitchToKeyMintOnTOverride"),
-			chrome.ExtraArgs(DisableSyncFlags()...),
-		}, nil
-	}
-	testing.AddFixture(&testing.Fixture{
-		Name: "arcBootedWithKeyMintOff",
-		Desc: "ARC is booted, with KeyMint turned off",
-		Contacts: []string{
-			"yaohuali@google.com",
-			"arc-commercial@google.com",
-		},
-		Vars:            []string{"ui.gaiaPoolDefault"},
-		Impl:            NewArcBootedFixture(fixtureConfig),
-		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
-		ResetTimeout:    ResetTimeout,
-		PreTestTimeout:  PreTestTimeout,
-		PostTestTimeout: PostTestTimeout,
-		TearDownTimeout: ResetTimeout,
-	})
-
 	// arcBootedWithPlayStore is a fixture similar to arcBooted along with
 	// GAIA login and Play Store Optin.
 	fixtureConfig = DefaultBootedFixtureConfig()

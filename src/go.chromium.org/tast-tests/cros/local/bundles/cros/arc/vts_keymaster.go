@@ -26,9 +26,8 @@ func init() {
 		BugComponent: "b:1487630",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
-		// TODO(b/301629757): Switch back to |arcBooted|, when KeyMint is fully launched on ARC-T.
-		Fixture: "arcBootedWithKeyMintOff",
-		Timeout: chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
+		Fixture:      "arcBooted",
+		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_p"},
 			// TODO(b/273223557): Download only one file for the current architecture.
@@ -83,8 +82,8 @@ func vtsTestExecName(ctx context.Context, a *arc.ARC) (string, error) {
 	}
 
 	sdkVersion, err := arc.SDKVersion()
-	if(err != nil) {
-		return "", errors.Errorf("failed to determine ARC SDK version")
+	if err != nil {
+		return "", errors.New("failed to determine ARC SDK version")
 	}
 
 	isSDKR := sdkVersion == arc.SDKR

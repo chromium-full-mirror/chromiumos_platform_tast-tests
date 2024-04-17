@@ -24,9 +24,8 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		VarDeps:      []string{"ui.gaiaPoolDefault"},
 		SoftwareDeps: []string{"chrome"},
-		// TODO(b/301629757): Switch back to |arcBooted|, when KeyMint is fully launched on ARC-T.
-		Fixture: "arcBootedWithKeyMintOn",
-		Timeout: chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
+		Fixture:      "arcBooted",
+		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		Params: []testing.Param{{
 			Name: "vm_x86_64",
 			// TODO(b/301347001): Enable this test for ARC T+.
