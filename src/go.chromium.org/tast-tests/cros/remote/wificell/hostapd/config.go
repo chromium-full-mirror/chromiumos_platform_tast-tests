@@ -885,6 +885,8 @@ func (c *Config) Format(iface, ctrlPath string) (string, error) {
 		if c.Mode == Mode80211bePure {
 			configure("require_eht", "1")
 		}
+		// All 11be tests should use MLO.
+		configure("mld_ap", "1")
 	}
 	if c.HTCaps != 0 {
 		configure("wmm_enabled", "1")
@@ -931,8 +933,6 @@ func (c *Config) Format(iface, ctrlPath string) (string, error) {
 			// Set country code to US to enable the DUT to actively scan for the
 			// AP on 6GHz.
 			configure("country_code", "US")
-			// Enable hash-to-element mechanism for 6GHz networks.
-			configure("sae_pwe", "1")
 		} else {
 			return "", errors.New("operating class outside of [131, 137] is not handled in testing hostapd config")
 		}
@@ -941,6 +941,11 @@ func (c *Config) Format(iface, ctrlPath string) (string, error) {
 	// If HostapdConfig has provided "ieee80211w" then do not overwrite it.
 	if _, ok := securityConf["ieee80211w"]; !ok {
 		configure("ieee80211w", strconv.Itoa(int(c.PMF)))
+	}
+
+	// Enable hash-to-element mechanism for networks that are using SAE.
+	if strings.Contains(securityConf["wpa_key_mgmt"], "SAE") {
+		configure("sae_pwe", "1")
 	}
 
 	if c.Bridge != "" {

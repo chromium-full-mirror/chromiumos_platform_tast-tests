@@ -790,7 +790,7 @@ func TestConfigFormat(t *testing.T) {
 				HEChWidth:        HEChWidth80,
 				EHTCenterChannel: 155,
 				EHTChWidth:       EHTChWidth80,
-				SecurityConfig:   &base.Config{},
+				SecurityConfig:   wpa3Conf,
 			},
 			verify: map[string]string{
 				"hw_mode":                      "a",
@@ -807,6 +807,8 @@ func TestConfigFormat(t *testing.T) {
 				"eht_oper_chwidth":             "1",
 				"eht_oper_centr_freq_seg0_idx": "155",
 				"vht_capab":                    "[SHORT-GI-80]",
+				"mld_ap":                       "1",
+				"sae_pwe":                      "1",
 			},
 		},
 		{
@@ -821,7 +823,7 @@ func TestConfigFormat(t *testing.T) {
 				HEChWidth:        HEChWidth80,
 				EHTCenterChannel: 42,
 				EHTChWidth:       EHTChWidth80,
-				SecurityConfig:   &base.Config{},
+				SecurityConfig:   wpa3Conf,
 			},
 			verify: map[string]string{
 				"hw_mode":                      "a",
@@ -838,6 +840,8 @@ func TestConfigFormat(t *testing.T) {
 				"eht_oper_chwidth":             "1",
 				"eht_oper_centr_freq_seg0_idx": "42",
 				"vht_capab":                    "",
+				"mld_ap":                       "1",
+				"sae_pwe":                      "1",
 			},
 		},
 
