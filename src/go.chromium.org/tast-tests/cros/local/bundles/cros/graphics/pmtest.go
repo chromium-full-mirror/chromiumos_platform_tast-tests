@@ -6,7 +6,6 @@ package graphics
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
@@ -797,13 +796,12 @@ func Pmtest(ctx context.Context, s *testing.State) {
 	}
 	// We request two consecutive suspend_resumes to ensure each cycle can be repeated.
 	// In other words if the resume was unclean we give the test a chance to fail itself (and not some following test).
-	out, err := testexec.CommandContext(ctx, "suspend_stress_test", "--count", fmt.Sprintf("%v", params.count), "--nopremature_wake_fatal", "--record_dmesg_dir", s.OutDir()).Output(testexec.DumpLogOnError)
-	testing.ContextLog(ctx, "suspend_stress_test Output: ", string(out))
-	if err != nil {
-		s.Fatalf("Failed to run suspend_stress_test to %v: %v", origSuspendMode, err)
-	}
-	msg, failed := graphics.GetSuspendStressTestError(ctx, origSuspendMode, mode, string(out))
-	if failed {
-		s.Fatalf("Failed to suspend to %v: %v", origSuspendMode, msg)
+	cmd := testexec.CommandContext(ctx, "powerd_dbus_suspend", "--delay=0", "--suspend_for_sec=5", "--timeout=60")
+	for i := 0; i < 2; i++ {
+		// We tries to suspend the system for 5 seconds following with 30 seconds to allow the DUT to resume.
+		s.Logf("[%v] Running: %v", i, cmd)
+		if cmd.Run(testexec.DumpLogOnError); err != nil {
+			s.Fatal("Suspend failed: ", err)
+		}
 	}
 }

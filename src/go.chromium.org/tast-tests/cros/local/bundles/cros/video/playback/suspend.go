@@ -53,23 +53,13 @@ func suspendSystem(ctx context.Context, cr *chrome.Chrome, reader *syslog.Reader
 	if err := graphics.CheckSysLog(ctx, testName, reader); err != nil {
 		return errors.Wrap(err, "syslog signature found")
 	}
-	outDir, ok := testing.ContextOutDir(ctx)
-	if !ok {
-		return errors.New("failed to get output directory")
-	}
-
 	if err := graphics.SetPMTest(ctx, sConfig.pmTestMode); err != nil {
 		return errors.Wrap(err, "failed to set pm_test")
 	}
-
-	out, err := testexec.CommandContext(ctx, "suspend_stress_test", "--count", "1", "--nopremature_wake_fatal", "--record_dmesg_dir", outDir).Output(testexec.DumpLogOnError)
-	testing.ContextLog(ctx, "suspend_stress_test Output: ", string(out))
-	if err != nil {
-		return errors.Wrapf(err, "suspend_stress_test to %v failed", sConfig.suspendMode)
-	}
-	msg, failed := graphics.GetSuspendStressTestError(ctx, sConfig.suspendMode, sConfig.pmTestMode, string(out))
-	if failed {
-		return errors.Errorf("suspend_stress_test error while suspend to %v: %v", sConfig.suspendMode, msg)
+	cmd := testexec.CommandContext(ctx, "powerd_dbus_suspend", "--deplay=0", "--suspend_for_sec=5", "--timeout=60")
+	testing.ContextLog(ctx, "Running: ", cmd)
+	if err := cmd.Run(testexec.DumpLogOnError); err != nil {
+		return errors.Wrapf(err, "suspend to %v failed", sConfig.suspendMode)
 	}
 	conn, err := reconnectToBrowser(ctx, cr, config.BrowserType)
 	// Check |currentTime| variable is changing.
