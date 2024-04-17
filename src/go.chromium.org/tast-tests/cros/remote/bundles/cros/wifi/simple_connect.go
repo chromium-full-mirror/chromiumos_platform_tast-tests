@@ -436,11 +436,12 @@ func init() {
 				ExtraAttr: []string{"wificell_unstable", "wificell_func_be"},
 				Val: []simpleConnectTestcase{{
 					apConfigs: []ap.ApConfig{{
-						ApOpts: []ap.Option{
-							ap.Mode(ap.Mode80211bePure), ap.Channel(40), ap.HTCaps(ap.HTCapHT20),
-							ap.EHTChWidth(ap.EHTChWidth20Or40),
-						},
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211bePure), ap.Channel(40), ap.HTCaps(ap.HTCapHT20),
+							ap.EHTChWidth(ap.EHTChWidth20Or40), ap.EHTCenterChannel(40), ap.PMF(ap.PMFRequired)},
+						SecConfFac: wpa.NewConfigFactory("chromeos",
+							wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					}},
+					expectedSecurity: shillconst.SecurityWPA3,
 				}},
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211be()),
 				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_BE"},
@@ -451,11 +452,12 @@ func init() {
 				ExtraAttr: []string{"wificell_unstable", "wificell_func_be"},
 				Val: []simpleConnectTestcase{{
 					apConfigs: []ap.ApConfig{{
-						ApOpts: []ap.Option{
-							ap.Mode(ap.Mode80211bePure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40, ap.HTCapLDPC),
-							ap.EHTChWidth(ap.EHTChWidth20Or40),
-						},
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211bePure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40, ap.HTCapLDPC),
+							ap.EHTChWidth(ap.EHTChWidth20Or40), ap.EHTCenterChannel(159), ap.PMF(ap.PMFRequired)},
+						SecConfFac: wpa.NewConfigFactory("chromeos",
+							wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					}},
+					expectedSecurity: shillconst.SecurityWPA3,
 				}},
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211be()),
 				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_BE"},
@@ -466,12 +468,13 @@ func init() {
 				ExtraAttr: []string{"wificell_unstable", "wificell_func_be"},
 				Val: []simpleConnectTestcase{{
 					apConfigs: []ap.ApConfig{{
-						ApOpts: []ap.Option{
-							ap.Mode(ap.Mode80211beMixed), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC),
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211beMixed), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC),
 							ap.VHTCaps(ap.VHTCapSGI80), ap.VHTCenterChannel(155), ap.VHTChWidth(ap.VHTChWidth80),
-							ap.EHTCenterChannel(155), ap.EHTChWidth(ap.EHTChWidth80),
-						},
+							ap.EHTCenterChannel(155), ap.EHTChWidth(ap.EHTChWidth80), ap.PMF(ap.PMFRequired)},
+						SecConfFac: wpa.NewConfigFactory("chromeos",
+							wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					}},
+					expectedSecurity: shillconst.SecurityWPA3,
 				}},
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211be()),
 				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_BE"},
@@ -483,12 +486,13 @@ func init() {
 				ExtraAttr: []string{"wificell_unstable", "wificell_func_be"},
 				Val: []simpleConnectTestcase{{
 					apConfigs: []ap.ApConfig{{
-						ApOpts: []ap.Option{
-							ap.Mode(ap.Mode80211bePure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC),
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211bePure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC),
 							ap.VHTCaps(ap.VHTCapSGI80), ap.VHTCenterChannel(155), ap.VHTChWidth(ap.VHTChWidth80),
-							ap.EHTCenterChannel(155), ap.EHTChWidth(ap.EHTChWidth80),
-						},
+							ap.EHTCenterChannel(155), ap.EHTChWidth(ap.EHTChWidth80), ap.PMF(ap.PMFRequired)},
+						SecConfFac: wpa.NewConfigFactory("chromeos",
+							wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					}},
+					expectedSecurity: shillconst.SecurityWPA3,
 				}},
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211be()),
 				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_BE"},
