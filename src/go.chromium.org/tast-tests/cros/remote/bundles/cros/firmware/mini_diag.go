@@ -167,11 +167,6 @@ func warmResetDUT(ctx context.Context, h *firmware.Helper) error {
 	if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
 		return errors.Wrap(err, "failed to warm reset the DUT")
 	}
-	waitDisconnectCtx, cancelWaitDisconnect := context.WithTimeout(ctx, 1*time.Minute)
-	defer cancelWaitDisconnect()
-	if err := h.DUT.WaitUnreachable(waitDisconnectCtx); err != nil {
-		return errors.Wrap(err, "failed to wait for DUT to become unreachable, warm reset failed")
-	}
 	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
 	defer cancelWaitConnect()
 
