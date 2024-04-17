@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/media/caps"
+	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/camera/cca"
 	"go.chromium.org/tast-tests/cros/local/camera/features"
 	"go.chromium.org/tast-tests/cros/local/camera/pnp"
@@ -228,7 +229,29 @@ func PNPCCAFeatureToggle(ctx context.Context, s *testing.State) {
 	if err := pnp.WarmUp(ctx); err != nil {
 		s.Fatal("Failed to run pnp warm up routine: ", err)
 	}
-	if err := pnpRoutine.MeasurePower(ctx, cleanupCtx, s.OutDir(), s.TestName(), true); err != nil {
+
+	fpsObserver, err := app.FPSObserver(ctx)
+	if err != nil {
+		s.Fatal("Failed to get FPS observer: ", err)
+	}
+	defer fpsObserver.Stop(cleanupCtx)
+
+	if err := pnpRoutine.MeasurePower(ctx, cleanupCtx, s.OutDir(), s.TestName(), false); err != nil {
 		s.Fatal("Failed to run pnp power measuring routine: ", err)
+	}
+
+	fps, err := fpsObserver.AverageFPS(ctx)
+	if err != nil {
+		s.Fatal("Failed to measure average FPS: ", err)
+	}
+	pv := perf.NewValues()
+	pv.Set(perf.Metric{
+		Name:      "cca_fps",
+		Unit:      "fps",
+		Direction: perf.BiggerIsBetter,
+	}, fps)
+
+	if err := pnpRoutine.UploadMetrics(ctx, cleanupCtx, pv); err != nil {
+		s.Fatal("Failed to upload metrics: ", err)
 	}
 }
