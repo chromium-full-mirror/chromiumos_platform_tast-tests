@@ -769,7 +769,7 @@ func (tf *TestFixture) ReinitRouters(ctx context.Context, doPcapReboot bool) err
 	if tf.options.EnableBridgeAndVeth {
 		for i, rd := range tf.routers {
 			// Configure bridges and veth on routers except pcap.
-			if rd != tf.pcap {
+			if rd != tf.pcap || tf.pcapIsRouter {
 				if err := tf.initializeBridgeAndVethOnRouter(ctx, rd); err != nil {
 					return errors.Wrapf(err, "failed to initialize bridges and veths on router %d", i)
 				}
