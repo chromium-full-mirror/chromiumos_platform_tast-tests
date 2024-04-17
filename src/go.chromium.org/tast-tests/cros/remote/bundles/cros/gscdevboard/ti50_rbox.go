@@ -20,9 +20,7 @@ const (
 	// battDisconnectMinimum is how long AC must be removed before battery
 	// disconnect is asserted
 	battDisconnectMinimum = 5 * time.Second
-	// deepSleepDelay the maximum amount of time we should wait in a test for
-	// deep sleep. This is 10 seconds longer than max deep sleep delay.
-	deepSleepDelay = 70 * time.Second
+	deepSleepDelay        = ti50.WaitForSleepTimeout
 )
 
 const (

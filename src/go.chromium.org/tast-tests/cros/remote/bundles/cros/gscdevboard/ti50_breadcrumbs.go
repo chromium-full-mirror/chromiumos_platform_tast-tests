@@ -64,10 +64,10 @@ func Ti50Breadcrumbs(ctx context.Context, s *testing.State) {
 	b.GpioApplyStrap(ctx, ti50.CcdDisconnected)
 	s.Log("Waiting for normal sleep")
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
-	th.MustSucceed(i.WaitUntilNormalSleep(ctx, 70*time.Second), "Sleep when AP on")
+	th.MustSucceed(i.WaitUntilNormalSleep(ctx, ti50.WaitForSleepTimeout), "Sleep when AP on")
 	s.Log("Waiting for deep sleep")
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, false)
-	th.MustSucceed(i.WaitUntilDeepSleep(ctx, 70*time.Second), "Sleep when AP off")
+	th.MustSucceed(i.WaitUntilDeepSleep(ctx, ti50.WaitForSleepTimeout), "Sleep when AP off")
 	// Expect pmuResumeFromSleep only after pmuNormalSleep. Wake from pmuDeepSleep will follow
 	// boot path instead.
 	expected = append(expected, pmuNormalSleep, pmuResumeFromSleep, pmuDeepSleep)

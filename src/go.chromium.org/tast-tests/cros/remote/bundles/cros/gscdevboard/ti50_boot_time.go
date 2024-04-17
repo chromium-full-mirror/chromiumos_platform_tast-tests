@@ -73,7 +73,7 @@ func Ti50BootTime(ctx context.Context, s *testing.State) {
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, false)
 	b.GpioApplyStrap(ctx, ti50.CcdDisconnected)
 	s.Log("Waiting for deep sleep")
-	th.MustSucceed(i.WaitUntilDeepSleep(ctx, 70*time.Second), "deep sleep")
+	th.MustSucceed(i.WaitUntilDeepSleep(ctx, ti50.WaitForSleepTimeout), "deep sleep")
 	if b.GscProperties().HasEcRstFet() {
 		gpioMonitor = b.GpioMonitorStart(ctx, ti50.GpioTi50PltRstL, ti50.GpioTi50EcRstL, ti50.GpioTi50EcRstFet)
 	} else {

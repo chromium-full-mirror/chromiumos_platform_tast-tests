@@ -15,6 +15,10 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+// WaitForSleepTimeout is the maximum amount of time we should wait in a test
+// for either normal/deep sleep. This is 10 seconds longer than max sleep delay.
+const WaitForSleepTimeout = 70 * time.Second
+
 // CCDLevel contains possible CCD levels.
 type CCDLevel string
 

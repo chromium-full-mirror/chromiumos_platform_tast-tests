@@ -359,7 +359,7 @@ func verifyWPMonitoring(ctx context.Context, s *testing.State, b utils.DevboardH
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, false)
 	b.GpioSet(ctx, ti50.GpioTi50WriteProtectSenseL, false)
 	s.Log("Waiting 70 seconds for GSC to go to deep sleep")
-	th.MustSucceed(i.WaitUntilDeepSleep(ctx, time.Second*70), "Enter deep sleep")
+	th.MustSucceed(i.WaitUntilDeepSleep(ctx, ti50.WaitForSleepTimeout), "Enter deep sleep")
 
 	// Externally pulse WP disable quickly. Should wake up GSC
 	b.GpioSet(ctx, ti50.GpioTi50WriteProtectSenseL, true)
@@ -373,7 +373,7 @@ func verifyWPMonitoring(ctx context.Context, s *testing.State, b utils.DevboardH
 
 	// Verify normal sleep WP_SENSE_L detection
 	s.Log("Waiting 70 seconds for GSC to go to normal sleep")
-	th.MustSucceed(i.WaitUntilNormalSleep(ctx, time.Second*70), "Enter normal sleep")
+	th.MustSucceed(i.WaitUntilNormalSleep(ctx, ti50.WaitForSleepTimeout), "Enter normal sleep")
 
 	// Externally pulse WP disable quickly
 	b.GpioSet(ctx, ti50.GpioTi50WriteProtectSenseL, true)
@@ -388,7 +388,7 @@ func verifyWPMonitoring(ctx context.Context, s *testing.State, b utils.DevboardH
 	b.GpioSet(ctx, ti50.GpioTi50WriteProtectSenseL, true)
 	b.GpioSet(ctx, ti50.GpioTi50WriteProtectSenseL, false)
 	s.Log("Waiting 70 seconds for GSC to go to deep sleep")
-	th.MustSucceed(i.WaitUntilDeepSleep(ctx, time.Second*70), "Enter deep sleep")
+	th.MustSucceed(i.WaitUntilDeepSleep(ctx, ti50.WaitForSleepTimeout), "Enter deep sleep")
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after deep sleep")
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
 	expectGscReboot(ctx, s, i, "AP turned on")
@@ -399,7 +399,7 @@ func verifyWPMonitoring(ctx context.Context, s *testing.State, b utils.DevboardH
 	th.MustSucceed(i.SetWp(ctx, false), "Disable WP")
 	expectNoGscReboot(ctx, s, i, "disabling WP")
 	s.Log("Waiting 70 seconds for GSC to go to deep sleep")
-	th.MustSucceed(i.WaitUntilDeepSleep(ctx, time.Second*70), "Enter deep sleep")
+	th.MustSucceed(i.WaitUntilDeepSleep(ctx, ti50.WaitForSleepTimeout), "Enter deep sleep")
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after deep sleep")
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
 	expectGscReboot(ctx, s, i, "AP turned on")

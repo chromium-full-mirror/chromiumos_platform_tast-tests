@@ -160,7 +160,7 @@ func GSCPCRRestore(ctx context.Context, s *testing.State) {
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, false)
 	if testParams.sleep {
 		s.Log("Waiting for Ti50 to go into deep sleep")
-		th.MustSucceed(b.WaitUntilDeepSleep(ctx, i, 2*time.Minute), "Ti50 did not sleep when AP off")
+		th.MustSucceed(b.WaitUntilDeepSleep(ctx, i, ti50.WaitForSleepTimeout), "Ti50 did not sleep when AP off")
 	}
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
 	if testParams.sleep {

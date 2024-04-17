@@ -98,7 +98,7 @@ func logCurrent(ctx context.Context, s *testing.State, b utils.DevboardHelper, p
 
 func verifyDeepSleep(ctx context.Context, s *testing.State, i *ti50.CrOSImage, th utils.FirmwareTestingHelper) {
 	s.Log("Waiting for sleep with AP off")
-	th.MustSucceed(i.WaitUntilDeepSleep(ctx, time.Minute), "Ti50 did not sleep when AP off")
+	th.MustSucceed(i.WaitUntilDeepSleep(ctx, ti50.WaitForSleepTimeout), "Ti50 did not sleep when AP off")
 	_, err := i.WaitUntilMatch(ctx, reBoot, time.Second*3)
 	if err != nil {
 		// We expected to NOT see boot a message.
@@ -361,7 +361,7 @@ func Ti50Sleep(ctx context.Context, s *testing.State) {
 	// Clear the last gpio monitor events since we expect GSC to reset EC from above commands
 	b.GpioMonitorRead(ctx, gpioMonitor)
 	s.Log("Waiting for sleep with AP off")
-	th.MustSucceed(i.WaitUntilDeepSleep(ctx, time.Minute), "Ti50 did not sleep when AP off")
+	th.MustSucceed(i.WaitUntilDeepSleep(ctx, ti50.WaitForSleepTimeout), "Ti50 did not sleep when AP off")
 
 	s.Log("Simulating AP booting")
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
@@ -388,7 +388,7 @@ func Ti50Sleep(ctx context.Context, s *testing.State) {
 	}
 	if verifyNormalWakeup(ctx, s, i, b, gpioMonitor, wakeSourceGpio, &whichPinTpmBus, "AP TPM request") {
 		s.Log("Waiting for sleep with AP on")
-		th.MustSucceed(i.WaitUntilNormalSleep(ctx, time.Minute), "Sleep when AP on")
+		th.MustSucceed(i.WaitUntilNormalSleep(ctx, ti50.WaitForSleepTimeout), "Sleep when AP on")
 	}
 
 	s.Logf("Simulating EC packet mode, wait %s", waitForNoSleep)
@@ -413,7 +413,7 @@ func Ti50Sleep(ctx context.Context, s *testing.State) {
 
 		b.GpioSet(ctx, ti50.GpioTi50EcPacketMode, false)
 		s.Log("Waiting for sleep with AP on")
-		th.MustSucceed(i.WaitUntilNormalSleep(ctx, time.Minute), "Sleep when AP on")
+		th.MustSucceed(i.WaitUntilNormalSleep(ctx, ti50.WaitForSleepTimeout), "Sleep when AP on")
 	} else {
 		// Error already reported by `verifyNormalWakeup`, move on to testing other wake
 		// sources.
@@ -428,7 +428,7 @@ func Ti50Sleep(ctx context.Context, s *testing.State) {
 		}
 		b.GpioSet(ctx, ti50.GpioTi50CcdModeL, true)
 		s.Log("Waiting for sleep with AP on")
-		th.MustSucceed(i.WaitUntilNormalSleep(ctx, time.Minute), "Sleep when AP on")
+		th.MustSucceed(i.WaitUntilNormalSleep(ctx, ti50.WaitForSleepTimeout), "Sleep when AP on")
 	} else {
 		// Error already reported by `verifyNormalWakeup`, move on to testing other wake
 		// sources.
@@ -444,7 +444,7 @@ func Ti50Sleep(ctx context.Context, s *testing.State) {
 		}
 		b.GpioApplyStrap(ctx, ti50.CcdDisconnected)
 		s.Log("Waiting for sleep with AP on")
-		th.MustSucceed(i.WaitUntilNormalSleep(ctx, time.Minute), "Sleep when AP on")
+		th.MustSucceed(i.WaitUntilNormalSleep(ctx, ti50.WaitForSleepTimeout), "Sleep when AP on")
 		logCurrent(ctx, s, b, pv, "NormalSleep_CCD")
 		// For some reason, after USB disconnect it takes five seconds for Dauntless power
 		// consumption to drop.
@@ -460,7 +460,7 @@ func Ti50Sleep(ctx context.Context, s *testing.State) {
 	th.MustSucceed(b.WriteSerial(ctx, []byte("hello\r")), "Serial write")
 	if verifyNormalWakeup(ctx, s, i, b, gpioMonitor, wakeSourceGpio, &whichPinGscUart, "serial console input") {
 		s.Log("Waiting for sleep with AP on")
-		th.MustSucceed(i.WaitUntilNormalSleep(ctx, time.Minute), "Sleep when AP on")
+		th.MustSucceed(i.WaitUntilNormalSleep(ctx, ti50.WaitForSleepTimeout), "Sleep when AP on")
 	}
 
 	s.Logf("Simulating WP_SENSE_L de-assert pulse event, wait %s", waitForNoSleep)
@@ -473,7 +473,7 @@ func Ti50Sleep(ctx context.Context, s *testing.State) {
 	// Clear the last gpio monitor events since we expect GSC to reset EC from above commands
 	b.GpioMonitorRead(ctx, gpioMonitor)
 	s.Log("Waiting for sleep with AP on")
-	th.MustSucceed(i.WaitUntilNormalSleep(ctx, time.Minute), "Sleep when AP on")
+	th.MustSucceed(i.WaitUntilNormalSleep(ctx, ti50.WaitForSleepTimeout), "Sleep when AP on")
 
 	s.Log("Simulating AP powering off")
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, false)

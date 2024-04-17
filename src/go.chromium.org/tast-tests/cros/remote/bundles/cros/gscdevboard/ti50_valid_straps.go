@@ -115,7 +115,7 @@ func Ti50ValidStraps(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Putting Ti50 into deep sleep")
-	th.MustSucceed(i.WaitUntilDeepSleep(ctx, time.Minute), "Ti50 did not sleep")
+	th.MustSucceed(i.WaitUntilDeepSleep(ctx, ti50.WaitForSleepTimeout), "Ti50 did not sleep")
 	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 did not wake up")
 	if err := checkGSCBrdpropCommandOutput(ctx, i, userParams.brdpropOutput); err != nil {
 		s.Error("Failed verify straps after wakeup from deep sleep: ", err)
