@@ -87,11 +87,6 @@ func AssignToAllDesks(ctx context.Context, s *testing.State) {
 	defer ash.CleanUpDesks(cleanupCtx, tconn)
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_dump")
 
-	// Ensure there is no window open before test starts.
-	if err := ash.CloseAllWindows(ctx, tconn); err != nil {
-		s.Fatal("Failed to ensure no window is open: ", err)
-	}
-
 	ac := uiauto.New(tconn)
 
 	chromeApp, err := apps.PrimaryBrowser(ctx, tconn)
@@ -116,9 +111,35 @@ func AssignToAllDesks(ctx context.Context, s *testing.State) {
 	}
 	arcApp := apps.App{ID: arcAppID, Name: appName}
 
-	appsList := []apps.App{chromeApp, apps.Terminal, arcApp}
+	// Create 4 desks.
+	const numNewDesks = 4
+	for i := 1; i <= numNewDesks; i++ {
+		if err := ash.CreateNewDesk(ctx, tconn); err != nil {
+			s.Fatalf("Failed to create the Desk %d: %v", i+1, err)
+		}
+		// Active the new created desk.
+		if err = ash.ActivateDeskAtIndex(ctx, tconn, i); err != nil {
+			s.Fatalf("Failed to activate desk with index %d: %v", i, err)
+		}
+	}
 
+	// Activate Desk 1 to launch and show windows on it.
+	if err = ash.ActivateDeskAtIndex(ctx, tconn, 0); err != nil {
+		s.Fatalf("Failed to activate desk with index %d: %v", 0, err)
+	}
+
+	// Ensure there is no window open before test starts.
+	if err := ash.CloseAllWindows(ctx, tconn); err != nil {
+		s.Fatal("Failed to ensure no window is open before creating test windows: ", err)
+	}
+
+	appsList := []apps.App{chromeApp, apps.Terminal, arcApp}
+	bt := s.Param().(browser.Type)
 	for _, app := range appsList {
+		if bt == browser.TypeLacros && app == chromeApp {
+			cr.Browser().NewConn(ctx, chrome.BlankURL)
+			continue
+		}
 		if err := apps.Launch(ctx, tconn, app.ID); err != nil {
 			s.Fatalf("Failed to launch %s: %v", app.Name, err)
 		}
@@ -127,14 +148,6 @@ func AssignToAllDesks(ctx context.Context, s *testing.State) {
 		}
 		if _, err := ash.WaitForAppWindow(ctx, tconn, app.ID); err != nil {
 			s.Fatalf("%s did not produce a visible window after launch: %v", app.Name, err)
-		}
-	}
-
-	// Create 4 desks.
-	const numNewDesks = 4
-	for i := 1; i <= numNewDesks; i++ {
-		if err := ash.CreateNewDesk(ctx, tconn); err != nil {
-			s.Fatalf("Failed to create the Desk %d: %v", i+1, err)
 		}
 	}
 
@@ -188,10 +201,8 @@ func AssignToAllDesks(ctx context.Context, s *testing.State) {
 		s.Fatalf("Unexpected number of windows found; want: 3, got: %d", len(ws))
 	}
 
-	for i := 0; i < len(ws); i++ {
-		if err := ws[i].CloseWindow(ctx, tconn); err != nil {
-			s.Fatal("Failed to close the window: ", err)
-		}
+	if err := ash.CloseAllWindows(ctx, tconn); err != nil {
+		s.Fatal("Failed to close any existing windows: ", err)
 	}
 	ws, err = ash.GetAllWindows(ctx, tconn)
 	if err != nil {
@@ -203,6 +214,11 @@ func AssignToAllDesks(ctx context.Context, s *testing.State) {
 
 	// 10. Re-open the 3 kinds of windows and assign them to all desks. Then re-assign them to a specific desk.
 	for _, app := range appsList {
+		// For the lacros browser, we don't need to do the launch step.
+		if bt == browser.TypeLacros && app == chromeApp {
+			cr.Browser().NewConn(ctx, chrome.BlankURL)
+			continue
+		}
 		if err := apps.Launch(ctx, tconn, app.ID); err != nil {
 			s.Fatalf("Failed to launch %s: %v", app.Name, err)
 		}
@@ -252,6 +268,16 @@ func isMenuItemChecked(ctx context.Context, ac *uiauto.Context, menuItem *nodewi
 
 // assignWindowsToDesks assigns windows to all desks or Desk 2 based on `onAllDesks`.
 func assignWindowsToDesks(ctx context.Context, tconn *chrome.TestConn, ac *uiauto.Context, onAllDesks bool) error {
+	dc, err := ash.GetDeskCount(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to count desks")
+	}
+
+	// We must have at least two desks. Then, the `MenuItemView` can be shown up when right-clicking on the caption bar of the window.
+	if dc == 1 {
+		return errors.Wrapf(err, "unexpected number of desks: got %v, want more than 1", dc)
+	}
+
 	ws, err := ash.GetAllWindows(ctx, tconn)
 	if err != nil {
 		return errors.Wrap(err, "failed to find all windows")
@@ -276,20 +302,24 @@ func assignWindowsToDesks(ctx context.Context, tconn *chrome.TestConn, ac *uiaut
 		}
 
 		// Right click on the top of the window.
-		rightClickPoint := coords.NewPoint(ws[i].BoundsInRoot.CenterPoint().X, ws[i].BoundsInRoot.Top+10)
+		rightClickPoint := coords.NewPoint(ws[i].BoundsInRoot.Left+ws[i].BoundsInRoot.Width/2, ws[i].BoundsInRoot.Top+ws[i].CaptionHeight/2)
 		if err := mouse.Click(tconn, rightClickPoint, mouse.RightButton)(ctx); err != nil {
 			return errors.Wrap(err, "failed to right click the top of the window")
 		}
 
 		// Move mouse to the move window to desk menu item.
 		moveWindowToDeskMenuItem := nodewith.ClassName("MenuItemView").Name("Move window to desk")
-		if err := uiauto.Combine(
-			"move cursor to menu and wait for submenu",
-			ac.MouseMoveTo(moveWindowToDeskMenuItem, 0),
-			ac.DoDefault(moveWindowToDeskMenuItem),
-			ac.WaitUntilExists(moveTarget),
-		)(ctx); err != nil {
-			return errors.Wrap(err, "failed to get window menu")
+
+		// For the arc app, when right-clicking on the caption bar of it, the `moveTarget` will be shown up, so we don't need to do the step below.
+		if err := ac.Exists(moveTarget)(ctx); err != nil {
+			if err := uiauto.Combine(
+				"move cursor to menu and wait for submenu",
+				ac.MouseMoveTo(moveWindowToDeskMenuItem, 0),
+				ac.DoDefault(moveWindowToDeskMenuItem),
+				ac.WaitUntilExists(moveTarget),
+			)(ctx); err != nil {
+				return errors.Wrapf(err, "failed to get window menu for window name: %s", ws[i].Name)
+			}
 		}
 
 		// If the menu item is already checked, the we must not check it again, since this toggles the item. See b/276296010 for more info.
