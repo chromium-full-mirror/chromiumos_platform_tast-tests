@@ -81,9 +81,10 @@ func init() {
 	// its parent.
 	// TODO(b/328698041): Remove this after removal of bind mount is released.
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeLoggedInForCrostiniNoDownloadsBindMount",
-		Desc:     "Logged into a session without downloads bind mount",
-		Contacts: []string{"chromeos-files-syd@google.com"},
+		Name:         "chromeLoggedInForCrostiniNoDownloadsBindMount",
+		Desc:         "Logged into a session without downloads bind mount",
+		Contacts:     []string{"chromeos-files-syd@google.com"},
+		BugComponent: "b:167289",
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			opts := generateChromeOpts(s)
 			if arc.Supported() {
@@ -210,6 +211,7 @@ func init() {
 		Name:            "crostiniBullseyeNoDownloadsBindMount",
 		Desc:            "Install Crostini with Bullseye without downloads bind mount",
 		Contacts:        []string{"chromeos-files-syd@google.com"},
+		BugComponent:    "b:167289",
 		Impl:            &crostiniFixture{preData: preTestDataBullseye},
 		SetUpTimeout:    installationTimeout + uninstallationTimeout,
 		ResetTimeout:    checkContainerTimeout,
@@ -255,6 +257,7 @@ func init() {
 		Name:            "crostiniBookwormNoDownloadsBindMount",
 		Desc:            "Install Crostini with Bookworm without downloads bind mount",
 		Contacts:        []string{"chromeos-files-syd@google.com"},
+		BugComponent:    "b:167289",
 		Impl:            &crostiniFixture{preData: preTestDataBookworm},
 		SetUpTimeout:    installationTimeout + uninstallationTimeout,
 		ResetTimeout:    checkContainerTimeout,

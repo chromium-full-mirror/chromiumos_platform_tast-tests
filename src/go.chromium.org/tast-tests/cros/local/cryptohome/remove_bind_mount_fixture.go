@@ -19,6 +19,7 @@ func init() {
 			"wenbojie@chromium.org",
 			"chromeos-files-syd@google.com",
 		},
+		BugComponent:    "b:167289",
 		SetUpTimeout:    fixtureSetUpTimeout,
 		ResetTimeout:    fixtureResetTimeout,
 		TearDownTimeout: fixtureTearDownTimeout,

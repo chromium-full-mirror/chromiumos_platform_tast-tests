@@ -55,6 +55,7 @@ func init() {
 			"wenbojie@chromium.org",
 			"chromeos-files-syd@google.com",
 		},
+		BugComponent:    "b:167289",
 		Impl:            NewArcBootedFixture(DefaultBootedFixtureConfig()),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,

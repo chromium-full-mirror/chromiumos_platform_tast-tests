@@ -31,6 +31,7 @@ func init() {
 		Name:            "smbStarted",
 		Desc:            "Samba server started with 2 shares available",
 		Contacts:        []string{"chromeos-files-syd@chromium.org", "benreich@chromium.org"},
+		BugComponent:    "b:167289",
 		Parent:          "chromeLoggedIn",
 		Impl:            &fixture{startChrome: true},
 		SetUpTimeout:    chrome.LoginTimeout + smbdSetupTimeout,
@@ -45,6 +46,7 @@ func init() {
 			   unmounting of SMB mounts and Chrome cleanup expected
 			   to be handled by the test`,
 		Contacts:        []string{"chromeos-files-syd@chromium.org", "benreich@chromium.org"},
+		BugComponent:    "b:167289",
 		Impl:            &fixture{startChrome: false},
 		SetUpTimeout:    smbdSetupTimeout,
 		ResetTimeout:    smbdSetupTimeout,
