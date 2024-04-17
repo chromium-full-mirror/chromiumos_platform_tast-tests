@@ -286,8 +286,18 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
+		Name:            "ccaPowerTest",
+		Desc:            "Set up test bridge for CCA for a power Test",
+		Contacts:        []string{"chromeos-camera-eng@google.com", "kamchonlathorn@chromium.org"},
+		Impl:            &fixture{powerTest: true},
+		SetUpTimeout:    powerSetUpTimeout,
+		ResetTimeout:    testBridgeSetUpTimeout,
+		TearDownTimeout: powerTearDownTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
 		Name:            "ccaPowerTestWithFakeHALCamera",
-		Desc:            "Set up test bridge for CCA without Auto QR Code detection for a power Test",
+		Desc:            "Set up test bridge for CCA with fake camera HAL for a power Test",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "dorahkim@chromium.org"},
 		Impl:            &fixture{powerTest: true, useCameraType: testutil.UseFakeHALCamera},
 		SetUpTimeout:    powerSetUpTimeout,
@@ -316,38 +326,6 @@ func init() {
 		PreTestTimeout:  ccaSetUpTimeout,
 		PostTestTimeout: ccaTearDownTimeout,
 		TearDownTimeout: tearDownTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name:            "ccaLaunchedStableEnv",
-		Desc:            "Launched CCA with stable power environement",
-		Contacts:        []string{"chromeos-camera-eng@google.com", "esker@google.com"},
-		Impl:            &fixture{launchCCA: true, powerTest: true},
-		SetUpTimeout:    powerSetUpTimeout,
-		ResetTimeout:    testBridgeSetUpTimeout,
-		PreTestTimeout:  ccaSetUpTimeout,
-		PostTestTimeout: ccaTearDownTimeout,
-		TearDownTimeout: powerTearDownTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name:            "ccaLaunchedStableEnvFakeHALCamera",
-		Desc:            "Launched CCA with fake camera hal and stable power environement",
-		Contacts:        []string{"chromeos-camera-eng@google.com", "esker@google.com"},
-		Impl:            &fixture{launchCCA: true, useCameraType: testutil.UseFakeHALCamera, powerTest: true},
-		SetUpTimeout:    powerSetUpTimeout,
-		ResetTimeout:    testBridgeSetUpTimeout,
-		PreTestTimeout:  ccaSetUpTimeout,
-		PostTestTimeout: ccaTearDownTimeout,
-		TearDownTimeout: powerTearDownTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:            "ccaPowerTest",
-		Desc:            "Set up test bridge for CCA for a power Test",
-		Contacts:        []string{"chromeos-camera-eng@google.com", "kamchonlathorn@chromium.org"},
-		Impl:            &fixture{powerTest: true},
-		SetUpTimeout:    powerSetUpTimeout,
-		ResetTimeout:    testBridgeSetUpTimeout,
-		TearDownTimeout: powerTearDownTimeout,
 	})
 
 	testing.AddFixture(&testing.Fixture{

@@ -11,6 +11,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast-tests/cros/local/camera/cca"
 	"go.chromium.org/tast-tests/cros/local/camera/pnp"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -36,25 +37,25 @@ func init() {
 		Timeout:      initTimePNPCCA + pnp.PNPTimeParams.Total + power.RecorderTimeout,
 		Params: []testing.Param{{
 			Name:    "photo_mode",
-			Fixture: "ccaLaunchedStableEnv",
+			Fixture: "ccaPowerTest",
 			Val: pnpCCAParams{
 				Mode: cca.Photo,
 			},
 		}, {
 			Name:    "photo_mode_fake_hal",
-			Fixture: "ccaLaunchedStableEnvFakeHALCamera",
+			Fixture: "ccaPowerTestWithFakeHALCamera",
 			Val: pnpCCAParams{
 				Mode: cca.Photo,
 			},
 		}, {
 			Name:    "video_mode",
-			Fixture: "ccaLaunchedStableEnv",
+			Fixture: "ccaPowerTest",
 			Val: pnpCCAParams{
 				Mode: cca.Video,
 			},
 		}, {
 			Name:    "video_mode_fake_hal",
-			Fixture: "ccaLaunchedStableEnvFakeHALCamera",
+			Fixture: "ccaPowerTestWithFakeHALCamera",
 			Val: pnpCCAParams{
 				Mode: cca.Video,
 			},
@@ -75,7 +76,24 @@ func PNPCCAFeatureToggle(ctx context.Context, s *testing.State) {
 	}
 
 	testing.ContextLog(ctx, "[Start Work Phase]")
-	app := s.FixtValue().(cca.FixtureData).App()
+	startApp := s.FixtValue().(cca.FixtureData).StartApp
+	stopApp := s.FixtValue().(cca.FixtureData).StopApp
+	cr := s.FixtValue().(cca.FixtureData).Chrome
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Failed to connect to Chrome: ", err)
+	}
+	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
+
+	app, err := startApp(ctx)
+	if err != nil {
+		s.Fatal("Failed to open CCA: ", err)
+	}
+	defer func(cleanupCtx context.Context) {
+		if err := stopApp(cleanupCtx, s.HasError()); err != nil {
+			s.Fatal("Failed to close CCA: ", err)
+		}
+	}(cleanupCtx)
 
 	if err := app.FullscreenWindow(ctx); err != nil {
 		s.Fatal("Failed to enter full screen of CCA: ", err)
