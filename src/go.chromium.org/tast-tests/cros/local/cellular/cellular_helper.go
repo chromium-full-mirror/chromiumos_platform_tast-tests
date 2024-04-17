@@ -1711,7 +1711,7 @@ func (h *Helper) ConnectAndCheckSignalQuality(ctx context.Context) error {
 	if err != nil {
 		return errors.Wrap(err, "unable to connect to cellular service")
 	}
-	// Poll max 3 times in 30 seconds to ensure service's signal quality matches expectations.
+	// Poll for 65 seconds to find service's signal quality and scaled quality property update.
 	if err = testing.Poll(ctx, func(ctx context.Context) error {
 		signalStrength, err := service.GetSignalStrength(ctx)
 		if err != nil {
@@ -1723,7 +1723,7 @@ func (h *Helper) ConnectAndCheckSignalQuality(ctx context.Context) error {
 		}
 		return nil
 	}, &testing.PollOptions{
-		Timeout:  15 * time.Second,
+		Timeout:  65 * time.Second,
 		Interval: 5 * time.Second}); err != nil {
 		return errors.Wrap(err, "failed SignalStrength check")
 	}
