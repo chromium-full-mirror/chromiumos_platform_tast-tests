@@ -213,28 +213,11 @@ func BootupTimesUSB(ctx context.Context, s *testing.State) {
 
 		// Perform reboot into recovery
 		s.Log("Boot in Recovery Mode: starting")
-		// Turn power off.
-		if err := h.Servo.SetPowerState(ctx, servo.PowerStateOff); err != nil {
-			s.Fatal("Boot in Recovery Mode: Power off: ", err)
-		}
-		// Next:Boot in recovery mode. The steps are:
-		// Step 1. Switch the USB to DUT on the servo multiplexer
-		if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
-			s.Fatal("Boot in Recovery Mode: Failed to set USB mux to DUT: ", err)
-		}
 
-		// Step 2. For servo V4, switch power delivery to sink mode. c.f.:
-		// b/187900184.
-		if needBatterySink {
-			if err := h.Servo.SetPDRole(ctx, servo.PDRoleSnk); err != nil {
-				s.Fatal("Boot in Recovery Mode: Failed to set pd:snk: ", err)
-			}
-		}
-		// GoBigSleepLint: Sleep a few seconds to apply all previous states before boot in recovery mode.
-		testing.Sleep(ctx, 1*time.Second)
-		s.Log("Boot in Recovery Mode: Started try to boot in recovery mode by power_state:rec")
-		if err := h.Servo.SetPowerState(ctx, servo.PowerStateRec); err != nil {
-			s.Fatal("Boot in Recovery Mode: Failure when trying to set power_state:rec with error: ", err)
+		// Using ModeSwitcher(ms) here instead of setting powerstate to rec directly
+		// as ms has some additional logic to retry for some special failure cases
+		if err := ms.EnableRecMode(ctx, servo.PowerStateRec, servo.USBMuxDUT); err != nil {
+			s.Fatal("Failed to enable recovery mode: ", err)
 		}
 	default:
 		s.Fatal("Error, unrecognized test case")
