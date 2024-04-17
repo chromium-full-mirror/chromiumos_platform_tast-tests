@@ -33,7 +33,11 @@ func PowerTestSetup(ctx context.Context, name string, tconn *chrome.TestConn, po
 		testing.ContextLog(ctx, "Unable to determine if a battery exists, do not force discharge: ", err)
 	}
 
-	su.Add(PowerTest(ctx, tconn, *powerTestOptions, NewBatteryDischarge(discharge, true /*ignoreErr*/, DefaultDischargeThreshold)))
+	batteryDischarge := NewBatteryDischarge(discharge, true /*ignoreErr*/, DefaultDischargeThreshold)
+	su.Add(PowerTest(ctx, tconn, *powerTestOptions, batteryDischarge))
+	// `discharge` is updated to reflect whether forcing to discharge succeeds
+	// or not. However, No error is thrown if forcing to discharge fails.
+	discharge = discharge && (batteryDischarge.Err() == nil)
 	if err := su.Check(ctx); err != nil {
 		cleanup(ctx)
 		return nil, discharge, errors.Wrap(err, "power test options setup failed for fixture "+name)
