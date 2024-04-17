@@ -187,9 +187,9 @@ func RoamAPGone(ctx context.Context, s *testing.State) {
 		1 - Configure AP1.
 		2 - Associate DUT to AP1.
 		3 - Configure AP2 with the same SSID as AP1.
-		4 - Optionally flush all BSSes to simulate the case where all BSS
-		    entries have expired and the DUT would have to trigger a new scan
-		    in order to discover AP2.
+		4 - Either flush all BSSes to force the DUT to rescan after AP1
+		    disappears or trigger a new scan now, so that the DUT can
+		    autoconnect after AP1 disappears.
 		5 - Deconfigure AP1.
 		6 - Verify the DUT roams to AP2.
 		7 - Deconfigure the DUT.
@@ -236,13 +236,13 @@ func RoamAPGone(ctx context.Context, s *testing.State) {
 
 	// Connect to the initial AP.
 	var servicePath string
-	if resp, err := tf.ConnectWifiAP(ctx, ap1); err != nil {
+	if resp, err := tf.ConnectWifiAPFromDUT(ctx, wificell.DefaultDUT, ap1); err != nil {
 		s.Fatal("Failed to connect to WiFi, err: ", err)
 	} else {
 		servicePath = resp.ServicePath
 	}
 	defer func(ctx context.Context) {
-		if err := tf.CleanDisconnectWifi(ctx); err != nil {
+		if err := tf.CleanDisconnectDUTFromWifi(ctx, wificell.DefaultDUT); err != nil {
 			s.Error("Failed to disconnect WiFi, err: ", err)
 		}
 	}(ctx)
@@ -250,7 +250,7 @@ func RoamAPGone(ctx context.Context, s *testing.State) {
 	defer cancel()
 	s.Log("Connected to AP1")
 
-	if err := tf.VerifyConnection(ctx, ap1); err != nil {
+	if err := tf.VerifyConnectionFromDUT(ctx, wificell.DefaultDUT, ap1); err != nil {
 		s.Fatal("Failed to verify connection: ", err)
 	}
 
@@ -282,13 +282,23 @@ func RoamAPGone(ctx context.Context, s *testing.State) {
 	// defer deconfig already scheduled above.
 	s.Log("AP2 setup done")
 
+	clientIface, err := tf.DUTClientInterface(ctx, wificell.DefaultDUT)
+	if err != nil {
+		s.Fatal("Unable to get DUT interface name: ", err)
+	}
+
 	if param.enableBSSFlush {
 		// Flush all BSSes from cache to ensure that we are forced to rescan
-		// after disconnect
-		clientIface, _ := tf.ClientInterface(ctx)
+		// after disconnect.
 		s.Log("Flushing BSS cache")
-		if err := tf.WifiClient().FlushBSS(ctx, clientIface, 0); err != nil {
+		if err := tf.DUTWifiClient(wificell.DefaultDUT).FlushBSS(ctx, clientIface, 0); err != nil {
 			s.Fatal("Failed to flush BSS list: ", err)
+		}
+	} else {
+		// Discover AP2 before disconnecting from AP1.
+		s.Logf("Waiting for AP2 discovery: %s", ap2BSSID)
+		if err := tf.DUTWifiClient(wificell.DefaultDUT).DiscoverBSSID(ctx, ap2BSSID, clientIface, []byte(ssid)); err != nil {
+			s.Fatal("Unable to discover AP2 BSSID: ", err)
 		}
 	}
 
@@ -317,7 +327,7 @@ func RoamAPGone(ctx context.Context, s *testing.State) {
 	}
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		return tf.VerifyConnection(ctx, ap2)
+		return tf.VerifyConnectionFromDUT(ctx, wificell.DefaultDUT, ap2)
 	}, &testing.PollOptions{
 		Timeout:  20 * time.Second,
 		Interval: time.Second,
