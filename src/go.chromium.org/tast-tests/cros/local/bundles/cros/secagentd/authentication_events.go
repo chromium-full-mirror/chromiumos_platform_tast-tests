@@ -82,6 +82,7 @@ func AuthenticationEvents(ctx context.Context, s *testing.State) {
 	const batchIntervalS = 5
 	// Restart secagentd and have it ignore policy and not wait for the first
 	// agent event to be enqueued successfully.
+	// Have it wait for the AddMatch signal.
 	agentPid, err := secagentdupstart.RestartSecagentd(ctx, true,
 		upstart.WithArg("SECAGENTD_LOG_LEVEL", "-1"),
 		upstart.WithArg("BYPASS_POLICY_FOR_TESTING", "true"),

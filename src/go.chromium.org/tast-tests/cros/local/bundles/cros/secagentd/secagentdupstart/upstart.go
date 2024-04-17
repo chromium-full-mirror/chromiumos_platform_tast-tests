@@ -59,6 +59,11 @@ func RestartSecagentd(ctx context.Context, waitForAddMatchSignal bool, args ...u
 		if err := secagentddbusmonitor.WaitForAddMatchSignal(addMatchWatcher); err != nil {
 			return 0, err
 		}
+		// TODO(b/329819143): Temp solution until we had a secagentd ready signal emitted from client.
+		// GoBigSleepLint: Once the correct dbus signal is sent wait some time to ensure
+		// secagentd is ready to receive cryptohome signals.
+		testing.Sleep(ctx, 5*time.Second)
 	}
+
 	return pid, nil
 }
