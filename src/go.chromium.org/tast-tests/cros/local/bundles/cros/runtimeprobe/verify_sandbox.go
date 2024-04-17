@@ -35,6 +35,7 @@ func init() {
 		BugComponent: "b:606088",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"racc"},
+		Fixture:      "crosHealthdRunning",
 		Params: []testing.Param{{
 			Val: verifySandboxTestParams{
 				probeConfig: probeConfig{[]probeStatement{}}},
