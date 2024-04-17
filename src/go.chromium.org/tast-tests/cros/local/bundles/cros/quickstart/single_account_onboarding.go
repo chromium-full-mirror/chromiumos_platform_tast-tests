@@ -115,4 +115,11 @@ func SingleAccountOnboarding(ctx context.Context, s *testing.State) {
 	if err := ui.WaitUntilExists(completionScreenTitle)(ctx); err != nil {
 		s.Fatal("Failed to wait for completion screen to appear: ", err)
 	}
+
+	// The subtitle on the setup complete screen is dynamic based on what we did
+	// during Quick Start, so we can verify based on this message.
+	connectedToWiFi := nodewith.NameContaining("connected to Wi-Fi").Role(role.StaticText)
+	if err := ui.WaitUntilExists(connectedToWiFi)(ctx); err != nil {
+		s.Fatal("Failed to confirm Wi-Fi credentials transfer: ", err)
+	}
 }
