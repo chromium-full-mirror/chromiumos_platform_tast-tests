@@ -43,12 +43,10 @@ func init() {
 		},
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
-		HardwareDeps: hwdep.D(hwdep.SupportsNV12Overlays(), hwdep.InternalDisplay(), hwdep.Model("bugzzy")),
+		HardwareDeps: hwdep.D(hwdep.SupportsNV12Overlays(), hwdep.InternalDisplay(), hwdep.Model("bugzzy"), hwdep.Model("crota"), hwdep.Model("volet")),
 		Data:         []string{"d-canvas/main.html", "d-canvas/2d.js", "d-canvas/webgl.js"},
 		Fixture:      "gpuWatchHangs",
 		Params: []testing.Param{{
-
-			ExtraHardwareDeps: hwdep.D(hwdep.Model("bugzzy")),
 			Val: roundedDisplayTestParams{
 				panelRadii: roundeddisplay.PanelRadii{
 					TopLeft:     18,
