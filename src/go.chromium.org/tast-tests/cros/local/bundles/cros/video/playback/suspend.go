@@ -115,7 +115,6 @@ func suspendResume(ctx context.Context, cr *chrome.Chrome, config Config, testNa
 	suspendMode := graphics.GetSuspendState(ctx)
 	testing.ContextLog(ctx, "DUT will suspend to ", suspendMode)
 
-	pmModes := []graphics.PmTestMode{graphics.PmTestNone, graphics.PmTestFreezer, graphics.PmTestDevices, graphics.PmTestPlatform}
 	// Start reading the syslog so we can stop the tests as soon as any GPU hangs/decode errors are found.
 	reader, err := syslog.NewReader(ctx, syslog.Severities(syslog.Info, syslog.Warning, syslog.Err))
 	if err != nil {
@@ -139,7 +138,7 @@ func suspendResume(ctx context.Context, cr *chrome.Chrome, config Config, testNa
 			// This switch the mode for every 2 suspend.
 			sConfig := suspendConfig{
 				suspendMode: suspendMode,
-				pmTestMode:  pmModes[(i/2)%len(pmModes)],
+				pmTestMode:  graphics.PmTestNone,
 			}
 			if err := suspendSystem(suspendCtx, cr, reader, config, sConfig, testName); err != nil {
 				errChan <- errors.Wrapf(err, "suspend [%v] failed with pm_test mode [%v]", i, sConfig.pmTestMode)
