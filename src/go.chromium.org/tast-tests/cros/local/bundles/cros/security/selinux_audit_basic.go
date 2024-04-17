@@ -31,8 +31,7 @@ func init() {
 		// ChromeOS > Security > Hardening
 		BugComponent: "b:1040049",
 		SoftwareDeps: []string{"selinux"},
-		// TODO(b/245411884): Re-enable this test.
-		// Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 	})
 }
 
