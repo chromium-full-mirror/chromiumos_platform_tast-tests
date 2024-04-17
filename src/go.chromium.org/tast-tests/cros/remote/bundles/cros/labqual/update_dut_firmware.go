@@ -86,14 +86,9 @@ func UpdateDutFirmware(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to init servo: ", err)
 	}
 
-	flashEC := true
 	ecChip, err := h.Servo.GetString(ctx, servo.ECChip)
 	if err != nil {
 		s.Fatal("Failed to read DUT EC Chip: ", err)
-	} else if strings.HasPrefix(ecChip, "it8") { // TODO(b/307797049) Remove this condition once the issue with flash_ec is resolved
-		// Flashing EC blocked for ite chips due to b/268108518
-		s.Log("Found it8 EC Chip, skipping ec firmware flashing due to b/307797049 : ", ecChip)
-		flashEC = false
 	}
 	s.Log("DUT EC Chip: ", ecChip)
 
@@ -221,7 +216,7 @@ func UpdateDutFirmware(ctx context.Context, s *testing.State) {
 				}
 			}
 		} else {
-			ecBinToFlash, monitorBinToFlash, apBinToFlash = untarLocalFirmwareFile(ctx, s, tmpDir, localFirmwarePathVal, fwidModel, flashEC)
+			ecBinToFlash, monitorBinToFlash, apBinToFlash = untarLocalFirmwareFile(ctx, s, tmpDir, localFirmwarePathVal, fwidModel)
 			// copy firmware files to the labstation as they are needed for servo firmware flashing test
 			fileMap := map[string]string{
 				fmt.Sprintf("%s/%s", tmpDir, apBinToFlash): fmt.Sprintf("%s/%s", tmpFwDir, firmware.APFirmwareFileToFlash),
@@ -251,12 +246,10 @@ func UpdateDutFirmware(ctx context.Context, s *testing.State) {
 		}
 		s.Logf("Files under %s: before FW flashing", tmpFwDir)
 		statFirmwareFilesOnDUT(ctx, s, h, tmpFwDir)
-		if flashEC {
-			flashECFirmware(ctx, s, h, tmpFwDir, tmpDir, ecChip)
-			s.Logf("Files under %s: after servo EC flash", tmpFwDir)
-			statFirmwareFilesOnDUT(ctx, s, h, tmpFwDir)
-			flashECFirmwareFromDut(ctx, s, h, tmpFwDir, tmpDir, ecBinToFlash, monitorBinToFlash)
-		}
+		flashECFirmware(ctx, s, h, tmpFwDir, tmpDir, ecChip)
+		s.Logf("Files under %s: after servo EC flash", tmpFwDir)
+		statFirmwareFilesOnDUT(ctx, s, h, tmpFwDir)
+		flashECFirmwareFromDut(ctx, s, h, tmpFwDir, tmpDir, ecBinToFlash, monitorBinToFlash, ecChip)
 		s.Logf("Files under %s: after dut EC flash", tmpFwDir)
 		statFirmwareFilesOnDUT(ctx, s, h, tmpFwDir)
 	}
@@ -277,7 +270,7 @@ func UpdateDutFirmware(ctx context.Context, s *testing.State) {
 }
 
 // untarLocalFirmwareFile untars the provided local firmware file to extract AP and EC images
-func untarLocalFirmwareFile(ctx context.Context, s *testing.State, tmpDir, firmwareFilepath, model string, flashEC bool) (ecBinToFlash, monitorBinToFlash, apBinToFlash string) {
+func untarLocalFirmwareFile(ctx context.Context, s *testing.State, tmpDir, firmwareFilepath, model string) (ecBinToFlash, monitorBinToFlash, apBinToFlash string) {
 	// Copy the fw file to tmp directory.
 	dst, err := os.Create(tmpDir + "/" + firmware.FirmwareFileName)
 	if err != nil {
@@ -304,9 +297,6 @@ func untarLocalFirmwareFile(ctx context.Context, s *testing.State, tmpDir, firmw
 	if err != nil {
 		s.Fatalf("Failed to untar file for %s: %s", firmware.APFirmware, err)
 	}
-	if !flashEC {
-		return "", "", apBinToFlash
-	}
 	ecBinToFlash, monitorBinToFlash, err = firmware.UntarUnknownFileName(ctx, tmpDir, model, firmware.ECFirmware)
 	if err != nil {
 		s.Fatalf("Failed to untar file for %s: %s", firmware.ECFirmware, err)
@@ -316,7 +306,7 @@ func untarLocalFirmwareFile(ctx context.Context, s *testing.State, tmpDir, firmw
 
 // flashECFirmware flashes the provided EC firmware on the DUT and restores the original EC firmware in the end.
 func flashECFirmware(ctx context.Context, s *testing.State, h *firmware.Helper, servoTmpDir, localTmpDir, ecChip string) {
-	backupECFirmware(ctx, s, h, servoTmpDir)
+	backupECFirmware(ctx, s, h, servoTmpDir, ecChip)
 
 	// Check that the DUT has initial fw in the end
 	defer func() {
@@ -448,9 +438,9 @@ func flashAPFirmwareFromDut(ctx context.Context, s *testing.State, h *firmware.H
 }
 
 // flashECFirmwareFromDut flashes the provided EC firmware on the DUT and restores the original EC firmware in the end.
-func flashECFirmwareFromDut(ctx context.Context, s *testing.State, h *firmware.Helper, tmpFwDir, localTmpDir, ecBinToFlash, monitorBinToFlash string) {
+func flashECFirmwareFromDut(ctx context.Context, s *testing.State, h *firmware.Helper, tmpFwDir, localTmpDir, ecBinToFlash, monitorBinToFlash, ecChip string) {
 	s.Log("Backing up EC firmware")
-	backupECFirmware(ctx, s, h, tmpFwDir)
+	backupECFirmware(ctx, s, h, tmpFwDir, ecChip)
 	s.Log("Completed backup of existing EC fw")
 
 	// Check that the DUT has initial fw in the end
@@ -508,9 +498,12 @@ func safeRebootDut(ctx context.Context, h *firmware.Helper) error {
 }
 
 // backupECFirmware takes a backup of current EC firmware.
-func backupECFirmware(ctx context.Context, s *testing.State, h *firmware.Helper, servoTmpDir string) {
+func backupECFirmware(ctx context.Context, s *testing.State, h *firmware.Helper, servoTmpDir, ecChip string) {
 	h.DisconnectDUT(ctx)
 	flashCmd := fmt.Sprintf("cd %s&&flash_ec --port=%d --read=%s/%s", servoTmpDir, h.ServoProxy.GetPort(), servoTmpDir, backupFirmwareFile)
+	if strings.HasPrefix(ecChip, "it8") {
+		flashCmd += " --nouse_i2c_pseudo"
+	}
 	if err := h.ServoProxy.RunCommand(ctx, false, "bash", "-c", flashCmd); err != nil {
 		s.Fatal("Failed to backup EC firmware: ", err)
 	}
@@ -524,11 +517,14 @@ func backupECFirmware(ctx context.Context, s *testing.State, h *firmware.Helper,
 
 // runECFirmwareFlashServo runs EC firmware flashing from the Servo
 func runECFirmwareFlashServo(ctx context.Context, s *testing.State, h *firmware.Helper, servoTmpDir, ecChip, image string) {
+	flashECArgs := []string{fmt.Sprintf("--chip=%s", ecChip), fmt.Sprintf("--image=%s/%s", servoTmpDir, image), fmt.Sprintf("--port=%d", h.ServoProxy.GetPort()), "--verify", "--verbose"}
 	if ecChip == "stm32" {
-		if err := h.ServoProxy.RunCommand(ctx, false, "flash_ec", fmt.Sprintf("--chip=%s", ecChip), fmt.Sprintf("--image=%s/%s", servoTmpDir, image), fmt.Sprintf("--port=%d", h.ServoProxy.GetPort()), "--bitbang_rate=57600", "--verify", "--verbose"); err != nil {
-			s.Fatal("Failed to flash EC firmware bin file: ", err)
-		}
-	} else if err := h.ServoProxy.RunCommand(ctx, false, "flash_ec", fmt.Sprintf("--chip=%s", ecChip), fmt.Sprintf("--image=%s/%s", servoTmpDir, image), fmt.Sprintf("--port=%d", h.ServoProxy.GetPort()), "--verify", "--verbose"); err != nil {
+		flashECArgs = append(flashECArgs, "--bitbang_rate=57600")
+	}
+	if strings.HasPrefix(ecChip, "it8") {
+		flashECArgs = append(flashECArgs, "--nouse_i2c_pseudo")
+	}
+	if err := h.ServoProxy.RunCommand(ctx, false, "flash_ec", flashECArgs...); err != nil {
 		s.Fatal("Failed to flash EC firmware bin file: ", err)
 	}
 	if err := h.EnsureDUTBooted(ctx); err != nil {

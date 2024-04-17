@@ -296,20 +296,9 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 		}
 	}()
 
-	restoreECOverServo := true
 	ecChip, err := h.Servo.GetString(ctx, servo.ECChip)
 	if err != nil {
 		s.Fatal("Failed to read DUT EC Chip: ", err)
-	}
-	if strings.HasPrefix(ecChip, "it8") {
-		// TODO(b/307797049) Remove this condition once the issue with flash_ec is resolved.
-		// In normal circumstances, this test performs the EC flash by sending the bin files
-		// to the DUT and conducting a local flash. However, if afterward, the DUT is unable
-		// to boot, as a recovery measure an external flash attempt will be made using the
-		// servo to prevent the DUT from being left unbootable. Due to some observed issues
-		// with using servo to flash it8 chips, skip restoring EC for now on those chips.
-		s.Log("Skip restoring EC over servo on EC chip: ", ecChip)
-		restoreECOverServo = false
 	}
 
 	// Back up current EC firmware. AP firmware is handled by fixture.
@@ -373,7 +362,7 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 
 	// At the end of this test, restore firmware to the one found at the beginning.
 	defer func(ctx context.Context, roNewID, initialRwFwid, initialActSection, ecChip string, testArgs *apROBootabilityPerformanceArgs) {
-		if !h.DUT.Connected(ctx) && restoreECOverServo {
+		if !h.DUT.Connected(ctx) {
 			// If a DUT reaches this point unable to boot, attempt to restore
 			// the EC firmware through servo.
 			// To-Do: Add restoration of AP when a DUT can't boot.
@@ -385,6 +374,9 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 			flashEcArgs := []string{fmt.Sprintf("--chip=%s", ecChip), fmt.Sprintf("--image=%s/%s", tmpDirServo, ecFwBackup), fmt.Sprintf("--port=%d", h.ServoProxy.GetPort()), "--verify", "--verbose"}
 			if ecChip == "stm32" {
 				flashEcArgs = append(flashEcArgs, "--bitbang_rate=57600")
+			}
+			if strings.HasPrefix(ecChip, "it8") {
+				flashEcArgs = append(flashEcArgs, "--nouse_i2c_pseudo")
 			}
 			if err := h.ServoProxy.RunCommand(ctx, false, "flash_ec", flashEcArgs...); err != nil {
 				s.Fatalf("Failed to restore %s EC firmware: %v", ecChip, err)
