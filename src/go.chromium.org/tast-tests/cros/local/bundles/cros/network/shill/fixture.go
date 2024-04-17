@@ -13,6 +13,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/local/network"
+	"go.chromium.org/tast-tests/cros/local/network/ehide"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/errors"
@@ -62,12 +63,18 @@ func ResetShill(ctx context.Context) []error {
 		errs = append(errs, errors.Wrap(err, "failed to pop all user profiles"))
 	}
 
-	// Wait until a service is connected.
-	expectProps := map[string]interface{}{
-		shillconst.ServicePropertyIsConnected: true,
+	// Wait until a service is connected, unless ehide is on.
+	ehideIsOn, err := ehide.IsOn(ctx)
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to check ehide state")
 	}
-	if _, err := manager.WaitForServiceProperties(ctx, expectProps, ResetShillTimeout); err != nil {
-		errs = append(errs, errors.Wrap(err, "failed to wait for connected service"))
+	if !ehideIsOn {
+		expectProps := map[string]interface{}{
+			shillconst.ServicePropertyIsConnected: true,
+		}
+		if _, err := manager.WaitForServiceProperties(ctx, expectProps, ResetShillTimeout); err != nil {
+			errs = append(errs, errors.Wrap(err, "failed to wait for connected service"))
+		}
 	}
 
 	return errs

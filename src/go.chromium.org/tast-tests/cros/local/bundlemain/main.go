@@ -24,6 +24,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/disk"
 	"go.chromium.org/tast-tests/cros/local/faillog"
 	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
+	"go.chromium.org/tast-tests/cros/local/network/ehide"
 	"go.chromium.org/tast-tests/cros/local/ready"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast-tests/cros/local/syslog"
@@ -147,9 +148,15 @@ func testHookLocal(ctx context.Context, s *testing.TestHookState) func(ctx conte
 		s.Log("Failed to mark crash test in progress: ", err)
 	}
 
-	// Wait for Internet connectivity.
-	if err := shill.WaitForOnline(ctx); err != nil {
-		s.Log("Failed to wait for Internet connectivity: ", err)
+	// Wait for Internet connectivity, unless the ehide tool is on.
+	ehideIsOn, err := ehide.IsOn(ctx)
+	if err != nil {
+		s.Log("Failed to check ehide state: ", err)
+	}
+	if !ehideIsOn {
+		if err := shill.WaitForOnline(ctx); err != nil {
+			s.Log("Failed to wait for Internet connectivity: ", err)
+		}
 	}
 
 	// Store current DA value before running the tast.
