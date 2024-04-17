@@ -24,9 +24,8 @@ func init() {
 		Desc:    "Ti50 system test",
 		Timeout: 20 * time.Minute,
 		Contacts: []string{
-			"chromeos-faft@google.com",
+			"gsc-sheriff@google.com", // CrOS GSC Developers
 			"ecgh@chromium.org",
-			"ti50-core@google.com",
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
 		Attr:         []string{"group:gsc", "gsc_dt_ab", "gsc_dt_shield", "gsc_nightly"},

@@ -23,8 +23,8 @@ func init() {
 		Desc:    "Verifies EFS2 communication with EC and AP",
 		Timeout: 5 * time.Minute,
 		Contacts: []string{
-			"chromeos-faft@google.com", // CrOS Firmware Developers
-			"jettrink@chromium.org",    // Test Author
+			"gsc-sheriff@google.com", // CrOS GSC Developers
+			"jettrink@chromium.org",  // Test Author
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
 		Attr: []string{"group:gsc",

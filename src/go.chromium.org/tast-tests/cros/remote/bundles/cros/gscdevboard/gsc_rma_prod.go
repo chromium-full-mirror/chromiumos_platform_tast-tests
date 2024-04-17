@@ -24,8 +24,8 @@ func init() {
 		Desc:    "Verify the RMA Auth challenge uses the prod key",
 		Timeout: time.Minute,
 		Contacts: []string{
-			"chromeos-faft@google.com", // CrOS Firmware Developers
-			"mruthven@chromium.org",    // Test Author
+			"gsc-sheriff@google.com", // CrOS GSC Developers
+			"mruthven@chromium.org",  // Test Author
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
 		Attr: []string{"group:gsc",

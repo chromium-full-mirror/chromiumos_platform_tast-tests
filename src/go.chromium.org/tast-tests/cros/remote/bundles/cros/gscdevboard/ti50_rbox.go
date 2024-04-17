@@ -60,8 +60,7 @@ func init() {
 		Desc:    "Verify keyboard combination for rbox on all form factors",
 		Timeout: 5 * time.Minute,
 		Contacts: []string{
-			"chromeos-faft@google.com",
-			"ti50-core@google.com",
+			"gsc-sheriff@google.com", // CrOS GSC Developers
 			"jettrink@google.com",
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50

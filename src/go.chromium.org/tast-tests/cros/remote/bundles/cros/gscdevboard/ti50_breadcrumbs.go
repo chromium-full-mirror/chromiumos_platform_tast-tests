@@ -37,8 +37,7 @@ func init() {
 		Desc:    "Check breadcrumbs storing PMU events over GSC reboot",
 		Timeout: 5 * time.Minute,
 		Contacts: []string{
-			"chromeos-faft@google.com",
-			"ti50-core@google.com",
+			"gsc-sheriff@google.com", // CrOS GSC Developers
 			"ecgh@google.com",
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50

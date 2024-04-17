@@ -28,7 +28,7 @@ func init() {
 		Desc:    "Test abilty of the GSC to tunnel I2C requests through USB CCD",
 		Timeout: 30 * time.Second,
 		Contacts: []string{
-			"ti50-core@google.com",
+			"gsc-sheriff@google.com", // CrOS GSC Developers
 			"jbk@google.com",
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50

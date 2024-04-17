@@ -24,8 +24,7 @@ func init() {
 		Desc:    "Measure boot time",
 		Timeout: 2 * time.Minute,
 		Contacts: []string{
-			"chromeos-faft@google.com",
-			"ti50-core@google.com",
+			"gsc-sheriff@google.com", // CrOS GSC Developers
 			"ecgh@google.com",
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50

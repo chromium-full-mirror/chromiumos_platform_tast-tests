@@ -20,8 +20,8 @@ func init() {
 		Desc:    "Test TPM functionality of ti50 in remote environment(Andreiboard connected to devboardsvc host)",
 		Timeout: 30 * time.Second,
 		Contacts: []string{
-			"chromeos-faft@google.com", // CrOS Firmware Developers
-			"aluo@chromium.org",        // Test Author
+			"gsc-sheriff@google.com", // CrOS GSC Developers
+			"aluo@chromium.org",      // Test Author
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
 		Attr: []string{"group:gsc",

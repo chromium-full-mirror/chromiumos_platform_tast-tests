@@ -20,8 +20,8 @@ func init() {
 		Desc:    "Run TCG Compliance tests against a remote Ti50",
 		Timeout: 60 * time.Minute,
 		Contacts: []string{
-			"chromeos-faft@google.com", // CrOS Firmware Developers
-			"granaghan@google.com",     // Test Author
+			"gsc-sheriff@google.com", // CrOS GSC Developers
+			"granaghan@google.com",   // Test Author
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
 		Attr:         []string{"group:gsc", "gsc_dt_ab", "gsc_dt_shield", "gsc_image_ti50"},

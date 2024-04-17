@@ -23,8 +23,8 @@ func init() {
 		Desc:    "Tests creating, deleting, and recreating the kernel antirollback space",
 		Timeout: 30 * time.Second,
 		Contacts: []string{
-			"chromeos-faft@google.com", // CrOS Firmware Developers
-			"granaghan@google.com",     // Test Author
+			"gsc-sheriff@google.com", // CrOS GSC Developers
+			"granaghan@google.com",   // Test Author
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
 		Attr: []string{"group:gsc",

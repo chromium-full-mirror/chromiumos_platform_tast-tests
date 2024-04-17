@@ -22,7 +22,7 @@ func init() {
 		Desc:    "Test TPM I2C corner cases",
 		Timeout: 5 * time.Minute,
 		Contacts: []string{
-			"ti50-core@google.com",
+			"gsc-sheriff@google.com", // CrOS GSC Developers
 			"jbk@google.com",
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50

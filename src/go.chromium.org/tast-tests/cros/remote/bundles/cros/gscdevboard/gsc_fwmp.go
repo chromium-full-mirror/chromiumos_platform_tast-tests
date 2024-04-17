@@ -22,8 +22,8 @@ func init() {
 		Desc:    "Verifies various FWMP enforcement for GSC",
 		Timeout: 30 * time.Second,
 		Contacts: []string{
-			"chromeos-faft@google.com", // CrOS Firmware Developers
-			"jettrink@chromium.org",    // Test Author
+			"gsc-sheriff@google.com", // CrOS GSC Developers
+			"jettrink@chromium.org",  // Test Author
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
 		Attr:         []string{"group:gsc", "gsc_dt_ab", "gsc_dt_shield", "gsc_h1_shield", "gsc_image_ti50", "gsc_nightly"},
