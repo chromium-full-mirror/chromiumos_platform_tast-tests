@@ -249,7 +249,7 @@ func Ti50Sleep(ctx context.Context, s *testing.State) {
 		whichPinGscUart = "0000000000000008"
 		whichPinCcdMode = "0000000000000004"
 
-		whichPinTpmSpi = "todo"
+		whichPinTpmSpi = "0000000000000040"
 		whichPinTpmI2C = "00000000000000c0"
 	}
 
