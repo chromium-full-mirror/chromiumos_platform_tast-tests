@@ -44,8 +44,9 @@ var (
 func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            "gpuWatchHangsEnrolled",
+		BugComponent:    "b:885255", // ChromeOS > Platform > Graphics
 		Desc:            "Check if there any GPU related hangs during a test in an enrolled device",
-		Contacts:        []string{"ddmail@google.com", "chromeos-gfx@google.com"},
+		Contacts:        []string{"chromeos-gfx@google.com", "ddmail@google.com"},
 		Impl:            &gpuWatchHangsFixture{},
 		SetUpTimeout:    1 * time.Minute,
 		TearDownTimeout: 1 * time.Minute,
@@ -57,7 +58,8 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            "gpuWatchHangs",
 		Desc:            "Check if there any GPU related hangs during a test",
-		Contacts:        []string{"ddmail@google.com", "chromeos-gfx@google.com"},
+		BugComponent:    "b:885255", // ChromeOS > Platform > Graphics
+		Contacts:        []string{"chromeos-gfx@google.com", "ddmail@google.com"},
 		Impl:            &gpuWatchHangsFixture{},
 		SetUpTimeout:    1 * time.Minute,
 		TearDownTimeout: 1 * time.Minute,
@@ -69,7 +71,8 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            "gpuWatchDog",
 		Desc:            "Check if there any GPU related problems(hangs+crashes) observed during a test",
-		Contacts:        []string{"ddmail@google.com", "chromeos-gfx@google.com"},
+		BugComponent:    "b:885255", // ChromeOS > Platform > Graphics
+		Contacts:        []string{"chromeos-gfx@google.com", "ddmail@google.com"},
 		Parent:          "gpuWatchHangs",
 		Impl:            &gpuWatchDogFixture{},
 		PreTestTimeout:  5 * time.Second,
@@ -77,10 +80,11 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeGraphics",
-		Desc:     "Logged into a user session for graphics testing",
-		Contacts: []string{"ddmail@google.com", "chromeos-gfx@google.com"},
-		Parent:   "gpuWatchDog",
+		Name:         "chromeGraphics",
+		Desc:         "Logged into a user session for graphics testing",
+		BugComponent: "b:885255", // ChromeOS > Platform > Graphics
+		Contacts:     []string{"chromeos-gfx@google.com", "ddmail@google.com"},
+		Parent:       "gpuWatchDog",
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{disableFirmwareUpdater}, nil
 		}),
@@ -90,10 +94,11 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeGraphicsHwOverlays",
-		Desc:     "Logged into a user session for graphics testing for HwOverlays test",
-		Contacts: []string{"chromeos-gfx@chromium.org", "syedfaaiz@google.com"},
-		Parent:   "gpuWatchDog",
+		Name:         "chromeGraphicsHwOverlays",
+		Desc:         "Logged into a user session for graphics testing for HwOverlays test",
+		BugComponent: "b:885255", // ChromeOS > Platform > Graphics
+		Contacts:     []string{"chromeos-gfx@chromium.org", "syedfaaiz@google.com"},
+		Parent:       "gpuWatchDog",
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
 				chrome.ExtraArgs("--ash-no-nudges"),
@@ -105,10 +110,11 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeGraphicsHDR",
-		Desc:     "Logged into a user session for graphics testing for HDR buffers",
-		Contacts: []string{"chromeos-gfx-compositor@google.com", "mrfemi@google.com"},
-		Parent:   "gpuWatchDog",
+		Name:         "chromeGraphicsHDR",
+		Desc:         "Logged into a user session for graphics testing for HDR buffers",
+		BugComponent: "b:885255", // ChromeOS > Platform > Graphics
+		Contacts:     []string{"chromeos-gfx-compositor@google.com", "mrfemi@google.com"},
+		Parent:       "gpuWatchDog",
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
 				chrome.EnableFeatures("UseHDRTransferFunction"),
@@ -121,10 +127,11 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeGraphicsLacros",
-		Desc:     "Logged into a user session for graphics testing (lacros)",
-		Contacts: []string{"lacros-team@google.com"},
-		Parent:   "gpuWatchDog",
+		Name:         "chromeGraphicsLacros",
+		Desc:         "Logged into a user session for graphics testing (lacros)",
+		BugComponent: "b:885255", // ChromeOS > Platform > Graphics
+		Contacts:     []string{"lacros-team@google.com"},
+		Parent:       "gpuWatchDog",
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			opt, err := lacrosfixt.NewConfig().Opts()
 			return append(opt, disableFirmwareUpdater), err
@@ -135,10 +142,11 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeGraphicsHwOverlaysLacros",
-		Desc:     "Logged into a user session for graphics testing for HwOverlays (lacros)",
-		Contacts: []string{"chromeos-gfx@chromium.org"},
-		Parent:   "gpuWatchDog",
+		Name:         "chromeGraphicsHwOverlaysLacros",
+		Desc:         "Logged into a user session for graphics testing for HwOverlays (lacros)",
+		BugComponent: "b:885255", // ChromeOS > Platform > Graphics
+		Contacts:     []string{"chromeos-gfx@chromium.org"},
+		Parent:       "gpuWatchDog",
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			opt, err := lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(chrome.ExtraArgs("--ash-no-nudges"))).Opts()
 			return append(opt, disableFirmwareUpdater), err
@@ -150,10 +158,11 @@ func init() {
 
 	// TODO(b/233238923): Remove when passthrough is enabled by default.
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeGraphicsPassthrough",
-		Desc:     "Logged into a user session for graphics testing with the passthrough command decoder feature enabled",
-		Contacts: []string{"chromeos-gfx@google.com", "hob@chromium.org"},
-		Parent:   "gpuWatchDog",
+		Name:         "chromeGraphicsPassthrough",
+		Desc:         "Logged into a user session for graphics testing with the passthrough command decoder feature enabled",
+		BugComponent: "b:885255", // ChromeOS > Platform > Graphics
+		Contacts:     []string{"chromeos-gfx@google.com", "hob@chromium.org"},
+		Parent:       "gpuWatchDog",
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{disableFirmwareUpdater, enablePassthrough}, nil
 		}),
@@ -163,10 +172,11 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeGraphicsVulkan",
-		Desc:     "Logged into a user session for graphics testing with Vulkan raster and composite",
-		Contacts: []string{"chromeos-gfx@google.com", "hob@chromium.org"},
-		Parent:   "gpuWatchDog",
+		Name:         "chromeGraphicsVulkan",
+		Desc:         "Logged into a user session for graphics testing with Vulkan raster and composite",
+		BugComponent: "b:885255", // ChromeOS > Platform > Graphics
+		Contacts:     []string{"chromeos-gfx@google.com", "hob@chromium.org"},
+		Parent:       "gpuWatchDog",
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
 				disableFirmwareUpdater,
@@ -182,6 +192,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            "graphicsNoChrome",
 		Desc:            "Stop UI before tests, start UI after",
+		BugComponent:    "b:885255", // ChromeOS > Platform > Graphics
 		Contacts:        []string{"chromeos-gfx@google.com"},
 		Impl:            &graphicsNoChromeFixture{},
 		Parent:          "gpuWatchHangs",
@@ -192,6 +203,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            "chromeGraphicsIgt",
 		Desc:            "Stop and later restart services for IGT",
+		BugComponent:    "b:885255", // ChromeOS > Platform > Graphics
 		Contacts:        []string{"markyacoub@google.com", "chromeos-gfx-display@google.com"},
 		Parent:          "graphicsNoChrome",
 		Impl:            &graphicsIgtFixture{},
@@ -202,7 +214,8 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            "chromeGraphicsIdle",
 		Desc:            "Logged into a user session for graphics Idle testing. This fixture starts a chrome dedicated for graphics.Idle tests",
-		Contacts:        []string{"ddmail@google.com", "chromeos-gfx@google.com"},
+		BugComponent:    "b:885255", // ChromeOS > Platform > Graphics
+		Contacts:        []string{"chromeos-gfx@google.com", "ddmail@google.com"},
 		Parent:          "gpuWatchDog",
 		Impl:            &graphicsIdleFixture{fOpt: []chrome.Option{disableFirmwareUpdater}},
 		SetUpTimeout:    chrome.LoginTimeout,
@@ -213,7 +226,8 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            "chromeGraphicsIdleArc",
 		Desc:            "Logged into a user session for graphics Idle testing. This fixture starts an arc enabled chrome dedicated for graphics.Idle.*arc tests",
-		Contacts:        []string{"ddmail@google.com", "chromeos-gfx@google.com"},
+		BugComponent:    "b:885255", // ChromeOS > Platform > Graphics
+		Contacts:        []string{"chromeos-gfx@google.com", "ddmail@google.com"},
 		Parent:          "gpuWatchDog",
 		Impl:            &graphicsIdleFixture{fOpt: []chrome.Option{chrome.ARCEnabled(), disableFirmwareUpdater}},
 		SetUpTimeout:    chrome.LoginTimeout,
@@ -224,7 +238,8 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            "chromeGraphicsWebContent",
 		Desc:            "Logs into Chrome and launches a browser window with specific content, like playing WebGL Aquarium for instance",
-		Contacts:        []string{"ddmail@google.com", "chromeos-gfx@google.com"},
+		BugComponent:    "b:885255", // ChromeOS > Platform > Graphics
+		Contacts:        []string{"chromeos-gfx@google.com", "ddmail@google.com"},
 		Parent:          "gpuWatchDog",
 		Impl:            &graphicsWebContentFixture{fOpt: []chrome.Option{chrome.ARCEnabled(), disableFirmwareUpdater}},
 		SetUpTimeout:    chrome.LoginTimeout,
