@@ -43,6 +43,7 @@ func init() {
 		Name:            Install3pDiag,
 		Desc:            "Trigger shimless flow and install the diagnostic IWA",
 		Contacts:        []string{"chromeos-shimless-eng@google.com"},
+		BugComponent:    "b:1002147", // ChromeOS > Platform > Enablement > Serviceability > Shimless RMA
 		Impl:            newInstall3pDiagFixture(),
 		SetUpTimeout:    chrome.LoginTimeout + 30*time.Second + cleanupTimeout,
 		TearDownTimeout: cleanupTimeout,
