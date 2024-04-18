@@ -21,8 +21,14 @@ import (
 type VmmmsPriority int
 
 const (
+	// VmmmsStaleCachedAppPriority is the priority of a stale cached background Android app.
+	VmmmsStaleCachedAppPriority VmmmsPriority = iota
+
+	// VmmmsStaleCachedTabPriority is the priority of a stale background tab.
+	VmmmsStaleCachedTabPriority
+
 	// VmmmsCachedAppPriority is the priority of a cached background Android app.
-	VmmmsCachedAppPriority VmmmsPriority = iota
+	VmmmsCachedAppPriority
 
 	// VmmmsCachedTabPriority is the priority of a background tab.
 	VmmmsCachedTabPriority
@@ -51,6 +57,10 @@ func VmmmsKillPriorityToString(priority VmmmsPriority) string {
 		return "RESIZE_PRIORITY_CACHED_TAB"
 	case VmmmsCachedAppPriority:
 		return "RESIZE_PRIORITY_CACHED_APP"
+	case VmmmsStaleCachedTabPriority:
+		return "RESIZE_PRIORITY_STALE_CACHED_TAB"
+	case VmmmsStaleCachedAppPriority:
+		return "RESIZE_PRIORITY_STALE_CACHED_APP"
 	default:
 		return "UNKNOWN"
 	}
@@ -70,6 +80,10 @@ func ParseVmmmsKillPriority(s string) (VmmmsPriority, error) {
 		return VmmmsCachedTabPriority, nil
 	case "CachedApp":
 		return VmmmsCachedAppPriority, nil
+	case "StaleCachedTab":
+		return VmmmsStaleCachedTabPriority, nil
+	case "StaleCachedApp":
+		return VmmmsStaleCachedAppPriority, nil
 	default:
 		return -1, errors.Errorf("unexpected VMMMS KillTrace priority %q", s)
 	}
