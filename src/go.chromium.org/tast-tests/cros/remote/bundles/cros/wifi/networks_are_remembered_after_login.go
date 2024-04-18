@@ -33,22 +33,21 @@ type remainsRememberedTestParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:           NetworksAreRememberedAfterLogin,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
-		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		Desc:           "Verify the networks added at OOBE and sign-in screen are remembered after logged in",
+		Func:         NetworksAreRememberedAfterLogin,
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Desc:         "Verify the networks added at OOBE and sign-in screen are remembered after logged in",
 		Contacts: []string{
-			// "cros-connectivity@google.com",
-			// "chromeos-connectivity-engprod@google.com",
-			"alfredyu@cienet.com",
-			"cj.tsai@cienet.com",
-			"chromeos-connectivity-cienet-external@google.com",
+			"cros-connectivity@google.com",
+			"chromeos-connectivity-engprod@google.com",
+			"shijinabraham@google.com",
+			"chadduffin@chromium.org",
 		},
 		// ChromeOS > Software > System Services > Connectivity > WiFi
-		BugComponent: "b:1131912",
-		Attr:         []string{"group:wificell", "wificell_e2e_unstable"},
-		TestBedDeps:  []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.PeripheralWifiStateWorking},
-		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
+		BugComponent:   "b:1131912",
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Attr:           []string{"group:wificell", "wificell_e2e"},
+		TestBedDeps:    []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.PeripheralWifiStateWorking},
+		VarDeps:        []string{"ui.signinProfileTestExtensionManifestKey"},
 		ServiceDeps: []string{
 			wificell.ShillServiceName,
 			"tast.cros.browser.ChromeService",
