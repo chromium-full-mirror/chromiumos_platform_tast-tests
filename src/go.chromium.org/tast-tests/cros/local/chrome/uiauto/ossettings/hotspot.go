@@ -41,9 +41,9 @@ func (s *OSSettings) ToggleHotspot(ctx context.Context, tconn *chrome.TestConn, 
 	s.SetToggleOption(cr, toggleName, expected)(ctx)
 
 	if expected {
-		const notificationTitle = "With hotspot on, Wi-Fi is off"
+		const notificationTitle = "Hotspot is on (Wi-Fi is off)"
 		if _, err := ash.WaitForNotification(ctx, tconn, time.Minute, ash.WaitTitle(notificationTitle)); err != nil {
-			return errors.Wrap(err, "failed to wait for notification with title: With hotspot on, Wi-Fi is off")
+			return errors.Wrap(err, "failed to wait for notification with title: Hotspot is on (Wi-Fi is off)")
 		}
 
 		// Close all notifications.
