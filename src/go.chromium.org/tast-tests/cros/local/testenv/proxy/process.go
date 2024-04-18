@@ -85,3 +85,20 @@ func waitForProcTerminated(ctx context.Context, timeout time.Duration) error {
 		return nil
 	}, &testing.PollOptions{Timeout: timeout})
 }
+
+// waitForProcRunning waits for any proxy process to start running.
+func waitForProcRunning(ctx context.Context) error {
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		procs, err := processes()
+		if err == procutil.ErrNotFound {
+			return errors.New("no process found yet")
+		}
+		for _, proc := range procs {
+			r, err := proc.IsRunning()
+			if err == nil && r {
+				return nil
+			}
+		}
+		return errors.New("no process running yet")
+	}, &testing.PollOptions{Timeout: 10 * time.Second})
+}

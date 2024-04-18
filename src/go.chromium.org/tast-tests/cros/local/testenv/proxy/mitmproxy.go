@@ -172,8 +172,8 @@ func (mp *MitmProxy) start(ctx context.Context) (retErr error) {
 	cmd.Env = append(cmd.Env, "TMPDIR=/usr/local/tmp")
 
 	testing.ContextLogf(ctx, "mitmproxy: starting with cmd: %s", cmd)
-	if err := cmd.Start(); err != nil {
-		return errors.Wrap(err, "failed to start proxy server")
+	if err := cmd.Start(); err != nil || waitForProcRunning(ctx) != nil {
+		return errors.Wrap(err, "failed to start proxy server (terminated at startup?)")
 	}
 
 	if err = mp.configureNetwork(ctx, pidPath); err != nil {
