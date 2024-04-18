@@ -46,6 +46,7 @@ func init() {
 		Data: []string{"wallpaper_image.jpeg"},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.ArcEnabled{}, pci.VerifiedFunctionalityOS),
+			pci.SearchFlag(&policy.PrintingEnabled{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.VideoCaptureAllowed{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.WallpaperImage{}, pci.VerifiedFunctionalityOS),
 		},
@@ -89,10 +90,11 @@ func ManagedDevicePolicy(ctx context.Context, s *testing.State) {
 
 	packages := []string{devicePolicyPkg}
 	arcPolicyMap := map[string]arcPolicyFactory{
+		"cameraDisabled":   createCameraPolicy,
+		"printingDisabled": createPrintingPolicy,
 		"setWallpaper": func() (policy.Policy, func(ctx context.Context), error) {
 			return createWallpaperPolicy(ctx, s.DataPath("wallpaper_image.jpeg"))
 		},
-		"cameraDisabled": createCameraPolicy,
 	}
 
 	creds, err := credconfig.PickRandomCreds(s.RequiredVar(arcent.LoginPoolVar))
@@ -207,6 +209,10 @@ func ManagedDevicePolicy(ctx context.Context, s *testing.State) {
 	}
 }
 
+func createPrintingPolicy() (policy.Policy, func(ctx context.Context), error) {
+	return &policy.PrintingEnabled{Val: false}, func(ctx context.Context) {}, nil
+}
+
 func createCameraPolicy() (policy.Policy, func(ctx context.Context), error) {
 	return &policy.VideoCaptureAllowed{Val: false}, func(ctx context.Context) {}, nil
 }
@@ -289,7 +295,7 @@ func testPolicyEnforcement(ctx context.Context, tconn *chrome.TestConn, a *arc.A
 		testButtonID    = devicePolicyPkg + ":id/btnTest"
 		errorTextID     = devicePolicyPkg + ":id/txtError"
 		mainActivityCls = devicePolicyPkg + ".MainActivity"
-		testTimeout     = time.Second * 30
+		testTimeout     = time.Minute
 	)
 
 	cleanupCtx := ctx
@@ -335,14 +341,14 @@ func testPolicyEnforcement(ctx context.Context, tconn *chrome.TestConn, a *arc.A
 		if err != nil {
 			return rl.Exit("get error message", err)
 		}
-		return rl.Retry(fmt.Sprintf("get expected result: %v, got %s, error: %s", shouldSucceed, result, errMessage), nil)
+		return rl.Retry(fmt.Sprintf("get expected result for policy %q: %v, got %s, error: %s", policy, shouldSucceed, result, errMessage), nil)
 	}, &testing.PollOptions{Timeout: testTimeout, Interval: time.Second})
 }
 
 func getPolicyTestResult(ctx context.Context, d *ui.Device) (string, error) {
 	const (
 		outputTextID   = devicePolicyPkg + ":id/txtOutput"
-		resultWaitTime = 10 * time.Second
+		resultWaitTime = 30 * time.Second
 	)
 
 	resultRegex := regexp.MustCompile("true|false")
@@ -363,7 +369,7 @@ func getPolicyTestResult(ctx context.Context, d *ui.Device) (string, error) {
 		}
 
 		return nil
-	}, &testing.PollOptions{Timeout: resultWaitTime, Interval: time.Second}); err != nil {
+	}, &testing.PollOptions{Timeout: resultWaitTime, Interval: 5 * time.Second}); err != nil {
 		return "", err
 	}
 

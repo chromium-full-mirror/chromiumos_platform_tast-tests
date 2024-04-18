@@ -54,6 +54,9 @@ public class MainActivity extends Activity {
                         Map.entry(
                                 "setWallpaper",
                                 () -> isRestrictionUnapplied(UserManager.DISALLOW_SET_WALLPAPER)),
+                        Map.entry(
+                                "printingDisabled",
+                                () -> isRestrictionUnapplied(UserManager.DISALLOW_PRINTING)),
                         Map.entry("cameraDisabled", this::isCameraEnabled));
     }
 
