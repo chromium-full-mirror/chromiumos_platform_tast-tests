@@ -132,13 +132,17 @@ func PasspointForgetNetwork(ctx context.Context, s *testing.State) {
 	}
 	// Open the forget dialog and confirm subscription removal.
 	forget := nodewith.Name("Forget").First()
+	subscription := nodewith.Name("Go to subscription").First()
+	remove := nodewith.Name("Remove").First()
 	confirm := nodewith.Name("Confirm").First()
-	if err := uiauto.Combine("forget current active WiFi network",
+	if err := uiauto.Combine("forget current active Passpoint network",
 		ac.WaitUntilExists(forget),
-		ac.RetryUntil(ac.LeftClick(forget), ac.Exists(confirm)),
+		ac.RetryUntil(ac.LeftClick(forget), ac.Exists(subscription)),
+		ac.RetryUntil(ac.LeftClick(subscription), ac.Exists(remove)),
+		ac.RetryUntil(ac.LeftClick(remove), ac.Exists(confirm)),
 		ac.RetryUntil(ac.LeftClick(confirm), ac.Gone(confirm)),
 	)(ctx); err != nil {
-		s.Fatal("Failed to forget current active WiFi network: ", err)
+		s.Fatal("Failed to forget current active Passpoint network: ", err)
 	}
 
 	// Delay to wait for a network to be discovered.
