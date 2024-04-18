@@ -29,13 +29,13 @@ import (
 type MediaDecoderInterface int
 
 const (
-	// Chrome current interface, media::VideoDecoder.
+	// Current Chrome interface, media::VideoDecoder.
 	// https://source.chromium.org/chromium/chromium/src/+/main:media/base/video_decoder.h;drc=9f7e05d16d893bc9c542f027a2be74fba1773aa4
 	Current MediaDecoderInterface = iota
-	// Chrome legacy interface, media::VideoDecodeAccelerator.
+	// Legacy Chrome interface that is being deprecated, media::VideoDecodeAccelerator.
 	// https://source.chromium.org/chromium/chromium/src/+/main:media/base/video_decode_accelerator.h;drc=9f7e05d16d893bc9c542f027a2be74fba1773aa4
 	Legacy
-	// Certain clients like ARCVM have not migrated to the current
+	// AdapterFromLegacyToCurrent interface bridges clients like ARCVM that have not migrated to the Current interface.
 	// media::VideoDecoder interface and still use the legacy
 	// media::VideoDecodeAccelerator for out of process decoding. They are
 	// temporarily allowed to keep using the legacy out of process interface and
