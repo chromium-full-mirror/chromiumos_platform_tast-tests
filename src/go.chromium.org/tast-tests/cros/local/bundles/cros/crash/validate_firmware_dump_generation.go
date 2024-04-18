@@ -7,18 +7,24 @@ package crash
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
+	"regexp"
 	"time"
+
+	"github.com/godbus/dbus/v5"
 
 	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
 	"go.chromium.org/tast-tests/cros/local/crash"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
+	"go.chromium.org/tast-tests/cros/local/debugd"
 	"go.chromium.org/tast-tests/cros/local/network/iface"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast-tests/cros/local/retry"
@@ -34,6 +40,8 @@ import (
 const (
 	// Firmware dump file pattern.
 	firmwareDumpFilePattern = "devcoredump_iwlwifi.*.devcore.gz"
+	// Example file name for the compressed firmware dump tarball.
+	firmwareDumpFileTarball = "wifi_firmware_dumps.tar.zst"
 	// This timeout will be adjusted when pseudonymization is enabled.
 	firmwareDumpProcessingTimeout = 5 * time.Second
 	// File expiration configuration for fbpreprocessord.
@@ -176,6 +184,20 @@ func checkIfDumpFileExists(ctx context.Context, filePath string, s *testing.Stat
 	return true, nil
 }
 
+// dumpsInDir filters for targeted type of dump files under the DirEntry.
+func dumpsInDir(entries []os.DirEntry, filePattern string) []os.DirEntry {
+	var ret []os.DirEntry
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		if match, _ := regexp.MatchString(filePattern, entry.Name()); match {
+			ret = append(ret, entry)
+		}
+	}
+	return ret
+}
+
 // removeContents removes all content of directory provided in the argument.
 func removeContents(dir string) error {
 	d, err := os.Open(dir)
@@ -240,6 +262,22 @@ func cleanUp(ctx context.Context, s *testing.State, dumpPath string) {
 // environment preparation before triggering firmware dump, followed by
 // firmware dump generation.
 func firmwareDumpValidator(ctx context.Context, rl *retry.Loop, s *testing.State) error {
+	/*
+		This test validates the end-to-end behavior of firmware dump generation,
+		with the following steps:
+		1- Obtain debugfs APIs that can trigger firmware dumps.
+		2- Configure chrome and use test account to perform Gaia login.
+			Configuration includes policy and platform feature flag.
+		3- Ensure fbpreprocessord daemonstore directories are created.
+		4- Trigger firmware dump.
+		5- Validate the existence of firmware dumps.
+		6- Ensure debugd compresses and passes the dump files to chrome.
+		7-1- For test variants with single user session, verify the dump files
+			are deleted when they expire.
+		7-2- For test variants with multiple user sessions, re-enter the same
+			user session (so that the same cryptohome is mounted) and make sure
+			the dump files are deleted on session change.
+	*/
 	const (
 		iwlwifiDir          = "/sys/kernel/debug/iwlwifi"
 		fwDbgCollectPath    = "/iwlmvm/fw_dbg_collect"
@@ -421,6 +459,104 @@ func firmwareDumpValidator(ctx context.Context, rl *retry.Loop, s *testing.State
 		s.Fatal("Firmware dump generated when not allowed by policy")
 	}
 	s.Log("Firmware dump file successfully generated")
+
+	// Keep records of the generated dump files. They will be used to verify the
+	// integrity of files after compression, passing through pipe, and
+	// decompression.
+	var dumpMap = make(map[string]os.DirEntry)
+	entries, err := os.ReadDir(dumpPath)
+	if err != nil {
+		s.Fatalf("Failed to read directory %s: %s", dumpPath, err)
+	}
+	for _, entry := range dumpsInDir(entries, firmwareDumpFilePattern) {
+		dumpMap[entry.Name()] = entry
+	}
+
+	// Simulate the process that debugd passes the compressed firmware dump
+	// files to chrome through pipe. The writer fd will be passed to debugd
+	// via D-Bus method call; the buffer from the reader fd will be decompressed
+	// and verified.
+	s.Log("Verifying debugd sends the compressed firmware dump tarball through pipe")
+	fdr, fdw, err := os.Pipe()
+	if err != nil {
+		s.Fatal("Failed to create pipe: ", err)
+	}
+	defer func() {
+		fdw.Close()
+		fdr.Close()
+	}()
+
+	// Fetch compressed firmware dump files from debugd through pipe.
+	dbgd, err := debugd.New(ctx)
+	if err != nil {
+		s.Fatal("Failed to create debugd proxy: ", err)
+	}
+	outfds := map[int]dbus.UnixFD{
+		int(debugd.WifiFirmwareDump): dbus.UnixFD(fdw.Fd()),
+	}
+	go func() {
+		s.Log("Fetching compressed firmware dump tarball from debugd")
+		if err := dbgd.GetFeedbackBinaryLogs(ctx, creds.User, outfds); err != nil {
+			s.Fatal("Failed to obtain the compressed firmware dump files from debugd: ", err)
+		}
+		s.Log("Successfully passed compressed firmware dump files from debugd through pipe. Closing writer side pipe")
+		fdw.Close()
+	}()
+
+	// Receive compressed firmware dump files from the reader side of pipe and
+	// decompress to verify the firmware dump file names.
+	fwdmpDir, err := os.MkdirTemp("", "")
+	if err != nil {
+		s.Fatalf("Failed to created temp dir %s: %s", fwdmpDir, err)
+	}
+	outputDir, err := os.MkdirTemp(fwdmpDir, "")
+	if err != nil {
+		s.Fatalf("Failed to created temp dir %s for decompressed dump files: %s", outputDir, err)
+	}
+	defer os.RemoveAll(fwdmpDir)
+	fwdumpFile := filepath.Join(fwdmpDir, firmwareDumpFileTarball)
+	fwdmp, err := os.Create(fwdumpFile)
+	if err != nil {
+		s.Fatal("Failed to create the firmware dump file: ", err)
+	}
+	defer fwdmp.Close()
+	if _, err := io.Copy(fwdmp, fdr); err != nil {
+		s.Fatal("Failed to read error: ", err)
+	}
+	if err := testexec.CommandContext(ctx, "tar", "-xf", fwdmp.Name(), "-C", outputDir).Run(testexec.DumpLogOnError); err != nil {
+		s.Logf("Failed to extract %s: %s", outputDir, err)
+	}
+	var outputEntries []os.DirEntry
+	if rawOutputEntries, err := os.ReadDir(outputDir); err != nil {
+		s.Fatalf("Failed to read directory %s: %s", outputDir, err)
+	} else {
+		outputEntries = dumpsInDir(rawOutputEntries, firmwareDumpFilePattern)
+	}
+	if len(outputEntries) != len(dumpMap) {
+		s.Logf("Dump file list before compression: %#v", entries)
+		s.Logf("Dump file list after decompression: %#v", outputEntries)
+		s.Fatal("The number of dump files from the decompressed tarball doesn't match the number of generated dumps")
+	}
+	for _, entry := range outputEntries {
+		val, ok := dumpMap[entry.Name()]
+		if !ok {
+			s.Fatalf("Decompressed file %s not found in the record before compression", entry.Name())
+		}
+		inputInfo, err := val.Info()
+		if err != nil {
+			s.Fatalf("Failed to obtain file information for the dump file before compression %s: %s", entry.Name(), err)
+		}
+		outputInfo, err := entry.Info()
+		if err != nil {
+			s.Fatalf("Failed to obtain file information for the dump file after decompression %s: %s", entry.Name(), err)
+		}
+		if inputInfo.Size() != outputInfo.Size() {
+			s.Logf("Dump file size before compression: %d", inputInfo.Size())
+			s.Logf("Dump file size after decompression: %d", outputInfo.Size())
+			s.Fatalf("The decompressed file %s may be corrupted: size doesn't match", entry.Name())
+		}
+	}
+	s.Log("Successfully found firmware dump files in the tarball passed by debugd through pipe")
 
 	// For single-session test cases, verifies that the dump files are deleted
 	// by fbpreprocessord after pre-configured file expiration time.

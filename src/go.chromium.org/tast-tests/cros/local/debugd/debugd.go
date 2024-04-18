@@ -140,6 +140,12 @@ const (
 	DRMTraceCategoryDRMRes                    = 0x200
 )
 
+// FeedbackBinaryLogType is an enumeration used as the key to the map argument |binaryLogs| to the GetFeedbackBinaryLogs method.
+type FeedbackBinaryLogType int
+
+// WifiFirmwareDump is one of the FeedbackBinaryLogType enum defined in org.chromium.debugd.xml.
+const WifiFirmwareDump FeedbackBinaryLogType = 0
+
 // Debugd is used to interact with the debugd process over D-Bus.
 // For detailed spec of each D-Bus method, please find
 // src/platform2/debugd/dbus_bindings/org.chromium.debugd.xml
@@ -278,6 +284,14 @@ func (d *Debugd) GetPerfOutputV2(ctx context.Context, quipperArgs []string, disa
 func (d *Debugd) StopPerf(ctx context.Context, sessionID uint64) error {
 	if err := d.call(ctx, "StopPerf", sessionID).Err; err != nil {
 		return errors.Wrap(err, "failed to call StopPerf")
+	}
+	return nil
+}
+
+// GetFeedbackBinaryLogs calls debugd's GetFeedbackBinaryLogs D-Bus method.
+func (d *Debugd) GetFeedbackBinaryLogs(ctx context.Context, username string, outfds map[int]dbus.UnixFD) error {
+	if err := d.call(ctx, "GetFeedbackBinaryLogs", username, outfds).Err; err != nil {
+		return errors.Wrap(err, "failed to call GetFeedbackBinaryLogs")
 	}
 	return nil
 }
