@@ -16,9 +16,10 @@ import (
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
-		Name:     fixture.PersistentLacros,
-		Desc:     "Fixture setting persistent policies needed for Lacros",
-		Contacts: []string{"vsavu@google.com", "chromeos-commercial-remote-management@google.com"},
+		Name:         fixture.PersistentLacros,
+		Desc:         "Fixture setting persistent policies needed for Lacros",
+		Contacts:     []string{"vsavu@google.com", "chromeos-commercial-remote-management@google.com"},
+		BugComponent: "b:1111617", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Policy Stack
 		Impl: &persistentFixture{
 			policies: []policy.Policy{&policy.LacrosAvailability{Val: "lacros_only"}},
 		},
@@ -29,9 +30,10 @@ func init() {
 		Parent:          fixture.FakeDMS,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name:     fixture.PersistentLacrosEnrolled,
-		Desc:     "Fixture setting persistent policies needed for Lacros on enrolled device",
-		Contacts: []string{"vsavu@google.com", "chromeos-commercial-remote-management@google.com"},
+		Name:         fixture.PersistentLacrosEnrolled,
+		Desc:         "Fixture setting persistent policies needed for Lacros on enrolled device",
+		Contacts:     []string{"vsavu@google.com", "chromeos-commercial-remote-management@google.com"},
+		BugComponent: "b:1111617", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Policy Stack
 		Impl: &persistentFixture{
 			policies: []policy.Policy{&policy.LacrosAvailability{Val: "lacros_only"}},
 		},
@@ -42,9 +44,10 @@ func init() {
 		Parent:          fixture.FakeDMSEnrolled,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name:     fixture.PersistentFamilyLink,
-		Desc:     "Fixture setting persistent policy user for a Family Link account",
-		Contacts: []string{"xiqiruan@chromium.org", "vsavu@google.com", "chromeos-commercial-remote-management@google.com"},
+		Name:         fixture.PersistentFamilyLink,
+		Desc:         "Fixture setting persistent policy user for a Family Link account",
+		Contacts:     []string{"xiqiruan@chromium.org", "vsavu@google.com", "chromeos-commercial-remote-management@google.com"},
+		BugComponent: "b:1111617", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Policy Stack
 		Vars: []string{
 			"family.unicornEmail",
 		},
@@ -59,9 +62,10 @@ func init() {
 		Parent:          fixture.FakeDMS,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name:     fixture.PersistentFamilyLinkARC,
-		Desc:     "Fixture setting persistent policy user for a Family Link account",
-		Contacts: []string{"xiqiruan@chromium.org", "vsavu@google.com", "chromeos-commercial-remote-management@google.com"},
+		Name:         fixture.PersistentFamilyLinkARC,
+		Desc:         "Fixture setting persistent policy user for a Family Link account",
+		Contacts:     []string{"xiqiruan@chromium.org", "vsavu@google.com", "chromeos-commercial-remote-management@google.com"},
+		BugComponent: "b:1111617", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Policy Stack
 		Vars: []string{
 			"arc.childUser",
 		},
@@ -76,9 +80,10 @@ func init() {
 		Parent:          fixture.FakeDMS,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name:     fixture.PersistentGellerARC,
-		Desc:     "Fixture setting persistent policy user for a Geller account",
-		Contacts: []string{"sun.tsai@cienet.com", "vsavu@google.com", "chromeos-commercial-remote-management@google.com"},
+		Name:         fixture.PersistentGellerARC,
+		Desc:         "Fixture setting persistent policy user for a Geller account",
+		Contacts:     []string{"sun.tsai@cienet.com", "vsavu@google.com", "chromeos-commercial-remote-management@google.com"},
+		BugComponent: "b:1111617", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Policy Stack
 		Vars: []string{
 			"family.gellerEmail",
 		},
@@ -93,9 +98,10 @@ func init() {
 		Parent:          fixture.FakeDMS,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name:     fixture.PersistentProjectorEDU,
-		Desc:     "Fixture setting persistent policy user for a managed EDU account",
-		Contacts: []string{"tobyhuang@chromium.org", "vsavu@google.com", "chromeos-commercial-remote-management@google.com"},
+		Name:         fixture.PersistentProjectorEDU,
+		Desc:         "Fixture setting persistent policy user for a managed EDU account",
+		Contacts:     []string{"tobyhuang@chromium.org", "vsavu@google.com", "chromeos-commercial-remote-management@google.com"},
+		BugComponent: "b:1111617", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Policy Stack
 		Vars: []string{
 			"projector.eduEmail",
 		},
@@ -109,9 +115,10 @@ func init() {
 		Parent:          fixture.FakeDMS,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name:     fixture.PersistentProjectorChild,
-		Desc:     "Fixture setting persistent policy user for a Family Link account",
-		Contacts: []string{"tobyhuang@chromium.org", "vsavu@google.com", "chromeos-commercial-remote-management@google.com"},
+		Name:         fixture.PersistentProjectorChild,
+		Desc:         "Fixture setting persistent policy user for a Family Link account",
+		Contacts:     []string{"tobyhuang@chromium.org", "vsavu@google.com", "chromeos-commercial-remote-management@google.com"},
+		BugComponent: "b:1111617", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Policy Stack
 		Vars: []string{
 			"projector.childEmail",
 		},

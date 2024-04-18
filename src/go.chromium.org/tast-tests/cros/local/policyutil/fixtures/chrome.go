@@ -37,6 +37,7 @@ func init() {
 		Name:            fixture.ChromePolicyLoggedIn,
 		Desc:            "Logged into a user session",
 		Contacts:        []string{"vsavu@google.com", "chromeos-commercial-remote-management@google.com"},
+		BugComponent:    "b:1111617", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Policy Stack
 		Impl:            &policyChromeFixture{},
 		SetUpTimeout:    chrome.ManagedUserLoginTimeout + cleanupTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
@@ -51,6 +52,7 @@ func init() {
 		Name:            fixture.ChromePolicyLoggedInLockscreen,
 		Desc:            "Logged into a user session and allow lockscreen to be used",
 		Contacts:        []string{"vsavu@google.com", "chromeos-commercial-remote-management@google.com"},
+		BugComponent:    "b:1111617", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Policy Stack
 		Impl:            &policyChromeFixture{},
 		SetUpTimeout:    chrome.ManagedUserLoginTimeout + cleanupTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
@@ -60,9 +62,10 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     fixture.ChromePolicyLoggedInIsolatedApp,
-		Desc:     "Logged into a user session with web app isolation enabled",
-		Contacts: []string{"simonha@google.com", "chromeos-commercial-remote-management@google.com"},
+		Name:         fixture.ChromePolicyLoggedInIsolatedApp,
+		Desc:         "Logged into a user session with web app isolation enabled",
+		Contacts:     []string{"simonha@google.com", "chromeos-commercial-remote-management@google.com"},
+		BugComponent: "b:1111617", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Policy Stack
 		Impl: &policyChromeFixture{
 			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 				return []chrome.Option{chrome.EnableFeatures("WebAppEnableIsolatedStorage")}, nil
@@ -76,9 +79,10 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     fixture.ChromePolicyLoggedInFeatureChromeLabs,
-		Desc:     "Logged into a user session with chrome labs enabled",
-		Contacts: []string{"samicolon@google.com", "chromeos-commercial-remote-management@google.com"},
+		Name:         fixture.ChromePolicyLoggedInFeatureChromeLabs,
+		Desc:         "Logged into a user session with chrome labs enabled",
+		Contacts:     []string{"samicolon@google.com", "chromeos-commercial-remote-management@google.com"},
+		BugComponent: "b:1111617", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Policy Stack
 		Impl: &policyChromeFixture{
 			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 				return []chrome.Option{chrome.EnableFeatures("ChromeLabs")}, nil
@@ -93,9 +97,10 @@ func init() {
 
 	// TODO(b/218907052): Remove fixture after Journeys flag  is enabled by default.
 	testing.AddFixture(&testing.Fixture{
-		Name:     fixture.ChromePolicyLoggedInFeatureJourneys,
-		Desc:     "Logged into a user session with journeys enabled",
-		Contacts: []string{"rodmartin@google.com", "chromeos-commercial-remote-management@google.com"},
+		Name:         fixture.ChromePolicyLoggedInFeatureJourneys,
+		Desc:         "Logged into a user session with journeys enabled",
+		Contacts:     []string{"rodmartin@google.com", "chromeos-commercial-remote-management@google.com"},
+		BugComponent: "b:1111617", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Policy Stack
 		Impl: &policyChromeFixture{
 			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 				return []chrome.Option{chrome.EnableFeatures("Journeys")}, nil
@@ -109,9 +114,10 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     fixture.ChromePolicyLoggedInARCFilesUXEnabled,
-		Desc:     "Logged into a user session with ARC support and files new policy UX enabled",
-		Contacts: []string{"aidazolic@google.com", "chromeos-commercial-remote-management@google.com"},
+		Name:         fixture.ChromePolicyLoggedInARCFilesUXEnabled,
+		Desc:         "Logged into a user session with ARC support and files new policy UX enabled",
+		Contacts:     []string{"aidazolic@google.com", "chromeos-commercial-remote-management@google.com"},
+		BugComponent: "b:1111617", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Policy Stack
 		Impl: &policyChromeFixture{
 			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 				return []chrome.Option{chrome.ARCEnabled(), chrome.UnRestrictARCCPU(), chrome.EnableFeatures("NewFilesPolicyUX"),
@@ -127,9 +133,10 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     fixture.ChromePolicyLoggedInFilesUXEnabled,
-		Desc:     "Logged into a user session with files new policy UX enabled",
-		Contacts: []string{"ayaelattar@google.com", "chromeos-commercial-remote-management@google.com"},
+		Name:         fixture.ChromePolicyLoggedInFilesUXEnabled,
+		Desc:         "Logged into a user session with files new policy UX enabled",
+		Contacts:     []string{"ayaelattar@google.com", "chromeos-commercial-remote-management@google.com"},
+		BugComponent: "b:1111617", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Policy Stack
 		Impl: &policyChromeFixture{
 			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 				return []chrome.Option{chrome.EnableFeatures("NewFilesPolicyUX")}, nil
@@ -143,9 +150,10 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     fixture.ChromePolicyLoggedInBruschetta,
-		Desc:     "Logged into a user session with Bruschetta support",
-		Contacts: []string{"clumptini+oncall@google.com"},
+		Name:         fixture.ChromePolicyLoggedInBruschetta,
+		Desc:         "Logged into a user session with Bruschetta support",
+		Contacts:     []string{"clumptini+oncall@google.com"},
+		BugComponent: "b:1111617", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Policy Stack
 		Impl: &policyChromeFixture{
 			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 				return []chrome.Option{
@@ -184,9 +192,10 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     fixture.ChromeEnrolledLoggedIn,
-		Desc:     "Logged into a user session with enrollment",
-		Contacts: []string{"vsavu@google.com", "chromeos-commercial-remote-management@google.com"},
+		Name:         fixture.ChromeEnrolledLoggedIn,
+		Desc:         "Logged into a user session with enrollment",
+		Contacts:     []string{"vsavu@google.com", "chromeos-commercial-remote-management@google.com"},
+		BugComponent: "b:1111617", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Policy Stack
 		Impl: &policyChromeFixture{
 			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 				return []chrome.Option{chrome.KeepEnrollment()}, nil
@@ -209,6 +218,7 @@ func init() {
 			"mpolzer@google.com",
 			"chromeos-commercial-remote-management@google.com",
 		},
+		BugComponent: "b:1111617", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Policy Stack
 		Impl: &policyChromeFixture{
 			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 				return []chrome.Option{chrome.KeepEnrollment()}, nil
@@ -222,9 +232,10 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     fixture.ChromeEnrolledLoggedInARC,
-		Desc:     "Logged into a user session with enrollment with ARC support",
-		Contacts: []string{"vsavu@google.com", "chromeos-commercial-remote-management@google.com"},
+		Name:         fixture.ChromeEnrolledLoggedInARC,
+		Desc:         "Logged into a user session with enrollment with ARC support",
+		Contacts:     []string{"vsavu@google.com", "chromeos-commercial-remote-management@google.com"},
+		BugComponent: "b:1111617", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Policy Stack
 		Impl: &policyChromeFixture{
 			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 				return []chrome.Option{chrome.KeepEnrollment(), chrome.ARCEnabled(),
@@ -244,7 +255,6 @@ func init() {
 		Desc: "Logged into a user session and reports metric every second",
 		Contacts: []string{
 			"chrome-ess-engprod@google.com",
-			"vsavu@google.com",
 			"meyron@googl.com",
 		},
 		Impl: &policyChromeFixture{
@@ -261,9 +271,10 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     fixture.ChromeAdminDeskTemplatesLoggedIn,
-		Desc:     "Logged into a user session with admin desk templates",
-		Contacts: []string{"zhumatthew@google.com", "chromeos-commercial-remote-management@google.com"},
+		Name:         fixture.ChromeAdminDeskTemplatesLoggedIn,
+		Desc:         "Logged into a user session with admin desk templates",
+		Contacts:     []string{"zhumatthew@google.com", "chromeos-commercial-remote-management@google.com"},
+		BugComponent: "b:1111617", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Policy Stack
 		Impl: &policyChromeFixture{
 			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 				return []chrome.Option{chrome.EnableFeatures("DesksTemplates")}, nil

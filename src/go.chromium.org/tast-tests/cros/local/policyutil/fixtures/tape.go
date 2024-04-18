@@ -31,6 +31,7 @@ func init() {
 		Name:            fixture.ChromeTAPELoggedIn,
 		Desc:            "Logged into a real managed user session",
 		Contacts:        []string{"vsavu@google.com", "chromeos-commercial-remote-management@google.com"},
+		BugComponent:    "b:1111617", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Policy Stack
 		Impl:            &tapeChromeFixture{},
 		SetUpTimeout:    chrome.ManagedUserLoginTimeout + cleanupTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
@@ -46,6 +47,7 @@ func init() {
 		Name:            fixture.ChromeTAPEEnrolledLoggedIn,
 		Desc:            "Logged into a real managed user session on an erolled device",
 		Contacts:        []string{"vsavu@google.com", "chromeos-commercial-remote-management@google.com"},
+		BugComponent:    "b:1111617", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Policy Stack
 		Impl:            &tapeChromeFixture{},
 		SetUpTimeout:    chrome.ManagedUserLoginTimeout + cleanupTimeout,
 		ResetTimeout:    chrome.ResetTimeout,

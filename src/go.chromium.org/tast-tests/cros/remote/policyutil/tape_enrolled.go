@@ -30,6 +30,7 @@ func init() {
 			"chromeos-commercial-remote-management@google.com",
 			"vsavu@google.com",
 		},
+		BugComponent:    "b:1111632", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Enrollment
 		Impl:            &tapeEnrolledFixt{},
 		SetUpTimeout:    enrollmentSetupTimeout,
 		TearDownTimeout: 5 * time.Minute,
@@ -55,6 +56,7 @@ func init() {
 			"webprotect-eng@google.com",
 			"mohamedaomar@google.com",
 		},
+		BugComponent:    "b:1111632", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Enrollment
 		Impl:            &tapeEnrolledFixt{},
 		SetUpTimeout:    enrollmentSetupTimeout,
 		TearDownTimeout: 5 * time.Minute,
@@ -80,6 +82,7 @@ func init() {
 			"webprotect-eng@google.com",
 			"mohamedaomar@google.com",
 		},
+		BugComponent:    "b:1111632", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Enrollment
 		Impl:            &tapeEnrolledFixt{},
 		SetUpTimeout:    enrollmentSetupTimeout,
 		TearDownTimeout: 5 * time.Minute,
@@ -105,6 +108,7 @@ func init() {
 			"webprotect-eng@google.com",
 			"mohamedaomar@google.com",
 		},
+		BugComponent:    "b:1111632", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Enrollment
 		Impl:            &tapeEnrolledFixt{},
 		SetUpTimeout:    enrollmentSetupTimeout,
 		TearDownTimeout: 5 * time.Minute,
@@ -130,6 +134,7 @@ func init() {
 			"webprotect-eng@google.com",
 			"mohamedaomar@google.com",
 		},
+		BugComponent:    "b:1111632", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Enrollment
 		Impl:            &tapeEnrolledFixt{},
 		SetUpTimeout:    enrollmentSetupTimeout,
 		TearDownTimeout: 5 * time.Minute,
@@ -155,6 +160,7 @@ func init() {
 			"webprotect-eng@google.com",
 			"mohamedaomar@google.com",
 		},
+		BugComponent:    "b:1111632", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Enrollment
 		Impl:            &tapeEnrolledFixt{},
 		SetUpTimeout:    enrollmentSetupTimeout,
 		TearDownTimeout: 5 * time.Minute,
@@ -180,6 +186,7 @@ func init() {
 			"webprotect-eng@google.com",
 			"mohamedaomar@google.com",
 		},
+		BugComponent:    "b:1111632", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Enrollment
 		Impl:            &tapeEnrolledFixt{},
 		SetUpTimeout:    enrollmentSetupTimeout,
 		TearDownTimeout: 5 * time.Minute,

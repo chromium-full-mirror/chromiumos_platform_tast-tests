@@ -44,6 +44,7 @@ func init() {
 			"chromeos-commercial-remote-management@google.com",
 			"vsavu@google.com",
 		},
+		BugComponent:    "b:1111632", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Enrollment
 		Impl:            &enrolledFixt{},
 		SetUpTimeout:    enrollmentSetupTimeout,
 		TearDownTimeout: 5 * time.Minute,

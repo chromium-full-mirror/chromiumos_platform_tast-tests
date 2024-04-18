@@ -26,6 +26,7 @@ func init() {
 			"chromeos-commercial-remote-management@google.com",
 			"vsavu@google.com",
 		},
+		BugComponent: "b:1170223", // ChromeOS > Software > Commercial (Enterprise) > EngProd
 		Impl: &tapeAccountFixt{
 			poolID:                tape.DefaultManaged,
 			accountLeasingTimeout: tapeFixtureTotalRunTime,
@@ -51,6 +52,7 @@ func init() {
 			"webprotect-eng@google.com",
 			"mohamedaomar@google.com",
 		},
+		BugComponent: "b:1170223", // ChromeOS > Software > Commercial (Enterprise) > EngProd
 		Impl: &tapeAccountFixt{
 			poolID:                tape.EnterpriseConnectorsMGSAshWebProtectDisabled,
 			accountLeasingTimeout: tapeFixtureTotalRunTime,
@@ -76,6 +78,7 @@ func init() {
 			"webprotect-eng@google.com",
 			"mohamedaomar@google.com",
 		},
+		BugComponent: "b:1170223", // ChromeOS > Software > Commercial (Enterprise) > EngProd
 		Impl: &tapeAccountFixt{
 			poolID:                tape.EnterpriseConnectorsMGSAshWebProtectEnabledAllow,
 			accountLeasingTimeout: tapeFixtureTotalRunTime,
@@ -101,6 +104,7 @@ func init() {
 			"webprotect-eng@google.com",
 			"mohamedaomar@google.com",
 		},
+		BugComponent: "b:1170223", // ChromeOS > Software > Commercial (Enterprise) > EngProd
 		Impl: &tapeAccountFixt{
 			poolID:                tape.EnterpriseConnectorsMGSAshWebProtectEnabledBlock,
 			accountLeasingTimeout: tapeFixtureTotalRunTime,
@@ -126,6 +130,7 @@ func init() {
 			"webprotect-eng@google.com",
 			"mohamedaomar@google.com",
 		},
+		BugComponent: "b:1170223", // ChromeOS > Software > Commercial (Enterprise) > EngProd
 		Impl: &tapeAccountFixt{
 			poolID:                tape.EnterpriseConnectorsMGSLacrosWebProtectDisabled,
 			accountLeasingTimeout: tapeFixtureTotalRunTime,
@@ -151,6 +156,7 @@ func init() {
 			"webprotect-eng@google.com",
 			"mohamedaomar@google.com",
 		},
+		BugComponent: "b:1170223", // ChromeOS > Software > Commercial (Enterprise) > EngProd
 		Impl: &tapeAccountFixt{
 			poolID:                tape.EnterpriseConnectorsMGSLacrosWebProtectEnabledAllow,
 			accountLeasingTimeout: tapeFixtureTotalRunTime,
@@ -169,8 +175,9 @@ func init() {
 		},
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name: fixture.EnterpriseConnectorsMGSLacrosWebProtectEnabledBlockAccount,
-		Desc: "Leases an account with Autolaunch MGS and pre-applied policies for Lacros web protect enabled and blocked using TAPE",
+		Name:         fixture.EnterpriseConnectorsMGSLacrosWebProtectEnabledBlockAccount,
+		Desc:         "Leases an account with Autolaunch MGS and pre-applied policies for Lacros web protect enabled and blocked using TAPE",
+		BugComponent: "b:1170223", // ChromeOS > Software > Commercial (Enterprise) > EngProd
 		Contacts: []string{
 			"cros-enterprise-connectors@google.com",
 			"webprotect-eng@google.com",
