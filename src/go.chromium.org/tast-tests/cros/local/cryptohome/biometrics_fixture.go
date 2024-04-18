@@ -28,6 +28,7 @@ func init() {
 			"lziest@google.com",
 			"cryptohome-core@google.com",
 		},
+		BugComponent:    "b:1088399", // ChromeOS > Security > Consumer Security > Cryptohome
 		SetUpTimeout:    fixtureSetUpTimeout,
 		ResetTimeout:    fixtureResetTimeout,
 		TearDownTimeout: fixtureTearDownTimeout,
