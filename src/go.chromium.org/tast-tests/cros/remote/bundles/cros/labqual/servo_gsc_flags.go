@@ -46,13 +46,28 @@ func ServoGSCFlags(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to servo: ", err)
 	}
 
-	// read cr50_ccd_level
-	if val, err := h.Servo.GetString(ctx, servo.GSCCCDLevel); err != nil {
-		s.Fatal("Failed to get gsc_ccd_level")
-	} else if val != servo.Open {
-		s.Logf("CCD is not open, got %q. Attempting to unlock", val)
-		if err := h.Servo.SetString(ctx, servo.CR50Testlab, servo.Open); err != nil {
-			s.Fatal("Failed to unlock CCD")
+	hasCCD, err := h.Servo.HasCCD(ctx)
+	if err != nil {
+		s.Fatal("Error while checking if servo has a CCD connection: ", err)
+	}
+	s.Log("Servo has ccd : ", hasCCD)
+
+	if hasCCD {
+		// read ccd serial number
+		ccdSerial, err := h.Servo.GetCCDSerial(ctx)
+		if err != nil {
+			s.Fatal("Failed to get servo serials: ", err)
+		}
+		s.Logf("CCD serial read from Servo : %s", ccdSerial)
+
+		// read cr50_ccd_level
+		if val, err := h.Servo.GetString(ctx, servo.GSCCCDLevel); err != nil {
+			s.Fatal("Failed to get gsc_ccd_level")
+		} else if val != servo.Open {
+			s.Logf("CCD is not open, got %q. Attempting to unlock", val)
+			if err := h.Servo.SetString(ctx, servo.CR50Testlab, servo.Open); err != nil {
+				s.Fatal("Failed to unlock CCD")
+			}
 		}
 	}
 
@@ -77,20 +92,6 @@ func ServoGSCFlags(ctx context.Context, s *testing.State) {
 	}
 	s.Log("Servo has cr50_reboot control : ", hasCR50Reboot)
 
-	hasCCD, err := h.Servo.HasCCD(ctx)
-	if err != nil {
-		s.Fatal("Error while checking if servo has a CCD connection: ", err)
-	}
-	s.Log("Servo has ccd : ", hasCCD)
-	if hasCCD {
-		// read ccd serial number
-		ccdSerial, err := h.Servo.GetCCDSerial(ctx)
-		if err != nil {
-			s.Fatal("Failed to get servo serials: ", err)
-		}
-		s.Logf("CCD serial read from Servo : %s", ccdSerial)
-	}
-
 	// read cr50_ccd_state_flags
 	val, err := h.Servo.HasControl(ctx, cr50CcdStateFlags)
 	if err != nil {
@@ -98,7 +99,7 @@ func ServoGSCFlags(ctx context.Context, s *testing.State) {
 	}
 	s.Log("cr50_ccd_state_flags can be read from Servo : ", val)
 
-	// read cr50_ccd_state_flags
+	// read cr50_servo
 	val, err = h.Servo.HasControl(ctx, cr50Servo)
 	if err != nil {
 		s.Fatal("Failed to get cr50_servo")
