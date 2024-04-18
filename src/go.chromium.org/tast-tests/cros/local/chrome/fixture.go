@@ -233,9 +233,10 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     fixture.ChromeLoggedInWithOobe,
-		Desc:     "Log in and proceed with the post-login OOBE flow",
-		Contacts: []string{"cros-oobe@google.com", "bohdanty@google.com"},
+		Name:         fixture.ChromeLoggedInWithOobe,
+		Desc:         "Log in and proceed with the post-login OOBE flow",
+		Contacts:     []string{"cros-oobe@google.com", "bohdanty@google.com"},
+		BugComponent: "b:1263090", // ChromeOS > Software > OOBE
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
 			return []Option{DontSkipOOBEAfterLogin()}, nil
 		}),
@@ -257,9 +258,10 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     fixture.ChromeLoggedInWithOobeAndAccessibilityButtonEnabled,
-		Desc:     "Log in and proceed with the post-login OOBE flow with the accessibility button enabled on the marketing opt-in screen",
-		Contacts: []string{"bohdanty@google.com", "cros-oobe@google.com"},
+		Name:         fixture.ChromeLoggedInWithOobeAndAccessibilityButtonEnabled,
+		Desc:         "Log in and proceed with the post-login OOBE flow with the accessibility button enabled on the marketing opt-in screen",
+		Contacts:     []string{"bohdanty@google.com", "cros-oobe@google.com"},
+		BugComponent: "b:1263090", // ChromeOS > Software > OOBE
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
 			return []Option{
 				DontSkipOOBEAfterLogin(),
