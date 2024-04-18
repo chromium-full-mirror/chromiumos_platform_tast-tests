@@ -86,7 +86,8 @@ type arcPolicyFactory func() (policy.Policy, func(ctx context.Context), error)
 
 func ManagedDevicePolicy(ctx context.Context, s *testing.State) {
 	const (
-		apk = "ArcDevicePolicyTest.apk"
+		apk             = "ArcDevicePolicyTest.apk"
+		mainActivityCls = devicePolicyPkg + ".MainActivity"
 	)
 
 	packages := []string{devicePolicyPkg}
@@ -161,6 +162,12 @@ func ManagedDevicePolicy(ctx context.Context, s *testing.State) {
 	}
 	defer d.Close(cleanupCtx)
 
+	cleanup, err := launchApp(ctx, tconn, a, devicePolicyPkg, mainActivityCls)
+	if err != nil {
+		s.Fatal("Failed to launch the app: ", err)
+	}
+	defer cleanup(cleanupCtx)
+
 	// No need to retry when testing policies without any changes.
 	rl := &retry.Loop{Attempts: 1,
 		MaxAttempts: 1,
@@ -221,6 +228,23 @@ func createPrintingPolicy() (policy.Policy, func(ctx context.Context), error) {
 
 func createCameraPolicy() (policy.Policy, func(ctx context.Context), error) {
 	return &policy.VideoCaptureAllowed{Val: false}, func(ctx context.Context) {}, nil
+}
+
+func launchApp(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, appPackage, mainActivity string) (func(ctx context.Context), error) {
+	testing.ContextLog(ctx, "Starting app")
+	act, err := arc.NewActivity(a, appPackage, mainActivity)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create main activity")
+	}
+	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
+		act.Close(ctx)
+		return nil, errors.Wrap(err, "failed to start main activity")
+	}
+	cleanup := func(ctx context.Context) {
+		act.Close(ctx)
+		act.Stop(ctx, tconn)
+	}
+	return cleanup, nil
 }
 
 func createWallpaperPolicy(ctx context.Context, imgPath string) (policy.Policy, func(ctx context.Context), error) {
@@ -297,29 +321,11 @@ func getPolicySyncTimestamp(ctx context.Context, user string) (int64, error) {
 
 func testPolicyEnforcement(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Device, policy string, shouldSucceed bool, rl *retry.Loop) error {
 	const (
-		policiesListID  = devicePolicyPkg + ":id/lstPolicies"
-		testButtonID    = devicePolicyPkg + ":id/btnTest"
-		errorTextID     = devicePolicyPkg + ":id/txtError"
-		mainActivityCls = devicePolicyPkg + ".MainActivity"
-		testTimeout     = time.Minute
+		policiesListID = devicePolicyPkg + ":id/lstPolicies"
+		testButtonID   = devicePolicyPkg + ":id/btnTest"
+		errorTextID    = devicePolicyPkg + ":id/txtError"
+		testTimeout    = time.Minute
 	)
-
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, time.Second)
-	defer cancel()
-
-	// Some policies can trigger a config change (e.g. setWallpaper) and that causes activity to be destroyed/re-created
-	// Thus we need to create a new activity for every policy test to start with a clean state every time.
-	testing.ContextLog(ctx, "Starting app")
-	act, err := arc.NewActivity(a, devicePolicyPkg, mainActivityCls)
-	if err != nil {
-		return errors.Wrap(err, "failed to create main activity")
-	}
-	defer act.Close(cleanupCtx)
-	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
-		return errors.Wrap(err, "failed to start main activity")
-	}
-	defer act.Stop(cleanupCtx, tconn)
 
 	if err := selectSpinnerItem(ctx, d, policiesListID, policy); err != nil {
 		return err
