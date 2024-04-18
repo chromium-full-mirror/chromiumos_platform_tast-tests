@@ -17,6 +17,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
+		// TODO(b/310387643) re-structure WindowArrangementCUJ to be simpler,
+		// in an attempt to fail on less niche bugs. Once this test has been
+		// improved, re-add it to the CUJ suite. Currently, the test is not
+		// run in the lab due to hard to resolve failures.
 		Func:         WindowArrangementCUJ,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measures the performance of critical user journey for window arrangements",
@@ -25,7 +29,6 @@ func init() {
 			"yichenz@chromium.org",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
-		Attr:         []string{"group:cuj"},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Timeout:      15 * time.Minute,
@@ -82,8 +85,7 @@ func init() {
 				Val: windowarrangementcuj.TestParam{
 					BrowserType: browser.TypeAsh,
 				},
-				ExtraAttr: []string{"cuj_experimental"},
-				Fixture:   "loggedInToCUJUserWithRoundedWindows",
+				Fixture: "loggedInToCUJUserWithRoundedWindows",
 			},
 			{
 				Name: "rounded_windows_lacros",
@@ -91,7 +93,6 @@ func init() {
 					BrowserType: browser.TypeLacros,
 				},
 				ExtraSoftwareDeps: []string{"lacros"},
-				ExtraAttr:         []string{"cuj_experimental"},
 				Fixture:           "loggedInToCUJUserLacrosWithRoundedWindows",
 			},
 		},
