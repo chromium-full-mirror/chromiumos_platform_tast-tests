@@ -30,6 +30,7 @@ func init() {
 			"vsavu@google.com",        // Original fixture author.
 
 		},
+		BugComponent:    "b:1170223", // ChromeOS > Software > Commercial (Enterprise) > EngProd
 		Impl:            &fakeDMSFixture{},
 		SetUpTimeout:    15 * time.Second,
 		ResetTimeout:    5 * time.Second,
@@ -47,6 +48,7 @@ func init() {
 			"vsavu@google.com",        // Original fixture author.
 
 		},
+		BugComponent: "b:1170223", // ChromeOS > Software > Commercial (Enterprise) > EngProd
 		Impl: &fakeDMSFixture{
 			importState: true,
 		},
@@ -67,6 +69,7 @@ func init() {
 			"chromeos-commercial-remote-management@google.com",
 			"mpolzer@chromium.org",
 		},
+		BugComponent: "b:1170223", // ChromeOS > Software > Commercial (Enterprise) > EngProd
 		Impl: &fakeDMSFixture{
 			importState: true,
 		},
