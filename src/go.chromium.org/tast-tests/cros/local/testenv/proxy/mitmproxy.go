@@ -159,8 +159,10 @@ func (mp *MitmProxy) start(ctx context.Context) (retErr error) {
 	nowStr := time.Now().Format("20060102-150405")
 	dumpFileName := fmt.Sprintf("mitmproxy_%s.dump", nowStr)
 	dumpFilePath := filepath.Join(mp.outDir, dumpFileName)
-	cmd := testexec.CommandContext(ctx,
-		"/sbin/minijail0", "-e", "--", mp.binaryPath, "--set", fmt.Sprintf("confdir=%s", mp.confDir), "-w", dumpFilePath)
+	logFilePath := filepath.Join(mp.outDir, fmt.Sprintf("mitmproxy_%s.log", nowStr))
+	proxyCmd := fmt.Sprintf(
+		`/sbin/minijail0 -e -- "%s" --set confdir="%s" -w "%s" &> "%s"`, mp.binaryPath, mp.confDir, dumpFilePath, logFilePath)
+	cmd := testexec.CommandContext(ctx, "bash", "-c", proxyCmd)
 
 	// Required for remote tast tests. mitmproxy is written in Python and uses the PyInstaller
 	// to bundle the mitmproxy scripts and all its dependencies into a single file. The file
@@ -171,7 +173,7 @@ func (mp *MitmProxy) start(ctx context.Context) (retErr error) {
 	// has to be manually changed.
 	cmd.Env = append(cmd.Env, "TMPDIR=/usr/local/tmp")
 
-	testing.ContextLogf(ctx, "mitmproxy: starting with cmd: %s", cmd)
+	testing.ContextLogf(ctx, "mitmproxy: starting with cmd: %s", proxyCmd)
 	if err := cmd.Start(); err != nil || waitForProcRunning(ctx) != nil {
 		return errors.Wrap(err, "failed to start proxy server (terminated at startup?)")
 	}
