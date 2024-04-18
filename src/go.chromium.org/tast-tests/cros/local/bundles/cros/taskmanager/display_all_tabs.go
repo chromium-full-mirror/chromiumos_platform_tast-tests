@@ -29,20 +29,18 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:           DisplayAllTabs,
-		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantExists,
-		Desc:           "Test that all tabs should be displayed in the task manager",
+		Func:         DisplayAllTabs,
+		LacrosStatus: testing.LacrosVariantExists,
+		Desc:         "Test that all tabs should be displayed in the task manager",
 		Contacts: []string{
-			// "afakhry@google.com",
-			// "chromeos-sw-engprod@google.com",
-			"alfredyu@cienet.com",
-			"chromeos-connectivity-cienet-external@google.com",
+			"afakhry@google.com",
+			"chromeos-sw-engprod@google.com",
 		},
-		BugComponent: "b:1457613",
-		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
-		SoftwareDeps: []string{"chrome"},
-		VarDeps:      []string{"ui.gaiaPoolDefault"},
+		BugComponent:   "b:1457613",
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Attr:           []string{"group:mainline", "informational", "group:hw_agnostic"},
+		SoftwareDeps:   []string{"chrome"},
+		VarDeps:        []string{"ui.gaiaPoolDefault"},
 		Params: []testing.Param{
 			{
 				// GAIA is required to install an app from Chrome Webstore.
