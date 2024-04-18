@@ -545,12 +545,14 @@ func init() {
 
 	// arcBootedWithInputOverlayAlphaV2 is a fixture similar to arcBooted but
 	// with the input overlay flag enabled.
+	// TODO(b/335668261): In M127, remove this fixture after all arc.InputOverlay* tast
+	// tests have been migrated or deprecated.
 	fixtureConfig = DefaultBootedFixtureConfig()
 	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 		return []chrome.Option{
 			chrome.ARCEnabled(),
 			chrome.UnRestrictARCCPU(),
-			chrome.ExtraArgs("--enable-features=ArcInputOverlayAlphaV2"),
+			chrome.ExtraArgs("--disable-features=GameDashboard"),
 		}, nil
 	}
 	testing.AddFixture(&testing.Fixture{
