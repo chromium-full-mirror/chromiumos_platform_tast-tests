@@ -36,7 +36,8 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            GSCInitialFactory,
 		Desc:            "Ensures GSC is in the initial factory mode state with cleared INFO pages",
-		Contacts:        []string{"tast-fw-library-reviewers@google.com", "jettrink@google.com"},
+		Contacts:        []string{"gsc-sheriff@google.com", "jettrink@google.com"},
+		BugComponent:    "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
 		Impl:            &initialFactoryImpl{},
 		SetUpTimeout:    copyFromGSTimeout,
 		TearDownTimeout: removeFileTimeout,
