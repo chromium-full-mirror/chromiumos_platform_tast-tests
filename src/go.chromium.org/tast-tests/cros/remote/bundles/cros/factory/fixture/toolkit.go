@@ -36,6 +36,7 @@ func init() {
 		Name:            EnsureToolkit,
 		Desc:            "Fixture for ensuring toolkit is installed before test and uninstalled after test",
 		Contacts:        []string{"lschyi@google.com", "chromeos-factory-eng@google.com"},
+		BugComponent:    "b:167224",
 		Impl:            &ensureToolkitFixt{},
 		SetUpTimeout:    rebootTimeout + time.Minute, // reboot and do toolkit installation
 		TearDownTimeout: rebootTimeout + time.Minute, // reboot and do toolkit uninstallation
