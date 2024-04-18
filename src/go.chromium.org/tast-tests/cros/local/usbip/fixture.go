@@ -22,12 +22,11 @@ const UsbipServerTimeout = 10 * time.Second
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
-		Name:            "usbipModulesLoaded",
-		Desc:            "Kernel modules necessary for `usbip` loaded",
-		Contacts:        []string{
+		Name: "usbipModulesLoaded",
+		Desc: "Kernel modules necessary for `usbip` loaded",
+		Contacts: []string{
 			"chromeos-engprod-syd@google.com",
 			"mattlui@google.com",
-			"alvinjia@google.com",
 		},
 		Impl:            &LoadModuleFixture{},
 		SetUpTimeout:    UsbipModulesLoadedTimeout,
@@ -36,12 +35,11 @@ func init() {
 		PostTestTimeout: UsbipModulesLoadedTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name:            "usbipServer",
-		Desc:            "A running USBIP server for device emulation",
-		Contacts:        []string{
+		Name: "usbipServer",
+		Desc: "A running USBIP server for device emulation",
+		Contacts: []string{
 			"chromeos-engprod-syd@google.com",
 			"mattlui@google.com",
-			"alvinjia@google.com",
 		},
 		Impl:            &ServerFixture{},
 		Parent:          "usbipModulesLoaded",

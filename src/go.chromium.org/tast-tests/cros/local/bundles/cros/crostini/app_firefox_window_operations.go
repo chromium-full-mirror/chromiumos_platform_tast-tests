@@ -23,7 +23,7 @@ func init() {
 		Func:         AppFirefoxWindowOperations,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Performs maximize/restore/minimize/close actions on Firefox",
-		Contacts:     []string{"clumptini+oncall@google.com", "alvinjia@google.com"},
+		Contacts:     []string{"clumptini+oncall@google.com"},
 		Attr:         []string{"group:mainline", "group:crostini_app_cq"},
 		Vars:         screenshot.ScreenDiffVars,
 		SoftwareDeps: []string{"chrome", "vm_host", "amd64"},

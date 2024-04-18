@@ -21,7 +21,7 @@ func init() {
 		Func:         TwoUsersInstall,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test two users can install crostini separately",
-		Contacts:     []string{"clumptini@google.com", "alvinjia@google.com"},
+		Contacts:     []string{"clumptini@google.com"},
 		VarDeps:      []string{"ui.gaiaPoolDefault"},
 		Attr:         []string{"group:mainline", "group:crostini_slow", "informational"},
 		SoftwareDeps: []string{"chrome", "vm_host"},

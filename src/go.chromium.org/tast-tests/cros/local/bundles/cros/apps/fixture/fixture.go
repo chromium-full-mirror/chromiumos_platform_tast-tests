@@ -143,7 +143,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            LacrosLoggedIn,
 		Desc:            "Logged into a user session with Lacros for essential apps",
-		Contacts:        []string{"alvinjia@google.com", "jinrongwu@google.com"},
+		Contacts:        []string{"mattlui@google.com", "jinrongwu@google.com"},
 		Impl:            eaFixture(browser.TypeLacros, true),
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -195,7 +195,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            LacrosLoggedInJP,
 		Desc:            "Logged into a user session with Lacros for essential apps in Japanese language",
-		Contacts:        []string{"alvinjia@google.com", "jinrongwu@google.com"},
+		Contacts:        []string{"mattlui@google.com", "jinrongwu@google.com"},
 		Impl:            eaFixture(browser.TypeLacros, true, chrome.Region("jp")),
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,

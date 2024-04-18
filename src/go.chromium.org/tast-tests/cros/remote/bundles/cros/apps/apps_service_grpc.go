@@ -26,12 +26,11 @@ var disableFeatures = []string{"DefaultWebAppInstallation"}
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AppsServiceGRPC,
-		Desc:         "Check basic functionalities of AppsService",
-		Contacts:     []string{
+		Func: AppsServiceGRPC,
+		Desc: "Check basic functionalities of AppsService",
+		Contacts: []string{
 			"chromeos-engprod-syd@google.com",
 			"mattlui@google.com",
-			"alvinjia@google.com",
 		},
 		BugComponent: "b:1103568", // ChromeOS -> EngProd -> Apps
 		Attr:         []string{"group:mainline", "informational"},
