@@ -46,6 +46,7 @@ func init() {
 		Data: []string{"wallpaper_image.jpeg"},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.ArcEnabled{}, pci.VerifiedFunctionalityOS),
+			pci.SearchFlag(&policy.DisableScreenshots{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.PrintingEnabled{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.VideoCaptureAllowed{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.WallpaperImage{}, pci.VerifiedFunctionalityOS),
@@ -90,8 +91,9 @@ func ManagedDevicePolicy(ctx context.Context, s *testing.State) {
 
 	packages := []string{devicePolicyPkg}
 	arcPolicyMap := map[string]arcPolicyFactory{
-		"cameraDisabled":   createCameraPolicy,
-		"printingDisabled": createPrintingPolicy,
+		"cameraDisabled":        createCameraPolicy,
+		"printingDisabled":      createPrintingPolicy,
+		"screenCaptureDisabled": createScreenshotPolicy,
 		"setWallpaper": func() (policy.Policy, func(ctx context.Context), error) {
 			return createWallpaperPolicy(ctx, s.DataPath("wallpaper_image.jpeg"))
 		},
@@ -207,6 +209,10 @@ func ManagedDevicePolicy(ctx context.Context, s *testing.State) {
 		}
 		firstTest = false
 	}
+}
+
+func createScreenshotPolicy() (policy.Policy, func(ctx context.Context), error) {
+	return &policy.DisableScreenshots{Val: true}, func(ctx context.Context) {}, nil
 }
 
 func createPrintingPolicy() (policy.Policy, func(ctx context.Context), error) {

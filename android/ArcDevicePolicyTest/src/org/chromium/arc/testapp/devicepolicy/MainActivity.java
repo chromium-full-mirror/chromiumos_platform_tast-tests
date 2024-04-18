@@ -57,6 +57,7 @@ public class MainActivity extends Activity {
                         Map.entry(
                                 "printingDisabled",
                                 () -> isRestrictionUnapplied(UserManager.DISALLOW_PRINTING)),
+                        Map.entry("screenCaptureDisabled", this::isScreenshotEnabled),
                         Map.entry("cameraDisabled", this::isCameraEnabled));
     }
 
@@ -95,12 +96,20 @@ public class MainActivity extends Activity {
         txtOutput.setText(String.valueOf(result));
     }
 
+    private boolean isScreenshotEnabled() {
+        final boolean disabled = devicePolicyManager.getScreenCaptureDisabled(null);
+        if (disabled) {
+            logError("Screenshot is disabled", null);
+        }
+        return !disabled;
+    }
+
     private boolean isCameraEnabled() {
-        final boolean isCameraDisabled = devicePolicyManager.getCameraDisabled(null);
-        if (isCameraDisabled) {
+        final boolean disabled = devicePolicyManager.getCameraDisabled(null);
+        if (disabled) {
             logError("Camera is disabled", null);
         }
-        return !isCameraDisabled;
+        return !disabled;
     }
 
     private boolean isRestrictionUnapplied(String restrictionKey) {

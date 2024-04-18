@@ -8,6 +8,7 @@
     <string-array name="policies">
         <item>cameraDisabled</item>
         <item>printingDisabled</item>
+        <item>screenCaptureDisabled</item>
         <item>setWallpaper</item>
     </string-array>
     <string name="test_button_text">Test</string>
