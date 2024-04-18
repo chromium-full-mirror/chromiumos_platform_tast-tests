@@ -42,13 +42,14 @@ func TestPmTestParams(t *testing.T) {
 		idx := 0
 		for _, variant := range []string{"", "chrome", "webglaquarium"} {
 			var s []string
-			if b != "" {
-				s = append(s, b)
-			}
 			if variant != "" {
 				s = append(s, variant)
 			}
+			if b != "" {
+				s = append(s, b)
+			}
 			suffix := strings.Join(s, "_")
+
 			for _, pm := range []graphics.PmTestMode{graphics.PmTestNone, graphics.PmTestFreezer, graphics.PmTestDevices, graphics.PmTestPlatform, graphics.PmTestProcessors, graphics.PmTestCore} {
 				for _, suspendMode := range []string{"graphics.SuspendS0ix", "graphics.SuspendS3"} {
 					// In S0, Processors and Core are not supported.
@@ -65,17 +66,17 @@ func TestPmTestParams(t *testing.T) {
 					}
 
 					attr := []string{"graphics_perbuild"}
-					if suffix == "bringup" {
+					if strings.Contains(suffix, "bringup") {
 						attr = []string{"graphics_manual", "graphics_bringup"}
 					}
 
 					loopCount := 2
-					if suffix == "bringup" {
+					if strings.Contains(suffix, "bringup") {
 						loopCount = 100
 					}
 
 					timeout := 3 * time.Minute
-					if suffix == "bringup" {
+					if strings.Contains(suffix, "bringup") {
 						timeout = 20 * time.Minute
 					}
 
