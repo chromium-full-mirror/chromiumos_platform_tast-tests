@@ -1,5 +1,5 @@
 {
-  "url": "gs://chromiumos-test-assets-public/tast/cros/printer/printer_add_custom_modus3_ca_printer_rasterToMODUS3_CA_20240408.bin",
-  "size": 11418,
-  "sha256sum": "3f7cb528659ebb4903e39f6c6a626c0cdc57db1ca100d96a97be9f3d7ae07981"
+  "url": "gs://chromiumos-test-assets-public/tast/cros/printer/printer_add_custom_modus3_ca_printer_rasterToMODUS3_CA_20240418.bin",
+  "size": 11419,
+  "sha256sum": "12bedb3928df51e5c899948be5dedcc90d45b44cb2ae64110ef23bfb1e8702bd"
 }
