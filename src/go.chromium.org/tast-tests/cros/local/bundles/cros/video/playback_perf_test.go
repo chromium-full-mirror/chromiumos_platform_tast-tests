@@ -321,6 +321,17 @@ func TestPlaybackPerfConfig(t *testing.T) {
 
 	}
 
+	for _, codec := range []string{"h264", "vp9", "av1"} {
+		resolution, dec := 1080, "hw"
+		for _, fps := range []int{30, 60} {
+			param := genPlaybackPerfParam(codec, playback.GenDataPath(codec, resolution, fps), resolution, fps, dec,
+				"reduced_hardware_video_decoder_buffers", "chromeVideoWithReducedHardwareVideoDecoderBuffers",
+				[]string{})
+			params = append(params, param)
+		}
+
+	}
+
 	code := genparams.Template(t, `{{ range . }}{
 		Name: {{ .Name | fmt }},
 		Val:  playback.Config{
