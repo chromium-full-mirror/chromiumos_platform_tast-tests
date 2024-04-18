@@ -181,6 +181,8 @@ func init() {
 		Name:     "lacrosResourcesFileSharing",
 		Desc:     "Lacros Chrome with resources file sharing feature",
 		Contacts: []string{"elkurin@chromium.org", "hidehiko@chromium.org"},
+		// Public Trackers > Chromium Public Trackers > Chromium > OS > LaCrOS > Core
+		BugComponent: "b:1456870",
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return NewConfig(ChromeOptions(chrome.EnableFeatures("LacrosResourcesFileSharing"))).Opts()
 		}),
