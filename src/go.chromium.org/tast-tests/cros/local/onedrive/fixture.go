@@ -80,9 +80,10 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "onedriveManaged",
-		Desc:     "Enterprise variant of onedrive with the corresponding policies set to 'allowed'",
-		Contacts: []string{"lmasopust@google.com", "cros-commercial-clippy-eng@google.com"},
+		Name:         "onedriveManaged",
+		Desc:         "Enterprise variant of onedrive with the corresponding policies set to 'allowed'",
+		Contacts:     []string{"lmasopust@google.com", "cros-commercial-clippy-eng@google.com"},
+		BugComponent: "b:1401215", // ChromeOS > Software > Commercial (Enterprise) > Identity > 3P IdP > Enterprise Clippy
 		Impl: &onedriveFixture{
 			bt:            browser.TypeAsh,
 			chromeOptions: opts,
