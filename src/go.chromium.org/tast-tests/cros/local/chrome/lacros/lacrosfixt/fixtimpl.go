@@ -249,9 +249,10 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "lacrosWithStackSampledMetrics",
-		Desc:     "Lacros Chrome from a pre-built image; stack-sampled metrics turned on for lacros",
-		Contacts: []string{"iby@google.com"},
+		Name:         "lacrosWithStackSampledMetrics",
+		Desc:         "Lacros Chrome from a pre-built image; stack-sampled metrics turned on for lacros",
+		Contacts:     []string{"iby@google.com", "chromeos-data-eng@google.com"},
+		BugComponent: "b:1087262",
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return NewConfig(ChromeOptions(
 				chrome.EnableLacrosStackSampledMetrics(),
