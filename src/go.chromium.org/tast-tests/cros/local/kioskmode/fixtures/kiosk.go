@@ -51,6 +51,7 @@ func init() {
 		Name:     fixture.KioskLoggedInLacros,
 		Desc:     "Kiosk mode started with default app setup, DUT is enrolled and Lacros enabled",
 		Contacts: []string{"irfedorova@google.com", "chromeos-kiosk-eng@google.com"},
+		BugComponent: "b:892153",
 		Impl: &kioskFixture{
 			autoLaunchKioskAppID: kioskmode.WebKioskAccountID,
 			extraPublicAccountPolicies: []policy.Policy{
