@@ -25,12 +25,19 @@ type P2POnOffRobustnessTestcase struct {
 }
 
 // P2POnOffRound sets up p2p, makes sure teardown is run then runs actions from P2PConnect round.
-func P2POnOffRound(ctx context.Context, tf *wificell.TestFixture, ops ...p2p.GroupOption) (retErr error) {
+func P2POnOffRound(ctx context.Context, tf *wificell.TestFixture, ops ...p2p.GroupOption) (
+	goMACAddress, clientMACAddress, SSID string, retErr error) {
 	// Configure GO according to the testcase specs.
 	err := tf.P2PConfigureGO(ctx, wificell.P2PDeviceDUT, ops...)
 	if err != nil {
-		return errors.Wrap(err, "failed to start P2P session on DUT")
+		return "", "", "", errors.Wrap(err, "failed to start P2P session on DUT")
 	}
+	p2pgo, err := tf.P2PDevice(ctx, wificell.P2PDeviceDUT)
+	if err != nil {
+		return "", "", "", errors.Wrap(err, "failed to get P2PDevice")
+	}
+	ssid := p2pgo.P2PSSID()
+	mac := p2pgo.P2PMACAddress()
 
 	defer func(ctx context.Context) {
 		err = tf.P2PDeconfigureGO(ctx)
@@ -42,19 +49,29 @@ func P2POnOffRound(ctx context.Context, tf *wificell.TestFixture, ops ...p2p.Gro
 	testing.ContextLog(ctx, "P2P Group started")
 
 	// Rest of the round is functionally identical to P2PConnectRound.
-	err = P2PConnectRound(ctx, tf)
+	clientMAC, err := P2PConnectRound(ctx, tf)
 	if err != nil {
-		return errors.Wrap(err, "failed to associate to DUT")
+		return "", "", "", errors.Wrap(err, "failed to associate to DUT")
 	}
-	return nil
+	if clientMAC == mac {
+		return "", "", "", errors.Wrapf(err,
+			"P2PDevice connected with the same MAC address as the owner (%v)", mac)
+	}
+	return mac, clientMAC, ssid, nil
 }
 
 // P2PConnectRound connects peer DUT to the P2P GO on the main DUT, then confirms connection by running a short ping burst.
-func P2PConnectRound(ctx context.Context, tf *wificell.TestFixture) (retErr error) {
+func P2PConnectRound(ctx context.Context, tf *wificell.TestFixture) (clientMACAddress string, retErr error) {
 	err := tf.P2PConnect(ctx, wificell.P2PDeviceCompanionDUT)
 	if err != nil {
-		return errors.Wrap(err, "failed to connect to P2P Group")
+		return "", errors.Wrap(err, "failed to connect to P2P Group")
 	}
+
+	pspClient, err := tf.P2PDevice(ctx, wificell.P2PDeviceCompanionDUT)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to get P2PDevice")
+	}
+	mac := pspClient.P2PMACAddress()
 	// Defer disconnect just in case something breaks.
 	defer func(ctx context.Context) {
 		err = tf.P2PDisconnect(ctx)
@@ -64,10 +81,10 @@ func P2PConnectRound(ctx context.Context, tf *wificell.TestFixture) (retErr erro
 	defer cancel()
 
 	if err := tf.P2PAssertPingFromGO(ctx); err != nil {
-		return errors.Wrap(err, "failed to ping the p2p client from the p2p group owner (GO)")
+		return "", errors.Wrap(err, "failed to ping the p2p client from the p2p group owner (GO)")
 	}
 
-	return nil
+	return mac, nil
 }
 
 // P2POnOffRobustnessTest runs P2P On/Off Robustness Test.
@@ -96,14 +113,39 @@ func P2POnOffRobustnessTest(ctx context.Context, s *testing.State, tf *wificell.
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
+	// We're not storing all previous identifiers, as it has been determined, that due to a rather small
+	// SSID randomness (>1/4000) and law of big numbers we would have too many accidental reuses,
+	// especially in extended suits.
+	// Checking only two consecutive values should be enough.
+	var previousGoMACAddress, previousClientMACAddress, previousSSID string
+
 	// We're running in a simple loop instead of s.Run() on purpose, we want to bail out on the first error.
 	for i := 0; i < rounds; i++ {
 		testing.ContextLogf(ctx, "P2P round #%v", i+1)
 
-		err := P2POnOffRound(ctx, tf, tc.Opts...)
+		goMACAddress, clientMACAddress, ssid, err := P2POnOffRound(ctx, tf, tc.Opts...)
 		if err != nil {
 			return errors.Wrapf(err, "failure during round %v", i)
 		}
+		if goMACAddress == previousGoMACAddress {
+			err = errors.Join(err, errors.Wrapf(err,
+				"failure during round %v, GO MAC Address %v used consecutively", i, goMACAddress))
+		}
+		if clientMACAddress == previousClientMACAddress {
+			err = errors.Join(err, errors.Wrapf(err,
+				"failure during round %v, Client MAC Address %v used consecutively", i, goMACAddress))
+		}
+		if ssid == previousSSID {
+			err = errors.Join(err, errors.Wrapf(err,
+				"failure during round %v, P2P %v used consecutively", i, goMACAddress))
+		}
+		if err != nil {
+			return err
+		}
+		previousGoMACAddress = goMACAddress
+		previousClientMACAddress = clientMACAddress
+		previousSSID = ssid
+
 		// Convert to a standard understandable by perf.
 		resInfoGO, err := GetResourceInfo(ctx, tf.DUT(wificell.DefaultDUT).Conn(), processes)
 		if err != nil {

@@ -56,6 +56,7 @@ type p2pDutData struct {
 	ssid       string
 	passphrase string
 	frequency  uint32
+	mac        string
 }
 
 // The below is WiFiDevice interface's implementation:
@@ -141,22 +142,30 @@ func (dd *dutData) Ping(ctx context.Context, addr string, ifType IfaceType, opts
 
 // The below is P2PWiFiDevice interface's implementation:
 
-// P2PIfName returns P2P interface name of a particular
+// P2PIfName returns P2P interface name of a particular DUT.
 func (dd *dutData) P2PIfName() string {
 	// TODO(b/333957851): Check frequency actively each time when called to cover the case of a channel switch.
 	return dd.p2p.ifName
 }
 
+// P2PIfName returns P2P group SSID of a particular DUT.
 func (dd *dutData) P2PSSID() string {
 	return dd.p2p.ssid
 }
 
+// P2PIfName returns P2P group passphrase of a particular DUT.
 func (dd *dutData) P2PPassphrase() string {
 	return dd.p2p.passphrase
 }
 
+// P2PIfName returns P2P group frequency of a particular DUT.
 func (dd *dutData) P2PFrequency() uint32 {
 	return dd.p2p.frequency
+}
+
+// P2PIfName returns P2P MAC address of a particular DUT.
+func (dd *dutData) P2PMACAddress() string {
+	return dd.p2p.mac
 }
 
 // P2PGroupCreate creates WiFi Direct Group and takes its ownership.
@@ -177,6 +186,7 @@ func (dd *dutData) P2PGroupCreate(ctx context.Context, ops ...p2p.GroupOption) e
 	dd.p2p.ssid = ret.Data.Ssid
 	dd.p2p.passphrase = ret.Data.Key
 	dd.p2p.frequency = ret.Data.Freq
+	dd.p2p.mac = ret.MacAddress
 	testing.ContextLogf(ctx, "P2P Group owner (GO): Configured in %vms",
 		ret.ExecutionTime.AsDuration().Milliseconds())
 	return err
@@ -195,6 +205,7 @@ func (dd *dutData) P2PGroupDelete(ctx context.Context) error {
 		ret.ExecutionTime.AsDuration().Milliseconds())
 	dd.p2p.id = ""
 	dd.p2p.ifName = ""
+	dd.p2p.mac = ""
 	dd.p2p.frequency = 0
 	return nil
 }
@@ -219,6 +230,7 @@ func (dd *dutData) P2PGroupConnect(ctx context.Context, device P2PWiFiDevice) er
 	dd.p2p.ifName = ret.IfName
 	dd.p2p.netID = ret.NetworkId
 	dd.p2p.frequency = device.P2PFrequency()
+	dd.p2p.mac = ret.MacAddress
 	testing.ContextLogf(ctx, "The p2p client connected to the p2p group owner (GO) network in %vms",
 		ret.ExecutionTime.AsDuration().Milliseconds())
 	return err
@@ -239,6 +251,7 @@ func (dd *dutData) P2PGroupDisconnect(ctx context.Context) error {
 		ret.ExecutionTime.AsDuration().Milliseconds())
 	dd.p2p.id = ""
 	dd.p2p.ifName = ""
+	dd.p2p.mac = ""
 	dd.p2p.netID = -1
 	return nil
 }

@@ -40,6 +40,7 @@ type p2pAndroidDeviceData struct {
 	passphrase string
 	frequency  uint32
 	iPv4       string
+	mac        string
 }
 
 const (
@@ -142,9 +143,13 @@ func (ad *androidDeviceData) P2PFrequency() uint32 {
 	return ad.p2p.frequency
 }
 
+func (ad *androidDeviceData) P2PMACAddress() string {
+	return ad.p2p.mac
+}
+
 // waitForP2PNetworkInfo waits for p2p network information and returns the p2p interface and IP address.
-func (ad *androidDeviceData) waitForP2PNetworkInfo(ctx context.Context) (string, string, error) {
-	var iface, ipAddr string
+func (ad *androidDeviceData) waitForP2PNetworkInfo(ctx context.Context) (string, string, string, error) {
+	var iface, ipAddr, macAddr string
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		// TODO(b/334194299): Use wifip2p commands instead of ip command to get the network information.
 		ifaceOut, err := ad.labstation.host.CommandContext(ctx, "adb", "-s", ad.serialNumber, "shell", "ip", "route", "|", "grep", "p2p", "|", "awk", "'{print $3}'").Output(ssh.DumpLogOnError)
@@ -165,19 +170,30 @@ func (ad *androidDeviceData) waitForP2PNetworkInfo(ctx context.Context) (string,
 			return errors.New("failed to find the p2p IP address")
 		}
 
+		macAddrOut, err := ad.labstation.host.CommandContext(ctx, "adb", "-s", ad.serialNumber, "shell", "ip", "link", "sh", "dev", string(ifaceOut), "|", "grep", "link", "|", "awk", "'{print $2}'").Output(ssh.DumpLogOnError)
+		if err != nil {
+			return errors.Wrap(err, "failed to get the p2p interface MAC address")
+		}
+
+		if len(macAddrOut) == 0 {
+			return errors.New("failed to find the p2p MAC address")
+		}
+
 		iface = strings.TrimSuffix(string(ifaceOut), "\n")
 		ipAddr = strings.TrimSuffix(string(ipAddrOut), "\n") + "/24"
+		macAddr = strings.TrimSuffix(string(macAddrOut), "\n")
 		testing.ContextLogf(ctx, "Android P2P GO Interface: %s", iface)
 		testing.ContextLogf(ctx, "Android P2P GO IP Address: %s", ipAddr)
+		testing.ContextLogf(ctx, "Android P2P GO MAC Address: %s", macAddr)
 
 		return nil
 	}, &testing.PollOptions{
 		Timeout:  time.Second * 20,
 		Interval: time.Millisecond * 500,
 	}); err != nil {
-		return "", "", err
+		return "", "", "", err
 	}
-	return iface, ipAddr, nil
+	return iface, ipAddr, macAddr, nil
 }
 
 // P2PGroupCreate creates WiFi Direct Group and takes its ownership.
@@ -198,13 +214,14 @@ func (ad *androidDeviceData) P2PGroupCreate(ctx context.Context, ops ...p2p.Grou
 		return errors.Wrapf(err, "failed to create group with parameters: Network name = %s, Passpharase = %s, Band of Frequency = %s, Persistent = %s", p2pAndroidDeviceNetworkSSID, p2pAndroidDevicePassphrase, strconv.Itoa(p2p.Freq(ops...)), P2PAndroidDeviceNotPersistent)
 	}
 
-	iface, ipAddr, err := ad.waitForP2PNetworkInfo(ctx)
+	iface, ipAddr, macAddr, err := ad.waitForP2PNetworkInfo(ctx)
 	if err != nil {
 		return err
 	}
 
-	ad.p2p.ifName = string(iface)
-	ad.p2p.iPv4 = string(ipAddr)
+	ad.p2p.ifName = iface
+	ad.p2p.iPv4 = ipAddr
+	ad.p2p.mac = macAddr
 	ad.p2p.ssid = p2pAndroidDeviceNetworkSSID
 	ad.p2p.passphrase = p2pAndroidDevicePassphrase
 	ad.p2p.frequency = uint32(p2p.Freq(ops...))
@@ -222,6 +239,7 @@ func (ad *androidDeviceData) P2PGroupDelete(ctx context.Context) error {
 
 	ad.p2p.ifName = ""
 	ad.p2p.iPv4 = ""
+	ad.p2p.mac = ""
 	ad.p2p.ssid = ""
 	ad.p2p.passphrase = ""
 	ad.p2p.frequency = 0
@@ -241,13 +259,14 @@ func (ad *androidDeviceData) P2PGroupConnect(ctx context.Context, device P2PWiFi
 		return errors.Wrapf(err, "failed to connect to p2p network with parameters: Network name = %s, Passpharase = %s, Band of Frequency = %d, Persistent = %s", device.P2PSSID(), device.P2PPassphrase(), device.P2PFrequency(), P2PAndroidDevicePersistent)
 	}
 
-	iface, ipAddr, err := ad.waitForP2PNetworkInfo(ctx)
+	iface, ipAddr, macAddr, err := ad.waitForP2PNetworkInfo(ctx)
 	if err != nil {
 		return err
 	}
 
-	ad.p2p.ifName = string(iface)
-	ad.p2p.iPv4 = string(ipAddr)
+	ad.p2p.ifName = iface
+	ad.p2p.iPv4 = ipAddr
+	ad.p2p.mac = macAddr
 	ad.p2p.ssid = device.P2PSSID()
 	ad.p2p.passphrase = device.P2PPassphrase()
 	ad.p2p.frequency = device.P2PFrequency()
@@ -265,6 +284,7 @@ func (ad *androidDeviceData) P2PGroupDisconnect(ctx context.Context) error {
 
 	ad.p2p.ifName = ""
 	ad.p2p.iPv4 = ""
+	ad.p2p.mac = ""
 	ad.p2p.ssid = ""
 	ad.p2p.passphrase = ""
 	ad.p2p.frequency = 0

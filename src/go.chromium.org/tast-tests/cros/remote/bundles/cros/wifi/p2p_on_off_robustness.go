@@ -90,8 +90,9 @@ func P2POnOffRobustness(ctx context.Context, s *testing.State) {
 		2c- Verify the connection by running ping from GO.
 		2d- Disconnect the P2P Client.
 		2e- Deconfigure the P2P Group.
-		2f- Record intermediate memory/open fd values.
-		2g- Check that tracked processes PIDs haven't changed.
+		2f- Check that SSID/MAC Addresses were not reused from the previous round.
+		2g- Record intermediate memory/open fd values.
+		2h- Check that tracked processes PIDs haven't changed.
 		3- Measure final memory/open fd values.
 		4- Make sure memory in use did not rise substantially and number of FDs is stable.
 	*/

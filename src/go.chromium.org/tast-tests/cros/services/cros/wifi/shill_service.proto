@@ -665,7 +665,8 @@ message P2PGroupCreateResponse {
   string id = 1;
   string if_name = 2;
   P2PData data = 3;
-  google.protobuf.Duration execution_time = 4;
+  string mac_address = 4;
+  google.protobuf.Duration execution_time = 5;
 }
 
 message P2PGroupDeleteRequest { string id = 1; }
@@ -682,7 +683,8 @@ message P2PGroupConnectResponse {
   string id = 1;
   string if_name = 2;
   int32 network_id = 3;
-  google.protobuf.Duration execution_time = 4;
+  string mac_address = 4;
+  google.protobuf.Duration execution_time = 5;
 }
 
 message P2PGroupDisconnectRequest {

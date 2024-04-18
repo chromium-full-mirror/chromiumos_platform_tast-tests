@@ -3342,6 +3342,7 @@ func (s *ShillService) p2pGroupCreateShillAPI(ctx context.Context, request *wifi
 			Ssid: params[shillconst.P2PGroupInfoSSIDProperty].(string),
 			Key:  params[shillconst.P2PGroupInfoPassphraseProperty].(string),
 			Freq: uint32(params[shillconst.P2PGroupInfoFrequencyProperty].(int32))},
+		MacAddress: params[shillconst.P2PGroupInfoMACAddressProperty].(string),
 	}
 	return
 }
@@ -3465,8 +3466,9 @@ func (s *ShillService) p2pGroupConnectShillAPI(ctx context.Context, request *wif
 
 	testing.ContextLogf(ctx, "P2P Client: Connected to %s on %s", ssid, ifName)
 	ret = &wifi.P2PGroupConnectResponse{
-		Id:     strconv.Itoa(int(shillID)),
-		IfName: ifName,
+		Id:         strconv.Itoa(int(shillID)),
+		IfName:     ifName,
+		MacAddress: params[shillconst.P2PClientInfoMACAddressProperty].(string),
 	}
 	return
 }
@@ -3557,12 +3559,17 @@ func waitForP2PGroupActive(ctx context.Context, manager *shill.Manager, shillID 
 	if err != nil {
 		return nil, errors.Wrap(err, "frequency not found in properties")
 	}
+	mac, err := groupInfo.Get(shillconst.P2PGroupInfoMACAddressProperty)
+	if err != nil {
+		return nil, errors.Wrap(err, "MAC Address not found in properties")
+	}
 
 	retParams = make(map[string]interface{})
 	retParams[shillconst.P2PGroupInfoSSIDProperty] = ssid
 	retParams[shillconst.P2PGroupInfoPassphraseProperty] = key
 	retParams[shillconst.P2PGroupInfoInterfaceProperty] = ifName
 	retParams[shillconst.P2PGroupInfoFrequencyProperty] = freq
+	retParams[shillconst.P2PGroupInfoMACAddressProperty] = mac
 	return
 }
 
@@ -3626,12 +3633,18 @@ func waitForP2PClientConnected(ctx context.Context, manager *shill.Manager, shil
 	if err != nil {
 		return nil, errors.Wrap(err, "frequency not found in properties")
 	}
+	mac, err := clientInfo.Get(shillconst.P2PClientInfoMACAddressProperty)
+	if err != nil {
+		return nil, errors.Wrap(err, "MAC Address not found in properties")
+	}
 
 	retParams = make(map[string]interface{})
 	retParams[shillconst.P2PClientInfoSSIDProperty] = ssid
 	retParams[shillconst.P2PClientInfoPassphraseProperty] = key
 	retParams[shillconst.P2PClientInfoInterfaceProperty] = ifName
 	retParams[shillconst.P2PClientInfoFrequencyProperty] = freq
+	retParams[shillconst.P2PClientInfoMACAddressProperty] = mac
+
 	return
 }
 
