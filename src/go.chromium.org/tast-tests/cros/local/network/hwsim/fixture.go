@@ -70,6 +70,8 @@ func init() {
 			"damiendejean@google.com", // fixture maintainer
 			"cros-networking@google.com",
 		},
+		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		BugComponent:    "b:1493959",
 		SetUpTimeout:    hwsimTimeout,
 		TearDownTimeout: hwsimTimeout,
 		ResetTimeout:    hwsimTimeout,
@@ -84,6 +86,8 @@ func init() {
 			"damiendejean@google.com", // fixture maintainer
 			"cros-networking@google.com",
 		},
+		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		BugComponent:    "b:1493959",
 		SetUpTimeout:    hwsimTimeout,
 		TearDownTimeout: hwsimTimeout,
 		ResetTimeout:    hwsimTimeout,
@@ -104,6 +108,8 @@ func init() {
 			"damiendejean@google.com", // fixture maintainer
 			"cros-networking@google.com",
 		},
+		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		BugComponent:    "b:1493959",
 		SetUpTimeout:    hwsimTimeout,
 		TearDownTimeout: hwsimTimeout,
 		ResetTimeout:    hwsimTimeout,

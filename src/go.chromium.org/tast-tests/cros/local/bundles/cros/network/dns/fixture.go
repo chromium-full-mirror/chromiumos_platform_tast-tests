@@ -23,6 +23,8 @@ func init() {
 			"cros-networking@google.com",
 			"jasongustaman@google.com",
 		},
+		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		BugComponent:    "b:1493959",
 		SetUpTimeout:    chrome.LoginTimeout + 5*time.Second,
 		PostTestTimeout: 5 * time.Second,
 		TearDownTimeout: chrome.LoginTimeout + 5*time.Second,

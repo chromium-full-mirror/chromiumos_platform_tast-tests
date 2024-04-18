@@ -32,6 +32,8 @@ func init() {
 			"jiejiang@google.com",        // fixture maintainer
 			"cros-networking@google.com", // platform networking team
 		},
+		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		BugComponent:    "b:1493959",
 		SetUpTimeout:    5 * time.Second,
 		PostTestTimeout: charonExitTimeout + 5*time.Second,
 		ResetTimeout:    5 * time.Second,
@@ -45,6 +47,8 @@ func init() {
 			"jiejiang@google.com",        // fixture maintainer
 			"cros-networking@google.com", // platform networking team
 		},
+		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		BugComponent:    "b:1493959",
 		SetUpTimeout:    certOpTimeout + 5*time.Second,
 		PostTestTimeout: charonExitTimeout + 5*time.Second,
 		ResetTimeout:    5 * time.Second,
@@ -58,6 +62,8 @@ func init() {
 			"jiejiang@google.com",        // fixture maintainer
 			"cros-networking@google.com", // platform networking team
 		},
+		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		BugComponent:    "b:1493959",
 		SetUpTimeout:    certOpTimeout + chrome.LoginTimeout + 5*time.Second,
 		PostTestTimeout: charonExitTimeout + 5*time.Second,
 		ResetTimeout:    chrome.ResetTimeout + 5*time.Second,
@@ -71,6 +77,8 @@ func init() {
 			"cassiewang@google.com",      // fixture maintainer
 			"cros-networking@google.com", // platform networking team
 		},
+		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		BugComponent:    "b:1493959",
 		SetUpTimeout:    chrome.LoginTimeout + 5*time.Second + arc.BootTimeout,
 		PostTestTimeout: charonExitTimeout + 5*time.Second,
 		ResetTimeout:    chrome.ResetTimeout + 5*time.Second,
