@@ -19,9 +19,11 @@ import (
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
-		Name:            "attestationFixture",
-		Desc:            "The HWSec attestation test fixture",
-		Contacts:        []string{"cros-hwsec@google.com", "yich@google.com"},
+		Name:     "attestationFixture",
+		Desc:     "The HWSec attestation test fixture",
+		Contacts: []string{"cros-hwsec@google.com", "yich@google.com"},
+		// ChromeOS > Platform > baseOS > Hardware Security > HwSec AP
+		BugComponent:    "b:1188704",
 		Impl:            &attestFixtImpl{},
 		SetUpTimeout:    2 * time.Minute,
 		ResetTimeout:    5 * time.Second,

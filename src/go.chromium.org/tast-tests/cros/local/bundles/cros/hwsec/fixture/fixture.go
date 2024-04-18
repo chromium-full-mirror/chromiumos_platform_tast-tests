@@ -44,6 +44,8 @@ func init() {
 			"cros-hwsec@google.com",
 			"chingkang@google.com",
 		},
+		// ChromeOS > Platform > baseOS > Hardware Security > HwSec AP
+		BugComponent:    "b:1188704",
 		SetUpTimeout:    crossVersionBackupSetUpTimeout,
 		ResetTimeout:    crossVersionBackupResetTimeout,
 		TearDownTimeout: crossVersionBackupTearDownTimeout,
@@ -57,6 +59,8 @@ func init() {
 			"cros-hwsec@google.com",
 			"chingkang@google.com",
 		},
+		// ChromeOS > Platform > baseOS > Hardware Security > HwSec AP
+		BugComponent:    "b:1188704",
 		SetUpTimeout:    crossVersionSetUpTimeout,
 		ResetTimeout:    crossVersionResetTimeout,
 		TearDownTimeout: crossVersionTearDownTimeout,

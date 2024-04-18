@@ -21,6 +21,8 @@ func init() {
 		Contacts: []string{
 			"cros-hwsec@google.com",
 			"yich@google.com"},
+		// ChromeOS > Platform > baseOS > Hardware Security > HwSec AP
+		BugComponent:    "b:1188704",
 		Impl:            &cleanOwner{},
 		SetUpTimeout:    3*time.Minute + /* b/239013478 */ 2*time.Minute,
 		TearDownTimeout: 3 * time.Minute,
