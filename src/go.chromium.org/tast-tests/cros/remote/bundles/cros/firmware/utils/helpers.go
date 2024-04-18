@@ -404,26 +404,12 @@ func BackupAndRestoreAPFirmwareAndWriteProtect(ctx context.Context, DUT *dut.DUT
 	}, &backupTmpFile, nil
 }
 
-// EnableSoftwareSync backs up EC_RW and clears the DISABLE_EC_SOFTWARE_SYNC gbb flag if set and provides a restore function which cleans up side effects.
-func EnableSoftwareSync(ctx context.Context, h *firmware.Helper, syncBackup bool) (func(context.Context, *testing.State), error) {
-	if err := h.RequireBiosServiceClient(ctx); err != nil {
-		return nil, errors.Wrap(err, "requiring BiosServiceClient")
-	}
-
+// EnableSoftwareSync clears the DISABLE_EC_SOFTWARE_SYNC gbb flag.
+func EnableSoftwareSync(ctx context.Context, h *firmware.Helper) error {
 	testing.ContextLog(ctx, "Get intial GBB flags")
 	old, err := fwCommon.GetGBBFlags(ctx, h.DUT)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get initial GetGBBFlags")
-	}
-
-	testing.ContextLog(ctx, "Backing up current EC_RW")
-	backup, err := h.BiosServiceClient.BackupImageSection(ctx, &pb.FWSectionInfo{
-		Section:    pb.ImageSection_ECRWImageSection,
-		Programmer: pb.Programmer_ECProgrammer,
-		Path:       "/usr/local/share/tast/",
-	})
-	if err != nil {
-		return nil, errors.Wrap(err, "could not backup EC firmware")
+		return errors.Wrap(err, "failed to get initial GetGBBFlags")
 	}
 
 	testing.ContextLog(ctx, "Check DISABLE_EC_SOFTWARE_SYNC GBB flag is not set, if it is, clear it")
@@ -432,62 +418,9 @@ func EnableSoftwareSync(ctx context.Context, h *firmware.Helper, syncBackup bool
 		req := pb.GBBFlagsState{Clear: []pb.GBBFlag{pb.GBBFlag_DISABLE_EC_SOFTWARE_SYNC}}
 
 		if _, err := fwCommon.ClearAndSetGBBFlags(ctx, h.DUT, &req); err != nil {
-			return nil, errors.Wrap(err, "failed to clear gbb flag")
+			return errors.Wrap(err, "failed to clear gbb flags")
 		}
 	}
 
-	restoreFunc := func(cleanupCtx context.Context, s *testing.State) {
-		s.Log("Restoring EC_RW from backup")
-		h.DisconnectDUT(cleanupCtx)
-		if err := h.EnsureDUTBooted(cleanupCtx); err != nil {
-			s.Fatal("Can't restore firmware, DUT is off: ", err)
-		}
-
-		if syncBackup {
-			// Don't use s.Fatal here in case restore was used after fw backed up but
-			// failed to save files locally so fw can still be cleaned up.
-			s.Log("Syncing EC RW backup to DUT")
-			if err := h.SyncTastFilesToDUT(cleanupCtx); err != nil {
-				s.Error("Could not restore saved tast files: ", err)
-			}
-		}
-
-		if err := h.RequireBiosServiceClient(cleanupCtx); err != nil {
-			s.Fatal("Requiring BiosServiceClient: ", err)
-		}
-		s.Log("Restoring EC firmware backup")
-		if _, err := h.BiosServiceClient.RestoreImageSection(cleanupCtx, backup); err != nil {
-			s.Fatal("Failed to restore EC firmware: ", err)
-		}
-		s.Log("Deleting temp file")
-		if err := h.DUT.Conn().CommandContext(cleanupCtx, "rm", "-f", backup.Path).Run(ssh.DumpLogOnError); err != nil {
-			s.Fatal("Failed to delete firmware backup: ", err)
-		}
-
-		// Reboot and check active copy after restore.
-		ms, err := firmware.NewModeSwitcher(cleanupCtx, h)
-		if err != nil {
-			s.Fatal("Creating mode switcher: ", err)
-		}
-		if err := ms.ModeAwareReboot(cleanupCtx, firmware.WarmReset); err != nil {
-			s.Fatal("Failed to reboot: ", err)
-		}
-		s.Log("Checking ec_active_copy is RW or RW_B")
-		activeCopy, err := h.Servo.GetString(cleanupCtx, "ec_active_copy")
-		if err != nil {
-			s.Fatal("EC active copy failed: ", err)
-		}
-		if !strings.HasPrefix(activeCopy, "RW") {
-			s.Fatalf("EC active copy incorrect, got %q want RW", activeCopy)
-		}
-	}
-
-	if syncBackup {
-		testing.ContextLog(ctx, "Copying EC RW back up so it can be restored after reset")
-		if err := h.CopyTastFilesFromDUT(ctx); err != nil {
-			return restoreFunc, errors.Wrap(err, "could not save tast files")
-		}
-	}
-
-	return restoreFunc, nil
+	return nil
 }

@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
 
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -31,7 +32,6 @@ func init() {
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		// TODO: When stable, change firmware_unstable to a different attr.
 		Attr:         []string{"group:firmware", "firmware_unstable"},
-		ServiceDeps:  []string{"tast.cros.firmware.BiosService"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Fixture:      fixture.NormalMode,
 		Timeout:      10 * time.Minute,
@@ -52,19 +52,29 @@ func RecToDevFromECRW(ctx context.Context, s *testing.State) {
 	cleanupContext := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Minute)
 	defer cancel()
-	restore, err := utils.EnableSoftwareSync(ctx, h, true)
-	if err != nil {
-		if restore != nil {
-			s.Log("Failed to clear disable software sync flag: ", err)
-			restore(cleanupContext, s)
-		} else {
-			s.Fatal("Failed to clear disable software sync flag: ", err)
-		}
-	}
-	defer restore(cleanupContext, s)
 
-	if err := h.RequireBiosServiceClient(ctx); err != nil {
-		s.Fatal("Requiring BiosServiceClient: ", err)
+	backupState, err := firmware.BackupECFirmware(ctx, h)
+	if err != nil {
+		s.Fatal("Failed to backup: ", err)
+	}
+
+	// Sync before reboot to make sure everything is written to disk.
+	if err := h.DUT.Conn().CommandContext(ctx, "sync").Run(ssh.DumpLogOnError); err != nil {
+		testing.ContextLogf(ctx, "Failed to sync DUT: %s", err)
+	}
+
+	defer func() {
+		if err := h.EnsureDUTBooted(cleanupContext); err != nil {
+			s.Fatal("Can't restore firmware, DUT is off: ", err)
+		}
+		if err := backupState.Close(cleanupContext, h); err != nil {
+			s.Fatal("Failed to cleanup EC backup: ", err)
+		}
+	}()
+
+	backupState.ShouldRestoreFirmware = true
+	if err := utils.EnableSoftwareSync(ctx, h); err != nil {
+		s.Fatal("Failed to clear disable software sync flag: ", err)
 	}
 
 	ms, err := firmware.NewModeSwitcher(ctx, h)
