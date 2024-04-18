@@ -437,6 +437,15 @@ var (
 	PasspointSubscriptionTitle = nodewith.Name("Passpoint subscriptions").Role(role.StaticText)
 )
 
+// Elements in "Network" page.
+var (
+	// JoinWiFiNetworkDialog is the finder for the "Join Wi-Fi network" dialog in the network page.
+	JoinWiFiNetworkDialog = nodewith.NameContaining("Join Wi-Fi network").Role(role.Dialog)
+
+	// JoinVPNNetworkDialog is the finder for the "Join VPN network" dialog in the network page.
+	JoinVPNNetworkDialog = nodewith.Name("Join VPN network").Role(role.Dialog)
+)
+
 // MoreActionsButtonNamePrefix is the name prefix of MoreActionsButton.
 const MoreActionsButtonNamePrefix = "More actions for "
 

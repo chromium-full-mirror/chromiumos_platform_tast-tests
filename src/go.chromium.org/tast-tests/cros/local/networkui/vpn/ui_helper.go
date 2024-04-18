@@ -93,6 +93,10 @@ func NewDialogHelper(vpnType vpn.Type, config *vpn.Config, props *vpn.ShillPrope
 // Note that vpnNameOnUI is only a name of this VPN network that end user
 // attempt to add through ChromeOS UI.
 func NewDialogHelperWithVPNServer(ctx context.Context, cfg *vpn.Config, vpnNameOnUI string) (server *vpn.Server, dialogHelper DialogHelper, cleanup uiauto.Action, retErr error) {
+	if cfg == nil || cfg.CertVals == nil {
+		return nil, nil, nil, errors.New("invalid configs: missing configs or certificates values")
+	}
+
 	var cleanups []uiauto.Action
 
 	// This function will start some processes which are supposed to be kept
@@ -111,6 +115,7 @@ func NewDialogHelperWithVPNServer(ctx context.Context, cfg *vpn.Config, vpnNameO
 			}
 		}
 	}()
+	// TODO: Apply `slices.Reverse` once "golang.org/x/exp/slices" is replaced with "slice" (which needs Golang is upgraded to 1.21 or later).
 	// Insert at front to reverse the cleanup order.
 	cleanups = append([]uiauto.Action{networkEnv.TearDown}, cleanups...)
 
@@ -130,6 +135,7 @@ func NewDialogHelperWithVPNServer(ctx context.Context, cfg *vpn.Config, vpnNameO
 			}
 		}
 	}()
+	// TODO: Apply `slices.Reverse` once "golang.org/x/exp/slices" is replaced with "slice" (which needs Golang is upgraded to 1.21 or later).
 	// Insert at front to reverse the cleanup order.
 	cleanups = append([]uiauto.Action{server.Exit}, cleanups...)
 

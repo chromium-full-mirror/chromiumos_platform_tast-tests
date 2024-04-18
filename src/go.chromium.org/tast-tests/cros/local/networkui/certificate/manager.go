@@ -207,7 +207,7 @@ func CreateCertAndImport(ctx context.Context, cr *chrome.Chrome, tconn *chrome.T
 
 	manager, err := Launch(ctx, tconn, cr.Browser())
 	if err != nil {
-		return errors.Wrap(err, "failed to launch certificate manager")
+		return errors.Wrap(err, "failed to launch the certificates manager")
 	}
 	defer manager.Close(cleanupCtx)
 
@@ -381,7 +381,7 @@ func DeleteCert(tconn *chrome.TestConn, br *browser.Browser, certs ...*CertData)
 
 		manager, err := Launch(ctx, tconn, br)
 		if err != nil {
-			return errors.Wrap(err, "failed to launch certificate manager")
+			return errors.Wrap(err, "failed to launch the certificate manager")
 		}
 		defer manager.Close(cleanupCtx)
 
@@ -416,6 +416,56 @@ func (m *Manager) DeleteCert(name string, org Organization, certType CertType) u
 		m.ui.WaitUntilGone(certFinder.Role(role.Dialog)),
 		m.ui.WaitUntilGone(certificateText),
 	)
+}
+
+// ExportCert exports the certificate from the Certificates Manager.
+// The exported certificate file will be saved in the "Downloads" folder in the files app.
+func (m *Manager) ExportCert(certName, outputFileName string, org Organization, certType CertType) uiauto.Action {
+	return func(ctx context.Context) error {
+		cleanupCtx := ctx
+		ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+		defer cancel()
+
+		kb, err := input.Keyboard(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to create keyboard")
+		}
+		defer kb.Close(cleanupCtx)
+
+		organizationText := certFinder.Name(org.displayName()).Role(role.StaticText)
+		// There will be a suffix in the name of the bound client certificate (e.g. certificate's Common Name).
+		// Use NameStartingWith to cover all kinds of certificates.
+		certificateText := certFinder.NameStartingWith(certName).Role(role.StaticText)
+
+		return uiauto.Combine("export certificate",
+			// Locate to the specified certificate.
+			m.switchToCertTab(certType),
+			m.ui.WaitUntilExists(organizationText),
+			m.ui.MakeVisible(organizationText),
+			m.expandCertOrganizationBox(org.displayName(), certificateText),
+			m.ui.WaitUntilExists(certificateText),
+
+			// Export the specified certificate.
+			m.clickMoreActionsButton(certName),
+			m.ui.LeftClick(nodewith.Name("View").Role(role.MenuItem)),
+			m.ui.LeftClick(nodewith.Name("Details").Role(role.Tab).Focusable()),
+			m.ui.LeftClick(nodewith.Name("Export selected certificate").Role(role.Button).Focusable()),
+
+			// Expecting the "Save file as" dialog pop up.
+			m.ui.WaitUntilExists(nodewith.Name("Save file as").Role(role.Window)),
+
+			// Attempt to name the exported file.
+			// Note that we don't change the folder since the default destination should be "Downloads".
+			m.ui.LeftClick(nodewith.Name("File name").Role(role.TextField).Editable()),
+
+			// Clear the default file name and enter the provided file name.
+			kb.AccelAction("Ctrl+A"),
+			kb.AccelAction("Backspace"),
+			kb.TypeAction(outputFileName),
+
+			m.ui.LeftClick(nodewith.Name("Save").Role(role.Button)),
+		)(ctx)
+	}
 }
 
 // IsCertImported returns whether a specified certificate has been installed in the Certificates Manager.

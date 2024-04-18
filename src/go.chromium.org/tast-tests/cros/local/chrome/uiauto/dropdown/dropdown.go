@@ -8,6 +8,7 @@ package dropdown
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -60,14 +61,32 @@ func Values(ctx context.Context, tconn *chrome.TestConn, dropdown *nodewith.Find
 	return availableValues, nil
 }
 
+// ExpandDropDown returns a function that expands the specified dropdown box.
+func ExpandDropDown(tconn *chrome.TestConn, dropdown *nodewith.Finder) uiauto.Action {
+	ui := uiauto.New(tconn)
+	return uiauto.Combine(fmt.Sprintf("expand dropdown box %q", dropdown.Pretty()),
+		ui.WaitUntilExists(dropdown),
+		ui.EnsureFocused(dropdown),
+		ui.LeftClickUntil(dropdown, ui.WithTimeout(3*time.Second).WaitUntilExists(dropdown.Expanded())),
+	)
+}
+
+// CollapseDropDown returns a function that collapses the specified dropdown box.
+func CollapseDropDown(tconn *chrome.TestConn, dropdown *nodewith.Finder) uiauto.Action {
+	ui := uiauto.New(tconn)
+	return uiauto.Combine(fmt.Sprintf("collapse dropdown box %q", dropdown.Pretty()),
+		ui.WaitUntilExists(dropdown),
+		ui.EnsureFocused(dropdown),
+		ui.LeftClickUntil(dropdown, ui.WithTimeout(3*time.Second).WaitUntilExists(dropdown.Collapsed())),
+	)
+}
+
 // SelectDropDownOption returns a function that selects dropdown option with the given option name.
 func SelectDropDownOption(tconn *chrome.TestConn, dropdown *nodewith.Finder, optionName string) uiauto.Action {
 	ui := uiauto.New(tconn)
 	option := nodewith.Name(optionName).Role(role.MenuListOption).Ancestor(dropdown)
 	return uiauto.Combine(fmt.Sprintf("select option %q", optionName),
-		ui.WaitUntilExists(dropdown),
-		ui.EnsureFocused(dropdown),
-		ui.LeftClickUntil(dropdown, ui.Exists(option)),
+		ExpandDropDown(tconn, dropdown),
 		ui.LeftClick(option),
 	)
 }
@@ -78,9 +97,7 @@ func SelectCustomizePeripheralButtonsDropdown(tconn *chrome.TestConn, dropdown *
 	ui := uiauto.New(tconn)
 	option := nodewith.Name(optionName).First()
 	return uiauto.Combine(fmt.Sprintf("select option %q", optionName),
-		ui.WaitUntilExists(dropdown),
-		ui.EnsureFocused(dropdown),
-		ui.LeftClickUntil(dropdown, ui.Exists(option)),
+		ExpandDropDown(tconn, dropdown),
 		ui.LeftClick(option),
 	)
 }
