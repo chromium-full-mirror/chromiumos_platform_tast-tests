@@ -33,6 +33,7 @@ func init() {
 			"chromeos-runtime-probe@google.com",
 			"clarkchung@google.com",
 		},
+		BugComponent:    "b:606088",
 		Impl:            &decryptProbeConfigFixture{},
 		Vars:            []string{"runtimeprobe.ProbeFunction.keys"},
 		SetUpTimeout:    10 * time.Second,
