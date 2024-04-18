@@ -29,6 +29,7 @@ func init() {
 			"hcyang@google.com",
 			"cryptohome-core@google.com",
 		},
+		BugComponent: "b:1188704",
 		SetUpTimeout: 3 * time.Minute,
 		Impl:         &establishPwPairingKeyFixture{},
 	})

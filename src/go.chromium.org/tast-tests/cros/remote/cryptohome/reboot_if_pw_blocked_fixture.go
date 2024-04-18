@@ -26,6 +26,7 @@ func init() {
 			"hcyang@google.com",
 			"cryptohome-core@google.com",
 		},
+		BugComponent: "b:1188704",
 		SetUpTimeout: fixtureSetUpTimeout,
 		Impl:         &rebootIfPwBlockedFixture{},
 	})
