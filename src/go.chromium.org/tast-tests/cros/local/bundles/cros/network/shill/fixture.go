@@ -31,6 +31,7 @@ func init() {
 			"stevenjb@chromium.org",               // fixture maintainer
 			"cros-network-health-team@google.com", // Network Health team
 		},
+		BugComponent:    "b:1166446", // ChromeOS > Platform > Connectivity > NetworkHealth
 		PreTestTimeout:  ResetShillTimeout + 5*time.Second,
 		PostTestTimeout: 5 * time.Second,
 		TearDownTimeout: ResetShillTimeout + 5*time.Second,

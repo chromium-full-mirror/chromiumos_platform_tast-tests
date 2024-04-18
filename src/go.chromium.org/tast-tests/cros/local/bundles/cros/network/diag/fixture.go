@@ -24,6 +24,7 @@ func init() {
 			"khegde@chromium.org",                 // network diagnostics author
 			"stevenjb@chromium.org",               // network-health tech lead
 		},
+		BugComponent:    "b:1166446", // ChromeOS > Platform > Connectivity > NetworkHealth
 		SetUpTimeout:    chrome.LoginTimeout + (30 * time.Second),
 		ResetTimeout:    5 * time.Second,
 		TearDownTimeout: 10 * time.Second,
@@ -38,6 +39,7 @@ func init() {
 			"stevenjb@chromium.org",               // network-health tech lead
 			"cros-network-health-team@google.com", // network-health team
 		},
+		BugComponent:    "b:1166446", // ChromeOS > Platform > Connectivity > NetworkHealth
 		SetUpTimeout:    chrome.LoginTimeout + (1 * time.Minute),
 		ResetTimeout:    5 * time.Second,
 		TearDownTimeout: 10 * time.Second,

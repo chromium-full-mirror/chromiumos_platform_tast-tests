@@ -41,6 +41,7 @@ func init() {
 			"cros-network-health-team@google.com",
 			"khegde@chromium.org", // fixture maintainer
 		},
+		BugComponent:    "b:1166446", // ChromeOS > Platform > Connectivity > NetworkHealth
 		Impl:            &ensureUIFixture{running: false},
 		SetUpTimeout:    UIRestartTimeout,
 		TearDownTimeout: UIRestartTimeout,

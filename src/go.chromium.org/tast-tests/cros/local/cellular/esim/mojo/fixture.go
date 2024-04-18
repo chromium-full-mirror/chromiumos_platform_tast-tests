@@ -45,11 +45,10 @@ func init() {
 		Name: "chromeLoggedInWithMojoTestEuiccAndSmdsSupport",
 		Desc: "Logs into a user session and creates a JS object for accessing mojo eSIM API calls for test eUICCS and Smds support",
 		Contacts: []string{
-			"khegde@google.com",
-			"cros-network-health-team@google.com",
 			"chadduffin@google.com",
 			"cros-connectivity@google.com",
 		},
+		BugComponent:    "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular
 		Impl:            newESimMojoFixture(testEuicc(), smdsSupport()),
 		SetUpTimeout:    chrome.LoginTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
