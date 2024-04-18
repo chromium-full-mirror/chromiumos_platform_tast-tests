@@ -19,8 +19,10 @@ import (
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
-		Name:            "prepareFwupd",
-		Desc:            "Restart fwupd daemon when needed, and do metadata refresh",
+		Name: "prepareFwupd",
+		Desc: "Restart fwupd daemon when needed, and do metadata refresh",
+		// ChromeOS > Platform > Services > Peripherals > Firmware Update - fwupd
+		BugComponent:    "b:857851",
 		Contacts:        []string{"chromeos-fwupd@google.com"},
 		Impl:            &fwupdFixture{},
 		SetUpTimeout:    60 * time.Second,
