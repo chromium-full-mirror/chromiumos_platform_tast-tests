@@ -22,6 +22,7 @@ func init() {
 			"crosep-intertech@google.com",
 			"chromeos-audio-bugs@google.com",
 		},
+		BugComponent:    "b:776546",
 		Impl:            LatencyToolkitFixture{},
 		SetUpTimeout:    20 * time.Second,
 		TearDownTimeout: 20 * time.Second,

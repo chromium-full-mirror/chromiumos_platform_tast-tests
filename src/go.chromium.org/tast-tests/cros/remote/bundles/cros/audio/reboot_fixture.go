@@ -92,6 +92,7 @@ func init() {
 			"judyhsiao@google.com",
 			"chromeos-audio-sw@google.com",
 		},
+		BugComponent: "b:776546",
 		SetUpTimeout: 5 * time.Minute,
 		Impl:         &rebootForAudioDSPFixtureImpl{},
 	})

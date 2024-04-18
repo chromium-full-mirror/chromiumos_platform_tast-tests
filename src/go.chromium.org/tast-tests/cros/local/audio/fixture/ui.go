@@ -29,6 +29,7 @@ func (pf UIStopped) Instance() string {
 		Desc:            "Stops the UI",
 		Contacts:        []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
 		Impl:            uiStoppedFixture{},
+		BugComponent:    "b:776546",
 		Parent:          pf.Parent,
 		SetUpTimeout:    20 * time.Second,
 		TearDownTimeout: 20 * time.Second,
@@ -70,9 +71,10 @@ var _ ParameterizedFixture = parameterizedChrome{}
 func (pf parameterizedChrome) Instance() string {
 	parameterizedChromeStartedID++
 	return maybeRegisterFixture(&testing.Fixture{
-		Name:     fmt.Sprintf("parameterizedChromeStarted%d", parameterizedChromeStartedID),
-		Desc:     "Starts Chrome with the given config",
-		Contacts: []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
+		Name:         fmt.Sprintf("parameterizedChromeStarted%d", parameterizedChromeStartedID),
+		Desc:         "Starts Chrome with the given config",
+		Contacts:     []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
+		BugComponent: "b:776546",
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return pf.opts, nil
 		}),

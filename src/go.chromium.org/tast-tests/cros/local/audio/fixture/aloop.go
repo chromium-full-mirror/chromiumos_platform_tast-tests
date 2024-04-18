@@ -37,9 +37,10 @@ func (pf AloopLoaded) Instance() string {
 	}
 
 	return maybeRegisterFixture(&testing.Fixture{
-		Name:     maybeWithParentName(name, pf.Parent),
-		Desc:     fmt.Sprintf("Configure the ALSA loopback device with %v", pf),
-		Contacts: []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
+		Name:         maybeWithParentName(name, pf.Parent),
+		Desc:         fmt.Sprintf("Configure the ALSA loopback device with %v", pf),
+		Contacts:     []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
+		BugComponent: "b:776546",
 		Impl: &AloopLoadedFixture{
 			Channels: pf.Channels,
 		},

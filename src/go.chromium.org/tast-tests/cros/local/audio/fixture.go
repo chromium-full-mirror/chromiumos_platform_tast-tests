@@ -20,14 +20,16 @@ func init() {
 		Desc:            "Ensure CRAS is stopped and audio devices are available for direct access",
 		Contacts:        []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
 		Impl:            crasStoppedFixture{},
+		BugComponent:    "b:776546",
 		SetUpTimeout:    20 * time.Second,
 		TearDownTimeout: 20 * time.Second,
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     fixture.FakeCrasClient,
-		Desc:     "Use fake cras client for Chrome to avoid UI manipulating volume and mute",
-		Contacts: []string{"chromeos-audio-bugs@google.com", "htcheong@google.com"},
+		Name:         fixture.FakeCrasClient,
+		Desc:         "Use fake cras client for Chrome to avoid UI manipulating volume and mute",
+		Contacts:     []string{"chromeos-audio-bugs@google.com", "htcheong@google.com"},
+		BugComponent: "b:776546",
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
 				// Prevent interference of audio preferences.
