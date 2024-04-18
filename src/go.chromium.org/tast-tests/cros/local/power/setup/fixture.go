@@ -708,6 +708,8 @@ func init() {
 			"dgrebenyuk@google.com",
 			"xiuwen@google.com",
 		},
+		// ChromeOS > Software > Consumer > Machine Intelligence > Search
+		BugComponent: "b:1257106",
 		Impl: NewPowerUIFixture(PowerTestOptions{
 			NightLight:         DisableNightLight,
 			DarkTheme:          EnableLightTheme,
