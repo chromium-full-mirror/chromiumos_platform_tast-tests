@@ -28,6 +28,9 @@ import (
 const (
 	tmpFirmwareDir     = "/var/tmp"
 	backupFirmwareFile = "backupfw.bin"
+	imageGCSBucket     = "chromeos-image-archive"
+	defaultTarSuffix   = ".tar.bz2"
+	defaultTarballName = "firmware_from_source" + defaultTarSuffix
 )
 
 func init() {
@@ -64,6 +67,19 @@ func UpdateDutFirmware(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Could not stat specified local firmware path: ", err)
 		}
+		s.Log("Path to local firmware file : ", localFirmwarePathVal)
+	}
+	if firmwarePathVal != "" {
+		// Adding default suffix and prefix to GCS firmware file path if needed.
+		downloadFilename := firmwarePathVal
+		if !strings.HasPrefix(firmwarePathVal, imageGCSBucket) {
+			downloadFilename = fmt.Sprintf("%s/%s", imageGCSBucket, firmwarePathVal)
+		}
+		if !strings.HasSuffix(firmwarePathVal, defaultTarSuffix) {
+			downloadFilename = fmt.Sprintf("%s/%s", downloadFilename, defaultTarballName)
+		}
+		firmwarePathVal = downloadFilename
+		s.Log("GCS path to download firmware files : ", firmwarePathVal)
 	}
 
 	if err := h.RequireServo(ctx); err != nil {
@@ -174,27 +190,30 @@ func UpdateDutFirmware(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get AP RO ID: ", err)
 	}
+
 	var ecBinToFlash, monitorBinToFlash, apBinToFlash string
 	if firmwarePathVal != "" || localFirmwarePathVal != "" {
 		if firmwarePathVal != "" {
 			s.Log("Downloading Firmware to Flash")
 			firmwareFilesToFlash, err := firmware.DownloadRequiredFirmwareFiles(ctx, h, s.CloudStorage(), firmwarePathVal, tmpFwDir, fwidModel)
 			if err != nil {
-				s.Fatal("Failed to download firmware files: ", err)
+				s.Fatal("Error while downloading firmware files: ", err)
 			}
+
+			apBinToFlash = firmwareFilesToFlash.APFirmwareFile
+			ecBinToFlash = firmwareFilesToFlash.ECFirmwareFile
+			if apBinToFlash == "" || ecBinToFlash == "" {
+				s.Fatalf("Failed to download required firmware files; APBinToFlash: %s; ECBinToFlash: %s ", apBinToFlash, ecBinToFlash)
+			}
+
 			// copy firmware files to the local host as they need to be copied to the DUT for DUT firmware flashing test
-			if firmwareFilesToFlash.APFirmwareFile != "" {
-				apBinToFlash = firmwareFilesToFlash.APFirmwareFile
-				if err := h.ServoProxy.GetFile(ctx, false, fmt.Sprintf("%s/%s", tmpFwDir, firmware.APFirmwareFileToFlash), fmt.Sprintf("%s/%s", tmpDir, apBinToFlash)); err != nil {
-					s.Fatal("Failed to copy AP firmware file from servo host: ", err)
-				}
+			if err := h.ServoProxy.GetFile(ctx, false, fmt.Sprintf("%s/%s", tmpFwDir, firmware.APFirmwareFileToFlash), fmt.Sprintf("%s/%s", tmpDir, apBinToFlash)); err != nil {
+				s.Fatal("Failed to copy AP firmware file from servo host: ", err)
 			}
-			if firmwareFilesToFlash.ECFirmwareFile != "" {
-				ecBinToFlash = firmwareFilesToFlash.ECFirmwareFile
-				if err := h.ServoProxy.GetFile(ctx, false, fmt.Sprintf("%s/%s", tmpFwDir, firmware.ECFirmwareFileToFlash), fmt.Sprintf("%s/%s", tmpDir, ecBinToFlash)); err != nil {
-					s.Fatal("Failed to copy EC firmware file from servo host: ", err)
-				}
+			if err := h.ServoProxy.GetFile(ctx, false, fmt.Sprintf("%s/%s", tmpFwDir, firmware.ECFirmwareFileToFlash), fmt.Sprintf("%s/%s", tmpDir, ecBinToFlash)); err != nil {
+				s.Fatal("Failed to copy EC firmware file from servo host: ", err)
 			}
+
 			if firmwareFilesToFlash.MonitorFile != "" {
 				monitorBinToFlash = firmwareFilesToFlash.MonitorFile
 				if err := h.ServoProxy.GetFile(ctx, false, fmt.Sprintf("%s/%s", tmpFwDir, firmware.MonitorFileToFlash), fmt.Sprintf("%s/%s", tmpDir, monitorBinToFlash)); err != nil {
@@ -237,8 +256,8 @@ func UpdateDutFirmware(ctx context.Context, s *testing.State) {
 			flashECFirmwareFromDut(ctx, s, h, tmpFwDir, tmpDir, ecBinToFlash, monitorBinToFlash)
 		}
 	}
-	flashAPFirmwareFromDut(ctx, s, h, tmpFwDir, tmpDir, firmwarePathVal, initialROFwid, initialRwFwid)
-	flashAPFirmware(ctx, s, h, tmpFwDir, firmwarePathVal, ecChip, initialROFwid, initialRwFwid)
+	flashAPFirmwareFromDut(ctx, s, h, tmpFwDir, tmpDir, firmwarePathVal, localFirmwarePathVal, initialROFwid, initialRwFwid)
+	flashAPFirmware(ctx, s, h, tmpFwDir, firmwarePathVal, localFirmwarePathVal, ecChip, initialROFwid, initialRwFwid)
 }
 
 // untarLocalFirmwareFile untars the provided local firmware file to extract AP and EC images
@@ -296,7 +315,7 @@ func flashECFirmware(ctx context.Context, s *testing.State, h *firmware.Helper, 
 }
 
 // flashAPFirmware flashes the provided AP firmware on the DUT and restores the original AP firmware in the end.
-func flashAPFirmware(ctx context.Context, s *testing.State, h *firmware.Helper, servoTmpDir, firmwarePathVal, ecChip, initialROFwid, initialRwFwid string) {
+func flashAPFirmware(ctx context.Context, s *testing.State, h *firmware.Helper, servoTmpDir, firmwarePathVal, localFirmwarePathVal, ecChip, initialROFwid, initialRwFwid string) {
 	s.Log("Backing up AP firmware")
 	if err := h.ServoProxy.RunCommand(ctx, false, "futility", "read", fmt.Sprintf("--servo_port=%d", h.ServoProxy.GetPort()), fmt.Sprintf("%s/%s", servoTmpDir, backupFirmwareFile)); err != nil {
 		s.Fatal("Failed to read fw using futility: ", err)
@@ -319,7 +338,7 @@ func flashAPFirmware(ctx context.Context, s *testing.State, h *firmware.Helper, 
 			s.Fatal("Failed while verifying firmware IDs after flashing at the end of test: ", err)
 		}
 	}()
-	if firmwarePathVal == "" {
+	if firmwarePathVal == "" && localFirmwarePathVal == "" {
 		return
 	}
 
@@ -332,6 +351,13 @@ func flashAPFirmware(ctx context.Context, s *testing.State, h *firmware.Helper, 
 		s.Fatal("Failed to reconnect to DUT after unsuspending: ", err)
 	}
 
+	// To verify firmware versions we need the filename to be in a certain format which
+	// locally downloaded firmware file may not be in
+	// so only verying versions for firmware downloaded from GCS
+	if firmwarePathVal == "" {
+		return
+	}
+
 	// Verify RO/RW firmware versions are the downloaded firmware versions after flashing.
 	// This is when RO and RW have the same version ids (i.e., RO_old + RW_old).
 	if err := firmware.VerifyFwIDs(ctx, h, firmwarePathVal, firmwarePathVal); err != nil {
@@ -340,7 +366,7 @@ func flashAPFirmware(ctx context.Context, s *testing.State, h *firmware.Helper, 
 }
 
 // flashAPFirmwareFromDut flashes the provided AP firmware on the DUT and restores the original AP firmware in the end.
-func flashAPFirmwareFromDut(ctx context.Context, s *testing.State, h *firmware.Helper, dutTmpDir, localTmpDir, firmwarePathVal, initialROFwid, initialRwFwid string) {
+func flashAPFirmwareFromDut(ctx context.Context, s *testing.State, h *firmware.Helper, dutTmpDir, localTmpDir, firmwarePathVal, localFirmwarePathVal, initialROFwid, initialRwFwid string) {
 	s.Log("Backing up AP firmware")
 	if err := h.DUT.Conn().CommandContext(ctx, "futility", "read", fmt.Sprintf("%s/%s", dutTmpDir, backupFirmwareFile)).Run(); err != nil {
 		s.Fatal("Failed to read fw using futility: ", err)
@@ -375,7 +401,7 @@ func flashAPFirmwareFromDut(ctx context.Context, s *testing.State, h *firmware.H
 			s.Fatal("Failed while verifying firmware IDs after flashing at the end of test: ", err)
 		}
 	}()
-	if firmwarePathVal == "" {
+	if firmwarePathVal == "" && localFirmwarePathVal == "" {
 		return
 	}
 
@@ -389,6 +415,13 @@ func flashAPFirmwareFromDut(ctx context.Context, s *testing.State, h *firmware.H
 	}
 	if err := h.EnsureDUTBooted(ctx); err != nil {
 		s.Fatal("Failed to reconnect to DUT after unsuspending: ", err)
+	}
+
+	// To verify firmware versions we need the filename to be in a certain format which
+	// locally downloaded firmware file may not be in
+	// so only verying versions for firmware downloaded from GCS
+	if firmwarePathVal == "" {
+		return
 	}
 
 	// Verify RO/RW firmware versions are the downloaded firmware versions after flashing.
