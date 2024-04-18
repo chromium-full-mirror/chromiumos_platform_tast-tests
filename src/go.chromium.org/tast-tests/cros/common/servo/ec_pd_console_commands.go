@@ -409,19 +409,15 @@ func (s *Servo) GetDUTDualRoleState(ctx context.Context, port int) (USBPdDualRol
 			ctx, "EC command %q failed. Trying older version. (%q)",
 			cmd, err,
 		)
-	} else {
-		goto success
+		// Older DUTs running firmware from before cl:1096654 don't have per-port
+		// dualrole settings. Fall back to the old command.
+		out, err = s.RunECCommandGetOutputNoConsoleLogs(ctx, "pd dualrole", matchList)
+		if err != nil {
+			// DUT does not support DRP
+			return "", errors.Wrapf(err, "ec command %q failed. No way to check dual role state", cmd)
+		}
 	}
 
-	// Older DUTs running firmware from before cl:1096654 don't have per-port
-	// dualrole settings. Fall back to the old command.
-	out, err = s.RunECCommandGetOutputNoConsoleLogs(ctx, "pd dualrole", matchList)
-	if err != nil {
-		// DUT does not support DRP
-		return "", errors.Wrapf(err, "ec command %q failed. No way to check dual role state", cmd)
-	}
-
-success:
 	testing.ContextLogf(ctx, "Port %d DRP status: %q", port, out[0][1])
 	return USBPdDualRoleValue(out[0][1]), nil
 }
