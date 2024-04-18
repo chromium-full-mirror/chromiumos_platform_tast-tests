@@ -39,6 +39,8 @@ func init() {
 			"keiichiw@chromium.org",
 			"cros-virt-devices-guests@google.com",
 		},
+		// ChromeOS > Platform > baseOS > Virtualization > Device and Guests
+		BugComponent:    "b:1248538",
 		Parent:          "chromeLoggedIn",
 		Impl:            &dlcFixture{},
 		SetUpTimeout:    60 * time.Second,
