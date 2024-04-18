@@ -31,7 +31,7 @@ func init() {
 		Desc:         "Tests debugd's behavior when parsing printer URIs",
 		Contacts: []string{
 			"project-bolton@google.com",
-			"masonwilde@google.com",
+			"nmuggli@google.com",
 		},
 		// ChromeOS > Platform > Services > Printing
 		BugComponent: "b:167231",
