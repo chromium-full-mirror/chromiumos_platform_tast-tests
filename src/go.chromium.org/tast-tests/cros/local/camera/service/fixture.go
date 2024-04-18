@@ -27,6 +27,7 @@ func init() {
 		Name:            fixture.CameraServiceReady,
 		Desc:            "The cros-camera service is ready, with all built-in cameras enumerated",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "hidenorik@chromium.org"},
+		BugComponent:    "b:167281", // ChromeOS > Platform > Technologies > Camera
 		Impl:            &serviceFixture{request: startService},
 		Parent:          fixture.CameraEnumerated,
 		SetUpTimeout:    serviceTimeout,
@@ -37,6 +38,7 @@ func init() {
 		Name:            fixture.CameraConnectorReady,
 		Desc:            "The camera connector is ready, with all built-in cameras enumerated",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "hidenorik@chromium.org"},
+		BugComponent:    "b:167281", // ChromeOS > Platform > Technologies > Camera
 		Impl:            &connectorFixture{},
 		Parent:          fixture.CameraServiceReady,
 		SetUpTimeout:    chrome.LoginTimeout,
@@ -47,6 +49,7 @@ func init() {
 		Name:            fixture.CameraServiceStopped,
 		Desc:            "The cros-camera service is stopped",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "hidenorik@chromium.org"},
+		BugComponent:    "b:167281", // ChromeOS > Platform > Technologies > Camera
 		Impl:            &serviceFixture{request: stopService},
 		SetUpTimeout:    serviceTimeout,
 		ResetTimeout:    serviceTimeout,

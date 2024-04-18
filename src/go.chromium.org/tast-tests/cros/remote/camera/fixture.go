@@ -31,6 +31,7 @@ func init() {
 		Contacts: []string{
 			"chromeos-camera-eng@google.com",
 			"hidenorik@google.com"},
+		BugComponent:    "b:167281", // ChromeOS > Platform > Technologies > Camera
 		Impl:            &cameraFixture{},
 		SetUpTimeout:    rebootTimeout,
 		TearDownTimeout: rebootTimeout,
