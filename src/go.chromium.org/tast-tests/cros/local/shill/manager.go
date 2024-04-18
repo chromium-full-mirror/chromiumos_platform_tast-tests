@@ -1090,7 +1090,7 @@ func (m *Manager) ConnectToP2PGroup(ctx context.Context, props map[string]interf
 }
 
 // DestroyP2PGroup destroys the P2P group with the specified shill_id.
-func (m *Manager) DestroyP2PGroup(ctx context.Context, shillID uint32) (*dbusutil.Properties, error) {
+func (m *Manager) DestroyP2PGroup(ctx context.Context, shillID int32) (*dbusutil.Properties, error) {
 	var result map[string]interface{}
 	if err := m.Call(ctx, "DestroyP2PGroup", shillID).Store(&result); err != nil {
 		return nil, err
@@ -1099,7 +1099,7 @@ func (m *Manager) DestroyP2PGroup(ctx context.Context, shillID uint32) (*dbusuti
 }
 
 // DisconnectFromP2PGroup disconnects the P2P client with the specified shill_id from it's P2P group.
-func (m *Manager) DisconnectFromP2PGroup(ctx context.Context, shillID uint32) (*dbusutil.Properties, error) {
+func (m *Manager) DisconnectFromP2PGroup(ctx context.Context, shillID int32) (*dbusutil.Properties, error) {
 	var result map[string]interface{}
 	if err := m.Call(ctx, "DisconnectFromP2PGroup", shillID).Store(&result); err != nil {
 		return nil, err

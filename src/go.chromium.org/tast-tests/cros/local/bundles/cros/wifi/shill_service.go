@@ -3317,7 +3317,7 @@ func (s *ShillService) p2pGroupCreateShillAPI(ctx context.Context, request *wifi
 	if err != nil {
 		return nil, errors.Wrap(err, "result code not found in response")
 	}
-	shillID := shillIDobj.(uint32)
+	shillID := shillIDobj.(int32)
 	defer func(ctx context.Context) {
 		if retErr == nil {
 			return
@@ -3359,7 +3359,7 @@ func (s *ShillService) p2pGroupDeleteShillAPI(ctx context.Context, request *wifi
 	if err != nil {
 		retErr = errors.Join(retErr, errors.Wrap(err, "failed to convert shiilID"))
 	}
-	if _, err := manager.DestroyP2PGroup(ctx, uint32(shillID)); err != nil {
+	if _, err := manager.DestroyP2PGroup(ctx, int32(shillID)); err != nil {
 		retErr = errors.Join(retErr, errors.Wrap(err, "failed to delete P2P"))
 	}
 	if err := manager.SetProperty(ctx, shillconst.ManagerPropertyP2PAllowed, false); err != nil {
@@ -3433,7 +3433,7 @@ func (s *ShillService) p2pGroupConnectShillAPI(ctx context.Context, request *wif
 	if err != nil {
 		return nil, errors.Wrap(err, "result code not found in response")
 	}
-	shillID := shillIDobj.(uint32)
+	shillID := shillIDobj.(int32)
 	defer func(ctx context.Context) {
 		if retErr == nil {
 			return
@@ -3484,7 +3484,7 @@ func (s *ShillService) p2pGroupDisconnectShillAPI(ctx context.Context, request *
 	if err != nil {
 		retErr = errors.Join(retErr, errors.Wrap(err, "failed to convert shillID"))
 	}
-	if _, err := manager.DisconnectFromP2PGroup(ctx, uint32(shillID)); err != nil {
+	if _, err := manager.DisconnectFromP2PGroup(ctx, int32(shillID)); err != nil {
 		retErr = errors.Join(retErr, errors.Wrap(err, "failed to delete P2P"))
 	}
 	if err := manager.SetProperty(ctx, shillconst.ManagerPropertyP2PAllowed, false); err != nil {
@@ -3495,7 +3495,7 @@ func (s *ShillService) p2pGroupDisconnectShillAPI(ctx context.Context, request *
 }
 
 // waitForP2PGroupActive polls P2PGroupInfos until the status is correct.
-func waitForP2PGroupActive(ctx context.Context, manager *shill.Manager, shillID uint32) (
+func waitForP2PGroupActive(ctx context.Context, manager *shill.Manager, shillID int32) (
 	retParams map[string]interface{}, retErr error) {
 	const waitForP2PGroupStartedTimeout = 30 * time.Second
 	const waitForP2PGroupStartedInterval = 500 * time.Millisecond
@@ -3514,9 +3514,9 @@ func waitForP2PGroupActive(ctx context.Context, manager *shill.Manager, shillID 
 			if err != nil {
 				return errors.Wrap(err, "shill id not found in properties")
 			}
-			sid, ok := id.(uint32)
+			sid, ok := id.(int32)
 			if !ok {
-				return errors.Errorf("failed to convert %v to uint32", sid)
+				return errors.Errorf("failed to convert %v to int32", sid)
 			}
 			if shillID != sid {
 				continue
@@ -3567,7 +3567,7 @@ func waitForP2PGroupActive(ctx context.Context, manager *shill.Manager, shillID 
 }
 
 // waitForP2PClientConnected polls P2PClientInfos until the status is correct.
-func waitForP2PClientConnected(ctx context.Context, manager *shill.Manager, shillID uint32) (
+func waitForP2PClientConnected(ctx context.Context, manager *shill.Manager, shillID int32) (
 	retParams map[string]interface{}, retErr error) {
 	const waitForP2PClientConnectedTimeout = 30 * time.Second
 	const waitForP2PClientConnectedInterval = 500 * time.Millisecond
@@ -3584,9 +3584,9 @@ func waitForP2PClientConnected(ctx context.Context, manager *shill.Manager, shil
 			if err != nil {
 				return errors.Wrap(err, "shill id not found in properties")
 			}
-			sid, ok := id.(uint32)
+			sid, ok := id.(int32)
 			if !ok {
-				return errors.Errorf("failed to convert %v to uint32", sid)
+				return errors.Errorf("failed to convert %v to int32", sid)
 			}
 			if shillID != sid {
 				continue
