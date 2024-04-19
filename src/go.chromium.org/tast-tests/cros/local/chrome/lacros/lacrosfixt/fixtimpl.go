@@ -279,6 +279,8 @@ func init() {
 		Name:     "lacrosPrinterSetupAssistanceEnabled",
 		Desc:     "Lacros Chrome from a pre-built image with printer setup assistance and jelly flags enabled",
 		Contacts: []string{"cros-peripherals@google.com", "ashleydp@google.com"},
+		// ChromeOS > Software > Fundamentals > Peripherals > Printing
+		BugComponent: "b:1131981",
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return NewConfig(ChromeOptions(
 				chrome.EnableFeatures("PrintManagementSetupAssistance", "PrintPreviewDiscoveredPrinters", "PrintSettingsRevamp", "PrintSettingsPrinterStatus"),
