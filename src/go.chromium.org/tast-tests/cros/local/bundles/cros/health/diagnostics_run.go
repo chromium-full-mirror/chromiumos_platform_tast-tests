@@ -123,14 +123,14 @@ func init() {
 			Name:              "emmc_lifetime",
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineEMMCLifetime),
 			Fixture:           "crosHealthdRunning",
-			ExtraHardwareDeps: hwdep.D(hwdep.Emmc(), hwdep.SkipOnModel("faffy")),
+			ExtraHardwareDeps: hwdep.D(hwdep.Emmc(), hwdep.SkipOnModel("faffy", "lillipup")),
 		}, {
 			// Contact: dennyh@google.com
-			// TODO(b/324001664): Fix the issue on faffy.
+			// TODO(b/324001664): Fix the issue on faffy and lillipup.
 			Name:              "emmc_lifetime_unstable",
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineEMMCLifetime),
 			Fixture:           "crosHealthdRunning",
-			ExtraHardwareDeps: hwdep.D(hwdep.Emmc(), hwdep.Model("faffy")),
+			ExtraHardwareDeps: hwdep.D(hwdep.Emmc(), hwdep.Model("faffy", "lillipup")),
 			ExtraAttr:         []string{"informational"},
 		}},
 	})
