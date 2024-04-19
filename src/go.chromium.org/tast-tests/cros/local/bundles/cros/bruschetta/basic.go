@@ -28,9 +28,8 @@ func init() {
 				Name:    "",
 				Fixture: bruschetta.BruschettaFixture,
 			}, {
-				Name:      "with_fieldtrial_config",
-				Fixture:   bruschetta.BruschettaFixtureWithFieldtrialConfig,
-				ExtraAttr: []string{"informational", "group:criticalstaging"},
+				Name:    "with_fieldtrial_config",
+				Fixture: bruschetta.BruschettaFixtureWithFieldtrialConfig,
 			},
 		},
 	})
