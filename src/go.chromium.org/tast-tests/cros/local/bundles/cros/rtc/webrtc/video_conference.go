@@ -16,14 +16,12 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/chrome/histogram"
 	"go.chromium.org/tast-tests/cros/common/perf"
-	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/cpu"
-	"go.chromium.org/tast-tests/cros/local/dlc"
 	"go.chromium.org/tast-tests/cros/local/graphics"
 	"go.chromium.org/tast-tests/cros/local/power"
 	pm "go.chromium.org/tast-tests/cros/local/power/metrics"
@@ -298,7 +296,7 @@ func runVCPerf(ctx context.Context, tconn, bTconn *chrome.TestConn, s *testing.S
 	ctx, cancel := ctxutil.Shorten(ctx, 2*time.Second)
 	defer cancel()
 
-	if err := setUpAudio(ctx, params); err != nil {
+	if err := setUpAudio(ctx, params.NoiseCancellation, params.StyleTransfer); err != nil {
 		return errors.Wrap(err, "setUpAudio")
 	}
 
@@ -345,32 +343,6 @@ func runVCPerf(ctx context.Context, tconn, bTconn *chrome.TestConn, s *testing.S
 		return runStep(ctx, conn, r)
 	}
 	return runNonStep(ctx, tconn, bTconn, s, conn, subWinConn, r, wm, params)
-}
-
-// setUpAudio configures the audio server according to p.
-func setUpAudio(ctx context.Context, p VCTestParams) error {
-	if p.NoiseCancellation {
-		if err := dlc.Install(ctx, "nc-ap-dlc", ""); err != nil {
-			return errors.Wrap(err, "cannot install nc-ap-dlc")
-		}
-	}
-	cras, err := audio.RestartCras(ctx)
-	if err != nil {
-		return errors.Wrap(err, "cannot restart CRAS")
-	}
-
-	if err := audio.SelectIODevices(ctx, cras, "INTERNAL_MIC", "INTERNAL_SPEAKER"); err != nil {
-		return errors.Wrap(err, "audio.SelectIODevices")
-	}
-
-	if err := cras.SetNoiseCancellationEnabled(ctx, p.NoiseCancellation); err != nil {
-		return errors.Wrap(err, "cras.SetNoiseCancellationEnabled")
-	}
-
-	if err := cras.SetStyleTransferEnabled(ctx, p.StyleTransfer); err != nil {
-		return errors.Wrap(err, "cras.SetStyleTransferEnabled")
-	}
-	return nil
 }
 
 // RunVideoConference runs a video conference using WebRTC API and measures the
