@@ -191,9 +191,9 @@ func runNonStep(ctx context.Context, tconn, bTconn *chrome.TestConn, s *testing.
 	}
 
 	var err error
-	var startHists []*histogram.Histogram
+	var histRecorder *metrics.Recorder
 	if len(histNames) > 0 {
-		startHists, err = metrics.GetHistograms(ctx, bTconn, histNames)
+		histRecorder, err = metrics.StartRecorder(ctx, bTconn, histNames...)
 		if err != nil {
 			return errors.Wrap(err, "failed to get histograms")
 		}
@@ -212,20 +212,14 @@ func runNonStep(ctx context.Context, tconn, bTconn *chrome.TestConn, s *testing.
 		return errors.Wrap(err, "cannot stop collecting power metrics")
 	}
 
-	if len(histNames) > 0 {
-		endHists, err := metrics.GetHistograms(ctx, bTconn, histNames)
+	if histRecorder != nil {
+		diffHists, err := histRecorder.Histogram(ctx, bTconn)
 		if err != nil {
-			return errors.Wrap(err, "failed to get histograms")
+			return errors.Wrap(err, "failed to get difference in histograms")
 		}
-		diffHists, err := histogram.DiffHistograms(startHists, endHists)
-		if err != nil {
-			return errors.Wrap(err, "get histograms")
-		}
-		histPerfs, err := chromeHistogramMetrics(diffHists)
-		if err != nil {
+		if err := chromeHistogramMetrics(ownPerfs, diffHists); err != nil {
 			return errors.Wrap(err, "compute histogram metrics")
 		}
-		ownPerfs.Merge(histPerfs)
 	}
 
 	if err := pr.Finish(ctx, ownPerfs); err != nil {
@@ -240,18 +234,17 @@ func runNonStep(ctx context.Context, tconn, bTconn *chrome.TestConn, s *testing.
 	return nil
 }
 
-func chromeHistogramMetrics(hists []*histogram.Histogram) (*perf.Values, error) {
+func chromeHistogramMetrics(p *perf.Values, hists []*histogram.Histogram) error {
 	// Check histograms is not empty.
 	for _, hist := range hists {
 		if hist.TotalCount() == 0 {
-			return nil, errors.Errorf("empty histogram: %s", hist.Name)
+			return errors.Errorf("empty histogram: %s", hist.Name)
 		}
 	}
-	p := perf.NewValues()
 	for _, hist := range hists {
 		mean, err := hist.Mean()
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to compute mean: %s", hist.Name)
+			return errors.Wrapf(err, "failed to compute mean: %s", hist.Name)
 		}
 		p.Set(perf.Metric{
 			Name:      hist.Name + "_mean",
@@ -260,7 +253,7 @@ func chromeHistogramMetrics(hists []*histogram.Histogram) (*perf.Values, error) 
 		}, mean)
 		percentile99, err := hist.Percentile(99)
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to compute mean: %s", hist.Name)
+			return errors.Wrapf(err, "failed to compute mean: %s", hist.Name)
 		}
 		p.Set(perf.Metric{
 			Name:      hist.Name + "_percentile_99",
@@ -268,7 +261,7 @@ func chromeHistogramMetrics(hists []*histogram.Histogram) (*perf.Values, error) 
 			Direction: perf.SmallerIsBetter,
 		}, percentile99)
 	}
-	return p, nil
+	return nil
 }
 
 // setupDisplayEnv sets up the display environment for the same state.
