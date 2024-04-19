@@ -39,7 +39,9 @@ func init() {
 		Timeout:      systemProxyForArcTestTimeout,
 		SoftwareDeps: []string{"reboot", "chrome", "chrome_internal", "tpm2"},
 		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_vm_r"},
+			// TODO(b/335124753): mitmproxy occasionally fails to start on arm devices.
+			// Remove architecture restrictions when the problem is solved.
+			ExtraSoftwareDeps: []string{"android_vm_r", "no_arm"},
 		}},
 		SearchFlags: []*testing.StringPair{
 			{

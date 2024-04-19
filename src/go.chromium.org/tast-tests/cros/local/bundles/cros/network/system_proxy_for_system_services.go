@@ -44,6 +44,11 @@ func init() {
 		},
 		Fixture: "chromeEnrolledLoggedIn",
 		Timeout: 5 * time.Minute,
+		Params: []testing.Param{{
+			// TODO(b/335124753): mitmproxy occasionally fails to start on arm devices.
+			// Remove architecture restrictions when the problem is solved.
+			ExtraSoftwareDeps: []string{"no_arm"},
+		}},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.ProxyMode{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.ProxyServer{}, pci.VerifiedFunctionalityOS),

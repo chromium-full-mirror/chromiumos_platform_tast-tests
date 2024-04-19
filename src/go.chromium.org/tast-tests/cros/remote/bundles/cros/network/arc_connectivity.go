@@ -43,7 +43,9 @@ func init() {
 		Timeout:      arcConnectivityTestTimeout,
 		SoftwareDeps: []string{"reboot", "chrome", "chrome_internal", "tpm2"},
 		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_vm"},
+			// TODO(b/335124753): mitmproxy occasionally fails to start on arm devices.
+			// Remove architecture restrictions when the problem is solved.
+			ExtraSoftwareDeps: []string{"android_vm", "no_arm"},
 		}},
 		Vars: []string{
 			tape.ServiceAccountVar,
