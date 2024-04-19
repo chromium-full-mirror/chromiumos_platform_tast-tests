@@ -110,7 +110,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            BruschettaFixtureWithFieldtrialConfig,
 		Desc:            "Set up reference VM with fieldtrial config enabled",
-		Contacts:        []string{"davidmunro@google.com", "clumptini+oncall@google.com"},
+		Contacts:        []string{"clumptini+oncall@google.com"},
 		Impl:            &bruschettaFixture{},
 		SetUpTimeout:    installationTimeout + uninstallationTimeout,
 		ResetTimeout:    resetTimeout,

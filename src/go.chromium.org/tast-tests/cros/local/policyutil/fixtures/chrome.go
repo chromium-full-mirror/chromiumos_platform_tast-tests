@@ -153,7 +153,7 @@ func init() {
 		Name:         fixture.ChromePolicyLoggedInBruschetta,
 		Desc:         "Logged into a user session with Bruschetta support",
 		Contacts:     []string{"clumptini+oncall@google.com"},
-		BugComponent: "b:1111617", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Policy Stack
+		BugComponent: "b:658562", // ChromeOS > Software > GuestOS
 		Impl: &policyChromeFixture{
 			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 				return []chrome.Option{
@@ -171,9 +171,10 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     fixture.ChromePolicyLoggedInBruschettaWithFieldtrialConfig,
-		Desc:     "Logged into a user session with Bruschetta support and fieldtrial config enabled",
-		Contacts: []string{"clumptini+oncall@google.com"},
+		Name:         fixture.ChromePolicyLoggedInBruschettaWithFieldtrialConfig,
+		Desc:         "Logged into a user session with Bruschetta support and fieldtrial config enabled",
+		Contacts:     []string{"clumptini+oncall@google.com"},
+		BugComponent: "b:658562", // ChromeOS > Software > GuestOS
 		Impl: &policyChromeFixture{
 			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 				return []chrome.Option{
