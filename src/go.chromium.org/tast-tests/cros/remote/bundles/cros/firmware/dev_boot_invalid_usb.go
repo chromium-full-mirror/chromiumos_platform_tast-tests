@@ -214,6 +214,11 @@ func DevBootInvalidUSB(ctx context.Context, s *testing.State) {
 	if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
 		s.Fatal("Failed to reboot the DUT with warm reset: ", err)
 	}
+	waitUnreachableCtx, cancelWaitUnreachable := context.WithTimeout(ctx, 1*time.Minute)
+	defer cancelWaitUnreachable()
+	if err := h.DUT.WaitUnreachable(waitUnreachableCtx); err != nil {
+		s.Fatal("Failed to wait for DUT to be unreachable: ", err)
+	}
 
 	s.Logf("Sleeping %s (FirmwareScreen)", h.Config.FirmwareScreen)
 	// GoBigSleepLint: Wait for firmware screen.
@@ -445,7 +450,7 @@ func devModeResetDUT(ctx context.Context, h *firmware.Helper, servoChargerRemove
 		if err := h.DUT.Conn().CommandContext(ctx, "reboot").Run(); err != nil && !errors.As(err, &context.DeadlineExceeded) {
 			return errors.Wrap(err, "failed to run reboot command")
 		}
-		waitUnreachableCtx, cancelWaitUnreachable := context.WithTimeout(ctx, 10*time.Second)
+		waitUnreachableCtx, cancelWaitUnreachable := context.WithTimeout(ctx, 1*time.Minute)
 		defer cancelWaitUnreachable()
 		if err := h.DUT.WaitUnreachable(waitUnreachableCtx); err != nil {
 			return errors.Wrap(err, "failed to wait for DUT to be unreachable after reboot")
