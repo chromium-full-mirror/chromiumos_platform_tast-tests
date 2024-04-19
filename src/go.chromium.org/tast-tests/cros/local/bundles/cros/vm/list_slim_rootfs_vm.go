@@ -6,10 +6,12 @@ package vm
 
 import (
 	"context"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/vm/slimrootfsutils"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/vm"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -28,7 +30,8 @@ func init() {
 }
 
 func ListSlimRootfsVM(ctx context.Context, s *testing.State) {
-	concierge, err := vm.NewConcierge(ctx, s.FixtValue().(chrome.HasChrome).Chrome().NormalizedUser())
+	user := s.FixtValue().(chrome.HasChrome).Chrome().NormalizedUser()
+	concierge, err := vm.NewConcierge(ctx, user)
 	if err != nil {
 		s.Error("Failed to get concierge instance: ", err)
 	}
@@ -37,6 +40,13 @@ func ListSlimRootfsVM(ctx context.Context, s *testing.State) {
 	vmNames := []string{slimrootfsutils.DefaultVMName + "one", slimrootfsutils.DefaultVMName + "two"}
 	kernel := s.DataPath(kernelAndRootfsFiles[0])
 	rootfs := s.DataPath(kernelAndRootfsFiles[1])
+
+	// Shorten timeout for the clean up
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 15*time.Second)
+	defer cancel()
+
+	defer vm.TrySaveAllVMLogs(cleanupCtx, user, s.OutDir())
 
 	var vms []*vm.VM
 	for _, vmName := range vmNames {
