@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -24,8 +25,10 @@ const (
 	// LacrosFixture is a lacros fixture with a screen recording.
 	LacrosFixture = "quickAnswersLacrosFixture"
 
-	setUpTimeout    = 10 * time.Second
-	preTestTimeout  = 10 * time.Second
+	setUpTimeout = 10 * time.Second
+	// 15 seconds for staring video recording.
+	// 1 minute for waiting an internet connection.
+	preTestTimeout  = 15*time.Second + time.Minute
 	postTestTimeout = 15 * time.Second
 )
 
@@ -37,6 +40,7 @@ func init() {
 			"assitive-eng@google.com",
 			"yawano@google.com",
 		},
+		BugComponent:    "b:905229", // ChromeOS > Software > Assistive
 		Parent:          fixture.ChromeLoggedInWithGaia,
 		Impl:            &quickAnswersFixture{},
 		SetUpTimeout:    setUpTimeout,
@@ -49,7 +53,8 @@ func init() {
 		Contacts: []string{
 			"assistive-eng@google.com",
 		},
-		Vars: []string{"ui.gaiaPoolDefault"},
+		BugComponent: "b:905229", // ChromeOS > Software > Assistive
+		Vars:         []string{"ui.gaiaPoolDefault"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			opts := []chrome.Option{
 				chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
@@ -67,6 +72,7 @@ func init() {
 			"assistive-eng@google.com",
 			"yawano@google.com",
 		},
+		BugComponent:    "b:905229", // ChromeOS > Software > Assistive
 		Parent:          lacrosFixtureInternal,
 		Impl:            &quickAnswersFixture{},
 		SetUpTimeout:    setUpTimeout,
@@ -101,6 +107,11 @@ func (f *quickAnswersFixture) Reset(ctx context.Context) error {
 
 func (f *quickAnswersFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
 	f.recorder = uiauto.CreateAndStartScreenRecorder(ctx, f.tconn)
+
+	// All QuickAnswers tast tests require an internet connection.
+	if err := ping.VerifyInternetConnectivity(ctx, time.Minute); err != nil {
+		s.Fatal("Failed to wait an internet connection: ", err)
+	}
 }
 
 func (f *quickAnswersFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
