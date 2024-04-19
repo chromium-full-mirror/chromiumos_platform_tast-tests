@@ -46,6 +46,7 @@ func init() {
 		Data: []string{"wallpaper_image.jpeg"},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.ArcEnabled{}, pci.VerifiedFunctionalityOS),
+			pci.SearchFlag(&policy.AudioCaptureAllowed{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.DisableScreenshots{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.PrintingEnabled{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.VideoCaptureAllowed{}, pci.VerifiedFunctionalityOS),
@@ -98,6 +99,7 @@ func ManagedDevicePolicy(ctx context.Context, s *testing.State) {
 		"setWallpaper": func() (policy.Policy, func(ctx context.Context), error) {
 			return createWallpaperPolicy(ctx, s.DataPath("wallpaper_image.jpeg"))
 		},
+		"unmuteMicrophoneDisabled": createMicrophonePolicy,
 	}
 
 	creds, err := credconfig.PickRandomCreds(s.RequiredVar(arcent.LoginPoolVar))
@@ -218,6 +220,10 @@ func ManagedDevicePolicy(ctx context.Context, s *testing.State) {
 	}
 }
 
+func createMicrophonePolicy() (policy.Policy, func(ctx context.Context), error) {
+	return &policy.AudioCaptureAllowed{Val: false}, func(ctx context.Context) {}, nil
+}
+
 func createScreenshotPolicy() (policy.Policy, func(ctx context.Context), error) {
 	return &policy.DisableScreenshots{Val: true}, func(ctx context.Context) {}, nil
 }
@@ -260,7 +266,6 @@ func createWallpaperPolicy(ctx context.Context, imgPath string) (policy.Policy, 
 	cleanup := func(ctx context.Context) { eds.Stop(ctx) }
 
 	iurl, ihash := eds.ServePolicyData(jpegBytes)
-
 	policy := &policy.WallpaperImage{Val: &policy.WallpaperImageValue{Url: iurl, Hash: ihash}}
 
 	return policy, cleanup, nil

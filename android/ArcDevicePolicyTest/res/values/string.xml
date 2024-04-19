@@ -10,6 +10,7 @@
         <item>printingDisabled</item>
         <item>screenCaptureDisabled</item>
         <item>setWallpaper</item>
+        <item>unmuteMicrophoneDisabled</item>
     </string-array>
     <string name="test_button_text">Test</string>
     <string name="app_name">ARC DevicePolicy Test</string>

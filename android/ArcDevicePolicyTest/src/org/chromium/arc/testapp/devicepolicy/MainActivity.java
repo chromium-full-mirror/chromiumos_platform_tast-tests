@@ -58,7 +58,12 @@ public class MainActivity extends Activity {
                                 "printingDisabled",
                                 () -> isRestrictionUnapplied(UserManager.DISALLOW_PRINTING)),
                         Map.entry("screenCaptureDisabled", this::isScreenshotEnabled),
-                        Map.entry("cameraDisabled", this::isCameraEnabled));
+                        Map.entry("cameraDisabled", this::isCameraEnabled),
+                        Map.entry(
+                                "unmuteMicrophoneDisabled",
+                                () ->
+                                        isRestrictionUnapplied(
+                                                UserManager.DISALLOW_UNMUTE_MICROPHONE)));
     }
 
     @Override
