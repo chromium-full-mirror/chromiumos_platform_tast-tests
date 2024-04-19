@@ -169,7 +169,7 @@ func init() {
 }
 
 func CorruptFWCBFS(ctx context.Context, s *testing.State) {
-	b := s.FixtValue().(*fixture.Value).BackupManager
+	backupManager := s.FixtValue().(*fixture.Value).BackupManager
 	h := s.FixtValue().(*fixture.Value).Helper
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to init servo: ", err)
@@ -233,7 +233,7 @@ func CorruptFWCBFS(ctx context.Context, s *testing.State) {
 		}
 
 		backupOnDut := "/tmp/fwBackup.bin"
-		if err := b.CopyBackupToDut(ctx, h.DUT, fixture.FirmwareAP, backupOnDut); err != nil {
+		if err := backupManager.CopyBackupToDut(ctx, h.DUT, fixture.FirmwareAP, backupOnDut); err != nil {
 			s.Fatal("Failed to copy backup firmware image to DUT: ", err)
 		}
 

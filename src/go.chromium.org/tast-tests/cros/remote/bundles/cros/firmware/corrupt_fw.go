@@ -78,7 +78,7 @@ func init() {
 
 func CorruptFW(ctx context.Context, s *testing.State) {
 	val := s.Param().(*corruptSingleSectionVals)
-	b := s.FixtValue().(*fixture.Value).BackupManager
+	backupManager := s.FixtValue().(*fixture.Value).BackupManager
 	h := s.FixtValue().(*fixture.Value).Helper
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to init servo: ", err)
@@ -117,7 +117,7 @@ func CorruptFW(ctx context.Context, s *testing.State) {
 		}()
 
 		backupOnServoProxy := fmt.Sprintf("%s/bios_backup.bin", servoTempDir)
-		if err := b.CopyBackupToServoProxy(ctx, h.ServoProxy, fixture.FirmwareAP, backupOnServoProxy); err != nil {
+		if err := backupManager.CopyBackupToServoProxy(ctx, h.ServoProxy, fixture.FirmwareAP, backupOnServoProxy); err != nil {
 			s.Fatal("Failed to copy AP firmware backup to ServoProxy: ", err)
 		}
 
@@ -157,7 +157,7 @@ func CorruptFW(ctx context.Context, s *testing.State) {
 	}()
 
 	backupOnDut := fmt.Sprintf("%s/bios_backup.bin", dutTempDir)
-	if err := b.CopyBackupToDut(ctx, h.DUT, fixture.FirmwareAP, backupOnDut); err != nil {
+	if err := backupManager.CopyBackupToDut(ctx, h.DUT, fixture.FirmwareAP, backupOnDut); err != nil {
 		s.Fatal("Failed to copy backup formware image to DUT: ", err)
 	}
 
