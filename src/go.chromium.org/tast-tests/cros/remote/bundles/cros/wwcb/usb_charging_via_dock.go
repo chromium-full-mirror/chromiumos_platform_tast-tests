@@ -59,10 +59,10 @@ func USBChargingViaDock(ctx context.Context, s *testing.State) {
 	defer pxy.Close(cleanupCtx)
 
 	// Cutting off the servo power supply.
-	if err := pxy.Servo().SetPDRole(ctx, servo.PDRoleSnk); err != nil {
+	if err := utils.DisableServoPower(ctx, dut, pxy.Servo()); err != nil {
 		s.Fatal("Failed to cut-off servo power supply: ", err)
 	}
-	defer pxy.Servo().SetPDRole(cleanupCtx, servo.PDRoleSrc)
+	defer utils.EnableServoPower(ctx, dut, pxy.Servo())
 
 	// Connect to the gRPC server on the DUT.
 	cl, err := rpc.Dial(ctx, s.DUT(), s.RPCHint())

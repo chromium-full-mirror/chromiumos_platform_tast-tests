@@ -81,10 +81,10 @@ func RaidenSettingsForTypecSingleRole(ctx context.Context, s *testing.State) {
 	defer pxy.Servo().RunECCommand(cleanupCtx, cleanupCmd)
 
 	// Cutting off the servo power supply, in case of affecting on verification of docking station power.
-	if err := pxy.Servo().SetPDRole(ctx, servo.PDRoleSnk); err != nil {
+	if err := utils.DisableServoPower(ctx, dut, pxy.Servo()); err != nil {
 		s.Fatal("Failed to cut-off servo power supply: ", err)
 	}
-	defer pxy.Servo().SetPDRole(cleanupCtx, servo.PDRoleSrc)
+	defer utils.EnableServoPower(ctx, dut, pxy.Servo())
 
 	cl, err := rpc.Dial(ctx, dut, s.RPCHint())
 	if err != nil {

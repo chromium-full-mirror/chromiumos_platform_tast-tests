@@ -60,10 +60,10 @@ func RaidenSettingsForTypecCable(ctx context.Context, s *testing.State) {
 	defer pxy.Close(cleanupCtx)
 
 	// Cut off the servo power supply, in case of affecting on verification of docking station power.
-	if err := pxy.Servo().SetPDRole(ctx, servo.PDRoleSnk); err != nil {
+	if err := utils.DisableServoPower(ctx, dut, pxy.Servo()); err != nil {
 		s.Fatal("Failed to cut-off servo power supply: ", err)
 	}
-	defer pxy.Servo().SetPDRole(cleanupCtx, servo.PDRoleSrc)
+	defer utils.EnableServoPower(ctx, dut, pxy.Servo())
 
 	if isTablet {
 		testing.ContextLog(ctx, "Enable tablet mode")
