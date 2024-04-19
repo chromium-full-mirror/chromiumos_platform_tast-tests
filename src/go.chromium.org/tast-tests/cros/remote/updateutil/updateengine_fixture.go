@@ -26,6 +26,7 @@ func init() {
 		Impl:            &updateEngineFixture{},
 		PreTestTimeout:  30 * time.Second,
 		PostTestTimeout: 30 * time.Second,
+		SetUpTimeout:    30 * time.Second,
 		ServiceDeps: []string{
 			"tast.cros.autoupdate.UpdateService",
 		},
@@ -95,6 +96,13 @@ func (*updateEngineFixture) PostTest(ctx context.Context, s *testing.FixtTestSta
 }
 
 func (*updateEngineFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	s.Log("UpdateEngine Fixture SetUp")
+	// Reset update engine in case a test not in this fixture left update engine in an
+	// unclean state
+	if err := ResetUpdateStatus(ctx, s.DUT(), s.RPCHint()); err != nil {
+		s.Fatal("Failed to reset update status: ", err)
+	}
+
 	return s.ParentValue()
 }
 func (*updateEngineFixture) Reset(ctx context.Context) error                    { return nil }
