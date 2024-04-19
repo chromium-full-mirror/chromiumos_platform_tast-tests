@@ -90,7 +90,7 @@ func GeneratePowerLogAndSaveToCrosbolt(ctx context.Context, outDir, testName str
 	metrics := CollectOneTimeMetrics(ctx)
 
 	for _, optionalRecorderArg := range args {
-		if optionalRecorderArg.argName == OptionalRecorderArgPowerLogCustomPerfKey {
+		if optionalRecorderArg.argName == cp.OptionalRecorderArgPowerLogCustomPerfKey {
 			t := optionalRecorderArg.argValue.(*perf.Values)
 			values.Merge(t)
 		}
@@ -101,7 +101,7 @@ func GeneratePowerLogAndSaveToCrosbolt(ctx context.Context, outDir, testName str
 	}
 
 	for _, optionalRecorderArg := range args {
-		if optionalRecorderArg.argName == OptionalRecorderArgCustomPerfKey {
+		if optionalRecorderArg.argName == cp.OptionalRecorderArgCustomPerfKey {
 			t := optionalRecorderArg.argValue.(*perf.Values)
 			values.Merge(t)
 		}

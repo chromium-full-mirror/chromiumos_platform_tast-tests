@@ -11,6 +11,7 @@ import (
 	"time"
 	"unicode"
 
+	cp "go.chromium.org/tast-tests/cros/common/power"
 	"go.chromium.org/tast-tests/cros/common/utils"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
@@ -224,8 +225,8 @@ func init() {
 		SetUpTimeout:    SetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: TearDownTimeout,
-		PreTestTimeout:  PreTestTimeout + power.RecorderCooldownTimeout,
-		PostTestTimeout: PostTestTimeout + power.RecorderOverheadTimeout,
+		PreTestTimeout:  PreTestTimeout + cp.RecorderCooldownTimeout,
+		PostTestTimeout: PostTestTimeout + cp.RecorderOverheadTimeout,
 		Parent:          "powerNoUIWiFi",
 	})
 

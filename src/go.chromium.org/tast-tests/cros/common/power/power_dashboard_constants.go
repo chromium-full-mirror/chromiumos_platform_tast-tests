@@ -4,6 +4,12 @@
 
 package power
 
+import "time"
+
+// DashboardUploadTimeout is the time required for uploading result to
+// dashboard.
+const DashboardUploadTimeout = 5 * time.Minute
+
 // Define a type for each metric. Metric "type" will be added as a prefix before the metric name.
 // This is to help categorize each metric in power_log.json/.html, which can also be used as a
 // filter on power_dashboard.

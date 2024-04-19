@@ -21,6 +21,9 @@ import (
 // A WebGL rendering workload used for stressing GPU.
 const aquariumURL = "https://webglsamples.org/aquarium/aquarium.html"
 
+// Time required for setting up DUT and logging in etc.
+const overheadTimeout = 1 * time.Minute
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ExampleRemoteUI,
@@ -38,7 +41,7 @@ func init() {
 			"tast.cros.ui.ConnService",
 		},
 		SoftwareDeps: []string{"chrome"},
-		Timeout:      5 * time.Minute,
+		Timeout:      cp.RecorderCooldownTimeout + cp.DashboardUploadTimeout + overheadTimeout,
 		Attr:         []string{"group:power", "power_daily", "power_weekly"},
 	})
 }

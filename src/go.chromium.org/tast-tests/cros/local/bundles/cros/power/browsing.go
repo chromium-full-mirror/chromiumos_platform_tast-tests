@@ -415,7 +415,7 @@ func Browsing(ctx context.Context, s *testing.State) {
 	// End of main test body.
 
 	// Save custom perf values to power logs and results-chart.json.
-	r.AddOptionalRecorderArg(power.OptionalRecorderArgPowerLogCustomPerfKey, configValues)
+	r.AddOptionalRecorderArg(cp.OptionalRecorderArgPowerLogCustomPerfKey, configValues)
 	if err := r.Finish(ctx); err != nil {
 		s.Error("Cannot finish collecting power metrics: ", err)
 	}

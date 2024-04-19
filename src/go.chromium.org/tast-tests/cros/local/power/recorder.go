@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
+	cp "go.chromium.org/tast-tests/cros/common/power"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast-tests/cros/local/power/metrics"
@@ -22,46 +23,11 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-const (
-	// RecorderTempCooldownTimeout is the max amount of time needed for device
-	// temperature to cooldown.
-	RecorderTempCooldownTimeout = 5 * time.Minute
-	// RecorderIdleStateCooldownTimeout is the max amount of time needed for cpu
-	// idle state activity to drop.
-	RecorderIdleStateCooldownTimeout = 2 * time.Minute
-	// RecorderPkgStateCooldownTimeout is the max amount of time needed for cpu
-	// pkg state activity to drop.
-	RecorderPkgStateCooldownTimeout = 3 * time.Minute
-
-	// RecorderCooldownTimeout is the max amount of time that Recorder allows
-	// for all combined cooldown items.
-	RecorderCooldownTimeout = RecorderTempCooldownTimeout + RecorderIdleStateCooldownTimeout +
-		RecorderPkgStateCooldownTimeout
-
-	// RecorderOverheadTimeout is the max amount of time needed for recorder &
-	// metrics construction, recorder destruction and data post-processing.
-	RecorderOverheadTimeout = 13 * time.Minute
-
-	// RecorderTimeout is the max amount of time that Recorder is expected to
-	// take.
-	RecorderTimeout = RecorderCooldownTimeout + RecorderOverheadTimeout
-
-	// OptionalRecorderArgCustomPerfKey is the key used to get optional custom
-	// perf values saved only to results-chart.json.
-	// Be very careful when you add optional custom perf values with a timeline,
-	// it may overwrite the timeline in power recorder metrics.
-	OptionalRecorderArgCustomPerfKey = "custom_perf_results_chart"
-
-	// OptionalRecorderArgPowerLogCustomPerfKey is the key used to get optional
-	// custom perf values saved to both power logs and results-chart.json.
-	// Be very careful when you add custom perf values with a timeline,
-	// it may overwrite the timeline in power recorder metrics.
-	OptionalRecorderArgPowerLogCustomPerfKey = "custom_perf_power_log"
-
-	// OptionalRecorderArgDischargeWatchdogKey is the arg name to enable
-	// discharge watchdog in recorder.
-	OptionalRecorderArgDischargeWatchdogKey = "enable_watchdog"
-)
+// RecorderTimeout is the max amount of time that Recorder is expected to
+// take.
+// TODO: b/336223114 - Remove this re-export after migrating the constants
+// to common.
+const RecorderTimeout = cp.RecorderTimeout
 
 // Recorder is a utility to measure power metrics during tests.
 type Recorder struct {
@@ -97,7 +63,7 @@ func (r *Recorder) AddOptionalRecorderArg(key string, val interface{}) {
 // DischargeWatchdogOption returns a new instance of OptionalRecorderArg that
 // controls if recorder enables discharge watchdog.
 func DischargeWatchdogOption(discharge bool) OptionalRecorderArg {
-	return OptionalRecorderArg{OptionalRecorderArgDischargeWatchdogKey, discharge}
+	return OptionalRecorderArg{cp.OptionalRecorderArgDischargeWatchdogKey, discharge}
 }
 
 // Cooldown device before running test load.
@@ -228,7 +194,7 @@ func (r *Recorder) Finish(ctx context.Context, vs ...*perf.Values) error {
 
 	if vs != nil {
 		for _, customValue := range vs {
-			r.AddOptionalRecorderArg(OptionalRecorderArgCustomPerfKey, customValue)
+			r.AddOptionalRecorderArg(cp.OptionalRecorderArgCustomPerfKey, customValue)
 		}
 	}
 
@@ -360,7 +326,7 @@ func NewRecorder(ctx context.Context, interval time.Duration, outDir, testName s
 	// Enable discharge watchdog if force discharge succeeds.
 	discharge := false
 	for _, optionalRecorderArg := range args {
-		if optionalRecorderArg.argName == OptionalRecorderArgDischargeWatchdogKey {
+		if optionalRecorderArg.argName == cp.OptionalRecorderArgDischargeWatchdogKey {
 			discharge = optionalRecorderArg.argValue.(bool)
 		}
 	}
