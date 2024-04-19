@@ -89,6 +89,7 @@ func init() {
 		Name:            FirmwareBase,
 		Desc:            "Basic common fixture",
 		Contacts:        []string{"tast-fw-library-reviewers@google.com", "czapiga@google.com"},
+		BugComponent:    "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Impl:            &impl{value: &BaseValue{}},
 		Vars:            []string{"servo", "dutHostname", "powerunitHostname", "powerunitOutlet", "hydraHostname", "noSSH"},
 		SetUpTimeout:    10 * time.Second,
@@ -102,6 +103,7 @@ func init() {
 		Name:            FirmwareBackupAP,
 		Desc:            "Backup AP firmware and provide copy to tests",
 		Contacts:        []string{"tast-fw-library-reviewers@google.com", "czapiga@google.com"},
+		BugComponent:    "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Impl:            &firmwareBackupAPImpl{value: &FirmwareBackupAPValue{}},
 		Vars:            []string{"servo", "dutHostname", "noSSH"},
 		SetUpTimeout:    2 * time.Minute,
@@ -115,6 +117,7 @@ func init() {
 		Name:            BootModeBase,
 		Desc:            "Boot into selected boot-mode",
 		Contacts:        []string{"tast-fw-library-reviewers@google.com", "jbettis@google.com", "czapiga@google.com"},
+		BugComponent:    "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Impl:            &bootModeImpl{value: &Value{}},
 		Vars:            []string{"servo", "dutHostname", "firmware.no_ec_sync", "firmware.skipFlashUSB", "noSSH"},
 		ResetTimeout:    10 * time.Second,
@@ -190,6 +193,7 @@ func init() {
 		Name:            USBDevModeWithReinstall,
 		Desc:            "Reboot into usb dev mode before test, and reinstall ChromeOS after last test",
 		Contacts:        []string{"tast-fw-library-reviewers@google.com", "jbettis@google.com"},
+		BugComponent:    "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Impl:            &reinstall{},
 		Parent:          USBDevModeGBB,
 		TearDownTimeout: 30 * time.Minute,
