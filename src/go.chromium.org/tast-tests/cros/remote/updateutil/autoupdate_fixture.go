@@ -24,6 +24,7 @@ func init() {
 			"mpolzer@google.com",
 			"chromeos-commercial-remote-management@google.com",
 		},
+		BugComponent:    "b:1031231",            // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Version Control
 		Parent:          fixture.UpdateEngine, // Ensure update engine is reset.
 		Impl:            &autoupdateFixt{},
 		SetUpTimeout:    2 * time.Minute,

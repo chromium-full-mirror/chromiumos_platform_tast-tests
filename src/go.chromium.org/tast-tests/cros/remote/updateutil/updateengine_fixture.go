@@ -41,6 +41,7 @@ func init() {
 			"mpolzer@chromium.org",
 			"chromeos-commercial-remote-management@google.com",
 		},
+		BugComponent:    "b:1031231",        // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Version Control
 		Parent:          fixture.Enrolled, // Provides enrollment.
 		Impl:            &updateEngineFixture{},
 		PreTestTimeout:  30 * time.Second,
@@ -59,6 +60,7 @@ func init() {
 			"igorcov@chromium.org",
 			"chromeos-commercial-remote-management@google.com",
 		},
+		BugComponent:    "b:1031231",              // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Version Control
 		Parent:          fixture.CleanOwnership, // Clean device ownership.
 		Impl:            &updateEngineFixture{},
 		PreTestTimeout:  30 * time.Second,
