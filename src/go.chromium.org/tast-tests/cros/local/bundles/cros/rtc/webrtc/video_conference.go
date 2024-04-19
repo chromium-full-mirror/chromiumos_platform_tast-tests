@@ -66,23 +66,6 @@ type VCTestParams struct {
 }
 
 const (
-	// vcHTML is the HTML holding a video conference using WebRTC API.
-	vcHTML = "webrtc/video_conference.html"
-	// vcTitle is the html title of vcHTML.
-	vcTitle = "WebRTC VideoConference"
-	// presentHTML is the HTML changing the content in 30fps for presentation.
-	presentHTML = "webrtc/presentation.html"
-	// presentTitle is the html title of presentHTML.
-	presentTitle = "presentation test"
-	// textHTML is the HTML that has a text area.
-	textHTML = "webrtc/text.html"
-	// textTitle is the html title of presentHTML.
-	textTitle = "text test"
-	// mouseHTML is the HTML that has letters.
-	mouseHTML = "webrtc/mouse.html"
-	// mouseTitle is the html title of mouseHTML.
-	mouseTitle = "mouse test"
-
 	// Peretto configuration file.
 	traceConfigFile = "webrtc/perfetto_trace.txtpb"
 
@@ -155,7 +138,7 @@ func runStep(ctx context.Context, conn *chrome.Conn, pr *power.Recorder) error {
 
 // runNonStep holds a conference video call in which |numPeople| persons attends
 // and thus |numPeople-1| decoders and 1 encoder run.
-func runNonStep(ctx context.Context, tconn, bTconn *chrome.TestConn, s *testing.State, conn *chrome.Conn, pr *power.Recorder, params VCTestParams) error {
+func runNonStep(ctx context.Context, tconn, bTconn *chrome.TestConn, s *testing.State, conn, subWinConn *chrome.Conn, pr *power.Recorder, wm *windowManager, params VCTestParams) error {
 	const profileInterval = 100 * time.Second // Sleep interval to measure the performance metrics.
 	if params.NumPeople <= 1 {
 		return errors.Errorf("the number of people must be more than 1: NumPeople=%d", params.NumPeople)
@@ -174,34 +157,24 @@ func runNonStep(ctx context.Context, tconn, bTconn *chrome.TestConn, s *testing.
 	}
 
 	var histNames []string
-	var stopEventFunc func() = func() {}
-	if params.Mouse {
-		// Active the text input window so that keyboard inputs the text area.
-		if err := browser.ActivateTabByTitle(ctx, bTconn, mouseTitle); err != nil {
-			return errors.Wrap(err, "failed activating video conference window")
+	if wm.hasSubWindow() {
+		if err := wm.activateSubWindow(ctx, bTconn); err != nil {
+			return err
 		}
 		var err error
-		histNames, stopEventFunc, err = startMouseEvent(ctx, tconn, bTconn)
+		var stopEventFunc func() = func() {}
+		if params.Mouse {
+			histNames, stopEventFunc, err = startMouseEvent(ctx, tconn, bTconn)
+		} else if params.Text {
+			histNames, stopEventFunc, err = startKeyInputEvent(ctx, tconn, bTconn)
+		} else if params.Present {
+			err = subWinConn.Eval(ctx, "drawCanvasAlternatingColours(1280, 720, 30)", nil)
+		}
 		if err != nil {
 			return err
 		}
-	} else if params.Text {
-		// Active the text input window so that keyboard inputs the text area.
-		if err := browser.ActivateTabByTitle(ctx, bTconn, textTitle); err != nil {
-			return errors.Wrap(err, "failed activating video conference window")
-		}
-		var err error
-		histNames, stopEventFunc, err = startKeyInputEvent(ctx, tconn, bTconn)
-		if err != nil {
-			return err
-		}
-	} else if params.Present {
-		// Capturing a tab activates the captured tab and window. Back to the video conference window.
-		if err := browser.ActivateTabByTitle(ctx, bTconn, vcTitle); err != nil {
-			return errors.Wrap(err, "failed activating video conference window")
-		}
+		defer stopEventFunc()
 	}
-	defer stopEventFunc()
 
 	ownPerfs := perf.NewValues()
 	if err := measureWebRTCPerf(ctx, conn, ownPerfs, params.Present, params.NumPeople); err != nil {
@@ -325,40 +298,7 @@ func setupDisplayEnv(ctx context.Context, tconn *chrome.TestConn) (func(context.
 	}, nil
 }
 
-// prepareWindowView maximizes the video conference window if only the window exists, or
-// snap windows of the video conference window and the presentation/text window.
-func prepareWindowView(ctx context.Context, tconn *chrome.TestConn, newWinTitle string) error {
-
-	vcWin, err := ash.WaitForAnyWindowWithTitle(ctx, tconn, vcTitle)
-	if err != nil {
-		return errors.Wrap(err, "failed to get the video conference window")
-	}
-
-	// Maximize the video conference window if we don't open a new window
-	if newWinTitle == "" {
-		if err := ash.SetWindowStateAndWait(ctx, tconn, vcWin.ID, ash.WindowStateMaximized); err != nil {
-			return errors.Wrap(err, "failed to maximize the video conference window")
-		}
-		return nil
-	}
-
-	// Snap a video conference window and a presentation/text window.
-	if err := ash.SetWindowStateAndWait(ctx, tconn, vcWin.ID, ash.WindowStatePrimarySnapped); err != nil {
-		return errors.Wrap(err, "failed to set up the video conference window")
-	}
-
-	newWin, err := ash.WaitForAnyWindowWithTitle(ctx, tconn, newWinTitle)
-	if err != nil {
-		return errors.Wrap(err, "failed to get the text/presentation window")
-	}
-	if err := ash.SetWindowStateAndWait(ctx, tconn, newWin.ID, ash.WindowStateSecondarySnapped); err != nil {
-		return errors.Wrap(err, "failed to set up the text/presentation window")
-	}
-
-	return nil
-}
-
-func runVCPerf(ctx context.Context, cs ash.ConnSource, tconn, bTconn *chrome.TestConn, s *testing.State, vcURL, newWinURL string, params VCTestParams) error {
+func runVCPerf(ctx context.Context, tconn, bTconn *chrome.TestConn, s *testing.State, params VCTestParams, wm *windowManager) error {
 	closeCtx := ctx
 
 	// Reserve time for closing tab and cleaning up a power library.
@@ -388,61 +328,30 @@ func runVCPerf(ctx context.Context, cs ash.ConnSource, tconn, bTconn *chrome.Tes
 		return err
 	}
 
-	conn, err := cs.NewConn(ctx, vcURL)
+	conn, err := wm.openVCWindow(ctx)
 	if err != nil {
-		return errors.Wrapf(err, "failed to open %s", vcURL)
-	}
-	defer conn.Close()
-	defer conn.CloseTarget(ctx)
-
-	if err := conn.WaitForExpr(ctx, "document.readyState === 'complete'"); err != nil {
-		return errors.Wrap(err, "timed out waiting for page loading")
-	}
-
-	var newWinTitle string
-	var newWinStartUp func() error
-	if params.Present || params.Text || params.Mouse {
-		// Opens a new window for presentation or text input.
-		newWinConn, err := cs.NewConn(ctx, newWinURL, browser.WithNewWindow())
-		if err != nil {
-			return errors.Wrapf(err, "failed to open %s", newWinURL)
-		}
-		defer newWinConn.Close()
-		defer newWinConn.CloseTarget(ctx)
-
-		newWinTitle = presentTitle
-		if params.Text {
-			newWinTitle = textTitle
-		} else if params.Mouse {
-			newWinTitle = mouseTitle
-		}
-		if err := newWinConn.WaitForExpr(ctx, "document.readyState === 'complete'"); err != nil {
-			return errors.Wrap(err, "timed out waiting for page loading")
-		}
-
-		if newWinTitle == presentTitle {
-			newWinStartUp = func() error {
-				return newWinConn.Eval(ctx, "drawCanvasAlternatingColours(1280, 720, 30)", nil)
-			}
-		}
-	}
-
-	if err := prepareWindowView(ctx, tconn, newWinTitle); err != nil {
 		return err
 	}
 
+	var subWinConn *chrome.Conn
+	if wm.hasSubWindow() {
+		subWinConn, err = wm.openSubWindow(ctx)
+		if err != nil {
+			return err
+		}
+	}
+	defer wm.closeConns()
+
+	if err := wm.setupWindowView(ctx, tconn); err != nil {
+		return err
+	}
 	if err := cpu.Cooldown(ctx); err != nil {
 		return errors.Wrap(err, "failed waiting for CPU to cool down")
-	}
-	if newWinStartUp != nil {
-		if err := newWinStartUp(); err != nil {
-			return errors.Wrap(err, "failed to start the presentation window")
-		}
 	}
 	if params.Step {
 		return runStep(ctx, conn, r)
 	}
-	return runNonStep(ctx, tconn, bTconn, s, conn, r, params)
+	return runNonStep(ctx, tconn, bTconn, s, conn, subWinConn, r, wm, params)
 }
 
 // setUpAudio configures the audio server according to p.
@@ -478,22 +387,10 @@ func RunVideoConference(ctx context.Context, cs ash.ConnSource, tconn, bTConn *c
 
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer server.Close()
-	vcURL := server.URL + "/" + vcHTML
-	newWinURL := server.URL + "/" + presentHTML
-	if params.Text {
-		newWinURL = server.URL + "/" + textHTML
-	} else if params.Mouse {
-		newWinURL = server.URL + "/" + mouseHTML
-	}
-
+	wm := newWindowManager(cs, server.URL, params.Present, params.Text, params.Mouse)
 	ctx, cancel := ctxutil.Shorten(ctx, cleanupTime)
 	defer cancel()
-
-	if err := runVCPerf(ctx, cs, tconn, bTConn, s, vcURL, newWinURL, params); err != nil {
-		return err
-	}
-
-	return nil
+	return runVCPerf(ctx, tconn, bTConn, s, params, wm)
 }
 
 func recordTracing(ctx context.Context, outDir, configFile string) error {
