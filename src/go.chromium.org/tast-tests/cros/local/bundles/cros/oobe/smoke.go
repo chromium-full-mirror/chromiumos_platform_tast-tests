@@ -7,7 +7,6 @@ package oobe
 import (
 	"context"
 
-	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast/core/testing"
 )
@@ -28,19 +27,11 @@ func init() {
 		Attr:         []string{"group:mainline", "group:hw_agnostic", "group:cq-medium"},
 		SoftwareDeps: []string{"chrome", "non_meets_device"},
 		Params: []testing.Param{{
-			Name: "fieldtrial_testing_config_on_without_fixture",
+			Name: "fieldtrial_testing_config_on",
 			Val:  chrome.FieldTrialConfigEnable,
 		}, {
-			Name: "fieldtrial_testing_config_off_without_fixture",
+			Name: "fieldtrial_testing_config_off",
 			Val:  chrome.FieldTrialConfigDisable,
-		}, {
-			Name:    "fieldtrial_testing_config_on_with_fixture",
-			Val:     chrome.FieldTrialConfigEnable,
-			Fixture: fixture.UpdateEngine, // Ensure to update engine status is idle and to reset between tests (b/263421799).
-		}, {
-			Name:    "fieldtrial_testing_config_off_with_fixture",
-			Val:     chrome.FieldTrialConfigDisable,
-			Fixture: fixture.UpdateEngine, // Ensure to update engine status is idle and to reset between tests (b/263421799).
 		}},
 	})
 }
