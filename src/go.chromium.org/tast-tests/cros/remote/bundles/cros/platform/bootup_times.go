@@ -252,6 +252,11 @@ func BootupTimes(ctx context.Context, s *testing.State) {
 		if err := dut.WaitUnreachable(ctx); err != nil {
 			s.Fatal("Failed to shutdown: ", err)
 		}
+
+		if err := powercontrol.ValidateG3PowerState(ctx, pxy); err != nil {
+			s.Fatal("Failed to validate G3 power state: ", err)
+		}
+
 		if err := powercontrol.PowerOntoDUT(ctx, pxy, dut); err != nil {
 			s.Fatal("Failed to press power button: ", err)
 		}
