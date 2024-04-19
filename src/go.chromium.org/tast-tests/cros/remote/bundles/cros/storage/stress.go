@@ -33,19 +33,18 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Data:         util.Configs,
 		SoftwareDeps: []string{"crossystem"},
-		Requirements: []string{
-			tdreq.StorageStable,
-		},
 		Params: []testing.Param{
 			{
-				Val:       fullStressTimeSec,
-				Timeout:   fullStressTimeoutMin * time.Minute,
-				ExtraAttr: []string{"group:storage-qual", "storage-qual_pdp_stress", "storage-qual_avl_v3"},
+				Val:               fullStressTimeSec,
+				Timeout:           fullStressTimeoutMin * time.Minute,
+				ExtraAttr:         []string{"group:storage-qual", "storage-qual_pdp_stress", "storage-qual_avl_v3"},
+				ExtraRequirements: []string{tdreq.StorageStable},
 			}, {
-				Name:      "iteration_2",
-				Val:       fullStressTimeSec,
-				Timeout:   fullStressTimeoutMin * time.Minute,
-				ExtraAttr: []string{"group:storage-qual", "storage-qual_avl_v3"},
+				Name:              "iteration_2",
+				Val:               fullStressTimeSec,
+				Timeout:           fullStressTimeoutMin * time.Minute,
+				ExtraAttr:         []string{"group:storage-qual", "storage-qual_avl_v3"},
+				ExtraRequirements: []string{tdreq.StorageStable},
 			}, {
 				Name:    "quick",
 				Val:     quickStressTimeSec,

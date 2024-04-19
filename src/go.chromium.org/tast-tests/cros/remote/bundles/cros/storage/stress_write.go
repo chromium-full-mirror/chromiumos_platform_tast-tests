@@ -29,24 +29,24 @@ func init() {
 		BugComponent: "b:974567", // ChromeOS > Platform > System > Storage
 		Data:         util.Configs,
 		SoftwareDeps: []string{"crossystem"},
-		Requirements: []string{
-			tdreq.StorageStable, tdreq.StorageEndurancePerf,
-		},
 		Params: []testing.Param{
 			{
-				Val:       fullBenchmarkTime,
-				Timeout:   fullBenchmarkTime * 1.5 * time.Minute,
-				ExtraAttr: []string{"group:storage-qual", "storage-qual_pdp_stress", "storage-qual_avl_v3"},
+				Val:               fullBenchmarkTime,
+				Timeout:           fullBenchmarkTime * 1.5 * time.Minute,
+				ExtraAttr:         []string{"group:storage-qual", "storage-qual_pdp_stress", "storage-qual_avl_v3"},
+				ExtraRequirements: []string{tdreq.StorageStable, tdreq.StorageEndurancePerf},
 			}, {
-				Name:      "iteration_2",
-				Val:       fullBenchmarkTime,
-				Timeout:   fullBenchmarkTime * 1.5 * time.Minute,
-				ExtraAttr: []string{"group:storage-qual", "storage-qual_avl_v3"},
+				Name:              "iteration_2",
+				Val:               fullBenchmarkTime,
+				Timeout:           fullBenchmarkTime * 1.5 * time.Minute,
+				ExtraAttr:         []string{"group:storage-qual", "storage-qual_avl_v3"},
+				ExtraRequirements: []string{tdreq.StorageStable, tdreq.StorageEndurancePerf},
 			}, {
-				Name:      "iteration_3",
-				Val:       fullBenchmarkTime,
-				Timeout:   fullBenchmarkTime * 1.5 * time.Minute,
-				ExtraAttr: []string{"group:storage-qual", "storage-qual_avl_v3"},
+				Name:              "iteration_3",
+				Val:               fullBenchmarkTime,
+				Timeout:           fullBenchmarkTime * 1.5 * time.Minute,
+				ExtraAttr:         []string{"group:storage-qual", "storage-qual_avl_v3"},
+				ExtraRequirements: []string{tdreq.StorageStable, tdreq.StorageEndurancePerf},
 			}, {
 				Name:    "quick",
 				Val:     quickBenchmarkTime,

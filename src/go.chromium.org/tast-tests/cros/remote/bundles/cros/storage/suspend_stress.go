@@ -44,24 +44,24 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Data:         util.Configs,
 		SoftwareDeps: []string{"crossystem"},
-		Requirements: []string{
-			tdreq.StorageSuspend,
-		},
 		Params: []testing.Param{
 			{
-				Val:       timeParams{fioTimeSec: fullFioTimeSec, suspendIterations: fullSuspendIterations, timeoutMin: fullPollTimeoutMin},
-				Timeout:   fullTimeoutMin * time.Minute,
-				ExtraAttr: []string{"group:storage-qual", "storage-qual_pdp_stress", "storage-qual_avl_v3"},
+				Val:               timeParams{fioTimeSec: fullFioTimeSec, suspendIterations: fullSuspendIterations, timeoutMin: fullPollTimeoutMin},
+				Timeout:           fullTimeoutMin * time.Minute,
+				ExtraAttr:         []string{"group:storage-qual", "storage-qual_pdp_stress", "storage-qual_avl_v3"},
+				ExtraRequirements: []string{tdreq.StorageSuspend},
 			}, {
-				Name:      "iteration_2",
-				Val:       timeParams{fioTimeSec: fullFioTimeSec, suspendIterations: fullSuspendIterations, timeoutMin: fullPollTimeoutMin},
-				Timeout:   fullTimeoutMin * time.Minute,
-				ExtraAttr: []string{"group:storage-qual", "storage-qual_avl_v3"},
+				Name:              "iteration_2",
+				Val:               timeParams{fioTimeSec: fullFioTimeSec, suspendIterations: fullSuspendIterations, timeoutMin: fullPollTimeoutMin},
+				Timeout:           fullTimeoutMin * time.Minute,
+				ExtraAttr:         []string{"group:storage-qual", "storage-qual_avl_v3"},
+				ExtraRequirements: []string{tdreq.StorageSuspend},
 			}, {
-				Name:      "iteration_3",
-				Val:       timeParams{fioTimeSec: fullFioTimeSec, suspendIterations: fullSuspendIterations, timeoutMin: fullPollTimeoutMin},
-				Timeout:   fullTimeoutMin * time.Minute,
-				ExtraAttr: []string{"group:storage-qual", "storage-qual_avl_v3"},
+				Name:              "iteration_3",
+				Val:               timeParams{fioTimeSec: fullFioTimeSec, suspendIterations: fullSuspendIterations, timeoutMin: fullPollTimeoutMin},
+				Timeout:           fullTimeoutMin * time.Minute,
+				ExtraAttr:         []string{"group:storage-qual", "storage-qual_avl_v3"},
+				ExtraRequirements: []string{tdreq.StorageSuspend},
 			}, {
 				Name:      "quick",
 				Val:       timeParams{fioTimeSec: quickFioTimeSec, suspendIterations: quickSuspendIterations, timeoutMin: quickPollTimeoutMin},

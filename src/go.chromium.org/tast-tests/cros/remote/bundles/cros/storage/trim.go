@@ -25,15 +25,13 @@ func init() {
 		Data:         util.Configs,
 		SoftwareDeps: []string{"crossystem"},
 		Timeout:      240 * time.Minute,
-		Requirements: []string{
-			tdreq.StorageTrim,
-		},
 		Params: []testing.Param{
 			{
-				ExtraAttr:    []string{"group:storage-qual", "storage-qual_pdp_enabled", "storage-qual_pdp_kpi", "storage-qual_pdp_stress", "storage-qual_avl_v3"},
+				ExtraAttr:         []string{"group:storage-qual", "storage-qual_pdp_enabled", "storage-qual_pdp_kpi", "storage-qual_pdp_stress", "storage-qual_avl_v3"},
+				ExtraRequirements: []string{tdreq.StorageTrim},
 			}, {
-				Name: "iteration_2",
-				ExtraAttr:    []string{"group:storage-qual", "storage-qual_avl_v3"},
+				Name:      "iteration_2",
+				ExtraAttr: []string{"group:storage-qual", "storage-qual_avl_v3"},
 			},
 		},
 	})
