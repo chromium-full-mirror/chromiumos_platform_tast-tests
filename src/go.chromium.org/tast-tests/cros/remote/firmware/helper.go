@@ -1976,3 +1976,8 @@ func (h *Helper) GetECConsoleOutputWithComment(ctx context.Context, comment stri
 	}
 	return output.String(), nil
 }
+
+// SetMiniOSPriority sets expected MiniOS priority.
+func (h *Helper) SetMiniOSPriority(ctx context.Context, expectedPriority string) error {
+	return h.Reporter.CrossystemSetParam(ctx, reporters.CrossystemParamMiniOSPriority, expectedPriority)
+}

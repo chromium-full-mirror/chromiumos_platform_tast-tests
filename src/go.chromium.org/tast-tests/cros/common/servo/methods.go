@@ -138,6 +138,7 @@ type KeypressControl StringControl
 // These are the Servo controls which can be set with either a numerical value or a KeypressDuration.
 const (
 	CtrlD        KeypressControl = "ctrl_d"
+	CtrlR        KeypressControl = "ctrl_r"
 	CtrlS        KeypressControl = "ctrl_s"
 	CtrlU        KeypressControl = "ctrl_u"
 	CtrlEnter    KeypressControl = "ctrl_enter"

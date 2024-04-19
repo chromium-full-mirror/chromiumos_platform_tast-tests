@@ -31,6 +31,8 @@ type bypasser interface {
 	// BypassAltfwMode bypasses the altfw-mode firmware logic to boot
 	// the altfw image.
 	BypassAltfwMode(ctx context.Context) error
+	// TriggerRecToMinios triggers internet recovery from recovery screen.
+	TriggerRecToMiniOS(ctx context.Context) error
 }
 
 type baseBypasser struct {
@@ -120,6 +122,23 @@ func (k *keyboardBypasser) BypassAltfwMode(ctx context.Context) error {
 	return h.Servo.PressKeys(ctx, []string{"<ctrl_l>", "l"}, servo.DurTab)
 }
 
+func (k *keyboardBypasser) TriggerRecToMiniOS(ctx context.Context) error {
+	h := k.helper
+	if !h.Config.MiniOSEnabled {
+		return errors.New("DUT does not support MiniOS")
+	}
+	testing.ContextLog(ctx, "Pressing Ctrl-R to boot to MiniOS")
+	if err := h.Servo.KeypressWithDuration(ctx, servo.CtrlR, servo.DurTab); err != nil {
+		return errors.Wrap(err, "failed to press Ctrl-R")
+	}
+	testing.ContextLog(ctx, "Waiting for MiniOS screen")
+	// GoBigSleepLint: Sleep for model specific time.
+	if err := testing.Sleep(ctx, h.Config.MiniOSScreen); err != nil {
+		return errors.Wrapf(err, "failed to wait for %s", h.Config.MiniOSScreen)
+	}
+	return nil
+}
+
 type legacyKeyboardBypasser struct {
 	keyboardBypasser
 }
@@ -164,6 +183,10 @@ func (lk *legacyKeyboardBypasser) BypassDevMode(ctx context.Context) error {
 func (lk *legacyKeyboardBypasser) BypassAltfwMode(ctx context.Context) error {
 	testing.ContextLog(ctx, "legacy")
 	return lk.keyboardBypasser.BypassAltfwMode(ctx)
+}
+
+func (lk *legacyKeyboardBypasser) TriggerRecToMiniOS(ctx context.Context) error {
+	return errors.New("DUT does not support MiniOS")
 }
 
 type legacyDetachableBypasser struct {
@@ -257,6 +280,10 @@ func (ld *legacyDetachableBypasser) BypassAltfwMode(ctx context.Context) error {
 	// TODO(b:296600641): Is this the right method?
 	testing.ContextLog(ctx, "Pressing and holding volume down button for 3 seconds")
 	return h.Servo.SetInt(ctx, servo.VolumeDownHold, 3000)
+}
+
+func (ld *legacyDetachableBypasser) TriggerRecToMiniOS(ctx context.Context) error {
+	return errors.New("DUT does not support MiniOS")
 }
 
 // NewBypasser creates a new bypasser. It relies on a firmware Helper to

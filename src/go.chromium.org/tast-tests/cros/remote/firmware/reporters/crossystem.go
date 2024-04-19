@@ -33,6 +33,7 @@ const (
 	CrossystemParamLocIdx             CrossystemParam = "loc_idx"
 	CrossystemParamMainfwAct          CrossystemParam = "mainfw_act"
 	CrossystemParamMainfwType         CrossystemParam = "mainfw_type"
+	CrossystemParamMiniOSPriority     CrossystemParam = "minios_priority"
 	CrossystemParamRoFwid             CrossystemParam = "ro_fwid"
 	CrossystemParamWpswCur            CrossystemParam = "wpsw_cur"
 	CrossystemParamRecoveryReason     CrossystemParam = "recovery_reason"
@@ -137,4 +138,9 @@ func (r *Reporter) CheckFWVersion(ctx context.Context, expected string) (bool, e
 		return false, errors.Wrap(err, "determining DUT firmware version")
 	}
 	return curr == expected, nil
+}
+
+// GetMiniOSPriority gets current MiniOS priority.
+func (r *Reporter) GetMiniOSPriority(ctx context.Context) (string, error) {
+	return r.CrossystemParam(ctx, CrossystemParamMiniOSPriority)
 }
