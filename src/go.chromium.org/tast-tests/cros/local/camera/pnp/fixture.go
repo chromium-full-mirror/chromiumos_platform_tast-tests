@@ -113,6 +113,7 @@ func init() {
 		Name:            cameraService,
 		Desc:            "Enable necessary utilities for using camera",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "esker@chromium.org"},
+		BugComponent:    "b:167281", // ChromeOS > Platform > Technologies > Camera
 		Impl:            &cameraServiceFixture{},
 		SetUpTimeout:    5 * time.Second,
 		ResetTimeout:    1 * time.Second,
@@ -121,9 +122,10 @@ func init() {
 		PostTestTimeout: 1 * time.Second,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name:     StablePowerNoUI,
-		Desc:     "Disable unnessary or unstable utilities for power evaluation as much as possible",
-		Contacts: []string{"chromeos-camera-eng@google.com", "esker@chromium.org"},
+		Name:         StablePowerNoUI,
+		Desc:         "Disable unnessary or unstable utilities for power evaluation as much as possible",
+		Contacts:     []string{"chromeos-camera-eng@google.com", "esker@chromium.org"},
+		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
 		Impl: powersetup.NewPowerNoUIFixture(
 			minPowerNoUITestOptions,
 		),
@@ -135,9 +137,10 @@ func init() {
 		PostTestTimeout: powersetup.PostTestTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name:     StablePowerAsh,
-		Desc:     "Disable unnessary or unstable utilities for power evaluation as much as possible using Ash chrome",
-		Contacts: []string{"chromeos-camera-eng@google.com", "esker@chromium.org"},
+		Name:         StablePowerAsh,
+		Desc:         "Disable unnessary or unstable utilities for power evaluation as much as possible using Ash chrome",
+		Contacts:     []string{"chromeos-camera-eng@google.com", "esker@chromium.org"},
+		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
 		Impl: powersetup.NewPowerUIFixture(
 			MinPowerTestOptions,
 			powersetup.PowerFixtureOptions{
@@ -152,9 +155,10 @@ func init() {
 		PostTestTimeout: powersetup.PostTestTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name:     StablePowerAshGAIA,
-		Desc:     "Disable unnessary or unstable utilities for power evaluation as much as possible using Ash Chrome with GAIA login",
-		Contacts: []string{"chromeos-camera-eng@google.com", "esker@chromium.org"},
+		Name:         StablePowerAshGAIA,
+		Desc:         "Disable unnessary or unstable utilities for power evaluation as much as possible using Ash Chrome with GAIA login",
+		Contacts:     []string{"chromeos-camera-eng@google.com", "esker@chromium.org"},
+		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
 		Impl: powersetup.NewPowerUIFixture(
 			MinPowerTestOptions,
 			powersetup.PowerFixtureOptions{
@@ -172,6 +176,7 @@ func init() {
 		Name:            StablePowerAshGAIAFakeHAL,
 		Desc:            "Disable unnessary or unstable utilities for power evaluation as much as possible using Ash Chrome with GAIA login and fake HAL",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "esker@chromium.org"},
+		BugComponent:    "b:167281", // ChromeOS > Platform > Technologies > Camera
 		Data:            []string{fakeHALImageInput},
 		Impl:            &fakeHALFixture{},
 		Parent:          StablePowerAshGAIA,
@@ -182,9 +187,10 @@ func init() {
 		PostTestTimeout: 1 * time.Second,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name:     StablePowerLacros,
-		Desc:     "Disable unnessary or unstable utilities for power evaluation as much as possible using Lacros chrome",
-		Contacts: []string{"chromeos-camera-eng@google.com", "esker@chromium.org"},
+		Name:         StablePowerLacros,
+		Desc:         "Disable unnessary or unstable utilities for power evaluation as much as possible using Lacros chrome",
+		Contacts:     []string{"chromeos-camera-eng@google.com", "esker@chromium.org"},
+		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
 		Impl: powersetup.NewPowerUIFixture(
 			MinPowerTestOptions,
 			powersetup.PowerFixtureOptions{
@@ -199,9 +205,10 @@ func init() {
 		PostTestTimeout: powersetup.PostTestTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name:     StablePowerLacrosGAIA,
-		Desc:     "Disable unnessary or unstable utilities for power evaluation as much as possible using Lacros chrome with GAIA login",
-		Contacts: []string{"chromeos-camera-eng@google.com", "esker@chromium.org"},
+		Name:         StablePowerLacrosGAIA,
+		Desc:         "Disable unnessary or unstable utilities for power evaluation as much as possible using Lacros chrome with GAIA login",
+		Contacts:     []string{"chromeos-camera-eng@google.com", "esker@chromium.org"},
+		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
 		Impl: powersetup.NewPowerUIFixture(
 			MinPowerTestOptions,
 			powersetup.PowerFixtureOptions{
@@ -219,6 +226,7 @@ func init() {
 		Name:            StablePowerLacrosGAIAFakeHAL,
 		Desc:            "Disable unnessary or unstable utilities for power evaluation as much as possible using Lacros chrome with GAIA login and fake HAL",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "esker@chromium.org"},
+		BugComponent:    "b:167281", // ChromeOS > Platform > Technologies > Camera
 		Data:            []string{fakeHALImageInput},
 		Impl:            &fakeHALFixture{},
 		Parent:          StablePowerLacrosGAIA,

@@ -29,6 +29,7 @@ func init() {
 		Name:         "arcWithWorkingCamera",
 		Desc:         "ARC is booted with working camera(s)",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
+		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Impl:         &fixture{},
 		Parent:       "arcBootedRestricted",
 		SetUpTimeout: setUpTimeout,
@@ -38,6 +39,7 @@ func init() {
 		Name:         "arcWithWorkingCameraForPerf",
 		Desc:         "ARC is booted with working camera(s) with noise disabled for performance measurement",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
+		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Impl:         &fixture{},
 		Parent:       "arcBootedWithDisableExternalStorage",
 		SetUpTimeout: setUpTimeout,

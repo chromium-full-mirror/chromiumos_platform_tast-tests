@@ -28,6 +28,7 @@ func init() {
 		Name:            "remoteCameraBox",
 		Desc:            "Set up remotely for camera box tests",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
+		BugComponent:    "b:167281", // ChromeOS > Platform > Technologies > Camera
 		Impl:            &fixture{},
 		SetUpTimeout:    5 * time.Second,
 		TearDownTimeout: 5 * time.Second,

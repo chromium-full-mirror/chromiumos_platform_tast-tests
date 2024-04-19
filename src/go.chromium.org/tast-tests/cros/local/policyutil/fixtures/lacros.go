@@ -21,9 +21,10 @@ import (
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
-		Name:     fixture.LacrosPolicyLoggedIn,
-		Desc:     "Fixture for a running FakeDMS with lacros",
-		Contacts: []string{"mohamedaomar@google.com", "wtlee@chromium.org", "chromeos-commercial-remote-management@google.com"},
+		Name:         fixture.LacrosPolicyLoggedIn,
+		Desc:         "Fixture for a running FakeDMS with lacros",
+		Contacts:     []string{"mohamedaomar@google.com", "wtlee@chromium.org", "chromeos-commercial-remote-management@google.com"},
+		BugComponent: "b:1160324", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Policies
 		Impl: &policyChromeFixture{
 			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 				return lacrosfixt.NewConfig().Opts()
@@ -39,9 +40,10 @@ func init() {
 	// LacrosPolicyLoggedInWithKeepAlive is similar to LacrosPolicyLoggedIn, but sets Lacros keep-alive.
 	// Do not use this unless you are explicitly testing the keep-alive feature or features that depend on it.
 	testing.AddFixture(&testing.Fixture{
-		Name:     fixture.LacrosPolicyLoggedInWithKeepAlive,
-		Desc:     "Fixture for a running FakeDMS with lacros with KeepAlive",
-		Contacts: []string{"mohamedaomar@google.com", "wtlee@chromium.org", "chromeos-commercial-remote-management@google.com"},
+		Name:         fixture.LacrosPolicyLoggedInWithKeepAlive,
+		Desc:         "Fixture for a running FakeDMS with lacros with KeepAlive",
+		Contacts:     []string{"mohamedaomar@google.com", "wtlee@chromium.org", "chromeos-commercial-remote-management@google.com"},
+		BugComponent: "b:1160324", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Policies
 		Impl: &policyChromeFixture{
 			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 				return lacrosfixt.NewConfig(lacrosfixt.KeepAlive(true)).Opts()

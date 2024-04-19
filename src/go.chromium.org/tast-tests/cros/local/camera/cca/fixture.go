@@ -67,6 +67,7 @@ func init() {
 		Name:            "ccaLaunchedInCameraBox",
 		Desc:            "Launched CCA in a Camera Box",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
+		BugComponent:    "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Impl:            &fixture{launchCCAInCameraBox: true, launchCCA: true},
 		Parent:          "remoteCameraBox",
 		SetUpTimeout:    setUpTimeout,
@@ -80,6 +81,7 @@ func init() {
 		Name:            "ccaLaunched",
 		Desc:            "Launched CCA",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
+		BugComponent:    "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Impl:            &fixture{launchCCA: true},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
@@ -92,6 +94,7 @@ func init() {
 		Name:            "ccaLaunchedGuestWithFakeHALCamera",
 		Desc:            "Launched CCA",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
+		BugComponent:    "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Impl:            &fixture{useCameraType: testutil.UseFakeHALCamera, guestMode: true, launchCCA: true},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
@@ -104,6 +107,7 @@ func init() {
 		Name:            "ccaLaunchedWithFakeVCDCamera",
 		Desc:            "Launched CCA with fake VCD camera input",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
+		BugComponent:    "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Impl:            &fixture{useCameraType: testutil.UseFakeVCDCamera, launchCCA: true},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
@@ -116,6 +120,7 @@ func init() {
 		Name:            "ccaLaunchedWithFakeHALCamera",
 		Desc:            "Launched CCA with fake camera HAL input",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "pihsun@chromium.org"},
+		BugComponent:    "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Impl:            &fixture{useCameraType: testutil.UseFakeHALCamera, launchCCA: true},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
@@ -129,6 +134,7 @@ func init() {
 		Name:            "ccaLaunchedWithHoldingSpaceIntegrationEnabled",
 		Desc:            "Launched CCA with holding space integration enabled",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "cros-system-ui-eng@google.com", "dmblack@google.com"},
+		BugComponent:    "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Impl:            &fixture{launchCCA: true, enableFeatures: []feature{"HoldingSpaceCameraAppIntegration"}},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
@@ -141,6 +147,7 @@ func init() {
 		Name:            "ccaTestBridgeReady",
 		Desc:            "Set up test bridge for CCA",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
+		BugComponent:    "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Impl:            &fixture{},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
@@ -151,6 +158,7 @@ func init() {
 		Name:            "ccaTestBridgeReadyLacros",
 		Desc:            "Set up test bridge for CCA",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
+		BugComponent:    "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Impl:            &fixture{lacros: true},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
@@ -162,6 +170,7 @@ func init() {
 		Desc: `Set up test bridge for CCA with fake camera. Any tests using this
 		       fixture should switch the camera scene before opening camera`,
 		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
+		BugComponent:    "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Impl:            &fixture{useCameraType: testutil.UseFakeVCDCamera, fakeScene: true},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
@@ -172,6 +181,7 @@ func init() {
 		Name:            "ccaTestBridgeReadyWithFakeCameraWithoutFakeScene",
 		Desc:            `Set up test bridge for CCA with fake camera without fake scene`,
 		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
+		BugComponent:    "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Impl:            &fixture{useCameraType: testutil.UseFakeVCDCamera},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
@@ -183,6 +193,7 @@ func init() {
 		Desc: `Set up test bridge for CCA with fake camera. Any tests using this
 		       fixture should switch the camera scene before opening camera`,
 		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
+		BugComponent:    "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Impl:            &fixture{useCameraType: testutil.UseFakeVCDCamera, fakeScene: true, lacros: true},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
@@ -193,6 +204,7 @@ func init() {
 		Name:            "ccaTestBridgeReadyWithFakeHALCamera",
 		Desc:            "Set up test bridge for CCA with fake camera HAL input",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "pihsun@chromium.org"},
+		BugComponent:    "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Impl:            &fixture{useCameraType: testutil.UseFakeHALCamera},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
@@ -203,6 +215,7 @@ func init() {
 		Name:            "ccaLaunchedAudioLoopback",
 		Desc:            "Launched CCA with fake camera HAL input and audio loopback",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
+		BugComponent:    "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Impl:            &fixture{launchCCA: true, useCameraType: testutil.UseFakeHALCamera, requireAudioLoopback: true},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
@@ -217,6 +230,7 @@ func init() {
 		Name:            "ccaTestBridgeReadyWithFakeHALCameraLacros",
 		Desc:            "Set up test bridge for CCA with fake camera HAL input and lacros",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "pihsun@chromium.org"},
+		BugComponent:    "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Impl:            &fixture{useCameraType: testutil.UseFakeHALCamera, lacros: true},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
@@ -227,6 +241,7 @@ func init() {
 		Name:            "ccaTestBridgeReadyWithFakeHALCameraBypassPermissionClamshell",
 		Desc:            "Set up test bridge for CCA with fake camera HAL input bypassPermission on clamshell mode on",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "pihsun@chromium.org"},
+		BugComponent:    "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Impl:            &fixture{useCameraType: testutil.UseFakeHALCamera, bypassPermission: true, forceClamshell: true},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
@@ -237,6 +252,7 @@ func init() {
 		Name:            "ccaTestBridgeReadyWithArc",
 		Desc:            "Set up test bridge for CCA with ARC enabled",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
+		BugComponent:    "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Impl:            &fixture{arcBooted: true},
 		SetUpTimeout:    setUpTimeout + arc.BootTimeout + ui.StartTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
@@ -247,6 +263,7 @@ func init() {
 		Name:            "ccaTestBridgeReadyWithArcFakeHALCamera",
 		Desc:            "Set up test bridge for CCA with ARC enabled and fake camera HAL",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "pihsun@chromium.org"},
+		BugComponent:    "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Impl:            &fixture{arcBooted: true, useCameraType: testutil.UseFakeHALCamera},
 		SetUpTimeout:    setUpTimeout + arc.BootTimeout + ui.StartTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
@@ -257,6 +274,7 @@ func init() {
 		Name:            "ccaTestBridgeReadyWithAutoFramingForceEnabled",
 		Desc:            "Set up test bridge for CCA with Auto Framing force enabled",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "kamesan@chromium.org"},
+		BugComponent:    "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Impl:            &fixture{forceEnableAutoFraming: true},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
@@ -268,6 +286,7 @@ func init() {
 		Name:            "ccaTestBridgeReadyWithAutoQROnFakeHALCamera",
 		Desc:            "Set up test bridge for CCA with fake camera HAL input with auto-qr flag enabled",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "dorahkim@chromium.org", "chromeos-camera-eng@google.com"},
+		BugComponent:    "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Impl:            &fixture{useCameraType: testutil.UseFakeHALCamera, enableFeatures: []feature{autoQR}},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
@@ -279,6 +298,7 @@ func init() {
 		Name:            "ccaTestBridgeReadyWithAutoQROnFakeHALCameraLacros",
 		Desc:            "Set up test bridge for CCA with fake camera HAL input and lacros with auto-qr flag enabled",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "dorahkim@chromium.org", "chromeos-camera-eng@google.com"},
+		BugComponent:    "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Impl:            &fixture{useCameraType: testutil.UseFakeHALCamera, lacros: true, enableFeatures: []feature{autoQR}},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
@@ -289,6 +309,7 @@ func init() {
 		Name:            "ccaPowerTest",
 		Desc:            "Set up test bridge for CCA for a power Test",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "kamchonlathorn@chromium.org"},
+		BugComponent:    "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Impl:            &fixture{powerTest: true},
 		SetUpTimeout:    powerSetUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
@@ -299,6 +320,7 @@ func init() {
 		Name:            "ccaPowerTestWithFakeHALCamera",
 		Desc:            "Set up test bridge for CCA with fake camera HAL for a power Test",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "dorahkim@chromium.org"},
+		BugComponent:    "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Impl:            &fixture{powerTest: true, useCameraType: testutil.UseFakeHALCamera},
 		SetUpTimeout:    powerSetUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
@@ -309,6 +331,7 @@ func init() {
 		Name:            "ccaPowerTestWithFakeHALCameraAutoQREnabled",
 		Desc:            "Set up test bridge for CCA with Auto QR Code detection for a power Test",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "dorahkim@chromium.org"},
+		BugComponent:    "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Impl:            &fixture{powerTest: true, useCameraType: testutil.UseFakeHALCamera, enableFeatures: []feature{"CameraAppAutoQRDetection"}},
 		SetUpTimeout:    powerSetUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
@@ -320,6 +343,7 @@ func init() {
 		Name:            "ccaLaunchedWithDigitalZoomAndSuperRes",
 		Desc:            "Launched CCA with digital zoom and super resolution enabled",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "kamchonlathorn@chromium.org"},
+		BugComponent:    "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Impl:            &fixture{launchCCA: true, forceEnableSuperRes: true, enableFeatures: []feature{digitalZoom}},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
@@ -332,6 +356,7 @@ func init() {
 		Name:            "ccaPowerTestWithDigitalZoomSuperResEnabled",
 		Desc:            "Set up test bridge for CCA with digital zoom and super resolution enabled for a power Test",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "kamchonlathorn@chromium.org"},
+		BugComponent:    "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Impl:            &fixture{powerTest: true, forceEnableSuperRes: true, enableFeatures: []feature{digitalZoom}},
 		SetUpTimeout:    powerSetUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,

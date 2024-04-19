@@ -48,6 +48,7 @@ func init() {
 		Name:            "cameraboxFixture",
 		Desc:            "Set up camera box fixture",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "xinggu@google.com"},
+		BugComponent:    "b:167281", // ChromeOS > Platform > Technologies > Camera
 		Impl:            &fixture{},
 		Vars:            []string{"chart"},
 		SetUpTimeout:    5 * time.Second,
