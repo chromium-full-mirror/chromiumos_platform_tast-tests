@@ -55,6 +55,10 @@ func Wrapper(ctx context.Context, s *testing.State) {
 
 	for _, module := range modules {
 		name := kunitName(module)
+		unload(ctx, d, name)
+	}
+	for _, module := range modules {
+		name := kunitName(module)
 		if err := runKunit(ctx, d, name); err != nil {
 			s.Fatal("Failed to run kunit: ", err)
 		}
@@ -124,8 +128,56 @@ func runKunit(ctx context.Context, d *dut.DUT, name string) error {
 }
 
 func kunitResult(ctx context.Context, d *dut.DUT, name string) ([]string, error) {
+	rpaths := resultPaths(ctx, d)
+	if len(rpaths) == 0 {
+		// The test run was not a kunit test. Nothing to do.
+		testing.ContextLogf(ctx, "[%v] found to not be a kunit test", name)
+		return nil, nil
+	}
+	testing.ContextLogf(ctx, "Results dir for [%v]: [%v]", name, rpaths)
+	for _, rpath := range rpaths {
+		output, err := d.Conn().CommandContext(ctx, "cat", rpath).Output()
+		if err != nil {
+			return nil, errors.Wrapf(err, "cat [%v]", rpath)
+		}
+		testing.ContextLog(ctx, string(output))
+	}
 	// TODO(b/332535556): Not implemented.
+	// The test results from kunit look as follows:
+	//    # Subtest: drm_buddy
+	//    1..6
+	// # drm_buddy: pass:6 fail:0 skip:0 total:6
+	// # Totals: pass:6 fail:0 skip:0 total:6
+	//    ok 1 - igt_buddy_alloc_limit
+	//    ok 2 - igt_buddy_alloc_range
+	//    ok 3 - igt_buddy_alloc_optimistic
+	//    ok 4 - igt_buddy_alloc_pessimistic
+	//    ok 5 - igt_buddy_alloc_smoke
+	//    ok 6 - igt_buddy_alloc_pathological
+	// ok 1 - drm_buddy
 	return nil, nil
+}
+
+// resultPaths returns paths to the results files corresponding to the latest run kunit test.
+// Results directories are created under /sys/kernel/debug/kunit/<test_name>. The |test_name| does not follow
+// a consistent naming pattern. Hence, we look at the directories under /sys/kernel/debug/kunit and determine
+// |test_name| at runtime.
+func resultPaths(ctx context.Context, d *dut.DUT) []string {
+	dir, err := d.Conn().CommandContext(ctx, "ls", "/sys/kernel/debug/kunit").Output()
+	if err != nil {
+		// Test was not kunit, ignore.
+		testing.ContextLog(ctx, "Unable to list /sys/kernel/debug/kunit")
+		return nil
+	}
+	tdirs := strings.Fields(strings.Trim(string(dir), "\n"))
+	if len(tdirs) == 0 {
+		return nil
+	}
+	var paths []string
+	for _, tdir := range tdirs {
+		paths = append(paths, filepath.Join("/sys/kernel/debug/kunit", tdir, "results"))
+	}
+	return paths
 }
 
 func unload(ctx context.Context, d *dut.DUT, name string) error {
