@@ -39,8 +39,9 @@ func init() {
 		Name: ProxyFixtBootToLoginScreen,
 		Desc: "The fixture is for proxy tests; boot the DUT to log-in screen, configure an AP, connect the AP and initiate the proxy-settings service client",
 		Contacts: []string{
-			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
+			"cros-connectivity@google.com",
 		},
+		BugComponent:    "b:1318544",                     // ChromeOS > Software > System Services > Connectivity > General
 		SetUpTimeout:    15*time.Second + 2*loginTimeout, // Boot the DUT to sign-in screen requires log-in, log-out and then no-log-in.
 		PreTestTimeout:  connectToNetworkTimeout,
 		PostTestTimeout: 15 * time.Second,
@@ -58,8 +59,9 @@ func init() {
 		Name: ProxyFixtBootToOOBEScreen,
 		Desc: "The fixture is for proxy tests; boot the DUT to log-in screen, configure an AP, connect the AP and initiate the proxy-settings service client",
 		Contacts: []string{
-			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
+			"cros-connectivity@google.com",
 		},
+		BugComponent:    "b:1318544", // ChromeOS > Software > System Services > Connectivity > General
 		SetUpTimeout:    15 * time.Second,
 		PreTestTimeout:  connectToNetworkTimeout,
 		PostTestTimeout: 15 * time.Second,
