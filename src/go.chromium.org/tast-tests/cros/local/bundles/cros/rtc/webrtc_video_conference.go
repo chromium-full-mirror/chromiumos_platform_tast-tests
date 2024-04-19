@@ -102,6 +102,40 @@ func init() {
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
+				Name: "4p_blur",
+				Val: webrtc.VCTestParams{
+					NumPeople:   4,
+					Blur:        true,
+					BrowserType: browser.TypeAsh,
+				},
+				Fixture:           pre.ChromeRTCFixture(),
+				ExtraSoftwareDeps: []string{"camera_feature_effects"},
+				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
+			},
+			{
+				Name: "4p_relight",
+				Val: webrtc.VCTestParams{
+					NumPeople:   4,
+					Relight:     true,
+					BrowserType: browser.TypeAsh,
+				},
+				Fixture:           pre.ChromeRTCFixture(),
+				ExtraSoftwareDeps: []string{"camera_feature_effects"},
+				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
+			},
+			{
+				Name: "4p_blur_relight",
+				Val: webrtc.VCTestParams{
+					NumPeople:   4,
+					Blur:        true,
+					Relight:     true,
+					BrowserType: browser.TypeAsh,
+				},
+				Fixture:           pre.ChromeRTCFixture(),
+				ExtraSoftwareDeps: []string{"camera_feature_effects"},
+				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
+			},
+			{
 				Name: "4p_present",
 				Val: webrtc.VCTestParams{
 					NumPeople:   4,
@@ -168,6 +202,20 @@ func init() {
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
+				Name: "4p_present_text_blur_relight",
+				Val: webrtc.VCTestParams{
+					NumPeople:   4,
+					Text:        true,
+					Present:     true,
+					Blur:        true,
+					Relight:     true,
+					BrowserType: browser.TypeAsh,
+				},
+				Fixture:           pre.ChromeRTCFixture(),
+				ExtraSoftwareDeps: []string{"camera_feature_effects"},
+				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
+			},
+			{
 				Name: "4p_mouse",
 				Val: webrtc.VCTestParams{
 					NumPeople:   4,
@@ -199,6 +247,20 @@ func init() {
 				},
 				Fixture:   pre.ChromeRTCFixture(),
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
+			},
+			{
+				Name: "4p_present_mouse_blur_relight",
+				Val: webrtc.VCTestParams{
+					NumPeople:   4,
+					Mouse:       true,
+					Present:     true,
+					Blur:        true,
+					Relight:     true,
+					BrowserType: browser.TypeAsh,
+				},
+				Fixture:           pre.ChromeRTCFixture(),
+				ExtraSoftwareDeps: []string{"camera_feature_effects"},
+				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
 				Name: "4p_lacros",

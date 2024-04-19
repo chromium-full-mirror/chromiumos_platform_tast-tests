@@ -9,7 +9,9 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/dlc"
+	"go.chromium.org/tast-tests/cros/local/videoconferencing/effects"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // setUpAudio configures the audio server according to noiseCancellation and styleTransfer.
@@ -36,4 +38,18 @@ func setUpAudio(ctx context.Context, noiseCancellation, styleTransfer bool) erro
 		return errors.Wrap(err, "cras.SetStyleTransferEnabled")
 	}
 	return nil
+}
+
+// enableCameraEffects turns on the platform video conferencing effects (platform blurring and relighting).
+// The effects are reset when the returned function is invoked.
+func enableCameraEffects(ctx context.Context, blur, relight bool) (func(), error) {
+	resetEffects, err := effects.ApplyPlatformEffects(ctx, blur, relight, effects.KAuto)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to enable platform blurring")
+	}
+	return func() {
+		if err := resetEffects(ctx); err != nil {
+			testing.ContextLog(ctx, "Failed to reset platform effects: ", err)
+		}
+	}, nil
 }

@@ -59,6 +59,10 @@ type VCTestParams struct {
 	NoiseCancellation bool
 	// If StyleTransfer is true, enable input style transfer on the platform.
 	StyleTransfer bool
+	// If Blur is true, enable platform blurring.
+	Blur bool
+	// If Relight is true, enable platform relighting.
+	Relight bool
 	// BrowserType represents chrome browser type that the test runs with.
 	BrowserType browser.Type
 }
@@ -150,6 +154,20 @@ func runNonStep(ctx context.Context, tconn, bTconn *chrome.TestConn, s *testing.
 	if err := conn.Eval(ctx, "VC.showCameraPreview()", nil); err != nil {
 		return errors.Wrap(err, "failed showing camera preview")
 	}
+
+	if params.Blur || params.Relight {
+		// Ensure that camera effects reset.
+		effectsCtx := ctx
+		var cancel context.CancelFunc
+		ctx, cancel = ctxutil.Shorten(ctx, time.Second)
+		defer cancel()
+		resetEffects, err := enableCameraEffects(effectsCtx, params.Blur, params.Relight)
+		if err != nil {
+			return err
+		}
+		defer resetEffects()
+	}
+
 	if err := conn.Eval(ctx, fmt.Sprintf("VC.holdCall(%d, %t)", params.NumPeople, params.Present), nil); err != nil {
 		return errors.Wrapf(err, "failed holding %dp call", params.NumPeople)
 	}
