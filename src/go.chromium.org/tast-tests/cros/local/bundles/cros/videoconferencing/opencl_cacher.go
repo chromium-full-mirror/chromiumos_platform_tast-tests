@@ -11,8 +11,8 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	upstartcommon "go.chromium.org/tast-tests/cros/common/upstart"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/effects"
 	"go.chromium.org/tast-tests/cros/local/upstart"
+	"go.chromium.org/tast-tests/cros/local/videoconferencing/effects"
 	"go.chromium.org/tast-tests/cros/local/videoconferencing/fixture"
 
 	"go.chromium.org/tast/core/testing"
