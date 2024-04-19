@@ -284,6 +284,13 @@ func Init(ctx context.Context, cr *chrome.Chrome, outDir string, appLauncher tes
 	if err := app.WaitForState(ctx, "view-camera", true); err != nil {
 		return nil, errors.Wrap(err, "failed to wait for view-camera becomes true")
 	}
+
+	// TODO(kamchonlathorn): Use state, e.g. HIDE_FLOATING_UI_FOR_TESTING, to
+	// hide the dialog in CCA instead.
+	if err := app.DisableSuperResIntroDialog(ctx); err != nil {
+		testing.ContextLog(ctx, "Failed to force disable super resolution intro dialog")
+	}
+
 	testing.ContextLog(ctx, "CCA window is ready")
 	return app, nil
 }
@@ -1703,6 +1710,40 @@ func (a *App) ZoomInFromPTZPanel(ctx context.Context) error {
 
 	if err = a.WaitForState(ctx, "view-ptz-panel", false); err != nil {
 		return errors.Wrap(err, "failed to wait for PTZ panel to close")
+	}
+
+	return nil
+}
+
+// DisableSuperResIntroDialog disables the super resolution introduction dialog
+// if exists.
+func (a *App) DisableSuperResIntroDialog(ctx context.Context) error {
+	visible, err := a.State(ctx, "view-super-res-intro-dialog")
+	if err != nil {
+		return err
+	}
+	if !visible {
+		return nil
+	}
+
+	// Press Esc to cancel the dialog.
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
+	// Create keyboard to close the PTZ panel.
+	keyboard, err := input.Keyboard(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to create a keyboard")
+	}
+	defer keyboard.Close(cleanupCtx)
+
+	if err := keyboard.Accel(ctx, "Esc"); err != nil {
+		return errors.Wrap(err, "failed to close the PTZ panel")
+	}
+
+	if err = a.WaitForState(ctx, "view-super-res-intro-dialog", false); err != nil {
+		return errors.Wrap(err, "failed to wait for the dialog to close")
 	}
 
 	return nil
