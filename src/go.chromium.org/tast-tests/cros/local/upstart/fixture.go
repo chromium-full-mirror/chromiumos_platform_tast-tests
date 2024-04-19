@@ -26,6 +26,8 @@ func init() {
 		Contacts: []string{
 			"project-bolton@google.com",
 		},
+		// ChromeOS > Platform > Services > Printing
+		BugComponent:    "b:167231",
 		Impl:            &ensureUIFixture{running: true},
 		SetUpTimeout:    UIRestartTimeout,
 		TearDownTimeout: UIRestartTimeout,

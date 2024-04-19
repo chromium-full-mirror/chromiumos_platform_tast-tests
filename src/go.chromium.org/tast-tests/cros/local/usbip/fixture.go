@@ -49,9 +49,11 @@ func init() {
 		PostTestTimeout: UsbipServerTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name:            "virtualUsbPrinterModulesLoaded",
-		Desc:            "Kernel modules necessary for `virtual-usb-printer` loaded",
-		Contacts:        []string{"project-bolton@google.com"},
+		Name:     "virtualUsbPrinterModulesLoaded",
+		Desc:     "Kernel modules necessary for `virtual-usb-printer` loaded",
+		Contacts: []string{"project-bolton@google.com"},
+		// ChromeOS > Platform > Services > Printing
+		BugComponent:    "b:167231",
 		Impl:            &LoadModuleFixture{},
 		SetUpTimeout:    UsbipModulesLoadedTimeout,
 		TearDownTimeout: UsbipModulesLoadedTimeout,
@@ -59,9 +61,11 @@ func init() {
 		PostTestTimeout: UsbipModulesLoadedTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name:            "virtualUsbPrinterModulesLoadedWithChromeLoggedIn",
-		Desc:            "Kernel modules necessary for `virtual-usb-printer` loaded (with `chromeLoggedIn` fixture)",
-		Contacts:        []string{"project-bolton@google.com"},
+		Name:     "virtualUsbPrinterModulesLoadedWithChromeLoggedIn",
+		Desc:     "Kernel modules necessary for `virtual-usb-printer` loaded (with `chromeLoggedIn` fixture)",
+		Contacts: []string{"project-bolton@google.com"},
+		// ChromeOS > Platform > Services > Printing
+		BugComponent:    "b:167231",
 		Impl:            &LoadModuleFixture{},
 		Parent:          "chromeLoggedIn",
 		SetUpTimeout:    UsbipModulesLoadedTimeout,
@@ -70,9 +74,11 @@ func init() {
 		PostTestTimeout: UsbipModulesLoadedTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name:            "virtualUsbPrinterModulesLoadedWithDriveFsStarted",
-		Desc:            "Kernel modules necessary for `virtual-usb-printer` loaded (with `chromeLoggedInWithGaia` fixture)",
-		Contacts:        []string{"project-bolton@google.com"},
+		Name:     "virtualUsbPrinterModulesLoadedWithDriveFsStarted",
+		Desc:     "Kernel modules necessary for `virtual-usb-printer` loaded (with `chromeLoggedInWithGaia` fixture)",
+		Contacts: []string{"cros-peripherals@google.com"},
+		// ChromeOS > Platform > Services > Scanning
+		BugComponent:    "b:860616",
 		Impl:            &LoadModuleFixture{},
 		Parent:          "driveFsStarted",
 		SetUpTimeout:    UsbipModulesLoadedTimeout + drivefs.DriveFsSetupAndTearDownTimeout,
@@ -82,9 +88,11 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:            "virtualUsbPrinterModulesLoadedWithLacros",
-		Desc:            "Kernel modules necessary for `virtual-usb-printer` loaded (with `lacros` fixture)",
-		Contacts:        []string{"project-bolton@google.com"},
+		Name:     "virtualUsbPrinterModulesLoadedWithLacros",
+		Desc:     "Kernel modules necessary for `virtual-usb-printer` loaded (with `lacros` fixture)",
+		Contacts: []string{"project-bolton@google.com"},
+		// ChromeOS > Platform > Services > Printing
+		BugComponent:    "b:167231",
 		Impl:            &LoadModuleFixture{},
 		Parent:          "lacros",
 		SetUpTimeout:    UsbipModulesLoadedTimeout,
@@ -93,9 +101,11 @@ func init() {
 		PostTestTimeout: UsbipModulesLoadedTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name:            "virtualUsbPrinterModulesLoadedWithArcBooted",
-		Desc:            "Kernel modules necessary for `virtual-usb-printer` loaded (with `arcBooted` fixture)",
-		Contacts:        []string{"project-bolton@google.com"},
+		Name:     "virtualUsbPrinterModulesLoadedWithArcBooted",
+		Desc:     "Kernel modules necessary for `virtual-usb-printer` loaded (with `arcBooted` fixture)",
+		Contacts: []string{"project-bolton@google.com"},
+		// ChromeOS > Software > ARC++ > Printing
+		BugComponent:    "b:613731",
 		Impl:            &LoadModuleFixture{},
 		Parent:          "arcBooted",
 		SetUpTimeout:    UsbipModulesLoadedTimeout,
@@ -104,9 +114,11 @@ func init() {
 		PostTestTimeout: UsbipModulesLoadedTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name:            "virtualUsbPrinterModulesLoadedWithChromePolicyLoggedIn",
-		Desc:            "Kernel modules necessary for `virtual-usb-printer` loaded (with `chromePolicyLoggedIn` fixture)",
-		Contacts:        []string{"project-bolton@google.com"},
+		Name:     "virtualUsbPrinterModulesLoadedWithChromePolicyLoggedIn",
+		Desc:     "Kernel modules necessary for `virtual-usb-printer` loaded (with `chromePolicyLoggedIn` fixture)",
+		Contacts: []string{"chromeos-commercial-printing@google.com"},
+		// ChromeOS > Software > Commercial (Enterprise) > Printing
+		BugComponent:    "b:1111614",
 		Impl:            &LoadModuleFixture{},
 		Parent:          "chromePolicyLoggedIn",
 		SetUpTimeout:    UsbipModulesLoadedTimeout,
@@ -115,9 +127,11 @@ func init() {
 		PostTestTimeout: UsbipModulesLoadedTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name:            "virtualUsbPrinterModulesLoadedWithLacrosPolicyLoggedIn",
-		Desc:            "Kernel modules necessary for `virtual-usb-printer` loaded (with `lacrosPolicyLoggedIn` fixture)",
-		Contacts:        []string{"project-bolton@google.com"},
+		Name:     "virtualUsbPrinterModulesLoadedWithLacrosPolicyLoggedIn",
+		Desc:     "Kernel modules necessary for `virtual-usb-printer` loaded (with `lacrosPolicyLoggedIn` fixture)",
+		Contacts: []string{"chromeos-commercial-printing@google.com"},
+		// ChromeOS > Software > Commercial (Enterprise) > Printing
+		BugComponent:    "b:1111614",
 		Impl:            &LoadModuleFixture{},
 		Parent:          "lacrosPolicyLoggedIn",
 		SetUpTimeout:    UsbipModulesLoadedTimeout,
@@ -126,9 +140,11 @@ func init() {
 		PostTestTimeout: UsbipModulesLoadedTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name:            "virtualUSBPrinterModulesLoadedWithChromeEnrolledLoggedIn",
-		Desc:            "Kernel modules necessary for `virtual-usb-printer` loaded (with `chromeEnrolledLoggedIn` fixture)",
-		Contacts:        []string{"project-bolton@google.com"},
+		Name:     "virtualUSBPrinterModulesLoadedWithChromeEnrolledLoggedIn",
+		Desc:     "Kernel modules necessary for `virtual-usb-printer` loaded (with `chromeEnrolledLoggedIn` fixture)",
+		Contacts: []string{"chromeos-commercial-printing@google.com"},
+		// ChromeOS > Software > Commercial (Enterprise) > Printing
+		BugComponent:    "b:1111614",
 		Impl:            &LoadModuleFixture{},
 		Parent:          "chromeEnrolledLoggedIn",
 		SetUpTimeout:    UsbipModulesLoadedTimeout,
@@ -137,9 +153,11 @@ func init() {
 		PostTestTimeout: UsbipModulesLoadedTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name:            "virtualUSBPrinterModulesLoadedWithLacrosEnrolledLoggedIn",
-		Desc:            "Kernel modules necessary for `virtual-usb-printer` loaded (with `lacrosEnrolledLoggedIn` fixture)",
-		Contacts:        []string{"project-bolton@google.com"},
+		Name:     "virtualUSBPrinterModulesLoadedWithLacrosEnrolledLoggedIn",
+		Desc:     "Kernel modules necessary for `virtual-usb-printer` loaded (with `lacrosEnrolledLoggedIn` fixture)",
+		Contacts: []string{"chromeos-commercial-printing@google.com"},
+		// ChromeOS > Software > Commercial (Enterprise) > Printing
+		BugComponent:    "b:1111614",
 		Impl:            &LoadModuleFixture{},
 		Parent:          "lacrosEnrolledLoggedIn",
 		SetUpTimeout:    UsbipModulesLoadedTimeout,
