@@ -242,6 +242,8 @@ func init() {
 		Name:     "lacrosOsFeedback",
 		Desc:     "Lacros Chrome from a pre-built image with OsFeedback enabled",
 		Contacts: []string{"wangdanny@google.com", "cros-feedback-app@google.com"},
+		// ChromeOS > Data > Engineering > Feedback
+		BugComponent: "b:1033360",
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return NewConfig(ChromeOptions(chrome.EnableFeatures("SkipSendingFeedbackReportInTastTests"))).Opts()
 		}),
