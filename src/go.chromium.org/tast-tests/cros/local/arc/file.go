@@ -142,6 +142,10 @@ func MountSDCardPartitionOnHostWithSSHFS(ctx context.Context, user string) error
 	if err != nil {
 		return errors.Wrap(err, "failed to get Android data dir")
 	}
+	mountPath := filepath.Join(androidDataDir, "/data/media/0")
+	if err := os.MkdirAll(mountPath, 0700); err != nil {
+		return errors.Wrapf(err, "failed to ensure the existence of the mount target %q", mountPath)
+	}
 	cid, err := getARCVMCID(ctx, user)
 	if err != nil {
 		return errors.Wrap(err, "failed to get ARCVM CID")
@@ -151,8 +155,7 @@ func MountSDCardPartitionOnHostWithSSHFS(ctx context.Context, user string) error
 	cmd := testexec.CommandContext(
 		// Use nonempty option since /home/root/<hash>/android-data/data/media/0 usually has
 		// an empty Download directory.
-		ctx, "sshfs", "-o", fmt.Sprintf("nonempty,vsock=%d:7780", cid), "unused:",
-		filepath.Join(androidDataDir, "/data/media/0"))
+		ctx, "sshfs", "-o", fmt.Sprintf("nonempty,vsock=%d:7780", cid), "unused:", mountPath)
 	return cmd.Run(testexec.DumpLogOnError)
 }
 
@@ -309,13 +312,16 @@ func MountVirtioBlkDataDiskImageReadOnlyIfUsed(ctx context.Context, user string)
 // MountVirtioBlkDataDiskImageReadOnlyWithoutSync mounts |diskPath|, a disk image of virtio-blk
 // /data, on the host's /home/root/<hash>/android-data/data as read-only.
 func MountVirtioBlkDataDiskImageReadOnlyWithoutSync(ctx context.Context, user, diskPath string) (func(context.Context), error) {
-	rootCryptDir, err := cryptohome.SystemPath(ctx, user)
+	androidDataDir, err := AndroidDataDir(ctx, user)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get cryptohome root dir")
+		return nil, errors.Wrap(err, "failed to get Android data dir")
+	}
+	hostMountPath := filepath.Join(androidDataDir, "data")
+	if err := os.MkdirAll(hostMountPath, 0700); err != nil {
+		return nil, errors.Wrapf(err, "failed to ensure the existence of the mount target %q", hostMountPath)
 	}
 
 	// Mount virtio-blk disk image.
-	hostMountPath := filepath.Join(rootCryptDir, "/android-data/data")
 	mountCmd := testexec.CommandContext(ctx, "mount", "-o", "loop,ro,noload", diskPath, hostMountPath)
 	if err := mountCmd.Run(testexec.DumpLogOnError); err != nil {
 		return nil, errors.Wrap(err, "failed to mount virtio-blk Android /data disk image on host")
