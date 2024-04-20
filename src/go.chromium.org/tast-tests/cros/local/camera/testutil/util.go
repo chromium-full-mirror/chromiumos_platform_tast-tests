@@ -16,9 +16,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/shirou/gopsutil/v3/process"
+
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/chromeproc"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -294,4 +297,62 @@ func GetMaxCameraResolution(ctx context.Context) (Resolution, error) {
 		}
 	}
 	return result, nil
+}
+
+// GetVideoCaptureServiceProcess returns video capture service process.
+func GetVideoCaptureServiceProcess(ctx context.Context) (*process.Process, error) {
+	const videoCaptureUtilProcName = "video_capture.mojom.VideoCaptureService"
+	procs, err := chromeproc.GetUtilityProcesses()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get utility processes")
+	}
+
+	re := regexp.MustCompile(` --?utility-sub-type=([\w\.]+)(?: |$)`)
+
+	for _, proc := range procs {
+		cmdline, err := proc.Cmdline()
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get cmdline")
+		}
+
+		matches := re.FindStringSubmatch(cmdline)
+		if len(matches) < 2 {
+			continue
+		}
+
+		procName := matches[1]
+		if procName == videoCaptureUtilProcName {
+			return proc, nil
+		}
+	}
+
+	return nil, errors.New("failed to find video capture service process")
+}
+
+// KillVideoCaptureServiceProcess kills video capture service process. Ash will launch a
+// new video capture service process after the old process is killed or crashed.
+func KillVideoCaptureServiceProcess(ctx context.Context) error {
+	oldProc, err := GetVideoCaptureServiceProcess(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to find video capture service before killing")
+	}
+	oldPid := oldProc.Pid
+
+	if err := oldProc.Kill(); err != nil {
+		return errors.Wrap(err, "failed to execute kill command")
+	}
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		newProc, err := GetVideoCaptureServiceProcess(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to find new video capture service after killing")
+		}
+		newPid := newProc.Pid
+		if oldPid == newPid {
+			return errors.New("failed to kill old video capture service")
+		}
+		return nil
+	}, &testing.PollOptions{Interval: 1 * time.Second, Timeout: 3 * time.Second}); err != nil {
+		return errors.Wrap(err, "failed to launch a new video capture service")
+	}
+	return nil
 }

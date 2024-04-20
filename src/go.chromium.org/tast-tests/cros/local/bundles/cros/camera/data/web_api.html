@@ -49,6 +49,26 @@ async function testImageCaptureAPI() {
   }
 }
 
+async function testEnumerateDevices() {
+  addLog('testEnumerateDevices');
+  try {
+    await loadScript("third_party/ssim.js");
+    for (const device of await navigator.mediaDevices.enumerateDevices()) {
+      if (device.kind === "videoinput") {
+        results.push(device.deviceId);
+      }
+    }
+    if (results.length === 0) {
+      throw new Error("No video input devices found");
+    }
+  } catch (error) {
+    gotEnumerateDevicesError(error);
+    throw error;
+  } finally {
+    reportTestDone();
+  }
+}
+
 function loadScript(src) {
   return new Promise(function(resolve, reject) {
     let script = document.createElement('script');

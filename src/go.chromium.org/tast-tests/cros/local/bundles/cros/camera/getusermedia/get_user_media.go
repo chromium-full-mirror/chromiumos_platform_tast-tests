@@ -261,3 +261,30 @@ func RunWebCameraApp(ctx context.Context, fileSystem http.FileSystem, cr ChromeI
 
 	return nil
 }
+
+// RunEnumerateDevices runs the enumerate devices test in /data/web_api.html.
+// It will return error when there is no video input devices found.
+func RunEnumerateDevices(ctx context.Context, fileSystem http.FileSystem, cr ChromeInterface, verbose VerboseLoggingMode) error {
+	if verbose == VerboseLogging {
+		vl, err := logging.NewVideoLogger()
+		if err != nil {
+			return errors.New("failed to set values for verbose logging")
+		}
+		defer vl.Close()
+	}
+
+	var deviceIds []string
+	var logs []string
+	err := RunTest(ctx, fileSystem, cr, "web_api.html", "testEnumerateDevices()", &deviceIds, &logs)
+
+	testing.ContextLogf(ctx, "Device Ids: %+v", deviceIds)
+
+	if err != nil {
+		testing.ContextLog(ctx, "Logs collected from JS:")
+		for _, log := range logs {
+			testing.ContextLog(ctx, log)
+		}
+		return err
+	}
+	return nil
+}
