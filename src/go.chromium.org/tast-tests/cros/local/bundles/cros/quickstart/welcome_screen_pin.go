@@ -1,4 +1,4 @@
-// Copyright 2022 The ChromiumOS Authors
+// Copyright 2024 The ChromiumOS Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -7,27 +7,30 @@ package quickstart
 
 import (
 	"context"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome/crossdevice"
+	"go.chromium.org/tast-tests/cros/local/chrome/crossdevice/quickstart"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast-tests/cros/local/input"
 
 	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SingleAccountOnboarding,
+		Func:         WelcomeScreenPIN,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test Quick Start onboarding flow with one user account on the phone",
+		Desc:         "Test Quick Start starting on the Welcome Screen with PIN verification",
 		Contacts: []string{
 			"chromeos-cross-device-eng@google.com",
 			"hansenmichael@google.com",
 			"chromeos-sw-engprod@google.com",
 		},
 		BugComponent: "b:1155263",
-		// Attr:         []string{"group:cross-device"},
+		Attr:         []string{"group:cross-device"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "crossdeviceNoSignIn",
 		VarDeps: []string{
@@ -36,7 +39,7 @@ func init() {
 	})
 }
 
-func SingleAccountOnboarding(ctx context.Context, s *testing.State) {
+func WelcomeScreenPIN(ctx context.Context, s *testing.State) {
 	androidDevice := s.FixtValue().(*crossdevice.FixtData).AndroidDevice
 	if androidDevice == nil {
 		s.Fatal("Fixture not associated with an android device")
@@ -51,22 +54,35 @@ func SingleAccountOnboarding(ctx context.Context, s *testing.State) {
 	}
 	defer oobeConn.Close()
 
-	// Set up a PIN on the phone (required for Quick Start)
+	// Set up a lockscreen PIN on the phone (required for Quick Start)
 	if err := androidDevice.SetPIN(ctx); err != nil {
 		s.Fatal("Failed to set a lockscreen PIN on the phone: ", err)
 	}
 	defer androidDevice.ClearPIN(ctx)
 
-	// Begin the UI flow
+	// Wait for the Welcome Screen to appear
 	s.Log("Waiting for the welcome screen")
 	if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.WelcomeScreen.isVisible()"); err != nil {
 		s.Fatal("Failed to wait for the welcome screen to be visible: ", err)
 	}
-	s.Log("Navigating to the quickstart screen")
 	tconn, err := cr.SigninProfileTestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create test API connection: ", err)
 	}
+
+	// Enable ChromeVox via keyboard shortcut
+	kw, err := input.Keyboard(ctx)
+	if err != nil {
+		s.Fatal("Failed to get keyboard handle: ", err)
+	}
+	defer kw.Close(ctx)
+	shortcut := "Ctrl+Alt+Z"
+	if err := kw.Accel(ctx, shortcut); err != nil {
+		s.Fatal("Failed to enable ChromeVox: ", err)
+	}
+
+	// Begin the UI flow and accept the halfsheet prompt on the phone
+	s.Log("Navigating to the quickstart screen")
 	ui := uiauto.New(tconn)
 	setupButton := nodewith.NameContaining("Android phone").Role(role.Button)
 	if err := ui.LeftClick(setupButton)(ctx); err != nil {
@@ -77,35 +93,47 @@ func SingleAccountOnboarding(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to accept fast pair half sheet: ", err)
 	}
 
-	// Wait for the PIN verification screen on the phone and enter the PIN
-	if err := androidDevice.WaitForPINVerificationPrompt(ctx); err != nil {
-		s.Fatal("Failed to wait for PIN verification screen on the phone: ", err)
+	// Get the verification PIN from the phone
+	s.Log("Waiting for PIN verification screen")
+	pinVerificationScreenTitle := nodewith.NameContaining("Verify the code on your Android phone").Role(role.Heading)
+	if err := ui.WithTimeout(60 * time.Second).WaitUntilExists(pinVerificationScreenTitle)(ctx); err != nil {
+		s.Fatal("Failed to wait for PIN verification screen to appear: ", err)
+	}
+	phonePIN, err := androidDevice.ExtractQuickStartVerificationPIN(ctx)
+	if err != nil {
+		s.Fatal("Failed to extract the verification PIN from the phone: ", err)
 	}
 
+	// Ensure each digit from the PIN on the phone side appears on the Chromebook
+	// screen. This is close enough given the limitations of the HTML on this
+	// screen.
+	for _, digit := range phonePIN {
+		digitNode := nodewith.Name(string(digit)).Role(role.StaticText).First()
+		if err := ui.WaitUntilExists(digitNode)(ctx); err != nil {
+			s.Fatal("PIN on Chromebook does not match: ", err)
+		}
+	}
+	if err := androidDevice.TapNext(ctx); err != nil {
+		s.Fatal("Failed to confirm Google Account: ", err)
+	}
+
+	// Clear the lockscreen challenge on the phone
+	if err := androidDevice.WaitForPINChallenge(ctx); err != nil {
+		s.Fatal("Failed to wait for lockscreen PIN challenge on the phone: ", err)
+	}
 	if err := androidDevice.EnterPIN(ctx); err != nil {
-		s.Fatal("Failed to enter PIN on the phone: ", err)
+		s.Fatal("Failed to enter lockscreen PIN on the phone: ", err)
 	}
 
-	// Wait for and click "For personal use" button
+	// Select "For personal use" on the Chromebook
 	s.Log("Waiting for user creation screen")
-	if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.UserCreationScreen.isVisible()"); err != nil {
-		s.Fatal("Failed to wait for the user creation screen to be visible: ", err)
+	if err := quickstart.SelectForPersonalUse(ctx, oobeConn, ui); err != nil {
+		s.Fatal("Failed to select 'For personal use' on user creation screen: ", err)
 	}
 
-	s.Log("Selecting personal Google Account")
-	personalUseButton := nodewith.NameContaining("personal use").Role(role.RadioButton)
-	if err := ui.LeftClick(personalUseButton)(ctx); err != nil {
-		s.Fatal("Failed to click the personal Google Account radio button: ", err)
-	}
-
-	nextButton := nodewith.Name("Next").Role(role.Button)
-	if err := ui.LeftClick(nextButton)(ctx); err != nil {
-		s.Fatal("Failed to click Next on the user creation screen: ", err)
-	}
-
-	// Wait for the account confirmation screen on the phone and click the "Next" button
+	// Confirm the Gaia account on the phone
 	s.Log("Waiting for account confirmation screen")
-	if err := androidDevice.ConfirmGoogleAccount(ctx); err != nil {
+	if err := androidDevice.TapNext(ctx); err != nil {
 		s.Fatal("Failed to confirm Google Account: ", err)
 	}
 

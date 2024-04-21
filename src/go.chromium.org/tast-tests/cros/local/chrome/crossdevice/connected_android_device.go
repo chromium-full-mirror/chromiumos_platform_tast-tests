@@ -148,8 +148,8 @@ func (c *AndroidDevice) SetPIN(ctx context.Context) error {
 	return nil
 }
 
-// WaitForPINVerificationPrompt waits for the PIN verification challenge screen.
-func (c *AndroidDevice) WaitForPINVerificationPrompt(ctx context.Context) error {
+// WaitForPINChallenge waits for the lockscreen PIN prompt.
+func (c *AndroidDevice) WaitForPINChallenge(ctx context.Context) error {
 	d, err := ui.NewDeviceWithRetry(ctx, c.Device)
 	if err != nil {
 		return errors.Wrap(err, "failed initializing UI automator")
@@ -691,9 +691,29 @@ func (c *AndroidDevice) AcceptFastPairHalfsheet(ctx context.Context) error {
 	return nil
 }
 
-// ConfirmGoogleAccount waits for the appropriate screen to appear and
-// then clicks the "Next" button on the account confirmation screen in Quick Start.
-func (c *AndroidDevice) ConfirmGoogleAccount(ctx context.Context) error {
+// ExtractQuickStartVerificationPIN finds the Quick Start verification PIN and returns it as a string.
+func (c *AndroidDevice) ExtractQuickStartVerificationPIN(ctx context.Context) (string, error) {
+	d, err := ui.NewDeviceWithRetry(ctx, c.Device)
+	if err != nil {
+		return "", errors.Wrap(err, "failed initializing UI automator")
+	}
+	defer d.Close(ctx)
+
+	pinElement := d.Object(ui.ResourceID("com.google.android.gms:id/pin"))
+	if err := pinElement.WaitForExists(ctx, 3*time.Second); err != nil {
+		return "", errors.Wrap(err, "failed to find Quick Start verification PIN on the phone")
+	}
+
+	pin, err := pinElement.GetText(ctx)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to get text from PIN element on the phone")
+	}
+
+	return strings.ReplaceAll(pin, " ", ""), nil
+}
+
+// TapNext waits for a "Next" button to appear and taps it.
+func (c *AndroidDevice) TapNext(ctx context.Context) error {
 	d, err := ui.NewDeviceWithRetry(ctx, c.Device)
 	if err != nil {
 		return errors.Wrap(err, "failed initializing UI automator")
