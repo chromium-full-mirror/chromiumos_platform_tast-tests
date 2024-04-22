@@ -66,6 +66,9 @@ public class MainActivity extends Activity {
                                                         !devicePolicyManager
                                                                 .getScreenCaptureDisabled(null))),
                         Map.entry(
+                                "shareLocationDisabled",
+                                () -> isRestrictionUnapplied(UserManager.DISALLOW_SHARE_LOCATION)),
+                        Map.entry(
                                 "cameraDisabled",
                                 () ->
                                         isOperationAllowed(

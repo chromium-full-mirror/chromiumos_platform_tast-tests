@@ -9,6 +9,7 @@
         <item>cameraDisabled</item>
         <item>printingDisabled</item>
         <item>screenCaptureDisabled</item>
+        <item>shareLocationDisabled</item>
         <item>setWallpaper</item>
         <item>unmuteMicrophoneDisabled</item>
     </string-array>

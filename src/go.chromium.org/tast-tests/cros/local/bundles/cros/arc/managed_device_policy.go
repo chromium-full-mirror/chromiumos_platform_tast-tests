@@ -47,6 +47,7 @@ func init() {
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.ArcEnabled{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.AudioCaptureAllowed{}, pci.VerifiedFunctionalityOS),
+			pci.SearchFlag(&policy.DefaultGeolocationSetting{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.DisableScreenshots{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.PrintingEnabled{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.VideoCaptureAllowed{}, pci.VerifiedFunctionalityOS),
@@ -99,6 +100,7 @@ func ManagedDevicePolicy(ctx context.Context, s *testing.State) {
 		"setWallpaper": func() (policy.Policy, func(ctx context.Context), error) {
 			return createWallpaperPolicy(ctx, s.DataPath("wallpaper_image.jpeg"))
 		},
+		"shareLocationDisabled":    staticPolicy(&policy.DefaultGeolocationSetting{Val: 2 /*BlockGeolocation*/}),
 		"unmuteMicrophoneDisabled": staticPolicy(&policy.AudioCaptureAllowed{Val: false}),
 	}
 
