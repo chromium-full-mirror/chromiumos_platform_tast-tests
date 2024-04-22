@@ -123,7 +123,7 @@ func (g *Gallery) SetPlaybackSpeed(s Speed) uiauto.Action {
 			g.ui.WithTimeout(5*time.Second).WaitUntilExists(playbackSpeedMenu))(ctx); err != nil {
 			return err
 		}
-		itemFinder := nodewith.Name(string(s)).Ancestor(RootFinder)
+		itemFinder := nodewith.NameStartingWith(string(s)).Ancestor(RootFinder)
 		playbackSpeedItem, err := g.ui.FindAnyExists(ctx,
 			itemFinder.Role(role.MenuItemRadio),
 			itemFinder.Role(role.MenuItem))
