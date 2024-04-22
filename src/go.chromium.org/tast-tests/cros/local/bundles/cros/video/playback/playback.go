@@ -95,9 +95,9 @@ type Config struct {
 
 // RunTest measures a number of performance metrics while playing a video with or without hardware acceleration as per DecoderType.
 func RunTest(ctx context.Context, s *testing.State, tconn *chrome.TestConn, config Config) {
-	// Save 10 seconds for cleanup.
+	// Save 20 seconds for cleanup.
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, 20*time.Second)
 	defer cancel()
 
 	s.Log("Starting playback")

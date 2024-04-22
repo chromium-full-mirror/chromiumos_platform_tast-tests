@@ -21,10 +21,10 @@ import (
 const (
 	// Targeted total playback duration for all subtests.
 
-	// sumOfTestDuration is the total sum of the tests timeout.
-	// The actual video playback time should be *(playback.DefaultSuspendSystemInterval/(playback.DefaultSuspendSystemTimeout+playback.DefaultSuspendSystemInterval))
+	// sumOfTestTimeout is the total sum of the tests timeout.
+	// The actual timeout and duration is calculated in |calculateTimeoutDuration|.
 	// Note, since DUT only supports 1 suspend mode by default, half the tests would skip on the DUT and total test duration will be halfed.
-	sumOfTestDuration = 4 * time.Hour
+	sumOfTestTimeout = 4 * time.Hour
 )
 
 type playbackStressParam struct {
@@ -41,6 +41,24 @@ type playbackStressParam struct {
 	duration time.Duration
 	// timeout is the test timeout.
 	timeout time.Duration
+}
+
+func calculateTimeoutDuration(count int) (time.Duration, time.Duration) {
+	convertInt := func(d time.Duration) int {
+		return int(d / time.Second)
+	}
+	convertDuration := func(d int) time.Duration {
+		return time.Duration(d) * time.Second
+	}
+
+	// Calculate the timeout/duration for each subtests.
+	suspendInterval := convertInt(playback.DefaultSuspendSystemInterval)
+	suspendTime := convertInt(playback.DefaultSuspendSystemTimeout)
+
+	testTimeout := convertDuration(convertInt(sumOfTestTimeout) / count)
+	// There is 20 seconds timeout reserved for resource cleanup.
+	testDuration := convertDuration(int(float64(convertInt(testTimeout)-20) * float64(suspendInterval) / float64(suspendInterval+suspendTime)))
+	return testTimeout, testDuration
 }
 
 // trimEmptyString removes any item in the `list` with empty String representation.
@@ -191,24 +209,12 @@ func TestPlaybackStressConfig(t *testing.T) {
 		}
 	}
 
-	convertInt := func(d time.Duration) int {
-		return int(d / time.Second)
-	}
-	convertDuration := func(d int) time.Duration {
-		return time.Duration(d) * time.Second
-	}
-
-	// Calculate the timeout/duration for each subtests.
-	suspendInterval := convertInt(playback.DefaultSuspendSystemInterval)
-	suspendTime := convertInt(playback.DefaultSuspendSystemTimeout)
-
-	testTimeout := convertDuration(convertInt(sumOfTestDuration) / len(testParams))
-	testDuration := convertDuration(int(float64(convertInt(testTimeout)) * float64(suspendInterval) / float64(suspendInterval+suspendTime)))
+	testTimeout, testDuration := calculateTimeoutDuration(len(testParams))
 	if testTimeout < 1*time.Minute {
-		t.Fatalf("Unexpect test timeout, expect>: %v, got: %v. Adjust sumOfTestDuration to have longer timeout.", 1*time.Minute, testTimeout)
+		t.Fatalf("Unexpect test timeout, expect>: %v, got: %v. Adjust sumOfTestTimeout to have longer timeout.", 1*time.Minute, testTimeout)
 	}
 	if testDuration < 10*time.Second {
-		t.Fatalf("Unexpect test duration, expect>: %v, got: %v. Adjust sumOfTestDuration to have longer duration.", 10*time.Second, testDuration)
+		t.Fatalf("Unexpect test duration, expect>: %v, got: %v. Adjust sumOfTestTimeout to have longer duration.", 10*time.Second, testDuration)
 	}
 	for _, param := range testParams {
 		param.duration = testDuration
