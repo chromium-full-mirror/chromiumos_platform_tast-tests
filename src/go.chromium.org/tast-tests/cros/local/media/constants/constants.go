@@ -22,11 +22,6 @@ const (
 	// MediaPepperVideoDecoderHardwareAccelerationBehaviorWithSWVD is the bucket value in Media.PepperVideoDecoder.HardwareAccelerationBehavior to be incremented when fallback to software decoding happens after trying to use a hardware decoder backed by the MojoVideoDecoder.
 	MediaPepperVideoDecoderHardwareAccelerationBehaviorWithSWVD = 4
 
-	// MediaRecorderVEAUsed is the name of histogram used to report VEA usage when running MediaRecorder.
-	MediaRecorderVEAUsed = "Media.MediaRecorder.VEAUsed"
-	// MediaRecorderVEAUsedSuccess is the bucket value in MediaRecorderVEAUsed to be incremented in success.
-	MediaRecorderVEAUsedSuccess = 1
-
 	// RTCVDInitStatus is the name of histogram used to describe whether HW video decoding is successfully initialized in WebRTC use case.
 	RTCVDInitStatus = "Media.RTCVideoDecoderInitDecodeSuccess"
 	// RTCVDInitSuccess is the bucket value in Media.RTCVideoDecoderInitDecodeSuccess to be incremented in success.

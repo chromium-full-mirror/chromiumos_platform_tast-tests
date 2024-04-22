@@ -17,6 +17,7 @@ import (
 
 	"github.com/pixelbender/go-matroska/matroska"
 
+	chromehistogram "go.chromium.org/tast-tests/cros/common/chrome/histogram"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
@@ -24,7 +25,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast-tests/cros/local/graphics"
-	"go.chromium.org/tast-tests/cros/local/media/constants"
 	mediacpu "go.chromium.org/tast-tests/cros/local/media/cpu"
 	"go.chromium.org/tast-tests/cros/local/media/histogram"
 	"go.chromium.org/tast-tests/cros/local/media/videotype"
@@ -36,7 +36,53 @@ import (
 const (
 	stabilizationDuration = 5 * time.Second
 	measurementDuration   = 15 * time.Second
+
+	// MediaRecorderCodec is the name of the histogram used to report codec when running the MediaRecorder.
+	mediaRecorderCodec = "Media.MediaRecorder.Codec"
 )
+
+func codecProfileToHWMediaRecoderCodec(profile videotype.CodecProfile) (int, error) {
+	switch profile {
+	case videotype.VP8Prof:
+		return 2, nil
+	case videotype.VP9Prof:
+		return 4, nil
+	case videotype.H264BaselineProf, videotype.H264MainProf, videotype.H264HighProf:
+		return 6, nil
+	case videotype.AV1MainProf:
+		return 8, nil
+	default:
+		return -1, errors.Errorf("unknown profile: %v", profile)
+	}
+}
+
+func checkCodecAndImplementation(
+	ctx context.Context, bTconn *chrome.TestConn,
+	initHistogram *chromehistogram.Histogram,
+	profile videotype.CodecProfile, hwAccelEnabled bool) error {
+
+	expectedBucket, err := codecProfileToHWMediaRecoderCodec(profile)
+	if err != nil {
+		return err
+	}
+
+	hwAccelUsed, err := histogram.WasHWAccelUsed(ctx, bTconn, initHistogram, mediaRecorderCodec, int64(expectedBucket), histogram.SuccessCountAtLeastOne)
+	if err != nil {
+		return errors.Wrap(err, "failed to get histogram")
+	}
+
+	if hwAccelEnabled {
+		if !hwAccelUsed {
+			return errors.Wrap(err, "Hw accelerator requested but not used")
+		}
+	} else {
+		if hwAccelUsed {
+			return errors.Wrap(err, "Hw accelerator not requested but used")
+		}
+	}
+
+	return nil
+}
 
 func reportMetric(name, unit string, value float64, direction perf.Direction, p *perf.Values) {
 	p.Set(perf.Metric{
@@ -92,7 +138,7 @@ func MeasurePerf(ctx context.Context, cs ash.ConnSource, tconn, bTconn *chrome.T
 	server := httptest.NewServer(http.FileServer(fileSystem))
 	defer server.Close()
 
-	initHistogram, err := metrics.GetHistogram(ctx, bTconn, constants.MediaRecorderVEAUsed)
+	initHistogram, err := metrics.GetHistogram(ctx, bTconn, mediaRecorderCodec)
 	if err != nil {
 		return errors.Wrap(err, "failed to get initial histogram")
 	}
@@ -138,18 +184,8 @@ func MeasurePerf(ctx context.Context, cs ash.ConnSource, tconn, bTconn *chrome.T
 		return errors.Wrap(err, "failed to stop recording")
 	}
 
-	hwAccelUsed, err := histogram.WasHWAccelUsed(ctx, bTconn, initHistogram, constants.MediaRecorderVEAUsed, int64(constants.MediaRecorderVEAUsedSuccess), histogram.SuccessCountAtLeastOne)
-	if err != nil {
-		return errors.Wrap(err, "failed to get histogram")
-	}
-	if hwAccelEnabled {
-		if !hwAccelUsed {
-			return errors.Wrap(err, "Hw accelerator requested but not used")
-		}
-	} else {
-		if hwAccelUsed {
-			return errors.Wrap(err, "Hw accelerator not requested but used")
-		}
+	if err := checkCodecAndImplementation(ctx, bTconn, initHistogram, profile, hwAccelEnabled); err != nil {
+		return err
 	}
 
 	processingTimePerFrame, err := calculateTimePerFrame(ctx, conn, videoBuffer, outDir)
@@ -277,7 +313,7 @@ func VerifyMediaRecorderUsesEncodeAccelerator(ctx context.Context, cs ash.ConnSo
 		return err
 	}
 
-	initHistogram, err := metrics.GetHistogram(ctx, bTconn, constants.MediaRecorderVEAUsed)
+	initHistogram, err := metrics.GetHistogram(ctx, bTconn, mediaRecorderCodec)
 	if err != nil {
 		return errors.Wrap(err, "failed to get initial histogram")
 	}
@@ -304,10 +340,9 @@ func VerifyMediaRecorderUsesEncodeAccelerator(ctx context.Context, cs ash.ConnSo
 		return errors.Wrapf(err, "failed to evaluate startRecordingForResult(%q, %d)", profile, recordTime.Milliseconds())
 	}
 
-	if hwUsed, err := histogram.WasHWAccelUsed(ctx, bTconn, initHistogram, constants.MediaRecorderVEAUsed, int64(constants.MediaRecorderVEAUsedSuccess), histogram.SuccessCountAtLeastOne); err != nil {
-		return errors.Wrap(err, "failed to verify histogram")
-	} else if !hwUsed {
-		return errors.New("hardware accelerator was not used")
+	if err := checkCodecAndImplementation(ctx, bTconn, initHistogram, profile, true); err != nil {
+		return err
 	}
+
 	return nil
 }
