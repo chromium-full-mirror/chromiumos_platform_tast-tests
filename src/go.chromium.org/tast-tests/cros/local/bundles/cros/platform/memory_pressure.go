@@ -6,6 +6,7 @@ package platform
 
 import (
 	"context"
+	"strconv"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
@@ -19,6 +20,16 @@ type memoryPressureParams struct {
 	useVulkan    bool
 	bt           browser.Type
 }
+
+const (
+	forceTabVarName = "platform.MemoryPressure.forceTab"
+)
+
+var forceTabVar = testing.RegisterVarString(
+	forceTabVarName,
+	"0",
+	"The number of forcibly open tabs (ignoreing discard). 0 means disabling this feature.",
+)
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -35,7 +46,7 @@ func init() {
 		},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
-			Val: memoryPressureParams{enableARC: false, useHugePages: false, useVulkan: false, bt: browser.TypeAsh},
+			Val:       memoryPressureParams{enableARC: false, useHugePages: false, useVulkan: false, bt: browser.TypeAsh},
 			ExtraAttr: []string{"crosbolt_memory_nightly"},
 		}, {
 			Name:              "vm",
@@ -45,7 +56,7 @@ func init() {
 		}, {
 			Name:              "huge_pages_vm",
 			Val:               memoryPressureParams{enableARC: true, useHugePages: true, useVulkan: false, bt: browser.TypeAsh},
-			ExtraAttr: []string{"crosbolt_memory_nightly"},
+			ExtraAttr:         []string{"crosbolt_memory_nightly"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 		}, {
 			Name:              "container",
@@ -55,12 +66,12 @@ func init() {
 		}, {
 			Name:              "lacros",
 			Val:               memoryPressureParams{enableARC: false, useHugePages: false, useVulkan: false, bt: browser.TypeLacros},
-			ExtraAttr: []string{"crosbolt_memory_nightly"},
+			ExtraAttr:         []string{"crosbolt_memory_nightly"},
 			ExtraSoftwareDeps: []string{"lacros"},
 		}, {
 			Name:              "vulkan",
 			Val:               memoryPressureParams{enableARC: false, useHugePages: false, useVulkan: true, bt: browser.TypeAsh},
-			ExtraAttr: []string{"crosbolt_memory_nightly"},
+			ExtraAttr:         []string{"crosbolt_memory_nightly"},
 			ExtraSoftwareDeps: []string{"vulkan_composite"},
 		}},
 	})
@@ -72,6 +83,10 @@ func MemoryPressure(ctx context.Context, s *testing.State) {
 	useHugePages := s.Param().(memoryPressureParams).useHugePages
 	useVulkan := s.Param().(memoryPressureParams).useVulkan
 	bt := s.Param().(memoryPressureParams).bt
+	forceTab, err := strconv.Atoi(forceTabVar.Value())
+	if err != nil {
+		s.Fatalf("Failed to parse %s: %v", forceTabVarName, err)
+	}
 
 	testEnv, err := mempressure.NewTestEnv(ctx, s.OutDir(), enableARC, useHugePages, useVulkan, bt, s.DataPath(mempressure.WPRArchiveName))
 	if err != nil {
@@ -82,6 +97,8 @@ func MemoryPressure(ctx context.Context, s *testing.State) {
 	p := &mempressure.RunParameters{
 		PageFilePath:             s.DataPath(mempressure.CompressibleData),
 		PageFileCompressionRatio: 0.40,
+		MaxTabCount:              forceTab,
+		IgnoreDiscard:            forceTab != 0,
 	}
 
 	if err := mempressure.Run(ctx, s.OutDir(), testEnv.Browser(), testEnv.ARC(), p); err != nil {

@@ -569,13 +569,15 @@ func runPhase1(ctx context.Context, outDir string, br *browser.Browser, p *RunPa
 	switchMeter := kernelmeter.New(ctx)
 	defer switchMeter.Close(ctx)
 
-	// Make sure that we don't somehow start the test with discarded tabs.
-	discardedTabIDs, err := getDiscardedTabIDs(ctx, tconn)
-	if err != nil {
-		return nil, nil, 0, 0, errors.Wrap(err, "cannot get discarded tab list")
-	}
-	if len(discardedTabIDs) != 0 {
-		return nil, nil, 0, 0, errors.New("can't start test with discarded tabs")
+	if !p.IgnoreDiscard {
+		// Make sure that we don't somehow start the test with discarded tabs.
+		discardedTabIDs, err := getDiscardedTabIDs(ctx, tconn)
+		if err != nil {
+			return nil, nil, 0, 0, errors.Wrap(err, "cannot get discarded tab list")
+		}
+		if len(discardedTabIDs) != 0 {
+			return nil, nil, 0, 0, errors.New("can't start test with discarded tabs")
+		}
 	}
 
 	// Figure out how many tabs already exist (typically 0).
@@ -671,7 +673,7 @@ func runPhase1(ctx context.Context, outDir string, br *browser.Browser, p *RunPa
 			return nil, nil, 0, 0, errors.Wrap(err, "cannot get tab list")
 		}
 		testing.ContextLogf(ctx, "Cycling tabs (opened %d, present %d, initial %d)", len(tabs), len(validTabIDs), initialTabCount)
-		if len(tabs)+initialTabCount > len(validTabIDs) {
+		if !p.IgnoreDiscard && len(tabs)+initialTabCount > len(validTabIDs) {
 			testing.ContextLog(ctx, "Ending allocation because one or more targets (tabs) have gone")
 			break
 		}
@@ -912,6 +914,8 @@ type RunParameters struct {
 	// Mode indicates whether to run in record mode
 	// vs. replay mode.
 	Mode wpr.Mode
+	// IgnoreDiscard ignores tab discard and open tabs until MaxTabCount.
+	IgnoreDiscard bool
 }
 
 // Run creates a memory pressure situation by loading multiple tabs into Chrome
@@ -926,6 +930,10 @@ func Run(ctx context.Context, outDir string, br *browser.Browser, arc *arc.ARC, 
 		tabCycleDelay        = 300 * time.Millisecond
 		tabSwitchRepeatCount = 10
 	)
+
+	if p.IgnoreDiscard && p.MaxTabCount == 0 {
+		return errors.New("if you set IgnoreDiscard, it requires to set MaxTabCount too")
+	}
 
 	memInfo, err := kernelmeter.MemInfo()
 	if err != nil {
@@ -986,7 +994,9 @@ func Run(ctx context.Context, outDir string, br *browser.Browser, arc *arc.ARC, 
 	}
 
 	// -----------------
-	// Phase 1: Open several pinned tabs, and then continue to open more tabs until a tab is discarded.
+	// Phase 1: Open several pinned tabs, and then continue to open more tabs
+	// until a tab is discarded, or until it hits MaxTabCount if IgnoreDiscard
+	// is set.
 	// -----------------
 	pinnedTabs, workTabs, _, _, err := runPhase1(ctx, outDir, br, p, initialTabSetSize, recentTabSetSize, tabSwitchRepeatCount, fullMeter, rm, perfValues, "")
 
