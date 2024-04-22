@@ -43,6 +43,17 @@ var (
 	allFilteredModels = append(append(nofwupdFilteredModels, namiFilteredModels...), octopusFilteredModels...)
 )
 
+type fwupdMode int
+
+const (
+	fwupdOff fwupdMode = iota
+	fwupdNoChange
+)
+
+type suspendConfig struct {
+	Fwupd fwupdMode
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Suspend,
@@ -59,16 +70,16 @@ func init() {
 		Params: []testing.Param{
 			{
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(allFilteredModels...)),
-				Val:               "fwupd_nochange",
+				Val:               suspendConfig{Fwupd: fwupdNoChange},
 			}, {
 				Name:              "unstable",
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(allFilteredModels...)),
-				Val:               "fwupd_nochange",
+				Val:               suspendConfig{Fwupd: fwupdNoChange},
 				ExtraAttr:         []string{"informational"},
 			}, {
 				Name:              "nofwupd",
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(nofwupdFilteredModels...)),
-				Val:               "fwupd_off",
+				Val:               suspendConfig{Fwupd: fwupdOff},
 			},
 		},
 	})
@@ -166,6 +177,11 @@ func startEvTestLogging(ctx context.Context, s *testing.State) (func(), error) {
 // indefinitely, causing the test infrastucture to mark the test as failed.
 // TODO: add different kinds of suspend test, including stress test
 func Suspend(ctx context.Context, s *testing.State) {
+	params, ok := s.Param().(suspendConfig)
+	if !ok {
+		s.Fatal("Failed to convert test suspendConfig")
+	}
+
 	// TODO(b/324513129): remove this once we have a better solution in place.
 	// **DO NOT COPY-PASTE THIS CODE IF YOU ARE NOT AFFECTED BY b/324513129**
 	// If you are affected by b/324513129, please add a comment on that bug
@@ -179,7 +195,7 @@ func Suspend(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to PowerManager DBus interface after restarting powerd: ", err)
 	}
 
-	if s.Param().(string) == "fwupd_off" {
+	if params.Fwupd == fwupdOff {
 		// Sometimes fwupd may end up being stuck in a lengthy transfer from a device making it non-
 		// suspendable. Stop fwupd before trying the suspend so this doesn't happen.
 		startFwupdFn, err := setup.DisableServiceIfExists(ctx, "fwupd")
