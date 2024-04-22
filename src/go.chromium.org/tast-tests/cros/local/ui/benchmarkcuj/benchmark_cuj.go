@@ -63,11 +63,6 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam BenchmarkTest, cmdLin
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	pv, err := localPerf.CaptureDeviceSnapshot(ctx, "Initial")
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to capture device snapshot")
-	}
-
 	benchmarkParam := testParam.BenchmarkInfo
 
 	benchmarkConn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr,
@@ -141,6 +136,11 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam BenchmarkTest, cmdLin
 	}
 
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
+		pv, err = localPerf.CaptureDeviceSnapshot(ctx, "Initial")
+		if err != nil {
+			return errors.Wrap(err, "failed to capture device snapshot")
+		}
+
 		testing.ContextLogf(ctx, "Running %s", benchmarkParam.name)
 		return benchmarkParam.benchmarkRun(ctx, benchmarkConn, ac, params)
 	}); err != nil {
