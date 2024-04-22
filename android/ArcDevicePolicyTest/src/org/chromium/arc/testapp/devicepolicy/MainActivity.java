@@ -57,8 +57,22 @@ public class MainActivity extends Activity {
                         Map.entry(
                                 "printingDisabled",
                                 () -> isRestrictionUnapplied(UserManager.DISALLOW_PRINTING)),
-                        Map.entry("screenCaptureDisabled", this::isScreenshotEnabled),
-                        Map.entry("cameraDisabled", this::isCameraEnabled),
+                        Map.entry(
+                                "screenCaptureDisabled",
+                                () ->
+                                        isOperationAllowed(
+                                                "Screenshot",
+                                                () ->
+                                                        !devicePolicyManager
+                                                                .getScreenCaptureDisabled(null))),
+                        Map.entry(
+                                "cameraDisabled",
+                                () ->
+                                        isOperationAllowed(
+                                                "Camera",
+                                                () ->
+                                                        !devicePolicyManager.getCameraDisabled(
+                                                                null))),
                         Map.entry(
                                 "unmuteMicrophoneDisabled",
                                 () ->
@@ -101,24 +115,17 @@ public class MainActivity extends Activity {
         txtOutput.setText(String.valueOf(result));
     }
 
-    private boolean isScreenshotEnabled() {
-        final boolean disabled = devicePolicyManager.getScreenCaptureDisabled(null);
-        if (disabled) {
-            logError("Screenshot is disabled", null);
-        }
-        return !disabled;
-    }
-
-    private boolean isCameraEnabled() {
-        final boolean disabled = devicePolicyManager.getCameraDisabled(null);
-        if (disabled) {
-            logError("Camera is disabled", null);
-        }
-        return !disabled;
-    }
-
     private boolean isRestrictionUnapplied(String restrictionKey) {
-        return !userManager.hasUserRestriction(restrictionKey);
+        return isOperationAllowed(
+                restrictionKey, () -> !userManager.hasUserRestriction(restrictionKey));
+    }
+
+    private boolean isOperationAllowed(String operation, Supplier<Boolean> operationTest) {
+        final boolean allowed = operationTest.get();
+        if (!allowed) {
+            logError(operation + " is disallowed", null);
+        }
+        return allowed;
     }
 
     private void logError(String message, Exception e) {

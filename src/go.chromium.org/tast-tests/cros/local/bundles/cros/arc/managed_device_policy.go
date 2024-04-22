@@ -93,13 +93,13 @@ func ManagedDevicePolicy(ctx context.Context, s *testing.State) {
 
 	packages := []string{devicePolicyPkg}
 	arcPolicyMap := map[string]arcPolicyFactory{
-		"cameraDisabled":        createCameraPolicy,
-		"printingDisabled":      createPrintingPolicy,
-		"screenCaptureDisabled": createScreenshotPolicy,
+		"cameraDisabled":        staticPolicy(&policy.VideoCaptureAllowed{Val: false}),
+		"printingDisabled":      staticPolicy(&policy.PrintingEnabled{Val: false}),
+		"screenCaptureDisabled": staticPolicy(&policy.DisableScreenshots{Val: true}),
 		"setWallpaper": func() (policy.Policy, func(ctx context.Context), error) {
 			return createWallpaperPolicy(ctx, s.DataPath("wallpaper_image.jpeg"))
 		},
-		"unmuteMicrophoneDisabled": createMicrophonePolicy,
+		"unmuteMicrophoneDisabled": staticPolicy(&policy.AudioCaptureAllowed{Val: false}),
 	}
 
 	creds, err := credconfig.PickRandomCreds(s.RequiredVar(arcent.LoginPoolVar))
@@ -220,22 +220,6 @@ func ManagedDevicePolicy(ctx context.Context, s *testing.State) {
 	}
 }
 
-func createMicrophonePolicy() (policy.Policy, func(ctx context.Context), error) {
-	return &policy.AudioCaptureAllowed{Val: false}, func(ctx context.Context) {}, nil
-}
-
-func createScreenshotPolicy() (policy.Policy, func(ctx context.Context), error) {
-	return &policy.DisableScreenshots{Val: true}, func(ctx context.Context) {}, nil
-}
-
-func createPrintingPolicy() (policy.Policy, func(ctx context.Context), error) {
-	return &policy.PrintingEnabled{Val: false}, func(ctx context.Context) {}, nil
-}
-
-func createCameraPolicy() (policy.Policy, func(ctx context.Context), error) {
-	return &policy.VideoCaptureAllowed{Val: false}, func(ctx context.Context) {}, nil
-}
-
 func launchApp(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, appPackage, mainActivity string) (func(ctx context.Context), error) {
 	testing.ContextLog(ctx, "Starting app")
 	act, err := arc.NewActivity(a, appPackage, mainActivity)
@@ -269,6 +253,12 @@ func createWallpaperPolicy(ctx context.Context, imgPath string) (policy.Policy, 
 	policy := &policy.WallpaperImage{Val: &policy.WallpaperImageValue{Url: iurl, Hash: ihash}}
 
 	return policy, cleanup, nil
+}
+
+func staticPolicy(value policy.Policy) arcPolicyFactory {
+	return func() (policy.Policy, func(ctx context.Context), error) {
+		return value /*policy*/, func(ctx context.Context) {} /*cleanup*/, nil /*error*/
+	}
 }
 
 func waitForPolicySync(ctx context.Context, a *arc.ARC, user string, lastSyncTimeStamp int64) (int64, error) {
