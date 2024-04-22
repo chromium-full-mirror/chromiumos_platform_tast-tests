@@ -41,7 +41,7 @@ func init() {
 				CC:  firmware.CCPolarityFlipped,
 				DTS: firmware.DTSModeOff,
 			},
-		}}, []string{"group:firmware", "firmware_pd_unstable"}),
+		}}, []string{"group:firmware", "firmware_pd"}),
 	})
 }
 
