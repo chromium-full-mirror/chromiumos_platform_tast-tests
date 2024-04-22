@@ -23,6 +23,7 @@ func init() {
 			"cros-enterprise-connectors@google.com",
 			"webprotect-eng@google.com",
 		},
+		BugComponent: "b:1240978",
 		Impl: CreateFixture(
 			"enterpriseconnectors.ash_username3",
 			"enterpriseconnectors.ash_password3",
@@ -43,6 +44,7 @@ func init() {
 			"cros-enterprise-connectors@google.com",
 			"webprotect-eng@google.com",
 		},
+		BugComponent: "b:1240978",
 		Impl: CreateFixture(
 			"enterpriseconnectors.ash_username1",
 			"enterpriseconnectors.ash_password1",
@@ -63,6 +65,7 @@ func init() {
 			"cros-enterprise-connectors@google.com",
 			"webprotect-eng@google.com",
 		},
+		BugComponent: "b:1240978",
 		Impl: CreateFixture(
 			"enterpriseconnectors.ash_username2",
 			"enterpriseconnectors.ash_password2",
@@ -83,6 +86,7 @@ func init() {
 			"cros-enterprise-connectors@google.com",
 			"webprotect-eng@google.com",
 		},
+		BugComponent: "b:1240978",
 		Impl: CreateFixture(
 			"enterpriseconnectors.lacros_username3",
 			"enterpriseconnectors.lacros_password3",
@@ -103,6 +107,7 @@ func init() {
 			"cros-enterprise-connectors@google.com",
 			"webprotect-eng@google.com",
 		},
+		BugComponent: "b:1240978",
 		Impl: CreateFixture(
 			"enterpriseconnectors.lacros_username1",
 			"enterpriseconnectors.lacros_password1",
@@ -123,6 +128,7 @@ func init() {
 			"cros-enterprise-connectors@google.com",
 			"webprotect-eng@google.com",
 		},
+		BugComponent: "b:1240978",
 		Impl: CreateFixture(
 			"enterpriseconnectors.lacros_username2",
 			"enterpriseconnectors.lacros_password2",
