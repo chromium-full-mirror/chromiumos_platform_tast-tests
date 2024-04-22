@@ -24,6 +24,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
+	hist "go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
 	"go.chromium.org/tast-tests/cros/local/memory/kernelmeter"
 	"go.chromium.org/tast-tests/cros/local/memory/metrics"
@@ -622,6 +623,35 @@ func runPhase1(ctx context.Context, outDir string, br *browser.Browser, p *RunPa
 	}
 	pinnedTabs = tabs[:]
 
+	// Collect other browser performance metrics
+	umaMetrics := []*hist.HistogramMetrics{
+		hist.NewHistogramMetrics(
+			"Browser.MainThreadsCongestion",
+			hist.SetMeanHistogramMetricWriter("", "per300", perf.SmallerIsBetter),
+			hist.SetPercentileHistogramMetricWriter(50, "_p50", "per300", perf.SmallerIsBetter),
+			hist.SetPercentileHistogramMetricWriter(90, "_p90", "per300", perf.SmallerIsBetter),
+			hist.SetPercentileHistogramMetricWriter(100, "_max", "per300", perf.SmallerIsBetter),
+		),
+		hist.NewHistogramMetrics(
+			"ChromeOS.CWP.PSIMemPressure.Some",
+			hist.SetMeanHistogramMetricWriter("", "per10000", perf.SmallerIsBetter),
+			hist.SetPercentileHistogramMetricWriter(50, "_p50", "per10000", perf.SmallerIsBetter),
+			hist.SetPercentileHistogramMetricWriter(90, "_p90", "per10000", perf.SmallerIsBetter),
+			hist.SetPercentileHistogramMetricWriter(100, "_max", "per10000", perf.SmallerIsBetter),
+		),
+		hist.NewHistogramMetrics(
+			"ChromeOS.CWP.PSIMemPressure.Full",
+			hist.SetMeanHistogramMetricWriter("", "per10000", perf.SmallerIsBetter),
+			hist.SetPercentileHistogramMetricWriter(50, "_p50", "per10000", perf.SmallerIsBetter),
+			hist.SetPercentileHistogramMetricWriter(90, "_p90", "per10000", perf.SmallerIsBetter),
+			hist.SetPercentileHistogramMetricWriter(100, "_max", "per10000", perf.SmallerIsBetter),
+		),
+	}
+
+	if hist.StartHistogramMetrics(ctx, tconn, umaMetrics); err != nil {
+		return nil, nil, 0, 0, errors.Wrap(err, "failed to Start UMA metrics")
+	}
+
 	// Collect and log tab-switching times in the absence of memory pressure.
 	if err := runTabSwitches(ctx, tabs, outDir, "light"+tag, tabSwitchRepeatCount, perfValues); err != nil {
 		return nil, nil, 0, 0, errors.Wrap(err, "cannot run tab switches with light load")
@@ -706,6 +736,10 @@ func runPhase1(ctx context.Context, outDir string, br *browser.Browser, p *RunPa
 			}
 		}
 	}
+	if err := hist.WriteHistogramMetrics(ctx, tconn, perfValues, umaMetrics); err != nil {
+		return nil, nil, 0, 0, errors.Wrap(err, "failed to write UMA histogram")
+	}
+
 	// GoBigSleepLint: Wait a bit so we will notice any additional tab discards.
 	if err := testing.Sleep(ctx, 10*time.Second); err != nil {
 		return nil, nil, 0, 0, errors.Wrap(err, "timed out")
