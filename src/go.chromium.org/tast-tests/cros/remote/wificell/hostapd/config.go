@@ -943,8 +943,10 @@ func (c *Config) Format(iface, ctrlPath string) (string, error) {
 		configure("ieee80211w", strconv.Itoa(int(c.PMF)))
 	}
 
-	// Enable hash-to-element mechanism for networks that are using SAE.
-	if strings.Contains(securityConf["wpa_key_mgmt"], "SAE") {
+	// Enable hash-to-element mechanism. Since the Gale hostap image is out of
+	// date and doesn't have the sae_pwe flag, only allow setting sae_pwe
+	// on WiFi 6/7 networks which cannot run on Gale routers.
+	if strings.Contains(securityConf["wpa_key_mgmt"], "SAE") && (c.is80211ax() || c.is80211be()) {
 		configure("sae_pwe", "1")
 	}
 
