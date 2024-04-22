@@ -1106,7 +1106,10 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	param := s.Param().(loginPerfTestParam)
-	lacrosCfg := lacrosfixt.NewConfig(lacrosfixt.Selection(param.lacrosSelection))
+	lacrosCfg := lacrosfixt.NewConfig(
+		lacrosfixt.Selection(param.lacrosSelection),
+		lacrosfixt.KeepAlive(true), // Enable keep alive to emulate production environment.
+	)
 
 	// Run an http server to serve the test contents for accessing from the chrome browsers.
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
