@@ -53,7 +53,8 @@ type logCommandMap map[string]mountFailureCrashLog
 // Please see crash-reporter/crash_reporter_logs.conf for the usage of the equivalent commands in crash-reporter.
 var mountFailureLogMap = logCommandMap{
 	"shutdown_umount_failure_state": {"/run/shutdown_umount_failure.log", "log_shutdown_umount_failure", "===shutdown umount() failure logs==="},
-	"dumpe2fs_stateful":             {"/run/dumpe2fs_stateful.log", "log_dumpe2fs_stateful", "===dumpe2fs (stateful partition)==="},
+	"dumpe2fs_stateful_old":         {"/run/dumpe2fs_stateful.log", "log_dumpe2fs_stateful", "===dumpe2fs (stateful partition)==="},
+	"dumpe2fs_stateful":             {"/run/chromeos_startup/dumpe2fs_stateful.log", "log_dumpe2fs_stateful", "===dumpe2fs (stateful partition)==="},
 	"dumpe2fs_encstateful":          {"/run/mount_encrypted/dumpe2fs.log", "log_dumpe2fs_encstateful", "===dumpe2fs (/dev/mapper/encstateful)==="},
 	"mount-encrypted":               {"/run/mount_encrypted/mount-encrypted.log", "log_mount-encrypted", "===mount-encrypted==="},
 	"umount-encrypted":              {"/run/mount_encrypted/umount-encrypted.log", "log_umount-encrypted", "===umount-encrypted==="},
