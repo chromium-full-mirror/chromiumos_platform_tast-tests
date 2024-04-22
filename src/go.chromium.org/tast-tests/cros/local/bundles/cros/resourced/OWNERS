@@ -1,0 +1,2 @@
+# ChromiumOS Resource Manager Daemon
+include chromiumos/platform2:/resourced/OWNERS

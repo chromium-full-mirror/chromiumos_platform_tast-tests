@@ -1,0 +1,37 @@
+// Copyright 2024 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package resourced
+
+import (
+	"context"
+	"time"
+
+	"go.chromium.org/tast-tests/cros/local/resourced"
+	"go.chromium.org/tast-tests/cros/local/resourced/utils"
+	"go.chromium.org/tast/core/testing"
+)
+
+func init() {
+	testing.AddTest(&testing.Test{
+		Func:         SetGameModeWithTimeout,
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Desc:         "Checks resourced setting game mode with timeout",
+		Contacts:     []string{"chromeos-memory@google.com", "vovoy@chromium.org"},
+		BugComponent: "b:167286", // ChromeOS > Platform > System > Memory Management
+		Attr:         []string{"group:mainline", "group:criticalstaging", "informational"},
+		Timeout:      2 * time.Minute,
+	})
+}
+
+func SetGameModeWithTimeout(ctx context.Context, s *testing.State) {
+	rm, err := resourced.NewClient(ctx)
+	if err != nil {
+		s.Fatal("Failed to create Resource Manager client: ", err)
+	}
+
+	if err := utils.CheckSetGameModeWithTimeout(ctx, rm, false, false); err != nil {
+		s.Fatal("Checking SetGameModeWithTimeout failed: ", err)
+	}
+}

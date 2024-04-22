@@ -110,6 +110,7 @@ import (
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/quickanswers"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/quicksettings"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/quickstart"
+	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/resourced"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/rgbkbd"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/rollback"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/rtc"
