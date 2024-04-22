@@ -1,0 +1,3 @@
+sseckler@google.com
+muhamedp@google.com
+per-file device_trust* = file:/src/go.chromium.org/tast-tests/cros/local/bundles/cros/enterpriseconnectors/devicetrust/OWNERS
