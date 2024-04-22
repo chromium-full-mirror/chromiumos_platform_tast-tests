@@ -328,11 +328,31 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:            "ccaPowerTestWithFakeHALCameraAutoQREnabled",
-		Desc:            "Set up test bridge for CCA with Auto QR Code detection for a power Test",
+		Name:            "ccaPowerReview",
+		Desc:            "Set up test bridge for CCA for a power review Test",
+		Contacts:        []string{"chromeos-camera-eng@google.com", "esker@chromium.org"},
+		Impl:            &fixture{powerReview: true},
+		SetUpTimeout:    powerSetUpTimeout,
+		ResetTimeout:    testBridgeSetUpTimeout,
+		TearDownTimeout: powerTearDownTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:            "ccaPowerReviewWithFakeHALCamera",
+		Desc:            "Set up test bridge for CCA with fake camera HAL for a power review Test",
+		Contacts:        []string{"chromeos-camera-eng@google.com", "esker@chromium.org"},
+		Impl:            &fixture{powerReview: true, useCameraType: testutil.UseFakeHALCamera},
+		SetUpTimeout:    powerSetUpTimeout,
+		ResetTimeout:    testBridgeSetUpTimeout,
+		TearDownTimeout: powerTearDownTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:            "ccaPowerReviewWithFakeHALCameraAutoQREnabled",
+		Desc:            "Set up test bridge for CCA with Auto QR Code detection for a power review Test",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "dorahkim@chromium.org"},
 		BugComponent:    "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
-		Impl:            &fixture{powerTest: true, useCameraType: testutil.UseFakeHALCamera, enableFeatures: []feature{"CameraAppAutoQRDetection"}},
+		Impl:            &fixture{powerReview: true, useCameraType: testutil.UseFakeHALCamera, enableFeatures: []feature{"CameraAppAutoQRDetection"}},
 		SetUpTimeout:    powerSetUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
 		TearDownTimeout: powerTearDownTimeout,
@@ -353,11 +373,11 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:            "ccaPowerTestWithDigitalZoomSuperResEnabled",
-		Desc:            "Set up test bridge for CCA with digital zoom and super resolution enabled for a power Test",
+		Name:            "ccaPowerReviewWithDigitalZoomSuperResEnabled",
+		Desc:            "Set up test bridge for CCA with digital zoom and super resolution enabled for a power review Test",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "kamchonlathorn@chromium.org"},
 		BugComponent:    "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
-		Impl:            &fixture{powerTest: true, forceEnableSuperRes: true, enableFeatures: []feature{digitalZoom}},
+		Impl:            &fixture{powerReview: true, forceEnableSuperRes: true, enableFeatures: []feature{digitalZoom}},
 		SetUpTimeout:    powerSetUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
 		TearDownTimeout: powerTearDownTimeout,
@@ -443,6 +463,7 @@ type fixture struct {
 	forceEnableAutoFraming bool
 	forceEnableSuperRes    bool
 	powerTest              bool
+	powerReview            bool
 	requireAudioLoopback   bool
 	debugParams            DebugParams
 	enableFeatures         []feature
@@ -461,7 +482,7 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 
 	var chromeOpts []chrome.Option
 
-	if f.powerTest {
+	if f.powerTest || f.powerReview {
 		// b/228256145 to avoid powerd restart.
 		chromeOpts = append(chromeOpts, chrome.DisableFeatures("FirmwareUpdaterApp"))
 	}
@@ -590,13 +611,23 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 		s.Fatal("Failed to mute audio: ", err)
 	}
 
-	if f.powerTest {
+	if f.powerTest || f.powerReview {
 		tconn, err := f.cr.TestAPIConn(ctx)
 		if err != nil {
 			s.Fatal("Failed to get test API: ", err)
 		}
 
-		opt := &pnp.MinPowerTestOptions
+		var opt *powerFixture.PowerTestOptions
+
+		if f.powerReview {
+			opt = &powerFixture.PowerTestOptions{
+				NightLight:         powerFixture.DisableNightLight,
+				DarkTheme:          powerFixture.EnableLightTheme,
+				KeyboardBrightness: powerFixture.SetKbBrightnessToZero,
+			}
+		} else {
+			opt = &pnp.MinPowerTestOptions
+		}
 
 		ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 		defer cancel()

@@ -31,17 +31,17 @@ func init() {
 		Timeout:      6*time.Minute + power.RecorderTimeout,
 		Params: []testing.Param{{
 			Name:      "disabled",
-			Fixture:   "ccaPowerTest",
+			Fixture:   "ccaPowerReview",
 			ExtraAttr: []string{"group:crosbolt", "crosbolt_nightly"},
 			Val:       digitalZoomPowerSubtest{useZoom: false},
 		}, {
 			Name:      "enabled_zoom_inactive",
-			Fixture:   "ccaPowerTestWithDigitalZoomSuperResEnabled",
+			Fixture:   "ccaPowerReviewWithDigitalZoomSuperResEnabled",
 			ExtraAttr: []string{"group:crosbolt", "crosbolt_nightly"},
 			Val:       digitalZoomPowerSubtest{useZoom: false},
 		}, {
 			Name:      "enabled_zoom_active",
-			Fixture:   "ccaPowerTestWithDigitalZoomSuperResEnabled",
+			Fixture:   "ccaPowerReviewWithDigitalZoomSuperResEnabled",
 			ExtraAttr: []string{"group:crosbolt", "crosbolt_nightly"},
 			Val:       digitalZoomPowerSubtest{useZoom: true},
 		}},

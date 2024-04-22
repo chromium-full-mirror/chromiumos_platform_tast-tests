@@ -25,13 +25,13 @@ func init() {
 		SoftwareDeps: []string{"chrome", "camera_app"},
 		Params: []testing.Param{{
 			Name:      "autoqr_disabled",
-			Fixture:   "ccaPowerTestWithFakeHALCamera",
+			Fixture:   "ccaPowerReviewWithFakeHALCamera",
 			ExtraAttr: []string{"group:crosbolt", "crosbolt_nightly"},
 			Val:       cca.PowerTimeParams,
 			Timeout:   6*time.Minute + power.RecorderTimeout,
 		}, {
 			Name:      "autoqr_enabled",
-			Fixture:   "ccaPowerTestWithFakeHALCameraAutoQREnabled",
+			Fixture:   "ccaPowerReviewWithFakeHALCameraAutoQREnabled",
 			ExtraAttr: []string{"group:crosbolt", "crosbolt_nightly"},
 			Val:       cca.PowerTimeParams,
 			Timeout:   6*time.Minute + power.RecorderTimeout,
