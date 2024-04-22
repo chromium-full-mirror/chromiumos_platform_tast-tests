@@ -366,7 +366,7 @@ func GetDeviceEventKbd(ctx context.Context, dut *dut.DUT) ([]string, error) {
 	}
 	var kbdList []string
 	for _, str := range strings.Split(strings.TrimSpace(string(lsInfo)), "\n") {
-		if strings.Contains(str, "kbd") && !strings.Contains(str, "if01") {
+		if strings.Contains(strings.ToLower(str), "usb-www.wch.cn_wch_uart_to_kb-ms") && strings.Contains(str, "kbd") && !strings.Contains(str, "if01") {
 			kbdList = append(kbdList, str)
 		}
 	}
