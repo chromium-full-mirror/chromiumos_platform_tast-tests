@@ -42,6 +42,8 @@ type testNetworkInfo struct {
 	ssidPrefix string
 	// ap holds the AP interface of WiFi AP.
 	ap *wificell.APIface
+	// channel is the configured channel of the AP.
+	channel int
 }
 
 func init() {
@@ -80,19 +82,25 @@ func CredentialsMasking(ctx context.Context, s *testing.State) {
 	const correctPsk = "correct_password"
 
 	tf := s.FixtValue().(*wificell.TestFixture)
-	apOptions := wificell.DefaultOpenNetworkAPOptions()
 
 	testNetworks := []*testNetworkInfo{{
 		psk:        &pskForTesting{value: correctPsk, isCorrect: true},
 		ssidPrefix: "Network_For_Test_Correct_Psk_",
+		channel:    1, // Must use different band (b/313541152#comment16).
 	}, {
 		psk:        &pskForTesting{value: "wrong_password", isCorrect: false},
 		ssidPrefix: "Network_For_Test_Wrong_Psk_",
+		channel:    48, // Must use different band (b/313541152#comment16).
 	}}
 
 	securityConfig := wpa.NewConfigFactory(correctPsk, wpa.Mode(wpa.ModePureWPA), wpa.Ciphers(wpa.CipherTKIP, wpa.CipherCCMP))
 	for _, testNetwork := range testNetworks {
-		opts := append(apOptions, hostapd.SSID(hostapd.RandomSSID(testNetwork.ssidPrefix)))
+		opts := []hostapd.Option{
+			hostapd.Mode(hostapd.Mode80211nPure),
+			hostapd.HTCaps(hostapd.HTCapHT20),
+			hostapd.SSID(hostapd.RandomSSID(testNetwork.ssidPrefix)),
+			hostapd.Channel(testNetwork.channel),
+		}
 
 		var (
 			err    error
