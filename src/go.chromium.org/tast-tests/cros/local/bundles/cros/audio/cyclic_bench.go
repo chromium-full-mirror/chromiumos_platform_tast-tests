@@ -93,6 +93,8 @@ var cyclicBenchUnstableModels = []string{
 	"elm",
 	// jacuzzi
 	"burnet", "willow",
+	// hana
+	"hana", "hana64",
 }
 
 func init() {
