@@ -95,7 +95,9 @@ func SocProperties(ctx context.Context, s *testing.State) {
 
 	manufacturer := getProperty(propertyManufacturer)
 	s.Logf("manufacturer: %q", manufacturer)
-	if re := regexp.MustCompile(`^(?:Intel|AMD|Mediatek|Rockchip|Qualcomm)$`); !re.MatchString(manufacturer) {
+	// Older models need Mediatek. The correct name going forward is "MediaTek".
+	// See b/333501774
+	if re := regexp.MustCompile(`^(?:Intel|AMD|Media[tT]ek|Rockchip|Qualcomm)$`); !re.MatchString(manufacturer) {
 		s.Errorf("%s property is missing or ill-formed: %q", propertyManufacturer, manufacturer)
 		saveCpuinfo = true
 	}
