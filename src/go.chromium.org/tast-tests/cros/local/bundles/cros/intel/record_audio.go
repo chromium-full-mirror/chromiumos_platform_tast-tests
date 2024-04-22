@@ -92,16 +92,25 @@ func RecordAudio(ctx context.Context, s *testing.State) {
 	}
 	recWavFile := filepath.Join(downloadsPath, recWavFileName)
 
-	arecordArgs := []string{fmt.Sprintf("-Dhw:%s,%s", cardNo, deviceNo),
-		"-d", "30", // duration
-		"-f", "S32_LE", // format
-		"-c", "4", // number of channels
-		"-r", "48000", // sample rate
-		recWavFile, // output file
+	channelNumbers := []string{"2", "4"}
+	var cmdErr error
+	for _, number := range channelNumbers {
+		buildArecordArgs := []string{
+			fmt.Sprintf("-Dhw:%s,%s", cardNo, deviceNo),
+			"-d", "30", // duration
+			"-f", "S32_LE", // format
+			"-c", fmt.Sprintf("%s", number),
+			"-r", "48000", // sample rate
+			recWavFile, // output file
+		}
+		cmd := testexec.CommandContext(ctx, "arecord", buildArecordArgs...)
+		cmdErr = cmd.Run(testexec.DumpLogOnError)
+		if cmdErr == nil {
+			break
+		}
 	}
-	cmd := testexec.CommandContext(ctx, "arecord", arecordArgs...)
-	if err := cmd.Run(testexec.DumpLogOnError); err != nil {
-		s.Fatalf("Failed to execute %q: %v", cmd, err)
+	if cmdErr != nil {
+		s.Fatal("Failed to execute command: ", cmdErr)
 	}
 
 	files, err := filesapp.Launch(ctx, tconn)
