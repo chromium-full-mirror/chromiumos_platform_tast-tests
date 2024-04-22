@@ -44,5 +44,8 @@ def request(flow: http.HTTPFlow) -> None:
     for allowed in allowedHosts:
         if hostname == allowed:
             return
-    flow.response = http.Response.make(503)
+    # The HTTP 403 Forbidden response status code indicates that the server
+    # understands the request but refuses to authorize it.
+    # Use 403 to indicates that the request is blocked by MitmProxy.
+    flow.response = http.Response.make(403)
     return

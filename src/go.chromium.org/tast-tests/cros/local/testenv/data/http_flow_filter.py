@@ -44,5 +44,5 @@ def request(flow: http.HTTPFlow) -> None:
     for allowed in allowedHosts:
         if hostname == allowed:
             return
-    flow.response = http.Response.make(503)
+    flow.response = http.Response.make(403)
     return

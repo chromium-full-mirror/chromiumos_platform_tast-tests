@@ -89,12 +89,15 @@ func NetworkManipulateMitmproxy(ctx context.Context, s *testing.State) {
 }
 
 func verify(ctx context.Context, s *testing.State, cr *chrome.Chrome, mp proxy.Proxy) error {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
 
 	conn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, "https://www.example.com")
 	if err != nil {
 		s.Fatal("Failed to open test page: ", err)
 	}
-	defer closeBrowser(ctx)
+	defer closeBrowser(cleanupCtx)
 	defer conn.Close()
 	br.ReloadActiveTab(ctx)
 
@@ -106,22 +109,14 @@ func verify(ctx context.Context, s *testing.State, cr *chrome.Chrome, mp proxy.P
 	case "error":
 		return verifyPageContent(ctx, conn, "error injected by proxy")
 	case "dumphttpflow":
-		traffic, err := mp.DumpHTTPFlow(ctx, false, true)
+		resp, err := mp.DumpHTTPFlow(ctx, false, true)
 		if err != nil {
 			return err
 		}
 
-		// TODO(b/319732303): Update to Verifier when it's ready.
-		foundURL := false
-		for _, element := range traffic.URLs {
-			if element == "https://www.example.com/" {
-				foundURL = true
-				break
-			}
-		}
-
-		if !foundURL {
-			return errors.New("fail to find URl or Hostname")
+		v := proxy.NewNetworkVerifier(resp)
+		if err := v.Verify([]string{"https://www\\.example\\.com/"}, []string{}, []string{".*"}); err != nil {
+			return errors.Wrap(err, "fail to find URl or Hostname")
 		}
 		return nil
 	case "httpflowfilter":
@@ -129,7 +124,7 @@ func verify(ctx context.Context, s *testing.State, cr *chrome.Chrome, mp proxy.P
 		if err != nil {
 			return errors.Wrap(err, "failed to open new tab")
 		}
-		return verifyPageContent(ctx, conn, "503")
+		return verifyPageContent(ctx, conn, "403")
 	default:
 		return nil
 	}
