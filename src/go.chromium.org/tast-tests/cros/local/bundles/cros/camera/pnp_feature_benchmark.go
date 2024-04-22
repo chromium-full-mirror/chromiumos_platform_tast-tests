@@ -32,7 +32,7 @@ const (
 	faceDetectionConfig             = "feature_benchmark_face_detection_config.json"
 )
 
-type featureBenchmarkParams struct {
+type pnpFeatureBenchmarkParams struct {
 	benchmarkConfig string
 	testCaseName    string
 }
@@ -50,21 +50,21 @@ func init() {
 		Timeout:      initTimePNPFeatureBenchmark + pnp.PNPTimeParams.Total + power.RecorderTimeout,
 		Params: []testing.Param{{
 			Name: "face_detection_1080p",
-			Val: featureBenchmarkParams{
+			Val: pnpFeatureBenchmarkParams{
 				benchmarkConfig: faceDetectionConfig,
 				testCaseName:    "face_detection_1080p",
 			},
 			ExtraData: []string{faceDetectionTestImageFile, faceDetectionTestImageFile + ".json", faceDetectionConfig},
 		}, {
 			Name: "face_detection_720p",
-			Val: featureBenchmarkParams{
+			Val: pnpFeatureBenchmarkParams{
 				benchmarkConfig: faceDetectionConfig,
 				testCaseName:    "face_detection_720p",
 			},
 			ExtraData: []string{faceDetectionTestImageFile, faceDetectionTestImageFile + ".json", faceDetectionConfig},
 		}, {
 			Name: "face_detection_480p",
-			Val: featureBenchmarkParams{
+			Val: pnpFeatureBenchmarkParams{
 				benchmarkConfig: faceDetectionConfig,
 				testCaseName:    "face_detection_480p",
 			},
@@ -107,8 +107,8 @@ func PNPFeatureBenchmark(ctx context.Context, s *testing.State) {
 	featureBenchmarkMetricsJSONPath := filepath.Join(s.OutDir(), featureBenchmarkMetricsJSONFile)
 	cmd := testexec.CommandContext(
 		ctx, benchmarkExec,
-		"--test_config_file_path="+s.DataPath(s.Param().(featureBenchmarkParams).benchmarkConfig),
-		"--test_case_name="+s.Param().(featureBenchmarkParams).testCaseName,
+		"--test_config_file_path="+s.DataPath(s.Param().(pnpFeatureBenchmarkParams).benchmarkConfig),
+		"--test_case_name="+s.Param().(pnpFeatureBenchmarkParams).testCaseName,
 		"--min_running_time_sec="+strconv.Itoa(int((pnp.PNPWarmUpTime+pnp.PNPTimeParams.Total+featureBenchamrkExecutableExtraRunningTime).Seconds())),
 		"--metrics_output_json_path="+featureBenchmarkMetricsJSONPath)
 

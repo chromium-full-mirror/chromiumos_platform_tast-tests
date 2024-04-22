@@ -27,9 +27,9 @@ const (
 )
 
 type pnpCCAParams struct {
-	Mode              cca.Mode
-	FeatureToggleConf features.FeatureToggleConf
-	EffectsConf       *pnp.EffectsParams
+	mode              cca.Mode
+	featureToggleConf features.FeatureToggleConf
+	effectsConf       *pnp.EffectsParams
 }
 
 func init() {
@@ -46,25 +46,25 @@ func init() {
 			Name:    "photo_mode",
 			Fixture: "ccaPowerTest",
 			Val: pnpCCAParams{
-				Mode: cca.Photo,
+				mode: cca.Photo,
 			},
 		}, {
 			Name:    "photo_mode_fake_hal",
 			Fixture: "ccaPowerTestWithFakeHALCamera",
 			Val: pnpCCAParams{
-				Mode: cca.Photo,
+				mode: cca.Photo,
 			},
 		}, {
 			Name:    "video_mode",
 			Fixture: "ccaPowerTest",
 			Val: pnpCCAParams{
-				Mode: cca.Video,
+				mode: cca.Video,
 			},
 		}, {
 			Name:    "video_mode_fake_hal",
 			Fixture: "ccaPowerTestWithFakeHALCamera",
 			Val: pnpCCAParams{
-				Mode: cca.Video,
+				mode: cca.Video,
 			},
 		}, {
 			Name:              "face_gcamae_hdrnet_all_off",
@@ -72,8 +72,8 @@ func init() {
 			ExtraHardwareDeps: hwdep.D(hwdep.CameraFeature(features.HDRnet, features.GcamAE)),
 			ExtraSoftwareDeps: []string{caps.BuiltinMIPICamera},
 			Val: pnpCCAParams{
-				Mode: cca.Video,
-				FeatureToggleConf: features.FeatureToggleConf{
+				mode: cca.Video,
+				featureToggleConf: features.FeatureToggleConf{
 					features.HDRnet:        false,
 					features.GcamAE:        false,
 					features.FaceDetection: false,
@@ -85,8 +85,8 @@ func init() {
 			ExtraHardwareDeps: hwdep.D(hwdep.CameraFeature(features.HDRnet, features.GcamAE)),
 			ExtraSoftwareDeps: []string{caps.BuiltinMIPICamera},
 			Val: pnpCCAParams{
-				Mode: cca.Video,
-				FeatureToggleConf: features.FeatureToggleConf{
+				mode: cca.Video,
+				featureToggleConf: features.FeatureToggleConf{
 					features.HDRnet:        false,
 					features.GcamAE:        false,
 					features.FaceDetection: true,
@@ -98,8 +98,8 @@ func init() {
 			ExtraHardwareDeps: hwdep.D(hwdep.CameraFeature(features.HDRnet, features.GcamAE)),
 			ExtraSoftwareDeps: []string{caps.BuiltinMIPICamera},
 			Val: pnpCCAParams{
-				Mode: cca.Video,
-				FeatureToggleConf: features.FeatureToggleConf{
+				mode: cca.Video,
+				featureToggleConf: features.FeatureToggleConf{
 					features.HDRnet:        false,
 					features.GcamAE:        true,
 					features.FaceDetection: false,
@@ -111,8 +111,8 @@ func init() {
 			ExtraHardwareDeps: hwdep.D(hwdep.CameraFeature(features.HDRnet, features.GcamAE)),
 			ExtraSoftwareDeps: []string{caps.BuiltinMIPICamera},
 			Val: pnpCCAParams{
-				Mode: cca.Video,
-				FeatureToggleConf: features.FeatureToggleConf{
+				mode: cca.Video,
+				featureToggleConf: features.FeatureToggleConf{
 					features.HDRnet:        true,
 					features.GcamAE:        false,
 					features.FaceDetection: false,
@@ -123,8 +123,8 @@ func init() {
 			Fixture:           "ccaPowerTest",
 			ExtraSoftwareDeps: []string{caps.BuiltinMIPICamera, "camera_feature_effects"},
 			Val: pnpCCAParams{
-				Mode: cca.Video,
-				EffectsConf: &pnp.EffectsParams{
+				mode: cca.Video,
+				effectsConf: &pnp.EffectsParams{
 					BlurLevel:      vctray.BackgroundBlurFull,
 					RelightEnabled: false,
 				},
@@ -134,8 +134,8 @@ func init() {
 			Fixture:           "ccaPowerTest",
 			ExtraSoftwareDeps: []string{caps.BuiltinMIPICamera, "camera_feature_effects"},
 			Val: pnpCCAParams{
-				Mode: cca.Video,
-				EffectsConf: &pnp.EffectsParams{
+				mode: cca.Video,
+				effectsConf: &pnp.EffectsParams{
 					BlurLevel:      vctray.BackgroundBlurOff,
 					RelightEnabled: true,
 				},
@@ -145,8 +145,8 @@ func init() {
 			Fixture:           "ccaPowerTest",
 			ExtraSoftwareDeps: []string{caps.BuiltinMIPICamera, "camera_feature_effects"},
 			Val: pnpCCAParams{
-				Mode: cca.Video,
-				EffectsConf: &pnp.EffectsParams{
+				mode: cca.Video,
+				effectsConf: &pnp.EffectsParams{
 					BlurLevel:      vctray.BackgroundBlurFull,
 					RelightEnabled: true,
 				},
@@ -168,7 +168,7 @@ func PNPCCAFeatureToggle(ctx context.Context, s *testing.State) {
 	}
 
 	testing.ContextLog(ctx, "[Start Work Phase]")
-	if s.Param().(pnpCCAParams).FeatureToggleConf != nil {
+	if s.Param().(pnpCCAParams).featureToggleConf != nil {
 		featureToggler, err := features.NewFeatureToggler(ctx)
 		if err != nil {
 			s.Fatal("Cannot create feature toggler: ", err)
@@ -178,7 +178,7 @@ func PNPCCAFeatureToggle(ctx context.Context, s *testing.State) {
 				s.Error("Cannot close feature toggler: ", err)
 			}
 		}()
-		featureToggler.Toggle(ctx, s.Param().(pnpCCAParams).FeatureToggleConf)
+		featureToggler.Toggle(ctx, s.Param().(pnpCCAParams).featureToggleConf)
 		if err := upstart.RestartJob(ctx, "cros-camera"); err != nil {
 			s.Fatal("Failed to restart cros-camera service: ", err)
 		}
@@ -203,7 +203,7 @@ func PNPCCAFeatureToggle(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	if effectsConf := s.Param().(pnpCCAParams).EffectsConf; effectsConf != nil {
+	if effectsConf := s.Param().(pnpCCAParams).effectsConf; effectsConf != nil {
 		cr := s.FixtValue().(cca.FixtureData).Chrome
 		tconn, err := cr.TestAPIConn(ctx)
 		if err != nil {
@@ -221,7 +221,7 @@ func PNPCCAFeatureToggle(ctx context.Context, s *testing.State) {
 	if err := app.FullscreenWindow(ctx); err != nil {
 		s.Fatal("Failed to enter full screen of CCA: ", err)
 	}
-	mode := s.Param().(pnpCCAParams).Mode
+	mode := s.Param().(pnpCCAParams).mode
 	if err := app.SwitchMode(ctx, mode); err != nil {
 		s.Error("Failed to switch mode ", mode, ": ", err)
 	}
