@@ -80,9 +80,6 @@ func parseYavtaEnumFormats(ctx context.Context, videoNode string) ([]captureMeta
 	// Camera name string is of the following style:
 	// Device `<camera_name>` on ...
 	cameraName := strings.FieldsFunc(lines[1], cameraNameSplitter)[1]
-	// perf.Values valid metric names only allow "^[a-zA-Z0-9._-]{1,256}$".
-	re := regexp.MustCompile("[^a-zA-Z0-9._-]")
-	cameraName = re.ReplaceAllString(cameraName, "-")
 
 	for _, line := range lines {
 		if strings.Contains(line, "Format") {
@@ -158,6 +155,9 @@ func PNPDirectOffUSBCameraPower(ctx context.Context, s *testing.State) {
 
 	testing.ContextLog(ctx, "[Start Work Phase]")
 	for _, videoNode := range usbCameraList {
+		usbCameraVersion, err := testutil.GetUsbCameraVersion(ctx, videoNode)
+		vidPid := usbCameraVersion.IDVendor + ":" + usbCameraVersion.IDProduct
+
 		captureMetadatas, err := parseYavtaEnumFormats(ctx, videoNode)
 		if err != nil {
 			s.Fatal("Failed to parse yavta enum formats from node ", videoNode, ": ", err)
@@ -222,12 +222,14 @@ func PNPDirectOffUSBCameraPower(ctx context.Context, s *testing.State) {
 					s.Fatal("Failed to wait for yavta termination: ", err)
 				}
 			}
-			perfValue.MergeWithSuffix(
-				fmt.Sprintf(
-					".%s_%s_%d_%d_%d", captureMetadata.cameraName,
-					captureMetadata.format, captureMetadata.width,
-					captureMetadata.height, captureMetadata.fps),
-				subPerfValue)
+
+			metricSuffix := fmt.Sprintf(
+				".%s_%s_%s_%d_%d_%d", vidPid, captureMetadata.cameraName,
+				captureMetadata.format, captureMetadata.width,
+				captureMetadata.height, captureMetadata.fps)
+			re := regexp.MustCompile("[^a-zA-Z0-9._-]")
+			metricSuffix = re.ReplaceAllString(metricSuffix, "-")
+			perfValue.MergeWithSuffix(metricSuffix, subPerfValue)
 		}
 	}
 	if err = perfValue.Save(s.OutDir()); err != nil {
