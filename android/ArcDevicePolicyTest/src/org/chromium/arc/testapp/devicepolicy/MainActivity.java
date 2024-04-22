@@ -51,36 +51,26 @@ public class MainActivity extends Activity {
 
         arcPolicies =
                 Map.ofEntries(
-                        Map.entry(
-                                "setWallpaper",
-                                () -> isRestrictionUnapplied(UserManager.DISALLOW_SET_WALLPAPER)),
-                        Map.entry(
-                                "printingDisabled",
-                                () -> isRestrictionUnapplied(UserManager.DISALLOW_PRINTING)),
-                        Map.entry(
+                        isRestrictionUnapplied(
+                                "setWallpaper", "setWallpaper", UserManager.DISALLOW_SET_WALLPAPER),
+                        isRestrictionUnapplied(
+                                "printingDisabled", "printing", UserManager.DISALLOW_PRINTING),
+                        isOperationAllowed(
                                 "screenCaptureDisabled",
-                                () ->
-                                        isOperationAllowed(
-                                                "Screenshot",
-                                                () ->
-                                                        !devicePolicyManager
-                                                                .getScreenCaptureDisabled(null))),
-                        Map.entry(
+                                "screenshot",
+                                () -> !devicePolicyManager.getScreenCaptureDisabled(null)),
+                        isRestrictionUnapplied(
                                 "shareLocationDisabled",
-                                () -> isRestrictionUnapplied(UserManager.DISALLOW_SHARE_LOCATION)),
-                        Map.entry(
+                                "shareLocation",
+                                UserManager.DISALLOW_SHARE_LOCATION),
+                        isOperationAllowed(
                                 "cameraDisabled",
-                                () ->
-                                        isOperationAllowed(
-                                                "Camera",
-                                                () ->
-                                                        !devicePolicyManager.getCameraDisabled(
-                                                                null))),
-                        Map.entry(
+                                "camera",
+                                () -> !devicePolicyManager.getCameraDisabled(null)),
+                        isRestrictionUnapplied(
                                 "unmuteMicrophoneDisabled",
-                                () ->
-                                        isRestrictionUnapplied(
-                                                UserManager.DISALLOW_UNMUTE_MICROPHONE)));
+                                "unmute",
+                                UserManager.DISALLOW_UNMUTE_MICROPHONE));
     }
 
     @Override
@@ -118,17 +108,23 @@ public class MainActivity extends Activity {
         txtOutput.setText(String.valueOf(result));
     }
 
-    private boolean isRestrictionUnapplied(String restrictionKey) {
+    private Map.Entry<String, Supplier<Boolean>> isRestrictionUnapplied(
+            String policy, String operation, String restrictionKey) {
         return isOperationAllowed(
-                restrictionKey, () -> !userManager.hasUserRestriction(restrictionKey));
+                policy, operation, () -> !userManager.hasUserRestriction(restrictionKey));
     }
 
-    private boolean isOperationAllowed(String operation, Supplier<Boolean> operationTest) {
-        final boolean allowed = operationTest.get();
-        if (!allowed) {
-            logError(operation + " is disallowed", null);
-        }
-        return allowed;
+    private Map.Entry<String, Supplier<Boolean>> isOperationAllowed(
+            String policy, String operation, Supplier<Boolean> operationTest) {
+        return Map.entry(
+                policy,
+                () -> {
+                    final boolean allowed = operationTest.get();
+                    if (!allowed) {
+                        logError(operation + " is disallowed", null);
+                    }
+                    return allowed;
+                });
     }
 
     private void logError(String message, Exception e) {
