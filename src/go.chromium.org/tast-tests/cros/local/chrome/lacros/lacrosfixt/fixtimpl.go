@@ -19,9 +19,10 @@ func init() {
 	// in Tast tests, unless you have a specific use case for using lacros from
 	// another source.
 	testing.AddFixture(&testing.Fixture{
-		Name:     "lacros",
-		Desc:     "Lacros Chrome from a pre-built image",
-		Contacts: []string{"hyungtaekim@chromium.org", "lacros-team@google.com"},
+		Name:         "lacros",
+		Desc:         "Lacros Chrome from a pre-built image",
+		Contacts:     []string{"hyungtaekim@chromium.org", "lacros-team@google.com"},
+		BugComponent: "b:1088267",
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return NewConfig().Opts()
 		}),
@@ -32,9 +33,10 @@ func init() {
 
 	// lacrosHDR is needed for playing and testing videos in HDR on lacros if the device supports it.
 	testing.AddFixture(&testing.Fixture{
-		Name:     "lacrosHDR",
-		Desc:     "Lacros Chrome from a pre-built image, for HDR tests",
-		Contacts: []string{"mrfemi@google.com", "lacros-team@google.com"},
+		Name:         "lacrosHDR",
+		Desc:         "Lacros Chrome from a pre-built image, for HDR tests",
+		Contacts:     []string{"mrfemi@google.com", "lacros-team@google.com"},
+		BugComponent: "b:1457249",
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return NewConfig(
 				EnableHDR(),
@@ -51,9 +53,10 @@ func init() {
 
 	// lacrosPerf is the same as lacros, but has some options specific for perf tests.
 	testing.AddFixture(&testing.Fixture{
-		Name:     "lacrosPerf",
-		Desc:     "Lacros Chrome from a pre-built image, for perf tests",
-		Contacts: []string{"hyungtaekim@chromium.org", "lacros-team@google.com"},
+		Name:         "lacrosPerf",
+		Desc:         "Lacros Chrome from a pre-built image, for perf tests",
+		Contacts:     []string{"hyungtaekim@chromium.org", "lacros-team@google.com"},
+		BugComponent: "b:1088267",
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			// Powerd is restarts because fwupd starts, which breaks power tests.
 			// Disable the FirmwareUpdaterApp feature.
@@ -164,9 +167,10 @@ func init() {
 
 	// lacrosDisableSync is a fixture to bring up Lacros as the only browser from the rootfs partition by default, with disabled app sync.
 	testing.AddFixture(&testing.Fixture{
-		Name:     "lacrosDisableSync",
-		Desc:     "Lacros Chrome from rootfs as the only browser, with disabled app sync",
-		Contacts: []string{"hyungtaekim@chromium.org", "lacros-team@google.com"},
+		Name:         "lacrosDisableSync",
+		Desc:         "Lacros Chrome from rootfs as the only browser, with disabled app sync",
+		Contacts:     []string{"hyungtaekim@chromium.org", "lacros-team@google.com"},
+		BugComponent: "b:1088267",
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return NewConfig(ChromeOptions(chrome.ExtraArgs("--disable-sync"))).Opts()
 		}),
@@ -207,10 +211,11 @@ func init() {
 
 	// lacrosGaiaLogin is used to test Lacros with a gaia user login.
 	testing.AddFixture(&testing.Fixture{
-		Name:     "lacrosGaiaLogin",
-		Desc:     "Lacros Chrome logged into a Gaia user session",
-		Contacts: []string{"hyungtaekim@chromium.org", "lacros-team@google.com"},
-		Vars:     []string{"ui.gaiaPoolDefault"},
+		Name:         "lacrosGaiaLogin",
+		Desc:         "Lacros Chrome logged into a Gaia user session",
+		Contacts:     []string{"hyungtaekim@chromium.org", "lacros-team@google.com"},
+		BugComponent: "b:1088267",
+		Vars:         []string{"ui.gaiaPoolDefault"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return NewConfig(ChromeOptions(
 				chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")))).Opts()
@@ -222,9 +227,10 @@ func init() {
 
 	// lacrosEduGaiaLogin is used to test Lacros with a gaia edu user login.
 	testing.AddFixture(&testing.Fixture{
-		Name:     "lacrosEduGaiaLogin",
-		Desc:     "Lacros with Edu User Gaia Login",
-		Contacts: []string{"yjt@google.com", "lacros-team@google.com"},
+		Name:         "lacrosEduGaiaLogin",
+		Desc:         "Lacros with Edu User Gaia Login",
+		Contacts:     []string{"kuanhuang@google.com", "lacros-team@google.com"},
+		BugComponent: "b:1088267",
 		// TODO(https://crbug.com/1380072): create new edu users and use that instead
 		Vars: []string{"ui.gaiaPoolDefault"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {

@@ -129,7 +129,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:         "chromeGraphicsLacros",
 		Desc:         "Logged into a user session for graphics testing (lacros)",
-		BugComponent: "b:885255", // ChromeOS > Platform > Graphics
+		BugComponent: "b:1457249",
 		Contacts:     []string{"lacros-team@google.com"},
 		Parent:       "gpuWatchDog",
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {

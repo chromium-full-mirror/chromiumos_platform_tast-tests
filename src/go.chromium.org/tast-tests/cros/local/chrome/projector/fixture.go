@@ -78,9 +78,10 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "lacrosProjectorLogin",
-		Desc:     "Regular user login to lacros with Projector feature flag enabled",
-		Contacts: []string{"hyungtaekim@chromium.org", "cros-projector@google.com"},
+		Name:         "lacrosProjectorLogin",
+		Desc:         "Regular user login to lacros with Projector feature flag enabled",
+		Contacts:     []string{"hyungtaekim@chromium.org", "cros-projector@google.com"},
+		BugComponent: "b:1088267",
 		Impl: NewProjectorFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(
 				chromeFlags,
