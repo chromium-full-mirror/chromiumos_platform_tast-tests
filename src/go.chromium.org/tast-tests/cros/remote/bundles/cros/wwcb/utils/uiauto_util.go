@@ -86,21 +86,24 @@ func OpenMediaFileOnFilesapp(ctx context.Context, uiautoSvc ui.AutomationService
 
 // ClickOnPlayButton clicks button to play the file on Gallery.
 func ClickOnPlayButton(ctx context.Context, uiautoSvc ui.AutomationServiceClient) error {
-	galleryPlayButtonFinder := ui.Node().Role(ui.Role_ROLE_TOGGLE_BUTTON).Name("Toggle play pause").Finder()
+	gallerFullScreenButtonFinder := ui.Node().Name("Toggle fullscreen").Role(ui.Role_ROLE_BUTTON).Finder()
+
+	if _, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: gallerFullScreenButtonFinder}); err != nil {
+		return errors.Wrap(err, "failed to wait for full screen button to show")
+	}
+
+	if _, err := uiautoSvc.LeftClick(ctx, &ui.LeftClickRequest{Finder: gallerFullScreenButtonFinder}); err != nil {
+		return errors.Wrap(err, "failed to click on full screen button")
+	}
+
+	galleryPlayButtonFinder := ui.Node().Name("Toggle play pause").Role(ui.Role_ROLE_BUTTON).Finder()
 
 	if _, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: galleryPlayButtonFinder}); err != nil {
 		return errors.Wrap(err, "failed to wait for play button to show")
 	}
 
-	info, err := uiautoSvc.Info(ctx, &ui.InfoRequest{Finder: galleryPlayButtonFinder})
-	if err != nil {
-		return errors.Wrap(err, "failed to get play button info")
-	}
-
-	if info.NodeInfo.Checked == ui.Checked_CHECKED_FALSE {
-		if _, err := uiautoSvc.LeftClick(ctx, &ui.LeftClickRequest{Finder: galleryPlayButtonFinder}); err != nil {
-			return errors.Wrap(err, "failed to click on play button")
-		}
+	if _, err := uiautoSvc.LeftClick(ctx, &ui.LeftClickRequest{Finder: galleryPlayButtonFinder}); err != nil {
+		return errors.Wrap(err, "failed to click on play button")
 	}
 
 	return nil
