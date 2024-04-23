@@ -24,7 +24,7 @@ func init() {
 		},
 		BugComponent: "b:974567", // ChromeOS > Platform > System > Storage
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Attr:    []string{"group:storage-qual", "storage-qual_pdp_enabled", "storage-qual_pdp_kpi", "storage-qual_pdp_stress", "storage-qual_avl_v3"},
+		Attr:         []string{"group:storage-qual", "storage-qual_pdp_enabled", "storage-qual_pdp_kpi", "storage-qual_pdp_stress", "storage-qual_avl_v3"},
 		Requirements: []string{
 			tdreq.NvmeBlkZeroOutPerf,
 		},
@@ -38,6 +38,11 @@ func WriteZeroPerf(ctx context.Context, s *testing.State) {
 	disk, err := util.GetStandbyRootfs(ctx, s.DUT())
 	if err != nil {
 		s.Fatal("Failed to get internal disk: ", err)
+	}
+
+	err = util.WriteAVLInfo(ctx, disk, s.OutDir())
+	if err != nil {
+		s.Fatal("Failed to write AVL info: ", err)
 	}
 
 	ddBsCount := strconv.FormatInt(int64(disk.Size)/512/1024, 10)

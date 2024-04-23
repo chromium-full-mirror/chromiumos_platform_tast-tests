@@ -46,6 +46,11 @@ func Trim(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get internal disk: ", err)
 	}
 
+	err = util.WriteAVLInfo(ctx, disk, s.OutDir())
+	if err != nil {
+		s.Fatal("Failed to write AVL info: ", err)
+	}
+
 	// Run Trim
 	// Make file size multiple of 4 * chunk size to account for all passes,
 	// i.e. 25% = 1/4, 75% = 3/4.

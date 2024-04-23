@@ -24,7 +24,7 @@ func init() {
 		},
 		BugComponent: "b:974567",
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Attr:    []string{"group:storage-qual", "storage-qual_pdp_enabled", "storage-qual_pdp_kpi", "storage-qual_pdp_stress", "storage-qual_avl_v3"},
+		Attr:         []string{"group:storage-qual", "storage-qual_pdp_enabled", "storage-qual_pdp_kpi", "storage-qual_pdp_stress", "storage-qual_avl_v3"},
 		Requirements: []string{
 			tdreq.InternalStorageInterface,
 			tdreq.StorageEmmcCapacity,
@@ -40,6 +40,11 @@ func InternalDeviceTypeCheck(ctx context.Context, s *testing.State) {
 	disk, err := util.GetInternalStorage(ctx, s.DUT())
 	if err != nil {
 		s.Fatal("Failed to get internal disk: ", err)
+	}
+
+	err = util.WriteAVLInfo(ctx, disk, s.OutDir())
+	if err != nil {
+		s.Fatal("Failed to write AVL info: ", err)
 	}
 
 	ifaces := map[string]bool{

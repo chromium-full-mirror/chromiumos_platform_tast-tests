@@ -45,6 +45,11 @@ func NvmeConfiguration(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get internal disk: ", err)
 	}
 
+	err = util.WriteAVLInfo(ctx, disk, s.OutDir())
+	if err != nil {
+		s.Fatal("Failed to write AVL info: ", err)
+	}
+
 	identity, err := util.RunCmdWithStringOutput(ctx, s.DUT(), "nvme", "id-ctrl", disk.Path)
 	if err != nil {
 		s.Fatal("Could not read controller identity: ", err)

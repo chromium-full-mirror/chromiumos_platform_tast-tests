@@ -63,6 +63,11 @@ func Stress(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get internal disk: ", err)
 	}
 
+	err = util.WriteAVLInfo(ctx, disk, s.OutDir())
+	if err != nil {
+		s.Fatal("Failed to write AVL info: ", err)
+	}
+
 	runTimeSec := s.Param().(string)
 	out, err := util.RunCmdWithStringOutput(ctx, s.DUT(), "stressapptest", "-m", "8", "-s", runTimeSec, "-d", disk.Path)
 	if err != nil {

@@ -26,7 +26,7 @@ func init() {
 		},
 		BugComponent: "b:974567", // ChromeOS > Platform > System > Storage
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Attr:    []string{"group:storage-qual", "storage-qual_pdp_enabled", "storage-qual_pdp_kpi", "storage-qual_pdp_stress", "storage-qual_avl_v3"},
+		Attr:         []string{"group:storage-qual", "storage-qual_pdp_enabled", "storage-qual_pdp_kpi", "storage-qual_pdp_stress", "storage-qual_avl_v3"},
 		HardwareDeps: hwdep.D(hwdep.Ufs()),
 		Requirements: []string{
 			tdreq.UfsStorageControllerVersion,
@@ -51,6 +51,18 @@ func UfsConfiguration(ctx context.Context, s *testing.State) {
 	bootIDChecker := util.NewBootIDChecker(ctx, s.DUT(), s)
 	defer util.FatalIfBootIDChanged(ctx, bootIDChecker, s)
 
+	disk, err := util.GetInternalStorage(ctx, s.DUT())
+	if err != nil {
+		s.Fatal("Failed to get internal disk: ", err)
+	}
+
+	err = util.WriteAVLInfo(ctx, disk, s.OutDir())
+	if err != nil {
+		s.Fatal("Failed to write AVL info: ", err)
+	}
+
+	// TODO: this can maybe be refactored to use parts of the AVL info code, since both are
+	// reading values from the file at this path.
 	const storageInfoPath = "/mnt/stateful_partition/encrypted/var/log/storage_info.txt"
 	storageInfo, err := util.RunCmdWithStringOutput(ctx, s.DUT(), "cat", storageInfoPath)
 	if err != nil {

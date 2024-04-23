@@ -68,6 +68,11 @@ func StressWrite(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get internal disk: ", err)
 	}
 
+	err = util.WriteAVLInfo(ctx, disk, s.OutDir())
+	if err != nil {
+		s.Fatal("Failed to write AVL info: ", err)
+	}
+
 	configBase := util.TestConfig{}.
 		WithResultWriter(resultWriter).
 		WithDisk(disk)
