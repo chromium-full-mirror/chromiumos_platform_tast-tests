@@ -6651,6 +6651,7 @@ type ArcPolicyValue struct {
 	Applications              []Application `json:"applications"`
 	PlayEmmApiInstallDisabled bool          `json:"playEmmApiInstallDisabled"`
 	PlayStoreMode             string        `json:"playStoreMode"`
+	ModifyAccountsDisabled    bool          `json:"modifyAccountsDisabled"`
 	DpsInteractionsDisabled   bool          `json:"dpsInteractionsDisabled"`
 }
 

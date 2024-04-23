@@ -54,6 +54,10 @@ public class MainActivity extends Activity {
                         isRestrictionUnapplied(
                                 "setWallpaper", "setWallpaper", UserManager.DISALLOW_SET_WALLPAPER),
                         isRestrictionUnapplied(
+                                "modifyAccountsDisabled",
+                                "modifyAccounts",
+                                UserManager.DISALLOW_MODIFY_ACCOUNTS),
+                        isRestrictionUnapplied(
                                 "printingDisabled", "printing", UserManager.DISALLOW_PRINTING),
                         isOperationAllowed(
                                 "screenCaptureDisabled",
@@ -112,12 +116,24 @@ public class MainActivity extends Activity {
         txtOutput.setText(String.valueOf(result));
     }
 
+    /*
+        Returns a map entry where key is policy name recognized by ARC DPC and value is a function
+        that can test whether the user is unrestricted to do the operation.
+
+        @return True if the restriction is unapplied, False otherwise.
+    */
     private Map.Entry<String, Supplier<Boolean>> isRestrictionUnapplied(
             String policy, String operation, String restrictionKey) {
         return isOperationAllowed(
                 policy, operation, () -> !userManager.hasUserRestriction(restrictionKey));
     }
 
+    /*
+        Returns a map entry where key is policy name recognized by ARC DPC and value is a function
+        that can test whether a policy restricted operation can be performed.
+
+        @return True if the restricted operation can be performed, False otherwise.
+    */
     private Map.Entry<String, Supplier<Boolean>> isOperationAllowed(
             String policy, String operation, Supplier<Boolean> operationTest) {
         return Map.entry(
