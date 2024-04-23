@@ -162,7 +162,6 @@ func SandboxedServices(ctx context.Context, s *testing.State) {
 		{"activate_date.service", "root", "root", 0},
 		{"chromeos-trim", "root", "root", 0},
 		{"crx-import.sh", "root", "root", 0},
-		{"dump_vpd_log", "root", "root", 0},
 		{"frecon-pre-start.sh", "root", "root", 0},
 		{"powerd-pre-start.sh", "root", "root", 0},
 		{"update_rw_vpd", "root", "root", 0},
