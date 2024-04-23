@@ -44,6 +44,7 @@ func init() {
 		Name:            "cellular",
 		Desc:            "Cellular tests are safe to run",
 		Contacts:        []string{"chromeos-cellular-team@google.com", "stevenjb@google.com"},
+		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		SetUpTimeout:    4 * time.Minute,
 		ResetTimeout:    5 * time.Second,
 		PreTestTimeout:  4 * time.Minute,
@@ -56,6 +57,7 @@ func init() {
 		Name:            "cellularNoUI",
 		Desc:            "Cellular tests without UI are safe to run",
 		Contacts:        []string{"chromeos-cellular-team@google.com", "andrewlassalle@google.com"},
+		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		SetUpTimeout:    4 * time.Minute,
 		ResetTimeout:    5 * time.Second,
 		PreTestTimeout:  4 * time.Minute,
@@ -68,6 +70,7 @@ func init() {
 		Name:            "cellularRebootSetupLocal",
 		Desc:            "Cellular fixture that reboots in SetUp",
 		Contacts:        []string{"chromeos-cellular-team@google.com", "jstanko@google.com"},
+		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		SetUpTimeout:    4 * time.Minute,
 		ResetTimeout:    5 * time.Second,
 		PreTestTimeout:  4 * time.Minute,
@@ -81,6 +84,7 @@ func init() {
 		Name:            "cellularSuspendLocal",
 		Desc:            "Cellular suspend-resume fixture that reboots to help enforce isolation",
 		Contacts:        []string{"chromeos-cellular-team@google.com", "jstanko@google.com"},
+		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		SetUpTimeout:    4 * time.Minute,
 		ResetTimeout:    5 * time.Second,
 		PreTestTimeout:  4 * time.Minute,
@@ -94,6 +98,7 @@ func init() {
 		Name:            "cellularStressLocal",
 		Desc:            "Cellular stress fixture that reboots to help enforce isolation",
 		Contacts:        []string{"chromeos-cellular-team@google.com", "jstanko@google.com"},
+		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		SetUpTimeout:    4 * time.Minute,
 		ResetTimeout:    5 * time.Second,
 		PreTestTimeout:  4 * time.Minute,
@@ -107,6 +112,7 @@ func init() {
 		Name:            "cellularE2ELocal",
 		Desc:            "Cellular e2e fixture that reboots to help enforce isolation",
 		Contacts:        []string{"chromeos-cellular-team@google.com", "jstanko@google.com"},
+		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		SetUpTimeout:    4 * time.Minute,
 		ResetTimeout:    5 * time.Second,
 		PreTestTimeout:  4 * time.Minute,
@@ -120,6 +126,7 @@ func init() {
 		Name:            "cellularHotspotLocal",
 		Desc:            "Cellular hotspot fixture that reboots to help enforce isolation",
 		Contacts:        []string{"chromeos-cellular-team@google.com", "jstanko@google.com"},
+		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		SetUpTimeout:    4 * time.Minute,
 		ResetTimeout:    5 * time.Second,
 		PreTestTimeout:  4 * time.Minute,
@@ -133,6 +140,7 @@ func init() {
 		Name:            "cellularDUTCheckLocal",
 		Desc:            "Cellular dut-check fixture that reboots to help enforce isolation",
 		Contacts:        []string{"chromeos-cellular-team@google.com", "jstanko@google.com"},
+		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		SetUpTimeout:    4 * time.Minute,
 		ResetTimeout:    5 * time.Second,
 		PreTestTimeout:  4 * time.Minute,
@@ -146,6 +154,7 @@ func init() {
 		Name:            "cellularAutoconnectLocal",
 		Desc:            "Cellular autoconnect fixture that reboots in SetUp",
 		Contacts:        []string{"chromeos-cellular-team@google.com", "jstanko@google.com"},
+		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		SetUpTimeout:    4 * time.Minute,
 		ResetTimeout:    5 * time.Second,
 		PreTestTimeout:  4 * time.Minute,
@@ -159,6 +168,7 @@ func init() {
 		Name:            "cellularTestESIM",
 		Desc:            "Cellular tests are safe to run with a Test SIM",
 		Contacts:        []string{"chromeos-cellular-team@google.com", "stevenjb@google.com"},
+		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		SetUpTimeout:    4 * time.Minute,
 		ResetTimeout:    5 * time.Second,
 		PreTestTimeout:  4 * time.Minute,
@@ -171,6 +181,7 @@ func init() {
 		Name:            "cellularWithFakeDMSEnrolled",
 		Desc:            "Cellular tests are safe to run and a fake DMS (for managed eSIM profiles) is running",
 		Contacts:        []string{"chromeos-cellular-team@google.com", "jiajunzhang@google.com"},
+		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		SetUpTimeout:    3 * time.Minute,
 		ResetTimeout:    5 * time.Second,
 		PreTestTimeout:  4 * time.Minute,
@@ -184,6 +195,7 @@ func init() {
 		Name:            "cellularWithFakeDMSEnrolledAndTestSIM",
 		Desc:            "Cellular tests are safe to run that require a Test SIM and a fake DMS (for managed eSIM profiles) is running",
 		Contacts:        []string{"chromeos-cellular-team@google.com", "jiajunzhang@google.com"},
+		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		SetUpTimeout:    3 * time.Minute,
 		ResetTimeout:    5 * time.Second,
 		PreTestTimeout:  4 * time.Minute,
@@ -197,6 +209,7 @@ func init() {
 		Name:            "cellularWithFakeDMSEnrolledAndFunctioningSIM",
 		Desc:            "Cellular tests are safe to run that require a functioning SIM and a fake DMS (for managed eSIM profiles) is running",
 		Contacts:        []string{"cros-connectivity@google.com", "jiajunz@google.com"},
+		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		SetUpTimeout:    3 * time.Minute,
 		ResetTimeout:    5 * time.Second,
 		PreTestTimeout:  4 * time.Minute,
@@ -210,6 +223,7 @@ func init() {
 		Name:            "cellularWithFakeDMSEnrolledAndSIMLockCleared",
 		Desc:            "Cellular tests are safe to run that require a functioning SIM and a fake DMS (for managed eSIM profiles) is running",
 		Contacts:        []string{"cros-connectivity@google.com", "jiajunz@google.com"},
+		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		SetUpTimeout:    3 * time.Minute,
 		ResetTimeout:    5 * time.Second,
 		PreTestTimeout:  4 * time.Minute,
@@ -226,6 +240,7 @@ func init() {
 			"andrewlassalle@google.com",
 			"chromeos-cellular-team@google.com",
 		},
+		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		SetUpTimeout:    5 * time.Minute,
 		ResetTimeout:    5 * time.Second,
 		PreTestTimeout:  4 * time.Minute,
@@ -241,6 +256,7 @@ func init() {
 			"andrewlassalle@google.com",
 			"chromeos-cellular-team@google.com",
 		},
+		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		SetUpTimeout:    5 * time.Minute,
 		ResetTimeout:    5 * time.Second,
 		PreTestTimeout:  4 * time.Minute,
@@ -256,6 +272,7 @@ func init() {
 			"andrewlassalle@google.com",
 			"chromeos-cellular-team@google.com",
 		},
+		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		SetUpTimeout:    5 * time.Minute,
 		ResetTimeout:    5 * time.Second,
 		PreTestTimeout:  4 * time.Minute,
@@ -268,6 +285,7 @@ func init() {
 		Name:            "cellularArcBooted",
 		Desc:            "Arc tests on cellular interface",
 		Contacts:        []string{"chromeos-cellular-team@google.com", "madhavadas@google.com"},
+		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		SetUpTimeout:    4 * time.Minute,
 		ResetTimeout:    5 * time.Second,
 		PreTestTimeout:  4 * time.Minute,
@@ -281,6 +299,7 @@ func init() {
 		Name:            "cellularWithFunctioningRoamingSim",
 		Desc:            "Cellular tests that require a functioning roaming SIM are safe to run",
 		Contacts:        []string{"cros-connectivity@google.com", "nikhilcn@google.com"},
+		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		SetUpTimeout:    4 * time.Minute,
 		ResetTimeout:    5 * time.Second,
 		PreTestTimeout:  4 * time.Minute,
@@ -293,6 +312,7 @@ func init() {
 		Name:            "cellularWithFunctioningSim",
 		Desc:            "Cellular tests that require a functioning SIM are safe to run",
 		Contacts:        []string{"cros-connectivity@google.com", "nikhilcn@google.com"},
+		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		SetUpTimeout:    4 * time.Minute,
 		ResetTimeout:    5 * time.Second,
 		PreTestTimeout:  4 * time.Minute,
@@ -305,6 +325,7 @@ func init() {
 		Name:            "cellularPower",
 		Desc:            "Power tests for cellular connectivity",
 		Contacts:        []string{"chromeos-cellular-team@google.com", "rmao@google.com"},
+		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		SetUpTimeout:    4 * time.Minute,
 		ResetTimeout:    5 * time.Second,
 		PreTestTimeout:  4 * time.Minute,
@@ -318,6 +339,7 @@ func init() {
 		Name:            "cellularSIMLockCleared",
 		Desc:            "Cellular tests that may affect SIM lock",
 		Contacts:        []string{"chromeos-cellular-team@google.com", "stevenjb@google.com"},
+		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		SetUpTimeout:    4 * time.Minute,
 		ResetTimeout:    5 * time.Second,
 		PreTestTimeout:  4 * time.Minute,
@@ -330,6 +352,7 @@ func init() {
 		Name:            "cellularWithChrome",
 		Desc:            "Cellular tests that require Chrome login first",
 		Contacts:        []string{"chromeos-cellular-team@google.com", "madhavadas@google.com"},
+		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		SetUpTimeout:    4 * time.Minute,
 		ResetTimeout:    5 * time.Second,
 		PreTestTimeout:  4 * time.Minute,
