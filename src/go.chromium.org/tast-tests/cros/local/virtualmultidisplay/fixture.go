@@ -36,6 +36,7 @@ func init() {
 			"arc-framework+tast@google.com",
 			"brpol@google.com",
 		},
+		BugComponent: "b:536857", // ChromeOS > Software > ARC++ > Framework > Tests
 		Impl: NewMultiDisplayFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{}, nil
 		}),
@@ -46,10 +47,14 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     fixture.ChromeLoggedInMultiDisplay,
-		Desc:     "Logged into a user session with multi dipslay",
-		Contacts: []string{"brpol@chromium.org"},
-		Parent:   VirtualMultiDisplay,
+		Name: fixture.ChromeLoggedInMultiDisplay,
+		Desc: "Logged into a user session with multi dipslay",
+		Contacts: []string{
+			"arc-framework+tast@google.com",
+			"brpol@chromium.org",
+		},
+		BugComponent: "b:536857", // ChromeOS > Software > ARC++ > Framework > Tests
+		Parent:       VirtualMultiDisplay,
 		Impl: chrome.NewLoggedInFixtureWithParentState(func(s *testing.FixtState) interface{} {
 			return s.ParentValue()
 		}, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
