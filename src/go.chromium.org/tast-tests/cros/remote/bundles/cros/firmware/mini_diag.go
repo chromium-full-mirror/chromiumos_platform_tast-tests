@@ -223,14 +223,14 @@ func miniDiagVerifyCBMEM(ctx context.Context, h *firmware.Helper, saveLogPath st
 	if err != nil {
 		return errors.Wrap(err, "failed to run cbmem command")
 	}
-	var memoryTestSpeedRegexp *regexp.Regexp = regexp.MustCompile(`([0-9]+) ms \([0-9]+ bytes\/us\) ... \([0-9]+%\)`)
+	var memoryTestSpeedRegexp *regexp.Regexp = regexp.MustCompile(`[0-9]+ ms \(([0-9]+) bytes\/us\) ... \([0-9]+%\)`)
 	memoryTestSpeedMatches := memoryTestSpeedRegexp.FindAllStringSubmatch(out, -1)
 	if memoryTestSpeedMatches == nil {
 		return errors.New("failed to find matching memory test result")
 	}
 	for _, match := range memoryTestSpeedMatches {
 		if match[1] == "0" {
-			return errors.New("memory test stuck, speed is 0 ms")
+			return errors.New("memory test stuck, speed is 0 bytes/us")
 		}
 	}
 	return nil
