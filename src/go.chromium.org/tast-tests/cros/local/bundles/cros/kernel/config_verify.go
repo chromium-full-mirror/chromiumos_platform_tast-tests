@@ -340,6 +340,10 @@ func newCommonKernelConfigCheck(ver *sysutil.KernelVersion, arch string) *kernel
 		missing = append(missing, "EXFAT_FS")
 	}
 
+	if ver.IsOrLater(5, 15) {
+		builtin = append(builtin, "RANDOMIZE_KSTACK_OFFSET_DEFAULT")
+	}
+
 	if ver.IsOrLess(6, 1) {
 		// CONFIG_DEBUG_CREDENTIALS was removed during the 6.7 dev cycle and
 		// backported to 6.6:
