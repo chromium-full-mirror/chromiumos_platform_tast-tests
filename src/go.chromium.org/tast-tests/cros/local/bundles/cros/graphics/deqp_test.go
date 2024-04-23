@@ -149,7 +149,7 @@ func TestDEQPParams(t *testing.T) {
 	params = append(params, []dEQPGenParamData{{
 		Name:           `vk_{{.ShardCount}}_{{ printf "%02d" .ShardNum }}`,
 		Timeout:        2 * time.Hour,
-		Attr:           []string{"graphics_manual"},
+		Attr:           []string{"graphics_nightly"},
 		API:            "graphics.VK",
 		ShardCount:     20,
 		IsParallel:     true,
@@ -191,13 +191,6 @@ func TestDEQPParams(t *testing.T) {
 		IsParallel: false,
 		IsSmoke:    true,
 	})
-
-	// TODO: Remove this if vk causes trouble in the lab.
-	for i := range tests {
-		if tests[i].Name == "vk_20_01" {
-			tests[i].Attr = []string{"graphics_nightly"}
-		}
-	}
 
 	code := genparams.Template(t, `{{ range . }}{
 		{{ if .Name }}
