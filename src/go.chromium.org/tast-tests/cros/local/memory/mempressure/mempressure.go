@@ -12,6 +12,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"sort"
 	"time"
 
 	"github.com/shirou/gopsutil/v3/mem"
@@ -107,6 +108,25 @@ func stdDev(values []time.Duration) time.Duration {
 	}
 	n := float64(len(values))
 	return time.Duration(float64(time.Second) * math.Sqrt((s2-s*s/n)/(n-1)))
+}
+
+// statValues sorts values and returns median, 90-percentile, and max.
+func statValues(values []time.Duration) (time.Duration, time.Duration, time.Duration) {
+	sort.Slice(values, func(i, j int) bool { return values[i] < values[j] })
+	l := len(values)
+	var p50, p90, max time.Duration
+	for i, v := range values {
+		if i == l/2 {
+			p50 = v
+		}
+		if i == l*9/10 {
+			p90 = v
+		}
+		if i == l-1 {
+			max = v
+		}
+	}
+	return p50, p90, max
 }
 
 // tab represents a tab on Chrome, providing several APIs to control the tab.
@@ -448,9 +468,17 @@ func logTabSwitchTimesToFile(ctx context.Context, switchTimes []time.Duration, o
 	return nil
 }
 
+func setTabSwitchingMetrics(values *perf.Values, suffix string, value time.Duration) {
+	values.Set(perf.Metric{
+		Name:      "tast_tab_switching" + suffix,
+		Unit:      "ms",
+		Direction: perf.SmallerIsBetter,
+	}, value.Seconds()*1000)
+}
+
 // runTabSwitches performs multiple set of tab switches through the tabs,
 // and logs switch times and their stats.
-func runTabSwitches(ctx context.Context, tabs []*tab, outDir, label string, repeatCount int) error {
+func runTabSwitches(ctx context.Context, tabs []*tab, outDir, label string, repeatCount int, values *perf.Values) error {
 	// Cycle through the tabs once to warm them up (no wiggling).
 	if _, err := cycleTabs(ctx, tabs, time.Second, false); err != nil {
 		return errors.Wrap(err, "cannot warm-up initial set of tabs")
@@ -466,6 +494,13 @@ func runTabSwitches(ctx context.Context, tabs []*tab, outDir, label string, repe
 		}
 		switchTimes = append(switchTimes, times...)
 	}
+
+	p50, p90, max := statValues(switchTimes)
+	setTabSwitchingMetrics(values, "_mean_"+label, mean(switchTimes))
+	setTabSwitchingMetrics(values, "_stddev_"+label, stdDev(switchTimes))
+	setTabSwitchingMetrics(values, "_p50_"+label, p50)
+	setTabSwitchingMetrics(values, "_p90_"+label, p90)
+	setTabSwitchingMetrics(values, "_max_"+label, max)
 
 	testing.ContextLogf(ctx, "Metrics: %s: mean/stddev of switch times for all tabs: %7.2f %7.2f (ms)",
 		label, mean(switchTimes).Seconds()*1000, stdDev(switchTimes).Seconds()*1000)
@@ -588,7 +623,7 @@ func runPhase1(ctx context.Context, outDir string, br *browser.Browser, p *RunPa
 	pinnedTabs = tabs[:]
 
 	// Collect and log tab-switching times in the absence of memory pressure.
-	if err := runTabSwitches(ctx, tabs, outDir, "light"+tag, tabSwitchRepeatCount); err != nil {
+	if err := runTabSwitches(ctx, tabs, outDir, "light"+tag, tabSwitchRepeatCount, perfValues); err != nil {
 		return nil, nil, 0, 0, errors.Wrap(err, "cannot run tab switches with light load")
 	}
 	logAndResetStats(ctx, partialMeter, "initial"+tag)
@@ -736,7 +771,7 @@ func runPhase3(ctx context.Context, outDir string, pinnedTabs []*tab, tabSwitchR
 		return errors.Wrap(err, "timed out")
 	}
 	// Measure tab switching under pressure.
-	if err := runTabSwitches(ctx, pinnedTabs, outDir, "heavy", tabSwitchRepeatCount); err != nil {
+	if err := runTabSwitches(ctx, pinnedTabs, outDir, "heavy", tabSwitchRepeatCount, perfValues); err != nil {
 		return errors.Wrap(err, "cannot run tab switches with heavy load")
 	}
 	if err := recordAndResetStats(ctx, fullMeter, perfValues, "phase_3"); err != nil {
