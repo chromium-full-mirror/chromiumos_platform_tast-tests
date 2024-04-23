@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/login"
 	"go.chromium.org/tast-tests/cros/local/upstart"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -58,8 +59,11 @@ func init() {
 
 // ExistingUser logs in to an existing user account from the login screen.
 func ExistingUser(ctx context.Context, s *testing.State) {
-	password := s.Param().(passwordType)
+	cleanupContext := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
+	defer cancel()
 
+	password := s.Param().(passwordType)
 	var creds chrome.Creds
 
 	// Log in and log out to create a user pod on the login screen.
@@ -81,6 +85,8 @@ func ExistingUser(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to restart ui: ", err)
 		}
 	}()
+	// Ensure that as the test ends, we cleanup any state.
+	defer userutil.ResetUsers(cleanupContext)
 
 	// chrome.NoLogin() and chrome.KeepState() are needed to show the login
 	// screen with a user pod (instead of the OOBE login screen).
@@ -97,13 +103,13 @@ func ExistingUser(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
-	defer cr.Close(ctx)
+	defer cr.Close(cleanupContext)
 
 	tLoginConn, err := cr.SigninProfileTestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Creating login test API connection failed: ", err)
 	}
-	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tLoginConn)
+	defer faillog.DumpUITreeOnError(cleanupContext, s.OutDir(), s.HasError, tLoginConn)
 
 	// Wait for the login screen to be ready for password entry.
 	if err := lockscreen.WaitForPasswordEntry(ctx, tLoginConn, 30*time.Second); err != nil {
@@ -114,7 +120,7 @@ func ExistingUser(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get keyboard: ", err)
 	}
-	defer kb.Close(ctx)
+	defer kb.Close(cleanupContext)
 
 	s.Log("Entering password to log in")
 	if err := lockscreen.EnterPassword(ctx, tLoginConn, creds.User, creds.Pass, kb); err != nil {
@@ -135,8 +141,7 @@ func ExistingUser(ctx context.Context, s *testing.State) {
 // can be user for the offline login afterwards.
 func logInWithGaiaPassword(ctx context.Context, s *testing.State) (c *chrome.Chrome, creds chrome.Creds) {
 	cr, err := chrome.New(ctx,
-		chrome.GAIALogin(chrome.Creds{User: s.RequiredVar("floatingworkspace.cros_username"), Pass: s.RequiredVar("floatingworkspace.cros_password")}),
-		chrome.TryReuseSession())
+		chrome.GAIALogin(chrome.Creds{User: s.RequiredVar("floatingworkspace.cros_username"), Pass: s.RequiredVar("floatingworkspace.cros_password")}))
 	if err != nil {
 		s.Fatal("Chrome login failed: ", err)
 	}
