@@ -62,13 +62,9 @@ func CarrierLockEndToEndSPNMatch(ctx context.Context, s *testing.State) {
 		s.Fatal("Unable to find Cellular Service: ", err)
 	}
 
-	modem, err := modemmanager.NewModemWithSim(ctx)
+	_, err = modemmanager.NewModemWithSim(ctx)
 	if err != nil {
 		s.Fatal("Could not find MM dbus object with a valid sim: ", err)
-	}
-
-	if err := modem.Enable(ctx); err != nil {
-		//	s.Fatal("Modem enable failed with: ", err)
 	}
 
 	cleanupCtx := ctx

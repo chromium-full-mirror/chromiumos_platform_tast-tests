@@ -73,10 +73,6 @@ func CarrierLockEndToEndIMSIPrefix(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to read SIM IMSI from modemmanager: ", err)
 	}
 
-	if err := modem.Enable(ctx); err != nil {
-		s.Fatal("Modem enable failed with: ", err)
-	}
-
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Minute)
 	defer cancel()
