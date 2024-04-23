@@ -461,7 +461,8 @@ func OpenNetworkDetailPage(ctx context.Context, tconn *chrome.TestConn, cr *chro
 
 	var technologyName string
 	enableTechnology := func(name string) action.Action { return app.SetToggleOption(cr, name+" enable", true) }
-	selectNetwork := ui.LeftClick(arrowFinder.NameContaining(networkName).First())
+	// The target network might be off-screen when there are lots of networks being found, so DoDefault is used.
+	selectNetwork := ui.DoDefault(arrowFinder.NameContaining(networkName).First())
 	switch networkType {
 	case netconfigtypes.Cellular:
 		technologyName = "Mobile data"

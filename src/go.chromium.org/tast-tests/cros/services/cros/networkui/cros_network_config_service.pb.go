@@ -80,6 +80,191 @@ func (HiddenSSIDMode) EnumDescriptor() ([]byte, []int) {
 	return file_cros_network_config_service_proto_rawDescGZIP(), []int{0}
 }
 
+type NetworkType int32
+
+const (
+	NetworkType_ALL_NETWORK_TYPE NetworkType = 0
+	NetworkType_CELLULAR         NetworkType = 1
+	NetworkType_ETHERNET         NetworkType = 2
+	NetworkType_MOBILE           NetworkType = 3
+	NetworkType_TETHER           NetworkType = 4
+	NetworkType_VPN              NetworkType = 5
+	NetworkType_WIRELESS         NetworkType = 6
+	NetworkType_WIFI             NetworkType = 7
+)
+
+// Enum value maps for NetworkType.
+var (
+	NetworkType_name = map[int32]string{
+		0: "ALL_NETWORK_TYPE",
+		1: "CELLULAR",
+		2: "ETHERNET",
+		3: "MOBILE",
+		4: "TETHER",
+		5: "VPN",
+		6: "WIRELESS",
+		7: "WIFI",
+	}
+	NetworkType_value = map[string]int32{
+		"ALL_NETWORK_TYPE": 0,
+		"CELLULAR":         1,
+		"ETHERNET":         2,
+		"MOBILE":           3,
+		"TETHER":           4,
+		"VPN":              5,
+		"WIRELESS":         6,
+		"WIFI":             7,
+	}
+)
+
+func (x NetworkType) Enum() *NetworkType {
+	p := new(NetworkType)
+	*p = x
+	return p
+}
+
+func (x NetworkType) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (NetworkType) Descriptor() protoreflect.EnumDescriptor {
+	return file_cros_network_config_service_proto_enumTypes[1].Descriptor()
+}
+
+func (NetworkType) Type() protoreflect.EnumType {
+	return &file_cros_network_config_service_proto_enumTypes[1]
+}
+
+func (x NetworkType) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use NetworkType.Descriptor instead.
+func (NetworkType) EnumDescriptor() ([]byte, []int) {
+	return file_cros_network_config_service_proto_rawDescGZIP(), []int{1}
+}
+
+type FilterType int32
+
+const (
+	FilterType_ALL_FILTER_TYPE FilterType = 0
+	// ACTIVE indicates return active networks. A network is active when its
+	// ConnectionStateType != NotConnected.
+	FilterType_ACTIVE FilterType = 1
+	// VISIBLE indicates return visible (active, physically connected or
+	// in-range) networks. Active networks will be listed first.
+	FilterType_VISIBLE FilterType = 2
+	// CONFIGURED indicates return configured (saved) networks.
+	FilterType_CONFIGURED FilterType = 3
+)
+
+// Enum value maps for FilterType.
+var (
+	FilterType_name = map[int32]string{
+		0: "ALL_FILTER_TYPE",
+		1: "ACTIVE",
+		2: "VISIBLE",
+		3: "CONFIGURED",
+	}
+	FilterType_value = map[string]int32{
+		"ALL_FILTER_TYPE": 0,
+		"ACTIVE":          1,
+		"VISIBLE":         2,
+		"CONFIGURED":      3,
+	}
+)
+
+func (x FilterType) Enum() *FilterType {
+	p := new(FilterType)
+	*p = x
+	return p
+}
+
+func (x FilterType) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (FilterType) Descriptor() protoreflect.EnumDescriptor {
+	return file_cros_network_config_service_proto_enumTypes[2].Descriptor()
+}
+
+func (FilterType) Type() protoreflect.EnumType {
+	return &file_cros_network_config_service_proto_enumTypes[2]
+}
+
+func (x FilterType) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use FilterType.Descriptor instead.
+func (FilterType) EnumDescriptor() ([]byte, []int) {
+	return file_cros_network_config_service_proto_rawDescGZIP(), []int{2}
+}
+
+type ConnectionState int32
+
+const (
+	// ONLINE indicates the network is connected and internet connectivity is
+	// available.
+	ConnectionState_ONLINE ConnectionState = 0
+	// CONNECTED indicates the network is connected and not in a detected portal
+	// state, but internet connectivity may not be available.
+	ConnectionState_CONNECTED ConnectionState = 1
+	// PORTAL indicates the network is connected but a portal state was
+	// detected. Internet connectivity may be limited. Additional details are in
+	// PortalState.
+	ConnectionState_PORTAL ConnectionState = 2
+	// CONNECTING indicates the network is in the process of connecting.
+	ConnectionState_CONNECTING ConnectionState = 3
+	// NOT_CONNECTED indicates the network is not connected.
+	ConnectionState_NOT_CONNECTED ConnectionState = 4
+)
+
+// Enum value maps for ConnectionState.
+var (
+	ConnectionState_name = map[int32]string{
+		0: "ONLINE",
+		1: "CONNECTED",
+		2: "PORTAL",
+		3: "CONNECTING",
+		4: "NOT_CONNECTED",
+	}
+	ConnectionState_value = map[string]int32{
+		"ONLINE":        0,
+		"CONNECTED":     1,
+		"PORTAL":        2,
+		"CONNECTING":    3,
+		"NOT_CONNECTED": 4,
+	}
+)
+
+func (x ConnectionState) Enum() *ConnectionState {
+	p := new(ConnectionState)
+	*p = x
+	return p
+}
+
+func (x ConnectionState) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (ConnectionState) Descriptor() protoreflect.EnumDescriptor {
+	return file_cros_network_config_service_proto_enumTypes[3].Descriptor()
+}
+
+func (ConnectionState) Type() protoreflect.EnumType {
+	return &file_cros_network_config_service_proto_enumTypes[3]
+}
+
+func (x ConnectionState) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use ConnectionState.Descriptor instead.
+func (ConnectionState) EnumDescriptor() ([]byte, []int) {
+	return file_cros_network_config_service_proto_rawDescGZIP(), []int{3}
+}
+
 type ConfigureNetworkRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -365,6 +550,176 @@ func (*WiFiConfigProperties_None) isWiFiConfigProperties_Security() {}
 
 func (*WiFiConfigProperties_Psk) isWiFiConfigProperties_Security() {}
 
+// NetworkFilter is passed to GetNetworkStateList to filter the list of networks
+// returned.
+type NetworkFilter struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Network NetworkType `protobuf:"varint,1,opt,name=network,proto3,enum=tast.cros.networkui.NetworkType" json:"network,omitempty"`
+	Filter  FilterType  `protobuf:"varint,2,opt,name=filter,proto3,enum=tast.cros.networkui.FilterType" json:"filter,omitempty"`
+	Limit   int32       `protobuf:"varint,3,opt,name=limit,proto3" json:"limit,omitempty"`
+}
+
+func (x *NetworkFilter) Reset() {
+	*x = NetworkFilter{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cros_network_config_service_proto_msgTypes[4]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *NetworkFilter) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*NetworkFilter) ProtoMessage() {}
+
+func (x *NetworkFilter) ProtoReflect() protoreflect.Message {
+	mi := &file_cros_network_config_service_proto_msgTypes[4]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use NetworkFilter.ProtoReflect.Descriptor instead.
+func (*NetworkFilter) Descriptor() ([]byte, []int) {
+	return file_cros_network_config_service_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *NetworkFilter) GetNetwork() NetworkType {
+	if x != nil {
+		return x.Network
+	}
+	return NetworkType_ALL_NETWORK_TYPE
+}
+
+func (x *NetworkFilter) GetFilter() FilterType {
+	if x != nil {
+		return x.Filter
+	}
+	return FilterType_ALL_FILTER_TYPE
+}
+
+func (x *NetworkFilter) GetLimit() int32 {
+	if x != nil {
+		return x.Limit
+	}
+	return 0
+}
+
+type GetNetworkStateListResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Properties []*NetworkStateProperties `protobuf:"bytes,1,rep,name=properties,proto3" json:"properties,omitempty"`
+}
+
+func (x *GetNetworkStateListResponse) Reset() {
+	*x = GetNetworkStateListResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cros_network_config_service_proto_msgTypes[5]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *GetNetworkStateListResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetNetworkStateListResponse) ProtoMessage() {}
+
+func (x *GetNetworkStateListResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_cros_network_config_service_proto_msgTypes[5]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetNetworkStateListResponse.ProtoReflect.Descriptor instead.
+func (*GetNetworkStateListResponse) Descriptor() ([]byte, []int) {
+	return file_cros_network_config_service_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *GetNetworkStateListResponse) GetProperties() []*NetworkStateProperties {
+	if x != nil {
+		return x.Properties
+	}
+	return nil
+}
+
+// NetworkStateProperties describes the network state property.
+// It can be further extended by adding other properties stated in the netconfig
+// package. see: netconfig.NetworkStateProperties.
+type NetworkStateProperties struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Name            string          `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	ConnectionState ConnectionState `protobuf:"varint,2,opt,name=connection_state,json=connectionState,proto3,enum=tast.cros.networkui.ConnectionState" json:"connection_state,omitempty"`
+}
+
+func (x *NetworkStateProperties) Reset() {
+	*x = NetworkStateProperties{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cros_network_config_service_proto_msgTypes[6]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *NetworkStateProperties) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*NetworkStateProperties) ProtoMessage() {}
+
+func (x *NetworkStateProperties) ProtoReflect() protoreflect.Message {
+	mi := &file_cros_network_config_service_proto_msgTypes[6]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use NetworkStateProperties.ProtoReflect.Descriptor instead.
+func (*NetworkStateProperties) Descriptor() ([]byte, []int) {
+	return file_cros_network_config_service_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *NetworkStateProperties) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *NetworkStateProperties) GetConnectionState() ConnectionState {
+	if x != nil {
+		return x.ConnectionState
+	}
+	return ConnectionState_ONLINE
+}
+
 var File_cros_network_config_service_proto protoreflect.FileDescriptor
 
 var file_cros_network_config_service_proto_rawDesc = []byte{
@@ -413,24 +768,73 @@ var file_cros_network_config_service_proto_rawDesc = []byte{
 	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79, 0x48, 0x00, 0x52,
 	0x04, 0x6e, 0x6f, 0x6e, 0x65, 0x12, 0x12, 0x0a, 0x03, 0x70, 0x73, 0x6b, 0x18, 0x04, 0x20, 0x01,
 	0x28, 0x09, 0x48, 0x00, 0x52, 0x03, 0x70, 0x73, 0x6b, 0x42, 0x0a, 0x0a, 0x08, 0x73, 0x65, 0x63,
-	0x75, 0x72, 0x69, 0x74, 0x79, 0x2a, 0x3a, 0x0a, 0x0e, 0x48, 0x69, 0x64, 0x64, 0x65, 0x6e, 0x53,
-	0x53, 0x49, 0x44, 0x4d, 0x6f, 0x64, 0x65, 0x12, 0x0d, 0x0a, 0x09, 0x41, 0x75, 0x74, 0x6f, 0x6d,
-	0x61, 0x74, 0x69, 0x63, 0x10, 0x00, 0x12, 0x0c, 0x0a, 0x08, 0x44, 0x69, 0x73, 0x61, 0x62, 0x6c,
-	0x65, 0x64, 0x10, 0x01, 0x12, 0x0b, 0x0a, 0x07, 0x45, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x10,
-	0x02, 0x32, 0x8d, 0x01, 0x0a, 0x18, 0x43, 0x72, 0x6f, 0x73, 0x4e, 0x65, 0x74, 0x77, 0x6f, 0x72,
-	0x6b, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x71,
-	0x0a, 0x10, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x75, 0x72, 0x65, 0x4e, 0x65, 0x74, 0x77, 0x6f,
-	0x72, 0x6b, 0x12, 0x2c, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x6e,
-	0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x75, 0x69, 0x2e, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x75,
-	0x72, 0x65, 0x4e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
-	0x1a, 0x2d, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x6e, 0x65, 0x74,
-	0x77, 0x6f, 0x72, 0x6b, 0x75, 0x69, 0x2e, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x75, 0x72, 0x65,
-	0x4e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22,
-	0x00, 0x42, 0x39, 0x5a, 0x37, 0x67, 0x6f, 0x2e, 0x63, 0x68, 0x72, 0x6f, 0x6d, 0x69, 0x75, 0x6d,
-	0x2e, 0x6f, 0x72, 0x67, 0x2f, 0x74, 0x61, 0x73, 0x74, 0x2d, 0x74, 0x65, 0x73, 0x74, 0x73, 0x2f,
-	0x63, 0x72, 0x6f, 0x73, 0x2f, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x73, 0x2f, 0x63, 0x72,
-	0x6f, 0x73, 0x2f, 0x6e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x75, 0x69, 0x62, 0x06, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x33,
+	0x75, 0x72, 0x69, 0x74, 0x79, 0x22, 0x9a, 0x01, 0x0a, 0x0d, 0x4e, 0x65, 0x74, 0x77, 0x6f, 0x72,
+	0x6b, 0x46, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x12, 0x3a, 0x0a, 0x07, 0x6e, 0x65, 0x74, 0x77, 0x6f,
+	0x72, 0x6b, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x20, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e,
+	0x63, 0x72, 0x6f, 0x73, 0x2e, 0x6e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x75, 0x69, 0x2e, 0x4e,
+	0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x54, 0x79, 0x70, 0x65, 0x52, 0x07, 0x6e, 0x65, 0x74, 0x77,
+	0x6f, 0x72, 0x6b, 0x12, 0x37, 0x0a, 0x06, 0x66, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x18, 0x02, 0x20,
+	0x01, 0x28, 0x0e, 0x32, 0x1f, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e,
+	0x6e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x75, 0x69, 0x2e, 0x46, 0x69, 0x6c, 0x74, 0x65, 0x72,
+	0x54, 0x79, 0x70, 0x65, 0x52, 0x06, 0x66, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x12, 0x14, 0x0a, 0x05,
+	0x6c, 0x69, 0x6d, 0x69, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x05, 0x52, 0x05, 0x6c, 0x69, 0x6d,
+	0x69, 0x74, 0x22, 0x6a, 0x0a, 0x1b, 0x47, 0x65, 0x74, 0x4e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b,
+	0x53, 0x74, 0x61, 0x74, 0x65, 0x4c, 0x69, 0x73, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x12, 0x4b, 0x0a, 0x0a, 0x70, 0x72, 0x6f, 0x70, 0x65, 0x72, 0x74, 0x69, 0x65, 0x73, 0x18,
+	0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x2b, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f,
+	0x73, 0x2e, 0x6e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x75, 0x69, 0x2e, 0x4e, 0x65, 0x74, 0x77,
+	0x6f, 0x72, 0x6b, 0x53, 0x74, 0x61, 0x74, 0x65, 0x50, 0x72, 0x6f, 0x70, 0x65, 0x72, 0x74, 0x69,
+	0x65, 0x73, 0x52, 0x0a, 0x70, 0x72, 0x6f, 0x70, 0x65, 0x72, 0x74, 0x69, 0x65, 0x73, 0x22, 0x7d,
+	0x0a, 0x16, 0x4e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x53, 0x74, 0x61, 0x74, 0x65, 0x50, 0x72,
+	0x6f, 0x70, 0x65, 0x72, 0x74, 0x69, 0x65, 0x73, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x12, 0x4f, 0x0a, 0x10,
+	0x63, 0x6f, 0x6e, 0x6e, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x5f, 0x73, 0x74, 0x61, 0x74, 0x65,
+	0x18, 0x02, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x24, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72,
+	0x6f, 0x73, 0x2e, 0x6e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x75, 0x69, 0x2e, 0x43, 0x6f, 0x6e,
+	0x6e, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x53, 0x74, 0x61, 0x74, 0x65, 0x52, 0x0f, 0x63, 0x6f,
+	0x6e, 0x6e, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x53, 0x74, 0x61, 0x74, 0x65, 0x2a, 0x3a, 0x0a,
+	0x0e, 0x48, 0x69, 0x64, 0x64, 0x65, 0x6e, 0x53, 0x53, 0x49, 0x44, 0x4d, 0x6f, 0x64, 0x65, 0x12,
+	0x0d, 0x0a, 0x09, 0x41, 0x75, 0x74, 0x6f, 0x6d, 0x61, 0x74, 0x69, 0x63, 0x10, 0x00, 0x12, 0x0c,
+	0x0a, 0x08, 0x44, 0x69, 0x73, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x10, 0x01, 0x12, 0x0b, 0x0a, 0x07,
+	0x45, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x10, 0x02, 0x2a, 0x78, 0x0a, 0x0b, 0x4e, 0x65, 0x74,
+	0x77, 0x6f, 0x72, 0x6b, 0x54, 0x79, 0x70, 0x65, 0x12, 0x14, 0x0a, 0x10, 0x41, 0x4c, 0x4c, 0x5f,
+	0x4e, 0x45, 0x54, 0x57, 0x4f, 0x52, 0x4b, 0x5f, 0x54, 0x59, 0x50, 0x45, 0x10, 0x00, 0x12, 0x0c,
+	0x0a, 0x08, 0x43, 0x45, 0x4c, 0x4c, 0x55, 0x4c, 0x41, 0x52, 0x10, 0x01, 0x12, 0x0c, 0x0a, 0x08,
+	0x45, 0x54, 0x48, 0x45, 0x52, 0x4e, 0x45, 0x54, 0x10, 0x02, 0x12, 0x0a, 0x0a, 0x06, 0x4d, 0x4f,
+	0x42, 0x49, 0x4c, 0x45, 0x10, 0x03, 0x12, 0x0a, 0x0a, 0x06, 0x54, 0x45, 0x54, 0x48, 0x45, 0x52,
+	0x10, 0x04, 0x12, 0x07, 0x0a, 0x03, 0x56, 0x50, 0x4e, 0x10, 0x05, 0x12, 0x0c, 0x0a, 0x08, 0x57,
+	0x49, 0x52, 0x45, 0x4c, 0x45, 0x53, 0x53, 0x10, 0x06, 0x12, 0x08, 0x0a, 0x04, 0x57, 0x49, 0x46,
+	0x49, 0x10, 0x07, 0x2a, 0x4a, 0x0a, 0x0a, 0x46, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x54, 0x79, 0x70,
+	0x65, 0x12, 0x13, 0x0a, 0x0f, 0x41, 0x4c, 0x4c, 0x5f, 0x46, 0x49, 0x4c, 0x54, 0x45, 0x52, 0x5f,
+	0x54, 0x59, 0x50, 0x45, 0x10, 0x00, 0x12, 0x0a, 0x0a, 0x06, 0x41, 0x43, 0x54, 0x49, 0x56, 0x45,
+	0x10, 0x01, 0x12, 0x0b, 0x0a, 0x07, 0x56, 0x49, 0x53, 0x49, 0x42, 0x4c, 0x45, 0x10, 0x02, 0x12,
+	0x0e, 0x0a, 0x0a, 0x43, 0x4f, 0x4e, 0x46, 0x49, 0x47, 0x55, 0x52, 0x45, 0x44, 0x10, 0x03, 0x2a,
+	0x5b, 0x0a, 0x0f, 0x43, 0x6f, 0x6e, 0x6e, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x53, 0x74, 0x61,
+	0x74, 0x65, 0x12, 0x0a, 0x0a, 0x06, 0x4f, 0x4e, 0x4c, 0x49, 0x4e, 0x45, 0x10, 0x00, 0x12, 0x0d,
+	0x0a, 0x09, 0x43, 0x4f, 0x4e, 0x4e, 0x45, 0x43, 0x54, 0x45, 0x44, 0x10, 0x01, 0x12, 0x0a, 0x0a,
+	0x06, 0x50, 0x4f, 0x52, 0x54, 0x41, 0x4c, 0x10, 0x02, 0x12, 0x0e, 0x0a, 0x0a, 0x43, 0x4f, 0x4e,
+	0x4e, 0x45, 0x43, 0x54, 0x49, 0x4e, 0x47, 0x10, 0x03, 0x12, 0x11, 0x0a, 0x0d, 0x4e, 0x4f, 0x54,
+	0x5f, 0x43, 0x4f, 0x4e, 0x4e, 0x45, 0x43, 0x54, 0x45, 0x44, 0x10, 0x04, 0x32, 0xfc, 0x01, 0x0a,
+	0x18, 0x43, 0x72, 0x6f, 0x73, 0x4e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x43, 0x6f, 0x6e, 0x66,
+	0x69, 0x67, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x71, 0x0a, 0x10, 0x43, 0x6f, 0x6e,
+	0x66, 0x69, 0x67, 0x75, 0x72, 0x65, 0x4e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x12, 0x2c, 0x2e,
+	0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x6e, 0x65, 0x74, 0x77, 0x6f, 0x72,
+	0x6b, 0x75, 0x69, 0x2e, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x75, 0x72, 0x65, 0x4e, 0x65, 0x74,
+	0x77, 0x6f, 0x72, 0x6b, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2d, 0x2e, 0x74, 0x61,
+	0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x6e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x75,
+	0x69, 0x2e, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x75, 0x72, 0x65, 0x4e, 0x65, 0x74, 0x77, 0x6f,
+	0x72, 0x6b, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x6d, 0x0a, 0x13,
+	0x47, 0x65, 0x74, 0x4e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x53, 0x74, 0x61, 0x74, 0x65, 0x4c,
+	0x69, 0x73, 0x74, 0x12, 0x22, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e,
+	0x6e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x75, 0x69, 0x2e, 0x4e, 0x65, 0x74, 0x77, 0x6f, 0x72,
+	0x6b, 0x46, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x1a, 0x30, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63,
+	0x72, 0x6f, 0x73, 0x2e, 0x6e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x75, 0x69, 0x2e, 0x47, 0x65,
+	0x74, 0x4e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x53, 0x74, 0x61, 0x74, 0x65, 0x4c, 0x69, 0x73,
+	0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x42, 0x39, 0x5a, 0x37, 0x67,
+	0x6f, 0x2e, 0x63, 0x68, 0x72, 0x6f, 0x6d, 0x69, 0x75, 0x6d, 0x2e, 0x6f, 0x72, 0x67, 0x2f, 0x74,
+	0x61, 0x73, 0x74, 0x2d, 0x74, 0x65, 0x73, 0x74, 0x73, 0x2f, 0x63, 0x72, 0x6f, 0x73, 0x2f, 0x73,
+	0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x73, 0x2f, 0x63, 0x72, 0x6f, 0x73, 0x2f, 0x6e, 0x65, 0x74,
+	0x77, 0x6f, 0x72, 0x6b, 0x75, 0x69, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -445,30 +849,42 @@ func file_cros_network_config_service_proto_rawDescGZIP() []byte {
 	return file_cros_network_config_service_proto_rawDescData
 }
 
-var file_cros_network_config_service_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_cros_network_config_service_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_cros_network_config_service_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
+var file_cros_network_config_service_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_cros_network_config_service_proto_goTypes = []interface{}{
 	(HiddenSSIDMode)(0),                 // 0: tast.cros.networkui.HiddenSSIDMode
-	(*ConfigureNetworkRequest)(nil),     // 1: tast.cros.networkui.ConfigureNetworkRequest
-	(*ConfigureNetworkResponse)(nil),    // 2: tast.cros.networkui.ConfigureNetworkResponse
-	(*NetworkTypeConfigProperties)(nil), // 3: tast.cros.networkui.NetworkTypeConfigProperties
-	(*WiFiConfigProperties)(nil),        // 4: tast.cros.networkui.WiFiConfigProperties
-	(*wrapperspb.BoolValue)(nil),        // 5: google.protobuf.BoolValue
-	(*anypb.Any)(nil),                   // 6: google.protobuf.Any
+	(NetworkType)(0),                    // 1: tast.cros.networkui.NetworkType
+	(FilterType)(0),                     // 2: tast.cros.networkui.FilterType
+	(ConnectionState)(0),                // 3: tast.cros.networkui.ConnectionState
+	(*ConfigureNetworkRequest)(nil),     // 4: tast.cros.networkui.ConfigureNetworkRequest
+	(*ConfigureNetworkResponse)(nil),    // 5: tast.cros.networkui.ConfigureNetworkResponse
+	(*NetworkTypeConfigProperties)(nil), // 6: tast.cros.networkui.NetworkTypeConfigProperties
+	(*WiFiConfigProperties)(nil),        // 7: tast.cros.networkui.WiFiConfigProperties
+	(*NetworkFilter)(nil),               // 8: tast.cros.networkui.NetworkFilter
+	(*GetNetworkStateListResponse)(nil), // 9: tast.cros.networkui.GetNetworkStateListResponse
+	(*NetworkStateProperties)(nil),      // 10: tast.cros.networkui.NetworkStateProperties
+	(*wrapperspb.BoolValue)(nil),        // 11: google.protobuf.BoolValue
+	(*anypb.Any)(nil),                   // 12: google.protobuf.Any
 }
 var file_cros_network_config_service_proto_depIdxs = []int32{
-	3, // 0: tast.cros.networkui.ConfigureNetworkRequest.config_properties:type_name -> tast.cros.networkui.NetworkTypeConfigProperties
-	4, // 1: tast.cros.networkui.NetworkTypeConfigProperties.wifi_config_properties:type_name -> tast.cros.networkui.WiFiConfigProperties
-	5, // 2: tast.cros.networkui.NetworkTypeConfigProperties.auto_connect:type_name -> google.protobuf.BoolValue
-	0, // 3: tast.cros.networkui.WiFiConfigProperties.hidden_ssid_mode:type_name -> tast.cros.networkui.HiddenSSIDMode
-	6, // 4: tast.cros.networkui.WiFiConfigProperties.none:type_name -> google.protobuf.Any
-	1, // 5: tast.cros.networkui.CrosNetworkConfigService.ConfigureNetwork:input_type -> tast.cros.networkui.ConfigureNetworkRequest
-	2, // 6: tast.cros.networkui.CrosNetworkConfigService.ConfigureNetwork:output_type -> tast.cros.networkui.ConfigureNetworkResponse
-	6, // [6:7] is the sub-list for method output_type
-	5, // [5:6] is the sub-list for method input_type
-	5, // [5:5] is the sub-list for extension type_name
-	5, // [5:5] is the sub-list for extension extendee
-	0, // [0:5] is the sub-list for field type_name
+	6,  // 0: tast.cros.networkui.ConfigureNetworkRequest.config_properties:type_name -> tast.cros.networkui.NetworkTypeConfigProperties
+	7,  // 1: tast.cros.networkui.NetworkTypeConfigProperties.wifi_config_properties:type_name -> tast.cros.networkui.WiFiConfigProperties
+	11, // 2: tast.cros.networkui.NetworkTypeConfigProperties.auto_connect:type_name -> google.protobuf.BoolValue
+	0,  // 3: tast.cros.networkui.WiFiConfigProperties.hidden_ssid_mode:type_name -> tast.cros.networkui.HiddenSSIDMode
+	12, // 4: tast.cros.networkui.WiFiConfigProperties.none:type_name -> google.protobuf.Any
+	1,  // 5: tast.cros.networkui.NetworkFilter.network:type_name -> tast.cros.networkui.NetworkType
+	2,  // 6: tast.cros.networkui.NetworkFilter.filter:type_name -> tast.cros.networkui.FilterType
+	10, // 7: tast.cros.networkui.GetNetworkStateListResponse.properties:type_name -> tast.cros.networkui.NetworkStateProperties
+	3,  // 8: tast.cros.networkui.NetworkStateProperties.connection_state:type_name -> tast.cros.networkui.ConnectionState
+	4,  // 9: tast.cros.networkui.CrosNetworkConfigService.ConfigureNetwork:input_type -> tast.cros.networkui.ConfigureNetworkRequest
+	8,  // 10: tast.cros.networkui.CrosNetworkConfigService.GetNetworkStateList:input_type -> tast.cros.networkui.NetworkFilter
+	5,  // 11: tast.cros.networkui.CrosNetworkConfigService.ConfigureNetwork:output_type -> tast.cros.networkui.ConfigureNetworkResponse
+	9,  // 12: tast.cros.networkui.CrosNetworkConfigService.GetNetworkStateList:output_type -> tast.cros.networkui.GetNetworkStateListResponse
+	11, // [11:13] is the sub-list for method output_type
+	9,  // [9:11] is the sub-list for method input_type
+	9,  // [9:9] is the sub-list for extension type_name
+	9,  // [9:9] is the sub-list for extension extendee
+	0,  // [0:9] is the sub-list for field type_name
 }
 
 func init() { file_cros_network_config_service_proto_init() }
@@ -525,6 +941,42 @@ func file_cros_network_config_service_proto_init() {
 				return nil
 			}
 		}
+		file_cros_network_config_service_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*NetworkFilter); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cros_network_config_service_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*GetNetworkStateListResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cros_network_config_service_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*NetworkStateProperties); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	file_cros_network_config_service_proto_msgTypes[2].OneofWrappers = []interface{}{
 		(*NetworkTypeConfigProperties_WifiConfigProperties)(nil),
@@ -538,8 +990,8 @@ func file_cros_network_config_service_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_cros_network_config_service_proto_rawDesc,
-			NumEnums:      1,
-			NumMessages:   4,
+			NumEnums:      4,
+			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
@@ -569,6 +1021,9 @@ type CrosNetworkConfigServiceClient interface {
 	// ConfigureNetwork either configures a new network or updates an existing
 	// network configuration.
 	ConfigureNetwork(ctx context.Context, in *ConfigureNetworkRequest, opts ...grpc.CallOption) (*ConfigureNetworkResponse, error)
+	// GetNetworkStateList returns an array of states of networks based on the
+	// filter.
+	GetNetworkStateList(ctx context.Context, in *NetworkFilter, opts ...grpc.CallOption) (*GetNetworkStateListResponse, error)
 }
 
 type crosNetworkConfigServiceClient struct {
@@ -588,11 +1043,23 @@ func (c *crosNetworkConfigServiceClient) ConfigureNetwork(ctx context.Context, i
 	return out, nil
 }
 
+func (c *crosNetworkConfigServiceClient) GetNetworkStateList(ctx context.Context, in *NetworkFilter, opts ...grpc.CallOption) (*GetNetworkStateListResponse, error) {
+	out := new(GetNetworkStateListResponse)
+	err := c.cc.Invoke(ctx, "/tast.cros.networkui.CrosNetworkConfigService/GetNetworkStateList", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // CrosNetworkConfigServiceServer is the server API for CrosNetworkConfigService service.
 type CrosNetworkConfigServiceServer interface {
 	// ConfigureNetwork either configures a new network or updates an existing
 	// network configuration.
 	ConfigureNetwork(context.Context, *ConfigureNetworkRequest) (*ConfigureNetworkResponse, error)
+	// GetNetworkStateList returns an array of states of networks based on the
+	// filter.
+	GetNetworkStateList(context.Context, *NetworkFilter) (*GetNetworkStateListResponse, error)
 }
 
 // UnimplementedCrosNetworkConfigServiceServer can be embedded to have forward compatible implementations.
@@ -601,6 +1068,9 @@ type UnimplementedCrosNetworkConfigServiceServer struct {
 
 func (*UnimplementedCrosNetworkConfigServiceServer) ConfigureNetwork(context.Context, *ConfigureNetworkRequest) (*ConfigureNetworkResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ConfigureNetwork not implemented")
+}
+func (*UnimplementedCrosNetworkConfigServiceServer) GetNetworkStateList(context.Context, *NetworkFilter) (*GetNetworkStateListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetNetworkStateList not implemented")
 }
 
 func RegisterCrosNetworkConfigServiceServer(s *grpc.Server, srv CrosNetworkConfigServiceServer) {
@@ -625,6 +1095,24 @@ func _CrosNetworkConfigService_ConfigureNetwork_Handler(srv interface{}, ctx con
 	return interceptor(ctx, in, info, handler)
 }
 
+func _CrosNetworkConfigService_GetNetworkStateList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(NetworkFilter)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CrosNetworkConfigServiceServer).GetNetworkStateList(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/tast.cros.networkui.CrosNetworkConfigService/GetNetworkStateList",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CrosNetworkConfigServiceServer).GetNetworkStateList(ctx, req.(*NetworkFilter))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _CrosNetworkConfigService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "tast.cros.networkui.CrosNetworkConfigService",
 	HandlerType: (*CrosNetworkConfigServiceServer)(nil),
@@ -632,6 +1120,10 @@ var _CrosNetworkConfigService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ConfigureNetwork",
 			Handler:    _CrosNetworkConfigService_ConfigureNetwork_Handler,
+		},
+		{
+			MethodName: "GetNetworkStateList",
+			Handler:    _CrosNetworkConfigService_GetNetworkStateList_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

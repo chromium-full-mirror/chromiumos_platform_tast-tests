@@ -18,6 +18,11 @@ service CrosNetworkConfigService {
   // network configuration.
   rpc ConfigureNetwork(ConfigureNetworkRequest)
       returns (ConfigureNetworkResponse) {}
+
+  // GetNetworkStateList returns an array of states of networks based on the
+  // filter.
+  rpc GetNetworkStateList(NetworkFilter) returns (GetNetworkStateListResponse) {
+  }
 }
 
 message ConfigureNetworkRequest {
@@ -57,4 +62,64 @@ enum HiddenSSIDMode {
   Automatic = 0;
   Disabled = 1;
   Enabled = 2;
+}
+
+enum NetworkType {
+  ALL_NETWORK_TYPE = 0;
+  CELLULAR = 1;
+  ETHERNET = 2;
+  MOBILE = 3;
+  TETHER = 4;
+  VPN = 5;
+  WIRELESS = 6;
+  WIFI = 7;
+}
+
+enum FilterType {
+  ALL_FILTER_TYPE = 0;
+  // ACTIVE indicates return active networks. A network is active when its
+  // ConnectionStateType != NotConnected.
+  ACTIVE = 1;
+  // VISIBLE indicates return visible (active, physically connected or
+  // in-range) networks. Active networks will be listed first.
+  VISIBLE = 2;
+  // CONFIGURED indicates return configured (saved) networks.
+  CONFIGURED = 3;
+}
+
+// NetworkFilter is passed to GetNetworkStateList to filter the list of networks
+// returned.
+message NetworkFilter {
+  NetworkType network = 1;
+  FilterType filter = 2;
+  int32 limit = 3;
+}
+
+message GetNetworkStateListResponse {
+  repeated NetworkStateProperties properties = 1;
+}
+
+// NetworkStateProperties describes the network state property.
+// It can be further extended by adding other properties stated in the netconfig
+// package. see: netconfig.NetworkStateProperties.
+message NetworkStateProperties {
+  string name = 1;
+  ConnectionState connection_state = 2;
+}
+
+enum ConnectionState {
+  // ONLINE indicates the network is connected and internet connectivity is
+  // available.
+  ONLINE = 0;
+  // CONNECTED indicates the network is connected and not in a detected portal
+  // state, but internet connectivity may not be available.
+  CONNECTED = 1;
+  // PORTAL indicates the network is connected but a portal state was
+  // detected. Internet connectivity may be limited. Additional details are in
+  // PortalState.
+  PORTAL = 2;
+  // CONNECTING indicates the network is in the process of connecting.
+  CONNECTING = 3;
+  // NOT_CONNECTED indicates the network is not connected.
+  NOT_CONNECTED = 4;
 }

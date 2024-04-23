@@ -40,6 +40,9 @@ var (
 
 	// ConnectButtonFinder is the connect button within the "Join Wi-Fi network" dialog.
 	ConnectButtonFinder = ui.Node().NameContaining("Connect").Role(ui.Role_ROLE_BUTTON).Ancestor(JoinWiFiNetworkDialogFinder).Finder()
+
+	// ErrorMessageContainerFinder is the error message container within the "Join Wi-Fi network" dialog.
+	ErrorMessageContainerFinder = ui.Node().HasClass("flex error").Role(ui.Role_ROLE_GENERIC_CONTAINER).Ancestor(JoinWiFiNetworkDialogFinder).Finder()
 )
 
 // Definitions of the common options in the certificate option combo-box.
