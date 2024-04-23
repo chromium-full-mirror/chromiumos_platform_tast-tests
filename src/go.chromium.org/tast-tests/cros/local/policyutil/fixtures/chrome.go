@@ -255,8 +255,8 @@ func init() {
 		Desc: "Logged into a user session and reports metric every second",
 		Contacts: []string{
 			"chrome-ess-engprod@google.com",
-			"meyron@googl.com",
 		},
+		BugComponent: "b:1111617", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Policy Stack
 		Impl: &policyChromeFixture{
 			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 				return []chrome.Option{chrome.KeepEnrollment(),
