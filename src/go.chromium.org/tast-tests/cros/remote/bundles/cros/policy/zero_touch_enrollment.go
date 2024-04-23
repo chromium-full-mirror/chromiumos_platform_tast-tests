@@ -198,11 +198,6 @@ func setVpdValuesForInitialEnrollment(ctx context.Context, dutConn *ssh.Conn) er
 		return errors.Wrap(err, "failed to set rlz date")
 	}
 
-	// Refresh dump_vpd_log because we don't reboot.
-	if err := dutConn.CommandContext(ctx, "dump_vpd_log", "--force").Run(exec.DumpLogOnError); err != nil {
-		return errors.Wrap(err, "failed to refresh dump_vpd_log")
-	}
-
 	return nil
 }
 
