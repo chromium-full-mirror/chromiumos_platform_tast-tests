@@ -6,12 +6,21 @@ package factory
 
 import (
 	"context"
+	"encoding/json"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/factory/fixture"
+	"go.chromium.org/tast-tests/cros/remote/firmware"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
+	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
+)
+
+const (
+	testCrosRegionsPath  = "/usr/share/misc/cros-regions.json"
+	localCrosRegionsPath = "/usr/local/factory/py_pkg/cros/factory/test/l10n/cros-regions.json"
 )
 
 type extraCmdParams struct {
@@ -77,10 +86,61 @@ func init() {
 	})
 }
 
+// setUpEcManifest copies testing EC component manifest to stateful partition. If the manifest doesn't exist, creates an empty one.
+func setUpEcManifest(ctx context.Context, s *testing.State, conn *ssh.Conn) error {
+	ecVersion, err := firmware.NewECTool(s.DUT(), firmware.ECToolNameMain).Version(ctx)
+	if err != nil {
+		s.Fatal("Failed to get EC version: ", err)
+	}
+
+	imageName, err := conn.CommandContext(ctx, "cros_config", "/firmware", "image-name").Output(ssh.DumpLogOnError)
+	if err != nil {
+		return errors.Wrap(err, "failed to get image name")
+	}
+
+	fakeManifest, err := json.Marshal(map[string]string{
+		"ec_version": ecVersion,
+	})
+	if err != nil {
+		return errors.Wrap(err, "failed to construct manifest")
+	}
+
+	manifestDir := "/usr/local/factory/cme/" + string(imageName)
+	if err := conn.CommandContext(ctx, "mkdir", "-p", manifestDir).Run(ssh.DumpLogOnError); err != nil {
+		return errors.Wrapf(err, "failed to create manifest dir: %s", manifestDir)
+	}
+
+	testManifestPath := "/usr/share/cme/" + string(imageName) + "/component_manifest.json"
+	localManifestPath := manifestDir + "/component_manifest.json"
+
+	setUpCrosRegionsCmd := conn.CommandContext(ctx, "cp", testManifestPath, localManifestPath)
+	if err := setUpCrosRegionsCmd.Run(ssh.DumpLogOnError); err != nil {
+		s.Log("No component manifest found in test image. Use fake manifest")
+	} else {
+		return nil
+	}
+
+	if err := linuxssh.WriteFile(ctx, conn, localManifestPath, fakeManifest, 0644); err != nil {
+		return errors.Wrap(err, "failed to write manifest")
+	}
+	return nil
+}
+
 func HWIDDatabase(ctx context.Context, s *testing.State) {
 	testExtraCmdParams := s.Param().(extraCmdParams)
 
 	conn := s.DUT().Conn()
+
+	// Create a empty EC component manifest with matched EC version in stateful partition.
+	if err := setUpEcManifest(ctx, s, conn); err != nil {
+		s.Fatal("Failed to set up EC manifest: ", err)
+	}
+
+	// Use cros-regions.json in test image instead of release partition.
+	setUpCrosRegionsCmd := conn.CommandContext(ctx, "cp", testCrosRegionsPath, localCrosRegionsPath)
+	if err := setUpCrosRegionsCmd.Run(ssh.DumpLogOnError); err != nil {
+		s.Fatal("Failed to set up cros-regions.json: ", err)
+	}
 
 	buildArgs := []string{"build-database"}
 	buildArgs = append(buildArgs, testExtraCmdParams.extraBuildParams...)
