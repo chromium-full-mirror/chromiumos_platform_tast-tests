@@ -70,7 +70,11 @@ public class MainActivity extends Activity {
                         isRestrictionUnapplied(
                                 "unmuteMicrophoneDisabled",
                                 "unmute",
-                                UserManager.DISALLOW_UNMUTE_MICROPHONE));
+                                UserManager.DISALLOW_UNMUTE_MICROPHONE),
+                        isRestrictionUnapplied(
+                                "vpnConfigDisabled",
+                                "vpnConfig",
+                                UserManager.DISALLOW_CONFIG_VPN));
     }
 
     @Override

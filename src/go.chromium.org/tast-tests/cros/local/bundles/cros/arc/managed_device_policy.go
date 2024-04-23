@@ -52,6 +52,7 @@ func init() {
 			pci.SearchFlag(&policy.PrintingEnabled{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.VideoCaptureAllowed{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.WallpaperImage{}, pci.VerifiedFunctionalityOS),
+			pci.SearchFlag(&policy.VpnConfigAllowed{}, pci.VerifiedFunctionalityOS),
 		},
 		Params: []testing.Param{
 			{
@@ -102,6 +103,7 @@ func ManagedDevicePolicy(ctx context.Context, s *testing.State) {
 		},
 		"shareLocationDisabled":    staticPolicy(&policy.DefaultGeolocationSetting{Val: 2 /*BlockGeolocation*/}),
 		"unmuteMicrophoneDisabled": staticPolicy(&policy.AudioCaptureAllowed{Val: false}),
+		"vpnConfigDisabled":        staticPolicy(&policy.VpnConfigAllowed{Val: false}),
 	}
 
 	creds, err := credconfig.PickRandomCreds(s.RequiredVar(arcent.LoginPoolVar))
