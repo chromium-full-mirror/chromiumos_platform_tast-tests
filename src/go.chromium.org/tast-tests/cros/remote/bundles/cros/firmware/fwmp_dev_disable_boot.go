@@ -67,12 +67,12 @@ func FwmpDevDisableBoot(ctx context.Context, s *testing.State) {
 		reOwnerPassword := regexp.MustCompile(`flags:\s*(0|1)`)
 		var currentFlagVal [][]byte
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			if err := s.DUT().Conn().CommandContext(ctx, "cryptohome", "--action=set_firmware_management_parameters", "--flags=0x"+flags).Run(ssh.DumpLogOnError); err != nil {
+			if err := s.DUT().Conn().CommandContext(ctx, "device_management_client", "--action=set_firmware_management_parameters", "--flags=0x"+flags).Run(ssh.DumpLogOnError); err != nil {
 				return errors.Wrapf(err, "failed to set firmware management parameters with flags 0x%s", flags)
 			}
 
 			// Verify the flags have been set as expected.
-			out, err := s.DUT().Conn().CommandContext(ctx, "cryptohome", "--action=get_firmware_management_parameters").Output(ssh.DumpLogOnError)
+			out, err := s.DUT().Conn().CommandContext(ctx, "device_management_client", "--action=get_firmware_management_parameters").Output(ssh.DumpLogOnError)
 			if err != nil {
 				return errors.Wrap(err, "failed to get firmware management parameter flags")
 			}
@@ -275,9 +275,9 @@ func FwmpDevDisableBoot(ctx context.Context, s *testing.State) {
 		}
 
 		// Document the result of fwmp when DUT boots unexpectedly into dev mode.
-		combinedOutput, err := s.DUT().Conn().CommandContext(ctx, "cryptohome", "--action=get_firmware_management_parameters").CombinedOutput(ssh.DumpLogOnError)
+		combinedOutput, err := s.DUT().Conn().CommandContext(ctx, "device_management_client", "--action=get_firmware_management_parameters").CombinedOutput(ssh.DumpLogOnError)
 		if err != nil {
-			s.Logf("Running 'cryptohome' on DUT failed: %v, and received: %s", err, combinedOutput)
+			s.Logf("Running 'device_management_client' on DUT failed: %v, and received: %s", err, combinedOutput)
 		} else {
 			s.Logf("Got current fwmp result: %s", combinedOutput)
 		}
