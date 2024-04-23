@@ -198,7 +198,7 @@ func openExtensionAndCheckTitleChange(ctx context.Context, s *testing.State, kio
 
 	ui := uiauto.New(tconn)
 
-	if err := kioskmode.LaunchAppManually(ctx, tconn, originalAppTitle); err != nil {
+	if err := kioskmode.LaunchAppManually(ctx, s.OutDir(), tconn, originalAppTitle); err != nil {
 		s.Fatal("Failed to start Kiosk app from Sign-in screen: ", err)
 	}
 

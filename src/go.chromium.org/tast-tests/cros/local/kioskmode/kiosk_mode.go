@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast-tests/cros/local/syslog"
@@ -43,7 +44,8 @@ var (
 		AccountType: &kioskAppAccountType,
 		KioskAppInfo: &policy.KioskAppInfo{
 			AppId: &KioskAppID,
-		}}
+		},
+	}
 	// cancelLaunchText is a text shown in the launch screen with instructions to cancel launch.
 	cancelLaunchText = nodewith.Name("Press Ctrl + Alt + S to switch to ChromeOS").Role("staticText")
 	// chromeAppWindow is the Kiosk app window in Chrome app deployments.
@@ -400,8 +402,20 @@ func (k *Kiosk) RestartChromeWithOptions(ctx context.Context, opts ...chrome.Opt
 // Ctrl+Alt+S.
 //
 // See kiosk.WaitLaunchLogs to wait for launch.
-func LaunchAppManually(ctx context.Context, tconn *chrome.TestConn, name string) error {
-	testing.ContextLogf(ctx, "Kiosk mode: Starting Kiosk app from signin screen %q", name)
+func LaunchAppManually(ctx context.Context,
+	outDir string,
+	tconn *chrome.TestConn,
+	name string,
+) (retErr error) {
+	testing.ContextLogf(ctx, "Kiosk mode: Starting Kiosk app manually from signin screen %q", name)
+
+	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnError(ctx,
+		outDir,
+		func() bool { return retErr != nil },
+		tconn,
+		"kioskmode_LaunchAppManually",
+	)
+
 	ui := uiauto.New(tconn)
 	localAccountsBtn := nodewith.Name("Apps").HasClass("KioskAppsButton")
 	if err := ui.WithTimeout(30 * time.Second).WaitUntilExists(localAccountsBtn)(ctx); err != nil {

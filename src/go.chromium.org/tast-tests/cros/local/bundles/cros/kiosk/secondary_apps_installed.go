@@ -143,7 +143,7 @@ func SecondaryAppsInstalled(ctx context.Context, s *testing.State) {
 		}
 		defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, testConn)
 
-		if err := kioskmode.LaunchAppManually(ctx, testConn, appName); err != nil {
+		if err := kioskmode.LaunchAppManually(ctx, s.OutDir(), testConn, appName); err != nil {
 			s.Fatal("Failed to start Kiosk application from Sign-in screen: ", err)
 		}
 	}

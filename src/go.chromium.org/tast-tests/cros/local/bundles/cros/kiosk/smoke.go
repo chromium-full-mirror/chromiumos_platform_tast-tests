@@ -189,14 +189,14 @@ func (param smokeTestParam) kioskModeOptions(signinProfileTestExtensionManifestK
 
 // launchKioskAppManually clicks and launches the Kiosk app corresponding to
 // this `param` under the "Apps" button from the login screen.
-func launchKioskAppManually(ctx context.Context, cr *chrome.Chrome, param smokeTestParam) error {
+func launchKioskAppManually(ctx context.Context, cr *chrome.Chrome, param smokeTestParam, outDir string) error {
 	testing.ContextLog(ctx, "Launching Kiosk app manually")
 	tconn, err := cr.SigninProfileTestAPIConn(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to get Test API connection")
 	}
 
-	if err := kioskmode.LaunchAppManually(ctx, tconn, param.appButtonName()); err != nil {
+	if err := kioskmode.LaunchAppManually(ctx, outDir, tconn, param.appButtonName()); err != nil {
 		return errors.Wrap(err, "failed to start Kiosk app from Sign-in screen")
 	}
 	return nil
@@ -284,7 +284,7 @@ func Smoke(ctx context.Context, s *testing.State) {
 	}(cleanupCtx)
 
 	if !param.autoLaunch {
-		if err := launchKioskAppManually(ctx, cr, param); err != nil {
+		if err := launchKioskAppManually(ctx, cr, param, s.OutDir()); err != nil {
 			s.Fatal("Could not manual launch Kiosk app: ", err)
 		}
 	}
