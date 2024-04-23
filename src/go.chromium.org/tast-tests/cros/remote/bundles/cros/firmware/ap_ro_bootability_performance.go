@@ -254,6 +254,13 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 		}
 		s.Logf("SHIPPED firmwares found for model %s:", h.Model)
 	}
+
+	// Sort the shipped firmware versions so that they will be flashed accordingly
+        // from the latest to the oldest.
+	if err := sortVersions(shippedFwVersions); err != nil {
+		s.Fatal("Failed to sort the shipped fw versions: ", err)
+	}
+
 	for i := range shippedFwVersions {
 		s.Log(shippedFwVersions[i].FwID)
 	}
@@ -538,6 +545,41 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 			s.Fatalf("Deviation with RO_new + RO_new ( %s + %s ) failed: %v", roNewID, rwNewID, err)
 		}
 	}
+}
+
+// areVersionsDescending accepts two version numbers and checks whether they are in the descending order.
+func areVersionsDescending(fwIDA, fwIDB string) (bool, error) {
+	splitA := strings.Split(fwIDA, ".")
+	splitB := strings.Split(fwIDB, ".")
+	for i := 0; i < len(splitA); i++ {
+		var idA, idB int
+		if _, err := fmt.Sscanf(splitA[i], "%d", &idA); err != nil {
+			return false, errors.Wrapf(err, "failed to sscanf %s", splitA[i])
+		}
+		if _, err := fmt.Sscanf(splitB[i], "%d", &idB); err != nil {
+			return false, errors.Wrapf(err, "failed to sscanf %s", splitB[i])
+		}
+		if idB < idA {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+// sortVersions accepts jsonFwInfo, and sorts the FwId version numbers.
+func sortVersions(shippedFwInfos []jsonFwInfo) error {
+	for i := range shippedFwInfos {
+		for j := 0; j < len(shippedFwInfos)-i-1; j++ {
+			areDesc, err := areVersionsDescending(shippedFwInfos[j].FwID, shippedFwInfos[j+1].FwID)
+			if areDesc {
+				shippedFwInfos[j], shippedFwInfos[j+1] = shippedFwInfos[j+1], shippedFwInfos[j]
+			}
+			if err != nil {
+				return errors.Wrap(err, "failed to sort versions")
+			}
+		}
+	}
+	return nil
 }
 
 // downloadAndUntarFwFile downloads and untars a firmware source file from the cloud,
