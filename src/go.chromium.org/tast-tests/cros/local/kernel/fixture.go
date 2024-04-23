@@ -20,8 +20,6 @@ import (
 
 const (
 	schedRRTimeslicePath = "/proc/sys/kernel/sched_rr_timeslice_ms"
-	schedRTRuntimePath   = "/proc/sys/kernel/sched_rt_runtime_us"
-	schedRTPeriodPath    = "/proc/sys/kernel/sched_rt_period_us"
 	schedFairServerPath  = "/sys/kernel/debug/sched/fair_server"
 )
 
@@ -53,8 +51,6 @@ type schedRTFixture struct{}
 
 type scheRTValues struct {
 	SchedRRTimeslice  string            `json:"sched_rr_timeslice_ms"`
-	SchedRTRuntime    string            `json:"sched_rt_runtime_us"`
-	SchedRTPeriod     string            `json:"sched_rt_period_us"`
 	FairServerRuntime map[string]string `json:"runtime"`
 	FairServerPeriod  map[string]string `json:"period"`
 }
@@ -64,16 +60,6 @@ func (i *schedRTFixture) SetUp(ctx context.Context, s *testing.FixtState) interf
 	schedRRTimeslice, err := os.ReadFile(schedRRTimeslicePath)
 	if err != nil {
 		s.Fatal("Failed to read sched_rr_timeslice_ms: ", err)
-	}
-
-	schedRTRuntime, err := os.ReadFile(schedRTRuntimePath)
-	if err != nil {
-		s.Fatal("Failed to read sched_rt_runtime_us: ", err)
-	}
-
-	schedRTPeriod, err := os.ReadFile(schedRTPeriodPath)
-	if err != nil {
-		s.Fatal("Failed to read sched_rt_period_us: ", err)
 	}
 
 	fairServerRuntime := make(map[string]string)
@@ -101,8 +87,6 @@ func (i *schedRTFixture) SetUp(ctx context.Context, s *testing.FixtState) interf
 
 	oldSched := scheRTValues{
 		SchedRRTimeslice:  strings.TrimRight(string(schedRRTimeslice), "\n"),
-		SchedRTRuntime:    strings.TrimRight(string(schedRTRuntime), "\n"),
-		SchedRTPeriod:     strings.TrimRight(string(schedRTPeriod), "\n"),
 		FairServerRuntime: fairServerRuntime,
 		FairServerPeriod:  fairServerPeriod,
 	}
@@ -126,22 +110,15 @@ func (i *schedRTFixture) SetUp(ctx context.Context, s *testing.FixtState) interf
 		s.Fatal("Failed to reset sched_rr_timeslice_ms: ", err)
 	}
 
-	if err := os.WriteFile(schedRTRuntimePath, []byte("25000"), 0644); err != nil {
-		s.Fatal("Failed to reset sched_rt_runtime_us: ", err)
-	}
-
-	if err := os.WriteFile(schedRTPeriodPath, []byte("50000"), 0644); err != nil {
-		s.Fatal("Failed to reset sched_rt_period_us: ", err)
-	}
-
 	for _, fairServer := range fairServers {
-		runtimePath := fairServer + "/runtime"
-		if err := os.WriteFile(runtimePath, []byte("25000000"), 0644); err != nil {
-			s.Fatal("Failed to reset fair_server runtime: ", err)
-		}
 		periodPath := fairServer + "/period"
 		if err := os.WriteFile(periodPath, []byte("50000000"), 0644); err != nil {
 			s.Fatal("Failed to reset fair_server period: ", err)
+		}
+
+		runtimePath := fairServer + "/runtime"
+		if err := os.WriteFile(runtimePath, []byte("25000000"), 0644); err != nil {
+			s.Fatal("Failed to reset fair_server runtime: ", err)
 		}
 	}
 
@@ -170,23 +147,15 @@ func (i *schedRTFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 		s.Fatal("Failed to reset sched_rr_timeslice_ms: ", err)
 	}
 
-	if err := os.WriteFile(schedRTPeriodPath, []byte(oldSched.SchedRTPeriod), 0644); err != nil {
-		s.Fatal("Failed to reset sched_rt_period_us: ", err)
-	}
-
-	if err := os.WriteFile(schedRTRuntimePath, []byte(oldSched.SchedRTRuntime), 0644); err != nil {
-		s.Fatal("Failed to reset sched_rt_runtime_us: ", err)
+	for path, value := range oldSched.FairServerPeriod {
+		if err := os.WriteFile(path, []byte(value), 0644); err != nil {
+			s.Fatal("Failed to reset fair_server period: ", err)
+		}
 	}
 
 	for path, value := range oldSched.FairServerRuntime {
 		if err := os.WriteFile(path, []byte(value), 0644); err != nil {
 			s.Fatal("Failed to reset fair_server runtime: ", err)
-		}
-	}
-
-	for path, value := range oldSched.FairServerPeriod {
-		if err := os.WriteFile(path, []byte(value), 0644); err != nil {
-			s.Fatal("Failed to reset fair_server period: ", err)
 		}
 	}
 
