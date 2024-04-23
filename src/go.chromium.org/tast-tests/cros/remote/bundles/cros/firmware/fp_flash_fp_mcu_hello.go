@@ -24,7 +24,7 @@ func init() {
 		},
 		// ChromeOS > Platform > Services > Fingerprint
 		BugComponent: "b:782045",
-		Attr:         []string{"group:mainline", "group:fingerprint-cq", "group:cq-medium"},
+		Attr:         []string{"group:mainline", "group:fingerprint-cq"},
 		// On hatch+bloonchipper(Dratini) flash_fp_mcu --hello takes about
 		// 4 seconds and the full test with reboot takes about 30 seconds.
 		// Given flash_fp_mcu can run into scenarios were it needs to retry a
