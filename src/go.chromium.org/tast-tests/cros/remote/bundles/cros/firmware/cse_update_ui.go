@@ -6,12 +6,14 @@ package firmware
 
 import (
 	"context"
+	"path/filepath"
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/firmware/futility"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
-	pb "go.chromium.org/tast-tests/cros/services/cros/firmware"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
@@ -30,39 +32,54 @@ func init() {
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		// TODO: When stable, change firmware_unstable to a different attr.
 		Attr:         []string{"group:firmware", "firmware_unstable"},
-		ServiceDeps:  []string{"tast.cros.firmware.BiosService"},
 		SoftwareDeps: []string{"flashrom"},
-		Fixture:      fixture.NormalMode,
+		Fixture:      fixture.BootModeFixtureWithAPBackup(fixture.NormalMode),
 		Timeout:      30 * time.Minute,
 		HardwareDeps: hwdep.D(hwdep.MainboardHasEarlyLibgfxinit()),
 	})
 }
 
 func CSEUpdateUI(ctx context.Context, s *testing.State) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Minute)
+	defer cancel()
+
+	backupManager := s.FixtValue().(*fixture.Value).BackupManager
 	h := s.FixtValue().(*fixture.Value).Helper
 	dut := s.DUT()
 
-	if err := h.RequireBiosServiceClient(ctx); err != nil {
-		s.Fatal("Requiring BiosServiceClient: ", err)
-	}
-	backup, err := h.BiosServiceClient.BackupImageSection(ctx, &pb.FWSectionInfo{Programmer: pb.Programmer_BIOSProgrammer})
+	out, err := dut.Conn().CommandContext(ctx, "mktemp", "-d", "-p", "/var/tmp", "-t", "fwimgXXXXXX").Output(ssh.DumpLogOnError)
 	if err != nil {
-		s.Fatal("Failed to backup BIOS")
+		s.Fatal("Failed creating remote temp dir: ", err)
 	}
-	defer func(ctx context.Context) {
-		if err := h.EnsureDUTBooted(ctx); err != nil {
+	dutTempDir := strings.TrimSuffix(string(out), "\n")
+	defer func() {
+		if err := dut.Conn().CommandContext(cleanupCtx, "rm", "-rf", dutTempDir).Run(ssh.DumpLogOnError); err != nil {
+			s.Log("Failed to delete temp dir on DUT: ", err)
+		}
+	}()
+
+	backupOnDut := filepath.Join(dutTempDir, "bios_backup.bin")
+
+	defer func() {
+		if err := h.EnsureDUTBooted(cleanupCtx); err != nil {
 			s.Fatal("Failed to EnsureDUTBooted: ", err)
 		}
-		if err := h.RequireBiosServiceClient(ctx); err != nil {
-			s.Fatal("Failed to require BiosServiceClient: ", err)
+
+		if err := backupManager.CopyBackupToDut(cleanupCtx, dut, fixture.FirmwareAP, backupOnDut); err != nil {
+			s.Fatal("Failed to copy backup firmware image to DUT: ", err)
 		}
-		if _, err := h.BiosServiceClient.RestoreImageSection(ctx, backup); err != nil {
-			s.Fatal("Failed to restore BIOS: ", err)
+
+		futilityInstance, err := futility.NewLocalBuilder(dut).Build()
+		if err != nil {
+			s.Fatal("Failed to setup futility instance: ", err)
 		}
-		if err := h.DUT.Conn().CommandContext(ctx, "rm", "-f", backup.Path).Run(ssh.DumpLogOnError); err != nil {
-			s.Fatal("Failed to delete BIOS backup: ", err)
+
+		updateOpts := futility.NewUpdateOptions(backupOnDut).WithHostOnly(true).WithMode(futility.UpdateModeRecovery)
+		if out, err := futilityInstance.Update(cleanupCtx, updateOpts); err != nil {
+			s.Fatal("Failed to restore firmware: ", err, "\nOutput:\n", string(out))
 		}
-	}(ctx)
+	}()
 
 	s.Log("Downgrade BIOS to uprev version")
 	if err := dut.Conn().CommandContext(ctx, "chromeos-firmwareupdate", "--mode=recovery", "--wp=1").Run(ssh.DumpLogOnError); err != nil {
@@ -78,13 +95,19 @@ func CSEUpdateUI(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to reboot: ", err)
 	}
 
-	if err := testing.Sleep(ctx, 10*time.Second); err != nil {
-		s.Fatal("Failed to sleep: ", err)
+	if err := backupManager.CopyBackupToDut(cleanupCtx, dut, fixture.FirmwareAP, backupOnDut); err != nil {
+		s.Fatal("Failed to copy backup firmware image to DUT: ", err)
 	}
 
 	s.Log("Upgrade BIOS to backup version")
-	if err := dut.Conn().CommandContext(ctx, "futility", "update", "--mode=autoupdate", "--wp=1", "-i", backup.Path).Run(ssh.DumpLogOnError); err != nil {
-		s.Fatal("Failed to upgrade bios: ", err)
+	futilityInstance, err := futility.NewLocalBuilder(dut).Build()
+	if err != nil {
+		s.Fatal("Failed to setup futility instance: ", err)
+	}
+
+	updateOpts := futility.NewUpdateOptions(backupOnDut).WithMode(futility.UpdateModeAutoUpdate).WithWriteProtection(futility.WriteProtectionEnable)
+	if out, err := futilityInstance.Update(ctx, updateOpts); err != nil {
+		s.Fatal("Failed to upgrade firmware: ", err, "\nOutput:\n", string(out))
 	}
 
 	if err := h.Reporter.ClearEventlog(ctx); err != nil {
@@ -93,10 +116,6 @@ func CSEUpdateUI(ctx context.Context, s *testing.State) {
 
 	if err := ms.ModeAwareReboot(ctx, firmware.WarmReset); err != nil {
 		s.Fatal("Failed to reboot: ", err)
-	}
-
-	if err := testing.Sleep(ctx, 10*time.Second); err != nil {
-		s.Fatal("Failed to sleep: ", err)
 	}
 
 	checkMatches := func(ctx context.Context, expected string) error {
