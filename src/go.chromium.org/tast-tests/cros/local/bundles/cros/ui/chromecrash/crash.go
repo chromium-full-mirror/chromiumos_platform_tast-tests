@@ -732,32 +732,17 @@ func (ct *CrashTester) validateBuildTime(ctx context.Context, metaFile string) e
 	return nil
 }
 
-// getMetaFilename returns the meta filename found in |matches|. Only one .meta file
-// should exist.
-func getMetaFilename(matches map[string][]string, metaRegex string) (string, error) {
-	metaFiles := matches[metaRegex]
-	if len(metaFiles) == 0 {
-		return "", errors.New("expected a .meta file but found none")
+// getCorrespondingFile returns the file in the filelist |files| that corresponds
+// to the given .meta file (that is, the file that has the same name up to the
+// final extension). It returns an error if no such file is found.
+func getCorrespondingFile(metaFile string, files []string) (string, error) {
+	baseName := strings.TrimSuffix(metaFile, filepath.Ext(metaFile))
+	for _, file := range files {
+		if baseName == strings.TrimSuffix(file, filepath.Ext(file)) {
+			return file, nil
+		}
 	}
-	if len(metaFiles) > 1 {
-		return "", errors.New("found more than one meta file")
-	}
-
-	return metaFiles[0], nil
-}
-
-// getDmpFilename returns the .dmp filename found in |matches|. Only one .dmp file
-// should exist.
-func getDmpFilename(matches map[string][]string, dmpRegex string) (string, error) {
-	dmpFiles := matches[dmpRegex]
-	if len(dmpFiles) == 0 {
-		return "", errors.New("expected a .dmp file but found none")
-	}
-	if len(dmpFiles) > 1 {
-		return "", errors.New("found more than one .dmp file")
-	}
-
-	return dmpFiles[0], nil
+	return "", errors.Errorf("could not find file that corresponded to %v in %v", metaFile, files)
 }
 
 // KillAndGetCrashFiles sends SIGSEGV to the given Chrome process, waits for it to
@@ -843,41 +828,69 @@ func (ct *CrashTester) KillAndGetCrashFiles(ctx context.Context) ([]string, erro
 
 	// Check that the .meta file has the correct computed_severity and computed_product values.
 	if ct.waitFor == MetaFile {
-		metaFile, fileErr := getMetaFilename(matches, fmt.Sprintf(chromeCrashFilePatternWithPid+"meta", ct.killedPID))
-		if fileErr != nil {
-			return nil, errors.Wrap(fileErr, "failed to get meta file")
+		metaRegex := fmt.Sprintf(chromeCrashFilePatternWithPid+"meta", ct.killedPID)
+		metaFiles := matches[metaRegex]
+		if len(metaFiles) == 0 {
+			return nil, errors.New("expected a .meta file but found none")
 		}
-		dmpFile, fileErr := getDmpFilename(matches, fmt.Sprintf(chromeCrashFilePatternWithPid+"dmp", ct.killedPID))
-		if fileErr != nil {
-			return nil, errors.Wrap(fileErr, "failed to get .dmp file")
+		dmpRegex := fmt.Sprintf(chromeCrashFilePatternWithPid+"dmp", ct.killedPID)
+		dmpFiles := matches[dmpRegex]
+		if len(dmpFiles) == 0 {
+			return nil, errors.New("expected a .dmp file but found none")
 		}
 
-		if validateErr := ct.validateComputedSeverity(ctx, metaFile); validateErr != nil {
+		// If Chrome did a DumpWithoutCrashing or got a JavaScript error before
+		// receiving the SEGV, there may be multiple meta files, only one of which
+		// will have the correct severity. Scan all of them, looking for the one
+		// with the correct severity.
+		var severityErr error
+		foundCorrectMeta := false
+		for _, metaFile := range metaFiles {
+			if buildTimeErr := ct.validateBuildTime(ctx, metaFile); buildTimeErr != nil {
+				// All crashes, from SEGV or DumpWithoutCrashing or JavaScript, should
+				// have correct build time, so fail out here regardless of which of the
+				// crash reports this is.
+				if outDir, outDirExists := testing.ContextOutDir(ctx); outDirExists {
+					if moveErr := crash.MoveFilesToOut(ctx, outDir, metaFiles...); moveErr != nil {
+						testing.ContextLog(ctx, "Failed to save the meta files: ", moveErr)
+					}
+					// The dmp file contains the CrashKeys records as well, so it is useful
+					// for debugging missing CrashKeys.
+					if moveErr := crash.MoveFilesToOut(ctx, outDir, dmpFiles...); moveErr != nil {
+						testing.ContextLog(ctx, "Failed to save the .dmp files: ", moveErr)
+					}
+				}
+				return nil, errors.Wrap(buildTimeErr, "failed to validate build time in meta file")
+			}
+
+			// See if this is the correct meta file.
+			if severityErr = ct.validateComputedSeverity(ctx, metaFile); severityErr == nil {
+				// This one should have a .dmp file. (The others might not because they were
+				// JavaScript errors.)
+				if _, err := getCorrespondingFile(metaFile, dmpFiles); err != nil {
+					return nil, errors.Wrap(err, ".meta file does not have corresponding .dmp file")
+				}
+				foundCorrectMeta = true
+			} else {
+				// Log all the errors, in case the last error that's returned happens to be for a different
+				// file than the one we actually expect to be the crash file.
+				testing.ContextLog(ctx, metaFile, " is not the correct file because it has the wrong severity: ", severityErr)
+			}
+		}
+
+		if !foundCorrectMeta {
 			if outDir, outDirExists := testing.ContextOutDir(ctx); outDirExists {
-				if moveErr := crash.MoveFilesToOut(ctx, outDir, metaFile); moveErr != nil {
-					testing.ContextLog(ctx, "Failed to save the meta file: ", moveErr)
+				if moveErr := crash.MoveFilesToOut(ctx, outDir, metaFiles...); moveErr != nil {
+					testing.ContextLog(ctx, "Failed to save the meta files: ", moveErr)
 				}
 				// The dmp file contains the CrashKeys records as well, so it is useful
 				// for debugging missing CrashKeys.
-				if moveErr := crash.MoveFilesToOut(ctx, outDir, dmpFile); moveErr != nil {
-					testing.ContextLog(ctx, "Failed to save the .dmp file: ", moveErr)
+				if moveErr := crash.MoveFilesToOut(ctx, outDir, dmpFiles...); moveErr != nil {
+					testing.ContextLog(ctx, "Failed to save the .dmp files: ", moveErr)
 				}
 			}
-			return nil, errors.Wrap(validateErr, "failed to validate meta file severity")
-		}
+			return nil, errors.Wrap(severityErr, "failed to validate meta file severity")
 
-		if validateErr := ct.validateBuildTime(ctx, metaFile); validateErr != nil {
-			if outDir, outDirExists := testing.ContextOutDir(ctx); outDirExists {
-				if moveErr := crash.MoveFilesToOut(ctx, outDir, metaFile); moveErr != nil {
-					testing.ContextLog(ctx, "Failed to save the meta file: ", moveErr)
-				}
-				// The dmp file contains the CrashKeys records as well, so it is useful
-				// for debugging missing CrashKeys.
-				if moveErr := crash.MoveFilesToOut(ctx, outDir, dmpFile); moveErr != nil {
-					testing.ContextLog(ctx, "Failed to save the .dmp file: ", moveErr)
-				}
-			}
-			return nil, errors.Wrap(validateErr, "failed to validate build time in meta file")
 		}
 	}
 	return files, nil
