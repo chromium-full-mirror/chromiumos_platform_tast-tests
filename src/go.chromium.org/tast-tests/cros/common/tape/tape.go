@@ -27,7 +27,8 @@ import (
 const tapeURL = "https://tape-307412.ey.r.appspot.com/"
 const tapeAudience = "770216225211-ihjn20dlehf94m9l4l5h0b0iilvd1vhc.apps.googleusercontent.com"
 const callTimeout = 30 * time.Second
-const requestAccountTimeout = 1 * time.Minute
+const requestAccountTimeout = 5 * time.Minute
+const setPolicyTimeout = 5 * time.Minute
 const deprovisionTimeout = 1 * time.Minute
 
 // client is created with NewClient and holds a *http.Client struct with an oauth token
@@ -375,7 +376,7 @@ func (c *client) SetPolicy(ctx context.Context, policySchema PolicySchema, updat
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal data")
 	}
-	response, err := c.sendRequestWithTimeout(ctx, "POST", "Policies/setPolicy", callTimeout, 0, payloadBytes)
+	response, err := c.sendRequestWithTimeout(ctx, "POST", "Policies/setPolicy", setPolicyTimeout, 0, payloadBytes)
 	if err != nil {
 		return errors.Wrap(err, "failed to make REST call")
 	}
