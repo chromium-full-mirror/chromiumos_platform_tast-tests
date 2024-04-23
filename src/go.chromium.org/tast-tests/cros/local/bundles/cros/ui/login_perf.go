@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os/exec"
+	"strconv"
 	"time"
 
 	"github.com/mafredri/cdp/rpcc"
@@ -76,6 +77,14 @@ const (
 )
 
 var disableARCSyncOption = chrome.ExtraArgs(arc.DisableSyncFlags()...)
+
+// TODO(b/335657898): Remove this once we do not need to compare metrics with
+// old results which were collected with uiauto enabled.
+var cmdlineVarUseUIAuto = testing.RegisterVarString(
+	"ui.LoginPerf.use_uiauto",
+	"false",
+	"Specify whether uiauto is used to await login animation.",
+)
 
 // loginPerfTestParam is a set of parameters for the login perf test.
 // The baseline parameters are:
@@ -431,6 +440,11 @@ func loginPerfDoLogin(
 	credentials chrome.Creds,
 	browserType browser.Type,
 ) (retL *lacros.Lacros, lacrosConnectTime *time.Duration, retErr error) {
+	useUIAuto, err := strconv.ParseBool(cmdlineVarUseUIAuto.Value())
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "invalid value for ui.LoginPerf.use_uiauto")
+	}
+
 	outdir, ok := testing.ContextOutDir(ctx)
 	if !ok {
 		return nil, nil, errors.New("no output directory exists")
@@ -449,6 +463,12 @@ func loginPerfDoLogin(
 		return nil, nil, errors.Wrap(err, "password text field did not appear in the ui")
 	}
 
+	if !useUIAuto {
+		if err := tLoginConn.ResetAutomation(ctx); err != nil {
+			return nil, nil, errors.Wrap(err, "failed to reset automation feature")
+		}
+	}
+
 	kb, err := input.Keyboard(ctx)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed to get keyboard")
@@ -459,7 +479,7 @@ func loginPerfDoLogin(
 		return nil, nil, errors.Wrap(err, "entering password failed")
 	}
 
-	// Check if the login was successful using the API and also by looking for the shelf in the UI.
+	// Check if the login was successful using the API.
 	if st, err := lockscreen.WaitState(
 		ctx,
 		tLoginConn,
@@ -469,8 +489,10 @@ func loginPerfDoLogin(
 		return nil, nil, errors.Wrapf(err, "failed waiting to log in: last state: %+v", st)
 	}
 
-	if err := ash.WaitForShelf(ctx, tLoginConn, 120*time.Second); err != nil {
-		return nil, nil, errors.Wrap(err, "shelf did not appear after logging in")
+	if useUIAuto {
+		if err := ash.WaitForShelf(ctx, tLoginConn, 120*time.Second); err != nil {
+			return nil, nil, errors.Wrap(err, "shelf did not appear after logging in")
+		}
 	}
 
 	if browserType == browser.TypeLacros {
@@ -498,6 +520,27 @@ func loginPerfDoLogin(
 		return nil, nil, errors.Wrap(err, "timed out retrying connection to Lacros")
 	}
 	return nil, nil, nil
+}
+
+// waitForLoginAnimationEnd waits until the post login animation is complete.
+func waitForLoginAnimationEnd(ctx context.Context, tconn *chrome.TestConn) error {
+	useUIAuto, err := strconv.ParseBool(cmdlineVarUseUIAuto.Value())
+	if err != nil {
+		return errors.Wrap(err, "invalid value for ui.LoginPerf.use_uiauto")
+	}
+
+	if useUIAuto {
+		if err := ash.ForEachWindow(ctx, tconn, func(w *ash.Window) error {
+			return ash.WaitWindowFinishAnimating(ctx, tconn, w.ID)
+		}); err != nil {
+			return errors.Wrap(err, "failed to wait")
+		}
+	} else {
+		if err := tconn.Call(ctx, nil, "tast.promisify(chrome.autotestPrivate.waitForLoginAnimationEnd)"); err != nil {
+			return errors.Wrap(err, "failed to call waitForLoginAnimationEnd. Maybe old chrome is being used?")
+		}
+	}
+	return nil
 }
 
 // loginPerfCreateWindows creates |n| windows and for Ash or Lacros.
@@ -911,11 +954,11 @@ func testFunction(
 		if err != nil {
 			return errors.Wrap(err, "failed to connect to test api")
 		}
-		if err := ash.ForEachWindow(ctx, tconn, func(w *ash.Window) error {
-			return ash.WaitWindowFinishAnimating(ctx, tconn, w.ID)
-		}); err != nil {
-			return errors.Wrap(err, "failed to wait")
+
+		if err := waitForLoginAnimationEnd(ctx, tconn); err != nil {
+			return errors.Wrap(err, "failed to await login animation")
 		}
+
 		sleepSeconds := 10 * time.Second
 		if stopTracing != nil {
 			// Stopping tracing before the full 10 seconds have
