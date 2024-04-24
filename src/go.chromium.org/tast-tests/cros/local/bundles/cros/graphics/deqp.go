@@ -679,6 +679,7 @@ func deqpParallel(ctx context.Context, s *testing.State, opts deqpParams) {
 		"--deqp=" + deqpExe,
 		"--caselist=" + caselist,
 		"--output=" + deqpLogDir,
+		"--testlog-to-xml=" + filepath.Join(graphics.DEQPBaseDir, "executor/testlog-to-xml"),
 	}
 	if opts.shardNum > 0 {
 		val := strconv.Itoa(opts.shardNum + 1)
@@ -710,6 +711,7 @@ func deqpParallel(ctx context.Context, s *testing.State, opts deqpParams) {
 	s.Log("Running command: ", command.Args)
 	stdout, stderr, err := command.SeparatedOutput(testexec.DumpLogOnError)
 	s.Logf("DEQP stdout: %s ", string(stdout))
+	deqprunner.PostProcess(ctx, deqpLogDir)
 	// Test failed, we have to parse the result from the failures.csv.
 	if err != nil {
 		s.Log("DEQP stderr: ", string(stderr))

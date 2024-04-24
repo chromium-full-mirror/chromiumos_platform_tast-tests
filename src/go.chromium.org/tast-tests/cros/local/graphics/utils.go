@@ -24,8 +24,8 @@ import (
 )
 
 const (
-	// The common path prefix for DEQP executables.
-	deqpBaseDir = "/usr/local/deqp"
+	// DEQPBaseDir is the common path prefix for DEQP executables.
+	DEQPBaseDir = "/usr/local/deqp"
 
 	// Path to the USE flags used by ChromiumCommandBuilder.
 	uiUseFlagsPath = "/etc/ui_use_flags.txt"
@@ -378,13 +378,13 @@ func DEQPExecutable(api APIType) (string, error) {
 	case EGL:
 		return "", errors.New("cannot run DEQP/EGL on ChromeOS")
 	case GLES2:
-		return filepath.Join(deqpBaseDir, "modules/gles2/deqp-gles2"), nil
+		return filepath.Join(DEQPBaseDir, "modules/gles2/deqp-gles2"), nil
 	case GLES3:
-		return filepath.Join(deqpBaseDir, "modules/gles3/deqp-gles3"), nil
+		return filepath.Join(DEQPBaseDir, "modules/gles3/deqp-gles3"), nil
 	case GLES31:
-		return filepath.Join(deqpBaseDir, "modules/gles31/deqp-gles31"), nil
+		return filepath.Join(DEQPBaseDir, "modules/gles31/deqp-gles31"), nil
 	case VK:
-		return filepath.Join(deqpBaseDir, "external/vulkancts/modules/vulkan/deqp-vk"), nil
+		return filepath.Join(DEQPBaseDir, "external/vulkancts/modules/vulkan/deqp-vk"), nil
 	}
 	return "", errors.Errorf("unknown graphics API: %s", api)
 }
