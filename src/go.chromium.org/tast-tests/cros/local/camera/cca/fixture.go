@@ -340,6 +340,17 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
+		Name:            "ccaPowerTestWithFakeVCDCamera",
+		Desc:            "Set up test bridge for CCA with fake VCD camera for a power Test",
+		Contacts:        []string{"chromeos-camera-eng@google.com", "esker@chromium.org"},
+		BugComponent:    "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
+		Impl:            &fixture{powerTest: true, useCameraType: testutil.UseFakeVCDCamera},
+		SetUpTimeout:    powerSetUpTimeout,
+		ResetTimeout:    testBridgeSetUpTimeout,
+		TearDownTimeout: powerTearDownTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
 		Name:            "ccaPowerReview",
 		Desc:            "Set up test bridge for CCA for a power review Test",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "esker@chromium.org"},

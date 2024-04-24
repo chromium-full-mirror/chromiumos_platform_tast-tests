@@ -27,6 +27,7 @@ const (
 )
 
 type pnpCCAParams struct {
+	cameraServiceOff  bool
 	mode              cca.Mode
 	featureToggleConf features.FeatureToggleConf
 	effectsConf       *pnp.EffectsParams
@@ -55,6 +56,13 @@ func init() {
 				mode: cca.Photo,
 			},
 		}, {
+			Name:    "photo_mode_fake_vcd",
+			Fixture: "ccaPowerTestWithFakeVCDCamera",
+			Val: pnpCCAParams{
+				cameraServiceOff: true,
+				mode:             cca.Photo,
+			},
+		}, {
 			Name:    "video_mode",
 			Fixture: "ccaPowerTest",
 			Val: pnpCCAParams{
@@ -65,6 +73,13 @@ func init() {
 			Fixture: "ccaPowerTestWithFakeHALCamera",
 			Val: pnpCCAParams{
 				mode: cca.Video,
+			},
+		}, {
+			Name:    "video_mode_fake_vcd",
+			Fixture: "ccaPowerTestWithFakeVCDCamera",
+			Val: pnpCCAParams{
+				cameraServiceOff: true,
+				mode:             cca.Video,
 			},
 		}, {
 			Name:              "face_gcamae_hdrnet_all_off",
@@ -168,6 +183,8 @@ func PNPCCAFeatureToggle(ctx context.Context, s *testing.State) {
 	}
 
 	testing.ContextLog(ctx, "[Start Work Phase]")
+	cameraServiceOff := s.Param().(pnpCCAParams).cameraServiceOff
+
 	if s.Param().(pnpCCAParams).featureToggleConf != nil {
 		featureToggler, err := features.NewFeatureToggler(ctx)
 		if err != nil {
@@ -224,6 +241,17 @@ func PNPCCAFeatureToggle(ctx context.Context, s *testing.State) {
 	mode := s.Param().(pnpCCAParams).mode
 	if err := app.SwitchMode(ctx, mode); err != nil {
 		s.Error("Failed to switch mode ", mode, ": ", err)
+	}
+
+	if cameraServiceOff {
+		if err := upstart.StopJob(ctx, "cros-camera"); err != nil {
+			s.Fatal("Failed to stop cros-camera service: ", err)
+		}
+		defer func() {
+			if err := upstart.EnsureJobRunning(ctx, "cros-camera"); err != nil {
+				s.Fatal("Failed to start cros-camera service: ", err)
+			}
+		}()
 	}
 
 	if err := pnp.WarmUp(ctx); err != nil {
