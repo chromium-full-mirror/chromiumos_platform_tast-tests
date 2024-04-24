@@ -427,6 +427,20 @@ func (h DevboardHelper) GpioMonitorRead(ctx context.Context, session GpioMonitor
 	return h.gpioMonitorRead(ctx, session, false)
 }
 
+// GpioMonitorWait waits until a GPIO event happens.
+func (h DevboardHelper) GpioMonitorWait(ctx context.Context, session GpioMonitorSession, timeout, interval time.Duration) GpioEvents {
+	events := GpioEvents{}
+	pOpts := testing.PollOptions{Interval: interval, Timeout: timeout}
+	testing.Poll(ctx, func(ctx context.Context) error {
+		events = h.GpioMonitorRead(ctx, session)
+		if len(events.Sorted) != 0 {
+			return nil
+		}
+		return errors.New("failed to detect gpio event")
+	}, &pOpts)
+	return events
+}
+
 // GpioMonitorFinish finishes gpio monitoring for the specified session
 func (h DevboardHelper) GpioMonitorFinish(ctx context.Context, session GpioMonitorSession) (events GpioEvents) {
 	return h.gpioMonitorRead(ctx, session, true)
