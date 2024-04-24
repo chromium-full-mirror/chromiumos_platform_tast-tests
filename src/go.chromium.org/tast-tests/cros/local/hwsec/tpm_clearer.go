@@ -68,10 +68,6 @@ func (tc *TPMClearer) PreClearTPM(ctx context.Context) error {
 // stateful partition. Files from SystemStateFiles in
 // tast/common/hwsec/tpm_clearer.go are cleared by tast to simulate the cleanup.
 func (tc *TPMClearer) ClearTPM(ctx context.Context) error {
-	// Fire clear TPM owner request to crossystem.
-	if rawOutput, err := tc.cmdRunner.RunWithCombinedOutput(ctx, "crossystem", "clear_tpm_owner_request=1"); err != nil {
-		return errors.Wrapf(err, "failed to clear_tpm_owner_request, output: %q", string(rawOutput))
-	}
 	// Using soft clear to clear the TPM
 	if _, err := tc.cmdRunner.Run(ctx, "tpm_softclear"); err != nil {
 		return errors.Wrap(err, "failed to soft clear the TPM")
