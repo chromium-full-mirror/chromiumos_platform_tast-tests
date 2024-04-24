@@ -497,6 +497,42 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211be()),
 				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_BE"},
 			}, {
+				// Verifies that DUT can connect to a WiFi5 GCMP-128 network on WPA3.
+				// TODO(b/337103884) Replace TestBedDep with GCMP-feature requirement once available.
+				Name:      "gcmp_128",
+				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
+				ExtraAttr: []string{"wificell_unstable"},
+				Val: []simpleConnectTestcase{{
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211acPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT40Plus),
+							ap.VHTCenterChannel(42), ap.VHTChWidth(ap.VHTChWidth80), ap.PMF(ap.PMFRequired)},
+						SecConfFac: wpa.NewConfigFactory("chromeos",
+							wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherGCMP128),
+							wpa.GroupCipherOverride(wpa.CipherGCMP128)),
+					}},
+					expectedSecurity: shillconst.SecurityWPA3,
+				}},
+				ExtraHardwareDeps: hwdep.D(hwdep.WifiGCMP()),
+				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_AX"},
+			}, {
+				// Verifies that DUT can connect to a WiFi5 GCMP-256 network on WPA3.
+				// TODO(b/337103884) Replace TestBedDep with GCMP-feature requirement once available.
+				Name:      "gcmp_256",
+				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
+				ExtraAttr: []string{"wificell_unstable"},
+				Val: []simpleConnectTestcase{{
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211acPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT40Plus),
+							ap.VHTCenterChannel(42), ap.VHTChWidth(ap.VHTChWidth80), ap.PMF(ap.PMFRequired)},
+						SecConfFac: wpa.NewConfigFactory("chromeos",
+							wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherGCMP256),
+							wpa.GroupCipherOverride(wpa.CipherGCMP256)),
+					}},
+					expectedSecurity: shillconst.SecurityWPA3,
+				}},
+				ExtraHardwareDeps: hwdep.D(hwdep.WifiGCMP()),
+				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_AX"},
+			}, {
 				// Verifies that DUT can connect to an OWE network on 2.4GHz.
 				Name:    "owe",
 				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),

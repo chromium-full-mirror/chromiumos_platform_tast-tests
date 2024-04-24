@@ -461,6 +461,46 @@ func simpleConnect80211be() []*simpleConnectParams {
 	}}
 }
 
+func simpleConnectGCMP() []*simpleConnectParams {
+	return []*simpleConnectParams{{
+		Name:      "gcmp_128",
+		Fixture:   defaultFixture,
+		ExtraAttr: []string{"wificell_unstable"},
+		Doc: append(simpleConnectDocPref("a WiFi5 GCMP-128 network on WPA3."),
+			"TODO(b/337103884) Replace TestBedDep with GCMP-feature requirement once available."),
+		Val: []simpleConnectParamsVal{{
+			APConfigs: []apConfigVal{{
+				APOpts: `ap.Mode(ap.Mode80211acPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT40Plus),
+					ap.VHTCenterChannel(42), ap.VHTChWidth(ap.VHTChWidth80), ap.PMF(ap.PMFRequired)`,
+				SecConfFac: `wpa.NewConfigFactory("chromeos",
+					wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherGCMP128),
+					wpa.GroupCipherOverride(wpa.CipherGCMP128))`,
+			}},
+			ExpectedSecurity: wpaModeToShillSecurity(`PureWPA3`),
+		}},
+		ExtraHardwareDeps:      `hwdep.D(hwdep.WifiGCMP())`,
+		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX},
+	}, {
+		Name:      "gcmp_256",
+		Fixture:   defaultFixture,
+		ExtraAttr: []string{"wificell_unstable"},
+		Doc: append(simpleConnectDocPref("a WiFi5 GCMP-256 network on WPA3."),
+			"TODO(b/337103884) Replace TestBedDep with GCMP-feature requirement once available."),
+		Val: []simpleConnectParamsVal{{
+			APConfigs: []apConfigVal{{
+				APOpts: `ap.Mode(ap.Mode80211acPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT40Plus),
+					ap.VHTCenterChannel(42), ap.VHTChWidth(ap.VHTChWidth80), ap.PMF(ap.PMFRequired)`,
+				SecConfFac: `wpa.NewConfigFactory("chromeos",
+					wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherGCMP256),
+					wpa.GroupCipherOverride(wpa.CipherGCMP256))`,
+			}},
+			ExpectedSecurity: wpaModeToShillSecurity(`PureWPA3`),
+		}},
+		ExtraHardwareDeps:      `hwdep.D(hwdep.WifiGCMP())`,
+		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX},
+	}}
+}
+
 func simpleConnectOWE() []*simpleConnectParams {
 	return []*simpleConnectParams{{
 		Name:    "owe",
@@ -1189,6 +1229,7 @@ func TestSimpleConnect(t *testing.T) {
 	ps = append(ps, simpleConnect80211ax()...)
 	ps = append(ps, simpleConnect80211axe()...)
 	ps = append(ps, simpleConnect80211be()...)
+	ps = append(ps, simpleConnectGCMP()...)
 	ps = append(ps, simpleConnectOWE()...)
 	ps = append(ps, simpleConnectHidden()...)
 	ps = append(ps, simpleConnectWEP()...)
