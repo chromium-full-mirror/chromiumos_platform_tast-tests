@@ -44,15 +44,8 @@ func ShillSimChangePin(ctx context.Context, s *testing.State) {
 
 	tempPin := mmconst.TempSimPin
 
-	nboard, err := cellular.GetBoard(ctx)
-	s.Log("Board name: ", nboard)
-	// ResetModem/RestartModemWithHelper needed for sim power reset to reflect locked type values.
-	if nboard == "zork" {
-		//Zork failing with Device.Reset, modemfwd helper gpio reset works on zork boards - TBD: b/330944917.
-		if _, err := cellular.RestartModemWithHelper(ctx); err != nil {
-			s.Fatal("Failed to reset modem: ", err)
-		}
-	} else if _, err := helper.ResetModem(ctx); err != nil {
+	// ResetModem needed for sim power reset to reflect locked type values.
+	if _, err := helper.ResetModem(ctx); err != nil {
 		s.Fatal("Failed to reset modem: ", err)
 	}
 
@@ -96,13 +89,8 @@ func ShillSimChangePin(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	// ResetModem/RestartModemWithHelper needed for sim power reset to reflect locked type values.
-	if nboard == "zork" {
-		//Zork failing with Device.Reset, modemfwd helper gpio reset works on zork boards - TBD: b/330944917.
-		if _, err := cellular.RestartModemWithHelper(ctx); err != nil {
-			s.Fatal("Failed to reset modem: ", err)
-		}
-	} else if _, err := helper.ResetModem(ctx); err != nil {
+	// ResetModem needed for sim power reset to reflect locked type values.
+	if _, err = helper.ResetModem(ctx); err != nil {
 		s.Fatal("Failed to reset modem: ", err)
 	}
 

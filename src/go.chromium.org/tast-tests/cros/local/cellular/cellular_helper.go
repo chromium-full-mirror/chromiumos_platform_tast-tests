@@ -891,11 +891,19 @@ func (h *Helper) ResetModem(ctx context.Context) (time.Duration, error) {
 
 	start := time.Now()
 
-	if err := h.Device.Reset(ctx); err != nil {
-		return time.Since(start), errors.Wrap(err, "reset modem failed")
+	modemType, err := GetModemType(ctx)
+	// Device.Reset is failing on NL668 modem (mainly Zork boards are affected)
+	if err == nil && modemType == cellularconst.ModemTypeNL668 {
+		if _, err := RestartModemWithHelper(ctx); err != nil {
+			return time.Since(start), errors.Wrap(err, "Modem reset with RestartModemWithHelper failed")
+		}
+		testing.ContextLog(ctx, "Modem reset with RestartModemWithHelper succeeded")
+	} else {
+		if err := h.Device.Reset(ctx); err != nil {
+			return time.Since(start), errors.Wrap(err, "Modem reset with Device.Reset failed")
+		}
+		testing.ContextLog(ctx, "Modem reset with Device.Reset succeeded")
 	}
-
-	testing.ContextLog(ctx, "Reset modem called")
 
 	if err := h.WaitForEnabledState(ctx, false); err != nil {
 		return time.Since(start), errors.Wrap(err, "expected enabled to become false")
