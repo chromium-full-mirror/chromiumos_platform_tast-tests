@@ -6,6 +6,8 @@ package firmware
 
 import (
 	"context"
+	"regexp"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/servo"
@@ -154,30 +156,81 @@ func isHWWPEnabled(ctx context.Context, h *firmware.Helper) (bool, error) {
 }
 
 func verifyECWPStatus(ctx context.Context, h *firmware.Helper, wp bool) error {
+
 	if err := setWPState(ctx, h, wp); err != nil {
 		return errors.Wrapf(err, "failed to set wp to %v", wp)
 	}
 
-	out, err := h.Servo.RunECCommandGetOutput(ctx, "sysinfo", []string{`Flags:\s+(locked|unlocked)[^\n]*\n`})
-	if err != nil {
-		return errors.Wrap(err, "sysinfo failed")
+	// Stop interrupting logs/console spam, not essential.
+	testing.ContextLog(ctx, "Powering off AP")
+	if err := h.Servo.RunECCommand(ctx, "apshutdown"); err != nil {
+		testing.ContextLog(ctx, "Failed to shutdown ap: ", err)
 	}
-	if wp && out[0][1] != "locked" {
-		return errors.Errorf("sysinfo reported wrong flags, got %v want %v", out[0][1], "locked")
-	}
-	if !wp && out[0][1] != "unlocked" {
-		return errors.Errorf("sysinfo reported wrong flags, got %v want %v", out[0][1], "unlocked")
+	defer func() {
+		testing.ContextLog(ctx, "Restarting AP")
+		if err := h.Servo.RunECCommand(ctx, "powerbtn"); err != nil {
+			testing.ContextLog(ctx, "Failed to restart: ", err)
+		}
+		if err := h.WaitConnect(ctx); err != nil {
+			testing.ContextLog(ctx, "Failed to boot to connect to DUT")
+		}
+	}()
+
+	testing.ContextLog(ctx, "Checking lock state in sysinfo")
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		out, err := h.Servo.RunECCommandGetOutput(ctx, "sysinfo", []string{`Flags:\s+(locked|unlocked)[^\n]*\n`})
+		if err != nil {
+			return errors.Wrap(err, "sysinfo failed")
+		}
+		if wp && out[0][1] != "locked" {
+			return errors.Errorf("sysinfo reported wrong flags, got %v want %v", out[0][1], "locked")
+		}
+		if !wp && out[0][1] != "unlocked" {
+			return errors.Errorf("sysinfo reported wrong flags, got %v want %v", out[0][1], "unlocked")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 5 * time.Second, Interval: 500 * time.Millisecond}); err != nil {
+		return errors.Wrap(err, "looking for sysinfo")
 	}
 
-	out, err = h.Servo.RunECCommandGetOutput(ctx, "flashinfo", []string{`wp_gpio_asserted:\s+(ON|OFF)\s*`})
-	if err != nil {
-		return errors.Wrap(err, "flashinfo failed")
+	testing.ContextLog(ctx, "Checking wp_gpio_asserted state in flashinfo")
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		out, err := h.Servo.RunECCommandGetOutput(ctx, "flashinfo", []string{`(?:.*\r\n){10}`})
+		if out == nil {
+			return errors.Wrap(err, "failed to get output from flashinfo")
+		} else if err != nil {
+			testing.ContextLog(ctx, "flashinfo failed to be fully parse, trying anyway")
+		}
+
+		flashinfoOutput := strings.Join(out[0], "\n")
+		testing.ContextLog(ctx, "flashinfo: ", flashinfoOutput)
+		oldPattern := regexp.MustCompile(`Flags:.*\n`)
+		newPattern := regexp.MustCompile(`wp_gpio_asserted:\s+(ON|OFF)\s*`)
+
+		if newMatch := newPattern.FindStringSubmatch(flashinfoOutput); newMatch != nil {
+			testing.ContextLog(ctx, "New match: ", newMatch)
+			if wp && newMatch[1] != "ON" {
+				return errors.New("flashinfo reported wp_gpio_asserted OFF when expecting ON, check wp gpio config")
+			}
+			if !wp && newMatch[1] != "OFF" {
+				return errors.New("flashinfo reported wp_gpio_asserted ON when expecting OFF, check wp gpio config")
+			}
+		} else if oldMatch := oldPattern.FindStringSubmatch(flashinfoOutput); oldMatch != nil {
+			testing.ContextLog(ctx, "Old match: ", oldMatch)
+			if wp && !strings.Contains(oldMatch[0], "wp_gpio_asserted") {
+				return errors.New("flashinfo reported wp_gpio_asserted OFF when expecting ON, check wp gpio config")
+			}
+			if !wp && strings.Contains(oldMatch[0], "wp_gpio_asserted") {
+				return errors.New("flashinfo reported wp_gpio_asserted ON when expecting OFF, check wp gpio config")
+			}
+		} else {
+			return errors.Errorf("failed to parse flashinfo output, got: %v", flashinfoOutput)
+		}
+
+		return nil
+	}, &testing.PollOptions{Timeout: 5 * time.Second, Interval: 500 * time.Millisecond}); err != nil {
+		return errors.Wrap(err, "looking for flashinfo")
 	}
-	if wp && out[0][1] != "ON" {
-		return errors.New("flashinfo reported wp_gpio_asserted OFF when expecting ON, check wp gpio config")
-	}
-	if !wp && out[0][1] != "OFF" {
-		return errors.New("flashinfo reported wp_gpio_asserted ON when expecting OFF, check wp gpio config")
-	}
+
 	return nil
 }
