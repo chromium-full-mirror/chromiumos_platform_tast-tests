@@ -14,7 +14,9 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -27,7 +29,7 @@ func init() {
 		SoftwareDeps: []string{"crossystem", "flashrom"},
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291",
-		Fixture:      fixture.DevMode,
+		Fixture:      fixture.DevModeGBB,
 		Timeout:      10 * time.Minute,
 	})
 }
@@ -38,7 +40,7 @@ func RecModeTime(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	h := s.FixtValue().(*fixture.Value).Helper
-
+	dut := s.DUT()
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to connect to servo: ", err)
 	}
@@ -98,7 +100,7 @@ func RecModeTime(ctx context.Context, s *testing.State) {
 		s.Fatalf("DUT did not boot from the bootable device: got %v, want true", bootedFromRemovableDevice)
 	}
 
-	fwBootTime, err := firmwareTimestampBootTime(ctx, h)
+	fwBootTime, err := firmwareTimestampBootTime(ctx, dut)
 	if err != nil {
 		s.Fatal("Failed to read firmware boot time: ", err)
 	}
@@ -112,10 +114,17 @@ func RecModeTime(ctx context.Context, s *testing.State) {
 
 // firmwareTimestampBootTime reads firmware startup time from /tmp/firmware-boot-time
 // and returns the value in seconds.
-func firmwareTimestampBootTime(ctx context.Context, h *firmware.Helper) (float64, error) {
-	b, err := h.Reporter.CatFile(ctx, "/tmp/firmware-boot-time")
-	for err != nil {
-		return 0, errors.Wrap(err, "failed to read firmware-boot-time file")
+func firmwareTimestampBootTime(ctx context.Context, dut *dut.DUT) (float64, error) {
+	var b []byte
+	var err error
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		b, err = linuxssh.ReadFile(ctx, dut.Conn(), "/tmp/firmware-boot-time")
+		if err != nil {
+			return errors.Wrap(err, "failed to read firmware-boot-time file")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 30 * time.Second, Interval: 1 * time.Second}); err != nil {
+		return 0, errors.Wrap(err, "failed to get firmware times stamp boot time")
 	}
 	l := strings.Split(string(b), "\n")[0]
 	return strconv.ParseFloat(l, 64)
