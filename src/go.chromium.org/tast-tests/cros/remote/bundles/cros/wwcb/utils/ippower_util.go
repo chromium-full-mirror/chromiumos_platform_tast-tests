@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -54,6 +55,9 @@ func OpenIppower(ctx context.Context, ports []int) error {
 		return errors.Wrap(err, "failed to send request")
 	}
 	defer resp.Body.Close()
+	// GoBigSleepLint: To prevent the simultaneous triggering of power and device connections,
+	// which can lead to device loss.
+	testing.Sleep(ctx, 5*time.Second)
 	return nil
 }
 
