@@ -28,6 +28,7 @@ func init() {
 			"chromeos-engprod-syd@google.com",
 			"mattlui@google.com",
 		},
+		BugComponent:    "b:1103568", // ChromeOS -> EngProd -> Developer
 		Impl:            &LoadModuleFixture{},
 		SetUpTimeout:    UsbipModulesLoadedTimeout,
 		TearDownTimeout: UsbipModulesLoadedTimeout,
@@ -41,6 +42,7 @@ func init() {
 			"chromeos-engprod-syd@google.com",
 			"mattlui@google.com",
 		},
+		BugComponent:    "b:1103568", // ChromeOS -> EngProd -> Developer
 		Impl:            &ServerFixture{},
 		Parent:          "usbipModulesLoaded",
 		SetUpTimeout:    UsbipServerTimeout,
