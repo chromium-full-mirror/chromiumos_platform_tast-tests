@@ -1,4 +1,4 @@
-// Copyright 2023 The ChromiumOS Authors
+// Copyright 2024 The ChromiumOS Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -7,10 +7,6 @@ package camera
 import (
 	"context"
 	"time"
-
-	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 
 	"go.chromium.org/tast-tests/cros/common/bond"
 	"go.chromium.org/tast-tests/cros/common/media/caps"
@@ -25,13 +21,16 @@ import (
 	"go.chromium.org/tast-tests/cros/local/power"
 	powersetup "go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast-tests/cros/local/upstart"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 const (
-	initTimePNPGoogleMeet = 1 * time.Minute
+	initTimePNPGoogleMeetFeatureToggle = 1 * time.Minute
 )
 
-type pnpGoogleMeetParams struct {
+type pnpGoogleMeetFeatureToggleParams struct {
 	featureToggleConf features.FeatureToggleConf
 	effectsConf       *pnp.EffectsParams
 	cameraOff         bool
@@ -39,7 +38,7 @@ type pnpGoogleMeetParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PNPGoogleMeet,
+		Func:         PNPGoogleMeetFeatureToggle,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Collect power metrics when in a google meet session",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "esker@chromium.org"},
@@ -47,39 +46,39 @@ func init() {
 		VarDeps:      []string{"ui.bond_credentials"},
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild", "group:camera_dependent"},
 		SoftwareDeps: []string{"chrome"},
-		Timeout:      initTimePNPGoogleMeet + pnp.PNPTimeParams.Total + power.RecorderTimeout,
+		Timeout:      initTimePNPGoogleMeetFeatureToggle + pnp.PNPTimeParams.Total + power.RecorderTimeout,
 		Params: []testing.Param{{
 			Name:              "ash",
 			Fixture:           pnp.StablePowerAshGAIA,
 			ExtraSoftwareDeps: []string{caps.BuiltinCamera},
-			Val:               pnpGoogleMeetParams{},
+			Val:               pnpGoogleMeetFeatureToggleParams{},
 		}, {
 			Name:    "ash_fake_hal",
 			Fixture: pnp.StablePowerAshGAIAFakeHAL,
-			Val:     pnpGoogleMeetParams{},
+			Val:     pnpGoogleMeetFeatureToggleParams{},
 		}, {
 			Name:    "ash_camera_off",
 			Fixture: pnp.StablePowerAshGAIA,
-			Val:     pnpGoogleMeetParams{cameraOff: true},
+			Val:     pnpGoogleMeetFeatureToggleParams{cameraOff: true},
 		}, {
 			Name:              "lacros",
 			Fixture:           pnp.StablePowerLacrosGAIA,
 			ExtraSoftwareDeps: []string{caps.BuiltinCamera},
-			Val:               pnpGoogleMeetParams{},
+			Val:               pnpGoogleMeetFeatureToggleParams{},
 		}, {
 			Name:    "lacros_fake_hal",
 			Fixture: pnp.StablePowerLacrosGAIAFakeHAL,
-			Val:     pnpGoogleMeetParams{},
+			Val:     pnpGoogleMeetFeatureToggleParams{},
 		}, {
 			Name:    "lacros_camera_off",
 			Fixture: pnp.StablePowerLacrosGAIA,
-			Val:     pnpGoogleMeetParams{cameraOff: true},
+			Val:     pnpGoogleMeetFeatureToggleParams{cameraOff: true},
 		}, {
 			Name:              "lacros_face_gcamae_hdrnet_all_off",
 			Fixture:           pnp.StablePowerLacrosGAIA,
 			ExtraHardwareDeps: hwdep.D(hwdep.CameraFeature(features.HDRnet, features.GcamAE)),
 			ExtraSoftwareDeps: []string{caps.BuiltinMIPICamera},
-			Val: pnpGoogleMeetParams{
+			Val: pnpGoogleMeetFeatureToggleParams{
 				featureToggleConf: features.FeatureToggleConf{
 					features.HDRnet:        false,
 					features.GcamAE:        false,
@@ -91,7 +90,7 @@ func init() {
 			Fixture:           pnp.StablePowerLacrosGAIA,
 			ExtraHardwareDeps: hwdep.D(hwdep.CameraFeature(features.HDRnet, features.GcamAE)),
 			ExtraSoftwareDeps: []string{caps.BuiltinMIPICamera},
-			Val: pnpGoogleMeetParams{
+			Val: pnpGoogleMeetFeatureToggleParams{
 				featureToggleConf: features.FeatureToggleConf{
 					features.HDRnet:        false,
 					features.GcamAE:        false,
@@ -103,7 +102,7 @@ func init() {
 			Fixture:           pnp.StablePowerLacrosGAIA,
 			ExtraHardwareDeps: hwdep.D(hwdep.CameraFeature(features.HDRnet, features.GcamAE)),
 			ExtraSoftwareDeps: []string{caps.BuiltinMIPICamera},
-			Val: pnpGoogleMeetParams{
+			Val: pnpGoogleMeetFeatureToggleParams{
 				featureToggleConf: features.FeatureToggleConf{
 					features.HDRnet:        false,
 					features.GcamAE:        true,
@@ -115,7 +114,7 @@ func init() {
 			Fixture:           pnp.StablePowerLacrosGAIA,
 			ExtraHardwareDeps: hwdep.D(hwdep.CameraFeature(features.HDRnet, features.GcamAE)),
 			ExtraSoftwareDeps: []string{caps.BuiltinMIPICamera},
-			Val: pnpGoogleMeetParams{
+			Val: pnpGoogleMeetFeatureToggleParams{
 				featureToggleConf: features.FeatureToggleConf{
 					features.HDRnet:        true,
 					features.GcamAE:        false,
@@ -126,7 +125,7 @@ func init() {
 			Name:              "lacros_vc_backgroun_blur_on",
 			Fixture:           pnp.StablePowerLacrosGAIA,
 			ExtraSoftwareDeps: []string{caps.BuiltinMIPICamera, "camera_feature_effects"},
-			Val: pnpGoogleMeetParams{
+			Val: pnpGoogleMeetFeatureToggleParams{
 				effectsConf: &pnp.EffectsParams{
 					BlurLevel:      vctray.BackgroundBlurFull,
 					RelightEnabled: false,
@@ -136,7 +135,7 @@ func init() {
 			Name:              "lacros_vc_relight_on",
 			Fixture:           pnp.StablePowerLacrosGAIA,
 			ExtraSoftwareDeps: []string{caps.BuiltinMIPICamera, "camera_feature_effects"},
-			Val: pnpGoogleMeetParams{
+			Val: pnpGoogleMeetFeatureToggleParams{
 				effectsConf: &pnp.EffectsParams{
 					BlurLevel:      vctray.BackgroundBlurOff,
 					RelightEnabled: true,
@@ -146,7 +145,7 @@ func init() {
 			Name:              "lacros_vc_background_blur_relight_on",
 			Fixture:           pnp.StablePowerLacrosGAIA,
 			ExtraSoftwareDeps: []string{caps.BuiltinMIPICamera, "camera_feature_effects"},
-			Val: pnpGoogleMeetParams{
+			Val: pnpGoogleMeetFeatureToggleParams{
 				effectsConf: &pnp.EffectsParams{
 					BlurLevel:      vctray.BackgroundBlurFull,
 					RelightEnabled: true,
@@ -156,7 +155,7 @@ func init() {
 	})
 }
 
-func PNPGoogleMeet(ctx context.Context, s *testing.State) {
+func PNPGoogleMeetFeatureToggle(ctx context.Context, s *testing.State) {
 	// Reserve some time to cleanup, even if it fails due to ctx timeout.
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
@@ -185,7 +184,7 @@ func PNPGoogleMeet(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get ash tconn: ", err)
 	}
 
-	if s.Param().(pnpGoogleMeetParams).featureToggleConf != nil {
+	if s.Param().(pnpGoogleMeetFeatureToggleParams).featureToggleConf != nil {
 		featureToggler, err := features.NewFeatureToggler(ctx)
 		if err != nil {
 			s.Fatal("Cannot create feature toggler: ", err)
@@ -195,7 +194,7 @@ func PNPGoogleMeet(ctx context.Context, s *testing.State) {
 				s.Error("Cannot close feature toggler: ", err)
 			}
 		}()
-		featureToggler.Toggle(ctx, s.Param().(pnpGoogleMeetParams).featureToggleConf)
+		featureToggler.Toggle(ctx, s.Param().(pnpGoogleMeetFeatureToggleParams).featureToggleConf)
 		if err := upstart.RestartJob(ctx, "cros-camera"); err != nil {
 			s.Fatal("Failed to restart cros-camera service: ", err)
 		}
@@ -248,7 +247,7 @@ func PNPGoogleMeet(ctx context.Context, s *testing.State) {
 	}
 	defer gm.Close(cleanupCtx)
 
-	if effectsConf := s.Param().(pnpGoogleMeetParams).effectsConf; effectsConf != nil {
+	if effectsConf := s.Param().(pnpGoogleMeetFeatureToggleParams).effectsConf; effectsConf != nil {
 		if err != nil {
 			s.Fatal("Failed to connect to the test API: ", err)
 		}
@@ -265,7 +264,7 @@ func PNPGoogleMeet(ctx context.Context, s *testing.State) {
 	if err := uiauto.Combine("Configure Google Meet",
 		gm.EnterFullScreen,
 		gm.MuteIfMicAvailable,
-		gm.SwitchVideo(!s.Param().(pnpGoogleMeetParams).cameraOff),
+		gm.SwitchVideo(!s.Param().(pnpGoogleMeetFeatureToggleParams).cameraOff),
 		gm.ChangeSettings(
 			gm.SetSendResolution(googlemeet.ResolutionHD720P),
 			gm.SetReceiveResolution(googlemeet.ResolutionHD720P),
