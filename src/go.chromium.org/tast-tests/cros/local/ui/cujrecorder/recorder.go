@@ -1617,7 +1617,11 @@ func (r *Recorder) stopMetrics(ctx context.Context) error {
 	r.pv.Set(perf.Metric{
 		Name: "TestMetrics.TotalTestRunTime",
 		Unit: "s",
-		// Longer runtime correlates to better performance data, so bigger is better
+		// There is no real improvement direction for this metric.
+		// Initially we put bigger is better because our tests didn't run for sufficient time,
+		// so we had this effort to increase the duration of all our tests.
+		// Now that our tests are sufficient length, running for a smaller amount of time
+		// might be good because we spend less time waiting for pages to load.
 		Direction: perf.BiggerIsBetter,
 	}, r.duration.Seconds())
 
