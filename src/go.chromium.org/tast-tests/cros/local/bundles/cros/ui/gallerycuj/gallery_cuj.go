@@ -108,6 +108,11 @@ func Run(ctx context.Context, cr *chrome.Chrome, outDir string, dataPath func(st
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
+	pv, err := localPerf.CaptureDeviceSnapshot(ctx, "Initial")
+	if err != nil {
+		return errors.Wrap(err, "failed to capture device snapshot")
+	}
+
 	// Mute the device. We don’t track audio performance anyways, so we don’t
 	// want the video or audio file disturbing anyone, especially during development.
 	cras, err := audio.NewCras(ctx)
@@ -188,11 +193,6 @@ func Run(ctx context.Context, cr *chrome.Chrome, outDir string, dataPath func(st
 	closeCtx := ctx
 	ctx, cancel = ctxutil.Shorten(ctx, time.Minute)
 	defer cancel()
-
-	pv, err := localPerf.CaptureDeviceSnapshot(ctx, "Initial")
-	if err != nil {
-		return errors.Wrap(err, "failed to capture device snapshot")
-	}
 
 	recorder, err := cujrecorder.NewRecorder(ctx, cr, tconn, nil, cujrecorder.RecorderOptions{})
 	if err != nil {

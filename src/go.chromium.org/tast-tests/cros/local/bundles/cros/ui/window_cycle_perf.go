@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/chrome/histogram"
+	"go.chromium.org/tast-tests/cros/common/perf"
 	uiperf "go.chromium.org/tast-tests/cros/local/bundles/cros/ui/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
@@ -67,11 +68,6 @@ func WindowCyclePerf(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	initialSnapshot, err := localPerf.CaptureDeviceSnapshot(ctx, "Initial")
-	if err != nil {
-		s.Fatal("Failed to capture device snapshot: ", err)
-	}
-
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	blankConn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, s.Param().(browser.Type), chrome.BlankURL)
@@ -116,7 +112,13 @@ func WindowCyclePerf(ctx context.Context, s *testing.State) {
 	}
 	defer recorder.Close(cleanupCtx)
 
+	var initialSnapshot *perf.Values
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
+		initialSnapshot, err = localPerf.CaptureDeviceSnapshot(ctx, "Initial")
+		if err != nil {
+			return errors.Wrap(err, "failed to capture device snapshot")
+		}
+
 		for i, numWindows := range []int{2, 8, 16} {
 			if err := ash.CreateWindows(ctx, tconn, br, ui.PerftestURL, numWindows-numExistingWindows); err != nil {
 				s.Fatal("Failed to open browser windows: ", err)

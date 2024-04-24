@@ -71,11 +71,6 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, outDir, sy
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	pv, err = localPerf.CaptureDeviceSnapshot(ctx, "Initial")
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to capture device snapshot")
-	}
-
 	sheetConn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, testParam.BrowserType, chrome.BlankURL)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to setup Chrome")
@@ -193,6 +188,11 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, outDir, sy
 	defer faillog.DumpUITreeWithScreenshotOnError(closeCtx, outDir, func() bool { return retErr != nil }, cr, "ui_dump")
 
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
+		pv, err = localPerf.CaptureDeviceSnapshot(ctx, "Initial")
+		if err != nil {
+			return errors.Wrap(err, "failed to capture device snapshot")
+		}
+
 		// Open Google Sheets file.
 		recorder.Annotate(ctx, "Opening_Google_Sheets_file")
 		if err := sheetConn.Navigate(ctx, sheetURL); err != nil {

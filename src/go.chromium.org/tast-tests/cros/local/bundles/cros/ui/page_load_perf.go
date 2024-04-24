@@ -57,11 +57,6 @@ func PageLoadPerf(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	initialSnapshot, err := localPerf.CaptureDeviceSnapshot(ctx, "Initial")
-	if err != nil {
-		s.Fatal("Failed to capture device snapshot: ", err)
-	}
-
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	conn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, s.Param().(browser.Type), chrome.BlankURL)
@@ -110,7 +105,13 @@ func PageLoadPerf(ctx context.Context, s *testing.State) {
 		// TODO(b/296939495) Add a media centric page and a lighter page.
 	}
 
+	var initialSnapshot *perf.Values
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
+		initialSnapshot, err = localPerf.CaptureDeviceSnapshot(ctx, "Initial")
+		if err != nil {
+			return errors.Wrap(err, "failed to capture device snapshot")
+		}
+
 		for _, page := range pages {
 			runner.RunMultiple(ctx, page.prefix, uiperf.Run(s,
 				perfutil.RunAndWaitAll(bTconn,
