@@ -367,6 +367,7 @@ func init() {
 				Val: meetcuj.MeetTest{
 					Bots:          []int{1, 3, 15},
 					Layout:        googlemeet.TiledLayout,
+					Enterprise:    true,
 					Present:       true,
 					Docs:          true,
 					Split:         true,

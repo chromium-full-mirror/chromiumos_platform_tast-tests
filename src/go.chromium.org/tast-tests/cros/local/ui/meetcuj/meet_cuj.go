@@ -83,6 +83,7 @@ type MeetTest struct {
 	Bots []int
 
 	Layout            googlemeet.LayoutOption // Type of the layout in the meeting.
+	Enterprise        bool                    // Whether to use enterprise accounts.
 	Present           bool                    // Whether it is presenting the Google Docs window.
 	Docs              bool                    // Whether it is running with a Google Docs window.
 	Slides            bool                    // Whether it is running with a Google Slides window.
@@ -1406,7 +1407,8 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 		if err := os.WriteFile(filepath.Join(outDir, "webrtc-internals.json"), dump, 0644); err != nil {
 			return pv, errors.Wrap(err, "failed to write WebRTC internals dump to test results folder")
 		}
-		webRTCInternalsPV, err := reportWebRTCInternals(ctx, dump, meetingCode, meet.Bots[len(meet.Bots)-1], meet.Present)
+		enterpriseEffects := meet.Enterprise && meet.Effects
+		webRTCInternalsPV, err := reportWebRTCInternals(ctx, dump, meetingCode, meet.Bots[len(meet.Bots)-1], enterpriseEffects, meet.Present)
 		if err != nil {
 			return pv, errors.Wrap(err, "failed to report info from WebRTC internals dump to performance metrics")
 		}
@@ -1645,7 +1647,7 @@ func generateMetrics(ctx context.Context, conn *chrome.Conn, tconn *chrome.TestC
 }
 
 // reportWebRTCInternals reports info from a WebRTC internals dump to performance metrics.
-func reportWebRTCInternals(ctx context.Context, dump []byte, meetingCode string, numBots int, present bool) (*perf.Values, error) {
+func reportWebRTCInternals(ctx context.Context, dump []byte, meetingCode string, numBots int, enterpriseEffects, present bool) (*perf.Values, error) {
 	var webRTC webrtcinternals.Dump
 	if err := json.Unmarshal(dump, &webRTC); err != nil {
 		return nil, errors.Wrap(err, "failed to unmarshal WebRTC internals dump")
@@ -1696,10 +1698,23 @@ func reportWebRTCInternals(ctx context.Context, dump []byte, meetingCode string,
 			// Sometimes when the connection is unstable, there may be multiple peer connections.
 			// Return failure only if none of the connections have correct inbound video data.
 			expectedInTotalCount = numBots
-			if inTotalCount != expectedInTotalCount {
-				inCountError = errors.Errorf("unexpected number of inbound-rtp video streams in peer connection %v; got %d, want %d", connID, inTotalCount, expectedInTotalCount)
+
+			testing.ContextLogf(ctx, "Found %v inbound-rtp video streams", inTotalCount)
+			// If an enterprise account turns on effects, it will generate 1~2 inbound-rtp video
+			// streams for the self view of sending client.
+			if enterpriseEffects {
+				expectedInTotalCount++
+				if inTotalCount != expectedInTotalCount && inTotalCount != expectedInTotalCount+1 {
+					inCountError = errors.Errorf("unexpected number of inbound-rtp video streams in peer connection %v; got %d, expected %d or %d", connID, inTotalCount, expectedInTotalCount, expectedInTotalCount+1)
+				} else {
+					inCountError = nil
+				}
 			} else {
-				inCountError = nil
+				if inTotalCount != expectedInTotalCount {
+					inCountError = errors.Errorf("unexpected number of inbound-rtp video streams in peer connection %v; got %d, want %d", connID, inTotalCount, expectedInTotalCount)
+				} else {
+					inCountError = nil
+				}
 			}
 		case outTotalCount: // This is the screen share connection.
 			numScreenshareConns++
