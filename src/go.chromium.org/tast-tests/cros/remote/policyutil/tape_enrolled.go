@@ -246,7 +246,7 @@ func (e *tapeEnrolledFixt) SetUp(ctx context.Context, s *testing.FixtState) inte
 
 	defer func(ctx context.Context) {
 		if !ok {
-			if err := tapeClient.DeprovisionHelper(ctx, rpcClient, e.account.CustomerID, e.account.OrgUnitPath); err != nil {
+			if err := tapeClient.DeprovisionHelper(ctx, rpcClient, e.account.OrgUnitPath); err != nil {
 				s.Fatal("Failed to deprovision device: ", err)
 			}
 		}
@@ -328,7 +328,7 @@ func (e *tapeEnrolledFixt) TearDown(ctx context.Context, s *testing.FixtState) {
 	}
 	defer cl.Close(ctx)
 
-	if err := tapeClient.DeprovisionHelper(ctx, cl, e.account.CustomerID, e.account.OrgUnitPath); err != nil {
+	if err := tapeClient.DeprovisionHelper(ctx, cl, e.account.OrgUnitPath); err != nil {
 		s.Fatal("Failed to deprovision device: ", err)
 	}
 }

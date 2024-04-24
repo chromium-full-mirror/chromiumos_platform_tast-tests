@@ -74,6 +74,9 @@ service PolicyService {
 
   // Grabs DirectoryAPIID of the managed session.
   rpc DirectoryAPIID(google.protobuf.Empty) returns (DirectoryAPIIDResponse) {}
+  // Grabs DirectoryAPIID and ObfuscatedCustomerID of the managed session.
+  rpc DeviceAndCustomerID(google.protobuf.Empty)
+      returns (DeviceAndCustomerIDResponse) {}
 
   // Locks the device.
   rpc LockDevice(google.protobuf.Empty) returns (google.protobuf.Empty) {}
@@ -201,6 +204,11 @@ message StartChromeRequest {
 message ClientIdResponse { string clientId = 1; }
 
 message DirectoryAPIIDResponse { string directoryAPIID = 1; }
+
+message DeviceAndCustomerIDResponse {
+  string deviceID = 1;
+  string customerID = 2;
+}
 
 message UnlockDeviceWithPasswordRequest {
   string username = 1;

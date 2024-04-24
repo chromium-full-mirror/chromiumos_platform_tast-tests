@@ -16,8 +16,8 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/tape"
 	"go.chromium.org/tast-tests/cros/remote/rollback"
+	pspb "go.chromium.org/tast-tests/cros/services/cros/policy"
 	rpb "go.chromium.org/tast-tests/cros/services/cros/rollback"
-	tape_service "go.chromium.org/tast-tests/cros/services/cros/tape"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
@@ -145,19 +145,20 @@ func EnterpriseRollbackEnrolled(ctx context.Context, s *testing.State) {
 		s.Fatal("Network before Rollback check error: ", err)
 	}
 
-	tapeService := tape_service.NewServiceClient(rpcClient.Conn)
-
-	ids, err := tapeService.GetDeviceID(ctx, &empty.Empty{})
+	policyClient := pspb.NewPolicyServiceClient(rpcClient.Conn)
+	deviceAndCustomerIDResponse, err := policyClient.DeviceAndCustomerID(ctx, &empty.Empty{})
 	if err != nil {
-		s.Error("Failed to get device id: ", err)
+		s.Fatal("Failed to get device and customer id: ", err)
 	}
+	deviceID := deviceAndCustomerIDResponse.DeviceID
+	customerID := deviceAndCustomerIDResponse.CustomerID
 
 	stableDeviceSecret, err := getStableDeviceSecret(ctx, s.DUT())
 	if err != nil {
 		s.Fatal("Failed to get stable device secret: ", err)
 	}
 
-	if err := tapeClient.StoreDeprovisioningIDs(ctx, ids.DeviceID, ids.CustomerID, stableDeviceSecret); err != nil {
+	if err := tapeClient.StoreDeprovisioningIDs(ctx, deviceID, customerID, stableDeviceSecret); err != nil {
 		s.Error("Failed to store ids in tape: ", err)
 	}
 

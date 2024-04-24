@@ -23,7 +23,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/tape"
-	ts "go.chromium.org/tast-tests/cros/services/cros/tape"
+	pspb "go.chromium.org/tast-tests/cros/services/cros/policy"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -168,20 +168,21 @@ func LookupUserEvents(ctx context.Context, reportingServerURL, obfuscatedCustome
 }
 
 // Deprovision deprovisions the DUT. This should be used after the test is over.
-func Deprovision(ctx context.Context, cc grpc.ClientConnInterface, serviceAccountVar []byte, customerID string) error {
+func Deprovision(ctx context.Context, cc grpc.ClientConnInterface, serviceAccountVar []byte) error {
 	tapeClient, err := tape.NewClient(ctx, serviceAccountVar)
 	if err != nil {
 		return errors.Wrap(err, "failed to create tape client")
 	}
 
-	tapeService := ts.NewServiceClient(cc)
-	// Get the device id of the DUT to deprovision it at the end of the test.
-	ids, err := tapeService.GetDeviceID(ctx, &empty.Empty{})
+	policyClient := pspb.NewPolicyServiceClient(cc)
+	deviceAndCustomerIDResponse, err := policyClient.DeviceAndCustomerID(ctx, &empty.Empty{})
 	if err != nil {
-		return errors.Wrap(err, "failed to get the deviceID")
+		return errors.Wrap(err, "failed to get device and customer id")
 	}
+	deviceID := deviceAndCustomerIDResponse.DeviceID
+	customerID := deviceAndCustomerIDResponse.CustomerID
 
-	if err = tapeClient.Deprovision(ctx, tape.WithDeviceAndCustomerID(ids.DeviceID, ids.CustomerID)); err != nil {
+	if err = tapeClient.Deprovision(ctx, tape.WithDeviceAndCustomerID(deviceID, customerID)); err != nil {
 		return errors.Wrap(err, "failed to deprovision device")
 	}
 	return nil

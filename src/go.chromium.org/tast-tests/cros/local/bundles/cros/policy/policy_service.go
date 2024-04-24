@@ -40,7 +40,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/policyutil/externaldata"
 	"go.chromium.org/tast-tests/cros/local/session"
 	"go.chromium.org/tast-tests/cros/local/syslog"
-	lt "go.chromium.org/tast-tests/cros/local/tape"
 	ppb "go.chromium.org/tast-tests/cros/services/cros/policy"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -141,7 +140,7 @@ func (c *PolicyService) WaitForEnrollmentError(ctx context.Context, req *empty.E
 
 // StoreIDsForDeprovisioningAndLogErrors calls StoreIDsForDeprovisioning and logs returned errors.
 func (c *PolicyService) StoreIDsForDeprovisioningAndLogErrors(ctx context.Context) {
-	if err := c.StoreIDsForDeprovisioning(ctx); err != nil && !errors.Is(err, lt.ErrNoPolicies) {
+	if err := c.StoreIDsForDeprovisioning(ctx); err != nil {
 		testing.ContextLog(ctx, "StoreIDsForDeprovisioning failed: ", err)
 	}
 }
@@ -150,10 +149,12 @@ func (c *PolicyService) StoreIDsForDeprovisioningAndLogErrors(ctx context.Contex
 // This function should be deferred before any enrollment with real GAIA is performed. As enrollment can still fail after
 // the provisioning it is important to also do this when enrollment fails.
 func (c *PolicyService) StoreIDsForDeprovisioning(ctx context.Context) error {
-	deviceID, customerID, err := lt.GetDeviceIDHelper(ctx)
+	deviceAndCustomerIDResponse, err := c.DeviceAndCustomerID(ctx, &empty.Empty{})
 	if err != nil {
-		return errors.Wrap(err, "failed to get customerID and deviceID")
+		return errors.Wrap(err, "failed to get device and customer id")
 	}
+	deviceID := deviceAndCustomerIDResponse.DeviceID
+	customerID := deviceAndCustomerIDResponse.CustomerID
 
 	// Get the stable_device_secret as the key under which we store the deviceID and customerID
 	// as that won't change.
@@ -828,6 +829,23 @@ func (c *PolicyService) DirectoryAPIID(ctx context.Context, req *empty.Empty) (*
 	}
 
 	return &ppb.DirectoryAPIIDResponse{DirectoryAPIID: *p.DirectoryApiId}, nil
+}
+
+// DeviceAndCustomerID retrieves the device id and customer id needed for deprovisioning.
+func (c *PolicyService) DeviceAndCustomerID(ctx context.Context, req *empty.Empty) (*ppb.DeviceAndCustomerIDResponse, error) {
+	sm, err := session.NewSessionManager(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create session_manager binding")
+	}
+
+	p, err := session.RetrievePolicyData(ctx, sm)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to retrieve settings")
+	} else if p == nil {
+		return nil, errors.New("client ID not found")
+	}
+
+	return &ppb.DeviceAndCustomerIDResponse{DeviceID: *p.DirectoryApiId, CustomerID: *p.ObfuscatedCustomerId}, nil
 }
 
 // LockDevice locks the device's screen.

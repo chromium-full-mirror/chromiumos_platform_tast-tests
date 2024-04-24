@@ -10,7 +10,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
-	ts "go.chromium.org/tast-tests/cros/services/cros/tape"
+	pspb "go.chromium.org/tast-tests/cros/services/cros/policy"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
@@ -185,15 +185,16 @@ func (ah *OwnedTestAccountManager) CleanUp(ctx context.Context) error {
 }
 
 // DeprovisionHelper is a helper function to deprovision a device in a managed domain.
-func (c *client) DeprovisionHelper(ctx context.Context, rpcClient *rpc.Client, customerID, orgUnitPath string) error {
-	tapeService := ts.NewServiceClient(rpcClient.Conn)
-	// Get the device ID of the DUT to deprovision it at the end of the test.
-	ids, err := tapeService.GetDeviceID(ctx, &empty.Empty{})
+func (c *client) DeprovisionHelper(ctx context.Context, rpcClient *rpc.Client, orgUnitPath string) error {
+	policyClient := pspb.NewPolicyServiceClient(rpcClient.Conn)
+	deviceAndCustomerIDResponse, err := policyClient.DeviceAndCustomerID(ctx, &empty.Empty{})
 	if err != nil {
-		return errors.Wrap(err, "failed to get the customer and deviceID")
+		return errors.Wrap(err, "failed to get device and customer id")
 	}
+	deviceID := deviceAndCustomerIDResponse.DeviceID
+	customerID := deviceAndCustomerIDResponse.CustomerID
 
-	return c.DeprovisionAndVerify(ctx, WithDeviceAndCustomerID(ids.DeviceID, ids.CustomerID))
+	return c.DeprovisionAndVerify(ctx, WithDeviceAndCustomerID(deviceID, customerID))
 }
 
 // DeprovisionAndVerify is a helper function to deprovision a device in a managed domain.
@@ -223,19 +224,21 @@ func (c *client) DeprovisionAndVerify(ctx context.Context, opt DeprovisionOption
 
 // MoveDeviceToOU is a helper function to move a device to an OU.
 func (c *client) MoveDeviceToOU(ctx context.Context, rpcClient *rpc.Client, orgUnitPath string) error {
-	tapeService := ts.NewServiceClient(rpcClient.Conn)
-	// Get the device ID of the DUT.
-	ids, err := tapeService.GetDeviceID(ctx, &empty.Empty{})
+	policyClient := pspb.NewPolicyServiceClient(rpcClient.Conn)
+	deviceAndCustomerIDResponse, err := policyClient.DeviceAndCustomerID(ctx, &empty.Empty{})
 	if err != nil {
-		return errors.Wrap(err, "failed to get the deviceID")
+		return errors.Wrap(err, "failed to get device and customer id")
 	}
-	_, err = c.MoveDevicesToOU(ctx, []string{ids.DeviceID}, orgUnitPath, ids.CustomerID)
+	deviceID := deviceAndCustomerIDResponse.DeviceID
+	customerID := deviceAndCustomerIDResponse.CustomerID
+
+	_, err = c.MoveDevicesToOU(ctx, []string{deviceID}, orgUnitPath, customerID)
 	if err != nil {
-		return errors.Wrapf(err, "failed to move device %s to %s", ids.DeviceID, orgUnitPath)
+		return errors.Wrapf(err, "failed to move device %s to %s", deviceID, orgUnitPath)
 	}
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		isDeprovisioned, err := c.Deprovisioned(ctx, WithDeviceAndCustomerID(ids.DeviceID, ids.CustomerID))
+		isDeprovisioned, err := c.Deprovisioned(ctx, WithDeviceAndCustomerID(deviceID, customerID))
 		if err != nil {
 			return err
 		}

@@ -211,7 +211,7 @@ func MajorVersionPinningE2E(ctx context.Context, s *testing.State) {
 
 	// Deprovision the DUT at the end of the test.
 	defer func(ctx context.Context) {
-		if err := tapeClient.DeprovisionHelper(cleanupCtx, cl, acc.CustomerID, acc.OrgUnitPath); err != nil {
+		if err := tapeClient.DeprovisionHelper(cleanupCtx, cl, acc.OrgUnitPath); err != nil {
 			s.Fatal("Failed to deprovision device: ", err)
 		}
 	}(cleanupCtx)

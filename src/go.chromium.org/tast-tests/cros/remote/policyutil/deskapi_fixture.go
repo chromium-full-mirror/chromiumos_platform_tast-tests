@@ -186,7 +186,7 @@ func (e *deskFixt) TearDown(ctx context.Context, s *testing.FixtState) {
 	if err != nil {
 		s.Fatal("Failed to create tape client: ", err)
 	}
-	if err := tapeClient.DeprovisionHelper(ctx, cl, e.acc.CustomerID, e.acc.OrgUnitPath); err != nil {
+	if err := tapeClient.DeprovisionHelper(ctx, cl, e.acc.OrgUnitPath); err != nil {
 		s.Fatal("Failed to deprovision device: ", err)
 	}
 	tapeClient.ReleaseOwnedTestAccount(ctx, e.acc)

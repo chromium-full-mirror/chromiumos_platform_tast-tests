@@ -176,7 +176,7 @@ func MemoryReporting(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
 	}
 	defer cl.Close(ctx)
-	defer reportingutil.Deprovision(ctx, cl.Conn, sa, customerID)
+	defer reportingutil.Deprovision(ctx, cl.Conn, sa)
 
 	if param.vProSpecific {
 		if su, err := vProSupported(ctx, cl.Conn); err != nil {

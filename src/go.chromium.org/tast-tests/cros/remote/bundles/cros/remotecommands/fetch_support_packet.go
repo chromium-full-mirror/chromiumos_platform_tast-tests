@@ -16,7 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/tape"
 	"go.chromium.org/tast-tests/cros/remote/policyutil"
 	ps "go.chromium.org/tast-tests/cros/services/cros/policy"
-	ts "go.chromium.org/tast-tests/cros/services/cros/tape"
+	pspb "go.chromium.org/tast-tests/cros/services/cros/policy"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
@@ -123,7 +123,7 @@ func FetchSupportPacket(ctx context.Context, s *testing.State) {
 	testStartTime := time.Now()
 
 	// Defer deprovision before the enrollment in case enrollement fails after provisioning.
-	defer reportingutil.Deprovision(ctx, cl.Conn, sa, acc.CustomerID)
+	defer reportingutil.Deprovision(ctx, cl.Conn, sa)
 	if _, err := pc.GAIAEnrollForReporting(ctx, &ps.GAIAEnrollForReportingRequest{
 		Username:           acc.Username,
 		Password:           acc.Password,
@@ -136,15 +136,17 @@ func FetchSupportPacket(ctx context.Context, s *testing.State) {
 	}
 	defer pc.StopChrome(ctx, &empty.Empty{})
 
-	tapeService := ts.NewServiceClient(cl.Conn)
-	ids, err := tapeService.GetDeviceID(ctx, &empty.Empty{})
+	policyClient := pspb.NewPolicyServiceClient(cl.Conn)
+	deviceAndCustomerIDResponse, err := policyClient.DeviceAndCustomerID(ctx, &empty.Empty{})
 	if err != nil {
-		s.Error("Failed to get device id: ", err)
+		s.Fatal("Failed to get device and customer id: ", err)
 	}
+	deviceID := deviceAndCustomerIDResponse.DeviceID
+	customerID := deviceAndCustomerIDResponse.CustomerID
 
 	s.Log("Supportability: Triggering FETCH_SUPPORT_PACKET remote command")
 	command := tape.RemoteCommand{CommandType: tape.CommandTypeFetchSupportPacket, Payload: "{\"supportPacketDetails\":{\"issueCaseId\":\"issue_case_id\",\"issueDescription\":\"issuedescription\",\"requestedDataCollectors\":[1,2,3]}}"}
-	response, err := tapeClient.IssueCommand(ctx, ids.DeviceID, acc.CustomerID, command)
+	response, err := tapeClient.IssueCommand(ctx, deviceID, customerID, command)
 	if err != nil {
 		s.Fatal("Failed to issue command: ", err)
 	}
@@ -154,7 +156,7 @@ func FetchSupportPacket(ctx context.Context, s *testing.State) {
 	commandID := response.CommandID
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		commandStatus, err := tapeClient.GetCommand(ctx, ids.DeviceID, acc.CustomerID, commandID)
+		commandStatus, err := tapeClient.GetCommand(ctx, deviceID, customerID, commandID)
 		if err != nil {
 			return errors.Wrap(err, "failed to get command status")
 		}

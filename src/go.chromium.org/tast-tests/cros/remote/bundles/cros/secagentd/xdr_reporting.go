@@ -97,7 +97,7 @@ func XdrReporting(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
 	}
 	defer cl.Close(ctx)
-	defer reportingutil.Deprovision(ctx, cl.Conn, sa, customerID)
+	defer reportingutil.Deprovision(ctx, cl.Conn, sa)
 
 	pc := ps.NewPolicyServiceClient(cl.Conn)
 

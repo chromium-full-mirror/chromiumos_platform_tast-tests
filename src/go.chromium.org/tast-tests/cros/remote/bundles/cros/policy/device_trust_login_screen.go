@@ -23,7 +23,7 @@ const deviceTrustEnrollmentTimeout = 7 * time.Minute
 
 type userParam struct {
 	poolID         string
-	expectedIdPURL string
+	expectedIDPURL string
 	loginPossible  bool
 }
 
@@ -61,14 +61,14 @@ func init() {
 			Name: "host_allowed",
 			Val: userParam{
 				poolID:         tape.DeviceTrustEnabled,
-				expectedIdPURL: "https://staging-idp-dot-cbe-integrationtesting-sandbox.uc.r.appspot.com",
+				expectedIDPURL: "https://staging-idp-dot-cbe-integrationtesting-sandbox.uc.r.appspot.com",
 				loginPossible:  true,
 			},
 		}, {
 			Name: "host_not_allowed",
 			Val: userParam{
 				poolID:         tape.DeviceTrustDisabled,
-				expectedIdPURL: "https://www.example.com",
+				expectedIDPURL: "https://www.example.com",
 				loginPossible:  false,
 			},
 		}},
@@ -81,7 +81,7 @@ func init() {
 func DeviceTrustLoginScreen(ctx context.Context, s *testing.State) {
 	param := s.Param().(userParam)
 	poolID := param.poolID
-	expectedIdPURL := param.expectedIdPURL
+	expectedIDPURL := param.expectedIDPURL
 	signinProfileTestExtensionManifestKey := s.RequiredVar("ui.signinProfileTestExtensionManifestKey")
 
 	// Shorten deadline to leave time for cleanup.
@@ -124,13 +124,13 @@ func DeviceTrustLoginScreen(ctx context.Context, s *testing.State) {
 	// provisioned even when the enrollment fails we need to defer the
 	// deprovisioning before enrolling.
 	defer func(ctx context.Context) {
-		if err := tapeClient.DeprovisionHelper(ctx, cl, acc.CustomerID, acc.OrgUnitPath); err != nil {
+		if err := tapeClient.DeprovisionHelper(ctx, cl, acc.OrgUnitPath); err != nil {
 			s.Fatal("Failed to deprovision device: ", err)
 		}
 	}(cleanupCtx)
 
 	s.Log("Enrolling device")
-	if _, err = service.Enroll(ctx, &enterpriseconnectors.EnrollRequest{User: acc.Username, Pass: acc.Password, ExpectedIdPURL: expectedIdPURL, SigninProfileTestExtensionManifestKey: signinProfileTestExtensionManifestKey}); err != nil {
+	if _, err = service.Enroll(ctx, &enterpriseconnectors.EnrollRequest{User: acc.Username, Pass: acc.Password, ExpectedIdPURL: expectedIDPURL, SigninProfileTestExtensionManifestKey: signinProfileTestExtensionManifestKey}); err != nil {
 		s.Fatal("Remote call Enroll() failed: ", err)
 	}
 	defer service.StopChrome(cleanupCtx, &empty.Empty{})

@@ -201,7 +201,7 @@ func TouchScreenReporting(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to enroll using chrome: ", err)
 	}
 	defer pc.StopChrome(ctx, &empty.Empty{})
-	defer reportingutil.Deprovision(ctx, cl.Conn, sa, acc.CustomerID)
+	defer reportingutil.Deprovision(ctx, cl.Conn, sa)
 
 	c, err := pc.ClientID(ctx, &empty.Empty{})
 	if err != nil {

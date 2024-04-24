@@ -21,7 +21,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/tape"
 	"go.chromium.org/tast-tests/cros/remote/policyutil"
 	ps "go.chromium.org/tast-tests/cros/services/cros/demomode"
-	tape_service "go.chromium.org/tast-tests/cros/services/cros/tape"
+	pspb "go.chromium.org/tast-tests/cros/services/cros/policy"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
 )
 
@@ -212,12 +212,14 @@ func (f *fixtureImpl) TearDown(ctx context.Context, s *testing.FixtState) {
 }
 
 func uploadTapeDeprovisioningIDs(ctx context.Context, rpcClient *rpc.Client, dut *dut.DUT, tapeServiceAccount []byte) error {
-	tapeService := tape_service.NewServiceClient(rpcClient.Conn)
-
-	ids, err := tapeService.GetDeviceID(ctx, &empty.Empty{})
+	policyClient := pspb.NewPolicyServiceClient(rpcClient.Conn)
+	deviceAndCustomerIDResponse, err := policyClient.DeviceAndCustomerID(ctx, &empty.Empty{})
 	if err != nil {
-		return errors.Wrap(err, "failed to get device IDs")
+		return errors.Wrap(err, "failed to get device and customer id")
 	}
+	deviceID := deviceAndCustomerIDResponse.DeviceID
+	customerID := deviceAndCustomerIDResponse.CustomerID
+
 	stableDeviceSecret, err := getStableDeviceSecret(ctx, dut)
 	if err != nil {
 		return errors.Wrap(err, "failed to get stable device secret")
@@ -228,8 +230,8 @@ func uploadTapeDeprovisioningIDs(ctx context.Context, rpcClient *rpc.Client, dut
 		return errors.Wrap(err, "failed to create tape client")
 	}
 
-	testing.ContextLog(ctx, "Uploading Tape deprovisioning IDs, customer ID: "+ids.CustomerID+" - device ID: "+ids.DeviceID)
-	if err := tapeClient.StoreDeprovisioningIDs(ctx, ids.DeviceID, ids.CustomerID, stableDeviceSecret); err != nil {
+	testing.ContextLog(ctx, "Uploading Tape deprovisioning IDs, customer ID: "+customerID+" - device ID: "+deviceID)
+	if err := tapeClient.StoreDeprovisioningIDs(ctx, deviceID, customerID, stableDeviceSecret); err != nil {
 		return errors.Wrap(err, "failed to store IDs in TAPE")
 	}
 	return nil

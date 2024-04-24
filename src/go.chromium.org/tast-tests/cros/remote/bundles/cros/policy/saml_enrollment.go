@@ -119,7 +119,7 @@ func SAMLEnrollment(ctx context.Context, s *testing.State) {
 	// provisioned even when the enrollment fails we need to defer the
 	// deprovisioning before enrolling.
 	defer func(ctx context.Context) {
-		if err := tapeClient.DeprovisionHelper(cleanupCtx, cl, acc.CustomerID, acc.OrgUnitPath); err != nil {
+		if err := tapeClient.DeprovisionHelper(cleanupCtx, cl, acc.OrgUnitPath); err != nil {
 			s.Fatal("Failed to deprovision device: ", err)
 		}
 	}(cleanupCtx)

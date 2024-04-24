@@ -246,7 +246,7 @@ func DlpReporting(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
 	}
 	defer cl.Close(cleanupCtx)
-	defer reportingutil.Deprovision(cleanupCtx, cl.Conn, sa, customerID)
+	defer reportingutil.Deprovision(cleanupCtx, cl.Conn, sa)
 
 	// Create client instance of the DataLeakPrevention service.
 	service := dlp.NewDataLeakPreventionServiceClient(cl.Conn)
