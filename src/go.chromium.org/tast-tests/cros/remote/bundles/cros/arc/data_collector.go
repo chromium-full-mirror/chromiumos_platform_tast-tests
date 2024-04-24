@@ -321,8 +321,8 @@ func init() {
 			ExtraAttr:         []string{"group:mainline", "informational"},
 			ExtraSoftwareDeps: []string{"android_vm_r"},
 			// x86-64 ARC: akali(nami-Intel), akali360(nami-Intel), pantheon(nami-Intel), sona(nami-Intel)
-			// arm64 ARC: kodama(kukui), katsu(kukui)
-			ExtraHardwareDeps: hwdep.D(hwdep.Model("akali", "akali360", "pantheon", "sona", "kodama", "katsu")),
+			// arm64 ARC: cozmo, damu, fennel, pico, willow (all jacuzzi)
+			ExtraHardwareDeps: hwdep.D(hwdep.Model("akali", "akali360", "pantheon", "sona", "cozmo", "damu", "fennel", "pico", "willow")),
 			Val: testParam{
 				vmEnabled:                     true,
 				androidPackage:                "android-vm-rvc",
