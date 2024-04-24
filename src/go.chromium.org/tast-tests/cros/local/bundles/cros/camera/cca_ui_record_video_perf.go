@@ -28,9 +28,18 @@ func init() {
 		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
-		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinOrVividCamera},
+		SoftwareDeps: []string{"camera_app", "chrome"},
 		Timeout:      20 * time.Minute,
-		Fixture:      "ccaTestBridgeReadyWithFakeHALCamera",
+		Params: []testing.Param{{
+			Name:              "real",
+			ExtraSoftwareDeps: []string{caps.BuiltinOrVividCamera},
+			Fixture:           "ccaTestBridgeReady",
+			Val:               false,
+		}, {
+			Name:    "fake_hal",
+			Fixture: "ccaTestBridgeReadyWithFakeHALCamera",
+			Val:     true,
+		}},
 	})
 }
 
@@ -39,6 +48,7 @@ func CCAUIRecordVideoPerf(ctx context.Context, s *testing.State) {
 	startApp := s.FixtValue().(cca.FixtureData).StartApp
 	stopApp := s.FixtValue().(cca.FixtureData).StopApp
 	perfValues := perf.NewValues()
+	isFakeHal := s.Param().(bool)
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
@@ -54,49 +64,51 @@ func CCAUIRecordVideoPerf(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait CPU idle: ", err)
 	}
 
-	// Simulates a 4K camera. Need to add other resolutions to satisfy the minimal requirement for camera3 API.
-	if err := testutil.WriteFakeHALConfig(ctx, testutil.FakeHALConfig{
-		Cameras: []testutil.FakeCameraConfig{
-			{ID: 1, Connected: true, SupportedFormats: []*testutil.FakeCameraFormatsConfig{
-				{
-					Width:      3840,
-					Height:     2160,
-					FrameRates: []int{60, 30},
-				},
-				{
-					Width:      1920,
-					Height:     1080,
-					FrameRates: []int{30},
-				},
-				{
-					Width:      1280,
-					Height:     960,
-					FrameRates: []int{30},
-				},
-				{
-					Width:      1280,
-					Height:     720,
-					FrameRates: []int{30},
-				},
-				{
-					Width:      640,
-					Height:     480,
-					FrameRates: []int{30},
-				},
-				{
-					Width:      640,
-					Height:     360,
-					FrameRates: []int{30},
-				},
-				{
-					Width:      320,
-					Height:     240,
-					FrameRates: []int{30},
-				},
-			}},
-		},
-	}); err != nil {
-		s.Fatal("Failed to write fake HAL config: ", err)
+	if isFakeHal {
+		// Simulates a 4K camera. Need to add other resolutions to satisfy the minimal requirement for camera3 API.
+		if err := testutil.WriteFakeHALConfig(ctx, testutil.FakeHALConfig{
+			Cameras: []testutil.FakeCameraConfig{
+				{ID: 1, Connected: true, SupportedFormats: []*testutil.FakeCameraFormatsConfig{
+					{
+						Width:      3840,
+						Height:     2160,
+						FrameRates: []int{60, 30},
+					},
+					{
+						Width:      1920,
+						Height:     1080,
+						FrameRates: []int{30},
+					},
+					{
+						Width:      1280,
+						Height:     960,
+						FrameRates: []int{30},
+					},
+					{
+						Width:      1280,
+						Height:     720,
+						FrameRates: []int{30},
+					},
+					{
+						Width:      640,
+						Height:     480,
+						FrameRates: []int{30},
+					},
+					{
+						Width:      640,
+						Height:     360,
+						FrameRates: []int{30},
+					},
+					{
+						Width:      320,
+						Height:     240,
+						FrameRates: []int{30},
+					},
+				}},
+			},
+		}); err != nil {
+			s.Fatal("Failed to write fake HAL config: ", err)
+		}
 	}
 
 	app, err := startApp(ctx)
@@ -117,12 +129,16 @@ func CCAUIRecordVideoPerf(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to switch to video mode: ", err)
 	}
 
-	// Switch to the 60 FPS button for 4K resolution.
-	if err := app.SwitchTo60FPS(ctx); err != nil {
-		s.Fatal("Failed to switch to 60 fps: ", err)
-	}
-
 	if err := app.RunThroughCameras(ctx, func(facing cca.Facing) error {
+		targetFps := 30
+		if isFakeHal {
+			// Switch to the 60 FPS button for 4K resolution.
+			targetFps = 60
+			if err := app.SwitchTo60FPS(ctx); err != nil {
+				s.Fatal("Failed to switch to 60 fps: ", err)
+			}
+		}
+
 		// Record video and measure CPU usage.
 		start, err := app.StartRecording(ctx, cca.TimerOff)
 		if err != nil {
@@ -157,7 +173,7 @@ func CCAUIRecordVideoPerf(ctx context.Context, s *testing.State) {
 			return errors.Wrap(err, "failed to stop recording")
 		}
 
-		fpsMetric := fmt.Sprintf("60fps-preview-fps-facing-%s", facing)
+		fpsMetric := fmt.Sprintf("%dfps-preview-fps-facing-%s", targetFps, facing)
 		perfValues.Set(perf.Metric{
 			Name:      fpsMetric,
 			Unit:      "fps",
@@ -165,7 +181,7 @@ func CCAUIRecordVideoPerf(ctx context.Context, s *testing.State) {
 		}, fps)
 
 		cpu, _ := usage["cpu"]
-		cpuMetric := fmt.Sprintf("60fps-cpu-facing-%s", facing)
+		cpuMetric := fmt.Sprintf("%dfps-cpu-facing-%s", targetFps, facing)
 		perfValues.Set(perf.Metric{
 			Name:      cpuMetric,
 			Unit:      "percent",
@@ -173,7 +189,7 @@ func CCAUIRecordVideoPerf(ctx context.Context, s *testing.State) {
 		}, cpu)
 
 		if power, ok := usage["power"]; ok {
-			powerMetric := fmt.Sprintf("60fps-power-facing-%s", facing)
+			powerMetric := fmt.Sprintf("%dfps-power-facing-%s", targetFps, facing)
 			perfValues.Set(perf.Metric{
 				Name:      powerMetric,
 				Unit:      "Watts",
