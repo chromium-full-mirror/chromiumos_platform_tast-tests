@@ -23,14 +23,14 @@ func AshCommonMetricConfigs() []MetricConfig {
 		NewCustomMetricConfig("Apps.PaginationTransition.DragScroll.PresentationTime.TabletMode", "ms", perf.SmallerIsBetter),
 
 		// Smoothness.
-		NewCustomMetricConfig("Ash.Smoothness.PercentDroppedFrames_1sWindow2", "percent", perf.SmallerIsBetter),
+		NewDistributionMetricConfig("Ash.Smoothness.PercentDroppedFrames_1sWindow2", "percent", perf.SmallerIsBetter),
 		NewSmoothnessMetricConfig("Apps.PaginationTransition.AnimationSmoothness.ClamshellMode"),
 		NewSmoothnessMetricConfig("Apps.StateTransition.AnimationSmoothness"),
 		NewSmoothnessMetricConfig("Apps.StateTransition.AnimationSmoothness.Close.ClamshellMode"),
 		NewSmoothnessMetricConfig("Apps.StateTransition.AnimationSmoothness.FullscreenAllApps.ClamshellMode"),
 		NewSmoothnessMetricConfig("Apps.StateTransition.AnimationSmoothness.Half.ClamshellMode"),
 		NewSmoothnessMetricConfig("Apps.StateTransition.AnimationSmoothness.Peeking.ClamshellMode"),
-		NewSmoothnessMetricConfig("Ash.Overview.AnimationSmoothness.Enter.ClamshellMode"),
+		NewSmoothnessDistributionMetricConfig("Ash.Overview.AnimationSmoothness.Enter.ClamshellMode"),
 		NewSmoothnessMetricConfig("Ash.Overview.AnimationSmoothness.Enter.SingleClamshellMode"),
 		NewSmoothnessMetricConfig("Ash.Overview.AnimationSmoothness.Enter.SplitView"),
 		NewSmoothnessMetricConfig("Ash.Overview.AnimationSmoothness.Exit.ClamshellMode"),
@@ -42,8 +42,8 @@ func AshCommonMetricConfigs() []MetricConfig {
 		NewSmoothnessMetricConfig("Ash.Overview.AnimationSmoothness.Exit.TabletMode"),
 		NewSmoothnessMetricConfig("Ash.Overview.AnimationSmoothness.Close.TabletMode"),
 		NewSmoothnessMetricConfig("Ash.Rotation.AnimationSmoothness"),
-		NewSmoothnessMetricConfig("Ash.WindowCycleView.AnimationSmoothness.Container"),
-		NewSmoothnessMetricConfig("Ash.WindowCycleView.AnimationSmoothness.Show"),
+		NewSmoothnessDistributionMetricConfig("Ash.WindowCycleView.AnimationSmoothness.Container"),
+		NewSmoothnessDistributionMetricConfig("Ash.WindowCycleView.AnimationSmoothness.Show"),
 		NewSmoothnessMetricConfig("Ash.Window.AnimationSmoothness.CrossFade"),
 		NewSmoothnessMetricConfig("Ash.Window.AnimationSmoothness.Snap"),
 
@@ -134,9 +134,9 @@ func BrowserCommonMetricConfigs() []MetricConfig {
 		// Other metrics to monitor.
 		NewDistributionMetricConfig("EventLatency.TotalLatency", "microseconds", perf.SmallerIsBetter),
 		NewCustomMetricConfig("Media.Video.Roughness.60fps", "ms", perf.SmallerIsBetter),
-		NewCustomMetricConfig("Graphics.Smoothness.PercentDroppedFrames3.AllInteractions", "percent", perf.SmallerIsBetter),
-		NewCustomMetricConfig("Graphics.Smoothness.PercentDroppedFrames3.CompositorThread.Video", "percent", perf.SmallerIsBetter),
-		NewCustomMetricConfig("Graphics.Smoothness.PercentDroppedFrames3.AllSequences", "percent", perf.SmallerIsBetter),
+		NewDistributionMetricConfig("Graphics.Smoothness.PercentDroppedFrames3.AllInteractions", "percent", perf.SmallerIsBetter),
+		NewDistributionMetricConfig("Graphics.Smoothness.PercentDroppedFrames3.CompositorThread.Video", "percent", perf.SmallerIsBetter),
+		NewDistributionMetricConfig("Graphics.Smoothness.PercentDroppedFrames3.AllSequences", "percent", perf.SmallerIsBetter),
 	}
 }
 
