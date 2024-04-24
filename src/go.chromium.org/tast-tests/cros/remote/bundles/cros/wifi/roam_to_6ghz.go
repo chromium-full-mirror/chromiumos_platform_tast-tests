@@ -49,7 +49,7 @@ func init() {
 				Name: "from_2ghz",
 				Val: roamTo6GHzTestCase{
 					lowerBandApConfig: hostapd.ApConfig{
-						ApOpts:     []hostapd.Option{hostapd.Mode(hostapd.Mode80211axMixed), hostapd.Channel(1), hostapd.HTCaps(hostapd.HTCapHT20)},
+						ApOpts:     []hostapd.Option{hostapd.Mode(hostapd.Mode80211axMixed), hostapd.Channel(1), hostapd.HTCaps(hostapd.HTCapHT20), hostapd.SpectrumManagement()},
 						SecConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherCCMP)),
 					},
 					higherBandApConfig: hostapd.ApConfig{
@@ -62,7 +62,7 @@ func init() {
 				Name: "from_5ghz",
 				Val: roamTo6GHzTestCase{
 					lowerBandApConfig: hostapd.ApConfig{
-						ApOpts:     []hostapd.Option{hostapd.Mode(hostapd.Mode80211axMixed), hostapd.Channel(40), hostapd.HTCaps(hostapd.HTCapHT20)},
+						ApOpts:     []hostapd.Option{hostapd.Mode(hostapd.Mode80211axMixed), hostapd.Channel(40), hostapd.HTCaps(hostapd.HTCapHT20), hostapd.SpectrumManagement()},
 						SecConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherCCMP)),
 					},
 					higherBandApConfig: hostapd.ApConfig{
