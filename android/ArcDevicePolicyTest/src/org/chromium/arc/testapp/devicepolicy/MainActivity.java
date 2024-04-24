@@ -54,6 +54,10 @@ public class MainActivity extends Activity {
                         isRestrictionUnapplied(
                                 "setWallpaper", "setWallpaper", UserManager.DISALLOW_SET_WALLPAPER),
                         isRestrictionUnapplied(
+                                "installUnknownSourcesDisabled",
+                                "installUnknownSources",
+                                UserManager.DISALLOW_INSTALL_UNKNOWN_SOURCES),
+                        isRestrictionUnapplied(
                                 "modifyAccountsDisabled",
                                 "modifyAccounts",
                                 UserManager.DISALLOW_MODIFY_ACCOUNTS),
@@ -76,9 +80,7 @@ public class MainActivity extends Activity {
                                 "unmute",
                                 UserManager.DISALLOW_UNMUTE_MICROPHONE),
                         isRestrictionUnapplied(
-                                "vpnConfigDisabled",
-                                "vpnConfig",
-                                UserManager.DISALLOW_CONFIG_VPN));
+                                "vpnConfigDisabled", "vpnConfig", UserManager.DISALLOW_CONFIG_VPN));
     }
 
     @Override

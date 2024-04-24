@@ -95,10 +95,11 @@ func ManagedDevicePolicy(ctx context.Context, s *testing.State) {
 
 	packages := []string{devicePolicyPkg}
 	arcPolicyMap := map[string]arcPolicyFactory{
-		"cameraDisabled":         staticPolicy(&policy.VideoCaptureAllowed{Val: false}),
-		"modifyAccountsDisabled": staticPolicy(nil),
-		"printingDisabled":       staticPolicy(&policy.PrintingEnabled{Val: false}),
-		"screenCaptureDisabled":  staticPolicy(&policy.DisableScreenshots{Val: true}),
+		"cameraDisabled":                staticPolicy(&policy.VideoCaptureAllowed{Val: false}),
+		"installUnknownSourcesDisabled": staticPolicy(nil),
+		"modifyAccountsDisabled":        staticPolicy(nil),
+		"printingDisabled":              staticPolicy(&policy.PrintingEnabled{Val: false}),
+		"screenCaptureDisabled":         staticPolicy(&policy.DisableScreenshots{Val: true}),
 		"setWallpaper": func() (policy.Policy, func(ctx context.Context), error) {
 			return createWallpaperPolicy(ctx, s.DataPath("wallpaper_image.jpeg"))
 		},
@@ -190,6 +191,7 @@ func ManagedDevicePolicy(ctx context.Context, s *testing.State) {
 	s.Log("Updating policies to apply restrictions")
 	arcPolicy := arcent.CreateArcPolicyWithApps(packages, arcent.InstallTypeAvailable, arcent.PlayStoreModeAllowList)
 	arcPolicy.Val.ModifyAccountsDisabled = true
+	arcPolicy.Val.InstallUnknownSourcesDisabled = true
 	arcEnabledPolicy := &policy.ArcEnabled{Val: true}
 	policies := []policy.Policy{arcEnabledPolicy, arcPolicy}
 	for policyName := range arcPolicyMap {

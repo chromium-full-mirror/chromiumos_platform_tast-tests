@@ -22,7 +22,7 @@ Generating a new defs.go file:
  Assuming chromiumos and chromium are checkouts for their respective
  projects you need to run:
   > PT=chromium/src/components/policy/resources
-  > python "${PT}/policy_templates.py"
+  > python3 "${PT}/policy_templates.py"
   > cd chromiumos/src/platform/tast-tests/src/go.chromium.org/tast-tests/cros/common/policy/gen
   > ./policy_tast_struct_creator.py --policy_templates "${PT}/policy_templates.json"
 """
@@ -586,6 +586,7 @@ type Application struct {
 
 type ArcPolicyValue struct {
 \tApplications\t[]Application\t`json:"applications"`
+\tInstallUnknownSourcesDisabled\tbool\t`json:"installUnknownSourcesDisabled"`
 \tPlayEmmApiInstallDisabled\tbool\t`json:"playEmmApiInstallDisabled"`
 \tPlayStoreMode\tstring\t`json:"playStoreMode"`
 \tModifyAccountsDisabled\tbool\t`json:"modifyAccountsDisabled"`

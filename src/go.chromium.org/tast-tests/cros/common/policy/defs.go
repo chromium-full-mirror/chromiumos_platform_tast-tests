@@ -6648,11 +6648,12 @@ type Application struct {
 }
 
 type ArcPolicyValue struct {
-	Applications              []Application `json:"applications"`
-	PlayEmmApiInstallDisabled bool          `json:"playEmmApiInstallDisabled"`
-	PlayStoreMode             string        `json:"playStoreMode"`
-	ModifyAccountsDisabled    bool          `json:"modifyAccountsDisabled"`
-	DpsInteractionsDisabled   bool          `json:"dpsInteractionsDisabled"`
+	Applications                  []Application `json:"applications"`
+	InstallUnknownSourcesDisabled bool          `json:"installUnknownSourcesDisabled"`
+	PlayEmmApiInstallDisabled     bool          `json:"playEmmApiInstallDisabled"`
+	PlayStoreMode                 string        `json:"playStoreMode"`
+	ModifyAccountsDisabled        bool          `json:"modifyAccountsDisabled"`
+	DpsInteractionsDisabled       bool          `json:"dpsInteractionsDisabled"`
 }
 
 func (p *ArcPolicy) Name() string          { return "ArcPolicy" }
