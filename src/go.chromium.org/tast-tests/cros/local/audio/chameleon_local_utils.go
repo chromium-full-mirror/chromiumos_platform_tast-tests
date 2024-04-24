@@ -65,14 +65,60 @@ func GenerateTestRawDataForChameleon(
 		return nil, "", err
 	}
 
-	filename := "audio_example.raw"
+	filename := "playback.raw"
 
 	testing.ContextLog(ctx, "Copying audio file from DUT to Chameleon")
 	token, err = chameleond.CopyFileToChameleon(ctx, bytes, filename)
 	if err != nil {
-		err = errors.Wrapf(err, "fail to copy sound file %s from DUT to chameleon", filename)
+		err = errors.Wrapf(err, "fail to copy sound file (%s) from DUT to chameleon", filename)
 		return nil, "", err
 	}
 
 	return goldenFile, token, nil
+}
+
+// CopyPlayFileToChameleon copy a play file path from dut to chameleon, and provide the play file token which is usable in chameleond.StartPlayingAudioWithToken
+func CopyPlayFileToChameleon(
+	ctx context.Context,
+	chameleond chameleon.Chameleond,
+	playFilePath string,
+) (playFileToken string, err error) {
+
+	bytes, err := os.ReadFile(playFilePath)
+	if err != nil {
+		err = errors.Wrap(err, "failed to read audio test data and convert to binary form")
+		return playFileToken, err
+	}
+
+	chamPlayFile := "playback.raw"
+
+	testing.ContextLog(ctx, "Copying audio file from DUT to Chameleon")
+	playFileToken, err = chameleond.CopyFileToChameleon(ctx, bytes, chamPlayFile)
+	if err != nil {
+		err = errors.Wrapf(err, "failed to copy sound file (%s) from DUT to chameleon", playFilePath)
+		return playFileToken, err
+	}
+
+	return playFileToken, err
+}
+
+// CopyRecordFileFromChameleon copy a record file by record token from chameleon to dut, and provide the play file token which is usable in chameleond.StartPlayingAudioWithToken
+func CopyRecordFileFromChameleon(
+	ctx context.Context,
+	chameleond chameleon.Chameleond,
+	recordToken, recordFilePath string,
+) error {
+
+	bytes, err := chameleond.GetFileFromChameleon(ctx, recordToken)
+	if err != nil {
+		err = errors.Wrapf(err, "failed to copy token file (%s) from Chameleon to DUT", recordToken)
+		return err
+	}
+
+	err = os.WriteFile(recordFilePath, bytes, 0644)
+	if err != nil {
+		err = errors.Wrapf(err, "failed to write record file (%s) on DUT", recordFilePath)
+		return err
+	}
+	return err
 }

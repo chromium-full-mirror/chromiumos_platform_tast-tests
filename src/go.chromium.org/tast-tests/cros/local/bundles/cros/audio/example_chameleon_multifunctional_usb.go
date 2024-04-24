@@ -6,15 +6,11 @@ package audio
 
 import (
 	"context"
-	"os"
-	"time"
 
-	"go.chromium.org/tast-tests/cros/common/audio/withchameleon"
 	"go.chromium.org/tast-tests/cros/common/chameleon"
 	"go.chromium.org/tast-tests/cros/common/fixture"
-	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/audio"
-	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/audio/withchameleon"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -36,84 +32,61 @@ func init() {
 	})
 }
 
+func playPortTypeUSBAudioOut(ctx context.Context, s *testing.State, chameleond chameleon.Chameleond) {
+	cleanupCtx := ctx
+
+	playFrom := withchameleon.ChameleonOutputPort{
+		ChamPortType: chameleon.PortTypeUSBMFGAudioOut,
+	}
+	playTo := withchameleon.CrosInputPort{
+		CrasNodeType: "USB",
+	}
+
+	deferFunc, err := withchameleon.Setup(ctx, chameleond, playFrom, playTo)
+	defer deferFunc(cleanupCtx)
+	if err != nil {
+		s.Fatal("Failed to setup chameleon: ", err)
+	}
+
+	deferFunc, err = withchameleon.Orchestrate(ctx, chameleond, playFrom, playTo)
+	defer deferFunc(cleanupCtx)
+	if err != nil {
+		s.Fatal("Failed to ochestrate chameleon: ", err)
+	}
+
+}
+
+func recordPortTypeUSBAudioIn(ctx context.Context, s *testing.State, chameleond chameleon.Chameleond) {
+	cleanupCtx := ctx
+
+	playFrom := withchameleon.CrosOutputPort{
+		CrasNodeType: "USB",
+	}
+	playTo := withchameleon.ChameleonInputPort{
+		ChamPortType: chameleon.PortTypeUSBMFGAudioIn,
+	}
+
+	deferFunc, err := withchameleon.Setup(ctx, chameleond, playFrom, playTo)
+	defer deferFunc(cleanupCtx)
+	if err != nil {
+		s.Fatal("Failed to setup chameleon: ", err)
+	}
+
+	deferFunc, err = withchameleon.Orchestrate(ctx, chameleond, playFrom, playTo)
+	defer deferFunc(cleanupCtx)
+	if err != nil {
+		s.Fatal("Failed to ochestrate chameleon: ", err)
+	}
+
+}
+
 // ExampleChameleonMultifunctionalUSB an example of using Chameleon as an USB mic that has Audio and HID capabilities
 func ExampleChameleonMultifunctionalUSB(ctx context.Context, s *testing.State) {
-	cleanupCtx := ctx
 	chameleond := s.FixtValue().(audio.ChameleonAudioTestbedFixture).Chameleond
-	audioPortType := chameleon.PortTypeUSBMFGAudioOut
-	audioFormat := audio.DefaultChameleonUtilGeneratedAudioFormat
 
-	// Preparing files
-	s.Log("Start generating golden audio file")
-	goldenFile, token, err := audio.GenerateTestRawDataForChameleon(ctx, chameleond, audioFormat)
-	if err != nil {
-		s.Fatal("Failed to GenerateTestRawDataChameleon: ", err)
-	}
+	// cham:play -> DUT:record
+	playPortTypeUSBAudioOut(ctx, s, chameleond)
 
-	defer func(ctx context.Context) {
-		s.Log("Clean up golden audio file in chameleon")
-		if err := chameleond.DeleteFileInChameleon(ctx, token); err != nil {
-			s.Logf("Failed to delete file in chameleon %s: %v", token, err)
-		}
-	}(cleanupCtx)
-
-	recordingFile, err := os.CreateTemp("", "30SEC_recorded*.raw")
-	if err != nil {
-		s.Fatal("Failed to create raw recording file: ", err)
-	}
-
-	s.Logf("Golden File %s", goldenFile.Name())
-	s.Logf("Recording File %s", recordingFile.Name())
-	defer func(ctx context.Context) {
-		s.Log("Clean up golden and recording file on DUT")
-		if err := os.Remove(goldenFile.Name()); err != nil {
-			s.Logf("Failed to delete golden file in dut %s: %v", goldenFile.Name(), err)
-		}
-		if err := os.Remove(recordingFile.Name()); err != nil {
-			s.Logf("Failed to delete recording file in dut %s: %v", recordingFile.Name(), err)
-		}
-	}(cleanupCtx)
-
-	// Playing and recording audio
-	s.Log("Start playing from chameleon")
-	playbackDuration := 10 * time.Second
-	chameleonAudioFormat := &chameleon.AudioDataFormat{
-		FileType:     chameleon.AudioFileTypeRaw,
-		SampleFormat: chameleon.AudioSampleFormatS16LE,
-		Channel:      audioFormat.Channels,
-		Rate:         audioFormat.Rate,
-	}
-	if err := withchameleon.PlayFileByPortType(ctx, chameleond, token, audioPortType, chameleonAudioFormat); err != nil {
-		s.Fatalf("Failed to PlayFileByPortType %s with token %s: %v", audioPortType, token, err)
-	}
-
-	defer func(ctx context.Context) {
-		portID, err := chameleond.FetchSupportedPortIDByType(ctx, audioPortType, 0)
-		if err != nil {
-			s.Logf("Cannot get portid when stopping audio. %s: %v", audioPortType, err)
-		}
-		if err := chameleond.StopPlayingAudio(ctx, portID); err != nil {
-			s.Logf("Cannot stop audio. %s: %v", audioPortType, err)
-		}
-		if err = chameleond.Unplug(ctx, portID); err != nil {
-			s.Logf("Cannot unplug the port. %d: %v", portID, err)
-		}
-	}(cleanupCtx)
-
-	recordDuration := withchameleon.CalculateRecordDuration(playbackDuration)
-
-	if err := crastestclient.CaptureFileCommand(
-		ctx, recordingFile.Name(),
-		int(recordDuration.Seconds()),
-		audioFormat.Channels,
-		audioFormat.Rate).Run(testexec.DumpLogOnError); err != nil {
-		s.Fatal("Failed to capture: ", err)
-	}
-
-	// Check recorded frequency of audio file
-	err = audio.CheckRecordedFrequency(ctx, recordingFile, audioFormat)
-	if err != nil {
-		s.Fatal("Failed to check recorded frequency: ", err)
-	}
-
+	// cham:record -> DUT:play
+	recordPortTypeUSBAudioIn(ctx, s, chameleond)
 }
