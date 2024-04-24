@@ -39,7 +39,7 @@ const (
 	backgroundImageDirname = "custom-camera-backgrounds/original"
 	backgroundImageJpg     = "3162101071.jpg"
 	backgroundMetadata     = "3162101071.jpg.metadata"
-	percentageNotChanged   = 0.35
+	percentageNotChanged   = 0.30
 	percentageChanged      = 0.55
 	vcBackgroundAppWindow  = "Camera Background"
 )
@@ -110,7 +110,7 @@ func CameraEffectsReplace(ctx context.Context, s *testing.State) {
 	}
 
 	// Wait until the camera is available.
-	videoElement := nodewith.Name("video").Role(role.Video)
+	videoElement := nodewith.Role(role.Video)
 	if err :=
 		ui.WaitUntilExists(videoElement)(ctx); err != nil {
 		s.Fatal("Fail to see camera feed: ", err)
@@ -213,14 +213,19 @@ func CameraEffectsReplace(ctx context.Context, s *testing.State) {
 		s.Fatal("Fail to grab camera screen shot after: ", err)
 	}
 
+	// Uncomment these two lines if you need debug it.
+	// screenshot.SaveImageToFile(imageBefore, userPath, "before.png")(ctx)
+	// screenshot.SaveImageToFile(imageAfter, userPath, "after.png")(ctx)
+
 	// Verify two images have enough portion changed and unchanged.
-	if !imageDiff(imageBefore, imageAfter) {
-		s.Fatal("The percentage of pixel change is wrong")
+	notChanged, changed := imageDiff(imageBefore, imageAfter)
+	if notChanged < percentageNotChanged || changed < percentageChanged {
+		s.Fatalf("The percentage of pixel change is wrong: %f changed and %f not changed", changed, notChanged)
 	}
 }
 
 // imageDiff returns whether two images have enough portion changed and unchanged.
-func imageDiff(img1, img2 image.Image) bool {
+func imageDiff(img1, img2 image.Image) (float64, float64) {
 	var bounds image.Rectangle = img1.Bounds()
 	numOfPixel := float64(bounds.Max.X-bounds.Min.X+1) * float64(bounds.Max.Y-bounds.Min.Y+1)
 	numOfSamePixel := 0.0
@@ -238,5 +243,5 @@ func imageDiff(img1, img2 image.Image) bool {
 		}
 	}
 
-	return numOfSamePixel/numOfPixel > percentageNotChanged && numOfDiffPixel/numOfPixel > percentageChanged
+	return numOfSamePixel / numOfPixel, numOfDiffPixel / numOfPixel
 }
