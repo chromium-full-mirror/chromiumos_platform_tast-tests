@@ -24,7 +24,7 @@ func init() {
 		Func:         ConnServiceGRPC,
 		Desc:         "Check basic functionalities of UI ConnService",
 		Contacts:     []string{"lacros-team@google.com", "ythjkt@google.com"},
-		BugComponent: "b:1103568", // ChromeOS -> EngProd -> Apps
+		BugComponent: "b:1103568", // ChromeOS -> EngProd -> Developer
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
