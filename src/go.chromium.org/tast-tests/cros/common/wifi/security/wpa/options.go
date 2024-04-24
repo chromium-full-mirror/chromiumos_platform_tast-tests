@@ -37,6 +37,13 @@ func Ciphers2(ciphers ...Cipher) Option {
 	}
 }
 
+// GroupCiphers returns an Option which sets the group ciphers in Config.
+func GroupCiphers(ciphers ...Cipher) Option {
+	return func(c *Config) {
+		c.groupCiphers = append(c.groupCiphers, ciphers...)
+	}
+}
+
 // PTKRekeyPeriod returns an Option which sets maximum lifetime in seconds for PTK in Config.
 func PTKRekeyPeriod(period int) Option {
 	return func(c *Config) {

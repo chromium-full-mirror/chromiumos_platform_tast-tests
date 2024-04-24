@@ -59,8 +59,10 @@ type Cipher string
 
 // Cipher algorithms.
 const (
-	CipherTKIP Cipher = "TKIP"
-	CipherCCMP Cipher = "CCMP"
+	CipherTKIP    Cipher = "TKIP"
+	CipherCCMP    Cipher = "CCMP"
+	CipherGCMP128 Cipher = "GCMP"
+	CipherGCMP256 Cipher = "GCMP-256"
 )
 
 // FTModeEnum is the type for specifying WPA Fast Transition modes.
@@ -83,6 +85,7 @@ type Config struct {
 	keyMgmt        []string
 	ciphers        []Cipher // ciphers used for WPA.
 	ciphers2       []Cipher // ciphers used for WPA2.
+	groupCiphers   []Cipher // cipher suite for group addressed frames, overrides automatic group cipher selection.
 	ptkRekeyPeriod int
 	gtkRekeyPeriod int
 	gmkRekeyPeriod int
@@ -181,6 +184,10 @@ func (c *Config) HostapdConfig() (map[string]string, error) {
 	}
 	if len(c.ciphers2) != 0 {
 		ret["rsn_pairwise"] = concatCiphers(c.ciphers2)
+	}
+
+	if len(c.groupCiphers) != 0 {
+		ret["group_cipher"] = concatCiphers(c.groupCiphers)
 	}
 
 	if c.ptkRekeyPeriod != 0 {

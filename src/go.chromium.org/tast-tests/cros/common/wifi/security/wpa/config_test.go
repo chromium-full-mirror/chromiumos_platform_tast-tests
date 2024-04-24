@@ -208,6 +208,60 @@ func TestGet(t *testing.T) {
 				"Passphrase": "chromeos",
 			},
 		}, {
+			// GCMP.
+			conf: &Config{
+				psk:            "chromeos",
+				mode:           ModeMixedWPA3,
+				ciphers2:       []Cipher{CipherGCMP128},
+				groupCiphers:   []Cipher{CipherGCMP128},
+				ftMode:         FTModeNone,
+				gmkRekeyPeriod: 86400,
+				gtkRekeyPeriod: 86400,
+				ptkRekeyPeriod: 600,
+				useStrictRekey: true,
+			},
+			verifyHostapd: map[string]string{
+				"wpa_passphrase":   "chromeos",
+				"wpa":              "2", // WPA3 is still RSN.
+				"rsn_pairwise":     "GCMP",
+				"group_cipher":     "GCMP",
+				"wpa_key_mgmt":     "WPA-PSK SAE",
+				"wpa_gmk_rekey":    "86400",
+				"wpa_group_rekey":  "86400",
+				"wpa_ptk_rekey":    "600",
+				"wpa_strict_rekey": "1",
+			},
+			verifyShill: map[string]interface{}{
+				"Passphrase": "chromeos",
+			},
+		}, {
+			// GCMP-256.
+			conf: &Config{
+				psk:            "chromeos",
+				mode:           ModeMixedWPA3,
+				ciphers2:       []Cipher{CipherGCMP256},
+				groupCiphers:   []Cipher{CipherGCMP256},
+				ftMode:         FTModeNone,
+				gmkRekeyPeriod: 86400,
+				gtkRekeyPeriod: 86400,
+				ptkRekeyPeriod: 600,
+				useStrictRekey: true,
+			},
+			verifyHostapd: map[string]string{
+				"wpa_passphrase":   "chromeos",
+				"wpa":              "2", // WPA3 is still RSN.
+				"rsn_pairwise":     "GCMP-256",
+				"group_cipher":     "GCMP-256",
+				"wpa_key_mgmt":     "WPA-PSK SAE",
+				"wpa_gmk_rekey":    "86400",
+				"wpa_group_rekey":  "86400",
+				"wpa_ptk_rekey":    "600",
+				"wpa_strict_rekey": "1",
+			},
+			verifyShill: map[string]interface{}{
+				"Passphrase": "chromeos",
+			},
+		}, {
 			// WPA3 mixed.
 			conf: &Config{
 				psk:            "chromeos",
