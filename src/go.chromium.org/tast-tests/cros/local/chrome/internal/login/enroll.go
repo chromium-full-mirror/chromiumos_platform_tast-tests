@@ -330,7 +330,12 @@ func performGAIAEnrollmentSignIn(ctx context.Context, oobeConn *driver.Conn, cfg
 			}
 
 			if !isOnErrorStep {
-				return errors.New("unexpected step after enrollment signin failure")
+				screen, step, err := currentOOBEScreenDetails(ctx, sess)
+				if err != nil {
+					return errors.Wrap(err, "unexpected step after enrollment signin failure, could not get current state")
+				}
+
+				return errors.Errorf("unexpected step after enrollment signin failure, currently on screen %q; step %q", screen, step)
 			}
 
 			var canRetry bool
