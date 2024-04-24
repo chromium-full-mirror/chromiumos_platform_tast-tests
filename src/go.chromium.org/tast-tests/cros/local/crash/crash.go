@@ -482,8 +482,9 @@ func WaitForCrashFiles(ctx context.Context, dirs, regexes []string, opts ...Wait
 								}
 							}
 							// Also, verify that all files referenced in the meta file are valid.
+							// Again, in case of "flickering", don't poll-break.
 							if err := VerifyMetaFileRefs(f); err != nil {
-								return testing.PollBreak(errors.Wrapf(err, "meta file %s has invalid file refs", f))
+								return errors.Wrapf(err, "meta file %s has invalid file refs", f)
 							}
 						}
 					}
