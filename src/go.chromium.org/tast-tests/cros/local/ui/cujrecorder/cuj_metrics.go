@@ -25,8 +25,8 @@ func CUJAshCommonMetricConfigs() []MetricConfig {
 
 		// Smoothness.
 		NewCustomMetricConfig("Ash.Smoothness.PercentDroppedFrames_1sWindow.InSession2", "percent", perf.SmallerIsBetter),
-		NewCustomMetricConfig("Graphics.Smoothness.MaxPercentDroppedFrames_1sWindow", "percent", perf.SmallerIsBetter),
-		NewCustomMetricConfig("Graphics.Smoothness.Jank3.AllSequences", "percent", perf.SmallerIsBetter),
+		NewDistributionMetricConfig("Graphics.Smoothness.MaxPercentDroppedFrames_1sWindow", "percent", perf.SmallerIsBetter),
+		NewDistributionMetricConfig("Graphics.Smoothness.Jank3.AllSequences", "percent", perf.SmallerIsBetter),
 		NewCustomMetricConfig("Graphics.Exo.Smoothness.DidNotProduceToFrameArrival", "microseconds", perf.SmallerIsBetter),
 		NewCustomMetricConfig("Graphics.Exo.Smoothness.PercentDidNotProduceFrame", "percent", perf.SmallerIsBetter),
 		NewCustomMetricConfig("Graphics.Exo.Smoothness.PercentFrameDiscarded", "percent", perf.SmallerIsBetter),
@@ -52,7 +52,7 @@ func CUJAshCommonMetricConfigs() []MetricConfig {
 		NewCumulativeMetricConfig("TabManager.Discarding.DiscardCount", "tabs", perf.SmallerIsBetter),
 
 		// Desk Metrics.
-		NewCustomMetricConfig("Ash.Desks.AnimationLatency.DeskActivation", "ms", perf.SmallerIsBetter),
+		NewDistributionMetricConfig("Ash.Desks.AnimationLatency.DeskActivation", "ms", perf.SmallerIsBetter),
 		NewSmoothnessMetricConfig("Ash.Desks.AnimationSmoothness.DeskActivation"),
 		NewEnumCustomMetricConfig("Ash.Desks.DesksSwitchScreenshotResult",
 			map[int64]string{
@@ -84,7 +84,7 @@ func CUJAshCommonMetricConfigs() []MetricConfig {
 		NewBootAndShutdownCustomMetricConfig("Arc.Tast.UiAvailable.TimeDelta", "ms", perf.SmallerIsBetter),
 
 		// Event Latency Metrics.
-		NewCustomMetricConfig("Ash.EventLatency.TotalLatency", "ms", perf.SmallerIsBetter),
+		NewDistributionMetricConfig("Ash.EventLatency.TotalLatency", "ms", perf.SmallerIsBetter),
 		NewCustomMetricConfig("Ash.EventLatency.Core.TotalLatency", "ms", perf.SmallerIsBetter),
 		NewCustomMetricConfig("Ash.EventLatency.FirstGestureScrollUpdate.TotalLatency", "microseconds", perf.SmallerIsBetter),
 		NewCustomMetricConfig("Ash.EventLatency.GestureDoubleTap.TotalLatency", "microseconds", perf.SmallerIsBetter),
@@ -103,11 +103,11 @@ func CUJAshCommonMetricConfigs() []MetricConfig {
 		NewCustomMetricConfig("Ash.EventLatency.GestureTapUnconfirmed.TotalLatency", "microseconds", perf.SmallerIsBetter),
 		NewCustomMetricConfig("Ash.EventLatency.GestureTwoFingerTap.TotalLatency", "microseconds", perf.SmallerIsBetter),
 		NewCustomMetricConfig("Ash.EventLatency.InertialGestureScrollUpdate.TotalLatency", "microseconds", perf.SmallerIsBetter),
-		NewCustomMetricConfig("Ash.EventLatency.KeyPressed.TotalLatency", "microseconds", perf.SmallerIsBetter),
+		NewDistributionMetricConfig("Ash.EventLatency.KeyPressed.TotalLatency", "microseconds", perf.SmallerIsBetter),
 		NewCustomMetricConfig("Ash.EventLatency.KeyReleased.TotalLatency", "microseconds", perf.SmallerIsBetter),
 		NewCustomMetricConfig("Ash.EventLatency.MouseDragged.TotalLatency", "microseconds", perf.SmallerIsBetter),
 		NewCustomMetricConfig("Ash.EventLatency.MouseMoved.TotalLatency", "microseconds", perf.SmallerIsBetter),
-		NewCustomMetricConfig("Ash.EventLatency.MousePressed.TotalLatency", "microseconds", perf.SmallerIsBetter),
+		NewDistributionMetricConfig("Ash.EventLatency.MousePressed.TotalLatency", "microseconds", perf.SmallerIsBetter),
 		NewCustomMetricConfig("Ash.EventLatency.MouseReleased.TotalLatency", "microseconds", perf.SmallerIsBetter),
 		NewCustomMetricConfig("Ash.EventLatency.MouseWheel.TotalLatency", "microseconds", perf.SmallerIsBetter),
 		NewCustomMetricConfig("Ash.EventLatency.TouchMoved.TotalLatency", "microseconds", perf.SmallerIsBetter),
