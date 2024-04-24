@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/graphics"
 	"go.chromium.org/tast-tests/cros/local/graphics/deqprunner"
+	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -652,6 +653,15 @@ func deqpNonParallel(ctx context.Context, s *testing.State, opts deqpParams) {
 }
 
 func deqpParallel(ctx context.Context, s *testing.State, opts deqpParams) {
+	if err := upstart.StopJob(ctx, "powerd"); err != nil {
+		s.Fatal("Failed to stop powerd job: ", err)
+	}
+	defer func() {
+		if err := upstart.EnsureJobRunning(ctx, "powerd"); err != nil {
+			s.Error("Failed to restart the power daemon after testing: ", err)
+		}
+	}()
+
 	filters, err := deqprunner.GetCaseListFilters(ctx, deqprunner.Deqp, deqprunner.Host)
 	if err != nil {
 		s.Fatal("Could not get filters from file: ", err)
