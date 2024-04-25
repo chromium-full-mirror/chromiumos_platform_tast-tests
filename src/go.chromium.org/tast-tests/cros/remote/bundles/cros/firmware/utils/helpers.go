@@ -71,6 +71,13 @@ const (
 	CCDPasswordNone = "none"
 )
 
+// FWVariantErr is an error returned by the ChangeFWVariant function, indicating
+// that switching to a specific active fw version fails. FWVariantErr can be used
+// as a marker to determine whether retries are to be implemented.
+type FWVariantErr struct {
+	*errors.E
+}
+
 // ChangeFWVariant checks if current FW variant (A/B) is equal to the fwVar, if not it switches to the fwVar
 func ChangeFWVariant(ctx context.Context, h *firmware.Helper, ms *firmware.ModeSwitcher, fwVar fwCommon.RWSection) error {
 	testing.ContextLogf(ctx, "Check the firmware version, looking for %q", fwVar)
@@ -90,7 +97,7 @@ func ChangeFWVariant(ctx context.Context, h *firmware.Helper, ms *firmware.ModeS
 		if isFWVerCorrect, err := h.Reporter.CheckFWVersion(ctx, string(fwVar)); err != nil {
 			return errors.Wrap(err, "failed to check a firmware version")
 		} else if !isFWVerCorrect {
-			return errors.New("failed to boot into the expected firmware version")
+			return &FWVariantErr{E: errors.New("failed to boot into the expected firmware version")}
 		}
 	}
 	return nil

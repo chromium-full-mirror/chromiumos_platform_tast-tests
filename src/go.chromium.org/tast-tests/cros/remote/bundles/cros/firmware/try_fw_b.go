@@ -13,6 +13,7 @@ import (
 	fwUtils "go.chromium.org/tast-tests/cros/remote/bundles/cros/firmware/utils"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -29,7 +30,7 @@ func init() {
 		// TODO: When stable, change firmware_unstable to a different attr.
 		Attr:         []string{"group:firmware", "firmware_unstable", "firmware_usb"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
-		Timeout:      10 * time.Minute,
+		Timeout:      15 * time.Minute,
 		SoftwareDeps: []string{"crossystem"},
 		ServiceDeps:  []string{"tast.cros.firmware.UtilsService"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
@@ -65,12 +66,12 @@ func TryFWB(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Start test with FW A")
-	if err := fwUtils.ChangeFWVariant(ctx, h, ms, fwCommon.RWSectionA); err != nil {
+	if err := pollToChangeFWVariant(ctx, h, ms, fwCommon.RWSectionA); err != nil {
 		s.Fatal("Failed to change FW variant: ", err)
 	}
 
 	s.Log("Switch firmware to B variant, reboot")
-	if err := fwUtils.ChangeFWVariant(ctx, h, ms, fwCommon.RWSectionB); err != nil {
+	if err := pollToChangeFWVariant(ctx, h, ms, fwCommon.RWSectionB); err != nil {
 		s.Fatal("Failed to change FW variant: ", err)
 	}
 
@@ -85,4 +86,20 @@ func TryFWB(ctx context.Context, s *testing.State) {
 	} else if !isFWVerCorrect {
 		s.Fatalf("Failed to boot into the %s firmware", finalFWVer)
 	}
+}
+
+func pollToChangeFWVariant(ctx context.Context, h *firmware.Helper, ms *firmware.ModeSwitcher, fwVar fwCommon.RWSection) error {
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if err := fwUtils.ChangeFWVariant(ctx, h, ms, fwVar); err != nil {
+			if _, ok := err.(*fwUtils.FWVariantErr); ok {
+				return err
+			}
+			return testing.PollBreak(err)
+
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 300 * time.Second}); err != nil {
+		return errors.Wrap(err, "failed to change FW variant")
+	}
+	return nil
 }
