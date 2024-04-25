@@ -47,8 +47,8 @@ func init() {
 				Val:  "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/power/powerqual-config/videoplayback_lacros_test.json",
 			},
 			{
-				Name:              "full",
-				Val:               "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/power/powerqual-config/full.json",
+				Name:              "qual",
+				Val:               "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/power/powerqual-config/qual.json",
 				ExtraRequirements: []string{"pwr-batLife-0009-v03", "pwr-batLife-0010-v03", "pwr-batLife-0011-v03", "pwr-batLife-0012-v01"},
 			},
 			{
