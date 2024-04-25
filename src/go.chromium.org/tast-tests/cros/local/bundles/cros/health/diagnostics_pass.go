@@ -62,8 +62,6 @@ func init() {
 			Name:    "cpu_stress",
 			Val:     croshealthd.NewRoutineParams(croshealthd.RoutineCPUStress),
 			Fixture: "crosHealthdRunningAndRebootDUT",
-			// TODO(b/334714620): Monitor test results and promote stable tests to critical.
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
 			// Contact: yycheng@google.com
 			Name:    "floating_point_accuracy",
