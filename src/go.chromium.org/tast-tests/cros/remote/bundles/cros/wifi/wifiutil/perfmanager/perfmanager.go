@@ -111,7 +111,13 @@ func setup3WayIPConfig(ctx context.Context, dutConn, routerConn, pcapConn *ssh.C
 	if err := iprPcap.SetLinkUp(ctx, defaultPcapLANIfaceName); err != nil {
 		return err
 	}
+	if err := iprRouter.FlushIP(ctx, defaultRouterLANIfaceName); err != nil {
+		return err
+	}
 	if err := iprRouter.AddIP(ctx, defaultRouterLANIfaceName, net.ParseIP(defaultRouterLANIPAddress), 24); err != nil {
+		return err
+	}
+	if err := iprPcap.FlushIP(ctx, defaultPcapLANIfaceName); err != nil {
 		return err
 	}
 	if err := iprPcap.AddIP(ctx, defaultPcapLANIfaceName, net.ParseIP(defaultPcapLANIPAddress), 24); err != nil {
