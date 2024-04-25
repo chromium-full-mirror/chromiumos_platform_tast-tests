@@ -34,6 +34,7 @@ const (
 const (
 	configDir       = "/etc/config"
 	configBackupDir = "/etc/config/backup/"
+	dnsmasqCmd      = "/etc/init.d/dnsmasq"
 )
 
 // BackupConfig copies the config file, located at configDir/config, to the
@@ -155,14 +156,45 @@ func ReloadConfigServices(ctx context.Context, uci *Runner, configs ...string) e
 	return nil
 }
 
-// ReloadWifi reloads Wi-Fi, which uses the current committed settings in
-// that are in ConfigWireless.
-func ReloadWifi(ctx context.Context, uci *Runner) error {
-	testing.ContextLog(ctx, "Reloading OpenWrt router wifi settings")
-	if err := uci.cmd.Run(ctx, "wifi", "reload"); err != nil {
-		return errors.Wrap(err, "failed to reload wifi settings")
+// Wifi runs the wifi command.
+func Wifi(ctx context.Context, uci *Runner, args ...string) error {
+	if err := uci.cmd.Run(ctx, "wifi", args...); err != nil {
+		return errors.Wrapf(err, "failed to run wifi %v", args)
 	}
 	return nil
+}
+
+// ReloadWifi reloads Wi-Fi, which uses the current committed settings in
+// /etc/config/wireless.
+func ReloadWifi(ctx context.Context, uci *Runner) error {
+	testing.ContextLog(ctx, "Reloading OpenWrt router wifi settings")
+	return Wifi(ctx, uci, "reload")
+}
+
+// StartWifi starts Wi-Fi, which uses the current committed settings in
+// /etc/config/wireless.
+func StartWifi(ctx context.Context, uci *Runner) error {
+	testing.ContextLog(ctx, "Starting OpenWrt router wifi")
+	return Wifi(ctx, uci, "up")
+}
+
+// StopWifi stops Wi-Fi.
+func StopWifi(ctx context.Context, uci *Runner) error {
+	testing.ContextLog(ctx, "Stopping OpenWrt router wifi")
+	return Wifi(ctx, uci, "down")
+}
+
+// RestartWifi restarts Wi-Fi, which uses the current committed settings in
+// /etc/config/wireless.
+func RestartWifi(ctx context.Context, uci *Runner) error {
+	testing.ContextLog(ctx, "Restarting OpenWrt router wifi")
+	return Wifi(ctx, uci, "restart")
+}
+
+// ResetWifi resets the settings in /etc/config/wireless to default config.
+func ResetWifi(ctx context.Context, uci *Runner) error {
+	testing.ContextLog(ctx, "Resetting OpenWrt router wifi")
+	return Wifi(ctx, uci, "reset")
 }
 
 // RestartDnsmasq restarts the dnsmasq service, which reloads the current
@@ -170,8 +202,26 @@ func ReloadWifi(ctx context.Context, uci *Runner) error {
 // for more info at https://openwrt.org/docs/guide-user/base-system/dhcp.
 func RestartDnsmasq(ctx context.Context, uci *Runner) error {
 	testing.ContextLog(ctx, "Restarting OpenWrt router dnsmasq service")
-	if err := uci.cmd.Run(ctx, "/etc/init.d/dnsmasq", "restart"); err != nil {
+	if err := uci.cmd.Run(ctx, dnsmasqCmd, "restart"); err != nil {
 		return errors.Wrap(err, "failed to restart dnsmasq service")
+	}
+	return nil
+}
+
+// StartDnsmasq starts the dnsmasq service.
+func StartDnsmasq(ctx context.Context, uci *Runner) error {
+	testing.ContextLog(ctx, "Starting OpenWrt router dnsmasq service")
+	if err := uci.cmd.Run(ctx, dnsmasqCmd, "start"); err != nil {
+		return errors.Wrap(err, "failed to start dnsmasq service")
+	}
+	return nil
+}
+
+// StopDnsmasq stops the dnsmasq service.
+func StopDnsmasq(ctx context.Context, uci *Runner) error {
+	testing.ContextLog(ctx, "Stopping OpenWrt router dnsmasq service")
+	if err := uci.cmd.Run(ctx, dnsmasqCmd, "stop"); err != nil {
+		return errors.Wrap(err, "failed to stop dnsmasq service")
 	}
 	return nil
 }
@@ -182,6 +232,15 @@ func ReloadNetwork(ctx context.Context, uci *Runner) error {
 	testing.ContextLog(ctx, "Reloading OpenWrt router network service")
 	if err := uci.cmd.Run(ctx, "/etc/init.d/network", "reload"); err != nil {
 		return errors.Wrap(err, "failed to reload network service")
+	}
+	return nil
+}
+
+// CommitConfig commits any pending config changes.
+func CommitConfig(ctx context.Context, uci *Runner, config string) error {
+	testing.ContextLogf(ctx, "Committing changes to UCI config %q", config)
+	if err := uci.Commit(ctx, config); err != nil {
+		return errors.Wrapf(err, "failed to commit changes to config %q", config)
 	}
 	return nil
 }

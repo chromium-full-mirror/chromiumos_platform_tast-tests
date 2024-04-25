@@ -49,6 +49,7 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/wificell/router/common"
 	"go.chromium.org/tast-tests/cros/remote/wificell/router/common/support"
 	"go.chromium.org/tast-tests/cros/remote/wificell/router/legacy"
+	"go.chromium.org/tast-tests/cros/remote/wificell/router/mtk"
 	"go.chromium.org/tast-tests/cros/remote/wificell/router/openwrt"
 	"go.chromium.org/tast-tests/cros/remote/wificell/router/ubuntu"
 	"go.chromium.org/tast-tests/cros/remote/wificell/tethering"
@@ -656,6 +657,8 @@ func (tf *TestFixture) newRouter(ctx, daemonCtx context.Context, host *ssh.Conn,
 		return legacy.NewRouter(ctx, daemonCtx, host, name)
 	case support.AxT:
 		return ax.NewRouter(ctx, daemonCtx, host, name)
+	case support.MtkOpenWrtT:
+		return mtk.NewRouter(ctx, daemonCtx, host, name)
 	case support.OpenWrtT:
 		return openwrt.NewRouter(ctx, daemonCtx, host, name)
 	case support.UbuntuT:
@@ -672,6 +675,12 @@ func (tf *TestFixture) resolveRouterTypeFromHost(ctx context.Context, host *ssh.
 		return -1, err
 	} else if isLegacy {
 		return support.LegacyT, nil
+	}
+	// A MTK router is also an openwrt router, so check MTK router before Openwrt router
+	if isMtk, err := mtk.HostIsMtkRouter(ctx, host); err != nil {
+		return -1, err
+	} else if isMtk {
+		return support.MtkOpenWrtT, nil
 	}
 	if isOpenWrt, err := openwrt.HostIsOpenWrtRouter(ctx, host); err != nil {
 		return -1, err
