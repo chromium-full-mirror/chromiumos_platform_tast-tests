@@ -11,6 +11,7 @@ import (
 	"time"
 
 	labapi "go.chromium.org/chromiumos/config/go/test/lab/api"
+
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
@@ -633,6 +634,11 @@ func NetworkWifiPerf(ctx context.Context, s *testing.State) {
 
 		doRun := func(ctx context.Context) error {
 			for _, testType := range perfTestTypes {
+				// TODO(b/331974589): Remove the condition when iperf bidirectional issue is fixed on devices with RTL8822CE.
+				if (testType == perfmanager.TestTypeTCPBidirectional || testType == perfmanager.TestTypeUDPBidirectional) && (boardName == "grunt" || boardName == "asurada") {
+					s.Logf("Skip Bidirectional tests on board: %s", boardName)
+					continue
+				}
 				s.Logf("Performing [[ %s ]]", testType)
 				config, err := manager.Config(routerType, testType, 0)
 				if err != nil {
