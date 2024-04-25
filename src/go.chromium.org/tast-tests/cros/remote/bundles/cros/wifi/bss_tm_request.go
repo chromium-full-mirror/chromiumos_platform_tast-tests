@@ -40,6 +40,10 @@ type bssTMReqTestCase struct {
 	pmfRequiredAP1 bool
 	// pmfRequiredAP2 indicates whether AP 2 should enable the Hostapd config |PMFRequired|.
 	pmfRequiredAP2 bool
+	// ap1Opts is the list of options to be used for the first AP.
+	ap1Opts []hostapd.Option
+	// ap2Opts is the list of options to be used for the second AP.
+	ap2Opts []hostapd.Option
 }
 
 func init() {
@@ -101,6 +105,21 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiNotMarvell()),
 				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel"}`,
 			},
+			{
+				// Verifies that DUT can roam from a BSS with SAE key management to a BSS with PSK key management and back.
+				Name: "psk_to_sae_6ghz",
+				Val: bssTMReqTestCase{
+					secConfFac1:    wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherCCMP)),
+					secConfFac2:    wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+					pmfRequiredAP1: true,
+					ap1Opts:        []hostapd.Option{hostapd.Mode(hostapd.Mode80211axMixed), hostapd.Channel(40), hostapd.HTCaps(hostapd.HTCapHT20), hostapd.SpectrumManagement()},
+					ap2Opts: []hostapd.Option{hostapd.Mode(hostapd.Mode80211axPure), hostapd.Channel(21), hostapd.HTCaps(hostapd.HTCapHT20),
+						hostapd.HEChWidth(hostapd.HEChWidth20Or40), hostapd.OpClass(131), hostapd.PMF(hostapd.PMFRequired)},
+				},
+				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
+				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E"},
+				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel"}`,
+			},
 		},
 	})
 }
@@ -145,6 +164,12 @@ func BSSTMRequest(ctx context.Context, s *testing.State) {
 		apOpts2 := []hostapd.Option{hostapd.Mode(hostapd.Mode80211nMixed), hostapd.HTCaps(hostapd.HTCapHT20), hostapd.Channel(48)}
 		params := s.Param().(bssTMReqTestCase)
 		requestParams := params.requestParams
+		if len(params.ap1Opts) > 0 {
+			apOpts1 = params.ap1Opts
+		}
+		if len(params.ap2Opts) > 0 {
+			apOpts2 = params.ap2Opts
+		}
 		if requestParams.DisassocImminent {
 			apOpts1 = append(apOpts1, hostapd.MBO())
 			apOpts2 = append(apOpts2, hostapd.MBO())
