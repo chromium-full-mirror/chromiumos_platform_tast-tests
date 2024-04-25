@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package network
+package cellular
 
 import (
 	"context"
@@ -23,7 +23,7 @@ func init() {
 			"pholla@google.com",
 		},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_test_esim"},
+		Attr:         []string{"group:cellular", "cellular_sim_test_esim"},
 		Timeout:      5 * time.Minute,
 	})
 }
