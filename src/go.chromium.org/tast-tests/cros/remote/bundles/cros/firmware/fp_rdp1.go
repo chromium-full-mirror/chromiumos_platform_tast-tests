@@ -40,7 +40,7 @@ func init() {
 		SoftwareDeps: []string{"biometrics_daemon"},
 		HardwareDeps: hwdep.D(hwdep.Fingerprint(), hwdep.SkipOnFPMCU(string(fp.BoardNameHelipilot))),
 		ServiceDeps:  []string{"tast.cros.platform.UpstartService", dutfs.ServiceName},
-		TestBedDeps:  []string{tbdep.ServoStateWorking},
+		TestBedDeps:  []string{tbdep.Fingerprint, tbdep.ServoStateWorking},
 		Vars:         []string{"servo"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
