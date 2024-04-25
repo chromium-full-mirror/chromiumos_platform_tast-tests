@@ -20,7 +20,7 @@ import (
 
 	"github.com/godbus/dbus/v5"
 
-	labapi "go.chromium.org/chromiumos/config/go/test/lab/api"
+	"go.chromium.org/tast-tests/cros/common/cellular"
 	"go.chromium.org/tast-tests/cros/common/hermesconst"
 	"go.chromium.org/tast-tests/cros/common/mmconst"
 	"go.chromium.org/tast-tests/cros/common/shillconst"
@@ -42,21 +42,13 @@ import (
 const defaultTimeout = 30 * time.Second
 const longTimeout = 120 * time.Second
 
-// LabelMap is the type label map.
-type LabelMap map[string][]string
-
 // Helper fetches Cellular Device and Service properties.
 type Helper struct {
-	Manager             *shill.Manager
-	Device              *shill.Device
-	enableEthernetFunc  func(ctx context.Context)
-	enableWifiFunc      func(ctx context.Context)
-	Labels              []string
-	modemInfo           *labapi.ModemInfo
-	simInfo             []*labapi.SIMInfo
-	carrierName         string
-	starfishSlotMapping string
-	devicePools         []string
+	Manager            *shill.Manager
+	Device             *shill.Device
+	enableEthernetFunc func(ctx context.Context)
+	enableWifiFunc     func(ctx context.Context)
+	di                 *cellular.DUTInfo
 }
 
 const (
@@ -119,7 +111,7 @@ func NewHelper(ctx context.Context) (*Helper, error) {
 // to clear any SIM lock.
 func (h *Helper) ClearSIMLockFromHostInfo(ctx context.Context) error {
 	// Ensure that the host info has been parsed.
-	if len(h.Labels) == 0 {
+	if len(h.di.Labels) == 0 {
 		return errors.New("ClearSIMLockFromHostInfo called before GetHostInfoLabels")
 	}
 
@@ -1601,79 +1593,16 @@ func (h *Helper) RunTestOnCellularInterface(ctx context.Context, testBody func(c
 	return nil
 }
 
-// PrintHostInfoLabels prints the host info labels
-func (h *Helper) PrintHostInfoLabels(ctx context.Context) {
-	for _, label := range h.Labels {
-		testing.ContextLog(ctx, "Labels: ", label)
-	}
-}
-
-// PrintModemInfo prints modem details
-func (h *Helper) PrintModemInfo(ctx context.Context) {
-	if h.modemInfo == nil {
-		testing.ContextLog(ctx, "Unable to print modem info, modem info is not populated")
-		return
-	}
-	testing.ContextLog(ctx, "Modem Type            : ", h.modemInfo.Type)
-	testing.ContextLog(ctx, "Modem IMEI            : ", h.modemInfo.Imei)
-	testing.ContextLog(ctx, "Modem Supported Bands : ", h.modemInfo.SupportedBands)
-	testing.ContextLog(ctx, "Modem SIM Count       : ", h.modemInfo.SimCount)
-}
-
 // PrintSIMInfo prints SIM details
 func (h *Helper) PrintSIMInfo(ctx context.Context) {
-	for _, s := range h.simInfo {
-		testing.ContextLog(ctx, "SIM Slot ID              : ", s.SlotId)
-		testing.ContextLog(ctx, "SIM Type                 : ", s.Type)
-		testing.ContextLog(ctx, "SIM Test eSIM            : ", s.TestEsim)
-		testing.ContextLog(ctx, "SIM EID                  : ", s.Eid)
-		for _, p := range s.ProfileInfo {
-			testing.ContextLog(ctx, "SIM Profile ICCID        : ", p.Iccid)
-			testing.ContextLog(ctx, "SIM Profile PIN          : ", p.SimPin)
-			testing.ContextLog(ctx, "SIM Profile PUK          : ", p.SimPuk)
-			testing.ContextLog(ctx, "SIM Profile Carrier Name : ", p.CarrierName)
-			testing.ContextLog(ctx, "SIM Profile Own Number   : ", p.OwnNumber)
-		}
+	if h.di != nil {
+		h.PrintSIMInfo(ctx)
 	}
-}
-
-// GetHostInfoFromStringArgs loads the host info labels from a var->value argument map.
-func (h *Helper) GetHostInfoFromStringArgs(ctx context.Context, cmd func(name string) (val string, ok bool), labelName string) error {
-	labels, err := GetLabelsAsStringArray(ctx, cmd, labelName)
-	if err != nil {
-		return errors.Wrap(err, "failed to read labels")
-	}
-	if err := h.GetHostInfoLabels(ctx, labels); err != nil {
-		return errors.Wrap(err, "failed to read labels")
-	}
-	return nil
-}
-
-// GetDutConfig sets the helper's sim and modem info from a provided labapi.DUT configuration.
-func (h *Helper) GetDutConfig(config *labapi.Dut) {
-	chrome := config.GetChromeos()
-	h.modemInfo = chrome.GetModemInfo()
-	h.simInfo = chrome.GetSimInfos()
-}
-
-// GetHostInfoLabels reads the labels from autotest_host_info_labels
-func (h *Helper) GetHostInfoLabels(ctx context.Context, labels []string) error {
-	h.Labels = labels
-	h.PrintHostInfoLabels(ctx)
-	h.modemInfo = GetModemInfoFromHostInfoLabels(ctx, labels)
-	h.simInfo = GetSIMInfoFromHostInfoLabels(ctx, labels)
-	h.carrierName = GetCellularCarrierFromHostInfoLabels(ctx, labels)
-	testing.ContextLog(ctx, "Carrier Name : ", h.carrierName)
-	h.starfishSlotMapping = GetStarfishMappingFromHostInfoLabels(ctx, labels)
-	testing.ContextLog(ctx, "Starfish slot mapping : ", h.starfishSlotMapping)
-	h.devicePools = GetDevicePoolFromHostInfoLabels(ctx, labels)
-	testing.ContextLog(ctx, "Pools : ", h.devicePools)
-	return nil
 }
 
 // GetPINAndPUKForICCID returns the pin and puk info for the given iccid from host_info_label
 func (h *Helper) GetPINAndPUKForICCID(ctx context.Context, iccid string) (string, string, error) {
-	for _, s := range h.simInfo {
+	for _, s := range h.di.SimInfo {
 		for _, p := range s.ProfileInfo {
 			if p.Iccid == iccid {
 				return p.SimPin, p.SimPuk, nil
@@ -1685,7 +1614,7 @@ func (h *Helper) GetPINAndPUKForICCID(ctx context.Context, iccid string) (string
 
 // GetCarrierNameForICCID returns carrier name for the given iccid from host_info_label
 func (h *Helper) GetCarrierNameForICCID(ctx context.Context, iccid string) (string, error) {
-	for _, s := range h.simInfo {
+	for _, s := range h.di.SimInfo {
 		for _, p := range s.ProfileInfo {
 			if p.Iccid == iccid {
 				return p.CarrierName.String(), nil
@@ -1695,19 +1624,24 @@ func (h *Helper) GetCarrierNameForICCID(ctx context.Context, iccid string) (stri
 	return "", errors.Errorf("carrier name for ICCID %q not found", iccid)
 }
 
+// SetDUTInfo sets the host-specific dut info for the helper.
+func (h *Helper) SetDUTInfo(di *cellular.DUTInfo) {
+	h.di = di
+}
+
 // GetLabelCarrierName return the current carrier name
 func (h *Helper) GetLabelCarrierName(ctx context.Context) string {
-	return h.carrierName
+	return h.di.CarrierName
 }
 
 // GetLabelStarfishSlotMapping return the starfish slot mapping label
 func (h *Helper) GetLabelStarfishSlotMapping(ctx context.Context) string {
-	return h.starfishSlotMapping
+	return h.di.StarfishSlotMapping
 }
 
 // GetLabelOwnNumber return the current own number.
 func (h *Helper) GetLabelOwnNumber(ctx context.Context, iccid string) string {
-	for _, s := range h.simInfo {
+	for _, s := range h.di.SimInfo {
 		for _, p := range s.ProfileInfo {
 			if p.Iccid == iccid {
 				return p.OwnNumber

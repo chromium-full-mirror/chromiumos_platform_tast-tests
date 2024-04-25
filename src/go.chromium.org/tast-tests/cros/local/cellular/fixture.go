@@ -13,6 +13,7 @@ import (
 
 	"golang.org/x/exp/slices"
 
+	"go.chromium.org/tast-tests/cros/common/cellular"
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/common/testexec"
@@ -574,29 +575,27 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	f.helper = helper
 
 	// Always load labels into helper.
-	hasDUTInfo := false
+	var dutInfo *cellular.DUTInfo
 	if dutConfig, err := s.ChromeOSDUTLabConfig(""); err == nil {
-		helper.GetDutConfig(dutConfig)
-		hasDUTInfo = true
+		dutInfo = cellular.NewDUTInfoFromConfig(dutConfig)
 		s.Log("Loaded DUT info from lab config")
-	} else if err := helper.GetHostInfoFromStringArgs(ctx, s.Var, "autotest_host_info_labels"); err != nil {
+	} else if dutInfo, err = cellular.NewDUTInfoFromStringArgs(ctx, s.Var, "autotest_host_info_labels"); err != nil {
 		// Not fatal unless labels are required.
 		s.Log("Failed to get SIM info labels: ", err)
 	} else {
-		hasDUTInfo = true
 		s.Log("Loaded DUT info from autotest_host_info_labels")
 	}
 
-	if hasDUTInfo {
-		helper.PrintSIMInfo(ctx)
-		helper.PrintModemInfo(ctx)
+	if dutInfo != nil {
+		dutInfo.LogInfo(ctx)
+		helper.SetDUTInfo(dutInfo)
 	}
 
 	if f.clearSIMLock {
 		// Clear the SIM lock in SetUp and TearDown to attempt to recover any
 		// DUT left in a SIM locked state. Since not all tests run on a SIM that
 		// supports SIM lock, only do this in fixtures that require SIM locking.
-		if !hasDUTInfo {
+		if dutInfo == nil {
 			s.Fatal("Cannot clear SIM lock, DUT configuration not available")
 		}
 		if err := helper.ClearSIMLockFromHostInfo(ctx); err != nil {

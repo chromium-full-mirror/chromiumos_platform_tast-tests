@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	cellularcommon "go.chromium.org/tast-tests/cros/common/cellular"
 	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
 	"go.chromium.org/tast-tests/cros/local/cellular"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -48,13 +49,14 @@ func CarrierLockEndToEndSIMSwap(ctx context.Context, s *testing.State) {
 		s.Fatal("Could not create cellular helper: ", err)
 	}
 
-	if dutConfig, err := s.ChromeOSDUTLabConfig(""); err != nil {
-		helper.GetDutConfig(dutConfig)
-	} else if err := helper.GetHostInfoFromStringArgs(ctx, s.Var, "autotest_host_info_labels"); err != nil {
+	var dutInfo *cellularcommon.DUTInfo
+	if dutConfig, err := s.ChromeOSDUTLabConfig(""); err == nil {
+		dutInfo = cellularcommon.NewDUTInfoFromConfig(dutConfig)
+	} else if dutInfo, err = cellularcommon.NewDUTInfoFromStringArgs(ctx, s.Var, "autotest_host_info_labels"); err != nil {
 		s.Fatal("Failed to get SIM info labels: ", err)
 	}
-
-	helper.PrintSIMInfo(ctx)
+	helper.SetDUTInfo(dutInfo)
+	dutInfo.LogInfo(ctx)
 
 	starfish, _, _, err := starfish.NewStarfish(ctx)
 
