@@ -116,7 +116,7 @@ func init() {
 			{
 				Name:              "vk_20_02",
 				Timeout:           2 * time.Hour,
-				ExtraAttr:         []string{"graphics_nightly"},
+				ExtraAttr:         []string{"graphics_manual"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("hayato", "atlas", "gladios", "redrix", "tomato", "babytiger", "ponyta", "boton", "drallion", "sion", "ciri", "kasumi", "kohaku", "cozmo", "karma", "kodama", "yaviks", "nocturne", "garfour", "wyvern", "pyro", "shyvana", "electro", "sand", "sarien", "skyrim", "soraka", "starmi", "homestar", "lazor", "lindar", "berknip"), hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{"vulkan"},
 				Val: deqpParams{
@@ -129,7 +129,7 @@ func init() {
 			{
 				Name:              "vk_20_03",
 				Timeout:           2 * time.Hour,
-				ExtraAttr:         []string{"graphics_nightly"},
+				ExtraAttr:         []string{"graphics_manual"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("hayato", "atlas", "gladios", "redrix", "tomato", "babytiger", "ponyta", "boton", "drallion", "sion", "ciri", "kasumi", "kohaku", "cozmo", "karma", "kodama", "yaviks", "nocturne", "garfour", "wyvern", "pyro", "shyvana", "electro", "sand", "sarien", "skyrim", "soraka", "starmi", "homestar", "lazor", "lindar", "berknip"), hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{"vulkan"},
 				Val: deqpParams{
@@ -142,7 +142,7 @@ func init() {
 			{
 				Name:              "vk_20_04",
 				Timeout:           2 * time.Hour,
-				ExtraAttr:         []string{"graphics_nightly"},
+				ExtraAttr:         []string{"graphics_manual"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("hayato", "atlas", "gladios", "redrix", "tomato", "babytiger", "ponyta", "boton", "drallion", "sion", "ciri", "kasumi", "kohaku", "cozmo", "karma", "kodama", "yaviks", "nocturne", "garfour", "wyvern", "pyro", "shyvana", "electro", "sand", "sarien", "skyrim", "soraka", "starmi", "homestar", "lazor", "lindar", "berknip"), hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{"vulkan"},
 				Val: deqpParams{
@@ -155,7 +155,7 @@ func init() {
 			{
 				Name:              "vk_20_05",
 				Timeout:           2 * time.Hour,
-				ExtraAttr:         []string{"graphics_nightly"},
+				ExtraAttr:         []string{"graphics_manual"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("hayato", "atlas", "gladios", "redrix", "tomato", "babytiger", "ponyta", "boton", "drallion", "sion", "ciri", "kasumi", "kohaku", "cozmo", "karma", "kodama", "yaviks", "nocturne", "garfour", "wyvern", "pyro", "shyvana", "electro", "sand", "sarien", "skyrim", "soraka", "starmi", "homestar", "lazor", "lindar", "berknip"), hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{"vulkan"},
 				Val: deqpParams{
@@ -168,7 +168,7 @@ func init() {
 			{
 				Name:              "vk_20_06",
 				Timeout:           2 * time.Hour,
-				ExtraAttr:         []string{"graphics_nightly"},
+				ExtraAttr:         []string{"graphics_manual"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("hayato", "atlas", "gladios", "redrix", "tomato", "babytiger", "ponyta", "boton", "drallion", "sion", "ciri", "kasumi", "kohaku", "cozmo", "karma", "kodama", "yaviks", "nocturne", "garfour", "wyvern", "pyro", "shyvana", "electro", "sand", "sarien", "skyrim", "soraka", "starmi", "homestar", "lazor", "lindar", "berknip"), hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{"vulkan"},
 				Val: deqpParams{
@@ -181,7 +181,7 @@ func init() {
 			{
 				Name:              "vk_20_07",
 				Timeout:           2 * time.Hour,
-				ExtraAttr:         []string{"graphics_nightly"},
+				ExtraAttr:         []string{"graphics_manual"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("hayato", "atlas", "gladios", "redrix", "tomato", "babytiger", "ponyta", "boton", "drallion", "sion", "ciri", "kasumi", "kohaku", "cozmo", "karma", "kodama", "yaviks", "nocturne", "garfour", "wyvern", "pyro", "shyvana", "electro", "sand", "sarien", "skyrim", "soraka", "starmi", "homestar", "lazor", "lindar", "berknip"), hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{"vulkan"},
 				Val: deqpParams{
@@ -194,7 +194,7 @@ func init() {
 			{
 				Name:              "vk_20_08",
 				Timeout:           2 * time.Hour,
-				ExtraAttr:         []string{"graphics_nightly"},
+				ExtraAttr:         []string{"graphics_manual"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("hayato", "atlas", "gladios", "redrix", "tomato", "babytiger", "ponyta", "boton", "drallion", "sion", "ciri", "kasumi", "kohaku", "cozmo", "karma", "kodama", "yaviks", "nocturne", "garfour", "wyvern", "pyro", "shyvana", "electro", "sand", "sarien", "skyrim", "soraka", "starmi", "homestar", "lazor", "lindar", "berknip"), hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{"vulkan"},
 				Val: deqpParams{
@@ -207,7 +207,7 @@ func init() {
 			{
 				Name:              "vk_20_09",
 				Timeout:           2 * time.Hour,
-				ExtraAttr:         []string{"graphics_nightly"},
+				ExtraAttr:         []string{"graphics_manual"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("hayato", "atlas", "gladios", "redrix", "tomato", "babytiger", "ponyta", "boton", "drallion", "sion", "ciri", "kasumi", "kohaku", "cozmo", "karma", "kodama", "yaviks", "nocturne", "garfour", "wyvern", "pyro", "shyvana", "electro", "sand", "sarien", "skyrim", "soraka", "starmi", "homestar", "lazor", "lindar", "berknip"), hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{"vulkan"},
 				Val: deqpParams{
@@ -220,7 +220,7 @@ func init() {
 			{
 				Name:              "vk_20_10",
 				Timeout:           2 * time.Hour,
-				ExtraAttr:         []string{"graphics_nightly"},
+				ExtraAttr:         []string{"graphics_manual"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("hayato", "atlas", "gladios", "redrix", "tomato", "babytiger", "ponyta", "boton", "drallion", "sion", "ciri", "kasumi", "kohaku", "cozmo", "karma", "kodama", "yaviks", "nocturne", "garfour", "wyvern", "pyro", "shyvana", "electro", "sand", "sarien", "skyrim", "soraka", "starmi", "homestar", "lazor", "lindar", "berknip"), hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{"vulkan"},
 				Val: deqpParams{
@@ -233,7 +233,7 @@ func init() {
 			{
 				Name:              "vk_20_11",
 				Timeout:           2 * time.Hour,
-				ExtraAttr:         []string{"graphics_nightly"},
+				ExtraAttr:         []string{"graphics_manual"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("hayato", "atlas", "gladios", "redrix", "tomato", "babytiger", "ponyta", "boton", "drallion", "sion", "ciri", "kasumi", "kohaku", "cozmo", "karma", "kodama", "yaviks", "nocturne", "garfour", "wyvern", "pyro", "shyvana", "electro", "sand", "sarien", "skyrim", "soraka", "starmi", "homestar", "lazor", "lindar", "berknip"), hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{"vulkan"},
 				Val: deqpParams{
@@ -246,7 +246,7 @@ func init() {
 			{
 				Name:              "vk_20_12",
 				Timeout:           2 * time.Hour,
-				ExtraAttr:         []string{"graphics_nightly"},
+				ExtraAttr:         []string{"graphics_manual"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("hayato", "atlas", "gladios", "redrix", "tomato", "babytiger", "ponyta", "boton", "drallion", "sion", "ciri", "kasumi", "kohaku", "cozmo", "karma", "kodama", "yaviks", "nocturne", "garfour", "wyvern", "pyro", "shyvana", "electro", "sand", "sarien", "skyrim", "soraka", "starmi", "homestar", "lazor", "lindar", "berknip"), hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{"vulkan"},
 				Val: deqpParams{
@@ -259,7 +259,7 @@ func init() {
 			{
 				Name:              "vk_20_13",
 				Timeout:           2 * time.Hour,
-				ExtraAttr:         []string{"graphics_nightly"},
+				ExtraAttr:         []string{"graphics_manual"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("hayato", "atlas", "gladios", "redrix", "tomato", "babytiger", "ponyta", "boton", "drallion", "sion", "ciri", "kasumi", "kohaku", "cozmo", "karma", "kodama", "yaviks", "nocturne", "garfour", "wyvern", "pyro", "shyvana", "electro", "sand", "sarien", "skyrim", "soraka", "starmi", "homestar", "lazor", "lindar", "berknip"), hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{"vulkan"},
 				Val: deqpParams{
@@ -272,7 +272,7 @@ func init() {
 			{
 				Name:              "vk_20_14",
 				Timeout:           2 * time.Hour,
-				ExtraAttr:         []string{"graphics_nightly"},
+				ExtraAttr:         []string{"graphics_manual"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("hayato", "atlas", "gladios", "redrix", "tomato", "babytiger", "ponyta", "boton", "drallion", "sion", "ciri", "kasumi", "kohaku", "cozmo", "karma", "kodama", "yaviks", "nocturne", "garfour", "wyvern", "pyro", "shyvana", "electro", "sand", "sarien", "skyrim", "soraka", "starmi", "homestar", "lazor", "lindar", "berknip"), hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{"vulkan"},
 				Val: deqpParams{
@@ -285,7 +285,7 @@ func init() {
 			{
 				Name:              "vk_20_15",
 				Timeout:           2 * time.Hour,
-				ExtraAttr:         []string{"graphics_nightly"},
+				ExtraAttr:         []string{"graphics_manual"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("hayato", "atlas", "gladios", "redrix", "tomato", "babytiger", "ponyta", "boton", "drallion", "sion", "ciri", "kasumi", "kohaku", "cozmo", "karma", "kodama", "yaviks", "nocturne", "garfour", "wyvern", "pyro", "shyvana", "electro", "sand", "sarien", "skyrim", "soraka", "starmi", "homestar", "lazor", "lindar", "berknip"), hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{"vulkan"},
 				Val: deqpParams{
@@ -298,7 +298,7 @@ func init() {
 			{
 				Name:              "vk_20_16",
 				Timeout:           2 * time.Hour,
-				ExtraAttr:         []string{"graphics_nightly"},
+				ExtraAttr:         []string{"graphics_manual"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("hayato", "atlas", "gladios", "redrix", "tomato", "babytiger", "ponyta", "boton", "drallion", "sion", "ciri", "kasumi", "kohaku", "cozmo", "karma", "kodama", "yaviks", "nocturne", "garfour", "wyvern", "pyro", "shyvana", "electro", "sand", "sarien", "skyrim", "soraka", "starmi", "homestar", "lazor", "lindar", "berknip"), hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{"vulkan"},
 				Val: deqpParams{
@@ -311,7 +311,7 @@ func init() {
 			{
 				Name:              "vk_20_17",
 				Timeout:           2 * time.Hour,
-				ExtraAttr:         []string{"graphics_nightly"},
+				ExtraAttr:         []string{"graphics_manual"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("hayato", "atlas", "gladios", "redrix", "tomato", "babytiger", "ponyta", "boton", "drallion", "sion", "ciri", "kasumi", "kohaku", "cozmo", "karma", "kodama", "yaviks", "nocturne", "garfour", "wyvern", "pyro", "shyvana", "electro", "sand", "sarien", "skyrim", "soraka", "starmi", "homestar", "lazor", "lindar", "berknip"), hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{"vulkan"},
 				Val: deqpParams{
@@ -324,7 +324,7 @@ func init() {
 			{
 				Name:              "vk_20_18",
 				Timeout:           2 * time.Hour,
-				ExtraAttr:         []string{"graphics_nightly"},
+				ExtraAttr:         []string{"graphics_manual"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("hayato", "atlas", "gladios", "redrix", "tomato", "babytiger", "ponyta", "boton", "drallion", "sion", "ciri", "kasumi", "kohaku", "cozmo", "karma", "kodama", "yaviks", "nocturne", "garfour", "wyvern", "pyro", "shyvana", "electro", "sand", "sarien", "skyrim", "soraka", "starmi", "homestar", "lazor", "lindar", "berknip"), hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{"vulkan"},
 				Val: deqpParams{
@@ -337,7 +337,7 @@ func init() {
 			{
 				Name:              "vk_20_19",
 				Timeout:           2 * time.Hour,
-				ExtraAttr:         []string{"graphics_nightly"},
+				ExtraAttr:         []string{"graphics_manual"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("hayato", "atlas", "gladios", "redrix", "tomato", "babytiger", "ponyta", "boton", "drallion", "sion", "ciri", "kasumi", "kohaku", "cozmo", "karma", "kodama", "yaviks", "nocturne", "garfour", "wyvern", "pyro", "shyvana", "electro", "sand", "sarien", "skyrim", "soraka", "starmi", "homestar", "lazor", "lindar", "berknip"), hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{"vulkan"},
 				Val: deqpParams{
@@ -350,7 +350,7 @@ func init() {
 			{
 				Name:              "vk_20_20",
 				Timeout:           2 * time.Hour,
-				ExtraAttr:         []string{"graphics_nightly"},
+				ExtraAttr:         []string{"graphics_manual"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("hayato", "atlas", "gladios", "redrix", "tomato", "babytiger", "ponyta", "boton", "drallion", "sion", "ciri", "kasumi", "kohaku", "cozmo", "karma", "kodama", "yaviks", "nocturne", "garfour", "wyvern", "pyro", "shyvana", "electro", "sand", "sarien", "skyrim", "soraka", "starmi", "homestar", "lazor", "lindar", "berknip"), hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{"vulkan"},
 				Val: deqpParams{
