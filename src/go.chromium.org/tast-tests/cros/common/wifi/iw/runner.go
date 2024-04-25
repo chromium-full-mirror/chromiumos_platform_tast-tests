@@ -929,7 +929,7 @@ func extractBSSID(out string) (string, error) {
 	return m[1], nil
 }
 
-// allLinkKeys parses `link` or `station dump` output into key value pairs.
+// allLinkKeys parses non-MLO `link` or `station dump` output into key value pairs.
 func allLinkKeys(out string) map[string]string {
 	kv := make(map[string]string)
 	r := regexp.MustCompile(`^\s+(.*):\s+(.*)$`)
@@ -1632,4 +1632,54 @@ func parseRegulatoryRules(contents string) ([]*BandRegRule, error) {
 		ret = append(ret, rule)
 	}
 	return ret, nil
+}
+
+// MLOLinks gets MLO links info and EHT NSS.
+func (r *Runner) MLOLinks(ctx context.Context, iface string) (map[int]string, int, error) {
+	out, err := r.cmd.Output(ctx, "iw", "dev", iface, "link")
+	if err != nil {
+		return nil, 0, errors.Wrapf(err, "failed to get link information from interface %s", iface)
+	}
+	mloLinks, err := allMLOLinks(string(out))
+	if err != nil {
+		return nil, 0, err
+	}
+	ethNSS, err := ehtNSS(string(out))
+	if err != nil {
+		return nil, 0, err
+	}
+	return mloLinks, ethNSS, nil
+}
+
+// allMLOLinks parses MLO `link` output into mapping from link ID to BSSID.
+func allMLOLinks(out string) (map[int]string, error) {
+	kv := make(map[int]string)
+	r := regexp.MustCompile(`^Link (\d+) BSSID ([0-9a-fA-F:]{17})$`)
+	for _, line := range strings.Split(out, "\n") {
+		m := r.FindStringSubmatch(line)
+		if m != nil {
+			id, err := strconv.Atoi(m[1])
+			if err != nil {
+				return nil, errors.Wrapf(err, "failed to parse link ID: %s", m[1])
+			}
+			kv[id] = m[2]
+		}
+	}
+	return kv, nil
+}
+
+// ehtNSS parses `link` output and reads EHT NSS value.
+func ehtNSS(out string) (int, error) {
+	r := regexp.MustCompile(`^tx bitrate:.*EHT-NSS (\d+)`)
+	for _, line := range strings.Split(out, "\n") {
+		m := r.FindStringSubmatch(line)
+		if m != nil {
+			nss, err := strconv.Atoi(m[1])
+			if err != nil {
+				return 0, errors.Wrapf(err, "failed to parse EHT NSS: %s", m[1])
+			}
+			return nss, nil
+		}
+	}
+	return 0, errors.New("failed to find EHT-NSS info")
 }
