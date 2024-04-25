@@ -130,6 +130,8 @@ func init() {
 			"alanding@chromium.org",
 			"arc-performance@google.com",
 		},
+		// ChromeOS > Software > ARC++ > Performance
+		BugComponent:    "b:168382",
 		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,
@@ -203,6 +205,8 @@ func init() {
 			"alanding@chromium.org",
 			"arc-performance@google.com",
 		},
+		// ChromeOS > Software > ARC++ > Performance
+		BugComponent:    "b:168382",
 		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,
