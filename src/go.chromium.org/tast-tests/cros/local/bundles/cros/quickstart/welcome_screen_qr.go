@@ -63,7 +63,7 @@ func WelcomeScreenQR(ctx context.Context, s *testing.State) {
 	if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.WelcomeScreen.isVisible()"); err != nil {
 		s.Fatal("Failed to wait for the welcome screen to be visible: ", err)
 	}
-	s.Log("Navigating to the quickstart screen")
+	s.Log("Navigating to the Quick Start screen")
 	tconn, err := cr.SigninProfileTestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create test API connection: ", err)

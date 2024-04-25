@@ -21,9 +21,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         WelcomeScreenPIN,
+		Func:         NetworkScreenPIN,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test Quick Start starting on the Welcome Screen with PIN verification",
+		Desc:         "Test Quick Start starting on the Network Screen with PIN verification",
 		Contacts: []string{
 			"chromeos-cross-device-eng@google.com",
 			"hansenmichael@google.com",
@@ -39,7 +39,7 @@ func init() {
 	})
 }
 
-func WelcomeScreenPIN(ctx context.Context, s *testing.State) {
+func NetworkScreenPIN(ctx context.Context, s *testing.State) {
 	androidDevice := s.FixtValue().(*crossdevice.FixtData).AndroidDevice
 	if androidDevice == nil {
 		s.Fatal("Fixture not associated with an android device")
@@ -81,10 +81,19 @@ func WelcomeScreenPIN(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to enable ChromeVox: ", err)
 	}
 
-	// Begin the UI flow and accept the halfsheet prompt on the phone
-	s.Log("Navigating to the Quick Start screen")
+	// Navigate to the Network Screen
+	s.Log("Navigating to the Network screen")
 	ui := uiauto.New(tconn)
-	setupButton := nodewith.NameContaining("Android phone").Role(role.Button)
+	getStartedButton := nodewith.Name("Get started").Role(role.Button)
+	if err := ui.LeftClick(getStartedButton)(ctx); err != nil {
+		s.Fatal("Failed to click the Get Started button: ", err)
+	}
+	if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.NetworkScreen.isVisible()"); err != nil {
+		s.Fatal("Failed to wait for the Network screen to be visible: ", err)
+	}
+
+	// Enter the Quick Start flow and accept the halfsheet prompt on the phone
+	setupButton := nodewith.NameContaining("Android phone").First()
 	if err := ui.LeftClick(setupButton)(ctx); err != nil {
 		s.Fatal("Failed to click the Quick Start setup button: ", err)
 	}

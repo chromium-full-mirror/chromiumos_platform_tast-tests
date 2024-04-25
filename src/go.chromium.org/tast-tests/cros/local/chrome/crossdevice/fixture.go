@@ -439,7 +439,7 @@ func (f *crossdeviceFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 		"*blue*=3",
 		"ble_*=3",
 	}
-	opts = append(opts, chrome.ExtraArgs("--enable-logging", "--vmodule="+strings.Join(tags, ","), "--tether-host-scans-ignore-wired-connections"))
+	opts = append(opts, chrome.ExtraArgs("--enable-logging", "--vmodule="+strings.Join(tags, ","), "--tether-host-scans-ignore-wired-connections", "--disable-oobe-network-screen-skipping-for-testing"))
 	opts = append(opts, chrome.EnableFeatures("PhoneHubCameraRoll", "SmartLockUIRevamp", "OobeQuickStart", "InstantHotspotRebrand"))
 
 	customUser, userOk := s.Var(customCrOSUsername)
