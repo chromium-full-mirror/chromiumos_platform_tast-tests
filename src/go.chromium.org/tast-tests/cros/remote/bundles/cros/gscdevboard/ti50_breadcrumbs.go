@@ -99,7 +99,12 @@ func Ti50Breadcrumbs(ctx context.Context, s *testing.State) {
 	th.MustSucceed(i.WaitUntilRoBoot(ctx, time.Second), "console reboot")
 	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
 
-	expected = append(expected, pmuTriggerHardReset, pmuTriggerSoftReset, projectMain, pmuPreInit, projectStart, projectRun)
+	expected = append(expected, pmuTriggerHardReset)
+	// On OpenTitan, HardReset is same as SoftReset and both breadcrumbs are present.
+	if b.TestbedType == ti50.GscOTShield || b.TestbedType == ti50.GscOpentitanCw310Fpga {
+		expected = append(expected, pmuTriggerSoftReset)
+	}
+	expected = append(expected, projectMain, pmuPreInit, projectStart, projectRun)
 	// We keep the most recent 16 events (u64 / 4 bits per event).
 	expected = expected[len(expected)-16:]
 	checkBreadcrumbs(ctx, s, i, expected)
