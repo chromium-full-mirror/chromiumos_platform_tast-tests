@@ -150,6 +150,9 @@ var (
 	// BluetoothStateNormal is a shortcut for calling BluetoothState
 	// with the NORMAL state.
 	BluetoothStateNormal = BluetoothState("NORMAL")
+
+	// ServoStateWorking is a shortcut for calling ServoState with the WORKING state.
+	ServoStateWorking = ServoState("WORKING")
 )
 
 // keyValueDep returns a formatted a dependency with key depKey and an optional
