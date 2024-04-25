@@ -20,6 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/login"
 	"go.chromium.org/tast-tests/cros/local/upstart"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -49,7 +50,7 @@ func init() {
 		VarDeps: []string{
 			"ui.signinProfileTestExtensionManifestKey",
 		},
-		Timeout: 2*chrome.LoginTimeout + userutil.TakingOwnershipTimeout + time.Minute,
+		Timeout: 2*chrome.LoginTimeout + userutil.TakingOwnershipTimeout + 2*time.Minute,
 	})
 }
 
@@ -59,6 +60,11 @@ func ChangeLocalPassword(ctx context.Context, s *testing.State) {
 		oldPassword = "oldtestpassword"
 		newPassword = "newtestpassword"
 	)
+
+	cleanupContext := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
+	defer cancel()
+	defer userutil.ResetUsers(cleanupContext)
 
 	func() {
 		cr, err := login.SetupUserWithLocalPassword(ctx,
@@ -71,7 +77,7 @@ func ChangeLocalPassword(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to setup user: ", err)
 		}
-		defer cr.Close(ctx)
+		defer cr.Close(cleanupContext)
 
 		tconn, err := cr.TestAPIConn(ctx)
 		if err != nil {
@@ -83,15 +89,15 @@ func ChangeLocalPassword(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to open setting page: ", err)
 		}
-		defer settings.Close(ctx)
-		defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
+		defer settings.Close(cleanupContext)
+		defer faillog.DumpUITreeOnError(cleanupContext, s.OutDir(), s.HasError, tconn)
 
 		// The page is password protected, confirm the old local password.
 		if err := ossettings.ConfirmPassword(ctx, cr, oldPassword); err != nil {
 			s.Fatal("Failed to confirm password: ", err)
 		}
 
-		if err := changeLocalPasswordInSettings(ctx, tconn, newPassword); err != nil {
+		if err := changeLocalPasswordInSettings(ctx, cleanupContext, tconn, newPassword); err != nil {
 			s.Fatal("Failed to change local password: ", err)
 		}
 
@@ -110,13 +116,13 @@ func ChangeLocalPassword(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
-	defer cr.Close(ctx)
+	defer cr.Close(cleanupContext)
 
 	tLoginConn, err := cr.SigninProfileTestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Creating login test API connection failed: ", err)
 	}
-	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tLoginConn)
+	defer faillog.DumpUITreeOnError(cleanupContext, s.OutDir(), s.HasError, tLoginConn)
 
 	// Wait for the login screen to be ready for password entry.
 	if err := lockscreen.WaitForPasswordEntry(ctx, tLoginConn, 30*time.Second); err != nil {
@@ -127,7 +133,7 @@ func ChangeLocalPassword(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get keyboard: ", err)
 	}
-	defer keyboard.Close(ctx)
+	defer keyboard.Close(cleanupContext)
 
 	s.Log("Entering password to log in")
 	if err := lockscreen.EnterPassword(ctx, tLoginConn, username, newPassword, keyboard); err != nil {
@@ -146,7 +152,7 @@ func ChangeLocalPassword(ctx context.Context, s *testing.State) {
 
 // changeLocalPasswordInSettings changes the local password to `password` on
 // the lock screen page in OS Settings (the page should be already open).
-func changeLocalPasswordInSettings(ctx context.Context, tconn *chrome.TestConn, password string) error {
+func changeLocalPasswordInSettings(ctx, cleanupContext context.Context, tconn *chrome.TestConn, password string) error {
 	ui := uiauto.New(tconn)
 
 	changePasswordButton := nodewith.Name("Change password").Role(role.Button)
@@ -157,7 +163,7 @@ func changeLocalPasswordInSettings(ctx context.Context, tconn *chrome.TestConn, 
 	if err != nil {
 		return errors.Wrap(err, "failed to open keyboard device")
 	}
-	defer keyboard.Close(ctx)
+	defer keyboard.Close(cleanupContext)
 
 	if err := uiauto.Combine("change password",
 		ui.WaitUntilExists(changePasswordButton),

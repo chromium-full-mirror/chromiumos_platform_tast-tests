@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/lockscreen"
 	"go.chromium.org/tast-tests/cros/local/chrome/userutil"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -50,6 +51,11 @@ func ChangePasswordFailure(ctx context.Context, s *testing.State) {
 	var fakeCreds chrome.Creds
 	var gaiaCreds chrome.Creds
 
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
+	defer cancel()
+	defer userutil.ResetUsers(cleanupCtx)
+
 	// Isolate the step to leverage `defer` pattern.
 	func() {
 		var err error
@@ -66,7 +72,7 @@ func ChangePasswordFailure(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to create a user: ", err)
 		}
-		defer cr.Close(ctx)
+		defer cr.Close(cleanupCtx)
 		// This is needed for reven tests, as login flow there relies on the existence of a device setting.
 		if err := userutil.WaitForOwnership(ctx, cr); err != nil {
 			s.Fatal("User did not become device owner: ", err)
@@ -85,7 +91,7 @@ func ChangePasswordFailure(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Chrome login failed: ", err)
 		}
-		defer cr.Close(ctx)
+		defer cr.Close(cleanupCtx)
 		oobeConn, err := cr.WaitForOOBEConnection(ctx)
 		if err != nil {
 			s.Fatal("Failed to wait for OOBE connection: ", err)
@@ -119,13 +125,13 @@ func ChangePasswordFailure(ctx context.Context, s *testing.State) {
 	}()
 
 	// Verify we can not login with the old password.
-	loginWithCreds(ctx, s, fakeCreds, false)
+	loginWithCreds(ctx, cleanupCtx, s, fakeCreds, false)
 
 	// Verify we can login with the new password.
-	loginWithCreds(ctx, s, gaiaCreds, true)
+	loginWithCreds(ctx, cleanupCtx, s, gaiaCreds, true)
 }
 
-func loginWithCreds(ctx context.Context, s *testing.State, creds chrome.Creds, successExpected bool) {
+func loginWithCreds(ctx, cleanupCtx context.Context, s *testing.State, creds chrome.Creds, successExpected bool) {
 	cr, err := chrome.New(
 		ctx,
 		chrome.NoLogin(),
@@ -135,7 +141,7 @@ func loginWithCreds(ctx context.Context, s *testing.State, creds chrome.Creds, s
 	if err != nil {
 		s.Fatal("Chrome start failed: ", err)
 	}
-	defer cr.Close(ctx)
+	defer cr.Close(cleanupCtx)
 
 	tconn, err := cr.SigninProfileTestAPIConn(ctx)
 	if err != nil {
@@ -150,7 +156,7 @@ func loginWithCreds(ctx context.Context, s *testing.State, creds chrome.Creds, s
 	if err != nil {
 		s.Fatal("Failed to get virtual keyboard: ", err)
 	}
-	defer keyboard.Close(ctx)
+	defer keyboard.Close(cleanupCtx)
 	if err = lockscreen.EnterPassword(ctx, tconn, creds.User, creds.Pass, keyboard); err != nil {
 		s.Fatal("Failed to enter password: ", err)
 	}

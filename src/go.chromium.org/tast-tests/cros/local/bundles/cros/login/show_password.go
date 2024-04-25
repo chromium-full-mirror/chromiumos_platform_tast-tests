@@ -14,7 +14,9 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/lockscreen"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
+	"go.chromium.org/tast-tests/cros/local/chrome/userutil"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -49,13 +51,17 @@ func init() {
 			Val:  testParams{true, true},
 		}},
 		// We need two LoginTimeouts because we log on once to create a user and then reboot (reboot is almost as expensive as login). We then perform some fast UI operations.
-		Timeout:      2*chrome.LoginTimeout + time.Minute,
+		Timeout:      2*chrome.LoginTimeout + 2*time.Minute,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 
 // ShowPassword tests viewing PIN / Password on login screen using the "Show password" button and that it goes hidden using the "Hide password" button.
 func ShowPassword(ctx context.Context, s *testing.State) {
+	cleanUpCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
+	defer cancel()
+
 	const PIN = "123456789012"
 	enablePIN := s.Param().(testParams).EnablePIN
 	autosubmit := s.Param().(testParams).Autosubmit
@@ -67,14 +73,14 @@ func ShowPassword(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Chrome login failed: ", err)
 		}
-		defer cr.Close(ctx)
+		defer cr.Close(cleanUpCtx)
 		creds = cr.Creds()
 
 		tconn, err := cr.TestAPIConn(ctx)
 		if err != nil {
 			s.Fatal("Getting test API connection failed: ", err)
 		}
-		defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
+		defer faillog.DumpUITreeOnError(cleanUpCtx, s.OutDir(), s.HasError, tconn)
 
 		if enablePIN {
 			// Set up PIN through a connection to the Settings page.
@@ -88,6 +94,7 @@ func ShowPassword(ctx context.Context, s *testing.State) {
 			}
 		}
 	}()
+	defer userutil.ResetUsers(cleanUpCtx)
 
 	// chrome.NoLogin() and chrome.KeepState() are needed to show the login screen with a user pod (instead of the OOBE login screen).
 	cr, err := chrome.New(ctx,
@@ -99,13 +106,13 @@ func ShowPassword(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
-	defer cr.Close(ctx)
+	defer cr.Close(cleanUpCtx)
 
 	tconn, err := cr.SigninProfileTestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Creating login test API connection failed: ", err)
 	}
-	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
+	defer faillog.DumpUITreeOnError(cleanUpCtx, s.OutDir(), s.HasError, tconn)
 
 	// Wait for the login screen to be ready for PIN / Password entry.
 	if err := lockscreen.WaitForPasswordEntry(ctx, tconn, 30*time.Second); err != nil {

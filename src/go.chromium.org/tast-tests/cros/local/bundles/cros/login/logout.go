@@ -85,7 +85,7 @@ func Logout(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to initialize keyboard: ", err)
 	}
-	defer kb.Close(ctx)
+	defer kb.Close(cleanupCtx)
 
 	defer func() {
 		faillog.DumpUITreeWithScreenshotWithTestAPIOnError(cleanupCtx, s.OutDir(), s.HasError, tconn, "logout")
@@ -101,7 +101,7 @@ func Logout(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to watch for D-Bus signals: ", err)
 	}
-	defer sw.Close(ctx)
+	defer sw.Close(cleanupCtx)
 
 	switch method {
 	case logoutShortcut:

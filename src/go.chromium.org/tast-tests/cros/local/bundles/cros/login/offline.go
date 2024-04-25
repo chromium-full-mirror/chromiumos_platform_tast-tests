@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/lockscreen"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/network"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -33,7 +34,7 @@ func init() {
 		SoftwareDeps: []string{"chrome", "chrome_internal", "non_meets_device"},
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
-		Timeout:      2*chrome.LoginTimeout + 25*time.Second,
+		Timeout:      2*chrome.LoginTimeout + time.Minute,
 		SearchFlags: []*testing.StringPair{{
 			Key: "feature_id",
 			// Offline Authentication.
@@ -43,6 +44,10 @@ func init() {
 }
 
 func Offline(ctx context.Context, s *testing.State) {
+	cleanUpCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
+	defer cancel()
+
 	var creds chrome.Creds
 	cr, err := chrome.New(ctx)
 	if err != nil {
@@ -63,7 +68,7 @@ func Offline(ctx context.Context, s *testing.State) {
 		if err != nil {
 			return errors.Wrap(err, "chrome start failed")
 		}
-		defer cr.Close(ctx)
+		defer cr.Close(cleanUpCtx)
 
 		tconn, err := cr.SigninProfileTestAPIConn(ctx)
 
@@ -73,7 +78,7 @@ func Offline(ctx context.Context, s *testing.State) {
 
 		hasErrorVar := true
 		hasError := func() bool { return hasErrorVar }
-		defer faillog.DumpUITreeOnError(ctx, s.OutDir(), hasError, tconn)
+		defer faillog.DumpUITreeOnError(cleanUpCtx, s.OutDir(), hasError, tconn)
 
 		if err := lockscreen.WaitForPasswordField(ctx, tconn, creds.User, 10*time.Second); err != nil {
 			return errors.Wrap(err, "failed to wait for the password field")
@@ -82,7 +87,7 @@ func Offline(ctx context.Context, s *testing.State) {
 		if err != nil {
 			return errors.Wrap(err, "failed to get virtual keyboard")
 		}
-		defer keyboard.Close(ctx)
+		defer keyboard.Close(cleanUpCtx)
 
 		// Enter wrong password
 		if err = lockscreen.EnterPassword(ctx, tconn, creds.User, creds.Pass+"fake", keyboard); err != nil {

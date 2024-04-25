@@ -62,10 +62,15 @@ func init() {
 
 // SignInWithLotsOfUsers tests user pods are all visible in the login screen and each user can log in accordingly.
 func SignInWithLotsOfUsers(ctx context.Context, s *testing.State) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 45*time.Second)
+	defer cancel()
+
 	deviceOwner := chrome.Creds{User: "test_owner@gmail.com", Pass: "test0000"}
 	if err := userutil.CreateDeviceOwner(ctx, deviceOwner.User, deviceOwner.Pass); err != nil {
 		s.Fatal("Failed to create device owner: ", err)
 	}
+	defer userutil.ResetUsers(cleanupCtx)
 
 	userCount := s.Param().(int)
 	testCreds := []chrome.Creds{deviceOwner}
@@ -83,10 +88,6 @@ func SignInWithLotsOfUsers(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create keyboard: ", err)
 	}
-
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
-	defer cancel()
 
 	for _, creds := range testCreds {
 		func() {

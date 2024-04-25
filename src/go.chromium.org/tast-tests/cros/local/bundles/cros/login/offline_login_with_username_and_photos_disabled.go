@@ -76,7 +76,7 @@ func OfflineLoginWithUsernameAndPhotosDisabled(ctx context.Context, s *testing.S
 
 func loginOffline(ctx context.Context, s *testing.State, creds []chrome.Creds) {
 	cleanUpCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
 	cr, err := chrome.New(ctx,
@@ -141,7 +141,7 @@ func loginOffline(ctx context.Context, s *testing.State, creds []chrome.Creds) {
 	if err != nil {
 		s.Fatal("Failed to get virtual keyboard: ", err)
 	}
-	defer kb.Close(ctx)
+	defer kb.Close(cleanUpCtx)
 
 	ui := uiauto.New(tconn)
 	fillTextField(ctx, s, ui, kb, emailFieldName, creds[1].User)

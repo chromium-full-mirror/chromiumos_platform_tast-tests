@@ -18,6 +18,7 @@ import (
 	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/network/ping"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -47,7 +48,7 @@ func init() {
 			"ui.gaiaPoolDefault",
 			"ui.signinProfileTestExtensionManifestKey",
 		},
-		Timeout: 2*chrome.GAIALoginTimeout + chrome.LoginTimeout + userutil.TakingOwnershipTimeout + time.Minute,
+		Timeout: 2*chrome.GAIALoginTimeout + chrome.LoginTimeout + userutil.TakingOwnershipTimeout + 2*time.Minute,
 		SearchFlags: []*testing.StringPair{{
 			Key: "feature_id",
 			// Credentials sync - successful password change.
@@ -71,8 +72,12 @@ func ChangePassword(ctx context.Context, s *testing.State) {
 	cmdRunner := hwseclocal.NewCmdRunner()
 	cryptohome := hwsec.NewCryptohomeClient(cmdRunner)
 
-	// TODO(b/286348339): use a smaller timeout value after b/286348339 is resolved.
-	if err := ping.VerifyInternetConnectivity(ctx, 20*time.Second); err != nil {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
+	defer cancel()
+	defer userutil.ResetUsers(cleanupCtx)
+
+	if err := ping.VerifyInternetConnectivity(ctx, 10*time.Second); err != nil {
 		// Only printing log instead of report error here, to avoid lab network issue causing test flakiness.
 		testing.ContextLog(ctx, "Failed to verify Internet connectivity before test: ", err)
 	}
@@ -94,7 +99,7 @@ func ChangePassword(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to create a user: ", err)
 		}
-		defer cr.Close(ctx)
+		defer cr.Close(cleanupCtx)
 		normalizedUser = cr.NormalizedUser()
 		if err := hwsec.WriteUserTestContent(ctx, cryptohome, cmdRunner, normalizedUser, testFile, testData); err != nil {
 			s.Fatal("Failed to write a user test file: ", err)
@@ -127,7 +132,7 @@ func ChangePassword(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Chrome login failed: ", err)
 		}
-		defer cr.Close(ctx)
+		defer cr.Close(cleanupCtx)
 		oobeConn, err := cr.WaitForOOBEConnection(ctx)
 		if err != nil {
 			s.Fatal("Failed to wait for OOBE connection: ", err)
@@ -176,7 +181,7 @@ func ChangePassword(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Chrome start failed: ", err)
 	}
-	defer cr.Close(ctx)
+	defer cr.Close(cleanupCtx)
 
 	tconn, err := cr.SigninProfileTestAPIConn(ctx)
 	if err != nil {
@@ -191,7 +196,7 @@ func ChangePassword(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get virtual keyboard: ", err)
 	}
-	defer keyboard.Close(ctx)
+	defer keyboard.Close(cleanupCtx)
 	if err = lockscreen.EnterPassword(ctx, tconn, gaiaCreds.User, gaiaCreds.Pass, keyboard); err != nil {
 		s.Fatal("Failed to enter password: ", err)
 	}

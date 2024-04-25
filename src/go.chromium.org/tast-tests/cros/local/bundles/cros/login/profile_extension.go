@@ -6,8 +6,10 @@ package login
 
 import (
 	"context"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -30,6 +32,10 @@ func init() {
 }
 
 func ProfileExtension(ctx context.Context, s *testing.State) {
+	cleanUpCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
 	cr, err := chrome.New(
 		ctx,
 		chrome.NoLogin(),
@@ -38,7 +44,7 @@ func ProfileExtension(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
-	defer cr.Close(ctx)
+	defer cr.Close(cleanUpCtx)
 	if _, err := cr.SigninProfileTestAPIConn(ctx); err != nil {
 		s.Fatal("Creating login test API connection failed: ", err)
 	}

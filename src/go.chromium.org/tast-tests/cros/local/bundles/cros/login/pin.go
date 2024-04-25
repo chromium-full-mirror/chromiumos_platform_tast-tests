@@ -14,8 +14,10 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/lockscreen"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
+	"go.chromium.org/tast-tests/cros/local/chrome/userutil"
 	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -39,7 +41,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
-		Timeout:      2*chrome.LoginTimeout + 25*time.Second,
+		Timeout:      2*chrome.LoginTimeout + time.Minute,
 		Params: []testing.Param{{
 			Name: "settings_enroll",
 			Val:  testParam{false, false},
@@ -62,6 +64,10 @@ func init() {
 }
 
 func Pin(ctx context.Context, s *testing.State) {
+	cleanUpCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 35*time.Second)
+	defer cancel()
+
 	oobeEnroll := s.Param().(testParam).OobeEnroll
 	autosubmit := s.Param().(testParam).Autosubmit
 	pin := "1234566543210"
@@ -74,7 +80,7 @@ func Pin(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get virtual keyboard: ", err)
 	}
-	defer keyboard.Close(ctx)
+	defer keyboard.Close(cleanUpCtx)
 
 	func() {
 		var cr *chrome.Chrome
@@ -93,7 +99,7 @@ func Pin(ctx context.Context, s *testing.State) {
 			if err != nil {
 				s.Fatal("Chrome login failed: ", err)
 			}
-			defer cr.Close(ctx)
+			defer cr.Close(cleanUpCtx)
 			oobeConn, err := cr.WaitForOOBEConnection(ctx)
 			if err != nil {
 				s.Fatal("Failed to create OOBE connection: ", err)
@@ -137,7 +143,7 @@ func Pin(ctx context.Context, s *testing.State) {
 			if err != nil {
 				s.Fatal("Getting test API connection failed: ", err)
 			}
-			defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
+			defer faillog.DumpUITreeOnError(cleanUpCtx, s.OutDir(), s.HasError, tconn)
 		} else {
 			// Setup pin from the settings.
 			// Disable VK so it does not get in the way of the pin pad.
@@ -145,13 +151,13 @@ func Pin(ctx context.Context, s *testing.State) {
 			if err != nil {
 				s.Fatal("Chrome login failed: ", err)
 			}
-			defer cr.Close(ctx)
+			defer cr.Close(cleanUpCtx)
 
 			tconn, err = cr.TestAPIConn(ctx)
 			if err != nil {
 				s.Fatal("Getting test API connection failed: ", err)
 			}
-			defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
+			defer faillog.DumpUITreeOnError(cleanUpCtx, s.OutDir(), s.HasError, tconn)
 
 			// Set up PIN through a connection to the Settings page.
 			settings, err := ossettings.Launch(ctx, tconn)
@@ -211,7 +217,8 @@ func Pin(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Chrome start failed: ", err)
 	}
-	defer cr.Close(ctx)
+	defer cr.Close(cleanUpCtx)
+	defer userutil.ResetUsers(cleanUpCtx)
 
 	tconn, err := cr.SigninProfileTestAPIConn(ctx)
 	if err != nil {

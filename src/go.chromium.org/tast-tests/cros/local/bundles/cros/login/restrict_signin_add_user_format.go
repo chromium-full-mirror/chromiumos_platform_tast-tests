@@ -85,7 +85,7 @@ func RestrictSigninAddUserFormat(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get keyboard: ", err)
 	}
-	defer kb.Close(ctx)
+	defer kb.Close(cleanUpCtx)
 
 	ui := uiauto.New(tconn)
 

@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/saml"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -55,6 +56,9 @@ func ChromeSAML(ctx context.Context, s *testing.State) {
 	username := s.RequiredVar("saml.testidp_username")
 	password := s.RequiredVar("saml.testidp_password")
 	fdms, ok := s.FixtValue().(*fakedms.FakeDMS)
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 20*time.Second)
+	defer cancel()
 
 	opts := []chrome.Option{
 		chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")),
@@ -73,5 +77,5 @@ func ChromeSAML(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Chrome SAML login failed: ", err)
 	}
-	defer cr.Close(ctx)
+	defer cr.Close(cleanupCtx)
 }

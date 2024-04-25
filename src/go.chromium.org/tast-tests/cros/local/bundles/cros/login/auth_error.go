@@ -14,7 +14,9 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/lockscreen"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast-tests/cros/local/chrome/userutil"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -32,7 +34,7 @@ func init() {
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
-		Timeout:      chrome.LoginTimeout + 30*time.Second,
+		Timeout:      chrome.LoginTimeout + 90*time.Second,
 		Params: []testing.Param{{
 			Val: false,
 		}, {
@@ -44,6 +46,10 @@ func init() {
 }
 
 func AuthError(ctx context.Context, s *testing.State) {
+	cleanupContext := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
+	defer cancel()
+
 	// Create user on the device.
 	cr, err := chrome.New(ctx)
 	if err != nil {
@@ -51,6 +57,7 @@ func AuthError(ctx context.Context, s *testing.State) {
 	}
 	creds := cr.Creds()
 	cr.Close(ctx)
+	defer userutil.ResetUsers(cleanupContext)
 
 	cr, err = chrome.New(ctx,
 		chrome.ExtraArgs("--skip-force-online-signin-for-testing"),
@@ -61,14 +68,14 @@ func AuthError(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Chrome start failed: ", err)
 	}
-	defer cr.Close(ctx)
+	defer cr.Close(cleanupContext)
 
 	tconn, err := cr.SigninProfileTestAPIConn(ctx)
 
 	if err != nil {
 		s.Fatal("Getting test Signin Profile API connection failed: ", err)
 	}
-	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
+	defer faillog.DumpUITreeOnError(cleanupContext, s.OutDir(), s.HasError, tconn)
 
 	if err := lockscreen.WaitForPasswordField(ctx, tconn, creds.User, 10*time.Second); err != nil {
 		s.Fatal("Failed to wait for the password field: ", err)
@@ -77,7 +84,7 @@ func AuthError(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get virtual keyboard: ", err)
 	}
-	defer keyboard.Close(ctx)
+	defer keyboard.Close(cleanupContext)
 
 	// Enter wrong password
 	if err := lockscreen.EnterPassword(ctx, tconn, creds.User, creds.Pass+"fake", keyboard); err != nil {
