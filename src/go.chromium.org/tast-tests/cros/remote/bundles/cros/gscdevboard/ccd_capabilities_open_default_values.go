@@ -15,6 +15,12 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+const (
+	toTBIDFlags    = 0x20000
+	prePVTBIDFlags = 0x10
+	mPBIDFlags     = 0x10000
+)
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:    CCDCapabilitiesOpenDefaultValues,
@@ -58,22 +64,22 @@ func CCDCapabilitiesOpenDefaultValues(ctx context.Context, s *testing.State) {
 		s.Log("Testing ToT branch defaults")
 		expectedOpenNoDevModeDefault = ti50.CapAlways
 		expectedOpenFromUSBDefault = ti50.CapAlways
-		if (info.Bid.Flags & 0x10) != 0x10 {
-			s.Errorf("Expected 0x10 to be set for ToT BID flags, got 0x%x", info.Bid.Flags)
+		if (info.Bid.Flags & toTBIDFlags) != toTBIDFlags {
+			s.Errorf("Expected 0x%x to be set for ToT BID flags, got 0x%x", toTBIDFlags, info.Bid.Flags)
 		}
 	case ti50.PrePvt:
 		s.Log("Testing PrePVT branch defaults")
 		expectedOpenNoDevModeDefault = ti50.CapAlways
 		expectedOpenFromUSBDefault = ti50.CapAlways
-		if (info.Bid.Flags & 0x10) != 0x10 {
-			s.Errorf("Expected 0x10 to be set for PrePVT BID flags, got 0x%x", info.Bid.Flags)
+		if (info.Bid.Flags & prePVTBIDFlags) != prePVTBIDFlags {
+			s.Errorf("Expected 0x%x to be set for PrePVT BID flags, got 0x%x", prePVTBIDFlags, info.Bid.Flags)
 		}
 	case ti50.MP:
 		s.Log("Testing MP branch defaults")
 		expectedOpenNoDevModeDefault = ti50.CapIfOpened
 		expectedOpenFromUSBDefault = ti50.CapIfOpened
-		if info.Bid.Flags != 0 && (info.Bid.Flags&0x10000 != 0x10000) {
-			s.Errorf("Expected 0 or 0x10000 to be set for MP BID flags, got 0x%x", info.Bid.Flags)
+		if info.Bid.Flags != 0 && (info.Bid.Flags&mPBIDFlags != mPBIDFlags) {
+			s.Errorf("Expected 0 or 0x%x to be set for MP BID flags, got 0x%x", mPBIDFlags, info.Bid.Flags)
 		}
 	}
 
