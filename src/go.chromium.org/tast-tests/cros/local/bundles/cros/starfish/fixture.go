@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/cellular"
 	"go.chromium.org/tast-tests/cros/local/starfish"
 	"go.chromium.org/tast/core/testing"
 )
@@ -39,7 +40,14 @@ type FixtData struct {
 }
 
 func (f *starfishFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
-	sfish, _, _, err := starfish.NewStarfish(ctx)
+	var dutInfo *cellular.DUTInfo
+	if dutConfig, err := s.ChromeOSDUTLabConfig(""); err == nil {
+		dutInfo = cellular.NewDUTInfoFromConfig(dutConfig)
+	} else if dutInfo, err = cellular.NewDUTInfoFromStringArgs(ctx, s.Var, "autotest_host_info_labels"); err != nil {
+		s.Fatal("Failed to get SIM info labels: ", err)
+	}
+
+	sfish, _, _, err := starfish.NewStarfish(ctx, dutInfo)
 	if err != nil {
 		s.Fatal("Failed to setup starfish module on supported setup: ", err)
 	}

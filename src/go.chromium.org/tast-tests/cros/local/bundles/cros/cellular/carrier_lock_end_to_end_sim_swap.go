@@ -58,7 +58,7 @@ func CarrierLockEndToEndSIMSwap(ctx context.Context, s *testing.State) {
 	helper.SetDUTInfo(dutInfo)
 	dutInfo.LogInfo(ctx)
 
-	starfish, _, _, err := starfish.NewStarfish(ctx)
+	starfish, _, _, err := starfish.NewStarfish(ctx, dutInfo)
 
 	if starfish == nil {
 		s.Fatal("Starfish setup failed")

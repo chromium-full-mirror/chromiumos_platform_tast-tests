@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 
+	"go.chromium.org/tast-tests/cros/common/cellular"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/timing"
@@ -36,7 +37,7 @@ const (
 // StarfishTypeVar indicates type of current starfish setup.
 var starfishTypeVar = testing.RegisterVarString(
 	"starfish.type",
-	Version0Str,
+	"",
 	"starfish.type",
 )
 
@@ -90,21 +91,56 @@ type Starfish struct {
 }
 
 // NewStarfish creates a Starfish object and ensures that it is configured properly.
-func NewStarfish(ctx context.Context) (*Starfish, int, string, error) {
+func NewStarfish(ctx context.Context, di *cellular.DUTInfo) (*Starfish, int, string, error) {
 	ctx, st := timing.Start(ctx, "Starfish.NewStarfish")
 	defer st.End()
 
-	sfVersionStr := starfishTypeVar.Value()
+	// If carrier is empty then assume we are not on a starfish DUT.
 	carrier := StarfishCarrierVar.Value()
-	indexVar := StarfishIndexVar.Value()
-	if indexVar == StarfishNotFound {
-		testing.ContextLog(ctx, "starfish setup not supported for carrier: ", carrier)
+	if carrier == "" {
+		testing.ContextLog(ctx, "No starfish carrier provided")
 		return nil, -1, StarfishNotFound, nil
 	}
-	index, err := strconv.Atoi(indexVar)
-	if err != nil {
-		return nil, -1, StarfishNotFound, errors.Wrapf(err, "failed to parse starfish config info: %s", indexVar)
+
+	var sfVersionStr string
+	// Determine starfish version from either starfishType var or from DUT's 'label-carrier' dimension.
+	if starfishTypeVar.Value() != "" {
+		sfVersionStr = starfishTypeVar.Value()
+		testing.ContextLogf(ctx, "using starfish version: %q from cmdline var", sfVersionStr)
+	} else if di == nil || di.CarrierName == "" {
+		// If CarrierName is empty but CarrierVar is provided, then we are on a starfish DUT,
+		// running Tast second class, default to type: Version0Str.
+		sfVersionStr = Version0Str
+		testing.ContextLogf(ctx, "starfish version not provided, defaulting to: %q", sfVersionStr)
+	} else if strings.EqualFold(di.CarrierName, "STARFISH") {
+		sfVersionStr = Version0Str
+		testing.ContextLogf(ctx, "using starfish version: %q from dut config", sfVersionStr)
+	} else if strings.EqualFold(di.CarrierName, "STARFISHPLUS") {
+		sfVersionStr = Version1Str
+		testing.ContextLogf(ctx, "using starfish version: %q from dut config", sfVersionStr)
+	} else {
+		// di.CarrierName is not empty and is not starfish -> We are sure we're not on a starfish DUT.
+		testing.ContextLog(ctx, "not a starfish testbed")
+		return nil, -1, StarfishNotFound, nil
 	}
+
+	var index int
+	if StarfishIndexVar.Value() != StarfishNotFound {
+		i, err := strconv.Atoi(StarfishIndexVar.Value())
+		if err != nil {
+			return nil, -1, StarfishNotFound, errors.Wrapf(err, "failed to parse starfish index: %q", StarfishIndexVar.Value())
+		}
+		index = i
+		testing.ContextLogf(ctx, "using starfish index: %d from cmdline var", index)
+	} else if di == nil {
+		return nil, -1, StarfishNotFound, errors.Errorf("failed to find starfish index for carrier %q, no dutinfo provided", carrier)
+	} else if i, err := di.GetSlotForStarfishCarrier(carrier); err == nil {
+		index = int(i)
+		testing.ContextLogf(ctx, "using starfish index: %d from dut config", index)
+	} else {
+		return nil, -1, StarfishNotFound, errors.Errorf("failed to find starfish index for carrier %q", carrier)
+	}
+
 	sh, logs, err := NewShim(ctx)
 	if err != nil {
 		return nil, -1, StarfishNotFound, errors.Wrap(err, "failed to create shim object")

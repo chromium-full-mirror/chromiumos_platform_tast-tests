@@ -502,8 +502,23 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 		s.Fatal("Could not confirm if modem was exported: ", err)
 	}
 
+	// Fetch DUT info.
+	var dutInfo *cellular.DUTInfo
+	if dutConfig, err := s.ChromeOSDUTLabConfig(""); err == nil {
+		dutInfo = cellular.NewDUTInfoFromConfig(dutConfig)
+		s.Log("Loaded DUT info from lab config")
+	} else if dutInfo, err = cellular.NewDUTInfoFromStringArgs(ctx, s.Var, "autotest_host_info_labels"); err != nil {
+		// Not fatal unless labels are required.
+		s.Log("Failed to get SIM info labels: ", err)
+	} else {
+		s.Log("Loaded DUT info from autotest_host_info_labels")
+	}
+	if dutInfo != nil {
+		dutInfo.LogInfo(ctx)
+	}
+
 	// Initialize Starfish.
-	sfish, sfIndex, sfCarrier, err := starfish.NewStarfish(ctx)
+	sfish, sfIndex, sfCarrier, err := starfish.NewStarfish(ctx, dutInfo)
 	if err != nil {
 		s.Fatal("Failed to setup starfish module on supported setup: ", err)
 	}
@@ -574,20 +589,7 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	}
 	f.helper = helper
 
-	// Always load labels into helper.
-	var dutInfo *cellular.DUTInfo
-	if dutConfig, err := s.ChromeOSDUTLabConfig(""); err == nil {
-		dutInfo = cellular.NewDUTInfoFromConfig(dutConfig)
-		s.Log("Loaded DUT info from lab config")
-	} else if dutInfo, err = cellular.NewDUTInfoFromStringArgs(ctx, s.Var, "autotest_host_info_labels"); err != nil {
-		// Not fatal unless labels are required.
-		s.Log("Failed to get SIM info labels: ", err)
-	} else {
-		s.Log("Loaded DUT info from autotest_host_info_labels")
-	}
-
 	if dutInfo != nil {
-		dutInfo.LogInfo(ctx)
 		helper.SetDUTInfo(dutInfo)
 	}
 

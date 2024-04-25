@@ -7,6 +7,7 @@ package cellular
 
 import (
 	"context"
+	"strings"
 
 	labapi "go.chromium.org/chromiumos/config/go/test/lab/api"
 
@@ -95,4 +96,21 @@ func (d *DUTInfo) PrintSIMInfo(ctx context.Context) {
 			testing.ContextLog(ctx, "SIM Profile Own Number   : ", p.OwnNumber)
 		}
 	}
+}
+
+// GetSlotForStarfishCarrier searches all SIM profiles to find which slot
+// contains the requested carrier.
+func (d *DUTInfo) GetSlotForStarfishCarrier(carrier string) (int32, error) {
+	// The carrier starfish is looking for will just be: att, verizon, tmobile, etc. So we should
+	// preappend network_ to it so it will match the SIM network string.
+	find := "network_" + carrier
+	for _, s := range d.SimInfo {
+		for _, p := range s.ProfileInfo {
+			if strings.EqualFold(p.CarrierName.String(), find) {
+				// Starfish indices are 0 indexed.
+				return s.SlotId - 1, nil
+			}
+		}
+	}
+	return 0, errors.Errorf("failed to find SIM with carrier name %q", find)
 }
