@@ -22,6 +22,7 @@ func init() {
 			"kerker@google.com",           // Fixture maintainer
 			"yycheng@google.com",          // Fixture maintainer
 		},
+		BugComponent: "b:982097",
 		SetUpTimeout: 5 * time.Minute,
 		Impl:         rebootDUT{},
 	})

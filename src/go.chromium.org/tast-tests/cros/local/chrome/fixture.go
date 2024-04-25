@@ -87,9 +87,10 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     fixture.ChromeNotLoggedIn,
-		Desc:     "Start Chrome without logging in",
-		Contacts: []string{"cros-tdm-tpe-eng@google.com"},
+		Name:         fixture.ChromeNotLoggedIn,
+		Desc:         "Start Chrome without logging in",
+		Contacts:     []string{"cros-tdm-tpe-eng@google.com"},
+		BugComponent: "b:982097",
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
 			return []Option{NoLogin()}, nil
 		}),
