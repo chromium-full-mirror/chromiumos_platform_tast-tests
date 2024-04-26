@@ -60,13 +60,13 @@ func init() {
 			Name: "addition_card_clamshell",
 			Val: searchTestCase{TabletMode: false,
 				SearchKeyword:  "1+1",
-				ExpectedResult: launcher.SearchResultListItemFinder.NameContaining("1+1, 2"),
+				ExpectedResult: launcher.SearchResultListItemFinder.NameContaining("1+1 = 2"),
 			},
 		}, {
 			Name: "unit_conversion_card_clamshell",
 			Val: searchTestCase{TabletMode: false,
 				SearchKeyword:  "455 lb in kg",
-				ExpectedResult: launcher.SearchResultListItemFinder.NameRegex(regexp.MustCompile("455 lb in kg, 206.*")),
+				ExpectedResult: launcher.SearchResultListItemFinder.NameRegex(regexp.MustCompile("455 lb in kg = 206.*")),
 			},
 		}, {
 			Name: "stock_card_clamshell",
