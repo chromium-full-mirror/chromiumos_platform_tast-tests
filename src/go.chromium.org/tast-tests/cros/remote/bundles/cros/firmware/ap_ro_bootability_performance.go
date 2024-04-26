@@ -6,6 +6,7 @@ package firmware
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -19,6 +20,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/google/uuid"
+	"gopkg.in/yaml.v3"
 
 	// TODO: Change to "slices" when go is upgraded to 1.21 or later.
 	"golang.org/x/exp/slices"
@@ -46,6 +48,24 @@ type jsonFwInfo struct {
 	Model  string `json:"model_name"`
 	FwID   string `json:"firmware_build_cros_version"`
 	Branch string `json:"branch_name"`
+}
+
+type configData struct {
+	ChromeOS struct {
+		Configs []struct {
+			Firmware struct {
+				BuildTargets struct {
+					// AP image name, if missing fallback to ImageName
+					Coreboot string `yaml:"coreboot"`
+				} `yaml:"build-targets"`
+				ImageName string `yaml:"image-name"`
+			} `yaml:"firmware"`
+			Name     string `yaml:"name"`
+			Identity struct {
+				SKUID int `yaml:"sku-id"`
+			} `yaml:"identity"`
+		}
+	}
 }
 
 type apROBootabilityPerformanceArgs struct {
@@ -77,6 +97,10 @@ const (
 	// Name of the files that will contain the backup firmware.
 	apFwBackup = "apFwBackup.bin"
 	ecFwBackup = "ecFwBackup.bin"
+
+	// Path of the config file from the DUT to find the downloaded firmware binary names that
+	// should be used.
+	configPath = "/usr/share/chromeos-config/yaml/config.yaml"
 )
 
 func init() {
@@ -240,6 +264,8 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 	if roVersionsOk && fwBranchVarOk {
 		for _, ro := range strings.Split(roVersions, ",") {
 			shippedFwVersions = append(shippedFwVersions, jsonFwInfo{
+				Board:  h.Board,
+				Model:  h.Model,
 				FwID:   ro,
 				Branch: fwBranchVar,
 			})
@@ -256,7 +282,7 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 	}
 
 	// Sort the shipped firmware versions so that they will be flashed accordingly
-        // from the latest to the oldest.
+	// from the latest to the oldest.
 	if err := sortVersions(shippedFwVersions); err != nil {
 		s.Fatal("Failed to sort the shipped fw versions: ", err)
 	}
@@ -264,6 +290,13 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 	for i := range shippedFwVersions {
 		s.Log(shippedFwVersions[i].FwID)
 	}
+
+	// Get the coreboot name from the 'config.yaml' file.
+	corebootName, err := readCorebootName(ctx, s.DUT().Conn(), configPath, h.Model, fwidModel)
+	if err != nil {
+		s.Fatal("Failed to read config.yaml file from the DUT: ", err)
+	}
+	s.Logf("Found the coreboot name: %s", corebootName)
 
 	// Create a new directory to store the downloaded files.
 	tmpDir, err := os.MkdirTemp("", "firmware-APROBootabilityPerformance")
@@ -307,7 +340,7 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 	}
 
 	// Download the latest shipped firmware.
-	firmwareFilesToFlash, err := downloadAndUntarFwFile(ctx, s, h, tmpDir, tmpDirServo, fwidModel, shippedFwVersions[len(shippedFwVersions)-1])
+	firmwareFilesToFlash, err := downloadAndUntarFwFile(ctx, s, h, tmpDir, tmpDirServo, corebootName, shippedFwVersions[len(shippedFwVersions)-1])
 	if err != nil {
 		s.Fatal("Failed while downloading file: ", err)
 	}
@@ -492,7 +525,7 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 	// Repeat steps for older RO firmware versions (i.e., RO_old-n + RW_new).
 	for i := len(shippedFwVersions) - 2; i >= 0; i-- {
 		s.Log("Downloading an older shipped firmware file")
-		firmwareFilesToFlash, err = downloadAndUntarFwFile(ctx, s, h, tmpDir, tmpDirServo, fwidModel, shippedFwVersions[i])
+		firmwareFilesToFlash, err = downloadAndUntarFwFile(ctx, s, h, tmpDir, tmpDirServo, corebootName, shippedFwVersions[i])
 		if err != nil {
 			s.Fatal("Failed while downloading file: ", err)
 		}
@@ -871,6 +904,56 @@ func collectShippedFws(h *firmware.Helper, filepath string) ([]jsonFwInfo, error
 	}
 
 	return shippedFws, nil
+}
+
+// readCorebootName finds the firmware binary name that should be used from 'config.yaml' on the DUT.
+func readCorebootName(ctx context.Context, conn *ssh.Conn, path, model, fwidModel string) (string, error) {
+	corebootName := fwidModel
+
+	out, err := conn.CommandContext(ctx, "crosid").Output(ssh.DumpLogOnError)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to run crosid")
+	}
+	re, err := regexp.Compile(`^SKU='([^']*)'`)
+	if err != nil {
+		return "", errors.Wrap(err, "sku regex failed")
+	}
+	m := re.FindStringSubmatch(string(out))
+	sku := -1
+	if m != nil {
+		sku, err = strconv.Atoi(m[1])
+		if err != nil {
+			return "", errors.Wrapf(err, "parse of %q failed", m[1])
+		}
+		testing.ContextLogf(ctx, "DUT sku = %d", sku)
+	}
+
+	out, err = conn.CommandContext(ctx, "cat", path).Output(ssh.DumpLogOnError)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to run 'cat' command")
+	}
+	config := bytes.NewReader(out)
+	parser := yaml.NewDecoder(config)
+	configYaml := configData{}
+	if err := parser.Decode(&configYaml); err != nil {
+		return "", errors.Wrap(err, "failed to parse config.yaml")
+	}
+	for _, config := range configYaml.ChromeOS.Configs {
+		if config.Name == model {
+			if sku >= 0 && config.Identity.SKUID >= 0 && config.Identity.SKUID != sku {
+				continue
+			}
+			thisAPName := config.Firmware.BuildTargets.Coreboot
+			// AP image name, if missing fallback to ImageName
+			if thisAPName == "" {
+				thisAPName = config.Firmware.ImageName
+			}
+			if thisAPName != "" {
+				corebootName = thisAPName
+			}
+		}
+	}
+	return corebootName, nil
 }
 
 // getFWIDFromBinFile returns a string representation of the data pointed by sections from a bin file.
