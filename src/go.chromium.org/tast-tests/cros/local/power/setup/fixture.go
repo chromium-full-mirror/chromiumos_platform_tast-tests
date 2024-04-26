@@ -720,7 +720,7 @@ func init() {
 				chrome.EnableFeatures("ProductivityLauncherImageSearch"),
 				chrome.EnableFeatures("LauncherImageSearch"),
 				chrome.EnableFeatures("LauncherImageSearchOcr"),
-				chrome.EnableFeatures("LauncherImageSearchIca"),
+				chrome.EnableFeatures("FeatureManagementLocalImageSearch"),
 			}}),
 		SetUpTimeout:    SetUpTimeout,
 		ResetTimeout:    ResetTimeout,

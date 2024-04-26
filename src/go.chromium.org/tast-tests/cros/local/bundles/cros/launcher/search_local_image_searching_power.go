@@ -21,7 +21,6 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -37,8 +36,7 @@ func init() {
 		Data:         []string{launcher.ImageSearchPowerTestPictureName},
 		BugComponent: "b:1281467",
 		Timeout:      20*time.Minute + power.RecorderTimeout,
-		SoftwareDeps: []string{"chrome", "camera_feature_effects"},
-		HardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
+		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{
 			{
 				Name:    "enable",
@@ -84,7 +82,7 @@ func SearchLocalImageSearchingPower(ctx context.Context, s *testing.State) {
 
 	localFileLocation := filepath.Join(downloadsPath, launcher.ImageSearchPowerTestPictureName)
 
-	dlcList := []string{"screen-ai", "ml-core-internal"}
+	dlcList := []string{"screen-ai"}
 	// TODO(b/303151432): Ensure all required DLCs are installed.
 	if err := launcher.InstallDlc(ctx, dlcList); err != nil {
 		s.Fatal("Cannot install dlc: ", err)
@@ -114,7 +112,7 @@ func SearchLocalImageSearchingPower(ctx context.Context, s *testing.State) {
 	}
 
 	// Search content in the test image.
-	query := "Paper"
+	query := "Thoughts"
 	for i := 0; i < launcher.ImageSearchPowerTestRepeatTimes; i++ {
 		if err := uiauto.NamedCombine("Search for image",
 			launcher.ClearSearchField(tconn, kb),
