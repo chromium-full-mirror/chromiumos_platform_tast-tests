@@ -56,8 +56,15 @@ func createDockerClient(ctx context.Context, dockerHost string) (*client.Client,
 		}
 		if err == nil {
 			testing.ContextLog(ctx, "Docker client connecting over docker.sock")
+			return client.NewClientWithOpts(client.WithAPIVersionNegotiation())
+		}
+		// For TLS create Docker Client from env variables.
+		if path := os.Getenv("DOCKER_CERT_PATH"); path != "" {
 			return client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 		}
+
+		// TODO(b/345200663): remove this legacy Docker Client fallback when
+		// Satlab with TLS dockerd is fully rolled out.
 		// Default to satlab docker settings.
 		dockerHost = "tcp://192.168.231.1:2375"
 	}
