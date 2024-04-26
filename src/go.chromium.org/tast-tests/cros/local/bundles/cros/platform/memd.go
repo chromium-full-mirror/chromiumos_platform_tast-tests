@@ -135,6 +135,12 @@ func Memd(ctx context.Context, s *testing.State) {
 		resourcedJob      = "resourced"
 	)
 
+	// Restart memd to make the test more stable. If memd is not running,
+	// it would start memd.
+	if err := upstart.RestartJob(ctx, memdJob); err != nil {
+		s.Error("Cannot restart memd: ", err)
+	}
+
 	_, _, memdPID, err := upstart.JobStatus(ctx, memdJob)
 	if err != nil {
 		s.Fatal("Could not get memd job status: ", err)
