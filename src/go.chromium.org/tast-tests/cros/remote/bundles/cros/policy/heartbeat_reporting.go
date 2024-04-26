@@ -173,7 +173,7 @@ func HeartbeatReporting(ctx context.Context, s *testing.State) {
 
 		if params.IsUserEvent {
 			// Look up user events using user account info.
-			events, err = reportingutil.LookupUserEvents(ctx, reportingutil.ReportingServerURL, customerID, APIKey, "HEARTBEAT_EVENTS", acc.Username, testStartTime)
+			events, err = reportingutil.LookupUserEvents(ctx, customerID, APIKey, "HEARTBEAT_EVENTS", acc.Username, testStartTime)
 		} else {
 			// Look up device events using client id.
 			c, err := policyClient.ClientID(ctx, &empty.Empty{})
@@ -181,7 +181,7 @@ func HeartbeatReporting(ctx context.Context, s *testing.State) {
 			if err != nil {
 				s.Fatalf("Failed to grab client ID from device: %v:", err)
 			}
-			events, err = reportingutil.LookupEvents(ctx, reportingutil.ReportingServerURL, customerID, clientID, APIKey, "HEARTBEAT_EVENTS", testStartTime)
+			events, err = reportingutil.LookupEvents(ctx, customerID, clientID, APIKey, "HEARTBEAT_EVENTS", testStartTime)
 		}
 		if err != nil {
 			return errors.Wrap(err, "failed to look up events")

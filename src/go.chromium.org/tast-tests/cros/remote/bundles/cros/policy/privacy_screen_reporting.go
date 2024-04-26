@@ -229,7 +229,7 @@ func PrivacyScreenReporting(ctx context.Context, s *testing.State) {
 	}
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		events, err := reportingutil.LookupEvents(ctx, reportingutil.ReportingServerURL, acc.CustomerID, c.ClientId, APIKey, "INFO_METRIC", testStartTime)
+		events, err := reportingutil.LookupEvents(ctx, acc.CustomerID, c.ClientId, APIKey, "INFO_METRIC", testStartTime)
 		if err != nil {
 			return testing.PollBreak(errors.Wrap(err, "failed to look up events"))
 		}

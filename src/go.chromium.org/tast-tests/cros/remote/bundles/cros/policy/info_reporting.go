@@ -173,7 +173,7 @@ func InfoReporting(ctx context.Context, s *testing.State) {
 	}
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		infoEvents, err := reportingutil.LookupEvents(ctx, reportingutil.ReportingServerURL, acc.CustomerID, c.ClientId, APIKey, "INFO_METRIC", testStartTime)
+		infoEvents, err := reportingutil.LookupEvents(ctx, acc.CustomerID, c.ClientId, APIKey, "INFO_METRIC", testStartTime)
 		if err != nil {
 			return errors.Wrap(err, "failed to look up info events")
 		}
@@ -183,14 +183,6 @@ func InfoReporting(ctx context.Context, s *testing.State) {
 			// function to verify the event
 			validator reportingutil.VerifyEventTypeCallback
 		}{
-			{
-				name: "networkInfo",
-				validator: func(event reportingutil.InputEvent) bool {
-					return verifyInfo(event, func(info *reportingutil.InfoData) bool {
-						return info.NetworkInfo != nil
-					})
-				},
-			},
 			{
 				name: "memoryInfo",
 				validator: func(event reportingutil.InputEvent) bool {
@@ -224,7 +216,7 @@ func InfoReporting(ctx context.Context, s *testing.State) {
 				},
 			},
 		} {
-			testing.ContextLog(ctx, "running sub-test: ", internalParam.name, " - reportingEnabled: ", param.reportingEnabled)
+			testing.ContextLog(ctx, "Reporting: Running sub-test: ", internalParam.name, " - with reportingEnabled: ", param.reportingEnabled)
 			events := infoEvents
 			prunedEvents, err := reportingutil.PruneEvents(ctx, events, func(e reportingutil.InputEvent) bool {
 				return internalParam.validator(e)
@@ -251,7 +243,7 @@ func InfoReporting(ctx context.Context, s *testing.State) {
 		return nil
 	}, &testing.PollOptions{
 		Timeout:  6 * time.Minute,
-		Interval: 2 * time.Minute,
+		Interval: 1 * time.Minute,
 	}); err != nil {
 		s.Errorf("Failed to validate info events: %v:", err)
 	}

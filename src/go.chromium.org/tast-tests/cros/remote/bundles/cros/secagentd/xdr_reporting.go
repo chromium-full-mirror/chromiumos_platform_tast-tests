@@ -183,7 +183,7 @@ func XdrReporting(ctx context.Context, s *testing.State) {
 	// Agent Events.
 	var agentStartTime int64 = 0
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		events, err := reportingutil.LookupEvents(ctx, reportingutil.ReportingServerURL, customerID, c.ClientId, APIKey, "CROS_SECURITY_AGENT", testStartTime)
+		events, err := reportingutil.LookupEvents(ctx, customerID, c.ClientId, APIKey, "CROS_SECURITY_AGENT", testStartTime)
 		if err != nil {
 			return errors.Wrap(err, "failed to look up agent events")
 		}
@@ -213,7 +213,7 @@ func XdrReporting(ctx context.Context, s *testing.State) {
 	// Process Events.
 	var firstProcessTime int64 = 0
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		events, err := reportingutil.LookupEvents(ctx, reportingutil.ReportingServerURL, customerID, c.ClientId, APIKey, "CROS_SECURITY_PROCESS", testStartTime)
+		events, err := reportingutil.LookupEvents(ctx, customerID, c.ClientId, APIKey, "CROS_SECURITY_PROCESS", testStartTime)
 		if err != nil {
 			return errors.Wrap(err, "failed to look up process events")
 		}

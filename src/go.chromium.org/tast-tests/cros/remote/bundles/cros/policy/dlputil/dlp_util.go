@@ -111,7 +111,7 @@ const (
 func RetrieveEvents(ctx context.Context, customerID, APIKey, clientID string, testStartTime time.Time) (*EventsBundle, error) {
 
 	// Retrieve all DLP events stored in the server side.
-	dlpEvents, err := reportingutil.LookupEvents(ctx, reportingutil.ReportingServerURL, customerID, clientID, APIKey, "DLP_EVENTS", testStartTime)
+	dlpEvents, err := reportingutil.LookupEvents(ctx, customerID, clientID, APIKey, "DLP_EVENTS", testStartTime)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to look up events")
 	}

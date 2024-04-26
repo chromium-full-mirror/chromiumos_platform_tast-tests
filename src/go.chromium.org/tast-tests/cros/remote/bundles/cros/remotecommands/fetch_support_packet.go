@@ -182,7 +182,7 @@ func FetchSupportPacket(ctx context.Context, s *testing.State) {
 	}
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		logUploadInputEvents, err := reportingutil.LookupEvents(ctx, reportingutil.ReportingServerURL, acc.CustomerID, c.ClientId, APIKey, "LOG_UPLOAD", testStartTime)
+		logUploadInputEvents, err := reportingutil.LookupEvents(ctx, acc.CustomerID, c.ClientId, APIKey, "LOG_UPLOAD", testStartTime)
 		if err != nil {
 			return errors.Wrap(err, "failed to look up log upload events")
 		}

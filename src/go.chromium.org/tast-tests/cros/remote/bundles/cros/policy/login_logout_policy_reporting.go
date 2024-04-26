@@ -291,7 +291,7 @@ func LoginLogoutPolicyReporting(ctx context.Context, s *testing.State) {
 	}
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		addedRemovedEvents, err := reportingutil.LookupEvents(ctx, reportingutil.ReportingServerURL, acc.CustomerID, c.ClientId, APIKey, "ADDED_REMOVED_EVENTS", testStartTime)
+		addedRemovedEvents, err := reportingutil.LookupEvents(ctx, acc.CustomerID, c.ClientId, APIKey, "ADDED_REMOVED_EVENTS", testStartTime)
 		if err != nil {
 			return errors.Wrap(err, "failed to look up user added/removed events")
 		}
@@ -299,7 +299,7 @@ func LoginLogoutPolicyReporting(ctx context.Context, s *testing.State) {
 			s.Log("Failed to save added/removed perf metric: ", err)
 		}
 
-		loginLogoutEvents, err := reportingutil.LookupEvents(ctx, reportingutil.ReportingServerURL, acc.CustomerID, c.ClientId, APIKey, "LOGIN_LOGOUT_EVENTS", testStartTime)
+		loginLogoutEvents, err := reportingutil.LookupEvents(ctx, acc.CustomerID, c.ClientId, APIKey, "LOGIN_LOGOUT_EVENTS", testStartTime)
 		if err != nil {
 			return errors.Wrap(err, "failed to look up device login/logout events")
 		}
@@ -307,7 +307,7 @@ func LoginLogoutPolicyReporting(ctx context.Context, s *testing.State) {
 			s.Log("Failed to save login/logout perf metric: ", err)
 		}
 
-		lockUnlockEvents, err := reportingutil.LookupEvents(ctx, reportingutil.ReportingServerURL, acc.CustomerID, c.ClientId, APIKey, "LOCK_UNLOCK_EVENTS", testStartTime)
+		lockUnlockEvents, err := reportingutil.LookupEvents(ctx, acc.CustomerID, c.ClientId, APIKey, "LOCK_UNLOCK_EVENTS", testStartTime)
 		if err != nil {
 			return errors.Wrap(err, "failed to look up device lock/unlock events")
 		}

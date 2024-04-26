@@ -75,7 +75,7 @@ func SaveCrosboltEventCountMetric(metricName string, count int, outDir string) e
 	return pv.Save(outDir)
 }
 
-// PruneEvents reduces the events response to only memory events after test began.
+// PruneEvents reduces the events response to only events after test began.
 func PruneEvents(ctx context.Context, events []InputEvent, correctEventType VerifyEventTypeCallback) ([]InputEvent, error) {
 	var prunedEvents []InputEvent
 	for _, event := range events {
@@ -90,7 +90,7 @@ func PruneEvents(ctx context.Context, events []InputEvent, correctEventType Veri
 		}
 		testing.ContextLog(ctx, "Reporting: Found a valid event ", string(j))
 	}
-
+	testing.ContextLog(ctx, "Reporting: Total pruned event count = ", len(prunedEvents))
 	return prunedEvents, nil
 }
 
@@ -147,24 +147,24 @@ func LookupEventsByRequestPath(ctx context.Context, requestPath string, testStar
 			testing.ContextLogf(ctx, "Found event with timestamp before test start time. event timestamp = %s. test start time=%s", time.UnixMicro(us), testStartTime)
 		}
 	}
-	testing.ContextLogf(ctx, "Reporting: Found %d events after querying the reporting server", len(filteredEvents))
+	testing.ContextLogf(ctx, "Reporting: Found %d events after querying the reporting server and filtering by timestamp", len(filteredEvents))
 	return filteredEvents, nil
 }
 
 // LookupEvents calls the Reporting API Server's ChromeReportingDebugService.LookupEvents
 // endpoint to get a list of events received by the server from a managed device.
-func LookupEvents(ctx context.Context, reportingServerURL, obfuscatedCustomerID, clientID, apiKey, destination string, testStartTime time.Time) ([]InputEvent, error) {
-	reqPath := fmt.Sprintf("%v/test/events?key=%v&obfuscatedCustomerId=%v&deviceId=%v&destination=%v", reportingServerURL, apiKey, obfuscatedCustomerID, clientID, destination)
-	testing.ContextLog(ctx, "Reporting: Querying the reporting server for device events")
-	return LookupEventsByRequestPath(ctx, reqPath, testStartTime)
+func LookupEvents(ctx context.Context, obfuscatedCustomerID, clientID, apiKey, destination string, testStartTime time.Time) ([]InputEvent, error) {
+	pathWithoutKey := fmt.Sprintf("%v/test/events?obfuscatedCustomerId=%v&deviceId=%v&destination=%v", ReportingServerURL, obfuscatedCustomerID, clientID, destination)
+	testing.ContextLog(ctx, "Reporting: Querying the reporting server for device events - URL being queried = ", pathWithoutKey)
+	return LookupEventsByRequestPath(ctx, fmt.Sprintf("%v&key=%v", pathWithoutKey, apiKey), testStartTime)
 }
 
 // LookupUserEvents calls the Reporting API Server's ChromeReportingDebugService.LookupEvents
 // endpoint to get a list of events received by the server from a managed user.
-func LookupUserEvents(ctx context.Context, reportingServerURL, obfuscatedCustomerID, apiKey, destination, userEmail string, testStartTime time.Time) ([]InputEvent, error) {
-	reqPath := fmt.Sprintf("%v/test/events?key=%v&obfuscatedCustomerId=%v&destination=%v&userEmail=%v", reportingServerURL, apiKey, obfuscatedCustomerID, destination, userEmail)
-	testing.ContextLog(ctx, "Reporting: Querying the reporting server for user events")
-	return LookupEventsByRequestPath(ctx, reqPath, testStartTime)
+func LookupUserEvents(ctx context.Context, obfuscatedCustomerID, apiKey, destination, userEmail string, testStartTime time.Time) ([]InputEvent, error) {
+	pathWithoutKey := fmt.Sprintf("%v/test/events?obfuscatedCustomerId=%v&destination=%v&userEmail=%v", ReportingServerURL, obfuscatedCustomerID, destination, userEmail)
+	testing.ContextLog(ctx, "Reporting: Querying the reporting server for user events - URL being queried = ", pathWithoutKey)
+	return LookupEventsByRequestPath(ctx, fmt.Sprintf("%v&key=%v", pathWithoutKey, apiKey), testStartTime)
 }
 
 // Deprovision deprovisions the DUT. This should be used after the test is over.
