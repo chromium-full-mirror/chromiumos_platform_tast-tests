@@ -102,6 +102,24 @@ func init() {
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
+				Name: "25p",
+				Val: webrtc.VCTestParams{
+					NumPeople:   25,
+					BrowserType: browser.TypeAsh,
+				},
+				Fixture:   pre.ChromeRTCFixture(),
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
+			},
+			{
+				Name: "49p",
+				Val: webrtc.VCTestParams{
+					NumPeople:   49,
+					BrowserType: browser.TypeAsh,
+				},
+				Fixture:   pre.ChromeRTCFixture(),
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
+			},
+			{
 				Name: "4p_blur",
 				Val: webrtc.VCTestParams{
 					NumPeople:   4,
