@@ -67,6 +67,7 @@ func ShowPassword(ctx context.Context, s *testing.State) {
 	autosubmit := s.Param().(testParams).Autosubmit
 	var creds chrome.Creds
 
+	defer userutil.ResetUsers(cleanUpCtx)
 	// Log in and log out to create a user pod on the login screen.
 	func() {
 		cr, err := chrome.New(ctx)
@@ -94,7 +95,6 @@ func ShowPassword(ctx context.Context, s *testing.State) {
 			}
 		}
 	}()
-	defer userutil.ResetUsers(cleanUpCtx)
 
 	// chrome.NoLogin() and chrome.KeepState() are needed to show the login screen with a user pod (instead of the OOBE login screen).
 	cr, err := chrome.New(ctx,

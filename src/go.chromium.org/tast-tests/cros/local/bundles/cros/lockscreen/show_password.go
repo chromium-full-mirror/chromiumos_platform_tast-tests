@@ -14,7 +14,9 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/lockscreen"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
+	"go.chromium.org/tast-tests/cros/local/chrome/userutil"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -36,6 +38,7 @@ func init() {
 			"rrsilva@google.com",
 			"chromeos-sw-engprod@google.com",
 		},
+		Timeout:      2*chrome.LoginTimeout + userutil.TakingOwnershipTimeout + 2*time.Minute,
 		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier", "group:medium_low_tier", "group:hardware", "group:complementary", "group:cq-medium", "group:hw_agnostic"},
@@ -58,14 +61,19 @@ func ShowPassword(ctx context.Context, s *testing.State) {
 		password = "good"
 		PIN      = "123456789012"
 	)
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
+	defer cancel()
+
 	enablePIN := s.Param().(testParameters).EnablePIN
 	autosubmit := s.Param().(testParameters).Autosubmit
 
 	cr, err := chrome.New(ctx, chrome.FakeLogin(chrome.Creds{User: username, Pass: password}))
+	defer userutil.ResetUsers(cleanupCtx)
 	if err != nil {
 		s.Fatal("Chrome login failed: ", err)
 	}
-	defer cr.Close(ctx)
+	defer cr.Close(cleanupCtx)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -96,7 +104,7 @@ func ShowPassword(ctx context.Context, s *testing.State) {
 	// Unlock the screen to ensure subsequent tests aren't affected by the screen remaining locked.
 	// TODO(b/187794615): Remove once chrome.go has a way to clean up the lock screen state.
 	defer func() {
-		if err := lockscreen.Unlock(ctx, tconn); err != nil {
+		if err := lockscreen.Unlock(cleanupCtx, tconn); err != nil {
 			s.Fatal("Failed to unlock the screen: ", err)
 		}
 	}()
@@ -110,25 +118,25 @@ func ShowPassword(ctx context.Context, s *testing.State) {
 
 	// Test the working of "Show password" and "Hide password" button on lockscreen.
 	if enablePIN && !autosubmit {
-		if err := showAndHidePassword(ctx, tconn, username, PIN, true); err != nil {
+		if err := showAndHidePassword(ctx, cleanupCtx, tconn, username, PIN, true); err != nil {
 			s.Fatal("Failed to Show/Hide PIN on lockscreen: ", err)
 		}
 	} else {
-		if err := showAndHidePassword(ctx, tconn, username, password, false); err != nil {
+		if err := showAndHidePassword(ctx, cleanupCtx, tconn, username, password, false); err != nil {
 			s.Fatal("Failed to Show/Hide Password on lockscreen: ", err)
 		}
 	}
 }
 
 // showAndHidePassword tests the working of "Show password" button and "Hide password" button on Password field and "PIN or password" field.
-func showAndHidePassword(ctx context.Context, tconn *chrome.TestConn, username, password string, pin bool) error {
+func showAndHidePassword(ctx, cleanupCtx context.Context, tconn *chrome.TestConn, username, password string, pin bool) error {
 	hiddenPwd := strings.Repeat(hiddenPwdChar, len(password))
 
 	kb, err := input.Keyboard(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to get keyboard")
 	}
-	defer kb.Close(ctx)
+	defer kb.Close(cleanupCtx)
 
 	if pin {
 		// Enter the PIN on lockscreen when PIN is enabled.

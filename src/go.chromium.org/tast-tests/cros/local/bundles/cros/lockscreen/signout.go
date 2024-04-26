@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/lockscreen"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast-tests/cros/local/chrome/userutil"
 	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast-tests/cros/local/crash"
 	"go.chromium.org/tast-tests/cros/local/input"
@@ -71,7 +72,7 @@ func init() {
 			ExtraSoftwareDeps: []string{"lacros"},
 		}},
 		// `cpu.WaitUntilIdle` takes up to 2 minutes + we start Chrome multiple times.
-		Timeout: 4 * time.Minute,
+		Timeout: 5 * time.Minute,
 	})
 }
 
@@ -82,8 +83,9 @@ func Signout(ctx context.Context, s *testing.State) {
 
 	// Reserve some time for cleanup.
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, 70*time.Second)
 	defer cancel()
+	defer userutil.ResetUsers(cleanupCtx)
 
 	// Separate function for the first chrome run to isolate from the second run. For example so it does not generate UI tree two times on error.
 	func() {

@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/lockscreen"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/userutil"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -29,6 +30,7 @@ func init() {
 			"emaamari@google.com",
 			"chromeos-sw-engprod@google.com",
 		},
+		Timeout:      2 * time.Minute,
 		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier", "group:medium_low_tier", "group:hardware", "group:complementary", "group:hw_agnostic"},
@@ -51,14 +53,15 @@ func DisplayProperTimeFormat(ctx context.Context, s *testing.State) {
 	} {
 		s.Run(ctx, param.name, func(ctx context.Context, s *testing.State) {
 			cleanupCtx := ctx
-			ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+			ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
 			defer cancel()
 
 			cr, err := chrome.New(ctx)
+			defer userutil.ResetUsers(cleanupCtx)
 			if err != nil {
 				s.Fatal("Chrome login failed: ", err)
 			}
-			defer cr.Close(ctx)
+			defer cr.Close(cleanupCtx)
 
 			tconn, err := cr.TestAPIConn(ctx)
 			if err != nil {

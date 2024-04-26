@@ -65,6 +65,8 @@ func ExistingUser(ctx context.Context, s *testing.State) {
 
 	password := s.Param().(passwordType)
 	var creds chrome.Creds
+	// Ensure that as the test ends, we cleanup any state.
+	defer userutil.ResetUsers(cleanupContext)
 
 	// Log in and log out to create a user pod on the login screen.
 	func() {
@@ -85,8 +87,6 @@ func ExistingUser(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to restart ui: ", err)
 		}
 	}()
-	// Ensure that as the test ends, we cleanup any state.
-	defer userutil.ResetUsers(cleanupContext)
 
 	// chrome.NoLogin() and chrome.KeepState() are needed to show the login
 	// screen with a user pod (instead of the OOBE login screen).

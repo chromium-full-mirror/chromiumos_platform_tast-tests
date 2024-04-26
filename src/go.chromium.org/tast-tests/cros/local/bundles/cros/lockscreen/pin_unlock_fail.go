@@ -13,7 +13,9 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/lockscreen"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
+	"go.chromium.org/tast-tests/cros/local/chrome/userutil"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -27,6 +29,7 @@ func init() {
 			"emaamari@google.com",
 			"chromeos-sw-engprod@google.com",
 		},
+		Timeout:      2*chrome.LoginTimeout + userutil.TakingOwnershipTimeout + 2*time.Minute,
 		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
 		SoftwareDeps: []string{"chrome"},
 		Attr: []string{
@@ -44,17 +47,22 @@ func PinUnlockFail(ctx context.Context, s *testing.State) {
 		lockoutAttempts = 5
 	)
 
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
+	defer cancel()
+
 	cr, err := chrome.New(ctx)
 	if err != nil {
 		s.Fatal("Chrome login failed: ", err)
 	}
-	defer cr.Close(ctx)
+	defer cr.Close(cleanupCtx)
+	defer userutil.ResetUsers(cleanupCtx)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Getting test API connection failed: ", err)
 	}
-	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
+	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
 	// Set up PIN through a connection to the Settings page.
 	settings, err := ossettings.Launch(ctx, tconn)
@@ -78,7 +86,7 @@ func PinUnlockFail(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get keyboard: ", err)
 	}
-	defer keyboard.Close(ctx)
+	defer keyboard.Close(cleanupCtx)
 
 	// Enter the wrong PIN to trigger password field. Here we would
 	// try multiple times of the wrong password until pin pad

@@ -213,12 +213,12 @@ func Pin(ctx context.Context, s *testing.State) {
 		options = append(options, chrome.ExtraArgs("--disable-virtual-keyboard"))
 	}
 	cr, err := chrome.New(ctx, options...)
+	defer userutil.ResetUsers(cleanUpCtx)
 
 	if err != nil {
 		s.Fatal("Chrome start failed: ", err)
 	}
 	defer cr.Close(cleanUpCtx)
-	defer userutil.ResetUsers(cleanUpCtx)
 
 	tconn, err := cr.SigninProfileTestAPIConn(ctx)
 	if err != nil {

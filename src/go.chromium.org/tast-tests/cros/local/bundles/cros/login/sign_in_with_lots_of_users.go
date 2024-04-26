@@ -67,10 +67,10 @@ func SignInWithLotsOfUsers(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	deviceOwner := chrome.Creds{User: "test_owner@gmail.com", Pass: "test0000"}
+	defer userutil.ResetUsers(cleanupCtx)
 	if err := userutil.CreateDeviceOwner(ctx, deviceOwner.User, deviceOwner.Pass); err != nil {
 		s.Fatal("Failed to create device owner: ", err)
 	}
-	defer userutil.ResetUsers(cleanupCtx)
 
 	userCount := s.Param().(int)
 	testCreds := []chrome.Creds{deviceOwner}

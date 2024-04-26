@@ -66,12 +66,12 @@ func RemoveUserOnSigninScreen(ctx context.Context, s *testing.State) {
 	secondUser := "second-user@gmail.com"
 	thirdUser := "third-user@gmail.com"
 	password := "password"
+	defer userutil.ResetUsers(ctx)
 	for _, user := range []string{firstUser, secondUser, thirdUser} {
 		if err := userutil.CreateUser(ctx, user, password, chrome.KeepState()); err != nil {
 			s.Fatal("Failed to create user: ", err)
 		}
 	}
-	defer userutil.ResetUsers(ctx)
 
 	// Go to the login screen, remove second user and check that second user pod is gone.
 	func() {

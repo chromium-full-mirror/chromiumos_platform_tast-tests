@@ -12,6 +12,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/lockscreen"
+	"go.chromium.org/tast-tests/cros/local/chrome/userutil"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast/core/ctxutil"
@@ -31,7 +32,7 @@ func init() {
 		},
 		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
 		SoftwareDeps: []string{"chrome"},
-		Timeout:      4 * time.Minute,
+		Timeout:      5 * time.Minute,
 		Attr:         []string{"group:mainline", "group:hw_agnostic", "group:cq-medium"},
 		Params: []testing.Param{{
 			Name: "fieldtrial_testing_config_on",
@@ -56,7 +57,7 @@ func CloseLid(ctx context.Context, s *testing.State) {
 	)
 
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, 60*time.Second)
 	defer cancel()
 
 	kb, err := input.Keyboard(ctx)
@@ -70,6 +71,7 @@ func CloseLid(ctx context.Context, s *testing.State) {
 		chrome.DisableFeatures("FirmwareUpdaterApp"),
 		chrome.FieldTrialConfig(s.Param().(chrome.FieldTrialConfigMode)),
 		chrome.FakeLogin(chrome.Creds{User: username, Pass: password}))
+	defer userutil.ResetUsers(cleanupCtx)
 	if err != nil {
 		s.Fatal("Chrome login failed: ", err)
 	}

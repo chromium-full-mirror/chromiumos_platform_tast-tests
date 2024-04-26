@@ -11,6 +11,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/lockscreen"
+	"go.chromium.org/tast-tests/cros/local/chrome/userutil"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/login"
 	"go.chromium.org/tast/core/ctxutil"
@@ -28,6 +29,7 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 		},
 		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
+		Timeout:      2*chrome.LoginTimeout + userutil.TakingOwnershipTimeout + 2*time.Minute,
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 	})
@@ -40,20 +42,21 @@ func LocalPasswordUnlock(ctx context.Context, s *testing.State) {
 		localPassword = "testpassword"
 	)
 
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
+	defer cancel()
+
 	cr, err := login.SetupUserWithLocalPassword(ctx,
 		localPassword,
 		// We don't need to provide Gaia password, as the local password will be
 		// used instead.
 		chrome.FakeLogin(chrome.Creds{User: username, Pass: ""}),
 	)
+	defer userutil.ResetUsers(cleanupCtx)
 	if err != nil {
 		s.Fatal("Failed to setup user: ", err)
 	}
-	defer cr.Close(ctx)
-
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
-	defer cancel()
+	defer cr.Close(cleanupCtx)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -74,7 +77,7 @@ func LocalPasswordUnlock(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get keyboard: ", err)
 	}
-	defer keyboard.Close(ctx)
+	defer keyboard.Close(cleanupCtx)
 
 	// Enter and submit the local password to unlock the DUT.
 	s.Log("Entering password to unlock")

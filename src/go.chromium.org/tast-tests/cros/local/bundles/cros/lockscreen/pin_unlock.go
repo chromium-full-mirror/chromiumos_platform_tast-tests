@@ -12,7 +12,9 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/lockscreen"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
+	"go.chromium.org/tast-tests/cros/local/chrome/userutil"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -26,6 +28,7 @@ func init() {
 			"emaamari@google.com",
 			"chromeos-sw-engprod@google.com",
 		},
+		Timeout:      2*chrome.LoginTimeout + userutil.TakingOwnershipTimeout + 2*time.Minute,
 		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
 		SoftwareDeps: []string{"chrome"},
 		Attr: []string{
@@ -49,14 +52,18 @@ func PINUnlock(ctx context.Context, s *testing.State) {
 		password = "good"
 		PIN      = "1234567890"
 	)
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
+	defer cancel()
 
 	autosubmit := s.Param().(bool)
 
 	cr, err := chrome.New(ctx, chrome.FakeLogin(chrome.Creds{User: username, Pass: password}))
+	defer userutil.ResetUsers(cleanupCtx)
 	if err != nil {
 		s.Fatal("Chrome login failed: ", err)
 	}
-	defer cr.Close(ctx)
+	defer cr.Close(cleanupCtx)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -87,7 +94,7 @@ func PINUnlock(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get keyboard: ", err)
 	}
-	defer keyboard.Close(ctx)
+	defer keyboard.Close(cleanupCtx)
 
 	// Enter and submit the PIN to unlock the DUT.
 	if err := lockscreen.EnterPIN(ctx, tconn, keyboard, PIN); err != nil {

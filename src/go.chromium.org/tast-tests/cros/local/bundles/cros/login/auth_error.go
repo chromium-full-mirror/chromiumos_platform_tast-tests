@@ -52,12 +52,12 @@ func AuthError(ctx context.Context, s *testing.State) {
 
 	// Create user on the device.
 	cr, err := chrome.New(ctx)
+	defer userutil.ResetUsers(cleanupContext)
 	if err != nil {
 		s.Fatal("Chrome login failed: ", err)
 	}
 	creds := cr.Creds()
 	cr.Close(ctx)
-	defer userutil.ResetUsers(cleanupContext)
 
 	cr, err = chrome.New(ctx,
 		chrome.ExtraArgs("--skip-force-online-signin-for-testing"),
