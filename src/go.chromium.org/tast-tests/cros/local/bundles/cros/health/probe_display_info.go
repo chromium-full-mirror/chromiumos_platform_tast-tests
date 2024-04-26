@@ -34,7 +34,6 @@ func init() {
 			"kerker@google.com",
 		},
 		BugComponent: "b:982097", // ChromeOS > Platform > Enablement > Health
-		// TODO(b/326832237): Promote to critical.
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"diagnostics"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
@@ -49,7 +48,6 @@ func init() {
 			Val: displayInfoTestParams{
 				hasPrivacyScreen: true,
 			},
-			ExtraAttr:         []string{"group:criticalstaging", "informational"},
 			ExtraHardwareDeps: hwdep.D(hwdep.PrivacyScreen()),
 		}},
 	})
