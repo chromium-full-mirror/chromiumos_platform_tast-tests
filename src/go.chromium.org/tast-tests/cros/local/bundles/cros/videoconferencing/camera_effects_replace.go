@@ -39,7 +39,7 @@ const (
 	backgroundImageDirname = "custom-camera-backgrounds/original"
 	backgroundImageJpg     = "3162101071.jpg"
 	backgroundMetadata     = "3162101071.jpg.metadata"
-	percentageNotChanged   = 0.30
+	percentageNotChanged   = 0.25
 	percentageChanged      = 0.55
 	vcBackgroundAppWindow  = "Camera Background"
 )
