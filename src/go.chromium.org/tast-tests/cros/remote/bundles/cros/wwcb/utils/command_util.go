@@ -7,6 +7,7 @@ package utils
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -735,4 +736,29 @@ func FindEthernetSpeed(ctx context.Context, dut *dut.DUT, eth string) (string, e
 		return "", errors.Wrap(err, "check the ethernet speed")
 	}
 	return strings.TrimSpace(strings.Replace(string(out), "Speed: ", "", -1)), nil
+}
+
+// VerifyUSBTypeADeviceSpeed verifys the device speed is same.
+func VerifyUSBTypeADeviceSpeed(ctx context.Context, dut *dut.DUT, capFile string) error {
+	data, err := os.ReadFile(capFile)
+	if err != nil {
+		return errors.Wrap(err, "failed to read file")
+	}
+	cap := map[string]interface{}{}
+	if err := json.Unmarshal(data, &cap); err != nil {
+		return errors.Wrap(err, "failed to parse json")
+	}
+	usbDevices := cap["Downstream"].(map[string]interface{})["USB Type A"].(map[string]interface{})
+	for _, port := range usbDevices {
+		fixtureID := port.(map[string]interface{})["USBTypeAIDArray"].(string)
+		expectDeviceSpeed := port.(map[string]interface{})["Speed"].(string)
+		speed, err := FindDeviceSpeed(ctx, dut, fixtureID)
+		if err != nil {
+			return errors.Wrap(err, "can't find the device speed")
+		}
+		if speed != expectDeviceSpeed {
+			return errors.Errorf("got:%s want:%s", speed, expectDeviceSpeed)
+		}
+	}
+	return nil
 }
