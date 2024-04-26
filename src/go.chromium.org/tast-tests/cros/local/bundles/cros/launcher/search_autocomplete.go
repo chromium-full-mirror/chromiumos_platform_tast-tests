@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -120,7 +121,7 @@ func SearchAutocomplete(ctx context.Context, s *testing.State) {
 	if err := uiauto.Combine("search launcher and verify ghost text",
 		launcher.Search(tconn, kb, testCase.searchKeyword),
 		launcher.WaitForResult(tconn, testCase.result))(ctx); err != nil {
-		s.Fatal("Failed to search for: ", testCase.searchKeyword)
+		s.Fatal(errors.Wrapf(err, "failed to search for: %s", testCase.searchKeyword))
 	}
 	res, err :=
 		launcher.GetSearchBoxGhostText(ctx, tconn)
