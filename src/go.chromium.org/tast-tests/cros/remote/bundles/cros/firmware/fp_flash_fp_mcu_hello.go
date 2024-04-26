@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/servo"
-	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -34,7 +33,6 @@ func init() {
 		Timeout:      2 * time.Minute,
 		SoftwareDeps: []string{"biometrics_daemon"},
 		HardwareDeps: hwdep.D(hwdep.Fingerprint()),
-		TestBedDeps:  []string{tbdep.Fingerprint},
 		Vars:         []string{"servo"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 	})

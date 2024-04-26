@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/servo"
-	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fingerprint"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fingerprint/rpcdut"
 	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
@@ -35,7 +34,6 @@ func init() {
 		SoftwareDeps: []string{"crossystem"},
 		HardwareDeps: hwdep.D(hwdep.Fingerprint()),
 		ServiceDeps:  []string{"tast.cros.platform.UpstartService", "tast.cros.baserpc.FileSystem"},
-		TestBedDeps:  []string{tbdep.Fingerprint},
 		Vars:         []string{"servo"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 	})

@@ -14,7 +14,6 @@ import (
 	"golang.org/x/crypto/ssh"
 
 	fp "go.chromium.org/tast-tests/cros/common/fingerprint"
-	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/dutfs"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fingerprint"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fingerprint/rpcdut"
@@ -40,7 +39,6 @@ func init() {
 		SoftwareDeps: []string{"biometrics_daemon"},
 		HardwareDeps: hwdep.D(hwdep.Fingerprint(), hwdep.SkipOnFPMCU(string(fp.BoardNameHelipilot))),
 		ServiceDeps:  []string{"tast.cros.platform.UpstartService", dutfs.ServiceName},
-		TestBedDeps:  []string{tbdep.Fingerprint},
 		Vars:         []string{"servo"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
