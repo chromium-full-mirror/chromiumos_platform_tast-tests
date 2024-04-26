@@ -99,6 +99,10 @@ func runSingleClient(ctx context.Context, s *testing.State, sn *iio.Sensor, i in
 	}
 	s.Logf("Got %v readings from %v %v",
 		len(rs), sn.Location, sn.Name)
+
+	// The last sample may be out of time for sensors where the FIFO needs to be disabled.
+	rs = rs[:len(rs)-1]
+
 	if err := iio.Validate(rs, start, end, sn, nDuration); err != nil {
 		return errors.Wrap(err, "error during validation")
 	}
