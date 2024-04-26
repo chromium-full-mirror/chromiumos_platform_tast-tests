@@ -231,14 +231,20 @@ func ListNetworks(ctx context.Context, dut *dut.DUT) ([]string, error) {
 
 // ListEthernets returns ethernet interface name array.
 func ListEthernets(ctx context.Context, dut *dut.DUT) ([]string, error) {
-	cmd := fmt.Sprint(`ifconfig -s`)
-	out, err := dut.Conn().CommandContext(ctx, "sh", "-c", cmd).Output()
-	if err != nil {
-		return nil, errors.Wrap(err, "execute ifconfig command")
+	eths := ""
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		cmd := fmt.Sprint(`ifconfig -s`)
+		out, err := dut.Conn().CommandContext(ctx, "sh", "-c", cmd).Output()
+		if err != nil {
+			return errors.New("execute ifconfig command")
+		}
+		eths = string(out)
+		return nil
+	}, &testing.PollOptions{Timeout: pollTimeout, Interval: pollInterval}); err != nil {
+		return nil, errors.Wrap(err, "failed to execute ifconfig command")
 	}
-
 	var ethernets []string
-	for _, line := range strings.Split(strings.TrimSpace(string(out)), "\n") {
+	for _, line := range strings.Split(strings.TrimSpace(eths), "\n") {
 		elements := strings.Split(line, " ")
 		ethernets = append(ethernets, elements[0])
 	}
