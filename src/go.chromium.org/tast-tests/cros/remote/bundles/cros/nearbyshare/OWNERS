@@ -1,9 +1,2 @@
-set noparent
-
-# Nearby Share team
-dclasson@google.com
-hansenmichael@google.com
-jackshira@google.com
-
-# Tast team for bulk/emergencies
-include /OWNERS.tast
+# Include Cross-device team owners (go/cros-cd)
+include /src/go.chromium.org/tast-tests/cros/common/cros/crossdevice/OWNERS

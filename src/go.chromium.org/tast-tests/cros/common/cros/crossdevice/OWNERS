@@ -1,0 +1,9 @@
+# Cross-device team owners (go/cros-cd)
+bhartmire@google.com
+dclasson@google.com
+hansenmichael@google.com
+jackshira@google.com
+jonmann@google.com
+
+# Tast team for bulk/emergencies
+include /OWNERS.tast
