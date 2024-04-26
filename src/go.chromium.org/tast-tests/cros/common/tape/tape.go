@@ -10,6 +10,8 @@ package tape
 import (
 	"bytes"
 	"context"
+	"crypto/sha1"
+	"encoding/base64"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -35,6 +37,7 @@ const deprovisionTimeout = 1 * time.Minute
 // for authentication against the TAPE GCP.
 type client struct {
 	httpClient *http.Client
+	creds      []byte
 }
 
 // createTokenSource an oauth2.TokenSource from service account key credentials.
@@ -55,6 +58,12 @@ func createTokenSource(ctx context.Context, credsJSON []byte) (oauth2.TokenSourc
 // NewClient creates a http client which provides the necessary oauth token to authenticate with the TAPE
 // GCP from the service account credentials in credsJSON.
 func NewClient(ctx context.Context, credsJSON []byte) (*client, error) {
+	// Log the time and hash of the credsJSON for debugging.
+	hasher := sha1.New()
+	hasher.Write(credsJSON)
+	hash := base64.URLEncoding.EncodeToString(hasher.Sum(nil))
+	testing.ContextLogf(ctx, "CredsJSON hash: %s", hash)
+
 	// Check if token content was written to the DUT and should be used.
 	if _, err := os.Stat(dutTokenFilePath); err == nil {
 		tokenBytes, err := os.ReadFile(dutTokenFilePath)
@@ -79,7 +88,20 @@ func NewClient(ctx context.Context, credsJSON []byte) (*client, error) {
 
 	return &client{
 		httpClient: oauth2.NewClient(ctx, ts),
+		creds:      credsJSON,
 	}, nil
+}
+
+// refreshClient creates a new http client for the tape client.
+func (c *client) refreshClient(ctx context.Context) error {
+	// Create new Oauth client using the stored credentials.
+	ts, err := createTokenSource(ctx, c.creds)
+	if err != nil {
+		return errors.Wrap(err, "failed to create token from json")
+	}
+
+	c.httpClient = oauth2.NewClient(ctx, ts)
+	return nil
 }
 
 // sendRequestWithTimeout makes a call to the specified REST endpoint of TAPE with the given http method and payload.
@@ -108,6 +130,10 @@ func (c *client) sendRequestWithTimeout(ctx context.Context, method, endpoint st
 		response, err = c.httpClient.Do(req)
 		if err != nil {
 			testing.ContextLog(ctx, "Failed to send request: ", err)
+			// Try to refresh the client.
+			if err = c.refreshClient(ctx); err != nil {
+				testing.ContextLog(ctx, "Failed to refresh the client: ", err)
+			}
 			continue
 		}
 		// Do not retry when the server is overloaded.
