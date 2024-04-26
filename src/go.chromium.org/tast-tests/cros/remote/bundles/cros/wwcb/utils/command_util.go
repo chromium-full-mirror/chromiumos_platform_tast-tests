@@ -762,3 +762,30 @@ func VerifyUSBTypeADeviceSpeed(ctx context.Context, dut *dut.DUT, capFile string
 	}
 	return nil
 }
+
+// VerifyDockingInterface verifies the docking interface is the same as the one in the capabilites.json file.
+func VerifyDockingInterface(ctx context.Context, dut *dut.DUT, dockingID, capFile string) error {
+	dockingPort, err := FindDockingConnectPort(ctx, dut, dockingID)
+	if err != nil {
+		return errors.Wrap(err, "failed to find the docking port")
+	}
+	testing.ContextLog(ctx, "Found the docking port: ", dockingPort)
+	dockingInterface, err := FindUSBConnectStatus(ctx, dut, dockingPort)
+	if err != nil {
+		return errors.Wrap(err, "failed to find the docking interface")
+	}
+	testing.ContextLog(ctx, "Found the docking status: ", dockingInterface)
+	data, err := os.ReadFile(capFile)
+	if err != nil {
+		return errors.Wrap(err, "failed to read file")
+	}
+	cap := map[string]interface{}{}
+	if err := json.Unmarshal(data, &cap); err != nil {
+		return errors.Wrap(err, "failed to parse json")
+	}
+	expectedValue := cap["Upstream"].(map[string]interface{})["Interface"]
+	if dockingInterface != expectedValue {
+		return errors.Errorf("failed to check the docking interface is different with the input value: got: %q, expected: %q", dockingInterface, expectedValue)
+	}
+	return nil
+}
