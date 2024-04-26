@@ -237,25 +237,41 @@ func UpdateDutFirmware(ctx context.Context, s *testing.State) {
 			}
 		}
 		s.Logf("EC Firmware to Flash %s; monitor file to flash %s; AP Firmware to Flash %s", ecBinToFlash, monitorBinToFlash, apBinToFlash)
-		dutFileMap := map[string]string{
-			fmt.Sprintf("%s/%s", tmpDir, apBinToFlash): fmt.Sprintf("%s/%s", tmpFwDir, firmware.APFirmwareFileToFlash),
-		}
+		dutFileMap := map[string]string{}
 		if ecBinToFlash != "" {
 			dutFileMap[fmt.Sprintf("%s/%s", tmpDir, ecBinToFlash)] = fmt.Sprintf("%s/%s", tmpFwDir, firmware.ECFirmwareFileToFlash)
 		}
 		if monitorBinToFlash != "" {
-			dutFileMap[fmt.Sprintf("%s/%s", tmpDir, ecBinToFlash)] = fmt.Sprintf("%s/%s", tmpFwDir, firmware.MonitorFileToFlash)
+			dutFileMap[fmt.Sprintf("%s/%s", tmpDir, monitorBinToFlash)] = fmt.Sprintf("%s/%s", tmpFwDir, firmware.MonitorFileToFlash)
 		}
 
-		s.Log("Copying files to dut")
+		s.Log("Copying EC firmware files to dut")
 		if _, err := linuxssh.PutFiles(ctx, s.DUT().Conn(), dutFileMap, linuxssh.PreserveSymlinks); err != nil {
 			s.Fatal("Failed to copy files to dut: ", err)
 		}
+		s.Logf("Files under %s: before FW flashing", tmpFwDir)
+		statFirmwareFilesOnDUT(ctx, s, h, tmpFwDir)
 		if flashEC {
 			flashECFirmware(ctx, s, h, tmpFwDir, tmpDir, ecChip)
+			s.Logf("Files under %s: after servo EC flash", tmpFwDir)
+			statFirmwareFilesOnDUT(ctx, s, h, tmpFwDir)
 			flashECFirmwareFromDut(ctx, s, h, tmpFwDir, tmpDir, ecBinToFlash, monitorBinToFlash)
 		}
+		s.Logf("Files under %s: after dut EC flash", tmpFwDir)
+		statFirmwareFilesOnDUT(ctx, s, h, tmpFwDir)
 	}
+
+	// AP firmware file is copied to the DUT after EC flashing to handle a corner case for some models
+	// where all the firmware files in dut tmp directory become empty after EC firmware flashing.
+	dutFileMap := map[string]string{
+		fmt.Sprintf("%s/%s", tmpDir, apBinToFlash): fmt.Sprintf("%s/%s", tmpFwDir, firmware.APFirmwareFileToFlash),
+	}
+	s.Log("Copying AP firmware file to dut")
+	if _, err := linuxssh.PutFiles(ctx, s.DUT().Conn(), dutFileMap, linuxssh.PreserveSymlinks); err != nil {
+		s.Fatal("Failed to copy files to dut: ", err)
+	}
+	s.Logf("Files under %s: before AP flashing", tmpFwDir)
+	statFirmwareFilesOnDUT(ctx, s, h, tmpFwDir)
 	flashAPFirmwareFromDut(ctx, s, h, tmpFwDir, tmpDir, firmwarePathVal, localFirmwarePathVal, initialROFwid, initialRwFwid)
 	flashAPFirmware(ctx, s, h, tmpFwDir, firmwarePathVal, localFirmwarePathVal, ecChip, initialROFwid, initialRwFwid)
 }
@@ -506,6 +522,7 @@ func backupECFirmware(ctx context.Context, s *testing.State, h *firmware.Helper,
 	}
 }
 
+// runECFirmwareFlashServo runs EC firmware flashing from the Servo
 func runECFirmwareFlashServo(ctx context.Context, s *testing.State, h *firmware.Helper, servoTmpDir, ecChip, image string) {
 	if ecChip == "stm32" {
 		if err := h.ServoProxy.RunCommand(ctx, false, "flash_ec", fmt.Sprintf("--chip=%s", ecChip), fmt.Sprintf("--image=%s/%s", servoTmpDir, image), fmt.Sprintf("--port=%d", h.ServoProxy.GetPort()), "--bitbang_rate=57600", "--verify", "--verbose"); err != nil {
@@ -519,11 +536,30 @@ func runECFirmwareFlashServo(ctx context.Context, s *testing.State, h *firmware.
 	}
 }
 
+// runECFirmwareFlashDut runs EC firmware flashing from the DUT
 func runECFirmwareFlashDut(ctx context.Context, s *testing.State, h *firmware.Helper, dutTmpDir, image string) {
 	if err := h.DUT.Conn().CommandContext(ctx, "chromeos-firmwareupdate", "--ec_image", fmt.Sprintf("%s/%s", dutTmpDir, image)).Run(); err != nil {
 		s.Fatal("Failed to flash firmware bin file: ", err)
 	}
 	if err := safeRebootDut(ctx, h); err != nil {
 		s.Fatal("Failed to reboot DUT after flashing: ", err)
+	}
+}
+
+// statFirmwareFilesOnDUT stats the files in the temporary fw dir on the DUT
+func statFirmwareFilesOnDUT(ctx context.Context, s *testing.State, h *firmware.Helper, tmpFwDir string) {
+	h.CloseRPCConnection(ctx)
+	if err := h.RequireRPCClient(ctx); err != nil {
+		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
+	}
+	fs := dutfs.NewClient(h.RPCClient.Conn)
+
+	fis, err := fs.ReadDir(ctx, tmpFwDir)
+	if err != nil {
+		s.Fatalf("Failed to list files at %s: %v", tmpFwDir, err)
+	}
+
+	for _, fi := range fis {
+		s.Logf("Firmware file Name: %s; file size: %d", fi.Name(), fi.Size())
 	}
 }
