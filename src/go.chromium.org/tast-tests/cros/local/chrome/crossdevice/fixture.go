@@ -585,6 +585,13 @@ func (f *crossdeviceFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 		}
 	}
 
+	// Disconnect from Wi-Fi for a completely fresh start in OOBE
+	if f.noSignIn {
+		if err := DisconnectFromWifi(ctx); err != nil {
+			s.Log("Failed to disconnect from Wi-Fi. Proceeding anyway. Error: ", err)
+		}
+	}
+
 	// Store Android attributes for reporting.
 	androidAttributes, err := androidDevice.GetAndroidAttributes(ctx)
 	if err != nil {
