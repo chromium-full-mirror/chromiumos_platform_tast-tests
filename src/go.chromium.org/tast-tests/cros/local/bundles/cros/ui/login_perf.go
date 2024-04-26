@@ -1003,7 +1003,7 @@ func testFunction(
 		var stopTracingCallback func(ctx context.Context) error
 		if runTracing {
 			// See go/trace-in-cuj-tests about rules for tracing.
-			if err := cujRecorder.StartTracingWithName(ctx, s.OutDir(), name+"-trace.data.gz", s.DataPath(loginPerfTraceConfigFileName)); err != nil {
+			if err := cujRecorder.StartTracingWithName(ctx, s.OutDir(), name+"-trace.data", s.DataPath(loginPerfTraceConfigFileName)); err != nil {
 				return errors.Wrap(err, "failed to start tracing")
 			}
 			stopTracingCallback = cujRecorder.StopTracing

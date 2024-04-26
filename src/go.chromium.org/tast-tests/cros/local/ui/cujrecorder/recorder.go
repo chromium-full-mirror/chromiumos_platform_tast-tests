@@ -809,15 +809,16 @@ func (r *Recorder) Reset(ctx context.Context) error {
 //		s.Fatal("Failed to save trace files: ", err)
 //	}
 func (r *Recorder) StartTracing(ctx context.Context, outDir, perfettoCfgPath string) error {
-	// trace.data.gz is the default trace file name.
-	return r.StartTracingWithExtraCategories(ctx, outDir, "trace.data.gz", perfettoCfgPath)
+	// trace.data is the default trace file name.
+	return r.StartTracingWithExtraCategories(ctx, outDir, "trace.data", perfettoCfgPath)
 }
 
 // StartTracingWithName starts a new system tracing session with a custom trace file name.
+// Note that `traceName` should not include the ".gz" suffix since it is automatically added by gzip.
 //
 // Example:
 //
-//	if err := recorder.StartTracingWithName(ctx, s.OutDir(), "trace-1.data.gz", perfettoCfgPath); err != nil {
+//	if err := recorder.StartTracingWithName(ctx, s.OutDir(), "trace-1.data", perfettoCfgPath); err != nil {
 //		s.Fatal("Failed to start tracing: ", err)
 //	}
 //	defer recorder.StopTracing(ctx)

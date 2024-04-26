@@ -127,7 +127,7 @@ func PageLoadPerf(ctx context.Context, s *testing.State) {
 			// Use the recorder to navigate to the page an additional time to
 			// capture a perfetto trace. Capture loading and blink trace
 			// data alongside the recorder default categories.
-			if err := recorder.StartTracingWithExtraCategories(ctx, s.OutDir(), page.prefix+".data.gz", perfettoCfgPath, "loading", "blink"); err != nil {
+			if err := recorder.StartTracingWithExtraCategories(ctx, s.OutDir(), page.prefix+".data", perfettoCfgPath, "loading", "blink"); err != nil {
 				return errors.Wrap(err, "failed to start tracing")
 			}
 

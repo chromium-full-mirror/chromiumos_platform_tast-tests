@@ -309,7 +309,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, bt browser.Type, outDir, system
 
 			// See go/trace-in-cuj-tests about rules for tracing.
 			if p.tracingCfg != "" {
-				traceName := fmt.Sprintf("paragraph%d.data.gz", pIndex)
+				traceName := fmt.Sprintf("paragraph%d.data", pIndex)
 				if err := recorder.StartTracingWithName(ctx, outDir, traceName, systemTraceConfigPath); err != nil {
 					return errors.Wrap(err, "failed to start tracing")
 				}
