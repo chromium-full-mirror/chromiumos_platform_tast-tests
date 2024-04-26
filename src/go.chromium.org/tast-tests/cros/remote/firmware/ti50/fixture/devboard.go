@@ -7,6 +7,7 @@ package fixture
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -128,6 +129,12 @@ func (i *devboardFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	} else {
 		i.v.TestbedProperties = p
 	}
+	if err := i.v.devboard.LogResultTag(ctx, ti50.TagTestbedType, string(i.v.TestbedProperties.TestbedType)); err != nil {
+		s.Log("Failed to log result tag: ", err)
+	}
+	if err := i.v.devboard.LogResultTag(ctx, ti50.TagCCDSerial, i.v.TestbedProperties.UsbSerial); err != nil {
+		s.Log("Failed to log result tag: ", err)
+	}
 
 	iv, err := downloadImage(ctx, i.v.TestbedProperties, i.image, s)
 	if err != nil {
@@ -142,11 +149,34 @@ func (i *devboardFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 		fwConfigJsons = i.imageValue.FwConfigPaths()
 	}
 
+	if err := i.v.devboard.LogResultTag(ctx, ti50.TagBuildURL, imagePath); err != nil {
+		s.Log("Failed to log result tag: ", err)
+	}
 	testing.ContextLog(ctx, "Setting up image: ", imagePath)
 	if i.v.TestbedProperties.TestbedType == "gsc_h1_shield" {
 		setupCr50Image(ctx, s, i.v.devboard, imagePath, fwConfigJsons, i.v.TestbedProperties)
 	} else if err := i.v.devboard.Setup(ctx, imagePath, fwConfigJsons); err != nil {
 		s.Fatal("Setup: ", err)
+	}
+
+	ver, err := i.v.devboard.GSCVersionInfo(ctx)
+	if err != nil {
+		s.Error("Could not get version info: ", err)
+	}
+	if err := i.v.devboard.LogResultTag(ctx, ti50.TagROVersion, ver.ROVersion); err != nil {
+		s.Log("Failed to log result tag: ", err)
+	}
+	if err := i.v.devboard.LogResultTag(ctx, ti50.TagRWVersion, ver.RWVersion); err != nil {
+		s.Log("Failed to log result tag: ", err)
+	}
+	if err := i.v.devboard.LogResultTag(ctx, ti50.TagRWBranch, ver.Branch); err != nil {
+		s.Log("Failed to log result tag: ", err)
+	}
+	if err := i.v.devboard.LogResultTag(ctx, ti50.TagRWRev, fmt.Sprint(ver.Rev)); err != nil {
+		s.Log("Failed to log result tag: ", err)
+	}
+	if err := i.v.devboard.LogResultTag(ctx, ti50.TagRWSHA, ver.SHA); err != nil {
+		s.Log("Failed to log result tag: ", err)
 	}
 
 	i.v.ImagePath = imagePath

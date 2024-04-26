@@ -7,6 +7,7 @@ package ti50
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -128,6 +129,53 @@ func (a *DUTControlAndreiboard) Setup(ctx context.Context, image string, fwConfs
 	if resp.Err != "" {
 		return errors.Errorf("Setup operation failed: %s", resp.Err)
 	}
+	return nil
+}
+
+// GSCVersionInfo is version information of the currently running image.
+type GSCVersionInfo struct {
+	Image     string
+	ROVersion string
+	RWVersion string
+	Branch    string
+	Rev       uint32
+	SHA       string
+}
+
+// GSCVersionInfo returns the GSC version information of the currently running image.
+func (a *DUTControlAndreiboard) GSCVersionInfo(ctx context.Context) (ver GSCVersionInfo, err error) {
+	req := &dutcontrol.GscVersionRequest{}
+
+	resp, err := a.client.GscVersion(ctx, req)
+	if err != nil {
+		return GSCVersionInfo{}, errors.Wrap(err, "GscVersion request")
+	}
+	if resp.Err != "" {
+		return GSCVersionInfo{}, errors.Errorf("GscVersion operation failed: %s", resp.Err)
+	}
+	log.Printf("GSC version info: %v", resp)
+	return GSCVersionInfo{
+		Image:     resp.Image,
+		ROVersion: resp.RoVersion,
+		RWVersion: resp.RwVersion,
+		Branch:    resp.Branch,
+		Rev:       resp.Rev,
+		SHA:       resp.Sha,
+	}, nil
+}
+
+// LogResultTag appends a tag=value line to result_tags.txt.
+func (a *DUTControlAndreiboard) LogResultTag(ctx context.Context, tag ti50.ResultTag, value string) error {
+	dir, ok := testing.ContextOutDir(ctx)
+	if !ok {
+		return errors.New("could not write result_tags.txt, no context out dir")
+	}
+	f, err := os.OpenFile(filepath.Join(dir, "result_tags.txt"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return errors.Wrap(err, "could not write result_tags.txt")
+	}
+	defer f.Close()
+	f.WriteString(fmt.Sprintf("%s=%s\n", tag, value))
 	return nil
 }
 

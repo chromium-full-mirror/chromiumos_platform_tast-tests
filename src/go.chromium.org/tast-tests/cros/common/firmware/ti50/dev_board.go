@@ -225,3 +225,25 @@ const (
 func (c APROResultCode) IsV2Code() bool {
 	return byte(c) >= byte(ApRoV2Success)
 }
+
+// ResultTag represents a field to be reported with the test result.
+type ResultTag string
+
+const (
+	// TagROVersion is the RO version of the running image.
+	TagROVersion ResultTag = "gsc_ro_version"
+	// TagRWVersion is the RW version of the running image.
+	TagRWVersion ResultTag = "gsc_rw_version"
+	// TagRWBranch is the branch name of the running image.
+	TagRWBranch ResultTag = "gsc_rw_branch"
+	// TagRWRev is the revision count of the running image.
+	TagRWRev ResultTag = "gsc_rw_rev"
+	// TagRWSHA is the git commit hash of the running image.
+	TagRWSHA ResultTag = "gsc_rw_sha"
+	// TagBuildURL is the build URL used to download the image file.
+	TagBuildURL ResultTag = "gsc_buildurl"
+	// TagTestbedType is the type of HW being tested (eg gsc_dt_shield).
+	TagTestbedType ResultTag = "gsc_testbed_type"
+	// TagCCDSerial is the serial number of the GSC chip (and CCD USB serial).
+	TagCCDSerial ResultTag = "gsc_ccd_serial"
+)
