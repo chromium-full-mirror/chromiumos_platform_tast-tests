@@ -43,7 +43,8 @@ func init() {
 			"markyacoub@google.com",
 		},
 		BugComponent: "b:188154", // ChromeOS > Platform > Graphics > Display
-		Attr:         []string{"group:graphics", "graphics_nightly"},
+		// We want to test this on multiple models even within the same selection pool, so add more tests to hit more devices per day.
+		Attr:         []string{"group:graphics", "graphics_nightly", "graphics_perbuild", "graphics_weekly"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Fixture:      "gpuWatchHangs",
@@ -74,9 +75,19 @@ func InternalPanelColorCompare(ctx context.Context, s *testing.State) {
 
 	// One way to compare images is to compare the file sizes. If the colored image is outside the
 	// tolerance of the average black image size, that means the screen is emitting light.
-	success, err := testImgsWithFileSizes(ctx, blackImgs, coloredImgs)
+	// Before we test out with colored images, let's check for false positives by comparing the black
+	// images to themselves.
+	success, err := testImgsWithFileSizes(ctx, blackImgs, blackImgs)
 	if err != nil {
-		s.Fatal("Failed to compare images with sizes: ", err)
+		s.Fatal("Failed to compare B-B with sizes: ", err)
+	}
+	if success {
+		s.Fatal("False positive detected on Image Size Test")
+	}
+
+	success, err = testImgsWithFileSizes(ctx, blackImgs, coloredImgs)
+	if err != nil {
+		s.Fatal("Failed to compare B-C with sizes: ", err)
 	}
 	if success {
 		return
@@ -85,6 +96,11 @@ func InternalPanelColorCompare(ctx context.Context, s *testing.State) {
 	// If we fail to compare with the file sizes, compare the ratio of the colors in the images. If
 	// the colored image has a different ratio of colors than the black image, that means the
 	// screen is emitting light.
+	// Test for false positives by comparing the black images to themselves first.
+	if testImgsWithColorRatio(ctx, blackImgs, blackImgs) {
+		s.Fatal("False positive detected on Color Ratio Test")
+	}
+
 	if testImgsWithColorRatio(ctx, blackImgs, coloredImgs) {
 		return
 	}
