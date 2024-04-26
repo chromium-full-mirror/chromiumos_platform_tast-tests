@@ -16,7 +16,7 @@ func init() {
 		Func:         Basic,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies basic Starfish functionality",
-		Contacts:     []string{"chromeos-cellular-team@google.com", "nmarupaka@google.com"},
+		Contacts:     []string{"chromeos-cellular-team@google.com", "andrewlassalle@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:         []string{"group:cellular"},
 		Fixture:      "starfish",

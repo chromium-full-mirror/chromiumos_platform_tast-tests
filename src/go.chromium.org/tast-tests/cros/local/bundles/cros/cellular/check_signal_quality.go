@@ -18,7 +18,7 @@ func init() {
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		LacrosStatus:   testing.LacrosVariantUnneeded,
 		Desc:           "Verifies that host has signal quality above threshold via cellular interface",
-		Contacts:       []string{"chromeos-cellular-team@google.com", "nmarupaka@google.com"},
+		Contacts:       []string{"chromeos-cellular-team@google.com", "michamazur@google.com"},
 		BugComponent:   "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:           []string{"group:cellular", "cellular_unstable", "cellular_sim_active"},
 		Fixture:        "cellular",
