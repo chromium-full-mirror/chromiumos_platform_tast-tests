@@ -10,7 +10,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/arc/gio"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -26,7 +25,7 @@ func init() {
 		BugComponent: "b:1373988",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "arcBootedWithInputOverlayAlphaV2",
+		Fixture:      "arcBootedWithGameDashboard",
 		Params: []testing.Param{
 			{
 				ExtraSoftwareDeps: []string{"android_container"},
@@ -46,12 +45,8 @@ func InputOverlayTouchInjector(ctx context.Context, s *testing.State) {
 			return errors.Wrap(err, "failed to open keyboard")
 		}
 		defer kb.Close(ctx)
-		// Start up UIAutomator.
-		ui := uiauto.New(params.TestConn).WithTimeout(time.Minute)
 
 		if err := uiauto.Combine("Tap overlay keys and ensure proper behavior",
-			// Close educational dialog.
-			ui.LeftClick(nodewith.Name("Got it").HasClass("LabelButtonLabel")),
 			// Execute keystrokes corresponding to tap buttons.
 			gio.TapOverlayButton(kb, gio.TopTapKey, &params, gio.TopTap),
 			gio.TapOverlayButton(kb, gio.BotTapKey, &params, gio.BotTap),

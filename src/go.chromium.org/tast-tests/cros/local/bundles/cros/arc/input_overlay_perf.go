@@ -13,7 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/arc/gio"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/arc/inputlatency"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/errors"
@@ -63,8 +62,7 @@ func InputOverlayPerf(ctx context.Context, s *testing.State) {
 			return errors.Wrap(err, "failed to open keyboard")
 		}
 		defer kb.Close(ctx)
-		// Start up UIAutomator.
-		ui := uiauto.New(params.TestConn).WithTimeout(time.Minute)
+
 		// Install the ARC host clock.
 		if err := inputlatency.InstallArcHostClockClient(ctx, params.Arc, s); err != nil {
 			return errors.Wrap(err, "could not install arc-host-clock-client")
@@ -72,11 +70,6 @@ func InputOverlayPerf(ctx context.Context, s *testing.State) {
 
 		// Store page name in variable.
 		var pkgName string = "org.chromium.arc.testapp.inputoverlay"
-
-		// Click to close educational dialogue.
-		if err := ui.LeftClick(nodewith.Name("Got it").HasClass("LabelButtonLabel"))(ctx); err != nil {
-			return errors.Wrap(err, "failed to click educational dialog")
-		}
 
 		// Inject the described number of tap events.
 		tapEventTimes := make([]int64, 0, numMoveEvents)

@@ -27,7 +27,7 @@ func init() {
 		BugComponent: "b:1373988",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "arcBootedWithInputOverlayAlphaV2",
+		Fixture:      "arcBootedWithGameDashboard",
 		Params: []testing.Param{
 			{
 				ExtraSoftwareDeps: []string{"android_container"},
@@ -46,10 +46,6 @@ func InputOverlayLaunch(ctx context.Context, s *testing.State) {
 		ui := uiauto.New(params.TestConn).WithTimeout(time.Minute)
 
 		if err := uiauto.Combine("Find gaming input overlay UI elements",
-			// Tap educational dialog.
-			ui.LeftClick(nodewith.Name("Got it").HasClass("LabelButtonLabel")),
-			// Find input overlay game control.
-			ui.WaitUntilExists(nodewith.Name("Game controls").HasClass("MenuEntryView")),
 			// Find input overlay tap buttons.
 			ui.WaitUntilExists(nodewith.Name(gio.TopTapKeyName).HasClass("LabelButtonLabel")),
 			ui.WaitUntilExists(nodewith.Name(gio.BotTapKey).HasClass("LabelButtonLabel")),
