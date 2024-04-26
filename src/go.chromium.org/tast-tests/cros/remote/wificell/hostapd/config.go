@@ -864,8 +864,9 @@ func (c *Config) Format(iface, ctrlPath string) (string, error) {
 	if c.is80211ax() || c.is80211be() {
 		configure("ieee80211ax", "1")
 		configure("he_oper_chwidth", strconv.Itoa(int(c.HEChWidth)))
-		configure("he_default_pe_duration", "0")   // 0us value in PE (packet extension) field
-		configure("he_basic_mcs_nss_set", "43690") // Enable MCS index 0-11 on spatial streams 1-8
+		configure("he_default_pe_duration", "0") // 0us value in PE (packet extension) field
+		// TODO(b/337225932): Set this value dynamically depending on AP/STA capabilities
+		configure("he_basic_mcs_nss_set", "65530") // Enable MCS index 0-11 on spatial streams 1 and 2 (0xfffa)
 		configure("he_bss_color", "42")            // Set default bss color
 
 		if c.HECenterChannel != 0 {
