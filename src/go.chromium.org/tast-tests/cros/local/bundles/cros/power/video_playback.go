@@ -55,6 +55,13 @@ func init() {
 			ExtraData: []string{"video_playback/h264_1080_30fps.mp4"},
 			ExtraAttr: []string{"group:power", "power_daily_video_playback", "power_weekly_video_playback"},
 		}, {
+			Name:      "h264_bt2020_1080_30fps_ash",
+			Fixture:   "powerAshRamfs",
+			Val:       videoPlaybackTestParam{VideoName: "h264_bt2020_1080_30fps"},
+			Timeout:   6*time.Minute + power.RecorderTimeout,
+			ExtraData: []string{"video_playback/h264_bt2020_1080_30fps.mp4"},
+			ExtraAttr: []string{"group:power", "power_daily_video_playback", "power_weekly_video_playback"},
+		}, {
 			Name:      "h264_1080_30fps_1hr_ash",
 			Fixture:   "powerAshRamfs",
 			ExtraData: []string{"video_playback/h264_1080_30fps.mp4"},
@@ -137,6 +144,13 @@ func init() {
 			ExtraData: []string{"video_playback/vp9_1080_30fps.webm"},
 			ExtraAttr: []string{"group:power", "power_daily_video_playback", "power_weekly_video_playback"},
 		}, {
+			Name:      "vp9_bt2020_1080_30fps_ash",
+			Fixture:   "powerAshRamfs",
+			Val:       videoPlaybackTestParam{VideoName: "vp9_bt2020_1080_30fps"},
+			Timeout:   6*time.Minute + power.RecorderTimeout,
+			ExtraData: []string{"video_playback/vp9_bt2020_1080_30fps.webm"},
+			ExtraAttr: []string{"group:power", "power_daily_video_playback", "power_weekly_video_playback"},
+		}, {
 			Name:      "vp9_1080_30fps_1hr_ash",
 			Fixture:   "powerAshRamfs",
 			ExtraData: []string{"video_playback/vp9_1080_30fps.webm"},
@@ -182,6 +196,12 @@ func init() {
 			Timeout:   6*time.Minute + power.RecorderTimeout,
 			ExtraData: []string{"video_playback/av1_1080_30fps.mp4"},
 		}, {
+			Name:      "av1_1080_bt2020_30fps_ash",
+			Fixture:   "powerAshRamfs",
+			Val:       videoPlaybackTestParam{VideoName: "av1_1080_bt2020_30fps"},
+			Timeout:   6*time.Minute + power.RecorderTimeout,
+			ExtraData: []string{"video_playback/av1_1080_bt2020_30fps.mp4"},
+		}, {
 			Name:      "av1_1080_60fps_ash",
 			Fixture:   "powerAshRamfs",
 			Val:       videoPlaybackTestParam{VideoName: "av1_1080_60fps"},
@@ -208,6 +228,14 @@ func init() {
 			Val:               videoPlaybackTestParam{VideoName: "h264_1080_30fps"},
 			Timeout:           6*time.Minute + power.RecorderTimeout,
 			ExtraData:         []string{"video_playback/h264_1080_30fps.mp4"},
+			ExtraAttr:         []string{"group:power", "power_daily_video_playback", "power_weekly_video_playback"},
+		}, {
+			Name:              "h264_bt2020_1080_30fps_lacros",
+			Fixture:           "powerAshRamfs",
+			Val:               videoPlaybackTestParam{VideoName: "h264_bt2020_1080_30fps"},
+			ExtraSoftwareDeps: []string{"lacros"},
+			Timeout:           6*time.Minute + power.RecorderTimeout,
+			ExtraData:         []string{"video_playback/h264_bt2020_1080_30fps.mp4"},
 			ExtraAttr:         []string{"group:power", "power_daily_video_playback", "power_weekly_video_playback"},
 		}, {
 			Name:              "h264_1080_30fps_1hr_lacros",
@@ -304,6 +332,14 @@ func init() {
 			ExtraData:         []string{"video_playback/vp9_1080_30fps.webm"},
 			ExtraAttr:         []string{"group:power", "power_daily_video_playback", "power_weekly_video_playback"},
 		}, {
+			Name:              "vp9_bt2020_1080_30fps_lacros",
+			Fixture:           "powerAshRamfs",
+			ExtraSoftwareDeps: []string{"lacros"},
+			Val:               videoPlaybackTestParam{VideoName: "vp9_bt2020_1080_30fps"},
+			Timeout:           6*time.Minute + power.RecorderTimeout,
+			ExtraData:         []string{"video_playback/vp9_bt2020_1080_30fps.webm"},
+			ExtraAttr:         []string{"group:power", "power_daily_video_playback", "power_weekly_video_playback"},
+		}, {
 			Name:              "vp9_1080_30fps_1hr_lacros",
 			Fixture:           "powerLacrosRamfs",
 			ExtraData:         []string{"video_playback/vp9_1080_30fps.webm"},
@@ -354,6 +390,13 @@ func init() {
 			Val:               videoPlaybackTestParam{VideoName: "av1_1080_30fps"},
 			Timeout:           6*time.Minute + power.RecorderTimeout,
 			ExtraData:         []string{"video_playback/av1_1080_30fps.mp4"},
+		}, {
+			Name:              "av1_1080_bt2020_30fps_lacros",
+			Fixture:           "powerLacrosRamfs",
+			ExtraSoftwareDeps: []string{"lacros"},
+			Val:               videoPlaybackTestParam{VideoName: "av1_1080_bt2020_30fps"},
+			Timeout:           6*time.Minute + power.RecorderTimeout,
+			ExtraData:         []string{"video_playback/av1_1080_bt2020_30fps.mp4"},
 		}, {
 			Name:              "av1_1080_60fps_lacros",
 			Fixture:           "powerLacrosRamfs",
