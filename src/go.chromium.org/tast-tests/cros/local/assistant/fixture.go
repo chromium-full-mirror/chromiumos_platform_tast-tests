@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/cpu"
+	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -24,7 +25,10 @@ import (
 const (
 	setUpTimeout    = time.Minute
 	tearDownTimeout = time.Minute
-	// Additional one minute as enabledFixture.PreTest performs a test query.
+	// 2 minutes:
+	// - 30 seconds for waiting an internet connection
+	// - 30 seconds for running a test query
+	// - 1 minute for misc
 	preTestTimeout  = 2 * time.Minute
 	postTestTimeout = time.Minute
 )
@@ -412,6 +416,11 @@ func (f *enabledFixture) PreTest(ctx context.Context, s *testing.FixtTestState) 
 	tconn, err := f.cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create test API connection: ", err)
+	}
+
+	// All Assistant tests require an internet connection.
+	if err := ping.VerifyInternetConnectivity(ctx, 30*time.Second); err != nil {
+		s.Fatal("Failed to wait an internet connection: ", err)
 	}
 
 	if err := EnableAndWaitForReady(ctx, tconn); err != nil {
