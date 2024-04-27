@@ -70,7 +70,7 @@ var standardTestCases = []searchSettingsTestCase{
 	},
 	{
 		searchTerm:        "Lock screen",
-		searchResult:      "Lock screen and sign-in, Security and Privacy",
+		searchResult:      "Lock screen and sign-in, Privacy and security",
 		wantValue:         nodewith.NameStartingWith("Lock screen").Role(role.Heading),
 		passwordProtected: true,
 	},
