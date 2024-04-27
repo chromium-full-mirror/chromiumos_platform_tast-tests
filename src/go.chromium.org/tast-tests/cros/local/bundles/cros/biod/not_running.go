@@ -22,7 +22,7 @@ func init() {
 		},
 		// ChromeOS > Platform > Services > Fingerprint
 		BugComponent: "b:782045",
-		Attr:         []string{"group:mainline", "informational", "group:fingerprint-cq"},
+		Attr:         []string{"group:fingerprint-cq"},
 		HardwareDeps: hwdep.D(hwdep.NoFingerprint()),
 	})
 }
