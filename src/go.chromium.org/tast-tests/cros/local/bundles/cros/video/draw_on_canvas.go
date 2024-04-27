@@ -21,6 +21,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/video/play"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
+	"go.chromium.org/tast-tests/cros/local/media/pre"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -118,7 +119,7 @@ func init() {
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraData:         []string{"video-on-canvas.html", "still-colors-360p.h264.mp4", "still-colors-360p.ref.png"},
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs", "lacros"},
-			Fixture:           "chromeVideoLacros",
+			Fixture:           pre.ChromeVideoLacrosFixture(pre.FakeMediaStreamUI),
 		}, {
 			Name: "h264_360p_exotic_crop_hw_lacros",
 			Val: drawOnCanvasParams{
@@ -129,7 +130,7 @@ func init() {
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraData:         []string{"video-on-canvas.html", "still-colors-720x480-cropped-to-640x360.h264.mp4", "still-colors-360p.ref.png"},
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs", "lacros"},
-			Fixture:           "chromeVideoLacros",
+			Fixture:           pre.ChromeVideoLacrosFixture(pre.FakeMediaStreamUI),
 		}, {
 			Name: "h264_480p_hw_lacros",
 			Val: drawOnCanvasParams{
@@ -140,7 +141,7 @@ func init() {
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraData:         []string{"video-on-canvas.html", "still-colors-480p.h264.mp4", "still-colors-480p.ref.png"},
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs", "lacros"},
-			Fixture:           "chromeVideoLacros",
+			Fixture:           pre.ChromeVideoLacrosFixture(pre.FakeMediaStreamUI),
 		}, {
 			Name: "h264_720p_hw_lacros",
 			Val: drawOnCanvasParams{
@@ -151,7 +152,7 @@ func init() {
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraData:         []string{"video-on-canvas.html", "still-colors-720p.h264.mp4", "still-colors-720p.ref.png"},
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs", "lacros"},
-			Fixture:           "chromeVideoLacros",
+			Fixture:           pre.ChromeVideoLacrosFixture(pre.FakeMediaStreamUI),
 		}, {
 			Name: "h264_1080p_hw_lacros",
 			Val: drawOnCanvasParams{
@@ -162,7 +163,7 @@ func init() {
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraData:         []string{"video-on-canvas.html", "still-colors-1080p.h264.mp4", "still-colors-1080p.ref.png"},
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs", "lacros"},
-			Fixture:           "chromeVideoLacros",
+			Fixture:           pre.ChromeVideoLacrosFixture(pre.FakeMediaStreamUI),
 		}},
 		// TODO(andrescj): add tests for VP8 and VP9.
 	})

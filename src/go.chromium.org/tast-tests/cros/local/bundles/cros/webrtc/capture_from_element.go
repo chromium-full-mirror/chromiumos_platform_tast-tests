@@ -11,6 +11,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/webrtc/capturefromelement"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
+	"go.chromium.org/tast-tests/cros/local/media/pre"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -47,7 +48,7 @@ func init() {
 				CanvasSource: capturefromelement.UseGlClearColor,
 				BrowserType:  browser.TypeLacros,
 			},
-			Fixture: "chromeVideoLacros",
+			Fixture: pre.ChromeVideoLacrosFixture(pre.FakeMediaStreamUI),
 		}, {
 			Name: "canvas_from_video_lacros",
 			Val: capturefromelement.TestParam{

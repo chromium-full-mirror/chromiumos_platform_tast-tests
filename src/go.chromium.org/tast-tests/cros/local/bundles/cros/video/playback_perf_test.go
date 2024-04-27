@@ -12,6 +12,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/genparams"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/video/playback"
+	"go.chromium.org/tast-tests/cros/local/media/pre"
 )
 
 // To regenerate the test parameters by running the following in a chroot:
@@ -208,7 +209,7 @@ func TestPlaybackPerfConfig(t *testing.T) {
 		}
 		for _, fps := range fpss {
 			param := genPlaybackPerfParam("h264", playback.GenDataPath("h264", resolution, fps),
-				resolution, fps, "hw", "lacros", "chromeVideoLacros", []string{"lacros"})
+				resolution, fps, "hw", "lacros", pre.ChromeVideoLacrosFixture(pre.FakeMediaStreamUI), []string{"lacros"})
 			if resolution == 1080 && fps == 30 {
 				param.MeasureSteadyStateMetrics = true
 			}
@@ -221,7 +222,7 @@ func TestPlaybackPerfConfig(t *testing.T) {
 		resolution, fps, dec := 1080, 30, "hw"
 		file := playbackPerfLongFile[codec]
 		param := genPlaybackPerfParam(codec, file, resolution, fps, dec,
-			"long_lacros", "chromeVideoLacros",
+			"long_lacros", pre.ChromeVideoLacrosFixture(pre.FakeMediaStreamUI),
 			[]string{"drm_atomic", "lacros"})
 		// "rogue" is for MT8173 hana.
 		param.HardwareDeps = append(param.HardwareDeps, "hwdep.SkipGPUFamily(\"rogue\")", "hwdep.InternalDisplay()")

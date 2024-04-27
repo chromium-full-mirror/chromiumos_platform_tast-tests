@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast-tests/cros/local/graphics/expectations"
+	"go.chromium.org/tast-tests/cros/local/media/pre"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -206,7 +207,7 @@ func init() {
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraData:         []string{"bear-320x240.h264.mp4"},
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs", "lacros"},
-			Fixture:           "chromeVideoLacros",
+			Fixture:           pre.ChromeVideoLacrosFixture(pre.FakeMediaStreamUI),
 		}, {
 			Name: "vp8_hw",
 			Val: playParams{
@@ -266,7 +267,7 @@ func init() {
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraData:         []string{"bear-320x240.vp9.webm"},
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "lacros"},
-			Fixture:           "chromeVideoLacros",
+			Fixture:           pre.ChromeVideoLacrosFixture(pre.FakeMediaStreamUI),
 		}, {
 			Name: "vp9_2_hw",
 			Val: playParams{

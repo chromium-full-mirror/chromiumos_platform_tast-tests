@@ -1356,7 +1356,7 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_1080_30", "lacros"},
 				ExtraData:         []string{"perf/h264/720p_30fps_300frames.h264.mp4"},
-				Fixture:           "chromeVideoLacros",
+				Fixture:           "chromeVideoLacros._FakeMediaStreamUI",
 				Timeout:           5 * time.Minute,
 			},
 			{
@@ -1373,7 +1373,7 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_1080_30", "lacros"},
 				ExtraData:         []string{"perf/h264/1080p_30fps_300frames.h264.mp4"},
-				Fixture:           "chromeVideoLacros",
+				Fixture:           "chromeVideoLacros._FakeMediaStreamUI",
 				Timeout:           5 * time.Minute,
 			},
 			{
@@ -1388,7 +1388,7 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_1080_60", "lacros"},
 				ExtraData:         []string{"perf/h264/1080p_60fps_600frames.h264.mp4"},
-				Fixture:           "chromeVideoLacros",
+				Fixture:           "chromeVideoLacros._FakeMediaStreamUI",
 				Timeout:           5 * time.Minute,
 			},
 			{
@@ -1403,7 +1403,7 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_2160_30", "lacros"},
 				ExtraData:         []string{"perf/h264/2160p_30fps_300frames.h264.mp4"},
-				Fixture:           "chromeVideoLacros",
+				Fixture:           "chromeVideoLacros._FakeMediaStreamUI",
 				Timeout:           5 * time.Minute,
 			},
 			{
@@ -1418,7 +1418,7 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_2160_60", "lacros"},
 				ExtraData:         []string{"perf/h264/2160p_60fps_600frames.h264.mp4"},
-				Fixture:           "chromeVideoLacros",
+				Fixture:           "chromeVideoLacros._FakeMediaStreamUI",
 				Timeout:           5 * time.Minute,
 			},
 			{
@@ -1437,7 +1437,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue"), hwdep.InternalDisplay()),
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_1080_30", "drm_atomic", "lacros"},
 				ExtraData:         []string{"crosvideo/1080.mp4"},
-				Fixture:           "chromeVideoLacros",
+				Fixture:           "chromeVideoLacros._FakeMediaStreamUI",
 				Timeout:           5 * time.Minute,
 			},
 			{
@@ -1455,7 +1455,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsHEVCVideoDecodingInChrome(), hwdep.SkipGPUFamily("rogue"), hwdep.InternalDisplay()),
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_hevc_1080_30", "drm_atomic", "lacros"},
 				ExtraData:         []string{"crosvideo/1080-5-frag.mp4"},
-				Fixture:           "chromeVideoLacros",
+				Fixture:           "chromeVideoLacros._FakeMediaStreamUI",
 				Timeout:           5 * time.Minute,
 			},
 			{
@@ -1473,7 +1473,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue"), hwdep.InternalDisplay()),
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_1080_30", "drm_atomic", "lacros"},
 				ExtraData:         []string{"crosvideo/1080.webm"},
-				Fixture:           "chromeVideoLacros",
+				Fixture:           "chromeVideoLacros._FakeMediaStreamUI",
 				Timeout:           5 * time.Minute,
 			},
 			{
@@ -1491,7 +1491,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue"), hwdep.InternalDisplay()),
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_av1_1080_30", "drm_atomic", "lacros"},
 				ExtraData:         []string{"crosvideo/av1_1080p_30fps.mp4"},
-				Fixture:           "chromeVideoLacros",
+				Fixture:           "chromeVideoLacros._FakeMediaStreamUI",
 				Timeout:           5 * time.Minute,
 			},
 			{

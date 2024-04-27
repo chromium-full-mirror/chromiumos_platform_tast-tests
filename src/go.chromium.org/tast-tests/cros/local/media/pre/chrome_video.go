@@ -6,11 +6,43 @@ package pre
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast/core/testing"
+)
+
+const (
+	chromeVideo featureType = featureType(uint32(1) << iota)
+
+	// FakeMediaStreamUI avoids the need to grant camera/microphone permissions.
+	FakeMediaStreamUI
+
+	// NaCl enables support for Native Client apps.
+	NaCl
+
+	// SWDecoding disables HW accelerated video decoding.
+	SWDecoding
+
+	// GuestLogin ensures the test runs while logged in as the guest user.
+	GuestLogin
+
+	// AshComposited disables HW overlays in ash-chrome entirely in order to force video to be composited by ash-chrome.
+	AshComposited
+
+	// LacrosComposited disables HW overlays in lacros-chrome entirely in order to force video to be composited by lacros-chrome.
+	LacrosComposited
+
+	// DistinctiveIdentifier allows for a distinctive identifier with DRM playback.
+	DistinctiveIdentifier
+
+	// VCDInUtilityProcess makes the video capture service run in a utility process.
+	VCDInUtilityProcess
+
+	// This must be defined last.
+	numChromeVideoFeatures = iota
 )
 
 func initChromeVideoFixtures() {
@@ -300,131 +332,6 @@ func initChromeVideoBaseFixtures() {
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
-}
-
-func initChromeVideoLacrosFixtures() {
-	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoLacros",
-		Desc:     "Logged into a user session with logging enabled (lacros)",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(
-				chrome.ExtraArgs(chromeVideoArgs...),
-				chrome.LacrosExtraArgs(chromeVideoArgs...),
-				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
-				chrome.LacrosExtraArgs(chromeBypassPermissionsArgs...))).Opts()
-		}),
-		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.FixtureSetUpTimeout + 7*time.Minute,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoLacrosNaCl",
-		Desc:     "Logged into a user session with logging, NaCl and the MojoVideoDecoder-for-Pepper enabled (lacros)",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(
-				chrome.ExtraArgs(chromeVideoArgs...),
-				chrome.LacrosExtraArgs(chromeVideoArgs...),
-				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
-				chrome.LacrosExtraArgs(chromeBypassPermissionsArgs...),
-				chrome.ExtraArgs("--enable-nacl"),
-				chrome.LacrosExtraArgs("--enable-nacl"))).Opts()
-		}),
-		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.FixtureSetUpTimeout + 7*time.Minute,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoLacrosNaClWithSWDecoding",
-		Desc:     "Similar to chromeVideoNaClWithMojoVideoDecoder but making sure Chrome does not use any potential hardware accelerated decoding (lacros)",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(
-				chrome.ExtraArgs(chromeVideoArgs...),
-				chrome.LacrosExtraArgs(chromeVideoArgs...),
-				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
-				chrome.LacrosExtraArgs(chromeBypassPermissionsArgs...),
-				chrome.ExtraArgs("--enable-nacl"),
-				chrome.ExtraArgs("--disable-accelerated-video-decode"),
-				chrome.LacrosExtraArgs("--enable-nacl"),
-				chrome.LacrosExtraArgs("--disable-accelerated-video-decode"))).Opts()
-		}),
-		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.FixtureSetUpTimeout + 7*time.Minute,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoWithGuestLoginLacros",
-		Desc:     "Similar to chromeVideo fixture but forcing login as a guest (lacros)",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(
-				chrome.ExtraArgs(chromeVideoArgs...),
-				chrome.LacrosExtraArgs(chromeVideoArgs...),
-				chrome.GuestLogin())).Opts()
-		}),
-		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.FixtureSetUpTimeout + 7*time.Minute,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeAshCompositedVideoLacros",
-		Desc:     "Similar to chromeVideoLacros fixture but disabling hardware overlays in ash-chrome entirely to force video to be composited",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(
-				chrome.ExtraArgs(chromeVideoArgs...),
-				chrome.LacrosExtraArgs(chromeVideoArgs...),
-				chrome.ExtraArgs("--enable-hardware-overlays=\"\""))).Opts()
-		}),
-		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.FixtureSetUpTimeout + 7*time.Minute,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeLacrosCompositedVideoLacros",
-		Desc:     "Similar to chromeVideoLacros fixture but disabling hardware overlays in lacros-chrome entirely to force video to be composited",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(
-				chrome.ExtraArgs(chromeVideoArgs...),
-				chrome.LacrosExtraArgs(chromeVideoArgs...),
-				chrome.LacrosExtraArgs("--enable-hardware-overlays=\"\""))).Opts()
-		}),
-		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.FixtureSetUpTimeout + 7*time.Minute,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoLacrosWithDistinctiveIdentifier",
-		Desc:     "Like chromeVideoWithDistinctiveIdentifier, but with lacros",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(
-				chrome.ExtraArgs(chromeVideoArgs...),
-				chrome.LacrosExtraArgs(chromeVideoArgs...),
-				chrome.ExtraArgs(chromeAllowDistinctiveIdentifierArgs...),
-				chrome.LacrosExtraArgs(chromeAllowDistinctiveIdentifierArgs...),
-				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
-				chrome.LacrosExtraArgs(chromeBypassPermissionsArgs...))).Opts()
-		}),
-		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.FixtureSetUpTimeout + 7*time.Minute,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
 	testing.AddFixture(&testing.Fixture{
 		Name:     "chromeVideoWithReducedHardwareVideoDecoderBuffers",
 		Desc:     "Similar to chromeVideo fixture but reduce the number of required renderer pipeline buffers to fill video frame pool",
@@ -441,7 +348,152 @@ func initChromeVideoLacrosFixtures() {
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
+}
 
+var chromeVideoLacrosFixtureGenerator = fixtureGenerator{
+	name: "chromeVideoLacros",
+}
+
+func initChromeVideoLacrosFixtures() {
+	combos := []featureComboType{
+		comb(chromeVideo, FakeMediaStreamUI),
+		comb(chromeVideo, FakeMediaStreamUI, NaCl),
+		comb(chromeVideo, FakeMediaStreamUI, NaCl, SWDecoding),
+		comb(chromeVideo, GuestLogin),
+		comb(chromeVideo, AshComposited),
+		comb(chromeVideo, LacrosComposited),
+		comb(chromeVideo, FakeMediaStreamUI, DistinctiveIdentifier),
+		comb(chromeVideo, FakeMediaStreamUI, VCDInUtilityProcess),
+	}
+
+	// TODO(b/337315335): ashAndLacrosVideoArgs is like chromeVideoArgs but
+	// doesn't contain --disable-features or --enable-features. Once we remove
+	// --disable-features/--enable-features from chromeVideoArgs, we can remove
+	// ashAndLacrosVideoArgs in favor of chromeVideoArgs.
+	ashAndLacrosVideoArgs := []string{
+		// Enable verbose log messages for video components.
+		"--vmodule=" + strings.Join([]string{
+			"*/media/gpu/chromeos/*=2",
+			"*/media/gpu/vaapi/*=2",
+			"*/media/gpu/v4l2/*=2"}, ","),
+		// Allow media autoplay. <video> tag won't automatically play upon loading the source unless this flag is set.
+		"--autoplay-policy=no-user-gesture-required",
+		// Do not show message center notifications.
+		"--suppress-message-center-popups",
+		// Make sure ARC++ is not running.
+		"--arc-availability=none",
+		// Ignore the list of blocked per-GPU functionality (e.g. VP8 accelerated
+		// decoding on Intel Jasper Lake).
+		"--disable-gpu-driver-bug-workarounds",
+	}
+
+	ashAndLacrosEnabledFeatures := []string{
+		// Enable hardware encoders frame drop in WebRTC.
+		// TODO(b/324998907): Remove this once the feature is enabled by default.
+		"WebRTCHardwareVideoEncoderFrameDrop",
+	}
+
+	ashAndLacrosDisabledFeatures := []string{
+		// The Renderer video stack might have a policy of not using hardware
+		// accelerated decoding for certain small resolutions (see crbug.com/684792).
+		// Disable that for testing.
+		"ResolutionBasedDecoderPriority",
+		// VA-API HW decoder and encoder might reject small resolutions for
+		// performance (see crbug.com/1008491 and b/171041334).
+		// Disable that for testing.
+		"VaapiEnforceVideoMinMaxResolution",
+		"VaapiVideoMinResolutionForPerformance",
+		// Disable firmware update to stop chrome from executing fwupd that restarts powerd.
+		"FirmwareUpdaterApp",
+	}
+
+	featureMap := map[featureType]featureInfo{
+		chromeVideo: {
+			"_",
+			[]chrome.Option{
+				chrome.ExtraArgs(ashAndLacrosVideoArgs...),
+				chrome.LacrosExtraArgs(ashAndLacrosVideoArgs...),
+				chrome.EnableFeatures(ashAndLacrosEnabledFeatures...),
+				chrome.LacrosEnableFeatures(ashAndLacrosEnabledFeatures...),
+				chrome.DisableFeatures(ashAndLacrosDisabledFeatures...),
+				chrome.LacrosDisableFeatures(ashAndLacrosDisabledFeatures...),
+			},
+		},
+		FakeMediaStreamUI: {
+			"FakeMediaStreamUI",
+			[]chrome.Option{
+				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
+				chrome.LacrosExtraArgs(chromeBypassPermissionsArgs...),
+			},
+		},
+		NaCl: {
+			"NaCl",
+			[]chrome.Option{
+				chrome.ExtraArgs("--enable-nacl"),
+				chrome.LacrosExtraArgs("--enable-nacl"),
+			},
+		},
+		SWDecoding: {
+			"SWDecoding",
+			[]chrome.Option{
+				chrome.ExtraArgs("--disable-accelerated-video-decode"),
+				chrome.LacrosExtraArgs("--disable-accelerated-video-decode"),
+			},
+		},
+		GuestLogin: {
+			"Guest",
+			[]chrome.Option{
+				chrome.GuestLogin(),
+			},
+		},
+		AshComposited: {
+			"AshComposited",
+			[]chrome.Option{
+				chrome.ExtraArgs("--enable-hardware-overlays=\"\""),
+			},
+		},
+		LacrosComposited: {
+			"LacrosComposited",
+			[]chrome.Option{
+				chrome.LacrosExtraArgs("--enable-hardware-overlays=\"\""),
+			},
+		},
+		DistinctiveIdentifier: {
+			"DistinctiveIdentifier",
+			[]chrome.Option{
+				chrome.ExtraArgs(chromeAllowDistinctiveIdentifierArgs...),
+				chrome.LacrosExtraArgs(chromeAllowDistinctiveIdentifierArgs...),
+			},
+		},
+		VCDInUtilityProcess: {
+			"VCDInUtilityProcess",
+			[]chrome.Option{
+				chrome.DisableFeatures("RunVideoCaptureServiceInBrowserProcess"),
+			},
+		},
+	}
+	if len(featureMap) != numChromeVideoFeatures {
+		panic("Missing feature declaration in featureMap")
+	}
+
+	chromeVideoLacrosFixtureGenerator.initialize(combos, featureMap)
+	testing.AddFixture(&testing.Fixture{
+		Name:            chromeVideoLacrosFixtureGenerator.name,
+		Desc:            "Logged into a LaCrOS session",
+		Contacts:        []string{"chromeos-gfx-video@google.com"},
+		BugComponent:    "b:168352", // ChromeOS > Platform > Graphics > Video.
+		Parent:          "gpuWatchDog",
+		SetUpTimeout:    chrome.FixtureSetUpTimeout + 7*time.Minute,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(s.Param().([]chrome.Option)...)).Opts()
+		}),
+		Params: chromeVideoLacrosFixtureGenerator.genParams(),
+	})
+
+	// TODO(b/337315335): remove this once camera.GetUserMediaPostVCSCrash.lacros migrates to
+	// ChromeVideoLacrosFixture(FakeMediaStreamUI, VCDInUtilityProcess).
 	testing.AddFixture(&testing.Fixture{
 		Name:     "chromeVideoLacrosWithVCDInUtilityProcess",
 		Desc:     "Similar to chromeVideoLacros fixture but running VCD in the utility process",
@@ -459,4 +511,9 @@ func initChromeVideoLacrosFixtures() {
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
+}
+
+// ChromeVideoLacrosFixture returns the name of the LaCrOS video fixture corresponding to features.
+func ChromeVideoLacrosFixture(features ...featureType) string {
+	return chromeVideoLacrosFixtureGenerator.getFixture(add(comb(features...), chromeVideo))
 }

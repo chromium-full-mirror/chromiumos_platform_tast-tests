@@ -11,6 +11,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/video/webcodecs"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
+	"go.chromium.org/tast-tests/cros/local/media/pre"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -84,25 +85,25 @@ func init() {
 			Val:               webcodecs.TestDecodeArgs{VideoFile: "bear-320x240.av1.mp4", Acceleration: webcodecs.PreferHardware, BrowserType: browser.TypeLacros},
 			ExtraSoftwareDeps: []string{caps.HWDecodeAV1, "lacros"},
 			ExtraData:         []string{"bear-320x240.av1.mp4", "bear-320x240.av1.mp4.json"},
-			Fixture:           "chromeVideoLacros",
+			Fixture:           pre.ChromeVideoLacrosFixture(pre.FakeMediaStreamUI),
 		}, {
 			Name:              "h264_hw_lacros",
 			Val:               webcodecs.TestDecodeArgs{VideoFile: "bear-320x240.h264.mp4", Acceleration: webcodecs.PreferHardware, BrowserType: browser.TypeLacros},
 			ExtraSoftwareDeps: []string{"proprietary_codecs", caps.HWDecodeH264, "lacros"},
 			ExtraData:         []string{"bear-320x240.h264.mp4", "bear-320x240.h264.mp4.json"},
-			Fixture:           "chromeVideoLacros",
+			Fixture:           pre.ChromeVideoLacrosFixture(pre.FakeMediaStreamUI),
 		}, {
 			Name:              "vp8_hw_lacros",
 			Val:               webcodecs.TestDecodeArgs{VideoFile: "bear-320x240.vp8.mp4", Acceleration: webcodecs.PreferHardware, BrowserType: browser.TypeLacros},
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "lacros"},
 			ExtraData:         []string{"bear-320x240.vp8.mp4", "bear-320x240.vp8.mp4.json"},
-			Fixture:           "chromeVideoLacros",
+			Fixture:           pre.ChromeVideoLacrosFixture(pre.FakeMediaStreamUI),
 		}, {
 			Name:              "vp9_hw_lacros",
 			Val:               webcodecs.TestDecodeArgs{VideoFile: "bear-320x240.vp9.mp4", Acceleration: webcodecs.PreferHardware, BrowserType: browser.TypeLacros},
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "lacros"},
 			ExtraData:         []string{"bear-320x240.vp9.mp4", "bear-320x240.vp9.mp4.json"},
-			Fixture:           "chromeVideoLacros",
+			Fixture:           pre.ChromeVideoLacrosFixture(pre.FakeMediaStreamUI),
 		}},
 	})
 }

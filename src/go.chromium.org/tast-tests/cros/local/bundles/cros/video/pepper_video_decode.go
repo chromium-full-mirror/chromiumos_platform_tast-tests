@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/media/constants"
 	"go.chromium.org/tast-tests/cros/local/media/histogram"
+	"go.chromium.org/tast-tests/cros/local/media/pre"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -68,12 +69,12 @@ func init() {
 			Name:              "h264_hw_lacros",
 			Val:               pepperVideoDecodeTestParam{browserType: browser.TypeLacros, verifyHWMode: verifyMojoVDPathWasUsed},
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs", "lacros"},
-			Fixture:           "chromeVideoLacrosNaCl",
+			Fixture:           pre.ChromeVideoLacrosFixture(pre.FakeMediaStreamUI, pre.NaCl),
 		}, {
 			Name:              "h264_sw_lacros",
 			Val:               pepperVideoDecodeTestParam{browserType: browser.TypeLacros, verifyHWMode: verifySWPathWasUsed},
 			ExtraSoftwareDeps: []string{"proprietary_codecs", "lacros"},
-			Fixture:           "chromeVideoLacrosNaClWithSWDecoding",
+			Fixture:           pre.ChromeVideoLacrosFixture(pre.FakeMediaStreamUI, pre.NaCl, pre.SWDecoding),
 		}},
 	})
 }
