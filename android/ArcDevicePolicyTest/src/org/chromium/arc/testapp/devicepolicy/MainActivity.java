@@ -9,6 +9,7 @@ package org.chromium.arc.testapp.devicepolicy;
 import android.app.Activity;
 import android.app.admin.DevicePolicyManager;
 import android.content.Context;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Bundle;
 import android.os.UserManager;
 import android.util.Log;
@@ -53,6 +54,7 @@ public class MainActivity extends Activity {
                 Map.ofEntries(
                         isRestrictionUnapplied(
                                 "setWallpaper", "setWallpaper", UserManager.DISALLOW_SET_WALLPAPER),
+                        Map.entry("enabledSystemAppPackageNames", this::IsSystemAppPackageDisabled),
                         isRestrictionUnapplied(
                                 "installUnknownSourcesDisabled",
                                 "installUnknownSources",
@@ -96,11 +98,9 @@ public class MainActivity extends Activity {
     public void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
 
-        if (savedInstanceState != null) {
-            lstPolicies.setSelection(savedInstanceState.getInt(POLICY_VALUE_KEY));
-            txtOutput.setText(savedInstanceState.getString(OUTPUT_VALUE_KEY));
-            txtError.setText(savedInstanceState.getString(ERROR_VALUE_KEY));
-        }
+        lstPolicies.setSelection(savedInstanceState.getInt(POLICY_VALUE_KEY));
+        txtOutput.setText(savedInstanceState.getString(OUTPUT_VALUE_KEY));
+        txtError.setText(savedInstanceState.getString(ERROR_VALUE_KEY));
     }
 
     private void runTest() {
@@ -147,6 +147,20 @@ public class MainActivity extends Activity {
                     }
                     return allowed;
                 });
+    }
+
+    private boolean IsSystemAppPackageDisabled() {
+        final String PACKAGE_NAME = "com.google.android.deskclock";
+        try {
+            final boolean enabled = getPackageManager().getApplicationInfo(PACKAGE_NAME, 0).enabled;
+            if (enabled) {
+                logError("System app is enabled", null);
+            }
+            return !enabled;
+        } catch (NameNotFoundException e) {
+            logError("System app not found", e);
+            return true;
+        }
     }
 
     private void logError(String message, Exception e) {

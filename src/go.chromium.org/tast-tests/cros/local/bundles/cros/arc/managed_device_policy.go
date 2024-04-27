@@ -91,11 +91,13 @@ func ManagedDevicePolicy(ctx context.Context, s *testing.State) {
 	const (
 		apk             = "ArcDevicePolicyTest.apk"
 		mainActivityCls = devicePolicyPkg + ".MainActivity"
+		disabledSystemPkg = "com.google.android.deskclock"
 	)
 
 	packages := []string{devicePolicyPkg}
 	arcPolicyMap := map[string]arcPolicyFactory{
 		"cameraDisabled":                staticPolicy(&policy.VideoCaptureAllowed{Val: false}),
+		"enabledSystemAppPackageNames":  staticPolicy(nil),
 		"installUnknownSourcesDisabled": staticPolicy(nil),
 		"modifyAccountsDisabled":        staticPolicy(nil),
 		"printingDisabled":              staticPolicy(&policy.PrintingEnabled{Val: false}),
@@ -190,8 +192,9 @@ func ManagedDevicePolicy(ctx context.Context, s *testing.State) {
 
 	s.Log("Updating policies to apply restrictions")
 	arcPolicy := arcent.CreateArcPolicyWithApps(packages, arcent.InstallTypeAvailable, arcent.PlayStoreModeAllowList)
-	arcPolicy.Val.ModifyAccountsDisabled = true
+	arcPolicy.Val.EnabledSystemAppPackageNames = []string{disabledSystemPkg}
 	arcPolicy.Val.InstallUnknownSourcesDisabled = true
+	arcPolicy.Val.ModifyAccountsDisabled = true
 	arcEnabledPolicy := &policy.ArcEnabled{Val: true}
 	policies := []policy.Policy{arcEnabledPolicy, arcPolicy}
 	for policyName := range arcPolicyMap {

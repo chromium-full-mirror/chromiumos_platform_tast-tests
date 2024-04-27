@@ -6649,6 +6649,7 @@ type Application struct {
 
 type ArcPolicyValue struct {
 	Applications                  []Application `json:"applications"`
+	EnabledSystemAppPackageNames  []string      `json:"enabledSystemAppPackageNames"`
 	InstallUnknownSourcesDisabled bool          `json:"installUnknownSourcesDisabled"`
 	PlayEmmApiInstallDisabled     bool          `json:"playEmmApiInstallDisabled"`
 	PlayStoreMode                 string        `json:"playStoreMode"`
