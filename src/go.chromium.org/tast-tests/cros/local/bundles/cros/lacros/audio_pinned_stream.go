@@ -23,9 +23,9 @@ func init() {
 		Func:         AudioPinnedStream,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Tests pinned stream on lacros",
-		Contacts:     []string{"lacros-team@google.com", "yuhsuan@chromium.org"},
+		Contacts:     []string{"chromeos-audio-bugs@google.com", "yuhsuan@chromium.org"},
 		Attr:         []string{"group:mainline", "group:audio"},
-		BugComponent: "b:1456869",
+		BugComponent: "b:167272",
 		SoftwareDeps: []string{"chrome", "lacros"},
 		Data:         []string{"sine_2ch_440hz_10s_20231101.wav", "audio_playback_test.html"},
 		Params: []testing.Param{{

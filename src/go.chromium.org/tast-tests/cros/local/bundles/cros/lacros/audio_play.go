@@ -29,8 +29,8 @@ func init() {
 		Func:         AudioPlay,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Tests basic audio playback on lacros",
-		Contacts:     []string{"lacros-team@google.com", "yuhsuan@chromium.org"},
-		BugComponent: "b:1456869",
+		Contacts:     []string{"chromeos-audio-bugs@google.com", "yuhsuan@chromium.org"},
+		BugComponent: "b:167272",
 		Attr:         []string{"group:mainline", "group:audio"},
 		SoftwareDeps: []string{"chrome", "lacros"},
 		Timeout:      7 * time.Minute, // A lenient limit for launching Lacros Chrome.
