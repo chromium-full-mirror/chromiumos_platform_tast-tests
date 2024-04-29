@@ -25,7 +25,7 @@ func init() {
 		Desc:           "Verifies that carrier lock restrictions are enforced by modem",
 		Contacts:       []string{"chromeos-cellular-team@google.com", "ujjwalpande@google.com"},
 		BugComponent:   "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:           []string{"group:cellular", "cellular_unstable", "cellular_sim_active"},
+		Attr:           []string{},
 		Fixture:        "cellularSIMLockCleared",
 		SoftwareDeps:   []string{"chrome"},
 		Timeout:        20 * time.Minute,

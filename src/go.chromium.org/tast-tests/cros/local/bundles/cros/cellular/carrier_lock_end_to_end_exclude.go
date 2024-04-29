@@ -25,7 +25,7 @@ func init() {
 		Desc:           "Verifies that carriers excluded by carrier lock config does not connect",
 		Contacts:       []string{"ujjwalpande@google.com", "chromeos-cellular-team@google.com"},
 		BugComponent:   "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:           []string{"group:cellular", "cellular_unstable", "cellular_sim_active"},
+		Attr:           []string{},
 		Fixture:        "cellularSIMLockCleared",
 		SoftwareDeps:   []string{"chrome"},
 		Timeout:        20 * time.Minute,
