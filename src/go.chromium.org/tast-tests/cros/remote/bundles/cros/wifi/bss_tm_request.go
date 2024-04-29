@@ -51,6 +51,7 @@ func init() {
 		Func: BSSTMRequest,
 		Desc: "Tests the DUTs response to a BSS Transition Management Request",
 		Contacts: []string{
+			"matthewmwang@google.com",         // TODO(b/337888953): remove after stabilizing psk_to_sae_6ghz
 			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
 		},
 		BugComponent:    "b:893827", // ChromeOS > Platform > Connectivity > WiFi
@@ -118,6 +119,7 @@ func init() {
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
 				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E"},
+				ExtraAttr:         []string{"wificell_unstable"},
 				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel"}`,
 			},
 		},
