@@ -36,7 +36,7 @@ func init() {
 		Name:            fixture.DeskAPILacros,
 		Desc:            "Fixture providing Desk API feature access for lacros browser",
 		Contacts:        []string{"chromeos-commercial-remote-management@google.com", "cros-commercial-productivity-eng@google.com", "aprilzhou@google.com"},
-		BugComponent:    "b:1020793",
+		BugComponent:    "b:1020793", // ChromeOS Server Projects > Enterprise Management > Commercial Productivity
 		Impl:            NewDeskAPILacrosFixt(),
 		SetUpTimeout:    15 * time.Minute,
 		TearDownTimeout: 5 * time.Minute,
@@ -56,7 +56,7 @@ func init() {
 		Name:            fixture.DeskAPIAsh,
 		Desc:            "Fixture providing Desk API feature access for ash browser",
 		Contacts:        []string{"chromeos-commercial-remote-management@google.com", "cros-commercial-productivity-eng@google.com", "aprilzhou@google.com"},
-		BugComponent:    "b:1020793",
+		BugComponent:    "b:1020793", // ChromeOS Server Projects > Enterprise Management > Commercial Productivity
 		Impl:            NewDeskAPIAshFixt(),
 		SetUpTimeout:    15 * time.Minute,
 		TearDownTimeout: 5 * time.Minute,

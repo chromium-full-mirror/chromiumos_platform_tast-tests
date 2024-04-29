@@ -126,9 +126,10 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     fixture.LacrosAdminDeskTemplatesLoggedIn,
-		Desc:     "Logged into a user session with admin desk templates for lacros",
-		Contacts: []string{"zhumatthew@google.com", "chromeos-commercial-remote-management@google.com"},
+		Name:         fixture.LacrosAdminDeskTemplatesLoggedIn,
+		Desc:         "Logged into a user session with admin desk templates for lacros",
+		Contacts:     []string{"chromeos-commercial-remote-management@google.com", "zhumatthew@google.com"},
+		BugComponent: "b:1020793", // ChromeOS Server Projects > Enterprise Management > Commercial Productivity
 		Impl: &policyChromeFixture{
 			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 				return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(chrome.EnableFeatures("DesksTemplates"))).Opts()
