@@ -24,9 +24,10 @@ import (
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
-		Name:     "metaRemoteDataFilesFixture",
-		Desc:     "Demonstrate how to use data files in fixtures",
-		Contacts: []string{"tast-owner@google.com", "seewaifu@google.com"},
+		Name:         "metaRemoteDataFilesFixture",
+		Desc:         "Demonstrate how to use data files in fixtures",
+		Contacts:     []string{"tast-core@google.com", "seewaifu@google.com"},
+		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
 		Data: []string{
 			"fixture_data_internal.txt",
 			"fixture_data_external.txt",
@@ -34,37 +35,42 @@ func init() {
 		Impl: dataFileFixture{},
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name:     "metaRemoteFixtureDUTFeature",
-		Desc:     "Demonstrate how to access DUT Features in fixtures",
-		Contacts: []string{"tast-owner@google.com", "seewaifu@chromium.org"},
-		Data:     []string{},
-		Impl:     &dutFeatureFixture{},
+		Name:         "metaRemoteFixtureDUTFeature",
+		Desc:         "Demonstrate how to access DUT Features in fixtures",
+		Contacts:     []string{"tast-core@google.com", "seewaifu@google.com"},
+		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
+		Data:         []string{},
+		Impl:         &dutFeatureFixture{},
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name:     "metaRemoteFixtureWithStringVal",
-		Desc:     "Used for verification of tests accessing string value from local fixture",
-		Contacts: []string{"tast-owner@google.com", "seewaifu@chromium.org", "yichiyan@chromium.org"},
-		Data:     []string{},
-		Impl:     &fixtSerializedStringFixture{},
+		Name:         "metaRemoteFixtureWithStringVal",
+		Desc:         "Used for verification of tests accessing string value from local fixture",
+		Contacts:     []string{"tast-core@google.com", "seewaifu@google.com", "yichiyan@google.com"},
+		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
+		Data:         []string{},
+		Impl:         &fixtSerializedStringFixture{},
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name:     "metaRemoteFixtureWithStructVal",
-		Desc:     "Used for verification of tests accessing string value from local fixture",
-		Contacts: []string{"tast-owner@google.com", "seewaifu@chromium.org", "yichiyan@chromium.org"},
-		Data:     []string{},
-		Impl:     &fixtSerializedStructFixture{},
+		Name:         "metaRemoteFixtureWithStructVal",
+		Desc:         "Used for verification of tests accessing string value from local fixture",
+		Contacts:     []string{"tast-core@google.com", "seewaifu@google.com", "yichiyan@google.com"},
+		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
+		Data:         []string{},
+		Impl:         &fixtSerializedStructFixture{},
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name:     "metaRemoteSetupFailureFixture",
-		Desc:     "Test tast fixture failures",
-		Contacts: []string{"tast-owner@google.com", "seewaifu@chromium.org"},
-		Impl:     remoteSetupFailureFixture{},
+		Name:         "metaRemoteSetupFailureFixture",
+		Desc:         "Test tast fixture failures",
+		Contacts:     []string{"tast-core@google.com", "seewaifu@google.com"},
+		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
+		Impl:         remoteSetupFailureFixture{},
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name:     "metaRemoteParamFixture",
-		Desc:     "Test tast parameterized fixture",
-		Contacts: []string{"tast-owner@google.com", "seewaifu@chromium.org"},
-		Impl:     remoteParamFixture{},
+		Name:         "metaRemoteParamFixture",
+		Desc:         "Test tast parameterized fixture",
+		Contacts:     []string{"tast-core@google.com", "seewaifu@google.com"},
+		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
+		Impl:         remoteParamFixture{},
 		Params: []testing.FixtureParam{
 			{
 				Val: remoteParamVal{},
@@ -84,10 +90,11 @@ func init() {
 		},
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name:     "metaRemoteDUTLabConfigFixture",
-		Desc:     "Test tast parameterized fixture",
-		Contacts: []string{"tast-owner@google.com", "seewaifu@chromium.org"},
-		Impl:     remoteDUTLabConfigFixture{},
+		Name:         "metaRemoteDUTLabConfigFixture",
+		Desc:         "Test tast parameterized fixture",
+		Contacts:     []string{"tast-core@google.com", "seewaifu@google.com"},
+		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
+		Impl:         remoteDUTLabConfigFixture{},
 	})
 }
 
