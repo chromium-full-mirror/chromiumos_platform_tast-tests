@@ -16,6 +16,7 @@ import (
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/cellular"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/certprovisioning"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/crash"
+	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/crosca"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/croshealthd/fixture"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/example"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/factory"
