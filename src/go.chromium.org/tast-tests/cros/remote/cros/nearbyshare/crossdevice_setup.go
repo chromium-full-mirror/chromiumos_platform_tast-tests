@@ -27,6 +27,7 @@ func init() {
 		Desc: "Fixture for setting up environment for Cross Device local tests",
 		Contacts: []string{"chromeos-cross-device-eng@google.com",
 			"chromeos-sw-engprod@google.com"},
+		BugComponent: "b:1108889", // ChromeOS > Software > System Services > Cross Device
 		Impl: &nearbyRemoteFixture{},
 		ServiceDeps: []string{
 			wificell.ShillServiceName,
