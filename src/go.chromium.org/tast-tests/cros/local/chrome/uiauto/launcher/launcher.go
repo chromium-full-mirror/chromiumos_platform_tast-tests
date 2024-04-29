@@ -562,24 +562,28 @@ func AppItemViewFinder(itemName string) *nodewith.Finder {
 	return nodewith.Name(itemName).HasClass(ExpandedItemsClass)
 }
 
-// Search return a function that executes a search query.
+// Search returns a function that executes a search query.
 // Launcher should be open already.
 func Search(tconn *chrome.TestConn, kb *input.KeyboardEventWriter, query string) uiauto.Action {
-	searchBoxView := nodewith.HasClass("SearchBoxView").Visible().First()
-	searchField := nodewith.HasClass("Textfield").Role("textField").Ancestor(searchBoxView)
-	return func(ctx context.Context) error {
-		// Click the search box.
-		ui := uiauto.New(tconn)
-		if err := ui.LeftClickUntilFocused(searchField)(ctx); err != nil {
-			return errors.Wrap(err, "failed to click launcher searchbox")
-		}
+	searchBoxView := nodewith.HasClass(SearchBoxView).Visible().First()
+	return search(tconn, kb, searchBoxView, query)
+}
 
-		// Search for anything by typing query string.
-		if err := kb.Type(ctx, query); err != nil {
-			return errors.Wrapf(err, "failed to type %q", query)
-		}
-		return nil
+// SearchWithTabletModeParameter returns a function that executes a search query.
+// Launcher should be open already.
+//
+// TODO(b/320771499): speculative fix for "launcher.SearchAutocomplete.*" tests. If this works, move all other `Search` calls to this function.
+// Possible reason: we keep both launchers in the views tree after switching between tablet and clamshell modes (and from the views perspective they both have visibility equal to `true`).
+// This may result in querying the wrong `SearchBoxView`. This may also explain the fact that the bubble launcher is dismissed on the faillog screenshot (due to clicking on the position where the tablet mode `SearchBoxView` is located).
+func SearchWithTabletModeParameter(tconn *chrome.TestConn, kb *input.KeyboardEventWriter, tabletMode bool, query string) uiauto.Action {
+	var searchBoxView *nodewith.Finder
+	if tabletMode {
+		searchBoxView = nodewith.HasClass(SearchBoxView).Visible().Ancestor(nodewith.HasClass("AppListView"))
+	} else {
+		searchBoxView = nodewith.HasClass(SearchBoxView).Visible().Ancestor(nodewith.HasClass("AppListBubbleView"))
 	}
+
+	return search(tconn, kb, searchBoxView, query)
 }
 
 // ClearSearchField function returns a function that clears the search field by pressing Ctrl+A and Backspace.
@@ -1595,4 +1599,23 @@ func VerifyDlcInstalled(ctx context.Context, dlcList []string) error {
 		}
 	}
 	return nil
+}
+
+// search returns a function that executes a search query.
+// Launcher should be open already.
+func search(tconn *chrome.TestConn, kb *input.KeyboardEventWriter, searchBoxView *nodewith.Finder, query string) uiauto.Action {
+	searchField := nodewith.HasClass("Textfield").Role("textField").Ancestor(searchBoxView)
+	return func(ctx context.Context) error {
+		// Click the search box.
+		ui := uiauto.New(tconn)
+		if err := ui.LeftClickUntilFocused(searchField)(ctx); err != nil {
+			return errors.Wrap(err, "failed to click launcher searchbox")
+		}
+
+		// Search for anything by typing query string.
+		if err := kb.Type(ctx, query); err != nil {
+			return errors.Wrapf(err, "failed to type %q", query)
+		}
+		return nil
+	}
 }

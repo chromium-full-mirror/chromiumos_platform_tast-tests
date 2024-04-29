@@ -119,7 +119,7 @@ func SearchAutocomplete(ctx context.Context, s *testing.State) {
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_query_"+string(testCase.searchKeyword))
 
 	if err := uiauto.Combine("search launcher and verify ghost text",
-		launcher.Search(tconn, kb, testCase.searchKeyword),
+		launcher.SearchWithTabletModeParameter(tconn, kb, testCase.TabletMode, testCase.searchKeyword),
 		launcher.WaitForResult(tconn, testCase.result))(ctx); err != nil {
 		s.Fatal(errors.Wrapf(err, "failed to search for: %s", testCase.searchKeyword))
 	}
