@@ -58,6 +58,34 @@ func init() {
 					"amd64", // libstyle.so is amd64 only.
 				},
 			},
+			{
+				Name: "nc_sleep_10ms",
+				Val: offlinePipelineBenchmarkParam{
+					dlcID:             "nc-ap-dlc",
+					dlcSharedObject:   "libdenoiser.so",
+					pluginName:        "plugin_processor_create",
+					blockSizeFrames:   480,
+					inputWavFrameRate: 48000,
+					sleepTime:         10 * time.Millisecond,
+				},
+				ExtraSoftwareDeps: []string{
+					"amd64", // libdenoiser.so is amd64 only.
+				},
+			},
+			{
+				Name: "ast_sleep_20ms",
+				Val: offlinePipelineBenchmarkParam{
+					dlcID:             "nuance-dlc",
+					dlcSharedObject:   "libstyle.so",
+					pluginName:        "plugin_processor_create_ast",
+					blockSizeFrames:   480,
+					inputWavFrameRate: 24000,
+					sleepTime:         20 * time.Millisecond,
+				},
+				ExtraSoftwareDeps: []string{
+					"amd64", // libstyle.so is amd64 only.
+				},
+			},
 		},
 	})
 }
@@ -68,6 +96,7 @@ type offlinePipelineBenchmarkParam struct {
 	pluginName        string
 	blockSizeFrames   int
 	inputWavFrameRate int
+	sleepTime         time.Duration
 }
 
 // OfflinePipelineBenchmark benchmarks audio_processor modules using offline-pipeline.
@@ -108,6 +137,7 @@ func OfflinePipelineBenchmark(ctx context.Context, s *testing.State) {
 		"offline-pipeline", "--json",
 		fmt.Sprintf("--plugin-name=%s", param.pluginName),
 		fmt.Sprintf("--block-size-frames=%d", param.blockSizeFrames),
+		fmt.Sprintf("--sleep-sec=%v", param.sleepTime.Seconds()),
 		sharedObject, inputWav, outputWav,
 	).Output(testexec.DumpLogOnError)
 	if err != nil {
