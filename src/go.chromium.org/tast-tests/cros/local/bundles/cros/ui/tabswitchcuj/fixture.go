@@ -24,6 +24,7 @@ func init() {
 			"xiyuan@chromium.org",
 			"cros-sw-perf@google.com",
 		},
+		BugComponent:    "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl:            wpr.NewFixture(WPRArchiveName, wpr.Replay),
 		SetUpTimeout:    chrome.LoginTimeout + 7*time.Minute,
 		ResetTimeout:    chrome.ResetTimeout,
@@ -38,6 +39,7 @@ func init() {
 			"xiyuan@chromium.org",
 			"cros-sw-perf@google.com",
 		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return s.ParentValue().(wpr.FixtValue).FOpt()(ctx, s)
 		}),
@@ -54,6 +56,7 @@ func init() {
 			"xiyuan@chromium.org",
 			"cros-sw-perf@google.com",
 		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			opts, err := s.ParentValue().(wpr.FixtValue).FOpt()(ctx, s)
 			if err != nil {
@@ -77,6 +80,7 @@ func init() {
 			"ramsaroop@google.com",
 			"cros-sw-perf@google.com",
 		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			opts, err := s.ParentValue().(wpr.FixtValue).FOpt()(ctx, s)
 			if err != nil {

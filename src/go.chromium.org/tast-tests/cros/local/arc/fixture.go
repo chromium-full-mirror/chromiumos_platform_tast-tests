@@ -467,6 +467,7 @@ func init() {
 			"cros-sw-perf@google.com",
 			"xiyuan@chromium.org",
 		},
+		BugComponent:    "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,
@@ -488,6 +489,7 @@ func init() {
 			"cros-sw-perf@google.com",
 			"xiyuan@chromium.org",
 		},
+		BugComponent:    "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,
@@ -514,6 +516,7 @@ func init() {
 			"cros-sw-perf@google.com",
 			"xiyuan@chromium.org",
 		},
+		BugComponent:    "b:1045832", // ChromeOS > Software > Performance > TPS
 		Vars:            []string{"ui.gaiaPoolDefault"},
 		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + BootTimeout + 2*time.Minute,

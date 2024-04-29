@@ -162,6 +162,7 @@ func init() {
 			"xiyuan@chromium.org",
 			"cros-sw-perf@google.com",
 		},
+		BugComponent:    "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl:            &prepareCUJFixture{},
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -174,6 +175,7 @@ func init() {
 			"vincentchiang@google.com",
 			"cros-sw-perf@google.com",
 		},
+		BugComponent:    "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl:            &prepareCUJFixture{skipCPUCooldown: true},
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -186,6 +188,7 @@ func init() {
 			"jane.yang@cienet.com",
 			"cros-sw-perf@google.com",
 		},
+		BugComponent:    "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl:            &prepareCUJFixture{chargeBattery: true},
 		PreTestTimeout:  CPUStablizationTimeout + BatteryChargingTimeout + 5*time.Second,
 		PostTestTimeout: postTestTimeout,
@@ -198,6 +201,7 @@ func init() {
 			"alston.huang@cienet.com",
 			"cros-sw-perf@google.com",
 		},
+		BugComponent:    "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl:            &prepareCUJFixture{chargeBattery: true},
 		SetUpTimeout:    chrome.EnrollmentAndLoginTimeout + chrome.GAIALoginTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
@@ -213,6 +217,7 @@ func init() {
 			"xiyuan@chromium.org",
 			"cros-sw-perf@google.com",
 		},
+		BugComponent:    "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl:            &loggedInToCUJUserFixture{bt: browser.TypeAsh},
 		Parent:          "prepareForCUJ",
 		SetUpTimeout:    setUpTimeout,
@@ -229,6 +234,7 @@ func init() {
 			"vineethrp@google.com",
 			"cros-sw-perf@google.com",
 		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: &loggedInToCUJUserFixture{
 			bt:            browser.TypeAsh,
 			enablePvSched: true,
@@ -248,6 +254,7 @@ func init() {
 			"cros-sw-perf@google.com",
 			"ramsaroop@google.com",
 		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: &loggedInToCUJUserFixture{
 			bt:         browser.TypeAsh,
 			disableARC: true,
@@ -273,6 +280,7 @@ func init() {
 			"ramsaroop@google.com",
 			"cros-sw-perf@google.com",
 		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: &loggedInToCUJUserFixture{
 			bt:           browser.TypeAsh,
 			arcSupported: true,
@@ -292,7 +300,8 @@ func init() {
 			"xiyuan@chromium.org",
 			"cros-sw-perf@google.com",
 		},
-		Data: docsBlockerFiles,
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
+		Data:         docsBlockerFiles,
 		Impl: &loggedInToCUJUserFixture{
 			chromeExtraOpts: []chrome.Option{
 				chrome.EnableFeatures("PreferConstantFrameRate"),
@@ -317,6 +326,7 @@ func init() {
 			"xiyuan@chromium.org",
 			"cros-sw-perf@google.com",
 		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: &loggedInToCUJUserFixture{
 			keepState: true,
 			bt:        browser.TypeAsh,
@@ -338,6 +348,7 @@ func init() {
 			"ramsaroop@google.com",
 			"cros-sw-perf@google.com",
 		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: &loggedInToCUJUserFixture{
 			keepState:    true,
 			bt:           browser.TypeAsh,
@@ -361,6 +372,7 @@ func init() {
 			"cros-vm-technology@google.com",
 			"cros-sw-perf@google.com",
 		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: &loggedInToCUJUserFixture{
 			keepState: true,
 			bt:        browser.TypeAsh,
@@ -386,6 +398,7 @@ func init() {
 			"cros-vm-technology@google.com",
 			"cros-sw-perf@google.com",
 		},
+		BugComponent:    "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl:            &androidBatterySaverFixture{},
 		Parent:          "loggedInAndKeepStateWithBatterySaverParent",
 		SetUpTimeout:    batterySaverTimeout,
@@ -399,7 +412,8 @@ func init() {
 			"jane.yang@cienet.com",
 			"cros-sw-perf@google.com",
 		},
-		Data: []string{highResFakeCameraFileName},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
+		Data:         []string{highResFakeCameraFileName},
 		Impl: &loggedInToCUJUserFixture{
 			bt:                 browser.TypeAsh,
 			keepState:          true,
@@ -420,7 +434,8 @@ func init() {
 			"jane.yang@cienet.com",
 			"cros-sw-perf@google.com",
 		},
-		Data: append(docsBlockerFiles, lowResFakeCameraFileName),
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
+		Data:         append(docsBlockerFiles, lowResFakeCameraFileName),
 		Impl: &loggedInToCUJUserFixture{
 			bt:                 browser.TypeAsh,
 			keepState:          true,
@@ -439,6 +454,7 @@ func init() {
 			"xiyuan@chromium.org",
 			"cros-sw-perf@google.com",
 		},
+		BugComponent:    "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl:            &loggedInToCUJUserFixture{bt: browser.TypeLacros},
 		Parent:          "prepareForCUJ",
 		SetUpTimeout:    setUpTimeout,
@@ -456,6 +472,7 @@ func init() {
 			"zoraiznaeem@chromium.org",
 			"cros-sw-perf@google.com",
 		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: &loggedInToCUJUserFixture{
 			bt: browser.TypeAsh,
 			chromeExtraOpts: []chrome.Option{
@@ -477,6 +494,7 @@ func init() {
 			"zoraiznaeem@chromium.org",
 			"cros-sw-perf@google.com",
 		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: &loggedInToCUJUserFixture{
 			bt: browser.TypeLacros,
 			chromeExtraOpts: []chrome.Option{
@@ -498,6 +516,7 @@ func init() {
 			"ramsaroop@google.com",
 			"cros-sw-perf@google.com",
 		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: &loggedInToCUJUserFixture{
 			bt:           browser.TypeLacros,
 			arcSupported: true,
@@ -517,6 +536,7 @@ func init() {
 			"xliu@cienet.com",
 			"cros-sw-perf@google.com",
 		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: &loggedInToCUJUserFixture{
 			keepState: true,
 			bt:        browser.TypeLacros,
@@ -538,6 +558,7 @@ func init() {
 			"ramsaroop@google.com",
 			"cros-sw-perf@google.com",
 		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: &loggedInToCUJUserFixture{
 			keepState:    true,
 			arcSupported: true,
@@ -560,7 +581,8 @@ func init() {
 			"jane.yang@cienet.com",
 			"cros-sw-perf@google.com",
 		},
-		Data: []string{highResFakeCameraFileName},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
+		Data:         []string{highResFakeCameraFileName},
 		Impl: &loggedInToCUJUserFixture{
 			bt:                 browser.TypeLacros,
 			keepState:          true,
@@ -581,7 +603,8 @@ func init() {
 			"jane.yang@cienet.com",
 			"cros-sw-perf@google.com",
 		},
-		Data: append(docsBlockerFiles, lowResFakeCameraFileName),
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
+		Data:         append(docsBlockerFiles, lowResFakeCameraFileName),
 		Impl: &loggedInToCUJUserFixture{
 			bt:                 browser.TypeLacros,
 			keepState:          true,
@@ -600,6 +623,7 @@ func init() {
 			"alston.huang@cienet.com",
 			"cros-sw-perf@google.com",
 		},
+		BugComponent:    "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl:            &loggedInToCUJUserFixture{},
 		Parent:          "prepareForCUJEnrolledWithCharge",
 		SetUpTimeout:    chrome.EnrollmentAndLoginTimeout + chrome.GAIALoginTimeout + optin.OptinTimeout + 2*time.Minute,
@@ -618,6 +642,7 @@ func init() {
 			"jane.yang@cienet.com",
 			"cros-sw-perf@google.com",
 		},
+		BugComponent:    "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl:            &loggedInToCUJUserFixture{bt: browser.TypeLacros},
 		Parent:          "prepareForCUJEnrolledWithCharge",
 		SetUpTimeout:    chrome.EnrollmentAndLoginTimeout + chrome.GAIALoginTimeout + optin.OptinTimeout + 2*time.Minute,
@@ -636,7 +661,8 @@ func init() {
 			"ramsaroop@google.com",
 			"cros-sw-perf@google.com",
 		},
-		Data: docsBlockerFiles,
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
+		Data:         docsBlockerFiles,
 		Impl: &loggedInToCUJUserFixture{
 			chromeExtraOpts: []chrome.Option{
 				chrome.EnableFeatures("PreferConstantFrameRate"),
@@ -661,7 +687,8 @@ func init() {
 			"vineethrp@google.com",
 			"cros-sw-perf@google.com",
 		},
-		Data: docsBlockerFiles,
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
+		Data:         docsBlockerFiles,
 		Impl: &loggedInToCUJUserFixture{
 			chromeExtraOpts: []chrome.Option{
 				chrome.ExtraArgs(webRTCEventLogCommandFlag),
@@ -686,7 +713,8 @@ func init() {
 			"cros-sw-perf@google.com",
 			"ramsaroop@google.com",
 		},
-		Data: docsBlockerFiles,
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
+		Data:         docsBlockerFiles,
 		Impl: &loggedInToCUJUserFixture{
 			chromeExtraOpts: []chrome.Option{
 				chrome.EnableFeatures("PreferConstantFrameRate"),
@@ -711,7 +739,8 @@ func init() {
 			"ramsaroop@google.com",
 			"cros-sw-perf@google.com",
 		},
-		Data: docsBlockerFiles,
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
+		Data:         docsBlockerFiles,
 		Impl: &loggedInToCUJUserFixture{
 			chromeExtraOpts: []chrome.Option{
 				chrome.EnableFeatures("PreferConstantFrameRate"),
@@ -735,7 +764,8 @@ func init() {
 			"ramsaroop@google.com",
 			"cros-sw-perf@google.com",
 		},
-		Data: docsBlockerFiles,
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
+		Data:         docsBlockerFiles,
 		Impl: &loggedInToCUJUserFixture{
 			chromeExtraOpts: []chrome.Option{
 				chrome.EnableFeatures("OneGroupPerRenderer", "PreferConstantFrameRate"),
@@ -761,7 +791,8 @@ func init() {
 			"cros-sw-perf@google.com",
 			"cros-pe-pnp@google.com",
 		},
-		Data: docsBlockerFiles,
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
+		Data:         docsBlockerFiles,
 		Impl: &loggedInToCUJUserFixture{
 			chromeExtraOpts: []chrome.Option{
 				chrome.ExtraArgs(webRTCEventLogCommandFlag),
@@ -793,7 +824,8 @@ func init() {
 			"cros-sw-perf@google.com",
 			"cros-pe-pnp@google.com",
 		},
-		Data: docsBlockerFiles,
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
+		Data:         docsBlockerFiles,
 		Impl: &loggedInToCUJUserFixture{
 			chromeExtraOpts: []chrome.Option{
 				chrome.ExtraArgs(webRTCEventLogCommandFlag),
@@ -824,7 +856,8 @@ func init() {
 			"chromeos-bsm@google.com",
 			"cros-sw-perf@google.com",
 		},
-		Data: docsBlockerFiles,
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
+		Data:         docsBlockerFiles,
 		Impl: &loggedInToCUJUserFixture{
 			chromeExtraOpts: []chrome.Option{
 				chrome.EnableFeatures("PreferConstantFrameRate"),
@@ -850,6 +883,7 @@ func init() {
 			"joelaf@google.com",
 			"cros-sw-perf@google.com",
 		},
+		BugComponent:    "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl:            &prepareCUJFixture{},
 		PreTestTimeout:  CPUStablizationTimeout + 3*time.Second,
 		PostTestTimeout: postTestTimeout,
@@ -863,7 +897,8 @@ func init() {
 			"joelaf@google.com",
 			"cros-sw-perf@google.com",
 		},
-		Data: docsBlockerFiles,
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
+		Data:         docsBlockerFiles,
 		Impl: &loggedInToCUJUserFixture{
 			chromeExtraOpts: []chrome.Option{
 				chrome.EnableFeatures("SetThreadBgForBgProcess"),
@@ -889,6 +924,7 @@ func init() {
 			"ramsaroop@google.com",
 			"cros-sw-perf@google.com",
 		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: &loggedInToCUJUserFixture{
 			chromeExtraOpts: []chrome.Option{
 				chrome.ExtraArgs("--enable-field-trial-config"),
@@ -910,6 +946,7 @@ func init() {
 			"ramsaroop@google.com",
 			"cros-sw-perf@google.com",
 		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: &loggedInToCUJUserFixture{
 			chromeExtraOpts: []chrome.Option{
 				chrome.ExtraArgs("--enable-field-trial-config"),
@@ -932,7 +969,8 @@ func init() {
 			"ramsaroop@google.com",
 			"cros-sw-perf@google.com",
 		},
-		Data: docsBlockerFiles,
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
+		Data:         docsBlockerFiles,
 		Impl: &loggedInToCUJUserFixture{
 			chromeExtraOpts: []chrome.Option{
 				chrome.EnableFeatures("PreferConstantFrameRate"),
@@ -957,6 +995,7 @@ func init() {
 			"ramsaroop@google.com",
 			"cros-sw-perf@google.com",
 		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: &loggedInToCUJUserFixture{
 			chromeExtraOpts: []chrome.Option{
 				chrome.ExtraArgs("--enable-field-trial-config"),
@@ -979,6 +1018,7 @@ func init() {
 			"cros-vm-technology@google.com",
 			"cros-sw-perf@google.com",
 		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: &loggedInToCUJUserFixture{
 			bt: browser.TypeAsh,
 			chromeExtraOpts: []chrome.Option{
@@ -1001,6 +1041,7 @@ func init() {
 			"cros-vm-technology@google.com",
 			"cros-sw-perf@google.com",
 		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: &loggedInToCUJUserFixture{
 			bt:           browser.TypeAsh,
 			arcSupported: true,
@@ -1024,6 +1065,7 @@ func init() {
 			"vineethrp@google.com",
 			"cros-sw-perf@google.com",
 		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: &loggedInToCUJUserFixture{
 			bt:            browser.TypeAsh,
 			arcSupported:  true,
@@ -1045,6 +1087,7 @@ func init() {
 			"cros-vm-technology@google.com",
 			"cros-sw-perf@google.com",
 		},
+		BugComponent:    "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl:            &androidBatterySaverFixture{},
 		Parent:          "loggedInToCUJUserWithBatterySaverParent",
 		SetUpTimeout:    batterySaverTimeout,
@@ -1058,6 +1101,7 @@ func init() {
 			"ramsaroop@google.com",
 			"cros-sw-perf@google.com",
 		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: &loggedInToCUJUserFixture{
 			bt:              browser.TypeAsh,
 			enableChromeVox: true,
@@ -1077,6 +1121,7 @@ func init() {
 			"vincentchiang@google.com",
 			"cros-sw-perf@google.com",
 		},
+		BugComponent:    "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl:            &loggedInToCUJUserFixture{bt: browser.TypeAsh},
 		Parent:          "prepareForCUJWithoutCooldown",
 		SetUpTimeout:    setUpTimeout,
@@ -1092,6 +1137,7 @@ func init() {
 			"hob@google.com",
 			"cros-sw-perf@google.com",
 		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: &loggedInToCUJUserFixture{
 			chromeExtraOpts: []chrome.Option{
 				chrome.EnableFeatures("Vulkan", "DefaultANGLEVulkan", "VulkanFromANGLE"),
@@ -1113,6 +1159,7 @@ func init() {
 			"cros-vm-technology@google.com",
 			"cros-sw-perf@google.com",
 		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: &loggedInToCUJUserFixture{
 			bt: browser.TypeAsh,
 			chromeExtraOpts: []chrome.Option{
@@ -1134,6 +1181,7 @@ func init() {
 			"cros-vm-technology@google.com",
 			"cros-sw-perf@google.com",
 		},
+		BugComponent:    "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl:            &androidBatterySaverFixture{},
 		Parent:          "loggedInToCUJUserWithBatterySaverWithoutCooldownParent",
 		SetUpTimeout:    batterySaverTimeout,
@@ -1147,6 +1195,7 @@ func init() {
 			"vincentchiang@google.com",
 			"cros-sw-perf@google.com",
 		},
+		BugComponent:    "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl:            &loggedInToCUJUserFixture{bt: browser.TypeLacros},
 		Parent:          "prepareForCUJWithoutCooldown",
 		SetUpTimeout:    setUpTimeout,
@@ -1163,6 +1212,7 @@ func init() {
 			"hob@chromium.org",
 			"cros-sw-perf@google.com",
 		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: &loggedInToCUJUserFixture{
 			chromeExtraOpts: []chrome.Option{
 				chrome.EnableFeatures("Vulkan"),
@@ -1184,6 +1234,7 @@ func init() {
 			"yichenz@chromium.org",
 			"cros-sw-perf@google.com",
 		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: &loggedInToCUJUserFixture{
 			bt:             browser.TypeAsh,
 			backgroundLoad: true,
@@ -1204,7 +1255,8 @@ func init() {
 			"yichenz@chromium.com",
 			"cros-sw-perf@google.com",
 		},
-		Data: docsBlockerFiles,
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
+		Data:         docsBlockerFiles,
 		Impl: &loggedInToCUJUserFixture{
 			chromeExtraOpts: []chrome.Option{
 				chrome.EnableFeatures("PreferConstantFrameRate"),
@@ -1231,6 +1283,7 @@ func init() {
 			"yichenz@chromium.org",
 			"cros-sw-perf@google.com",
 		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: &loggedInToCUJUserFixture{
 			bt:             browser.TypeAsh,
 			backgroundLoad: true,
@@ -1250,6 +1303,7 @@ func init() {
 			"yichenz@chromium.org",
 			"cros-sw-perf@google.com",
 		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: &loggedInToCUJUserFixture{
 			bt:             browser.TypeAsh,
 			backgroundLoad: true,
@@ -1270,7 +1324,8 @@ func init() {
 			"yichenz@chromium.com",
 			"cros-sw-perf@google.com",
 		},
-		Data: docsBlockerFiles,
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
+		Data:         docsBlockerFiles,
 		Impl: &loggedInToCUJUserFixture{
 			chromeExtraOpts: []chrome.Option{
 				chrome.EnableFeatures("PreferConstantFrameRate"),
@@ -1297,6 +1352,7 @@ func init() {
 			"yichenz@chromium.org",
 			"cros-sw-perf@google.com",
 		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: &loggedInToCUJUserFixture{
 			bt:             browser.TypeAsh,
 			backgroundLoad: true,
@@ -1316,6 +1372,7 @@ func init() {
 			"yichenz@chromium.org",
 			"cros-sw-perf@google.com",
 		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: &loggedInToCUJUserFixture{
 			bt:             browser.TypeAsh,
 			backgroundLoad: true,
@@ -1336,7 +1393,8 @@ func init() {
 			"yichenz@chromium.com",
 			"cros-sw-perf@google.com",
 		},
-		Data: docsBlockerFiles,
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
+		Data:         docsBlockerFiles,
 		Impl: &loggedInToCUJUserFixture{
 			chromeExtraOpts: []chrome.Option{
 				chrome.EnableFeatures("PreferConstantFrameRate"),
@@ -1363,6 +1421,7 @@ func init() {
 			"yichenz@chromium.org",
 			"cros-sw-perf@google.com",
 		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: &loggedInToCUJUserFixture{
 			bt:             browser.TypeAsh,
 			backgroundLoad: true,
@@ -1382,6 +1441,7 @@ func init() {
 			"yichenz@chromium.org",
 			"cros-sw-perf@google.com",
 		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: &loggedInToCUJUserFixture{
 			bt:             browser.TypeAsh,
 			backgroundLoad: true,
@@ -1402,7 +1462,8 @@ func init() {
 			"yichenz@chromium.com",
 			"cros-sw-perf@google.com",
 		},
-		Data: docsBlockerFiles,
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
+		Data:         docsBlockerFiles,
 		Impl: &loggedInToCUJUserFixture{
 			chromeExtraOpts: []chrome.Option{
 				chrome.EnableFeatures("PreferConstantFrameRate"),
@@ -1429,6 +1490,7 @@ func init() {
 			"yichenz@chromium.org",
 			"cros-sw-perf@google.com",
 		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: &loggedInToCUJUserFixture{
 			bt:             browser.TypeAsh,
 			backgroundLoad: true,
@@ -1448,6 +1510,7 @@ func init() {
 			"yichenz@chromium.org",
 			"cros-sw-perf@google.com",
 		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: &loggedInToCUJUserFixture{
 			bt:             browser.TypeAsh,
 			backgroundLoad: true,
@@ -1468,7 +1531,8 @@ func init() {
 			"yichenz@chromium.com",
 			"cros-sw-perf@google.com",
 		},
-		Data: docsBlockerFiles,
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
+		Data:         docsBlockerFiles,
 		Impl: &loggedInToCUJUserFixture{
 			chromeExtraOpts: []chrome.Option{
 				chrome.EnableFeatures("PreferConstantFrameRate"),
@@ -1495,6 +1559,7 @@ func init() {
 			"yichenz@chromium.org",
 			"cros-sw-perf@google.com",
 		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: &loggedInToCUJUserFixture{
 			bt:             browser.TypeAsh,
 			backgroundLoad: true,
@@ -1514,6 +1579,7 @@ func init() {
 			"yichenz@chromium.org",
 			"cros-sw-perf@google.com",
 		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: &loggedInToCUJUserFixture{
 			bt:                       browser.TypeAsh,
 			mlbenchmarkDataDirectory: true,
@@ -1533,7 +1599,8 @@ func init() {
 			"yichenz@chromium.com",
 			"cros-sw-perf@google.com",
 		},
-		Data: docsBlockerFiles,
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
+		Data:         docsBlockerFiles,
 		Impl: &loggedInToCUJUserFixture{
 			chromeExtraOpts: []chrome.Option{
 				chrome.EnableFeatures("PreferConstantFrameRate"),
@@ -1559,6 +1626,7 @@ func init() {
 			"yichenz@chromium.org",
 			"cros-sw-perf@google.com",
 		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: &loggedInToCUJUserFixture{
 			bt:                       browser.TypeAsh,
 			mlbenchmarkDataDirectory: true,
