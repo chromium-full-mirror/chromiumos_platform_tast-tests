@@ -171,6 +171,8 @@ func init() {
 		Name:            "virtualUSBPrinterModulesLoadedWithLacrosPrinterSetupAssistance",
 		Desc:            "Kernel modules necessary for `virtual-usb-printer` loaded (with `lacrosPrinterSetupAssistanceEnabled` fixture)",
 		Contacts:        []string{"cros-peripherals@google.com", "ashleydp@google.com"},
+		// ChromeOS > Software > Fundamentals > Peripherals > Printing
+		BugComponent: 	 "b:1131981",
 		Impl:            &LoadModuleFixture{},
 		Parent:          "lacrosPrinterSetupAssistanceEnabled",
 		SetUpTimeout:    UsbipModulesLoadedTimeout,
@@ -182,6 +184,8 @@ func init() {
 		Name:            "virtualUSBPrinterModulesLoadedWithPrinterSetupAssistance",
 		Desc:            "Kernel modules necessary for `virtual-usb-printer` loaded (with `chromeLoggedInWithPrinterSetupAssistance` fixture)",
 		Contacts:        []string{"cros-peripherals@google.com", "ashleydp@google.com"},
+		// ChromeOS > Software > Fundamentals > Peripherals > Printing
+		BugComponent: 	 "b:1131981",
 		Impl:            &LoadModuleFixture{},
 		Parent:          "chromeLoggedInWithPrinterSetupAssistance",
 		SetUpTimeout:    UsbipModulesLoadedTimeout,
