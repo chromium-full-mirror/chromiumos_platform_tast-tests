@@ -109,10 +109,6 @@ func ShillApn(ctx context.Context, s *testing.State) {
 
 	helper := s.FixtValue().(*cellular.FixtData).Helper
 
-	if _, err := helper.Disable(ctx); err != nil {
-		s.Fatal("Failed to disable cellular: ", err)
-	}
-
 	deferCleanUp, err := cellular.SetServiceProvidersExclusiveOverride(ctx, s.DataPath(modbOverrideProto))
 	if err != nil {
 		s.Fatal("Failed to set service providers override: ", err)
