@@ -27,7 +27,7 @@ func init() {
 		Contacts: []string{
 			"chromeos-cross-device-eng@google.com",
 			"hansenmichael@google.com",
-			"chromeos-sw-engprod@google.com",
+			"bhartmire@google.com",
 		},
 		BugComponent: "b:1155263",
 		Attr:         []string{"group:cross-device"},
@@ -121,6 +121,16 @@ func NetworkScreenPIN(ctx context.Context, s *testing.State) {
 	}
 	if err := androidDevice.EnterPIN(ctx); err != nil {
 		s.Fatal("Failed to enter lockscreen PIN on the phone: ", err)
+	}
+
+	// Because we're using the "disable-oobe-network-screen-skipping-for-testing"
+	// switch, we will attempt to hit "Next" on the Network Screen.
+	if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.NetworkScreen.isVisible()"); err == nil {
+		s.Log("Clicking Next on the Network Screen")
+		nextButton := nodewith.Name("Next").Role(role.Button)
+		if err := ui.LeftClick(nextButton)(ctx); err != nil {
+			s.Fatal("Failed to click Next on the Network Screen: ", err)
+		}
 	}
 
 	// Select "For personal use" on the Chromebook

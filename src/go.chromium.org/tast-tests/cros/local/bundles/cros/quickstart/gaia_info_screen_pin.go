@@ -27,7 +27,7 @@ func init() {
 		Contacts: []string{
 			"chromeos-cross-device-eng@google.com",
 			"hansenmichael@google.com",
-			"chromeos-sw-engprod@google.com",
+			"bhartmire@google.com",
 		},
 		BugComponent: "b:1155263",
 		Attr:         []string{"group:cross-device"},

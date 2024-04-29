@@ -21,9 +21,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         GaiaScreenPIN,
+		Func:         WelcomeScreenPINNoAccount,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test Quick Start starting on the Gaia Screen with PIN verification",
+		Desc:         "Test Quick Start starting on the Welcome Screen with PIN verification, and no account on the source device",
 		Contacts: []string{
 			"chromeos-cross-device-eng@google.com",
 			"hansenmichael@google.com",
@@ -39,11 +39,16 @@ func init() {
 	})
 }
 
-func GaiaScreenPIN(ctx context.Context, s *testing.State) {
+func WelcomeScreenPINNoAccount(ctx context.Context, s *testing.State) {
 	androidDevice := s.FixtValue().(*crossdevice.FixtData).AndroidDevice
 	if androidDevice == nil {
 		s.Fatal("Fixture not associated with an android device")
 	}
+	// Remove Gaia accounts from the Android device
+	if err := crossdevice.RemoveAccounts(ctx, androidDevice.Device); err != nil {
+		s.Fatal("Failed to remove accounts from Android device: ", err)
+	}
+
 	cr := s.FixtValue().(*crossdevice.FixtData).Chrome
 	if cr == nil {
 		s.Fatal("Fixture not associated with Chrome")
@@ -81,52 +86,10 @@ func GaiaScreenPIN(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to enable ChromeVox: ", err)
 	}
 
-	// Navigate to the Network Screen
-	s.Log("Navigating to the Network screen")
+	// Begin the UI flow and accept the halfsheet prompt on the phone
+	s.Log("Navigating to the Quick Start screen")
 	ui := uiauto.New(tconn)
-	getStartedButton := nodewith.Name("Get started").Role(role.Button)
-	if err := ui.LeftClick(getStartedButton)(ctx); err != nil {
-		s.Fatal("Failed to click the Get Started button: ", err)
-	}
-	if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.NetworkScreen.isVisible()"); err != nil {
-		s.Fatal("Failed to wait for the Network screen to be visible: ", err)
-	}
-
-	// Navigate to the User Creation screen
-	s.Log("Navigating to the User Creation screen")
-	nextButton := nodewith.Name("Next").Role(role.Button)
-	if err := ui.LeftClick(nextButton)(ctx); err != nil {
-		s.Fatal("Failed to click Next on the Network screen: ", err)
-	}
-
-	// Select "For personal use" on the Chromebook
-	s.Log("Waiting for User Creation screen")
-	if err := quickstart.SelectForPersonalUse(ctx, oobeConn, ui); err != nil {
-		s.Fatal("Failed to select 'For personal use' on user creation screen: ", err)
-	}
-
-	// Wait for the Gaia Info screen
-	s.Log("Waiting for Gaia Info screen")
-	if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.GaiaInfoScreen.isVisible()"); err != nil {
-		s.Fatal("Failed to wait for the Gaia Info screen to be visible: ", err)
-	}
-
-	// Select manual setup option
-	manualSetupButton := nodewith.Name("Enter your Google Account and password").First()
-	if err := ui.LeftClick(manualSetupButton)(ctx); err != nil {
-		s.Fatal("Failed to click the manual account setup button: ", err)
-	}
-	if err := ui.LeftClick(nextButton)(ctx); err != nil {
-		s.Fatal("Failed to click Next on the Gaia Info screen: ", err)
-	}
-
-	// Wait for the Gaia screen
-	if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.GaiaScreen.isVisible()"); err != nil {
-		s.Fatal("Failed to wait for the Gaia Screen to be visible: ", err)
-	}
-
-	// Enter the Quick Start flow and accept the halfsheet prompt on the phone
-	setupButton := nodewith.NameContaining("Android phone").First()
+	setupButton := nodewith.NameContaining("Android phone").Role(role.Button)
 	if err := ui.LeftClick(setupButton)(ctx); err != nil {
 		s.Fatal("Failed to click the Quick Start setup button: ", err)
 	}
@@ -156,16 +119,25 @@ func GaiaScreenPIN(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to enter lockscreen PIN on the phone: ", err)
 	}
 
-	// Confirm the Gaia account on the phone
-	s.Log("Waiting for account confirmation screen")
-	if err := androidDevice.TapNext(ctx); err != nil {
-		s.Fatal("Failed to confirm Google Account: ", err)
+	// Because we're using the "disable-oobe-network-screen-skipping-for-testing"
+	// switch, we will attempt to hit "Next" on the Network Screen.
+	if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.NetworkScreen.isVisible()"); err == nil {
+		s.Log("Clicking Next on the Network Screen")
+		nextButton := nodewith.Name("Next").Role(role.Button)
+		if err := ui.LeftClick(nextButton)(ctx); err != nil {
+			s.Fatal("Failed to click Next on the Network Screen: ", err)
+		}
 	}
 
-	// Wait for the completion screen.
-	s.Log("Waiting for Quick Start completion screen")
-	completionScreenTitle := nodewith.NameContaining("Android quick setup is done").Role(role.Heading)
-	if err := ui.WaitUntilExists(completionScreenTitle)(ctx); err != nil {
-		s.Fatal("Failed to wait for completion screen to appear: ", err)
+	// Select "For personal use" on the Chromebook
+	s.Log("Waiting for user creation screen")
+	if err := quickstart.SelectForPersonalUse(ctx, oobeConn, ui); err != nil {
+		s.Fatal("Failed to select 'For personal use' on user creation screen: ", err)
+	}
+
+	// Ensure we land on the Gaia Info Screen
+	s.Log("Waiting for Gaia Info screen")
+	if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.GaiaInfoScreen.isVisible()"); err != nil {
+		s.Fatal("Failed to wait for the Gaia Info screen to be visible: ", err)
 	}
 }
