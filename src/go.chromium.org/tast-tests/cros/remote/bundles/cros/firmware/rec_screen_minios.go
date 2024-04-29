@@ -6,13 +6,13 @@ package firmware
 
 import (
 	"context"
-	"regexp"
+	"os"
+	"path/filepath"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
-	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -24,6 +24,11 @@ type recScreenMiniOSTestParams struct {
 	miniOSPriority string
 }
 
+type checkAndSetServoCharger struct {
+	removeCharger      bool
+	isChargerConnected bool
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: RecScreenMiniOS,
@@ -33,7 +38,7 @@ func init() {
 			"cienet-firmware@cienet.corp-partner.google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		Attr:         []string{"group:firmware"},
+		Attr:         []string{"group:firmware", "firmware_usb"},
 		HardwareDeps: hwdep.D(hwdep.MiniOS()),
 		Fixture:      fixture.NormalMode,
 		Params: []testing.Param{{
@@ -65,7 +70,7 @@ func init() {
 				miniOSPriority: "B",
 			},
 		}},
-		Timeout: 15 * time.Minute,
+		Timeout: 120 * time.Minute,
 	})
 }
 
@@ -96,31 +101,47 @@ func RecScreenMiniOS(ctx context.Context, s *testing.State) {
 		}
 	}
 
+	var state checkAndSetServoCharger
+	state.isChargerConnected, state.removeCharger = h.CheckServoChargerBeforeBootingFromUSB(ctx)
+
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 4*time.Minute)
 	defer cancel()
 
 	defer func(ctx context.Context) {
-		s.Log("Leaving MiniOS by a warm reset")
+		if miniOSConnectTimeoutErr.err != nil {
+			cs := s.CloudStorage()
+			if err := state.restoreDUTConnectionWithUSB(ctx, h, cs); err != nil {
+				s.Error("Failed to restore DUT connection with USB: ", err)
+			} else {
+				saveLogPath := filepath.Join(s.OutDir(), "check_minios_corrupted.log")
+				if miniOSCorrupted, err := checkMiniOSCorruptedAndSaveLog(ctx, h, saveLogPath); err != nil {
+					s.Error("Failed to check if MiniOS is corrupted: ", err)
+				} else if miniOSCorrupted {
+					s.Error("MiniOS is corrupted")
+				} else {
+					s.Error("DUT remained in recovery select screen, keypress might not work properly")
+				}
+			}
+		}
+		s.Log("Warm resetting DUT")
 		if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
-			s.Fatal("Failed to warm reset DUT: ", err)
+			s.Error("Failed to warm reset DUT: ", err)
 		}
 		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
 		defer cancelWaitConnect()
 		if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
-			s.Fatal("Failed to reconnect to dut: ", err)
+			s.Error("Failed to reconnect to dut: ", err)
 		}
-		if miniOSConnectTimeoutErr.err != nil && h.Config.HasMiniDiagCapability(firmware.CbmemPreservedByAPReset) {
-			out, err := h.Reporter.GetCBMEMLogs(ctx, reporters.ConsoleLog)
-			if err != nil {
-				s.Fatal("Failed to get CBMEM logs: ", err)
+		if !state.isChargerConnected {
+			if err := h.SetDUTPower(ctx, true); err != nil {
+				s.Fatal("Failed to connect charger: ", err)
 			}
-			miniosVersionRe := regexp.MustCompile(`cros_minios_version=\d+.\d+.\d+`)
-			match := miniosVersionRe.FindStringSubmatch(out)
-			if match == nil {
-				s.Fatal("DUT might contains an invalid MiniOS or keys did not be pressed on firmware screen")
-			} else {
-				s.Fatalf("Reconnect timeout is not enough to connect to MiniOS, got %s", match[0])
+			state.isChargerConnected = true
+			waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 2*time.Minute)
+			defer cancelWaitConnect()
+			if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
+				s.Fatal("Failed to reconnect to the DUT: ", err)
 			}
 		}
 		if tc.miniOSPriority != restoreMiniOSPriority {
@@ -189,4 +210,39 @@ func launchMiniOS(ctx context.Context, h *firmware.Helper, miniosPriority string
 		}
 	}
 	return nil
+}
+
+func (ckchg *checkAndSetServoCharger) restoreDUTConnectionWithUSB(ctx context.Context, h *firmware.Helper, cs *testing.CloudStorage) error {
+	if err := h.SetupUSBKey(ctx, cs); err != nil {
+		return errors.Wrap(err, "usbkey not working")
+	}
+	if ckchg.removeCharger {
+		if err := h.SetDUTPower(ctx, false); err != nil {
+			return errors.Wrap(err, "failed to remove charger")
+		}
+		ckchg.isChargerConnected = false
+	}
+	testing.ContextLog(ctx, "Inserting a valid USB to DUT")
+	if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
+		return errors.Wrap(err, "failed to insert a valid USB to the DUT")
+	}
+	testing.ContextLog(ctx, "Checking if DUT boots from USB")
+	if err := h.WaitDUTConnectDuringBootFromUSB(ctx, true); err != nil {
+		return errors.Wrap(err, "failed to boot from USB")
+	}
+	return nil
+}
+
+func checkMiniOSCorruptedAndSaveLog(ctx context.Context, h *firmware.Helper, logPath string) (bool, error) {
+	out, err := h.Reporter.GetCBMEMLogs(ctx)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to run cbmem command")
+	}
+	if err := h.ScanWithoutExpectedSequenceInSource(ctx, out, []string{"Failed to boot from MiniOS"}); err != nil {
+		if saveLogErr := os.WriteFile(logPath, []byte(out), 0666); saveLogErr != nil {
+			return false, errors.Wrap(err, "failed to write firmware log")
+		}
+		return false, nil
+	}
+	return true, nil
 }

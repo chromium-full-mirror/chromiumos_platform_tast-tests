@@ -1981,3 +1981,33 @@ func (h *Helper) GetECConsoleOutputWithComment(ctx context.Context, comment stri
 func (h *Helper) SetMiniOSPriority(ctx context.Context, expectedPriority string) error {
 	return h.Reporter.CrossystemSetParam(ctx, reporters.CrossystemParamMiniOSPriority, expectedPriority)
 }
+
+// CheckHasBatteryWithServoTypeC checks whether the DUT has a battery,
+// and whether the connected servo is a servo type-C. One scenario where
+// this method can be called is before disconnecting the servo charger to
+// make booting the USB more stable.
+func (h *Helper) CheckHasBatteryWithServoTypeC(ctx context.Context) (bool, error) {
+	batteryExists, err := h.CheckBatteryAvailable(ctx)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to check if battery is available")
+	}
+	supportPDRole, err := h.Servo.IsServoTypeC(ctx)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to check the servo connection type")
+	}
+	return batteryExists && supportPDRole, nil
+}
+
+// CheckServoChargerBeforeBootingFromUSB returns current charger state and
+// whether the charger can be removed safely before booting from USB.
+func (h *Helper) CheckServoChargerBeforeBootingFromUSB(ctx context.Context) (isChargerConnected, removeCharger bool) {
+	ok, err := h.CheckHasBatteryWithServoTypeC(ctx)
+	if err != nil {
+		testing.ContextLog(ctx, "Unable to determine battery and servo connection type info: ", err)
+	}
+	attached, err := h.Servo.GetChargerAttached(ctx)
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to check charger status")
+	}
+	return attached, ok && attached
+}
