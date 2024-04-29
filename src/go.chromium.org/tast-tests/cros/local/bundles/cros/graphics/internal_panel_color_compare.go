@@ -9,10 +9,12 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"math/rand"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -73,11 +75,18 @@ func InternalPanelColorCompare(ctx context.Context, s *testing.State) {
 		coloredImgs[idx] = coloredImg
 	}
 
+	// Create a shuffled copy of the black images to test for false positives.
+	shuffledBlackImgs := make([]string, len(blackImgs))
+	copy(shuffledBlackImgs, blackImgs)
+	rand.Shuffle(len(shuffledBlackImgs), func(i, j int) {
+		shuffledBlackImgs[i], shuffledBlackImgs[j] = shuffledBlackImgs[j], shuffledBlackImgs[i]
+	})
+
 	// One way to compare images is to compare the file sizes. If the colored image is outside the
 	// tolerance of the average black image size, that means the screen is emitting light.
 	// Before we test out with colored images, let's check for false positives by comparing the black
 	// images to themselves.
-	success, err := testImgsWithFileSizes(ctx, blackImgs, blackImgs)
+	success, err := testImgsWithFileSizes(ctx, blackImgs, shuffledBlackImgs)
 	if err != nil {
 		s.Fatal("Failed to compare B-B with sizes: ", err)
 	}
@@ -97,11 +106,22 @@ func InternalPanelColorCompare(ctx context.Context, s *testing.State) {
 	// the colored image has a different ratio of colors than the black image, that means the
 	// screen is emitting light.
 	// Test for false positives by comparing the black images to themselves first.
-	if testImgsWithColorRatio(ctx, blackImgs, blackImgs) {
+	if testImgsWithColorRatio(ctx, blackImgs, shuffledBlackImgs) {
 		s.Fatal("False positive detected on Color Ratio Test")
 	}
 
 	if testImgsWithColorRatio(ctx, blackImgs, coloredImgs) {
+		return
+	}
+
+	// If we fail to compare with the color ratios, compare the histograms of the images. If the colored
+	// image has a different histogram than the black image, that means the screen is emitting light.
+	// Test for false positives by comparing the black images to themselves first.
+	if testImgsWithHistogramAnalysis(ctx, blackImgs, shuffledBlackImgs) {
+		s.Fatal("False positive detected on Histogram Analysis Test")
+	}
+
+	if testImgsWithHistogramAnalysis(ctx, blackImgs, coloredImgs) {
 		return
 	}
 
@@ -235,6 +255,44 @@ func testImgsWithColorRatio(ctx context.Context, blackImgs, coloredImgs []string
 	return false
 }
 
+func testImgsWithHistogramAnalysis(ctx context.Context, blackImgs, coloredImgs []string) bool {
+	// Test Red
+	isRedMoreIntense, err := compareHistogramIntensity(ctx, "red", blackImgs[0], coloredImgs[0])
+	if err != nil {
+		testing.ContextLog(ctx, "testing Red with Histogram failed: ", err)
+		return false
+	}
+	if isRedMoreIntense {
+		testing.ContextLog(ctx, "Detected more Red")
+		return true
+	}
+
+	// Test Green
+	isGreenMoreIntense, err := compareHistogramIntensity(ctx, "green", blackImgs[1], coloredImgs[1])
+	if err != nil {
+		testing.ContextLog(ctx, "testing Green with Histogram failed: ", err)
+		return false
+	}
+	if isGreenMoreIntense {
+		testing.ContextLog(ctx, "Detected more Green")
+		return true
+	}
+
+	// Test Blue
+	isBlueMoreIntense, err := compareHistogramIntensity(ctx, "blue", blackImgs[2], coloredImgs[2])
+	if err != nil {
+		testing.ContextLog(ctx, "testing Blue with Histogram failed: ", err)
+		return false
+	}
+	if isBlueMoreIntense {
+		testing.ContextLog(ctx, "Detected more Blue")
+		return true
+	}
+
+	testing.ContextLog(ctx, "Failed to find a meaningful difference in Histogram Analysis")
+	return false
+}
+
 func openColoredFullScreen(ctx context.Context, cr *chrome.Chrome, htmlColor string) error {
 	html := "<style>body { background-color: " + htmlColor + "; }</style>"
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -351,6 +409,84 @@ func getSingleColorRatioToRgb(ctx context.Context, colorAbbrev, imgPath string) 
 		return 0, errors.Wrapf(err, "failed to parse the color ratio of %s with value %s", colorAbbrev, rawValue)
 	}
 	return color, nil
+}
+
+func compareHistogramIntensity(ctx context.Context, color, blackImg, coloredImg string) (bool, error) {
+	threshold := 0.5
+
+	blackHistogram, err := generateHistogramString(ctx, color, blackImg)
+	if err != nil {
+		return false, errors.Wrapf(err, "failed to generate histogram for %s", blackImg)
+	}
+	coloredHistogram, err := generateHistogramString(ctx, color, coloredImg)
+	if err != nil {
+		return false, errors.Wrapf(err, "failed to generate histogram for %s", coloredImg)
+	}
+
+	blackIntensity, blackCount, err := extractHistogramData(blackHistogram, color)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to extract histogram data for black")
+	}
+	coloredIntensity, colorCount, err := extractHistogramData(coloredHistogram, color)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to extract histogram data for colored")
+	}
+
+	blackMean := calculateWeightedMean(blackIntensity, blackCount)
+	colorMean := calculateWeightedMean(coloredIntensity, colorCount)
+
+	testing.ContextLogf(ctx, "Black Mean: %f, %s Mean: %f", blackMean, color, colorMean)
+	return colorMean > blackMean+threshold, nil
+}
+
+func generateHistogramString(ctx context.Context, color, img string) (string, error) {
+	cmd := testexec.CommandContext(ctx, "convert", img, "-format", "%c", "-channel", color, "histogram:")
+	output, err := cmd.Output()
+	if err != nil {
+		return "", err
+	}
+	return string(output), nil
+}
+
+func extractHistogramData(histogram, color string) (intensities, counts []float64, err error) {
+	// Regular expression to match histogram lines like "  1234: (0,0,255)" to remove Exif data.
+	// This represents "  1234: (R,G,B)" where 1234 is the count of pixels with the RGB value.
+	// Each regex pattern captures the count and the intensity of the color.
+	regexPatterns := map[string]string{
+		"red":   `\s*(\d+):.*\((\d+),`,
+		"green": `\s*(\d+):.*\(\d+,(\d+),`,
+		"blue":  `\s*(\d+):.*\((?:\d+,){2}(\d+)\)`,
+	}
+
+	re := regexp.MustCompile(regexPatterns[color])
+	lines := strings.Split(strings.TrimSpace(histogram), "\n")
+	for _, line := range lines {
+		matches := re.FindStringSubmatch(line)
+		if len(matches) == 3 { // Ensure we have 3 matches (full match + 2 captures)
+			count, err := strconv.ParseFloat(matches[1] /*bitSize=*/, 64)
+			if err != nil {
+				return nil, nil, errors.Wrapf(err, "failed to parse count %s", matches[1])
+			}
+			intensity, err := strconv.ParseFloat(matches[2] /*bitSize=*/, 64)
+			if err != nil {
+				return nil, nil, errors.Wrapf(err, "failed to parse intensity %s", matches[2])
+			}
+			counts = append(counts, count)
+			intensities = append(intensities, intensity)
+		}
+	}
+
+	return intensities, counts, nil
+}
+
+func calculateWeightedMean(intensities, counts []float64) float64 {
+	sum := 0.0
+	totalWeight := 0.0
+	for i := 0; i < len(intensities); i++ {
+		sum += intensities[i] * counts[i]
+		totalWeight += counts[i]
+	}
+	return sum / totalWeight
 }
 
 func getPanelName(ctx context.Context) string {
