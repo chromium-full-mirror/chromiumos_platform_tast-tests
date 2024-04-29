@@ -23,6 +23,7 @@ func init() {
 			"chromeos-core-services@google.com", // Update engine
 			"chromeos-commercial-remote-management@google.com",
 		},
+        BugComponent: "b:908319",
 		Impl:            &updateEngineFixture{},
 		PreTestTimeout:  30 * time.Second,
 		PostTestTimeout: 30 * time.Second,
