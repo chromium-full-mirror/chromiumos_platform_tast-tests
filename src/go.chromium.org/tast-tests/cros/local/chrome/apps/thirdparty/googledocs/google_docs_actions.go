@@ -55,8 +55,10 @@ func EnablePageNumbers(ctx context.Context, pc pointer.Context, ac *uiauto.Conte
 	apply := nodewith.Name("Apply").Role(role.Button)
 	return uiauto.Combine(
 		"enable page numbers in Google Docs",
-		pc.Click(format),
-		ac.WaitUntilExists(pageNumbers),
+		ac.RetryUntil(
+			pc.Click(format),
+			ac.WithTimeout(5*time.Second).WaitUntilExists(pageNumbers),
+		),
 		pc.Click(pageNumbers),
 		ac.WaitUntilExists(apply),
 		pc.Click(apply),
