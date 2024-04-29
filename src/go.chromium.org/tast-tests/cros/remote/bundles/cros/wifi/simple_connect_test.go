@@ -498,6 +498,22 @@ func simpleConnectGCMP() []*simpleConnectParams {
 		}},
 		ExtraHardwareDeps:      `hwdep.D(hwdep.WifiGCMP())`,
 		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX},
+	}, {
+		Name:      "gcmp_ccmp",
+		Fixture:   defaultFixture,
+		ExtraAttr: []string{"wificell_unstable"},
+		Doc: append(simpleConnectDocPref("a WiFi5 network that supports CCMP and GCMP on WPA2."),
+			"TODO(b/337103884) Replace TestBedDep with GCMP-feature requirement once available."),
+		Val: []simpleConnectParamsVal{{
+			APConfigs: []apConfigVal{{
+				APOpts: `ap.Mode(ap.Mode80211acPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT40Plus),
+								ap.VHTCenterChannel(42), ap.VHTChWidth(ap.VHTChWidth80), ap.PMF(ap.PMFRequired)`,
+				SecConfFac: `wpa.NewConfigFactory("chromeos",
+								wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherCCMP, wpa.CipherGCMP128))`,
+			}},
+			ExpectedSecurity: wpaModeToShillSecurity(`PureWPA2`),
+		}},
+		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX},
 	}}
 }
 
