@@ -1063,10 +1063,11 @@ func init() {
 		Name: "twoChromebooksLoggedInWithFastPairAnd1BTPeerFlossDisabled",
 		Desc: "Logs into two Chromebooks as the same user and enables Bluetooth, FastPair, and connects to 1 btpeer",
 		Contacts: []string{
-			"dclasson@google.com",
-			"chromeos-sw-engprod@google.com",
 			"chromeos-cross-device-eng@google.com",
+			"chromeos-sw-engprod@google.com",
+			"dclasson@google.com",
 		},
+                BugComponent: "b:1133283", // ChromeOS > Software > System Services > Cross Device > Fast Pair
 		Impl: newFixture(&fixtureFeatures{
 			EnableChromeUI: true,
 			BTPeerCount:    1,
@@ -1101,10 +1102,11 @@ func init() {
 		Name: "twoChromebooksLoggedInWithFastPairAnd1BTPeerFlossEnabled",
 		Desc: "Logs into two Chromebooks as the same user and enables Bluetooth, FastPair, and connects to 1 btpeer",
 		Contacts: []string{
-			"dclasson@google.com",
+                        "chromeos-cross-device-eng@google.com",
 			"chromeos-sw-engprod@google.com",
-			"chromeos-cross-device-eng@google.com",
+                        "dclasson@google.com",
 		},
+                BugComponent: "b:1133283", // ChromeOS > Software > System Services > Cross Device > Fast Pair
 		Impl: newFixture(&fixtureFeatures{
 			EnableChromeUI: true,
 			BTPeerCount:    1,
