@@ -28,6 +28,8 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 			"assistive-eng@google.com",
 		},
+		// ChromeOS > Software > Personalization
+		BugComponent:    "b:1006527",
 		Impl:            &clamshellFixture{},
 		Parent:          "chromeLoggedIn",
 		SetUpTimeout:    chrome.LoginTimeout,
@@ -42,6 +44,8 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 			"assistive-eng@google.com",
 		},
+		// ChromeOS > Software > Personalization
+		BugComponent: "b:1006527",
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
 				chrome.GAIALogin(chrome.Creds{
@@ -84,6 +88,8 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 			"assistive-eng@google.com",
 		},
+		// ChromeOS > Software > Personalization
+		BugComponent: "b:1006527",
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{chrome.EnableFeatures("RgbKeyboard")}, nil
 		}),
@@ -99,6 +105,8 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 			"assistive-eng@google.com",
 		},
+		// ChromeOS > Software > Personalization
+		BugComponent: "b:1006527",
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{chrome.EnableFeatures("RgbKeyboard", "MultiZoneRgbKeyboard")}, nil
 		}),
@@ -114,6 +122,8 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 			"assistive-eng@google.com",
 		},
+		// ChromeOS > Software > Personalization
+		BugComponent: "b:1006527",
 		// Setting Google Photos wallpapers requires that Chrome be logged in with
 		// a user from an account pool which has been preconditioned to have a
 		// Google Photos library with specific photos/albums present. Note that sync
@@ -141,6 +151,8 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 			"assistive-eng@google.com",
 		},
+		// ChromeOS > Software > Personalization
+		BugComponent: "b:1006527",
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{chrome.EnableFeatures("AvatarsCloudMigration")}, nil
 		}),
@@ -156,6 +168,8 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 			"cowmoo@google.com",
 		},
+		// ChromeOS > Software > Personalization
+		BugComponent: "b:1006527",
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
 				chrome.GAIALoginPool(s.RequiredVar("wallpaper.googlePhotosAccountPool")),
@@ -194,6 +208,8 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 			"jasontt@google.com",
 		},
+		// ChromeOS > Software > Personalization
+		BugComponent: "b:1006527",
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{getTimeOfDayOption()}, nil
 		}),

@@ -62,6 +62,8 @@ func init() {
 			"assitive-eng@google.com",
 			"yawano@google.com",
 		},
+		// ChromeOS > Software > Assistive
+		BugComponent: "b:905229",
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
 				VerboseLogging(),
@@ -81,6 +83,8 @@ func init() {
 			"assitive-eng@google.com",
 			"yawano@google.com",
 		},
+		// ChromeOS > Software > Assistive
+		BugComponent: "b:905229",
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
 				VerboseLogging(),
@@ -120,6 +124,8 @@ func init() {
 			"assitive-eng@google.com",
 			"yawano@google.com",
 		},
+		// ChromeOS > Software > Assistive
+		BugComponent:    "b:905229",
 		Vars:            []string{"assistant.username", "assistant.password"},
 		Impl:            arc.NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
@@ -136,6 +142,8 @@ func init() {
 			"assitive-eng@google.com",
 			"yawano@google.com",
 		},
+		// ChromeOS > Software > Assistive
+		BugComponent:    "b:905229",
 		Vars:            []string{"assistant.username", "assistant.password", "ui.signinProfileTestExtensionManifestKey"},
 		Impl:            NewOOBEFixture(),
 		SetUpTimeout:    30 * time.Second,
@@ -150,7 +158,9 @@ func init() {
 			"assitive-eng@google.com",
 			"yawano@google.com",
 		},
-		Vars: []string{"assistant.username", "assistant.password"},
+		// ChromeOS > Software > Assistive
+		BugComponent: "b:905229",
+		Vars:         []string{"assistant.username", "assistant.password"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
 				chrome.GAIALogin(chrome.Creds{
@@ -299,7 +309,9 @@ func init() {
 			"assitive-eng@google.com",
 			"wutao@google.com",
 		},
-		Vars: []string{"ui.gaiaPoolDefault"},
+		// ChromeOS > Software > Assistive
+		BugComponent: "b:905229",
+		Vars:         []string{"ui.gaiaPoolDefault"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
 				chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
