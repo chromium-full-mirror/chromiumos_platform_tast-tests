@@ -38,8 +38,9 @@ func init() {
 		Desc: "Has proceeded through Demo Mode setup flow from OOBE",
 		Contacts: []string{
 			"cros-demo-mode-eng@google.com",
-			"jacksontadie@google.com",
+			"llin@chromium.org",
 		},
+		BugComponent: "b:812312", // ChromeOS > Software > Consumer > Demo Mode
 		Impl: &fixtureImpl{
 			// This user has infinite idle time-out value for demo mode, thus will not end demo mode session in middle of test.
 			enrollmentUser: "admin-tast",
@@ -59,9 +60,10 @@ func init() {
 		Name: fixture.PostDemoModeOOBEProd,
 		Desc: "Has proceeded through Demo Mode setup flow from OOBE with Cloud Gaming customizations configured",
 		Contacts: []string{
-			"jacksontadie@google.com",
 			"cros-demo-mode-eng@google.com",
+			"llin@chromium.org",
 		},
+		BugComponent: "b:812312", // ChromeOS > Software > Consumer > Demo Mode
 		Impl: &fixtureImpl{
 			// This user has infinite idle time-out value for demo mode, thus will not end demo mode session in middle of test.
 			enrollmentUser: "admin-tast",
@@ -81,9 +83,10 @@ func init() {
 		Name: fixture.PostDemoModeOOBECloudGaming,
 		Desc: "Has proceeded through Demo Mode setup flow from OOBE with Cloud Gaming customizations configured",
 		Contacts: []string{
-			"jacksontadie@google.com",
 			"cros-demo-mode-eng@google.com",
+			"llin@chromium.org",
 		},
+		BugComponent: "b:812312", // ChromeOS > Software > Consumer > Demo Mode
 		Impl: &fixtureImpl{
 			// This user has infinite idle time-out value for demo mode, thus will not end demo mode session in middle of test.
 			enrollmentUser:  "admin-tast",
