@@ -304,6 +304,8 @@ func init() {
 		Name:     fixture.ChromeLoggedInWithOsSettingsSearchFeedback,
 		Desc:     "Logged into a user session with searchFeedbackEnabled flag enabled",
 		Contacts: []string{"cros-settings@google.com", "moteva@google.com"},
+		// ChromeOS > Software > Settings
+		BugComponent: "b:1246072",
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
 			return []Option{EnableFeatures("OsSettingsSearchFeedback")}, nil
 		}),
@@ -316,6 +318,8 @@ func init() {
 		Name:     fixture.ChromeLoggedInGuestWithOsSettingsSearchFeedback,
 		Desc:     "Logged into a guest user session with searchFeedbackEnabled flag enabled",
 		Contacts: []string{"cros-settings@google.com", "moteva@google.com"},
+		// ChromeOS > Software > Settings
+		BugComponent: "b:1246072",
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
 			return []Option{GuestLogin(), EnableFeatures("OsSettingsSearchFeedback")}, nil
 		}),
