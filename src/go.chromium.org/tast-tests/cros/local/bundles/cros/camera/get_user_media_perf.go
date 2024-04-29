@@ -16,7 +16,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
-	"go.chromium.org/tast-tests/cros/local/media/pre"
 	"go.chromium.org/tast-tests/cros/local/tracing"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/ctxutil"
@@ -46,13 +45,25 @@ func init() {
 			"perfetto/camera_query.sql"),
 		Params: []testing.Param{
 			{
-				Name: "ash",
-				Pre:  pre.ChromeCameraPerf(),
-				Val:  browser.TypeAsh,
+				Name:    "ash",
+				Fixture: "chromeCameraPerf",
+				Val:     browser.TypeAsh,
 			},
 			{
 				Name:              "lacros",
 				Fixture:           "chromeCameraPerfLacros",
+				ExtraSoftwareDeps: []string{"lacros"},
+				Timeout:           7 * time.Minute, // A lenient limit for launching Lacros Chrome.
+				Val:               browser.TypeLacros,
+			},
+			{
+				Name:    "ash_vcd_utility",
+				Fixture: "chromeCameraPerfWithVCDInUtilityProcess",
+				Val:     browser.TypeAsh,
+			},
+			{
+				Name:              "lacros_vcd_utility",
+				Fixture:           "chromeCameraPerfLacrosWithVCDInUtilityProcess",
 				ExtraSoftwareDeps: []string{"lacros"},
 				Timeout:           7 * time.Minute, // A lenient limit for launching Lacros Chrome.
 				Val:               browser.TypeLacros,
@@ -153,7 +164,7 @@ func GetUserMediaPerf(ctx context.Context, s *testing.State) {
 		}
 		defer ci.Close(ctx)
 	} else {
-		ci = s.PreValue().(*chrome.Chrome)
+		ci = s.FixtValue().(chrome.HasChrome).Chrome()
 	}
 
 	// Run tests for 20 seconds per resolution.

@@ -45,4 +45,37 @@ func initChromeCameraPerfFixtures() {
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
+	testing.AddFixture(&testing.Fixture{
+		Name:     "chromeCameraPerfWithVCDInUtilityProcess",
+		Desc:     "Similar to chromeCameraPerf fixture but running VCD in the utility process",
+		Contacts: []string{"chromeos-camera-eng@google.com"},
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return []chrome.Option{
+				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
+				chrome.ExtraArgs(chromeSuppressNotificationsArgs...),
+				chrome.DisableFeatures("RunVideoCaptureServiceInBrowserProcess"),
+			}, nil
+		}),
+		Parent:          "gpuWatchDog",
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name:     "chromeCameraPerfLacrosWithVCDInUtilityProcess",
+		Desc:     "Similar to chromeCameraPerfLacros fixture but running VCD in the utility process",
+		Contacts: []string{"chromeos-camera-eng@google.com"},
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(
+				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
+				chrome.LacrosExtraArgs(chromeBypassPermissionsArgs...),
+				chrome.ExtraArgs(chromeSuppressNotificationsArgs...),
+				chrome.LacrosExtraArgs(chromeSuppressNotificationsArgs...),
+				chrome.DisableFeatures("RunVideoCaptureServiceInBrowserProcess"))).Opts()
+		}),
+		Parent:          "gpuWatchDog",
+		SetUpTimeout:    chrome.FixtureSetUpTimeout + 7*time.Minute,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
 }
