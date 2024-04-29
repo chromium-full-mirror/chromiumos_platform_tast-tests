@@ -20,7 +20,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/event"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
 	localPerf "go.chromium.org/tast-tests/cros/local/perf"
 	"go.chromium.org/tast-tests/cros/local/power"
@@ -250,13 +249,6 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, args func(
 				// before interacting with it.
 				if err := ac.WithInterval(time.Second).WithTimeout(5*time.Second).WaitUntilNoEvent(nodewith.Root(), event.LocationChanged)(ctx); err != nil {
 					testing.ContextLog(ctx, "Failed to wait for current desk to stabilize: ", err)
-				}
-				understandBtn := nodewith.Name("I understand").Role(role.Button)
-				if err := uiauto.IfSuccessThen(
-					ac.WithTimeout(5*time.Second).WaitUntilExists(understandBtn),
-					ac.LeftClick(understandBtn),
-				)(ctx); err != nil {
-					return errors.Wrap(err, "failed to skip privacy settings dialog")
 				}
 
 				if err := onVisitActions[activeDesk](ctx); err != nil {
