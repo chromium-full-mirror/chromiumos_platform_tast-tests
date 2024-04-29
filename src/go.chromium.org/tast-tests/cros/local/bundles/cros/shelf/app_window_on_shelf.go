@@ -85,7 +85,7 @@ func AppWindowOnShelf(ctx context.Context, s *testing.State) {
 
 	appsGridView := nodewith.ClassName("ScrollableAppsGridView")
 	if tabletMode {
-		appsGridView = nodewith.ClassName("AppsGridView")
+		appsGridView = nodewith.ClassName("PagedAppsGridView")
 	}
 
 	// Wait for at least one fake app to be installed.
