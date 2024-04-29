@@ -11,17 +11,20 @@ package certpageutils
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/checked"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/event"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/sysutil"
 	"go.chromium.org/tast/core/errors"
@@ -286,11 +289,11 @@ func DeleteClientCert(ctx context.Context, ui *uiauto.Context, clientOrg string)
 }
 
 // DeleteCACert selects and deletes specific CA certificate on CA tab.
-func DeleteCACert(ctx context.Context, ui *uiauto.Context, caOrgName, caOrg string) (retErr error) {
-	if err := SelectCACertificate(ctx, ui, caOrg); err != nil {
+func DeleteCACert(ctx context.Context, ui *uiauto.Context, conn *chrome.Conn, caOrg, caCertName string) (retErr error) {
+	if err := SelectCACertificate(ctx, ui, conn, caOrg, caCertName); err != nil {
 		return errors.Wrap(err, "failed to select CA certificate")
 	}
-	if err := OpenActionMenuForCACertificate(ctx, ui, caOrgName); err != nil {
+	if err := OpenActionMenuForCACertificate(ctx, ui, conn, caCertName); err != nil {
 		return errors.Wrap(err, "failed to open action menu for CA certificate")
 	}
 
@@ -307,7 +310,7 @@ func DeleteCACert(ctx context.Context, ui *uiauto.Context, caOrgName, caOrg stri
 		return errors.Wrap(err, failedToPressOkErr)
 	}
 
-	if err := ui.WaitUntilGone(nodewith.Name(caOrgName))(ctx); err != nil {
+	if err := ui.WaitUntilGone(nodewith.Name(caCertName))(ctx); err != nil {
 		return errors.Wrap(err, failedToDeleteCertErr)
 	}
 	return nil
@@ -350,44 +353,54 @@ func pressTabsThenPressEnter(ctx context.Context, tabsToPress int) (retErr error
 	return nil
 }
 
+// expandCertOrganizationBox expands the certificate list of the organization.
+// There's no unique identifier on the UI tree for the organization box, invoking the click action by JavaScript.
+func expandCertOrganizationBox(organizationName string, conn *chrome.Conn, ui *uiauto.Context,
+	certificateText *nodewith.Finder) uiauto.Action {
+	expandCertList := uiauto.NamedAction("expand the certificate list of the organization",
+		func(ctx context.Context) error {
+			expr := ClickElementWithConditionJSExpr("cr-expand-button", "certificate-entry", "div.flex", organizationName)
+			return webutil.EvalWithShadowPiercer(ctx, conn, expr, nil)
+		},
+	)
+	// If the certificate text visible, it indicates the certificate list is already expanded.
+	return uiauto.IfFailThen(
+		ui.WithTimeout(1*time.Second).WaitUntilExists(certificateText),
+		expandCertList,
+	)
+}
+
 // SelectCACertificateImpl selects CA on CA tab and open/close list of certificates
-// for the organization. Sometimes extra icons are shown before open/close button,
-// tabsToPress parameter helps to move through all extra UI elements with "Tab" button.
-func SelectCACertificateImpl(ctx context.Context, ui *uiauto.Context, caOrg string, tabsToPress int) (retErr error) {
+// for the organization.
+func SelectCACertificateImpl(ctx context.Context, ui *uiauto.Context, conn *chrome.Conn, caOrg, caCertName string) (retErr error) {
 	caCertOrg := nodewith.Name(caOrg).Role(role.StaticText)
+	caCertNameFinder := nodewith.Ancestor(ManageCertSettingsWebArea).Name(caCertName).Role(role.StaticText)
 	if err := uiauto.Combine("select CA from list",
 		ui.DoDefault(nodewith.Name("Authorities").Role(role.Tab)),
 		ui.WaitUntilExists(nodewith.Name("Authorities").ClassName("tab selected")),
 		ui.WaitUntilExists(caCertOrg),
 		ui.MakeVisible(caCertOrg),
-		ui.LeftClick(caCertOrg),
+		expandCertOrganizationBox(caOrg, conn, ui, caCertNameFinder),
+		ui.WaitUntilExists(caCertNameFinder),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to select CA from list")
-	}
-	// Open/close drop down list of certificates under selected CA.
-	// The UI tree for these elements is not very convenient.
-	// Use keyboard to navigate.
-	if err := pressTabsThenPressEnter(ctx, tabsToPress); err != nil {
-		return errors.Wrap(err, failedToSelectNextUIElementErr)
 	}
 	return nil
 }
 
 // SelectCACertificate selects CA on CA tab and open/close list of certificates
-// for the organization. This is default case when only 1 tab needs to be pressed and dropdown
-// button will be selected.
-func SelectCACertificate(ctx context.Context, ui *uiauto.Context, caOrg string) (retErr error) {
-	if err := SelectCACertificateImpl(ctx, ui, caOrg, 1 /*tabsToPress*/); err != nil {
+// for the organization.
+func SelectCACertificate(ctx context.Context, ui *uiauto.Context, conn *chrome.Conn, caOrg, caCertName string) (retErr error) {
+	if err := SelectCACertificateImpl(ctx, ui, conn, caOrg, caCertName); err != nil {
 		return errors.Wrap(err, failedToSelectNextUIElementErr)
 	}
 	return nil
 }
 
 // SelectPolicyProvidedCACertificate selects CA on CA tab and open/close list of certificates
-// for the organization. Policy management icon is show for policy provided CA,
-// so Tab needs to be pressed 2 times before dropdown button is selected.
-func SelectPolicyProvidedCACertificate(ctx context.Context, ui *uiauto.Context, caOrg string) (retErr error) {
-	if err := SelectCACertificateImpl(ctx, ui, caOrg, 2 /*tabsToPress*/); err != nil {
+// for the organization.
+func SelectPolicyProvidedCACertificate(ctx context.Context, ui *uiauto.Context, conn *chrome.Conn, caOrg, caCertName string) (retErr error) {
+	if err := SelectCACertificateImpl(ctx, ui, conn, caOrg, caCertName); err != nil {
 		return errors.Wrap(err, failedToSelectNextUIElementErr)
 	}
 	return nil
@@ -454,11 +467,11 @@ func setTrustCheckboxAndSave(ctx context.Context, ui *uiauto.Context, targetStat
 }
 
 // SetCACertTrust sets Web trust setting for CA certificate to true or false.
-func SetCACertTrust(ctx context.Context, ui *uiauto.Context, targetState checked.Checked, caOrgName, caOrg string) (retErr error) {
-	if err := SelectCACertificate(ctx, ui, caOrg); err != nil {
+func SetCACertTrust(ctx context.Context, ui *uiauto.Context, conn *chrome.Conn, targetState checked.Checked, caOrg, caCertName string) (retErr error) {
+	if err := SelectCACertificate(ctx, ui, conn, caOrg, caCertName); err != nil {
 		return errors.Wrap(err, "failed to select CA certificate")
 	}
-	if err := OpenActionMenuForCACertificate(ctx, ui, caOrgName); err != nil {
+	if err := OpenActionMenuForCACertificate(ctx, ui, conn, caCertName); err != nil {
 		return errors.Wrap(err, "failed to open action menu for the certificate")
 	}
 	if err := SelectEditCACertificate(ctx, ui); err != nil {
@@ -469,40 +482,43 @@ func SetCACertTrust(ctx context.Context, ui *uiauto.Context, targetState checked
 	}
 
 	// Hide a list of CA certificates by selecting CA again.
-	if err := SelectCACertificate(ctx, ui, caOrg); err != nil {
+	if err := SelectCACertificate(ctx, ui, conn, caOrg, caCertName); err != nil {
 		return errors.Wrap(err, "failed to select CA certificate")
 	}
 	return nil
+}
+
+// clickMoreActionsButton clicks the "More actions" button of the certificate.
+// There's no unique identifier on the UI tree for the "More actions" button, invoking the click action by JavaScript.
+func clickMoreActionsButton(certName string, conn *chrome.Conn) uiauto.Action {
+	return uiauto.NamedAction("click the 'More actions' button of the certificate",
+		func(ctx context.Context) error {
+			expr := ClickElementWithConditionJSExpr("cr-icon-button#dots", "certificate-subentry", "div.name", certName)
+			return webutil.EvalWithShadowPiercer(ctx, conn, expr, nil)
+		},
+	)
 }
 
 // chooseCACertificateImpl selects CA certificate from the list of certificates for CA org.
 // It is expected that list of certificates is already expanded.
 // Sometimes extra icons are shown before action menu button,
 // tabsToPress parameter helps to move through all extra UI elements with "Tab" button.
-func chooseCACertificateImpl(ctx context.Context, ui *uiauto.Context, caOrg string, tabsToPress int) (retErr error) {
-	caCertificateNode := nodewith.Name(caOrg).Role(role.StaticText)
+func chooseCACertificateImpl(ctx context.Context, ui *uiauto.Context, conn *chrome.Conn, caCertName string) (retErr error) {
+	caCertificateNode := nodewith.Name(caCertName).Role(role.StaticText)
 	if err := uiauto.Combine("select CA cert from list",
 		ui.WaitUntilExists(caCertificateNode),
-		ui.DoDefault(caCertificateNode),
+		clickMoreActionsButton(caCertName, conn),
+		ui.WaitUntilExists(nodewith.Name("View").Role(role.MenuItem)),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to select CA cert from list")
-	}
-
-	// Open menu for the selected certificate from 3 dots using keyboard.
-	if err := pressTabsThenPressEnter(ctx, tabsToPress); err != nil {
-		return err
-	}
-	// Make sure that menu become visible on older DUT with slow UI.
-	if err := ui.WaitUntilExists(nodewith.Name("View").Role(role.MenuItem))(ctx); err != nil {
-		return errors.Wrap(err, "failed to select CA certificate")
 	}
 	return nil
 }
 
 // OpenActionMenuForCACertificate selects specific CA certificate on CA tab and open actions menu for it.
 // This is default case when only 1 tab needs to be pressed and dropdown button will be selected.
-func OpenActionMenuForCACertificate(ctx context.Context, ui *uiauto.Context, caOrg string) (retErr error) {
-	if err := chooseCACertificateImpl(ctx, ui, caOrg, 1 /*tabsToPress*/); err != nil {
+func OpenActionMenuForCACertificate(ctx context.Context, ui *uiauto.Context, conn *chrome.Conn, caCertName string) (retErr error) {
+	if err := chooseCACertificateImpl(ctx, ui, conn, caCertName); err != nil {
 		return err
 	}
 	return nil
@@ -510,9 +526,38 @@ func OpenActionMenuForCACertificate(ctx context.Context, ui *uiauto.Context, caO
 
 // OpenActionMenuForPolicyProvidedCACertificate selects specific CA certificate on CA tab and open actions menu for it.
 // Policy management icon will be shows before the action menu, so "Tab" needs to be pressed 2 times.
-func OpenActionMenuForPolicyProvidedCACertificate(ctx context.Context, ui *uiauto.Context, caOrg string) (retErr error) {
-	if err := chooseCACertificateImpl(ctx, ui, caOrg, 2 /*tabsToPress*/); err != nil {
+func OpenActionMenuForPolicyProvidedCACertificate(ctx context.Context, ui *uiauto.Context, conn *chrome.Conn, caCertName string) (retErr error) {
+	if err := chooseCACertificateImpl(ctx, ui, conn, caCertName); err != nil {
 		return err
 	}
 	return nil
+}
+
+// ClickElementWithConditionJSExpr returns a JavaScript expression to find and
+// click on an element given certain conditions. The expression will search for
+// all elements on page using |entrySelector| which is expected to return zero
+// or more elements, then it will select internal entries inside of elements
+// using query selector |conditionSelector|. Next step expression will check if
+// at least one of entries has |conditionText| inside its HTML, and if so will
+// attempt to find the button matching |selector| and click it.
+func ClickElementWithConditionJSExpr(selector, entrySelector, conditionSelector, conditionText string) string {
+	return fmt.Sprintf(`(() => {
+		let entries = shadowPiercingQueryAll(%[1]q);
+		if (entries == null) { throw new Error("entry elements are not found"); }
+		if (!entries.some(entry => {
+			let divs = entry.shadowRoot.querySelectorAll(%[2]q)
+			if (divs == null) {
+				return false;
+			}
+			let divsArray = Array.from(divs);
+			if (divsArray.some(div => { return div.innerHTML.includes(%[3]q) })) {
+				let button = entry.shadowRoot.querySelector(%[4]q);
+				if (button == null) {
+					return false;
+				}
+				button.click();
+				return true;
+			}
+		})) { throw new Error("no element with a matched condition found"); };
+	})()`, entrySelector, conditionSelector, conditionText, selector)
 }

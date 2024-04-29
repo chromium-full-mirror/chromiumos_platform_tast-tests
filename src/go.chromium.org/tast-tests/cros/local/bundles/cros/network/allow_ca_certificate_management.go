@@ -150,19 +150,19 @@ func expectImportUserCACertNotPossible(ctx context.Context, s *testing.State, ui
 }
 
 // expectDeleteUserCACertSuccess selects and deletes user's CA certificate on CA tab.
-func expectDeleteUserCACertSuccess(ctx context.Context, s *testing.State, ui *uiauto.Context) {
-	if err := utils.DeleteCACert(ctx, ui, userCaCertName, userCaOrg); err != nil {
+func expectDeleteUserCACertSuccess(ctx context.Context, s *testing.State, ui *uiauto.Context, conn *chrome.Conn) {
+	if err := utils.DeleteCACert(ctx, ui, conn, userCaOrg, userCaCertName); err != nil {
 		s.Fatal("Failed to delete CA certificate: ", err)
 	}
 }
 
 // expectDeleteUserCACertNotPossible checks that "Delete" button is not shown for user's CA certificate.
-func expectDeleteUserCACertNotPossible(ctx context.Context, s *testing.State, ui *uiauto.Context) {
-	if err := utils.SelectCACertificate(ctx, ui, userCaOrg); err != nil {
+func expectDeleteUserCACertNotPossible(ctx context.Context, s *testing.State, ui *uiauto.Context, conn *chrome.Conn) {
+	if err := utils.SelectCACertificate(ctx, ui, conn, userCaOrg, userCaCertName); err != nil {
 		s.Fatal("Failed to select CA certificate: ", err)
 	}
 
-	if err := utils.OpenActionMenuForCACertificate(ctx, ui, userCaOrg); err != nil {
+	if err := utils.OpenActionMenuForCACertificate(ctx, ui, conn, userCaCertName); err != nil {
 		s.Fatal("Failed to open action menu: ", err)
 	}
 
@@ -176,29 +176,29 @@ func expectDeleteUserCACertNotPossible(ctx context.Context, s *testing.State, ui
 
 	// Close popup menu and previously selected CA org.
 	utils.PressEscape(ctx)
-	if err := utils.SelectCACertificate(ctx, ui, userCaOrg); err != nil {
+	if err := utils.SelectCACertificate(ctx, ui, conn, userCaOrg, userCaCertName); err != nil {
 		s.Fatal("Failed to select CA certificate: ", err)
 	}
 }
 
 // expectEditTrustUserCACertSuccess testing that trust bit for the user's CA certificate can be turned off.
-func expectEditTrustUserCACertSuccess(ctx context.Context, s *testing.State, ui *uiauto.Context) {
-	if err := utils.SetCACertTrust(ctx, ui, checked.False /*targetState*/, userCaCertName, userCaOrg); err != nil {
+func expectEditTrustUserCACertSuccess(ctx context.Context, s *testing.State, ui *uiauto.Context, conn *chrome.Conn) {
+	if err := utils.SetCACertTrust(ctx, ui, conn, checked.False /*targetState*/, userCaOrg, userCaCertName); err != nil {
 		s.Fatal("Failed to set CA trust: ", err)
 	}
 	// Return trust value back to original state.
-	if err := utils.SetCACertTrust(ctx, ui, checked.True /*targetState*/, userCaCertName, userCaOrg); err != nil {
+	if err := utils.SetCACertTrust(ctx, ui, conn, checked.True /*targetState*/, userCaOrg, userCaCertName); err != nil {
 		s.Fatal("Failed to set CA trust: ", err)
 	}
 }
 
 // expectEditTrustProvidedCACertSuccess testing that trust bit for the provided CA certificate can be turned off.
-func expectEditTrustProvidedCACertSuccess(ctx context.Context, s *testing.State, ui *uiauto.Context) {
-	if err := utils.SetCACertTrust(ctx, ui, checked.False /*targetState*/, providedCaCertName, providedCaOrg); err != nil {
+func expectEditTrustProvidedCACertSuccess(ctx context.Context, s *testing.State, ui *uiauto.Context, conn *chrome.Conn) {
+	if err := utils.SetCACertTrust(ctx, ui, conn, checked.False /*targetState*/, providedCaOrg, providedCaCertName); err != nil {
 		s.Fatal("Failed to set CA trust: ", err)
 	}
 	// Return trust value back to original state.
-	if err := utils.SetCACertTrust(ctx, ui, checked.True /*targetState*/, providedCaCertName, providedCaOrg); err != nil {
+	if err := utils.SetCACertTrust(ctx, ui, conn, checked.True /*targetState*/, providedCaOrg, providedCaCertName); err != nil {
 		s.Fatal("Failed to set CA trust: ", err)
 	}
 }
@@ -206,12 +206,12 @@ func expectEditTrustProvidedCACertSuccess(ctx context.Context, s *testing.State,
 // expectManagePolicyProvidedCACertNotPossible testing that it is not possible to manage CA certificate provided by policy.
 // It will select CA org, then it will select specific CA certificate and open action menu for it. Then
 // it will check that "Edit" and "Delete" buttons are not shown while "View" and "Export" buttons are shown.
-func expectManagePolicyProvidedCACertNotPossible(ctx context.Context, s *testing.State, ui *uiauto.Context, caOrg, caCertName string) {
-	if err := utils.SelectPolicyProvidedCACertificate(ctx, ui, caOrg); err != nil {
+func expectManagePolicyProvidedCACertNotPossible(ctx context.Context, s *testing.State, ui *uiauto.Context, conn *chrome.Conn, caOrg, caCertName string) {
+	if err := utils.SelectPolicyProvidedCACertificate(ctx, ui, conn, caOrg, caCertName); err != nil {
 		s.Fatal("Failed to select CA certificate: ", err)
 	}
 
-	if err := utils.OpenActionMenuForPolicyProvidedCACertificate(ctx, ui, caCertName); err != nil {
+	if err := utils.OpenActionMenuForPolicyProvidedCACertificate(ctx, ui, conn, caCertName); err != nil {
 		s.Fatal("Failed to open action menu for the certificate: ", err)
 	}
 
@@ -225,7 +225,7 @@ func expectManagePolicyProvidedCACertNotPossible(ctx context.Context, s *testing
 	if err := utils.PressEscape(ctx); err != nil {
 		s.Fatal("Failed to press Esc: ", err)
 	}
-	if err := utils.SelectPolicyProvidedCACertificate(ctx, ui, caOrg); err != nil {
+	if err := utils.SelectPolicyProvidedCACertificate(ctx, ui, conn, caOrg, caCertName); err != nil {
 		s.Fatal("Failed to select CA certificate: ", err)
 	}
 }
@@ -233,12 +233,12 @@ func expectManagePolicyProvidedCACertNotPossible(ctx context.Context, s *testing
 // expectManageCACertNotPossible testing that it is not possible to manage CA certificate.
 // It will select CA org, then it will select specific CA certificate and open action menu for it. Then
 // it will check that "Edit" and "Delete" buttons are not shown while "View" and "Export" buttons are shown.
-func expectManageCACertNotPossible(ctx context.Context, s *testing.State, ui *uiauto.Context, caOrg, caCertName string) {
-	if err := utils.SelectCACertificate(ctx, ui, caOrg); err != nil {
+func expectManageCACertNotPossible(ctx context.Context, s *testing.State, ui *uiauto.Context, conn *chrome.Conn, caOrg, caCertName string) {
+	if err := utils.SelectCACertificate(ctx, ui, conn, caOrg, caCertName); err != nil {
 		s.Fatal("Failed to select CA certificate: ", err)
 	}
 
-	if err := utils.OpenActionMenuForCACertificate(ctx, ui, caCertName); err != nil {
+	if err := utils.OpenActionMenuForCACertificate(ctx, ui, conn, caCertName); err != nil {
 		s.Fatal("Failed to open action menu for the certificate: ", err)
 	}
 
@@ -252,7 +252,7 @@ func expectManageCACertNotPossible(ctx context.Context, s *testing.State, ui *ui
 	if err := utils.PressEscape(ctx); err != nil {
 		s.Fatal("Failed to press Esc: ", err)
 	}
-	if err := utils.SelectCACertificate(ctx, ui, caOrg); err != nil {
+	if err := utils.SelectCACertificate(ctx, ui, conn, caOrg, caCertName); err != nil {
 		s.Fatal("Failed to select CA certificate: ", err)
 	}
 }
@@ -392,17 +392,17 @@ func AllowCACertificateManagement(ctx context.Context, s *testing.State) {
 			defer conn.Close()
 
 			// CA certificates provided by policy can not be managed at all.
-			expectManagePolicyProvidedCACertNotPossible(ctx, s, ui, policyProvidedCaOrg, policyProvidedCaCertName)
+			expectManagePolicyProvidedCACertNotPossible(ctx, s, ui, conn, policyProvidedCaOrg, policyProvidedCaCertName)
 
 			if param.canManageUserCACert {
 				expectCACertNotImported(ctx, s, ui)
 				expectImportUserCACertSuccess(ctx, s, ui)
-				expectEditTrustUserCACertSuccess(ctx, s, ui)
-				expectDeleteUserCACertSuccess(ctx, s, ui)
+				expectEditTrustUserCACertSuccess(ctx, s, ui, conn)
+				expectDeleteUserCACertSuccess(ctx, s, ui, conn)
 			} else {
 				expectImportUserCACertNotPossible(ctx, s, ui)
-				expectManageCACertNotPossible(ctx, s, ui, userCaOrg, userCaCertName)
-				expectDeleteUserCACertNotPossible(ctx, s, ui)
+				expectManageCACertNotPossible(ctx, s, ui, conn, userCaOrg, userCaCertName)
+				expectDeleteUserCACertNotPossible(ctx, s, ui, conn)
 			}
 
 			// TODO(b/291182593): Re-enable this when the new UI for modifying
@@ -423,7 +423,7 @@ func AllowCACertificateManagement(ctx context.Context, s *testing.State) {
 					s.Fatal("Failed to open a new tab in browser: ", err)
 				}
 				defer conn.Close()
-				expectDeleteUserCACertSuccess(ctx, s, ui)
+				expectDeleteUserCACertSuccess(ctx, s, ui, conn)
 			}
 		})
 	}

@@ -341,15 +341,15 @@ func deleteClientCert(ctx context.Context, s *testing.State, ui *uiauto.Context,
 }
 
 // deleteCACert selects and deletes specific CA certificate on CA tab.
-func deleteCACert(ctx context.Context, s *testing.State, ui *uiauto.Context, ignoreErrors bool) {
-	if err := utils.DeleteCACert(ctx, ui, caCertName, caOrg); err != nil && !ignoreErrors {
+func deleteCACert(ctx context.Context, s *testing.State, ui *uiauto.Context, conn *chrome.Conn, ignoreErrors bool) {
+	if err := utils.DeleteCACert(ctx, ui, conn, caOrg, caCertName); err != nil && !ignoreErrors {
 		s.Fatal("Failed to delete CA certificate: ", err)
 	}
 }
 
 // setCACertTrust sets Web trust setting for CA certificate to true or false.
-func setCACertTrust(ctx context.Context, s *testing.State, ui *uiauto.Context, targetState checked.Checked) {
-	if err := utils.SetCACertTrust(ctx, ui, targetState, caCertName, caOrg); err != nil {
+func setCACertTrust(ctx context.Context, s *testing.State, ui *uiauto.Context, conn *chrome.Conn, targetState checked.Checked) {
+	if err := utils.SetCACertTrust(ctx, ui, conn, targetState, caOrg, caCertName); err != nil {
 		s.Fatal("Failed to set CA trust: ", err)
 	}
 }
@@ -395,7 +395,7 @@ func CertSettingsPage(ctx context.Context, s *testing.State) {
 	defer conn.Close()
 
 	ui := uiauto.New(tconn)
-	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
+	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
 	downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
 	if err != nil {
@@ -408,7 +408,7 @@ func CertSettingsPage(ctx context.Context, s *testing.State) {
 	// Try to delete certs from the certificates manager at the end of test.
 	// This will clean device in case test has failed early.
 	defer deleteClientCert(ctx, s, ui, true /*ignoreErrors*/)
-	defer deleteCACert(ctx, s, ui, true /*ignoreErrors*/)
+	defer deleteCACert(ctx, s, ui, conn, true /*ignoreErrors*/)
 
 	// Try opening a website without any certs, that should fail with a CA error.
 	createAndUseWebsite(ctx, s, browser, ui, kb, false /*expectCertPopup*/, caInvalidErrorRegex)
@@ -429,12 +429,12 @@ func CertSettingsPage(ctx context.Context, s *testing.State) {
 	// Test that certificates for not trusted CA will be not valid.
 	{
 		// Mark CA as not trusted for ssl and try connection to the website, it should fail.
-		setCACertTrust(ctx, s, ui, checked.False)
+		setCACertTrust(ctx, s, ui, conn, checked.False)
 		waitForClientCert(ctx, s)
 		createAndUseWebsite(ctx, s, browser, ui, kb, false /*expectCertPopup*/, caInvalidErrorRegex)
 
 		// Mark CA as trusted for ssl and try connection to the website, it should succeed.
-		setCACertTrust(ctx, s, ui, checked.True)
+		setCACertTrust(ctx, s, ui, conn, checked.True)
 		waitForClientCert(ctx, s)
 		createAndUseWebsite(ctx, s, browser, ui, kb, true /*expectCertPopup*/, pageLoadedRegex)
 	}
@@ -451,7 +451,7 @@ func CertSettingsPage(ctx context.Context, s *testing.State) {
 		createAndUseWebsite(ctx, s, browser, ui, kb, true /*expectCertPopup*/, pageLoadedRegex)
 
 		// Delete the CA cert and check that Chrome gets the CA error again.
-		deleteCACert(ctx, s, ui, false /*ignoreErrors*/)
+		deleteCACert(ctx, s, ui, conn, false /*ignoreErrors*/)
 		waitForClientCert(ctx, s)
 		createAndUseWebsite(ctx, s, browser, ui, kb, false /*expectCertPopup*/, caInvalidErrorRegex)
 
@@ -475,7 +475,7 @@ func CertSettingsPage(ctx context.Context, s *testing.State) {
 		createAndUseWebsite(ctx, s, browser, ui, kb, false /*expectCertPopup*/, connectionErrorRegex)
 
 		// Delete the CA cert and check that Chrome gets the CA error again.
-		deleteCACert(ctx, s, ui, false /*ignoreErrors*/)
+		deleteCACert(ctx, s, ui, conn, false /*ignoreErrors*/)
 		createAndUseWebsite(ctx, s, browser, ui, kb, false /*expectCertPopup*/, caInvalidErrorRegex)
 	}
 }
