@@ -210,15 +210,15 @@ func TestGet(t *testing.T) {
 		}, {
 			// GCMP.
 			conf: &Config{
-				psk:            "chromeos",
-				mode:           ModeMixedWPA3,
-				ciphers2:       []Cipher{CipherGCMP128},
-				groupCiphers:   []Cipher{CipherGCMP128},
-				ftMode:         FTModeNone,
-				gmkRekeyPeriod: 86400,
-				gtkRekeyPeriod: 86400,
-				ptkRekeyPeriod: 600,
-				useStrictRekey: true,
+				psk:                 "chromeos",
+				mode:                ModeMixedWPA3,
+				ciphers2:            []Cipher{CipherGCMP128},
+				groupCipherOverride: CipherGCMP128,
+				ftMode:              FTModeNone,
+				gmkRekeyPeriod:      86400,
+				gtkRekeyPeriod:      86400,
+				ptkRekeyPeriod:      600,
+				useStrictRekey:      true,
 			},
 			verifyHostapd: map[string]string{
 				"wpa_passphrase":   "chromeos",
@@ -237,15 +237,15 @@ func TestGet(t *testing.T) {
 		}, {
 			// GCMP-256.
 			conf: &Config{
-				psk:            "chromeos",
-				mode:           ModeMixedWPA3,
-				ciphers2:       []Cipher{CipherGCMP256},
-				groupCiphers:   []Cipher{CipherGCMP256},
-				ftMode:         FTModeNone,
-				gmkRekeyPeriod: 86400,
-				gtkRekeyPeriod: 86400,
-				ptkRekeyPeriod: 600,
-				useStrictRekey: true,
+				psk:                 "chromeos",
+				mode:                ModeMixedWPA3,
+				ciphers2:            []Cipher{CipherGCMP256},
+				groupCipherOverride: CipherGCMP256,
+				ftMode:              FTModeNone,
+				gmkRekeyPeriod:      86400,
+				gtkRekeyPeriod:      86400,
+				ptkRekeyPeriod:      600,
+				useStrictRekey:      true,
 			},
 			verifyHostapd: map[string]string{
 				"wpa_passphrase":   "chromeos",

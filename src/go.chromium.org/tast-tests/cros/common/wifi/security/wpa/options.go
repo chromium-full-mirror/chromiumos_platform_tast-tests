@@ -37,10 +37,10 @@ func Ciphers2(ciphers ...Cipher) Option {
 	}
 }
 
-// GroupCiphers returns an Option which sets the group ciphers in Config.
-func GroupCiphers(ciphers ...Cipher) Option {
+// GroupCipherOverride returns an Option which sets the group cipher in Config.
+func GroupCipherOverride(cipher Cipher) Option {
 	return func(c *Config) {
-		c.groupCiphers = append(c.groupCiphers, ciphers...)
+		c.groupCipherOverride = cipher
 	}
 }
 
