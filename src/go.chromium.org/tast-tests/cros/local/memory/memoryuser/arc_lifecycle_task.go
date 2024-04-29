@@ -35,19 +35,20 @@ const ArcLifecycleUnitCount = 100
 
 const arcLifecycleTestPkg = "org.chromium.arc.testapp.lifecycle"
 
-func (t *ArcLifecycleUnit) packageName() string {
+// PackageName returns the package name of the ArcLifeCycleUnit
+func (t *ArcLifecycleUnit) PackageName() string {
 	// E.g. "org.chromium.arc.testapp.lifecycle00".
 	return fmt.Sprintf("%s%02d", arcLifecycleTestPkg, t.id)
 }
 
 func (t *ArcLifecycleUnit) mainActivity() string {
 	// E.g. "org.chromium.arc.testapp.lifecycle00/org.chromium.arc.testapp.lifecycle.MainActivity".
-	return fmt.Sprintf("%s/%s.MainActivity", t.packageName(), arcLifecycleTestPkg)
+	return fmt.Sprintf("%s/%s.MainActivity", t.PackageName(), arcLifecycleTestPkg)
 }
 
 func (t *ArcLifecycleUnit) intentAction(action string) string {
 	// E.g. "org.chromium.arc.testapp.lifecycle00.ALLOC".
-	return fmt.Sprintf("%s.%s", t.packageName(), action)
+	return fmt.Sprintf("%s.%s", t.PackageName(), action)
 }
 
 var amStartRE = regexp.MustCompile("(?m)^Status: ok$")
@@ -94,7 +95,7 @@ func (t *ArcLifecycleUnit) Run(ctx context.Context, a *arc.ARC, tconn *chrome.Te
 		}
 		return nil
 	}, &testing.PollOptions{Interval: 500 * time.Millisecond, Timeout: 30 * time.Second}); err != nil {
-		return errors.Wrapf(err, "failed to allocate with %q", t.packageName())
+		return errors.Wrapf(err, "failed to allocate with %q", t.PackageName())
 	}
 
 	if t.minimize {
@@ -108,8 +109,8 @@ func (t *ArcLifecycleUnit) Run(ctx context.Context, a *arc.ARC, tconn *chrome.Te
 					await setState(w.id, {eventType: 'WMEventMinimize'});
 				}
 			}
-		}`, t.packageName()); err != nil {
-			return errors.Wrapf(err, "failed to minimize window for %q", t.packageName())
+		}`, t.PackageName()); err != nil {
+			return errors.Wrapf(err, "failed to minimize window for %q", t.PackageName())
 		}
 	}
 
@@ -118,9 +119,9 @@ func (t *ArcLifecycleUnit) Run(ctx context.Context, a *arc.ARC, tconn *chrome.Te
 
 // Close kills the AndroidLifecycleTest app.
 func (t *ArcLifecycleUnit) Close(ctx context.Context, a *arc.ARC) {
-	err := a.Command(ctx, "am", "force-stop", t.packageName()).Run(testexec.DumpLogOnError)
+	err := a.Command(ctx, "am", "force-stop", t.PackageName()).Run(testexec.DumpLogOnError)
 	if err != nil {
-		testing.ContextLogf(ctx, "Failed to Close %q: %v", t.packageName(), err)
+		testing.ContextLogf(ctx, "Failed to Close %q: %v", t.PackageName(), err)
 	}
 }
 
@@ -161,8 +162,8 @@ func FillArcMemory(ctx context.Context, a *arc.ARC, tconn *chrome.TestConn, unit
 		var res error
 		for _, unit := range units {
 			// Uninstalling the APK will also kill the app, if it's running.
-			if err := a.Uninstall(ctx, unit.packageName()); err != nil {
-				testing.ContextLogf(ctx, "Failed to uninstall %q: %s", unit.packageName(), err)
+			if err := a.Uninstall(ctx, unit.PackageName()); err != nil {
+				testing.ContextLogf(ctx, "Failed to uninstall %q: %s", unit.PackageName(), err)
 				if res == nil {
 					res = err
 				}
