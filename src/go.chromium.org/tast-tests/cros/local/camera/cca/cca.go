@@ -195,7 +195,7 @@ type PTZSettings struct {
 }
 
 // PowerTimeParams are time parameters used in power recording in CCA.
-var PowerTimeParams = power.TimeParams{Interval: 5 * time.Second, Total: 15 * time.Second}
+var PowerTimeParams = power.TimeParams{Interval: 5 * time.Second, Total: 300 * time.Second}
 
 // Equal returns if PTZ settings a and b are equal.
 func (a *PTZSettings) Equal(b *PTZSettings) bool {
