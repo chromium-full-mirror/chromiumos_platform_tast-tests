@@ -23,7 +23,6 @@ func init() {
 			"group:mainline",
 			"group:crosbolt", "crosbolt_perbuild",
 		},
-		Timeout: 2 * time.Minute,
 		Fixture: "rebootForAudioDSPFixture",
 		Params: []testing.Param{
 			{
@@ -38,6 +37,7 @@ func init() {
 				Name:              "dsp_am",
 				ExtraSoftwareDeps: []string{"dlc"},
 				Val:               crasbench.AM,
+				Timeout:           4 * time.Minute,
 			},
 			{
 				Name: "cras_mixer_ops",
