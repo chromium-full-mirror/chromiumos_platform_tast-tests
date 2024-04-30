@@ -51,7 +51,8 @@ const (
 )
 
 type suspendConfig struct {
-	Fwupd fwupdMode
+	Fwupd      fwupdMode
+	Iterations int
 }
 
 func init() {
@@ -70,16 +71,16 @@ func init() {
 		Params: []testing.Param{
 			{
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(allFilteredModels...)),
-				Val:               suspendConfig{Fwupd: fwupdNoChange},
+				Val:               suspendConfig{Fwupd: fwupdNoChange, Iterations: 1},
 			}, {
 				Name:              "unstable",
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(allFilteredModels...)),
-				Val:               suspendConfig{Fwupd: fwupdNoChange},
+				Val:               suspendConfig{Fwupd: fwupdNoChange, Iterations: 1},
 				ExtraAttr:         []string{"informational"},
 			}, {
 				Name:              "nofwupd",
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(nofwupdFilteredModels...)),
-				Val:               suspendConfig{Fwupd: fwupdOff},
+				Val:               suspendConfig{Fwupd: fwupdOff, Iterations: 1},
 			},
 		},
 	})
@@ -213,8 +214,10 @@ func Suspend(ctx context.Context, s *testing.State) {
 	}
 	defer stopEvtest()
 
-	_, err = suspend.ForDurationWithKernelFreezeTimeout(ctx, 10*time.Second, 8*time.Second)
-	if err != nil {
-		s.Fatal("Failed to suspend: ", err)
+	for i := 0; i < params.Iterations; i++ {
+		testing.ContextLogf(ctx, "Suspend %d of %d", i+1, params.Iterations)
+		if _, err = suspend.ForDurationWithKernelFreezeTimeout(ctx, 10*time.Second, 8*time.Second); err != nil {
+			s.Fatal("Failed to suspend: ", err)
+		}
 	}
 }
