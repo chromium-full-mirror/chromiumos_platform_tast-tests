@@ -132,7 +132,7 @@ func init() {
 				isListenTest: false,
 				processCount: 100,
 			},
-			ExtraAttr: []string{"group:mainline", "group:criticalstaging", "informational"},
+			ExtraAttr: []string{"group:mainline", "group:criticalstaging", "informational", "group:secagentd_bpf"},
 		}, {
 			Name: "relaxed_tcp",
 			Val: networkTypeParams{
@@ -141,7 +141,7 @@ func init() {
 				isListenTest: false,
 				processCount: 100,
 			},
-			ExtraAttr: []string{"group:mainline", "group:criticalstaging", "informational"},
+			ExtraAttr: []string{"group:mainline", "group:criticalstaging", "informational", "group:secagentd_bpf"},
 		}, {
 			Name: "relaxed_tcp_v6",
 			Val: networkTypeParams{
@@ -150,7 +150,7 @@ func init() {
 				isListenTest: false,
 				processCount: 100,
 			},
-			ExtraAttr: []string{"group:mainline", "group:criticalstaging", "informational"},
+			ExtraAttr: []string{"group:mainline", "group:criticalstaging", "informational", "group:secagentd_bpf"},
 		}, {
 			Name: "relaxed_udp",
 			Val: networkTypeParams{
@@ -159,7 +159,7 @@ func init() {
 				isListenTest: false,
 				processCount: 100,
 			},
-			ExtraAttr: []string{"group:mainline", "group:criticalstaging", "informational"},
+			ExtraAttr: []string{"group:mainline", "group:criticalstaging", "informational", "group:secagentd_bpf"},
 		}, {
 			Name: "relaxed_udp_v6",
 			Val: networkTypeParams{
@@ -168,7 +168,7 @@ func init() {
 				isListenTest: false,
 				processCount: 100,
 			},
-			ExtraAttr: []string{"group:mainline", "group:criticalstaging", "informational"},
+			ExtraAttr: []string{"group:mainline", "group:criticalstaging", "informational", "group:secagentd_bpf"},
 		},
 			{
 				Name: "listen_tcp",
@@ -178,7 +178,7 @@ func init() {
 					isListenTest: true,
 					processCount: 1,
 				},
-				ExtraAttr: []string{"group:mainline", "group:criticalstaging", "informational"},
+				ExtraAttr: []string{"group:mainline", "group:criticalstaging", "informational", "group:secagentd_bpf"},
 			},
 			{
 				Name: "listen_tcp_v6",
@@ -188,7 +188,7 @@ func init() {
 					isListenTest: true,
 					processCount: 1,
 				},
-				ExtraAttr: []string{"group:mainline", "group:criticalstaging", "informational"},
+				ExtraAttr: []string{"group:mainline", "group:criticalstaging", "informational", "group:secagentd_bpf"},
 			},
 		},
 	})
