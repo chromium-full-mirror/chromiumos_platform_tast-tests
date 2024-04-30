@@ -545,6 +545,8 @@ func init() {
 			"hungmn@google.com",
 			"arc-performance@google.com",
 		},
+		// ChromeOS > Software > ARC++ > Performance
+		BugComponent:    "b:168382",
 		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,
