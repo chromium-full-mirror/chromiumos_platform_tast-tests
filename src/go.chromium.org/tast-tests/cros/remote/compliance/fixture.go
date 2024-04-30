@@ -25,9 +25,11 @@ const (
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
-		Name:            "complianceHostFixture",
-		Desc:            "Fixture for communicating with compliance measurement devices",
-		Contacts:        []string{},
+		Name:     "complianceHostFixture",
+		Desc:     "Fixture for communicating with compliance measurement devices",
+		Contacts: []string{"chromeos-usb@google.com", "jstanko@google.com"},
+		// ChromeOS > Platform > Technologies > USB
+		BugComponent:    "b:958036",
 		Impl:            &TestFixture{},
 		SetUpTimeout:    setUpTimeout,
 		TearDownTimeout: tearDownTimeout,
