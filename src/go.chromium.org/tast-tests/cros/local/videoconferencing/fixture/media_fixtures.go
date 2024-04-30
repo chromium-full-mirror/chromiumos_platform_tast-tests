@@ -400,7 +400,7 @@ func init() {
 		Desc: "Log in with a fake powerloadtest user, setup power, disable wifi and screen recorder",
 		Contacts: []string{
 			"chromeos-platform-power@google.com",
-			"xiuwen@chromium.org",
+			"xiuwen@google.com",
 		},
 		Impl: setup.NewPowerUIFixture(setup.PowerTestOptions{
 			NightLight:         setup.DisableNightLight,
