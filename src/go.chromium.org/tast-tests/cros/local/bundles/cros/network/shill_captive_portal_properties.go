@@ -34,7 +34,6 @@ func init() {
 			Val: &captivePortalProperties{
 				serviceTechnology: shillconst.TypeEthernet,
 			},
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}},
 	})
 }
