@@ -15,6 +15,12 @@ import (
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
+// TODO(b/331445568): Skip until we solve the flakiness. Remove when resolved.
+var flakyModel = []string{"homestar"}
+
+// TODO(b/243048705): skip the test on faulty flash. Remove when resolved.
+var flakyCamera = []string{"0408:3028", "0408:4021", "05c8:03f4"}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PlatformServiceSmoke,
@@ -22,11 +28,23 @@ func init() {
 		Desc:         "Smoke test for the Platform Camera Service",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "hidenorik@chromium.org"},
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
-		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera", "group:cq-medium", "group:camera-stability", "group:camera-kernelnext"},
+		Attr:         []string{"group:mainline", "group:camera-libcamera", "group:cq-medium", "group:camera-stability", "group:camera-kernelnext"},
 		SoftwareDeps: []string{"arc_camera3", "chrome", caps.BuiltinCamera},
-		// TODO(b/243048705): skip the test on faulty flash. Remove the first three entries when resolved.
-		HardwareDeps: hwdep.D(hwdep.CameraEnumerated(), hwdep.SkipOnCameraUSBModule("0408:3028", "0408:4021", "05c8:03f4")),
 		Fixture:      fixture.CameraConnectorReady,
+		Params: []testing.Param{
+			{
+				ExtraHardwareDeps: hwdep.D(hwdep.CameraEnumerated(), hwdep.SkipOnModel(flakyModel...), hwdep.SkipOnCameraUSBModule(flakyCamera...)),
+				ExtraAttr:         []string{"informational", "group:criticalstaging"},
+			}, {
+				Name:              "flaky_model",
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(flakyModel...)),
+				ExtraAttr:         []string{"informational"},
+			}, {
+				Name:              "flaky_camera",
+				ExtraHardwareDeps: hwdep.D(hwdep.CameraUSBModule(flakyCamera...)),
+				ExtraAttr:         []string{"informational"},
+			},
+		},
 	})
 }
 
