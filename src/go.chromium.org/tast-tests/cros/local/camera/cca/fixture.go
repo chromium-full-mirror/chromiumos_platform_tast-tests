@@ -331,6 +331,7 @@ func init() {
 		Name:            "ccaPowerReview",
 		Desc:            "Set up test bridge for CCA for a power review Test",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "esker@chromium.org"},
+		BugComponent:    "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Impl:            &fixture{powerReview: true},
 		SetUpTimeout:    powerSetUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
@@ -341,6 +342,7 @@ func init() {
 		Name:            "ccaPowerReviewWithFakeHALCamera",
 		Desc:            "Set up test bridge for CCA with fake camera HAL for a power review Test",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "esker@chromium.org"},
+		BugComponent:    "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Impl:            &fixture{powerReview: true, useCameraType: testutil.UseFakeHALCamera},
 		SetUpTimeout:    powerSetUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
