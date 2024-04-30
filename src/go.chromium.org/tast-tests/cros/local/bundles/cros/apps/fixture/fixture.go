@@ -60,7 +60,8 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            LoggedInFieldTrialConfigDisable,
 		Desc:            "Logged into a user session for essential apps. And field trial test config disabled",
-		Contacts:        []string{"cros-ca-eng@google.com", "xiuwen@google.com"},
+		Contacts:        []string{"cros-ca-eng@google.com"},
+		BugComponent:    "b:385700", // ChromeOS > Software > Consumer > Apps Suite
 		Impl:            eaFixture(browser.TypeAsh, true, chrome.FieldTrialConfig(chrome.FieldTrialConfigDisable)),
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -72,7 +73,8 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            LoggedInFieldTrialConfigEnable,
 		Desc:            "Logged into a user session for essential apps. And field trial test config enabled",
-		Contacts:        []string{"cros-ca-eng@google.com", "xiuwen@google.com"},
+		Contacts:        []string{"cros-ca-eng@google.com"},
+		BugComponent:    "b:385700", // ChromeOS > Software > Consumer > Apps Suite
 		Impl:            eaFixture(browser.TypeAsh, true, chrome.FieldTrialConfig(chrome.FieldTrialConfigEnable)),
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -131,8 +133,8 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            ArcBootedWithGalleryPhotosImageFeature,
 		Desc:            "ARC is booted with the MediaAppPhotosIntegrationImage feature flag enabled",
-		Contacts:        []string{"bugsnash@chromium.org"},
-		BugComponent:    "b:385700", // ChromeOS > Software > Consumer > Apps Suite
+		Contacts:        []string{"backlight-swe@google.com", "cros-ca-eng@google.com", "bugsnash@chromium.org"},
+		BugComponent:    "b:562866", // ChromeOS > Software > Consumer > Apps Suite > Backlight
 		Vars:            []string{"ui.gaiaPoolDefault"},
 		Impl:            arc.NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + arc.BootTimeout + ui.StartTimeout,
@@ -161,7 +163,8 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            LacrosLoggedInFieldTrialConfigDisable,
 		Desc:            "Logged into a user session with Lacros for essential apps. And field trial test config disabled",
-		Contacts:        []string{"cros-ca-eng@google.com", "xiuwen@google.com"},
+		Contacts:        []string{"cros-ca-eng@google.com"},
+		BugComponent:    "b:385700", // ChromeOS > Software > Consumer > Apps Suite
 		Impl:            eaFixture(browser.TypeLacros, true, chrome.FieldTrialConfig(chrome.FieldTrialConfigDisable)),
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -173,7 +176,8 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            LacrosLoggedInFieldTrialConfigEnable,
 		Desc:            "Logged into a user session with Lacros for essential apps. And field trial test config enabled",
-		Contacts:        []string{"cros-ca-eng@google.com", "xiuwen@google.com"},
+		Contacts:        []string{"cros-ca-eng@google.com"},
+		BugComponent:    "b:385700", // ChromeOS > Software > Consumer > Apps Suite
 		Impl:            eaFixture(browser.TypeLacros, true, chrome.FieldTrialConfig(chrome.FieldTrialConfigEnable)),
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
