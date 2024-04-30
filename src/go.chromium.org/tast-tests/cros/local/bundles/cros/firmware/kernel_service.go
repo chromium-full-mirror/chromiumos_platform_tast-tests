@@ -139,8 +139,8 @@ func (ks *KernelService) RestorePartition(ctx context.Context, req *pb.Partition
 	return &empty.Empty{}, nil
 }
 
-// BackupKernel backs up both kernel A and B copies, and corresponding ROOTFS and saves them to a file.
-func (ks *KernelService) BackupKernel(ctx context.Context, req *pb.KernelBackup) (*pb.KernelBackup, error) {
+// BackupKernel backs up both partition A and B copies and saves them to a file.
+func (ks *KernelService) BackupKernel(ctx context.Context, req *pb.KernelBackup) (_ *pb.KernelBackup, retErr error) {
 	var rootDevWithPart string
 	if req.RootDev != "" {
 		rootDevWithPart = req.RootDev
@@ -152,89 +152,112 @@ func (ks *KernelService) BackupKernel(ctx context.Context, req *pb.KernelBackup)
 		}
 		req.RootDev = rootDevWithPart
 	}
-	kernA, err := ks.BackupPartition(ctx, &pb.Partition{
-		Name:    pb.PartitionName_KERNEL,
-		Copy:    pb.PartitionCopy_A,
-		RootDev: rootDevWithPart,
-	})
-	if err != nil {
-		// If backing up partition fails, unfinished backup file is already deleted.
-		return nil, errors.Wrap(err, "failed to back up KERN-A")
+	// If all the backup fields are set to false, backup only KERNEL.
+	if !req.BackupKernel && !req.BackupMiniOS && !req.BackupRootfs {
+		req.BackupKernel = true
 	}
-
-	kernB, err := ks.BackupPartition(ctx, &pb.Partition{
-		Name:    pb.PartitionName_KERNEL,
-		Copy:    pb.PartitionCopy_B,
-		RootDev: rootDevWithPart,
-	})
-	if err != nil {
-		// If backing up KERN-B fails, make sure KERN-A back up is cleaned up, KERN-B tmpfile will already be cleaned up.
-		os.Remove(kernA.BackupPath)
-		return nil, errors.Wrap(err, "failed to back up KERN-B")
-	}
-
-	req.KernA = kernA
-	req.KernB = kernB
-
-	if req.BackupRootfs {
-		rootA, err := ks.BackupPartition(ctx, &pb.Partition{
-			Name:    pb.PartitionName_ROOTFS,
+	var allBackupPath []string
+	defer func() {
+		if retErr != nil {
+			for _, path := range allBackupPath {
+				os.Remove(path)
+			}
+		}
+	}()
+	for _, step := range []struct {
+		shouldBackup        bool
+		backupPartitionName pb.PartitionName
+	}{
+		{
+			shouldBackup:        req.BackupKernel,
+			backupPartitionName: pb.PartitionName_KERNEL,
+		},
+		{
+			shouldBackup:        req.BackupMiniOS,
+			backupPartitionName: pb.PartitionName_MINIOS,
+		},
+		{
+			shouldBackup:        req.BackupRootfs,
+			backupPartitionName: pb.PartitionName_ROOTFS,
+		},
+	} {
+		if !step.shouldBackup {
+			continue
+		}
+		partitionInfoA, err := ks.BackupPartition(ctx, &pb.Partition{
+			Name:    step.backupPartitionName,
 			Copy:    pb.PartitionCopy_A,
 			RootDev: rootDevWithPart,
 		})
 		if err != nil {
-			os.Remove(kernA.BackupPath)
-			os.Remove(kernB.BackupPath)
-			return nil, errors.Wrap(err, "failed to back up ROOTFS-A")
+			// If backing up partition fails, unfinished backup file is already deleted.
+			return nil, errors.Wrap(err, "failed to back up partition A")
 		}
+		allBackupPath = append(allBackupPath, partitionInfoA.BackupPath)
 
-		rootB, err := ks.BackupPartition(ctx, &pb.Partition{
-			Name:    pb.PartitionName_ROOTFS,
+		partitionInfoB, err := ks.BackupPartition(ctx, &pb.Partition{
+			Name:    step.backupPartitionName,
 			Copy:    pb.PartitionCopy_B,
 			RootDev: rootDevWithPart,
 		})
 		if err != nil {
-			os.Remove(kernA.BackupPath)
-			os.Remove(kernB.BackupPath)
-			os.Remove(rootA.BackupPath)
-			return nil, errors.Wrap(err, "failed to back up ROOTFS-B")
+			// If backing up partition fails, unfinished backup file is already deleted.
+			return nil, errors.Wrap(err, "failed to back up partition B")
 		}
-
-		req.RootA = rootA
-		req.RootB = rootB
+		allBackupPath = append(allBackupPath, partitionInfoB.BackupPath)
+		switch step.backupPartitionName {
+		case pb.PartitionName_MINIOS:
+			req.MiniOSA = partitionInfoA
+			req.MiniOSB = partitionInfoB
+		case pb.PartitionName_ROOTFS:
+			req.RootA = partitionInfoA
+			req.RootB = partitionInfoB
+		default:
+			req.KernA = partitionInfoA
+			req.KernB = partitionInfoB
+		}
 	}
-
 	return req, nil
 }
 
-// RestoreKernel restores both kernel A and B, and corresponding rootfs from back ups.
+// RestoreKernel restores both partition A and B from back ups.
 func (ks *KernelService) RestoreKernel(ctx context.Context, req *pb.KernelBackup) (*empty.Empty, error) {
 	var retErr error
-	if _, err := ks.RestorePartition(ctx, req.KernA); err != nil {
-		// If restoring A failed, try to restore B instead of returning immediately.
-		retErr = errors.Wrap(err, "failed to restore KERN-A")
-	}
-
-	if _, err := ks.RestorePartition(ctx, req.KernB); err != nil {
-		if retErr != nil {
-			// If restoring both A and B fails, report both errors instead of just latest.
-			retErr = errors.Wrap(errors.Wrap(err, "failed to restore KERN-B"), retErr.Error())
-		} else {
-			retErr = errors.Wrap(err, "failed to restore KERN-B")
+	for _, step := range []struct {
+		shouldBackup         bool
+		backupPartitionInfoA *pb.PartitionInfo
+		backupPartitionInfoB *pb.PartitionInfo
+	}{
+		{
+			shouldBackup:         req.BackupKernel,
+			backupPartitionInfoA: req.KernA,
+			backupPartitionInfoB: req.KernB,
+		},
+		{
+			shouldBackup:         req.BackupMiniOS,
+			backupPartitionInfoA: req.MiniOSA,
+			backupPartitionInfoB: req.MiniOSB,
+		},
+		{
+			shouldBackup:         req.BackupRootfs,
+			backupPartitionInfoA: req.RootA,
+			backupPartitionInfoB: req.RootB,
+		},
+	} {
+		if !step.shouldBackup {
+			continue
 		}
-	}
-
-	if req.BackupRootfs {
-		if _, err := ks.RestorePartition(ctx, req.RootA); err != nil {
-			retErr = errors.Wrap(err, "failed to restore ROOT-A")
+		if _, err := ks.RestorePartition(ctx, step.backupPartitionInfoA); err != nil {
+			// If restoring A failed, try to restore B instead of returning immediately.
+			retErr = errors.Wrap(err, "failed to restore partition A")
 		}
 
-		if _, err := ks.RestorePartition(ctx, req.RootB); err != nil {
+		if _, err := ks.RestorePartition(ctx, step.backupPartitionInfoB); err != nil {
 			if retErr != nil {
 				// If restoring both A and B fails, report both errors instead of just latest.
-				retErr = errors.Wrap(errors.Wrap(err, "failed to restore ROOT-B"), retErr.Error())
+				retErr = errors.Wrap(errors.Wrap(err, "failed to restore partition B"), retErr.Error())
 			} else {
-				retErr = errors.Wrap(err, "failed to restore ROOT-B")
+				retErr = errors.Wrap(err, "failed to restore partition B")
 			}
 		}
 	}

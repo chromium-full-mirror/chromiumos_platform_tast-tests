@@ -2011,3 +2011,35 @@ func (h *Helper) CheckServoChargerBeforeBootingFromUSB(ctx context.Context) (isC
 	}
 	return attached, ok && attached
 }
+
+// LaunchMiniOS sets minios_priority if needed, and launches minios.
+func (h *Helper) LaunchMiniOS(ctx context.Context, kbShortcutBoot, miniOSOld bool) error {
+	ms, err := NewModeSwitcher(ctx, h)
+	if err != nil {
+		return errors.Wrap(err, "failed to create mode switcher")
+	}
+	if err := ms.EnableRecMode(ctx, servo.PowerStateRec, servo.USBMuxOff); err != nil {
+		return errors.Wrap(err, "failed to enable recovery mode")
+	}
+	if err := h.WaitFirmwareScreen(ctx, h.Config.FirmwareScreenRecMode); err != nil {
+		return errors.Wrap(err, "failed to get to firmware screen")
+	}
+	if kbShortcutBoot {
+		newbp, err := NewBypasser(ctx, h)
+		if err != nil {
+			return errors.Wrap(err, "failed to create a new bypasser")
+		}
+		if err := newbp.TriggerRecToMiniOS(ctx); err != nil {
+			return errors.Wrap(err, "failed to boot to MiniOS")
+		}
+	} else {
+		menuOperator, err := NewMenuOperator(ctx, h)
+		if err != nil {
+			return errors.Wrap(err, "failed to create a new menu operator")
+		}
+		if err := menuOperator.TriggerRecToMiniOS(ctx, miniOSOld); err != nil {
+			return errors.Wrap(err, "failed to boot to MiniOS")
+		}
+	}
+	return nil
+}

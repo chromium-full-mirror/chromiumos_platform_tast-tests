@@ -22,6 +22,7 @@ import (
 type recScreenMiniOSTestParams struct {
 	miniOSMenuOld  bool
 	miniOSPriority string
+	kbShortcutBoot bool
 }
 
 type checkAndSetServoCharger struct {
@@ -46,14 +47,16 @@ func init() {
 			ExtraAttr:         []string{"group:firmware", "firmware_bios", "firmware_level2", "firmware_ro"},
 			ExtraRequirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01"},
 			Val: recScreenMiniOSTestParams{
-				miniOSMenuOld: false,
+				miniOSMenuOld:  false,
+				kbShortcutBoot: false,
 			},
 		}, {
 			Name:              "menu_old",
 			ExtraAttr:         []string{"group:firmware", "firmware_bios", "firmware_level2", "firmware_ro"},
 			ExtraRequirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01"},
 			Val: recScreenMiniOSTestParams{
-				miniOSMenuOld: true,
+				miniOSMenuOld:  true,
+				kbShortcutBoot: false,
 			},
 		}, {
 			Name: "priority_minios_a",
@@ -61,6 +64,7 @@ func init() {
 			ExtraAttr: []string{"firmware_unstable"},
 			Val: recScreenMiniOSTestParams{
 				miniOSPriority: "A",
+				kbShortcutBoot: true,
 			},
 		}, {
 			Name: "priority_minios_b",
@@ -68,6 +72,7 @@ func init() {
 			ExtraAttr: []string{"firmware_unstable"},
 			Val: recScreenMiniOSTestParams{
 				miniOSPriority: "B",
+				kbShortcutBoot: true,
 			},
 		}},
 		Timeout: 120 * time.Minute,
@@ -152,7 +157,16 @@ func RecScreenMiniOS(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	if err := launchMiniOS(ctx, h, tc.miniOSPriority, tc.miniOSMenuOld); err != nil {
+	if tc.miniOSPriority != "" {
+		s.Logf("Setting MiniOS priority to %s", tc.miniOSPriority)
+		if err := h.SetMiniOSPriority(ctx, tc.miniOSPriority); err != nil {
+			s.Fatal("Failed to set MiniOS priority: ", err)
+		}
+	} else {
+		s.Log("Using the original MiniOS priority setting")
+	}
+
+	if err := h.LaunchMiniOS(ctx, tc.kbShortcutBoot, tc.miniOSMenuOld); err != nil {
 		s.Fatal("Failed to launch MiniOS menu: ", err)
 	}
 	s.Log("Waiting for DUT to reconnect")
@@ -171,45 +185,6 @@ func RecScreenMiniOS(ctx context.Context, s *testing.State) {
 	if !miniOSBoot {
 		s.Fatal("MiniOS boot was unsuccessful")
 	}
-}
-
-func launchMiniOS(ctx context.Context, h *firmware.Helper, miniosPriority string, miniOSOld bool) error {
-	if miniosPriority != "" {
-		testing.ContextLogf(ctx, "Setting MiniOS priority to %s", miniosPriority)
-		if err := h.SetMiniOSPriority(ctx, miniosPriority); err != nil {
-			return errors.Wrap(err, "failed to set MiniOS priority")
-		}
-	} else {
-		testing.ContextLog(ctx, "Using the original MiniOS priority setting")
-	}
-	ms, err := firmware.NewModeSwitcher(ctx, h)
-	if err != nil {
-		return errors.Wrap(err, "failed to create mode switcher")
-	}
-	if err := ms.EnableRecMode(ctx, servo.PowerStateRec, servo.USBMuxOff); err != nil {
-		return errors.Wrap(err, "failed to enable recovery mode")
-	}
-	if err := h.WaitFirmwareScreen(ctx, h.Config.FirmwareScreenRecMode); err != nil {
-		return errors.Wrap(err, "failed to get to firmware screen")
-	}
-	if miniosPriority != "" {
-		newbp, err := firmware.NewBypasser(ctx, h)
-		if err != nil {
-			return errors.Wrap(err, "failed to create a new bypasser")
-		}
-		if err := newbp.TriggerRecToMiniOS(ctx); err != nil {
-			return errors.Wrap(err, "failed to boot to MiniOS")
-		}
-	} else {
-		menuOperator, err := firmware.NewMenuOperator(ctx, h)
-		if err != nil {
-			return errors.Wrap(err, "failed to create a new menu operator")
-		}
-		if err := menuOperator.TriggerRecToMiniOS(ctx, miniOSOld); err != nil {
-			return errors.Wrap(err, "failed to boot to MiniOS")
-		}
-	}
-	return nil
 }
 
 func (ckchg *checkAndSetServoCharger) restoreDUTConnectionWithUSB(ctx context.Context, h *firmware.Helper, cs *testing.CloudStorage) error {

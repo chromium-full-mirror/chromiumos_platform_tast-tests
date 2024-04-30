@@ -155,7 +155,7 @@ message PartitionInfo {
     PartitionCopy Copy = 6;
 }
 
-// KernelBackup holds the information for backups for KERN-A/B, ROOT-A/B.
+// KernelBackup holds the information for backups for KERN-A/B, ROOT-A/B and MINIOS-A/B.
 message KernelBackup {
     PartitionInfo KernA = 1;
     PartitionInfo KernB = 2;
@@ -163,6 +163,10 @@ message KernelBackup {
     PartitionInfo RootB = 4;
     bool BackupRootfs = 5;
     string RootDev = 6;
+    bool BackupKernel = 7;
+    PartitionInfo MiniOSA = 8;
+    PartitionInfo MiniOSB = 9;
+    bool BackupMiniOS = 10;
 }
 
 // RootfsVerityHashBackup holds the offset and backup file for verity hash for rootfs.
