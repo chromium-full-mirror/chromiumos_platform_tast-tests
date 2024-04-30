@@ -950,20 +950,6 @@ func (u *CryptohomeClient) CleanupSession(ctx context.Context, authSessionID str
 	return nil
 }
 
-// FetchRecoveryRequest creates recovery request, returns the value of the request.
-func (u *CryptohomeClient) FetchRecoveryRequest(ctx context.Context, authSessionID, label, epochResponseHex string) (string, error) {
-	response, err := u.binary.fetchRecoveryRequest(ctx, authSessionID, label, epochResponseHex)
-	if err != nil {
-		return "", errors.Wrap(err, "FetchRecoveryRequest failed")
-	}
-
-	m := recoveryRequestRegexp.FindSubmatch(response)
-	if m == nil {
-		return "", errors.Errorf("didn't find recovery request in output %q", string(response))
-	}
-	return strings.TrimSpace(string(m[1])), nil
-}
-
 // ListAuthFactors lists the auth factors for a given user.
 func (u *CryptohomeClient) ListAuthFactors(ctx context.Context, user string) (*uda.ListAuthFactorsReply, error) {
 	reply := &uda.ListAuthFactorsReply{}

@@ -177,8 +177,8 @@ func induceRecoveryRequestFailure(ctx context.Context) error {
 
 	// Invalid epoch value causes the "Failed to parse epoch response"
 	// (kLocFailedParseEpochResponseInGenerateRecoveryRequest) error.
-	if _, err := client.FetchRecoveryRequest(ctx, authSessionID, recoveryLabel, "invalid_epoch" /*epoch*/); err == nil {
-		return errors.New("FetchRecoveryRequest succeeded with invalid epoch")
+	if _, err := client.PrepareRecoveryAuthFactor(ctx, authSessionID, recoveryLabel, "invalid_epoch" /*epoch*/); err == nil {
+		return errors.New("PrepareAuthFactor succeeded with invalid epoch")
 	}
 
 	return nil

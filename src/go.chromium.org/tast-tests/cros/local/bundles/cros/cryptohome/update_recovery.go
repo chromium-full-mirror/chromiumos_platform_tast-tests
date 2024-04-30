@@ -147,10 +147,11 @@ func UpdateRecovery(ctx context.Context, s *testing.State) {
 			return authSessionID, errors.Wrap(err, "failed to get fake epoch response")
 		}
 
-		requestHex, err := client.FetchRecoveryRequest(ctx, authSessionID, recoveryLabel, epoch)
+		prepareOutput, err := client.PrepareRecoveryAuthFactor(ctx, authSessionID, recoveryLabel, epoch)
 		if err != nil {
 			return authSessionID, errors.Wrap(err, "failed to get recovery request")
 		}
+		requestHex := hex.EncodeToString(prepareOutput.RecoveryRequest)
 
 		response, err := testTool.FakeMediateWithPrivateKey(ctx, requestHex, mediatorPrivKey)
 		if err != nil {

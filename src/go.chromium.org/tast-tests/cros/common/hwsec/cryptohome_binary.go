@@ -411,13 +411,6 @@ func (c *cryptohomeBinary) invalidateAuthSession(ctx context.Context, authSessio
 	return c.call(ctx, args...)
 }
 
-// fetchRecoveryRequest returns cryptohome recovery request to be sent to the mediator
-// by calling "cryptohome --action=get_recovery_request --recovery_epoch_response=epochResponseHex".
-func (c *cryptohomeBinary) fetchRecoveryRequest(ctx context.Context, authSessionID, label, epochResponseHex string) ([]byte, error) {
-	args := []string{"--action=get_recovery_request", "--auth_session_id=" + authSessionID, "--key_label=" + label, "--recovery_epoch_response=" + epochResponseHex}
-	return c.call(ctx, args...)
-}
-
 // listAuthFactors returns auth factors by calling "cryptohome --action=list_auth_factors".
 func (c *cryptohomeBinary) listAuthFactors(ctx context.Context, username string) ([]byte, error) {
 	args := []string{"--output-format=binary-protobuf", "--action=list_auth_factors", "--user=" + username}
