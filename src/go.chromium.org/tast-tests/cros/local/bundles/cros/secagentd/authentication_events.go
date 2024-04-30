@@ -51,16 +51,6 @@ func init() {
 		Timeout:      3 * time.Minute,
 		SoftwareDeps: []string{"bpf", "chrome"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Params: []testing.Param{
-			{
-				Name: "mainline",
-				// TODO(b/334955129): Promote all boards to mainline.
-				ExtraSoftwareDeps: []string{"secagentd_auth_stable"},
-			}, {
-				Name:      "informational",
-				ExtraAttr: []string{"informational", "group:criticalstaging"},
-			},
-		},
 	})
 }
 
@@ -127,6 +117,7 @@ func AuthenticationEvents(ctx context.Context, s *testing.State) {
 		_, deviceUser, err = secagentdaffiliation.GetAffiliationStatus(signedInUser, hash)
 		return err
 	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
+		s.Error("Failed to get affiliation status: ", err)
 	}
 
 	// 2: Lock.
