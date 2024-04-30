@@ -32,7 +32,7 @@ func init() {
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		// This test mainly verifies the crosh interface so it's hw_agnostic.
-		Attr:         []string{"group:mainline", "group:criticalstaging", "informational", "group:hw_agnostic"},
+		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		SoftwareDeps: []string{"wireguard"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
