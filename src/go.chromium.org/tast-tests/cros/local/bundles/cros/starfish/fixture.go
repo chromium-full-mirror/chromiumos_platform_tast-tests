@@ -18,7 +18,8 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            "starfish",
 		Desc:            "Allows preconfiguration of the Starfish module before running a test suite",
-		Contacts:        []string{"chromeos-cellular-team@google.com", "nmarupaka@google.com"},
+		Contacts:        []string{"chromeos-cellular-team@google.com", "andrewlassalle@google.com"},
+		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		SetUpTimeout:    1 * time.Minute,
 		ResetTimeout:    1 * time.Second,
 		PreTestTimeout:  1 * time.Second,
