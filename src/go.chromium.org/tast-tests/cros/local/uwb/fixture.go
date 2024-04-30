@@ -21,6 +21,7 @@ const (
 func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            "uwbMultiAndroid",
+		BugComponent:    "b:1135853",
 		Desc:            "A fixture that sets up multiple android phones",
 		Impl:            &multiAndroidPeerFixture{},
 		Parent:          "uwbMixedPeerRemote",

@@ -29,6 +29,7 @@ const (
 func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            "uwbMixedPeerRemote",
+		BugComponent:    "b:1135853",
 		Desc:            "Fixture for setting up mixed android/CrOS device testbeds",
 		Contacts:        []string{"chromeos-uwb-team@google.com"},
 		Impl:            &mixedPeerRemoteFixture{},
