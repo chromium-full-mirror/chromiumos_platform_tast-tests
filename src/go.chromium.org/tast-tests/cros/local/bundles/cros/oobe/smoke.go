@@ -7,6 +7,7 @@ package oobe
 import (
 	"context"
 
+	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast/core/testing"
 )
@@ -33,6 +34,7 @@ func init() {
 			Name: "fieldtrial_testing_config_off",
 			Val:  chrome.FieldTrialConfigDisable,
 		}},
+		Fixture: fixture.UpdateEngine,
 	})
 }
 
