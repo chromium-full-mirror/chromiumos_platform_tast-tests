@@ -18,7 +18,8 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:         "cellularRebootSetupRemote",
 		Desc:         "A remote fixture that reboots the device as part of the setup to help enforce isolation between tests",
-		Contacts:     []string{},
+		Contacts:     []string{"chromeos-cellular-team@google.com", "jstanko@google.com"},
+		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Impl:         newFixture(true, false),
 		SetUpTimeout: 3 * time.Minute,
 		Vars:         []string{"skipReboot"},
@@ -27,6 +28,7 @@ func init() {
 		Name:            "cellularSuspendRemote",
 		Desc:            "Remote cellular suspend-resume test fixture that reboots in pre and post test to help enforce isolation",
 		Contacts:        []string{"chromeos-cellular-team@google.com", "jstanko@google.com"},
+		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Impl:            newFixture(true, true),
 		SetUpTimeout:    3 * time.Minute,
 		TearDownTimeout: 3 * time.Minute,
@@ -36,6 +38,7 @@ func init() {
 		Name:            "cellularStressRemote",
 		Desc:            "Remote cellular stress test fixture that reboots in setup and teardown to help enforce isolation",
 		Contacts:        []string{"chromeos-cellular-team@google.com", "jstanko@google.com"},
+		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Impl:            newFixture(true, true),
 		SetUpTimeout:    3 * time.Minute,
 		TearDownTimeout: 3 * time.Minute,
@@ -44,7 +47,8 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularE2ERemote",
 		Desc:            "Remote cellular e2e test fixture that reboots in setup and teardown to help enforce isolation",
-		Contacts:        []string{},
+		Contacts:        []string{"chromeos-cellular-team@google.com", "jstanko@google.com"},
+		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Impl:            newFixture(true, true),
 		SetUpTimeout:    3 * time.Minute,
 		TearDownTimeout: 3 * time.Minute,
@@ -53,16 +57,18 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularHotspotRemote",
 		Desc:            "Remote cellular hotspot test fixture that reboots in setup and teardown to help enforce isolation",
-		Contacts:        []string{},
+		Contacts:        []string{"chromeos-cellular-team@google.com", "jstanko@google.com"},
+		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Impl:            newFixture(true, true),
 		SetUpTimeout:    3 * time.Minute,
 		TearDownTimeout: 3 * time.Minute,
 		Vars:            []string{"skipReboot"},
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name:     "cellularDUTCheckRemote",
-		Desc:     "Remote cellular dut check test fixture that reboots during setup",
-		Contacts: []string{},
+		Name:         "cellularDUTCheckRemote",
+		Desc:         "Remote cellular dut check test fixture that reboots during setup",
+		Contacts:     []string{"chromeos-cellular-team@google.com", "jstanko@google.com"},
+		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		// Just reboot in SetUp since there shouldn't be any side effects to these tests.
 		Impl:         newFixture(true, false),
 		SetUpTimeout: 3 * time.Minute,
@@ -71,7 +77,8 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularAutoconnectRemote",
 		Desc:            "Remote cellular autoconnect test fixture that reboots in setup and teardown to help enforce isolation",
-		Contacts:        []string{},
+		Contacts:        []string{"chromeos-cellular-team@google.com", "jstanko@google.com"},
+		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Impl:            newFixture(true, true),
 		SetUpTimeout:    3 * time.Minute,
 		TearDownTimeout: 3 * time.Minute,
