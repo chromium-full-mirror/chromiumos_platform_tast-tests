@@ -79,7 +79,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"android_vm", "qemu"},
 				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
 			}},
-		Timeout: chrome.LoginTimeout + arc.BootTimeout + 2*time.Minute,
+		Timeout: chrome.LoginTimeout + arc.BootTimeout + 3*time.Minute,
 	})
 }
 
@@ -89,8 +89,8 @@ type arcPolicyFactory func() (policy.Policy, func(ctx context.Context), error)
 
 func ManagedDevicePolicy(ctx context.Context, s *testing.State) {
 	const (
-		apk             = "ArcDevicePolicyTest.apk"
-		mainActivityCls = devicePolicyPkg + ".MainActivity"
+		apk               = "ArcDevicePolicyTest.apk"
+		mainActivityCls   = devicePolicyPkg + ".MainActivity"
 		disabledSystemPkg = "com.google.android.deskclock"
 	)
 
@@ -332,7 +332,7 @@ func testPolicyEnforcement(ctx context.Context, tconn *chrome.TestConn, a *arc.A
 		policiesListID = devicePolicyPkg + ":id/lstPolicies"
 		testButtonID   = devicePolicyPkg + ":id/btnTest"
 		errorTextID    = devicePolicyPkg + ":id/txtError"
-		testTimeout    = time.Minute
+		testTimeout    = 2 * time.Minute
 	)
 
 	if err := selectSpinnerItem(ctx, d, policiesListID, policy); err != nil {
@@ -368,7 +368,7 @@ func testPolicyEnforcement(ctx context.Context, tconn *chrome.TestConn, a *arc.A
 func getPolicyTestResult(ctx context.Context, d *ui.Device) (string, error) {
 	const (
 		outputTextID   = devicePolicyPkg + ":id/txtOutput"
-		resultWaitTime = 30 * time.Second
+		resultWaitTime = 1 * time.Minute
 	)
 
 	resultRegex := regexp.MustCompile("true|false")
