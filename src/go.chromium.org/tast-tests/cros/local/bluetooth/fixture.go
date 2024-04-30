@@ -22,6 +22,7 @@ func init() {
 			"chadduffin@chromium.org",
 			"cros-connectivity@google.com",
 		},
+		BugComponent:    "b:1131776", // ChromeOS > Software > Fundamentals > Connectivity > Bluetooth
 		Impl:            fixtureImplWithFeatures([]string{}, []string{"Floss"}, false),
 		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
@@ -34,12 +35,13 @@ func init() {
 			"chadduffin@chromium.org",
 			"cros-connectivity@google.com",
 		},
+		BugComponent: "b:1131776", // ChromeOS > Software > Fundamentals > Connectivity > Bluetooth
 		// chromeFeatureFlossIsAvailabilityCheckNeeded needs to be disabled when
 		// chromeFeatureFloss is enabled.
-		Impl:            fixtureImplWithFeatures(
-					[]string{"Floss"},
-					[]string{"FlossIsAvailabilityCheckNeeded"},
-					false),
+		Impl: fixtureImplWithFeatures(
+			[]string{"Floss"},
+			[]string{"FlossIsAvailabilityCheckNeeded"},
+			false),
 		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
@@ -51,6 +53,7 @@ func init() {
 			"chadduffin@chromium.org",
 			"cros-connectivity@google.com",
 		},
+		BugComponent:    "b:1131776", // ChromeOS > Software > Fundamentals > Connectivity > Bluetooth
 		Impl:            fixtureImplWithFeatures([]string{}, []string{"Floss"}, true),
 		Vars:            []string{"ui.signinProfileTestExtensionManifestKey"},
 		SetUpTimeout:    chrome.FixtureSetUpTimeout,
@@ -64,12 +67,13 @@ func init() {
 			"chadduffin@chromium.org",
 			"cros-connectivity@google.com",
 		},
+		BugComponent: "b:1131776", // ChromeOS > Software > Fundamentals > Connectivity > Bluetooth
 		// chromeFeatureFlossIsAvailabilityCheckNeeded needs to be disabled when
 		// chromeFeatureFloss is enabled.
-		Impl:            fixtureImplWithFeatures(
-					[]string{"Floss"},
-					[]string{"FlossIsAvailabilityCheckNeeded"},
-					true),
+		Impl: fixtureImplWithFeatures(
+			[]string{"Floss"},
+			[]string{"FlossIsAvailabilityCheckNeeded"},
+			true),
 		Vars:            []string{"ui.signinProfileTestExtensionManifestKey"},
 		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
@@ -82,6 +86,7 @@ func init() {
 			"chadduffin@chromium.org",
 			"cros-connectivity@google.com",
 		},
+		BugComponent:    "b:1131776", // ChromeOS > Software > Fundamentals > Connectivity > Bluetooth
 		Impl:            &bluetoothEnabledFixt{btImpl: &bluez.BlueZ{}},
 		Parent:          "chromeLoggedInWithBlueZ",
 		SetUpTimeout:    chrome.LoginTimeout,
@@ -95,6 +100,7 @@ func init() {
 			"chadduffin@chromium.org",
 			"cros-connectivity@google.com",
 		},
+		BugComponent:    "b:1131776", // ChromeOS > Software > Fundamentals > Connectivity > Bluetooth
 		Impl:            &bluetoothEnabledFixt{btImpl: &floss.Floss{}},
 		Parent:          "chromeLoggedInWithFloss",
 		SetUpTimeout:    chrome.LoginTimeout,
@@ -108,6 +114,7 @@ func init() {
 			"chadduffin@chromium.org",
 			"cros-connectivity@google.com",
 		},
+		BugComponent:    "b:1131776", // ChromeOS > Software > Fundamentals > Connectivity > Bluetooth
 		Impl:            &bluetoothEnabledFixt{btImpl: &bluez.BlueZ{}, isOobe: true},
 		Parent:          "oobeWithBlueZ",
 		SetUpTimeout:    chrome.LoginTimeout,
@@ -121,6 +128,7 @@ func init() {
 			"chadduffin@chromium.org",
 			"cros-connectivity@google.com",
 		},
+		BugComponent:    "b:1131776", // ChromeOS > Software > Fundamentals > Connectivity > Bluetooth
 		Impl:            &bluetoothEnabledFixt{btImpl: &floss.Floss{}, isOobe: true},
 		Parent:          "oobeWithFloss",
 		SetUpTimeout:    chrome.LoginTimeout,

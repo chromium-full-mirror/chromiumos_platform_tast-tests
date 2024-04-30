@@ -22,6 +22,7 @@ func init() {
 			"cros-connectivity@google.com",
 			"chadduffin@google.com",
 		},
+		BugComponent:    "b:1131776", // ChromeOS > Software > Fundamentals > Connectivity > Bluetooth
 		Impl:            &crosNetworkConfigConnection{},
 		Parent:          "bluetoothEnabledWithBlueZ",
 		SetUpTimeout:    chrome.LoginTimeout,
@@ -35,6 +36,7 @@ func init() {
 			"cros-connectivity@google.com",
 			"chadduffin@google.com",
 		},
+		BugComponent:    "b:1131776", // ChromeOS > Software > Fundamentals > Connectivity > Bluetooth
 		Impl:            &crosNetworkConfigConnection{},
 		Parent:          "bluetoothEnabledWithFloss",
 		SetUpTimeout:    chrome.LoginTimeout,

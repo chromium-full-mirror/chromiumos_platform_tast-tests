@@ -22,6 +22,7 @@ func init() {
 			"jstanko@google.com",
 			"cros-connectivity@google.com",
 		},
+		BugComponent:    "b:1131774", // ChromeOS > Software > Fundamentals > Connectivity > Cellular
 		Impl:            newESimMojoFixture(testEuicc()),
 		SetUpTimeout:    chrome.LoginTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
@@ -35,6 +36,7 @@ func init() {
 			"jstanko@google.com",
 			"cros-connectivity@google.com",
 		},
+		BugComponent:    "b:1131774", // ChromeOS > Software > Fundamentals > Connectivity > Cellular
 		Impl:            newESimMojoFixture(),
 		SetUpTimeout:    chrome.LoginTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
@@ -48,7 +50,7 @@ func init() {
 			"chadduffin@google.com",
 			"cros-connectivity@google.com",
 		},
-		BugComponent:    "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular
+		BugComponent:    "b:1131774", // ChromeOS > Software > Fundamentals > Connectivity > Cellular
 		Impl:            newESimMojoFixture(testEuicc(), smdsSupport()),
 		SetUpTimeout:    chrome.LoginTimeout,
 		ResetTimeout:    chrome.ResetTimeout,

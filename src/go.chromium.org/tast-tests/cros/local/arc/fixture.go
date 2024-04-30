@@ -266,6 +266,7 @@ func init() {
 			"kinwang.lao@cienet.com",
 			"chromeos-connectivity-cienet-external@google.com",
 		},
+		BugComponent:    "b:1131776", // ChromeOS > Software > Fundamentals > Connectivity > Bluetooth
 		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + BootTimeout + 2*time.Minute,
 		ResetTimeout:    ResetTimeout,
@@ -298,6 +299,7 @@ func init() {
 			"kinwang.lao@cienet.com",
 			"chromeos-connectivity-cienet-external@google.com",
 		},
+		BugComponent:    "b:1131776", // ChromeOS > Software > Fundamentals > Connectivity > Bluetooth
 		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + BootTimeout + 2*time.Minute,
 		ResetTimeout:    ResetTimeout,

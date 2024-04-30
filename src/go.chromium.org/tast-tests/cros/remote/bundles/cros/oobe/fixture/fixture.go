@@ -18,6 +18,7 @@ func init() {
 		Name:            "turnOffServoKeyboard",
 		Desc:            "Fixture for turning off Servo in Chrome devices",
 		Contacts:        []string{"tjohnsonkanu@google.com", "cros-connectivity@google.com"},
+		BugComponent:    "b:1131776", // ChromeOS > Software > Fundamentals > Connectivity > Bluetooth
 		Impl:            &fixture{},
 		Vars:            []string{"servo"},
 		SetUpTimeout:    10 * time.Second,

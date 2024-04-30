@@ -20,6 +20,7 @@ func init() {
 			"cros-connectivity@google.com",
 			"chadduffin@google.com",
 		},
+		BugComponent:    "b:1131912", // ChromeOS > Software > Fundamentals > Connectivity > WiFi
 		Impl:            &hiddenNetworkMigrationFixture{},
 		SetUpTimeout:    chrome.LoginTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
