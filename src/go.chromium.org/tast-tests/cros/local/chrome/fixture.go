@@ -453,7 +453,9 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:     fixture.ChromeLoggedInWithSchedQoS,
 		Desc:     "Logged into a user session with SchedQoSOnResourcedForChrome feature enabled",
-		Contacts: []string{"kawasin@chromium.org", "cros-core-systems-perf@google.com"},
+		Contacts: []string{"cros-core-systems-perf@google.com", "kawasin@chromium.org"},
+		// ChromeOS > Platform > baseOS > Performance
+		BugComponent: "b:167279",
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
 			return []Option{EnableFeatures("SchedQoSOnResourcedForChrome")}, nil
 		}),
