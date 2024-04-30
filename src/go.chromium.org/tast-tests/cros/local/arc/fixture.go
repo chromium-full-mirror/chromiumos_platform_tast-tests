@@ -37,6 +37,7 @@ func init() {
 			"niwa@chromium.org",
 			"arcvm-eng-team@google.com",
 		},
+		BugComponent:    "b:883059", // ChromeOS > Software > ARC++ > ARCVM
 		Impl:            NewArcBootedFixture(DefaultBootedFixtureConfig()),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,
@@ -76,6 +77,7 @@ func init() {
 			"niwa@chromium.org",
 			"arcvm-eng-team@google.com",
 		},
+		BugComponent:    "b:883059", // ChromeOS > Software > ARC++ > ARCVM
 		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout,
 		ResetTimeout:    ResetTimeout,
@@ -103,6 +105,7 @@ func init() {
 			"niwa@chromium.org",
 			"arcvm-eng-team@google.com",
 		},
+		BugComponent:    "b:883059", // ChromeOS > Software > ARC++ > ARCVM
 		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,
@@ -236,6 +239,7 @@ func init() {
 			"niwa@chromium.org",
 			"arcvm-eng-team@google.com",
 		},
+		BugComponent:    "b:1487630", // ChromeOS > Software > ARC++ > Commercial > Tast Tests
 		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + BootTimeout + 2*time.Minute,
 		ResetTimeout:    ResetTimeout,
@@ -325,6 +329,7 @@ func init() {
 			"niwa@chromium.org",
 			"arcvm-eng-team@google.com",
 		},
+		BugComponent:    "b:883059", // ChromeOS > Software > ARC++ > ARCVM
 		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,
@@ -356,6 +361,7 @@ func init() {
 			"niwa@chromium.org",
 			"arcvm-eng-team@google.com",
 		},
+		BugComponent:    "b:883059", // ChromeOS > Software > ARC++ > ARCVM
 		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,
@@ -446,8 +452,9 @@ func init() {
 		Name: "arcBootedWithVideoLoggingVD",
 		Desc: "ARC is booted with VD and additional Chrome video logging",
 		Contacts: []string{
-			"arcvm-eng-team@google.com",
+			"arcvm-platform-video@google.com",
 		},
+		BugComponent:    "b:632502", // ChromeOS > Platform > Virtualization > ARC++ & ARCVM > ARC Video
 		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,
