@@ -77,6 +77,9 @@ const (
 
 	// Launcher Image search
 	PowerImageSearchWithFlagOn = "powerImageSearchWithFlagOn"
+
+	// Read Aloud
+	PowerAshReadAloudWithFlagOn = "powerAshReadAloudWithFlagOn"
 )
 
 // PowerFixtureOptions describes options used by the fixture only.
@@ -747,6 +750,30 @@ func init() {
 				chrome.EnableFeatures("LauncherImageSearch"),
 				chrome.EnableFeatures("LauncherImageSearchOcr"),
 				chrome.EnableFeatures("FeatureManagementLocalImageSearch"),
+			}}),
+		SetUpTimeout:    SetUpTimeout,
+		ResetTimeout:    ResetTimeout,
+		TearDownTimeout: TearDownTimeout,
+		PreTestTimeout:  PreTestTimeout,
+		PostTestTimeout: PostTestTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: PowerAshReadAloudWithFlagOn,
+		Desc: "Fixture with read aloud flags turned on ash",
+		Contacts: []string{
+			"komo-eng@google.com",
+			"trewin@google.com",
+		},
+		BugComponent: "b:1372781",
+		Impl: NewPowerUIFixture(PowerTestOptions{
+			NightLight:         DisableNightLight,
+			DarkTheme:          EnableLightTheme,
+			KeyboardBrightness: SetKbBrightnessToZero,
+		}, PowerFixtureOptions{BrowserType: browser.TypeAsh,
+			BrowserExtraOpts: []chrome.Option{
+				chrome.EnableFeatures("ReadAnythingWebUIToolbar"),
+				chrome.EnableFeatures("ReadAnythingReadAloud"),
 			}}),
 		SetUpTimeout:    SetUpTimeout,
 		ResetTimeout:    ResetTimeout,
