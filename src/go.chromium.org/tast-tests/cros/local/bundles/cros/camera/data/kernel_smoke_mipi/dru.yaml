@@ -1,0 +1,728 @@
+remap_entity_by_name:
+- id: 1
+  name: rkisp1_isp
+- id: 6
+  name: rkisp1_resizer_mainpath
+- id: 9
+  name: rkisp1_resizer_selfpath
+- id: 12
+  name: rkisp1_mainpath
+- id: 16
+  name: rkisp1_selfpath
+- id: 20
+  name: rkisp1_stats
+- id: 24
+  name: rkisp1_params
+- id: 28
+  name: ov2685 7-003c
+- id: 30
+  name: ov5695 7-0036
+media_ctl:
+  info:
+    driver: rkisp1
+    model: rkisp1
+    serial:
+    bus_info: platform:rkisp1
+    media_version: 330455
+    hw_revision: 10
+    driver_version: 330455
+  entities:
+  - desc:
+      id: 1
+      name: rkisp1_isp
+      type: 131072
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 4
+      links: 3
+    v4l_properties: {}
+    pads:
+    - desc:
+        entity: 1
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 1296
+          height: 972
+        fmt:
+          width: 1296
+          height: 972
+          code: 12295
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 1296
+            height: 972
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 1296
+            height: 972
+      links: []
+    - desc:
+        entity: 1
+        index: 1
+        flags: 1
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 0
+          height: 0
+          code: 28673
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+    - desc:
+        entity: 1
+        index: 2
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 1296
+          height: 972
+        fmt:
+          width: 1296
+          height: 972
+          code: 8200
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 2
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 1296
+            height: 972
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 1296
+            height: 972
+      links:
+      - sink:
+          entity: 6
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 9
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 1
+        reserved: [0, 0]
+    - desc:
+        entity: 1
+        index: 3
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 0
+          height: 0
+          code: 28673
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links:
+      - sink:
+          entity: 20
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 3
+        reserved: [0, 0]
+  - desc:
+      id: 6
+      name: rkisp1_resizer_mainpath
+      type: 131072
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 2
+      links: 1
+    v4l_properties: {}
+    pads:
+    - desc:
+        entity: 6
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 1296
+          height: 972
+        fmt:
+          width: 1296
+          height: 972
+          code: 8200
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 1
+          quantization: 2
+          xfer_func: 2
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 1296
+            height: 972
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 1296
+            height: 972
+      links: []
+    - desc:
+        entity: 6
+        index: 1
+        flags: 6
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 640
+          height: 480
+          code: 8196
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 1
+          quantization: 2
+          xfer_func: 2
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links:
+      - sink:
+          entity: 12
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 3
+        reserved: [0, 0]
+  - desc:
+      id: 9
+      name: rkisp1_resizer_selfpath
+      type: 131072
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 2
+      links: 1
+    v4l_properties: {}
+    pads:
+    - desc:
+        entity: 9
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 1296
+          height: 972
+        fmt:
+          width: 1296
+          height: 972
+          code: 8200
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 1
+          quantization: 2
+          xfer_func: 2
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 1296
+            height: 972
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 1296
+            height: 972
+      links: []
+    - desc:
+        entity: 9
+        index: 1
+        flags: 6
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 800
+          height: 600
+          code: 8200
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 1
+          quantization: 2
+          xfer_func: 2
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links:
+      - sink:
+          entity: 16
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 3
+        reserved: [0, 0]
+  - desc:
+      id: 12
+      name: rkisp1_mainpath
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_video_capture_mplane:
+        width: 640
+        height: 480
+        pixelformat: 842091854
+        field: 1
+        colorspace: 0
+        plane_fmt:
+        - sizeimage: 307200
+          bytesperline: 640
+        - sizeimage: 153600
+          bytesperline: 640
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        num_planes: 2
+        flags: 0
+        ycbcr_enc: 0
+        quantization: 0
+        xfer_func: 0
+        reserved: [0, 0, 0, 0, 0, 0, 0]
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 12
+        index: 0
+        flags: 1
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 16
+      name: rkisp1_selfpath
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_video_capture_mplane:
+        width: 800
+        height: 600
+        pixelformat: 1448695129
+        field: 1
+        colorspace: 0
+        plane_fmt:
+        - sizeimage: 960000
+          bytesperline: 1600
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        num_planes: 1
+        flags: 0
+        ycbcr_enc: 0
+        quantization: 0
+        xfer_func: 0
+        reserved: [0, 0, 0, 0, 0, 0, 0]
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 16
+        index: 0
+        flags: 1
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 20
+      name: rkisp1_stats
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_meta_capture:
+        dataformat: 1395739474
+        buffersize: 260
+      priority: 2
+    pads:
+    - desc:
+        entity: 20
+        index: 0
+        flags: 1
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 24
+      name: rkisp1_params
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 1
+    v4l_properties:
+      fmt_meta_output:
+        dataformat: 1345407826
+        buffersize: 3048
+      priority: 2
+    pads:
+    - desc:
+        entity: 24
+        index: 0
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties: {}
+      links:
+      - sink:
+          entity: 1
+          index: 1
+          flags: 1
+          reserved: [0, 0]
+        flags: 3
+        reserved: [0, 0]
+  - desc:
+      id: 28
+      name: ov2685 7-003c
+      type: 131073
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 1
+    v4l_properties: {}
+    controls:
+    - desc:
+        id: 9963793
+        type: 1
+        name: Exposure
+        minimum: 4
+        maximum: 1290
+        step: 1
+        default_value: 1262
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 1262
+    - desc:
+        id: 10356993
+        type: 1
+        name: Vertical Blanking
+        minimum: 94
+        maximum: 31567
+        step: 1
+        default_value: 94
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 94
+    - desc:
+        id: 10356994
+        type: 1
+        name: Horizontal Blanking
+        minimum: 100
+        maximum: 100
+        step: 1
+        default_value: 100
+        flags: 4
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 100
+    - desc:
+        id: 10356995
+        type: 1
+        name: Analogue Gain
+        minimum: 0
+        maximum: 2047
+        step: 1
+        default_value: 54
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 54
+    - desc:
+        id: 10422529
+        type: 9
+        name: Link Frequency
+        minimum: 0
+        maximum: 0
+        step: 1
+        default_value: 0
+        flags: 4
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 0
+    - desc:
+        id: 10422530
+        type: 5
+        name: Pixel Rate
+        minimum: 0
+        maximum: 66000000
+        step: 1
+        default_value: 66000000
+        flags: 4
+        elem_size: 8
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 66000000
+    - desc:
+        id: 10422531
+        type: 3
+        name: Test Pattern
+        minimum: 0
+        maximum: 5
+        step: 1
+        default_value: 0
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 0
+    pads:
+    - desc:
+        entity: 28
+        index: 0
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links:
+      - sink:
+          entity: 1
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+  - desc:
+      id: 30
+      name: ov5695 7-0036
+      type: 131073
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 1
+    v4l_properties: {}
+    controls:
+    - desc:
+        id: 9963793
+        type: 1
+        name: Exposure
+        minimum: 4
+        maximum: 1668
+        step: 1
+        default_value: 1104
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 1668
+    - desc:
+        id: 10356993
+        type: 1
+        name: Vertical Blanking
+        minimum: 40
+        maximum: 31795
+        step: 1
+        default_value: 40
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 700
+    - desc:
+        id: 10356994
+        type: 1
+        name: Horizontal Blanking
+        minimum: 1664
+        maximum: 1664
+        step: 1
+        default_value: 1664
+        flags: 4
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 1664
+    - desc:
+        id: 10356995
+        type: 1
+        name: Analogue Gain
+        minimum: 16
+        maximum: 248
+        step: 1
+        default_value: 248
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 248
+    - desc:
+        id: 10422529
+        type: 9
+        name: Link Frequency
+        minimum: 0
+        maximum: 0
+        step: 1
+        default_value: 0
+        flags: 4
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 0
+    - desc:
+        id: 10422530
+        type: 5
+        name: Pixel Rate
+        minimum: 0
+        maximum: 180000000
+        step: 1
+        default_value: 180000000
+        flags: 4
+        elem_size: 8
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 180000000
+    - desc:
+        id: 10422531
+        type: 3
+        name: Test Pattern
+        minimum: 0
+        maximum: 4
+        step: 1
+        default_value: 0
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 0
+    - desc:
+        id: 10422533
+        type: 1
+        name: Digital Gain
+        minimum: 0
+        maximum: 16383
+        step: 1
+        default_value: 1024
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 16
+    pads:
+    - desc:
+        entity: 30
+        index: 0
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 1296
+          height: 972
+          code: 12295
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links:
+      - sink:
+          entity: 1
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 1
+        reserved: [0, 0]

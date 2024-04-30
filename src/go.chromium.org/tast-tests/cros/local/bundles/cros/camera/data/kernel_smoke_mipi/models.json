@@ -35,6 +35,10 @@
     "bus_info": "pci:pci0000:00",
     "out_entity": "Intel IPU6 BE SOC capture 0"
   },
+  "dru": {
+    "bus_info": "platform:rkisp1",
+    "out_entity": "rkisp1_selfpath"
+  },
   "kano-CH0001": {
     "bus_info": "pci:pci0000:00",
     "out_entity": "Intel IPU6 BE SOC capture 1"
