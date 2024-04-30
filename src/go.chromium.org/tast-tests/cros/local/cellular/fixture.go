@@ -43,7 +43,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            "cellular",
 		Desc:            "Cellular tests are safe to run",
-		Contacts:        []string{"chromeos-cellular-team@google.com", "stevenjb@google.com"},
+		Contacts:        []string{"chromeos-cellular-team@google.com", "ejcaruso@google.com"},
 		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		SetUpTimeout:    4 * time.Minute,
 		ResetTimeout:    5 * time.Second,
@@ -167,7 +167,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularTestESIM",
 		Desc:            "Cellular tests are safe to run with a Test SIM",
-		Contacts:        []string{"chromeos-cellular-team@google.com", "stevenjb@google.com"},
+		Contacts:        []string{"chromeos-cellular-team@google.com", "ejcaruso@google.com"},
 		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		SetUpTimeout:    4 * time.Minute,
 		ResetTimeout:    5 * time.Second,
@@ -180,7 +180,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularWithFakeDMSEnrolled",
 		Desc:            "Cellular tests are safe to run and a fake DMS (for managed eSIM profiles) is running",
-		Contacts:        []string{"chromeos-cellular-team@google.com", "jiajunzhang@google.com"},
+		Contacts:        []string{"chromeos-cellular-team@google.com", "jiajunz@google.com"},
 		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		SetUpTimeout:    3 * time.Minute,
 		ResetTimeout:    5 * time.Second,
@@ -194,7 +194,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularWithFakeDMSEnrolledAndTestSIM",
 		Desc:            "Cellular tests are safe to run that require a Test SIM and a fake DMS (for managed eSIM profiles) is running",
-		Contacts:        []string{"chromeos-cellular-team@google.com", "jiajunzhang@google.com"},
+		Contacts:        []string{"chromeos-cellular-team@google.com", "jiajunz@google.com"},
 		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		SetUpTimeout:    3 * time.Minute,
 		ResetTimeout:    5 * time.Second,
@@ -338,7 +338,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularSIMLockCleared",
 		Desc:            "Cellular tests that may affect SIM lock",
-		Contacts:        []string{"chromeos-cellular-team@google.com", "stevenjb@google.com"},
+		Contacts:        []string{"chromeos-cellular-team@google.com", "ejcaruso@google.com"},
 		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		SetUpTimeout:    4 * time.Minute,
 		ResetTimeout:    5 * time.Second,
