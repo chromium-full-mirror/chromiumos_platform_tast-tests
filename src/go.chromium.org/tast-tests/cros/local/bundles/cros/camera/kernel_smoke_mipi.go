@@ -65,11 +65,13 @@ func configFiles() []string {
 	}
 }
 
-// TODO(b/317158480): Skip on those models until we can add configuration file for them
+// Skip on some models. Some models have no plan to add support for this test.
+// TODO(b/333009681): Once "ciri" supports it, remove it from below.
 var unsupportedModel = []string{
 	"krane", "kakadu", "kodama", "katsu", // kukui
 	"coachz", "homestar", "mrbland", "wormdingler", "quackingstick", // strongbad
 	"rex4es", "screebo4es", // rex es
+	"ciri", // geralt
 }
 
 func init() {
