@@ -143,9 +143,10 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     fixture.LacrosEnrolledLoggedIn,
-		Desc:     "Fixture for a running FakeDMS with lacros on enrolled device",
-		Contacts: []string{"nedol@google.com", "chromeos-commercial-printing@google.com"},
+		Name:         fixture.LacrosEnrolledLoggedIn,
+		Desc:         "Fixture for a running FakeDMS with lacros on enrolled device",
+		Contacts:     []string{"nedol@google.com", "chromeos-commercial-printing@google.com", "chromeos-commercial-remote-management@google.com"},
+		BugComponent: "b:1160324", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Policies
 		Impl: &policyChromeFixture{
 			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 				opts, err := lacrosfixt.NewConfig().Opts()
