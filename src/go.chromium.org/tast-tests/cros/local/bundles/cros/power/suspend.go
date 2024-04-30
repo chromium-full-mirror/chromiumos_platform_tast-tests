@@ -73,6 +73,11 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(allFilteredModels...)),
 				Val:               suspendConfig{Fwupd: fwupdNoChange, Iterations: 1},
 			}, {
+				Name:              "twice",
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(allFilteredModels...)),
+				Val:               suspendConfig{Fwupd: fwupdNoChange, Iterations: 2},
+				ExtraAttr:         []string{"informational"},
+			}, {
 				Name:              "unstable",
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(allFilteredModels...)),
 				Val:               suspendConfig{Fwupd: fwupdNoChange, Iterations: 1},
