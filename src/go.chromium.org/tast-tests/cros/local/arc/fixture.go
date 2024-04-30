@@ -636,6 +636,8 @@ func init() {
 			"kawasin@google.com",
 			"hikalium@chromium.org",
 		},
+		// ChromeOS > Platform > baseOS > Virtualization
+		BugComponent:    "b:882513",
 		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + swap.UnrestrictedTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,
