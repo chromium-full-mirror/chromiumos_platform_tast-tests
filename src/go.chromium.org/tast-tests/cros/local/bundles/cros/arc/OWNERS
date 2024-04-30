@@ -13,6 +13,14 @@ per-file compat_snap.go=file:/src/go.chromium.org/tast-tests/cros/local/arc/OWNE
 per-file window_manager*.go=file:/src/go.chromium.org/tast-tests/cros/local/arc/OWNERS.wm
 per-file wm_*.go=file:/src/go.chromium.org/tast-tests/cros/local/arc/OWNERS.wm
 
+# Managed tests
+per-file managed_*.go=file:/src/go.chromium.org/tast-tests/cros/local/arc/OWNERS.managed
+per-file unicorn_*.go=file:/src/go.chromium.org/tast-tests/cros/local/arc/OWNERS.managed
+
+# Play Store tests
+per-file optin*.go=mhasank@chromium.org
+per-file play_*.go=mhasank@chromium.org
+
 # Notification experts own notification-related tests
 per-file notification*.go=file:/src/go.chromium.org/tast-tests/cros/local/arc/OWNERS.notif
 
