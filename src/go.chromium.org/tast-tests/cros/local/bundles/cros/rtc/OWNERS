@@ -1,1 +1,8 @@
-include /src/go.chromium.org/tast-tests/cros/local/rtc/OWNERS
+set noparent
+
+aaronyu@google.com
+hiroh@chromium.org
+paulhsia@chromium.org
+
+# Tast team for bulk/emergencies
+include /OWNERS.tast
