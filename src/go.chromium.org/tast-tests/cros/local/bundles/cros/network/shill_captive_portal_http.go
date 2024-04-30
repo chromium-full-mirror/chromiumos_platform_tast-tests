@@ -38,7 +38,7 @@ func init() {
 			"cros-networking@google.com",          // Platform networking team
 			"michaelrygiel@google.com",            // Test author
 		},
-		Attr: []string{"group:mainline", "group:hw_agnostic", "informational"},
+		Attr: []string{"group:mainline", "group:hw_agnostic", "informational", "group:criticalstaging"},
 		Params: []testing.Param{{
 			Name: "redirectfound",
 			Val: &params{

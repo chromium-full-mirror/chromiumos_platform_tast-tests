@@ -32,7 +32,7 @@ func init() {
 			"cros-networking@google.com",          // Platform networking team
 			"michaelrygiel@google.com",            // Test maintainer
 		},
-		Attr: []string{"group:mainline", "group:hw_agnostic", "informational"},
+		Attr: []string{"group:mainline", "group:hw_agnostic", "informational", "group:criticalstaging"},
 	})
 }
 
