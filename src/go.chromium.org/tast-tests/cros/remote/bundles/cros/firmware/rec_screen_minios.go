@@ -39,37 +39,30 @@ func init() {
 			"cienet-firmware@cienet.corp-partner.google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		Attr:         []string{"group:firmware", "firmware_usb"},
+		Attr:         []string{"group:firmware", "firmware_usb", "firmware_bios", "firmware_level2", "firmware_ro"},
+		Requirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01"},
 		HardwareDeps: hwdep.D(hwdep.MiniOS()),
 		Fixture:      fixture.NormalMode,
 		Params: []testing.Param{{
-			Name:              "menu",
-			ExtraAttr:         []string{"group:firmware", "firmware_bios", "firmware_level2", "firmware_ro"},
-			ExtraRequirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01"},
+			Name: "menu",
 			Val: recScreenMiniOSTestParams{
 				miniOSMenuOld:  false,
 				kbShortcutBoot: false,
 			},
 		}, {
-			Name:              "menu_old",
-			ExtraAttr:         []string{"group:firmware", "firmware_bios", "firmware_level2", "firmware_ro"},
-			ExtraRequirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01"},
+			Name: "menu_old",
 			Val: recScreenMiniOSTestParams{
 				miniOSMenuOld:  true,
 				kbShortcutBoot: false,
 			},
 		}, {
 			Name: "priority_minios_a",
-			// TODO: When stable, change firmware_unstable to a different attr.
-			ExtraAttr: []string{"firmware_unstable"},
 			Val: recScreenMiniOSTestParams{
 				miniOSPriority: "A",
 				kbShortcutBoot: true,
 			},
 		}, {
 			Name: "priority_minios_b",
-			// TODO: When stable, change firmware_unstable to a different attr.
-			ExtraAttr: []string{"firmware_unstable"},
 			Val: recScreenMiniOSTestParams{
 				miniOSPriority: "B",
 				kbShortcutBoot: true,
