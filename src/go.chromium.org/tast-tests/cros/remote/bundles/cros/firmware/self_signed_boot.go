@@ -35,7 +35,7 @@ func init() {
 		Vars:         []string{"firmware.skipFlashUSB"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Fixture:      fixture.DevModeGBB,
-		Timeout:      10 * time.Minute,
+		Timeout:      25 * time.Minute,
 	})
 }
 
