@@ -40,6 +40,8 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name: "pvsShopUnpack",
 		Desc: "Set up pvs container using `shop unpack`",
+		// ChromeOS > PlatformEnablement> PVS Framework > Internal Planning
+		BugComponent: "b:1475606",
 		Contacts: []string{
 			"chromeos-pvs-eng@google.com",
 			"jackgelinas@google.com",
