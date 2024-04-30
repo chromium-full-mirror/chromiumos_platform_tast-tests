@@ -24,6 +24,7 @@ func init() {
 		Name:            "enableDisablePsrFixture",
 		Desc:            "Makes PSR status to DEEP_SLEEP",
 		Contacts:        []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
+		BugComponent:    "b:157291", // ChromeOS > External > Intel
 		Impl:            &psr{},
 		SetUpTimeout:    5 * time.Minute,
 		TearDownTimeout: 2 * time.Minute,

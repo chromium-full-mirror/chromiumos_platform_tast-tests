@@ -21,6 +21,7 @@ func init() {
 		Name:         "rootfsRemovedFixture",
 		Desc:         "Makes Rootfs writable and checks if provisioning is done by oemcrypto daemon with google servers",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
+		BugComponent: "b:157291", // ChromeOS > External > Intel
 		Impl:         &impl{},
 		SetUpTimeout: 5 * time.Minute,
 	})

@@ -19,6 +19,7 @@ func init() {
 		Name:            "chromeLoggedInRootfsRemoved",
 		Desc:            "Removes rootfs verification, if required reboots the DUT and return logged into user session",
 		Contacts:        []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
+		BugComponent:    "b:157291", // ChromeOS > External > Intel
 		Impl:            &loggedIn{},
 		Parent:          "rootfsRemovedFixture",
 		SetUpTimeout:    5 * time.Minute,
@@ -30,6 +31,7 @@ func init() {
 		Name:            "chromeLoggedInPsrEnableDisable",
 		Desc:            "Enables and disables PSR 2, if required reboots the DUT and return logged into user session",
 		Contacts:        []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
+		BugComponent:    "b:157291", // ChromeOS > External > Intel
 		Impl:            &loggedIn{},
 		Parent:          "enableDisablePsrFixture",
 		SetUpTimeout:    5 * time.Minute,
