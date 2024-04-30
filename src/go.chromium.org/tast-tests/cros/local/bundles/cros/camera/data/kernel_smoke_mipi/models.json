@@ -1,4 +1,8 @@
 {
+  "anraggar360-LC6ace": {
+    "bus_info": "pci:pci0000:00",
+    "out_entity": "Intel IPU6 BE SOC capture 0"
+  },
   "anraggar360-TXfc2c": {
     "bus_info": "pci:pci0000:00",
     "out_entity": "Intel IPU6 BE SOC capture 0"
