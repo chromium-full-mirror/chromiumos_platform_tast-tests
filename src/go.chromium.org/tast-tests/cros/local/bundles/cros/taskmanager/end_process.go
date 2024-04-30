@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"regexp"
 	"strings"
 	"time"
 
@@ -272,8 +271,8 @@ func newPluginTest(browserType browser.Type) (*pluginTest, func(), error) {
 		"youtube": {
 			plugin: &plugin{
 				name:       "https://youtube.com/",
-				nodeFinder: nodewith.NameRegex(regexp.MustCompile(`^"Go Beyond" 4K Ultra HD Time Lapse.*YouTube`)).Role(role.RootWebArea),
-				source:     "https://www.youtube.com/embed/suWsd372pQE",
+				nodeFinder: nodewith.NameStartingWith("COSTA RICA IN 4K 60fps HDR (ULTRA HD)").Role(role.RootWebArea),
+				source:     "https://www.youtube.com/embed/LXb3EKWsInQ",
 			},
 		},
 		"googlemap": {
