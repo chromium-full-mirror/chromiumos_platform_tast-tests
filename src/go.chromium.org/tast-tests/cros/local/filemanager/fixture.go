@@ -30,7 +30,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            "install10Pwas",
 		Desc:            "Installs 10 PWAs in ash chrome",
-		Contacts:        []string{"chromeos-files-syd@chromium.org", "lucmult@chromium.org"},
+		Contacts:        []string{"chromeos-files-syd@google.com", "lucmult@chromium.org"},
 		BugComponent:    "b:167289",
 		Parent:          "chromeLoggedIn",
 		Impl:            &fixtureInstallPwa{numPwas: 10},
@@ -41,7 +41,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:         "openFilesApp",
 		Desc:         "Opens a Files app Window",
-		Contacts:     []string{"chromeos-files-syd@chromium.org", "lucmult@chromium.org"},
+		Contacts:     []string{"chromeos-files-syd@google.com", "lucmult@chromium.org"},
 		BugComponent: "b:167289",
 		Parent:       "chromeLoggedIn",
 		Impl:         &fixtureInstallPwa{numPwas: 0},

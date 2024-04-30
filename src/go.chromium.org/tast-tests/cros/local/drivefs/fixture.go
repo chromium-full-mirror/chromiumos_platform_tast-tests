@@ -57,7 +57,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            "driveFsStarted",
 		Desc:            "Ensures DriveFS is mounted and provides an authenticated Drive API Client",
-		Contacts:        []string{"benreich@chromium.org", "chromeos-files-syd@chromium.org"},
+		Contacts:        []string{"benreich@chromium.org", "chromeos-files-syd@google.com"},
 		BugComponent:    "b:167289",
 		Impl:            &fixture{bt: browser.TypeAsh},
 		SetUpTimeout:    chrome.GAIALoginTimeout + DriveFsSetupAndTearDownTimeout,
@@ -72,7 +72,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            "driveFsStartedFieldTrialEnabled",
 		Desc:            "Ensures DriveFS is mounted and provides an authenticated Drive API Client with the field trial enabled flag supplied",
-		Contacts:        []string{"benreich@chromium.org", "chromeos-files-syd@chromium.org"},
+		Contacts:        []string{"benreich@chromium.org", "chromeos-files-syd@google.com"},
 		BugComponent:    "b:167289",
 		Impl:            &fixture{bt: browser.TypeAsh, fieldTrial: chrome.FieldTrialConfigEnable},
 		SetUpTimeout:    chrome.GAIALoginTimeout + DriveFsSetupAndTearDownTimeout,
@@ -87,7 +87,8 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            "driveFsStartedFieldTrialDisabled",
 		Desc:            "Ensures DriveFS is mounted and provides an authenticated Drive API Client with the field trial disabled flag supplied",
-		Contacts:        []string{"benreich@chromium.org", "chromeos-files-syd@chromium.org"},
+		Contacts:        []string{"benreich@chromium.org", "chromeos-files-syd@google.com"},
+		BugComponent:    "b:167289",
 		Impl:            &fixture{bt: browser.TypeAsh, fieldTrial: chrome.FieldTrialConfigDisable},
 		SetUpTimeout:    chrome.GAIALoginTimeout + DriveFsSetupAndTearDownTimeout,
 		ResetTimeout:    DriveFsSetupAndTearDownTimeout,
@@ -101,7 +102,8 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            "driveFsStartedLacros",
 		Desc:            "Lacros variant of driveFsStarted",
-		Contacts:        []string{"chromeos-files-syd@chromium.org"},
+		Contacts:        []string{"chromeos-files-syd@google.com"},
+		BugComponent:    "b:167289",
 		Impl:            &fixture{bt: browser.TypeLacros},
 		SetUpTimeout:    chrome.GAIALoginTimeout + DriveFsSetupAndTearDownTimeout,
 		ResetTimeout:    DriveFsSetupAndTearDownTimeout,
@@ -113,9 +115,10 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "driveFsStartedTrashEnabled",
-		Desc:     "Ensures DriveFS is mounted and provides an authenticated Drive API Client",
-		Contacts: []string{"benreich@chromium.org", "chromeos-files-syd@chromium.org"},
+		Name:         "driveFsStartedTrashEnabled",
+		Desc:         "Ensures DriveFS is mounted and provides an authenticated Drive API Client",
+		Contacts:     []string{"benreich@chromium.org", "chromeos-files-syd@google.com"},
+		BugComponent: "b:167289",
 		Impl: &fixture{
 			chromeOptions: []chrome.Option{chrome.EnableFeatures("FilesTrash")},
 			bt:            browser.TypeAsh,
@@ -130,9 +133,10 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "driveFsStartedBulkPinningEnabled",
-		Desc:     "Ensures DriveFS is mounted and provides an authenticated Drive API Client",
-		Contacts: []string{"benreich@chromium.org", "chromeos-files-syd@chromium.org"},
+		Name:         "driveFsStartedBulkPinningEnabled",
+		Desc:         "Ensures DriveFS is mounted and provides an authenticated Drive API Client",
+		Contacts:     []string{"benreich@chromium.org", "chromeos-files-syd@google.com"},
+		BugComponent: "b:167289",
 		Impl: &fixture{
 			enableBulkPinning: true,
 			bt:                browser.TypeAsh,
@@ -147,9 +151,10 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "driveFsStartedBulkPinningEnabledWithLogLevelFine",
-		Desc:     "Ensures DriveFS is mounted and provides an authenticated Drive API Client",
-		Contacts: []string{"benreich@chromium.org", "chromeos-files-syd@chromium.org"},
+		Name:         "driveFsStartedBulkPinningEnabledWithLogLevelFine",
+		Desc:         "Ensures DriveFS is mounted and provides an authenticated Drive API Client",
+		Contacts:     []string{"benreich@chromium.org", "chromeos-files-syd@google.com"},
+		BugComponent: "b:167289",
 		Impl: &fixture{
 			drivefsOptions: CliArgsMap{
 				CliKeyModuleLogLevel: {
@@ -169,9 +174,10 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "driveFsStartedWithNativeMessaging",
-		Desc:     "Ensures DriveFS is mounted and the bidirectional messaging functionality is enabled",
-		Contacts: []string{"austinct@chromium.org", "chromeos-files-syd@chromium.org"},
+		Name:         "driveFsStartedWithNativeMessaging",
+		Desc:         "Ensures DriveFS is mounted and the bidirectional messaging functionality is enabled",
+		Contacts:     []string{"austinct@chromium.org", "chromeos-files-syd@google.com"},
+		BugComponent: "b:167289",
 		Impl: &fixture{drivefsOptions: CliArgsMap{
 			CliKeyFeatures: {
 				"switchblade_dss": "true",
@@ -187,9 +193,10 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "driveFsStartedWithNativeMessagingLacros",
-		Desc:     "Lacros variant of driveFsStartedWithNativeMessaging",
-		Contacts: []string{"austinct@chromium.org", "chromeos-files-syd@chromium.org"},
+		Name:         "driveFsStartedWithNativeMessagingLacros",
+		Desc:         "Lacros variant of driveFsStartedWithNativeMessaging",
+		Contacts:     []string{"austinct@chromium.org", "chromeos-files-syd@google.com"},
+		BugComponent: "b:167289",
 		Impl: &fixture{drivefsOptions: CliArgsMap{
 			CliKeyFeatures: {
 				"switchblade_dss": "true",
@@ -205,9 +212,10 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "driveFsStartedWithNativeMessagingAndBulkPinningEnabledLacros",
-		Desc:     "Lacros variant of driveFsStartedWithNativeMessagingLacros",
-		Contacts: []string{"benreich@chromium.org", "chromeos-files-syd@chromium.org"},
+		Name:         "driveFsStartedWithNativeMessagingAndBulkPinningEnabledLacros",
+		Desc:         "Lacros variant of driveFsStartedWithNativeMessagingLacros",
+		Contacts:     []string{"benreich@chromium.org", "chromeos-files-syd@google.com"},
+		BugComponent: "b:167289",
 		Impl: &fixture{
 			enableBulkPinning: true,
 			drivefsOptions: CliArgsMap{
@@ -225,9 +233,10 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "driveFsStartedWithOfficeEnabled",
-		Desc:     "Ensures DriveFS is mounted with #upload-to-office enabled",
-		Contacts: []string{"lucmult@chromium.org", "chromeos-files-syd@chromium.org"},
+		Name:         "driveFsStartedWithOfficeEnabled",
+		Desc:         "Ensures DriveFS is mounted with #upload-to-office enabled",
+		Contacts:     []string{"lucmult@chromium.org", "chromeos-files-syd@google.com"},
+		BugComponent: "b:167289",
 		Impl: &fixture{
 			chromeOptions: []chrome.Option{chrome.EnableFeatures("UploadOfficeToCloud"), chrome.ExtraArgs("--disable-sync")},
 			bt:            browser.TypeAsh,
@@ -242,9 +251,10 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "driveFsStartedWithOfficeEnabledLacros",
-		Desc:     "Lacros variant of driveFsStartedWithOfficeEnabled",
-		Contacts: []string{"lucmult@chromium.org", "chromeos-files-syd@chromium.org"},
+		Name:         "driveFsStartedWithOfficeEnabledLacros",
+		Desc:         "Lacros variant of driveFsStartedWithOfficeEnabled",
+		Contacts:     []string{"lucmult@chromium.org", "chromeos-files-syd@google.com"},
+		BugComponent: "b:167289",
 		Impl: &fixture{
 			chromeOptions: []chrome.Option{chrome.EnableFeatures("UploadOfficeToCloud")},
 			bt:            browser.TypeLacros,

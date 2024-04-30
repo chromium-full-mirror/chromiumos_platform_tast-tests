@@ -30,7 +30,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            "smbStarted",
 		Desc:            "Samba server started with 2 shares available",
-		Contacts:        []string{"chromeos-files-syd@chromium.org", "benreich@chromium.org"},
+		Contacts:        []string{"chromeos-files-syd@google.com", "benreich@chromium.org"},
 		BugComponent:    "b:167289",
 		Parent:          "chromeLoggedIn",
 		Impl:            &fixture{startChrome: true},
@@ -45,7 +45,7 @@ func init() {
 		Desc: `Samba server started with 2 shares available with
 			   unmounting of SMB mounts and Chrome cleanup expected
 			   to be handled by the test`,
-		Contacts:        []string{"chromeos-files-syd@chromium.org", "benreich@chromium.org"},
+		Contacts:        []string{"chromeos-files-syd@google.com", "benreich@chromium.org"},
 		BugComponent:    "b:167289",
 		Impl:            &fixture{startChrome: false},
 		SetUpTimeout:    smbdSetupTimeout,
