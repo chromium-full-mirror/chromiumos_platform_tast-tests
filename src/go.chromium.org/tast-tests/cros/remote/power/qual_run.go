@@ -234,7 +234,7 @@ func (r *QualRun) GenerateReport(ctx context.Context, outputDir, testName string
 				Unit:      "minute",
 				Direction: perf.SmallerIsBetter,
 			}, power.Average.MinutesBatteryLifeTested)
-			if strings.Contains(t.Name, "browsing") {
+			if strings.Contains(strings.ToLower(t.Name), "browsing") {
 				pv.Set(perf.Metric{
 					Name:      p.Name + "." + t.Name + "." + "browsing_test_config_version",
 					Unit:      "unit",
