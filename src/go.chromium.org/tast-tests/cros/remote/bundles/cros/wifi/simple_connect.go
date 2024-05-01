@@ -22,6 +22,8 @@ import (
 	"go.chromium.org/tast-tests/cros/common/wifi/security/wep"
 	"go.chromium.org/tast-tests/cros/common/wifi/security/wpa"
 	"go.chromium.org/tast-tests/cros/common/wifi/security/wpaeap"
+	"go.chromium.org/tast-tests/cros/common/wifi/wpacli"
+	"go.chromium.org/tast-tests/cros/remote/network/cmd"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
 	ap "go.chromium.org/tast-tests/cros/remote/wificell/hostapd"
 	"go.chromium.org/tast-tests/cros/remote/wificell/wifiutil"
@@ -41,6 +43,7 @@ type simpleConnectTestcase struct {
 	pingOps          []ping.Option
 	expectedFailure  bool
 	expectedSecurity string
+	expectedKeyMgmt  string
 }
 
 // EAP certs/keys for EAP tests.
@@ -893,6 +896,31 @@ func init() {
 				}},
 				ExtraRequirements: []string{"wifi-gen-0006-v01", "wifi-sec-0002-v01"},
 			}, {
+				// Verifies that DUT can connect to an AP in WPA3-SAE-EXT ("mixed") mode. WiFi alliance requires PMF in this mode.
+				Name:      "wpa3extmixed",
+				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
+				ExtraAttr: []string{"wificell_unstable"},
+				// Not all WiFi chips support SAE. We enable the feature as a Software dependency for now, but eventually
+				// this will require a hardware dependency (crbug.com/1070299).
+				ExtraSoftwareDeps: []string{"wpa3_sae"},
+				Val: []simpleConnectTestcase{{
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{
+							ap.Mode(ap.Mode80211acMixed), ap.Channel(36), ap.HTCaps(ap.HTCapHT40Plus),
+							ap.VHTCenterChannel(42), ap.VHTChWidth(ap.VHTChWidth80),
+							ap.PMF(ap.PMFOptional),
+						},
+						SecConfFac: wpa.NewConfigFactory(
+							"chromeos", wpa.Mode(wpa.ModeMixedWPA3Ext),
+							wpa.Ciphers2(wpa.CipherCCMP),
+						),
+					}},
+					expectedSecurity: shillconst.SecurityWPA2WPA3,
+					expectedKeyMgmt:  wpa.KeyMgmtSAEEXT,
+				}},
+				ExtraRequirements: []string{"wifi-gen-0006-v01", "wifi-sec-0002-v01"},
+				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_AX"},
+			}, {
 				// Verifies that DUT can connect to an AP in WPA3-SAE ("pure") mode. WiFi alliance requires PMF in this mode.
 				Name:    "wpa3",
 				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
@@ -912,8 +940,34 @@ func init() {
 						),
 					}},
 					expectedSecurity: shillconst.SecurityWPA3,
+					expectedKeyMgmt:  wpa.KeyMgmtSAE,
 				}},
 				ExtraRequirements: []string{"wifi-gen-0006-v01", "wifi-sec-0002-v01"},
+			}, {
+				// Verifies that DUT can connect to an AP in WPA3-SAE-EXT ("pure") mode. WiFi alliance requires PMF in this mode.
+				Name:      "wpa3ext",
+				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
+				ExtraAttr: []string{"wificell_unstable"},
+				// Not all WiFi chips support SAE. We enable the feature as a Software dependency for now, but eventually
+				// this will require a hardware dependency (crbug.com/1070299).
+				ExtraSoftwareDeps: []string{"wpa3_sae"},
+				Val: []simpleConnectTestcase{{
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{
+							ap.Mode(ap.Mode80211acMixed), ap.Channel(36), ap.HTCaps(ap.HTCapHT40Plus),
+							ap.VHTCenterChannel(42), ap.VHTChWidth(ap.VHTChWidth80),
+							ap.PMF(ap.PMFRequired),
+						},
+						SecConfFac: wpa.NewConfigFactory(
+							"chromeos", wpa.Mode(wpa.ModePureWPA3Ext),
+							wpa.Ciphers2(wpa.CipherCCMP),
+						),
+					}},
+					expectedSecurity: shillconst.SecurityWPA3,
+					expectedKeyMgmt:  wpa.KeyMgmtSAEEXT,
+				}},
+				ExtraRequirements: []string{"wifi-gen-0006-v01", "wifi-sec-0002-v01"},
+				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_AX"},
 			}, {
 				// Verifies that DUT can connect to a protected 802.11ac network supporting for WPA.
 				Name:    "wpavht80",
@@ -2208,8 +2262,8 @@ func SimpleConnect(ctx context.Context, s *testing.State) {
 			s.Log("Failed to save perf data, err: ", err)
 		}
 	}()
-
-	testOnce := func(ctx context.Context, s *testing.State, apConfigs []ap.ApConfig, pingOps []ping.Option, expectedFailure bool, expectedSecurity string) {
+	runner := wpacli.NewRunner(&cmd.RemoteCmdRunner{Host: s.DUT().Conn()})
+	testOnce := func(ctx context.Context, s *testing.State, apConfigs []ap.ApConfig, pingOps []ping.Option, expectedFailure bool, expectedSecurity, expectedKeyMgmt string) {
 		apIface, err := tf.ConfigureMultiAP(ctx, wificell.DefaultRouter, apConfigs)
 		if err != nil {
 			s.Fatal("Failed to configure ap, err: ", err)
@@ -2313,6 +2367,13 @@ func SimpleConnect(ctx context.Context, s *testing.State) {
 		if expectedSecurity != serInfo.Wifi.Security {
 			s.Fatalf("Wrong security of the service: got %s, want %s ", serInfo.Wifi.Security, expectedSecurity)
 		}
+		keyMgmt, err := runner.KeyMgmt(ctx)
+		if err != nil {
+			s.Fatal("Unable to get KeyMgmt from WiFi interface")
+		}
+		if len(expectedKeyMgmt) > 0 && expectedKeyMgmt != keyMgmt {
+			s.Fatalf("Wrong KeyMgmt of the service: got %s, want %s ", keyMgmt, expectedKeyMgmt)
+		}
 
 		// TODO(crbug.com/1034875): Assert no deauth detected from the server side.
 		// TODO(crbug.com/1034875): Maybe some more check on the WiFi capabilities to
@@ -2331,7 +2392,7 @@ func SimpleConnect(ctx context.Context, s *testing.State) {
 				}
 			}
 
-			testOnce(ctx, s, tc.apConfigs, tc.pingOps, tc.expectedFailure, tc.expectedSecurity)
+			testOnce(ctx, s, tc.apConfigs, tc.pingOps, tc.expectedFailure, tc.expectedSecurity, tc.expectedKeyMgmt)
 		}
 		if !s.Run(ctx, fmt.Sprintf("Testcase #%d", i), subtest) {
 			// Stop if any sub-test failed.

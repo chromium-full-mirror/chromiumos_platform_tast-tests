@@ -42,6 +42,9 @@ type simpleConnectParamsVal struct {
 	PingOps          string
 	ExpectedFailure  bool
 	ExpectedSecurity string
+	// ExpectedKeyMgmt specifies the required AKM needed for the connection.
+	// This is stricter than ExpectedSecurity and gives us higher granularity.
+	ExpectedKeyMgmt string
 }
 
 type simpleConnectParams struct {
@@ -612,9 +615,13 @@ func wpaModeToShillSecurity(mode string) string {
 		return `shillconst.SecurityWPA2`
 	case `PureWPA3`:
 		return `shillconst.SecurityWPA3`
+	case `PureWPA3Ext`:
+		return `shillconst.SecurityWPA3`
 	case `Mixed`:
 		return `shillconst.SecurityWPAWPA2`
 	case `MixedWPA3`:
+		return `shillconst.SecurityWPA2WPA3`
+	case `MixedWPA3Ext`:
 		return `shillconst.SecurityWPA2WPA3`
 	}
 	return ``
@@ -736,7 +743,7 @@ func simpleConnectWPA() []*simpleConnectParams {
 }
 
 func simpleConnectWPA3() []*simpleConnectParams {
-	mkOps := func(pmf, mode string) []simpleConnectParamsVal {
+	mkOps := func(pmf, mode, keyMgmtOverride string) []simpleConnectParamsVal {
 		return []simpleConnectParamsVal{{
 			APConfigs: []apConfigVal{{
 				APOpts: fmt.Sprintf(`
@@ -750,14 +757,30 @@ func simpleConnectWPA3() []*simpleConnectParams {
 				)`, mode),
 			}},
 			ExpectedSecurity: wpaModeToShillSecurity(mode),
+			ExpectedKeyMgmt:  keyMgmtOverride,
 		}}
 	}
 	return []*simpleConnectParams{{
 		Name:              "wpa3mixed",
 		Fixture:           defaultFixture,
 		Doc:               simpleConnectDocPref("an AP in WPA2/WPA3 mixed mode. WiFi alliance suggests PMF in this mode."),
-		Val:               mkOps("Optional", "MixedWPA3"),
+		Val:               mkOps("Optional", "MixedWPA3", ""),
 		ExtraRequirements: []string{tdreq.WiFiGenSupportPMF, tdreq.WiFiSecSupportWPA3Personal},
+	}, {
+		Name:      "wpa3extmixed",
+		Fixture:   defaultFixture,
+		ExtraAttr: []string{"wificell_unstable"},
+		// We enforce wpa3_sae support here as we expect devices to connect to SAE-EXT-KEY mode in mixed mode.
+		ExtraSoftwareDeps: []string{"wpa3_sae"},
+		ExtraSoftwareDepsDoc: []string{
+			"Not all WiFi chips support SAE. We enable the feature as a Software dependency for now, but eventually",
+			"this will require a hardware dependency (crbug.com/1070299).",
+		},
+		Doc:               simpleConnectDocPref(`an AP in WPA3-SAE-EXT ("mixed") mode. WiFi alliance requires PMF in this mode.`),
+		Val:               mkOps("Optional", "MixedWPA3Ext", "wpa.KeyMgmtSAEEXT"),
+		ExtraRequirements: []string{tdreq.WiFiGenSupportPMF, tdreq.WiFiSecSupportWPA3Personal},
+		// TODO(b/339435290) Refine testbed dep to work for routers w/ AKM24 support.
+		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX},
 	}, {
 		Name:              "wpa3",
 		Fixture:           defaultFixture,
@@ -767,8 +790,22 @@ func simpleConnectWPA3() []*simpleConnectParams {
 			"this will require a hardware dependency (crbug.com/1070299).",
 		},
 		Doc:               simpleConnectDocPref(`an AP in WPA3-SAE ("pure") mode. WiFi alliance requires PMF in this mode.`),
-		Val:               mkOps("Required", "PureWPA3"),
+		Val:               mkOps("Required", "PureWPA3", "wpa.KeyMgmtSAE"),
 		ExtraRequirements: []string{tdreq.WiFiGenSupportPMF, tdreq.WiFiSecSupportWPA3Personal},
+	}, {
+		Name:              "wpa3ext",
+		Fixture:           defaultFixture,
+		ExtraAttr:         []string{"wificell_unstable"},
+		ExtraSoftwareDeps: []string{"wpa3_sae"},
+		ExtraSoftwareDepsDoc: []string{
+			"Not all WiFi chips support SAE. We enable the feature as a Software dependency for now, but eventually",
+			"this will require a hardware dependency (crbug.com/1070299).",
+		},
+		Doc:               simpleConnectDocPref(`an AP in WPA3-SAE-EXT ("pure") mode. WiFi alliance requires PMF in this mode.`),
+		Val:               mkOps("Required", "PureWPA3Ext", "wpa.KeyMgmtSAEEXT"),
+		ExtraRequirements: []string{tdreq.WiFiGenSupportPMF, tdreq.WiFiSecSupportWPA3Personal},
+		// TODO(b/339435290) Refine testbed dep to work for routers w/ AKM24 support.
+		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX},
 	}}
 }
 
@@ -1311,6 +1348,9 @@ func TestSimpleConnect(t *testing.T) {
 		{{ end }}
 		{{ if .ExpectedSecurity }}
 		expectedSecurity: {{ .ExpectedSecurity }},
+		{{ end }}
+		{{ if .ExpectedKeyMgmt }}
+		expectedKeyMgmt: {{ .ExpectedKeyMgmt }},
 		{{ end }}
 	}, {{ end }} },
 	{{ if .ExtraHardwareDeps }}

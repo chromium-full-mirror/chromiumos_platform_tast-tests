@@ -199,10 +199,10 @@ func (r *Runner) setNetwork(ctx context.Context, networkID int, variable, value 
 }
 
 // statusMap returns a generated status key/value map from the output of the WiFi interface.
-func (r *Runner) statusMap(ctx context.Context, iface string) (map[string]string, error) {
-	cmdOut, err := r.cmd.Output(ctx, "sudo", r.sudoWPACLI("-i", iface, "status")...)
+func (r *Runner) statusMap(ctx context.Context) (map[string]string, error) {
+	cmdOut, err := r.cmd.Output(ctx, "sudo", r.sudoWPACLI("status")...)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed running wpa_cli -i %s status", iface)
+		return nil, errors.Wrap(err, "failed running wpa_cli status")
 	}
 	statusMap := make(map[string]string)
 	for _, line := range strings.Split(string(cmdOut), "\n") {
@@ -483,6 +483,18 @@ func (r *Runner) BSS(ctx context.Context, addr net.HardwareAddr) (map[string]str
 		}
 	}
 	return bss, nil
+}
+
+// KeyMgmt fetches the KeyMgmt used for the connection from the iface.
+func (r *Runner) KeyMgmt(ctx context.Context) (string, error) {
+	sMap, err := r.statusMap(ctx)
+	if err != nil {
+		return "", err
+	}
+	if _, ok := sMap["key_mgmt"]; !ok {
+		return "", errors.New("key_mgmt not found in status map")
+	}
+	return sMap["key_mgmt"], nil
 }
 
 // NewWPAMonitor returns new WPA Monitor that will be handled by this runner.
