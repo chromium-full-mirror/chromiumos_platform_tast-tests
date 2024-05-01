@@ -142,7 +142,8 @@ func init() {
 		Desc: "Set up DUT for power measurements",
 		Contacts: []string{
 			"chromeos-platform-ml@google.com",
-			"jakebarnes@google.com",
+			"zactu@google.com",
+			"zhaon@google.com",
 		},
 		Impl:            &powerSetUpFixture{},
 		SetUpTimeout:    SetUpTimeout,
