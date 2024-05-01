@@ -47,8 +47,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that the hps detects single person in backlit environments",
 		Contacts: []string{
-			"chromeos-hps-swe@google.com",
 			"eunicesun@google.com",
+			"jmpollock@google.com",
+			"pmarheine@google.com",
+			"chromeos-hps-swe@google.com",
 		},
 		BugComponent: "b:1140302",
 		Timeout:      45 * time.Minute,
