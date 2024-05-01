@@ -1,0 +1,309 @@
+// Copyright 2024 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package videoconferencing
+
+import (
+	"context"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"time"
+
+	"go.chromium.org/tast-tests/cros/common/tbdep"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/fakevctab"
+	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vctray"
+	"go.chromium.org/tast-tests/cros/local/videoconferencing/fixture"
+
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
+)
+
+const vcTabURL = "/popup.html"
+
+func init() {
+	testing.AddTest(&testing.Test{
+		Func:         TrayTriggersTab,
+		LacrosStatus: testing.LacrosVariantExists,
+		Desc:         "Checks VC tray can be triggered by Chrome tab",
+		Contacts: []string{
+			"chrome-knowledge-eng@google.com",
+			"xiuwen@google.com",
+		},
+		BugComponent: "b:187682",
+		Timeout:      3 * time.Minute,
+		Attr: []string{
+			"group:mainline", "group:cbx", "cbx_feature_enabled", "cbx_unstable",
+			"informational",
+		},
+		TestBedDeps:  []string{tbdep.Cbx(false)},
+		SoftwareDeps: []string{"chrome"},
+		Data: []string{
+			"popup.html",
+			"popup.js",
+		},
+
+		Params: []testing.Param{
+			{
+				Fixture: fixture.LoggedInWithFakeHALAndEffectsDisabled,
+			},
+			{
+				Name:              "lacros",
+				ExtraSoftwareDeps: []string{"lacros"},
+				Fixture:           fixture.LoggedInLacrosWithFakeHALAndEffectsDisabled,
+			},
+		},
+		SearchFlags: []*testing.StringPair{
+			// Test coverage on Chrome tabs.
+			{
+				// Trigger VC tray with Camera on Chrome tabs.
+				Key:   "feature_id",
+				Value: "screenplay-eb95a7e3-db7d-4856-b12f-c72206223f6a",
+			},
+			{
+				// Trigger VC tray with Mic on Chrome tabs.
+				Key:   "feature_id",
+				Value: "screenplay-9bee2da7-d1b3-4c75-ba10-b598d8c93b8e",
+			},
+			{
+				// Trigger VC tray with sharing screen on Chrome tabs.
+				Key:   "feature_id",
+				Value: "screenplay-9423c5ea-5050-4828-96fa-52ba838449e1",
+			},
+			{
+				// Use VC tray to return to a Chrome tab.
+				Key:   "feature_id",
+				Value: "screenplay-1be20f28-70a4-44c0-9124-81ad373b68a9",
+			},
+
+			// Test coverage on Lacros tabs.
+			{
+				// Trigger VC tray with Camera on Lacros tabs.
+				Key:   "feature_id",
+				Value: "screenplay-897ef5fb-a9c4-4ae5-85f2-f1f82bc396a0",
+			},
+			{
+				// Trigger VC tray with Mic on Lacros tabs.
+				Key:   "feature_id",
+				Value: "screenplay-cac94449-3699-45a0-adff-98708f2da826",
+			},
+			{
+				// Trigger VC tray with sharing screen on Lacros tabs.
+				Key:   "feature_id",
+				Value: "screenplay-09d4f0df-d171-40d5-9eab-486fa54710ab",
+			},
+			{
+				// Use VC tray to return to a Lacros tab.
+				Key:   "feature_id",
+				Value: "screenplay-4a47131d-4a9f-450d-b256-f6796f0c26ef",
+			},
+		},
+	})
+}
+
+// TrayTriggersTab checks VC tray can be triggered by Chrome tabs.
+func TrayTriggersTab(ctx context.Context, s *testing.State) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Failed to connect Test API: ", err)
+	}
+
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui")
+
+	browserType := s.FixtValue().(fixture.FixtData).BrowserType()
+
+	// Open an empty chrome tab.
+	conn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browserType, chrome.NewTabURL)
+	if err != nil {
+		s.Fatal("Failed to launch browser: ", err)
+	}
+
+	defer closeBrowser(cleanupCtx)
+	defer conn.Close()
+	defer conn.CloseTarget(cleanupCtx)
+
+	// Grant permission.
+	srv := httptest.NewServer(http.FileServer(s.DataFileSystem()))
+	defer srv.Close()
+	br.GrantPermissions(ctx, []string{fmt.Sprintf("%s/*", srv.URL)},
+		browser.CameraContentSetting,
+		browser.MicrophoneContentSetting,
+	)
+
+	vcTray := vctray.New(ctx, tconn)
+
+	vcTabFullURL := srv.URL + vcTabURL
+
+	// Verify extension triggers vcTray on camera.
+	s.Run(ctx, "cam_only", func(ctx context.Context, s *testing.State) {
+		tabUI, err := fakevctab.LaunchTab(ctx, tconn, br, vcTabFullURL)
+		if err != nil {
+			s.Fatal("Failed to open tab: ", err)
+		}
+
+		defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_cam_only")
+
+		if err := uiauto.Combine("activate camera",
+			tabUI.StartVideo,
+			vcTray.WaitUntilState(vctray.DevMicrophone, vctray.DeviceAvailable),
+			vcTray.WaitUntilState(vctray.DevCamera, vctray.DeviceInUse),
+			vcTray.WaitUntilState(vctray.DevScreen, vctray.DeviceHidden),
+			// Sleep 1s to wait for video rendering.
+			uiauto.Sleep(time.Second),
+		)(ctx); err != nil {
+			s.Fatal("Failed to verify that tab triggers vcTray by camera: ", err)
+		}
+
+		if err := uiauto.Retry(3, uiauto.Combine("deactivate camera",
+			tabUI.StopVideo,
+			vcTray.WaitUntilState(vctray.DevMicrophone, vctray.DeviceAvailable),
+			vcTray.WaitUntilState(vctray.DevCamera, vctray.DeviceAvailable),
+			vcTray.WaitUntilState(vctray.DevScreen, vctray.DeviceHidden),
+		))(ctx); err != nil {
+			s.Fatal("Failed to verify that stop using camera resets tray state: ", err)
+		}
+
+		if err := uiauto.Combine("close tab",
+			tabUI.CloseTab,
+			vcTray.WaitUntilGone,
+		)(ctx); err != nil {
+			s.Fatal("Failed to verify that close tab hides VcTray: ", err)
+		}
+	})
+
+	s.Run(ctx, "mic_only", func(ctx context.Context, s *testing.State) {
+		tabUI, err := fakevctab.LaunchTab(ctx, tconn, br, vcTabFullURL)
+		if err != nil {
+			s.Fatal("Failed to open tab: ", err)
+		}
+
+		defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_mic_only")
+
+		if err := uiauto.Combine("activate mic",
+			tabUI.StartAudio,
+			vcTray.WaitUntilState(vctray.DevMicrophone, vctray.DeviceInUse),
+			vcTray.WaitUntilState(vctray.DevCamera, vctray.DeviceAvailable),
+			vcTray.WaitUntilState(vctray.DevScreen, vctray.DeviceHidden),
+		)(ctx); err != nil {
+			s.Fatal("Failed to verify that tab triggers vcTray by mic: ", err)
+		}
+
+		if err := uiauto.Retry(3, uiauto.Combine("deactivate mic",
+			tabUI.StopAudio,
+			vcTray.WaitUntilState(vctray.DevMicrophone, vctray.DeviceAvailable),
+			vcTray.WaitUntilState(vctray.DevCamera, vctray.DeviceAvailable),
+			vcTray.WaitUntilState(vctray.DevScreen, vctray.DeviceHidden),
+		))(ctx); err != nil {
+			s.Fatal("Failed to verify that stop using camera resets tray state: ", err)
+		}
+
+		if err := uiauto.Combine("close tab",
+			tabUI.CloseTab,
+			vcTray.WaitUntilGone,
+		)(ctx); err != nil {
+			s.Fatal("Failed to verify that close tab hides VcTray: ", err)
+		}
+	})
+
+	s.Run(ctx, "screen_only", func(ctx context.Context, s *testing.State) {
+		tabUI, err := fakevctab.LaunchTab(ctx, tconn, br, vcTabFullURL)
+		if err != nil {
+			s.Fatal("Failed to open tab: ", err)
+		}
+
+		defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_screen_only")
+
+		if err := uiauto.Combine("share screen only",
+			tabUI.StartScreenCapture,
+			vcTray.WaitUntilState(vctray.DevMicrophone, vctray.DeviceAvailable),
+			vcTray.WaitUntilState(vctray.DevCamera, vctray.DeviceAvailable),
+			vcTray.WaitUntilState(vctray.DevScreen, vctray.DeviceInUse),
+		)(ctx); err != nil {
+			s.Fatal("Failed to verify that extension triggers vcTray by sharing screen: ", err)
+		}
+
+		if err := uiauto.Retry(3, uiauto.Combine("stop screen share",
+			tabUI.StopScreenCapture,
+			vcTray.WaitUntilState(vctray.DevMicrophone, vctray.DeviceAvailable),
+			vcTray.WaitUntilState(vctray.DevCamera, vctray.DeviceAvailable),
+			vcTray.WaitUntilState(vctray.DevScreen, vctray.DeviceHidden),
+		))(ctx); err != nil {
+			s.Fatal("Failed to verify that stop screen share resets tray state: ", err)
+		}
+
+		if err := uiauto.Combine("close tab",
+			tabUI.CloseTab,
+			vcTray.WaitUntilGone,
+		)(ctx); err != nil {
+			s.Fatal("Failed to verify that close tab hides VcTray: ", err)
+		}
+	})
+
+	s.Run(ctx, "return_to_app", func(ctx context.Context, s *testing.State) {
+		tabUI, err := fakevctab.LaunchTab(ctx, tconn, br, vcTabFullURL)
+		if err != nil {
+			s.Fatal("Failed to open tab: ", err)
+		}
+
+		defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_return_to_app")
+
+		if err := uiauto.Combine("share screen only",
+			tabUI.StartScreenCapture,
+			vcTray.WaitUntilState(vctray.DevMicrophone, vctray.DeviceAvailable),
+			vcTray.WaitUntilState(vctray.DevCamera, vctray.DeviceAvailable),
+			vcTray.WaitUntilState(vctray.DevScreen, vctray.DeviceInUse),
+		)(ctx); err != nil {
+			s.Fatal("Failed to verify that extension triggers vcTray by sharing screen: ", err)
+		}
+
+		tabWindow, err := ash.GetActiveWindow(ctx, tconn)
+		if err != nil {
+			s.Fatal("Failed to get active window: ", err)
+		}
+
+		if err := ash.SetWindowStateAndWait(ctx, tconn, tabWindow.ID, ash.WindowStateMaximized); err != nil {
+			s.Fatal("Failed to Maximize active window: ", err)
+		}
+
+		if err := ash.SetWindowStateAndWait(ctx, tconn, tabWindow.ID, ash.WindowStateMinimized); err != nil {
+			s.Fatal("Failed to Minize active window: ", err)
+		}
+
+		if err := ash.WaitForCondition(ctx, tconn, func(window *ash.Window) bool {
+			return tabWindow.ID == window.ID && window.State == ash.WindowStateMinimized && !window.IsAnimating
+		}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
+			s.Fatal("Failed to minimize tab: ", err)
+		}
+
+		if err := uiauto.Combine("return to tab via vcpanel",
+			vcTray.ExpandPanel,
+			vcTray.ReturnToApp("VcTester"),
+		)(ctx); err != nil {
+			s.Fatal("Failed to return to app: ", err)
+		}
+
+		// Wait until the window is minimized.
+		if err := ash.WaitWindowFinishAnimating(ctx, tconn, tabWindow.ID); err != nil {
+			s.Fatal("Failed to wait vcBackgroundAppWindow to minimize: ", err)
+		}
+
+		if err := ash.WaitForCondition(ctx, tconn, func(window *ash.Window) bool {
+			return tabWindow.ID == window.ID && window.State == ash.WindowStateMaximized && !window.IsAnimating
+		}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
+			s.Fatal("Failed to return to app: ", err)
+		}
+	})
+}

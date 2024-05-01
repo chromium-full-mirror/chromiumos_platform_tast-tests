@@ -42,10 +42,12 @@ const (
 	NoLogInWithInternalCameraAndEffectsEnabled = "noLogInWithInternalCameraAndEffectsEnabled"
 
 	// Fixtures with fake login.
-	LoggedInWithFakeHALAndEffectsEnabled                 = "loggedInWithFakeHALAndEffectsEnabled"
+	LoggedInWithFakeHALAndEffectsEnabled        = "loggedInWithFakeHALAndEffectsEnabled"
+	LoggedInLacrosWithFakeHALAndEffectsEnabled  = "loggedInLacrosWithFakeHALAndEffectsEnabled"
+	LoggedInWithFakeHALAndEffectsDisabled       = "loggedInWithFakeHALAndEffectsDisabled"
+	LoggedInLacrosWithFakeHALAndEffectsDisabled = "loggedInLacrosWithFakeHALAndEffectsDisabled"
+
 	LoggedInWithFakeHALAndEffectsEnabledNoScreenRecorder = "loggedInWithFakeHALAndEffectsEnabledNoScreenRecorder"
-	LoggedInWithFakeHALAndEffectsDisabled                = "loggedInWithFakeHALAndEffectsDisabled"
-	LoggedInLacrosWithFakeHALAndEffectsEnabled           = "loggedInLacrosWithFakeHALAndEffectsEnabled"
 
 	// Fixtures using GAIA login without specifying device mode.
 	GAIALoggedInWithFakeHALAndEffectsEnabled                 = "gaiaLoggedInWithFakeHALAndEffectsEnabled"
@@ -154,6 +156,23 @@ func init() {
 		Data:            []string{fakeHALImageInput},
 		Impl:            mediaSetupFixture(halCameraWithPlatformEffectsDisabled),
 		Parent:          loggedIn,
+		SetUpTimeout:    chrome.LoginTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: LoggedInLacrosWithFakeHALAndEffectsDisabled,
+		Desc: "A fixture with fake user logged in Lacros using fake HAL camera with platform effects disabled",
+		Contacts: []string{
+			"chrome-knowledge-eng@google.com",
+			"xiuwen@google.com",
+		},
+		Data:            []string{fakeHALImageInput},
+		Impl:            mediaSetupFixture(halCameraWithPlatformEffectsDisabled),
+		Parent:          loggedInLacros,
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
