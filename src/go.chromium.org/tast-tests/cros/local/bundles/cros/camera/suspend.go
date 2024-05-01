@@ -19,9 +19,9 @@ import (
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
-// TODO(b/324533891): This model is skipped in power.Suspend.
-// Remove it when the bug is closed.
-var unstableModel = []string{"sona"}
+// TODO(b/324533891): "sona" is skipped in power.Suspend. Remove when the bug is closed.
+var unstableSuspendModel = []string{"sona"}
+var flakyModel = append(unstableSuspendModel, testutil.FlakyModel...)
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -33,11 +33,24 @@ func init() {
 			"ribalda@chromium.org",
 		},
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
-		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera", "group:cq-medium", "group:camera-stability"},
+		Attr:         []string{"group:mainline", "group:camera-libcamera", "group:cq-medium", "group:camera-stability"},
 		Timeout:      4 * time.Minute,
 		SoftwareDeps: []string{"arc_camera3", "chrome", caps.BuiltinCamera},
-		HardwareDeps: hwdep.D(hwdep.CameraEnumerated(), hwdep.SkipOnModel(unstableModel...)),
 		Fixture:      fixture.CameraConnectorRestarted,
+		Params: []testing.Param{
+			{
+				ExtraHardwareDeps: hwdep.D(hwdep.CameraEnumerated(), hwdep.SkipOnModel(flakyModel...), hwdep.SkipOnCameraUSBModule(testutil.FlakyUSBCamera...)),
+				ExtraAttr:         []string{"informational"},
+			}, {
+				Name:              "flaky_model",
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(flakyModel...)),
+				ExtraAttr:         []string{"informational"},
+			}, {
+				Name:              "flaky_camera",
+				ExtraHardwareDeps: hwdep.D(hwdep.CameraUSBModule(testutil.FlakyUSBCamera...)),
+				ExtraAttr:         []string{"informational"},
+			},
+		},
 	})
 }
 
