@@ -29,7 +29,7 @@ func init() {
 		Name:         fixture.ChromeLoggedIn,
 		Desc:         "Logged into a user session",
 		Contacts:     []string{"tast-core@google.com", "abergman@google.com", "yichiyan@google.com"},
-		BugComponent: "b:335659417", //ChromeOS > Test > Harness > Tast > Libraries
+		BugComponent: "b:1034649", //ChromeOS > Test > Harness > Tast > Libraries
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
 			return nil, nil
 		}),
