@@ -39,6 +39,7 @@ func SELinuxNonRootFSPaths(ctx context.Context, s *testing.State) {
 		{Path: "/run/dbus", Context: "cros_run_dbus"},
 		{Path: "/run/dbus/system_bus_socket", Context: "cros_system_bus_socket"},
 		{Path: "/run/featured/active", Context: "cros_run_featured_active", Recursive: true},
+		{Path: "/run/early-metrics", Context: "cros_metrics_uma_events_file", Recursive: true},
 		{Path: "/run/metrics", Context: "cros_run_metrics"},
 		{Path: "/run/metrics/external", Context: "cros_run_metrics_external"},
 		{Path: "/run/metrics/external/crash-reporter", Context: "cros_run_metrics_external_crash"},
