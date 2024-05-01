@@ -188,41 +188,42 @@ func (erpserver *ErpServer) SetFakeConfigFile(configFile *ResponseConfigFile) {
 }
 
 func (erpserver *ErpServer) handleUpload(ctx context.Context, w http.ResponseWriter, r *http.Request) {
-	testing.ContextLog(ctx, "ERP new request")
+	testing.ContextLog(ctx, "Reporting: new request to the server")
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		testing.ContextLog(ctx, "Could not read request body: ", err)
+		testing.ContextLog(ctx, "Reporting: Could not read request body: ", err)
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
 
 	var request UploadRequest
 	if err = json.Unmarshal(body, &request); err != nil {
-		testing.ContextLog(ctx, "Could not parse request body: ", err)
+		testing.ContextLog(ctx, "Reporting: Could not parse request body: ", err)
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
 
 	var response UploadResponse
 	if request.AttachEncryptionSettings {
-		testing.ContextLog(ctx, "ERP attach encryption settings requested")
+		testing.ContextLog(ctx, "Reporting: attach encryption settings requested")
 		response.EncryptionSettings = &ResponseEncryptionSettings{
 			PublicKeyID:        erpserver.keyID,
 			PublicKey:          erpserver.publicKeyEncoded,
 			PublicKeySignature: erpserver.signatureEncoded,
 		}
+		testing.ContextLog(ctx, "Reporting: returning encryption settings = ", response.EncryptionSettings)
 	}
 
 	if request.ConfigurationFileVersion != nil {
 		if erpserver.fakeConfigFile != nil && *request.ConfigurationFileVersion != erpserver.fakeConfigFile.Version {
-			testing.ContextLog(ctx, "ERP attach configuration file requested, with version= ", *request.ConfigurationFileVersion)
-			testing.ContextLog(ctx, "Returning fake configuration file = ", erpserver.fakeConfigFile)
+			testing.ContextLog(ctx, "Reporting: attach configuration file requested, with version= ", *request.ConfigurationFileVersion)
+			testing.ContextLog(ctx, "Reporting: Returning fake configuration file = ", erpserver.fakeConfigFile)
 			response.ConfigurationFile = erpserver.fakeConfigFile
 		}
 	}
 
 	if len(request.EncryptedRecord) > 0 {
-		testing.ContextLog(ctx, "ERP records upload requested")
+		testing.ContextLog(ctx, "Reporting: records upload requested")
 		lastRecord := request.EncryptedRecord[len(request.EncryptedRecord)-1]
 		response.LastSucceedUploadedRecord = &lastRecord.SequenceInformation
 	}
@@ -233,28 +234,28 @@ func (erpserver *ErpServer) handleUpload(ctx context.Context, w http.ResponseWri
 		// Continue handling upcoming records on errors without returning an
 		// http error to avoid blocking records needed to be verified by the test.
 		if publicKeyID != keyID {
-			testing.ContextLog(ctx, "Uknown public key ID: ", publicKeyID)
+			testing.ContextLog(ctx, "Reporting: Uknown public key ID: ", publicKeyID)
 			continue
 		}
 
 		key, err := getKey(encryptedRecord.EncryptionInfo.EncryptionKey, erpserver.privateKey[:])
 		if err != nil {
-			testing.ContextLog(ctx, "Could not decrypt secret: ", err)
+			testing.ContextLog(ctx, "Reporting: Could not decrypt secret: ", err)
 			continue
 		}
 		result, err := decrypt(encryptedRecord.EncryptedWrappedRecord, key)
 		if err != nil {
-			testing.ContextLog(ctx, "Could not decrypt record: ", err)
+			testing.ContextLog(ctx, "Reporting: Could not decrypt record: ", err)
 			continue
 		}
 		compression := encryptedRecord.CompressionInformation.CompressionAlgorithm
 		if compression != 0 {
-			testing.ContextLog(ctx, "Compressed records are not supported in fake server")
+			testing.ContextLog(ctx, "Reporting: Compressed records are not supported in fake server")
 			continue
 		}
 		var record reporting.WrappedRecord
 		if err = proto.Unmarshal(result, &record); err != nil {
-			testing.ContextLog(ctx, "Could not parse decrypted record: ", err)
+			testing.ContextLog(ctx, "Reporting: Could not parse decrypted record: ", err)
 			continue
 		}
 		if erpserver.filter(&record) {
@@ -264,12 +265,12 @@ func (erpserver *ErpServer) handleUpload(ctx context.Context, w http.ResponseWri
 
 	responseJSON, err := json.Marshal(response)
 	if err != nil {
-		testing.ContextLog(ctx, "Could not encode response to json: ", err)
+		testing.ContextLog(ctx, "Reporting: Could not encode response to json: ", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
 	if _, err := io.WriteString(w, string(responseJSON)); err != nil {
-		testing.ContextLog(ctx, "Could not write response: ", err)
+		testing.ContextLog(ctx, "Reporting: Could not write response: ", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
@@ -287,7 +288,7 @@ func (erpserver *ErpServer) Start(ctx context.Context) error {
 	erpserver.server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		erpserver.handleUpload(ctx, w, r)
 	}))
-	testing.ContextLog(ctx, "ERP fake server started on: ", erpserver.server.URL)
+	testing.ContextLog(ctx, "Reporting: fake server started on: ", erpserver.server.URL)
 	return nil
 }
 
