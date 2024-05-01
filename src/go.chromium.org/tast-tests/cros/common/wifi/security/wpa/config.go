@@ -21,12 +21,12 @@ type AuthAlgo int
 
 // IEEE 802.11 authentication algorithms.
 const (
-	AuthAlgoOpen   AuthAlgo = 0
-	AuthAlgoShared          = 1
-	AuthAlgoFT              = 2
-	AuthAlgoSAE             = 3
-
-	AuthAlgoInvalid = -1
+	AuthAlgoOpen      AuthAlgo = 0
+	AuthAlgoShared             = 1
+	AuthAlgoFT                 = 2
+	AuthAlgoSAE                = 3
+	AuthAlgoSAEExtKey          = 4
+	AuthAlgoInvalid            = -1
 )
 
 // A PSK should be a string composed with 64 hex digits, or a ASCII passphrase whose length is between 8 and 63 (inclusive).
@@ -44,14 +44,22 @@ const (
 	ModePureWPA ModeEnum = 1 << iota
 	ModePureWPA2
 	ModePureWPA3
-	ModeMixed     = ModePureWPA | ModePureWPA2
-	ModeMixedWPA3 = ModePureWPA2 | ModePureWPA3
+	ModePureWPA3Ext = 1<<iota | ModePureWPA3 // WPA3Ext Pure also must include SAE auth in addition to SAE-EXT-KEY. This is a limitation on
+	// the Ubiquiti 6 lite router. We cannot properly use SAE-EXT-KEY w/o SAE being in the KeyMgmt list.
+	ModeMixed        = ModePureWPA | ModePureWPA2
+	ModeMixedWPA3    = ModePureWPA2 | ModePureWPA3
+	ModeMixedWPA3Ext = ModePureWPA3Ext | ModeMixedWPA3
 )
 
 // Key management (AKM) suites
 const (
 	KeyMgmtWPAPSK       = "WPA-PSK"
 	KeyMgmtWPAPSKSHA256 = "WPA-PSK-SHA256"
+	KeyMgmtSAE          = "SAE"
+	KeyMgmtSAEEXT       = "SAE-EXT-KEY"
+	KeyMgmtFTPSK        = "FT-PSK"
+	KeyMgmtFTSAE        = "FT-SAE"
+	KeyMgmtFTSAEEXT     = "FT-SAE-EXT-KEY"
 )
 
 // Cipher is the type for specifying WPA cipher algorithms.
@@ -106,6 +114,10 @@ func (c *Config) Security() (string, error) {
 		return shillconst.SecurityWPA2WPA3, nil
 	case ModePureWPA3:
 		return shillconst.SecurityWPA3, nil
+	case ModePureWPA3Ext:
+		return shillconst.SecurityWPA3, nil
+	case ModeMixedWPA3Ext:
+		return shillconst.SecurityWPA3, nil
 	default:
 		return shillconst.SecurityWPAAll, nil
 	}
@@ -146,22 +158,28 @@ func (c *Config) HostapdConfig() (map[string]string, error) {
 	ret["wpa"] = strconv.Itoa(mode)
 
 	var keyMgmt []string
+	// Add non-FT cases if FT none flag is set
 	if c.ftMode&FTModeNone > 0 {
 		if c.mode&ModeMixed > 0 {
 			keyMgmt = append(keyMgmt, KeyMgmtWPAPSK)
 		}
 		if c.mode&ModePureWPA3 > 0 {
-			// TODO(b/249582789): tast-tests: const-ify key
-			// management suites in tast.wifi lib and tests
-			keyMgmt = append(keyMgmt, "SAE")
+			keyMgmt = append(keyMgmt, KeyMgmtSAE)
+		}
+		if c.mode&ModePureWPA3Ext == ModePureWPA3Ext {
+			keyMgmt = append(keyMgmt, KeyMgmtSAEEXT)
 		}
 	}
+	// Add FT cases FT flag is set
 	if c.ftMode&FTModePure > 0 {
 		if c.mode&ModeMixed > 0 {
-			keyMgmt = append(keyMgmt, "FT-PSK")
+			keyMgmt = append(keyMgmt, KeyMgmtFTPSK)
 		}
 		if c.mode&ModePureWPA3 > 0 {
-			keyMgmt = append(keyMgmt, "FT-SAE")
+			keyMgmt = append(keyMgmt, KeyMgmtFTSAE)
+		}
+		if c.mode&ModePureWPA3Ext == ModePureWPA3Ext {
+			keyMgmt = append(keyMgmt, KeyMgmtFTSAEEXT)
 		}
 	}
 
@@ -217,7 +235,7 @@ func (c *Config) ShillServiceProperties() (map[string]interface{}, error) {
 
 // validate validates the Config.
 func (c *Config) validate() error {
-	if c.mode&(^(ModeMixed|ModeMixedWPA3)) > 0 || c.mode == 0 {
+	if c.mode&(^(ModeMixed|ModeMixedWPA3|ModeMixedWPA3Ext)) > 0 || c.mode == 0 {
 		return errors.Errorf("invalid mode %d", c.mode)
 	}
 	if c.mode&ModePureWPA > 0 && len(c.ciphers) == 0 {

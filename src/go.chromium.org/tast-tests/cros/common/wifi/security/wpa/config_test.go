@@ -155,6 +155,46 @@ func TestGen(t *testing.T) {
 				ftMode:  FTModeNone,
 			},
 			shouldFail: false,
+		}, {
+			factory: NewConfigFactory(
+				"chromeos",
+				Mode(ModePureWPA3Ext),
+				Ciphers(CipherCCMP),
+			),
+			expected: &Config{
+				psk:     "chromeos",
+				mode:    ModePureWPA3Ext,
+				ciphers: []Cipher{CipherCCMP},
+				ftMode:  FTModeNone,
+			},
+			shouldFail: false,
+		}, {
+			factory: NewConfigFactory(
+				"chromeos",
+				Mode(ModeMixedWPA3Ext),
+				Ciphers(CipherCCMP),
+			),
+			expected: &Config{
+				psk:     "chromeos",
+				mode:    ModeMixedWPA3Ext,
+				ciphers: []Cipher{CipherCCMP},
+				ftMode:  FTModeNone,
+			},
+			shouldFail: false,
+		}, {
+			factory: NewConfigFactory(
+				"chromeos",
+				Mode(ModePureWPA3Ext),
+				Ciphers(CipherCCMP),
+				FTMode(FTModePure),
+			),
+			expected: &Config{
+				psk:     "chromeos",
+				mode:    ModePureWPA3Ext,
+				ciphers: []Cipher{CipherCCMP},
+				ftMode:  FTModePure,
+			},
+			shouldFail: false,
 		},
 	} {
 		conf, err := tc.factory.Gen()
@@ -334,6 +374,56 @@ func TestGet(t *testing.T) {
 				"wpa":            "1",
 				"wpa_pairwise":   "TKIP",
 				"wpa_key_mgmt":   "WPA-PSK FT-PSK",
+			},
+			verifyShill: map[string]interface{}{
+				"Passphrase": "chromeos",
+			},
+		}, {
+			// WPA3Ext mixed.
+			conf: &Config{
+				psk:            "chromeos",
+				mode:           ModeMixedWPA3Ext,
+				ciphers:        []Cipher{CipherCCMP},
+				ftMode:         FTModeNone,
+				gmkRekeyPeriod: 86400,
+				gtkRekeyPeriod: 86400,
+				ptkRekeyPeriod: 600,
+				useStrictRekey: true,
+			},
+			verifyHostapd: map[string]string{
+				"wpa_passphrase":   "chromeos",
+				"wpa":              "2", // WPA3 is still RSN.
+				"wpa_pairwise":     "CCMP",
+				"wpa_key_mgmt":     "WPA-PSK SAE SAE-EXT-KEY",
+				"wpa_gmk_rekey":    "86400",
+				"wpa_group_rekey":  "86400",
+				"wpa_ptk_rekey":    "600",
+				"wpa_strict_rekey": "1",
+			},
+			verifyShill: map[string]interface{}{
+				"Passphrase": "chromeos",
+			},
+		}, {
+			// WPA3Ext Pure.
+			conf: &Config{
+				psk:            "chromeos",
+				mode:           ModePureWPA3Ext,
+				ciphers:        []Cipher{CipherCCMP},
+				ftMode:         FTModeNone,
+				gmkRekeyPeriod: 86400,
+				gtkRekeyPeriod: 86400,
+				ptkRekeyPeriod: 600,
+				useStrictRekey: true,
+			},
+			verifyHostapd: map[string]string{
+				"wpa_passphrase":   "chromeos",
+				"wpa":              "2", // WPA3 is still RSN.
+				"wpa_pairwise":     "CCMP",
+				"wpa_key_mgmt":     "SAE SAE-EXT-KEY",
+				"wpa_gmk_rekey":    "86400",
+				"wpa_group_rekey":  "86400",
+				"wpa_ptk_rekey":    "600",
+				"wpa_strict_rekey": "1",
 			},
 			verifyShill: map[string]interface{}{
 				"Passphrase": "chromeos",
