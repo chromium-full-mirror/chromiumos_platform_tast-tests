@@ -17,6 +17,9 @@ type Average struct {
 	// For non-browsing tests, they will be omitted.
 	BrowsingTestConfigVersion     float64 `json:"browsing_test_config_version,omitempty"`
 	BrowsingTestCachedSiteVersion float64 `json:"browsing_test_cached_site_version,omitempty"`
+	// The following field only apply to arc VPB tests.
+	// For other tests, they will be omitted.
+	ArcVPBTestAppVersion float64 `json:"arc_video_app_version,omitempty"`
 }
 
 // Power contains the power test result.

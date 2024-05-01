@@ -172,6 +172,10 @@ func (r *QualRun) AddTestResults(ctx context.Context, tests, skippedTests []stri
 			if _, browsingURLConfigversionKeyOK := average[power.BrowsingTestCachedSiteVersionKey]; browsingURLConfigversionKeyOK {
 				r.testPowers[t].Average.BrowsingTestCachedSiteVersion = average[power.BrowsingTestCachedSiteVersionKey].(float64)
 			}
+
+			if _, arcVPBAppVersionKeyOK := average[power.ArcVPBAppVersionKey]; arcVPBAppVersionKeyOK {
+				r.testPowers[t].Average.ArcVPBTestAppVersion = average[power.ArcVPBAppVersionKey].(float64)
+			}
 			// Record other average values.
 			for _, key := range []string{power.BacklightPercentNonlinearKey, power.BacklightPercentLinearKey} {
 				if value, ok := average[key]; ok {
@@ -245,6 +249,13 @@ func (r *QualRun) GenerateReport(ctx context.Context, outputDir, testName string
 					Unit:      "unit",
 					Direction: perf.BiggerIsBetter,
 				}, power.Average.BrowsingTestCachedSiteVersion)
+			}
+			if strings.Contains(strings.ToLower(t.Name), "arcvideoplayback") {
+				pv.Set(perf.Metric{
+					Name:      p.Name + "." + t.Name + "." + "arc_video_app_version",
+					Unit:      "unit",
+					Direction: perf.BiggerIsBetter,
+				}, power.Average.ArcVPBTestAppVersion)
 			}
 			persona.Tests = append(persona.Tests, result.Test{Name: t.Name, Weight: t.Weight, Power: *power})
 			minutesBatteryLifeValues = append(minutesBatteryLifeValues, power.Average.MinutesBatteryLife)

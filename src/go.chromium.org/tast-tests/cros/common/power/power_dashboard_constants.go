@@ -78,6 +78,8 @@ const (
 	BrowsingTestConfigVersionKey = "browsing_test_config_version"
 	// BrowsingTestCachedSiteVersionKey is website cached version.
 	BrowsingTestCachedSiteVersionKey = "browsing_test_cached_site_version"
+	//ArcVPBAppVersionKey is version of arc VPB app.
+	ArcVPBAppVersionKey = "arc_video_app_version"
 )
 
 // Only keys inside validMetricTypeMap are accepted metric types.
