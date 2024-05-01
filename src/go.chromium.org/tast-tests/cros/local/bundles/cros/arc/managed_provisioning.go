@@ -48,24 +48,53 @@ func init() {
 		},
 		Params: []testing.Param{
 			{
+				Val:               chrome.FieldTrialConfigDefault,
 				ExtraSoftwareDeps: []string{"android_container", "no_qemu"},
 			},
 			{
+				Name:              "fieldtrial_testing_config_off",
+				Val:               chrome.FieldTrialConfigDisable,
+				ExtraSoftwareDeps: []string{"android_container", "no_qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "fieldtrial_testing_config_on",
+				Val:               chrome.FieldTrialConfigEnable,
+				ExtraSoftwareDeps: []string{"android_container", "no_qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
 				Name:              "vm",
+				Val:               chrome.FieldTrialConfigDefault,
 				ExtraSoftwareDeps: []string{"android_vm", "no_android_vm_t", "no_qemu"},
 			},
 			{
 				Name:              "x",
+				Val:               chrome.FieldTrialConfigDefault,
+				ExtraSoftwareDeps: []string{"android_vm_t", "no_qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "fieldtrial_testing_config_off_x",
+				Val:               chrome.FieldTrialConfigDisable,
+				ExtraSoftwareDeps: []string{"android_vm_t", "no_qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "fieldtrial_testing_config_on_x",
+				Val:               chrome.FieldTrialConfigEnable,
 				ExtraSoftwareDeps: []string{"android_vm_t", "no_qemu"},
 				ExtraAttr:         []string{"informational"},
 			},
 			{
 				Name:              "betty",
+				Val:               chrome.FieldTrialConfigDefault,
 				ExtraSoftwareDeps: []string{"android_container", "qemu"},
 				ExtraAttr:         []string{"informational"},
 			},
 			{
 				Name:              "betty_vm",
+				Val:               chrome.FieldTrialConfigDefault,
 				ExtraSoftwareDeps: []string{"android_vm", "qemu"},
 				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
 			}},
@@ -113,12 +142,12 @@ func ManagedProvisioning(ctx context.Context, s *testing.State) {
 		}
 		defer fdms.Stop(cleanupCtx)
 
-		gaiaLogin := chrome.GAIALogin(creds)
 		cr, err := chrome.New(ctx,
-			gaiaLogin,
+			chrome.GAIALogin(creds),
 			chrome.DMSPolicy(fdms.URL),
 			chrome.ARCSupported(),
 			chrome.UnRestrictARCCPU(),
+			chrome.FieldTrialConfig(s.Param().(chrome.FieldTrialConfigMode)),
 			chrome.ExtraArgs(arc.DisableSyncFlags()...))
 		if err != nil {
 			return rl.Retry("connect to Chrome", err)
