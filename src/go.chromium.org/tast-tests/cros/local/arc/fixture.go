@@ -447,7 +447,9 @@ func init() {
 					"*/media/gpu/v4l2/*=2",
 					"*/components/arc/video_accelerator/*=2"}, ","))}, nil
 	}
-	fixtureConfig.ArcvmConfig = "!--video-decoder\n--video-decoder=libvda-vd\n"
+	fixtureConfig.ArcvmConfig = func(context.Context) (string, error) {
+		return "!--video-decoder\n--video-decoder=libvda-vd\n", nil
+	}
 	testing.AddFixture(&testing.Fixture{
 		Name: "arcBootedWithVideoLoggingVD",
 		Desc: "ARC is booted with VD and additional Chrome video logging",
@@ -619,7 +621,9 @@ func init() {
 
 	fixtureConfig = DefaultBootedFixtureConfig()
 	fixtureConfig.BootTimeout = BootTimeout + swap.UnrestrictedTimeout
-	fixtureConfig.ArcvmConfig = "SKIP_SWAP_POLICY=true"
+	fixtureConfig.ArcvmConfig = func(ctx context.Context) (string, error) {
+		return "SKIP_SWAP_POLICY=true\n", nil
+	}
 	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 		return []chrome.Option{
 			chrome.ARCEnabled(),
@@ -703,9 +707,9 @@ type bootedFixture struct {
 	d    *ui.Device
 	init *Snapshot
 
-	playStoreOptin    bool   // Opt into PlayStore.
-	enableUIAutomator bool   // Enable UI Automator
-	arcvmConfig       string // Append config to arcvm_dev.conf
+	playStoreOptin    bool                                  // Opt into PlayStore.
+	enableUIAutomator bool                                  // Enable UI Automator
+	arcvmConfig       func(context.Context) (string, error) // Append config to arcvm_dev.conf
 	bootTimeout       time.Duration
 
 	fOpt chrome.OptionsCallback // Function to return chrome options.
@@ -724,7 +728,7 @@ type BootedFixtureConfig struct {
 	// OptionsCallback function to provide functions to chrome.
 	FOpts chrome.OptionsCallback
 	// specified config appended to arcvm_dev.conf.
-	ArcvmConfig string
+	ArcvmConfig func(context.Context) (string, error)
 	// Timeout to wait for ARC boot to complete.
 	BootTimeout time.Duration
 	// A factory provider that returns the parent fixture state (via a closure, generally).
@@ -742,7 +746,7 @@ func DefaultBootedFixtureConfig() BootedFixtureConfig {
 			return []chrome.Option{chrome.UnRestrictARCCPU()}, nil
 		},
 		// specified config appended to arcvm_dev.conf.
-		ArcvmConfig:         "",
+		ArcvmConfig:         nil,
 		BootTimeout:         BootTimeout,
 		ParentStateProvider: nil,
 		EnableUIAutomator:   true,
@@ -823,13 +827,16 @@ func (f *bootedFixture) SetUp(ctx context.Context, s *testing.FixtState) interfa
 	success := false
 
 	// Append additional config to the ARCVM config file, needs to be done before launching Chrome.
-	if f.arcvmConfig != "" {
-		if err := AppendToArcvmDevConf(ctx, f.arcvmConfig); err != nil {
+	if f.arcvmConfig != nil {
+		if cfg, err := f.arcvmConfig(ctx); err != nil {
+			s.Fatal("Failed to generate arcvm_dev.conf modification: ", err)
+		} else if err := AppendToArcvmDevConf(ctx, cfg); err != nil {
 			s.Fatal("Failed to write arcvm_dev.conf: ", err)
 		}
 	}
+
 	defer func() {
-		if !success && f.arcvmConfig != "" {
+		if !success && f.arcvmConfig != nil {
 			if err := RestoreArcvmDevConf(ctx); err != nil {
 				s.Fatal("Failed to restore arcvm_dev.conf: ", err)
 			}
@@ -926,7 +933,7 @@ func (f *bootedFixture) SetUp(ctx context.Context, s *testing.FixtState) interfa
 }
 
 func (f *bootedFixture) TearDown(ctx context.Context, s *testing.FixtState) {
-	if f.arcvmConfig != "" {
+	if f.arcvmConfig != nil {
 		if err := RestoreArcvmDevConf(ctx); err != nil {
 			s.Fatal("Failed to restore arcvm_dev.conf: ", err)
 		}
