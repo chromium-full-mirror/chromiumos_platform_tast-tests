@@ -77,9 +77,10 @@ func init() {
 		Desc:   "ARC is booted and multi display is setup",
 		Parent: VirtualMultiDisplay,
 		Contacts: []string{
+			"arc-framework+tast@google.com",
 			"brpol@chromium.org",
-			"arcvm-eng-team@google.com",
 		},
+		BugComponent:    "b:536857", // ChromeOS > Software > ARC++ > Framework > Tests
 		Impl:            arc.NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + arc.BootTimeout + ui.StartTimeout,
 		ResetTimeout:    arc.ResetTimeout,
