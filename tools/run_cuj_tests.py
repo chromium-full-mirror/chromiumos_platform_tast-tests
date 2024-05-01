@@ -767,6 +767,15 @@ def parse_arguments(argv) -> argparse.Namespace:
         help=("Directory for test results."),
     )
     parser.add_argument(
+        "--cleanup",
+        action="store_true",
+        help=(
+            "If set, corp-ssh-helper-helper-server will be killed and"
+            " all DUTs leased by crosfleet will be free as cleanups when"
+            " the program exits."
+        ),
+    )
+    parser.add_argument(
         "pattern",
         nargs=argparse.REMAINDER,
         type=str,
@@ -916,8 +925,9 @@ def main(argv) -> Optional[int]:
                     )
 
     finally:
-        crosfleet_dut_abandon()
-        kill_ssh_helper()
+        if opts.cleanup:
+            crosfleet_dut_abandon()
+            kill_ssh_helper()
 
 
 if __name__ == "__main__":
