@@ -12,17 +12,31 @@ import (
 	"strings"
 	"time"
 
+	labapi "go.chromium.org/chromiumos/config/go/test/lab/api"
+	"go.chromium.org/chromiumos/config/go/test/lab/api/btpeerd"
 	"go.chromium.org/tast-tests/cros/common/chameleon"
+	"go.chromium.org/tast-tests/cros/remote/fileutils"
 	"go.chromium.org/tast-tests/cros/remote/log"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
 	cryptossh "golang.org/x/crypto/ssh"
+	"google.golang.org/grpc"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 const (
-	btpeerVersionLogFilePath    = "/var/log/chameleon_commits"
-	btpeerChameleondLogFilePath = "/var/log/chameleond"
+	// btpeerChameleondVersionLegacyLogFilePath is the path to the log file with
+	// installed chameleond commits for btpeers configured via chameleond bundles,
+	// not the newer image-based configuration with btpeerd.
+	btpeerChameleondVersionLegacyLogFilePath = "/var/log/chameleon_commits"
+	btpeerChameleondLogFilePath              = "/var/log/chameleond"
+	btpeerChameleondPort                     = 9992
+	btpeerBtpeerdPort                        = 8100
+
+	// btpeerImageBuildInfoFilePath is the path to the build info file present
+	// only on btpeers with custom ChromeOS images built with pi-gen-btpeer.
+	btpeerImageBuildInfoFilePath = "/etc/chromiumos/raspios_cros_btpeer_build_info.json"
 )
 
 // BtpeerClient manages connections and provides clients to btpeers.
@@ -33,11 +47,17 @@ type BtpeerClient struct {
 	sshConn            *ssh.Conn
 	sshOptions         *ssh.Options
 	systemLogCollector log.Collector
+	hasCustomImage     bool
 
 	// Chameleond-specific.
 	chameleondClient        chameleon.Chameleond
 	chameleondPortForwarder *ssh.Forwarder
 	chameleondLogCollector  log.Collector
+
+	// Btpeerd-specific.
+	btpeerdClient         btpeerd.BtpeerManagementServiceClient
+	btpeerdPortForwarder  *ssh.Forwarder
+	btpeerdGRPCClientConn *grpc.ClientConn
 }
 
 func newBtpeerClient(hostname string, sshOptions *ssh.Options, registrationID int) (*BtpeerClient, error) {
@@ -64,33 +84,101 @@ func (c *BtpeerClient) Connect(ctx context.Context) error {
 		return errors.Wrapf(err, "failed to connect to %s over ssh", c)
 	}
 	testing.ContextLogf(ctx, "Successfully connected to %s over ssh", c)
-	// Connect chameleond.
-	testing.ContextLogf(ctx, "Connecting to chameleond on %s", c)
-	if err := c.connectChameleond(ctx); err != nil {
-		testing.ContextLogf(ctx, "WARNING: Failed to connect to chameleond on %s in first attempt: %v", c, err)
-		testing.ContextLogf(ctx, "Rebooting %s and retrying chameleond connection", c)
-		if err := c.Reboot(ctx); err != nil {
-			return errors.Wrapf(err, "failed to reboot %s after first chameleond connection failure", c)
+
+	// Identify image type.
+	hasBuildInfoFile, err := fileutils.HostFileExists(ctx, c.sshConn, btpeerImageBuildInfoFilePath)
+	if err != nil {
+		return errors.Wrapf(err, "failed to check for existence of file %q on %s", btpeerImageBuildInfoFilePath, c)
+	}
+	c.hasCustomImage = hasBuildInfoFile
+
+	// Log device info and prepare connection step.
+	var connectServicesFn func(ctx context.Context) error
+	if c.hasCustomImage {
+		testing.ContextLogf(ctx, "Btpeer %s has a custom ChromeOS Raspberry Pi image installed, will connect to both btpeerd and chameleond", c)
+		// Log build info.
+		testing.ContextLogf(ctx, "Fetching image build info from %s", c)
+		buildInfoFileContents, err := c.sshConn.CommandContext(ctx, "cat", btpeerImageBuildInfoFilePath).Output()
+		if err != nil {
+			return errors.Wrapf(err, "failed to read contents of file %q on %s", btpeerImageBuildInfoFilePath, c)
 		}
-		// Try chameleond again with a short poll as ssh may come up before
-		// chameleond does.
-		testing.ContextLogf(ctx, "Connecting to chameleond on %s after successful reboot", c)
-		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			return c.connectChameleond(ctx)
-		}, &testing.PollOptions{
+		buildInfo := &labapi.RaspiosCrosBtpeerImageBuildInfo{}
+		if err := protojson.Unmarshal(buildInfoFileContents, buildInfo); err != nil {
+			return errors.Wrapf(err, "failed to unmarshal contents of file %q to a RaspiosCrosBtpeerImageBuildInfo on %s", btpeerImageBuildInfoFilePath, c)
+		}
+		buildInfoJSON, err := protojson.Marshal(buildInfo)
+		if err != nil {
+			return errors.Wrapf(err, "failed to marshall RaspiosCrosBtpeerImageBuildInfo from %q to JSON for %s", btpeerImageBuildInfoFilePath, c)
+		}
+		testing.ContextLogf(ctx, "Btpeer image build info for %s: RaspiosCrosBtpeerImageBuildInfo%s", c, string(buildInfoJSON))
+		connectServicesFn = func(ctx context.Context) error {
+			// Connect to btpeerd and chameleond.
+			testing.ContextLogf(ctx, "Connecting to btpeerd on %s", c)
+			if err := c.connectBtpeerd(ctx); err != nil {
+				return errors.Wrapf(err, "failed to connect to btpeerd on %s", c)
+			}
+			testing.ContextLogf(ctx, "Successfully connected to btpeerd on %s", c)
+			testing.ContextLogf(ctx, "Connecting to chameleond on %s", c)
+			if err := c.connectChameleond(ctx); err != nil {
+				return errors.Wrapf(err, "failed to connect to chameleond on %s", c)
+			}
+			testing.ContextLogf(ctx, "Successfully connected to chameleond on %s", c)
+			return nil
+		}
+	} else {
+		testing.ContextLogf(ctx, "Btpeer %s does not have a custom ChromeOS Raspberry Pi image installed, will connect to chameleond and not btpeerd", c)
+		// Log chameleond version from non-custom image.
+		testing.ContextLogf(ctx, "Fetching chameleond version information from %s", c)
+		if chameleondUpdatedAt, chameleondLastCommit, err := c.fetchChameleondVersion(ctx); err != nil {
+			testing.ContextLogf(ctx, "WARNING: Failed to fetch chameleond version information from %s: %v", c, err)
+		} else {
+			testing.ContextLogf(ctx, "Chameleond on %s was last updated at %q to commit %q", c, chameleondUpdatedAt, chameleondLastCommit)
+		}
+		c.disconnectBtpeerd(ctx)
+		connectServicesFn = func(ctx context.Context) error {
+			// Connect to just chameleond, as btpeerd does not exist on device.
+			testing.ContextLogf(ctx, "Connecting to chameleond on %s", c)
+			if err := c.connectChameleond(ctx); err != nil {
+				return errors.Wrapf(err, "failed to connect to chameleond on %s", c)
+			}
+			testing.ContextLogf(ctx, "Successfully connected to chameleond on %s", c)
+			return nil
+		}
+	}
+
+	// Connect, retrying after a reboot if it fails.
+	testing.ContextLogf(ctx, "Connecting to services on %s", c)
+	if err := connectServicesFn(ctx); err != nil {
+		testing.ContextLogf(ctx, "WARNING: Failed to connect to services on %s in first attempt: %v", c, err)
+		testing.ContextLogf(ctx, "Rebooting %s and reattempting to connect to services", c)
+		c.disconnectBtpeerd(ctx)
+		c.disconnectChameleond(ctx)
+		if err := c.Reboot(ctx); err != nil {
+			return errors.Wrapf(err, "failed to reboot %s after first services connection failure", c)
+		}
+		// Try again with a short poll as ssh may come up before services.
+		testing.ContextLogf(ctx, "Connecting to services on %s after successful reboot", c)
+		if err := testing.Poll(ctx, connectServicesFn, &testing.PollOptions{
 			Interval: 500 * time.Millisecond,
 			Timeout:  10 * time.Second,
 		}); err != nil {
-			return errors.Wrapf(err, "failed to connect to chameleond on %s after successful reboot", c)
+			return errors.Wrapf(err, "failed to connect to services on %s after successful reboot", c)
 		}
 	}
-	testing.ContextLogf(ctx, "Successfully connected to chameleond on %s", c)
-	// Log chameleond version.
-	testing.ContextLogf(ctx, "Fetching chameleond version information from %s", c)
-	if chameleondUpdatedAt, chameleondLastCommit, err := c.fetchChameleondVersion(ctx); err != nil {
-		testing.ContextLogf(ctx, "WARNING: Failed to fetch chameleond version information from %s: %v", c, err)
-	} else {
-		testing.ContextLogf(ctx, "Chameleond on %s was last updated at %q to commit %q", c, chameleondUpdatedAt, chameleondLastCommit)
+	testing.ContextLogf(ctx, "Successfully connected to services on %s", c)
+
+	if c.hasCustomImage {
+		// Log device info from btpeerd.
+		testing.ContextLogf(ctx, "Retrieving device info from btpeerd on %s", c)
+		deviceInfo, err := c.btpeerdClient.DeviceInfo(ctx, &btpeerd.DeviceInfoRequest{})
+		if err != nil {
+			return errors.Wrapf(err, "failed to get device info from btpeerd on %s", c)
+		}
+		deviceInfoJSON, err := protojson.Marshal(deviceInfo)
+		if err != nil {
+			return errors.Wrapf(err, "failed to marshal device info to JSON from btpeerd on %s", c)
+		}
+		testing.ContextLogf(ctx, "Btpeer device info for %s: DeviceInfoResponse%s", c, string(deviceInfoJSON))
 	}
 	return nil
 }
@@ -165,10 +253,11 @@ func (c *BtpeerClient) connectChameleond(ctx context.Context) error {
 	}
 	// Create an ssh tunnel to the chameleond port.
 	onFwdError := func(err error) {
-		testing.ContextLogf(ctx, "ssh forwarding error for %s: %v", c, err)
+		testing.ContextLogf(ctx, "ERROR: ssh chameleond port forwarding error for %s: %v", c, err)
 		c.chameleondClient = nil
 	}
-	chameleondPortForwarder, err := c.sshConn.ForwardLocalToRemote("tcp", "localhost:0", "localhost:9992", onFwdError)
+	remoteAddr := fmt.Sprintf("localhost:%d", btpeerChameleondPort)
+	chameleondPortForwarder, err := c.sshConn.ForwardLocalToRemote("tcp", "localhost:0", remoteAddr, onFwdError)
 	if err != nil {
 		return errors.Wrapf(err, "failed to port forward chameleond port for %s", c)
 	}
@@ -190,12 +279,12 @@ func (c *BtpeerClient) fetchChameleondVersion(ctx context.Context) (string, stri
 	}
 	// Attempt to fetch the chameleond version (not supported on old versions).
 	var chameleondLastCommit, chameleondUpdatedAt string
-	btpeerVersionLogFileExists, err := c.remoteFileExists(ctx, c.sshConn, btpeerVersionLogFilePath)
+	btpeerVersionLogFileExists, err := c.remoteFileExists(ctx, c.sshConn, btpeerChameleondVersionLegacyLogFilePath)
 	if err != nil {
 		return "", "", errors.Wrapf(err, "failed to check for chameleond log file %q on %s", btpeerChameleondLogFilePath, c)
 	}
 	if btpeerVersionLogFileExists {
-		lastLogLine, err := c.sshConn.CommandContext(ctx, "tail", "-1", btpeerVersionLogFilePath).Output()
+		lastLogLine, err := c.sshConn.CommandContext(ctx, "tail", "-1", btpeerChameleondVersionLegacyLogFilePath).Output()
 		if err == nil {
 			lastLogLineParts := strings.Split(strings.TrimSpace(string(lastLogLine)), " ")
 			if len(lastLogLineParts) == 2 {
@@ -221,6 +310,55 @@ func (c *BtpeerClient) disconnectChameleond(ctx context.Context) {
 		if err := c.chameleondPortForwarder.Close(); err != nil {
 			testing.ContextLogf(ctx, "WARNING: Failed to shut down forwarded chameleond port tunnel for %s: %v", c, err)
 		}
+		c.chameleondPortForwarder = nil
+	}
+}
+
+// connectBtpeerd will create a new ssh tunnel to the btpeerd port on the
+// btpeer device and create a new chameleond client connected through that
+// tunnel. Requires an active ssh connection to the device. Any existing
+// ssh tunnel or chameleond client is closed and replaced.
+func (c *BtpeerClient) connectBtpeerd(ctx context.Context) error {
+	c.disconnectBtpeerd(ctx)
+	if c.sshConn == nil {
+		return errors.Errorf("failed to connect to btpeerd for %s: no active ssh connection to device", c)
+	}
+	// Create an ssh tunnel to the chameleond port.
+	onFwdError := func(err error) {
+		testing.ContextLogf(ctx, "ERROR: ssh btpeerd port forwarding error for %s: %v", c, err)
+		c.disconnectBtpeerd(ctx)
+	}
+	remoteAddr := fmt.Sprintf("localhost:%d", btpeerBtpeerdPort)
+	portForwarder, err := c.sshConn.ForwardLocalToRemote("tcp", "localhost:0", remoteAddr, onFwdError)
+	if err != nil {
+		return errors.Wrapf(err, "failed to port forward btpeerd port for %s", c)
+	}
+	c.btpeerdPortForwarder = portForwarder
+	// Create a new btpeerd client which uses forwarded port.
+	grpcConn, err := grpc.Dial(c.btpeerdPortForwarder.ListenAddr().String(), grpc.WithInsecure())
+	if err != nil {
+		return errors.Wrapf(err, "failed to connect to btpeerd gRPC server on %s through forwarded btpeerd port at %q", c, portForwarder.ListenAddr().String())
+	}
+	c.btpeerdGRPCClientConn = grpcConn
+	c.btpeerdClient = btpeerd.NewBtpeerManagementServiceClient(c.btpeerdGRPCClientConn)
+	return nil
+}
+
+func (c *BtpeerClient) disconnectBtpeerd(ctx context.Context) {
+	// Disconnect from gRPC server.
+	if c.btpeerdGRPCClientConn != nil {
+		if err := c.btpeerdGRPCClientConn.Close(); err != nil {
+			testing.ContextLogf(ctx, "WARNING: Failed to close connection to btpeerd gRPC server for %s: %v", c, err)
+		}
+		c.btpeerdGRPCClientConn = nil
+	}
+	c.btpeerdClient = nil
+	// Close ssh tunnel.
+	if c.btpeerdPortForwarder != nil {
+		if err := c.btpeerdPortForwarder.Close(); err != nil {
+			testing.ContextLogf(ctx, "WARNING: Failed to shut down forwarded btpeerd port tunnel for %s: %v", c, err)
+		}
+		c.btpeerdPortForwarder = nil
 	}
 }
 
@@ -232,7 +370,7 @@ func (c *BtpeerClient) StartLogCollection(ctx context.Context) error {
 	if c.sshConn == nil {
 		return errors.Errorf("failed to start log collection on %s: no active ssh connection to device", c)
 	}
-	// Start collecting system logs.
+	// Start collecting system logs (includes btpeerd logs).
 	systemLogCollector, err := log.StartJournalctlCollector(ctx, c.sshConn, "--output", "short-full")
 	if err != nil {
 		return errors.Wrapf(err, "failed to start collecting system logs on %s", c)
@@ -273,6 +411,7 @@ func (c *BtpeerClient) StopLogCollection(ctx context.Context) {
 // btpeer device. Connect must be called in order to use the btpeer again.
 func (c *BtpeerClient) Disconnect(ctx context.Context) {
 	c.StopLogCollection(ctx)
+	c.disconnectBtpeerd(ctx)
 	c.disconnectChameleond(ctx)
 	c.disconnectSSH(ctx)
 }
@@ -308,10 +447,26 @@ func (c *BtpeerClient) ChameleondClient() chameleon.Chameleond {
 	return c.chameleondClient
 }
 
-// IsConnected returns true if there is an existing ssh connection and usable
-// chameleond client.
+// BtpeerdClient returns a btpeerd client for this btpeer device.
+//
+// Note: All btpeerd method calls are routed through an ssh tunnel to the
+// btpeerd service running on the btpeer device.
+//
+// Once btpeerd has been rolled out to all lab btpeers, this should be simplified
+// to panic if not set like ChameleondClient.
+func (c *BtpeerClient) BtpeerdClient() (btpeerd.BtpeerManagementServiceClient, error) {
+	if c.btpeerdClient == nil {
+		return nil, errors.Errorf("no open btpeerd client available for %s", c)
+	}
+	return c.btpeerdClient, nil
+}
+
+// IsConnected returns true if there is an existing ssh connection, usable
+// chameleond client, and either the device does not have btpeerd or there is a
+// usable btpeerd client.
 func (c *BtpeerClient) IsConnected() bool {
-	return c.sshConn != nil && c.chameleondClient != nil
+	return c.sshConn != nil && c.chameleondClient != nil &&
+		(!c.hasCustomImage || c.btpeerdClient != nil)
 }
 
 // Reset resets the btpeer to return it to its normal state and clear any

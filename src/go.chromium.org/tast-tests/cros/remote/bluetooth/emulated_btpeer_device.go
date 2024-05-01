@@ -106,7 +106,7 @@ func (d *EmulatedBTPeerDevice) initializeEmulatedBTPeerDevice(ctx context.Contex
 		return errors.Wrap(err, "failed to power on bluetooth adapter")
 	}
 	if err := d.rpc.SpecifyDeviceType(ctx, deviceConfig.DeviceType.String()); err != nil {
-		return errors.Wrapf(err, "failed to specify the btpeer to act as a %q device", d.cache.deviceType.String())
+		return errors.Wrapf(err, "failed to specify the btpeer to act as a %q device", deviceConfig.DeviceType.String())
 	}
 	if err := d.rpc.Init(ctx, false); err != nil {
 		return errors.Wrap(err, "failed to initialize btpeer")
