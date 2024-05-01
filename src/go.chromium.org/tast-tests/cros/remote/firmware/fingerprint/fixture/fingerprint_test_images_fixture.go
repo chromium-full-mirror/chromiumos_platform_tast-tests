@@ -64,6 +64,7 @@ func init() {
 			"chromeos-fingerprint@google.com",
 			"patrykd@google.com",
 		},
+		BugComponent:    "b:782045", // ChromeOS > Platform > baseOS > Fingerprint
 		Impl:            &fingerprintImagesFixture{},
 		ServiceDeps:     []string{dutfs.ServiceName},
 		SetUpTimeout:    10 * time.Second,
