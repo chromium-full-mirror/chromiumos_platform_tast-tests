@@ -11,6 +11,7 @@ import (
 	"github.com/godbus/dbus/v5"
 
 	"go.chromium.org/tast-tests/cros/common/hermesconst"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/local/hermes"
 	"go.chromium.org/tast-tests/cros/local/modemmanager"
 	"go.chromium.org/tast-tests/cros/local/stork"
@@ -23,9 +24,10 @@ func init() {
 		Desc:         "Perform eSIM operations on test eSIM",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "pholla@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:         []string{"group:cellular", "cellular_sim_test_esim"},
+		Attr:         []string{"group:cellular", "cellular_sim_test_esim", "cellular_cq"},
 		Fixture:      "cellularTestESIM",
 		Timeout:      10 * time.Minute,
+		TestBedDeps:  []string{tbdep.CellularModemState("NORMAL"), tbdep.Carrier("testesim")},
 		Params: []testing.Param{{
 			Name: "hermes_only",
 			Val:  hermesconst.HermesOnly,
