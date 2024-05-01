@@ -126,9 +126,6 @@ func SetupPDTester(ctx context.Context, h *Helper, testParams PDTestParams) erro
 	// Set the requested servo PD role from the DUT's perspective. This
 	// helps in case a previous test left the port in a strange state.
 	role := servo.PDRoleSrc
-	if testParams.PowerRole == RoleSink {
-		role = servo.PDRoleSnk
-	}
 	if err := h.Servo.SetPDRole(ctx, role); err != nil {
 		return errors.Wrap(err, "failed to set pd role")
 	}
@@ -147,11 +144,8 @@ func SetupPDTester(ctx context.Context, h *Helper, testParams PDTestParams) erro
 
 		testing.ContextLogf(ctx, "Servo DUT port (C1) PE State is %s", pdState.PEStateName)
 
-		if testParams.PowerRole == RoleSource && !pdState.IsSourceReady() {
+		if !pdState.IsSourceReady() {
 			return errors.New("Servo DUT port (C1) is not src-ready")
-		}
-		if testParams.PowerRole == RoleSink && !pdState.IsSinkReady() {
-			return errors.New("Servo DUT port (C1) is not sink-ready")
 		}
 
 		return nil
@@ -229,15 +223,38 @@ func SetupPDTester(ctx context.Context, h *Helper, testParams PDTestParams) erro
 			return testing.PollBreak(err)
 		}
 		testing.ContextLogf(ctx, "Servo DUT port PE State: %s", pdState.PEStateName)
-		if testParams.PowerRole == RoleSource && !pdState.IsSourceReady() {
+		if !pdState.IsSourceReady() {
 			return errors.New("Servo DUT port (C1) is not src-ready")
 		}
-		if testParams.PowerRole == RoleSink && !pdState.IsSinkReady() {
-			return errors.New("Servo DUT port (C1) is not sink-ready")
-		}
+
 		return nil
 	}, &testing.PollOptions{Interval: time.Second, Timeout: 20 * time.Second}); err != nil {
 		return errors.Wrap(err, "timed out waiting for Servo DUT port to be ready")
+	}
+
+	// If required role is sink, have servo initiate a power swap
+	if testParams.PowerRole == RoleSink {
+		role = servo.PDRoleSnk
+		h.Servo.ServoSendPowerSwapRequest(ctx)
+
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			pdState, err := h.Servo.GetServoPDState(ctx)
+			if err != nil {
+				return testing.PollBreak(
+					errors.Wrap(err, "cannot access servo DUT port (C1) PD status"),
+				)
+			}
+
+			testing.ContextLogf(ctx, "Servo DUT port (C1) PE State is %s", pdState.PEStateName)
+
+			if !pdState.IsSinkReady() {
+				return errors.New("Servo DUT port (C1) is not sink-ready")
+			}
+
+			return nil
+		}, &testing.PollOptions{Timeout: 15 * time.Second}); err != nil {
+			return errors.Wrap(err, "timed out waiting for servo DUT port to sink power")
+		}
 	}
 
 	// Turn off CCD watchdogs as this can interfere with PD tests.
