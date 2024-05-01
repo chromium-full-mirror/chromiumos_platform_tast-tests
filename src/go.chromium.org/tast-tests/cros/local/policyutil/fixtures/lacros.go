@@ -166,9 +166,10 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     fixture.LacrosEnrolledLoggedInShortMetricsInterval,
-		Desc:     "Fixture for a running FakeDMS with lacros on enrolled device that reports metric every second",
-		Contacts: []string{"sugandhagoyal@google.com", "dp-chromeos-eng@google.com"},
+		Name:         fixture.LacrosEnrolledLoggedInShortMetricsInterval,
+		Desc:         "Fixture for a running FakeDMS with lacros on enrolled device that reports metric every second",
+		Contacts:     []string{"sugandhagoyal@google.com", "dp-chromeos-eng@google.com"},
+		BugComponent: "b:1129862", // ChromeOS > Privacy > DPChromeOS > DPChromeOS Engineering
 		Impl: &policyChromeFixture{
 			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 				opts, err := lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(chrome.LacrosExtraArgs("--metrics-upload-interval=1"))).Opts()
