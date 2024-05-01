@@ -13,7 +13,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/session"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -32,7 +31,7 @@ func init() {
 		BugComponent: "b:1088399", // ChromeOS > Security > Cryptohome
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
-		Pre:          chrome.LoggedIn(),
+		Fixture:      "chromeLoggedIn",
 		Params: []testing.Param{{
 			Name: "normal",
 			Val: fileStabilityParams{

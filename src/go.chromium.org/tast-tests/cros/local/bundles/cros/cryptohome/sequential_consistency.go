@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
-	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/session"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -43,7 +42,7 @@ func init() {
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		BugComponent: "b:1088399", // ChromeOS > Security > Cryptohome
-		Pre:          chrome.LoggedIn(),
+		Fixture:      "chromeLoggedIn",
 		Params: []testing.Param{{
 			Name: "normal",
 			Val: sequentialConsistencyParams{
