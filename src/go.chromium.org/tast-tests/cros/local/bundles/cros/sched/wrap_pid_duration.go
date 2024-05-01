@@ -67,7 +67,9 @@ while True:
 
 end_time_ns = time.monotonic_ns()
 
-print(end_time_ns - start_time_ns)
+duration_millis = (end_time_ns - start_time_ns) / 1_000_000
+
+print(int(duration_millis))
 `
 
 func init() {
@@ -123,12 +125,12 @@ func WrapPidDuration(ctx context.Context, s *testing.State) {
 		s.Fatal("run python script: ", err)
 	}
 
-	durationNs, err := strconv.Atoi(strings.TrimSpace(output))
+	durationMillis, err := strconv.Atoi(strings.TrimSpace(output))
 	if err != nil {
 		s.Fatal("parse duration: ", err)
 	}
 
-	duration := time.Duration(durationNs) * time.Nanosecond
+	duration := time.Duration(durationMillis) * time.Millisecond
 	if duration <= minDurationToWrapPIDSpace {
 		s.Fatal("took too short to wrap PID space: ", duration)
 	}
