@@ -26,9 +26,21 @@ const (
 	JobName = "hermes"
 )
 
+func isESIMSupported(ctx context.Context) bool {
+	if !upstart.JobExists(ctx, JobName) {
+		return false
+	}
+	euiccPaths, err := GetEUICCPaths(ctx)
+	if err == nil && len(euiccPaths) == 0 {
+		return false
+	}
+	return true
+}
+
 // WaitForHermesIdle waits for Chrome to refresh installed profiles before returning.
 func WaitForHermesIdle(ctx context.Context, timeout time.Duration) error {
-	if !upstart.JobExists(ctx, JobName) {
+	if !isESIMSupported(ctx) {
+		testing.ContextLog(ctx, "Skipping Hermes idle check because eSIM is not supported")
 		return nil
 	}
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
@@ -41,7 +53,8 @@ func WaitForHermesIdle(ctx context.Context, timeout time.Duration) error {
 
 // WaitForChromeESIMCache waits for Chrome's eSIM cache to exist
 func WaitForChromeESIMCache(ctx context.Context, timeout time.Duration) error {
-	if !upstart.JobExists(ctx, JobName) {
+	if !isESIMSupported(ctx) {
+		testing.ContextLog(ctx, "Skipping eSIM cache check because eSIM is not supported")
 		return nil
 	}
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
