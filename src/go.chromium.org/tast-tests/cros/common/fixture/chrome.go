@@ -74,4 +74,6 @@ const (
 	ChromeLoggedInWithFieldTrialConfigDisableAndVerboseConsent = "chromeLoggedInWithFieldTrialConfigDisableAndVerboseConsent"
 	// Logged in to a user session with SchedQoSOnResourcedForChrome feature enabled.
 	ChromeLoggedInWithSchedQoS = "chromeLoggedInWithSchedQoS"
+	// Logged in to a user session with oak feature enabled.
+	ChromeLoggedInWithOak = "chromeLoggedInWithOak"
 )

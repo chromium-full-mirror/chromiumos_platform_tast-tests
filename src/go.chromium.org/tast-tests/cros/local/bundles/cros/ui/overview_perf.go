@@ -66,6 +66,11 @@ func init() {
 			Val:     browser.TypeAsh,
 			Fixture: "chromeLoggedInWith100FakeAppsPassthroughCmdDecoder",
 			Timeout: cujrecorder.CooldownTimeout + 20*time.Minute,
+		}, {
+			Name:    "oak",
+			Val:     browser.TypeAsh,
+			Fixture: "chromeLoggedInWithOak",
+			Timeout: cujrecorder.CooldownTimeout + 20*time.Minute,
 		}},
 		Data: []string{"animation.html", "animation.js"},
 	})
