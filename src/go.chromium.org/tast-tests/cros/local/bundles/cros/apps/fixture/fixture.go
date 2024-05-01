@@ -47,7 +47,8 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            LoggedIn,
 		Desc:            "Logged into a user session for essential apps",
-		Contacts:        []string{"jinrongwu@google.com"},
+		Contacts:        []string{"cros-ca-eng@google.com"},
+		BugComponent:    "b:385700", // ChromeOS > Software > Consumer > Apps Suite
 		Impl:            eaFixture(browser.TypeAsh, true),
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -83,7 +84,8 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            LoggedInDisableInstall,
 		Desc:            "Logged into a user session without installing web apps",
-		Contacts:        []string{"jinrongwu@google.com"},
+		Contacts:        []string{"cros-ca-eng@google.com"},
+		BugComponent:    "b:385700", // ChromeOS > Software > Consumer > Apps Suite
 		Impl:            eaFixture(browser.TypeAsh, false),
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -95,7 +97,8 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            LoggedInJP,
 		Desc:            "Logged into a user session for essential apps in Japanese language",
-		Contacts:        []string{"jinrongwu@google.com"},
+		Contacts:        []string{"cros-ca-eng@google.com"},
+		BugComponent:    "b:385700", // ChromeOS > Software > Consumer > Apps Suite
 		Impl:            eaFixture(browser.TypeAsh, true, chrome.Region("jp")),
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -107,7 +110,8 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            LoggedInGuest,
 		Desc:            "Logged into a guest user session for essential apps",
-		Contacts:        []string{"jinrongwu@google.com"},
+		Contacts:        []string{"cros-ca-eng@google.com"},
+		BugComponent:    "b:385700", // ChromeOS > Software > Consumer > Apps Suite
 		Impl:            eaFixture(browser.TypeAsh, true, chrome.GuestLogin()),
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -127,7 +131,8 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            ArcBootedWithGalleryPhotosImageFeature,
 		Desc:            "ARC is booted with the MediaAppPhotosIntegrationImage feature flag enabled",
-		Contacts:        []string{"bugsnash@chromium.org", "jinrongwu@google.com"},
+		Contacts:        []string{"bugsnash@chromium.org"},
+		BugComponent:    "b:385700", // ChromeOS > Software > Consumer > Apps Suite
 		Vars:            []string{"ui.gaiaPoolDefault"},
 		Impl:            arc.NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + arc.BootTimeout + ui.StartTimeout,
@@ -143,7 +148,8 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            LacrosLoggedIn,
 		Desc:            "Logged into a user session with Lacros for essential apps",
-		Contacts:        []string{"mattlui@google.com", "jinrongwu@google.com"},
+		Contacts:        []string{"cros-ca-eng@google.com"},
+		BugComponent:    "b:385700", // ChromeOS > Software > Consumer > Apps Suite
 		Impl:            eaFixture(browser.TypeLacros, true),
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -179,7 +185,8 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            LacrosLoggedInDisableInstall,
 		Desc:            "Logged into a user session without installing web apps",
-		Contacts:        []string{"jinrongwu@google.com"},
+		Contacts:        []string{"cros-ca-eng@google.com"},
+		BugComponent:    "b:385700", // ChromeOS > Software > Consumer > Apps Suite
 		Impl:            eaFixture(browser.TypeLacros, false),
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -195,7 +202,8 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            LacrosLoggedInJP,
 		Desc:            "Logged into a user session with Lacros for essential apps in Japanese language",
-		Contacts:        []string{"mattlui@google.com", "jinrongwu@google.com"},
+		Contacts:        []string{"cros-ca-eng@google.com"},
+		BugComponent:    "b:385700", // ChromeOS > Software > Consumer > Apps Suite
 		Impl:            eaFixture(browser.TypeLacros, true, chrome.Region("jp")),
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,

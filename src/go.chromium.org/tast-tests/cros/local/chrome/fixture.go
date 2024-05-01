@@ -184,10 +184,11 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     fixture.ChromeLoggedInWithGaia,
-		Desc:     "Logged into a session with Gaia user",
-		Contacts: []string{"jinrongwu@google.com"},
-		Vars:     []string{"ui.gaiaPoolDefault"},
+		Name:         fixture.ChromeLoggedInWithGaia,
+		Desc:         "Logged into a session with Gaia user",
+		Contacts:     []string{"jinrongwu@google.com"},
+		BugComponent: "b:1034649", // ChromeOS > Test > Harness > Tast > Libraries
+		Vars:         []string{"ui.gaiaPoolDefault"},
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
 			return []Option{GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault"))}, nil
 		}),
