@@ -36,22 +36,11 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:cellular", "cellular_sim_test_esim"},
 		Fixture:      "cellularTestESIM",
-		Params: []testing.Param{
-			{
-				Name: "",
-				Val:  true,
-			},
-			{
-				Name: "smds_support_disabled",
-				Val:  false,
-			},
-		},
-		Timeout: 9 * time.Minute,
+		Timeout:      9 * time.Minute,
 	})
 }
 
 func ESimInstallWithConfirmationCode(ctx context.Context, s *testing.State) {
-	enableSmdsSupport := s.Param().(bool)
 	euicc, slot, err := hermes.GetEUICC(ctx, true)
 	if err != nil {
 		s.Fatal("Failed to get test euicc: ", err)
@@ -76,11 +65,6 @@ func ESimInstallWithConfirmationCode(ctx context.Context, s *testing.State) {
 	if slot == 1 {
 		s.Log("Append CellularUseSecondEuicc feature flag")
 		chromeOpts = append(chromeOpts, chrome.EnableFeatures("CellularUseSecondEuicc"))
-	}
-	if enableSmdsSupport {
-		chromeOpts = append(chromeOpts, chrome.EnableFeatures("SmdsSupport"))
-	} else {
-		chromeOpts = append(chromeOpts, chrome.DisableFeatures("SmdsSupport"))
 	}
 
 	cr, err := chrome.New(ctx, chromeOpts...)
@@ -133,11 +117,7 @@ func ESimInstallWithConfirmationCode(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to type incorrect confirmation code: ", err)
 	}
 
-	var incorrectActivationCodeSubtext = nodewith.NameContaining("Unable to connect to this profile.").Role(role.StaticText)
-	if enableSmdsSupport {
-		incorrectActivationCodeSubtext = nodewith.NameContaining("Unable to install this profile.").Role(role.StaticText)
-	}
-
+	var incorrectActivationCodeSubtext = nodewith.NameContaining("Unable to install this profile.").Role(role.StaticText)
 	if err := uiauto.Combine("Verify that incorrect confirmation code subtext shows",
 		mdp.LeftClick(ossettings.ConfirmButton.Focusable()),
 		mdp.WithTimeout(3*time.Minute).WaitUntilExists(incorrectActivationCodeSubtext),

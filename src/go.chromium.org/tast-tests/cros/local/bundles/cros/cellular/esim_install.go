@@ -31,23 +31,12 @@ func init() {
 		BugComponent: "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:cellular", "cellular_sim_test_esim"},
-		Params: []testing.Param{
-			{
-				Name: "",
-				Val:  true,
-			},
-			{
-				Name: "smds_support_disabled",
-				Val:  false,
-			},
-		},
-		Fixture: "cellularTestESIM",
-		Timeout: 9 * time.Minute,
+		Fixture:      "cellularTestESIM",
+		Timeout:      9 * time.Minute,
 	})
 }
 
 func ESimInstall(ctx context.Context, s *testing.State) {
-	enableSmdsSupport := s.Param().(bool)
 	euicc, slot, err := hermes.GetEUICC(ctx, true)
 	if err != nil {
 		s.Fatal("Failed to get test euicc: ", err)
@@ -72,11 +61,6 @@ func ESimInstall(ctx context.Context, s *testing.State) {
 	if slot == 1 {
 		s.Log("Append CellularUseSecondEuicc feature flag")
 		chromeOpts = append(chromeOpts, chrome.EnableFeatures("CellularUseSecondEuicc"))
-	}
-	if enableSmdsSupport {
-		chromeOpts = append(chromeOpts, chrome.EnableFeatures("SmdsSupport"))
-	} else {
-		chromeOpts = append(chromeOpts, chrome.DisableFeatures("SmdsSupport"))
 	}
 
 	cr, err := chrome.New(ctx, chromeOpts...)

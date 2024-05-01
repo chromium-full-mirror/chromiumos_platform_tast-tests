@@ -11,10 +11,8 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -36,17 +34,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:cellular", "cellular_sim_prod_esim", "cellular_e2e"},
 		Fixture:      "cellular",
-		Params: []testing.Param{
-			{
-				Name: "",
-				Val:  true,
-			},
-			{
-				Name: "smds_support_disabled",
-				Val:  false,
-			},
-		},
-		Timeout: 9 * time.Minute,
+		Timeout:      9 * time.Minute,
 	})
 }
 
@@ -55,16 +43,7 @@ func init() {
 // OS Settings from the Add Cellular button in the Network detailed view within
 // Quick Settings.
 func OpenAddCellularSettingsFromQuickSettings(ctx context.Context, s *testing.State) {
-	enableSmdsSupport := s.Param().(bool)
-	chromeOpts := []chrome.Option{}
-
-	if enableSmdsSupport {
-		chromeOpts = append(chromeOpts, chrome.EnableFeatures("SmdsSupport"))
-	} else {
-		chromeOpts = append(chromeOpts, chrome.DisableFeatures("SmdsSupport"))
-	}
-
-	cr, err := chrome.New(ctx, chromeOpts...)
+	cr, err := chrome.New(ctx)
 	if err != nil {
 		s.Fatal("Chrome login failed: ", err)
 	}
@@ -96,20 +75,8 @@ func OpenAddCellularSettingsFromQuickSettings(ctx context.Context, s *testing.St
 		s.Fatal("Failed to open the Add Cellular dialog: ", err)
 	}
 
-	if enableSmdsSupport {
-		if err := ui.WithTimeout(5 * time.Second).WaitUntilExists(ossettings.DialogEntryHeader)(ctx); err != nil {
-			s.Fatal("Failed to find SM-DS discovery page: ", err)
-		}
-	} else {
-		var setupNetworkText = nodewith.NameContaining("Set up new network").Role(role.StaticText)
-		var lookingForPendingProfilesText = nodewith.NameContaining("Looking for available profiles").Role(role.StaticText)
-		if err := uiauto.Combine("Check that add cellular dialog appears",
-			ui.WithTimeout(5*time.Second).WaitUntilExists(lookingForPendingProfilesText),
-			ui.WithTimeout(5*time.Second).WaitUntilExists(setupNetworkText),
-		)(ctx); err != nil {
-			s.Fatal("Failed to find add cellular dialog: ", err)
-		}
+	if err := ui.WithTimeout(5 * time.Second).WaitUntilExists(ossettings.DialogEntryHeader)(ctx); err != nil {
+		s.Fatal("Failed to find SM-DS discovery page: ", err)
 	}
-
 	defer conn.Close()
 }
