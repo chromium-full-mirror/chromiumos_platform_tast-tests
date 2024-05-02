@@ -15,13 +15,15 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-type bootConfig struct {
+type bootTestArgs struct {
 	// Run boot this many times
 	numTrials int
 	// Extra Chrome command line options
 	chromeArgs []string
 	// Check that the Virtual Machine Memory Management Service is running.
 	checkVMMMS bool
+	// Value for FieldTrialConfig Chrome parameter
+	fieldTrialConfig int
 }
 
 func init() {
@@ -37,100 +39,160 @@ func init() {
 		// ChromeOS > Software > ARC++ > Core
 		BugComponent: "b:488493",
 		SoftwareDeps: []string{"chrome"},
-		Params: []testing.Param{{
-			Val: bootConfig{
-				numTrials: 1,
-			},
-			ExtraAttr:         []string{"group:mainline"},
-			ExtraSoftwareDeps: []string{"android_container"},
-			Timeout:           chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
-		}, {
-			Name: "forever",
-			Val: bootConfig{
-				numTrials: 1000000,
-			},
-			ExtraSoftwareDeps: []string{"android_container"},
-			Timeout:           365 * 24 * time.Hour,
-		}, {
-			Name: "stress",
-			Val: bootConfig{
-				numTrials: 10,
-			},
-			ExtraAttr:         []string{"group:mainline", "informational"},
-			ExtraSoftwareDeps: []string{"android_container"},
-			Timeout:           25 * time.Minute,
-		}, {
-			Name: "vm",
-			Val: bootConfig{
-				numTrials: 1,
-			},
-			ExtraAttr:         []string{"group:mainline", "group:hw_agnostic"},
-			ExtraSoftwareDeps: []string{"android_vm"},
-			Timeout:           chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
-		}, {
-			Name: "vm_virtio_blk",
-			Val: bootConfig{
-				numTrials: 1,
-				chromeArgs: []string{
-					"--enable-features=ArcEnableVirtioBlkForData",
+		Params: []testing.Param{
+			{
+				Val: bootTestArgs{
+					numTrials:        1,
+					fieldTrialConfig: chrome.FieldTrialConfigDefault,
 				},
+				ExtraAttr:         []string{"group:mainline"},
+				ExtraSoftwareDeps: []string{"android_container"},
+				Timeout:           chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 			},
-			ExtraAttr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
-			ExtraSoftwareDeps: []string{"android_vm"},
-			Timeout:           chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
-		}, {
-			Name: "vm_with_per_vcpu_core_scheduling",
-			Val: bootConfig{
-				numTrials: 1,
-				// Switch from per-VM core scheduling to per-vCPU core scheduling which
-				// is more secure but slow.
-				chromeArgs: []string{"--disable-features=ArcEnablePerVmCoreScheduling"},
+			{
+				Name: "fieldtrial_testing_config_off",
+				Val: bootTestArgs{
+					numTrials:        1,
+					fieldTrialConfig: chrome.FieldTrialConfigDisable,
+				},
+				ExtraAttr:         []string{"group:mainline", "informational"},
+				ExtraSoftwareDeps: []string{"android_container"},
+				Timeout:           chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 			},
-			ExtraAttr:         []string{"group:mainline", "group:hw_agnostic"},
-			ExtraSoftwareDeps: []string{"android_vm"},
-			Timeout:           chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
-		}, {
-			Name: "vm_forever",
-			Val: bootConfig{
-				numTrials: 1000000,
+			{
+				Name: "fieldtrial_testing_config_on",
+				Val: bootTestArgs{
+					numTrials:        1,
+					fieldTrialConfig: chrome.FieldTrialConfigEnable,
+				},
+				ExtraAttr:         []string{"group:mainline", "informational"},
+				ExtraSoftwareDeps: []string{"android_container"},
+				Timeout:           chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 			},
-			ExtraAttr:         []string{"group:hw_agnostic"},
-			ExtraSoftwareDeps: []string{"android_vm"},
-			Timeout:           365 * 24 * time.Hour,
-		}, {
-			Name: "vm_stress",
-			Val: bootConfig{
-				numTrials: 10,
+			{
+				Name: "forever",
+				Val: bootTestArgs{
+					numTrials:        1000000,
+					fieldTrialConfig: chrome.FieldTrialConfigDefault,
+				},
+				ExtraSoftwareDeps: []string{"android_container"},
+				Timeout:           365 * 24 * time.Hour,
 			},
-			ExtraAttr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
-			ExtraSoftwareDeps: []string{"android_vm"},
-			Timeout:           25 * time.Minute,
-		}, {
-			Name: "vm_large_memory",
-			Val: bootConfig{
-				numTrials: 1,
-				// Boot ARCVM with the largest possible guest memory size.
-				chromeArgs: []string{"--enable-features=ArcVmMemorySize:shift_mib/0"},
+			{
+				Name: "stress",
+				Val: bootTestArgs{
+					numTrials:        10,
+					fieldTrialConfig: chrome.FieldTrialConfigDefault,
+				},
+				ExtraAttr:         []string{"group:mainline", "informational"},
+				ExtraSoftwareDeps: []string{"android_container"},
+				Timeout:           25 * time.Minute,
 			},
-			ExtraAttr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
-			ExtraSoftwareDeps: []string{"android_vm"},
-			Timeout:           chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
-		}, {
-			// TODO(b:322724008): Remove this param and enable checkVMMMS on all other .vm* tests once we know this is stable.
-			Name: "vm_check_vmmms",
-			Val: bootConfig{
-				numTrials:  1,
-				checkVMMMS: true,
+			{
+				Name: "vm",
+				Val: bootTestArgs{
+					numTrials:        1,
+					fieldTrialConfig: chrome.FieldTrialConfigDefault,
+				},
+				ExtraAttr:         []string{"group:mainline", "group:hw_agnostic"},
+				ExtraSoftwareDeps: []string{"android_vm"},
+				Timeout:           chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 			},
-			ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging", "group:hw_agnostic"},
-			ExtraSoftwareDeps: []string{"android_vm"},
-			Timeout:           chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
-		}},
+			{
+				Name: "fieldtrial_testing_config_off_vm",
+				Val: bootTestArgs{
+					numTrials:        1,
+					fieldTrialConfig: chrome.FieldTrialConfigDisable,
+				},
+				ExtraAttr:         []string{"group:mainline", "informational"},
+				ExtraSoftwareDeps: []string{"android_vm"},
+				Timeout:           chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
+			},
+			{
+				Name: "fieldtrial_testing_config_on_vm",
+				Val: bootTestArgs{
+					numTrials:        1,
+					fieldTrialConfig: chrome.FieldTrialConfigEnable,
+				},
+				ExtraAttr:         []string{"group:mainline", "informational"},
+				ExtraSoftwareDeps: []string{"android_vm"},
+				Timeout:           chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
+			},
+			{
+				Name: "vm_virtio_blk",
+				Val: bootTestArgs{
+					numTrials:        1,
+					fieldTrialConfig: chrome.FieldTrialConfigDefault,
+					chromeArgs: []string{
+						"--enable-features=ArcEnableVirtioBlkForData",
+					},
+				},
+				ExtraAttr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
+				ExtraSoftwareDeps: []string{"android_vm"},
+				Timeout:           chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
+			},
+			{
+				Name: "vm_with_per_vcpu_core_scheduling",
+				Val: bootTestArgs{
+					numTrials:        1,
+					fieldTrialConfig: chrome.FieldTrialConfigDefault,
+					// Switch from per-VM core scheduling to per-vCPU core scheduling which
+					// is more secure but slow.
+					chromeArgs: []string{"--disable-features=ArcEnablePerVmCoreScheduling"},
+				},
+				ExtraAttr:         []string{"group:mainline", "group:hw_agnostic"},
+				ExtraSoftwareDeps: []string{"android_vm"},
+				Timeout:           chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
+			},
+			{
+				Name: "vm_forever",
+				Val: bootTestArgs{
+					numTrials:        1000000,
+					fieldTrialConfig: chrome.FieldTrialConfigDefault,
+				},
+				ExtraAttr:         []string{"group:hw_agnostic"},
+				ExtraSoftwareDeps: []string{"android_vm"},
+				Timeout:           365 * 24 * time.Hour,
+			},
+			{
+				Name: "vm_stress",
+				Val: bootTestArgs{
+					numTrials:        10,
+					fieldTrialConfig: chrome.FieldTrialConfigDefault,
+				},
+				ExtraAttr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
+				ExtraSoftwareDeps: []string{"android_vm"},
+				Timeout:           25 * time.Minute,
+			},
+			{
+				Name: "vm_large_memory",
+				Val: bootTestArgs{
+					numTrials:        1,
+					fieldTrialConfig: chrome.FieldTrialConfigDefault,
+					// Boot ARCVM with the largest possible guest memory size.
+					chromeArgs: []string{"--enable-features=ArcVmMemorySize:shift_mib/0"},
+				},
+				ExtraAttr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
+				ExtraSoftwareDeps: []string{"android_vm"},
+				Timeout:           chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
+			},
+			{
+				// TODO(b:322724008): Remove this param and enable checkVMMMS on all other .vm* tests once we know this is stable.
+				Name: "vm_check_vmmms",
+				Val: bootTestArgs{
+					numTrials:        1,
+					fieldTrialConfig: chrome.FieldTrialConfigDefault,
+					checkVMMMS:       true,
+				},
+				ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging", "group:hw_agnostic"},
+				ExtraSoftwareDeps: []string{"android_vm"},
+				Timeout:           chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
+			}},
 	})
 }
 
 func Boot(ctx context.Context, s *testing.State) {
-	numTrials := s.Param().(bootConfig).numTrials
+	numTrials := s.Param().(bootTestArgs).numTrials
 	for i := 0; i < numTrials; i++ {
 		if numTrials > 1 {
 			s.Logf("Trial %d/%d", i+1, numTrials)
@@ -141,7 +203,9 @@ func Boot(ctx context.Context, s *testing.State) {
 
 func runBoot(ctx context.Context, s *testing.State) {
 	var vmmmsVerify *memory.VmmmsInitVerifier
-	if s.Param().(bootConfig).checkVMMMS {
+	args := s.Param().(bootTestArgs)
+
+	if args.checkVMMMS {
 		var err error
 		vmmmsVerify, err = memory.NewVmmmsInitVerifier(ctx)
 		if err != nil {
@@ -156,8 +220,11 @@ func runBoot(ctx context.Context, s *testing.State) {
 	}
 	defer reader.Close()
 
-	args := s.Param().(bootConfig).chromeArgs
-	cr, err := chrome.New(ctx, chrome.ARCEnabled(), chrome.UnRestrictARCCPU(), chrome.ExtraArgs(args...))
+	cr, err := chrome.New(ctx,
+		chrome.ARCEnabled(),
+		chrome.UnRestrictARCCPU(),
+		chrome.FieldTrialConfig(args.fieldTrialConfig),
+		chrome.ExtraArgs(args.chromeArgs...))
 	if err != nil {
 		s.Fatal("Failed to connect to Chrome: ", err)
 	}
