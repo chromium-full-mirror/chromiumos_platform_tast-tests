@@ -105,10 +105,11 @@ func init() {
 	// LacrosPolicyRealUserLoggedIn is similar to LacrosPolicyLoggedInRealUser, but instead starts up a Chrome instance
 	// and has an Ash equivalent: ChromePolicyRealUserLoggedIn.
 	testing.AddFixture(&testing.Fixture{
-		Name:     fixture.LacrosPolicyRealUserLoggedIn,
-		Desc:     "Fixture for running FakeDMS with lacros with a real managed user logged on",
-		Contacts: []string{"chiav@google.com", "dp-chromeos-eng@google.com"},
-		Vars:     []string{"tape.service_account_key"},
+		Name:         fixture.LacrosPolicyRealUserLoggedIn,
+		Desc:         "Fixture for running FakeDMS with lacros with a real managed user logged on",
+		Contacts:     []string{"chiav@google.com", "dp-chromeos-eng@google.com"},
+		BugComponent: "b:1129862", // ChromeOS > Privacy > DPChromeOS > DPChromeOS Engineering
+		Vars:         []string{"tape.service_account_key"},
 		Impl: &policyChromeFixture{
 			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 				return lacrosfixt.NewConfig().Opts()
@@ -186,9 +187,10 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     fixture.LacrosPolicyLoggedInAdvancedProtection,
-		Desc:     "Logged into a fake user session with advanced protection enabled",
-		Contacts: []string{"chiav@google.com", "dp-chromeos-eng@google.com"},
+		Name:         fixture.LacrosPolicyLoggedInAdvancedProtection,
+		Desc:         "Logged into a fake user session with advanced protection enabled",
+		Contacts:     []string{"chiav@google.com", "dp-chromeos-eng@google.com"},
+		BugComponent: "b:1129862", // ChromeOS > Privacy > DPChromeOS > DPChromeOS Engineering
 		Impl: &policyChromeFixture{
 			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 				return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(

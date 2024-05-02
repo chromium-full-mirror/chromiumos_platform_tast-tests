@@ -325,9 +325,10 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     fixture.ChromePolicyLoggedInAdvancedProtection,
-		Desc:     "Logged into a fake user session with advanced protection enabled",
-		Contacts: []string{"chiav@google.com", "dp-chromeos-eng@google.com"},
+		Name:         fixture.ChromePolicyLoggedInAdvancedProtection,
+		Desc:         "Logged into a fake user session with advanced protection enabled",
+		Contacts:     []string{"chiav@google.com", "dp-chromeos-eng@google.com"},
+		BugComponent: "b:1129862", // ChromeOS > Privacy > DPChromeOS > DPChromeOS Engineering
 		Impl: &policyChromeFixture{
 			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 				return []chrome.Option{chrome.ExtraArgs("--safe-browsing-treat-user-as-advanced-protection")}, nil
