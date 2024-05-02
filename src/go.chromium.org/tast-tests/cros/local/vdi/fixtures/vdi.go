@@ -37,6 +37,7 @@ func init() {
 			"kamilszare@google.com",
 			"cros-engprod-muc@google.com",
 		},
+		BugComponent: "b:1170223", // ChromeOS > Software > Commercial (Enterprise) > EngProd
 		Impl: &fixtureState{
 			vdiApplicationToStart: apps.Citrix,
 			vdiConnector:          &citrix.Connector{},
@@ -68,6 +69,7 @@ func init() {
 			"kamilszare@google.com",
 			"cros-engprod-muc@google.com",
 		},
+		BugComponent: "b:1170223", // ChromeOS > Software > Commercial (Enterprise) > EngProd
 		Impl: &fixtureState{
 			vdiApplicationToStart: apps.Citrix,
 			vdiConnector:          &citrix.Connector{},
@@ -99,6 +101,7 @@ func init() {
 			"kamilszare@google.com",
 			"cros-engprod-muc@google.com",
 		},
+		BugComponent: "b:1170223", // ChromeOS > Software > Commercial (Enterprise) > EngProd
 		Impl: &fixtureState{
 			vdiApplicationToStart: apps.VMWare,
 			vdiConnector:          &vmware.Connector{},

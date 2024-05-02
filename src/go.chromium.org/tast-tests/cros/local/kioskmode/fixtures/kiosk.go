@@ -38,6 +38,7 @@ func init() {
 		Name:            fixture.KioskLoggedInAsh,
 		Desc:            "Kiosk mode started with default app setup, DUT is enrolled",
 		Contacts:        []string{"kamilszarek@google.com", "alt-modalities-stability@google.com"},
+		BugComponent:    "b:892153", // ChromeOS > Software > Commercial (Enterprise) > Kiosk
 		Impl:            &kioskFixture{autoLaunchKioskAppID: kioskmode.WebKioskAccountID},
 		SetUpTimeout:    setupTimeout,
 		ResetTimeout:    resetTimeout,
@@ -48,10 +49,10 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     fixture.KioskLoggedInLacros,
-		Desc:     "Kiosk mode started with default app setup, DUT is enrolled and Lacros enabled",
-		Contacts: []string{"irfedorova@google.com", "chromeos-kiosk-eng@google.com"},
-		BugComponent: "b:892153",
+		Name:         fixture.KioskLoggedInLacros,
+		Desc:         "Kiosk mode started with default app setup, DUT is enrolled and Lacros enabled",
+		Contacts:     []string{"irfedorova@google.com", "chromeos-kiosk-eng@google.com"},
+		BugComponent: "b:892153", // ChromeOS > Software > Commercial (Enterprise) > Kiosk
 		Impl: &kioskFixture{
 			autoLaunchKioskAppID: kioskmode.WebKioskAccountID,
 			extraPublicAccountPolicies: []policy.Policy{
