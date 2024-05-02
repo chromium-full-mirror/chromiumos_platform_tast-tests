@@ -52,24 +52,20 @@ func init() {
 				ExtraRequirements: []string{"pwr-batLife-0009-v03", "pwr-batLife-0010-v03", "pwr-batLife-0011-v03", "pwr-batLife-0012-v01"},
 			},
 			{
-				Name:              "browsingheavy",
-				Val:               "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/power/powerqual-config/browsing_heavy.json",
-				ExtraRequirements: []string{"pwr-batLife-0009-v03"},
+				Name: "browsingheavy",
+				Val:  "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/power/powerqual-config/browsing_heavy.json",
 			},
 			{
-				Name:              "videoplayback",
-				Val:               "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/power/powerqual-config/video_playback.json",
-				ExtraRequirements: []string{"pwr-batLife-0010-v03"},
+				Name: "videoplayback",
+				Val:  "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/power/powerqual-config/video_playback.json",
 			},
 			{
-				Name:              "videocall",
-				Val:               "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/power/powerqual-config/video_call.json",
-				ExtraRequirements: []string{"pwr-batLife-0011-v03"},
+				Name: "videocall",
+				Val:  "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/power/powerqual-config/video_call.json",
 			},
 			{
-				Name:              "browsing",
-				Val:               "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/power/powerqual-config/browsing.json",
-				ExtraRequirements: []string{"pwr-batLife-0012-v01"},
+				Name: "browsing",
+				Val:  "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/power/powerqual-config/browsing.json",
 			},
 			{
 				Name: "short",
