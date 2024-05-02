@@ -73,7 +73,7 @@ func DownloadPerf(ctx context.Context, s *testing.State) {
 
 	// Ensure we can reach the network.
 	verifyHostIPConnectivity := func(ctx context.Context) error {
-		if err := cellular.VerifyIPConnectivityUsingCurl(ctx, testexec.CommandContext, !params.isIPv6, params.isIPv6, "/usr/bin"); err != nil {
+		if err := cellular.VerifyIPConnectivityUsingCurl(ctx, testexec.CommandContext, !params.isIPv6, params.isIPv6); err != nil {
 			return errors.Wrap(err, "failed connectivity test")
 		}
 		return nil
