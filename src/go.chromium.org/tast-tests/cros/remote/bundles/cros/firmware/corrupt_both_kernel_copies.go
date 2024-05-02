@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
+	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
 	pb "go.chromium.org/tast-tests/cros/services/cros/firmware"
 
 	"go.chromium.org/tast/core/ctxutil"
@@ -177,7 +178,7 @@ func CorruptBothKernelCopies(ctx context.Context, s *testing.State) {
 			kernelBackup.KernB.BackupPath,
 		}
 		if _, err := h.DUT.Conn().CommandContext(ctx, "rm", rmargs...).Output(ssh.DumpLogOnError); err != nil {
-			s.Fatal("Failed to delete backup files: ", err)
+			testing.ContextLog(ctx, "Failed to delete backup files: ", err)
 		}
 	}(cleanupContext)
 
@@ -302,11 +303,13 @@ func CorruptBothKernelCopies(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to warm reset the DUT: ", err)
 	}
 	s.Log("Waiting for DUT to reach broken fw screen")
-	if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, h.Config.FirmwareScreen, "S0"); err != nil {
-		s.Fatal("Failed to wait for DUT to reach broken fw screen")
+	// GoBigSleepLint: Wait for the recovery reason to get set.
+	if err := testing.Sleep(ctx, h.Config.DelayRebootToPing); err != nil {
+		s.Fatal("Sleep failed: ", err)
 	}
+
 	if !h.Config.NoBrokenScreenInDev {
-		s.Log("Rebooting the DUT with a warm reset")
+		s.Log("Going to recovery mode (power_state:rec)")
 		if err := h.Servo.SetPowerState(ctx, servo.PowerStateRec); err != nil {
 			s.Fatal("Failed to warm reset the DUT: ", err)
 		}
@@ -327,6 +330,17 @@ func CorruptBothKernelCopies(ctx context.Context, s *testing.State) {
 	}
 	if !bootedFromRemovableDevice {
 		testing.ContextLog(ctx, "DUT unexpectedly booted from disk")
+	}
+
+	hasRecRes, err := h.Reporter.ContainsRecoveryReason(ctx, []reporters.RecoveryReason{
+		reporters.RecoveryReasonDeprecatedRWNoDisk,
+		reporters.RecoveryReasonRWInvalidOS,
+		reporters.RecoveryReasonRWNoKernel,
+	})
+	if err != nil {
+		s.Error("Failed to find recovery reason in crossystem params: ", err)
+	} else if !hasRecRes {
+		s.Error("Didn't find expected recovery reason in crossystem params")
 	}
 
 	s.Log("Restore KERN-A")
@@ -352,10 +366,6 @@ func CorruptBothKernelCopies(ctx context.Context, s *testing.State) {
 	}
 	needsUSBRestore = false
 
-	if err := checkRecReason(ctx, h); err != nil {
-		s.Error("Did not get expected recovery reason in eventlog: ", err)
-	}
-
 	if err := h.RequireKernelServiceClient(ctx); err != nil {
 		s.Fatal("Failed to connect to kernel service: ", err)
 	}
@@ -367,53 +377,6 @@ func CorruptBothKernelCopies(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to verify booot from KERN-A: ", err)
 	}
 	needsRestore = false
-}
-
-func checkRecReason(ctx context.Context, h *firmware.Helper) error {
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		var recModeEvents = map[int64]string{}
-		events, err := h.Reporter.EventlogList(ctx)
-		if err != nil {
-			return errors.Wrap(err, "failed to get event log")
-		}
-		// Case insensitive to match with different log messages.
-		re := regexp.MustCompile(`(?i)[Rr]ecovery\s+[Mm]ode.*0x([a-fA-F0-9]+)`)
-		for _, event := range events {
-			if match := re.FindStringSubmatch(event.Message); match != nil {
-				eventInt, err := strconv.ParseInt(match[1], 16, 64)
-				if err != nil {
-					testing.ContextLogf(ctx, "Failed to parse %s as an int", match[1])
-				}
-				recModeEvents[eventInt] = event.Message
-			}
-		}
-
-		foundExpRecReason := false
-		if len(recModeEvents) == 0 {
-			return errors.Errorf("expected recovery reason in eventlog but found none, got events: %v", events)
-		}
-		for _, recRes := range []int64{
-			0x48, // No bootable disk found.
-			0x5b, // No bootable kernel found on disk.
-			0x43, // OS kernel failed signature check.
-		} {
-			if val, ok := recModeEvents[recRes]; ok {
-				testing.ContextLogf(ctx, "Found recovery reason 0x%x: %s", recRes, val)
-				foundExpRecReason = true
-				break
-			}
-		}
-		if !foundExpRecReason {
-			return errors.Errorf("Did not find expected recovery reasons in event log, found the following reasons for recovery instead: %v", recModeEvents)
-		}
-		return nil
-	}, &testing.PollOptions{
-		Interval: 15 * time.Second,
-		Timeout:  1 * time.Minute,
-	}); err != nil {
-		return errors.Wrap(err, "looking for recovery reason")
-	}
-	return nil
 }
 
 // getRootdevNameByID gets the name of disk by id to look for it at the end of the test to recovery kernel.
