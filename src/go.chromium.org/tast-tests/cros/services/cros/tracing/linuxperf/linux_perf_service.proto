@@ -1,0 +1,16 @@
+// Copyright 2024 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+syntax = "proto3";
+
+package tast.cros.tracing.linuxperf;
+
+option go_package = "go.chromium.org/tast-tests/cros/services/cros/tracing/linuxperf";
+
+message LinuxPerfOptions {
+  repeated string args = 1;
+  string out_file = 2;
+  bool background = 3;
+  int32 timeout_seconds = 4;
+}
