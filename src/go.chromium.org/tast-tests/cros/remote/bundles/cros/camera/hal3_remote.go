@@ -190,9 +190,6 @@ func init() {
 }
 
 func HAL3Remote(ctx context.Context, s *testing.State) {
-	if err := s.DUT().Reboot(ctx); err != nil {
-		s.Fatal("Failed to reboot DUT: ", err)
-	}
 	d := s.DUT()
 	runTestRequest := s.Param().(*pb.RunTestRequest)
 	fixt := s.FixtValue().(camerabox.FixtureData)
