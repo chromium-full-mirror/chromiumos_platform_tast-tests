@@ -90,6 +90,7 @@ func PhoneToCrosHighVisWifiCredentials(ctx context.Context, s *testing.State) {
 	testWiFi := testData.WiFiName
 	testSecurityType := testData.SecurityType
 	testPassword := testData.WiFiPassword
+        isTestWiFiHidden := false
 
 	s.Log("Starting receiving on the CrOS device")
 	receiver, err := nearbyshare.StartReceiving(ctx, tconn, cr)
@@ -101,7 +102,7 @@ func PhoneToCrosHighVisWifiCredentials(ctx context.Context, s *testing.State) {
 
 	s.Log("Starting sending on the Android device")
 	testTimeout := testData.TestTimeout
-	if err := androidDevice.SendWifi(ctx, androidDisplayName, crosDisplayName, testWiFi, testPassword, testSecurityType, testTimeout); err != nil {
+	if err := androidDevice.SendWifi(ctx, androidDisplayName, crosDisplayName, testWiFi, testPassword, testSecurityType, isTestWiFiHidden, testTimeout); err != nil {
 		s.Fatal("Failed to start sending on Android: ", err)
 	}
 
