@@ -425,7 +425,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:     "crostiniBullseyePolicy",
 		Desc:     "Install Crostini with Bullseye, with Chrome logged in with policy",
-		Contacts: []string{"clumptini+oncall@google.com", "aidazolic@google.com"},
+		Contacts: []string{"clumptini+oncall@google.com"},
 		Impl: &crostiniFixture{preData: preTestDataBullseye,
 			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 				return []chrome.Option{chrome.EnableFeatures("NewFilesPolicyUX")}, nil
