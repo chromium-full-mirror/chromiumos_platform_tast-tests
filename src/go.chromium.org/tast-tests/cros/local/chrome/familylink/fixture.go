@@ -52,13 +52,14 @@ func NewFamilyLinkFixtureLacros(parentUser, parentPassword, childUser, childPass
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
-		Name:     "familyLinkUnicornLogin",
-		Desc:     "Supervised Family Link user login with Unicorn account",
+		Name: "familyLinkUnicornLogin",
+		Desc: "Supervised Family Link user login with Unicorn account",
 		Contacts: []string{
 			"cros-families-eng+test@google.com",
 			"agawronska@chromium.org",
 		},
-		Impl:     NewFamilyLinkFixture("family.parentEmail", "family.parentPassword", "family.unicornEmail", "family.unicornPassword", true),
+		BugComponent: "b:1079167", // ChromeOS > Software > Family
+		Impl:         NewFamilyLinkFixture("family.parentEmail", "family.parentPassword", "family.unicornEmail", "family.unicornPassword", true),
 		Vars: []string{
 			"family.parentEmail",
 			"family.parentPassword",
@@ -73,13 +74,14 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "familyLinkUnicornLoginWithLacros",
-		Desc:     "Supervised Family Link user login with Unicorn account",
+		Name: "familyLinkUnicornLoginWithLacros",
+		Desc: "Supervised Family Link user login with Unicorn account",
 		Contacts: []string{
 			"cros-families-eng+test@google.com",
 			"agawronska@chromium.org",
 		},
-		Impl:     NewFamilyLinkFixtureLacros("family.parentEmail", "family.parentPassword", "family.unicornEmail", "family.unicornPassword", true),
+		BugComponent: "b:1079167", // ChromeOS > Software > Family
+		Impl:         NewFamilyLinkFixtureLacros("family.parentEmail", "family.parentPassword", "family.unicornEmail", "family.unicornPassword", true),
 		Vars: []string{
 			"family.parentEmail",
 			"family.parentPassword",
@@ -94,13 +96,14 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "familyLinkUnicornWebAllowlistLogin",
-		Desc:     "This fixture logs in Unicorn account with 'Only allow approved sites' website filtering setting",
+		Name: "familyLinkUnicornWebAllowlistLogin",
+		Desc: "This fixture logs in Unicorn account with 'Only allow approved sites' website filtering setting",
 		Contacts: []string{
 			"cros-families-eng+test@google.com",
 			"agawronska@chromium.org",
 		},
-		Impl:     NewFamilyLinkFixture("family.parentEmail", "family.parentPassword", "family.unicornAllowlistEmail", "family.unicornAllowlistPassword", true),
+		BugComponent: "b:1079167", // ChromeOS > Software > Family
+		Impl:         NewFamilyLinkFixture("family.parentEmail", "family.parentPassword", "family.unicornAllowlistEmail", "family.unicornAllowlistPassword", true),
 		Vars: []string{
 			"family.parentEmail",
 			"family.parentPassword",
@@ -115,13 +118,14 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "familyLinkUnicornWebAllowlistLoginWithLacros",
-		Desc:     "This fixture enables LaCrOS and logs in Unicorn account with 'Only allow approved sites' website filtering setting",
+		Name: "familyLinkUnicornWebAllowlistLoginWithLacros",
+		Desc: "This fixture enables LaCrOS and logs in Unicorn account with 'Only allow approved sites' website filtering setting",
 		Contacts: []string{
 			"cros-families-eng+test@google.com",
 			"agawronska@chromium.org",
 		},
-		Impl:     NewFamilyLinkFixtureLacros("family.parentEmail", "family.parentPassword", "family.unicornAllowlistEmail", "family.unicornAllowlistPassword", true),
+		BugComponent: "b:1079167", // ChromeOS > Software > Family
+		Impl:         NewFamilyLinkFixtureLacros("family.parentEmail", "family.parentPassword", "family.unicornAllowlistEmail", "family.unicornAllowlistPassword", true),
 		Vars: []string{
 			"family.parentEmail",
 			"family.parentPassword",
@@ -136,13 +140,14 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "familyLinkUnicornLoginNonOwner",
-		Desc:     "Supervised Family Link user login with Unicorn account as second user on device",
+		Name: "familyLinkUnicornLoginNonOwner",
+		Desc: "Supervised Family Link user login with Unicorn account as second user on device",
 		Contacts: []string{
 			"cros-families-eng+test@google.com",
 			"agawronska@chromium.org",
 		},
-		Impl:     NewFamilyLinkFixture("family.parentEmail", "family.parentPassword", "family.unicornEmail", "family.unicornPassword", false),
+		BugComponent: "b:1079167", // ChromeOS > Software > Family
+		Impl:         NewFamilyLinkFixture("family.parentEmail", "family.parentPassword", "family.unicornEmail", "family.unicornPassword", false),
 		Vars: []string{
 			"ui.gaiaPoolDefault",
 			"family.parentEmail",
@@ -158,14 +163,15 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "familyLinkUnicornLoginNonOwnerWithLacros",
-		Desc:     "Supervised Family Link user login with Unicorn account as second user on device",
+		Name: "familyLinkUnicornLoginNonOwnerWithLacros",
+		Desc: "Supervised Family Link user login with Unicorn account as second user on device",
 		Contacts: []string{
 			"cros-families-eng+test@google.com",
 			"hyungtaekim@chromium.org",
 			"agawronska@chromium.org",
 		},
-		Impl:     NewFamilyLinkFixtureLacros("family.parentEmail", "family.parentPassword", "family.unicornEmail", "family.unicornPassword", false),
+		BugComponent: "b:1079167", // ChromeOS > Software > Family
+		Impl:         NewFamilyLinkFixtureLacros("family.parentEmail", "family.parentPassword", "family.unicornEmail", "family.unicornPassword", false),
 		Vars: []string{
 			"ui.gaiaPoolDefault",
 			"family.parentEmail",
@@ -181,13 +187,14 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "familyLinkGellerLogin",
-		Desc:     "Supervised Family Link user login with Geller account",
+		Name: "familyLinkGellerLogin",
+		Desc: "Supervised Family Link user login with Geller account",
 		Contacts: []string{
 			"cros-families-eng+test@google.com",
 			"agawronska@chromium.org",
 		},
-		Impl:     NewFamilyLinkFixture("family.parentEmail", "family.parentPassword", "family.gellerEmail", "family.gellerPassword", true),
+		BugComponent: "b:1079167", // ChromeOS > Software > Family
+		Impl:         NewFamilyLinkFixture("family.parentEmail", "family.parentPassword", "family.gellerEmail", "family.gellerPassword", true),
 		Vars: []string{
 			"family.parentEmail",
 			"family.parentPassword",
@@ -202,14 +209,15 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "familyLinkGellerLoginWithLacros",
-		Desc:     "Supervised Family Link user login with Geller account on Lacros",
+		Name: "familyLinkGellerLoginWithLacros",
+		Desc: "Supervised Family Link user login with Geller account on Lacros",
 		Contacts: []string{
 			"cros-families-eng+test@google.com",
 			"hyungtaekim@chromium.org",
 			"agawronska@chromium.org",
 		},
-		Impl:     NewFamilyLinkFixtureLacros("family.parentEmail", "family.parentPassword", "family.gellerEmail", "family.gellerPassword", true),
+		BugComponent: "b:1079167", // ChromeOS > Software > Family
+		Impl:         NewFamilyLinkFixtureLacros("family.parentEmail", "family.parentPassword", "family.gellerEmail", "family.gellerPassword", true),
 		Vars: []string{
 			"family.parentEmail",
 			"family.parentPassword",
@@ -224,13 +232,14 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "familyLinkUnicornArcLogin",
-		Desc:     "Supervised Family Link user login with Unicorn account and ARC support",
+		Name: "familyLinkUnicornArcLogin",
+		Desc: "Supervised Family Link user login with Unicorn account and ARC support",
 		Contacts: []string{
 			"cros-families-eng+test@google.com",
 			"agawronska@chromium.org",
 		},
-		Impl:     NewFamilyLinkFixture("arc.parentUser", "arc.parentPassword", "arc.childUser", "arc.childPassword", true, chrome.ARCSupported()),
+		BugComponent: "b:1079167", // ChromeOS > Software > Family
+		Impl:         NewFamilyLinkFixture("arc.parentUser", "arc.parentPassword", "arc.childUser", "arc.childPassword", true, chrome.ARCSupported()),
 		Vars: []string{
 			"arc.parentUser",
 			"arc.parentPassword",
@@ -245,13 +254,14 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "familyLinkGriffinLogin",
-		Desc:     "Supervised Family Link user login with Griffin account",
+		Name: "familyLinkGriffinLogin",
+		Desc: "Supervised Family Link user login with Griffin account",
 		Contacts: []string{
 			"cros-families-eng+test@google.com",
 			"agawronska@chromium.org",
 		},
-		Impl:     NewFamilyLinkFixture("family.parentEmail", "family.parentPassword", "family.griffinEmail", "family.griffinPassword", true),
+		BugComponent: "b:1079167", // ChromeOS > Software > Family
+		Impl:         NewFamilyLinkFixture("family.parentEmail", "family.parentPassword", "family.griffinEmail", "family.griffinPassword", true),
 		Vars: []string{
 			"family.parentEmail",
 			"family.parentPassword",
@@ -266,13 +276,14 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "familyLinkGriffinLoginWithLacros",
-		Desc:     "Supervised Family Link user login with Griffin account on Lacros",
+		Name: "familyLinkGriffinLoginWithLacros",
+		Desc: "Supervised Family Link user login with Griffin account on Lacros",
 		Contacts: []string{
 			"cros-families-eng+test@google.com",
 			"agawronska@chromium.org",
 		},
-		Impl:     NewFamilyLinkFixtureLacros("family.parentEmail", "family.parentPassword", "family.griffinEmail", "family.griffinPassword", true),
+		BugComponent: "b:1079167", // ChromeOS > Software > Family
+		Impl:         NewFamilyLinkFixtureLacros("family.parentEmail", "family.parentPassword", "family.griffinEmail", "family.griffinPassword", true),
 		Vars: []string{
 			"family.parentEmail",
 			"family.parentPassword",
@@ -286,13 +297,14 @@ func init() {
 		PostTestTimeout: resetTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name:     "familyLinkParentArcLogin",
-		Desc:     "Non-supervised Family Link user login with regular parent account and ARC support",
+		Name: "familyLinkParentArcLogin",
+		Desc: "Non-supervised Family Link user login with regular parent account and ARC support",
 		Contacts: []string{
 			"cros-families-eng+test@google.com",
 			"agawronska@chromium.org",
 		},
-		Impl:     NewFamilyLinkFixture("arc.parentUser", "arc.parentPassword", "", "", true, chrome.ARCSupported(), chrome.ExtraArgs(arc.DisableSyncFlags()...)),
+		BugComponent: "b:1079167", // ChromeOS > Software > Family
+		Impl:         NewFamilyLinkFixture("arc.parentUser", "arc.parentPassword", "", "", true, chrome.ARCSupported(), chrome.ExtraArgs(arc.DisableSyncFlags()...)),
 		Vars: []string{
 			"arc.parentUser",
 			"arc.parentPassword",
@@ -305,13 +317,14 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "familyLinkUnicornPolicyLogin",
-		Desc:     "Supervised Family Link user login with Unicorn account and policy setup",
+		Name: "familyLinkUnicornPolicyLogin",
+		Desc: "Supervised Family Link user login with Unicorn account and policy setup",
 		Contacts: []string{
 			"cros-families-eng+test@google.com",
 			"agawronska@chromium.org",
 		},
-		Impl:     NewFamilyLinkFixture("family.parentEmail", "family.parentPassword", "family.unicornEmail", "family.unicornPassword", true),
+		BugComponent: "b:1079167", // ChromeOS > Software > Family
+		Impl:         NewFamilyLinkFixture("family.parentEmail", "family.parentPassword", "family.unicornEmail", "family.unicornPassword", true),
 		Vars: []string{
 			"family.parentEmail",
 			"family.parentPassword",
@@ -327,13 +340,14 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "familyLinkUnicornArcPolicyLogin",
-		Desc:     "Supervised Family Link user login with Unicorn account and ARC support with fakeDMS setup",
+		Name: "familyLinkUnicornArcPolicyLogin",
+		Desc: "Supervised Family Link user login with Unicorn account and ARC support with fakeDMS setup",
 		Contacts: []string{
 			"cros-families-eng+test@google.com",
 			"agawronska@chromium.org",
 		},
-		Impl:     NewFamilyLinkFixture("arc.parentUser", "arc.parentPassword", "arc.childUser", "arc.childPassword", true, chrome.ARCSupported(), chrome.ExtraArgs(arc.DisableSyncFlags()...)),
+		BugComponent: "b:1079167", // ChromeOS > Software > Family
+		Impl:         NewFamilyLinkFixture("arc.parentUser", "arc.parentPassword", "arc.childUser", "arc.childPassword", true, chrome.ARCSupported(), chrome.ExtraArgs(arc.DisableSyncFlags()...)),
 		Vars: []string{
 			"arc.parentUser",
 			"arc.parentPassword",
@@ -349,13 +363,14 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "familyLinkGellerArcPolicyLogin",
-		Desc:     "Supervised Family Link user login with Geller account and ARC support with fakeDMS setup",
+		Name: "familyLinkGellerArcPolicyLogin",
+		Desc: "Supervised Family Link user login with Geller account and ARC support with fakeDMS setup",
 		Contacts: []string{
 			"cros-families-eng+test@google.com",
 			"agawronska@chromium.org",
 		},
-		Impl:     NewFamilyLinkFixture("family.parentEmail", "family.parentPassword", "family.gellerEmail", "family.gellerPassword", true, chrome.ARCSupported(), chrome.ExtraArgs(arc.DisableSyncFlags()...)),
+		BugComponent: "b:1079167", // ChromeOS > Software > Family
+		Impl:         NewFamilyLinkFixture("family.parentEmail", "family.parentPassword", "family.gellerEmail", "family.gellerPassword", true, chrome.ARCSupported(), chrome.ExtraArgs(arc.DisableSyncFlags()...)),
 		Vars: []string{
 			"family.parentEmail",
 			"family.parentPassword",
