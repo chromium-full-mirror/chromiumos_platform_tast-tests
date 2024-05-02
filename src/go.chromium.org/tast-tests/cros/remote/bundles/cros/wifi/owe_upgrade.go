@@ -40,7 +40,7 @@ func init() {
 			"andrzejo@google.com",             // author
 		},
 		BugComponent:    "b:893827", // ChromeOS > Platform > Connectivity > WiFi
-		Attr:            []string{"group:wificell", "wificell_func", "wificell_unstable"},
+		Attr:            []string{"group:wificell", "wificell_func"},
 		ServiceDeps:     []string{wificell.ShillServiceName},
 		Fixture:         wificell.FixtureID(wificell.TFFeaturesCapture),
 		HardwareDeps:    hwdep.D(hwdep.WifiNotMarvell()),
