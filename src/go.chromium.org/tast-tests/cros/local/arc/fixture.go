@@ -44,6 +44,19 @@ func init() {
 		PreTestTimeout:  PreTestTimeout,
 		PostTestTimeout: PostTestTimeout,
 		TearDownTimeout: ResetTimeout,
+		Params: []testing.FixtureParam{
+			{
+				Val: arcBootedFixtureArgs{chrome.FieldTrialConfigDefault},
+			},
+			{
+				Name: "fieldtrial_testing_config_off",
+				Val:  arcBootedFixtureArgs{chrome.FieldTrialConfigDisable},
+			},
+			{
+				Name: "fieldtrial_testing_config_on",
+				Val:  arcBootedFixtureArgs{chrome.FieldTrialConfigEnable},
+			},
+		},
 	})
 
 	// arcBootedWithNoDownloadsBindMount is a fixture similar to arcBooted, except
@@ -699,6 +712,10 @@ func init() {
 	})
 }
 
+type arcBootedFixtureArgs struct {
+	fieldTrialConfig int // Value for FieldTrialConfig Chrome parameter
+}
+
 type bootedFixture struct {
 	parentStateProvider func(s *testing.FixtState) interface{}
 
@@ -851,6 +868,11 @@ func (f *bootedFixture) SetUp(ctx context.Context, s *testing.FixtState) interfa
 	opts, err := f.fOpt(ctx, s)
 	if err != nil {
 		s.Fatal("Failed to obtain fixture options: ", err)
+	}
+
+	if s.Param() != nil {
+		args := s.Param().(arcBootedFixtureArgs)
+		opts = append(opts, chrome.FieldTrialConfig(args.fieldTrialConfig))
 	}
 
 	cr, err := chrome.New(ctx, opts...)

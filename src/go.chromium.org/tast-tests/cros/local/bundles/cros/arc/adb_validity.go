@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
@@ -27,16 +28,43 @@ func init() {
 		// ChromeOS > Software > ARC++ > Core > Integration
 		BugComponent: "b:1131321",
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "arcBooted",
-		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_container"},
-			// b:238260020 - disable aged (>1y) unpromoted informational tests
-			// ExtraAttr:         []string{"group:mainline", "informational"},
-		}, {
-			Name:              "vm",
-			ExtraSoftwareDeps: []string{"android_vm"},
-			ExtraAttr:         []string{"group:mainline", "group:hw_agnostic"},
-		}},
+		Timeout: 7 * time.Minute,
+		Params: []testing.Param{
+			{
+				Fixture:           "arcBooted",
+				ExtraSoftwareDeps: []string{"android_container"},
+				ExtraAttr:         []string{"group:mainline", "informational"},
+			},
+			{
+				Name:              "fieldtrial_testing_config_off",
+				Fixture:           "arcBooted.fieldtrial_testing_config_off",
+				ExtraSoftwareDeps: []string{"android_container"},
+				ExtraAttr:         []string{"group:mainline", "informational"},
+			},
+			{
+				Name:              "fieldtrial_testing_config_on",
+				Fixture:           "arcBooted.fieldtrial_testing_config_on",
+				ExtraSoftwareDeps: []string{"android_container"},
+				ExtraAttr:         []string{"group:mainline", "informational"},
+			},
+			{
+				Name:              "vm",
+				Fixture:           "arcBooted",
+				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraAttr:         []string{"group:mainline", "group:hw_agnostic"},
+			},
+			{
+				Name:              "fieldtrial_testing_config_off_vm",
+				Fixture:           "arcBooted.fieldtrial_testing_config_off",
+				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraAttr:         []string{"group:mainline", "informational"},
+			},
+			{
+				Name:              "fieldtrial_testing_config_on_vm",
+				Fixture:           "arcBooted.fieldtrial_testing_config_on",
+				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraAttr:         []string{"group:mainline", "informational"},
+			}},
 	})
 }
 
