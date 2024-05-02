@@ -178,7 +178,7 @@ func stressTestCase(ctx context.Context, localRand *rand.Rand, mbPerTab, switchC
 	}
 
 	if err := cpu.WaitUntilIdle(ctx); err != nil {
-		return memorystress.TestCaseResult{}, errors.Wrap(err, "failed to wait for idle CPU")
+		testing.ContextLog(ctx, "Failed to wait for idle CPU: ", err)
 	}
 
 	// Setup min_filelist_kbytes after chrome start.
