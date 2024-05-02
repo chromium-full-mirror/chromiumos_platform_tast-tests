@@ -29,7 +29,7 @@ var mouseHistograms = []string{
 	// Collect the event once the root cause is fixed.
 	// "EventLatency.MouseMoved.TotalLatency",
 	"EventLatency.MousePressed.TotalLatency",
-	"EventLatency.GestureScrollUpdate.TotalLatency",
+	"EventLatency.GestureScrollUpdate.TotalLatency2",
 }
 
 var keyInputHistograms = []string{
