@@ -23,7 +23,7 @@ func init() {
 			"chromeos-core-services@google.com", // Update engine
 			"chromeos-commercial-remote-management@google.com",
 		},
-        BugComponent: "b:908319",
+		BugComponent:    "b:908319",
 		Impl:            &updateEngineFixture{},
 		PreTestTimeout:  30 * time.Second,
 		PostTestTimeout: 30 * time.Second,
@@ -42,11 +42,12 @@ func init() {
 			"mpolzer@chromium.org",
 			"chromeos-commercial-remote-management@google.com",
 		},
-		BugComponent:    "b:1031231",        // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Version Control
+		BugComponent:    "b:1031231",      // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Version Control
 		Parent:          fixture.Enrolled, // Provides enrollment.
 		Impl:            &updateEngineFixture{},
 		PreTestTimeout:  30 * time.Second,
 		PostTestTimeout: 30 * time.Second,
+		SetUpTimeout:    30 * time.Second,
 		ServiceDeps: []string{
 			"tast.cros.autoupdate.UpdateService",
 		},
@@ -61,11 +62,12 @@ func init() {
 			"igorcov@chromium.org",
 			"chromeos-commercial-remote-management@google.com",
 		},
-		BugComponent:    "b:1031231",              // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Version Control
+		BugComponent:    "b:1031231",            // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Version Control
 		Parent:          fixture.CleanOwnership, // Clean device ownership.
 		Impl:            &updateEngineFixture{},
 		PreTestTimeout:  30 * time.Second,
 		PostTestTimeout: 30 * time.Second,
+		SetUpTimeout:    30 * time.Second,
 		ServiceDeps: []string{
 			"tast.cros.autoupdate.UpdateService",
 		},
