@@ -31,7 +31,6 @@ func SELinuxRootFS(ctx context.Context, s *testing.State) {
 		{Path: "/bin", Context: "cros_coreutils_exec", Recursive: true, Filter: selinux.InvertFilterSkipFile(selinux.SkipCoreutilsFile)},
 		{Path: "/bin/bash", Context: "sh_exec"},
 		{Path: "/bin/dash", Context: "sh_exec"},
-		{Path: "/bin/kmod", Context: "cros_modprobe_exec"},
 		{Path: "/bin/sh", Context: "sh_exec"},
 		{Path: "/etc", Context: "cros_conf_file", Recursive: true, Filter: selinux.IgnorePaths([]string{
 			"/etc/hosts.d", "/etc/localtime", "/etc/passwd", "/etc/group", "/etc/shadow", "/etc/selinux", "/etc/featured",
@@ -47,6 +46,7 @@ func SELinuxRootFS(ctx context.Context, s *testing.State) {
 		{Path: "/usr/bin/anomaly_detector", Context: "cros_anomaly_detector_exec"},
 		{Path: "/usr/bin/dbus-uuidgen", Context: "cros_dbus_uuidgen_exec"},
 		{Path: "/usr/bin/ionice", Context: "cros_ionice_exec"},
+		{Path: "/usr/bin/kmod", Context: "cros_modprobe_exec"},
 		{Path: "/usr/bin/logger", Context: "cros_logger_exec"},
 		{Path: "/usr/bin/metrics_client", Context: "cros_metrics_client_exec"},
 		{Path: "/usr/bin/metrics_daemon", Context: "cros_metrics_daemon_exec"},
