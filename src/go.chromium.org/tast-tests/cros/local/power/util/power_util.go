@@ -142,13 +142,34 @@ func GetKernelVersion(ctx context.Context) string {
 
 // GetScreenResolution returns the screen resolution.
 func GetScreenResolution(ctx context.Context) string {
-	cmd := "for f in /sys/class/drm/*/*/modes; do head -1 $f; done"
+	cmd := "modetest -c | sed -n '/modes:/{n;p}'"
 	readResult, err := testexec.CommandContext(ctx, "bash", "-c", cmd).Output()
 	if err != nil {
-		testing.ContextLog(ctx, "Failed to get screen resolution, or device doesn't have a screen")
+		testing.ContextLog(ctx, "Failed to find screen resolution, or device doesn't have a screen")
 		return ""
 	}
-	return strings.TrimSpace(string(readResult))
+	pattern := `\s+`
+	re := regexp.MustCompile(pattern)
+	re.ReplaceAll(readResult, []byte(" "))
+	fields1 := strings.Split(strings.TrimSpace(string(readResult)), " ")
+
+	cmd = "modetest -c | sed -n '/modes:/{n;n;p}'"
+	readResult, err = testexec.CommandContext(ctx, "bash", "-c", cmd).Output()
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to read screen resolution")
+		return ""
+	}
+	re.ReplaceAll(readResult, []byte(" "))
+	fields2 := strings.Split(strings.TrimSpace(string(readResult)), " ")
+	// e.g. fields1 = ["index", "name", "refresh", ...]
+	// e.g. fields2 = ["#0", "1920x1080", "60.00", ...]
+	for i := 0; i < min(len(fields1), len(fields2)); i++ {
+		if fields1[i] == "name" {
+			return fields2[i]
+		}
+	}
+	testing.ContextLog(ctx, "Failed to parse screen resolution")
+	return ""
 }
 
 // GetRootDevice returns the root disk device.
