@@ -22,7 +22,8 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:         fixture.ServicesOnBoot,
 		Desc:         "Fixture for platform.ServicesOnBoot.* tests; DO NOT USE for other tests",
-		Contacts:     []string{"aaronyu@google.com", "chromeos-audio-sw@google.com"},
+		Contacts:     []string{"aaronyu@google.com", "chromeos-audio-bugs@google.com"},
+		BugComponent: "b:776546",
 		Impl:         ServicesOnBootFixt{},
 		SetUpTimeout: servicesOnBootSetUpTimeout,
 		ServiceDeps:  []string{"tast.cros.platform.UpstartService"},
