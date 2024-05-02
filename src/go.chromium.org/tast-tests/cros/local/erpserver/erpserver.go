@@ -215,6 +215,7 @@ func (erpserver *ErpServer) handleUpload(ctx context.Context, w http.ResponseWri
 	}
 
 	if request.ConfigurationFileVersion != nil {
+		testing.ContextLog(ctx, "Reporting: attach config file requested")
 		if erpserver.fakeConfigFile != nil && *request.ConfigurationFileVersion != erpserver.fakeConfigFile.Version {
 			testing.ContextLog(ctx, "Reporting: attach configuration file requested, with version= ", *request.ConfigurationFileVersion)
 			testing.ContextLog(ctx, "Reporting: Returning fake configuration file = ", erpserver.fakeConfigFile)
