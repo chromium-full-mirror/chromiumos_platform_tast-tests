@@ -21,7 +21,7 @@ func init() {
 		Desc:         "Measure the time it takes to enable, disable, connect, and disconnect from a Cellular Service ",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "madhavadas@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:         []string{"group:cellular_crosbolt", "cellular_crosbolt_perf_nightly", "cellular_crosbolt_unstable"},
+		Attr:         []string{"group:cellular_crosbolt", "cellular_crosbolt_perf_nightly"},
 		HardwareDeps: hwdep.D(hwdep.Cellular()),
 		Timeout:      10 * time.Minute,
 		Fixture:      "cellular",
