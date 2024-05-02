@@ -57,6 +57,7 @@ func init() {
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
 			return []Option{ExtraArgs("--disable-sync"), EnableFeatures("CrosBatterySaver", "CrosBatterySaverAlwaysOn")}, nil
 		}),
+		BugComponent:    "b:1045832", // ChromeOS > Software > Performance > TPS
 		SetUpTimeout:    FixtureSetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: ResetTimeout,
