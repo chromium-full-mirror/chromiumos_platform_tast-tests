@@ -55,6 +55,12 @@ func KernelMemory(ctx context.Context, s *testing.State) {
 		Unit:      "bytes",
 		Direction: perf.BiggerIsBetter,
 	}, float64(bytesUsed))
+	pv.Set(perf.Metric{
+		Name:      "platform_mem_total",
+		Unit:      "bytes",
+		Direction: perf.BiggerIsBetter,
+	}, float64(outMem["MemTotal"]))
+
 	if err := pv.Save(s.OutDir()); err != nil {
 		s.Error("Failed saving perf data: ", err)
 	}
