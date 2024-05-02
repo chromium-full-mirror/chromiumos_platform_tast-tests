@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/media/caps"
+	"go.chromium.org/tast-tests/cros/local/graphics"
 	"go.chromium.org/tast-tests/cros/local/graphics/expectations"
 	"go.chromium.org/tast-tests/cros/local/media/decoding"
 	"go.chromium.org/tast/core/testing"
@@ -769,12 +770,11 @@ func calculateTestTimeout(videoFiles []string, testName string) time.Duration {
 // chromeStackDecoderVerificationTestParam is used to describe the options used
 // to run each test.
 type chromeStackDecoderVerificationTestParam struct {
-	videoFiles    []string               // The paths of video files to be tested.
-	validatorType decoding.ValidatorType // The frame validation type of video_decode_accelerator_tests.
-	// If set, verify that MD5SUM verification is not successful.
-	mustFail bool
-	// List of Chrome Features to enable, if any.
-	enabledFeatures []string
+	videoFiles      []string                  // The paths of video files to be tested.
+	validatorType   decoding.ValidatorType    // The frame validation type of video_decode_accelerator_tests.
+	mustFail        bool                      // If set, verify that MD5SUM verification is not successful.
+	ignoredSysLogs  []graphics.SysLogCategory // optional list of syslog categories to ignore
+	enabledFeatures []string                  // List of Chrome Features to enable, if any.
 }
 
 func init() {
@@ -932,6 +932,7 @@ func init() {
 					validatorType:   decoding.MD5,
 					mustFail:        true,
 					enabledFeatures: []string{},
+					ignoredSysLogs:  []graphics.SysLogCategory{graphics.SysLogMediatekVideoErrors},
 				},
 			},
 			{
@@ -1619,6 +1620,7 @@ func init() {
 					validatorType:   decoding.MD5,
 					mustFail:        true,
 					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
+					ignoredSysLogs:  []graphics.SysLogCategory{graphics.SysLogMediatekVideoErrors},
 				},
 			},
 			{
@@ -2187,6 +2189,10 @@ func ChromeStackDecoderVerification(ctx context.Context, s *testing.State) {
 	param := s.Param().(chromeStackDecoderVerificationTestParam)
 	for _, file := range param.videoFiles {
 		tv = append(tv, s.DataPath(file))
+	}
+
+	if len(param.ignoredSysLogs) > 0 {
+		graphics.DisableSysLogCheck(s.TestName(), param.ignoredSysLogs...)
 	}
 
 	if err := decoding.RunAccelVideoTestWithTestVectors(ctx, s.OutDir(), tv, param.validatorType, param.mustFail, param.enabledFeatures); err != nil {

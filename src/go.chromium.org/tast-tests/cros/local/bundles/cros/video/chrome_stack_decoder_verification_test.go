@@ -53,6 +53,7 @@ type paramData struct {
 	ValidatorType   string
 	EnabledFeatures []string
 	MustFail        bool
+	IgnoredSysLogs  string
 }
 
 func genCombinedDeps(format string, deps []string) string {
@@ -188,6 +189,7 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 			ValidatorType:   "decoding.MD5",
 			MustFail:        true,
 			EnabledFeatures: param.EnabledFeatures,
+			IgnoredSysLogs:  "graphics.SysLogMediatekVideoErrors",
 		}, {
 			Name:            fmt.Sprintf("%sh264_baseline", testGroup),
 			Attr:            perBuildAttrs,
@@ -456,9 +458,9 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 
 	code := genparams.Template(t, `{{ range . }}{
 		Name: {{ .Name | fmt }},
-        {{ if .Comment }}
-        // {{ .Comment }}
-        {{ end }}
+			{{ if .Comment }}
+			// {{ .Comment }}
+			{{ end }}
 		{{ if .Attr }}
 		ExtraAttr: {{ .Attr | fmt }},
 		{{ end }}
@@ -471,10 +473,14 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 		ExtraData: appendJSONFiles({{ .VideoFiles }}),
 		Timeout: calculateTestTimeout({{ .VideoFiles }}, {{ .Name | fmt }}),
 		Val:  chromeStackDecoderVerificationTestParam{
-            videoFiles: {{ .VideoFiles  }},
-            validatorType: {{ .ValidatorType }},
-            mustFail: {{ .MustFail | fmt }},
-            enabledFeatures: {{ .EnabledFeatures | fmt }},
+						videoFiles: {{ .VideoFiles  }},
+						validatorType: {{ .ValidatorType }},
+						mustFail: {{ .MustFail | fmt }},
+						enabledFeatures: {{ .EnabledFeatures | fmt }},
+						{{ if .IgnoredSysLogs }}
+						ignoredSysLogs: []graphics.SysLogCategory{ {{ .IgnoredSysLogs }} },
+						{{ end }}
+
 		},
 	},
 	{{ end }}`, params)
