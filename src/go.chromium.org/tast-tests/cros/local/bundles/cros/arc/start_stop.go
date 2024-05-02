@@ -15,10 +15,10 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-// testArgs represents the arguments passed to each parameterized test.
-type testArgs struct {
-	// subtests represents the subtests to run.
-	subtests []startstop.Subtest
+// startStopTestArgs represents the arguments passed to each parameterized test.
+type startStopTestArgs struct {
+	subtests         []startstop.Subtest // subtests represents the subtests to run.
+	fieldTrialConfig int                 // Value for FieldTrialConfig Chrome parameter
 }
 
 func init() {
@@ -44,30 +44,84 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
-		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_container"},
-			Val: testArgs{
-				subtests: []startstop.Subtest{
-					&startstop.TestMidis{},
-					&startstop.TestMount{},
-					&startstop.TestPID{},
+		Params: []testing.Param{
+			{
+				ExtraSoftwareDeps: []string{"android_container"},
+				Val: startStopTestArgs{
+					fieldTrialConfig: chrome.FieldTrialConfigDefault,
+					subtests: []startstop.Subtest{
+						&startstop.TestMidis{},
+						&startstop.TestMount{},
+						&startstop.TestPID{},
+					},
 				},
 			},
-		}, {
-			Name:              "vm",
-			ExtraSoftwareDeps: []string{"android_vm"},
-			Val: testArgs{
-				subtests: []startstop.Subtest{
-					&startstop.TestMidis{},
-					&startstop.TestPID{},
+			{
+				Name:              "fieldtrial_testing_config_off",
+				ExtraAttr:         []string{"informational"},
+				ExtraSoftwareDeps: []string{"android_container"},
+				Val: startStopTestArgs{
+					fieldTrialConfig: chrome.FieldTrialConfigDisable,
+					subtests: []startstop.Subtest{
+						&startstop.TestMidis{},
+						&startstop.TestMount{},
+						&startstop.TestPID{},
+					},
 				},
 			},
-		}},
+			{
+				Name:              "fieldtrial_testing_config_on",
+				ExtraAttr:         []string{"informational"},
+				ExtraSoftwareDeps: []string{"android_container"},
+				Val: startStopTestArgs{
+					fieldTrialConfig: chrome.FieldTrialConfigEnable,
+					subtests: []startstop.Subtest{
+						&startstop.TestMidis{},
+						&startstop.TestMount{},
+						&startstop.TestPID{},
+					},
+				},
+			},
+			{
+				Name:              "vm",
+				ExtraSoftwareDeps: []string{"android_vm"},
+				Val: startStopTestArgs{
+					fieldTrialConfig: chrome.FieldTrialConfigDefault,
+					subtests: []startstop.Subtest{
+						&startstop.TestMidis{},
+						&startstop.TestPID{},
+					},
+				},
+			},
+			{
+				Name:              "fieldtrial_testing_config_off_vm",
+				ExtraAttr:         []string{"informational"},
+				ExtraSoftwareDeps: []string{"android_vm"},
+				Val: startStopTestArgs{
+					fieldTrialConfig: chrome.FieldTrialConfigDisable,
+					subtests: []startstop.Subtest{
+						&startstop.TestMidis{},
+						&startstop.TestPID{},
+					},
+				},
+			},
+			{
+				Name:              "fieldtrial_testing_config_on_vm",
+				ExtraAttr:         []string{"informational"},
+				ExtraSoftwareDeps: []string{"android_vm"},
+				Val: startStopTestArgs{
+					fieldTrialConfig: chrome.FieldTrialConfigEnable,
+					subtests: []startstop.Subtest{
+						&startstop.TestMidis{},
+						&startstop.TestPID{},
+					},
+				},
+			}},
 	})
 }
 
 func StartStop(ctx context.Context, s *testing.State) {
-	args := s.Param().(testArgs)
+	args := s.Param().(startStopTestArgs)
 
 	s.Log("Restarting Chrome")
 
@@ -83,7 +137,7 @@ func StartStop(ctx context.Context, s *testing.State) {
 
 	// Launch Chrome with enabling ARC.
 	func() {
-		cr, err := chrome.New(ctx, chrome.ARCEnabled(), chrome.UnRestrictARCCPU())
+		cr, err := chrome.New(ctx, chrome.ARCEnabled(), chrome.UnRestrictARCCPU(), chrome.FieldTrialConfig(args.fieldTrialConfig))
 		if err != nil {
 			s.Fatal("Failed to connect to Chrome: ", err)
 		}
