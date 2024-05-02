@@ -148,10 +148,10 @@ func TestDEQPParams(t *testing.T) {
 	// Adding the normal run for each APIType
 	params = append(params, []dEQPGenParamData{{
 		Name:           `vk_{{.ShardCount}}_{{ printf "%02d" .ShardNum }}`,
-		Timeout:        2 * time.Hour,
+		Timeout:        3 * time.Hour,
 		Attr:           []string{"graphics_manual"},
 		API:            "graphics.VK",
-		ShardCount:     20,
+		ShardCount:     10,
 		IsParallel:     true,
 		HardwareModels: selectiveModels,
 		SkipGPUFamily:  []string{"rogue"},
@@ -194,7 +194,7 @@ func TestDEQPParams(t *testing.T) {
 
 	// TODO: Remove this if vk causes trouble in the lab.
 	for i := range tests {
-		if tests[i].Name == "vk_20_01" {
+		if tests[i].Name == "vk_10_01" {
 			tests[i].Attr = []string{"graphics_nightly"}
 		}
 	}
