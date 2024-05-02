@@ -681,6 +681,7 @@ func init() {
 			"pteerapong@chromium.org",
 			"arcvm-eng-team@google.com",
 		},
+		BugComponent:    "b:883059", // ChromeOS > Software > ARC++ > ARCVM
 		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,
@@ -705,6 +706,7 @@ func init() {
 			"pteerapong@chromium.org",
 			"arcvm-eng-team@google.com",
 		},
+		BugComponent:    "b:883059", // ChromeOS > Software > ARC++ > ARCVM
 		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,
