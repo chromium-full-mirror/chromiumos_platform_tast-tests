@@ -163,7 +163,7 @@ func ShillApn(ctx context.Context, s *testing.State) {
 	s.Log("ipv4: ", ipv4, " ipv6: ", ipv6)
 
 	verifyHostIPConnectivity := func(ctx context.Context) error {
-		if err := cellular.VerifyIPConnectivityUsingCurl(ctx, testexec.CommandContext, ipv4, ipv6, "/usr/bin"); err != nil {
+		if err := cellular.VerifyIPConnectivityUsingCurl(ctx, testexec.CommandContext, ipv4, ipv6); err != nil {
 			return errors.Wrap(err, "failed connectivity test")
 		}
 		return nil

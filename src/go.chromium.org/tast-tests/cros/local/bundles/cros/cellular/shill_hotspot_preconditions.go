@@ -63,7 +63,7 @@ func verifyConnectivityInBearer(ctx context.Context, s *testing.State, helper *c
 	s.Logf("Bearer connected (%s) ipv4: %v, ipv6: %v", iface, ipv4, ipv6)
 
 	verifyHostIPConnectivity := func(ctx context.Context) error {
-		if err := cellular.VerifyIPConnectivityByInterface(ctx, testexec.CommandContext, ipv4, ipv6, iface, "/bin"); err != nil {
+		if err := cellular.VerifyIPConnectivityByInterface(ctx, testexec.CommandContext, ipv4, ipv6, iface); err != nil {
 			return errors.Wrap(err, "failed connectivity test")
 		}
 		return nil

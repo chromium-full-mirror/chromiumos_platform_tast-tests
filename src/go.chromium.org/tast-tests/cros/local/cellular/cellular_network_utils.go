@@ -105,7 +105,7 @@ func verifyIPConnectivityUsingCurl(ctx context.Context, cmd func(context.Context
 }
 
 // VerifyIPConnectivityUsingCurl verifies the ip connectivity from Host via cellular interface using curl.
-func VerifyIPConnectivityUsingCurl(ctx context.Context, cmd func(context.Context, string, ...string) *testexec.Cmd, ipv4, ipv6 bool, bindir string) error {
+func VerifyIPConnectivityUsingCurl(ctx context.Context, cmd func(context.Context, string, ...string) *testexec.Cmd, ipv4, ipv6 bool) error {
 	if !ipv4 && !ipv6 {
 		return errors.New("no ip network found")
 	}
@@ -156,17 +156,17 @@ func verifyIPConnectivityUsingPing(ctx context.Context, binCmd, iface, addr stri
 
 // VerifyIPConnectivityByInterface verifies the ip connectivity from Host via one specific network interface.
 // If the |iface| string is empty, the default network interface is used.
-func VerifyIPConnectivityByInterface(ctx context.Context, cmd func(context.Context, string, ...string) *testexec.Cmd, ipv4, ipv6 bool, iface, bindir string) error {
+func VerifyIPConnectivityByInterface(ctx context.Context, cmd func(context.Context, string, ...string) *testexec.Cmd, ipv4, ipv6 bool, iface string) error {
 	if !ipv4 && !ipv6 {
 		return errors.New("no ip network found")
 	}
 	if ipv4 {
-		if err := verifyIPConnectivityUsingPing(ctx, filepath.Join(bindir, "ping"), iface, googleDotComIPv4, cmd); err != nil {
+		if err := verifyIPConnectivityUsingPing(ctx, "ping", iface, googleDotComIPv4, cmd); err != nil {
 			return err
 		}
 	}
 	if ipv6 {
-		if err := verifyIPConnectivityUsingPing(ctx, filepath.Join(bindir, "ping6"), iface, googleDotComIPv6, cmd); err != nil {
+		if err := verifyIPConnectivityUsingPing(ctx, "ping6", iface, googleDotComIPv6, cmd); err != nil {
 			return err
 		}
 	}
@@ -174,8 +174,8 @@ func VerifyIPConnectivityByInterface(ctx context.Context, cmd func(context.Conte
 }
 
 // VerifyIPConnectivity verifies the ip connectivity from Host via the default network interface
-func VerifyIPConnectivity(ctx context.Context, cmd func(context.Context, string, ...string) *testexec.Cmd, ipv4, ipv6 bool, bindir string) error {
-	return VerifyIPConnectivityByInterface(ctx, cmd, ipv4, ipv6, "", bindir)
+func VerifyIPConnectivity(ctx context.Context, cmd func(context.Context, string, ...string) *testexec.Cmd, ipv4, ipv6 bool) error {
+	return VerifyIPConnectivityByInterface(ctx, cmd, ipv4, ipv6, "")
 }
 
 func verifyArcIPConnectivityUsingPing(ctx context.Context, addr string, a *arc.ARC) error {
