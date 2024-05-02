@@ -51,6 +51,10 @@ func ConnectivityPerf(ctx context.Context, s *testing.State) {
 				Multiple:  true,
 			}, disableTime.Seconds())
 			testing.ContextLogf(ctx, "Enable %d", i)
+
+			// GoBigSleepLint: sleep to prevent MM from throttling.
+			testing.Sleep(ctx, 2*time.Second)
+
 			enableTime, err := helper.Enable(ctx)
 			if err != nil {
 				return errors.Wrapf(err, "enable failed on attempt %d", i)
