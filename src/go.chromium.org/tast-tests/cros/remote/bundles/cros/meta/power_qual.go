@@ -19,14 +19,14 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PowerQualV2,
+		Func:         PowerQual,
 		Desc:         "Run power test cases based on the given configuration",
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		BugComponent: "b:1361410", // ChromeOS > Platform > System > Power
+		BugComponent: "b:1361410", // ChromeOS > Platform > Enablement > Power
 		Contacts:     []string{"chromeos-platform-power@google.com"},
 		Vars: []string{
-			// Optional. If given, it overrides the default URL.
-			"meta.PowerQualV2.configURL",
+			// Default config URL will be overridden if this is given.
+			"meta.PowerQual.configURL",
 		},
 		ServiceDeps: []string{"tast.common.power.powerpb.LocalInfoService"},
 		// Use a big enough timeout value for the tests. Actual test context timeout value will
@@ -77,10 +77,10 @@ func init() {
 	})
 }
 
-func PowerQualV2(ctx context.Context, s *testing.State) {
+func PowerQual(ctx context.Context, s *testing.State) {
 	configURL := s.Param().(string)
 
-	if v, ok := s.Var("meta.PowerQualV2.configURL"); ok {
+	if v, ok := s.Var("meta.PowerQual.configURL"); ok {
 		// Override the default configuration file URL.
 		configURL = v
 	}

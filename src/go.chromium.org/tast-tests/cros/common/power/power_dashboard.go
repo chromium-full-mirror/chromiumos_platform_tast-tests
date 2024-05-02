@@ -366,7 +366,7 @@ func convertPerfValuesToPowerDicts(ctx context.Context, values *perf.Values, che
 		}
 
 		if metric.Interval == "" && metric.Multiple {
-			return nil, time.Time{}, errors.Errorf("multiple value metric should have a timeline")
+			return nil, time.Time{}, errors.New("multiple value metric should have a timeline")
 		}
 
 		pwrDict := timelinePowerDict
@@ -530,7 +530,7 @@ func addPowerPerfValues(ctx context.Context, powerDict *PowerDict, metrics *pb.O
 func createPowerLogFromPowerDict(ctx context.Context, testName string, powerDict map[string]interface{}, start time.Time, devInfo *pb.DeviceInfo) map[string]interface{} {
 	// If perf.Timeline is used, timestamp will be the start ts of
 	// perf.Timeline. The exception is PowerQualV2.
-	// Since PowerQualV2 main test does not have perf.Timeline, it does not
+	// Since PowerQual main test does not have perf.Timeline, it does not
 	// record test start time. Use the timestamp at time of power_log creation
 	// as an approximate.
 	powerLogDict := map[string]interface{}{
