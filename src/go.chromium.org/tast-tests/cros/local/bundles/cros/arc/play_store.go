@@ -21,7 +21,8 @@ import (
 )
 
 type playStoreTestArgs struct {
-	preprod bool // whether to run against preprod versions of dependencies (default: false)
+	preprod          bool // whether to run against preprod versions of dependencies (default: false)
+	fieldTrialConfig int  // Value for FieldTrialConfig Chrome parameter
 }
 
 func init() {
@@ -39,34 +40,64 @@ func init() {
 		BugComponent: "b:1131344",
 		Attr:         []string{"group:arc-functional", "group:mainline"},
 		SoftwareDeps: []string{"play_store", "chrome"},
-		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_container", "no_qemu"},
-			Val:               playStoreTestArgs{preprod: false},
-		}, {
-			Name:              "betty",
-			ExtraAttr:         []string{"informational"},
-			ExtraSoftwareDeps: []string{"android_container", "qemu"},
-			Val:               playStoreTestArgs{preprod: false},
-		}, {
-			Name:              "vm",
-			ExtraSoftwareDeps: []string{"android_vm", "no_qemu", "no_android_vm_t"},
-			Val:               playStoreTestArgs{preprod: false},
-		}, {
-			Name:              "x",
-			ExtraAttr:         []string{"informational"},
-			ExtraSoftwareDeps: []string{"android_vm", "no_qemu", "android_vm_t"},
-			Val:               playStoreTestArgs{preprod: false},
-		}, {
-			Name:              "betty_vm",
-			ExtraAttr:         []string{"informational"},
-			ExtraSoftwareDeps: []string{"android_vm", "qemu"},
-			Val:               playStoreTestArgs{preprod: false},
-		}, {
-			Name:              "preprod",
-			ExtraAttr:         []string{"informational", "group:hw_agnostic"},
-			ExtraSoftwareDeps: []string{"android_vm", "qemu"}, // Use betty_vm configuration for googleapis
-			Val:               playStoreTestArgs{preprod: true},
-		}},
+		Params: []testing.Param{
+			{
+				ExtraSoftwareDeps: []string{"android_container", "no_qemu"},
+				Val:               playStoreTestArgs{preprod: false, fieldTrialConfig: chrome.FieldTrialConfigDefault},
+			},
+			{
+				Name:              "fieldtrial_testing_config_off",
+				ExtraAttr:         []string{"informational"},
+				ExtraSoftwareDeps: []string{"android_container", "no_qemu"},
+				Val:               playStoreTestArgs{preprod: false, fieldTrialConfig: chrome.FieldTrialConfigDisable},
+			},
+			{
+				Name:              "fieldtrial_testing_config_on",
+				ExtraAttr:         []string{"informational"},
+				ExtraSoftwareDeps: []string{"android_container", "no_qemu"},
+				Val:               playStoreTestArgs{preprod: false, fieldTrialConfig: chrome.FieldTrialConfigEnable},
+			},
+			{
+				Name:              "betty",
+				ExtraAttr:         []string{"informational"},
+				ExtraSoftwareDeps: []string{"android_container", "qemu"},
+				Val:               playStoreTestArgs{preprod: false, fieldTrialConfig: chrome.FieldTrialConfigDefault},
+			},
+			{
+				Name:              "vm",
+				ExtraSoftwareDeps: []string{"android_vm", "no_qemu", "no_android_vm_t"},
+				Val:               playStoreTestArgs{preprod: false, fieldTrialConfig: chrome.FieldTrialConfigDefault},
+			},
+			{
+				Name:              "x",
+				ExtraAttr:         []string{"informational"},
+				ExtraSoftwareDeps: []string{"android_vm", "no_qemu", "android_vm_t"},
+				Val:               playStoreTestArgs{preprod: false, fieldTrialConfig: chrome.FieldTrialConfigDefault},
+			},
+			{
+				Name:              "fieldtrial_testing_config_off_x",
+				ExtraAttr:         []string{"informational"},
+				ExtraSoftwareDeps: []string{"android_vm", "no_qemu", "android_vm_t"},
+				Val:               playStoreTestArgs{preprod: false, fieldTrialConfig: chrome.FieldTrialConfigDisable},
+			},
+			{
+				Name:              "fieldtrial_testing_config_on_x",
+				ExtraAttr:         []string{"informational"},
+				ExtraSoftwareDeps: []string{"android_vm", "no_qemu", "android_vm_t"},
+				Val:               playStoreTestArgs{preprod: false, fieldTrialConfig: chrome.FieldTrialConfigEnable},
+			},
+			{
+				Name:              "betty_vm",
+				ExtraAttr:         []string{"informational"},
+				ExtraSoftwareDeps: []string{"android_vm", "qemu"},
+				Val:               playStoreTestArgs{preprod: false},
+			},
+			{
+				Name:              "preprod",
+				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
+				ExtraSoftwareDeps: []string{"android_vm", "qemu"}, // Use betty_vm configuration for googleapis
+				Val:               playStoreTestArgs{preprod: true},
+			}},
 		Timeout: 15 * time.Minute,
 		VarDeps: []string{"ui.gaiaPoolDefault"},
 	})
@@ -88,11 +119,14 @@ func PlayStore(ctx context.Context, s *testing.State) {
 		Errorf:      s.Errorf,
 		Logf:        s.Logf}
 
+	args := s.Param().(playStoreTestArgs)
+
 	if err := testing.Poll(ctx, func(ctx context.Context) (retErr error) {
 		cr, err := chrome.New(ctx,
 			chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
 			chrome.UnRestrictARCCPU(),
 			chrome.ARCSupported(),
+			chrome.FieldTrialConfig(args.fieldTrialConfig),
 			chrome.ExtraArgs(arc.DisableSyncFlags()...))
 		if err != nil {
 			return rl.Retry("connect to Chrome", err)
@@ -106,7 +140,7 @@ func PlayStore(ctx context.Context, s *testing.State) {
 		// Set up the test environment for external dependencies post opt-in.
 		// This will redirect *.google.com and *.googleapis.com to the preprod of Google frontend
 		// to see that PlayStore works with any changes coming in this environment.
-		if s.Param().(playStoreTestArgs).preprod {
+		if args.preprod {
 			env, err := testenv.NewPreprodEnv(ctx,
 				testenv.RedirectMap(arc.PassThroughPreprodGFE))
 			if err != nil {
