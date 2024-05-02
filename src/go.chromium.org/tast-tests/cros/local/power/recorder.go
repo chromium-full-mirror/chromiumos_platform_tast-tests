@@ -12,7 +12,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/perf"
 	cp "go.chromium.org/tast-tests/cros/common/power"
-	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast-tests/cros/local/power/metrics"
@@ -118,25 +117,41 @@ type ThermalCooldownParams struct {
 // setting fans to 100% and wait until the temperature meets the
 // stopping criteria defined in ThermalCooldownParams.
 func ThermalCooldown(ctx context.Context, p ThermalCooldownParams) error {
+	// The retry parameters are set based on similar utilities in autotest.
+	// crsrc.org/o/src/third_party/autotest/files/client/cros/power/power_status.py;l=2492
+	const (
+		retryAttempts  = 3
+		ecCommandDelay = 2 * time.Second
+	)
+
 	setFanMaxDuty := func(ctx context.Context) error {
-		if err := testexec.CommandContext(ctx, "ectool", "fanduty", "100").Run(); err != nil {
-			return errors.Wrap(err, "unable to set fan to max duty cycle")
-		}
-		return nil
+		return util.RunCommandWithRetry(ctx,
+			retryAttempts,
+			ecCommandDelay,
+			"unable to set fan to max duty cycle using ectool",
+			"ectool", "fanduty", "100")
 	}
 
 	setFanAutoCtrl := func(ctx context.Context) error {
-		if err := testexec.CommandContext(ctx, "ectool", "autofanctrl").Run(); err != nil {
-			return errors.Wrap(err, "unable to set fan to auto")
-		}
-		return nil
+		return util.RunCommandWithRetry(ctx,
+			retryAttempts,
+			ecCommandDelay,
+			"unable to set fan to auto using using ectool",
+			"ectool", "autofanctrl")
 	}
+
+	// Some fanless devices return error when setting fan speed. Avoid setting
+	// fan speed for these devices. For fanless devices which do not return
+	// error, setting fan speed would make no functional difference.
+	useFanForCooldown := setFanAutoCtrl(ctx) == nil
 
 	samples := make([]float64, 0)
 
 	if err := testing.Poll(ctx, func(context.Context) error {
-		if err := setFanMaxDuty(ctx); err != nil {
-			return err
+		if useFanForCooldown {
+			if err := setFanMaxDuty(ctx); err != nil {
+				return err
+			}
 		}
 
 		temp, _, err := cpu.Temperature(ctx)
@@ -162,14 +177,22 @@ func ThermalCooldown(ctx context.Context, p ThermalCooldownParams) error {
 		Timeout:  p.Timeout,
 		Interval: p.Interval,
 	}); err != nil {
-		if fanErr := setFanAutoCtrl(ctx); fanErr != nil {
-			testing.ContextLog(ctx, "Fan failed to reset to auto after cooldown failure")
+		err = errors.Wrap(err, "failed to cooldown")
+
+		if useFanForCooldown {
+			if fanErr := setFanAutoCtrl(ctx); fanErr != nil {
+				fanErr = errors.Wrap(fanErr, "also failed to reset fan to auto")
+				err = errors.Join(err, fanErr)
+			}
 		}
-		return errors.Wrap(err, "failed to cooldown")
+
+		return err
 	}
 
-	if err := setFanAutoCtrl(ctx); err != nil {
-		return err
+	if useFanForCooldown {
+		if err := setFanAutoCtrl(ctx); err != nil {
+			return err
+		}
 	}
 
 	if err := Cooldown(ctx); err != nil {
