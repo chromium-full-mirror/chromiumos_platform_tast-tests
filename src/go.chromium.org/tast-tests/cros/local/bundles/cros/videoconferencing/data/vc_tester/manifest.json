@@ -1,0 +1,13 @@
+{
+  "display": "standalone",
+  "icons": [
+    {
+      "sizes": "256x256",
+      "src": "camera.png",
+      "type": "image/png"
+    }
+  ],
+  "name": "VcTester",
+  "short_name": "VcTester",
+  "start_url": "/vc_tester/popup.html"
+}

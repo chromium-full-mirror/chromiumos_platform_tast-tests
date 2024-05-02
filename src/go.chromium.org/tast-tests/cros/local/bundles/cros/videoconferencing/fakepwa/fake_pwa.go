@@ -2,32 +2,34 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Package fakevctab contains the library of fake VC tab.
-package fakevctab
+// Package fakepwa contains the library of fake VC PWA app.
+package fakepwa
 
 import (
 	"context"
 	"regexp"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 )
 
-// VcTabUI represents the Fake VC Tab UI.
+// VcPwaUI represents the Fake VC Tab UI.
 // It is usually launched by browersing to fake html.
-type VcTabUI struct {
+type VcPwaUI struct {
 	tconn *chrome.TestConn
 	ui    *uiauto.Context
-	tab   *browser.Tab
+	appID string
 }
 
 var (
-	vcTabName   = "VcTester"
-	rootWebArea = nodewith.Role(role.RootWebArea).Name(vcTabName)
+	vcPwaName   = "VcTester"
+	rootWebArea = nodewith.Role(role.RootWebArea).Name(vcPwaName)
 
 	startVideoButton           = nodewith.Name("Start Video").Role(role.Button).Ancestor(rootWebArea)
 	stopVideoButton            = nodewith.Name("Stop Video").Role(role.Button).Ancestor(rootWebArea)
@@ -39,68 +41,67 @@ var (
 	videoNode = nodewith.Role(role.Video).Ancestor(rootWebArea)
 )
 
-// LaunchTab opens a new tab for the url.
-func LaunchTab(ctx context.Context, tconn *browser.TestConn, br *browser.Browser, url string) (*VcTabUI, error) {
-	if _, err := br.NewTab(ctx, url); err != nil {
+// LaunchApp opens an app with appID.
+func LaunchApp(ctx context.Context, tconn *browser.TestConn, br *browser.Browser, appID string) (*VcPwaUI, error) {
+	if err := apps.Launch(ctx, tconn, appID); err != nil {
 		return nil, err
 	}
 
-	tab, err := browser.GetTabByTitle(ctx, tconn, vcTabName)
-	if err != nil {
-		return nil, err
-	}
-
-	return &VcTabUI{tconn, uiauto.New(tconn), tab}, nil
+	return &VcPwaUI{tconn, uiauto.New(tconn), appID}, nil
 }
 
-// CloseTab closes the tab with id inside VcTabUI.
-func (extUI *VcTabUI) CloseTab(ctx context.Context) error {
-	return browser.CloseTabsByID(ctx, extUI.tconn, []int{extUI.tab.ID})
+// CloseApp closes the app with appID inside VcPwaUI.
+func (pwaUI *VcPwaUI) CloseApp(ctx context.Context) error {
+	if err := apps.Close(ctx, pwaUI.tconn, pwaUI.appID); err != nil {
+		return err
+	}
+
+	return ash.WaitForAppClosed(ctx, pwaUI.tconn, pwaUI.appID)
 }
 
 // StartVideo clicks on "Start Video" button to activate camera.
-func (extUI *VcTabUI) StartVideo(ctx context.Context) error {
-	return extUI.ui.DoDefault(startVideoButton)(ctx)
+func (pwaUI *VcPwaUI) StartVideo(ctx context.Context) error {
+	return pwaUI.ui.DoDefault(startVideoButton)(ctx)
 }
 
 // StopVideo clicks on "Stop Video" button to deactivate camera.
-func (extUI *VcTabUI) StopVideo(ctx context.Context) error {
-	return extUI.ui.DoDefault(stopVideoButton)(ctx)
+func (pwaUI *VcPwaUI) StopVideo(ctx context.Context) error {
+	return pwaUI.ui.DoDefault(stopVideoButton)(ctx)
 }
 
 // StartAudio clicks on "Start Audio" button to activate microphone.
-func (extUI *VcTabUI) StartAudio(ctx context.Context) error {
+func (pwaUI *VcPwaUI) StartAudio(ctx context.Context) error {
 	return uiauto.Combine("start audio",
-		extUI.ui.DoDefault(startAudioButton),
+		pwaUI.ui.DoDefault(startAudioButton),
 		// Add a short sleep after starting audio. Refer to b/298280544 for more details.
 		uiauto.Sleep(100*time.Millisecond),
 	)(ctx)
 }
 
 // StopAudio clicks on "Stop Audio" button to deactivate microphone.
-func (extUI *VcTabUI) StopAudio(ctx context.Context) error {
-	return extUI.ui.DoDefault(stopAudioButton)(ctx)
+func (pwaUI *VcPwaUI) StopAudio(ctx context.Context) error {
+	return pwaUI.ui.DoDefault(stopAudioButton)(ctx)
 }
 
 // StartScreenCapture clicks on "Start Screen Capturing" button to activate screen sharing.
-func (extUI *VcTabUI) StartScreenCapture(ctx context.Context) error {
+func (pwaUI *VcPwaUI) StartScreenCapture(ctx context.Context) error {
 	// There may be multiple "Choose what to share" dialogs, so add First() here.
 	chooseWhatToShareWindow := nodewith.Role(role.Dialog).NameContaining("Choose what to share").HasClass("Widget").First()
 	entireScreenTab := nodewith.Role(role.Tab).NameRegex(regexp.MustCompile("(?i)Entire Screen")).Ancestor(chooseWhatToShareWindow)
 	display := nodewith.Role(role.Button).HasClass("DesktopMediaSourceView").Ancestor(chooseWhatToShareWindow).First()
 	shareButton := nodewith.Name("Share").Role(role.Button).Ancestor(chooseWhatToShareWindow)
 	return uiauto.Combine("share entire screen",
-		extUI.ui.DoDefaultUntil(
+		pwaUI.ui.DoDefaultUntil(
 			startScreenCapturingButton,
-			extUI.ui.WithTimeout(3*time.Second).WaitUntilExists(chooseWhatToShareWindow),
+			pwaUI.ui.WithTimeout(3*time.Second).WaitUntilExists(chooseWhatToShareWindow),
 		),
-		extUI.ui.DoDefault(entireScreenTab),
-		extUI.ui.DoDefault(display),
-		extUI.ui.DoDefault(shareButton),
+		pwaUI.ui.DoDefault(entireScreenTab),
+		pwaUI.ui.DoDefault(display),
+		pwaUI.ui.DoDefault(shareButton),
 	)(ctx)
 }
 
 // StopScreenCapture clicks on "Stop Screen Capturing" button to deactivate screen sharing.
-func (extUI *VcTabUI) StopScreenCapture(ctx context.Context) error {
-	return extUI.ui.DoDefault(stopScreenCapturingButton)(ctx)
+func (pwaUI *VcPwaUI) StopScreenCapture(ctx context.Context) error {
+	return pwaUI.ui.DoDefault(stopScreenCapturingButton)(ctx)
 }

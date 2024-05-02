@@ -12,7 +12,8 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/tbdep"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/fakevctab"
+	"go.chromium.org/tast-tests/cros/local/apps"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/fakepwa"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
@@ -26,16 +27,15 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-const vcTabURL = "/vc_tester/popup.html"
-
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         TrayTriggersTab,
+		Func:         TrayTriggersPwa,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks VC tray can be triggered by Chrome tab",
 		Contacts: []string{
 			"chrome-knowledge-eng@google.com",
 			"xiuwen@google.com",
+			"charleszhao@google.com",
 		},
 		BugComponent: "b:187682",
 		Timeout:      3 * time.Minute,
@@ -48,6 +48,8 @@ func init() {
 		Data: []string{
 			"vc_tester/popup.html",
 			"vc_tester/popup.js",
+			"vc_tester/camera.png",
+			"vc_tester/manifest.json",
 		},
 
 		Params: []testing.Param{
@@ -108,8 +110,8 @@ func init() {
 	})
 }
 
-// TrayTriggersTab checks VC tray can be triggered by Chrome tabs.
-func TrayTriggersTab(ctx context.Context, s *testing.State) {
+// TrayTriggersPwa checks VC tray can be triggered by Chrome tabs.
+func TrayTriggersPwa(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
@@ -122,6 +124,9 @@ func TrayTriggersTab(ctx context.Context, s *testing.State) {
 	}
 
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui")
+
+	srv := httptest.NewServer(http.FileServer(s.DataFileSystem()))
+	defer srv.Close()
 
 	browserType := s.FixtValue().(fixture.FixtData).BrowserType()
 
@@ -136,8 +141,6 @@ func TrayTriggersTab(ctx context.Context, s *testing.State) {
 	defer conn.CloseTarget(cleanupCtx)
 
 	// Grant permission.
-	srv := httptest.NewServer(http.FileServer(s.DataFileSystem()))
-	defer srv.Close()
 	br.GrantPermissions(ctx, []string{fmt.Sprintf("%s/*", srv.URL)},
 		browser.CameraContentSetting,
 		browser.MicrophoneContentSetting,
@@ -145,19 +148,32 @@ func TrayTriggersTab(ctx context.Context, s *testing.State) {
 
 	vcTray := vctray.New(ctx, tconn)
 
-	vcTabFullURL := srv.URL + vcTabURL
+	// Install PWA.
+	vcPwaFullURL := srv.URL + "/vc_tester/popup.html"
+	if err := apps.InstallPWAForURL(ctx, tconn, br, vcPwaFullURL, 15*time.Second); err != nil {
+		s.Fatal("Failed to install PWA for URL: ", err)
+	}
+	appID, err := apps.InstalledAppID(ctx, tconn, func(app *ash.ChromeApp) bool {
+		return app.Name == "VcTester"
+	}, &testing.PollOptions{Timeout: 5 * time.Second})
+	if err != nil {
+		s.Fatal("Failed to get appID: ", err)
+	}
+	if err = apps.Close(ctx, tconn, appID); err != nil {
+		s.Fatal("Failed to close app: ", err)
+	}
 
-	// Verify tab triggers vcTray on camera.
+	// Verify pwa triggers vcTray on camera.
 	s.Run(ctx, "cam_only", func(ctx context.Context, s *testing.State) {
-		tabUI, err := fakevctab.LaunchTab(ctx, tconn, br, vcTabFullURL)
+		pwaUI, err := fakepwa.LaunchApp(ctx, tconn, br, appID)
 		if err != nil {
-			s.Fatal("Failed to open tab: ", err)
+			s.Fatal("Failed to open pwa: ", err)
 		}
 
 		defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_cam_only")
 
 		if err := uiauto.Combine("activate camera",
-			tabUI.StartVideo,
+			pwaUI.StartVideo,
 			vcTray.WaitUntilState(vctray.DevMicrophone, vctray.DeviceAvailable),
 			vcTray.WaitUntilState(vctray.DevCamera, vctray.DeviceInUse),
 			vcTray.WaitUntilState(vctray.DevScreen, vctray.DeviceHidden),
@@ -166,7 +182,7 @@ func TrayTriggersTab(ctx context.Context, s *testing.State) {
 		}
 
 		if err := uiauto.Retry(3, uiauto.Combine("deactivate camera",
-			tabUI.StopVideo,
+			pwaUI.StopVideo,
 			vcTray.WaitUntilState(vctray.DevMicrophone, vctray.DeviceAvailable),
 			vcTray.WaitUntilState(vctray.DevCamera, vctray.DeviceAvailable),
 			vcTray.WaitUntilState(vctray.DevScreen, vctray.DeviceHidden),
@@ -175,16 +191,16 @@ func TrayTriggersTab(ctx context.Context, s *testing.State) {
 		}
 
 		if err := uiauto.Combine("close tab",
-			tabUI.CloseTab,
+			pwaUI.CloseApp,
 			vcTray.WaitUntilGone,
 		)(ctx); err != nil {
 			s.Fatal("Failed to verify that close tab hides VcTray: ", err)
 		}
 	})
 
-	// Verify tab triggers vcTray on mic.
+	// Verify pwa triggers vcTray on mic.
 	s.Run(ctx, "mic_only", func(ctx context.Context, s *testing.State) {
-		tabUI, err := fakevctab.LaunchTab(ctx, tconn, br, vcTabFullURL)
+		pwaUI, err := fakepwa.LaunchApp(ctx, tconn, br, appID)
 		if err != nil {
 			s.Fatal("Failed to open tab: ", err)
 		}
@@ -192,7 +208,7 @@ func TrayTriggersTab(ctx context.Context, s *testing.State) {
 		defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_mic_only")
 
 		if err := uiauto.Combine("activate mic",
-			tabUI.StartAudio,
+			pwaUI.StartAudio,
 			vcTray.WaitUntilState(vctray.DevMicrophone, vctray.DeviceInUse),
 			vcTray.WaitUntilState(vctray.DevCamera, vctray.DeviceAvailable),
 			vcTray.WaitUntilState(vctray.DevScreen, vctray.DeviceHidden),
@@ -201,7 +217,7 @@ func TrayTriggersTab(ctx context.Context, s *testing.State) {
 		}
 
 		if err := uiauto.Retry(3, uiauto.Combine("deactivate mic",
-			tabUI.StopAudio,
+			pwaUI.StopAudio,
 			vcTray.WaitUntilState(vctray.DevMicrophone, vctray.DeviceAvailable),
 			vcTray.WaitUntilState(vctray.DevCamera, vctray.DeviceAvailable),
 			vcTray.WaitUntilState(vctray.DevScreen, vctray.DeviceHidden),
@@ -210,16 +226,16 @@ func TrayTriggersTab(ctx context.Context, s *testing.State) {
 		}
 
 		if err := uiauto.Combine("close tab",
-			tabUI.CloseTab,
+			pwaUI.CloseApp,
 			vcTray.WaitUntilGone,
 		)(ctx); err != nil {
 			s.Fatal("Failed to verify that close tab hides VcTray: ", err)
 		}
 	})
 
-	// Verify tab triggers vcTray on screen-share.
+	// Verify pwa triggers vcTray on screen-share.
 	s.Run(ctx, "screen_only", func(ctx context.Context, s *testing.State) {
-		tabUI, err := fakevctab.LaunchTab(ctx, tconn, br, vcTabFullURL)
+		pwaUI, err := fakepwa.LaunchApp(ctx, tconn, br, appID)
 		if err != nil {
 			s.Fatal("Failed to open tab: ", err)
 		}
@@ -227,7 +243,7 @@ func TrayTriggersTab(ctx context.Context, s *testing.State) {
 		defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_screen_only")
 
 		if err := uiauto.Combine("share screen only",
-			tabUI.StartScreenCapture,
+			pwaUI.StartScreenCapture,
 			vcTray.WaitUntilState(vctray.DevMicrophone, vctray.DeviceAvailable),
 			vcTray.WaitUntilState(vctray.DevCamera, vctray.DeviceAvailable),
 			vcTray.WaitUntilState(vctray.DevScreen, vctray.DeviceInUse),
@@ -236,7 +252,7 @@ func TrayTriggersTab(ctx context.Context, s *testing.State) {
 		}
 
 		if err := uiauto.Retry(3, uiauto.Combine("stop screen share",
-			tabUI.StopScreenCapture,
+			pwaUI.StopScreenCapture,
 			vcTray.WaitUntilState(vctray.DevMicrophone, vctray.DeviceAvailable),
 			vcTray.WaitUntilState(vctray.DevCamera, vctray.DeviceAvailable),
 			vcTray.WaitUntilState(vctray.DevScreen, vctray.DeviceHidden),
@@ -245,16 +261,16 @@ func TrayTriggersTab(ctx context.Context, s *testing.State) {
 		}
 
 		if err := uiauto.Combine("close tab",
-			tabUI.CloseTab,
+			pwaUI.CloseApp,
 			vcTray.WaitUntilGone,
 		)(ctx); err != nil {
 			s.Fatal("Failed to verify that close tab hides VcTray: ", err)
 		}
 	})
 
-	// Verify tab works on return to app.
+	// Verify pwa works on return to app.
 	s.Run(ctx, "return_to_app", func(ctx context.Context, s *testing.State) {
-		tabUI, err := fakevctab.LaunchTab(ctx, tconn, br, vcTabFullURL)
+		pwaUI, err := fakepwa.LaunchApp(ctx, tconn, br, appID)
 		if err != nil {
 			s.Fatal("Failed to open tab: ", err)
 		}
@@ -262,7 +278,7 @@ func TrayTriggersTab(ctx context.Context, s *testing.State) {
 		defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_return_to_app")
 
 		if err := uiauto.Combine("share screen only",
-			tabUI.StartScreenCapture,
+			pwaUI.StartScreenCapture,
 			vcTray.WaitUntilState(vctray.DevMicrophone, vctray.DeviceAvailable),
 			vcTray.WaitUntilState(vctray.DevCamera, vctray.DeviceAvailable),
 			vcTray.WaitUntilState(vctray.DevScreen, vctray.DeviceInUse),

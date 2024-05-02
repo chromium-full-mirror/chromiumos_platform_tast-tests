@@ -45,7 +45,7 @@ func (svc *service) LaunchApp(ctx context.Context, req *pb.LaunchAppRequest) (*e
 		req.TimeoutSecs = defaultAppLaunchTimeout
 	}
 	return common.UseTconn(ctx, svc.sharedObject, func(tconn *chrome.TestConn) (*empty.Empty, error) {
-		appID, err := getInstalledAppID(ctx, tconn, func(app *ash.ChromeApp) bool {
+		appID, err := InstalledAppID(ctx, tconn, func(app *ash.ChromeApp) bool {
 			return app.Name == req.AppName
 		}, &testing.PollOptions{Timeout: time.Duration(req.TimeoutSecs) * time.Second})
 		if err != nil {
@@ -67,7 +67,7 @@ func (svc *service) CloseApp(ctx context.Context, req *pb.CloseAppRequest) (*emp
 		req.TimeoutSecs = defaultAppCloseTimeout
 	}
 	return common.UseTconn(ctx, svc.sharedObject, func(tconn *chrome.TestConn) (*empty.Empty, error) {
-		appID, err := getInstalledAppID(ctx, tconn, func(app *ash.ChromeApp) bool {
+		appID, err := InstalledAppID(ctx, tconn, func(app *ash.ChromeApp) bool {
 			return app.Name == req.AppName
 		}, &testing.PollOptions{Timeout: time.Duration(req.TimeoutSecs) * time.Second})
 		if err != nil {

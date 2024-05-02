@@ -29,6 +29,7 @@ func init() {
 		Contacts: []string{
 			"chrome-knowledge-eng@google.com",
 			"xiuwen@google.com",
+			"charleszhao@google.com",
 		},
 		BugComponent: "b:187682",
 		Timeout:      3 * time.Minute,
@@ -151,6 +152,7 @@ func TrayTriggersExtension(ctx context.Context, s *testing.State) {
 		}
 	})
 
+	// Verify extension triggers vcTray on mic.
 	s.Run(ctx, "mic_only", func(ctx context.Context, s *testing.State) {
 		defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_mic_only")
 
