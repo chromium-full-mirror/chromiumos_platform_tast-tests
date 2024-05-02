@@ -184,7 +184,8 @@ func AdvancedScan(ctx context.Context, s *testing.State) {
 
 	extensionWindow := nodewith.Name("Scanner Control").Role(role.RootWebArea)
 	getScannersButton := nodewith.Name("Get Scanners").Role(role.Button).Ancestor(extensionWindow)
-	allowDiscoveryPrompt := nodewith.Name("Allow").Role(role.Button).Ancestor(nodewith.Name("Find document scanners").Role(role.Window))
+	// We use First() because there are two nodes that share the dialog Role with the same Name, one is an immediate parent of the next.
+	allowDiscoveryPrompt := nodewith.Name("Allow").Role(role.Button).Ancestor(nodewith.Name("Find document scanners").Role(role.Dialog).First())
 
 	if err := uiauto.Combine("Click scanner list button",
 		ui.WithTimeout(10*time.Second).WaitUntilExists(getScannersButton),
@@ -242,7 +243,8 @@ func AdvancedScan(ctx context.Context, s *testing.State) {
 
 	s.Log("Starting first scan")
 	cancelButton := nodewith.Name("Cancel").Role(role.Button).Ancestor(extensionWindow)
-	allowScanPrompt := nodewith.Name("Allow").Role(role.Button).Ancestor(nodewith.Name("Start scan").Role(role.Window))
+	// We use First() because there are two nodes that share the dialog Role with the same Name, one is an immediate parent of the next.
+	allowScanPrompt := nodewith.Name("Allow").Role(role.Button).Ancestor(nodewith.Name("Start scan").Role(role.Dialog).First())
 	if err := uiauto.Combine("Scan and cancel",
 		ui.DoDefault(scanButton),
 		ui.WaitForRestriction(scanButton, restriction.Disabled),
