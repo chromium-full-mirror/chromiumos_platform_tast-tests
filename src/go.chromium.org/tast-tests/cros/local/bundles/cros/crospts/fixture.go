@@ -43,7 +43,8 @@ func init() {
 			"cros-core-systems-perf@google.com",
 			"darrenwu@google.com",
 		},
-		Data: []string{ptsWorldBaseImagex86, ptsWorldDataImagex86},
+		BugComponent: "b:167279", // ChromeOS > Software > baseOS > Performance
+		Data:         []string{ptsWorldBaseImagex86, ptsWorldDataImagex86},
 		Impl: &PtsWorldFixture{
 			fixture: ptsworld.NewCrosFixture(ptsWorldBaseImagex86, ptsWorldDataImagex86),
 			mount:   true,
@@ -63,7 +64,8 @@ func init() {
 			"cros-core-systems-perf@google.com",
 			"darrenwu@google.com",
 		},
-		Data: []string{ptsWorldBaseImagex86, ptsWorldDataImagex86},
+		BugComponent: "b:167279", // ChromeOS > Software > baseOS > Performance
+		Data:         []string{ptsWorldBaseImagex86, ptsWorldDataImagex86},
 		Impl: &PtsWorldFixture{
 			fixture: ptsworld.NewCrosFixture(ptsWorldBaseImagex86, ptsWorldDataImagex86),
 			mount:   false,
@@ -83,7 +85,8 @@ func init() {
 			"cros-core-systems-perf@google.com",
 			"darrenwu@google.com",
 		},
-		Data: []string{ptsWorldBaseImagex86, ptsWorldDataImagex86},
+		BugComponent: "b:167279", // ChromeOS > Software > baseOS > Performance
+		Data:         []string{ptsWorldBaseImagex86, ptsWorldDataImagex86},
 		Impl: &PtsWorldFixture{
 			fixture: ptsworld.NewCrosFixture(ptsWorldBaseImagex86, ptsWorldDataImagex86),
 			mount:   true,
@@ -103,7 +106,8 @@ func init() {
 			"cros-core-systems-perf@google.com",
 			"darrenwu@google.com",
 		},
-		Data: []string{ptsWorldBaseImagearm64, ptsWorldDataImagearm64},
+		BugComponent: "b:167279", // ChromeOS > Software > baseOS > Performance
+		Data:         []string{ptsWorldBaseImagearm64, ptsWorldDataImagearm64},
 		Impl: &PtsWorldFixture{
 			fixture: ptsworld.NewCrosFixture(ptsWorldBaseImagearm64, ptsWorldDataImagearm64),
 			mount:   true,
@@ -123,7 +127,8 @@ func init() {
 			"darrenwu@google.com",
 			"cros-core-systems-perf@google.com",
 		},
-		Data: []string{ptsWorldBaseImagearm64, ptsWorldDataImagearm64},
+		BugComponent: "b:167279", // ChromeOS > Software > baseOS > Performance
+		Data:         []string{ptsWorldBaseImagearm64, ptsWorldDataImagearm64},
 		Impl: &PtsWorldFixture{
 			fixture: ptsworld.NewCrosFixture(ptsWorldBaseImagearm64, ptsWorldDataImagearm64),
 			mount:   false,
@@ -143,7 +148,8 @@ func init() {
 			"cros-core-systems-perf@google.com",
 			"darrenwu@google.com",
 		},
-		Data: []string{ptsWorldBaseImagearm64, ptsWorldDataImagearm64},
+		BugComponent: "b:167279", // ChromeOS > Software > baseOS > Performance
+		Data:         []string{ptsWorldBaseImagearm64, ptsWorldDataImagearm64},
 		Impl: &PtsWorldFixture{
 			fixture: ptsworld.NewCrosFixture(ptsWorldBaseImagearm64, ptsWorldDataImagearm64),
 			mount:   true,
