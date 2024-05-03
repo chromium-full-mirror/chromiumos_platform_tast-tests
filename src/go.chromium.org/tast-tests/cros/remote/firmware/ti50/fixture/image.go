@@ -182,7 +182,7 @@ func downloadImage(ctx context.Context, testbedProperties remoteTi50.TestbedProp
 
 	// For inputURL that is in the form of gs://*.tbz2, convert it to a local file by downloading.
 	if strings.HasPrefix(inputURL, gsPrefix) && reGSCReleaseTarball.FindStringSubmatch(inputURL) != nil {
-		downloadedFile, err := downloadToTempFile(ctx, "tbz2", inputURL)
+		downloadedFile, err := DownloadToTempFile(ctx, "tbz2", inputURL)
 		if err != nil {
 			return nil, err
 		}
@@ -228,14 +228,14 @@ func downloadImage(ctx context.Context, testbedProperties remoteTi50.TestbedProp
 			testing.ContextLogf(ctx, "Found tast directory %s", fullURL)
 		}
 
-		downloadedBin, err := downloadToTempFile(ctx, "image bin", fullURL)
+		downloadedBin, err := DownloadToTempFile(ctx, "image bin", fullURL)
 		if err != nil {
 			return nil, err
 		}
 		iv.imagePath = downloadedBin
 
 		if jsonURL != "" {
-			downloadedJSON, err := downloadToTempFile(ctx, "fw conf json", jsonURL)
+			downloadedJSON, err := DownloadToTempFile(ctx, "fw conf json", jsonURL)
 			if err != nil {
 				return nil, err
 			}
@@ -343,8 +343,8 @@ Loop:
 	return "", errors.New("found no completed builds for tot")
 }
 
-// downloadToTempFile downloads url (gs) to a temp file.
-func downloadToTempFile(ctx context.Context, desc, url string) (string, error) {
+// DownloadToTempFile downloads url (gs) to a temp file.
+func DownloadToTempFile(ctx context.Context, desc, url string) (string, error) {
 	baseName := filepath.Base(url)
 	f, err := os.CreateTemp("", "*."+baseName)
 	if err != nil {
@@ -437,7 +437,7 @@ func DownloadGSCTestImages(ctx context.Context, testbedProperties remoteTi50.Tes
 	if err != nil {
 		return "", "", errors.Wrap(err, "failed to find gsc debug image")
 	}
-	debugImage, err := downloadToTempFile(ctx, "debug image", debugImageURL)
+	debugImage, err := DownloadToTempFile(ctx, "debug image", debugImageURL)
 	if err != nil {
 		return "", "", errors.Wrap(err, "failed to download the debug image")
 	}
@@ -447,7 +447,7 @@ func DownloadGSCTestImages(ctx context.Context, testbedProperties remoteTi50.Tes
 	if err != nil {
 		return "", "", errors.Wrap(err, "failed to find gsc efi image")
 	}
-	efiImage, err := downloadToTempFile(ctx, "efi image", efiImageURL)
+	efiImage, err := DownloadToTempFile(ctx, "efi image", efiImageURL)
 	if err != nil {
 		return "", "", errors.Wrap(err, "failed to download the efi image")
 	}
