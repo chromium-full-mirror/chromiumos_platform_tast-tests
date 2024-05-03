@@ -34,7 +34,7 @@ func init() {
 		Desc:         "Check the CCA app can return to the front camera preview screen after removing the external camera",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
-		Attr:         []string{"group:wwcb"},
+		Attr:         []string{"group:wwcb", "group:pasit", "pasit_camera"},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"ExtCameraID"},
 		ServiceDeps: []string{

@@ -28,7 +28,7 @@ func init() {
 		Desc:         "Launch cca app with the external camera connected and check the preview of app is from the front camera",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
-		Attr:         []string{"group:wwcb"},
+		Attr:         []string{"group:wwcb", "group:pasit", "pasit_camera"},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"ExtCameraID"},
 		ServiceDeps: []string{
