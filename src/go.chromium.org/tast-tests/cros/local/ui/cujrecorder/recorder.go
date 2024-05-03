@@ -164,12 +164,6 @@ func NewDistributionMetricConfig(histogramName, unit string, direction perf.Dire
 	return MetricConfig{histogramName: histogramName, unit: unit, direction: direction, bootAndShutdown: false, histogramType: distributionHistogram}
 }
 
-// NewSmoothnessDistributionMetricConfig creates a distribution config for
-// smoothness metrics.
-func NewSmoothnessDistributionMetricConfig(histogramName string) MetricConfig {
-	return MetricConfig{histogramName: histogramName, unit: "percent", direction: perf.BiggerIsBetter, bootAndShutdown: false, histogramType: distributionHistogram}
-}
-
 // NewCustomMetricConfig creates a new MetricConfig for the given histogram
 // name, unit, and direction. The data are reported as-is but
 // not aggregated with other histograms.
