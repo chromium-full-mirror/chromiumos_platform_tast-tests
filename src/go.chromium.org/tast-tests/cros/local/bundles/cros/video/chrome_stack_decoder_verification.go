@@ -99,7 +99,7 @@ var av1Aom8bitFiles = map[string][]string{
 		"test_vectors/av1/aom/av1-1-b8-00-quantizer-62.ivf",
 		"test_vectors/av1/aom/av1-1-b8-00-quantizer-63.ivf",
 	},
-	"size": {
+	"size_under_64x64": {
 		"test_vectors/av1/aom/av1-1-b8-01-size-16x16.ivf",
 		"test_vectors/av1/aom/av1-1-b8-01-size-16x18.ivf",
 		"test_vectors/av1/aom/av1-1-b8-01-size-16x32.ivf",
@@ -128,12 +128,14 @@ var av1Aom8bitFiles = map[string][]string{
 		"test_vectors/av1/aom/av1-1-b8-01-size-64x18.ivf",
 		"test_vectors/av1/aom/av1-1-b8-01-size-64x32.ivf",
 		"test_vectors/av1/aom/av1-1-b8-01-size-64x34.ivf",
-		"test_vectors/av1/aom/av1-1-b8-01-size-64x64.ivf",
-		"test_vectors/av1/aom/av1-1-b8-01-size-64x66.ivf",
 		"test_vectors/av1/aom/av1-1-b8-01-size-66x16.ivf",
 		"test_vectors/av1/aom/av1-1-b8-01-size-66x18.ivf",
 		"test_vectors/av1/aom/av1-1-b8-01-size-66x32.ivf",
 		"test_vectors/av1/aom/av1-1-b8-01-size-66x34.ivf",
+	},
+	"size": {
+		"test_vectors/av1/aom/av1-1-b8-01-size-64x64.ivf",
+		"test_vectors/av1/aom/av1-1-b8-01-size-64x66.ivf",
 		"test_vectors/av1/aom/av1-1-b8-01-size-66x64.ivf",
 		"test_vectors/av1/aom/av1-1-b8-01-size-66x66.ivf",
 		"test_vectors/av1/aom/av1-1-b8-01-size-196x196.ivf",
@@ -815,6 +817,20 @@ func init() {
 				Timeout:           calculateTestTimeout(av1Aom8bitFiles["quantizer"], "av1_8bit_quantizer"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      av1Aom8bitFiles["quantizer"],
+					validatorType:   decoding.MD5,
+					mustFail:        false,
+					enabledFeatures: []string{},
+				},
+			},
+			{
+				Name:              "av1_8bit_size_under_64x64",
+				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipCPUSocFamily("mediatek"), hwdep.SkipGPUFamily("rogue")),
+				ExtraSoftwareDeps: []string{caps.HWDecodeAV1},
+				ExtraData:         appendJSONFiles(av1Aom8bitFiles["size_under_64x64"]),
+				Timeout:           calculateTestTimeout(av1Aom8bitFiles["size_under_64x64"], "av1_8bit_size_under_64x64"),
+				Val: chromeStackDecoderVerificationTestParam{
+					videoFiles:      av1Aom8bitFiles["size_under_64x64"],
 					validatorType:   decoding.MD5,
 					mustFail:        false,
 					enabledFeatures: []string{},
@@ -1503,6 +1519,20 @@ func init() {
 				Timeout:           calculateTestTimeout(av1Aom8bitFiles["quantizer"], "v4l2_flat_av1_8bit_quantizer"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      av1Aom8bitFiles["quantizer"],
+					validatorType:   decoding.MD5,
+					mustFail:        false,
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
+				},
+			},
+			{
+				Name:              "v4l2_flat_av1_8bit_size_under_64x64",
+				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipCPUSocFamily("mediatek"), hwdep.SupportsV4L2FlatVideoDecoding()),
+				ExtraSoftwareDeps: []string{caps.HWDecodeAV1, "v4l2_codec"},
+				ExtraData:         appendJSONFiles(av1Aom8bitFiles["size_under_64x64"]),
+				Timeout:           calculateTestTimeout(av1Aom8bitFiles["size_under_64x64"], "v4l2_flat_av1_8bit_size_under_64x64"),
+				Val: chromeStackDecoderVerificationTestParam{
+					videoFiles:      av1Aom8bitFiles["size_under_64x64"],
 					validatorType:   decoding.MD5,
 					mustFail:        false,
 					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},

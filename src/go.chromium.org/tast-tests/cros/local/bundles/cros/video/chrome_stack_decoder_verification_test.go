@@ -123,6 +123,14 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 			ValidatorType:   "decoding.MD5",
 			EnabledFeatures: param.EnabledFeatures,
 		}, {
+			Name:            fmt.Sprintf("%sav1_8bit_size_under_64x64", testGroup),
+			Attr:            perBuildAttrs,
+			HardwareDeps:    genCombinedDeps("hwdep.D(%s)", []string{"hwdep.SkipCPUSocFamily(\"mediatek\")", param.HardwareDeps}),
+			SoftwareDeps:    genCombinedDeps("[]string{%s}", []string{"caps.HWDecodeAV1", param.SoftwareDeps}),
+			VideoFiles:      "av1Aom8bitFiles[\"size_under_64x64\"]",
+			ValidatorType:   "decoding.MD5",
+			EnabledFeatures: param.EnabledFeatures,
+		}, {
 			Name:            fmt.Sprintf("%sav1_8bit_size", testGroup),
 			Attr:            perBuildAttrs,
 			HardwareDeps:    genCombinedDeps("hwdep.D(%s)", []string{param.HardwareDeps}),
