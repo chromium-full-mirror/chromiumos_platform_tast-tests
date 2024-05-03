@@ -404,6 +404,7 @@ func init() {
 			"andrescj@chromium.org",
 			"chromeos-gfx-video@google.com",
 		},
+		BugComponent:    "b:168352",  // ChromeOS > Platform > Graphics > Video.
 		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,
@@ -437,6 +438,7 @@ func init() {
 			"andrescj@chromium.org",
 			"chromeos-gfx-video@google.com",
 		},
+		BugComponent:    "b:168352",  // ChromeOS > Platform > Graphics > Video.
 		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,
