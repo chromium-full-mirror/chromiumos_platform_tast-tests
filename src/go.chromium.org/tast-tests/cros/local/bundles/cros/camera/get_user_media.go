@@ -128,7 +128,7 @@ func GetUserMedia(ctx context.Context, s *testing.State) {
 	}
 
 	// Run tests for 480p and 720p.
-	if _, err := getusermedia.RunGetUserMedia(ctx, s.DataFileSystem(), ci, duration, getusermedia.VerboseLogging); err != nil {
+	if _, err := getusermedia.RunGetUserMedia(ctx, s.DataFileSystem(), ci, duration, nil, getusermedia.VerboseLogging); err != nil {
 		s.Fatal("Failed to call getUserMedia(): ", err)
 	}
 }

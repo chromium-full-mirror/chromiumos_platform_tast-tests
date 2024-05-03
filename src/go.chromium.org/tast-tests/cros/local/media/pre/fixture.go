@@ -10,6 +10,7 @@ import (
 
 func init() {
 	initChromeVideoFixtures()
+	initChromeVideoPowerFixtures()
 	initChromeVideoStressFixtures()
 	initChromeFakeWebCamFixtures()
 	initChromeCameraPerfFixtures()

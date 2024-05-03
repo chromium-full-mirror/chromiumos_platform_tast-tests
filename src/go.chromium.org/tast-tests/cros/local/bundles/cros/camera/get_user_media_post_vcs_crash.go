@@ -89,7 +89,7 @@ func GetUserMediaPostVCSCrash(ctx context.Context, s *testing.State) {
 	}
 
 	// Run tests for 480p and 720p.
-	if _, err := getusermedia.RunGetUserMedia(ctx, s.DataFileSystem(), ci, duration, getusermedia.VerboseLogging); err != nil {
+	if _, err := getusermedia.RunGetUserMedia(ctx, s.DataFileSystem(), ci, duration, nil, getusermedia.VerboseLogging); err != nil {
 		s.Fatal("Failed to call getUserMedia() before killing video capture service process: ", err)
 	}
 
@@ -107,7 +107,7 @@ func GetUserMediaPostVCSCrash(ctx context.Context, s *testing.State) {
 	}
 
 	// Run tests for 480p and 720p.
-	if _, err := getusermedia.RunGetUserMedia(ctx, s.DataFileSystem(), ci, duration, getusermedia.VerboseLogging); err != nil {
+	if _, err := getusermedia.RunGetUserMedia(ctx, s.DataFileSystem(), ci, duration, nil, getusermedia.VerboseLogging); err != nil {
 		s.Fatal("Failed to call getUserMedia() after killing video capture service process: ", err)
 	}
 

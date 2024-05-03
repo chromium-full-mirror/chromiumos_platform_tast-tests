@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
@@ -148,12 +149,23 @@ type ChromeInterface interface {
 	Close(ctx context.Context) error
 }
 
+// Resolution represents the dimensions (width and height in pixels) of a video frame.
+type Resolution struct {
+	Width  int
+	Height int
+}
+
 // RunGetUserMedia run a test in /data/web_api.html.
 // duration specifies how long video capturing will run for each resolution.
+//
+// preferResolutions is an optional slice of preferred video resolutions (e.g., [[1280, 720]] for 720p).
+// If provided, the test will run getUserMedia only with these resolutions.
+// If empty or nil, the test defaults to 720p and VGA ([[1280, 720], [640, 480]]).
+//
 // If verbose is true, video drivers' verbose messages will be enabled.
 // verbose must be false for performance tests.
 func RunGetUserMedia(ctx context.Context, fileSystem http.FileSystem, cr ChromeInterface,
-	duration time.Duration, verbose VerboseLoggingMode) (cameraResults, error) {
+	duration time.Duration, preferResolutions []Resolution, verbose VerboseLoggingMode) (cameraResults, error) {
 	if verbose == VerboseLogging {
 		vl, err := logging.NewVideoLogger()
 		if err != nil {
@@ -164,7 +176,7 @@ func RunGetUserMedia(ctx context.Context, fileSystem http.FileSystem, cr ChromeI
 
 	var results cameraResults
 	var logs []string
-	err := RunTest(ctx, fileSystem, cr, "web_api.html", fmt.Sprintf("testGetUserMedia(%d)", duration/time.Second), &results, &logs)
+	err := RunTest(ctx, fileSystem, cr, "web_api.html", fmt.Sprintf("testGetUserMedia(%d, %s)", duration/time.Second, getResolutionString(preferResolutions)), &results, &logs)
 
 	testing.ContextLogf(ctx, "Results: %+v", results)
 
@@ -196,6 +208,21 @@ func RunGetUserMedia(ctx context.Context, fileSystem http.FileSystem, cr ChromeI
 	}
 
 	return results, nil
+}
+
+// getResolutionString converts a slice of Resolutions into a string.
+// If no resolution is provided, returns "null".
+func getResolutionString(resolutions []Resolution) string {
+	if len(resolutions) == 0 {
+		return "null" // No resolutions provided
+	}
+
+	var resolutionStrings []string
+	for _, res := range resolutions {
+		resolutionStrings = append(resolutionStrings, fmt.Sprintf("[%d, %d]", res.Width, res.Height))
+	}
+
+	return fmt.Sprintf("[%s]", strings.Join(resolutionStrings, ", "))
 }
 
 // RunImageCaptureAPI run a test in /data/web_api.html.

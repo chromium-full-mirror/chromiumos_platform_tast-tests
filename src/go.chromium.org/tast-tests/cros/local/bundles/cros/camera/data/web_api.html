@@ -4,7 +4,7 @@
 <body>
   <script src="third_party/blackframe.js"></script>
 <script>
-const resolutions = [[640, 480], [1280, 720]];
+const defaultResolutions = [[640, 480], [1280, 720]];
 let scriptReady = false;
 let isTestDone = false;
 let enumerateDevicesError = '';
@@ -17,10 +17,11 @@ function addLog(msg) {
   logs.push(`[${curTime}] ${msg}`);
 }
 
-async function testGetUserMedia(durationSec) {
+async function testGetUserMedia(durationSec, preferResolutions) {
   addLog('testGetUserMedia');
   try {
     await loadScript("third_party/ssim.js");
+    const resolutions = preferResolutions || defaultResolutions;
     for (const resolution of resolutions) {
       const test = new CameraTest(resolution);
       test.checkVideoFrames();
@@ -37,7 +38,7 @@ async function testImageCaptureAPI() {
   addLog('testImageCaptureAPI');
   try {
     await loadScript("third_party/ssim.js");
-    for (const resolution of resolutions) {
+    for (const resolution of defaultResolutions) {
       const test = new CameraTest(resolution);
       test.checkVideoFrames();
       await test.callGetUserMedia();
