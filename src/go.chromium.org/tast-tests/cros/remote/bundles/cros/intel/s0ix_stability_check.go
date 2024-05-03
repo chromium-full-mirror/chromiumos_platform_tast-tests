@@ -15,6 +15,7 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/remote/tabletmode"
 	"go.chromium.org/tast-tests/cros/services/cros/security"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
@@ -79,23 +80,15 @@ func S0ixStabilityCheck(ctx context.Context, s *testing.State) {
 		powerdConfigCmd = "check_powerd_config --suspend_to_idle; echo $?"
 	)
 
-	// Get the initial tablet_mode_angle settings to restore at the end of test.
-	reTabletAngle := regexp.MustCompile(`tablet_mode_angle=(\d+) hys=(\d+)`)
-	out, err := dut.Conn().CommandContext(ctx, "ectool", "motionsense", "tablet_mode_angle").Output(ssh.DumpLogOnError)
-	if err != nil {
-		s.Fatal("Failed to retrieve tablet_mode_angle settings: ", err)
+	tmc := &tabletmode.ConvertibleModeControl{}
+	if err := tmc.InitControl(ctx, dut); err != nil {
+		s.Fatal("Failed to init TabletModeControl: ", err)
 	}
-	m := reTabletAngle.FindSubmatch(out)
-	if len(m) != 3 {
-		s.Fatalf("Failed to get initial tablet_mode_angle settings: got submatches %+v", m)
-	}
-	initLidAngle := m[1]
-	initHys := m[2]
 
 	if testOpt.tabletMode {
-		// Set tabletModeAngle to 0 to force the DUT into tablet mode.
+		// Force DUT into tablet mode.
 		testing.ContextLog(ctx, "Put DUT into tablet mode")
-		if err := dut.Conn().CommandContext(ctx, "ectool", "motionsense", "tablet_mode_angle", "0", "0").Run(ssh.DumpLogOnError); err != nil {
+		if err := tmc.ForceTabletMode(ctx); err != nil {
 			s.Fatal("Failed to set DUT into tablet mode: ", err)
 		}
 	}
@@ -128,9 +121,9 @@ func S0ixStabilityCheck(ctx context.Context, s *testing.State) {
 				}
 			}
 		}
-
-		if err := dut.Conn().CommandContext(ctx, "ectool", "motionsense", "tablet_mode_angle", string(initLidAngle), string(initHys)).Run(ssh.DumpLogOnError); err != nil {
-			s.Fatal("Failed to restore tablet_mode_angle to the original settings: ", err)
+		testing.ContextLog(ctx, "Resetting tabletmode")
+		if err := tmc.Reset(ctx); err != nil {
+			s.Fatal("Failed to restore tabletmode to the original settings: ", err)
 		}
 
 		if err := dut.Conn().CommandContext(ctx, "sh", "-c", "umount /var/lib/power_manager && restart powerd").Run(ssh.DumpLogOnError); err != nil {
