@@ -10,7 +10,6 @@ import (
 
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/storage/util"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -108,16 +107,28 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to run suspend stress test: ", err)
 	}
 
+	if err := s.DUT().Disconnect(ctx); err != nil {
+		s.Fatal("Failed to close the current DUT ssh connection: ", err)
+	}
+
+	// GoBigSleepLint: Wait for workloads to finish before reestablishing connection
+	// to avoid flakiness from connection loss during suspend/resume.
+	if err := testing.Sleep(ctx, time.Duration(params.timeoutMin)*time.Minute); err != nil {
+		s.Fatal("Sleep failed: ", err)
+	}
+
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		cmd := "lsof -p " + pidFio + " -p " + pidSuspend + " +r 1 &>/dev/null"
-		out, err := util.RunCmdWithStringOutputSilent(ctx, s.DUT(), "bash", "-c", cmd)
-		if err != nil {
-			return errors.Wrap(err, "failed to listen for pid done")
-		}
+		return s.DUT().Connect(ctx)
+	}, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
+		s.Fatal("Failed to connect to DUT: ", err)
+	}
+
+	cmd := "lsof -p " + pidFio + " -p " + pidSuspend
+	out, _ := util.RunCmdWithStringOutputSilent(ctx, s.DUT(), "bash", "-c", cmd)
+
+	if out != "" {
 		s.Log(out)
-		return nil
-	}, &testing.PollOptions{Timeout: time.Duration(params.timeoutMin) * time.Minute}); err != nil {
-		s.Fatal("Timed out listening for pid done: ", err)
+		s.Fatal("Tasks did not complete in expected time")
 	}
 
 	util.FatalIfBootIDChanged(ctx, bootIDChecker, s)
