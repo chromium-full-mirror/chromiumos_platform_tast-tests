@@ -238,26 +238,6 @@ func dirExists(path string) (bool, error) {
 	return false, err
 }
 
-// cleanUp function removes any generated firmware dump if found in
-// given path and also logsout the user.
-func cleanUp(ctx context.Context, s *testing.State, dumpPath string) {
-	// As part of test wrapup, ensure the generated firmware dump is cleared.
-	s.Log("Remove generated firmwaredump files for test cleanup")
-	e := removeContents(dumpPath)
-	if e != nil {
-		s.Fatal("Failed to clean the raw_dumps directory after the test")
-	}
-
-	// This should always be the executed after removing the content of
-	// processed dumps directory.
-	s.Log("Initiating user logout")
-	// Emulate logout. chrome.Close() does not log out. So, here,
-	// manually restart "ui" job for the emulation.
-	if err := upstart.RestartJob(ctx, "ui"); err != nil {
-		s.Fatal("Failed to log out: ", err)
-	}
-}
-
 // firmwareDumpValidator contains the core logic of this test i.e. the test
 // environment preparation before triggering firmware dump, followed by
 // firmware dump generation.
@@ -434,9 +414,6 @@ func firmwareDumpValidator(ctx context.Context, rl *retry.Loop, s *testing.State
 	if err := os.WriteFile(fwDbgCollect, []byte("1"), 0); err != nil {
 		s.Fatal("Failed to trigger a devcoredump: ", err)
 	}
-	// Ensures firmware dumps are deleted if generated and user is logged out on
-	// test completion.
-	defer cleanUp(cleanupCtx, s, dumpPath)
 
 	var exist bool
 	// Verify if firmware dump is generated after firmware dump trigger
