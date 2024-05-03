@@ -617,11 +617,12 @@ func (h *Helper) SetupUSBKey(ctx context.Context, cloudStorage *testing.CloudSto
 			return errors.Wrap(err, "failed to check the usb device on servo host")
 		}
 	}
-
-	if valid, err := h.validateUSBImage(ctx, usbdev, cloudStorage, opts...); valid && err == nil {
-		return nil
-	} else if err != nil {
-		return errors.Wrap(err, "failed to validate USB image")
+	if h.DUT.Connected(ctx) {
+		if valid, err := h.validateUSBImage(ctx, usbdev, cloudStorage, opts...); valid && err == nil {
+			return nil
+		} else if err != nil {
+			return errors.Wrap(err, "failed to validate USB image")
+		}
 	}
 
 	// Sometimes servod loses the CCD connection while we are flashing the USB drive.
@@ -664,9 +665,11 @@ func (h *Helper) SetupUSBKey(ctx context.Context, cloudStorage *testing.CloudSto
 			}
 			return errors.Wrapf(err, "failed to flash os image %q to USB %q", testImageURL, usbdev)
 		}
-		// ensure that image was successfully flashed by reading back OS version
-		if valid, err := h.validateUSBImage(ctx, usbdev, cloudStorage, opts...); valid && err != nil {
-			return errors.Wrap(err, "failed to validate USB image after flashing")
+		if h.DUT.Connected(ctx) {
+			// ensure that image was successfully flashed by reading back OS version
+			if valid, err := h.validateUSBImage(ctx, usbdev, cloudStorage, opts...); valid && err != nil {
+				return errors.Wrap(err, "failed to validate USB image after flashing")
+			}
 		}
 		testing.ContextLogf(ctx, "Successfully flashed %q from %q", usbdev, testImageURL)
 		return nil
