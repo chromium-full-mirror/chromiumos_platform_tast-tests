@@ -235,7 +235,7 @@ func DataLeakPreventionRulesListFilesUSB(ctx context.Context, s *testing.State) 
 	if err != nil {
 		s.Fatal("Failed to get keyboard: ", err)
 	}
-	defer keyboard.Close(ctx)
+	defer keyboard.Close(cleanupCtx)
 
 	appliedRestriction := s.Param().(fileUSBCopyTestParams).restriction
 
@@ -322,7 +322,11 @@ func DataLeakPreventionRulesListFilesUSB(ctx context.Context, s *testing.State) 
 	if err := setupVirtualUSBDevice(ctx); err != nil {
 		s.Fatal("Failed to setup virtual USB device: ", err)
 	}
-	defer cleanupVirtualUSBDevice(ctx)
+	defer func(ctx context.Context) {
+		if err := cleanupVirtualUSBDevice(ctx); err != nil {
+			s.Error("Failed to cleanup USB device: ", err)
+		}
+	}(cleanupCtx)
 
 	// Re-open the Files app to retrieve the new USB drive, format it and try to copy the file.
 	filesApp, err = filesapp.Relaunch(ctx, tconnAsh, filesApp)
@@ -353,11 +357,12 @@ func DataLeakPreventionRulesListFilesUSB(ctx context.Context, s *testing.State) 
 	if err := filesApp.OpenUSBDriveWithName("UNTITLED")(ctx); err != nil {
 		s.Fatal("Failed to open formatted USB drive: ", err)
 	}
-	// TODO(crbug.com/1515361): Remove additional debugging logs once resolved.
 	if err := filesApp.FileExists(files.DlFileName)(ctx); err == nil {
-		faillog.DumpUITreeToFile(ctx, s.OutDir(), tconnAsh, "before_file_delete.txt")
-		if err := filesApp.DeleteFileOrFolder(keyboard, files.DlFileName)(ctx); err != nil {
-			faillog.DumpUITreeToFile(ctx, s.OutDir(), tconnAsh, "on_file_delete_error.txt")
+		// Sometimes the file is found above, even that in reality it's already gone
+		// Not checking delete result as it'll return an error then, but rather
+		// checking that the file is gone afterwards.
+		filesApp.DeleteFileOrFolder(keyboard, files.DlFileName)(ctx)
+		if err := filesApp.FileExists(files.DlFileName)(ctx); err == nil {
 			s.Error("Failed to delete file before pasting: ", err)
 		}
 	}
@@ -427,9 +432,17 @@ func setupVirtualUSBDevice(ctx context.Context) error {
 }
 
 // cleanupVirtualUSBDevice removes previously created virtual USB drive and the backing file.
-func cleanupVirtualUSBDevice(ctx context.Context) {
-	testexec.CommandContext(ctx, "modprobe", "g_mass_storage", "-r").Run()
+func cleanupVirtualUSBDevice(ctx context.Context) error {
+	if err := testexec.CommandContext(ctx, "modprobe", "g_mass_storage", "-r").Run(testexec.DumpLogOnError); err != nil {
+		return errors.Wrap(err, "fail to remove g_mass_storage device")
+	}
 
-	// The file could be absent, so ignoring the error.
-	os.Remove("/tmp/backing_file")
+	if err := testexec.CommandContext(ctx, "modprobe", "dummy_hcd", "-r").Run(testexec.DumpLogOnError); err != nil {
+		return errors.Wrap(err, "fail to remove dummy_hcd device")
+	}
+
+	if err := os.Remove("/tmp/backing_file"); err != nil {
+		return errors.Wrap(err, "fail to remove backing file")
+	}
+	return nil
 }
