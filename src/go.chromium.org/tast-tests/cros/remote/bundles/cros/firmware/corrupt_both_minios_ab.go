@@ -15,7 +15,6 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	pb "go.chromium.org/tast-tests/cros/services/cros/firmware"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -70,10 +69,11 @@ func CorruptBothMiniOSAB(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to back up MINIOS-A and MINIOS-B: ", err)
 	}
 	needRestore := false
+	usbBoot := false
 
 	defer func() {
 		if needRestore {
-			if !h.DUT.Connected(ctx) {
+			if !h.DUT.Connected(ctx) || usbBoot {
 				s.Log("Rebooting the DUT with a cold reset")
 				if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
 					s.Error("Failed to cold reset the DUT: ", err)
@@ -130,15 +130,9 @@ func CorruptBothMiniOSAB(ctx context.Context, s *testing.State) {
 	}
 	needRestore = true
 
+	s.Log("Booting the DUT from corrupted MiniOS")
 	if err := h.LaunchMiniOS(ctx, true, false); err != nil {
 		s.Fatal("Failed to launch MiniOS: ", err)
-	}
-	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 90*time.Second)
-	defer cancelWaitConnect()
-
-	err = h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle)
-	if !errors.As(err, &context.DeadlineExceeded) {
-		s.Fatal("Expected dut disconnected")
 	}
 	if removeChargerRequired {
 		if err := h.SetDUTPower(ctx, false); err != nil {
@@ -155,6 +149,7 @@ func CorruptBothMiniOSAB(ctx context.Context, s *testing.State) {
 	if err := h.WaitDUTConnectDuringBootFromUSB(ctx, true); err != nil {
 		s.Fatal("Failed to boot from USB: ", err)
 	}
+	usbBoot = true
 
 	expectedBootMode, err := h.Reporter.CheckBootMode(ctx, fwCommon.BootModeRecovery)
 	if err != nil {
@@ -168,6 +163,7 @@ func CorruptBothMiniOSAB(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to run cbmem command: ", err)
 	}
+	s.Log("Checking if DUT failed to boot from corrupted MiniOS")
 	if err := h.ScanWithoutExpectedSequenceInSource(ctx, out, []string{"Failed to boot from MiniOS"}); err != nil {
 		saveLogPath := filepath.Join(s.OutDir(), "firmware.log")
 		if saveLogErr := os.WriteFile(saveLogPath, []byte(out), 0666); saveLogErr != nil {
@@ -179,6 +175,7 @@ func CorruptBothMiniOSAB(ctx context.Context, s *testing.State) {
 	if err := ms.ModeAwareReboot(ctx, firmware.ColdReset); err != nil {
 		s.Fatal("Failed to reboot: ", err)
 	}
+	usbBoot = false
 
 	if removeChargerRequired {
 		if err := h.SetDUTPower(ctx, true); err != nil {
