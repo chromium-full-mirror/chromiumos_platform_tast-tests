@@ -153,7 +153,7 @@ type perfStatRecordOpts struct {
 
 type perfSchedOpts struct {
 	// Used to get stats of process.
-	procName string
+	threadName string
 
 	// Used to provide output.
 	output *PerfSchedOutput
@@ -212,8 +212,8 @@ func PerfStatRecordOpts() *PerfOpts {
 }
 
 // PerfSchedOpts creates a PerfOpts for running "perf sched record" on the DUT.
-func PerfSchedOpts(out *PerfSchedOutput, procName string) *PerfOpts {
-	return &PerfOpts{sched: &perfSchedOpts{procName: procName, output: out}}
+func PerfSchedOpts(out *PerfSchedOutput, threadName string) *PerfOpts {
+	return &PerfOpts{sched: &perfSchedOpts{threadName: threadName, output: out}}
 }
 
 // Perf creates a Profiler instance that constructs the profiler.
@@ -500,7 +500,7 @@ func (p *perf) handleStat() error {
 func (p *perf) handleSched(ctx context.Context) error {
 	perfPath := filepath.Join(p.outDir, perfSchedFileName)
 
-	maxLatencyMs, err := getMaxLatencyMs(ctx, perfPath, p.opts.sched.procName)
+	maxLatencyMs, err := getMaxLatencyMs(ctx, perfPath, p.opts.sched.threadName)
 	if err != nil {
 		return errors.Wrap(err, "failed to parse sched file")
 	}
