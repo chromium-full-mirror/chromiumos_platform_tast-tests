@@ -21,10 +21,11 @@ import (
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
-		Name:     testing.TastRootRemoteFixtureName,
-		Desc:     "Root fixture that will be run before all tests and fixtures",
-		Contacts: []string{"tast-owner@google.com", "seewaifu@google.com"},
-		Impl:     &rootFixture{},
+		Name:         testing.TastRootRemoteFixtureName,
+		Desc:         "Root fixture that will be run before all tests and fixtures",
+		Contacts:     []string{"tast-owner@google.com", "seewaifu@google.com"},
+		BugComponent: "b:1034754",
+		Impl:         &rootFixture{},
 	})
 }
 
