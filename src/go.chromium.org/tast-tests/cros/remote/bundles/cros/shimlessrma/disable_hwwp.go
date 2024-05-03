@@ -281,7 +281,6 @@ func generateActionCombinedToDisableWP(option rmaweb.WriteProtectDisableOption, 
 			uiHelper.WelcomePageOperation,
 			uiHelper.ComponentsPageOperation,
 			uiHelper.OwnerPageOperation(destination),
-			uiHelper.WipeDevicePageOperation,
 			uiHelper.WriteProtectPageChooseRSU,
 			uiHelper.RSUPageOperation,
 		)
@@ -290,7 +289,6 @@ func generateActionCombinedToDisableWP(option rmaweb.WriteProtectDisableOption, 
 			uiHelper.WelcomePageOperation,
 			uiHelper.ComponentsPageOperation,
 			uiHelper.OwnerPageOperation(destination),
-			uiHelper.WipeDevicePageOperation,
 			uiHelper.WriteProtectPageChooseManual,
 		)
 	}

@@ -187,15 +187,6 @@ func (uiHelper *UIHelper) WriteProtectPageChooseManual(ctx context.Context) erro
 
 }
 
-// WipeDevicePageOperation handles all operations on wipe device Page.
-func (uiHelper *UIHelper) WipeDevicePageOperation(ctx context.Context) error {
-	return action.Combine("wipe Device page operation",
-		uiHelper.waitForPageToLoad("Device is going to the same user. Erase user data?", timeInSecondToLoadPage),
-		uiHelper.clickRadioButton("Erase all data"),
-		uiHelper.waitAndClickButton("Next", timeInSecondToEnableButton),
-	)(ctx)
-}
-
 // WriteProtectDisabledPageOperation handles all operations on Write Protect Disabled Page.
 func (uiHelper *UIHelper) WriteProtectDisabledPageOperation(ctx context.Context) error {
 	return action.Combine("write Protect Disabled page operation",

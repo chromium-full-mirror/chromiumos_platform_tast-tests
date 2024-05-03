@@ -159,7 +159,6 @@ func generateActionCombinedToDisableWPManual(uiHelper *rmaweb.UIHelper) action.A
 		uiHelper.WelcomePageOperation,
 		uiHelper.ComponentsPageOperation,
 		uiHelper.OwnerPageOperation(rmaweb.SameUser),
-		uiHelper.WipeDevicePageOperation,
 		uiHelper.WriteProtectPageChooseManual,
 	)
 }
