@@ -2713,7 +2713,7 @@ func (tf *TestFixture) CheckFullAuthFlow(ctx context.Context, capturer *pcap.Cap
 		return wpa.AuthAlgoSAE, nil
 	}
 
-	return wpa.AuthAlgoInvalid, nil
+	return wpa.AuthAlgoInvalid, errors.Errorf("openAuthCount=%d, ftAuthCount=%d, saeAuthCount=%d", openAuthCount, ftAuthCount, saeAuthCount)
 }
 
 /*
