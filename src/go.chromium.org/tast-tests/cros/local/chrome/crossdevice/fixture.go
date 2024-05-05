@@ -144,7 +144,7 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 		},
 		Parent: "crossdeviceAndroidSetupPhoneHub",
-		Impl: NewCrossDeviceOnboarded(FixtureOptions{false, false, true, true, false}, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+		Impl: NewCrossDeviceOnboarded(FixtureOptions{false, false, false, true, false}, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return nil, nil
 		}),
 		Vars: []string{

@@ -731,3 +731,20 @@ func (c *AndroidDevice) TapNext(ctx context.Context) error {
 
 	return nil
 }
+
+// WaitForUpdateScreen waits for a heading to appear which indicates the phone
+// is ready for the Chromebook to reboot.
+func (c *AndroidDevice) WaitForUpdateScreen(ctx context.Context) error {
+	d, err := ui.NewDeviceWithRetry(ctx, c.Device)
+	if err != nil {
+		return errors.Wrap(err, "failed initializing UI automator")
+	}
+	defer d.Close(ctx)
+
+	updateHeading := d.Object(ui.TextContains("downloading the latest update"))
+	if err := updateHeading.WaitForExists(ctx, 10*time.Second); err != nil {
+		return errors.Wrap(err, "failed to find the update screen")
+	}
+
+	return nil
+}

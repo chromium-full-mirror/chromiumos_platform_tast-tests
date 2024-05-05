@@ -112,7 +112,7 @@ func NetworkScreenPIN(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to verify matching PIN: ", err)
 	}
 	if err := androidDevice.TapNext(ctx); err != nil {
-		s.Fatal("Failed to confirm Google Account: ", err)
+		s.Fatal("Failed to confirm verification PIN: ", err)
 	}
 
 	// Clear the lockscreen challenge on the phone
