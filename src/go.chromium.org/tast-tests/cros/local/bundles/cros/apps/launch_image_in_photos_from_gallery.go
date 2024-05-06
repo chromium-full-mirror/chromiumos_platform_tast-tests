@@ -39,7 +39,7 @@ func init() {
 		Desc:         "From the Gallery app, launch an opened image in the Android Photos app",
 		Contacts: []string{
 			"backlight-swe@google.com",
-			"bugsnash@chromium.org",
+			"josephkimsh@google.com",
 		},
 		BugComponent: "b:562866",
 		Attr:         []string{"group:mainline", "informational"},
