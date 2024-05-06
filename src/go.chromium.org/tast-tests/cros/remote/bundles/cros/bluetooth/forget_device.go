@@ -25,20 +25,20 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:           ForgetDevice,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
-		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		Desc:           "Verify that user can forget paired/connected and paired/disconnected devices by clicking the 'forget' button",
+		Func:         ForgetDevice,
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Desc:         "Verify that user can forget paired/connected and paired/disconnected devices by clicking the 'forget' button",
 		Contacts: []string{
-			// "cros-connectivity@google.com",
-			// "cienet-development@googlegroups.com",
-			"cj.tsai@cienet.com",
-			"chromeos-connectivity-cienet-external@google.com",
+			"cros-connectivity@google.com",
+			"chromeos-connectivity-engprod@google.com",
+			"shijinabraham@google.com",
+			"chadduffin@chromium.org",
 		},
-		BugComponent: "b:1131776", // ChromeOS > Software > System Services > Connectivity > Bluetooth
-		Attr:         []string{"group:bluetooth"},
-		TestBedDeps:  []string{tbdep.Wificell, tbdep.BluetoothStateNormal, tbdep.WorkingBluetoothPeers(1)},
-		SoftwareDeps: []string{"chrome"},
+		BugComponent:   "b:1131776", // ChromeOS > Software > System Services > Connectivity > Bluetooth
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Attr:           []string{"group:bluetooth"},
+		TestBedDeps:    []string{tbdep.Wificell, tbdep.BluetoothStateNormal, tbdep.WorkingBluetoothPeers(1)},
+		SoftwareDeps:   []string{"chrome"},
 		ServiceDeps: []string{
 			"tast.cros.bluetooth.BluetoothUIService",
 			"tast.cros.ui.AutomationService",
