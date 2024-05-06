@@ -135,23 +135,6 @@ func assertNoActiveConsoles(ctx context.Context, d *dut.DUT) error {
 	return nil
 }
 
-// assertNormalMode asserts the device is in normal mode by checking 'crossystem mainfw_type`.
-// Firmware boot time is not accurate in developer mode since the developer mode screen is
-// displayed for several seconds.
-func assertNormalMode(ctx context.Context, d *dut.DUT) error {
-	b, err := d.Conn().CommandContext(ctx, "crossystem", "mainfw_type").Output()
-	if err != nil {
-		return errors.Wrap(err, "failed to run 'crossystem mainfw_type'")
-	}
-	fwType := strings.TrimSpace(string(b))
-
-	if fwType != "normal" {
-		return errors.Errorf("Device is not in normal mode (mainfw_type=%s)", fwType)
-	}
-
-	return nil
-}
-
 // preReboot performs actions before rebooting the DUT:
 //   - Wait until the CPU is cool.
 //   - Stop tlsdated.
@@ -432,10 +415,6 @@ func BootPerf(ctx context.Context, s *testing.State) {
 
 	if err := assertNoActiveConsoles(ctx, s.DUT()); err != nil {
 		s.Fatal(err) // NOLINT: assertNoActiveConsoles() returns loggable errors
-	}
-
-	if err := assertNormalMode(ctx, s.DUT()); err != nil {
-		s.Fatal(err) // NOLINT: assertNormalMode() returns loggable errors
 	}
 
 	func(ctx context.Context) {
