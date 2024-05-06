@@ -43,7 +43,7 @@ func init() {
 			pci.SearchFlag(&policy.DeviceLocalAccounts{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.LacrosAvailability{}, pci.VerifiedFunctionalityOS),
 		},
-		SoftwareDeps: []string{"reboot", "chrome", "vpd"},
+		SoftwareDeps: []string{"reboot", "chrome"},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
 		Fixture:      fixture.FakeDMSEnrolled,
 		Params: []testing.Param{

@@ -43,7 +43,7 @@ func init() {
 		},
 		BugComponent: "b:892153", // ChromeOS > Software > Commercial (Enterprise) > Kiosk
 		Attr:         []string{"group:dpanel-end2end", "group:dmserver-enrollment-daily", "group:hw_agnostic"},
-		SoftwareDeps: []string{"reboot", "chrome", "vpd"},
+		SoftwareDeps: []string{"reboot", "chrome"},
 		ServiceDeps:  []string{"tast.cros.policy.PolicyService", "tast.cros.kiosk.KioskService", "tast.cros.hwsec.OwnershipService", "tast.cros.tape.Service", "tast.cros.graphics.ScreenshotService"},
 		Timeout:      gaiaKioskEnrollmentTestTimeout,
 		Params: []testing.Param{

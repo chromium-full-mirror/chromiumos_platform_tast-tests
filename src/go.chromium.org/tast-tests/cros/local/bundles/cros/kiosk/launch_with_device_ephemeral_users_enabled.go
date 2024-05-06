@@ -41,7 +41,7 @@ func init() {
 			"group:complementary",
 			"group:hw_agnostic",
 		},
-		SoftwareDeps: []string{"reboot", "chrome", "vpd"},
+		SoftwareDeps: []string{"reboot", "chrome"},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
 		Fixture:      fixture.FakeDMSEnrolled,
 		Timeout:      kioskmode.SetupDuration + 2*kioskmode.LaunchDuration + kioskmode.CleanupDuration,

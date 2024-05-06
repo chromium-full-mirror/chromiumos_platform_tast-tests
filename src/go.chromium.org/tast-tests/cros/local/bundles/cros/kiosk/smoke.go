@@ -85,7 +85,7 @@ func init() {
 		},
 		// Enough time for kioskmode.New, kiosk launch, and kiosk.Close.
 		Timeout:      kioskmode.SetupDuration + kioskmode.LaunchDuration + kioskmode.CleanupDuration,
-		SoftwareDeps: []string{"reboot", "chrome", "lacros", "vpd"},
+		SoftwareDeps: []string{"reboot", "chrome", "lacros"},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
 		Fixture:      fixture.FakeDMSEnrolled,
 		Params: []testing.Param{

@@ -57,7 +57,7 @@ func init() {
 			"group:hw_agnostic",
 		},
 		Timeout:      kioskmode.SetupDuration + kioskmode.LaunchDuration + kioskmode.CleanupDuration + verifyPixelsTimeout,
-		SoftwareDeps: []string{"reboot", "chrome", "lacros", "vpd"},
+		SoftwareDeps: []string{"reboot", "chrome", "lacros"},
 		HardwareDeps: hwdep.D(hwdep.Display()),
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
 		Fixture:      fixture.FakeDMSEnrolled,

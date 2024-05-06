@@ -35,7 +35,7 @@ func init() {
 			"group:complementary",
 			"group:hw_agnostic",
 		},
-		SoftwareDeps: []string{"reboot", "chrome", "vpd"},
+		SoftwareDeps: []string{"reboot", "chrome"},
 		Timeout:      1 * time.Minute,
 		Params: []testing.Param{
 			{

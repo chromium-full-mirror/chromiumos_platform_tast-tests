@@ -25,7 +25,7 @@ func init() {
 			"chromeos-kiosk-eng+TAST@google.com",
 		},
 		BugComponent: "b:892153", // ChromeOS > Software > Commercial (Enterprise) > Kiosk
-		SoftwareDeps: []string{"reboot", "camera_app", "chrome", "vpd", caps.BuiltinOrVividCamera},
+		SoftwareDeps: []string{"reboot", "camera_app", "chrome", caps.BuiltinOrVividCamera},
 		Attr: []string{
 			"group:camera_dependent",
 			"group:complementary",
