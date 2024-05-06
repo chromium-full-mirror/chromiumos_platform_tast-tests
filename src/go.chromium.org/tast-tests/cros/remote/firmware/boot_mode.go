@@ -10,6 +10,7 @@ This file implements functions to check or switch the DUT's boot mode.
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"path/filepath"
 	"regexp"
@@ -17,6 +18,7 @@ import (
 	"time"
 
 	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
+	"go.chromium.org/tast-tests/cros/common/firmware/usb"
 	"go.chromium.org/tast-tests/cros/common/servo"
 	fwpb "go.chromium.org/tast-tests/cros/services/cros/firmware"
 	"go.chromium.org/tast/core/errors"
@@ -1076,6 +1078,29 @@ func (ms *ModeSwitcher) RebootToFirmwareScreen(ctx context.Context, fwScreen fwC
 		}
 	case fwCommon.FwRecoveryScreen:
 		if err := ms.EnableRecMode(ctx, servo.PowerStateRec, servo.USBMuxOff); err != nil {
+			return errors.Wrap(err, "failed to reboot to recovery screen")
+		}
+	case fwCommon.FwToNormScreen:
+		if err := ms.RebootToFirmwareScreen(ctx, fwCommon.FwDeveloperScreen); err != nil {
+			return err
+		}
+		if err := ms.TriggerToNormScreen(ctx); err != nil {
+			return errors.Wrap(err, "failed to trigger the to-norm screen")
+		}
+	case fwCommon.FwInvalidScreen:
+		usbdev, err := h.Servo.GetStringTimeout(ctx, servo.ImageUSBKeyDev, time.Second*90)
+		if err != nil {
+			return errors.Wrap(err, "failed to call image_usbkey_dev")
+		}
+		mountPath := fmt.Sprintf("/media/servo_usb/%d", h.ServoProxy.GetPort())
+		usbRelease, _, err := usb.ValidateUSBImage(ctx, usbdev, mountPath, h.ServoProxy)
+		if err != nil {
+			return errors.Wrap(err, "failed to validate USB image")
+		}
+		if usbRelease != "" {
+			return errors.Errorf("found usb release %s, expected an invalid usb before triggering the invalid usb screen", usbRelease)
+		}
+		if err := ms.EnableRecMode(ctx, servo.PowerStateRec, servo.USBMuxDUT); err != nil {
 			return errors.Wrap(err, "failed to reboot to recovery screen")
 		}
 	}

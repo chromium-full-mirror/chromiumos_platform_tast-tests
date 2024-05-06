@@ -105,4 +105,5 @@ const (
 	FwRecoveryScreen
 	FwBrokenScreen
 	FwToNormScreen
+	FwInvalidScreen
 )

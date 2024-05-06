@@ -89,18 +89,18 @@ func FWScreenCloseLid(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
+	ms, err := firmware.NewModeSwitcher(ctx, h)
+	if err != nil {
+		s.Fatal("Failed to create mode switcher: ", err)
+	}
+
 	s.Log("Rebooting to firmware screen")
-	if err := rebootToScreen(ctx, h, param.bootToScreen); err != nil {
+	if err := ms.RebootToFirmwareScreen(ctx, param.bootToScreen); err != nil {
 		s.Fatal("Failed to reboot to firmware screen: ", err)
 	}
 
 	if err := rebootDUTWithLidCloseOpen(ctx, h); err != nil {
 		s.Fatal("Failed to run shutdown process: ", err)
-	}
-
-	ms, err := firmware.NewModeSwitcher(ctx, h)
-	if err != nil {
-		s.Fatal("Failed to create mode switcher: ", err)
 	}
 
 	if param.bootMode == fwCommon.BootModeNormal {
@@ -124,27 +124,6 @@ func FWScreenCloseLid(ctx context.Context, s *testing.State) {
 	} else if !isExpMode {
 		s.Fatal("Found unexpected boot mode")
 	}
-}
-
-func rebootToScreen(ctx context.Context, h *firmware.Helper, bootToScreen fwCommon.FwScreenType) error {
-	ms, err := firmware.NewModeSwitcher(ctx, h)
-	if err != nil {
-		return errors.Wrap(err, "failed to create mode switcher")
-	}
-	switch bootToScreen {
-	case fwCommon.FwToNormScreen:
-		if err := ms.RebootToFirmwareScreen(ctx, fwCommon.FwDeveloperScreen); err != nil {
-			return errors.Wrap(err, "failed to reboot to firmware screen")
-		}
-		if err := ms.TriggerToNormScreen(ctx); err != nil {
-			return errors.Wrap(err, "failed to trigger the to-norm screen")
-		}
-	default:
-		if err := ms.RebootToFirmwareScreen(ctx, bootToScreen); err != nil {
-			return errors.Wrap(err, "failed to reboot to firmware screen")
-		}
-	}
-	return nil
 }
 
 func rebootDUTWithLidCloseOpen(ctx context.Context, h *firmware.Helper) error {
