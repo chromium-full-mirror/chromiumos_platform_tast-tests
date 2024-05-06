@@ -118,7 +118,7 @@ func SetLayout(ctx context.Context, tconn *chrome.TestConn, layout Layout) error
 	}
 
 	// Find the landscape layout option to verify the layout list has expanded.
-	landscapeOption := nodewith.Name("Landscape").Role(role.ListBoxOption)
+	landscapeOption := nodewith.Name("Landscape").Role(role.MenuListOption)
 	if err := ui.WithTimeout(10 * time.Second).WaitUntilExists(landscapeOption)(ctx); err != nil {
 		return errors.Wrap(err, "failed to wait for layout list to expand")
 	}
@@ -158,7 +158,7 @@ func SetPages(ctx context.Context, tconn *chrome.TestConn, pages string) error {
 	}
 
 	// Find the custom pages option to verify the pages list has expanded.
-	customOption := nodewith.Name("Custom").Role(role.ListBoxOption)
+	customOption := nodewith.Name("Custom").Role(role.MenuListOption)
 	if err := ui.WithTimeout(10 * time.Second).WaitUntilExists(customOption)(ctx); err != nil {
 		return errors.Wrap(err, "failed to wait for pages list to expand")
 	}
@@ -241,7 +241,7 @@ func ExpandMoreSettings(ctx context.Context, tconn *chrome.TestConn) error {
 // setDropdownInternal changes the selected option of a dropdown menu to the
 // desired value.
 func setDropdownInternal(ui *uiauto.Context, dropdown *nodewith.Finder, value string) uiauto.Action {
-	option := nodewith.Name(value).Role(role.ListBoxOption)
+	option := nodewith.Name(value).Role(role.MenuListOption)
 
 	return uiauto.Combine(fmt.Sprintf("expand dropdown and select option '%s'", value),
 		ui.WithTimeout(10*time.Second).WaitUntilExists(dropdown.Focusable()),
