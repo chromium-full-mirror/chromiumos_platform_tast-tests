@@ -167,11 +167,12 @@ func init() {
 		}, nil
 	}
 	testing.AddFixture(&testing.Fixture{
-		Name: "arcBootedWithPvSchedEnabled",
-		Desc: "ARC is booted, with paravirt sched enabled",
+		Name:         "arcBootedWithPvSchedEnabled",
+		Desc:         "ARC is booted, with paravirt sched enabled",
+		BugComponent: "b:167279", // ChromeOS > Platform > baseOS > Performance
 		Contacts: []string{
 			"vineethrp@google.com",
-			"arc-commercial@google.com",
+			"cros-sw-perf@google.com",
 		},
 		Impl:            NewArcBootedFixtureWithPvSchedEnabled(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
@@ -192,11 +193,12 @@ func init() {
 		}, nil
 	}
 	testing.AddFixture(&testing.Fixture{
-		Name: "arcBootedWithDisableExternalStoragePvSchedEnabled",
-		Desc: "ARC is booted, with external storage disabled and paravirt sched enabled",
+		Name:         "arcBootedWithDisableExternalStoragePvSchedEnabled",
+		Desc:         "ARC is booted, with external storage disabled and paravirt sched enabled",
+		BugComponent: "b:167279", // ChromeOS > Platform > baseOS > Performance
 		Contacts: []string{
 			"vineethrp@google.com",
-			"arc-commercial@google.com",
+			"cros-sw-perf@google.com",
 		},
 		Impl:            NewArcBootedFixtureWithPvSchedEnabled(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,

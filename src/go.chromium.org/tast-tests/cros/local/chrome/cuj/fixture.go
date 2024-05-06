@@ -228,13 +228,13 @@ func init() {
 		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name: "loggedInToCUJUserWithPvSchedEnabled",
-		Desc: "Similar to loggedInToCUJUser but with paravirt sched feature enabled",
+		Name:         "loggedInToCUJUserWithPvSchedEnabled",
+		Desc:         "Similar to loggedInToCUJUser but with paravirt sched feature enabled",
+		BugComponent: "b:167279", // ChromeOS > Platform > baseOS > Performance
 		Contacts: []string{
 			"vineethrp@google.com",
 			"cros-sw-perf@google.com",
 		},
-		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: &loggedInToCUJUserFixture{
 			bt:            browser.TypeAsh,
 			enablePvSched: true,
@@ -681,14 +681,14 @@ func init() {
 	})
 	// TODO(b/325918094): Remove when enough data is collected related to paravirt sched impact.
 	testing.AddFixture(&testing.Fixture{
-		Name: "loggedInToCUJUserWithWebRTCEventLoggingWithPvSchedEnabled",
-		Desc: "CUJ test fixture with WebRTC event logging and paravirt sched enabled",
+		Name:         "loggedInToCUJUserWithWebRTCEventLoggingWithPvSchedEnabled",
+		Desc:         "CUJ test fixture with WebRTC event logging and paravirt sched enabled",
+		BugComponent: "b:167279", // ChromeOS > Platform > baseOS > Performance
 		Contacts: []string{
 			"vineethrp@google.com",
 			"cros-sw-perf@google.com",
 		},
-		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
-		Data:         docsBlockerFiles,
+		Data: docsBlockerFiles,
 		Impl: &loggedInToCUJUserFixture{
 			chromeExtraOpts: []chrome.Option{
 				chrome.ExtraArgs(webRTCEventLogCommandFlag),
@@ -1059,13 +1059,13 @@ func init() {
 	})
 	// TODO(b/325918094): Remove when enough data is collected related to paravirt sched impact.
 	testing.AddFixture(&testing.Fixture{
-		Name: "loggedInToCUJUserARCSupportedWithPvSchedEnabled",
-		Desc: "CUJ fixture with ARC supported and paravirt sched feature enabled",
+		Name:         "loggedInToCUJUserARCSupportedWithPvSchedEnabled",
+		Desc:         "CUJ fixture with ARC supported and paravirt sched feature enabled",
+		BugComponent: "b:167279", // ChromeOS > Platform > baseOS > Performance
 		Contacts: []string{
 			"vineethrp@google.com",
 			"cros-sw-perf@google.com",
 		},
-		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: &loggedInToCUJUserFixture{
 			bt:            browser.TypeAsh,
 			arcSupported:  true,
