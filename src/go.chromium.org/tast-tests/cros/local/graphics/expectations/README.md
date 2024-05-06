@@ -72,6 +72,8 @@ properties:
     type: string
   since_build:
     type: string
+  failure_pattern:
+    type: string
 required:
   - expectation
 ```
@@ -85,10 +87,16 @@ For example:
   - "crbug/67890"
   comments: "The test has an expectation for the following reason: ..."
   sinceBuild: "R100-14526.89.0"
+  failure_pattern: "test_pattern"
 ```
 
 The field `tickets`, `comments`, and `sinceBuild` are informative and may be
 used for logging.
+
+The field `failure_pattern` is optional and is used to
+check against a specific failure reason. If a test fails and there
+is a `failure_pattern` specified, then the test will be reported as
+passing only if it's failure message regex matches the `failure_pattern` field.
 
 If there is no key for the test, then it is expected to pass.
 
