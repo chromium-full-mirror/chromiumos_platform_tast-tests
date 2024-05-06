@@ -196,11 +196,11 @@ func init() {
 			Timeout:   6*time.Minute + power.RecorderTimeout,
 			ExtraData: []string{"video_playback/av1_1080_30fps.mp4"},
 		}, {
-			Name:      "av1_1080_bt2020_30fps_ash",
+			Name:      "av1_bt2020_1080_30fps_ash",
 			Fixture:   "powerAshRamfs",
-			Val:       videoPlaybackTestParam{VideoName: "av1_1080_bt2020_30fps"},
+			Val:       videoPlaybackTestParam{VideoName: "av1_bt2020_1080_30fps"},
 			Timeout:   6*time.Minute + power.RecorderTimeout,
-			ExtraData: []string{"video_playback/av1_1080_bt2020_30fps.mp4"},
+			ExtraData: []string{"video_playback/av1_bt2020_1080_30fps.mp4"},
 		}, {
 			Name:      "av1_1080_60fps_ash",
 			Fixture:   "powerAshRamfs",
@@ -391,12 +391,12 @@ func init() {
 			Timeout:           6*time.Minute + power.RecorderTimeout,
 			ExtraData:         []string{"video_playback/av1_1080_30fps.mp4"},
 		}, {
-			Name:              "av1_1080_bt2020_30fps_lacros",
+			Name:              "av1_bt2020_1080_30fps_lacros",
 			Fixture:           "powerLacrosRamfs",
 			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               videoPlaybackTestParam{VideoName: "av1_1080_bt2020_30fps"},
+			Val:               videoPlaybackTestParam{VideoName: "av1_bt2020_1080_30fps"},
 			Timeout:           6*time.Minute + power.RecorderTimeout,
-			ExtraData:         []string{"video_playback/av1_1080_bt2020_30fps.mp4"},
+			ExtraData:         []string{"video_playback/av1_bt2020_1080_30fps.mp4"},
 		}, {
 			Name:              "av1_1080_60fps_lacros",
 			Fixture:           "powerLacrosRamfs",
