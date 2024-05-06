@@ -74,6 +74,7 @@ func init() {
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 		Vars:            []string{"keepState"},
+		BugComponent:    "b:658562", // ChromeOS > Software > GuestOS
 	})
 
 	// chromeLoggedInForCrostiniNoDownloadsBindMount is similar to
@@ -121,6 +122,7 @@ func init() {
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 		Vars:            []string{"ui.gaiaPoolDefault", "keepState"},
+		BugComponent:    "b:658562", // ChromeOS > Software > GuestOS
 	})
 
 	testing.AddFixture(&testing.Fixture{
@@ -141,6 +143,7 @@ func init() {
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 		Vars:            []string{"keepState"},
+		BugComponent:    "b:658562", // ChromeOS > Software > GuestOS
 	})
 
 	testing.AddFixture(&testing.Fixture{
@@ -156,6 +159,7 @@ func init() {
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 		Vars:            []string{"keepState"},
+		BugComponent:    "b:658562", // ChromeOS > Software > GuestOS
 	})
 
 	testing.AddFixture(&testing.Fixture{
@@ -171,6 +175,7 @@ func init() {
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 		Vars:            []string{"keepState"},
+		BugComponent:    "b:658562", // ChromeOS > Software > GuestOS
 	})
 
 	testing.AddFixture(&testing.Fixture{
@@ -186,6 +191,7 @@ func init() {
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 		Vars:            []string{"ui.gaiaPoolDefault", "keepState"},
+		BugComponent:    "b:658562", // ChromeOS > Software > GuestOS
 	})
 
 	testing.AddFixture(&testing.Fixture{
@@ -438,6 +444,7 @@ func init() {
 		Parent:          fixture.ChromePolicyLoggedIn,
 		Vars:            []string{"keepState"},
 		Data:            []string{GetContainerMetadataArtifact("bullseye", false), GetContainerRootfsArtifact("bullseye", false)},
+		BugComponent:    "b:658562", // ChromeOS > Software > GuestOS
 	})
 }
 

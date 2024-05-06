@@ -223,6 +223,7 @@ func init() {
 		TearDownTimeout: chrome.ResetTimeout,
 		PostTestTimeout: 15 * time.Second,
 		Parent:          fixture.PersistentLacros,
+		BugComponent:    "b:658562", // ChromeOS > Software > GuestOS
 	})
 
 	testing.AddFixture(&testing.Fixture{
