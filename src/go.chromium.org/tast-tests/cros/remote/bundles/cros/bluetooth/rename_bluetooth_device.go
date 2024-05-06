@@ -21,20 +21,20 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:           RenameBluetoothDevice,
-		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
-		Desc:           "Verify that the connected/disconnected Bluetooth device can be renamed and the edited name is persisted after re-login",
+		Func:         RenameBluetoothDevice,
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Desc:         "Verify that the connected/disconnected Bluetooth device can be renamed and the edited name is persisted after re-login",
 		Contacts: []string{
-			// "cros-connectivity@google.com",
-			// "cros-conn-test-team@google.com",
-			"edgar.chang@cienet.com",
-			"chromeos-connectivity-cienet-external@google.com",
+			"cros-connectivity@google.com",
+			"chromeos-connectivity-engprod@google.com",
+			"shijinabraham@google.com",
+			"chadduffin@chromium.org",
 		},
-		BugComponent: "b:1131776", // ChromeOS > Software > System Services > Connectivity > Bluetooth
-		Attr:         []string{"group:bluetooth"},
-		TestBedDeps:  []string{tbdep.Wificell, tbdep.BluetoothStateNormal, tbdep.WorkingBluetoothPeers(1)},
-		SoftwareDeps: []string{"chrome"},
+		BugComponent:   "b:1131776", // ChromeOS > Software > System Services > Connectivity > Bluetooth
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Attr:           []string{"group:bluetooth"},
+		TestBedDeps:    []string{tbdep.Wificell, tbdep.BluetoothStateNormal, tbdep.WorkingBluetoothPeers(1)},
+		SoftwareDeps:   []string{"chrome"},
 		ServiceDeps: []string{
 			"tast.cros.bluetooth.BluetoothUIService",
 			"tast.cros.browser.ChromeService",
