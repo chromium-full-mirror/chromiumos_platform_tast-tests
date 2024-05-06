@@ -10,9 +10,12 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/local/gtest"
 	"go.chromium.org/tast/core/fsutil"
+	"go.chromium.org/tast/core/shutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -26,6 +29,16 @@ func init() {
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"ml_service"},
 		Vars:         []string{"settings", "accel_config"},
+		Params: []testing.Param{{
+			Name: "sample",
+			Val:  sampleParam,
+		}, {
+			Name:              "apu",
+			Val:               apuParam,
+			Timeout:           5 * time.Minute,
+			ExtraAttr:         []string{"informational", "group:criticalstaging"},
+			ExtraSoftwareDeps: []string{"tflite_mtk_neuron"},
+		}},
 	})
 }
 
@@ -40,6 +53,12 @@ type stableDelegateSettings struct {
 	StableDelegateLoaderSettings stableDelegateLoaderSettings `json:"stable_delegate_loader_settings"`
 }
 
+type testingParam struct {
+	Settings         stableDelegateSettings
+	AccelConfig      string
+	SkipTestPatterns []string
+}
+
 func localLibraryDirectory() string {
 	if runtime.GOARCH == "amd64" || runtime.GOARCH == "arm64" {
 		return "/usr/local/lib64/"
@@ -47,7 +66,6 @@ func localLibraryDirectory() string {
 	return "/usr/local/lib/"
 }
 
-// TODO(shik): Run DTS with vendor provided stable delegates automatically.
 var sampleSettings = stableDelegateSettings{
 	StableDelegateLoaderSettings: stableDelegateLoaderSettings{
 		DelegatePath: localLibraryDirectory() + "libtensorflowlite_cros_sample_delegate.so",
@@ -80,13 +98,62 @@ FloatSubOpModel/NoActivation
 FloatSubOpModel/VariousInputShapes
 `
 
-// Disable MultiDimBroadcast related tests for now since it takes ~3 minutes,
-// and the operation is not supported by sample stable delegate.
-// TODO(shik): Consider enable it for vendor delegate if it's supported.
-const gtestFilter = "-*MultiDimBroadcastSubshard*"
+var sampleParam = testingParam{
+	Settings:    sampleSettings,
+	AccelConfig: sampleAccelConfig,
+	// Disable MultiDimBroadcast related tests since it takes ~3 minutes, and the
+	// operation is not supported by sample stable delegate.
+	SkipTestPatterns: []string{"*MultiDimBroadcastSubshard*"},
+}
+
+var apuSettings = stableDelegateSettings{
+	StableDelegateLoaderSettings: stableDelegateLoaderSettings{
+		DelegatePath: "/usr/lib64/libtensorflowlite_mtk_neuron_delegate.so",
+		DelegateName: "mtk_neuron_delegate",
+	},
+}
+
+// TODO(b/338910179): MediaTek to provide the proper config.
+const apuAccelConfig = `
+# Disable acceleration validation temporarily.
+-.*
+`
+
+var apuParam = testingParam{
+	Settings:    apuSettings,
+	AccelConfig: apuAccelConfig,
+	SkipTestPatterns: []string{
+		// TODO(b/338914262): Neuron delegte crashed for this convolution test.
+		"*ConvolutionOpTest.SimplePerChannel16x8Bias64*",
+
+		// TODO(b/338914051): Neuron delegate crashed for int64 paddings.
+		"*Pad*OpTest*.Int64Padding*",
+
+		// TODO(b/338938802): Neuron delegate is ~30x slower than CPU on these test
+		// cases and need ~1hr to finish them. This is a superset of the
+		// unsupported data types below as expected.
+		"*MultiDimBroadcastSubshard*",
+
+		// Disable the slow MultiDimBroadcast tests with unsupported data types to
+		// save test execution time.
+		"*IntegerMultiDimBroadcastSubshard*",
+		"*Float32MultiDimBroadcastSubshard*",
+
+		// TODO(b/338959718): Neuron delegate failed with all -128 output.
+		"*QuantizeOpTest.Int16ZeroPointInt8*",
+
+		// TODO(b/338963077): The test itself has inconsistent expectation for
+		// negative input values and precision errors that need to be fixed in
+		// upstream.
+		"*RsqrtNanInt8*",
+		"*RsqrtNanInt16*",
+		"*RsqrtInt16*",
+	},
+}
 
 // DTS runs the Tensorflow Lite Stable Delegate Test Suite (DTS).
 func DTS(ctx context.Context, s *testing.State) {
+	param := s.Param().(testingParam)
 	settingsPath := filepath.Join(s.OutDir(), "settings.json")
 	accelConfigPath := filepath.Join(s.OutDir(), "accel.conf")
 	gtestLogPath := filepath.Join(s.OutDir(), "gtest.log")
@@ -98,7 +165,7 @@ func DTS(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to copy settings file: ", err)
 		}
 	} else {
-		jsonSettings, err := json.Marshal(sampleSettings)
+		jsonSettings, err := json.Marshal(param.Settings)
 		if err != nil {
 			s.Fatal("Failed to marshal stable delegate settings")
 		}
@@ -114,12 +181,17 @@ func DTS(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to copy accel_config file: ", err)
 		}
 	} else {
-		if err := os.WriteFile(accelConfigPath, []byte(sampleAccelConfig), 0644); err != nil {
+		if err := os.WriteFile(accelConfigPath, []byte(param.AccelConfig), 0644); err != nil {
 			s.Fatal("Failed to write accel.conf: ", err)
 		}
 	}
 
-	if report, err := gtest.New(
+	gtestFilter := ""
+	if len(param.SkipTestPatterns) > 0 {
+		gtestFilter = "-" + strings.Join(param.SkipTestPatterns, ":")
+	}
+
+	test := gtest.New(
 		"/usr/local/bin/stable_delegate_test_suite",
 		gtest.Logfile(gtestLogPath),
 		gtest.Filter(gtestFilter),
@@ -127,7 +199,14 @@ func DTS(ctx context.Context, s *testing.State) {
 			"--stable_delegate_settings_file="+settingsPath,
 			"--acceleration_test_config_path="+accelConfigPath,
 		),
-	).Run(ctx); err != nil {
+	)
+	args, err := test.Args()
+	if err != nil {
+		s.Fatal("Failed to get gtest args: ", err)
+	}
+	s.Log("Running ", shutil.EscapeSlice(args))
+
+	if report, err := test.Run(ctx); err != nil {
 		if report != nil {
 			failed := report.FailedTestNames()
 			for _, name := range failed {
