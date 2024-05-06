@@ -32,7 +32,7 @@ func NewCallboxIperfServer(callbox string, client *manager.CallboxManagerClient)
 
 // Start starts an iperf server session on the callbox with the given configuration.
 func (c *CallboxIperfServer) Start(ctx context.Context, cfg *iperf.Config) error {
-	if cfg.WindowSize < iperf.KB {
+	if cfg.ServerWindowSize < iperf.KB {
 		return errors.New("minimum allowed callbox window size is 1 KByte")
 	}
 
@@ -120,7 +120,7 @@ func newServerRequest(c *CallboxIperfServer, config *iperf.Config) *manager.Conf
 			manager.IperfServerConfig{
 				Protocol:   string(config.Protocol),
 				Port:       config.Port,
-				WindowSize: int64(config.WindowSize / iperf.KB),
+				WindowSize: int64(config.ServerWindowSize / iperf.KB),
 			},
 		},
 	}

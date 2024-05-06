@@ -168,9 +168,9 @@ func (c *TestManager) RunOnce(ctx context.Context, testType TestType, interfaceN
 	// don't adjust any other network configuration options
 	if windowSize, err := getSystemWindowSize(ctx, c.conn, windowParam); err != nil {
 		testing.ContextLog(ctx, "Unable to verify maximum system window size: ", err)
-	} else if windowSize < cfg.WindowSize {
-		testing.ContextLogf(ctx, "Requested window size: %v greater than system max: %v, setting system window size", cfg.WindowSize, windowSize)
-		if cleanup, err := setSystemWindowSize(ctx, c.conn, windowParam, cfg.WindowSize); err != nil {
+	} else if windowSize < cfg.ClientWindowSize {
+		testing.ContextLogf(ctx, "Requested window size: %v greater than system max: %v, setting system window size", cfg.ClientWindowSize, windowSize)
+		if cleanup, err := setSystemWindowSize(ctx, c.conn, windowParam, cfg.ClientWindowSize); err != nil {
 			// changing this parameter is optional so just log errors
 			testing.ContextLog(ctx, "Failed to set max system window size: ", err)
 		} else {

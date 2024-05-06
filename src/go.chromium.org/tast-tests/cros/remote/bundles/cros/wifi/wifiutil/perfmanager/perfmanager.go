@@ -164,7 +164,11 @@ func (p *TestManager) Config(routerType routerSupport.RouterType, testType TestT
 	}
 
 	if (testType == TestTypeTCPBidirectional) || (testType == TestTypeTCPTx) || (testType == TestTypeTCPRx) {
-		options = append(options, iperf.WindowSizeOption(320*iperf.KB))
+		options = append(options, iperf.ClientWindowSizeOption(320*iperf.KB))
+		options = append(options, iperf.ServerWindowSizeOption(320*iperf.KB))
+	} else if routerType == routerSupport.LegacyT {
+		// 320kB is the maximum socket buffer size on Gale (default is 208kB).
+		options = append(options, iperf.ServerWindowSizeOption(320*iperf.KB))
 	}
 
 	switch testType {

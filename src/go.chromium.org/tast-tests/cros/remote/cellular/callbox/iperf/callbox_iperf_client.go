@@ -37,7 +37,7 @@ func (c *CallboxIperfClient) Start(ctx context.Context, config *iperf.Config) (*
 	if config.Bidirectional {
 		return nil, errors.New("iperf callbox client does not support bidirectional tests")
 	}
-	if config.WindowSize < iperf.KB {
+	if config.ClientWindowSize < iperf.KB {
 		return nil, errors.New("minimum allowed callbox window size is 1 KByte")
 	}
 
@@ -146,7 +146,7 @@ func newClientRequest(c *CallboxIperfClient, config *iperf.Config) *manager.Conf
 				IP:                  config.ServerIP,
 				Protocol:            string(config.Protocol),
 				Port:                config.Port,
-				WindowSize:          int64(config.WindowSize / iperf.KB),
+				WindowSize:          int64(config.ClientWindowSize / iperf.KB),
 				ParallelConnections: config.PortCount,
 				MaxBitRate:          float64(config.MaxBandwidth),
 			},

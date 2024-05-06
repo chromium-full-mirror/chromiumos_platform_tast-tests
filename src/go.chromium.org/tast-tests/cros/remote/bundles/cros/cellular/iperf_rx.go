@@ -72,7 +72,7 @@ func IperfRx(ctx context.Context, s *testing.State) {
 
 	testManager := cbiperf.NewTestManager(tf.Vars.Callbox, dutConn, tf.CallboxManagerClient)
 
-	additionalOptions := []iperf.ConfigOption{iperf.TestTimeOption(20 * time.Second), iperf.MaxBandwidthOption(iperf.BitRate(max) * iperf.Mbps), iperf.WindowSizeOption(1.4 * iperf.MB)}
+	additionalOptions := []iperf.ConfigOption{iperf.TestTimeOption(20 * time.Second), iperf.MaxBandwidthOption(iperf.BitRate(max) * iperf.Mbps), iperf.ClientWindowSizeOption(1.4 * iperf.MB), iperf.ServerWindowSizeOption(1.4 * iperf.MB)}
 
 	// Test is Rx/Download so DUT is server and callbox is client.
 	perfValues := perf.NewValues()

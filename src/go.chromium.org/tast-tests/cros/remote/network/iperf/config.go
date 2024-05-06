@@ -49,12 +49,13 @@ const (
 )
 
 const (
-	defaultTestTime      = 10 * time.Second
-	defaultMaxBandwidth  = 1 * Gbps
-	defaultPort          = 5001
-	defaultPortCount     = 4
-	defaultWindowSize    = 0
-	defaultBidirectional = false
+	defaultTestTime         = 10 * time.Second
+	defaultMaxBandwidth     = 1 * Gbps
+	defaultPort             = 5001
+	defaultPortCount        = 4
+	defaultClientWindowSize = 0
+	defaultServerWindowSize = 0
+	defaultBidirectional    = false
 )
 
 // Config represents the configuration options for an iperf run.
@@ -63,7 +64,8 @@ type Config struct {
 	Bidirectional      bool
 	TestTime           time.Duration
 	MaxBandwidth       BitRate
-	WindowSize         ByteSize
+	ClientWindowSize   ByteSize
+	ServerWindowSize   ByteSize
 	DatagramLength     ByteSize
 	Port               int
 	PortCount          int
@@ -78,15 +80,16 @@ type ConfigOption func(config *Config) error
 // NewConfig returns an Iperf configuration for a run with the specified options.
 func NewConfig(protocol Protocol, clientIP, serverIP string, opts ...ConfigOption) (*Config, error) {
 	res := &Config{
-		Protocol:      protocol,
-		ClientIP:      clientIP,
-		ServerIP:      serverIP,
-		Bidirectional: defaultBidirectional,
-		TestTime:      defaultTestTime,
-		MaxBandwidth:  defaultMaxBandwidth,
-		WindowSize:    defaultWindowSize,
-		Port:          defaultPort,
-		PortCount:     defaultPortCount,
+		Protocol:         protocol,
+		ClientIP:         clientIP,
+		ServerIP:         serverIP,
+		Bidirectional:    defaultBidirectional,
+		TestTime:         defaultTestTime,
+		MaxBandwidth:     defaultMaxBandwidth,
+		ClientWindowSize: defaultClientWindowSize,
+		ServerWindowSize: defaultServerWindowSize,
+		Port:             defaultPort,
+		PortCount:        defaultPortCount,
 	}
 
 	for _, opt := range opts {
@@ -131,10 +134,18 @@ func MaxBandwidthOption(maxBandwidth BitRate) ConfigOption {
 	}
 }
 
-// WindowSizeOption sets the size of the window to use in the Iperf run.
-func WindowSizeOption(windowSize ByteSize) ConfigOption {
+// ClientWindowSizeOption sets the size of the window to use in the Iperf run.
+func ClientWindowSizeOption(windowSize ByteSize) ConfigOption {
 	return func(config *Config) error {
-		config.WindowSize = windowSize
+		config.ClientWindowSize = windowSize
+		return nil
+	}
+}
+
+// ServerWindowSizeOption sets the size of the window to use in the Iperf run.
+func ServerWindowSizeOption(windowSize ByteSize) ConfigOption {
+	return func(config *Config) error {
+		config.ServerWindowSize = windowSize
 		return nil
 	}
 }
