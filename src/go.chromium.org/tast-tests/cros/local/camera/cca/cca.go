@@ -563,6 +563,13 @@ func (a *App) RestoreWindow(ctx context.Context) error {
 	return a.conn.Eval(ctx, "CCATest.restoreWindow()", nil)
 }
 
+// GetAverageOCRScanningLatency returns the average OCR scanning latency on preview in photo mode in milliseconds.
+func (a *App) GetAverageOCRScanningLatency(ctx context.Context) (float64, error) {
+	var averageLatency float64
+	err := a.conn.Eval(ctx, "CCATest.getAverageOcrScanTime()", &averageLatency)
+	return averageLatency, err
+}
+
 // MinimizeWindow minimizes the window.
 func (a *App) MinimizeWindow(ctx context.Context) error {
 	return a.conn.Eval(ctx, "CCATest.minimizeWindow()", nil)

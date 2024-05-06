@@ -307,6 +307,17 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
+		Name:            "ccaTestBridgeReadyWithFakeHALCameraWithPreviewOCR",
+		Desc:            "Set up test bridge for CCA with fake camera HAL input with preview OCR flag enabled",
+		Contacts:        []string{"chromeos-camera-eng@google.com", "chuhsuan@chromium.org"},
+		BugComponent:    "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
+		Impl:            &fixture{useCameraType: testutil.UseFakeHALCamera, enableFeatures: []feature{previewOCR}},
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    testBridgeSetUpTimeout,
+		TearDownTimeout: tearDownTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
 		Name:            "ccaPowerTest",
 		Desc:            "Set up test bridge for CCA for a power Test",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "kamchonlathorn@chromium.org"},
