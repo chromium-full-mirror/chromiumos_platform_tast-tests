@@ -51,6 +51,7 @@ type feature string
 const (
 	autoQR      feature = "CameraAppAutoQRDetection"
 	digitalZoom feature = "CameraAppDigitalZoom"
+	previewOCR  feature = "CameraAppPreviewOcr"
 )
 
 var (
@@ -355,6 +356,28 @@ func init() {
 		Contacts:        []string{"chromeos-camera-eng@google.com", "dorahkim@chromium.org"},
 		BugComponent:    "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Impl:            &fixture{powerReview: true, useCameraType: testutil.UseFakeHALCamera, enableFeatures: []feature{"CameraAppAutoQRDetection"}},
+		SetUpTimeout:    powerSetUpTimeout,
+		ResetTimeout:    testBridgeSetUpTimeout,
+		TearDownTimeout: powerTearDownTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:            "ccaPowerReviewWithFakeHALCameraPreviewOCREnabled",
+		Desc:            "Set up test bridge for CCA with preview OCR flag enabled for a power review Test",
+		Contacts:        []string{"chromeos-camera-eng@google.com", "chuhsuan@chromium.org"},
+		BugComponent:    "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
+		Impl:            &fixture{powerReview: true, useCameraType: testutil.UseFakeHALCamera, enableFeatures: []feature{previewOCR}},
+		SetUpTimeout:    powerSetUpTimeout,
+		ResetTimeout:    testBridgeSetUpTimeout,
+		TearDownTimeout: powerTearDownTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:            "ccaPowerReviewWithFakeHALCameraPreviewOCRDisabled",
+		Desc:            "Set up test bridge for CCA with preview OCR flag disabled for a power review Test",
+		Contacts:        []string{"chromeos-camera-eng@google.com", "chuhsuan@chromium.org"},
+		BugComponent:    "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
+		Impl:            &fixture{powerReview: true, useCameraType: testutil.UseFakeHALCamera, disableFeatures: []feature{previewOCR}},
 		SetUpTimeout:    powerSetUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
 		TearDownTimeout: powerTearDownTimeout,
