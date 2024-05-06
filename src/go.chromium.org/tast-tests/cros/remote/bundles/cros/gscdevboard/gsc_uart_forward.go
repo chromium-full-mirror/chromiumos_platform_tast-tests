@@ -62,7 +62,8 @@ func GSCUARTForward(ctx context.Context, s *testing.State) {
 	}
 
 	b.GpioApplyStrap(ctx, ti50.CcdSuzyQ)
-	b.WaitUntilCCDConnected(ctx)
+	// Wait until CCD USB shows up and CCD UART TX is enabled.
+	b.WaitUntilCCDConnectedAndUARTTXEnabled(ctx)
 
 	// Test forwarding on each of three ports.
 	s.Log("AP off, no uServo")
@@ -103,7 +104,7 @@ func GSCUARTForward(ctx context.Context, s *testing.State) {
 	b.ResetWithStraps(ctx, ti50.ServoMicroConnected)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
 	b.GpioApplyStrap(ctx, ti50.CcdSuzyQ)
-	b.WaitUntilCCDConnected(ctx)
+	b.WaitUntilCCDConnectedAndUARTTXEnabled(ctx)
 
 	// Test forwarding on each of three ports.
 	s.Log("AP off, with uServo")
