@@ -25,7 +25,7 @@ func init() {
 		BugComponent: "b:1361410",
 		Contacts: []string{
 			"chromeos-platform-power@google.com",
-			"dbasehore@google.com",
+			"eizan@google.com",
 		},
 		// This test doesn't run well in VMs. See b/180868425.
 		SoftwareDeps: []string{

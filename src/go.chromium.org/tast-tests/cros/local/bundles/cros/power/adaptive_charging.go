@@ -38,7 +38,7 @@ func init() {
 		BugComponent: "b:1361410",
 		Contacts: []string{
 			"chromeos-platform-power@google.com", // CrOS platform power developers
-			"dbasehore@google.com",               // test author
+			"yanyeli@google.com",
 		},
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
