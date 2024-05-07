@@ -45,10 +45,13 @@ var (
 	testlabDisabledRE = regexp.MustCompile("Updating testlab to false|CCD test lab mode disabled")
 	// Regex to wait until ccd testlab mode is disabled
 	testlabEnabledRE = regexp.MustCompile("Updating testlab to true|CCD test lab mode enabled")
-	// GSC version strings
-	verRWCr50StrRE = `cr50_([0-9_vpmefi\.]*)\.[0-9]*-([[:xdigit:]]+)`
-	verRWTi50StrRE = `ti50_common_([a-z]+)\S*:(\S+)`
-	verRWGSCStrRE  = verRWCr50StrRE + `|` + verRWTi50StrRE
+	// GSC version strings.
+	// Group 1 is the branch name.
+	// Group 2 is the version sha
+	verRWCr50StrRE       = `cr50_([0-9_vpmefi\.]*)\.[0-9]*-([[:xdigit:]]+)`
+	verRWTi50StrRE       = `ti50_common_([a-z]+)\S*:(\S+)`
+	verRWLegacyTi50StrRE = `(ti50_common):(\S+)`
+	verRWGSCStrRE        = verRWCr50StrRE + `|` + verRWTi50StrRE + `|` + verRWLegacyTi50StrRE
 	// GSC board properties
 	brdPropRE          = regexp.MustCompile(`properties = 0x([0-9a-fA-F]+)`)
 	gettimeDeepSleepRE = regexp.MustCompile(`deep sleep:.*= ([0-9\.]*) `)
@@ -643,15 +646,15 @@ func matchBidInfo(s string, slot GscSlot) (BidInfo, error) {
 func matchBuildInfo(s string) (BuildInfo, error) {
 	ret := BuildInfo{}
 
-	buildRE := regexp.MustCompile(`Build:\s+([0-9.]+(/DBG)?/` + verRWCr50StrRE + `|` + verRWTi50StrRE + `)`)
+	buildRE := regexp.MustCompile(`Build:\s+([0-9./]*(DBG)?/?(` + verRWGSCStrRE + `))`)
 	matches := buildRE.FindStringSubmatch(s)
-	if len(matches) != 7 {
-		return ret, errors.New("regex failed to extract build info from: " + s)
+	if len(matches) != 10 {
+		return ret, errors.Errorf("regex failed to extract build info from found %d matches in %s: %s", len(matches), s, matches)
 	}
-	if matches[3] != "" {
-		ret.Branch = getBranch(matches[3])
+	if matches[4] != "" {
+		ret.Branch = getBranch(matches[4])
 	} else {
-		ret.Branch = getBranch(matches[5])
+		ret.Branch = getBranch(matches[6])
 	}
 	if matches[2] != "" {
 		ret.Debug = true

@@ -34,6 +34,56 @@ Build:   ti50_common_tot:v0.0.909-efe9eb23
 	testVersionInfoMatcher(t, input, expected)
 }
 
+func TestVersionCommandTi50Processor2(t *testing.T) {
+	input := `
+[       0.823] RO_A:    0.0.52/d1072955
+[       0.824] RO_B:  * 0.0.56/cf178281
+[       0.827] RW_A:  * 0.24.20/ti50_common:v0.0.2888-c2eeb17e
+[       0.833] RW_B:    1.24.30/DBG/ti50_common_tot:v0.0.360+ef9becfc
+[       0.839] BID A:   00000000:00000000:00000000 Yes
+[       0.845] BID B:   00000000:00000000:00000000 Yes
+[       0.850] Build:   ti50_common:v0.0.2888-c2eeb17e
+[       0.854]   libtock-rs:v0.0.913-d8d9fdc
+[       0.859]   tock:v0.0.9623-bf7357e8b
+[       0.863]   ms-tpm-20-ref:v0.0.301-7a188ef
+`
+	expected := VersionCommandInfo{
+		RoA:   RoInfo{Active: false, Version: "0.0.52", ImageCheck: "d1072955"},
+		RoB:   RoInfo{Active: true, Version: "0.0.56", ImageCheck: "cf178281"},
+		RwA:   RwInfo{Empty: false, Active: true, Version: "0.24.20", Branch: Unknown},
+		RwB:   RwInfo{Empty: false, Active: false, Debug: true, Version: "1.24.30", Branch: ToT},
+		Bid:   BidInfo{Empty: false, BidType: 0, Mask: 0, Flags: 0},
+		Build: BuildInfo{Branch: Unknown, Debug: false},
+	}
+
+	testVersionInfoMatcher(t, input, expected)
+}
+
+func TestVersionCommandTi50Processor3(t *testing.T) {
+	input := `
+RO_A:    0.0.52/d1072955
+RO_B:  * 0.0.56/cf178281
+RW_A:    0.24.20/ti50_common:v0.0.2888-c2eeb17e
+RW_B:  * 1.24.30/DBG/ti50_common_tot:v0.0.360+ef9becfc
+BID A:   00000000:00000000:00000000 Yes
+BID B:   00000000:00000000:00000000 Yes
+Build:   DBG/ti50_common_tot:v0.0.360+ef9becfc
+         libtock-rs:v0.0.915-10cf494
+         tock:v0.0.9632-b3a7d9d57
+         ms-tpm-20-ref:v0.0.306-ba9d73d
+`
+	expected := VersionCommandInfo{
+		RoA:   RoInfo{Active: false, Version: "0.0.52", ImageCheck: "d1072955"},
+		RoB:   RoInfo{Active: true, Version: "0.0.56", ImageCheck: "cf178281"},
+		RwA:   RwInfo{Empty: false, Active: false, Version: "0.24.20", Branch: Unknown},
+		RwB:   RwInfo{Empty: false, Active: true, Debug: true, Version: "1.24.30", Branch: ToT},
+		Bid:   BidInfo{Empty: false, BidType: 0, Mask: 0, Flags: 0},
+		Build: BuildInfo{Branch: ToT, Debug: true},
+	}
+
+	testVersionInfoMatcher(t, input, expected)
+}
+
 func TestVersionCommandCr50Processor1(t *testing.T) {
 	input := `
 Chip:    g cr50 B2-C
@@ -141,6 +191,7 @@ Build:   0.6.230/cr50_v3.94_pp.259-e20fb86af1
 
 	testVersionInfoMatcher(t, input, expected)
 }
+
 func testVersionInfoMatcher(t *testing.T, input string, expected VersionCommandInfo) {
 	out, err := matchVersionInfo(input)
 	if err != nil {
@@ -344,6 +395,18 @@ func TestBuildInfoMatcher5(t *testing.T) {
 func TestBuildInfoMatcher6(t *testing.T) {
 	input := `Build:   0.6.241/cr50_v4.08_pp.61-a50884addc`
 	expected := BuildInfo{Branch: PrePvt}
+	testBuildInfoMatcher(t, input, expected)
+}
+
+func TestBuildInfoMatcher7(t *testing.T) {
+	input := `Build:   ti50_common:v0.0.2888-c2eeb17e`
+	expected := BuildInfo{Branch: Unknown}
+	testBuildInfoMatcher(t, input, expected)
+}
+
+func TestBuildInfoMatcher8(t *testing.T) {
+	input := `Build:   DBG/ti50_common_tot:v0.0.360+ef9becfc`
+	expected := BuildInfo{Branch: ToT, Debug: true}
 	testBuildInfoMatcher(t, input, expected)
 }
 
