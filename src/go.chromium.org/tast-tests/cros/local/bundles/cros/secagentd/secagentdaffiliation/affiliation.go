@@ -9,7 +9,9 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"regexp"
 	"strings"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/local/session"
 	"go.chromium.org/tast/core/errors"
@@ -62,4 +64,40 @@ func GetSignedInUser(ctx context.Context) (string, string, error) {
 		return "", "", errors.Wrap(err, "failed to retrieve primary session")
 	}
 	return deviceUser, hash, nil
+}
+
+// GetSessionManagerReady verifies that session manager is running and secagentd is listening for changes.
+func GetSessionManagerReady(ctx context.Context, startTime time.Time) (bool, error) {
+	// Verify session manager object is created.
+	_, err := session.NewSessionManager(ctx)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to start session manager")
+	}
+
+	// Verify secagentd is listening for session manager changes.
+	secagentdLog := fmt.Sprint("/var/log/secagentd.log")
+	file, err := os.ReadFile(secagentdLog)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to open secagentd.log")
+	}
+	data := string(file)
+
+	re, err := regexp.Compile(`(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+Z).*\[DO NOT REMOVE\] Used for tast testing: Listening for session state changes`)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to compile log regex")
+	}
+	matches := re.FindAllStringSubmatch(data, -1)
+
+	if len(matches) != 0 {
+		// Append characters to make valid format.
+		logTime, err := time.Parse("2006-01-02T15:04:05.000000Z", matches[len(matches)-1][1])
+		if err != nil {
+			return false, errors.Wrap(err, "failed to parse log time")
+		}
+		if logTime.After(startTime) {
+			return true, nil
+		}
+	}
+
+	return false, errors.New("Did not find session manager ready log")
 }

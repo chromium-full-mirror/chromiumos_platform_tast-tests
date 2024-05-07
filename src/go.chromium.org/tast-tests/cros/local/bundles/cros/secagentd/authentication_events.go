@@ -68,8 +68,9 @@ func AuthenticationEvents(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start chrome: ", err)
 	}
 	defer cr.Close(cleanupCtx)
-
 	const batchIntervalS = 5
+
+	currTime := time.Now()
 	// Restart secagentd and have it ignore policy and not wait for the first
 	// agent event to be enqueued successfully.
 	// Have it wait for the AddMatch signal.
@@ -100,6 +101,14 @@ func AuthenticationEvents(ctx context.Context, s *testing.State) {
 		Authentication: &xdr.Authentication{
 			AuthFactor: []xdr.Authentication_AuthenticationType{xdr.Authentication_AUTH_PASSWORD},
 		},
+	}
+
+	// Poll until secagentd is ready to listen to session manager.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		_, err := secagentdaffiliation.GetSessionManagerReady(ctx, currTime)
+		return err
+	}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
+		s.Error("Failed to listen to session manager: ", err)
 	}
 
 	// 1: Login.
