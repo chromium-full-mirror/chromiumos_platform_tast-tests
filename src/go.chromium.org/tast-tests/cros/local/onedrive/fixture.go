@@ -46,9 +46,10 @@ func init() {
 	var opts = []chrome.Option{chrome.EnableFeatures("UploadOfficeToCloud"), chrome.ExtraArgs("--disable-sync", "--vmodule=cloud_upload*=3", "--extension-force-channel=dev")}
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "onedrive",
-		Desc:     "Sets up 3 office files docx, pptx and xlsx. At tear down tries to remove them from the remote service via ODFS",
-		Contacts: []string{"lucmult@chromium.org", "chromeos-files-syd@chromum.org"},
+		Name:         "onedrive",
+		Desc:         "Sets up 3 office files docx, pptx and xlsx. At tear down tries to remove them from the remote service via ODFS",
+		Contacts:     []string{"lucmult@chromium.org", "chromeos-files-syd@google.com"},
+		BugComponent: "b:167289",
 		Impl: &onedriveFixture{
 			bt:            browser.TypeAsh,
 			chromeOptions: opts,
@@ -63,9 +64,10 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "onedriveLacros",
-		Desc:     "Lacros variant of onedrive",
-		Contacts: []string{"lucmult@chromium.org", "chromeos-files-syd@chromum.org"},
+		Name:         "onedriveLacros",
+		Desc:         "Lacros variant of onedrive",
+		Contacts:     []string{"lucmult@chromium.org", "chromeos-files-syd@google.com"},
+		BugComponent: "b:167289",
 		Impl: &onedriveFixture{
 			bt:            browser.TypeLacros,
 			chromeOptions: opts,
@@ -99,9 +101,10 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "onedriveAndGoogleDrive",
-		Desc:     "Sets up 3 office files docx, pptx and xlsx. At tear down tries to remove them from the remote service via ODFS",
-		Contacts: []string{"lucmult@chromium.org", "chromeos-files-syd@chromum.org"},
+		Name:         "onedriveAndGoogleDrive",
+		Desc:         "Sets up 3 office files docx, pptx and xlsx. At tear down tries to remove them from the remote service via ODFS",
+		Contacts:     []string{"lucmult@chromium.org", "chromeos-files-syd@google.com"},
+		BugComponent: "b:167289",
 		Impl: &onedriveFixture{
 			bt:       browser.TypeAsh,
 			provider: filesconsts.DriveFs,
@@ -116,9 +119,10 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "onedriveAndGoogleDriveLacros",
-		Desc:     "Lacros variant of onedriveAndGoogleDrive",
-		Contacts: []string{"lucmult@chromium.org", "chromeos-files-syd@chromum.org"},
+		Name:         "onedriveAndGoogleDriveLacros",
+		Desc:         "Lacros variant of onedriveAndGoogleDrive",
+		Contacts:     []string{"lucmult@chromium.org", "chromeos-files-syd@google.com"},
+		BugComponent: "b:167289",
 		Impl: &onedriveFixture{
 			bt:       browser.TypeLacros,
 			provider: filesconsts.DriveFs,
