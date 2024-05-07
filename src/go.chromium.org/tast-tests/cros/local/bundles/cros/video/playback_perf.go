@@ -2378,10 +2378,7 @@ func PlaybackPerf(ctx context.Context, s *testing.State) {
 		KeyboardBrightness: setup.SetKbBrightnessToZero,
 	}, setup.NewBatteryDischarge(true /*discharge*/, true /*ignoreErr*/, setup.DefaultDischargeThreshold))
 	if err != nil {
-		// This is not really an error: sometimes powerd is down or lost and setting
-		// up the power test fails. Just don't provide any metric.
-		s.Log("Skipping test, something went wrong during test set up: ", err)
-		return
+		s.Fatal("Failed in power setup: ", err)
 	}
 	defer cleanup(ctx)
 
