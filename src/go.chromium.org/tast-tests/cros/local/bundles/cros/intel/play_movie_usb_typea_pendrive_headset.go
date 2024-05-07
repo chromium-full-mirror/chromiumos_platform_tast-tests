@@ -95,7 +95,7 @@ func PlayMovieUsbTypeaPendriveHeadset(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to open the audio file %q: %v", videoFileName, err)
 	}
 	cui := uiauto.New(tconn)
-	togglePlayPause := nodewith.Name("Toggle play pause").Role(role.ToggleButton)
+	togglePlayPause := nodewith.Name("Toggle play pause").Role(role.Button)
 	if err := cui.LeftClick(togglePlayPause)(ctx); err != nil {
 		s.Fatal("Failed to find and click togglePlayPause button: ", err)
 	}
