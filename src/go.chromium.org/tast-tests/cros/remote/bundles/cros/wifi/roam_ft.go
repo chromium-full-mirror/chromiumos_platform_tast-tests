@@ -20,7 +20,9 @@ import (
 	"go.chromium.org/tast-tests/cros/common/wifi/security"
 	"go.chromium.org/tast-tests/cros/common/wifi/security/wpa"
 	"go.chromium.org/tast-tests/cros/common/wifi/security/wpaeap"
+	"go.chromium.org/tast-tests/cros/common/wifi/wpacli"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wifi/wifiutil"
+	"go.chromium.org/tast-tests/cros/remote/network/cmd"
 	"go.chromium.org/tast-tests/cros/remote/wifi/iw"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
 	"go.chromium.org/tast-tests/cros/remote/wificell/dutcfg"
@@ -31,9 +33,11 @@ import (
 )
 
 type roamFTparam struct {
-	apOpts     []hostapd.Option
-	secConfFac security.ConfigFactory
-	mixed      bool
+	apOpts               []hostapd.Option
+	secConfFac           security.ConfigFactory
+	mixed                bool
+	expectedFtKeyMgmt    string
+	expectedNonFtKeyMgmt string
 }
 
 var (
@@ -96,6 +100,8 @@ func init() {
 					"chromeos", wpa.Mode(wpa.ModePureWPA3),
 					wpa.Ciphers2(wpa.CipherCCMP), wpa.FTMode(wpa.FTModePure),
 				),
+				expectedFtKeyMgmt:    wpa.KeyMgmtFTSAE,
+				expectedNonFtKeyMgmt: wpa.KeyMgmtSAE,
 			},
 		}, {
 			Name:              "mixed_sae",
@@ -108,8 +114,45 @@ func init() {
 					"chromeos", wpa.Mode(wpa.ModePureWPA3),
 					wpa.Ciphers2(wpa.CipherCCMP), wpa.FTMode(wpa.FTModeMixed),
 				),
-				mixed: true,
+				mixed:                true,
+				expectedFtKeyMgmt:    wpa.KeyMgmtFTSAE,
+				expectedNonFtKeyMgmt: wpa.KeyMgmtSAE,
 			},
+		}, {
+			Name:              "mixed_sae_ext",
+			ExtraAttr:         []string{"wificell_unstable"},
+			ExtraSoftwareDeps: []string{"wpa3_sae"},
+			Val: roamFTparam{
+				apOpts: []hostapd.Option{
+					hostapd.PMF(hostapd.PMFRequired),
+				},
+				secConfFac: wpa.NewConfigFactory(
+					"chromeos", wpa.Mode(wpa.ModePureWPA3Ext),
+					wpa.Ciphers2(wpa.CipherCCMP), wpa.FTMode(wpa.FTModeMixed),
+				),
+				mixed:                true,
+				expectedFtKeyMgmt:    wpa.KeyMgmtFTSAEEXT,
+				expectedNonFtKeyMgmt: wpa.KeyMgmtSAEEXT,
+			},
+			// TODO(b/339435290) Refine testbed dep to work for routers w/ AKM24 support.
+			ExtraTestBedDeps: []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_AX"},
+		}, {
+			Name:              "sae_ext",
+			ExtraAttr:         []string{"wificell_unstable"},
+			ExtraSoftwareDeps: []string{"wpa3_sae"},
+			Val: roamFTparam{
+				apOpts: []hostapd.Option{
+					hostapd.PMF(hostapd.PMFRequired),
+				},
+				secConfFac: wpa.NewConfigFactory(
+					"chromeos", wpa.Mode(wpa.ModePureWPA3Ext),
+					wpa.Ciphers2(wpa.CipherCCMP), wpa.FTMode(wpa.FTModePure),
+				),
+				expectedFtKeyMgmt:    wpa.KeyMgmtFTSAEEXT,
+				expectedNonFtKeyMgmt: wpa.KeyMgmtSAEEXT,
+			},
+			// TODO(b/339435290) Refine testbed dep to work for routers w/ AKM24 support.
+			ExtraTestBedDeps: []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_AX"},
 		},
 		},
 	})
@@ -155,9 +198,9 @@ func RoamFT(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Unable to get DUT MAC address: ", err)
 	}
-
+	runner := wpacli.NewRunner(&cmd.RemoteCmdRunner{Host: s.DUT().Conn()})
 	// runOnce sets up the network environment as mentioned above, and verifies the DUT is able to roam between the APs iff expectedFailure is not set.
-	runOnce := func(ctx context.Context, apOpts []hostapd.Option, secConfFac security.ConfigFactory, expectedFailure bool) {
+	runOnce := func(ctx context.Context, apOpts []hostapd.Option, secConfFac security.ConfigFactory, expectedFailure bool, expectedKeyMgmt string) {
 		var cancel context.CancelFunc
 		var err error
 
@@ -270,6 +313,15 @@ func RoamFT(ctx context.Context, s *testing.State) {
 		ctx, cancel = tf.ReserveForDisconnect(ctx)
 		defer cancel()
 
+		// Verify connection connected with expected Key Management.
+		keyMgmt, err := runner.KeyMgmt(ctx)
+		if err != nil {
+			s.Fatal("Unable to get KeyMgmt from WiFi interface")
+		}
+		if len(expectedKeyMgmt) > 0 && expectedKeyMgmt != keyMgmt {
+			s.Fatalf("Wrong KeyMgmt of the service: got %s, want %s ", keyMgmt, expectedKeyMgmt)
+		}
+
 		if err := tf.PingFromDUT(ctx, serverIP.String()); err != nil {
 			s.Fatal("Failed to ping from the DUT: ", err)
 		}
@@ -318,6 +370,14 @@ func RoamFT(ctx context.Context, s *testing.State) {
 			s.Fatal("DUT: failed to stay connected during the roaming process: ", err)
 		}
 
+		// Verify connection connected with expected Key Management.
+		keyMgmt, err = runner.KeyMgmt(ctx)
+		if err != nil {
+			s.Fatal("Unable to get KeyMgmt from WiFi interface")
+		}
+		if len(expectedKeyMgmt) > 0 && expectedKeyMgmt != keyMgmt {
+			s.Fatalf("Wrong KeyMgmt of the service: got %s, want %s ", keyMgmt, expectedKeyMgmt)
+		}
 		// Verify the L3 connectivity and make sure that the DUT stays connected to the second AP.
 		if err := tf.PingFromDUT(ctx, serverIP.String()); err != nil {
 			s.Fatal("Failed to verify connection: ", err)
@@ -393,10 +453,10 @@ func RoamFT(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to turn on the global FT property: ", err)
 	}
 	// Expect failure if we are running pure FT test and the DUT is not supporting SME.
-	runOnce(ctx, param.apOpts, param.secConfFac, !param.mixed && !hasFTSupport(ctx))
+	runOnce(ctx, param.apOpts, param.secConfFac, !param.mixed && !hasFTSupport(ctx), param.expectedFtKeyMgmt)
 	// Run the test without global FT. It should pass iff we configured the AP in mixed mode.
 	if _, err := tf.WifiClient().SetGlobalFTProperty(ctx, &wifi.SetGlobalFTPropertyRequest{Enabled: false}); err != nil {
 		s.Fatal("Failed to turn off the global FT property: ", err)
 	}
-	runOnce(ctx, param.apOpts, param.secConfFac, !param.mixed)
+	runOnce(ctx, param.apOpts, param.secConfFac, !param.mixed, param.expectedNonFtKeyMgmt)
 }
