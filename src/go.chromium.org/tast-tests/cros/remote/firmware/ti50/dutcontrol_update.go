@@ -38,7 +38,7 @@ func (b *DUTControlAndreiboard) Rollback(ctx context.Context, i *common.CrOSImag
 		return errors.Wrap(err, "wait for debug image to boot")
 	}
 
-	if _, err := i.Command(ctx, "rollback"); err != nil {
+	if err := i.Rollback(ctx); err != nil {
 		return errors.Wrap(err, "rollback")
 	}
 

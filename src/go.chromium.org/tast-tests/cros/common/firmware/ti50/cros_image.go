@@ -334,6 +334,16 @@ func (i *CrOSImage) SendConsoleRebootCmd(ctx context.Context) error {
 	return nil
 }
 
+// Rollback issues the rollback command but does not listen for a response since the GSC
+// is expected to reboot. Note that this does not detect if rollback was not performed because
+// it's missing from the image.
+func (i *CrOSImage) Rollback(ctx context.Context) error {
+	if err := i.WriteSerial(ctx, []byte("rollback\r")); err != nil {
+		return err
+	}
+	return i.WaitUntilBooted(ctx)
+}
+
 // SetCCDCapabilities uses the `ccd` GSC console command to set the device
 // capabilities to the given map.
 func (i *CrOSImage) SetCCDCapabilities(ctx context.Context, capabilities map[CCDCap]CCDCapState) error {
