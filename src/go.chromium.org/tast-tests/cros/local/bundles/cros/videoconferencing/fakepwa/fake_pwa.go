@@ -7,6 +7,9 @@ package fakepwa
 
 import (
 	"context"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"regexp"
 	"time"
 
@@ -17,6 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast/core/testing"
 )
 
 // VcPwaUI represents the Fake VC Tab UI.
@@ -29,6 +33,7 @@ type VcPwaUI struct {
 
 var (
 	vcPwaName   = "VcTester"
+	vcPwaURL    = "/vc_tester/popup.html"
 	rootWebArea = nodewith.Role(role.RootWebArea).Name(vcPwaName)
 
 	startVideoButton           = nodewith.Name("Start Video").Role(role.Button).Ancestor(rootWebArea)
@@ -40,6 +45,32 @@ var (
 
 	videoNode = nodewith.Role(role.Video).Ancestor(rootWebArea)
 )
+
+// SetupServerAndPermission installs the app, sets its permission and returns its appID.
+func SetupServerAndPermission(ctx context.Context, br *browser.Browser, s *testing.State, tconn *chrome.TestConn) string {
+	// Grant permission.
+	srv := httptest.NewServer(http.FileServer(s.DataFileSystem()))
+	br.GrantPermissions(ctx, []string{fmt.Sprintf("%s/*", srv.URL)},
+		browser.CameraContentSetting,
+		browser.MicrophoneContentSetting,
+	)
+
+	vcPwaFullURL := srv.URL + vcPwaURL
+	if err := apps.InstallPWAForURL(ctx, tconn, br, vcPwaFullURL, 15*time.Second); err != nil {
+		s.Fatal("Failed to install PWA for URL: ", err)
+	}
+	appID, err := apps.InstalledAppID(ctx, tconn, func(app *ash.ChromeApp) bool {
+		return app.Name == "VcTester"
+	}, &testing.PollOptions{Timeout: 5 * time.Second})
+	if err != nil {
+		s.Fatal("Failed to get appID: ", err)
+	}
+	if err = apps.Close(ctx, tconn, appID); err != nil {
+		s.Fatal("Failed to close app: ", err)
+	}
+
+	return appID
+}
 
 // LaunchApp opens an app with appID.
 func LaunchApp(ctx context.Context, tconn *browser.TestConn, br *browser.Browser, appID string) (*VcPwaUI, error) {

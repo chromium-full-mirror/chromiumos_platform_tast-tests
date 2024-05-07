@@ -6,17 +6,12 @@ package videoconferencing
 
 import (
 	"context"
-	"fmt"
-	"net/http"
-	"net/http/httptest"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/tbdep"
-	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/fakepwa"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -125,9 +120,6 @@ func TrayTriggersPwa(ctx context.Context, s *testing.State) {
 
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui")
 
-	srv := httptest.NewServer(http.FileServer(s.DataFileSystem()))
-	defer srv.Close()
-
 	browserType := s.FixtValue().(fixture.FixtData).BrowserType()
 
 	// Open an empty chrome tab.
@@ -140,28 +132,10 @@ func TrayTriggersPwa(ctx context.Context, s *testing.State) {
 	defer conn.Close()
 	defer conn.CloseTarget(cleanupCtx)
 
-	// Grant permission.
-	br.GrantPermissions(ctx, []string{fmt.Sprintf("%s/*", srv.URL)},
-		browser.CameraContentSetting,
-		browser.MicrophoneContentSetting,
-	)
-
 	vcTray := vctray.New(ctx, tconn)
 
 	// Install PWA.
-	vcPwaFullURL := srv.URL + "/vc_tester/popup.html"
-	if err := apps.InstallPWAForURL(ctx, tconn, br, vcPwaFullURL, 15*time.Second); err != nil {
-		s.Fatal("Failed to install PWA for URL: ", err)
-	}
-	appID, err := apps.InstalledAppID(ctx, tconn, func(app *ash.ChromeApp) bool {
-		return app.Name == "VcTester"
-	}, &testing.PollOptions{Timeout: 5 * time.Second})
-	if err != nil {
-		s.Fatal("Failed to get appID: ", err)
-	}
-	if err = apps.Close(ctx, tconn, appID); err != nil {
-		s.Fatal("Failed to close app: ", err)
-	}
+	appID := fakepwa.SetupServerAndPermission(ctx, br, s, tconn)
 
 	// Verify pwa triggers vcTray on camera.
 	s.Run(ctx, "cam_only", func(ctx context.Context, s *testing.State) {

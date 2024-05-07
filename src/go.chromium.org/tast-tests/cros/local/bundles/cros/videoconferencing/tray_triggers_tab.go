@@ -6,16 +6,12 @@ package videoconferencing
 
 import (
 	"context"
-	"fmt"
-	"net/http"
-	"net/http/httptest"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/fakevctab"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -25,8 +21,6 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
-
-const vcTabURL = "/vc_tester/popup.html"
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -135,17 +129,9 @@ func TrayTriggersTab(ctx context.Context, s *testing.State) {
 	defer conn.Close()
 	defer conn.CloseTarget(cleanupCtx)
 
-	// Grant permission.
-	srv := httptest.NewServer(http.FileServer(s.DataFileSystem()))
-	defer srv.Close()
-	br.GrantPermissions(ctx, []string{fmt.Sprintf("%s/*", srv.URL)},
-		browser.CameraContentSetting,
-		browser.MicrophoneContentSetting,
-	)
-
 	vcTray := vctray.New(ctx, tconn)
 
-	vcTabFullURL := srv.URL + vcTabURL
+	vcTabFullURL := fakevctab.SetupServerAndPermission(ctx, br, s)
 
 	// Verify tab triggers vcTray on camera.
 	s.Run(ctx, "cam_only", func(ctx context.Context, s *testing.State) {

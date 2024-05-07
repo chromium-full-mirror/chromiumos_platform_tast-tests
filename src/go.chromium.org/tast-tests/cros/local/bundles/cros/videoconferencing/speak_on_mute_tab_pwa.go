@@ -17,8 +17,10 @@ import (
 	"go.chromium.org/tast-tests/cros/local/audio/wav"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/common"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/data"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/fakepwa"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/fakevctab"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/apps/thirdparty/googlemeet"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
@@ -32,7 +34,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         MeetSpeakOnMute,
+		Func:         SpeakOnMuteTabPwa,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks Speak-On-Mute is functional in Google Meet",
 		Contacts: []string{
@@ -40,15 +42,20 @@ func init() {
 			"xiuwen@google.com",
 		},
 		Attr: []string{
-			"group:camera_dependent",
 			"group:external-dependency",
 			"group:cbx", "cbx_feature_enabled", "cbx_unstable",
 		},
-		TestBedDeps:  []string{tbdep.Cbx(false)},
-		Data:         []string{data.SpeechInputFile},
+		TestBedDeps: []string{tbdep.Cbx(false)},
+		Data: []string{
+			data.SpeechInputFile,
+			"vc_tester/popup.html",
+			"vc_tester/popup.js",
+			"vc_tester/camera.png",
+			"vc_tester/manifest.json",
+		},
 		BugComponent: "b:187682",
 		Timeout:      3 * time.Minute,
-		SoftwareDeps: []string{"chrome", "camera_feature_effects"},
+		SoftwareDeps: []string{"chrome"},
 		SearchFlags: []*testing.StringPair{
 			{
 				// Mute Mic and speak more.
@@ -64,29 +71,29 @@ func init() {
 		Params: []testing.Param{
 			{
 				Name:    "web",
-				Fixture: fixture.GAIALoggedInWithFakeHALAndEffectsEnabled,
+				Fixture: fixture.LoggedInWithFakeHALAndEffectsDisabled,
 				Val:     common.LaunchAppInWeb,
 			},
 			{
 				Name:    "web_lacros",
-				Fixture: fixture.GAIALoggedInLacrosWithFakeHALAndEffectsEnabled,
+				Fixture: fixture.LoggedInLacrosWithFakeHALAndEffectsDisabled,
 				Val:     common.LaunchAppInWeb,
 			},
 			{
 				Name:    "pwa",
-				Fixture: fixture.GAIALoggedInWithFakeHALAndEffectsEnabled,
+				Fixture: fixture.LoggedInWithFakeHALAndEffectsDisabled,
 				Val:     common.LaunchAppInPWA,
 			},
 			{
 				Name:    "pwa_lacros",
-				Fixture: fixture.GAIALoggedInLacrosWithFakeHALAndEffectsEnabled,
+				Fixture: fixture.LoggedInLacrosWithFakeHALAndEffectsDisabled,
 				Val:     common.LaunchAppInPWA,
 			},
 		},
 	})
 }
 
-func MeetSpeakOnMute(ctx context.Context, s *testing.State) {
+func SpeakOnMuteTabPwa(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
@@ -118,26 +125,49 @@ func MeetSpeakOnMute(ctx context.Context, s *testing.State) {
 
 	browserType := s.FixtValue().(fixture.FixtData).BrowserType()
 
-	var gm *googlemeet.GoogleMeet
+	vcTray := vctray.New(ctx, tconn)
+
+	// Open an empty chrome tab.
+	conn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browserType, chrome.NewTabURL)
+	if err != nil {
+		s.Fatal("Failed to launch browser: ", err)
+	}
+	defer closeBrowser(cleanupCtx)
+	defer conn.Close()
+	defer conn.CloseTarget(cleanupCtx)
 
 	if s.Param().(common.LaunchAppType) == common.LaunchAppInPWA {
-		gm, err = googlemeet.StartNewMeetingUsingPWA(ctx, cr, browserType, googlemeet.WithAllPermissions)
+		appID := fakepwa.SetupServerAndPermission(ctx, br, s, tconn)
+		pwaUI, err := fakepwa.LaunchApp(ctx, tconn, br, appID)
+		if err != nil {
+			s.Fatal("Failed to open pwa: ", err)
+		}
+		if err := uiauto.Combine("activate mic",
+			pwaUI.StartAudio,
+			vcTray.WaitUntilState(vctray.DevMicrophone, vctray.DeviceInUse),
+			vcTray.WaitUntilState(vctray.DevCamera, vctray.DeviceAvailable),
+			vcTray.WaitUntilState(vctray.DevScreen, vctray.DeviceHidden),
+		)(ctx); err != nil {
+			s.Fatal("Failed to verify that pwa triggers vcTray by mic: ", err)
+		}
 	} else {
-		// Meet can dynamically switch between different segmentation models.
-		// Force the same model the platform effects use with the experiment ?e=ForceSegmentationModelVariant::GpuMid.
-		gm, err = googlemeet.StartNewMeetingUsingBrowser(ctx, cr, browserType,
-			map[string]string{
-				"e": "ForceSegmentationModelVariant::GpuMid",
-			}, googlemeet.WithAllPermissions)
+		vcTabFullURL := fakevctab.SetupServerAndPermission(ctx, br, s)
+		tabUI, err := fakevctab.LaunchTab(ctx, tconn, br, vcTabFullURL)
+		if err != nil {
+			s.Fatal("Failed to open tab: ", err)
+		}
+
+		if err := uiauto.Combine("activate mic",
+			tabUI.StartAudio,
+			vcTray.WaitUntilState(vctray.DevMicrophone, vctray.DeviceInUse),
+			vcTray.WaitUntilState(vctray.DevCamera, vctray.DeviceAvailable),
+			vcTray.WaitUntilState(vctray.DevScreen, vctray.DeviceHidden),
+		)(ctx); err != nil {
+			s.Fatal("Failed to verify that tab triggers vcTray by mic: ", err)
+		}
 	}
-	if err != nil {
-		s.Fatal("Failed to start meeting: ", err)
-	}
-	defer gm.Close(cleanupCtx)
 
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_with_meet")
-
-	vcTray := vctray.New(ctx, tconn)
 
 	defer func(ctx context.Context) error {
 		if err := vcTray.ToggleAVDevice(vctray.DevMicrophone, true)(ctx); err != nil {
