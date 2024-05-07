@@ -37,7 +37,6 @@ func init() {
 		Desc: "Test DUT can get into U-Boot using altfw mode",
 		Contacts: []string{
 			"chromeos-faft@google.com", // Owning team list
-			"sjg@chromium.org",         // Test author
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		// TODO(b/296600641): Add to firmware_unstable, and then when stable, move to firmware_bios.
