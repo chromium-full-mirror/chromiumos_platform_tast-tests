@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/power/metrics"
 	"go.chromium.org/tast-tests/cros/local/power/util"
 	"go.chromium.org/tast-tests/cros/local/screenshot"
+	"go.chromium.org/tast-tests/cros/local/tracing"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -44,6 +45,12 @@ type Recorder struct {
 	enableDischargeWatchdog bool
 	isRecording             bool
 	perfValues              *perf.Values
+
+	// Fields used for perfetto tracing.
+	traceEnabled    bool
+	traceSession    *tracing.Session
+	traceConfigPath string
+	traceFilePath   string
 }
 
 // OptionalRecorderArg is used for denoting optional args for recorder.
@@ -229,6 +236,14 @@ func (r *Recorder) Start(ctx context.Context) error {
 		return errors.Wrap(err, "failed to start recording")
 	}
 
+	if r.traceEnabled {
+		traceSession, err := tracing.StartSession(ctx, r.traceConfigPath, tracing.WithTraceDataPath(r.traceFilePath))
+		if err != nil {
+			return errors.Wrap(err, "failed to start tracing")
+		}
+		r.traceSession = traceSession
+	}
+
 	r.metrics = metrics
 	r.checkpoints = perf.NewCheckpoints()
 	r.isRecording = true
@@ -248,13 +263,26 @@ func (r *Recorder) Stop(ctx context.Context) (*perf.Values, error) {
 	if !r.isRecording {
 		return nil, errors.New("recorder is not recording")
 	}
+
 	r.isRecording = false
 	// Stop watching for battery discharge either way.
 	r.enableDischargeWatchdog = false
+
 	p, err := r.metrics.StopRecording(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed while recording metrics or stopping recorder")
 	}
+
+	if r.traceEnabled {
+		if err := r.traceSession.Stop(ctx); err != nil {
+			return nil, errors.Wrap(err, "failed to stop tracing")
+		}
+
+		if err := r.traceSession.Finalize(ctx); err != nil {
+			return nil, errors.Wrap(err, "failed to finalize tracing")
+		}
+	}
+
 	r.perfValues = p
 	return p, nil
 }
@@ -440,7 +468,34 @@ func NewRecorder(ctx context.Context, interval time.Duration, outDir, testName s
 		dataSources:             metrics.TestMetrics(),
 		enableDischargeWatchdog: discharge,
 		isRecording:             false,
+
+		traceEnabled:    false,
+		traceSession:    nil,
+		traceConfigPath: "",
+		traceFilePath:   "",
 	}
+}
+
+// EnableTracing enables and configures perfetto tracing in the recorder.
+func (r *Recorder) EnableTracing(ctx context.Context, traceConfigPath, traceFileName string) error {
+	if r.isRecording {
+		return errors.New("cannot enable tracing while recording")
+	}
+	r.traceEnabled = true
+	r.traceConfigPath = traceConfigPath
+	r.traceFilePath = filepath.Join(r.outDir, traceFileName)
+	return nil
+}
+
+// DisableTracing disables tracing in the recorder.
+func (r *Recorder) DisableTracing(ctx context.Context) error {
+	if r.isRecording {
+		return errors.New("cannot disable tracing while recording")
+	}
+	r.traceEnabled = false
+	r.traceConfigPath = ""
+	r.traceFilePath = ""
+	return nil
 }
 
 // UseMetrics will rewrite recorder datasources
