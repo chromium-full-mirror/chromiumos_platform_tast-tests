@@ -28,7 +28,7 @@ func init() {
 			"bhartmire@google.com",
 		},
 		BugComponent: "b:1155263",
-		// Attr:         []string{"group:cross-device"},
+		Attr:         []string{"group:cross-device"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "crossdeviceNoSignIn",
 		VarDeps: []string{
@@ -69,12 +69,30 @@ func WelcomeScreenQR(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create test API connection: ", err)
 	}
 
-	// Begin the UI flow and accept the halfsheet prompt on the phone
+	// Begin the UI flow
 	ui := uiauto.New(tconn)
 	setupButton := nodewith.NameContaining("Android phone").Role(role.Button)
 	if err := ui.LeftClick(setupButton)(ctx); err != nil {
 		s.Fatal("Failed to click the Quick Start setup button: ", err)
 	}
+
+	// Find the QR code URL
+	qrCodeCanvas := nodewith.Role(role.Canvas)
+	qrCodeInfo, err := ui.Info(ctx, qrCodeCanvas)
+	if err != nil {
+		s.Fatal("Failed to retrieve QR code canvas: ", err)
+	}
+	qrCodeURL, ok := qrCodeInfo.HTMLAttributes["qr-code-url"]
+	if !ok {
+		s.Fatal("Failed to retrieve QR code URL")
+	}
+
+	// Pipe the QR code URL over to the phone
+	if err := androidDevice.SendQuickStartQRCode(ctx, qrCodeURL); err != nil {
+		s.Fatal("Failed to set QR code URL on Android device: ", err)
+	}
+
+	// Accept the halfsheet prompt on the phone
 	s.Log("Calling accept fast pair half sheet")
 	if err := androidDevice.AcceptFastPairHalfsheet(ctx); err != nil {
 		s.Fatal("Failed to accept fast pair half sheet: ", err)

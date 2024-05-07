@@ -748,3 +748,25 @@ func (c *AndroidDevice) WaitForUpdateScreen(ctx context.Context) error {
 
 	return nil
 }
+
+// SendQuickStartQRCode simulates scanning the QR code on the Quick Start UI.
+func (c *AndroidDevice) SendQuickStartQRCode(ctx context.Context, content string) error {
+	if err := c.Device.Root(ctx); err != nil {
+		return errors.Wrap(err, "failed to restart adb as root")
+	}
+
+	_, err := c.Device.BroadcastIntent(ctx,
+		"com.google.android.gms.phenotype.FLAG_OVERRIDE",
+		"--es", "package", "com.google.android.gms.quickstart#com.google.android.gms",
+		"--es", "user", `*`,
+		"--esa", "flags", "QrCodeScanner__fake_qr_code_contents_for_testing",
+		"--esa", "types", "string",
+		"--esa", "values", content,
+		"--ez", "commit", "true",
+		"com.google.android.gms")
+	if err != nil {
+		return errors.Wrap(err, "failed to set QR code content on Android")
+	}
+
+	return nil
+}
