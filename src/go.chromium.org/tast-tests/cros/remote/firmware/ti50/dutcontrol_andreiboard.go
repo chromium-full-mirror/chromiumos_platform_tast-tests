@@ -45,9 +45,7 @@ var (
 	// the newer docker images are used everywhere
 	gpioOutput = regexp.MustCompile("\"?value\"?: (true|false)")
 
-	reGsctoolUpdateSuccess  = regexp.MustCompile(`image updated`)
-	reGsctoolUpdateNotReady = regexp.MustCompile(`Can't find device`)
-	reGsctoolFoundDevice    = regexp.MustCompile(`Found device\.`)
+	reGsctoolUpdateSuccess = regexp.MustCompile(`image updated`)
 )
 
 // DUTControlAndreiboard controls an Andreiboard through dutcontrol grpc..
@@ -298,13 +296,8 @@ func (a *DUTControlAndreiboard) GSCToolWaitUntilReady(ctx context.Context, timeo
 		interval = timeoutInterval[1]
 	}
 	return testing.Poll(ctx, func(ctx context.Context) error {
-		if out, _ := a.GSCToolCommand(ctx, "", "--board_id"); reGsctoolUpdateNotReady.Match(out) {
-			return errors.New("gsctool update not ready: " + string(out))
-		} else if reGsctoolFoundDevice.Match(out) {
-			return nil
-		} else {
-			return testing.PollBreak(errors.New("gsctool error: " + string(out)))
-		}
+		_, err := a.GSCToolCommand(ctx, "", "--fwver")
+		return err
 	}, &testing.PollOptions{Timeout: timeout, Interval: interval})
 }
 
