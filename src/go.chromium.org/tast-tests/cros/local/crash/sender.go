@@ -275,8 +275,12 @@ func parseLogsForResult(es []*syslog.Entry) (*SendResult, error) {
 			r.Schedule = e.Timestamp.Add(time.Duration(sec) * time.Second)
 		} else if strings.Contains(e.Content, "Mocking successful send") {
 			r.Success = true
-		} else if strings.HasPrefix(e.Content, "  ") {
-			// This is a key-value pair.
+		} else if strings.HasPrefix(e.Content, "  ") && !strings.Contains(e.Content, "Sending crash report on behalf of") {
+			// Ignore "  Sending crash report on behalf of <whatever>". This
+			// happens for Chrome_ChromeOS, Chrome_Lacros, and ChromeOS_ARC
+			// crashes, or if we have a weird GOOGLE_CRASH_ID in the os-release.
+			//
+			// Otherwise, this is a key-value pair.
 			kv := strings.SplitN(strings.TrimSpace(e.Content), ": ", 2)
 			if len(kv) != 2 {
 				return nil, errors.Errorf("corrupted report line: %q", e.Content)
