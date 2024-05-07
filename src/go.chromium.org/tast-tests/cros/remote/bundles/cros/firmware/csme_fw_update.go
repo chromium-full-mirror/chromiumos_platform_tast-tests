@@ -101,6 +101,9 @@ func CsmeFwUpdate(ctx context.Context, s *testing.State) {
 	}
 
 	originalMeVersion, downgradeMeVersion, isDowngradePossible, err := getCsmeVersions(ctx, h.DUT, tempDirOnDut, backupOnDut, downgradeBiosImageOnDut)
+	if err != nil {
+		s.Fatal("Failed to get CSME versions: ", err)
+	}
 	if !isDowngradePossible {
 		s.Fatal("CSME RW blobs are same in downgrade and original bios")
 	}
@@ -353,7 +356,7 @@ func isMeRwBlobsIdentical(ctx context.Context, dut *dut.DUT, workDir, originalBi
 }
 
 func cmpLocalFiles(ctx context.Context, dut *dut.DUT, file1, file2 string) (string, error) {
-	out, err := dut.Conn().CommandContext(ctx, "cmp", file2, file2).Output()
+	out, err := dut.Conn().CommandContext(ctx, "cmp", file2, file2).Output(ssh.DumpLogOnError)
 	if err != nil {
 		return "", errors.Wrap(err, "file comparison failed")
 	}
