@@ -6,8 +6,6 @@ package networkui
 
 import (
 	"context"
-	"fmt"
-	"strings"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
@@ -38,12 +36,12 @@ type ProxyService struct {
 func (s *ProxyService) StartServer(ctx context.Context, request *networkui.StartServerRequest) (resp *networkui.StartServerResponse, retErr error) {
 	var opts []proxy.Option
 
-	var ignoreList string
+	var ignoredHosts []string
 
 	if len(request.Allowlist) > 0 {
-		ignoreList = strings.Join(request.Allowlist, " \n - ")
+		ignoredHosts = request.Allowlist
 	} else {
-		ignoreList = ".*" // allow all hostnames to bypass mitmproxy cert inspection
+		ignoredHosts = []string{".*"} // allow all hostnames to bypass mitmproxy cert inspection
 	}
 
 	// Create a service-scoped context for mitmproxy. The mitmproxy server is shutdown after the test is finished.
@@ -55,7 +53,7 @@ func (s *ProxyService) StartServer(ctx context.Context, request *networkui.Start
 		return nil, errors.New("OutDir should be set in the context")
 	}
 	opts = append(opts,
-		proxy.CustomOptions(fmt.Sprintf("ignore_hosts: \n - %s", ignoreList)),
+		proxy.Ignorelist(ignoredHosts),
 		proxy.OutDir(outDir),
 		proxy.HealthCheck(false),
 	)

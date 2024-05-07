@@ -62,6 +62,7 @@ type MitmProxy struct {
 	dumpHTTPFlowEnabled   bool
 	dumpHTTPFlowAddonPath string
 	allowedHosts          []string
+	ignoredHosts          []string
 }
 
 // NewMitmProxy creates a new MitmProxy instance with default configuration and option overrides.

@@ -113,7 +113,7 @@ func DumpFull(enable bool) Option {
 //
 // Filter follows these rules:
 // 1. Only traffic to the specified hosts is allowed.
-// 2. Otherwise, the traffic is blocked and return 500.
+// 2. Otherwise, the traffic is blocked and return 403.
 //
 // Sample for hosts:
 //
@@ -122,10 +122,6 @@ func DumpFull(enable bool) Option {
 // TODO(b/319732303): remove trafficFilterAddonPath later.
 func Allowlist(hosts []string, trafficFilterAddonPath string) Option {
 	return func(mp *MitmProxy) error {
-		if len(hosts) == 0 {
-			return errors.New("failed to filter HTTP flow since allowedHosts is empty")
-		}
-
 		if len(trafficFilterAddonPath) == 0 {
 			return errors.New("failed to filter HTTP flow since trafficFilterAddonPath is empty")
 		}
@@ -139,9 +135,39 @@ func Allowlist(hosts []string, trafficFilterAddonPath string) Option {
 
 		yamlConfig, err := yaml.Marshal(&config)
 		if err != nil {
-			return errors.Wrapf(err, "fail to marshal allowedHosts: %s", hosts)
+			return errors.Wrapf(err, "failed to marshal allowedHosts: %s", hosts)
 		}
 		mp.options = append(mp.options, string(yamlConfig))
+		return nil
+	}
+}
+
+// Ignorelist configures MitmProxy ignore_hosts.
+// It accepts a list of hostnames.
+// MitmProxy ignores any host in the list without processing it.
+// It is useful if you want to exempt some traffic that is protected using certificate pinning
+// or traffic that you don't really care about for what it is testing.
+func Ignorelist(hosts []string) Option {
+	return func(mp *MitmProxy) error {
+		if len(hosts) == 0 {
+			return errors.New("failed to setup IgnoreHosts since host is empty")
+		}
+
+		if len(mp.ignoredHosts) != 0 {
+			return errors.New("failed to setup IgnoreHosts since it has been setup")
+		}
+
+		mp.ignoredHosts = hosts
+		config := map[string][]string{
+			"ignore_hosts": hosts,
+		}
+		yamlConfig, err := yaml.Marshal(&config)
+		if err != nil {
+			return errors.Wrapf(err, "failed to marshal IgnoreHosts: %s", hosts)
+		}
+
+		mp.options = append(mp.options, string(yamlConfig))
+
 		return nil
 	}
 }
