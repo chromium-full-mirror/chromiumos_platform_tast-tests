@@ -59,12 +59,46 @@ func init() {
 					Parent:   fixture.UIStopped{}.Instance(),
 				}.Instance(),
 			},
+			{
+				Name: "1ch_aec",
+				Val: crasMultiChannelCaptureParam{
+					channels: 1,
+					effects:  0x1,
+				},
+				Fixture: fixture.AloopLoaded{
+					Channels: 1,
+					Parent:   fixture.UIStopped{}.Instance(),
+				}.Instance(),
+			},
+			{
+				Name: "2ch_aec",
+				Val: crasMultiChannelCaptureParam{
+					channels: 2,
+					effects:  0x1,
+				},
+				Fixture: fixture.AloopLoaded{
+					Channels: 2,
+					Parent:   fixture.UIStopped{}.Instance(),
+				}.Instance(),
+			},
+			{
+				Name: "3ch_aec",
+				Val: crasMultiChannelCaptureParam{
+					channels: 3,
+					effects:  0x1,
+				},
+				Fixture: fixture.AloopLoaded{
+					Channels: 3,
+					Parent:   fixture.UIStopped{}.Instance(),
+				}.Instance(),
+			},
 		},
 	})
 }
 
 type crasMultiChannelCaptureParam struct {
 	channels int
+	effects  int
 }
 
 func CrasMultiChannelCapture(ctx context.Context, s *testing.State) {
@@ -130,6 +164,7 @@ func CrasMultiChannelCapture(ctx context.Context, s *testing.State) {
 		"cras_tests",
 		"capture",
 		captureWav,
+		fmt.Sprintf("--effects=0x%x", param.effects),
 		fmt.Sprintf("--channels=%d", param.channels),
 		fmt.Sprintf("--duration=%v", testDuration.Seconds()),
 	).Run(testexec.DumpLogOnError); err != nil {
