@@ -14,10 +14,10 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/platform/memorystress"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast-tests/cros/local/cpu"
+	"go.chromium.org/tast-tests/cros/local/memory/memorystress"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
