@@ -33,6 +33,10 @@ const (
 
 	// LatestPrefix allows BuildURL to be specified as latest-<branch> obtain the latest available images.
 	LatestPrefix = "latest-"
+	// ReleasePrefix allows BuildURL lookup the gs path for the given GSC version string. This uses
+	// the same format as the QUAL_VERSION files.
+	// ex release-0.24.90/FFFF:0:0x10
+	ReleasePrefix = "release-"
 
 	// FwConfigJSON is the arg name for the json configuration file (for use in case buildurl
 	// specifies a single .bin file, rather than a directory).
@@ -149,13 +153,21 @@ func (v *ImageValue) FwConfigPaths() []string {
 // downloadImage downloads the image from google storage if necessary.
 // inputURL can be a local file, a gs file, or a gs build folder.
 func downloadImage(ctx context.Context, testbedProperties remoteTi50.TestbedProperties, imageType ImageType, s *testing.FixtState) (*ImageValue, error) {
+	var err error
 	inputURL, _ := s.Var(BuildURL)
 	iv := &ImageValue{}
 
-	// For inputURL that is in the form of latest-*, convert it to the corresponding GS path.
-	if strings.HasPrefix(inputURL, LatestPrefix) {
+	fw := findFwName(testbedProperties.TestbedType)
+	// For inputURL that is in the form of release-*, extract the version and lookup the corresponding GS path.
+	if strings.HasPrefix(inputURL, ReleasePrefix) {
+		v := inputURL[len(ReleasePrefix):]
+		inputURL, err = LookupGSCReleaseTarball(ctx, v, fw)
+		if err != nil {
+			return nil, err
+		}
+	} else if strings.HasPrefix(inputURL, LatestPrefix) {
+		// For inputURL that is in the form of latest-*, convert it to the corresponding GS path.
 		var latestURL string
-		var err error
 		branch := inputURL[len(LatestPrefix):]
 		switch branch {
 		case ToTBranch:
@@ -172,7 +184,6 @@ func downloadImage(ctx context.Context, testbedProperties remoteTi50.TestbedProp
 				return nil, err
 			}
 		case GSCQualBranch:
-			fw := findFwName(testbedProperties.TestbedType)
 			latestURL, err = lookupLatestGSCQualTarball(ctx, fw)
 			if err != nil {
 				return nil, err
