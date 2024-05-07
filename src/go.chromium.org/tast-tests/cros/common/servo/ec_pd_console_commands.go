@@ -483,34 +483,6 @@ func (s *Servo) GetDUTDualRoleState(ctx context.Context, port int) (USBPdDualRol
 	return USBPdDualRoleValue(outState), nil
 }
 
-// SetDUTDualRole accepts a port ID and sets the PD DRP status of this port
-func (s *Servo) SetDUTDualRole(ctx context.Context, val USBPdDualRoleValue) error {
-	// USBPdDualRoleSink and Source contains "force " prefix, strip this from the command
-	// sent to EC
-	action := strings.TrimPrefix(string(val), "force ")
-
-	cmd := fmt.Sprintf("pd %d dualrole %s", s.dutPDInfo.activePort, action)
-
-	if err := s.RunECCommand(ctx, cmd); err != nil {
-		testing.ContextLogf(
-			ctx, "EC command %q failed. Trying older version. (%q)",
-			cmd, err,
-		)
-		cmd := fmt.Sprintf("pd dualrole %s", action)
-
-		if err := s.RunECCommand(ctx, cmd); err != nil {
-			return errors.Wrapf(err, "ec command %q failed", cmd)
-		}
-	}
-
-	state, _ := s.GetDUTDualRoleState(ctx, s.dutPDInfo.activePort)
-
-	if state != val {
-		return errors.Errorf("failed to set dual role to %q", val)
-	}
-	return nil
-}
-
 // SetPDTrySrc attempts to set PD TrySrc enable or disabled.
 // returns True is setting was successful, False if feature not supported
 // by the device, or not set as desired.

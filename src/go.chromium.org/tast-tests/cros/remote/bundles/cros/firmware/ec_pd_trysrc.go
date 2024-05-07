@@ -113,7 +113,7 @@ func ECPDTrysrc(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to enable usbpd console channel: ", err)
 	}
 
-	if err := h.Servo.SetDUTDualRole(ctx, servo.USBPdDualRoleOn); err != nil {
+	if err := h.Servo.SetDualroleState(ctx, servo.DROn); err != nil {
 		s.Fatal("Could not enable DRP on EC")
 	}
 
