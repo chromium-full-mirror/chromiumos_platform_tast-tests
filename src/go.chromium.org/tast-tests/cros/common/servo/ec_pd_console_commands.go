@@ -515,12 +515,14 @@ func (s *Servo) SetDUTDualRole(ctx context.Context, val USBPdDualRoleValue) erro
 // returns True is setting was successful, False if feature not supported
 // by the device, or not set as desired.
 func (s *Servo) SetPDTrySrc(ctx context.Context, enable int) (bool, error) {
+	var cmd string
+
 	// TCPMv1 indicates Try.SRC is on by returning 'on'
-	// TCPMv2 indicates Try.SRC is on by returning 'Forced ON'
+	// TCPMv2 and PDC indicates Try.SRC is on by returning 'Forced ON'
 	onVals := []string{"on", "Forced ON"}
 
 	// TCPMv1 indicates Try.SRC is off by returning 'off'
-	// TCPMv2 indicates Try.SRC is off by returning 'Forced OFF'
+	// TCPMv2 and PDC indicates Try.SRC is off by returning 'Forced OFF'
 	offVals := []string{"off", "Forced OFF"}
 
 	// Try.SRC on/off is output, if supported feature
@@ -528,7 +530,16 @@ func (s *Servo) SetPDTrySrc(ctx context.Context, enable int) (bool, error) {
 	regex := fmt.Sprintf(`Try\.SRC\s(%s)|(Parameter)`, values)
 
 	matchList := []string{regex}
-	cmd := fmt.Sprintf("pd trysrc %d", enable)
+
+	switch s.dutPDInfo.version {
+	case TCPMv1, TCPMv2:
+		cmd = fmt.Sprintf("pd trysrc %d", enable)
+	case PDC:
+		cmd = fmt.Sprintf("pdc trysrc %d", enable)
+	default:
+		panic("Unknown TCPM version")
+	}
+
 	out, err := s.RunECCommandGetOutputNoConsoleLogs(ctx, cmd, matchList)
 
 	if err != nil {
@@ -536,7 +547,7 @@ func (s *Servo) SetPDTrySrc(ctx context.Context, enable int) (bool, error) {
 	}
 
 	if !strings.Contains(out[0][0], "Try.SRC") {
-		return false, errors.Wrap(err, "Try.SRC not supported on this PD device")
+		return false, errors.New("Try.SRC not supported on this PD device")
 	}
 
 	trySrcVal := out[0][1]
