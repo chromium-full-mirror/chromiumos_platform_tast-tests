@@ -60,11 +60,11 @@ func SetTimeOfDayWallpaper(ctx context.Context, s *testing.State) {
 	// time to wait for nodes to load.
 	ui := uiauto.New(tconn).WithTimeout(30 * time.Second)
 
-	if err := uiauto.Combine("Enable dark mode",
+	if err := uiauto.Combine("Enable auto mode",
 		personalization.OpenPersonalizationHub(ui),
-		personalization.ToggleDarkMode(ui),
+		personalization.ToggleAutoMode(ui),
 	)(ctx); err != nil {
-		s.Fatal("Failed to enable dark mode: ", err)
+		s.Fatal("Failed to enable auto mode: ", err)
 	}
 
 	if err := uiauto.Combine(fmt.Sprintf("Change the wallpaper to %s %s", constants.DawnToDarkCollection, constants.EarthFlowImage),
