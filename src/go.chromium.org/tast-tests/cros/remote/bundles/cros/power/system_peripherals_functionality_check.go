@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -31,8 +32,9 @@ const (
 )
 
 type peripheralsTestParams struct {
-	powerMode peripheralsPowerMode
-	iter      int
+	powerMode   peripheralsPowerMode
+	iter        int
+	checkSDCard bool
 }
 
 func init() {
@@ -44,44 +46,44 @@ func init() {
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"chrome", "reboot"},
 		ServiceDeps:  []string{"tast.cros.security.BootLockboxService"},
-		VarDeps:      []string{"servo"},
+		Vars:         []string{"servo", "power.sd_card_present"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.InternalDisplay()),
 		Params: []testing.Param{{
 			Name:    "suspend_quick",
-			Val:     peripheralsTestParams{powerMode: suspendTest, iter: 1},
+			Val:     peripheralsTestParams{powerMode: suspendTest, iter: 1, checkSDCard: true},
 			Timeout: 5 * time.Minute,
 		}, {
 			Name:      "suspend_bronze",
-			Val:       peripheralsTestParams{powerMode: suspendTest, iter: 20},
+			Val:       peripheralsTestParams{powerMode: suspendTest, iter: 20, checkSDCard: true},
 			Timeout:   8 * time.Minute,
 			ExtraAttr: []string{"group:intel-stability-bronze"},
 		}, {
 			Name:      "suspend_silver",
-			Val:       peripheralsTestParams{powerMode: suspendTest, iter: 50},
+			Val:       peripheralsTestParams{powerMode: suspendTest, iter: 50, checkSDCard: true},
 			Timeout:   13 * time.Minute,
 			ExtraAttr: []string{"group:intel-stability-silver"},
 		}, {
 			Name:      "suspend_gold",
-			Val:       peripheralsTestParams{powerMode: suspendTest, iter: 100},
+			Val:       peripheralsTestParams{powerMode: suspendTest, iter: 100, checkSDCard: true},
 			Timeout:   20 * time.Minute,
 			ExtraAttr: []string{"group:intel-stability-gold"},
 		}, {
 			Name:    "coldboot_quick",
-			Val:     peripheralsTestParams{powerMode: coldbootTest, iter: 1},
+			Val:     peripheralsTestParams{powerMode: coldbootTest, iter: 1, checkSDCard: true},
 			Timeout: 5 * time.Minute,
 		}, {
 			Name:      "coldboot_bronze",
-			Val:       peripheralsTestParams{powerMode: coldbootTest, iter: 20},
+			Val:       peripheralsTestParams{powerMode: coldbootTest, iter: 20, checkSDCard: true},
 			Timeout:   25 * time.Minute,
 			ExtraAttr: []string{"group:intel-stability-bronze"},
 		}, {
 			Name:      "coldboot_silver",
-			Val:       peripheralsTestParams{powerMode: coldbootTest, iter: 50},
+			Val:       peripheralsTestParams{powerMode: coldbootTest, iter: 50, checkSDCard: true},
 			Timeout:   45 * time.Minute,
 			ExtraAttr: []string{"group:intel-stability-silver"},
 		}, {
 			Name:      "coldboot_gold",
-			Val:       peripheralsTestParams{powerMode: coldbootTest, iter: 100},
+			Val:       peripheralsTestParams{powerMode: coldbootTest, iter: 100, checkSDCard: true},
 			Timeout:   85 * time.Minute,
 			ExtraAttr: []string{"group:intel-stability-gold"},
 		},
@@ -102,6 +104,15 @@ func SystemPeripheralsFunctionalityCheck(ctx context.Context, s *testing.State) 
 
 	dut := s.DUT()
 	testParam := s.Param().(peripheralsTestParams)
+
+	sdCardVar := testParam.checkSDCard
+	if sdCard, ok := s.Var("power.sd_card_present"); ok {
+		checkSDcard, err := strconv.ParseBool(sdCard)
+		if err != nil {
+			s.Fatalf("Failed to convert value of 'power.sd_card_present' %q to bool: %v", sdCard, err)
+		}
+		sdCardVar = checkSDcard
+	}
 
 	servoSpec := s.RequiredVar("servo")
 	pxy, err := servo.NewProxy(ctx, servoSpec, dut.KeyFile(), dut.KeyDir())
@@ -124,7 +135,7 @@ func SystemPeripheralsFunctionalityCheck(ctx context.Context, s *testing.State) 
 	}
 
 	// Check for all peripheral devices detection before suspend/cold boot.
-	if err := connectedPeripheralsDetection(ctx, dut); err != nil {
+	if err := connectedPeripheralsDetection(ctx, dut, sdCardVar); err != nil {
 		s.Fatal("Failed to detect connected peripherals devices before cold boot: ", err)
 	}
 
@@ -138,7 +149,7 @@ func SystemPeripheralsFunctionalityCheck(ctx context.Context, s *testing.State) 
 			}
 
 			// Check for all peripheral devices detection after suspend.
-			if err := connectedPeripheralsDetection(ctx, dut); err != nil {
+			if err := connectedPeripheralsDetection(ctx, dut, sdCardVar); err != nil {
 				s.Fatal("Failed to detect connected peripherals devices during suspend test: ", err)
 			}
 		}
@@ -161,7 +172,7 @@ func SystemPeripheralsFunctionalityCheck(ctx context.Context, s *testing.State) 
 			}
 
 			// Check for all peripheral devices detection after cold boot.
-			if err := connectedPeripheralsDetection(ctx, dut); err != nil {
+			if err := connectedPeripheralsDetection(ctx, dut, sdCardVar); err != nil {
 				s.Fatal("Failed to detect connected peripherals devices after cold boot: ", err)
 			}
 
@@ -227,12 +238,14 @@ func usbStorageDevicesDetection(ctx context.Context, dut *dut.DUT) error {
 
 // connectedPeripheralsDetection verified whether all connected peripheral devices
 // detected or not.
-func connectedPeripheralsDetection(ctx context.Context, dut *dut.DUT) error {
+func connectedPeripheralsDetection(ctx context.Context, dut *dut.DUT, sdCardVar bool) error {
 	if err := usbStorageDevicesDetection(ctx, dut); err != nil {
 		return errors.Wrap(err, "failed to detect connected USB storage devices")
 	}
-	if err := sdCardDetection(ctx, dut); err != nil {
-		return errors.Wrap(err, "failed to detect connected SD Card")
+	if sdCardVar {
+		if err := sdCardDetection(ctx, dut); err != nil {
+			return errors.Wrap(err, "failed to detect connected SD Card")
+		}
 	}
 	numberOfDisplay := 1
 	spec := usbutils.DisplaySpec{
