@@ -1000,3 +1000,8 @@ func (i *CrOSImage) GetH1ChipSKU(ctx context.Context) (ChipSKU, error) {
 	}
 	return FindH1ChipSKU(output)
 }
+
+// Eraseflashinfo runs eraseflashinfo.
+func (i *CrOSImage) Eraseflashinfo(ctx context.Context) (string, error) {
+	return i.Command(ctx, "eraseflashinfo both")
+}

@@ -124,7 +124,7 @@ func (b *DUTControlAndreiboard) RollbackAndRunEraseflashinfoUpdate(ctx context.C
 		return errors.Wrap(err, "unable to rollback to efi image")
 	}
 
-	_, err = i.Command(ctx, "eraseflashinfo")
+	_, err = i.Eraseflashinfo(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to run GSC eraseflashinfo command")
 	}

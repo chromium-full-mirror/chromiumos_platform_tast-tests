@@ -94,7 +94,8 @@ func (c *initialFactoryImpl) eraseInfoPage(ctx context.Context, s *testing.FixtT
 	mustSucceed(s, b.Reset(ctx), "Reset gsc console for EFI")
 	mustSucceed(s, i.WaitUntilBooted(ctx), "EFI image revives after reboot")
 
-	eraseOutput := runCommand(ctx, s, i, "erase")
+	eraseOutput, err := i.Eraseflashinfo(ctx)
+	mustSucceed(s, err, "failed to run eraseflashinfo command")
 	if !strings.Contains(eraseOutput, "Succeeded!") {
 		s.Fatal("Erase command did not work: ", eraseOutput)
 	}
