@@ -41,11 +41,11 @@ func init() {
 		}},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
-			Fixture: quickanswers.BasicFixture,
+			Fixture: quickanswers.BaseFixture,
 			Val:     browser.TypeAsh,
 		}, {
 			Name:              "lacros",
-			Fixture:           quickanswers.LacrosFixture,
+			Fixture:           quickanswers.BaseLacrosFixture,
 			ExtraSoftwareDeps: []string{"lacros"},
 			Val:               browser.TypeLacros,
 		}},
@@ -66,10 +66,6 @@ func UnitConversion(ctx context.Context, s *testing.State) {
 	}
 
 	ui := uiauto.New(tconn)
-
-	if err := quickanswers.SetPrefValue(ctx, tconn, "settings.quick_answers.enabled", true); err != nil {
-		s.Fatal("Failed to enable Quick Answers: ", err)
-	}
 
 	// Setup a browser.
 	bt := s.Param().(browser.Type)

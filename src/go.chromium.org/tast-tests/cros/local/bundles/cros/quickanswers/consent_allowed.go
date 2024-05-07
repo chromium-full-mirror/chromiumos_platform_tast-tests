@@ -6,16 +6,11 @@ package quickanswers
 
 import (
 	"context"
-	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/quickanswers"
-	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -36,13 +31,17 @@ func init() {
 		},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
-			Fixture: quickanswers.BasicFixture,
-			Val:     browser.TypeAsh,
+			Fixture: quickanswers.Parameterize(
+				quickanswers.NotEnabledWithBrowserFixture,
+				quickanswers.VariantSingleWord,
+			),
 		}, {
-			Name:              "lacros",
-			Fixture:           quickanswers.LacrosFixture,
+			Name: "lacros",
+			Fixture: quickanswers.Parameterize(
+				quickanswers.NotEnabledWithBrowserLacrosFixture,
+				quickanswers.VariantSingleWord,
+			),
 			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               browser.TypeLacros,
 		}},
 	})
 }
@@ -50,26 +49,7 @@ func init() {
 // ConsentAllowed tests Quick Answers consent flow.
 func ConsentAllowed(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
-
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
-	defer cancel()
-
-	const queryWord = "icosahedron"
-	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(
-		ctx, cr, s.Param().(browser.Type),
-		quickanswers.BuildDataURL(queryWord))
-	if err != nil {
-		s.Fatal("Failed to open a browser: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
-	defer conn.Close()
-
-	// Stacked defers are executed in last-in first-out order.
-	// DumpUITreeWithScreenshotOnError should be after a defer of closing a
-	// browser as we want to capture browser UI.
-	defer faillog.DumpUITreeWithScreenshotOnError(
-		ctx, s.OutDir(), s.HasError, cr, "ui")
+	queryWord := s.FixtValue().(quickanswers.HasQueryWord).QueryWord()
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {

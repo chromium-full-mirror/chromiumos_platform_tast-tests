@@ -39,11 +39,11 @@ func init() {
 		},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
-			Fixture: quickanswers.BasicFixture,
+			Fixture: quickanswers.BaseFixture,
 			Val:     browser.TypeAsh,
 		}, {
 			Name:              "lacros",
-			Fixture:           quickanswers.LacrosFixture,
+			Fixture:           quickanswers.BaseLacrosFixture,
 			ExtraSoftwareDeps: []string{"lacros"},
 			Val:               browser.TypeLacros,
 		}},
@@ -60,10 +60,6 @@ func PhoneticsAudioButton(ctx context.Context, s *testing.State) {
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
-	}
-
-	if err := quickanswers.SetPrefValue(ctx, tconn, "settings.quick_answers.enabled", true); err != nil {
-		s.Fatal("Failed to enable Quick Answers: ", err)
 	}
 
 	// Setup a browser.

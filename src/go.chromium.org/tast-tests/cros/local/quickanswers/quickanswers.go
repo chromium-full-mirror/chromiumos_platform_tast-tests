@@ -18,9 +18,36 @@ import (
 	"go.chromium.org/tast/core/errors"
 )
 
+const (
+	prefPathEnabled       = "settings.quick_answers.enabled"
+	prefPathConsentStatus = "settings.quick_answers.consent_status"
+
+	prefValueConsentStatusUnknown = 0
+)
+
+// ResetPref resets quick answers pref values to default values.
+func ResetPref(ctx context.Context, tconn *chrome.TestConn) error {
+	// prefPathConsentStatus is not in chrome.settingsPrivate.setPref.
+	if err := tconn.Call(ctx, nil,
+		`tast.promisify(chrome.autotestPrivate.setAllowedPref)`,
+		prefPathConsentStatus,
+		prefValueConsentStatusUnknown); err != nil {
+		return errors.Wrap(err, "failed to reset consent status")
+	}
+	return SetPrefValue(ctx, tconn, prefPathEnabled, false)
+
+}
+
+// Enable enables quick answers pref.
+func Enable(ctx context.Context, tconn *chrome.TestConn) error {
+	return SetPrefValue(ctx, tconn, prefPathEnabled, true)
+}
+
 // SetPrefValue is a helper function to sets value for Quick answers related prefs.
 // Note that the pref needs to be allowlisted here:
 // https://cs.chromium.org/chromium/src/chrome/browser/extensions/api/settings_private/prefs_util.cc
+// TODO(b/339097439): Make this a private function and expose them with respective
+// pref path specific methods, e.g., Enabled.
 func SetPrefValue(ctx context.Context, tconn *chrome.TestConn, prefName string, value interface{}) error {
 	return tconn.Call(ctx, nil, `tast.promisify(chrome.settingsPrivate.setPref)`, prefName, value)
 }

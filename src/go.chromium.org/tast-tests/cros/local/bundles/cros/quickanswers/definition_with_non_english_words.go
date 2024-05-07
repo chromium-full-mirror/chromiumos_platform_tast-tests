@@ -41,11 +41,11 @@ func init() {
 		}},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
-			Fixture: quickanswers.BasicFixture,
+			Fixture: quickanswers.BaseFixture,
 			Val:     browser.TypeAsh,
 		}, {
 			Name:              "lacros",
-			Fixture:           quickanswers.LacrosFixture,
+			Fixture:           quickanswers.BaseLacrosFixture,
 			ExtraSoftwareDeps: []string{"lacros"},
 			Val:               browser.TypeLacros,
 		}},
@@ -74,10 +74,6 @@ func DefinitionWithNonEnglishWords(ctx context.Context, s *testing.State) {
 	defer closeBrowser(cleanupCtx)
 
 	ui := uiauto.New(tconn)
-
-	if err := quickanswers.SetPrefValue(ctx, tconn, "settings.quick_answers.enabled", true); err != nil {
-		s.Fatal("Failed to enable Quick Answers: ", err)
-	}
 
 	const languagesList = "en,es,it,fr,pt,de"
 
