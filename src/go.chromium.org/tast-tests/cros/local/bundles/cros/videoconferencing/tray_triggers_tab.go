@@ -247,13 +247,11 @@ func TrayTriggersTab(ctx context.Context, s *testing.State) {
 
 		defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_return_to_app")
 
-		if err := uiauto.Combine("share screen only",
-			tabUI.StartScreenCapture,
-			vcTray.WaitUntilState(vctray.DevMicrophone, vctray.DeviceAvailable),
-			vcTray.WaitUntilState(vctray.DevCamera, vctray.DeviceAvailable),
-			vcTray.WaitUntilState(vctray.DevScreen, vctray.DeviceInUse),
+		if err := uiauto.Combine("activate camera",
+			tabUI.StartVideo,
+			vcTray.WaitUntilState(vctray.DevCamera, vctray.DeviceInUse),
 		)(ctx); err != nil {
-			s.Fatal("Failed to verify that extension triggers vcTray by sharing screen: ", err)
+			s.Fatal("Failed to verify that tab triggers vcTray by camera: ", err)
 		}
 
 		tabWindow, err := ash.GetActiveWindow(ctx, tconn)
@@ -261,36 +259,12 @@ func TrayTriggersTab(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to get active window: ", err)
 		}
 
-		if err := ash.SetWindowStateAndWait(ctx, tconn, tabWindow.ID, ash.WindowStateMaximized); err != nil {
-			s.Fatal("Failed to Maximize active window: ", err)
+		if err := vcTray.ReturnToAppForWindow("VcTester", tabWindow, tconn)(ctx); err != nil {
+			s.Fatal("Failed to verify return to app: ", err)
 		}
 
-		if err := ash.SetWindowStateAndWait(ctx, tconn, tabWindow.ID, ash.WindowStateMinimized); err != nil {
-			s.Fatal("Failed to Minize active window: ", err)
-		}
-
-		if err := ash.WaitForCondition(ctx, tconn, func(window *ash.Window) bool {
-			return tabWindow.ID == window.ID && window.State == ash.WindowStateMinimized && !window.IsAnimating
-		}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
-			s.Fatal("Failed to minimize tab: ", err)
-		}
-
-		if err := uiauto.Combine("return to tab via vcpanel",
-			vcTray.ExpandPanel,
-			vcTray.ReturnToApp("VcTester"),
-		)(ctx); err != nil {
-			s.Fatal("Failed to return to app: ", err)
-		}
-
-		// Wait until the window is minimized.
-		if err := ash.WaitWindowFinishAnimating(ctx, tconn, tabWindow.ID); err != nil {
-			s.Fatal("Failed to wait vcBackgroundAppWindow to minimize: ", err)
-		}
-
-		if err := ash.WaitForCondition(ctx, tconn, func(window *ash.Window) bool {
-			return tabWindow.ID == window.ID && window.State == ash.WindowStateMaximized && !window.IsAnimating
-		}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
-			s.Fatal("Failed to return to app: ", err)
+		if err := tabUI.CloseTab(ctx); err != nil {
+			s.Fatal("Failed to close tab: ", err)
 		}
 	})
 }

@@ -242,6 +242,43 @@ func (vcTray VCTray) ReturnToApp(appName string) action.Action {
 	}
 }
 
+// ReturnToAppForWindow returns an action returning to the VC app, also handles window state.
+func (vcTray VCTray) ReturnToAppForWindow(appName string, window *ash.Window, tconn *chrome.TestConn) action.Action {
+	return func(ctx context.Context) error {
+
+		initialState := window.State
+		if initialState == ash.WindowStateMinimized {
+			return errors.New("can't return to a minimized window")
+		}
+		// Minimized the window.
+		if err := ash.SetWindowStateAndWait(ctx, tconn, window.ID, ash.WindowStateMinimized); err != nil {
+			return errors.Wrap(err, "failed to minimized the window")
+		}
+
+		// Click on the app name from the vcTray.
+		if err := uiauto.Combine("return to tab via vcpanel",
+			vcTray.ExpandPanel,
+			vcTray.ReturnToApp(appName),
+		)(ctx); err != nil {
+			return errors.Wrap(err, "failed to click on the return to app button")
+		}
+
+		// Wait until the animation to complete.
+		if err := ash.WaitWindowFinishAnimating(ctx, tconn, window.ID); err != nil {
+			return errors.Wrap(err, "failed to wait until the animation is over")
+		}
+
+		// Check the restored state.
+		if err := ash.WaitForCondition(ctx, tconn, func(wd *ash.Window) bool {
+			return window.ID == wd.ID && wd.State == initialState && !wd.IsAnimating
+		}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
+			return errors.Wrap(err, "failed to maximize the window by return to app")
+		}
+
+		return nil
+	}
+}
+
 // OpenVcBackgroundApp clicks on the Create with AI button and opens the VcBackgroundApp.
 func (vcTray VCTray) OpenVcBackgroundApp() action.Action {
 	actionsToPerform := []action.Action{vcTray.ExpandPanel}
