@@ -79,19 +79,19 @@ func init() {
 			},
 			{
 				Name:      "ec_reboot",
-				ExtraAttr: []string{"group:crosbolt", "crosbolt_nightly"},
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_weekly"},
 				Fixture:   fixture.NormalMode,
 				Val:       bootPerfEcReboot,
 			},
 			{
 				Name:      "from_g3",
-				ExtraAttr: []string{"group:crosbolt", "crosbolt_nightly"},
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_weekly"},
 				Fixture:   fixture.NormalMode,
 				Val:       bootPerfFromG3,
 			},
 			{
 				Name:      "from_s5",
-				ExtraAttr: []string{"group:crosbolt", "crosbolt_nightly"},
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_weekly"},
 				Fixture:   fixture.NormalMode,
 				Val:       bootPerfFromS5,
 			},
