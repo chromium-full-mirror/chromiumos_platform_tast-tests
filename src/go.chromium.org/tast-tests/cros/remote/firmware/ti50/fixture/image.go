@@ -70,6 +70,8 @@ const (
 
 	// Cr50QualBranch is the latest qual candidate for Cr50
 	Cr50QualBranch string = "cr50qual"
+	// GSCQualBranch is the latest qual candidate for the running GSC testbed type
+	GSCQualBranch string = "gscqual"
 	// Ti50QualBranch is the latest qual candidate for Ti50
 	Ti50QualBranch string = "ti50qual"
 
@@ -166,6 +168,12 @@ func downloadImage(ctx context.Context, testbedProperties remoteTi50.TestbedProp
 			testing.ContextLogf(ctx, "Found %s for %s", latestURL, inputURL)
 		case Cr50QualBranch:
 			latestURL, err = lookupLatestGSCQualTarball(ctx, "cr50")
+			if err != nil {
+				return nil, err
+			}
+		case GSCQualBranch:
+			fw := findFwName(testbedProperties.TestbedType)
+			latestURL, err = lookupLatestGSCQualTarball(ctx, fw)
 			if err != nil {
 				return nil, err
 			}
