@@ -29,7 +29,7 @@ func init() {
 		Desc: "Verifies that for TPMv2.0 devices, cryptohome recreates user's vault directory when the TPM is re-owned",
 		Contacts: []string{
 			"cros-hwsec@google.com",
-			"garryxiao@chromium.org",
+			"yich@google.com",
 		},
 		BugComponent: "b:1188704",
 		SoftwareDeps: []string{"tpm2", "tpm_clear_allowed"},
