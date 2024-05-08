@@ -470,6 +470,8 @@ func init() {
 		Name:     fixture.ChromeLoggedInWithOak,
 		Desc:     "Logged into a user session with oak feature enabled",
 		Contacts: []string{"sammiequon@google.com"},
+		// ChromeOS > Software > Window Management > PostLoginRestoreAndGlanceables
+		BugComponent: "b:1488650",
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
 			return []Option{EnableFeatures("OakFeature")}, nil
 		}),
