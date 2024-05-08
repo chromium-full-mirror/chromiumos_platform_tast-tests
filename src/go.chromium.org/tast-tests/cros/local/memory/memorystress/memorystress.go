@@ -7,11 +7,11 @@ package memorystress
 
 import (
 	"context"
-	"fmt"
 	"math/rand"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/chrome/histogram"
+	"go.chromium.org/tast-tests/cros/common/memory"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
@@ -19,12 +19,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/memory/kernelmeter"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
-)
-
-// Web page filenames to allocate a lot of JavaScript objects.
-const (
-	AllocPageFilename  = "memory_stress.html"
-	JavascriptFilename = "memory_stress.js"
 )
 
 // TestCaseResult is the result of a stress test case.
@@ -120,9 +114,9 @@ func openTabCount(mbPerTab int) (int, error) {
 }
 
 // openTabs opens tabs to create memory pressure.
-func openTabs(ctx context.Context, br *browser.Browser, createTabCount, mbPerTab int, compressRatio float64, baseURL string) error {
+func openTabs(ctx context.Context, br *browser.Browser, createTabCount, mbPerTab int, compressRatio float32) error {
 	for i := 0; i < createTabCount; i++ {
-		url := fmt.Sprintf("%s?alloc=%d&ratio=%.3f&id=%d", baseURL, mbPerTab, compressRatio, i)
+		url := memory.CompileMemoryStressDataURL(mbPerTab, compressRatio)
 		if err := openAllocationPage(ctx, url, br); err != nil {
 			return errors.Wrap(err, "cannot create tab")
 		}
@@ -203,7 +197,7 @@ func ReportTestCaseResult(ctx context.Context, perfValues *perf.Values, result T
 }
 
 // TestCase opens synthetic pages to allocate JavaScript objects to create memory pressure.
-func TestCase(ctx context.Context, br *browser.Browser, localRand *rand.Rand, mbPerTab, switchCount int, compressRatio float64, baseURL string) (TestCaseResult, error) {
+func TestCase(ctx context.Context, br *browser.Browser, localRand *rand.Rand, mbPerTab, switchCount int, compressRatio float32) (TestCaseResult, error) {
 	vmstatsStart, err := kernelmeter.VMStats()
 	if err != nil {
 		return TestCaseResult{}, errors.Wrap(err, "failed to get vmstat")
@@ -215,7 +209,7 @@ func TestCase(ctx context.Context, br *browser.Browser, localRand *rand.Rand, mb
 	}
 	testing.ContextLog(ctx, "Tab count to create: ", createTabCount)
 
-	if err := openTabs(ctx, br, createTabCount, mbPerTab, compressRatio, baseURL); err != nil {
+	if err := openTabs(ctx, br, createTabCount, mbPerTab, compressRatio); err != nil {
 		return TestCaseResult{}, errors.Wrap(err, "failed to open tabs")
 	}
 

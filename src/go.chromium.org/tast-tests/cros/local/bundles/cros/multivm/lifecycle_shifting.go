@@ -51,40 +51,24 @@ func init() {
 			// Arc lifecycle unit allocates on the Java heap which is limited to 512MiB.
 			// 2% * 24GiB = 492MiB, which gives room for the rest of the app.
 			ExtraHardwareDeps: hwdep.D(hwdep.MaxMemory(24 * 1024)),
-			ExtraData: []string{
-				memoryuser.AllocPageFilename,
-				memoryuser.JavascriptFilename,
-			},
 		}, {
 			Name:              "arc_host_lacros",
 			Pre:               multivm.ArcLacrosStarted(),
 			Val:               &lifecycleShiftingParam{inARC: true, inHost: true, browserType: browser.TypeLacros},
 			ExtraSoftwareDeps: []string{"android_vm", "lacros"},
 			ExtraHardwareDeps: hwdep.D(hwdep.MaxMemory(24 * 1024)),
-			ExtraData: []string{
-				memoryuser.AllocPageFilename,
-				memoryuser.JavascriptFilename,
-			},
 		}, {
 			Name:              "arc_host_vmmms",
 			Pre:               multivm.ArcStartedVMMMS(),
 			Val:               &lifecycleShiftingParam{inARC: true, inHost: true, browserType: browser.TypeAsh},
 			ExtraSoftwareDeps: []string{"android_vm"},
 			ExtraHardwareDeps: hwdep.D(hwdep.MaxMemory(24 * 1024)),
-			ExtraData: []string{
-				memoryuser.AllocPageFilename,
-				memoryuser.JavascriptFilename,
-			},
 		}, {
 			Name:              "arc_host_lacros_vmmms",
 			Pre:               multivm.ArcLacrosStartedVMMMS(),
 			Val:               &lifecycleShiftingParam{inARC: true, inHost: true, browserType: browser.TypeLacros},
 			ExtraSoftwareDeps: []string{"android_vm", "lacros"},
 			ExtraHardwareDeps: hwdep.D(hwdep.MaxMemory(24 * 1024)),
-			ExtraData: []string{
-				memoryuser.AllocPageFilename,
-				memoryuser.JavascriptFilename,
-			},
 		}, {
 			Name:              "crostini_host",
 			Pre:               multivm.CrostiniStarted(),
@@ -93,8 +77,6 @@ func init() {
 			ExtraData: []string{
 				crostini.GetContainerMetadataArtifact("bullseye", false),
 				crostini.GetContainerRootfsArtifact("bullseye", false),
-				memoryuser.AllocPageFilename,
-				memoryuser.JavascriptFilename,
 			},
 			ExtraHardwareDeps: crostini.CrostiniStable,
 		}},
@@ -162,11 +144,8 @@ func LifecycleShifting(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to Start UMA metrics: ", err)
 	}
 
-	var server *memoryuser.MemoryStressServer
 	numTypes := 0
 	if param.inHost {
-		server = memoryuser.NewMemoryStressServer(s.DataFileSystem())
-		defer server.Close()
 		numTypes++
 	}
 	if param.inARC {
@@ -196,7 +175,7 @@ func LifecycleShifting(ctx context.Context, s *testing.State) {
 		if param.inHost {
 			for j := 0; j < numTasks/numTypes; j++ {
 				const tabOpenCooldown = 2 * time.Second
-				task := server.NewMemoryStressTask(int(taskAllocMiB), compressRatio, tabOpenCooldown)
+				task := memoryuser.NewMemoryStressTask(int(taskAllocMiB), compressRatio, tabOpenCooldown)
 				tabsAliveTasks = append(tabsAliveTasks, task)
 				tasks = append(tasks, task)
 			}

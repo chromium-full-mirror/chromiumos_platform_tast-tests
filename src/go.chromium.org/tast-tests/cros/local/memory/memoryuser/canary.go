@@ -6,7 +6,6 @@ package memoryuser
 
 import (
 	"context"
-	"net/http"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/arc"
@@ -23,7 +22,7 @@ type CanaryCloser func(ctx context.Context)
 // there are any parts of a canary alive, it returns true.
 type IsCanaryStillAlive func(ctx context.Context) bool
 
-func openTabCanaries(ctx context.Context, allocMiB int, ratio float32, br *browser.Browser, fs http.FileSystem) (CanaryCloser, IsCanaryStillAlive, error) {
+func openTabCanaries(ctx context.Context, allocMiB int, ratio float32, br *browser.Browser) (CanaryCloser, IsCanaryStillAlive, error) {
 	var bgTab *MemoryStressUnit
 	var protTab *MemoryStressUnit
 	closer := func(ctx context.Context) {
@@ -44,12 +43,11 @@ func openTabCanaries(ctx context.Context, allocMiB int, ratio float32, br *brows
 			closer(ctx)
 		}
 	}()
-	server := NewMemoryStressServer(fs)
-	bgTab = server.NewMemoryStressUnit(allocMiB, ratio, 2*time.Second)
+	bgTab = NewMemoryStressUnit(allocMiB, ratio, 2*time.Second)
 	if err := bgTab.Run(ctx, br); err != nil {
 		return nil, nil, errors.Wrap(err, "failed to run background tab canary")
 	}
-	protTab = server.NewMemoryStressUnit(allocMiB, ratio, 2*time.Second)
+	protTab = NewMemoryStressUnit(allocMiB, ratio, 2*time.Second)
 	if err := protTab.Run(ctx, br); err != nil {
 		return nil, nil, errors.Wrap(err, "failed to run protected background tab canary")
 	}
@@ -153,7 +151,7 @@ func openAppCanaries(ctx context.Context, allocMiB int, ratio float32, tconn *ch
 // fs        - FileSystem to initialize the memory stress server.
 // tconn     - Test connection to Chrome.
 // a         - ARC test object.
-func OpenAppTabCanaries(ctx context.Context, allocMiB int, ratio float32, br *browser.Browser, fs http.FileSystem, tconn *chrome.TestConn, a *arc.ARC) (CanaryCloser, IsCanaryStillAlive, error) {
+func OpenAppTabCanaries(ctx context.Context, allocMiB int, ratio float32, br *browser.Browser, tconn *chrome.TestConn, a *arc.ARC) (CanaryCloser, IsCanaryStillAlive, error) {
 	var tabCloser CanaryCloser
 	var appCloser CanaryCloser
 	closer := func(ctx context.Context) {
@@ -173,7 +171,7 @@ func OpenAppTabCanaries(ctx context.Context, allocMiB int, ratio float32, br *br
 
 	var err error
 	var tabStillAlive, appStillAlive IsCanaryStillAlive
-	tabCloser, tabStillAlive, err = openTabCanaries(ctx, allocMiB, ratio, br, fs)
+	tabCloser, tabStillAlive, err = openTabCanaries(ctx, allocMiB, ratio, br)
 	if err != nil {
 		return nil, nil, err
 	}

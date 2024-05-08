@@ -6,7 +6,6 @@ package multivm
 
 import (
 	"context"
-	"net/http"
 	"strconv"
 	"time"
 
@@ -48,10 +47,6 @@ func init() {
 		Params: []testing.Param{{
 			Pre: multivm.ArcStartedVMMMSTabManagerDelegate(),
 			Val: &canaryHealthPerfParam{browser.TypeAsh},
-			ExtraData: []string{
-				memoryuser.AllocPageFilename,
-				memoryuser.JavascriptFilename,
-			},
 		}},
 		Vars: []string{
 			iterationsVar,
@@ -105,7 +100,7 @@ func appendKillLatencyMetric(p *perf.Values, label string, latency time.Duration
 	}, latency.Seconds())
 }
 
-func stressCanary(ctx context.Context, fs http.FileSystem, param *canaryHealthPerfParam, allocationMiB int64, allocationPeriod time.Duration, cr *chrome.Chrome, br *browser.Browser, a *arc.ARC, p *perf.Values) error {
+func stressCanary(ctx context.Context, param *canaryHealthPerfParam, allocationMiB int64, allocationPeriod time.Duration, cr *chrome.Chrome, br *browser.Browser, a *arc.ARC, p *perf.Values) error {
 	allocationKiB := allocationMiB * 1024
 	// Context used by cleanup actions that are deferred.
 	cleanupCtx := ctx
@@ -158,7 +153,7 @@ func stressCanary(ctx context.Context, fs http.FileSystem, param *canaryHealthPe
 		return errors.Wrap(err, "failed to create LmkdKillsParser")
 	}
 
-	canaryCloser, canaryStillAlive, err := memoryuser.OpenAppTabCanaries(ctx, canaryAllocationMiB, canaryCompressionRatio, br, fs, tconn, a)
+	canaryCloser, canaryStillAlive, err := memoryuser.OpenAppTabCanaries(ctx, canaryAllocationMiB, canaryCompressionRatio, br, tconn, a)
 	if err != nil {
 		return err
 	}
@@ -474,7 +469,7 @@ func MemoryCanaryPerf(ctx context.Context, s *testing.State) {
 
 	for i := 0; i < iterations; i++ {
 		s.Logf("Starting iteration %d of %d", i+1, iterations)
-		if err := stressCanary(ctx, s.DataFileSystem(), param, allocationMiB, allocationPeriod, pre.Chrome, br, preARC, p); err != nil {
+		if err := stressCanary(ctx, param, allocationMiB, allocationPeriod, pre.Chrome, br, preARC, p); err != nil {
 			s.Fatal("Error in the canary stress test: ", err)
 		}
 	}

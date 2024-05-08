@@ -45,18 +45,10 @@ func init() {
 			Name: "host",
 			Pre:  multivm.NoVMStarted(),
 			Val:  &lifecycleParam{inHost: true, browserType: browser.TypeAsh},
-			ExtraData: []string{
-				memoryuser.AllocPageFilename,
-				memoryuser.JavascriptFilename,
-			},
 		}, {
-			Name: "host_lacros",
-			Pre:  multivm.NoVMLacrosStarted(),
-			Val:  &lifecycleParam{inHost: true, browserType: browser.TypeLacros},
-			ExtraData: []string{
-				memoryuser.AllocPageFilename,
-				memoryuser.JavascriptFilename,
-			},
+			Name:              "host_lacros",
+			Pre:               multivm.NoVMLacrosStarted(),
+			Val:               &lifecycleParam{inHost: true, browserType: browser.TypeLacros},
 			ExtraSoftwareDeps: []string{"lacros"},
 		}, {
 			Name:              "arc",
@@ -93,37 +85,21 @@ func init() {
 			Pre:               multivm.ArcStarted(),
 			Val:               &lifecycleParam{inARC: true, inHost: true, browserType: browser.TypeAsh},
 			ExtraSoftwareDeps: []string{"android_vm"},
-			ExtraData: []string{
-				memoryuser.AllocPageFilename,
-				memoryuser.JavascriptFilename,
-			},
 		}, {
 			Name:              "host_with_bg_arc",
 			Pre:               multivm.ArcStarted(),
 			Val:               &lifecycleParam{inHost: true, browserType: browser.TypeAsh},
 			ExtraSoftwareDeps: []string{"android_vm"},
-			ExtraData: []string{
-				memoryuser.AllocPageFilename,
-				memoryuser.JavascriptFilename,
-			},
 		}, {
 			Name:              "arc_host_vmmms",
 			Pre:               multivm.ArcStartedVMMMS(),
 			Val:               &lifecycleParam{inARC: true, inHost: true, browserType: browser.TypeAsh},
 			ExtraSoftwareDeps: []string{"android_vm"},
-			ExtraData: []string{
-				memoryuser.AllocPageFilename,
-				memoryuser.JavascriptFilename,
-			},
 		}, {
 			Name:              "host_with_bg_arc_vmmms",
 			Pre:               multivm.ArcStartedVMMMS(),
 			Val:               &lifecycleParam{inHost: true, browserType: browser.TypeAsh},
 			ExtraSoftwareDeps: []string{"android_vm"},
-			ExtraData: []string{
-				memoryuser.AllocPageFilename,
-				memoryuser.JavascriptFilename,
-			},
 		}},
 	})
 }
@@ -189,11 +165,8 @@ func Lifecycle(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to Start UMA metrics: ", err)
 	}
 
-	var server *memoryuser.MemoryStressServer
 	numTypes := 0
 	if param.inHost {
-		server = memoryuser.NewMemoryStressServer(s.DataFileSystem())
-		defer server.Close()
 		numTypes++
 	}
 	if param.inARC {
@@ -219,7 +192,7 @@ func Lifecycle(ctx context.Context, s *testing.State) {
 	for i := 0; i < numTasks/numTypes; i++ {
 		if param.inHost {
 			const tabOpenCooldown = 2 * time.Second
-			task := server.NewMemoryStressTask(int(taskAllocMiB), compressRatio, tabOpenCooldown)
+			task := memoryuser.NewMemoryStressTask(int(taskAllocMiB), compressRatio, tabOpenCooldown)
 			tabsAliveTasks = append(tabsAliveTasks, task)
 			tasks = append(tasks, task)
 		}

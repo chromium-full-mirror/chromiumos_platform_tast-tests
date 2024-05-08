@@ -6,11 +6,9 @@ package memoryuser
 
 import (
 	"context"
-	"fmt"
-	"net/http"
-	"net/http/httptest"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/memory"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -107,8 +105,7 @@ func (st *MemoryStressUnit) StillAlive(ctx context.Context, br *browser.Browser)
 
 // FillChromeOSMemory launches memory stress tabs until one is killed, filling
 // up memory in ChromeOS.
-func FillChromeOSMemory(ctx context.Context, dataFileSystem http.FileSystem, br *browser.Browser, unitMiB int, ratio float32) (func(context.Context) error, error) {
-	server := NewMemoryStressServer(dataFileSystem)
+func FillChromeOSMemory(ctx context.Context, br *browser.Browser, unitMiB int, ratio float32) (func(context.Context) error, error) {
 	var units []*MemoryStressUnit
 	cleanup := func(ctx context.Context) error {
 		var res error
@@ -120,12 +117,11 @@ func FillChromeOSMemory(ctx context.Context, dataFileSystem http.FileSystem, br 
 				}
 			}
 		}
-		server.Close()
 		return res
 	}
 	for i := 0; ; i++ {
 		const tabOpenCooldown = 2 * time.Second
-		unit := server.NewMemoryStressUnit(unitMiB, ratio, tabOpenCooldown)
+		unit := NewMemoryStressUnit(unitMiB, ratio, tabOpenCooldown)
 		units = append(units, unit)
 		if err := unit.Run(ctx, br); err != nil {
 			return cleanup, errors.Wrapf(err, "failed to run MemoryStressUnit %q", unit.url)
@@ -175,34 +171,12 @@ func (st *MemoryStressTask) StillAlive(ctx context.Context, testEnv *TestEnv) bo
 	return st.MemoryStressUnit.StillAlive(ctx, testEnv.br)
 }
 
-// MemoryStressServer is an http server that hosts the html and js needed to
-// create MemoryStressTasks.
-type MemoryStressServer struct {
-	server *httptest.Server
-	nextID int
-}
-
-// Resources needed by MemoryStressServer to create MemoryStressTasks.
-const (
-	AllocPageFilename  = "memory_stress.html"
-	JavascriptFilename = "memory_stress.js"
-)
-
-// NewMemoryStressServer creates a server that can create MemoryStressTasks.
-// Close() should be called after use.
-func NewMemoryStressServer(dataFileSystem http.FileSystem) *MemoryStressServer {
-	return &MemoryStressServer{
-		server: httptest.NewServer(http.FileServer(dataFileSystem)),
-	}
-}
-
 // NewMemoryStressUnit creates a new MemoryStressUnit.
 // allocMiB - The amount of memory the tab will allocate.
 // ratio    - How compressible the allocated memory will be.
 // cooldown - How long to wait after allocating before returning.
-func (s *MemoryStressServer) NewMemoryStressUnit(allocMiB int, ratio float32, cooldown time.Duration) *MemoryStressUnit {
-	url := fmt.Sprintf("%s/%s?alloc=%d&ratio=%.3f&id=%d", s.server.URL, AllocPageFilename, allocMiB, ratio, s.nextID)
-	s.nextID++
+func NewMemoryStressUnit(allocMiB int, ratio float32, cooldown time.Duration) *MemoryStressUnit {
+	url := memory.CompileMemoryStressDataURL(allocMiB, ratio)
 	return &MemoryStressUnit{
 		url:      url,
 		cooldown: cooldown,
@@ -213,11 +187,6 @@ func (s *MemoryStressServer) NewMemoryStressUnit(allocMiB int, ratio float32, co
 // allocMiB - The amount of memory the tab will allocate.
 // ratio    - How compressible the allocated memory will be.
 // cooldown - How long to wait after allocating before returning.
-func (s *MemoryStressServer) NewMemoryStressTask(allocMiB int, ratio float32, cooldown time.Duration) *MemoryStressTask {
-	return &MemoryStressTask{*s.NewMemoryStressUnit(allocMiB, ratio, cooldown)}
-}
-
-// Close shuts down the http server.
-func (s *MemoryStressServer) Close() {
-	s.server.Close()
+func NewMemoryStressTask(allocMiB int, ratio float32, cooldown time.Duration) *MemoryStressTask {
+	return &MemoryStressTask{*NewMemoryStressUnit(allocMiB, ratio, cooldown)}
 }

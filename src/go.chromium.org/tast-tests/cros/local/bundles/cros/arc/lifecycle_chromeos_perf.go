@@ -29,10 +29,6 @@ func init() {
 		BugComponent: "b:930563",
 		Attr:         []string{"group:crosbolt", "crosbolt_nightly"},
 		SoftwareDeps: []string{"chrome"},
-		Data: []string{
-			memoryuser.AllocPageFilename,
-			memoryuser.JavascriptFilename,
-		},
 		Params: []testing.Param{{
 			Name:              "noarc",
 			ExtraSoftwareDeps: []string{"arc"}, // to prevent this from running on non-ARC boards
@@ -58,11 +54,9 @@ func LifecycleChromeOSPerf(ctx context.Context, s *testing.State) {
 	tabAllocMiB := (int)((2 * info.Total / numTabs) / memory.MiB)
 	var tasks []memoryuser.MemoryTask
 	var tabsAliveTasks []memoryuser.KillableTask
-	server := memoryuser.NewMemoryStressServer(s.DataFileSystem())
-	defer server.Close()
 	for i := 0; i < numTabs; i++ {
 		const tabOpenCooldown = 2 * time.Second
-		task := server.NewMemoryStressTask(tabAllocMiB, 0.67, tabOpenCooldown)
+		task := memoryuser.NewMemoryStressTask(tabAllocMiB, 0.67, tabOpenCooldown)
 		tasks = append(tasks, task)
 		tabsAliveTasks = append(tabsAliveTasks, task)
 	}

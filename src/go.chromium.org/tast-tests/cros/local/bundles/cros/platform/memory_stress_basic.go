@@ -8,8 +8,6 @@ import (
 	"context"
 	"io/ioutil"
 	"math/rand"
-	"net/http"
-	"net/http/httptest"
 	"strconv"
 	"time"
 
@@ -34,11 +32,7 @@ func init() {
 		Contacts:     []string{"chromeos-memory@google.com"},
 		BugComponent: "b:167286",
 		// This test takes 15-30 minutes to run.
-		Timeout: 45 * time.Minute,
-		Data: []string{
-			memorystress.AllocPageFilename,
-			memorystress.JavascriptFilename,
-		},
+		Timeout:      45 * time.Minute,
 		SoftwareDeps: []string{"chrome"},
 		Vars: []string{
 			"platform.MemoryStressBasic.enableARC",
@@ -115,20 +109,15 @@ func MemoryStressBasic(ctx context.Context, s *testing.State) {
 	s.Log("Seed: ", seed)
 	localRand := rand.New(rand.NewSource(seed))
 
-	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
-	defer server.Close()
-
-	baseURL := server.URL + "/" + memorystress.AllocPageFilename
-
 	perfValues := perf.NewValues()
 
 	const mbPerTab = 800
 	if s.Param().(testParams).isLacros {
-		if err := lacrosMain(ctx, s, localRand, mbPerTab, baseURL, perfValues); err != nil {
+		if err := lacrosMain(ctx, s, localRand, mbPerTab, perfValues); err != nil {
 			s.Fatal("lacrosMain failed: ", err)
 		}
 	} else {
-		if err := stressMain(ctx, localRand, mbPerTab, minFilelistKB, baseURL, enableARC, useHugePages, perfValues); err != nil {
+		if err := stressMain(ctx, localRand, mbPerTab, minFilelistKB, enableARC, useHugePages, perfValues); err != nil {
 			s.Fatal("stressMain failed: ", err)
 		}
 	}
@@ -138,18 +127,18 @@ func MemoryStressBasic(ctx context.Context, s *testing.State) {
 	}
 }
 
-func stressMain(ctx context.Context, localRand *rand.Rand, mbPerTab, minFilelistKB int, baseURL string, enableARC, useHugePages bool, perfValues *perf.Values) error {
+func stressMain(ctx context.Context, localRand *rand.Rand, mbPerTab, minFilelistKB int, enableARC, useHugePages bool, perfValues *perf.Values) error {
 	// Tests both the low compress ratio and high compress ratio cases.
 	// When there is more random data (67 percent random), the compress ratio is low,
 	// the low memory notification is triggered by low uncompressed anonymous memory.
 	// When there is less random data (33 percent random), the compress ratio is high,
 	// the low memory notification is triggered by low swap free.
 	const switchCount = 150
-	result67, err := stressTestCase(ctx, localRand, mbPerTab, switchCount, minFilelistKB, 0.67, baseURL, enableARC, useHugePages)
+	result67, err := stressTestCase(ctx, localRand, mbPerTab, switchCount, minFilelistKB, 0.67, enableARC, useHugePages)
 	if err != nil {
 		return errors.Wrap(err, "67_percent_random test case failed")
 	}
-	result33, err := stressTestCase(ctx, localRand, mbPerTab, switchCount, minFilelistKB, 0.33, baseURL, enableARC, useHugePages)
+	result33, err := stressTestCase(ctx, localRand, mbPerTab, switchCount, minFilelistKB, 0.33, enableARC, useHugePages)
 	if err != nil {
 		return errors.Wrap(err, "33_percent_random test case failed")
 	}
@@ -164,7 +153,7 @@ func stressMain(ctx context.Context, localRand *rand.Rand, mbPerTab, minFilelist
 	return nil
 }
 
-func stressTestCase(ctx context.Context, localRand *rand.Rand, mbPerTab, switchCount, minFilelistKB int, compressRatio float64, baseURL string, enableARC, useHugePages bool) (memorystress.TestCaseResult, error) {
+func stressTestCase(ctx context.Context, localRand *rand.Rand, mbPerTab, switchCount, minFilelistKB int, compressRatio float32, enableARC, useHugePages bool) (memorystress.TestCaseResult, error) {
 	var opts []chrome.Option
 	if enableARC {
 		opts = append(opts, chrome.ARCEnabled())
@@ -188,10 +177,10 @@ func stressTestCase(ctx context.Context, localRand *rand.Rand, mbPerTab, switchC
 		}
 	}
 
-	return memorystress.TestCase(ctx, cr.Browser(), localRand, mbPerTab, switchCount, compressRatio, baseURL)
+	return memorystress.TestCase(ctx, cr.Browser(), localRand, mbPerTab, switchCount, compressRatio)
 }
 
-func lacrosMain(ctx context.Context, s *testing.State, localRand *rand.Rand, mbPerTab int, baseURL string, perfValues *perf.Values) error {
+func lacrosMain(ctx context.Context, s *testing.State, localRand *rand.Rand, mbPerTab int, perfValues *perf.Values) error {
 	// TODO(b/191105438): Tune Lacros variation when Lacros tab discarder is mature.
 	tconn, err := s.FixtValue().(chrome.HasChrome).Chrome().TestAPIConn(ctx)
 	if err != nil {
@@ -209,7 +198,7 @@ func lacrosMain(ctx context.Context, s *testing.State, localRand *rand.Rand, mbP
 
 	const switchCount = 10
 	const compressRatio = 0.67
-	result, err := memorystress.TestCase(ctx, lacros.Browser(), localRand, mbPerTab, switchCount, compressRatio, baseURL)
+	result, err := memorystress.TestCase(ctx, lacros.Browser(), localRand, mbPerTab, switchCount, compressRatio)
 	if err != nil {
 		return errors.Wrap(err, "memorystress test case failed")
 	}
