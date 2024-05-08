@@ -83,6 +83,9 @@ const (
 
 	// Read Aloud
 	PowerAshReadAloudWithFlagOn = "powerAshReadAloudWithFlagOn"
+
+	// Speak On Mute
+	PowerAshSpeakOnMute = "powerAshSpeakOnMute"
 )
 
 // PowerFixtureOptions describes options used by the fixture only.
@@ -743,7 +746,7 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:         "powerAshGAIAWithSpeakOnMute",
+		Name:         PowerAshSpeakOnMute,
 		Desc:         "Fixture for speak-on-mute power test",
 		BugComponent: "b:1361410",
 		Contacts: []string{
@@ -758,8 +761,7 @@ func init() {
 			Wifi:               DisableWifiInterfaces,
 			Audio:              DoNotChangeAudio, // Uses audio.
 		}, PowerFixtureOptions{
-			BrowserType:     browser.TypeAsh,
-			EnableGAIALogin: true,
+			BrowserType: browser.TypeAsh,
 			BrowserExtraOpts: []chrome.Option{
 				chrome.EnableFeatures("CrosPrivacyHub"),
 				chrome.EnableFeatures("VideoConference"),
@@ -767,7 +769,7 @@ func init() {
 			},
 		}),
 		Parent:          fixture.AloopLoaded{Channels: 2}.Instance(),
-		SetUpTimeout:    chrome.GAIALoginTimeout + SetUpTimeout,
+		SetUpTimeout:    SetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: TearDownTimeout,
 		PreTestTimeout:  PreTestTimeout,

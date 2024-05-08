@@ -40,8 +40,8 @@ func init() {
 		Data:         []string{data.SpeechInputFile},
 		BugComponent: "b:187682",
 		Timeout:      10*time.Minute + power.RecorderTimeout,
-		SoftwareDeps: []string{"chrome", "camera_feature_effects"},
-		Fixture:      "powerAshGAIAWithSpeakOnMute",
+		SoftwareDeps: []string{"chrome"},
+		Fixture:      setup.PowerAshSpeakOnMute,
 		Params: []testing.Param{
 			{
 				Name: "disabled",
