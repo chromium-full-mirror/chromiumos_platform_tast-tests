@@ -52,8 +52,8 @@ func init() {
 				Name: "aec",
 				Val: crasNoiseCancellationParams{
 					captureRate:          48000,
-					expectedRMS:          0.35,
-					expectedRMSTolerance: 0.15,
+					expectedRMS:          0.3,
+					expectedRMSTolerance: 0.2,
 					extraCaptureFlags: []string{
 						"--effects=aec",
 					},
@@ -64,8 +64,8 @@ func init() {
 				Val: crasNoiseCancellationParams{
 					noiseCancellationEnabled: true,
 					captureRate:              48000,
-					expectedRMS:              0.03,
-					expectedRMSTolerance:     0.01,
+					expectedRMS:              0.01,
+					expectedRMSTolerance:     0.005,
 					extraCaptureFlags: []string{
 						"--effects=aec",
 					},
@@ -77,8 +77,8 @@ func init() {
 				Val: crasNoiseCancellationParams{
 					noiseCancellationEnabled: true,
 					captureRate:              44100,
-					expectedRMS:              0.03,
-					expectedRMSTolerance:     0.01,
+					expectedRMS:              0.01,
+					expectedRMSTolerance:     0.005,
 					extraCaptureFlags: []string{
 						"--effects=aec",
 					},
@@ -90,8 +90,8 @@ func init() {
 				Val: crasNoiseCancellationParams{
 					noiseCancellationEnabled: true,
 					captureRate:              48000,
-					expectedRMS:              0.03,
-					expectedRMSTolerance:     0.01,
+					expectedRMS:              0.01,
+					expectedRMSTolerance:     0.005,
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
 			},
@@ -100,8 +100,8 @@ func init() {
 				Val: crasNoiseCancellationParams{
 					noiseCancellationEnabled: true,
 					captureRate:              44100,
-					expectedRMS:              0.03,
-					expectedRMSTolerance:     0.01,
+					expectedRMS:              0.01,
+					expectedRMSTolerance:     0.005,
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
 			},
@@ -110,8 +110,8 @@ func init() {
 				Val: crasNoiseCancellationParams{
 					noiseCancellationEnabled: true,
 					captureRate:              48000,
-					expectedRMS:              0.03,
-					expectedRMSTolerance:     0.01,
+					expectedRMS:              0.01,
+					expectedRMSTolerance:     0.005,
 					extraCaptureFlags: []string{
 						"--effects=aec",
 					},
@@ -123,8 +123,8 @@ func init() {
 				Val: crasNoiseCancellationParams{
 					noiseCancellationEnabled: true,
 					captureRate:              44100,
-					expectedRMS:              0.03,
-					expectedRMSTolerance:     0.01,
+					expectedRMS:              0.01,
+					expectedRMSTolerance:     0.005,
 					extraCaptureFlags: []string{
 						"--effects=aec",
 					},
@@ -136,8 +136,8 @@ func init() {
 				Val: crasNoiseCancellationParams{
 					noiseCancellationEnabled: true,
 					captureRate:              48000,
-					expectedRMS:              0.03,
-					expectedRMSTolerance:     0.01,
+					expectedRMS:              0.01,
+					expectedRMSTolerance:     0.005,
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
 			},
@@ -146,8 +146,8 @@ func init() {
 				Val: crasNoiseCancellationParams{
 					noiseCancellationEnabled: true,
 					captureRate:              44100,
-					expectedRMS:              0.03,
-					expectedRMSTolerance:     0.01,
+					expectedRMS:              0.01,
+					expectedRMSTolerance:     0.005,
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
 			},
@@ -231,7 +231,7 @@ func CrasNoiseCancellation(ctx context.Context, s *testing.State) {
 		"-c", "2",
 		noiseWave,
 		"synth", strconv.FormatFloat(noiseDuration.Seconds(), 'f', -1, 64),
-		"sine", "300",
+		"whitenoise",
 		"gain", "-10",
 	).Run(testexec.DumpLogOnError); err != nil {
 		s.Fatal("Cannot generate noise.wav: ", err)
