@@ -21,6 +21,7 @@ import (
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 const (
@@ -44,7 +45,9 @@ var enablePerfettoVar = testing.RegisterVarString(
 )
 
 type testArgsForSuspendPerf struct {
-	numSuspend int
+	numSuspend   int
+	enableLacros bool
+	enableArc    bool
 }
 
 func init() {
@@ -57,7 +60,6 @@ func init() {
 			"mhiramat@google.com",
 		},
 		BugComponent: "b:256693104",
-		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps: []string{
 			"tast.cros.browser.ChromeService",
@@ -67,13 +69,29 @@ func init() {
 			"tast.cros.tracing.PerfettoTraceService",
 			"tast.cros.ui.TconnService",
 		},
-		// (40 sec for histograms + 10 + 60 sec suspend/resume) * 5 times
-		Timeout: 10 * time.Minute,
 		Params: []testing.Param{{
 			Name: "",
 			Val: testArgsForSuspendPerf{
 				numSuspend: 5,
 			},
+			ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
+			// (40 sec for histograms + 10 + 60 sec suspend/resume) * 5 times
+			Timeout: 10 * time.Minute,
+		}, {
+			Name: "arc",
+			Val: testArgsForSuspendPerf{
+				numSuspend: 5,
+				enableArc:  true,
+			},
+			Timeout: 10 * time.Minute,
+		}, {
+			Name: "arc_lacros",
+			Val: testArgsForSuspendPerf{
+				numSuspend:   5,
+				enableArc:    true,
+				enableLacros: true,
+			},
+			Timeout: 10 * time.Minute,
 		}},
 	})
 }
@@ -107,7 +125,11 @@ var remoteCommandTimeout = time.Duration(3) * time.Second
 func SuspendPerf(ctx context.Context, s *testing.State) {
 	args := s.Param().(testArgsForSuspendPerf)
 
-	useMetrics := defaultMetrics
+	var useMetrics []*histogramRequest
+	for _, m := range defaultMetrics {
+		m.FromLacros = m.FromLacros && args.enableLacros
+		useMetrics = append(useMetrics, m)
+	}
 
 	cl, err := rpc.Dial(ctx, s.DUT(), s.RPCHint())
 	if err != nil {
@@ -116,7 +138,7 @@ func SuspendPerf(ctx context.Context, s *testing.State) {
 	defer cl.Close(ctx)
 
 	// Login test user for suspend/resume.
-	if err := setupBrowser(ctx, cl.Conn, false); err != nil {
+	if err := setupBrowser(ctx, cl.Conn, false, args.enableArc, args.enableLacros); err != nil {
 		s.Fatal("Failed to initalize test environment: ", err)
 	}
 
@@ -158,7 +180,7 @@ func SuspendPerf(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to reconnect the RPC: ", err)
 			}
 			// defer cl.Close() is already set.
-			if err := setupBrowser(ctx, cl.Conn, true); err != nil {
+			if err := setupBrowser(ctx, cl.Conn, true, args.enableArc, args.enableLacros); err != nil {
 				s.Fatal("Failed to re-initalize test environment: ", err)
 			}
 		}
@@ -190,16 +212,34 @@ func SuspendPerf(ctx context.Context, s *testing.State) {
 	}
 }
 
-func setupBrowser(ctx context.Context, cc grpc.ClientConnInterface, reconnect bool) error {
+func setupBrowser(ctx context.Context, cc grpc.ClientConnInterface, reconnect, arc, lacros bool) error {
 	crs := ui.NewChromeServiceClient(cc)
 	req := &ui.NewRequest{}
 	if reconnect {
 		req.KeepState = true
 		req.TryReuseSession = true
 	}
+	if arc {
+		req.ArcMode = ui.ArcMode_ARC_MODE_ENABLED
+	}
+	if lacros {
+		req.Lacros = &ui.Lacros{}
+	}
 	// Fake login on the DUT through the chrome service.
 	if _, err := crs.New(ctx, req, grpc.WaitForReady(true)); err != nil {
 		return errors.Wrap(err, "failed to login on the DUT ")
+	}
+	if lacros {
+		las := ui.NewLacrosServiceClient(cc)
+		if reconnect {
+			if _, err := las.Connect(ctx, &emptypb.Empty{}); err != nil {
+				return errors.Wrap(err, "failed to reconnect lacros ")
+			}
+		} else {
+			if _, err := las.Launch(ctx, &emptypb.Empty{}); err != nil {
+				return errors.Wrap(err, "failed to launch lacros ")
+			}
+		}
 	}
 	return nil
 }
