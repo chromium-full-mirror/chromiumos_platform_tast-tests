@@ -52,8 +52,7 @@ func init() {
 		}, {
 			Name: "shutdown",
 			Val: firmware.PDTestParams{
-				Shutdown:  true,
-				PowerRole: firmware.RoleSink,
+				Shutdown: true,
 			},
 		}, {
 			Name: "suspend",

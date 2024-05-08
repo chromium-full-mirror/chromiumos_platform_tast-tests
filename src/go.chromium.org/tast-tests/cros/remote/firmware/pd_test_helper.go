@@ -235,7 +235,9 @@ func SetupPDTester(ctx context.Context, h *Helper, testParams PDTestParams) erro
 	// If required role is sink, have servo initiate a power swap
 	if testParams.PowerRole == RoleSink {
 		role = servo.PDRoleSnk
-		h.Servo.ServoSendPowerSwapRequest(ctx)
+		if _, err := h.Servo.ServoSendPowerSwapRequest(ctx); err != nil {
+			return errors.Wrap(err, "swap power failed")
+		}
 
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
 			pdState, err := h.Servo.GetServoPDState(ctx)
