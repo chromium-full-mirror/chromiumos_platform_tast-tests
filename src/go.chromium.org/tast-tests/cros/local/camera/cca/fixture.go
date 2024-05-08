@@ -375,6 +375,17 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
+		Name:            "ccaPowerReviewWithDigitalZoomSuperDisabled",
+		Desc:            "Set up test bridge for CCA with digital zoom disabled for a power review Test",
+		Contacts:        []string{"chromeos-camera-eng@google.com", "kamchonlathorn@chromium.org"},
+		BugComponent:    "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
+		Impl:            &fixture{powerReview: true, disableFeatures: []feature{digitalZoom}},
+		SetUpTimeout:    powerSetUpTimeout,
+		ResetTimeout:    testBridgeSetUpTimeout,
+		TearDownTimeout: powerTearDownTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
 		Name:            "ccaPowerReviewWithDigitalZoomSuperResEnabled",
 		Desc:            "Set up test bridge for CCA with digital zoom and super resolution enabled for a power review Test",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "kamchonlathorn@chromium.org"},

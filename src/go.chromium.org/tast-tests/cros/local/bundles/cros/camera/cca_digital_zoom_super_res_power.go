@@ -31,7 +31,7 @@ func init() {
 		Timeout:      6*time.Minute + power.RecorderTimeout,
 		Params: []testing.Param{{
 			Name:      "disabled",
-			Fixture:   "ccaPowerReview",
+			Fixture:   "ccaPowerReviewWithDigitalZoomSuperDisabled",
 			ExtraAttr: []string{"group:crosbolt", "crosbolt_nightly"},
 			Val:       digitalZoomPowerSubtest{useZoom: false},
 		}, {
