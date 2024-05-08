@@ -26,10 +26,13 @@ type pdPolarityValue string
 
 // List of polarity values.
 const (
-	PolarityCC1    pdPolarityValue = "CC1"
-	PolarityCC2    pdPolarityValue = "CC2"
-	PolarityCC1DTS pdPolarityValue = "CC3"
-	PolarityCC2DTS pdPolarityValue = "CC4"
+	// PolarityUnknown (CC0) is observed on some DUTs when the polarity is unknown /
+	// uninitialized.
+	PolarityUnknown pdPolarityValue = "CC0"
+	PolarityCC1     pdPolarityValue = "CC1"
+	PolarityCC2     pdPolarityValue = "CC2"
+	PolarityCC1DTS  pdPolarityValue = "CC3"
+	PolarityCC2DTS  pdPolarityValue = "CC4"
 )
 
 // A connectionValue defines the current PD connection status, enabled or disabled.
@@ -143,8 +146,9 @@ var pdStateFieldIndex = map[TCPMVersion]map[string]int{
 
 // pdStateFieldLookup is used for mapping console output to internal constants
 var pdStateFieldLookup = map[string]map[string]string{
-	"CCPolarity": {"CC1": string(PolarityCC1), "CC2": string(PolarityCC2),
-		"CC3": string(PolarityCC1DTS), "CC4": string(PolarityCC2DTS)},
+	"CCPolarity": {"CC0": string(PolarityUnknown), "CC1": string(PolarityCC1),
+		"CC2": string(PolarityCC2), "CC3": string(PolarityCC1DTS),
+		"CC4": string(PolarityCC2DTS)},
 	"Connection": {"Ena": string(PDEnabled), "Dis": string(PDDisabled),
 		"Enable": string(PDEnabled), "Disable": string(PDDisabled)},
 	"PowerRole": {"SRC": string(PowerRoleSRC), "SNK": string(PowerRoleSNK)},
