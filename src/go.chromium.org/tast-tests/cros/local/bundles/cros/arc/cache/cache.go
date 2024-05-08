@@ -55,6 +55,7 @@ type pathCondition int
 const (
 	pathMustExist pathCondition = iota
 	pathMustNotExist
+	pathMustExistAndHasData
 )
 
 const (
@@ -374,7 +375,7 @@ func CopyTTSCache(ctx context.Context, outputDir string) error {
 	ttsCachePath := filepath.Join(androidDataDir, ttsCacheAndroidPath)
 
 	return arc.PollWithReadOnlyAndroidData(ctx, chrome.DefaultUser, func(context.Context) error {
-		if err := checkPathNoMount(ctx, ttsCachePath, pathMustExist); err != nil {
+		if err := checkPathNoMount(ctx, ttsCachePath, pathMustExistAndHasData); err != nil {
 			return err
 		}
 		// Although CopyFile isn't retried, it needs to be called inside the polling function
@@ -444,20 +445,29 @@ func CopyDexOptCache(ctx context.Context, outputDir string) error {
 // checkPathNoMount checks if specified path exists or does not exist depending on pathCondition c
 // (i.e. pathMustExist).
 func checkPathNoMount(ctx context.Context, path string, c pathCondition) error {
-	_, err := os.Stat(path)
+	statInfo, err := os.Stat(path)
 	if err != nil && !os.IsNotExist(err) {
 		return errors.Wrapf(err, "failed to stat %s", path)
 	}
 	exists := err == nil
-	if c == pathMustExist {
+	switch c {
+	case pathMustExist:
 		if !exists {
 			return errors.Wrapf(err, "path %s still does not exist", path)
 		}
-	} else {
+	case pathMustExistAndHasData:
+		if !exists {
+			return errors.Wrapf(err, "path %s still does not exist", path)
+		}
+		if statInfo.Size() == 0 {
+			return errors.Wrapf(err, "path %s exists but empty", path)
+		}
+	case pathMustNotExist:
 		if exists {
 			return errors.Wrapf(err, "path %s still exists", path)
 		}
 	}
+
 	return nil
 }
 
