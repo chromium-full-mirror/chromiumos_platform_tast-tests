@@ -72,7 +72,11 @@ func Launch(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn) (*Ex
 				browserui.ExtensionsToolbarButton,
 				ui.WithTimeout(5*time.Second).WaitUntilExists(vcTesterExtensionButton),
 			),
-			ui.DoDefaultUntil(vcTesterExtensionButton, ui.WaitUntilExists(popupRootWindow)),
+			ui.DoDefault(vcTesterExtensionButton),
+			ui.WaitUntilExists(popupRootWindow),
+			ui.WaitUntilExists(startVideoButton),
+			ui.WaitUntilExists(startAudioButton),
+			ui.WaitUntilExists(startScreenCapturingButton),
 		)(ctx); err != nil {
 			return nil, errors.Wrap(err, "failed to launch extension")
 		}
