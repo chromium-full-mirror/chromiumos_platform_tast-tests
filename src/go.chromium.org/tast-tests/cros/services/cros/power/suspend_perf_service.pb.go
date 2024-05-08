@@ -12,13 +12,11 @@ package power
 
 import (
 	context "context"
-	histogrampb "go.chromium.org/tast-tests/cros/common/chrome/histogram/histogrampb"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	emptypb "google.golang.org/protobuf/types/known/emptypb"
 	reflect "reflect"
 	sync "sync"
 )
@@ -29,54 +27,6 @@ const (
 	// Verify that runtime/protoimpl is sufficiently up-to-date.
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
-
-// HistogramRequest is for passing the name of Histogram to GetHistogram().
-type HistogramRequest struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-}
-
-func (x *HistogramRequest) Reset() {
-	*x = HistogramRequest{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_suspend_perf_service_proto_msgTypes[0]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *HistogramRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*HistogramRequest) ProtoMessage() {}
-
-func (x *HistogramRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_suspend_perf_service_proto_msgTypes[0]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use HistogramRequest.ProtoReflect.Descriptor instead.
-func (*HistogramRequest) Descriptor() ([]byte, []int) {
-	return file_suspend_perf_service_proto_rawDescGZIP(), []int{0}
-}
-
-func (x *HistogramRequest) GetName() string {
-	if x != nil {
-		return x.Name
-	}
-	return ""
-}
 
 // SuspendRequest is for passing the seconds of suspend duration to Suspend().
 type SuspendRequest struct {
@@ -90,7 +40,7 @@ type SuspendRequest struct {
 func (x *SuspendRequest) Reset() {
 	*x = SuspendRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_suspend_perf_service_proto_msgTypes[1]
+		mi := &file_suspend_perf_service_proto_msgTypes[0]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -103,7 +53,7 @@ func (x *SuspendRequest) String() string {
 func (*SuspendRequest) ProtoMessage() {}
 
 func (x *SuspendRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_suspend_perf_service_proto_msgTypes[1]
+	mi := &file_suspend_perf_service_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -116,7 +66,7 @@ func (x *SuspendRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SuspendRequest.ProtoReflect.Descriptor instead.
 func (*SuspendRequest) Descriptor() ([]byte, []int) {
-	return file_suspend_perf_service_proto_rawDescGZIP(), []int{1}
+	return file_suspend_perf_service_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *SuspendRequest) GetSeconds() int32 {
@@ -143,7 +93,7 @@ type SuspendResponse struct {
 func (x *SuspendResponse) Reset() {
 	*x = SuspendResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_suspend_perf_service_proto_msgTypes[2]
+		mi := &file_suspend_perf_service_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -156,7 +106,7 @@ func (x *SuspendResponse) String() string {
 func (*SuspendResponse) ProtoMessage() {}
 
 func (x *SuspendResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_suspend_perf_service_proto_msgTypes[2]
+	mi := &file_suspend_perf_service_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -169,7 +119,7 @@ func (x *SuspendResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SuspendResponse.ProtoReflect.Descriptor instead.
 func (*SuspendResponse) Descriptor() ([]byte, []int) {
-	return file_suspend_perf_service_proto_rawDescGZIP(), []int{2}
+	return file_suspend_perf_service_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *SuspendResponse) GetFailed() bool {
@@ -191,40 +141,25 @@ var File_suspend_perf_service_proto protoreflect.FileDescriptor
 var file_suspend_perf_service_proto_rawDesc = []byte{
 	0x0a, 0x1a, 0x73, 0x75, 0x73, 0x70, 0x65, 0x6e, 0x64, 0x5f, 0x70, 0x65, 0x72, 0x66, 0x5f, 0x73,
 	0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x0f, 0x74, 0x61,
-	0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x70, 0x6f, 0x77, 0x65, 0x72, 0x1a, 0x1b, 0x67,
-	0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2f, 0x65,
-	0x6d, 0x70, 0x74, 0x79, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x0f, 0x68, 0x69, 0x73, 0x74,
-	0x6f, 0x67, 0x72, 0x61, 0x6d, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x26, 0x0a, 0x10, 0x48,
-	0x69, 0x73, 0x74, 0x6f, 0x67, 0x72, 0x61, 0x6d, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12,
-	0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e,
-	0x61, 0x6d, 0x65, 0x22, 0x2a, 0x0a, 0x0e, 0x53, 0x75, 0x73, 0x70, 0x65, 0x6e, 0x64, 0x52, 0x65,
-	0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x73, 0x65, 0x63, 0x6f, 0x6e, 0x64, 0x73,
-	0x18, 0x01, 0x20, 0x01, 0x28, 0x05, 0x52, 0x07, 0x73, 0x65, 0x63, 0x6f, 0x6e, 0x64, 0x73, 0x22,
-	0x41, 0x0a, 0x0f, 0x53, 0x75, 0x73, 0x70, 0x65, 0x6e, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x12, 0x16, 0x0a, 0x06, 0x66, 0x61, 0x69, 0x6c, 0x65, 0x64, 0x18, 0x01, 0x20, 0x01,
-	0x28, 0x08, 0x52, 0x06, 0x66, 0x61, 0x69, 0x6c, 0x65, 0x64, 0x12, 0x16, 0x0a, 0x06, 0x6f, 0x75,
-	0x74, 0x70, 0x75, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x6f, 0x75, 0x74, 0x70,
-	0x75, 0x74, 0x32, 0x8b, 0x02, 0x0a, 0x12, 0x53, 0x75, 0x73, 0x70, 0x65, 0x6e, 0x64, 0x50, 0x65,
-	0x72, 0x66, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x3b, 0x0a, 0x07, 0x50, 0x72, 0x65,
-	0x70, 0x61, 0x72, 0x65, 0x12, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x1a, 0x16, 0x2e, 0x67,
-	0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45,
-	0x6d, 0x70, 0x74, 0x79, 0x22, 0x00, 0x12, 0x68, 0x0a, 0x0c, 0x47, 0x65, 0x74, 0x48, 0x69, 0x73,
-	0x74, 0x6f, 0x67, 0x72, 0x61, 0x6d, 0x12, 0x21, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72,
-	0x6f, 0x73, 0x2e, 0x70, 0x6f, 0x77, 0x65, 0x72, 0x2e, 0x48, 0x69, 0x73, 0x74, 0x6f, 0x67, 0x72,
-	0x61, 0x6d, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x33, 0x2e, 0x74, 0x61, 0x73, 0x74,
-	0x2e, 0x63, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x2e, 0x63, 0x68, 0x72, 0x6f, 0x6d, 0x65, 0x2e, 0x68,
-	0x69, 0x73, 0x74, 0x6f, 0x67, 0x72, 0x61, 0x6d, 0x2e, 0x68, 0x69, 0x73, 0x74, 0x6f, 0x67, 0x72,
-	0x61, 0x6d, 0x70, 0x62, 0x2e, 0x48, 0x69, 0x73, 0x74, 0x6f, 0x67, 0x72, 0x61, 0x6d, 0x22, 0x00,
-	0x12, 0x4e, 0x0a, 0x07, 0x53, 0x75, 0x73, 0x70, 0x65, 0x6e, 0x64, 0x12, 0x1f, 0x2e, 0x74, 0x61,
-	0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x70, 0x6f, 0x77, 0x65, 0x72, 0x2e, 0x53, 0x75,
-	0x73, 0x70, 0x65, 0x6e, 0x64, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x20, 0x2e, 0x74,
-	0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x70, 0x6f, 0x77, 0x65, 0x72, 0x2e, 0x53,
-	0x75, 0x73, 0x70, 0x65, 0x6e, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00,
-	0x42, 0x35, 0x5a, 0x33, 0x67, 0x6f, 0x2e, 0x63, 0x68, 0x72, 0x6f, 0x6d, 0x69, 0x75, 0x6d, 0x2e,
-	0x6f, 0x72, 0x67, 0x2f, 0x74, 0x61, 0x73, 0x74, 0x2d, 0x74, 0x65, 0x73, 0x74, 0x73, 0x2f, 0x63,
-	0x72, 0x6f, 0x73, 0x2f, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x73, 0x2f, 0x63, 0x72, 0x6f,
-	0x73, 0x2f, 0x70, 0x6f, 0x77, 0x65, 0x72, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x70, 0x6f, 0x77, 0x65, 0x72, 0x22, 0x2a, 0x0a,
+	0x0e, 0x53, 0x75, 0x73, 0x70, 0x65, 0x6e, 0x64, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12,
+	0x18, 0x0a, 0x07, 0x73, 0x65, 0x63, 0x6f, 0x6e, 0x64, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x05,
+	0x52, 0x07, 0x73, 0x65, 0x63, 0x6f, 0x6e, 0x64, 0x73, 0x22, 0x41, 0x0a, 0x0f, 0x53, 0x75, 0x73,
+	0x70, 0x65, 0x6e, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x16, 0x0a, 0x06,
+	0x66, 0x61, 0x69, 0x6c, 0x65, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x08, 0x52, 0x06, 0x66, 0x61,
+	0x69, 0x6c, 0x65, 0x64, 0x12, 0x16, 0x0a, 0x06, 0x6f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x18, 0x02,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x6f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x32, 0x64, 0x0a, 0x12,
+	0x53, 0x75, 0x73, 0x70, 0x65, 0x6e, 0x64, 0x50, 0x65, 0x72, 0x66, 0x53, 0x65, 0x72, 0x76, 0x69,
+	0x63, 0x65, 0x12, 0x4e, 0x0a, 0x07, 0x53, 0x75, 0x73, 0x70, 0x65, 0x6e, 0x64, 0x12, 0x1f, 0x2e,
+	0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x70, 0x6f, 0x77, 0x65, 0x72, 0x2e,
+	0x53, 0x75, 0x73, 0x70, 0x65, 0x6e, 0x64, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x20,
+	0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x70, 0x6f, 0x77, 0x65, 0x72,
+	0x2e, 0x53, 0x75, 0x73, 0x70, 0x65, 0x6e, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x22, 0x00, 0x42, 0x35, 0x5a, 0x33, 0x67, 0x6f, 0x2e, 0x63, 0x68, 0x72, 0x6f, 0x6d, 0x69, 0x75,
+	0x6d, 0x2e, 0x6f, 0x72, 0x67, 0x2f, 0x74, 0x61, 0x73, 0x74, 0x2d, 0x74, 0x65, 0x73, 0x74, 0x73,
+	0x2f, 0x63, 0x72, 0x6f, 0x73, 0x2f, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x73, 0x2f, 0x63,
+	0x72, 0x6f, 0x73, 0x2f, 0x70, 0x6f, 0x77, 0x65, 0x72, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x33,
 }
 
 var (
@@ -239,23 +174,16 @@ func file_suspend_perf_service_proto_rawDescGZIP() []byte {
 	return file_suspend_perf_service_proto_rawDescData
 }
 
-var file_suspend_perf_service_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_suspend_perf_service_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_suspend_perf_service_proto_goTypes = []interface{}{
-	(*HistogramRequest)(nil),      // 0: tast.cros.power.HistogramRequest
-	(*SuspendRequest)(nil),        // 1: tast.cros.power.SuspendRequest
-	(*SuspendResponse)(nil),       // 2: tast.cros.power.SuspendResponse
-	(*emptypb.Empty)(nil),         // 3: google.protobuf.Empty
-	(*histogrampb.Histogram)(nil), // 4: tast.common.chrome.histogram.histogrampb.Histogram
+	(*SuspendRequest)(nil),  // 0: tast.cros.power.SuspendRequest
+	(*SuspendResponse)(nil), // 1: tast.cros.power.SuspendResponse
 }
 var file_suspend_perf_service_proto_depIdxs = []int32{
-	3, // 0: tast.cros.power.SuspendPerfService.Prepare:input_type -> google.protobuf.Empty
-	0, // 1: tast.cros.power.SuspendPerfService.GetHistogram:input_type -> tast.cros.power.HistogramRequest
-	1, // 2: tast.cros.power.SuspendPerfService.Suspend:input_type -> tast.cros.power.SuspendRequest
-	3, // 3: tast.cros.power.SuspendPerfService.Prepare:output_type -> google.protobuf.Empty
-	4, // 4: tast.cros.power.SuspendPerfService.GetHistogram:output_type -> tast.common.chrome.histogram.histogrampb.Histogram
-	2, // 5: tast.cros.power.SuspendPerfService.Suspend:output_type -> tast.cros.power.SuspendResponse
-	3, // [3:6] is the sub-list for method output_type
-	0, // [0:3] is the sub-list for method input_type
+	0, // 0: tast.cros.power.SuspendPerfService.Suspend:input_type -> tast.cros.power.SuspendRequest
+	1, // 1: tast.cros.power.SuspendPerfService.Suspend:output_type -> tast.cros.power.SuspendResponse
+	1, // [1:2] is the sub-list for method output_type
+	0, // [0:1] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
@@ -268,18 +196,6 @@ func file_suspend_perf_service_proto_init() {
 	}
 	if !protoimpl.UnsafeEnabled {
 		file_suspend_perf_service_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*HistogramRequest); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_suspend_perf_service_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*SuspendRequest); i {
 			case 0:
 				return &v.state
@@ -291,7 +207,7 @@ func file_suspend_perf_service_proto_init() {
 				return nil
 			}
 		}
-		file_suspend_perf_service_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
+		file_suspend_perf_service_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*SuspendResponse); i {
 			case 0:
 				return &v.state
@@ -310,7 +226,7 @@ func file_suspend_perf_service_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_suspend_perf_service_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   3,
+			NumMessages:   2,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
@@ -336,8 +252,6 @@ const _ = grpc.SupportPackageIsVersion6
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type SuspendPerfServiceClient interface {
-	Prepare(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	GetHistogram(ctx context.Context, in *HistogramRequest, opts ...grpc.CallOption) (*histogrampb.Histogram, error)
 	Suspend(ctx context.Context, in *SuspendRequest, opts ...grpc.CallOption) (*SuspendResponse, error)
 }
 
@@ -347,24 +261,6 @@ type suspendPerfServiceClient struct {
 
 func NewSuspendPerfServiceClient(cc grpc.ClientConnInterface) SuspendPerfServiceClient {
 	return &suspendPerfServiceClient{cc}
-}
-
-func (c *suspendPerfServiceClient) Prepare(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/tast.cros.power.SuspendPerfService/Prepare", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *suspendPerfServiceClient) GetHistogram(ctx context.Context, in *HistogramRequest, opts ...grpc.CallOption) (*histogrampb.Histogram, error) {
-	out := new(histogrampb.Histogram)
-	err := c.cc.Invoke(ctx, "/tast.cros.power.SuspendPerfService/GetHistogram", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
 }
 
 func (c *suspendPerfServiceClient) Suspend(ctx context.Context, in *SuspendRequest, opts ...grpc.CallOption) (*SuspendResponse, error) {
@@ -378,8 +274,6 @@ func (c *suspendPerfServiceClient) Suspend(ctx context.Context, in *SuspendReque
 
 // SuspendPerfServiceServer is the server API for SuspendPerfService service.
 type SuspendPerfServiceServer interface {
-	Prepare(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
-	GetHistogram(context.Context, *HistogramRequest) (*histogrampb.Histogram, error)
 	Suspend(context.Context, *SuspendRequest) (*SuspendResponse, error)
 }
 
@@ -387,54 +281,12 @@ type SuspendPerfServiceServer interface {
 type UnimplementedSuspendPerfServiceServer struct {
 }
 
-func (*UnimplementedSuspendPerfServiceServer) Prepare(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Prepare not implemented")
-}
-func (*UnimplementedSuspendPerfServiceServer) GetHistogram(context.Context, *HistogramRequest) (*histogrampb.Histogram, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetHistogram not implemented")
-}
 func (*UnimplementedSuspendPerfServiceServer) Suspend(context.Context, *SuspendRequest) (*SuspendResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Suspend not implemented")
 }
 
 func RegisterSuspendPerfServiceServer(s *grpc.Server, srv SuspendPerfServiceServer) {
 	s.RegisterService(&_SuspendPerfService_serviceDesc, srv)
-}
-
-func _SuspendPerfService_Prepare_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(emptypb.Empty)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(SuspendPerfServiceServer).Prepare(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/tast.cros.power.SuspendPerfService/Prepare",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SuspendPerfServiceServer).Prepare(ctx, req.(*emptypb.Empty))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _SuspendPerfService_GetHistogram_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(HistogramRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(SuspendPerfServiceServer).GetHistogram(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/tast.cros.power.SuspendPerfService/GetHistogram",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SuspendPerfServiceServer).GetHistogram(ctx, req.(*HistogramRequest))
-	}
-	return interceptor(ctx, in, info, handler)
 }
 
 func _SuspendPerfService_Suspend_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -459,14 +311,6 @@ var _SuspendPerfService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "tast.cros.power.SuspendPerfService",
 	HandlerType: (*SuspendPerfServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "Prepare",
-			Handler:    _SuspendPerfService_Prepare_Handler,
-		},
-		{
-			MethodName: "GetHistogram",
-			Handler:    _SuspendPerfService_GetHistogram_Handler,
-		},
 		{
 			MethodName: "Suspend",
 			Handler:    _SuspendPerfService_Suspend_Handler,

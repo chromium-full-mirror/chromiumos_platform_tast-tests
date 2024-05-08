@@ -6,7 +6,7 @@
 //go:generate protoc -I . --go_out=plugins=grpc:../../../../../.. device_setup_service.proto
 //go:generate protoc -I . -I ../../../common/power/powerpb -I ../../../common/perf/perfpb --go_out=plugins=grpc:../../../../../.. recorder_service.proto
 //go:generate protoc -I . --go_out=plugins=grpc:../../../../../.. usb_service.proto
-//go:generate protoc -I . -I ../../../common/chrome/histogram/histogrampb --go_out=plugins=grpc:../../../../../.. suspend_perf_service.proto
+//go:generate protoc -I . --go_out=plugins=grpc:../../../../../.. suspend_perf_service.proto
 
 // Package power provides the BatteryService.
 package power

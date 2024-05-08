@@ -6,24 +6,11 @@ syntax = "proto3";
 
 package tast.cros.power;
 
-import "google/protobuf/empty.proto";
-
-import "histogram.proto";
-
 option go_package = "go.chromium.org/tast-tests/cros/services/cros/power";
 
 service SuspendPerfService {
-
-  rpc Prepare(google.protobuf.Empty) returns (google.protobuf.Empty) {}
-
-  rpc GetHistogram(HistogramRequest)
-      returns (tast.common.chrome.histogram.histogrampb.Histogram) {}
-
   rpc Suspend(SuspendRequest) returns (SuspendResponse) {}
 }
-
-// HistogramRequest is for passing the name of Histogram to GetHistogram().
-message HistogramRequest { string name = 1; }
 
 // SuspendRequest is for passing the seconds of suspend duration to Suspend().
 message SuspendRequest { int32 seconds = 1; }
