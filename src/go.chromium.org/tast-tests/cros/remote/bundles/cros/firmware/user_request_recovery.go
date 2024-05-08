@@ -18,6 +18,7 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -33,6 +34,7 @@ func init() {
 		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level2", "firmware_usb", "group:labqual"},
 		Requirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
 		Vars:         []string{"firmware.skipFlashUSB"},
+		HardwareDeps: hwdep.D(hwdep.SkipOnModel("hana", "elm")),
 		Timeout:      120 * time.Minute,
 		Params: []testing.Param{{
 			Name:    "normal",
