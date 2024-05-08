@@ -9,6 +9,7 @@ This file implements command runner for local tests.
 */
 
 import (
+	"bufio"
 	"context"
 	"os/exec"
 
@@ -52,6 +53,37 @@ func (r *CmdRunnerLocal) RunWithCombinedOutput(ctx context.Context, cmd string, 
 	result, err := testexec.CommandContext(ctx, cmd, args...).CombinedOutput()
 	err = checkExitError(cmd, err)
 	return result, err
+}
+
+// RunWithInteractiveStderr implements hwsec.CmdRunner.RunWithInteractiveStderr.
+func (r *CmdRunnerLocal) RunWithInteractiveStderr(ctx context.Context, onStderrLine hwsec.StderrLineFunc, cmd string, args ...string) error {
+	if r.printLog {
+		testing.ContextLogf(ctx, "Running: %s", shutil.EscapeSlice(append([]string{cmd}, args...)))
+	}
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	command := testexec.CommandContext(ctx, cmd, args...)
+	stderrPipe, err := command.StderrPipe()
+	if err != nil {
+		return errors.Wrap(err, "failed to get stderr pipe")
+	}
+	if err := command.Start(); err != nil {
+		return errors.Wrap(err, "failed to start command")
+	}
+
+	sc := bufio.NewScanner(stderrPipe)
+	sc.Split(bufio.ScanLines)
+	for sc.Scan() {
+		if err := onStderrLine(sc.Bytes()); err != nil {
+			cancel()
+			return err
+		}
+	}
+
+	err = command.Wait()
+	err = checkExitError(cmd, err)
+	return err
 }
 
 func checkExitError(cmd string, err error) error {

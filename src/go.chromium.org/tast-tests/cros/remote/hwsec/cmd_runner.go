@@ -9,6 +9,7 @@ This file implements command runner for remote tests.
 */
 
 import (
+	"bufio"
 	"context"
 
 	"golang.org/x/crypto/ssh"
@@ -54,6 +55,35 @@ func (r *CmdRunnerRemote) RunWithCombinedOutput(ctx context.Context, cmd string,
 	result, err := r.d.Conn().CommandContext(ctx, cmd, args...).CombinedOutput()
 	err = checkExitError(cmd, err)
 	return result, err
+}
+
+// RunWithInteractiveStderr implements hwsec.CmdRunner.RunWithInteractiveStderr.
+func (r *CmdRunnerRemote) RunWithInteractiveStderr(ctx context.Context, onStderrLine hwsec.StderrLineFunc, cmd string, args ...string) error {
+	if r.printLog {
+		testing.ContextLogf(ctx, "Running: %s", shutil.EscapeSlice(append([]string{cmd}, args...)))
+	}
+	command := r.d.Conn().CommandContext(ctx, cmd, args...)
+	stderrPipe, err := command.StderrPipe()
+	if err != nil {
+		return errors.Wrap(err, "failed to get stderr pipe")
+	}
+	if err := command.Start(); err != nil {
+		return errors.Wrap(err, "failed to start command")
+	}
+
+	sc := bufio.NewScanner(stderrPipe)
+	sc.Split(bufio.ScanLines)
+	for sc.Scan() {
+		if err := onStderrLine(sc.Bytes()); err != nil {
+			command.Abort()
+			command.Wait()
+			return err
+		}
+	}
+
+	err = command.Wait()
+	err = checkExitError(cmd, err)
+	return err
 }
 
 func checkExitError(cmd string, err error) error {
