@@ -6,6 +6,7 @@ package gscdevboard
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 	"regexp"
 	"time"
@@ -13,9 +14,18 @@ import (
 	"github.com/google/go-tpm/tpm2"
 
 	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
+	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/gscdevboard/utils"
 	"go.chromium.org/tast-tests/cros/remote/firmware/ti50/fixture"
 	"go.chromium.org/tast/core/testing"
+)
+
+type throughputTest uint
+
+const (
+	basicTest throughputTest = iota
+	endlessCryptoTest
+	bothDirectionsTest
 )
 
 func init() {
@@ -35,12 +45,16 @@ func init() {
 		Fixture: fixture.GSCOpenCCD,
 		Params: []testing.Param{{
 			Name:      "basic",
-			Val:       false,
+			Val:       basicTest,
 			ExtraAttr: []string{"gsc_h1_shield", "gsc_ot_fpga_cw310", "gsc_ot_shield"},
 		}, {
 			Name: "endless_crypto",
 			// Run crypto operations in the background to validate it doesn't interfere with UART operations.
-			Val: true,
+			Val: endlessCryptoTest,
+		}, {
+			Name: "both_directions",
+			// Send data in both directions through GSC: UART TX to USB RX, and USB TX to UART RX.
+			Val: bothDirectionsTest,
 		}},
 	})
 }
@@ -48,13 +62,15 @@ func init() {
 const (
 	uartThroughputBlockSize            int = 64
 	uartThroughputNumWarmupBlocks      int = 16
-	uartThroughputNumMeasurementBlocks int = 32768
+	uartThroughputNumMeasurementBlocks int = 5000
 
 	// uartBitsPerByte represents how many bit times it takes to transmit a byte on UART.
 	uartBitsPerByte int = 10
 
 	uartThroughputNominalBps   float64 = 115200.0
 	uartThroughputBpsTolerance float64 = 400.0
+	// When forwarding in both directions, we only achieve about half of the target.
+	uartThroughputBothDirectionsBps float64 = 55000.0
 )
 
 type consoleChannel struct {
@@ -76,7 +92,7 @@ func GSCUARTThroughput(ctx context.Context, s *testing.State) {
 
 	b := utils.NewDevboardHelper(s)
 	gscProps := b.GscProperties()
-	runEndlessCrypto := s.Param().(bool)
+	testOption := s.Param().(throughputTest)
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
 	i := ti50.MustOpenCrOSImage(ctx, b, s)
 	defer i.Close(ctx)
@@ -129,6 +145,10 @@ func GSCUARTThroughput(ctx context.Context, s *testing.State) {
 		_, _, err := console.ccd.ReadSerialSubmatch(ctx, regexp.MustCompile(`AB\r\n`))
 		th.MustSucceed(err, "Error clearing buffer")
 		th.MustSucceed(console.uart.ClearInput(ctx), "Error clearing buffer")
+		console.ccd.WriteSerial(ctx, []byte("AB\r\n"))
+		_, _, err = console.uart.ReadSerialSubmatch(ctx, regexp.MustCompile(`AB\r\n`))
+		th.MustSucceed(err, "Error clearing buffer")
+		th.MustSucceed(console.ccd.ClearInput(ctx), "Error clearing buffer")
 	}
 
 	// Start out by sending some initial data on all three UARTS, to fill up the buffers.
@@ -141,6 +161,12 @@ func GSCUARTThroughput(ctx context.Context, s *testing.State) {
 		for _, console := range consoles {
 			sendIteration(ctx, s, th, console.uart, console.magic, sendBlockNo)
 		}
+		if testOption == bothDirectionsTest {
+			// Transmit block on each console USB endpoint.
+			for _, console := range consoles {
+				sendIteration(ctx, s, th, console.ccd, console.magic+1, sendBlockNo)
+			}
+		}
 	}
 
 	// Start a separate goroutine, which will repeatedly create RSA keys in order to load the
@@ -148,9 +174,15 @@ func GSCUARTThroughput(ctx context.Context, s *testing.State) {
 	// does not yet have hardware cryptolib).
 	stop := make(chan bool)
 	done := make(chan bool)
-	if runEndlessCrypto {
+	if testOption == endlessCryptoTest {
 		s.Log("Running crypto in the background")
 		go endlessCrypto(tpm, s, stop, done)
+		defer func() {
+			// Tell the endlessCrypto() goroutine to stop, and wait for it to finish any ongoing
+			// operation.
+			stop <- true
+			<-done
+		}()
 	}
 
 	// Now, read and verify one 64-byte block of data from each of the three CCD endpoints,
@@ -166,23 +198,41 @@ func GSCUARTThroughput(ctx context.Context, s *testing.State) {
 		for _, console := range consoles {
 			sendIteration(ctx, s, th, console.uart, console.magic, sendBlockNo)
 		}
+		if testOption == bothDirectionsTest {
+			// Read a block from each UART.
+			for _, console := range consoles {
+				recvIteration(ctx, s, th, console.uart, console.magic+1, recvBlockNo)
+			}
+			// Transmit block on each console USB endpoint.
+			for _, console := range consoles {
+				sendIteration(ctx, s, th, console.ccd, console.magic+1, sendBlockNo)
+			}
+		}
 	}
 	elapsed := time.Since(start)
 
 	var bps = float64(uartThroughputNumMeasurementBlocks*uartThroughputBlockSize*uartBitsPerByte) / elapsed.Seconds()
 	s.Logf("Effective transfer speed: %.02f kbps", bps/1000)
+
+	pv := perf.NewValues()
+	pv.Set(perf.Metric{
+		Name:      "transfer_speed",
+		Unit:      "bps",
+		Direction: perf.BiggerIsBetter,
+	}, bps)
+	if err := pv.Save(s.OutDir()); err != nil {
+		s.Error("Failed to save perf data: ", err)
+	}
+
 	if bps > uartThroughputNominalBps+uartThroughputBpsTolerance {
 		s.Error("Transfer speed too fast, something is not right")
 	}
-	if bps < uartThroughputNominalBps-uartThroughputBpsTolerance {
-		s.Error("Transfer speed too slow, HyperDebug may not be performing")
+	var minBps = uartThroughputNominalBps - uartThroughputBpsTolerance
+	if testOption == bothDirectionsTest {
+		minBps = uartThroughputBothDirectionsBps
 	}
-
-	// Tell the endlessCrypto() goroutine to stop, and wait for it to finish any ongoing
-	// operation.
-	if runEndlessCrypto {
-		stop <- true
-		<-done
+	if bps < minBps {
+		s.Error("Transfer speed too slow, HyperDebug may not be performing")
 	}
 }
 
@@ -205,7 +255,7 @@ func recvIteration(ctx context.Context, s *testing.State, th utils.FirmwareTesti
 	var idx = 5
 	for idx < uartThroughputBlockSize {
 		if databuf[idx] != byte(idx) {
-			s.Fatal("Incorrect data contents")
+			s.Fatalf("Incorrect data contents at %d: %s", idx, hex.EncodeToString(databuf))
 		}
 		idx = idx + 1
 	}
