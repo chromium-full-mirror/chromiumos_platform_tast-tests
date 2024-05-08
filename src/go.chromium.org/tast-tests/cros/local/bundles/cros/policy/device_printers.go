@@ -31,7 +31,7 @@ func init() {
 			"chromeos-commercial-printing@google.com",
 		},
 		BugComponent: "b:1111614", // ChromeOS > Software > Commercial (Enterprise) > Printing
-		SoftwareDeps: []string{"reboot", "chrome", "vpd"},
+		SoftwareDeps: []string{"reboot", "chrome"},
 		Attr: []string{
 			"group:golden_tier",
 			"group:medium_low_tier",
