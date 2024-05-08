@@ -667,6 +667,39 @@ func init() {
 		TearDownTimeout: ResetTimeout,
 	})
 
+	fixtureConfig = DefaultBootedFixtureConfig()
+	// s2idle state is visible via "dumpsys suspend_control_internal", which requires root
+	fixtureConfig.ArcvmConfig = func(context.Context) (string, error) {
+		return "--params=androidboot.verifiedbootstate=orange", nil
+	}
+	// Initialization of the UiAutomator injects a KEYCODE_POWER event that races
+	// with ArcIdleManager putting the device into doze mode.
+	fixtureConfig.EnableUIAutomator = false
+	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+		return []chrome.Option{
+			chrome.ARCEnabled(),
+			chrome.EnableFeatures("ArcIdleManager:ignore_battery_for_test/true/delay_ms/1000,ArcS2Idle"),
+			chrome.ExtraArgs(DisableSyncFlags()...),
+			chrome.ExtraArgs("--disable-features=ArcExternalStorageAccess", "--disable-features=FirmwareUpdaterApp"),
+		}, nil
+	}
+	testing.AddFixture(&testing.Fixture{
+		Name: "arcBootedS2Idle",
+		Desc: "ARC is booted with S2Idle enabled and Chrome enabling doze aggressively",
+		Contacts: []string{
+			"cros-vm-technology@google.com",
+			"stevensd@google.com",
+		},
+		// ChromeOS > Platform > baseOS > Virtualization
+		BugComponent:    "b:882513",
+		Impl:            NewArcBootedFixture(fixtureConfig),
+		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
+		ResetTimeout:    ResetTimeout,
+		PreTestTimeout:  PreTestTimeout,
+		PostTestTimeout: PostTestTimeout,
+		TearDownTimeout: ResetTimeout,
+	})
+
 	// arcBootedWithFieldTrialConfigOff is a fixture similar to arcBooted with field trial config disabled.
 	fixtureConfig = DefaultBootedFixtureConfig()
 	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
