@@ -113,11 +113,12 @@ func RestartChromeForTesting(ctx context.Context, cfg *config.Config, extArgs, l
 		"--enable-oobe-test-api",                      // Enable OOBE helper functions for authentication.
 		"--keep-login-events-for-testing",             // Keep LoginEventRecorder data for later retrieval by tests.
 		"--disable-input-event-activation-protection", // Don't try to detect and ignore unintended clicks.
-		"--force-raster-color-profile=srgb",           // Force rendering to run in the sRGB color space. See b/221643955 for details.
 		"--propagate-iph-for-testing",                 // Disable In Product Help notifications and UI. Pass additional parameters to enable. See https://chromium.googlesource.com/chromium/src/+/main/components/feature_engagement/README.md#Automated-External-Testing-Tast and b/296141011 for details.
 	}
 	if !cfg.EnableHDR() {
-		args = append(args, "--force-color-profile=srgb") // Force chrome to treat the display as sRGB. See b/221643955 for details.
+		args = append(args,
+			"--force-color-profile=srgb",        // Force chrome to treat the display as sRGB. See b/221643955 for details.
+			"--force-raster-color-profile=srgb") // Force rendering to run in the sRGB color space. See b/221643955 for details.
 	}
 
 	if !cfg.EnableRestoreTabs() {

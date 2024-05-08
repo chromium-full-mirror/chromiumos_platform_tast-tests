@@ -588,6 +588,16 @@ func EnableLacrosStackSampledMetrics() Option {
 	}
 }
 
+// EnableHDR returns an Option that can be passed to New to enable non-srgb
+// color profiles. By default, in tast tests, we always force the color profile
+// and rasterization to srgb to avoid flakiness when comparing images or colors.
+func EnableHDR() Option {
+	return func(cfg *config.MutableConfig) error {
+		cfg.EnableHDR = true
+		return nil
+	}
+}
+
 // FieldTrialConfig returns an Option that can be passed to New to control use of fieldtrial_testing_config.json.
 func FieldTrialConfig(opt FieldTrialConfigMode) Option {
 	return func(cfg *config.MutableConfig) error {

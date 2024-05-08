@@ -358,7 +358,7 @@ func NewConfig(opts []Option) (*Config, error) {
 		}
 	}
 	for _, feature := range cfg.m.EnableFeatures {
-		if "LacrosColorManagement" == feature {
+		if "LacrosColorManagement" == feature || "EnableExternalDisplayHDR10Mode" == feature {
 			cfg.m.EnableHDR = true
 		}
 	}

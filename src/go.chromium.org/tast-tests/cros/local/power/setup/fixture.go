@@ -94,6 +94,7 @@ type PowerFixtureOptions struct {
 	BrowserExtraOpts []chrome.Option
 	EnableGAIALogin  bool
 	EnableARC        bool
+	EnableHDR        bool
 }
 
 // Register variables for overriding PowerFixtureOptions.
@@ -512,7 +513,7 @@ func init() {
 			DarkTheme:          EnableLightTheme,
 			KeyboardBrightness: SetKbBrightnessToZero,
 			Ramfs:              SetupRamfs,
-		}, PowerFixtureOptions{BrowserType: browser.TypeAsh}),
+		}, PowerFixtureOptions{BrowserType: browser.TypeAsh, EnableHDR: true}),
 		SetUpTimeout:    SetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: TearDownTimeout,
@@ -533,7 +534,7 @@ func init() {
 			DarkTheme:          EnableLightTheme,
 			KeyboardBrightness: SetKbBrightnessToZero,
 			Ramfs:              SetupRamfs,
-		}, PowerFixtureOptions{BrowserType: browser.TypeLacros}),
+		}, PowerFixtureOptions{BrowserType: browser.TypeLacros, EnableHDR: true}),
 		SetUpTimeout:    SetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: TearDownTimeout,
@@ -1104,6 +1105,10 @@ func (f *powerUIFixture) SetUp(ctx context.Context, s *testing.FixtState) interf
 		opts = append(opts,
 			chrome.ARCSupported(),
 			chrome.ExtraArgs(arc.DisableSyncFlags()...))
+	}
+
+	if f.powerFixtureOption.EnableHDR {
+		opts = append(opts, chrome.EnableHDR())
 	}
 
 	// Apply PowerFixtureOptions feature command-line overrides.
