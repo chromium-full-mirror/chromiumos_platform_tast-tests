@@ -43,6 +43,9 @@ var (
 	startScreenCapturingButton = nodewith.Name("Start Screen Capturing").Role(role.Button).Ancestor(rootWebArea)
 	stopScreenCapturingButton  = nodewith.Name("Stop Screen Capturing").Role(role.Button).Ancestor(rootWebArea)
 
+	audioPlayButton  = nodewith.Name("play").Role(role.Button).Ancestor(nodewith.Name("HelloAudio"))
+	audioPauseButton = nodewith.Name("pause").Role(role.Button).Ancestor(nodewith.Name("HelloAudio"))
+
 	videoNode = nodewith.Role(role.Video).Ancestor(rootWebArea)
 )
 
@@ -135,4 +138,13 @@ func (pwaUI *VcPwaUI) StartScreenCapture(ctx context.Context) error {
 // StopScreenCapture clicks on "Stop Screen Capturing" button to deactivate screen sharing.
 func (pwaUI *VcPwaUI) StopScreenCapture(ctx context.Context) error {
 	return pwaUI.ui.DoDefault(stopScreenCapturingButton)(ctx)
+}
+
+// PlayAudio clicks on the audioPlayButton button and wait until the pauseButton to appear.
+func (pwaUI *VcPwaUI) PlayAudio(ctx context.Context) error {
+	return uiauto.Combine("Play the audio",
+		pwaUI.ui.WaitUntilExists(audioPlayButton),
+		pwaUI.ui.DoDefault(audioPlayButton),
+		pwaUI.ui.WaitUntilExists(audioPauseButton),
+	)(ctx)
 }
