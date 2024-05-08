@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/remote/tracing"
 	powerpb "go.chromium.org/tast-tests/cros/services/cros/power"
+	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
@@ -107,7 +108,7 @@ func SuspendPerf(ctx context.Context, s *testing.State) {
 	}
 
 	// Get old (before the suspend) histograms if exist. Usually this is empty.
-	older, err := getHistograms(ctx, s, service, defaultMetrics)
+	older, err := getHistograms(ctx, service, defaultMetrics)
 	if err != nil {
 		s.Fatal("Failed to get Histograms from DUT: ", err)
 	}
@@ -131,7 +132,7 @@ func SuspendPerf(ctx context.Context, s *testing.State) {
 			s.Log("Ignore suspend command error if connection is lost: ", err)
 
 			// Reconnect because suspend can disconnect network.
-			cl, err = redialRPC(ctx, s, defaultRedialTimeoutSeconds+seconds)
+			cl, err = redialRPC(ctx, s.DUT(), s.RPCHint(), defaultRedialTimeoutSeconds+seconds)
 			if err != nil {
 				s.Fatal("Failed to reconnect the RPC: ", err)
 			}
@@ -141,7 +142,7 @@ func SuspendPerf(ctx context.Context, s *testing.State) {
 
 		s.Log("Wait for suspend metrics update")
 		service = powerpb.NewSuspendPerfServiceClient(cl.Conn)
-		prev, err = waitHistogramsUpdate(ctx, s, service, prev)
+		prev, err = waitHistogramsUpdate(ctx, service, prev)
 		if err != nil {
 			s.Fatal("Could not observe histogram update: ", err)
 		}
@@ -164,15 +165,14 @@ func SuspendPerf(ctx context.Context, s *testing.State) {
 	}
 }
 
-func redialRPC(ctx context.Context, s *testing.State, timeoutSeconds int) (*rpc.Client, error) {
-	d := s.DUT()
+func redialRPC(ctx context.Context, dut *dut.DUT, hint *testing.RPCHint, timeoutSeconds int) (*rpc.Client, error) {
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		// Set a short timeout to the iteration in case of
 		// any SSH operations blocking for a long time.
 		ctx, cancel := context.WithTimeout(ctx, remoteCommandTimeout)
 		defer cancel()
 
-		if err := d.WaitConnect(ctx); err != nil {
+		if err := dut.WaitConnect(ctx); err != nil {
 			return errors.Wrap(err, "failed to connect to DUT after suspend")
 		}
 		return nil
@@ -183,7 +183,7 @@ func redialRPC(ctx context.Context, s *testing.State, timeoutSeconds int) (*rpc.
 		return nil, err
 	}
 
-	return rpc.Dial(ctx, d, s.RPCHint())
+	return rpc.Dial(ctx, dut, hint)
 }
 
 func shouldRunTraceCmd() bool {
@@ -295,10 +295,10 @@ func cleanupTracing(ctx context.Context, s *testing.State, cl *rpc.Client) error
 	return tracing.CleanupRemoteInstance(ctx, cl, defaultInstanceName)
 }
 
-func waitHistogramsUpdate(ctx context.Context, s *testing.State, service powerpb.SuspendPerfServiceClient, prev []*histogram.Histogram) ([]*histogram.Histogram, error) {
+func waitHistogramsUpdate(ctx context.Context, service powerpb.SuspendPerfServiceClient, prev []*histogram.Histogram) ([]*histogram.Histogram, error) {
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		curr, err := getHistograms(ctx, s, service, defaultMetrics)
+		curr, err := getHistograms(ctx, service, defaultMetrics)
 		if err != nil {
 			return err
 		}
@@ -321,13 +321,13 @@ func waitHistogramsUpdate(ctx context.Context, s *testing.State, service powerpb
 		return nil, err
 	}
 
-	return getHistograms(ctx, s, service, defaultMetrics)
+	return getHistograms(ctx, service, defaultMetrics)
 }
 
-func getHistograms(ctx context.Context, s *testing.State, service powerpb.SuspendPerfServiceClient, names []string) ([]*histogram.Histogram, error) {
+func getHistograms(ctx context.Context, service powerpb.SuspendPerfServiceClient, names []string) ([]*histogram.Histogram, error) {
 	var hists []*histogram.Histogram
 	for _, n := range names {
-		hist, err := getHistogram(ctx, s, service, n)
+		hist, err := getHistogram(ctx, service, n)
 		if err != nil {
 			return nil, err
 		}
@@ -336,7 +336,7 @@ func getHistograms(ctx context.Context, s *testing.State, service powerpb.Suspen
 	return hists, nil
 }
 
-func getHistogram(ctx context.Context, s *testing.State, service powerpb.SuspendPerfServiceClient, name string) (*histogram.Histogram, error) {
+func getHistogram(ctx context.Context, service powerpb.SuspendPerfServiceClient, name string) (*histogram.Histogram, error) {
 
 	req := powerpb.HistogramRequest{Name: name}
 
