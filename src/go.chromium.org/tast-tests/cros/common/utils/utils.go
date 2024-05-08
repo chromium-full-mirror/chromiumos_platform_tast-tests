@@ -8,6 +8,7 @@ package utils
 import (
 	"context"
 	"net"
+	"os"
 	"regexp"
 	"strings"
 	"unicode"
@@ -67,4 +68,9 @@ func CompanionDeviceHostname(dutHost, suffix string) (string, error) {
 	}
 	hostname[0] = hostname[0] + suffix
 	return strings.Join(hostname, "."), nil
+}
+
+// IsCloudBot returns true if it running on cloudbots vm.
+func IsCloudBot() bool {
+	return strings.HasPrefix(os.Getenv("SWARMING_BOT_ID"), "cloudbots-")
 }

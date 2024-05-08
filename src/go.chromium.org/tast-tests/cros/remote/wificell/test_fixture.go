@@ -507,8 +507,10 @@ func (tf *TestFixture) resolveCompanionHostname(companionHostnameSuffix string) 
 	if err != nil {
 		return "", errors.Wrap(err, "failed to build companion device hostname")
 	}
-	if _, err := net.LookupIP(companionHostname); err != nil {
-		return "", errors.Wrapf(err, "could not resolve IP for companion device hostname %q", companionHostname)
+	if !utils.IsCloudBot() {
+		if _, err := net.LookupIP(companionHostname); err != nil {
+			return "", errors.Wrapf(err, "could not resolve IP for companion device hostname %q", companionHostname)
+		}
 	}
 	return companionHostname, nil
 }
