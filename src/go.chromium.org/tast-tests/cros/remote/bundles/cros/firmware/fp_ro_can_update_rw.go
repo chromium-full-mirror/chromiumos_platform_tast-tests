@@ -6,6 +6,7 @@ package firmware
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/remote/dutfs"
@@ -98,6 +99,9 @@ func FpROCanUpdateRW(ctx context.Context, s *testing.State) {
 	// Set both HW write protect and SW write protect true.
 	t, err := fingerprint.NewFirmwareTest(ctx, d, servoSpec, s.OutDir(), firmwareFile, true /*HW protect*/, true /*SW protect*/)
 	if err != nil {
+		if strings.Contains(err.Error(), "failed to connect to servo") {
+			s.Error("Test did not run")
+		}
 		s.Fatal("Failed to create new firmware test: ", err)
 	}
 	cleanupCtx := ctx

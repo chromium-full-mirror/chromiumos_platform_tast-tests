@@ -6,6 +6,7 @@ package firmware
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/remote/dutfs"
@@ -52,6 +53,9 @@ func FpAddEntropy(ctx context.Context, s *testing.State) {
 	}
 	t, err := fingerprint.NewFirmwareTest(ctx, d, servoSpec, s.OutDir(), firmwareFile, true, true)
 	if err != nil {
+		if strings.Contains(err.Error(), "failed to connect to servo") {
+			s.Error("Test did not run")
+		}
 		s.Fatal("Failed to create new firmware test: ", err)
 	}
 	ctxForCleanup := ctx

@@ -49,6 +49,7 @@ func FpTpmSeed(ctx context.Context, s *testing.State) {
 	}
 	pxy, err := servo.NewProxy(ctx, servoSpec, d.KeyFile(), d.KeyDir())
 	if err != nil {
+		s.Error("Test did not run")
 		s.Fatal("Failed to connect to servo: ", err)
 	}
 	defer pxy.Close(ctx)
