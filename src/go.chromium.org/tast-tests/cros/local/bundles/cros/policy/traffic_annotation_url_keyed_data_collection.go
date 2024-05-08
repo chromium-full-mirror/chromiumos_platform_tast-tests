@@ -34,7 +34,7 @@ func init() {
 		Desc:         "This test checks the network annotation for UKM policy to make sure we are not sending network traffic when it's off",
 		Contacts: []string{
 			"dp-chromeos-eng@google.com",
-			"rzakarian@google.com",
+			"yanghenry@google.com",
 		},
 		BugComponent: "b:1129862", // ChromeOS > Privacy > DPChromeOS > DPChromeOS Engineering
 		SoftwareDeps: []string{"chrome"},
