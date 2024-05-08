@@ -1748,3 +1748,12 @@ func (a *App) DisableSuperResIntroDialog(ctx context.Context) error {
 
 	return nil
 }
+
+// GetVidPid returns the active camera vid:pid. Return "" if MIPI.
+func (a *App) GetVidPid(ctx context.Context) (string, error) {
+	var vidPid string
+	if err := a.conn.Eval(ctx, "CCATest.getVidPid()", &vidPid); err != nil {
+		return "", err
+	}
+	return vidPid, nil
+}
