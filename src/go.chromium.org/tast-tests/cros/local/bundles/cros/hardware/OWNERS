@@ -1,0 +1,8 @@
+set noparent
+
+# Sensors:
+per-file sensor*=file:chromiumos/owners:v1:/platform/OWNERS.sensor
+per-file iio*=file:chromiumos/owners:v1:/platform/OWNERS.sensor
+
+# Tast team for bulk/emergencies
+include /OWNERS.tast
