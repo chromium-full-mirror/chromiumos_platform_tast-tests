@@ -30,6 +30,15 @@ type testParameters struct {
 	binaryTranslation bool
 }
 
+type scoreList []float64
+type groupMap map[string]scoreList
+
+type groupDef struct {
+	upload        bool
+	aggregationFn func(scores scoreList) (float64, error)
+	parent        string
+}
+
 var (
 	// disabledFeatures is a list of features to disable while running the test.
 	disabledFeatures = []string{"--disable-features=ArcExternalStorageAccess", "--disable-features=FirmwareUpdaterApp"}
@@ -227,6 +236,24 @@ func AppLoadingPerf(ctx context.Context, s *testing.State) {
 		prefix: "ui",
 	}}
 
+	// Optional metadata about groups.
+	groupMetadata := map[string]groupDef{
+		// Original groups from |tests| struct.
+		"ext4_fs": {
+			aggregationFn: calcGeometricMean,
+			parent:        "io_score",
+		},
+		"not_ext4_fs": {
+			aggregationFn: calcGeometricMean,
+			parent:        "io_score",
+		},
+		// Second-level storage groups.
+		"io_score": {
+			upload:        true,
+			aggregationFn: calcGeometricMean,
+		},
+	}
+
 	// Obtain specific APK file name for the CPU architecture being tested.
 	a := s.PreValue().(arc.PreData).ARC
 	apkName, err := apploading.ApkNameForArch(ctx, a)
@@ -248,10 +275,8 @@ func AppLoadingPerf(ctx context.Context, s *testing.State) {
 		config.ApkPath = s.DataPath(apploading.ArmApkName)
 	}
 
-	var scores []float64
-	var ioScores []float64
-
-	groups := make(map[string][]float64)
+	var scores scoreList
+	groups := make(groupMap)
 	cr := s.PreValue().(arc.PreData).Chrome
 
 	cleanup, setupErr := apploading.SetupTest(ctx, &config, a, cr)
@@ -281,31 +306,53 @@ func AppLoadingPerf(ctx context.Context, s *testing.State) {
 
 		// Put scores in the same group together, else add to top-level scores.
 		if test.group != "" {
+			if _, ok := groupMetadata[test.group]; !ok {
+				s.Fatal("Test defined with invalid group: ", test.group)
+			}
 			groups[test.group] = append(groups[test.group], score)
 		} else {
 			scores = append(scores, score)
 		}
 	}
 
-	// Obtain geometric mean of each group and append to top-level scores.
-	for groupName, group := range groups {
-		score, err := calcGeometricMean(group)
-		if err != nil {
-			s.Fatal("Failed to process geometric mean: ", err)
-		}
-		scores = append(scores, score)
-		if groupName == "ext4_fs" || groupName == "not_ext4_fs" {
-			ioScores = append(ioScores, score)
-		}
-	}
+	// Aggregate groups of scores from individual test runs and repeat
+	// the process on the results, until no further aggregation is needed.
+	isOriginalGroup := true
+	for len(groups) > 0 {
+		parentGroups := make(groupMap)
 
-	if len(ioScores) != 2 {
-		s.Fatalf("Invalid number of IO groups, got %d expected 2", len(ioScores))
-	}
+		for groupName, group := range groups {
+			groupInfo, groupFound := groupMetadata[groupName]
+			if !groupFound {
+				s.Fatal("Failed to find definition for group:", groupName)
+			}
 
-	ioScore, err := calcGeometricMean(ioScores)
-	if err != nil {
-		s.Fatal("Failed to process IO geometric mean: ", err)
+			score, err := groupInfo.aggregationFn(group)
+			if err != nil {
+				s.Fatal("Failed to process geometric mean: ", err)
+			}
+			if isOriginalGroup {
+				scores = append(scores, score)
+			}
+			if parent := groupInfo.parent; parent != "" {
+				if _, ok := groupMetadata[parent]; !ok {
+					s.Fatal("Failed to find definition for parent group: ", parent)
+				}
+				parentGroups[parent] = append(parentGroups[parent], score)
+			}
+			if groupInfo.upload {
+				finalPerfValues.Set(
+					perf.Metric{
+						Name:      groupName,
+						Unit:      "MB_per_sec",
+						Direction: perf.BiggerIsBetter,
+						Multiple:  false,
+					}, score)
+			}
+		}
+
+		groups = parentGroups
+		isOriginalGroup = false // from here on, only aggregations.
 	}
 
 	// Calculate grand mean (geometric) of top-level scores which includes the
@@ -322,13 +369,6 @@ func AppLoadingPerf(ctx context.Context, s *testing.State) {
 			Direction: perf.BiggerIsBetter,
 			Multiple:  false,
 		}, totalScore)
-	finalPerfValues.Set(
-		perf.Metric{
-			Name:      "io_score",
-			Unit:      "MB_per_sec",
-			Direction: perf.BiggerIsBetter,
-			Multiple:  false,
-		}, ioScore)
 	s.Logf("Finished all tests with total score: %.2f", totalScore)
 
 	s.Log("Uploading perf metrics")
@@ -340,7 +380,7 @@ func AppLoadingPerf(ctx context.Context, s *testing.State) {
 
 // calcGeometricMean computes the geometric mean but use antilog method to
 // prevent overflow: EXP((LOG(x1) + LOG(x2) + LOG(x3)) ... + LOG(xn)) / n)
-func calcGeometricMean(scores []float64) (float64, error) {
+func calcGeometricMean(scores scoreList) (float64, error) {
 	if len(scores) == 0 {
 		return 0, errors.New("scores can not be empty")
 	}
@@ -352,6 +392,19 @@ func calcGeometricMean(scores []float64) (float64, error) {
 	mean /= float64(len(scores))
 
 	return math.Exp(mean), nil
+}
+
+// calcArithmeticMean returns the arithmetic mean of the passed scores.
+func calcArithmeticMean(scores scoreList) (float64, error) {
+	if len(scores) == 0 {
+		return 0, errors.New("scores can not be empty")
+	}
+
+	var sum float64
+	for _, score := range scores {
+		sum += score
+	}
+	return sum / float64(len(scores)), nil
 }
 
 // runAppLoadingTest will test each app loading subflow with timeout.
