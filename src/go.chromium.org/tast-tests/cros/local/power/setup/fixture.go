@@ -148,19 +148,6 @@ var keepPowerdVar = testing.RegisterVarString(
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
-		Name: "powerSetUp",
-		Desc: "Set up DUT for power measurements",
-		Contacts: []string{
-			"chromeos-platform-ml@google.com",
-			"zactu@google.com",
-			"zhaon@google.com",
-		},
-		Impl:            &powerSetUpFixture{},
-		SetUpTimeout:    SetUpTimeout,
-		TearDownTimeout: TearDownTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
 		Name:         PowerNoUINoWiFi,
 		Desc:         "Set up test environment for tests with no UI, no backlight, no WiFi",
 		BugComponent: "b:1361410",
