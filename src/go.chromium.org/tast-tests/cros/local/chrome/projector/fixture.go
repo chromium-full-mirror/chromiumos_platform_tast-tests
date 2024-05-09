@@ -58,9 +58,10 @@ func GetProjectorApp(ctx context.Context, tconn *chrome.TestConn) (*apps.App, er
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
-		Name:     "projectorLogin",
-		Desc:     "Regular user login with Projector feature flag enabled",
-		Contacts: []string{"cros-projector+tast@google.com", "xiqiruan@chromium.org"},
+		Name:         "projectorLogin",
+		Desc:         "Regular user login with Projector feature flag enabled",
+		Contacts:     []string{"cros-projector+tast@google.com", "xiqiruan@chromium.org"},
+		BugComponent: "b:1080013", // ChromeOS Server Projects > Enterprise Management > Edu Features > Projector
 		Impl: NewProjectorFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
 				chromeFlags,
@@ -102,9 +103,10 @@ func init() {
 	// different test account and isolates sessions for Projector
 	// tests.
 	testing.AddFixture(&testing.Fixture{
-		Name:     "projectorUnicornLogin",
-		Desc:     "Supervised Family Link user login with Unicorn account and fakeDMS policy setup for Projector tests",
-		Contacts: []string{"cros-projector+tast@google.com", "xiqiruan@chromium.org"},
+		Name:         "projectorUnicornLogin",
+		Desc:         "Supervised Family Link user login with Unicorn account and fakeDMS policy setup for Projector tests",
+		Contacts:     []string{"cros-projector+tast@google.com", "xiqiruan@chromium.org"},
+		BugComponent: "b:1080013", // ChromeOS Server Projects > Enterprise Management > Edu Features > Projector
 		Impl: NewProjectorFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
 				chromeFlags,
@@ -132,9 +134,10 @@ func init() {
 
 	// Managed user login requires fakeDMS to work.
 	testing.AddFixture(&testing.Fixture{
-		Name:     "projectorEduLogin",
-		Desc:     "Managed user login with fakeDMS setup for Projector tests",
-		Contacts: []string{"cros-projector+tast@google.com", "xiqiruan@chromium.org"},
+		Name:         "projectorEduLogin",
+		Desc:         "Managed user login with fakeDMS setup for Projector tests",
+		Contacts:     []string{"cros-projector+tast@google.com", "xiqiruan@chromium.org"},
+		BugComponent: "b:1080013", // ChromeOS Server Projects > Enterprise Management > Edu Features > Projector
 		Impl: NewProjectorFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
 				chromeFlags,
