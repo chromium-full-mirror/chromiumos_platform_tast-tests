@@ -480,6 +480,7 @@ func init() {
 		PreTestTimeout:  PreTestTimeout,
 		PostTestTimeout: PostTestTimeout,
 		TearDownTimeout: ResetTimeout,
+		Parent:          "gpuWatchDog",
 	})
 
 	// lacrosWithArcBooted is a fixture that combines the functionality of
