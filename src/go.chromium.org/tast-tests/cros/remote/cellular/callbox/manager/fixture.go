@@ -36,11 +36,10 @@ const (
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
-		Name:     "callboxManagedFixture",
-		Desc:     "Cellular fixture with a Callbox managed by a Callbox Manager",
-		Contacts: []string{
-			// None yet, fixture is still preliminary
-		},
+		Name:            "callboxManagedFixture",
+		Desc:            "Cellular fixture with a Callbox managed by a Callbox Manager",
+		Contacts:        []string{"chromeos-cellular-team@google.com", "jstanko@google.com"},
+		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Impl:            &TestFixture{},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
