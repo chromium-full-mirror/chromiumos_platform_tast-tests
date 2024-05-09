@@ -195,20 +195,20 @@ func verifyECWPStatus(ctx context.Context, h *firmware.Helper, wp bool) error {
 
 	testing.ContextLog(ctx, "Checking wp_gpio_asserted state in flashinfo")
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		out, err := h.Servo.RunECCommandGetOutput(ctx, "flashinfo", []string{`(?:.*\r\n){10}`})
-		if out == nil {
+		out, err := h.Servo.RunECCommandGetOutput(ctx, "flashinfo", []string{`Flags:.*\n.*\n`})
+		if out == nil || err != nil {
+			testing.ContextLogf(ctx, "Failed to get flashinfo output, got: %v with err %v", out, err)
 			return errors.Wrap(err, "failed to get output from flashinfo")
 		} else if err != nil {
-			testing.ContextLog(ctx, "flashinfo failed to be fully parse, trying anyway")
+			testing.ContextLog(ctx, "flashinfo failed to be fully parsed, trying anyway")
 		}
-
 		flashinfoOutput := strings.Join(out[0], "\n")
 		testing.ContextLog(ctx, "flashinfo: ", flashinfoOutput)
 		oldPattern := regexp.MustCompile(`Flags:.*\n`)
 		newPattern := regexp.MustCompile(`wp_gpio_asserted:\s+(ON|OFF)\s*`)
 
 		if newMatch := newPattern.FindStringSubmatch(flashinfoOutput); newMatch != nil {
-			testing.ContextLog(ctx, "New match: ", newMatch)
+			testing.ContextLog(ctx, "New format match: ", newMatch)
 			if wp && newMatch[1] != "ON" {
 				return errors.New("flashinfo reported wp_gpio_asserted OFF when expecting ON, check wp gpio config")
 			}
@@ -216,7 +216,7 @@ func verifyECWPStatus(ctx context.Context, h *firmware.Helper, wp bool) error {
 				return errors.New("flashinfo reported wp_gpio_asserted ON when expecting OFF, check wp gpio config")
 			}
 		} else if oldMatch := oldPattern.FindStringSubmatch(flashinfoOutput); oldMatch != nil {
-			testing.ContextLog(ctx, "Old match: ", oldMatch)
+			testing.ContextLog(ctx, "Old format match: ", oldMatch)
 			if wp && !strings.Contains(oldMatch[0], "wp_gpio_asserted") {
 				return errors.New("flashinfo reported wp_gpio_asserted OFF when expecting ON, check wp gpio config")
 			}
@@ -228,7 +228,7 @@ func verifyECWPStatus(ctx context.Context, h *firmware.Helper, wp bool) error {
 		}
 
 		return nil
-	}, &testing.PollOptions{Timeout: 5 * time.Second, Interval: 500 * time.Millisecond}); err != nil {
+	}, &testing.PollOptions{Timeout: 5 * time.Second, Interval: 1 * time.Second}); err != nil {
 		return errors.Wrap(err, "looking for flashinfo")
 	}
 
