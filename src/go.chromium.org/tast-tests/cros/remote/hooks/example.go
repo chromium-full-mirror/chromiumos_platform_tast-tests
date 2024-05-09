@@ -15,7 +15,7 @@ func init() {
 	addHook(&Hook{
 		Name:         "exampleHook",
 		Desc:         "Demonstrate how to use hook",
-		Contacts:     []string{"tast-owner@google.com", "seewaifu@google.com"},
+		Contacts:     []string{"tast-core@google.com", "seewaifu@google.com"},
 		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
 		Impl:         &testhook{},
 	})
