@@ -6,7 +6,6 @@ package arc
 
 import (
 	"context"
-	"math"
 	"strings"
 	"time"
 
@@ -30,12 +29,11 @@ type testParameters struct {
 	binaryTranslation bool
 }
 
-type scoreList []float64
-type groupMap map[string]scoreList
+type groupMap map[string]arc.ScoreList
 
 type groupDef struct {
 	upload        bool
-	aggregationFn func(scores scoreList) (float64, error)
+	aggregationFn func(scores arc.ScoreList) (float64, error)
 	parent        string
 }
 
@@ -240,17 +238,17 @@ func AppLoadingPerf(ctx context.Context, s *testing.State) {
 	groupMetadata := map[string]groupDef{
 		// Original groups from |tests| struct.
 		"ext4_fs": {
-			aggregationFn: calcGeometricMean,
+			aggregationFn: arc.CalcGeometricMean,
 			parent:        "io_score",
 		},
 		"not_ext4_fs": {
-			aggregationFn: calcGeometricMean,
+			aggregationFn: arc.CalcGeometricMean,
 			parent:        "io_score",
 		},
 		// Second-level storage groups.
 		"io_score": {
 			upload:        true,
-			aggregationFn: calcGeometricMean,
+			aggregationFn: arc.CalcGeometricMean,
 		},
 	}
 
@@ -275,7 +273,7 @@ func AppLoadingPerf(ctx context.Context, s *testing.State) {
 		config.ApkPath = s.DataPath(apploading.ArmApkName)
 	}
 
-	var scores scoreList
+	var scores arc.ScoreList
 	groups := make(groupMap)
 	cr := s.PreValue().(arc.PreData).Chrome
 
@@ -357,7 +355,7 @@ func AppLoadingPerf(ctx context.Context, s *testing.State) {
 
 	// Calculate grand mean (geometric) of top-level scores which includes the
 	// geometric means from each group.
-	totalScore, err := calcGeometricMean(scores)
+	totalScore, err := arc.CalcGeometricMean(scores)
 	if err != nil {
 		s.Fatal("Failed to process geometric mean: ", err)
 	}
@@ -376,35 +374,6 @@ func AppLoadingPerf(ctx context.Context, s *testing.State) {
 	if err := finalPerfValues.Save(s.OutDir()); err != nil {
 		s.Fatal("Failed to save final perf metrics: ", err)
 	}
-}
-
-// calcGeometricMean computes the geometric mean but use antilog method to
-// prevent overflow: EXP((LOG(x1) + LOG(x2) + LOG(x3)) ... + LOG(xn)) / n)
-func calcGeometricMean(scores scoreList) (float64, error) {
-	if len(scores) == 0 {
-		return 0, errors.New("scores can not be empty")
-	}
-
-	var mean float64
-	for _, score := range scores {
-		mean += math.Log(score)
-	}
-	mean /= float64(len(scores))
-
-	return math.Exp(mean), nil
-}
-
-// calcArithmeticMean returns the arithmetic mean of the passed scores.
-func calcArithmeticMean(scores scoreList) (float64, error) {
-	if len(scores) == 0 {
-		return 0, errors.New("scores can not be empty")
-	}
-
-	var sum float64
-	for _, score := range scores {
-		sum += score
-	}
-	return sum / float64(len(scores)), nil
 }
 
 // runAppLoadingTest will test each app loading subflow with timeout.

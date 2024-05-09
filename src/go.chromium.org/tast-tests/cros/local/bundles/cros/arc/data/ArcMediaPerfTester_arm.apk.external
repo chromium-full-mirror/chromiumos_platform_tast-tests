@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/arcapp/ArcMediaPerfTester_arm_20240520.apk",
+  "size": 570817533,
+  "sha256sum": "909c4696abd1216f8b08a198088c510c946c365911f7288f39565f72fa39a307"
+}
