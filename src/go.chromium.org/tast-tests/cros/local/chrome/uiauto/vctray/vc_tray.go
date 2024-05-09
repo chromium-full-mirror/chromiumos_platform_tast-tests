@@ -148,7 +148,11 @@ func (vcTray VCTray) SetBackgroundBlur(blurLevel BackgroundBlurLevel) action.Act
 	case BackgroundBlurOff:
 		return vcTray.ui.DoDefault(bgBlurOffButton)
 	case BackgroundBlurImage:
-		return uiauto.Combine("ApplyBackgroundReplaceFromUi", vcTray.ui.DoDefault(bgBlurImageButton), vcTray.ui.DoDefault(firstBackgroundImageButton))
+		return uiauto.Combine("ApplyBackgroundReplaceFromUi",
+			vcTray.ui.WaitUntilExists(firstBackgroundImageButton),
+			vcTray.ui.DoDefault(bgBlurImageButton),
+			vcTray.ui.DoDefault(firstBackgroundImageButton),
+		)
 	default:
 		return func(context.Context) error {
 			return errors.Errorf("background blur level %q is not supported", blurLevel)
