@@ -15,9 +15,6 @@ import (
 	"time"
 
 	"go.chromium.org/chromiumos/config/go/test/lab/api"
-	"golang.org/x/exp/slices"
-	"google.golang.org/protobuf/encoding/protojson"
-
 	"go.chromium.org/tast-tests/cros/common/utils"
 	"go.chromium.org/tast-tests/cros/common/wifi/iw"
 	"go.chromium.org/tast-tests/cros/remote/fileutils"
@@ -36,6 +33,7 @@ import (
 	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/timing"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 const (
@@ -63,7 +61,6 @@ type Router struct {
 	nextVethID       int
 	closed           bool
 	workDirPath      string
-	buildInfo        *api.CrosOpenWrtImageBuildInfo
 }
 
 // activeServices keeps a record of what services have been started and not yet
@@ -112,23 +109,15 @@ func NewRouter(ctx, daemonCtx context.Context, host *ssh.Conn, name string) (rou
 	defer cancel()
 
 	testing.ContextLog(ctx, "Collecting router build info")
-	if err := r.logAndSaveBuildInfo(ctx); err != nil {
-		testing.ContextLog(ctx, "Failed to log OpenWrt build info file from host: ", err)
-		// TODO: b/329028717 - Remove the hardcode below once golden image ships.
-		// These lines of code takes effect only on MTK RFB since other routers
-		// don't have such interfaces in place. Ignore the error as a workaround
-		// for Ubiquiti routers.
-		if err := r.addReservedIfNamesAvailable(ctx, "ra0", "rai0", "rax0"); err != nil {
-			testing.ContextLog(ctx, "Ignore this if the router is non-MTK RFB: did not reserve interfaces due to error: ", err)
-		}
+	if err := r.logBuildInfo(ctx); err != nil {
 		// Just log the error and move on, as the router still may be usable.
+		testing.ContextLog(ctx, "Failed to log OpenWrt build info file from host: ", err)
 	}
 
-	reservedInterfaces := r.getBuildInfoReservedInterfaces()
-	if reservedInterfaces != nil {
-		if err := r.addReservedIfNamesAvailable(ctx, reservedInterfaces...); err != nil {
-			return nil, errors.Wrapf(err, "failed to reserved interfaces %v", reservedInterfaces)
-		}
+	testing.ContextLog(ctx, "Waiting for router to be ready for testing")
+	if err := r.waitForReady(ctx); err != nil {
+		testing.ContextLog(ctx, "Failed to wait for router to say it is ready: ", err)
+		testing.ContextLog(ctx, "Assuming router is ready and continuing with setup")
 	}
 
 	// Start collecting system logs and save logs already in the buffer to a file.
@@ -207,21 +196,14 @@ func (r *Router) Close(ctx context.Context) error {
 	// Remove the interfaces that we created.
 	if r.im != nil {
 		for _, nd := range r.im.Available {
-			if !slices.Contains(r.im.ReservedIfNames, nd.IfName) {
-				if err := r.im.Remove(ctx, nd.IfName); err != nil {
-					utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to remove interfaces"))
-				}
+			if err := r.im.Remove(ctx, nd.IfName); err != nil {
+				utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to remove interfaces"))
 			}
 		}
 		for _, nd := range r.im.Busy {
-			if !slices.Contains(r.im.ReservedIfNames, nd.IfName) {
-				testing.ContextLogf(ctx, "iface %s not yet freed", nd.IfName)
-				if err := r.im.Remove(ctx, nd.IfName); err != nil {
-					utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to remove interfaces"))
-				}
-			} else {
-				testing.ContextLogf(ctx, "set iface %s to available", nd.IfName)
-				r.im.SetAvailable(nd.IfName)
+			testing.ContextLogf(ctx, "iface %s not yet freed", nd.IfName)
+			if err := r.im.Remove(ctx, nd.IfName); err != nil {
+				utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to remove interfaces"))
 			}
 		}
 	}
@@ -324,11 +306,11 @@ func (r *Router) StartReboot(ctx context.Context) error {
 	return nil
 }
 
-// logAndSaveBuildInfo retrieves the build info file present on all ChromeOS OpenWrt
+// logBuildInfo retrieves the build info file present on all ChromeOS OpenWrt
 // test routers, saves a copy of it to the logs, and logs the key info. Also, save
 // the device type and name which are used to create the unique model name for the
-// router, as well as build info struct.
-func (r *Router) logAndSaveBuildInfo(ctx context.Context) error {
+// router.
+func (r *Router) logBuildInfo(ctx context.Context) error {
 	// Get the build info from the router.
 	if err := r.host.CommandContext(ctx, "test", "-f", buildInfoFile).Run(); err != nil {
 		return errors.Wrapf(err, "build info file file %q` not present", buildInfoFile)
@@ -360,15 +342,13 @@ func (r *Router) logAndSaveBuildInfo(ctx context.Context) error {
 		OsRelease: &api.CrosOpenWrtImageBuildInfo_OSRelease{
 			OpenwrtRelease: buildInfo.GetOsRelease().GetOpenwrtRelease(),
 		},
-		RouterFeatures:     buildInfo.GetRouterFeatures(),
-		ReservedInterfaces: buildInfo.GetReservedInterfaces(),
+		RouterFeatures: buildInfo.GetRouterFeatures(),
 	}
 	minimalBuildInfoJSON, err := protojson.Marshal(minimalBuildInfo)
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal minimal build info")
 	}
 	testing.ContextLogf(ctx, "CrosOpenWrtImageBuildInfo: %s", string(minimalBuildInfoJSON))
-	r.buildInfo = buildInfo
 	return nil
 }
 
@@ -455,38 +435,6 @@ func (r *Router) setupWifiPhys(ctx context.Context) error {
 		}
 		r.phys[phyID] = p
 	}
-	return nil
-}
-
-// addReservedIfNamesAvailable adds IEEE802.11 interfaces to im.ReservedIfNames
-// and set them in Available state. The function either adds ifNames altogether,
-// or nothing if any error occurs.
-// Only managed type of IEEE802.11 interfaces are supported.
-func (r *Router) addReservedIfNamesAvailable(ctx context.Context, ifNames ...string) error {
-	ctx, st := timing.Start(ctx, "addReservedIfNamesAvailable")
-	defer st.End()
-
-	var phyIDs []int
-	for _, ifn := range ifNames {
-		phyIDBytes, err := r.host.CommandContext(ctx, "cat", fmt.Sprintf("/sys/class/net/%s/phy80211/index", ifn)).Output()
-		if err != nil {
-			return errors.Wrapf(err, "failed to get phy idx for interface %s", ifn)
-		}
-		phyID, err := strconv.Atoi(strings.TrimSpace(string(phyIDBytes)))
-		if err != nil {
-			return errors.Wrapf(err, "invalid phy idx %s", string(phyIDBytes))
-		}
-		phyIDs = append(phyIDs, phyID)
-	}
-
-	if err := r.im.AddReservedIfNames(ifNames...); err != nil {
-		return errors.Wrap(err, "failed to reserve interfaces")
-	}
-
-	for i, ifn := range ifNames {
-		r.im.AddAvailable(phyIDs[i], ifn, iw.IfTypeManaged)
-	}
-
 	return nil
 }
 
@@ -638,12 +586,13 @@ func (r *Router) startHostapdOnIfaces(ctx context.Context, name string, ifaces [
 		if isWEP, err := common.HostapdSecurityConfigIsWEP(iface.Config().SecurityConfig); err != nil {
 			return nil, errors.Wrap(err, "failed to check if hostapd security config uses wep")
 		} else if isWEP {
-			testing.ContextLog(ctx,
+			testing.ContextLog(
+				ctx,
 				"Warning: Starting hostapd with a security config using WEP. "+
 					"OpenWrt routers are not guaranteed to support WEP in future OS"+
 					"versions. If this device does not support WEP, hostapd will fail to"+
-					"start.")
-
+					"start.",
+			)
 		}
 	}
 	hs, err := hostapd.StartServerOnIface(ctx, r.host, name, r.workDir(), ifaces, map[string]string{})
@@ -900,12 +849,4 @@ func (r *Router) monitorOnInterface(ctx context.Context, iface string) (*iw.NetD
 	}
 	phyID := ndev.PhyNum
 	return r.netDevWithPhyID(ctx, phyID, iw.IfTypeMonitor)
-}
-
-// getBuildInfoReservedInterfaces returns reserved interface names from build info, or nil.
-func (r *Router) getBuildInfoReservedInterfaces() []string {
-	if r.buildInfo != nil {
-		return r.buildInfo.GetReservedInterfaces()
-	}
-	return nil
 }

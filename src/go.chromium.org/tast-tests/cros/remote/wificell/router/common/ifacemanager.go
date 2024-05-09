@@ -8,8 +8,6 @@ import (
 	"context"
 	"fmt"
 
-	"golang.org/x/exp/slices"
-
 	"go.chromium.org/tast-tests/cros/common/wifi/iw"
 	"go.chromium.org/tast-tests/cros/remote/wificell/router/common/support"
 	"go.chromium.org/tast/core/errors"
@@ -27,9 +25,6 @@ type IfaceManager struct {
 
 	// Busy is a map from the interface name to iw.NetDev for busy interfaces.
 	Busy map[string]*iw.NetDev
-
-	// Reserved interface names are exempted from clean up.
-	ReservedIfNames []string
 }
 
 // NewRouterIfaceManager creates a new IfaceManager
@@ -49,10 +44,8 @@ func (im *IfaceManager) RemoveAll(ctx context.Context) error {
 		return errors.Wrap(err, "failed to list interfaces")
 	}
 	for _, w := range netDevs {
-		if !slices.Contains(im.ReservedIfNames, w.IfName) {
-			if err := im.Remove(ctx, w.IfName); err != nil {
-				return err
-			}
+		if err := im.Remove(ctx, w.IfName); err != nil {
+			return err
 		}
 	}
 	return nil
@@ -86,14 +79,6 @@ func (im *IfaceManager) Create(ctx context.Context, phyName string, phyID int, t
 	testing.ContextLogf(ctx, "Creating wdev %s on wiphy %s", ifaceName, phyName)
 	if err := im.iwr.AddInterface(ctx, phyName, ifaceName, t, nil); err != nil {
 		return nil, err
-	}
-	return im.AddAvailable(phyID, ifaceName, t)
-}
-
-// AddAvailable adds an interface with phyID, ifaceName and type to available list
-func (im *IfaceManager) AddAvailable(phyID int, ifaceName string, t iw.IfType) (*iw.NetDev, error) {
-	if _, ok := im.Available[ifaceName]; ok {
-		return nil, errors.Errorf("Interface %s already in available list", ifaceName)
 	}
 	nd := &iw.NetDev{
 		PhyNum: phyID,
@@ -142,23 +127,4 @@ func (im *IfaceManager) IsPhyBusy(phyID int, t iw.IfType) bool {
 		}
 	}
 	return false
-}
-
-// AddReservedIfNames adds a list of interface names that are exempted from clean up.
-// im.ReservedIfNames is updated IFF all ifNames are successfully added.
-// Some interfaces are already in router as part of system initialization before
-// test fixture setup. Removing them may impact the wireless functionality.
-func (im *IfaceManager) AddReservedIfNames(ifNames ...string) error {
-	resvdIfNames := im.ReservedIfNames
-	for _, ifn := range ifNames {
-		if slices.Contains(resvdIfNames, ifn) {
-			return errors.Errorf("failed to reserve interface %s since it's already in the list", ifn)
-		}
-		if _, ok := im.Busy[ifn]; ok {
-			return errors.Errorf("failed to reserve interface %s since it's already in busy state", ifn)
-		}
-		resvdIfNames = append(resvdIfNames, ifn)
-	}
-	im.ReservedIfNames = resvdIfNames
-	return nil
 }
