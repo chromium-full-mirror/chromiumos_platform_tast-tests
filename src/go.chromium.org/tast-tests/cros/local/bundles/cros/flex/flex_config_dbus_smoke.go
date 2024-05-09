@@ -28,7 +28,7 @@ const (
 
 	flexConfigDirPath  = "/mnt/stateful_partition/unencrypted/flex_config"
 	flexConfigFilePath = "/mnt/stateful_partition/unencrypted/flex_config/config.json"
-	flexConfigJSONData = "{ \"flexToken\" : \"This is a Flex Token\" }"
+	flexConfigJSONData = "{ \"enrollmentToken\" : \"test-enrollment-token\" }"
 
 	oobeConfigRestoreUID = 20121
 	oobeConfigRestoreGID = 20121
@@ -45,7 +45,7 @@ func init() {
 		},
 		BugComponent: "b:1271043", // Chrome OS Server Projects > Enterprise Management >> Chrome Commercial Backend >> Onboarding >> Enterprise Enrollment
 		Fixture:      fixture.CleanOwnership,
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		SoftwareDeps: []string{"reven_oobe_config"},
 	})
 }
