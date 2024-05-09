@@ -9,12 +9,12 @@ import (
 	"fmt"
 	"math"
 	"os"
-	"strings"
 	"time"
 
 	uda "go.chromium.org/chromiumos/system_api/user_data_auth_proto"
 
 	"go.chromium.org/tast-tests/cros/common/hwsec"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/cryptohome/internal"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
@@ -193,7 +193,7 @@ func enrollFinger(ctx context.Context, client *hwsec.CryptohomeClient, authSessi
 	}
 	defer client.TerminateFpAuthFactor(ctx, authSessionID)
 
-	promptFingerTouch(ctx, fingerName)
+	internal.PromptFingerTouch(ctx, fingerName)
 	for {
 		select {
 		case sig, ok := <-watcher.Signals:
@@ -211,7 +211,7 @@ func enrollFinger(ctx context.Context, client *hwsec.CryptohomeClient, authSessi
 			if sig.ScanResult == uda.FingerprintScanResult_FINGERPRINT_SCAN_RESULT_FATAL_ERROR {
 				return errors.New("fingerprint enrollment failed with internal error")
 			}
-			promptFingerTouch(ctx, fingerName)
+			internal.PromptFingerTouch(ctx, fingerName)
 		case <-ctxWatcher.Done():
 			return errors.New("fingerprint enrollment timed out")
 		}
@@ -246,7 +246,7 @@ func authFinger(ctx context.Context, client *hwsec.CryptohomeClient, authSession
 	}
 	defer client.TerminateFpAuthFactor(ctx, authSessionID)
 
-	promptFingerTouch(ctx, fingerName)
+	internal.PromptFingerTouch(ctx, fingerName)
 	for {
 		select {
 		case sig, ok := <-watcher.Signals:
@@ -266,7 +266,7 @@ func authFinger(ctx context.Context, client *hwsec.CryptohomeClient, authSession
 			} else {
 				return nil
 			}
-			promptFingerTouch(ctx, fingerName)
+			internal.PromptFingerTouch(ctx, fingerName)
 		case <-ctxWatcher.Done():
 			return errors.New("fingerprint authentication timed out")
 		}
@@ -295,7 +295,7 @@ func authFingerLockout(ctx context.Context, client *hwsec.CryptohomeClient, auth
 	}
 	defer client.TerminateFpAuthFactor(ctx, authSessionID)
 
-	promptFingerTouch(ctx, wrongFingerName)
+	internal.PromptFingerTouch(ctx, wrongFingerName)
 	for i := 1; i <= lockoutWrongAttempts; i++ {
 		select {
 		case sig, ok := <-watcher.Signals:
@@ -320,22 +320,10 @@ func authFingerLockout(ctx context.Context, client *hwsec.CryptohomeClient, auth
 			} else {
 				return errors.New("fingerprint authentication succeeded with a wrong finger")
 			}
-			promptFingerTouch(ctx, wrongFingerName)
+			internal.PromptFingerTouch(ctx, wrongFingerName)
 		case <-ctxWatcher.Done():
 			return errors.New("fingerprint authentication timed out")
 		}
 	}
 	return nil
-}
-
-func promptFingerTouch(ctx context.Context, fingerName string) {
-	// This will look like:
-	// ******************************
-	// * Please press your X finger *
-	// ******************************
-	promptString := "* Please press your " + fingerName + " *"
-	asterisks := strings.Repeat("*", len(promptString))
-	testing.ContextLogf(ctx, "%s", asterisks)
-	testing.ContextLogf(ctx, "%s", promptString)
-	testing.ContextLogf(ctx, "%s", asterisks)
 }
