@@ -44,11 +44,11 @@ func openTabCanaries(ctx context.Context, allocMiB int, ratio float32, br *brows
 		}
 	}()
 	bgTab = NewMemoryStressUnit(allocMiB, ratio, 2*time.Second)
-	if err := bgTab.Run(ctx, br); err != nil {
+	if err := bgTab.Run(ctx, br, nil); err != nil {
 		return nil, nil, errors.Wrap(err, "failed to run background tab canary")
 	}
 	protTab = NewMemoryStressUnit(allocMiB, ratio, 2*time.Second)
-	if err := protTab.Run(ctx, br); err != nil {
+	if err := protTab.Run(ctx, br, nil); err != nil {
 		return nil, nil, errors.Wrap(err, "failed to run protected background tab canary")
 	}
 	protTabAlive := true

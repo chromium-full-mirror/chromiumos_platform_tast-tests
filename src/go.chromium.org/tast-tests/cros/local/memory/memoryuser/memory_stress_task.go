@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/memory"
+	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -25,8 +26,10 @@ type MemoryStressUnit struct {
 
 // Run creates a Chrome tab that allocates memory, then waits for the provided
 // cooldown.
-func (st *MemoryStressUnit) Run(ctx context.Context, br *browser.Browser) error {
+func (st *MemoryStressUnit) Run(ctx context.Context, br *browser.Browser, p *perf.Values) error {
+	startTime := time.Now()
 	conn, err := br.NewConn(ctx, st.url)
+	openLatency := time.Now().Sub(startTime)
 	if err != nil {
 		return errors.New("failed to open MemoryStressUnit page")
 	}
@@ -59,6 +62,7 @@ func (st *MemoryStressUnit) Run(ctx context.Context, br *browser.Browser) error 
 	if err := conn.WaitForExprFailOnErr(ctx, expr); err != nil {
 		return errors.Wrap(err, "unexpected error waiting for allocation")
 	}
+	memoryAllocateLatency := time.Now().Sub(startTime)
 	if st.cooldown > 0 {
 		// GoBigSleepLint we sleep here to throttle allocation of memory. Allocating
 		// as fast as possible can cause instability.
@@ -66,6 +70,57 @@ func (st *MemoryStressUnit) Run(ctx context.Context, br *browser.Browser) error 
 			return errors.Wrap(err, "failed to sleep for cooldown")
 		}
 	}
+
+	if p == nil {
+		return nil
+	}
+	allTabs, err := browser.AllTabs(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to get all tabs")
+	}
+	if len(allTabs) <= 1 {
+		// Skip logging metrics for the first tab because it contains overhead
+		// of opening a new window.
+		return nil
+	}
+	var nAliveTabs int
+	for _, tab := range allTabs {
+		if !tab.Discarded {
+			nAliveTabs++
+		}
+	}
+	var metricsNameSuffix string
+	if nAliveTabs != len(allTabs) {
+		// If at least one tab is discarded, the number of alive tabs represents
+		// the amount of memory that the memory pressure policy allows. If the
+		// variance of the number during a test is small, it means that the
+		// memory pressure policy handles memory pressure smoothly.
+		p.Append(perf.Metric{
+			Name:      "tabs_alive_on_open",
+			Unit:      "count",
+			Direction: perf.BiggerIsBetter,
+			Multiple:  true,
+		}, float64(nAliveTabs))
+		testing.ContextLog(ctx, "tabs_alive_on_open: ", nAliveTabs)
+	} else {
+		metricsNameSuffix = "_before_discard"
+	}
+	openLatencyLabel := "memory_stress_tab_open_latency" + metricsNameSuffix
+	testing.ContextLog(ctx, openLatencyLabel, ": ", openLatency.Milliseconds(), " ms")
+	p.Append(perf.Metric{
+		Name:      openLatencyLabel,
+		Unit:      "ms",
+		Direction: perf.SmallerIsBetter,
+		Multiple:  true,
+	}, openLatency.Seconds()*1000.0)
+	tabAllocationLabel := "memory_stress_tab_allocation_latency" + metricsNameSuffix
+	testing.ContextLog(ctx, tabAllocationLabel, ": ", memoryAllocateLatency.Milliseconds(), " ms")
+	p.Append(perf.Metric{
+		Name:      tabAllocationLabel,
+		Unit:      "ms",
+		Direction: perf.SmallerIsBetter,
+		Multiple:  true,
+	}, memoryAllocateLatency.Seconds()*1000.0)
 	return nil
 }
 
@@ -105,7 +160,7 @@ func (st *MemoryStressUnit) StillAlive(ctx context.Context, br *browser.Browser)
 
 // FillChromeOSMemory launches memory stress tabs until one is killed, filling
 // up memory in ChromeOS.
-func FillChromeOSMemory(ctx context.Context, br *browser.Browser, unitMiB int, ratio float32) (func(context.Context) error, error) {
+func FillChromeOSMemory(ctx context.Context, br *browser.Browser, p *perf.Values, unitMiB int, ratio float32) (func(context.Context) error, error) {
 	var units []*MemoryStressUnit
 	cleanup := func(ctx context.Context) error {
 		var res error
@@ -123,7 +178,7 @@ func FillChromeOSMemory(ctx context.Context, br *browser.Browser, unitMiB int, r
 		const tabOpenCooldown = 2 * time.Second
 		unit := NewMemoryStressUnit(unitMiB, ratio, tabOpenCooldown)
 		units = append(units, unit)
-		if err := unit.Run(ctx, br); err != nil {
+		if err := unit.Run(ctx, br, p); err != nil {
 			return cleanup, errors.Wrapf(err, "failed to run MemoryStressUnit %q", unit.url)
 		}
 		for _, unit := range units {
@@ -158,7 +213,7 @@ func (st *MemoryStressTask) NeedVM() bool {
 // Run creates a Chrome tab that allocates memory, then waits for the provided
 // cooldown.
 func (st *MemoryStressTask) Run(ctx context.Context, testEnv *TestEnv) error {
-	return st.MemoryStressUnit.Run(ctx, testEnv.br)
+	return st.MemoryStressUnit.Run(ctx, testEnv.br, testEnv.p)
 }
 
 // Close closes the memory stress allocation tab.

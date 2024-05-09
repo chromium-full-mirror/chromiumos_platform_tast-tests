@@ -16,11 +16,12 @@ import (
 // Tab represents a browser tab as obtained from the chrome.tabs API.
 // See https://developer.chrome.com/docs/extensions/reference/tabs/#type-Tab
 type Tab struct {
-	ID     int    `json:"ID"`
-	Index  int    `json:"index"`
-	Title  string `json:"title"`
-	URL    string `json:"url"`
-	Active bool   `json:"active"`
+	ID        int    `json:"ID"`
+	Index     int    `json:"index"`
+	Title     string `json:"title"`
+	URL       string `json:"url"`
+	Active    bool   `json:"active"`
+	Discarded bool   `json:"discarded"`
 }
 
 // CurrentTabs returns the tabs of the current browser window.
