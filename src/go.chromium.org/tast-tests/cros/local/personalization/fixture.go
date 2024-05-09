@@ -70,6 +70,8 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 			"assistive-eng@google.com",
 		},
+		// ChromeOS > Software > Personalization
+		BugComponent:    "b:1006527",
 		Impl:            &clamshellFixture{},
 		Parent:          "personalizationWithGaiaLogin",
 		SetUpTimeout:    chrome.GAIALoginTimeout,
@@ -191,6 +193,8 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 			"cowmoo@google.com",
 		},
+		// ChromeOS > Software > Personalization
+		BugComponent:    "b:1006527",
 		Impl:            &clamshellFixture{},
 		Parent:          "personalizationScreenSaver",
 		SetUpTimeout:    chrome.GAIALoginTimeout,
@@ -225,6 +229,8 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 			"jasontt@google.com",
 		},
+		// ChromeOS > Software > Personalization
+		BugComponent:    "b:1006527",
 		Impl:            &clamshellFixture{},
 		Parent:          "personalizationWithTimeOfDayFeature",
 		SetUpTimeout:    chrome.GAIALoginTimeout,

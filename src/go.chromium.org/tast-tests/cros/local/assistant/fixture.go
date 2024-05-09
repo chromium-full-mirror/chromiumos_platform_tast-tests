@@ -184,7 +184,9 @@ func init() {
 			"yawano@google.com",
 			"assistive-eng@google.com",
 		},
-		Parent: "assistantBase",
+		// ChromeOS > Software > Assistive
+		BugComponent: "b:905229",
+		Parent:       "assistantBase",
 		Impl: NewAssistantFixture(func(s *testing.FixtState) FixtData {
 			return FixtData{
 				Chrome: s.ParentValue().(chrome.HasChrome).Chrome(),
@@ -201,7 +203,9 @@ func init() {
 			"assitive-eng@google.com",
 			"yawano@google.com",
 		},
-		Parent: "assistantBaseWithStartAudioDecoderOnDemand",
+		// ChromeOS > Software > Assistive
+		BugComponent: "b:905229",
+		Parent:       "assistantBaseWithStartAudioDecoderOnDemand",
 		Impl: NewAssistantFixture(func(s *testing.FixtState) FixtData {
 			return FixtData{
 				Chrome: s.ParentValue().(chrome.HasChrome).Chrome(),
@@ -218,6 +222,8 @@ func init() {
 			"assitive-eng@google.com",
 			"yawano@google.com",
 		},
+		// ChromeOS > Software > Assistive
+		BugComponent:    "b:905229",
 		Parent:          "assistant",
 		Impl:            newTabletFixture(false),
 		SetUpTimeout:    setUpTimeout,
@@ -231,7 +237,9 @@ func init() {
 			"assitive-eng@google.com",
 			"yawano@google.com",
 		},
-		Parent: "assistantBaseWithPlayStore",
+		// ChromeOS > Software > Assistive
+		BugComponent: "b:905229",
+		Parent:       "assistantBaseWithPlayStore",
 		Impl: NewAssistantFixture(func(s *testing.FixtState) FixtData {
 			preData := s.ParentValue().(*arc.PreData)
 			return FixtData{
@@ -250,6 +258,8 @@ func init() {
 			"assitive-eng@google.com",
 			"yawano@google.com",
 		},
+		// ChromeOS > Software > Assistive
+		BugComponent:   "b:905229",
 		Parent:         "assistantClamshell",
 		Impl:           newPerfFixture(),
 		PreTestTimeout: perfFixturePreTestTimeout,
@@ -262,6 +272,8 @@ func init() {
 			"assitive-eng@google.com",
 			"yawano@google.com",
 		},
+		// ChromeOS > Software > Assistive
+		BugComponent:   "b:905229",
 		Parent:         "assistant",
 		Impl:           newPerfFixture(),
 		PreTestTimeout: perfFixturePreTestTimeout,
@@ -274,7 +286,9 @@ func init() {
 			"assitive-eng@google.com",
 			"yawano@google.com",
 		},
-		Parent: "assistantBaseWithHotword",
+		// ChromeOS > Software > Assistive
+		BugComponent: "b:905229",
+		Parent:       "assistantBaseWithHotword",
 		Impl: NewAssistantFixture(func(s *testing.FixtState) FixtData {
 			return FixtData{
 				Chrome: s.ParentValue().(chrome.HasChrome).Chrome(),
@@ -291,7 +305,9 @@ func init() {
 			"assitive-eng@google.com",
 			"yawano@google.com",
 		},
-		Parent: "assistantWithHotword",
+		// ChromeOS > Software > Assistive
+		BugComponent: "b:905229",
+		Parent:       "assistantWithHotword",
 		Impl: NewAudioBoxFixture(func(s *testing.FixtState) AudioBoxFixtData {
 			fixtData := s.ParentValue().(*FixtData)
 			return AudioBoxFixtData{
@@ -331,7 +347,9 @@ func init() {
 			"assistive-eng@google.com",
 			"wutao@google.com",
 		},
-		Parent: "assistantBaseWithGaia",
+		// ChromeOS > Software > Assistive
+		BugComponent: "b:905229",
+		Parent:       "assistantBaseWithGaia",
 		Impl: NewAssistantFixture(func(s *testing.FixtState) FixtData {
 			return FixtData{
 				Chrome: s.ParentValue().(chrome.HasChrome).Chrome(),
