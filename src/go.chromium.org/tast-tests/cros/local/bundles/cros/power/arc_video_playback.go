@@ -362,13 +362,17 @@ func ARCVideoPlayback(ctx context.Context, s *testing.State) {
 // convertAppVersionToFloat converts the app version from string to float
 // for easier comparisons within the power dashboard.
 func convertAppVersionToFloat(appVersion string) (float64, error) {
-	// The version format of ExoPlayer app is "1.4.0-alpha01".
-	// Replace the "-alpha" with "." to convert it to float.
-	const exoplayerVerStr = "-alpha"
-	appVersion = strings.Replace(appVersion, exoplayerVerStr, ".", 1)
+	// Only keep major.minor.patch of the app version and disgard pre-release label
+	// if there is one. For example, for "1.4.0-alpha01", we only keep "1.4.0".
+	transformedAppVersion := strings.Split(appVersion, "-")[0]
+	// Pad the app version if minor or patch is missing. For example, "1.4" will
+	// be padded as "1.4.0".
+	for count := strings.Count(transformedAppVersion, "."); count < 2; count++ {
+		transformedAppVersion = transformedAppVersion + ".0"
+	}
 
 	var appVersionNum float64
-	appVersionSlice := strings.Split(appVersion, ".")
+	appVersionSlice := strings.Split(transformedAppVersion, ".")
 	for _, n := range appVersionSlice {
 		num, err := strconv.ParseFloat(n, 64)
 		if err != nil {
