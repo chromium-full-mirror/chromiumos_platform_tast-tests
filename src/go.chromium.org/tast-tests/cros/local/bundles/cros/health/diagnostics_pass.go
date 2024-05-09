@@ -108,12 +108,6 @@ func init() {
 			Val:     croshealthd.NewRoutineParams(croshealthd.RoutineMemory),
 			Fixture: "crosHealthdRunningAndRebootDUT",
 		}, {
-			// Contact: byronlee@google.com
-			Name:      "sensitive_sensor",
-			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineSensitiveSensor),
-			Fixture:   "crosHealthdRunning",
-			ExtraAttr: []string{"informational"},
-		}, {
 			// Contact: kerker@google.com
 			Name:              "fingerprint",
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineFingerprint),

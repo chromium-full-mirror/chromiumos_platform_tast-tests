@@ -112,13 +112,6 @@ func init() {
 			Val:     croshealthd.NewRoutineParams(croshealthd.RoutineHTTPSLatency),
 			Fixture: "crosHealthdRunning",
 		}, {
-			// Contact: byronlee@google.com
-			Name:    "sensitive_sensor",
-			Val:     croshealthd.NewRoutineParams(croshealthd.RoutineSensitiveSensor),
-			Fixture: "crosHealthdRunning",
-			// TODO(b/280388091): Promote to critical.
-			ExtraAttr: []string{"informational"},
-		}, {
 			// Contact: dennyh@google.com
 			Name:              "emmc_lifetime",
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineEMMCLifetime),
