@@ -76,9 +76,9 @@ func BrokenToDev(ctx context.Context, s *testing.State) {
 	if err := h.DUT.Conn().CommandContext(ctx, "crossystem", "recovery_request=193").Run(); err != nil {
 		s.Fatal("Failed to set crossystem recovery_request to 193: ", err)
 	}
-	s.Log("Rebooting the DUT with a warm reset")
-	if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
-		s.Fatal("Failed to warm reset the DUT: ", err)
+	s.Log("Rebooting the DUT")
+	if err := h.DUT.Conn().CommandContext(ctx, "reboot").Run(); err != nil && !errors.As(err, &context.DeadlineExceeded) {
+		s.Fatal("Failed to run reboot command: ", err)
 	}
 	waitDisconnectCtx, cancelWaitDisconnect := context.WithTimeout(ctx, 1*time.Minute)
 	defer cancelWaitDisconnect()
