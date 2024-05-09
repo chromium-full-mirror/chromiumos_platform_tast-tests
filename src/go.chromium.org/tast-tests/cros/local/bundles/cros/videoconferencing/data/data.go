@@ -5,6 +5,15 @@
 // Package data provides file names for test data.
 package data
 
-// SpeechInputFile is a WAVE file containing 2.090667 seconds of speech of the
-// English word "hello".
-const SpeechInputFile = "voice_en_hello.wav"
+const (
+	// SpeechInputFile is a WAVE file containing 2.090667 seconds of speech of the
+	// English word "hello".
+	SpeechInputFile = "voice_en_hello.wav"
+
+	// BackgroundImageDirname is the directory to put the background images.
+	BackgroundImageDirname = "custom-camera-backgrounds/original"
+	// BackgroundImageJpg is the background image filename.
+	BackgroundImageJpg = "3162101071.jpg"
+	// BackgroundMetadata is the metadata file name of the background image.
+	BackgroundMetadata = "3162101071.jpg.metadata"
+)

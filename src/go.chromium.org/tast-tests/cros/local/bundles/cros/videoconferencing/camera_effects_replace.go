@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/tbdep"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/data"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/fakehtml"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
@@ -36,12 +37,9 @@ import (
 )
 
 const (
-	backgroundImageDirname = "custom-camera-backgrounds/original"
-	backgroundImageJpg     = "3162101071.jpg"
-	backgroundMetadata     = "3162101071.jpg.metadata"
-	percentageNotChanged   = 0.25
-	percentageChanged      = 0.55
-	vcBackgroundAppWindow  = "Camera Background"
+	percentageNotChanged  = 0.25
+	percentageChanged     = 0.55
+	vcBackgroundAppWindow = "Camera Background"
 )
 
 func init() {
@@ -65,8 +63,8 @@ func init() {
 		Data: []string{
 			"effects_frame_metrics.js",
 			"effects_video_script.html",
-			backgroundImageJpg,
-			backgroundMetadata,
+			data.BackgroundImageJpg,
+			data.BackgroundMetadata,
 		},
 		Fixture: fixture.LoggedInWithFakeHALAndEffectsEnabledNoScreenRecorder,
 	})
@@ -139,23 +137,23 @@ func CameraEffectsReplace(ctx context.Context, s *testing.State) {
 		s.Fatal("Fail to grab camera screen shot before: ", err)
 	}
 
-	// Copy background image and metadata to the backgroundImageDirname to apply.
+	// Copy background image and metadata to the BackgroundImageDirname to apply.
 	userPath, err := cryptohome.UserPath(ctx, cr.NormalizedUser())
 	if err != nil {
 		s.Fatal("Failed to get user's userPath path: ", err)
 	}
 
-	imagePath := filepath.Join(userPath, backgroundImageDirname)
+	imagePath := filepath.Join(userPath, data.BackgroundImageDirname)
 
 	if err := os.MkdirAll(imagePath, 0777); err != nil {
 		s.Fatal("Failed to create image path: ", err)
 	}
 	if err := fsutil.CopyFile(
-		s.DataPath(backgroundImageJpg), filepath.Join(imagePath, backgroundImageJpg)); err != nil {
+		s.DataPath(data.BackgroundImageJpg), filepath.Join(imagePath, data.BackgroundImageJpg)); err != nil {
 		s.Fatal("Failed to copy image to custom-camera-backgrounds: ", err)
 	}
 	if err := fsutil.CopyFile(
-		s.DataPath(backgroundMetadata), filepath.Join(imagePath, backgroundMetadata)); err != nil {
+		s.DataPath(data.BackgroundMetadata), filepath.Join(imagePath, data.BackgroundMetadata)); err != nil {
 		s.Fatal("Failed to copy metadata to custom-camera-backgrounds: ", err)
 	}
 

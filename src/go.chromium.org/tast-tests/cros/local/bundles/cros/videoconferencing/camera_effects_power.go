@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/tbdep"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/data"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/fakehtml"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -28,9 +29,6 @@ import (
 )
 
 const (
-	backgroundImageDir  = "custom-camera-backgrounds/original" // relative path in user path to store background images.
-	backgroundImageFile = "camera_background.jpg"
-
 	testDuration = 5 * time.Minute
 )
 
@@ -64,7 +62,8 @@ func init() {
 		Data: []string{
 			"effects_frame_metrics.js",
 			"effects_video_script.html",
-			backgroundImageFile,
+			data.BackgroundImageJpg,
+			data.BackgroundMetadata,
 		},
 		Fixture: fixture.PowerLoggedInWithFakeHALAndEffectsEnabledNoScreenRecorder,
 		Params: []testing.Param{
@@ -149,14 +148,18 @@ func CameraEffectsPower(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to get user's userPath path: ", err)
 		}
 
-		imagePath := filepath.Join(userPath, backgroundImageDir)
+		imagePath := filepath.Join(userPath, data.BackgroundImageDirname)
 
 		if err := os.MkdirAll(imagePath, 0777); err != nil {
 			s.Fatal("Failed to create image path: ", err)
 		}
 		if err := fsutil.CopyFile(
-			s.DataPath(backgroundImageFile), filepath.Join(imagePath, backgroundImageFile)); err != nil {
-			s.Fatal("Failed to copy file to custom-camera-backgrounds: ", err)
+			s.DataPath(data.BackgroundImageJpg), filepath.Join(imagePath, data.BackgroundImageJpg)); err != nil {
+			s.Fatal("Failed to copy image to custom-camera-backgrounds: ", err)
+		}
+		if err := fsutil.CopyFile(
+			s.DataPath(data.BackgroundMetadata), filepath.Join(imagePath, data.BackgroundMetadata)); err != nil {
+			s.Fatal("Failed to copy metadata to custom-camera-backgrounds: ", err)
 		}
 	}
 
