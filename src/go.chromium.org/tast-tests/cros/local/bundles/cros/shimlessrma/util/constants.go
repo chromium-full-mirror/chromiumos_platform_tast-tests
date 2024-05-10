@@ -5,9 +5,8 @@
 // Package util contains RMAResources which manges Shimless RMA resources.
 package util
 
-// ShimlessRmaEnabledModels are models with Shimless RMA support.
-// TODO(jeffulin): Add stable model list for critical tests.
-var ShimlessRmaEnabledModels = []string{
+// ShimlessRmaEnabledModelsCritical are models with Shimless RMA support and stable in staging.
+var ShimlessRmaEnabledModelsCritical = []string{
 	// octopus
 	"fleex",
 	"vortininja",
@@ -77,8 +76,6 @@ var ShimlessRmaEnabledModels = []string{
 	// dedede
 	"bookem",
 	"boten",
-	"cret",
-	"cret360",
 	"maglia",
 	"maglith",
 	"magolor",
@@ -88,3 +85,6 @@ var ShimlessRmaEnabledModels = []string{
 	"craaskvin",
 	"pujjo",
 	"pujjoteen"}
+
+// ShimlessRmaEnabledModelsStaging are models with Shimless RMA support and pending to be enlisted to critical model list.
+var ShimlessRmaEnabledModelsStaging = []string{}

@@ -33,12 +33,14 @@ func init() {
 			"ui.signinProfileTestExtensionManifestKey",
 		},
 		SoftwareDeps: []string{"chrome"},
-		HardwareDeps: hwdep.D(hwdep.Model(util.ShimlessRmaEnabledModels...)),
 		Timeout:      5 * time.Minute,
-		// TODO(jeffulin): Add critical parameters when staging results found stable.
 		Params: []testing.Param{{
-			Name:      "staging",
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			Name:              "critical",
+			ExtraHardwareDeps: hwdep.D(hwdep.Model(util.ShimlessRmaEnabledModelsCritical...)),
+		}, {
+			Name:              "staging",
+			ExtraHardwareDeps: hwdep.D(hwdep.Model(util.ShimlessRmaEnabledModelsStaging...)),
+			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 		}},
 	})
 }
