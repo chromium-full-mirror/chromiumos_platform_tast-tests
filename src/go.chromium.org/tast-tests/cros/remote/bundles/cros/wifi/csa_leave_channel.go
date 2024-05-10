@@ -32,7 +32,7 @@ func init() {
 		Attr:            []string{"group:wificell", "wificell_func"},
 		TestBedDeps:     []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
 		ServiceDeps:     []string{wificell.ShillServiceName},
-		Fixture:         wificell.FixtureID(wificell.TFFeaturesNone),
+		Fixture:         wificell.FixtureID(wificell.TFFeaturesCapture),
 		Requirements:    []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
 		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 	})
