@@ -44,7 +44,6 @@ func init() {
 		Desc:         "Verifies crash reporting for user processes",
 		Contacts: []string{
 			"chromeos-data-eng@google.com",
-			"yamaguchi@chromium.org",
 			"arc-performance@google.com",
 		},
 		BugComponent: "b:1032705",

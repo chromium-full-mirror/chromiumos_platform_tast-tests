@@ -30,7 +30,6 @@ func init() {
 		Desc:         "Verifies crash reporter after reboot",
 		Contacts: []string{
 			"chromeos-data-eng@google.com",
-			"yamaguchi@chromium.org",
 			"arc-performance@google.com",
 		},
 		BugComponent: "b:1032705",

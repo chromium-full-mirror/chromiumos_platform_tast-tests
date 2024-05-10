@@ -620,7 +620,7 @@ func RunCrashTest(ctx context.Context, s *testing.State, testFunc func(context.C
 	}()
 
 	// Ignore process-not-found error.
-	// TODO(yamaguchi): Refactor to this after Go version >= 1.12
+	// TODO: Refactor to this after Go version >= 1.12
 	// (*cmd.ProcessState).ExitCode()
 	if err := testexec.CommandContext(ctx, "pkill", "-9", "-e", "crash_sender").Run(); err != nil {
 		e, ok := err.(*exec.ExitError)
