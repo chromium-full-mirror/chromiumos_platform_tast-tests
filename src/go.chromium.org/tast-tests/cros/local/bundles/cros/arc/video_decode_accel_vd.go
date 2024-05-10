@@ -10,9 +10,9 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast-tests/cros/local/arc"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/arc/c2e2etest"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/arc/video"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/media/arc/c2e2etest"
+	"go.chromium.org/tast-tests/cros/local/media/arc/video"
 	"go.chromium.org/tast/core/testing"
 )
 
