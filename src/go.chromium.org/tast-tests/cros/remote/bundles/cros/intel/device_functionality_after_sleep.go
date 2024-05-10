@@ -136,6 +136,7 @@ func DeviceFunctionalityAfterSleep(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to perform Long duration System Idle: ", err)
 		}
 	}
+	defer resetPowerPolicy(ctx, h)
 
 	waitCtx, cancelWaitConnectShort := context.WithTimeout(ctx, 1*time.Minute)
 	defer cancelWaitConnectShort()
@@ -247,7 +248,6 @@ func performSystemIdle(ctx context.Context, h *firmware.Helper, isLongDuration b
 	if err := setPowerPolicy(ctx, h); err != nil {
 		return errors.Wrap(err, "failed to setup power policy")
 	}
-	defer resetPowerPolicy(ctx, h)
 
 	if isLongDuration {
 		testing.ContextLog(ctx, "Keeping DUT undisturbed for 10 minutes")
