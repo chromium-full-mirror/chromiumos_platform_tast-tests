@@ -31,15 +31,13 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           VPNAreUserSpecified,
 		LacrosStatus:   testing.LacrosVariantUnneeded,
-		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LifeCycleStage: testing.LifeCycleInDevelopment,
 		Desc:           "Verify VPN networks added are user specific",
 		Contacts: []string{
-			// "cros-connectivity@google.com",
-			// "chromeos-connectivity-engprod@google.com",
-			"edgar.chang@cienet.com",
+			"alfredyu@cienet.com",
 			"chromeos-connectivity-cienet-external@google.com",
 		},
-		BugComponent: "b:1318544", // ChromeOS > Software > System Services > Connectivity > General
+		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
 		Attr:         []string{"group:network", "network_e2e_unstable"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "vpnEnv",

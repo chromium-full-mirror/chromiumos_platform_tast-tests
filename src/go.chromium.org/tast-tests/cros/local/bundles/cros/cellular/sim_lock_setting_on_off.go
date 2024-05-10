@@ -21,14 +21,14 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           SimLockSettingOnOff,
 		LacrosStatus:   testing.LacrosVariantUnneeded,
-		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LifeCycleStage: testing.LifeCycleInDevelopment,
 		Desc:           "Checks that SIM Lock in Settings PIN locks and unlocks the SIM",
 		Contacts: []string{
-			"cros-connectivity@google.com",
-			"hsuregan@google.com",
+			"alfredyu@cienet.com",
+			"chromeos-connectivity-cienet-external@google.com",
 		},
 		SoftwareDeps: []string{"chrome"},
-		BugComponent: "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular
+		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
 		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_pinlock", "cellular_e2e"},
 		Fixture:      "cellularSIMLockCleared",
 	})

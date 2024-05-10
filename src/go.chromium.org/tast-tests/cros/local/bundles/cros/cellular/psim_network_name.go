@@ -21,12 +21,13 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           PSimNetworkName,
 		LacrosStatus:   testing.LacrosVariantUnneeded,
-		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LifeCycleStage: testing.LifeCycleInDevelopment,
 		Desc:           "Tests the network name on non-connected psim",
 		Contacts: []string{
-			"cros-connectivity@google.com",
+			"alfredyu@cienet.com",
+			"chromeos-connectivity-cienet-external@google.com",
 		},
-		BugComponent: "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular
+		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_active"},
 		Fixture:      "cellularWithChrome",

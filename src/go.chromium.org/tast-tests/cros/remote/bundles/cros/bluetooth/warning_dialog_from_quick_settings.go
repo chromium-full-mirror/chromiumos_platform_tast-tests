@@ -26,14 +26,14 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           WarningDialogFromQuickSettings,
 		LacrosStatus:   testing.LacrosVariantUnneeded,
-		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LifeCycleStage: testing.LifeCycleInDevelopment,
 		Desc:           "Checks that a bluetooth mouse can be used to complete OOBE",
 		Contacts: []string{
-			"cros-connectivity@google.com",
-			"tjohnsonkanu@google.com",
+			"alfredyu@cienet.com",
+			"chromeos-connectivity-cienet-external@google.com",
 		},
 		VarDeps:      []string{"servo"},
-		BugComponent: "b:1131776", // ChromeOS > Software > System Services > Connectivity > Bluetooth
+		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
 		Attr:         []string{"group:bluetooth"},
 		TestBedDeps:  []string{tbdep.Wificell, tbdep.BluetoothStateNormal, tbdep.WorkingBluetoothPeers(2)},
 		SoftwareDeps: []string{"chrome"},

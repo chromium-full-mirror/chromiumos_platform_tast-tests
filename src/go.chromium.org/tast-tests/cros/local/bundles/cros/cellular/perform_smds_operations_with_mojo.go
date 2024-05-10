@@ -25,14 +25,13 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           PerformSmdsOperationsWithMojo,
 		LacrosStatus:   testing.LacrosVariantUnneeded,
-		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LifeCycleStage: testing.LifeCycleInDevelopment,
 		Desc:           "An API test that performs SMDS eSIM operations on a test eSIM to validate the logic for the subset of functions in the esim_manager Mojo API (RequestAvailableProfiles, InstallProfileFromActivationCode)",
 		Contacts: []string{
-			"cros-connectivity@google.com",
-			"chadduffin@google.com",
-			"khegde@google.com",
+			"alfredyu@cienet.com",
+			"chromeos-connectivity-cienet-external@google.com",
 		},
-		BugComponent: "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular
+		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
 		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_test_esim"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedInWithMojoTestEuiccAndSmdsSupport",

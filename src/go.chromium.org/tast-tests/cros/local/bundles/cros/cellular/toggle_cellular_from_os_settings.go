@@ -17,13 +17,13 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           ToggleCellularFromOSSettings,
 		LacrosStatus:   testing.LacrosVariantUnneeded,
-		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LifeCycleStage: testing.LifeCycleInDevelopment,
 		Desc:           "Checks that Cellular can be enabled and disabled from the OS Settings",
 		Contacts: []string{
-			"cros-connectivity@google.com",
-			"nikhilcn@google.com",
+			"alfredyu@cienet.com",
+			"chromeos-connectivity-cienet-external@google.com",
 		},
-		BugComponent: "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular
+		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_active"},
 		Fixture:      "cellularE2ELocal",

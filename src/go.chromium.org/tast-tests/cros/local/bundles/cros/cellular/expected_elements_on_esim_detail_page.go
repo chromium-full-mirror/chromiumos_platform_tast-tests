@@ -22,13 +22,13 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           ExpectedElementsOnESimDetailPage,
 		LacrosStatus:   testing.LacrosVariantUnneeded,
-		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LifeCycleStage: testing.LifeCycleInDevelopment,
 		Desc:           "Tests that expected elements are shown on the detail view page of an eSIM profile",
 		Contacts: []string{
-			"cros-connectivity@google.com",
-			"hsuregan@google.com",
+			"alfredyu@cienet.com",
+			"chromeos-connectivity-cienet-external@google.com",
 		},
-		BugComponent: "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular
+		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
 		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_prod_esim"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "cellular",

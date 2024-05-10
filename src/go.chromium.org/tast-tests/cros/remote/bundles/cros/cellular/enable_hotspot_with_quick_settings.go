@@ -25,13 +25,13 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           EnableHotspotWithQuickSettings,
 		LacrosStatus:   testing.LacrosVariantUnneeded,
-		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LifeCycleStage: testing.LifeCycleInDevelopment,
 		Desc:           "Tests that hotspot can be turned on and off with quick settings",
 		Contacts: []string{
-			"cros-connectivity@google.com",
-			"jiajunz@google.com",
+			"alfredyu@cienet.com",
+			"chromeos-connectivity-cienet-external@google.com",
 		},
-		BugComponent: "b:1281224", // ChromeOS > Software > System Services > Connectivity > Hotspot
+		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
 		Attr:         []string{"group:wificell_cross_device", "wificell_cross_device_sap", "wificell_cross_device_unstable"},
 		TestBedDeps:  []string{tbdep.Wificell, tbdep.PeripheralWifiStateWorking},
 		ServiceDeps: []string{

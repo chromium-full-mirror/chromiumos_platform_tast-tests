@@ -30,13 +30,13 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           SimLockPolicyLockSettingOn,
 		LacrosStatus:   testing.LacrosVariantUnneeded,
-		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LifeCycleStage: testing.LifeCycleInDevelopment,
 		Desc:           "Test the notification flow that's triggered when the 'Lock SIM' setting is turned on before the policy is turned on",
 		Contacts: []string{
-			"cros-connectivity@google.com",
-			"hsuregan@google.com",
+			"alfredyu@cienet.com",
+			"chromeos-connectivity-cienet-external@google.com",
 		},
-		BugComponent: "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular
+		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:cellular", "cellular_sim_pinlock", "cellular_e2e"},
 		Fixture:      "cellularWithFakeDMSEnrolledAndSIMLockCleared",

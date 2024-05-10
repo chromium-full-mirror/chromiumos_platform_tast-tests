@@ -22,10 +22,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests the correct connect behavior for a custom APN that needs to be enabled as default and attach is created separately",
 		Contacts: []string{
-			"cros-connectivity@google.com",
-			"hsuregan@google.com",
+			"alfredyu@cienet.com",
+			"chromeos-connectivity-cienet-external@google.com",
 		},
-		BugComponent: "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular
+		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
 		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_active", "cellular_e2e", "cellular_carrier_dependent", "cellular_carrier_softbank"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "cellularResetShillProfileOnPostTest",

@@ -31,14 +31,13 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           MigrateManagedUnselectedApn,
 		LacrosStatus:   testing.LacrosVariantUnneeded,
-		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LifeCycleStage: testing.LifeCycleInDevelopment,
 		Desc:           "Tests the correctness of the UI for a managed network's unselected APN that is migrated to the new UI",
 		Contacts: []string{
-			"cros-connectivity@google.com",
-			"gordonseto@google.com",
-			"hsuregan@google.com",
+			"alfredyu@cienet.com",
+			"chromeos-connectivity-cienet-external@google.com",
 		},
-		BugComponent: "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular
+		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:cellular", "cellular_sim_prod_esim", "cellular_e2e"},
 		Fixture:      "cellularWithFakeDMSEnrolled",

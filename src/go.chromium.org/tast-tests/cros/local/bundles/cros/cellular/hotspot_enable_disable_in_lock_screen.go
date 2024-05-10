@@ -25,13 +25,13 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           HotspotEnableDisableInLockScreen,
 		LacrosStatus:   testing.LacrosVariantUnneeded,
-		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LifeCycleStage: testing.LifeCycleInDevelopment,
 		Desc:           "Test hotspot can be accessed and controled in lock screen through Quick Settings",
 		Contacts: []string{
-			"cros-connectivity@google.com",
-			"jiajunz@google.com",
+			"alfredyu@cienet.com",
+			"chromeos-connectivity-cienet-external@google.com",
 		},
-		BugComponent: "b:1281224", // ChromeOS > Software > System Services > Connectivity > Hotspot
+		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
 		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_active", "cellular_carrier_dependent"},
 		HardwareDeps: hwdep.D(hwdep.WifiSAP()),
 		SoftwareDeps: []string{"chrome", "hotspot"},

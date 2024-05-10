@@ -30,15 +30,13 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           ControlAutoconnectWithUI,
 		LacrosStatus:   testing.LacrosVariantUnneeded,
-		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LifeCycleStage: testing.LifeCycleInDevelopment,
 		Desc:           "Verify user should be able to specify whether or not a particular network can auto-connect after turning WiFi off/on, rebooting and waking up from sleep",
 		Contacts: []string{
-			// "cros-connectivity@google.com",
-			// "chromeos-connectivity-engprod@google.com",
 			"alfredyu@cienet.com",
 			"chromeos-connectivity-cienet-external@google.com",
 		},
-		BugComponent: "b:1131912", // ChromeOS > Software > System Services > Connectivity > WiFi
+		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
 		Attr:         []string{"group:wificell", "wificell_e2e_unstable"},
 		TestBedDeps:  []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.PeripheralWifiStateWorking},
 		ServiceDeps: []string{

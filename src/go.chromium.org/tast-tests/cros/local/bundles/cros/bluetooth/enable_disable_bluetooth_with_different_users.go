@@ -36,13 +36,13 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           EnableDisableBluetoothWithDifferentUsers,
 		LacrosStatus:   testing.LacrosVariantUnneeded,
-		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LifeCycleStage: testing.LifeCycleInDevelopment,
 		Desc:           "Checks that the Bluetooth adapter state preference is preserved for the device and users",
 		Contacts: []string{
-			"cros-connectivity@google.com",
-			"gordonseto@google.com",
+			"alfredyu@cienet.com",
+			"chromeos-connectivity-cienet-external@google.com",
 		},
-		BugComponent: "b:1131776", // ChromeOS > Software > System Services > Connectivity > Bluetooth
+		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
 		Attr:         []string{"group:bluetooth"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.Bluetooth()),

@@ -44,13 +44,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify that user can turn Bluetooth on with an ARC++ app",
 		Contacts: []string{
-			// "cros-connectivity@google.com",
-			// "chromeos-connectivity-engprod@google.com",
 			"kinwang.lao@cienet.com",
 			"chromeos-connectivity-cienet-external@google.com",
 		},
 		// ChromeOS > Software > System Services > Connectivity > Bluetooth
-		BugComponent:   "b:1131776",
+		BugComponent:   "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
 		LifeCycleStage: testing.LifeCycleInDevelopment,
 		Attr:           []string{"group:bluetooth"},
 		SoftwareDeps:   []string{"chrome", "arc"},
