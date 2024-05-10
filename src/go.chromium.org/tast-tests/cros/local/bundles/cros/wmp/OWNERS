@@ -1,0 +1,13 @@
+# Copyright 2024 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+set noparent
+
+# ChromeOS WM Team
+xdai@google.com
+dandersson@google.com
+sammiequon@google.com
+zxdan@google.com
+
+# Tast Owners
+include /OWNERS.tast
