@@ -227,9 +227,10 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     fixture.LacrosPolicyLoggedInFilesUXEnabled,
-		Desc:     "Logged into a user session with files new policy UX enabled",
-		Contacts: []string{"ayaelattar@google.com", "chromeos-commercial-remote-management@google.com"},
+		Name:         fixture.LacrosPolicyLoggedInFilesUXEnabled,
+		Desc:         "Logged into a user session with files new policy UX enabled",
+		Contacts:     []string{"ayaelattar@google.com", "chromeos-commercial-remote-management@google.com"},
+		BugComponent: "b:1111617", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Policy Stack
 		Impl: &policyChromeFixture{
 			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 				return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(chrome.EnableFeatures("NewFilesPolicyUX"))).Opts()
