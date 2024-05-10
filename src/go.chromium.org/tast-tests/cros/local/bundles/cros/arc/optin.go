@@ -55,7 +55,7 @@ func init() {
 			},
 			{
 				Name:              "fieldtrial_testing_config_on",
-				ExtraAttr:         []string{"informational"},
+				ExtraAttr:         []string{"informational", "group:chrome_uprev_cbx"},
 				ExtraSoftwareDeps: []string{"android_container"},
 				Val:               optinTestArgs{preprod: false, fieldTrialConfig: chrome.FieldTrialConfigEnable},
 			},
@@ -79,7 +79,7 @@ func init() {
 			},
 			{
 				Name:              "fieldtrial_testing_config_on_x",
-				ExtraAttr:         []string{"informational"},
+				ExtraAttr:         []string{"informational", "group:chrome_uprev_cbx"},
 				ExtraSoftwareDeps: []string{"android_vm_t"},
 				Val:               optinTestArgs{preprod: false, fieldTrialConfig: chrome.FieldTrialConfigEnable},
 			},

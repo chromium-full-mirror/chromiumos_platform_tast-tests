@@ -89,6 +89,7 @@ func init() {
 			},
 			Fixture:           localcrash.LoggedInRealConsentFieldTrialConfigEnable,
 			ExtraSoftwareDeps: []string{"chrome", "metrics_consent"},
+			ExtraAttr:         []string{"group:chrome_uprev_cbx"},
 		}, {
 			Name: "chronos_crasher_mock_consent_fieldtrial_testing_config_off",
 			Val: userCrashParams{
@@ -103,6 +104,7 @@ func init() {
 			},
 			Fixture:           localcrash.MockConsentFieldTrialConfigEnable,
 			ExtraSoftwareDeps: []string{"chrome"},
+			ExtraAttr:         []string{"group:chrome_uprev_cbx"},
 		}, {
 			Name: "chronos_crasher_no_consent_fieldtrial_testing_config_off",
 			Val: userCrashParams{
@@ -117,6 +119,7 @@ func init() {
 			},
 			Fixture:           localcrash.LoggedInNoConsentFieldTrialConfigEnable,
 			ExtraSoftwareDeps: []string{"chrome", "metrics_consent"},
+			ExtraAttr:         []string{"group:chrome_uprev_cbx"},
 		}, {
 			Name: "root_crasher_real_consent",
 			Val: userCrashParams{
@@ -138,6 +141,7 @@ func init() {
 			},
 			Fixture:           localcrash.MockConsentFieldTrialConfigEnable,
 			ExtraSoftwareDeps: []string{"chrome"},
+			ExtraAttr:         []string{"group:chrome_uprev_cbx"},
 		}, {
 			Name: "root_crasher_no_consent",
 			Val: userCrashParams{

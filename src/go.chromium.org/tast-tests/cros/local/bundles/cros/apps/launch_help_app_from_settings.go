@@ -38,7 +38,7 @@ func init() {
 			}, {
 				Name:              "stable_fieldtrial_testing_config_on",
 				ExtraHardwareDeps: hwdep.D(pre.AppsStableModels),
-				ExtraAttr:         []string{"group:mainline"},
+				ExtraAttr:         []string{"group:mainline", "group:chrome_uprev_cbx"},
 				Fixture:           fixture.LoggedInFieldTrialConfigEnable,
 			}, {
 				Name:              "unstable",

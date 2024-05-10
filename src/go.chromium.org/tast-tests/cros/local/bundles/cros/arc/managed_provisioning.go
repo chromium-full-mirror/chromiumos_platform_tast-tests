@@ -61,7 +61,7 @@ func init() {
 				Name:              "fieldtrial_testing_config_on",
 				Val:               chrome.FieldTrialConfigEnable,
 				ExtraSoftwareDeps: []string{"android_container", "no_qemu"},
-				ExtraAttr:         []string{"informational"},
+				ExtraAttr:         []string{"informational", "group:chrome_uprev_cbx"},
 			},
 			{
 				Name:              "vm",
@@ -84,7 +84,7 @@ func init() {
 				Name:              "fieldtrial_testing_config_on_x",
 				Val:               chrome.FieldTrialConfigEnable,
 				ExtraSoftwareDeps: []string{"android_vm_t", "no_qemu"},
-				ExtraAttr:         []string{"informational"},
+				ExtraAttr:         []string{"informational", "group:chrome_uprev_cbx"},
 			},
 			{
 				Name:              "betty",

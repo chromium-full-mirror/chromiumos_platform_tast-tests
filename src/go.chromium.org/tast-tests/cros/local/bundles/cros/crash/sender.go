@@ -41,8 +41,9 @@ func init() {
 			Name:    "mock_consent_fieldtrial_testing_config_off",
 			Fixture: crash.MockConsentFieldTrialConfigDisable,
 		}, {
-			Name:    "mock_consent_fieldtrial_testing_config_on",
-			Fixture: crash.MockConsentFieldTrialConfigEnable,
+			Name:      "mock_consent_fieldtrial_testing_config_on",
+			Fixture:   crash.MockConsentFieldTrialConfigEnable,
+			ExtraAttr: []string{"group:chrome_uprev_cbx"},
 		}},
 	})
 }

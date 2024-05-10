@@ -52,7 +52,7 @@ func init() {
 			}, {
 				Name:              "clamshell_oobe_stable_fieldtrial_testing_config_on",
 				ExtraHardwareDeps: hwdep.D(pre.AppsStableModels),
-				ExtraAttr:         []string{"group:mainline"},
+				ExtraAttr:         []string{"group:mainline", "group:chrome_uprev_cbx"},
 				Val: testParameters{
 					tabletMode:       false,
 					oobe:             true,
@@ -96,7 +96,7 @@ func init() {
 			}, {
 				Name:              "clamshell_logged_in_stable_fieldtrial_testing_config_on",
 				ExtraHardwareDeps: hwdep.D(pre.AppsStableModels),
-				ExtraAttr:         []string{"group:mainline"},
+				ExtraAttr:         []string{"group:mainline", "group:chrome_uprev_cbx"},
 				Fixture:           fixture.LoggedInFieldTrialConfigEnable,
 				Val: testParameters{
 					tabletMode: false,
@@ -146,7 +146,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(pre.AppsStableModels),
 				Fixture:           fixture.LacrosLoggedInFieldTrialConfigEnable,
 				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				ExtraAttr:         []string{"group:mainline"},
+				ExtraAttr:         []string{"group:mainline", "group:chrome_uprev_cbx"},
 				Val: testParameters{
 					tabletMode: false,
 					oobe:       false,

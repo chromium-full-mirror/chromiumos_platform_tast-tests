@@ -28,7 +28,7 @@ func init() {
 		// ChromeOS > Software > ARC++ > Core > Integration
 		BugComponent: "b:1131321",
 		SoftwareDeps: []string{"chrome"},
-		Timeout: 7 * time.Minute,
+		Timeout:      7 * time.Minute,
 		Params: []testing.Param{
 			{
 				Fixture:           "arcBooted",
@@ -45,7 +45,7 @@ func init() {
 				Name:              "fieldtrial_testing_config_on",
 				Fixture:           "arcBooted.fieldtrial_testing_config_on",
 				ExtraSoftwareDeps: []string{"android_container"},
-				ExtraAttr:         []string{"group:mainline", "informational"},
+				ExtraAttr:         []string{"group:mainline", "informational", "group:chrome_uprev_cbx"},
 			},
 			{
 				Name:              "vm",
@@ -63,7 +63,7 @@ func init() {
 				Name:              "fieldtrial_testing_config_on_vm",
 				Fixture:           "arcBooted.fieldtrial_testing_config_on",
 				ExtraSoftwareDeps: []string{"android_vm"},
-				ExtraAttr:         []string{"group:mainline", "informational"},
+				ExtraAttr:         []string{"group:mainline", "informational", "group:chrome_uprev_cbx"},
 			}},
 	})
 }

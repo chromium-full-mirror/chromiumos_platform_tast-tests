@@ -52,7 +52,7 @@ func init() {
 					isOOBE:           true,
 					fieldTrialConfig: chrome.FieldTrialConfigEnable,
 				},
-				ExtraAttr: []string{"group:mainline"},
+				ExtraAttr: []string{"group:mainline", "group:chrome_uprev_cbx"},
 			}, {
 				Name:              "oobe_unstable",
 				ExtraHardwareDeps: hwdep.D(pre.AppsUnstableModels),
@@ -78,7 +78,7 @@ func init() {
 					isOOBE:           false,
 					fieldTrialConfig: chrome.FieldTrialConfigEnable,
 				},
-				ExtraAttr: []string{"group:mainline"},
+				ExtraAttr: []string{"group:mainline", "group:chrome_uprev_cbx"},
 			}, {
 				Name:              "logged_in_unstable",
 				ExtraHardwareDeps: hwdep.D(pre.AppsUnstableModels),
