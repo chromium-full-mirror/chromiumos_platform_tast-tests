@@ -60,6 +60,9 @@ var vcOpts = []chrome.Option{
 	chrome.ExtraArgs("--disable-sync"),
 	// Disable VK should avoid VK randomly shows up.
 	chrome.ExtraArgs("--disable-virtual-keyboard"),
+	// Auto select screen for screen capturing.
+	chrome.ExtraArgs(`--auto-select-desktop-capture-source=display`),
+	chrome.LacrosExtraArgs("--auto-select-desktop-capture-source=Entire screen"),
 	// Disable MemoryUsageInHovercards for lacros tests.
 	chrome.LacrosDisableFeatures("MemoryUsageInHovercards"),
 }
@@ -84,6 +87,7 @@ func init() {
 			"chrome-knowledge-eng@google.com",
 			"xiuwen@google.com",
 		},
+		BugComponent:    "b:187682",
 		Impl:            baseSetupFixture(browser.TypeAsh, nil),
 		Parent:          fixture.AloopLoaded{Channels: 2}.Instance(),
 		SetUpTimeout:    chrome.LoginTimeout,
@@ -100,7 +104,8 @@ func init() {
 			"chrome-knowledge-eng@google.com",
 			"xiuwen@google.com",
 		},
-		Vars: []string{"ui.gaiaPoolDefault"},
+		BugComponent: "b:187682",
+		Vars:         []string{"ui.gaiaPoolDefault"},
 		Impl: baseSetupFixture(browser.TypeAsh, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault"))}, nil
 		}),
@@ -119,8 +124,9 @@ func init() {
 			"chrome-knowledge-eng@google.com",
 			"xiuwen@google.com",
 		},
-		Parent: fixture.AloopLoaded{Channels: 2}.Instance(),
-		Vars:   []string{"ui.gaiaPoolDefault"},
+		BugComponent: "b:187682",
+		Parent:       fixture.AloopLoaded{Channels: 2}.Instance(),
+		Vars:         []string{"ui.gaiaPoolDefault"},
 		Impl: baseSetupFixture(browser.TypeAsh, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
 				chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
@@ -141,7 +147,8 @@ func init() {
 			"chrome-knowledge-eng@google.com",
 			"xiuwen@google.com",
 		},
-		Vars: []string{"ui.gaiaPoolDefault"},
+		BugComponent: "b:187682",
+		Vars:         []string{"ui.gaiaPoolDefault"},
 		Impl: baseSetupFixture(browser.TypeAsh, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
 				chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
@@ -163,6 +170,7 @@ func init() {
 			"chrome-knowledge-eng@google.com",
 			"xiuwen@google.com",
 		},
+		BugComponent:    "b:187682",
 		Impl:            baseSetupFixture(browser.TypeLacros, nil),
 		Parent:          fixture.AloopLoaded{Channels: 2}.Instance(),
 		SetUpTimeout:    chrome.LoginTimeout,
@@ -179,7 +187,8 @@ func init() {
 			"chrome-knowledge-eng@google.com",
 			"xiuwen@google.com",
 		},
-		Vars: []string{"ui.gaiaPoolDefault"},
+		BugComponent: "b:187682",
+		Vars:         []string{"ui.gaiaPoolDefault"},
 		Impl: baseSetupFixture(browser.TypeLacros, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
 				chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
@@ -200,7 +209,8 @@ func init() {
 			"chrome-knowledge-eng@google.com",
 			"xiuwen@google.com",
 		},
-		Vars: []string{"ui.gaiaPoolDefault"},
+		BugComponent: "b:187682",
+		Vars:         []string{"ui.gaiaPoolDefault"},
 		Impl: baseSetupFixture(browser.TypeLacros, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
 				chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
@@ -222,7 +232,8 @@ func init() {
 			"chrome-knowledge-eng@google.com",
 			"xiuwen@google.com",
 		},
-		Vars: []string{"ui.gaiaPoolDefault"},
+		BugComponent: "b:187682",
+		Vars:         []string{"ui.gaiaPoolDefault"},
 		Impl: baseSetupFixture(browser.TypeLacros, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
 				chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
@@ -244,6 +255,7 @@ func init() {
 			"chrome-knowledge-eng@google.com",
 			"xiuwen@google.com",
 		},
+		BugComponent: "b:187682",
 		Impl: baseSetupFixture(browser.TypeAsh, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{chrome.NoLogin()}, nil
 		}),
@@ -262,6 +274,7 @@ func init() {
 			"chrome-knowledge-eng@google.com",
 			"xiuwen@google.com",
 		},
+		BugComponent:    "b:187682",
 		Data:            fakeVCExtensionFiles,
 		Impl:            baseSetupFixtureWithFakeExtension(browser.TypeAsh, nil),
 		Parent:          fixture.AloopLoaded{Channels: 2}.Instance(),
@@ -279,6 +292,7 @@ func init() {
 			"chrome-knowledge-eng@google.com",
 			"xiuwen@google.com",
 		},
+		BugComponent:    "b:187682",
 		Data:            fakeVCExtensionFiles,
 		Impl:            baseSetupFixtureWithFakeExtension(browser.TypeLacros, nil),
 		Parent:          fixture.AloopLoaded{Channels: 2}.Instance(),

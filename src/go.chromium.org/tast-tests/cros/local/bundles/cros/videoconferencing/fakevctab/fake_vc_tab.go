@@ -10,41 +10,23 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"regexp"
-	"time"
+	"strings"
 
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/common"
+	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast/core/testing"
 )
 
 // VcTabUI represents the Fake VC Tab UI.
 // It is usually launched by browersing to fake html.
 type VcTabUI struct {
-	ui  *uiauto.Context
-	br  *browser.Browser
-	url string
+	common.VcWebApp
+	tconn  *chrome.TestConn
+	window *ash.Window
 }
-
-var (
-	vcTabName   = "VcTester"
-	vcTabURL    = "/vc_tester/popup.html"
-	rootWebArea = nodewith.Role(role.RootWebArea).Name(vcTabName)
-
-	startVideoButton           = nodewith.Name("Start Video").Role(role.Button).Ancestor(rootWebArea)
-	stopVideoButton            = nodewith.Name("Stop Video").Role(role.Button).Ancestor(rootWebArea)
-	startAudioButton           = nodewith.Name("Start Audio").Role(role.Button).Ancestor(rootWebArea)
-	stopAudioButton            = nodewith.Name("Stop Audio").Role(role.Button).Ancestor(rootWebArea)
-	startScreenCapturingButton = nodewith.Name("Start Screen Capturing").Role(role.Button).Ancestor(rootWebArea)
-	stopScreenCapturingButton  = nodewith.Name("Stop Screen Capturing").Role(role.Button).Ancestor(rootWebArea)
-
-	audioPlayButton  = nodewith.Name("play").Role(role.Button).Ancestor(nodewith.Name("HelloAudio"))
-	audioPauseButton = nodewith.Name("pause").Role(role.Button).Ancestor(nodewith.Name("HelloAudio"))
-
-	videoNode = nodewith.Role(role.Video).Ancestor(rootWebArea)
-)
 
 // SetupServerAndPermission sets the permission for the tab and returns the url.
 func SetupServerAndPermission(ctx context.Context, br *browser.Browser, s *testing.State) string {
@@ -55,7 +37,7 @@ func SetupServerAndPermission(ctx context.Context, br *browser.Browser, s *testi
 		browser.MicrophoneContentSetting,
 	)
 
-	return srv.URL + vcTabURL
+	return srv.URL + common.VcAppURL
 }
 
 // LaunchTab opens a new tab for the url.
@@ -64,66 +46,24 @@ func LaunchTab(ctx context.Context, tconn *browser.TestConn, br *browser.Browser
 		return nil, err
 	}
 
-	return &VcTabUI{uiauto.New(tconn), br, url}, nil
+	window, err := ash.WaitForAnyWindow(ctx, tconn, func(w *ash.Window) bool {
+		return strings.Contains(w.Title, common.VcAppName) && w.IsVisible && !w.IsAnimating
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	tabUI := VcTabUI{common.VcWebApp{UI: uiauto.New(tconn)}, tconn, window}
+
+	if err := tabUI.WaitUntilAllButtonsExists(ctx); err != nil {
+		return nil, err
+	}
+
+	return &tabUI, nil
 }
 
 // CloseTab closes the tab with id inside VcTabUI.
 func (tabUI *VcTabUI) CloseTab(ctx context.Context) error {
-	return tabUI.br.CloseWithURL(ctx, tabUI.url)
-}
-
-// StartVideo clicks on "Start Video" button to activate camera.
-func (tabUI *VcTabUI) StartVideo(ctx context.Context) error {
-	return tabUI.ui.DoDefault(startVideoButton)(ctx)
-}
-
-// StopVideo clicks on "Stop Video" button to deactivate camera.
-func (tabUI *VcTabUI) StopVideo(ctx context.Context) error {
-	return tabUI.ui.DoDefault(stopVideoButton)(ctx)
-}
-
-// StartAudio clicks on "Start Audio" button to activate microphone.
-func (tabUI *VcTabUI) StartAudio(ctx context.Context) error {
-	return uiauto.Combine("start audio",
-		tabUI.ui.DoDefault(startAudioButton),
-		// Add a short sleep after starting audio. Refer to b/298280544 for more details.
-		uiauto.Sleep(100*time.Millisecond),
-	)(ctx)
-}
-
-// StopAudio clicks on "Stop Audio" button to deactivate microphone.
-func (tabUI *VcTabUI) StopAudio(ctx context.Context) error {
-	return tabUI.ui.DoDefault(stopAudioButton)(ctx)
-}
-
-// StartScreenCapture clicks on "Start Screen Capturing" button to activate screen sharing.
-func (tabUI *VcTabUI) StartScreenCapture(ctx context.Context) error {
-	// There may be multiple "Choose what to share" dialogs, so add First() here.
-	chooseWhatToShareWindow := nodewith.Role(role.Dialog).NameContaining("Choose what to share").HasClass("Widget").First()
-	entireScreenTab := nodewith.Role(role.Tab).NameRegex(regexp.MustCompile("(?i)Entire Screen")).Ancestor(chooseWhatToShareWindow)
-	display := nodewith.Role(role.Button).HasClass("DesktopMediaSourceView").Ancestor(chooseWhatToShareWindow).First()
-	shareButton := nodewith.Name("Share").Role(role.Button).Ancestor(chooseWhatToShareWindow)
-	return uiauto.Combine("share entire screen",
-		tabUI.ui.DoDefaultUntil(
-			startScreenCapturingButton,
-			tabUI.ui.WithTimeout(3*time.Second).WaitUntilExists(chooseWhatToShareWindow),
-		),
-		tabUI.ui.DoDefault(entireScreenTab),
-		tabUI.ui.DoDefault(display),
-		tabUI.ui.DoDefault(shareButton),
-	)(ctx)
-}
-
-// StopScreenCapture clicks on "Stop Screen Capturing" button to deactivate screen sharing.
-func (tabUI *VcTabUI) StopScreenCapture(ctx context.Context) error {
-	return tabUI.ui.DoDefault(stopScreenCapturingButton)(ctx)
-}
-
-// PlayAudio clicks on the audioPlayButton button and wait until the pauseButton to appear.
-func (tabUI *VcTabUI) PlayAudio(ctx context.Context) error {
-	return uiauto.Combine("Play the audio",
-		tabUI.ui.WaitUntilExists(audioPlayButton),
-		tabUI.ui.DoDefault(audioPlayButton),
-		tabUI.ui.WaitUntilExists(audioPauseButton),
-	)(ctx)
+	return tabUI.window.CloseWindow(ctx, tabUI.tconn)
 }

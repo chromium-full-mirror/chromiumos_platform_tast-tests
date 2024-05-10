@@ -35,11 +35,13 @@ func init() {
 		Timeout:      3 * time.Minute,
 		Attr: []string{
 			"group:mainline", "group:cbx", "cbx_feature_enabled", "cbx_unstable",
+			"informational",
 		},
-		TestBedDeps:  []string{tbdep.Cbx(false)},
+		TestBedDeps:  []string{tbdep.Cbx(true)},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{
 			{
+				Name:    "ash",
 				Fixture: fixture.LoggedInWithFakeVCExtension,
 			},
 			{
@@ -124,7 +126,7 @@ func TrayTriggersExtension(ctx context.Context, s *testing.State) {
 
 	vcTray := vctray.New(ctx, tconn)
 
-	extUI, err := fakeextension.Launch(ctx, cr, tconn)
+	extUI, err := fakeextension.Launch(ctx, tconn)
 	if err != nil {
 		s.Fatal("Failed to launch extension: ", err)
 	}
@@ -138,16 +140,14 @@ func TrayTriggersExtension(ctx context.Context, s *testing.State) {
 			vcTray.WaitUntilState(vctray.DevMicrophone, vctray.DeviceHidden),
 			vcTray.WaitUntilState(vctray.DevCamera, vctray.DeviceInUse),
 			vcTray.WaitUntilState(vctray.DevScreen, vctray.DeviceHidden),
-			// Sleep 1s to wait for video rendering.
-			uiauto.Sleep(time.Second),
 		)(ctx); err != nil {
 			s.Fatal("Failed to verify that extension triggers vcTray by camera: ", err)
 		}
 
-		if err := uiauto.RetrySilently(3, uiauto.Combine("deactivate camera",
+		if err := uiauto.Combine("deactivate camera",
 			extUI.StopVideo,
 			vcTray.WaitUntilGone,
-		))(ctx); err != nil {
+		)(ctx); err != nil {
 			s.Fatal("Failed to verify that vcTray is gone after deactivating camera: ", err)
 		}
 	})
@@ -187,10 +187,10 @@ func TrayTriggersExtension(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to verify that extension triggers vcTray by sharing screen: ", err)
 		}
 
-		if err := uiauto.Retry(3, uiauto.Combine("stop screen share",
+		if err := uiauto.Combine("stop screen share",
 			extUI.StopScreenCapture,
 			vcTray.WaitUntilGone,
-		))(ctx); err != nil {
+		)(ctx); err != nil {
 			s.Fatal("Failed to verify that vcTray is gone after stopping sharing screen: ", err)
 		}
 	})

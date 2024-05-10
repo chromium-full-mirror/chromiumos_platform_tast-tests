@@ -35,10 +35,9 @@ func init() {
 		BugComponent: "b:187682",
 		Timeout:      3 * time.Minute,
 		Attr: []string{
-			"group:mainline", "group:cbx", "cbx_feature_enabled", "cbx_unstable",
-			"informational",
+			"group:cbx", "cbx_feature_enabled", "cbx_unstable",
 		},
-		TestBedDeps:  []string{tbdep.Cbx(false)},
+		TestBedDeps:  []string{tbdep.Cbx(true)},
 		SoftwareDeps: []string{"chrome"},
 		Data: []string{
 			"vc_tester/popup.html",
@@ -49,6 +48,7 @@ func init() {
 
 		Params: []testing.Param{
 			{
+				Name:    "ash",
 				Fixture: fixture.LoggedInWithFakeHALAndEffectsDisabled,
 			},
 			{
@@ -155,12 +155,12 @@ func TrayTriggersPwa(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to verify that tab triggers vcTray by camera: ", err)
 		}
 
-		if err := uiauto.Retry(3, uiauto.Combine("deactivate camera",
+		if err := uiauto.Combine("deactivate camera",
 			pwaUI.StopVideo,
 			vcTray.WaitUntilState(vctray.DevMicrophone, vctray.DeviceAvailable),
 			vcTray.WaitUntilState(vctray.DevCamera, vctray.DeviceAvailable),
 			vcTray.WaitUntilState(vctray.DevScreen, vctray.DeviceHidden),
-		))(ctx); err != nil {
+		)(ctx); err != nil {
 			s.Fatal("Failed to verify that stop using camera resets tray state: ", err)
 		}
 
@@ -190,12 +190,12 @@ func TrayTriggersPwa(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to verify that tab triggers vcTray by mic: ", err)
 		}
 
-		if err := uiauto.Retry(3, uiauto.Combine("deactivate mic",
+		if err := uiauto.Combine("deactivate mic",
 			pwaUI.StopAudio,
 			vcTray.WaitUntilState(vctray.DevMicrophone, vctray.DeviceAvailable),
 			vcTray.WaitUntilState(vctray.DevCamera, vctray.DeviceAvailable),
 			vcTray.WaitUntilState(vctray.DevScreen, vctray.DeviceHidden),
-		))(ctx); err != nil {
+		)(ctx); err != nil {
 			s.Fatal("Failed to verify that stop using camera resets tray state: ", err)
 		}
 
@@ -225,12 +225,12 @@ func TrayTriggersPwa(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to verify that extension triggers vcTray by sharing screen: ", err)
 		}
 
-		if err := uiauto.Retry(3, uiauto.Combine("stop screen share",
+		if err := uiauto.Combine("stop screen share",
 			pwaUI.StopScreenCapture,
 			vcTray.WaitUntilState(vctray.DevMicrophone, vctray.DeviceAvailable),
 			vcTray.WaitUntilState(vctray.DevCamera, vctray.DeviceAvailable),
 			vcTray.WaitUntilState(vctray.DevScreen, vctray.DeviceHidden),
-		))(ctx); err != nil {
+		)(ctx); err != nil {
 			s.Fatal("Failed to verify that stop screen share resets tray state: ", err)
 		}
 
