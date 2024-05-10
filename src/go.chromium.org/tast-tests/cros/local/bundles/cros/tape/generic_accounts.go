@@ -19,8 +19,8 @@ func init() {
 		Desc:         "Confirm that the generic account leasing for TAPE works as intended",
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Contacts:     []string{"arc-engprod@google.com", "alexanderhartl@google.com"},
-		// ChromeOS > Software > ARC++ > EngProd
-		BugComponent: "b:1052117",
+		// ChromeOS > Software > Commercial (Enterprise) > EngProd > ChromeOS Testing
+		BugComponent: "b:1359454",
 		Attr:         []string{"group:mainline", "informational"},
 		Timeout:      5 * time.Minute,
 		Vars:         []string{tape2.LocalRefreshTokenVar},

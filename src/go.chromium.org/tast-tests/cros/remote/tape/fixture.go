@@ -14,9 +14,11 @@ import (
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
-		Name:            "tapeRemoteBase",
-		Desc:            "Writes a TAPE access token to the DUT in a shared location for accessing the TAPE API from the DUT",
-		Contacts:        []string{"arc-engprod@google.com"},
+		Name:     "tapeRemoteBase",
+		Desc:     "Writes a TAPE access token to the DUT in a shared location for accessing the TAPE API from the DUT",
+		Contacts: []string{"arc-engprod@google.com", "alexanderhartl@google.com"},
+		// ChromeOS > Software > Commercial (Enterprise) > EngProd > ChromeOS Testing
+		BugComponent:    "b:1359454",
 		Impl:            tape.NewBaseTapeFixture(),
 		Vars:            []string{tape.AuthenticationConfigJSONVar, tape.LocalRefreshTokenVar},
 		SetUpTimeout:    10 * time.Second,
