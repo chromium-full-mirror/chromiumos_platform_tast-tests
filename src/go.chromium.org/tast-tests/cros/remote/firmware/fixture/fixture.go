@@ -464,23 +464,23 @@ func (i *impl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 		s.Error("Test did not run")
 		s.Fatal("Servo echo failed: ", err)
 	}
-	// Check whether CCD connection exists, if it does, attempt to open
-	// CCD with all capabilities set to factory settings. If CCD is locked,
-	// transitioning the dut from one mode to another might fail, returning
-	// one error that says "EC: No data was sent from the pty".
-	hasCCD, err := i.value.Helper.Servo.HasCCD(ctx)
+	// Check whether servo_micro connection exists, if it does not, attempt
+	// to open CCD with all capabilities set to factory settings. If CCD is
+	// locked, transitioning the dut from one mode to another might fail,
+	// returning one error that says "EC: No data was sent from the pty".
+	hasServoMicro, err := i.value.Helper.Servo.HasServoMicro(ctx)
 	if err != nil {
-		s.Fatal("Failed to check for CCD connection: ", err)
+		s.Fatal("Failed to check for servo_micro connection: ", err)
 	}
-	hasC2D2, err := i.value.Helper.Servo.HasC2D2(ctx)
-	if err != nil {
-		s.Fatal("Failed to check for CCD connection: ", err)
-	}
-	if hasCCD || hasC2D2 {
+	if !hasServoMicro {
 		s.Log("Ensuring CCD open, testlab enabled, and capabilities set to factory settings")
 		if err := i.value.Helper.OpenCCD(ctx, true, true); err != nil {
 			s.Fatal("Failed to set CCD open: ", err)
 		}
+	}
+	hasC2D2, err := i.value.Helper.Servo.HasC2D2(ctx)
+	if err != nil {
+		s.Fatal("Failed to check for C2D2 connection: ", err)
 	}
 	if hasC2D2 {
 		if err := i.value.Helper.Servo.SetCCDCapability(ctx, map[servo.CCDCap]servo.CCDCapState{

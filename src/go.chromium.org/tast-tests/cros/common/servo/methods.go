@@ -1417,6 +1417,16 @@ func (s *Servo) HasC2D2(ctx context.Context) (bool, error) {
 	return s.hasC2D2, nil
 }
 
+// HasServoMicro checks if the servo has a servo_micro connection.
+func (s *Servo) HasServoMicro(ctx context.Context) (bool, error) {
+	_, err := s.GetServoType(ctx)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to get servo type")
+	}
+
+	return s.hasServoMicro, nil
+}
+
 // PreferDebugHeader switches to the servo_micro or C2D2 for dual v4 servos, but doesn't fail on CCD only servos.
 // Returns true if the servo has a debug header connection, false if it only has CCD.
 func (s *Servo) PreferDebugHeader(ctx context.Context) (bool, error) {
