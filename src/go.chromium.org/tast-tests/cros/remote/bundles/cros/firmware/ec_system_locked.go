@@ -167,6 +167,10 @@ func verifyECWPStatus(ctx context.Context, h *firmware.Helper, wp bool) error {
 		testing.ContextLog(ctx, "Failed to shutdown ap: ", err)
 	}
 	defer func() {
+		testing.ContextLog(ctx, "Checking for G3 powerstate")
+		if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "G3"); err != nil {
+			testing.ContextLog(ctx, "Failed to get G3 state")
+		}
 		testing.ContextLog(ctx, "Restarting AP")
 		if err := h.Servo.RunECCommand(ctx, "powerbtn"); err != nil {
 			testing.ContextLog(ctx, "Failed to restart: ", err)
