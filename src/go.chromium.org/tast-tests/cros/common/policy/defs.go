@@ -6647,14 +6647,20 @@ type Application struct {
 	ManagedConfiguration    map[string]interface{} `json:"managedConfiguration"`
 }
 
+type PermittedAccessibilityServices struct {
+	Enabled      bool     `json:"enabled"`
+	PackageNames []string `json:"packageNames"`
+}
+
 type ArcPolicyValue struct {
-	Applications                  []Application `json:"applications"`
-	EnabledSystemAppPackageNames  []string      `json:"enabledSystemAppPackageNames"`
-	InstallUnknownSourcesDisabled bool          `json:"installUnknownSourcesDisabled"`
-	PlayEmmApiInstallDisabled     bool          `json:"playEmmApiInstallDisabled"`
-	PlayStoreMode                 string        `json:"playStoreMode"`
-	ModifyAccountsDisabled        bool          `json:"modifyAccountsDisabled"`
-	DpsInteractionsDisabled       bool          `json:"dpsInteractionsDisabled"`
+	Applications                   []Application                  `json:"applications"`
+	EnabledSystemAppPackageNames   []string                       `json:"enabledSystemAppPackageNames"`
+	InstallUnknownSourcesDisabled  bool                           `json:"installUnknownSourcesDisabled"`
+	PlayEmmApiInstallDisabled      bool                           `json:"playEmmApiInstallDisabled"`
+	PlayStoreMode                  string                         `json:"playStoreMode"`
+	ModifyAccountsDisabled         bool                           `json:"modifyAccountsDisabled"`
+	DpsInteractionsDisabled        bool                           `json:"dpsInteractionsDisabled"`
+	PermittedAccessibilityServices PermittedAccessibilityServices `json:"permittedAccessibilityServices"`
 }
 
 func (p *ArcPolicy) Name() string          { return "ArcPolicy" }

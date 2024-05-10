@@ -584,6 +584,11 @@ type Application struct {
 \tManagedConfiguration\tmap[string]interface{}\t`json:"managedConfiguration"`
 }
 
+type PermittedAccessibilityServices struct {
+\tEnabled\tbool\t`json:"enabled"`
+\tPackageNames\t[]string\t`json:"packageNames"`
+}
+
 type ArcPolicyValue struct {
 \tApplications\t[]Application\t`json:"applications"`
 \tEnabledSystemAppPackageNames\t[]string\t`json:"enabledSystemAppPackageNames"`
@@ -592,6 +597,7 @@ type ArcPolicyValue struct {
 \tPlayStoreMode\tstring\t`json:"playStoreMode"`
 \tModifyAccountsDisabled\tbool\t`json:"modifyAccountsDisabled"`
 \tDpsInteractionsDisabled\tbool\t`json:"dpsInteractionsDisabled"`
+\tPermittedAccessibilityServices\tPermittedAccessibilityServices\t`json:"permittedAccessibilityServices"`
 }
 """ + attr_structs
   return attr_type, attr_structs

@@ -17,9 +17,11 @@ import (
 	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/arcent"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/imagehelpers"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
@@ -89,19 +91,22 @@ type arcPolicyFactory func() (policy.Policy, func(ctx context.Context), error)
 
 func ManagedDevicePolicy(ctx context.Context, s *testing.State) {
 	const (
-		apk               = "ArcDevicePolicyTest.apk"
-		mainActivityCls   = devicePolicyPkg + ".MainActivity"
-		disabledSystemPkg = "com.google.android.deskclock"
+		apk                      = "ArcDevicePolicyTest.apk"
+		mainActivityCls          = devicePolicyPkg + ".MainActivity"
+		disabledSystemPkg        = "com.google.android.deskclock"
+		enabledAccessibilityPkg  = "com.google.android.marvin.talkback"
+		disabledAccessibilityPkg = "com.google.android.apps.accessibility.auditor"
 	)
 
-	packages := []string{devicePolicyPkg}
+	packages := []string{enabledAccessibilityPkg, disabledAccessibilityPkg}
 	arcPolicyMap := map[string]arcPolicyFactory{
-		"cameraDisabled":                staticPolicy(&policy.VideoCaptureAllowed{Val: false}),
-		"enabledSystemAppPackageNames":  staticPolicy(nil),
-		"installUnknownSourcesDisabled": staticPolicy(nil),
-		"modifyAccountsDisabled":        staticPolicy(nil),
-		"printingDisabled":              staticPolicy(&policy.PrintingEnabled{Val: false}),
-		"screenCaptureDisabled":         staticPolicy(&policy.DisableScreenshots{Val: true}),
+		"cameraDisabled":                 staticPolicy(&policy.VideoCaptureAllowed{Val: false}),
+		"enabledSystemAppPackageNames":   staticPolicy(nil),
+		"installUnknownSourcesDisabled":  staticPolicy(nil),
+		"modifyAccountsDisabled":         staticPolicy(nil),
+		"permittedAccessibilityServices": staticPolicy(nil),
+		"printingDisabled":               staticPolicy(&policy.PrintingEnabled{Val: false}),
+		"screenCaptureDisabled":          staticPolicy(&policy.DisableScreenshots{Val: true}),
 		"setWallpaper": func() (policy.Policy, func(ctx context.Context), error) {
 			return createWallpaperPolicy(ctx, s.DataPath("wallpaper_image.jpeg"))
 		},
@@ -120,7 +125,10 @@ func ManagedDevicePolicy(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	login := chrome.GAIALogin(creds)
-	fdms, err := arcent.SetupPolicyServerWithArcApps(ctx, s.OutDir(), creds.User, packages, arcent.InstallTypeAvailable, arcent.PlayStoreModeAllowList)
+
+	arcPolicy := arcent.CreateArcPolicyWithApps(packages, arcent.InstallTypeForceInstalled, arcent.PlayStoreModeBlockList)
+	policies := []policy.Policy{&policy.ArcEnabled{Val: true}, arcPolicy}
+	fdms, err := arcent.SetUpFakePolicyServer(ctx, s.OutDir(), creds.User, policies, false /*affiliated*/)
 	if err != nil {
 		s.Fatal("Failed to setup fake policy server: ", err)
 	}
@@ -152,7 +160,11 @@ func ManagedDevicePolicy(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get policy sync time: ", err)
 	}
 
-	s.Log("Installing app")
+	if err := a.WaitForPackages(ctx, packages); err != nil {
+		s.Fatal("Packages did not install in time: ", err)
+	}
+
+	s.Log("Installing test app")
 	if err := a.Install(ctx, arc.APKPath(apk)); err != nil {
 		s.Fatal("Failed installing app: ", err)
 	}
@@ -191,12 +203,12 @@ func ManagedDevicePolicy(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Updating policies to apply restrictions")
-	arcPolicy := arcent.CreateArcPolicyWithApps(packages, arcent.InstallTypeAvailable, arcent.PlayStoreModeAllowList)
 	arcPolicy.Val.EnabledSystemAppPackageNames = []string{disabledSystemPkg}
 	arcPolicy.Val.InstallUnknownSourcesDisabled = true
 	arcPolicy.Val.ModifyAccountsDisabled = true
-	arcEnabledPolicy := &policy.ArcEnabled{Val: true}
-	policies := []policy.Policy{arcEnabledPolicy, arcPolicy}
+	arcPolicy.Val.PermittedAccessibilityServices.Enabled = true
+	arcPolicy.Val.PermittedAccessibilityServices.PackageNames = []string{enabledAccessibilityPkg}
+
 	for policyName := range arcPolicyMap {
 		newPolicy, cleanup, err := arcPolicyMap[policyName]()
 		if err != nil {
@@ -222,7 +234,7 @@ func ManagedDevicePolicy(ctx context.Context, s *testing.State) {
 	firstTest := true
 	for policyName := range arcPolicyMap {
 		rl = &retry.Loop{Attempts: 1,
-			MaxAttempts: 5,
+			MaxAttempts: 10,
 			DoRetries:   firstTest,
 			Errorf:      s.Errorf,
 			Logf:        s.Logf}
@@ -335,37 +347,103 @@ func testPolicyEnforcement(ctx context.Context, tconn *chrome.TestConn, a *arc.A
 		testTimeout    = 2 * time.Minute
 	)
 
-	if err := selectSpinnerItem(ctx, d, policiesListID, policy); err != nil {
-		return err
+	localTestMap := map[string]func(ctx context.Context) (bool, string, error){
+		"permittedAccessibilityServices": func(ctx context.Context) (bool, string, error) {
+			return getPermittedAccessibilityServicesTestResult(ctx, tconn, a, d, shouldSucceed)
+		},
 	}
 
 	testing.ContextLogf(ctx, "Testing policy %q and expecting success=%v", policy, shouldSucceed)
 	return testing.Poll(ctx, func(ctx context.Context) error {
-		btnTest := d.Object(ui.ID(testButtonID))
-		if err := btnTest.Click(ctx); err != nil {
-			return errors.Wrap(err, "failed to click test")
+		var succeeded bool
+		var errMessage string
+		var err error
+		tester, isTestLocal := localTestMap[policy]
+		if isTestLocal {
+			succeeded, errMessage, err = tester(ctx)
+			if err != nil {
+				return rl.Exit("get manual test result", err)
+			}
+		} else {
+			if err := selectSpinnerItem(ctx, d, policiesListID, policy); err != nil {
+				return err
+			}
+
+			btnTest := d.Object(ui.ID(testButtonID))
+			if err := btnTest.Click(ctx); err != nil {
+				return errors.Wrap(err, "failed to click test")
+			}
+
+			succeeded, err = getPolicyTestResult(ctx, d)
+			if err != nil {
+				return rl.Exit("get test result", err)
+			}
+
+			txtError := d.Object(ui.ID(errorTextID))
+			errMessage, err = txtError.GetText(ctx)
+			if err != nil {
+				return rl.Exit("get error message", err)
+			}
 		}
 
-		result, err := getPolicyTestResult(ctx, d)
-		if err != nil {
-			return rl.Exit("get test result", err)
-		}
-
-		if result == fmt.Sprintf("%v", shouldSucceed) {
+		if succeeded == shouldSucceed {
 			testing.ContextLog(ctx, "Policy test succeeded with expected result: ", shouldSucceed)
 			return nil
 		}
 
-		txtError := d.Object(ui.ID(errorTextID))
-		errMessage, err := txtError.GetText(ctx)
-		if err != nil {
-			return rl.Exit("get error message", err)
-		}
-		return rl.Retry(fmt.Sprintf("get expected result for policy %q: %v, got %s, error: %s", policy, shouldSucceed, result, errMessage), nil)
+		return rl.Retry(fmt.Sprintf("get expected result for policy %q: %v, got %t, error: %s", policy, shouldSucceed, succeeded, errMessage), nil)
 	}, &testing.PollOptions{Timeout: testTimeout, Interval: time.Second})
 }
 
-func getPolicyTestResult(ctx context.Context, d *ui.Device) (string, error) {
+func getPermittedAccessibilityServicesTestResult(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Device, shouldSucceed bool) (succeeded bool, errMessage string, err error) {
+	const (
+		enabledPackageTitle         = "TalkBack"
+		disabledPackageTitle        = "Accessibility Scanner"
+		accessibilitySettingsIntent = "android.settings.ACCESSIBILITY_SETTINGS"
+		settingsPackage             = "com.android.settings"
+	)
+
+	if err := a.SendIntentCommand(ctx, accessibilitySettingsIntent, "").Run(testexec.DumpLogOnError); err != nil {
+		return false, "", err
+	}
+
+	closeSettingsApp := func() {
+		if settingsWindow, err := ash.GetARCAppWindowInfo(ctx, tconn, settingsPackage); err == nil {
+			settingsWindow.CloseWindow(ctx, tconn)
+		}
+	}
+	defer closeSettingsApp()
+
+	err = testing.Poll(ctx, func(ctx context.Context) (err error) {
+		if err := waitForAccessibilityAppInState(ctx, d, enabledPackageTitle, true /*enabled*/); err != nil {
+			return testing.PollBreak(err)
+		}
+
+		if err := waitForAccessibilityAppInState(ctx, d, disabledPackageTitle, shouldSucceed /*enabled*/); err != nil {
+			closeSettingsApp()
+			return err
+		}
+
+		return nil
+	}, &testing.PollOptions{Interval: time.Second})
+	if err == nil {
+		return shouldSucceed, "", nil
+	}
+	return false, err.Error(), nil
+}
+
+func waitForAccessibilityAppInState(ctx context.Context, d *ui.Device, title string, enabled bool) error {
+	const accessibilityAppWaitTimeout = 10 * time.Second
+
+	testing.ContextLogf(ctx, "Waiting for %s app to be enabled=%t", title, enabled)
+	appTitle := d.Object(ui.ID("android:id/title"), ui.ClassName("android.widget.TextView"), ui.Text(title), ui.Enabled(enabled))
+	if err := appTitle.WaitForExists(ctx, accessibilityAppWaitTimeout); err != nil {
+		return err
+	}
+	return nil
+}
+
+func getPolicyTestResult(ctx context.Context, d *ui.Device) (bool, error) {
 	const (
 		outputTextID   = devicePolicyPkg + ":id/txtOutput"
 		resultWaitTime = 1 * time.Minute
@@ -373,13 +451,12 @@ func getPolicyTestResult(ctx context.Context, d *ui.Device) (string, error) {
 
 	resultRegex := regexp.MustCompile("true|false")
 
-	var output string
-	var err error
+	succeeded := false
 	testing.ContextLog(ctx, "Waiting for policy test result")
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		txtOutput := d.Object(ui.ID(outputTextID))
 
-		output, err = txtOutput.GetText(ctx)
+		output, err := txtOutput.GetText(ctx)
 		if err != nil {
 			return errors.Wrap(err, "failed to get output")
 		}
@@ -388,12 +465,13 @@ func getPolicyTestResult(ctx context.Context, d *ui.Device) (string, error) {
 			return errors.New("Unexpected result :" + output)
 		}
 
+		succeeded, _ = strconv.ParseBool(output)
 		return nil
 	}, &testing.PollOptions{Timeout: resultWaitTime, Interval: 5 * time.Second}); err != nil {
-		return "", err
+		return false, err
 	}
 
-	return output, nil
+	return succeeded, nil
 }
 
 func selectSpinnerItem(ctx context.Context, d *ui.Device, spinnerId, itemText string) error {
