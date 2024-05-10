@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast/core/ctxutil"
@@ -77,8 +78,14 @@ func ChromeosReadAloudPower(ctx context.Context, s *testing.State) {
 	tconn, err := cr.TestAPIConn(ctx)
 	ui := uiauto.New(tconn)
 
-	wikiTextField := nodewith.ClassName("BrowserFrame")
-	openInReadModeItem := nodewith.NameContaining("Open in reading mode").ClassName("MenuItemView")
+	// Get keyboard.
+	kb, err := input.Keyboard(ctx)
+	if err != nil {
+		s.Fatal("Failed to find keyboard: ", err)
+	}
+
+	moreToolsItem := nodewith.Name("More tools").ClassName("MenuItemView")
+	readingModeItem := nodewith.Name("Reading mode").ClassName("MenuItemView")
 	playAudioButton := nodewith.Name("Play keyboard shortcut k").Role(role.Button).ClassName("toolbar-button audio-controls")
 	pauseAudioButton := nodewith.Name("Pause keyboard shortcut k").Role(role.Button).ClassName("toolbar-button audio-controls")
 
@@ -94,9 +101,10 @@ func ChromeosReadAloudPower(ctx context.Context, s *testing.State) {
 	// Test body.
 	param := s.Param().(readAloudPowerParam)
 	if param.enabled {
-		if err := uiauto.Combine("open reading mode",
-			ui.RightClickUntil(wikiTextField, ui.Exists(openInReadModeItem)),
-			ui.DoDefaultUntil(openInReadModeItem, ui.Exists(playAudioButton)),
+		if err := uiauto.Combine("open reading mode via keyboard",
+			kb.AccelAction("alt+f"),
+			ui.DoDefaultUntil(moreToolsItem, ui.Exists(moreToolsItem)),
+			ui.DoDefaultUntil(readingModeItem, ui.Exists(playAudioButton)),
 		)(ctx); err != nil {
 			s.Fatal("Failed to verify open reading mode: ", err)
 		}
