@@ -12,9 +12,9 @@ import (
 	"time"
 
 	labapi "go.chromium.org/chromiumos/config/go/test/lab/api"
+	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
-	"go.chromium.org/tast-tests/cros/common/wifi/security"
 	"go.chromium.org/tast-tests/cros/common/wifi/security/wpa"
 	"go.chromium.org/tast-tests/cros/remote/wifi/iw"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
@@ -31,8 +31,6 @@ import (
 type preferHigherBandTestCase struct {
 	lowerBandApOpts  []hostapd.Option
 	higherBandApOpts []hostapd.Option
-	// If unassigned, use default security config: open network.
-	secConfFac security.ConfigFactory
 }
 
 func init() {
@@ -54,17 +52,15 @@ func init() {
 			{
 				Name: "2ghz_5ghz",
 				Val: preferHigherBandTestCase{
-					lowerBandApOpts:  []hostapd.Option{hostapd.Mode(hostapd.Mode80211nPure), hostapd.HTCaps(hostapd.HTCapHT20), hostapd.Channel(1)},
-					higherBandApOpts: []hostapd.Option{hostapd.Mode(hostapd.Mode80211nPure), hostapd.HTCaps(hostapd.HTCapHT20), hostapd.Channel(48)},
-					secConfFac:       nil,
+					lowerBandApOpts:  []hostapd.Option{hostapd.Mode(hostapd.Mode80211acPure), hostapd.HTCaps(hostapd.HTCapHT20), hostapd.Channel(1), hostapd.VHTChWidth(hostapd.VHTChWidth20Or40), hostapd.PMF(hostapd.PMFRequired)},
+					higherBandApOpts: []hostapd.Option{hostapd.Mode(hostapd.Mode80211acPure), hostapd.HTCaps(hostapd.HTCapHT20), hostapd.Channel(48), hostapd.VHTChWidth(hostapd.VHTChWidth20Or40), hostapd.PMF(hostapd.PMFRequired)},
 				},
 			},
 			{
 				Name: "5ghz_6ghz",
 				Val: preferHigherBandTestCase{
-					lowerBandApOpts:  []hostapd.Option{hostapd.Mode(hostapd.Mode80211axPure), hostapd.HTCaps(hostapd.HTCapHT20), hostapd.HEChWidth(hostapd.HEChWidth20Or40), hostapd.Channel(48), hostapd.PMF(hostapd.PMFRequired)},
+					lowerBandApOpts:  []hostapd.Option{hostapd.Mode(hostapd.Mode80211axPure), hostapd.HTCaps(hostapd.HTCapHT20), hostapd.HEChWidth(hostapd.HEChWidth20Or40), hostapd.Channel(48)},
 					higherBandApOpts: []hostapd.Option{hostapd.Mode(hostapd.Mode80211axPure), hostapd.HTCaps(hostapd.HTCapHT20), hostapd.HEChWidth(hostapd.HEChWidth20Or40), hostapd.Channel(21), hostapd.PMF(hostapd.PMFRequired), hostapd.OpClass(131)},
-					secConfFac:       wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 				},
 				// TODO(b/317288421): Promote test to stable by removing wificell_unstable attribute.
 				ExtraAttr:         []string{"wificell_unstable"},
@@ -75,9 +71,8 @@ func init() {
 			{
 				Name: "2ghz_6ghz",
 				Val: preferHigherBandTestCase{
-					lowerBandApOpts:  []hostapd.Option{hostapd.Mode(hostapd.Mode80211axPure), hostapd.HTCaps(hostapd.HTCapHT20), hostapd.HEChWidth(hostapd.HEChWidth20Or40), hostapd.Channel(1), hostapd.PMF(hostapd.PMFRequired)},
+					lowerBandApOpts:  []hostapd.Option{hostapd.Mode(hostapd.Mode80211axPure), hostapd.HTCaps(hostapd.HTCapHT20), hostapd.HEChWidth(hostapd.HEChWidth20Or40), hostapd.Channel(1)},
 					higherBandApOpts: []hostapd.Option{hostapd.Mode(hostapd.Mode80211axPure), hostapd.HTCaps(hostapd.HTCapHT20), hostapd.HEChWidth(hostapd.HEChWidth20Or40), hostapd.Channel(21), hostapd.PMF(hostapd.PMFRequired), hostapd.OpClass(131)},
-					secConfFac:       wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 				},
 				// TODO(b/317288421): Promote test to stable by removing wificell_unstable attribute.
 				ExtraAttr:         []string{"wificell_unstable"},
@@ -103,60 +98,79 @@ func PreferHigherBand(ctx context.Context, s *testing.State) {
 	tf := s.FixtValue().(*wificell.TestFixture)
 	tc := s.Param().(preferHigherBandTestCase)
 
-	// Configure an AP on the specific channel with given SSID.
-	// It returns a shorten ctx, the channel's mapping frequency,
-	// a callback to deconfigure the AP run with the input ctx,
-	// and an error object. Note that it directly used s and tf
-	// from the outer scope.
-	configureAP := func(ctx context.Context, ssid string, options []hostapd.Option, fac security.ConfigFactory) (context.Context, int, hostapd.BandEnum, func(), error) {
-		apIface, err := tf.ConfigureAP(ctx, append([]hostapd.Option{hostapd.SSID(ssid)}, options...), fac)
-		if err != nil {
-			return ctx, 0, hostapd.BandUnknown, nil, err
+	var cancel context.CancelFunc
+
+	// Turn off background and foreground scans, so that all the WiFi scans are triggered by shill::Manager::RequestScan()
+	ctx, restoreBgAndFg, err := tf.WifiClient().TurnOffBgAndFgscan(ctx)
+	if err != nil {
+		s.Fatal("Failed to turn off the background and/or foreground scan: ", err)
+	}
+	defer func() {
+		if err := restoreBgAndFg(); err != nil {
+			s.Error("Failed to restore the background and/or foreground scan config: ", err)
 		}
-		sCtx, cancel := tf.ReserveForDeconfigAP(ctx, apIface)
-		deferFunc := func() {
-			cancel()
-			s.Log("Deconfiguring the AP")
-			if err := tf.DeconfigAP(ctx, apIface); err != nil {
-				s.Error("Failed to deconfig AP: ", err)
+	}()
+
+	// Set WiFi request scan type to active on the DUT
+	originalRequestScanType, err := tf.WifiClient().GetRequestScanTypeProperty(ctx)
+	if err != nil {
+		s.Error("Failed to get WiFi RequestScan type: ", err)
+	}
+	if originalRequestScanType != shillconst.WiFiRequestScanTypeActive {
+		defer func(ctx context.Context) {
+			if err := tf.WifiClient().SetRequestScanTypeProperty(ctx, originalRequestScanType); err != nil {
+				s.Errorf("Failed to reset WiFi RequestScan type to %s: %v", originalRequestScanType, err)
 			}
+			s.Log("Reset WiFi RequestScan type to ", originalRequestScanType)
+		}(ctx)
+		ctx, cancel = ctxutil.Shorten(ctx, 500*time.Millisecond)
+		defer cancel()
+		if err := tf.WifiClient().SetRequestScanTypeProperty(ctx, shillconst.WiFiRequestScanTypeActive); err != nil {
+			s.Fatal("Failed to set WiFi RequestScan type to active: ", err)
 		}
-		band, freq, err := apIface.Config().OperatingBandAndFreq()
-		if err != nil {
-			s.Error("Failed to get operating band: ", err)
-		}
-		s.Logf("Setting up the AP on freq %d", freq)
-		return sCtx, freq, band, deferFunc, nil
+		s.Log("Set WiFi RequestScan type to active")
 	}
 
 	ssid := hostapd.RandomSSID("TAST_TEST_")
-	ctx, freqLowerBand, lowerBand, deconfigLowerBand, err := configureAP(ctx, ssid, tc.lowerBandApOpts, tc.secConfFac)
-	if err != nil {
-		s.Fatal("Failed to set up AP: ", err)
+	secConfFac := wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP))
+	apConfigs := []hostapd.ApConfig{
+		{ApOpts: append([]hostapd.Option{hostapd.SSID(ssid)}, tc.lowerBandApOpts...), SecConfFac: secConfFac},
+		{ApOpts: append([]hostapd.Option{hostapd.SSID(ssid)}, tc.higherBandApOpts...), SecConfFac: secConfFac},
 	}
-	defer deconfigLowerBand()
-
-	ctx, freqHigherBand, higherBand, deconfigHigherBand, err := configureAP(ctx, ssid, tc.higherBandApOpts, tc.secConfFac)
+	apIface, err := tf.ConfigureMultiAP(ctx, wificell.DefaultRouter, apConfigs)
 	if err != nil {
-		s.Fatal("Failed to set up AP: ", err)
+		s.Fatal("Failed to configure ap, err: ", err)
 	}
-	defer deconfigHigherBand()
-	s.Logf("AP setup done. Expecting the DUT to see the SSID on both %s and %s channels", lowerBand.String(), higherBand.String())
-
-	if higherBand == hostapd.Band6Ghz {
-		initialRegDomain, err := tf.InitializeRegdomainUS(ctx)
-		if err != nil {
-			s.Fatal("Failed to initialize the regulatory domain: ", err)
+	defer func(ctx context.Context) {
+		if err := tf.DeconfigAP(ctx, apIface); err != nil {
+			s.Error("Failed to deconfig ap, err: ", err)
 		}
-		defer func(ctx context.Context) {
-			if err := tf.ResetRegdomain(ctx, initialRegDomain); err != nil {
-				s.Error("Failed to reset the regulatory domain: ", err)
-			}
-		}(ctx)
-		var cancel context.CancelFunc
-		ctx, cancel = ctxutil.Shorten(ctx, 500*time.Millisecond)
-		defer cancel()
+	}(ctx)
+	ctx, cancel = tf.ReserveForDeconfigAP(ctx, apIface)
+	defer cancel()
+	s.Log("AP setup done")
+
+	initialRegDomain, err := tf.InitializeRegdomainUS(ctx)
+	if err != nil {
+		s.Fatal("Failed to initialize the regulatory domain: ", err)
 	}
+	defer func(ctx context.Context) {
+		if err := tf.ResetRegdomain(ctx, initialRegDomain); err != nil {
+			s.Error("Failed to reset the regulatory domain: ", err)
+		}
+	}(ctx)
+	ctx, cancel = ctxutil.Shorten(ctx, 500*time.Millisecond)
+	defer cancel()
+
+	lowerBand, freqLowerBand, err := apIface.Configs()[0].OperatingBandAndFreq()
+	if err != nil {
+		s.Errorf("Failed to get operating band on the interface %s: %v", apIface.Interfaces()[0], err)
+	}
+	higherBand, freqHigherBand, err := apIface.Configs()[1].OperatingBandAndFreq()
+	if err != nil {
+		s.Errorf("Failed to get operating band on the interface %s: %v", apIface.Interfaces()[1], err)
+	}
+	s.Logf("AP setup done. Expecting the DUT to see the SSID on both %s and %s channels", lowerBand.String(), higherBand.String())
 
 	// Check SSID on both lower and higher band channels.
 	req := &wifi.ExpectWifiFrequenciesRequest{
@@ -167,25 +181,19 @@ func PreferHigherBand(ctx context.Context, s *testing.State) {
 		s.Error("Failed to expect a service with two WiFi frequencies: ", err)
 	}
 	s.Log("Verified. Asserting the connection")
-	if tc.secConfFac != nil {
-		secConf, err := tc.secConfFac.Gen()
-		if err != nil {
-			s.Error("Failed to generate security config: ", err)
-		}
-		if _, err := tf.ConnectWifi(ctx, ssid, dutcfg.ConnHidden(false), dutcfg.ConnSecurity(secConf)); err != nil {
-			s.Fatal("Failed to connect to WiFi: ", err)
-		}
-	} else {
-		if _, err := tf.ConnectWifi(ctx, ssid, dutcfg.ConnHidden(false)); err != nil {
-			s.Fatal("Failed to connect to WiFi: ", err)
-		}
+	secConf, err := secConfFac.Gen()
+	if err != nil {
+		s.Error("Failed to generate security config: ", err)
+	}
+	if _, err := tf.ConnectWifi(ctx, ssid, dutcfg.ConnHidden(false), dutcfg.ConnSecurity(secConf)); err != nil {
+		s.Fatal("Failed to connect to WiFi: ", err)
 	}
 	defer func(ctx context.Context) {
 		if err := tf.CleanDisconnectWifi(ctx); err != nil {
 			s.Error("Failed to disconnect WiFi: ", err)
 		}
 	}(ctx)
-	ctx, cancel := tf.ReserveForDisconnect(ctx)
+	ctx, cancel = tf.ReserveForDisconnect(ctx)
 	defer cancel()
 
 	freqSignal, err := wifiSignal(ctx, tf, s.DUT(), ssid)
