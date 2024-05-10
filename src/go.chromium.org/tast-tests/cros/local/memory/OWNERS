@@ -4,6 +4,8 @@ set noparent
 bgeffon@chromium.org
 ctshao@google.com
 vovoy@chromium.org
+cwd@google.com
+raging@google.com
 
 # Tast team for bulk/emergencies
 include /OWNERS.tast
