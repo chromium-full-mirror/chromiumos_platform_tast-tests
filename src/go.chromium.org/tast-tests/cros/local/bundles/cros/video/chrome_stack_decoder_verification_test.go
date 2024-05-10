@@ -428,39 +428,44 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 		// generate test case for each files_from_bugs so that we can easily find
 		// a decoder fails decoding a specific bug file.
 		params = append(params, genFilesFromBugs(paramData{
-			Name:          fmt.Sprintf("%sh264_files_from_bugs", testGroup),
-			Attr:          perBuildAttrs,
-			HardwareDeps:  "hwdep.D(hwdep.SkipGPUFamily(\"rogue\"))",
-			SoftwareDeps:  genCombinedDeps("[]string{%s}", []string{"caps.HWDecodeH264", "\"proprietary_codecs\"", param.SoftwareDeps}),
-			ValidatorType: "decoding.MD5",
+			Name:            fmt.Sprintf("%sh264_files_from_bugs", testGroup),
+			Attr:            perBuildAttrs,
+			HardwareDeps:    "hwdep.D(hwdep.SkipGPUFamily(\"rogue\"))",
+			SoftwareDeps:    genCombinedDeps("[]string{%s}", []string{"caps.HWDecodeH264", "\"proprietary_codecs\"", param.SoftwareDeps}),
+			ValidatorType:   "decoding.MD5",
+			EnabledFeatures: param.EnabledFeatures,
 		}, h264FilesFromBugs)...)
 		params = append(params, genFilesFromBugs(paramData{
-			Name:          fmt.Sprintf("%sh264_4k_files_from_bugs", testGroup),
-			Attr:          perBuildAttrs,
-			HardwareDeps:  "hwdep.D(hwdep.SkipGPUFamily(\"rogue\"))",
-			SoftwareDeps:  genCombinedDeps("[]string{%s}", []string{"caps.HWDecodeH264_4K", "\"proprietary_codecs\"", param.SoftwareDeps}),
-			ValidatorType: "decoding.MD5",
+			Name:            fmt.Sprintf("%sh264_4k_files_from_bugs", testGroup),
+			Attr:            perBuildAttrs,
+			HardwareDeps:    "hwdep.D(hwdep.SkipGPUFamily(\"rogue\"))",
+			SoftwareDeps:    genCombinedDeps("[]string{%s}", []string{"caps.HWDecodeH264_4K", "\"proprietary_codecs\"", param.SoftwareDeps}),
+			ValidatorType:   "decoding.MD5",
+			EnabledFeatures: param.EnabledFeatures,
 		}, h2644kFilesFromBugs)...)
 		params = append(params, genFilesFromBugs(paramData{
-			Name:          fmt.Sprintf("%svp9_files_from_bugs", testGroup),
-			Attr:          perBuildAttrs,
-			HardwareDeps:  "hwdep.D(hwdep.SkipGPUFamily(\"rogue\"))",
-			SoftwareDeps:  genCombinedDeps("[]string{%s}", []string{"caps.HWDecodeVP9", param.SoftwareDeps}),
-			ValidatorType: "decoding.MD5",
+			Name:            fmt.Sprintf("%svp9_files_from_bugs", testGroup),
+			Attr:            perBuildAttrs,
+			HardwareDeps:    "hwdep.D(hwdep.SkipGPUFamily(\"rogue\"))",
+			SoftwareDeps:    genCombinedDeps("[]string{%s}", []string{"caps.HWDecodeVP9", param.SoftwareDeps}),
+			ValidatorType:   "decoding.MD5",
+			EnabledFeatures: param.EnabledFeatures,
 		}, vp9FilesFromBugs)...)
 		params = append(params, genFilesFromBugs(paramData{
-			Name:          fmt.Sprintf("%sav1_files_from_bugs", testGroup),
-			Attr:          perBuildAttrs,
-			HardwareDeps:  "hwdep.D(hwdep.SkipGPUFamily(\"rogue\"))",
-			SoftwareDeps:  genCombinedDeps("[]string{%s}", []string{"caps.HWDecodeAV1", param.SoftwareDeps}),
-			ValidatorType: "decoding.MD5",
+			Name:            fmt.Sprintf("%sav1_files_from_bugs", testGroup),
+			Attr:            perBuildAttrs,
+			HardwareDeps:    "hwdep.D(hwdep.SkipGPUFamily(\"rogue\"))",
+			SoftwareDeps:    genCombinedDeps("[]string{%s}", []string{"caps.HWDecodeAV1", param.SoftwareDeps}),
+			ValidatorType:   "decoding.MD5",
+			EnabledFeatures: param.EnabledFeatures,
 		}, av1FilesFromBugs)...)
 		params = append(params, genFilesFromBugs(paramData{
-			Name:          fmt.Sprintf("%shevc_files_from_bugs", testGroup),
-			Attr:          perBuildAttrs,
-			HardwareDeps:  "hwdep.D(hwdep.SkipGPUFamily(\"rogue\"))",
-			SoftwareDeps:  genCombinedDeps("[]string{%s}", []string{"caps.HWDecodeHEVC", "\"proprietary_codecs\"", param.SoftwareDeps}),
-			ValidatorType: "decoding.MD5",
+			Name:            fmt.Sprintf("%shevc_files_from_bugs", testGroup),
+			Attr:            perBuildAttrs,
+			HardwareDeps:    "hwdep.D(hwdep.SkipGPUFamily(\"rogue\"))",
+			SoftwareDeps:    genCombinedDeps("[]string{%s}", []string{"caps.HWDecodeHEVC", "\"proprietary_codecs\"", param.SoftwareDeps}),
+			ValidatorType:   "decoding.MD5",
+			EnabledFeatures: param.EnabledFeatures,
 		}, h265FilesFromBugs)...)
 	}
 

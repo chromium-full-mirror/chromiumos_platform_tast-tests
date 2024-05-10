@@ -2055,7 +2055,7 @@ func init() {
 					videoFiles:      []string{"test_vectors/h264/files_from_bugs/b_149068426_invalid_video_layout_mtk_8183_with_direct_videodecoder.h264"},
 					validatorType:   decoding.MD5,
 					mustFail:        false,
-					enabledFeatures: []string{},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
 				},
 			},
 			{
@@ -2069,7 +2069,7 @@ func init() {
 					videoFiles:      []string{"test_vectors/h264/files_from_bugs/b_172838252_pixelated_video_on_rk3399.h264"},
 					validatorType:   decoding.MD5,
 					mustFail:        false,
-					enabledFeatures: []string{},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
 				},
 			},
 			{
@@ -2083,7 +2083,7 @@ func init() {
 					videoFiles:      []string{"test_vectors/h264/files_from_bugs/b_174733646_video_with_out_of_order_frames_mtk_8173.h264"},
 					validatorType:   decoding.MD5,
 					mustFail:        false,
-					enabledFeatures: []string{},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
 				},
 			},
 			{
@@ -2097,7 +2097,7 @@ func init() {
 					videoFiles:      []string{"test_vectors/h264/files_from_bugs/b_210895987_still-colors-360p.h264"},
 					validatorType:   decoding.MD5,
 					mustFail:        false,
-					enabledFeatures: []string{},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
 				},
 			},
 			{
@@ -2111,7 +2111,7 @@ func init() {
 					videoFiles:      []string{"test_vectors/h264/files_from_bugs/b_276358257__amd_gpu_gen3_lockup.h264"},
 					validatorType:   decoding.MD5,
 					mustFail:        false,
-					enabledFeatures: []string{},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
 				},
 			},
 			{
@@ -2125,7 +2125,7 @@ func init() {
 					videoFiles:      []string{"test_vectors/h264/files_from_bugs/b_299320432__amd_skyrim_system_hang.h264"},
 					validatorType:   decoding.MD5,
 					mustFail:        false,
-					enabledFeatures: []string{},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
 				},
 			},
 			{
@@ -2139,7 +2139,7 @@ func init() {
 					videoFiles:      []string{"test_vectors/h264/files_from_bugs/b_227047778_mtk_8195_artifacts.h264"},
 					validatorType:   decoding.MD5,
 					mustFail:        false,
-					enabledFeatures: []string{},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
 				},
 			},
 			{
@@ -2153,7 +2153,7 @@ func init() {
 					videoFiles:      []string{"test_vectors/vp9/files_from_bugs/b_177839888__rk3399_vp9_artifacts_with_video_decoder_japanews24.ivf"},
 					validatorType:   decoding.MD5,
 					mustFail:        false,
-					enabledFeatures: []string{},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
 				},
 			},
 			{
@@ -2167,7 +2167,7 @@ func init() {
 					videoFiles:      []string{"test_vectors/vp9/files_from_bugs/b_251040563_webrtc_libvpx.vp9.ivf"},
 					validatorType:   decoding.MD5,
 					mustFail:        false,
-					enabledFeatures: []string{},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
 				},
 			},
 			{
@@ -2181,7 +2181,7 @@ func init() {
 					videoFiles:      []string{"test_vectors/av1/files_from_bugs/b_235138734_test-25fps-one-to-four-tiles.av1.ivf"},
 					validatorType:   decoding.MD5,
 					mustFail:        false,
-					enabledFeatures: []string{},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
 				},
 			},
 			{
@@ -2195,7 +2195,7 @@ func init() {
 					videoFiles:      []string{"test_vectors/hevc/files_from_bugs/b_321622872__bands_across_screen_4k.hevc"},
 					validatorType:   decoding.MD5,
 					mustFail:        false,
-					enabledFeatures: []string{},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
 				},
 			},
 		},
