@@ -29,7 +29,7 @@ func init() {
 		Name:         fixture.ChromeLoggedIn,
 		Desc:         "Logged into a user session",
 		Contacts:     []string{"tast-core@google.com", "abergman@google.com", "yichiyan@google.com"},
-		BugComponent: "b:1034649", //ChromeOS > Test > Harness > Tast > Libraries
+		BugComponent: "b:1034649", // ChromeOS > Test > Harness > Tast > Libraries
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
 			return nil, nil
 		}),
@@ -126,6 +126,7 @@ func init() {
 				EnableFeatures("CrosBatterySaver", "CrosBatterySaverAlwaysOn"),
 			}, nil
 		}),
+		BugComponent:    "b:1045832", // ChromeOS > Software > Performance > TPS
 		Parent:          "install100Apps",
 		SetUpTimeout:    FixtureSetUpTimeout,
 		ResetTimeout:    ResetTimeout,
@@ -430,8 +431,10 @@ func init() {
 		Contacts:     []string{"iby@chromium.org", "cros-exp-wg@google.com"},
 		BugComponent: "b:1096648",
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
-			return []Option{FieldTrialConfig(FieldTrialConfigEnable),
-				ExtraArgs("--vmodule=*stats_reporting_controller*=1,*autotest_private_api*=1,*owner_pending_setting_controller*=1")}, nil
+			return []Option{
+				FieldTrialConfig(FieldTrialConfigEnable),
+				ExtraArgs("--vmodule=*stats_reporting_controller*=1,*autotest_private_api*=1,*owner_pending_setting_controller*=1"),
+			}, nil
 		}),
 		SetUpTimeout:    FixtureSetUpTimeout,
 		ResetTimeout:    ResetTimeout,
@@ -444,8 +447,10 @@ func init() {
 		Contacts:     []string{"iby@chromium.org", "cros-exp-wg@google.com"},
 		BugComponent: "b:1096648",
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
-			return []Option{FieldTrialConfig(FieldTrialConfigDisable),
-				ExtraArgs("--vmodule=*stats_reporting_controller*=1,*autotest_private_api*=1,*owner_pending_setting_controller*=1")}, nil
+			return []Option{
+				FieldTrialConfig(FieldTrialConfigDisable),
+				ExtraArgs("--vmodule=*stats_reporting_controller*=1,*autotest_private_api*=1,*owner_pending_setting_controller*=1"),
+			}, nil
 		}),
 		SetUpTimeout:    FixtureSetUpTimeout,
 		ResetTimeout:    ResetTimeout,
