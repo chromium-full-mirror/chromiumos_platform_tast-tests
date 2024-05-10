@@ -31,6 +31,7 @@ const (
 	EnrollmentSAML                                      = "enrollment_saml"
 	ImprivataSharedKiosk                                = "imprivata_shared_kiosk"
 	ImprivataSingleUser                                 = "imprivata_single_user"
+	LogUploadEnabled                                    = "log_upload_enabled"
 	Reporting                                           = "reporting"
 	ZTETestAutomation                                   = "zte-test-automation"
 )
