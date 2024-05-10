@@ -64,7 +64,7 @@ type timeoutError struct {
 	*errors.E
 }
 
-var regPowerdBrightness = regexp.MustCompile(`Setting brightness to \d+ \((\d+)%\)`)
+var regPowerdBrightness = regexp.MustCompile(`Setting brightness to \d+ \(([\.\d]+)%\)`)
 
 // CheckKeyboardBacklightFunctionality confirms keyboard backlight support and verifies its functionality.
 func CheckKeyboardBacklightFunctionality(ctx context.Context, s *testing.State) {
@@ -147,7 +147,7 @@ func CheckKeyboardBacklightFunctionality(ctx context.Context, s *testing.State) 
 	if err := h.Servo.PressKeys(ctx, []string{"<alt_l>", kbLightUp}, servo.DurTab); err != nil {
 		s.Fatal("Failed to increase keyboard backlight: ", err)
 	}
-	currKBLight, err := func() (int, error) {
+	currKBLight, err := func() (float64, error) {
 		matches, err := getKBLightValFromPowerd(ctx, h)
 		if err != nil {
 			return -1, err
@@ -218,7 +218,7 @@ func checkKBLightWhenLidClosedOpen(ctx context.Context, h *firmware.Helper, dut 
 		return errors.Wrap(err, "failed to reconnect to dut")
 	}
 
-	var kbLightValues []int
+	var kbLightValues []float64
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		var err error
 		kbLightValues, err = getKBLightValFromPowerd(ctx, h)
@@ -235,7 +235,7 @@ func checkKBLightWhenLidClosedOpen(ctx context.Context, h *firmware.Helper, dut 
 
 	kbLightClosedLid := kbLightValues[len(kbLightValues)-2]
 	if kbLightClosedLid != 0 {
-		return errors.Errorf("expected kb backlight to be 0 when lid is closed, but got: %d", kbLightClosedLid)
+		return errors.Errorf("expected kb backlight to be 0 when lid is closed, but got: %v", kbLightClosedLid)
 	}
 	kbLightOpenLid := kbLightValues[len(kbLightValues)-1]
 	if kbLightOpenLid == 0 {
@@ -245,14 +245,14 @@ func checkKBLightWhenLidClosedOpen(ctx context.Context, h *firmware.Helper, dut 
 }
 
 // shouldContinue continues adjustment on keyboard backlight until reaching the desired value.
-func shouldContinue(kbBacklight, extremeValue int, action string) bool {
+func shouldContinue(kbBacklight float64, extremeValue int, action string) bool {
 	switch action {
 	case "increasing":
-		return kbBacklight <= extremeValue
+		return kbBacklight <= float64(extremeValue)
 	case "decreasing":
-		return kbBacklight >= extremeValue
+		return kbBacklight >= float64(extremeValue)
 	default:
-		return kbBacklight != extremeValue
+		return kbBacklight != float64(extremeValue)
 	}
 }
 
@@ -260,7 +260,7 @@ func shouldContinue(kbBacklight, extremeValue int, action string) bool {
 // If a timeout is reached, possibly because no physical kb light exists, some information will
 // be logged regarding pwm values, and values from files evaluated in hwdep.
 func adjustKBBacklight(ctx context.Context, h *firmware.Helper, d *dut.DUT, extremeValue int, dur time.Duration, actionKey, action string) error {
-	getCurrentKBLight := func(ctx context.Context, h *firmware.Helper) (int, error) {
+	getCurrentKBLight := func(ctx context.Context, h *firmware.Helper) (float64, error) {
 		matches, err := getKBLightValFromPowerd(ctx, h)
 		if err != nil {
 			return -1, err
@@ -281,13 +281,13 @@ func adjustKBBacklight(ctx context.Context, h *firmware.Helper, d *dut.DUT, extr
 			if err != nil {
 				testing.ContextLog(ctx, "Failed to run ec command to get kb backlight")
 			}
-			if !shouldContinue(kbLightFromEC, extremeValue, action) {
+			if !shouldContinue(float64(kbLightFromEC), extremeValue, action) {
 				return nil
 			}
 			return &timeoutError{E: errors.Errorf(
 				"timeout in adjusting kb backlight. Got kb light from ec command: %d", kbLightFromEC)}
 		}
-		testing.ContextLogf(ctx, "Attempting to match, current: %d, expected: %d", kbLight, extremeValue)
+		testing.ContextLogf(ctx, "Attempting to match, current: %v%%, expected: %d%%", kbLight, extremeValue)
 		if err := h.Servo.PressKeys(ctx, []string{"<alt_l>", actionKey}, servo.DurTab); err != nil {
 			return errors.Wrapf(err, "failed to press alt_l and %v", actionKey)
 		}
@@ -305,7 +305,7 @@ func adjustKBBacklight(ctx context.Context, h *firmware.Helper, d *dut.DUT, extr
 }
 
 // getKBLightValFromPowerd captures the keyboard backlight value from the powerd log.
-func getKBLightValFromPowerd(ctx context.Context, h *firmware.Helper) ([]int, error) {
+func getKBLightValFromPowerd(ctx context.Context, h *firmware.Helper) ([]float64, error) {
 	bashCmd := "grep keyboard_backlight_controller.*Setting' 'brightness /var/log/power_manager/powerd.LATEST"
 	out, err := h.DUT.Conn().CommandContext(ctx, "bash", "-c", bashCmd).Output()
 	if err != nil {
@@ -315,9 +315,9 @@ func getKBLightValFromPowerd(ctx context.Context, h *firmware.Helper) ([]int, er
 	if len(data) == 0 {
 		return nil, errors.New("did not find any records in the powerd log about kb backlight")
 	}
-	var kbLightVals []int
+	var kbLightVals []float64
 	for _, val := range data {
-		found, err := strconv.Atoi(string(val[1]))
+		found, err := strconv.ParseFloat(string(val[1]), 32)
 		if err != nil {
 			return nil, errors.Errorf("unable to parse %s", string(val[1]))
 		}
