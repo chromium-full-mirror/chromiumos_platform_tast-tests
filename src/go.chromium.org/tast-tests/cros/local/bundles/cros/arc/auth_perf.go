@@ -60,9 +60,10 @@ var resultPropRegexp = regexp.MustCompile(`OK,(\d+)`)
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AuthPerf,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Measure auth times in ARC",
+		Func:           AuthPerf,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LacrosStatus:   testing.LacrosVariantExists,
+		Desc:           "Measure auth times in ARC",
 		Contacts: []string{
 			"arc-performance@google.com",
 			"khmel@chromium.org", // Original author.
