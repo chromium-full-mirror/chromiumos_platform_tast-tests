@@ -31,7 +31,7 @@ func init() {
 			{
 				Name:      "floss_disabled",
 				Fixture:   "chromeUIDisabledWith2BTPeersFlossDisabled",
-				ExtraAttr: []string{"bluetooth_flaky"},
+				ExtraAttr: []string{"bluetooth_sa"},
 			},
 			{
 				Name:              "floss_enabled",

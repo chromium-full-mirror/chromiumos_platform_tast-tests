@@ -26,7 +26,7 @@ func init() {
 			"cros-connectivity@google.com",
 			"chadduffin@chromium.org",
 		},
-		BugComponent: "b:1131776", // ChromeOS > Software > System Services > Connectivity > Bluetooth
+		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
 		Attr:         []string{"group:bluetooth"},
 		SoftwareDeps: []string{"chrome"},
 		// Skip on form factors where a warning dialog may be shown when disabling Bluetooth due to all known HID devices being connected via Bluetooth.
@@ -35,20 +35,20 @@ func init() {
 		Params: []testing.Param{{
 			Name:      "floss_disabled",
 			Fixture:   "bluetoothEnabledWithBlueZ",
-			ExtraAttr: []string{"bluetooth_sa"},
+			ExtraAttr: []string{"bluetooth_flaky"},
 		}, {
 			Name:              "floss_enabled",
 			Fixture:           "bluetoothEnabledWithFloss",
-			ExtraAttr:         []string{"bluetooth_floss"},
+			ExtraAttr:         []string{"bluetooth_floss_flaky"},
 			ExtraSoftwareDeps: []string{"bluetooth_floss"},
 		}, {
 			Name:      "floss_disabled_oobe",
 			Fixture:   "bluetoothEnabledInOobeWithBlueZ",
-			ExtraAttr: []string{"bluetooth_sa"},
+			ExtraAttr: []string{"bluetooth_flaky"},
 		}, {
 			Name:              "floss_enabled_oobe",
 			Fixture:           "bluetoothEnabledInOobeWithFloss",
-			ExtraAttr:         []string{"bluetooth_floss"},
+			ExtraAttr:         []string{"bluetooth_floss_flaky"},
 			ExtraSoftwareDeps: []string{"bluetooth_floss"},
 		}},
 	})

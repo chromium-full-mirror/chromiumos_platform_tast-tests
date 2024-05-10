@@ -28,8 +28,8 @@ func init() {
 			"alfredyu@cienet.com",
 			"chromeos-connectivity-cienet-external@google.com",
 		},
-		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
-		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_prod_esim"},
+		BugComponent: "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular
+		Attr:         []string{"group:cellular", "cellular_sim_prod_esim"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "cellular",
 		Timeout:      3 * time.Minute,

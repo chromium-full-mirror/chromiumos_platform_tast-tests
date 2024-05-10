@@ -101,7 +101,7 @@ func init() {
 					securityConfig: wpa.NewConfigFactory(correctPassphrase, wpa.Mode(wpa.ModePureWPA), wpa.Ciphers(wpa.CipherTKIP, wpa.CipherCCMP)),
 					apOption:       []hostapd.Option{hostapd.SSID(hostapd.RandomSSID("Hidden_WiFi")), hostapd.Hidden()},
 				},
-				ExtraAttr: []string{"wificell_e2e_unstable"},
+				ExtraAttr: []string{"wificell_e2e"},
 			}, {
 				Name: "oobe_open_wpa",
 				Val: &handlePassphrasesParam{
@@ -109,7 +109,7 @@ func init() {
 					securityConfig: wpa.NewConfigFactory(correctPassphrase, wpa.Mode(wpa.ModePureWPA), wpa.Ciphers(wpa.CipherTKIP, wpa.CipherCCMP)),
 					apOption:       []hostapd.Option{hostapd.SSID(hostapd.RandomSSID("Open_WiFi_"))},
 				},
-				ExtraAttr: []string{"wificell_e2e_unstable"},
+				ExtraAttr: []string{"wificell_e2e"},
 			}, {
 				Name: "logged_in_hidden_wpa2",
 				Val: &handlePassphrasesParam{
@@ -133,7 +133,7 @@ func init() {
 					securityConfig: wpa.NewConfigFactory(correctPassphrase, wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherTKIP, wpa.CipherCCMP)),
 					apOption:       []hostapd.Option{hostapd.SSID(hostapd.RandomSSID("Hidden_WiFi_")), hostapd.Hidden()},
 				},
-				ExtraAttr: []string{"wificell_e2e_unstable"},
+				ExtraAttr: []string{"wificell_e2e"},
 			}, {
 				Name: "oobe_open_wpa2",
 				Val: &handlePassphrasesParam{
@@ -141,7 +141,7 @@ func init() {
 					securityConfig: wpa.NewConfigFactory(correctPassphrase, wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherTKIP, wpa.CipherCCMP)),
 					apOption:       []hostapd.Option{hostapd.SSID(hostapd.RandomSSID("Open_WiFi_"))},
 				},
-				ExtraAttr: []string{"wificell_e2e_unstable"},
+				ExtraAttr: []string{"wificell_e2e"},
 			},
 		},
 		Fixture: wificell.FixtureID(wificell.TFFeaturesNone),
