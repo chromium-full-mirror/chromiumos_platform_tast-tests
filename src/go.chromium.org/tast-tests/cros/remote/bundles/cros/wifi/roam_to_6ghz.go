@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/common/wifi/security/wpa"
 	"go.chromium.org/tast-tests/cros/services/cros/wifi"
@@ -22,8 +23,7 @@ import (
 )
 
 type roamTo6GHzTestCase struct {
-	lowerBandApConfig  hostapd.ApConfig
-	higherBandApConfig hostapd.ApConfig
+	lowerBandChannel int
 }
 
 func init() {
@@ -48,28 +48,12 @@ func init() {
 			{
 				Name: "from_2ghz",
 				Val: roamTo6GHzTestCase{
-					lowerBandApConfig: hostapd.ApConfig{
-						ApOpts:     []hostapd.Option{hostapd.Mode(hostapd.Mode80211axMixed), hostapd.Channel(1), hostapd.HTCaps(hostapd.HTCapHT20), hostapd.SpectrumManagement()},
-						SecConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherCCMP)),
-					},
-					higherBandApConfig: hostapd.ApConfig{
-						ApOpts: []hostapd.Option{hostapd.Mode(hostapd.Mode80211axPure), hostapd.Channel(21), hostapd.HTCaps(hostapd.HTCapHT20),
-							hostapd.HEChWidth(hostapd.HEChWidth20Or40), hostapd.OpClass(131), hostapd.PMF(hostapd.PMFRequired)},
-						SecConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
-					},
+					lowerBandChannel: 1,
 				},
 			}, {
 				Name: "from_5ghz",
 				Val: roamTo6GHzTestCase{
-					lowerBandApConfig: hostapd.ApConfig{
-						ApOpts:     []hostapd.Option{hostapd.Mode(hostapd.Mode80211axMixed), hostapd.Channel(40), hostapd.HTCaps(hostapd.HTCapHT20), hostapd.SpectrumManagement()},
-						SecConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherCCMP)),
-					},
-					higherBandApConfig: hostapd.ApConfig{
-						ApOpts: []hostapd.Option{hostapd.Mode(hostapd.Mode80211axPure), hostapd.Channel(21), hostapd.HTCaps(hostapd.HTCapHT20),
-							hostapd.HEChWidth(hostapd.HEChWidth20Or40), hostapd.OpClass(131), hostapd.PMF(hostapd.PMFRequired)},
-						SecConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
-					},
+					lowerBandChannel: 40,
 				},
 			},
 		},
@@ -85,16 +69,24 @@ func RoamTo6GHz(ctx context.Context, s *testing.State) {
 		2 - Configure legacy band AP.
 		3 - Associate DUT to legacy band AP.
 		4 - Configure the 6GHz AP with the same SSID as legacy band AP.
-		5 - Request a scan.
-		6 - Verify the DUT roams to the 6GHz AP in a reasonable amount of time.
-		7 - Verify there were no disconnections during the roam.
+		5 - Set the DUT RequestScanType to active.
+		6 - Request a scan.
+		7 - Verify the DUT roams to the 6GHz AP in a reasonable amount of time.
+		8 - Verify there were no disconnections during the roam.
 	*/
 	tf := s.FixtValue().(*wificell.TestFixture)
 	tc := s.Param().(roamTo6GHzTestCase)
+	lowerBandApConfig := hostapd.ApConfig{
+		ApOpts:     []hostapd.Option{hostapd.Mode(hostapd.Mode80211axMixed), hostapd.Channel(tc.lowerBandChannel), hostapd.HTCaps(hostapd.HTCapHT20), hostapd.SpectrumManagement()},
+		SecConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherCCMP))}
+	higherBandApConfig := hostapd.ApConfig{
+		ApOpts: []hostapd.Option{hostapd.Mode(hostapd.Mode80211axPure), hostapd.Channel(21), hostapd.HTCaps(hostapd.HTCapHT20),
+			hostapd.HEChWidth(hostapd.HEChWidth20Or40), hostapd.OpClass(131), hostapd.PMF(hostapd.PMFRequired), hostapd.BeaconInterval(20)},
+		SecConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP))}
 
 	// Configure the legacy band AP and connect the DUT to it, then configure
 	// the 6GHz band AP.
-	ctx, rt, finish, err := wifiutil.SimpleRoamInitialSetup(ctx, tf, wificell.DefaultDUT, tc.lowerBandApConfig, tc.higherBandApConfig, true)
+	ctx, rt, finish, err := wifiutil.SimpleRoamInitialSetup(ctx, tf, wificell.DefaultDUT, lowerBandApConfig, higherBandApConfig, true)
 	if err != nil {
 		s.Fatal("Failed initial setup of the test: ", err)
 	}
@@ -107,6 +99,27 @@ func RoamTo6GHz(ctx context.Context, s *testing.State) {
 	defer cancel()
 	rt.SetRoamSucceeded(false)
 
+	// Set WiFi RequestScanType on the DUT to active to ensure the 6GHz AP
+	// is discovered in a timely manner.
+	originalRequestScanType, err := tf.WifiClient().GetRequestScanTypeProperty(ctx)
+	if err != nil {
+		s.Error("Failed to get WiFi RequestScan type: ", err)
+	}
+	if originalRequestScanType != shillconst.WiFiRequestScanTypeActive {
+		defer func(ctx context.Context) {
+			if err := tf.WifiClient().SetRequestScanTypeProperty(ctx, originalRequestScanType); err != nil {
+				s.Errorf("Failed to reset WiFi RequestScan type to %s: %v", originalRequestScanType, err)
+			}
+			s.Log("Reset WiFi RequestScan type to ", originalRequestScanType)
+		}(ctx)
+		ctx, cancel = ctxutil.Shorten(ctx, 500*time.Millisecond)
+		defer cancel()
+		if err := tf.WifiClient().SetRequestScanTypeProperty(ctx, shillconst.WiFiRequestScanTypeActive); err != nil {
+			s.Fatal("Failed to set WiFi RequestScan type to active: ", err)
+		}
+		s.Log("Set WiFi RequestScan type to active")
+	}
+
 	// Generate a property watcher for changes in roam state and WiFi.BSSID.
 	waitCtx, cancel := context.WithTimeout(ctx, 60*time.Second)
 	defer cancel()
@@ -118,7 +131,7 @@ func RoamTo6GHz(ctx context.Context, s *testing.State) {
 	// No need to request a roam to the 6GHz AP, the DUT should automatically
 	// roam after a scan.
 	if err := tf.DUTWifiClient(wificell.DefaultDUT).RequestScan(ctx); err != nil {
-		s.Error("Failed to request scan: ", err)
+		s.Fatal("Failed to request scan: ", err)
 	}
 
 	detectTimeout := 10 * time.Second
