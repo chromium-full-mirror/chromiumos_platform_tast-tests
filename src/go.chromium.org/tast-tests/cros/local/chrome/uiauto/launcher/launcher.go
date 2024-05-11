@@ -85,6 +85,12 @@ var ImageSearchPowerTestRepeatTimes = 50
 // ImageSearchPowerTestPictureName is the base file name for image search power test.
 const ImageSearchPowerTestPictureName = "search_local_image.png"
 
+// SearchCategoriesButton is button to pop up the search category menu.
+var SearchCategoriesButton *nodewith.Finder = nodewith.Name("Search categories").ClassName("SearchBoxImageButton").Role(role.PopUpButton)
+
+// SearchCategoriesMenu is the node of search category menu.
+var SearchCategoriesMenu *nodewith.Finder = nodewith.Name("Search categories").ClassName("MenuItemView").Role(role.MenuItem)
+
 // TestCase describes modes in which the launcher UI can be shown, and by which launcher test should generally be parameterized.
 // Use a struct because it makes the individual test cases more readable.
 type TestCase struct {
@@ -594,7 +600,7 @@ func ClearSearchField(tconn *chrome.TestConn, kb *input.KeyboardEventWriter) uia
 	searchField := nodewith.HasClass("Textfield").Role("textField").Ancestor(searchBoxView)
 
 	return uiauto.Combine("Clear the launcher search field",
-		ui.WaitUntilExists(searchField.Focused()),
+		ui.LeftClickUntilFocused(searchField),
 		kb.AccelAction("Ctrl+A"),
 		kb.TypeKeyAction(input.KEY_BACKSPACE),
 	)
@@ -1618,4 +1624,21 @@ func search(tconn *chrome.TestConn, kb *input.KeyboardEventWriter, searchBoxView
 		}
 		return nil
 	}
+}
+
+// SearchWithCategory return a function that executes a search query and wait for result show in the search result.
+// Launcher should be open already.
+func SearchWithCategory(tconn *chrome.TestConn, kb *input.KeyboardEventWriter, query string, searchCategoryInfo SearchCategoryInfo) uiauto.Action {
+	return uiauto.Combine("search in launcher",
+		ClearSearchField(tconn, kb),
+		Search(tconn, kb, query),
+		WaitForResultWithCategory(tconn, searchCategoryInfo))
+}
+
+// ChangeSelectStatusOfSearchCategoryItem return a function that simulate use change Search Categry Item.
+func ChangeSelectStatusOfSearchCategoryItem(tconn *chrome.TestConn, ui *uiauto.Context, categoryitem *nodewith.Finder) uiauto.Action {
+	return uiauto.Combine("change item select status in the menu",
+		ui.DoDefaultUntil(SearchCategoriesButton, ui.Exists(SearchCategoriesMenu)),
+		ui.DoDefault(categoryitem),
+		ui.DoDefault(SearchCategoriesButton))
 }

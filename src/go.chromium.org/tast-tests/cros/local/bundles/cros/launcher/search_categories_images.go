@@ -1,4 +1,4 @@
-// Copyright 2023 The ChromiumOS Authors
+// Copyright 2024 The ChromiumOS Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -10,49 +10,47 @@ import (
 	"path/filepath"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/launcher/fixture"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/launcher/util"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
-	"go.chromium.org/tast-tests/cros/local/uidetection"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
 )
 
+const localPictureName = util.ImageSearchLocalPictureName
+
+var queryCategoryInfo = launcher.SearchCategoryInfo{
+	Category:  "Images",
+	NeedRegex: false,
+	Result:    "search_local_image",
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SearchLocalImage,
+		Func:         SearchCategoriesImages,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that use local image search with different feature flags and search for a local image",
+		Desc:         "Checks that removing images item from search catetories will not show image search result",
 		Contacts: []string{
 			"launcher-search-notify@google.com",
-			"dgrebenyuk@google.com",
+			"chenjih@google.com",
 			"ypitsishin@google.com",
 		},
 		BugComponent: "b:1281467",
-		SoftwareDeps: []string{"chrome"},
-		Data:         []string{util.ImageSearchLocalPictureName},
-		Timeout:      10 * time.Minute,
+		SoftwareDeps: []string{"chrome", "ondevice_image_content_annotation"},
+		Data:         []string{launcher.ImageSearchPowerTestPictureName},
+		Timeout:      5 * time.Minute,
+		Fixture:      fixture.LauncherImageSearchOcr,
+		Attr: []string{"group:cbx",
+			"cbx_feature_enabled",
+			"cbx_unstable"},
+		TestBedDeps: []string{tbdep.Cbx(true)},
 		Params: []testing.Param{
 			{
-				Name: "search_with_ica",
-				Val: util.ImageSearchTestParam{
-					Name:           "ica",
-					TabletMode:     false,
-					Query:          []string{"paper", "Paper"},
-					ExpectedResult: "About",
-					UseIca:         true,
-					UseOcr:         false,
-				},
-				Fixture:           fixture.LauncherImageSearchIca,
-				ExtraSoftwareDeps: []string{"ondevice_image_content_annotation"},
-				ExtraAttr:         []string{"group:mainline", "informational"},
-			},
-			{
-				Name: "search_with_ocr_critical",
 				Val: util.ImageSearchTestParam{
 					Name:           "ocr",
 					TabletMode:     false,
@@ -61,45 +59,12 @@ func init() {
 					UseIca:         false,
 					UseOcr:         true,
 				},
-				Fixture:           fixture.LauncherImageSearchOcr,
-				ExtraSoftwareDeps: []string{"ondevice_image_content_annotation"},
-				ExtraAttr: []string{"group:cbx",
-					"cbx_feature_enabled",
-					"cbx_unstable"},
-			},
-			{
-				Name: "search_with_ocr_informational",
-				Val: util.ImageSearchTestParam{
-					Name:           "ocr",
-					TabletMode:     false,
-					Query:          []string{"Thoughts"},
-					ExpectedResult: "About",
-					UseIca:         false,
-					UseOcr:         true,
-				},
-				Fixture:           fixture.LauncherImageSearchOcrNonCBX,
-				ExtraSoftwareDeps: []string{"no_ondevice_image_content_annotation"},
-				ExtraAttr:         []string{"group:mainline", "informational"},
-			},
-			{
-				Name: "search_with_ica_ocr",
-				Val: util.ImageSearchTestParam{
-					Name:           "ica_ocr",
-					TabletMode:     false,
-					Query:          []string{"Paper", "Thoughts"},
-					ExpectedResult: "About",
-					UseIca:         true,
-					UseOcr:         true,
-				},
-				Fixture:           fixture.LauncherImageSearchIcaAndOcr,
-				ExtraSoftwareDeps: []string{"ondevice_image_content_annotation"},
-				ExtraAttr:         []string{"group:mainline", "informational"},
 			},
 		},
 	})
 }
 
-func SearchLocalImage(ctx context.Context, s *testing.State) {
+func SearchCategoriesImages(ctx context.Context, s *testing.State) {
 	param := s.Param().(util.ImageSearchTestParam)
 
 	cr := s.FixtValue().(fixture.LauncherSearchFixtData).Chrome
@@ -133,14 +98,13 @@ func SearchLocalImage(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get user's Download path: ", err)
 	}
 
-	localFileLocation := filepath.Join(downloadsPath, util.ImageSearchLocalPictureName)
-	if err := fsutil.CopyFile(s.DataPath(util.ImageSearchLocalPictureName), localFileLocation); err != nil {
+	localFileLocation := filepath.Join(downloadsPath, localPictureName)
+	if err := fsutil.CopyFile(s.DataPath(localPictureName), localFileLocation); err != nil {
 		s.Fatalf("Failed to copy the test image to %s: %s", localFileLocation, err)
 	}
 	defer os.Remove(localFileLocation)
 
 	ui := uiauto.New(tconn)
-	ud := uidetection.NewDefault(tconn).WithScreenshotStrategy(uidetection.ImmediateScreenshot)
 
 	for _, query := range param.Query {
 		cleanup, err := launcher.SetUpLauncherTest(ctx, tconn, param.TabletMode, false /*stabilizeAppCount*/)
@@ -157,18 +121,35 @@ func SearchLocalImage(ctx context.Context, s *testing.State) {
 		testing.Sleep(ctx, 5*time.Second)
 
 		if err := uiauto.Retry(util.ImageSearchRetryTimes, uiauto.NamedCombine("Search for image",
-			launcher.SearchWithCategory(tconn, kb, query, launcher.SearchCategoryInfo{
-				Category:  "Images",
-				NeedRegex: false,
-				Result:    "search_local_image",
-			}),
-
-			ui.DoDefault(util.ImageNode),
-			launcher.VerifyTextWithUIDetection(ud, param.ExpectedResult),
+			launcher.SearchWithCategory(tconn, kb, query, queryCategoryInfo),
+			ui.Exists(util.ImageNode),
 		))(ctx); err != nil {
 			faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_dump_"+s.Param().(util.ImageSearchTestParam).Name)
 			s.Fatal("Failed to search image: ", err)
 		}
+
+		if err := launcher.ChangeSelectStatusOfSearchCategoryItem(tconn, ui, util.ImagesSelectionItem)(ctx); err != nil {
+			s.Fatal("Failed to unselect Images in the menu : ", err)
+		}
+
+		if err := uiauto.Retry(util.ImageSearchRetryTimes, uiauto.NamedCombine("search image after unselect Images in menu",
+			launcher.SearchWithCategory(tconn, kb, query, queryCategoryInfo),
+			ui.Exists(util.ImageNode),
+		))(ctx); err == nil {
+			s.Fatal("The image is still present: ", err)
+		}
+
+		if err := launcher.ChangeSelectStatusOfSearchCategoryItem(tconn, ui, util.ImagesSelectionItem)(ctx); err != nil {
+			s.Fatal("Failed to select Images in the menu : ", err)
+		}
+
+		if err := uiauto.Retry(util.ImageSearchRetryTimes, uiauto.NamedCombine("Search for image after select images in category",
+			launcher.SearchWithCategory(tconn, kb, query, queryCategoryInfo),
+			ui.Exists(util.ImageNode),
+		))(ctx); err != nil {
+			s.Fatal("Failed to search image after select images in category: ", err)
+		}
+
 	}
 
 	if err := launcher.VerifyDlcInstalled(ctx, dlcList); err != nil {
