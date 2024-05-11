@@ -6,17 +6,11 @@ package quickanswers
 
 import (
 	"context"
-	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/event"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/quickanswers"
-	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -41,66 +35,44 @@ func init() {
 		}},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
-			Fixture: quickanswers.BaseFixture,
-			Val:     browser.TypeAsh,
+			Fixture: quickanswers.Parameterize(
+				quickanswers.EnabledWithBrowserFixture,
+				quickanswers.VariantTranslationSentence,
+			),
 		}, {
-			Name:              "lacros",
-			Fixture:           quickanswers.BaseLacrosFixture,
+			Name: "lacros",
+			Fixture: quickanswers.Parameterize(
+				quickanswers.EnabledWithBrowserLacrosFixture,
+				quickanswers.VariantTranslationSentence,
+			),
 			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               browser.TypeLacros,
 		}},
 	})
 }
 
 // TranslationWithSentences tests Quick Answers translation feature with sentences.
 func TranslationWithSentences(ctx context.Context, s *testing.State) {
-	// Reserve five seconds for various cleanup.
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
-	defer cancel()
-
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	queryWord := s.FixtValue().(quickanswers.HasQueryWord).QueryWord()
+
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
-	// Setup a browser.
-	bt := s.Param().(browser.Type)
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, bt)
+	queryFinder, err := quickanswers.SelectQueryWord(ctx, tconn, queryWord)
 	if err != nil {
-		s.Fatal("Failed to open the browser: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
-
-	// Open page with query sentence on it.
-	const querySentence = "《霍比特人》由英国作家J·R·R·托尔金所作，于1937年9月21日出版。"
-	conn, err := br.NewConn(ctx, "https://google.com/search?q="+querySentence)
-	if err != nil {
-		s.Fatal("Failed to create new Chrome connection: ", err)
-	}
-	defer conn.Close()
-	defer conn.CloseTarget(ctx)
-
-	ui := uiauto.New(tconn)
-	// Wait for the query sentence to appear.
-	query := nodewith.Name(querySentence).Role(role.StaticText).First()
-	if err := ui.WaitUntilExists(query)(ctx); err != nil {
-		s.Fatal("Failed to wait for query to load: ", err)
-	}
-
-	// Select the sentence and setup watcher to wait for text selection event.
-	if err := ui.WaitForEvent(nodewith.Root(),
-		event.TextSelectionChanged,
-		ui.Select(query, 0 /*startOffset*/, query, 36 /*endOffset*/))(ctx); err != nil {
-		s.Fatal("Failed to select query: ", err)
+		s.Fatal("Failed to select a query: ", err)
 	}
 
 	// Right click the selected query sentence and ensure the Quick Answers UI shows up with the translation result.
+	ui := uiauto.New(tconn)
 	quickAnswers := nodewith.ClassName("QuickAnswersView")
-	translationResult := nodewith.NameContaining("The Hobbit").NameContaining("J.R.R. Tolkien").NameContaining("September 21").ClassName("QuickAnswersTextLabel")
+	translationResult := nodewith.NameContaining("organize the world's information").
+		NameContaining("make it universally accessible and useful").
+		ClassName("QuickAnswersTextLabel")
 	if err := uiauto.Combine("Show context menu",
-		ui.RightClick(query),
+		ui.RightClick(queryFinder),
 		ui.WaitUntilExists(quickAnswers),
 		ui.WaitUntilExists(translationResult))(ctx); err != nil {
 		s.Fatal("Quick Answers result not showing up: ", err)
@@ -108,7 +80,7 @@ func TranslationWithSentences(ctx context.Context, s *testing.State) {
 
 	// Dismiss the context menu and ensure the Quick Answers UI also dismiss.
 	if err := uiauto.Combine("Dismiss context menu",
-		ui.LeftClick(query),
+		ui.LeftClick(queryFinder),
 		ui.WaitUntilGone(quickAnswers))(ctx); err != nil {
 		s.Fatal("Quick Answers result not dismissed: ", err)
 	}

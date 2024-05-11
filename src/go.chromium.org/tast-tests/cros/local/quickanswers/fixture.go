@@ -41,6 +41,15 @@ const (
 	// VariantSimpleWord is a name of WithBrowserFixture variant with a simple
 	// English word.
 	VariantSimpleWord = "simpleWord"
+	// VariantUnitConversion is a name of WithBrowserFixture variant with a
+	// query for unit conversion intent.
+	VariantUnitConversion = "unitConversion"
+	// VariantTranslation is a name of WithBrowserFixture variant with a
+	// query for translation intent.
+	VariantTranslation = "translation"
+	// VariantTranslationSentence is a name of WithBrowserFixture variant
+	// with a sentence for translation intent.
+	VariantTranslationSentence = "translationSentence"
 
 	// BaseFixture is a fixture with specified quick answers pref state.
 	// TODO(b/339097439): Make this a private. All tests should use
@@ -79,6 +88,26 @@ func withBrowserFixtureParams() []testing.FixtureParam {
 			Name: VariantSimpleWord,
 			Val: withBrowserFixtureParam{
 				queryWord: "dog",
+			},
+		},
+		{
+			Name: VariantUnitConversion,
+			Val: withBrowserFixtureParam{
+				queryWord: "50 kg",
+			},
+		},
+		{
+			Name: VariantTranslation,
+			Val: withBrowserFixtureParam{
+				// En-translation: information
+				queryWord: "信息",
+			},
+		},
+		{
+			Name: VariantTranslationSentence,
+			Val: withBrowserFixtureParam{
+				// From https://about.google/intl/zh_cn/
+				queryWord: "我们的使命是整合全球信息，供大众使用，让人人受益。",
 			},
 		},
 	}
