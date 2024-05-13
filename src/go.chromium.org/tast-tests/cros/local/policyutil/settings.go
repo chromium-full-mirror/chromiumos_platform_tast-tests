@@ -231,5 +231,5 @@ func CheckCertificateVisibleInSystemSettings(ctx context.Context, tconn *chrome.
 		ui.WaitUntilExists(userCertSelector),
 		ui.MakeVisible(userCertSelector),
 		ui.DoDefault(userCertSelector),
-		ui.DoDefault(nodewith.Name(certName+" ["+certName+"]").Role(role.ListBoxOption)))(ctx)
+		ui.DoDefault(nodewith.Name(certName+" ["+certName+"]").Ancestor(userCertSelector).Role(role.MenuListOption)))(ctx)
 }

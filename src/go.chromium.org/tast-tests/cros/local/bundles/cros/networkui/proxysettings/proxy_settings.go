@@ -537,12 +537,11 @@ func (m *Manager) IsUseSameProxyToggleOptionEnabled(ctx context.Context, tconn *
 
 // setConnectionType sets proxy connection type to expected type.
 func setConnectionType(ctx context.Context, ui *uiauto.Context, connectionType ConnectionType) error {
-	option := nodewith.Name(string(connectionType)).Role(role.ListBoxOption)
+	option := nodewith.Name(string(connectionType)).Role(role.MenuListOption)
 	return uiauto.Combine(fmt.Sprintf("setup proxy to %q", connectionType),
 		ui.MakeVisible(ossettings.ProxyDropDownMenu),
 		ui.WaitUntilExists(ossettings.ProxyDropDownMenu.Visible()),
 		ui.LeftClickUntil(ossettings.ProxyDropDownMenu, ui.WithTimeout(3*time.Second).WaitUntilExists(option)),
 		ui.LeftClick(option),
-		ui.WaitUntilGone(option),
 	)(ctx)
 }

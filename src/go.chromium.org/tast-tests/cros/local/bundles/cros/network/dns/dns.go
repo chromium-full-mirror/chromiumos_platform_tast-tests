@@ -227,7 +227,7 @@ func setDoHMode(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, 
 		defer kb.Close(ctx)
 
 		selectNode := nodewith.Name("Select DNS provider").Role(role.ComboBoxSelect)
-		optionNode := nodewith.Name("Add custom DNS service provider").Role(role.ListBoxOption)
+		optionNode := nodewith.Name("Add custom DNS service provider").Role(role.MenuListOption)
 		textNode := nodewith.Name("Enter custom DNS query URL").Role(role.TextField)
 		if err := uiauto.Combine("enable DoH always on with a custom provider",
 			// Click add custom DNS service provider option.

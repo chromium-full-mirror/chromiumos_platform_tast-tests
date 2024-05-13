@@ -379,7 +379,7 @@ func SelectPreRevampOtherAPN(ctx context.Context, tconn *chrome.TestConn, apn st
 		return errors.Wrap(err, "failed to expand APN network details")
 	}
 
-	apnMenuItem := nodewith.NameContaining(apn).Role(role.ListBoxOption)
+	apnMenuItem := nodewith.NameContaining(apn).Role(role.MenuListOption)
 
 	if err := uiauto.Combine("Select other menu item",
 		ui.WaitUntilExists(AccessPointDropdown.Focusable()),
@@ -629,7 +629,7 @@ func (s *OSSettings) OpenNewAPNDialogAndPopulateFields(ctx context.Context, apn 
 	}
 
 	if len(apn.AuthenticationType) != 0 {
-		authenticationTypeMenuItem := nodewith.Name(apn.AuthenticationType).Role(role.ListBoxOption)
+		authenticationTypeMenuItem := nodewith.Name(apn.AuthenticationType).Role(role.MenuListOption)
 
 		if err := uiauto.Combine("Select authentication menu item",
 			s.ui.LeftClick(AuthenticationTypeDropdown),
@@ -653,7 +653,7 @@ func (s *OSSettings) OpenNewAPNDialogAndPopulateFields(ctx context.Context, apn 
 	}
 
 	if len(apn.IPType) != 0 {
-		ipTypeMenuItem := nodewith.Name(apn.IPType).Role(role.ListBoxOption)
+		ipTypeMenuItem := nodewith.Name(apn.IPType).Role(role.MenuListOption)
 
 		if err := uiauto.Combine("Select IP menu item",
 			s.ui.LeftClick(IPTypeDropdown),

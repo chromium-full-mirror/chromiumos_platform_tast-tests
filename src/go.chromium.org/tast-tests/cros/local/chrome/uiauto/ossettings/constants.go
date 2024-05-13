@@ -383,7 +383,7 @@ var (
 	ProxyDropDownMenu = nodewith.HasClass("md-select").NameRegex(proxyDropDownNameRegex).Role(role.ComboBoxSelect)
 
 	// ManualProxyOption is the finder for the "Manual proxy configuration" option in the proxy drop down menu.
-	ManualProxyOption = nodewith.Name("Manual proxy configuration").Role(role.ListBoxOption)
+	ManualProxyOption = nodewith.Name("Manual proxy configuration").Role(role.MenuListOption)
 
 	// HTTPHostTextField is the finder for the "HTTP host" text field.
 	HTTPHostTextField = nodewith.Name("HTTP Proxy - Host").Role(role.TextField)

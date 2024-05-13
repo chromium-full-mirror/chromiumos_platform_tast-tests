@@ -29,7 +29,7 @@ func getValueNodeInfos(ctx context.Context, tconn *chrome.TestConn, dropdown *no
 	}
 
 	// Search for all available option nodes.
-	valueNodes, err := ui.NodesInfo(ctx, nodewith.Ancestor(dropdown).Role(role.ListBoxOption))
+	valueNodes, err := ui.NodesInfo(ctx, nodewith.Ancestor(dropdown).Role(role.MenuListOption))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to fetch available option nodes")
 	}
@@ -63,12 +63,12 @@ func Values(ctx context.Context, tconn *chrome.TestConn, dropdown *nodewith.Find
 // SelectDropDownOption returns a function that selects dropdown option with the given option name.
 func SelectDropDownOption(tconn *chrome.TestConn, dropdown *nodewith.Finder, optionName string) uiauto.Action {
 	ui := uiauto.New(tconn)
-	option := nodewith.Name(optionName).Role(role.ListBoxOption).Ancestor(dropdown)
+	option := nodewith.Name(optionName).Role(role.MenuListOption).Ancestor(dropdown)
 	return uiauto.Combine(fmt.Sprintf("select option %q", optionName),
 		ui.WaitUntilExists(dropdown),
 		ui.FocusAndWait(dropdown),
 		ui.LeftClickUntil(dropdown, ui.Exists(option)),
-		ui.LeftClickUntil(option, ui.Gone(option)),
+		ui.LeftClick(option),
 	)
 }
 
