@@ -40,6 +40,7 @@ group("all") {
     "ArcLaunchIntentTest:ArcLaunchIntentTest",
     "ArcLifecycleTest:ArcLifecycleTest",
     "ArcLinkCapturingTest:ArcLinkCapturingTest",
+    "ArcLocaleChangerTest:ArcLocaleChangerTest",
     "ArcLongPressTest:ArcLongPressTest",
     "ArcManyFilesTest:ArcManyFilesTest",
     "ArcMediaScanPerfTest:ArcMediaScanPerfTest",

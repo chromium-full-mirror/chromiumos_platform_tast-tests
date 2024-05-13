@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright 2024 The ChromiumOS Authors
+     Use of this source code is governed by a BSD-style license that can be
+     found in the LICENSE file.
+-->
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:id="@+id/main_activity"
+    tools:context=".MainActivity">
+
+    <TextView
+        android:id="@+id/locale_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/empty_locale_text"/>
+
+    <Button
+        android:id="@+id/spanish_button_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="changeLocale"
+        android:text="@string/spanish_button_text"/>
+    <Button
+        android:id="@+id/english_button_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="changeLocale"
+        android:text="@string/english_button_text"/>
+    <Button
+        android:id="@+id/french_button_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="changeLocale"
+        android:text="@string/french_button_text"/>
+    <Button
+        android:id="@+id/default_button_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="changeLocale"
+        android:text="@string/default_button_text"/>
+
+</LinearLayout>

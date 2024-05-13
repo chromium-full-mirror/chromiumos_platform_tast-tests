@@ -25,10 +25,10 @@ import (
 )
 
 const (
-	perAppLangTestAppID         = "hpmboldompfijmkgjmdodcbfebdncjml"
-	perAppLangTestAppName       = "ARC Locale Changer Demo"
-	perAppLangTestApkFileName   = "ArcLocaleChangerDemo.apk"
-	perAppLangTestPackageName   = "org.chromium.arc.localechangerdemo"
+	perAppLangTestAppID         = "ljodfcljdagbflnefogibkoibobehcah"
+	perAppLangTestAppName       = "ARC Locale Changer Test"
+	perAppLangTestApkFileName   = "ArcLocaleChangerTest.apk"
+	perAppLangTestPackageName   = "org.chromium.arc.testapp.localechanger"
 	perAppLangTestActvitityName = ".MainActivity"
 	englishUSLocale             = "en_US"
 	englishUSLanguage           = "English (United States)"
@@ -48,12 +48,6 @@ func init() {
 		// ChromeOS > Software > ARC++ > Framework > Chrome Integration
 		BugComponent: "b:537221",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
-		// TODO(b/322267186): Move the apk to ChromeOS repository once
-		// Per-App Language feature has fully launched.
-		// To update test APK, run `m ArcLocaleChangerDemo` && upload APK with `gsutil`.
-		// Please read https://chromium.googlesource.com/chromiumos/platform/tast/+/HEAD/docs/writing_tests.md#external-data-files
-		// for more info.
-		Data: []string{perAppLangTestApkFileName},
 		// Per-App Language is currently only enabled on ARC-T.
 		SoftwareDeps: []string{"chrome", "android_vm", "no_android_vm_r"},
 		Timeout:      10 * time.Minute,
@@ -101,7 +95,7 @@ func ChangeAppLanguage(ctx context.Context, s *testing.State) {
 
 	// Install and start activity.
 	s.Log("Installing app")
-	if err := a.Install(ctx, s.DataPath(perAppLangTestApkFileName)); err != nil {
+	if err := a.Install(ctx, arc.APKPath(perAppLangTestApkFileName)); err != nil {
 		s.Fatal("Failed installing app: ", err)
 	}
 	act, err := arc.NewActivity(a, perAppLangTestPackageName, perAppLangTestActvitityName)

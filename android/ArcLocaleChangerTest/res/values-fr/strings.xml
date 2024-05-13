@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright 2024 The ChromiumOS Authors
+     Use of this source code is governed by a BSD-style license that can be
+     found in the LICENSE file.
+-->
+
+<resources>
+    <string name="spanish_button_text" translatable="true">Espagnol</string>
+    <string name="english_button_text" translatable="true">Anglaise</string>
+    <string name="french_button_text" translatable="true">Français</string>
+    <string name="default_button_text" translatable="true">Défaut</string>
+    <string name="empty_locale_text" translatable="true">App actuelle locale: inconnue</string>
+    <string name="current_locale_text" translatable="true">App actuelle locale: %1$s</string>
+</resources>
