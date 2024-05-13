@@ -103,6 +103,11 @@ func FloatWindowMultitaskMenu(ctx context.Context, s *testing.State) {
 	pollOpts := testing.PollOptions{Timeout: 30 * time.Second}
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_dump")
 
+	// Set the Chrome window to normal state before testing the caption button actions.
+	if err := ash.SetWindowStateAndWait(ctx, tconn, bw.ID, ash.WindowStateNormal); err != nil {
+		s.Fatal("Failed to set Chrome window state to \"Normal\": ", err)
+	}
+
 	// Test that the "Float" button changes the window state to be floated.
 	if err := showMultitaskMenu(ctx, tconn, ui); err != nil {
 		s.Fatal("Failed to open Multitask Menu: ", err)
