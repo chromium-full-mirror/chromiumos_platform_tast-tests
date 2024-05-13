@@ -501,3 +501,9 @@ func (c *cryptohomeBinary) isPinWeaverPkEstablishmentBlocked(ctx context.Context
 	args := []string{"--action=is_pw_pk_establishment_blocked"}
 	return c.call(ctx, args...)
 }
+
+// migrateLegacyFingerprints returns the responses by calling "cryptohome --action=migrate_legacy_fingerprints".
+func (c *cryptohomeBinary) migrateLegacyFingerprints(ctx context.Context, authSessionID string) ([]byte, error) {
+	args := []string{"--output-format=binary-protobuf", "--action=migrate_legacy_fingerprints", "--auth_session_id=" + authSessionID}
+	return c.call(ctx, args...)
+}

@@ -6,7 +6,6 @@ package cryptohome
 
 import (
 	"context"
-	"fmt"
 	"math"
 	"os"
 	"time"
@@ -16,7 +15,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/cryptohome/internal"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
 
 	"go.chromium.org/tast/core/ctxutil"
@@ -55,7 +53,9 @@ func FingerprintManual(ctx context.Context, s *testing.State) {
 		indexFingerName   = "index finger"
 		middleFingerLabel = "middle-finger"
 		middleFingerName  = "middle finger"
-		biodDir           = "/var/lib/biod/"
+		// This finger won't be enrolled
+		thumbFingerName = "thumb"
+		biodDir         = "/var/lib/biod/"
 	)
 	fingersToEnroll := []struct {
 		label string
@@ -103,7 +103,7 @@ func FingerprintManual(ctx context.Context, s *testing.State) {
 		}
 		// Step 1: Enroll both index finger and middle finger.
 		for _, finger := range fingersToEnroll {
-			if err := enrollFinger(ctx, client, authSessionID, finger.label, finger.name); err != nil {
+			if err := internal.EnrollFinger(ctx, client, authSessionID, finger.label, finger.name); err != nil {
 				return errors.Wrapf(err, "failed to enroll the %v", finger.name)
 			}
 		}
@@ -115,12 +115,12 @@ func FingerprintManual(ctx context.Context, s *testing.State) {
 	if err := client.WithAuthSession(ctx, userName, false /*ephemeral*/, uda.AuthIntent_AUTH_INTENT_VERIFY_ONLY, func(authSessionID string) error {
 		// Step 2: Test that both fingers authenticate successfully.
 		for _, finger := range fingersToEnroll {
-			if err := authFinger(ctx, client, authSessionID, allFingerLabels, finger.name); err != nil {
+			if err := internal.MatchFinger(ctx, client, authSessionID, allFingerLabels, finger.name); err != nil {
 				return errors.Wrapf(err, "failed to authenticate the %v", finger.name)
 			}
 		}
 		// Step 3: Test that wrong finger fails and locks out fingerprint after 5 attempts.
-		if err := authFingerLockout(ctx, client, authSessionID, allFingerLabels); err != nil {
+		if err := internal.MatchWrongFingerUntilLockout(ctx, client, authSessionID, allFingerLabels, thumbFingerName); err != nil {
 			return errors.Wrap(err, "failed to verify wrong finger fails authentication")
 		}
 		reply, _, err := client.StartAuthSession(ctx, userName, false, uda.AuthIntent_AUTH_INTENT_DECRYPT)
@@ -144,7 +144,7 @@ func FingerprintManual(ctx context.Context, s *testing.State) {
 		if _, err := client.AuthenticateAuthFactor(ctx, authSessionID, passwordLabel, userPassword); err != nil {
 			return errors.Wrap(err, "failed to authenticate auth session with password")
 		}
-		if err := authFinger(ctx, client, authSessionID, allFingerLabels, fingersToEnroll[0].name); err != nil {
+		if err := internal.MatchFinger(ctx, client, authSessionID, allFingerLabels, fingersToEnroll[0].name); err != nil {
 			return errors.Wrapf(err, "failed to authenticate the %v", fingersToEnroll[0].name)
 		}
 		return nil
@@ -176,154 +176,4 @@ func FingerprintManual(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to ensure fingerprint directory removed: ", err)
 		}
 	}
-}
-
-func enrollFinger(ctx context.Context, client *hwsec.CryptohomeClient, authSessionID, fingerLabel, fingerName string) error {
-	// Fingerprint enrollment might take up to 10 touches. Reserve 30 seconds.
-	ctxWatcher, cancel := context.WithTimeout(ctx, 30*time.Second)
-	defer cancel()
-
-	watcher, err := cryptohome.NewFingerprintEnrollmentWatcher(ctxWatcher)
-	if err != nil {
-		return errors.Wrap(err, "failed to create FingerprintEnrollmentWatcher")
-	}
-	defer watcher.Close(ctx)
-	if _, err := client.PrepareAddFpAuthFactor(ctx, authSessionID); err != nil {
-		return errors.Wrap(err, "failed to prepare fingerprint auth factor for add")
-	}
-	defer client.TerminateFpAuthFactor(ctx, authSessionID)
-
-	internal.PromptFingerTouch(ctx, fingerName)
-	for {
-		select {
-		case sig, ok := <-watcher.Signals:
-			if !ok {
-				return errors.New("enrollment signal channel closed unexpectedly")
-			}
-			showEnrollmentProgress(ctx, *sig)
-			if sig.Done {
-				if err := client.AddFingerprintAuthFactor(ctx, authSessionID, fingerLabel); err != nil {
-					return errors.Wrap(err, "failed to add fingerprint auth factor")
-				}
-				return nil
-			}
-			// There's a special error code that signals the enrollment session can't be continued.
-			if sig.ScanResult == uda.FingerprintScanResult_FINGERPRINT_SCAN_RESULT_FATAL_ERROR {
-				return errors.New("fingerprint enrollment failed with internal error")
-			}
-			internal.PromptFingerTouch(ctx, fingerName)
-		case <-ctxWatcher.Done():
-			return errors.New("fingerprint enrollment timed out")
-		}
-	}
-}
-
-func showEnrollmentProgress(ctx context.Context, sig cryptohome.FingerprintEnrollmentSignal) {
-	var scanStatusString string
-	if sig.ScanResult == uda.FingerprintScanResult_FINGERPRINT_SCAN_RESULT_SUCCESS {
-		scanStatusString = "Scan success"
-	} else {
-		// Note that the failure might just be a hint, and percent-complete might still increase
-		// even if the scan status isn't success.
-		scanStatusString = fmt.Sprintf("Scan failed: %v", sig.ScanResult)
-	}
-	testing.ContextLogf(ctx, "%s, progress: %v%%", scanStatusString, sig.PercentComplete)
-}
-
-func authFinger(ctx context.Context, client *hwsec.CryptohomeClient, authSessionID string, fingerLabels []string, fingerName string) error {
-	// Fingerprint authentication might take up to 5 touches due to false negatives (5th touch will lock it out anyway).
-	// Reserve 5 seconds for each touch, 25 seconds in total.
-	ctxWatcher, cancel := context.WithTimeout(ctx, 25*time.Second)
-	defer cancel()
-
-	watcher, err := cryptohome.NewFingerprintAuthenticationWatcher(ctxWatcher)
-	if err != nil {
-		return errors.Wrap(err, "failed to create FingerprintAuthenticationWatcher")
-	}
-	defer watcher.Close(ctx)
-	if _, err := client.PrepareAuthFpAuthFactor(ctx, authSessionID); err != nil {
-		return errors.Wrap(err, "failed to prepare fingerprint auth factor for auth")
-	}
-	defer client.TerminateFpAuthFactor(ctx, authSessionID)
-
-	internal.PromptFingerTouch(ctx, fingerName)
-	for {
-		select {
-		case sig, ok := <-watcher.Signals:
-			if !ok {
-				return errors.New("authentication signal channel closed unexpectedly")
-			}
-			// Scan should always succeed if there's no internal errors, as match is a later step.
-			if sig.ScanResult != uda.FingerprintScanResult_FINGERPRINT_SCAN_RESULT_SUCCESS {
-				return errors.New("fingerprint authentication failed with internal error")
-			}
-			if reply, err := client.AuthenticateFingerprintAuthFactor(ctx, authSessionID, fingerLabels); err != nil {
-				if reply.ErrorInfo.PrimaryAction != uda.PrimaryAction_PRIMARY_INCORRECT_AUTH {
-					// This error isn't retryable, return error.
-					return errors.Wrap(err, "failed to authenticate fingerprint auth factor")
-				}
-				testing.ContextLog(ctx, "Fingerprint auth failed, please retry")
-			} else {
-				return nil
-			}
-			internal.PromptFingerTouch(ctx, fingerName)
-		case <-ctxWatcher.Done():
-			return errors.New("fingerprint authentication timed out")
-		}
-	}
-}
-
-func authFingerLockout(ctx context.Context, client *hwsec.CryptohomeClient, authSessionID string, fingerLabels []string) error {
-	const (
-		// This finger isn't enrolled. It's used for testing failure cases.
-		wrongFingerName      = "thumb"
-		lockoutWrongAttempts = 5
-	)
-
-	// Fingerprint authentication takes 5 touches to get locked.
-	// Reserve 5 seconds for each touch, 25 seconds in total.
-	ctxWatcher, cancel := context.WithTimeout(ctx, 25*time.Second)
-	defer cancel()
-
-	watcher, err := cryptohome.NewFingerprintAuthenticationWatcher(ctxWatcher)
-	if err != nil {
-		return errors.Wrap(err, "failed to create FingerprintAuthenticationWatcher")
-	}
-	defer watcher.Close(ctx)
-	if _, err := client.PrepareAuthFpAuthFactor(ctx, authSessionID); err != nil {
-		return errors.Wrap(err, "failed to prepare fingerprint auth factor for auth")
-	}
-	defer client.TerminateFpAuthFactor(ctx, authSessionID)
-
-	internal.PromptFingerTouch(ctx, wrongFingerName)
-	for i := 1; i <= lockoutWrongAttempts; i++ {
-		select {
-		case sig, ok := <-watcher.Signals:
-			if !ok {
-				return errors.New("authentication signal channel closed unexpectedly")
-			}
-			// Scan should always succeed if there's no internal errors, as match is a later step.
-			if sig.ScanResult != uda.FingerprintScanResult_FINGERPRINT_SCAN_RESULT_SUCCESS {
-				return errors.New("fingerprint authentication failed with internal error")
-			}
-			if reply, err := client.AuthenticateFingerprintAuthFactor(ctx, authSessionID, fingerLabels); err != nil {
-				var expectedAction uda.PrimaryAction
-				if i == lockoutWrongAttempts {
-					expectedAction = uda.PrimaryAction_PRIMARY_FACTOR_LOCKED_OUT
-				} else {
-					expectedAction = uda.PrimaryAction_PRIMARY_INCORRECT_AUTH
-				}
-				if reply.ErrorInfo.PrimaryAction != expectedAction {
-					return errors.Wrapf(err, "authenticate fingerprint did not fail with primary action %v", expectedAction)
-				}
-				testing.ContextLog(ctx, "Fingerprint auth failed as expected")
-			} else {
-				return errors.New("fingerprint authentication succeeded with a wrong finger")
-			}
-			internal.PromptFingerTouch(ctx, wrongFingerName)
-		case <-ctxWatcher.Done():
-			return errors.New("fingerprint authentication timed out")
-		}
-	}
-	return nil
 }

@@ -1140,3 +1140,19 @@ func (u *CryptohomeClient) IsPinWeaverPkEstablishmentBlocked(ctx context.Context
 	}
 	return strings.Contains(string(binaryMsg), "true"), nil
 }
+
+// MigrateLegacyFingerprints migrates legacy fingerprint records to fingerprint auth factors.
+func (u *CryptohomeClient) MigrateLegacyFingerprints(ctx context.Context, authSessionID string) (*uda.MigrateLegacyFingerprintsReply, error) {
+	binaryMsg, err := u.binary.migrateLegacyFingerprints(ctx, authSessionID)
+
+	// Attempt to parse the binaryMsg anyway, we need them to check for the correct error code.
+	reply := &uda.MigrateLegacyFingerprintsReply{}
+	if unmarshErr := proto.Unmarshal(binaryMsg, reply); unmarshErr != nil {
+		return nil, errors.Wrap(unmarshErr, "failed to unmarshal MigrateLegacyFingerprints reply")
+	}
+
+	if err != nil {
+		return reply, errors.Wrap(err, "MigrateLegacyFingerprints failed")
+	}
+	return reply, nil
+}
