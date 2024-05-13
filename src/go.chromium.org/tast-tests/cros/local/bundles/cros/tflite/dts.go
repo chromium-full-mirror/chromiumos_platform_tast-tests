@@ -123,12 +123,6 @@ var apuParam = testingParam{
 	Settings:    apuSettings,
 	AccelConfig: apuAccelConfig,
 	SkipTestPatterns: []string{
-		// TODO(b/338914262): Neuron delegte crashed for this convolution test.
-		"*ConvolutionOpTest.SimplePerChannel16x8Bias64*",
-
-		// TODO(b/338914051): Neuron delegate crashed for int64 paddings.
-		"*Pad*OpTest*.Int64Padding*",
-
 		// TODO(b/338938802): Neuron delegate is ~30x slower than CPU on these test
 		// cases and need ~1hr to finish them. This is a superset of the
 		// unsupported data types below as expected.
