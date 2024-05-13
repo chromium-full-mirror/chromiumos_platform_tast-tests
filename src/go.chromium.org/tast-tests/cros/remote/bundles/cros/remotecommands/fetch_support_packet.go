@@ -108,17 +108,11 @@ func FetchSupportPacket(ctx context.Context, s *testing.State) {
 
 	timeout := int32(fetchSupportPacketTestTimeout.Seconds())
 	// Create an account manager and lease a test account for the duration of the test.
-	accManager, acc, err := tape.NewOwnedTestAccountManagerFromClient(ctx, tapeClient /*lock=*/, true, tape.WithTimeout(timeout), tape.WithPoolID(tape.DefaultManaged))
+	accManager, acc, err := tape.NewOwnedTestAccountManagerFromClient(ctx, tapeClient /*lock=*/, true, tape.WithTimeout(timeout), tape.WithPoolID(tape.LogUploadEnabled))
 	if err != nil {
 		s.Fatal("Failed to create an account manager and lease an account: ", err)
 	}
 	defer accManager.CleanUp(ctx)
-
-	systemLogUploadPolicy := &tape.LogUploadEnabledDevices{LogUploadEnabled: true}
-
-	if err := tapeClient.SetPolicy(ctx, systemLogUploadPolicy, []string{"logUploadEnabled"}, nil, acc.RequestID); err != nil {
-		s.Fatal("Failed to set the log upload enabled policy: ", err)
-	}
 
 	testStartTime := time.Now()
 
