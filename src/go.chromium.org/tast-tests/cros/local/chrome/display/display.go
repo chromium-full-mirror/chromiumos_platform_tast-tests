@@ -26,6 +26,16 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+// ActiveState tells if the display is detected and used by the system.
+// See https://developer.chrome.com/docs/extensions/reference/api/system/display#type-ActiveState
+type ActiveState string
+
+// ActiveState values as defined in: https://developer.chrome.com/docs/extensions/reference/api/system/display#enum
+const (
+	Active   ActiveState = "active"
+	Inactive ActiveState = "inactive"
+)
+
 // Insets holds onscreen insets.
 // See https://developer.chrome.com/docs/extensions/reference/system_display/#type-Insets.
 type Insets struct {
@@ -70,6 +80,7 @@ type Info struct {
 	HasTouchSupport             bool           `json:"hasTouchSupport"`
 	AvailableDisplayZoomFactors []float64      `json:"availableDisplayZoomFactors"`
 	DisplayZoomFactor           float64        `json:"displayZoomFactor"`
+	ActiveState                 ActiveState    `json:"activeState"`
 }
 
 // GetSelectedMode returns the currently selected display mode. It returns
