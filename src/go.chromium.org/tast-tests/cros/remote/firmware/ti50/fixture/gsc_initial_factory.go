@@ -24,8 +24,7 @@ const (
 	// tmpEfiLocation specifies the format of temporary file for EFI images
 	tmpEfiLocation = "ti50-efi-%s.*.bin"
 
-	copyFromGSTimeout  = 30 * time.Second
-	rescueTwiceTimeout = 2 * time.Minute
+	rescueTwiceTimeout = 3 * time.Minute
 	removeFileTimeout  = 5 * time.Second
 )
 
@@ -36,7 +35,7 @@ func init() {
 		Contacts:        []string{"gsc-sheriff@google.com", "jettrink@google.com"},
 		BugComponent:    "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
 		Impl:            &initialFactoryImpl{},
-		SetUpTimeout:    copyFromGSTimeout,
+		SetUpTimeout:    rescueTwiceTimeout,
 		TearDownTimeout: removeFileTimeout,
 		PreTestTimeout:  rescueTwiceTimeout,
 		Parent:          SystemDevboard,
