@@ -502,9 +502,8 @@ func init() {
 			}, {
 				// Verifies that DUT can connect to a WiFi5 GCMP-128 network on WPA3.
 				// TODO(b/337103884) Replace TestBedDep with GCMP-feature requirement once available.
-				Name:      "gcmp_128",
-				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
-				ExtraAttr: []string{"wificell_unstable"},
+				Name:    "gcmp_128",
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
 					apConfigs: []ap.ApConfig{{
 						ApOpts: []ap.Option{ap.Mode(ap.Mode80211acPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT40Plus),
@@ -520,9 +519,8 @@ func init() {
 			}, {
 				// Verifies that DUT can connect to a WiFi5 GCMP-256 network on WPA3.
 				// TODO(b/337103884) Replace TestBedDep with GCMP-feature requirement once available.
-				Name:      "gcmp_256",
-				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
-				ExtraAttr: []string{"wificell_unstable"},
+				Name:    "gcmp_256",
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
 					apConfigs: []ap.ApConfig{{
 						ApOpts: []ap.Option{ap.Mode(ap.Mode80211acPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT40Plus),
@@ -538,9 +536,8 @@ func init() {
 			}, {
 				// Verifies that DUT can connect to a WiFi5 network that supports CCMP and GCMP on WPA2.
 				// TODO(b/337103884) Replace TestBedDep with GCMP-feature requirement once available.
-				Name:      "gcmp_ccmp",
-				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
-				ExtraAttr: []string{"wificell_unstable"},
+				Name:    "gcmp_ccmp",
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
 					apConfigs: []ap.ApConfig{{
 						ApOpts: []ap.Option{ap.Mode(ap.Mode80211acPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT40Plus),

@@ -466,9 +466,8 @@ func simpleConnect80211be() []*simpleConnectParams {
 
 func simpleConnectGCMP() []*simpleConnectParams {
 	return []*simpleConnectParams{{
-		Name:      "gcmp_128",
-		Fixture:   defaultFixture,
-		ExtraAttr: []string{"wificell_unstable"},
+		Name:    "gcmp_128",
+		Fixture: defaultFixture,
 		Doc: append(simpleConnectDocPref("a WiFi5 GCMP-128 network on WPA3."),
 			"TODO(b/337103884) Replace TestBedDep with GCMP-feature requirement once available."),
 		Val: []simpleConnectParamsVal{{
@@ -484,9 +483,8 @@ func simpleConnectGCMP() []*simpleConnectParams {
 		ExtraHardwareDeps:      `hwdep.D(hwdep.WifiGCMP())`,
 		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX},
 	}, {
-		Name:      "gcmp_256",
-		Fixture:   defaultFixture,
-		ExtraAttr: []string{"wificell_unstable"},
+		Name:    "gcmp_256",
+		Fixture: defaultFixture,
 		Doc: append(simpleConnectDocPref("a WiFi5 GCMP-256 network on WPA3."),
 			"TODO(b/337103884) Replace TestBedDep with GCMP-feature requirement once available."),
 		Val: []simpleConnectParamsVal{{
@@ -502,9 +500,8 @@ func simpleConnectGCMP() []*simpleConnectParams {
 		ExtraHardwareDeps:      `hwdep.D(hwdep.WifiGCMP())`,
 		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX},
 	}, {
-		Name:      "gcmp_ccmp",
-		Fixture:   defaultFixture,
-		ExtraAttr: []string{"wificell_unstable"},
+		Name:    "gcmp_ccmp",
+		Fixture: defaultFixture,
 		Doc: append(simpleConnectDocPref("a WiFi5 network that supports CCMP and GCMP on WPA2."),
 			"TODO(b/337103884) Replace TestBedDep with GCMP-feature requirement once available."),
 		Val: []simpleConnectParamsVal{{
