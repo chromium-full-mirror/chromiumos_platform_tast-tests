@@ -144,7 +144,7 @@ func CCAUIDocumentScanning(ctx context.Context, s *testing.State) {
 			}
 
 			if err := runTestWithApp(subTestCtx, func(subTestCtx context.Context, app *cca.App) error {
-				if err := enterDocumentMode(ctx, app); err != nil {
+				if err := app.EnterDocumentMode(ctx); err != nil {
 					return errors.Wrap(err, "failed to enter document mode")
 				}
 
@@ -154,20 +154,6 @@ func CCAUIDocumentScanning(ctx context.Context, s *testing.State) {
 			}
 		})
 	}
-}
-
-func enterDocumentMode(ctx context.Context, app *cca.App) error {
-	if err := app.SwitchMode(ctx, cca.Scan); err != nil {
-		return errors.Wrap(err, "failed to switch to scan mode")
-	}
-
-	if checked, err := app.IsCheckedWithIndex(ctx, cca.ScanDocumentModeOption, 0); err != nil {
-		return errors.Wrap(err, "failed to check if it lands on document mode")
-	} else if !checked {
-		return errors.New("failed to land on document mode by default")
-	}
-
-	return nil
 }
 
 // testSavePhoto tests if CCA can take a document photo and save the file as JPG correctly.

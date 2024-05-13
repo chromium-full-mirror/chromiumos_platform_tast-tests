@@ -570,6 +570,13 @@ func (a *App) GetAverageOCRScanningLatency(ctx context.Context) (float64, error)
 	return averageLatency, err
 }
 
+// GetDocumentReviewLastFileLatency returns the latency of saving images as a searchable PDF using OCR in document scanning mode.
+func (a *App) GetDocumentReviewLastFileLatency(ctx context.Context) (float64, error) {
+	var latency float64
+	err := a.conn.Eval(ctx, "CCATest.getDocumentReviewLastFileProcessingTime()", &latency)
+	return latency, err
+}
+
 // MinimizeWindow minimizes the window.
 func (a *App) MinimizeWindow(ctx context.Context) error {
 	return a.conn.Eval(ctx, "CCATest.minimizeWindow()", nil)
@@ -1763,4 +1770,19 @@ func (a *App) GetVidPid(ctx context.Context) (string, error) {
 		return "", err
 	}
 	return vidPid, nil
+}
+
+// EnterDocumentMode switches CCA to Scan mode and check if CCA lands on Document sub-mode.
+func (a *App) EnterDocumentMode(ctx context.Context) error {
+	if err := a.SwitchMode(ctx, Scan); err != nil {
+		return errors.Wrap(err, "failed to switch to scan mode")
+	}
+
+	if checked, err := a.IsCheckedWithIndex(ctx, ScanDocumentModeOption, 0); err != nil {
+		return errors.Wrap(err, "failed to check if it lands on document mode")
+	} else if !checked {
+		return errors.New("failed to land on document mode by default")
+	}
+
+	return nil
 }
