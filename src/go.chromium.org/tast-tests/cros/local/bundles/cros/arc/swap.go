@@ -29,8 +29,8 @@ func init() {
 			"kawasin@google.com",
 			"hikalium@chromium.org",
 		},
-		// ChromeOS > Platform > Virtualization > VM Technology
-		BugComponent: "b:930563",
+		// ChromeOS > Platform > baseOS > Virtualization > ARC++ & ARCVM
+		BugComponent: "b:882467",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"android_vm", "chrome", "crosvm_swap"},
 		Fixture:      "arcBootedBoostedVmmSwap",

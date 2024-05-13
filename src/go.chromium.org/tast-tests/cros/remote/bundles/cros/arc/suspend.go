@@ -36,8 +36,8 @@ func init() {
 			"cros-vm-technology@google.com",
 			"hikalium@chromium.org",
 		},
-		// ChromeOS > Platform > Virtualization > VM Technology
-		BugComponent: "b:930563",
+		// ChromeOS > Platform > baseOS > Virtualization > ARC++ & ARCVM
+		BugComponent: "b:882467",
 		/* This test is hardware dependent */
 		SoftwareDeps: []string{
 			"chrome",

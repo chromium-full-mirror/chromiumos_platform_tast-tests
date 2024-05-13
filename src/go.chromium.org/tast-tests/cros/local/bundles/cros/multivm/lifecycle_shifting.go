@@ -38,7 +38,8 @@ func init() {
 			"arcvm-memory@google.com",
 			"cwd@google.com",
 		},
-		BugComponent: "b:930563",
+		// ChromeOS > Platform > baseOS > Virtualization > ARC++ & ARCVM
+		BugComponent: "b:882467",
 		Attr:         []string{"group:crosbolt", "crosbolt_nightly"},
 		Timeout:      30 * time.Minute,
 		SoftwareDeps: []string{"chrome"},
