@@ -18,6 +18,13 @@ import android.widget.Button;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import java.io.IOException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import java.util.Collections;
 import java.util.Map;
 import java.util.function.Supplier;
 
@@ -26,6 +33,8 @@ public class MainActivity extends Activity {
     private static final String POLICY_VALUE_KEY = "lstPolicies_value";
     private static final String OUTPUT_VALUE_KEY = "txtOutput_value";
     private static final String ERROR_VALUE_KEY = "txtError_value";
+    private static final String TEST_CA_CERT_ISSUER =
+            "CN=chromelab-wifi-testbed-root.mtv.google.com,L=Mountain View,ST=California,C=US";
 
     private TextView txtOutput;
     private Button btnTest;
@@ -54,7 +63,7 @@ public class MainActivity extends Activity {
                 Map.ofEntries(
                         isRestrictionUnapplied(
                                 "setWallpaper", "setWallpaper", UserManager.DISALLOW_SET_WALLPAPER),
-                        Map.entry("enabledSystemAppPackageNames", this::IsSystemAppPackageDisabled),
+                        Map.entry("enabledSystemAppPackageNames", this::isSystemAppPackageDisabled),
                         isRestrictionUnapplied(
                                 "installUnknownSourcesDisabled",
                                 "installUnknownSources",
@@ -82,7 +91,8 @@ public class MainActivity extends Activity {
                                 "unmute",
                                 UserManager.DISALLOW_UNMUTE_MICROPHONE),
                         isRestrictionUnapplied(
-                                "vpnConfigDisabled", "vpnConfig", UserManager.DISALLOW_CONFIG_VPN));
+                                "vpnConfigDisabled", "vpnConfig", UserManager.DISALLOW_CONFIG_VPN),
+                        Map.entry("ArcCertificatesSyncMode", this::isCaCertSyncDisabled));
     }
 
     @Override
@@ -149,7 +159,39 @@ public class MainActivity extends Activity {
                 });
     }
 
-    private boolean IsSystemAppPackageDisabled() {
+    private boolean isCaCertSyncDisabled() {
+        try {
+            KeyStore store = KeyStore.getInstance("AndroidCAStore");
+            if (store == null) {
+                logError("Key store not found", null);
+                return false;
+            }
+            store.load(/* stream= */ null, /* password= */ null);
+            boolean syncDisabled = !isTestCertInstalled(store);
+            if (!syncDisabled) {
+                logError("Test cert found. Syncing is enabled", null);
+            }
+            return syncDisabled;
+        } catch (IOException
+                | KeyStoreException
+                | NoSuchAlgorithmException
+                | CertificateException e) {
+            logError("Failed to load certs", e);
+            return false;
+        }
+    }
+
+    private static boolean isTestCertInstalled(KeyStore store) throws KeyStoreException {
+        for (String alias : Collections.list(store.aliases())) {
+            var cert = (X509Certificate) store.getCertificate(alias);
+            if (cert.getIssuerX500Principal().getName().equals(MainActivity.TEST_CA_CERT_ISSUER)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isSystemAppPackageDisabled() {
         final String PACKAGE_NAME = "com.google.android.deskclock";
         try {
             final boolean enabled = getPackageManager().getApplicationInfo(PACKAGE_NAME, 0).enabled;
