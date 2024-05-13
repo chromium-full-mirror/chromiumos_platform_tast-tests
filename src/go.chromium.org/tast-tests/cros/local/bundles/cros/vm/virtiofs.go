@@ -68,6 +68,8 @@ func setupCrosvmCmd(ctx context.Context, kernel, serialLog, script string, scrip
 	return testexec.CommandContext(ctx, "prlimit", args...)
 }
 
+// Virtiofs is used as one of the standard SW gates (go/pe-sw-gates).
+// Please ask to crosvm-core@ if you want to modify or delete this test.
 func Virtiofs(ctx context.Context, s *testing.State) {
 	// Create a temporary directory on the stateful partition rather than in memory.
 	td, err := ioutil.TempDir("/usr/local/tmp", "tast.vm.Virtiofs.")

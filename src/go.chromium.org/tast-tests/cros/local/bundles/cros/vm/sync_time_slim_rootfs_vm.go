@@ -27,6 +27,8 @@ func init() {
 	})
 }
 
+// SyncTimeSlimRootfsVM is used as one of the standard SW gates (go/pe-sw-gates).
+// Please ask to crosvm-core@ if you want to modify or delete this test.
 func SyncTimeSlimRootfsVM(ctx context.Context, s *testing.State) {
 	concierge, err := vm.NewConcierge(ctx, s.FixtValue().(chrome.HasChrome).Chrome().NormalizedUser())
 	if err != nil {

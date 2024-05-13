@@ -44,6 +44,8 @@ func init() {
 	})
 }
 
+// AudioLoopbackLatency is used as one of the standard SW gates (go/pe-sw-gates).
+// Please ask to crosvm-core@ if you want to modify or delete this test.
 func AudioLoopbackLatency(ctx context.Context, s *testing.State) {
 	data := s.FixtValue().(dlc.FixtData)
 	bufferSizes := []string{"512", "1024", "2048", "4096", "8192"}

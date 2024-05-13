@@ -29,6 +29,8 @@ func init() {
 	})
 }
 
+// StopAllSlimRootfsVMs is used as one of the standard SW gates (go/pe-sw-gates).
+// Please ask to crosvm-core@ if you want to modify or delete this test.
 func StopAllSlimRootfsVMs(ctx context.Context, s *testing.State) {
 	user := s.FixtValue().(chrome.HasChrome).Chrome().NormalizedUser()
 	concierge, err := vm.NewConcierge(ctx, user)

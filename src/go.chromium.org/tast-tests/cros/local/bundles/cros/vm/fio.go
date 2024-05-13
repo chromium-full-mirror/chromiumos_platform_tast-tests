@@ -412,6 +412,8 @@ func init() {
 	})
 }
 
+// Fio is used as one of the standard SW gates (go/pe-sw-gates).
+// Please ask to crosvm-core@ if you want to modify or delete this test.
 func Fio(ctx context.Context, s *testing.State) {
 	// Reserve 5 seconds for clean up
 	cleanupCtx := ctx

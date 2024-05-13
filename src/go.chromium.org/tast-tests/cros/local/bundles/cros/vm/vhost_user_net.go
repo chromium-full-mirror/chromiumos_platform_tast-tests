@@ -78,6 +78,8 @@ func waitUntilFileAvailable(ctx context.Context, path string) error {
 	}, nil)
 }
 
+// VhostUserNet is used as one of the standard SW gates (go/pe-sw-gates).
+// Please ask to crosvm-core@ if you want to modify or delete this test.
 func VhostUserNet(ctx context.Context, s *testing.State) {
 	td, err := ioutil.TempDir("", "tast.vm.VhostUserNet.")
 	if err != nil {

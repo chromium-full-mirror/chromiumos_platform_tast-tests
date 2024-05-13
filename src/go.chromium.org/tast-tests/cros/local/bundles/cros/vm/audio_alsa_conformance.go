@@ -69,6 +69,8 @@ func parseResults(ctx context.Context, path string) (int, int, error) {
 	return results.Pass, results.Fail, nil
 }
 
+// AudioAlsaConformance is used as one of the standard SW gates (go/pe-sw-gates).
+// Please ask to crosvm-core@ if you want to modify or delete this test.
 func AudioAlsaConformance(ctx context.Context, s *testing.State) {
 	config := s.Param().(audioutils.Config)
 	data := s.FixtValue().(dlc.FixtData)

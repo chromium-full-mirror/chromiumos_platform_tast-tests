@@ -173,6 +173,8 @@ func init() {
 	})
 }
 
+// AudioCyclicBench is used as one of the standard SW gates (go/pe-sw-gates).
+// Please ask to crosvm-core@ if you want to modify or delete this test.
 func AudioCyclicBench(ctx context.Context, s *testing.State) {
 	param := s.Param().(audio.CyclicTestParameters)
 	data := s.FixtValue().(dlc.FixtData)
