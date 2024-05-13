@@ -10,6 +10,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/camera/cca"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -152,19 +153,8 @@ func runQRCodeTest(ctx context.Context, cr *chrome.Chrome, bt browser.Type, app 
 		if err != nil {
 			return errors.Wrap(err, "failed to get test connection")
 		}
-
-		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			var clipData string
-			if err := tconn.Eval(ctx, `tast.promisify(chrome.autotestPrivate.getClipboardTextData)()`, &clipData); err != nil {
-				return testing.PollBreak(err)
-			}
-			if clipData != testParams.copyButton.expected {
-				return errors.Errorf("unexpected clipboard data: got %q, want %q", clipData, testParams.copyButton.expected)
-			}
-			testing.ContextLogf(ctx, "%v copied successfully", testParams.format)
-			return nil
-		}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
-			return errors.Wrap(err, "failed to get expected clipboard data")
+		if err := ash.WaitUntilClipboardText(ctx, tconn, testParams.copyButton.expected); err != nil {
+			return errors.Wrap(err, "failed to copy detected text")
 		}
 	}
 
