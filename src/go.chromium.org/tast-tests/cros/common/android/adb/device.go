@@ -226,6 +226,7 @@ const (
 	InstallOptionGrantPermissions      InstallOption = "-g"
 	InstallOptionEphemeralInstall      InstallOption = "--instant"
 	InstallOptionFromPlayStore         InstallOption = "-i com.android.vending"
+	InstallOptionForceArm64            InstallOption = "--abi arm64-v8a"
 )
 
 var showAPKPathWarningOnce sync.Once
@@ -644,7 +645,7 @@ func (d *Device) StartScreenRecording(ctx context.Context, filename, outDir stri
 			return errors.Wrap(err, "failed to stop screen recording")
 		}
 		cmd.Wait()
-		// It takes a moment for the file to save properly.
+		// GoBigSleepLint: It takes a moment for the file to save properly.
 		testing.Sleep(ctx, time.Second)
 		if hasError() {
 			if err := d.PullFile(ctx, path, filepath.Join(outDir, recordingName)); err != nil {
