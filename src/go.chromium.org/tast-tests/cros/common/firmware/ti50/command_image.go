@@ -66,7 +66,7 @@ func (i *CommandImage) RawCommand(ctx context.Context, rawCmd string, re *regexp
 	}
 	if whichRegularExpression == 0 {
 		// GSC printed a fatal message, report error to caller.
-		return nil, errors.New(strings.TrimRight(string(match[0]), "\r\n"))
+		return nil, errors.Errorf("%q failed to find output %s", rawCmd, strings.TrimRight(string(match[0]), "\r\n"))
 	}
 	ret := make([]string, 0)
 	for _, m := range match {
