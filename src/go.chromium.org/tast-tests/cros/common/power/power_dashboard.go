@@ -90,10 +90,10 @@ func generateDashboardLink(powerLogDict map[string]interface{}) string {
 	if value, ok := powerLogDict["test"].(string); ok {
 		test = value
 	}
-	if value, ok := powerLogDict["timestamp"].(int64); ok {
-		timeRaw = time.Unix(value, 0).UTC()
+	if value, ok := powerLogDict["timestamp"].(float64); ok {
+		timeRaw = time.Unix(int64(value), 0).UTC()
 	}
-	datetime = fmt.Sprintf("%d%02d%02d%02d%02d", timeRaw.Year(), int(timeRaw.Month()), timeRaw.Day(), timeRaw.Hour(), timeRaw.Minute())
+	datetime = fmt.Sprintf("%d%02d%02d%02d%02d%02d", timeRaw.Year(), int(timeRaw.Month()), timeRaw.Day(), timeRaw.Hour(), timeRaw.Minute(), timeRaw.Second())
 	if dutMap, ok := powerLogDict["dut"].(map[string]interface{}); ok {
 		if value, ok := dutMap["board"].(string); ok {
 			board = value
