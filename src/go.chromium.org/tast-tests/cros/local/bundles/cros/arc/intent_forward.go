@@ -38,9 +38,7 @@ func init() {
 			Val:               browser.TypeAsh,
 			Fixture:           "arcBooted",
 		}, {
-			Name: "lacros",
-			// TODO(b/239469085): Remove "informational" attribute.
-			ExtraAttr:         []string{"informational"},
+			Name:              "lacros",
 			ExtraSoftwareDeps: []string{"android_container", "lacros"},
 			Val:               browser.TypeLacros,
 			Fixture:           "lacrosWithArcBooted",
@@ -51,9 +49,8 @@ func init() {
 			Val:               browser.TypeAsh,
 			Fixture:           "arcBooted",
 		}, {
-			Name: "lacros_vm",
-			// TODO(crbug.com/1446233): Remove "informational" attribute (flaky).
-			ExtraAttr:         []string{"informational", "group:hw_agnostic"},
+			Name:              "lacros_vm",
+			ExtraAttr:         []string{"group:hw_agnostic"},
 			ExtraSoftwareDeps: []string{"android_vm", "lacros"},
 			Val:               browser.TypeLacros,
 			Fixture:           "lacrosWithArcBooted",
