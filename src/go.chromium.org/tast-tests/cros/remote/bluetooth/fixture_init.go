@@ -86,7 +86,6 @@ func init() {
 		Name: "chromeUIDisabledWith1BTPeerFlossDisabled",
 		Desc: "Disables Chrome UI, enables Bluetooth, and connects to 1 btpeer",
 		Contacts: []string{
-			"jaredbennett@google.com",
 			"chadduffin@chromium.org",
 			"cros-connectivity@google.com",
 		},
@@ -374,7 +373,6 @@ func init() {
 		Name: "chromeUIDisabledWith1BTPeerFlossEnabled",
 		Desc: "Disables Chrome UI, enables Bluetooth, and connects to 1 btpeer",
 		Contacts: []string{
-			"jaredbennett@google.com",
 			"chadduffin@chromium.org",
 			"cros-connectivity@google.com",
 		},
@@ -404,7 +402,6 @@ func init() {
 		Name: "chromeUIDisabledWith2BTPeersFlossDisabled",
 		Desc: "Disables Chrome UI, enables Bluetooth, and connects to 2 btpeers",
 		Contacts: []string{
-			"jaredbennett@google.com",
 			"chadduffin@chromium.org",
 			"cros-connectivity@google.com",
 		},
@@ -434,7 +431,6 @@ func init() {
 		Name: "chromeUIDisabledWith2BTPeersFlossEnabled",
 		Desc: "Disables Chrome UI, enables Bluetooth, and connects to 2 btpeers",
 		Contacts: []string{
-			"jaredbennett@google.com",
 			"chadduffin@chromium.org",
 			"cros-connectivity@google.com",
 		},
@@ -464,7 +460,6 @@ func init() {
 		Name: "chromeUIDisabledWith3BTPeersFlossDisabled",
 		Desc: "Disables Chrome UI, enables Bluetooth, and connects to 3 btpeers",
 		Contacts: []string{
-			"jaredbennett@google.com",
 			"chadduffin@chromium.org",
 			"cros-connectivity@google.com",
 		},
@@ -494,7 +489,6 @@ func init() {
 		Name: "chromeUIDisabledWith3BTPeersFlossEnabled",
 		Desc: "Disables Chrome UI, enables Bluetooth, and connects to 3 btpeers",
 		Contacts: []string{
-			"jaredbennett@google.com",
 			"chadduffin@chromium.org",
 			"cros-connectivity@google.com",
 		},
@@ -524,7 +518,6 @@ func init() {
 		Name: "chromeUIDisabledWith4BTPeersFlossDisabled",
 		Desc: "Disables Chrome UI, enables Bluetooth, and connects to 4 btpeers",
 		Contacts: []string{
-			"jaredbennett@google.com",
 			"chadduffin@chromium.org",
 			"cros-connectivity@google.com",
 		},
@@ -554,7 +547,6 @@ func init() {
 		Name: "chromeUIDisabledWith4BTPeersFlossEnabled",
 		Desc: "Disables Chrome UI, enables Bluetooth, and connects to 4 btpeers",
 		Contacts: []string{
-			"jaredbennett@google.com",
 			"chadduffin@chromium.org",
 			"cros-connectivity@google.com",
 		},
@@ -908,7 +900,6 @@ func init() {
 		Name: "chromeLoggedInAsUserWithFastPairAnd1BTPeerFlossDisabled",
 		Desc: "Logs into a chrome as a specific user and enables Bluetooth, FastPair, and connects to 1 btpeer",
 		Contacts: []string{
-			"jaredbennett@chromium.org",
 			"cros-connectivity@google.com",
 		},
 		BugComponent: "b:1131776", // ChromeOS > Software > Fundamentals > Connectivity > Bluetooth
@@ -1025,7 +1016,6 @@ func init() {
 		Name: "chromeLoggedInAsUserWithFastPairAnd1BTPeerFlossEnabled",
 		Desc: "Logs into a chrome as a specific user and enables Bluetooth, FastPair, and connects to 1 btpeer",
 		Contacts: []string{
-			"jaredbennett@chromium.org",
 			"cros-connectivity@google.com",
 		},
 		BugComponent: "b:1131776", // ChromeOS > Software > Fundamentals > Connectivity > Bluetooth
@@ -1067,7 +1057,7 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 			"dclasson@google.com",
 		},
-                BugComponent: "b:1133283", // ChromeOS > Software > System Services > Cross Device > Fast Pair
+		BugComponent: "b:1133283", // ChromeOS > Software > System Services > Cross Device > Fast Pair
 		Impl: newFixture(&fixtureFeatures{
 			EnableChromeUI: true,
 			BTPeerCount:    1,
@@ -1102,11 +1092,11 @@ func init() {
 		Name: "twoChromebooksLoggedInWithFastPairAnd1BTPeerFlossEnabled",
 		Desc: "Logs into two Chromebooks as the same user and enables Bluetooth, FastPair, and connects to 1 btpeer",
 		Contacts: []string{
-                        "chromeos-cross-device-eng@google.com",
+			"chromeos-cross-device-eng@google.com",
 			"chromeos-sw-engprod@google.com",
-                        "dclasson@google.com",
+			"dclasson@google.com",
 		},
-                BugComponent: "b:1133283", // ChromeOS > Software > System Services > Cross Device > Fast Pair
+		BugComponent: "b:1133283", // ChromeOS > Software > System Services > Cross Device > Fast Pair
 		Impl: newFixture(&fixtureFeatures{
 			EnableChromeUI: true,
 			BTPeerCount:    1,

@@ -21,7 +21,6 @@ func init() {
 		Desc:           "Checks that a remote test can connect to btpeers and call a chameleond method",
 		Contacts: []string{
 			"cros-connectivity@google.com",
-			"jaredbennett@google.com",
 		},
 		BugComponent: "b:1131776", // ChromeOS > Software > System Services > Connectivity > Bluetooth
 		Attr:         []string{"group:bluetooth"},

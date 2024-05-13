@@ -24,7 +24,6 @@ func init() {
 		Desc:           "Tests that btpeers can be set to emulate a type device and that the DUT can discover them as those devices",
 		Contacts: []string{
 			"cros-connectivity@google.com",
-			"jaredbennett@google.com",
 		},
 		BugComponent: "b:1131776", // ChromeOS > Software > System Services > Connectivity > Bluetooth
 		Attr:         []string{"group:bluetooth"},

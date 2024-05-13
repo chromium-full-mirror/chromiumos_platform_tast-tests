@@ -28,7 +28,6 @@ func init() {
 		Desc:           "Tests pairing of classic and LE btpeers, with pairing done through dbus",
 		Contacts: []string{
 			"cros-connectivity@google.com",
-			"jaredbennett@google.com",
 		},
 		BugComponent: "b:1131776", // ChromeOS > Software > System Services > Connectivity > Bluetooth
 		Attr:         []string{"group:bluetooth"},
