@@ -87,6 +87,10 @@ const (
 
 	// Speak On Mute
 	PowerAshSpeakOnMute = "powerAshSpeakOnMute"
+
+	// Protected video playback
+	PowerAshProtectedVideo    = "powerAshProtectedVideo"
+	PowerLacrosProtectedVideo = "powerLacrosProtectedVideo"
 )
 
 // PowerFixtureOptions describes options used by the fixture only.
@@ -877,6 +881,60 @@ func init() {
 			BrowserExtraOpts: []chrome.Option{
 				chrome.EnableFeatures("ReadAnythingWebUIToolbar"),
 				chrome.EnableFeatures("ReadAnythingReadAloud"),
+			}}),
+		SetUpTimeout:    SetUpTimeout,
+		ResetTimeout:    ResetTimeout,
+		TearDownTimeout: TearDownTimeout,
+		PreTestTimeout:  PreTestTimeout,
+		PostTestTimeout: PostTestTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:         PowerAshProtectedVideo,
+		Desc:         "Like PowerAsh but allows protected video",
+		BugComponent: "b:1361410",
+		Contacts: []string{
+			"chromeos-platform-power@google.com",
+			"jkardatzke@google.com",
+		},
+		Impl: NewPowerUIFixture(PowerTestOptions{
+			NightLight:         DisableNightLight,
+			DarkTheme:          EnableLightTheme,
+			KeyboardBrightness: SetKbBrightnessToZero,
+		}, PowerFixtureOptions{BrowserType: browser.TypeAsh,
+			BrowserExtraOpts: []chrome.Option{
+				// Options for allowing L1 playback in dev mode
+				chrome.ExtraArgs("--allow-ra-in-dev-mode"),
+				chrome.ExtraArgs("--unsafely-allow-protected-media-identifier-for-domain=127.0.0.1"),
+				// Feature flags.
+				chrome.EnableFeatures("EnableArmHwdrm"),
+			}}),
+		SetUpTimeout:    SetUpTimeout,
+		ResetTimeout:    ResetTimeout,
+		TearDownTimeout: TearDownTimeout,
+		PreTestTimeout:  PreTestTimeout,
+		PostTestTimeout: PostTestTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:         PowerLacrosProtectedVideo,
+		Desc:         "Like PowerLacros but allows protected video",
+		BugComponent: "b:1361410",
+		Contacts: []string{
+			"chromeos-platform-power@google.com",
+			"jkardatzke@google.com",
+		},
+		Impl: NewPowerUIFixture(PowerTestOptions{
+			NightLight:         DisableNightLight,
+			DarkTheme:          EnableLightTheme,
+			KeyboardBrightness: SetKbBrightnessToZero,
+		}, PowerFixtureOptions{BrowserType: browser.TypeLacros,
+			BrowserExtraOpts: []chrome.Option{
+				// Options for allowing L1 playback in dev mode
+				chrome.ExtraArgs("--allow-ra-in-dev-mode"),
+				chrome.ExtraArgs("--unsafely-allow-protected-media-identifier-for-domain=127.0.0.1"),
+				// Feature flags.
+				chrome.EnableFeatures("EnableArmHwdrm"),
 			}}),
 		SetUpTimeout:    SetUpTimeout,
 		ResetTimeout:    ResetTimeout,
