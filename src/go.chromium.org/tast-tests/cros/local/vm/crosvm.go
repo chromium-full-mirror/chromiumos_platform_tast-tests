@@ -63,8 +63,7 @@ type SerialIOParam struct {
 
 // NetOption contains option for set up virtio net
 type NetOption struct {
-	TapFd       uint
-	PackedQueue bool
+	TapFd uint
 }
 
 // CrosvmParams - Parameters for starting a crosvm instance.
@@ -301,7 +300,7 @@ func (p *CrosvmParams) ToArgs() []string {
 	}
 
 	for _, netOption := range p.netOptions {
-		args = append(args, "--net", fmt.Sprintf("tap-fd=%d,packed-queue=%t", netOption.TapFd, netOption.PackedQueue))
+		args = append(args, "--net", fmt.Sprintf("tap-fd=%d,packed-queue=true", netOption.TapFd))
 	}
 
 	return args
