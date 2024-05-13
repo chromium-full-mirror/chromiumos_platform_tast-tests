@@ -538,7 +538,7 @@ func matchRoInfo(s string, slot GscSlot) (RoInfo, error) {
 	}
 
 	ret := RoInfo{}
-	verRE := regexp.MustCompile(`RO_` + slotStr + `:\s+([\s|*])\s([0-9.]+)\/([[:xdigit:]]+)`)
+	verRE := regexp.MustCompile(`RO_` + slotStr + `:\s+([\s|*])\s([0-9.]+)\/([[:xdigit:]]+)|Empty`)
 	matches := verRE.FindStringSubmatch(s)
 	if len(matches) != 4 {
 		return ret, errors.New("regex failed to extract ro info from: " + s)
