@@ -90,6 +90,7 @@ func ChromeosReadAloudPower(ctx context.Context, s *testing.State) {
 	pauseAudioButton := nodewith.Name("Pause keyboard shortcut k").Role(role.Button).ClassName("toolbar-button audio-controls")
 
 	r := power.NewRecorder(ctx, 10*time.Second, s.OutDir(), s.TestName())
+
 	defer r.Close(cleanupCtx)
 	if err := r.Cooldown(ctx); err != nil {
 		s.Error("Cooldown failed: ", err)
@@ -111,7 +112,7 @@ func ChromeosReadAloudPower(ctx context.Context, s *testing.State) {
 
 		//GoBigSleepLint: avoid reading mode is not fully loaded with the right content b:337985323.
 		testing.Sleep(ctx, 3*time.Second)
-		if err := ui.DoDefaultUntil(playAudioButton, ui.Exists(pauseAudioButton))(ctx); err != nil {
+		if err := ui.Retry(5, ui.DoDefaultUntil(playAudioButton, ui.Exists(pauseAudioButton)))(ctx); err != nil {
 			s.Fatal("Failed to start reading: ", err)
 		}
 	}
