@@ -21,6 +21,9 @@ type ZramIOMetrics struct {
 	hasZram      bool
 	metrics      map[string]perf.Metric
 	intervalName string
+	startRead    float64
+	startWrite   float64
+	prefix       string
 }
 
 // Assert that ZramIOMetrics can be used in perf.Timeline.
@@ -93,6 +96,8 @@ func NewZramIOMetrics() *ZramIOMetrics {
 
 // Setup creates the metric.
 func (z *ZramIOMetrics) Setup(ctx context.Context, prefix, intervalName string) error {
+	z.prefix = prefix
+
 	const zramDevPath = "/dev/zram0"
 	// Check if the device has zram.
 	if f, err := os.Stat(zramDevPath); err == nil {
@@ -135,6 +140,14 @@ func (z *ZramIOMetrics) Setup(ctx context.Context, prefix, intervalName string) 
 func (z *ZramIOMetrics) Start(ctx context.Context) error {
 	if z.hasZram {
 		testing.ContextLog(ctx, "Start tracking zram IO stats")
+
+		readResult, err := zramIOStats(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to read complete Zram I/O stats")
+		}
+
+		z.startRead = readResult["read"]
+		z.startWrite = readResult["write"]
 	} else {
 		testing.ContextLog(ctx, "The device does not have zram")
 	}
@@ -159,8 +172,27 @@ func (z *ZramIOMetrics) Snapshot(ctx context.Context, values *perf.Values) error
 // Stop logs the stop of zram IO stats tracker.
 // This function is required by perf.Timeline. It does not need to make another snapshot.
 func (z *ZramIOMetrics) Stop(ctx context.Context, values *perf.Values) error {
-	if z.hasZram {
-		testing.ContextLog(ctx, "Stop tracking zram IO stats")
+	if !z.hasZram {
+		return nil
 	}
+
+	testing.ContextLog(ctx, "Stop tracking zram IO stats")
+
+	readResult, err := zramIOStats(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to read complete Zram I/O stats")
+	}
+
+	values.Set(perf.Metric{
+		Name:      z.prefix + cp.ZramMetricType + "zram_read_IOs_diff",
+		Unit:      cp.ZramMetricTypeUnit,
+		Direction: perf.SmallerIsBetter,
+	}, readResult["read"]-z.startRead)
+
+	values.Set(perf.Metric{
+		Name:      z.prefix + cp.ZramMetricType + "zram_write_IOs_diff",
+		Unit:      cp.ZramMetricTypeUnit,
+		Direction: perf.SmallerIsBetter,
+	}, readResult["write"]-z.startWrite)
 	return nil
 }
