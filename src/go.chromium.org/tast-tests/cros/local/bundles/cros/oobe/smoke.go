@@ -41,8 +41,7 @@ func init() {
 func Smoke(ctx context.Context, s *testing.State) {
 	cr, err := chrome.New(ctx,
 		chrome.FieldTrialConfig(s.Param().(chrome.FieldTrialConfigMode)),
-		chrome.NoLogin(),
-		chrome.EnableFeatures("OobeQuickStart"))
+		chrome.NoLogin())
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
@@ -96,14 +95,23 @@ func Smoke(ctx context.Context, s *testing.State) {
 	}
 
 	if !shouldSkipGaiaInfoScreen {
+		s.Log("Waiting for the Gaia Info screen")
 		if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.GaiaInfoScreen.isVisible()"); err != nil {
-			s.Fatal("Failed to wait for the gaia info screen to be visible: ", err)
+			s.Fatal("Failed to wait for the Gaia Info screen to be visible: ", err)
 		}
 
-		// Select the "manual setup" option (as opposed to Quick Start). This button is not always present,
-		// depending on the capabilities of the device, so we just log the error.
-		if err := oobeConn.Eval(ctx, "OobeAPI.screens.GaiaInfoScreen.selectManualCredentials()", nil); err != nil {
-			s.Log("Unable to click gaia info screen manual credentials buttons: ", err)
+		// The Gaia Info Screen has two main UI states. When QuickStart is enabled, the user must choose between
+		// the manual vs. QuickStart setup. When QuickStart is disabled, the only option is to click "Next".
+		isQuickStartEnabled := false
+		if err := oobeConn.Eval(ctx, "OobeAPI.screens.GaiaInfoScreen.isOobeQuickStartEnabled()", &isQuickStartEnabled); err != nil {
+			s.Fatal("Failed to evaluate whether QuickStart is enabled: ", err)
+		}
+
+		if isQuickStartEnabled {
+			s.Log("QuickStart is enabled, selecting manual setup on Gaia Info Screen")
+			if err := oobeConn.Eval(ctx, "OobeAPI.screens.GaiaInfoScreen.selectManualCredentials()", nil); err != nil {
+				s.Log("Unable to click gaia info screen manual credentials buttons: ", err)
+			}
 		}
 
 		if err := oobeConn.Eval(ctx, "OobeAPI.screens.GaiaInfoScreen.clickNext()", nil); err != nil {

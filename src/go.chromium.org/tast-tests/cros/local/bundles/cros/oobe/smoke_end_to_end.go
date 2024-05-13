@@ -234,16 +234,34 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to click user creation screen next button: ", err)
 		}
 
-		s.Log("Waiting for the Gaia Info screen")
-		if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.GaiaInfoScreen.isVisible()"); err != nil {
-			s.Fatal("Failed to wait for the Gaia Info screen to be visible: ", err)
+		shouldSkipGaiaInfoScreen := false
+		if err := oobeConn.Eval(ctx, "OobeAPI.screens.GaiaInfoScreen.shouldSkip()", &shouldSkipGaiaInfoScreen); err != nil {
+			s.Fatal("Failed to evaluate whether to skip Gaia Info screen: ", err)
 		}
 
-		if err := uiauto.Combine("click next on the Gaia Info screen",
-			ui.WaitUntilExists(focusedButton),
-			ui.LeftClick(focusedButton),
-		)(ctx); err != nil {
-			s.Fatal("Failed to click Gaia Info screen next button: ", err)
+		if !shouldSkipGaiaInfoScreen {
+			s.Log("Waiting for the Gaia Info screen")
+			if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.GaiaInfoScreen.isVisible()"); err != nil {
+				s.Fatal("Failed to wait for the Gaia Info screen to be visible: ", err)
+			}
+
+			// The Gaia Info Screen has two main UI states. When QuickStart is enabled, the user must choose between
+			// the manual vs. QuickStart setup. When QuickStart is disabled, the only option is to click "Next".
+			isQuickStartEnabled := false
+			if err := oobeConn.Eval(ctx, "OobeAPI.screens.GaiaInfoScreen.isOobeQuickStartEnabled()", &isQuickStartEnabled); err != nil {
+				s.Fatal("Failed to evaluate whether QuickStart is enabled: ", err)
+			}
+
+			if isQuickStartEnabled {
+				s.Log("QuickStart is enabled, selecting manual setup on Gaia Info Screen")
+				if err := oobeConn.Eval(ctx, "OobeAPI.screens.GaiaInfoScreen.selectManualCredentials()", nil); err != nil {
+					s.Log("Unable to click gaia info screen manual credentials buttons: ", err)
+				}
+			}
+
+			if err := oobeConn.Eval(ctx, "OobeAPI.screens.GaiaInfoScreen.clickNext()", nil); err != nil {
+				s.Fatal("Failed to click gaia info screen next button: ", err)
+			}
 		}
 
 		s.Log("Waiting for the Gaia screen")
