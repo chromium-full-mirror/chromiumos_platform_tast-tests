@@ -81,6 +81,19 @@ const (
 	lowResFakeCameraFileName  = "720p_camera_video.mjpeg"
 )
 
+// Benchmark flags to mimic CrossBench setup.
+var benchmarkFlags = []string{
+	"--no-default-browser-check",
+	"--disable-component-update",
+	"--no-first-run",
+	"--disable-search-engine-choice-screen",
+	"--disable-background-timer-throttling",
+	"--disable-renderer-backgrounding",
+	"--no-experiments",
+	"--enable-benchmarking",
+	"--disable-field-trial-config",
+}
+
 // isLocalVar is a runtime variable that specifies whether to skip
 // waiting for the CPU to cooldown and idle, which speeds up overall
 // test runtime. This variable is explicitly made for local testing,
@@ -1131,6 +1144,25 @@ func init() {
 		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithoutCooldownBenchmark",
+		Desc: "CUJ fixture that skips CPU cooldown and has Benchmark Flags",
+		Contacts: []string{
+			"vincentchiang@google.com",
+			"cros-sw-perf@google.com",
+		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
+		Impl: &loggedInToCUJUserFixture{
+			bt:              browser.TypeAsh,
+			chromeExtraOpts: []chrome.Option{chrome.ExtraArgs(benchmarkFlags...)},
+		},
+		Parent:          "prepareForCUJWithoutCooldown",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
+	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithVulkanWithoutCooldown",
 		Desc: "CUJ fixture that skips CPU cooldown and runs with Vulkan composite/raster",
 		Contacts: []string{
@@ -1204,6 +1236,25 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 		Vars:            []string{"ui.cujAccountPool"},
 	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserLacrosWithoutCooldownBenchmark",
+		Desc: "Lacros CUJ fixture that skips CPU cooldown and have benchmark flags enabled",
+		Contacts: []string{
+			"vincentchiang@google.com",
+			"cros-sw-perf@google.com",
+		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
+		Impl: &loggedInToCUJUserFixture{
+			bt:              browser.TypeLacros,
+			chromeExtraOpts: []chrome.Option{chrome.ExtraArgs(benchmarkFlags...)},
+		},
+		Parent:          "prepareForCUJWithoutCooldown",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
 	// TODO(b/292249282): Remove when Vulkan is launched on brya and volteer.
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserVulkan",
@@ -1252,7 +1303,7 @@ func init() {
 		Name: "loggedInToCUJUserWithWebRTCEventLoggingWithBackgroundLoad50MB",
 		Desc: "CUJ fixture that adds 50MB background memory load with WebRTC event logging",
 		Contacts: []string{
-			"yichenz@chromium.com",
+			"yichenz@chromium.org",
 			"cros-sw-perf@google.com",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
@@ -1321,7 +1372,7 @@ func init() {
 		Name: "loggedInToCUJUserWithWebRTCEventLoggingWithBackgroundLoad1GB",
 		Desc: "CUJ fixture that adds 1GB background memory load with WebRTC event logging",
 		Contacts: []string{
-			"yichenz@chromium.com",
+			"yichenz@chromium.org",
 			"cros-sw-perf@google.com",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
@@ -1390,7 +1441,7 @@ func init() {
 		Name: "loggedInToCUJUserWithWebRTCEventLoggingWithBackgroundLoad2GB",
 		Desc: "CUJ fixture that adds 2GB background memory load with WebRTC event logging",
 		Contacts: []string{
-			"yichenz@chromium.com",
+			"yichenz@chromium.org",
 			"cros-sw-perf@google.com",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
@@ -1459,7 +1510,7 @@ func init() {
 		Name: "loggedInToCUJUserWithWebRTCEventLoggingWithBackgroundLoad3GB",
 		Desc: "CUJ fixture that adds 3GB background memory load with WebRTC event logging",
 		Contacts: []string{
-			"yichenz@chromium.com",
+			"yichenz@chromium.org",
 			"cros-sw-perf@google.com",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
@@ -1528,7 +1579,7 @@ func init() {
 		Name: "loggedInToCUJUserWithWebRTCEventLoggingWithBackgroundLoad4GB",
 		Desc: "CUJ fixture that adds 4GB background memory load with WebRTC event logging",
 		Contacts: []string{
-			"yichenz@chromium.com",
+			"yichenz@chromium.org",
 			"cros-sw-perf@google.com",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
@@ -1596,7 +1647,7 @@ func init() {
 		Name: "loggedInToCUJUserWithWebRTCEventLoggingWithMlbenchmarkDataDirectory",
 		Desc: "CUJ fixture with WebRTC event logging with mlbenchmark data directory",
 		Contacts: []string{
-			"yichenz@chromium.com",
+			"yichenz@chromium.org",
 			"cros-sw-perf@google.com",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
