@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
+	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/reportingutil"
@@ -24,10 +25,12 @@ import (
 
 const (
 	fetchSupportPacketEnrollmentTimeout       = 5 * time.Minute
+	fetchSupportPacketIssueCommandRetries     = 3
+	fetchSupportPacketIssueCommandRetryDelay  = 20 * time.Second
 	fetchSupportPacketCommandExecutionTimeout = 10 * time.Minute
 	fetchSupportPacketReportingTimeout        = 3 * time.Minute
 	fetchSupportPacketCleanupTimeout          = 3 * time.Minute
-	fetchSupportPacketTestTimeout             = fetchSupportPacketEnrollmentTimeout + fetchSupportPacketCommandExecutionTimeout + fetchSupportPacketReportingTimeout + fetchSupportPacketCleanupTimeout
+	fetchSupportPacketTestTimeout             = fetchSupportPacketEnrollmentTimeout + (fetchSupportPacketIssueCommandRetries * fetchSupportPacketIssueCommandRetryDelay) + fetchSupportPacketCommandExecutionTimeout + fetchSupportPacketReportingTimeout + fetchSupportPacketCleanupTimeout
 )
 
 type testingParam struct {
@@ -140,7 +143,13 @@ func FetchSupportPacket(ctx context.Context, s *testing.State) {
 
 	s.Log("Supportability: Triggering FETCH_SUPPORT_PACKET remote command")
 	command := tape.RemoteCommand{CommandType: tape.CommandTypeFetchSupportPacket, Payload: "{\"supportPacketDetails\":{\"issueCaseId\":\"issue_case_id\",\"issueDescription\":\"issuedescription\",\"requestedDataCollectors\":[1,2,3]}}"}
-	response, err := tapeClient.IssueCommand(ctx, deviceID, customerID, command)
+	var response *tape.IssueCommandResponse
+	// Try to issue remote command with retries.
+	err = action.Retry(fetchSupportPacketIssueCommandRetries, func(ctx context.Context) error {
+		s.Log("Supportability: Trying to issue remote command")
+		response, err = tapeClient.IssueCommand(ctx, deviceID, customerID, command)
+		return err
+	}, fetchSupportPacketIssueCommandRetryDelay)(ctx)
 	if err != nil {
 		s.Fatal("Failed to issue command: ", err)
 	}
