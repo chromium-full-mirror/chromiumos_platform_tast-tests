@@ -89,6 +89,7 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  resetTimeout,
 		PostTestTimeout: postTestTimeout,
+		BugComponent:    "b:1108889", // ChromeOS > Software > System Services > Cross Device
 	})
 	// TODO(b/230401333): Remove fixture after root cause of PhoneHub onboarding failure fixed.
 	// This is a temporary fixture to see if flake rates for Cryptauth DeviceSync are lower after a second DeviceSync attempt with a longer wait time.
@@ -113,6 +114,7 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  resetTimeout,
 		PostTestTimeout: postTestTimeout,
+		BugComponent:    "b:1108889", // ChromeOS > Software > System Services > Cross Device
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "crossdeviceOnboarded",
@@ -135,6 +137,7 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  resetTimeout,
 		PostTestTimeout: postTestTimeout,
+		BugComponent:    "b:1108889", // ChromeOS > Software > System Services > Cross Device
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "crossdeviceNoSignIn",
@@ -158,6 +161,7 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  resetTimeout,
 		PostTestTimeout: postTestTimeout,
+		BugComponent:    "b:1108889", // ChromeOS > Software > System Services > Cross Device
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "crossdeviceOnboardedNoLock",
@@ -180,6 +184,7 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  resetTimeout,
 		PostTestTimeout: postTestTimeout,
+		BugComponent:    "b:1108889", // ChromeOS > Software > System Services > Cross Device
 	})
 
 	// lacros fixtures
@@ -204,6 +209,7 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  resetTimeout,
 		PostTestTimeout: postTestTimeout,
+		BugComponent:    "b:1108889", // ChromeOS > Software > System Services > Cross Device
 	})
 
 	// Floss fixtures - these are duplicates of all the above fixtures
@@ -229,6 +235,7 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  resetTimeout,
 		PostTestTimeout: postTestTimeout,
+		BugComponent:    "b:1108889", // ChromeOS > Software > System Services > Cross Device
 	})
 	// TODO(b/230401333): Remove fixture after root cause of PhoneHub onboarding failure fixed.
 	// This is a temporary fixture to see if flake rates for Cryptauth DeviceSync are lower after a second DeviceSync attempt with a longer wait time
@@ -253,6 +260,7 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  resetTimeout,
 		PostTestTimeout: postTestTimeout,
+		BugComponent:    "b:1108889", // ChromeOS > Software > System Services > Cross Device
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "crossdeviceOnboardedFloss",
@@ -275,6 +283,7 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  resetTimeout,
 		PostTestTimeout: postTestTimeout,
+		BugComponent:    "b:1108889", // ChromeOS > Software > System Services > Cross Device
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "crossdeviceNoSignInFloss",
@@ -298,6 +307,7 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  resetTimeout,
 		PostTestTimeout: postTestTimeout,
+		BugComponent:    "b:1108889", // ChromeOS > Software > System Services > Cross Device
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "crossdeviceOnboardedNoLockFloss",
@@ -320,6 +330,7 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  resetTimeout,
 		PostTestTimeout: postTestTimeout,
+		BugComponent:    "b:1108889", // ChromeOS > Software > System Services > Cross Device
 	})
 
 	testing.AddFixture(&testing.Fixture{
@@ -347,6 +358,7 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  resetTimeout,
 		PostTestTimeout: postTestTimeout,
+		BugComponent:    "b:1108889", // ChromeOS > Software > System Services > Cross Device
 	})
 }
 
@@ -536,19 +548,18 @@ func (f *crossdeviceFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 		return errors.Wrap(err, "failed to enable bluetooth debug logging")
 	}
 
+	// Attempt to reconnect to the Android device if needed.
+	if err := androidDevice.Device.IsConnected(ctx); err != nil {
+		s.Log("Android device is no longer reachable via adb. Reconnecting")
+		adbDevice, _, err := AdbSetup(ctx, phoneIP)
+		if err != nil {
+			s.Fatal("Failed to reconnect to adb device: ", err)
+		}
+		androidDevice.Device = adbDevice
+	}
+
 	// Phone and Chromebook will not be paired if we are not signed in to the Chromebook yet.
 	if !f.noSignIn {
-		// Sometimes during login the tcp connection to the snippet server and/or adb is lost.
-		// Check we can still connect to the adb device.
-		if err := androidDevice.Device.IsConnected(ctx); err != nil {
-			s.Log("Android device is no longer reachable via adb. Reconnecting")
-			adbDevice, _, err := AdbSetup(ctx, phoneIP)
-			if err != nil {
-				s.Fatal("Failed to reconnect to adb device: ", err)
-			}
-			androidDevice.Device = adbDevice
-		}
-		// If the Pair RPC fails, reconnect to the snippet server and try again.
 		if err := f.PairWithAndroid(ctx, tconn, cr); err != nil {
 			s.Fatal("Pairing with Android failed: ", err)
 		}
@@ -585,13 +596,6 @@ func (f *crossdeviceFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 		}
 	}
 
-	// Disconnect from Wi-Fi for a completely fresh start in OOBE
-	if f.noSignIn {
-		if err := DisconnectFromWifi(ctx); err != nil {
-			s.Log("Failed to disconnect from Wi-Fi. Proceeding anyway. Error: ", err)
-		}
-	}
-
 	// Store Android attributes for reporting.
 	androidAttributes, err := androidDevice.GetAndroidAttributes(ctx)
 	if err != nil {
@@ -610,6 +614,13 @@ func (f *crossdeviceFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 	f.downloadsPath, err = cryptohome.DownloadsPath(ctx, f.cr.NormalizedUser())
 	if err != nil {
 		s.Fatal("Failed to get user's Downloads path: ", err)
+	}
+
+	// Disconnect from Wi-Fi for a completely fresh start in OOBE
+	if f.noSignIn {
+		if err := DisconnectFromWifi(ctx); err != nil {
+			s.Log("Failed to disconnect from Wi-Fi. Proceeding anyway. Error: ", err)
+		}
 	}
 
 	// Lock chrome after all Setup is complete so we don't block other fixtures.
