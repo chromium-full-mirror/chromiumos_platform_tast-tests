@@ -20,7 +20,6 @@ import (
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -40,9 +39,8 @@ func init() {
 			"video_conference_cq_critical",
 			"group:cbx", "cbx_feature_enabled", "cbx_unstable",
 		},
-		TestBedDeps:  []string{tbdep.Cbx(false)},
-		SoftwareDeps: []string{"chrome", "camera_feature_effects"},
-		HardwareDeps: hwdep.D(hwdep.SkipOnModel("betty")),
+		TestBedDeps:  []string{tbdep.Cbx(true)},
+		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.LoggedInWithFakeHALAndEffectsEnabled,
 		SearchFlags: []*testing.StringPair{
 			{

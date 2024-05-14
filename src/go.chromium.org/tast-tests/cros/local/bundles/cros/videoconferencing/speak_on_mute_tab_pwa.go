@@ -45,7 +45,7 @@ func init() {
 			"group:external-dependency",
 			"group:cbx", "cbx_feature_enabled", "cbx_unstable",
 		},
-		TestBedDeps: []string{tbdep.Cbx(false)},
+		TestBedDeps: []string{tbdep.Cbx(true)},
 		Data: []string{
 			data.SpeechInputFile,
 			"vc_tester/popup.html",

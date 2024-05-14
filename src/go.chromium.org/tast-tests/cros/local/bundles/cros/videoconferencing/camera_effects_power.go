@@ -55,7 +55,7 @@ func init() {
 			"group:cbx", "cbx_feature_enabled", "cbx_unstable",
 			"group:crosbolt", "crosbolt_perbuild",
 		},
-		TestBedDeps:  []string{tbdep.Cbx(false)},
+		TestBedDeps:  []string{tbdep.Cbx(true)},
 		SoftwareDeps: []string{"chrome", "camera_feature_effects"},
 		HardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
 		Timeout:      15 * time.Minute,

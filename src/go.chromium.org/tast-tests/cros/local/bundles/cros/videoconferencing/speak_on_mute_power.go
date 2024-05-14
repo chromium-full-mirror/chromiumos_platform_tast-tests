@@ -10,6 +10,7 @@ import (
 	"sync"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/wav"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/common"
@@ -37,6 +38,7 @@ func init() {
 			"aaronyu@google.com",
 		},
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
+		TestBedDeps:  []string{tbdep.Cbx(true)},
 		Data:         []string{data.SpeechInputFile},
 		BugComponent: "b:187682",
 		Timeout:      10*time.Minute + power.RecorderTimeout,
