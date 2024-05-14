@@ -83,7 +83,7 @@ func (as *Asphalt8) EnterGameScene(ctx context.Context) error {
 	raceNow := uidetection.TextBlock([]string{"RACE", "NOW!"})
 	return uiauto.NamedCombine("enter game scene",
 		// Dismiss the profile dialog if it exists.
-		cuj.ClickIfExist(notNowButton, defaultUITimeout),
+		cuj.ClickIfExist(notNowButton, longUITimeout),
 		cuj.WaitForExists(actionBarRoot, defaultUITimeout),
 		uiauto.NamedAction("press enter to skip animation", kb.AccelAction("Enter")),
 		// On low-end devices, wait up to 2 minutes for the 'RACE-NOW' button.

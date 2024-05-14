@@ -9,7 +9,10 @@ import (
 	"time"
 )
 
-const defaultUITimeout = 15 * time.Second // Used for situations where UI response might be slow.
+const (
+	defaultUITimeout = 15 * time.Second
+	longUITimeout    = 30 * time.Second // Used for situations where UI response might be slow.
+)
 
 // GameApp contains user's operation in game application.
 type GameApp interface {
