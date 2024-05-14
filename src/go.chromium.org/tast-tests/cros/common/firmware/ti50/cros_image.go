@@ -1015,9 +1015,14 @@ const (
 	SKUH1Clamshell ChipSKU = "H1-C"
 )
 
+// Sysinfo returns the chip sku from sysinfo
+func (i *CrOSImage) Sysinfo(ctx context.Context) (string, error) {
+	return i.Command(ctx, "sysinfo")
+}
+
 // GetH1ChipSKU returns the chip sku from sysinfo
 func (i *CrOSImage) GetH1ChipSKU(ctx context.Context) (ChipSKU, error) {
-	output, err := i.Command(ctx, "sysinfo")
+	output, err := i.Sysinfo(ctx)
 	if err != nil {
 		return "", err
 	}
