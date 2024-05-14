@@ -75,8 +75,8 @@ func (g *Gallery) AddTextToPDF(kb *input.KeyboardEventWriter, location coords.Po
 func (g *Gallery) Sign() uiauto.Action {
 	signButton := nodewith.Name("Sign").Role(role.ToggleButton).Ancestor(RootFinder)
 	return uiauto.NamedCombine("create signature",
-		g.ui.LeftClick(signButton),
-		g.ui.WaitUntilAnyExists(drawSignatureCanvas, placeSignatureButton),
+		g.ui.WithTimeout(longUITimeout).LeftClickUntil(signButton,
+			g.ui.WaitUntilAnyExists(drawSignatureCanvas, placeSignatureButton)),
 	)
 }
 
