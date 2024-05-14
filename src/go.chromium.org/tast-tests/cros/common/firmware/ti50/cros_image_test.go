@@ -595,15 +595,14 @@ func TestGettimeDT(t *testing.T) {
 }
 
 func TestGettimeH1(t *testing.T) {
-	// These hex values do not match the base 10 value. They don't matter.
 	input := `
-		Time: 0x0000000000b98f67 = 67.890 s
-		Since reset: 0x0000000000abcde = 12345.678 s
-		Since deep sleep: 0x0000000000ade606 = 1.000 s
+		gettime
+		Time: 0x00000000001ea5ff = 2.008575 s
+		since cold_reset: 1683 s
 `
 	expected := GSCTime{
-		coldResetTime: 12345678000000,
-		dsTime:        1000000000,
+		coldResetTime: 1683000000000,
+		dsTime:        2008575000,
 	}
 
 	testExtractGSCTime(t, input, expected)

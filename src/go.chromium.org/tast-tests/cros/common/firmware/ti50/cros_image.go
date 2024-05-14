@@ -53,9 +53,10 @@ var (
 	verRWLegacyTi50StrRE = `(ti50_common):(\S+)`
 	verRWGSCStrRE        = verRWCr50StrRE + `|` + verRWTi50StrRE + `|` + verRWLegacyTi50StrRE
 	// GSC board properties
-	brdPropRE          = regexp.MustCompile(`properties = 0x([0-9a-fA-F]+)`)
-	gettimeDeepSleepRE = regexp.MustCompile(`deep sleep:.*= ([0-9\.]*) `)
-	gettimeColdResetRE = regexp.MustCompile(`reset:.*= ([0-9\.]*) `)
+	brdPropRE     = regexp.MustCompile(`properties = 0x([0-9a-fA-F]+)`)
+	gettimeTi50RE = regexp.MustCompile(`(?s)Since reset:.*\s([0-9\.]+) s\s*Since deep sleep:.*\s([0-9\.]+) s\s`)
+	gettimeCr50RE = regexp.MustCompile(`(?s)Time:.*\s([0-9\.]+) s\s*since cold_reset:.*\s([0-9\.]+) s\s`)
+
 	// USB ADC info regex
 	usbAdcStateRE = regexp.MustCompile(`(PHY [AB])|ADC: (disconnected)|connected: ([\S]+)`)
 	usbAdcCc1RE   = regexp.MustCompile(`ADC: CC1 = ([0-9]+) mV`)
@@ -831,24 +832,27 @@ type GSCTime struct {
 // extractGSCTime extracts the time since deep sleep and cold reset from the gettime output
 func extractGSCTime(out string) (GSCTime, error) {
 	ret := GSCTime{}
+	var coldResetTime string
+	var dsTime string
 
-	// Find the deep sleep time
-	m := gettimeDeepSleepRE.FindStringSubmatch(out)
-	if m == nil {
-		return ret, errors.New("failed to find deep sleep time in gettime output")
+	// Find the cold reset and deep sleep time.
+	if m := gettimeTi50RE.FindStringSubmatch(out); m != nil {
+		coldResetTime = m[1]
+		dsTime = m[2]
+	} else if m := gettimeCr50RE.FindStringSubmatch(out); m != nil {
+		dsTime = m[1]
+		coldResetTime = m[2]
+	} else {
+		return ret, errors.New("failed to match gettime output")
 	}
-	t, err := strconv.ParseFloat(m[1], 64)
+
+	t, err := strconv.ParseFloat(dsTime, 64)
 	if err != nil {
 		return ret, err
 	}
 	ret.dsTime = time.Duration(t * float64(time.Second))
 
-	// Find the cold reset time
-	m = gettimeColdResetRE.FindStringSubmatch(out)
-	if m == nil {
-		return ret, errors.New("failed to find cold reset time in gettime output")
-	}
-	t, err = strconv.ParseFloat(m[1], 64)
+	t, err = strconv.ParseFloat(coldResetTime, 64)
 	if err != nil {
 		return ret, err
 	}
