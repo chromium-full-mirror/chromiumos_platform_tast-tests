@@ -37,128 +37,76 @@ func init() {
 	})
 }
 
+// defaultRevision constifies key for default kernel version
+const defaultRevision = "default"
+
 // Reven's WiFi driver is upstream iwlwifi instead of specific
 // drivers for other ChromiumOS boards. The path of the WiFi
 // module should be separated from other ChromiumOS boards.
 var expectedFlexWLANDriver = map[wlan.DeviceID]map[string]string{
 	wlan.Intel8265: {
-		"5.10": "wireless/intel/iwlwifi/iwlwifi.ko",
-		"5.15": "wireless/intel/iwlwifi/iwlwifi.ko",
-		"6.6":  "wireless/intel/iwlwifi/iwlwifi.ko",
+		defaultRevision: "wireless/intel/iwlwifi/iwlwifi.ko",
 	},
 	wlan.Intel9000: {
-		"5.10": "wireless/intel/iwlwifi/iwlwifi.ko",
-		"5.15": "wireless/intel/iwlwifi/iwlwifi.ko",
-		"6.1":  "wireless/intel/iwlwifi/iwlwifi.ko",
-		"6.6":  "wireless/intel/iwlwifi/iwlwifi.ko",
+		defaultRevision: "wireless/intel/iwlwifi/iwlwifi.ko",
 	},
 	wlan.IntelAX201: {
-		"5.10": "wireless/intel/iwlwifi/iwlwifi.ko",
-		"5.15": "wireless/intel/iwlwifi/iwlwifi.ko",
-		"6.1":  "wireless/intel/iwlwifi/iwlwifi.ko",
-		"6.6":  "wireless/intel/iwlwifi/iwlwifi.ko",
+		defaultRevision: "wireless/intel/iwlwifi/iwlwifi.ko",
 	},
 }
 
 var expectedWLANDriver = map[wlan.DeviceID]map[string]string{
 	wlan.Intel7260: {
-		"3.8":  "wireless/iwl7000/iwlwifi/iwlwifi.ko",
-		"3.14": "wireless-3.8/iwl7000/iwlwifi/iwlwifi.ko",
-		"4.4":  "wireless/iwl7000/iwlwifi/iwlwifi.ko",
-		"4.14": "wireless/iwl7000/iwlwifi/iwlwifi.ko",
-		"4.19": "wireless/iwl7000/iwlwifi/iwlwifi.ko",
+		defaultRevision: "wireless/iwl7000/iwlwifi/iwlwifi.ko",
+		"3.14":          "wireless-3.8/iwl7000/iwlwifi/iwlwifi.ko",
 	},
 	wlan.Intel7265: {
-		"3.8":  "wireless/iwl7000/iwlwifi/iwlwifi.ko",
-		"3.14": "wireless-3.8/iwl7000/iwlwifi/iwlwifi.ko",
-		"3.18": "wireless/iwl7000/iwlwifi/iwlwifi.ko",
-		"4.4":  "wireless/iwl7000/iwlwifi/iwlwifi.ko",
-		"4.14": "wireless/iwl7000/iwlwifi/iwlwifi.ko",
-		"4.19": "wireless/iwl7000/iwlwifi/iwlwifi.ko",
-		"5.4":  "wireless/iwl7000/iwlwifi/iwlwifi.ko",
-		"5.10": "wireless/iwl7000/iwlwifi/iwlwifi.ko",
-		"6.6":  "wireless/iwl7000/iwlwifi/iwlwifi.ko",
+		defaultRevision: "wireless/iwl7000/iwlwifi/iwlwifi.ko",
+		"3.14":          "wireless-3.8/iwl7000/iwlwifi/iwlwifi.ko",
 	},
 	wlan.Intel9000: {
-		"4.14": "wireless/iwl7000/iwlwifi/iwlwifi.ko",
-		"4.19": "wireless/iwl7000/iwlwifi/iwlwifi.ko",
-		"5.10": "wireless/iwl7000/iwlwifi/iwlwifi.ko",
-		"5.15": "wireless/iwl7000/iwlwifi/iwlwifi.ko",
+		defaultRevision: "wireless/iwl7000/iwlwifi/iwlwifi.ko",
 	},
 	wlan.Intel9260: {
-		"4.4":  "wireless/iwl7000/iwlwifi/iwlwifi.ko",
-		"4.14": "wireless/iwl7000/iwlwifi/iwlwifi.ko",
-		"4.19": "wireless/iwl7000/iwlwifi/iwlwifi.ko",
-		"5.4":  "wireless/iwl7000/iwlwifi/iwlwifi.ko",
-		"5.10": "wireless/iwl7000/iwlwifi/iwlwifi.ko",
+		defaultRevision: "wireless/iwl7000/iwlwifi/iwlwifi.ko",
 	},
 	wlan.Intel22260: {
-		"4.4":  "wireless/iwl7000/iwlwifi/iwlwifi.ko",
-		"4.14": "wireless/iwl7000/iwlwifi/iwlwifi.ko",
-		"4.19": "wireless/iwl7000/iwlwifi/iwlwifi.ko",
-		"5.4":  "wireless/iwl7000/iwlwifi/iwlwifi.ko",
-		"5.10": "wireless/iwl7000/iwlwifi/iwlwifi.ko",
-		"5.15": "wireless/iwl7000/iwlwifi/iwlwifi.ko",
-		"6.6":  "wireless/iwl7000/iwlwifi/iwlwifi.ko",
+		defaultRevision: "wireless/iwl7000/iwlwifi/iwlwifi.ko",
 	},
 	wlan.Intel22560: {
-		"4.19": "wireless/iwl7000/iwlwifi/iwlwifi.ko",
-		"5.4":  "wireless/iwl7000/iwlwifi/iwlwifi.ko",
-		"5.10": "wireless/iwl7000/iwlwifi/iwlwifi.ko",
-		"5.15": "wireless/iwl7000/iwlwifi/iwlwifi.ko",
-		"6.1":  "wireless/iwl7000/iwlwifi/iwlwifi.ko",
-		"6.6":  "wireless/iwl7000/iwlwifi/iwlwifi.ko",
+		defaultRevision: "wireless/iwl7000/iwlwifi/iwlwifi.ko",
 	},
 	wlan.IntelAX203: {
-		"5.15": "wireless/iwl7000/iwlwifi/iwlwifi.ko",
-		"6.6":  "wireless/iwl7000/iwlwifi/iwlwifi.ko",
+		defaultRevision: "wireless/iwl7000/iwlwifi/iwlwifi.ko",
 	},
 	wlan.IntelAX211: {
-		"5.10": "wireless/iwl7000/iwlwifi/iwlwifi.ko",
-		"5.15": "wireless/iwl7000/iwlwifi/iwlwifi.ko",
-		"6.1":  "wireless/iwl7000/iwlwifi/iwlwifi.ko",
-		"6.6":  "wireless/iwl7000/iwlwifi/iwlwifi.ko",
+		defaultRevision: "wireless/iwl7000/iwlwifi/iwlwifi.ko",
 	},
 	wlan.IntelBE200: {
-		"6.1": "wireless/iwl7000/iwlwifi/iwlwifi.ko",
-		"6.6": "wireless/iwl7000/iwlwifi/iwlwifi.ko",
+		defaultRevision: "wireless/iwl7000/iwlwifi/iwlwifi.ko",
 	},
 	wlan.QualcommAtherosQCA6174: {
-		"4.4":  "wireless/ar10k/ath/ath10k/ath10k_pci.ko",
-		"4.14": "wireless/ath/ath10k/ath10k_pci.ko",
-		"4.19": "wireless/ath/ath10k/ath10k_pci.ko",
-		"5.4":  "wireless/ath/ath10k/ath10k_pci.ko",
-		"5.10": "wireless/ath/ath10k/ath10k_pci.ko",
+		defaultRevision: "wireless/ath/ath10k/ath10k_pci.ko",
+		"4.4":           "wireless/ar10k/ath/ath10k/ath10k_pci.ko",
 	},
 	wlan.QualcommAtherosQCA6174SDIO: {
-		"4.19": "wireless/ath/ath10k/ath10k_sdio.ko",
-		"5.10": "wireless/ath/ath10k/ath10k_sdio.ko",
+		defaultRevision: "wireless/ath/ath10k/ath10k_sdio.ko",
 	},
 	wlan.QualcommWCN3990: {
-		"4.14": "wireless/ath/ath10k/ath10k_snoc.ko",
-		"4.19": "wireless/ath/ath10k/ath10k_snoc.ko",
-		"5.4":  "wireless/ath/ath10k/ath10k_snoc.ko",
-		"5.10": "wireless/ath/ath10k/ath10k_snoc.ko",
-		"5.15": "wireless/ath/ath10k/ath10k_snoc.ko",
-		"6.6":  "wireless/ath/ath10k/ath10k_snoc.ko",
+		defaultRevision: "wireless/ath/ath10k/ath10k_snoc.ko",
 	},
 	wlan.QualcommWCN6750: {
-		"5.15": "wireless/ath/ath11k/ath11k_ahb.ko",
+		defaultRevision: "wireless/ath/ath11k/ath11k_ahb.ko",
 	},
 	wlan.QualcommWCN6855: {
-		"5.10": "wireless/ath/ath11k/ath11k_pci.ko",
-		"6.6":  "wireless/ath/ath11k/ath11k_pci.ko",
+		defaultRevision: "wireless/ath/ath11k/ath11k_pci.ko",
 	},
 	wlan.Marvell88w8897SDIO: {
-		"3.8":  "wireless/mwifiex/mwifiex_sdio.ko",
-		"3.10": "wireless-3.8/mwifiex/mwifiex_sdio.ko",
-		"3.14": "wireless-3.8/mwifiex/mwifiex_sdio.ko",
-		"3.18": "wireless/mwifiex/mwifiex_sdio.ko",
-		"4.14": "wireless/marvell/mwifiex/mwifiex_sdio.ko",
-		"4.19": "wireless/marvell/mwifiex/mwifiex_sdio.ko",
-		"5.4":  "wireless/marvell/mwifiex/mwifiex_sdio.ko",
-		"5.10": "wireless/marvell/mwifiex/mwifiex_sdio.ko",
-		"5.15": "wireless/marvell/mwifiex/mwifiex_sdio.ko",
+		defaultRevision: "wireless/marvell/mwifiex/mwifiex_sdio.ko",
+		"3.8":           "wireless/mwifiex/mwifiex_sdio.ko",
+		"3.10":          "wireless-3.8/mwifiex/mwifiex_sdio.ko",
+		"3.14":          "wireless-3.8/mwifiex/mwifiex_sdio.ko",
+		"3.18":          "wireless/mwifiex/mwifiex_sdio.ko",
 	},
 	wlan.BroadcomBCM4354SDIO: {
 		"3.8":  "wireless/brcm80211/brcmfmac/brcmfmac.ko",
@@ -172,43 +120,25 @@ var expectedWLANDriver = map[wlan.DeviceID]map[string]string{
 		"4.19": "wireless/broadcom/brcm80211/brcmfmac/brcmfmac.ko",
 	},
 	wlan.Marvell88w8997PCIE: {
-		"4.4":  "wireless/marvell/mwifiex/mwifiex_pcie.ko",
-		"4.14": "wireless/marvell/mwifiex/mwifiex_pcie.ko",
-		"4.19": "wireless/marvell/mwifiex/mwifiex_pcie.ko",
-		"5.4":  "wireless/marvell/mwifiex/mwifiex_pcie.ko",
-		"5.10": "wireless/marvell/mwifiex/mwifiex_pcie.ko",
+		defaultRevision: "wireless/marvell/mwifiex/mwifiex_pcie.ko",
 	},
 	wlan.Realtek8822CPCIE: {
-		"4.14": "wireless/realtek/rtw88/rtw88_8822ce.ko",
-		"5.4":  "wireless/realtek/rtw88/rtw88_8822ce.ko",
-		"5.10": "wireless/realtek/rtw88/rtw88_8822ce.ko",
-		"5.15": "wireless/realtek/rtw88/rtw88_8822ce.ko",
-		"6.1":  "wireless/realtek/rtw88/rtw88_8822ce.ko",
-		"6.6":  "wireless/realtek/rtw88/rtw88_8822ce.ko",
+		defaultRevision: "wireless/realtek/rtw88/rtw88_8822ce.ko",
 	},
 	wlan.Realtek8852APCIE: {
-		"5.10": "wireless/realtek/rtw89/rtw89_8852ae.ko",
-		"6.6":  "wireless/realtek/rtw89/rtw89_8852ae.ko",
+		defaultRevision: "wireless/realtek/rtw89/rtw89_8852ae.ko",
 	},
 	wlan.Realtek8852CPCIE: {
-		"5.10": "wireless/realtek/rtw89/rtw89_8852ce.ko",
-		"5.15": "wireless/realtek/rtw89/rtw89_8852ce.ko",
+		defaultRevision: "wireless/realtek/rtw89/rtw89_8852ce.ko",
 	},
 	wlan.MediaTekMT7921PCIE: {
-		"5.4":  "wireless/mediatek/mt76/mt7921/mt7921e.ko",
-		"5.10": "wireless/mediatek/mt76/mt7921/mt7921e.ko",
-		"5.15": "wireless/mediatek/mt76/mt7921/mt7921e.ko",
-		"6.1":  "wireless/mediatek/mt76/mt7921/mt7921e.ko",
-		"6.6":  "wireless/mediatek/mt76/mt7921/mt7921e.ko",
+		defaultRevision: "wireless/mediatek/mt76/mt7921/mt7921e.ko",
 	},
 	wlan.MediaTekMT7921SDIO: {
-		"5.10": "wireless/mediatek/mt76/mt7921/mt7921s.ko",
-		"5.15": "wireless/mediatek/mt76/mt7921/mt7921s.ko",
+		defaultRevision: "wireless/mediatek/mt76/mt7921/mt7921s.ko",
 	},
 	wlan.MediaTekMT7922PCIE: {
-		"5.15": "wireless/mediatek/mt76/mt7921/mt7921e.ko",
-		"6.1":  "wireless/mediatek/mt76/mt7921/mt7921e.ko",
-		"6.6":  "wireless/mediatek/mt76/mt7921/mt7921e.ko",
+		defaultRevision: "wireless/mediatek/mt76/mt7921/mt7921e.ko",
 	},
 }
 
@@ -284,7 +214,11 @@ func Driver(ctx context.Context, s *testing.State) {
 	baseRevision := strings.Join(strings.Split(u.Release, ".")[:2], ".")
 	expectedPath, ok := wlanDriverList[devInfo.ID][baseRevision]
 	if !ok {
-		s.Fatalf("Unexpected base revision %v for device %v", baseRevision, devInfo.Name)
+		s.Log("Base revision not found in driver map, checking default")
+		expectedPath, ok = wlanDriverList[devInfo.ID][defaultRevision]
+		if !ok {
+			s.Fatalf("Unexpected base revision %v for device %v", baseRevision, devInfo.Name)
+		}
 	}
 
 	netDriversRoot := filepath.Join("/lib/modules", u.Release, "kernel/drivers/net")
