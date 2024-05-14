@@ -21,7 +21,7 @@ func init() {
 		Desc: "Concurrently tasks the TPM",
 		Contacts: []string{
 			"cros-proj-amd@google.com",
-			"markhas@google.com",
+			"jpmurphy@google.com",
 		},
 		BugComponent: "b:169878",
 		// TODO: This test does not have to be specific to AMD cpus, but is
