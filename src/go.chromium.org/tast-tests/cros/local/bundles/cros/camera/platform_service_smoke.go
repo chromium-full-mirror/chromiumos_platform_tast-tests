@@ -19,7 +19,12 @@ import (
 var flakyModel = []string{"homestar"}
 
 // TODO(b/243048705): skip the test on faulty flash. Remove when resolved.
-var flakyCamera = []string{"0408:3028", "0408:4021", "05c8:03f4"}
+var flakyCamera1 = []string{"0408:3028", "0408:4021", "05c8:03f4"}
+
+// TODO(b/340123520): skip the test on flaky camera. Remove when resolved.
+var flakyCamera2 = []string{"13d3:56ec"}
+
+var flakyCamera = append(flakyCamera1, flakyCamera2...)
 
 func init() {
 	testing.AddTest(&testing.Test{
