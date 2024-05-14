@@ -139,3 +139,13 @@ func AUETestConfig() TestConfig {
 		TestAUE:     true,
 	}
 }
+
+// RotateCropTestConfig returns test config for testing the Rotate and Crop
+// stream manipulator.
+func RotateCropTestConfig() TestConfig {
+	return TestConfig{
+		GtestFilter: "Camera3FrameTest/Camera3PortraitRotationTest*",
+		// Stream manipulators only available if camera service is used.
+		ConnectToCameraService: true,
+	}
+}
