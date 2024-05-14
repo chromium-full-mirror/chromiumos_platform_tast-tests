@@ -9,10 +9,10 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/tbdep"
-	"go.chromium.org/tast-tests/cros/local/apps"
-	"go.chromium.org/tast-tests/cros/local/camera/cca"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/fakevctab"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vctray"
@@ -41,7 +41,11 @@ func init() {
 		},
 		TestBedDeps:  []string{tbdep.Cbx(true)},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      fixture.LoggedInWithFakeHALAndEffectsEnabled,
+		Data: []string{
+			"vc_tester/popup.html",
+			"vc_tester/popup.js",
+		},
+		Fixture: fixture.LoggedInWithFakeHALAndEffectsEnabled,
 		SearchFlags: []*testing.StringPair{
 			{
 				// VC features on virtual desktop.
@@ -73,46 +77,63 @@ func TrayReturnToAppVirtualDesktop(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to activate new desk: ", err)
 	}
 
+	vcTray := vctray.New(ctx, tconn)
+
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_dump")
 
-	if err := apps.Launch(ctx, tconn, apps.Camera.ID); err != nil {
-		s.Fatal("Failed to launch Camera app: ", err)
-	}
-	defer apps.Close(cleanupCtx, tconn, apps.Camera.ID)
+	browserType := s.FixtValue().(fixture.FixtData).BrowserType()
 
-	// Wait for Camera activated, otherwise vcTray is not triggered.
-	if err := uiauto.New(tconn).WaitUntilExists(cca.A11yCanvasNode)(ctx); err != nil {
-		s.Fatal("Camera is not working appropriately: ", err)
+	// Open an empty chrome tab.
+	conn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browserType, chrome.NewTabURL)
+	if err != nil {
+		s.Fatal("Failed to launch browser: ", err)
+	}
+	defer closeBrowser(cleanupCtx)
+	defer conn.Close()
+	defer conn.CloseTarget(cleanupCtx)
+
+	// Open VcTester tab.
+	vcTabFullURL := fakevctab.SetupServerAndPermission(ctx, br, s)
+	tabUI, err := fakevctab.LaunchTab(ctx, tconn, br, vcTabFullURL)
+	if err != nil {
+		s.Fatal("Failed to open tab: ", err)
 	}
 
-	appWindow, err := ash.GetActiveWindow(ctx, tconn)
+	// Turn on camera to trigger the tray.
+	if err := uiauto.Combine("activate camera",
+		tabUI.StartVideo,
+		vcTray.WaitUntilState(vctray.DevCamera, vctray.DeviceInUse),
+	)(ctx); err != nil {
+		s.Fatal("Failed to verify that tab triggers vcTray by camera: ", err)
+	}
+
+	// Get current window.
+	tabWindow, err := ash.GetActiveWindow(ctx, tconn)
 	if err != nil {
 		s.Fatal("Failed to get active window: ", err)
 	}
-
-	// Save current window state and use it for return verification.
-	appWindowState := appWindow.State
 
 	// Return to original desk.
 	if err := ash.ActivateDeskAtIndex(ctx, tconn, 0); err != nil {
 		s.Fatal("Failed to activate new desk: ", err)
 	}
 
-	vcTray := vctray.New(ctx, tconn)
-
-	if err := uiauto.Combine("return to app via mcpanel",
-		vcTray.ExpandPanel,
-		vcTray.ReturnToApp(appWindow.Title),
-	)(ctx); err != nil {
-		s.Fatal("Failed to return to app: ", err)
+	// Apply return to app from vcTray.
+	if err := vcTray.ReturnToAppForWindow("VcTester", tabWindow, tconn)(ctx); err != nil {
+		s.Fatal("Failed to verify return to app: ", err)
 	}
 
+	// Get current active window and verify that it is the original tabWindow.
 	newActiveWindow, err := ash.GetActiveWindow(ctx, tconn)
 	if err != nil {
 		s.Fatal("Failed to get active window: ", err)
 	}
+	if newActiveWindow.ID != tabWindow.ID || newActiveWindow.State != tabWindow.State {
+		s.Fatalf("Failed to restore window(expected: %v, actual: %v)", tabWindow, newActiveWindow)
+	}
 
-	if newActiveWindow.ID != appWindow.ID || newActiveWindow.State != appWindowState {
-		s.Fatalf("Failed to restore window(expected: %v, actual: %v)", appWindow, newActiveWindow)
+	// Close the tab.
+	if err := tabUI.CloseTab(ctx); err != nil {
+		s.Fatal("Failed to close tab: ", err)
 	}
 }
