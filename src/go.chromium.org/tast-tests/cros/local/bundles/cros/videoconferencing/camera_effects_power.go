@@ -163,16 +163,16 @@ func CameraEffectsPower(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	r := power.NewRecorder(ctx, 5*time.Second, s.OutDir(), s.TestName())
-	defer r.Close(cleanupCtx)
-	if err := r.Cooldown(ctx); err != nil {
-		s.Error("Cooldown failed: ", err)
-	}
-
 	// Set camera effects.
 	if err := vcTray.SetCameraEffects(param.blurLevel, param.relightEnabled)(ctx); err != nil {
 		s.Fatalf("Failed to set camera effects to BackgroundBlur %v; PortraitRelighting %v: %v",
 			param.blurLevel, param.relightEnabled, err)
+	}
+
+	r := power.NewRecorder(ctx, 5*time.Second, s.OutDir(), s.TestName())
+	defer r.Close(cleanupCtx)
+	if err := r.Cooldown(ctx); err != nil {
+		s.Error("Cooldown failed: ", err)
 	}
 
 	// Start to track power metrics.

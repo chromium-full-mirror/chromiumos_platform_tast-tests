@@ -43,7 +43,7 @@ var (
 	bgBlurFullButton           = nodewith.NameContaining("Full").Role(role.ToggleButton).Ancestor(panelSection)
 	bgBlurImageButton          = nodewith.NameContaining("Image").Role(role.ToggleButton).Ancestor(panelSection)
 	createwWithAiButton        = nodewith.NameContaining("Create with AI").Role(role.Button).Ancestor(panelSection)
-	firstBackgroundImageButton = nodewith.ClassName("RecentlyUsedImageButton").Role(role.Button).First()
+	firstBackgroundImageButton = nodewith.ClassName("RecentlyUsedImageButton").Role(role.ListItem).First()
 	showAppsButton             = nodewith.NameContaining("Used by").Role(role.Button).Ancestor(panelSection)
 )
 
@@ -149,7 +149,11 @@ func (vcTray VCTray) SetBackgroundBlur(blurLevel BackgroundBlurLevel) action.Act
 		return vcTray.ui.DoDefault(bgBlurOffButton)
 	case BackgroundBlurImage:
 		return uiauto.Combine("ApplyBackgroundReplaceFromUi",
-			vcTray.ui.WaitUntilExists(firstBackgroundImageButton),
+			// TODO(b/340352012):remove the sleep after the bug is fixed.
+			// GoBigSleepLint: wait for 1 second for the background images being loaded
+			// in the background. Note that we can't wait for the
+			// firstBackgroundImageButton because they are hidden after loaded.
+			uiauto.Sleep(time.Second),
 			vcTray.ui.DoDefault(bgBlurImageButton),
 			vcTray.ui.DoDefault(firstBackgroundImageButton),
 		)
