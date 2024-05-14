@@ -180,7 +180,7 @@ func CCARecordFromExternalCamera(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to decode image: ", err)
 	}
 
-	if err := utils.ValidateImageColor(ctx, image, color.RGBA{255, 0, 0, 255}, 60); err != nil {
+	if err := utils.ValidateImageColor(ctx, image, color.RGBA{255, 0, 0, 255}, 20); err != nil {
 		s.Fatal("Failed to validate color of image captured from the external camera: ", err)
 	}
 
