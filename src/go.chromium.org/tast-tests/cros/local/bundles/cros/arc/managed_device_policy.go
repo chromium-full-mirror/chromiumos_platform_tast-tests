@@ -7,6 +7,7 @@ package arc
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -45,7 +46,7 @@ func init() {
 		VarDeps: []string{
 			arcent.LoginPoolVar,
 		},
-		Data: []string{"wallpaper_image.jpeg"},
+		Data: []string{"wallpaper_image.jpeg", "managed_device_policy_ca_cert.pem"},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.ArcCertificatesSyncMode{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.ArcEnabled{}, pci.VerifiedFunctionalityOS),
@@ -129,6 +130,11 @@ func ManagedDevicePolicy(ctx context.Context, s *testing.State) {
 
 	login := chrome.GAIALogin(creds)
 
+	caCert, err := ioutil.ReadFile(s.DataPath("managed_device_policy_ca_cert.pem"))
+	if err != nil {
+		s.Fatal("Failed to read ca cert: ", err)
+	}
+
 	arcEnabledPolicy := &policy.ArcEnabled{Val: true}
 	arcPolicy := arcent.CreateArcPolicyWithApps(packages, arcent.InstallTypeForceInstalled, arcent.PlayStoreModeBlockList)
 	caCertPolicy := &policy.OpenNetworkConfiguration{
@@ -138,7 +144,7 @@ func ManagedDevicePolicy(ctx context.Context, s *testing.State) {
 					GUID:      "{b3aae353-cfa9-4093-9aff-9f8ee2bf8c29}",
 					TrustBits: []string{"Web"},
 					Type:      "Authority",
-					X509:      "-----BEGIN CERTIFICATE-----\nMIIDzjCCAragAwIBAgIUSpT0+xRWE0/5pwyJYdO0lpw/VrQwDQYJKoZIhvcNAQEF\nBQAwbzELMAkGA1UEBhMCVVMxEzARBgNVBAgMCkNhbGlmb3JuaWExFjAUBgNVBAcM\nDU1vdW50YWluIFZpZXcxMzAxBgNVBAMMKmNocm9tZWxhYi13aWZpLXRlc3RiZWQt\ncm9vdC5tdHYuZ29vZ2xlLmNvbTAgFw0yMzA2MjgwMDA1NDJaGA8zMDIyMTAyOTAw\nMDU0MlowbzELMAkGA1UEBhMCVVMxEzARBgNVBAgMCkNhbGlmb3JuaWExFjAUBgNV\nBAcMDU1vdW50YWluIFZpZXcxMzAxBgNVBAMMKmNocm9tZWxhYi13aWZpLXRlc3Ri\nZWQtcm9vdC5tdHYuZ29vZ2xlLmNvbTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCC\nAQoCggEBAIYbIGtVaZu2FBR+SRXcq+xTuqCJtpVMUu9ReUkxr5eG5LAcBk9gr5lv\ns803c8OPPUQuVF/bfjY9aahzEfaeUFm+2dkYOFq8zU1vXYonG97SxF8kQJGxiNyu\nE//X6CQ+Yd2yuVpIZxeg7h5uuAu+uxtEyVtS9mgsJapGKNZhfdWTxjPwXI0MYH0c\nIVGaCroKkbbiTAXRh/umZEihdthW+ry36zrkXEP7CKtwhBliNRGvrnTnzRKP3ox2\nBMxaM4OXhRfTHIaFlMmcBIBXOT9yQgGlo+wqWgMcEj3VSHIw2w9n3n7x4ACQ4NVu\n+bJz7mWOuSaCkSKmQpEhEezRzB0PIGMCAwEAAaNgMF4wHQYDVR0OBBYEFNTjwfs/\ncIsfXvb7bCRy2wipaeofMB8GA1UdIwQYMBaAFNTjwfs/cIsfXvb7bCRy2wipaeof\nMA8GA1UdEwEB/wQFMAMBAf8wCwYDVR0PBAQDAgEGMA0GCSqGSIb3DQEBBQUAA4IB\nAQBSjGgmW8uc+MeKJHRvLLqPqE3IQM3nrsSHEJuxvYJ9c5Rn3dBg79dpP+rToLha\nWzSXvRQeBDz8Hh518WbokMmt9yJmGMy9lWXi51EDDX+/4rMJXXyFZ+xp2q5+WTqU\nn45b2w8gaaeLDOUzinD0h7XTXqh4iaieaMgFHMMEF59ViNqMP5iatRib8Tc86F8r\nfHjFBrt0QMq1SFW3Ys80eC7h0lSG0xoALLbZOU5Wzv4upF/N5+xyTuvYy3OGFjB4\nOtLg7mSdiFOikGNOAYQWkfAAwYfgvXN5TvSmrkXWoZgQbQbmVZwe7PfHgVWpZdS1\nROjnsItOo1ERmVcnHIUegraQ\n-----END CERTIFICATE-----\n",
+					X509:      string(caCert),
 				},
 			},
 		},
