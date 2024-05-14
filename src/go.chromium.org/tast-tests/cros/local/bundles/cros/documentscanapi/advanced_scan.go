@@ -27,6 +27,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/restriction"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/state"
 	"go.chromium.org/tast-tests/cros/local/printing/ippusbbridge"
 	"go.chromium.org/tast-tests/cros/local/printing/usbprinter"
 	"go.chromium.org/tast-tests/cros/local/scanner/lorgnette"
@@ -210,15 +211,18 @@ func AdvancedScan(ctx context.Context, s *testing.State) {
 
 	s.Log("Configuring scan")
 	sourceSelect := nodewith.Name("Scan source").Role(role.ComboBoxSelect).Ancestor(extensionWindow)
-	adfSource := nodewith.Name("ADF").Role(role.ListBoxOption).Ancestor(sourceSelect)
+	adfSourceVisible := nodewith.Name("ADF").Role(role.MenuListOption).State(state.Invisible, false).Ancestor(sourceSelect)
+	// We check the flatbed option is invisible as a proxy for validating we selected ADF as the source.
+	flatbedInvisible := nodewith.Name("Flatbed").Role(role.MenuListOption).State(state.Invisible, true).Ancestor(sourceSelect)
 	if err := uiauto.Combine("Select ADF",
 		ui.WaitUntilExists(sourceSelect.Focusable()),
 		ui.EnsureFocused(sourceSelect),
 		ui.DoDefault(sourceSelect),
-		ui.WaitUntilExists(adfSource),
-		ui.DoDefault(adfSource),
+		ui.WaitUntilExists(adfSourceVisible),
+		ui.DoDefault(adfSourceVisible),
 		ui.DoDefault(sourceSelect),
-		ui.WaitUntilGone(adfSource),
+		ui.WaitUntilExists(flatbedInvisible),
+		ui.WaitUntilExists(adfSourceVisible),
 		ui.WaitUntilEnabled(scanButton),
 	)(ctx); err != nil {
 		s.Fatal("Failed to select ADF: ", err)

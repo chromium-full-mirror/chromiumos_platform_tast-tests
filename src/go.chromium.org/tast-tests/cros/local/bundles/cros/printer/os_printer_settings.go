@@ -166,7 +166,7 @@ func OsPrinterSettings(ctx context.Context, s *testing.State) {
 		kb.AccelAction("Tab"),
 		kb.TypeAction("Address"),
 		ui.LeftClick(nodewith.Name("Protocol").Role(role.ComboBoxSelect)),
-		ui.LeftClick(nodewith.Name("AppSocket (TCP/IP)").Role(role.ListBoxOption)),
+		ui.LeftClick(nodewith.Name("AppSocket (TCP/IP)").Role(role.MenuListOption)),
 		ui.DoDefault(nodewith.Name("Add").Role(role.Button)),
 		ui.LeftClick(nodewith.Name("Manufacturer").Role(role.TextField)),
 		ui.DoDefault(nodewith.Name("Anitech").Role(role.Button)),
