@@ -6,7 +6,9 @@
 -->
 <resources>
     <string-array name="policies">
+        <item>ArcCertificatesSyncMode</item>
         <item>cameraDisabled</item>
+        <item>credentialsConfigDisabled</item>
         <item>enabledSystemAppPackageNames</item>
         <item>installUnknownSourcesDisabled</item>
         <item>modifyAccountsDisabled</item>
@@ -16,7 +18,6 @@
         <item>setWallpaper</item>
         <item>unmuteMicrophoneDisabled</item>
         <item>vpnConfigDisabled</item>
-        <item>ArcCertificatesSyncMode</item>
     </string-array>
     <string name="test_button_text">Test</string>
     <string name="app_name">ARC DevicePolicy Test</string>

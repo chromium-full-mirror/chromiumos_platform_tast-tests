@@ -103,7 +103,9 @@ func ManagedDevicePolicy(ctx context.Context, s *testing.State) {
 
 	packages := []string{enabledAccessibilityPkg, disabledAccessibilityPkg}
 	arcPolicyMap := map[string]arcPolicyFactory{
+		"ArcCertificatesSyncMode":        staticPolicy(&policy.ArcCertificatesSyncMode{Val: 1 /*Enable sync*/}),
 		"cameraDisabled":                 staticPolicy(&policy.VideoCaptureAllowed{Val: false}),
+		"credentialsConfigDisabled":      staticPolicy(nil),
 		"enabledSystemAppPackageNames":   staticPolicy(nil),
 		"installUnknownSourcesDisabled":  staticPolicy(nil),
 		"modifyAccountsDisabled":         staticPolicy(nil),
@@ -116,7 +118,6 @@ func ManagedDevicePolicy(ctx context.Context, s *testing.State) {
 		"shareLocationDisabled":    staticPolicy(&policy.DefaultGeolocationSetting{Val: 2 /*BlockGeolocation*/}),
 		"unmuteMicrophoneDisabled": staticPolicy(&policy.AudioCaptureAllowed{Val: false}),
 		"vpnConfigDisabled":        staticPolicy(&policy.VpnConfigAllowed{Val: false}),
-		"ArcCertificatesSyncMode":  staticPolicy(&policy.ArcCertificatesSyncMode{Val: 1 /*Enable sync*/}),
 	}
 
 	creds, err := credconfig.PickRandomCreds(s.RequiredVar(arcent.LoginPoolVar))
@@ -137,6 +138,7 @@ func ManagedDevicePolicy(ctx context.Context, s *testing.State) {
 
 	arcEnabledPolicy := &policy.ArcEnabled{Val: true}
 	arcPolicy := arcent.CreateArcPolicyWithApps(packages, arcent.InstallTypeForceInstalled, arcent.PlayStoreModeBlockList)
+	// Adding a CaCert will cause credentialsConfigDisabled to be also configured.
 	caCertPolicy := &policy.OpenNetworkConfiguration{
 		Val: &policy.ONC{
 			Certificates: []*policy.ONCCertificate{

@@ -61,8 +61,11 @@ public class MainActivity extends Activity {
 
         arcPolicies =
                 Map.ofEntries(
+                        Map.entry("ArcCertificatesSyncMode", this::isCaCertSyncDisabled),
                         isRestrictionUnapplied(
-                                "setWallpaper", "setWallpaper", UserManager.DISALLOW_SET_WALLPAPER),
+                                "credentialsConfigDisabled",
+                                "credentialsConfig",
+                                UserManager.DISALLOW_CONFIG_CREDENTIALS),
                         Map.entry("enabledSystemAppPackageNames", this::isSystemAppPackageDisabled),
                         isRestrictionUnapplied(
                                 "installUnknownSourcesDisabled",
@@ -74,6 +77,8 @@ public class MainActivity extends Activity {
                                 UserManager.DISALLOW_MODIFY_ACCOUNTS),
                         isRestrictionUnapplied(
                                 "printingDisabled", "printing", UserManager.DISALLOW_PRINTING),
+                        isRestrictionUnapplied(
+                                "setWallpaper", "setWallpaper", UserManager.DISALLOW_SET_WALLPAPER),
                         isOperationAllowed(
                                 "screenCaptureDisabled",
                                 "screenshot",
@@ -91,8 +96,7 @@ public class MainActivity extends Activity {
                                 "unmute",
                                 UserManager.DISALLOW_UNMUTE_MICROPHONE),
                         isRestrictionUnapplied(
-                                "vpnConfigDisabled", "vpnConfig", UserManager.DISALLOW_CONFIG_VPN),
-                        Map.entry("ArcCertificatesSyncMode", this::isCaCertSyncDisabled));
+                                "vpnConfigDisabled", "vpnConfig", UserManager.DISALLOW_CONFIG_VPN));
     }
 
     @Override
