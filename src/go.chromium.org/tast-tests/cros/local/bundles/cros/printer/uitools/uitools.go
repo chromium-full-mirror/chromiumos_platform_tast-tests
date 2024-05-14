@@ -59,7 +59,7 @@ var (
 	AddFinder                    *nodewith.Finder = nodewith.Role(role.Button).Name(AddName)
 	AddressFinder                *nodewith.Finder = nodewith.Role(role.TextField).Name(AddressName)
 	AdvancedConfigFinder         *nodewith.Finder = nodewith.Role(role.Dialog).Name(AdvancedConfigName)
-	AppSocketFinder              *nodewith.Finder = nodewith.Role(role.ListBoxOption).NameContaining(AppSocketName)
+	AppSocketFinder              *nodewith.Finder = nodewith.Role(role.MenuListOption).NameContaining(AppSocketName)
 	EditFinder                   *nodewith.Finder = nodewith.Role(role.StaticText).Name(EditName)
 	EditPrinterFinder            *nodewith.Finder = nodewith.Role(role.Dialog).Name(EditPrinterName)
 	ManufacturerFinder           *nodewith.Finder = nodewith.Role(role.TextField).Name(ManufacturerName)
