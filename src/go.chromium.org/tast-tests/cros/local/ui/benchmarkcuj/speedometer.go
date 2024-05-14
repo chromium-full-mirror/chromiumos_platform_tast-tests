@@ -18,8 +18,9 @@ import (
 )
 
 const (
-	iterationsVar     = "iterations"
-	speedometerPrefix = "Speedometer."
+	iterationsVar      = "iterations"
+	speedometerPrefix  = "Speedometer."
+	speedometer3Prefix = "Speedometer3."
 )
 
 // SpeedometerInfo contains the information for running Speedometer Benchmark.
@@ -99,8 +100,13 @@ func RetrieveSpeedometerScore(ctx context.Context, benchmarkConn *chrome.Conn, s
 			scoreList.push(result.score);
 			total += result.score;
 		}
+		let version = 2;
+		if(window.location.href.includes("Speedometer3")) {
+			version = 3;
+		}
 		scoreMap["Score"] = [total / benchmarkClient.iterationCount];
 		scoreMap["Runs_Scores"] = scoreList;
+		scoreMap["Version"] = [version];
 		resolve(scoreMap);
 	})`, &benchmarkScores); err != nil {
 		return errors.Wrap(err, "failed to retrieve Speedometer score")
@@ -110,8 +116,19 @@ func RetrieveSpeedometerScore(ctx context.Context, benchmarkConn *chrome.Conn, s
 		return errors.New("Speedometer crashed during the test")
 	}
 
+	unit := "runs-per-min"
+	prefix := speedometerPrefix
+
+	if benchmarkScores["Version"][0] == 3 {
+		unit = "score"
+		prefix = speedometer3Prefix
+	}
+
 	for metric, value := range benchmarkScores {
-		scores[speedometerPrefix+metric] = Score{"runs-per-min", perf.BiggerIsBetter, value}
+		if metric == "Version" {
+			continue
+		}
+		scores[prefix+metric] = Score{unit, perf.BiggerIsBetter, value}
 	}
 
 	mean, sd, delta, err := getDelta(benchmarkScores["Runs_Scores"])
@@ -119,8 +136,8 @@ func RetrieveSpeedometerScore(ctx context.Context, benchmarkConn *chrome.Conn, s
 		return errors.Wrap(err, "failed to calculate confidence interval")
 	}
 
-	scores[speedometerPrefix+"sd"] = Score{"runs-per-min", perf.SmallerIsBetter, []float64{sd}}
-	scores[speedometerPrefix+"95_percent_ci"] = Score{"runs-per-min", perf.BiggerIsBetter, []float64{mean - delta, mean + delta}}
+	scores[prefix+"sd"] = Score{unit, perf.SmallerIsBetter, []float64{sd}}
+	scores[prefix+"95_percent_ci"] = Score{unit, perf.BiggerIsBetter, []float64{mean - delta, mean + delta}}
 
 	testing.ContextLogf(ctx, "Speedometer Mean: %.2f", mean)
 	testing.ContextLogf(ctx, "Speedometer Standard Deviation: %.2f", sd)
