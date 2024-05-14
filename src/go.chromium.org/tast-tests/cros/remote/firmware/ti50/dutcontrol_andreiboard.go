@@ -7,7 +7,6 @@ package ti50
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -160,21 +159,6 @@ func (a *DUTControlAndreiboard) GSCVersionInfo(ctx context.Context) (ver GSCVers
 		Rev:       resp.Rev,
 		SHA:       resp.Sha,
 	}, nil
-}
-
-// LogResultTag appends a tag=value line to result_tags.txt.
-func (a *DUTControlAndreiboard) LogResultTag(ctx context.Context, tag ti50.ResultTag, value string) error {
-	dir, ok := testing.ContextOutDir(ctx)
-	if !ok {
-		return errors.New("could not write result_tags.txt, no context out dir")
-	}
-	f, err := os.OpenFile(filepath.Join(dir, "result_tags.txt"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		return errors.Wrap(err, "could not write result_tags.txt")
-	}
-	defer f.Close()
-	f.WriteString(fmt.Sprintf("%s=%s\n", tag, value))
-	return nil
 }
 
 // StartSession will initialize the devboard and debugger to a known state.

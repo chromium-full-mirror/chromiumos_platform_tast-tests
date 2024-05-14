@@ -8,6 +8,9 @@ package fixture
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
+	"sort"
 	"strconv"
 	"time"
 
@@ -109,9 +112,11 @@ type devboardFixture struct {
 	hostPort   string
 	v          *Value
 	preTest    extraPreTestMethod
+	resultTags map[string]string
 }
 
 func (i *devboardFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	i.resultTags = make(map[string]string)
 	if hostPort, ok := s.Var(DevBoardService); ok {
 		i.hostPort = hostPort
 	} else {
@@ -131,12 +136,10 @@ func (i *devboardFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	} else {
 		i.v.TestbedProperties = p
 	}
-	if err := i.v.devboard.LogResultTag(ctx, ti50.TagTestbedType, string(i.v.TestbedProperties.TestbedType)); err != nil {
-		s.Log("Failed to log result tag: ", err)
-	}
-	if err := i.v.devboard.LogResultTag(ctx, ti50.TagCCDSerial, i.v.TestbedProperties.UsbSerial); err != nil {
-		s.Log("Failed to log result tag: ", err)
-	}
+	i.resultTags[string(ti50.TagTestbedType)] = string(i.v.TestbedProperties.TestbedType)
+	i.resultTags[string(ti50.TagCCDSerial)] = i.v.TestbedProperties.UsbSerial
+	burl, _ := s.Var(BuildURL)
+	i.resultTags[string(ti50.TagBuildURL)] = burl
 
 	iv, err := downloadImage(ctx, i.v.TestbedProperties, i.image, s)
 	if err != nil {
@@ -151,10 +154,6 @@ func (i *devboardFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 		fwConfigJsons = i.imageValue.FwConfigPaths()
 	}
 
-	if err := i.v.devboard.LogResultTag(ctx, ti50.TagBuildURL, imagePath); err != nil {
-		s.Log("Failed to log result tag: ", err)
-	}
-
 	i.v.ImagePath = imagePath
 	i.v.FwConfigJsons = fwConfigJsons
 
@@ -162,23 +161,13 @@ func (i *devboardFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 
 	ver, err := i.v.devboard.GSCVersionInfo(ctx)
 	if err != nil {
-		s.Error("Could not get version info: ", err)
+		s.Log("Could not get version info: ", err)
 	}
-	if err := i.v.devboard.LogResultTag(ctx, ti50.TagROVersion, ver.ROVersion); err != nil {
-		s.Log("Failed to log result tag: ", err)
-	}
-	if err := i.v.devboard.LogResultTag(ctx, ti50.TagRWVersion, ver.RWVersion); err != nil {
-		s.Log("Failed to log result tag: ", err)
-	}
-	if err := i.v.devboard.LogResultTag(ctx, ti50.TagRWBranch, ver.Branch); err != nil {
-		s.Log("Failed to log result tag: ", err)
-	}
-	if err := i.v.devboard.LogResultTag(ctx, ti50.TagRWRev, fmt.Sprint(ver.Rev)); err != nil {
-		s.Log("Failed to log result tag: ", err)
-	}
-	if err := i.v.devboard.LogResultTag(ctx, ti50.TagRWSHA, ver.SHA); err != nil {
-		s.Log("Failed to log result tag: ", err)
-	}
+	i.resultTags[string(ti50.TagROVersion)] = ver.ROVersion
+	i.resultTags[string(ti50.TagRWVersion)] = ver.RWVersion
+	i.resultTags[string(ti50.TagRWBranch)] = ver.Branch
+	i.resultTags[string(ti50.TagRWRev)] = fmt.Sprint(ver.Rev)
+	i.resultTags[string(ti50.TagRWSHA)] = ver.SHA
 
 	return i.v
 }
@@ -269,11 +258,26 @@ func (i *devboardFixture) Reset(ctx context.Context) error {
 }
 
 func (i *devboardFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
+	i.logResultTags(ctx, s)
 	testing.ContextLog(ctx, "Starting OTT session")
 	// At this point, start an opentitantool session, which could involve either
 	// starting a host emulation instance, or resetting a devboard and its debugger to a known
 	// state.
 	mustSucceed(s, i.v.devboard.StartSession(ctx, ti50.StrapReset), "Start testing session")
+}
+
+func (i *devboardFixture) logResultTags(ctx context.Context, s *testing.FixtTestState) {
+	f, err := os.OpenFile(filepath.Join(s.OutDir(), "result_tags.txt"), os.O_CREATE|os.O_WRONLY, 0644)
+	mustSucceed(s, err, "Create result_tags.txt")
+	defer f.Close()
+	var tags []string
+	for tag := range i.resultTags {
+		tags = append(tags, tag)
+	}
+	sort.Strings(tags)
+	for _, tag := range tags {
+		f.WriteString(fmt.Sprintf("%s=%s\n", tag, i.resultTags[tag]))
+	}
 }
 
 func (i *devboardFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
