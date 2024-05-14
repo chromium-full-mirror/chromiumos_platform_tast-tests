@@ -35,13 +35,7 @@ func SetUpVaultAndUserAsOwner(ctx context.Context, certpath, username, password,
 		return errors.Wrap(err, "failed to prepare Chrome for testing")
 	}
 
-	// Pre-configure some owner settings, including initial key.
-	settings := ownership.BuildTestSettings(username)
-	if err := session.StoreSettings(ctx, sm, username, privKey, nil, settings); err != nil {
-		return errors.Wrap(err, "failed to store settings")
-	}
-
-	// Start a new session, which will trigger the re-taking of ownership.
+	// Start listening to signals from session manager.
 	wp, err := sm.WatchPropertyChangeComplete(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to start watching PropertyChangeComplete signal")
@@ -52,6 +46,13 @@ func SetUpVaultAndUserAsOwner(ctx context.Context, certpath, username, password,
 		return errors.Wrap(err, "failed to start watching SetOwnerKeyComplete signal")
 	}
 	defer ws.Close(ctx)
+
+	// Pre-configure some owner settings, including initial key. Assuming the
+	// device is clean and there's no current owner, this will also take ownership.
+	settings := ownership.BuildTestSettings(username)
+	if err := session.StoreSettings(ctx, sm, username, privKey, nil, settings); err != nil {
+		return errors.Wrap(err, "failed to store settings")
+	}
 
 	// Now create the vault.
 	if err := utility.MountVault(ctx, label, hwsec.NewPassAuthConfig(username, password), true, hwsec.NewVaultConfig()); err != nil {
