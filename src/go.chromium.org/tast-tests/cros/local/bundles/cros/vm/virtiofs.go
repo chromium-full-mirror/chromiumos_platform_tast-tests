@@ -28,7 +28,7 @@ func init() {
 		Desc:         "Tests that the crosvm virtio-fs device works correctly",
 		Contacts:     []string{"cros-virt-devices-guests@google.com", "keiichiw@google.com"},
 		BugComponent: "b:1248538",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:sw_gates_virt", "sw_gates_virt_enabled"},
 		Data:         []string{runPjdfstest},
 		Timeout:      20 * time.Minute,
 		SoftwareDeps: []string{"vm_host", "chrome", "dlc"},

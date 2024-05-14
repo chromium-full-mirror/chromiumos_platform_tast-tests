@@ -26,7 +26,7 @@ func init() {
 		Desc:         "Benchmarks for scheduling latency with cyclictest binary",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "eddyhsu@chromium.org", "paulhsia@chromium.org", "cychiang@chromium.org"},
 		BugComponent: "b:1332660",
-		Attr:         []string{"group:crosbolt", "crosbolt_perbuild", "group:audio"},
+		Attr:         []string{"group:crosbolt", "crosbolt_perbuild", "group:audio", "group:sw_gates_virt", "sw_gates_virt_enabled"},
 		Data:         []string{runCyclicTest},
 		SoftwareDeps: []string{"cras", "vm_host", "chrome", "dlc"},
 		Timeout:      6 * time.Minute,

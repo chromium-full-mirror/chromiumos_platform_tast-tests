@@ -52,7 +52,7 @@ func init() {
 		Desc:         "Measure performances of touching many files",
 		Contacts:     []string{"cros-virt-devices-guests@google.com", "keiichiw@google.com"},
 		BugComponent: "b:1248538",
-		Attr:         []string{"group:crosbolt", "crosbolt_nightly"},
+		Attr:         []string{"group:crosbolt", "crosbolt_nightly", "group:sw_gates_virt", "sw_gates_virt_enabled"},
 		Data:         []string{runManyFiles, guestconn.LibFile},
 		SoftwareDeps: []string{"vm_host", "chrome"},
 		Vars: []string{

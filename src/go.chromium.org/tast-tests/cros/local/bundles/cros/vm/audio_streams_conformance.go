@@ -80,7 +80,8 @@ func init() {
 		Timeout:      4 * time.Minute,
 		Params: []testing.Param{
 			{
-				Name: "noop",
+				Name:      "noop",
+				ExtraAttr: []string{"group:sw_gates_virt", "sw_gates_virt_enabled"},
 				Val: audioStreamTestParameters{
 					StreamSource:               noop,
 					RateCriteria:               0.0005,
@@ -91,6 +92,7 @@ func init() {
 			{
 				Name:              "cras",
 				ExtraHardwareDeps: hwdep.D(hwdep.Speaker(), hwdep.SkipOnModel(relaxedCriteriaModels...)),
+				ExtraAttr:         []string{"group:sw_gates_virt", "sw_gates_virt_enabled"},
 				Val: audioStreamTestParameters{
 					StreamSource:               cras,
 					RateCriteria:               0.001,

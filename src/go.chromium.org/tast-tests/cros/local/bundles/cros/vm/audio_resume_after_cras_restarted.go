@@ -36,7 +36,7 @@ func init() {
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "pteerapong@chromium.org"},
 		// ChromeOS > Platform > Technologies > Audio > VM
 		BugComponent: "b:1332660",
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:sw_gates_virt", "sw_gates_virt_enabled"},
 		Data:         []string{runAudioResumeAfterCrasRestarted},
 		Timeout:      3 * time.Minute,
 		SoftwareDeps: []string{"vm_host", "chrome", "dlc"},
