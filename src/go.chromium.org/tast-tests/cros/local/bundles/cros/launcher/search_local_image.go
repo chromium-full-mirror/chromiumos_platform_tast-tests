@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/launcher/fixture"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/launcher/util"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -66,6 +67,7 @@ func init() {
 				ExtraAttr: []string{"group:cbx",
 					"cbx_feature_enabled",
 					"cbx_unstable"},
+				ExtraTestBedDeps: []string{tbdep.Cbx(true)},
 			},
 			{
 				Name: "search_with_ocr_informational",
