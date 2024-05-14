@@ -30,7 +30,7 @@ const (
 // VerifyPowerStatus verifies battery is charging or discharging.
 func VerifyPowerStatus(ctx context.Context, dut *dut.DUT, isBatteryCharging bool) error {
 	return testing.Poll(ctx, func(ctx context.Context) error {
-		out, err := dut.Conn().CommandContext(ctx, "sudo", "cat", "/sys/class/power_supply/BAT0/status").Output()
+		out, err := dut.Conn().CommandContext(ctx, "sudo", "cat", "/sys/class/power_supply/CROS_USBPD_CHARGER1/status").Output()
 		if err != nil {
 			return errors.Wrap(err, "retrieve power supply info from DUT")
 		}
