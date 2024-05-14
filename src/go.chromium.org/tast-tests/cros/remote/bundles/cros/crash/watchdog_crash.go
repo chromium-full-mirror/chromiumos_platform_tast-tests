@@ -45,6 +45,10 @@ func init() {
 				"skyrim6w",     /* TODO(b/282821025): Watchdog broken on Skyrim */
 				"skyrim6w360",  /* TODO(b/282821025): Watchdog broken on Skyrim */
 				"whiterun",     /* TODO(b/282821025): Watchdog broken on Skyrim */
+				"jax",          /* TODO(b/340814753): Re-enable after FW uprev */
+				"kench",        /* TODO(b/340814753): Re-enable after FW uprev */
+				"sion",         /* TODO(b/340814753): Re-enable after FW uprev */
+				"wukong",       /* TODO(b/340814753): Re-enable after FW uprev */
 			)),
 		Timeout: 10 * time.Minute,
 	})
