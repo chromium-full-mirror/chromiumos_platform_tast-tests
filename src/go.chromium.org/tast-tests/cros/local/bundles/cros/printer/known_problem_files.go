@@ -81,6 +81,17 @@ func init() {
 					GoldenFile:  "test_fonts_unembedded_golden.pwg",
 				},
 				ExtraData: []string{"test_fonts_unembedded.pdf", "test_fonts_unembedded_golden.pwg"},
+			}, {
+				// This is a test document with unembedded ZapfDingbats font.  For
+				// awhile we did not have dingbats font aliased correctly - this checks
+				// for that.
+				Name: "unembedded_dingbats_font",
+				Val: usbprintertests.PrintJobSetup{
+					ToPrint:     "test_fonts_unembedded_dingbats.pdf",
+					PrintedFile: "record.pwg",
+					GoldenFile:  "test_fonts_unembedded_dingbats_golden.pwg",
+				},
+				ExtraData: []string{"test_fonts_unembedded_dingbats.pdf", "test_fonts_unembedded_dingbats_golden.pwg"},
 			},
 		},
 	})
