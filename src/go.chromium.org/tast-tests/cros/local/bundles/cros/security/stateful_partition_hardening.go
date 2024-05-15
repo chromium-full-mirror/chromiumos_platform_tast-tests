@@ -90,8 +90,6 @@ func StatefulPartitionHardening(ctx context.Context, s *testing.State) {
 	}
 
 	var symlinkExceptions = []string{
-		"/var/cache/echo",
-		"/var/cache/vpd",
 		"/var/lib/timezone",
 		"/var/log",
 	}
