@@ -46,11 +46,11 @@ var tlwAddress = testing.RegisterVarString(
 	"The address {host:port} of the TLW service",
 )
 
-// WaitForUpdateReboot waits for the test device to reboot and the boot id to change,
+// WaitForUpdateReboot waits for the test device to reboot and the partition name to change,
 // which means the device booted into the update image.
-// This function does not read the boot id by itself because it must be ok to call it
+// This function does not read the old partition name by itself because it must be ok to call it
 // when the device is already rebooting.
-func WaitForUpdateReboot(ctx context.Context, dut *dut.DUT, oldBootID string) error {
+func WaitForUpdateReboot(ctx context.Context, dut *dut.DUT, oldRootPartition string) error {
 	const rebootTimeout = time.Minute * 4
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
@@ -59,12 +59,12 @@ func WaitForUpdateReboot(ctx context.Context, dut *dut.DUT, oldBootID string) er
 		if err := dut.WaitConnect(ctx); err != nil {
 			return errors.Wrap(err, "failed to connect to DUT")
 		}
-		id, err := dutpkg.ReadBootID(ctx, dut.Conn())
+		currentRootPartition, err := dutpkg.ReadCurrentRootPartitionName(ctx, dut.Conn())
 		if err != nil {
-			return errors.Wrap(err, "failed to read boot_id")
+			return errors.Wrap(err, "failed to get current root partition")
 		}
-		if id == oldBootID {
-			return errors.New("boot_id did not change")
+		if oldRootPartition != currentRootPartition {
+			return errors.New("partition name did not change")
 		}
 		return nil
 	}, &testing.PollOptions{Timeout: rebootTimeout, Interval: time.Second}); err != nil {
@@ -75,9 +75,9 @@ func WaitForUpdateReboot(ctx context.Context, dut *dut.DUT, oldBootID string) er
 
 // ApplyDeferredUpdate applies the deferred update, reboot, and wait for the DUT becomes reachable again.
 func ApplyDeferredUpdate(ctx context.Context, dut *dut.DUT) error {
-	bootID, err := dutpkg.ReadBootID(ctx, dut.Conn())
+	currentRootPartition, err := dutpkg.ReadCurrentRootPartitionName(ctx, dut.Conn())
 	if err != nil {
-		return errors.Wrap(err, "failed to read the boot_id before applying the update")
+		return errors.Wrap(err, "failed to read the partition name before applying the update")
 	}
 
 	// Call update_engine DBus method to apply the update and reboot.
@@ -87,7 +87,7 @@ func ApplyDeferredUpdate(ctx context.Context, dut *dut.DUT) error {
 	}
 
 	// Wait for reboot and boot_id change.
-	return WaitForUpdateReboot(ctx, dut, bootID)
+	return WaitForUpdateReboot(ctx, dut, currentRootPartition)
 }
 
 // EnsureUpdateStatusIdle ensures update engine is running and its status is
@@ -424,11 +424,10 @@ func VerifyCurrentKernelPartitionHasHighestPriority(ctx context.Context, dut *du
 	// Get the current and the alternative root partitions paths.
 	// Read https://chromium.googlesource.com/chromiumos/docs/+/HEAD/disk_format.md
 	// about the disk layout and the partition information.
-	currentRootPartitionBytes, err := dut.Conn().CommandContext(ctx, "rootdev", "-s").Output()
+	currentRootPartition, err := dutpkg.ReadCurrentRootPartitionName(ctx, dut.Conn())
 	if err != nil {
 		return errors.Wrap(err, "failed to get current root partition")
 	}
-	currentRootPartition := strings.TrimSpace(string(currentRootPartitionBytes))
 
 	alternativeRootPartition, ok := commonautoupdate.AlternativeRootPartitionMap[currentRootPartition]
 	if !ok {

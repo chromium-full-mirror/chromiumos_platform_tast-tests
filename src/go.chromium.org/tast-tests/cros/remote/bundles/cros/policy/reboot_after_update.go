@@ -163,6 +163,12 @@ func RebootAfterUpdate(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to read current boot ID: ", err)
 	}
 
+	// Retrieve the current root partition name to check if the update happens.
+	oldRootPartition, err := dut.ReadCurrentRootPartitionName(ctx, s.DUT().Conn())
+	if err != nil {
+		s.Fatal("Failed to get current root partition: ", err)
+	}
+
 	// Ignore update errors for the reboot_after_update_on subtest,
 	// since the method throws cleanup errors due to the automatic reboot.
 	err = updateutil.UpdateFromGS(ctx, s.DUT(), s.OutDir(), s.RPCHint(), builderPath)
@@ -182,13 +188,22 @@ func RebootAfterUpdate(ctx context.Context, s *testing.State) {
 			s.Fatal("boot_id is not supposed to change")
 		}
 
+		// Check that the partition name is still the same.
+		currnetRootPartition, err := dut.ReadCurrentRootPartitionName(ctx, s.DUT().Conn())
+		if err != nil {
+			s.Fatal("Failed to get current root partition: ", err)
+		}
+		if oldRootPartition != currnetRootPartition {
+			s.Fatal("Partition name is not supposed to change")
+		}
+
 		// If reboot is not automatic we need to reboot manually to be able to clean up.
 		if err := s.DUT().Reboot(ctx); err != nil {
 			s.Fatal("Failed to reboot: ", err)
 		}
 	} else {
-		// Await the reboot and ensure boot id changed.
-		if err := updateutil.WaitForUpdateReboot(ctx, s.DUT(), oldBootID); err != nil {
+		// Await the reboot and ensure root partition changed.
+		if err := updateutil.WaitForUpdateReboot(ctx, s.DUT(), oldRootPartition); err != nil {
 			s.Fatal("Failed to await reboot into the new image: ", err)
 		}
 	}
