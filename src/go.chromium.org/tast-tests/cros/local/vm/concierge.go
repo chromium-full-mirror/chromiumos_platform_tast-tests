@@ -84,10 +84,8 @@ func NewConcierge(ctx context.Context, user string) (*Concierge, error) {
 	}
 	cicerone := bus.Object(ciceroneName, ciceronePath)
 
-	testing.ContextLogf(ctx, "Restarting %v job", ciceroneJob)
-	if err = upstart.RestartJob(ctx, ciceroneJob); err != nil {
-		return nil, errors.Wrapf(err, "%v Upstart job failed", ciceroneJob)
-	}
+	// Concierge restarts Cicerone, too. So, wait for it here.
+	testing.ContextLogf(ctx, "Waiting for %v job to be ready", ciceroneJob)
 	if err = dbusutil.WaitForService(ctx, bus, ciceroneName); err != nil {
 		return nil, errors.Wrapf(err, "%v D-Bus service unavailable", ciceroneName)
 	}
