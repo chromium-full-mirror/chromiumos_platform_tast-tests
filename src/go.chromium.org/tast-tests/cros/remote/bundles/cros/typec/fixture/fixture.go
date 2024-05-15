@@ -18,7 +18,9 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            "typeCServo",
 		Desc:            "Set up Servo for Type C tests",
-		Contacts:        []string{"pmalani@chromium.org", "chromeos-usb@google.com"},
+		Contacts:        []string{"pmalani@chromium.org", "chromeos-usb-champs@google.com"},
+		// ChromeOS > Platform > Connectivity > USB
+		BugComponent:    "b:958036",
 		Impl:            &impl{},
 		Vars:            []string{"servo"},
 		SetUpTimeout:    5 * time.Second,
