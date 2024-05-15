@@ -19,7 +19,7 @@ func init() {
 		Desc:         "Checks resourced setting RTC audio active",
 		Contacts:     []string{"chromeos-memory@google.com", "vovoy@chromium.org"},
 		BugComponent: "b:167286", // ChromeOS > Platform > System > Memory Management
-		Attr:         []string{"group:mainline", "group:criticalstaging", "informational"},
+		Attr:         []string{"group:mainline"},
 		Timeout:      2 * time.Minute,
 	})
 }
