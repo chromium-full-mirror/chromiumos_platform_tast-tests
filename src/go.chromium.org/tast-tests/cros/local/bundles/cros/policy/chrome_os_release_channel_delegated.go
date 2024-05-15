@@ -46,8 +46,10 @@ func init() {
 			"group:hardware",
 			"group:complementary",
 		},
+		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
 		SoftwareDeps: []string{"reboot", "chrome"},
 		Fixture:      fixture.FakeDMSUpdateEngineEnrolled,
+		Timeout:      3 * time.Minute,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.ChromeOsReleaseChannelDelegated{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.ChromeOsReleaseChannel{}, pci.VerifiedFunctionalityUI),
@@ -63,6 +65,50 @@ func init() {
 			},
 		},
 	})
+}
+
+var affiliationID []string = []string{"affiliation_id"}
+
+func updateDeviceAffiliationIDs(ctx context.Context, fdms *fakedms.FakeDMS, signinProfileTestExtensionManifestKey string) (retErr error) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
+	// ChromeOsReleaseChannelDelegated only works for affiliated users.
+	pb := policy.NewBlob()
+	pb.DeviceAffiliationIds = affiliationID
+	pb.UserAffiliationIds = affiliationID
+
+	// Update affiliation.
+	if err := fdms.WritePolicyBlob(pb); err != nil {
+		return errors.Wrap(err, "failed to write policy blob with device affiliation IDs")
+	}
+
+	// Restart Chrome to read the updated device affiliation IDs.
+	cr, err := chrome.New(ctx,
+		chrome.NoLogin(),
+		chrome.DMSPolicy(fdms.URL),
+		chrome.LoadSigninProfileExtension(signinProfileTestExtensionManifestKey),
+		chrome.KeepEnrollment())
+	if err != nil {
+		return errors.Wrap(err, "failed to start initial Chrome")
+	}
+	defer func() {
+		if err := cr.Close(cleanupCtx); err != nil {
+			retErr = errors.Wrap(err, "failed to close initial Chrome connection")
+		}
+	}()
+
+	tconn, err := cr.SigninProfileTestAPIConn(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to create a test connection to the login screen")
+	}
+
+	if err := policyutil.Refresh(ctx, tconn); err != nil {
+		return errors.Wrap(err, "failed to refresh device affiliation IDs")
+	}
+
+	return nil
 }
 
 // updateEngineTargetChannel reads target channel from update_engine.
@@ -111,7 +157,6 @@ func applyPoliciesAndCheckSettingsPage(ctx context.Context, s *testing.State, fd
 
 	// ChromeOsReleaseChannelDelegated only works for affiliated users.
 	pb := policy.NewBlob()
-	affiliationID := []string{"affiliation_id"}
 	pb.DeviceAffiliationIds = affiliationID
 	pb.UserAffiliationIds = affiliationID
 	pb.AddPolicies(policies)
@@ -121,7 +166,7 @@ func applyPoliciesAndCheckSettingsPage(ctx context.Context, s *testing.State, fd
 		return nil, err
 	}
 
-	// Chrome Restart is required for affiliations and policies to refresh.
+	// Restart to apply the affiliation and policies.
 	cr, err := chrome.New(ctx,
 		chrome.FakeLogin(chrome.Creds{User: fixtures.Username, Pass: fixtures.Password}),
 		chrome.DMSPolicy(fdms.URL),
@@ -181,6 +226,11 @@ func applyPoliciesAndCheckSettingsPage(ctx context.Context, s *testing.State, fd
 
 func ChromeOSReleaseChannelDelegated(ctx context.Context, s *testing.State) {
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
+
+	signinProfileTestExtensionManifestKey := s.RequiredVar("ui.signinProfileTestExtensionManifestKey")
+	if err := updateDeviceAffiliationIDs(ctx, fdms, signinProfileTestExtensionManifestKey); err != nil {
+		s.Fatal("Failed to set up device affiliation IDs: ", err)
+	}
 
 	s.Run(ctx, "delegated_first", func(ctx context.Context, s *testing.State) {
 		// Set the channel user choice to stable.
