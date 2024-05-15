@@ -48,6 +48,7 @@ func init() {
 			"tast.cros.tape.Service",
 			"tast.cros.enterpriseconnectors.DeviceTrustService",
 			"tast.cros.graphics.ScreenshotService",
+			"tast.cros.policy.PolicyService",
 		},
 		Attr: []string{
 			"group:golden_tier",
