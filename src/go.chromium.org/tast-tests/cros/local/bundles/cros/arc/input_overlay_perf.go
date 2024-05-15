@@ -41,7 +41,7 @@ func init() {
 		Data:         inputlatency.AndroidData(),
 		Params: []testing.Param{
 			{
-				ExtraSoftwareDeps: []string{"android_container"},
+				ExtraSoftwareDeps: []string{"android_container_r"},
 			}, {
 				Name:              "vm",
 				ExtraSoftwareDeps: []string{"android_vm"},
