@@ -156,7 +156,7 @@ func init() {
 				Name:      "jetstream",
 				ExtraAttr: []string{"group:cuj"},
 				Timeout:   defaultTimeout,
-				Fixture:   "loggedInToCUJUserWithoutCooldown",
+				Fixture:   "loggedInToCUJUserWithoutCooldownBenchmark",
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeAsh,
 					BenchmarkInfo: benchmarkcuj.JetStreamInfo,
@@ -167,7 +167,7 @@ func init() {
 				Name:      "lacros_jetstream",
 				ExtraAttr: []string{"group:cuj"},
 				Timeout:   defaultTimeout,
-				Fixture:   "loggedInToCUJUserLacrosWithoutCooldown",
+				Fixture:   "loggedInToCUJUserLacrosWithoutCooldownBenchmark",
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeLacros,
 					BenchmarkInfo: benchmarkcuj.JetStreamInfo,
@@ -179,7 +179,7 @@ func init() {
 				Name:      "kraken",
 				ExtraAttr: []string{"group:cuj"},
 				Timeout:   defaultTimeout,
-				Fixture:   "loggedInToCUJUserWithoutCooldown",
+				Fixture:   "loggedInToCUJUserWithoutCooldownBenchmark",
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeAsh,
 					BenchmarkInfo: benchmarkcuj.KrakenInfo,
@@ -190,7 +190,7 @@ func init() {
 				Name:      "lacros_kraken",
 				ExtraAttr: []string{"group:cuj"},
 				Timeout:   defaultTimeout,
-				Fixture:   "loggedInToCUJUserLacrosWithoutCooldown",
+				Fixture:   "loggedInToCUJUserLacrosWithoutCooldownBenchmark",
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeLacros,
 					BenchmarkInfo: benchmarkcuj.KrakenInfo,
@@ -202,7 +202,7 @@ func init() {
 				Name:      "octane",
 				ExtraAttr: []string{"group:cuj"},
 				Timeout:   defaultTimeout,
-				Fixture:   "loggedInToCUJUserWithoutCooldown",
+				Fixture:   "loggedInToCUJUserWithoutCooldownBenchmark",
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeAsh,
 					BenchmarkInfo: benchmarkcuj.OctaneInfo,
@@ -213,7 +213,7 @@ func init() {
 				Name:      "lacros_octane",
 				ExtraAttr: []string{"group:cuj"},
 				Timeout:   defaultTimeout,
-				Fixture:   "loggedInToCUJUserLacrosWithoutCooldown",
+				Fixture:   "loggedInToCUJUserLacrosWithoutCooldownBenchmark",
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeLacros,
 					BenchmarkInfo: benchmarkcuj.OctaneInfo,
@@ -225,7 +225,7 @@ func init() {
 				Name:      "webxprt4",
 				ExtraAttr: []string{"group:cuj", "cuj_weekly"},
 				Timeout:   30*time.Minute + cujrecorder.CooldownTimeout,
-				Fixture:   "loggedInToCUJUserWithoutCooldown",
+				Fixture:   "loggedInToCUJUserWithoutCooldownBenchmark",
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeAsh,
 					BenchmarkInfo: benchmarkcuj.WebXPRT4Info,
@@ -236,7 +236,7 @@ func init() {
 				Name:      "lacros_webxprt4",
 				ExtraAttr: []string{"group:cuj", "cuj_weekly"},
 				Timeout:   30*time.Minute + cujrecorder.CooldownTimeout,
-				Fixture:   "loggedInToCUJUserLacrosWithoutCooldown",
+				Fixture:   "loggedInToCUJUserLacrosWithoutCooldownBenchmark",
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeLacros,
 					BenchmarkInfo: benchmarkcuj.WebXPRT4Info,
