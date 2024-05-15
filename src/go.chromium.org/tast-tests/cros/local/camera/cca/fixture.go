@@ -682,7 +682,7 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 		f.tabletIP = tabletIP
 	}
 	if f.requireAudioLoopback {
-		if err := audio.SetupLoopback(ctx, cr); err != nil {
+		if err := audio.SetupLoopback(ctx, cr, s.OutDir(), s.HasError); err != nil {
 			crastestclient.DumpAudioDiagnostics(cleanupCtx, s.OutDir())
 			s.Fatal("Failed to setup loopback device: ", err)
 		}

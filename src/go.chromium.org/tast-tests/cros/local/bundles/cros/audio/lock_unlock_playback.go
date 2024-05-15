@@ -57,7 +57,7 @@ func LockUnlockPlayback(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Creating test API connection failed: ", err)
 	}
-	if err := audio.SetupLoopback(ctx, cr); err != nil {
+	if err := audio.SetupLoopback(ctx, cr, s.OutDir(), s.HasError); err != nil {
 		s.Fatal("Failed to setup loopback device: ", err)
 	}
 

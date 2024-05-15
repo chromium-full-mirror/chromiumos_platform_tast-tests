@@ -197,7 +197,7 @@ func CrasNoiseCancellation(ctx context.Context, s *testing.State) {
 	}
 
 	// Start Cras.
-	if err := audio.SetupLoopback(ctx, cr); err != nil {
+	if err := audio.SetupLoopback(ctx, cr, s.OutDir(), s.HasError); err != nil {
 		s.Fatal("Failed to SetupLoopback: ", err)
 	}
 

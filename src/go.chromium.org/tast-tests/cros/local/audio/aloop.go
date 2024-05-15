@@ -10,6 +10,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/audio/internal"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -22,11 +23,13 @@ import (
 var LoadAloop = internal.LoadAloop
 
 // SetupLoopback selects the playback and capture nodes to the ALSA loopback via the Quick Settings UI.
-func SetupLoopback(ctx context.Context, cr *chrome.Chrome) error {
+func SetupLoopback(ctx context.Context, cr *chrome.Chrome, outDir string, hasError func() bool) error {
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to create Test API connection")
 	}
+
+	defer faillog.DumpUITreeOnError(ctx, outDir, hasError, tconn)
 
 	timeForCleanUp := 5 * time.Second
 	ctxForCleanUp := ctx

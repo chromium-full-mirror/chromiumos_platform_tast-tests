@@ -17,7 +17,7 @@ import (
 
 // SetupLoopbackDevice setups ALSA loopback (aloop) module and select the loopback devices
 // as the output and input.
-func SetupLoopbackDevice(ctx context.Context, cr *chrome.Chrome) (cleanup func(context.Context), err error) {
+func SetupLoopbackDevice(ctx context.Context, cr *chrome.Chrome, outDir string, hasError func() bool) (cleanup func(context.Context), err error) {
 	timeForCleanUp := 10 * time.Second
 	ctxForCleanUp := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, timeForCleanUp)
@@ -35,7 +35,7 @@ func SetupLoopbackDevice(ctx context.Context, cr *chrome.Chrome) (cleanup func(c
 		unload(ctx)
 	}
 
-	if err := audio.SetupLoopback(ctx, cr); err != nil {
+	if err := audio.SetupLoopback(ctx, cr, outDir, hasError); err != nil {
 		cleanup(ctxForCleanUp)
 		return nil, errors.Wrap(err, "failed to setup loopback")
 	}

@@ -86,7 +86,7 @@ func AppVLC(ctx context.Context, s *testing.State) {
 	}
 	defer unload(cleanupCtx)
 
-	if err := audio.SetupLoopback(ctx, cr); err != nil {
+	if err := audio.SetupLoopback(ctx, cr, s.OutDir(), s.HasError); err != nil {
 		s.Fatal("Failed to set up loopback audio device: ", err)
 	}
 

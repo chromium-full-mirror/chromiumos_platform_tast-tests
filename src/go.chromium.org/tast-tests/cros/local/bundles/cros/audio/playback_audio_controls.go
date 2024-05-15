@@ -96,7 +96,7 @@ func PlaybackAudioControls(ctx context.Context, s *testing.State) {
 	}(cleanupCtx)
 
 	// Select ALSA loopback output and input nodes as active nodes by UI.
-	if err := audio.SetupLoopback(ctx, cr); err != nil {
+	if err := audio.SetupLoopback(ctx, cr, s.OutDir(), s.HasError); err != nil {
 		crastestclient.DumpAudioDiagnostics(ctx, s.OutDir())
 		s.Fatal("Failed to SetupLoopback: ", err)
 	}

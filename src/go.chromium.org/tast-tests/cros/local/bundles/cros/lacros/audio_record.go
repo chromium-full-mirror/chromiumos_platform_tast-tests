@@ -99,7 +99,7 @@ func AudioRecord(ctx context.Context, s *testing.State) {
 	}
 
 	// Select the loopback devices
-	if err = audio.SetupLoopback(ctx, chrome); err != nil {
+	if err = audio.SetupLoopback(ctx, chrome, s.OutDir(), s.HasError); err != nil {
 		s.Fatal("Failed to setup loopback device: ", err)
 	}
 

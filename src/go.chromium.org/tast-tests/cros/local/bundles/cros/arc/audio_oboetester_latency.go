@@ -98,7 +98,7 @@ func AudioOboetesterLatency(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, cleanupTime)
 	defer cancel()
 
-	cleanup, err := audio.SetupLoopbackDevice(ctx, cr)
+	cleanup, err := audio.SetupLoopbackDevice(ctx, cr, s.OutDir(), s.HasError)
 	if err != nil {
 		s.Fatal("Failed to setup loopback device: ", err)
 	}
