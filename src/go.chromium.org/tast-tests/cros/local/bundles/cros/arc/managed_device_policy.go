@@ -33,6 +33,40 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+const (
+	devicePolicyPkg = "org.chromium.arc.testapp.devicepolicy"
+
+	policyArcCertificatesSyncMode        = "ArcCertificatesSyncMode"
+	policyCameraDisabled                 = "cameraDisabled"
+	policyCredentialsConfigDisabled      = "credentialsConfigDisabled"
+	policyEnabledSystemAppPackageNames   = "enabledSystemAppPackageNames"
+	policyInstallUnknownSourcesDisabled  = "installUnknownSourcesDisabled"
+	policyModifyAccountsDisabled         = "modifyAccountsDisabled"
+	policyPermittedAccessibilityServices = "permittedAccessibilityServices"
+	policyPrintingDisabled               = "printingDisabled"
+	policyScreenCaptureDisabled          = "screenCaptureDisabled"
+	policySetWallpaper                   = "setWallpaper"
+	policyShareLocationDisabled          = "shareLocationDisabled"
+	policyUnmuteMicrophoneDisabled       = "unmuteMicrophoneDisabled"
+	policyVpnConfigDisabled              = "vpnConfigDisabled"
+)
+
+var arcPolicyMap = map[string]func(ctx context.Context, s *testing.State) (policy.Policy, func(ctx context.Context), error){
+	policyArcCertificatesSyncMode:        staticPolicy(&policy.ArcCertificatesSyncMode{Val: 1 /*Enable sync*/}),
+	policyCameraDisabled:                 staticPolicy(&policy.VideoCaptureAllowed{Val: false}),
+	policyCredentialsConfigDisabled:      staticPolicy(nil),
+	policyEnabledSystemAppPackageNames:   staticPolicy(nil),
+	policyInstallUnknownSourcesDisabled:  staticPolicy(nil),
+	policyModifyAccountsDisabled:         staticPolicy(nil),
+	policyPermittedAccessibilityServices: staticPolicy(nil),
+	policyPrintingDisabled:               staticPolicy(&policy.PrintingEnabled{Val: false}),
+	policyScreenCaptureDisabled:          staticPolicy(&policy.DisableScreenshots{Val: true}),
+	policySetWallpaper:                   createWallpaperPolicy,
+	policyShareLocationDisabled:          staticPolicy(&policy.DefaultGeolocationSetting{Val: 2 /*BlockGeolocation*/}),
+	policyUnmuteMicrophoneDisabled:       staticPolicy(&policy.AudioCaptureAllowed{Val: false}),
+	policyVpnConfigDisabled:              staticPolicy(&policy.VpnConfigAllowed{Val: false}),
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ManagedDevicePolicy,
@@ -61,36 +95,398 @@ func init() {
 		},
 		Params: []testing.Param{
 			{
+				Name:              "arc_certificates_sync_mode",
+				Val:               policyArcCertificatesSyncMode,
 				ExtraSoftwareDeps: []string{"android_container", "no_qemu"},
 				ExtraAttr:         []string{"informational"},
 			},
 			{
-				Name:              "betty",
+				Name:              "arc_certificates_sync_mode_betty",
+				Val:               policyArcCertificatesSyncMode,
 				ExtraSoftwareDeps: []string{"android_container", "qemu"},
 				ExtraAttr:         []string{"informational"},
 			},
 			{
-				Name:              "vm",
+				Name:              "arc_certificates_sync_mode_vm",
+				Val:               policyArcCertificatesSyncMode,
 				ExtraSoftwareDeps: []string{"android_vm", "no_android_vm_t", "no_qemu"},
 				ExtraAttr:         []string{"informational"},
 			},
 			{
-				Name:              "x",
+				Name:              "arc_certificates_sync_mode_x",
+				Val:               policyArcCertificatesSyncMode,
 				ExtraSoftwareDeps: []string{"android_vm_t", "no_qemu"},
 				ExtraAttr:         []string{"informational"},
 			},
 			{
-				Name:              "betty_vm",
+				Name:              "arc_certificates_sync_mode_betty_vm",
+				Val:               policyArcCertificatesSyncMode,
+				ExtraSoftwareDeps: []string{"android_vm", "qemu"},
+				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
+			},
+			{
+				Name:              "camera_disabled",
+				Val:               policyCameraDisabled,
+				ExtraSoftwareDeps: []string{"android_container", "no_qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "camera_disabled_betty",
+				Val:               policyCameraDisabled,
+				ExtraSoftwareDeps: []string{"android_container", "qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "camera_disabled_vm",
+				Val:               policyCameraDisabled,
+				ExtraSoftwareDeps: []string{"android_vm", "no_android_vm_t", "no_qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "camera_disabled_x",
+				Val:               policyCameraDisabled,
+				ExtraSoftwareDeps: []string{"android_vm_t", "no_qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "camera_disabled_betty_vm",
+				Val:               policyCameraDisabled,
+				ExtraSoftwareDeps: []string{"android_vm", "qemu"},
+				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
+			},
+			{
+				Name:              "credentials_config_disabled",
+				Val:               policyCredentialsConfigDisabled,
+				ExtraSoftwareDeps: []string{"android_container", "no_qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "credentials_config_disabled_betty",
+				Val:               policyCredentialsConfigDisabled,
+				ExtraSoftwareDeps: []string{"android_container", "qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "credentials_config_disabled_vm",
+				Val:               policyCredentialsConfigDisabled,
+				ExtraSoftwareDeps: []string{"android_vm", "no_android_vm_t", "no_qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "credentials_config_disabled_x",
+				Val:               policyCredentialsConfigDisabled,
+				ExtraSoftwareDeps: []string{"android_vm_t", "no_qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "credentials_config_disabled_betty_vm",
+				Val:               policyCredentialsConfigDisabled,
+				ExtraSoftwareDeps: []string{"android_vm", "qemu"},
+				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
+			},
+			{
+				Name:              "enabled_system_app_package_names",
+				Val:               policyEnabledSystemAppPackageNames,
+				ExtraSoftwareDeps: []string{"android_container", "no_qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "enabled_system_app_package_names_betty",
+				Val:               policyEnabledSystemAppPackageNames,
+				ExtraSoftwareDeps: []string{"android_container", "qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "enabled_system_app_package_names_vm",
+				Val:               policyEnabledSystemAppPackageNames,
+				ExtraSoftwareDeps: []string{"android_vm", "no_android_vm_t", "no_qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "enabled_system_app_package_names_x",
+				Val:               policyEnabledSystemAppPackageNames,
+				ExtraSoftwareDeps: []string{"android_vm_t", "no_qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "enabled_system_app_package_names_betty_vm",
+				Val:               policyEnabledSystemAppPackageNames,
+				ExtraSoftwareDeps: []string{"android_vm", "qemu"},
+				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
+			},
+			{
+				Name:              "install_unknown_sources_disabled",
+				Val:               policyInstallUnknownSourcesDisabled,
+				ExtraSoftwareDeps: []string{"android_container", "no_qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "install_unknown_sources_disabled_betty",
+				Val:               policyInstallUnknownSourcesDisabled,
+				ExtraSoftwareDeps: []string{"android_container", "qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "install_unknown_sources_disabled_vm",
+				Val:               policyInstallUnknownSourcesDisabled,
+				ExtraSoftwareDeps: []string{"android_vm", "no_android_vm_t", "no_qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "install_unknown_sources_disabled_x",
+				Val:               policyInstallUnknownSourcesDisabled,
+				ExtraSoftwareDeps: []string{"android_vm_t", "no_qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "install_unknown_sources_disabled_betty_vm",
+				Val:               policyInstallUnknownSourcesDisabled,
+				ExtraSoftwareDeps: []string{"android_vm", "qemu"},
+				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
+			},
+			{
+				Name:              "modify_accounts_disabled",
+				Val:               policyModifyAccountsDisabled,
+				ExtraSoftwareDeps: []string{"android_container", "no_qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "modify_accounts_disabled_betty",
+				Val:               policyModifyAccountsDisabled,
+				ExtraSoftwareDeps: []string{"android_container", "qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "modify_accounts_disabled_vm",
+				Val:               policyModifyAccountsDisabled,
+				ExtraSoftwareDeps: []string{"android_vm", "no_android_vm_t", "no_qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "modify_accounts_disabled_x",
+				Val:               policyModifyAccountsDisabled,
+				ExtraSoftwareDeps: []string{"android_vm_t", "no_qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "modify_accounts_disabled_betty_vm",
+				Val:               policyModifyAccountsDisabled,
+				ExtraSoftwareDeps: []string{"android_vm", "qemu"},
+				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
+			},
+			{
+				Name:              "permitted_accessibility_services",
+				Val:               policyPermittedAccessibilityServices,
+				ExtraSoftwareDeps: []string{"android_container", "no_qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "permitted_accessibility_services_betty",
+				Val:               policyPermittedAccessibilityServices,
+				ExtraSoftwareDeps: []string{"android_container", "qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "permitted_accessibility_services_vm",
+				Val:               policyPermittedAccessibilityServices,
+				ExtraSoftwareDeps: []string{"android_vm", "no_android_vm_t", "no_qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "permitted_accessibility_services_x",
+				Val:               policyPermittedAccessibilityServices,
+				ExtraSoftwareDeps: []string{"android_vm_t", "no_qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "permitted_accessibility_services_betty_vm",
+				Val:               policyPermittedAccessibilityServices,
+				ExtraSoftwareDeps: []string{"android_vm", "qemu"},
+				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
+			},
+			{
+				Name:              "printing_disabled",
+				Val:               policyPrintingDisabled,
+				ExtraSoftwareDeps: []string{"android_container", "no_qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "printing_disabled_betty",
+				Val:               policyPrintingDisabled,
+				ExtraSoftwareDeps: []string{"android_container", "qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "printing_disabled_vm",
+				Val:               policyPrintingDisabled,
+				ExtraSoftwareDeps: []string{"android_vm", "no_android_vm_t", "no_qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "printing_disabled_x",
+				Val:               policyPrintingDisabled,
+				ExtraSoftwareDeps: []string{"android_vm_t", "no_qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "printing_disabled_betty_vm",
+				Val:               policyPrintingDisabled,
+				ExtraSoftwareDeps: []string{"android_vm", "qemu"},
+				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
+			},
+			{
+				Name:              "screen_capture_disabled",
+				Val:               policyScreenCaptureDisabled,
+				ExtraSoftwareDeps: []string{"android_container", "no_qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "screen_capture_disabled_betty",
+				Val:               policyScreenCaptureDisabled,
+				ExtraSoftwareDeps: []string{"android_container", "qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "screen_capture_disabled_vm",
+				Val:               policyScreenCaptureDisabled,
+				ExtraSoftwareDeps: []string{"android_vm", "no_android_vm_t", "no_qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "screen_capture_disabled_x",
+				Val:               policyScreenCaptureDisabled,
+				ExtraSoftwareDeps: []string{"android_vm_t", "no_qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "screen_capture_disabled_betty_vm",
+				Val:               policyScreenCaptureDisabled,
+				ExtraSoftwareDeps: []string{"android_vm", "qemu"},
+				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
+			},
+			{
+				Name:              "set_wallpaper",
+				Val:               policySetWallpaper,
+				ExtraSoftwareDeps: []string{"android_container", "no_qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "set_wallpaper_betty",
+				Val:               policySetWallpaper,
+				ExtraSoftwareDeps: []string{"android_container", "qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "set_wallpaper_vm",
+				Val:               policySetWallpaper,
+				ExtraSoftwareDeps: []string{"android_vm", "no_android_vm_t", "no_qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "set_wallpaper_x",
+				Val:               policySetWallpaper,
+				ExtraSoftwareDeps: []string{"android_vm_t", "no_qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "set_wallpaper_betty_vm",
+				Val:               policySetWallpaper,
+				ExtraSoftwareDeps: []string{"android_vm", "qemu"},
+				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
+			},
+			{
+				Name:              "share_location_disabled",
+				Val:               policyShareLocationDisabled,
+				ExtraSoftwareDeps: []string{"android_container", "no_qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "share_location_disabled_betty",
+				Val:               policyShareLocationDisabled,
+				ExtraSoftwareDeps: []string{"android_container", "qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "share_location_disabled_vm",
+				Val:               policyShareLocationDisabled,
+				ExtraSoftwareDeps: []string{"android_vm", "no_android_vm_t", "no_qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "share_location_disabled_x",
+				Val:               policyShareLocationDisabled,
+				ExtraSoftwareDeps: []string{"android_vm_t", "no_qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "share_location_disabled_betty_vm",
+				Val:               policyShareLocationDisabled,
+				ExtraSoftwareDeps: []string{"android_vm", "qemu"},
+				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
+			},
+			{
+				Name:              "unmute_microphone_disabled",
+				Val:               policyUnmuteMicrophoneDisabled,
+				ExtraSoftwareDeps: []string{"android_container", "no_qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "unmute_microphone_disabled_betty",
+				Val:               policyUnmuteMicrophoneDisabled,
+				ExtraSoftwareDeps: []string{"android_container", "qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "unmute_microphone_disabled_vm",
+				Val:               policyUnmuteMicrophoneDisabled,
+				ExtraSoftwareDeps: []string{"android_vm", "no_android_vm_t", "no_qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "unmute_microphone_disabled_x",
+				Val:               policyUnmuteMicrophoneDisabled,
+				ExtraSoftwareDeps: []string{"android_vm_t", "no_qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "unmute_microphone_disabled_betty_vm",
+				Val:               policyUnmuteMicrophoneDisabled,
+				ExtraSoftwareDeps: []string{"android_vm", "qemu"},
+				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
+			},
+			{
+				Name:              "vpn_config_disabled",
+				Val:               policyVpnConfigDisabled,
+				ExtraSoftwareDeps: []string{"android_container", "no_qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "vpn_config_disabled_betty",
+				Val:               policyVpnConfigDisabled,
+				ExtraSoftwareDeps: []string{"android_container", "qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "vpn_config_disabled_vm",
+				Val:               policyVpnConfigDisabled,
+				ExtraSoftwareDeps: []string{"android_vm", "no_android_vm_t", "no_qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "vpn_config_disabled_x",
+				Val:               policyVpnConfigDisabled,
+				ExtraSoftwareDeps: []string{"android_vm_t", "no_qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "vpn_config_disabled_betty_vm",
+				Val:               policyVpnConfigDisabled,
 				ExtraSoftwareDeps: []string{"android_vm", "qemu"},
 				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
 			}},
 		Timeout: chrome.LoginTimeout + arc.BootTimeout + 3*time.Minute,
 	})
 }
-
-const devicePolicyPkg = "org.chromium.arc.testapp.devicepolicy"
-
-type arcPolicyFactory func() (policy.Policy, func(ctx context.Context), error)
 
 func ManagedDevicePolicy(ctx context.Context, s *testing.State) {
 	const (
@@ -101,24 +497,7 @@ func ManagedDevicePolicy(ctx context.Context, s *testing.State) {
 		disabledAccessibilityPkg = "com.google.android.apps.accessibility.auditor"
 	)
 
-	packages := []string{enabledAccessibilityPkg, disabledAccessibilityPkg}
-	arcPolicyMap := map[string]arcPolicyFactory{
-		"ArcCertificatesSyncMode":        staticPolicy(&policy.ArcCertificatesSyncMode{Val: 1 /*Enable sync*/}),
-		"cameraDisabled":                 staticPolicy(&policy.VideoCaptureAllowed{Val: false}),
-		"credentialsConfigDisabled":      staticPolicy(nil),
-		"enabledSystemAppPackageNames":   staticPolicy(nil),
-		"installUnknownSourcesDisabled":  staticPolicy(nil),
-		"modifyAccountsDisabled":         staticPolicy(nil),
-		"permittedAccessibilityServices": staticPolicy(nil),
-		"printingDisabled":               staticPolicy(&policy.PrintingEnabled{Val: false}),
-		"screenCaptureDisabled":          staticPolicy(&policy.DisableScreenshots{Val: true}),
-		"setWallpaper": func() (policy.Policy, func(ctx context.Context), error) {
-			return createWallpaperPolicy(ctx, s.DataPath("wallpaper_image.jpeg"))
-		},
-		"shareLocationDisabled":    staticPolicy(&policy.DefaultGeolocationSetting{Val: 2 /*BlockGeolocation*/}),
-		"unmuteMicrophoneDisabled": staticPolicy(&policy.AudioCaptureAllowed{Val: false}),
-		"vpnConfigDisabled":        staticPolicy(&policy.VpnConfigAllowed{Val: false}),
-	}
+	policyName := s.Param().(string)
 
 	creds, err := credconfig.PickRandomCreds(s.RequiredVar(arcent.LoginPoolVar))
 	if err != nil {
@@ -137,6 +516,10 @@ func ManagedDevicePolicy(ctx context.Context, s *testing.State) {
 	}
 
 	arcEnabledPolicy := &policy.ArcEnabled{Val: true}
+	var packages []string
+	if policyName == policyPermittedAccessibilityServices {
+		packages = append(packages, enabledAccessibilityPkg, disabledAccessibilityPkg)
+	}
 	arcPolicy := arcent.CreateArcPolicyWithApps(packages, arcent.InstallTypeForceInstalled, arcent.PlayStoreModeBlockList)
 	// Adding a CaCert will cause credentialsConfigDisabled to be also configured.
 	caCertPolicy := &policy.OpenNetworkConfiguration{
@@ -220,10 +603,8 @@ func ManagedDevicePolicy(ctx context.Context, s *testing.State) {
 		DoRetries:   false,
 		Errorf:      s.Errorf,
 		Logf:        s.Logf}
-	for policyName := range arcPolicyMap {
-		if err := testPolicyEnforcement(ctx, tconn, a, d, policyName, true /*shouldSucceed*/, rl); err != nil {
-			s.Fatalf("Test for policy %s failed: %v", policyName, err)
-		}
+	if err := testPolicyEnforcement(ctx, tconn, a, d, policyName, true /*shouldSucceed*/, rl); err != nil {
+		s.Fatalf("Test for policy %s failed: %v", policyName, err)
 	}
 
 	s.Log("Updating policies to apply restrictions")
@@ -234,7 +615,7 @@ func ManagedDevicePolicy(ctx context.Context, s *testing.State) {
 	arcPolicy.Val.PermittedAccessibilityServices.PackageNames = []string{enabledAccessibilityPkg}
 
 	for policyName := range arcPolicyMap {
-		newPolicy, cleanup, err := arcPolicyMap[policyName]()
+		newPolicy, cleanup, err := arcPolicyMap[policyName](ctx, s)
 		if err != nil {
 			s.Fatalf("Failed to create %s policy: %v", policyName, err)
 		}
@@ -254,18 +635,14 @@ func ManagedDevicePolicy(ctx context.Context, s *testing.State) {
 
 	s.Log("Testing policies with restrictions")
 
-	// It can take time for the policies to apply so retry the first policy a few times until it succeeds.
-	firstTest := true
-	for policyName := range arcPolicyMap {
-		rl = &retry.Loop{Attempts: 1,
-			MaxAttempts: 10,
-			DoRetries:   firstTest,
-			Errorf:      s.Errorf,
-			Logf:        s.Logf}
-		if err := testPolicyEnforcement(ctx, tconn, a, d, policyName, false /*shouldSucceed*/, rl); err != nil {
-			s.Fatalf("Test for policy %s failed: %v", policyName, err)
-		}
-		firstTest = false
+	// It can take time for the policies to apply so retry the a few times until it succeeds.
+	rl = &retry.Loop{Attempts: 1,
+		MaxAttempts: 10,
+		DoRetries:   true,
+		Errorf:      s.Errorf,
+		Logf:        s.Logf}
+	if err := testPolicyEnforcement(ctx, tconn, a, d, policyName, false /*shouldSucceed*/, rl); err != nil {
+		s.Fatalf("Test for policy %s failed: %v", policyName, err)
 	}
 }
 
@@ -286,8 +663,8 @@ func launchApp(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, appPacka
 	return cleanup, nil
 }
 
-func createWallpaperPolicy(ctx context.Context, imgPath string) (policy.Policy, func(ctx context.Context), error) {
-	jpegBytes, err := imagehelpers.GetJPEGBytesFromFilePath(imgPath)
+func createWallpaperPolicy(ctx context.Context, s *testing.State) (policy.Policy, func(ctx context.Context), error) {
+	jpegBytes, err := imagehelpers.GetJPEGBytesFromFilePath(s.DataPath("wallpaper_image.jpeg"))
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed to read wallpaper image")
 	}
@@ -304,8 +681,8 @@ func createWallpaperPolicy(ctx context.Context, imgPath string) (policy.Policy, 
 	return policy, cleanup, nil
 }
 
-func staticPolicy(value policy.Policy) arcPolicyFactory {
-	return func() (policy.Policy, func(ctx context.Context), error) {
+func staticPolicy(value policy.Policy) func(ctx context.Context, s *testing.State) (policy.Policy, func(ctx context.Context), error) {
+	return func(ctx context.Context, s *testing.State) (policy.Policy, func(ctx context.Context), error) {
 		return value /*policy*/, func(ctx context.Context) {} /*cleanup*/, nil /*error*/
 	}
 }
@@ -386,7 +763,7 @@ func testPolicyEnforcement(ctx context.Context, tconn *chrome.TestConn, a *arc.A
 		if isTestLocal {
 			succeeded, errMessage, err = tester(ctx)
 			if err != nil {
-				return rl.Exit("get manual test result", err)
+				return rl.Retry("get manual test result", err)
 			}
 		} else {
 			if err := selectSpinnerItem(ctx, d, policiesListID, policy); err != nil {
@@ -400,13 +777,13 @@ func testPolicyEnforcement(ctx context.Context, tconn *chrome.TestConn, a *arc.A
 
 			succeeded, err = getPolicyTestResult(ctx, d)
 			if err != nil {
-				return rl.Exit("get test result", err)
+				return rl.Retry("get test result", err)
 			}
 
 			txtError := d.Object(ui.ID(errorTextID))
 			errMessage, err = txtError.GetText(ctx)
 			if err != nil {
-				return rl.Exit("get error message", err)
+				return rl.Retry("get error message", err)
 			}
 		}
 
