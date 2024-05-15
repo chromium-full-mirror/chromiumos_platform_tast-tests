@@ -32,7 +32,7 @@ func init() {
 		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
 		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_active", "cellular_e2e", "cellular_carrier_dependent", "cellular_carrier_att"},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "cellularResetShillProfileOnPostTest",
+		Fixture:      "cellularEnforceConnectionAndResetShillProfile",
 		Timeout:      9 * time.Minute,
 	})
 }

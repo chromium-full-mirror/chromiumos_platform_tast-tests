@@ -36,7 +36,7 @@ func init() {
 		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
 		Attr:         []string{"group:cellular", "cellular_sim_prod_esim"},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "cellular",
+		Fixture:      "cellularEnforceConnectionLocal",
 		Timeout:      6 * time.Minute,
 		Params: []testing.Param{{
 			Name: "connected_before_suspend",

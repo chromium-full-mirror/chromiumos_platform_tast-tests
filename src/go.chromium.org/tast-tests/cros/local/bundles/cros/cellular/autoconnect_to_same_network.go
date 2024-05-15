@@ -34,7 +34,7 @@ func init() {
 		BugComponent: "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:cellular", "cellular_sim_active"},
-		Fixture:      "cellularE2ELocal",
+		Fixture:      "cellularEnforceConnectionLocal",
 		Params: []testing.Param{{
 			Name: "auto_connect_enabled",
 			Val:  autoconnectToSameNetworkTestParams{shouldEnableAutoconnect: true},
