@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/network/ping"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -50,6 +51,21 @@ const (
 	// VariantTranslationSentence is a name of WithBrowserFixture variant
 	// with a sentence for translation intent.
 	VariantTranslationSentence = "translationSentence"
+	// VariantSingleWordEs is a name of WithBrowserFixture variant with a
+	// single Spanish word.
+	VariantSingleWordEs = "singleWordEs"
+	// VariantSingleWordIt is a name of WithBrowserFixture variant with a
+	// single Italian word.
+	VariantSingleWordIt = "singleWordIt"
+	// VariantSingleWordFr is a name of WithBrowserFixture variant with a
+	// single French word.
+	VariantSingleWordFr = "singleWordFr"
+	// VariantSingleWordPt is a name of WithBrowserFixture variant with a
+	// single Portuguese word.
+	VariantSingleWordPt = "singleWordPt"
+	// VariantSingleWordDe is a name of WithBrowserFixture variant with a
+	// single German word.
+	VariantSingleWordDe = "singleWordDe"
 
 	// BaseFixture is a fixture with specified quick answers pref state.
 	// TODO(b/339097439): Make this a private. All tests should use
@@ -108,6 +124,41 @@ func withBrowserFixtureParams() []testing.FixtureParam {
 			Val: withBrowserFixtureParam{
 				// From https://about.google/intl/zh_cn/
 				queryWord: "我们的使命是整合全球信息，供大众使用，让人人受益。",
+			},
+		},
+		{
+			Name: VariantSingleWordEs,
+			Val: withBrowserFixtureParam{
+				queryWord:     "pentágono",
+				languageCodes: []string{"es"},
+			},
+		},
+		{
+			Name: VariantSingleWordIt,
+			Val: withBrowserFixtureParam{
+				queryWord:     "settimana",
+				languageCodes: []string{"it"},
+			},
+		},
+		{
+			Name: VariantSingleWordFr,
+			Val: withBrowserFixtureParam{
+				queryWord:     "semaine",
+				languageCodes: []string{"fr"},
+			},
+		},
+		{
+			Name: VariantSingleWordPt,
+			Val: withBrowserFixtureParam{
+				queryWord:     "futebol",
+				languageCodes: []string{"pt"},
+			},
+		},
+		{
+			Name: VariantSingleWordDe,
+			Val: withBrowserFixtureParam{
+				queryWord:     "verdreifachen",
+				languageCodes: []string{"de"},
 			},
 		},
 	}
@@ -348,15 +399,27 @@ type HasQueryWord interface {
 }
 
 type withBrowserFixtureParam struct {
-	queryWord string
+	queryWord     string
+	languageCodes []string
 }
 
 type withBrowserFixture struct {
-	queryWord    string
-	bt           browser.Type
-	cr           *chrome.Chrome
-	conn         *chrome.Conn
-	closeBrowser func(context.Context) error
+	queryWord     string
+	bt            browser.Type
+	cr            *chrome.Chrome
+	conn          *chrome.Conn
+	tconn         *chrome.TestConn
+	languageCodes []string
+	closeBrowser  func(context.Context) error
+}
+
+func maybeSetPreferredLanguages(ctx context.Context,
+	tconn *chrome.TestConn, languageCodes []string) error {
+	if languageCodes == nil {
+		return nil
+	}
+
+	return SetPreferredLanguages(ctx, tconn, languageCodes)
 }
 
 func (f *withBrowserFixture) Chrome() *chrome.Chrome {
@@ -370,8 +433,20 @@ func (f *withBrowserFixture) QueryWord() string {
 func (f *withBrowserFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	param := s.Param().(withBrowserFixtureParam)
 	f.queryWord = param.queryWord
+	f.languageCodes = param.languageCodes
 	f.bt = s.ParentValue().(hasBrowserType).browserType()
 	f.cr = s.ParentValue().(chrome.HasChrome).Chrome()
+
+	tconn, err := f.cr.TestAPIConn(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to create a Test API connection")
+	}
+	f.tconn = tconn
+
+	if err := maybeSetPreferredLanguages(ctx, tconn, f.languageCodes); err != nil {
+		s.Fatal("Failed to set preferred languages: ", err)
+	}
+
 	return f
 }
 
@@ -393,7 +468,12 @@ func (f *withBrowserFixture) PostTest(ctx context.Context, s *testing.FixtTestSt
 	f.conn.Close()
 }
 
-func (f *withBrowserFixture) TearDown(ctx context.Context, s *testing.FixtState) {}
+func (f *withBrowserFixture) TearDown(ctx context.Context, s *testing.FixtState) {
+	if err := SetPreferredLanguages(ctx, f.tconn, []string{"en"}); err != nil {
+		s.Fatal("Failed to set preferred languages: ", err)
+	}
+}
+
 func (f *withBrowserFixture) Reset(ctx context.Context) error {
-	return nil
+	return maybeSetPreferredLanguages(ctx, f.tconn, f.languageCodes)
 }

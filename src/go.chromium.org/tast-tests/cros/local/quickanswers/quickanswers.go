@@ -8,6 +8,7 @@ package quickanswers
 
 import (
 	"context"
+	"strings"
 	"unicode/utf8"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -19,8 +20,9 @@ import (
 )
 
 const (
-	prefPathEnabled       = "settings.quick_answers.enabled"
-	prefPathConsentStatus = "settings.quick_answers.consent_status"
+	prefPathEnabled            = "settings.quick_answers.enabled"
+	prefPathConsentStatus      = "settings.quick_answers.consent_status"
+	prefPathPreferredLanguages = "settings.language.preferred_languages"
 
 	prefValueConsentStatusUnknown = 0
 )
@@ -35,7 +37,12 @@ func ResetPref(ctx context.Context, tconn *chrome.TestConn) error {
 		return errors.Wrap(err, "failed to reset consent status")
 	}
 	return SetPrefValue(ctx, tconn, prefPathEnabled, false)
+}
 
+// SetPreferredLanguages sets preferred languages to languageCodes.
+func SetPreferredLanguages(ctx context.Context, tconn *chrome.TestConn,
+	languageCodes []string) error {
+	return SetPrefValue(ctx, tconn, prefPathPreferredLanguages, strings.Join(languageCodes, ","))
 }
 
 // Enable enables quick answers pref.
@@ -62,7 +69,8 @@ func SelectQueryWord(ctx context.Context, tconn *chrome.TestConn,
 	queryWord string) (*nodewith.Finder, error) {
 	ui := uiauto.New(tconn)
 	// Wait for the query word to appear.
-	query := nodewith.Name(queryWord).Role(role.StaticText).First()
+	query := nodewith.Name(queryWord).Role(role.StaticText).Ancestor(
+		nodewith.Role(role.WebView)).First()
 	if err := ui.WaitUntilExists(query)(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to wait for query to load")
 	}
