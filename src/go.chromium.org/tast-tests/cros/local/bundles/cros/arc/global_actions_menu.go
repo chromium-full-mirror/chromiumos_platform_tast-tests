@@ -40,7 +40,7 @@ func GlobalActionsMenu(ctx context.Context, s *testing.State) {
 	ui := uiauto.New(tconn)
 
 	// Open global action menu
-	if err := a.Command(ctx, "input", "keyevent", "--longpress", "KEYCODE_POWER").Run(); err != nil {
+	if err := a.Command(ctx, "input", "keyevent", "--duration", "1000", "KEYCODE_POWER").Run(); err != nil {
 		s.Fatal("Failed to launch global actions menu via ADB command: ", err)
 	}
 
