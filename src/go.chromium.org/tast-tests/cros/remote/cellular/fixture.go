@@ -10,6 +10,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/golang/protobuf/ptypes/empty"
+
+	"go.chromium.org/tast-tests/cros/services/cros/cellular"
+	"go.chromium.org/tast/core/dut"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
 )
@@ -20,7 +26,7 @@ func init() {
 		Desc:         "A remote fixture that reboots the device as part of the setup to help enforce isolation between tests",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "jstanko@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Impl:         newFixture(true, false),
+		Impl:         newFixture(rebootOnSetup),
 		SetUpTimeout: 3 * time.Minute,
 		Vars:         []string{"skipReboot"},
 	})
@@ -29,7 +35,7 @@ func init() {
 		Desc:            "Remote cellular suspend-resume test fixture that reboots in pre and post test to help enforce isolation",
 		Contacts:        []string{"chromeos-cellular-team@google.com", "jstanko@google.com"},
 		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Impl:            newFixture(true, true),
+		Impl:            newFixture(rebootOnSetup, rebootOnTeardown),
 		SetUpTimeout:    3 * time.Minute,
 		TearDownTimeout: 3 * time.Minute,
 		Vars:            []string{"skipReboot"},
@@ -39,7 +45,7 @@ func init() {
 		Desc:            "Remote cellular stress test fixture that reboots in setup and teardown to help enforce isolation",
 		Contacts:        []string{"chromeos-cellular-team@google.com", "jstanko@google.com"},
 		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Impl:            newFixture(true, true),
+		Impl:            newFixture(rebootOnSetup, rebootOnTeardown),
 		SetUpTimeout:    3 * time.Minute,
 		TearDownTimeout: 3 * time.Minute,
 		Vars:            []string{"skipReboot"},
@@ -49,7 +55,7 @@ func init() {
 		Desc:            "Remote cellular e2e test fixture that reboots in setup and teardown to help enforce isolation",
 		Contacts:        []string{"chromeos-cellular-team@google.com", "jstanko@google.com"},
 		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Impl:            newFixture(true, true),
+		Impl:            newFixture(rebootOnSetup, rebootOnTeardown),
 		SetUpTimeout:    3 * time.Minute,
 		TearDownTimeout: 3 * time.Minute,
 		Vars:            []string{"skipReboot"},
@@ -59,7 +65,7 @@ func init() {
 		Desc:            "Remote cellular hotspot test fixture that reboots in setup and teardown to help enforce isolation",
 		Contacts:        []string{"chromeos-cellular-team@google.com", "jstanko@google.com"},
 		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Impl:            newFixture(true, true),
+		Impl:            newFixture(rebootOnSetup, rebootOnTeardown),
 		SetUpTimeout:    3 * time.Minute,
 		TearDownTimeout: 3 * time.Minute,
 		Vars:            []string{"skipReboot"},
@@ -70,7 +76,7 @@ func init() {
 		Contacts:     []string{"chromeos-cellular-team@google.com", "jstanko@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		// Just reboot in SetUp since there shouldn't be any side effects to these tests.
-		Impl:         newFixture(true, false),
+		Impl:         newFixture(rebootOnSetup),
 		SetUpTimeout: 3 * time.Minute,
 		Vars:         []string{"skipReboot"},
 	})
@@ -79,22 +85,53 @@ func init() {
 		Desc:            "Remote cellular autoconnect test fixture that reboots in setup and teardown to help enforce isolation",
 		Contacts:        []string{"chromeos-cellular-team@google.com", "jstanko@google.com"},
 		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Impl:            newFixture(true, true),
+		Impl:            newFixture(rebootOnSetup, rebootOnTeardown),
 		SetUpTimeout:    3 * time.Minute,
 		TearDownTimeout: 3 * time.Minute,
 		Vars:            []string{"skipReboot"},
 	})
+	testing.AddFixture(&testing.Fixture{
+		Name:            "cellularEnforceConnectionRemote",
+		Desc:            "Remote cellular fixture that ensures the device is connected as part of reset",
+		Contacts:        []string{"chromeos-cellular-team@google.com", "jstanko@google.com"},
+		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
+		Impl:            newFixture(rebootOnSetup, rebootOnTeardown, enforceConnected),
+		SetUpTimeout:    3 * time.Minute,
+		TearDownTimeout: 3 * time.Minute,
+		ResetTimeout:    5 * time.Minute,
+		ServiceDeps:     []string{"tast.cros.cellular.RemoteCellularService"},
+		Vars:            []string{"skipReboot"},
+	})
 }
-func newFixture(rebootOnSetup, rebootOnTeardown bool) *fixture {
-	return &fixture{
-		rebootOnSetup:    rebootOnSetup,
-		rebootOnTeardown: rebootOnTeardown,
+
+type fixtureOption func(*fixture)
+
+var rebootOnSetup = func(f *fixture) {
+	f.rebootOnSetup = true
+}
+
+var rebootOnTeardown = func(f *fixture) {
+	f.rebootOnTeardown = true
+}
+
+var enforceConnected = func(f *fixture) {
+	f.enforceConnected = true
+}
+
+func newFixture(options ...fixtureOption) *fixture {
+	fixture := &fixture{}
+	for _, opt := range options {
+		opt(fixture)
 	}
+	return fixture
 }
 
 type fixture struct {
 	rebootOnSetup    bool
 	rebootOnTeardown bool
+	enforceConnected bool
+	dut              *dut.DUT
+	hint             *testing.RPCHint
 }
 
 // If the uptime is less than skipStartupRebootUptime, then skip rebooting in startup since the device
@@ -115,6 +152,8 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 			s.Fatal("Failed to connect to DUT: ", err)
 		}
 	}
+	tf.dut = d
+	tf.hint = s.RPCHint()
 
 	if tf.rebootOnSetup && hasStartupRebootUptime(ctx, s) {
 		s.Log("Rebooting DUT")
@@ -126,6 +165,34 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 }
 
 func (tf *fixture) Reset(ctx context.Context) error {
+	if !tf.enforceConnected {
+		return nil
+	}
+
+	// Reconnect to DUT if needed.
+	if !tf.dut.Connected(ctx) {
+		testing.ContextLog(ctx, "Reconnecting to DUT")
+		if err := tf.dut.Connect(ctx); err != nil {
+			return errors.Wrap(err, "failed to connect to dut")
+		}
+	}
+
+	cl, err := rpc.Dial(ctx, tf.dut, tf.hint)
+	if err != nil {
+		return errors.Wrap(err, "failed to connect to the RPC service on the DUT")
+	}
+	defer cl.Close(ctx)
+
+	remoteCellularClient := cellular.NewRemoteCellularServiceClient(cl.Conn)
+	if _, err := remoteCellularClient.SetUp(ctx, &empty.Empty{}); err != nil {
+		return errors.Wrap(err, "failed to initialize cellular shill service on DUT")
+	}
+
+	// If we fail to connect to the cellular network, we should return an error.
+	// On error tast will call SetUp again which will cause our DUT to reboot (if that rebootOnSetup is true).
+	if _, err := remoteCellularClient.Connect(ctx, &empty.Empty{}); err != nil {
+		return errors.Wrap(err, "failed to connect to cellular service")
+	}
 	return nil
 }
 

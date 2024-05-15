@@ -363,6 +363,39 @@ func init() {
 		Impl:            newCellularFixture().setHasChrome(true),
 		Vars:            []string{"autotest_host_info_labels"},
 	})
+	testing.AddFixture(&testing.Fixture{
+		Name:            "cellularEnforceConnectionLocal",
+		Desc:            "Cellular fixture that enforces that the network is connectable as part of the reset, if not then the DUT is rebooted",
+		Contacts:        []string{"chromeos-cellular-team@google.com", "jstanko@google.com"},
+		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
+		SetUpTimeout:    4 * time.Minute,
+		ResetTimeout:    5 * time.Second,
+		PreTestTimeout:  4 * time.Minute,
+		PostTestTimeout: 3 * time.Minute,
+		TearDownTimeout: 5 * time.Second,
+		Parent:          "cellularEnforceConnectionRemote",
+		// We dont need to reset on failure since we will be rebooting if we can't connect.
+		Impl: newCellularFixture().setRestartOnFailure([]string{}),
+		Vars: []string{"autotest_host_info_labels"},
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: "cellularEnforceConnectionAndResetShillProfile",
+		Desc: "Cellular fixture that resets shill after each test and enforces DUT is in a connectable state",
+		Contacts: []string{
+			"jstanko@google.com",
+			"chromeos-cellular-team@google.com",
+		},
+		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
+		SetUpTimeout:    5 * time.Minute,
+		ResetTimeout:    5 * time.Second,
+		PreTestTimeout:  4 * time.Minute,
+		PostTestTimeout: 3 * time.Minute,
+		TearDownTimeout: 5 * time.Second,
+		Vars:            []string{"autotest_host_info_labels"},
+		Impl:            newCellularFixture().setRestartOnFailure([]string{modemmanager.JobName}).setResetShillProfileOnPostTest(true).setDaemonUptimeBeforeTest(0 * time.Second),
+		Parent:          "cellularEnforceConnectionRemote",
+	})
 }
 
 // cellularFixture implements testing.FixtureImpl.
