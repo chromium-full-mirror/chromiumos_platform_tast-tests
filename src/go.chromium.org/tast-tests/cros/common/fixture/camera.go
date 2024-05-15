@@ -7,8 +7,12 @@ package fixture
 const (
 	// CameraServiceReady ensures camera service is ready.
 	CameraServiceReady = "cameraServiceReady"
+	// CameraServiceRestarted ensures camera service is restarted.
+	CameraServiceRestarted = "cameraServiceRestarted"
 	// CameraConnectorReady ensures camera connector is ready without any user.
 	CameraConnectorReady = "cameraConnectorReady"
+	// CameraConnectorRestarted ensures camera connector is ready without any user, and service restarted.
+	CameraConnectorRestarted = "cameraConnectorRestarted"
 	// CameraServiceStopped ensures camera service is stopped.
 	CameraServiceStopped = "cameraServiceStopped"
 

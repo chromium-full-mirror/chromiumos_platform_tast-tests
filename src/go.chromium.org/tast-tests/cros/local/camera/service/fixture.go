@@ -35,12 +35,32 @@ func init() {
 		TearDownTimeout: serviceTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
+		Name:            fixture.CameraServiceRestarted,
+		Desc:            "The cros-camera service is restarted, with all built-in cameras enumerated",
+		Contacts:        []string{"chromeos-camera-eng@google.com", "hidenorik@chromium.org"},
+		BugComponent:    "b:167281", // ChromeOS > Platform > Technologies > Camera
+		Impl:            &serviceFixture{request: restartService},
+		Parent:          fixture.CameraEnumerated,
+		SetUpTimeout:    chrome.LoginTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
 		Name:            fixture.CameraConnectorReady,
 		Desc:            "The camera connector is ready, with all built-in cameras enumerated",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "hidenorik@chromium.org"},
 		BugComponent:    "b:167281", // ChromeOS > Platform > Technologies > Camera
 		Impl:            &connectorFixture{},
 		Parent:          fixture.CameraServiceReady,
+		SetUpTimeout:    chrome.LoginTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name:            fixture.CameraConnectorRestarted,
+		Desc:            "The camera connector is ready, with all built-in cameras enumerated & service restarted",
+		Contacts:        []string{"chromeos-camera-eng@google.com", "hidenorik@chromium.org"},
+		BugComponent:    "b:167281", // ChromeOS > Platform > Technologies > Camera
+		Impl:            &connectorFixture{},
+		Parent:          fixture.CameraServiceRestarted,
 		SetUpTimeout:    chrome.LoginTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -64,6 +84,9 @@ const (
 	startService serviceRequest = iota
 	// stopService ensures cros-camera service is stopped in Setup() and Reset().
 	stopService
+	// restartService ensures cros-camera service is restarted in Setup(), Reset(), and TearDown().
+	// This should be used when clean-ups cannot be run reliably, e.g. in suspend test.
+	restartService
 )
 
 // The ServiceRequest only affect the operation in Setup() and Reset().
@@ -81,6 +104,11 @@ func (f *serviceFixture) SetUp(ctx context.Context, s *testing.FixtState) interf
 }
 
 func (f *serviceFixture) TearDown(ctx context.Context, s *testing.FixtState) {
+	if f.request == restartService {
+		if err := restartCameraService(ctx); err != nil {
+			s.Log("Failed to restart camera service: ", err)
+		}
+	}
 	if err := upstart.EnsureJobRunning(ctx, "cros-camera"); err != nil {
 		s.Log("Failed to start camera service: ", err)
 	}
@@ -107,18 +135,29 @@ func ensureServiceState(ctx context.Context, request serviceRequest) error {
 		return testutil.WaitForCameraServiceBinding(ctx)
 	case stopService:
 		return upstart.StopJob(ctx, "cros-camera")
+	case restartService:
+		return restartCameraService(ctx)
 	}
 
 	return errors.New("invalid request")
+}
+
+func restartCameraService(ctx context.Context) error {
+	if err := upstart.RestartJob(ctx, "cros-camera"); err != nil {
+		return err
+	}
+	// WaitForCameraServiceBinding includes a call to EnsureJobRunning.
+	return testutil.WaitForCameraServiceBinding(ctx)
+
 }
 
 type connectorFixture struct {
 	cr *chrome.Chrome
 }
 
-// SetUp only ensures that we don't have a stale user of the connector.
-// The readiness of the connector itself should be ensured in the parent fixture
-// by calling testutil.WaitForCameraServiceBinding().
+// SetUp only ensures that we don't have an old chrome connected to the connector.
+// The readiness of the connector itself is ensured in the parent fixture by
+// calling testutil.WaitForCameraServiceBinding().
 func (f *connectorFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	cr, err := chrome.New(ctx, chrome.NoLogin())
 	if err != nil {

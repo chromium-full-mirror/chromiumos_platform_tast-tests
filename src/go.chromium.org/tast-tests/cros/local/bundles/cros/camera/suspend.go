@@ -9,13 +9,12 @@ import (
 	"path/filepath"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast-tests/cros/local/camera/testutil"
-	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/gtest"
 	"go.chromium.org/tast-tests/cros/local/power/suspend"
 	"go.chromium.org/tast-tests/cros/local/upstart"
-	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -38,23 +37,11 @@ func init() {
 		Timeout:      4 * time.Minute,
 		SoftwareDeps: []string{"arc_camera3", "chrome", caps.BuiltinCamera},
 		HardwareDeps: hwdep.D(hwdep.CameraEnumerated(), hwdep.SkipOnModel(unstableModel...)),
+		Fixture:      fixture.CameraConnectorRestarted,
 	})
 }
 
 func Suspend(ctx context.Context, s *testing.State) {
-	// TODO(b/151270948): Temporarily disable ARC.
-	// The cros-camera service would kill itself when running the test if
-	// arc_setup.cc is triggered at that time, which will fail the test.
-	cr, err := chrome.New(ctx, chrome.ARCDisabled(), chrome.NoLogin())
-	if err != nil {
-		s.Fatal("Failed to start chrome: ", err)
-	}
-	defer cr.Close(ctx)
-
-	// Leave some time for cr.Close.
-	ctx, cancel := ctxutil.Shorten(ctx, chrome.ResetTimeout)
-	defer cancel()
-
 	if err := upstart.EnsureJobRunning(ctx, "powerd"); err != nil {
 		s.Fatal("Failed to make powerd running: ", err)
 	}
