@@ -68,9 +68,9 @@ remap_entity_by_name:
 - id: 148
   name: Intel IPU6 CSI2 BE capture
 - id: 298
-  name: ov13b10 14-0036
+  name_regex: ov13b10 [0-9]+-0036
 - id: 338
-  name: dw9714 14-000c
+  name_regex: dw9714 [0-9]+-000c
 media_ctl:
   info:
     driver: intel-ipu6-isys
