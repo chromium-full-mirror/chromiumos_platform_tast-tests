@@ -24,7 +24,7 @@ const (
 	// tmpEfiLocation specifies the format of temporary file for EFI images
 	tmpEfiLocation = "ti50-efi-%s.*.bin"
 
-	rescueTwiceTimeout = 3 * time.Minute
+	rescueTwiceTimeout = 5 * time.Minute
 	removeFileTimeout  = 5 * time.Second
 )
 
