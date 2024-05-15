@@ -13,12 +13,35 @@ import (
 	"go.chromium.org/tast-tests/cros/common/genparams"
 )
 
+// ToStr() functions are only used to generate test params
+func (vk vmKernel) ToStr() string {
+	switch vk {
+	case arcvmKernel:
+		return "arcvmKernel"
+	case terminaKernel:
+		return "terminaKernel"
+	}
+	return "unknown"
+}
+
+func (dk deviceKind) ToStr() string {
+	switch dk {
+	case block:
+		return "block"
+	case blockLVM:
+		return "blockLVM"
+	case virtiofs:
+		return "virtiofs"
+	}
+	return "unknown"
+}
+
 func TestManyFiles(t *testing.T) {
 	type paramData struct {
 		Name            string
-		Kind            string
-		Kernel          string
-		Cache           string
+		Kind            deviceKind
+		Kernel          vmKernel
+		Cache           cachePolicy
 		CaseFold        bool
 		Deps            []string
 		Fixture         string
@@ -26,25 +49,26 @@ func TestManyFiles(t *testing.T) {
 	}
 
 	type fsCacheParam struct {
-		policy          string
+		policy          cachePolicy
 		negativeTimeout int
 	}
 
 	var params []paramData
 	for _, p := range []struct {
-		kernel  string
+		kernel  vmKernel
 		dep     string
 		fixture string
-	}{{"arcvm", "android_vm", "chromeLoggedIn"}, {"termina", "dlc", "vmDLC"}} {
+	}{{arcvmKernel, "android_vm", "chromeLoggedIn"}, {terminaKernel, "dlc", "vmDLC"}} {
 		// Block
-		for _, kind := range []string{"block", "block_lvm"} {
+		for _, kind := range []deviceKind{block, blockLVM} {
 			deps := []string{p.dep}
-			if kind == "block_lvm" {
+			if kind == blockLVM {
 				deps = append(deps, "lvm_stateful_partition")
 			}
 			params = append(params, paramData{
 				Name:    fmt.Sprintf("%s_%s", kind, p.kernel),
 				Kernel:  p.kernel,
+				Cache:   undefined,
 				Kind:    kind,
 				Deps:    deps,
 				Fixture: p.fixture,
@@ -53,9 +77,9 @@ func TestManyFiles(t *testing.T) {
 
 		// Virtiofs
 		for _, cache := range []fsCacheParam{
-			{policy: "auto", negativeTimeout: 0},
-			{policy: "always", negativeTimeout: 0},
-			{policy: "always", negativeTimeout: 3600},
+			{policy: auto, negativeTimeout: 0},
+			{policy: always, negativeTimeout: 0},
+			{policy: always, negativeTimeout: 3600},
 		} {
 			deps := []string{p.dep}
 			for _, caseFold := range []bool{false, true} {
@@ -65,7 +89,7 @@ func TestManyFiles(t *testing.T) {
 				}
 
 				name := "virtiofs"
-				if cache.policy == "always" {
+				if cache.policy == always {
 					name += "_cached"
 				}
 				if cache.negativeTimeout > 0 {
@@ -78,7 +102,7 @@ func TestManyFiles(t *testing.T) {
 
 				params = append(params, paramData{
 					Name:            name,
-					Kind:            "virtiofs",
+					Kind:            virtiofs,
 					Kernel:          p.kernel,
 					Cache:           cache.policy,
 					CaseFold:        caseFold,
@@ -94,9 +118,9 @@ func TestManyFiles(t *testing.T) {
 		`{{ range . }}{
 			Name: {{ .Name | fmt }},
 			Val: manyFilesParams{
-				kernel: {{ .Kernel | fmt }},
-				kind: {{ .Kind | fmt }},
-				cache: {{ .Cache | fmt }},
+				kernel: {{ .Kernel.ToStr }},
+				kind: {{ .Kind.ToStr }},
+				cache: {{ .Cache }},
 				caseFold: {{ .CaseFold }},
 				negativeTimeout: {{ .NegativeTimeout }},
 			},

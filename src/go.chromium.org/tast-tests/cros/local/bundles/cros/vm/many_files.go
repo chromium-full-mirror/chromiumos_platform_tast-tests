@@ -37,10 +37,69 @@ var traceCmdEventsVar = testing.RegisterVarString(
 	"Comma-separated events to enable trace-cmd and to ask it to record. (e.g. 'syscalls,sched:*')",
 )
 
+type deviceKind int
+type cachePolicy int
+type vmKernel int
+
+const (
+	block deviceKind = iota
+	blockLVM
+	virtiofs
+)
+
+const (
+	arcvmKernel vmKernel = iota
+	terminaKernel
+)
+
+const (
+	always cachePolicy = iota
+	auto
+	never
+	undefined
+)
+
+func (dk deviceKind) String() string {
+	switch dk {
+	case block:
+		return "block"
+	case blockLVM:
+		return "block_lvm"
+	case virtiofs:
+		return "virtiofs"
+	}
+	return "unknown"
+}
+
+func (vk vmKernel) String() string {
+	switch vk {
+	case arcvmKernel:
+		return "arcvm"
+	case terminaKernel:
+		return "termina"
+	}
+	return "unknown"
+}
+
+func (cp cachePolicy) String() string {
+	switch cp {
+	case always:
+		return "always"
+	case auto:
+		return "auto"
+	case never:
+		return "never"
+	// Devices not supposed to use cachePolicy
+	case undefined:
+		return "undefined"
+	}
+	return "unknown"
+}
+
 type manyFilesParams struct {
-	kind            string
-	kernel          string
-	cache           string
+	kind            deviceKind
+	kernel          vmKernel
+	cache           cachePolicy
 	caseFold        bool
 	negativeTimeout int
 }
@@ -67,9 +126,9 @@ func init() {
 			{
 				Name: "block_arcvm",
 				Val: manyFilesParams{
-					kernel:          "arcvm",
-					kind:            "block",
-					cache:           "",
+					kernel:          arcvmKernel,
+					kind:            block,
+					cache:           undefined,
 					caseFold:        false,
 					negativeTimeout: 0,
 				},
@@ -79,9 +138,9 @@ func init() {
 			{
 				Name: "block_lvm_arcvm",
 				Val: manyFilesParams{
-					kernel:          "arcvm",
-					kind:            "block_lvm",
-					cache:           "",
+					kernel:          arcvmKernel,
+					kind:            blockLVM,
+					cache:           undefined,
 					caseFold:        false,
 					negativeTimeout: 0,
 				},
@@ -91,9 +150,9 @@ func init() {
 			{
 				Name: "virtiofs_arcvm",
 				Val: manyFilesParams{
-					kernel:          "arcvm",
-					kind:            "virtiofs",
-					cache:           "auto",
+					kernel:          arcvmKernel,
+					kind:            virtiofs,
+					cache:           auto,
 					caseFold:        false,
 					negativeTimeout: 0,
 				},
@@ -103,9 +162,9 @@ func init() {
 			{
 				Name: "virtiofs_casefold_arcvm",
 				Val: manyFilesParams{
-					kernel:          "arcvm",
-					kind:            "virtiofs",
-					cache:           "auto",
+					kernel:          arcvmKernel,
+					kind:            virtiofs,
+					cache:           auto,
 					caseFold:        true,
 					negativeTimeout: 0,
 				},
@@ -115,9 +174,9 @@ func init() {
 			{
 				Name: "virtiofs_cached_arcvm",
 				Val: manyFilesParams{
-					kernel:          "arcvm",
-					kind:            "virtiofs",
-					cache:           "always",
+					kernel:          arcvmKernel,
+					kind:            virtiofs,
+					cache:           always,
 					caseFold:        false,
 					negativeTimeout: 0,
 				},
@@ -127,9 +186,9 @@ func init() {
 			{
 				Name: "virtiofs_cached_casefold_arcvm",
 				Val: manyFilesParams{
-					kernel:          "arcvm",
-					kind:            "virtiofs",
-					cache:           "always",
+					kernel:          arcvmKernel,
+					kind:            virtiofs,
+					cache:           always,
 					caseFold:        true,
 					negativeTimeout: 0,
 				},
@@ -139,9 +198,9 @@ func init() {
 			{
 				Name: "virtiofs_cached_negativecache_arcvm",
 				Val: manyFilesParams{
-					kernel:          "arcvm",
-					kind:            "virtiofs",
-					cache:           "always",
+					kernel:          arcvmKernel,
+					kind:            virtiofs,
+					cache:           always,
 					caseFold:        false,
 					negativeTimeout: 3600,
 				},
@@ -151,9 +210,9 @@ func init() {
 			{
 				Name: "block_termina",
 				Val: manyFilesParams{
-					kernel:          "termina",
-					kind:            "block",
-					cache:           "",
+					kernel:          terminaKernel,
+					kind:            block,
+					cache:           undefined,
 					caseFold:        false,
 					negativeTimeout: 0,
 				},
@@ -163,9 +222,9 @@ func init() {
 			{
 				Name: "block_lvm_termina",
 				Val: manyFilesParams{
-					kernel:          "termina",
-					kind:            "block_lvm",
-					cache:           "",
+					kernel:          terminaKernel,
+					kind:            blockLVM,
+					cache:           undefined,
 					caseFold:        false,
 					negativeTimeout: 0,
 				},
@@ -175,9 +234,9 @@ func init() {
 			{
 				Name: "virtiofs_termina",
 				Val: manyFilesParams{
-					kernel:          "termina",
-					kind:            "virtiofs",
-					cache:           "auto",
+					kernel:          terminaKernel,
+					kind:            virtiofs,
+					cache:           auto,
 					caseFold:        false,
 					negativeTimeout: 0,
 				},
@@ -187,9 +246,9 @@ func init() {
 			{
 				Name: "virtiofs_casefold_termina",
 				Val: manyFilesParams{
-					kernel:          "termina",
-					kind:            "virtiofs",
-					cache:           "auto",
+					kernel:          terminaKernel,
+					kind:            virtiofs,
+					cache:           auto,
 					caseFold:        true,
 					negativeTimeout: 0,
 				},
@@ -199,9 +258,9 @@ func init() {
 			{
 				Name: "virtiofs_cached_termina",
 				Val: manyFilesParams{
-					kernel:          "termina",
-					kind:            "virtiofs",
-					cache:           "always",
+					kernel:          terminaKernel,
+					kind:            virtiofs,
+					cache:           always,
 					caseFold:        false,
 					negativeTimeout: 0,
 				},
@@ -211,9 +270,9 @@ func init() {
 			{
 				Name: "virtiofs_cached_casefold_termina",
 				Val: manyFilesParams{
-					kernel:          "termina",
-					kind:            "virtiofs",
-					cache:           "always",
+					kernel:          terminaKernel,
+					kind:            virtiofs,
+					cache:           always,
 					caseFold:        true,
 					negativeTimeout: 0,
 				},
@@ -223,9 +282,9 @@ func init() {
 			{
 				Name: "virtiofs_cached_negativecache_termina",
 				Val: manyFilesParams{
-					kernel:          "termina",
-					kind:            "virtiofs",
-					cache:           "always",
+					kernel:          terminaKernel,
+					kind:            virtiofs,
+					cache:           always,
 					caseFold:        false,
 					negativeTimeout: 3600,
 				},
@@ -291,11 +350,11 @@ func ManyFiles(ctx context.Context, s *testing.State) {
 	kernelPath := ""
 	username := ""
 
-	if p.kernel == "termina" {
+	if p.kernel == terminaKernel {
 		data := s.FixtValue().(dlc.FixtData)
 		username = data.Chrome.NormalizedUser()
 		kernelPath = data.Kernel
-	} else if p.kernel == "arcvm" {
+	} else if p.kernel == arcvmKernel {
 		username = s.FixtValue().(chrome.HasChrome).Chrome().NormalizedUser()
 		kernelPath = "/opt/google/vms/android/vmlinux"
 	} else {
@@ -323,7 +382,7 @@ func ManyFiles(ctx context.Context, s *testing.State) {
 	ud, err := ioutil.TempDir(rootCryptDir, "tast.vm.ManyFiles.")
 	defer os.RemoveAll(ud)
 
-	opt, err := storage.NewOption(p.kind, p.cache, p.caseFold, p.negativeTimeout)
+	opt, err := storage.NewOption(p.kind.String(), p.cache.String(), p.caseFold, p.negativeTimeout)
 	if err != nil {
 		s.Fatal("Failed to create storage option: ", err)
 	}
