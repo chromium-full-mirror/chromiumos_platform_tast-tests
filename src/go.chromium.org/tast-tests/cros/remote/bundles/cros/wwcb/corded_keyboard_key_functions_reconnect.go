@@ -28,7 +28,7 @@ func init() {
 		Desc:         "After reconnecting, check the functionality of the top row function keys, special keys, and character keys on the corded keyboard",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
-		Attr:         []string{"group:wwcb"},
+		Attr:         []string{"group:wwcb", "group:pasit", "pasit_hid"},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"servo", "USBID"},
 		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.ui.AutomationService", "tast.cros.apps.AppsService", "tast.cros.inputs.KeyboardService"},
