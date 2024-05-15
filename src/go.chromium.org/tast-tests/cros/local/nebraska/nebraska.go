@@ -178,21 +178,9 @@ func (n *Nebraska) dumpLog(ctx context.Context) error {
 	return nil
 }
 
-const (
-	// CriticalUpdate is passed to UpdateURL to indicate a critical update should be returned, i.e. it will contain "deadline=now".
-	CriticalUpdate = true
-	// NormalUpdate is passed to UpdateURL to make it return a normal update.
-	NormalUpdate = false
-)
-
 // UpdateURL returns the URL to request updates from the Nebraska instance running on port.
-func UpdateURL(port int, isCritical bool) string {
-	critical := "False"
-	if isCritical {
-		critical = "True"
-	}
-
-	return fmt.Sprintf("%s:%d/update?critical_update=%s", localhost, port, critical)
+func UpdateURL(port int) string {
+	return fmt.Sprintf("%s:%d/update", localhost, port)
 }
 
 // SetFakedMetadata writes faked metadata to Nebraska's runtime directory and points the server towards it.

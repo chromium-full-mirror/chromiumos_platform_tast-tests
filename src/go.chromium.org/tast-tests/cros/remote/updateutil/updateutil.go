@@ -30,7 +30,6 @@ import (
 	aupb "go.chromium.org/tast-tests/cros/services/cros/autoupdate"
 	"go.chromium.org/tast-tests/cros/services/cros/baserpc"
 	"go.chromium.org/tast-tests/cros/services/cros/nebraska"
-
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
@@ -208,7 +207,7 @@ func ConfigureNebraskaFromGS(ctx context.Context, conn *grpc.ClientConn, dut *du
 	metadataFilename := filepath.Base(paths[0])
 
 	nebraskaClient := nebraska.NewServiceClient(conn)
-	startResponse, err := nebraskaClient.Start(preparationCtx, &nebraska.StartRequest{})
+	startResponse, err := nebraskaClient.Start(preparationCtx, &nebraska.StartRequest{ConfigureUpdateEngine: true})
 	if err != nil {
 		return nil, 0, errors.Wrap(err, "failed to start Nebraska")
 	}

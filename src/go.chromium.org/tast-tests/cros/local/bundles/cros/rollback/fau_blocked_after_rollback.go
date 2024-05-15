@@ -95,6 +95,10 @@ func FauBlockedAfterRollback(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to configure Nebraska with faked update metadata: ", err)
 	}
 
+	if err := updateServer.SetCriticalUpdate(ctx, true); err != nil {
+		s.Fatal("Failed to configure Nebraska to serve critical update: ", err)
+	}
+
 	if err := createRollbackHappenedFile(); err != nil {
 		s.Fatal("Failed to set the rollback-happened pref file: ", err)
 	}
@@ -103,7 +107,7 @@ func FauBlockedAfterRollback(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to trigger update request: ", err)
 	}
 
-	if err := triggerUpdate(ctx, nebraska.UpdateURL(updateServer.Port, true)); err != nil {
+	if err := triggerUpdate(ctx, nebraska.UpdateURL(updateServer.Port)); err != nil {
 		s.Fatal("Failed to trigger update request: ", err)
 	}
 

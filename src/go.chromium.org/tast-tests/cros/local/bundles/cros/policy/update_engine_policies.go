@@ -284,7 +284,11 @@ func UpdateEnginePolicies(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to update policies: ", err)
 	}
 
-	if err := triggerUpdate(ctx, nebraska.UpdateURL(updateServer.Port, true)); err != nil {
+	if err := updateServer.SetCriticalUpdate(ctx, true); err != nil {
+		s.Fatal("Failed to configure Nebraska with critical update: ", err)
+	}
+
+	if err := triggerUpdate(ctx, nebraska.UpdateURL(updateServer.Port)); err != nil {
 		s.Fatal("Failed to trigger update request: ", err)
 	}
 

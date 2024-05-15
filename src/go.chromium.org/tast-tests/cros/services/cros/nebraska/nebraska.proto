@@ -23,9 +23,14 @@ service Service {
   rpc SetInvalidateLastUpdate(SetInvalidateLastUpdateRequest)
       returns (google.protobuf.Empty) {}
   rpc SetIsRollback(SetIsRollbackRequest) returns (google.protobuf.Empty) {}
+  rpc SetCriticalUpdate(SetCriticalUpdateRequest)
+      returns (google.protobuf.Empty) {}
 }
 
-message StartRequest { optional int32 port = 1; }
+message StartRequest {
+  optional int32 port = 1;
+  bool configure_update_engine = 2;
+}
 
 message UpdatePayloadRequest { Payload update = 1; }
 
@@ -46,3 +51,5 @@ message ReadLogResponse { bytes data = 1; }
 message SetInvalidateLastUpdateRequest { bool invalidateLastUpdate = 1; }
 
 message SetIsRollbackRequest { bool isRollback = 1; }
+
+message SetCriticalUpdateRequest { bool isCritical = 1; }

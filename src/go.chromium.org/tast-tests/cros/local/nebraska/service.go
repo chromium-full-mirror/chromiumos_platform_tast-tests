@@ -12,7 +12,6 @@ import (
 	"google.golang.org/grpc"
 
 	"go.chromium.org/tast-tests/cros/services/cros/nebraska"
-
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -38,6 +37,10 @@ func (s *Service) Start(ctx context.Context, req *nebraska.StartRequest) (*nebra
 
 	if req.Port != nil {
 		options = append(options, Port(int(*req.Port)))
+	}
+
+	if req.ConfigureUpdateEngine {
+		options = append(options, ConfigureUpdateEngine())
 	}
 
 	// Start the Nebraska service.
@@ -108,6 +111,15 @@ func (s *Service) SetInvalidateLastUpdate(ctx context.Context, req *nebraska.Set
 // SetIsRollback configures Nebraska to serve the next update as rollback or not.
 func (s *Service) SetIsRollback(ctx context.Context, req *nebraska.SetIsRollbackRequest) (*empty.Empty, error) {
 	if err := s.instance.SetIsRollback(ctx, req.IsRollback); err != nil {
+		return nil, err
+	}
+
+	return &empty.Empty{}, nil
+}
+
+// SetCriticalUpdate configures Nebraska to serve the next update as critical or not.
+func (s *Service) SetCriticalUpdate(ctx context.Context, req *nebraska.SetCriticalUpdateRequest) (*empty.Empty, error) {
+	if err := s.instance.SetCriticalUpdate(ctx, req.IsCritical); err != nil {
 		return nil, err
 	}
 

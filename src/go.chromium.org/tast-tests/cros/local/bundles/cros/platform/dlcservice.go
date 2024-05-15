@@ -107,7 +107,7 @@ func DLCService(ctx context.Context, s *testing.State) {
 			defer n.Close(ctx)
 
 			// Install single DLC.
-			install(ctx, s, dlctest.TestID1, nebraska.UpdateURL(n.Port, nebraska.CriticalUpdate))
+			install(ctx, s, dlctest.TestID1, nebraska.UpdateURL(n.Port))
 			dump(ctx, s, "install_single", dlctest.TestID1)
 
 		}()
@@ -141,7 +141,7 @@ func DLCService(ctx context.Context, s *testing.State) {
 			defer n.Close(ctx)
 
 			// Install DLC.
-			install(ctx, s, dlctest.TestID1, nebraska.UpdateURL(n.Port, nebraska.CriticalUpdate))
+			install(ctx, s, dlctest.TestID1, nebraska.UpdateURL(n.Port))
 			dump(ctx, s, "reboot_install_before_reboot", dlctest.TestID1)
 		}()
 

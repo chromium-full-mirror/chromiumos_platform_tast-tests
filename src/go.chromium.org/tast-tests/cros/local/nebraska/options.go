@@ -117,7 +117,7 @@ func ConfigureUpdateEngine() Option {
 	return func(config *MutableConfig) error {
 		// Delay setup until after nebraska is up and we know the port it runs on.
 		config.ConfigureUpdateEngine = func(port int) error {
-			if err := ioutil.WriteFile(statefulLSBRelease, []byte(fmt.Sprintf("CHROMEOS_AUSERVER=%s", UpdateURL(port, NormalUpdate))), 0666); err != nil {
+			if err := ioutil.WriteFile(statefulLSBRelease, []byte(fmt.Sprintf("CHROMEOS_AUSERVER=%s", UpdateURL(port))), 0666); err != nil {
 				return errors.Wrap(err, "failed to configure LSB release")
 			}
 			// TODO restart update engine?

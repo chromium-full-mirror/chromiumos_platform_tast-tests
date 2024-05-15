@@ -93,7 +93,7 @@ func Update(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to restart daemon: ", err)
 	}
 
-	if err := triggerUpdate(ctx, nebraska.UpdateURL(updateServer.Port, false)); err != nil {
+	if err := triggerUpdate(ctx, nebraska.UpdateURL(updateServer.Port)); err != nil {
 		s.Fatal("Failed to trigger update request: ", err)
 	}
 
