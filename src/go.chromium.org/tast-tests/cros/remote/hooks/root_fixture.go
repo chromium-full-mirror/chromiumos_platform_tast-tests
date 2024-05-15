@@ -75,6 +75,7 @@ var hooks map[string]*Hook
 // is added to this list.
 var orderedHooks []string = []string{
 	"exampleHook",
+	"diskThrottler",
 }
 
 // HookState includes certain fixture state information that is
