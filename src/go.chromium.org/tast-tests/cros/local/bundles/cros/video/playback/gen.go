@@ -31,13 +31,14 @@ type ParamData struct {
 	SuspendMode               string
 	Duration                  time.Duration
 
-	SoftwareDeps []string
-	HardwareDeps string
-	Data         []string
-	Attr         []string
-	Fixture      string
-	ExtraAttr    []string
-	Timeout      time.Duration
+	SoftwareDeps          []string
+	HardwareDeps          []string
+	FlattenedHardwareDeps string // Flattened version of HardwareDeps for parameter generation.
+	Data                  []string
+	Attr                  []string
+	Fixture               string
+	ExtraAttr             []string
+	Timeout               time.Duration
 }
 
 // GenDataPath returns the data path for specific codec/resolution/fps combination.

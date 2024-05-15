@@ -67,12 +67,17 @@ func genPlaybackPerfParam(codec, file string, resolution, fps int, dec, nameSuff
 	if (codec == "h264" || codec == "vp9") && resolution == 1080 && fps == 60 && dec == "hw" && fixture == "chromeVideo" {
 		extraAttr = []string{"group:graphics", "graphics_video", "graphics_nightly", "group:crosbolt", "crosbolt_fsi_check"}
 	}
+	var hwDeps []string
+	if codec == "hevc" {
+		hwDeps = []string{"hwdep.SupportsHEVCVideoDecodingInChrome()"}
+	}
 	return playback.ParamData{
 		Name:            testName,
 		File:            file,
 		DecoderType:     decType,
 		BrowserType:     brwType,
 		SoftwareDeps:    deps,
+		HardwareDeps:    hwDeps,
 		Data:            []string{file},
 		Fixture:         fixture,
 		ExtraAttr:       extraAttr,
@@ -114,9 +119,6 @@ func TestPlaybackPerfConfig(t *testing.T) {
 					param :=
 						genPlaybackPerfParam(codec, playback.GenDataPath(codec, resolution, fps),
 							resolution, fps, dec, "", "", nil)
-					if codec == "hevc" {
-						param.HardwareDeps = "hwdep.SupportsHEVCVideoDecodingInChrome()"
-					}
 					params = append(params, param)
 				}
 			}
@@ -128,7 +130,6 @@ func TestPlaybackPerfConfig(t *testing.T) {
 			codec, dec := "hevc10", "hw"
 			param := genPlaybackPerfParam(codec, playback.GenDataPath(codec, resolution, fps),
 				resolution, fps, dec, "", "", []string{})
-			param.HardwareDeps = "hwdep.SupportsHEVCVideoDecodingInChrome()"
 			params = append(params, param)
 		}
 	}
@@ -143,10 +144,7 @@ func TestPlaybackPerfConfig(t *testing.T) {
 			param := genPlaybackPerfParam(codec, playback.GenDataPath(codec, resolution, fps),
 				resolution, fps, dec, "v4l2_flat", "chromeVideoWithV4L2FlatDecoder",
 				[]string{"v4l2_codec"})
-			param.HardwareDeps = "hwdep.SupportsV4L2FlatVideoDecoding()"
-			if codec == "hevc" {
-				param.HardwareDeps += ", hwdep.SupportsHEVCVideoDecodingInChrome()"
-			}
+			param.HardwareDeps = append(param.HardwareDeps, "hwdep.SupportsV4L2FlatVideoDecoding()")
 			params = append(params, param)
 		}
 	}
@@ -162,10 +160,7 @@ func TestPlaybackPerfConfig(t *testing.T) {
 			param := genPlaybackPerfParam(codec, file, resolution, fps, dec,
 				"long", "", []string{"drm_atomic"})
 			// "rogue" is for MT8173 hana.
-			param.HardwareDeps = "hwdep.SkipGPUFamily(\"rogue\"), hwdep.InternalDisplay()"
-			if codec == "hevc" {
-				param.HardwareDeps += ", hwdep.SupportsHEVCVideoDecodingInChrome()"
-			}
+			param.HardwareDeps = append(param.HardwareDeps, "hwdep.SkipGPUFamily(\"rogue\")", "hwdep.InternalDisplay()")
 			param.MeasureRoughness = true
 			param.Duration = measurementDurationLong
 			params = append(params, param)
@@ -196,7 +191,7 @@ func TestPlaybackPerfConfig(t *testing.T) {
 			"long_inpvd", "chromeVideoINPVD",
 			[]string{"drm_atomic"})
 		// "rogue" is for MT8173 hana.
-		param.HardwareDeps = "hwdep.SkipGPUFamily(\"rogue\"), hwdep.InternalDisplay()"
+		param.HardwareDeps = append(param.HardwareDeps, "hwdep.SkipGPUFamily(\"rogue\")", "hwdep.InternalDisplay()")
 		if codec == "h264" {
 			param.MeasureSteadyStateMetrics = true
 		}
@@ -229,7 +224,7 @@ func TestPlaybackPerfConfig(t *testing.T) {
 			"long_lacros", "chromeVideoLacros",
 			[]string{"drm_atomic", "lacros"})
 		// "rogue" is for MT8173 hana.
-		param.HardwareDeps = "hwdep.SkipGPUFamily(\"rogue\"), hwdep.InternalDisplay()"
+		param.HardwareDeps = append(param.HardwareDeps, "hwdep.SkipGPUFamily(\"rogue\")", "hwdep.InternalDisplay()")
 		if codec == "h264" {
 			param.MeasureSteadyStateMetrics = true
 		}
@@ -268,7 +263,7 @@ func TestPlaybackPerfConfig(t *testing.T) {
 			param.PerfTracing = true
 			if numVideos > 10 {
 				// More than 10 videos in parallel is too much for Grunt, see b/290637628.
-				param.HardwareDeps = "hwdep.SkipGPUFamily(\"stoney\")"
+				param.HardwareDeps = append(param.HardwareDeps, "hwdep.SkipGPUFamily(\"stoney\")")
 			}
 			if resolution != 720 {
 				// "graphics_weekly" amounts to 2 or 3 times per week.
@@ -286,7 +281,7 @@ func TestPlaybackPerfConfig(t *testing.T) {
 				param := genPlaybackPerfParam(codec, playback.GenDataPath(codec, resolution, fps), resolution, fps, dec,
 					"intel_mc", "chromeVideoWithIntelMediaCompression",
 					[]string{})
-				param.HardwareDeps = "hwdep.GPUFamily(\"meteorlake\", \"alderlake\", \"raptorlake\")"
+				param.HardwareDeps = append(param.HardwareDeps, "hwdep.GPUFamily(\"meteorlake\", \"alderlake\", \"raptorlake\")")
 				params = append(params, param)
 			}
 
@@ -300,10 +295,7 @@ func TestPlaybackPerfConfig(t *testing.T) {
 		param := genPlaybackPerfParam(codec, file, resolution, fps, dec,
 			"v4l2_flat_long", "chromeVideoWithV4L2FlatDecoder",
 			[]string{"v4l2_codec"})
-		param.HardwareDeps = "hwdep.SupportsV4L2FlatVideoDecoding()"
-		if codec == "hevc" {
-			param.HardwareDeps += ", hwdep.SupportsHEVCVideoDecodingInChrome()"
-		}
+		param.HardwareDeps = append(param.HardwareDeps, "hwdep.SupportsV4L2FlatVideoDecoding()")
 		param.MeasureRoughness = true
 		param.Duration = measurementDurationLong
 		params = append(params, param)
@@ -315,7 +307,7 @@ func TestPlaybackPerfConfig(t *testing.T) {
 			param := genPlaybackPerfParam(codec, playback.GenDataPath(codec, resolution, fps), resolution, fps, dec,
 				"batch_decoding_in_renderer", "chromeVideoWithBatchDecodingInRenderer",
 				[]string{})
-			param.HardwareDeps = "hwdep.CPUSocFamily(\"intel\")"
+			param.HardwareDeps = append(param.HardwareDeps, "hwdep.CPUSocFamily(\"intel\")")
 			params = append(params, param)
 		}
 
@@ -330,6 +322,10 @@ func TestPlaybackPerfConfig(t *testing.T) {
 			params = append(params, param)
 		}
 
+	}
+
+	for i, param := range params {
+		params[i].FlattenedHardwareDeps = strings.Join(param.HardwareDeps, ",")
 	}
 
 	code := genparams.Template(t, `{{ range . }}{
@@ -360,7 +356,7 @@ func TestPlaybackPerfConfig(t *testing.T) {
 			{{ end }}
 		},
 		{{ if .HardwareDeps }}
-		ExtraHardwareDeps: hwdep.D({{ .HardwareDeps }}),
+		ExtraHardwareDeps: hwdep.D({{ .FlattenedHardwareDeps }}),
 		{{ end }}
 		{{ if .SoftwareDeps }}
 		ExtraSoftwareDeps: {{ .SoftwareDeps | fmt }},

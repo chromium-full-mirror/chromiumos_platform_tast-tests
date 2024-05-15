@@ -102,11 +102,14 @@ func genPlaybackStressParam(param playbackStressParam) playback.ParamData {
 		extraAttr = append(extraAttr, []string{"graphics_nightly"}...)
 	}
 
-	hwdeps := ""
+	var hwdeps []string
 	if param.suspendMode == graphics.SuspendS0ix {
-		hwdeps = "hwdep.SuspendToIdle()"
+		hwdeps = append(hwdeps, "hwdep.SuspendToIdle()")
 	} else if param.suspendMode == graphics.SuspendS3 {
-		hwdeps = "hwdep.SuspendToMem()"
+		hwdeps = append(hwdeps, "hwdep.SuspendToMem()")
+	}
+	if param.codec == "hevc" {
+		hwdeps = append(hwdeps, "hwdep.SupportsHEVCVideoDecodingInChrome()")
 	}
 
 	susMode := ""
@@ -223,6 +226,10 @@ func TestPlaybackStressConfig(t *testing.T) {
 		params = append(params, p)
 	}
 
+	for i, param := range params {
+		params[i].FlattenedHardwareDeps = strings.Join(param.HardwareDeps, ",")
+	}
+
 	code := genparams.Template(t, `{{ range . }}{
 		Name: {{ .Name | fmt }},
 		Val:  playback.Config{
@@ -255,7 +262,7 @@ func TestPlaybackStressConfig(t *testing.T) {
 			{{ end }}
 		},
 		{{ if .HardwareDeps }}
-		ExtraHardwareDeps: hwdep.D({{ .HardwareDeps }}),
+		ExtraHardwareDeps: hwdep.D({{ .FlattenedHardwareDeps }}),
 		{{ end }}
 		{{ if .SoftwareDeps }}
 		ExtraSoftwareDeps: {{ .SoftwareDeps | fmt }},
