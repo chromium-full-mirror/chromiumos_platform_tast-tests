@@ -398,7 +398,7 @@ func simpleConnect80211be() []*simpleConnectParams {
 		Name:      "80211beeht20",
 		Fixture:   defaultFixture,
 		Doc:       simpleConnectDocPref("an open 802.11be network on channel 40 with a channel width of 20MHz."),
-		ExtraAttr: []string{"wificell_unstable", "wificell_func_be"},
+		ExtraAttr: []string{"wificell_func_be"},
 		Val: []simpleConnectParamsVal{{
 			APConfigs: []apConfigVal{{
 				APOpts: `ap.Mode(ap.Mode80211bePure), ap.Channel(40), ap.HTCaps(ap.HTCapHT20),
@@ -414,7 +414,7 @@ func simpleConnect80211be() []*simpleConnectParams {
 		Name:      "80211beeht40",
 		Fixture:   defaultFixture,
 		Doc:       simpleConnectDocPref("an open 802.11be network on channel 157 with a channel width of 40MHz."),
-		ExtraAttr: []string{"wificell_unstable", "wificell_func_be"},
+		ExtraAttr: []string{"wificell_func_be"},
 		Val: []simpleConnectParamsVal{{
 			APConfigs: []apConfigVal{{
 				APOpts: `ap.Mode(ap.Mode80211bePure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40, ap.HTCapLDPC),
@@ -430,7 +430,7 @@ func simpleConnect80211be() []*simpleConnectParams {
 		Name:      "80211beeht80mixed",
 		Fixture:   defaultFixture,
 		Doc:       simpleConnectDocPref("an open 802.11be network on 5GHz channel 157 with center channel of 155 and channel width of 80MHz."),
-		ExtraAttr: []string{"wificell_unstable", "wificell_func_be"},
+		ExtraAttr: []string{"wificell_func_be"},
 		Val: []simpleConnectParamsVal{{
 			APConfigs: []apConfigVal{{
 				APOpts: `ap.Mode(ap.Mode80211beMixed), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC),
@@ -446,7 +446,7 @@ func simpleConnect80211be() []*simpleConnectParams {
 	}, {
 		Name:      "80211beeht80pure",
 		Fixture:   defaultFixture,
-		ExtraAttr: []string{"wificell_unstable", "wificell_func_be"},
+		ExtraAttr: []string{"wificell_func_be"},
 		Doc: append(simpleConnectDocPref("an open 802.11be network on channel 157 with center channel of 155 and channel width of 80MHz."),
 			"The router is forced to use EHT WiFi standard."),
 		Val: []simpleConnectParamsVal{{

@@ -436,7 +436,7 @@ func init() {
 				// Verifies that DUT can connect to an open 802.11be network on channel 40 with a channel width of 20MHz.
 				Name:      "80211beeht20",
 				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
-				ExtraAttr: []string{"wificell_unstable", "wificell_func_be"},
+				ExtraAttr: []string{"wificell_func_be"},
 				Val: []simpleConnectTestcase{{
 					apConfigs: []ap.ApConfig{{
 						ApOpts: []ap.Option{ap.Mode(ap.Mode80211bePure), ap.Channel(40), ap.HTCaps(ap.HTCapHT20),
@@ -452,7 +452,7 @@ func init() {
 				// Verifies that DUT can connect to an open 802.11be network on channel 157 with a channel width of 40MHz.
 				Name:      "80211beeht40",
 				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
-				ExtraAttr: []string{"wificell_unstable", "wificell_func_be"},
+				ExtraAttr: []string{"wificell_func_be"},
 				Val: []simpleConnectTestcase{{
 					apConfigs: []ap.ApConfig{{
 						ApOpts: []ap.Option{ap.Mode(ap.Mode80211bePure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40, ap.HTCapLDPC),
@@ -468,7 +468,7 @@ func init() {
 				// Verifies that DUT can connect to an open 802.11be network on 5GHz channel 157 with center channel of 155 and channel width of 80MHz.
 				Name:      "80211beeht80mixed",
 				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
-				ExtraAttr: []string{"wificell_unstable", "wificell_func_be"},
+				ExtraAttr: []string{"wificell_func_be"},
 				Val: []simpleConnectTestcase{{
 					apConfigs: []ap.ApConfig{{
 						ApOpts: []ap.Option{ap.Mode(ap.Mode80211beMixed), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC),
@@ -486,7 +486,7 @@ func init() {
 				// The router is forced to use EHT WiFi standard.
 				Name:      "80211beeht80pure",
 				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
-				ExtraAttr: []string{"wificell_unstable", "wificell_func_be"},
+				ExtraAttr: []string{"wificell_func_be"},
 				Val: []simpleConnectTestcase{{
 					apConfigs: []ap.ApConfig{{
 						ApOpts: []ap.Option{ap.Mode(ap.Mode80211bePure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC),
