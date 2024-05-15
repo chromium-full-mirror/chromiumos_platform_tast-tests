@@ -205,11 +205,11 @@ func setDoHMode(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, 
 			return err
 		}
 		selectNode := nodewith.Name("Select DNS provider").Role(role.ComboBoxSelect)
-		optionNode := nodewith.Name("Network default").Role(role.ListBoxOption)
+		optionNode := nodewith.Name("Network default").Role(role.MenuListOption)
 		if err := uiauto.Combine("enable secure DNS automatic mode",
 			ac.WithTimeout(10*time.Second).WaitUntilExists(selectNode),
 			ac.WithInterval(3*time.Second).LeftClickUntil(selectNode, ac.Exists(optionNode)),
-			ac.WithInterval(3*time.Second).LeftClickUntil(optionNode, ac.Gone(optionNode)),
+			ac.LeftClick(optionNode),
 		)(ctx); err != nil {
 			return err
 		}
