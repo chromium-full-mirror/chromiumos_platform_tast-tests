@@ -154,12 +154,11 @@ func (i *devboardFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	if err := i.v.devboard.LogResultTag(ctx, ti50.TagBuildURL, imagePath); err != nil {
 		s.Log("Failed to log result tag: ", err)
 	}
-	testing.ContextLog(ctx, "Setting up image: ", imagePath)
-	if i.v.TestbedProperties.TestbedType == "gsc_h1_shield" {
-		setupCr50Image(ctx, s, i.v.devboard, imagePath, fwConfigJsons, i.v.TestbedProperties, false)
-	} else if err := i.v.devboard.Setup(ctx, imagePath, fwConfigJsons); err != nil {
-		s.Fatal("Setup: ", err)
-	}
+
+	i.v.ImagePath = imagePath
+	i.v.FwConfigJsons = fwConfigJsons
+
+	setupImage(ctx, i.v, s)
 
 	ver, err := i.v.devboard.GSCVersionInfo(ctx)
 	if err != nil {
@@ -181,10 +180,19 @@ func (i *devboardFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 		s.Log("Failed to log result tag: ", err)
 	}
 
-	i.v.ImagePath = imagePath
-	i.v.FwConfigJsons = fwConfigJsons
-
 	return i.v
+}
+
+// setupImage flashes the image under test on the devboard using the image and
+// json files provided in the `Value` parameter.
+func setupImage(ctx context.Context, v *Value, s TestingState) {
+	testing.ContextLog(ctx, "Setting up image: ", v.ImagePath)
+	if v.TestbedProperties.TestbedType == "gsc_h1_shield" {
+		setupCr50Image(ctx, s, v.devboard, v.ImagePath, v.FwConfigJsons, v.TestbedProperties, false)
+	} else if err := v.devboard.Setup(ctx, v.ImagePath, v.FwConfigJsons); err != nil {
+		s.Fatal("Setup: ", err)
+	}
+
 }
 
 // setupCr50Image uses gsctool to flash the cr50 image.

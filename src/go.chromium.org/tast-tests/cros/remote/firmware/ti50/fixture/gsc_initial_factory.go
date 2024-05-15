@@ -36,7 +36,7 @@ func init() {
 		BugComponent:    "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
 		Impl:            &initialFactoryImpl{},
 		SetUpTimeout:    rescueTwiceTimeout,
-		TearDownTimeout: removeFileTimeout,
+		TearDownTimeout: rescueTwiceTimeout,
 		PreTestTimeout:  rescueTwiceTimeout,
 		Parent:          SystemDevboard,
 	})
@@ -154,4 +154,8 @@ func (c *initialFactoryImpl) Reset(ctx context.Context) error {
 }
 
 func (c *initialFactoryImpl) TearDown(ctx context.Context, s *testing.FixtState) {
+	// Let's always make sure that the image from the parent SystemDevboard is
+	// set up correctly after finishing with this fixture since it is possible
+	// in errors cases for the image under test to not on the device anymore.
+	setupImage(ctx, s.ParentValue().(*Value), s)
 }
