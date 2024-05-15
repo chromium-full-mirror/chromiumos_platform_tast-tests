@@ -41,9 +41,6 @@ func init() {
 					blockSizeFrames:   480,
 					inputWavFrameRate: 48000,
 				},
-				ExtraSoftwareDeps: []string{
-					"amd64", // libdenoiser.so is amd64 only.
-				},
 			},
 			{
 				Name: "ast",
@@ -67,9 +64,6 @@ func init() {
 					blockSizeFrames:   480,
 					inputWavFrameRate: 48000,
 					sleepTime:         10 * time.Millisecond,
-				},
-				ExtraSoftwareDeps: []string{
-					"amd64", // libdenoiser.so is amd64 only.
 				},
 			},
 			{
