@@ -11,7 +11,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/testexec"
-
 	"go.chromium.org/tast/core/lsbrelease"
 	"go.chromium.org/tast/core/testing"
 )
@@ -24,8 +23,29 @@ func init() {
 			"mpolzer@google.com",
 			"chromeos-commercial-remote-management@google.com",
 		},
-		BugComponent:    "b:1031231",            // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Version Control
+		BugComponent:    "b:1031231",          // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Version Control
 		Parent:          fixture.UpdateEngine, // Ensure update engine is reset.
+		Impl:            &autoupdateFixt{},
+		SetUpTimeout:    2 * time.Minute,
+		PreTestTimeout:  30 * time.Second,
+		PostTestTimeout: 15 * time.Minute,
+		TearDownTimeout: 1 * time.Minute,
+		ServiceDeps: []string{
+			"tast.cros.nebraska.Service",
+			"tast.cros.autoupdate.UpdateService",
+		},
+	})
+
+	// TODO(b/339743985): Simplify structure of fixtures inherited from fixture.UpdateEngine*
+	testing.AddFixture(&testing.Fixture{
+		Name: fixture.ForcedAutoupdate,
+		Desc: "Fixture for forced autoupdate tests in OOBE, copies implmentation of fixture.Autoupdate",
+		Contacts: []string{
+			"dkuzmin@google.com",
+			"cros-oobe@google.com",
+		},
+		BugComponent:    "b:1263090",                        // ChromeOS > Software > OOBE
+		Parent:          fixture.UpdateEngineCleanOwnership, // Ensure update engine is reset.
 		Impl:            &autoupdateFixt{},
 		SetUpTimeout:    2 * time.Minute,
 		PreTestTimeout:  30 * time.Second,

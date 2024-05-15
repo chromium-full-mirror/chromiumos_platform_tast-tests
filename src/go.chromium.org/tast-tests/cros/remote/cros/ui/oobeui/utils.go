@@ -25,10 +25,23 @@ const SearchingForPointerNodeName = "Searching for pointing device"
 // for an element indicating a mouse is paired to DUT.
 const BluetoothMousePairedNodeName = "Bluetooth mouse paired"
 
+// RestartingToApplyUpdateName is a node name in OOBE Update screen, for a
+// title indicating that the update is finished and the reboot will happen
+// soon.
+const RestartingToApplyUpdateName = "Restarting to apply updates"
+
 // ContinueButtonFinder is the continue button in OOBE HID detection screen.
 var ContinueButtonFinder = &ui.Finder{
 	NodeWiths: []*ui.NodeWith{
 		{Value: &ui.NodeWith_Name{Name: "Continue"}},
+		{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_BUTTON}},
+	},
+}
+
+// GetStartedButtonFinder is the "Get started" button in OOBE Welcome screen.
+var GetStartedButtonFinder = &ui.Finder{
+	NodeWiths: []*ui.NodeWith{
+		{Value: &ui.NodeWith_Name{Name: "Get started"}},
 		{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_BUTTON}},
 	},
 }

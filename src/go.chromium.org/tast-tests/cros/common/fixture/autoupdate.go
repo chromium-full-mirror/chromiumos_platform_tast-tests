@@ -8,4 +8,6 @@ package fixture
 const (
 	// Fixture for autoupdate tests, ensures that the DUT stays on initially provisioned test image.
 	Autoupdate = "autoupdate"
+	// Fixture for forced autoupdate, copies implementation of Autoupdate, but removes ownership.
+	ForcedAutoupdate = "forcedAutoupdate"
 )
