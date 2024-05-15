@@ -96,7 +96,9 @@ func (c *BufferedConsole) ReadSerialSubmatch(ctx context.Context, regularExpress
 		}
 		err := c.readSerial(ctx)
 		if err != nil {
-			return 0, nil, errors.Wrapf(err, "(wanted %s)", regularExpressions[0])
+			// Report the last regex since the first regex is most likely the
+			// regex to detect unexpected panics and resets.
+			return 0, nil, errors.Wrapf(err, "(wanted %s)", regularExpressions[len(regularExpressions)-1])
 		}
 	}
 }
