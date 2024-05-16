@@ -105,11 +105,6 @@ func InternalPanelColorCompare(ctx context.Context, s *testing.State) {
 	// If we fail to compare with the file sizes, compare the ratio of the colors in the images. If
 	// the colored image has a different ratio of colors than the black image, that means the
 	// screen is emitting light.
-	// Test for false positives by comparing the black images to themselves first.
-	if testImgsWithColorRatio(ctx, blackImgs, shuffledBlackImgs) {
-		s.Fatal("False positive detected on Color Ratio Test")
-	}
-
 	if testImgsWithColorRatio(ctx, blackImgs, coloredImgs) {
 		return
 	}
@@ -200,58 +195,36 @@ func testImgsWithFileSizes(ctx context.Context, blackImgs, coloredImgs []string)
 }
 
 func testImgsWithColorRatio(ctx context.Context, blackImgs, coloredImgs []string) bool {
-	const tolerance = 0.1
-
-	// Test R
-	ratioRedOn, err := getColorToOtherColorRatio(ctx, "R", coloredImgs[0])
+	res, err := checkForColorSignificance(ctx, "R", blackImgs, coloredImgs[0])
 	if err != nil {
-		testing.ContextLog(ctx, "testing color ratio failed: ", err)
+		testing.ContextLog(ctx, "testing Red with Color Ratio failed: ", err)
 		return false
 	}
-	ratioRedOff, err := getColorToOtherColorRatio(ctx, "R", blackImgs[0])
-	if err != nil {
-		testing.ContextLog(ctx, "testing color ratio failed: ", err)
-		return false
-	}
-	// What we are looking for is that nothing is reflecting back, even in a small area (if only something small is in the field of view). Any detected color change is a good case, because that means the screen is working.
-	if ratioRedOn > ratioRedOff*(1+tolerance) || ratioRedOn < ratioRedOff*(1-tolerance) {
-		testing.ContextLogf(ctx, "Detected Red Reflection with Ratio: %f:%f", ratioRedOn, ratioRedOff)
+	if res {
+		testing.ContextLog(ctx, "Detected more Red")
 		return true
 	}
 
-	// Test G
-	ratioGreenOn, err := getColorToOtherColorRatio(ctx, "G", coloredImgs[1])
+	res, err = checkForColorSignificance(ctx, "G", blackImgs, coloredImgs[1])
 	if err != nil {
-		testing.ContextLog(ctx, "testing color ratio failed: ", err)
+		testing.ContextLog(ctx, "testing Green with Color Ratio failed: ", err)
 		return false
 	}
-	ratioGreenOff, err := getColorToOtherColorRatio(ctx, "G", blackImgs[1])
-	if err != nil {
-		testing.ContextLog(ctx, "testing color ratio failed: ", err)
-		return false
-	}
-	if ratioGreenOn > ratioGreenOff*(1+tolerance) || ratioGreenOn < ratioGreenOff*(1-tolerance) {
-		testing.ContextLogf(ctx, "Detected Green Reflection with Ratio: %f:%f", ratioGreenOn, ratioGreenOff)
+	if res {
+		testing.ContextLog(ctx, "Detected more Green")
 		return true
 	}
 
-	// Test B
-	ratioBlueOn, err := getColorToOtherColorRatio(ctx, "B", coloredImgs[2])
+	res, err = checkForColorSignificance(ctx, "B", blackImgs, coloredImgs[2])
 	if err != nil {
-		testing.ContextLog(ctx, "testing color ratio failed: ", err)
+		testing.ContextLog(ctx, "testing Blue with Color Ratio failed: ", err)
 		return false
 	}
-	ratioBlueOff, err := getColorToOtherColorRatio(ctx, "B", blackImgs[2])
-	if err != nil {
-		testing.ContextLog(ctx, "testing color ratio failed: ", err)
-		return false
-	}
-	if ratioBlueOn > ratioBlueOff*(1+tolerance) || ratioBlueOn < ratioBlueOff*(1-tolerance) {
-		testing.ContextLogf(ctx, "Detected Blue Reflection with Ratio: %f:%f", ratioBlueOn, ratioBlueOff)
+	if res {
+		testing.ContextLog(ctx, "Detected more Blue")
 		return true
 	}
 
-	testing.ContextLog(ctx, "Failed to find a meaningful difference in color ratios")
 	return false
 }
 
@@ -352,6 +325,30 @@ func takeCameraShotOnFullScreen(ctx context.Context, cr *chrome.Chrome, imgPath 
 		return errors.Wrap(err, "failed to toggle the screen")
 	}
 	return nil
+}
+
+func checkForColorSignificance(ctx context.Context, color string, blackImgs []string, coloredImg string) (bool, error) {
+	minColorness := 0.0
+	for _, blackImg := range blackImgs {
+		blackColorRatio, err := getColorToOtherColorRatio(ctx, color, blackImg)
+		if err != nil {
+			return false, errors.Wrapf(err, "failed to get color ratio for %s for image %s", color, blackImg)
+		}
+		if blackColorRatio > minColorness {
+			minColorness = blackColorRatio
+		}
+	}
+
+	minColorness *= 1.1 //  Add 10% tolerance to create an enough gap for a valid signal.
+
+	colored, err := getColorToOtherColorRatio(ctx, color, coloredImg)
+	if err != nil {
+		return false, errors.Wrapf(err, "failed to get color ratio for %s for image %s", color, coloredImg)
+	}
+	testing.ContextLogf(ctx, "%s: Minimum colorness: %f, Colored colorness: %f", color, minColorness, colored)
+
+	return colored > minColorness, nil
+
 }
 
 func getColorToOtherColorRatio(ctx context.Context, colorAbbrev, imgPath string) (float64, error) {
