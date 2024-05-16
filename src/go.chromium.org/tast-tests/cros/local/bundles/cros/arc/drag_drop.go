@@ -159,6 +159,12 @@ func DragDrop(ctx context.Context, s *testing.State) {
 		targetPkg     = "org.chromium.arc.testapp.dragtarget"
 		targetActName = ".DragTargetActivity"
 
+		// Title of Chrome extension, defined in the manifest.
+		extensionTitle = "DragDrop Controller"
+
+		// Packagename of placeholder activity.
+		placeholderPkg = "org.chromium.arc.applauncher"
+
 		// width and height of target and source windows.
 		w = 500
 	)
@@ -328,6 +334,23 @@ func DragDrop(ctx context.Context, s *testing.State) {
 		}
 		defer targetAct.Close(cleanupCtx)
 		defer targetAct.Stop(cleanupCtx, tconn)
+
+		if !args.androidSource {
+			// This is a workaround to wait for placeholder activity launches.
+			//
+			// In a drag-and-drop from Chrome to Android, we currently rely on Placeholder Activity.
+			// It is started for the first time ARC window goes behind.
+			// Thus, if we just inject drag event after starting the activity, there's a race
+			// between launching the placeholder activity and starting a drag operation.
+			// TODO(b/337997097): We should remove dependency on placeholder.
+			if _, err := ash.BringWindowToForeground(ctx, tconn, extensionTitle); err != nil {
+				s.Fatal("Failed to activate the source app: ", err)
+			}
+
+			if err := d.Object(ui.PackageName(placeholderPkg)).WaitForExists(ctx, 10*time.Second); err != nil {
+				s.Fatal("Failed to wait for placeholder launched: ", err)
+			}
+		}
 	}
 
 	if err := mouse.Drag(tconn, sourceBounds.CenterPoint(), targetBounds.CenterPoint(), time.Second)(ctx); err != nil {
