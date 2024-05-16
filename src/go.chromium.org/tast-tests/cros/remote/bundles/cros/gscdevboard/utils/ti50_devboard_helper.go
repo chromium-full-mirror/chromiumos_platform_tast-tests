@@ -266,6 +266,14 @@ func (h DevboardHelper) GpioGet(ctx context.Context, g ti50.GpioName) bool {
 	return val
 }
 
+// GpioSetMode set operation mode for particular GPIO pin.
+func (h DevboardHelper) GpioSetMode(ctx context.Context, g ti50.GpioName, m GpioMode) {
+	args := []string{"set-mode", string(g), string(m)}
+	if _, err := h.PlainCommand(ctx, "gpio", args...); err != nil {
+		h.Fatalf("Failed to set mode for gpio %s: %s", g, err)
+	}
+}
+
 // GpioMultiSet configures a gpio pin in a particular logic level, drive mode, and weak pull
 // mode.  If there are any errors, set a fatal condition on the test state
 func (h DevboardHelper) GpioMultiSet(ctx context.Context, g ti50.GpioName, val bool, m GpioMode, p GpioPullMode) {
