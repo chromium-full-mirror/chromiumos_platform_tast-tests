@@ -59,12 +59,6 @@ func init() {
 				ExtraAttr: []string{"paper-io_mfp_printscan"},
 			}, {
 				//MFP in lab
-				Name:      "hp_laserjet_mfp_m234dw",
-				Val:       "hp_laserjet_mfp_m234dw_descriptor.json",
-				ExtraData: []string{"hp_laserjet_mfp_m234dw_descriptor.json"},
-				ExtraAttr: []string{"paper-io_mfp_printscan"},
-			}, {
-				//MFP in lab
 				Name:              "usb_canon_tr4700_series",
 				Val:               "usb_canon_tr4700_series_descriptor.json",
 				ExtraData:         []string{"usb_canon_tr4700_series_descriptor.json"},
