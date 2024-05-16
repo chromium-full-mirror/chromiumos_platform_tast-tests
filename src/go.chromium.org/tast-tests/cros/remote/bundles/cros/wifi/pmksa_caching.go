@@ -10,6 +10,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/golang/protobuf/ptypes/empty"
+
 	"go.chromium.org/tast-tests/cros/common/crypto/certificate"
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
@@ -205,6 +207,10 @@ func PMKSACaching(ctx context.Context, s *testing.State) {
 		ctx, cancel := pcapRouter.ReserveForStopCapture(ctx, capturer)
 		defer cancel()
 
+		// GoBigSleepLint. Wait a little while for the capturer to actually start capturing packets.
+		if err := testing.Sleep(ctx, time.Second); err != nil {
+			return nil, errors.Wrap(err, "interrupted while sleeping for capturer startup")
+		}
 		if checkEap {
 			skippedRecver, err = tf.WifiClient().EAPAuthSkipped(ctx)
 			if err != nil {
@@ -251,6 +257,21 @@ func PMKSACaching(ctx context.Context, s *testing.State) {
 			s.Error("Failed to restore the background and/or foreground scan config: ", err)
 		}
 	}()
+
+	allowRoamResp, err := tf.WifiClient().GetScanAllowRoamProperty(ctx, &empty.Empty{})
+	if err != nil {
+		s.Fatal("Failed to get the ScanAllowRoam property: ", err)
+	}
+	if allowRoamResp.Allow {
+		if _, err := tf.WifiClient().SetScanAllowRoamProperty(ctx, &wifi.SetScanAllowRoamPropertyRequest{Allow: false}); err != nil {
+			s.Error("Failed to set ScanAllowRoam property to false: ", err)
+		}
+		defer func(ctx context.Context) {
+			if _, err := tf.WifiClient().SetScanAllowRoamProperty(ctx, &wifi.SetScanAllowRoamPropertyRequest{Allow: allowRoamResp.Allow}); err != nil {
+				s.Errorf("Failed to set ScanAllowRoam property back to %v: %v", allowRoamResp.Allow, err)
+			}
+		}(ctx)
+	}
 
 	// Generate BSSIDs for the two APs.
 	mac0, err := hostapd.RandomMAC()
