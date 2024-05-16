@@ -459,6 +459,17 @@ func init() {
 				ExtraData:         []string{"encode/desktop2-3840x2160_170frames.vp9.webm", "encode/desktop2-3840x2160_170frames.vp9.webm.json"},
 			},
 			{
+				Name: "vp9_134p_odd_width",
+				Val: encode.TestOptions{
+					WebMName:      "encode/desktop2-239x134_850frames.vp9.webm",
+					Profile:       videotype.VP9Prof,
+					PSNRThreshold: 24.9,
+					BitrateMode:   "cbr",
+				},
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp9_1080_30", "autotest-capability:hw_enc_vp9_odd_dimension"},
+				ExtraData:         []string{"encode/desktop2-239x134_850frames.vp9.webm", "encode/desktop2-239x134_850frames.vp9.webm.json"},
+			},
+			{
 				Name: "h264baseline_720p_l1t2",
 				Val: encode.TestOptions{
 					WebMName:      "encode/desktop2-1280x720_850frames.vp9.webm",

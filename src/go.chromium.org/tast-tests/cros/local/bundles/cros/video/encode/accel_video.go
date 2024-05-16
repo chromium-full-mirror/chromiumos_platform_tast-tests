@@ -39,6 +39,7 @@ const (
 
 // The md5 hash values of the first 60 frames in the video file.
 var md5OfYUV60Frames = map[string]string{
+	"encode/desktop2-239x134_850frames.vp9.webm":   "b935c36eee6c4fa765a534165e441783",
 	"encode/desktop2-240x135_850frames.vp9.webm":   "3ac3550a9082255ebb423fdf991ff245",
 	"encode/desktop2-320x180_850frames.vp9.webm":   "63c5e91eef6e0c99431f4e3ff17ed8f9",
 	"encode/desktop2-480x270_850frames.vp9.webm":   "e1ebf7d5b2abf9ee3d7a60493c1153db",

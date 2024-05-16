@@ -128,6 +128,7 @@ func psnrThreshold(codec string, height int) float32 {
 			2160: 35.3,
 		},
 		"vp9": {
+			134:  24.9,
 			135:  25.6,
 			180:  28.5,
 			270:  29.5,
@@ -265,6 +266,24 @@ func TestEncodeAccelParams(t *testing.T) {
 			}
 			params = append(params, param)
 		}
+	}
+
+	// Odd width.
+	{
+		codec := "vp9"
+		height := 134
+		webMFile := "encode/desktop2-239x134_850frames.vp9.webm"
+		webMJSONFile := webMFile + ".json"
+		param := encodeAccelParam{
+			Name:              fmt.Sprintf("%s_%dp_odd_width", codec, height),
+			WebMName:          webMFile,
+			Profile:           toProfile(codec),
+			PSNRThreshold:     psnrThreshold(codec, height),
+			BitrateMode:       "cbr",
+			ExtraSoftwareDeps: append(encodeSoftwareDeps(codec, height, false), caps.HWEncodeVP9OddDimension),
+			ExtraData:         []string{webMFile, webMJSONFile},
+		}
+		params = append(params, param)
 	}
 
 	// SVC encoding.
