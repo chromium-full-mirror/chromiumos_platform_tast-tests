@@ -186,9 +186,17 @@ func ECPowerG3(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	if err := h.WaitConnect(ctx); err != nil {
-		s.Fatal("Failed to reconnect to DUT after restarting: ", err)
+	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
+	defer cancelWaitConnect()
+
+	if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
+		currPowerState, stateErr := h.Servo.GetECSystemPowerState(ctx)
+		if stateErr != nil {
+			s.Fatalf("Failed to reconnect to dut: %v, and failed to check power state: %v", err, stateErr)
+		}
+		s.Fatalf("Failed to reconnect to dut: %v, got power state: %v", err, currPowerState)
 	}
+
 	if tc.RemovePower {
 		h.SetDUTPower(ctx, true)
 		// Restoring power with servo_v4 can cause ethernet failure, so reconnect afterwards
