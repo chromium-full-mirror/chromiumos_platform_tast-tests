@@ -71,6 +71,10 @@ func init() {
 				Name: "short",
 				Val:  "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/power/powerqual-config/short.json",
 			},
+			{
+				Name: "segment",
+				Val:  "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/power/powerqual-config/segment.json",
+			},
 			// TODO(b/274972858): add other parameterized tests.
 			// For example, add "essential" and "advanced" tests that use different configurations.
 		},
