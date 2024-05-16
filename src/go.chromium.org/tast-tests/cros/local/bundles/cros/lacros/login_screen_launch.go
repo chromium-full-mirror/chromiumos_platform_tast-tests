@@ -254,7 +254,6 @@ func LoginScreenLaunch(ctx context.Context, s *testing.State) {
 		chrome.KeepState(),
 		chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")),
 		chrome.EnableFeatures("LacrosLaunchAtLoginScreen"),
-		chrome.EnableFeatures("LacrosForkZygotesAtLoginScreen"),
 		chrome.EnableFeatures("LacrosProfileMigrationForceOff"),
 		// Prelaunch Lacros regardless of whether there are users with Lacros enabled.
 		// We restart Chrome quickly after the first login, so the preference is
