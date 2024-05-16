@@ -439,4 +439,13 @@ func PDVbusRequest(ctx context.Context, s *testing.State) {
 		number := len(dutFailures)
 		s.Fatal("DUT failed ", number, " times")
 	}
+
+	if testParams.Shutdown {
+		if err := h.Servo.SetPowerState(ctx, servo.PowerStateOn); err != nil {
+			testing.ContextLog(ctx, "Failed to power on DUT: ", err)
+		}
+		if err := h.WaitConnect(ctx); err != nil {
+			s.Fatal("Failed to boot after test: ", err)
+		}
+	}
 }

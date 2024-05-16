@@ -112,6 +112,16 @@ func PDDataSwap(ctx context.Context, s *testing.State) {
 	if err := dataRoleSwap(ctx, h); err != nil {
 		s.Error("Data role swap failed: ", err)
 	}
+
+	if testParams.Shutdown {
+		if err := h.Servo.SetPowerState(ctx, servo.PowerStateOn); err != nil {
+			testing.ContextLog(ctx, "Failed to power on DUT: ", err)
+		}
+		if err := h.WaitConnect(ctx); err != nil {
+			s.Fatal("Failed to boot after test: ", err)
+		}
+	}
+
 }
 
 // dataRoleSwap tests data role swaps from servo.

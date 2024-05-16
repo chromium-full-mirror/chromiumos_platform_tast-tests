@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast/core/testing"
@@ -125,4 +126,12 @@ func PDResetSoft(ctx context.Context, s *testing.State) {
 		s.Fatal("EC-initiated soft reset did not succeed after swapping power roles: ", err)
 	}
 
+	if testParams.Shutdown {
+		if err := h.Servo.SetPowerState(ctx, servo.PowerStateOn); err != nil {
+			testing.ContextLog(ctx, "Failed to power on DUT: ", err)
+		}
+		if err := h.WaitConnect(ctx); err != nil {
+			s.Fatal("Failed to boot after test: ", err)
+		}
+	}
 }

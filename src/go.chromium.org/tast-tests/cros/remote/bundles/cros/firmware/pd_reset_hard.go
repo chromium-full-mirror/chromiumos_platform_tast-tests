@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast/core/errors"
@@ -124,5 +125,14 @@ func PDResetHard(ctx context.Context, s *testing.State) {
 	// Test Hard Reset with DUT as power role SRC
 	if err := executeHardReset(ctx, s, iterationCount); err != nil {
 		s.Fatal("DUT power role SNK hard reset test failed: ", err)
+	}
+
+	if testParams.Shutdown {
+		if err := h.Servo.SetPowerState(ctx, servo.PowerStateOn); err != nil {
+			testing.ContextLog(ctx, "Failed to power on DUT: ", err)
+		}
+		if err := h.WaitConnect(ctx); err != nil {
+			s.Fatal("Failed to boot after test: ", err)
+		}
 	}
 }
