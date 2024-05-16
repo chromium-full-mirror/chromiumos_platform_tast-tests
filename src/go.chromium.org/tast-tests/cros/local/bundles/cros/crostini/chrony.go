@@ -22,7 +22,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test PTP clock synchronization works",
 		Contacts:     []string{"clumptini+oncall@google.com"},
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:sw_gates_virt", "sw_gates_virt_enabled"},
 		SoftwareDeps: []string{"chrome", "ptp_kvm", "vm_host"},
 		BugComponent: "b:1122570",
 		Params: []testing.Param{

@@ -62,7 +62,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test the installation could not proceed with invalid user",
 		Contacts:     []string{"clumptini+oncall@google.com"},
-		Attr:         []string{"group:mainline", "group:crostini_slow"},
+		Attr:         []string{"group:mainline", "group:crostini_slow", "group:sw_gates_virt", "sw_gates_virt_enabled"},
 		SoftwareDeps: []string{"chrome", "vm_host"},
 		BugComponent: "b:1122570",
 		Params: []testing.Param{
