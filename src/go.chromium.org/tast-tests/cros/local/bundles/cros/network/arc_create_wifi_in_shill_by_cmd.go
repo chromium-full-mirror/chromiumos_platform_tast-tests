@@ -200,7 +200,7 @@ func ARCCreateWifiInShillByCmd(ctx context.Context, s *testing.State) {
 						s.Error(ns + " is expected to be included but it is not")
 					}
 				}
-			case shillconst.IPConfigPropertyDomainName:
+			case shillconst.IPConfigPropertySearchDomains:
 				staticIPConfig, err := p.Get(shillconst.ServicePropertyStaticIPConfig)
 				if err != nil {
 					s.Fatal("Failed to get static IP config property from service: ", err)

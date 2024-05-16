@@ -93,7 +93,6 @@ const (
 const (
 	IPConfigPropertyAddress                  = "Address"
 	IPConfigPropertyNameServers              = "NameServers"
-	IPConfigPropertyDomainName               = "DomainName"
 	IPConfigPropertyGateway                  = "Gateway"
 	IPConfigPropertyMethod                   = "Method"
 	IPConfigPropertyMtu                      = "Mtu"
