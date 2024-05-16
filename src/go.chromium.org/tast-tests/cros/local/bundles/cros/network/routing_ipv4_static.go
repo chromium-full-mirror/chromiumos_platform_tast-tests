@@ -185,12 +185,11 @@ func RoutingIPv4Static(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get IPProperties from IPConfig: ", err)
 	}
 	expectedIPProps := shill.IPProperties{
-		Address:        localIPv4Addr.String(),
-		Gateway:        routerIPv4Addr.String(),
-		Method:         "ipv4",
-		PrefixLen:      int32(prefixLen),
-		NameServers:    []string{},
-		ISNSOptionData: []uint8{},
+		Address:     localIPv4Addr.String(),
+		Gateway:     routerIPv4Addr.String(),
+		Method:      "ipv4",
+		PrefixLen:   int32(prefixLen),
+		NameServers: []string{},
 	}
 	if diff := cmp.Diff(actualIPProps, expectedIPProps); diff != "" {
 		s.Fatal("Got unexpected IPProperties with diff: ", diff)

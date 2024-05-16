@@ -26,16 +26,12 @@ type IPConfig struct {
 // ipconfig-api.txt in shill for their definitions.
 type IPProperties struct {
 	Address                  string
-	Broadcast                string
-	DomainName               string
 	Gateway                  string
 	Method                   string
 	MTU                      int32
 	NameServers              []string
-	PeerAddress              string
 	PrefixLen                int32
 	WebProxyAutoDiscoveryURL string
-	ISNSOptionData           []uint8
 }
 
 // NewIPConfig connects to an IPConfig in Shill.
@@ -61,11 +57,8 @@ func (ph *IPConfig) GetIPProperties(ctx context.Context) (IPProperties, error) {
 		field *string
 		name  string
 	}{{&ipProps.Address, shillconst.IPConfigPropertyAddress},
-		{&ipProps.Broadcast, shillconst.IPConfigPropertyBroadcast},
-		{&ipProps.DomainName, shillconst.IPConfigPropertyDomainName},
 		{&ipProps.Gateway, shillconst.IPConfigPropertyGateway},
 		{&ipProps.Method, shillconst.IPConfigPropertyMethod},
-		{&ipProps.PeerAddress, shillconst.IPConfigPropertyPeerAddress},
 		{&ipProps.WebProxyAutoDiscoveryURL, shillconst.IPConfigPropertyWebProxyAutoDiscoveryURL},
 	} {
 		*fn.field, err = dbusProps.GetString(fn.name)
@@ -84,11 +77,6 @@ func (ph *IPConfig) GetIPProperties(ctx context.Context) (IPProperties, error) {
 		if err != nil {
 			return ipProps, errors.Wrapf(err, "failed to get property %s", fn.name)
 		}
-	}
-
-	ipProps.ISNSOptionData, err = dbusProps.GetUint8s(shillconst.IPConfigPropertyiSNSOptionData)
-	if err != nil {
-		return ipProps, errors.Wrapf(err, "failed to get property %s", shillconst.IPConfigPropertyiSNSOptionData)
 	}
 
 	ipProps.NameServers, err = dbusProps.GetStrings(shillconst.IPConfigPropertyNameServers)

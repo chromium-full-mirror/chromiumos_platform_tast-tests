@@ -91,19 +91,15 @@ const (
 
 // IPConfig property names.
 const (
-	IPConfigPropertyAddress                   = "Address"
-	IPConfigPropertyNameServers               = "NameServers"
-	IPConfigPropertyBroadcast                 = "Broadcast"
-	IPConfigPropertyDomainName                = "DomainName"
-	IPConfigPropertyGateway                   = "Gateway"
-	IPConfigPropertyMethod                    = "Method"
-	IPConfigPropertyMtu                       = "Mtu"
-	IPConfigPropertyPeerAddress               = "PeerAddress"
-	IPConfigPropertyPrefixlen                 = "Prefixlen"
-	IPConfigPropertySearchDomains             = "SearchDomains"
-	IPConfigPropertyVendorEncapsulatedOptions = "VendorEncapsulatedOptions"
-	IPConfigPropertyWebProxyAutoDiscoveryURL  = "WebProxyAutoDiscoveryUrl"
-	IPConfigPropertyiSNSOptionData            = "iSNSOptionData"
+	IPConfigPropertyAddress                  = "Address"
+	IPConfigPropertyNameServers              = "NameServers"
+	IPConfigPropertyDomainName               = "DomainName"
+	IPConfigPropertyGateway                  = "Gateway"
+	IPConfigPropertyMethod                   = "Method"
+	IPConfigPropertyMtu                      = "Mtu"
+	IPConfigPropertyPrefixlen                = "Prefixlen"
+	IPConfigPropertySearchDomains            = "SearchDomains"
+	IPConfigPropertyWebProxyAutoDiscoveryURL = "WebProxyAutoDiscoveryUrl"
 )
 
 // Manager property names.
