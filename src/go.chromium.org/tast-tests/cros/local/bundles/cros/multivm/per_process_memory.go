@@ -20,6 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/memory"
 	memoryarc "go.chromium.org/tast-tests/cros/local/memory/arc"
+	"go.chromium.org/tast-tests/cros/local/memory/kernelmeter"
 	"go.chromium.org/tast-tests/cros/local/multivm"
 	"go.chromium.org/tast-tests/cros/local/session"
 	"go.chromium.org/tast/core/errors"
@@ -261,6 +262,17 @@ func extraHostMemoryMetrics(ctx context.Context, outdir, suffix string) (map[str
 		metrics["Host_BalloonSize"] = balloonSize * 1024
 	} else {
 		testing.ContextLog(ctx, "Failed to extract balloon size: ", err)
+	}
+
+	// Extract the host kernel memory usage. This is only an estimation, some of
+	// entries may overlap, such as Slab and Unevictable.
+	memInfo, err := kernelmeter.MemInfo()
+	if err == nil {
+		// Extracted memInfo size is in bytes, use KB to align with other metrics
+		metrics["Host_KernelMemoryUsage"] = uint64(memInfo.Slab+memInfo.PageTables+
+			memInfo.KernelStack+memInfo.Unevictable+memInfo.VmallocUsed) / 1024
+	} else {
+		testing.ContextLog(ctx, "Failed to extract kernel memory usage: ", err)
 	}
 
 	return metrics, nil

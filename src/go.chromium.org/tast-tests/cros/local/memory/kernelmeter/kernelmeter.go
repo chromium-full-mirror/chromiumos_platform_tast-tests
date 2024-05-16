@@ -448,7 +448,8 @@ func ReadMemInfo() (map[string]MemSize, error) {
 
 // MemInfoFields holds selected fields of /proc/meminfo.
 type MemInfoFields struct {
-	Total, Free, Anon, File, SwapTotal, SwapUsed MemSize
+	Total, Free, Anon, File, SwapTotal, SwapUsed, Slab,
+	PageTables, Unevictable, KernelStack, VmallocUsed MemSize
 }
 
 // MemInfo returns selected /proc/meminfo fields.
@@ -458,12 +459,17 @@ func MemInfo() (data *MemInfoFields, err error) {
 		return nil, err
 	}
 	return &MemInfoFields{
-		Total:     info["MemTotal"],
-		Free:      info["MemFree"],
-		Anon:      info["Active(anon)"] + info["Inactive(anon)"],
-		File:      info["Active(file)"] + info["Inactive(file)"],
-		SwapTotal: info["SwapTotal"],
-		SwapUsed:  info["SwapTotal"] - info["SwapFree"],
+		Total:       info["MemTotal"],
+		Free:        info["MemFree"],
+		Anon:        info["Active(anon)"] + info["Inactive(anon)"],
+		File:        info["Active(file)"] + info["Inactive(file)"],
+		SwapTotal:   info["SwapTotal"],
+		SwapUsed:    info["SwapTotal"] - info["SwapFree"],
+		Slab:        info["Slab"],
+		PageTables:  info["PageTables"],
+		Unevictable: info["Unevictable"],
+		KernelStack: info["KernelStack"],
+		VmallocUsed: info["VmallocUsed"],
 	}, nil
 }
 
