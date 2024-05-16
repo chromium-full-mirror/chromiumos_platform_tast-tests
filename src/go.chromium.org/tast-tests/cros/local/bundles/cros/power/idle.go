@@ -59,6 +59,7 @@ var tracingIdle = power.IdleParams{
 	DisplayPower:   true,
 	BluetoothPower: true,
 	CollectTrace:   true,
+	PSRState:       display.PSRDefault,
 	IdleTimeParams: idleTracingTimeParams}
 
 // Disable PSR to better understand the effect of display refresh rate on power.
