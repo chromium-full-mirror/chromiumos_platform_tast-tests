@@ -812,7 +812,7 @@ func init() {
 		Desc: "Fixture with image search flags turned on",
 		Contacts: []string{
 			"launcher-search-notify@google.com",
-			"dgrebenyuk@google.com",
+			"chenjih@google.com",
 			"xiuwen@google.com",
 		},
 		// ChromeOS > Software > Consumer > Machine Intelligence > Search

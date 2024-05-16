@@ -30,7 +30,7 @@ func init() {
 		Desc:         "Checks that use local image search with different feature flags and search for a local image",
 		Contacts: []string{
 			"launcher-search-notify@google.com",
-			"dgrebenyuk@google.com",
+			"chenjih@google.com",
 			"ypitsishin@google.com",
 		},
 		BugComponent: "b:1281467",
@@ -66,7 +66,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"ondevice_image_content_annotation"},
 				ExtraAttr: []string{"group:cbx",
 					"cbx_feature_enabled",
-					"cbx_unstable"},
+					"cbx_stable"},
 				ExtraTestBedDeps: []string{tbdep.Cbx(true)},
 			},
 			{
