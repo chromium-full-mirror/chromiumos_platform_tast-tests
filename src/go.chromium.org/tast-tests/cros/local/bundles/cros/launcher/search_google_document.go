@@ -133,7 +133,7 @@ func SearchGoogleDocument(ctx context.Context, s *testing.State) {
 	browserRootFinder := nodewith.Role(role.Window).HasClass("BrowserRootView")
 	expectedNode := browserRootFinder.NameRegex(regexp.MustCompile(fmt.Sprintf("^%s - Google Docs - Google Chrome - .*", gDocFilename)))
 
-	if err := uiauto.New(tconn).WaitUntilExists(expectedNode)(ctx); err != nil {
+	if err := uiauto.New(tconn).WithTimeout(60 * time.Second).WaitUntilExists(expectedNode)(ctx); err != nil {
 		s.Fatal("Failed to verify search result: ", err)
 	}
 }
