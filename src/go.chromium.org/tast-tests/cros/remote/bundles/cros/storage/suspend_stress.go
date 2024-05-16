@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/servo"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/storage/util"
 	"go.chromium.org/tast/core/testing"
@@ -43,6 +44,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Data:         util.Configs,
 		SoftwareDeps: []string{"crossystem"},
+		Vars:         []string{"servo"},
 		Params: []testing.Param{
 			{
 				Val:               timeParams{fioTimeSec: fullFioTimeSec, suspendIterations: fullSuspendIterations, timeoutMin: fullPollTimeoutMin},
@@ -85,6 +87,13 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get internal disk: ", err)
 	}
 
+	pxy, err := servo.NewProxy(ctx, s.RequiredVar("servo"), s.DUT().KeyFile(), s.DUT().KeyDir())
+	if err != nil {
+		s.Fatal("Failed to connect to servo: ", err)
+	}
+	svo := pxy.Servo()
+	defer pxy.Close(ctx)
+
 	err = util.WriteAVLInfo(ctx, disk, s.OutDir())
 	if err != nil {
 		s.Fatal("Failed to write AVL info: ", err)
@@ -115,6 +124,18 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 	// to avoid flakiness from connection loss during suspend/resume.
 	if err := testing.Sleep(ctx, time.Duration(params.timeoutMin)*time.Minute); err != nil {
 		s.Fatal("Sleep failed: ", err)
+	}
+
+	ok, err := svo.HasControl(ctx, string(servo.DutEthPwrEn))
+	if err != nil {
+		s.Fatalf("Failed to check control %v: %v", servo.DutEthPwrEn, err)
+	}
+	if !ok {
+		s.Fatal("Servo does not have control ", servo.DutEthPwrEn)
+	}
+	testing.ContextLog(ctx, "Resetting the ethernet adapter")
+	if err := svo.ToggleOffOn(ctx, servo.DutEthPwrEn); err != nil {
+		s.Fatal("Failed to toggle servo control ", servo.DutEthPwrEn)
 	}
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
