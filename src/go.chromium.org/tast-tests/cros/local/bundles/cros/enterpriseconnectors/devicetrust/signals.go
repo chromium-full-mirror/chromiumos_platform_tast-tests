@@ -17,42 +17,11 @@ type serverSignals struct {
 	CustomerID        *string
 	DevicePermanentID *string
 	DeviceSignal      *string
-	DeviceSignals     *clientSignalsProto
+	DeviceSignals     *clientSignals
 	KeyTrustLevel     *string
 }
 
-// Fields are sorted in alphabetical order.
-// Pointers are used to detect missing or null signals.
 type clientSignals struct {
-	AllowScreenLock                  *bool
-	BrowserVersion                   *string
-	BuiltInDNSClientEnabled          *bool
-	ChromeRemoteDesktopAppBlocked    *bool
-	DeviceAffiliationIDs             *[]string
-	DeviceEnrollmentDomain           *string
-	DeviceHostName                   *string
-	DeviceManufacturer               *string
-	DeviceModel                      *string
-	DiskEncrypted                    *int
-	DisplayName                      *string
-	IMEI                             *[]string
-	MACAddresses                     *[]string
-	MEID                             *[]string
-	OS                               *string
-	OSFirewall                       *int
-	OSVersion                        *string
-	PasswordProtectionWarningTrigger *int
-	ProfileAffiliationIDs            *[]string
-	RealtimeURLCheckMode             *int
-	SafeBrowsingProtectionLevel      *int
-	ScreenLockSecured                *int
-	SerialNumber                     *string
-	SiteIsolationEnabled             *bool
-	SystemDNSServers                 *[]string
-	Trigger                          *int
-}
-
-type clientSignalsProto struct {
 	AllowScreenLock                  *bool
 	BrowserVersion                   *string
 	BuiltInDNSClientEnabled          *bool
@@ -67,7 +36,7 @@ type clientSignalsProto struct {
 	IMEI                             *[]string
 	MACAddresses                     *[]string
 	MEID                             *[]string
-	OS                               *string
+	OperatingSystem                  *string
 	OSFirewall                       *string
 	OSVersion                        *string
 	PasswordProtectionWarningTrigger *string
@@ -87,20 +56,27 @@ const (
 	expectedOS                     = "ChromeOS"
 	expectedDeviceEnrollmentDomain = "managedchrome.com"
 	expectedAffiliationIDLength    = 1
-	expectedDiskEncryption         = 2
-	expectedScreenLockSecured      = 2
+	expectedDiskEncryption         = "DISK_ENCRYPTION_ENCRYPTED"
+	expectedScreenLockSecured      = "SCREEN_LOCK_SECURED_ENABLED"
 )
 
-// List of JSON signals which are converted to an enum by Verified Access and thus should not be compared with the corresponding proto signal.
-var enumSignals = map[string]bool{"DiskEncrypted": true, "OS": true, "OSFirewall": true, "PasswordProtectionWarningTrigger": true, "RealtimeURLCheckMode": true, "SafeBrowsingProtectionLevel": true, "ScreenLockSecured": true, "Trigger": true}
+// Array signals which might be empty and thus omitted from the proto.
+var optionalSignals = map[string]bool{"IMEI": true, "MEID": true, "ProfileAffiliationIDs": true}
 
 // checkIfSignalsAreFilled checks if all signals were transmitted by checking for nil values at the struct fields.
-// It will fail, if a signal was missing or the value was "null". Empty values of the datatype are allowed (empty string or array).
+// It will fail, if a signal was missing or the value was "null".
 func checkIfSignalsAreFilled(signals any) error {
 	signalValues := reflect.ValueOf(signals)
 
 	for i := 0; i < signalValues.NumField(); i++ {
 		field := signalValues.Field(i)
+		fieldName := signalValues.Type().Field(i).Name
+
+		// Skip optional signals.
+		if optionalSignals[fieldName] {
+			continue
+		}
+
 		if field.IsNil() {
 			return errors.Errorf("signal field not found: %s", signalValues.Type().Field(i).Name)
 		}
@@ -123,73 +99,19 @@ func parseServerSignals(signalsString []byte) (*serverSignals, error) {
 	return &signals, nil
 }
 
-func parseClientSignals(signalsString []byte) (*clientSignals, error) {
-	if !json.Valid(signalsString) {
-		return nil, errors.New("signals json invalid")
-	}
-
-	var signals clientSignals
-	// json.Unmarshal verifies that signals have the right data type, if they do exist.
-	if err := json.Unmarshal(signalsString, &signals); err != nil {
-		return nil, errors.Wrap(err, "failed to marshal the client signals")
-	}
-
-	return &signals, nil
-}
-
-// verifyIsInRange checks if values is inclusively in range of minValue and maxValue.
-func verifyIsInRange(value, minValue, maxValue int) error {
-	if value < minValue || value > maxValue {
-		return errors.Errorf("value %v is not in range (%v, %v)", value, minValue, maxValue)
-	}
-
-	return nil
-}
-
-// verifyIsSettingEnum verifies the value is in the valid enum values range.
-// Enum defined at: chrome/browser/enterprise/signals/signals_common.h
-func verifyIsSettingEnum(value int) error {
-	return verifyIsInRange(value, 0, 2)
-}
-
 // verifyNonDeviceIdentifyingSignalValues verifies that non device identifying signals are in their value ranges or have pre-known values.
 func verifyNonDeviceIdentifyingSignalValues(parsedServerSignals serverSignals, parsedClientSignals clientSignals, isInSession bool) error {
-	// Checking value ranges for settings.
-	if err := verifyIsSettingEnum(*parsedClientSignals.DiskEncrypted); err != nil {
-		return errors.Wrap(err, "failed to verify clientSignals.diskEncrypted")
-	}
-
-	if err := verifyIsSettingEnum(*parsedClientSignals.OSFirewall); err != nil {
-		return errors.Wrap(err, "failed to verify clientSignals.osFirewall")
-	}
-
-	if err := verifyIsSettingEnum(*parsedClientSignals.ScreenLockSecured); err != nil {
-		return errors.Wrap(err, "failed to verify clientSignals.screenLockSecured")
-	}
-
-	if err := verifyIsInRange(*parsedClientSignals.PasswordProtectionWarningTrigger, 0, 3); err != nil {
-		return errors.Wrap(err, "failed to verify clientSignals.passwordPotectionWarningTrigger")
-	}
-
-	if err := verifyIsInRange(*parsedClientSignals.RealtimeURLCheckMode, 0, 1); err != nil {
-		return errors.Wrap(err, "failed to verify clientSignals.realtimeUrlCheckMode")
-	}
-
-	if err := verifyIsInRange(*parsedClientSignals.SafeBrowsingProtectionLevel, 0, 2); err != nil {
-		return errors.Wrap(err, "failed to verify clientSignals.safeBrowsingProtectionLevel")
-	}
-
 	// Checking pre-known values.
 	if *parsedServerSignals.KeyTrustLevel != expectedKeyTrustLevelDev && *parsedServerSignals.KeyTrustLevel != expectedKeyTrustLevelVerified {
 		return errors.Errorf("unexpected value for serverSignals.keyTrustLevel: got %q, want %q or %q", *parsedServerSignals.KeyTrustLevel, expectedKeyTrustLevelDev, expectedKeyTrustLevelVerified)
 	}
 
-	if *parsedClientSignals.OS != expectedOS {
-		return errors.Errorf("unexpected value for clientSignals.os: got %q, want %q", *parsedClientSignals.OS, expectedOS)
+	if *parsedClientSignals.OperatingSystem != expectedOS {
+		return errors.Errorf("unexpected value for clientSignals.os: got %q, want %q", *parsedClientSignals.OperatingSystem, expectedOS)
 	}
 
-	if *parsedClientSignals.DiskEncrypted != expectedDiskEncryption {
-		return errors.Errorf("unexpected value for clientSignals.diskEncrypted: got %q, want %q", *parsedClientSignals.DiskEncrypted, expectedDiskEncryption)
+	if *parsedClientSignals.DiskEncryption != expectedDiskEncryption {
+		return errors.Errorf("unexpected value for clientSignals.diskEncrypted: got %q, want %q", *parsedClientSignals.DiskEncryption, expectedDiskEncryption)
 	}
 
 	if *parsedClientSignals.ScreenLockSecured != expectedScreenLockSecured {
@@ -197,13 +119,13 @@ func verifyNonDeviceIdentifyingSignalValues(parsedServerSignals serverSignals, p
 	}
 
 	// Checking the expected os firewall which depends on the key trust level.
-	var expectedOSFirewall int
+	var expectedOSFirewall string
 	if *parsedServerSignals.KeyTrustLevel == expectedKeyTrustLevelDev {
-		expectedOSFirewall = 1
+		expectedOSFirewall = "OS_FIREWALL_DISABLED"
 	} else if *parsedServerSignals.KeyTrustLevel == expectedKeyTrustLevelVerified {
-		expectedOSFirewall = 2
+		expectedOSFirewall = "OS_FIREWALL_ENABLED"
 	} else {
-		expectedOSFirewall = -1
+		expectedOSFirewall = "OS_FIREWALL_UNSPECIFIED"
 	}
 
 	if *parsedClientSignals.OSFirewall != expectedOSFirewall {
@@ -211,11 +133,11 @@ func verifyNonDeviceIdentifyingSignalValues(parsedServerSignals serverSignals, p
 	}
 
 	// Checking the signal for the trigger which generated the device signals.
-	var expectedTrigger int
+	var expectedTrigger string
 	if isInSession {
-		expectedTrigger = 1
+		expectedTrigger = "TRIGGER_BROWSER_NAVIGATION"
 	} else {
-		expectedTrigger = 2
+		expectedTrigger = "TRIGGER_LOGIN_SCREEN"
 	}
 
 	if *parsedClientSignals.Trigger != expectedTrigger {
@@ -296,8 +218,8 @@ func verifySignalValuesUnmanagedDevice(parsedServerSignals serverSignals, parsed
 	}
 
 	// Checking if device identifying client signals don't exist.
-	if parsedClientSignals.DeviceHostName != nil {
-		return errors.New("key parsedClientSignals.deviceHostName should not exist")
+	if parsedClientSignals.HostName != nil {
+		return errors.New("key parsedClientSignals.hostName should not exist")
 	}
 
 	if parsedClientSignals.DisplayName != nil {
@@ -327,54 +249,6 @@ func verifySignalValuesUnmanagedDevice(parsedServerSignals serverSignals, parsed
 	return nil
 }
 
-// verifyIsSame checks whether both signal fields either contain the same value or are both empty.
-func verifyIsSame(jsonField, protoField reflect.Value) error {
-	// Both fields are empty.
-	if jsonField.IsNil() && protoField.IsNil() {
-		return nil
-	}
-
-	// Only one of both fields is empty.
-	if jsonField.IsNil() || protoField.IsNil() {
-		// Proto field is nil in case of an empty string array.
-		if jsonField.Type().String() == "*[]string" {
-			return nil
-		}
-
-		return errors.Errorf("both fields should be either empty or non empty, values were %v and %v", jsonField.Interface(), protoField.Interface())
-	}
-
-	// Fields have different values.
-	if !reflect.DeepEqual(jsonField.Interface(), protoField.Interface()) {
-		return errors.Errorf("values needs to be the same for JSON and proto signal, values were %v and %v", jsonField.Interface(), protoField.Interface())
-	}
-
-	return nil
-}
-
-// compareClientSignalsJSONAndProto compares the clients signals from the JSON and proto payload with each other which were not converted to enum by Verified Access.
-func compareClientSignalsJSONAndProto(jsonSignals clientSignals, protoSignals clientSignalsProto) error {
-	jsonValues := reflect.ValueOf(jsonSignals)
-	protoValues := reflect.ValueOf(protoSignals)
-
-	for i := 0; i < jsonValues.NumField(); i++ {
-		jsonName := jsonValues.Type().Field(i).Name
-		jsonField := jsonValues.Field(i)
-		protoField := protoValues.Field(i)
-
-		// Skip signals which were converted to an enum.
-		if enumSignals[jsonName] == true {
-			continue
-		}
-
-		if err := verifyIsSame(jsonField, protoField); err != nil {
-			return errors.Wrapf(err, "JSON and proto signals for %s needs to be the same", jsonName)
-		}
-	}
-
-	return nil
-}
-
 // Verify tries to parse the signal strings to JSON and checks the signals for completeness and validity.
 func Verify(serverSignalsString, clientSignalsString []byte, isInSession, isDeviceManaged bool) error {
 	parsedServerSignals, err := parseServerSignals(serverSignalsString)
@@ -382,21 +256,12 @@ func Verify(serverSignalsString, clientSignalsString []byte, isInSession, isDevi
 		return errors.Wrap(err, "failed to parse server signals")
 	}
 
-	parsedClientSignals, err := parseClientSignals(clientSignalsString)
-	if err != nil {
-		return errors.Wrap(err, "failed to parse client signals")
-	}
-
-	if err = compareClientSignalsJSONAndProto(*parsedClientSignals, *parsedServerSignals.DeviceSignals); err != nil {
-		return errors.Wrap(err, "mismatch for client signals in JSON and proto")
-	}
-
 	if isDeviceManaged {
-		if err = verifySignalValuesManagedDevice(*parsedServerSignals, *parsedClientSignals, isInSession); err != nil {
+		if err = verifySignalValuesManagedDevice(*parsedServerSignals, *parsedServerSignals.DeviceSignals, isInSession); err != nil {
 			return errors.Wrap(err, "failed to verify signal values for a managed device")
 		}
 	} else {
-		if err = verifySignalValuesUnmanagedDevice(*parsedServerSignals, *parsedClientSignals, isInSession); err != nil {
+		if err = verifySignalValuesUnmanagedDevice(*parsedServerSignals, *parsedServerSignals.DeviceSignals, isInSession); err != nil {
 			return errors.Wrap(err, "failed to verify signal values for an unmanaged device")
 		}
 	}
