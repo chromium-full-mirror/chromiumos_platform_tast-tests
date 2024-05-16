@@ -82,9 +82,18 @@ func DiagnosticsApp(ctx context.Context, s *testing.State) {
 		s.Fatal("Could not launch Diagnostics app: ", err)
 	}
 
+	// Open navigation, if necessary.
+	if err := diagnosticsapp.ClickNavigationMenuButton(ctx, tconn); err != nil {
+		s.Fatal("Could not click the navigation menu button: ", err)
+	}
+
+	// Cache finder for button which saves logs.
+	dxLogButton := diagnosticsapp.DxLogButton.Ancestor(dxRootnode)
+
 	ui := uiauto.New(tconn)
 	if err := uiauto.Combine("Save logs and verify file appears in holding space",
-		ui.LeftClick(diagnosticsapp.DxLogButton.Ancestor(dxRootnode)),
+		ui.MakeVisible(dxLogButton),
+		ui.LeftClick(dxLogButton),
 		ui.LeftClick(nodewith.Name("Save").Role(role.Button)),
 		ui.LeftClick(holdingspace.FindTray()),
 		ui.WaitUntilExists(holdingspace.FindDownloadChip().Name(filename)),
