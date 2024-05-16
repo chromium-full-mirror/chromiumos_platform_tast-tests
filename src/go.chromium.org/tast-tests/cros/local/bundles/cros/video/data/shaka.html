@@ -2,7 +2,7 @@
 <html>
   <script src="third_party/shaka-player/shaka-player.compiled.debug.js"></script>
   <script>
-    function play_shaka(mpdPath, trackChangeIntervalMs = 3000) {
+    function startPlayingShaka(mpdPath, unmutePlayer, trackChangeIntervalMs = 3000) {
       return new Promise((resolve, reject) => {
         let video = document.getElementById('video');
         let player = new shaka.Player(video);

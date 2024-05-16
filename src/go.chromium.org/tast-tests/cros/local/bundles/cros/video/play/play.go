@@ -99,11 +99,11 @@ func loadPage(ctx context.Context, cs ash.ConnSource, url string) (*chrome.Conn,
 	return conn, err
 }
 
-// playVideo invokes loadVideo(), plays a normal video in video.html, and checks if it has progress.
-// videoFile is the file name which is played there.
-// url is the URL of the video playback testing webpage.
-func playVideo(ctx context.Context, cs ash.ConnSource, videoFile, url string, unmutePlayer bool) (bool, error) {
-	ctx, st := timing.Start(ctx, "play_video")
+// playClearVideo loads and plays a non-protected (i.e. clear) video, waits
+// until it's finished and returns whether such playback has used a "platform"
+// decoder.
+func playClearVideo(ctx context.Context, cs ash.ConnSource, functionName, resourceName, url string, unmutePlayer ...bool) (bool, error) {
+	ctx, st := timing.Start(ctx, "playClearVideo")
 	defer st.End()
 
 	conn, err := loadPage(ctx, cs, url)
@@ -118,38 +118,11 @@ func playVideo(ctx context.Context, cs ash.ConnSource, videoFile, url string, un
 		return false, errors.Wrap(err, "failed to retrieve a media DevTools observer")
 	}
 
-	if err := conn.Call(ctx, nil, "startPlaying", videoFile, unmutePlayer); err != nil {
+	if err := conn.Call(ctx, nil, functionName, resourceName, unmutePlayer); err != nil {
 		return false, err
 	}
 
 	if err := conn.WaitForExpr(ctx, "document.getElementsByTagName('video')[0].ended"); err != nil {
-		return false, err
-	}
-
-	isPlatform, _, err := devtools.GetVideoDecoder(ctx, observer, url)
-	return isPlatform, err
-}
-
-// playMSEVideo plays an MSE video stream via Shaka player, and checks its play progress.
-// mpdFile is the name of MPD file for the video stream.
-// url is the URL of the shaka player webpage.
-func playMSEVideo(ctx context.Context, cs ash.ConnSource, mpdFile, url string) (bool, error) {
-	ctx, st := timing.Start(ctx, "play_mse_video")
-	defer st.End()
-
-	conn, err := loadPage(ctx, cs, url)
-	if err != nil {
-		return false, err
-	}
-	defer conn.Close()
-	defer conn.CloseTarget(ctx)
-
-	observer, err := conn.GetMediaPropertiesChangedObserver(ctx)
-	if err != nil {
-		return false, errors.Wrap(err, "failed to retrieve a media DevTools observer")
-	}
-
-	if err := conn.Call(ctx, nil, "play_shaka", mpdFile); err != nil {
 		return false, err
 	}
 
@@ -463,10 +436,10 @@ func TestPlay(ctx context.Context, s *testing.State, cs ash.ConnSource, cr *chro
 	switch videotype {
 	case NormalVideo:
 		url = server.URL + "/video.html"
-		usesPlatformVideoDecoder, playErr = playVideo(ctx, cs, filename, url, unmutePlayer)
+		usesPlatformVideoDecoder, playErr = playClearVideo(ctx, cs, "startPlaying", filename, url, unmutePlayer)
 	case MSEVideo:
 		url = server.URL + "/shaka.html"
-		usesPlatformVideoDecoder, playErr = playMSEVideo(ctx, cs, filename, url)
+		usesPlatformVideoDecoder, playErr = playClearVideo(ctx, cs, "startPlayingShaka", filename, url)
 	case DRMVideo:
 		url = server.URL + "/shaka_drm.html"
 		isHwDrmPipeline, playErr = playDRMVideo(ctx, s, cs, cr, filename, url)
