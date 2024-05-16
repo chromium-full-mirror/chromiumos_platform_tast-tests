@@ -27,7 +27,7 @@ import (
 
 // removalDialogFinder is a node finder for launcher dialog shown to confirm suggested search
 // result from launcehr search.
-var removalDialogFinder = nodewith.Role(role.AlertDialog).NameContaining("Remove this suggestion")
+var removalDialogFinder = nodewith.Role(role.Dialog).NameContaining("Remove this suggestion").First()
 
 func init() {
 	testing.AddTest(&testing.Test{
