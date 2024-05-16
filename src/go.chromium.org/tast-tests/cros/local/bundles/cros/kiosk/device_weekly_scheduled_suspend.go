@@ -63,7 +63,7 @@ func init() {
 		BugComponent: "b:892153", // ChromeOS > Software > Commercial (Enterprise) > Kiosk
 		// This test can be limited to the golden tier, since it's only meant to cover the
 		// integration of the policy with powerd, and powerd is well covered by other tests.
-		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
+		Attr:         []string{"group:golden_tier"},
 		SoftwareDeps: []string{"reboot", "chrome"},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
 		Fixture:      fixture.FakeDMSEnrolled,
