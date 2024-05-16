@@ -25,8 +25,10 @@ const (
 )
 
 type powerG3Params struct {
-	PowerOffMethod powerOffMethod
-	RemovePower    bool
+	PowerOffMethod    powerOffMethod
+	PowerStateTimeout time.Duration
+	RemovePower       bool
+	SetRecMode        bool
 }
 
 func init() {
@@ -88,6 +90,18 @@ func init() {
 				},
 				Fixture: fixture.RecModeNoServices,
 			},
+			{
+				Name: "power_button_from_ro",
+				// TODO: When stable, change firmware_unstable to a different attr.
+				ExtraAttr: []string{"firmware_unstable"},
+				Val: powerG3Params{
+					PowerOffMethod: longPowerButtonPress,
+					SetRecMode:     true,
+					// Verify if the power state transitions to G3 after PowerStateTimeout.
+					PowerStateTimeout: 11 * time.Second,
+				},
+				Fixture: fixture.NormalMode,
+			},
 		},
 	})
 }
@@ -105,6 +119,21 @@ func ECPowerG3(ctx context.Context, s *testing.State) {
 
 	if tc.RemovePower {
 		h.SetDUTPower(ctx, false)
+	}
+
+	if tc.SetRecMode {
+		ms, err := firmware.NewModeSwitcher(ctx, h)
+		if err != nil {
+			s.Fatal("Failed to create mode switcher: ", err)
+		}
+		s.Log("Booting the DUT to the recovery screen")
+		if err := ms.EnableRecMode(ctx, servo.PowerStateRec, servo.USBMuxOff); err != nil {
+			s.Fatal("Failed to boot to recovery screen: ", err)
+		}
+		s.Log("Waiting for DUT to reach the firmware screen")
+		if err := h.WaitFirmwareScreen(ctx, h.Config.FirmwareScreenRecMode); err != nil {
+			s.Fatal("Failed to get to firmware screen: ", err)
+		}
 	}
 
 	switch tc.PowerOffMethod {
@@ -128,16 +157,20 @@ func ECPowerG3(ctx context.Context, s *testing.State) {
 
 	h.DisconnectDUT(ctx)
 	s.Log("Check for G3 powerstate")
-	if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "G3"); err != nil {
+	powerStateTimeout := firmware.PowerStateTimeout
+	if tc.PowerStateTimeout > 0 {
+		powerStateTimeout = tc.PowerStateTimeout
+	}
+	if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, powerStateTimeout, "G3"); err != nil {
 		s.Fatal("Failed to get G3 powerstate: ", err)
 	}
 
 	if tc.PowerOffMethod == powerStateOff {
-		// Verify that power state off doesn't power back on by mistake
 		s.Log("Power state off")
 		if err := h.Servo.SetPowerState(ctx, servo.PowerStateOff); err != nil {
 			s.Fatal("Failed to power off DUT with power state off: ", err)
 		}
+		//GoBigSleepLint: Verify that power state off doesn't power back on by mistake.
 		testing.Sleep(ctx, 10*time.Second)
 		if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "G3"); err != nil {
 			s.Fatal("Failed to get G3 powerstate: ", err)
