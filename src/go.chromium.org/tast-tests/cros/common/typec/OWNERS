@@ -7,6 +7,10 @@ jthies@chromium.org
 pmalani@chromium.org
 wonchung@chromium.org
 
+# ChromeOS SIE team for QPOP Automation
+rickytlchang@chromium.org
+kylelinck@google.com
+
 # ChromeOS Connectivity (EngProd)
 include chromiumos/owners:v1:/engprod/OWNERS.connectivity
 
