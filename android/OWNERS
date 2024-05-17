@@ -1,7 +1,3 @@
-# Copyright 2023 The ChromiumOS Authors
-# Use of this source code is governed by a BSD-style license that can be
-# found in the LICENSE file.
-#
 # These owners are added here to review Android Java code. For build toolchain,
 # you should still ask the owners of the parent directory for review.
 
