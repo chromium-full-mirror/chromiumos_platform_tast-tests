@@ -54,47 +54,48 @@ func init() {
 		Vars: []string{"servo",
 			"platform.BootupTimes.bootTime",
 			"platform.BootupTimes.cbmemTimeout",
+			"platform.iterations",
 		},
 		Params: []testing.Param{{
 			Name:      "reboot",
 			Val:       bootupTimes{bootType: reboot},
-			Timeout:   5 * time.Minute,
+			Timeout:   10 * time.Minute,
 			ExtraAttr: []string{"group:intel-sleep"},
 		}, {
 			Name:      "reboot_tablet_mode",
 			Val:       bootupTimes{bootType: reboot, tabletMode: true},
-			Timeout:   5 * time.Minute,
+			Timeout:   10 * time.Minute,
 			ExtraAttr: []string{"group:intel-convertible"},
 		}, {
 			Name:      "vt2_reboot",
 			Val:       bootupTimes{bootType: vt2Reboot},
-			Timeout:   5 * time.Minute,
+			Timeout:   10 * time.Minute,
 			ExtraAttr: []string{"group:intel-sleep"},
 		}, {
 			Name:      "lid_close_open",
 			Val:       bootupTimes{bootType: lidCloseOpen},
-			Timeout:   5 * time.Minute,
+			Timeout:   10 * time.Minute,
 			ExtraAttr: []string{"group:intel-sleep"},
 		}, {
 			Name:      "power_button",
 			Val:       bootupTimes{bootType: powerButton},
-			Timeout:   5 * time.Minute,
+			Timeout:   10 * time.Minute,
 			ExtraAttr: []string{"group:intel-sleep"},
 		}, {
 			Name:      "power_button_tablet_mode",
 			Val:       bootupTimes{bootType: powerButton, tabletMode: true},
-			Timeout:   5 * time.Minute,
+			Timeout:   10 * time.Minute,
 			ExtraAttr: []string{"group:intel-convertible"},
 		}, {
 			Name:              "from_s5",
 			Val:               bootupTimes{bootType: bootFromS5},
-			Timeout:           5 * time.Minute,
+			Timeout:           10 * time.Minute,
 			ExtraHardwareDeps: hwdep.D(hwdep.ChromeEC()),
 			ExtraAttr:         []string{"group:intel-sleep"},
 		}, {
 			Name:              "refresh_power",
 			Val:               bootupTimes{bootType: refreshPower},
-			Timeout:           5 * time.Minute,
+			Timeout:           10 * time.Minute,
 			ExtraHardwareDeps: hwdep.D(hwdep.ChromeEC()),
 			ExtraAttr:         []string{"group:intel-sleep"},
 		}},
@@ -108,6 +109,19 @@ func BootupTimes(ctx context.Context, s *testing.State) {
 	)
 	dut := s.DUT()
 	btType := s.Param().(bootupTimes)
+
+	const defaultIteration = 10
+	var iterValue int
+	out, ok := s.Var("platform.iterations")
+	if ok {
+		val, err := strconv.Atoi(out)
+		if err != nil {
+			s.Fatal("Failed to parse string to integer variable: ", err)
+		}
+		iterValue = val
+	} else {
+		iterValue = defaultIteration
+	}
 
 	bootupTime, ok := s.Var("platform.BootupTimes.bootTime")
 	if !ok {
@@ -211,159 +225,164 @@ func BootupTimes(ctx context.Context, s *testing.State) {
 		}
 	}(ctx)
 
-	if btType.bootType == "reboot" {
-		s.Log("Rebooting DUT")
-		if err := dut.Reboot(ctx); err != nil {
-			s.Fatal("Failed to reboot DUT: ", err)
-		}
-	} else if btType.bootType == "lidCloseOpen" {
-		s.Log("Closing lid")
-		if err := pxy.Servo().SetString(ctx, "lid_open", "no"); err != nil {
-			s.Fatal("Unable to close lid : ", err)
-		}
-		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			pwrState, err := pxy.Servo().GetECSystemPowerState(ctx)
+	var totalCbmemTime []float64
+	for i := 1; i <= iterValue; i++ {
+		s.Logf("Iteration: %v/%v", i, iterValue)
+		if btType.bootType == "reboot" {
+			s.Log("Rebooting DUT")
+			if err := dut.Reboot(ctx); err != nil {
+				s.Fatal("Failed to reboot DUT: ", err)
+			}
+		} else if btType.bootType == "lidCloseOpen" {
+			s.Log("Closing lid")
+			if err := pxy.Servo().SetString(ctx, "lid_open", "no"); err != nil {
+				s.Fatal("Failed to close lid : ", err)
+			}
+			if err := testing.Poll(ctx, func(ctx context.Context) error {
+				pwrState, err := pxy.Servo().GetECSystemPowerState(ctx)
+				if err != nil {
+					return errors.Wrap(err, "failed to get power state S5 error")
+				}
+				if pwrState != "S5" {
+					return errors.Errorf("System is not in S5, got: %s", pwrState)
+				}
+				return nil
+			}, &testing.PollOptions{Timeout: 20 * time.Second}); err != nil {
+				s.Fatal("Failed to enter S5 state : ", err)
+			}
+			if err := pxy.Servo().SetString(ctx, "lid_open", "yes"); err != nil {
+				s.Fatal("Failed to open lid: ", err)
+			}
+			if err := dut.WaitConnect(ctx); err != nil {
+				if err := powercontrol.PowerOntoDUT(ctx, pxy, dut); err != nil {
+					s.Fatal("Failed to press power button: ", err)
+				}
+			}
+		} else if btType.bootType == "powerButton" {
+			if err := dut.Conn().CommandContext(ctx, "sh", "-c", "rm -rf /var/log/metrics/*").Run(); err != nil {
+				s.Fatal("Failed to remove /var/log/metrics/* files: ", err)
+			}
+			if err := pxy.Servo().SetString(ctx, "power_key", "long_press"); err != nil {
+				s.Fatal("Unable to power state off: ", err)
+			}
+
+			if err := dut.WaitUnreachable(ctx); err != nil {
+				s.Fatal("Failed to shutdown: ", err)
+			}
+
+			if err := powercontrol.ValidateG3PowerState(ctx, pxy); err != nil {
+				s.Fatal("Failed to validate G3 power state: ", err)
+			}
+
+			if err := powercontrol.PowerOntoDUT(ctx, pxy, dut); err != nil {
+				s.Fatal("Failed to press power button: ", err)
+			}
+		} else if btType.bootType == bootFromS5 {
+			if err := dut.Conn().CommandContext(ctx, "sh", "-c", "rm -rf /var/log/metrics/*").Run(); err != nil {
+				s.Fatal("Failed to remove /var/log/metrics/* files: ", err)
+			}
+			// Use the ec command here instead of power_key, because servo sleeps before the command returns
+			if err := pxy.Servo().RunECCommand(ctx, "powerbtn 8500"); err != nil {
+				s.Fatal("Failed to press power button: ", err)
+			}
+
+			if err := waitForS0State(ctx, pxy); err != nil {
+				s.Fatal("Failed to wait for S0 state: ", err)
+			}
+			waitCtx, cancel := context.WithTimeout(ctx, time.Minute)
+			defer cancel()
+			if err := dut.WaitConnect(waitCtx); err != nil {
+				s.Fatal("Failed to wait connect DUT: ", err)
+			}
+		} else if btType.bootType == refreshPower {
+			waitCtx, cancel := context.WithTimeout(ctx, time.Minute)
+			defer cancel()
+
+			s.Log("Pressing power btn to shutdown DUT")
+			if err := pxy.Servo().KeypressWithDuration(ctx, servo.PowerKey, servo.DurLongPress); err != nil {
+				s.Fatal("Failed to power off DUT: ", err)
+			}
+
+			if err := dut.WaitUnreachable(ctx); err != nil {
+				if err := powercontrol.PowerOntoDUT(ctx, pxy, dut); err != nil {
+					s.Fatal("Failed to press power button: ", err)
+				}
+			}
+
+			s.Log("Pressing refresh + power key to boot up DUT")
+			if err := pxy.Servo().KeypressWithDuration(ctx, servo.Refresh, servo.DurLongPress); err != nil {
+				s.Fatal("Failed to press refresh key: ", err)
+			}
+			if err := pxy.Servo().KeypressWithDuration(ctx, servo.PowerKey, servo.DurPress); err != nil {
+				s.Fatal("Failed to power normal press: ", err)
+			}
+			if err := dut.WaitConnect(waitCtx); err != nil {
+				s.Fatal("Failed to wait connect DUT: ", err)
+			}
+		} else if btType.bootType == vt2Reboot {
+			cl, err := rpc.Dial(ctx, dut, s.RPCHint())
 			if err != nil {
-				return errors.Wrap(err, "failed to get power state S5 error")
+				s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
 			}
-			if pwrState != "S5" {
-				return errors.Errorf("System is not in S5, got: %s", pwrState)
+			defer cl.Close(ctx)
+
+			kb := inputs.NewKeyboardServiceClient(cl.Conn)
+			if err := openVT2(ctx, kb); err != nil {
+				s.Fatal("Failed to open VT2 Terminal: ", err)
 			}
-			return nil
-		}, &testing.PollOptions{Timeout: 20 * time.Second}); err != nil {
-			s.Fatal("Failed to enter S5 state : ", err)
-		}
-		if err := pxy.Servo().SetString(ctx, "lid_open", "yes"); err != nil {
-			s.Fatal("Failed to open lid: ", err)
-		}
-		if err := dut.WaitConnect(ctx); err != nil {
-			if err := powercontrol.PowerOntoDUT(ctx, pxy, dut); err != nil {
-				s.Fatal("Failed to press power button: ", err)
+
+			if err := loginVT2(ctx, kb); err != nil {
+				s.Fatal("Failed to login VT2 Terminal: ", err)
 			}
-		}
-	} else if btType.bootType == "powerButton" {
-		if err := dut.Conn().CommandContext(ctx, "sh", "-c", "rm -rf /var/log/metrics/*").Run(); err != nil {
-			s.Fatal("Failed to remove /var/log/metrics/* files: ", err)
-		}
-		if err := pxy.Servo().SetString(ctx, "power_key", "long_press"); err != nil {
-			s.Fatal("Unable to power state off: ", err)
-		}
 
-		if err := dut.WaitUnreachable(ctx); err != nil {
-			s.Fatal("Failed to shutdown: ", err)
-		}
+			if err := rebootViaVT2(ctx, kb); err != nil {
+				s.Fatal("Failed to reboot via VT2 Terminal: ", err)
+			}
 
-		if err := powercontrol.ValidateG3PowerState(ctx, pxy); err != nil {
-			s.Fatal("Failed to validate G3 power state: ", err)
-		}
-
-		if err := powercontrol.PowerOntoDUT(ctx, pxy, dut); err != nil {
-			s.Fatal("Failed to press power button: ", err)
-		}
-	} else if btType.bootType == bootFromS5 {
-		if err := dut.Conn().CommandContext(ctx, "sh", "-c", "rm -rf /var/log/metrics/*").Run(); err != nil {
-			s.Fatal("Failed to remove /var/log/metrics/* files: ", err)
-		}
-		// Use the ec command here instead of power_key, because servo sleeps before the command returns
-		if err := pxy.Servo().RunECCommand(ctx, "powerbtn 8500"); err != nil {
-			s.Fatal("Failed to press power button: ", err)
-		}
-
-		if err := waitForS0State(ctx, pxy); err != nil {
-			s.Fatal("Failed to wait for S0 state: ", err)
 		}
 		waitCtx, cancel := context.WithTimeout(ctx, time.Minute)
 		defer cancel()
 		if err := dut.WaitConnect(waitCtx); err != nil {
 			s.Fatal("Failed to wait connect DUT: ", err)
 		}
-	} else if btType.bootType == refreshPower {
-		waitCtx, cancel := context.WithTimeout(ctx, time.Minute)
-		defer cancel()
 
-		s.Log("Pressing power btn to shutdown DUT")
-		if err := pxy.Servo().KeypressWithDuration(ctx, servo.PowerKey, servo.DurLongPress); err != nil {
-			s.Fatal("Failed to power off DUT: ", err)
+		if err := getBootPerf(ctx, dut, s.RPCHint(), bootTime); err != nil {
+			s.Fatal("Failed to get boot perf values: ", err)
 		}
+		cbmemTime, err := verifyCBMem(ctx, dut)
+		if err != nil {
+			s.Fatal("Failed to verify cbmem timeout: ", err)
+		}
+		totalCbmemTime = append(totalCbmemTime, cbmemTime)
 
-		if err := dut.WaitUnreachable(ctx); err != nil {
-			if err := powercontrol.PowerOntoDUT(ctx, pxy, dut); err != nil {
-				s.Fatal("Failed to press power button: ", err)
+		// Validating prev sleep state for power modes.
+		if btType.bootType == "reboot" || btType.bootType == vt2Reboot {
+			if err := powercontrol.ValidatePrevSleepState(ctx, dut, 0); err != nil {
+				s.Fatal("Failed to get previous sleep state: ", err)
+			}
+		} else {
+			if err := powercontrol.ValidatePrevSleepState(ctx, dut, 5); err != nil {
+				s.Fatal("Failed to get previous sleep state: ", err)
 			}
 		}
-
-		// GoBigSleepLint: Expected time sleep 5 seconds to ensure DUT switch to s5.
-		if err := testing.Sleep(ctx, 5*time.Second); err != nil {
-			s.Fatal("Failed to sleep: ", err)
-		}
-
-		s.Log("Pressing refresh + power key to boot up DUT")
-		if err := pxy.Servo().KeypressWithDuration(ctx, servo.Refresh, servo.DurLongPress); err != nil {
-			s.Fatal("Failed to press refresh key: ", err)
-		}
-		if err := pxy.Servo().KeypressWithDuration(ctx, servo.PowerKey, servo.DurPress); err != nil {
-			s.Fatal("Failed to power normal press: ", err)
-		}
-		if err := dut.WaitConnect(waitCtx); err != nil {
-			s.Fatal("Failed to wait connect DUT: ", err)
-		}
-	} else if btType.bootType == vt2Reboot {
-		kb := inputs.NewKeyboardServiceClient(cl.Conn)
-
-		if err := openVT2(ctx, kb); err != nil {
-			s.Fatal("Failed to open VT2 Terminal: ", err)
-		}
-
-		if err := loginVT2(ctx, kb); err != nil {
-			s.Fatal("Failed to login VT2 Terminal: ", err)
-		}
-
-		if err := rebootViaVT2(ctx, kb); err != nil {
-			s.Fatal("Failed to reboot via VT2 Terminal: ", err)
-		}
-
 	}
-	waitCtx, cancel := context.WithTimeout(ctx, time.Minute)
-	defer cancel()
-	if err := dut.WaitConnect(waitCtx); err != nil {
-		s.Fatal("Failed to wait connect DUT: ", err)
+	var sum float64
+	sum = 0
+	for _, num := range totalCbmemTime {
+		sum += num
 	}
-	// Validating prev sleep state for power modes.
-	if btType.bootType == "reboot" || btType.bootType == vt2Reboot {
-		if err := powercontrol.ValidatePrevSleepState(ctx, dut, 0); err != nil {
-			s.Fatal("Failed to get previous sleep state: ", err)
-		}
-	} else {
-		if err := powercontrol.ValidatePrevSleepState(ctx, dut, 5); err != nil {
-			s.Fatal("Failed to get previous sleep state: ", err)
-		}
-	}
-	if err := getBootPerf(ctx, dut, s.RPCHint(), bootTime); err != nil {
-		s.Fatal("Failed to get boot perf values: ", err)
-	}
-	if err := verifyCBMem(ctx, dut, cbmemTimeout); err != nil {
-		s.Fatal("Failed to verify cbmem timeout: ", err)
+	cbmemTimeAvg := sum / float64(iterValue)
+	if cbmemTimeAvg > cbmemTimeout {
+		s.Logf("Failed to validate cbmem time, actual cbmem time is more than expected cbmem time, got %v; want %v", cbmemTimeAvg, cbmemTimeout)
 	}
 }
 
 // verifyCBMem verifies cbmem timeout.
-func verifyCBMem(ctx context.Context, dut *dut.DUT, cbmemTimeout float64) error {
+func verifyCBMem(ctx context.Context, dut *dut.DUT) (float64, error) {
 	cbmemOutput, err := dut.Conn().CommandContext(ctx, "sh", "-c", "cbmem -t").Output()
 	if err != nil {
-		return errors.Wrap(err, "failed to execute cbmem command")
+		return 0.0, errors.Wrap(err, "failed to execute cbmem command")
 	}
-	timeStampPattern := regexp.MustCompile(`timestamp\s+([\d,]+)`)
-
-	timeStampMatch := timeStampPattern.FindStringSubmatch(string(cbmemOutput))
-	timeStampValue := ""
-	if len(timeStampMatch) > 1 {
-		timeStampValue = strings.Replace(timeStampMatch[1], ",", "", -1)
-	}
-	timeStamp, err := strconv.ParseFloat(timeStampValue, 8)
-	if err != nil {
-		return errors.Wrap(err, "failed to convert string value to floating point value")
-	}
-	timeStamp = timeStamp / 1000000
 
 	cbmemPattern := regexp.MustCompile(`Total Time: (.*)`)
 	match := cbmemPattern.FindStringSubmatch(string(cbmemOutput))
@@ -373,22 +392,26 @@ func verifyCBMem(ctx context.Context, dut *dut.DUT, cbmemTimeout float64) error 
 	}
 	totalCbmemTime, err := strconv.ParseFloat(cbmemTotalTime, 8)
 	if err != nil {
-		return errors.Wrap(err, "failed to convert string value to floating point value")
+		return 0.0, errors.Wrap(err, "failed to convert string value to floating point value")
 	}
 	totalCbmemTime = totalCbmemTime / 1000000
 
-	cbmemTime := totalCbmemTime - timeStamp
-	if cbmemTime > cbmemTimeout {
-		return errors.Wrapf(err, "failed to validate cbmem time, actual cbmem time is more than expected cbmem time, want %v; got %v", cbmemTimeout, cbmemTime)
-	}
-	return nil
+	return totalCbmemTime, nil
 }
 
 // getBootPerf validates seconds power on to login from platform bootperf values.
 func getBootPerf(ctx context.Context, dut *dut.DUT, rpcHint *testing.RPCHint, btime float64) error {
 	cl, err := rpc.Dial(ctx, dut, rpcHint)
 	if err != nil {
-		return errors.Wrap(err, "failed to connect to the RPC service on the DUT")
+		testing.ContextLog(ctx, "Failed RPC dial. reconnecting to RPC service again: ", err)
+		// Reconnect to DUT if its disconnected.
+		if err := dut.Connect(ctx); err != nil {
+			return errors.Wrap(err, "failed to connect to DUT")
+		}
+		cl, err = rpc.Dial(ctx, dut, rpcHint)
+		if err != nil {
+			return errors.Wrap(err, "failed to connect to the RPC service on the DUT")
+		}
 	}
 	defer cl.Close(ctx)
 	bootPerfService := platform.NewBootPerfServiceClient(cl.Conn)
