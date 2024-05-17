@@ -33,7 +33,8 @@ func init() {
 		Contacts:     []string{"arc-gaming@google.com", "pjlee@google.com", "phshah@google.com", "cuicuiruan@google.com"},
 		// ChromeOS > Software > ARC++ > Gaming
 		BugComponent: "b:1373988",
-		Attr:         []string{"group:mainline", "informational"},
+		// TODO(b/339504728): Replace with the "stable" once test has stabilized.
+		Attr:         []string{"group:mainline", "informational", "group:cbx", "cbx_feature_enabled", "cbx_unstable"},
 		SoftwareDeps: []string{"chrome", "no_arc_userdebug", "android_vm"},
 		HardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
 		Fixture:      "arcBootedWithGameDashboard",
