@@ -234,3 +234,39 @@ func CompleteOnboardingFlow(ctx context.Context, ui *uiauto.Context) error {
 	}
 	return nil
 }
+
+// ProceedThroughGaiaInfoScreen clicks through the Gaia Info OOBE screen if shown.
+func ProceedThroughGaiaInfoScreen(ctx context.Context, oobeConn *chrome.Conn) error {
+	shouldSkipGaiaInfoScreen := false
+	if err := oobeConn.Eval(ctx, "OobeAPI.screens.GaiaInfoScreen.shouldSkip()", &shouldSkipGaiaInfoScreen); err != nil {
+		return errors.Wrap(err, "failed to evaluate whether to skip Gaia Info screen")
+	}
+
+	if shouldSkipGaiaInfoScreen {
+		return nil
+	}
+
+	testing.ContextLog(ctx, "Waiting for the Gaia Info screen")
+	if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.GaiaInfoScreen.isVisible()"); err != nil {
+		return errors.Wrap(err, "failed to wait for the gaia info screen to be visible")
+	}
+
+	// The Gaia Info Screen has two main UI states. When QuickStart is enabled, the user must choose between
+	// the manual vs. QuickStart setup. When QuickStart is disabled, the only option is to click "Next".
+	isQuickStartEnabled := false
+	if err := oobeConn.Eval(ctx, "OobeAPI.screens.GaiaInfoScreen.isOobeQuickStartEnabled()", &isQuickStartEnabled); err != nil {
+		return errors.Wrap(err, "failed to evaluate whether QuickStart is enabled")
+	}
+
+	if isQuickStartEnabled {
+		testing.ContextLog(ctx, "QuickStart is enabled, selecting manual setup on Gaia Info Screen")
+		if err := oobeConn.Eval(ctx, "OobeAPI.screens.GaiaInfoScreen.selectManualCredentials()", nil); err != nil {
+			testing.ContextLog(ctx, "Unable to click gaia info screen manual credentials buttons: ", err)
+		}
+	}
+
+	if err := oobeConn.Eval(ctx, "OobeAPI.screens.GaiaInfoScreen.clickNext()", nil); err != nil {
+		return errors.Wrap(err, "failed to click gaia info screen next button")
+	}
+	return nil
+}
