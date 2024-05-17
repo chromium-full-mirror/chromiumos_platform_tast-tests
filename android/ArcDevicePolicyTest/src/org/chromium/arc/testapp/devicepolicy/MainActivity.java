@@ -61,7 +61,7 @@ public class MainActivity extends Activity {
 
         arcPolicies =
                 Map.ofEntries(
-                        Map.entry("ArcCertificatesSyncMode", this::isCaCertSyncDisabled),
+                        Map.entry("caCerts", this::isCaCertSyncDisabled),
                         isRestrictionUnapplied(
                                 "credentialsConfigDisabled",
                                 "credentialsConfig",

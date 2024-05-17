@@ -6,7 +6,7 @@
 -->
 <resources>
     <string-array name="policies">
-        <item>ArcCertificatesSyncMode</item>
+        <item>caCerts</item>
         <item>cameraDisabled</item>
         <item>credentialsConfigDisabled</item>
         <item>enabledSystemAppPackageNames</item>

@@ -36,7 +36,7 @@ import (
 const (
 	devicePolicyPkg = "org.chromium.arc.testapp.devicepolicy"
 
-	policyArcCertificatesSyncMode        = "ArcCertificatesSyncMode"
+	policyCaCerts                        = "caCerts"
 	policyCameraDisabled                 = "cameraDisabled"
 	policyCredentialsConfigDisabled      = "credentialsConfigDisabled"
 	policyEnabledSystemAppPackageNames   = "enabledSystemAppPackageNames"
@@ -52,7 +52,7 @@ const (
 )
 
 var arcPolicyMap = map[string]func(ctx context.Context, s *testing.State) (policy.Policy, func(ctx context.Context), error){
-	policyArcCertificatesSyncMode:        staticPolicy(&policy.ArcCertificatesSyncMode{Val: 1 /*Enable sync*/}),
+	policyCaCerts:                        staticPolicy(&policy.ArcCertificatesSyncMode{Val: 1 /*Enable sync*/}),
 	policyCameraDisabled:                 staticPolicy(&policy.VideoCaptureAllowed{Val: false}),
 	policyCredentialsConfigDisabled:      staticPolicy(nil),
 	policyEnabledSystemAppPackageNames:   staticPolicy(nil),
@@ -95,32 +95,32 @@ func init() {
 		},
 		Params: []testing.Param{
 			{
-				Name:              "arc_certificates_sync_mode",
-				Val:               policyArcCertificatesSyncMode,
+				Name:              "ca_certs",
+				Val:               policyCaCerts,
 				ExtraSoftwareDeps: []string{"android_container", "no_qemu"},
 				ExtraAttr:         []string{"informational"},
 			},
 			{
-				Name:              "arc_certificates_sync_mode_betty",
-				Val:               policyArcCertificatesSyncMode,
+				Name:              "ca_certs_betty",
+				Val:               policyCaCerts,
 				ExtraSoftwareDeps: []string{"android_container", "qemu"},
 				ExtraAttr:         []string{"informational"},
 			},
 			{
-				Name:              "arc_certificates_sync_mode_vm",
-				Val:               policyArcCertificatesSyncMode,
+				Name:              "ca_certs_vm",
+				Val:               policyCaCerts,
 				ExtraSoftwareDeps: []string{"android_vm", "no_android_vm_t", "no_qemu"},
 				ExtraAttr:         []string{"informational"},
 			},
 			{
-				Name:              "arc_certificates_sync_mode_x",
-				Val:               policyArcCertificatesSyncMode,
+				Name:              "ca_certs_x",
+				Val:               policyCaCerts,
 				ExtraSoftwareDeps: []string{"android_vm_t", "no_qemu"},
 				ExtraAttr:         []string{"informational"},
 			},
 			{
-				Name:              "arc_certificates_sync_mode_betty_vm",
-				Val:               policyArcCertificatesSyncMode,
+				Name:              "ca_certs_betty_vm",
+				Val:               policyCaCerts,
 				ExtraSoftwareDeps: []string{"android_vm", "qemu"},
 				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
 			},
