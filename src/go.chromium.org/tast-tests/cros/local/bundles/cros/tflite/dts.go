@@ -36,7 +36,6 @@ func init() {
 			Name:              "apu",
 			Val:               apuParam,
 			Timeout:           5 * time.Minute,
-			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			ExtraSoftwareDeps: []string{"tflite_mtk_neuron"},
 		}},
 	})
