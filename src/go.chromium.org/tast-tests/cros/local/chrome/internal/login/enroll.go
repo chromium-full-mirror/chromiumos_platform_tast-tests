@@ -386,7 +386,7 @@ func isEnrollmentWebView(t *driver.Target) bool {
 	flow := q.Get("flow")
 
 	// Keep in sync with constants from chrome/browser/ui/webui/ash/login/enrollment_screen_handler.cc
-	if flow == "enterprise" || flow == "deviceEnrollment" {
+	if flow == "enterprise" || flow == "deviceEnrollment" || flow == "cfm" {
 		return true
 	}
 
