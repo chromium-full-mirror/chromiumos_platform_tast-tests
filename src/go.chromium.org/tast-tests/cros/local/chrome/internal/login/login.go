@@ -21,6 +21,7 @@ import (
 
 const oobePrefix = "chrome://oobe"
 const rmaPrefix = "chrome://shimless-rma"
+const cfmPrefix = "https://meet.google.com/oobe"
 
 // Use a low polling interval while waiting for conditions during login, as this code is shared by many tests.
 var pollOpts = &testing.PollOptions{Interval: 10 * time.Millisecond}
@@ -166,6 +167,15 @@ func WaitForRMAConnection(ctx context.Context, sess *driver.Session) (*driver.Co
 	defer st.End()
 
 	return waitForConnectionWithPrefix(ctx, sess, rmaPrefix)
+}
+
+// WaitForCFMConnection establishes a connection to the CfM dialog.
+func WaitForCFMConnection(ctx context.Context, sess *driver.Session) (*driver.Conn, error) {
+	testing.ContextLog(ctx, "Finding CfM DevTools target")
+	ctx, st := timing.Start(ctx, "wait_for_cfm")
+	defer st.End()
+
+	return waitForConnectionWithPrefix(ctx, sess, cfmPrefix)
 }
 
 func waitForConnectionWithPrefix(ctx context.Context, sess *driver.Session, prefix string) (*driver.Conn, error) {
