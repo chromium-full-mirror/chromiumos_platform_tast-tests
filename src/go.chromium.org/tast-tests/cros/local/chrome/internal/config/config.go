@@ -55,9 +55,10 @@ type EnrollMode int
 const (
 	NoEnroll          EnrollMode = iota // do not enroll device
 	FakeEnroll                          // enroll with a fake, local device management server
-	GAIAEnroll                          // real network based enrollment using a real, live device management server
-	ZeroTouchEnroll                     // real network based zero touch enrollment using real device management server
-	SAMLTestIDPEnroll                   // real network based enrollment using a real, live device management server relying on a SAML redirection to a test IdP
+	GAIAEnroll                          // real network-based enrollment using a real, live device management server
+	ZeroTouchEnroll                     // real network-based zero touch enrollment using real device management server
+	TokenBasedEnroll                    // real network-based, token-based enrollment against a real, live device management server
+	SAMLTestIDPEnroll                   // real network-based enrollment using a real, live device management server relying on a SAML redirection to a test IdP
 )
 
 // AuthType describes the type of authentication to be used in GAIA.

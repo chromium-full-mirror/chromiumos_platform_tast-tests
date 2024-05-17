@@ -40,6 +40,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/policyutil/externaldata"
 	"go.chromium.org/tast-tests/cros/local/session"
 	"go.chromium.org/tast-tests/cros/local/syslog"
+	"go.chromium.org/tast-tests/cros/local/upstart"
 	ppb "go.chromium.org/tast-tests/cros/services/cros/policy"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -230,6 +231,31 @@ func (c *PolicyService) ZeroTouchEnrollUsingChrome(ctx context.Context, req *ppb
 	if err := c.newChrome(
 		ctx,
 		chrome.ZeroTouchEnroll(),
+		chrome.KeepState(),
+		chrome.NoLogin(),
+		chrome.DMSPolicy(req.DmserverURL),
+		chrome.LoadSigninProfileExtension(req.ManifestKey),
+	); err != nil {
+		return nil, errors.Wrap(err, "failed to start chrome")
+	}
+
+	return &empty.Empty{}, nil
+}
+
+func (c *PolicyService) TokenBasedEnrollUsingChrome(ctx context.Context, req *ppb.TokenBasedEnrollUsingChromeRequest) (*empty.Empty, error) {
+	testing.ContextLogf(ctx, "Token-based enrolling using Chrome with DMServer: %s", req.DmserverURL)
+
+	// Have to restart job after creating flex_config files as upstart config conditionally bind-mounts the flex_config dir only if it's present.
+	if err := upstart.RestartJob(ctx, "oobe_config_restore"); err != nil {
+		return nil, errors.Wrap(err, "failed to restart oobe_config_restore daemon")
+	}
+
+	// Store the IDs we need for deprovisioning, as enrollment can fail after provisioning we need to defer this function before enrolling.
+	defer c.StoreIDsForDeprovisioningAndLogErrors(ctx)
+
+	if err := c.newChrome(
+		ctx,
+		chrome.TokenBasedEnroll(),
 		chrome.KeepState(),
 		chrome.NoLogin(),
 		chrome.DMSPolicy(req.DmserverURL),

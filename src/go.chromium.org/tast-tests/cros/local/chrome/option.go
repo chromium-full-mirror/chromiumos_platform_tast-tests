@@ -318,6 +318,15 @@ func ZeroTouchEnroll() Option {
 	}
 }
 
+// TokenBasedEnroll returns an Option that can be passed to New to enable/expect
+// automatic Enterprise Enrollment before login, using an enrollment token.
+func TokenBasedEnroll() Option {
+	return func(cfg *config.MutableConfig) error {
+		cfg.EnrollMode = config.TokenBasedEnroll
+		return nil
+	}
+}
+
 // SAMLTestIDPEnterpriseEnroll returns an Option that can be passed to New to enable SAML
 // Enterprise Enrollment using a test IdP before login. The corresponding user needs to
 // have SAML redirection to the test IdP (https://g-id-test-idp.appspot.com/) enabled

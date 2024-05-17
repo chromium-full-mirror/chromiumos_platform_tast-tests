@@ -54,6 +54,10 @@ func LogIn(ctx context.Context, cfg *config.Config, sess *driver.Session) error 
 		if err := performZeroTouchEnrollment(ctx, cfg, sess); err != nil {
 			return err
 		}
+	case config.TokenBasedEnroll:
+		if err := performTokenBasedEnrollment(ctx, cfg, sess); err != nil {
+			return err
+		}
 	default:
 		return errors.Errorf("unknown enrollment mode: %v", cfg.EnrollMode())
 	}

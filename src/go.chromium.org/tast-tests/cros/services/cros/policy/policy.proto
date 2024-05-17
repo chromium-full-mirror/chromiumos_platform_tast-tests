@@ -20,6 +20,8 @@ service PolicyService {
       returns (google.protobuf.Empty) {}
   rpc ZeroTouchEnrollUsingChrome(ZeroTouchEnrollUsingChromeRequest)
       returns (google.protobuf.Empty) {}
+  rpc TokenBasedEnrollUsingChrome(TokenBasedEnrollUsingChromeRequest)
+      returns (google.protobuf.Empty) {}
   rpc EnrollUsingChrome(EnrollUsingChromeRequest)
       returns (google.protobuf.Empty) {}
   rpc GAIAEnrollUsingChrome(GAIAEnrollUsingChromeRequest)
@@ -112,6 +114,11 @@ message EnrollUsingChromeRequest {
 }
 
 message ZeroTouchEnrollUsingChromeRequest {
+  string dmserverURL = 1;
+  string manifestKey = 2;
+}
+
+message TokenBasedEnrollUsingChromeRequest {
   string dmserverURL = 1;
   string manifestKey = 2;
 }

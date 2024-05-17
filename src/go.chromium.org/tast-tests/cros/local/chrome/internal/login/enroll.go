@@ -255,29 +255,73 @@ func performGAIAEnrollment(ctx context.Context, cfg *config.Config, sess *driver
 	return nil
 }
 
-// performZeroTouchEnrollment enrolls the test device using the OOBE screen.
+// performZeroTouchEnrollment enrolls the test device by proceeding through OOBE,
+// expecting the device to automatically enroll (using Zero Touch Enrollment).
 func performZeroTouchEnrollment(ctx context.Context, cfg *config.Config, sess *driver.Session) error {
 	ctx, st := timing.Start(ctx, "zerotouchenroll")
 	defer st.End()
 
-	conn, err := WaitForOOBEConnection(ctx, sess)
+	return proceedThroughOOBEAndExpectAutomaticEnrollment(ctx, cfg, sess)
+}
+
+// performTokenBasedEnrollment enrolls the test device by proceeding through OOBE,
+// expecting the device to automatically enroll (using an enrollment token).
+func performTokenBasedEnrollment(ctx context.Context, cfg *config.Config, sess *driver.Session) error {
+	ctx, st := timing.Start(ctx, "tokenbasedenroll")
+	defer st.End()
+
+	return proceedThroughOOBEAndExpectAutomaticEnrollment(ctx, cfg, sess)
+}
+
+// proceedThroughOOBEAndExpectAutomaticEnrollment clicks through the OOBE welcome
+// and network screens, expecting afterwards that the device will go through
+// automatic enrollment and end on the enrollment success screen.
+func proceedThroughOOBEAndExpectAutomaticEnrollment(ctx context.Context, cfg *config.Config, sess *driver.Session) error {
+	oobeConn, err := WaitForOOBEConnection(ctx, sess)
+	defer oobeConn.Close()
 	if err != nil {
 		return errors.Wrap(err, "could not find OOBE connection")
 	}
 
-	if err := conn.WaitForExpr(ctx, "OobeAPI.screens.WelcomeScreen.isVisible()"); err != nil {
+	if err := oobeConn.WaitForExpr(ctx, "OobeAPI.screens.WelcomeScreen.isVisible()"); err != nil {
 		return errors.Wrap(err, "failed to wait for the OOBE Welcome Screen")
 	}
 
-	if err := conn.Eval(ctx, "OobeAPI.screens.WelcomeScreen.clickNext()", nil); err != nil {
+	if err := oobeConn.Eval(ctx, "OobeAPI.screens.WelcomeScreen.clickNext()", nil); err != nil {
 		return errors.Wrap(err, "failed to click on the Next button on the OOBE Welcome Screen")
 	}
 
-	if err := conn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.EnterpriseEnrollmentScreen.successStep.isReadyForTesting()"); err != nil {
-		return errors.Wrap(err, "failed to wait for the OOBE enterprise enrollment signin screen to be ready")
+	if err := proceedThroughNetworkScreen(ctx, oobeConn); err != nil {
+		return errors.Wrap(err, "failed to proceed through network screen")
 	}
 
-	defer conn.Close()
+	if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.EnterpriseEnrollmentScreen.successStep.isReadyForTesting()"); err != nil {
+		return errors.Wrap(err, "failed to wait for the OOBE enterprise enrollment signin screen to be ready")
+	}
+	return nil
+}
+
+// proceedThroughNetworkScreen clicks through the network OOBE screen if shown.
+// We have to redefine this function (also defined in package oobe) to avoid cyclical
+// dependencies.
+func proceedThroughNetworkScreen(ctx context.Context, oobeConn *driver.Conn) error {
+	shouldSkipNetworkScreen := false
+	if err := oobeConn.Eval(ctx, "OobeAPI.screens.NetworkScreen.shouldSkip()", &shouldSkipNetworkScreen); err != nil {
+		return errors.Wrap(err, "failed to evaluate whether to skip network screen")
+	}
+	if shouldSkipNetworkScreen {
+		testing.ContextLog(ctx, "NetworkScreen.shouldSkip() is true; skipped")
+		return nil
+	}
+
+	testing.ContextLog(ctx, "Proceeding through network screen")
+	if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.NetworkScreen.isVisible()"); err != nil {
+		return errors.Wrap(err, "failed to wait for the network screen to be visible")
+	}
+
+	if err := oobeConn.Eval(ctx, "OobeAPI.screens.NetworkScreen.clickNext()", nil); err != nil {
+		return errors.Wrap(err, "failed to click network page next button")
+	}
 	return nil
 }
 
