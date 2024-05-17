@@ -16,29 +16,27 @@ import (
 
 // List of ARC++ fixture names for video conferencing testing.
 const (
-	gaiaLoggedInARC = "gaiaLoggedInARCForVideoConferencing"
+	loggedInARCForVideoConferencing = "loggedInARCForVideoConferencing"
 )
 
 func init() {
 	fixtureConfig := arc.DefaultBootedFixtureConfig()
-	fixtureConfig.PlayStoreOptin = true
 	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 		opts := []chrome.Option{
 			chrome.EnableFeatures("SpeakOnMuteEnabled"),
-			chrome.ExtraArgs(arc.DisableSyncFlags()...),
-			chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault"))}
+			chrome.ExtraArgs(arc.DisableSyncFlags()...)}
 
 		opts = append(opts, vcOpts...)
 		return opts, nil
 	}
 	testing.AddFixture(&testing.Fixture{
-		Name: gaiaLoggedInARC,
-		Desc: "A fixture with GAIA user logged in and ARC booted",
+		Name: loggedInARCForVideoConferencing,
+		Desc: "A fixture with ARC booted, but not PlayStore",
 		Contacts: []string{
 			"chrome-knowledge-eng@google.com",
 			"xiuwen@google.com",
 		},
-		Vars:            []string{"ui.gaiaPoolDefault"},
+		BugComponent:    "b:187682",
 		Impl:            arc.NewArcBootedFixture(fixtureConfig),
 		Parent:          fixture.AloopLoaded{Channels: 2}.Instance(),
 		SetUpTimeout:    chrome.LoginTimeout + arc.BootTimeout + ui.StartTimeout,

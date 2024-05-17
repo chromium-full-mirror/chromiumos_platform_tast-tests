@@ -251,8 +251,12 @@ func (vcTray VCTray) ReturnToApp(appName string) action.Action {
 }
 
 // ReturnToAppForWindow returns an action returning to the VC app, also handles window state.
-func (vcTray VCTray) ReturnToAppForWindow(appName string, window *ash.Window, tconn *chrome.TestConn) action.Action {
+func (vcTray VCTray) ReturnToAppForWindow(appName string, tconn *chrome.TestConn) action.Action {
 	return func(ctx context.Context) error {
+		window, err := ash.WaitForAnyWindowWithTitle(ctx, tconn, appName)
+		if err != nil {
+			errors.Wrap(err, "can't find window with appName")
+		}
 
 		initialState := window.State
 		if initialState == ash.WindowStateMinimized {

@@ -23,7 +23,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/videoconferencing/fixture"
 
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -174,25 +173,7 @@ func LiveCaptionTabPwa(ctx context.Context, s *testing.State) {
 	}
 
 	// Play audio and wait for the caption.
-	// This need to be triggered multiple times because of its flakiness.
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		// Play audio.
-		if err := playAudioAction(ctx); err != nil {
-			return errors.Wrap(err, "failed to play audio")
-		}
-
-		// Wait for the buble to show.
-		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			return uiauto.Combine("Wait for the bubble and content",
-				ui.WaitUntilExists(liveCaptionBubble),
-				ui.WaitUntilExists(liveCaptionContent),
-			)(ctx)
-		}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 1 * time.Second}); err != nil {
-			return errors.Wrap(err, "failed to wait for the caption buble and content")
-		}
-		return nil
-
-	}, &testing.PollOptions{Timeout: 60 * time.Second, Interval: 10 * time.Second}); err != nil {
+	if err := common.PlayAudioAndVerifyBuble(ctx, tconn, playAudioAction); err != nil {
 		s.Fatal("Failed to validate live caption: ", err)
 	}
 

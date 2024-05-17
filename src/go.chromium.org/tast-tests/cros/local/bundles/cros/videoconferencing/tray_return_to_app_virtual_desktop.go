@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/tbdep"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/common"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/fakevctab"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
@@ -119,7 +120,7 @@ func TrayReturnToAppVirtualDesktop(ctx context.Context, s *testing.State) {
 	}
 
 	// Apply return to app from vcTray.
-	if err := vcTray.ReturnToAppForWindow("VcTester", tabWindow, tconn)(ctx); err != nil {
+	if err := vcTray.ReturnToAppForWindow(common.VcAppName, tconn)(ctx); err != nil {
 		s.Fatal("Failed to verify return to app: ", err)
 	}
 

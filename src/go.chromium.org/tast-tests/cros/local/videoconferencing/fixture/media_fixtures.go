@@ -54,8 +54,6 @@ const (
 	GAIALoggedInWithFakeHALAndEffectsEnabledNoScreenRecorder = "gaiaLoggedInWithFakeHALAndEffectsEnabledNoScreenRecorderDisabled"
 	GAIALoggedInWithFakeHALAndEffectsDisabled                = "gaiaLoggedInWithFakeHALAndEffectsDisabled"
 	GAIALoggedInLacrosWithFakeHALAndEffectsEnabled           = "gaiaLoggedInLacrosWithFakeHALAndEffectsEnabled"
-	GAIALoggedInARCWithFakeHALAndEffectsEnabled              = "gaiaLoggedInARCWithFakeHALAndEffectsEnabled"
-	GAIALoggedInARCWithInternalCameraAndEffectsEnabled       = "gaiaLoggedInARCWithInternalCameraAndEffectsEnabled"
 
 	// Fixtures using GAIA login and specifying device mode.
 	GAIALoggedInClamshellWithFakeHALAndEffectsEnabled       = "gaiaLoggedInClamshellWithFakeHALAndEffectsEnabled"
@@ -69,6 +67,8 @@ const (
 
 	// PowerLoggedInWithFakeHALAndEffectsEnabledNoScreenRecorder is a fixture used for power measurements with standard power api.
 	PowerLoggedInWithFakeHALAndEffectsEnabledNoScreenRecorder = "powerLoggedInWithFakeHALAndEffectsEnabledNoScreenRecorder"
+
+	LoggedInARCWithInternalCameraAndEffectsDisabled = "loggedInARCWithInternalCameraAndEffectsDisabled"
 )
 
 type platformEffectLevel int
@@ -102,6 +102,11 @@ var (
 	internalCameraWithPlatformEffectsEnabled = cameraConfig{
 		cameraType:     testutil.UseRealCamera,
 		platformEffect: platformEffectEnabled,
+	}
+
+	internalCameraWithPlatformEffectsDisabled = cameraConfig{
+		cameraType:     testutil.UseRealCamera,
+		platformEffect: platformEffectDisabled,
 	}
 )
 
@@ -347,33 +352,16 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name: GAIALoggedInARCWithFakeHALAndEffectsEnabled,
-		Desc: "A fixture with GAIA user logged in and ARC booted using fake HAL camera with platform effects enabled",
+		Name: LoggedInARCWithInternalCameraAndEffectsDisabled,
+		Desc: "A fixture with test user logged in and ARC booted using internal camera with platform effects disabled",
 		Contacts: []string{
 			"chrome-knowledge-eng@google.com",
 			"xiuwen@google.com",
 		},
 		BugComponent:    "b:187682",
 		Data:            []string{fakeHALImageInput},
-		Impl:            mediaSetupFixture(halCameraWithPlatformEffectsEnabled),
-		Parent:          gaiaLoggedInARC,
-		SetUpTimeout:    chrome.LoginTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name: GAIALoggedInARCWithInternalCameraAndEffectsEnabled,
-		Desc: "A fixture with GAIA user logged in and ARC booted using internal camera with platform effects enabled",
-		Contacts: []string{
-			"chrome-knowledge-eng@google.com",
-			"xiuwen@google.com",
-		},
-		BugComponent:    "b:187682",
-		Impl:            mediaSetupFixture(internalCameraWithPlatformEffectsEnabled),
-		Parent:          gaiaLoggedInARC,
+		Impl:            mediaSetupFixture(internalCameraWithPlatformEffectsDisabled),
+		Parent:          loggedInARCForVideoConferencing,
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,

@@ -10,17 +10,16 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/common"
-	"go.chromium.org/tast-tests/cros/local/camera/arcapp"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/fakearc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vctray"
+	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/videoconferencing/fixture"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -41,10 +40,9 @@ func init() {
 			"group:cbx", "cbx_feature_enabled", "cbx_unstable",
 		},
 		TestBedDeps:  []string{tbdep.Cbx(true)},
-		SoftwareDeps: []string{"chrome", "camera_feature_effects"},
-		HardwareDeps: hwdep.D(hwdep.SkipOnModel("betty")),
-		Data:         []string{"ArcCameraTest.apk"},
-		Fixture:      fixture.GAIALoggedInARCWithInternalCameraAndEffectsEnabled,
+		SoftwareDeps: []string{"chrome"},
+		Data:         []string{fakearc.AppNameArc},
+		Fixture:      fixture.LoggedInARCWithInternalCameraAndEffectsDisabled,
 		SearchFlags: []*testing.StringPair{
 			{
 				// Trigger VC tray with Camera on ARC++ apps.
@@ -78,73 +76,107 @@ func TrayTriggersARC(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	a := s.FixtValue().(fixture.FixtData).ARC()
-
-	if err := a.Install(ctx, s.DataPath(arcapp.CameraAppApk)); err != nil {
-		s.Fatal("Failed to install the APK: ", err)
-	}
-
-	cleanupFunc, err := arcapp.LaunchARCCameraApp(ctx, a, tconn)
-	if err != nil {
-		s.Fatal("Failed to launch ARC camera app: ", err)
-	}
-	defer func() {
-		if s.HasError() {
-			cleanupFunc(cleanupCtx, tconn)
-		}
-	}()
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui")
 
+	kb, err := input.Keyboard(ctx)
+	if err != nil {
+		s.Fatal("Failed to create the keyboard: ", err)
+	}
+	defer kb.Close(ctx)
+
+	fakearc.Install(ctx, s)
+
 	vcTray := vctray.New(ctx, tconn)
-	if err := uiauto.Combine("verify camera triggers vcTray",
-		vcTray.WaitUntilExists,
-		vcTray.WaitUntilState(vctray.DevCamera, vctray.DeviceInUse),
-	)(ctx); err != nil {
-		s.Fatal("Failed to verify camera triggers vcTray: ", err)
-	}
 
-	// This step will fail on the ARC-T board because the test application loses focus when it opens.
-	// This is a temporary fix to prevent tests from being blocked by the test application issue.
-	// https://b.corp.google.com/issues/319318909
-	if err := uiauto.New(tconn).RightClick(nodewith.ClassName("HeaderView"))(ctx); err != nil {
-		s.Fatal("Failed to make test app be focused: ", err)
-	}
+	// Verify arc triggers vcTray on camera.
+	s.Run(ctx, "cam_only", func(ctx context.Context, s *testing.State) {
+		defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_cam_only")
 
-	if err := common.VerifyReturnToApp(ctx, tconn); err != nil {
-		s.Fatal("Failed to verify returnToApp: ", err)
-	}
+		arcApp := fakearc.Launch(ctx, s, tconn, cr, kb)
 
-	if err := uiauto.Combine("verify audio activation",
-		func(ctx context.Context) error {
-			return arcapp.StartRecording(ctx, cr, a)
-		},
-		vcTray.WaitUntilState(vctray.DevCamera, vctray.DeviceInUse),
-		vcTray.WaitUntilState(vctray.DevMicrophone, vctray.DeviceInUse),
-	)(ctx); err != nil {
-		s.Fatal("Failed to verify audio activation: ", err)
-	}
+		if err := uiauto.Combine("activate camera",
+			arcApp.StartVideo,
+			vcTray.WaitUntilState(vctray.DevMicrophone, vctray.DeviceAvailable),
+			vcTray.WaitUntilState(vctray.DevCamera, vctray.DeviceInUse),
+			vcTray.WaitUntilState(vctray.DevScreen, vctray.DeviceHidden),
+		)(ctx); err != nil {
+			s.Fatal("Failed to verify that arc triggers vcTray by camera: ", err)
+		}
 
-	if err := uiauto.Combine("verify audio deactivation",
-		// GoBigSleepLint: Record the video for 3 seconds before stop. Otherwise it fails with
-		// `could not send intent: broadcast of "chromeos.camera.app.arccameratest.ACTION_STOP_RECORDING" failed, status = 0, data = "8"`
-		uiauto.Sleep(3*time.Second),
-		func(ctx context.Context) error {
-			return arcapp.StopRecordingAndCheckFile(ctx, cr, a, false)
-		},
-		vcTray.WaitUntilState(vctray.DevCamera, vctray.DeviceInUse),
-		vcTray.WaitUntilState(vctray.DevMicrophone, vctray.DeviceAvailable),
-	)(ctx); err != nil {
-		s.Fatal("Failed to verify audio deactivation: ", err)
-	}
+		// GoBigSleepLint: wait for 6 seconds; arc only notify os every a few seconds.
+		uiauto.Sleep(6 * time.Second)
 
-	// Close app should hide vcTray.
-	if err := uiauto.Combine("verify closing app hides vcTray",
-		func(ctx context.Context) error {
-			cleanupFunc(cleanupCtx, tconn)
-			return nil
-		},
-		vcTray.WaitUntilGone,
-	)(ctx); err != nil {
-		s.Fatal("Failed to verify audio deactivation: ", err)
-	}
+		if err := uiauto.Combine("deactivate camera",
+			arcApp.StopVideo,
+			vcTray.WaitUntilState(vctray.DevMicrophone, vctray.DeviceAvailable),
+			vcTray.WaitUntilState(vctray.DevCamera, vctray.DeviceAvailable),
+			vcTray.WaitUntilState(vctray.DevScreen, vctray.DeviceHidden),
+		)(ctx); err != nil {
+			s.Fatal("Failed to verify that stop using camera resets tray state: ", err)
+		}
+
+		if err := uiauto.Combine("close app",
+			arcApp.Close,
+			vcTray.WaitUntilGone,
+		)(ctx); err != nil {
+			s.Fatal("Failed to verify that close app hides VcTray: ", err)
+		}
+	})
+
+	// Verify arc triggers vcTray on mic.
+	s.Run(ctx, "mic_only", func(ctx context.Context, s *testing.State) {
+		defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_mic_only")
+
+		arcApp := fakearc.Launch(ctx, s, tconn, cr, kb)
+
+		if err := uiauto.Combine("activate mic",
+			arcApp.StartAudio,
+			vcTray.WaitUntilState(vctray.DevMicrophone, vctray.DeviceInUse),
+			vcTray.WaitUntilState(vctray.DevCamera, vctray.DeviceAvailable),
+			vcTray.WaitUntilState(vctray.DevScreen, vctray.DeviceHidden),
+		)(ctx); err != nil {
+			s.Fatal("Failed to verify that arc triggers vcTray by mic: ", err)
+		}
+
+		// GoBigSleepLint: wait for 6 seconds; arc only notify os every a few seconds.
+		uiauto.Sleep(6 * time.Second)
+
+		if err := uiauto.Combine("deactivate mic",
+			arcApp.StopAudio,
+			vcTray.WaitUntilState(vctray.DevMicrophone, vctray.DeviceAvailable),
+			vcTray.WaitUntilState(vctray.DevCamera, vctray.DeviceAvailable),
+			vcTray.WaitUntilState(vctray.DevScreen, vctray.DeviceHidden),
+		)(ctx); err != nil {
+			s.Fatal("Failed to verify that stop using camera resets tray state: ", err)
+		}
+
+		if err := uiauto.Combine("close app",
+			arcApp.Close,
+			vcTray.WaitUntilGone,
+		)(ctx); err != nil {
+			s.Fatal("Failed to verify that close app hides VcTray: ", err)
+		}
+	})
+
+	// Verify tab works on return to app.
+	s.Run(ctx, "return_to_app", func(ctx context.Context, s *testing.State) {
+		defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_return_to_app")
+
+		arcApp := fakearc.Launch(ctx, s, tconn, cr, kb)
+
+		if err := uiauto.Combine("activate microphone",
+			arcApp.StartAudio,
+			vcTray.WaitUntilState(vctray.DevMicrophone, vctray.DeviceInUse),
+		)(ctx); err != nil {
+			s.Fatal("Failed to verify that arc triggers vcTray by camera: ", err)
+		}
+
+		if err := vcTray.ReturnToAppForWindow(common.VcAppName, tconn)(ctx); err != nil {
+			s.Fatal("Failed to verify return to app: ", err)
+		}
+
+		if err := arcApp.Close(cleanupCtx); err != nil {
+			s.Fatal("Failed to close tab: ", err)
+		}
+	})
 }
