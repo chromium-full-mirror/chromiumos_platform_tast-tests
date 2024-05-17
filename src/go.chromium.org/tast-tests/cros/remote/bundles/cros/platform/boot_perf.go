@@ -37,9 +37,10 @@ const (
 )
 
 var (
-	defaultIterations      = 10    // The number of boot iterations. Can be overridden by var "platform.BootPerf.iterations".
-	defaultSkipRootfsCheck = false // Should we skip rootfs verification? Can be overridden by var "platform.BootPerf.skipRootfsCheck"
-	defaultManualReboot    = false // If set to true, don't reboot the device and collect the timing of the current boot. This is used in collecting boot performance with manual reboots.
+	defaultIterations          = 10    // The number of boot iterations. Can be overridden by var "platform.BootPerf.iterations".
+	defaultSkipRootfsCheck     = false // Should we skip rootfs verification? Can be overridden by var "platform.BootPerf.skipRootfsCheck"
+	defaultSkipNormalModeCheck = false // Should we skip the normal mode check? Can be overridden by var "platform.BootPerf.skipNormalModeCheck"
+	defaultManualReboot        = false // If set to true, don't reboot the device and collect the timing of the current boot. This is used in collecting boot performance with manual reboots.
 )
 
 type bootPerfTestCase int
@@ -66,7 +67,12 @@ func init() {
 		ServiceDeps:  []string{"tast.cros.arc.PerfBootService", "tast.cros.platform.BootPerfService", "tast.cros.security.BootLockboxService"},
 		// Deps of "chrome" is used to ensure the test doesn't boot to the OOBE screen.
 		SoftwareDeps: []string{"chrome"},
-		Vars:         []string{"platform.BootPerf.iterations", "platform.BootPerf.skipRootfsCheck", "platform.BootPerf.manualReboot"},
+		Vars: []string{
+			"platform.BootPerf.iterations",
+			"platform.BootPerf.skipRootfsCheck",
+			"platform.BootPerf.skipNormalModeCheck",
+			"platform.BootPerf.manualReboot",
+		},
 		// This test collects boot timing for |iterations| times and requires a longer timeout.
 		Timeout: 25 * time.Minute,
 		Params: []testing.Param{
@@ -130,6 +136,24 @@ func assertNoActiveConsoles(ctx context.Context, d *dut.DUT) error {
 
 	if activeConsoles != "" {
 		return errors.Errorf("unexpected console(s) enabled: %s", activeConsoles)
+	}
+
+	return nil
+}
+
+// assertNormalMode asserts the device is in normal mode by checking 'crossystem mainfw_type`.
+// Firmware boot time is not accurate in developer mode since the developer mode screen is
+// displayed for several seconds.
+func assertNormalMode(ctx context.Context, d *dut.DUT) error {
+	b, err := d.Conn().CommandContext(ctx, "crossystem", "mainfw_type").Output()
+	if err != nil {
+		return errors.Wrap(err, "failed to run 'crossystem mainfw_type'")
+	}
+	fwType := strings.TrimSpace(string(b))
+
+	if fwType != "normal" {
+		return errors.Errorf("Device is not in normal mode (mainfw_type=%s)\n"+
+			"To override this check, run the test with -var \"platform.BootPerf.skipNormalModeCheck=true\"", fwType)
 	}
 
 	return nil
@@ -380,6 +404,19 @@ func BootPerf(ctx context.Context, s *testing.State) {
 		skipRootfsCheck = (strings.ToLower(val) == "true")
 	}
 
+	skipNormalModeCheck := defaultSkipNormalModeCheck
+	if val, ok := s.Var("platform.BootPerf.skipNormalModeCheck"); ok {
+		// We only accept "true" (case insensitive) as valid value to enable this option.
+		// Other values are just ignored silently.
+		skipNormalModeCheck = (strings.ToLower(val) == "true")
+	}
+
+	// The cold boot test cases use fixture.NormalMode, so they don't support skipping the
+	// normal mode check.
+	if skipNormalModeCheck && s.Param().(bootPerfTestCase) != bootPerfWarmReboot {
+		s.Fatal("skipNormalModeCheck is only supported by the warm reboot test variant (platform.BootPerf)")
+	}
+
 	iterations := defaultIterations
 	if iter, ok := s.Var("platform.BootPerf.iterations"); ok {
 		if i, err := strconv.Atoi(iter); err == nil {
@@ -415,6 +452,12 @@ func BootPerf(ctx context.Context, s *testing.State) {
 
 	if err := assertNoActiveConsoles(ctx, s.DUT()); err != nil {
 		s.Fatal(err) // NOLINT: assertNoActiveConsoles() returns loggable errors
+	}
+
+	if !skipNormalModeCheck {
+		if err := assertNormalMode(ctx, s.DUT()); err != nil {
+			s.Fatal(err) // NOLINT: assertNormalMode() returns loggable errors
+		}
 	}
 
 	func(ctx context.Context) {
