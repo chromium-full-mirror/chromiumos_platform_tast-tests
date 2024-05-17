@@ -509,14 +509,14 @@ func (r *Runner) RadioConfig(ctx context.Context, iface string) (*ChannelConfig,
 // SinglePhyRegulatoryDomain gets the phy-specific regulatory domain code for
 // a device with only one phy.
 func (r *Runner) SinglePhyRegulatoryDomain(ctx context.Context) (string, error) {
-	ifaces, err := r.ListInterfaces(ctx)
+	phys, _, err := r.ListPhys(ctx)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "failed to list phys")
 	}
-	if len(ifaces) != 1 {
-		return "", errors.Errorf("expected 1 phy, got %d", len(ifaces))
+	if len(phys) != 1 {
+		return "", errors.Errorf("got %d phys, want 1", len(phys))
 	}
-	return r.PhyRegulatoryDomain(ctx, fmt.Sprintf("phy%d", ifaces[0].PhyNum))
+	return r.PhyRegulatoryDomain(ctx, phys[0].Name)
 }
 
 // PhyRegulatoryDomain gets the phy-specific regulatory domain code.
