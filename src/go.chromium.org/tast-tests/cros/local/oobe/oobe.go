@@ -278,3 +278,25 @@ func ProceedThroughGaiaInfoScreen(ctx context.Context, oobeConn *chrome.Conn) er
 	}
 	return nil
 }
+
+// ProceedThroughNetworkScreen clicks through the network OOBE screen if shown.
+func ProceedThroughNetworkScreen(ctx context.Context, oobeConn *chrome.Conn) error {
+	shouldSkipNetworkScreen := false
+	if err := oobeConn.Eval(ctx, "OobeAPI.screens.NetworkScreen.shouldSkip()", &shouldSkipNetworkScreen); err != nil {
+		return errors.Wrap(err, "failed to evaluate whether to skip network screen")
+	}
+	if shouldSkipNetworkScreen {
+		testing.ContextLog(ctx, "NetworkScreen.shouldSkip() is true; skipped")
+		return nil
+	}
+
+	testing.ContextLog(ctx, "Proceeding through network screen")
+	if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.NetworkScreen.isVisible()"); err != nil {
+		return errors.Wrap(err, "failed to wait for the network screen to be visible")
+	}
+
+	if err := oobeConn.Eval(ctx, "OobeAPI.screens.NetworkScreen.clickNext()", nil); err != nil {
+		return errors.Wrap(err, "failed to click network page next button")
+	}
+	return nil
+}

@@ -193,23 +193,8 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to click welcome screen next button: ", err)
 		}
 
-		shouldSkipNetworkScreen := false
-		if err := oobeConn.Eval(ctx, "OobeAPI.screens.NetworkScreen.shouldSkip()", &shouldSkipNetworkScreen); err != nil {
-			s.Fatal("Failed to evaluate whether to skip Network screen: ", err)
-		}
-
-		if shouldSkipNetworkScreen {
-			s.Log("Skipping the network screen")
-		} else {
-			s.Log("Waiting for the network screen")
-			if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.NetworkScreen.isVisible()"); err != nil {
-				s.Fatal("Failed to wait for the network screen to be visible: ", err)
-			}
-			//(TODO, https://crbug.com/1291153): Switch to focused button.
-			nextButton := nodewith.Name("Next").Role(role.Button)
-			if err := ui.LeftClickUntil(nextButton, ui.Gone(nextButton))(ctx); err != nil {
-				s.Fatal("Failed to click network page next button: ", err)
-			}
+		if err := oobe.ProceedThroughNetworkScreen(ctx, oobeConn); err != nil {
+			s.Fatal("Failed to proceed through network screen: ", err)
 		}
 	}
 	// TODO(b/255972416) - Remove this.

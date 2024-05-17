@@ -69,7 +69,7 @@ func (service *Service) SetUpDemoMode(ctx context.Context, req *pb.SetUpDemoMode
 		return nil, errors.Wrap(err, "failed to enter Demo Mode setup flow")
 	}
 
-	if err := proceedThroughNetworkScreen(ctx, oobeConn, ui); err != nil {
+	if err := oobe.ProceedThroughNetworkScreen(ctx, oobeConn); err != nil {
 		return nil, errors.Wrap(err, "failed to proceed through network screen")
 	}
 
@@ -109,27 +109,6 @@ func enterDemoModeSetupFlow(ctx context.Context, oobeConn *chrome.Conn, ui *uiau
 		return errors.Wrap(err, "failed to wait for the demo confirmation dialog to be visible")
 	}
 	findAndClickButton(ctx, "WelcomeScreen.getDemoModeOkButtonName()", oobeConn, ui)
-	return nil
-}
-
-func proceedThroughNetworkScreen(ctx context.Context, oobeConn *chrome.Conn, ui *uiauto.Context) error {
-	shouldSkipNetworkScreen := false
-	if err := oobeConn.Eval(ctx, "OobeAPI.screens.NetworkScreen.shouldSkip()", &shouldSkipNetworkScreen); err != nil {
-		return errors.Wrap(err, "failed to evaluate whether to skip network screen")
-	}
-	if shouldSkipNetworkScreen {
-		testing.ContextLog(ctx, "NetworkScreen.shouldSkip() is true; skipped")
-	} else {
-		testing.ContextLog(ctx, "Proceeding through network screen")
-		if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.NetworkScreen.isVisible()"); err != nil {
-			return errors.Wrap(err, "failed to wait for the network screen to be visible")
-		}
-		// TODO(crbug.com/1291153): Switch to focused button.
-		nextButton := nodewith.Name("Next").Role(role.Button)
-		if err := ui.LeftClickUntil(nextButton, ui.Gone(nextButton))(ctx); err != nil {
-			return errors.Wrap(err, "failed to click network page next button")
-		}
-	}
 	return nil
 }
 
