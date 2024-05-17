@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/pointer"
@@ -18,6 +19,10 @@ import (
 var (
 	// ArcNotificationContentView is the class name of ArcNotificationContentView.
 	ArcNotificationContentView = nodewith.HasClass("ArcNotificationContentView")
+)
+
+const (
+	notificationPostPermission = "android.permission.POST_NOTIFICATIONS"
 )
 
 // ClickNotificationExpandButtonAndWaitForAnimation clicks the expand button and waits for its animation.
@@ -43,19 +48,41 @@ func ClickNotificationExpandButtonAndWaitForAnimation(ctx context.Context, ui *u
 
 // EnsureNotificationPermission grants the notification permission if needed.
 func EnsureNotificationPermission(ctx context.Context, a *ARC, packageName string) error {
-	const (
-		notificationPostPermission = "android.permission.POST_NOTIFICATIONS"
-	)
-	// Starts from T, notification permission must be granted explicitly.
+	// Unable to programmatically change notification settings before T.
 	sdkVer, err := SDKVersion()
 	if err != nil {
-		return errors.Wrap(err, "failed to get SDKVersion")
+		return errors.Wrap(err, "failed to get SDK version")
 	}
-	if sdkVer >= SDKT {
-		if err := a.GrantPermission(ctx, packageName, notificationPostPermission); err != nil {
-			return errors.Wrapf(err, "failed to grant %s", notificationPostPermission)
-		}
+	if sdkVer < SDKT {
+		return nil
 	}
 
+	if err := a.GrantPermission(ctx, packageName, notificationPostPermission); err != nil {
+		return errors.Wrapf(err, "failed to grant %q", notificationPostPermission)
+	}
+
+	return nil
+}
+
+// DisableAppNotifications disables the notification permission. This
+// permanently prevents the app from making a pop-up for notification
+// permissions.
+func DisableAppNotifications(ctx context.Context, a *ARC, appPkgName string) error {
+	// Unable to programmatically block notification settings before R.
+	sdkVer, err := SDKVersion()
+	if err != nil {
+		return errors.Wrap(err, "failed to get SDK version")
+	}
+	if sdkVer < SDKR {
+		return nil
+	}
+
+	// The "user-fixed" permission flag permanently prevents the app from asking
+	// for notification permissions.
+	// See https://developer.android.com/about/versions/11/privacy/permissions#dialog-visibility.
+	fixedFlag := "user-fixed"
+	if err := a.Command(ctx, "pm", "set-permission-flags", appPkgName, notificationPostPermission, fixedFlag).Run(testexec.DumpLogOnError); err != nil {
+		return errors.Wrapf(err, "failed to set permission flag %q for permission %q", fixedFlag, notificationPostPermission)
+	}
 	return nil
 }
