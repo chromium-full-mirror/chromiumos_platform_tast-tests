@@ -15,9 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
-	"go.chromium.org/tast-tests/cros/local/uidetection"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -32,10 +30,10 @@ func init() {
 		BugComponent: "b:1373988",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "arcBootedWithInputOverlayAlphaV2",
+		Fixture:      "arcBootedWithGameDashboard",
 		Params: []testing.Param{
 			{
-				ExtraSoftwareDeps: []string{"android_container"},
+				ExtraSoftwareDeps: []string{"android_container_r"},
 			}, {
 				Name:              "vm",
 				ExtraSoftwareDeps: []string{"android_vm"},
@@ -56,37 +54,32 @@ func InputOverlayEditor(ctx context.Context, s *testing.State) {
 		defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, params.TestConn)
 		// Start up UIAutomator.
 		ui := uiauto.New(params.TestConn).WithTimeout(time.Minute)
-		// Start up ACUITI.
-		uda := uidetection.NewDefault(params.TestConn).WithOptions(uidetection.Retries(3)).WithTimeout(time.Minute)
 
-		editButton := nodewith.Name("Edit").HasClass("PillButton")
-		appWindow := nodewith.Name("ARCInputOverlayTest").Role(role.Window).HasClass("RootView")
+		gameControlsEdit := nodewith.Name("Edit game controls").HasClass("GameDashboardMainMenuView::GameControlsDetailsRow")
+		topTapListItem := nodewith.Name("Selected key is space. Tap on the button to edit the control").HasClass("ActionViewListItem")
+		topTapButtonOptionsEditLabel := nodewith.Name("Selected key is space. Tap on another keyboard key to replace").HasClass("EditLabel")
+		topMoveEditingListEditLabel := nodewith.Name("Selected key is w for up. Tap on another keyboard key to replace").HasClass("EditLabel")
+		botTapEditingListEditLabel := nodewith.Name("Selected key is n. Tap on another keyboard key to replace").HasClass("EditLabel")
+		illegalMappingDescription := nodewith.Name("The following keys aren’t supported: Tab, Shift, Control, Escape, Caps lock, Volume").HasClass("ImageView")
+		buttonOptionsDone := nodewith.Name("Done").HasClass("DoneButton")
+		editingListDone := nodewith.Name("Done editing").HasClass("PillButton")
 
 		// CUJ: Attempts to change binding to illegal keys.
 		s.Log("Editor CUJ #1: key mappings changed to illegal keys")
 		if err := uiauto.Combine("mappings changed to illegal keys",
-			// Close educational dialog.
-			ui.LeftClick(nodewith.Name("Got it").HasClass("LabelButtonLabel")),
-			// Open game controls.
-			ui.LeftClick(nodewith.Name("Game controls").HasClass("MenuEntryView")),
-			ui.LeftClick(editButton),
-			// Change mapping of "w" to "ESC" (NOTE: "w" key is used because, unlike the
-			// "n" key, the associated on-screen error messages have no overlapping text,
-			// and thus it has the highest chance of success with text detection).
-			ui.LeftClick(nodewith.Name(gio.UpMoveKey).HasClass("LabelButtonLabel")),
+			// Open game dashboard.
+			kb.AccelAction("Search+g"),
+			// Open game controls editing.
+			ui.LeftClickUntil(gameControlsEdit, ui.Gone(gameControlsEdit)),
+			// Open the button options menu.
+			ui.LeftClickUntil(topTapListItem, ui.Gone(topTapListItem)),
+			// Change mapping of space key to "ESC"
+			ui.LeftClickUntilFocused(topTapButtonOptionsEditLabel),
 			kb.TypeKeyAction(input.KEY_ESC),
 			// Verify illegal mapping.
-			waitForMultiple(uda, "following", "supported", "Volume"),
-			// Change mapping of "w" to "w".
-			kb.TypeAction(gio.UpMoveKey),
-			// Verify illegal mapping.
-			waitForMultiple(uda, "Same", "ame"),
-			// Change mapping of "w" to "CTRL"
-			kb.TypeKeyAction(input.KEY_LEFTCTRL),
-			// Verify illegal mapping.
-			waitForMultiple(uda, "following", "supported", "Volume"),
+			ui.WaitUntilExists(illegalMappingDescription),
 			// Close out.
-			uda.Tap(uidetection.Word("Cancel").WithinA11yNode(appWindow)),
+			ui.LeftClickUntil(buttonOptionsDone, ui.Gone(buttonOptionsDone)),
 		)(ctx); err != nil {
 			s.Error("Failed to verify illegal keys: ", err)
 			// Reset activity.
@@ -95,38 +88,14 @@ func InputOverlayEditor(ctx context.Context, s *testing.State) {
 			}
 		}
 
-		// CUJ: Change key mappings and then press cancel.
-		s.Log("Editor CUJ #2: key mappings changes canceled")
-		if err := uiauto.Combine("cancel changed mapping",
-			// Open game controls.
-			ui.LeftClick(nodewith.Name("Game controls").HasClass("MenuEntryView")),
-			ui.LeftClick(editButton),
-			// Change mapping of "n" to "l".
-			ui.LeftClick(nodewith.Name(gio.BotTapKey).HasClass("LabelButtonLabel")),
-			kb.TypeAction("l"),
-			uda.Tap(uidetection.Word("Cancel").WithinA11yNode(appWindow)),
-			// Verify old mapping still exists.
-			ui.WaitUntilExists(nodewith.Name(gio.BotTapKey).HasClass("LabelButtonLabel")),
-		)(ctx); err != nil {
-			s.Error("Failed to verify canceled mapping: ", err)
-			// Reset activity.
-			if err := gio.CloseAndRelaunchActivity(ctx, &params); err != nil {
-				s.Fatal("Failed to reset application after failed CUJ: ", err)
-			}
-		}
-
 		// CUJ: Key of key binding changed to another existing key bind.
-		s.Log("Editor CUJ #3: key mapping changed to a non-existing key bind")
+		s.Log("Editor CUJ #2: key mapping changed to a non-existing key bind")
 		if err := uiauto.Combine("mapping unbound",
-			// Open game controls.
-			ui.LeftClick(nodewith.Name("Game controls").HasClass("MenuEntryView")),
-			ui.LeftClick(editButton),
 			// Change mapping of "w" to "g"
-			ui.LeftClick(nodewith.Name(gio.UpMoveKey).HasClass("LabelButtonLabel")),
+			ui.LeftClickUntilFocused(topMoveEditingListEditLabel),
 			kb.TypeAction("g"),
-			// Save binding.
-			uda.Tap(uidetection.Word("Save")),
-			uda.WaitUntilGone(uidetection.Word("Save")),
+			// Close editing.
+			ui.LeftClickUntil(editingListDone, ui.Gone(editingListDone)),
 			// Verify original "w" binding doesn't exist anymore (i.e. the current "w"
 			// binding taps at the bottom tap button, not the top tap button).
 			gio.MoveOverlayButton(kb, "g", &params),
@@ -135,17 +104,17 @@ func InputOverlayEditor(ctx context.Context, s *testing.State) {
 		}
 
 		// CUJ: Key of key binding changed to another existing key bind.
-		s.Log("Editor CUJ #4: key mapping changed to another existing key bind")
+		s.Log("Editor CUJ #3: key mapping changed to another existing key bind")
 		if err := uiauto.Combine("mapping unbound",
-			// Open game controls.
-			ui.LeftClick(nodewith.Name("Game controls").HasClass("MenuEntryView")),
-			ui.LeftClick(editButton),
+			// Open game dashboard.
+			kb.AccelAction("Search+g"),
+			// Open game controls editing.
+			ui.LeftClickUntil(gameControlsEdit, ui.Gone(gameControlsEdit)),
 			// Change mapping of "n" to " "
-			ui.LeftClick(nodewith.Name(gio.BotTapKey).HasClass("LabelButtonLabel")),
+			ui.LeftClickUntilFocused(botTapEditingListEditLabel),
 			kb.TypeAction(gio.TopTapKey),
-			// Save binding.
-			uda.Tap(uidetection.Word("Save")),
-			uda.WaitUntilGone(uidetection.Word("Save")),
+			// Close editing.
+			ui.LeftClickUntil(editingListDone, ui.Gone(editingListDone)),
 			// Verify original " " binding doesn't exist anymore (i.e. the current " "
 			// binding taps at the bottom tap button, not the top tap button).
 			gio.TapOverlayButton(kb, gio.TopTapKey, &params, gio.BotTap),
@@ -154,7 +123,7 @@ func InputOverlayEditor(ctx context.Context, s *testing.State) {
 		}
 
 		// CUJ: Close and reopen test application after changing key bindings.
-		s.Log("Editor CUJ #5: close and reopen application, after changing key mappings")
+		s.Log("Editor CUJ #4: close and reopen application, after changing key mappings")
 		if err := uiauto.Combine("mapping unbound",
 			// Close and reopen test application.
 			closeAndReopen(&params),
@@ -166,19 +135,6 @@ func InputOverlayEditor(ctx context.Context, s *testing.State) {
 
 		return nil
 	})
-}
-
-// waitForMultiple returns true if any of the listed words are found via ACUITI.
-func waitForMultiple(uda *uidetection.Context, words ...string) action.Action {
-	return func(ctx context.Context) error {
-		for _, word := range words {
-			if err := uda.WaitUntilExists(uidetection.Word(word))(ctx); err != nil {
-				continue
-			}
-			return nil
-		}
-		return errors.New("no listed words found")
-	}
 }
 
 // closeAndReopen returns a function that closes the current test application activity and relaunches it.
