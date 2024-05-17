@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
+	"go.chromium.org/tast-tests/cros/local/media/pre"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/testing"
 )
@@ -39,7 +40,7 @@ func init() {
 			},
 			{
 				Name:              "lacros",
-				Fixture:           "chromeVideoLacrosWithVCDInUtilityProcess",
+				Fixture:           pre.ChromeVideoLacrosFixture(pre.FakeMediaStreamUI, pre.VCDInUtilityProcess),
 				ExtraAttr:         []string{"informational"},
 				ExtraSoftwareDeps: []string{caps.BuiltinCamera, "lacros"},
 				Timeout:           7 * time.Minute, // A lenient limit for launching Lacros Chrome.

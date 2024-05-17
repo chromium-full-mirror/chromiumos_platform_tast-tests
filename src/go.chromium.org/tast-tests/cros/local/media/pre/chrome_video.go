@@ -491,26 +491,6 @@ func initChromeVideoLacrosFixtures() {
 		}),
 		Params: chromeVideoLacrosFixtureGenerator.genParams(),
 	})
-
-	// TODO(b/337315335): remove this once camera.GetUserMediaPostVCSCrash.lacros migrates to
-	// ChromeVideoLacrosFixture(FakeMediaStreamUI, VCDInUtilityProcess).
-	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoLacrosWithVCDInUtilityProcess",
-		Desc:     "Similar to chromeVideoLacros fixture but running VCD in the utility process",
-		Contacts: []string{"chromeos-gfx-video@google.com", "seannli@google.com"},
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(
-				chrome.ExtraArgs(chromeVideoArgs...),
-				chrome.LacrosExtraArgs(chromeVideoArgs...),
-				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
-				chrome.LacrosExtraArgs(chromeBypassPermissionsArgs...),
-				chrome.DisableFeatures("RunVideoCaptureServiceInBrowserProcess"))).Opts()
-		}),
-		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.FixtureSetUpTimeout + 7*time.Minute,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
 }
 
 // ChromeVideoLacrosFixture returns the name of the LaCrOS video fixture corresponding to features.
