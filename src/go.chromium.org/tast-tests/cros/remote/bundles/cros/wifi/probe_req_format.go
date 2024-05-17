@@ -30,7 +30,7 @@ func init() {
 		// a pcap problem that frame checksum might not be trust-worthy.
 		// See previous investigation in b/185378075.
 		Attr:        []string{"group:wificell"},
-		TestBedDeps: []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.PeripheralWifiStateWorking},
+		TestBedDeps: []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
 		ServiceDeps: []string{wificell.ShillServiceName},
 		Fixture:     wificell.FixtureID(wificell.TFFeaturesCapture),
 	})

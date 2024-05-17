@@ -46,7 +46,7 @@ func init() {
 		BugComponent:   "b:1131912",
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Attr:           []string{"group:wificell", "wificell_e2e"},
-		TestBedDeps:    []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.PeripheralWifiStateWorking},
+		TestBedDeps:    []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
 		VarDeps:        []string{"ui.signinProfileTestExtensionManifestKey"},
 		ServiceDeps: []string{
 			wificell.ShillServiceName,

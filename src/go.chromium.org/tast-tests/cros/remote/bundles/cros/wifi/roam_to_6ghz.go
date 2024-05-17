@@ -37,7 +37,7 @@ func init() {
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		// TODO(b/333388420) Stabilize RoamTo6GHz test
 		Attr:            []string{"group:wificell", "wificell_func", "wificell_unstable"},
-		TestBedDeps:     []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.PeripheralWifiStateWorking, "wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E"},
+		TestBedDeps:     []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking, "wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E"},
 		ServiceDeps:     []string{wificell.ShillServiceName},
 		Fixture:         wificell.FixtureID(wificell.TFFeaturesCapture),
 		Requirements:    []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},

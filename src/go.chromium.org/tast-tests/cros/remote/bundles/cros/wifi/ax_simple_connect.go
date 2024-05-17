@@ -38,6 +38,7 @@ func init() {
 		TestBedDeps: []string{
 			tbdep.Wificell,
 			tbdep.WifiStateNormal,
+			tbdep.BluetoothStateNormal,
 			tbdep.PeripheralWifiStateWorking,
 			tbdep.WifiRouterModels("ASUSWRT[GT-AXE11000]")[0],
 		},

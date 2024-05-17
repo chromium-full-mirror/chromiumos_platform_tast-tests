@@ -38,7 +38,7 @@ func init() {
 		BugComponent: "b:1318544", // ChromeOS > Software > System Services > Connectivity > General
 		// TODO(b/275127708): Move this test to network suite.
 		Attr:        []string{"group:wificell", "wificell_e2e"},
-		TestBedDeps: []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.PeripheralWifiStateWorking},
+		TestBedDeps: []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
 		ServiceDeps: []string{
 			"tast.cros.browser.ChromeService",
 			"tast.cros.networkui.ProxySettingService",

@@ -140,7 +140,7 @@ func init() {
 			},
 		},
 		Attr:         []string{"group:wificell", "wificell_commercial_unstable"},
-		TestBedDeps:  []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.PeripheralWifiStateWorking},
+		TestBedDeps:  []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
 		SoftwareDeps: []string{"chrome"},
 		// SigninProfileTestExtensionID is an id of the test extension which is
 		// allowed for signin profile (see http://crrev.com/772709 for details).
