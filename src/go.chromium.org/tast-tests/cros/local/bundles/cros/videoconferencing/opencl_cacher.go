@@ -9,7 +9,6 @@ import (
 	"os"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/tbdep"
 	upstartcommon "go.chromium.org/tast-tests/cros/common/upstart"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast-tests/cros/local/videoconferencing/effects"
@@ -36,7 +35,6 @@ func init() {
 			"video_conference_cq_critical",
 			"group:cbx", "cbx_feature_enabled", "cbx_unstable",
 		},
-		TestBedDeps:  []string{tbdep.Cbx(false)},
 		Fixture:      fixture.LoggedInWithFakeHALAndEffectsEnabled,
 		SoftwareDeps: []string{"camera_feature_effects"},
 	})

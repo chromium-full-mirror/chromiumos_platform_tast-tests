@@ -8,7 +8,6 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/videoconferencing/fixture"
 
@@ -38,7 +37,6 @@ func init() {
 				ExtraAttr: []string{
 					"group:cbx", "cbx_feature_enabled", "cbx_unstable",
 				},
-				ExtraTestBedDeps:  []string{tbdep.Cbx(false)},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("betty")),
 				Val:               []string{"ml_core_effects_pipeline_test"},
 			},

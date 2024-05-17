@@ -40,7 +40,7 @@ func init() {
 		Attr: []string{
 			"group:cbx", "cbx_feature_enabled", "cbx_unstable",
 		},
-		TestBedDeps: []string{tbdep.Cbx(false)},
+		TestBedDeps: []string{tbdep.Cbx(true)},
 		Data: []string{
 			"effects_frame_metrics.js",
 			"effects_video_script.html",
@@ -66,6 +66,7 @@ func init() {
 		},
 		Params: []testing.Param{
 			{
+				Name:    "ash",
 				Fixture: fixture.LoggedInWithFakeHALAndEffectsEnabled,
 			},
 			// Disabled by TORA.  See: b/297948060

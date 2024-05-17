@@ -46,7 +46,7 @@ func init() {
 			//	"cbx_feature_enabled",
 			//	"cbx_unstable",
 		},
-		TestBedDeps:  []string{tbdep.Cbx(false)},
+		TestBedDeps:  []string{tbdep.Cbx(true)},
 		Data:         []string{data.SpeechInputFile},
 		Fixture:      fixture.GAIALoggedInARCWithInternalCameraAndEffectsEnabled,
 		SoftwareDeps: []string{"chrome", "camera_feature_effects"},
