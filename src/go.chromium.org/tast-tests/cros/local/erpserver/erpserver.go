@@ -259,6 +259,7 @@ func (erpserver *ErpServer) handleUpload(ctx context.Context, w http.ResponseWri
 			continue
 		}
 		if erpserver.filter(&record) {
+			testing.ContextLog(ctx, "Reporting: Record accepted by filter: ", &record)
 			erpserver.queue <- recordData{record: &record, sequence: encryptedRecord.SequenceInformation}
 		}
 	}
