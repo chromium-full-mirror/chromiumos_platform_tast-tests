@@ -315,6 +315,36 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWDecodeCTRV3VP9, "proprietary_codecs"},
 			Fixture:           "chromeVideoWithDistinctiveIdentifier",
 		}, {
+			Name: "cencv3_vp92_cbc",
+			Val: playDrmParams{
+				fileName:    "tulip_480p_vp92_cencv3_cbc.mpd",
+				browserType: browser.TypeAsh,
+			},
+			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
+			ExtraData:         append(play.DRMDataFiles(), "tulip_480p_vp92_cencv3_cbc.mp4", "tulip_audio_aac_cencv3_cbc.mp4", "tulip_480p_vp92_cencv3_cbc.mpd"),
+			ExtraSoftwareDeps: []string{caps.HWDecodeCBCV3VP9, "proprietary_codecs"},
+			Fixture:           "chromeVideoWithDistinctiveIdentifier",
+		}, {
+			Name: "cencv3_vp92_cbc_lacros",
+			Val: playDrmParams{
+				fileName:    "tulip_480p_vp92_cencv3_cbc.mpd",
+				browserType: browser.TypeLacros,
+			},
+			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
+			ExtraData:         append(play.DRMDataFiles(), "tulip_480p_vp92_cencv3_cbc.mp4", "tulip_audio_aac_cencv3_cbc.mp4", "tulip_480p_vp92_cencv3_cbc.mpd"),
+			ExtraSoftwareDeps: []string{caps.HWDecodeCBCV3VP9, "proprietary_codecs"},
+			Fixture:           pre.ChromeVideoLacrosFixture(pre.FakeMediaStreamUI, pre.DistinctiveIdentifier),
+		}, {
+			Name: "cencv3_vp92_ctr",
+			Val: playDrmParams{
+				fileName:    "tulip_480p_vp92_cencv3_ctr.mpd",
+				browserType: browser.TypeAsh,
+			},
+			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
+			ExtraData:         append(play.DRMDataFiles(), "tulip_480p_vp92_cencv3_ctr.mp4", "tulip_audio_aac_cencv3_ctr.mp4", "tulip_480p_vp92_cencv3_ctr.mpd"),
+			ExtraSoftwareDeps: []string{caps.HWDecodeCTRV3VP9, "proprietary_codecs"},
+			Fixture:           "chromeVideoWithDistinctiveIdentifier",
+		}, {
 			Name: "cencv3_av1_cbc",
 			Val: playDrmParams{
 				fileName:    "tulip_480p_av1_cencv3_cbc.mpd",
@@ -342,6 +372,36 @@ func init() {
 			},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraData:         append(play.DRMDataFiles(), "tulip_480p_av1_cencv3_ctr.webm", "tulip_audio_aac_cencv3_ctr.mp4", "tulip_480p_av1_cencv3_ctr.mpd"),
+			ExtraSoftwareDeps: []string{caps.HWDecodeCTRV3AV1, "proprietary_codecs"},
+			Fixture:           pre.ChromeVideoLacrosFixture(pre.FakeMediaStreamUI, pre.DistinctiveIdentifier),
+		}, {
+			Name: "cencv3_av1_10bit_cbc",
+			Val: playDrmParams{
+				fileName:    "tulip_480p_av1_10bit_cencv3_cbc.mpd",
+				browserType: browser.TypeAsh,
+			},
+			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
+			ExtraData:         append(play.DRMDataFiles(), "tulip_480p_av1_10bit_cencv3_cbc.webm", "tulip_audio_aac_cencv3_cbc.mp4", "tulip_480p_av1_10bit_cencv3_cbc.mpd"),
+			ExtraSoftwareDeps: []string{caps.HWDecodeCBCV3AV1, "proprietary_codecs"},
+			Fixture:           "chromeVideoWithDistinctiveIdentifier",
+		}, {
+			Name: "cencv3_av1_10bit_ctr",
+			Val: playDrmParams{
+				fileName:    "tulip_480p_av1_10bit_cencv3_ctr.mpd",
+				browserType: browser.TypeAsh,
+			},
+			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
+			ExtraData:         append(play.DRMDataFiles(), "tulip_480p_av1_10bit_cencv3_ctr.webm", "tulip_audio_aac_cencv3_ctr.mp4", "tulip_480p_av1_10bit_cencv3_ctr.mpd"),
+			ExtraSoftwareDeps: []string{caps.HWDecodeCTRV3AV1, "proprietary_codecs"},
+			Fixture:           "chromeVideoWithDistinctiveIdentifier",
+		}, {
+			Name: "cencv3_av1_10bit_ctr_lacros",
+			Val: playDrmParams{
+				fileName:    "tulip_480p_av1_10bit_cencv3_ctr.mpd",
+				browserType: browser.TypeLacros,
+			},
+			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
+			ExtraData:         append(play.DRMDataFiles(), "tulip_480p_av1_10bit_cencv3_ctr.webm", "tulip_audio_aac_cencv3_ctr.mp4", "tulip_480p_av1_10bit_cencv3_ctr.mpd"),
 			ExtraSoftwareDeps: []string{caps.HWDecodeCTRV3AV1, "proprietary_codecs"},
 			Fixture:           pre.ChromeVideoLacrosFixture(pre.FakeMediaStreamUI, pre.DistinctiveIdentifier),
 		}},
