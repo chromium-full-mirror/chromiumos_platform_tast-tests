@@ -17,7 +17,7 @@ chromeos {
           suite_name: "bvt-tast-cq-cft-firmware"
           tag_criteria {
             tags: "group:mainline"
-            tag_excludes: "informational"
+            tag_excludes: ["informational", "group:fingerprint-informational", "group:fingerprint-cq"]
             test_names: "tast.firmware.*"
           }
         }
