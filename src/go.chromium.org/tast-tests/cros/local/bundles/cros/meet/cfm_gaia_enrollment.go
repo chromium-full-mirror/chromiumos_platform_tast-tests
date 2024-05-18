@@ -45,7 +45,7 @@ func CfmGAIAEnrollment(ctx context.Context, s *testing.State) {
 
 	opts := append([]chrome.Option{
 		chrome.ExtraArgs("--enable-logging", "--vmodule="+strings.Join(tags, ","))},
-		chrome.GAIALogin(chrome.Creds{User: cfmUser, Pass: cfmPassword}))
+		chrome.GAIAEnterpriseEnroll(chrome.Creds{User: cfmUser, Pass: cfmPassword}))
 
 	opts = append(opts, chrome.DontSkipOOBEAfterLogin(),
 		chrome.RemoveNotification(false),
