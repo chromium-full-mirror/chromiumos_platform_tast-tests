@@ -8,6 +8,7 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -18,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/firmware/futility"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
+	fwpb "go.chromium.org/tast-tests/cros/services/cros/firmware"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
@@ -41,7 +43,10 @@ func init() {
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		HardwareDeps: hwdep.D(hwdep.CPUSocFamily("intel")),
 		SoftwareDeps: []string{"csme_update"},
+		ServiceDeps:  []string{"tast.cros.firmware.BiosService"},
 		Attr:         []string{"group:firmware", "firmware_unstable"},
+		Vars:         []string{"firmware_branch", "ro_versions"},
+		Data:         []string{"shipped-firmwares.json"},
 		Timeout:      40 * time.Minute,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{
@@ -105,7 +110,20 @@ func CsmeFwUpdate(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get CSME versions: ", err)
 	}
 	if !isDowngradePossible {
-		s.Fatal("CSME RW blobs are same in downgrade and original bios")
+		s.Log("WARNING! CSME RW blobs are same in downgrade and original bios")
+
+		// Replace downgrade bios with shipped bios
+		downgradeBiosImageOnDut, err := flashLatestShippedFirmwareInRO(ctx, s, tempDirOnDut, backupOnDut)
+		if err != nil {
+			s.Fatal("CSME RW blobs are same in downgrade and original bios while failed to get shipped bios : ", err)
+		}
+		originalMeVersion, downgradeMeVersion, isDowngradePossible, err = getCsmeVersions(ctx, h.DUT, tempDirOnDut, backupOnDut, downgradeBiosImageOnDut)
+		if err != nil {
+			s.Fatal("Failed to get CSME versions: ", err)
+		}
+		if !isDowngradePossible {
+			s.Fatal("CSME RW blobs are same in downgrade, original and shipped bios")
+		}
 	}
 
 	activeMeVersion, err := getActiveCsmeRwVersion(ctx, h.DUT)
@@ -415,4 +433,135 @@ func switchSlotAndVerifyCsme(ctx context.Context, dut *dut.DUT, reporter *report
 
 	testing.ContextLogf(ctx, "Switch to slot %s successful", slot)
 	return nil
+}
+
+func flashLatestShippedFirmwareInRO(ctx context.Context, s *testing.State, tempDirOnDut string, originalBios string) (string, error) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Minute)
+	defer cancel()
+
+	h := s.FixtValue().(*fixture.Value).Helper
+
+	// Create a new directory in servo host to store the downloaded files.
+	out, err := h.ServoProxy.OutputCommand(ctx, false, "mktemp", "-d", "-p", "/var/tmp", "-t", "CsmeFwUpdateXXXXXX")
+	if err != nil {
+		s.Fatal("Failed to create servo temp dir")
+	}
+	tmpDirServo := strings.TrimSuffix(string(out), "\n")
+	defer func() {
+		s.Log("Deleting tmp directory on servo: ", tmpDirServo)
+		if err := h.ServoProxy.RunCommand(cleanupCtx, false, "rm", "-rf", tmpDirServo); err != nil {
+			s.Fatal("Failed to delete temp directory on servo host: ", err)
+		}
+	}()
+
+	// Create a new directory to store the downloaded files.
+	tmpDir, err := os.MkdirTemp("", "firmware-CsmeFwUpdate")
+	if err != nil {
+		s.Fatal("Failed to create a new directory for the test: ", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	// Get firmware name
+	corebootName, err := getFwName(ctx, h.Reporter)
+	if err != nil {
+		s.Fatal("Failed to get firmware name: ", err)
+	}
+
+	// Shipped version Data
+	var shippedFwVersions []jsonFwInfo
+	fwBranchVar, fwBranchVarOk := s.Var("firmware_branch")
+	roVersions, roVersionsOk := s.Var("ro_versions")
+	if roVersionsOk && fwBranchVarOk {
+		for _, ro := range strings.Split(roVersions, ",") {
+			shippedFwVersions = append(shippedFwVersions, jsonFwInfo{
+				Board:  h.Board,
+				Model:  h.Model,
+				FwID:   ro,
+				Branch: fwBranchVar,
+			})
+		}
+		s.Log("SHIPPED firmwares manually set from command line")
+	} else {
+		// Read from the 'shipped-firmwares.json' file.
+		jsonFilePath := s.DataPath("shipped-firmwares.json")
+		shippedFwVersions, err = collectShippedFws(h, jsonFilePath)
+		if err != nil {
+			s.Fatal("While collecting the shipped fw versions details ", err)
+			return "", errors.Wrapf(err, "failed while collecting the shipped fw versions;")
+		}
+		s.Logf("SHIPPED firmwares found for model %s:", h.Model)
+	}
+
+	// Download the latest shipped firmware.
+	firmwareFilesToFlash, err := downloadAndUntarFwFile(ctx, s, h, tmpDir, tmpDirServo, corebootName, shippedFwVersions[len(shippedFwVersions)-1])
+	if err != nil {
+		return "", errors.Wrapf(err, "failed while downloading the shipped fw versions;")
+	}
+	biosImageServo := filepath.Join(tmpDirServo, firmwareFilesToFlash.APFirmwareFile)
+
+	s.Logf("Servo Downloaded AP Firmware version %s", biosImageServo)
+	biosImageOnDut := tempDirOnDut + "/bios_downgrade.bin"
+
+	s.Logf("DUT Downloaded AP Firmware version %s", biosImageOnDut)
+	aMAP := make(map[string]string)
+	aMAP[biosImageServo] = biosImageOnDut
+	_, err = linuxssh.PutFiles(ctx, s.DUT().Conn(), aMAP, linuxssh.DereferenceSymlinks)
+	if err != nil {
+		return "", errors.Wrapf(err, "Failed to copy image firmware from Host to the Dut;")
+	}
+
+	downgradeMeVersion, err := getImageCsmeRwVersion(ctx, h.DUT, tempDirOnDut, biosImageOnDut)
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to get ME version of shipped image;")
+	}
+	s.Logf("FW main CSME RW Version Shipped Image: %s", downgradeMeVersion)
+
+	s.Log("Flashing shipped RO, Shipped RW")
+	if err := h.RequireBiosServiceClient(ctx); err != nil {
+		return "", errors.Wrapf(err, "failed to setup BiosServiceClient;")
+	}
+	flashingCtx, cancelflashingCtx := context.WithTimeout(ctx, flashingTime)
+	defer cancelflashingCtx()
+	s.Logf("Flashing DUT with file: %s using section: %v programmer: %v", biosImageOnDut, fwpb.ImageSection_EmptyImageSection, fwpb.Programmer_BIOSProgrammer)
+	if _, err := h.BiosServiceClient.WriteImageFromMultiSectionFile(flashingCtx, &fwpb.FWSectionInfo{Programmer: fwpb.Programmer_BIOSProgrammer, Path: biosImageOnDut, Section: fwpb.ImageSection_EmptyImageSection}); err != nil {
+		return "", errors.Wrapf(err, "failed to flash DUT with the Shipped bin image;")
+	}
+
+	s.Log("Flashing RW A")
+	if _, err := h.BiosServiceClient.WriteImageFromMultiSectionFile(flashingCtx, &fwpb.FWSectionInfo{Programmer: fwpb.Programmer_BIOSProgrammer, Path: originalBios, Section: fwpb.ImageSection_APRWAImageSection}); err != nil {
+		return "", errors.Wrapf(err, "failed to flash DUT RW_A with the Shipped bin image;")
+	}
+
+	s.Log("Flashing RW B")
+	if _, err := h.BiosServiceClient.WriteImageFromMultiSectionFile(flashingCtx, &fwpb.FWSectionInfo{Programmer: fwpb.Programmer_BIOSProgrammer, Path: originalBios, Section: fwpb.ImageSection_APRWBImageSection}); err != nil {
+		return "", errors.Wrapf(err, "failed to flash DUT RW_B with the Shipped bin image;")
+	}
+
+	testing.ContextLog(ctx, "Reboot and wait for DUT to reconnect")
+	if err := h.DUT.Reboot(ctx); err != nil {
+		return "", errors.Wrapf(err, "failed to reboot DUT post flashing shipped RO and current RW;")
+	}
+
+	s.Logf("Restoring temp directory: %s  after reboot", tempDirOnDut)
+	// All DUT files has been deleted, so restore
+	_, err = h.DUT.Conn().CommandContext(ctx, "mkdir", "-p", tempDirOnDut).Output()
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to create remote data path directory;")
+	}
+
+	// Copy Downgrade image.
+	s.Logf("Copying downgrade bios to DUT %s", biosImageOnDut)
+	_, err = linuxssh.PutFiles(ctx, s.DUT().Conn(), aMAP, linuxssh.DereferenceSymlinks)
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to copy image firmware from Host to the Dut;")
+	}
+
+	// Copy Original image.
+	s.Logf("Fetching orginal Bios %s", originalBios)
+	backupManager := s.FixtValue().(*fixture.Value).BackupManager
+	if err := backupManager.CopyBackupToDut(ctx, h.DUT, fixture.FirmwareAP, originalBios); err != nil {
+		return "", errors.Wrapf(err, "failed to send AP firmware backup to DUT;")
+	}
+	return biosImageOnDut, nil
 }
