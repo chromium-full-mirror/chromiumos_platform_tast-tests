@@ -41,24 +41,27 @@ func SetupServerAndPermission(ctx context.Context, br *browser.Browser, s *testi
 
 	vcPwaFullURL := srv.URL + common.VcAppURL
 	if err := apps.InstallPWAForURL(ctx, tconn, br, vcPwaFullURL, 15*time.Second); err != nil {
-		s.Fatal("Failed to install PWA for URL: ", err)
+		s.Fatal("Failed to InstallPWAForURL: ", err)
 	}
 
 	appID, err := apps.InstalledAppID(ctx, tconn, func(app *ash.ChromeApp) bool {
 		return app.Name == common.VcAppName
 	}, &testing.PollOptions{Timeout: 5 * time.Second})
 	if err != nil {
-		s.Fatal("Failed to get appID: ", err)
+		s.Fatal("Failed to InstalledAppID: ", err)
 	}
 
-	// Wait for the app to show.
-	window, err := ash.WaitForAppWindow(ctx, tconn, appID)
-	if err != nil {
-		s.Fatal("Failed to wait for app window: ", err)
+	if err := ash.WaitForApp(ctx, tconn, appID, 15*time.Second); err != nil {
+		s.Fatal("Failed to WaitForApp: ", err)
 	}
 
-	if err := window.CloseWindow(ctx, tconn); err != nil {
+	if err := apps.Close(ctx, tconn, appID); err != nil {
 		s.Fatal("Failed to close app: ", err)
+	}
+
+	// Wait for the app to close.
+	if err := ash.WaitForAppClosed(ctx, tconn, appID); err != nil {
+		s.Fatal("Failed to WaitForAppClosed: ", err)
 	}
 
 	return appID
