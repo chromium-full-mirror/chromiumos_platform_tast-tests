@@ -208,13 +208,13 @@ func changeTimeSettings(ctx context.Context, res *timezoneTestResources, timezon
 
 	if err := uiauto.Combine("open drop down list of timezone",
 		settings.LeftClick(timezoneSelect),
-		settings.WaitForLocation(nodewith.Role(role.ListBox).Ancestor(timezoneSelect)),
+		settings.WaitForLocation(nodewith.Role(role.MenuListPopup).Ancestor(timezoneSelect)),
 	)(ctx); err != nil {
 		return is24Hour, "", err
 	}
 
 	var targetTimezone *nodewith.Finder
-	onscreenOptions := nodewith.Role(role.ListBoxOption).Onscreen()
+	onscreenOptions := nodewith.Role(role.MenuListOption).Onscreen().Ancestor(timezoneSelect)
 	options, err := settings.NodesInfo(ctx, onscreenOptions)
 	if err != nil {
 		return is24Hour, "", errors.Wrap(err, "failed to get info of timezone options")
