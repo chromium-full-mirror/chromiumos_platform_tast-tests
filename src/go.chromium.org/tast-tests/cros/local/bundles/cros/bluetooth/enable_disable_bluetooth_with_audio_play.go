@@ -203,7 +203,7 @@ func EnableDisableBluetoothWithAudioPlay(ctx context.Context, s *testing.State) 
 		}
 
 		// Cheking and playing the audio if it is paused after reconnecting the BT device.
-		playPauseButton := nodewith.Name("Toggle play pause").Role(role.ToggleButton)
+		playPauseButton := nodewith.Name("Toggle play pause").Role(role.Button)
 		_, err := crastestclient.WaitForStreams(ctx, 3*time.Second)
 		if err != nil {
 			if err := ui.LeftClick(playPauseButton)(ctx); err != nil {
