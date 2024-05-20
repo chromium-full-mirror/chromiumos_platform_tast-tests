@@ -31,6 +31,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/logsaver"
 	"go.chromium.org/tast-tests/cros/local/minidump"
+	"go.chromium.org/tast-tests/cros/local/network/diag"
 	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast/core/caller"
 	"go.chromium.org/tast/core/errors"
@@ -318,9 +319,15 @@ func New(ctx context.Context, opts ...Option) (c *Chrome, retErr error) {
 	ctx, cancel := context.WithTimeout(origCtx, timeout)
 	defer cancel()
 
-	// Gaia Profiling: background internet check with timeout.
 	if cfg.LoginMode() == config.GAIALogin {
-		checkInternetConnectivityInBackground(ctx, 40*time.Second)
+		checkInternetConnectivityInBackground(ctx, 60*time.Second)
+
+		dutNetVerifyStart := time.Now()
+		if err := dutNetworkCheckAndResolve(ctx, cfg); err != nil {
+			return nil, errors.Wrap(err, "DUT network verification failed")
+		}
+		dutNetVerifyElapsed := time.Since(dutNetVerifyStart)
+		testing.ContextLog(ctx, "DUT network verification finished in: ", dutNetVerifyElapsed)
 	}
 
 	// Check whether ctx is long enough.
@@ -990,17 +997,33 @@ func saveChromeLog(ctx context.Context, logFilename string) error {
 func checkInternetConnectivityInBackground(ctx context.Context, timeout time.Duration) {
 	go func() {
 		checkInternetConnectivityStart := time.Now()
+		testing.ContextLog(ctx, "Background checking DUT connection to Internet")
 
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
 			if err := ping.VerifyInternetConnectivity(ctx, timeout); err != nil {
-				return errors.Wrap(err, "DUT no internet connectivity")
+				return errors.Wrap(err, "Background checking DUT no internet connectivity")
 			}
 
 			duration := time.Now().Sub(checkInternetConnectivityStart)
-			testing.ContextLog(ctx, "DUT network verification finished in: ", duration)
+			testing.ContextLog(ctx, "Background DUT network checking finished in: ", duration)
 			return nil
 		}, &testing.PollOptions{Timeout: timeout}); err != nil {
-			testing.ContextLog(ctx, "Timeout while checking internet connectivity: ", err)
+			testing.ContextLog(ctx, "Timeout while background checking internet connectivity: ", err)
 		}
 	}()
+}
+
+// dutNetworkCheckAndResolve doing network diagnostics to debug DUT connection issues.
+// If there is any issue, try to fix it at first, and return an error if the fix attempt fails.
+func dutNetworkCheckAndResolve(ctx context.Context, cfg *config.Config) error {
+	if err := diag.DUTConnectionCheck(ctx, 120*time.Second); err != nil {
+		if err := diag.DUTConnectionResolve(ctx); err != nil {
+			return err
+		}
+		if err := diag.DUTConnectionCheck(ctx, 30*time.Second); err != nil {
+			return errors.Wrap(err, "DUT network connections still failed after shill reset")
+		}
+		testing.ContextLog(ctx, "DUT network connections fixed")
+	}
+	return nil
 }
