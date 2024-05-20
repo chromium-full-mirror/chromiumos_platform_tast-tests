@@ -57,6 +57,11 @@ func (a *ARC) DumpUIHierarchyToFile(ctx context.Context, outDir, fileName string
 		return errors.Wrap(err, "failed to pull UI dump to outDir")
 	}
 
+	// Format the XML file for readability by adding a newline before every '<'.
+	if err := testexec.CommandContext(ctx, "sed", "-i", "s/</\\n</g", path).Run(testexec.DumpLogOnError); err != nil {
+		testing.ContextLog(ctx, "Failed to format XML: ", err)
+	}
+
 	testing.ContextLogf(ctx, "Test failed. Dumped ARC UI hierarchy into %q", path)
 	return nil
 }
