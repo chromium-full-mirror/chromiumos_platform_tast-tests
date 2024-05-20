@@ -12,6 +12,7 @@ import (
 	"net/http/httptest"
 	"os/exec"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/mafredri/cdp/rpcc"
@@ -84,6 +85,20 @@ var cmdlineVarUseUIAuto = testing.RegisterVarString(
 	"ui.LoginPerf.use_uiauto",
 	"false",
 	"Specify whether uiauto is used to await login animation.",
+)
+
+// NOTE: default set of categories is defined in `loginPerfTraceConfigFileName`.
+var cmdlineVarTracingExtraCategories = testing.RegisterVarString(
+	"ui.LoginPerf.tracing_extra_categories",
+	"",
+	"Trace event categories to additionally collect, separated by commas",
+)
+
+// Use 3 successful runs instead of 10, to reduce tests time.
+var cmdlineVarMinSuccessfulRuns = testing.RegisterVarString(
+	"ui.LoginPerf.runs",
+	"3",
+	"The number of minimum successful runs.",
 )
 
 // loginPerfTestParam is a set of parameters for the login perf test.
@@ -1043,8 +1058,12 @@ func testFunction(
 		}
 		var stopTracingCallback func(ctx context.Context) error
 		if runTracing {
+			var extraCategories []string
+			if cmdlineVarTracingExtraCategories.Value() != "" {
+				extraCategories = strings.Split(cmdlineVarTracingExtraCategories.Value(), ",")
+			}
 			// See go/trace-in-cuj-tests about rules for tracing.
-			if err := cujRecorder.StartTracingWithName(ctx, s.OutDir(), name+"-trace.data", s.DataPath(loginPerfTraceConfigFileName)); err != nil {
+			if err := cujRecorder.StartTracingWithExtraCategories(ctx, s.OutDir(), name+"-trace.data", s.DataPath(loginPerfTraceConfigFileName), extraCategories...); err != nil {
 				return errors.Wrap(err, "failed to start tracing")
 			}
 			stopTracingCallback = cujRecorder.StopTracing
@@ -1200,8 +1219,11 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 			DropMinMaxValues: false,
 		},
 	)
-	// Use 3 (successful) runs instead of 10, to reduce tests time.
-	r.SetRunsNumber(perfutil.RunnerCyclesOptions{MaxRuns: 5, MinSuccessfulRuns: 3})
+	minRuns, err := strconv.ParseInt(cmdlineVarMinSuccessfulRuns.Value(), 10, 32)
+	if err != nil || minRuns <= 0 {
+		s.Fatalf("Invalid value for %s: %v", cmdlineVarMinSuccessfulRuns.Name(), err)
+	}
+	r.SetRunsNumber(perfutil.RunnerCyclesOptions{MaxRuns: int(minRuns) + 2, MinSuccessfulRuns: int(minRuns)})
 	s.Logf("Starting test: %s for  %d windows", arcMode, windows)
 
 	inTabletMode := param.tabletMode
