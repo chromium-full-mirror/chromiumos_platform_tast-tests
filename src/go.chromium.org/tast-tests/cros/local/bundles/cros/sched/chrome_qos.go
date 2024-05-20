@@ -68,26 +68,26 @@ func getCPUSetCgroup(pid, tid int32) (string, error) {
 	return "", errors.New("cpuset cgroup not found")
 }
 
-func checkCPUCgroup(ctx context.Context, s *testing.State, pid int32) {
+func checkCPUCgroup(pid int32) error {
 	cgroup, err := getCPUCgroup(pid)
 	if err != nil {
-		s.Fatalf("Failed to get cpu cgroup for process %d: %v", pid, err)
+		return errors.Wrapf(err, "failed to get cpu cgroup for process %d", pid)
 	}
 	if cgroup == "/resourced/normal" || cgroup == "/resourced/background" {
-		return
+		return nil
 	}
-	s.Fatalf("Unexpected cpu cgroup %s for process %d", cgroup, pid)
+	return errors.Errorf("unexpected cpu cgroup %s for process %d", cgroup, pid)
 }
 
-func checkCPUSetCgroup(ctx context.Context, s *testing.State, pid, tid int32) {
+func checkCPUSetCgroup(pid, tid int32) error {
 	cgroup, err := getCPUSetCgroup(pid, tid)
 	if err != nil {
-		s.Fatalf("Failed to get cpuset cgroup for process %d: %v", pid, err)
+		return errors.Wrapf(err, "failed to get cpuset cgroup for process %d", pid)
 	}
 	if cgroup == "/resourced/all" || cgroup == "/resourced/efficient" {
-		return
+		return nil
 	}
-	s.Fatalf("Unexpected cpuset cgroup %s for process %d, thread %d", cgroup, pid, tid)
+	return errors.Errorf("unexpected cpuset cgroup %s for process %d, thread %d", cgroup, pid, tid)
 }
 
 func isQoSEligibleProcess(ctx context.Context, s *testing.State, p *process.Process) bool {
@@ -115,19 +115,30 @@ func ChromeQoS(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	br := cr.Browser()
 
-	processes, err := ashproc.Processes()
-	if err != nil {
-		s.Fatal("Failed to get Chrome processes: ", err)
-	} else if len(processes) == 0 {
-		s.Fatal("No Chrome processes found")
-	}
-
-	// Check cpu cgroups of all Chrome processes are managed by resourced.
-	for _, process := range processes {
-		if isQoSEligibleProcess(ctx, s, process) {
-			checkCPUCgroup(ctx, s, process.Pid)
-			checkCPUSetCgroup(ctx, s, process.Pid, process.Pid)
+	// Cgroups of chrome processes are updated via D-Bus messages. The updates can be delayed if the
+	// system is busy. Poll the cgroups of Chrome processes here until they are stabilized.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		processes, err := ashproc.Processes()
+		if err != nil {
+			return errors.Wrap(err, "failed to get Chrome processes")
+		} else if len(processes) == 0 {
+			return errors.New("no Chrome processes found")
 		}
+
+		// Check cpu cgroups of all Chrome processes are managed by resourced.
+		for _, process := range processes {
+			if isQoSEligibleProcess(ctx, s, process) {
+				if err := checkCPUCgroup(process.Pid); err != nil {
+					return errors.Wrapf(err, "failed to check cpu cgroup for process %d", process.Pid)
+				}
+				if err := checkCPUSetCgroup(process.Pid, process.Pid); err != nil {
+					return errors.Wrapf(err, "failed to check cpuset cgroup for process %d", process.Pid)
+				}
+			}
+		}
+		return nil
+	}, &testing.PollOptions{Interval: time.Second, Timeout: 10 * time.Second}); err != nil {
+		s.Fatal("Failed to verify Chrome processes: ", err)
 	}
 
 	// Open a page.
