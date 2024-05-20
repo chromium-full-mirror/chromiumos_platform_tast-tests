@@ -220,7 +220,14 @@ func (c *AdapterClient) CreateBond(ctx context.Context, device *BluetoothDevice,
 	if device == nil {
 		return errors.New("non-nil device required")
 	}
-	return c.dbus.CallForSuccess(ctx, "CreateBond", device.Marshall(), transport)
+	btStatus, err := c.dbus.CallForUInt32(ctx, "CreateBond", device.Marshall(), transport)
+	if err != nil {
+		return err
+	}
+	if btStatus != uint32(BtStatusSuccess) {
+		return errors.Errorf("create bond returned non-zero BtStatus %d", btStatus)
+	}
+	return nil
 }
 
 // CancelBondProcess calls the floss D-Bus method with the same name for this
@@ -437,7 +444,14 @@ func (c *AdapterClient) ConnectAllEnabledProfiles(ctx context.Context, device *B
 	if device == nil {
 		return errors.New("non-nil device required")
 	}
-	return c.dbus.CallForSuccess(ctx, "ConnectAllEnabledProfiles", device.Marshall())
+	btStatus, err := c.dbus.CallForUInt32(ctx, "ConnectAllEnabledProfiles", device.Marshall())
+	if err != nil {
+		return err
+	}
+	if btStatus != uint32(BtStatusSuccess) {
+		return errors.Errorf("connect all enabled profiles returned non-zero BtStatus %d", btStatus)
+	}
+	return nil
 }
 
 // DisconnectAllEnabledProfiles calls the floss D-Bus method with the same name
