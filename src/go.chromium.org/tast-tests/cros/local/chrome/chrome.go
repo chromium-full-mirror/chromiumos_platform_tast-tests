@@ -31,6 +31,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/logsaver"
 	"go.chromium.org/tast-tests/cros/local/minidump"
+	"go.chromium.org/tast-tests/cros/local/network/diag"
 	"go.chromium.org/tast/core/caller"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -316,6 +317,15 @@ func New(ctx context.Context, opts ...Option) (c *Chrome, retErr error) {
 	origCtx := ctx
 	ctx, cancel := context.WithTimeout(origCtx, timeout)
 	defer cancel()
+
+	if cfg.LoginMode() == config.GAIALogin {
+		dutNetVerifyStart := time.Now()
+		if err := dutNetworkCheckAndResolve(ctx, cfg); err != nil {
+			return nil, errors.Wrap(err, "DUT network verification failed")
+		}
+		dutNetVerifyElapsed := time.Since(dutNetVerifyStart)
+		testing.ContextLog(ctx, "DUT network verification finished in: ", dutNetVerifyElapsed)
+	}
 
 	// Check whether ctx is long enough.
 	deadline, _ := ctx.Deadline()
@@ -975,6 +985,21 @@ func saveChromeLog(ctx context.Context, logFilename string) error {
 		}
 	} else {
 		testing.ContextLog(ctx, "No output directory exists, not saving log file")
+	}
+	return nil
+}
+
+// dutNetworkCheckAndResolve doing network diagnostics to debug DUT connection issues.
+// If there is any issue, try to fix it at first, and return an error if the fix attempt fails.
+func dutNetworkCheckAndResolve(ctx context.Context, cfg *config.Config) error {
+	if err := diag.DUTConnectionCheck(ctx); err != nil {
+		if err := diag.DUTConnectionResolve(ctx); err != nil {
+			return err
+		}
+		if err := diag.DUTConnectionCheck(ctx); err != nil {
+			return errors.Wrap(err, "DUT network connections still failed after shill reset")
+		}
+		testing.ContextLog(ctx, "DUT network connections fixed")
 	}
 	return nil
 }
