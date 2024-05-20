@@ -37,10 +37,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tablet basics: Scroll, window controls",
 		Contacts: []string{
-			"chromeos-wm-corexp@google.com",
-			"shidi@google.com",
-			"chromeos-sw-engprod@google.com",
+			"chromeos-wm@google.com",
+			"chromeos-consumer-engprod@google.com",
 		},
+		// ChromeOS > Software > Window Management > Tablet Mode
 		BugComponent: "b:1253116",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},

@@ -27,9 +27,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks Alt+Tab and Alt+Shift+Tab functionality for cycling windows for each desk",
 		Contacts: []string{
-			"chromeos-wms@google.com",
-			"hongyulong@chromium.org",
-			"chromeos-sw-engprod@google.com",
+			"chromeos-wm@google.com",
+			"chromeos-consumer-engprod@google.com",
 		},
 		//  ChromeOS > Software > Window Management > Virtual Desks
 		BugComponent: "b:1238200",
@@ -199,6 +198,7 @@ func clickCurrentDeskButton(ctx context.Context, ac *uiauto.Context) error {
 	}
 	defer keyboard.AccelRelease(ctx, "Alt")
 
+	//TODO: Fix sleep and improve logic to wait for an event as per GoBigSleepLint
 	if err := testing.Sleep(ctx, 500*time.Millisecond); err != nil {
 		return errors.Wrap(err, "failed to sleep before press tab to open Alt+Tab window")
 	}

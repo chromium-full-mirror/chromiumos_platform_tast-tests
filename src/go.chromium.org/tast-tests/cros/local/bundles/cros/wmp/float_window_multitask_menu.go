@@ -31,9 +31,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Test that the float multitask menu works",
 		Contacts: []string{
-			"chromeos-wm-corexp@google.com",
-			"chromeos-sw-engprod@google.com",
-			"sophiewen@chromium.org",
+			"chromeos-wm@google.com",
+			"chromeos-consumer-engprod@google.com",
 		},
 		// ChromeOS > Software > Window Management > FloatingWindow
 		BugComponent: "b:1252568",

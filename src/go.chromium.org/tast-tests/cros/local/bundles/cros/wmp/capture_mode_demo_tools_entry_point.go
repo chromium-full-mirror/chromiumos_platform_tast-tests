@@ -23,8 +23,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that we can enable the demo tools feature from the capture mode settings menu",
 		Contacts: []string{
-			"chromeos-wms@google.com",
-			"chromeos-sw-engprod@google.com",
+			"chromeos-wm@google.com",
+			"chromeos-consumer-engprod@google.com",
 		},
 		// ChromeOS > Software > ScreenCapture
 		BugComponent: "b:1253115",

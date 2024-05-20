@@ -35,11 +35,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks the action to close all windows and desks can be canceled",
 		Contacts: []string{
-			"chromeos-wms@google.com",
-			"benbecker@chromium.org",
-			"yzd@google.com",
-			"cros-commercial-productivity-eng@google.com",
-			"chromeos-sw-engprod@google.com",
+			"chromeos-wm@google.com",
+			"chromeos-consumer-engprod@google.com",
 		},
 		// ChromeOS > Software > Window Management > Virtual Desks
 		BugComponent: "b:1238200",

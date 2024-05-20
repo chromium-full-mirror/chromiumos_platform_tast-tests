@@ -28,9 +28,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Check if the move tab to another window menu is grouped by desks",
 		Contacts: []string{
-			"chromeos-wms@google.com",
-			"hongyulong@chromium.org",
-			"chromeos-sw-engprod@google.com",
+			"chromeos-wm@google.com",
+			"chromeos-consumer-engprod@google.com",
 		},
 		// ChromeOS > Software > Window Management
 		BugComponent: "b:1238037",

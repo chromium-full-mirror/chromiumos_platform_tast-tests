@@ -29,8 +29,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that window caption buttons work properly",
 		Contacts: []string{
-			"chromeos-wm-corexp@google.com",
-			"chromeos-sw-engprod@google.com",
+			"chromeos-wm@google.com",
+			"chromeos-consumer-engprod@google.com",
 		},
 		// ChromeOS > Software > Window Management
 		BugComponent: "b:1238037",

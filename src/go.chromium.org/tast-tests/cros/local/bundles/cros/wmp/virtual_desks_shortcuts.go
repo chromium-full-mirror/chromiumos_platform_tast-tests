@@ -30,9 +30,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that virtual desks shortcuts works correctly",
 		Contacts: []string{
-			"chromeos-wms@google.com",
-			"dandersson@chromium.org",
-			"chromeos-sw-engprod@google.com",
+			"chromeos-wm@google.com",
+			"chromeos-consumer-engprod@google.com",
 		},
 		// ChromeOS > Software > Window Management > Virtual Desks
 		BugComponent: "b:1238200",

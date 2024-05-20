@@ -34,9 +34,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests the adjustment of night light schedule",
 		Contacts: []string{
-			"chromeos-wm-corexp@google.com",
-			"zxdan@google.com",
-			"awendy@google.com",
+			"chromeos-wm@google.com",
+			"chromeos-consumer-engprod@google.com",
 		},
 		// ChromeOS > Software > Nightlight
 		BugComponent: "b:1252585",

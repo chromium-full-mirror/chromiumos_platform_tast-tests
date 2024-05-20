@@ -29,9 +29,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that overview mode works correctly",
 		Contacts: []string{
-			"chromeos-wm-corexp@google.com",
-			"chromeos-sw-engprod@google.com",
-			"sammiequon@chromium.org",
+			"chromeos-wm@google.com",
+			"chromeos-consumer-engprod@google.com",
 		},
 		// ChromeOS > Software > Window Management > OverviewMode
 		BugComponent: "b:1252584",

@@ -23,8 +23,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that we can select cameras from the capture settings menu",
 		Contacts: []string{
-			"chromeos-wms@google.com",
-			"awendy@google.com",
+			"chromeos-wm@google.com",
+			"chromeos-consumer-engprod@google.com",
 		},
 		// ChromeOS > Software > ScreenCapture
 		BugComponent: "b:1253115",

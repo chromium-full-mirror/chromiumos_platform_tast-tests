@@ -27,9 +27,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that track pad reverse scrolling works properly",
 		Contacts: []string{
-			"chromeos-wm-corexp@google.com",
-			"zxdan@chromium.org",
-			"chromeos-sw-engprod@google.com",
+			"chromeos-wm@google.com",
+			"chromeos-consumer-engprod@google.com",
 		},
 		// ChromeOS > Software > Window Management
 		BugComponent: "b:1238037",
@@ -113,6 +112,7 @@ func TrackpadReverseScroll(ctx context.Context, s *testing.State) {
 	}
 	defer ash.SetOverviewModeAndWait(cleanupCtx, tconn, false)
 	// ---------------------------------------------------------
+	//TODO: Fix sleep and improve logic to wait for an event as per GoBigSleepLint
 	// Wait for an interval for the next swipe gesture.
 	if err := testing.Sleep(ctx, swipeInterval); err != nil {
 		s.Fatal("Failed to wait for the swipe interval: ", err)
@@ -213,7 +213,7 @@ func swipeTwice(ctx context.Context, tconn *chrome.TestConn, tpw *input.Trackpad
 	if err := trackpad.Swipe(ctx, tconn, tpw, swipeDirection, touches); err != nil {
 		return errors.Wrapf(err, "failed to swipe twice with %d fingers", touches)
 	}
-
+	//TODO: Fix sleep and improve logic to wait for an event as per GoBigSleepLint
 	if err := testing.Sleep(ctx, swipeInterval); err != nil {
 		return errors.Wrap(err, "failed to wait for the swipe interval")
 	}

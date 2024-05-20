@@ -33,11 +33,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that desks can be combined",
 		Contacts: []string{
-			"chromeos-wms@google.com",
-			"benbecker@chromium.org",
-			"cros-commercial-productivity-eng@google.com",
-			"chromeos-sw-engprod@google.com",
+			"chromeos-wm@google.com",
+			"chromeos-consumer-engprod@google.com",
 		},
+		// ChromeOS > Software > Window Management > Virtual Desks
 		BugComponent: "b:1238200",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},

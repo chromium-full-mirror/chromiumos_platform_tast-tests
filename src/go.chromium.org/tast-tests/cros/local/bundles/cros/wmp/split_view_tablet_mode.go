@@ -41,9 +41,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "In tablet mode, checks split view works properly",
 		Contacts: []string{
-			"chromeos-wm-corexp@google.com",
-			"zxdan@google.com",
-			"awendy@google.com",
+			"chromeos-wm@google.com",
+			"chromeos-consumer-engprod@google.com",
 		},
 		// ChromeOS > Software > Window Management > Splitscreen
 		BugComponent: "b:1252451",
