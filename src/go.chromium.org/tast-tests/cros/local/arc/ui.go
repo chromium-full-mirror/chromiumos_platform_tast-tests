@@ -21,16 +21,26 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+const defaultUIDumpFileName = "arc_uidump"
+
 // NewUIDevice creates a Device object by starting and connecting to UI Automator server.
 // Close must be called to clean up resources when a test is over.
 func (a *ARC) NewUIDevice(ctx context.Context) (*ui.Device, error) {
 	return ui.NewDeviceWithRetry(ctx, a.device)
 }
 
-// DumpUIHierarchy dumps arc UI hierarchy to 'arc_uidump.xml'. Call this
-// function after closing arc UI devices, since only one can be attached at
-// a time or it will fail with code 137.
+// DumpUIHierarchy dumps the arc UI hierarchy to 'arc_uidump.xml'. This
+// function should be called after closing arc UI devices, since only one can be
+// attached at a time or it will fail with code 137.
 func (a *ARC) DumpUIHierarchy(ctx context.Context, outDir string) error {
+	return a.DumpUIHierarchyToFile(ctx, outDir, defaultUIDumpFileName)
+}
+
+// DumpUIHierarchyToFile dumps the arc UI hierarchy to a file with the given
+// base file name (without extension). This function should be called after
+// closing arc UI devices, since only one can be attached at a time or it will
+// fail with code 137.
+func (a *ARC) DumpUIHierarchyToFile(ctx context.Context, outDir, fileName string) error {
 	dumpFile := "/sdcard/window_dump.xml"
 
 	if err := a.Command(ctx, "uiautomator", "dump").Run(testexec.DumpLogOnError); err != nil {
@@ -42,14 +52,12 @@ func (a *ARC) DumpUIHierarchy(ctx context.Context, outDir string) error {
 	if err := os.MkdirAll(dir, 0777); err != nil {
 		return errors.Wrapf(err, "failed to create directory %s", dir)
 	}
-
-	outputFile := "arc_uidump.xml"
-	file := filepath.Join(dir, outputFile)
-	if err := a.PullFile(ctx, dumpFile, file); err != nil {
+	path := filepath.Join(dir, fileName+".xml")
+	if err := a.PullFile(ctx, dumpFile, path); err != nil {
 		return errors.Wrap(err, "failed to pull UI dump to outDir")
 	}
 
-	testing.ContextLogf(ctx, "Test failed. Dumped ARC UI hierarchy into %s", outputFile)
+	testing.ContextLogf(ctx, "Test failed. Dumped ARC UI hierarchy into %q", path)
 	return nil
 }
 
@@ -75,6 +83,21 @@ func (a *ARC) DumpUIHierarchyOnError(ctx context.Context, outDir string, hasErro
 //
 // s.AttachErrorHandlers(uiDumpHandler, uiDumpHandler)
 func (a *ARC) DumpUIHierarchyHandler(ctx context.Context, d *ui.Device, outDir string) func(string) {
+	return a.DumpUIHierarchyToFileHandler(ctx, d, outDir, defaultUIDumpFileName)
+}
+
+// DumpUIHierarchyToFileHandler dumps the arc UI hierarchy to a file with the
+// given base file name (without extension). A UI device is optional. Pass nil
+// if no devices are open. If provided, closes the given UI device since only
+// one instance can be attached at a time.
+//
+// This function can be used with s.AttachErrorHandlers to dump the hierarchy
+// immediately after failure, before any cleanup functions run. For example:
+//
+// uiDumpHandler := a.DumpUIHierarchyToFileHandler(cleanupCtx, d, s.OutDir())
+//
+// s.AttachErrorHandlers(uiDumpHandler, uiDumpHandler)
+func (a *ARC) DumpUIHierarchyToFileHandler(ctx context.Context, d *ui.Device, outDir, fname string) func(string) {
 	return func(_ string) {
 		if d != nil {
 			testing.ContextLog(ctx, "Closing existing UI device to dump UI hierarchy")
@@ -82,7 +105,7 @@ func (a *ARC) DumpUIHierarchyHandler(ctx context.Context, d *ui.Device, outDir s
 				testing.ContextLog(ctx, "Failed to close ARC UI device: ", err)
 			}
 		}
-		if err := a.DumpUIHierarchy(ctx, outDir); err != nil {
+		if err := a.DumpUIHierarchyToFile(ctx, outDir, fname); err != nil {
 			testing.ContextLog(ctx, "Failed to dump ARC UI hierarchy: ", err)
 		}
 	}
