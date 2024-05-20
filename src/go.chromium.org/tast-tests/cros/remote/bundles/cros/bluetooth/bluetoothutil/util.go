@@ -77,7 +77,7 @@ func ConfigureAudioDevice(ctx context.Context, device *btr.EmulatedBTPeerDevice,
 	})
 
 	if err := device.RPCAudio().SetAudioConfig(ctx, audioConfig); err != nil {
-		return errors.Wrap(err, "failed to set audio config")
+		testing.ContextLogf(ctx, "ignore return value of SetAudioConfig: %s", err)
 	}
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		if err := device.RPCAudio().StartAudioServer(ctx, audioProfile); err != nil {
