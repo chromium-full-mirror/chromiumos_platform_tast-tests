@@ -42,7 +42,7 @@ func buildCameraFrameAnalysisRoutineArgs(ctx context.Context) ([]string, error) 
 func RunCameraFrameAnalysisRoutine(ctx context.Context, s *testing.State) {
 	// Camera diagnostics is installed in test image only. We need to enable it manually in tests.
 	enableCameraDiagCmd := testexec.CommandContext(ctx, "bash", "/usr/local/bin/enable_camera_diagnostics.sh")
-	if err := enableCameraDiagCmd.Run(); err != nil {
+	if err := enableCameraDiagCmd.Run(testexec.DumpLogOnError); err != nil {
 		s.Fatal("Failed to enable camera diagnostics: ", err)
 	}
 
