@@ -191,24 +191,6 @@ func TestPlaybackStressConfig(t *testing.T) {
 					}
 				}
 			}
-			// lacros
-			for _, resolution := range resolutions {
-				fpss := []int{30}
-				for _, fps := range fpss {
-					param := playbackStressParam{
-						codec:         "h264",
-						file:          playback.GenDataPath("h264", resolution, fps),
-						resolution:    resolution,
-						fps:           fps,
-						nameSuffix:    "lacros",
-						extendDeps:    []string{"lacros"},
-						suspendResume: true,
-						suspendMode:   sMode,
-						pmTestMode:    graphics.PmTestMode(pmMode),
-					}
-					testParams = append(testParams, param)
-				}
-			}
 		}
 	}
 
