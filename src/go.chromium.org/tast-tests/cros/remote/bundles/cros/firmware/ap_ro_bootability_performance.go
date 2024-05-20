@@ -1137,28 +1137,20 @@ func getNewestRWIDAvailable(ctx context.Context, pathToFile string, rwA, rwB fut
 	if err != nil {
 		return "", fwpb.ImageSection_EmptyImageSection, errors.Wrap(err, "failed to get ID from bin file")
 	}
-	splitRWA := strings.Split(apRWA, ".")
-	splitRWB := strings.Split(apRWB, ".")
 
 	// Compare the firmware IDs from section A and B to identify which is the newer.
 	// If they are the same, use section A as default.
-	rwDefaultStr := splitRWA[1] + "." + splitRWA[2] + "." + splitRWA[3]
-	for i := 1; i < len(splitRWA); i++ {
-		var idA, idB int
-		if _, err := fmt.Sscanf(splitRWA[i], "%d", &idA); err != nil {
-			return "", fwpb.ImageSection_EmptyImageSection, errors.Wrapf(err, "failed to sscanf %s", splitRWA[i])
-		}
-		if _, err := fmt.Sscanf(splitRWB[i], "%d", &idB); err != nil {
-			return "", fwpb.ImageSection_EmptyImageSection, errors.Wrapf(err, "failed to sscanf %s", splitRWB[i])
-		}
-
-		if idB > idA {
-			rwBStr := splitRWB[1] + "." + splitRWB[2] + "." + splitRWB[3]
-			return rwBStr, fwpb.ImageSection_APRWBImageSection, nil
-		}
-		if idB < idA {
-			return rwDefaultStr, fwpb.ImageSection_APRWAImageSection, nil
-		}
+	apIDRWA := strings.SplitN(apRWA, ".", 2)[1]
+	apIDRWB := strings.SplitN(apRWB, ".", 2)[1]
+	if apIDRWA == apIDRWB {
+		return apIDRWA, fwpb.ImageSection_APRWAImageSection, nil
 	}
-	return rwDefaultStr, fwpb.ImageSection_APRWAImageSection, nil
+
+	if areDesc, err := areVersionsDescending(apIDRWA, apIDRWB); err != nil {
+		return "", fwpb.ImageSection_EmptyImageSection, errors.Wrapf(err, "failed to compare firmware IDs %s and %s", apIDRWA, apIDRWB)
+	} else if areDesc {
+		return apIDRWA, fwpb.ImageSection_APRWAImageSection, nil
+	} else {
+		return apIDRWB, fwpb.ImageSection_APRWBImageSection, nil
+	}
 }

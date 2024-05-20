@@ -128,6 +128,12 @@
   {
     "board_name": "brask",
     "branch_name": "firmware-brya-14505.B",
+    "firmware_build_cros_version": "14505.468.0",
+    "model_name": "lisbon"
+  },
+  {
+    "board_name": "brask",
+    "branch_name": "firmware-brya-14505.B",
     "firmware_build_cros_version": "14505.285.0",
     "model_name": "moli"
   },
@@ -190,6 +196,12 @@
     "branch_name": "firmware-brya-14505.B",
     "firmware_build_cros_version": "14505.456.0",
     "model_name": "crota360"
+  },
+  {
+    "board_name": "brya",
+    "branch_name": "firmware-brya-14505.B",
+    "firmware_build_cros_version": "14505.755.0",
+    "model_name": "dochi"
   },
   {
     "board_name": "brya",
@@ -266,6 +278,12 @@
   {
     "board_name": "brya",
     "branch_name": "firmware-brya-14505.B",
+    "firmware_build_cros_version": "14505.711.0",
+    "model_name": "marasov"
+  },
+  {
+    "board_name": "brya",
+    "branch_name": "firmware-brya-14505.B",
     "firmware_build_cros_version": "14505.262.0",
     "model_name": "mithrax"
   },
@@ -292,6 +310,12 @@
     "branch_name": "firmware-brya-14505.B",
     "firmware_build_cros_version": "14505.635.0",
     "model_name": "omnigul"
+  },
+  {
+    "board_name": "brya",
+    "branch_name": "firmware-brya-14505.B",
+    "firmware_build_cros_version": "14505.744.0",
+    "model_name": "omniknight"
   },
   {
     "board_name": "brya",
@@ -339,6 +363,12 @@
     "board_name": "brya",
     "branch_name": "firmware-brya-14505.B",
     "firmware_build_cros_version": "14505.57.0",
+    "model_name": "primus"
+  },
+  {
+    "board_name": "brya",
+    "branch_name": "firmware-brya-14505.B",
+    "firmware_build_cros_version": "14505.705.0",
     "model_name": "primus"
   },
   {
@@ -956,7 +986,19 @@
   {
     "board_name": "corsola",
     "branch_name": "firmware-corsola-15194.B",
+    "firmware_build_cros_version": "15194.170.0",
+    "model_name": "voltorb"
+  },
+  {
+    "board_name": "corsola",
+    "branch_name": "firmware-corsola-15194.B",
     "firmware_build_cros_version": "15194.69.0",
+    "model_name": "voltorb"
+  },
+  {
+    "board_name": "corsola",
+    "branch_name": "firmware-corsola-15194.B",
+    "firmware_build_cros_version": "15194.75.0",
     "model_name": "voltorb"
   },
   {
@@ -980,13 +1022,13 @@
   {
     "board_name": "dedede",
     "branch_name": "firmware-dedede-13606.B",
-    "firmware_build_cros_version": "13606.519.0",
+    "firmware_build_cros_version": "13606.560.0",
     "model_name": "beadrix"
   },
   {
     "board_name": "dedede",
     "branch_name": "firmware-dedede-13606.B",
-    "firmware_build_cros_version": "13606.560.0",
+    "firmware_build_cros_version": "13606.627.0",
     "model_name": "beadrix"
   },
   {
@@ -1114,6 +1156,18 @@
     "branch_name": "firmware-dedede-13606.B",
     "firmware_build_cros_version": "13606.601.0",
     "model_name": "cret360"
+  },
+  {
+    "board_name": "dedede",
+    "branch_name": "firmware-dedede-13606.B",
+    "firmware_build_cros_version": "13606.618.0",
+    "model_name": "dexi"
+  },
+  {
+    "board_name": "dedede",
+    "branch_name": "firmware-dedede-13606.B",
+    "firmware_build_cros_version": "13606.633.0",
+    "model_name": "dita"
   },
   {
     "board_name": "dedede",
@@ -1280,6 +1334,12 @@
   {
     "board_name": "dedede",
     "branch_name": "firmware-dedede-13606.B",
+    "firmware_build_cros_version": "13606.620.0",
+    "model_name": "galith"
+  },
+  {
+    "board_name": "dedede",
+    "branch_name": "firmware-dedede-13606.B",
     "firmware_build_cros_version": "13606.427.0",
     "model_name": "galith360"
   },
@@ -1287,6 +1347,12 @@
     "board_name": "dedede",
     "branch_name": "firmware-dedede-13606.B",
     "firmware_build_cros_version": "13606.459.0",
+    "model_name": "galith360"
+  },
+  {
+    "board_name": "dedede",
+    "branch_name": "firmware-dedede-13606.B",
+    "firmware_build_cros_version": "13606.620.0",
     "model_name": "galith360"
   },
   {
@@ -1304,13 +1370,31 @@
   {
     "board_name": "dedede",
     "branch_name": "firmware-dedede-13606.B",
+    "firmware_build_cros_version": "13606.620.0",
+    "model_name": "gallop"
+  },
+  {
+    "board_name": "dedede",
+    "branch_name": "firmware-dedede-13606.B",
     "firmware_build_cros_version": "13606.459.0",
     "model_name": "galnat"
   },
   {
     "board_name": "dedede",
     "branch_name": "firmware-dedede-13606.B",
+    "firmware_build_cros_version": "13606.620.0",
+    "model_name": "galnat"
+  },
+  {
+    "board_name": "dedede",
+    "branch_name": "firmware-dedede-13606.B",
     "firmware_build_cros_version": "13606.459.0",
+    "model_name": "galnat360"
+  },
+  {
+    "board_name": "dedede",
+    "branch_name": "firmware-dedede-13606.B",
+    "firmware_build_cros_version": "13606.620.0",
     "model_name": "galnat360"
   },
   {
@@ -1328,6 +1412,12 @@
   {
     "board_name": "dedede",
     "branch_name": "firmware-dedede-13606.B",
+    "firmware_build_cros_version": "13606.620.0",
+    "model_name": "galtic"
+  },
+  {
+    "board_name": "dedede",
+    "branch_name": "firmware-dedede-13606.B",
     "firmware_build_cros_version": "13606.427.0",
     "model_name": "galtic360"
   },
@@ -1335,6 +1425,12 @@
     "board_name": "dedede",
     "branch_name": "firmware-dedede-13606.B",
     "firmware_build_cros_version": "13606.459.0",
+    "model_name": "galtic360"
+  },
+  {
+    "board_name": "dedede",
+    "branch_name": "firmware-dedede-13606.B",
+    "firmware_build_cros_version": "13606.620.0",
     "model_name": "galtic360"
   },
   {
@@ -1460,6 +1556,12 @@
   {
     "board_name": "dedede",
     "branch_name": "firmware-dedede-13606.B",
+    "firmware_build_cros_version": "13606.617.0",
+    "model_name": "magister"
+  },
+  {
+    "board_name": "dedede",
+    "branch_name": "firmware-dedede-13606.B",
     "firmware_build_cros_version": "13606.389.0",
     "model_name": "maglet"
   },
@@ -1473,6 +1575,12 @@
     "board_name": "dedede",
     "branch_name": "firmware-dedede-13606.B",
     "firmware_build_cros_version": "13606.560.0",
+    "model_name": "maglet"
+  },
+  {
+    "board_name": "dedede",
+    "branch_name": "firmware-dedede-13606.B",
+    "firmware_build_cros_version": "13606.617.0",
     "model_name": "maglet"
   },
   {
@@ -1508,6 +1616,12 @@
   {
     "board_name": "dedede",
     "branch_name": "firmware-dedede-13606.B",
+    "firmware_build_cros_version": "13606.617.0",
+    "model_name": "maglia"
+  },
+  {
+    "board_name": "dedede",
+    "branch_name": "firmware-dedede-13606.B",
     "firmware_build_cros_version": "13606.336.0",
     "model_name": "maglith"
   },
@@ -1521,6 +1635,12 @@
     "board_name": "dedede",
     "branch_name": "firmware-dedede-13606.B",
     "firmware_build_cros_version": "13606.560.0",
+    "model_name": "maglith"
+  },
+  {
+    "board_name": "dedede",
+    "branch_name": "firmware-dedede-13606.B",
+    "firmware_build_cros_version": "13606.617.0",
     "model_name": "maglith"
   },
   {
@@ -1544,6 +1664,12 @@
   {
     "board_name": "dedede",
     "branch_name": "firmware-dedede-13606.B",
+    "firmware_build_cros_version": "13606.617.0",
+    "model_name": "magma"
+  },
+  {
+    "board_name": "dedede",
+    "branch_name": "firmware-dedede-13606.B",
     "firmware_build_cros_version": "13606.438.0",
     "model_name": "magneto"
   },
@@ -1551,6 +1677,12 @@
     "board_name": "dedede",
     "branch_name": "firmware-dedede-13606.B",
     "firmware_build_cros_version": "13606.560.0",
+    "model_name": "magneto"
+  },
+  {
+    "board_name": "dedede",
+    "branch_name": "firmware-dedede-13606.B",
+    "firmware_build_cros_version": "13606.617.0",
     "model_name": "magneto"
   },
   {
@@ -1581,6 +1713,12 @@
     "board_name": "dedede",
     "branch_name": "firmware-dedede-13606.B",
     "firmware_build_cros_version": "13606.560.0",
+    "model_name": "magolor"
+  },
+  {
+    "board_name": "dedede",
+    "branch_name": "firmware-dedede-13606.B",
+    "firmware_build_cros_version": "13606.617.0",
     "model_name": "magolor"
   },
   {
@@ -1622,6 +1760,12 @@
   {
     "board_name": "dedede",
     "branch_name": "firmware-dedede-13606.B",
+    "firmware_build_cros_version": "13606.617.0",
+    "model_name": "magpie"
+  },
+  {
+    "board_name": "dedede",
+    "branch_name": "firmware-dedede-13606.B",
     "firmware_build_cros_version": "13606.182.0",
     "model_name": "metaknight"
   },
@@ -1646,6 +1790,12 @@
   {
     "board_name": "dedede",
     "branch_name": "firmware-dedede-13606.B",
+    "firmware_build_cros_version": "13606.617.0",
+    "model_name": "palutena"
+  },
+  {
+    "board_name": "dedede",
+    "branch_name": "firmware-dedede-13606.B",
     "firmware_build_cros_version": "13606.442.0",
     "model_name": "pasara"
   },
@@ -1653,6 +1803,12 @@
     "board_name": "dedede",
     "branch_name": "firmware-dedede-13606.B",
     "firmware_build_cros_version": "13606.615.0",
+    "model_name": "peezer"
+  },
+  {
+    "board_name": "dedede",
+    "branch_name": "firmware-dedede-13606.B",
+    "firmware_build_cros_version": "13606.627.0",
     "model_name": "peezer"
   },
   {
@@ -2714,7 +2870,37 @@
   {
     "board_name": "nissa",
     "branch_name": "firmware-nissa-15217.B",
+    "firmware_build_cros_version": "15217.522.0",
+    "model_name": "anraggar"
+  },
+  {
+    "board_name": "nissa",
+    "branch_name": "firmware-nissa-15217.B",
+    "firmware_build_cros_version": "15217.538.0",
+    "model_name": "anraggar"
+  },
+  {
+    "board_name": "nissa",
+    "branch_name": "firmware-nissa-15217.B",
+    "firmware_build_cros_version": "15217.522.0",
+    "model_name": "anraggar360"
+  },
+  {
+    "board_name": "nissa",
+    "branch_name": "firmware-nissa-15217.B",
+    "firmware_build_cros_version": "15217.538.0",
+    "model_name": "anraggar360"
+  },
+  {
+    "board_name": "nissa",
+    "branch_name": "firmware-nissa-15217.B",
     "firmware_build_cros_version": "15217.319.0",
+    "model_name": "craask"
+  },
+  {
+    "board_name": "nissa",
+    "branch_name": "firmware-nissa-15217.B",
+    "firmware_build_cros_version": "15217.439.0",
     "model_name": "craask"
   },
   {
@@ -2726,7 +2912,19 @@
   {
     "board_name": "nissa",
     "branch_name": "firmware-nissa-15217.B",
+    "firmware_build_cros_version": "15217.467.0",
+    "model_name": "craaskana"
+  },
+  {
+    "board_name": "nissa",
+    "branch_name": "firmware-nissa-15217.B",
     "firmware_build_cros_version": "15217.319.0",
+    "model_name": "craaskbowl"
+  },
+  {
+    "board_name": "nissa",
+    "branch_name": "firmware-nissa-15217.B",
+    "firmware_build_cros_version": "15217.439.0",
     "model_name": "craaskbowl"
   },
   {
@@ -2750,7 +2948,19 @@
   {
     "board_name": "nissa",
     "branch_name": "firmware-nissa-15217.B",
+    "firmware_build_cros_version": "15217.439.0",
+    "model_name": "craaskino"
+  },
+  {
+    "board_name": "nissa",
+    "branch_name": "firmware-nissa-15217.B",
     "firmware_build_cros_version": "15217.319.0",
+    "model_name": "craaskvin"
+  },
+  {
+    "board_name": "nissa",
+    "branch_name": "firmware-nissa-15217.B",
+    "firmware_build_cros_version": "15217.439.0",
     "model_name": "craaskvin"
   },
   {
@@ -2775,7 +2985,31 @@
     "board_name": "nissa",
     "branch_name": "firmware-nissa-15217.B",
     "firmware_build_cros_version": "15217.439.0",
+    "model_name": "craasneto"
+  },
+  {
+    "board_name": "nissa",
+    "branch_name": "firmware-nissa-15217.B",
+    "firmware_build_cros_version": "15217.502.0",
+    "model_name": "craaswell"
+  },
+  {
+    "board_name": "nissa",
+    "branch_name": "firmware-nissa-15217.B",
+    "firmware_build_cros_version": "15217.448.0",
     "model_name": "gothrax"
+  },
+  {
+    "board_name": "nissa",
+    "branch_name": "firmware-nissa-15217.B",
+    "firmware_build_cros_version": "15217.448.0",
+    "model_name": "gothraxcs"
+  },
+  {
+    "board_name": "nissa",
+    "branch_name": "firmware-nissa-15217.B",
+    "firmware_build_cros_version": "15217.531.0",
+    "model_name": "hideo"
   },
   {
     "board_name": "nissa",
@@ -2799,6 +3033,12 @@
     "board_name": "nissa",
     "branch_name": "firmware-nissa-15217.B",
     "firmware_build_cros_version": "15217.355.0",
+    "model_name": "pujjo1e"
+  },
+  {
+    "board_name": "nissa",
+    "branch_name": "firmware-nissa-15217.B",
+    "firmware_build_cros_version": "15217.460.0",
     "model_name": "pujjo1e"
   },
   {
@@ -2841,12 +3081,36 @@
     "board_name": "nissa",
     "branch_name": "firmware-nissa-15217.B",
     "firmware_build_cros_version": "15217.439.0",
+    "model_name": "quandiso"
+  },
+  {
+    "board_name": "nissa",
+    "branch_name": "firmware-nissa-15217.B",
+    "firmware_build_cros_version": "15217.439.0",
+    "model_name": "quandiso360"
+  },
+  {
+    "board_name": "nissa",
+    "branch_name": "firmware-nissa-15217.B",
+    "firmware_build_cros_version": "15217.439.0",
+    "model_name": "uldren"
+  },
+  {
+    "board_name": "nissa",
+    "branch_name": "firmware-nissa-15217.B",
+    "firmware_build_cros_version": "15217.504.0",
     "model_name": "uldren"
   },
   {
     "board_name": "nissa",
     "branch_name": "firmware-nissa-15217.B",
     "firmware_build_cros_version": "15217.439.0",
+    "model_name": "uldren360"
+  },
+  {
+    "board_name": "nissa",
+    "branch_name": "firmware-nissa-15217.B",
+    "firmware_build_cros_version": "15217.504.0",
     "model_name": "uldren360"
   },
   {
@@ -2872,6 +3136,12 @@
     "branch_name": "firmware-nissa-15217.B",
     "firmware_build_cros_version": "15217.156.0",
     "model_name": "xivu360"
+  },
+  {
+    "board_name": "nissa",
+    "branch_name": "firmware-nissa-15217.B",
+    "firmware_build_cros_version": "15217.392.0",
+    "model_name": "yahiko"
   },
   {
     "board_name": "nissa",
@@ -3798,6 +4068,24 @@
     "model_name": null
   },
   {
+    "board_name": "rex",
+    "branch_name": "firmware-rex-15709.B",
+    "firmware_build_cros_version": "15709.100.0",
+    "model_name": "karis"
+  },
+  {
+    "board_name": "rex",
+    "branch_name": "firmware-rex-15709.B",
+    "firmware_build_cros_version": "15709.59.0",
+    "model_name": "karis"
+  },
+  {
+    "board_name": "rex",
+    "branch_name": "firmware-rex-15709.B",
+    "firmware_build_cros_version": "15709.46.0",
+    "model_name": "screebo"
+  },
+  {
     "board_name": "sand",
     "branch_name": "firmware-reef-9042.B",
     "firmware_build_cros_version": "9042.125.0",
@@ -4052,6 +4340,12 @@
   {
     "board_name": "strongbad",
     "branch_name": "firmware-trogdor-13577.B",
+    "firmware_build_cros_version": "13577.1061.0",
+    "model_name": "homestar"
+  },
+  {
+    "board_name": "strongbad",
+    "branch_name": "firmware-trogdor-13577.B",
     "firmware_build_cros_version": "13577.299.0",
     "model_name": "homestar"
   },
@@ -4065,6 +4359,12 @@
     "board_name": "strongbad",
     "branch_name": "firmware-trogdor-13577.B",
     "firmware_build_cros_version": "13577.508.0",
+    "model_name": "homestar"
+  },
+  {
+    "board_name": "strongbad",
+    "branch_name": "firmware-trogdor-13577.B",
+    "firmware_build_cros_version": "13577.905.0",
     "model_name": "homestar"
   },
   {
@@ -4162,6 +4462,12 @@
     "branch_name": "firmware-trogdor-13577.B",
     "firmware_build_cros_version": "13577.571.0",
     "model_name": "pazquel"
+  },
+  {
+    "board_name": "trogdor",
+    "branch_name": "firmware-trogdor-13577.B",
+    "firmware_build_cros_version": "13577.742.0",
+    "model_name": "pazquel360"
   },
   {
     "board_name": "trogdor",
@@ -4382,13 +4688,31 @@
   {
     "board_name": "volteer",
     "branch_name": "firmware-volteer-13672.B",
+    "firmware_build_cros_version": "13672.382.0",
+    "model_name": "volet"
+  },
+  {
+    "board_name": "volteer",
+    "branch_name": "firmware-volteer-13672.B",
     "firmware_build_cros_version": "13672.172.0",
     "model_name": "volta"
   },
   {
     "board_name": "volteer",
     "branch_name": "firmware-volteer-13672.B",
+    "firmware_build_cros_version": "13672.382.0",
+    "model_name": "volta"
+  },
+  {
+    "board_name": "volteer",
+    "branch_name": "firmware-volteer-13672.B",
     "firmware_build_cros_version": "13672.121.0",
+    "model_name": "voxel"
+  },
+  {
+    "board_name": "volteer",
+    "branch_name": "firmware-volteer-13672.B",
+    "firmware_build_cros_version": "13672.382.0",
     "model_name": "voxel"
   },
   {
