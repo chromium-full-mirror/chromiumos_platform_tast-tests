@@ -48,7 +48,7 @@ var (
 	// GSC version strings.
 	// Group 1 is the branch name.
 	// Group 2 is the version sha
-	verRWCr50StrRE       = `cr50_([0-9_vpmefi\.]*)\.[0-9]*-([[:xdigit:]]+)`
+	verRWCr50StrRE       = `cr50_([0-9_vpmefi\.]*)\.[0-9]*[\-\+]([[:xdigit:]]+)`
 	verRWTi50StrRE       = `ti50_common_([a-z]+)\S*:(\S+)`
 	verRWLegacyTi50StrRE = `(ti50_common):(\S+)`
 	verRWGSCStrRE        = verRWCr50StrRE + `|` + verRWTi50StrRE + `|` + verRWLegacyTi50StrRE

@@ -217,6 +217,32 @@ Build:   0.6.230/cr50_v3.94_pp.259-e20fb86af1
 	testVersionInfoMatcher(t, input, expected)
 }
 
+func TestVersionCommandCr50Processor5(t *testing.T) {
+	input := `
+Chip:    g cr50 B2-C
+Board:   0
+RO_A:    0.0.11/bc74f7dc
+RO_B:  * 0.0.12/9eb618de
+RW_A:    0.5.12/cr50_v4.11_28_efi.0-8441619945
+RW_B:  * 1.6.250/DBG/cr50_v4.08_pp.61+a50884addc
+BID A:   00000000:00000000:00000000 Yes
+BID B:   00000000:00000000:00000000 Yes
+Build:   1.6.250/DBG/cr50_v4.08_pp.61+a50884addc
+         tpm2:v1.9308_26_0.93-d6c7c5f
+         pinweaver:v0.0.156-4ec2204
+`
+	expected := VersionCommandInfo{
+		RoA:   RoInfo{Active: false, Version: "0.0.11", ImageCheck: "bc74f7dc"},
+		RoB:   RoInfo{Active: true, Version: "0.0.12", ImageCheck: "9eb618de"},
+		RwA:   RwInfo{Empty: false, Active: false, Version: "0.5.12", Branch: EFI},
+		RwB:   RwInfo{Empty: false, Active: true, Debug: true, Version: "1.6.250", Branch: PrePvt},
+		Bid:   BidInfo{Empty: false, BidType: 0, Mask: 0, Flags: 0},
+		Build: BuildInfo{Branch: PrePvt, Debug: true},
+	}
+
+	testVersionInfoMatcher(t, input, expected)
+}
+
 func testVersionInfoMatcher(t *testing.T, input string, expected VersionCommandInfo) {
 	out, err := matchVersionInfo(input)
 	if err != nil {
