@@ -32,6 +32,14 @@ const (
 	tearDownTimeout = 60 * time.Second
 )
 
+var serviceDeps = []string{
+	"tast.cros.demomode.DemoModeService",
+	"tast.cros.hwsec.OwnershipService",
+	"tast.cros.ui.ChromeUIService",
+	"tast.cros.browser.ChromeService",
+	"tast.cros.tape.Service",
+	"tast.cros.policy.PolicyService"}
+
 func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name: fixture.PostDemoModeOOBEAlpha,
@@ -49,12 +57,7 @@ func init() {
 		SetUpTimeout:    setUpTimeout,
 		TearDownTimeout: tearDownTimeout,
 		Vars:            []string{"ui.signinProfileTestExtensionManifestKey", tape.ServiceAccountVar},
-		ServiceDeps: []string{
-			"tast.cros.demomode.DemoModeService",
-			"tast.cros.hwsec.OwnershipService",
-			"tast.cros.ui.ChromeUIService",
-			"tast.cros.browser.ChromeService",
-			"tast.cros.tape.Service"},
+		ServiceDeps:     serviceDeps,
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: fixture.PostDemoModeOOBEProd,
@@ -72,12 +75,7 @@ func init() {
 		SetUpTimeout:    setUpTimeout,
 		TearDownTimeout: tearDownTimeout,
 		Vars:            []string{"ui.signinProfileTestExtensionManifestKey", tape.ServiceAccountVar},
-		ServiceDeps: []string{
-			"tast.cros.demomode.DemoModeService",
-			"tast.cros.hwsec.OwnershipService",
-			"tast.cros.ui.ChromeUIService",
-			"tast.cros.browser.ChromeService",
-			"tast.cros.tape.Service"},
+		ServiceDeps:     serviceDeps,
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: fixture.PostDemoModeOOBECloudGaming,
@@ -96,12 +94,7 @@ func init() {
 		SetUpTimeout:    setUpTimeout,
 		TearDownTimeout: tearDownTimeout,
 		Vars:            []string{"ui.signinProfileTestExtensionManifestKey", tape.ServiceAccountVar},
-		ServiceDeps: []string{
-			"tast.cros.demomode.DemoModeService",
-			"tast.cros.hwsec.OwnershipService",
-			"tast.cros.ui.ChromeUIService",
-			"tast.cros.browser.ChromeService",
-			"tast.cros.tape.Service"},
+		ServiceDeps:     serviceDeps,
 	})
 }
 
