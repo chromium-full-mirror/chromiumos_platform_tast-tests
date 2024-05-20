@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 
+	"go.chromium.org/tast-tests/cros/common/bounds"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/storage/util"
@@ -37,6 +38,18 @@ func init() {
 }
 
 func NvmeConfiguration(ctx context.Context, s *testing.State) {
+	metricBounds := []bounds.MetricBounds{{
+		Metric: bounds.MatchExact("_NvmePCIe"),
+		Bounds: bounds.Min(1), // 1 - is pcie transport, 0 - otherwise
+	}, {
+		Metric: bounds.MatchExact("_NvmeLinkSpeed"),
+		Bounds: bounds.Min(8.0), // 8 GT/s is PCIe gen3
+	}, {
+		Metric: bounds.MatchExact("_NvmeVersion"),
+		Bounds: bounds.Min(66304), // 0x10300 - NVMe 1.3
+	}}
+	defer util.FatalIfBoundsCheckFail(ctx, metricBounds, s)
+
 	bootIDChecker := util.NewBootIDChecker(ctx, s.DUT(), s)
 	defer util.FatalIfBootIDChanged(ctx, bootIDChecker, s)
 

@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/bounds"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/storage/util"
 	"go.chromium.org/tast/core/testing"
@@ -57,6 +58,18 @@ func init() {
 }
 
 func StressWrite(ctx context.Context, s *testing.State) {
+	metricBounds := []bounds.MetricBounds{{
+		Metric: bounds.MatchRegexp(`.*bw_delta.*`),
+		Bounds: bounds.Between(-15, 15), // percentage increase/decrease
+	}, {
+		Metric: bounds.MatchRegexp(`.*iops_delta.*`),
+		Bounds: bounds.Between(-15, 15), // percentage increase/decrease
+	}, {
+		Metric: bounds.MatchRegexp(`.*percentile_99.000000_delta.*`),
+		Bounds: bounds.Between(-15, 15), // percentage increase/decrease
+	}}
+	defer util.FatalIfBoundsCheckFail(ctx, metricBounds, s)
+
 	bootIDChecker := util.NewBootIDChecker(ctx, s.DUT(), s)
 	defer util.FatalIfBootIDChanged(ctx, bootIDChecker, s)
 

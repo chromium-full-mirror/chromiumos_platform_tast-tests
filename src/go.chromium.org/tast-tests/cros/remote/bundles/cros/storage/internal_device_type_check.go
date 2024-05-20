@@ -8,6 +8,7 @@ package storage
 import (
 	"context"
 
+	"go.chromium.org/tast-tests/cros/common/bounds"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/storage/util"
@@ -34,6 +35,15 @@ func init() {
 }
 
 func InternalDeviceTypeCheck(ctx context.Context, s *testing.State) {
+	metricBounds := []bounds.MetricBounds{{
+		Metric: bounds.MatchExact("_DiskSize"),
+		Bounds: bounds.Min(30_400_000_000), // 32 GB (power of 10) minus 5%
+	}, {
+		Metric: bounds.MatchExact("_EmmcDiskSize"),
+		Bounds: bounds.Max(128_000_000_000), // 128 GB (power of 10)
+	}}
+	defer util.FatalIfBoundsCheckFail(ctx, metricBounds, s)
+
 	bootIDChecker := util.NewBootIDChecker(ctx, s.DUT(), s)
 	defer util.FatalIfBootIDChanged(ctx, bootIDChecker, s)
 

@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/bounds"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/storage/util"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
@@ -31,19 +32,35 @@ func init() {
 		Attr:         []string{"group:storage-qual", "storage-qual_pdp_kpi", "storage-qual_pdp_stress"},
 		Timeout:      10 * time.Minute,
 		Params: []testing.Param{{
-			Name:              "nvme_link_bw",
+			Name: "nvme_link_bw",
+			Val: []bounds.MetricBounds{{
+				Metric: bounds.MatchRegexp(`_seq_read_read_bw`),
+				Bounds: bounds.Min(2_048_000), // KiB/sec, 2000 MiB/sec
+			}},
 			ExtraHardwareDeps: hwdep.D(hwdep.Nvme()),
 			ExtraRequirements: []string{tdreq.NvmePcieBW},
 		}, {
-			Name:              "emmc_link_bw",
+			Name: "emmc_link_bw",
+			Val: []bounds.MetricBounds{{
+				Metric: bounds.MatchRegexp(`_seq_read_read_bw`),
+				Bounds: bounds.Max(256_000), // KiB/sec, 250 MiB/sec
+			}},
 			ExtraHardwareDeps: hwdep.D(hwdep.EmmcOrBridge()),
 			ExtraRequirements: []string{tdreq.EmmcControllerBW},
 		}, {
-			Name:              "ufs_g3_link_bw",
+			Name: "ufs_g3_link_bw",
+			Val: []bounds.MetricBounds{{
+				Metric: bounds.MatchRegexp(`_seq_read_read_bw`),
+				Bounds: bounds.Min(512_000), // KiB/sec, 500 MiB/sec
+			}},
 			ExtraHardwareDeps: hwdep.D(hwdep.Ufs()),
 			ExtraRequirements: []string{tdreq.UfsControllerG3BW},
 		}, {
-			Name:              "ufs_g4_link_bw",
+			Name: "ufs_g4_link_bw",
+			Val: []bounds.MetricBounds{{
+				Metric: bounds.MatchRegexp(`_seq_read_read_bw`),
+				Bounds: bounds.Min(1_024_000), // KiB/sec, 1000 MiB/sec
+			}},
 			ExtraHardwareDeps: hwdep.D(hwdep.Ufs()),
 			ExtraRequirements: []string{tdreq.UfsControllerG4BW},
 		}},
@@ -51,6 +68,8 @@ func init() {
 }
 
 func SocPerformance(ctx context.Context, s *testing.State) {
+	defer util.FatalIfBoundsCheckFail(ctx, s.Param().([]bounds.MetricBounds), s)
+
 	bootIDChecker := util.NewBootIDChecker(ctx, s.DUT(), s)
 	defer util.FatalIfBootIDChanged(ctx, bootIDChecker, s)
 

@@ -7,6 +7,7 @@ package storage
 import (
 	"context"
 
+	"go.chromium.org/tast-tests/cros/common/bounds"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/storage/util"
@@ -41,6 +42,21 @@ func init() {
 }
 
 func EmmcConfiguration(ctx context.Context, s *testing.State) {
+	metricBounds := []bounds.MetricBounds{{
+		// If we can detect a part with eMMC 5.1, then it means controller can support it.
+		Metric: bounds.MatchExact("_EMMC_Revision"),
+		Bounds: bounds.Min(8), // eMMC 5.1 is the 8th revision
+	}, {
+		// If capability is present, then it is supported and enabled
+		Metric: bounds.MatchExact("_EMMC_HS400ES"),
+		Bounds: bounds.Min(1),
+	}, {
+		// TODO(dlunev): a way to detect if CQE is supported but not enabled?
+		Metric: bounds.MatchExact("_EMMC_CQE"),
+		Bounds: bounds.Min(1),
+	}}
+	defer util.FatalIfBoundsCheckFail(ctx, metricBounds, s)
+
 	bootIDChecker := util.NewBootIDChecker(ctx, s.DUT(), s)
 	defer util.FatalIfBootIDChanged(ctx, bootIDChecker, s)
 

@@ -7,6 +7,7 @@ package storage
 import (
 	"context"
 
+	"go.chromium.org/tast-tests/cros/common/bounds"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/storage/util"
@@ -48,6 +49,44 @@ func init() {
 }
 
 func UfsConfiguration(ctx context.Context, s *testing.State) {
+	metricBounds := []bounds.MetricBounds{{
+		// If we can detect a part with UFS2.1 or higher, then it means controller can support it.
+		Metric: bounds.MatchExact("_wSpecVersion"),
+		Bounds: bounds.Min(528), // 0x210, UFS2.1
+	}, {
+		Metric: bounds.MatchExact("_bProvisioningType"),
+		Bounds: bounds.Min(3.0), // Thin provisioning with TPRZ == 1
+	}, {
+		Metric: bounds.MatchExact("_WriteBoosterSupport"),
+		Bounds: bounds.Min(1.0), // WriteBooster is supported
+	}, {
+		Metric: bounds.MatchExact("_bWriteBoosterBufferPreserveUserSpaceEn"),
+		Bounds: bounds.Equals(1.0),
+	}, {
+		Metric: bounds.MatchExact("_bWriteBoosterBufferType"),
+		Bounds: bounds.Equals(1.0),
+	}, {
+		Metric: bounds.MatchExact("_WriteBoosterFraction"),
+		Bounds: bounds.Min(0.049), // 5%, and a bit of floating point margin
+	}, {
+		// This and the following bounds apply to local and peer.
+		Metric: bounds.MatchRegexp(`_PA_TxGear$`),
+		Bounds: bounds.Min(3.0), // HSGEAR 3 or higher
+	}, {
+		Metric: bounds.MatchRegexp(`_PA_RxGear$`),
+		Bounds: bounds.Min(3.0), // HSGEAR 3 or higher
+	}, {
+		Metric: bounds.MatchRegexp(`_PA_HSSeries$`),
+		Bounds: bounds.Min(2.0), // HS-Series B
+	}, {
+		Metric: bounds.MatchRegexp(`_PA_AvailTxDataLanes$`),
+		Bounds: bounds.Min(2.0), // 2 Tx Lanes
+	}, {
+		Metric: bounds.MatchRegexp(`_PA_AvailRxDataLanes$`),
+		Bounds: bounds.Min(2.0), // 2 Rx Lanes
+	}}
+	defer util.FatalIfBoundsCheckFail(ctx, metricBounds, s)
+
 	bootIDChecker := util.NewBootIDChecker(ctx, s.DUT(), s)
 	defer util.FatalIfBootIDChanged(ctx, bootIDChecker, s)
 
