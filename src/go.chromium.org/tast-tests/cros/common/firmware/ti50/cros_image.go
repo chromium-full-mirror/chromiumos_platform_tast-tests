@@ -52,8 +52,9 @@ var (
 	verRWTi50StrRE       = `ti50_common_([a-z]+)\S*:\S+[\-\+](\S+)`
 	verRWLegacyTi50StrRE = `(ti50_common):\S+[\-\+](\S+)`
 	verRWGSCStrRE        = verRWCr50StrRE + `|` + verRWTi50StrRE + `|` + verRWLegacyTi50StrRE
+	hexRE                = `[0-9a-fA-F]+`
 	// GSC board properties
-	brdPropRE     = regexp.MustCompile(`properties = 0x([0-9a-fA-F]+)`)
+	brdPropRE     = regexp.MustCompile(`properties = 0x(` + hexRE + `)`)
 	gettimeTi50RE = regexp.MustCompile(`(?s)Since reset:.*\s([0-9\.]+) s\s*Since deep sleep:.*\s([0-9\.]+) s\s`)
 	gettimeCr50RE = regexp.MustCompile(`(?s)Time:.*\s([0-9\.]+) s\s*since cold_reset:.*\s([0-9\.]+) s\s`)
 
@@ -64,7 +65,20 @@ var (
 	// RMA regex
 	rmaAuthChallengeRE = regexp.MustCompile(`([A-Z0-9]{80})|(RMA Auth error)|(Must wait)`)
 	// Regex to find the chip type in H1 sysinfo output
-	h1SysinfoChipRE = regexp.MustCompile(`cr50 B2-(D|C)`)
+	h1SysinfoChipRE = regexp.MustCompile(`B2-(D|C)`)
+
+	sysinfoResetFlagRE  = `Reset flags:\s+0x(?P<resetFlags>` + hexRE + `)\s+\S*\s*`
+	sysinfoResetCountRE = `Reset count:\s+(?P<resetCount>\d*)\s*`
+	sysinfoBreadcrumbRE = `(Breadcrumbs:\s+0x(?P<breadcrumbs>` + hexRE + `))?\s*`
+	sysinfoChipRE       = `Chip:\s+g\s+(?P<chipName>Ti50|cr50) (?P<chipSKU>\S+)\s*`
+	sysinfoROKeyidRE    = `RO keyid:\s+(?P<roKeyid>0x` + hexRE + `)\s*`
+	sysinfoRWKeyidRE    = `RW keyid:\s+(?P<rwKeyid>0x` + hexRE + `)\s*`
+	sysinfoDevidRE      = `DEV_ID:\s+(?P<devid>0x` + hexRE + ` 0x` + hexRE + `)\s*`
+	sysinfoRollbackRE   = `Rollback:\s+(?P<roRollback>\S+) (?P<rwRollback>\S+)\s*`
+	sysinfoTPMModeRE    = `TPM [ModeODE]+:\s+(?P<tpmMode>enabled|disabled) \((?P<tpmModeStatus>[0-9])\)\s*`
+	sysinfoKeyladderRE  = `Key Ladder:\s+(?P<keyladder>\S*)\s*`
+
+	sysinfoRE = regexp.MustCompile(sysinfoResetFlagRE + sysinfoResetCountRE + sysinfoBreadcrumbRE + sysinfoChipRE + sysinfoROKeyidRE + sysinfoRWKeyidRE + sysinfoDevidRE + sysinfoRollbackRE + sysinfoTPMModeRE + sysinfoKeyladderRE)
 )
 
 // TestlabState contains possible CCD testlab states.
@@ -803,7 +817,10 @@ func (i *CrOSImage) GetBoardProperties(ctx context.Context) (uint64, error) {
 		return 0, errors.Wrap(err, "failed to run GSC brdprop command")
 	}
 	matches := brdPropRE.FindStringSubmatch(output)
-	brdprop, _ := strconv.ParseUint(matches[1], 16, 64)
+	if matches == nil || len(matches) != 2 {
+		return 0, errors.Errorf("failed to find %s in brdprop output %s", brdPropRE, output)
+	}
+	brdprop, err := strconv.ParseUint(matches[1], 16, 64)
 	if err != nil {
 		return 0, errors.Wrap(err, "failed to parse brdprop value")
 	}
@@ -992,16 +1009,16 @@ func matchRmaChallenge(s string) (string, error) {
 	return "", errors.New("regex failed to process rma auth matches from: " + s)
 }
 
-// FindH1ChipSKU finds the chip sku in the sysinfo output
-func FindH1ChipSKU(output string) (ChipSKU, error) {
+// FindChipSKU finds the chip sku in the sysinfo output
+func FindChipSKU(output string) ChipSKU {
 	matches := h1SysinfoChipRE.FindStringSubmatch(output)
 	if matches == nil {
-		return "", errors.New("Unable to find chip type in sysinfo output")
+		return SKUDT
 	}
 	if matches[1] == "D" {
-		return SKUH1Detachable, nil
+		return SKUH1Detachable
 	}
-	return SKUH1Clamshell, nil
+	return SKUH1Clamshell
 }
 
 // ChipSKU contains possible CCD levels.
@@ -1013,20 +1030,179 @@ const (
 	SKUH1Detachable ChipSKU = "H1-D"
 	// SKUH1Clamshell is the sysinfo string used for H1 Clamshell chips
 	SKUH1Clamshell ChipSKU = "H1-C"
+	// SKUDT is the sysinfo string used for the DT chip
+	SKUDT ChipSKU = "D3C1"
 )
 
-// Sysinfo returns the chip sku from sysinfo
+// Sysinfo returns current sysinfo output
 func (i *CrOSImage) Sysinfo(ctx context.Context) (string, error) {
 	return i.Command(ctx, "sysinfo")
 }
 
-// GetH1ChipSKU returns the chip sku from sysinfo
-func (i *CrOSImage) GetH1ChipSKU(ctx context.Context) (ChipSKU, error) {
-	output, err := i.Sysinfo(ctx)
+// GetSysinfo returns current sysinfo state
+func (i *CrOSImage) GetSysinfo(ctx context.Context) (Sysinfo, error) {
+	out, err := i.Sysinfo(ctx)
+	if err != nil {
+		return Sysinfo{}, errors.Wrap(err, "unable to run sysinfo")
+	}
+	sysinfoMap, err := parseSysinfo(out)
+	if err != nil {
+		return Sysinfo{}, errors.Wrap(err, "unable to parse sysinfo output")
+	}
+	return getSysinfoStruct(sysinfoMap)
+}
+
+// parseSysinfo converts the sysinfo output into a map
+func parseSysinfo(output string) (map[string]string, error) {
+	result := make(map[string]string)
+	match := sysinfoRE.FindStringSubmatch(output)
+	if match == nil {
+		return result, errors.Errorf("could not find %s in %s", sysinfoRE, output)
+	}
+	for i, name := range sysinfoRE.SubexpNames() {
+		if i != 0 && name != "" {
+			result[name] = match[i]
+		}
+	}
+	return result, nil
+}
+
+// Sysinfo contains structured information returned from the GSC
+// `sysinfo` command.
+type Sysinfo struct {
+	// OriginalResetFlags is the original reset flag value from the sysinfo output
+	OriginalResetFlags uint32
+	// ResetFlags is the sysinfo reset flag with unified values between cr50 and ti50
+	ResetFlags uint32
+	// ResetCount is the number of times GSC has reset without clearing the counter
+	ResetCount uint32
+	// Breadcrumbs is a Ti50 field that track boot events
+	Breadcrumbs string
+	// ChipName is the chip specific name Ti50 or Cr50
+	ChipName string
+	// ChipSKU is the chip sku from the sysinfo output
+	ChipSKU ChipSKU
+	// ROKeyid is the key id used to sign the active RO
+	ROKeyid string
+	// RWKeyid is the key id used to sign the active RW
+	RWKeyid string
+	// Devid is the chip devid
+	Devid string
+	// RORollback is a string describing the rollback bits blown in the chip and the RO A/B image
+	RORollback string
+	// RWRollback is a string describing the rollback bits blown in the chip and the RW A/B image
+	RWRollback string
+	// TpmMode is the tpm mode state string
+	TpmMode string
+	// TpmEnabled is True if the tpm is enabled
+	TpmEnabled bool
+	// TpmModeStatus is the integer value of the tpm mode
+	TpmModeStatus uint32
+	// Keyladder is "prod" if GSC is using the prod keyladder "dev" if it isn't
+	Keyladder string
+	// ProdKeyladder is true if the prod keyladder is enabled
+	ProdKeyladder bool
+}
+
+const (
+	// Cr50ResetFlagPowerOn Cr50 did a Power-on reset
+	Cr50ResetFlagPowerOn = (1 << 3)
+	// Cr50ResetFlagHibernate is set when Cr50 woke from deep sleep
+	Cr50ResetFlagHibernate = (1 << 6)
+	// Cr50ResetFlagHard is set when Cr50 requests a hard reset
+	Cr50ResetFlagHard = (1 << 11)
+	// Cr50ResetFlagRdd is set when Rdd woke Cr50
+	Cr50ResetFlagRdd = (1 << 15)
+	// Cr50ResetFlagRbox is set when Cr50 resumes because of an rbox wake source
+	Cr50ResetFlagRbox = (1 << 16)
+
+	// GscResetFlagPowerOn Cr50 did a Power-on reset
+	GscResetFlagPowerOn = 1
+	// GscResetFlagHibernate is set when Cr50 woke from deep sleep
+	GscResetFlagHibernate = (1 << 1)
+	// GscResetFlagSoftware is set when GSC requests a software reset
+	GscResetFlagSoftware = (1 << 2)
+	// GscResetFlagHard is set when GSC requests a hard reset
+	GscResetFlagHard = (1 << 5)
+	// GscResetFlagRdd is when when Rdd woke GSC
+	GscResetFlagRdd = (1 << (31 - 0))
+	// GscResetFlagRbox is set when GSC resumes because of an rbox wake source
+	GscResetFlagRbox = (1 << (31 - 1))
+)
+
+func convertCr50ResetFlags(flags int64) int {
+	res := 0
+	if flags&Cr50ResetFlagPowerOn != 0 {
+		res |= GscResetFlagPowerOn
+	}
+	if flags&Cr50ResetFlagHibernate != 0 {
+		res |= GscResetFlagHibernate
+	}
+	if flags&Cr50ResetFlagHard != 0 {
+		res |= GscResetFlagHard
+	}
+	if flags&Cr50ResetFlagRdd != 0 {
+		res |= GscResetFlagRdd
+	}
+	if flags&Cr50ResetFlagRbox != 0 {
+		res |= GscResetFlagRbox
+	}
+	return res
+}
+
+// getSysinfoStruct returns the full sysinfo structure
+func getSysinfoStruct(input map[string]string) (Sysinfo, error) {
+	result := Sysinfo{}
+
+	result.ChipName = input["chipName"]
+	result.ChipSKU = FindChipSKU(input["chipSKU"])
+	result.ROKeyid = input["roKeyid"]
+	result.RWKeyid = input["rwKeyid"]
+	result.Devid = input["devid"]
+	result.RORollback = input["roRollback"]
+	result.RWRollback = input["rwRollback"]
+	result.TpmMode = input["tpmMode"]
+	result.Keyladder = input["keyladder"]
+	result.Breadcrumbs = input["breadcrumbs"]
+
+	result.TpmEnabled = result.TpmMode == "enabled"
+	result.ProdKeyladder = result.Keyladder == "prod"
+
+	isCr50 := result.ChipName == "cr50"
+
+	res, err := strconv.ParseInt(input["resetCount"], 10, 32)
+	if err != nil {
+		return result, errors.Wrap(err, "invalid resetCount")
+	}
+	result.ResetCount = uint32(res)
+
+	res, err = strconv.ParseInt(input["tpmModeStatus"], 10, 32)
+	if err != nil {
+		return result, errors.Wrap(err, "invalid tpmModeStatus")
+	}
+	result.TpmModeStatus = uint32(res)
+
+	res, err = strconv.ParseInt(input["resetFlags"], 16, 32)
+	if err != nil {
+		return result, errors.Wrap(err, "invalid resetFlags")
+	}
+	result.OriginalResetFlags = uint32(res)
+	if isCr50 {
+		result.ResetFlags = uint32(convertCr50ResetFlags(res))
+	} else {
+		result.ResetFlags = result.OriginalResetFlags
+	}
+
+	return result, nil
+}
+
+// GetChipSKU returns the chip sku from sysinfo
+func (i *CrOSImage) GetChipSKU(ctx context.Context) (ChipSKU, error) {
+	sysinfo, err := i.GetSysinfo(ctx)
 	if err != nil {
 		return "", err
 	}
-	return FindH1ChipSKU(output)
+	return sysinfo.ChipSKU, nil
 }
 
 // Eraseflashinfo runs eraseflashinfo.

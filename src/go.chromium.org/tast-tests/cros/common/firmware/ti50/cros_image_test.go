@@ -862,16 +862,26 @@ func testMatchRmaChallenge(t *testing.T, input, expected string) {
 	}
 }
 
-func TestH1ChipDetectDetachable1(t *testing.T) {
+func TestH1ChipDetectClamshell(t *testing.T) {
 	input := `cr50 B2-C`
 	expected := SKUH1Clamshell
-	testFindH1ChipSKU(t, input, expected)
+	testFindChipSKU(t, input, expected)
 }
 
 func TestH1ChipDetectDetachable2(t *testing.T) {
 	input := `cr50 B2-D`
 	expected := SKUH1Detachable
-	testFindH1ChipSKU(t, input, expected)
+	testFindChipSKU(t, input, expected)
+}
+func TestH1ChipDetectDT(t *testing.T) {
+	input := `Ti50 D3C1`
+	expected := SKUDT
+	testFindChipSKU(t, input, expected)
+}
+func TestH1ChipDetectDT2(t *testing.T) {
+	input := `Ti50 other sku`
+	expected := SKUDT
+	testFindChipSKU(t, input, expected)
 }
 func TestH1ChipDetectDetachable3(t *testing.T) {
 	input := `
@@ -886,15 +896,339 @@ TPM MODE:    enabled (0)
 Key Ladder:  prod
 `
 	expected := SKUH1Clamshell
-	testFindH1ChipSKU(t, input, expected)
+	testFindChipSKU(t, input, expected)
 }
 
-func testFindH1ChipSKU(t *testing.T, input string, expected ChipSKU) {
-	chip, err := FindH1ChipSKU(input)
+func testFindChipSKU(t *testing.T, input string, expected ChipSKU) {
+	chip := FindChipSKU(input)
+	if expected != chip {
+		t.Fatalf("chip mismatch:\ngot      %v\nexpected %v", chip, expected)
+	}
+}
+
+func TestTi50Sysinfo1(t *testing.T) {
+	input := `
+Reset flags: 0x00000001 (Cold)
+Reset count: 1
+Breadcrumbs: 0x0000000000001234
+Chip:        g Ti50 D3C1
+RO keyid:    0xc7d40497
+RW keyid:    0xfba25ca9
+DEV_ID:      0x14820030 0x4c2ac261
+Rollback:    0.3/0.3/0.3 4.0/?.?/4.0
+TPM MODE:    disabled (3)
+Key Ladder:  prod
+EK Cert:     Compliant
+Chip factory mode.
+`
+	expectedMap := make(map[string]string)
+	expectedMap["resetFlags"] = "00000001"
+	expectedMap["resetCount"] = "1"
+	expectedMap["breadcrumbs"] = "0000000000001234"
+	expectedMap["chipName"] = "Ti50"
+	expectedMap["chipSKU"] = "D3C1"
+	expectedMap["roKeyid"] = "0xc7d40497"
+	expectedMap["rwKeyid"] = "0xfba25ca9"
+	expectedMap["devid"] = "0x14820030 0x4c2ac261"
+	expectedMap["roRollback"] = "0.3/0.3/0.3"
+	expectedMap["rwRollback"] = "4.0/?.?/4.0"
+	expectedMap["tpmMode"] = "disabled"
+	expectedMap["tpmModeStatus"] = "3"
+	expectedMap["keyladder"] = "prod"
+
+	expected := Sysinfo{}
+	expected.ResetFlags = 0x00000001
+	expected.OriginalResetFlags = 0x00000001
+	expected.ResetCount = 1
+	expected.Breadcrumbs = "0000000000001234"
+	expected.ChipName = "Ti50"
+	expected.ChipSKU = SKUDT
+	expected.ROKeyid = "0xc7d40497"
+	expected.RWKeyid = "0xfba25ca9"
+	expected.Devid = "0x14820030 0x4c2ac261"
+	expected.RORollback = "0.3/0.3/0.3"
+	expected.RWRollback = "4.0/?.?/4.0"
+	expected.TpmMode = "disabled"
+	expected.TpmModeStatus = 3
+	expected.Keyladder = "prod"
+	expected.TpmEnabled = false
+	expected.ProdKeyladder = true
+
+	testGetSysinfo(t, input, expectedMap, expected)
+}
+
+func TestTi50Sysinfo2(t *testing.T) {
+	input := `
+sysinfo
+Reset flags: 0x00000020 (Cold)
+Reset count: 2
+Breadcrumbs: 0x0000000123491234
+Chip:        g Ti50 D3C1
+RO keyid:    0xc7d40497
+RW keyid:    0xfba25ca9
+DEV_ID:      0x14820030 0x4c2ac261
+Rollback:    0.3/0.3/0.3 4.0/?.?/4.0
+TPM MODE:    disabled (3)
+Key Ladder:  prod
+EK Cert:     Compliant
+Chip factory mode.
+`
+	expectedMap := make(map[string]string)
+	expectedMap["resetFlags"] = "00000020"
+	expectedMap["resetCount"] = "2"
+	expectedMap["chipName"] = "Ti50"
+	expectedMap["chipSKU"] = "D3C1"
+	expectedMap["breadcrumbs"] = "0000000123491234"
+	expectedMap["roKeyid"] = "0xc7d40497"
+	expectedMap["rwKeyid"] = "0xfba25ca9"
+	expectedMap["devid"] = "0x14820030 0x4c2ac261"
+	expectedMap["roRollback"] = "0.3/0.3/0.3"
+	expectedMap["rwRollback"] = "4.0/?.?/4.0"
+	expectedMap["tpmMode"] = "disabled"
+	expectedMap["tpmModeStatus"] = "3"
+	expectedMap["keyladder"] = "prod"
+
+	expected := Sysinfo{}
+	expected.ResetFlags = 0x00000020
+	expected.OriginalResetFlags = 0x00000020
+	expected.ResetCount = 2
+	expected.ChipName = "Ti50"
+	expected.ChipSKU = SKUDT
+	expected.Breadcrumbs = "0000000123491234"
+	expected.ROKeyid = "0xc7d40497"
+	expected.RWKeyid = "0xfba25ca9"
+	expected.Devid = "0x14820030 0x4c2ac261"
+	expected.RORollback = "0.3/0.3/0.3"
+	expected.RWRollback = "4.0/?.?/4.0"
+	expected.TpmMode = "disabled"
+	expected.TpmModeStatus = 3
+	expected.Keyladder = "prod"
+	expected.TpmEnabled = false
+	expected.ProdKeyladder = true
+
+	testGetSysinfo(t, input, expectedMap, expected)
+}
+
+func TestCr50Sysinfo1(t *testing.T) {
+	input := `
+Reset flags: 0x00000008 (power-on)
+Reset count: 1
+Chip:        g cr50 B2-D
+RO keyid:    0xaa66150f
+RW keyid:    0x87b73b67
+DEV_ID:      0x12345678 0x12345678
+Rollback:    1/1/2 4/4/4
+TPM MODE:    disabled (2)
+Key Ladder:  dev
+`
+	expectedMap := make(map[string]string)
+	expectedMap["breadcrumbs"] = ""
+	expectedMap["resetFlags"] = "00000008"
+	expectedMap["resetCount"] = "1"
+	expectedMap["chipName"] = "cr50"
+	expectedMap["chipSKU"] = "B2-D"
+	expectedMap["rwKeyid"] = "0x87b73b67"
+	expectedMap["roKeyid"] = "0xaa66150f"
+	expectedMap["devid"] = "0x12345678 0x12345678"
+	expectedMap["roRollback"] = "1/1/2"
+	expectedMap["rwRollback"] = "4/4/4"
+	expectedMap["tpmMode"] = "disabled"
+	expectedMap["tpmModeStatus"] = "2"
+	expectedMap["keyladder"] = "dev"
+
+	expected := Sysinfo{}
+	expected.Breadcrumbs = ""
+	expected.OriginalResetFlags = 0x00000008
+	expected.ResetFlags = GscResetFlagPowerOn
+	expected.ResetCount = 1
+	expected.ChipName = "cr50"
+	expected.ChipSKU = SKUH1Detachable
+	expected.RWKeyid = "0x87b73b67"
+	expected.ROKeyid = "0xaa66150f"
+	expected.Devid = "0x12345678 0x12345678"
+	expected.RORollback = "1/1/2"
+	expected.RWRollback = "4/4/4"
+	expected.TpmMode = "disabled"
+	expected.TpmModeStatus = 2
+	expected.Keyladder = "dev"
+	expected.TpmEnabled = false
+	expected.ProdKeyladder = false
+
+	testGetSysinfo(t, input, expectedMap, expected)
+}
+
+func TestCr50Sysinfo2(t *testing.T) {
+	input := `
+Reset flags: 0x00000800 (hard)
+Reset count: 1
+Chip:        g cr50 B2-C
+RO keyid:    0xaa66150f
+RW keyid:    0x87b73b67
+DEV_ID:      0x12345678 0x12345678
+Rollback:    1/1/2 4/4/4
+TPM MODE:    enabled (0)
+Key Ladder:  prod
+`
+	expectedMap := make(map[string]string)
+
+	expectedMap["breadcrumbs"] = ""
+	expectedMap["resetFlags"] = "00000800"
+	expectedMap["resetCount"] = "1"
+	expectedMap["chipName"] = "cr50"
+	expectedMap["chipSKU"] = "B2-C"
+	expectedMap["roKeyid"] = "0xaa66150f"
+	expectedMap["rwKeyid"] = "0x87b73b67"
+	expectedMap["devid"] = "0x12345678 0x12345678"
+	expectedMap["roRollback"] = "1/1/2"
+	expectedMap["rwRollback"] = "4/4/4"
+	expectedMap["tpmMode"] = "enabled"
+	expectedMap["tpmModeStatus"] = "0"
+	expectedMap["keyladder"] = "prod"
+
+	expected := Sysinfo{}
+	expected.Breadcrumbs = ""
+	expected.ResetFlags = GscResetFlagHard
+	expected.OriginalResetFlags = 0x00000800
+	expected.ResetCount = 1
+	expected.ChipName = "cr50"
+	expected.ChipSKU = SKUH1Clamshell
+	expected.ROKeyid = "0xaa66150f"
+	expected.RWKeyid = "0x87b73b67"
+	expected.Devid = "0x12345678 0x12345678"
+	expected.RORollback = "1/1/2"
+	expected.RWRollback = "4/4/4"
+	expected.TpmMode = "enabled"
+	expected.TpmModeStatus = 0
+	expected.Keyladder = "prod"
+	expected.TpmEnabled = true
+	expected.ProdKeyladder = true
+
+	testGetSysinfo(t, input, expectedMap, expected)
+}
+
+func TestCr50Sysinfo3(t *testing.T) {
+	input := `
+Reset flags: 0x00000800 (hard)
+Reset count: 1
+Chip:        g cr50 B2-C
+RO keyid:    0xaa66150f
+RW keyid:    0x87b73b67
+DEV_ID:      0x12345678 0x12345678
+Rollback:    1/1/2 4/4/4
+TPM MODE:    enabled (0)
+Key Ladder:  prod
+`
+	expectedMap := make(map[string]string)
+
+	expectedMap["breadcrumbs"] = ""
+	expectedMap["resetFlags"] = "00000800"
+	expectedMap["resetCount"] = "1"
+	expectedMap["chipName"] = "cr50"
+	expectedMap["chipSKU"] = "B2-C"
+	expectedMap["roKeyid"] = "0xaa66150f"
+	expectedMap["rwKeyid"] = "0x87b73b67"
+	expectedMap["devid"] = "0x12345678 0x12345678"
+	expectedMap["roRollback"] = "1/1/2"
+	expectedMap["rwRollback"] = "4/4/4"
+	expectedMap["tpmMode"] = "enabled"
+	expectedMap["tpmModeStatus"] = "0"
+	expectedMap["keyladder"] = "prod"
+
+	expected := Sysinfo{}
+	expected.Breadcrumbs = ""
+	expected.ResetFlags = GscResetFlagHard
+	expected.OriginalResetFlags = 0x00000800
+	expected.ResetCount = 1
+	expected.ChipName = "cr50"
+	expected.ChipSKU = SKUH1Clamshell
+	expected.ROKeyid = "0xaa66150f"
+	expected.RWKeyid = "0x87b73b67"
+	expected.Devid = "0x12345678 0x12345678"
+	expected.RORollback = "1/1/2"
+	expected.RWRollback = "4/4/4"
+	expected.TpmMode = "enabled"
+	expected.TpmModeStatus = 0
+	expected.Keyladder = "prod"
+	expected.TpmEnabled = true
+	expected.ProdKeyladder = true
+
+	testGetSysinfo(t, input, expectedMap, expected)
+}
+
+func testGetSysinfo(t *testing.T, input string, expectedMap map[string]string, expected Sysinfo) {
+	result, err := parseSysinfo(input)
 	if err != nil {
 		t.Fatal("error processing input:", err)
 	}
-	if expected != chip {
-		t.Fatalf("chip mismatch:\ngot      %v\nexpected %v", chip, expected)
+	if !reflect.DeepEqual(expectedMap, result) {
+		t.Fatalf("chip mismatch:\ngot      %+v\nexpected %+v", result, expectedMap)
+	}
+	sysinfo, err := getSysinfoStruct(result)
+	if err != nil {
+		t.Fatal("error processing map:", err)
+	}
+	if !reflect.DeepEqual(expected, sysinfo) {
+		t.Fatalf("chip mismatch:\ngot      %+v\nexpected %+v", sysinfo, expected)
+	}
+}
+
+func TestConvertCr50ResetFlags1(t *testing.T) {
+	input := (Cr50ResetFlagPowerOn | Cr50ResetFlagHibernate | Cr50ResetFlagHard | Cr50ResetFlagRdd | Cr50ResetFlagRbox)
+	expected := (GscResetFlagPowerOn | GscResetFlagHibernate | GscResetFlagHard | GscResetFlagRdd | GscResetFlagRbox)
+	testConvertCr50ResetFlags(t, input, expected)
+}
+
+func TestConvertCr50ResetFlags2(t *testing.T) {
+	input := 0xffffffff
+	expected := (GscResetFlagPowerOn | GscResetFlagHibernate | GscResetFlagHard | GscResetFlagRdd | GscResetFlagRbox)
+	testConvertCr50ResetFlags(t, input, expected)
+}
+
+func TestConvertCr50ResetFlags3(t *testing.T) {
+	input := Cr50ResetFlagPowerOn
+	expected := GscResetFlagPowerOn
+	testConvertCr50ResetFlags(t, input, expected)
+}
+
+func TestConvertCr50ResetFlags4(t *testing.T) {
+	input := Cr50ResetFlagHard
+	expected := GscResetFlagHard
+	testConvertCr50ResetFlags(t, input, expected)
+}
+
+func TestConvertCr50ResetFlags5(t *testing.T) {
+	input := Cr50ResetFlagHibernate
+	expected := GscResetFlagHibernate
+	testConvertCr50ResetFlags(t, input, expected)
+}
+
+func TestConvertCr50ResetFlags6(t *testing.T) {
+	input := Cr50ResetFlagRdd
+	expected := GscResetFlagRdd
+	testConvertCr50ResetFlags(t, input, expected)
+}
+
+func TestConvertCr50ResetFlags7(t *testing.T) {
+	input := Cr50ResetFlagRbox
+	expected := GscResetFlagRbox
+	testConvertCr50ResetFlags(t, input, expected)
+}
+
+func TestConvertCr50ResetFlags8(t *testing.T) {
+	input := Cr50ResetFlagHibernate | Cr50ResetFlagRbox
+	expected := GscResetFlagHibernate | GscResetFlagRbox
+	testConvertCr50ResetFlags(t, input, expected)
+}
+
+func TestConvertCr50ResetFlags9(t *testing.T) {
+	input := Cr50ResetFlagHibernate | Cr50ResetFlagRbox
+	expected := GscResetFlagHibernate | GscResetFlagRbox
+	testConvertCr50ResetFlags(t, input, expected)
+}
+
+func testConvertCr50ResetFlags(t *testing.T, input, expected int) {
+	res := convertCr50ResetFlags(int64(input))
+	if expected != res {
+		t.Fatalf("flag mismatch with %x: expected %x got %x", input, expected, res)
 	}
 }
