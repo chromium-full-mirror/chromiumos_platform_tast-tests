@@ -339,10 +339,12 @@ func init() {
 			ExtraAttr:         []string{"group:mainline", "informational"},
 			ExtraSoftwareDeps: []string{"android_vm_t"},
 			// x86-64 ARC: gimble(brya-Intel), kohaku(hatch-Intel), jinlon(hatch-Intel), berknip(zork-AMD), jelboz360(zork-AMD), vilboz(zork-AMD)
-			// x64only ARC: screebo(rex-Intel), karis(rex-Intel)
+			// x64only ARC: screebo(rex-Intel), karis(rex-Intel), frostflow(skyrim-AMD), markarth(skyrim-AMD)
 			// arm64 ARC: pompom(trogdor), pazquel(trogdor)
 			// arm64only ARC: steelix(corsola), magneton(corsola)
-			ExtraHardwareDeps: hwdep.D(hwdep.Model("gimble", "kohaku", "jinlon", "screebo", "karis", "berknip", "jelboz360", "vilboz", "pompom", "pazquel", "steelix", "magneton")),
+			ExtraHardwareDeps: hwdep.D(hwdep.Model(
+				"gimble", "kohaku", "jinlon", "berknip", "jelboz360", "vilboz", "screebo", "karis", "frostflow", "markarth",
+				"pompom", "pazquel", "steelix", "magneton")),
 			Val: testParam{
 				vmEnabled:                     true,
 				androidPackage:                "android-vm-tm",
