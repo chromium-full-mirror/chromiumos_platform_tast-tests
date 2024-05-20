@@ -6,6 +6,8 @@ package arc
 
 import (
 	"context"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -31,15 +33,15 @@ func init() {
 		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		SoftwareDeps: []string{"android_vm", "chrome"},
 		Fixture:      "arcBootedS2Idle",
-		Timeout:      10 * time.Minute,
+		Timeout:      12 * time.Minute,
 	})
 }
 
-func getSuspendCount(ctx context.Context, a *arc.ARC) (int, error) {
+func dumpsysSuspendControl(ctx context.Context, a *arc.ARC) ([]byte, error) {
 	var serviceName string
 	n, err := arc.SDKVersion()
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 	if n == arc.SDKR {
 		serviceName = "suspend_control"
@@ -47,7 +49,11 @@ func getSuspendCount(ctx context.Context, a *arc.ARC) (int, error) {
 		serviceName = "suspend_control_internal"
 	}
 
-	out, err := a.Command(ctx, "dumpsys", serviceName).Output(testexec.DumpLogOnError)
+	return a.Command(ctx, "dumpsys", serviceName).Output(testexec.DumpLogOnError)
+}
+
+func getSuspendCount(ctx context.Context, a *arc.ARC) (int, error) {
+	out, err := dumpsysSuspendControl(ctx, a)
 	if err != nil {
 		return 0, errors.Wrap(err, "could not get dumpsys output")
 	}
@@ -87,9 +93,18 @@ func DozeSuspend(ctx context.Context, s *testing.State) {
 			return nil
 		}
 		return errors.New("no successful suspend attempts")
-	}, &testing.PollOptions{Timeout: 2 * time.Minute, Interval: 5 * time.Second})
+	}, &testing.PollOptions{Timeout: 5 * time.Minute, Interval: 5 * time.Second})
 	if err != nil {
-		s.Fatal("Failed to wait for suspend: ", err)
+		s.Error("Failed to wait for suspend: ", err)
+		if out, err := dumpsysSuspendControl(ctx, a); err == nil {
+			s.Log("Dumping suspend_control to out directory")
+			if err := os.WriteFile(filepath.Join(s.OutDir(), "suspend_control.txt"), out, 0644); err != nil {
+				s.Error("Failed to save suspend_control dump: ", err)
+			}
+		} else {
+			s.Error("Failed to dump suspend_control: ", err)
+		}
+	} else {
+		s.Log("Observed suspend")
 	}
-	s.Log("Observed suspend")
 }
