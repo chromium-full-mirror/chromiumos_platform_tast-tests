@@ -96,20 +96,20 @@ func init() {
 			Val:       testMetadata{image: imageTypeRO, hwWriteProtect: true},
 		}, {
 			ExtraAttr: []string{"fingerprint-mcu_dragonclaw"},
-			Name:      "bloonchipper_fpsensor_spi_ro",
-			Val:       testMetadata{name: "test-fpsensor.bin", image: imageTypeRO, testArgs: []string{"spi"}},
+			Name:      "bloonchipper_fp_transport_spi_ro",
+			Val:       testMetadata{name: "test-fp_transport.bin", image: imageTypeRO, testArgs: []string{"spi"}},
 		}, {
 			ExtraAttr: []string{"fingerprint-mcu_dragonclaw"},
-			Name:      "bloonchipper_fpsensor_spi_rw",
-			Val:       testMetadata{name: "test-fpsensor.bin", testArgs: []string{"spi"}},
+			Name:      "bloonchipper_fp_transport_spi_rw",
+			Val:       testMetadata{name: "test-fp_transport.bin", testArgs: []string{"spi"}},
 		}, {
 			ExtraAttr: []string{"fingerprint-mcu_dragonclaw"},
-			Name:      "bloonchipper_fpsensor_uart_ro",
-			Val:       testMetadata{name: "test-fpsensor.bin", image: imageTypeRO, testArgs: []string{"uart"}},
+			Name:      "bloonchipper_fp_transport_uart_ro",
+			Val:       testMetadata{name: "test-fp_transport.bin", image: imageTypeRO, testArgs: []string{"uart"}},
 		}, {
 			ExtraAttr: []string{"fingerprint-mcu_dragonclaw"},
-			Name:      "bloonchipper_fpsensor_uart_rw",
-			Val:       testMetadata{name: "test-fpsensor.bin", testArgs: []string{"uart"}},
+			Name:      "bloonchipper_fp_transport_uart_rw",
+			Val:       testMetadata{name: "test-fp_transport.bin", testArgs: []string{"uart"}},
 		}, {
 			ExtraAttr: []string{"fingerprint-mcu_dragonclaw"},
 			Name:      "bloonchipper_fpsensor_hw",
@@ -212,20 +212,20 @@ func init() {
 			Val:       testMetadata{image: imageTypeRO, hwWriteProtect: true},
 		}, {
 			ExtraAttr: []string{"fingerprint-mcu_quincy"},
-			Name:      "helipilot_fpsensor_spi_ro",
-			Val:       testMetadata{name: "test-fpsensor.bin", image: imageTypeRO, testArgs: []string{"spi"}},
+			Name:      "helipilot_fp_transport_spi_ro",
+			Val:       testMetadata{name: "test-fp_transport.bin", image: imageTypeRO, testArgs: []string{"spi"}},
 		}, {
 			ExtraAttr: []string{"fingerprint-mcu_quincy"},
-			Name:      "helipilot_fpsensor_spi_rw",
-			Val:       testMetadata{name: "test-fpsensor.bin", testArgs: []string{"spi"}},
+			Name:      "helipilot_fp_transport_spi_rw",
+			Val:       testMetadata{name: "test-fp_transport.bin", testArgs: []string{"spi"}},
 		}, {
 			ExtraAttr: []string{"fingerprint-mcu_quincy"},
-			Name:      "helipilot_fpsensor_uart_ro",
-			Val:       testMetadata{name: "test-fpsensor.bin", image: imageTypeRO, testArgs: []string{"uart"}},
+			Name:      "helipilot_fp_transport_uart_ro",
+			Val:       testMetadata{name: "test-fp_transport.bin", image: imageTypeRO, testArgs: []string{"uart"}},
 		}, {
 			ExtraAttr: []string{"fingerprint-mcu_quincy"},
-			Name:      "helipilot_fpsensor_uart_rw",
-			Val:       testMetadata{name: "test-fpsensor.bin", testArgs: []string{"uart"}},
+			Name:      "helipilot_fp_transport_uart_rw",
+			Val:       testMetadata{name: "test-fp_transport.bin", testArgs: []string{"uart"}},
 		}, {
 			ExtraAttr: []string{"fingerprint-mcu_quincy"},
 			Name:      "helipilot_fpsensor_hw",
