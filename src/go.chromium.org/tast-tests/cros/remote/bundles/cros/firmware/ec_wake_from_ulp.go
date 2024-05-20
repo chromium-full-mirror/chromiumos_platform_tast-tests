@@ -33,8 +33,8 @@ func init() {
 			"cienet-firmware@cienet.corp-partner.google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		// TODO: When stable, change firmware_unstable to a different attr.
-		Attr:         []string{"group:firmware", "firmware_unstable", "firmware_servo_micro"},
+		Attr:         []string{"group:firmware", "firmware_ec", "firmware_servo_micro"},
+		Requirements: []string{"sys-fw-0022-v02"},
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Battery()),
 		SoftwareDeps: []string{"ec_hibernate"},
