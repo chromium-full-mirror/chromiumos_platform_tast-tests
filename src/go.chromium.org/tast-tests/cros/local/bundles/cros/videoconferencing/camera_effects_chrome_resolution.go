@@ -6,6 +6,7 @@ package videoconferencing
 
 import (
 	"context"
+	"image"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -14,7 +15,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/fakehtml"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -23,6 +23,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/videoconferencing/fixture"
 
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -74,6 +75,7 @@ func CameraEffectsChromeResolution(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to connect Test API: ", err)
 	}
+	ui := uiauto.New(tconn)
 
 	// Open video on simple javascript browser.
 	testing.ContextLog(ctx, "Opening Simple Meeting")
@@ -93,6 +95,12 @@ func CameraEffectsChromeResolution(ctx context.Context, s *testing.State) {
 	fakeHTMLUI := fakehtml.NewUI(tconn)
 	if err := fakeHTMLUI.MayBeAllowCameraAccess(ctx); err != nil {
 		s.Fatal("Failed to allow camera access: ", err)
+	}
+
+	// Take a screenshot before camera effects applied.
+	imageBefore, err := fakehtml.GrabVideoArea(ctx, cr, tconn, ui)
+	if err != nil {
+		s.Fatal("Fail to grab camera screen shot before: ", err)
 	}
 
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
@@ -125,8 +133,6 @@ func CameraEffectsChromeResolution(ctx context.Context, s *testing.State) {
 		},
 	}
 
-	ui := uiauto.New(tconn)
-
 	for _, subTest := range subTests {
 		s.Run(ctx, subTest.name, func(ctx context.Context, s *testing.State) {
 			urlWithResolution := url + strconv.Itoa(subTest.resolution)
@@ -138,22 +144,27 @@ func CameraEffectsChromeResolution(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to fully load the page : ", err)
 			}
 
-			d, err := screenshot.NewDifferFromChrome(ctx, s, cr,
-				screenshot.Config{
-					DefaultOptions: screenshot.Options{
-						WindowState: ash.WindowStateDefault,
-					},
-					SkipDpiNormalization: true,
-				})
-			if err != nil {
-				s.Fatal("Failed to start screen differ: ", err)
-			}
-			defer d.DieOnFailedDiffs()
-			if err := d.Diff(ctx, subTest.name, fakehtml.VideoNode,
-				screenshot.Retries(5),
-				screenshot.RetryInterval(time.Second),
-			)(ctx); err != nil {
-				s.Fatal("Failed the skia gold diff: ", err)
+			var imageAfter image.Image
+			if err := testing.Poll(ctx, func(ctx context.Context) error {
+				// Take a screenshot after camera effects applied.
+				imageAfter, err = fakehtml.GrabVideoArea(ctx, cr, tconn, ui)
+				if err != nil {
+					return err
+				}
+
+				notChangedThreshold := 0.2
+				changedThreshold := 0.5
+				notChanged, changed := fakehtml.ImageDiff(imageBefore, imageAfter, 0.0)
+				if notChanged < notChangedThreshold || changed < changedThreshold {
+					return errors.Errorf("Wrong percentage of pixel change: %f changed and %f not changed", changed, notChanged)
+				}
+
+				return nil
+
+			}, &testing.PollOptions{Timeout: 3 * time.Second, Interval: time.Second}); err != nil {
+				fakehtml.SaveImageToFaillog(ctx, s, imageBefore, fakehtml.BeforeEffectsImageName)
+				fakehtml.SaveImageToFaillog(ctx, s, imageAfter, subTest.name+fakehtml.AfterEffectsImageName)
+				s.Fatal("Screenshot diff unexpected: ", err)
 			}
 		})
 	}

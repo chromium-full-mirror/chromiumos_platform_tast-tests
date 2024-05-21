@@ -6,6 +6,7 @@ package videoconferencing
 
 import (
 	"context"
+	"image"
 	"net/http"
 	"net/http/httptest"
 	"time"
@@ -15,12 +16,14 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vctray"
 	"go.chromium.org/tast-tests/cros/local/screenshot"
 	"go.chromium.org/tast-tests/cros/local/videoconferencing/fixture"
 
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -91,6 +94,7 @@ func CameraEffectsChrome(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to connect Test API: ", err)
 	}
+	ui := uiauto.New(tconn)
 
 	// Open video on simple javascript browser.
 	testing.ContextLog(ctx, "Opening Simple Meeting")
@@ -123,44 +127,64 @@ func CameraEffectsChrome(ctx context.Context, s *testing.State) {
 		}
 	}
 
+	// Take a screenshot before camera effects applied.
+	imageBefore, err := fakehtml.GrabVideoArea(ctx, cr, tconn, ui)
+	if err != nil {
+		s.Fatal("Fail to grab camera screen shot before: ", err)
+	}
+
 	vcTray := vctray.New(ctx, tconn)
 
 	// Run subtests to verify video effects are correctly applied.
 	// Note: Golden images can be found at https://cros-tast-gold.skia.org/list?corpus=videoconferencing.
 	subTests := []struct {
-		name               string
-		backgroundBlur     vctray.BackgroundBlurLevel
-		portraitRelighting bool
+		name                string
+		backgroundBlur      vctray.BackgroundBlurLevel
+		portraitRelighting  bool
+		notChangedThreshold float64
+		changedThreshold    float64
 	}{
 		{
-			name:               "backgroundblur_off_portraitrelighting_off",
-			backgroundBlur:     vctray.BackgroundBlurOff,
-			portraitRelighting: false,
+			name:                "backgroundblur_off_portraitrelighting_off",
+			backgroundBlur:      vctray.BackgroundBlurOff,
+			portraitRelighting:  false,
+			notChangedThreshold: 1.0,
+			changedThreshold:    0.0,
 		},
 		{
-			name:               "backgroundblur_light_portraitrelighting_off",
-			backgroundBlur:     vctray.BackgroundBlurLight,
-			portraitRelighting: false,
+			name:                "backgroundblur_light_portraitrelighting_off",
+			backgroundBlur:      vctray.BackgroundBlurLight,
+			portraitRelighting:  false,
+			notChangedThreshold: 0.2,
+			changedThreshold:    0.5,
 		},
 		{
-			name:               "backgroundblur_full_portraitrelighting_off",
-			backgroundBlur:     vctray.BackgroundBlurFull,
-			portraitRelighting: false,
+			name:                "backgroundblur_full_portraitrelighting_off",
+			backgroundBlur:      vctray.BackgroundBlurFull,
+			portraitRelighting:  false,
+			notChangedThreshold: 0.2,
+			changedThreshold:    0.5,
 		},
 		{
-			name:               "backgroundblur_off_portraitrelighting_on",
-			backgroundBlur:     vctray.BackgroundBlurOff,
-			portraitRelighting: true,
+			name:                "backgroundblur_off_portraitrelighting_on",
+			backgroundBlur:      vctray.BackgroundBlurOff,
+			portraitRelighting:  true,
+			notChangedThreshold: 0.6,
+			changedThreshold:    0.15,
 		},
 		{
-			name:               "backgroundblur_light_portraitrelighting_on",
-			backgroundBlur:     vctray.BackgroundBlurLight,
-			portraitRelighting: true,
+			name:                "backgroundblur_light_portraitrelighting_on",
+			backgroundBlur:      vctray.BackgroundBlurLight,
+			portraitRelighting:  true,
+			notChangedThreshold: 0.02,
+			changedThreshold:    0.85,
 		},
 		{
-			name:               "backgroundblur_full_portraitrelighting_on",
-			backgroundBlur:     vctray.BackgroundBlurFull,
-			portraitRelighting: true,
+			name:                "backgroundblur_full_portraitrelighting_on",
+			backgroundBlur:      vctray.BackgroundBlurFull,
+			portraitRelighting:  true,
+			notChangedThreshold: 0.02,
+			changedThreshold:    0.85,
 		},
 	}
 
@@ -171,22 +195,25 @@ func CameraEffectsChrome(ctx context.Context, s *testing.State) {
 					subTest.backgroundBlur, subTest.portraitRelighting, err)
 			}
 
-			d, err := screenshot.NewDifferFromChrome(ctx, s, cr,
-				screenshot.Config{
-					DefaultOptions: screenshot.Options{
-						WindowState: ash.WindowStateDefault,
-					},
-					SkipDpiNormalization: true,
-				})
-			if err != nil {
-				s.Fatal("Failed to start screen differ: ", err)
-			}
-			defer d.DieOnFailedDiffs()
-			if err := d.Diff(ctx, subTest.name, fakehtml.VideoNode,
-				screenshot.Retries(5),
-				screenshot.RetryInterval(time.Second),
-			)(ctx); err != nil {
-				s.Fatal("Failed the skia gold diff: ", err)
+			var imageAfter image.Image
+			if err := testing.Poll(ctx, func(ctx context.Context) error {
+				// Take a screenshot after camera effects applied.
+				imageAfter, err = fakehtml.GrabVideoArea(ctx, cr, tconn, ui)
+				if err != nil {
+					return err
+				}
+
+				notChanged, changed := fakehtml.ImageDiff(imageBefore, imageAfter, 0.0)
+				if notChanged < subTest.notChangedThreshold || changed < subTest.changedThreshold {
+					return errors.Errorf("Wrong percentage of pixel change for %s: %f changed and %f not changed", subTest.name, changed, notChanged)
+				}
+
+				return nil
+
+			}, &testing.PollOptions{Timeout: 3 * time.Second, Interval: time.Second}); err != nil {
+				fakehtml.SaveImageToFaillog(ctx, s, imageBefore, fakehtml.BeforeEffectsImageName)
+				fakehtml.SaveImageToFaillog(ctx, s, imageAfter, subTest.name+fakehtml.AfterEffectsImageName)
+				s.Fatal("Screenshot diff unexpected: ", err)
 			}
 		})
 	}

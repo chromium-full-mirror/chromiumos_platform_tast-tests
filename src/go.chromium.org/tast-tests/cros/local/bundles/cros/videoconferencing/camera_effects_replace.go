@@ -6,8 +6,6 @@ package videoconferencing
 
 import (
 	"context"
-	"image"
-	"math"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -20,15 +18,12 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vctray"
-	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
-	"go.chromium.org/tast-tests/cros/local/screenshot"
 	"go.chromium.org/tast-tests/cros/local/videoconferencing/fixture"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/fsutil"
@@ -107,32 +102,8 @@ func CameraEffectsReplace(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to allow camera access: ", err)
 	}
 
-	// Wait until the camera is available.
-	videoElement := nodewith.Role(role.Video)
-	if err :=
-		ui.WaitUntilExists(videoElement)(ctx); err != nil {
-		s.Fatal("Fail to see camera feed: ", err)
-	}
-
-	// Get location of the camera element.
-	loc, err := ui.Location(ctx, videoElement)
-	if err != nil {
-		s.Fatal("Fail to get the location of the video element: ", err)
-	}
-
-	// deviceScaleFactor is required to convert location to pixels.
-	deviceScaleFactor, err := display.GetDeviceScaleFactor(ctx, tconn,
-		func(info *display.Info) bool {
-			return info.IsPrimary
-		})
-	if err != nil {
-		s.Fatal("Failed to get primary display scale factor: ", err)
-	}
-
-	videoRect := coords.ConvertBoundsFromDPToPX(*loc, deviceScaleFactor)
-
 	// Take a screen shot before background replace is applied.
-	imageBefore, err := screenshot.GrabAndCropScreenshot(ctx, cr, videoRect)
+	imageBefore, err := fakehtml.GrabVideoArea(ctx, cr, tconn, ui)
 	if err != nil {
 		s.Fatal("Fail to grab camera screen shot before: ", err)
 	}
@@ -206,7 +177,7 @@ func CameraEffectsReplace(ctx context.Context, s *testing.State) {
 	}
 
 	// Take a second screenshot after camera background already applied.
-	imageAfter, err := screenshot.GrabAndCropScreenshot(ctx, cr, videoRect)
+	imageAfter, err := fakehtml.GrabVideoArea(ctx, cr, tconn, ui)
 	if err != nil {
 		s.Fatal("Fail to grab camera screen shot after: ", err)
 	}
@@ -216,30 +187,10 @@ func CameraEffectsReplace(ctx context.Context, s *testing.State) {
 	// screenshot.SaveImageToFile(imageAfter, userPath, "after.png")(ctx)
 
 	// Verify two images have enough portion changed and unchanged.
-	notChanged, changed := imageDiff(imageBefore, imageAfter)
+	notChanged, changed := fakehtml.ImageDiff(imageBefore, imageAfter, 0.0)
 	if notChanged < percentageNotChanged || changed < percentageChanged {
+		fakehtml.SaveImageToFaillog(ctx, s, imageBefore, fakehtml.BeforeEffectsImageName)
+		fakehtml.SaveImageToFaillog(ctx, s, imageAfter, fakehtml.AfterEffectsImageName)
 		s.Fatalf("The percentage of pixel change is wrong: %f changed and %f not changed", changed, notChanged)
 	}
-}
-
-// imageDiff returns whether two images have enough portion changed and unchanged.
-func imageDiff(img1, img2 image.Image) (float64, float64) {
-	var bounds image.Rectangle = img1.Bounds()
-	numOfPixel := float64(bounds.Max.X-bounds.Min.X+1) * float64(bounds.Max.Y-bounds.Min.Y+1)
-	numOfSamePixel := 0.0
-	numOfDiffPixel := 0.0
-	for x := bounds.Min.X; x <= bounds.Max.X; x++ {
-		for y := bounds.Min.Y; y <= bounds.Max.Y; y++ {
-			r1, g1, b1, _ := img1.At(x, y).RGBA()
-			r2, g2, b2, _ := img2.At(x, y).RGBA()
-			dis := math.Abs(float64(r1)-float64(r2)) + math.Abs(float64(g1)-float64(g2)) + math.Abs(float64(b1)-float64(b2))
-			if dis == 0 {
-				numOfSamePixel += 1.0
-			} else {
-				numOfDiffPixel += 1.0
-			}
-		}
-	}
-
-	return numOfSamePixel / numOfPixel, numOfDiffPixel / numOfPixel
 }
