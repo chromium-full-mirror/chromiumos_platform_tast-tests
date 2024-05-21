@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome/internal/config"
 	"go.chromium.org/tast-tests/cros/local/chrome/internal/driver"
+	"go.chromium.org/tast-tests/cros/local/media/vm"
 	"go.chromium.org/tast-tests/cros/local/session"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/errors"
@@ -312,6 +313,13 @@ func RestartChromeForTesting(ctx context.Context, cfg *config.Config, extArgs, l
 		largs = append(largs, lacrosExtArgs...)
 	}
 	largs = append(largs, stackProfilerArg(cfg.EnableLacrosStackSampledMetrics()))
+
+	// Disable GPU sandbox for lacros on VMs because it crashes on entering.
+	// GPU crashes cause strange test timeouts. See b/40280541 and b/341794182.
+	if vm.IsRunningOnVM() {
+		largs = append(largs, "--disable-gpu-sandbox")
+	}
+
 	args = append(args, "--lacros-chrome-additional-args="+strings.Join(largs, "####"))
 
 	args = append(args, cfg.ExtraArgs()...)
