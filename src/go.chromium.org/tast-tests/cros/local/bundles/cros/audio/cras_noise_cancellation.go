@@ -109,9 +109,10 @@ func init() {
 				Name: "aec_nc_ast",
 				Val: crasNoiseCancellationParams{
 					noiseCancellationEnabled: true,
+					styleTransferEnabled:     true,
 					captureRate:              48000,
-					expectedRMS:              0.01,
-					expectedRMSTolerance:     0.005,
+					expectedRMS:              0.0075,
+					expectedRMSTolerance:     0.0075,
 					extraCaptureFlags: []string{
 						"--effects=aec",
 					},
@@ -122,9 +123,10 @@ func init() {
 				Name: "aec_nc_ast_44100hz",
 				Val: crasNoiseCancellationParams{
 					noiseCancellationEnabled: true,
+					styleTransferEnabled:     true,
 					captureRate:              44100,
-					expectedRMS:              0.01,
-					expectedRMSTolerance:     0.005,
+					expectedRMS:              0.0075,
+					expectedRMSTolerance:     0.0075,
 					extraCaptureFlags: []string{
 						"--effects=aec",
 					},
@@ -135,6 +137,7 @@ func init() {
 				Name: "nc_ast",
 				Val: crasNoiseCancellationParams{
 					noiseCancellationEnabled: true,
+					styleTransferEnabled:     true,
 					captureRate:              48000,
 					expectedRMS:              0.01,
 					expectedRMSTolerance:     0.005,
@@ -145,6 +148,7 @@ func init() {
 				Name: "nc_ast_44100hz",
 				Val: crasNoiseCancellationParams{
 					noiseCancellationEnabled: true,
+					styleTransferEnabled:     true,
 					captureRate:              44100,
 					expectedRMS:              0.01,
 					expectedRMSTolerance:     0.005,
