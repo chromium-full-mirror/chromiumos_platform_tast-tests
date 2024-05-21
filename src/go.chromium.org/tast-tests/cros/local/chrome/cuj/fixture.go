@@ -1200,6 +1200,7 @@ func init() {
 		Impl: &loggedInToCUJUserFixture{
 			chromeExtraOpts: []chrome.Option{
 				chrome.EnableFeatures("Vulkan", "DefaultANGLEVulkan", "VulkanFromANGLE"),
+				chrome.ExtraArgs(benchmarkFlags...),
 			},
 			bt: browser.TypeAsh,
 		},

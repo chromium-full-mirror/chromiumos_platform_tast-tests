@@ -40,7 +40,7 @@ func init() {
 				Name:      "speedometer",
 				ExtraAttr: []string{"group:cuj", "group:crosbolt", "crosbolt_perbuild", "crosbolt_fsi_check"},
 				Timeout:   defaultTimeout,
-				Fixture:   "loggedInToCUJUserWithoutCooldown",
+				Fixture:   "loggedInToCUJUserWithoutCooldownBenchmark",
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeAsh,
 					BenchmarkInfo: benchmarkcuj.SpeedometerInfo,
@@ -51,7 +51,7 @@ func init() {
 				Name:      "speedometer3",
 				ExtraAttr: []string{"group:cuj", "group:crosbolt", "cuj_experimental"},
 				Timeout:   defaultTimeout,
-				Fixture:   "loggedInToCUJUserWithoutCooldown",
+				Fixture:   "loggedInToCUJUserWithoutCooldownBenchmark",
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeAsh,
 					BenchmarkInfo: benchmarkcuj.Speedometer3Info,
@@ -62,7 +62,7 @@ func init() {
 				Name:      "lacros_speedometer",
 				ExtraAttr: []string{"group:cuj"},
 				Timeout:   defaultTimeout,
-				Fixture:   "loggedInToCUJUserLacrosWithoutCooldown",
+				Fixture:   "loggedInToCUJUserLacrosWithoutCooldownBenchmark",
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeLacros,
 					BenchmarkInfo: benchmarkcuj.SpeedometerInfo,
@@ -74,7 +74,7 @@ func init() {
 				Name:      "lacros_speedometer3",
 				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
 				Timeout:   defaultTimeout,
-				Fixture:   "loggedInToCUJUserLacrosWithoutCooldown",
+				Fixture:   "loggedInToCUJUserLacrosWithoutCooldownBenchmark",
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeLacros,
 					BenchmarkInfo: benchmarkcuj.Speedometer3Info,
@@ -86,7 +86,7 @@ func init() {
 				Name:      "motionmark",
 				ExtraAttr: []string{"group:cuj"},
 				Timeout:   defaultTimeout,
-				Fixture:   "loggedInToCUJUserWithoutCooldown",
+				Fixture:   "loggedInToCUJUserWithoutCooldownBenchmark",
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeAsh,
 					BenchmarkInfo: benchmarkcuj.MotionMarkInfo,
@@ -97,7 +97,7 @@ func init() {
 				Name:      "lacros_motionmark",
 				ExtraAttr: []string{"group:cuj"},
 				Timeout:   defaultTimeout,
-				Fixture:   "loggedInToCUJUserLacrosWithoutCooldown",
+				Fixture:   "loggedInToCUJUserLacrosWithoutCooldownBenchmark",
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeLacros,
 					BenchmarkInfo: benchmarkcuj.MotionMarkInfo,
@@ -121,7 +121,7 @@ func init() {
 				Name:      "motionmark1_3",
 				ExtraAttr: []string{"group:cuj"},
 				Timeout:   defaultTimeout,
-				Fixture:   "loggedInToCUJUserWithoutCooldown",
+				Fixture:   "loggedInToCUJUserWithoutCooldownBenchmark",
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeAsh,
 					BenchmarkInfo: benchmarkcuj.MotionMark1_3Info,
@@ -132,7 +132,7 @@ func init() {
 				Name:      "lacros_motionmark1_3",
 				ExtraAttr: []string{"group:cuj"},
 				Timeout:   defaultTimeout,
-				Fixture:   "loggedInToCUJUserLacrosWithoutCooldown",
+				Fixture:   "loggedInToCUJUserLacrosWithoutCooldownBenchmark",
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeLacros,
 					BenchmarkInfo: benchmarkcuj.MotionMark1_3Info,
@@ -431,7 +431,7 @@ func init() {
 			{
 				Name:    "bmark",
 				Timeout: defaultTimeout,
-				Fixture: "loggedInToCUJUserWithoutCooldown",
+				Fixture: "loggedInToCUJUserWithoutCooldownBenchmark",
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeAsh,
 					BenchmarkInfo: benchmarkcuj.BmarkInfo,
@@ -441,7 +441,7 @@ func init() {
 			{
 				Name:    "lacros_bmark",
 				Timeout: defaultTimeout,
-				Fixture: "loggedInToCUJUserLacrosWithoutCooldown",
+				Fixture: "loggedInToCUJUserLacrosWithoutCooldownBenchmark",
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeLacros,
 					BenchmarkInfo: benchmarkcuj.BmarkInfo,
