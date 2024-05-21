@@ -138,7 +138,7 @@ func TestDEQPParams(t *testing.T) {
 			Name:       "smoke_" + s.name,
 			API:        s.api,
 			Timeout:    2 * time.Minute,
-			Attr:       []string{"graphics_perbuild"},
+			Attr:       []string{"graphics_perbuild", "group:mainline", "informational", "group:criticalstaging"},
 			ShardCount: 1,
 			IsParallel: true,
 			IsSmoke:    true,

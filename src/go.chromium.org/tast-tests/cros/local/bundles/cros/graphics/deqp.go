@@ -54,7 +54,7 @@ func init() {
 			{
 				Name:              "smoke_vk",
 				Timeout:           2 * time.Minute,
-				ExtraAttr:         []string{"graphics_perbuild"},
+				ExtraAttr:         []string{"graphics_perbuild", "group:mainline", "informational", "group:criticalstaging"},
 				ExtraSoftwareDeps: []string{"vulkan"},
 				Val: deqpParams{
 					api:        graphics.VK,
@@ -67,7 +67,7 @@ func init() {
 			{
 				Name:      "smoke_gles2",
 				Timeout:   2 * time.Minute,
-				ExtraAttr: []string{"graphics_perbuild"},
+				ExtraAttr: []string{"graphics_perbuild", "group:mainline", "informational", "group:criticalstaging"},
 				Val: deqpParams{
 					api:        graphics.GLES2,
 					smoke:      true,
@@ -79,7 +79,7 @@ func init() {
 			{
 				Name:      "smoke_gles3",
 				Timeout:   2 * time.Minute,
-				ExtraAttr: []string{"graphics_perbuild"},
+				ExtraAttr: []string{"graphics_perbuild", "group:mainline", "informational", "group:criticalstaging"},
 				Val: deqpParams{
 					api:        graphics.GLES3,
 					smoke:      true,
@@ -91,7 +91,7 @@ func init() {
 			{
 				Name:      "smoke_gles31",
 				Timeout:   2 * time.Minute,
-				ExtraAttr: []string{"graphics_perbuild"},
+				ExtraAttr: []string{"graphics_perbuild", "group:mainline", "informational", "group:criticalstaging"},
 				Val: deqpParams{
 					api:        graphics.GLES31,
 					smoke:      true,
