@@ -139,6 +139,11 @@ func CorruptBothMiniOSAB(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to remove charger: ", err)
 		}
 		chargerAttached = false
+		// GoBigSleepLint: Wait for a while between removing the charger and
+		// booting the DUT from USB to prevent USB disconnected issues.
+		if err := testing.Sleep(ctx, 5*time.Second); err != nil {
+			s.Fatal("Failed to sleep: ", err)
+		}
 	}
 
 	s.Log("Inserting a valid USB to DUT")

@@ -189,6 +189,11 @@ func (ckchg *checkAndSetServoCharger) restoreDUTConnectionWithUSB(ctx context.Co
 			return errors.Wrap(err, "failed to remove charger")
 		}
 		ckchg.isChargerConnected = false
+		// GoBigSleepLint: Wait for a while between removing the charger and
+		// booting the DUT from USB to prevent USB disconnected issues.
+		if err := testing.Sleep(ctx, 5*time.Second); err != nil {
+			return errors.Wrap(err, "failed to sleep")
+		}
 	}
 	testing.ContextLog(ctx, "Inserting a valid USB to DUT")
 	if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
