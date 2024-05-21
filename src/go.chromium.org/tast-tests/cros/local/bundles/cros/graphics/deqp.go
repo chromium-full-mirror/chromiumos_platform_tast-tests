@@ -116,7 +116,7 @@ func init() {
 			{
 				Name:              "vk_10_02",
 				Timeout:           3 * time.Hour,
-				ExtraAttr:         []string{"graphics_manual"},
+				ExtraAttr:         []string{"graphics_nightly"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("hayato", "atlas", "gladios", "redrix", "tomato", "babytiger", "ponyta", "boton", "drallion", "sion", "ciri", "kasumi", "kohaku", "cozmo", "karma", "kodama", "yaviks", "nocturne", "garfour", "wyvern", "pyro", "shyvana", "electro", "sand", "sarien", "skyrim", "soraka", "starmi", "homestar", "lazor", "lindar", "berknip"), hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{"vulkan"},
 				Val: deqpParams{
@@ -129,7 +129,7 @@ func init() {
 			{
 				Name:              "vk_10_03",
 				Timeout:           3 * time.Hour,
-				ExtraAttr:         []string{"graphics_manual"},
+				ExtraAttr:         []string{"graphics_nightly"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("hayato", "atlas", "gladios", "redrix", "tomato", "babytiger", "ponyta", "boton", "drallion", "sion", "ciri", "kasumi", "kohaku", "cozmo", "karma", "kodama", "yaviks", "nocturne", "garfour", "wyvern", "pyro", "shyvana", "electro", "sand", "sarien", "skyrim", "soraka", "starmi", "homestar", "lazor", "lindar", "berknip"), hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{"vulkan"},
 				Val: deqpParams{
@@ -142,7 +142,7 @@ func init() {
 			{
 				Name:              "vk_10_04",
 				Timeout:           3 * time.Hour,
-				ExtraAttr:         []string{"graphics_manual"},
+				ExtraAttr:         []string{"graphics_nightly"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("hayato", "atlas", "gladios", "redrix", "tomato", "babytiger", "ponyta", "boton", "drallion", "sion", "ciri", "kasumi", "kohaku", "cozmo", "karma", "kodama", "yaviks", "nocturne", "garfour", "wyvern", "pyro", "shyvana", "electro", "sand", "sarien", "skyrim", "soraka", "starmi", "homestar", "lazor", "lindar", "berknip"), hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{"vulkan"},
 				Val: deqpParams{
@@ -155,7 +155,7 @@ func init() {
 			{
 				Name:              "vk_10_05",
 				Timeout:           3 * time.Hour,
-				ExtraAttr:         []string{"graphics_manual"},
+				ExtraAttr:         []string{"graphics_nightly"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("hayato", "atlas", "gladios", "redrix", "tomato", "babytiger", "ponyta", "boton", "drallion", "sion", "ciri", "kasumi", "kohaku", "cozmo", "karma", "kodama", "yaviks", "nocturne", "garfour", "wyvern", "pyro", "shyvana", "electro", "sand", "sarien", "skyrim", "soraka", "starmi", "homestar", "lazor", "lindar", "berknip"), hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{"vulkan"},
 				Val: deqpParams{
@@ -168,7 +168,7 @@ func init() {
 			{
 				Name:              "vk_10_06",
 				Timeout:           3 * time.Hour,
-				ExtraAttr:         []string{"graphics_manual"},
+				ExtraAttr:         []string{"graphics_nightly"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("hayato", "atlas", "gladios", "redrix", "tomato", "babytiger", "ponyta", "boton", "drallion", "sion", "ciri", "kasumi", "kohaku", "cozmo", "karma", "kodama", "yaviks", "nocturne", "garfour", "wyvern", "pyro", "shyvana", "electro", "sand", "sarien", "skyrim", "soraka", "starmi", "homestar", "lazor", "lindar", "berknip"), hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{"vulkan"},
 				Val: deqpParams{
@@ -181,7 +181,7 @@ func init() {
 			{
 				Name:              "vk_10_07",
 				Timeout:           3 * time.Hour,
-				ExtraAttr:         []string{"graphics_manual"},
+				ExtraAttr:         []string{"graphics_nightly"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("hayato", "atlas", "gladios", "redrix", "tomato", "babytiger", "ponyta", "boton", "drallion", "sion", "ciri", "kasumi", "kohaku", "cozmo", "karma", "kodama", "yaviks", "nocturne", "garfour", "wyvern", "pyro", "shyvana", "electro", "sand", "sarien", "skyrim", "soraka", "starmi", "homestar", "lazor", "lindar", "berknip"), hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{"vulkan"},
 				Val: deqpParams{
@@ -194,7 +194,7 @@ func init() {
 			{
 				Name:              "vk_10_08",
 				Timeout:           3 * time.Hour,
-				ExtraAttr:         []string{"graphics_manual"},
+				ExtraAttr:         []string{"graphics_nightly"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("hayato", "atlas", "gladios", "redrix", "tomato", "babytiger", "ponyta", "boton", "drallion", "sion", "ciri", "kasumi", "kohaku", "cozmo", "karma", "kodama", "yaviks", "nocturne", "garfour", "wyvern", "pyro", "shyvana", "electro", "sand", "sarien", "skyrim", "soraka", "starmi", "homestar", "lazor", "lindar", "berknip"), hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{"vulkan"},
 				Val: deqpParams{
@@ -207,7 +207,7 @@ func init() {
 			{
 				Name:              "vk_10_09",
 				Timeout:           3 * time.Hour,
-				ExtraAttr:         []string{"graphics_manual"},
+				ExtraAttr:         []string{"graphics_nightly"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("hayato", "atlas", "gladios", "redrix", "tomato", "babytiger", "ponyta", "boton", "drallion", "sion", "ciri", "kasumi", "kohaku", "cozmo", "karma", "kodama", "yaviks", "nocturne", "garfour", "wyvern", "pyro", "shyvana", "electro", "sand", "sarien", "skyrim", "soraka", "starmi", "homestar", "lazor", "lindar", "berknip"), hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{"vulkan"},
 				Val: deqpParams{
@@ -220,7 +220,7 @@ func init() {
 			{
 				Name:              "vk_10_10",
 				Timeout:           3 * time.Hour,
-				ExtraAttr:         []string{"graphics_manual"},
+				ExtraAttr:         []string{"graphics_nightly"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("hayato", "atlas", "gladios", "redrix", "tomato", "babytiger", "ponyta", "boton", "drallion", "sion", "ciri", "kasumi", "kohaku", "cozmo", "karma", "kodama", "yaviks", "nocturne", "garfour", "wyvern", "pyro", "shyvana", "electro", "sand", "sarien", "skyrim", "soraka", "starmi", "homestar", "lazor", "lindar", "berknip"), hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{"vulkan"},
 				Val: deqpParams{
