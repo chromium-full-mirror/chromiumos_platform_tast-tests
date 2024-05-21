@@ -98,6 +98,10 @@ func ReportingHeartbeatLocal(ctx context.Context, s *testing.State) {
 			s.Errorf("Record %d is nil", i)
 		}
 
+		if record.Record.TimestampUs == nil {
+			s.Errorf("No timestamp for record %d", i)
+		}
+
 		ts := *record.Record.TimestampUs
 		if time.UnixMicro(ts).Before(testStartTime) {
 			s.Errorf("Invalid timestamp, test start time: %s , record  %d timestamp: %d", testStartTime.String(), i, ts)
