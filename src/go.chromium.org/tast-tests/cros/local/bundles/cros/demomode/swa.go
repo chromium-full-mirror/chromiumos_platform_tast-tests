@@ -99,9 +99,11 @@ func SWA(ctx context.Context, s *testing.State) {
 		}
 		defer faillog.DumpUITreeOnError(clearUpCtx, s.OutDir(), s.HasError, tconn)
 
-		highlightsMainNav := nodewith.Role(role.Navigation).Name("Home navigation")
+		// Element in 2024 C1 refresh.
+		highlightsMainNav := nodewith.Role(role.Button).Name("Chromebook logo")
+		attractLoopNode := nodewith.Role(role.Video).ClassName("attract-loop")
 
-		return demomode.VerifySWAFunctionality(ctx, tconn, highlightsMainNav)
+		return demomode.VerifySWAFunctionality(ctx, tconn, highlightsMainNav, attractLoopNode)
 	}
 
 	if tc.shouldRunOnline {

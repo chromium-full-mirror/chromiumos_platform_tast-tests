@@ -57,7 +57,8 @@ func BreakSWAAttractLoop(ctx context.Context, tconn *chrome.TestConn) error {
 // can be running on different devices, so highlightsNode is a node representing a UI element
 // unique to the version of the Highlights App being tested, to verify that the proper version
 // of the app is running.
-func VerifySWAFunctionality(ctx context.Context, tconn *chrome.TestConn, highlightsNode *nodewith.Finder) error {
+func VerifySWAFunctionality(ctx context.Context, tconn *chrome.TestConn, highlightsNode,
+	attractLoopNode *nodewith.Finder) error {
 	ui := uiauto.New(tconn).WithTimeout(100 * time.Second)
 
 	// Verify that splash screen has disappeared before moving mouse.
@@ -77,27 +78,24 @@ func VerifySWAFunctionality(ctx context.Context, tconn *chrome.TestConn, highlig
 		return errors.Wrap(err, "failed to wait for a window in fullscreen mode")
 	}
 
-	// Confirm that Highlights content is not yet shown
-	if err := ui.WaitUntilGone(highlightsNode)(ctx); err != nil {
-		return errors.Wrap(err, "failed to confirm that no highlights content is present")
+	if err := ui.WaitUntilExists(attractLoopNode)(ctx); err != nil {
+		return errors.Wrap(err, "failed to wait until attract loop exists")
 	}
 
-	pc := pointer.NewMouse(tconn)
-	defer pc.Close(ctx)
+	// GoBigSleepLint: attractLoopNode` exists does not mean the video become stable. There
+	// isn't any UI elements or conditions to wait for with the Test API `tconn` so sleep for
+	// 6s now. If the video not get loaded after 6s, we should investigate this issue.
+	if err := testing.Sleep(ctx, 6*time.Second); err != nil {
+		return errors.Wrap(err, "failed to sleep")
+	}
 
-	demoAppLocation, _ := ui.Location(ctx, demoApp)
-
-	// Move mouse (arbitrarily) from center of demo app to screen corner to
-	// trigger interaction, breaking fullscreen Attract Loop.
-	if err := pc.Drag(
-		demoAppLocation.CenterPoint(),
-		pc.DragTo(coords.NewPoint(0, 0), 1*time.Second))(ctx); err != nil {
-		return errors.Wrap(err, "failed to drag mouse across screen")
+	if err := ui.LeftClick(attractLoopNode)(ctx); err != nil {
+		return errors.Wrap(err, "failed to click on attract loop")
 	}
 
 	testing.ContextLog(ctx, "Confirming that app is in windowed Highlights mode")
 	if err := ash.WaitForFullscreenConditionWithTitle(tconn, "ChromeOS Highlights", false, 10*time.Second)(ctx); err != nil {
-		return errors.Wrap(err, "failed to wait for a window in fullscreen mode")
+		return errors.Wrap(err, "failed to wait for a window in non-fullscreen mode")
 	}
 	// Confirm that basic Highlights content is shown by presence of highlightsNode
 	if err := ui.WaitUntilExists(highlightsNode)(ctx); err != nil {

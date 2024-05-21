@@ -80,8 +80,9 @@ func CloudGaming(ctx context.Context, s *testing.State) {
 	defer faillog.DumpUITreeOnError(clearUpCtx, s.OutDir(), s.HasError, tconn)
 
 	gamingDisplaySectionButton := nodewith.Role(role.Button).Name("Discover Chromebook Display")
+	attractLoopNode := nodewith.Role(role.Video).ClassName("attract-loop-video")
 
-	if err := demomode.VerifySWAFunctionality(ctx, tconn, gamingDisplaySectionButton); err != nil {
+	if err := demomode.VerifySWAFunctionality(ctx, tconn, gamingDisplaySectionButton, attractLoopNode); err != nil {
 		s.Fatal("Failed to verify SWA functionality: ", err)
 	}
 }
