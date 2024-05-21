@@ -16,8 +16,8 @@ import (
 
 // Values keeps the reporting values for multiple runs.
 type Values struct {
-	metrics    map[string]perf.Metric
-	values     map[string][]float64
+	metrics    map[string] /* name + variant */ perf.Metric
+	values     map[string] /* name + variant */ []float64
 	dropMinMax bool
 }
 
@@ -32,7 +32,12 @@ func NewValues(dropMinMax bool) *Values {
 
 // Append adds a new data points to values.
 func (v *Values) Append(metric perf.Metric, value float64) {
+	if metric.Variant == "" {
+		metric.Variant = "average"
+	}
+	// Use name + variant as the key to keep both information.
 	name := metric.Name
+	name += metric.Variant
 	if _, ok := v.metrics[name]; !ok {
 		v.metrics[name] = metric
 	}
@@ -74,8 +79,9 @@ func minMaxIndices(vs []float64) (minIndex, maxIndex int) {
 func (v *Values) Values(ctx context.Context) *perf.Values {
 	pv := perf.NewValues()
 
-	// Ensure that the iteration order is sorted by the name of the metrics, as
-	// this iteration also logs the name/results.
+	// The key of the map is the "name" + "variant" of the metric.
+	// Ensure that the iteration order is sorted by the keys of the metrics, as
+	// this iteration also logs the name/variant/results.
 	names := make([]string, 0, len(v.metrics))
 	for name := range v.metrics {
 		names = append(names, name)
@@ -88,7 +94,6 @@ func (v *Values) Values(ctx context.Context) *perf.Values {
 			continue
 		}
 		otherMetric := metric
-		otherMetric.Variant = "average"
 		sum := 0.0
 		count := 0
 		if len(vs) != 1 {
@@ -107,7 +112,7 @@ func (v *Values) Values(ctx context.Context) *perf.Values {
 			sum = vs[0]
 			count = 1
 		}
-		testing.ContextLogf(ctx, "Average %s = %f", name, sum/float64(count))
+		testing.ContextLogf(ctx, "Average %s.%s = %f", otherMetric.Name, otherMetric.Variant, sum/float64(count))
 	}
 	return pv
 }
