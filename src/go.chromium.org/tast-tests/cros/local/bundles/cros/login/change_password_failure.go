@@ -68,7 +68,10 @@ func ChangePasswordFailure(ctx context.Context, s *testing.State) {
 		// Add something to the password so when user logs in again - password change would be detected.
 		fakeCreds.Pass = "fake" + fakeCreds.Pass
 		cr, err := chrome.New(
-			ctx, chrome.FakeLogin(fakeCreds))
+			ctx, chrome.FakeLogin(fakeCreds),
+			// We don't have an explicit way to control recovery feature state via
+			// options, so rely on feature flag instead.
+			chrome.DisableFeatures("CryptohomeRecoveryByDefaultForConsumers"))
 		if err != nil {
 			s.Fatal("Failed to create a user: ", err)
 		}

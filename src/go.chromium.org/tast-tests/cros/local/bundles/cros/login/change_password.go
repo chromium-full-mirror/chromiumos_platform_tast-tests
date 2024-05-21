@@ -12,7 +12,9 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
 	"go.chromium.org/tast-tests/cros/common/hwsec"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/login/signinutil"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/lockscreen"
 	"go.chromium.org/tast-tests/cros/local/chrome/userutil"
 	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
@@ -55,10 +57,10 @@ func init() {
 			Value: "screenplay-1b766b3e-874a-49dd-be9d-5c63994970e3",
 		}},
 		Params: []testing.Param{{
-			Name: "no_consumer_update",
+			Name: "user_without_recovery",
 			Val:  false,
 		}, {
-			Name: "consumer_update",
+			Name: "user_with_recovery",
 			Val:  true,
 		}},
 	})
@@ -82,6 +84,8 @@ func ChangePassword(ctx context.Context, s *testing.State) {
 		testing.ContextLog(ctx, "Failed to verify Internet connectivity before test: ", err)
 	}
 
+	userHasRecovery := s.Param().(bool)
+
 	// Isolate the step to leverage `defer` pattern.
 	func() {
 		var err error
@@ -94,8 +98,19 @@ func ChangePassword(ctx context.Context, s *testing.State) {
 		// Add a whitespace to the password, so when user logs in again - password change would be detected.
 		// Note: the password with a whitespace will still be accepted by Gaia.
 		initialCreds.Pass = " " + initialCreds.Pass
-		cr, err := chrome.New(
-			ctx, chrome.GAIALogin(initialCreds))
+
+		options := []chrome.Option{
+			chrome.GAIALogin(initialCreds),
+		}
+		// We don't have a way to configure recovery via chrome.New params, so
+		// rely on Feature flag for now to control recovery factor.
+		if userHasRecovery {
+			options = append(options, chrome.EnableFeatures("CryptohomeRecoveryByDefaultForConsumers"))
+		} else {
+			options = append(options, chrome.DisableFeatures("CryptohomeRecoveryByDefaultForConsumers"))
+		}
+
+		cr, err := chrome.New(ctx, options...)
 		if err != nil {
 			s.Fatal("Failed to create a user: ", err)
 		}
@@ -112,50 +127,66 @@ func ChangePassword(ctx context.Context, s *testing.State) {
 
 	// Isolate the step to leverage `defer` pattern.
 	func() {
-		isConsumerUpdate := s.Param().(bool)
-
-		options := []chrome.Option{
+		cr, err := chrome.New(
+			ctx,
 			chrome.GAIALogin(gaiaCreds),
+			chrome.DeferLogin(),
 			chrome.DontWaitForCryptohome(),
+			chrome.ReauthMode(),
 			chrome.KeepState(),
-			chrome.RemoveNotification(false), // By default it waits for the user session.
 			chrome.DontSkipOOBEAfterLogin(),
-			chrome.DisableFeatures("CryptohomeRecoveryBeforeFlowSplit"),
-		}
-
-		if isConsumerUpdate {
-			options = append(options, chrome.ExtraArgs("--enable-features=OobeSoftwareUpdate"))
-		}
-
-		cr, err := chrome.New(ctx, options...)
-
+			chrome.RemoveNotification(false), // By default it waits for the user session.
+			chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")),
+		)
 		if err != nil {
-			s.Fatal("Chrome login failed: ", err)
+			s.Fatal("Failed to start Chrome on the login screen: ", err)
 		}
 		defer cr.Close(cleanupCtx)
+
+		tLoginConn, err := cr.SigninProfileTestAPIConn(ctx)
+		if err != nil {
+			s.Fatal("Creating login test API connection failed: ", err)
+		}
+		defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tLoginConn)
+
+		if err := signinutil.EnterInvalidPassword(ctx, cr, gaiaCreds); err != nil {
+			s.Fatal("Failed to enter invalid password: ", err)
+		}
+
+		s.Log("Starting reauth flow")
+		if err := lockscreen.ClickRecoverUser(ctx, tLoginConn); err != nil {
+			s.Fatal("Failed to click recovery button: ", err)
+		}
+
+		if err := cr.ContinueLogin(ctx); err != nil {
+			s.Fatal("Chrome login during recovery failed: ", err)
+		}
+
 		oobeConn, err := cr.WaitForOOBEConnection(ctx)
 		if err != nil {
 			s.Fatal("Failed to wait for OOBE connection: ", err)
 		}
 		defer oobeConn.Close()
 
-		if err := oobeConn.WaitForExprFailOnErrWithTimeout(ctx, "!document.querySelector('#enter-old-password').hidden", 45*time.Second); err != nil {
-			s.Fatal("Failed to wait for enter old password screen: ", err)
+		if !userHasRecovery {
+			// Without recovery user need to enter old password.
+			if err := oobeConn.WaitForExprFailOnErrWithTimeout(ctx, "!document.querySelector('#enter-old-password').hidden", 45*time.Second); err != nil {
+				s.Fatal("Failed to wait for enter old password screen: ", err)
+			}
+
+			if err := oobeConn.Eval(ctx, fmt.Sprintf("document.querySelector('#enter-old-password').$.oldPasswordInput.value = '%s'", initialCreds.Pass), nil); err != nil {
+				s.Fatal("Failed to enter the old password: ", err)
+			}
+			if err := oobeConn.Eval(ctx, "document.querySelector('#enter-old-password').$.next.click()", nil); err != nil {
+				s.Fatal("Failed to click on the next button: ", err)
+			}
 		}
 
-		if err := oobeConn.Eval(ctx, fmt.Sprintf("document.querySelector('#enter-old-password').$.oldPasswordInput.value = '%s'", initialCreds.Pass), nil); err != nil {
-			s.Fatal("Failed to enter the old password: ", err)
-		}
-
-		if err := oobeConn.Eval(ctx, "document.querySelector('#enter-old-password').$.next.click()", nil); err != nil {
-			s.Fatal("Failed to click on the next button: ", err)
-		}
-
-		if err := oobeConn.WaitForExprFailOnErrWithTimeout(ctx, "!document.querySelector('#factor-setup-success').hidden", 45*time.Second); err != nil {
+		if err := oobeConn.WaitForExprFailOnErrWithTimeout(ctx, "OobeAPI.screens.PasswordFactorSuccessScreen.isVisible()", 45*time.Second); err != nil {
 			s.Fatal("Failed to wait for factor setup success screen: ", err)
 		}
 
-		if err := oobeConn.Eval(ctx, "document.querySelector('#factor-setup-success').$.doneButton.click()", nil); err != nil {
+		if err := oobeConn.Eval(ctx, "OobeAPI.screens.PasswordFactorSuccessScreen.clickDone()", nil); err != nil {
 			s.Fatal("Failed to click on the done button: ", err)
 		}
 
