@@ -15,7 +15,9 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/dma"
 	"go.chromium.org/tast-tests/cros/local/testenv/middns"
+	"go.chromium.org/tast-tests/cros/local/ui"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -30,7 +32,7 @@ func init() {
 		// Attr:         []string{"group:mainline", "group:hw_agnostic", "informational"},
 		SoftwareDeps: []string{"chrome", "gaia", "arc"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		VarDeps:      []string{"ui.gaiaPoolDefault"},
+		VarDeps:      []string{ui.GaiaPoolDefaultVarName},
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 2*time.Minute,
 	})
 }
@@ -42,7 +44,7 @@ func VerifyMidDNSARC(ctx context.Context, s *testing.State) {
 
 	// Start Chrome with ARC enabled
 	cr, err := chrome.New(ctx,
-		chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
+		chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)),
 		chrome.ARCSupported(),
 		chrome.UnRestrictARCCPU(),
 		chrome.ExtraArgs(arc.DisableSyncFlags()...))
