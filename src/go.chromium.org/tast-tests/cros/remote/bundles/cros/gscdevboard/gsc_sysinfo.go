@@ -6,7 +6,6 @@ package gscdevboard
 
 import (
 	"context"
-	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
@@ -33,9 +32,6 @@ func init() {
 	})
 }
 
-var devIDRegexp = regexp.MustCompile(`DEV_ID: *0x([0-9a-fA-F]+) +0x([0-9a-fA-F]+)`)
-var prodKeyLadder = regexp.MustCompile(`Key Ladder:  prod`)
-
 func GSCSysinfo(ctx context.Context, s *testing.State) {
 	b := utils.NewDevboardHelper(s)
 	i := ti50.MustOpenCrOSImage(ctx, b, s)
@@ -48,18 +44,14 @@ func GSCSysinfo(ctx context.Context, s *testing.State) {
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
 
 	// Simulate the typing of "sysinfo" command on GSC console.
-	output, err := i.Command(ctx, "sysinfo")
+	sysinfo, err := i.GetSysinfo(ctx)
 	if err != nil {
 		s.Fatal("Error communicating with GSC: ", err)
 	}
 
 	// Rudimentary validation of output: find and print "DEV_ID:" line.
-	match := devIDRegexp.FindStringSubmatch(output)
-	if match == nil {
-		s.Error("Did not find DEV_ID among sysinfo output: ", output)
-	} else {
-		s.Log("DEV_ID: ", match[1], ":", match[2])
-	}
+	s.Log("DEV_ID: ", sysinfo.Devid)
+
 	version, err := i.GetVersionInfo(ctx)
 	if err != nil {
 		s.Fatal("Unable to get version output: ", err)
@@ -70,8 +62,7 @@ func GSCSysinfo(ctx context.Context, s *testing.State) {
 		isReleaseBranch = true
 	}
 
-	match = prodKeyLadder.FindStringSubmatch(output)
-	if match != nil {
+	if sysinfo.ProdKeyladder {
 		if version.RwA.Active {
 			s.Logf("%+v is using the prod key ladder", version.RwA)
 		} else if version.RwB.Active {
@@ -80,9 +71,9 @@ func GSCSysinfo(ctx context.Context, s *testing.State) {
 
 		if b.TestbedType == ti50.GscH1Shield && !isReleaseBranch {
 			// Images from the H1 TOT branch should not use the prod keyladder.
-			s.Fatal("Found prod Key Ladder in a non-release H1 image: ", output)
+			s.Fatalf("Found prod Key Ladder in a non-release H1 image: %+v", sysinfo)
 		}
 	} else if isReleaseBranch {
-		s.Fatal("Did not find prod Key Ladder in release image: ", output)
+		s.Fatalf("Did not find prod Key Ladder in release image: %+v", sysinfo)
 	}
 }
