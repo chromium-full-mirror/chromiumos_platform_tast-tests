@@ -37,6 +37,8 @@ const (
 	crosCameraGPUAlgoDaemonName     = "cros-camera-gpu-algo"
 	crosCameraGPUAlgoExecutablePath = "/usr/bin/cros_camera_algo --type=gpu"
 
+	dmabufInfoPath = "/sys/kernel/debug/dma_buf/bufinfo"
+
 	stableMemoryWaitingTime = 1 * time.Minute
 )
 
@@ -58,6 +60,10 @@ var headerRegex = regexp.MustCompile(`^([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+)\s
 // <info name>: <size of data> kB
 var memorySizeRegex = regexp.MustCompile(`^([^ ]+):\s+([^ ]+)\s+kB$`)
 
+// The last line of bufinfo file is of the following pattern:
+// Total <total_buffers> objects, <total_size> bytes
+var dmabufInfoRegex = regexp.MustCompile(`Total (\d+) object[s]?\, (\d+) byte[s]?`)
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PNPCameraProcessMemory,
@@ -65,10 +71,18 @@ func init() {
 		Desc:         "Collect memory usage of camera service",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "esker@chromium.org"},
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
-		Fixture:      pnp.StablePowerLacros,
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{caps.BuiltinCamera, "chrome", "camera_app"},
 		Timeout:      5 * time.Minute,
+		Params: []testing.Param{{
+			Fixture: pnp.StablePowerLacros,
+		}, {
+			Name:    "digital_zoom_on_super_res_off",
+			Fixture: pnp.StablePowerLacrosWithSuperResDisabled,
+		}, {
+			Name:    "digital_zoom_off_super_res_off",
+			Fixture: pnp.StablePowerLacrosWithDigitalZoomSuperResDisabled,
+		}},
 	})
 }
 
@@ -200,6 +214,40 @@ func saveProcessSmaps(ctx context.Context, cameraProcessList []cameraProcess, ou
 	return nil
 }
 
+func saveDmabuf(ctx context.Context, suffix string, pv *perf.Values) error {
+	cmd := testexec.CommandContext(ctx, "tail", "-n", "1", dmabufInfoPath)
+	dmabufInfo, err := cmd.Output(testexec.DumpLogOnError)
+	if err != nil {
+		return errors.Wrap(err, "failed to get dmabuf info")
+	}
+	testing.ContextLogf(ctx, "dmabuf info: %s", dmabufInfo)
+	matches := dmabufInfoRegex.FindStringSubmatch(string(dmabufInfo))
+	if matches == nil {
+		return errors.Wrapf(err, "failed to parse dmabuf info from %q", string(dmabufInfo))
+	}
+	totalBufferCount, err := strconv.Atoi(matches[1])
+	if err != nil {
+		return errors.Wrapf(err, "failed to convert total buffer count %v to an integer", matches[1])
+	}
+	totalBufferSize, err := strconv.Atoi(matches[2])
+	if err != nil {
+		return errors.Wrapf(err, "failed to convert total buffer size %v to an integer", matches[2])
+	}
+
+	pv.Set(perf.Metric{
+		Name:      fmt.Sprintf("%s_dmabuf_count", suffix),
+		Unit:      "count",
+		Direction: perf.SmallerIsBetter,
+	}, float64(totalBufferCount))
+	pv.Set(perf.Metric{
+		Name:      fmt.Sprintf("%s_dmabuf_size", suffix),
+		Unit:      "byte",
+		Direction: perf.SmallerIsBetter,
+	}, float64(totalBufferSize))
+
+	return nil
+}
+
 func PNPCameraProcessMemory(ctx context.Context, s *testing.State) {
 	// Reserve some time for the cleanup, even if it fails due to ctx timeout.
 	cleanupCtx := ctx
@@ -244,7 +292,12 @@ func PNPCameraProcessMemory(ctx context.Context, s *testing.State) {
 	}
 
 	perfValue := perf.NewValues()
-	saveProcessSmaps(ctx, filteredCameraProcessList, s.OutDir(), "idle", perfValue)
+	if err := saveProcessSmaps(ctx, filteredCameraProcessList, s.OutDir(), "idle", perfValue); err != nil {
+		s.Error("Failed to save process Smaps when idle: ", err)
+	}
+	if err := saveDmabuf(ctx, "idle", perfValue); err != nil {
+		s.Error("Failed to save dmabuf when idle: ", err)
+	}
 
 	// Open CCA.
 	cr := s.FixtValue().(powersetup.PowerUIFixtureData).Cr
@@ -271,7 +324,12 @@ func PNPCameraProcessMemory(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to sleep to warm up")
 	}
 
-	saveProcessSmaps(ctx, filteredCameraProcessList, s.OutDir(), "using_cca", perfValue)
+	if err := saveProcessSmaps(ctx, filteredCameraProcessList, s.OutDir(), "using_cca", perfValue); err != nil {
+		s.Error("Failed to save process Smaps when using CCA: ", err)
+	}
+	if err := saveDmabuf(ctx, "using_cca", perfValue); err != nil {
+		s.Error("Failed to save dmabuf when using CCA: ", err)
+	}
 
 	if err := perfValue.Save(s.OutDir()); err != nil {
 		s.Fatal("Failed to save perf value: ", err)
