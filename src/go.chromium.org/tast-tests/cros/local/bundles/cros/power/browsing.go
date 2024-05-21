@@ -62,16 +62,27 @@ func init() {
 			Val:               browsingTestParam{ConfigName: "browsing", TimeParams: power.TimeParams{Interval: 20 * time.Second, Total: time.Hour}},
 			ExtraSoftwareDeps: []string{"lacros"},
 		}, {
-			Name:      "20min_ash",
-			Fixture:   "powerAsh",
-			Timeout:   20*time.Minute + setupTimeoutBuffer + power.RecorderTimeout,
-			Val:       browsingTestParam{ConfigName: "browsing_20min", TimeParams: power.TimeParams{Interval: 5 * time.Second, Total: 20 * time.Minute}},
-			ExtraAttr: []string{"group:power", "power_daily", "power_weekly"},
+			Name:    "20min_ash",
+			Fixture: "powerAsh",
+			Timeout: 20*time.Minute + setupTimeoutBuffer + power.RecorderTimeout,
+			Val:     browsingTestParam{ConfigName: "browsing_20min", TimeParams: power.TimeParams{Interval: 5 * time.Second, Total: 20 * time.Minute}},
 		}, {
 			Name:              "20min_lacros",
 			Fixture:           "powerLacros",
 			Timeout:           20*time.Minute + setupTimeoutBuffer + power.RecorderTimeout,
 			Val:               browsingTestParam{ConfigName: "browsing_20min", TimeParams: power.TimeParams{Interval: 5 * time.Second, Total: 20 * time.Minute}},
+			ExtraSoftwareDeps: []string{"lacros"},
+		}, {
+			Name:      "fast_ash",
+			Fixture:   "powerAsh",
+			Timeout:   3*time.Minute + setupTimeoutBuffer + power.RecorderTimeout,
+			Val:       browsingTestParam{ConfigName: "browsing_fast", TimeParams: power.TimeParams{Interval: 5 * time.Second, Total: 3 * time.Minute}},
+			ExtraAttr: []string{"group:power", "power_daily", "power_weekly"},
+		}, {
+			Name:              "fast_lacros",
+			Fixture:           "powerLacros",
+			Timeout:           3*time.Minute + setupTimeoutBuffer + power.RecorderTimeout,
+			Val:               browsingTestParam{ConfigName: "browsing_fast", TimeParams: power.TimeParams{Interval: 5 * time.Second, Total: 3 * time.Minute}},
 			ExtraSoftwareDeps: []string{"lacros"},
 			ExtraAttr:         []string{"group:power", "power_daily", "power_weekly"},
 		}, {
