@@ -10,6 +10,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/a11y/tts"
@@ -110,9 +111,9 @@ func VerifySodaInstalled(ctx context.Context) error {
 	const templateMnt = "/run/imageloader/%s/package/root"
 
 	// TODO(b/261775478): Figure out why "--list" flakes.
-	for _, id := range []string{"libsoda", "libsoda-model-en-us"} {
+	for _, id := range []string{"libsoda", "libsoda-model-en-us*"} {
 		mnt := fmt.Sprintf(templateMnt, id)
-		if _, err := os.Stat(mnt); err != nil {
+		if matches, err := filepath.Glob(mnt); err != nil || matches == nil {
 			errStr := fmt.Sprintf("dlc %s is not installed", id)
 			return errors.Wrap(err, errStr)
 		}
