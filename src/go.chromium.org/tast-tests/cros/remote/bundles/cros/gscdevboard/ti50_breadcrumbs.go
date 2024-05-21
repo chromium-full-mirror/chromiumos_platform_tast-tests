@@ -7,7 +7,6 @@ package gscdevboard
 import (
 	"context"
 	"reflect"
-	"regexp"
 	"strconv"
 	"time"
 
@@ -111,25 +110,19 @@ func Ti50Breadcrumbs(ctx context.Context, s *testing.State) {
 
 }
 
-var breadcrumbsRegexp = regexp.MustCompile(`Breadcrumbs: *0x([0-9a-fA-F]+)`)
-
 func checkBreadcrumbs(ctx context.Context, s *testing.State, i *ti50.CrOSImage, expected []int) {
-	output, err := i.Command(ctx, "sysinfo")
+	sysinfo, err := i.GetSysinfo(ctx)
 	if err != nil {
 		s.Fatal("sysinfo failed: ", err)
 	}
-	match := breadcrumbsRegexp.FindStringSubmatch(output)
-	if match == nil {
-		s.Fatal("sysinfo output: ", output)
-	}
-	s.Log("Breadcrumbs: 0x", match[1])
+	s.Logf("Breadcrumbs: %x", sysinfo.Breadcrumbs)
 	// Decode from u64 into the list of breadcrumb event values. Each value is stored as 4 bits, so
 	// one char of the hex string.
 	var got []int
-	for _, c := range match[1] {
+	for _, c := range sysinfo.Breadcrumbs {
 		v, err := strconv.ParseInt(string(c), 16, 0)
 		if err != nil {
-			s.Fatal("parse int: ", match[1])
+			s.Fatal("Failed to parse int: ", sysinfo.Breadcrumbs)
 		}
 		if v != 0 {
 			got = append(got, int(v))
