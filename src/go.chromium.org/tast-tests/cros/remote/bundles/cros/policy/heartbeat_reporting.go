@@ -186,6 +186,9 @@ func HeartbeatReporting(ctx context.Context, s *testing.State) {
 		if err != nil {
 			return errors.Wrap(err, "failed to look up events")
 		}
+		if err := reportingutil.SaveCrosboltEventCountMetric("heartbeat_events", len(events), s.OutDir()); err != nil {
+			s.Log("Failed to save heartbeat event count perf metric: ", err)
+		}
 		if len(events) < 1 {
 			return errors.New("no event found")
 		}

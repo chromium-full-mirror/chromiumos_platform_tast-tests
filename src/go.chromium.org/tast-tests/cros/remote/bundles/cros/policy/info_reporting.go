@@ -221,6 +221,9 @@ func InfoReporting(ctx context.Context, s *testing.State) {
 			prunedEvents, err := reportingutil.PruneEvents(ctx, events, func(e reportingutil.InputEvent) bool {
 				return internalParam.validator(e)
 			})
+			if err := reportingutil.SaveCrosboltEventCountMetric(internalParam.name, len(prunedEvents), s.OutDir()); err != nil {
+				s.Log("Failed to save perf metric: ", err)
+			}
 			if err != nil {
 				return testing.PollBreak(errors.Wrap(err, "failed to prune events in sub-test: "+internalParam.name))
 			}
