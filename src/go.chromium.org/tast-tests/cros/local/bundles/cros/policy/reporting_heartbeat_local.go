@@ -70,7 +70,7 @@ func ReportingHeartbeatLocal(ctx context.Context, s *testing.State) {
 		chrome.FakeLogin(chrome.Creds{User: fixtures.Username, Pass: fixtures.Password}),
 		chrome.DMSPolicy(fdms.URL),
 		chrome.EncryptedReportingAddr(server.URL()),
-		chrome.EnableFeatures(erpserver.MissiveDeaultFeature, "EncryptedReportingManualTestHeartbeatEvent"),
+		chrome.EnableFeatures(erpserver.MissiveDefaultFeature, "EncryptedReportingManualTestHeartbeatEvent"),
 		chrome.KeepEnrollment())
 	if err != nil {
 		s.Fatal("Chrome start failed: ", err)

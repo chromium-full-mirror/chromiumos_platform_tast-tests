@@ -179,7 +179,7 @@ func ReportingUnuploadedCrashEvents(ctx context.Context, s *testing.State) {
 		chrome.FakeLogin(chrome.Creds{User: fixtures.Username, Pass: fixtures.Password}),
 		chrome.DMSPolicy(fdms.URL),
 		chrome.EncryptedReportingAddr(server.URL()),
-		chrome.EnableFeatures(erpserver.MissiveDeaultFeature),
+		chrome.EnableFeatures(erpserver.MissiveDefaultFeature),
 		chrome.EnableFeatures("EnableFatalCrashEventsObserver"),
 		chrome.KeepEnrollment())
 	if err != nil {
