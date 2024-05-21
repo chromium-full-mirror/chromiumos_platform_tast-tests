@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package platform
+package memory
 
 import (
 	"context"
@@ -26,7 +26,7 @@ type testParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         MemoryStressBasic,
+		Func:         Stress,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Create heavy memory pressure and check if oom-killer is invoked",
 		Contacts:     []string{"chromeos-memory@google.com"},
@@ -35,10 +35,10 @@ func init() {
 		Timeout:      45 * time.Minute,
 		SoftwareDeps: []string{"chrome"},
 		Vars: []string{
-			"platform.MemoryStressBasic.enableARC",
-			"platform.MemoryStressBasic.minFilelistKB",
-			"platform.MemoryStressBasic.seed",
-			"platform.MemoryStressBasic.useHugePages",
+			"memory.Stress.enableARC",
+			"memory.Stress.minFilelistKB",
+			"memory.Stress.seed",
+			"memory.Stress.useHugePages",
 		},
 		Params: []testing.Param{{
 			ExtraAttr:         []string{"group:crosbolt", "crosbolt_memory_nightly"},
@@ -65,12 +65,12 @@ func init() {
 
 }
 
-func MemoryStressBasic(ctx context.Context, s *testing.State) {
+func Stress(ctx context.Context, s *testing.State) {
 	minFilelistKB := -1
-	if val, ok := s.Var("platform.MemoryStressBasic.minFilelistKB"); ok {
+	if val, ok := s.Var("memory.Stress.minFilelistKB"); ok {
 		val, err := strconv.Atoi(val)
 		if err != nil {
-			s.Fatal("Cannot parse argument platform.MemoryStressBasic.minFilelistKB: ", err)
+			s.Fatal("Cannot parse argument memory.Stress.minFilelistKB: ", err)
 		}
 		minFilelistKB = val
 	}
@@ -79,30 +79,30 @@ func MemoryStressBasic(ctx context.Context, s *testing.State) {
 	// The memory pressure is higher when ARC is enabled (without launching Android apps).
 	// Checks the ARC enabled case by default.
 	enableARC := true
-	if val, ok := s.Var("platform.MemoryStressBasic.enableARC"); ok {
+	if val, ok := s.Var("memory.Stress.enableARC"); ok {
 		boolVal, err := strconv.ParseBool(val)
 		if err != nil {
-			s.Fatal("Cannot parse argument platform.MemoryStressBasic.enableARC: ", err)
+			s.Fatal("Cannot parse argument memory.Stress.enableARC: ", err)
 		}
 		enableARC = boolVal
 	}
 	s.Log("enableARC: ", enableARC)
 
 	useHugePages := false
-	if val, ok := s.Var("platform.MemoryStressBasic.useHugePages"); ok {
+	if val, ok := s.Var("memory.Stress.useHugePages"); ok {
 		boolVal, err := strconv.ParseBool(val)
 		if err != nil {
-			s.Fatal("Cannot parse argument platform.MemoryStressBasic.useHugePages: ", err)
+			s.Fatal("Cannot parse argument memory.Stress.useHugePages: ", err)
 		}
 		useHugePages = boolVal
 	}
 	s.Log("useHugePages: ", useHugePages)
 
 	seed := time.Now().UTC().UnixNano()
-	if val, ok := s.Var("platform.MemoryStressBasic.seed"); ok {
+	if val, ok := s.Var("memory.Stress.seed"); ok {
 		intVal, err := strconv.ParseInt(val, 10, 64)
 		if err != nil {
-			s.Fatal("Cannot parse argument platform.MemoryStressBasic.seed: ", err)
+			s.Fatal("Cannot parse argument memory.Stress.seed: ", err)
 		}
 		seed = intVal
 	}
