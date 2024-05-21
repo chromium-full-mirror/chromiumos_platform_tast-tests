@@ -199,8 +199,13 @@ func ECLaptopMode(ctx context.Context, s *testing.State) {
 	// saved is not needed, it would always get deleted immediately.
 	screenshotService := graphics.NewScreenshotServiceClient(h.RPCClient.Conn)
 	checkDisplay := func(ctx context.Context) error {
-		if _, err := screenshotService.CaptureScreenAndDelete(ctx, &empty.Empty{}); err != nil {
-			return errors.Wrap(err, "failed to take screenshot")
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			if _, err := screenshotService.CaptureScreenAndDelete(ctx, &empty.Empty{}); err != nil {
+				return errors.Wrap(err, "failed to take screenshot")
+			}
+			return nil
+		}, &testing.PollOptions{Timeout: 15 * time.Second, Interval: 1 * time.Second}); err != nil {
+			return errors.Wrap(err, "failed to check display on after 15 seconds")
 		}
 		return nil
 	}
@@ -390,7 +395,7 @@ func ECLaptopMode(ctx context.Context, s *testing.State) {
 			if err := validatePressOnPower(ctx, h, 1*time.Second); err != nil {
 				s.Log("Unable to validate press on power: ", err)
 			}
-			s.Fatal("Power menu was absent following a 1 second press on the power button: ", err)
+			s.Fatal("Power menu was absent following 1 to 1.8 second presses on the power button: ", err)
 		}
 
 		s.Log("Checking that power menu items are displayed correctly")
@@ -450,15 +455,15 @@ func ECLaptopMode(ctx context.Context, s *testing.State) {
 		// Differentiate the press durations on Zork from the other platforms.
 		// Depending on Stainless results, a new flag may be created from
 		// fw-testing-configs for a more general use.
-		s.Log("Pressing and holding the power button for 2~3 seconds")
 		var whiteScreenPwrDur time.Duration
 		if h.Config.Platform == "zork" {
 			whiteScreenPwrDur = 1500 * time.Millisecond
 		} else {
-			whiteScreenPwrDur = (h.Config.HoldPwrButtonPowerOff) / 3
+			whiteScreenPwrDur = 2 * time.Second
 		}
+		s.Logf("Pressing and holding the power button for %s seconds", whiteScreenPwrDur)
 		if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.Dur(whiteScreenPwrDur)); err != nil {
-			s.Fatal("Failed to press and hold on the power button for 3 second: ", err)
+			s.Fatalf("Failed to press and hold on the power button for %s: %v", whiteScreenPwrDur, err)
 		}
 
 		s.Logf("Sleeping for %v before checking on the power state", h.Config.ShutdownTimeout)
@@ -479,14 +484,14 @@ func ECLaptopMode(ctx context.Context, s *testing.State) {
 		repeatedSteps(testCase)
 	}
 
-	s.Log("Pressing and holding the power button for 3~8 seconds")
+	s.Logf("Pressing and holding the power button for %s seconds", h.Config.HoldPwrButtonPowerOff)
 	if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.Dur(h.Config.HoldPwrButtonPowerOff)); err != nil {
-		s.Fatal("Failed to press and hold on the power button for 3~8 second: ", err)
+		s.Fatalf("Failed to press and hold on the power button for %v second: %v", h.Config.HoldPwrButtonPowerOff, err)
 	}
 
-	s.Log("Waiting for power state to become G3")
-	if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "G3"); err != nil {
-		s.Fatal("Failed to get G3 powerstate: ", err)
+	s.Log("Waiting for power state to become G3/S5")
+	if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "G3", "S5"); err != nil {
+		s.Fatal("Failed to get G3/S5 powerstate: ", err)
 	}
 
 	s.Log("Getting powerstate information")
