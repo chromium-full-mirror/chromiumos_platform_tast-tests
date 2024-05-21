@@ -30,7 +30,7 @@ type bootReportingParameters struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         BootReportingDbus,
+		Func:         ReportingBootDataDbus,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify that the boot reporting telemetry is being populated and sent correctly",
 		Contacts: []string{
@@ -38,7 +38,7 @@ func init() {
 			"albertojuarez@google.com", // Test author
 		},
 		BugComponent: "b:817866", // Chrome OS Server Projects > Enterprise Management > Reporting
-		Attr:         []string{"group:mainline", "informational", "group:enterprise-reporting-daily", "group:enterprise-reporting", "group:hw_agnostic"},
+		Attr:         []string{"group:golden_tier", "group:medium_low_tier", "group:hardware", "group:complementary", "group:enterprise-reporting"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.FakeDMSEnrolled,
 		Timeout:      5 * time.Minute,
@@ -63,7 +63,7 @@ func init() {
 	})
 }
 
-func BootReportingDbus(ctx context.Context, s *testing.State) {
+func ReportingBootDataDbus(ctx context.Context, s *testing.State) {
 	param := s.Param().(bootReportingParameters)
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 

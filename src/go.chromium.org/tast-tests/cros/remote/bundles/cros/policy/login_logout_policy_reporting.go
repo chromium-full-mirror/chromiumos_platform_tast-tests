@@ -44,7 +44,6 @@ func init() {
 			"group:medium_low_tier",
 			"group:hardware",
 			"group:complementary",
-			"group:enterprise-reporting-daily",
 			"group:enterprise-reporting",
 			"group:hw_agnostic",
 		},
