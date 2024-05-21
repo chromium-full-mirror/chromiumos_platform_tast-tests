@@ -23,6 +23,8 @@ type inputInfo struct {
 type touchpadDevice struct {
 	DriverName  string      `json:"driver_name"`
 	InputDevice inputDevice `json:"input_device"`
+	VendorID    string      `json:"vendor_id"`
+	ProductID   string      `json:"product_id"`
 }
 
 type touchscreenDevice struct {
@@ -84,6 +86,14 @@ func validateTouchpads(ctx context.Context, info *inputInfo) error {
 	for _, device := range devices {
 		if device.DriverName == "" {
 			return errors.New("touchpad driver name is empty")
+		}
+
+		if device.VendorID == "" {
+			return errors.New("touchpad vendor id is empty")
+		}
+
+		if device.ProductID == "" {
+			return errors.New("touchpad product id is empty")
 		}
 
 		touchpadInputDevice := device.InputDevice
