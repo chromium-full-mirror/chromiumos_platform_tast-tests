@@ -25,10 +25,11 @@ func init() {
 			"crosep-intertech@google.com",
 		},
 		// BugComponent of CrOS Platform EngProd Interactive Technology
-		BugComponent: "b:1280385",
-		Attr:         []string{"group:audio_e2e_experimental", "audio_e2e_experimental_usb"},
-		SoftwareDeps: []string{"chrome"},
-		Fixture:      fixture.ChameleonAudioTestbed,
+		BugComponent:    "b:1280385",
+		Attr:            []string{"group:audio_e2e_experimental", "audio_e2e_experimental_usb"},
+		SoftwareDeps:    []string{"chrome"},
+		Fixture:         fixture.ChameleonAudioTestbed,
+		VariantCategory: `{"name": "Audio_Board"}`,
 	})
 }
 

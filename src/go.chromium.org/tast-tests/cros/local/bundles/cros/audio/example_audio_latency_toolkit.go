@@ -24,10 +24,11 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 			"crosep-intertech@google.com",
 		},
-		BugComponent: "b:1280385",
-		Attr:         []string{"group:audio_e2e_experimental", "audio_e2e_experimental_latency_toolkit"},
-		SoftwareDeps: []string{"chrome"},
-		Fixture:      fixture.AudioLatencyToolkit,
+		BugComponent:    "b:1280385",
+		Attr:            []string{"group:audio_e2e_experimental", "audio_e2e_experimental_latency_toolkit"},
+		SoftwareDeps:    []string{"chrome"},
+		Fixture:         fixture.AudioLatencyToolkit,
+		VariantCategory: `{"name": "Audio_SoC_Codec_Amp"}`,
 	})
 }
 
