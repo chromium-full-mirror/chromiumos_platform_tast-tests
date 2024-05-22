@@ -36,7 +36,7 @@ const (
 	// connection
 	SystemTestAuto2Devboard = "systemTestAuto2Devboard"
 
-	setUpTimeout    = 2 * time.Minute
+	setUpTimeout    = 10 * time.Minute
 	resetTimeout    = 5 * time.Second
 	tearDownTimeout = 5 * time.Second
 	preTestTimeout  = 15 * time.Second

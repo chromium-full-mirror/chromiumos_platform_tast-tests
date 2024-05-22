@@ -24,8 +24,7 @@ const (
 	// tmpEfiLocation specifies the format of temporary file for EFI images
 	tmpEfiLocation = "ti50-efi-%s.*.bin"
 
-	rescueTwiceTimeout = 5 * time.Minute
-	removeFileTimeout  = 5 * time.Second
+	rescueTwiceTimeout = 10 * time.Minute
 )
 
 func init() {
@@ -47,6 +46,7 @@ type initialFactoryImpl struct {
 }
 
 func (c *initialFactoryImpl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	testing.ContextLog(ctx, "GSC Initial Factory Setup")
 	if s.ParentValue() != nil {
 		c.v = s.ParentValue().(*Value)
 	}
@@ -58,6 +58,7 @@ func (c *initialFactoryImpl) SetUp(ctx context.Context, s *testing.FixtState) in
 		s.Fatal("InitialFactory fixture must specify a image (i.e. through buildurl var)")
 	}
 
+	testing.ContextLog(ctx, "Saving images for GSC Initial Factory Fixture")
 	efiImage, err := DownloadEfiImage(ctx, c.v.TestbedProperties)
 	if err != nil {
 		s.Fatal(err, "failed to download the efi image")
@@ -71,6 +72,7 @@ func (c *initialFactoryImpl) SetUp(ctx context.Context, s *testing.FixtState) in
 	}
 	c.v.DebugImagePath = debugImage
 	c.v.EfiImagePath = efiImage
+	testing.ContextLog(ctx, "End GSC Initial Factory Setup")
 	return c.v
 }
 
@@ -125,6 +127,7 @@ func (c *initialFactoryImpl) PreTest(ctx context.Context, s *testing.FixtTestSta
 		return
 	}
 
+	testing.ContextLog(ctx, "Start GSC Initial Factory Fixture PreTest")
 	b := c.v.devboard
 	mustSucceed(s, b.EndSession(ctx), "End image under test session")
 

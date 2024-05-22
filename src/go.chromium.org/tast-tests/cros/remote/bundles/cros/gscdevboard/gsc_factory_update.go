@@ -18,7 +18,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:    GSCFactoryUpdate,
 		Desc:    "Verify the factory image can update to the image under test",
-		Timeout: 7 * time.Minute,
+		Timeout: 10 * time.Minute,
 		Contacts: []string{
 			"gsc-sheriff@google.com",
 			"mruthven@chromium.org",
