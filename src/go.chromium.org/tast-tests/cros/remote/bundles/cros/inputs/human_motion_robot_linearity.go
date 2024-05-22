@@ -5,9 +5,7 @@
 package inputs
 
 import (
-	"bufio"
 	"context"
-	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -15,7 +13,6 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"go.chromium.org/tast-tests/cros/common/action"
-	"go.chromium.org/tast-tests/cros/common/xmlrpc"
 	input "go.chromium.org/tast-tests/cros/remote/inputs"
 	inputspb "go.chromium.org/tast-tests/cros/services/cros/inputs"
 	"go.chromium.org/tast/core/errors"
@@ -29,13 +26,6 @@ const (
 	baseFileName     = "linearity"
 	gcodeFileName    = baseFileName + ".nc"
 	touchLogFileName = baseFileName + ".csv"
-
-	xIdx        = 0
-	yIdx        = 1
-	pressureIdx = 2
-	timeIdx     = 3
-
-	maxNumParts = 5
 )
 
 type serviceResponse struct {
@@ -121,7 +111,7 @@ func HumanMotionRobotLinearity(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to port forward touchhost %s port %d - %s", touchhostHostname, touchhostPort, err)
 	}
 
-	hmrInterface, err := newHMRInterface(ctx, "127.0.0.1", 9992)
+	hmrInterface, err := input.NewHMRInterface(ctx, "127.0.0.1", 9992)
 	if err != nil {
 		s.Fatal("Error generating new HMR interface: ", err)
 	}
@@ -206,7 +196,7 @@ func HumanMotionRobotLinearity(ctx context.Context, s *testing.State) {
 	}
 
 	// Clean stylus touch data of common errors.
-	err = removeCommonDataErrorsFromStylusLogFile(hostRawTouchLogFilePath, hostTouchLogFilePath)
+	err = input.RemoveCommonDataErrorsFromStylusLogFile(hostRawTouchLogFilePath, hostTouchLogFilePath)
 	if err != nil {
 		s.Error("Failed to clean raw touchlog file: ", err)
 	}
@@ -222,103 +212,4 @@ func HumanMotionRobotLinearity(ctx context.Context, s *testing.State) {
 			s.Error(result.Message)
 		}
 	}
-}
-
-func newHMRInterface(ctx context.Context, host string, port int) (*xmlrpc.CommonRPCInterface, error) {
-	hmrInterface := xmlrpc.NewCommonRPCInterface(xmlrpc.New(host, port), "")
-
-	err := action.Retry(5, func(ctx context.Context) error {
-		testing.ContextLogf(ctx, "Attempting to connect to HMR Touchhost: %s:%d", host, port)
-		deadline, _ := ctx.Deadline()
-		timeUntil := time.Until(deadline)
-		testing.ContextLogf(ctx, "time until deadline: %s", timeUntil)
-		err := hmrInterface.RPC("TestConnection").Timeout(30 * time.Second).Call(ctx)
-		if err != nil {
-			return errors.Wrap(err, "failed to communicate with HMR device with a call to TestConnection on HMR Touchhost")
-		}
-		return nil
-	}, 30*time.Second)(ctx)
-
-	return hmrInterface, err
-}
-
-// removeCommonDataErrorsFromStylusLogFile checks for common touch log data errors and generates a cleaned touch log file with these errors removed.
-func removeCommonDataErrorsFromStylusLogFile(rawFilePath, cleanedFilePath string) error {
-	readFile, err := os.Open(rawFilePath)
-	if err != nil {
-		return err
-	}
-	defer readFile.Close()
-
-	writeFile, err := os.Create(cleanedFilePath)
-	if err != nil {
-		return err
-	}
-	defer writeFile.Close()
-
-	scanner := bufio.NewScanner(readFile)
-	writer := bufio.NewWriter(writeFile)
-
-	// All touch log csv files must contain "x,y,pressure,time" as their header.
-	scanner.Scan()
-	line := scanner.Text()
-	if line != "x,y,pressure,time" {
-		return errors.New(rawFilePath + " does not contain csv header")
-	}
-	_, err = writer.WriteString(line + "\n")
-	if err != nil {
-		return err
-	}
-
-	// There are two common data errors that are being checked for:
-
-	// The prefix error occurs when an number of rows at the start of a touch log file are missing elements.
-	// Example:
-	// 	10216,5164,,1691552057.683170,
-	//	10216,,,1691552067.683172,
-	// These errors must occur before the first row with all elements.
-	// prefixDataChecked refers to whether a row with all elements has been read yet.
-	// If a row missing elements is read after a row with all elements has been read, a fatal error is triggered.
-
-	// The suffix error occurs when the final row at the end of a touch log file excludes some delimiters & elements. (The last element may also be only partially written)
-	// Example:
-	// 8200,680
-	// suffixDataChecked refers to whether this row has been read yet.
-	// If any row is read after this row, a fatal error is triggered.
-
-	prefixDataChecked := false
-	suffixDataChecked := false
-	for scanner.Scan() {
-		if err := scanner.Err(); err != nil {
-			return err
-		}
-		line := scanner.Text()
-		splitLine := strings.Split(line, ",")
-		if len(splitLine) == maxNumParts {
-			if splitLine[xIdx] == "" || splitLine[yIdx] == "" || splitLine[pressureIdx] == "" || splitLine[timeIdx] == "" {
-				if !prefixDataChecked {
-					continue
-				} else {
-					return errors.New(rawFilePath + " contains rows with empty elements")
-				}
-			} else {
-				prefixDataChecked = true
-			}
-		} else if len(splitLine) < maxNumParts {
-			if !suffixDataChecked {
-				suffixDataChecked = true
-				continue
-			} else {
-				return errors.New(rawFilePath + " contains rows with less than 4 elements")
-			}
-		} else {
-			return errors.New(rawFilePath + " contains a row with excess columns")
-		}
-		_, err = writer.WriteString(line + "\n")
-		if err != nil {
-			return err
-		}
-	}
-	writer.Flush()
-	return nil
 }
