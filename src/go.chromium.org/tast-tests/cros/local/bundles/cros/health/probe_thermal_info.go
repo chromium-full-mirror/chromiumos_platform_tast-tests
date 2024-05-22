@@ -20,6 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/croshealthd"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type thermalSensorInfo struct {
@@ -51,6 +52,8 @@ func init() {
 		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		SoftwareDeps: []string{"diagnostics"},
 		Fixture:      "crosHealthdRunning",
+		// TODO(b/336951497): Resume testing on primus if the bug is solved and FW uprevved.
+		HardwareDeps: hwdep.D(hwdep.SkipOnModel("primus")),
 	})
 }
 
