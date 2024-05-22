@@ -8,6 +8,7 @@ package wwcb
 import (
 	"context"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -18,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/log"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
+	"go.chromium.org/tast-tests/cros/remote/dutfs"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
@@ -29,6 +31,7 @@ import (
 
 const (
 	sampleTXT = "sample.txt"
+	removableDirPath = "/media/removable"
 )
 
 func init() {
@@ -51,6 +54,8 @@ func init() {
 	})
 }
 
+// CopyFilesViaDock runs a test to copy a file to a removable storage device connected via dock
+// and then compares the files with what's on the DUT to verify that the copy completed successfully.
 func CopyFilesViaDock(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
@@ -101,6 +106,13 @@ func CopyFilesViaDock(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect docking station: ", err)
 	}
 
+	// Make sure to switch off the Type-A fixture
+	for _, ID := range USBTypeAIDArray {
+		if err := utils.ControlFixture(ctx, ID, "off"); err != nil {
+			s.Fatal("Failed to disconnect USB Type-A device: ", err)
+		}
+	}
+
 	before, err := utils.GetUSBDevice(ctx, dut)
 	if err != nil {
 		s.Fatal("Failed to get original USB devices: ", err)
@@ -134,15 +146,26 @@ func CopyFilesViaDock(ctx context.Context, s *testing.State) {
 	}
 	defer dut.Conn().CommandContext(ctx, "rm", remoteTXTPath).Output()
 
-	// Retrieve USB path.
-	cmd := fmt.Sprint("lsblk -l -o mountpoint | grep removable")
-	output, err := dut.Conn().CommandContext(ctx, "sh", "-c", cmd).Output(testexec.DumpLogOnError)
+	// Retrieve USB storage drive directory location.
+	fs := dutfs.NewClient(cl.Conn)
+	removableFiles, err := fs.ReadDir(ctx, removableDirPath)
 	if err != nil {
-		s.Fatal("Failed to retrieve USB path: ", err)
+		s.Fatal("Failed to list files in removable dir after connecting storage device: ", err)
 	}
 
-	for _, path := range strings.Split(strings.TrimSpace(string(output)), "\n") {
-		USBTXTPath := filepath.Join(path, sampleTXT)
+	var removableDirs []os.FileInfo
+	for _, fi := range removableFiles {
+		if fi.IsDir() {
+			removableDirs = append(removableDirs, fi)
+		}
+	}
+
+	if len(removableDirs) == 0 {
+		s.Fatal("Failed to detect any entry in removable directory")
+	}
+
+	for _, path := range removableDirs {
+		USBTXTPath := filepath.Join(removableDirPath, path.Name(), sampleTXT)
 		testing.ContextLogf(ctx, "Copy file to %s", USBTXTPath)
 
 		// Copy file to USB.
