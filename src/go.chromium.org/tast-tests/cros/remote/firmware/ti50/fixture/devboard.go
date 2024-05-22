@@ -8,10 +8,12 @@ package fixture
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"google.golang.org/grpc"
@@ -175,13 +177,96 @@ func (i *devboardFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 // setupImage flashes the image under test on the devboard using the image and
 // json files provided in the `Value` parameter.
 func setupImage(ctx context.Context, v *Value, s TestingState) {
+	// Setup the board with the correct jsons. Use an empty string for the image
+	// path so setup doesn't try to flash the image.
+	if err := v.devboard.Setup(ctx, "", v.FwConfigJsons); err != nil {
+		s.Fatal("Setup: ", err)
+	}
+
+	if imageIsRunning(ctx, s, v.devboard, v.ImagePath) {
+		testing.ContextLog(ctx, "Image is already running")
+		return
+	}
 	testing.ContextLog(ctx, "Setting up image: ", v.ImagePath)
-	if v.TestbedProperties.TestbedType == "gsc_h1_shield" {
+	if v.TestbedProperties.TestbedType == ti50.GscH1Shield {
 		setupCr50Image(ctx, s, v.devboard, v.ImagePath, v.FwConfigJsons, v.TestbedProperties, false)
 	} else if err := v.devboard.Setup(ctx, v.ImagePath, v.FwConfigJsons); err != nil {
 		s.Fatal("Setup: ", err)
 	}
+}
 
+func imageIsRunning(ctx context.Context, s TestingState, board *remoteTi50.DUTControlAndreiboard, imagePath string) bool {
+	if imagePath == "" {
+		testing.ContextLog(ctx, "No image given. Nothing to do")
+		return true
+	}
+	if err := board.StartSession(ctx, ti50.StrapReset); err != nil {
+		s.Fatal("StartSession: ", err)
+	}
+	defer func() {
+		if err := board.EndSession(ctx); err != nil {
+			s.Fatal("EndSession: ", err)
+		}
+	}()
+
+	_, imageVer, _, _, err := board.GSCToolBinVersion(ctx, imagePath)
+	mustSucceed(s, err, "parse bin version")
+
+	// Sometimes cr50 does not show up on the USB bus until it is reset.
+	gpioSet(ctx, s, board, ti50.GpioTi50ResetL, false)
+	gpioSet(ctx, s, board, ti50.GpioTi50ResetL, true)
+
+	gscConsole := board.PhysicalUart(ti50.UartConsole)
+
+	i, err := ti50.OpenCrOSImage(ctx, gscConsole)
+	if err != nil {
+		s.Fatal("Unable to open gsc console: ", err)
+	}
+	defer i.Close(ctx)
+
+	i.WaitUntilBooted(ctx)
+
+	// Check the running version string is found in the image file. It's possible multiple
+	// images will be built with the same minor version. The version string contains the
+	// git sha which should be unique per build.
+	versionInfo, err := i.GetVersionInfo(ctx)
+	if err != nil {
+		testing.ContextLog(ctx, "Unable to get the gsc version")
+		return false
+	}
+	runningVersion := versionInfo.RwA.Version
+	if versionInfo.RwB.Active {
+		runningVersion = versionInfo.RwB.Version
+	}
+	if runningVersion != imageVer.String() {
+		testing.ContextLogf(ctx, "GSC is running %s not %s", runningVersion, imageVer.String())
+		return false
+	}
+	if versionInfo.Build.VersionStr == "" {
+		testing.ContextLog(ctx, "Did not find a valid version string. Running update")
+		return false
+	}
+	if strings.Contains(versionInfo.Build.VersionStr, "+") {
+		testing.ContextLogf(ctx, "%s is dirty", versionInfo.Build.VersionStr)
+		testing.ContextLog(ctx, "Can't skip update")
+		return false
+	}
+	runningCorrectVersionStr := false
+	// Check if the image under test contains the running version string
+	imageContents, err := ioutil.ReadFile(imagePath)
+	if err != nil {
+		testing.ContextLog(ctx, "Unable to read file", imagePath)
+	} else {
+		imageContentStr := string(imageContents)
+		runningCorrectVersionStr = strings.Contains(imageContentStr, versionInfo.Build.VersionStr)
+	}
+	if runningCorrectVersionStr {
+		testing.ContextLogf(ctx, "%s found in %s", versionInfo.Build.VersionStr, imagePath)
+		testing.ContextLog(ctx, "GSC is running the image under test")
+	} else {
+		testing.ContextLogf(ctx, "%s not found in %s", versionInfo.Build.VersionStr, imagePath)
+	}
+	return runningCorrectVersionStr
 }
 
 // setupCr50Image uses gsctool to flash the cr50 image.
@@ -189,10 +274,6 @@ func setupImage(ctx context.Context, v *Value, s TestingState) {
 // TODO(b/140534392): Support changing the board id.
 func setupCr50Image(ctx context.Context, s TestingState, board *remoteTi50.DUTControlAndreiboard, imagePath string, fwConfigJsons []string,
 	testbedProperties remoteTi50.TestbedProperties, runEraseflashinfo bool) {
-	if err := board.Setup(ctx, "", fwConfigJsons); err != nil {
-		s.Fatal("Setup: ", err)
-	}
-
 	if err := board.StartSession(ctx, ti50.StrapReset); err != nil {
 		s.Fatal("StartSession: ", err)
 	}
@@ -206,36 +287,28 @@ func setupCr50Image(ctx context.Context, s TestingState, board *remoteTi50.DUTCo
 		return
 	}
 
-	gpioApplyStrap(ctx, s, board, ti50.CcdSuzyQ)
+	testing.ContextLog(ctx, "Updating GSC")
 
 	// Sometimes cr50 does not show up on the USB bus until it is reset.
 	gpioSet(ctx, s, board, ti50.GpioTi50ResetL, false)
 	gpioSet(ctx, s, board, ti50.GpioTi50ResetL, true)
 
+	_, imageVer, _, _, err := board.GSCToolBinVersion(ctx, imagePath)
+	mustSucceed(s, err, "parse bin version")
+	gpioApplyStrap(ctx, s, board, ti50.CcdSuzyQ)
 	mustSucceed(s, board.GSCToolWaitUntilReady(ctx), "wait until gsc ready")
 
 	_, rw, err := board.GSCToolCurrentFwVersion(ctx)
 	mustSucceed(s, err, "get current fwver")
 
-	_, imageVer, _, _, err := board.GSCToolBinVersion(ctx, imagePath)
-	mustSucceed(s, err, "parse bin version")
-
 	gscConsole := board.PhysicalUart(ti50.UartConsole)
-
 	i, err := ti50.OpenCrOSImage(ctx, gscConsole)
 	if err != nil {
 		s.Fatal("Unable to open gsc console: ", err)
 	}
 	defer i.Close(ctx)
 
-	isRunningRelease, err := i.CheckRunningVersion(ctx, imageVer.String(), false, true)
-	if err != nil {
-		testing.ContextLogf(ctx, "Unable to get the cr50 version: %s", err)
-	} else if isRunningRelease && !runEraseflashinfo {
-		testing.ContextLog(ctx, "Cr50 is already running the release")
-		return
-	}
-	testing.ContextLog(ctx, "Updating Cr50")
+	i.WaitUntilBooted(ctx)
 
 	if imageVer.Less(rw) || runEraseflashinfo {
 		testing.ContextLogf(ctx, "Rollback required for flashing %s to %s", rw, imageVer)
