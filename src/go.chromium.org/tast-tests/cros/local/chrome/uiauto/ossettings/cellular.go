@@ -621,7 +621,7 @@ func (s *OSSettings) OpenNewAPNDialogAndPopulateFields(ctx context.Context, apn 
 	}
 
 	if len(apn.AuthenticationType) != 0 {
-		authenticationTypeMenuItem := nodewith.Name(apn.AuthenticationType).Role(role.MenuListOption)
+		authenticationTypeMenuItem := nodewith.Name(apn.AuthenticationType).Role(role.MenuListOption).Ancestor(AuthenticationTypeDropdown)
 
 		if err := uiauto.Combine("Select authentication menu item",
 			s.ui.LeftClick(AuthenticationTypeDropdown),
@@ -645,7 +645,7 @@ func (s *OSSettings) OpenNewAPNDialogAndPopulateFields(ctx context.Context, apn 
 	}
 
 	if len(apn.IPType) != 0 {
-		ipTypeMenuItem := nodewith.Name(apn.IPType).Role(role.MenuListOption)
+		ipTypeMenuItem := nodewith.Name(apn.IPType).Role(role.MenuListOption).Ancestor(IPTypeDropdown)
 
 		if err := uiauto.Combine("Select IP menu item",
 			s.ui.LeftClick(IPTypeDropdown),
@@ -900,7 +900,7 @@ func VerifyAPNStabilized(ctx context.Context, tconn *chrome.TestConn, name strin
 func GoConnectIfNotConnectedThenReturnApnSubpage(ctx context.Context, tconn *chrome.TestConn) error {
 	ui := uiauto.New(tconn)
 
-	if err := ui.EnsureExistsFor(nodewith.NameContaining("Manage network APN settings").Role(role.StaticText), 5*time.Second)(ctx); err == nil {
+	if err := ui.EnsureExistsFor(nodewith.NameContaining("Manage network APN settings").Role(role.Link), 5*time.Second)(ctx); err == nil {
 		if err := ui.LeftClick(BackArrowBtn)(ctx); err != nil {
 			return errors.Wrap(err, "failed to navigate back to mobile data subpage from APN subpage")
 		}

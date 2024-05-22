@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/cellular"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/restriction"
@@ -74,6 +75,7 @@ func CustomDefaultAndAttachApnFallbackBehavior(ctx context.Context, s *testing.S
 		s.Fatal("Failed to open mobile data subpage: ", err)
 	}
 	defer mdp.Close(cleanupCtx)
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
 	if err := ossettings.GoToActiveNetworkApnSubpage(ctx, tconn, true /*isFromMobileDataSubpage*/); err != nil {
 		s.Fatal("Failed to go to apn subpage: ", err)
@@ -168,7 +170,11 @@ func CustomDefaultAndAttachApnFallbackBehavior(ctx context.Context, s *testing.S
 		s.Fatal("Failed to ensure successful connection: ", err)
 	}
 
-	if err := mdp.VerifyAPNSubpageConnectedApnUI(ctx, tconn, cr, apnName, ""); err == nil {
+	if err := mdp.VerifyAPNSubpageConnectedApnUI(ctx, tconn, cr, apnName, "" /*source*/); err != nil {
 		s.Fatal("Failed to verify connected UI: ", err)
+	}
+
+	if err := mdp.VerifyAPNSubpageNotConnectedApnUI(ctx, tconn, cr, invalidApnName); err != nil {
+		s.Fatal("Failed to verify invalid APN is not connected: ", err)
 	}
 }
