@@ -174,6 +174,15 @@ func (svc *StylusEvtestCaptureService) StopStylusDataCapture(ctx context.Context
 	return &empty.Empty{}, nil
 }
 
+// GetScreenSize returns the physical screen size of the device the stylus is reporting on.
+func (svc *StylusEvtestCaptureService) GetScreenSize(ctx context.Context, req *empty.Empty) (*pb.GetScreenSizeResponse, error) {
+	width, height, err := input.FindPhysicalStylusDimensions(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.GetScreenSizeResponse{Width: width, Height: height}, nil
+}
+
 // CleanUp removes the stylus touch data file created by StartStylusDataCapture.
 func (svc *StylusEvtestCaptureService) CleanUp(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
 	err := os.RemoveAll(svc.touchLogTempDir)

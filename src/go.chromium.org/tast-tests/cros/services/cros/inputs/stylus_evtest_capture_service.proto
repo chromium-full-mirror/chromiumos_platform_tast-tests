@@ -20,6 +20,8 @@ service StylusEvtestCaptureService {
   rpc StopStylusDataCapture(google.protobuf.Empty)
       returns (google.protobuf.Empty) {}
 
+  rpc GetScreenSize(google.protobuf.Empty) returns (GetScreenSizeResponse) {}
+
   rpc CleanUp(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 }
 
@@ -27,4 +29,9 @@ message StylusEvtestCaptureResponse {
   string StylusLogPath = 1;
   uint32 WidthResolution = 2;
   uint32 HeightResolution = 3;
+}
+
+message GetScreenSizeResponse {
+  float Width = 1;
+  float Height = 2;
 }

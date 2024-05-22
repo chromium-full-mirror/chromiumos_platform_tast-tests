@@ -134,6 +134,17 @@ func FindPhysicalStylusResolution(ctx context.Context) (uint32, uint32, error) {
 	return absInfo.infoX.resolution, absInfo.infoY.resolution, nil
 }
 
+// FindPhysicalStylusDimensions returns the physical dimensions of the stylus' screen in mm.
+// Note: 1st return value is width, 2nd is height.
+func FindPhysicalStylusDimensions(ctx context.Context) (float32, float32, error) {
+	absInfo, err := findPhysicalStylusAbsInfo(ctx)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	return float32(absInfo.infoX.maximum) / float32(absInfo.infoX.resolution), float32(absInfo.infoY.maximum) / float32(absInfo.infoY.resolution), nil
+}
+
 // parseHIDName parses and returns the HID device name from a /sys/devices path.
 func parseHIDName(ctx context.Context, sysfs string) (string, error) {
 	ms := hidNameRegex.FindStringSubmatch(sysfs)
