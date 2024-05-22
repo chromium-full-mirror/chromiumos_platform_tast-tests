@@ -154,7 +154,6 @@ func DisplaysIds(ctx context.Context, a *ARC) ([]int, error) {
 	return displayIds, nil
 }
 
-
 // CaptionHeight returns the caption height in pixels.
 func (d *Display) CaptionHeight(ctx context.Context) (h int, err error) {
 	cmd := d.a.Command(ctx, "dumpsys", "display")
@@ -187,7 +186,7 @@ func (d *Display) CaptionHeight(ctx context.Context) (h int, err error) {
 			return -1, errors.Wrap(err, "failed to parse captionHeight value")
 		}
 		return i, nil
-	case SDKR, SDKS, SDKT, SDKU:
+	case SDKR, SDKS, SDKT, SDKU, SDKV:
 		uniqueID, err := scrapeUniqueID(output, d.DisplayID)
 		if err != nil {
 			return -1, errors.Wrap(err, "failed to parse display unique id")
@@ -261,7 +260,7 @@ func scrapeDensity(output []byte, displayID, sdkVersion int) (density float64, e
 			`(?:\s+.*$)+?`+ // Skip entire lines...
 			`\s+mDisplayInfo=.+density=(\d\.\d+)?`, uniqueID) // ...until density is matched.
 		re = regexp.MustCompile(s)
-	case SDKU:
+	case SDKU, SDKV:
 		uniqueID, err := scrapeUniqueID(output, displayID)
 		if err != nil {
 			return -1, err
@@ -409,7 +408,7 @@ func scrapeDisplaySize(output []byte, isStableSize bool, displayID, sdkVersion i
 				`^\s*Display: mDisplayId=0\n` + // Match displayId 0 (internal display).
 				`\s*init=([0-9]+)x([0-9]+)`) // Gather 'init=' bounds.
 		}
-	case SDKR, SDKS, SDKT, SDKU:
+	case SDKR, SDKS, SDKT, SDKU, SDKV:
 		// For ARC R and later, dump output from `dumpsys display`
 		if isStableSize {
 			// Looking for:

@@ -157,7 +157,7 @@ func (a *ARC) TaskInfosFromDumpsys(ctx context.Context) ([]TaskInfo, error) {
 	switch n {
 	case SDKP:
 		return a.dumpsysActivityActivitiesP(ctx)
-	case SDKR, SDKS, SDKT, SDKU:
+	case SDKR, SDKS, SDKT, SDKU, SDKV:
 		tasks, err := a.dumpsysActivityActivitiesR(ctx)
 
 		if err != nil {
@@ -494,7 +494,7 @@ func (a *ARC) DumpsysMeminfoPackage(ctx context.Context, pkg string) (*MeminfoAp
 		return nil, err
 	}
 	switch n {
-	case SDKP, SDKR, SDKS, SDKT, SDKU:
+	case SDKP, SDKR, SDKS, SDKT, SDKU, SDKV:
 		return a.dumpsysMeminfoPackageR(ctx, pkg)
 	default:
 		return nil, errors.Errorf("unsupported Android version %d", n)
