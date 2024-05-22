@@ -381,7 +381,7 @@ func init() {
 				browserType: browser.TypeAsh,
 			},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
-			ExtraData:         append(play.DRMDataFiles(), "tulip_480p_av1_10bit_cencv3_cbc.webm", "tulip_audio_aac_cencv3_cbc.mp4", "tulip_480p_av1_10bit_cencv3_cbc.mpd"),
+			ExtraData:         append(play.DRMDataFiles(), "tulip_480p_av1_10bit_cencv3_cbc.mp4", "tulip_audio_aac_cencv3_cbc.mp4", "tulip_480p_av1_10bit_cencv3_cbc.mpd"),
 			ExtraSoftwareDeps: []string{caps.HWDecodeCBCV3AV1, "proprietary_codecs"},
 			Fixture:           "chromeVideoWithDistinctiveIdentifier",
 		}, {

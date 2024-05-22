@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/video/tulip_480p_av1_10bit_cencv3_cbc_20240522.mp4",
+  "size": 445079,
+  "sha256sum": "7eb87b09563769c00873b07f4f16676a287ec247ca57701bfb6db02db5b0d1b2"
+}
