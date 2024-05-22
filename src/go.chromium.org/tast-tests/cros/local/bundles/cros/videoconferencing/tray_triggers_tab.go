@@ -139,6 +139,7 @@ func TrayTriggersTab(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to open tab: ", err)
 		}
+		defer tabUI.Close(ctx)
 
 		defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_cam_only")
 
@@ -161,7 +162,7 @@ func TrayTriggersTab(ctx context.Context, s *testing.State) {
 		}
 
 		if err := uiauto.Combine("close tab",
-			tabUI.CloseTab,
+			tabUI.Close,
 			vcTray.WaitUntilGone,
 		)(ctx); err != nil {
 			s.Fatal("Failed to verify that close tab hides VcTray: ", err)
@@ -174,6 +175,7 @@ func TrayTriggersTab(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to open tab: ", err)
 		}
+		defer tabUI.Close(ctx)
 
 		defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_mic_only")
 
@@ -196,7 +198,7 @@ func TrayTriggersTab(ctx context.Context, s *testing.State) {
 		}
 
 		if err := uiauto.Combine("close tab",
-			tabUI.CloseTab,
+			tabUI.Close,
 			vcTray.WaitUntilGone,
 		)(ctx); err != nil {
 			s.Fatal("Failed to verify that close tab hides VcTray: ", err)
@@ -209,6 +211,7 @@ func TrayTriggersTab(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to open tab: ", err)
 		}
+		defer tabUI.Close(ctx)
 
 		defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_screen_only")
 
@@ -231,7 +234,7 @@ func TrayTriggersTab(ctx context.Context, s *testing.State) {
 		}
 
 		if err := uiauto.Combine("close tab",
-			tabUI.CloseTab,
+			tabUI.Close,
 			vcTray.WaitUntilGone,
 		)(ctx); err != nil {
 			s.Fatal("Failed to verify that close tab hides VcTray: ", err)
@@ -244,6 +247,7 @@ func TrayTriggersTab(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to open tab: ", err)
 		}
+		defer tabUI.Close(ctx)
 
 		defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_return_to_app")
 
@@ -256,10 +260,6 @@ func TrayTriggersTab(ctx context.Context, s *testing.State) {
 
 		if err := vcTray.ReturnToAppForWindow(common.VcAppName, tconn)(ctx); err != nil {
 			s.Fatal("Failed to verify return to app: ", err)
-		}
-
-		if err := tabUI.CloseTab(ctx); err != nil {
-			s.Fatal("Failed to close tab: ", err)
 		}
 	})
 }

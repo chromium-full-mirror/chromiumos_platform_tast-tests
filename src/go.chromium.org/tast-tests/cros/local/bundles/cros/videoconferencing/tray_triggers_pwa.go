@@ -143,6 +143,7 @@ func TrayTriggersPwa(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to open pwa: ", err)
 		}
+		defer pwaUI.Close(ctx)
 
 		defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_cam_only")
 
@@ -165,7 +166,7 @@ func TrayTriggersPwa(ctx context.Context, s *testing.State) {
 		}
 
 		if err := uiauto.Combine("close tab",
-			pwaUI.CloseApp,
+			pwaUI.Close,
 			vcTray.WaitUntilGone,
 		)(ctx); err != nil {
 			s.Fatal("Failed to verify that close tab hides VcTray: ", err)
@@ -178,6 +179,7 @@ func TrayTriggersPwa(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to open tab: ", err)
 		}
+		defer pwaUI.Close(ctx)
 
 		defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_mic_only")
 
@@ -200,7 +202,7 @@ func TrayTriggersPwa(ctx context.Context, s *testing.State) {
 		}
 
 		if err := uiauto.Combine("close tab",
-			pwaUI.CloseApp,
+			pwaUI.Close,
 			vcTray.WaitUntilGone,
 		)(ctx); err != nil {
 			s.Fatal("Failed to verify that close tab hides VcTray: ", err)
@@ -213,6 +215,7 @@ func TrayTriggersPwa(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to open tab: ", err)
 		}
+		defer pwaUI.Close(ctx)
 
 		defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_screen_only")
 
@@ -235,7 +238,7 @@ func TrayTriggersPwa(ctx context.Context, s *testing.State) {
 		}
 
 		if err := uiauto.Combine("close tab",
-			pwaUI.CloseApp,
+			pwaUI.Close,
 			vcTray.WaitUntilGone,
 		)(ctx); err != nil {
 			s.Fatal("Failed to verify that close tab hides VcTray: ", err)
@@ -248,6 +251,7 @@ func TrayTriggersPwa(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to open tab: ", err)
 		}
+		defer pwaUI.Close(ctx)
 
 		defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_return_to_app")
 
@@ -260,10 +264,6 @@ func TrayTriggersPwa(ctx context.Context, s *testing.State) {
 
 		if err := vcTray.ReturnToAppForWindow(common.VcAppName, tconn)(ctx); err != nil {
 			s.Fatal("Failed to verify return to app: ", err)
-		}
-
-		if err := pwaUI.CloseApp(ctx); err != nil {
-			s.Fatal("Failed to close app: ", err)
 		}
 	})
 }

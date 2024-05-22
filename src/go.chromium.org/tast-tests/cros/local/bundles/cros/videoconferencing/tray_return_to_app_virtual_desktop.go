@@ -99,6 +99,7 @@ func TrayReturnToAppVirtualDesktop(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to open tab: ", err)
 	}
+	defer tabUI.Close(ctx)
 
 	// Turn on camera to trigger the tray.
 	if err := uiauto.Combine("activate camera",
@@ -131,10 +132,5 @@ func TrayReturnToAppVirtualDesktop(ctx context.Context, s *testing.State) {
 	}
 	if newActiveWindow.ID != tabWindow.ID || newActiveWindow.State != tabWindow.State {
 		s.Fatalf("Failed to restore window(expected: %v, actual: %v)", tabWindow, newActiveWindow)
-	}
-
-	// Close the tab.
-	if err := tabUI.CloseTab(ctx); err != nil {
-		s.Fatal("Failed to close tab: ", err)
 	}
 }

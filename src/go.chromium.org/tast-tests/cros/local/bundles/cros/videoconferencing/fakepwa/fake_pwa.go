@@ -88,7 +88,7 @@ func LaunchApp(ctx context.Context, tconn *browser.TestConn, br *browser.Browser
 	return &pwaUI, nil
 }
 
-// CloseApp closes the app with appID inside VcPwaUI.
-func (pwaUI *VcPwaUI) CloseApp(ctx context.Context) error {
+// Close closes the app with appID inside VcPwaUI.
+func (pwaUI *VcPwaUI) Close(ctx context.Context) error {
 	return pwaUI.window.CloseWindow(ctx, pwaUI.tconn)
 }

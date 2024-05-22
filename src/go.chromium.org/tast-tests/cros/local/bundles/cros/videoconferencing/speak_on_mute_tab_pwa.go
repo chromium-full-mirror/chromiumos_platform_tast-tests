@@ -142,6 +142,7 @@ func SpeakOnMuteTabPwa(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to open pwa: ", err)
 		}
+		defer pwaUI.Close(ctx)
 		if err := uiauto.Combine("activate mic",
 			pwaUI.StartAudio,
 			vcTray.WaitUntilState(vctray.DevMicrophone, vctray.DeviceInUse),
@@ -165,6 +166,7 @@ func SpeakOnMuteTabPwa(ctx context.Context, s *testing.State) {
 		)(ctx); err != nil {
 			s.Fatal("Failed to verify that tab triggers vcTray by mic: ", err)
 		}
+		defer tabUI.Close(ctx)
 	}
 
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_with_meet")

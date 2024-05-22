@@ -93,6 +93,7 @@ func TrayTriggersARC(ctx context.Context, s *testing.State) {
 		defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_cam_only")
 
 		arcApp := fakearc.Launch(ctx, s, tconn, cr, kb)
+		defer arcApp.Close(ctx)
 
 		if err := uiauto.Combine("activate camera",
 			arcApp.StartVideo,
@@ -128,6 +129,7 @@ func TrayTriggersARC(ctx context.Context, s *testing.State) {
 		defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_mic_only")
 
 		arcApp := fakearc.Launch(ctx, s, tconn, cr, kb)
+		defer arcApp.Close(ctx)
 
 		if err := uiauto.Combine("activate mic",
 			arcApp.StartAudio,
@@ -163,6 +165,7 @@ func TrayTriggersARC(ctx context.Context, s *testing.State) {
 		defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_return_to_app")
 
 		arcApp := fakearc.Launch(ctx, s, tconn, cr, kb)
+		defer arcApp.Close(ctx)
 
 		if err := uiauto.Combine("activate microphone",
 			arcApp.StartAudio,
@@ -173,10 +176,6 @@ func TrayTriggersARC(ctx context.Context, s *testing.State) {
 
 		if err := vcTray.ReturnToAppForWindow(common.VcAppName, tconn)(ctx); err != nil {
 			s.Fatal("Failed to verify return to app: ", err)
-		}
-
-		if err := arcApp.Close(cleanupCtx); err != nil {
-			s.Fatal("Failed to close tab: ", err)
 		}
 	})
 }

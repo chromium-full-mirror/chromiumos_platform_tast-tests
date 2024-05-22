@@ -63,7 +63,7 @@ func LaunchTab(ctx context.Context, tconn *browser.TestConn, br *browser.Browser
 	return &tabUI, nil
 }
 
-// CloseTab closes the tab with id inside VcTabUI.
-func (tabUI *VcTabUI) CloseTab(ctx context.Context) error {
+// Close closes the tab with id inside VcTabUI.
+func (tabUI *VcTabUI) Close(ctx context.Context) error {
 	return tabUI.window.CloseWindow(ctx, tabUI.tconn)
 }

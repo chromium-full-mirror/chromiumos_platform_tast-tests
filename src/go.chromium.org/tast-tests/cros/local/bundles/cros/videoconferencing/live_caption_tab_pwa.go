@@ -135,6 +135,7 @@ func LiveCaptionTabPwa(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to open pwa: ", err)
 		}
+		defer pwaUI.Close(ctx)
 
 		if err := uiauto.Combine("activate mic",
 			pwaUI.StartAudio,
@@ -151,6 +152,7 @@ func LiveCaptionTabPwa(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to open tab: ", err)
 		}
+		defer tabUI.Close(ctx)
 
 		if err := uiauto.Combine("activate mic",
 			tabUI.StartAudio,
