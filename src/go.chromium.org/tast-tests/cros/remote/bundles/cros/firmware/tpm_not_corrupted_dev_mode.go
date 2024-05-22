@@ -122,9 +122,9 @@ func TPMNotCorruptedDevMode(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to enable USB boot: ", err)
 	}
 
-	s.Log("Inserting a valid USB to DUT")
-	if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
-		s.Fatal("Failed to insert USB to DUT: ", err)
+	s.Log("Removing the USB")
+	if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxOff); err != nil {
+		s.Fatal("Failed to remove the USB: ", err)
 	}
 
 	cleanupCtx := ctx
@@ -142,12 +142,6 @@ func TPMNotCorruptedDevMode(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	// GoBigSleepLint: It may take some time for usb mux state to
-	// take effect.
-	if err := testing.Sleep(ctx, firmware.UsbVisibleTime); err != nil {
-		s.Fatalf("Failed to sleep for %v s: %v", firmware.UsbDisableTime, err)
-	}
-
 	s.Log("Rebooting dut by warm reset")
 	if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
 		s.Fatal("Failed to warm reset dut: ", err)
@@ -158,6 +152,28 @@ func TPMNotCorruptedDevMode(ctx context.Context, s *testing.State) {
 	if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
 		s.Fatalf("Failed to sleep for %s: %v", h.Config.FirmwareScreen, err)
 	}
+
+	s.Log("Resetting firmware screen timeout")
+	if err := h.Servo.PressKey(ctx, " ", servo.DurTab); err != nil {
+		s.Fatal("Failed to press space key: ", err)
+	}
+
+	s.Log("Setting DFP mode")
+	if err := h.Servo.SetDUTPDDataRole(ctx, servo.DFP); err != nil {
+		s.Logf("Failed to set pd data role to DFP: %.400s", err)
+	}
+
+	s.Log("Inserting a valid USB to DUT")
+	if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
+		s.Fatal("Failed to insert USB to DUT: ", err)
+	}
+
+	// GoBigSleepLint: It may take some time for usb mux state to
+	// take effect.
+	if err := testing.Sleep(ctx, firmware.UsbVisibleTime); err != nil {
+		s.Fatalf("Failed to sleep for %v s: %v", firmware.UsbDisableTime, err)
+	}
+
 	ms, err := firmware.NewModeSwitcher(ctx, h)
 	if err != nil {
 		s.Fatal("Creating mode switcher: ", err)
