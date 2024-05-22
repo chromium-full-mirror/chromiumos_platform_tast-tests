@@ -15,7 +15,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
 	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast-tests/cros/local/input"
@@ -542,137 +541,6 @@ func (ac *Activity) Close(ctx context.Context) {
 	}
 }
 
-// MoveWindow moves the activity's window to a new location.
-// t represents the duration of the movement.
-// toBounds represent the destination bounds (in px).
-// fromBounds represent the source bounds (in px).
-func (ac *Activity) MoveWindow(ctx context.Context, tconn *chrome.TestConn, t time.Duration, toBounds, fromBounds coords.Rect) error {
-	sdkVer, err := SDKVersion()
-	if err != nil {
-		return errors.Wrap(err, "failed to get the SDK version")
-	}
-
-	switch sdkVer {
-	case SDKP:
-		return ac.moveWindowP(ctx, coords.NewPoint(toBounds.Left, toBounds.Top), t)
-	case SDKR:
-		return ac.moveWindowR(ctx, tconn, t, toBounds, fromBounds)
-	case SDKT:
-		return ac.moveWindowT(ctx, tconn, t, toBounds, fromBounds)
-	case SDKU:
-		return ac.moveWindowU(ctx, tconn, t, toBounds, fromBounds)
-	default:
-		return errors.Errorf("unsupported SDK version: %d", sdkVer)
-	}
-}
-
-// moveWindowP moves the activity's window to a new location.
-// to represents the coordinates (top-left) for the new position, in pixels.
-// t represents the duration of the movement.
-// moveWindowP only works with WindowStateNormal and WindowStatePIP windows. Will fail otherwise.
-// moveWindowP performs the movement by injecting Touch events in the kernel.
-// If the device does not have a touchscreen, it will fail.
-func (ac *Activity) moveWindowP(ctx context.Context, to coords.Point, t time.Duration) error {
-	task, err := ac.getTaskInfo(ctx)
-	if err != nil {
-		return errors.Wrap(err, "could not get task info")
-	}
-
-	if task.windowState != WindowStateNormal && task.windowState != WindowStatePIP {
-		return errors.Errorf("cannot move window in state %d", int(task.windowState))
-	}
-
-	bounds, err := ac.WindowBounds(ctx)
-	if err != nil {
-		return errors.Wrap(err, "could not get activity bounds")
-	}
-
-	var from coords.Point
-	captionHeight, err := ac.disp.CaptionHeight(ctx)
-	if err != nil {
-		return errors.Wrap(err, "could not get caption height")
-	}
-	halfWidth := bounds.Width / 2
-	from.X = bounds.Left + halfWidth
-	to.X += halfWidth
-	if task.windowState == WindowStatePIP {
-		// PiP windows are dragged from its center
-		halfHeight := bounds.Height / 2
-		from.Y = bounds.Top + halfHeight
-		to.Y += halfHeight
-	} else {
-		// Normal-state windows are dragged from its caption
-		from.Y = bounds.Top + captionHeight/2
-		to.Y += captionHeight / 2
-	}
-	return ac.swipe(ctx, from, to, t)
-}
-
-// moveWindowR moves the activity's window to a new location.
-// t represents the duration of the movement.
-// toBounds represent the destination bounds (in px).
-// fromBounds represent the source bounds (in px).
-// moveWindowR only works with WindowStateNormal and WindowStatePIP windows. Will fail otherwise.
-// moveWindowR performs the movement using a mouse drag.
-func (ac *Activity) moveWindowR(ctx context.Context, tconn *chrome.TestConn, t time.Duration, toBounds, fromBounds coords.Rect) error {
-	windowStates, err := ash.GetAllARCAppWindowStates(ctx, tconn, ac.PackageName())
-	if err != nil {
-		return errors.Wrap(err, "could not get app window state")
-	}
-
-	supportsMove := false
-	for _, windowState := range windowStates {
-		if windowState == ash.WindowStatePIP || windowState == ash.WindowStateNormal {
-			supportsMove = true
-			break
-		}
-	}
-	if !supportsMove {
-		return errors.New("move window only supports Normal and PIP windows")
-	}
-
-	// We'll drag the window from the top-left quadrant.
-	from := coords.NewPoint(fromBounds.Left+(fromBounds.Width/4), fromBounds.Top+(fromBounds.Height/4))
-	to := coords.NewPoint(toBounds.Left+(toBounds.Width/4), toBounds.Top+(toBounds.Height/4))
-
-	dispMode, err := ash.PrimaryDisplayMode(ctx, tconn)
-	if err != nil {
-		return errors.Wrap(err, "failed to get display mode")
-	}
-	dsf := dispMode.DeviceScaleFactor
-
-	// Convert points back to dp to perform drag.
-	from.X = int(math.Round(float64(from.X) / dsf))
-	from.Y = int(math.Round(float64(from.Y) / dsf))
-	to.X = int(math.Round(float64(to.X) / dsf))
-	to.Y = int(math.Round(float64(to.Y) / dsf))
-
-	// There needs to be a brief pause before the drag or the mouse won't pick up the pip window.
-	return dragWithPause(ctx, tconn, from, to, t)
-}
-
-// moveWindowT moves the activity's window to a new location.
-// t represents the duration of the movement.
-// toBounds represent the destination bounds (in px).
-// fromBounds represent the source bounds (in px).
-// moveWindowT only works with WindowStateNormal and WindowStatePIP windows. Will fail otherwise.
-// moveWindowT performs the movement using a mouse drag.
-func (ac *Activity) moveWindowT(ctx context.Context, tconn *chrome.TestConn, t time.Duration, toBounds, fromBounds coords.Rect) error {
-	// Delegate to R version because there isn't a significant difference.
-	return ac.moveWindowR(ctx, tconn, t, toBounds, fromBounds)
-}
-
-// moveWindowU moves the activity's window to a new location.
-// t represents the duration of the movement.
-// toBounds represent the destination bounds (in px).
-// fromBounds represent the source bounds (in px).
-// moveWindowU only works with WindowStateNormal and WindowStatePIP windows. Will fail otherwise.
-// moveWindowU performs the movement using a mouse drag.
-func (ac *Activity) moveWindowU(ctx context.Context, tconn *chrome.TestConn, t time.Duration, toBounds, fromBounds coords.Rect) error {
-	// Delegate to T version because there isn't a significant difference.
-	return ac.moveWindowT(ctx, tconn, t, toBounds, fromBounds)
-}
-
 // ResizeWindow resizes the activity's window.
 // border represents from where the resize should start.
 // to represents the coordinates for for the new border's position, in pixels.
@@ -688,21 +556,6 @@ func (ac *Activity) ResizeWindow(ctx context.Context, tconn *chrome.TestConn, bo
 	switch sdkVer {
 	case SDKP:
 		if err := ac.resizeWindowP(ctx, border, to, time.Second); err != nil {
-			return errors.Wrap(err, "could not resize window")
-		}
-		return nil
-	case SDKR:
-		if err := ac.resizeWindowR(ctx, tconn, border, to, time.Second); err != nil {
-			return errors.Wrap(err, "could not resize window")
-		}
-		return nil
-	case SDKT:
-		if err := ac.resizeWindowT(ctx, tconn, border, to, time.Second); err != nil {
-			return errors.Wrap(err, "could not resize window")
-		}
-		return nil
-	case SDKU:
-		if err := ac.resizeWindowU(ctx, tconn, border, to, time.Second); err != nil {
 			return errors.Wrap(err, "could not resize window")
 		}
 		return nil
@@ -764,101 +617,6 @@ func (ac *Activity) resizeWindowP(ctx context.Context, border BorderType, to coo
 	src.Y = int(math.Max(0, math.Min(float64(ds.Height-1), float64(src.Y))))
 
 	return ac.swipe(ctx, src, to, t)
-}
-
-// resizeWindowR resizes the activity's window.
-// border represents from where the resize should start.
-// to represents the coordinates for for the new border's position, in pixels.
-// t represents the duration of the resize.
-// resizeWindowR only works with WindowStateNormal and WindowStatePIP windows. Will fail otherwise.
-// resizeWindowR performs the resizing using a mouse drag.
-func (ac *Activity) resizeWindowR(ctx context.Context, tconn *chrome.TestConn, border BorderType, to coords.Point, t time.Duration) error {
-	windowStates, err := ash.GetAllARCAppWindowStates(ctx, tconn, ac.PackageName())
-	if err != nil {
-		return errors.Wrap(err, "could not get app window state")
-	}
-
-	supportsMove := false
-	hasPIPWindow := false
-	for _, windowState := range windowStates {
-		if windowState == ash.WindowStatePIP {
-			hasPIPWindow = true
-		}
-		if windowState == ash.WindowStatePIP || windowState == ash.WindowStateNormal {
-			supportsMove = true
-			break
-		}
-	}
-	if !supportsMove {
-		return errors.New("resize window only supports Normal and PIP windows")
-	}
-
-	// Default value: center of window.
-	bounds, err := ac.WindowBounds(ctx)
-	src := bounds.CenterPoint()
-
-	borderOffset := borderOffsetForNormal
-	if hasPIPWindow {
-		borderOffset = borderOffsetForPIP
-	}
-
-	// Top & Bottom are exclusive.
-	if border&BorderTop != 0 {
-		src.Y = bounds.Top - borderOffset
-	} else if border&BorderBottom != 0 {
-		src.Y = bounds.Top + bounds.Height + borderOffset
-	}
-
-	// Left & Right are exclusive.
-	if border&BorderLeft != 0 {
-		src.X = bounds.Left - borderOffset
-	} else if border&BorderRight != 0 {
-		src.X = bounds.Left + bounds.Width + borderOffset
-	}
-
-	dispInfo, err := display.GetPrimaryInfo(ctx, tconn)
-	if err != nil {
-		return errors.Wrap(err, "failed to get display info")
-	}
-	dispMode, err := dispInfo.GetSelectedMode()
-	if err != nil {
-		return errors.Wrap(err, "failed to get display mode")
-	}
-	dsf := dispMode.DeviceScaleFactor
-	displaySize := coords.ConvertBoundsFromDPToPX(dispInfo.Bounds, dsf)
-	// After updating src, clamp it to valid display bounds.
-	src.X = int(math.Max(0, math.Min(float64(displaySize.Width-1), float64(src.X))))
-	src.Y = int(math.Max(0, math.Min(float64(displaySize.Height-1), float64(src.Y))))
-
-	// Convert points back to dp to perform drag.
-	src.X = int(math.Round(float64(src.X) / dsf))
-	src.Y = int(math.Round(float64(src.Y) / dsf))
-	to.X = int(math.Round(float64(to.X) / dsf))
-	to.Y = int(math.Round(float64(to.Y) / dsf))
-
-	return mouse.Drag(tconn, src, to, t)(ctx)
-}
-
-// resizeWindowT resizes the activity's window.
-// border represents from where the resize should start.
-// to represents the coordinates for for the new border's position, in pixels.
-// t represents the duration of the resize.
-// resizeWindowT only works with WindowStateNormal and WindowStatePIP windows. Will fail otherwise.
-// resizeWindowT performs the resizing using a mouse drag.
-func (ac *Activity) resizeWindowT(ctx context.Context, tconn *chrome.TestConn, border BorderType, to coords.Point, t time.Duration) error {
-	// Delegate to R version because there isn't a significant difference.
-	return ac.resizeWindowR(ctx, tconn, border, to, t)
-}
-
-// resizeWindowU resizes the activity's window.
-// border represents from where the resize should start.
-// to represents the coordinates for for the new border's position, in pixels.
-// t represents the duration of the resize.
-// resizeWindowU only works with WindowStateNormal and WindowStatePIP windows. Will fail otherwise.
-// resizeWindowU performs the resizing using a mouse drag.
-func (ac *Activity) resizeWindowU(ctx context.Context, tconn *chrome.TestConn, border BorderType, to coords.Point, t time.Duration) error {
-	// Delegate to T version because there isn't a significant difference.
-	return ac.resizeWindowT(ctx, tconn, border, to, t)
 }
 
 // SetWindowState sets the window state. Note this method is async, so ensure to call ash.WaitForArcAppWindowState after this.
