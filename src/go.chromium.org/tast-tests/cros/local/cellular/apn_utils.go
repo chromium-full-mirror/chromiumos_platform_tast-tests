@@ -204,7 +204,7 @@ func GetCarrier(operatorID string) (Carrier, error) {
 func CheckThatApnListIsEmpty(ctx context.Context, tconn *chrome.TestConn, apnSubpageButtonNode *nodewith.Finder) error {
 	ui := uiauto.New(tconn)
 
-	apnNotConnectedText := nodewith.NameContaining("You are not connected yet").Role(role.StaticText)
+	apnNotConnectedText := nodewith.NameContaining("You are not connected yet").Role(role.Link)
 	if err := uiauto.Combine("Navigate to the APN subpage and verify no APN information is shown",
 		ui.WaitUntilExists(apnSubpageButtonNode),
 		ui.DoDefault(apnSubpageButtonNode),
