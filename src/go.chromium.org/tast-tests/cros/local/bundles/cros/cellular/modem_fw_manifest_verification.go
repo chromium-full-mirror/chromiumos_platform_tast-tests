@@ -28,7 +28,6 @@ func init() {
 		Contacts:     []string{"chromeos-cellular-team@google.com", "andrewlassalle@google.com", "madhavadas@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:         []string{"group:cellular", "cellular_sim_active", "cellular_cq", "cellular_ota_avl", "cellular_modem_verification"},
-		Fixture:      "cellular",
 		SoftwareDeps: []string{"modemfwd"},
 	})
 }
@@ -278,7 +277,10 @@ var (
 		cellularconst.ModemTypeL850:  *newDlcSpec(39, 43),
 		cellularconst.ModemTypeFM350: *newDlcSpec(156, 165),
 		cellularconst.ModemTypeFM101: *newDlcSpec(200, 310),
-		cellularconst.ModemTypeEM060: *newDlcSpec(292, 310)}
+		cellularconst.ModemTypeEM060: *newDlcSpec(292, 310),
+		cellularconst.ModemTypeRW101: *newDlcSpec(200, 310),
+		cellularconst.ModemTypeRW135: *newDlcSpec(200, 310),
+	}
 )
 
 // ImageLoaderManifest holds the fields related to a imageloader manifest.
