@@ -51,6 +51,10 @@ func init() {
 			"onedrive.accountPool",
 			"onedrive.managedusernamemicrosoft",
 			"onedrive.managedpassword",
+			"onedrive.e3managedusernamemicrosoft",
+			"onedrive.e3managedpassword",
+			"onedrive.e5managedusernamemicrosoft",
+			"onedrive.e5managedpassword",
 		},
 		Fixture: "onedriveManaged",
 		Params: []testing.Param{{
@@ -65,8 +69,20 @@ func init() {
 				username:       "onedrive.managedusernamemicrosoft",
 				password:       "onedrive.managedpassword",
 			},
-			// This test should cover more Microsoft licenses (e3, e5) but the
-			// test setup is not ready yet, so they will be added later on.
+		}, {
+			Name: "e3",
+			Val: userParam{
+				useAccountPool: false,
+				username:       "onedrive.e3managedusernamemicrosoft",
+				password:       "onedrive.e3managedpassword",
+			},
+		}, {
+			Name: "e5",
+			Val: userParam{
+				useAccountPool: false,
+				username:       "onedrive.e5managedusernamemicrosoft",
+				password:       "onedrive.e5managedpassword",
+			},
 		}},
 	})
 }
