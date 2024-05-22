@@ -25,10 +25,10 @@ Build:   ti50_common_tot:v0.0.909-efe9eb23
 	expected := VersionCommandInfo{
 		RoA:   RoInfo{Active: false, Version: "0.0.22", ImageCheck: "ffc7a523"},
 		RoB:   RoInfo{Active: true, Version: "0.0.46", ImageCheck: "c57c2460"},
-		RwA:   RwInfo{Empty: false, Active: true, Version: "0.24.61", Branch: ToT},
+		RwA:   RwInfo{Empty: false, Active: true, Version: "0.24.61", Branch: ToT, VersionStr: "ti50_common_tot:v0.0.909-efe9eb23"},
 		RwB:   RwInfo{Empty: true},
 		Bid:   BidInfo{Empty: false, BidType: 0x46464646, Mask: 0, Flags: 0x10},
-		Build: BuildInfo{Branch: ToT},
+		Build: BuildInfo{Branch: ToT, VersionStr: "ti50_common_tot:v0.0.909-efe9eb23"},
 	}
 
 	testVersionInfoMatcher(t, input, expected)
@@ -50,10 +50,10 @@ func TestVersionCommandTi50Processor2(t *testing.T) {
 	expected := VersionCommandInfo{
 		RoA:   RoInfo{Active: false, Version: "0.0.52", ImageCheck: "d1072955"},
 		RoB:   RoInfo{Active: true, Version: "0.0.56", ImageCheck: "cf178281"},
-		RwA:   RwInfo{Empty: false, Active: true, Version: "0.24.20", Branch: Unknown},
-		RwB:   RwInfo{Empty: false, Active: false, Debug: true, Version: "1.24.30", Branch: ToT},
+		RwA:   RwInfo{Empty: false, Active: true, Version: "0.24.20", Branch: Unknown, VersionStr: "ti50_common:v0.0.2888-c2eeb17e"},
+		RwB:   RwInfo{Empty: false, Active: false, Debug: true, Version: "1.24.30", Branch: ToT, VersionStr: "DBG/ti50_common_tot:v0.0.360+ef9becfc"},
 		Bid:   BidInfo{Empty: false, BidType: 0, Mask: 0, Flags: 0},
-		Build: BuildInfo{Branch: Unknown, Debug: false},
+		Build: BuildInfo{Branch: Unknown, Debug: false, VersionStr: "ti50_common:v0.0.2888-c2eeb17e"},
 	}
 
 	testVersionInfoMatcher(t, input, expected)
@@ -75,10 +75,10 @@ Build:   DBG/ti50_common_tot:v0.0.360+ef9becfc
 	expected := VersionCommandInfo{
 		RoA:   RoInfo{Active: false, Version: "0.0.52", ImageCheck: "d1072955"},
 		RoB:   RoInfo{Active: true, Version: "0.0.56", ImageCheck: "cf178281"},
-		RwA:   RwInfo{Empty: false, Active: false, Version: "0.24.20", Branch: Unknown},
-		RwB:   RwInfo{Empty: false, Active: true, Debug: true, Version: "1.24.30", Branch: ToT},
+		RwA:   RwInfo{Empty: false, Active: false, Version: "0.24.20", Branch: Unknown, VersionStr: "ti50_common:v0.0.2888-c2eeb17e"},
+		RwB:   RwInfo{Empty: false, Active: true, Debug: true, Version: "1.24.30", Branch: ToT, VersionStr: "DBG/ti50_common_tot:v0.0.360+ef9becfc"},
 		Bid:   BidInfo{Empty: false, BidType: 0, Mask: 0, Flags: 0},
-		Build: BuildInfo{Branch: ToT, Debug: true},
+		Build: BuildInfo{Branch: ToT, Debug: true, VersionStr: "DBG/ti50_common_tot:v0.0.360+ef9becfc"},
 	}
 
 	testVersionInfoMatcher(t, input, expected)
@@ -100,10 +100,10 @@ Build:   DBG/ti50_common_tot:v0.0.360+ef9becfc
 	expected := VersionCommandInfo{
 		RoA:   RoInfo{Active: true, Version: "0.0.52", ImageCheck: "d1072955"},
 		RoB:   RoInfo{},
-		RwA:   RwInfo{Empty: false, Active: false, Version: "0.24.20", Branch: Unknown},
-		RwB:   RwInfo{Empty: false, Active: true, Debug: true, Version: "1.24.30", Branch: ToT},
+		RwA:   RwInfo{Empty: false, Active: false, Version: "0.24.20", Branch: Unknown, VersionStr: "ti50_common:v0.0.2888-c2eeb17e"},
+		RwB:   RwInfo{Empty: false, Active: true, Debug: true, Version: "1.24.30", Branch: ToT, VersionStr: "DBG/ti50_common_tot:v0.0.360+ef9becfc"},
 		Bid:   BidInfo{Empty: false, BidType: 0, Mask: 0, Flags: 0},
-		Build: BuildInfo{Branch: ToT, Debug: true},
+		Build: BuildInfo{Branch: ToT, Debug: true, VersionStr: "DBG/ti50_common_tot:v0.0.360+ef9becfc"},
 	}
 
 	testVersionInfoMatcher(t, input, expected)
@@ -127,10 +127,10 @@ Build:   0.3.22/cr50_v1.9308_26_0.596-e6b91d6
 	expected := VersionCommandInfo{
 		RoA:   RoInfo{Active: true, Version: "0.0.11", ImageCheck: "bc74f7dc"},
 		RoB:   RoInfo{Active: false, Version: "0.0.11", ImageCheck: "4d655eab"},
-		RwA:   RwInfo{Empty: false, Active: true, Version: "0.3.22", Branch: Unknown},
-		RwB:   RwInfo{Empty: false, Active: false, Version: "0.3.22", Branch: Unknown},
+		RwA:   RwInfo{Empty: false, Active: true, Version: "0.3.22", Branch: Unknown, VersionStr: "cr50_v1.9308_26_0.596-e6b91d6"},
+		RwB:   RwInfo{Empty: false, Active: false, Version: "0.3.22", Branch: Unknown, VersionStr: "cr50_v1.9308_26_0.596-e6b91d6"},
 		Bid:   BidInfo{Empty: false, BidType: 0, Mask: 0, Flags: 0},
-		Build: BuildInfo{Branch: Unknown},
+		Build: BuildInfo{Branch: Unknown, VersionStr: "cr50_v1.9308_26_0.596-e6b91d6"},
 	}
 
 	testVersionInfoMatcher(t, input, expected)
@@ -154,10 +154,10 @@ Build:   1.6.205/DBG/cr50_v2.0.3597-2b7751b89f
 	expected := VersionCommandInfo{
 		RoA:   RoInfo{Active: false, Version: "0.0.11", ImageCheck: "bc74f7dc"},
 		RoB:   RoInfo{Active: true, Version: "0.0.12", ImageCheck: "9eb618de"},
-		RwA:   RwInfo{Empty: false, Active: false, Version: "0.6.211", Branch: PrePvt},
-		RwB:   RwInfo{Empty: false, Active: true, Debug: true, Version: "1.6.205", Branch: ToT},
+		RwA:   RwInfo{Empty: false, Active: false, Version: "0.6.211", Branch: PrePvt, VersionStr: "cr50_v3.94_pp.256-f6119fcacf"},
+		RwB:   RwInfo{Empty: false, Active: true, Debug: true, Version: "1.6.205", Branch: ToT, VersionStr: "DBG/cr50_v2.0.3597-2b7751b89f"},
 		Bid:   BidInfo{Empty: false, BidType: 0, Mask: 0, Flags: 0},
-		Build: BuildInfo{Branch: ToT, Debug: true},
+		Build: BuildInfo{Branch: ToT, Debug: true, VersionStr: "DBG/cr50_v2.0.3597-2b7751b89f"},
 	}
 
 	testVersionInfoMatcher(t, input, expected)
@@ -181,10 +181,10 @@ Build:   0.6.230/cr50_v3.94_pp.259-e20fb86af1
 	expected := VersionCommandInfo{
 		RoA:   RoInfo{Active: false, Version: "0.0.11", ImageCheck: "bc74f7dc"},
 		RoB:   RoInfo{Active: true, Version: "0.0.12", ImageCheck: "9eb618de"},
-		RwA:   RwInfo{Empty: false, Active: false, Version: "0.5.215", Branch: MP},
-		RwB:   RwInfo{Empty: false, Active: true, Version: "0.6.230", Branch: PrePvt},
+		RwA:   RwInfo{Empty: false, Active: false, Version: "0.5.215", Branch: MP, VersionStr: "cr50_v4.11_mp.258-bcc62291cf"},
+		RwB:   RwInfo{Empty: false, Active: true, Version: "0.6.230", Branch: PrePvt, VersionStr: "cr50_v3.94_pp.259-e20fb86af1"},
 		Bid:   BidInfo{Empty: false, BidType: 0x46464646, Mask: 0, Flags: 0x10},
-		Build: BuildInfo{Branch: PrePvt, Debug: false},
+		Build: BuildInfo{Branch: PrePvt, Debug: false, VersionStr: "cr50_v3.94_pp.259-e20fb86af1"},
 	}
 
 	testVersionInfoMatcher(t, input, expected)
@@ -209,9 +209,9 @@ Build:   0.6.230/cr50_v3.94_pp.259-e20fb86af1
 		RoA:   RoInfo{Active: false, Version: "0.0.11", ImageCheck: "bc74f7dc"},
 		RoB:   RoInfo{Active: true, Version: "0.0.12", ImageCheck: "9eb618de"},
 		RwA:   RwInfo{Empty: true},
-		RwB:   RwInfo{Empty: false, Active: true, Version: "0.6.230", Branch: PrePvt},
+		RwB:   RwInfo{Empty: false, Active: true, Version: "0.6.230", Branch: PrePvt, VersionStr: "cr50_v3.94_pp.259-e20fb86af1"},
 		Bid:   BidInfo{Empty: false, BidType: 0x46464646, Mask: 0, Flags: 0x10},
-		Build: BuildInfo{Branch: PrePvt, Debug: false},
+		Build: BuildInfo{Branch: PrePvt, Debug: false, VersionStr: "cr50_v3.94_pp.259-e20fb86af1"},
 	}
 
 	testVersionInfoMatcher(t, input, expected)
@@ -234,10 +234,10 @@ Build:   1.6.250/DBG/cr50_v4.08_pp.61+a50884addc
 	expected := VersionCommandInfo{
 		RoA:   RoInfo{Active: false, Version: "0.0.11", ImageCheck: "bc74f7dc"},
 		RoB:   RoInfo{Active: true, Version: "0.0.12", ImageCheck: "9eb618de"},
-		RwA:   RwInfo{Empty: false, Active: false, Version: "0.5.12", Branch: EFI},
-		RwB:   RwInfo{Empty: false, Active: true, Debug: true, Version: "1.6.250", Branch: PrePvt},
+		RwA:   RwInfo{Empty: false, Active: false, Version: "0.5.12", Branch: EFI, VersionStr: "cr50_v4.11_28_efi.0-8441619945"},
+		RwB:   RwInfo{Empty: false, Active: true, Debug: true, Version: "1.6.250", Branch: PrePvt, VersionStr: "DBG/cr50_v4.08_pp.61+a50884addc"},
 		Bid:   BidInfo{Empty: false, BidType: 0, Mask: 0, Flags: 0},
-		Build: BuildInfo{Branch: PrePvt, Debug: true},
+		Build: BuildInfo{Branch: PrePvt, Debug: true, VersionStr: "DBG/cr50_v4.08_pp.61+a50884addc"},
 	}
 
 	testVersionInfoMatcher(t, input, expected)
@@ -335,7 +335,7 @@ func testRoInfoMatcher(t *testing.T, input string, slot GscSlot, expected RoInfo
 		t.Fatal("error processing ro info:", err)
 	}
 	if out != expected {
-		t.Fatal("output mismatch")
+		t.Fatalf("output mismatch:got      %v\nexpected %v", out, expected)
 	}
 }
 
@@ -347,7 +347,7 @@ func TestRwInfoMatcherInvalidInput(t *testing.T) {
 
 func TestRwInfoMatcher1(t *testing.T) {
 	input := `RW_A:  * 0.24.61/ti50_common_tot:v0.0.909-efe9eb23`
-	expected := RwInfo{Active: true, Empty: false, Version: "0.24.61", Branch: ToT}
+	expected := RwInfo{Active: true, Empty: false, Version: "0.24.61", Branch: ToT, VersionStr: "ti50_common_tot:v0.0.909-efe9eb23"}
 	testRwInfoMatcher(t, input, SlotA, expected)
 }
 
@@ -359,19 +359,19 @@ func TestRwInfoMatcher2(t *testing.T) {
 
 func TestRwInfoMatcher3(t *testing.T) {
 	input := `RW_A:  * 0.24.60/ti50_common_prepvt-15086.B:v0.0.782-aca516e7`
-	expected := RwInfo{Active: true, Empty: false, Version: "0.24.60", Branch: PrePvt}
+	expected := RwInfo{Active: true, Empty: false, Version: "0.24.60", Branch: PrePvt, VersionStr: "ti50_common_prepvt-15086.B:v0.0.782-aca516e7"}
 	testRwInfoMatcher(t, input, SlotA, expected)
 }
 
 func TestRwInfoMatcher4(t *testing.T) {
 	input := `RW_A:  * 0.23.60/ti50_common_mp-15224.B:v0.0.729-2ab3d1fb`
-	expected := RwInfo{Active: true, Empty: false, Version: "0.23.60", Branch: MP}
+	expected := RwInfo{Active: true, Empty: false, Version: "0.23.60", Branch: MP, VersionStr: "ti50_common_mp-15224.B:v0.0.729-2ab3d1fb"}
 	testRwInfoMatcher(t, input, SlotA, expected)
 }
 
 func TestRwInfoMatcher5(t *testing.T) {
 	input := `RW_A:  * 0.3.22/cr50_v1.9308_26_0.596-e6b91d6`
-	expected := RwInfo{Active: true, Empty: false, Version: "0.3.22", Branch: Unknown}
+	expected := RwInfo{Active: true, Empty: false, Version: "0.3.22", Branch: Unknown, VersionStr: "cr50_v1.9308_26_0.596-e6b91d6"}
 	testRwInfoMatcher(t, input, SlotA, expected)
 }
 
@@ -415,49 +415,54 @@ func testBidInfoMatcher(t *testing.T, input string, slot GscSlot, expected BidIn
 
 func TestBuildInfoMatcher1(t *testing.T) {
 	input := `Build:   ti50_common_tot:v0.0.909-efe9eb23`
-	expected := BuildInfo{Branch: ToT}
+	expected := BuildInfo{Branch: ToT, VersionStr: "ti50_common_tot:v0.0.909-efe9eb23"}
 	testBuildInfoMatcher(t, input, expected)
 }
 
 func TestBuildInfoMatcher2(t *testing.T) {
 	input := `Build:   ti50_common_prepvt-15086.B:v0.0.782-aca516e7`
-	expected := BuildInfo{Branch: PrePvt}
+	expected := BuildInfo{Branch: PrePvt, VersionStr: "ti50_common_prepvt-15086.B:v0.0.782-aca516e7"}
 	testBuildInfoMatcher(t, input, expected)
 }
 
 func TestBuildInfoMatcher3(t *testing.T) {
 	input := `Build:   ti50_common_mp-15224.B:v0.0.729-2ab3d1fb`
-	expected := BuildInfo{Branch: MP}
+	expected := BuildInfo{Branch: MP, VersionStr: "ti50_common_mp-15224.B:v0.0.729-2ab3d1fb"}
 	testBuildInfoMatcher(t, input, expected)
 }
 
 func TestBuildInfoMatcher4(t *testing.T) {
 	input := `Build:   0.3.22/cr50_v1.9308_26_0.596-e6b91d6`
-	expected := BuildInfo{Branch: Unknown}
+	expected := BuildInfo{Branch: Unknown, VersionStr: "cr50_v1.9308_26_0.596-e6b91d6"}
 	testBuildInfoMatcher(t, input, expected)
 }
 
 func TestBuildInfoMatcher5(t *testing.T) {
 	input := `Build:   0.5.12/cr50_v4.11_28_efi.0-8441619945`
-	expected := BuildInfo{Branch: EFI}
+	expected := BuildInfo{Branch: EFI, VersionStr: "cr50_v4.11_28_efi.0-8441619945"}
 	testBuildInfoMatcher(t, input, expected)
 }
 
 func TestBuildInfoMatcher6(t *testing.T) {
 	input := `Build:   0.6.241/cr50_v4.08_pp.61-a50884addc`
-	expected := BuildInfo{Branch: PrePvt}
+	expected := BuildInfo{Branch: PrePvt, VersionStr: "cr50_v4.08_pp.61-a50884addc"}
 	testBuildInfoMatcher(t, input, expected)
 }
 
 func TestBuildInfoMatcher7(t *testing.T) {
 	input := `Build:   ti50_common:v0.0.2888-c2eeb17e`
-	expected := BuildInfo{Branch: Unknown}
+	expected := BuildInfo{Branch: Unknown, VersionStr: "ti50_common:v0.0.2888-c2eeb17e"}
 	testBuildInfoMatcher(t, input, expected)
 }
 
 func TestBuildInfoMatcher8(t *testing.T) {
 	input := `Build:   DBG/ti50_common_tot:v0.0.360+ef9becfc`
-	expected := BuildInfo{Branch: ToT, Debug: true}
+	expected := BuildInfo{Branch: ToT, Debug: true, VersionStr: "DBG/ti50_common_tot:v0.0.360+ef9becfc"}
+	testBuildInfoMatcher(t, input, expected)
+}
+func TestBuildInfoMatcher9(t *testing.T) {
+	input := `Build:   1.6.205/DBG/cr50_v2.0.3597-2b7751b89f`
+	expected := BuildInfo{Branch: ToT, Debug: true, VersionStr: "DBG/cr50_v2.0.3597-2b7751b89f"}
 	testBuildInfoMatcher(t, input, expected)
 }
 
@@ -467,7 +472,7 @@ func testBuildInfoMatcher(t *testing.T, input string, expected BuildInfo) {
 		t.Fatal("error processing bid info:", err)
 	}
 	if out != expected {
-		t.Fatal("output mismatch")
+		t.Fatalf("output mismatch:got      %v\nexpected %v", out, expected)
 	}
 }
 

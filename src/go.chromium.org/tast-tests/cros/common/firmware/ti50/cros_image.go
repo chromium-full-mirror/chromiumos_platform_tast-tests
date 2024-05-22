@@ -49,8 +49,8 @@ var (
 	// Group 1 is the branch name.
 	// Group 2 is the version sha
 	verRWCr50StrRE       = `cr50_([0-9_vpmefi\.]*)\.[0-9]*[\-\+]([[:xdigit:]]+)`
-	verRWTi50StrRE       = `ti50_common_([a-z]+)\S*:(\S+)`
-	verRWLegacyTi50StrRE = `(ti50_common):(\S+)`
+	verRWTi50StrRE       = `ti50_common_([a-z]+)\S*:\S+[\-\+](\S+)`
+	verRWLegacyTi50StrRE = `(ti50_common):\S+[\-\+](\S+)`
 	verRWGSCStrRE        = verRWCr50StrRE + `|` + verRWTi50StrRE + `|` + verRWLegacyTi50StrRE
 	// GSC board properties
 	brdPropRE     = regexp.MustCompile(`properties = 0x([0-9a-fA-F]+)`)
@@ -160,11 +160,12 @@ type RoInfo struct {
 
 // RwInfo contains information about a loaded rw image slot.
 type RwInfo struct {
-	Empty   bool
-	Active  bool
-	Debug   bool
-	Version string
-	Branch  GscBranch
+	Empty      bool
+	Active     bool
+	Debug      bool
+	Version    string
+	VersionStr string
+	Branch     GscBranch
 }
 
 // BidInfo contains board id information for a slot.
@@ -177,8 +178,9 @@ type BidInfo struct {
 
 // BuildInfo contains information about the firmware currently running.
 type BuildInfo struct {
-	Branch GscBranch
-	Debug  bool
+	Branch     GscBranch
+	Debug      bool
+	VersionStr string
 }
 
 // CrOSImage interacts with a board running ti50.
@@ -581,6 +583,7 @@ func matchRwInfo(s string, slot GscSlot) (RwInfo, error) {
 			ret.Active = true
 		}
 		ret.Version = matches[3]
+		ret.VersionStr = matches[5]
 
 		if matches[6] != "" {
 			ret.Branch = getBranch(matches[6])
@@ -590,6 +593,7 @@ func matchRwInfo(s string, slot GscSlot) (RwInfo, error) {
 
 		if numMatches == 8 {
 			ret.Debug = true
+			ret.VersionStr = "DBG/" + ret.VersionStr
 		}
 
 		return ret, nil
@@ -652,6 +656,7 @@ func matchBuildInfo(s string) (BuildInfo, error) {
 	if len(matches) != 10 {
 		return ret, errors.Errorf("regex failed to extract build info from found %d matches in %s: %s", len(matches), s, matches)
 	}
+	ret.VersionStr = matches[3]
 	if matches[4] != "" {
 		ret.Branch = getBranch(matches[4])
 	} else {
@@ -659,6 +664,7 @@ func matchBuildInfo(s string) (BuildInfo, error) {
 	}
 	if matches[2] != "" {
 		ret.Debug = true
+		ret.VersionStr = "DBG/" + ret.VersionStr
 	}
 
 	return ret, nil
