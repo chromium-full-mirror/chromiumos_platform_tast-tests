@@ -22,9 +22,7 @@ func init() {
 		Desc:         "Checks if Geller login is working",
 		Contacts: []string{
 			"cros-families-eng+test@google.com",
-			"chromeos-sw-engprod@google.com",
-			"cros-oac@google.com",
-			"zork@chromium.org",
+			"chromeos-consumer-engprod@google.com",
 		},
 		// ChromeOS > Software > Family > Parental controls
 		BugComponent: "b:1090157",
@@ -50,7 +48,7 @@ func GellerLogin(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	tconn := s.FixtValue().(familylink.HasTestConn).TestConn()
 
-	// TODO(b/254891227): Remove this when chrome.New() doesn't have a race condition.
+	// TODO(b/254891227):Fix sleep when chrome.New() doesn't have a race condition and improve logic to wait for an event as per GoBigSleepLint
 	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
 		s.Fatal("Failed to wait for Login to complete: ", err)
 	}

@@ -28,8 +28,7 @@ func init() {
 		Desc:         "Checks that web filtering allowlist mode work correctly: websites on the list are allowed and websites outside of the list are blocked",
 		Contacts: []string{
 			"cros-families-eng+test@google.com",
-			"chromeos-sw-engprod@google.com",
-			"courtneywong@chromium.org",
+			"chromeos-consumer-engprod@google.com",
 		},
 		// ChromeOS > Software > Family > Parental controls
 		BugComponent: "b:1090157",

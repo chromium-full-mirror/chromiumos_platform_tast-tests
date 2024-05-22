@@ -29,8 +29,7 @@ func init() {
 		Desc:         "Verifies that a Unicorn Account can delete browsing history",
 		Contacts: []string{
 			"cros-families-eng+test@google.com",
-			"chromeos-sw-engprod@google.com",
-			"agawronska@chromium.org",
+			"chromeos-consumer-engprod@google.com",
 		},
 		// ChromeOS > Software > Family > Parental controls
 		BugComponent: "b:1090157",

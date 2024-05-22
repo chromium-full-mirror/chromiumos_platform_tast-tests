@@ -25,7 +25,7 @@ func init() {
 		Desc:         "Checks that Unicorn account trying to add a non-EDU secondary account fails",
 		Contacts: []string{
 			"cros-families-eng+test@google.com",
-			"amberhaynes@chromium.org",
+			"chromeos-consumer-engprod@google.com",
 		},
 		// ChromeOS > Software > Family > Parental controls
 		BugComponent: "b:1090157",

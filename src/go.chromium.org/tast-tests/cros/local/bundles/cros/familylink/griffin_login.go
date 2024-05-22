@@ -22,9 +22,7 @@ func init() {
 		Desc:         "Checks if login is working for Family Link Griffin account",
 		Contacts: []string{
 			"cros-families-eng+test@google.com",
-			"chromeos-sw-engprod@google.com",
-			"cros-oac@google.com",
-			"agawronska@chromium.org",
+			"chromeos-consumer-engprod@google.com",
 		},
 		// ChromeOS > Software > Family > Parental controls
 		BugComponent: "b:1090157",

@@ -34,8 +34,7 @@ func init() {
 		Desc:         "Verify that clicking the 'Parental controls' link in the Accounts page in Settings launches the Child & Teen version of the Family Link app",
 		Contacts: []string{
 			"cros-families-eng+test@google.com",
-			"chromeos-sw-engprod@google.com",
-			"amberhaynes@chromium.org",
+			"chromeos-consumer-engprod@google.com",
 		},
 		// ChromeOS > Software > Family > Parental controls
 		BugComponent: "b:1090157",

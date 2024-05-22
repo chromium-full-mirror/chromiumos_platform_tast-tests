@@ -30,8 +30,7 @@ func init() {
 		Desc:         "Verify 'Parental controls' setting opens family website when Play Store is disabled",
 		Contacts: []string{
 			"cros-families-eng+test@google.com",
-			"chromeos-sw-engprod@google.com",
-			"amberhaynes@chromium.org",
+			"chromeos-consumer-engprod@google.com",
 		},
 		// ChromeOS > Software > Family > Parental controls
 		BugComponent: "b:1090157",

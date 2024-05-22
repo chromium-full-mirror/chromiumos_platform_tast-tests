@@ -21,8 +21,7 @@ func init() {
 		Desc:         "Checks that you can add a Unicorn user through the Add Person flow",
 		Contacts: []string{
 			"cros-families-eng+test@google.com",
-			"chromeos-sw-engprod@google.com",
-			"zork@chromium.org",
+			"chromeos-consumer-engprod@google.com",
 		},
 		// ChromeOS > Software > Family > Parental controls
 		BugComponent: "b:1090157",

@@ -28,8 +28,7 @@ func init() {
 		Desc:         "Checks that matures sites are blocked for Unicorn users",
 		Contacts: []string{
 			"cros-families-eng+test@google.com",
-			"chromeos-sw-engprod@google.com",
-			"courtneywong@chromium.org",
+			"chromeos-consumer-engprod@google.com",
 		},
 		// ChromeOS > Software > Family > Parental controls
 		BugComponent: "b:1090157",
