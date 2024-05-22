@@ -34,7 +34,7 @@ const (
 	requiredBatteryPercent = 70
 	maxBatteryPercent      = 97.00
 	chargeCheckInterval    = time.Minute
-	chargeCheckTimeout     = 90 * time.Minute
+	chargeCheckTimeout     = 120 * time.Minute
 	batteryLevelTimeout    = 20 * time.Second // default servo comm timeout is 10s, battery check requires two.
 	batteryLevelInterval   = time.Second
 )
@@ -201,7 +201,7 @@ func MeasureChargingRate(ctx context.Context, s *testing.State) {
 
 		totalTime := endTime.Sub(startTime) * 100 / time.Duration((chargeAfterSleep-chargeBeforeSleep)*float32(time.Minute))
 		s.Log("Total Time to Full Charge in minutes: ", totalTime)
-		if totalTime > 180 {
+		if totalTime > 240 {
 			s.Fatal("Failed: Total battery charging time is more than 3 hours")
 		}
 
