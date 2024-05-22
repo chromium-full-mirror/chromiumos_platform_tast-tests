@@ -20,7 +20,7 @@ Before running this script:
 """
 
 # [VPYTHON:BEGIN]
-# python_version: "3.8"
+# python_version: "3.11"
 # wheel: <
 #   name: "infra/python/wheels/google-cloud-storage-py3"
 #   version: "version:2.1.0"
@@ -48,12 +48,12 @@ Before running this script:
 # # google-api-core-dep
 # wheel: <
 #   name: "infra/python/wheels/grpcio/${vpython_platform}"
-#   version: "version:1.44.0"
+#   version: "version:1.57.0"
 # >
 # # google-api-core-dep
 # wheel: <
 #   name: "infra/python/wheels/grpcio-status-py3"
-#   version: "version:1.44.0"
+#   version: "version:1.57.0"
 # >
 # # google-api-core dep
 # wheel: <
@@ -803,8 +803,12 @@ def verify_arguments(opts, username):
             "Need to specify --lease_dims or --lease_hostname or --dut_host."
         )
 
-    if not opts.auto_upload and check_experiment_id_existance(
-        opts.bucket_name, username, opts.experiment_id
+    if (
+        not opts.no_upload
+        and not opts.auto_upload
+        and check_experiment_id_existance(
+            opts.bucket_name, username, opts.experiment_id
+        )
     ):
         while True:
             user_input = input(
