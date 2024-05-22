@@ -57,6 +57,17 @@ func init() {
 		Parent:          "enableServoAndTabletMode",
 		Vars:            []string{"USBID"},
 	})
+	testing.AddFixture(&testing.Fixture{
+		Name:            "wwcbCamera",
+		Desc:            "PASIT fixture that initializes camera topology for camera tests",
+		Contacts:        []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
+		BugComponent:    "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
+		Impl:            &TestFixture{defaultTopology: defaultCameraTopology},
+		SetUpTimeout:    setupTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ExtCameraID"},
+	})
 }
 
 var ipPowerPorts = []int{1}
@@ -71,6 +82,11 @@ func varOrDefault(s *testing.FixtState, varName, defaultValue string) string {
 func defaultStorageTopology(s *testing.FixtState, hostname string) *labapi.PasitHost {
 	usbID := varOrDefault(s, "USBID", "2001902")
 	return DefaultStorageTopology(hostname, usbID)
+}
+
+func defaultCameraTopology(s *testing.FixtState, hostname string) *labapi.PasitHost {
+	cameraID := varOrDefault(s, "ExtCameraID", "2001903")
+	return DefaultCameraTopology(hostname, cameraID)
 }
 
 // TestFixture is the PASIT test fixture.

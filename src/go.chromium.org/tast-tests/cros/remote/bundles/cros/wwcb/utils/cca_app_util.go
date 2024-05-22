@@ -310,13 +310,13 @@ func waitForFileSaved(ctx context.Context, fs *dutfs.Client, dir string, pat *re
 }
 
 // ConnectExternalCamera connects an external camera through a fixture and returns device information.
-func ConnectExternalCamera(ctx context.Context, dut *dut.DUT, extCameraID string) ([]string, error) {
+func ConnectExternalCamera(ctx context.Context, dut *dut.DUT, enableCamera func(ctx context.Context) error) ([]string, error) {
 	before, err := DevicesFromV4L2(ctx, dut)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get v4l2 devices before connecting external camera")
 	}
 
-	if err := ControlFixture(ctx, extCameraID, "on"); err != nil {
+	if err := enableCamera(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to control fixture to connect external camera")
 	}
 

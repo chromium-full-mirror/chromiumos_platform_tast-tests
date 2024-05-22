@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/colorcmp"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/log"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils/topology"
 	"go.chromium.org/tast-tests/cros/remote/dutfs"
 	pb "go.chromium.org/tast-tests/cros/services/cros/apps"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
@@ -36,7 +37,7 @@ func init() {
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
 		Attr:         []string{"group:wwcb", "group:pasit", "pasit_camera"},
 		SoftwareDeps: []string{"chrome"},
-		Vars:         []string{"ExtCameraID"},
+		Fixture:      "wwcbCamera",
 		ServiceDeps: []string{
 			"tast.cros.browser.ChromeService",
 			"tast.cros.apps.AppsService",
@@ -62,8 +63,6 @@ func CCAUnplugExternalCamera(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
-
-	extCameraID := s.RequiredVar("ExtCameraID")
 
 	// Connect to the gRPC server on the DUT.
 	dut := s.DUT()
@@ -129,19 +128,21 @@ func CCAUnplugExternalCamera(ctx context.Context, s *testing.State) {
 	}
 	testing.ContextLog(ctx, "Found built-in camera: ", builtinDevices)
 
-	// Connect the external camera via controlling the fixture.
-	if err := utils.InitFixture(ctx); err != nil {
-		s.Fatal("Failed to initialize fixtures: ", err)
-	}
-	defer utils.CloseAllFixture(cleanupCtx)
-
 	defer func(ctx context.Context) {
 		if s.HasError() {
 			log.CollectedLogs(ctx, s.DUT(), s.OutDir())
 		}
 	}(ctx)
 
-	extCamera, err := utils.ConnectExternalCamera(ctx, dut, extCameraID)
+	tf := s.FixtValue().(*topology.TestFixture)
+	cameras := tf.Helper.DevicesByType(topology.DeviceTypeCamera)
+	if len(cameras) < 1 {
+		s.Fatal("Failed to find camera in topology")
+	}
+	enable := func(ctx context.Context) error {
+		return tf.Helper.ActivateDeviceByID(ctx, cameras[0])
+	}
+	extCamera, err := utils.ConnectExternalCamera(ctx, dut, enable)
 	if err != nil {
 		s.Fatal("Failed to plug in external camera: ", err)
 	}
@@ -163,7 +164,7 @@ func CCAUnplugExternalCamera(ctx context.Context, s *testing.State) {
 	}
 
 	// Disconnect the external camera.
-	if err := utils.ControlFixture(ctx, extCameraID, "off"); err != nil {
+	if err := tf.Helper.DeactivateDeviceByID(ctx, cameras[0]); err != nil {
 		s.Fatal("Failed to turn on fixture of external camera: ", err)
 	}
 

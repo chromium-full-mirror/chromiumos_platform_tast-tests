@@ -16,6 +16,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/log"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils/topology"
 	"go.chromium.org/tast-tests/cros/remote/dutfs"
 	pb "go.chromium.org/tast-tests/cros/services/cros/apps"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
@@ -34,7 +35,7 @@ func init() {
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
 		Attr:         []string{"group:wwcb", "group:pasit", "pasit_camera"},
 		SoftwareDeps: []string{"chrome"},
-		Vars:         []string{"ExtCameraID"},
+		Fixture:      "wwcbCamera",
 		ServiceDeps: []string{
 			"tast.cros.browser.ChromeService",
 			"tast.cros.apps.AppsService",
@@ -49,8 +50,6 @@ func CCASwitchToExternalCamera(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
-
-	extCameraID := s.RequiredVar("ExtCameraID")
 
 	// Connect to the gRPC server on the DUT.
 	dut := s.DUT()
@@ -112,18 +111,18 @@ func CCASwitchToExternalCamera(ctx context.Context, s *testing.State) {
 	}
 	testing.ContextLog(ctx, "Found built-in camera: ", builtinDevices)
 
-	if err := utils.InitFixture(ctx); err != nil {
-		s.Fatal("Failed to initialize fixtures: ", err)
-	}
-	defer utils.CloseAllFixture(cleanupCtx)
-
 	defer func(ctx context.Context) {
 		if s.HasError() {
 			log.CollectedLogs(ctx, s.DUT(), s.OutDir())
 		}
 	}(ctx)
 
-	extCamera, err := utils.ConnectExternalCamera(ctx, dut, extCameraID)
+	tf := s.FixtValue().(*topology.TestFixture)
+	enable := func(ctx context.Context) error {
+		_, err := tf.Helper.ActivateDeviceByType(ctx, topology.DeviceTypeCamera)
+		return err
+	}
+	extCamera, err := utils.ConnectExternalCamera(ctx, dut, enable)
 	if err != nil {
 		s.Fatal("Failed to plug in external camera: ", err)
 	}
