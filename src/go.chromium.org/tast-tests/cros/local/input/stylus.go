@@ -17,6 +17,15 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+// StylusAbsInfo contains the absInfo for each of the stylus ABS event codes.
+type StylusAbsInfo struct {
+	infoX        absInfo
+	infoY        absInfo
+	infoPressure absInfo
+	infoTiltX    absInfo
+	infoTiltY    absInfo
+}
+
 var hidNameRegex = regexp.MustCompile(`/([^/]+)/input/input\d+$`)
 
 // findPhysicalStylusDevInfo iterates over devices and returns devinfo for the stylus if found
@@ -78,33 +87,51 @@ func FindPhysicalStylusBatteryLevel(ctx context.Context) (bool, int, error) {
 	return true, level, nil
 }
 
-// FindPhysicalStylusResolution returns the resolution that can be used to convert stylus touch values in pixels to cm.
-// Note: 1st return value is width resolution, 2nd is height resolution
-func FindPhysicalStylusResolution(ctx context.Context) (uint32, uint32, error) {
+// findPhysicalStylusAbsInfo returns the absInfo for each of the stylus ABS axis event codes.
+func findPhysicalStylusAbsInfo(ctx context.Context) (*StylusAbsInfo, error) {
 	_, path, err := FindPhysicalStylus(ctx)
 	if err != nil {
-		return 0, 0, errors.Wrap(err, "could not find physical stylus")
+		return nil, errors.Wrap(err, "could not find physical stylus")
 	}
 
 	f, err := os.Open(path)
 	if err != nil {
-		return 0, 0, errors.Wrapf(err, "could not open stylus path (%s)", path)
+		return nil, errors.Wrapf(err, "could not open stylus path (%s)", path)
 	}
 	defer f.Close()
 
-	var infoX, infoY absInfo
+	var infoX, infoY, infoPressure, infoTiltX, infoTiltY absInfo
 	for _, entry := range []struct {
 		ec  EventCode
 		dst *absInfo
 	}{
 		{ABS_X, &infoX},
 		{ABS_Y, &infoY},
+		{ABS_PRESSURE, &infoPressure},
+		{ABS_TILT_X, &infoTiltX},
+		{ABS_TILT_Y, &infoTiltY},
 	} {
 		if err := ioctl(int(f.Fd()), evIOCGAbs(uint(entry.ec)), uintptr(unsafe.Pointer(entry.dst))); err != nil {
-			return 0, 0, errors.Wrap(err, "failed system call to request resolution from stylus")
+			return nil, errors.Wrap(err, "failed system call to request resolution from stylus")
 		}
 	}
-	return infoX.resolution, infoY.resolution, nil
+	return &StylusAbsInfo{
+		infoX:        infoX,
+		infoY:        infoY,
+		infoPressure: infoPressure,
+		infoTiltX:    infoTiltX,
+		infoTiltY:    infoTiltY,
+	}, nil
+}
+
+// FindPhysicalStylusResolution returns the resolution that can be used to convert stylus touch values in pixels to mm.
+// Note: 1st return value is width resolution, 2nd is height resolution.
+func FindPhysicalStylusResolution(ctx context.Context) (uint32, uint32, error) {
+	absInfo, err := findPhysicalStylusAbsInfo(ctx)
+	if err != nil {
+		return 0, 0, err
+	}
+	return absInfo.infoX.resolution, absInfo.infoY.resolution, nil
 }
 
 // parseHIDName parses and returns the HID device name from a /sys/devices path.
