@@ -25,6 +25,11 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+type liveCaptionParams struct {
+	browserType      browser.Type // One of browser.Type{Ash,LaCrOS}.
+	fieldTrialConfig int          // One of chrome.FieldTrialConfig{Enabled,Disabled}.
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         LiveCaption,
@@ -41,12 +46,22 @@ func init() {
 		SoftwareDeps: []string{"chrome", "ondevice_speech"},
 		Attr:         []string{"group:mainline"},
 		Params: []testing.Param{{
-			Val: browser.TypeAsh,
+			Name: "fieldtrial_testing_config_off",
+			Val:  liveCaptionParams{browser.TypeAsh, chrome.FieldTrialConfigDisable},
 		}, {
-			Name:              "lacros",
+			Name:              "lacros_fieldtrial_testing_config_off",
 			ExtraAttr:         []string{"informational"},
 			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               browser.TypeLacros,
+			Val:               liveCaptionParams{browser.TypeLacros, chrome.FieldTrialConfigDisable},
+		}, {
+			Name:      "fieldtrial_testing_config_on",
+			ExtraAttr: []string{"informational"},
+			Val:       liveCaptionParams{browser.TypeLacros, chrome.FieldTrialConfigEnable},
+		}, {
+			Name:              "lacros_fieldtrial_testing_config_on",
+			ExtraAttr:         []string{"informational"},
+			ExtraSoftwareDeps: []string{"lacros"},
+			Val:               liveCaptionParams{browser.TypeLacros, chrome.FieldTrialConfigEnable},
 		}},
 		Data: []string{
 			"live_caption.html",
@@ -64,11 +79,13 @@ func LiveCaption(ctx context.Context, s *testing.State) {
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer server.Close()
 
+	params := s.Param().(liveCaptionParams)
+
 	// Launch browser.
-	bt := s.Param().(browser.Type)
-	cr, err := browserfixt.NewChrome(ctx, bt, lacrosfixt.NewConfig(),
+	cr, err := browserfixt.NewChrome(ctx, params.browserType, lacrosfixt.NewConfig(),
 		chrome.ExtraArgs("--autoplay-policy=no-user-gesture-required"), // Allow media autoplay.
 		chrome.EnableFeatures("OnDeviceSpeechRecognition", "LayoutMediaNGContainer"),
+		chrome.FieldTrialConfig(params.fieldTrialConfig),
 	)
 	if err != nil {
 		s.Fatal("Failed to start chrome: ", err)
@@ -91,7 +108,7 @@ func LiveCaption(ctx context.Context, s *testing.State) {
 	}
 
 	// Open the test page and play the audio.
-	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, bt, server.URL+"/live_caption.html")
+	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, params.browserType, server.URL+"/live_caption.html")
 	if err != nil {
 		s.Fatal("Failed to open test web page: ", err)
 	}
