@@ -8,12 +8,15 @@ import (
 	"bufio"
 	"context"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/common/xmlrpc"
+	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -25,6 +28,13 @@ const (
 
 	maxNumParts = 5
 )
+
+// TouchHostConnectionManager manages ssh connection information between the drone and touchhost.
+type TouchHostConnectionManager struct {
+	SSHConn                *ssh.Conn
+	SSHOptions             *ssh.Options
+	TouchhostPortForwarder *ssh.Forwarder
+}
 
 // NewHMRInterface creates an XMLRPC interface through which RPC calls can be made to the HMR Touchhost.
 func NewHMRInterface(ctx context.Context, host string, port int) (*xmlrpc.CommonRPCInterface, error) {
@@ -122,4 +132,33 @@ func RemoveCommonDataErrorsFromStylusLogFile(rawFilePath, cleanedFilePath string
 	}
 	writer.Flush()
 	return nil
+}
+
+// CreateSSHTunnelToTouchhost creates a ssh tunnel between localhost port 9992 to TouchhostD's port on the Touchhost.
+func CreateSSHTunnelToTouchhost(ctx context.Context, touchhostHostname string, touchhostPort int, d *dut.DUT) (*TouchHostConnectionManager, error) {
+	sshOptions := &ssh.Options{
+		KeyDir:  d.KeyDir(),
+		KeyFile: d.KeyFile(),
+	}
+
+	err := ssh.ParseTarget(touchhostHostname, sshOptions)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to parse ssh target touchhost host (%s)", touchhostHostname)
+	}
+	sshConn, err := ssh.New(ctx, sshOptions)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to connect to touchhost host (%s) over ssh", touchhostHostname)
+	}
+
+	onFwdError := func(err error) {
+		testing.ContextLogf(ctx, "ssh forwarding error for touchhostd host %s: %s", touchhostHostname, err)
+	}
+
+	// TODO: b/343532845 - Handle finding a new local port if a port collision occurs.
+	// Forwards TouchHostD's port on TouchHost to 9992 on localhost.
+	touchhostPortForwarder, err := sshConn.ForwardLocalToRemote("tcp", "127.0.0.1:9992", "127.0.0.1:"+strconv.Itoa(touchhostPort), onFwdError)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to port forward touchhost (%s) port (%d)", touchhostHostname, touchhostPort)
+	}
+	return &TouchHostConnectionManager{SSHConn: sshConn, SSHOptions: sshOptions, TouchhostPortForwarder: touchhostPortForwarder}, nil
 }

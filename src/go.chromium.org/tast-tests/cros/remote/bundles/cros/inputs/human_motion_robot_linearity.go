@@ -17,7 +17,6 @@ import (
 	inputspb "go.chromium.org/tast-tests/cros/services/cros/inputs"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
-	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
 )
@@ -87,28 +86,9 @@ func HumanMotionRobotLinearity(ctx context.Context, s *testing.State) {
 	hostRawTouchLogFilePath := filepath.Join(s.OutDir(), "raw_"+touchLogFileName)
 
 	// Create a SSH Tunnel to connect to the TouchHost device from the remote drone.
-	sshOptions := &ssh.Options{
-		KeyDir:  s.DUT().KeyDir(),
-		KeyFile: s.DUT().KeyFile(),
-	}
-
-	err = ssh.ParseTarget(touchhostHostname, sshOptions)
+	touchhostConnectionManager, err := input.CreateSSHTunnelToTouchhost(ctx, touchhostHostname, touchhostPort, s.DUT())
 	if err != nil {
-		s.Fatalf("Failed to parse ssh target touchhost host (%s) - %s", touchhostHostname, err)
-	}
-	sshConn, err := ssh.New(ctx, sshOptions)
-	if err != nil {
-		s.Fatalf("Failed to connect to touchhost host over ssh %s - %s", touchhostHostname, err)
-	}
-
-	onFwdError := func(err error) {
-		testing.ContextLogf(ctx, "ssh forwarding error for touchhostd host %s: %s", touchhostHostname, err)
-	}
-
-	// Forwards TouchHostD's port on TouchHost to 9992 on localhost.
-	hmrSSHForwarder, err := sshConn.ForwardLocalToRemote("tcp", "127.0.0.1:9992", "127.0.0.1:"+hmrTouchhostPort.Value(), onFwdError)
-	if err != nil {
-		s.Fatalf("Failed to port forward touchhost %s port %d - %s", touchhostHostname, touchhostPort, err)
+		s.Fatal("Error setting up SSH tunnel to touchhost: ", err)
 	}
 
 	hmrInterface, err := input.NewHMRInterface(ctx, "127.0.0.1", 9992)
@@ -178,7 +158,7 @@ func HumanMotionRobotLinearity(ctx context.Context, s *testing.State) {
 		hmrInterface.RPC("StopJob").Call(ctx)
 	}
 
-	hmrSSHForwarder.Close()
+	touchhostConnectionManager.TouchhostPortForwarder.Close()
 
 	// Stop DUT evtest stylus touch data capture.
 	if _, err = DutEvtestService.StopStylusDataCapture(ctx, &empty.Empty{}); err != nil {
