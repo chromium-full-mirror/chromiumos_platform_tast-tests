@@ -11,13 +11,14 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
+	"google.golang.org/grpc"
+
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/log"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils/topology"
 	pb "go.chromium.org/tast-tests/cros/services/cros/apps"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
-	"google.golang.org/grpc"
-
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/rpc"
@@ -33,7 +34,8 @@ func init() {
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
 		Attr:         []string{"group:wwcb", "group:pasit", "pasit_storage"},
 		SoftwareDeps: []string{"chrome"},
-		Vars:         []string{"servo", "USBID"},
+		Vars:         []string{"servo"},
+		Fixture:      "wwcbStorage",
 		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.apps.AppsService", "tast.cros.ui.AutomationService"},
 		Data:         []string{"sample.txt"},
 		Params: []testing.Param{{
@@ -67,7 +69,6 @@ func PlugExternalStorageWhileSuspend(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	usbID := s.RequiredVar("USBID")
 	testParms := s.Param().(bool)
 
 	// Set up the servo attached to the DUT.
@@ -95,15 +96,12 @@ func PlugExternalStorageWhileSuspend(ctx context.Context, s *testing.State) {
 		defer pxy.Servo().RunECCommand(cleanupCtx, "tabletmode on")
 	}
 
-	// Initfixture.
-	if err := utils.InitFixture(ctx); err != nil {
-		s.Fatal("Failed to initialize fixtures: ", err)
-	}
 	// Plug external storage.
-	if err := utils.ControlFixture(ctx, usbID, "on"); err != nil {
+	tf := s.FixtValue().(*topology.TestFixture)
+	usbID, err := tf.Helper.ActivateDeviceByType(ctx, topology.DeviceTypeStorage)
+	if err != nil {
 		s.Fatal("Failed to connect to the external storage: ", err)
 	}
-	defer utils.CloseAllFixture(cleanupCtx)
 
 	defer func(ctx context.Context) {
 		if s.HasError() {
@@ -127,7 +125,7 @@ func PlugExternalStorageWhileSuspend(ctx context.Context, s *testing.State) {
 	defer cs.Close(cleanupCtx, &empty.Empty{})
 
 	// Unplug external storage.
-	if err := utils.ControlFixture(ctx, usbID, "off"); err != nil {
+	if err := tf.Helper.DeactivateDeviceByID(ctx, usbID); err != nil {
 		s.Fatal("Failed to unplug the external storage after login chrome: ", err)
 	}
 	// Suspend chrome.
@@ -135,7 +133,7 @@ func PlugExternalStorageWhileSuspend(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to suspend after login chrome and unplug external storage: ", err)
 	}
 	// Plug external storage.
-	if err := utils.ControlFixture(ctx, usbID, "on"); err != nil {
+	if err := tf.Helper.ActivateDeviceByID(ctx, usbID); err != nil {
 		s.Fatal("Failed to plug the external storage after suspend: ", err)
 	}
 	// Resume chrome.

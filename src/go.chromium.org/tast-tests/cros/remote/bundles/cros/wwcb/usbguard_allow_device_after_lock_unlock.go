@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/log"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils/topology"
 	"go.chromium.org/tast-tests/cros/services/cros/nearbyservice"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/rpc"
@@ -28,7 +29,8 @@ func init() {
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
 		Attr:         []string{"group:wwcb", "group:pasit", "pasit_storage"},
 		SoftwareDeps: []string{"chrome"},
-		Vars:         []string{"servo", "USBID"},
+		Vars:         []string{"servo"},
+		Fixture:      "wwcbStorage",
 		ServiceDeps:  []string{"tast.cros.nearbyservice.NearbyShareService"},
 	})
 }
@@ -50,8 +52,6 @@ func USBGuardAllowDeviceAfterLockUnlock(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	usbDeviceID := s.RequiredVar("USBID")
-
 	// Set up the servo attached to the DUT.
 	dut := s.DUT()
 	servoSpec, _ := s.Var("servo")
@@ -60,12 +60,6 @@ func USBGuardAllowDeviceAfterLockUnlock(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to servo: ", err)
 	}
 	defer pxy.Close(cleanupCtx)
-
-	// Initialize fixtures to find the connected devices.
-	if err := utils.InitFixture(ctx); err != nil {
-		s.Fatal("Failed to initialize fixtures: ", err)
-	}
-	defer utils.CloseAllFixture(cleanupCtx)
 
 	defer func(ctx context.Context) {
 		if s.HasError() {
@@ -84,7 +78,9 @@ func USBGuardAllowDeviceAfterLockUnlock(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	if err := utils.ControlFixture(ctx, usbDeviceID, "on"); err != nil {
+	tf := s.FixtValue().(*topology.TestFixture)
+	usbID, err := tf.Helper.ActivateDeviceByType(ctx, topology.DeviceTypeStorage)
+	if err != nil {
 		s.Fatal("Failed to control fixture to plug in the USB device: ", err)
 	}
 
@@ -128,7 +124,7 @@ func USBGuardAllowDeviceAfterLockUnlock(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to lsusb before unplugging the USB device: ", err)
 	}
-	if err := utils.ControlFixture(ctx, usbDeviceID, "off"); err != nil {
+	if err := tf.Helper.DeactivateDeviceByID(ctx, usbID); err != nil {
 		s.Fatal("Failed to control fixture to unplug the USB device: ", err)
 	}
 	afterUnplug, err := utils.GetUSBDevice(ctx, dut)
@@ -140,7 +136,7 @@ func USBGuardAllowDeviceAfterLockUnlock(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Plug in the USB device")
-	if err := utils.ControlFixture(ctx, usbDeviceID, "on"); err != nil {
+	if err := tf.Helper.ActivateDeviceByID(ctx, usbID); err != nil {
 		s.Fatal("Failed to control fixture to re-plug in the USB device: ", err)
 	}
 	if err := utils.VerifyExternalStorageMounted(ctx, dut); err != nil {

@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/log"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils/topology"
 	"go.chromium.org/tast-tests/cros/services/cros/nearbyservice"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
@@ -36,7 +37,8 @@ func init() {
 		Attr:         []string{"group:wwcb", "group:pasit", "pasit_storage"},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.nearbyservice.NearbyShareService"},
-		Vars:         []string{"servo", "USBID"},
+		Vars:         []string{"servo"},
+		Fixture:      "wwcbStorage",
 		Params: []testing.Param{{
 			Name: "normal",
 			Val:  false,
@@ -70,7 +72,6 @@ func UsbguardBlocksUnknownDevicesAtLockScreen(ctx context.Context, s *testing.St
 	defer cancel()
 
 	isSuspend := s.Param().(bool)
-	usbID := s.RequiredVar("USBID")
 	dut := s.DUT()
 	// Connect to the gRPC server on the DUT.
 	cl, err := rpc.Dial(ctx, s.DUT(), s.RPCHint())
@@ -85,11 +86,6 @@ func UsbguardBlocksUnknownDevicesAtLockScreen(ctx context.Context, s *testing.St
 		s.Fatal("Failed to connect to servo: ", err)
 	}
 	defer pxy.Close(cleanupCtx)
-
-	if err := utils.InitFixture(ctx); err != nil {
-		s.Fatal("Failed to initialize fixture: ", err)
-	}
-	defer utils.CloseAllFixture(cleanupCtx)
 
 	defer func(ctx context.Context) {
 		if s.HasError() {
@@ -153,7 +149,8 @@ func UsbguardBlocksUnknownDevicesAtLockScreen(ctx context.Context, s *testing.St
 			s.Fatal("Failed to suspend/resume on DUT after check USB storage unmounted: ", err)
 		}
 	}
-	if err := utils.ControlFixture(ctx, usbID, "on"); err != nil {
+	tf := s.FixtValue().(*topology.TestFixture)
+	if _, err := tf.Helper.ActivateDeviceByType(ctx, topology.DeviceTypeStorage); err != nil {
 		s.Fatal("Failed to open usb type c fixture: ", err)
 	}
 

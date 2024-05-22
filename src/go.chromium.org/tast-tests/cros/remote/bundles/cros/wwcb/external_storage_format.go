@@ -20,6 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/log"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils/topology"
 	"go.chromium.org/tast-tests/cros/remote/dutfs"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fingerprint/rpcdut"
 	pb "go.chromium.org/tast-tests/cros/services/cros/apps"
@@ -39,7 +40,8 @@ func init() {
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
 		Attr:         []string{"group:wwcb", "group:pasit", "pasit_storage"},
 		SoftwareDeps: []string{"chrome"},
-		Vars:         []string{"servo", "USBID"},
+		Vars:         []string{"servo"},
+		Fixture:      "wwcbStorage",
 		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.apps.AppsService"},
 		Data:         []string{"sample.txt"},
 		Params: []testing.Param{{
@@ -56,8 +58,6 @@ func ExternalStorageFormat(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
-
-	USBID := s.RequiredVar("USBID")
 
 	tabletMode := s.Param().(bool)
 
@@ -79,12 +79,6 @@ func ExternalStorageFormat(ctx context.Context, s *testing.State) {
 		defer pxy.Servo().RunECCommand(cleanupCtx, "tabletmode off")
 	}
 
-	// Initialize fixtures to find the connected devices.
-	if err := utils.InitFixture(ctx); err != nil {
-		s.Fatal("Failed to initialize fixtures: ", err)
-	}
-	defer utils.CloseAllFixture(cleanupCtx)
-
 	defer func(ctx context.Context) {
 		if s.HasError() {
 			log.CollectedLogs(ctx, s.DUT(), s.OutDir())
@@ -99,7 +93,8 @@ func ExternalStorageFormat(ctx context.Context, s *testing.State) {
 	s.Log("Mount points prior to plugging in USB devices: ", before)
 
 	// Plug in the USB devices.
-	if err := utils.ControlFixture(ctx, USBID, "on"); err != nil {
+	tf := s.FixtValue().(*topology.TestFixture)
+	if _, err := tf.Helper.ActivateDeviceByType(ctx, topology.DeviceTypeStorage); err != nil {
 		s.Fatal("Failed to control fixture to connect the external storage media: ", err)
 	}
 

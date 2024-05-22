@@ -15,6 +15,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/log"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils/topology"
 	pb "go.chromium.org/tast-tests/cros/services/cros/apps"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast-tests/cros/services/cros/wwcb"
@@ -33,15 +34,15 @@ func init() {
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
 		Attr:         []string{"group:wwcb", "group:pasit", "pasit_storage"},
 		SoftwareDeps: []string{"chrome"},
-		Vars:         []string{"servo", "USBID"},
+		Vars:         []string{"servo"},
 		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.apps.AppsService", "tast.cros.wwcb.ExternalStorageService"},
 		Data:         []string{"sample.txt"},
 		Params: []testing.Param{{
 			Name:    "clamshell_mode",
-			Fixture: "enableServoAndDisableTabletMode",
+			Fixture: "wwcbStorageEnableServoAndDisableTabletMode",
 		}, {
 			Name:    "tablet_mode",
-			Fixture: "enableServoAndTabletMode",
+			Fixture: "wwcbStorageEnableServoAndTabletMode",
 		}},
 	})
 }
@@ -51,16 +52,8 @@ func ExternalStorageEject(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	USBID := s.RequiredVar("USBID")
-
 	// Set up the servo attached to the DUT.
 	dut := s.DUT()
-
-	// Initialize fixtures to find the connected devices.
-	if err := utils.InitFixture(ctx); err != nil {
-		s.Fatal("Failed to initialize fixtures: ", err)
-	}
-	defer utils.CloseAllFixture(cleanupCtx)
 
 	defer func(ctx context.Context) {
 		if s.HasError() {
@@ -76,7 +69,9 @@ func ExternalStorageEject(ctx context.Context, s *testing.State) {
 	s.Log("Following mount points were found prior to plugging in USB devices: ", mountPointsBeforePlugInUSB)
 
 	// Plug in the USB devices.
-	if err := utils.ControlFixture(ctx, USBID, "on"); err != nil {
+	tf := s.FixtValue().(*topology.TestFixture)
+	usbID, err := tf.Helper.ActivateDeviceByType(ctx, topology.DeviceTypeStorage)
+	if err != nil {
 		s.Fatal("Failed to control fixture to connect the external storage media: ", err)
 	}
 
@@ -127,12 +122,12 @@ func ExternalStorageEject(ctx context.Context, s *testing.State) {
 	}
 
 	// Unplug the USB devices.
-	if err := utils.ControlFixture(ctx, USBID, "off"); err != nil {
+	if err := tf.Helper.DeactivateDeviceByID(ctx, usbID); err != nil {
 		s.Fatal("Failed to control fixture to disconnect the external storage media after eject: ", err)
 	}
 
 	// Plug in the USB devices.
-	if err := utils.ControlFixture(ctx, USBID, "on"); err != nil {
+	if err := tf.Helper.ActivateDeviceByID(ctx, usbID); err != nil {
 		s.Fatal("Failed to control fixture to connect the external storage media after eject: ", err)
 	}
 

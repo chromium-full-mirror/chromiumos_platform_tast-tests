@@ -12,17 +12,18 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
+	"google.golang.org/grpc"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/log"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils/topology"
 	"go.chromium.org/tast-tests/cros/remote/dutfs"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
-	"google.golang.org/grpc"
 )
 
 func init() {
@@ -34,8 +35,8 @@ func init() {
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
 		Attr:         []string{"group:wwcb", "group:pasit", "pasit_storage"},
 		SoftwareDeps: []string{"chrome"},
-		Vars:         []string{"USBID"},
 		Data:         []string{"sample.txt"},
+		Fixture:      "wwcbStorage",
 		ServiceDeps: []string{
 			"tast.cros.browser.ChromeService",
 		},
@@ -58,8 +59,6 @@ func CopyAndMoveFilesExternalStorage(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	usbID := s.RequiredVar("USBID")
-
 	// Connect to the gRPC server on the DUT.
 	cl, err := rpc.Dial(ctx, s.DUT(), s.RPCHint())
 	if err != nil {
@@ -77,12 +76,6 @@ func CopyAndMoveFilesExternalStorage(ctx context.Context, s *testing.State) {
 
 	dut := s.DUT()
 	fs := dutfs.NewClient(cl.Conn)
-
-	// Initialize fixtures to find the connected devices.
-	if err := utils.InitFixture(ctx); err != nil {
-		s.Fatal("Failed to initialize fixtures: ", err)
-	}
-	defer utils.CloseAllFixture(cleanupCtx)
 
 	defer func(ctx context.Context) {
 		if s.HasError() {
@@ -108,9 +101,11 @@ func CopyAndMoveFilesExternalStorage(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get initial mount points: ", err)
 	}
 
-	if err := utils.ControlFixture(ctx, usbID, "on"); err != nil {
+	tf := s.FixtValue().(*topology.TestFixture)
+	if _, err := tf.Helper.ActivateDeviceByType(ctx, topology.DeviceTypeStorage); err != nil {
 		s.Fatal("Failed to plug the external storage media: ", err)
 	}
+
 	usbCount := 1
 	const verifyTimeout, verifyInterval = 10 * time.Second, 1 * time.Second
 	// Expect number of USB devices is not less than number of input parameters.
