@@ -6,6 +6,7 @@ package bruschetta
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -65,6 +66,12 @@ const (
 	httpAddr          = "localhost:12345"
 	httpInstallerPath = "files/refvm.qcow2"
 	httpPflashPath    = "files/refvm_VARS.fd"
+)
+
+var bruschettaVMConfigurationVar = testing.RegisterVarString(
+	"bruschetta.vm_configuration",
+	"",
+	"Path to a bruschetta VM configuration on the DUT. This is a json object representing a BruschettaVMConfiguration entry, see below refvmConfiguratoin func for a good example. If unset the default refvm configuration is used.",
 )
 
 // BruschettaHwDeps prevents tests from running on devices without enough storage or RAM.
@@ -162,6 +169,41 @@ type FixtureData struct {
 	KB           *input.KeyboardEventWriter
 }
 
+func refvmConfiguration(s *testing.FixtState) map[string]interface{} {
+	imageHash, err := ioutil.ReadFile(s.DataPath(referenceVMInstallerHash))
+	if err != nil {
+		s.Fatal("Failed to read disk image hash: ", err)
+	}
+
+	pflashHash, err := ioutil.ReadFile(s.DataPath(referenceVMPflashHash))
+	if err != nil {
+		s.Fatal("Failed to read pflash hash: ", err)
+	}
+
+	return map[string]interface{}{
+		"glinux-latest": map[string]interface{}{
+			"name":          constants.BruschettaVMName,
+			"enabled_state": "INSTALL_ALLOWED",
+			"installer_image_x86_64": map[string]interface{}{
+				"url":  fmt.Sprintf("http://%s/%s", httpAddr, httpInstallerPath),
+				"hash": strings.TrimSpace(string(imageHash)),
+			},
+			"uefi_pflash_x86_64": map[string]interface{}{
+				"url":  fmt.Sprintf("http://%s/%s", httpAddr, httpPflashPath),
+				"hash": strings.TrimSpace(string(pflashHash)),
+			},
+			"vtpm": map[string]interface{}{
+				"enabled":              true,
+				"policy_update_action": "NONE",
+			},
+			"oem_strings": []interface{}{
+				"refvm:install=true",
+				"refvm:noninteractive=true",
+			},
+		},
+	}
+}
+
 func (f *bruschettaFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	// Use a shortened context for setup operations to reserve time for cleanup.
 	cleanupCtx := ctx
@@ -187,40 +229,25 @@ func (f *bruschettaFixture) SetUp(ctx context.Context, s *testing.FixtState) int
 
 	s.Log("Setting chrome policy")
 
-	imageHash, err := ioutil.ReadFile(s.DataPath(referenceVMInstallerHash))
-	if err != nil {
-		s.Fatal("Failed to read disk image hash: ", err)
-	}
+	var configVal map[string]interface{}
+	if cfgPath := bruschettaVMConfigurationVar.Value(); cfgPath != "" {
+		s.Logf("Loading bruschetta vm configuration from %q", cfgPath)
 
-	pflashHash, err := ioutil.ReadFile(s.DataPath(referenceVMPflashHash))
-	if err != nil {
-		s.Fatal("Failed to read pflash hash: ", err)
+		b, err := os.ReadFile(cfgPath)
+		if err != nil {
+			s.Fatalf("Failed to read bruschetta.vm_configuration file %q: %v", cfgPath, err)
+		}
+		if err := json.Unmarshal(b, &configVal); err != nil {
+			s.Fatalf("Failed to unmarshal %q as json: %v", cfgPath, err)
+		}
+	} else {
+		s.Log("Using default refvm configuration")
+		configVal = refvmConfiguration(s)
 	}
 
 	f.policy = &policy.BruschettaVMConfiguration{
 		Stat: policy.StatusSet,
-		Val: map[string]interface{}{
-			"glinux-latest": map[string]interface{}{
-				"name":          constants.BruschettaVMName,
-				"enabled_state": "INSTALL_ALLOWED",
-				"installer_image_x86_64": map[string]interface{}{
-					"url":  fmt.Sprintf("http://%s/%s", httpAddr, httpInstallerPath),
-					"hash": strings.TrimSpace(string(imageHash)),
-				},
-				"uefi_pflash_x86_64": map[string]interface{}{
-					"url":  fmt.Sprintf("http://%s/%s", httpAddr, httpPflashPath),
-					"hash": strings.TrimSpace(string(pflashHash)),
-				},
-				"vtpm": map[string]interface{}{
-					"enabled":              true,
-					"policy_update_action": "NONE",
-				},
-				"oem_strings": []interface{}{
-					"refvm:install=true",
-					"refvm:noninteractive=true",
-				},
-			},
-		},
+		Val:  configVal,
 	}
 
 	if err := policyutil.ServeAndVerify(ctx, f.fakeDMS, f.chrome, []policy.Policy{f.policy}); err != nil {
