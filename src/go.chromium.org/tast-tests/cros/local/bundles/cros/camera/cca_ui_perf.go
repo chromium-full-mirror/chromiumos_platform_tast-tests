@@ -32,9 +32,9 @@ func init() {
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Attr:         []string{"group:crosbolt"},
 		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinOrVividCamera},
-		Fixture:      "ccaTestBridgeReady",
 		Params: []testing.Param{{
 			ExtraAttr: []string{"crosbolt_perbuild"},
+			Fixture:   "ccaTestBridgeReady",
 			// Six subtests each have 5 mins timeout. 5mins * 6 = 30 minutes.
 			Timeout: 30 * time.Minute,
 			Val: param{
@@ -44,6 +44,17 @@ func init() {
 		}, {
 			Name:      "long",
 			ExtraAttr: []string{"crosbolt_nightly"},
+			Fixture:   "ccaTestBridgeReady",
+			// Six subtests each have 20 mins timeout. 20mins * 6 = 120 minutes.
+			Timeout: 120 * time.Minute,
+			Val: param{
+				subtestTimeout:  20 * time.Minute,
+				measureDuration: 5 * time.Minute,
+			},
+		}, {
+			Name:      "long_vcd_utility",
+			ExtraAttr: []string{"crosbolt_nightly"},
+			Fixture:   "ccaTestBridgeReadyWithVCDInUtilityProcess",
 			// Six subtests each have 20 mins timeout. 20mins * 6 = 120 minutes.
 			Timeout: 120 * time.Minute,
 			Val: param{
