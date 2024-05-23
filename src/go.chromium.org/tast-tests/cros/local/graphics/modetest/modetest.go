@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Package graphics contains graphics-related utility functions for local tests.
-package graphics
+// Package modetest contains modetest-related utility functions for local tests.
+package modetest
 
 import (
 	"context"
@@ -161,8 +161,8 @@ func DumpModetestOnError(ctx context.Context, options, outDir string, hasError f
 	}
 }
 
-// ModetestEncoders returns the list of encoders parsed from modetest.
-func ModetestEncoders(ctx context.Context) ([]*Encoder, error) {
+// Encoders returns the list of encoders parsed from modetest.
+func Encoders(ctx context.Context) ([]*Encoder, error) {
 	output, err := testexec.CommandContext(ctx, "modetest", "-e").Output()
 	if err != nil {
 		return nil, err
@@ -225,8 +225,8 @@ func splitAndConvertInt(input string) ([]uint32, error) {
 	return result, nil
 }
 
-// ModetestConnectors returns the list of connectors parsed from modetest.
-func ModetestConnectors(ctx context.Context) ([]*Connector, error) {
+// Connectors returns the list of connectors parsed from modetest.
+func Connectors(ctx context.Context) ([]*Connector, error) {
 	output, err := testexec.CommandContext(ctx, "modetest", "-c").Output()
 	if err != nil {
 		return nil, err
@@ -324,7 +324,7 @@ func ModetestConnectors(ctx context.Context) ([]*Connector, error) {
 
 // NumberOfOutputsConnected returns the number of connected connectors from modetest.
 func NumberOfOutputsConnected(ctx context.Context) (int, error) {
-	connectors, err := ModetestConnectors(ctx)
+	connectors, err := Connectors(ctx)
 	if err != nil {
 		return 0, err
 	}
@@ -337,8 +337,8 @@ func NumberOfOutputsConnected(ctx context.Context) (int, error) {
 	return connected, nil
 }
 
-// ModetestCrtcs returns the list of crtcs parsed from modetest.
-func ModetestCrtcs(ctx context.Context) ([]*Crtc, error) {
+// Crtcs returns the list of crtcs parsed from modetest.
+func Crtcs(ctx context.Context) ([]*Crtc, error) {
 	output, err := testexec.CommandContext(ctx, "modetest", "-p").Output()
 	if err != nil {
 		return nil, err
@@ -484,19 +484,19 @@ func parseMode(matches []string) (*Mode, error) {
 	}, nil
 }
 
-// ModetestConnectedDisplays returns of list of displays which are connected according to modetest.
-func ModetestConnectedDisplays(ctx context.Context) ([]Display, error) {
+// ConnectedDisplays returns of list of displays which are connected according to modetest.
+func ConnectedDisplays(ctx context.Context) ([]Display, error) {
 	var displays []Display
 
-	connectors, err := ModetestConnectors(ctx)
+	connectors, err := Connectors(ctx)
 	if err != nil {
 		return displays, errors.Wrap(err, "failed to get connectors from modetest")
 	}
-	encoders, err := ModetestEncoders(ctx)
+	encoders, err := Encoders(ctx)
 	if err != nil {
 		return displays, errors.Wrap(err, "failed to get encoders from modetest")
 	}
-	crtcs, err := ModetestCrtcs(ctx)
+	crtcs, err := Crtcs(ctx)
 	if err != nil {
 		return displays, errors.Wrap(err, "failed to get CRTCs from modetest")
 	}

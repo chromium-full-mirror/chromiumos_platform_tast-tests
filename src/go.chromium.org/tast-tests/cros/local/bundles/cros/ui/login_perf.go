@@ -36,7 +36,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/disk"
-	"go.chromium.org/tast-tests/cros/local/graphics"
+	"go.chromium.org/tast-tests/cros/local/graphics/modetest"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/perfutil"
 	"go.chromium.org/tast-tests/cros/local/session"
@@ -1177,7 +1177,7 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 
 	url := server.URL + "/animation.html"
 
-	displCount, err := graphics.NumberOfOutputsConnected(ctx)
+	displCount, err := modetest.NumberOfOutputsConnected(ctx)
 	if err != nil {
 		s.Fatal("Failed to get connected displays count: ", err)
 	}

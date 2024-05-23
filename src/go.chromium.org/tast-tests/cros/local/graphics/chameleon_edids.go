@@ -8,6 +8,7 @@ import (
 	"context"
 
 	"go.chromium.org/tast-tests/cros/common/chameleon"
+	"go.chromium.org/tast-tests/cros/local/graphics/modetest"
 	"go.chromium.org/tast/core/errors"
 )
 
@@ -82,7 +83,7 @@ var edids = map[EdidID]string{
 // ChameleonSetEdid sets EDIDs for the Chameleon
 func ChameleonSetEdid(ctx context.Context, cham chameleon.Chameleond, port chameleon.PortID) error {
 	// TODO(b:273965028): EDID should be specified with EdidID parameter.
-	edid, err := EdidStringToBytes(edids[HPM27fd])
+	edid, err := modetest.EdidStringToBytes(edids[HPM27fd])
 	if err != nil {
 		return errors.Wrap(err, "failed to convert EDID string to bytes")
 	}

@@ -8,7 +8,7 @@ import (
 	"context"
 
 	"go.chromium.org/tast-tests/cros/local/graph"
-	"go.chromium.org/tast-tests/cros/local/graphics"
+	"go.chromium.org/tast-tests/cros/local/graphics/modetest"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -84,11 +84,11 @@ func init() {
 
 // Connector checks various attributes of the connectors settings via modetest.
 func Connector(ctx context.Context, s *testing.State) {
-	connectors, err := graphics.ModetestConnectors(ctx)
+	connectors, err := modetest.Connectors(ctx)
 	if err != nil {
 		s.Fatal("Failed to get connectors: ", err)
 	}
-	defer graphics.DumpModetestOnError(ctx, "-c", s.OutDir(), s.HasError)
+	defer modetest.DumpModetestOnError(ctx, "-c", s.OutDir(), s.HasError)
 
 	if err := checkUniqueEncoders(ctx, connectors); err != nil {
 		s.Error("Failed to have check unique encoders: ", err)
@@ -96,7 +96,7 @@ func Connector(ctx context.Context, s *testing.State) {
 }
 
 // checkUniqueEncoders checks if every connector can be assigned a unique encoder concurrently.
-func checkUniqueEncoders(ctx context.Context, connectors []*graphics.Connector) error {
+func checkUniqueEncoders(ctx context.Context, connectors []*modetest.Connector) error {
 	g := graph.NewBipartite()
 	for _, connector := range connectors {
 		for _, encoderID := range connector.Encoders {

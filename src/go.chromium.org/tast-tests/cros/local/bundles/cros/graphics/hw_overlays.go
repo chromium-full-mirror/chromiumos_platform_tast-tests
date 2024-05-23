@@ -18,7 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/graphics"
+	"go.chromium.org/tast-tests/cros/local/graphics/modetest"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -134,7 +134,7 @@ func init() {
 			Name:              "canvas_2d_vulkan",
 			Fixture:           "chromeGraphicsVulkan",
 			ExtraSoftwareDeps: []string{"vulkan_composite"},
-			ExtraData: []string{canvas2DFile},
+			ExtraData:         []string{canvas2DFile},
 			Val: pageTestParams{
 				browserType: browser.TypeAsh,
 				file:        canvas2DFile,
@@ -144,7 +144,7 @@ func init() {
 			Name:              "canvas_3d_vulkan",
 			Fixture:           "chromeGraphicsVulkan",
 			ExtraSoftwareDeps: []string{"vulkan_composite"},
-			ExtraData: []string{canvas3DFile},
+			ExtraData:         []string{canvas3DFile},
 			Val: pageTestParams{
 				browserType: browser.TypeAsh,
 				file:        canvas3DFile,
@@ -154,7 +154,7 @@ func init() {
 			Name:              "video_vulkan",
 			Fixture:           "chromeGraphicsVulkan",
 			ExtraSoftwareDeps: []string{"vulkan_composite"},
-			ExtraData: []string{videoFile, videoMedia},
+			ExtraData:         []string{videoFile, videoMedia},
 			Val: pageTestParams{
 				browserType: browser.TypeAsh,
 				file:        videoFile,
@@ -223,7 +223,7 @@ func checkNumOverlays(ctx context.Context) error {
 
 func HwOverlays(ctx context.Context, s *testing.State) {
 	// Check if we have the minimum required number of overlays through "modetest -p".
-	out, err := graphics.GetModeTestPlanes(ctx)
+	out, err := modetest.GetModeTestPlanes(ctx)
 	if err != nil {
 		s.Fatalf("Failed to get number of modetest planes: %s", err)
 	}

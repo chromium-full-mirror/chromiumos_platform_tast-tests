@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/graphics"
+	"go.chromium.org/tast-tests/cros/local/graphics/modetest"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -139,7 +140,7 @@ func FPS(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to collect vblank trace: ", err)
 			}
 
-			crtcs, err := graphics.ModetestCrtcs(ctx)
+			crtcs, err := modetest.Crtcs(ctx)
 			if err != nil {
 				s.Fatal("Failed to read crtcs from modetest: ", err)
 			}

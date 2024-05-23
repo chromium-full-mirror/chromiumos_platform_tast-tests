@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/graphics"
+	"go.chromium.org/tast-tests/cros/local/graphics/modetest"
 	"go.chromium.org/tast-tests/cros/local/media/logging"
 	"go.chromium.org/tast-tests/cros/local/media/oop"
 	"go.chromium.org/tast-tests/cros/local/media/webrtc"
@@ -420,7 +421,7 @@ func setupCapture(ctx context.Context, conn *chrome.Conn, tconn *chrome.TestConn
 
 // displayResolution gets the resolution of the primary connected display.
 func displayResolution(ctx context.Context) (width, height int, err error) {
-	displays, err := graphics.ModetestConnectedDisplays(ctx)
+	displays, err := modetest.ConnectedDisplays(ctx)
 	if err != nil {
 		return -1, -1, err
 	}

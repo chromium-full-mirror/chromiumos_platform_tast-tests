@@ -18,7 +18,7 @@ import (
 	"strings"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
-	"go.chromium.org/tast-tests/cros/local/graphics"
+	"go.chromium.org/tast-tests/cros/local/graphics/modetest"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -188,7 +188,7 @@ func GetRefreshRateArgs(ctx context.Context) (string, string, string, string, er
 	refreshRate := 60.0
 	width := "1280"
 	height := "720"
-	connectors, err := graphics.ModetestConnectors(ctx)
+	connectors, err := modetest.Connectors(ctx)
 	if err != nil {
 		return targetRefreshRate, refreshMs, width, height, errors.Wrap(err, "failed to get connectors")
 	}

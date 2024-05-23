@@ -22,7 +22,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
-	"go.chromium.org/tast-tests/cros/local/graphics"
+	"go.chromium.org/tast-tests/cros/local/graphics/modetest"
 	"go.chromium.org/tast-tests/cros/local/session"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -87,7 +87,7 @@ func CheckTBTDevice(expected bool) error {
 //
 // These two signals are used as to determine whether a DP monitor is successfully connected and showing the extended screen.
 func FindConnectedDPMonitor(ctx context.Context, tc *chrome.TestConn) error {
-	connectors, err := graphics.ModetestConnectors(ctx)
+	connectors, err := modetest.Connectors(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to get connectors")
 	}

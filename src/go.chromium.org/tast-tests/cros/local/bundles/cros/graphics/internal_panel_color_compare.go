@@ -20,7 +20,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/graphics"
+	"go.chromium.org/tast-tests/cros/local/graphics/modetest"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -487,7 +487,7 @@ func calculateWeightedMean(intensities, counts []float64) float64 {
 }
 
 func getPanelName(ctx context.Context) string {
-	connectors, err := graphics.ModetestConnectors(ctx)
+	connectors, err := modetest.Connectors(ctx)
 	if err != nil {
 		return "Failed to get the panel name" + err.Error()
 	}

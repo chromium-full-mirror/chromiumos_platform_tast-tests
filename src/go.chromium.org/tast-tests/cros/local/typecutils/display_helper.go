@@ -24,7 +24,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
-	"go.chromium.org/tast-tests/cros/local/graphics"
+	"go.chromium.org/tast-tests/cros/local/graphics/modetest"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -37,7 +37,7 @@ const displayInfoFile = "/sys/kernel/debug/dri/0/i915_display_info"
 func FindConnectedDisplay(ctx context.Context, totalDisplays int) error {
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		displayNames := []string{"HDMI", "DP"}
-		connectors, err := graphics.ModetestConnectors(ctx)
+		connectors, err := modetest.Connectors(ctx)
 		if err != nil {
 			return errors.Wrap(err, "failed to get connectors")
 		}
