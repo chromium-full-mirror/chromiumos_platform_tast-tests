@@ -19,8 +19,9 @@ func init() {
 		Desc:         "Verify that middle-layer DNS redirects hosts using dnsmasq",
 		Contacts:     []string{"cros-ufo-testing@google.com", "hyungtaekim@chromium.org"},
 		BugComponent: "b:1528139", // ChromeOS > EngProd > Software > Trust & Safety > UFO Testing
-		Attr:         []string{"group:mainline", "group:hw_agnostic", "informational"},
-		Timeout:      2 * time.Minute,
+		// TODO(b/342085937): Disable continuous testing for troubleshooting
+		// Attr:         []string{"group:mainline", "group:hw_agnostic", "informational"},
+		Timeout: 2 * time.Minute,
 	})
 }
 

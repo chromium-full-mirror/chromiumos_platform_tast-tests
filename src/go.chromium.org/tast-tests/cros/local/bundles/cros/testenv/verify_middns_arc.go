@@ -26,7 +26,8 @@ func init() {
 		Desc:         "Verify that a mid DNS server redirects hosts for ARC VM",
 		Contacts:     []string{"cros-ufo-testing@google.com", "hyungtaekim@chromium.org"},
 		BugComponent: "b:1528139", // ChromeOS > EngProd > Software > Trust & Safety > UFO Testing
-		Attr:         []string{"group:mainline", "group:hw_agnostic", "informational"},
+		// TODO(b/342085937): Disable continuous testing for troubleshooting
+		// Attr:         []string{"group:mainline", "group:hw_agnostic", "informational"},
 		SoftwareDeps: []string{"chrome", "gaia", "arc"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		VarDeps:      []string{"ui.gaiaPoolDefault"},

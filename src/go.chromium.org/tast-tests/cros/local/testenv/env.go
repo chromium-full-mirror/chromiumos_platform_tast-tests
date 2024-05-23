@@ -95,6 +95,9 @@ func NewBase(ctx context.Context, name string, opts ...Option) (*BaseEnv, error)
 		b.shouldRedirect = len(b.redirectMap) > 0
 	}
 
+	// TODO(b/342085937): Remove the line below to turn back on DNS based redirection after troubleshooting login failure by an invalid DNS IP entry.
+	b.shouldRedirect = false
+
 	// Configure redirection for the given hosts using either a DNS server or /etc/hosts updater.
 	if b.shouldRedirect {
 		midDNS := middns.NewDNSServer()
