@@ -35,13 +35,22 @@ func Not(m QueryMatcher) QueryMatcher {
 	}
 }
 
+// dig runs `dig` command.
+func dig(ctx context.Context, host string) (string, error) {
+	out, err := testexec.CommandContext(ctx, "dig", host).CombinedOutput()
+	if status, ok := testexec.ExitCode(err); !ok || status != 0 {
+		return "", errors.Errorf("dig: %v not reachable with error: %v", host, status)
+	}
+	return string(out), nil
+}
+
 // digMatch runs `dig` and check if the output satisfies the given matcher.
 func digMatch(ctx context.Context, host string, m QueryMatcher) error {
-	out, err := testexec.CommandContext(ctx, "dig", host).Output()
+	out, err := dig(ctx, host)
 	if err != nil {
 		return errors.Wrap(err, "failed to run dig")
 	}
-	if !m(string(out)) {
+	if !m(out) {
 		return errors.Errorf("failed to dig match host: %v", host)
 	}
 	return nil

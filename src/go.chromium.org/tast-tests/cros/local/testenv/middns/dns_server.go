@@ -36,6 +36,7 @@ const (
 // DNSServer represents a middle-layer DNS server running on a DUT.
 type DNSServer struct {
 	IP           string
+	defaultIPs   []string
 	pidFileName  string
 	confFileName string
 	confArgs     []string
@@ -133,14 +134,26 @@ func (s *DNSServer) Start(ctx context.Context, hostmap map[string]string) (retEr
 		return errors.Wrap(err, "failed to find default service")
 	}
 	s.shillService = service
-	if err := s.setStaticIPNameServers(ctx, []string{s.IP}); err != nil {
+
+	// Save the static DNS IP that has been set before we update it.
+	// Mostly this is just an empty list in valid test condition.
+	defaultIPs, err := s.getStaticIPNameServers(ctx)
+	testing.ContextLog(ctx, "default DNS was set to: ", defaultIPs)
+	if err != nil {
+		return errors.Wrap(err, "failed to get static IP of name servers")
+	}
+	s.defaultIPs = defaultIPs
+
+	if err := s.setStaticIPNameServers(ctx, []string{
+		s.IP,
+	}); err != nil {
 		return errors.Wrap(err, "failed to set the DNS server")
 	}
 	testing.ContextLog(ctx, "DNS server static IP address set to: ", s.shillService)
 
 	// Final health check to ensure that mid DNS works as expected.
 	if err := s.healthCheck(ctx); err != nil {
-		return errors.Wrap(err, "failed to health check mid DNS")
+		return errors.Wrap(err, "mid DNS is not healthy, failed to redirect")
 	}
 	return nil
 }
@@ -159,9 +172,20 @@ func (s *DNSServer) Close(ctx context.Context) error {
 	}()
 
 	var err error
-	// Clear the static IP of the DNS server that has been set.
+
+	// Confirm that the current nameserver IP is the mid DNS.
+	currentIPs, err := s.getStaticIPNameServers(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get static IP of name servers")
+	}
+	if len(currentIPs) != 1 || currentIPs[0] != s.IP {
+		return errors.Wrapf(err, "static IP config should only have the mid DNS IP on cleanup, actual: %v, expected: %v", currentIPs, s.IP)
+	}
+
+	// Reset the static IP of the DNS server to the one saved on Start (expected empty).
 	if s.shillService != nil {
-		if err = s.setStaticIPNameServers(ctx, []string{}); err != nil {
+		testing.ContextLogf(ctx, "DNS server IP reset to %v, from %v", s.defaultIPs, s.IP)
+		if err = s.setStaticIPNameServers(ctx, s.defaultIPs); err != nil {
 			err = errors.Wrap(err, "failed to reset the DNS IP after use")
 		}
 	}
@@ -177,6 +201,12 @@ func (s *DNSServer) Close(ctx context.Context) error {
 		err = errors.Wrap(err, "failed to get proxy pid")
 	} else if err := testexec.CommandContext(ctx, "kill", fmt.Sprintf("%d", pid)).Run(); err != nil {
 		err = errors.Wrap(err, "failed to kill dnsmasq process")
+	}
+
+	// Safeguard: Ensure that the current DNS can resolve a hostname after it is reset to the default.
+	testHost := "google.com"
+	if _, err = dig(ctx, testHost); err != nil {
+		err = errors.Wrapf(err, "failed to resolve %v by the current DNS: %v", testHost, s.defaultIPs)
 	}
 
 	if err != nil {
@@ -291,10 +321,10 @@ func (s *DNSServer) configureDnsmasq(ctx context.Context, hostmap map[string]str
 		return errors.Wrap(err, "failed to create new dnsmasq.conf")
 	}
 	defer fd.Close()
-	for _, arg := range args {
-		if _, err := fd.WriteString(arg + "\n"); err != nil {
-			return errors.Wrap(err, "failed to write dnsmasq.conf")
-		}
+	config := strings.Join(args, "\n")
+	testing.ContextLog(ctx, "Using the dnsmasq conf: ", config)
+	if _, err := fd.WriteString(config); err != nil {
+		return errors.Wrap(err, "failed to write dnsmasq.conf")
 	}
 	s.confArgs = args
 	s.confFileName = fd.Name()
