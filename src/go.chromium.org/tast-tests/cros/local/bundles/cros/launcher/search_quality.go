@@ -177,6 +177,17 @@ func init() {
 				ExtraAttr: []string{"group:hw_agnostic"},
 			},
 			{
+				Name:    "best_match_personalization_screen_saver",
+				Fixture: fixture.NormalLauncherSearch,
+				Val: searchQualityTestCase{
+					query:          "screen saver",
+					useRegex:       false,
+					expectedResult: "Screen saver",
+					category:       "Best Match",
+				},
+				ExtraAttr: []string{"group:hw_agnostic"},
+			},
+			{
 				Name:    "best_match_settings_bluetooth",
 				Fixture: fixture.NormalLauncherSearch,
 				Val: searchQualityTestCase{
@@ -236,12 +247,12 @@ func init() {
 
 			// --- Help app test cases. ---
 			{
-				Name:    "help_new_tab",
-				Fixture: fixture.NormalLauncherSearch,
+				Name:    "help_change_channel",
+				Fixture: fixture.NormalLauncherSearchWithOOBE,
 				Val: searchQualityTestCase{
-					query:          "new tab",
+					query:          "change channel",
 					useRegex:       false,
-					expectedResult: "Open the link in a new tab, Shortcuts, Drag the link to a blank area on the tab strip",
+					expectedResult: "Switch between stable, beta and dev software",
 					category:       "Help",
 				},
 				ExtraAttr: []string{"group:hw_agnostic"},
@@ -302,7 +313,7 @@ func SearchQuality(ctx context.Context, s *testing.State) {
 	}
 }
 
-// checkOmnibox check ominibox when the query search failed.
+// checkOmnibox check omnibox when the query search failed.
 func checkOmnibox(ctx context.Context, s *testing.State, cr *chrome.Chrome, kb *input.KeyboardEventWriter, query string) {
 	if _, err := cr.NewConn(ctx, "chrome://omnibox"); err != nil {
 		s.Log("Failed to open omnibox: ", err)
