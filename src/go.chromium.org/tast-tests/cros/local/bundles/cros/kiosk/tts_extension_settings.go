@@ -109,6 +109,11 @@ func TTSExtensionSettings(ctx context.Context, s *testing.State) {
 		if _, err = lacrosproc.Root(ctx, tconn); err != nil {
 			s.Fatal("Failed to get lacros proc: ", err)
 		}
+		s.Log("http://b/281993208 sleep 5 seconds before checking UI tree in lacros")
+		// GoBigSleepLint: TODO(b/281993208) lacros needs some time before we can check the UI tree.
+		if err := testing.Sleep(ctx, 5*time.Second); err != nil {
+			s.Fatal("Failed to sleep before checking UI tree in lacros: ", err)
+		}
 	}
 
 	// Mute the device to avoid noisiness.
