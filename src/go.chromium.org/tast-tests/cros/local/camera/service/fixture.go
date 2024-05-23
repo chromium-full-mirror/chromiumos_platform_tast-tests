@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/camera/testutil"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/upstart"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -41,28 +42,31 @@ func init() {
 		BugComponent:    "b:167281", // ChromeOS > Platform > Technologies > Camera
 		Impl:            &serviceFixture{request: restartService},
 		Parent:          fixture.CameraEnumerated,
-		SetUpTimeout:    chrome.LoginTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
+		SetUpTimeout:    serviceTimeout,
+		ResetTimeout:    serviceTimeout,
+		TearDownTimeout: serviceTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            fixture.CameraConnectorReady,
 		Desc:            "The camera connector is ready, with all built-in cameras enumerated",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "hidenorik@chromium.org"},
 		BugComponent:    "b:167281", // ChromeOS > Platform > Technologies > Camera
-		Impl:            &connectorFixture{},
-		Parent:          fixture.CameraServiceReady,
-		SetUpTimeout:    chrome.LoginTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
+		Impl:            &serviceFixture{request: startServiceWithConnector},
+		Parent:          fixture.CameraEnumerated,
+		SetUpTimeout:    serviceTimeout + chrome.LoginTimeout,
+		ResetTimeout:    serviceTimeout,
+		TearDownTimeout: serviceTimeout + chrome.ResetTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            fixture.CameraConnectorRestarted,
 		Desc:            "The camera connector is ready, with all built-in cameras enumerated & service restarted",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "hidenorik@chromium.org"},
 		BugComponent:    "b:167281", // ChromeOS > Platform > Technologies > Camera
-		Impl:            &connectorFixture{},
-		Parent:          fixture.CameraServiceRestarted,
-		SetUpTimeout:    chrome.LoginTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
+		Impl:            &serviceFixture{request: restartServiceWithConnector},
+		Parent:          fixture.CameraEnumerated,
+		SetUpTimeout:    serviceTimeout + chrome.LoginTimeout,
+		ResetTimeout:    serviceTimeout,
+		TearDownTimeout: serviceTimeout + chrome.ResetTimeout,
 	})
 	// Fixture that does not ensure all built-in cameras are enumerated; intended for kernel testing.
 	testing.AddFixture(&testing.Fixture{
@@ -80,22 +84,44 @@ func init() {
 type serviceRequest uint
 
 const (
-	// startService ensures cros-camera service is started in Setup() and Reset().
+	// startService ensures cros-camera service is started.
 	startService serviceRequest = iota
-	// stopService ensures cros-camera service is stopped in Setup() and Reset().
+	// stopService ensures cros-camera service is stopped.
 	stopService
-	// restartService ensures cros-camera service is restarted in Setup(), Reset(), and TearDown().
+	// restartService ensures cros-camera service is restarted.
 	// This should be used when clean-ups cannot be run reliably, e.g. in suspend test.
 	restartService
+	// startServiceWithConnector ensures cros-camera service is started, with new Ash.
+	startServiceWithConnector
+	// restartServiceWithConnector ensures cros-camera service is restarted, with new Ash.
+	restartServiceWithConnector
 )
 
 // The ServiceRequest only affect the operation in Setup() and Reset().
 // TearDown() always brings the service to running, which is the default state.
 type serviceFixture struct {
 	request serviceRequest
+	cr      *chrome.Chrome
 }
 
 func (f *serviceFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
+	if isConnectorRequested(f.request) {
+		cr, err := chrome.New(ctx, chrome.NoLogin())
+		if err != nil {
+			s.Fatal("Failed to start chrome: ", err)
+		}
+		f.cr = cr
+	}
+	defer func() {
+		if s.HasError() {
+			f.cr.Close(cleanupCtx)
+		}
+	}()
+
 	if err := ensureServiceState(ctx, f.request); err != nil {
 		s.Fatal("Failed to setup camera service: ", err)
 	}
@@ -106,11 +132,16 @@ func (f *serviceFixture) SetUp(ctx context.Context, s *testing.FixtState) interf
 func (f *serviceFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 	if f.request == restartService {
 		if err := restartCameraService(ctx); err != nil {
-			s.Log("Failed to restart camera service: ", err)
+			s.Error("Failed to restart camera service: ", err)
 		}
 	}
 	if err := upstart.EnsureJobRunning(ctx, "cros-camera"); err != nil {
-		s.Log("Failed to start camera service: ", err)
+		s.Error("Failed to start camera service: ", err)
+	}
+	if isConnectorRequested(f.request) {
+		if err := f.cr.Close(ctx); err != nil {
+			s.Error("Failed to close chrome: ", err)
+		}
 	}
 }
 
@@ -130,16 +161,20 @@ func (f *serviceFixture) PostTest(ctx context.Context, s *testing.FixtTestState)
 // that is requested by serviceRequest.
 func ensureServiceState(ctx context.Context, request serviceRequest) error {
 	switch request {
-	case startService:
+	case startService, startServiceWithConnector:
 		// WaitForCameraServiceBinding includes a call to EnsureJobRunning.
 		return testutil.WaitForCameraServiceBinding(ctx)
 	case stopService:
 		return upstart.StopJob(ctx, "cros-camera")
-	case restartService:
+	case restartService, restartServiceWithConnector:
 		return restartCameraService(ctx)
 	}
 
 	return errors.New("invalid request")
+}
+
+func isConnectorRequested(request serviceRequest) bool {
+	return request == startServiceWithConnector || request == restartServiceWithConnector
 }
 
 func restartCameraService(ctx context.Context) error {
@@ -150,30 +185,3 @@ func restartCameraService(ctx context.Context) error {
 	return testutil.WaitForCameraServiceBinding(ctx)
 
 }
-
-type connectorFixture struct {
-	cr *chrome.Chrome
-}
-
-// SetUp only ensures that we don't have an old chrome connected to the connector.
-// The readiness of the connector itself is ensured in the parent fixture by
-// calling testutil.WaitForCameraServiceBinding().
-func (f *connectorFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
-	cr, err := chrome.New(ctx, chrome.NoLogin())
-	if err != nil {
-		s.Fatal("Failed to start chrome: ", err)
-	}
-	f.cr = cr
-	return nil
-}
-func (f *connectorFixture) TearDown(ctx context.Context, s *testing.FixtState) {
-	if err := f.cr.Close(ctx); err != nil {
-		s.Error("Failed to close chrome: ", err)
-	}
-}
-func (f *connectorFixture) Reset(ctx context.Context) error {
-	return nil
-}
-func (f *connectorFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {}
-
-func (f *connectorFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {}
