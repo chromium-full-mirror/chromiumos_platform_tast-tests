@@ -65,7 +65,7 @@ func init() {
 }
 
 const (
-	minSuspendResumeTime = 3
+	minSuspendResumeTime = 5
 	maxSuspendResumeTime = 10 // Sets time range between [minSuspendResumeTime, minSuspendResumeTime + maxSuspendResumeTime).
 	minResumeTime        = 3
 	maxResumeTime        = 5
