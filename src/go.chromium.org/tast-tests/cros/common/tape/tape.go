@@ -149,7 +149,7 @@ func (c *client) sendRequestWithTimeout(ctx context.Context, method, endpoint st
 		break
 	}
 
-	if err != nil {
+	if err != nil || response == nil {
 		return nil, errors.Wrap(err, "failed to get a response from TAPE")
 	}
 	// Check if the call was successful.
