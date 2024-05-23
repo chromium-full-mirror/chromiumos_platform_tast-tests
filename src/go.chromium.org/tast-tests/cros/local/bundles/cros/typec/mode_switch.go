@@ -18,7 +18,7 @@ func init() {
 		Func:         ModeSwitch,
 		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Checks USB Type C mode switch behaviour on login",
-		Contacts:     []string{"chromeos-usb@google.com", "pmalani@chromium.org"},
+		Contacts:     []string{"chromeos-usb-champs@google.com", "pmalani@chromium.org"},
 		BugComponent: "b:958036",
 		Attr:         []string{"group:typec", "typec_lab"},
 		SoftwareDeps: []string{"chrome"},

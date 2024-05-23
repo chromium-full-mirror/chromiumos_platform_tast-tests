@@ -27,7 +27,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:     Usb3StorageSpeed,
 		Desc:     "Checks data transfer speed with a USB 3.X mass storage device",
-		Contacts: []string{"chromeos-usb@google.com", "pmalani@chromium.org", "jthies@google.com"},
+		Contacts: []string{"chromeos-usb-champs@google.com", "pmalani@chromium.org", "jthies@google.com"},
 		// ChromeOS > Platform > Technologies > USB
 		BugComponent: "b:958036",
 		Attr:         []string{"group:typec", "typec_usb_bringup"},

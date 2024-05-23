@@ -17,7 +17,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:     ComplianceSmoke,
 		Desc:     "Meta test that verifies that we're able to connect to a compliance tester host, run a simple command, and copy a file back",
-		Contacts: []string{"chromeos-usb@google.com", "jstanko@chromium.org"},
+		Contacts: []string{"chromeos-usb-champs@google.com", "jstanko@chromium.org"},
 		// ChromeOS > Platform > Technologies > USB
 		BugComponent: "b:958036",
 		Attr:         []string{"group:typec", "typec_compliance_ex350"},

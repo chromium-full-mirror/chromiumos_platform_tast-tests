@@ -21,7 +21,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:     Tbt4HotplugSuspend,
 		Desc:     "Check that a Thunderbolt 4 device enumerates successfully on hotplug during suspend",
-		Contacts: []string{"chromeos-usb@google.com", "pmalani@chromium.org"},
+		Contacts: []string{"chromeos-usb-champs@google.com", "pmalani@chromium.org"},
 		// ChromeOS > Platform > Technologies > USB
 		BugComponent: "b:958036",
 		Attr:         []string{"group:typec", "typec_tbt4_bringup"},

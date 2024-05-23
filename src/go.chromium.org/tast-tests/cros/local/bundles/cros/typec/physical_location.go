@@ -19,7 +19,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PhysicalLocation,
 		Desc:         "Checks if physical location information is present for Type C connectors",
-		Contacts:     []string{"chromeos-usb@google.com", "wonchung@google.com"},
+		Contacts:     []string{"chromeos-usb-champs@google.com", "wonchung@google.com"},
 		BugComponent: "b:958036", // ChromeOS > Platform > Technologies > USB
 		Attr:         []string{"group:mainline", "group:typec", "informational"},
 		SoftwareDeps: []string{"typec_physical_location"},

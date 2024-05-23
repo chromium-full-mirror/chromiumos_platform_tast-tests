@@ -24,7 +24,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:     Basic,
 		Desc:     "Checks basic typec kernel driver functionality",
-		Contacts: []string{"chromeos-usb@google.com", "pmalani@chromium.org"},
+		Contacts: []string{"chromeos-usb-champs@google.com", "pmalani@chromium.org"},
 		// ChromeOS > Platform > Technologies > USB
 		BugComponent: "b:958036",
 		Attr:         []string{"group:typec"},

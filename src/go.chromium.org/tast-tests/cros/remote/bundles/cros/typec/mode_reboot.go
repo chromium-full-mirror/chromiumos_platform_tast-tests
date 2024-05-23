@@ -24,7 +24,7 @@ func init() {
 		Func:         ModeReboot,
 		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Demonstrates USB Type C mode selection after reboot",
-		Contacts:     []string{"chromeos-usb@google.com", "pmalani@chromium.org"},
+		Contacts:     []string{"chromeos-usb-champs@google.com", "pmalani@chromium.org"},
 		BugComponent: "b:958036",
 		Attr:         []string{"group:typec", "typec_lab"},
 		SoftwareDeps: []string{"tpm2", "reboot", "chrome"},

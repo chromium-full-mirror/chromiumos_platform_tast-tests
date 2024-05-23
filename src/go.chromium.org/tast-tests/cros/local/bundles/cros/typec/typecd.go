@@ -17,7 +17,7 @@ func init() {
 		Func:         Typecd,
 		LacrosStatus: testing.LacrosVariantUnknown,
 		Desc:         "Checks that typecd is running on a system",
-		Contacts:     []string{"chromeos-usb@google.com", "pmalani@chromium.org"},
+		Contacts:     []string{"chromeos-usb-champs@google.com", "pmalani@chromium.org"},
 		// ChromeOS > Platform > Technologies > USB
 		BugComponent: "b:958036",
 		Attr:         []string{"group:mainline"},

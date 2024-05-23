@@ -21,7 +21,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:     DpHotplug,
 		Desc:     "Check that a DisplayPort Alternate Mode display enumerates successfully on hotplug",
-		Contacts: []string{"chromeos-usb@google.com", "pmalani@chromium.org"},
+		Contacts: []string{"chromeos-usb-champs@google.com", "pmalani@chromium.org"},
 		// ChromeOS > Platform > Technologies > USB
 		BugComponent: "b:958036",
 		Attr:         []string{"group:typec", "typec_dp_bringup"},

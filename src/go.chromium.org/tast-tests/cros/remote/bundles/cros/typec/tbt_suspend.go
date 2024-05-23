@@ -22,7 +22,7 @@ func init() {
 		Func:     TbtSuspend,
 		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:     "Check that a Thunderbolt (3 or 4) device enumerates before and after suspend",
-		Contacts: []string{"chromeos-usb@google.com", "pmalani@chromium.org"},
+		Contacts: []string{"chromeos-usb-champs@google.com", "pmalani@chromium.org"},
 		// ChromeOS > Platform > Technologies > USB
 		BugComponent: "b:958036",
 		Attr:         []string{"group:typec", "typec_tbt4_bringup", "typec_tbt3_bringup"},

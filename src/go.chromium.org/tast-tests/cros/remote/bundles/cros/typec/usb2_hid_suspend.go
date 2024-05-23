@@ -25,7 +25,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:     Usb2HidSuspend,
 		Desc:     "Check that a USB HID device remains enumerated during suspend/resume",
-		Contacts: []string{"chromeos-usb@google.com", "pmalani@chromium.org", "jthies@google.com"},
+		Contacts: []string{"chromeos-usb-champs@google.com", "pmalani@chromium.org", "jthies@google.com"},
 		// ChromeOS > Platform > Technologies > USB
 		BugComponent: "b:958036",
 		Attr:         []string{"group:typec", "typec_usb_bringup"},

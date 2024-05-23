@@ -21,7 +21,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:     DpHotplugSuspend,
 		Desc:     "Check that a DisplayPort display enumerates successfully on hotplug during suspend",
-		Contacts: []string{"chromeos-usb@google.com", "pmalani@chromium.org"},
+		Contacts: []string{"chromeos-usb-champs@google.com", "pmalani@chromium.org"},
 		// ChromeOS > Platform > Connectivity > USB
 		BugComponent: "b:958036",
 		Attr:         []string{"group:typec", "typec_dp_bringup"},

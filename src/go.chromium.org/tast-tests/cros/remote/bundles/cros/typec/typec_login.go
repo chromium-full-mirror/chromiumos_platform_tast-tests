@@ -22,7 +22,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Processes login and enables data peripheral access setting (when mode set to complete) to enable TBT/USB4",
 		Contacts: []string{
-			"chromeos-usb@google.com",
+			"chromeos-usb-champs@google.com",
 			"rajat.khandelwal@intel.com",
 		},
 		ServiceDeps:  []string{"tast.cros.typec.Service"},

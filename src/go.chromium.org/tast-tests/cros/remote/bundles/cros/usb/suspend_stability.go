@@ -24,7 +24,7 @@ func init() {
 		Desc: "Checks that USB device connection is maintained through suspend/resume",
 		// ChromeOS > Platform > Technologies > USB
 		BugComponent: "b:958036",
-		Contacts:     []string{"chromeos-usb@google.com", "jthies@google.com"},
+		Contacts:     []string{"chromeos-usb-champs@google.com", "jthies@google.com"},
 		Attr:         []string{"group:mainline", "informational"},
 		ServiceDeps:  []string{"tast.cros.usb.SysfsService"},
 	})

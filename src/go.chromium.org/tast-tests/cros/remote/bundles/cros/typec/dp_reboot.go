@@ -21,7 +21,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:     DpReboot,
 		Desc:     "Check that a DisplayPort display enumerates successfully after reboot",
-		Contacts: []string{"chromeos-usb@google.com", "pmalani@chromium.org"},
+		Contacts: []string{"chromeos-usb-champs@google.com", "pmalani@chromium.org"},
 		// ChromeOS > Platform > Connectivity > USB
 		BugComponent: "b:958036",
 		Attr:         []string{"group:typec", "typec_dp_bringup"},
