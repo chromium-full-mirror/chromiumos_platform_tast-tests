@@ -93,6 +93,11 @@ func init() {
 			Val:       displayOnBTOn,
 			ExtraAttr: []string{"group:power", "power_regression"},
 		}, {
+			Name:              "display_on_bt_on_ash_arc",
+			Fixture:           "powerAshARC",
+			Val:               displayOnBTOn,
+			ExtraSoftwareDeps: []string{"arc"},
+		}, {
 			Name:    "display_off_bt_on_ash",
 			Fixture: "powerAsh",
 			Val:     displayOffBTOn,

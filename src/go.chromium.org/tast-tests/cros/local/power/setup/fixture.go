@@ -59,6 +59,7 @@ const (
 
 	// With ramfs setup
 	PowerAshRamfs    = "powerAshRamfs"
+	PowerAshARCRamfs = "powerAshARCRamfs"
 	PowerLacrosRamfs = "powerLacrosRamfs"
 
 	// With Dark theme
@@ -501,6 +502,31 @@ func init() {
 			KeyboardBrightness: SetKbBrightnessToZero,
 			Ramfs:              SetupRamfs,
 		}, PowerFixtureOptions{BrowserType: browser.TypeAsh, EnableHDR: true}),
+		SetUpTimeout:    SetUpTimeout,
+		ResetTimeout:    ResetTimeout,
+		TearDownTimeout: TearDownTimeout,
+		PreTestTimeout:  PreTestTimeout,
+		PostTestTimeout: PostTestTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:         PowerAshARCRamfs,
+		Desc:         "PowerAsh with ramfs setup for local data with ARC enabled",
+		BugComponent: "b:1361410",
+		Contacts: []string{
+			"chromeos-platform-power@google.com",
+			"jingmuli@google.com",
+		},
+		Impl: NewPowerUIFixture(PowerTestOptions{
+			NightLight:         DisableNightLight,
+			DarkTheme:          EnableLightTheme,
+			KeyboardBrightness: SetKbBrightnessToZero,
+			Ramfs:              SetupRamfs,
+		}, PowerFixtureOptions{
+			BrowserType:     browser.TypeAsh,
+			EnableGAIALogin: true,
+			EnableARC:       true,
+			EnableHDR:       true}),
 		SetUpTimeout:    SetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: TearDownTimeout,

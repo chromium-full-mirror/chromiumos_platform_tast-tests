@@ -56,6 +56,12 @@ func init() {
 			Timeout: time.Hour + setupTimeoutBuffer + power.RecorderTimeout,
 			Val:     browsingTestParam{ConfigName: "browsing", TimeParams: power.TimeParams{Interval: 20 * time.Second, Total: time.Hour}},
 		}, {
+			Name:              "ash_arc",
+			Fixture:           "powerAshARC",
+			Timeout:           time.Hour + setupTimeoutBuffer + power.RecorderTimeout,
+			Val:               browsingTestParam{ConfigName: "browsing", TimeParams: power.TimeParams{Interval: 20 * time.Second, Total: time.Hour}},
+			ExtraSoftwareDeps: []string{"arc"},
+		}, {
 			Name:              "lacros",
 			Fixture:           "powerLacros",
 			Timeout:           time.Hour + setupTimeoutBuffer + power.RecorderTimeout,
@@ -90,6 +96,12 @@ func init() {
 			Fixture: "powerAsh",
 			Timeout: time.Hour + setupTimeoutBuffer + power.RecorderTimeout,
 			Val:     browsingTestParam{ConfigName: "heavy", TimeParams: power.TimeParams{Interval: 20 * time.Second, Total: time.Hour}},
+		}, {
+			Name:              "heavy_ash_arc",
+			Fixture:           "powerAshARC",
+			Timeout:           time.Hour + setupTimeoutBuffer + power.RecorderTimeout,
+			Val:               browsingTestParam{ConfigName: "heavy", TimeParams: power.TimeParams{Interval: 20 * time.Second, Total: time.Hour}},
+			ExtraSoftwareDeps: []string{"arc"},
 		}, {
 			Name:              "heavy_lacros",
 			Fixture:           "powerLacros",

@@ -71,6 +71,15 @@ func init() {
 				VideoName:  "h264_1080_30fps",
 				TimeParams: power.TimeParams{Total: time.Hour, Interval: 5 * time.Second}},
 		}, {
+			Name:      "h264_1080_30fps_1hr_ash_arc",
+			Fixture:   "powerAshARCRamfs",
+			ExtraData: []string{"video_playback/h264_1080_30fps.mp4"},
+			Timeout:   3*time.Hour + power.RecorderTimeout, // 1 hour for video and 2 hour for charging
+			Val: videoPlaybackTestParam{
+				VideoName:  "h264_1080_30fps",
+				TimeParams: power.TimeParams{Total: time.Hour, Interval: 5 * time.Second}},
+			ExtraSoftwareDeps: []string{"arc"},
+		}, {
 			Name:      "h264_1080_60fps_ash",
 			Fixture:   "powerAshRamfs",
 			Val:       videoPlaybackTestParam{VideoName: "h264_1080_60fps"},
@@ -159,6 +168,15 @@ func init() {
 			Val: videoPlaybackTestParam{
 				VideoName:  "vp9_1080_30fps",
 				TimeParams: power.TimeParams{Total: time.Hour, Interval: 5 * time.Second}},
+		}, {
+			Name:      "vp9_1080_30fps_1hr_ash_arc",
+			Fixture:   "powerAshARCRamfs",
+			ExtraData: []string{"video_playback/vp9_1080_30fps.webm"},
+			Timeout:   3*time.Hour + power.RecorderTimeout, // 1 hour for video and 2 hour for charging
+			Val: videoPlaybackTestParam{
+				VideoName:  "vp9_1080_30fps",
+				TimeParams: power.TimeParams{Total: time.Hour, Interval: 5 * time.Second}},
+			ExtraSoftwareDeps: []string{"arc"},
 		}, {
 			Name:      "vp9_1080_60fps_ash",
 			Fixture:   "powerAshRamfs",
