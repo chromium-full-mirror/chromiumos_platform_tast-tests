@@ -6,7 +6,6 @@ package gscdevboard
 
 import (
 	"context"
-	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
@@ -16,8 +15,11 @@ import (
 )
 
 const (
-	reboot  = "hard"
+	reboot  = "reboot"
 	powerOn = "power-on"
+
+	rebootFlag  = ti50.GscResetFlagHard
+	powerOnFlag = ti50.GscResetFlagPowerOn
 
 	updateDelay = time.Second * 61
 )
@@ -37,7 +39,7 @@ func init() {
 			"mruthven@chromium.org",
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
-		Attr:         []string{"group:gsc", "gsc_h1_shield", "gsc_image_ti50", "gsc_nightly"},
+		Attr:         []string{"group:gsc", "gsc_dt_shield", "gsc_h1_shield", "gsc_image_ti50", "gsc_nightly"},
 		Fixture:      fixture.GSCUpdate,
 		Params: []testing.Param{{
 			Name: "reboot",
@@ -56,14 +58,18 @@ func init() {
 }
 
 func reset(ctx context.Context, s *testing.State, b utils.DevboardHelper, i *ti50.CrOSImage, resetType string) {
+
+	var resetFlag uint32
 	switch resetType {
 	case reboot:
 		s.Log("Running reboot")
 		i.SendConsoleRebootCmd(ctx)
+		resetFlag = rebootFlag
 	case powerOn:
 		s.Log("Running power-on reset")
 		b.GpioSet(ctx, ti50.GpioTi50ResetL, false)
 		b.GpioSet(ctx, ti50.GpioTi50ResetL, true)
+		resetFlag = powerOnFlag
 	default:
 		s.Fatalf("Invalid reset type: %s", resetType)
 	}
@@ -73,12 +79,12 @@ func reset(ctx context.Context, s *testing.State, b utils.DevboardHelper, i *ti5
 		s.Fatalf("GSC failed to boot after %s reset: %s", resetType, err)
 	}
 
-	out, err := i.Sysinfo(ctx)
+	sysinfo, err := i.GetSysinfo(ctx)
 	if err != nil {
 		s.Fatalf("Unable to run sysinfo: %s", err)
 	}
-	if !strings.Contains(out, resetType) {
-		s.Fatalf("%s not found in %s", resetType, out)
+	if sysinfo.ResetFlags&resetFlag != resetFlag {
+		s.Fatalf("%s reset: %x not found in %x", resetType, resetFlag, sysinfo.ResetFlags)
 	}
 	s.Logf("Ran %s reset", resetType)
 }
