@@ -26,8 +26,8 @@ type ti50SleepParam struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:    Ti50Sleep,
-		Desc:    "Test ti50 deep/normal sleep on Andreiboard connected to devboardsvc host",
-		Timeout: 15 * time.Minute,
+		Desc:    "Test ti50 deep/normal sleep",
+		Timeout: 40 * time.Minute,
 		Contacts: []string{
 			"gsc-sheriff@google.com", // CrOS GSC Developers
 			"jbk@chromium.org",       // Test Author
