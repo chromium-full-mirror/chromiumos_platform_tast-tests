@@ -15,13 +15,13 @@ import (
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/log"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils/topology"
 	"go.chromium.org/tast-tests/cros/remote/dutfs"
 	pb "go.chromium.org/tast-tests/cros/services/cros/apps"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast-tests/cros/services/cros/wwcb"
 
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
 )
@@ -35,8 +35,9 @@ func init() {
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
 		Attr:         []string{"group:wwcb", "group:pasit"},
 		SoftwareDeps: []string{"chrome"},
-		Vars:         []string{"servo", "DockingID", "ExtDispID1", "newTestItem"},
+		Vars:         []string{"servo", "newTestItem"},
 		Data:         []string{"Capabilities.json"},
+		Fixture:      "wwcbPasitDock",
 		ServiceDeps: []string{
 			"tast.cros.browser.ChromeService",
 			"tast.cros.apps.AppsService",
@@ -56,8 +57,6 @@ func ShutdownDUTWithExternalDisplay(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
-
-	extDispID := s.RequiredVar("ExtDispID1")
 
 	// Set up the servo attached to the DUT.
 	dut := s.DUT()
@@ -91,31 +90,14 @@ func ShutdownDUTWithExternalDisplay(ctx context.Context, s *testing.State) {
 	uiautoSvc := ui.NewAutomationServiceClient(cl.Conn)
 	fs := dutfs.NewClient(cl.Conn)
 
-	// Initialize fixtures to find the connected devices.
-	if err := utils.InitFixture(ctx); err != nil {
-		s.Fatal("Failed to initialize fixtures: ", err)
-	}
-	defer utils.CloseAllFixture(cleanupCtx)
-
-	if err := utils.ControlFixture(ctx, extDispID, "on"); err != nil {
+	tf := s.FixtValue().(*topology.TestFixture)
+	if _, err := tf.Helper.ActivateDeviceByType(ctx, topology.DeviceTypeMonitor); err != nil {
 		s.Fatal("Failed to connect to the external display: ", err)
 	}
 
-	if dockingID, ok := s.Var("DockingID"); ok {
-		ippowerPorts := []int{1}
-		if err := utils.OpenIppower(ctx, ippowerPorts); err != nil {
-			s.Fatal("Failed to power on the docking station: ", err)
-		}
-		defer utils.CloseIppower(cleanupCtx, ippowerPorts)
-
-		if _, ok := s.Var("newTestItem"); ok {
-			if err := utils.VerifyDockingInterface(ctx, s.DUT(), dockingID, s.DataPath("Capabilities.json")); err != nil {
-				s.Fatal("Failed to verify the docking station interface: ", err)
-			}
-		}
-
-		if err := utils.ControlFixture(ctx, dockingID, "on"); err != nil {
-			s.Fatal("Failed to connect to the docking station: ", err)
+	if _, ok := s.Var("newTestItem"); ok {
+		if err := tf.VerifyDockingInterface(ctx, s.DUT(), s.DataPath("Capabilities.json")); err != nil {
+			s.Fatal("Failed to verify the docking station interface: ", err)
 		}
 	}
 
@@ -163,15 +145,8 @@ func ShutdownDUTWithExternalDisplay(ctx context.Context, s *testing.State) {
 	}
 
 	// Shutdown DUT.
-	powerOffCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
-	defer cancel()
-	if err := dut.Conn().CommandContext(powerOffCtx, "shutdown", "-h", "now").Run(); err != nil && !errors.Is(err, context.DeadlineExceeded) {
-		s.Fatal("Failed to execute shutdown command: ", err)
-	}
-	sdCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
-	defer cancel()
-	if err := dut.WaitUnreachable(sdCtx); err != nil {
-		s.Fatal("Failed to wait for unreachable: ", err)
+	if err := utils.ShutdownDUT(ctx, pxy, dut); err != nil {
+		s.Fatal("Failed to shutdown DUT: ", err)
 	}
 	defer utils.PowerOnDUT(cleanupCtx, pxy, dut)
 
@@ -185,6 +160,8 @@ func ShutdownDUTWithExternalDisplay(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get the DUT screen light when DUT is shutdown: ", err)
 	}
 
+	testing.ContextLogf(ctx, "External screen off: %d, on: %d", extScreenOff, extScreenOn)
+	testing.ContextLogf(ctx, "Internal screen off: %d, on: %d", dutScreenOff, dutScreenOn)
 	// Check external & DUT screen to become dark by camera connecting to host.
 	if extScreenOff >= extScreenOn {
 		s.Fatalf("Expect the external screen light in shutdown state is lower than in turned-on state; shutdown light: %d, turned-on light: %d", extScreenOff, extScreenOn)

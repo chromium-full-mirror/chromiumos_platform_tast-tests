@@ -6,13 +6,13 @@ package wwcb
 
 import (
 	"context"
-	"strings"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/log"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils/topology"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
@@ -34,9 +34,10 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.ui.ChromeUIService"},
-		Vars:         []string{"servo", "DockingID", "ExtDispID1", "EthernetID", "USBTypeAIDArray", "wwcbIPPowerIp", "newTestItem"},
+		Vars:         []string{"servo", "newTestItem"},
 		Data:         []string{"Capabilities.json"},
 		Timeout:      utils.TestingTimeout,
+		Fixture:      "wwcbPasitDock",
 		Params: []testing.Param{{
 			Name: "clamshell_mode",
 			Val:  false,
@@ -97,41 +98,20 @@ func SuspendResumeDockPlugUnplug(ctx context.Context, s *testing.State) {
 	// Dump the UI tree and screenshot on any failure
 	utils.AttachErrorHandlersForUITreeDump(cleanupCtx, s, cl.Conn)
 
-	dockingID := s.RequiredVar("DockingID")
-	extDispID := s.RequiredVar("ExtDispID1")
-	ethernetID := s.RequiredVar("EthernetID")
-	USBDeviceIDs := strings.Split(s.RequiredVar("USBTypeAIDArray"), ",")
-
-	// Initialize fixtures to find the connected devices.
-	if err := utils.InitFixture(ctx); err != nil {
-		s.Fatal("Failed to initialize the fixture: ", err)
-	}
-	defer utils.CloseAllFixture(cleanupCtx)
-
-	// Open IP power to supply docking power.
-	ippowerPorts := []int{1}
-	if err := utils.OpenIppower(ctx, ippowerPorts); err != nil {
-		s.Fatal("Failed to power on the docking station: ", err)
-	}
-	defer utils.CloseIppower(cleanupCtx, ippowerPorts)
-
 	defer func(ctx context.Context) {
 		if s.HasError() {
 			log.CollectedLogs(ctx, s.DUT(), s.OutDir())
 		}
 	}(ctx)
 
-	if err := utils.ControlFixture(ctx, dockingID, "on"); err != nil {
-		s.Fatal("Failed to plug in the docking station: ", err)
-	}
-
-	USBDevices, err := utils.ConnectPeripheralsViaDock(ctx, dut, extDispID, ethernetID, USBDeviceIDs)
+	tf := s.FixtValue().(*topology.TestFixture)
+	dockingID, USBDevices, err := tf.ConnectPeripheralsViaDock(ctx, dut)
 	if err != nil {
 		s.Fatal("Failed to connect the peripherals via Dock: ", err)
 	}
 
 	if _, ok := s.Var("newTestItem"); ok {
-		if err := utils.VerifyDockingInterface(ctx, s.DUT(), dockingID, s.DataPath("Capabilities.json")); err != nil {
+		if err := tf.VerifyDockingInterface(ctx, s.DUT(), s.DataPath("Capabilities.json")); err != nil {
 			s.Fatal("Failed to verify the docking station interface: ", err)
 		}
 
@@ -145,7 +125,7 @@ func SuspendResumeDockPlugUnplug(ctx context.Context, s *testing.State) {
 	}
 
 	if _, ok := s.Var("newTestItem"); ok {
-		if err := utils.VerifyDockingInterface(ctx, s.DUT(), dockingID, s.DataPath("Capabilities.json")); err != nil {
+		if err := tf.VerifyDockingInterface(ctx, s.DUT(), s.DataPath("Capabilities.json")); err != nil {
 			s.Fatal("Failed to verify the docking station interface: ", err)
 		}
 
@@ -154,12 +134,12 @@ func SuspendResumeDockPlugUnplug(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	if err := suspendUnplugResumePlug(ctx, dut, pxy, dockingID, USBDevices); err != nil {
+	if err := suspendUnplugResumePlug(ctx, dut, pxy, dockingID, tf, USBDevices); err != nil {
 		s.Fatal("Failed to verify peripherals after suspend DUT, unplug dock, resume DUT, plug dock: ", err)
 	}
 
 	if _, ok := s.Var("newTestItem"); ok {
-		if err := utils.VerifyDockingInterface(ctx, s.DUT(), dockingID, s.DataPath("Capabilities.json")); err != nil {
+		if err := tf.VerifyDockingInterface(ctx, s.DUT(), s.DataPath("Capabilities.json")); err != nil {
 			s.Fatal("Failed to verify the docking station interface: ", err)
 		}
 
@@ -168,12 +148,12 @@ func SuspendResumeDockPlugUnplug(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	if err := unplugSuspendPlugResume(ctx, dut, pxy, dockingID, USBDevices); err != nil {
+	if err := unplugSuspendPlugResume(ctx, dut, pxy, dockingID, tf, USBDevices); err != nil {
 		s.Fatal("Failed to verify peripherals after unplug dock, suspend DUT, plug dock, resume DUT: ", err)
 	}
 
 	if _, ok := s.Var("newTestItem"); ok {
-		if err := utils.VerifyDockingInterface(ctx, s.DUT(), dockingID, s.DataPath("Capabilities.json")); err != nil {
+		if err := tf.VerifyDockingInterface(ctx, s.DUT(), s.DataPath("Capabilities.json")); err != nil {
 			s.Fatal("Failed to verify the docking station interface: ", err)
 		}
 
@@ -203,12 +183,12 @@ func suspendResume(ctx context.Context, dut *dut.DUT, pxy *servo.Proxy, USBDevic
 }
 
 // suspendUnplugResumePlug suspends DUT, unplugs the dock, resumes DUT, plugs in the dock then verifies the connection of peripherals.
-func suspendUnplugResumePlug(ctx context.Context, dut *dut.DUT, pxy *servo.Proxy, dockingID string, USBDevices []string) error {
+func suspendUnplugResumePlug(ctx context.Context, dut *dut.DUT, pxy *servo.Proxy, dockingID string, tf *topology.TestFixture, USBDevices []string) error {
 	if err := utils.SuspendDUT(ctx, dut, pxy); err != nil {
 		return errors.Wrap(err, "perform powerdbus suspend")
 	}
 
-	if err := utils.ControlFixture(ctx, dockingID, "off"); err != nil {
+	if err := tf.Helper.DeactivateDeviceByID(ctx, dockingID); err != nil {
 		return errors.Wrap(err, "unplug the docking station")
 	}
 
@@ -223,7 +203,7 @@ func suspendUnplugResumePlug(ctx context.Context, dut *dut.DUT, pxy *servo.Proxy
 		return errors.Wrap(err, "power on DUT")
 	}
 
-	if err := utils.ControlFixture(ctx, dockingID, "on"); err != nil {
+	if err := tf.Helper.ActivateDeviceByID(ctx, dockingID); err != nil {
 		return errors.Wrap(err, "plug in the docking station")
 	}
 
@@ -234,8 +214,8 @@ func suspendUnplugResumePlug(ctx context.Context, dut *dut.DUT, pxy *servo.Proxy
 }
 
 // unplugSuspendPlugResume unplugs the dock, suspends the DUT, plugs in the dock, resumes the DUT then verifies the connection of peripherals.
-func unplugSuspendPlugResume(ctx context.Context, dut *dut.DUT, pxy *servo.Proxy, dockingID string, USBDevices []string) error {
-	if err := utils.ControlFixture(ctx, dockingID, "off"); err != nil {
+func unplugSuspendPlugResume(ctx context.Context, dut *dut.DUT, pxy *servo.Proxy, dockingID string, tf *topology.TestFixture, USBDevices []string) error {
+	if err := tf.Helper.DeactivateDeviceByID(ctx, dockingID); err != nil {
 		return errors.Wrap(err, "unplug the docking station")
 	}
 
@@ -243,7 +223,7 @@ func unplugSuspendPlugResume(ctx context.Context, dut *dut.DUT, pxy *servo.Proxy
 		return errors.Wrap(err, "perform powerdbus suspend")
 	}
 
-	if err := utils.ControlFixture(ctx, dockingID, "on"); err != nil {
+	if err := tf.Helper.ActivateDeviceByID(ctx, dockingID); err != nil {
 		return errors.Wrap(err, "plug in the docking station")
 	}
 

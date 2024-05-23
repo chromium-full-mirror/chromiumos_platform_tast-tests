@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/log"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils/topology"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast-tests/cros/services/cros/wwcb"
 	"go.chromium.org/tast/core/ctxutil"
@@ -31,8 +32,9 @@ func init() {
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
 		Attr:         []string{"group:wwcb", "group:pasit"},
 		SoftwareDeps: []string{"chrome"},
-		Vars:         []string{"servo", "DockingID", "ExtDispID1", "wwcbIPPowerIp", "newTestItem"},
+		Vars:         []string{"servo", "newTestItem"},
 		ServiceDeps:  []string{"tast.cros.wwcb.DisplayService", "tast.cros.browser.ChromeService", "tast.cros.ui.ChromeUIService", "tast.cros.ui.ScreenRecorderService"},
+		Fixture:      "wwcbPasitDock",
 		Data:         []string{"Capabilities.json"},
 		Params: []testing.Param{
 			{
@@ -46,9 +48,6 @@ func USBChargingViaDock(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
-
-	dockingID := s.RequiredVar("DockingID")
-	extDispID := s.RequiredVar("ExtDispID1")
 
 	// Set up the servo attached to the DUT.
 	dut := s.DUT()
@@ -90,25 +89,15 @@ func USBChargingViaDock(ctx context.Context, s *testing.State) {
 	utils.StartRecording(ctx, s, screenRecorder)
 	defer utils.StopAndSaveScreenRecording(cleanupCtx, s, screenRecorder)
 
-	// Open IP power and initialize fixtures.
-	if err := utils.OpenIppower(ctx, []int{1}); err != nil {
-		s.Fatal("Failed to open IP Power: ", err)
-	}
-	defer utils.CloseIppower(cleanupCtx, []int{1})
-
-	if err := utils.InitFixture(ctx); err != nil {
-		s.Fatal("Failed to initialize fixtures: ", err)
-	}
-	defer utils.CloseAllFixture(cleanupCtx)
-
 	defer func(ctx context.Context) {
 		if s.HasError() {
 			log.CollectedLogs(ctx, s.DUT(), s.OutDir())
 		}
 	}(ctx)
 
-	if err := utils.ControlFixture(ctx, extDispID, "on"); err != nil {
-		s.Fatal("Failed to connect external display: ", err)
+	tf := s.FixtValue().(*topology.TestFixture)
+	if _, _, err := tf.Helper.ActivateDeviceByTypeVia(ctx, topology.DeviceTypeMonitor, topology.DeviceTypeDockingStation); err != nil {
+		s.Fatal("Failed to connect to the external display via dock: ", err)
 	}
 
 	if _, ok := s.Var("newTestItem"); ok {
@@ -117,13 +106,10 @@ func USBChargingViaDock(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to find the docking power path: ", err)
 		}
 		testing.ContextLog(ctx, "Found the docking power path: ", dockPowerPath)
-		if err := utils.VerifyDockingInterface(ctx, s.DUT(), dockingID, s.DataPath("Capabilities.json")); err != nil {
+
+		if err := tf.VerifyDockingInterface(ctx, s.DUT(), s.DataPath("Capabilities.json")); err != nil {
 			s.Fatal("Failed to verify the docking station interface: ", err)
 		}
-	}
-
-	if err := utils.ControlFixture(ctx, dockingID, "on"); err != nil {
-		s.Fatal("Failed to connect docking station: ", err)
 	}
 
 	if _, err := displaySvc.VerifyDisplayCount(ctx, &wwcb.QueryRequest{DisplayCount: 2}); err != nil {

@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/log"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils/topology"
 	"go.chromium.org/tast-tests/cros/remote/dutfs"
 	pb "go.chromium.org/tast-tests/cros/services/cros/apps"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
@@ -34,7 +35,8 @@ func init() {
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
 		Attr:         []string{"group:wwcb", "group:pasit"},
 		SoftwareDeps: []string{"chrome"},
-		Vars:         []string{"servo", "DockingID", "ExtDispID1", "wwcbIPPowerIp", "newTestItem"},
+		Vars:         []string{"servo", "newTestItem"},
+		Fixture:      "wwcbPasitDock",
 		ServiceDeps: []string{
 			"tast.cros.browser.ChromeService",
 			"tast.cros.apps.AppsService",
@@ -54,8 +56,6 @@ func DisconnectDisplayWhileSuspendDUT(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
-
-	extDispID := s.RequiredVar("ExtDispID1")
 
 	// Set up the servo attached to the DUT.
 	dut := s.DUT()
@@ -89,31 +89,15 @@ func DisconnectDisplayWhileSuspendDUT(ctx context.Context, s *testing.State) {
 	uiautoSvc := ui.NewAutomationServiceClient(cl.Conn)
 	fs := dutfs.NewClient(cl.Conn)
 
-	// Initialize fixtures to find the connected devices.
-	if err := utils.InitFixture(ctx); err != nil {
-		s.Fatal("Failed to initialize fixtures: ", err)
-	}
-	defer utils.CloseAllFixture(cleanupCtx)
-
-	if err := utils.ControlFixture(ctx, extDispID, "on"); err != nil {
+	tf := s.FixtValue().(*topology.TestFixture)
+	extDispID, err := tf.Helper.ActivateDeviceByType(ctx, topology.DeviceTypeMonitor)
+	if err != nil {
 		s.Fatal("Failed to connect to the external display: ", err)
 	}
 
-	if dockingID, ok := s.Var("DockingID"); ok {
-		ippowerPorts := []int{1}
-		if err := utils.OpenIppower(ctx, ippowerPorts); err != nil {
-			s.Fatal("Failed to power on the docking station: ", err)
-		}
-		defer utils.CloseIppower(cleanupCtx, ippowerPorts)
-
-		if _, ok := s.Var("newTestItem"); ok {
-			if err := utils.VerifyDockingInterface(ctx, s.DUT(), dockingID, s.DataPath("Capabilities.json")); err != nil {
-				s.Fatal("Failed to verify the docking station interface: ", err)
-			}
-		}
-
-		if err := utils.ControlFixture(ctx, dockingID, "on"); err != nil {
-			s.Fatal("Failed to connect to the docking station: ", err)
+	if _, ok := s.Var("newTestItem"); ok {
+		if err := tf.VerifyDockingInterface(ctx, s.DUT(), s.DataPath("Capabilities.json")); err != nil {
+			s.Fatal("Failed to verify the docking station interface: ", err)
 		}
 	}
 
@@ -162,7 +146,7 @@ func DisconnectDisplayWhileSuspendDUT(ctx context.Context, s *testing.State) {
 	}
 	defer utils.PowerOnDUT(cleanupCtx, pxy, dut)
 
-	if err := utils.ControlFixture(ctx, extDispID, "off"); err != nil {
+	if err := tf.Helper.DeactivateDeviceByID(ctx, extDispID); err != nil {
 		s.Fatal("Failed to disconnect to the external display after DUT is suspended: ", err)
 	}
 

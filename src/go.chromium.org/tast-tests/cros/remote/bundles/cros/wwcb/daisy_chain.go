@@ -14,6 +14,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/log"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils/topology"
 	"go.chromium.org/tast-tests/cros/remote/dutfs"
 	pb "go.chromium.org/tast-tests/cros/services/cros/apps"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
@@ -32,7 +33,7 @@ func init() {
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
 		Attr:         []string{"group:wwcb", "group:pasit", "pasit_display"},
 		SoftwareDeps: []string{"chrome"},
-		Vars:         []string{"servo", "DockingID", "ExtDispID1", "ExtDispID2", "wwcbIPPowerIp", "newTestItem"},
+		Vars:         []string{"servo", "newTestItem"},
 		ServiceDeps: []string{
 			"tast.cros.browser.ChromeService",
 			"tast.cros.apps.AppsService",
@@ -40,7 +41,8 @@ func init() {
 			"tast.cros.wwcb.DisplayService",
 			"tast.cros.ui.ChromeUIService",
 		},
-		Data: []string{"Capabilities.json", utils.VideoFile},
+		Data:    []string{"Capabilities.json", utils.VideoFile},
+		Fixture: "wwcbDisplay",
 	})
 }
 
@@ -48,9 +50,6 @@ func DaisyChain(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
-
-	extDispID1 := s.RequiredVar("ExtDispID1")
-	extDispID2 := s.RequiredVar("ExtDispID2")
 
 	// Connect to the gRPC server on the DUT.
 	cl, err := rpc.Dial(ctx, s.DUT(), s.RPCHint())
@@ -83,33 +82,18 @@ func DaisyChain(ctx context.Context, s *testing.State) {
 	uiautoSvc := ui.NewAutomationServiceClient(cl.Conn)
 	fs := dutfs.NewClient(cl.Conn)
 
-	// Initialize fixtures to find the connected devices.
-	if err := utils.InitFixture(ctx); err != nil {
-		s.Fatal("Failed to initialize fixtures: ", err)
-	}
-	defer utils.CloseAllFixture(cleanupCtx)
-
-	if err := utils.ControlFixture(ctx, extDispID1, "on"); err != nil {
-		s.Fatal("Failed to connect to the first external display: ", err)
+	tf := s.FixtValue().(*topology.TestFixture)
+	// Connect a display whose connection path passes through another display.
+	extDispID1, extDispID2, err := tf.Helper.ActivateDeviceByTypeVia(ctx, topology.DeviceTypeMonitor, topology.DeviceTypeMonitor)
+	if err != nil {
 	}
 
-	dockingID, hasDockingID := s.Var("DockingID")
-	if hasDockingID {
-		// Open IP power to supply docking power.
-		ipPowerPorts := []int{1}
-		if err := utils.OpenIppower(ctx, ipPowerPorts); err != nil {
-			s.Fatal("Failed to power on docking station: ", err)
-		}
-		defer utils.CloseIppower(cleanupCtx, ipPowerPorts)
+	if err := tf.Helper.DeactivateDeviceByID(ctx, extDispID2); err != nil {
+	}
 
-		if _, ok := s.Var("newTestItem"); ok {
-			if err := utils.VerifyDockingInterface(ctx, s.DUT(), dockingID, s.DataPath("Capabilities.json")); err != nil {
-				s.Fatal("Failed to verify the docking station interface: ", err)
-			}
-		}
-
-		if err := utils.ControlFixture(ctx, dockingID, "on"); err != nil {
-			s.Fatal("Failed to connect to the docking station: ", err)
+	if _, ok := s.Var("newTestItem"); ok {
+		if err := tf.VerifyDockingInterface(ctx, s.DUT(), s.DataPath("Capabilities.json")); err != nil {
+			s.Fatal("Failed to verify the docking station interface: ", err)
 		}
 	}
 

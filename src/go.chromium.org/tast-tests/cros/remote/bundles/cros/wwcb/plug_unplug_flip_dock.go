@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/log"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils/topology"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	"google.golang.org/grpc"
 
@@ -33,8 +34,9 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.ui.ChromeUIService"},
-		Vars:         []string{"servo", "DockingID", "ExtDispID1", "EthernetID", "USBTypeAIDArray", "wwcbIPPowerIp", "newTestItem"},
+		Vars:         []string{"servo", "newTestItem"},
 		Data:         []string{"Capabilities.json"},
+		Fixture:      "wwcbPasitDock",
 		Timeout:      utils.TestingTimeout,
 		Params: []testing.Param{{
 			Name: "clamshell_mode",
@@ -54,11 +56,6 @@ func PlugUnplugFlipDock(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
-
-	dockingID := s.RequiredVar("DockingID")
-	extDispID := s.RequiredVar("ExtDispID1")
-	ethernetID := s.RequiredVar("EthernetID")
-	usbDeviceIDs := strings.Split(s.RequiredVar("USBTypeAIDArray"), ",")
 
 	// Set up the servo attached to the DUT.
 	dut := s.DUT()
@@ -102,30 +99,14 @@ func PlugUnplugFlipDock(ctx context.Context, s *testing.State) {
 	// Dump the UI tree and screenshot on any failure
 	utils.AttachErrorHandlersForUITreeDump(cleanupCtx, s, cl.Conn)
 
-	// Initialize fixtures to find the connected devices.
-	if err := utils.InitFixture(ctx); err != nil {
-		s.Fatal("Failed to initialize fixtures: ", err)
-	}
-	defer utils.CloseAllFixture(cleanupCtx)
-
-	// Connect non-power docking station.
-	if err := utils.ControlFixture(ctx, dockingID, "on"); err != nil {
-		s.Fatal("Failed to plug in the docking station: ", err)
-	}
-
-	ippowerPorts := []int{1}
-	if err := utils.OpenIppower(ctx, ippowerPorts); err != nil {
-		s.Fatal("Failed to power on the docking station: ", err)
-	}
-	defer utils.CloseIppower(cleanupCtx, ippowerPorts)
-
 	defer func(ctx context.Context) {
 		if s.HasError() {
 			log.CollectedLogs(ctx, s.DUT(), s.OutDir())
 		}
 	}(ctx)
 
-	usbDevices, err := utils.ConnectPeripheralsViaDock(ctx, dut, extDispID, ethernetID, usbDeviceIDs)
+	tf := s.FixtValue().(*topology.TestFixture)
+	dockingID, usbDevices, err := tf.ConnectPeripheralsViaDock(ctx, dut)
 	if err != nil {
 		s.Fatal("Failed to plug in peripherals: ", err)
 	}
@@ -140,7 +121,7 @@ func PlugUnplugFlipDock(ctx context.Context, s *testing.State) {
 	}(cleanupCtx)
 
 	if _, ok := s.Var("newTestItem"); ok {
-		if err := utils.VerifyDockingInterface(ctx, s.DUT(), dockingID, s.DataPath("Capabilities.json")); err != nil {
+		if err := tf.VerifyDockingInterface(ctx, s.DUT(), s.DataPath("Capabilities.json")); err != nil {
 			s.Fatal("Failed to verify the docking station interface: ", err)
 		}
 
@@ -156,7 +137,7 @@ func PlugUnplugFlipDock(ctx context.Context, s *testing.State) {
 		{"on", "connect"},
 		{"flip", "flip"},
 	} {
-		if err := utils.ControlFixture(ctx, dockingID, "off"); err != nil {
+		if err := tf.Helper.DeactivateDeviceByID(ctx, dockingID); err != nil {
 			s.Fatal("Failed to control fixture to disconnect the docking station: ", err)
 		}
 
@@ -164,8 +145,14 @@ func PlugUnplugFlipDock(ctx context.Context, s *testing.State) {
 		// prevent the docking or Chromebook from being temporarily cached and affecting the test results.
 		testing.Sleep(ctx, 5*time.Second)
 
-		if err := utils.ControlFixture(ctx, dockingID, test.ctrl); err != nil {
-			s.Fatalf("Failed to control fixture to %s the docking station: %v", test.desc, err)
+		if test.ctrl == "on" {
+			if err := tf.Helper.ActivateDeviceByID(ctx, dockingID); err != nil {
+				s.Fatalf("Failed to control fixture to %s the docking station: %v", test.desc, err)
+			}
+		} else if test.ctrl == "flip" {
+			if err := tf.Helper.FlipDeviceByID(ctx, dockingID); err != nil {
+				s.Fatalf("Failed to control fixture to %s the docking station: %v", test.desc, err)
+			}
 		}
 
 		if err := utils.VerifyPeripheralsConnection(ctx, dut, true, usbDevices); err != nil {
@@ -173,7 +160,7 @@ func PlugUnplugFlipDock(ctx context.Context, s *testing.State) {
 		}
 
 		if _, ok := s.Var("newTestItem"); ok {
-			if err := utils.VerifyDockingInterface(ctx, s.DUT(), dockingID, s.DataPath("Capabilities.json")); err != nil {
+			if err := tf.VerifyDockingInterface(ctx, s.DUT(), s.DataPath("Capabilities.json")); err != nil {
 				s.Fatal("Failed to verify the docking station interface: ", err)
 			}
 

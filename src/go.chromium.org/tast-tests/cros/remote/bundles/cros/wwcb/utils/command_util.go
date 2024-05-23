@@ -696,8 +696,8 @@ func VerifyDeviceSpeed(ctx context.Context, dut *dut.DUT, fixtureID, expectDevic
 }
 
 // FindDockingConnectPort returns the docking connect port information.
-func FindDockingConnectPort(ctx context.Context, dut *dut.DUT, dockingID string) (string, error) {
-	if err := ControlFixture(ctx, dockingID, "off"); err != nil {
+func FindDockingConnectPort(ctx context.Context, dut *dut.DUT, disable, enable func(ctx context.Context) error) (string, error) {
+	if err := disable(ctx); err != nil {
 		return "", errors.Wrap(err, "failed to connect to docking")
 	}
 	usbStatus, err := dut.Conn().CommandContext(ctx, "ectool", "usbpdmuxinfo").Output()
@@ -705,7 +705,7 @@ func FindDockingConnectPort(ctx context.Context, dut *dut.DUT, dockingID string)
 		return "", errors.Wrap(err, "execute ectool usbpdmuxinfo")
 	}
 	usbStatusBefore := strings.Split(strings.TrimSpace(string(usbStatus)), "\n")
-	if err := ControlFixture(ctx, dockingID, "on"); err != nil {
+	if err := enable(ctx); err != nil {
 		return "", errors.Wrap(err, "failed to connect to docking")
 	}
 	usbStatus, err = dut.Conn().CommandContext(ctx, "ectool", "usbpdmuxinfo").Output()
@@ -783,9 +783,9 @@ func VerifyUSBTypeADeviceSpeed(ctx context.Context, dut *dut.DUT, capFile string
 	return nil
 }
 
-// VerifyDockingInterface verifies the docking interface is the same as the one in the capabilites.json file.
-func VerifyDockingInterface(ctx context.Context, dut *dut.DUT, dockingID, capFile string) error {
-	dockingPort, err := FindDockingConnectPort(ctx, dut, dockingID)
+// VerifyDockingInterface verifies the docking interface is the same as the one in the capabilities.json file.
+func VerifyDockingInterface(ctx context.Context, dut *dut.DUT, capFile string, disable, enable func(ctx context.Context) error) error {
+	dockingPort, err := FindDockingConnectPort(ctx, dut, disable, enable)
 	if err != nil {
 		return errors.Wrap(err, "failed to find the docking port")
 	}

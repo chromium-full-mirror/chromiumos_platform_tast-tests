@@ -24,3 +24,7 @@ func (a *allionConnectionManager) EnabledState(ctx context.Context, enabled bool
 
 	return utils.ControlFixture(ctx, a.id, status)
 }
+
+func (a *allionConnectionManager) Flip(ctx context.Context) error {
+	return utils.ControlFixture(ctx, a.id, "flip")
+}

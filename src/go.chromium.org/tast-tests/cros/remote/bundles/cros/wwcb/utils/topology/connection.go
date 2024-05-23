@@ -18,6 +18,8 @@ import (
 type ConnectionManager interface {
 	// Configures the enable state of the connection.
 	EnabledState(context.Context, bool) error
+	// Flips the connection orientation on a symmetric connector (e.g. USB-C).
+	Flip(context.Context) error
 }
 
 // Connection is a directed connection between two components in the PASIT topology.
@@ -57,7 +59,9 @@ type ConnectionPath []*Connection
 
 // Activate iterates through all connections in the path and enables them.
 func (c ConnectionPath) Activate(ctx context.Context) error {
-	for _, con := range c {
+	// Plug in devices starting at peripheral and working towards DUT.
+	for i := len(c) - 1; i >= 0; i-- {
+		con := c[i]
 		if con.IsStatic() {
 			continue
 		}
@@ -99,6 +103,24 @@ func (c ConnectionPath) DisableLast(ctx context.Context) error {
 			continue
 		}
 		if err := con.manager.EnabledState(ctx, false); err != nil {
+			return errors.Wrap(err, "failed to enable connection")
+		}
+		return nil
+	}
+	return errors.New("failed to disable path, no switch connections found")
+}
+
+// FlipLast "flips" the final connection in the path.
+//
+// This can be used to disconnect a monitor but not the dock since paths are always
+// defined as starting with the DUT and ending with the leaf device.
+func (c ConnectionPath) FlipLast(ctx context.Context) error {
+	for i := len(c) - 1; i >= 0; i-- {
+		con := c[i]
+		if con.IsStatic() {
+			continue
+		}
+		if err := con.manager.Flip(ctx); err != nil {
 			return errors.Wrap(err, "failed to enable connection")
 		}
 		return nil

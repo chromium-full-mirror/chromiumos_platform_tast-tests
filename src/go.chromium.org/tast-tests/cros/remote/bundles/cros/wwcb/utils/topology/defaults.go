@@ -12,7 +12,7 @@ import (
 )
 
 // DefaultFullTopology creates a default "pasit_full" topology with the provided IDs.
-func DefaultFullTopology(hostname, dockSwitch, m1Switch, m2Switch, ethSwitch string, auxiliary ...string) *labapi.PasitHost {
+func DefaultFullTopology(hostname, dockSwitch, dock1HdmiSwitch, dock2DpSwitch, ethSwitch string, auxiliary ...string) *labapi.PasitHost {
 	topology := &labapi.PasitHost{
 		Devices: []*labapi.PasitHost_Device{
 			{
@@ -28,7 +28,7 @@ func DefaultFullTopology(hostname, dockSwitch, m1Switch, m2Switch, ethSwitch str
 				Type: labapi.PasitHost_Device_DOCKING_STATION,
 			},
 			{
-				Id:   m1Switch,
+				Id:   dock1HdmiSwitch,
 				Type: labapi.PasitHost_Device_SWITCH_FIXTURE,
 			},
 			{
@@ -36,7 +36,7 @@ func DefaultFullTopology(hostname, dockSwitch, m1Switch, m2Switch, ethSwitch str
 				Type: labapi.PasitHost_Device_MONITOR,
 			},
 			{
-				Id:   m2Switch,
+				Id:   dock2DpSwitch,
 				Type: labapi.PasitHost_Device_SWITCH_FIXTURE,
 			},
 			{
@@ -66,22 +66,22 @@ func DefaultFullTopology(hostname, dockSwitch, m1Switch, m2Switch, ethSwitch str
 			{
 				Type:     "HDMI",
 				ParentId: "dock_1",
-				ChildId:  m1Switch,
+				ChildId:  dock2DpSwitch,
 			},
 			{
 				Type:     "HDMI",
-				ParentId: "dock_1",
-				ChildId:  m2Switch,
+				ParentId: dock2DpSwitch,
+				ChildId:  "monitor_2",
 			},
 			{
 				Type:     "HDMI",
-				ParentId: m1Switch,
+				ParentId: dock1HdmiSwitch,
 				ChildId:  "monitor_1",
 			},
 			{
 				Type:     "HDMI",
-				ParentId: m2Switch,
-				ChildId:  "monitor_2",
+				ParentId: "dock_1",
+				ChildId:  dock1HdmiSwitch,
 			},
 			{
 				Type:     "ETHERNET",
@@ -123,7 +123,7 @@ func DefaultFullTopology(hostname, dockSwitch, m1Switch, m2Switch, ethSwitch str
 }
 
 // DefaultDisplayTopology creates a default topology for simple display tests.
-func DefaultDisplayTopology(hostname, m1Switch, m2Switch string) *labapi.PasitHost {
+func DefaultDisplayTopology(hostname, dock1HdmiSwitch, dock2DpSwitch string) *labapi.PasitHost {
 	return &labapi.PasitHost{
 		Devices: []*labapi.PasitHost_Device{
 			{
@@ -131,11 +131,11 @@ func DefaultDisplayTopology(hostname, m1Switch, m2Switch string) *labapi.PasitHo
 				Type: labapi.PasitHost_Device_DUT,
 			},
 			{
-				Id:   m1Switch,
+				Id:   dock1HdmiSwitch,
 				Type: labapi.PasitHost_Device_SWITCH_FIXTURE,
 			},
 			{
-				Id:   m2Switch,
+				Id:   dock2DpSwitch,
 				Type: labapi.PasitHost_Device_SWITCH_FIXTURE,
 			},
 			{
@@ -151,21 +151,21 @@ func DefaultDisplayTopology(hostname, m1Switch, m2Switch string) *labapi.PasitHo
 			{
 				Type:     "USBC",
 				ParentId: hostname,
-				ChildId:  m1Switch,
+				ChildId:  dock1HdmiSwitch,
 			},
 			{
 				Type:     "DISPLAYPORT",
-				ParentId: m1Switch,
+				ParentId: dock1HdmiSwitch,
 				ChildId:  "monitor_1",
 			},
 			{
 				Type:     "DISPLAYPORT",
 				ParentId: "monitor_1",
-				ChildId:  m2Switch,
+				ChildId:  dock2DpSwitch,
 			},
 			{
 				Type:     "DISPLAYPORT",
-				ParentId: m2Switch,
+				ParentId: dock2DpSwitch,
 				ChildId:  "monitor_2",
 			},
 		},

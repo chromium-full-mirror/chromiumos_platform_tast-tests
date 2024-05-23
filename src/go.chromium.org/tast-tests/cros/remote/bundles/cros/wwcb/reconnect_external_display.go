@@ -13,6 +13,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/log"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils/topology"
 	pb "go.chromium.org/tast-tests/cros/services/cros/apps"
 	inputspb "go.chromium.org/tast-tests/cros/services/cros/inputs"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
@@ -32,7 +33,7 @@ func init() {
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
 		Attr:         []string{"group:wwcb", "group:pasit"},
 		SoftwareDeps: []string{"chrome"},
-		Vars:         []string{"servo", "DockingID", "ExtDispID1", "wwcbIPPowerIp", "newTestItem"},
+		Vars:         []string{"servo", "newTestItem"},
 		ServiceDeps: []string{
 			"tast.cros.browser.ChromeService",
 			"tast.cros.apps.AppsService",
@@ -41,7 +42,8 @@ func init() {
 			"tast.cros.inputs.KeyboardService",
 			"tast.cros.ui.ChromeUIService",
 		},
-		Data: []string{"Capabilities.json"},
+		Data:    []string{"Capabilities.json"},
+		Fixture: "wwcbPasitDock",
 		Params: []testing.Param{
 			{
 				Name:      "fast",
@@ -54,8 +56,6 @@ func ReconnectExternalDisplay(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
-
-	extDispID := s.RequiredVar("ExtDispID1")
 
 	// Connect to the gRPC server on the DUT.
 	cl, err := rpc.Dial(ctx, s.DUT(), s.RPCHint())
@@ -75,32 +75,16 @@ func ReconnectExternalDisplay(ctx context.Context, s *testing.State) {
 	// Dump the UI tree and screenshot on any failure
 	utils.AttachErrorHandlersForUITreeDump(cleanupCtx, s, cl.Conn)
 
-	// Initialize fixtures to find the connected devices.
-	if err := utils.InitFixture(ctx); err != nil {
-		s.Fatal("Failed to initialize fixtures: ", err)
-	}
-	defer utils.CloseAllFixture(cleanupCtx)
-
 	// Connect the external display & Dock.
-	if err := utils.ControlFixture(ctx, extDispID, "on"); err != nil {
-		s.Fatal("Failed to connect the external display: ", err)
+	tf := s.FixtValue().(*topology.TestFixture)
+	extDispID, err := tf.Helper.ActivateDeviceByType(ctx, topology.DeviceTypeMonitor)
+	if err != nil {
+		s.Fatal("Failed to connect to the external display: ", err)
 	}
 
-	if dockingID, ok := s.Var("DockingID"); ok {
-		ipPowerPorts := []int{1}
-		if err := utils.OpenIppower(ctx, ipPowerPorts); err != nil {
-			s.Fatal("Failed to power on the docking station: ", err)
-		}
-		defer utils.CloseIppower(cleanupCtx, ipPowerPorts)
-
-		if _, ok := s.Var("newTestItem"); ok {
-			if err := utils.VerifyDockingInterface(ctx, s.DUT(), dockingID, s.DataPath("Capabilities.json")); err != nil {
-				s.Fatal("Failed to verify the docking station interface: ", err)
-			}
-		}
-
-		if err := utils.ControlFixture(ctx, dockingID, "on"); err != nil {
-			s.Fatal("Failed to connect to the docking station: ", err)
+	if _, ok := s.Var("newTestItem"); ok {
+		if err := tf.VerifyDockingInterface(ctx, s.DUT(), s.DataPath("Capabilities.json")); err != nil {
+			s.Fatal("Failed to verify the docking station interface: ", err)
 		}
 	}
 
@@ -139,7 +123,7 @@ func ReconnectExternalDisplay(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to verify Filesapp window show on the external display: ", err)
 	}
 
-	if err := utils.ControlFixture(ctx, extDispID, "off"); err != nil {
+	if err := tf.Helper.DeactivateDeviceByID(ctx, extDispID); err != nil {
 		s.Fatal("Failed to disconnect the external display: ", err)
 	}
 
@@ -147,8 +131,8 @@ func ReconnectExternalDisplay(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to verify Filesapp window show on the DUT: ", err)
 	}
 
-	if err := utils.ControlFixture(ctx, extDispID, "on"); err != nil {
-		s.Fatal("Failed to connect the external display: ", err)
+	if err := tf.Helper.ActivateDeviceByID(ctx, extDispID); err != nil {
+		s.Fatal("Failed to connect to the external display: ", err)
 	}
 
 	if _, err := displaySvc.VerifyWindowOnDisplay(ctx, &wwcb.QueryRequest{WindowTitle: filesWindowName, DisplayIndex: 1}); err != nil {

@@ -11,6 +11,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/log"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils/topology"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/testing"
@@ -25,8 +26,9 @@ func init() {
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
 		Attr:         []string{"group:wwcb", "group:pasit"},
 		SoftwareDeps: []string{"chrome"},
-		Vars:         []string{"DockingID", "ExtDispID1", "EthernetID", "wwcbIPPowerIp", "newTestItem"},
+		Vars:         []string{"DockingID", "newTestItem"},
 		Data:         []string{"Capabilities.json"},
+		Fixture:      "wwcbPasitDock",
 		Params: []testing.Param{
 			{
 				Name:      "fast",
@@ -40,49 +42,33 @@ func NetworkSwitchingWithDock(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	dockingID := s.RequiredVar("DockingID")
-	extDispID := s.RequiredVar("ExtDispID1")
-	ethernetID := s.RequiredVar("EthernetID")
-
-	// Open IP power to supply docking power.
-	ippowerPorts := []int{1}
-	if err := utils.OpenIppower(ctx, ippowerPorts); err != nil {
-		s.Fatal("Failed to open IP power: ", err)
-	}
-	defer utils.CloseIppower(cleanupCtx, ippowerPorts)
-
-	// Initialize fixtures to find the connected devices.
-	if err := utils.InitFixture(ctx); err != nil {
-		s.Fatal("Failed to initialize fixtures: ", err)
-	}
-	defer utils.CloseAllFixture(cleanupCtx)
-
 	defer func(ctx context.Context) {
 		if s.HasError() {
 			log.CollectedLogs(ctx, s.DUT(), s.OutDir())
 		}
-	}(ctx)
+	}(cleanupCtx)
 
 	defaultEthernets, err := utils.ListEthernets(ctx, s.DUT())
 	if err != nil {
 		s.Fatal("Failed to list Ethernets: ", err)
 	}
 
-	if err := utils.ControlFixture(ctx, extDispID, "on"); err != nil {
-		s.Fatal("Failed to connect the external display to the Dock: ", err)
+	tf := s.FixtValue().(*topology.TestFixture)
+	// Connect Monitor and network via dock.
+	_, dockID, err := tf.Helper.ActivateDeviceByTypeVia(ctx, topology.DeviceTypeMonitor, topology.DeviceTypeDockingStation)
+	if err != nil {
+		s.Fatal("Failed to connect to the external display: ", err)
 	}
-	if err := utils.ControlFixture(ctx, ethernetID, "on"); err != nil {
-		s.Fatal("Failed to connect the Ethernet to the Dock: ", err)
+
+	ethID, err := tf.Helper.ActivateDeviceByTypeViaId(ctx, topology.DeviceTypeNetwork, dockID)
+	if err != nil {
+		s.Fatal("Failed to connect to the Ethernet: ", err)
 	}
 
 	if _, ok := s.Var("newTestItem"); ok {
-		if err := utils.VerifyDockingInterface(ctx, s.DUT(), dockingID, s.DataPath("Capabilities.json")); err != nil {
+		if err := tf.VerifyDockingInterface(ctx, s.DUT(), s.DataPath("Capabilities.json")); err != nil {
 			s.Fatal("Failed to verify the docking station interface: ", err)
 		}
-	}
-
-	if err := utils.ControlFixture(ctx, dockingID, "on"); err != nil {
-		s.Fatal("Failed to connect the docking station: ", err)
 	}
 
 	// Find Dock Ethernet on DUT.
@@ -106,7 +92,7 @@ func NetworkSwitchingWithDock(ctx context.Context, s *testing.State) {
 	}
 
 	// Verify Dock Ethernet is closed in negative situation.
-	if err := utils.ControlFixture(ctx, ethernetID, "off"); err != nil {
+	if err := tf.Helper.DeactivateDeviceByID(ctx, ethID); err != nil {
 		s.Fatal("Failed to disconnect Ethernet from Dock: ", err)
 	}
 	if err := pingNetwork(ctx, s.DUT(), dockEth, server); err == nil {

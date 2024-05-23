@@ -11,6 +11,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/log"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils/topology"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -25,8 +26,9 @@ func init() {
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
 		Attr:         []string{"group:wwcb", "group:pasit"},
 		SoftwareDeps: []string{"chrome"},
-		Vars:         []string{"servo", "DockingID", "ExtDispID1", "wwcbIPPowerIp", "newTestItem"},
+		Vars:         []string{"servo", "newTestItem"},
 		Data:         []string{"Capabilities.json"},
+		Fixture:      "wwcbPasitDock",
 		Params: []testing.Param{
 			{
 				Name:      "fast",
@@ -39,8 +41,6 @@ func ConnectDisplayBeforeBootDUT(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
-
-	extDispID := s.RequiredVar("ExtDispID1")
 
 	// Set up the servo attached to the DUT.
 	dut := s.DUT()
@@ -56,27 +56,10 @@ func ConnectDisplayBeforeBootDUT(ctx context.Context, s *testing.State) {
 	}
 	defer utils.PowerOnDUT(ctx, pxy, dut)
 
-	// Initialize fixtures to find the connected devices.
-	if err := utils.InitFixture(ctx); err != nil {
-		s.Fatal("Failed to initialize fixtures: ", err)
-	}
-	defer utils.CloseAllFixture(cleanupCtx)
-
 	// Connect the external display via Dock before cold boot DUT.
-	if err := utils.ControlFixture(ctx, extDispID, "on"); err != nil {
+	tf := s.FixtValue().(*topology.TestFixture)
+	if _, err := tf.Helper.ActivateDeviceByType(ctx, topology.DeviceTypeMonitor); err != nil {
 		s.Fatal("Failed to connect to the external display: ", err)
-	}
-
-	if dockingID, ok := s.Var("DockingID"); ok {
-		ipPowerPorts := []int{1}
-		if err := utils.OpenIppower(ctx, ipPowerPorts); err != nil {
-			s.Fatal("Failed to power on the docking station: ", err)
-		}
-		defer utils.CloseIppower(cleanupCtx, ipPowerPorts)
-
-		if err := utils.ControlFixture(ctx, dockingID, "on"); err != nil {
-			s.Fatal("Failed to connect to the docking station: ", err)
-		}
 	}
 
 	defer func(ctx context.Context) {
@@ -98,11 +81,9 @@ func ConnectDisplayBeforeBootDUT(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to verify that the external display is connected: ", err)
 	}
 
-	if dockingID, ok := s.Var("DockingID"); ok {
-		if _, ok := s.Var("newTestItem"); ok {
-			if err := utils.VerifyDockingInterface(ctx, s.DUT(), dockingID, s.DataPath("Capabilities.json")); err != nil {
-				s.Fatal("Failed to verify the docking station interface: ", err)
-			}
+	if _, ok := s.Var("newTestItem"); ok {
+		if err := tf.VerifyDockingInterface(ctx, s.DUT(), s.DataPath("Capabilities.json")); err != nil {
+			s.Fatal("Failed to verify the docking station interface: ", err)
 		}
 	}
 }

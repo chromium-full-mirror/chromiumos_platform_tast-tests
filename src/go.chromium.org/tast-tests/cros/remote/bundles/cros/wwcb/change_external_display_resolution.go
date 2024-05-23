@@ -13,6 +13,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/log"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils/topology"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast-tests/cros/services/cros/wwcb"
 
@@ -30,9 +31,10 @@ func init() {
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
 		Attr:         []string{"group:wwcb", "group:pasit"},
 		SoftwareDeps: []string{"chrome"},
-		Vars:         []string{"DockingID", "ExtDispID1", "wwcbIPPowerIp", "newTestItem"},
+		Vars:         []string{"newTestItem"},
 		ServiceDeps:  []string{"tast.cros.wwcb.DisplayService", "tast.cros.browser.ChromeService", "tast.cros.ui.ChromeUIService"},
 		Data:         []string{"Capabilities.json"},
+		Fixture:      "wwcbPasitDock",
 		Params: []testing.Param{
 			{
 				Name:      "fast",
@@ -45,8 +47,6 @@ func ChangeExternalDisplayResolution(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
-
-	extDispID := s.RequiredVar("ExtDispID1")
 
 	// Connect to the gRPC server on the DUT.
 	cl, err := rpc.Dial(ctx, s.DUT(), s.RPCHint())
@@ -80,25 +80,14 @@ func ChangeExternalDisplayResolution(ctx context.Context, s *testing.State) {
 		}
 	}(ctx)
 
-	if err := utils.ControlFixture(ctx, extDispID, "on"); err != nil {
+	tf := s.FixtValue().(*topology.TestFixture)
+	if _, err := tf.Helper.ActivateDeviceByType(ctx, topology.DeviceTypeMonitor); err != nil {
 		s.Fatal("Failed to connect external display: ", err)
 	}
 
-	if dockingID, ok := s.Var("DockingID"); ok {
-		// Open IP power to supply docking power.
-		if err := utils.OpenIppower(ctx, []int{1}); err != nil {
-			s.Fatal("Failed to open IP power: ", err)
-		}
-		defer utils.CloseIppower(cleanupCtx, []int{1})
-
-		if _, ok := s.Var("newTestItem"); ok {
-			if err := utils.VerifyDockingInterface(ctx, s.DUT(), dockingID, s.DataPath("Capabilities.json")); err != nil {
-				s.Fatal("Failed to verify the docking station interface: ", err)
-			}
-		}
-
-		if err := utils.ControlFixture(ctx, dockingID, "on"); err != nil {
-			s.Fatal("Failed to connect docking station: ", err)
+	if _, ok := s.Var("newTestItem"); ok {
+		if err := tf.VerifyDockingInterface(ctx, s.DUT(), s.DataPath("Capabilities.json")); err != nil {
+			s.Fatal("Failed to verify the docking station interface: ", err)
 		}
 	}
 

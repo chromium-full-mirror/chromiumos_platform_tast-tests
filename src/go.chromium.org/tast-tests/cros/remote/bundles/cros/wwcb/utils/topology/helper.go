@@ -106,12 +106,54 @@ type devicePredicate func(*labapi.PasitHost_Device) bool
 // DevicesByType returns a list of devices with IDs matching the requested type.
 func (t *Helper) DevicesByType(deviceType labapi.PasitHost_Device_Type) []string {
 	var devices []string
-	for _, d := range t.devices {
+	for _, d := range t.topology.GetDevices() {
 		if d.GetType() == deviceType {
 			devices = append(devices, d.GetId())
 		}
 	}
 	return devices
+}
+
+// DevicesByTypeViaId returns a list of all devices whose path travels through the specific ID.
+func (t *Helper) DevicesByTypeViaId(deviceType labapi.PasitHost_Device_Type, viaId string) []string {
+	predicate := func(device *labapi.PasitHost_Device) bool {
+		return device.GetId() == viaId
+	}
+	return t.devicesByTypeVia(deviceType, predicate)
+}
+
+// ActivateDeviceByTypeViaId activates the first device of the requested type whose path passes through the requested ID.
+func (t *Helper) ActivateDeviceByTypeViaId(ctx context.Context, deviceType labapi.PasitHost_Device_Type, viaId string) (string, error) {
+	predicate := func(device *labapi.PasitHost_Device) bool {
+		return device.GetId() == viaId
+	}
+	path, deviceID, _, err := t.pathToDeviceVia(deviceType, predicate)
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to find path to device of type: %v via: %v", deviceType, viaId)
+	}
+	testing.ContextLogf(ctx, "Found path to device: %q: %v", deviceID, path)
+
+	if err := path.Activate(ctx); err != nil {
+		return "", errors.Wrap(err, "failed to activate device path")
+	}
+	return deviceID, nil
+}
+
+// ActivateDeviceByTypeVia enables the first found component of the specified type whose path travels through another device of type "via".
+func (t *Helper) ActivateDeviceByTypeVia(ctx context.Context, deviceType, viaType labapi.PasitHost_Device_Type) (string, string, error) {
+	predicate := func(device *labapi.PasitHost_Device) bool {
+		return device.GetType() == viaType
+	}
+	path, deviceID, viaID, err := t.pathToDeviceVia(deviceType, predicate)
+	if err != nil {
+		return "", "", errors.Wrapf(err, "failed to find path to device of type: %v via: %v", deviceType, viaType)
+	}
+	testing.ContextLogf(ctx, "Found path to device: %q: %v", deviceID, path)
+
+	if err := path.Activate(ctx); err != nil {
+		return "", "", errors.Wrap(err, "failed to activate device path")
+	}
+	return deviceID, viaID, nil
 }
 
 // PathToDeviceByType gets the connection path between the DUT and the first device of the requested type.
@@ -138,6 +180,59 @@ func (t *Helper) ActivateDeviceByType(ctx context.Context, deviceType labapi.Pas
 		return "", errors.Wrap(err, "failed to activate device path")
 	}
 	return device, nil
+}
+
+func (t *Helper) pathToDeviceVia(deviceType labapi.PasitHost_Device_Type, predicate devicePredicate) (ConnectionPath, string, string, error) {
+	devices := t.devicesByTypeVia(deviceType, predicate)
+	if len(devices) == 0 {
+		return nil, "", "", errors.New("failed to get path to device")
+	}
+	deviceID := devices[0]
+
+	// Get the path to the first found device that matches.
+	idPredicate := func(device *labapi.PasitHost_Device) bool {
+		return device.GetId() == deviceID
+	}
+
+	path, err := t.path(idPredicate)
+	if err != nil {
+		return nil, "", "", errors.Wrapf(err, "failed to get path to device with ID: %q", deviceID)
+	}
+
+	for _, d := range path {
+		if predicate(t.devices[d]) {
+			return t.connectionsInPath(path), deviceID, d, nil
+		}
+	}
+	return nil, "", "", errors.Wrap(err, "failed to get path to device")
+}
+
+// devicesByTypeVia returns a list of devices whose path runs through the requested item.
+func (t *Helper) devicesByTypeVia(deviceType labapi.PasitHost_Device_Type, predicate devicePredicate) []string {
+	var devices []string
+	for _, d := range t.DevicesByType(deviceType) {
+		predicate := func(device *labapi.PasitHost_Device) bool {
+			return device.GetId() == d
+		}
+
+		// Get the path to the device.
+		// Note: We assume that there is only one valid path from the DUT to the device.
+		path, err := t.path(predicate)
+		if err != nil {
+			// No path to this device, just ignore it.
+			continue
+		}
+
+		// Check if the path contains the requested component.
+		for _, id := range path {
+			dev := t.devices[id]
+			if predicate(dev) {
+				devices = append(devices, d)
+				break
+			}
+		}
+	}
+	return devices
 }
 
 // DeactivateDeviceByType disables the first found component of the specified type.
@@ -189,6 +284,20 @@ func (t *Helper) DeactivateDeviceByID(ctx context.Context, id string) error {
 	testing.ContextLogf(ctx, "Found path to device: %q: %v", id, path)
 
 	if err := path.DisableLast(ctx); err != nil {
+		return errors.Wrap(err, "failed to disable device path")
+	}
+	return nil
+}
+
+// FlipDeviceByID flips the connection direction of the component with the provided ID.
+func (t *Helper) FlipDeviceByID(ctx context.Context, id string) error {
+	path, err := t.PathToDeviceByID(id)
+	if err != nil {
+		return errors.Wrap(err, "failed to get path to device")
+	}
+	testing.ContextLogf(ctx, "Found path to device: %q: %v", id, path)
+
+	if err := path.FlipLast(ctx); err != nil {
 		return errors.Wrap(err, "failed to disable device path")
 	}
 	return nil

@@ -15,6 +15,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/log"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils/topology"
 	pb "go.chromium.org/tast-tests/cros/services/cros/apps"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast-tests/cros/services/cros/wwcb"
@@ -39,9 +40,10 @@ func init() {
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
 		Attr:         []string{"group:wwcb", "group:pasit"},
 		SoftwareDeps: []string{"chrome"},
-		Vars:         []string{"DockingID", "ExtDispID1", "ExtDispID2", "wwcbIPPowerIp", "newTestItem"},
+		Vars:         []string{"DockingID", "newTestItem"},
 		ServiceDeps:  []string{"tast.cros.wwcb.DisplayService", "tast.cros.apps.AppsService", "tast.cros.browser.ChromeService", "tast.cros.ui.ChromeUIService"},
 		Data:         []string{"Capabilities.json"},
+		Fixture:      "wwcbPasitDock",
 		Timeout:      10 * time.Minute,
 		Params: []testing.Param{
 			{
@@ -60,9 +62,6 @@ func WindowsPersistenceWithDualDisplay(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
-
-	extDispID1 := s.RequiredVar("ExtDispID1")
-	extDispID2 := s.RequiredVar("ExtDispID2")
 
 	// Connect to the gRPC server on the DUT.
 	cl, err := rpc.Dial(ctx, s.DUT(), s.RPCHint())
@@ -85,37 +84,26 @@ func WindowsPersistenceWithDualDisplay(ctx context.Context, s *testing.State) {
 	displaySvc := wwcb.NewDisplayServiceClient(cl.Conn)
 	appsSvc := pb.NewAppsServiceClient(cl.Conn)
 
-	// Initialize fixtures to find the connected devices.
-	if err := utils.InitFixture(ctx); err != nil {
-		s.Fatal("Failed to initialize fixtures: ", err)
-	}
-	defer utils.CloseAllFixture(cleanupCtx)
-
 	defer func(ctx context.Context) {
 		if s.HasError() {
 			log.CollectedLogs(ctx, s.DUT(), s.OutDir())
 		}
 	}(ctx)
 
-	if dockingID, ok := s.Var("DockingID"); ok {
-		ipPowerPorts := []int{1}
-		if err := utils.OpenIppower(ctx, ipPowerPorts); err != nil {
-			s.Fatal("Failed to power on the docking station: ", err)
-		}
-		defer utils.CloseIppower(cleanupCtx, ipPowerPorts)
+	tf := s.FixtValue().(*topology.TestFixture)
+	displays := tf.Helper.DevicesByType(topology.DeviceTypeMonitor)
+	if len(displays) < 2 {
+		s.Fatalf("Failed to find required displays, expected at least 2, found: %d", len(displays))
+	}
 
-		if _, ok := s.Var("newTestItem"); ok {
-			if err := utils.VerifyDockingInterface(ctx, s.DUT(), dockingID, s.DataPath("Capabilities.json")); err != nil {
-				s.Fatal("Failed to verify the docking station interface: ", err)
-			}
-		}
-
-		if err := utils.ControlFixture(ctx, dockingID, "on"); err != nil {
-			s.Fatal("Failed to connect to the docking station: ", err)
+	if _, ok := s.Var("newTestItem"); ok {
+		if err := tf.VerifyDockingInterface(ctx, s.DUT(), s.DataPath("Capabilities.json")); err != nil {
+			s.Fatal("Failed to verify the docking station interface: ", err)
 		}
 	}
 
-	if err := utils.ControlFixture(ctx, extDispID1, "on"); err != nil {
+	extDispID1 := displays[0]
+	if err := tf.Helper.ActivateDeviceByID(ctx, extDispID1); err != nil {
 		s.Fatal("Failed to connect to the first external display: ", err)
 	}
 
@@ -128,7 +116,8 @@ func WindowsPersistenceWithDualDisplay(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get display ID: ", err)
 	}
 
-	if err := utils.ControlFixture(ctx, extDispID2, "on"); err != nil {
+	extDispID2 := displays[1]
+	if err := tf.Helper.ActivateDeviceByID(ctx, extDispID2); err != nil {
 		s.Fatal("Failed to connect to the second external display: ", err)
 	}
 
@@ -150,11 +139,11 @@ func WindowsPersistenceWithDualDisplay(ctx context.Context, s *testing.State) {
 		extDispID1, extDispID2 = extDispID2, extDispID1
 	}
 
-	if err := openAppsOnDualDisplay(ctx, appsSvc, displaySvc, extDispID1, extDispID2); err != nil {
+	if err := openAppsOnDualDisplay(ctx, appsSvc, displaySvc); err != nil {
 		s.Fatal("Failed to open two apps on two external displays: ", err)
 	}
 
-	if err := replugExternalDisplay(ctx, displaySvc, extDispID1, extDispID2); err != nil {
+	if err := replugExternalDisplay(ctx, displaySvc, tf.Helper, extDispID1, extDispID2); err != nil {
 		s.Fatal("Failed to replug two external displays: ", err)
 	}
 
@@ -162,7 +151,7 @@ func WindowsPersistenceWithDualDisplay(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to test primary mode on two external displays: ", err)
 	}
 
-	if err := replugExternalDisplayInPrimary(ctx, displaySvc, extDispID1, extDispID2); err != nil {
+	if err := replugExternalDisplayInPrimary(ctx, displaySvc, tf.Helper, extDispID1, extDispID2); err != nil {
 		s.Fatal("Failed to replug two external displays when the first external display is in primary: ", err)
 	}
 
@@ -171,7 +160,7 @@ func WindowsPersistenceWithDualDisplay(ctx context.Context, s *testing.State) {
 	}
 }
 
-func openAppsOnDualDisplay(ctx context.Context, appsSvc pb.AppsServiceClient, displaySvc wwcb.DisplayServiceClient, extDispID1, extDispID2 string) error {
+func openAppsOnDualDisplay(ctx context.Context, appsSvc pb.AppsServiceClient, displaySvc wwcb.DisplayServiceClient) error {
 	testing.ContextLog(ctx, "Open two apps on dual external displays")
 
 	// Open two any app for testing requirement, just to get a window.
@@ -198,14 +187,14 @@ func openAppsOnDualDisplay(ctx context.Context, appsSvc pb.AppsServiceClient, di
 	return nil
 }
 
-func replugExternalDisplay(ctx context.Context, displaySvc wwcb.DisplayServiceClient, extDispID1, extDispID2 string) error {
+func replugExternalDisplay(ctx context.Context, displaySvc wwcb.DisplayServiceClient, helper *topology.Helper, extDispID1, extDispID2 string) error {
 	testing.ContextLog(ctx, "Unplug and replug in, check windows on expected display")
 
-	if err := utils.ControlFixture(ctx, extDispID1, "off"); err != nil {
+	if err := helper.DeactivateDeviceByID(ctx, extDispID1); err != nil {
 		return errors.Wrap(err, "failed to disconnect the first external display")
 	}
 
-	if err := utils.ControlFixture(ctx, extDispID2, "off"); err != nil {
+	if err := helper.DeactivateDeviceByID(ctx, extDispID2); err != nil {
 		return errors.Wrap(err, "failed to disconnect the second external display")
 	}
 
@@ -217,11 +206,11 @@ func replugExternalDisplay(ctx context.Context, displaySvc wwcb.DisplayServiceCl
 		return errors.Wrap(err, "failed to verify the Gallery App's window is on internal display")
 	}
 
-	if err := utils.ControlFixture(ctx, extDispID1, "on"); err != nil {
+	if err := helper.ActivateDeviceByID(ctx, extDispID1); err != nil {
 		return errors.Wrap(err, "failed to connect to the first external display")
 	}
 
-	if err := utils.ControlFixture(ctx, extDispID2, "on"); err != nil {
+	if err := helper.ActivateDeviceByID(ctx, extDispID2); err != nil {
 		return errors.Wrap(err, "failed to connect to the second external display")
 	}
 
@@ -259,7 +248,7 @@ func testPrimaryModeWithDualDisplay(ctx context.Context, displaySvc wwcb.Display
 	return nil
 }
 
-func replugExternalDisplayInPrimary(ctx context.Context, displaySvc wwcb.DisplayServiceClient, extDispID1, extDispID2 string) error {
+func replugExternalDisplayInPrimary(ctx context.Context, displaySvc wwcb.DisplayServiceClient, helper *topology.Helper, extDispID1, extDispID2 string) error {
 	testing.ContextLog(ctx, "Unplug and replug in, check windows on expected display")
 
 	for _, outer := range []struct {
@@ -285,14 +274,21 @@ func replugExternalDisplayInPrimary(ctx context.Context, displaySvc wwcb.Display
 
 		// Unplug and re-plug in the external display, then check the windows bound on which display.
 		for _, inner := range []struct {
-			onOff           string
+			onOff           bool
 			windowOnDisplay int
 		}{
-			{"off", 0},
-			{"on", outer.dispIndex},
+			{false, 0},
+			{true, outer.dispIndex},
 		} {
-			if err := utils.ControlFixture(ctx, outer.fixtureID, inner.onOff); err != nil {
-				return errors.Wrapf(err, "failed to turn %s the fixture of the external display", inner.onOff)
+
+			if inner.onOff {
+				if err := helper.ActivateDeviceByID(ctx, outer.fixtureID); err != nil {
+					return errors.Wrap(err, "failed to turn on the fixture of the external display")
+				}
+			} else {
+				if err := helper.DeactivateDeviceByID(ctx, outer.fixtureID); err != nil {
+					return errors.Wrap(err, "failed to turn off the fixture of the external display")
+				}
 			}
 
 			if _, err := displaySvc.VerifyWindowOnDisplay(ctx, &wwcb.QueryRequest{WindowTitle: fileWindowTitle, DisplayIndex: int32(inner.windowOnDisplay)}); err != nil {

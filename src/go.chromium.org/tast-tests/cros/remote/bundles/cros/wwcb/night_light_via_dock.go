@@ -16,6 +16,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/log"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils/topology"
 	"go.chromium.org/tast-tests/cros/remote/dutfs"
 	pb "go.chromium.org/tast-tests/cros/services/cros/apps"
 	inputspb "go.chromium.org/tast-tests/cros/services/cros/inputs"
@@ -97,8 +98,9 @@ func init() {
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
 		Attr:         []string{"group:wwcb", "group:pasit"},
 		SoftwareDeps: []string{"chrome"},
-		Vars:         []string{"servo", "DockingID", "ExtDispID1", "wwcbIPPowerIp", "newTestItem"},
+		Vars:         []string{"servo", "newTestItem"},
 		Data:         []string{"Capabilities.json"},
+		Fixture:      "wwcbPasitDock",
 		ServiceDeps: []string{
 			"tast.cros.browser.ChromeService",
 			"tast.cros.apps.AppsService",
@@ -119,9 +121,6 @@ func NightLightViaDock(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
-
-	dockingID := s.RequiredVar("DockingID")
-	extDispID := s.RequiredVar("ExtDispID1")
 
 	// Connect to the gRPC server on the DUT.
 	cl, err := rpc.Dial(ctx, s.DUT(), s.RPCHint())
@@ -152,37 +151,22 @@ func NightLightViaDock(ctx context.Context, s *testing.State) {
 	keyboardSvc := inputspb.NewKeyboardServiceClient(cl.Conn)
 	uiautoSvc := ui.NewAutomationServiceClient(cl.Conn)
 
-	// Open IP power to supply docking power.
-	ippowerPorts := []int{1}
-	if err := utils.OpenIppower(ctx, ippowerPorts); err != nil {
-		s.Fatal("Failed to open IP power: ", err)
-	}
-	defer utils.CloseIppower(cleanupCtx, ippowerPorts)
-
-	// Initialize fixtures to find the connected devices.
-	if err := utils.InitFixture(ctx); err != nil {
-		s.Fatal("Failed to initialize fixtures: ", err)
-	}
-	defer utils.CloseAllFixture(cleanupCtx)
-
 	defer func(ctx context.Context) {
 		if s.HasError() {
 			log.CollectedLogs(ctx, s.DUT(), s.OutDir())
 		}
 	}(ctx)
 
-	if err := utils.ControlFixture(ctx, extDispID, "on"); err != nil {
+	// Connect the external display & Dock.
+	tf := s.FixtValue().(*topology.TestFixture)
+	if _, _, err := tf.Helper.ActivateDeviceByTypeVia(ctx, topology.DeviceTypeMonitor, topology.DeviceTypeDockingStation); err != nil {
 		s.Fatal("Failed to connect to the external display: ", err)
 	}
 
 	if _, ok := s.Var("newTestItem"); ok {
-		if err := utils.VerifyDockingInterface(ctx, s.DUT(), dockingID, s.DataPath("Capabilities.json")); err != nil {
+		if err := tf.VerifyDockingInterface(ctx, s.DUT(), s.DataPath("Capabilities.json")); err != nil {
 			s.Fatal("Failed to verify the docking station interface: ", err)
 		}
-	}
-
-	if err := utils.ControlFixture(ctx, dockingID, "on"); err != nil {
-		s.Fatal("Failed to connect to the docking station: ", err)
 	}
 
 	if _, err := displaySvc.VerifyDisplayCount(ctx, &wwcb.QueryRequest{DisplayCount: 2}); err != nil {

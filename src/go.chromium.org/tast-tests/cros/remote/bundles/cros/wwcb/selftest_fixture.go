@@ -273,8 +273,15 @@ func identifyPeripheralsCapabilities(ctx context.Context, dut *dut.DUT, cap map[
 			return cap, errors.Wrap(err, "failed to find the docking power path")
 		}
 		testing.ContextLogf(ctx, "docking power path:%s", dockCharger)
+
+		enable := func(ctx context.Context) error {
+			return utils.ControlFixture(ctx, dockingID, "on")
+		}
+		disable := func(ctx context.Context) error {
+			return utils.ControlFixture(ctx, dockingID, "off")
+		}
 		// Retrieve the docking interface.
-		dockingPort, err := utils.FindDockingConnectPort(ctx, dut, dockingID)
+		dockingPort, err := utils.FindDockingConnectPort(ctx, dut, disable, enable)
 		if err != nil {
 			return cap, errors.Wrap(err, "failed to find the docking port")
 		}

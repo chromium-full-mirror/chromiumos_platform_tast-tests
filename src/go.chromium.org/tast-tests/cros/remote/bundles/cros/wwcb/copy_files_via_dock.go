@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
@@ -19,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/log"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils/topology"
 	"go.chromium.org/tast-tests/cros/remote/dutfs"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast/core/ctxutil"
@@ -43,8 +43,9 @@ func init() {
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
 		Attr:         []string{"group:wwcb", "group:pasit"},
 		SoftwareDeps: []string{"chrome"},
-		Vars:         []string{"DockingID", "USBTypeAIDArray", "wwcbIPPowerIp", "newTestItem"},
+		Vars:         []string{"newTestItem"},
 		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.ui.ChromeUIService", "tast.cros.ui.ScreenRecorderService"},
+		Fixture:      "wwcbPasitDock",
 		Data:         []string{"Capabilities.json", sampleTXT},
 		Timeout:      utils.TestingTimeout,
 		Params: []testing.Param{
@@ -61,12 +62,6 @@ func CopyFilesViaDock(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
-
-	dockingID := s.RequiredVar("DockingID")
-	var USBTypeAIDArray []string
-	for _, ID := range strings.Split(s.RequiredVar("USBTypeAIDArray"), ",") {
-		USBTypeAIDArray = append(USBTypeAIDArray, ID)
-	}
 
 	dut := s.DUT()
 
@@ -93,31 +88,26 @@ func CopyFilesViaDock(ctx context.Context, s *testing.State) {
 	utils.StartRecording(ctx, s, screenRecorder)
 	defer utils.StopAndSaveScreenRecording(cleanupCtx, s, screenRecorder)
 
-	// Open IP power to supply docking power.
-	if err := utils.OpenIppower(ctx, []int{1}); err != nil {
-		s.Fatal("Failed to open IP power: ", err)
-	}
-	defer utils.CloseIppower(cleanupCtx, []int{1})
-
-	// Initialize fixtures to find the connected devices.
-	if err := utils.InitFixture(ctx); err != nil {
-		s.Fatal("Failed to initialize fixtures: ", err)
-	}
-	defer utils.CloseAllFixture(cleanupCtx)
-
 	defer func(ctx context.Context) {
 		if s.HasError() {
 			log.CollectedLogs(ctx, s.DUT(), s.OutDir())
 		}
 	}(ctx)
 
-	if err := utils.ControlFixture(ctx, dockingID, "on"); err != nil {
-		s.Fatal("Failed to connect docking station: ", err)
+	tf := s.FixtValue().(*topology.TestFixture)
+
+	// Get the first available dock.
+	docks := tf.Helper.DevicesByType(topology.DeviceTypeDockingStation)
+	if len(docks) != 1 {
+		s.Fatalf("Failed to find dock, expected 1 docks got: %d", len(docks))
 	}
+	dockID := docks[0]
 
 	// Make sure to switch off the Type-A fixture
+	// Enable any auxiliary USB devices that pass through the dock, these devices are categorized as "HID"
+	USBTypeAIDArray := tf.Helper.DevicesByTypeViaId(topology.DeviceTypeHID, dockID)
 	for _, ID := range USBTypeAIDArray {
-		if err := utils.ControlFixture(ctx, ID, "off"); err != nil {
+		if err := tf.Helper.DeactivateDeviceByID(ctx, ID); err != nil {
 			s.Fatal("Failed to disconnect USB Type-A device: ", err)
 		}
 	}
@@ -128,7 +118,7 @@ func CopyFilesViaDock(ctx context.Context, s *testing.State) {
 	}
 
 	for _, ID := range USBTypeAIDArray {
-		if err := utils.ControlFixture(ctx, ID, "on"); err != nil {
+		if err := tf.Helper.ActivateDeviceByID(ctx, ID); err != nil {
 			s.Fatal("Failed to connect USB Type-A device: ", err)
 		}
 	}
@@ -149,7 +139,7 @@ func CopyFilesViaDock(ctx context.Context, s *testing.State) {
 	}
 
 	if _, ok := s.Var("newTestItem"); ok {
-		if err := utils.VerifyDockingInterface(ctx, s.DUT(), dockingID, s.DataPath("Capabilities.json")); err != nil {
+		if err := tf.VerifyDockingInterface(ctx, s.DUT(), s.DataPath("Capabilities.json")); err != nil {
 			s.Fatal("Failed to verify the docking station interface: ", err)
 		}
 

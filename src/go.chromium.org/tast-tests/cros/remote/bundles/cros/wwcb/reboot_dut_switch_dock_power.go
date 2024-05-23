@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/log"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils/topology"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
@@ -31,8 +32,9 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		ServiceDeps:  []string{"tast.cros.browser.ChromeService"},
-		Vars:         []string{"servo", "DockingID", "ExtDispID1", "EthernetID", "USBTypeAIDArray", "wwcbIPPowerIp", "newTestItem"},
+		Vars:         []string{"servo", "newTestItem"},
 		Data:         []string{"Capabilities.json"},
+		Fixture:      "wwcbPasitDock",
 		Timeout:      utils.TestingTimeout,
 		Params: []testing.Param{{
 			Name: "clamshell_mode",
@@ -76,43 +78,23 @@ func RebootDUTSwitchDockPower(ctx context.Context, s *testing.State) {
 	}
 	defer utils.EnableServoPower(ctx, dut, pxy.Servo())
 
-	// Initialize fixtures to find the connected devices.
-	if err := utils.InitFixture(ctx); err != nil {
-		s.Fatal("Failed to initialize the fixture: ", err)
-	}
-	defer utils.CloseAllFixture(cleanupCtx)
-
-	// Open IP power to supply docking power.
-	ippowerPorts := []int{1}
-	if err := utils.OpenIppower(ctx, ippowerPorts); err != nil {
-		s.Fatal("Failed to power on the docking station: ", err)
-	}
-	defer utils.CloseIppower(cleanupCtx, ippowerPorts)
-
 	defer func(ctx context.Context) {
 		if s.HasError() {
 			log.CollectedLogs(ctx, s.DUT(), s.OutDir())
 		}
 	}(ctx)
 
-	dockingID := s.RequiredVar("DockingID")
-	extDispID := s.RequiredVar("ExtDispID1")
-	ethernetID := s.RequiredVar("EthernetID")
-	USBTypeAIDArray := strings.Split(s.RequiredVar("USBTypeAIDArray"), ",")
-
-	if err := utils.ControlFixture(ctx, dockingID, "on"); err != nil {
-		s.Fatal("Failed to plug in the docking station: ", err)
-	}
-
 	// Verify connection to DUT.
 	if err := testing.Poll(ctx, dut.Connect, &testing.PollOptions{Timeout: 60 * time.Second}); err != nil {
 		s.Fatal("Failed to connect to DUT: ", err)
 	}
 
-	USBDevices, err := utils.ConnectPeripheralsViaDock(ctx, dut, extDispID, ethernetID, USBTypeAIDArray)
+	tf := s.FixtValue().(*topology.TestFixture)
+	_, USBDevices, err := tf.ConnectPeripheralsViaDock(ctx, dut)
 	if err != nil {
-		s.Fatal("Failed to connect peripherals via Dock: ", err)
+		s.Fatal("Failed to connect the peripherals via Dock: ", err)
 	}
+
 	defer func(context.Context) {
 		if s.HasError() {
 			USBDevicesFailed, err := utils.GetUSBDevice(ctx, dut)
@@ -124,7 +106,7 @@ func RebootDUTSwitchDockPower(ctx context.Context, s *testing.State) {
 	}(cleanupCtx)
 
 	if _, ok := s.Var("newTestItem"); ok {
-		if err := utils.VerifyDockingInterface(ctx, s.DUT(), dockingID, s.DataPath("Capabilities.json")); err != nil {
+		if err := tf.VerifyDockingInterface(ctx, s.DUT(), s.DataPath("Capabilities.json")); err != nil {
 			s.Fatal("Failed to verify the docking station interface: ", err)
 		}
 
@@ -133,12 +115,13 @@ func RebootDUTSwitchDockPower(ctx context.Context, s *testing.State) {
 		}
 	}
 
+	ippowerPorts := []int{1}
 	if err := powerOffOn(ctx, dut, ippowerPorts, USBDevices); err != nil {
 		s.Fatal("Failed to verify peripherals after power off/on the docking station: ", err)
 	}
 
 	if _, ok := s.Var("newTestItem"); ok {
-		if err := utils.VerifyDockingInterface(ctx, s.DUT(), dockingID, s.DataPath("Capabilities.json")); err != nil {
+		if err := tf.VerifyDockingInterface(ctx, s.DUT(), s.DataPath("Capabilities.json")); err != nil {
 			s.Fatal("Failed to verify the docking station interface: ", err)
 		}
 
@@ -152,7 +135,7 @@ func RebootDUTSwitchDockPower(ctx context.Context, s *testing.State) {
 	}
 
 	if _, ok := s.Var("newTestItem"); ok {
-		if err := utils.VerifyDockingInterface(ctx, s.DUT(), dockingID, s.DataPath("Capabilities.json")); err != nil {
+		if err := tf.VerifyDockingInterface(ctx, s.DUT(), s.DataPath("Capabilities.json")); err != nil {
 			s.Fatal("Failed to verify the docking station interface: ", err)
 		}
 
@@ -166,7 +149,7 @@ func RebootDUTSwitchDockPower(ctx context.Context, s *testing.State) {
 	}
 
 	if _, ok := s.Var("newTestItem"); ok {
-		if err := utils.VerifyDockingInterface(ctx, s.DUT(), dockingID, s.DataPath("Capabilities.json")); err != nil {
+		if err := tf.VerifyDockingInterface(ctx, s.DUT(), s.DataPath("Capabilities.json")); err != nil {
 			s.Fatal("Failed to verify the docking station interface: ", err)
 		}
 

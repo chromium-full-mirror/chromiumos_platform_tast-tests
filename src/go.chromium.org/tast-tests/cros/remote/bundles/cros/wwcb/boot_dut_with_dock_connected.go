@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/log"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils/topology"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -28,9 +29,10 @@ func init() {
 		Attr:         []string{"group:wwcb", "group:pasit"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
-		Vars:         []string{"servo", "DockingID", "ExtDispID1", "EthernetID", "USBTypeAIDArray", "wwcbIPPowerIp", "newTestItem"},
+		Vars:         []string{"servo", "newTestItem"},
 		Data:         []string{"Capabilities.json"},
 		Timeout:      utils.TestingTimeout,
+		Fixture:      "wwcbPasitDock",
 		Params: []testing.Param{{
 			Name: "clamshell_mode",
 			Val:  false,
@@ -49,11 +51,6 @@ func BootDUTWithDockConnected(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
-
-	dockingID := s.RequiredVar("DockingID")
-	extDispID := s.RequiredVar("ExtDispID1")
-	ethernetID := s.RequiredVar("EthernetID")
-	USBDeviceIDs := strings.Split(s.RequiredVar("USBTypeAIDArray"), ",")
 
 	// Set up the servo attached to the DUT.
 	dut := s.DUT()
@@ -95,19 +92,6 @@ func BootDUTWithDockConnected(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	// Initialize fixtures to find the connected devices.
-	if err := utils.InitFixture(ctx); err != nil {
-		s.Fatal("Failed to initialize the fixture: ", err)
-	}
-	defer utils.CloseAllFixture(cleanupCtx)
-
-	// Open IP power to supply docking power.
-	ippowerPorts := []int{1}
-	if err := utils.OpenIppower(ctx, ippowerPorts); err != nil {
-		s.Fatal("Failed to power on the docking station: ", err)
-	}
-	defer utils.CloseIppower(cleanupCtx, ippowerPorts)
-
 	defer func(ctx context.Context) {
 		if s.HasError() {
 			log.CollectedLogs(ctx, s.DUT(), s.OutDir())
@@ -115,17 +99,17 @@ func BootDUTWithDockConnected(ctx context.Context, s *testing.State) {
 	}(ctx)
 
 	// Connect docking station, ext-display, Ethernet, USB devices.
-	if err := utils.ControlFixture(ctx, dockingID, "on"); err != nil {
-		s.Fatal("Failed to connect to the docking station: ", err)
-	}
-	if err := utils.ControlFixture(ctx, extDispID, "on"); err != nil {
+	tf := s.FixtValue().(*topology.TestFixture)
+	_, dockID, err := tf.Helper.ActivateDeviceByTypeVia(ctx, topology.DeviceTypeMonitor, topology.DeviceTypeDockingStation)
+	if err != nil {
 		s.Fatal("Failed to connect to the external display: ", err)
 	}
-	if err := utils.ControlFixture(ctx, ethernetID, "on"); err != nil {
+	if _, err := tf.Helper.ActivateDeviceByTypeViaId(ctx, topology.DeviceTypeNetwork, dockID); err != nil {
 		s.Fatal("Failed to connect to the Ethernet: ", err)
 	}
-	for _, usbID := range USBDeviceIDs {
-		if err := utils.ControlFixture(ctx, usbID, "on"); err != nil {
+	// Enable any auxiliary USB devices that pass through the dock, these devices are categorized as "HID"
+	for _, usbID := range tf.Helper.DevicesByTypeViaId(topology.DeviceTypeHID, dockID) {
+		if err := tf.Helper.ActivateDeviceByID(ctx, usbID); err != nil {
 			s.Fatal("Failed to connect to the USB device: ", err)
 		}
 	}
@@ -154,7 +138,7 @@ func BootDUTWithDockConnected(ctx context.Context, s *testing.State) {
 	}
 
 	if _, ok := s.Var("newTestItem"); ok {
-		if err := utils.VerifyDockingInterface(ctx, s.DUT(), dockingID, s.DataPath("Capabilities.json")); err != nil {
+		if err := tf.VerifyDockingInterface(ctx, s.DUT(), s.DataPath("Capabilities.json")); err != nil {
 			s.Fatal("Failed to verify the docking station interface: ", err)
 		}
 
