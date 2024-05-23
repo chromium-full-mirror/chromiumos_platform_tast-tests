@@ -25,6 +25,8 @@ type AloopLoaded struct {
 	Channels int
 	// Name of the parent fixture.
 	Parent string
+	// Number of loopback device pairs. Default is 1.
+	DevicePairs int
 }
 
 var _ ParameterizedFixture = AloopLoaded{}
@@ -35,6 +37,9 @@ func (pf AloopLoaded) Instance() string {
 	if pf.Channels != 0 {
 		name += fmt.Sprintf("%dch", pf.Channels)
 	}
+	if pf.DevicePairs != 0 {
+		name += fmt.Sprintf("%dpair", pf.DevicePairs)
+	}
 
 	return maybeRegisterFixture(&testing.Fixture{
 		Name:         maybeWithParentName(name, pf.Parent),
@@ -42,7 +47,8 @@ func (pf AloopLoaded) Instance() string {
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
 		BugComponent: "b:776546",
 		Impl: &AloopLoadedFixture{
-			Channels: pf.Channels,
+			Channels:    pf.Channels,
+			DevicePairs: pf.DevicePairs,
 		},
 		Parent:          pf.Parent,
 		SetUpTimeout:    20 * time.Second,
@@ -51,6 +57,8 @@ func (pf AloopLoaded) Instance() string {
 	})
 }
 
+const defaultChannels = 2
+const defaultPairs = 1
 const aloopUCMPath = "/usr/share/alsa/ucm/Loopback/HiFi.conf"
 
 const aloopUCMTemplate = `SectionVerb {
@@ -65,19 +73,22 @@ const aloopUCMTemplate = `SectionVerb {
 	]
 }
 
-SectionDevice."Loopback Playback".0 {
+{{range $i, $name := $.DeviceNames}}
+{{/* The first device will be named "Loopback Playback", and the second one will be "Loopback Playback 1". */}}
+SectionDevice."Loopback Playback{{if gt $i 0}} {{$i}}{{end}}".0 {
 	Value {
-		PlaybackPCM "hw:Loopback,0"
-		PlaybackChannels "{{.Channels}}"
+		PlaybackPCM "hw:{{$name}},0"
+		PlaybackChannels "{{$.Channels}}"
 	}
 }
 
-SectionDevice."Loopback Capture".0 {
+SectionDevice."Loopback Capture{{if gt $i 0}} {{$i}}{{end}}".0 {
 	Value {
-		CapturePCM "hw:Loopback,1"
-		CaptureChannels "{{.Channels}}"
+		CapturePCM "hw:{{$name}},1"
+		CaptureChannels "{{$.Channels}}"
 	}
 }
+{{end}}
 `
 
 // AloopLoadedFixture is a fixture to load snd-aloop kernel module.
@@ -88,13 +99,32 @@ type AloopLoadedFixture struct {
 	// Channels of the aloop device. 0 to not change the existing configuration.
 	Channels int
 
-	originalUCM []byte
+	// Number of loopback device pairs. Default is 1.
+	DevicePairs int
+
+	// Name of the loopback devices
+	DeviceNames []string
 }
 
 // SetUp the AloopLoadedFixture
 func (f *AloopLoadedFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
-	if f.Channels != 0 {
-		s.Logf("Replacing %s with channels=%d", aloopUCMPath, f.Channels)
+	if f.Channels != 0 || f.DevicePairs != 0 {
+		if f.Channels == 0 {
+			f.Channels = defaultChannels
+		}
+		if f.DevicePairs == 0 {
+			f.DevicePairs = defaultPairs
+		}
+
+		s.Logf("Replacing %s with channels=%d pairs=%d", aloopUCMPath, f.Channels, f.DevicePairs)
+
+		for i := 0; i < f.DevicePairs; i++ {
+			name := "Loopback"
+			if i > 0 {
+				name += fmt.Sprintf("_%d", i)
+			}
+			f.DeviceNames = append(f.DeviceNames, name)
+		}
 		var ucmContent bytes.Buffer
 		if err := template.Must(template.New("HiFi.conf").Parse(aloopUCMTemplate)).Execute(&ucmContent, f); err != nil {
 			s.Fatal("Cannot generate aloop HiFi.conf: ", err)
@@ -108,7 +138,12 @@ func (f *AloopLoadedFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 		}
 	}
 
-	if _, err := internal.LoadAloop(ctx); err != nil {
+	var options []internal.AloopOption
+	if f.DevicePairs > 1 {
+		options = append(options, internal.WithMultiplePairs(f.DevicePairs))
+	}
+
+	if _, err := internal.LoadAloop(ctx, options...); err != nil {
 		s.Fatal("Cannot load aloop: ", err)
 	}
 

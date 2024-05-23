@@ -6,6 +6,7 @@ package audio
 
 import (
 	"context"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -13,6 +14,17 @@ import (
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
+
+// CaptureWavFromPCM capture wavFile from the pcm device.
+func CaptureWavFromPCM(ctx context.Context, wavFile, pcmDevice string, duration int) error {
+	testing.ContextLogf(ctx, "Capturing %s directly from %s", filepath.Base(wavFile), pcmDevice)
+	if err := testexec.CommandContext(ctx, "arecord", "-f", "dat", "-d", strconv.Itoa(duration), "-D"+pcmDevice, wavFile).Run(
+		testexec.DumpLogOnError,
+	); err != nil {
+		return errors.Wrap(err, "cannot run arecord")
+	}
+	return nil
+}
 
 // CaptureWavFromDefault records wavFile from the default device.
 func CaptureWavFromDefault(ctx context.Context, wavFile TestRawData) error {

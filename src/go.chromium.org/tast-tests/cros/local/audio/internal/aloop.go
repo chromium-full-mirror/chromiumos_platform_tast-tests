@@ -6,6 +6,8 @@ package internal
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/upstart"
@@ -15,11 +17,31 @@ import (
 
 const aloopModuleName = "snd-aloop"
 
+// AloopOption is a function that helps to construct snd-aloop arguments.
+type AloopOption func([]string) []string
+
+// WithMultiplePairs returns an option to enable snd-aloop with multiple device pairs.
+// It appends enable=1,1 (number of pairs) to the argument list.
+func WithMultiplePairs(pairs int) AloopOption {
+	ones := make([]string, pairs)
+	for i := 0; i < pairs; i++ {
+		ones[i] = "1"
+	}
+	return func(args []string) []string {
+		return append(args, fmt.Sprintf("enable=%s\n", strings.Join(ones, ",")))
+	}
+}
+
 // LoadAloop loads snd-aloop module on kernel. A deferred call to the returned
 // unloadAloop function to unload snd-aloop should be scheduled by the caller if
 // err is non-nil.
-func LoadAloop(ctx context.Context) (func(context.Context), error) {
-	if err := testexec.CommandContext(ctx, "modprobe", aloopModuleName).Run(testexec.DumpLogOnError); err != nil {
+func LoadAloop(ctx context.Context, options ...AloopOption) (func(context.Context), error) {
+	args := []string{aloopModuleName}
+	for _, opt := range options {
+		args = opt(args)
+	}
+
+	if err := testexec.CommandContext(ctx, "modprobe", args...).Run(testexec.DumpLogOnError); err != nil {
 		return nil, err
 	}
 

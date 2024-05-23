@@ -111,6 +111,7 @@ type CrasNode struct {
 	Type       string
 	Active     bool
 	IsInput    bool
+	Name       string
 	DeviceName string
 	NodeVolume uint64
 }
@@ -179,6 +180,11 @@ func (c *Cras) GetNodes(ctx context.Context) ([]CrasNode, error) {
 		} else if nodes[i].IsInput, ok = isInput.Value().(bool); !ok {
 			return nil, errors.Errorf("'IsInput' is not bool: %v", mp)
 		}
+		if name, ok := mp["Name"]; !ok {
+			return nil, errors.Errorf("'Name' not found: %v", mp)
+		} else if nodes[i].Name, ok = name.Value().(string); !ok {
+			return nil, errors.Errorf("'Name' is not string: %v", mp)
+		}
 		if deviceName, ok := mp["DeviceName"]; !ok {
 			return nil, errors.Errorf("'DeviceName' not found: %v", mp)
 		} else if nodes[i].DeviceName, ok = deviceName.Value().(string); !ok {
@@ -197,6 +203,22 @@ func (c *Cras) GetNodes(ctx context.Context) ([]CrasNode, error) {
 type NodeMatcher interface {
 	Match(*CrasNode) bool
 	fmt.Stringer
+}
+
+// MatchNodeName is a NodeMatcher that matches CrasNode's device name.
+type MatchNodeName struct {
+	Name string
+}
+
+var _ NodeMatcher = MatchNodeName{}
+
+// Match implements NodeMatcher.Match.
+func (m MatchNodeName) Match(n *CrasNode) bool {
+	return m.Name == n.Name
+}
+
+func (m MatchNodeName) String() string {
+	return fmt.Sprintf("%#v", m)
 }
 
 // MatchNodeType is a NodeMatcher that matches CrasNode's type.
@@ -482,6 +504,11 @@ func (c *Cras) SetNoiseCancellationEnabled(ctx context.Context, enabled bool) er
 // SetStyleTransferEnabled enables or disables style transfer.
 func (c *Cras) SetStyleTransferEnabled(ctx context.Context, enabled bool) error {
 	return c.call(ctx, "SetStyleTransferEnabled", enabled).Err
+}
+
+// SetSidetoneEnabled enables or disables sidetone.
+func (c *Cras) SetSidetoneEnabled(ctx context.Context, enabled bool) error {
+	return c.call(ctx, "SetSidetoneEnabled", enabled).Err
 }
 
 // GetFeatureFlagForTest returns the enabled status of the given feature as seen by CRAS.

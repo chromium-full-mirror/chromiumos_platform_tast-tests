@@ -34,7 +34,26 @@ type Header struct {
 // File is a struct that represents a WAV file.
 type File struct {
 	Header Header
-	Body   [][]int32
+	// Body contains array of PCM audio per channels
+	// e.g [ch1][frame1], [ch1][frame2], [ch1][frame3], ...
+	//     [ch2][frame1], [ch2][frame2], [ch2][frame3], ...
+	Body [][]int32
+}
+
+// GetBodyAsInt16 returns File.Body as [][]int16
+func (f File) GetBodyAsInt16() [][]int16 {
+	pcmData := make([][]int16, f.Header.Channels)
+	for i := range pcmData {
+		pcmData[i] = make([]int16, f.Header.FrameCount)
+	}
+
+	for channel := range pcmData {
+		for frame := range pcmData[0] {
+			pcmData[channel][frame] = int16(f.Body[channel][frame])
+		}
+	}
+
+	return pcmData
 }
 
 func getHeader(headerBytes []byte) (Header, error) {
