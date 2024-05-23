@@ -17,7 +17,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
-	"go.chromium.org/tast-tests/cros/local/loginstatus"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/fsutil"
@@ -28,13 +27,6 @@ import (
 const (
 	loggedIn       = "loggedInForVideoConferencing"
 	loggedInLacros = "loggedInLacrosForVideoConferencing"
-
-	gaiaLoggedIn                = "gaiaLoggedInForVideoConferencing"
-	gaiaLoggedInClamshell       = "gaiaLoggedInClamshellForVideoConferencing"
-	gaiaLoggedInTablet          = "gaiaLoggedInTabletForVideoConferencing"
-	gaiaLoggedInLacros          = "gaiaLoggedInLacrosForVideoConferencing"
-	gaiaLoggedInLacrosClamshell = "gaiaLoggedInLacrosClamshellForVideoConferencing"
-	gaiaLoggedInLacrosTablet    = "gaiaLoggedInLacrosTabletForVideoConferencing"
 
 	baseLoggedInWithFakeVCExtension       = "baseLoggedInWithFakeVCExtension"
 	baseLoggedInLacrosWithFakeVCExtension = "baseLoggedInLacrosWithFakeVCExtension"
@@ -98,72 +90,6 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name: gaiaLoggedIn,
-		Desc: "A fixture with GAIA user logged in",
-		Contacts: []string{
-			"chrome-knowledge-eng@google.com",
-			"xiuwen@google.com",
-		},
-		BugComponent: "b:187682",
-		Vars:         []string{"ui.gaiaPoolDefault"},
-		Impl: baseSetupFixture(browser.TypeAsh, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault"))}, nil
-		}),
-		Parent:          fixture.AloopLoaded{Channels: 2}.Instance(),
-		SetUpTimeout:    chrome.LoginTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name: gaiaLoggedInClamshell,
-		Desc: "A fixture with GAIA user logged in forcing clamshell mode",
-		Contacts: []string{
-			"chrome-knowledge-eng@google.com",
-			"xiuwen@google.com",
-		},
-		BugComponent: "b:187682",
-		Parent:       fixture.AloopLoaded{Channels: 2}.Instance(),
-		Vars:         []string{"ui.gaiaPoolDefault"},
-		Impl: baseSetupFixture(browser.TypeAsh, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
-				chrome.ExtraArgs("--force-tablet-mode=clamshell"),
-			}, nil
-		}),
-		SetUpTimeout:    chrome.LoginTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name: gaiaLoggedInTablet,
-		Desc: "A fixture with GAIA user logged in forcing tablet mode",
-		Contacts: []string{
-			"chrome-knowledge-eng@google.com",
-			"xiuwen@google.com",
-		},
-		BugComponent: "b:187682",
-		Vars:         []string{"ui.gaiaPoolDefault"},
-		Impl: baseSetupFixture(browser.TypeAsh, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
-				chrome.ExtraArgs("--force-tablet-mode=touch_view"),
-			}, nil
-		}),
-		Parent:          fixture.AloopLoaded{Channels: 2}.Instance(),
-		SetUpTimeout:    chrome.LoginTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
 		Name: loggedInLacros,
 		Desc: "A fixture with fake user logged in Lacros",
 		Contacts: []string{
@@ -172,74 +98,6 @@ func init() {
 		},
 		BugComponent:    "b:187682",
 		Impl:            baseSetupFixture(browser.TypeLacros, nil),
-		Parent:          fixture.AloopLoaded{Channels: 2}.Instance(),
-		SetUpTimeout:    chrome.LoginTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name: gaiaLoggedInLacros,
-		Desc: "A fixture with GAIA user logged in Lacros",
-		Contacts: []string{
-			"chrome-knowledge-eng@google.com",
-			"xiuwen@google.com",
-		},
-		BugComponent: "b:187682",
-		Vars:         []string{"ui.gaiaPoolDefault"},
-		Impl: baseSetupFixture(browser.TypeLacros, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
-			}, nil
-		}),
-		Parent:          fixture.AloopLoaded{Channels: 2}.Instance(),
-		SetUpTimeout:    chrome.LoginTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name: gaiaLoggedInLacrosClamshell,
-		Desc: "A fixture with GAIA user logged in Lacros in clamshell mode",
-		Contacts: []string{
-			"chrome-knowledge-eng@google.com",
-			"xiuwen@google.com",
-		},
-		BugComponent: "b:187682",
-		Vars:         []string{"ui.gaiaPoolDefault"},
-		Impl: baseSetupFixture(browser.TypeLacros, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
-				chrome.ExtraArgs("--force-tablet-mode=clamshell"),
-			}, nil
-		}),
-		Parent:          fixture.AloopLoaded{Channels: 2}.Instance(),
-		SetUpTimeout:    chrome.LoginTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name: gaiaLoggedInLacrosTablet,
-		Desc: "A fixture with GAIA user logged in Lacros in tablet mode",
-		Contacts: []string{
-			"chrome-knowledge-eng@google.com",
-			"xiuwen@google.com",
-		},
-		BugComponent: "b:187682",
-		Vars:         []string{"ui.gaiaPoolDefault"},
-		Impl: baseSetupFixture(browser.TypeLacros, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
-				chrome.ExtraArgs("--force-tablet-mode=touch_view"),
-			}, nil
-		}),
 		Parent:          fixture.AloopLoaded{Channels: 2}.Instance(),
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
@@ -412,16 +270,6 @@ func (f *baseSetupFixtureImpl) PreTest(ctx context.Context, s *testing.FixtTestS
 func (f *baseSetupFixtureImpl) PostTest(ctx context.Context, s *testing.FixtTestState) {}
 
 func (f *baseSetupFixtureImpl) Reset(ctx context.Context) error {
-	// Check oauth2 token is still valid. If not, return an error to restart
-	// chrome and re-login.
-	if f.cr.LoginMode() == "GAIA" {
-		if st, err := loginstatus.GetLoginStatus(ctx, f.tconn); err != nil {
-			return errors.Wrap(err, "failed to get login status")
-		} else if !*st.HasValidOauth2Token {
-			return errors.New("invalid oauth2 token")
-		}
-	}
-
 	if err := f.cr.Responded(ctx); err != nil {
 		return errors.Wrap(err, "existing Chrome connection is unusable")
 	}

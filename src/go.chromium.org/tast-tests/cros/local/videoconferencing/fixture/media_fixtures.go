@@ -49,18 +49,6 @@ const (
 
 	LoggedInWithFakeHALAndEffectsEnabledNoScreenRecorder = "loggedInWithFakeHALAndEffectsEnabledNoScreenRecorder"
 
-	// Fixtures using GAIA login without specifying device mode.
-	GAIALoggedInWithFakeHALAndEffectsEnabled                 = "gaiaLoggedInWithFakeHALAndEffectsEnabled"
-	GAIALoggedInWithFakeHALAndEffectsEnabledNoScreenRecorder = "gaiaLoggedInWithFakeHALAndEffectsEnabledNoScreenRecorderDisabled"
-	GAIALoggedInWithFakeHALAndEffectsDisabled                = "gaiaLoggedInWithFakeHALAndEffectsDisabled"
-	GAIALoggedInLacrosWithFakeHALAndEffectsEnabled           = "gaiaLoggedInLacrosWithFakeHALAndEffectsEnabled"
-
-	// Fixtures using GAIA login and specifying device mode.
-	GAIALoggedInClamshellWithFakeHALAndEffectsEnabled       = "gaiaLoggedInClamshellWithFakeHALAndEffectsEnabled"
-	GAIALoggedInTabletWithFakeHALAndEffectsEnabled          = "gaiaLoggedInTabletWithFakeHALAndEffectsEnabled"
-	GAIALoggedInLacrosClamshellWithFakeHALAndEffectsEnabled = "gaiaLoggedInLacrosClamshellWithFakeHALAndEffectsEnabled"
-	GAIALoggedInLacrosTabletWithFakeHALAndEffectsEnabled    = "gaiaLoggedInLacrosTabletWithFakeHALAndEffectsEnabled"
-
 	// List of fixture names for video conferencing testing with fake VC extension installed.
 	LoggedInWithFakeVCExtension       = "loggedInWithFakeVCExtension"
 	LoggedInLacrosWithFakeVCExtension = "loggedInLacrosWithFakeVCExtension"
@@ -208,150 +196,6 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name: GAIALoggedInWithFakeHALAndEffectsEnabled,
-		Desc: "A fixture with gaia user logged in using fake HAL camera with platform effects enabled",
-		Contacts: []string{
-			"chrome-knowledge-eng@google.com",
-			"xiuwen@google.com",
-		},
-		BugComponent:    "b:187682",
-		Data:            []string{fakeHALImageInput},
-		Impl:            mediaSetupFixture(halCameraWithPlatformEffectsEnabled),
-		Parent:          gaiaLoggedIn,
-		SetUpTimeout:    chrome.LoginTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name: GAIALoggedInWithFakeHALAndEffectsEnabledNoScreenRecorder,
-		Desc: "A fixture with gaia user logged in using fake HAL camera with platform effects enabled  without the screen recorder",
-		Contacts: []string{
-			"chrome-knowledge-eng@google.com",
-			"xiuwen@google.com",
-		},
-		BugComponent:    "b:187682",
-		Data:            []string{fakeHALImageInput},
-		Impl:            mediaSetupFixtureNoScreenRecorder(halCameraWithPlatformEffectsEnabled),
-		Parent:          gaiaLoggedIn,
-		SetUpTimeout:    chrome.LoginTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name: GAIALoggedInWithFakeHALAndEffectsDisabled,
-		Desc: "A fixture with gaia user logged in using fake HAL camera with platform effects disabled",
-		Contacts: []string{
-			"chrome-knowledge-eng@google.com",
-			"xiuwen@google.com",
-		},
-		BugComponent:    "b:187682",
-		Data:            []string{fakeHALImageInput},
-		Impl:            mediaSetupFixture(halCameraWithPlatformEffectsDisabled),
-		Parent:          gaiaLoggedIn,
-		SetUpTimeout:    chrome.LoginTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name: GAIALoggedInClamshellWithFakeHALAndEffectsEnabled,
-		Desc: "A fixture with gaia user logged in clamshell mode using fake HAL camera with platform effects enabled",
-		Contacts: []string{
-			"chrome-knowledge-eng@google.com",
-			"xiuwen@google.com",
-		},
-		BugComponent:    "b:187682",
-		Data:            []string{fakeHALImageInput},
-		Impl:            mediaSetupFixture(halCameraWithPlatformEffectsEnabled),
-		Parent:          gaiaLoggedInClamshell,
-		SetUpTimeout:    chrome.LoginTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name: GAIALoggedInTabletWithFakeHALAndEffectsEnabled,
-		Desc: "A fixture with gaia user logged in tablet mode using fake media devices with platform effects enabled",
-		Contacts: []string{
-			"chrome-knowledge-eng@google.com",
-			"xiuwen@google.com",
-		},
-		BugComponent:    "b:187682",
-		Data:            []string{fakeHALImageInput},
-		Impl:            mediaSetupFixture(halCameraWithPlatformEffectsEnabled),
-		Parent:          gaiaLoggedInTablet,
-		SetUpTimeout:    chrome.LoginTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name: GAIALoggedInLacrosWithFakeHALAndEffectsEnabled,
-		Desc: "A fixture with gaia user logged in Lacros using fake HAL camera with platform effects enabled",
-		Contacts: []string{
-			"chrome-knowledge-eng@google.com",
-			"xiuwen@google.com",
-		},
-		BugComponent:    "b:187682",
-		Data:            []string{fakeHALImageInput},
-		Impl:            mediaSetupFixture(halCameraWithPlatformEffectsEnabled),
-		Parent:          gaiaLoggedInLacros,
-		SetUpTimeout:    chrome.LoginTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name: GAIALoggedInLacrosClamshellWithFakeHALAndEffectsEnabled,
-		Desc: "A fixture with gaia user logged in Lacros clamshell mode using fake HAL camera with platform effects enabled",
-		Contacts: []string{
-			"chrome-knowledge-eng@google.com",
-			"xiuwen@google.com",
-		},
-		BugComponent:    "b:187682",
-		Data:            []string{fakeHALImageInput},
-		Impl:            mediaSetupFixture(halCameraWithPlatformEffectsEnabled),
-		Parent:          gaiaLoggedInLacrosClamshell,
-		SetUpTimeout:    chrome.LoginTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name: GAIALoggedInLacrosTabletWithFakeHALAndEffectsEnabled,
-		Desc: "A fixture with gaia user logged in Lacros tablet mode using fake HAL camera with platform effects enabled",
-		Contacts: []string{
-			"chrome-knowledge-eng@google.com",
-			"xiuwen@google.com",
-		},
-		BugComponent:    "b:187682",
-		Data:            []string{fakeHALImageInput},
-		Impl:            mediaSetupFixture(halCameraWithPlatformEffectsEnabled),
-		Parent:          gaiaLoggedInLacrosTablet,
-		SetUpTimeout:    chrome.LoginTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
 		Name: LoggedInARCWithInternalCameraAndEffectsDisabled,
 		Desc: "A fixture with test user logged in and ARC booted using internal camera with platform effects disabled",
 		Contacts: []string{
@@ -436,14 +280,13 @@ func init() {
 			KeyboardBrightness: setup.SetKbBrightnessToZero,
 			Wifi:               setup.DisableWifiInterfaces,
 		}, setup.PowerFixtureOptions{
-			BrowserType:     browser.TypeAsh,
-			EnableGAIALogin: true,
+			BrowserType: browser.TypeAsh,
 			BrowserExtraOpts: []chrome.Option{
 				chrome.EnableFeatures("VCBackgroundReplace"),
 			},
 		}),
 		Parent:          LoggedInWithFakeHALAndEffectsEnabledNoScreenRecorder,
-		SetUpTimeout:    2 * (chrome.GAIALoginTimeout + setup.SetUpTimeout),
+		SetUpTimeout:    2 * (chrome.LoginTimeout + setup.SetUpTimeout),
 		ResetTimeout:    setup.ResetTimeout,
 		TearDownTimeout: setup.TearDownTimeout,
 		PreTestTimeout:  setup.PreTestTimeout,
