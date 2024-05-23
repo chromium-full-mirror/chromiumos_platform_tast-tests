@@ -9,14 +9,14 @@ import (
 	"path/filepath"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/ui/tabswitchcuj"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/ui/tabswitchperf"
 	"go.chromium.org/tast-tests/cros/local/wpr"
 	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         TabSwitchCUJRecorder,
+		Func:         TabSwitchPerfRecorder,
 		LacrosStatus: testing.LacrosVariantUnneeded, // used to record all web traffic via wpr so that later TabSwitchCUJ could run without really talking to real sites
 		Desc:         "Run tab-switching CUJ test in chromewpr recording mode",
 		Contacts: []string{
@@ -29,10 +29,10 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      10 * time.Minute,
 		Vars:         []string{"mute"},
-		Pre:          wpr.RecordMode(filepath.Join("/tmp", tabswitchcuj.WPRArchiveName)),
+		Pre:          wpr.RecordMode(filepath.Join("/tmp", tabswitchperf.WPRArchiveName)),
 	})
 }
 
-func TabSwitchCUJRecorder(ctx context.Context, s *testing.State) {
-	tabswitchcuj.Run(ctx, s)
+func TabSwitchPerfRecorder(ctx context.Context, s *testing.State) {
+	tabswitchperf.Run(ctx, s)
 }

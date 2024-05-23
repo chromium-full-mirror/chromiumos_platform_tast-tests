@@ -2,22 +2,22 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Package tabswitchcuj contains the test code for TabSwitchCUJ. The test is
-// extracted into this package to be shared between TabSwitchCUJRecorder and
-// TabSwitchCUJ.
+// Package tabswitchperf contains the test code for TabSwitchPerf. The test is
+// extracted into this package to be shared between TabSwitchPerfRecorder and
+// TabSwitchPerf.
 //
 // Steps to update the test:
 //  1. Make changes in this package.
-//  2. "tast run $IP ui.TabSwitchCUJRecorder" to record the contents.
-//     Look for the recorded wpr archive in /tmp/tab_switch_cuj.wprgo.
+//  2. "tast run $IP ui.TabSwitchPerfRecorder" to record the contents.
+//     Look for the recorded wpr archive in /tmp/tab_switch_perf.wprgo.
 //  3. Update the recorded wpr archive to cloud storage under
 //     gs://chromiumos-test-assets-public/tast/cros/ui/
 //     It is recommended to add a date suffix to make it easier to change.
-//  4. Update "tab_switch_cuj.wprgo.external" file under ui/data.
-//  5. "tast run $IP ui.TabSwitchCUJ" locally to make sure tests works
+//  4. Update "tab_switch_perf.wprgo.external" file under ui/data.
+//  5. "tast run $IP ui.TabSwitchPerf" locally to make sure tests works
 //     with the new recorded contents.
 //  6. Submit the changes here with updated external data reference.
-package tabswitchcuj
+package tabswitchperf
 
 import (
 	"context"
@@ -44,12 +44,12 @@ import (
 
 const (
 	// WPRArchiveName is used as the external file name of the wpr archive for
-	// TabSwitchCuj and as the output filename under "/tmp" for
-	// TabSwitchCujRecorder.
-	WPRArchiveName = "tab_switch_cuj.wprgo"
+	// TabSwitchPerf and as the output filename under "/tmp" for
+	// TabSwitchPerfRecorder.
+	WPRArchiveName = "tab_switch_perf.wprgo"
 )
 
-// TabSwitchParam holds parameters of tab switch cuj test variations.
+// TabSwitchParam holds parameters of TabSwitchPerf test variations.
 type TabSwitchParam struct {
 	BrowserType browser.Type // Chrome type.
 }
@@ -78,7 +78,7 @@ type webPage struct {
 
 // coreTestDuration is a minimum duration for the core part of the test.
 // The actual test duration could be longer because of various setup.
-const coreTestDuration = 10 * time.Minute
+const coreTestDuration = 3 * time.Minute
 
 func runSetup(ctx context.Context, s *testing.State) (*tabSwitchVariables, error) {
 	vars := tabSwitchVariables{
@@ -100,7 +100,10 @@ func runSetup(ctx context.Context, s *testing.State) (*tabSwitchVariables, error
 		return nil, errors.Wrap(err, "failed to get browser TestAPIConn")
 	}
 
-	vars.recorder, err = cujrecorder.NewRecorder(ctx, vars.cr, vars.bTconn, nil, cujrecorder.RecorderOptions{})
+	vars.recorder, err = cujrecorder.NewRecorder(ctx, vars.cr, vars.bTconn, nil, cujrecorder.RecorderOptions{
+		Mode:              cujrecorder.Benchmark,
+		CooldownBeforeRun: true,
+	})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create a recorder")
 	}
@@ -246,7 +249,7 @@ func focusTab(ctx context.Context, tconn *chrome.TestConn, tabs *[]map[string]in
 func testBody(ctx context.Context, test *tabSwitchVariables) error {
 	const (
 		numPages         = 7
-		tabSwitchTimeout = 20 * time.Second
+		tabSwitchTimeout = 10 * time.Second
 	)
 
 	info, err := display.GetPrimaryInfo(ctx, test.tconn)
@@ -337,9 +340,9 @@ func testBody(ctx context.Context, test *tabSwitchVariables) error {
 			tabToClick := nodewith.HasClass("TabIcon").Nth(currentTab)
 			if err := action.Combine(
 				"click on tab and move mouse back to the center of the display",
-				ac.MouseMoveTo(tabToClick, 500*time.Millisecond),
+				ac.MouseMoveTo(tabToClick, 20*time.Millisecond),
 				ac.LeftClick(tabToClick),
-				mouse.Move(test.tconn, info.Bounds.CenterPoint(), 500*time.Millisecond),
+				mouse.Move(test.tconn, info.Bounds.CenterPoint(), 20*time.Millisecond),
 			)(ctx); err != nil {
 				return err
 			}
@@ -349,22 +352,13 @@ func testBody(ctx context.Context, test *tabSwitchVariables) error {
 			}
 
 			for _, key := range []string{"Down", "Up"} {
-				if err := sim.RepeatKeyPress(ctx, kw, key, 200*time.Millisecond, 3); err != nil {
+				if err := sim.RepeatKeyPress(ctx, kw, key, 20*time.Millisecond, 3); err != nil {
 					return errors.Wrapf(err, "failed to repeatedly press %s in between tab switches", key)
 				}
 			}
-			for _, scrollDown := range []bool{true, false} {
-				if err := sim.RepeatMouseScroll(ctx, mw, scrollDown, 50*time.Millisecond, 20); err != nil {
-					return errors.Wrap(err, "failed to scroll in between tab switches")
-				}
-			}
 
-			if err := ac.WithInterval(time.Second).WithTimeout(5*time.Second).WaitUntilNoEvent(nodewith.Root(), event.LocationChanged)(ctx); err != nil {
+			if err := ac.WithTimeout(5*time.Second).WaitUntilNoEvent(nodewith.Root(), event.LocationChanged)(ctx); err != nil {
 				testing.ContextLog(ctx, "Scroll animations haven't stabilized yet, continuing anyway: ", err)
-			}
-
-			if err := sim.RunDragMouseCycle(ctx, test.tconn, info); err != nil {
-				return errors.Wrap(err, "failed to run the mouse drag cycle")
 			}
 
 			currentTab = (currentTab + skipSize + 1) % len(conns)
@@ -401,7 +395,7 @@ func testBody(ctx context.Context, test *tabSwitchVariables) error {
 	return nil
 }
 
-// Run runs the setup, core part of the TabSwitchCUJ test, and cleanup.
+// Run runs the setup, core part of the TabSwitchPerf test, and cleanup.
 func Run(ctx context.Context, s *testing.State) {
 	// Reserve time for cleanup
 	closeCtx := ctx

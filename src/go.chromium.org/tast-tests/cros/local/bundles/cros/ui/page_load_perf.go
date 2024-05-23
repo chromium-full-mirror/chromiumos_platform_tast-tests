@@ -40,11 +40,11 @@ func init() {
 			{
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild", "crosbolt_fsi_check"},
 				Val:       browser.TypeAsh,
-				Fixture:   "tabSwitchCUJWPRAsh",
+				Fixture:   "tabSwitchPerfWPRAsh",
 			}, {
 				Name:              "lacros",
 				Val:               browser.TypeLacros,
-				Fixture:           "tabSwitchCUJWPRLacros",
+				Fixture:           "tabSwitchPerfWPRLacros",
 				ExtraSoftwareDeps: []string{"lacros"},
 			},
 		},

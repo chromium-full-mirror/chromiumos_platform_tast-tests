@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package tabswitchcuj
+package tabswitchperf
 
 import (
 	"context"
@@ -18,8 +18,8 @@ import (
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
-		Name: "tabSwitchCUJWPR",
-		Desc: "Base fixture for TabSwitchCUJ with WPR",
+		Name: "tabSwitchPerfWPR",
+		Desc: "Base fixture for TabSwitchPerf with WPR",
 		Contacts: []string{
 			"xiyuan@chromium.org",
 			"cros-sw-perf@google.com",
@@ -33,8 +33,8 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name: "tabSwitchCUJWPRAsh",
-		Desc: "Composed fixture for TabSwitchCUJ with WPR",
+		Name: "tabSwitchPerfWPRAsh",
+		Desc: "Composed fixture for TabSwitchPerf with WPR",
 		Contacts: []string{
 			"xiyuan@chromium.org",
 			"cros-sw-perf@google.com",
@@ -46,12 +46,12 @@ func init() {
 		SetUpTimeout:    chrome.FixtureSetUpTimeout + 7*time.Minute,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
-		Parent:          "tabSwitchCUJWPR",
+		Parent:          "tabSwitchPerfWPR",
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name: "tabSwitchCUJWPRLacros",
-		Desc: "Composed fixture for TabSwitchCUJ with WPR",
+		Name: "tabSwitchPerfWPRLacros",
+		Desc: "Composed fixture for TabSwitchPerf with WPR",
 		Contacts: []string{
 			"xiyuan@chromium.org",
 			"cros-sw-perf@google.com",
@@ -70,29 +70,6 @@ func init() {
 		SetUpTimeout:    chrome.FixtureSetUpTimeout + 7*time.Minute,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
-		Parent:          "tabSwitchCUJWPR",
+		Parent:          "tabSwitchPerfWPR",
 	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name: "tabSwitchCUJWPRAshWithFieldTrials",
-		Desc: "Variant of tabSwitchCUJWPRAsh with all field trials enabled",
-		Contacts: []string{
-			"ramsaroop@google.com",
-			"cros-sw-perf@google.com",
-		},
-		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			opts, err := s.ParentValue().(wpr.FixtValue).FOpt()(ctx, s)
-			if err != nil {
-				return nil, err
-			}
-			opts = append(opts, chrome.ExtraArgs("enable-field-trial-config"))
-			return opts, nil
-		}),
-		SetUpTimeout:    chrome.FixtureSetUpTimeout + 7*time.Minute,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-		Parent:          "tabSwitchCUJWPR",
-	})
-
 }
