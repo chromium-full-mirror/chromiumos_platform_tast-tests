@@ -79,6 +79,7 @@ var (
 	sysinfoKeyladderRE  = `Key Ladder:\s+(?P<keyladder>\S*)\s*`
 
 	sysinfoRE = regexp.MustCompile(sysinfoResetFlagRE + sysinfoResetCountRE + sysinfoBreadcrumbRE + sysinfoChipRE + sysinfoROKeyidRE + sysinfoRWKeyidRE + sysinfoDevidRE + sysinfoRollbackRE + sysinfoTPMModeRE + sysinfoKeyladderRE)
+	chipBIDRE = regexp.MustCompile(`Board ID:\s*(` + hexRE + `):(` + hexRE + `),\s*flags:?\s*(` + hexRE + `)`)
 )
 
 // TestlabState contains possible CCD testlab states.
@@ -1208,4 +1209,66 @@ func (i *CrOSImage) GetChipSKU(ctx context.Context) (ChipSKU, error) {
 // Eraseflashinfo runs eraseflashinfo.
 func (i *CrOSImage) Eraseflashinfo(ctx context.Context) (string, error) {
 	return i.Command(ctx, "eraseflashinfo both")
+}
+
+// BIDField is the bid field type
+type BIDField uint32
+
+const (
+	// UnsetBID is the unset BID value
+	UnsetBID BIDField = 0xffffffff
+)
+
+// ChipBID contains information about the chip board ID.
+type ChipBID struct {
+	Type           BIDField
+	TypeInv        BIDField
+	Flags          BIDField
+	IsErased       bool
+	FlagsAreErased bool
+	TypeIsErased   bool
+}
+
+// parseChipBID returns the chip sku from sysinfo
+func parseChipBID(output string) (ChipBID, error) {
+	result := ChipBID{}
+	matches := chipBIDRE.FindStringSubmatch(output)
+	if matches == nil {
+		return ChipBID{}, errors.Errorf("Unable to find chip board ID %s in bid output %s", chipBIDRE, output)
+	}
+	res, err := strconv.ParseUint(matches[1], 16, 32)
+	if err != nil {
+		return ChipBID{}, errors.Wrap(err, "could not parse board ID Type")
+	}
+	result.Type = BIDField(res)
+
+	res, err = strconv.ParseUint(matches[2], 16, 32)
+	if err != nil {
+		return ChipBID{}, errors.Wrap(err, "could not parse board ID TypeInv")
+	}
+	result.TypeInv = BIDField(res)
+
+	res, err = strconv.ParseUint(matches[3], 16, 32)
+	if err != nil {
+		return ChipBID{}, errors.Wrap(err, "could not parse board ID Flags")
+	}
+	result.Flags = BIDField(res)
+
+	result.TypeIsErased = (result.Type == UnsetBID) && (result.TypeInv == UnsetBID)
+	if !result.TypeIsErased && result.Type != (result.TypeInv^UnsetBID) {
+		return ChipBID{}, errors.Errorf("BID Type %x is not the inverted BID Type Inv %x", result.Type, result.TypeInv)
+	}
+	result.FlagsAreErased = (result.Flags == UnsetBID) && result.TypeIsErased
+	result.IsErased = result.TypeIsErased && result.FlagsAreErased
+
+	return result, nil
+}
+
+// GetChipBID gets the current chip board id.
+func (i *CrOSImage) GetChipBID(ctx context.Context) (ChipBID, error) {
+	out, err := i.Command(ctx, "bid")
+	if err != nil {
+		return ChipBID{}, err
+	}
+	return parseChipBID(out)
 }

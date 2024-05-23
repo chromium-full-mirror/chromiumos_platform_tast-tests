@@ -1232,3 +1232,111 @@ func testConvertCr50ResetFlags(t *testing.T, input, expected uint32) {
 		t.Fatalf("flag mismatch with %x: expected %x got %x", input, expected, res)
 	}
 }
+
+func TestGetChipBID1(t *testing.T) {
+	input := `Board ID: ffffffff:ffffffff, flags: ffffffff`
+	expected := ChipBID{
+		Type:           0xffffffff,
+		TypeInv:        0xffffffff,
+		Flags:          0xffffffff,
+		IsErased:       true,
+		FlagsAreErased: true,
+		TypeIsErased:   true,
+	}
+	testparseChipBID(t, input, expected, false)
+}
+
+func TestGetChipBID2(t *testing.T) {
+	input := `Board ID: ffffffff:00000000, flags: ffffffff`
+	expected := ChipBID{
+		Type:           0xffffffff,
+		TypeInv:        0,
+		Flags:          0xffffffff,
+		IsErased:       false,
+		FlagsAreErased: false,
+		TypeIsErased:   false,
+	}
+	testparseChipBID(t, input, expected, false)
+}
+
+func TestGetChipBID3(t *testing.T) {
+	input := `Board ID: 00000000:ffffffff, flags: ffffffff`
+	expected := ChipBID{
+		Type:           0,
+		TypeInv:        0xffffffff,
+		Flags:          0xffffffff,
+		IsErased:       false,
+		FlagsAreErased: false,
+		TypeIsErased:   false,
+	}
+	testparseChipBID(t, input, expected, false)
+}
+
+func TestGetChipBID4(t *testing.T) {
+	input := `Board ID: ffffffff:ffffffff, flags: 00000010`
+	expected := ChipBID{
+		Type:           0xffffffff,
+		TypeInv:        0xffffffff,
+		Flags:          0x10,
+		IsErased:       false,
+		FlagsAreErased: false,
+		TypeIsErased:   true,
+	}
+	testparseChipBID(t, input, expected, false)
+}
+
+func TestGetChipBID5(t *testing.T) {
+	input := `Board ID: 4a465a42:b5b9a5bd, flags 00000010`
+	expected := ChipBID{
+		Type:           0x4a465a42,
+		TypeInv:        0xb5b9a5bd,
+		Flags:          0x10,
+		IsErased:       false,
+		FlagsAreErased: false,
+		TypeIsErased:   false,
+	}
+	testparseChipBID(t, input, expected, false)
+}
+
+func TestGetChipBID6(t *testing.T) {
+	input := `Board ID: 4A465A42:B5B9A5BD, flags 00000010`
+	expected := ChipBID{
+		Type:           0x4a465a42,
+		TypeInv:        0xb5b9a5bd,
+		Flags:          0x10,
+		IsErased:       false,
+		FlagsAreErased: false,
+		TypeIsErased:   false,
+	}
+	testparseChipBID(t, input, expected, false)
+}
+
+func TestGetChipBID7(t *testing.T) {
+	input := `Board ID: gggggggg:gggggggg, flags 00000010`
+	testparseChipBID(t, input, ChipBID{}, true)
+}
+
+func TestGetChipBID8(t *testing.T) {
+	input := `Board ID: ffffffff:00000000, flags gggggggg`
+	testparseChipBID(t, input, ChipBID{}, true)
+}
+func TestGetChipBID9(t *testing.T) {
+	input := `Board ID: ffffffff:00000001, flags 00000010`
+	testparseChipBID(t, input, ChipBID{}, true)
+}
+
+func testparseChipBID(t *testing.T, input string, expected ChipBID, expectError bool) {
+	chip, err := parseChipBID(input)
+	if expectError {
+		if err == nil {
+			t.Fatalf("%s did not trigger an error", input)
+		}
+		return
+	}
+	if err != nil {
+		t.Fatal("error processing bid input:", err)
+	}
+	if expected != chip {
+		t.Fatalf("bid mismatch:\ngot      %v\nexpected %v", chip, expected)
+	}
+}
