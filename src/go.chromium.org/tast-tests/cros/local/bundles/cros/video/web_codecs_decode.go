@@ -104,6 +104,12 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "lacros"},
 			ExtraData:         []string{"bear-320x240.vp9.mp4", "bear-320x240.vp9.mp4.json"},
 			Fixture:           pre.ChromeVideoLacrosFixture(pre.FakeMediaStreamUI),
+		}, {
+			Name:              "h264_hw_lacros_gtfo",
+			Val:               webcodecs.TestDecodeArgs{VideoFile: "bear-320x240.h264.mp4", Acceleration: webcodecs.PreferHardware, BrowserType: browser.TypeLacros},
+			ExtraSoftwareDeps: []string{"proprietary_codecs", caps.HWDecodeH264, "lacros"},
+			ExtraData:         []string{"bear-320x240.h264.mp4", "bear-320x240.h264.mp4.json"},
+			Fixture:           pre.ChromeVideoLacrosFixture(pre.FakeMediaStreamUI, pre.GTFO),
 		}},
 	})
 }

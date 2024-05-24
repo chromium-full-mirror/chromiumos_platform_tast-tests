@@ -41,6 +41,9 @@ const (
 	// VCDInUtilityProcess makes the video capture service run in a utility process.
 	VCDInUtilityProcess
 
+	// GTFO avoids using the Chrome GPU process as a proxy in between renderers and video decoder utility processes (go/oopvd-gtfo-dd).
+	GTFO
+
 	// This must be defined last.
 	numChromeVideoFeatures = iota
 )
@@ -357,11 +360,15 @@ var chromeVideoLacrosFixtureGenerator = fixtureGenerator{
 func initChromeVideoLacrosFixtures() {
 	combos := []featureComboType{
 		comb(chromeVideo, FakeMediaStreamUI),
+		comb(chromeVideo, FakeMediaStreamUI, GTFO),
 		comb(chromeVideo, FakeMediaStreamUI, NaCl),
 		comb(chromeVideo, FakeMediaStreamUI, NaCl, SWDecoding),
 		comb(chromeVideo, GuestLogin),
+		comb(chromeVideo, GuestLogin, GTFO),
 		comb(chromeVideo, AshComposited),
+		comb(chromeVideo, AshComposited, GTFO),
 		comb(chromeVideo, LacrosComposited),
+		comb(chromeVideo, LacrosComposited, GTFO),
 		comb(chromeVideo, FakeMediaStreamUI, DistinctiveIdentifier),
 		comb(chromeVideo, FakeMediaStreamUI, VCDInUtilityProcess),
 	}
@@ -469,6 +476,13 @@ func initChromeVideoLacrosFixtures() {
 			"VCDInUtilityProcess",
 			[]chrome.Option{
 				chrome.DisableFeatures("RunVideoCaptureServiceInBrowserProcess"),
+			},
+		},
+		GTFO: {
+			"GTFO",
+			[]chrome.Option{
+				chrome.LacrosDisableFeatures("UseOutOfProcessVideoDecoding"),
+				chrome.LacrosEnableFeatures("UseGTFOOutOfProcessVideoDecoding"),
 			},
 		},
 	}

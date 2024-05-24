@@ -87,6 +87,19 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs", "lacros"},
 			Fixture:           pre.ChromeVideoLacrosFixture(pre.FakeMediaStreamUI),
 		}, {
+			// TODO(andrescj): move to graphics_nightly after the test is stabilized.
+			Name: "h264_360p_exotic_crop_hw_lacros_gtfo",
+			Val: contentsParams{
+				fileName:    "still-colors-720x480-cropped-to-640x360.h264.mp4",
+				refFileName: "still-colors-360p.ref.png",
+				browserType: browser.TypeLacros,
+			},
+			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
+			ExtraData:         []string{"still-colors-720x480-cropped-to-640x360.h264.mp4", "still-colors-360p.ref.png"},
+			ExtraHardwareDeps: hwdep.D(hwdep.SupportsNV12Overlays()),
+			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs", "lacros"},
+			Fixture:           pre.ChromeVideoLacrosFixture(pre.FakeMediaStreamUI, pre.GTFO),
+		}, {
 			Name: "h264_480p_hw",
 			Val: contentsParams{
 				fileName:    "still-colors-480p.h264.mp4",
@@ -159,6 +172,18 @@ func init() {
 			Fixture:           pre.ChromeVideoLacrosFixture(pre.AshComposited),
 		}, {
 			// TODO(andrescj): move to graphics_nightly after the test is stabilized.
+			Name: "h264_360p_exotic_crop_ash_composited_hw_lacros_gtfo",
+			Val: contentsParams{
+				fileName:    "still-colors-720x480-cropped-to-640x360.h264.mp4",
+				refFileName: "still-colors-360p.ref.png",
+				browserType: browser.TypeLacros,
+			},
+			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
+			ExtraData:         []string{"still-colors-720x480-cropped-to-640x360.h264.mp4", "still-colors-360p.ref.png"},
+			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs", "lacros"},
+			Fixture:           pre.ChromeVideoLacrosFixture(pre.AshComposited, pre.GTFO),
+		}, {
+			// TODO(andrescj): move to graphics_nightly after the test is stabilized.
 			Name: "h264_360p_exotic_crop_lacros_composited_hw_lacros",
 			Val: contentsParams{
 				fileName:    "still-colors-720x480-cropped-to-640x360.h264.mp4",
@@ -169,6 +194,18 @@ func init() {
 			ExtraData:         []string{"still-colors-720x480-cropped-to-640x360.h264.mp4", "still-colors-360p.ref.png"},
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs", "lacros"},
 			Fixture:           pre.ChromeVideoLacrosFixture(pre.LacrosComposited),
+		}, {
+			// TODO(andrescj): move to graphics_nightly after the test is stabilized.
+			Name: "h264_360p_exotic_crop_lacros_composited_hw_lacros_gtfo",
+			Val: contentsParams{
+				fileName:    "still-colors-720x480-cropped-to-640x360.h264.mp4",
+				refFileName: "still-colors-360p.ref.png",
+				browserType: browser.TypeLacros,
+			},
+			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
+			ExtraData:         []string{"still-colors-720x480-cropped-to-640x360.h264.mp4", "still-colors-360p.ref.png"},
+			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs", "lacros"},
+			Fixture:           pre.ChromeVideoLacrosFixture(pre.LacrosComposited, pre.GTFO),
 		}, {
 			Name: "h264_480p_composited_hw",
 			Val: contentsParams{

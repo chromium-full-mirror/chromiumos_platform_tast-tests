@@ -82,6 +82,17 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs", "lacros"},
 			Fixture:           pre.ChromeVideoLacrosFixture(pre.FakeMediaStreamUI),
 		}, {
+			Name: "h264_lacros_gtfo",
+			Val: seekTest{
+				filename:    "720_h264.mp4",
+				numSeeks:    25,
+				browserType: browser.TypeLacros,
+			},
+			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
+			ExtraData:         []string{"720_h264.mp4"},
+			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs", "lacros"},
+			Fixture:           pre.ChromeVideoLacrosFixture(pre.FakeMediaStreamUI, pre.GTFO),
+		}, {
 			Name: "hevc",
 			Val: seekTest{
 				filename:    "720_hevc.mp4",

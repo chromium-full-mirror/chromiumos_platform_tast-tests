@@ -234,6 +234,21 @@ func TestPlaybackPerfConfig(t *testing.T) {
 		params = append(params, param)
 	}
 
+	// Long lacros with GTFO OOP-VD
+	{
+		codec, resolution, fps, dec := "h264", 1080, 30, "hw"
+		file := playbackPerfLongFile[codec]
+		param := genPlaybackPerfParam(codec, file, resolution, fps, dec,
+			"long_lacros_gtfo", pre.ChromeVideoLacrosFixture(pre.FakeMediaStreamUI, pre.GTFO),
+			[]string{"drm_atomic", "lacros"})
+		// "rogue" is for MT8173 hana.
+		param.HardwareDeps = append(param.HardwareDeps, "hwdep.SkipGPUFamily(\"rogue\")", "hwdep.InternalDisplay()")
+		param.MeasureSteadyStateMetrics = true
+		param.MeasureRoughness = true
+		param.Duration = measurementDurationLong
+		params = append(params, param)
+	}
+
 	// All 1080p x 2, 720p x 4, 480p x 9 and 360p x 16 are equivalent to each
 	// other in number of pixels decoded per second. The next logical steps would
 	// be 240p x36 (6x6 grid) and maybe even 144p x100 (10x10 grid).
