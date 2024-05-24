@@ -30,7 +30,7 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level4"},
-		Requirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
+		Requirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01"},
 		Timeout:      8 * time.Minute,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.FirmwareUIType(hwdep.MenuUI, hwdep.LegacyMenuUI)),
 		LacrosStatus: testing.LacrosVariantUnneeded,
@@ -40,18 +40,21 @@ func init() {
 			Val: &fwScreenPowerOffParam{
 				menuPowerOffScreen: fwCommon.FwDeveloperScreen,
 			},
+			ExtraRequirements: []string{"sys-fw-0025-v01"},
 		}, {
 			Name:    "rec",
 			Fixture: fixture.NormalMode,
 			Val: &fwScreenPowerOffParam{
 				menuPowerOffScreen: fwCommon.FwRecoveryScreen,
 			},
+			ExtraAttr: []string{"firmware_ro"},
 		}, {
 			Name:    "broken",
 			Fixture: fixture.NormalMode,
 			Val: &fwScreenPowerOffParam{
 				menuPowerOffScreen: fwCommon.FwBrokenScreen,
 			},
+			ExtraRequirements: []string{"sys-fw-0025-v01"},
 		}},
 	})
 }
