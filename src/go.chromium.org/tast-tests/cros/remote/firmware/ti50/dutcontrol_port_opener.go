@@ -102,6 +102,7 @@ func openDUTControlConsole(stream dutcontrol.DutControl_ConsoleClient, dir, file
 	data := make(chan *dutcontrol.ConsoleSerialData, qSize)
 	write := make(chan *dutcontrol.ConsoleSerialWriteResult, qSize)
 	go func() {
+		addTs := true
 	Loop:
 		for {
 			resp, err := stream.Recv()
@@ -114,9 +115,19 @@ func openDUTControlConsole(stream dutcontrol.DutControl_ConsoleClient, dir, file
 			switch op := resp.Type.(type) {
 			case *dutcontrol.ConsoleResponse_SerialData:
 				if logfile != nil {
-					ts := time.Now().UTC().Format("2006-01-02T15:04:05.000Z")
-					buf := bytes.ReplaceAll(op.SerialData.Data, []byte("\n"), []byte("\n"+ts+" "))
-					_, _ = logfile.Write(buf)
+					ts := time.Now().UTC()
+					tspf := []byte(ts.Format("2006-01-02T15:04:05.000Z") + " ")
+					data := bytes.ReplaceAll(op.SerialData.Data, []byte("\x00"), []byte("\\x00"))
+					for _, line := range bytes.SplitAfter(data, []byte("\n")) {
+						if len(line) == 0 {
+							break
+						}
+						if addTs {
+							line = append(tspf, line...)
+						}
+						addTs = bytes.HasSuffix(line, []byte("\n"))
+						logfile.Write(line)
+					}
 				}
 				if len(data) == qSize {
 					testing.ContextLog(stream.Context(), "WARNING: Dutcontrol data queue full, could block future operations")
