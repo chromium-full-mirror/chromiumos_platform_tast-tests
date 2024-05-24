@@ -67,18 +67,21 @@ var (
 	// Regex to find the chip type in H1 sysinfo output
 	h1SysinfoChipRE = regexp.MustCompile(`B2-(D|C)`)
 
-	sysinfoResetFlagRE  = `Reset flags:\s+0x(?P<resetFlags>` + hexRE + `)\s+\S*\s*`
-	sysinfoResetCountRE = `Reset count:\s+(?P<resetCount>\d*)\s*`
-	sysinfoBreadcrumbRE = `(Breadcrumbs:\s+0x(?P<breadcrumbs>` + hexRE + `))?\s*`
-	sysinfoChipRE       = `Chip:\s+g\s+(?P<chipName>Ti50|cr50) (?P<chipSKU>\S+)\s*`
-	sysinfoROKeyidRE    = `RO keyid:\s+(?P<roKeyid>0x` + hexRE + `)\s*`
-	sysinfoRWKeyidRE    = `RW keyid:\s+(?P<rwKeyid>0x` + hexRE + `)\s*`
-	sysinfoDevidRE      = `DEV_ID:\s+(?P<devid>0x` + hexRE + ` 0x` + hexRE + `)\s*`
-	sysinfoRollbackRE   = `Rollback:\s+(?P<roRollback>\S+) (?P<rwRollback>\S+)\s*`
-	sysinfoTPMModeRE    = `TPM [ModeODE]+:\s+(?P<tpmMode>enabled|disabled) \((?P<tpmModeStatus>[0-9])\)\s*`
-	sysinfoKeyladderRE  = `Key Ladder:\s+(?P<keyladder>\S*)\s*`
+	sysinfoFactoryMode   = `Chip factory mode.`
+	sysinfoResetFlagRE   = `Reset flags:\s+0x(?P<resetFlags>` + hexRE + `)\s+\S*\s*`
+	sysinfoResetCountRE  = `Reset count:\s+(?P<resetCount>\d*)\s*`
+	sysinfoBreadcrumbRE  = `(Breadcrumbs:\s+0x(?P<breadcrumbs>` + hexRE + `))?\s*`
+	sysinfoChipRE        = `Chip:\s+g\s+(?P<chipName>Ti50|cr50) (?P<chipSKU>\S+)\s*`
+	sysinfoROKeyidRE     = `RO keyid:\s+(?P<roKeyid>0x` + hexRE + `)\s*`
+	sysinfoRWKeyidRE     = `RW keyid:\s+(?P<rwKeyid>0x` + hexRE + `)\s*`
+	sysinfoDevidRE       = `DEV_ID:\s+(?P<devid>0x` + hexRE + ` 0x` + hexRE + `)\s*`
+	sysinfoRollbackRE    = `Rollback:\s+(?P<roRollback>\S+) (?P<rwRollback>\S+)\s*`
+	sysinfoTPMModeRE     = `TPM [ModeODE]+:\s+(?P<tpmMode>enabled|disabled) \((?P<tpmModeStatus>[0-9])\)\s*`
+	sysinfoKeyladderRE   = `Key Ladder:\s+(?P<keyladder>\S*)\s*`
+	sysinfoEKCertRE      = `(EK Cert:\s+(?P<ekCert>\S+))?\s*`
+	sysinfoFactoryModeRE = `(?P<factoryMode>` + sysinfoFactoryMode + `)?`
 
-	sysinfoRE = regexp.MustCompile(sysinfoResetFlagRE + sysinfoResetCountRE + sysinfoBreadcrumbRE + sysinfoChipRE + sysinfoROKeyidRE + sysinfoRWKeyidRE + sysinfoDevidRE + sysinfoRollbackRE + sysinfoTPMModeRE + sysinfoKeyladderRE)
+	sysinfoRE = regexp.MustCompile(sysinfoResetFlagRE + sysinfoResetCountRE + sysinfoBreadcrumbRE + sysinfoChipRE + sysinfoROKeyidRE + sysinfoRWKeyidRE + sysinfoDevidRE + sysinfoRollbackRE + sysinfoTPMModeRE + sysinfoKeyladderRE + sysinfoEKCertRE + sysinfoFactoryModeRE)
 	chipBIDRE = regexp.MustCompile(`Board ID:\s*(` + hexRE + `):(` + hexRE + `),\s*flags:?\s*(` + hexRE + `)`)
 )
 
@@ -1103,6 +1106,12 @@ type Sysinfo struct {
 	Keyladder string
 	// ProdKeyladder is true if the prod keyladder is enabled
 	ProdKeyladder bool
+	// FactoryModeValid is true when the InFactoryMode field is valid
+	FactoryModeValid bool
+	// InFactoryMode is true if sysinfo prints the chip is in factory mode (ti50 only)
+	InFactoryMode bool
+	// EKCert is the EK Cert value
+	EKCert string
 }
 
 const (
@@ -1165,6 +1174,9 @@ func getSysinfoStruct(input map[string]string) (Sysinfo, error) {
 	result.TpmMode = input["tpmMode"]
 	result.Keyladder = input["keyladder"]
 	result.Breadcrumbs = input["breadcrumbs"]
+	result.EKCert = input["ekCert"]
+	result.InFactoryMode = false
+	result.FactoryModeValid = false
 
 	result.TpmEnabled = result.TpmMode == "enabled"
 	result.ProdKeyladder = result.Keyladder == "prod"
@@ -1192,6 +1204,8 @@ func getSysinfoStruct(input map[string]string) (Sysinfo, error) {
 		result.ResetFlags = uint32(convertCr50ResetFlags(res))
 	} else {
 		result.ResetFlags = result.OriginalResetFlags
+		result.FactoryModeValid = true
+		result.InFactoryMode = input["factoryMode"] == sysinfoFactoryMode
 	}
 
 	return result, nil

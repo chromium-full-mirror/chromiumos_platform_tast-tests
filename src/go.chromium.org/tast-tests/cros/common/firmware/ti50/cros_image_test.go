@@ -919,7 +919,6 @@ Rollback:    0.3/0.3/0.3 4.0/?.?/4.0
 TPM MODE:    disabled (3)
 Key Ladder:  prod
 EK Cert:     Compliant
-Chip factory mode.
 `
 	expectedMap := make(map[string]string)
 	expectedMap["resetFlags"] = "00000001"
@@ -935,6 +934,8 @@ Chip factory mode.
 	expectedMap["tpmMode"] = "disabled"
 	expectedMap["tpmModeStatus"] = "3"
 	expectedMap["keyladder"] = "prod"
+	expectedMap["ekCert"] = "Compliant"
+	expectedMap["factoryMode"] = ""
 
 	expected := Sysinfo{}
 	expected.ResetFlags = 0x00000001
@@ -953,6 +954,9 @@ Chip factory mode.
 	expected.Keyladder = "prod"
 	expected.TpmEnabled = false
 	expected.ProdKeyladder = true
+	expected.InFactoryMode = false
+	expected.FactoryModeValid = true
+	expected.EKCert = "Compliant"
 
 	testGetSysinfo(t, input, expectedMap, expected)
 }
@@ -987,6 +991,8 @@ Chip factory mode.
 	expectedMap["tpmMode"] = "disabled"
 	expectedMap["tpmModeStatus"] = "3"
 	expectedMap["keyladder"] = "prod"
+	expectedMap["ekCert"] = "Compliant"
+	expectedMap["factoryMode"] = "Chip factory mode."
 
 	expected := Sysinfo{}
 	expected.ResetFlags = 0x00000020
@@ -1005,6 +1011,9 @@ Chip factory mode.
 	expected.Keyladder = "prod"
 	expected.TpmEnabled = false
 	expected.ProdKeyladder = true
+	expected.InFactoryMode = true
+	expected.FactoryModeValid = true
+	expected.EKCert = "Compliant"
 
 	testGetSysinfo(t, input, expectedMap, expected)
 }
@@ -1035,6 +1044,8 @@ Key Ladder:  dev
 	expectedMap["tpmMode"] = "disabled"
 	expectedMap["tpmModeStatus"] = "2"
 	expectedMap["keyladder"] = "dev"
+	expectedMap["ekCert"] = ""
+	expectedMap["factoryMode"] = ""
 
 	expected := Sysinfo{}
 	expected.Breadcrumbs = ""
@@ -1053,6 +1064,9 @@ Key Ladder:  dev
 	expected.Keyladder = "dev"
 	expected.TpmEnabled = false
 	expected.ProdKeyladder = false
+	expected.FactoryModeValid = false
+	expected.InFactoryMode = false
+	expected.EKCert = ""
 
 	testGetSysinfo(t, input, expectedMap, expected)
 }
@@ -1084,6 +1098,8 @@ Key Ladder:  prod
 	expectedMap["tpmMode"] = "enabled"
 	expectedMap["tpmModeStatus"] = "0"
 	expectedMap["keyladder"] = "prod"
+	expectedMap["ekCert"] = ""
+	expectedMap["factoryMode"] = ""
 
 	expected := Sysinfo{}
 	expected.Breadcrumbs = ""
@@ -1102,6 +1118,9 @@ Key Ladder:  prod
 	expected.Keyladder = "prod"
 	expected.TpmEnabled = true
 	expected.ProdKeyladder = true
+	expected.FactoryModeValid = false
+	expected.InFactoryMode = false
+	expected.EKCert = ""
 
 	testGetSysinfo(t, input, expectedMap, expected)
 }
@@ -1133,6 +1152,8 @@ Key Ladder:  prod
 	expectedMap["tpmMode"] = "enabled"
 	expectedMap["tpmModeStatus"] = "0"
 	expectedMap["keyladder"] = "prod"
+	expectedMap["ekCert"] = ""
+	expectedMap["factoryMode"] = ""
 
 	expected := Sysinfo{}
 	expected.Breadcrumbs = ""
@@ -1151,6 +1172,9 @@ Key Ladder:  prod
 	expected.Keyladder = "prod"
 	expected.TpmEnabled = true
 	expected.ProdKeyladder = true
+	expected.FactoryModeValid = false
+	expected.InFactoryMode = false
+	expected.EKCert = ""
 
 	testGetSysinfo(t, input, expectedMap, expected)
 }
