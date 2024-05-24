@@ -159,6 +159,8 @@ func DragDrop(ctx context.Context, s *testing.State) {
 		targetPkg     = "org.chromium.arc.testapp.dragtarget"
 		targetActName = ".DragTargetActivity"
 
+		dragAreaViewID = sourcePkg + ":id/drag_area"
+
 		// Title of Chrome extension, defined in the manifest.
 		extensionTitle = "DragDrop Controller"
 
@@ -324,6 +326,11 @@ func DragDrop(ctx context.Context, s *testing.State) {
 		}
 		defer sourceAct.Close(cleanupCtx)
 		defer sourceAct.Stop(cleanupCtx, tconn)
+
+		// Makes sure that the drag source View is inflated at a proper location.
+		if err := waitForViewInsideBounds(ctx, tconn, d.Object(ui.ID(dragAreaViewID)), sourceBounds); err != nil {
+			s.Fatal("Failed to wait for the drag area view: ", err)
+		}
 	}
 
 	var targetAct *arc.Activity
@@ -383,4 +390,30 @@ func DragDrop(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to wait for the dropped data: ", err)
 		}
 	}
+}
+
+func waitForViewInsideBounds(ctx context.Context, tconn *chrome.TestConn, uiObj *ui.Object, bounds coords.Rect) error {
+	if err := uiObj.WaitForExists(ctx, 10*time.Second); err != nil {
+		return errors.Wrap(err, "failed to wait for view exists")
+	}
+
+	dispInfo, err := display.GetPrimaryInfo(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to get display info")
+	}
+	dsf, err := dispInfo.GetEffectiveDeviceScaleFactor()
+	if err != nil {
+		return errors.Wrap(err, "failed to get display dsf")
+	}
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		viewBounds, err := uiObj.GetBounds(ctx)
+		if err != nil {
+			return err
+		}
+		viewBoundsDP := coords.ConvertBoundsFromPXToDP(viewBounds, dsf)
+		if !bounds.Contains(viewBoundsDP) {
+			return errors.Errorf("view bounds is not ready. container=%v, view=%v", bounds, viewBoundsDP)
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 15 * time.Second})
 }
