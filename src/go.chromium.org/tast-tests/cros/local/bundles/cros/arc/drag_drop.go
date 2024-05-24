@@ -378,7 +378,8 @@ func DragDrop(ctx context.Context, s *testing.State) {
 		}
 
 		const expected = "Data text"
-		if err := conn.WaitForExpr(ctx, fmt.Sprintf(`document.getElementById('dropped-data').innerHTML === %q`, expected)); err != nil {
+		script := fmt.Sprintf(`document.getElementById('dropped-data').innerHTML === %q`, expected)
+		if err := conn.WaitForExprWithTimeout(ctx, script, 30*time.Second); err != nil {
 			s.Fatal("Failed to wait for the dropped data: ", err)
 		}
 	}
