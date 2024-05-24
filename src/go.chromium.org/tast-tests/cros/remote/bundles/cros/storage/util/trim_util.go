@@ -93,12 +93,12 @@ func CompareToZero(ctx context.Context, dut *dut.DUT, filename string, chunk uin
 	cmdTmpl := "dd if=%s bs=%d count=1 skip=%d status=none | cmp -n %d - /dev/zero 2>&1"
 	cmd := fmt.Sprintf(cmdTmpl, filename, TrimChunkSize, chunk, TrimChunkSize)
 	out, err := RunCmdWithStringOutputSilent(ctx, dut, "bash", "-c", cmd)
-	if err != nil {
-		return false, errors.Wrapf(err, " error reading from: %s", filename)
-	}
-
 	if strings.Contains(out, "differ") {
 		return false, nil
+	}
+
+	if err != nil {
+		return false, errors.Wrapf(err, " error reading from: %s", filename)
 	}
 
 	return true, nil
@@ -109,12 +109,12 @@ func CompareToOne(ctx context.Context, dut *dut.DUT, filename string, chunk uint
 	cmdTmpl := "dd if=%s bs=%d count=1 skip=%d status=none | cmp -n %d - <(tr '\000' '\377' < /dev/zero) 2>&1"
 	cmd := fmt.Sprintf(cmdTmpl, filename, TrimChunkSize, chunk, TrimChunkSize)
 	out, err := RunCmdWithStringOutputSilent(ctx, dut, "bash", "-c", cmd)
-	if err != nil {
-		return false, errors.Wrapf(err, " error reading from: %s", filename)
-	}
-
 	if strings.Contains(out, "differ") {
 		return false, nil
+	}
+
+	if err != nil {
+		return false, errors.Wrapf(err, " error reading from: %s", filename)
 	}
 
 	return true, nil
