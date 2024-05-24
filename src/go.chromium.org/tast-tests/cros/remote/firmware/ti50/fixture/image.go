@@ -80,9 +80,11 @@ const (
 	Ti50QualBranch string = "ti50qual"
 
 	// Remote image paths
-	latestQualFile     = "chromeos-localmirror-private/distfiles/chromeos-%s-QUAL_VERSION"
-	debugImageTemplate = "gs://chromeos-localmirror-private/distfiles/chromeos-%s*/*_shield/*.dbg.0x%s_0x%s.bin.*"
-	efiImageTemplate   = "gs://chromeos-localmirror-private/distfiles/chromeos-%s*/*_shield/*_Unknown_NodeLocked-%s_*-accessory-mp.bin"
+	latestQualFile = "chromeos-localmirror-private/distfiles/chromeos-%s-QUAL_VERSION"
+	// DevGSCImageBucket is the bucket where node locked GSC test images are stored.
+	DevGSCImageBucket  = "gs://chromeos-localmirror-private/distfiles/chromeos-%s*/"
+	debugImageTemplate = DevGSCImageBucket + "*_shield/*.dbg.0x%s_0x%s.bin.*"
+	efiImageTemplate   = DevGSCImageBucket + "*_shield/*_Unknown_NodeLocked-%s_*-accessory-mp.bin"
 	qualPrivateBucket  = "chromeos-localmirror-private/distfiles/"
 	qualBucket         = "chromeos-localmirror/distfiles/"
 
