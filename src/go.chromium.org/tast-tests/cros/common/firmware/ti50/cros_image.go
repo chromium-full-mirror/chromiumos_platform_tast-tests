@@ -1286,3 +1286,25 @@ func (i *CrOSImage) GetChipBID(ctx context.Context) (ChipBID, error) {
 	}
 	return parseChipBID(out)
 }
+
+// writeOnceInfoPagesAreErased returns True if all fields in protected info
+// pages are erased. This checks the board id and sysinfo in factory mode bit.
+// If any other information is added to a write once info page, this check
+// should be updated to include it.
+func writeOnceInfoPagesAreErased(bid ChipBID, sysinfo Sysinfo) bool {
+	return bid.IsErased && (!sysinfo.FactoryModeValid || sysinfo.InFactoryMode)
+}
+
+// WriteOnceInfoPagesAreErased returns True if all fields in the info pages that
+// RO protects are erased.
+func (i *CrOSImage) WriteOnceInfoPagesAreErased(ctx context.Context) (bool, error) {
+	bid, err := i.GetChipBID(ctx)
+	if err != nil {
+		return false, err
+	}
+	sysinfo, err := i.GetSysinfo(ctx)
+	if err != nil {
+		return false, err
+	}
+	return writeOnceInfoPagesAreErased(bid, sysinfo), nil
+}

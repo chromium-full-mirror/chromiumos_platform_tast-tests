@@ -1364,3 +1364,40 @@ func testparseChipBID(t *testing.T, input string, expected ChipBID, expectError 
 		t.Fatalf("bid mismatch:\ngot      %v\nexpected %v", chip, expected)
 	}
 }
+
+func TestErasedInfoPages1(t *testing.T) {
+	bid := ChipBID{IsErased: true}
+	sysinfo := Sysinfo{FactoryModeValid: false, InFactoryMode: false}
+	testwriteOnceInfoPagesAreErased(t, bid, sysinfo, true)
+}
+
+func TestErasedInfoPages2(t *testing.T) {
+	bid := ChipBID{IsErased: false}
+	sysinfo := Sysinfo{FactoryModeValid: false, InFactoryMode: false}
+	testwriteOnceInfoPagesAreErased(t, bid, sysinfo, false)
+}
+
+func TestErasedInfoPages3(t *testing.T) {
+	bid := ChipBID{IsErased: false}
+	sysinfo := Sysinfo{FactoryModeValid: true, InFactoryMode: true}
+	testwriteOnceInfoPagesAreErased(t, bid, sysinfo, false)
+}
+
+func TestErasedInfoPages4(t *testing.T) {
+	bid := ChipBID{IsErased: true}
+	sysinfo := Sysinfo{FactoryModeValid: true, InFactoryMode: false}
+	testwriteOnceInfoPagesAreErased(t, bid, sysinfo, false)
+}
+
+func TestErasedInfoPages5(t *testing.T) {
+	bid := ChipBID{IsErased: true}
+	sysinfo := Sysinfo{FactoryModeValid: true, InFactoryMode: true}
+	testwriteOnceInfoPagesAreErased(t, bid, sysinfo, true)
+}
+
+func testwriteOnceInfoPagesAreErased(t *testing.T, bid ChipBID, sysinfo Sysinfo, expected bool) {
+	got := writeOnceInfoPagesAreErased(bid, sysinfo)
+	if expected != got {
+		t.Fatalf("info is erased mismatch:\ngot      %v\nexpected %v\n with bid:%+v sysinfo%+v", got, expected, bid, sysinfo)
+	}
+}
