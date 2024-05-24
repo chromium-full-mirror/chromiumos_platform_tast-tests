@@ -27,7 +27,7 @@ Build:   ti50_common_tot:v0.0.909-efe9eb23
 		RoB:   RoInfo{Active: true, Version: "0.0.46", ImageCheck: "c57c2460"},
 		RwA:   RwInfo{Empty: false, Active: true, Version: "0.24.61", Branch: ToT, VersionStr: "ti50_common_tot:v0.0.909-efe9eb23"},
 		RwB:   RwInfo{Empty: true},
-		Bid:   BidInfo{Empty: false, BidType: 0x46464646, Mask: 0, Flags: 0x10},
+		BID:   ImageBID{Empty: false, Type: 0x46464646, Mask: 0, Flags: 0x10},
 		Build: BuildInfo{Branch: ToT, VersionStr: "ti50_common_tot:v0.0.909-efe9eb23"},
 	}
 
@@ -52,7 +52,7 @@ func TestVersionCommandTi50Processor2(t *testing.T) {
 		RoB:   RoInfo{Active: true, Version: "0.0.56", ImageCheck: "cf178281"},
 		RwA:   RwInfo{Empty: false, Active: true, Version: "0.24.20", Branch: Unknown, VersionStr: "ti50_common:v0.0.2888-c2eeb17e"},
 		RwB:   RwInfo{Empty: false, Active: false, Debug: true, Version: "1.24.30", Branch: ToT, VersionStr: "DBG/ti50_common_tot:v0.0.360+ef9becfc"},
-		Bid:   BidInfo{Empty: false, BidType: 0, Mask: 0, Flags: 0},
+		BID:   ImageBID{Empty: false, Type: 0, Mask: 0, Flags: 0},
 		Build: BuildInfo{Branch: Unknown, Debug: false, VersionStr: "ti50_common:v0.0.2888-c2eeb17e"},
 	}
 
@@ -77,7 +77,7 @@ Build:   DBG/ti50_common_tot:v0.0.360+ef9becfc
 		RoB:   RoInfo{Active: true, Version: "0.0.56", ImageCheck: "cf178281"},
 		RwA:   RwInfo{Empty: false, Active: false, Version: "0.24.20", Branch: Unknown, VersionStr: "ti50_common:v0.0.2888-c2eeb17e"},
 		RwB:   RwInfo{Empty: false, Active: true, Debug: true, Version: "1.24.30", Branch: ToT, VersionStr: "DBG/ti50_common_tot:v0.0.360+ef9becfc"},
-		Bid:   BidInfo{Empty: false, BidType: 0, Mask: 0, Flags: 0},
+		BID:   ImageBID{Empty: false, Type: 0, Mask: 0, Flags: 0},
 		Build: BuildInfo{Branch: ToT, Debug: true, VersionStr: "DBG/ti50_common_tot:v0.0.360+ef9becfc"},
 	}
 
@@ -102,7 +102,7 @@ Build:   DBG/ti50_common_tot:v0.0.360+ef9becfc
 		RoB:   RoInfo{},
 		RwA:   RwInfo{Empty: false, Active: false, Version: "0.24.20", Branch: Unknown, VersionStr: "ti50_common:v0.0.2888-c2eeb17e"},
 		RwB:   RwInfo{Empty: false, Active: true, Debug: true, Version: "1.24.30", Branch: ToT, VersionStr: "DBG/ti50_common_tot:v0.0.360+ef9becfc"},
-		Bid:   BidInfo{Empty: false, BidType: 0, Mask: 0, Flags: 0},
+		BID:   ImageBID{Empty: false, Type: 0, Mask: 0, Flags: 0},
 		Build: BuildInfo{Branch: ToT, Debug: true, VersionStr: "DBG/ti50_common_tot:v0.0.360+ef9becfc"},
 	}
 
@@ -129,7 +129,7 @@ Build:   0.3.22/cr50_v1.9308_26_0.596-e6b91d6
 		RoB:   RoInfo{Active: false, Version: "0.0.11", ImageCheck: "4d655eab"},
 		RwA:   RwInfo{Empty: false, Active: true, Version: "0.3.22", Branch: Unknown, VersionStr: "cr50_v1.9308_26_0.596-e6b91d6"},
 		RwB:   RwInfo{Empty: false, Active: false, Version: "0.3.22", Branch: Unknown, VersionStr: "cr50_v1.9308_26_0.596-e6b91d6"},
-		Bid:   BidInfo{Empty: false, BidType: 0, Mask: 0, Flags: 0},
+		BID:   ImageBID{Empty: false, Type: 0, Mask: 0, Flags: 0},
 		Build: BuildInfo{Branch: Unknown, VersionStr: "cr50_v1.9308_26_0.596-e6b91d6"},
 	}
 
@@ -156,7 +156,7 @@ Build:   1.6.205/DBG/cr50_v2.0.3597-2b7751b89f
 		RoB:   RoInfo{Active: true, Version: "0.0.12", ImageCheck: "9eb618de"},
 		RwA:   RwInfo{Empty: false, Active: false, Version: "0.6.211", Branch: PrePvt, VersionStr: "cr50_v3.94_pp.256-f6119fcacf"},
 		RwB:   RwInfo{Empty: false, Active: true, Debug: true, Version: "1.6.205", Branch: ToT, VersionStr: "DBG/cr50_v2.0.3597-2b7751b89f"},
-		Bid:   BidInfo{Empty: false, BidType: 0, Mask: 0, Flags: 0},
+		BID:   ImageBID{Empty: false, Type: 0, Mask: 0, Flags: 0},
 		Build: BuildInfo{Branch: ToT, Debug: true, VersionStr: "DBG/cr50_v2.0.3597-2b7751b89f"},
 	}
 
@@ -183,7 +183,7 @@ Build:   0.6.230/cr50_v3.94_pp.259-e20fb86af1
 		RoB:   RoInfo{Active: true, Version: "0.0.12", ImageCheck: "9eb618de"},
 		RwA:   RwInfo{Empty: false, Active: false, Version: "0.5.215", Branch: MP, VersionStr: "cr50_v4.11_mp.258-bcc62291cf"},
 		RwB:   RwInfo{Empty: false, Active: true, Version: "0.6.230", Branch: PrePvt, VersionStr: "cr50_v3.94_pp.259-e20fb86af1"},
-		Bid:   BidInfo{Empty: false, BidType: 0x46464646, Mask: 0, Flags: 0x10},
+		BID:   ImageBID{Empty: false, Type: 0x46464646, Mask: 0, Flags: 0x10},
 		Build: BuildInfo{Branch: PrePvt, Debug: false, VersionStr: "cr50_v3.94_pp.259-e20fb86af1"},
 	}
 
@@ -210,7 +210,7 @@ Build:   0.6.230/cr50_v3.94_pp.259-e20fb86af1
 		RoB:   RoInfo{Active: true, Version: "0.0.12", ImageCheck: "9eb618de"},
 		RwA:   RwInfo{Empty: true},
 		RwB:   RwInfo{Empty: false, Active: true, Version: "0.6.230", Branch: PrePvt, VersionStr: "cr50_v3.94_pp.259-e20fb86af1"},
-		Bid:   BidInfo{Empty: false, BidType: 0x46464646, Mask: 0, Flags: 0x10},
+		BID:   ImageBID{Empty: false, Type: 0x46464646, Mask: 0, Flags: 0x10},
 		Build: BuildInfo{Branch: PrePvt, Debug: false, VersionStr: "cr50_v3.94_pp.259-e20fb86af1"},
 	}
 
@@ -236,7 +236,7 @@ Build:   1.6.250/DBG/cr50_v4.08_pp.61+a50884addc
 		RoB:   RoInfo{Active: true, Version: "0.0.12", ImageCheck: "9eb618de"},
 		RwA:   RwInfo{Empty: false, Active: false, Version: "0.5.12", Branch: EFI, VersionStr: "cr50_v4.11_28_efi.0-8441619945"},
 		RwB:   RwInfo{Empty: false, Active: true, Debug: true, Version: "1.6.250", Branch: PrePvt, VersionStr: "DBG/cr50_v4.08_pp.61+a50884addc"},
-		Bid:   BidInfo{Empty: false, BidType: 0, Mask: 0, Flags: 0},
+		BID:   ImageBID{Empty: false, Type: 0, Mask: 0, Flags: 0},
 		Build: BuildInfo{Branch: PrePvt, Debug: true, VersionStr: "DBG/cr50_v4.08_pp.61+a50884addc"},
 	}
 
@@ -391,20 +391,20 @@ func testRwInfoMatcher(t *testing.T, input string, slot GscSlot, expected RwInfo
 	}
 }
 
-func TestBidInfoMatcher1(t *testing.T) {
+func TestImageBIDMatcher1(t *testing.T) {
 	input := `BID A:   46464646:00000000:00000010 Yes`
-	expected := BidInfo{BidType: 0x46464646, Mask: 0, Flags: 0x10}
-	testBidInfoMatcher(t, input, SlotA, expected)
+	expected := ImageBID{Type: 0x46464646, Mask: 0, Flags: 0x10}
+	testImageBIDMatcher(t, input, SlotA, expected)
 }
 
-func TestBidInfoMatcher2(t *testing.T) {
+func TestImageBIDMatcher2(t *testing.T) {
 	input := `BID B:   46464646:00000000:00000010 Yes`
-	expected := BidInfo{BidType: 0x46464646, Mask: 0, Flags: 0x10}
-	testBidInfoMatcher(t, input, SlotB, expected)
+	expected := ImageBID{Type: 0x46464646, Mask: 0, Flags: 0x10}
+	testImageBIDMatcher(t, input, SlotB, expected)
 }
 
-func testBidInfoMatcher(t *testing.T, input string, slot GscSlot, expected BidInfo) {
-	out, err := matchBidInfo(input, slot)
+func testImageBIDMatcher(t *testing.T, input string, slot GscSlot, expected ImageBID) {
+	out, err := matchImageBID(input, slot)
 	if err != nil {
 		t.Fatal("error processing bid info:", err)
 	}

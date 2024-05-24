@@ -165,7 +165,7 @@ type VersionCommandInfo struct {
 	RoB   RoInfo
 	RwA   RwInfo
 	RwB   RwInfo
-	Bid   BidInfo
+	BID   ImageBID
 	Build BuildInfo
 }
 
@@ -186,12 +186,12 @@ type RwInfo struct {
 	Branch     GscBranch
 }
 
-// BidInfo contains board id information for a slot.
-type BidInfo struct {
-	Empty   bool
-	BidType uint32
-	Mask    uint32
-	Flags   uint32
+// ImageBID contains board id information for a slot.
+type ImageBID struct {
+	Empty bool
+	Type  BIDField
+	Mask  BIDField
+	Flags BIDField
 }
 
 // BuildInfo contains information about the firmware currently running.
@@ -622,44 +622,44 @@ func matchRwInfo(s string, slot GscSlot) (RwInfo, error) {
 
 var bidRe = `([[:xdigit:]]+):([[:xdigit:]]+):([[:xdigit:]]+)`
 
-func matchBidInfo(s string, slot GscSlot) (BidInfo, error) {
+func matchImageBID(s string, slot GscSlot) (ImageBID, error) {
 	slotStr := "A"
 	if slot == SlotB {
 		slotStr = "B"
 	}
 
-	ret := BidInfo{}
+	ret := ImageBID{}
 	bidRE := regexp.MustCompile(`BID ` + slotStr + `:\s+` + bidRe)
 	matches := bidRE.FindStringSubmatch(s)
 	if len(matches) == 0 {
 		ret.Empty = true
 		return ret, nil
 	} else if len(matches) != 4 {
-		return BidInfo{}, errors.New("regex failed to extract bid info from: " + s)
+		return ImageBID{}, errors.New("regex failed to extract bid info from: " + s)
 	}
 
-	hexToUint32 := func(str string) (uint32, error) {
+	hexToBIDField := func(str string) (BIDField, error) {
 		res, err := strconv.ParseInt(str, 16, 32)
 		if err != nil {
 			return 0, errors.Wrap(err, "could not parse hex string")
 		}
-		return uint32(res), nil
+		return BIDField(res), nil
 	}
-	bidType, err := hexToUint32(matches[1])
+	bidType, err := hexToBIDField(matches[1])
 	if err != nil {
 		return ret, err
 	}
-	mask, err := hexToUint32(matches[2])
+	mask, err := hexToBIDField(matches[2])
 	if err != nil {
 		return ret, err
 	}
-	flags, err := hexToUint32(matches[3])
+	flags, err := hexToBIDField(matches[3])
 	if err != nil {
 		return ret, err
 	}
 
 	ret.Empty = false
-	ret.BidType = bidType
+	ret.Type = bidType
 	ret.Mask = mask
 	ret.Flags = flags
 
@@ -733,11 +733,11 @@ func matchVersionInfo(s string) (VersionCommandInfo, error) {
 	if err != nil {
 		return ret, err
 	}
-	bidInfoA, err := matchBidInfo(s, SlotA)
+	imageBIDA, err := matchImageBID(s, SlotA)
 	if err != nil {
 		return ret, err
 	}
-	bidInfoB, err := matchBidInfo(s, SlotB)
+	imageBIDB, err := matchImageBID(s, SlotB)
 	if err != nil {
 		return ret, err
 	}
@@ -746,9 +746,9 @@ func matchVersionInfo(s string) (VersionCommandInfo, error) {
 		return ret, err
 	}
 
-	bidInfo := bidInfoA
+	imageBID := imageBIDA
 	if rwInfoB.Active {
-		bidInfo = bidInfoB
+		imageBID = imageBIDB
 	}
 
 	ret = VersionCommandInfo{
@@ -756,7 +756,7 @@ func matchVersionInfo(s string) (VersionCommandInfo, error) {
 		RoB:   roInfoB,
 		RwA:   rwInfoA,
 		RwB:   rwInfoB,
-		Bid:   bidInfo,
+		BID:   imageBID,
 		Build: buildInfo,
 	}
 

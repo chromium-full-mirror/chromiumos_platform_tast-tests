@@ -64,22 +64,22 @@ func CCDCapabilitiesOpenDefaultValues(ctx context.Context, s *testing.State) {
 		s.Log("Testing ToT branch defaults")
 		expectedOpenNoDevModeDefault = ti50.CapAlways
 		expectedOpenFromUSBDefault = ti50.CapAlways
-		if (info.Bid.Flags & toTBIDFlags) != toTBIDFlags {
-			s.Errorf("Expected 0x%x to be set for ToT BID flags, got 0x%x", toTBIDFlags, info.Bid.Flags)
+		if (info.BID.Flags & toTBIDFlags) != toTBIDFlags {
+			s.Errorf("Expected 0x%x to be set for ToT BID flags, got 0x%x", toTBIDFlags, info.BID.Flags)
 		}
 	case ti50.PrePvt:
 		s.Log("Testing PrePVT branch defaults")
 		expectedOpenNoDevModeDefault = ti50.CapAlways
 		expectedOpenFromUSBDefault = ti50.CapAlways
-		if (info.Bid.Flags & prePVTBIDFlags) != prePVTBIDFlags {
-			s.Errorf("Expected 0x%x to be set for PrePVT BID flags, got 0x%x", prePVTBIDFlags, info.Bid.Flags)
+		if (info.BID.Flags & prePVTBIDFlags) != prePVTBIDFlags {
+			s.Errorf("Expected 0x%x to be set for PrePVT BID flags, got 0x%x", prePVTBIDFlags, info.BID.Flags)
 		}
 	case ti50.MP:
 		s.Log("Testing MP branch defaults")
 		expectedOpenNoDevModeDefault = ti50.CapIfOpened
 		expectedOpenFromUSBDefault = ti50.CapIfOpened
-		if info.Bid.Flags != 0 && (info.Bid.Flags&mPBIDFlags != mPBIDFlags) {
-			s.Errorf("Expected 0 or 0x%x to be set for MP BID flags, got 0x%x", mPBIDFlags, info.Bid.Flags)
+		if info.BID.Flags != 0 && (info.BID.Flags&mPBIDFlags != mPBIDFlags) {
+			s.Errorf("Expected 0 or 0x%x to be set for MP BID flags, got 0x%x", mPBIDFlags, info.BID.Flags)
 		}
 	}
 
