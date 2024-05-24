@@ -38,12 +38,12 @@ func PlayAudioAndVerifyBuble(ctx context.Context, tconn *chrome.TestConn, playAu
 				ui.WaitUntilExists(liveCaptionBubble),
 				ui.WaitUntilExists(liveCaptionContent),
 			)(ctx)
-		}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 1 * time.Second}); err != nil {
+		}, &testing.PollOptions{Timeout: 3 * time.Second, Interval: 1 * time.Second}); err != nil {
 			return errors.Wrap(err, "failed to wait for the caption buble and content")
 		}
 		return nil
 
-	}, &testing.PollOptions{Timeout: 60 * time.Second, Interval: 10 * time.Second}); err != nil {
+	}, &testing.PollOptions{Timeout: 60 * time.Second, Interval: 3 * time.Second}); err != nil {
 		return errors.Wrap(err, "failed to validate live caption")
 	}
 

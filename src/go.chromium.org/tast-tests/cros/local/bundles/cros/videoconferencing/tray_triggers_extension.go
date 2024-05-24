@@ -9,15 +9,13 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/tbdep"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/common"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/fakeextension"
-	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vctray"
 	"go.chromium.org/tast-tests/cros/local/videoconferencing/fixture"
 
-	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -96,37 +94,16 @@ func init() {
 }
 
 // TrayTriggersExtension checks VC tray can be triggered by Chrome extension.
-func TrayTriggersExtension(ctx context.Context, s *testing.State) {
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
-	defer cancel()
+func TrayTriggersExtension(cleanupCtx context.Context, s *testing.State) {
+	ctx, tconn, cr, br, _, cleanupFunc := common.Setup(cleanupCtx, s)
+	defer cleanupFunc()
 
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
-
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to connect Test API: ", err)
-	}
-
-	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui")
-
-	browserType := s.FixtValue().(fixture.FixtData).BrowserType()
-
-	conn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browserType, chrome.NewTabURL)
-	if err != nil {
-		s.Fatal("Failed to launch browser: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
-	defer conn.Close()
-	defer conn.CloseTarget(cleanupCtx)
+	vcTray := vctray.New(ctx, tconn)
 
 	if err := fakeextension.GrantAVPermissions(ctx, br); err != nil {
 		s.Fatal("Failed to grant AV permissions: ", err)
 	}
-
-	vcTray := vctray.New(ctx, tconn)
-
-	extUI, err := fakeextension.Launch(ctx, tconn)
+	extUI, err := fakeextension.Launch(ctx, tconn, br)
 	if err != nil {
 		s.Fatal("Failed to launch extension: ", err)
 	}

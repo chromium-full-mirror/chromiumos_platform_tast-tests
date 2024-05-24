@@ -47,9 +47,12 @@ var (
 )
 
 // Launch triggers VcTester popup window in browser extensions.
-func Launch(ctx context.Context, tconn *chrome.TestConn) (*ExtensionUI, error) {
-	ui := uiauto.New(tconn)
+func Launch(ctx context.Context, tconn *chrome.TestConn, br *browser.Browser) (*ExtensionUI, error) {
+	if _, err := br.NewTab(ctx, chrome.NewTabURL); err != nil {
+		return nil, err
+	}
 
+	ui := uiauto.New(tconn)
 	extUI := ExtensionUI{common.VcWebApp{UI: ui}}
 
 	// The extension is already launched if the popup window is found.

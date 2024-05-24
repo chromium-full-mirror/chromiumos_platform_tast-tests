@@ -7,9 +7,6 @@ package fakevctab
 
 import (
 	"context"
-	"fmt"
-	"net/http"
-	"net/http/httptest"
 	"strings"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/common"
@@ -17,7 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
-	"go.chromium.org/tast/core/testing"
 )
 
 // VcTabUI represents the Fake VC Tab UI.
@@ -26,18 +22,6 @@ type VcTabUI struct {
 	common.VcWebApp
 	tconn  *chrome.TestConn
 	window *ash.Window
-}
-
-// SetupServerAndPermission sets the permission for the tab and returns the url.
-func SetupServerAndPermission(ctx context.Context, br *browser.Browser, s *testing.State) string {
-	// Grant permission.
-	srv := httptest.NewServer(http.FileServer(s.DataFileSystem()))
-	br.GrantPermissions(ctx, []string{fmt.Sprintf("%s/*", srv.URL)},
-		browser.CameraContentSetting,
-		browser.MicrophoneContentSetting,
-	)
-
-	return srv.URL + common.VcAppURL
 }
 
 // LaunchTab opens a new tab for the url.

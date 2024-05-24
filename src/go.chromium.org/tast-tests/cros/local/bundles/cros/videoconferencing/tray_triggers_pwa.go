@@ -10,15 +10,13 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/common"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/data"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/fakepwa"
-	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vctray"
 	"go.chromium.org/tast-tests/cros/local/videoconferencing/fixture"
 
-	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -40,10 +38,10 @@ func init() {
 		TestBedDeps:  []string{tbdep.Cbx(true)},
 		SoftwareDeps: []string{"chrome"},
 		Data: []string{
-			"vc_tester/popup.html",
-			"vc_tester/popup.js",
-			"vc_tester/camera.png",
-			"vc_tester/manifest.json",
+			data.VcAppHTML,
+			data.VcAppJs,
+			data.VcAppIcon,
+			data.VcAppManifest,
 		},
 
 		Params: []testing.Param{
@@ -106,36 +104,17 @@ func init() {
 }
 
 // TrayTriggersPwa checks VC tray can be triggered by Chrome tabs.
-func TrayTriggersPwa(ctx context.Context, s *testing.State) {
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
-	defer cancel()
-
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
-
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to connect Test API: ", err)
-	}
-
-	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui")
-
-	browserType := s.FixtValue().(fixture.FixtData).BrowserType()
-
-	// Open an empty chrome tab.
-	conn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browserType, chrome.NewTabURL)
-	if err != nil {
-		s.Fatal("Failed to launch browser: ", err)
-	}
-
-	defer closeBrowser(cleanupCtx)
-	defer conn.Close()
-	defer conn.CloseTarget(cleanupCtx)
+func TrayTriggersPwa(cleanupCtx context.Context, s *testing.State) {
+	ctx, tconn, cr, br, srvURL, cleanupFunc := common.Setup(cleanupCtx, s)
+	defer cleanupFunc()
 
 	vcTray := vctray.New(ctx, tconn)
 
 	// Install PWA.
-	appID := fakepwa.SetupServerAndPermission(ctx, br, s, tconn)
+	appID, err := fakepwa.InstallPwa(ctx, br, tconn, srvURL+data.VcAppHTML)
+	if err != nil {
+		s.Fatal("fail to install pwa: ", err)
+	}
 
 	// Verify pwa triggers vcTray on camera.
 	s.Run(ctx, "cam_only", func(ctx context.Context, s *testing.State) {

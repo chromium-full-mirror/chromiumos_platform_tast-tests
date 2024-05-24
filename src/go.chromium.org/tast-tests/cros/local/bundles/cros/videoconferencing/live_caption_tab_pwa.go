@@ -11,10 +11,9 @@ import (
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/local/a11y"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/common"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/data"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/fakepwa"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/fakevctab"
-	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -22,7 +21,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vctray"
 	"go.chromium.org/tast-tests/cros/local/videoconferencing/fixture"
 
-	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -49,11 +47,11 @@ func init() {
 		TestBedDeps:  []string{tbdep.Cbx(true)},
 		SoftwareDeps: []string{"chrome"},
 		Data: []string{
-			"vc_tester/voice_en_hello.wav",
-			"vc_tester/popup.html",
-			"vc_tester/popup.js",
-			"vc_tester/camera.png",
-			"vc_tester/manifest.json",
+			data.SpeechInputFile,
+			data.VcAppHTML,
+			data.VcAppJs,
+			data.VcAppIcon,
+			data.VcAppManifest,
 		},
 		SearchFlags: []*testing.StringPair{
 			{
@@ -97,40 +95,25 @@ func init() {
 	})
 }
 
-func LiveCaptionTabPwa(ctx context.Context, s *testing.State) {
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
-	defer cancel()
-
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
-
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to create Test API connection: ", err)
-	}
-
-	browserType := s.FixtValue().(fixture.FixtData).BrowserType()
+func LiveCaptionTabPwa(cleanupCtx context.Context, s *testing.State) {
+	ctx, tconn, cr, br, srvURL, cleanupFunc := common.Setup(cleanupCtx, s)
+	defer cleanupFunc()
 
 	vcTray := vctray.New(ctx, tconn)
 
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "caption")
 
-	// Open an empty chrome tab.
-	conn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browserType, chrome.NewTabURL)
-	if err != nil {
-		s.Fatal("Failed to launch browser: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
-	defer conn.Close()
-	defer conn.CloseTarget(cleanupCtx)
-
 	ui := uiauto.New(tconn)
 
 	playAudioAction := ui.DoDefault(nil)
 
+	vcTesterFullURL := srvURL + data.VcAppHTML
 	// Launch either the tab or the pwa.
 	if s.Param().(common.LaunchAppType) == common.LaunchAppInPWA {
-		appID := fakepwa.SetupServerAndPermission(ctx, br, s, tconn)
+		appID, err := fakepwa.InstallPwa(ctx, br, tconn, vcTesterFullURL)
+		if err != nil {
+			s.Fatal("fail to install pwa: ", err)
+		}
 		pwaUI, err := fakepwa.LaunchApp(ctx, tconn, br, appID)
 		if err != nil {
 			s.Fatal("Failed to open pwa: ", err)
@@ -147,8 +130,7 @@ func LiveCaptionTabPwa(ctx context.Context, s *testing.State) {
 		playAudioAction = pwaUI.PlayAudio
 
 	} else {
-		vcTabFullURL := fakevctab.SetupServerAndPermission(ctx, br, s)
-		tabUI, err := fakevctab.LaunchTab(ctx, tconn, br, vcTabFullURL)
+		tabUI, err := fakevctab.LaunchTab(ctx, tconn, br, vcTesterFullURL)
 		if err != nil {
 			s.Fatal("Failed to open tab: ", err)
 		}

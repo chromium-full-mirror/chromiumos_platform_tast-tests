@@ -19,8 +19,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/data"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/fakepwa"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/fakevctab"
-	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
@@ -28,7 +26,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/input/voice"
 	"go.chromium.org/tast-tests/cros/local/videoconferencing/fixture"
 
-	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -48,10 +45,10 @@ func init() {
 		TestBedDeps: []string{tbdep.Cbx(true)},
 		Data: []string{
 			data.SpeechInputFile,
-			"vc_tester/popup.html",
-			"vc_tester/popup.js",
-			"vc_tester/camera.png",
-			"vc_tester/manifest.json",
+			data.VcAppHTML,
+			data.VcAppJs,
+			data.VcAppIcon,
+			data.VcAppManifest,
 		},
 		BugComponent: "b:187682",
 		Timeout:      3 * time.Minute,
@@ -93,17 +90,11 @@ func init() {
 	})
 }
 
-func SpeakOnMuteTabPwa(ctx context.Context, s *testing.State) {
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
-	defer cancel()
+func SpeakOnMuteTabPwa(cleanupCtx context.Context, s *testing.State) {
+	ctx, tconn, cr, br, srvURL, cleanupFunc := common.Setup(cleanupCtx, s)
+	defer cleanupFunc()
 
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
-
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to connect Test API: ", err)
-	}
+	vcTray := vctray.New(ctx, tconn)
 
 	// Setup CRAS Aloop for audio test.
 	if err := voice.ActivateAloopNodes(ctx, tconn, voice.LoopbackCapture); err != nil {
@@ -123,21 +114,13 @@ func SpeakOnMuteTabPwa(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	browserType := s.FixtValue().(fixture.FixtData).BrowserType()
-
-	vcTray := vctray.New(ctx, tconn)
-
-	// Open an empty chrome tab.
-	conn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browserType, chrome.NewTabURL)
-	if err != nil {
-		s.Fatal("Failed to launch browser: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
-	defer conn.Close()
-	defer conn.CloseTarget(cleanupCtx)
-
+	vcTesterFullURL := srvURL + data.VcAppHTML
 	if s.Param().(common.LaunchAppType) == common.LaunchAppInPWA {
-		appID := fakepwa.SetupServerAndPermission(ctx, br, s, tconn)
+		// Install PWA.
+		appID, err := fakepwa.InstallPwa(ctx, br, tconn, vcTesterFullURL)
+		if err != nil {
+			s.Fatal("fail to install pwa: ", err)
+		}
 		pwaUI, err := fakepwa.LaunchApp(ctx, tconn, br, appID)
 		if err != nil {
 			s.Fatal("Failed to open pwa: ", err)
@@ -152,8 +135,7 @@ func SpeakOnMuteTabPwa(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to verify that pwa triggers vcTray by mic: ", err)
 		}
 	} else {
-		vcTabFullURL := fakevctab.SetupServerAndPermission(ctx, br, s)
-		tabUI, err := fakevctab.LaunchTab(ctx, tconn, br, vcTabFullURL)
+		tabUI, err := fakevctab.LaunchTab(ctx, tconn, br, vcTesterFullURL)
 		if err != nil {
 			s.Fatal("Failed to open tab: ", err)
 		}

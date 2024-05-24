@@ -141,7 +141,7 @@ func CameraEffectsPower(ctx context.Context, s *testing.State) {
 
 	vcTray := vctray.New(ctx, tconn)
 
-	// Copy camera_background.jpg to the backgroundImageDir to apply.
+	// Copy camera background to the backgroundImageDir to apply.
 	if param.blurLevel == vctray.BackgroundBlurImage {
 		userPath, err := cryptohome.UserPath(ctx, cr.NormalizedUser())
 		if err != nil {

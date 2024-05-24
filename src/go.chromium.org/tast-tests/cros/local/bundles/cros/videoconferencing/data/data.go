@@ -8,7 +8,7 @@ package data
 const (
 	// SpeechInputFile is a WAVE file containing 2.090667 seconds of speech of the
 	// English word "hello".
-	SpeechInputFile = "voice_en_hello.wav"
+	SpeechInputFile = "vc_tester/voice_en_hello.wav"
 
 	// BackgroundImageDirname is the directory to put the background images.
 	BackgroundImageDirname = "custom-camera-backgrounds/original"
@@ -16,4 +16,13 @@ const (
 	BackgroundImageJpg = "3162101071.jpg"
 	// BackgroundMetadata is the metadata file name of the background image.
 	BackgroundMetadata = "3162101071.jpg.metadata"
+
+	// VcAppHTML is the html file for VcTester.
+	VcAppHTML = "vc_tester/popup.html"
+	// VcAppJs used inside VcAppHTML
+	VcAppJs = "vc_tester/popup.js"
+	// VcAppIcon is the icon for VcAppHTML
+	VcAppIcon = "vc_tester/camera.png"
+	// VcAppManifest is need to treat VcTester as a pwa.
+	VcAppManifest = "vc_tester/manifest.json"
 )

@@ -7,9 +7,6 @@ package fakepwa
 
 import (
 	"context"
-	"fmt"
-	"net/http"
-	"net/http/httptest"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/apps"
@@ -18,7 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
-
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -30,41 +27,33 @@ type VcPwaUI struct {
 	window *ash.Window
 }
 
-// SetupServerAndPermission installs the app, sets its permission and returns its appID.
-func SetupServerAndPermission(ctx context.Context, br *browser.Browser, s *testing.State, tconn *chrome.TestConn) string {
-	// Grant permission.
-	srv := httptest.NewServer(http.FileServer(s.DataFileSystem()))
-	br.GrantPermissions(ctx, []string{fmt.Sprintf("%s/*", srv.URL)},
-		browser.CameraContentSetting,
-		browser.MicrophoneContentSetting,
-	)
-
-	vcPwaFullURL := srv.URL + common.VcAppURL
-	if err := apps.InstallPWAForURL(ctx, tconn, br, vcPwaFullURL, 15*time.Second); err != nil {
-		s.Fatal("Failed to InstallPWAForURL: ", err)
+// InstallPwa installs the pwa and returns its appID.
+func InstallPwa(ctx context.Context, br *browser.Browser, tconn *chrome.TestConn, url string) (string, error) {
+	if err := apps.InstallPWAForURL(ctx, tconn, br, url, 15*time.Second); err != nil {
+		return "", errors.Wrap(err, "failed to InstallPWAForURL")
 	}
 
 	appID, err := apps.InstalledAppID(ctx, tconn, func(app *ash.ChromeApp) bool {
 		return app.Name == common.VcAppName
 	}, &testing.PollOptions{Timeout: 5 * time.Second})
 	if err != nil {
-		s.Fatal("Failed to InstalledAppID: ", err)
+		return "", errors.Wrap(err, "failed to InstalledAppID")
 	}
 
 	if err := ash.WaitForApp(ctx, tconn, appID, 15*time.Second); err != nil {
-		s.Fatal("Failed to WaitForApp: ", err)
+		return "", errors.Wrap(err, "failed to WaitForApp")
 	}
 
 	if err := apps.Close(ctx, tconn, appID); err != nil {
-		s.Fatal("Failed to close app: ", err)
+		return "", errors.Wrap(err, "failed to close app")
 	}
 
 	// Wait for the app to close.
 	if err := ash.WaitForAppClosed(ctx, tconn, appID); err != nil {
-		s.Fatal("Failed to WaitForAppClosed: ", err)
+		return "", errors.Wrap(err, "failed to WaitForAppClosed")
 	}
 
-	return appID
+	return appID, nil
 }
 
 // LaunchApp opens an app with appID.

@@ -17,8 +17,6 @@ import (
 var (
 	// VcAppName is the name of App used for extension, pwa and tab.
 	VcAppName = "VcTester"
-	// VcAppURL is the url to access the App used for pwa and tab.
-	VcAppURL = "/vc_tester/popup.html"
 
 	rootWebArea                = nodewith.Role(role.RootWebArea).Name(VcAppName)
 	startVideoButton           = nodewith.Name("Start Video").Role(role.Button).Ancestor(rootWebArea)
