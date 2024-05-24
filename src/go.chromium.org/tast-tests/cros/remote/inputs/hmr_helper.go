@@ -36,6 +36,39 @@ type TouchHostConnectionManager struct {
 	TouchhostPortForwarder *ssh.Forwarder
 }
 
+var (
+	hmrTouchhostHostname = testing.RegisterVarString(
+		"inputs.hmr_touchhost_hostname",
+		"",
+		"Hostname for HMR Touchhost Device")
+
+	hmrTouchhostPort = testing.RegisterVarString(
+		"inputs.hmr_touchhost_port",
+		"9992",
+		"Port for xmlrpc server on HMR Touchhost")
+)
+
+// ParseHMRRuntimeVariables parses and returns the Touchhost hostname and port runtime variables for HMR tests.
+func ParseHMRRuntimeVariables(d *dut.DUT) (string, int, error) {
+	var touchhostHostname string
+	if hmrTouchhostHostname.Value() == "" {
+		hostName := d.HostName()
+		splitName := strings.Split(hostName, ".")
+		splitName[0] = strings.Split(splitName[0], ":")[0]
+		splitName[0] = splitName[0] + "-touchhost"
+		touchhostHostname = strings.Join(splitName, ".")
+	} else {
+		touchhostHostname = hmrTouchhostHostname.Value()
+	}
+
+	touchhostPort, err := strconv.Atoi(hmrTouchhostPort.Value())
+	if err != nil {
+		return "", 0, errors.Wrapf(err, "failed to convert inputs.hmr_touchhost_port with value: %s to integer", hmrTouchhostPort.Value())
+	}
+
+	return touchhostHostname, touchhostPort, nil
+}
+
 // NewHMRInterface creates an XMLRPC interface through which RPC calls can be made to the HMR Touchhost.
 func NewHMRInterface(ctx context.Context, host string, port int) (*xmlrpc.CommonRPCInterface, error) {
 	hmrInterface := xmlrpc.NewCommonRPCInterface(xmlrpc.New(host, port), "")

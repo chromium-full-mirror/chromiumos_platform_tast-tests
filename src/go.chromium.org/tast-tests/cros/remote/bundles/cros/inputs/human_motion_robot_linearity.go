@@ -7,8 +7,6 @@ package inputs
 import (
 	"context"
 	"path/filepath"
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
@@ -33,18 +31,6 @@ type serviceResponse struct {
 	err              error
 }
 
-var (
-	hmrTouchhostHostname = testing.RegisterVarString(
-		"inputs.hmr_touchhost_hostname",
-		"",
-		"Hostname for HMR Touchhost Device")
-
-	hmrTouchhostPort = testing.RegisterVarString(
-		"inputs.hmr_touchhost_port",
-		"9992",
-		"Port for xmlrpc server on HMR Touchhost")
-)
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         HumanMotionRobotLinearity,
@@ -65,21 +51,9 @@ func init() {
 // HumanMotionRobotLinearity runs a set of stylus touch motions on a DUT, then captures
 // the DUT's evtest stylus output.
 func HumanMotionRobotLinearity(ctx context.Context, s *testing.State) {
-	var touchhostHostname string
-	if hmrTouchhostHostname.Value() == "" {
-		hostName := s.DUT().HostName()
-		splitName := strings.Split(hostName, ".")
-		splitName[0] = strings.Split(splitName[0], ":")[0]
-		splitName[0] = splitName[0] + "-touchhost"
-		touchhostHostname = strings.Join(splitName, ".")
-	} else {
-		touchhostHostname = hmrTouchhostHostname.Value()
-	}
-
-	touchhostPort, err := strconv.Atoi(hmrTouchhostPort.Value())
+	touchhostHostname, touchhostPort, err := input.ParseHMRRuntimeVariables(s.DUT())
 	if err != nil {
-		s.Fatalf("Failed to convert inputs.hmr_touchhost_port with value: %s to integer: %v",
-			hmrTouchhostPort.Value(), err)
+		s.Fatal("Failed to parse runtime variables: ", err)
 	}
 
 	hostTouchLogFilePath := filepath.Join(s.OutDir(), touchLogFileName)
