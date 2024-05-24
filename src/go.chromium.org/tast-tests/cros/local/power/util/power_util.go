@@ -17,6 +17,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/graphics/hardwareprobe"
+	"go.chromium.org/tast-tests/cros/local/graphics/modetest"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -142,34 +143,23 @@ func GetKernelVersion(ctx context.Context) string {
 
 // GetScreenResolution returns the screen resolution.
 func GetScreenResolution(ctx context.Context) string {
-	cmd := "modetest -c | sed -n '/modes:/{n;p}'"
-	readResult, err := testexec.CommandContext(ctx, "bash", "-c", cmd).Output()
+	connectors, err := modetest.Connectors(ctx)
 	if err != nil {
 		testing.ContextLog(ctx, "Failed to find screen resolution, or device doesn't have a screen")
 		return ""
 	}
-	pattern := `\s+`
-	re := regexp.MustCompile(pattern)
-	re.ReplaceAll(readResult, []byte(" "))
-	fields1 := strings.Split(strings.TrimSpace(string(readResult)), " ")
 
-	cmd = "modetest -c | sed -n '/modes:/{n;n;p}'"
-	readResult, err = testexec.CommandContext(ctx, "bash", "-c", cmd).Output()
-	if err != nil {
-		testing.ContextLog(ctx, "Failed to read screen resolution")
-		return ""
-	}
-	re.ReplaceAll(readResult, []byte(" "))
-	fields2 := strings.Split(strings.TrimSpace(string(readResult)), " ")
-	// e.g. fields1 = ["index", "name", "refresh", ...]
-	// e.g. fields2 = ["#0", "1920x1080", "60.00", ...]
-	for i := 0; i < min(len(fields1), len(fields2)); i++ {
-		if fields1[i] == "name" {
-			return fields2[i]
+	var resolution string
+	for _, connector := range connectors {
+		if connector.Connected && len(connector.Modes) != 0 {
+			resolution = connector.Modes[0].Name
+			break
 		}
 	}
-	testing.ContextLog(ctx, "Failed to parse screen resolution")
-	return ""
+	if resolution == "" {
+		testing.ContextLog(ctx, "Failed to get screen resolution")
+	}
+	return resolution
 }
 
 // GetRootDevice returns the root disk device.
@@ -567,9 +557,8 @@ func GetStorageType(ctx context.Context) string {
 
 // HasScreen detects if the device has a screen.
 func HasScreen(ctx context.Context) bool {
-	cmd := "for f in /sys/class/drm/*/*/modes; do head -1 $f; done"
-	readResult, err := testexec.CommandContext(ctx, "bash", "-c", cmd).Output()
-	if err != nil || strings.TrimSpace(string(readResult)) == "" {
+	outputs, err := modetest.NumberOfOutputsConnected(ctx)
+	if err != nil || outputs == 0 {
 		return false
 	}
 	return true
@@ -580,16 +569,22 @@ func GetScreenSize(ctx context.Context) string {
 	if !HasScreen(ctx) {
 		return ""
 	}
-	cmd := "modetest -c | sed -n '/size (mm)/{n;p}'"
-	readResult, err := testexec.CommandContext(ctx, "bash", "-c", cmd).Output()
+	connectors, err := modetest.Connectors(ctx)
 	if err != nil {
 		testing.ContextLog(ctx, "Failed to get screen size")
 		return ""
 	}
-	pattern := "[0-9]+x[0-9]+"
-	re := regexp.MustCompile(pattern)
-	findResult := re.Find(readResult)
-	return string(findResult)
+	var width, height uint32
+	for _, connector := range connectors {
+		if connector.Connected && (len(connector.Modes) != 0) {
+			width, height = connector.Width, connector.Height
+			break
+		}
+	}
+	if width == 0 || height == 0 {
+		testing.ContextLog(ctx, "Failed to get screen refresh rate")
+	}
+	return strings.Join([]string{strconv.Itoa(int(width)), strconv.Itoa(int(height))}, "x")
 }
 
 func min(a, b int) int {
@@ -601,42 +596,22 @@ func min(a, b int) int {
 
 // GetScreenRefreshRate returns the screen refresh rate in Hz.
 func GetScreenRefreshRate(ctx context.Context) int32 {
-	if !HasScreen(ctx) {
-		return 0
-	}
-	cmd := "modetest -c | grep 'refresh (Hz)'"
-	readResult, err := testexec.CommandContext(ctx, "bash", "-c", cmd).Output()
+	connectors, err := modetest.Connectors(ctx)
 	if err != nil {
 		testing.ContextLog(ctx, "Failed to get screen refresh rate")
 		return 0
 	}
-	pattern := `\s+`
-	re := regexp.MustCompile(pattern)
-	re.ReplaceAll(readResult, []byte(" "))
-	fields1 := strings.Split(strings.TrimSpace(string(readResult)), " ")
-
-	cmd = "modetest -c | sed -n '/refresh (Hz)/{n;p}'"
-	readResult, err = testexec.CommandContext(ctx, "bash", "-c", cmd).Output()
-	if err != nil {
-		testing.ContextLog(ctx, "Failed to get screen refresh rate")
-		return 0
-	}
-	re.ReplaceAll(readResult, []byte(" "))
-	fields2 := strings.Split(strings.TrimSpace(string(readResult)), " ")
-	// e.g. fields1 = ["index", "name", "refresh", ...]
-	// e.g. fields2 = ["#0", "1920x1080", "60.00", ...]
-	for i := 0; i < min(len(fields1), len(fields2)); i++ {
-		if fields1[i] == "refresh" {
-			findResult, err := strconv.ParseFloat(fields2[i], 64)
-			if err != nil {
-				testing.ContextLog(ctx, "Failed to get screen refresh rate")
-				return 0
-			}
-			return int32(math.Round(findResult))
+	var refresh float64
+	for _, connector := range connectors {
+		if connector.Connected && (len(connector.Modes) != 0) {
+			refresh = connector.Modes[0].Refresh
+			break
 		}
 	}
-	testing.ContextLog(ctx, "Failed to get screen refresh rate")
-	return 0
+	if refresh == 0 {
+		testing.ContextLog(ctx, "Failed to get screen refresh rate")
+	}
+	return int32(math.Round(refresh))
 }
 
 // GetBacklightLevel returns screen backlight brightness in non-linear (human
