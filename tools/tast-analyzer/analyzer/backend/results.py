@@ -28,6 +28,11 @@ class TestResultKey:
     variant: str
     """Variant name from Tast - usually 'summary'."""
 
+    def metric_path(self) -> str:
+        """Returns a unique identifier for the metric in the context of a set
+        of test runs."""
+        return self.test_name + "." + self.metric_name + "." + self.variant
+
     def to_json(self) -> str:
         return json.dumps(dataclasses.asdict(self), sort_keys=True)
 

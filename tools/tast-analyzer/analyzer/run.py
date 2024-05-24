@@ -1,6 +1,9 @@
 # Copyright 2024 The ChromiumOS Authors
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
+import logging
+
+from analyzer.analysis.analyze import analyze_results
 from analyzer.backend.tast_results_dir import ingest_tast_results_directory
 import click
 
@@ -11,6 +14,8 @@ def cli() -> None:
 
 
 cli.add_command(ingest_tast_results_directory, name="ingest-tast")
+cli.add_command(analyze_results, name="analyze-results")
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
     cli()
