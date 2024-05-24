@@ -106,9 +106,9 @@ func (b *DUTControlAndreiboard) RollbackUpdate(ctx context.Context, i *common.Cr
 	return nil
 }
 
-// RollbackAndRunEraseflashinfoUpdate rolls back to the erase flashinfo image and runs eraseflashinfo.
+// RollbackAndRunEraseFlashInfoUpdate rolls back to the erase flashinfo image and runs eraseflashinfo.
 // TODO(b/323024317): Ensure method works for ti50 as well.
-func (b *DUTControlAndreiboard) RollbackAndRunEraseflashinfoUpdate(ctx context.Context, i *common.CrOSImage, imagePath, efiImage, debugImage string) error {
+func (b *DUTControlAndreiboard) RollbackAndRunEraseFlashInfoUpdate(ctx context.Context, i *common.CrOSImage, imagePath, efiImage, debugImage string) error {
 	_, imageVer, _, _, err := b.GSCToolBinVersion(ctx, imagePath)
 	if err != nil {
 		return errors.Wrap(err, "parse bin version")
@@ -124,7 +124,7 @@ func (b *DUTControlAndreiboard) RollbackAndRunEraseflashinfoUpdate(ctx context.C
 		return errors.Wrap(err, "unable to rollback to efi image")
 	}
 
-	_, err = i.Eraseflashinfo(ctx)
+	_, err = i.EraseFlashInfo(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to run GSC eraseflashinfo command")
 	}

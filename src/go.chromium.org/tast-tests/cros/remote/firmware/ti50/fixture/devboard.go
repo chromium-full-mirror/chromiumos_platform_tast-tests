@@ -183,7 +183,7 @@ func setupImage(ctx context.Context, v *Value, s TestingState) {
 		s.Fatal("Setup: ", err)
 	}
 
-	if imageIsRunning(ctx, s, v.devboard, v.ImagePath) {
+	if needsUpdate(ctx, s, v.devboard, v.ImagePath, false) {
 		testing.ContextLog(ctx, "Image is already running")
 		return
 	}
@@ -195,7 +195,7 @@ func setupImage(ctx context.Context, v *Value, s TestingState) {
 	}
 }
 
-func imageIsRunning(ctx context.Context, s TestingState, board *remoteTi50.DUTControlAndreiboard, imagePath string) bool {
+func needsUpdate(ctx context.Context, s TestingState, board *remoteTi50.DUTControlAndreiboard, imagePath string, checkInfoSpace bool) bool {
 	if imagePath == "" {
 		testing.ContextLog(ctx, "No image given. Nothing to do")
 		return true
@@ -226,6 +226,18 @@ func imageIsRunning(ctx context.Context, s TestingState, board *remoteTi50.DUTCo
 
 	i.WaitUntilBooted(ctx)
 
+	if checkInfoSpace {
+		// Check if any fields in the info pages are set. If they are,
+		// the test has to run the update.
+		isErased, err := i.WriteOnceInfoPagesAreErased(ctx)
+		if err != nil {
+			testing.ContextLog(ctx, "Unable to check the info space: ", err)
+			return false
+		}
+		if !isErased {
+			return false
+		}
+	}
 	// Check the running version string is found in the image file. It's possible multiple
 	// images will be built with the same minor version. The version string contains the
 	// git sha which should be unique per build.
@@ -273,7 +285,7 @@ func imageIsRunning(ctx context.Context, s TestingState, board *remoteTi50.DUTCo
 // The GSC UART must be closed before calling this method since it opens it to issue commands to the board.
 // TODO(b/140534392): Support changing the board id.
 func setupCr50Image(ctx context.Context, s TestingState, board *remoteTi50.DUTControlAndreiboard, imagePath string, fwConfigJsons []string,
-	testbedProperties remoteTi50.TestbedProperties, runEraseflashinfo bool) {
+	testbedProperties remoteTi50.TestbedProperties, runEraseFlashInfo bool) {
 	if err := board.StartSession(ctx, ti50.StrapReset); err != nil {
 		s.Fatal("StartSession: ", err)
 	}
@@ -310,7 +322,7 @@ func setupCr50Image(ctx context.Context, s TestingState, board *remoteTi50.DUTCo
 
 	i.WaitUntilBooted(ctx)
 
-	if imageVer.Less(rw) || runEraseflashinfo {
+	if imageVer.Less(rw) || runEraseFlashInfo {
 		testing.ContextLogf(ctx, "Rollback required for flashing %s to %s", rw, imageVer)
 		debugImage, efiImage, err := DownloadGSCTestImages(ctx, testbedProperties)
 		mustSucceed(s, err, "failed to download debug and efi image")
@@ -318,7 +330,7 @@ func setupCr50Image(ctx context.Context, s TestingState, board *remoteTi50.DUTCo
 		if debugImage == "" || efiImage == "" {
 			s.Fatal("Supply EFI and debug image to rollback with ccd")
 		}
-		err = board.RollbackAndRunEraseflashinfoUpdate(ctx, i, imagePath, efiImage, debugImage)
+		err = board.RollbackAndRunEraseFlashInfoUpdate(ctx, i, imagePath, efiImage, debugImage)
 		mustSucceed(s, err, "failed efi rollback update to image")
 	} else {
 		testing.ContextLogf(ctx, "Direct gsctool update for %s to %s", rw, imageVer)

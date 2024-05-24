@@ -98,7 +98,7 @@ func GSCFactoryUpdate(ctx context.Context, s *testing.State) {
 	b.WaitUntilCCDConnected(ctx)
 
 	// Erase info1 and rollback to the factory image.
-	err = b.RollbackAndRunEraseflashinfoUpdate(ctx, i, factoryImage, efiImage, debugImage)
+	err = b.RollbackAndRunEraseFlashInfoUpdate(ctx, i, factoryImage, efiImage, debugImage)
 	th.MustSucceed(err, "failed to update to factory image")
 	s.Log("Updated to the factory image")
 	s.Log("Wait 61s to avoid update too soon error")

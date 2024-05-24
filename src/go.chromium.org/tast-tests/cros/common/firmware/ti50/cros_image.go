@@ -1220,8 +1220,8 @@ func (i *CrOSImage) GetChipSKU(ctx context.Context) (ChipSKU, error) {
 	return sysinfo.ChipSKU, nil
 }
 
-// Eraseflashinfo runs eraseflashinfo.
-func (i *CrOSImage) Eraseflashinfo(ctx context.Context) (string, error) {
+// EraseFlashInfo runs eraseflashinfo.
+func (i *CrOSImage) EraseFlashInfo(ctx context.Context) (string, error) {
 	return i.Command(ctx, "eraseflashinfo both")
 }
 

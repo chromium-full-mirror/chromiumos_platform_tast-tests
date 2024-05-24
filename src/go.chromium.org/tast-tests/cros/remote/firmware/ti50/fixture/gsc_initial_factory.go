@@ -37,6 +37,7 @@ func init() {
 		SetUpTimeout:    rescueTwiceTimeout,
 		TearDownTimeout: rescueTwiceTimeout,
 		PreTestTimeout:  rescueTwiceTimeout,
+		PostTestTimeout: rescueTwiceTimeout,
 		Parent:          SystemDevboard,
 	})
 }
@@ -76,8 +77,8 @@ func (c *initialFactoryImpl) SetUp(ctx context.Context, s *testing.FixtState) in
 	return c.v
 }
 
-func (c *initialFactoryImpl) eraseInfoPage(ctx context.Context, s *testing.FixtTestState) {
-	b := c.v.devboard
+func eraseInfoPage(ctx context.Context, v *Value, s TestingState) {
+	b := v.devboard
 
 	mustSucceed(s, b.StartSession(ctx, ti50.StrapReset), "Start EFI session")
 	defer b.EndSession(ctx)
@@ -89,7 +90,7 @@ func (c *initialFactoryImpl) eraseInfoPage(ctx context.Context, s *testing.FixtT
 	mustSucceed(s, b.Reset(ctx), "Reset gsc console for EFI")
 	mustSucceed(s, i.WaitUntilBooted(ctx), "EFI image revives after reboot")
 
-	eraseOutput, err := i.Eraseflashinfo(ctx)
+	eraseOutput, err := i.EraseFlashInfo(ctx)
 	mustSucceed(s, err, "failed to run eraseflashinfo command")
 	if !strings.Contains(eraseOutput, "Succeeded!") {
 		s.Fatal("Erase command did not work: ", eraseOutput)
@@ -97,12 +98,12 @@ func (c *initialFactoryImpl) eraseInfoPage(ctx context.Context, s *testing.FixtT
 	testing.ContextLog(ctx, "GSC INFO page erased")
 }
 
-func (c *initialFactoryImpl) eraseAPROVerificationSettings(ctx context.Context, s *testing.FixtTestState) {
+func eraseAPROVerificationSettings(ctx context.Context, v *Value, s TestingState) {
 	// Haven does not have AP RO verification settings that need to be erased
-	if c.v.TestbedProperties.TestbedType == ti50.GscH1Shield {
+	if v.TestbedProperties.TestbedType == ti50.GscH1Shield {
 		return
 	}
-	b := c.v.devboard
+	b := v.devboard
 
 	mustSucceed(s, b.StartSession(ctx, ti50.StrapReset), "Start ap ro erase session")
 	defer b.EndSession(ctx)
@@ -121,35 +122,62 @@ func (c *initialFactoryImpl) eraseAPROVerificationSettings(ctx context.Context, 
 	testing.ContextLog(ctx, "AP RO verification settings erased")
 }
 
-func (c *initialFactoryImpl) PreTest(ctx context.Context, s *testing.FixtTestState) {
+// setupImageAndEraseInfo runs eraseflashinfo and flashes the image under test
+// on the devboard using the image and json files provided in the `Value`
+// parameter.
+func setupImageAndEraseInfo(ctx context.Context, v *Value, s TestingState) {
+	// Setup the board with the correct jsons. Use an empty string for the image
+	// path so setup doesn't try to flash the image.
+	if err := v.devboard.Setup(ctx, "", v.FwConfigJsons); err != nil {
+		s.Fatal("Setup: ", err)
+	}
+
+	b := v.devboard
+	if needsUpdate(ctx, s, b, v.ImagePath, true) {
+		testing.ContextLog(ctx, "Image is already running and info1 is erased")
+		return
+	}
+
+	testing.ContextLog(ctx, "Setting up image and running eraseflashinfo: ", v.ImagePath)
+	if v.TestbedProperties.TestbedType == ti50.GscH1Shield {
+		setupCr50Image(ctx, s, b, v.ImagePath, v.FwConfigJsons, v.TestbedProperties, true)
+	} else {
+		testing.ContextLog(ctx, "Flashing EFI image")
+		mustSucceed(s, b.Setup(ctx, v.EfiImagePath, []string{}), "Setup EFI image")
+		eraseInfoPage(ctx, v, s)
+
+		testing.ContextLog(ctx, "Flashing image under test")
+		mustSucceed(s, b.Setup(ctx, v.ImagePath, v.FwConfigJsons), "Setup for image under test")
+
+	}
+}
+
+func (c *initialFactoryImpl) UpdateAndRunEraseFlashInfo(ctx context.Context, s *testing.FixtTestState) {
 	// Host emulation does not need to erase anything, it always started erased
 	if c.v.TestbedProperties.TestbedType == ti50.GscHostEmulation {
 		return
 	}
 
-	testing.ContextLog(ctx, "Start GSC Initial Factory Fixture PreTest")
-	b := c.v.devboard
-	mustSucceed(s, b.EndSession(ctx), "End image under test session")
+	setupImageAndEraseInfo(ctx, c.v, s)
 
-	if c.v.TestbedProperties.TestbedType == ti50.GscH1Shield {
-		setupCr50Image(ctx, s, c.v.devboard, c.v.ImagePath, c.v.FwConfigJsons, c.v.TestbedProperties, true)
-	} else {
-		testing.ContextLog(ctx, "Flashing EFI image")
-		mustSucceed(s, b.Setup(ctx, c.v.EfiImagePath, []string{}), "Setup EFI image")
-		c.eraseInfoPage(ctx, s)
-
-		testing.ContextLog(ctx, "Flashing image under test")
-		mustSucceed(s, b.Setup(ctx, c.v.ImagePath, c.v.FwConfigJsons), "Setup for image under test")
-
-		c.eraseAPROVerificationSettings(ctx, s)
+	if c.v.TestbedProperties.TestbedType != ti50.GscH1Shield {
+		eraseAPROVerificationSettings(ctx, c.v, s)
 	}
+	mustSucceed(s, c.v.devboard.StartSession(ctx, ti50.StrapReset), "Start testing session")
+}
 
-	mustSucceed(s, b.StartSession(ctx, ti50.StrapReset), "Start testing session")
+func (c *initialFactoryImpl) PreTest(ctx context.Context, s *testing.FixtTestState) {
+	testing.ContextLog(ctx, "Start GSC Initial Factory Fixture PreTest")
+
+	c.UpdateAndRunEraseFlashInfo(ctx, s)
 
 	testing.ContextLog(ctx, "Board ready for test")
 }
 
 func (c *initialFactoryImpl) PostTest(ctx context.Context, s *testing.FixtTestState) {
+	testing.ContextLog(ctx, "Start GSC Initial Factory Fixture PostTest")
+
+	c.UpdateAndRunEraseFlashInfo(ctx, s)
 }
 
 func (c *initialFactoryImpl) Reset(ctx context.Context) error {
