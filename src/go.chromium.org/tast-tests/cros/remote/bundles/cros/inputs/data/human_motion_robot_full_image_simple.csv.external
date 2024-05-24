@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/human-motion-robot/reference_images/human_motion_robot_full_image_simple_20240523.csv",
+  "size": 42774,
+  "sha256sum": "693078e8b78dc32b049f4d35d8174c9fa26f8949172702f89d09a9e94c8df7b6"
+}
