@@ -45,6 +45,20 @@ func (c *updateImpl) SetUp(ctx context.Context, s *testing.FixtState) interface{
 	if c.v.ImagePath == "" {
 		s.Fatal("Update fixture must specify a image (i.e. through buildurl var)")
 	}
+	testing.ContextLog(ctx, "Saving images for GSC Update Fixture")
+	efiImage, err := DownloadEfiImage(ctx, c.v.TestbedProperties)
+	if err != nil {
+		s.Fatal(err, "failed to download the efi image")
+	}
+	debugImage, err := DownloadDebugImage(ctx, c.v.TestbedProperties)
+	if err != nil {
+		if c.v.TestbedProperties.TestbedType == ti50.GscH1Shield {
+			s.Fatal(err, "failed to download the debug image")
+		}
+		debugImage = ""
+	}
+	c.v.DebugImagePath = debugImage
+	c.v.EfiImagePath = efiImage
 	return c.v
 }
 

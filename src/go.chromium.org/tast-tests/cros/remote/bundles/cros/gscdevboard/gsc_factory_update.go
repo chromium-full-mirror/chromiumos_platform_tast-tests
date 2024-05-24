@@ -25,7 +25,7 @@ func init() {
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
 		Attr:         []string{"group:gsc", "gsc_image_ti50", "gsc_nightly"},
-		Fixture:      fixture.GSCInitialFactory,
+		Fixture:      fixture.GSCUpdate,
 		Params: []testing.Param{{
 			Name:      "cr50_0_3_22",
 			Val:       "0.3.22",
