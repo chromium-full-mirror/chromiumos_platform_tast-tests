@@ -189,6 +189,7 @@ func MigrateManagedUnselectedApn(ctx context.Context, s *testing.State) {
 	}
 
 	defer func(ctx context.Context) {
+		faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree_before_clear_APN")
 		if err := helper.ClearCustomAPNList(ctx); err != nil {
 			testing.ContextLog(ctx, "Failed to clear cellular.CustomAPNList: ", err)
 		}
@@ -207,7 +208,7 @@ func MigrateManagedUnselectedApn(ctx context.Context, s *testing.State) {
 	}
 
 	// Select a database APN.
-	apnMenuItem := nodewith.Role(role.ListBoxOption).First()
+	apnMenuItem := nodewith.Role(role.MenuListOption).First()
 	if err := uiauto.Combine("Select first menu item",
 		ui.WaitUntilExists(ossettings.AccessPointDropdown.Focusable()),
 		ui.LeftClick(ossettings.AccessPointDropdown),
