@@ -7,22 +7,17 @@ package videoconferencing
 import (
 	"context"
 	"image"
-	"net/http"
-	"net/http/httptest"
 	"strconv"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/tbdep"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/common"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/fakehtml"
-	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vctray"
 	"go.chromium.org/tast-tests/cros/local/screenshot"
 	"go.chromium.org/tast-tests/cros/local/videoconferencing/fixture"
 
-	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -62,39 +57,23 @@ func init() {
 	})
 }
 
-func CameraEffectsChromeResolution(ctx context.Context, s *testing.State) {
-	// Shorten context to allow for cleanup.
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
-	defer cancel()
+func CameraEffectsChromeResolution(cleanupCtx context.Context, s *testing.State) {
+	ctx, tconn, cr, br, srvURL, cleanupFunc := common.Setup(cleanupCtx, s)
+	defer cleanupFunc()
 
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
-	browserType := s.FixtValue().(fixture.FixtData).BrowserType()
+	vcTray := vctray.New(ctx, tconn)
 
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to connect Test API: ", err)
-	}
 	ui := uiauto.New(tconn)
 
-	// Open video on simple javascript browser.
-	testing.ContextLog(ctx, "Opening Simple Meeting")
-	srv := httptest.NewServer(http.FileServer(s.DataFileSystem()))
-	defer srv.Close()
-
-	url := srv.URL + fakehtml.PageURL
-
-	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browserType, url)
+	url := srvURL + fakehtml.PageURL
+	conn, err := br.NewTab(ctx, url)
 	if err != nil {
-		s.Fatal("Failed to launch browser: ", err)
+		s.Fatal("Fail to open the fake html: ", err)
 	}
-	defer closeBrowser(cleanupCtx)
-	defer conn.Close()
-	defer conn.CloseTarget(cleanupCtx)
 
-	fakeHTMLUI := fakehtml.NewUI(tconn)
-	if err := fakeHTMLUI.MayBeAllowCameraAccess(ctx); err != nil {
-		s.Fatal("Failed to allow camera access: ", err)
+	if err := vcTray.SetCameraEffects(vctray.BackgroundBlurOff, false)(ctx); err != nil {
+		s.Fatalf("Failed to set camera effects to BackgroundBlur %v; PortraitRelighting off: %v",
+			vctray.BackgroundBlurOff, err)
 	}
 
 	// Take a screenshot before camera effects applied.
@@ -103,9 +82,6 @@ func CameraEffectsChromeResolution(ctx context.Context, s *testing.State) {
 		s.Fatal("Fail to grab camera screen shot before: ", err)
 	}
 
-	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
-
-	vcTray := vctray.New(ctx, tconn)
 	// Only test camera effects in different resolution with BackgroundBlurFull and RelightingOn.
 	if err := vcTray.SetCameraEffects(vctray.BackgroundBlurFull, true)(ctx); err != nil {
 		s.Fatalf("Failed to set camera effects to BackgroundBlur %v; PortraitRelighting on: %v",

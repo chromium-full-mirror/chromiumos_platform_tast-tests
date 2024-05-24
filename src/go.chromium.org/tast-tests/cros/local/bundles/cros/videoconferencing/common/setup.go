@@ -42,7 +42,6 @@ func Setup(cleanupCtx context.Context, s *testing.State) (context.Context, *chro
 	}
 
 	// Lacros browser won't work with ash TestConn tconn, instead we need the TestConn from the browser.
-
 	brTconn, err := br.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to get TestAPIConn from the browser: ", err)

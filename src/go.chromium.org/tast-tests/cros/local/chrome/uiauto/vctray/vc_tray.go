@@ -30,21 +30,20 @@ var (
 
 // Node finders in the expanded panel which is implemented in TrayBubbleView.
 var (
-	panelSection = nodewith.HasClass("RootView").Role(role.Dialog).First().Ancestor(
-		nodewith.HasClass("SettingBubbleContainer").Role(role.Window).First(),
-	)
-	adjustLightingButton    = nodewith.NameStartingWith("Toggle Improve lighting").Role(role.ToggleButton).Ancestor(panelSection)
-	liveCaptionButton       = nodewith.NameStartingWith("Toggle Live Caption").Role(role.ToggleButton).Ancestor(panelSection)
-	adjustCameraFraming     = nodewith.NameStartingWith("Toggle Camera framing").Role(role.ToggleButton).Ancestor(panelSection)
-	noiseCancellationButton = nodewith.NameStartingWith("Toggle Noise cancellation").Role(role.ToggleButton).Ancestor(panelSection)
+	bubleView = nodewith.NameContaining("Video Call Controls").HasClass("BubbleView").Role(role.Window)
 
-	bgBlurOffButton            = nodewith.NameContaining("Off").Role(role.ToggleButton).Ancestor(panelSection)
-	bgBlurLightButton          = nodewith.NameContaining("Light").Role(role.ToggleButton).Ancestor(panelSection)
-	bgBlurFullButton           = nodewith.NameContaining("Full").Role(role.ToggleButton).Ancestor(panelSection)
-	bgBlurImageButton          = nodewith.NameContaining("Image").Role(role.ToggleButton).Ancestor(panelSection)
-	createwWithAiButton        = nodewith.NameContaining("Create with AI").Role(role.Button).Ancestor(panelSection)
+	adjustLightingButton    = nodewith.NameStartingWith("Toggle Improve lighting").Role(role.ToggleButton).Ancestor(bubleView)
+	liveCaptionButton       = nodewith.NameStartingWith("Toggle Live Caption").Role(role.ToggleButton).Ancestor(bubleView)
+	adjustCameraFraming     = nodewith.NameStartingWith("Toggle Camera framing").Role(role.ToggleButton).Ancestor(bubleView)
+	noiseCancellationButton = nodewith.NameStartingWith("Toggle Noise cancellation").Role(role.ToggleButton).Ancestor(bubleView)
+
+	bgBlurOffButton            = nodewith.NameContaining("Off").Role(role.ToggleButton).Ancestor(bubleView)
+	bgBlurLightButton          = nodewith.NameContaining("Light").Role(role.ToggleButton).Ancestor(bubleView)
+	bgBlurFullButton           = nodewith.NameContaining("Full").Role(role.ToggleButton).Ancestor(bubleView)
+	bgBlurImageButton          = nodewith.NameContaining("Image").Role(role.ToggleButton).Ancestor(bubleView)
+	createwWithAiButton        = nodewith.NameContaining("Create with AI").Role(role.Button).Ancestor(bubleView)
 	firstBackgroundImageButton = nodewith.ClassName("RecentlyUsedImageButton").Role(role.ListItem).First()
-	showAppsButton             = nodewith.NameContaining("Used by").Role(role.Button).Ancestor(panelSection)
+	showAppsButton             = nodewith.NameContaining("Used by").Role(role.Button).Ancestor(bubleView)
 )
 
 // VCTray represents the type of video conference tray.
@@ -78,7 +77,7 @@ func (vcTray VCTray) WaitUntilGone(ctx context.Context) error {
 // ExpandPanel clicks the up-arrow button in VC tray section to expand the panel.
 // It skips action if the panel is already expanded.
 func (vcTray VCTray) ExpandPanel(ctx context.Context) error {
-	isPanelExpanded, err := vcTray.ui.IsNodeFound(ctx, panelSection)
+	isPanelExpanded, err := vcTray.ui.IsNodeFound(ctx, bubleView)
 	if err != nil {
 		return err
 	} else if isPanelExpanded {
@@ -111,20 +110,20 @@ func (vcTray VCTray) ExpandPanel(ctx context.Context) error {
 	if err := ash.WaitForShelf(ctx, vcTray.tconn, 3*time.Second); err != nil {
 		return errors.Wrap(err, "shelf is not visible")
 	}
-	return vcTray.ui.DoDefaultUntil(expandButton, vcTray.ui.WithTimeout(3*time.Second).WaitUntilExists(panelSection))(ctx)
+	return vcTray.ui.DoDefaultUntil(expandButton, vcTray.ui.WithTimeout(3*time.Second).WaitUntilExists(bubleView))(ctx)
 }
 
 // CollapsePanel clicks the down-arrow button in VC tray section to collapse the panel.
 // It skips action if the panel is not expanded.
 func (vcTray VCTray) CollapsePanel(ctx context.Context) error {
-	isPanelExpanded, err := vcTray.ui.IsNodeFound(ctx, panelSection)
+	isPanelExpanded, err := vcTray.ui.IsNodeFound(ctx, bubleView)
 	if err != nil {
 		return err
 	} else if !isPanelExpanded {
 		return nil
 	}
 
-	return vcTray.ui.DoDefaultUntil(expandButton, vcTray.ui.WithTimeout(3*time.Second).WaitUntilGone(panelSection))(ctx)
+	return vcTray.ui.DoDefaultUntil(expandButton, vcTray.ui.WithTimeout(3*time.Second).WaitUntilGone(bubleView))(ctx)
 }
 
 // BackgroundBlurLevel represents the type of background blur option.
@@ -227,7 +226,7 @@ func (vcTray VCTray) SetLiveCaption(expectedOn bool) action.Action {
 
 // ReturnToApp returns an action returning to the VC app.
 func (vcTray VCTray) ReturnToApp(appName string) action.Action {
-	appFinder := nodewith.NameContaining(appName).Role(role.Button).Ancestor(panelSection)
+	appFinder := nodewith.NameContaining(appName).Role(role.Button).Ancestor(bubleView)
 
 	return func(ctx context.Context) error {
 		// Multiple VC apps are hidden inside the app list.

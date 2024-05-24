@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/common"
-	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -20,8 +19,8 @@ import (
 // It is usually launched by browersing to fake html.
 type VcTabUI struct {
 	common.VcWebApp
-	tconn  *chrome.TestConn
-	window *ash.Window
+	br  *browser.Browser
+	url string
 }
 
 // LaunchTab opens a new tab for the url.
@@ -30,15 +29,13 @@ func LaunchTab(ctx context.Context, tconn *browser.TestConn, br *browser.Browser
 		return nil, err
 	}
 
-	window, err := ash.WaitForAnyWindow(ctx, tconn, func(w *ash.Window) bool {
+	if _, err := ash.WaitForAnyWindow(ctx, tconn, func(w *ash.Window) bool {
 		return strings.Contains(w.Title, common.VcAppName) && w.IsVisible && !w.IsAnimating
-	})
-
-	if err != nil {
+	}); err != nil {
 		return nil, err
 	}
 
-	tabUI := VcTabUI{common.VcWebApp{UI: uiauto.New(tconn)}, tconn, window}
+	tabUI := VcTabUI{common.VcWebApp{UI: uiauto.New(tconn)}, br, url}
 
 	if err := tabUI.WaitUntilAllButtonsExists(ctx); err != nil {
 		return nil, err
@@ -49,5 +46,5 @@ func LaunchTab(ctx context.Context, tconn *browser.TestConn, br *browser.Browser
 
 // Close closes the tab with id inside VcTabUI.
 func (tabUI *VcTabUI) Close(ctx context.Context) error {
-	return tabUI.window.CloseWindow(ctx, tabUI.tconn)
+	return tabUI.br.CloseWithURL(ctx, tabUI.url)
 }

@@ -40,17 +40,12 @@ func InstallPwa(ctx context.Context, br *browser.Browser, tconn *chrome.TestConn
 		return "", errors.Wrap(err, "failed to InstalledAppID")
 	}
 
-	if err := ash.WaitForApp(ctx, tconn, appID, 15*time.Second); err != nil {
-		return "", errors.Wrap(err, "failed to WaitForApp")
+	brTconn, err := br.TestAPIConn(ctx)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to get browser TestAPIConn")
 	}
-
-	if err := apps.Close(ctx, tconn, appID); err != nil {
-		return "", errors.Wrap(err, "failed to close app")
-	}
-
-	// Wait for the app to close.
-	if err := ash.WaitForAppClosed(ctx, tconn, appID); err != nil {
-		return "", errors.Wrap(err, "failed to WaitForAppClosed")
+	if err := browser.CloseAllTabs(ctx, brTconn); err != nil {
+		return "", errors.Wrap(err, "failed to close all tabs")
 	}
 
 	return appID, nil
