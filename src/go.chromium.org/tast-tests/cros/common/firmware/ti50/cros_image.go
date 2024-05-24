@@ -1130,8 +1130,8 @@ const (
 	GscResetFlagRbox = (1 << (31 - 1))
 )
 
-func convertCr50ResetFlags(flags int64) int {
-	res := 0
+func convertCr50ResetFlags(flags int64) uint32 {
+	res := uint32(0)
 	if flags&Cr50ResetFlagPowerOn != 0 {
 		res |= GscResetFlagPowerOn
 	}

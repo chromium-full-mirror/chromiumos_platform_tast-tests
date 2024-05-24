@@ -1173,60 +1173,60 @@ func testGetSysinfo(t *testing.T, input string, expectedMap map[string]string, e
 }
 
 func TestConvertCr50ResetFlags1(t *testing.T) {
-	input := (Cr50ResetFlagPowerOn | Cr50ResetFlagHibernate | Cr50ResetFlagHard | Cr50ResetFlagRdd | Cr50ResetFlagRbox)
-	expected := (GscResetFlagPowerOn | GscResetFlagHibernate | GscResetFlagHard | GscResetFlagRdd | GscResetFlagRbox)
+	input := uint32(Cr50ResetFlagPowerOn | Cr50ResetFlagHibernate | Cr50ResetFlagHard | Cr50ResetFlagRdd | Cr50ResetFlagRbox)
+	expected := uint32(GscResetFlagPowerOn | GscResetFlagHibernate | GscResetFlagHard | GscResetFlagRdd | GscResetFlagRbox)
 	testConvertCr50ResetFlags(t, input, expected)
 }
 
 func TestConvertCr50ResetFlags2(t *testing.T) {
-	input := 0xffffffff
-	expected := (GscResetFlagPowerOn | GscResetFlagHibernate | GscResetFlagHard | GscResetFlagRdd | GscResetFlagRbox)
+	input := uint32(0xffffffff)
+	expected := uint32(GscResetFlagPowerOn | GscResetFlagHibernate | GscResetFlagHard | GscResetFlagRdd | GscResetFlagRbox)
 	testConvertCr50ResetFlags(t, input, expected)
 }
 
 func TestConvertCr50ResetFlags3(t *testing.T) {
-	input := Cr50ResetFlagPowerOn
-	expected := GscResetFlagPowerOn
+	input := uint32(Cr50ResetFlagPowerOn)
+	expected := uint32(GscResetFlagPowerOn)
 	testConvertCr50ResetFlags(t, input, expected)
 }
 
 func TestConvertCr50ResetFlags4(t *testing.T) {
-	input := Cr50ResetFlagHard
-	expected := GscResetFlagHard
+	input := uint32(Cr50ResetFlagHard)
+	expected := uint32(GscResetFlagHard)
 	testConvertCr50ResetFlags(t, input, expected)
 }
 
 func TestConvertCr50ResetFlags5(t *testing.T) {
-	input := Cr50ResetFlagHibernate
-	expected := GscResetFlagHibernate
+	input := uint32(Cr50ResetFlagHibernate)
+	expected := uint32(GscResetFlagHibernate)
 	testConvertCr50ResetFlags(t, input, expected)
 }
 
 func TestConvertCr50ResetFlags6(t *testing.T) {
-	input := Cr50ResetFlagRdd
-	expected := GscResetFlagRdd
+	input := uint32(Cr50ResetFlagRdd)
+	expected := uint32(GscResetFlagRdd)
 	testConvertCr50ResetFlags(t, input, expected)
 }
 
 func TestConvertCr50ResetFlags7(t *testing.T) {
-	input := Cr50ResetFlagRbox
-	expected := GscResetFlagRbox
+	input := uint32(Cr50ResetFlagRbox)
+	expected := uint32(GscResetFlagRbox)
 	testConvertCr50ResetFlags(t, input, expected)
 }
 
 func TestConvertCr50ResetFlags8(t *testing.T) {
-	input := Cr50ResetFlagHibernate | Cr50ResetFlagRbox
-	expected := GscResetFlagHibernate | GscResetFlagRbox
+	input := uint32(Cr50ResetFlagHibernate | Cr50ResetFlagRbox)
+	expected := uint32(GscResetFlagHibernate | GscResetFlagRbox)
 	testConvertCr50ResetFlags(t, input, expected)
 }
 
 func TestConvertCr50ResetFlags9(t *testing.T) {
-	input := Cr50ResetFlagHibernate | Cr50ResetFlagRbox
-	expected := GscResetFlagHibernate | GscResetFlagRbox
+	input := uint32(Cr50ResetFlagHibernate | Cr50ResetFlagRbox)
+	expected := uint32(GscResetFlagHibernate | GscResetFlagRbox)
 	testConvertCr50ResetFlags(t, input, expected)
 }
 
-func testConvertCr50ResetFlags(t *testing.T, input, expected int) {
+func testConvertCr50ResetFlags(t *testing.T, input, expected uint32) {
 	res := convertCr50ResetFlags(int64(input))
 	if expected != res {
 		t.Fatalf("flag mismatch with %x: expected %x got %x", input, expected, res)
