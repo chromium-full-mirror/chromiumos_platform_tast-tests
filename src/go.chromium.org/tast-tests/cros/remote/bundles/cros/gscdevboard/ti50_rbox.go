@@ -24,27 +24,15 @@ const (
 )
 
 const (
-	// boxEcResetGpioDelay is the amount of time the EC reset key combo should be
-	// held for box form factor.
-	boxEcResetGpioDelay = 200 * time.Millisecond
-)
-
-const (
 	// tabletEcResetHoldDelay is how long EC reset keys must be held to trigger EC reset
 	tabletEcResetHoldDelay = 10 * time.Second
 	// tabletGscResetHoldDelay is how long GSC reset keys must be held to trigger GSC reset
 	tabletGscResetHoldDelay = 20 * time.Second
-	// tabletEcResetGpioDelay is the amount of time the EC reset key combo should
-	// be held for tablet form factor.
-	tabletEcResetGpioDelay = tabletEcResetHoldDelay + 200*time.Millisecond
 )
 
 const (
 	// clamshellGscResetHoldDelay is how long GSC reset keys must be held to trigger GSC reset
 	clamshellGscResetHoldDelay = 10 * time.Second
-	// clamshellEcResetGpioDelay is the amount of time the EC reset key combo
-	// should be  held for clamshell form factor.
-	clamshellEcResetGpioDelay = 200 * time.Millisecond
 )
 
 type ti50ValidRBOXParam struct {
@@ -132,7 +120,7 @@ func ti50RBOXBox(ctx context.Context, s *testing.State, b utils.DevboardHelper, 
 	verifyEcResetWithKeysInOrder(ctx, s, b, ti50.GpioTi50RecoveryIn, ti50.GpioTi50PowerBtnL, nil)
 	verifyMinECPulseWidth(ctx, s, b)
 
-	verifyRMAKeySequence(ctx, s, b, i, ti50.GpioTi50RecoveryIn, boxEcResetGpioDelay)
+	verifyRMAKeySequence(ctx, s, b, i, ti50.GpioTi50RecoveryIn)
 
 	// Finish test if bypass_sleep_check var is present (even if value is "false")
 	if _, noSleepCheck := s.Var("bypass_sleep_check"); noSleepCheck {
@@ -213,7 +201,7 @@ func ti50RBOXClamshell(ctx context.Context, s *testing.State, b utils.DevboardHe
 	b.GpioSet(ctx, ti50.GpioTi50KsiRefresh, true)
 	b.GpioSet(ctx, ti50.GpioTi50KsiBack, true)
 
-	verifyRMAKeySequence(ctx, s, b, i, ti50.GpioTi50KsiRefresh, clamshellEcResetGpioDelay)
+	verifyRMAKeySequence(ctx, s, b, i, ti50.GpioTi50KsiRefresh)
 	verifyBatteryDisconnectCancelled(ctx, s, b, ti50.GpioTi50KsiRefresh)
 	verifyBatteryDisconnect(ctx, s, b, ti50.GpioTi50KsiRefresh)
 
@@ -324,7 +312,7 @@ func ti50RBOXTablet(ctx context.Context, s *testing.State, b utils.DevboardHelpe
 	b.GpioSet(ctx, ti50.GpioTi50VolUpIn, true)
 	b.GpioSet(ctx, ti50.GpioTi50VolDownIn, true)
 
-	verifyRMAKeySequence(ctx, s, b, i, ti50.GpioTi50VolUpIn, tabletEcResetGpioDelay)
+	verifyRMAKeySequence(ctx, s, b, i, ti50.GpioTi50VolUpIn)
 	verifyBatteryDisconnectCancelled(ctx, s, b, ti50.GpioTi50VolUpIn)
 	verifyBatteryDisconnect(ctx, s, b, ti50.GpioTi50VolUpIn)
 }
@@ -525,10 +513,11 @@ func verifyMinECPulseWidth(ctx context.Context, s *testing.State, b utils.Devboa
 	}
 }
 
-func verifyRMAKeySequence(ctx context.Context, s *testing.State, b utils.DevboardHelper, i *ti50.CrOSImage, gpio ti50.GpioName, ecResetGpioDelay time.Duration) {
+func verifyRMAKeySequence(ctx context.Context, s *testing.State, b utils.DevboardHelper, i *ti50.CrOSImage, gpio ti50.GpioName) {
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
 	params := s.Param().(ti50ValidRBOXParam)
 	assertVal := false
+	tapDelay := 100 * time.Millisecond
 
 	// Verify that AP RO result is one of the V2 errors before performing
 	// the RMA key sequence. This only applies to Ti50 not Cr50.
@@ -541,13 +530,13 @@ func verifyRMAKeySequence(ctx context.Context, s *testing.State, b utils.Devboar
 
 	// Turn AP off while performing RMA key combo (AP would be shut off with the
 	// first refresh/recovery key tap anyway due to EC reset).
-	s.Logf("Send RMA request key combo (takes more than %s)", ecResetGpioDelay*3)
+	s.Log("Send RMA request key combo")
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, false)
 	b.GpioSet(ctx, ti50.GpioTi50PowerBtnL, false)
 
 	b.GpioSet(ctx, gpio, assertVal)
 	// GoBigSleepLint: Simulating button press
-	testing.Sleep(ctx, ecResetGpioDelay)
+	testing.Sleep(ctx, tapDelay)
 	b.GpioSet(ctx, gpio, !assertVal)
 
 	// GoBigSleepLint: Simulating reasonable time between button press
@@ -555,7 +544,7 @@ func verifyRMAKeySequence(ctx context.Context, s *testing.State, b utils.Devboar
 
 	b.GpioSet(ctx, gpio, assertVal)
 	// GoBigSleepLint: Simulating button press
-	testing.Sleep(ctx, ecResetGpioDelay)
+	testing.Sleep(ctx, tapDelay)
 	b.GpioSet(ctx, gpio, !assertVal)
 
 	// GoBigSleepLint: Simulating reasonable time between button press
@@ -563,7 +552,7 @@ func verifyRMAKeySequence(ctx context.Context, s *testing.State, b utils.Devboar
 
 	b.GpioSet(ctx, gpio, assertVal)
 	// GoBigSleepLint: Simulating button press
-	testing.Sleep(ctx, ecResetGpioDelay)
+	testing.Sleep(ctx, tapDelay)
 	b.GpioSet(ctx, gpio, !assertVal)
 
 	b.GpioSet(ctx, ti50.GpioTi50PowerBtnL, true)
