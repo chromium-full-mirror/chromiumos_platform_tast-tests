@@ -68,12 +68,12 @@ func EnsureNotificationPermission(ctx context.Context, a *ARC, packageName strin
 // permanently prevents the app from making a pop-up for notification
 // permissions.
 func DisableAppNotifications(ctx context.Context, a *ARC, appPkgName string) error {
-	// Unable to programmatically block notification settings before R.
+	// Unable to programmatically block notification settings before T.
 	sdkVer, err := SDKVersion()
 	if err != nil {
 		return errors.Wrap(err, "failed to get SDK version")
 	}
-	if sdkVer < SDKR {
+	if sdkVer < SDKT {
 		return nil
 	}
 
