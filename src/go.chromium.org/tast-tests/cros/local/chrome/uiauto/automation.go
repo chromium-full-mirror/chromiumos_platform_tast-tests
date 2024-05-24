@@ -872,6 +872,42 @@ func (ac *Context) FindAnyExists(ctx context.Context, finders ...*nodewith.Finde
 	return *foundNode, nil
 }
 
+// FindAnyExistsMatching returns the first found node which is meet the predicate condition, otherwise error if none of them is found.
+func (ac *Context) FindAnyExistsMatching(ctx context.Context, predicate func(*nodewith.Finder) bool, condition string, finders ...*nodewith.Finder) (*nodewith.Finder, error) {
+	var foundNode **nodewith.Finder
+	var prettyFinders = []string{}
+	for _, finder := range finders {
+		prettyFinders = append(prettyFinders, finder.Pretty())
+	}
+
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		for _, finder := range finders {
+			if err := ac.Exists(finder)(ctx); err == nil {
+				nodeInfo, err := ac.Info(ctx, finder)
+				if err != nil {
+					return err
+				}
+
+				if predicate(finder) {
+					return errors.Wrapf(err, "%v condition not met %v", nodeInfo.Name, condition)
+				}
+
+				foundNode = &finder
+				return nil
+
+			} else if !nodewith.IsNodeNotFoundErr(err) {
+				// Break poll if ac.Exists fails on other issues.
+				return testing.PollBreak(err)
+			}
+		}
+
+		return errors.Errorf("%s:%s", nodewith.ErrNotFound, strings.Join(prettyFinders, "; "))
+	}, &ac.pollOpts); err != nil {
+		return nil, err
+	}
+	return *foundNode, nil
+}
+
 // WaitUntilAnyExists returns a function that waits until any of the input finder exists.
 func (ac *Context) WaitUntilAnyExists(finders ...*nodewith.Finder) Action {
 	return func(ctx context.Context) error {

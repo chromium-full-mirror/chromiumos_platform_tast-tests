@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/restriction"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/state"
 	"go.chromium.org/tast/core/errors"
@@ -185,16 +186,18 @@ func CompleteOnboardingFlow(ctx context.Context, ui *uiauto.Context) error {
 		"Login Dialog")).First().Role(role.Window)
 
 	useGoogleAccount := nodewith.Name(
-		"Use Google Account password").First().Role(role.RadioButton)
+		"Use Google Account password").Role(role.StaticText)
+
+	nextButton := nodewith.Name("Next").First().Role(role.Button).Onscreen()
 
 	actionButtons := []*nodewith.Finder{
-		nodewith.Name("Skip").First().Role(role.Button),
-		nodewith.Name("No thanks").First().Role(role.Button),
-		nodewith.Name("Next").First().Role(role.Button),
-		nodewith.Name("Accept and continue").First().Role(role.Button),
-		nodewith.Name("Turn on sync").First().Role(role.Button),
-		nodewith.Name("Get started").First().Role(role.Button),
-		nodewith.Name("Close").First().Role(role.Button),
+		nodewith.Name("Skip").First().Role(role.Button).Onscreen(),
+		nodewith.Name("No thanks").First().Role(role.Button).Onscreen(),
+		nodewith.Name("Accept and continue").First().Role(role.Button).Onscreen(),
+		nodewith.Name("Turn on sync").First().Role(role.Button).Onscreen(),
+		nodewith.Name("Get started").First().Role(role.Button).Onscreen(),
+		nodewith.Name("Close").First().Role(role.Button).Onscreen(),
+		nextButton,
 	}
 
 	if err := ui.WithTimeout(anyDialogTimeout).WaitUntilExists(loginDialog)(ctx); err != nil {
@@ -212,24 +215,29 @@ func CompleteOnboardingFlow(ctx context.Context, ui *uiauto.Context) error {
 			return errors.New("failed to detect action button")
 		}
 
-		if err := ui.Exists(useGoogleAccount)(ctx); err == nil {
+		if err := ui.WithTimeout(3 * time.Second).WaitUntilExists(useGoogleAccount)(ctx); err == nil {
 			testing.ContextLog(ctx, "Use google account found")
-			if err := ui.LeftClickUntil(useGoogleAccount, ui.EnsureFocused(useGoogleAccount))(ctx); err != nil {
-				return errors.Wrap(err, "failed to click use google account")
+			if err := uiauto.NamedCombine("Select Use Google Account password and click next button",
+				ui.DoDefault(useGoogleAccount),
+				ui.DoDefaultUntil(nextButton, ui.Gone(nextButton)),
+			)(ctx); err != nil {
+				return errors.Wrap(err, "failed to use google account login")
 			}
-			testing.ContextLog(ctx, "Use google account selected")
 		}
 
-		if actionButton, err := ui.WithTimeout(findActionButtonTimeout).FindAnyExists(ctx, actionButtons...); err == nil {
+		notDisabledPredicate := func(finder *nodewith.Finder) bool {
+			return ui.CheckRestriction(finder, restriction.Disabled)(ctx) == nil
+		}
+
+		if actionButton, err := ui.WithTimeout(findActionButtonTimeout).FindAnyExistsMatching(ctx, notDisabledPredicate, "node disabled property is false", actionButtons...); err == nil {
 			// Some action button is detected. Click it
 			testing.ContextLogf(ctx, "Detected action button %s", actionButton.Pretty())
-			if err := ui.LeftClickUntil(actionButton, ui.Gone(actionButton))(ctx); err != nil {
+			if err := ui.DoDefault(actionButton)(ctx); err != nil {
 				return errors.Wrap(err, "failed to click button")
 			}
 
 			testing.ContextLogf(ctx, "Action button has been clicked: %s", actionButton.Pretty())
 			lastActionTime = time.Now()
-			continue
 		}
 	}
 	return nil
