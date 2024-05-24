@@ -692,6 +692,33 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 		Vars:            []string{"ui.cujAccountPool"},
 	})
+	// TODO(b/331565548): Remove if VsyncDecoding is launched.
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithWebRTCEventLoggingWithVsyncDecoding",
+		Desc: "CUJ test fixture with WebRTC event logging",
+		Contacts: []string{
+			"hiroh@chromium.org",
+			"cros-sw-perf@google.com",
+		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
+		Data:         docsBlockerFiles,
+		Impl: &loggedInToCUJUserFixture{
+			chromeExtraOpts: []chrome.Option{
+				chrome.EnableFeatures("PreferConstantFrameRate"),
+				chrome.ExtraArgs(webRTCEventLogCommandFlag),
+				chrome.EnableFeatures("VsyncDecoding"),
+			},
+			bt:          browser.TypeAsh,
+			docsBlocker: true,
+		},
+		Parent:          "prepareForCUJ",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
 	// TODO(b/325918094): Remove when enough data is collected related to paravirt sched impact.
 	testing.AddFixture(&testing.Fixture{
 		Name:         "loggedInToCUJUserWithWebRTCEventLoggingWithPvSchedEnabled",
