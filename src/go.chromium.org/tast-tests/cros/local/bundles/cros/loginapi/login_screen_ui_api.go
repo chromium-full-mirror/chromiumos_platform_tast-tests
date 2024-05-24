@@ -95,10 +95,9 @@ func LoginScreenUIAPI(ctx context.Context, s *testing.State) {
 		s.Fatal("Chrome restart failed: ", err)
 	}
 
-	loginScreenBGURL := chrome.ExtensionBackgroundPageURL(mgs.LoginScreenExtensionID)
-	bgConn, err := cr.NewConnForTarget(ctx, chrome.MatchTargetURL(loginScreenBGURL))
+	bgConn, err := cr.NewConnForTarget(ctx, chrome.MatchTargetURLPrefix(mgs.LoginScreenExtensionURLPrefix))
 	if err != nil {
-		s.Fatal("Failed to connect to login screen background page: ", err)
+		s.Fatal("Failed to connect to login screen extension: ", err)
 	}
 	defer bgConn.Close()
 

@@ -153,10 +153,9 @@ func SharedManagedGuestSessionCleanup(ctx context.Context, s *testing.State) {
 	}
 	defer sw.Close(ctx)
 
-	loginScreenBGURL := chrome.ExtensionBackgroundPageURL(mgs.LoginScreenExtensionID)
-	conn, err := cr.NewConnForTarget(ctx, chrome.MatchTargetURL(loginScreenBGURL))
+	conn, err := cr.NewConnForTarget(ctx, chrome.MatchTargetURLPrefix(mgs.LoginScreenExtensionURLPrefix))
 	if err != nil {
-		s.Fatal("Failed to connect to login screen background page: ", err)
+		s.Fatal("Failed to connect to login screen extension: ", err)
 	}
 	defer conn.Close()
 
@@ -181,10 +180,9 @@ func SharedManagedGuestSessionCleanup(ctx context.Context, s *testing.State) {
 		s.Fatal("Timeout before getting SessionStateChanged signal: ", err)
 	}
 
-	inSessionBGURL := chrome.ExtensionBackgroundPageURL(mgs.InSessionExtensionID)
-	inSessionConn, err := cr.NewConnForTarget(ctx, chrome.MatchTargetURL(inSessionBGURL))
+	inSessionConn, err := cr.NewConnForTarget(ctx, chrome.MatchTargetURLPrefix(mgs.InSessionExtensionURLPrefix))
 	if err != nil {
-		s.Fatal("Failed to connect to in-session background page: ", err)
+		s.Fatal("Failed to connect to in-session extension: ", err)
 	}
 	defer inSessionConn.Close()
 
@@ -273,9 +271,9 @@ func SharedManagedGuestSessionCleanup(ctx context.Context, s *testing.State) {
 
 	// Previous conn is closed since it is a login screen extension which
 	// closes when the session starts.
-	conn2, err := cr.NewConnForTarget(ctx, chrome.MatchTargetURL(loginScreenBGURL))
+	conn2, err := cr.NewConnForTarget(ctx, chrome.MatchTargetURLPrefix(mgs.LoginScreenExtensionURLPrefix))
 	if err != nil {
-		s.Fatal("Failed to connect to login screen background page on lock screen: ", err)
+		s.Fatal("Failed to connect to login screen extension on lock screen: ", err)
 	}
 	defer conn2.Close()
 

@@ -26,8 +26,14 @@ const (
 
 	// LoginScreenExtensionID is the ID for "Login screen APIs test extension".
 	LoginScreenExtensionID = "oclffehlkdgibkainkilopaalpdobkan"
+	// LoginScreenExtensionURLPrefix is the prefix of the login screen extension service
+	// worker. In MV3, URLs are not generic any more so we can only use a prefix.
+	LoginScreenExtensionURLPrefix = "chrome-extension://oclffehlkdgibkainkilopaalpdobkan/"
 	// InSessionExtensionID is the ID for "Login screen APIs in-session test extension".
 	InSessionExtensionID = "ofcpkomnogjenhfajfjadjmjppbegnad"
+	// InSessionExtensionURLPrefix is the prefix of the in-session extension service
+	// worker. In MV3, URLs are not generic any more so we can only use a prefix.
+	InSessionExtensionURLPrefix = "chrome-extension://ofcpkomnogjenhfajfjadjmjppbegnad/"
 )
 
 var (
