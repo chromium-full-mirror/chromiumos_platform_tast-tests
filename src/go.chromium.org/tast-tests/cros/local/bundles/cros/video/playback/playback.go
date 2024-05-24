@@ -258,8 +258,13 @@ func measurePerformance(ctx context.Context, params measureParams) error {
 		p.GetUnderlyingValues().Save(outDir)
 	}()
 
-	const decodeHistogram = "Media.MojoVideoDecoder.Decode"
-	initDecodeHistogram, err := metrics.GetHistogram(ctx, params.bTconn, decodeHistogram)
+	const mvdDecodeDelayHistogram = "Media.MojoVideoDecoder.Decode"
+	initMVDDecodeDelayHistogram, err := metrics.GetHistogram(ctx, params.bTconn, mvdDecodeDelayHistogram)
+	if err != nil {
+		return errors.Wrap(err, "failed to get initial histogram")
+	}
+	const msvdDecodeDelayHistogram = "Media.MojoStableVideoDecoder.Decode"
+	initMSVDDecodeDelayHistogram, err := metrics.GetHistogram(ctx, params.bTconn, msvdDecodeDelayHistogram)
 	if err != nil {
 		return errors.Wrap(err, "failed to get initial histogram")
 	}
@@ -383,8 +388,11 @@ func measurePerformance(ctx context.Context, params measureParams) error {
 		return errors.Wrap(roughnessErr, "failed to measure playback roughness")
 	}
 
-	if err := graphics.UpdatePerfMetricFromHistogram(ctx, params.bTconn, decodeHistogram, initDecodeHistogram, p.GetUnderlyingValues(), "video_decode_delay"); err != nil {
-		return errors.Wrap(err, "failed to calculate Decode perf metric")
+	if err := graphics.UpdatePerfMetricFromHistogram(ctx, params.bTconn, msvdDecodeDelayHistogram, initMSVDDecodeDelayHistogram, p.GetUnderlyingValues(), "mojo_stable_video_decoder_decode_delay"); err != nil {
+		return errors.Wrap(err, "failed to calculate the MojoStableVideoDecoder decode delay perf metric")
+	}
+	if err := graphics.UpdatePerfMetricFromHistogram(ctx, params.bTconn, mvdDecodeDelayHistogram, initMVDDecodeDelayHistogram, p.GetUnderlyingValues(), "video_decode_delay"); err != nil {
+		return errors.Wrap(err, "failed to calculate the MojoVideoDecoder decode delay perf metric")
 	}
 	if err := graphics.UpdatePerfMetricFromHistogram(ctx, params.tconn, platformdecodeHistogram, initPlatformdecodeHistogram, p.GetUnderlyingValues(), "platform_video_decode_delay"); err != nil {
 		return errors.Wrap(err, "failed to calculate Platform Decode perf metric")
