@@ -493,43 +493,6 @@ func NetworkWifiPerf(ctx context.Context, s *testing.State) {
 		}
 	}()
 
-	// Verify that performance test result passes the must and should throughput requirements.
-	verifyResults := func(ctx context.Context, result, mustExpectedThroughput, shouldExpectedThroughput float64, testType perfmanager.TestType, powerSave, shouldTputRequired bool, channel int, board string) string {
-		mustTputFailed := false
-		shouldTputFailed := false
-		var failedPerformanceTest string
-		// If the must requirement is greater than our maximum expectation for a
-		// board, use the maximum expectation instead of the must requirement.
-		// get the board name using the package "go.chromium.org/tast/core/lsbrelease"
-		boardMaxExpectation, found := perfmanager.MaxExpectedThroughputForBoard(board, testType)
-		if found && boardMaxExpectation < mustExpectedThroughput {
-			mustExpectedThroughput = boardMaxExpectation
-		}
-
-		if result < mustExpectedThroughput {
-			s.Logf("Throughput is too low for %s. Expected (must) %0.2f Mbps, got %0.2f", testType, mustExpectedThroughput, result)
-			mustTputFailed = true
-		}
-
-		if result < shouldExpectedThroughput {
-			s.Logf("Throughput is too low for %s. Expected (should) %0.2f Mbps, got %0.2f", testType, shouldExpectedThroughput, result)
-			if shouldTputRequired {
-				shouldTputFailed = true
-			}
-		}
-
-		if mustTputFailed || shouldTputFailed {
-			failedTests := []string{fmt.Sprintf("[test_type=%s, channel=%d, power_save_on=%t, measured_Tput=%0.2f", testType, channel, powerSave, result)}
-			if mustTputFailed {
-				failedTests = append(failedTests, fmt.Sprintf("must_expected_Tput_failed=%0.2f", mustExpectedThroughput))
-			} else if shouldTputFailed {
-				failedTests = append(failedTests, fmt.Sprintf("should_expected_Tput_failed=%0.2f", shouldExpectedThroughput))
-			}
-			failedPerformanceTest = strings.Join(failedTests, ",") + "]"
-		}
-		return failedPerformanceTest
-	}
-
 	testOnce := func(ctx context.Context, s *testing.State, options []ap.Option, fac security.ConfigFactory, powerSave, shouldTputRequired bool, boardName string) {
 		apIface, err := tf.ConfigureAP(ctx, options, fac)
 		if err != nil {
@@ -665,7 +628,7 @@ func NetworkWifiPerf(ctx context.Context, s *testing.State) {
 					values = append(values, sample.Throughput/iperf.Mbps)
 				}
 				logPerfValues(fmt.Sprintf("%s.%s_dev", apConfigTag, testType), []float64{float64(finalResult.StdDeviation / iperf.Mbps)}, perf.SmallerIsBetter, false)
-				failedResults := verifyResults(ctx, float64(finalResult.Throughput/iperf.Mbps), expectedThrougput.Must, expectedThrougput.Should, testType, powerSave, shouldTputRequired, apIface.Config().Channel, boardName)
+				failedResults := perfmanager.VerifyResults(ctx, float64(finalResult.Throughput/iperf.Mbps), expectedThrougput.Must, expectedThrougput.Should, testType, powerSave, shouldTputRequired, apIface.Config().Channel, boardName)
 				if failedResults != "" {
 					lowThroughputTests = append(lowThroughputTests, failedResults)
 				}

@@ -5,11 +5,14 @@
 package perfmanager
 
 import (
+	"context"
+	"fmt"
 	"strings"
 
 	ap "go.chromium.org/tast-tests/cros/remote/wificell/hostapd"
 	routerSupport "go.chromium.org/tast-tests/cros/remote/wificell/router/common/support"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 /*
@@ -595,4 +598,41 @@ func MaxExpectedThroughputForBoard(boardName string, testType TestType) (float64
 		return maxTput, true
 	}
 	return 0, false
+}
+
+// VerifyResults verifies that performance test result passes the must and should throughput requirements.
+func VerifyResults(ctx context.Context, result, mustExpectedThroughput, shouldExpectedThroughput float64, testType TestType, powerSave, shouldTputRequired bool, channel int, board string) string {
+	mustTputFailed := false
+	shouldTputFailed := false
+	var failedPerformanceTest string
+	// If the must requirement is greater than our maximum expectation for a
+	// board, use the maximum expectation instead of the must requirement.
+	// get the board name using the package "go.chromium.org/tast/core/lsbrelease"
+	boardMaxExpectation, found := MaxExpectedThroughputForBoard(board, testType)
+	if found && boardMaxExpectation < mustExpectedThroughput {
+		mustExpectedThroughput = boardMaxExpectation
+	}
+
+	if result < mustExpectedThroughput {
+		testing.ContextLogf(ctx, "Throughput is too low for %s. Expected (must) %0.2f Mbps, got %0.2f", testType, mustExpectedThroughput, result)
+		mustTputFailed = true
+	}
+
+	if result < shouldExpectedThroughput {
+		testing.ContextLogf(ctx, "Throughput is too low for %s. Expected (should) %0.2f Mbps, got %0.2f", testType, shouldExpectedThroughput, result)
+		if shouldTputRequired {
+			shouldTputFailed = true
+		}
+	}
+
+	if mustTputFailed || shouldTputFailed {
+		failedTests := []string{fmt.Sprintf("[test_type=%s, channel=%d, power_save_on=%t, measured_Tput=%0.2f", testType, channel, powerSave, result)}
+		if mustTputFailed {
+			failedTests = append(failedTests, fmt.Sprintf("must_expected_Tput_failed=%0.2f", mustExpectedThroughput))
+		} else if shouldTputFailed {
+			failedTests = append(failedTests, fmt.Sprintf("should_expected_Tput_failed=%0.2f", shouldExpectedThroughput))
+		}
+		failedPerformanceTest = strings.Join(failedTests, ",") + "]"
+	}
+	return failedPerformanceTest
 }
