@@ -310,8 +310,24 @@ func (s *Servo) RestorePDPort(ctx context.Context) error {
 	return nil
 }
 
+// IsDUTPDSoftResetSupported determines wither the attached DUT supports initiating PD soft resets
+func (s *Servo) IsDUTPDSoftResetSupported() bool {
+	switch s.dutPDInfo.version {
+	case TCPMv1, TCPMv2:
+		return true
+	case PDC:
+		return false
+	}
+	return false
+}
+
 // TriggerPDSoftReset triggers a USB-PD Soft Reset from the EC/DUT-side
 func (s *Servo) TriggerPDSoftReset(ctx context.Context) error {
+	if !s.IsDUTPDSoftResetSupported() {
+		return errors.Errorf("DUT soft reset not supported on this TCPM version (%d)",
+			s.dutPDInfo.version)
+	}
+
 	// Get port status
 	pdStateBefore, err := s.GetDUTPDState(ctx)
 	if err != nil {

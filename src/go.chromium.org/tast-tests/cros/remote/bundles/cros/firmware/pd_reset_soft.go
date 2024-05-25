@@ -85,9 +85,13 @@ func PDResetSoft(ctx context.Context, s *testing.State) {
 	}
 
 	// EC/DUT initiates soft reset
-	s.Log("Attempting EC/DUT-initiated soft reset")
-	if err := h.Servo.TriggerPDSoftReset(ctx); err != nil {
-		s.Fatal("EC-initiated soft reset did not succeed: ", err)
+	if h.Servo.IsDUTPDSoftResetSupported() {
+		s.Log("Attempting EC/DUT-initiated soft reset")
+		if err := h.Servo.TriggerPDSoftReset(ctx); err != nil {
+			s.Fatal("EC-initiated soft reset did not succeed: ", err)
+		}
+	} else {
+		s.Log("Skipping DUT-initiated soft reset as unsupported operation")
 	}
 
 	// Testing soft resets after a power role swap (DUT is SRC) is not currently
@@ -121,9 +125,13 @@ func PDResetSoft(ctx context.Context, s *testing.State) {
 	}
 
 	// EC/DUT initiates soft reset
-	s.Log("Attempting EC/DUT-initiated soft reset")
-	if err := h.Servo.TriggerPDSoftReset(ctx); err != nil {
-		s.Fatal("EC-initiated soft reset did not succeed after swapping power roles: ", err)
+	if h.Servo.IsDUTPDSoftResetSupported() {
+		s.Log("Attempting EC/DUT-initiated soft reset")
+		if err := h.Servo.TriggerPDSoftReset(ctx); err != nil {
+			s.Fatal("EC-initiated soft reset did not succeed after swapping power roles: ", err)
+		}
+	} else {
+		s.Log("Skipping DUT-initiated soft reset as unsupported operation")
 	}
 
 	if testParams.Shutdown {
