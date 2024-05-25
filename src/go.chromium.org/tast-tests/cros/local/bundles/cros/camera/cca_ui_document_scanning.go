@@ -6,14 +6,22 @@ package camera
 
 import (
 	"context"
+	"io/fs"
 	"math"
 	"regexp"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast-tests/cros/local/camera/cca"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -28,16 +36,17 @@ func init() {
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
 		SoftwareDeps: []string{"camera_app", "chrome", "ondevice_document_scanner_rootfs_or_dlc", caps.BuiltinOrVividCamera},
-		Data:         []string{"document_3264x2448.mjpeg"},
-		Fixture:      "ccaTestBridgeReadyWithFakeHALCamera",
+		Data:         []string{"document_3264x2448.mjpeg", "ocr_one_line_3264x2448.jpg"},
+		Fixture:      "ccaTestBridgeReadyWithFakeHALCameraWithPDFOCR",
 	})
 }
 
 type documentScanRunSubTest func(ctx context.Context, app *cca.App) error
 
 type documentScanSubTest struct {
-	name string
-	run  documentScanRunSubTest
+	name  string
+	run   documentScanRunSubTest
+	scene string
 }
 
 type docCorner struct {
@@ -90,6 +99,7 @@ func CCAUIDocumentScanning(ctx context.Context, s *testing.State) {
 	runTestWithApp := s.FixtValue().(cca.FixtureData).RunTestWithApp
 	switchScene := s.FixtValue().(cca.FixtureData).SwitchScene
 	cr := s.FixtValue().(cca.FixtureData).Chrome
+	bt := s.FixtValue().(cca.FixtureData).BrowserType
 	s.FixtValue().(cca.FixtureData).SetDebugParams(cca.DebugParams{SaveCameraFolderWhenFail: true})
 
 	subTestTimeout := 30 * time.Second
@@ -107,12 +117,22 @@ func CCAUIDocumentScanning(ctx context.Context, s *testing.State) {
 		run: func(ctx context.Context, app *cca.App) error {
 			return testFixCropArea(ctx, app, cr)
 		},
+	}, {
+		name: "testPDFOCR",
+		run: func(ctx context.Context, app *cca.App) error {
+			return testPDFOCR(ctx, app, cr, bt, "hello.", s.OutDir())
+		},
+		scene: "ocr_one_line_3264x2448.jpg",
 	}} {
 		s.Run(ctx, tst.name, func(ctx context.Context, s *testing.State) {
 			subTestCtx, cancel := context.WithTimeout(ctx, subTestTimeout)
 			defer cancel()
 
-			if err := switchScene(ctx, cca.SceneData{Path: s.DataPath("document_3264x2448.mjpeg")}); err != nil {
+			scene := tst.scene
+			if scene == "" {
+				scene = "document_3264x2448.mjpeg"
+			}
+			if err := switchScene(ctx, cca.SceneData{Path: s.DataPath(scene)}); err != nil {
 				s.Fatal("Failed to prepare document scene: ", err)
 			}
 
@@ -140,7 +160,7 @@ func testSavePhoto(ctx context.Context, app *cca.App) (retErr error) {
 		return errors.Wrap(err, "failed to click save as photo button")
 	}
 
-	if err := waitForFileSaved(ctx, app, cca.DocumentPhotoPattern, start); err != nil {
+	if _, err := waitForFileSaved(ctx, app, cca.DocumentPhotoPattern, start); err != nil {
 		return errors.Wrap(err, "failed to wait for the photo")
 	}
 
@@ -171,7 +191,7 @@ func testSavePdf(ctx context.Context, app *cca.App) (retErr error) {
 		return errors.Wrap(err, "failed to click save as PDF button")
 	}
 
-	if err := waitForFileSaved(ctx, app, cca.DocumentPDFPattern, start); err != nil {
+	if _, err := waitForFileSaved(ctx, app, cca.DocumentPDFPattern, start); err != nil {
 		return errors.Wrap(err, "failed to wait for the PDF file")
 	}
 
@@ -352,6 +372,68 @@ func testFixCropArea(ctx context.Context, app *cca.App, cr *chrome.Chrome) error
 	return nil
 }
 
+// testPDFOCR verifies if the saved PDF has `expectedText`.
+func testPDFOCR(ctx context.Context, app *cca.App, cr *chrome.Chrome, bt browser.Type, expectedText, outDirForUITreeDump string) (retErr error) {
+	if err := clickShutterAndWaitFor(ctx, app, cca.DocumentReview); err != nil {
+		return errors.Wrap(err, "failed to wait for review UI to show")
+	}
+
+	start := time.Now()
+
+	if err := app.Click(ctx, cca.DocumentSaveAsPdfButton); err != nil {
+		return errors.Wrap(err, "failed to click save as PDF button")
+	}
+
+	file, err := waitForFileSaved(ctx, app, cca.DocumentPDFPattern, start)
+	if err != nil {
+		return errors.Wrap(err, "failed to wait for file to be saved")
+	}
+
+	path, err := app.FilePathInSavedDir(ctx, file.Name())
+	if err != nil {
+		return errors.Wrap(err, "failed to get full file path")
+	}
+	// Convert the file path to a URL that can be opened in the browser.
+	// The original file path: /home/user/<id>/MyFiles/Camera/xxx.pdf
+	// The URL we want: file:///home/chronos/u-<id>/MyFiles/Camera/xxx.pdf
+	parts := strings.Split(path, "/")
+	parts[2] = "chronos"
+	parts[3] = "u-" + parts[3]
+	url := "file://" + strings.Join(parts, "/")
+	testing.ContextLog(ctx, "File path: ", path)
+	testing.ContextLog(ctx, "URL: ", url)
+
+	br, brCleanUp, err := browserfixt.Connect(ctx, cr, bt)
+	if err != nil {
+		return errors.Wrap(err, "failed to set up browser")
+	}
+	defer brCleanUp(ctx)
+
+	// Open `url` in the browser.
+	conn, err := br.NewConn(ctx, url)
+	if err != nil {
+		return errors.Wrap(err, "failed to open url")
+	}
+	defer br.CloseTarget(ctx, conn.TargetID)
+	defer conn.Close()
+
+	// Connect to Test API to use it with the UI library.
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get Test API connection")
+	}
+
+	// For debugging when the test fails to find the expected text on screen.
+	defer faillog.DumpUITreeWithScreenshotOnError(ctx, outDirForUITreeDump, func() bool { return retErr != nil }, cr, "ui_tree")
+
+	ui := uiauto.New(tconn)
+	if err := ui.WaitUntilExists(nodewith.Role(role.StaticText).NameStartingWith(expectedText))(ctx); err != nil {
+		return errors.Wrapf(err, "failed to find %q on screen", expectedText)
+	}
+
+	return nil
+}
+
 // clickShutterAndWaitFor clicks shutter button and waits specified UI for 10 seconds
 func clickShutterAndWaitFor(ctx context.Context, app *cca.App, ui cca.UIComponentName) error {
 	if err := app.ClickShutter(ctx); err != nil {
@@ -365,15 +447,17 @@ func clickShutterAndWaitFor(ctx context.Context, app *cca.App, ui cca.UIComponen
 	return nil
 }
 
-func waitForFileSaved(ctx context.Context, app *cca.App, pat *regexp.Regexp, start time.Time) error {
+func waitForFileSaved(ctx context.Context, app *cca.App, pat *regexp.Regexp, start time.Time) (fs.FileInfo, error) {
+	var file fs.FileInfo
 	dir, err := app.SavedDir(ctx)
 	if err != nil {
-		return errors.Wrap(err, "failed to get CCA default saved path")
+		return file, errors.Wrap(err, "failed to get CCA default saved path")
 	}
 
-	if _, err := app.WaitForFileSavedFor(ctx, dir, pat, start, 10*time.Second); err != nil {
-		return errors.Wrap(err, "failed to wait for the file")
+	file, err = app.WaitForFileSavedFor(ctx, dir, pat, start, 10*time.Second)
+	if err != nil {
+		return file, errors.Wrap(err, "failed to wait for the file")
 	}
 
-	return nil
+	return file, nil
 }
