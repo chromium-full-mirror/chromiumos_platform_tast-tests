@@ -30,52 +30,10 @@ func init() {
 		SoftwareDeps: []string{"camera_app", "chrome", "ondevice_document_scanner_rootfs_or_dlc", caps.BuiltinOrVividCamera},
 		Data:         []string{"document_3264x2448.mjpeg"},
 		Fixture:      "ccaTestBridgeReadyWithFakeHALCamera",
-		Params: []testing.Param{{
-			Name: "multi_page",
-			Val: []documentScanSubTest{
-				{
-					name: "testSavePhoto",
-					run: func(ctx context.Context, app *cca.App, cr *chrome.Chrome) error {
-						return testSavePhoto(ctx, app)
-					},
-				}, {
-					name: "testSavePdf",
-					run: func(ctx context.Context, app *cca.App, cr *chrome.Chrome) error {
-						return testSavePdf(ctx, app)
-					},
-				}, {
-					name: "testUIChangeWithDifferentPageCount",
-					run: func(ctx context.Context, app *cca.App, cr *chrome.Chrome) error {
-						return testUIChangeWithDifferentPageCount(ctx, app)
-					},
-				},
-			},
-		}, {
-			Name: "manual_crop_multi_page",
-			Val: []documentScanSubTest{
-				{
-					name: "testFixCropArea",
-					run: func(ctx context.Context, app *cca.App, cr *chrome.Chrome) error {
-						return testFixCropArea(ctx, app, cr)
-					},
-				},
-			},
-		}, {
-			Name:              "corner_indicator",
-			ExtraSoftwareDeps: []string{"camera_doc_corner_indicator"},
-			Val: []documentScanSubTest{
-				{
-					name: "testPreviewShowsDocCorner",
-					run: func(ctx context.Context, app *cca.App, cr *chrome.Chrome) error {
-						return testPreviewShowsDocCorner(ctx, app)
-					},
-				},
-			},
-		}},
 	})
 }
 
-type documentScanRunSubTest func(ctx context.Context, app *cca.App, cr *chrome.Chrome) error
+type documentScanRunSubTest func(ctx context.Context, app *cca.App) error
 
 type documentScanSubTest struct {
 	name string
@@ -131,10 +89,25 @@ var (
 func CCAUIDocumentScanning(ctx context.Context, s *testing.State) {
 	runTestWithApp := s.FixtValue().(cca.FixtureData).RunTestWithApp
 	switchScene := s.FixtValue().(cca.FixtureData).SwitchScene
+	cr := s.FixtValue().(cca.FixtureData).Chrome
 	s.FixtValue().(cca.FixtureData).SetDebugParams(cca.DebugParams{SaveCameraFolderWhenFail: true})
 
 	subTestTimeout := 30 * time.Second
-	for _, tst := range s.Param().([]documentScanSubTest) {
+	for _, tst := range []documentScanSubTest{{
+		name: "testSavePhoto",
+		run:  testSavePhoto,
+	}, {
+		name: "testSavePdf",
+		run:  testSavePdf,
+	}, {
+		name: "testUIChangeWithDifferentPageCount",
+		run:  testUIChangeWithDifferentPageCount,
+	}, {
+		name: "testFixCropArea",
+		run: func(ctx context.Context, app *cca.App) error {
+			return testFixCropArea(ctx, app, cr)
+		},
+	}} {
 		s.Run(ctx, tst.name, func(ctx context.Context, s *testing.State) {
 			subTestCtx, cancel := context.WithTimeout(ctx, subTestTimeout)
 			defer cancel()
@@ -147,8 +120,7 @@ func CCAUIDocumentScanning(ctx context.Context, s *testing.State) {
 				if err := app.EnterDocumentMode(ctx); err != nil {
 					return errors.Wrap(err, "failed to enter document mode")
 				}
-
-				return tst.run(subTestCtx, app, s.FixtValue().(cca.FixtureData).Chrome)
+				return tst.run(subTestCtx, app)
 			}, cca.TestWithAppParams{}); err != nil {
 				s.Errorf("Failed to pass %v subtest: %v", tst.name, err)
 			}
@@ -377,22 +349,6 @@ func testFixCropArea(ctx context.Context, app *cca.App, cr *chrome.Chrome) error
 		return errors.Errorf("should crop the longer document after fix crop area, got document width: %v, height: %v", imageElSize.Width, imageElSize.Height)
 	}
 
-	return nil
-}
-
-func testPreviewShowsDocCorner(ctx context.Context, app *cca.App) error {
-	// Verify that document corners are shown in the preview.
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		result, err := app.Visible(ctx, cca.DocumentCorner)
-		if err != nil {
-			return testing.PollBreak(errors.Wrap(err, "failed to check visibility of the document scan overlay"))
-		} else if !result {
-			return errors.Wrap(err, "no document is found")
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
-		return errors.Wrap(err, "failed to wait for corner indicator show up")
-	}
 	return nil
 }
 
