@@ -90,7 +90,10 @@ type crasAECParams struct {
 	channels int
 }
 
-var crasAECChromeFixture = fixture.Chrome(chrome.ExtraArgs("--use-fake-cras-audio-client-for-dbus"))
+var crasAECChromeFixture = fixture.Chrome(
+	chrome.ExtraArgs("--use-fake-cras-audio-client-for-dbus"),
+	chrome.EnableFeatures("CrOSLateBootCrasAecFixedCaptureDelay320Samples"),
+)
 
 func crasAECFixture(channels int) string {
 	return fixture.AloopLoaded{
@@ -105,6 +108,10 @@ func CrasAEC(ctx context.Context, s *testing.State) {
 	cras, err := audio.NewCras(ctx)
 	if err != nil {
 		s.Fatal("Cannot connect to CRAS: ", err)
+	}
+
+	if err := cras.WaitUntilFeatureFlagHasValue(ctx, "CrOSLateBootCrasAecFixedCaptureDelay320Samples", true); err != nil {
+		s.Fatal("Cannot WaitUntilFeatureFlagHasValue: ", err)
 	}
 
 	if err := audio.SelectIODevices(ctx, cras, "ALSA_LOOPBACK", "ALSA_LOOPBACK"); err != nil {
