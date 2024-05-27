@@ -221,6 +221,11 @@ func setUpTestBridge(ctx context.Context, cr *chrome.Chrome) (*chrome.Conn, *chr
 		}
 		return nil, nil, errors.Wrap(err, "failed to get test bridge")
 	}
+
+	// TODO(b/340399683): Remove the check once the change from Chromium is upreved.
+	if err := testBridge.Call(ctx, nil, "function() { if (this.setUseInTestSession) {this.setUseInTestSession();} }"); err != nil {
+		return nil, nil, errors.Wrap(err, "failed to notify the app that it is running in a test environment")
+	}
 	return pageConn, &testBridge, nil
 }
 
