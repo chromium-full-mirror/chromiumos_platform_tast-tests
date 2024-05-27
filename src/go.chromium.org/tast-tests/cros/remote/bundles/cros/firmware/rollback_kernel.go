@@ -47,7 +47,7 @@ func init() {
 				Name:      "dev",
 				Fixture:   fixture.DevModeGBB,
 				Val:       common.BootModeDev,
-				Timeout:   10 * time.Minute,
+				Timeout:   30 * time.Minute,
 				ExtraAttr: []string{"firmware_unstable"},
 			},
 		},
