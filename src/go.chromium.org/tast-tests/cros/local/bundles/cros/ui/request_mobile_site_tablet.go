@@ -79,33 +79,38 @@ type mobileTestResources struct {
 
 // RequestMobileSiteTablet tests request mobile site function on websites under different types of login account.
 func RequestMobileSiteTablet(ctx context.Context, s *testing.State) {
-	optsForUser := map[userType][]chrome.Option{
-		child: {
-			chrome.GAIALogin(chrome.Creds{
-				User:       s.RequiredVar("family.unicornEmail"),
-				Pass:       s.RequiredVar("family.unicornPassword"),
-				ParentUser: s.RequiredVar("family.parentEmail"),
-				ParentPass: s.RequiredVar("family.parentPassword"),
-			}),
-			// Dev tools are necessary for the test instrumentation to work, but by default
-			// disabled for supervised users. Always force enable them in supervised users tests.
-			chrome.ExtraArgs("--force-devtools-available"),
-		},
-		normal: {
-			chrome.GAIALogin(chrome.Creds{
-				User: s.RequiredVar("family.parentEmail"),
-				Pass: s.RequiredVar("family.parentPassword"),
-			}),
-		},
+	parentCred := chrome.Creds{
+		User: s.RequiredVar("family.parentEmail"),
+		Pass: s.RequiredVar("family.parentPassword"),
+	}
+	childCred := chrome.Creds{
+		User:       s.RequiredVar("family.unicornEmail"),
+		Pass:       s.RequiredVar("family.unicornPassword"),
+		ParentUser: parentCred.User,
+		ParentPass: parentCred.Pass,
 	}
 
+	// Dev tools are necessary for the test instrumentation to work, but by default
+	// disabled for supervised users. Always force enable them in supervised users tests.
+	const extraArg = "--force-devtools-available"
+
+	var optsForUser map[userType][]chrome.Option
 	browserType := s.Param().(browser.Type)
 	switch browserType {
 	case browser.TypeAsh:
-		// TODO(b/244513681): Enable guest mode test for lacros once lacros supports the guest mode.
-		optsForUser[guest] = []chrome.Option{chrome.GuestLogin()}
+		optsForUser = map[userType][]chrome.Option{
+			normal: {chrome.GAIALogin(parentCred)},
+			child:  {chrome.GAIALogin(childCred), chrome.ExtraArgs(extraArg)},
+			guest:  {chrome.GuestLogin()},
+		}
 	case browser.TypeLacros:
-		optsForUser[child] = append(optsForUser[child], chrome.EnableFeatures("LacrosForSupervisedUsers"))
+		optsForUser = map[userType][]chrome.Option{
+			normal: {chrome.GAIALogin(parentCred)},
+			child:  {chrome.GAIALogin(childCred), chrome.EnableFeatures("LacrosForSupervisedUsers"), chrome.LacrosExtraArgs(extraArg)},
+			// TODO(b/244513681): Enable guest mode test for lacros once lacros supports the guest mode.
+		}
+	default:
+		s.Fatal("Unrecognized browser type: ", browserType)
 	}
 
 	websites := map[string]string{
