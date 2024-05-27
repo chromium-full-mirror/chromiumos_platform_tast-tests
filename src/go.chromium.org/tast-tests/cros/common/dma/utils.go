@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"strings"
 
-	"go.chromium.org/tast-tests/cros/local/ui"
+	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast/core/testing"
 )
 

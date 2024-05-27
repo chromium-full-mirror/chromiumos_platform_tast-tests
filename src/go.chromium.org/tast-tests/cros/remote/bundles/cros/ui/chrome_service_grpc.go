@@ -11,6 +11,8 @@ import (
 	"google.golang.org/grpc"
 
 	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
+	"go.chromium.org/tast-tests/cros/common/dma"
+	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/remote/crosserverutil"
 	pb "go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast/core/errors"
@@ -31,7 +33,7 @@ func init() {
 		BugComponent: "b:1034649",
 		Attr:         []string{"group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
-		VarDeps:      []string{"ui.gaiaPoolDefault"},
+		VarDeps:      []string{ui.GaiaPoolDefaultVarName},
 		Params: []testing.Param{{
 			Name:      "default_fake_login",
 			Val:       &pb.NewRequest{},
@@ -78,7 +80,8 @@ func init() {
 				// Credentials will be populated based on "ui.gaiaPoolDefault" in the main test function.
 				LoginMode: pb.LoginMode_LOGIN_MODE_GAIA_LOGIN,
 			},
-			ExtraAttr: []string{"group:mainline", "informational"},
+			ExtraAttr:         []string{"group:mainline", "informational"},
+			ExtraSoftwareDeps: []string{"gaia"},
 		}, {
 			Name: "default_fake_login_lacros",
 			Val: &pb.NewRequest{
@@ -107,7 +110,7 @@ func ChromeServiceGRPC(ctx context.Context, s *testing.State) {
 	// Populate credentials from Tast variable for the Gaia login test case.
 	loginReq := s.Param().(*pb.NewRequest)
 	if loginReq.LoginMode == pb.LoginMode_LOGIN_MODE_GAIA_LOGIN && loginReq.Credentials == nil {
-		if loginReq.Credentials, err = pickRandomCreds(s.RequiredVar("ui.gaiaPoolDefault")); err != nil {
+		if loginReq.Credentials, err = pickRandomCreds(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)); err != nil {
 			s.Fatal("Failed to get login credentials: ", err)
 		}
 	}
