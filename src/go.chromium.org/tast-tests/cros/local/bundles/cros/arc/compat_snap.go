@@ -152,6 +152,10 @@ func CompatSnap(ctx context.Context, s *testing.State) {
 		s.Fatal("Creating test API connection Failed: ", err)
 	}
 
+	if err := wm.ResetSplashScreenCounter(ctx, tconn); err != nil {
+		s.Fatal("Failed to reset splash screen counter: ", err)
+	}
+
 	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, false)
 	if err != nil {
 		s.Fatal("Failed to ensure the device is in clamshell mode: ", err)
@@ -184,6 +188,17 @@ func CompatSnap(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set the white wallpaper: ", err)
 	}
 
+	// Uninstall the test app if it's already installed so that per-app settings get cleared.
+	installed, err := a.PackageInstalled(ctx, wm.ResizeLockTestPkgName)
+	if err != nil {
+		s.Fatal("Failed to get package install status: ", err)
+	}
+	if installed {
+		testing.ContextLog(ctx, "The test app is already installed. Trying to uninstall")
+		if err := a.Uninstall(ctx, wm.ResizeLockTestPkgName); err != nil {
+			s.Fatal("Failed to uninstall app: ", err)
+		}
+	}
 	// Install the test app.
 	if err := a.Install(ctx, arc.APKPath(wm.ResizeLockApkName), adb.InstallOptionFromPlayStore); err != nil {
 		s.Fatal("Failed to install app from PlayStore: ", err)
