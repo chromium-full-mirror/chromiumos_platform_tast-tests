@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
 
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -31,11 +32,12 @@ func init() {
 			"tij@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
+		// TODO: When stable, change firmware_unstable to a different attr.
 		Attr:         []string{"group:firmware", "firmware_unstable"},
 		Vars:         []string{"firmware.skipFlashUSB"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
-		Fixture:      fixture.DevModeGBB,
-		Timeout:      25 * time.Minute,
+		Fixture:      fixture.DevMode,
+		Timeout:      120 * time.Minute,
 	})
 }
 
@@ -46,14 +48,6 @@ func SelfSignedBoot(ctx context.Context, s *testing.State) {
 	}
 	if err := h.RequireConfig(ctx); err != nil {
 		s.Fatal("Failed to get config: ", err)
-	}
-	if err := h.Servo.RemoveCCDWatchdogs(ctx); err != nil {
-		s.Fatal("Failed to remove ccd watchdog: ", err)
-	}
-
-	ms, err := firmware.NewModeSwitcher(ctx, h)
-	if err != nil {
-		s.Fatal("Creating mode switcher: ", err)
 	}
 
 	skipFlashUSB := false
@@ -71,9 +65,6 @@ func SelfSignedBoot(ctx context.Context, s *testing.State) {
 	if err := h.SetupUSBKey(ctx, cs); err != nil {
 		s.Fatal("USBKey not working: ", err)
 	}
-	if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
-		s.Fatal("Failed to set 'usb3_mux_sel:dut_sees_usbkey': ", err)
-	}
 
 	devBootUSB, err := h.Reporter.CrossystemParam(ctx, reporters.CrossystemParamDevBootUsb)
 	if err != nil {
@@ -88,8 +79,15 @@ func SelfSignedBoot(ctx context.Context, s *testing.State) {
 	s.Log("Initial dev_boot_signed_only value = ", devBootSignedOnly)
 
 	getUSBDev := func(ctx context.Context) string {
+		s.Log("Inserting the USB to DUT")
 		if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
-			s.Fatal("Failed to set 'usb3_mux_sel:dut_sees_usbkey': ", err)
+			s.Fatal("Failed to insert USB to DUT: ", err)
+		}
+		s.Logf("Sleeping %s to let USB become visible to DUT", firmware.UsbVisibleTime)
+		// GoBigSleepLint: It may take some time for usb mux state to
+		// take effect.
+		if err := testing.Sleep(ctx, firmware.UsbVisibleTime); err != nil {
+			s.Fatalf("Failed to sleep for %v s: %v", firmware.UsbDisableTime, err)
 		}
 
 		outRaw, err := h.DUT.Conn().CommandContext(ctx, "sh", "-c", "lsblk -nd --output NAME | grep sd").Output(ssh.DumpLogOnError)
@@ -126,17 +124,8 @@ func SelfSignedBoot(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupContext)
 
-	if err := ms.ModeAwareReboot(ctx, firmware.ColdReset); err != nil {
-		s.Fatal("Failed to reboot: ", err)
-	}
-
-	s.Log("Checking that DUT didn't unexpectedly boot from usb")
-	bootedFromRemovableDevice, err := h.Reporter.BootedFromRemovableDevice(ctx)
-	if err != nil {
-		s.Fatal("Could not determine boot device type: ", err)
-	}
-	if bootedFromRemovableDevice {
-		s.Fatalf("DUT did not boot from the internal device: got %v, want false", bootedFromRemovableDevice)
+	if err := developerUSBBoot(ctx, h, false); err != nil {
+		s.Fatal("Failed to boot from internal disk: ", err)
 	}
 
 	s.Log("Resigning KERN_A on USB with ssd key")
@@ -148,8 +137,15 @@ func SelfSignedBoot(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to resign usb with ssd keys: ", err)
 	}
 	defer func(ctx context.Context) {
+		s.Log("Inserting the USB to DUT")
 		if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
-			s.Fatal("Failed to mux usb to dut: ", err)
+			s.Fatal("Failed to insert the USB to DUT: ", err)
+		}
+		s.Logf("Sleeping %s to let USB become visible to DUT", firmware.UsbVisibleTime)
+		// GoBigSleepLint: It may take some time for usb mux state to
+		// take effect.
+		if err := testing.Sleep(ctx, firmware.UsbVisibleTime); err != nil {
+			s.Fatalf("Failed to sleep for %v s: %v", firmware.UsbDisableTime, err)
 		}
 
 		s.Log("Resigning KERN_A on USB with recovery key")
@@ -163,39 +159,56 @@ func SelfSignedBoot(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupContext)
 
-	// Not using ms.RebootToMode(ctx, fwCommon.BootModeUSBDev) here as it messes with the crossystem params.
-	if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
-		s.Fatal("Failed to do power state reset: ", err)
-	}
-	params := firmware.RunBypasser{BypasserMethod: ms.BypassDevBootUSB, RepeatBypasser: true, WaitUntilDUTConnected: h.Config.DelayRebootToPing}
-	if err := ms.RunBypasserUntilDUTConnected(ctx, params); err != nil {
-		s.Fatal("Failed to transition from fw screen to usb boot: ", err)
-	}
 	defer func(ctx context.Context) {
-		s.Log("Rebooting to disk")
-		if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
-			s.Fatal("Failed to do power state reset: ", err)
-		}
-
-		if err := h.EnsureDUTBooted(ctx); err != nil {
-			s.Fatal("Failed to connect to DUT: ", err)
-		}
-
-		bootedFromRemovableDevice, err = h.Reporter.BootedFromRemovableDevice(ctx)
-		if err != nil {
-			s.Fatal("Could not determine boot device type: ", err)
-		}
-		if bootedFromRemovableDevice {
-			s.Fatalf("DUT did not boot from the internal device: got %v, want false", bootedFromRemovableDevice)
+		if err := developerUSBBoot(ctx, h, false); err != nil {
+			s.Fatal("Failed to boot from internal disk: ", err)
 		}
 	}(cleanupContext)
 
-	s.Log("Checking that DUT booted from usb")
-	bootedFromRemovableDevice, err = h.Reporter.BootedFromRemovableDevice(ctx)
+	if err := developerUSBBoot(ctx, h, true); err != nil {
+		s.Fatal("Failed to boot from USB: ", err)
+	}
+}
+
+func developerUSBBoot(ctx context.Context, h *firmware.Helper, expectedBootFromUSB bool) error {
+	ms, err := firmware.NewModeSwitcher(ctx, h)
 	if err != nil {
-		s.Fatal("Could not determine boot device type: ", err)
+		return errors.Wrap(err, "failed to create mode switcher")
 	}
-	if !bootedFromRemovableDevice {
-		s.Fatalf("DUT did not boot from usb: got %v, want true", bootedFromRemovableDevice)
+	testing.ContextLog(ctx, "Removing the USB to DUT")
+	if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxOff); err != nil {
+		return errors.Wrap(err, "failed to remove USB")
 	}
+	if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
+		return errors.Wrap(err, "failed to cold reset the DUT")
+	}
+	testing.ContextLog(ctx, "Setting DFP mode")
+	if err := h.Servo.SetDUTPDDataRole(ctx, servo.DFP); err != nil {
+		testing.ContextLogf(ctx, "Failed to set pd data role to DFP: %.400s", err)
+	}
+	testing.ContextLog(ctx, "Inserting the USB to DUT")
+	if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
+		return errors.Wrap(err, "failed to insert USB to DUT")
+	}
+	if expectedBootFromUSB {
+		params := firmware.RunBypasser{BypasserMethod: ms.BypassDevBootUSB, RepeatBypasser: true, WaitUntilDUTConnected: h.Config.USBImageBootTimeout}
+		if err := ms.RunBypasserUntilDUTConnected(ctx, params); err != nil {
+			return errors.Wrap(err, "failed to transition from fw screen to usb boot")
+		}
+	} else {
+		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.DelayRebootToPing+h.Config.FirmwareScreen)
+		defer cancelWaitConnect()
+		if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
+			return errors.Wrap(err, "failed to reconnect to the DUT")
+		}
+	}
+	testing.ContextLog(ctx, "Expecting that DUT booted from usb: ", expectedBootFromUSB)
+	bootedFromRemovableDevice, err := h.Reporter.BootedFromRemovableDevice(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to determine boot device type")
+	}
+	if bootedFromRemovableDevice != expectedBootFromUSB {
+		return errors.Errorf("expected boot from usb: %v, got %v", expectedBootFromUSB, bootedFromRemovableDevice)
+	}
+	return nil
 }
