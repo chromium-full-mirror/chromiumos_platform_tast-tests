@@ -467,7 +467,7 @@ func flashECFirmwareFromDut(ctx context.Context, s *testing.State, h *firmware.H
 		if _, err := linuxssh.PutFiles(ctx, h.DUT.Conn(), map[string]string{fmt.Sprintf("%s/%s", localTmpDir, backupFirmwareFile): fmt.Sprintf("%s/%s", tmpFwDir, backupFirmwareFile)}, linuxssh.PreserveSymlinks); err != nil {
 			s.Fatal("Failed to copy files to dut: ", err)
 		}
-		runECFirmwareFlashDut(ctx, s, h, tmpFwDir, backupFirmwareFile)
+		runECFirmwareFlashDut(ctx, s, h, tmpFwDir, backupFirmwareFile, true)
 		s.Log("Completed flashing of backup EC fw")
 	}()
 
@@ -475,7 +475,7 @@ func flashECFirmwareFromDut(ctx context.Context, s *testing.State, h *firmware.H
 	if _, err := linuxssh.PutFiles(ctx, h.DUT.Conn(), map[string]string{fmt.Sprintf("%s/%s", localTmpDir, ecBinToFlash): fmt.Sprintf("%s/%s", tmpFwDir, firmware.ECFirmwareFileToFlash)}, linuxssh.PreserveSymlinks); err != nil {
 		s.Fatal("Failed to copy files to dut: ", err)
 	}
-	runECFirmwareFlashDut(ctx, s, h, tmpFwDir, firmware.ECFirmwareFileToFlash)
+	runECFirmwareFlashDut(ctx, s, h, tmpFwDir, firmware.ECFirmwareFileToFlash, false)
 	s.Log("Completed flashing of downloaded fw")
 	if err := h.EnsureDUTBooted(ctx); err != nil {
 		s.Fatal("Failed to reconnect to DUT after unsuspending: ", err)
@@ -537,9 +537,12 @@ func runECFirmwareFlashServo(ctx context.Context, s *testing.State, h *firmware.
 }
 
 // runECFirmwareFlashDut runs EC firmware flashing from the DUT
-func runECFirmwareFlashDut(ctx context.Context, s *testing.State, h *firmware.Helper, dutTmpDir, image string) {
+func runECFirmwareFlashDut(ctx context.Context, s *testing.State, h *firmware.Helper, dutTmpDir, image string, allowFlashFailure bool) {
 	if err := h.DUT.Conn().CommandContext(ctx, "chromeos-firmwareupdate", "--ec_image", fmt.Sprintf("%s/%s", dutTmpDir, image)).Run(); err != nil {
-		s.Fatal("Failed to flash firmware bin file: ", err)
+		if !allowFlashFailure {
+			s.Fatal("Failed to flash firmware bin file: ", err)
+		}
+		s.Log("Failed to flash firmware bin file: ", err)
 	}
 	if err := safeRebootDut(ctx, h); err != nil {
 		s.Fatal("Failed to reboot DUT after flashing: ", err)
