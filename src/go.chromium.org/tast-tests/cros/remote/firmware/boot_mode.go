@@ -1048,6 +1048,7 @@ func (ms *ModeSwitcher) RunBypasserUntilDUTConnected(ctx context.Context, params
 // the respective logic to reboot the DUT to the given firmware screen.
 func (ms *ModeSwitcher) RebootToFirmwareScreen(ctx context.Context, fwScreen fwCommon.FwScreenType) error {
 	h := ms.Helper
+	durToFwScreen := h.Config.FirmwareScreen
 	switch fwScreen {
 	case fwCommon.FwBrokenScreen:
 		testing.ContextLog(ctx, "Setting crossystem recovery_request to 193")
@@ -1060,6 +1061,7 @@ func (ms *ModeSwitcher) RebootToFirmwareScreen(ctx context.Context, fwScreen fwC
 		if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
 			return errors.Wrap(err, "failed to warm reset the DUT")
 		}
+		durToFwScreen = h.Config.FirmwareScreenRecMode
 	case fwCommon.FwDeveloperScreen:
 		if !h.DUT.Connected(ctx) {
 			return errors.New("requiring DUT to be connected initially")
@@ -1080,6 +1082,7 @@ func (ms *ModeSwitcher) RebootToFirmwareScreen(ctx context.Context, fwScreen fwC
 		if err := ms.EnableRecMode(ctx, servo.PowerStateRec, servo.USBMuxOff); err != nil {
 			return errors.Wrap(err, "failed to reboot to recovery screen")
 		}
+		durToFwScreen = h.Config.FirmwareScreenRecMode
 	case fwCommon.FwToNormScreen:
 		if err := ms.RebootToFirmwareScreen(ctx, fwCommon.FwDeveloperScreen); err != nil {
 			return err
@@ -1103,11 +1106,12 @@ func (ms *ModeSwitcher) RebootToFirmwareScreen(ctx context.Context, fwScreen fwC
 		if err := ms.EnableRecMode(ctx, servo.PowerStateRec, servo.USBMuxDUT); err != nil {
 			return errors.Wrap(err, "failed to reboot to recovery screen")
 		}
+		durToFwScreen = h.Config.FirmwareScreenRecMode
 	}
-	testing.ContextLogf(ctx, "Sleeping for %s (FirmwareScreen) ", h.Config.FirmwareScreen)
+	testing.ContextLogf(ctx, "Sleeping for %s (FirmwareScreen) ", durToFwScreen)
 	// GoBigSleepLint: Delay to wait for the firmware screen during boot-up.
-	if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
-		return errors.Wrapf(err, "failed to sleep for %s", h.Config.FirmwareScreen)
+	if err := testing.Sleep(ctx, durToFwScreen); err != nil {
+		return errors.Wrapf(err, "failed to sleep for %s", durToFwScreen)
 	}
 	return nil
 }
