@@ -8,6 +8,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -15,29 +16,33 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
+
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/webrtcinternals"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
-
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 )
 
 const createDumpSectionName = "Create Dump"
 
 var (
-	createDumpSectionReg = regexp.MustCompile("(Create Dump)|(Create a WebRTC-Internals dump)")
-	createDumpSection    = nodewith.NameRegex(createDumpSectionReg).Role(role.DisclosureTriangle)
-	webRTCRootWebArea    = nodewith.Name("WebRTC Internals").Role(role.RootWebArea)
-	webRTCDownloadButton = nodewith.NameContaining("Download").Role(role.Button).Ancestor(webRTCRootWebArea)
+	createDumpSectionReg                    = regexp.MustCompile("(Create Dump)|(Create a WebRTC-Internals dump)")
+	createDumpSection                       = nodewith.NameRegex(createDumpSectionReg).Role(role.DisclosureTriangle)
+	webRTCRootWebArea                       = nodewith.Name("WebRTC Internals").Role(role.RootWebArea)
+	webRTCDownloadButton                    = nodewith.NameContaining("Download").Role(role.Button).Ancestor(webRTCRootWebArea)
+	createDiagnosticAudioRecordingsSection  = nodewith.Name("Create diagnostic audio recordings").Role(role.DisclosureTriangle)
+	enableDiagnosticAudioRecordingsCheckbox = nodewith.Name("Enable diagnostic audio recordings").Role(role.CheckBox)
 )
 
 // ExpandCreateDumpSection expands the Create Dump section of chrome://webrtc-internals.
@@ -138,6 +143,139 @@ func DumpWebRTCInternals(ctx context.Context, tconn *chrome.TestConn, ui *uiauto
 	}
 
 	return dumpFilePath, nil
+}
+
+// DumpDiagnosticAudioRecordings downloads aecdump files from
+// chrome://webrtc-internals to the Downloads path of the current user.
+func DumpDiagnosticAudioRecordings(ctx context.Context, tconn *chrome.TestConn) (err error) {
+	ui := uiauto.New(tconn)
+	dumpAudioFile := func(ctx context.Context) error {
+		if err := uiauto.NamedCombine("Enable diagnostic audio recordings",
+			ui.WaitUntilExists(createDiagnosticAudioRecordingsSection),
+			ui.DoDefault(createDiagnosticAudioRecordingsSection),
+			ui.WaitUntilExists(enableDiagnosticAudioRecordingsCheckbox),
+			ui.DoDefault(enableDiagnosticAudioRecordingsCheckbox),
+		)(ctx); err != nil {
+			return err
+		}
+
+		// Find the files app dialog.
+		saver, err := filesapp.App(ctx, tconn, filesapp.FileSaverPseudoAppID)
+		if err != nil {
+			return err
+		}
+		saver = saver.WithTimeout(10 * time.Second)
+		saveButton := nodewith.Role(role.Button).Name("Save")
+		if err := uiauto.NamedCombine("Save audio_debug",
+			saver.OpenDir("Downloads", "Downloads"),
+			saver.WaitUntilExists(saveButton),
+			saver.LeftClick(saveButton),
+		)(ctx); err != nil {
+			return errors.Wrap(err, "cannot select diagnostic audio recordings filename")
+		}
+		testing.ContextLog(ctx, "Enable diagnostic audio recordings")
+		return nil
+	}
+
+	if err := uiauto.Retry(3, dumpAudioFile)(ctx); err != nil {
+		return errors.Wrap(err, "failed to enable diagnostic audio recordings")
+	}
+
+	return nil
+}
+
+// CleanupDiagnosticAudioRecordings deletes audio diagnostic recordings.
+func CleanupDiagnosticAudioRecordings(ctx context.Context, path string) {
+	deleteFileWithPattern(ctx, filepath.Join(path, "*.wav"))
+	deleteFileWithPattern(ctx, filepath.Join(path, "*.aecdump"))
+}
+
+// findLargestFileWithPattern returns the path of the largest file with the
+// given pattern.
+func findLargestFileWithPattern(pattern string) (file string, size int64, err error) {
+	files, err := filepath.Glob(pattern)
+	if err != nil {
+		return "", 0, errors.Wrap(err, "failed to glob files")
+	}
+	if len(files) == 0 {
+		return "", 0, errors.New("no files found")
+	}
+
+	var largestFileSize int64
+	var largestFile string
+	for _, file := range files {
+		fState, err := os.Stat(file)
+		if err != nil {
+			continue
+		}
+		if fState.Size() > largestFileSize {
+			largestFileSize = fState.Size()
+			largestFile = file
+		}
+	}
+
+	if largestFile == "" {
+		return "", 0, errors.Errorf("cannot find file with pattern %q", pattern)
+	}
+	return largestFile, largestFileSize, nil
+}
+
+// deleteFileWithPattern deletes files with the given pattern.
+func deleteFileWithPattern(ctx context.Context, pattern string) (err error) {
+	files, err := filepath.Glob(pattern)
+	if err != nil {
+		return errors.Wrap(err, "failed to glob files")
+	}
+	for _, file := range files {
+		err := os.Remove(file)
+		if err != nil {
+			testing.ContextLog(ctx, "Error deleting file:", file, err)
+		} else {
+			testing.ContextLog(ctx, "Deleted:", file)
+		}
+	}
+	return nil
+}
+
+// CalculateEchoRMS calculates the root mean square (RMS) amplitude of the echo from
+// the meeting .aecdump files.
+func CalculateEchoRMS(ctx context.Context, downloadsPath string) (float64, error) {
+	aecDump, largestAECDumpSize, err := findLargestFileWithPattern(filepath.Join(downloadsPath, "*.aecdump"))
+	if err != nil {
+		return -1, errors.Wrap(err, "cannot find aecdump file")
+	}
+	testing.ContextLogf(ctx, "aecdump file: %s (Size: %d bytes)", aecDump, largestAECDumpSize)
+
+	// Unpack the aecdump file.
+	tempDir, err := os.MkdirTemp("", "")
+	if err != nil {
+		return -1, errors.Wrap(err, "failed to create temp dir")
+	}
+	defer os.RemoveAll(tempDir)
+	aecDumpCmd := testexec.CommandContext(ctx, "unpack_aecdump", aecDump)
+	aecDumpCmd.Dir = tempDir
+
+	if _, err := aecDumpCmd.Output(); err != nil {
+		return -1, errors.Wrap(err, "cannot run unpack_aecdump")
+	}
+	refOut, refOutSize, err := findLargestFileWithPattern(filepath.Join(tempDir, "ref_out*.wav"))
+	if err != nil {
+		return -1, errors.Wrap(err, "cannot find ref_out.wav")
+	}
+	testing.ContextLogf(ctx, "ref_out file: %s (Size: %d bytes)", refOut, refOutSize)
+	// Trim 5 seconds from the beginning as we expect some echos happen at the
+	// beginning.
+	trimmedRefOut := filepath.Join(tempDir, "ref_out_trim.wav")
+	audio.TrimFileFrom(ctx, refOut, trimmedRefOut, 5*time.Second)
+	rms, err := audio.GetRmsAmplitudeFromWav(ctx, trimmedRefOut)
+	if err != nil {
+		return -1, errors.Wrap(err, "cannot get rms amplitude")
+	}
+	// dBFS = 20 * log10 (RMS / Reference Level).
+	// For 32 bit float PCM, the `Reference Level` is 1.
+	dbfs := 20 * math.Log10(rms)
+	testing.ContextLogf(ctx, "dbfs: %f dB", dbfs)
+	return dbfs, nil
 }
 
 type videoCodec float64

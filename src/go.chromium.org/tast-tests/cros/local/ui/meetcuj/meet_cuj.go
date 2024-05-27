@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/async"
 	"go.chromium.org/tast-tests/cros/common/bond"
 	"go.chromium.org/tast-tests/cros/common/perf"
+	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/camera/testutil"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/apps/thirdparty/googledocs"
@@ -40,6 +41,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vctray"
 	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
 	"go.chromium.org/tast-tests/cros/local/coords"
+	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/graphics"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/loginstatus"
@@ -102,6 +104,7 @@ type MeetTest struct {
 	BrowserType       browser.Type            // Ash Chrome browser or Lacros.
 	BotsOptions       []bond.AddBotsOption    // Customizes the meeting participant bots.
 	FakeCamHALCfg     *fakeCameraHALCfg       // Enable Fake Camera HAL if the config is present.
+	MeasureEcho       bool                    // Whether to measure the echo RMS. The number of meeting participant bot must be one and should be enabled with human speech as the only audio source (no other noise) to accurately evaluate the echo RMS.
 }
 
 // FakeCamHALCfg720p is the fake camera HAL used in MeetCUJ.
@@ -228,6 +231,18 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 
 		if err := upstart.RestartJob(ctx, cameraService); err != nil {
 			return pv, errors.Wrapf(err, "failed to restart %s after camera setup", cameraService)
+		}
+	}
+
+	if meet.MeasureEcho {
+		testing.ContextLog(ctx, "setup POST_DSP_DELAYED_LOOPBACK")
+		cras, err := audio.NewCras(ctx)
+		if err != nil {
+			return pv, errors.Wrap(err, "failed to connect to CRAS")
+		}
+
+		if err := cras.SetActiveNodeByType(ctx, "POST_DSP_DELAYED_LOOPBACK"); err != nil {
+			return pv, errors.Wrap(err, "failed to set active node POST_DSP_DELAYED_LOOPBACK")
 		}
 	}
 
@@ -482,6 +497,17 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 
 	if err := cuj.ExpandCreateDumpSection(ctx, tconn); err != nil {
 		return pv, errors.Wrap(err, "failed to expand Create Dump section of chrome://webrtc-internals")
+	}
+
+	if meet.MeasureEcho {
+		if err := cuj.DumpDiagnosticAudioRecordings(ctx, tconn); err != nil {
+			return pv, errors.Wrap(err, "failed to enable audio recordings from chrome://webrtc-internals")
+		}
+		downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
+		if err != nil {
+			return pv, errors.Wrap(err, "failed to get Downloads path")
+		}
+		defer cuj.CleanupDiagnosticAudioRecordings(ctx, downloadsPath)
 	}
 
 	var names []string
@@ -1489,6 +1515,23 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 				Multiple:  true,
 			}, bucketMaxima...)
 		}
+	}
+
+	if meet.MeasureEcho {
+		downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
+		if err != nil {
+			return pv, errors.Wrap(err, "failed to get Downloads path")
+		}
+		rms, err := cuj.CalculateEchoRMS(ctx, downloadsPath)
+		if err != nil {
+			return pv, errors.Wrap(err, "failed to calculate echo rms")
+		}
+
+		pv.Set(perf.Metric{
+			Name:      "EchoRMS",
+			Unit:      "dB",
+			Direction: perf.SmallerIsBetter,
+		}, float64(rms))
 	}
 
 	if err := recorder.Record(ctx, pv); err != nil {

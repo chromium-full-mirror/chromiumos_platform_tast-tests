@@ -103,6 +103,50 @@ func init() {
 				Fixture: "loggedInToCUJUserWithWebRTCEventLogging",
 			},
 			{
+				Name:      "docs_echo_measured",
+				Timeout:   meetcuj.DefaultTestTimeout,
+				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
+				Val: meetcuj.MeetTest{
+					// Restrict meetings to a single bot participant. Echo cancellation algorithms often struggle to process multiple simultaneous bot voices.
+					Bots:        []int{1},
+					Layout:      googlemeet.TiledLayout,
+					Present:     true,
+					Docs:        true,
+					Split:       true,
+					Cam:         true,
+					ZoomOut:     true,
+					Effects:     true,
+					BrowserType: browser.TypeAsh,
+					// The meeting bot must be enabled with human speech as the only audio source (no other noise) to accurately evaluate the echo RMS.
+					MeasureEcho: true,
+					BotsOptions: []bond.AddBotsOption{bond.WithAudio("sample_speech_10secs_32bit_48k_stereo.raw")},
+				},
+				Fixture: "loggedInToCUJUserWithWebRTCEventLogging",
+			},
+			{
+				Name:      "docs_nc_echo_measured",
+				Timeout:   meetcuj.DefaultTestTimeout,
+				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
+				Val: meetcuj.MeetTest{
+					// Restrict meetings to a single bot participant. Echo cancellation algorithms often struggle to process multiple simultaneous bot voices.
+					Bots:              []int{1},
+					Layout:            googlemeet.TiledLayout,
+					Present:           true,
+					Docs:              true,
+					Split:             true,
+					Cam:               true,
+					ZoomOut:           true,
+					Effects:           true,
+					NoiseCancellation: true,
+					BrowserType:       browser.TypeAsh,
+					// The meeting bot must be enabled with human speech as the only audio source (no other noise) to accurately evaluate the echo RMS.
+					MeasureEcho: true,
+					BotsOptions: []bond.AddBotsOption{bond.WithAudio("sample_speech_10secs_32bit_48k_stereo.raw")},
+				},
+				Fixture: "loggedInToCUJUserWithWebRTCEventLogging",
+			},
+			{
+
 				Name:              "docs_pvsched",
 				BugComponent:      "b:167279",
 				Timeout:           meetcuj.DefaultTestTimeout,
