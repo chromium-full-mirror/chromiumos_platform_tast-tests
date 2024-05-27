@@ -136,6 +136,7 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 		chrome.EnableFeatures("OobeAiIntro"),
 		// TODO(b/333444345): Remove this as a part of post-launch cleanup.
 		chrome.EnableFeatures("OobeTuna"),
+		chrome.DisableFeatures("OobePersonalizedOnboarding"),
 	}
 	// Keep the user that was previously added for the 'AddPerson' flow.
 	if isAddPersonFlow {
