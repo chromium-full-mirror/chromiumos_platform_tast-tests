@@ -62,6 +62,10 @@ func AttestationNoExternalServer(ctx context.Context, s *testing.State) {
 	cryptohome := helper.CryptohomeClient()
 	mountInfo := hwsec.NewCryptohomeMountInfo(r, cryptohome)
 
+	if err := hwseclocal.BackupAttestationDbWithFakeGoogleKeys(ctx); err != nil {
+		testing.ContextLog(ctx, "Failed to backup attestation database: ", err)
+	}
+
 	const username = "test@crashwsec.bigr.name"
 
 	s.Log("Resetting vault in case the cryptohome status is contaminated")

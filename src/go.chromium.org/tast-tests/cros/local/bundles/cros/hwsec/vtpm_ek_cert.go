@@ -44,6 +44,10 @@ func VTPMEKCert(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to ensure tpm readiness: ", err)
 	}
 
+	if err := hwseclocal.BackupAttestationDbWithFakeGoogleKeys(ctx); err != nil {
+		testing.ContextLog(ctx, "Failed to backup attestation database: ", err)
+	}
+
 	ali := hwseclocal.NewAttestationLocalInfra(helper.DaemonController())
 	if err := ali.Enable(ctx); err != nil {
 		s.Fatal("Failed to enable local test infra feature: ", err)
