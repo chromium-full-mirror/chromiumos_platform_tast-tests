@@ -419,7 +419,11 @@ func runAccelVideoSpeedPerfTest(ctx context.Context, s *testing.State, testArgs 
 	}
 	defer cleanUpBenchmark(ctx)
 
-	if err := cpu.WaitUntilIdle(ctx); err != nil {
+	// Low powered devices like dedede or octopus have a harder time reducing
+	// the workload due to stubborn network processes, see e.g. b/343251417.
+	idleConfig := cpu.DefaultIdleConfig()
+	idleConfig.CPUUsagePercentMax = 40
+	if err := cpu.WaitUntilIdleWithConfig(ctx, idleConfig); err != nil {
 		return errors.Wrap(err, "failed to wait for CPU to become idle")
 	}
 
