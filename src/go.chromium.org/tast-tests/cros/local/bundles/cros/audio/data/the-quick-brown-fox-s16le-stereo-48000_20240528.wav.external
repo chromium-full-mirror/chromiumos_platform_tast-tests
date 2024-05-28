@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/audio/the-quick-brown-fox-s16le-stereo-48000_20240529.wav",
+  "size": 636208,
+  "sha256sum": "8fc5b1b7b3c1c837a5a801a17ef3a40855a5be758142f6641822e41b82720a1a"
+}
