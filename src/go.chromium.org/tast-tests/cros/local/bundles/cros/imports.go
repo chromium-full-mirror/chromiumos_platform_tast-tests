@@ -19,6 +19,7 @@ import (
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/baserpc"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/benchmark"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/biod"
+	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/bisector"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/bluetooth"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/bruschetta"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/calendar"
