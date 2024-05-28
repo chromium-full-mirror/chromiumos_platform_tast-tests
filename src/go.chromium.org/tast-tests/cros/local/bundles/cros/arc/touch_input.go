@@ -11,6 +11,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/arc/motioninput"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
+	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/testing"
@@ -91,6 +92,14 @@ func verifyTouchscreen(ctx context.Context, s *testing.State, tconn *chrome.Test
 		s.Fatal("Failed to create touchscreen: ", err)
 	}
 	defer tew.Close(ctx)
+
+	orientation, err := display.GetOrientation(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to get the orientation information: ", err)
+	}
+	if err := tew.SetRotation(-orientation.Angle); err != nil {
+		s.Fatal("Failed to set rotation: ", err)
+	}
 
 	stw, err := tew.NewSingleTouchWriter()
 	if err != nil {
