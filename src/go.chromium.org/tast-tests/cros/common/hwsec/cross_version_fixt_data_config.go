@@ -8,7 +8,7 @@ package hwsec
 var FirstTpm2DataMilestone = 88
 
 // LatestTpm2DataMilestone is the latest milestone we have prepared for cross version with TPM2.0 simulator
-var LatestTpm2DataMilestone = 119
+var LatestTpm2DataMilestone = 125
 
 // Tpm2DataPrefixes are the data prefixed for cross version with TPM2.0 simulator
 var Tpm2DataPrefixes = map[int]string{
@@ -43,13 +43,19 @@ var Tpm2DataPrefixes = map[int]string{
 	117: "R117-15572.63.0_novato_20231031",
 	118: "R118-15604.33.0_novato_20231123",
 	119: "R119-15633.69.0_amd64-generic_20231212",
+	120: "R120-15662.109.0_amd64-generic_20240528",
+	121: "R121-15699.70.0_amd64-generic_20240528",
+	122: "R122-15753.58.0_amd64-generic_20240528",
+	123: "R123-15786.60.0_amd64-generic_20240528",
+	124: "R124-15823.61.0_amd64-generic_20240529",
+	125: "R125-15853.52.0_amd64-generic_20240529",
 }
 
 // FirstTpmDynamicDataMilestone is the first milestone we have prepared for cross version with TPM dynamic
 var FirstTpmDynamicDataMilestone = 96
 
 // LatestTpmDynamicDataMilestone is the latest milestone we have prepared for cross version with TPM dynamic
-var LatestTpmDynamicDataMilestone = 119
+var LatestTpmDynamicDataMilestone = 125
 
 // TpmDynamicDataPrefixes are the data prefixed for cross version with TPM dynamic
 var TpmDynamicDataPrefixes = map[int]string{
@@ -77,13 +83,19 @@ var TpmDynamicDataPrefixes = map[int]string{
 	117: "R117-15572.63.0_reven-vmtest_20231031",
 	118: "R118-15604.60.0_reven-vmtest_20231123",
 	119: "R119-15633.69.0_reven-vmtest_20231212",
+	120: "R120-15662.109.0_reven-vmtest_20240528",
+	121: "R121-15699.72.0_reven-vmtest_20240528",
+	122: "R122-15753.58.0_reven-vmtest_20240528",
+	123: "R123-15786.60.0_reven-vmtest_20240528",
+	124: "R124-15823.61.0_reven-vmtest_20240529",
+	125: "R125-15853.52.0_reven-vmtest_20240529",
 }
 
 // FirstTi50DataMilestone is the first milestone we have prepared for cross version with Ti50 emulator
 var FirstTi50DataMilestone = 112
 
 // LatestTi50DataMilestone is the latest milestone we have prepared for cross version with Ti50 emulator
-var LatestTi50DataMilestone = 119
+var LatestTi50DataMilestone = 125
 
 // Ti50DataPrefixes are the data prefixed for cross version with Ti50 emulator
 var Ti50DataPrefixes = map[int]string{
@@ -95,4 +107,10 @@ var Ti50DataPrefixes = map[int]string{
 	117: "R117-15572.63.0_betty_20231031",
 	118: "R118-15604.60.0_betty_20231123",
 	119: "R119-15633.69.0_betty_20231212",
+	120: "R120-15662.109.0_betty_20240528",
+	121: "R121-15699.72.0_betty_20240528",
+	122: "R122-15753.58.0_betty_20240528",
+	123: "R123-15786.60.0_betty_20240528",
+	124: "R124-15823.61.0_betty_20240528",
+	125: "R125-15853.53.0_betty_20240529",
 }

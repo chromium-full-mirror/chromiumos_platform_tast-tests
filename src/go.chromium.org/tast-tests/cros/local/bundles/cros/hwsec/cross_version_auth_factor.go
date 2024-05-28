@@ -76,6 +76,36 @@ func init() {
 			}, {
 				Name:              "ti50_r119",
 				Fixture:           "crossVersion.ti50_r119",
+				ExtraAttr:         []string{"group:mainline", "informational"},
+				ExtraSoftwareDeps: []string{"no_tpm_dynamic", "gsc"},
+			}, {
+				Name:              "ti50_r120",
+				Fixture:           "crossVersion.ti50_r120",
+				ExtraAttr:         []string{"group:mainline"},
+				ExtraSoftwareDeps: []string{"no_tpm_dynamic", "gsc"},
+			}, {
+				Name:              "ti50_r121",
+				Fixture:           "crossVersion.ti50_r121",
+				ExtraAttr:         []string{"group:mainline", "informational"},
+				ExtraSoftwareDeps: []string{"no_tpm_dynamic", "gsc"},
+			}, {
+				Name:              "ti50_r122",
+				Fixture:           "crossVersion.ti50_r122",
+				ExtraAttr:         []string{"group:mainline", "informational"},
+				ExtraSoftwareDeps: []string{"no_tpm_dynamic", "gsc"},
+			}, {
+				Name:              "ti50_r123",
+				Fixture:           "crossVersion.ti50_r123",
+				ExtraAttr:         []string{"group:mainline", "informational"},
+				ExtraSoftwareDeps: []string{"no_tpm_dynamic", "gsc"},
+			}, {
+				Name:              "ti50_r124",
+				Fixture:           "crossVersion.ti50_r124",
+				ExtraAttr:         []string{"group:mainline", "informational"},
+				ExtraSoftwareDeps: []string{"no_tpm_dynamic", "gsc"},
+			}, {
+				Name:              "ti50_r125",
+				Fixture:           "crossVersion.ti50_r125",
 				ExtraAttr:         []string{"group:mainline"},
 				ExtraSoftwareDeps: []string{"no_tpm_dynamic", "gsc"},
 			}, {
@@ -231,6 +261,36 @@ func init() {
 			}, {
 				Name:              "tpm2_r119",
 				Fixture:           "crossVersion.tpm2_r119",
+				ExtraAttr:         []string{"group:mainline", "informational"},
+				ExtraSoftwareDeps: []string{"no_tpm_dynamic", "no_gsc"},
+			}, {
+				Name:              "tpm2_r120",
+				Fixture:           "crossVersion.tpm2_r120",
+				ExtraAttr:         []string{"group:mainline"},
+				ExtraSoftwareDeps: []string{"no_tpm_dynamic", "no_gsc"},
+			}, {
+				Name:              "tpm2_r121",
+				Fixture:           "crossVersion.tpm2_r121",
+				ExtraAttr:         []string{"group:mainline", "informational"},
+				ExtraSoftwareDeps: []string{"no_tpm_dynamic", "no_gsc"},
+			}, {
+				Name:              "tpm2_r122",
+				Fixture:           "crossVersion.tpm2_r122",
+				ExtraAttr:         []string{"group:mainline", "informational"},
+				ExtraSoftwareDeps: []string{"no_tpm_dynamic", "no_gsc"},
+			}, {
+				Name:              "tpm2_r123",
+				Fixture:           "crossVersion.tpm2_r123",
+				ExtraAttr:         []string{"group:mainline", "informational"},
+				ExtraSoftwareDeps: []string{"no_tpm_dynamic", "no_gsc"},
+			}, {
+				Name:              "tpm2_r124",
+				Fixture:           "crossVersion.tpm2_r124",
+				ExtraAttr:         []string{"group:mainline", "informational"},
+				ExtraSoftwareDeps: []string{"no_tpm_dynamic", "no_gsc"},
+			}, {
+				Name:              "tpm2_r125",
+				Fixture:           "crossVersion.tpm2_r125",
 				ExtraAttr:         []string{"group:mainline"},
 				ExtraSoftwareDeps: []string{"no_tpm_dynamic", "no_gsc"},
 			}, {
@@ -351,6 +411,36 @@ func init() {
 			}, {
 				Name:              "tpm_dynamic_r119",
 				Fixture:           "crossVersion.tpm_dynamic_r119",
+				ExtraAttr:         []string{"group:mainline", "informational"},
+				ExtraSoftwareDeps: []string{"tpm_dynamic", "no_gsc"},
+			}, {
+				Name:              "tpm_dynamic_r120",
+				Fixture:           "crossVersion.tpm_dynamic_r120",
+				ExtraAttr:         []string{"group:mainline"},
+				ExtraSoftwareDeps: []string{"tpm_dynamic", "no_gsc"},
+			}, {
+				Name:              "tpm_dynamic_r121",
+				Fixture:           "crossVersion.tpm_dynamic_r121",
+				ExtraAttr:         []string{"group:mainline", "informational"},
+				ExtraSoftwareDeps: []string{"tpm_dynamic", "no_gsc"},
+			}, {
+				Name:              "tpm_dynamic_r122",
+				Fixture:           "crossVersion.tpm_dynamic_r122",
+				ExtraAttr:         []string{"group:mainline", "informational"},
+				ExtraSoftwareDeps: []string{"tpm_dynamic", "no_gsc"},
+			}, {
+				Name:              "tpm_dynamic_r123",
+				Fixture:           "crossVersion.tpm_dynamic_r123",
+				ExtraAttr:         []string{"group:mainline", "informational"},
+				ExtraSoftwareDeps: []string{"tpm_dynamic", "no_gsc"},
+			}, {
+				Name:              "tpm_dynamic_r124",
+				Fixture:           "crossVersion.tpm_dynamic_r124",
+				ExtraAttr:         []string{"group:mainline", "informational"},
+				ExtraSoftwareDeps: []string{"tpm_dynamic", "no_gsc"},
+			}, {
+				Name:              "tpm_dynamic_r125",
+				Fixture:           "crossVersion.tpm_dynamic_r125",
 				ExtraAttr:         []string{"group:mainline"},
 				ExtraSoftwareDeps: []string{"tpm_dynamic", "no_gsc"},
 			},

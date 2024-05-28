@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/hwsec/cross_version_login/R123-15786.60.0_amd64-generic_20240528_data.tar.gz",
+  "size": 10695141,
+  "sha256sum": "df58758ced8501436e94bea73cbaff3a97155a96a82f13487de8da1d36dacf4d"
+}
