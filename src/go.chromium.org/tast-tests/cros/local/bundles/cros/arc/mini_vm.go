@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -30,7 +31,7 @@ func init() {
 		BugComponent: "b:168382",
 		SoftwareDeps: []string{"android_vm", "chrome"},
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
-		VarDeps:      []string{"ui.gaiaPoolDefault"},
+		VarDeps:      []string{ui.GaiaPoolDefaultVarName},
 	})
 }
 
@@ -39,7 +40,7 @@ func MiniVM(ctx context.Context, s *testing.State) {
 	// Setup Chrome and login as an opt-out user. mini-ARCVM should
 	// automatically start.
 	cr, err := chrome.New(ctx,
-		chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
+		chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)),
 		chrome.ARCSupported(),
 		chrome.ExtraArgs(arc.DisableSyncFlags()...))
 	if err != nil {

@@ -12,6 +12,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
 	"go.chromium.org/tast-tests/cros/common/hwsec"
+	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/login/signinutil"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -47,7 +48,7 @@ func init() {
 		},
 		Attr: []string{"group:mainline", "group:hw_agnostic"},
 		VarDeps: []string{
-			"ui.gaiaPoolDefault",
+			ui.GaiaPoolDefaultVarName,
 			"ui.signinProfileTestExtensionManifestKey",
 		},
 		Timeout: 2*chrome.GAIALoginTimeout + chrome.LoginTimeout + userutil.TakingOwnershipTimeout + 2*time.Minute,
@@ -89,7 +90,7 @@ func ChangePassword(ctx context.Context, s *testing.State) {
 	// Isolate the step to leverage `defer` pattern.
 	func() {
 		var err error
-		gaiaCreds, err = credconfig.PickRandomCreds(s.RequiredVar("ui.gaiaPoolDefault"))
+		gaiaCreds, err = credconfig.PickRandomCreds(s.RequiredVar(ui.GaiaPoolDefaultVarName))
 		if err != nil {
 			s.Fatal("Failed to parse creds: ", err)
 		}

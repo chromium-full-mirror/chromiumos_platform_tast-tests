@@ -7,6 +7,7 @@ package personalization
 import (
 	"context"
 
+	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 
@@ -201,7 +202,7 @@ func init() {
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 		Vars: []string{
-			"ui.gaiaPoolDefault",
+			ui.GaiaPoolDefaultVarName,
 		},
 	})
 	testing.AddFixture(&testing.Fixture{

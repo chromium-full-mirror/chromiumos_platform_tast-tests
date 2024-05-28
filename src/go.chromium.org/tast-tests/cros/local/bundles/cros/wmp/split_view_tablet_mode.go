@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
@@ -65,7 +66,7 @@ func init() {
 			ExtraSoftwareDeps: []string{"lacros"},
 		}},
 		Timeout: chrome.GAIALoginTimeout + arc.BootTimeout + 120*time.Second,
-		VarDeps: []string{"ui.gaiaPoolDefault"},
+		VarDeps: []string{ui.GaiaPoolDefaultVarName},
 	})
 }
 
@@ -83,7 +84,7 @@ func SplitViewTabletMode(ctx context.Context, s *testing.State) {
 
 	bt := param.browserType
 	cr, br, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, bt, lacrosfixt.NewConfig(),
-		chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
+		chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)),
 		chrome.ARCSupported(),
 		chrome.ExtraArgs(arc.DisableSyncFlags()...))
 	if err != nil {

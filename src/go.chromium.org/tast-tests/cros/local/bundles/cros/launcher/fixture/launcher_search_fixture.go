@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -135,7 +136,7 @@ func init() {
 		SetUpTimeout:    launcherSearchSetUpTestTimeout + arcOptinTimeout,
 		PreTestTimeout:  launcherSearchPreTestTimeout,
 		PostTestTimeout: launcherSearchPostTestTimeout,
-		Vars:            []string{"ui.gaiaPoolDefault"},
+		Vars:            []string{ui.GaiaPoolDefaultVarName},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: NormalLauncherSearchWithArc,
@@ -149,7 +150,7 @@ func init() {
 		SetUpTimeout:    launcherSearchSetUpTestTimeout + arcOptinTimeout,
 		PreTestTimeout:  launcherSearchPreTestTimeout,
 		PostTestTimeout: launcherSearchPostTestTimeout,
-		Vars:            []string{"ui.gaiaPoolDefault"},
+		Vars:            []string{ui.GaiaPoolDefaultVarName},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: NormalLauncherSearchWithOOBE,
@@ -163,7 +164,7 @@ func init() {
 		SetUpTimeout:    launcherSearchSetUpTestTimeout + oobeTimeout,
 		PreTestTimeout:  launcherSearchPreTestTimeout,
 		PostTestTimeout: launcherSearchPostTestTimeout,
-		Vars:            []string{"ui.gaiaPoolDefault"},
+		Vars:            []string{ui.GaiaPoolDefaultVarName},
 	})
 
 }
@@ -173,13 +174,13 @@ func (f *launcherSearchFixtureImpl) SetUp(ctx context.Context, s *testing.FixtSt
 	opts = append(opts, chrome.EnableFeatures(f.featureFlags...))
 
 	if f.CompleteOOBE {
-		opts = append(opts, chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")))
+		opts = append(opts, chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)))
 		opts = append(opts, chrome.DontSkipOOBEAfterLogin())
 		opts = append(opts, chrome.EnableFeatures("HelpAppLauncherSearch"))
 	}
 
 	if f.ARCSupported {
-		opts = append(opts, chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")))
+		opts = append(opts, chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)))
 		opts = append(opts, chrome.ARCSupported())
 		opts = append(opts, chrome.ExtraArgs(arc.DisableSyncFlags()...))
 	}

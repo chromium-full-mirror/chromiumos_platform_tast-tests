@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/apputil"
@@ -77,7 +78,7 @@ func init() {
 		BugComponent: "b:1238037",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
-		Vars:         []string{"ui.gaiaPoolDefault"}, // GAIA is required to install an app from Chrome Webstore.
+		Vars:         []string{ui.GaiaPoolDefaultVarName}, // GAIA is required to install an app from Chrome Webstore.
 		Params: []testing.Param{
 			{
 				Val: resizeWindowTestParams{
@@ -135,7 +136,7 @@ func ResizeWindow(ctx context.Context, s *testing.State) {
 	case browserCase:
 		opts = append(opts, chrome.FakeLogin(chrome.Creds{User: fakeAccount, Pass: fakePassword}))
 	case appCase:
-		opts = append(opts, chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")))
+		opts = append(opts, chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)))
 	case arcCase:
 		opts = append(opts, chrome.ARCEnabled(), chrome.UnRestrictARCCPU(),
 			chrome.FakeLogin(chrome.Creds{User: fakeAccount, Pass: fakePassword}))

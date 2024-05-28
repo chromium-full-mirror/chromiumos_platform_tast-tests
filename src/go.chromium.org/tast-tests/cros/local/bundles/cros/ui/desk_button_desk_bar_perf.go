@@ -11,6 +11,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/common/perf"
+	uiCommon "go.chromium.org/tast-tests/cros/common/ui"
 	uiperf "go.chromium.org/tast-tests/cros/local/bundles/cros/ui/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
@@ -46,7 +47,7 @@ func init() {
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
-		VarDeps:      []string{"ui.gaiaPoolDefault"},
+		VarDeps:      []string{uiCommon.GaiaPoolDefaultVarName},
 		Timeout:      chrome.GAIALoginTimeout + 2*time.Minute,
 		Params: []testing.Param{{
 			Val: browser.TypeAsh,
@@ -70,7 +71,7 @@ func DeskButtonDeskBarPerf(ctx context.Context, s *testing.State) {
 	}
 
 	opts := []chrome.Option{chrome.EnableFeatures("DeskButton"),
-		chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault"))}
+		chrome.GAIALoginPool(s.RequiredVar(uiCommon.GaiaPoolDefaultVarName))}
 	cr, _, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, s.Param().(browser.Type), lacrosfixt.NewConfig(), opts...)
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)

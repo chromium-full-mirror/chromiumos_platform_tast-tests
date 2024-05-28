@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/android/ui"
+	uiCommon "go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/appsplatform/webapks"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -75,7 +76,7 @@ func init() {
 			ExtraSoftwareDeps: []string{"android_vm", "lacros"},
 		}},
 		Timeout: chrome.GAIALoginTimeout + arc.BootTimeout + 3*time.Minute,
-		VarDeps: []string{"ui.gaiaPoolDefault"},
+		VarDeps: []string{uiCommon.GaiaPoolDefaultVarName},
 	})
 }
 
@@ -89,7 +90,7 @@ func WebAPK(ctx context.Context, s *testing.State) {
 
 	// Due to the UI Automator flakiness, we still can't use the arcBooted fixture as it starts UI Automator automatically.
 	var opts []chrome.Option
-	opts = append(opts, chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
+	opts = append(opts, chrome.GAIALoginPool(s.RequiredVar(uiCommon.GaiaPoolDefaultVarName)),
 		chrome.ARCEnabled())
 	if s.Param().(browser.Type) == browser.TypeLacros {
 		lacrosOpts, err := lacrosfixt.NewConfig().Opts()

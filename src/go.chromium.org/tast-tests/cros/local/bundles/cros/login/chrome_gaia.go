@@ -10,6 +10,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
+	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -35,7 +36,7 @@ func init() {
 			"group:hw_agnostic",
 		},
 		VarDeps: []string{
-			"ui.gaiaPoolDefault",
+			ui.GaiaPoolDefaultVarName,
 		},
 		Params: []testing.Param{{
 			Name: "",
@@ -54,7 +55,7 @@ func ChromeGAIA(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 20*time.Second)
 	defer cancel()
 	opts := []chrome.Option{
-		chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
+		chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)),
 	}
 
 	if ok {

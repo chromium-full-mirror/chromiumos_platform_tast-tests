@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
+	uiCommon "go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/accountmanager"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/arcent"
@@ -31,8 +32,6 @@ type accountRemoveTestArgs struct {
 	optin                bool
 }
 
-const unmanagedLoginPoolVar = "ui.gaiaPoolDefault"
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         AccountRemove,
@@ -46,7 +45,7 @@ func init() {
 		Timeout:      15 * time.Minute,
 		VarDeps: []string{
 			arcent.LoginPoolVar,
-			unmanagedLoginPoolVar,
+			uiCommon.GaiaPoolDefaultVarName,
 		},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.ArcEnabled{}, pci.VerifiedFunctionalityOS),
@@ -56,7 +55,7 @@ func init() {
 				Name: "managed",
 				Val: accountRemoveTestArgs{
 					primaryAccountPool:   arcent.LoginPoolVar,
-					secondaryAccountPool: unmanagedLoginPoolVar,
+					secondaryAccountPool: uiCommon.GaiaPoolDefaultVarName,
 					optin:                false,
 				},
 				ExtraSoftwareDeps: []string{"android_container"},
@@ -66,7 +65,7 @@ func init() {
 				Name: "managed_vm",
 				Val: accountRemoveTestArgs{
 					primaryAccountPool:   arcent.LoginPoolVar,
-					secondaryAccountPool: unmanagedLoginPoolVar,
+					secondaryAccountPool: uiCommon.GaiaPoolDefaultVarName,
 					optin:                false,
 				},
 				ExtraSoftwareDeps: []string{"android_vm"},
@@ -75,7 +74,7 @@ func init() {
 			{
 				Name: "unmanaged",
 				Val: accountRemoveTestArgs{
-					primaryAccountPool:   unmanagedLoginPoolVar,
+					primaryAccountPool:   uiCommon.GaiaPoolDefaultVarName,
 					secondaryAccountPool: arcent.LoginPoolVar,
 					optin:                true,
 				},
@@ -85,7 +84,7 @@ func init() {
 			{
 				Name: "unmanaged_vm",
 				Val: accountRemoveTestArgs{
-					primaryAccountPool:   unmanagedLoginPoolVar,
+					primaryAccountPool:   uiCommon.GaiaPoolDefaultVarName,
 					secondaryAccountPool: arcent.LoginPoolVar,
 					optin:                true,
 				},

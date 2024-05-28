@@ -9,13 +9,14 @@ import (
 	"path/filepath"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
-	"go.chromium.org/tast-tests/cros/local/inputs/inputactions"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/useractions"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast-tests/cros/local/inputs/inputactions"
 	"go.chromium.org/tast-tests/cros/local/uidetection"
 	"go.chromium.org/tast/core/testing"
 )
@@ -59,7 +60,7 @@ func init() {
 		SetUpTimeout:    2 * time.Minute,
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 2 * time.Minute,
-		Vars:            []string{"ui.gaiaPoolDefault"},
+		Vars:            []string{ui.GaiaPoolDefaultVarName},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: PlayStoreWithVK,
@@ -72,14 +73,14 @@ func init() {
 		SetUpTimeout:    2 * time.Minute,
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 2 * time.Minute,
-		Vars:            []string{"ui.gaiaPoolDefault"},
+		Vars:            []string{ui.GaiaPoolDefaultVarName},
 	})
 }
 
 func (f *arcFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	var chromeOpts []chrome.Option
 
-	chromeOpts = append(chromeOpts, chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")))
+	chromeOpts = append(chromeOpts, chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)))
 	chromeOpts = append(chromeOpts, chrome.ARCSupported())
 	chromeOpts = append(chromeOpts, chrome.ExtraArgs(arc.DisableSyncFlags()...))
 

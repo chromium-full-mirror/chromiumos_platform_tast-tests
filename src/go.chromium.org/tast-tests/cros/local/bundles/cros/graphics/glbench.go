@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/crostini"
 	"go.chromium.org/tast-tests/cros/local/graphics/glbench"
 	"go.chromium.org/tast/core/testing"
@@ -31,7 +32,7 @@ func init() {
 			"pwang@chromium.org",
 		},
 		SoftwareDeps: []string{"no_qemu"},
-		Vars:         []string{"keepState", "ui.gaiaPoolDefault"},
+		Vars:         []string{"keepState", ui.GaiaPoolDefaultVarName},
 		Params: []testing.Param{
 			// TODO(b/307460167): Update this test to use modern Crostini fixtures.
 			{

@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
@@ -133,7 +134,7 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
-		Vars:            []string{"ui.gaiaPoolDefault"},
+		Vars:            []string{ui.GaiaPoolDefaultVarName},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: ClamshellNonVKInGAIA,
@@ -148,7 +149,7 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
-		Vars:            []string{"ui.gaiaPoolDefault"},
+		Vars:            []string{ui.GaiaPoolDefaultVarName},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: ClamshellVK,
@@ -622,7 +623,7 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
-		Vars:            []string{"ui.gaiaPoolDefault"},
+		Vars:            []string{ui.GaiaPoolDefaultVarName},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: LacrosAnyVKInGAIA,
@@ -637,7 +638,7 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
-		Vars:            []string{"ui.gaiaPoolDefault"},
+		Vars:            []string{ui.GaiaPoolDefaultVarName},
 	})
 }
 
@@ -683,7 +684,7 @@ func (f *inputsFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) int
 		case guestLogin:
 			opts = append(opts, chrome.GuestLogin())
 		case gaiaLogin:
-			opts = append(opts, chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")))
+			opts = append(opts, chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)))
 		case autocorrectToggle:
 			opts = append(opts, chrome.ExtraArgs("--enable-features=AutocorrectToggle"))
 		case assistMultiWord:

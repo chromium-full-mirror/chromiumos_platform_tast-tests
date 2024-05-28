@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -35,7 +36,7 @@ func init() {
 		// ChromeOS > Software > ARC++ > Core > Play Store Setup
 		BugComponent: "b:1131344",
 		Attr:         []string{"group:mainline", "group:arc-functional", "group:cq-medium"},
-		VarDeps:      []string{"ui.gaiaPoolDefault"},
+		VarDeps:      []string{ui.GaiaPoolDefaultVarName},
 		SoftwareDeps: []string{
 			"chrome",
 			"chrome_internal",
@@ -109,7 +110,7 @@ func Optin(ctx context.Context, s *testing.State) {
 	args := s.Param().(optinTestArgs)
 
 	cr, err := chrome.New(ctx,
-		chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
+		chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)),
 		chrome.ARCSupported(),
 		chrome.UnRestrictARCCPU(),
 		chrome.FieldTrialConfig(args.fieldTrialConfig),

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
+	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
@@ -294,10 +295,10 @@ func init() {
 			"assistive-eng@google.com",
 		},
 		BugComponent: "b:905229", // ChromeOS > Software > Assistive
-		Vars:         []string{"ui.gaiaPoolDefault"},
+		Vars:         []string{ui.GaiaPoolDefaultVarName},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			opts := []chrome.Option{
-				chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
+				chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)),
 			}
 			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(opts...)).Opts()
 		}),

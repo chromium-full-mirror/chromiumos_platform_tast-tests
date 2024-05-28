@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/apps/fixture"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/apps/pre"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -36,7 +37,7 @@ func init() {
 		BugComponent: "b:690873",
 		// TODO(b/303137892): remove after fixing tast test.
 		Attr:         []string{"group:mainline", "informational"},
-		VarDeps:      []string{"ui.gaiaPoolDefault"},
+		VarDeps:      []string{ui.GaiaPoolDefaultVarName},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Timeout:      chrome.GAIALoginTimeout + time.Minute,
 		Params: []testing.Param{
@@ -185,7 +186,7 @@ func helpAppLaunchDuringOOBE(ctx context.Context, s *testing.State, isTabletMode
 	}
 
 	cr, err := chrome.New(ctx,
-		chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
+		chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)),
 		chrome.DontSkipOOBEAfterLogin(),
 		chrome.EnableFeatures("HelpAppFirstRun"),
 		chrome.ExtraArgs(uiMode),

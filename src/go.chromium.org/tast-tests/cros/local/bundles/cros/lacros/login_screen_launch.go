@@ -11,6 +11,7 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 
+	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
@@ -48,7 +49,7 @@ func init() {
 		SoftwareDeps: []string{"chrome", "chrome_internal", "lacros"},
 		VarDeps: []string{
 			"ui.signinProfileTestExtensionManifestKey",
-			"ui.gaiaPoolDefault",
+			ui.GaiaPoolDefaultVarName,
 		},
 
 		// Login time + User ownership + Wait for password entry + Wait for Lacros processes:
@@ -234,7 +235,7 @@ func isSubset(subset, superset map[int32]string) bool {
 
 func LoginScreenLaunch(ctx context.Context, s *testing.State) {
 	// Create user pod on login screen.
-	creds, err := initUserPod(ctx, s.RequiredVar("ui.gaiaPoolDefault"))
+	creds, err := initUserPod(ctx, s.RequiredVar(ui.GaiaPoolDefaultVarName))
 	if err != nil {
 		s.Fatal("Failed to create user pod on login screen: ", err)
 	}

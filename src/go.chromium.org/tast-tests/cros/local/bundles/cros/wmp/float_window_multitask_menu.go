@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/wmp/wmputils"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -46,7 +47,7 @@ func init() {
 			ExtraSoftwareDeps: []string{"lacros"},
 		}},
 		Timeout: chrome.GAIALoginTimeout + arc.BootTimeout + 2*time.Minute,
-		VarDeps: []string{"ui.gaiaPoolDefault"},
+		VarDeps: []string{ui.GaiaPoolDefaultVarName},
 		SearchFlags: []*testing.StringPair{{
 			Key:   "feature_id",
 			Value: "screenplay-f4dbfe9b-7a0d-4759-885a-79b1925d6cd0",
@@ -62,7 +63,7 @@ func FloatWindowMultitaskMenu(ctx context.Context, s *testing.State) {
 
 	bt := s.Param().(browser.Type)
 	cr, br, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, bt, lacrosfixt.NewConfig(),
-		chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
+		chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)),
 		chrome.EnableFeatures("WindowLayoutMenu"),
 		chrome.ARCSupported(),
 		chrome.ExtraArgs(arc.DisableSyncFlags()...))

@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/login/signinutil"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -35,7 +36,7 @@ func init() {
 		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
 		Attr:         []string{"group:golden_tier", "group:medium_low_tier", "group:hardware", "group:complementary", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
-		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey", "ui.gaiaPoolDefault"},
+		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey", ui.GaiaPoolDefaultVarName},
 		Timeout:      chrome.LoginTimeout + 3*time.Minute,
 	})
 }

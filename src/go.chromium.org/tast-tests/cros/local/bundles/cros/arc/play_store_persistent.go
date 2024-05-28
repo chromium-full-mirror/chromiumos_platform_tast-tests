@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -53,7 +54,7 @@ func init() {
 			ExtraSoftwareDeps: []string{"android_vm", "lacros"},
 			Val:               browser.TypeLacros,
 		}},
-		VarDeps: []string{"ui.gaiaPoolDefault"},
+		VarDeps: []string{ui.GaiaPoolDefaultVarName},
 	})
 }
 
@@ -121,7 +122,7 @@ func PlayStorePersistent(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	opts := []chrome.Option{
-		chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
+		chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)),
 		chrome.ARCSupported(),
 		chrome.ExtraArgs(arc.DisableSyncFlags()...),
 	}

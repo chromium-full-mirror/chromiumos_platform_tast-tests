@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -44,7 +45,7 @@ func init() {
 			Key:   "feature_id",
 			Value: "screenplay-90e4fecc-d2ea-40dc-b9db-eb9d61089e22",
 		}},
-		VarDeps: []string{"ui.gaiaPoolDefault"},
+		VarDeps: []string{ui.GaiaPoolDefaultVarName},
 		Params: []testing.Param{
 			{
 				Name:              "androidp_clamshell",
@@ -105,7 +106,7 @@ func RecentApps(ctx context.Context, s *testing.State) {
 		opts = append(opts, chrome.UnRestrictARCCPU())
 	} else {
 		// GAIA login is required to use Chrome Web Store.
-		opts = append(opts, chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")))
+		opts = append(opts, chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)))
 	}
 
 	cr, err := chrome.New(ctx, opts...)

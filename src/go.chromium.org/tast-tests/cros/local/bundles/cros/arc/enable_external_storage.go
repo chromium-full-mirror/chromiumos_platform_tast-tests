@@ -10,6 +10,7 @@ import (
 	"os"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/arc/removablemedia"
@@ -40,14 +41,14 @@ func init() {
 			ExtraAttr:         []string{"group:hw_agnostic"},
 		}},
 		Timeout: chrome.GAIALoginTimeout + arc.BootTimeout + 1*time.Minute,
-		VarDeps: []string{"ui.gaiaPoolDefault"},
+		VarDeps: []string{ui.GaiaPoolDefaultVarName},
 	})
 }
 
 func EnableExternalStorage(ctx context.Context, s *testing.State) {
 	// Set up Chrome.
 	cr, err := chrome.New(ctx,
-		chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
+		chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)),
 		chrome.ARCSupported(),
 		chrome.ExtraArgs(arc.DisableSyncFlags()...))
 	if err != nil {

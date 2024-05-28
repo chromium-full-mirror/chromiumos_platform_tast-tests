@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
+	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/ui/geekbenchcuj"
 	"go.chromium.org/tast-tests/cros/local/crostini"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
@@ -34,7 +35,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Vars: []string{
 			"keepState",
-			"ui.gaiaPoolDefault",
+			ui.GaiaPoolDefaultVarName,
 			"geekbench.email",
 			"geekbench.key",
 		},

@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
@@ -31,7 +32,7 @@ func init() {
 		SoftwareDeps: []string{"android_p", "chrome"},
 		Timeout:      chrome.GAIALoginTimeout + arc.BootTimeout + 10*time.Minute,
 		Fixture:      "arcBootedWithPlayStore",
-		VarDeps:      []string{"ui.gaiaPoolDefault"},
+		VarDeps:      []string{ui.GaiaPoolDefaultVarName},
 	})
 }
 

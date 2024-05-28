@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
+	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
@@ -44,7 +45,7 @@ func init() {
 		SoftwareDeps: []string{"chrome", "no_kernel_upstream"},
 		Data:         []string{cujrecorder.SystemTraceConfigFile},
 		Timeout:      chrome.GAIALoginTimeout + arc.BootTimeout + 3*time.Minute,
-		VarDeps:      []string{"ui.gaiaPoolDefault"},
+		VarDeps:      []string{ui.GaiaPoolDefaultVarName},
 		Params: []testing.Param{{
 			Fixture: "savedDesksCUJEnableWithoutArc",
 			Val:     []apps.App{apps.FilesSWA},

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
+	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
@@ -40,7 +41,7 @@ func init() {
 			Val:  []browser.Type{browser.TypeAsh, browser.TypeLacros},
 		}},
 		Vars:    []string{"lacros.DocsCUJ.iterations"},
-		VarDeps: []string{"ui.gaiaPoolDefault"},
+		VarDeps: []string{ui.GaiaPoolDefaultVarName},
 	})
 }
 
@@ -61,7 +62,7 @@ func DocsCUJ(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	opts := []chrome.Option{
 		chrome.DisableFeatures("FirmwareUpdaterApp"),
-		chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
+		chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)),
 	}
 
 	opts, err := lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(opts...)).Opts()

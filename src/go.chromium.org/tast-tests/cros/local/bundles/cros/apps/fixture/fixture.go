@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/android/ui"
+	uiCommon "go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
@@ -128,14 +129,14 @@ func init() {
 		return []chrome.Option{
 			chrome.EnableFeatures("MediaAppPhotosIntegrationImage:minPhotosVersionForImage/1.0"),
 			chrome.ExtraArgs(arc.DisableSyncFlags()...),
-			chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault"))}, nil
+			chrome.GAIALoginPool(s.RequiredVar(uiCommon.GaiaPoolDefaultVarName))}, nil
 	}
 	testing.AddFixture(&testing.Fixture{
 		Name:            ArcBootedWithGalleryPhotosImageFeature,
 		Desc:            "ARC is booted with the MediaAppPhotosIntegrationImage feature flag enabled",
 		Contacts:        []string{"backlight-swe@google.com", "cros-ca-eng@google.com", "bugsnash@chromium.org"},
 		BugComponent:    "b:562866", // ChromeOS > Software > Consumer > Apps Suite > Backlight
-		Vars:            []string{"ui.gaiaPoolDefault"},
+		Vars:            []string{uiCommon.GaiaPoolDefaultVarName},
 		Impl:            arc.NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + arc.BootTimeout + ui.StartTimeout,
 		ResetTimeout:    arc.ResetTimeout,

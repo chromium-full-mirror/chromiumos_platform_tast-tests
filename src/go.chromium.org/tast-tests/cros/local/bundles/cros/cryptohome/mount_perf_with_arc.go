@@ -11,6 +11,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
 	"go.chromium.org/tast-tests/cros/common/perf"
+	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
 	"go.chromium.org/tast-tests/cros/local/arc/playstore"
@@ -46,7 +47,7 @@ func init() {
 				"no_arcvm_virtio_blk_data",
 			},
 		}},
-		VarDeps: []string{"ui.gaiaPoolDefault"},
+		VarDeps: []string{ui.GaiaPoolDefaultVarName},
 		Timeout: 12 * time.Minute,
 	})
 }
@@ -60,7 +61,7 @@ func MountPerfWithArc(ctx context.Context, s *testing.State) {
 	{
 		// Set up Chrome instance.
 		cr, err := chrome.New(ctx,
-			chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
+			chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)),
 			chrome.ARCSupported(),
 			chrome.ExtraArgs(arc.DisableSyncFlags()...))
 		if err != nil {

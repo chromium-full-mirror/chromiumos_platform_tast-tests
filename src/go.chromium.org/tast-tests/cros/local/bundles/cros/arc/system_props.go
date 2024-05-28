@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
+	uiCommon "go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/arcent"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
@@ -41,7 +42,7 @@ func init() {
 		Timeout:      15 * time.Minute,
 		VarDeps: []string{
 			arcent.LoginPoolVar,
-			optin.LoginPoolVar,
+			uiCommon.GaiaPoolDefaultVarName,
 			systemPropsVar,
 		},
 		SearchFlags: []*testing.StringPair{
@@ -59,7 +60,7 @@ func init() {
 			{
 				Name: "unmanaged_vm",
 				Val: systemPropsTestArgs{
-					accountPool: optin.LoginPoolVar,
+					accountPool: uiCommon.GaiaPoolDefaultVarName,
 					optin:       true,
 				},
 				ExtraAttr: []string{"informational"},

@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/crostini"
 	cui "go.chromium.org/tast-tests/cros/local/crostini/ui"
@@ -22,7 +23,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test two users can install crostini separately",
 		Contacts:     []string{"clumptini@google.com"},
-		VarDeps:      []string{"ui.gaiaPoolDefault"},
+		VarDeps:      []string{ui.GaiaPoolDefaultVarName},
 		Attr:         []string{"group:mainline", "group:crostini_slow", "informational"},
 		SoftwareDeps: []string{"chrome", "vm_host"},
 		BugComponent: "b:1122570",
@@ -44,7 +45,7 @@ func TwoUsersInstall(ctx context.Context, s *testing.State) {
 	debianVersion := s.Param().(vm.ContainerDebianVersion)
 
 	// Login options for the first user.
-	optsUser1 := []chrome.Option{chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
+	optsUser1 := []chrome.Option{chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)),
 		chrome.ExtraArgs("--vmodule=crostini*=1"),
 	}
 

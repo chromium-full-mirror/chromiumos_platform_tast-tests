@@ -16,6 +16,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
 	"go.chromium.org/tast-tests/cros/common/perf"
+	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
@@ -79,7 +80,7 @@ func init() {
 			},
 		}},
 		Vars:    []string{"lacros.StartupPerf.iterations", "lacros.StartupPerf.credentials", "skipInitialLogin", "skipRegularLogin"},
-		VarDeps: []string{"ui.gaiaPoolDefault"},
+		VarDeps: []string{ui.GaiaPoolDefaultVarName},
 	})
 }
 
@@ -204,7 +205,7 @@ func parseVars(s *testing.State) spVars {
 		creds.User = usernamePassword[0]
 		creds.Pass = usernamePassword[1]
 	} else {
-		creds, err = credconfig.PickRandomCreds(s.RequiredVar("ui.gaiaPoolDefault"))
+		creds, err = credconfig.PickRandomCreds(s.RequiredVar(ui.GaiaPoolDefaultVarName))
 		if err != nil {
 			s.Fatal("Failed to get login creds: ", err)
 		}

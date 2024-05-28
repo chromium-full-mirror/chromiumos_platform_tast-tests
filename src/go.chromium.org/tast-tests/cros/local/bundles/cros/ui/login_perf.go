@@ -20,6 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/chrome/histogram"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
 	uiperf "go.chromium.org/tast-tests/cros/local/bundles/cros/ui/perf"
@@ -134,7 +135,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		VarDeps: []string{
 			"ui.signinProfileTestExtensionManifestKey",
-			"ui.gaiaPoolDefault",
+			ui.GaiaPoolDefaultVarName,
 		},
 		Data:    []string{"animation.html", "animation.js", loginPerfTraceConfigFileName},
 		Timeout: 15 * time.Minute,
@@ -1204,7 +1205,7 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 		ctx,
 		s.OutDir(),
 		lacrosCfg,
-		s.RequiredVar("ui.gaiaPoolDefault"),
+		s.RequiredVar(ui.GaiaPoolDefaultVarName),
 		param,
 		s.RequiredVar("ui.signinProfileTestExtensionManifestKey"),
 		url,

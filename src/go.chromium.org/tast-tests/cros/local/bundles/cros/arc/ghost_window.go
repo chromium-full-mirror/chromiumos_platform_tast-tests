@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
@@ -76,7 +77,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 1*time.Minute,
-		Vars:         []string{"ui.gaiaPoolDefault"},
+		Vars:         []string{ui.GaiaPoolDefaultVarName},
 		Params: []testing.Param{{
 			Name: "general_r",
 			Val:  generalLaunchGwTests,
@@ -470,7 +471,7 @@ func loginChrome(ctx context.Context, s *testing.State, creds *chrome.Creds) (*c
 	}
 	// Setup Chrome for a new cred.
 	cr, err := chrome.New(ctx,
-		chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
+		chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)),
 		chrome.ARCSupported(),
 		chrome.EnableFeatures(ghostWindowFeatureFlags...),
 		chrome.ExtraArgs(arc.DisableSyncFlags()...))

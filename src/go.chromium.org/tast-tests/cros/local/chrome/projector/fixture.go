@@ -11,6 +11,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
+	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
@@ -65,11 +66,11 @@ func init() {
 		Impl: NewProjectorFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
 				chromeFlags,
-				chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
+				chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)),
 			}, nil
 		}),
 		Vars: []string{
-			"ui.gaiaPoolDefault",
+			ui.GaiaPoolDefaultVarName,
 		},
 		SetUpTimeout:    chrome.GAIALoginTimeout + time.Minute,
 		ResetTimeout:    resetTimeout,
@@ -86,11 +87,11 @@ func init() {
 		Impl: NewProjectorFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(
 				chromeFlags,
-				chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
+				chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)),
 			)).Opts()
 		}),
 		Vars: []string{
-			"ui.gaiaPoolDefault",
+			ui.GaiaPoolDefaultVarName,
 		},
 		SetUpTimeout:    chrome.GAIALoginTimeout + time.Minute,
 		ResetTimeout:    resetTimeout,
@@ -141,11 +142,11 @@ func init() {
 		Impl: NewProjectorFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
 				chromeFlags,
-				chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
+				chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)),
 			}, nil
 		}),
 		Vars: []string{
-			"ui.gaiaPoolDefault",
+			ui.GaiaPoolDefaultVarName,
 		},
 		SetUpTimeout:    chrome.ManagedUserLoginTimeout,
 		ResetTimeout:    resetTimeout,

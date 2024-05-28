@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -22,7 +23,7 @@ import (
 )
 
 const (
-	accountPool   = "ui.gaiaPoolDefault"
+	accountPool   = ui.GaiaPoolDefaultVarName
 	assetLinksVar = "arc.PlayBillingAssetLinks"
 	icon          = "play_billing_icon.png"
 	index         = "play_billing_index.html"

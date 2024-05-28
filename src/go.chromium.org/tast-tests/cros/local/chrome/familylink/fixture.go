@@ -11,6 +11,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
+	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
@@ -149,7 +150,7 @@ func init() {
 		BugComponent: "b:1079167", // ChromeOS > Software > Family
 		Impl:         NewFamilyLinkFixture("family.parentEmail", "family.parentPassword", "family.unicornEmail", "family.unicornPassword", false),
 		Vars: []string{
-			"ui.gaiaPoolDefault",
+			ui.GaiaPoolDefaultVarName,
 			"family.parentEmail",
 			"family.parentPassword",
 			"family.unicornEmail",
@@ -173,7 +174,7 @@ func init() {
 		BugComponent: "b:1079167", // ChromeOS > Software > Family
 		Impl:         NewFamilyLinkFixtureLacros("family.parentEmail", "family.parentPassword", "family.unicornEmail", "family.unicornPassword", false),
 		Vars: []string{
-			"ui.gaiaPoolDefault",
+			ui.GaiaPoolDefaultVarName,
 			"family.parentEmail",
 			"family.parentPassword",
 			"family.unicornEmail",
@@ -522,7 +523,7 @@ func (f *familyLinkFixture) SetUp(ctx context.Context, s *testing.FixtState) int
 	if !f.isOwner {
 		func() {
 			// Log in and log out to create a user pod on the login screen.
-			cr, err := chrome.New(ctx, chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")))
+			cr, err := chrome.New(ctx, chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)))
 			if err != nil {
 				s.Fatal("Chrome login failed: ", err)
 			}

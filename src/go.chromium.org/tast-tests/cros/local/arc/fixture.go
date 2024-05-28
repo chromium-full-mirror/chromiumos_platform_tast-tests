@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/android/ui"
+	uiCommon "go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
 	"go.chromium.org/tast-tests/cros/local/arc/swap"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -242,13 +243,13 @@ func init() {
 		return []chrome.Option{
 			chrome.ExtraArgs(DisableSyncFlags()...),
 			chrome.UnRestrictARCCPU(),
-			chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
+			chrome.GAIALoginPool(s.RequiredVar(uiCommon.GaiaPoolDefaultVarName)),
 		}, nil
 	}
 	testing.AddFixture(&testing.Fixture{
 		Name: "arcBootedWithPlayStore",
 		Desc: "ARC is booted with disabling sync flags",
-		Vars: []string{"ui.gaiaPoolDefault"},
+		Vars: []string{uiCommon.GaiaPoolDefaultVarName},
 		Contacts: []string{
 			"jinrongwu@google.com",
 			"niwa@chromium.org",
@@ -272,13 +273,13 @@ func init() {
 			chrome.DisableFeatures("Floss"),
 			chrome.ExtraArgs(DisableSyncFlags()...),
 			chrome.UnRestrictARCCPU(),
-			chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
+			chrome.GAIALoginPool(s.RequiredVar(uiCommon.GaiaPoolDefaultVarName)),
 		}, nil
 	}
 	testing.AddFixture(&testing.Fixture{
 		Name: "arcBootedWithPlayStoreAndBluetoothBlueZ",
 		Desc: "ARC is booted with disabling sync flags and Bluetooth-BlueZ is enabled",
-		Vars: []string{"ui.gaiaPoolDefault"},
+		Vars: []string{uiCommon.GaiaPoolDefaultVarName},
 		Contacts: []string{
 			"chadduffin@chromium.org",
 			"cros-connectivity@google.com",
@@ -305,13 +306,13 @@ func init() {
 			chrome.DisableFeatures("FlossIsAvailabilityCheckNeeded"),
 			chrome.ExtraArgs(DisableSyncFlags()...),
 			chrome.UnRestrictARCCPU(),
-			chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
+			chrome.GAIALoginPool(s.RequiredVar(uiCommon.GaiaPoolDefaultVarName)),
 		}, nil
 	}
 	testing.AddFixture(&testing.Fixture{
 		Name: "arcBootedWithPlayStoreAndBluetoothFloss",
 		Desc: "ARC is booted with disabling sync flags and Bluetooth-Floss is enabled",
-		Vars: []string{"ui.gaiaPoolDefault"},
+		Vars: []string{uiCommon.GaiaPoolDefaultVarName},
 		Contacts: []string{
 			"chadduffin@chromium.org",
 			"cros-connectivity@google.com",
@@ -404,7 +405,7 @@ func init() {
 			"andrescj@chromium.org",
 			"chromeos-gfx-video@google.com",
 		},
-		BugComponent:    "b:168352",  // ChromeOS > Platform > Graphics > Video.
+		BugComponent:    "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,
@@ -438,7 +439,7 @@ func init() {
 			"andrescj@chromium.org",
 			"chromeos-gfx-video@google.com",
 		},
-		BugComponent:    "b:168352",  // ChromeOS > Platform > Graphics > Video.
+		BugComponent:    "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,
@@ -536,7 +537,7 @@ func init() {
 			chrome.ARCEnabled(),
 			chrome.ExtraArgs(DisableSyncFlags()...),
 			chrome.UnRestrictARCCPU(),
-			chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")))).Opts()
+			chrome.GAIALoginPool(s.RequiredVar(uiCommon.GaiaPoolDefaultVarName)))).Opts()
 	}
 	testing.AddFixture(&testing.Fixture{
 		Name: "lacrosWithArcBootedAndPlayStore",
@@ -546,7 +547,7 @@ func init() {
 			"xiyuan@chromium.org",
 		},
 		BugComponent:    "b:1045832", // ChromeOS > Software > Performance > TPS
-		Vars:            []string{"ui.gaiaPoolDefault"},
+		Vars:            []string{uiCommon.GaiaPoolDefaultVarName},
 		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + BootTimeout + 2*time.Minute,
 		ResetTimeout:    ResetTimeout,

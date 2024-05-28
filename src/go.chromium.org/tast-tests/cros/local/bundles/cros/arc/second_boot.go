@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
@@ -47,7 +48,7 @@ func init() {
 			ExtraSoftwareDeps: []string{"android_vm", "qemu"},
 		}},
 		Timeout: (chrome.LoginTimeout * 2) + (arc.BootTimeout * 2) + 5*time.Minute,
-		VarDeps: []string{"ui.gaiaPoolDefault"},
+		VarDeps: []string{ui.GaiaPoolDefaultVarName},
 	})
 }
 
@@ -56,7 +57,7 @@ func SecondBoot(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
 	defer cancel()
 
-	loginPool := s.RequiredVar("ui.gaiaPoolDefault")
+	loginPool := s.RequiredVar(ui.GaiaPoolDefaultVarName)
 
 	cr, err := chrome.New(ctx,
 		chrome.GAIALoginPool(loginPool),

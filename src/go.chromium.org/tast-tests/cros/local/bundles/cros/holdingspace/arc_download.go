@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/arcdownload"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -32,7 +33,7 @@ func init() {
 		Fixture:      "arcBooted",
 		Data:         []string{"light_resistance.txt"},
 		SoftwareDeps: []string{"chrome", "android_vm"},
-		VarDeps:      []string{"ui.gaiaPoolDefault"},
+		VarDeps:      []string{ui.GaiaPoolDefaultVarName},
 		SearchFlags: []*testing.StringPair{{
 			Key:   "feature_id",
 			Value: "screenplay-cbd2ebb4-8f09-4902-a7ae-9eb7619f7409",

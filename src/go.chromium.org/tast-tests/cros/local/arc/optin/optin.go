@@ -29,9 +29,6 @@ const (
 	// PlayStoreCloseTimeout is the timeout value waiting for Play Store window to show up
 	// and then close it after optin.
 	PlayStoreCloseTimeout = 1 * time.Minute
-
-	// LoginPoolVar is a tast variable name that holds a list of unmanaged accounts.
-	LoginPoolVar = "ui.gaiaPoolDefault"
 )
 
 // arcApp maps ArcAppDict definition

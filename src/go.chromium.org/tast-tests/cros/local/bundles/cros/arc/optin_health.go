@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -30,7 +31,7 @@ func init() {
 		// ChromeOS > Software > ARC++ > Core > Play Store Setup
 		BugComponent: "b:1131344",
 		Attr:         []string{"group:mainline"},
-		VarDeps:      []string{"ui.gaiaPoolDefault"},
+		VarDeps:      []string{ui.GaiaPoolDefaultVarName},
 		SoftwareDeps: []string{"chrome", "play_store"},
 		Params: []testing.Param{
 			{
@@ -65,7 +66,7 @@ func OptinHealth(ctx context.Context, s *testing.State) {
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 
-		gaiaLogin := chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault"))
+		gaiaLogin := chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName))
 
 		cr, err := chrome.New(ctx,
 			gaiaLogin,

@@ -12,6 +12,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
+	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/syslog"
 	"go.chromium.org/tast/core/ctxutil"
@@ -39,7 +40,7 @@ func init() {
 			"informational",
 		},
 		VarDeps: []string{
-			"ui.gaiaPoolDefault",
+			ui.GaiaPoolDefaultVarName,
 		},
 		Timeout: chrome.GAIALoginTimeout + time.Minute,
 		Params: []testing.Param{{
@@ -62,7 +63,7 @@ func ChromeGaiaAPI(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	options := []chrome.Option{chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")), chrome.DeferLogin()}
+	options := []chrome.Option{chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)), chrome.DeferLogin()}
 	if useSandboxGaia {
 		options = append(options, chrome.UseSandboxGaia())
 	}

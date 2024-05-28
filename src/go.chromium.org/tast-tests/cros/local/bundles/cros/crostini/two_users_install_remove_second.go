@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/userutil"
@@ -24,7 +25,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test two users can install crostini parallely and then remove the second",
 		Contacts:     []string{"hardikgoyal@google.com", "cryptohome-core@google.com"},
-		VarDeps:      []string{"ui.gaiaPoolDefault", "ui.signinProfileTestExtensionManifestKey"},
+		VarDeps:      []string{ui.GaiaPoolDefaultVarName, "ui.signinProfileTestExtensionManifestKey"},
 		Attr:         []string{"group:mainline", "group:crostini_slow", "informational"},
 		SoftwareDeps: []string{"chrome", "vm_host"},
 		BugComponent: "b:1088399", // ChromeOS > Security > Cryptohome
@@ -50,7 +51,7 @@ func TwoUsersInstallRemoveSecond(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	// Login options for the first user.
-	optsUser1 := []chrome.Option{chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
+	optsUser1 := []chrome.Option{chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)),
 		chrome.ExtraArgs("--vmodule=crostini*=1"),
 	}
 	// First user setup and crostini install.

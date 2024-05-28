@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
@@ -32,7 +33,7 @@ func init() {
 		},
 		BugComponent: "b:1203766",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
-		Vars:         []string{"ui.gaiaPoolDefault"},
+		Vars:         []string{ui.GaiaPoolDefaultVarName},
 		SoftwareDeps: []string{"chrome"},
 	})
 }

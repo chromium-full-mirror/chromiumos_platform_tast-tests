@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
 	"go.chromium.org/tast-tests/cros/local/arc/playstore"
@@ -99,7 +100,7 @@ func init() {
 				Val:               playStoreTestArgs{preprod: true},
 			}},
 		Timeout: 15 * time.Minute,
-		VarDeps: []string{"ui.gaiaPoolDefault"},
+		VarDeps: []string{ui.GaiaPoolDefaultVarName},
 	})
 }
 
@@ -123,7 +124,7 @@ func PlayStore(ctx context.Context, s *testing.State) {
 
 	if err := testing.Poll(ctx, func(ctx context.Context) (retErr error) {
 		cr, err := chrome.New(ctx,
-			chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
+			chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)),
 			chrome.UnRestrictARCCPU(),
 			chrome.ARCSupported(),
 			chrome.FieldTrialConfig(args.fieldTrialConfig),

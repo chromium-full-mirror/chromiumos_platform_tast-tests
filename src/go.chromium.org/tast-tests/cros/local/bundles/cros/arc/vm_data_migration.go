@@ -18,6 +18,7 @@ import (
 	goselinux "github.com/opencontainers/selinux/go-selinux"
 	"golang.org/x/sys/unix"
 
+	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
@@ -80,7 +81,7 @@ func init() {
 		},
 		Data:    []string{vmDataMigrationTestImageFilename},
 		Timeout: vmDataMigrationTestTimeout,
-		VarDeps: []string{"ui.gaiaPoolDefault"},
+		VarDeps: []string{ui.GaiaPoolDefaultVarName},
 		Params: []testing.Param{{
 			Val: vmDataMigrationTestParams{
 				resume: false,
@@ -130,7 +131,7 @@ func signInForPreMigrationData(ctx context.Context, s *testing.State) (chrome.Cr
 	defer cancel()
 
 	cr, err := chrome.New(ctx,
-		chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
+		chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)),
 		chrome.ARCSupported(),
 		chrome.DisableFeatures("ArcEnableVirtioBlkForData"),
 		chrome.DisableFeatures("ArcVmDataMigration"),

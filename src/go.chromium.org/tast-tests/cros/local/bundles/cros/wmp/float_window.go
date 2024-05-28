@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
@@ -43,7 +44,7 @@ func init() {
 			Val:               browser.TypeLacros,
 		}},
 		Timeout: chrome.GAIALoginTimeout + arc.BootTimeout + 2*time.Minute,
-		VarDeps: []string{"ui.gaiaPoolDefault"},
+		VarDeps: []string{ui.GaiaPoolDefaultVarName},
 		SearchFlags: []*testing.StringPair{{
 			Key:   "feature_id",
 			Value: "screenplay-f4dbfe9b-7a0d-4759-885a-79b1925d6cd0",
@@ -58,7 +59,7 @@ func FloatWindow(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	opts := []chrome.Option{chrome.EnableFeatures("WindowLayoutMenu"),
-		chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
+		chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)),
 		chrome.ARCSupported(),
 		chrome.ExtraArgs(arc.DisableSyncFlags()...)}
 

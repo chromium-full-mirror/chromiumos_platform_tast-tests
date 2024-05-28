@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/android/ui"
+	uiCommon "go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/apputil"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -37,7 +38,7 @@ func init() {
 		Fixture:      "arcBooted",
 		// TODO(b/301347001): Enable this test for ARC T+.
 		SoftwareDeps: []string{"android_vm_t", "chrome"},
-		VarDeps:      []string{"ui.gaiaPoolDefault"},
+		VarDeps:      []string{uiCommon.GaiaPoolDefaultVarName},
 		Params: []testing.Param{{
 			ExtraData: []string{
 				"KeyMintTester.apk",

@@ -1,4 +1,5 @@
-// Copyright 2020 The ChromiumOS Authors// Use of this source code is governed by a BSD-style license that can be
+// Copyright 2020 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
 package arc
@@ -10,6 +11,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/android/ui"
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	uiCommon "go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
@@ -37,7 +39,7 @@ func init() {
 			ExtraSoftwareDeps: []string{"android_vm"},
 		}},
 		Timeout: 15 * time.Minute,
-		VarDeps: []string{"ui.gaiaPoolDefault"},
+		VarDeps: []string{uiCommon.GaiaPoolDefaultVarName},
 	})
 }
 
@@ -125,7 +127,7 @@ func reopenPlayStore(ctx context.Context, s *testing.State, a *arc.ARC, d *ui.De
 func Availability(ctx context.Context, s *testing.State) {
 	// Setup Chrome.
 	cr, err := chrome.New(ctx,
-		chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
+		chrome.GAIALoginPool(s.RequiredVar(uiCommon.GaiaPoolDefaultVarName)),
 		chrome.ARCSupported(),
 		chrome.ExtraArgs(arc.DisableSyncFlags()...))
 	if err != nil {

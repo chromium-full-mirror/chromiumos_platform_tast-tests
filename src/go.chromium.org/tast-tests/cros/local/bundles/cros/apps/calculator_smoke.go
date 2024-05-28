@@ -9,6 +9,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/apps/pre"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -31,7 +32,7 @@ func init() {
 			"jinrongwu@google.com",
 		},
 		BugComponent: "b:961438",
-		VarDeps:      []string{"ui.gaiaPoolDefault"},
+		VarDeps:      []string{ui.GaiaPoolDefaultVarName},
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		HardwareDeps: hwdep.D(pre.AppsStableModels),
 		Timeout:      5 * time.Minute,
@@ -41,7 +42,7 @@ func init() {
 
 func CalculatorSmoke(ctx context.Context, s *testing.State) {
 	cr, err := chrome.New(ctx,
-		chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
+		chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)),
 		chrome.EnableWebAppInstall())
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)

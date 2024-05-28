@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -116,12 +117,12 @@ func init() {
 			} else {
 				opts = append(opts, chrome.ARCDisabled())
 			}
-			return append(opts, chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault"))), nil
+			return append(opts, chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName))), nil
 		}),
 		SetUpTimeout:    chrome.GAIALoginTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
-		Vars:            []string{"ui.gaiaPoolDefault", "keepState"},
+		Vars:            []string{ui.GaiaPoolDefaultVarName, "keepState"},
 		BugComponent:    "b:658562", // ChromeOS > Software > GuestOS
 	})
 
@@ -185,12 +186,12 @@ func init() {
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			opts := generateChromeOpts(s)
 			opts = append(opts, chrome.ARCDisabled())
-			return append(opts, chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault"))), nil
+			return append(opts, chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName))), nil
 		}),
 		SetUpTimeout:    chrome.GAIALoginTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
-		Vars:            []string{"ui.gaiaPoolDefault", "keepState"},
+		Vars:            []string{ui.GaiaPoolDefaultVarName, "keepState"},
 		BugComponent:    "b:658562", // ChromeOS > Software > GuestOS
 	})
 
@@ -298,7 +299,7 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 		TearDownTimeout: uninstallationTimeout,
 		Parent:          "chromeLoggedInWithGaiaForCrostini",
-		Vars:            []string{"keepState", "ui.gaiaPoolDefault"},
+		Vars:            []string{"keepState", ui.GaiaPoolDefaultVarName},
 		Data:            []string{GetContainerMetadataArtifact("bullseye", false), GetContainerRootfsArtifact("bullseye", false)},
 	})
 
@@ -312,7 +313,7 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 		TearDownTimeout: uninstallationTimeout,
 		Parent:          "chromeLoggedInWithGaiaForCrostiniWithoutArc",
-		Vars:            []string{"keepState", "ui.gaiaPoolDefault"},
+		Vars:            []string{"keepState", ui.GaiaPoolDefaultVarName},
 		Data:            []string{GetContainerMetadataArtifact("bullseye", false), GetContainerRootfsArtifact("bullseye", false)},
 	})
 
@@ -326,7 +327,7 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 		TearDownTimeout: uninstallationTimeout,
 		Parent:          "chromeLoggedInWithGaiaForCrostini",
-		Vars:            []string{"keepState", "ui.gaiaPoolDefault"},
+		Vars:            []string{"keepState", ui.GaiaPoolDefaultVarName},
 		Data:            []string{GetContainerMetadataArtifact("bookworm", false), GetContainerRootfsArtifact("bookworm", false)},
 	})
 
@@ -340,7 +341,7 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 		TearDownTimeout: uninstallationTimeout,
 		Parent:          "chromeLoggedInWithGaiaForCrostiniWithoutArc",
-		Vars:            []string{"keepState", "ui.gaiaPoolDefault"},
+		Vars:            []string{"keepState", ui.GaiaPoolDefaultVarName},
 		Data:            []string{GetContainerMetadataArtifact("bookworm", false), GetContainerRootfsArtifact("bookworm", false)},
 	})
 

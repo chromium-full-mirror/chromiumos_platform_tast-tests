@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 
@@ -215,10 +216,10 @@ func init() {
 		Desc:         "Lacros Chrome logged into a Gaia user session",
 		Contacts:     []string{"hyungtaekim@chromium.org", "lacros-team@google.com"},
 		BugComponent: "b:1088267",
-		Vars:         []string{"ui.gaiaPoolDefault"},
+		Vars:         []string{ui.GaiaPoolDefaultVarName},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return NewConfig(ChromeOptions(
-				chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")))).Opts()
+				chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)))).Opts()
 		}),
 		SetUpTimeout:    chrome.FixtureSetUpTimeout + 7*time.Minute,
 		ResetTimeout:    chrome.ResetTimeout,
@@ -232,10 +233,10 @@ func init() {
 		Contacts:     []string{"kuanhuang@google.com", "lacros-team@google.com"},
 		BugComponent: "b:1088267",
 		// TODO(https://crbug.com/1380072): create new edu users and use that instead
-		Vars: []string{"ui.gaiaPoolDefault"},
+		Vars: []string{ui.GaiaPoolDefaultVarName},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return NewConfig(ChromeOptions(
-				chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")))).Opts()
+				chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)))).Opts()
 		}),
 		SetUpTimeout:    chrome.FixtureSetUpTimeout + 7*time.Minute,
 		ResetTimeout:    chrome.ResetTimeout,

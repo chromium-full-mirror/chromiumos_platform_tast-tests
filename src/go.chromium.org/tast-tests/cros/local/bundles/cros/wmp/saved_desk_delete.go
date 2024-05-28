@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -43,7 +44,7 @@ func init() {
 			// Delete saved desk
 			Value: "screenplay-7f6d909c-3450-4ec0-ab4d-a3f704ec3e7f",
 		}},
-		VarDeps: []string{"ui.gaiaPoolDefault"},
+		VarDeps: []string{ui.GaiaPoolDefaultVarName},
 		Params: []testing.Param{{
 			Fixture: "savedDesksEnableWithoutArc",
 			Val:     []apps.App{apps.FilesSWA},

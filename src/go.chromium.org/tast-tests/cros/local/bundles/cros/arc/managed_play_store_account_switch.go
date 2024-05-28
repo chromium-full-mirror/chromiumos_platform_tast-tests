@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
+	uiCommon "go.chromium.org/tast-tests/cros/common/ui"
 
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/arcent"
@@ -40,7 +41,7 @@ func init() {
 		Timeout:      15 * time.Minute,
 		VarDeps: []string{
 			arcent.LoginPoolVar,
-			"ui.gaiaPoolDefault",
+			uiCommon.GaiaPoolDefaultVarName,
 		},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.ArcEnabled{}, pci.VerifiedFunctionalityOS),
@@ -208,7 +209,7 @@ func ManagedPlayStoreAccountSwitch(ctx context.Context, s *testing.State) {
 		}
 		defer d.Close(cleanupCtx)
 
-		secondaryUser, err := credconfig.PickRandomCreds(s.RequiredVar("ui.gaiaPoolDefault"))
+		secondaryUser, err := credconfig.PickRandomCreds(s.RequiredVar(uiCommon.GaiaPoolDefaultVarName))
 		if err != nil {
 			return rl.Exit("get secondary user creds", err)
 		}

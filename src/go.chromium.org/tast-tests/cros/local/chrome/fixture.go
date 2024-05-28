@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
+	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/chrome/internal/lacros"
 	"go.chromium.org/tast-tests/cros/local/logsaver"
 	"go.chromium.org/tast-tests/cros/local/screenshot/cliscreenshot"
@@ -191,9 +192,9 @@ func init() {
 		Desc:         "Logged into a session with Gaia user",
 		Contacts:     []string{"jinrongwu@google.com"},
 		BugComponent: "b:1034649", // ChromeOS > Test > Harness > Tast > Libraries
-		Vars:         []string{"ui.gaiaPoolDefault"},
+		Vars:         []string{ui.GaiaPoolDefaultVarName},
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
-			return []Option{GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault"))}, nil
+			return []Option{GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName))}, nil
 		}),
 		SetUpTimeout:    FixtureSetUpTimeout,
 		ResetTimeout:    ResetTimeout,

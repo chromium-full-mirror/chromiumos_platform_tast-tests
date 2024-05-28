@@ -12,6 +12,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/common/chameleon"
+	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -327,10 +328,10 @@ func init() {
 		},
 		// ChromeOS > Software > Assistive
 		BugComponent: "b:905229",
-		Vars:         []string{"ui.gaiaPoolDefault"},
+		Vars:         []string{ui.GaiaPoolDefaultVarName},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
-				chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
+				chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)),
 				VerboseLogging(),
 				ashNoNudgesExtraArg(),
 			}, nil

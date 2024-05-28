@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
@@ -40,7 +41,7 @@ func init() {
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Attr:           []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps:   []string{"chrome"},
-		VarDeps:        []string{"ui.gaiaPoolDefault"},
+		VarDeps:        []string{ui.GaiaPoolDefaultVarName},
 		Params: []testing.Param{
 			{
 				// GAIA is required to install an app from Chrome Webstore.

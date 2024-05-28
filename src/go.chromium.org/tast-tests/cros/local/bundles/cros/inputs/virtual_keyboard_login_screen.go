@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -37,7 +38,7 @@ func init() {
 		SoftwareDeps: []string{"inputs_deps", "chrome", "google_virtual_keyboard"},
 		HardwareDeps: hwdep.D(pre.InputsStableModels),
 		VarDeps: []string{
-			"ui.gaiaPoolDefault",
+			ui.GaiaPoolDefaultVarName,
 			"ui.signinProfileTestExtensionManifestKey",
 		},
 		SearchFlags: util.SearchFlagsWithIMEAndScreenPlay([]ime.InputMethod{ime.EnglishUS}, []string{"screenplay-79dbd617-95bd-484b-89fe-8921fb9178c6"}),
@@ -62,7 +63,7 @@ func VirtualKeyboardLoginScreen(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	// Use GAIA login otherwise user profile does not exist after restart UI.
-	cr, err := chrome.New(ctx, chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")))
+	cr, err := chrome.New(ctx, chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)))
 	if err != nil {
 		s.Fatal("Failed to start Chrome via GAIA login: ", err)
 	}

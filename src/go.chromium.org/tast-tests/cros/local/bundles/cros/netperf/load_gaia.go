@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
+	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/network/dumputil"
 	"go.chromium.org/tast/core/ctxutil"
@@ -38,7 +39,7 @@ func init() {
 			"chrome",
 		},
 		VarDeps: []string{
-			"ui.gaiaPoolDefault",
+			ui.GaiaPoolDefaultVarName,
 			"ui.signinProfileTestExtensionManifestKey",
 		},
 	})

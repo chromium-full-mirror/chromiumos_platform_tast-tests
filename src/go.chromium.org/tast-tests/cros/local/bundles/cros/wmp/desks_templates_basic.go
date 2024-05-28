@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -41,7 +42,7 @@ func init() {
 			// Setup workspace templates.
 			Value: "screenplay-a28f92cc-e3f3-47e7-8234-f7508f7722fe",
 		}},
-		VarDeps: []string{"ui.gaiaPoolDefault"},
+		VarDeps: []string{ui.GaiaPoolDefaultVarName},
 		Params: []testing.Param{{
 			Fixture: "savedDesksEnableWithoutArc",
 			Val:     []apps.App{apps.FilesSWA},

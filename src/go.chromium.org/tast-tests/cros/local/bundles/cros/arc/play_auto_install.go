@@ -56,7 +56,7 @@ func init() {
 
 func PlayAutoInstall(ctx context.Context, s *testing.State) {
 	// Note, ARC produces pailist.txt only for this account. Changing this account would lead to test failures.
-	// TODO(khmel): Switch to pool of accounts "ui.gaiaPoolDefault".
+	// TODO(khmel): Switch to pool of accounts ui.GaiaPoolDefaultVarName.
 	username := s.RequiredVar("arc.PlayAutoInstall.username")
 	password := s.RequiredVar("arc.PlayAutoInstall.password")
 

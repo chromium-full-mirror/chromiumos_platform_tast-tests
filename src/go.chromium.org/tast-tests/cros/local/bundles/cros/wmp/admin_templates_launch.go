@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
+	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -43,7 +44,7 @@ func init() {
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Timeout:      chrome.GAIALoginTimeout + arc.BootTimeout + 180*time.Second,
-		VarDeps:      []string{"ui.gaiaPoolDefault"},
+		VarDeps:      []string{ui.GaiaPoolDefaultVarName},
 		Data:         []string{"admin_desk_template.json"},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.PreconfiguredDeskTemplates{}, pci.VerifiedFunctionalityUI),

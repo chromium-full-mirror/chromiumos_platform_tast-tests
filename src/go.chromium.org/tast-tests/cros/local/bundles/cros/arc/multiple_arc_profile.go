@@ -11,6 +11,7 @@ import (
 
 	androidui "go.chromium.org/tast-tests/cros/common/android/ui"
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/accountmanager"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/arc"
@@ -48,14 +49,14 @@ func init() {
 			ExtraSoftwareDeps: []string{"android_vm"},
 		}},
 		Timeout: chrome.LoginTimeout + arc.BootTimeout + 6*time.Minute,
-		VarDeps: []string{"ui.gaiaPoolDefault", "arc.parentUser", "arc.parentPassword"},
+		VarDeps: []string{ui.GaiaPoolDefaultVarName, "arc.parentUser", "arc.parentPassword"},
 	})
 }
 
 func MultipleArcProfile(ctx context.Context, s *testing.State) {
 
 	cr, err := chrome.New(ctx,
-		chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
+		chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)),
 		chrome.ARCSupported(),
 		chrome.ExtraArgs(arc.DisableSyncFlags()...))
 	if err != nil {

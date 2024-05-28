@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
+	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -63,7 +64,7 @@ func init() {
 			"glanceables.Smoke.regularUsername",
 			"glanceables.Smoke.regularPassword",
 		},
-		VarDeps: []string{"ui.gaiaPoolDefault"},
+		VarDeps: []string{ui.GaiaPoolDefaultVarName},
 		Params: []testing.Param{{
 			Name: "student",
 			Val: testCase{
@@ -179,7 +180,7 @@ func Smoke(ctx context.Context, s *testing.State) {
 	} else {
 		opts = []chrome.Option{
 			chrome.EnableFeatures(param.enabledFeatures...),
-			chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
+			chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)),
 		}
 	}
 
