@@ -464,7 +464,7 @@ media_ctl:
         maximum: 1
         step: 1
         default_value: 0
-        flags: 0
+        flags: 1024
         elem_size: 4
         reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
           0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -478,7 +478,7 @@ media_ctl:
         maximum: 1
         step: 1
         default_value: 0
-        flags: 0
+        flags: 1024
         elem_size: 4
         reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
           0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
