@@ -27,7 +27,7 @@ func init() {
 			"mcasas@chromium.org",
 		},
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
-		Attr:         []string{"group:graphics", "graphics_video"},
+		Attr:         []string{"group:graphics", "graphics_video", "graphics_stress", "graphics_cft"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("kodama")), // b/324981613
 		Data: []string{

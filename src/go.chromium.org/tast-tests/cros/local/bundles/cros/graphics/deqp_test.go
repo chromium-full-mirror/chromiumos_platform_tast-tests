@@ -149,7 +149,7 @@ func TestDEQPParams(t *testing.T) {
 	params = append(params, []dEQPGenParamData{{
 		Name:           `vk_{{.ShardCount}}_{{ printf "%02d" .ShardNum }}`,
 		Timeout:        3 * time.Hour,
-		Attr:           []string{"graphics_nightly"},
+		Attr:           []string{"graphics_nightly", "graphics_cft"},
 		API:            "graphics.VK",
 		ShardCount:     10,
 		IsParallel:     true,
@@ -158,21 +158,21 @@ func TestDEQPParams(t *testing.T) {
 	}, {
 		Name:       `gles2`,
 		Timeout:    30 * time.Minute,
-		Attr:       []string{"graphics_nightly"},
+		Attr:       []string{"graphics_nightly", "graphics_cft"},
 		API:        "graphics.GLES2",
 		ShardCount: 1,
 		IsParallel: true,
 	}, {
 		Name:       `gles3`,
 		Timeout:    2 * time.Hour,
-		Attr:       []string{"graphics_nightly"},
+		Attr:       []string{"graphics_nightly", "graphics_cft"},
 		API:        "graphics.GLES3",
 		ShardCount: 1,
 		IsParallel: true,
 	}, {
 		Name:       `gles31`,
 		Timeout:    2 * time.Hour,
-		Attr:       []string{"graphics_nightly"},
+		Attr:       []string{"graphics_nightly", "graphics_cft"},
 		API:        "graphics.GLES31",
 		ShardCount: 1,
 		IsParallel: true,
