@@ -9,6 +9,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io/fs"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -180,10 +181,15 @@ func SELinuxFilesDataDir(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get user hash: ", err)
 	}
 	dataDirPath := filepath.Join("/home/.shadow", ownerID, "mount/root/android-data/data")
-	dirList, err := ioutil.ReadDir(dataDirPath)
-	if err != nil {
+
+	var dirList []fs.FileInfo
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		dirList, err = ioutil.ReadDir(dataDirPath)
+		return err
+	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
 		s.Fatalf("Failed to read from directory %v: %v", dataDirPath, err)
 	}
+
 	skipDirMap := map[string]struct{}{
 		"data":    {},
 		"media":   {},
