@@ -17,8 +17,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/audio/device"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/dlc"
-	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -172,136 +170,97 @@ type crasNoiseCancellationParams struct {
 // CrasNoiseCancellation checks noise cancellation in CRAS using aloop.
 func CrasNoiseCancellation(ctx context.Context, s *testing.State) {
 	param := s.Param().(crasNoiseCancellationParams)
-
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(cleanupCtx, chrome.ResetTimeout)
-	defer cancel()
-
-	// Start chrome.
-	chromeOpts := param.extraChromeOpts
-	if param.styleTransferEnabled {
-		chromeOpts = append(chromeOpts, chrome.EnableFeatures("CrOSLateBootAudioStyleTransfer"))
+	apConfig := audio.NoiseCancellationConfig{
+		NoiseCancellationEnabled: param.noiseCancellationEnabled,
+		StyleTransferEnabled:     param.styleTransferEnabled,
+		ChromeOpts:               param.extraChromeOpts,
 	}
-	cr, err := chrome.New(ctx, chromeOpts...)
-	if err != nil {
-		s.Fatal("Failed to start Chrome: ", err)
-	}
-	defer cr.Close(cleanupCtx)
 
-	// Install DLC.
-	if param.noiseCancellationEnabled {
-		if err := dlc.Install(ctx, "nc-ap-dlc", ""); err != nil {
-			s.Fatal("Cannot install nc-ap-dlc: ", err)
+	if err := audio.WithNoiseCancellation(ctx, apConfig, s.OutDir(), s.HasError, func(ctx context.Context) {
+		// Generate test file.
+		const noiseDuration = 10 * time.Second
+
+		noiseWave := filepath.Join(s.OutDir(), "noise.wav")
+		if err := testexec.CommandContext(
+			ctx,
+			"sox",
+			"-n", "-L",
+			"-e", "signed-integer",
+			"-b", "16",
+			"-r", strconv.Itoa(param.captureRate),
+			"-c", "2",
+			noiseWave,
+			"synth", strconv.FormatFloat(noiseDuration.Seconds(), 'f', -1, 64),
+			"whitenoise",
+			"gain", "-10",
+		).Run(testexec.DumpLogOnError); err != nil {
+			s.Fatal("Cannot generate noise.wav: ", err)
 		}
-	}
-	if param.styleTransferEnabled {
-		if err := dlc.Install(ctx, "nuance-dlc", ""); err != nil {
-			s.Fatal("Cannot install nuance-dlc: ", err)
+
+		playbackCaptureCtx, cancel := context.WithTimeout(ctx, 2*noiseDuration)
+		defer cancel()
+
+		playbackDone := make(chan struct{})
+		go func() {
+			defer close(playbackDone)
+			// Run playback.
+			if err := audio.PlayWavToPCM(playbackCaptureCtx, noiseWave, device.AloopPlaybackPCM); err != nil {
+				s.Error("Cannot run playback: ", err)
+			}
+		}()
+
+		// Run capture.
+		captureRaw := filepath.Join(s.OutDir(), "capture.raw")
+		if err := testexec.CommandContext(
+			playbackCaptureCtx,
+			"cras_test_client",
+			append(
+				[]string{
+					"-C", captureRaw,
+					"--block_size=480",
+					fmt.Sprintf("--rate=%d", param.captureRate),
+					"--num_channels=1",
+					fmt.Sprintf("--duration=%.0f", noiseDuration.Seconds()),
+				},
+				param.extraCaptureFlags...,
+			)...,
+		).Run(testexec.DumpLogOnError); err != nil {
+			s.Error("Cannot run capture: ", err)
 		}
-	}
-
-	// Start Cras.
-	if err := audio.SetupLoopback(ctx, cr, s.OutDir(), s.HasError); err != nil {
-		s.Fatal("Failed to SetupLoopback: ", err)
-	}
-
-	cras, err := audio.NewCras(ctx)
-	if err != nil {
-		s.Fatal("Failed to connect to CRAS: ", err)
-	}
-	if param.styleTransferEnabled {
-		if err := cras.WaitUntilFeatureFlagHasValue(ctx, "CrOSLateBootAudioStyleTransfer", true); err != nil {
-			s.Fatal("Feature flag not propagated to CRAS: ", err)
+		rawData := audio.TestRawData{
+			Path:          captureRaw,
+			BitsPerSample: 16,
+			Channels:      1,
+			Rate:          param.captureRate,
 		}
-	}
-	if err := cras.SetNoiseCancellationEnabled(ctx, param.noiseCancellationEnabled); err != nil {
-		s.Fatal("Failed to SetNoiseCancellationEnabled: ", err)
-	}
-	if err := cras.SetStyleTransferEnabled(ctx, param.styleTransferEnabled); err != nil {
-		s.Fatal("Failed to SetStyleTransferEnabled: ", err)
-	}
-
-	// Generate test file.
-	const noiseDuration = 10 * time.Second
-
-	noiseWave := filepath.Join(s.OutDir(), "noise.wav")
-	if err := testexec.CommandContext(
-		ctx,
-		"sox",
-		"-n", "-L",
-		"-e", "signed-integer",
-		"-b", "16",
-		"-r", strconv.Itoa(param.captureRate),
-		"-c", "2",
-		noiseWave,
-		"synth", strconv.FormatFloat(noiseDuration.Seconds(), 'f', -1, 64),
-		"whitenoise",
-		"gain", "-10",
-	).Run(testexec.DumpLogOnError); err != nil {
-		s.Fatal("Cannot generate noise.wav: ", err)
-	}
-
-	playbackCaptureCtx, cancel := context.WithTimeout(ctx, 2*noiseDuration)
-	defer cancel()
-
-	playbackDone := make(chan struct{})
-	go func() {
-		defer close(playbackDone)
-		// Run playback.
-		if err := audio.PlayWavToPCM(playbackCaptureCtx, noiseWave, device.AloopPlaybackPCM); err != nil {
-			s.Error("Cannot run playback: ", err)
+		captureWav := filepath.Join(s.OutDir(), "capture.wav")
+		if err := audio.ConvertRawToWav(ctx, rawData, captureWav); err != nil {
+			s.Errorf("Cannot convert %s to %s: %v", captureRaw, captureWav, err)
 		}
-	}()
 
-	// Run capture.
-	captureRaw := filepath.Join(s.OutDir(), "capture.raw")
-	if err := testexec.CommandContext(
-		playbackCaptureCtx,
-		"cras_test_client",
-		append(
-			[]string{
-				"-C", captureRaw,
-				"--block_size=480",
-				fmt.Sprintf("--rate=%d", param.captureRate),
-				"--num_channels=1",
-				fmt.Sprintf("--duration=%.0f", noiseDuration.Seconds()),
-			},
-			param.extraCaptureFlags...,
-		)...,
-	).Run(testexec.DumpLogOnError); err != nil {
-		s.Error("Cannot run capture: ", err)
-	}
-	rawData := audio.TestRawData{
-		Path:          captureRaw,
-		BitsPerSample: 16,
-		Channels:      1,
-		Rate:          param.captureRate,
-	}
-	captureWav := filepath.Join(s.OutDir(), "capture.wav")
-	if err := audio.ConvertRawToWav(ctx, rawData, captureWav); err != nil {
-		s.Errorf("Cannot convert %s to %s: %v", captureRaw, captureWav, err)
-	}
+		// Verify: RMS.
+		rms, err := audio.GetRmsAmplitude(ctx, audio.TestRawData{
+			Path:          captureRaw,
+			BitsPerSample: 16,
+			Channels:      1,
+			Rate:          param.captureRate,
+		})
+		if err != nil {
+			s.Fatal("Cannot get RMS from capture.raw")
+		}
+		s.Log("Capture RMS: ", rms)
+		if diff := rms - param.expectedRMS; math.Abs(diff) > param.expectedRMSTolerance {
+			s.Fatalf("RMS %g is not within %g±%g (diff: %+g)",
+				rms,
+				param.expectedRMS,
+				param.expectedRMSTolerance,
+				diff,
+			)
+		}
 
-	// Verify: RMS.
-	rms, err := audio.GetRmsAmplitude(ctx, audio.TestRawData{
-		Path:          captureRaw,
-		BitsPerSample: 16,
-		Channels:      1,
-		Rate:          param.captureRate,
-	})
-	if err != nil {
-		s.Fatal("Cannot get RMS from capture.raw")
+		s.Log("Waiting for playback to complete")
+		<-playbackDone
+	}); err != nil {
+		s.Fatal("Failed to setup noise cancellation: ", err)
 	}
-	s.Log("Capture RMS: ", rms)
-	if diff := rms - param.expectedRMS; math.Abs(diff) > param.expectedRMSTolerance {
-		s.Fatalf("RMS %g is not within %g±%g (diff: %+g)",
-			rms,
-			param.expectedRMS,
-			param.expectedRMSTolerance,
-			diff,
-		)
-	}
-
-	s.Log("Waiting for playback to complete")
-	<-playbackDone
 }
