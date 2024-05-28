@@ -10,11 +10,11 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/camera/cca"
 	"go.chromium.org/tast-tests/cros/local/camera/testutil"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/croshealthd"
+	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -40,10 +40,8 @@ func buildCameraFrameAnalysisRoutineArgs(ctx context.Context) ([]string, error) 
 }
 
 func RunCameraFrameAnalysisRoutine(ctx context.Context, s *testing.State) {
-	// Camera diagnostics is installed in test image only. We need to enable it manually in tests.
-	enableCameraDiagCmd := testexec.CommandContext(ctx, "bash", "/usr/local/bin/enable_camera_diagnostics.sh")
-	if err := enableCameraDiagCmd.Run(testexec.DumpLogOnError); err != nil {
-		s.Fatal("Failed to enable camera diagnostics: ", err)
+	if err := upstart.EnsureJobRunning(ctx, "cros-camera-diagnostics"); err != nil {
+		s.Fatal("Failed to ensure the cros-camera-diagnostics service is running: ", err)
 	}
 
 	cr, err := chrome.New(ctx, chrome.GuestLogin())
