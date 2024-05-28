@@ -36,6 +36,7 @@ func SetupLoopbackDevice(ctx context.Context, cr *chrome.Chrome, outDir string, 
 	}
 
 	if err := audio.SetupLoopback(ctx, cr, outDir, hasError); err != nil {
+		crastestclient.DumpAudioDiagnostics(ctx, outDir)
 		cleanup(ctxForCleanUp)
 		return nil, errors.Wrap(err, "failed to setup loopback")
 	}
