@@ -215,10 +215,16 @@ func createPasswordData(ctx context.Context, cryptohome *hwsec.CryptohomeClient,
 		return nil, errors.Wrap(err, "failed to list auth factors")
 	}
 	authFactors := reply.ConfiguredAuthFactors
-	if len(authFactors) != 1 {
-		return nil, errors.Errorf("expected exactly 1 auth factor, but got %v", authFactors)
+	var passwordLabels []string
+	for _, factor := range authFactors {
+		if factor.Type == uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD {
+			passwordLabels = append(passwordLabels, factor.Label)
+		}
 	}
-	keyLabel := authFactors[0].Label
+	if len(passwordLabels) != 1 {
+		return nil, errors.Errorf("expected exact 1 password auth factor, but got %v", authFactors)
+	}
+	keyLabel := passwordLabels[0]
 
 	authConfig := hwsec.NewPassAuthConfig(username, password)
 	config := util.NewPassAuthCrossVersionLoginConfig(authConfig, keyLabel)

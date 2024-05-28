@@ -530,14 +530,24 @@ func prepareChallengeAuth(ctx context.Context, lf hwsec.LogFunc, config *util.Cr
 	return cleanup, nil
 }
 
-// testListAuthFactors tests that ListAuthFactors() works as expected and the listed auth factors is as same as the |expectedAuthFactors|.
+// testListAuthFactors tests that ListAuthFactors() works as expected and |expectedAuthFactors| are present in the listed auth factors.
 func testListAuthFactors(ctx context.Context, cryptohome *hwsec.CryptohomeClient, username string, expectedAuthFactors []*uda.AuthFactorWithStatus) error {
 	reply, err := cryptohome.ListAuthFactors(ctx, username)
 	if err != nil {
 		return errors.Wrap(err, "failed to list auth factors")
 	}
-	if err := cryptohomecommon.ExpectAuthFactorsWithTypeAndLabel(reply.ConfiguredAuthFactorsWithStatus, expectedAuthFactors); err != nil {
-		return errors.Wrap(err, "mismatch in configured auth factors (-got, +want)")
+	// Note that because there might be some extra auth factors that we don't properly write it to the config, we could not use cryptohomecommon.ExpectAuthFactorsWithTypeAndLabel here. Instead, we just make sure |expectedAuthFactors| are all present in the list.
+	for _, expect := range expectedAuthFactors {
+		found := false
+		for _, actual := range reply.ConfiguredAuthFactorsWithStatus {
+			if expect.AuthFactor.Type == actual.AuthFactor.Type && expect.AuthFactor.Label == actual.AuthFactor.Label {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return errors.Errorf("expected to find auth factor %q, but got %q", expect, reply.ConfiguredAuthFactorsWithStatus)
+		}
 	}
 	return nil
 }
