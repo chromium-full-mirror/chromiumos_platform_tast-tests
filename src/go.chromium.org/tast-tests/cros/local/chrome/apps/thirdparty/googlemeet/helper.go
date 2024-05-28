@@ -169,7 +169,7 @@ func (h *HRTelemetryHelper) OpenPresentDialog(ctx context.Context) error {
 		return err
 	}
 	ui := uiauto.New(h.tconn)
-	if err := ui.WaitUntilExists(nodewith.Name("Chrome Tab").Role(role.ListGrid))(ctx); err != nil {
+	if err := ui.WaitUntilExists(nodewith.HasClass("TableView").Role(role.ListGrid))(ctx); err != nil {
 		return errors.Wrap(err, "failed to find the screen-sharing popup")
 	}
 	return nil

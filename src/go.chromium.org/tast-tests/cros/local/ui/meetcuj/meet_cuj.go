@@ -1591,7 +1591,7 @@ func startPresenting(ctx context.Context, conn *chrome.Conn, ui *uiauto.Context,
 	waitForPresentTabFocus := ui.WithTimeout(5 * time.Second).WaitUntilExists(nodewith.NameContaining(presentTabTitle).HasClass("AXVirtualView").Focused())
 	stopPresenting := nodewith.Name("Stop presenting").Role(role.Button)
 	if err := uiauto.NamedCombine(fmt.Sprintf("select tab %q to screenshare", presentTabTitle),
-		ui.EnsureFocused(nodewith.Name("Chrome Tab").Role(role.ListGrid)),
+		ui.EnsureFocused(nodewith.HasClass("TableView").Role(role.ListGrid)),
 		// If the presenting tab is not focused, press the down
 		// arrow until it is.
 		uiauto.IfFailThen(
