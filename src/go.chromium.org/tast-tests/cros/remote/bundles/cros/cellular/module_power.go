@@ -42,7 +42,7 @@ func init() {
 		Desc:         "Verifies that the power consumption of the DUT is in the expected range",
 		Contacts:     []string{"cros-cellular-core@google.com", "jstanko@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:         []string{"group:cellular", "cellular_callbox", "cellular_cmw_callbox", "cellular_run_isolated", "cellular_power"},
+		Attr:         []string{"group:cellular", "cellular_callbox", "cellular_cmw_callbox", "cellular_cmx_callbox", "cellular_run_isolated", "cellular_power"},
 		ServiceDeps: []string{
 			"tast.cros.cellular.RemoteCellularService",
 			"tast.cros.power.RecorderService",
@@ -50,14 +50,14 @@ func init() {
 		},
 		SoftwareDeps: []string{"chrome"},
 		// Restrict tests to models that we have deployed intrusive measurements for.
-		HardwareDeps: hwdep.D(hwdep.Model("crota")),
+		HardwareDeps: hwdep.D(hwdep.Model("crota", "redrix")),
 		Fixture:      "callboxManagedFixture",
 		Timeout:      15 * time.Minute,
 		Vars:         []string{"servo"},
 		Params: []testing.Param{
 			{
 				Name:      "low_power",
-				ExtraData: []string{"cellular_power_crota_FM101.xml"},
+				ExtraData: []string{"cellular_power_crota_FM101.xml", "cellular_power_redrix_FM350.xml"},
 				Val: modulePowerTestCase{
 					connectionOptions: &manager.ConfigureCallboxRequestBody{
 						CellularType: manager.CellularTechnologyLTE,
