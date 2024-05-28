@@ -318,7 +318,7 @@ func stressCanary(ctx context.Context, param *canaryHealthPerfParam, allocationM
 
 	if !memoryuser.AllVmmmsPrioritiesLogged(vmmmsLog) {
 		memoryuser.DumpVmmmsKillLog(measureCtx, vmmmsLog)
-		return errors.New("not all VMMMS KillTrace priorities observed, see log above for full list of observed priorities")
+		return errors.New("not all VMMMS kill priorities observed, see log above for full list of observed priorities")
 	}
 
 	// AllVmmmsPrioritiesLogged above ensures these are non-nil

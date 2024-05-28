@@ -85,7 +85,7 @@ func ParseVmmmsKillPriority(s string) (VmmmsPriority, error) {
 	case "StaleCachedApp":
 		return VmmmsStaleCachedAppPriority, nil
 	default:
-		return -1, errors.Errorf("unexpected VMMMS KillTrace priority %q", s)
+		return -1, errors.Errorf("unexpected VMMMS kill priority %q", s)
 	}
 }
 
@@ -97,16 +97,16 @@ type VmmmsKillInfo struct {
 	SizeMiB  int64
 }
 
-// 2023-10-31T07:32:23.450025Z INFO vm_concierge[21465]: KillTrace:[35,RESIZE_PRIORITY_CACHED_APP,53MB]
-var killTraceRE = regexp.MustCompile(`^(?P<timestamp>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}(?:Z|[+-]\d{2}:\d{2})) INFO vm_concierge\[\d+\]: KillTrace:\[(?P<cid>\d+),(?P<priority>[a-zA-Z_]+),(?P<sizeMB>\d+)MB\]`)
+// 2023-10-31T07:32:23.450025Z INFO vm_concierge[21465]: VMMMS:[35,kill,RESIZE_PRIORITY_CACHED_APP,53MB]
+var vmmmsKillsRE = regexp.MustCompile(`^(?P<timestamp>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}(?:Z|[+-]\d{2}:\d{2})) INFO vm_concierge\[\d+\]: VMMMS:\[(?P<cid>\d+),kill,(?P<priority>[a-zA-Z_]+),(?P<sizeMB>\d+)MB\]`)
 
-// ParseVmmmsKills reads all KillTrace lines from /var/log/messages between the
+// ParseVmmmsKills reads all VMMMS kill lines from /var/log/messages between the
 // given time stamps and returns a list of VmmmsKillInfo in chronological order.
 func ParseVmmmsKills(ctx context.Context, start, stop time.Time) ([]*VmmmsKillInfo, error) {
 	var log []*VmmmsKillInfo
 	reader, err := syslog.NewLineReader(ctx, "/var/log/messages", true, nil)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to open /var/log/messages to parse VMMMS KillTrace lines")
+		return nil, errors.Wrap(err, "failed to open /var/log/messages to parse VMMMS kill lines")
 	}
 
 	for {
@@ -114,10 +114,10 @@ func ParseVmmmsKills(ctx context.Context, start, stop time.Time) ([]*VmmmsKillIn
 		if err == io.EOF {
 			return log, nil
 		} else if err != nil {
-			return nil, errors.Wrap(err, "failed to read /var/log/messages looking for KillTrace lines")
+			return nil, errors.Wrap(err, "failed to read /var/log/messages looking for kill lines")
 		}
 
-		m := killTraceRE.FindStringSubmatch(line)
+		m := vmmmsKillsRE.FindStringSubmatch(line)
 		if m == nil {
 			continue
 		}
@@ -180,6 +180,6 @@ func AllVmmmsPrioritiesLogged(log []*VmmmsKillInfo) bool {
 // DumpVmmmsKillLog prints out a log of VmmmsKillInfo.
 func DumpVmmmsKillLog(ctx context.Context, log []*VmmmsKillInfo) {
 	for _, info := range log {
-		testing.ContextLogf(ctx, "%s KillTrace %d, %s, %d MiB", info.Time.String(), info.Cid, VmmmsKillPriorityToString(info.Priority), info.SizeMiB)
+		testing.ContextLogf(ctx, "%s VMMMS Kill %d, %s, %d MiB", info.Time.String(), info.Cid, VmmmsKillPriorityToString(info.Priority), info.SizeMiB)
 	}
 }
