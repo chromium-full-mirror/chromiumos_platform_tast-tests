@@ -34,7 +34,7 @@ func init() {
 		// TODO(b:169152720), Remove "no_kernel_upstream" to enable the test to run on
 		// boards with upstream kernel when upstream iwlwifi is able to produce valid
 		// fw dumps.
-		SoftwareDeps: []string{"wifi", "no_kernel_upstream"},
+		SoftwareDeps: []string{"wifi", "no_kernel_upstream", "no_fbpreprocessord"},
 		// NB: The WifiIntel dependency tracks a manually maintained list of devices.
 		// If the test is skipping when it should run or vice versa, check the hwdep
 		// to see if your board is incorrectly included/excluded.
