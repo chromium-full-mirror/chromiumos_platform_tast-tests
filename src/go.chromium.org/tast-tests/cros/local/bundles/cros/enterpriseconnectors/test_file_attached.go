@@ -326,7 +326,7 @@ func testFileAttachedForBrowserAndFile(
 	}
 
 	// Click on <input type="file">.
-	fileInputNodeFinder := nodewith.Name("Choose File").Role(role.Button).First()
+	fileInputNodeFinder := nodewith.NameStartingWith("Choose File").Role(role.Button).First()
 	if err := ui.LeftClick(fileInputNodeFinder)(ctx); err != nil {
 		s.Fatal("Failed to press file input button: ", err)
 	}
