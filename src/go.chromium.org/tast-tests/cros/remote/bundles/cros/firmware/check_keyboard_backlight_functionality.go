@@ -31,6 +31,7 @@ const (
 	adjustBacklightWithKeyboardShortcuts checkKeyboardBacklightTest = iota
 	lidCloseAndOpen
 )
+const powerdLogPath = "/var/log/power_manager/powerd.LATEST"
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -147,16 +148,25 @@ func CheckKeyboardBacklightFunctionality(ctx context.Context, s *testing.State) 
 	if err := h.Servo.PressKeys(ctx, []string{"<alt_l>", kbLightUp}, servo.DurTab); err != nil {
 		s.Fatal("Failed to increase keyboard backlight: ", err)
 	}
-	currKBLight, err := func() (float64, error) {
-		matches, err := getKBLightValFromPowerd(ctx, h)
+	var currKBLight float64
+	var err error
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		currKBLight, err = func() (float64, error) {
+			matches, err := getKBLightValFromPowerd(ctx, h)
+			if err != nil {
+				return -1, err
+			}
+			return matches[len(matches)-1], nil
+		}()
 		if err != nil {
-			return -1, err
+			s.Fatal("Failed to get current kblight: ", err)
 		}
-		return matches[len(matches)-1], nil
-	}()
-	if err != nil {
-		s.Fatal("Failed to get current kblight: ", err)
+		return nil
+	}, &testing.PollOptions{Timeout: 30 * time.Second, Interval: 1 * time.Second}); err != nil {
+		s.Fatal("Failed to poll to get current kblight: ", err)
 	}
+	s.Log("Keyboard initial backlight value: ", currKBLight)
+
 	switch currKBLight {
 	case 0:
 		s.Log("Keyboard initial backlight value is 0, attempting to increase the light to at least 30 percent before test")
@@ -186,7 +196,11 @@ func CheckKeyboardBacklightFunctionality(ctx context.Context, s *testing.State) 
 			}
 		}
 	case lidCloseAndOpen:
-		if err := checkKBLightWhenLidClosedOpen(ctx, h, s.DUT()); err != nil {
+		s.Logf("Clearing %s", powerdLogPath)
+		if err := h.DUT.Conn().CommandContext(ctx, "truncate", "--size=0", powerdLogPath).Run(); err != nil {
+			s.Fatal("Failed to clear powerd log file: ", err)
+		}
+		if err := checkKBLightWhenLidClosedOpen(ctx, h); err != nil {
 			s.Fatal("Failed to verify keyboard backlight level when lid is closed and reopened: ", err)
 		}
 	}
@@ -194,7 +208,7 @@ func CheckKeyboardBacklightFunctionality(ctx context.Context, s *testing.State) 
 
 // checkKBLightWhenLidClosedOpen checks for keyboard backlight turned off
 // when lid is closed, and turned back on when the lid reopens.
-func checkKBLightWhenLidClosedOpen(ctx context.Context, h *firmware.Helper, dut *dut.DUT) error {
+func checkKBLightWhenLidClosedOpen(ctx context.Context, h *firmware.Helper) error {
 	if err := h.Servo.CloseLid(ctx); err != nil {
 		return err
 	}
@@ -225,19 +239,19 @@ func checkKBLightWhenLidClosedOpen(ctx context.Context, h *firmware.Helper, dut 
 		if err != nil {
 			return err
 		}
-		if len(kbLightValues)%2 != 0 || len(kbLightValues) == 0 {
-			return errors.New("unexpected number of keyboard backlight values")
+		if len(kbLightValues) < 2 {
+			return errors.Errorf("unexpected number of keyboard backlight values: %v", kbLightValues)
 		}
 		return nil
 	}, &testing.PollOptions{Timeout: 30 * time.Second, Interval: 1 * time.Second}); err != nil {
 		return err
 	}
 
-	kbLightClosedLid := kbLightValues[len(kbLightValues)-2]
+	kbLightClosedLid := kbLightValues[0]
 	if kbLightClosedLid != 0 {
 		return errors.Errorf("expected kb backlight to be 0 when lid is closed, but got: %v", kbLightClosedLid)
 	}
-	kbLightOpenLid := kbLightValues[len(kbLightValues)-1]
+	kbLightOpenLid := kbLightValues[1]
 	if kbLightOpenLid == 0 {
 		return errors.New("got kb backlight level at 0 when lid is open")
 	}
@@ -306,10 +320,10 @@ func adjustKBBacklight(ctx context.Context, h *firmware.Helper, d *dut.DUT, extr
 
 // getKBLightValFromPowerd captures the keyboard backlight value from the powerd log.
 func getKBLightValFromPowerd(ctx context.Context, h *firmware.Helper) ([]float64, error) {
-	bashCmd := "grep keyboard_backlight_controller.*Setting' 'brightness /var/log/power_manager/powerd.LATEST"
+	bashCmd := "grep keyboard_backlight_controller.*Setting' 'brightness " + powerdLogPath
 	out, err := h.DUT.Conn().CommandContext(ctx, "bash", "-c", bashCmd).Output()
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "unable to grep records in the powerd log about kb backlight")
 	}
 	data := regPowerdBrightness.FindAllSubmatch(out, -1)
 	if len(data) == 0 {
