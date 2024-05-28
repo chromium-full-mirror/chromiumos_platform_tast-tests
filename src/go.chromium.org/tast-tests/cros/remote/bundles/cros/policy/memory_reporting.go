@@ -286,6 +286,6 @@ func MemoryReporting(ctx context.Context, s *testing.State) {
 		Timeout:  3 * time.Minute,
 		Interval: 30 * time.Second,
 	}); err != nil {
-		s.Errorf("Failed to validate heartbeat event: %v:", err)
+		s.Errorf("Reporting: Failed to validate heartbeat event: %v:", err)
 	}
 }

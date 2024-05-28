@@ -241,6 +241,6 @@ func TouchScreenReporting(ctx context.Context, s *testing.State) {
 		Timeout:  6 * time.Minute,
 		Interval: 3 * time.Minute,
 	}); err != nil {
-		s.Errorf("Failed to validate touchscreen info: %v:", err)
+		s.Errorf("Reporting: Failed to validate touchscreen info: %v:", err)
 	}
 }

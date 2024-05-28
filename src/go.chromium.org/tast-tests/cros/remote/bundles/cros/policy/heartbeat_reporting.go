@@ -197,6 +197,6 @@ func HeartbeatReporting(ctx context.Context, s *testing.State) {
 		Timeout:  testTimeout,
 		Interval: 30 * time.Second,
 	}); err != nil {
-		s.Errorf("Failed to validate heartbeat event: %v:", err)
+		s.Errorf("Reporting: Failed to validate heartbeat event: %v:", err)
 	}
 }

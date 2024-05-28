@@ -247,6 +247,6 @@ func InfoReporting(ctx context.Context, s *testing.State) {
 		Timeout:  6 * time.Minute,
 		Interval: 1 * time.Minute,
 	}); err != nil {
-		s.Errorf("Failed to validate info events: %v:", err)
+		s.Errorf("Reporting: Failed to validate info events: %v:", err)
 	}
 }
