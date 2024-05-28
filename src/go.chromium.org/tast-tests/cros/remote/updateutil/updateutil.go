@@ -47,14 +47,17 @@ var tlwAddress = testing.RegisterVarString(
 )
 
 // WaitForUpdateReboot waits for the test device to reboot and the partition name to change,
-// which means the device booted into the update image.
+// which means the device booted into the update image. Also verifies that current partition
+// has the highest priority.
 // This function does not read the old partition name by itself because it must be ok to call it
 // when the device is already rebooting.
 func WaitForUpdateReboot(ctx context.Context, dut *dut.DUT, oldRootPartition string) error {
-	const rebootTimeout = time.Minute * 4
+	testing.ContextLogf(ctx, "Waiting for reboot and partition %s to change", oldRootPartition)
 
+	// First wait for partition to change after reboot.
+	const rebootTimeout = time.Minute * 4
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+		ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 		defer cancel()
 		if err := dut.WaitConnect(ctx); err != nil {
 			return errors.Wrap(err, "failed to connect to DUT")
@@ -63,12 +66,38 @@ func WaitForUpdateReboot(ctx context.Context, dut *dut.DUT, oldRootPartition str
 		if err != nil {
 			return errors.Wrap(err, "failed to get current root partition")
 		}
-		if oldRootPartition != currentRootPartition {
+
+		if oldRootPartition == currentRootPartition {
 			return errors.New("partition name did not change")
 		}
 		return nil
 	}, &testing.PollOptions{Timeout: rebootTimeout, Interval: time.Second}); err != nil {
 		return errors.Wrap(err, "failed to wait for DUT to reboot")
+	}
+
+	// After the partition has changed we need to verify that it is marked as successful.
+	const successfulTimeout = 2 * time.Minute
+	currentRootPartition, err := dutpkg.ReadCurrentRootPartitionName(ctx, dut.Conn())
+	if err != nil {
+		return errors.Wrap(err, "failed to get current root partition")
+	}
+	testing.ContextLogf(ctx, "Waiting for partition %s to be marked successful", currentRootPartition)
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if flag, err := getKernelSuccessfulBootFlag(ctx, dut, currentRootPartition); err == nil {
+			if flag {
+				return nil
+			}
+			return errors.New("current kernel is not marked as successful")
+		}
+		return errors.Wrap(err, "failed to read kernel successful flag")
+	}, &testing.PollOptions{Timeout: successfulTimeout, Interval: time.Second}); err != nil {
+		return errors.Wrap(err, "failed to wait for new partition to be marked successful")
+	}
+	testing.ContextLogf(ctx, "Boot to %s is marked successful", currentRootPartition)
+
+	// Make sure that the priority stays the highest.
+	if err := VerifyCurrentKernelPartitionHasHighestPriority(ctx, dut); err != nil {
+		return errors.New("new partition has lower priority")
 	}
 	return nil
 }
@@ -422,7 +451,7 @@ func VerifyInvalidatedUpdate(ctx context.Context, dut *dut.DUT, preUpdateFwAct s
 // the current kernel partition has the highest boot priority.
 func VerifyCurrentKernelPartitionHasHighestPriority(ctx context.Context, dut *dut.DUT) error {
 	// Get the current and the alternative root partitions paths.
-	// Read https://chromium.googlesource.com/chromiumos/docs/+/HEAD/disk_format.md
+	// Read https://www.chromium.org/chromium-os/developer-library/reference/device/disk-format/
 	// about the disk layout and the partition information.
 	currentRootPartition, err := dutpkg.ReadCurrentRootPartitionName(ctx, dut.Conn())
 	if err != nil {
@@ -454,19 +483,8 @@ func VerifyCurrentKernelPartitionHasHighestPriority(ctx context.Context, dut *du
 // getKernelPartitionPriority gets a priority of a kernel partition given
 // its adjacent root partition path.
 func getKernelPartitionPriority(ctx context.Context, dut *dut.DUT, rootPartition string) (int, error) {
-	partitionNumber, err := getKernelPartitionNumber(rootPartition)
-	if err != nil {
-		return 0, errors.Wrap(err, "failed to get partition number")
-	}
-
-	// Get a drive path.
-	driveBytes, err := dut.Conn().CommandContext(ctx, "rootdev", "-s", "-d").Output()
-	if err != nil {
-		return 0, errors.Wrap(err, "failed to get drive path")
-	}
-	drive := strings.TrimSpace(string(driveBytes))
-
-	priority, err := getPartitionPriority(ctx, dut, drive, partitionNumber)
+	drive, rootPartitionNumber := dutpkg.SplitRootDevAndPart(ctx, rootPartition)
+	priority, err := getPartitionPriority(ctx, dut, drive, rootPartitionNumber)
 	if err != nil {
 		return 0, errors.Wrap(err, "failed to get priority of partition")
 	}
@@ -474,24 +492,27 @@ func getKernelPartitionPriority(ctx context.Context, dut *dut.DUT, rootPartition
 	return priority, nil
 }
 
-// getKernelPartitionNumber calculates a kernel partition number.
-// A kernel partition number is calculated as the number of its adjacent
-// root partition - 1.
-// More information about the partition numbers here
-// https://chromium.googlesource.com/chromiumos/docs/+/HEAD/disk_format.md#drive-partitions.
-func getKernelPartitionNumber(rootPartition string) (int, error) {
-	// Root partition number is the last number in the root partition path.
-	rootPartitionNumber, err := strconv.Atoi(rootPartition[len(rootPartition)-1:])
+// getKernelSuccessfulBootFlag gets a successful flag of a kernel partition given
+// its adjacent root partition path.
+func getKernelSuccessfulBootFlag(ctx context.Context, dut *dut.DUT, rootPartition string) (bool, error) {
+	drive, rootPartitionNumber := dutpkg.SplitRootDevAndPart(ctx, rootPartition)
+	// A kernel partition number is calculated as the number of its adjacent root partition - 1.
+	successfulByte, err := dut.Conn().CommandContext(ctx, "cgpt", "show", drive, "-i", strconv.Itoa(rootPartitionNumber-1), "-S").CombinedOutput(testexec.DumpLogOnError)
 	if err != nil {
-		return 0, errors.Wrap(err, "failed to calculate root partition number")
+		return false, errors.Wrapf(err, "failed to retrieve kernel successful flag, got output: %v", string(successfulByte))
+	}
+	successful, err := strconv.ParseBool(strings.TrimSpace(string(successfulByte)))
+	if err != nil {
+		return false, errors.Wrap(err, "failed to read kernel successful flag")
 	}
 
-	return rootPartitionNumber - 1, nil
+	return successful, nil
 }
 
 // getPartitionPriority gets a priority of a partition using cgpt.
 func getPartitionPriority(ctx context.Context, dut *dut.DUT, drive string, partitionNumber int) (int, error) {
-	priorityBytes, err := dut.Conn().CommandContext(ctx, "cgpt", "show", drive, "-i", strconv.Itoa(partitionNumber), "-P").Output()
+	// A kernel partition number is calculated as the number of its adjacent root partition - 1.
+	priorityBytes, err := dut.Conn().CommandContext(ctx, "cgpt", "show", drive, "-i", strconv.Itoa(partitionNumber-1), "-P").Output()
 	if err != nil {
 		return 0, errors.Wrap(err, "failed to get partition priority via cgpt")
 	}
