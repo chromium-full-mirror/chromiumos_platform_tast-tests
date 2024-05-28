@@ -4,7 +4,6 @@ set noparent
 include /OWNERS.tast
 
 # ChromeOS EngProd UFO testing
-hsiehjun@google.com
 hyungtaekim@chromium.org
 jinrongwu@google.com
 kamilszarek@google.com
