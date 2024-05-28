@@ -23,6 +23,9 @@ const (
 	crosAppspotH264ChangingResolutionURL = "https://crosvideo.appspot.com/?codec=h264&cycle=true&loop=true&mute=true"
 	crosAppspotVP9ChangingResolutionURL  = "https://crosvideo.appspot.com/?codec=vp9&cycle=true&loop=true&mute=true"
 
+	// From b/342022288.
+	widevineClearURL = "https://integration.uat.widevine.com/player?autoPlay=true&contentUrl=https://storage.googleapis.com/wvmedia/clear/vp9/30fps/llama/llama_uhd.mpd"
+
 	// Whatever URL this test navigates to, it should have an element with id
 	// "video", to monitor its |currentTime| attribute.
 	videoElement = "document.getElementsByTagName('video')[0]"
@@ -161,6 +164,18 @@ func init() {
 				Fixture:           "chromeVideoWithV4L2FlatDecoder",
 				Timeout:           5 * time.Minute,
 			},
+			{
+				Name: "widevine_clear_vp9_2minute",
+				Val: playURLParams{
+					url:         widevineClearURL,
+					duration:    2 * time.Minute,
+					browserType: browser.TypeAsh,
+				},
+				ExtraSoftwareDeps: []string{caps.HWDecodeVP9_4K},
+				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_weekly"},
+				Fixture:           "chromeVideo",
+				Timeout:           5 * time.Minute,
+			},
 		},
 	})
 }
@@ -215,6 +230,14 @@ func PlayURL(ctx context.Context, s *testing.State) {
 	// Make sure |videoElement| is playing every so often.
 	previousPlayTime := -1.0
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		ended := false
+		if err := conn.Eval(ctx, videoElement+".ended", &ended); err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to get <video> 'ended' property"))
+		} else if ended {
+			testing.ContextLog(ctx, "<video> element has finished playing")
+			return nil
+		}
+
 		var lastPlayedTime float64
 		if err := conn.Eval(ctx, videoElement+".currentTime", &lastPlayedTime); err != nil {
 			return testing.PollBreak(errors.Wrap(err, "failed to get <video> current playing time"))
