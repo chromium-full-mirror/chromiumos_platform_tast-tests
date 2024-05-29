@@ -70,6 +70,23 @@ func initChromeVideoBaseFixtures() {
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
+		Name:     "chromeVideoGTFO",
+		Desc:     "Logged into a user session with logging enabled and GTFO OOP-VD enabled",
+		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return getChromeVideoOptions(
+				browser.TypeAsh,
+				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
+				chrome.DisableFeatures("UseOutOfProcessVideoDecoding"),
+				chrome.EnableFeatures("UseGTFOOutOfProcessVideoDecoding"),
+			), nil
+		}),
+		Parent:          "gpuWatchDog",
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
 		Name:     "chromeVideoINPVD",
 		Desc:     "Logged into a user session with logging and out-of-process video decoding disabled",
 		Contacts: []string{"chromeos-gfx-video@google.com"},
@@ -156,6 +173,23 @@ func initChromeVideoBaseFixtures() {
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
+		Name:     "chromeVideoGTFOWithGuestLogin",
+		Desc:     "Similar to chromeVideoGTFO fixture but forcing login as a guest",
+		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return getChromeVideoOptions(
+				browser.TypeAsh,
+				chrome.GuestLogin(),
+				chrome.DisableFeatures("UseOutOfProcessVideoDecoding"),
+				chrome.EnableFeatures("UseGTFOOutOfProcessVideoDecoding"),
+			), nil
+		}),
+		Parent:          "gpuWatchDog",
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
 		Name:     "chromeVideoINPVDWithGuestLogin",
 		Desc:     "Like chromeVideoWithGuestLogin but with out-of-process video decoding disabled",
 		Contacts: []string{"chromeos-gfx-video@google.com"},
@@ -196,6 +230,23 @@ func initChromeVideoBaseFixtures() {
 			return getChromeVideoOptions(
 				browser.TypeAsh,
 				chrome.ExtraArgs("--enable-hardware-overlays=\"\""),
+			), nil
+		}),
+		Parent:          "gpuWatchDog",
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name:     "chromeCompositedVideoGTFO",
+		Desc:     "Similar to chromeVideoGTFO fixture but disabling hardware overlays entirely to force video to be composited",
+		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return getChromeVideoOptions(
+				browser.TypeAsh,
+				chrome.ExtraArgs("--enable-hardware-overlays=\"\""),
+				chrome.DisableFeatures("UseOutOfProcessVideoDecoding"),
+				chrome.EnableFeatures("UseGTFOOutOfProcessVideoDecoding"),
 			), nil
 		}),
 		Parent:          "gpuWatchDog",

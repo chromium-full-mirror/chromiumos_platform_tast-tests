@@ -75,6 +75,19 @@ func init() {
 			Fixture:           "chromeVideo",
 		}, {
 			// TODO(andrescj): move to graphics_nightly after the test is stabilized.
+			Name: "h264_360p_exotic_crop_hw_gtfo",
+			Val: contentsParams{
+				fileName:    "still-colors-720x480-cropped-to-640x360.h264.mp4",
+				refFileName: "still-colors-360p.ref.png",
+				browserType: browser.TypeAsh,
+			},
+			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
+			ExtraData:         []string{"still-colors-720x480-cropped-to-640x360.h264.mp4", "still-colors-360p.ref.png"},
+			ExtraHardwareDeps: hwdep.D(hwdep.SupportsNV12Overlays()),
+			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
+			Fixture:           "chromeVideoGTFO",
+		}, {
+			// TODO(andrescj): move to graphics_nightly after the test is stabilized.
 			Name: "h264_360p_exotic_crop_hw_lacros",
 			Val: contentsParams{
 				fileName:    "still-colors-720x480-cropped-to-640x360.h264.mp4",
@@ -158,6 +171,18 @@ func init() {
 			ExtraData:         []string{"still-colors-720x480-cropped-to-640x360.h264.mp4", "still-colors-360p.ref.png"},
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
 			Fixture:           "chromeCompositedVideo",
+		}, {
+			// TODO(andrescj): move to graphics_nightly after the test is stabilized.
+			Name: "h264_360p_exotic_crop_composited_hw_gtfo",
+			Val: contentsParams{
+				fileName:    "still-colors-720x480-cropped-to-640x360.h264.mp4",
+				refFileName: "still-colors-360p.ref.png",
+				browserType: browser.TypeAsh,
+			},
+			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
+			ExtraData:         []string{"still-colors-720x480-cropped-to-640x360.h264.mp4", "still-colors-360p.ref.png"},
+			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
+			Fixture:           "chromeCompositedVideoGTFO",
 		}, {
 			// TODO(andrescj): move to graphics_nightly after the test is stabilized.
 			Name: "h264_360p_exotic_crop_ash_composited_hw_lacros",

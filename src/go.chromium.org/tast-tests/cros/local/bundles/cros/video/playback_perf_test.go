@@ -184,7 +184,7 @@ func TestPlaybackPerfConfig(t *testing.T) {
 		}
 	}
 
-	// Long Out-of-process video decoding (ash-chrome)
+	// Long in-process video decoding (ash-chrome)
 	for _, codec := range []string{"h264", "hevc", "vp9", "av1"} {
 		resolution, fps, dec := 1080, 30, "hw"
 		file := playbackPerfLongFile[codec]
@@ -196,6 +196,19 @@ func TestPlaybackPerfConfig(t *testing.T) {
 		if codec == "h264" {
 			param.MeasureSteadyStateMetrics = true
 		}
+		param.MeasureRoughness = true
+		param.Duration = measurementDurationLong
+		params = append(params, param)
+	}
+
+	// Long GTFO OOP-VD (ash-chrome)
+	{
+		codec, resolution, fps, dec := "h264", 1080, 30, "hw"
+		file := playbackPerfLongFile[codec]
+		param := genPlaybackPerfParam(codec, file, resolution, fps, dec,
+			"long_gtfo", "chromeVideoGTFO", []string{"drm_atomic"})
+		// "rogue" is for MT8173 hana.
+		param.HardwareDeps = append(param.HardwareDeps, "hwdep.SkipGPUFamily(\"rogue\")", "hwdep.InternalDisplay()")
 		param.MeasureRoughness = true
 		param.Duration = measurementDurationLong
 		params = append(params, param)

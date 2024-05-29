@@ -1349,6 +1349,24 @@ func init() {
 				Timeout:           5 * time.Minute,
 			},
 			{
+				Name: "h264_1080p_30fps_hw_long_gtfo",
+				Val: playback.Config{
+					FileName:        "crosvideo/1080.mp4",
+					DecoderType:     0,
+					BrowserType:     browser.TypeAsh,
+					PerfMeasurement: true,
+					PerfSetting: playback.PerfSetting{
+						MeasureRoughness: true,
+					},
+					Duration: 100 * time.Second,
+				},
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue"), hwdep.InternalDisplay()),
+				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_1080_30", "drm_atomic"},
+				ExtraData:         []string{"crosvideo/1080.mp4"},
+				Fixture:           "chromeVideoGTFO",
+				Timeout:           5 * time.Minute,
+			},
+			{
 				Name: "h264_720p_30fps_hw_lacros",
 				Val: playback.Config{
 					FileName:        "perf/h264/720p_30fps_300frames.h264.mp4",

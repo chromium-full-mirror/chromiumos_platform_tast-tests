@@ -77,6 +77,18 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
 			Fixture:           "chromeVideo",
 		}, {
+			// TODO(andrescj): move to graphics_nightly after the test is stabilized.
+			Name: "h264_360p_exotic_crop_hw_gtfo",
+			Val: drawOnCanvasParams{
+				fileName:    "still-colors-720x480-cropped-to-640x360.h264.mp4",
+				refFileName: "still-colors-360p.ref.png",
+				browserType: browser.TypeAsh,
+			},
+			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
+			ExtraData:         []string{"video-on-canvas.html", "still-colors-720x480-cropped-to-640x360.h264.mp4", "still-colors-360p.ref.png"},
+			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
+			Fixture:           "chromeVideoGTFO",
+		}, {
 			Name: "h264_480p_hw",
 			Val: drawOnCanvasParams{
 				fileName:    "still-colors-480p.h264.mp4",
@@ -98,6 +110,17 @@ func init() {
 			ExtraData:         []string{"video-on-canvas.html", "still-colors-720p.h264.mp4", "still-colors-720p.ref.png"},
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
 			Fixture:           "chromeVideo",
+		}, {
+			Name: "h264_720p_hw_gtfo",
+			Val: drawOnCanvasParams{
+				fileName:    "still-colors-720p.h264.mp4",
+				refFileName: "still-colors-720p.ref.png",
+				browserType: browser.TypeAsh,
+			},
+			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
+			ExtraData:         []string{"video-on-canvas.html", "still-colors-720p.h264.mp4", "still-colors-720p.ref.png"},
+			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
+			Fixture:           "chromeVideoGTFO",
 		}, {
 			Name: "h264_1080p_hw",
 			Val: drawOnCanvasParams{
