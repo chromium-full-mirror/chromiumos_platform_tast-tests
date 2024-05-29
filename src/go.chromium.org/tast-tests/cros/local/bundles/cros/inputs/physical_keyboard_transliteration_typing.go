@@ -250,7 +250,6 @@ func init() {
 				},
 				Fixture:           fixture.LacrosClamshellNonVK,
 				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				ExtraAttr:         []string{"informational"},
 				ExtraSearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.Kannada}),
 			},
 			{
@@ -273,7 +272,6 @@ func init() {
 				},
 				Fixture:           fixture.LacrosClamshellNonVK,
 				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				ExtraAttr:         []string{"informational"},
 				ExtraSearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.Marathi}),
 			},
 			{
@@ -318,7 +316,6 @@ func init() {
 				},
 				Fixture:           fixture.LacrosClamshellNonVK,
 				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				ExtraAttr:         []string{"informational"},
 				ExtraSearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.Punjabi}),
 			},
 			{
