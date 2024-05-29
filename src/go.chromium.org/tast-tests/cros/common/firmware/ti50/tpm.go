@@ -336,3 +336,48 @@ func (t *TpmHandle) TpmvSetBoardID(boardIDType, boardIDFlags BIDField) error {
 	}
 	return nil
 }
+
+// TpmvGetFactoryConfig reads the factory config via vendor command.
+func (t *TpmHandle) TpmvGetFactoryConfig() (uint64, error) {
+	var tpmvSetFactoryConfig, _ = hex.DecodeString("8001" + // tag: TPM_ST_NO_SESSIONS
+		"0000000c" + // size
+		"20000000" + // ordinal: vendor
+		"0044") // subcommand: SetFactoryConfig
+
+	response, err := t.Send(tpmvSetFactoryConfig)
+	if err != nil {
+		return 0, err
+	}
+	errorCode, err := getTPMVResponseStatus(response)
+	if err != nil {
+		return 0, err
+	}
+	if errorCode != 0 {
+		return 0, errors.Errorf("GetFactoryConfig command returned error: 0x%x", errorCode)
+	}
+
+	if len(response) < 20 {
+		return 0, errors.Errorf("GetFactoryConfig response not large enough: %v", response)
+	}
+	return binary.BigEndian.Uint64(response[12:20]), nil
+}
+
+// TpmvSetFactoryConfig reads the factory config via vendor command.
+func (t *TpmHandle) TpmvSetFactoryConfig(config uint64) (uint32, error) {
+	configStr := fmt.Sprintf("%016x", config)
+	var tpmvSetFactoryConfig, _ = hex.DecodeString("8001" + // tag: TPM_ST_NO_SESSIONS
+		"00000014" + // size
+		"20000000" + // ordinal: vendor
+		"0045" + // subcommand: SetFactoryConfig
+		configStr)
+
+	response, err := t.Send(tpmvSetFactoryConfig)
+	if err != nil {
+		return 0, err
+	}
+	errorCode, err := getTPMVResponseStatus(response)
+	if err != nil {
+		return 0, err
+	}
+	return errorCode, nil
+}
