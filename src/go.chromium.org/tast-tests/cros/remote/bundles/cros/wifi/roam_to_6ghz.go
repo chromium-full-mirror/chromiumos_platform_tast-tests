@@ -86,7 +86,7 @@ func RoamTo6GHz(ctx context.Context, s *testing.State) {
 
 	// Configure the legacy band AP and connect the DUT to it, then configure
 	// the 6GHz band AP.
-	ctx, rt, finish, err := wifiutil.SimpleRoamInitialSetup(ctx, tf, wificell.DefaultDUT, lowerBandApConfig, higherBandApConfig, true)
+	ctx, rt, finish, err := wifiutil.SimpleRoamInitialSetup(ctx, tf, []wificell.DutIdx{wificell.DefaultDUT}, lowerBandApConfig, higherBandApConfig, true)
 	if err != nil {
 		s.Fatal("Failed initial setup of the test: ", err)
 	}

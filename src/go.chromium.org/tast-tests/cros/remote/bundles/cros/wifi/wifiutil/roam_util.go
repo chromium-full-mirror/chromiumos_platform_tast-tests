@@ -8,6 +8,7 @@ import (
 	"context"
 
 	"github.com/golang/protobuf/ptypes/empty"
+
 	"go.chromium.org/tast-tests/cros/remote/wificell"
 	"go.chromium.org/tast-tests/cros/remote/wificell/hostapd"
 	"go.chromium.org/tast-tests/cros/services/cros/wifi"
@@ -19,16 +20,16 @@ import (
 type RoamTest struct {
 	tf             *wificell.TestFixture
 	restoreBgAndFg func() error
-	servicePath    string
+	servicePath    []string
 	roamSucceeded  bool
 	ap1            *wificell.APIface
 	ap2            *wificell.APIface
 }
 
-// SimpleRoamInitialSetup sets up AP1, connects the DUT to it, then sets up AP2.
+// SimpleRoamInitialSetup sets up AP1, connects DUTs to it, then sets up AP2.
 // Background and foreground scans are disabled and the ScanAllowRoam property
 // is set to the specified value as part of this test setup.
-func SimpleRoamInitialSetup(ctx context.Context, tf *wificell.TestFixture, DUTIdx wificell.DutIdx, ap1Config, ap2Config hostapd.ApConfig, scanAllowRoam bool) (context.Context, *RoamTest, DestructorStackDestroyF, error) {
+func SimpleRoamInitialSetup(ctx context.Context, tf *wificell.TestFixture, duts []wificell.DutIdx, ap1Config, ap2Config hostapd.ApConfig, scanAllowRoam bool) (context.Context, *RoamTest, DestructorStackDestroyF, error) {
 	rt := &RoamTest{tf: tf}
 	ds, destroyIfNotExported := newDestructorStack()
 	defer destroyIfNotExported()
@@ -36,32 +37,34 @@ func SimpleRoamInitialSetup(ctx context.Context, tf *wificell.TestFixture, DUTId
 	// Turn off background and foreground scans to prevent unwanted discovery of
 	// APs.
 	var err error
-	ctx, rt.restoreBgAndFg, err = rt.tf.DUTWifiClient(DUTIdx).TurnOffBgAndFgscan(ctx)
-	if err != nil {
-		return ctx, nil, nil, errors.Wrap(err, "failed to turn off the background and/or foreground scan")
-	}
-	ds.push(func() (err error) {
-		if err := rt.restoreBgAndFg(); err != nil {
-			return errors.Wrap(err, "failed to restore the background and/or foreground scan config")
-		}
-		return nil
-	})
-
-	// Set ScanAllowRoam property to scanAllowRoam.
-	allowRoamResp, err := tf.DUTWifiClient(DUTIdx).GetScanAllowRoamProperty(ctx, &empty.Empty{})
-	if err != nil {
-		return ctx, nil, nil, errors.Wrap(err, "failed to get the ScanAllowRoam property")
-	}
-	if allowRoamResp.Allow != scanAllowRoam {
-		if _, err := tf.DUTWifiClient(DUTIdx).SetScanAllowRoamProperty(ctx, &wifi.SetScanAllowRoamPropertyRequest{Allow: scanAllowRoam}); err != nil {
-			return ctx, nil, nil, errors.Wrapf(err, "failed to set the ScanAllowRoam property to %v", scanAllowRoam)
+	for _, index := range duts {
+		ctx, rt.restoreBgAndFg, err = rt.tf.DUTWifiClient(index).TurnOffBgAndFgscan(ctx)
+		if err != nil {
+			return ctx, nil, nil, errors.Wrap(err, "failed to turn off the background and/or foreground scan")
 		}
 		ds.push(func() (err error) {
-			if _, err := tf.DUTWifiClient(DUTIdx).SetScanAllowRoamProperty(ctx, &wifi.SetScanAllowRoamPropertyRequest{Allow: allowRoamResp.Allow}); err != nil {
-				return errors.Wrapf(err, "failed to set the ScanAllowRoam property back to %v", allowRoamResp.Allow)
+			if err := rt.restoreBgAndFg(); err != nil {
+				return errors.Wrap(err, "failed to restore the background and/or foreground scan config")
 			}
 			return nil
 		})
+
+		// Set ScanAllowRoam property to scanAllowRoam.
+		allowRoamResp, err := tf.DUTWifiClient(index).GetScanAllowRoamProperty(ctx, &empty.Empty{})
+		if err != nil {
+			return ctx, nil, nil, errors.Wrap(err, "failed to get the ScanAllowRoam property")
+		}
+		if allowRoamResp.Allow != scanAllowRoam {
+			if _, err := tf.DUTWifiClient(index).SetScanAllowRoamProperty(ctx, &wifi.SetScanAllowRoamPropertyRequest{Allow: scanAllowRoam}); err != nil {
+				return ctx, nil, nil, errors.Wrapf(err, "failed to set the ScanAllowRoam property to %v", scanAllowRoam)
+			}
+			ds.push(func() (err error) {
+				if _, err := tf.DUTWifiClient(index).SetScanAllowRoamProperty(ctx, &wifi.SetScanAllowRoamPropertyRequest{Allow: allowRoamResp.Allow}); err != nil {
+					return errors.Wrapf(err, "failed to set the ScanAllowRoam property back to %v", allowRoamResp.Allow)
+				}
+				return nil
+			})
+		}
 	}
 
 	// Generate BSSIDs for the two APs.
@@ -91,27 +94,30 @@ func SimpleRoamInitialSetup(ctx context.Context, tf *wificell.TestFixture, DUTId
 	testing.ContextLog(ctx, "Setup the first AP")
 
 	ap1SSID := rt.ap1.Config().SSID
-
+	rt.servicePath = make([]string, len(duts))
 	// Connect to the initial AP.
-	resp, err := tf.ConnectWifiAPFromDUT(ctx, DUTIdx, rt.ap1)
-	if err != nil {
-		return ctx, nil, nil, errors.Wrap(err, "DUT: failed to connect to WiFi")
-	}
-	rt.servicePath = resp.ServicePath
-	rt.roamSucceeded = false
-	ds.push(func() (err error) {
-		if rt.roamSucceeded {
+	for _, index := range duts {
+		resp, err := tf.ConnectWifiAPFromDUT(ctx, index, rt.ap1)
+		if err != nil {
+			return ctx, nil, nil, errors.Wrap(err, "DUT: failed to connect to WiFi")
+		}
+		rt.servicePath[index] = resp.ServicePath
+		rt.roamSucceeded = false
+		ds.push(func() (err error) {
+			if rt.roamSucceeded {
+				return nil
+			}
+			if err := tf.CleanDisconnectDUTFromWifi(ctx, wificell.DefaultDUT); err != nil {
+				return errors.Wrap(err, "failed to disconnect WiFi")
+			}
 			return nil
-		}
-		if err := tf.CleanDisconnectDUTFromWifi(ctx, wificell.DefaultDUT); err != nil {
-			return errors.Wrap(err, "failed to disconnect WiFi")
-		}
-		return nil
-	})
+		})
 
-	if err := tf.VerifyConnectionFromDUT(ctx, 0, rt.ap1); err != nil {
-		return ctx, nil, nil, errors.Wrap(err, "DUT: failed to verify connection")
+		if err := tf.VerifyConnectionFromDUT(ctx, index, rt.ap1); err != nil {
+			return ctx, nil, nil, errors.Wrap(err, "DUT: failed to verify connection")
+		}
 	}
+
 	testing.ContextLog(ctx, "Connected to the first AP")
 
 	// Set up the second AP on the same SSID as the first AP.
@@ -168,5 +174,10 @@ func (rt *RoamTest) AP2() *wificell.APIface {
 
 // ServicePath gets the service path after connecting to AP1.
 func (rt *RoamTest) ServicePath() string {
-	return rt.servicePath
+	return rt.servicePath[0]
+}
+
+// ServicePathOfDUT gets the service path after connecting to AP1.
+func (rt *RoamTest) ServicePathOfDUT(index wificell.DutIdx) string {
+	return rt.servicePath[index]
 }

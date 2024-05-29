@@ -54,7 +54,7 @@ func RoamDbus(ctx context.Context, s *testing.State) {
 	// Configure AP1 and connect the DUT to it, then configure AP2.
 	ap1Config := hostapd.ApConfig{ApOpts: []hostapd.Option{hostapd.Mode(hostapd.Mode80211nPure), hostapd.Channel(48), hostapd.HTCaps(hostapd.HTCapHT20)}}
 	ap2Config := hostapd.ApConfig{ApOpts: []hostapd.Option{hostapd.Mode(hostapd.Mode80211nPure), hostapd.Channel(1), hostapd.HTCaps(hostapd.HTCapHT20)}}
-	ctx, rt, finish, err := wifiutil.SimpleRoamInitialSetup(ctx, tf, wificell.DefaultDUT, ap1Config, ap2Config, false)
+	ctx, rt, finish, err := wifiutil.SimpleRoamInitialSetup(ctx, tf, []wificell.DutIdx{wificell.DefaultDUT}, ap1Config, ap2Config, false)
 	if err != nil {
 		s.Fatal("Failed initial setup of the test: ", err)
 	}

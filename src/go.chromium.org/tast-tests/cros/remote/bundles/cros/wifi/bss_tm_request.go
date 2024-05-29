@@ -187,7 +187,7 @@ func BSSTMRequest(ctx context.Context, s *testing.State) {
 		// Configure AP1, connect the DUT to it, then configure AP2.
 		ap1Config := hostapd.ApConfig{ApOpts: apOpts1, SecConfFac: params.secConfFac1}
 		ap2Config := hostapd.ApConfig{ApOpts: apOpts2, SecConfFac: params.secConfFac2}
-		ctx, rt, finish, err := wifiutil.SimpleRoamInitialSetup(ctx, tf, wificell.DefaultDUT, ap1Config, ap2Config, false)
+		ctx, rt, finish, err := wifiutil.SimpleRoamInitialSetup(ctx, tf, []wificell.DutIdx{wificell.DefaultDUT}, ap1Config, ap2Config, false)
 		if err != nil {
 			s.Fatal("Failed initial setup of the test: ", err)
 		}
