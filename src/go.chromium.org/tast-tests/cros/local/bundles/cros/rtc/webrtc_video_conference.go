@@ -330,7 +330,7 @@ func init() {
 					NumPeople:   4,
 					BrowserType: browser.TypeAsh,
 				},
-				Fixture:   pre.ChromeRTCFixture(pre.VsyncDecoding),
+				Fixture:   pre.ChromeRTCFixture(pre.RTCFeatureVsyncDecoding),
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
@@ -339,7 +339,7 @@ func init() {
 					NumPeople:   9,
 					BrowserType: browser.TypeAsh,
 				},
-				Fixture:   pre.ChromeRTCFixture(pre.VsyncDecoding),
+				Fixture:   pre.ChromeRTCFixture(pre.RTCFeatureVsyncDecoding),
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
@@ -348,7 +348,7 @@ func init() {
 					NumPeople:   9,
 					BrowserType: browser.TypeLacros,
 				},
-				Fixture:           pre.ChromeRTCLacrosFixture(pre.VsyncDecoding),
+				Fixture:           pre.ChromeRTCLacrosFixture(pre.RTCFeatureVsyncDecoding),
 				ExtraSoftwareDeps: []string{"lacros"},
 				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 			},

@@ -69,12 +69,12 @@ func init() {
 			Name:              "h264_hw_lacros",
 			Val:               pepperVideoDecodeTestParam{browserType: browser.TypeLacros, verifyHWMode: verifyMojoVDPathWasUsed},
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs", "lacros"},
-			Fixture:           pre.ChromeVideoLacrosFixture(pre.FakeMediaStreamUI, pre.NaCl),
+			Fixture:           pre.ChromeVideoLacrosFixture(pre.VideoFeatureFakeMediaStreamUI, pre.VideoFeatureNaCl),
 		}, {
 			Name:              "h264_sw_lacros",
 			Val:               pepperVideoDecodeTestParam{browserType: browser.TypeLacros, verifyHWMode: verifySWPathWasUsed},
 			ExtraSoftwareDeps: []string{"proprietary_codecs", "lacros"},
-			Fixture:           pre.ChromeVideoLacrosFixture(pre.FakeMediaStreamUI, pre.NaCl, pre.SWDecoding),
+			Fixture:           pre.ChromeVideoLacrosFixture(pre.VideoFeatureFakeMediaStreamUI, pre.VideoFeatureNaCl, pre.VideoFeatureSWDecoding),
 		}},
 	})
 }

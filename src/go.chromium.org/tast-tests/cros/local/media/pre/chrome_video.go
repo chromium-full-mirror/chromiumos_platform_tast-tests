@@ -17,32 +17,32 @@ import (
 const (
 	chromeVideo featureType = featureType(uint32(1) << iota)
 
-	// FakeMediaStreamUI avoids the need to grant camera/microphone permissions.
-	FakeMediaStreamUI
+	// VideoFeatureFakeMediaStreamUI avoids the need to grant camera/microphone permissions.
+	VideoFeatureFakeMediaStreamUI
 
-	// NaCl enables support for Native Client apps.
-	NaCl
+	// VideoFeatureNaCl enables support for Native Client apps.
+	VideoFeatureNaCl
 
-	// SWDecoding disables HW accelerated video decoding.
-	SWDecoding
+	// VideoFeatureSWDecoding disables HW accelerated video decoding.
+	VideoFeatureSWDecoding
 
-	// GuestLogin ensures the test runs while logged in as the guest user.
-	GuestLogin
+	// VideoFeatureGuestLogin ensures the test runs while logged in as the guest user.
+	VideoFeatureGuestLogin
 
-	// AshComposited disables HW overlays in ash-chrome entirely in order to force video to be composited by ash-chrome.
-	AshComposited
+	// VideoFeatureAshComposited disables HW overlays in ash-chrome entirely in order to force video to be composited by ash-chrome.
+	VideoFeatureAshComposited
 
-	// LacrosComposited disables HW overlays in lacros-chrome entirely in order to force video to be composited by lacros-chrome.
-	LacrosComposited
+	// VideoFeatureLacrosComposited disables HW overlays in lacros-chrome entirely in order to force video to be composited by lacros-chrome.
+	VideoFeatureLacrosComposited
 
-	// DistinctiveIdentifier allows for a distinctive identifier with DRM playback.
-	DistinctiveIdentifier
+	// VideoFeatureDistinctiveIdentifier allows for a distinctive identifier with DRM playback.
+	VideoFeatureDistinctiveIdentifier
 
-	// VCDInUtilityProcess makes the video capture service run in a utility process.
-	VCDInUtilityProcess
+	// VideoFeatureVCDInUtilityProcess makes the video capture service run in a utility process.
+	VideoFeatureVCDInUtilityProcess
 
-	// GTFO avoids using the Chrome GPU process as a proxy in between renderers and video decoder utility processes (go/oopvd-gtfo-dd).
-	GTFO
+	// VideoFeatureGTFO avoids using the Chrome GPU process as a proxy in between renderers and video decoder utility processes (go/oopvd-gtfo-dd).
+	VideoFeatureGTFO
 
 	// This must be defined last.
 	numChromeVideoFeatures = iota
@@ -410,18 +410,18 @@ var chromeVideoLacrosFixtureGenerator = fixtureGenerator{
 
 func initChromeVideoLacrosFixtures() {
 	combos := []featureComboType{
-		comb(chromeVideo, FakeMediaStreamUI),
-		comb(chromeVideo, FakeMediaStreamUI, GTFO),
-		comb(chromeVideo, FakeMediaStreamUI, NaCl),
-		comb(chromeVideo, FakeMediaStreamUI, NaCl, SWDecoding),
-		comb(chromeVideo, GuestLogin),
-		comb(chromeVideo, GuestLogin, GTFO),
-		comb(chromeVideo, AshComposited),
-		comb(chromeVideo, AshComposited, GTFO),
-		comb(chromeVideo, LacrosComposited),
-		comb(chromeVideo, LacrosComposited, GTFO),
-		comb(chromeVideo, FakeMediaStreamUI, DistinctiveIdentifier),
-		comb(chromeVideo, FakeMediaStreamUI, VCDInUtilityProcess),
+		comb(chromeVideo, VideoFeatureFakeMediaStreamUI),
+		comb(chromeVideo, VideoFeatureFakeMediaStreamUI, VideoFeatureGTFO),
+		comb(chromeVideo, VideoFeatureFakeMediaStreamUI, VideoFeatureNaCl),
+		comb(chromeVideo, VideoFeatureFakeMediaStreamUI, VideoFeatureNaCl, VideoFeatureSWDecoding),
+		comb(chromeVideo, VideoFeatureGuestLogin),
+		comb(chromeVideo, VideoFeatureGuestLogin, VideoFeatureGTFO),
+		comb(chromeVideo, VideoFeatureAshComposited),
+		comb(chromeVideo, VideoFeatureAshComposited, VideoFeatureGTFO),
+		comb(chromeVideo, VideoFeatureLacrosComposited),
+		comb(chromeVideo, VideoFeatureLacrosComposited, VideoFeatureGTFO),
+		comb(chromeVideo, VideoFeatureFakeMediaStreamUI, VideoFeatureDistinctiveIdentifier),
+		comb(chromeVideo, VideoFeatureFakeMediaStreamUI, VideoFeatureVCDInUtilityProcess),
 	}
 
 	featureMap := map[featureType]featureInfo{
@@ -429,59 +429,59 @@ func initChromeVideoLacrosFixtures() {
 			"_",
 			getChromeVideoOptions(browser.TypeLacros),
 		},
-		FakeMediaStreamUI: {
+		VideoFeatureFakeMediaStreamUI: {
 			"FakeMediaStreamUI",
 			[]chrome.Option{
 				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
 				chrome.LacrosExtraArgs(chromeBypassPermissionsArgs...),
 			},
 		},
-		NaCl: {
+		VideoFeatureNaCl: {
 			"NaCl",
 			[]chrome.Option{
 				chrome.ExtraArgs("--enable-nacl"),
 				chrome.LacrosExtraArgs("--enable-nacl"),
 			},
 		},
-		SWDecoding: {
+		VideoFeatureSWDecoding: {
 			"SWDecoding",
 			[]chrome.Option{
 				chrome.ExtraArgs("--disable-accelerated-video-decode"),
 				chrome.LacrosExtraArgs("--disable-accelerated-video-decode"),
 			},
 		},
-		GuestLogin: {
+		VideoFeatureGuestLogin: {
 			"Guest",
 			[]chrome.Option{
 				chrome.GuestLogin(),
 			},
 		},
-		AshComposited: {
+		VideoFeatureAshComposited: {
 			"AshComposited",
 			[]chrome.Option{
 				chrome.ExtraArgs("--enable-hardware-overlays=\"\""),
 			},
 		},
-		LacrosComposited: {
+		VideoFeatureLacrosComposited: {
 			"LacrosComposited",
 			[]chrome.Option{
 				chrome.LacrosExtraArgs("--enable-hardware-overlays=\"\""),
 			},
 		},
-		DistinctiveIdentifier: {
+		VideoFeatureDistinctiveIdentifier: {
 			"DistinctiveIdentifier",
 			[]chrome.Option{
 				chrome.ExtraArgs(chromeAllowDistinctiveIdentifierArgs...),
 				chrome.LacrosExtraArgs(chromeAllowDistinctiveIdentifierArgs...),
 			},
 		},
-		VCDInUtilityProcess: {
+		VideoFeatureVCDInUtilityProcess: {
 			"VCDInUtilityProcess",
 			[]chrome.Option{
 				chrome.DisableFeatures("RunVideoCaptureServiceInBrowserProcess"),
 			},
 		},
-		GTFO: {
+		VideoFeatureGTFO: {
 			"GTFO",
 			[]chrome.Option{
 				chrome.LacrosDisableFeatures("UseOutOfProcessVideoDecoding"),

@@ -14,8 +14,8 @@ import (
 
 const (
 	chromeRTC featureType = featureType(uint32(1) << iota)
-	// VsyncDecoding enables WebRTC VsyncDecoding feature.
-	VsyncDecoding
+	// RTCFeatureVsyncDecoding enables WebRTC VsyncDecoding feature.
+	RTCFeatureVsyncDecoding
 
 	// keep this at last
 	numChromeRTCFeatures = iota
@@ -33,7 +33,7 @@ var chromeRTCFixtureGenerator = fixtureGenerator{
 func initChromeRTCBaseFixtures() {
 	combos := []featureComboType{
 		comb(chromeRTC),
-		comb(chromeRTC, VsyncDecoding),
+		comb(chromeRTC, RTCFeatureVsyncDecoding),
 	}
 	featureMap := map[featureType]featureInfo{
 		chromeRTC: {
@@ -67,7 +67,7 @@ func initChromeRTCBaseFixtures() {
 				),
 			},
 		},
-		VsyncDecoding: {
+		RTCFeatureVsyncDecoding: {
 			"VsyncDecoding",
 			[]chrome.Option{
 				chrome.EnableFeatures(
@@ -103,7 +103,7 @@ var chromeRTCLacrosFixtureGenerator = fixtureGenerator{
 func initChromeRTCLacrosFixtures() {
 	combos := []featureComboType{
 		comb(chromeRTC),
-		comb(chromeRTC, VsyncDecoding),
+		comb(chromeRTC, RTCFeatureVsyncDecoding),
 	}
 	featureMap := map[featureType]featureInfo{
 		chromeRTC: {
@@ -155,7 +155,7 @@ func initChromeRTCLacrosFixtures() {
 				),
 			},
 		},
-		VsyncDecoding: {
+		RTCFeatureVsyncDecoding: {
 			"VsyncDecoding",
 			[]chrome.Option{
 				chrome.EnableFeatures(

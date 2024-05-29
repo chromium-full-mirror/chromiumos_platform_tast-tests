@@ -48,7 +48,7 @@ func init() {
 				CanvasSource: capturefromelement.UseGlClearColor,
 				BrowserType:  browser.TypeLacros,
 			},
-			Fixture: pre.ChromeVideoLacrosFixture(pre.FakeMediaStreamUI),
+			Fixture: pre.ChromeVideoLacrosFixture(pre.VideoFeatureFakeMediaStreamUI),
 		}, {
 			Name: "canvas_from_video_lacros",
 			Val: capturefromelement.TestParam{

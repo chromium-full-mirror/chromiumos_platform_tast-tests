@@ -37,7 +37,7 @@ func init() {
 			},
 			{
 				Name:              "lacros",
-				Fixture:           pre.ChromeVideoLacrosFixture(pre.FakeMediaStreamUI),
+				Fixture:           pre.ChromeVideoLacrosFixture(pre.VideoFeatureFakeMediaStreamUI),
 				ExtraAttr:         []string{"informational"},
 				ExtraSoftwareDeps: []string{caps.BuiltinCamera, "lacros"},
 				Timeout:           7 * time.Minute, // A lenient limit for launching Lacros Chrome.

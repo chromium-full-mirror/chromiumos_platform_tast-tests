@@ -222,7 +222,7 @@ func TestPlaybackPerfConfig(t *testing.T) {
 		}
 		for _, fps := range fpss {
 			param := genPlaybackPerfParam("h264", playback.GenDataPath("h264", resolution, fps),
-				resolution, fps, "hw", "lacros", pre.ChromeVideoLacrosFixture(pre.FakeMediaStreamUI), []string{"lacros"})
+				resolution, fps, "hw", "lacros", pre.ChromeVideoLacrosFixture(pre.VideoFeatureFakeMediaStreamUI), []string{"lacros"})
 			if resolution == 1080 && fps == 30 {
 				param.MeasureSteadyStateMetrics = true
 			}
@@ -235,7 +235,7 @@ func TestPlaybackPerfConfig(t *testing.T) {
 		resolution, fps, dec := 1080, 30, "hw"
 		file := playbackPerfLongFile[codec]
 		param := genPlaybackPerfParam(codec, file, resolution, fps, dec,
-			"long_lacros", pre.ChromeVideoLacrosFixture(pre.FakeMediaStreamUI),
+			"long_lacros", pre.ChromeVideoLacrosFixture(pre.VideoFeatureFakeMediaStreamUI),
 			[]string{"drm_atomic", "lacros"})
 		// "rogue" is for MT8173 hana.
 		param.HardwareDeps = append(param.HardwareDeps, "hwdep.SkipGPUFamily(\"rogue\")", "hwdep.InternalDisplay()")
@@ -252,7 +252,7 @@ func TestPlaybackPerfConfig(t *testing.T) {
 		codec, resolution, fps, dec := "h264", 1080, 30, "hw"
 		file := playbackPerfLongFile[codec]
 		param := genPlaybackPerfParam(codec, file, resolution, fps, dec,
-			"long_lacros_gtfo", pre.ChromeVideoLacrosFixture(pre.FakeMediaStreamUI, pre.GTFO),
+			"long_lacros_gtfo", pre.ChromeVideoLacrosFixture(pre.VideoFeatureFakeMediaStreamUI, pre.VideoFeatureGTFO),
 			[]string{"drm_atomic", "lacros"})
 		// "rogue" is for MT8173 hana.
 		param.HardwareDeps = append(param.HardwareDeps, "hwdep.SkipGPUFamily(\"rogue\")", "hwdep.InternalDisplay()")

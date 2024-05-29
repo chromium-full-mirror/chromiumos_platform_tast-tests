@@ -127,7 +127,7 @@ func init() {
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_nightly"},
 			ExtraData:         []string{"720_av1.mp4"},
 			ExtraSoftwareDeps: []string{"video_overlays", caps.HWDecodeAV1, "lacros"},
-			Fixture:           pre.ChromeVideoLacrosFixture(pre.GuestLogin),
+			Fixture:           pre.ChromeVideoLacrosFixture(pre.VideoFeatureGuestLogin),
 			Timeout:           10 * time.Minute,
 		}, {
 			Name:              "h264_hw_lacros",
@@ -135,7 +135,7 @@ func init() {
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_nightly"},
 			ExtraData:         []string{"720_h264.mp4"},
 			ExtraSoftwareDeps: []string{"video_overlays", caps.HWDecodeH264, "proprietary_codecs", "lacros"},
-			Fixture:           pre.ChromeVideoLacrosFixture(pre.GuestLogin),
+			Fixture:           pre.ChromeVideoLacrosFixture(pre.VideoFeatureGuestLogin),
 			Timeout:           10 * time.Minute,
 		}, {
 			Name:              "hevc_hw_lacros",
@@ -144,7 +144,7 @@ func init() {
 			ExtraData:         []string{"720_hevc.mp4"},
 			ExtraHardwareDeps: hwdep.D(hwdep.SupportsHEVCVideoDecodingInChrome()),
 			ExtraSoftwareDeps: []string{"video_overlays", caps.HWDecodeHEVC, "proprietary_codecs", "lacros"},
-			Fixture:           pre.ChromeVideoLacrosFixture(pre.GuestLogin),
+			Fixture:           pre.ChromeVideoLacrosFixture(pre.VideoFeatureGuestLogin),
 			Timeout:           10 * time.Minute,
 		}, {
 			Name:              "vp8_hw_lacros",
@@ -152,7 +152,7 @@ func init() {
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_nightly"},
 			ExtraData:         []string{"720_vp8.webm"},
 			ExtraSoftwareDeps: []string{"video_overlays", caps.HWDecodeVP8, "lacros"},
-			Fixture:           pre.ChromeVideoLacrosFixture(pre.GuestLogin),
+			Fixture:           pre.ChromeVideoLacrosFixture(pre.VideoFeatureGuestLogin),
 			Timeout:           10 * time.Minute,
 		}, {
 			Name:              "vp9_hw_lacros",
@@ -160,7 +160,7 @@ func init() {
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_nightly"},
 			ExtraData:         []string{"720_vp9.webm"},
 			ExtraSoftwareDeps: []string{"video_overlays", caps.HWDecodeVP9, "lacros"},
-			Fixture:           pre.ChromeVideoLacrosFixture(pre.GuestLogin),
+			Fixture:           pre.ChromeVideoLacrosFixture(pre.VideoFeatureGuestLogin),
 			Timeout:           10 * time.Minute,
 		}, {
 			Name:              "h264_hw_lacros_gtfo",
@@ -168,7 +168,7 @@ func init() {
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_nightly"},
 			ExtraData:         []string{"720_h264.mp4"},
 			ExtraSoftwareDeps: []string{"video_overlays", caps.HWDecodeH264, "proprietary_codecs", "lacros"},
-			Fixture:           pre.ChromeVideoLacrosFixture(pre.GuestLogin, pre.GTFO),
+			Fixture:           pre.ChromeVideoLacrosFixture(pre.VideoFeatureGuestLogin, pre.VideoFeatureGTFO),
 			Timeout:           10 * time.Minute,
 		}},
 	})
