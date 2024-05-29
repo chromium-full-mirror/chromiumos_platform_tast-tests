@@ -7,6 +7,7 @@ package inputs
 import (
 	"bufio"
 	"context"
+	"math"
 	"os"
 	"strconv"
 	"strings"
@@ -229,4 +230,44 @@ func CreateSSHTunnelToTouchhost(ctx context.Context, touchhostHostname string, t
 		return nil, errors.Wrapf(err, "failed to port forward touchhost (%s) port (%d)", touchhostHostname, touchhostPort)
 	}
 	return &TouchHostConnectionManager{SSHConn: sshConn, SSHOptions: sshOptions, TouchhostPortForwarder: touchhostPortForwarder}, nil
+}
+
+// roundFloat64 rounds a float64 to a specified number of decimal places.
+func roundFloat64(val float64, decimal int) float64 {
+	scaleFactor := math.Pow(10, float64(decimal))
+	scaledVal := val * scaleFactor
+	rounded := math.Round(scaledVal)
+	retVal := rounded / scaleFactor
+	return retVal
+}
+
+// GetDiagonalScreenSize returns the screen size in inches, rounded to 1 decimal place.
+func GetDiagonalScreenSize(height, width float64) (float64, error) {
+	if height <= 0 || width <= 0 {
+		return -1, errors.Errorf("invalid screen height (%v) and width (%v)", height, width)
+	}
+	roughScreenSize := math.Sqrt(math.Pow(height, 2) + math.Pow(width, 2))
+	roughScreenSizeInches := roughScreenSize / 25.4
+	return roundFloat64(roughScreenSizeInches, 1), nil
+}
+
+// GetScreenAspectRatio returns the screen aspect ratio as a string.
+func GetScreenAspectRatio(height, width float64) (string, error) {
+	if height <= 0 || width <= 0 {
+		return "", errors.Errorf("invalid screen height (%v) and width (%v)", height, width)
+	}
+
+	unroundedRatio := width / height
+	ratio := roundFloat64(unroundedRatio, 1)
+	if ratio == 1.8 {
+		return "16_9", nil
+	} else if ratio == 0.8 {
+		return "4_3", nil
+	} else if ratio == 1.5 {
+		return "3_2", nil
+	} else if ratio == 1.6 {
+		return "16_10", nil
+	} else {
+		return "", errors.Errorf("invalid width/ratio ratio (%v)", ratio)
+	}
 }

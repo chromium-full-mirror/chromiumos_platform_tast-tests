@@ -7,9 +7,12 @@ package inputs
 import (
 	"context"
 	"encoding/json"
+	"strconv"
 	"time"
 
+	reporters "go.chromium.org/tast-tests/cros/remote/firmware/reporters"
 	input "go.chromium.org/tast-tests/cros/remote/inputs"
+	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -47,6 +50,8 @@ func init() {
 }
 
 func HumanMotionRobotFullImage(ctx context.Context, s *testing.State) {
+	referenceFileData := s.Param().(referenceFileData)
+
 	touchhostHostname, touchhostPort, err := input.ParseHMRRuntimeVariables(s.DUT())
 	if err != nil {
 		s.Fatal("Failed to parse runtime variables: ", err)
@@ -58,6 +63,13 @@ func HumanMotionRobotFullImage(ctx context.Context, s *testing.State) {
 		s.Fatal("Error setting up SSH tunnel to touchhost: ", err)
 	}
 	defer touchhostConnectionManager.TouchhostPortForwarder.Close()
+
+	// Create DUT client to run services on DUT.
+	client, err := rpc.Dial(ctx, s.DUT(), s.RPCHint())
+	if err != nil {
+		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
+	}
+	defer client.Close(ctx)
 
 	hmrInterface, err := input.NewHMRInterface(ctx, "127.0.0.1", 9992)
 	if err != nil {
@@ -77,7 +89,41 @@ func HumanMotionRobotFullImage(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to decode calibration file json string: ", err)
 	}
 
-	// TODO(b/343548313): Collect screen size information from the DUT and use this to verify that there is an appropriately sized gcode file on the HMR.
+	// Device model name is used for lookup of screen's physical dimensions.
+	reporter := reporters.New(s.DUT())
+	modelName, err := reporter.Model(ctx)
+	if err != nil {
+		s.Fatal("Could not obtain device model name: ", err)
+	}
+
+	dutScreenHeightInMM, dutScreenWidthInMM, err := input.GetScreenDimensions(modelName)
+	if err != nil {
+		s.Fatal("Could not obtain device's screen dimensions: ", err)
+	}
+
+	screenSize, err := input.GetDiagonalScreenSize(dutScreenHeightInMM, dutScreenWidthInMM)
+	if err != nil {
+		s.Fatal("Failed to get DUT screen diagnonal screen size: ", err)
+	}
+	aspectRatio, err := input.GetScreenAspectRatio(dutScreenHeightInMM, dutScreenWidthInMM)
+	if err != nil {
+		s.Fatal("Failed to get DUT screen resolution: ", err)
+	}
+
+	// Full image gcode file names are of the format {reference filename}-{diagonal screen size}-{screen aspect ratio}-{date input file was created}.
+	// Example: human_motion_robot_full_image_simple-13.3-16_9-20240523.nc
+	baseFileName := referenceFileData.filename + "-" + strconv.FormatFloat(screenSize, 'f', -1, 64) + "-" + aspectRatio + "-" + referenceFileData.date
+	gcodeFileName := baseFileName + ".nc"
+
+	// Checks that the GCode file is already loaded on HMR.
+	fileExists, err := hmrInterface.RPC("FileExists").Args(gcodeFileName).CallForBool(ctx)
+	if err != nil {
+		s.Fatal("Failed to call FileExists: ", err)
+	}
+	if !fileExists {
+		s.Fatalf("Gcode file (%s) not found on HMR", gcodeFileName)
+	}
+
 	// TODO(b/343548313): Run HMR job and collect touch events.
 	// TODO(b/343548793): Full image analysis.
 }
