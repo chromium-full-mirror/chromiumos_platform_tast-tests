@@ -161,12 +161,12 @@ func SetupExtension(ctx context.Context, cr *chrome.Chrome, br *browser.Browser)
 	// After the extension is installed, the "Add to Chrome" button on
 	// the extension page should change to the "Remove from Chrome" button.
 	addToChromeButton := nodewith.Name("Add to Chrome").Role(role.Button).First()
-	addExtensionButton := nodewith.Name("Add extension").Role(role.Button)
+	addExtensionButton := nodewith.Name("Add extension").Role(role.Button).First()
 	removeButton := nodewith.Name("Remove from Chrome").Role(role.Button).First()
 	if err := uiauto.Combine("Install extension",
-		ui.LeftClick(addToChromeButton),
+		ui.DoDefaultUntil(addToChromeButton, ui.Gone(addToChromeButton)),
 		// The "Add extension" button may not immediately be clickable.
-		ui.LeftClickUntil(addExtensionButton, ui.Gone(addExtensionButton)),
+		ui.DoDefaultUntil(addExtensionButton, ui.Gone(addExtensionButton)),
 		// TODO(crbug.com/1326398): Remove tab reload when this bug is fixed.
 		ui.RetryUntil(br.ReloadActiveTab, ui.WithTimeout(7*time.Second).WaitUntilExists(removeButton)),
 	)(ctx); err != nil {
