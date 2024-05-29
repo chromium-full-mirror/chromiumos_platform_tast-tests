@@ -224,16 +224,17 @@ func ARCMulticastForwarder(ctx context.Context, s *testing.State) {
 	expectIn[multicast.MdnsPrefix+multicast.LegacyMDNSHostnameInIPv6] = "IPv6 legacy mDNS"
 	// Skipped SSDP IPv6 expectations as we don't currently have the firewall rule.
 
-	// If this is a WiFi multicast traffic test, multicast traffic should only be expected when
-	// Android multicast lock is held and device is not idle. If this is an ethernet multicast
-	// traffic test, multicast traffic is expected as long as device is not idle.
+	// If this is a WiFi multicast traffic test, inbound multicast traffic should only be expected
+	// when Android multicast lock is held and device is not idle. If this is an ethernet multicast
+	// traffic test, inbound multicast traffic is expected as long as device is not idle.
+	// Outbound multicast traffic is always allowed.
 	multicastLockHeld := s.Param().(multicastForwarderTestCase).multicastLockHeld
 	deviceIdle := s.Param().(multicastForwarderTestCase).deviceIdle
-	var expectPacketReceived bool
+	var expectInboundPacketReceived bool
 	if isWifi {
-		expectPacketReceived = multicastLockHeld && !deviceIdle
+		expectInboundPacketReceived = multicastLockHeld && !deviceIdle
 	} else {
-		expectPacketReceived = !deviceIdle
+		expectInboundPacketReceived = !deviceIdle
 	}
 
 	if deviceIdle {
@@ -265,14 +266,14 @@ func ARCMulticastForwarder(ctx context.Context, s *testing.State) {
 		// * -l to make stdout line buffered,
 		// * --immediate-mode to disable packet buffering.
 		ifname := ifname // https://golang.org/doc/faq#closures_and_goroutines
-		if expectPacketReceived {
-			g.Go(func() error {
-				tcpdumpCmd := []string{"/usr/local/sbin/tcpdump", "-Alni", ifname, "port", "5353", "or", "port", "1900", "-Q", "out", "--immediate-mode"}
-				if err := multicast.StreamCmd(ctx, tcpdumpCmd, expectOut); err != nil {
-					return errors.Wrap(err, "outbound test failed")
-				}
-				return nil
-			})
+		g.Go(func() error {
+			tcpdumpCmd := []string{"/usr/local/sbin/tcpdump", "-Alni", ifname, "port", "5353", "or", "port", "1900", "-Q", "out", "--immediate-mode"}
+			if err := multicast.StreamCmd(ctx, tcpdumpCmd, expectOut); err != nil {
+				return errors.Wrap(err, "outbound test failed")
+			}
+			return nil
+		})
+		if expectInboundPacketReceived {
 			g.Go(func() error {
 				tcpdumpCmd := []string{"/usr/local/sbin/tcpdump", "-Alni", "arc_" + ifname, "port", "5353", "or", "port", "1900", "-Q", "out", "--immediate-mode"}
 				if err := multicast.StreamCmd(ctx, tcpdumpCmd, expectIn); err != nil {
@@ -281,13 +282,6 @@ func ARCMulticastForwarder(ctx context.Context, s *testing.State) {
 				return nil
 			})
 		} else {
-			g.Go(func() error {
-				tcpdumpCmd := []string{"/usr/local/sbin/tcpdump", "-Alni", ifname, "port", "5353", "or", "port", "1900", "-Q", "out", "--immediate-mode"}
-				if err := multicast.StreamCmdExpectNotFound(ctx, tcpdumpCmd, expectOut); err != nil {
-					return errors.Wrap(err, "outbound test failed")
-				}
-				return nil
-			})
 			g.Go(func() error {
 				tcpdumpCmd := []string{"/usr/local/sbin/tcpdump", "-Alni", "arc_" + ifname, "port", "5353", "or", "port", "1900", "-Q", "out", "--immediate-mode"}
 				if err := multicast.StreamCmdExpectNotFound(ctx, tcpdumpCmd, expectIn); err != nil {
