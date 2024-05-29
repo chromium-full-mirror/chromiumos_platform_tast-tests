@@ -108,6 +108,7 @@ func FingerprintMigrationManual(ctx context.Context, s *testing.State) {
 		defer cr.Close(ctxForCleanUp)
 
 		// Step 1: Enroll the index finger.
+		testing.ContextLog(ctx, "---Enroll Legacy Fingerprint---")
 		internal.PromptFingerEnroll(ctx, indexFingerName)
 		if err := biodClient.Enroll(ctx, sanitizedUsername, indexFingerLabel); err != nil {
 			s.Fatal("Enroll failed: ", err)
@@ -115,6 +116,7 @@ func FingerprintMigrationManual(ctx context.Context, s *testing.State) {
 		internal.PromptFingerLift(ctx)
 
 		// Step 2: Enroll the middle finger.
+		testing.ContextLog(ctx, "---Enroll Legacy Fingerprint---")
 		internal.PromptFingerEnroll(ctx, middleFingerName)
 		if err := biodClient.Enroll(ctx, sanitizedUsername, middleFingerLabel); err != nil {
 			s.Fatal("Enroll failed: ", err)
@@ -155,6 +157,7 @@ func FingerprintMigrationManual(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to test fingerprint functionalities: ", err)
 		}
 
+		testing.ContextLog(ctx, "---Migration Completed---")
 		// Start auth session again because we want to authenticate fingerprint with verify-only intent.
 		if err := client.WithAuthSession(ctx, userName, false /*ephemeral*/, uda.AuthIntent_AUTH_INTENT_VERIFY_ONLY, func(authSessionID string) error {
 			// Step 2: Test that both migrated fingers authenticate successfully.
@@ -178,6 +181,7 @@ func FingerprintMigrationManual(ctx context.Context, s *testing.State) {
 				return errors.Wrap(err, "failed to authenticate auth session with password")
 			}
 
+			testing.ContextLog(ctx, "---Enroll Fingerprint Auth Factor---")
 			// Step 3: Add an extra finger: the thumb.
 			if err := internal.EnrollFinger(ctx, client, authSessionID, thumbLabel, thumbName); err != nil {
 				return errors.Wrapf(err, "failed to enroll the %v", thumbName)
@@ -211,17 +215,20 @@ func FingerprintMigrationManual(ctx context.Context, s *testing.State) {
 		}); err != nil {
 			s.Fatal("Failed to test fingerprint functionalities: ", err)
 		}
+		testing.ContextLogf(ctx, "---Deleted Auth Factor %s---", indexFingerLabel)
 
 		// Start auth session again because we want to authenticate fingerprint with verify-only intent.
 		if err := client.WithAuthSession(ctx, userName, false /*ephemeral*/, uda.AuthIntent_AUTH_INTENT_VERIFY_ONLY, func(authSessionID string) error {
 			allFingerLabels := []string{remainingLegacyFpLabel, thumbLabel}
 			// Step 5: Test that middle finger and thumb authenticate successfully.
 			for _, fingerName := range []string{thumbName, middleFingerName} {
+				testing.ContextLog(ctx, "---Authenticate Fingerprint Auth Factor---")
 				if err := internal.MatchFinger(ctx, client, authSessionID, allFingerLabels, fingerName); err != nil {
 					return errors.Wrapf(err, "failed to authenticate the %v", fingerName)
 				}
 			}
 			// Step 6: Test that wrong finger fails and locks out fingerprint after 5 attempts.
+			testing.ContextLog(ctx, "---Force Fingerprint Auth Factor Lockout---")
 			if err := internal.MatchWrongFingerUntilLockout(ctx, client, authSessionID, allFingerLabels, indexFingerName); err != nil {
 				return errors.Wrap(err, "failed to verify wrong finger fails authentication")
 			}
@@ -229,6 +236,7 @@ func FingerprintMigrationManual(ctx context.Context, s *testing.State) {
 			if _, err := client.AuthenticateAuthFactor(ctx, authSessionID, passwordLabel, userPassword); err != nil {
 				return errors.Wrap(err, "failed to authenticate auth session with password")
 			}
+			testing.ContextLog(ctx, "---Verify Fingerprint Auth Factor Usable after Password Authentication---")
 			if err := internal.MatchFinger(ctx, client, authSessionID, allFingerLabels, middleFingerName); err != nil {
 				return errors.Wrapf(err, "failed to authenticate the %v", middleFingerName)
 			}
@@ -253,7 +261,10 @@ func FingerprintMigrationManual(ctx context.Context, s *testing.State) {
 		}
 		defer cr.Close(ctxForCleanUp)
 
+		testing.ContextLog(ctx, "---Rolled-back Fingerprint Auth Factor---")
+
 		// Step 1: Ensure index finger authenticates successfully within 3 touches.
+		testing.ContextLog(ctx, "---Authenticate Legacy Fingerprint---")
 		internal.PromptFingerMatch(ctx, indexFingerName)
 		if err := biodClient.MatchExpectSuccess(ctx, maxFailureAttempts); err != nil {
 			s.Fatal("Match failed: ", err)
