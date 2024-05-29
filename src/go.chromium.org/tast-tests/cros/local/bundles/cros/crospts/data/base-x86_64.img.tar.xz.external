@@ -1,5 +1,5 @@
 {
-    "url": "gs://chromiumos-test-assets-public/tast/cros/crospts/base-x86_64.img-20231123.155500.tar.xz",
-    "size": 280942592,
-    "sha256sum": "ff9243bb173b5fb64b95fee265f8dbaac30d51eda9008c2fc98422a5f1026afa"
+    "url": "gs://chromiumos-test-assets-public/tast/cros/crospts/base-x86_64.img-20240601.060026.tar.xz",
+    "size": 294179788,
+    "sha256sum": "ee233ad2e067e122ec31cfee384e7ef9329e9f77dabfef055295f6b4e98f2431"
 }

@@ -32,6 +32,9 @@ const (
 	CrosResultsDir string = ResultsDir + "/cros"
 	// chrootEtc is the directory of /etc in chroot.
 	chrootEtc string = CrosChroot + "/etc"
+	// installed image for installing benchmark tools
+	installedImageSize uint64 = 15 * 1024 * 1024 * 1024
+	installedImage     string = crosData + "/installed.img"
 )
 
 const (
@@ -159,6 +162,11 @@ func (c *CrosFixture) Prepare(ctx context.Context, s *testing.FixtState) error {
 			dst: CrosChroot + PtsDir,
 			fs:  "ext4",
 		}, {
+			src: installedImage,
+			dst: CrosChroot + PtsDir + "/installed-tests",
+			fs:  "ext4",
+		},
+		{
 			src: "tmpfs",
 			dst: CrosChroot + "/run",
 			fs:  "tmpfs",
@@ -251,6 +259,29 @@ func blockTestsReinstall(ctx context.Context, testsList []string) error {
 	return nil
 }
 
+// allocateInstalledImageFile allocates a image file for installing benchmark tools
+func allocateInstalledImageFile(ctx context.Context, imageFile string) error {
+	// check imageFile exist
+	if _, err := os.Stat(imageFile); err == nil {
+		return nil
+	}
+
+	// Create the directory if not exist
+	if _, err := os.Create(imageFile); err != nil {
+		return errors.Wrapf(err, "failed to create file: %s", imageFile)
+	}
+
+	// Create the image file
+	if err := os.Truncate(imageFile, int64(installedImageSize)); err != nil {
+		return errors.Wrapf(err, "failed to truncate image file: %s", imageFile)
+	}
+	// Format the image file with ext4 file system
+	if err := testexec.CommandContext(ctx, "mkfs.ext4", "-F", imageFile).Run(); err != nil {
+		return errors.Wrapf(err, "failed to format image file: %s", imageFile)
+	}
+	return nil
+}
+
 // Mount mounts PTSWorld for CrOS. It mounts base image to sysroot of chroot in
 // read-only, and data image to a /var/lib/phoronix-test-suite. The chroot
 // mounting sequence follows the mountSequence.
@@ -261,6 +292,12 @@ func (c *CrosFixture) Mount(ctx context.Context, s *testing.FixtState) error {
 	mountPoints, err := GetMountPoints(ctx)
 	if err != nil {
 		s.Fatal("Failed to get mount points: ", err)
+	}
+
+	err = allocateInstalledImageFile(shortCtx, installedImage)
+	if err != nil {
+		s.Fatal("Failed to allocate image file: ", err)
+		return err
 	}
 
 	for _, mount := range c.mountSequence {
@@ -315,6 +352,12 @@ func (c *CrosFixture) Unmount(ctx context.Context, s *testing.FixtState) error {
 			s.Fatalf("Failed to unmount %v: %v", c.mountSequence[i].dst, err)
 			return err
 		}
+	}
+
+	// Remove the installed image file
+	if err := os.Remove(installedImage); err != nil {
+		s.Fatal("Failed to remove image file: ", err)
+		return err
 	}
 
 	return nil
