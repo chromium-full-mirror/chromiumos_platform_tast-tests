@@ -11,7 +11,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/croshealthd"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -45,12 +44,6 @@ func init() {
 			Name:    "cpu_cache_v2",
 			Val:     croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineCPUCacheV2},
 			Fixture: "crosHealthdRunningAndRebootDUT",
-		}, {
-			// Contact: dennyh@google.com
-			Name:              "ufs_lifetime",
-			Val:               croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineUFSLifetime},
-			Fixture:           "crosHealthdRunning",
-			ExtraHardwareDeps: hwdep.D(hwdep.Ufs()),
 		}, {
 			// Contact: yycheng@google.com
 			Name:    "prime_search_v2",

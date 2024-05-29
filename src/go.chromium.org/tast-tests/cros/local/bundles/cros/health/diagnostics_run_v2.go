@@ -11,6 +11,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/croshealthd"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -27,6 +28,12 @@ func init() {
 			Name:    "audio_driver",
 			Val:     croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineAudioDriver},
 			Fixture: "crosHealthdRunning",
+		}, {
+			// Contact: dennyh@google.com
+			Name:              "ufs_lifetime",
+			Val:               croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineUFSLifetime},
+			Fixture:           "crosHealthdRunning",
+			ExtraHardwareDeps: hwdep.D(hwdep.Ufs()),
 		}}})
 }
 

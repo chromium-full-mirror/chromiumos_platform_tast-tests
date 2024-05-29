@@ -8,7 +8,6 @@ package health
 
 import (
 	"context"
-	"time"
 
 	"go.chromium.org/tast-tests/cros/local/croshealthd"
 	"go.chromium.org/tast/core/testing"
@@ -45,14 +44,6 @@ func init() {
 			Val:     croshealthd.NewRoutineParams(croshealthd.RoutineURandom),
 			Fixture: "crosHealthdRunning",
 		}, {
-			// Contact: dennyh@google.com
-			Name:              "smartctl_check",
-			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineSmartctlCheck),
-			Fixture:           "crosHealthdRunning",
-			ExtraAttr:         []string{"informational"},
-			ExtraSoftwareDeps: []string{"smartctl"},
-			ExtraHardwareDeps: hwdep.D(hwdep.Nvme()),
-		}, {
 			// Contact: yycheng@google.com
 			Name:    "cpu_cache",
 			Val:     croshealthd.NewRoutineParams(croshealthd.RoutineCPUCache),
@@ -67,15 +58,6 @@ func init() {
 			Name:    "floating_point_accuracy",
 			Val:     croshealthd.NewRoutineParams(croshealthd.RoutineFloatingPointAccurary),
 			Fixture: "crosHealthdRunning",
-		}, {
-			// Contact: dennyh@google.com
-			Name:              "nvme_self_test",
-			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineNVMESelfTest),
-			Fixture:           "crosHealthdRunning",
-			ExtraAttr:         []string{"informational"},
-			Timeout:           3 * time.Minute,
-			ExtraSoftwareDeps: []string{"nvme"},
-			ExtraHardwareDeps: hwdep.D(hwdep.Nvme(), hwdep.NvmeSelfTest()),
 		}, {
 			// Contact: yycheng@google.com
 			Name:    "prime_search",
@@ -119,21 +101,6 @@ func init() {
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineFingerprintAlive),
 			Fixture:           "crosHealthdRunning",
 			ExtraHardwareDeps: hwdep.D(hwdep.FingerprintDiagSupported()),
-		}, {
-			// Contact: dennyh@google.com
-			Name:              "emmc_lifetime",
-			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineEMMCLifetime),
-			Fixture:           "crosHealthdRunning",
-			ExtraAttr:         []string{"informational"},
-			ExtraHardwareDeps: hwdep.D(hwdep.Emmc(), hwdep.SkipOnModel("faffy")),
-		}, {
-			// Contact: dennyh@google.com
-			// TODO(b/324001664): Fix the issue on faffy.
-			Name:              "emmc_lifetime_unstable",
-			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineEMMCLifetime),
-			Fixture:           "crosHealthdRunning",
-			ExtraAttr:         []string{"informational"},
-			ExtraHardwareDeps: hwdep.D(hwdep.Emmc(), hwdep.Model("faffy")),
 		}, {
 			// Contact: byronlee@google.com
 			Name:              "bluetooth_power",
