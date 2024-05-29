@@ -101,8 +101,8 @@ func CryptohomeRecoveryFailure(ctx context.Context, s *testing.State) {
 			s.Error("Could not move meta file to out dir: ", err)
 		}
 	}
-	if !strings.Contains(string(contents), "sig=GetRecoveryRequest-3-recovery-failure\n") {
-		s.Error("Meta file didn't contain sig=GetRecoveryRequest-3-recovery-failure. Saving file")
+	if !strings.Contains(string(contents), "sig=Request generation-3-recovery-failure\n") {
+		s.Error("Meta file didn't contain sig=Request generation-3-recovery-failure. Saving file")
 		if err := crash.MoveFilesToOut(ctx, s.OutDir(), meta); err != nil {
 			s.Error("Could not move meta file to out dir: ", err)
 		}
