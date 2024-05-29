@@ -24,6 +24,7 @@ var listOfAllChecks = map[string]*CleanUpCheck{
 	"CheckIfTastUseFlagsFileExists":       {Check: checkIfTastUseFlagsFileExists, RecordState: nil, Level: Fast, Enabled: true},
 	"CheckIfTastBundlesLocalFileExists":   {Check: checkIfTastBundlesLocalFileExists, RecordState: nil, Level: Fast, Enabled: true},
 	"CheckIfRootfsVerificationIsTurnedOn": {Check: checkIfRootfsVerificationIsTurnedOn, RecordState: nil, Level: Fast, Enabled: true},
+	"CheckIfDeviceIsEnrolled":             {Check: checkIfDeviceIsEnrolled, RecordState: recordStateDeviceEnrolled, Level: Fast, Enabled: true},
 }
 
 // CleanUpChecks can be defined here or in some other package which will be imported in this file.
@@ -59,6 +60,38 @@ func checkIfRootfsVerificationIsTurnedOn(ctx context.Context, data *cs.PreTestDa
 	}
 	if !strings.Contains(string(cmdline), "dm_verity.dev_wait=1") {
 		return errors.New("checkIfRootfsVerificationIsTurnedOn: Rootfs verificaiton has been turned off")
+	}
+	return nil
+}
+
+// recordStateDeviceEnrolled records the enrolled state of the device before running the test.
+func recordStateDeviceEnrolled(ctx context.Context) (*cs.PreTestData, error) {
+	cmdline, err := exec.Command("device_management_client", "--action=install_attributes_get", "--name=enterprise.owned").Output()
+	if err != nil {
+		return nil, errors.New("recordStateDeviceEnrolled: failed to read kernel cmdline")
+	}
+
+	// Check if the attribute exists and is set to "true".
+	isEnrolled := strings.Contains(string(cmdline), "true")
+	data := &cs.PreTestData{
+		Data: &cs.PreTestData_BoolData{
+			BoolData: isEnrolled,
+		},
+	}
+	return data, nil
+}
+
+// checkIfDeviceIsEnrolled checks the device enrolled state after the test and compare it with the state before the test.
+func checkIfDeviceIsEnrolled(ctx context.Context, data *cs.PreTestData) error {
+	cmdline, err := exec.Command("device_management_client", "--action=install_attributes_get", "--name=enterprise.owned").Output()
+	if err != nil {
+		return errors.New("checkIfDeviceIsEnrolled: failed to read kernel cmdline")
+	}
+
+	// Check if the attribute exists and is set to "true".
+	isEnrolled := strings.Contains(string(cmdline), "true")
+	if data.GetBoolData() != isEnrolled {
+		return errors.Errorf("checkIfDeviceIsEnrolled: device enrolled state has changed; before: %v after: %v", data.GetBoolData(), isEnrolled)
 	}
 	return nil
 }
