@@ -593,7 +593,6 @@ type ArcPolicyValue struct {
 \tApplications\t[]Application\t`json:"applications"`
 \tEnabledSystemAppPackageNames\t[]string\t`json:"enabledSystemAppPackageNames"`
 \tInstallUnknownSourcesDisabled\tbool\t`json:"installUnknownSourcesDisabled"`
-\tPlayEmmApiInstallDisabled\tbool\t`json:"playEmmApiInstallDisabled"`
 \tPlayStoreMode\tstring\t`json:"playStoreMode"`
 \tModifyAccountsDisabled\tbool\t`json:"modifyAccountsDisabled"`
 \tDpsInteractionsDisabled\tbool\t`json:"dpsInteractionsDisabled"`

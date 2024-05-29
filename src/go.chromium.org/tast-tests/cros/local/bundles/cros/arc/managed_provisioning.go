@@ -124,7 +124,6 @@ func ManagedProvisioning(ctx context.Context, s *testing.State) {
 			Applications:              []policy.Application{},
 			PlayStoreMode:             arcent.PlayStoreModeAllowList,
 			DpsInteractionsDisabled:   true,
-			PlayEmmApiInstallDisabled: true,
 		},
 	}
 	arcEnabledPolicy := &policy.ArcEnabled{Val: true, Stat: policy.StatusSet}
