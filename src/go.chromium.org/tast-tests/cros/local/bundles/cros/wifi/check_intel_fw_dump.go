@@ -11,10 +11,10 @@ import (
 	"time"
 
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/wifi/intelfwextractor"
 	"go.chromium.org/tast-tests/cros/local/crash"
 	"go.chromium.org/tast-tests/cros/local/network/iface"
 	"go.chromium.org/tast-tests/cros/local/shill"
+	"go.chromium.org/tast-tests/cros/local/wifi/intelfwextractor"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
