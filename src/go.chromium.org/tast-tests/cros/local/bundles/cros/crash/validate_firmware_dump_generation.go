@@ -31,6 +31,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/session"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast-tests/cros/local/upstart"
+	"go.chromium.org/tast-tests/cros/local/wifi/intelfwextractor"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -155,8 +156,8 @@ func getUserHash(ctx context.Context, sm *session.SessionManager, creds credconf
 	return userHash, err
 }
 
-// checkIfDumpFileExists verifies that firmware dump file is created after firmware dump is triggered.
-func checkIfDumpFileExists(ctx context.Context, filePath string, s *testing.State, policy string) (bool, error) {
+// findDumpFiles finds all firmware dump files in the give file path.
+func findDumpFiles(ctx context.Context, filePath string, s *testing.State, policy string) ([]string, error) {
 	dumpFilePath := filepath.Join(filePath, firmwareDumpFilePattern)
 	s.Log("Waiting until firmware dump is created")
 	s.Log(dumpFilePath)
@@ -176,12 +177,12 @@ func checkIfDumpFileExists(ctx context.Context, filePath string, s *testing.Stat
 	}, &testing.PollOptions{Timeout: firmwareDumpProcessingTimeout, Interval: 400 * time.Millisecond}); err != nil {
 		// Some unknown error other than file discovery.
 		if e != nil {
-			return false, e
+			return nil, e
 		}
 		// Timeout looking for file.
-		return false, nil
+		return match, nil
 	}
-	return true, nil
+	return match, nil
 }
 
 // dumpsInDir filters for targeted type of dump files under the DirEntry.
@@ -415,14 +416,14 @@ func firmwareDumpValidator(ctx context.Context, rl *retry.Loop, s *testing.State
 		s.Fatal("Failed to trigger a devcoredump: ", err)
 	}
 
-	var exist bool
+	var found []string
 	// Verify if firmware dump is generated after firmware dump trigger
-	exist, err = checkIfDumpFileExists(ctx, dumpPath, s, tc.policy)
+	found, err = findDumpFiles(ctx, dumpPath, s, tc.policy)
 	if err != nil {
 		s.Fatal("Firmware dump file not generated error: ", err)
 	}
 
-	if !exist {
+	if len(found) == 0 {
 		// Fail if no firmware dump is generated even when allowed by policy.
 		if firmwareDumpExpectedByPolicy(tc.policy) {
 			s.Fatal("Firmware dump file not generated")
@@ -434,6 +435,11 @@ func firmwareDumpValidator(ctx context.Context, rl *retry.Loop, s *testing.State
 	// Fatal error if firmware dump is created when not allowed by policy.
 	if !firmwareDumpExpectedByPolicy(tc.policy) {
 		s.Fatal("Firmware dump generated when not allowed by policy")
+	}
+	for _, dumpFile := range found {
+		if err := intelfwextractor.ValidateFWDump(ctx, dumpFile); err != nil {
+			s.Fatalf("Failed to validate %s: %s", dumpFile, err)
+		}
 	}
 	s.Log("Firmware dump file successfully generated")
 
@@ -545,11 +551,11 @@ func firmwareDumpValidator(ctx context.Context, rl *retry.Loop, s *testing.State
 
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
 			// Verify if firmware dump is deleted after expiration
-			exist, e := checkIfDumpFileExists(ctx, dumpPath, s, tc.policy)
+			found, e := findDumpFiles(ctx, dumpPath, s, tc.policy)
 			if e != nil {
 				return e
 			}
-			if exist {
+			if len(found) > 0 {
 				return errors.New("firmware dump file not deleted after expiration")
 			}
 			return nil
@@ -610,11 +616,11 @@ func firmwareDumpValidator(ctx context.Context, rl *retry.Loop, s *testing.State
 	s.Log("User login successful")
 
 	// Ensure there's no dump file.
-	exist, err = checkIfDumpFileExists(ctx, dumpPath, s, tc.policy)
+	found, err = findDumpFiles(ctx, dumpPath, s, tc.policy)
 	if err != nil {
 		s.Fatal("Firmware dump file not generated error: ", err)
 	}
-	if exist {
+	if len(found) > 0 {
 		s.Fatal("Firmware Dump file not deleted after user login")
 	}
 	s.Log("Firmware dump successfully deleted after user login")
