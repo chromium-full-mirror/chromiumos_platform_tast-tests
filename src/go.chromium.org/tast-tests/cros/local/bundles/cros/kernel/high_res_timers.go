@@ -23,7 +23,11 @@ func init() {
 			"briannorris@chromium.org",
 		},
 		BugComponent: "b:167278", // ChromeOS > Platform > System > Kernel
-		Attr:         []string{"group:mainline"},
+		// b/263289152: There is an ongoing effort to disable highres timers for
+		// power efficiency reasons and experiments shows that disabling highres
+		// timers helps in power efficiency without hurting performance.
+		// Disabling as it will be obsolete when the lowres is rolled out.
+		Attr: []string{"group:mainline", "informational"},
 	})
 }
 
