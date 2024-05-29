@@ -7,7 +7,9 @@ package policy
 import (
 	"context"
 	"encoding/json"
+	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/golang/protobuf/proto"
@@ -23,8 +25,14 @@ import (
 	"go.chromium.org/tast-tests/cros/local/erpserver"
 	"go.chromium.org/tast-tests/cros/local/policyutil/fixtures"
 	"go.chromium.org/tast-tests/cros/local/upstart"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
+
+type reportingMemoryInfoParams struct {
+	vProDevice bool // test should prepare vPro specific logic
+}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -43,6 +51,21 @@ func init() {
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.ReportDeviceMemoryInfo{}, pci.VerifiedFunctionalityOS),
 		},
+		Params: []testing.Param{
+			{
+				Name:              "vpro_memory_reporting_enabled",
+				ExtraHardwareDeps: hwdep.D(hwdep.Model("brya", "redrix")),
+				Val: reportingMemoryInfoParams{
+					vProDevice: true,
+				},
+			}, {
+				Name:              "nonvpro_memory_reporting_enabled",
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("brya", "redrix")),
+				Val: reportingMemoryInfoParams{
+					vProDevice: false,
+				},
+			},
+		},
 		VarDeps: []string{"erpserver.key_id", "erpserver.public_key", "erpserver.private_key", "erpserver.signature"},
 	})
 }
@@ -53,7 +76,22 @@ type memoryEncryptionInfo struct {
 	MaxKeyNumber    int64  `json:"max_key_number"`
 }
 
+// vProSupported checks if vPro features are on the device. Even on vPro supported models, vPro
+// is not always supported on the specific device. Therefore some manual checking is required.
+func vProSupported() (bool, error) {
+	out, err := os.ReadFile("/proc/cpuinfo")
+	if err != nil {
+		return false, errors.Wrap(err, "failed to read /proc/cpuinfo file")
+	}
+	// Checking whether the system supports vPro feature or not.
+	if strings.Contains(string(out), "tme") {
+		return true, nil
+	}
+	return false, nil
+}
+
 func ReportingMemoryInfo(ctx context.Context, s *testing.State) {
+	vProDevice := s.Param().(reportingMemoryInfoParams).vProDevice
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 	// Prepare fake ERP server.
 	publicKey := s.RequiredVar("erpserver.public_key")
@@ -98,6 +136,17 @@ func ReportingMemoryInfo(ctx context.Context, s *testing.State) {
 	pb.AddPolicies(policies)
 	if err := fdms.WritePolicyBlob(pb); err != nil {
 		s.Fatal("Could not apply policy: ", err)
+	}
+
+	// Check if vPro is supported on the device.
+	if vProDevice {
+		if su, err := vProSupported(); err != nil {
+			s.Fatalf("Failed to verify if vPro is supported: %v: ", err)
+		} else if !su {
+			// vPro is not actually enabled on this device, skip test for now.
+			testing.ContextLog(ctx, "not testing vPro reporting on non vpro device")
+			return
+		}
 	}
 
 	// Start a Chrome instance that will fetch policies from the FakeDMS.
