@@ -40,10 +40,10 @@ func initChromeVideoPowerFixtures() {
 		Contacts: []string{"chromeos-camera-eng@google.com", "seannli@google.com"},
 		Impl: powersetup.NewPowerUIFixture(MinPowerTestOptions, powersetup.PowerFixtureOptions{
 			BrowserType: browser.TypeAsh,
-			BrowserExtraOpts: []chrome.Option{
-				chrome.ExtraArgs(chromeVideoArgs...),
+			BrowserExtraOpts: getChromeVideoOptions(
+				browser.TypeAsh,
 				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
-			},
+			),
 		}),
 		Parent:          "gpuWatchHangs",
 		SetUpTimeout:    powersetup.SetUpTimeout,
@@ -60,11 +60,11 @@ func initChromeVideoPowerFixtures() {
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Impl: powersetup.NewPowerUIFixture(MinPowerTestOptions, powersetup.PowerFixtureOptions{
 			BrowserType: browser.TypeAsh,
-			BrowserExtraOpts: []chrome.Option{
-				chrome.ExtraArgs(chromeVideoArgs...),
+			BrowserExtraOpts: getChromeVideoOptions(
+				browser.TypeAsh,
 				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
 				chrome.DisableFeatures("RunVideoCaptureServiceInBrowserProcess"),
-			},
+			),
 		}),
 		Parent:          "gpuWatchHangs",
 		SetUpTimeout:    powersetup.SetUpTimeout,
@@ -81,12 +81,11 @@ func initChromeVideoPowerFixtures() {
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Impl: powersetup.NewPowerUIFixture(MinPowerTestOptions, powersetup.PowerFixtureOptions{
 			BrowserType: browser.TypeLacros,
-			BrowserExtraOpts: []chrome.Option{
-				chrome.ExtraArgs(chromeVideoArgs...),
-				chrome.LacrosExtraArgs(chromeVideoArgs...),
+			BrowserExtraOpts: getChromeVideoOptions(
+				browser.TypeLacros,
 				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
 				chrome.LacrosExtraArgs(chromeBypassPermissionsArgs...),
-			},
+			),
 		}),
 		Parent:          "gpuWatchHangs",
 		SetUpTimeout:    powersetup.SetUpTimeout,
@@ -103,13 +102,12 @@ func initChromeVideoPowerFixtures() {
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Impl: powersetup.NewPowerUIFixture(MinPowerTestOptions, powersetup.PowerFixtureOptions{
 			BrowserType: browser.TypeLacros,
-			BrowserExtraOpts: []chrome.Option{
-				chrome.ExtraArgs(chromeVideoArgs...),
-				chrome.LacrosExtraArgs(chromeVideoArgs...),
+			BrowserExtraOpts: getChromeVideoOptions(
+				browser.TypeLacros,
 				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
 				chrome.LacrosExtraArgs(chromeBypassPermissionsArgs...),
 				chrome.DisableFeatures("RunVideoCaptureServiceInBrowserProcess"),
-			},
+			),
 		}),
 		Parent:          "gpuWatchHangs",
 		SetUpTimeout:    powersetup.SetUpTimeout,

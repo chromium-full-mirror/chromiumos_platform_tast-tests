@@ -29,10 +29,10 @@ func initChromeVideoStressFixtures() {
 		Impl: &chromeVideoStressImpl{
 			browserType: browser.TypeAsh,
 			fOpt: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-				return []chrome.Option{
-					chrome.ExtraArgs(chromeVideoArgs...),
+				return getChromeVideoOptions(
+					browser.TypeAsh,
 					chrome.ExtraArgs(chromeBypassPermissionsArgs...),
-				}, nil
+				), nil
 			},
 		},
 		Parent:          "gpuWatchDog",
@@ -49,10 +49,12 @@ func initChromeVideoStressFixtures() {
 			browserType: browser.TypeLacros,
 			fOpt: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 				return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(
-					chrome.ExtraArgs(chromeVideoArgs...),
-					chrome.LacrosExtraArgs(chromeVideoArgs...),
-					chrome.ExtraArgs(chromeBypassPermissionsArgs...),
-					chrome.LacrosExtraArgs(chromeBypassPermissionsArgs...))).Opts()
+					getChromeVideoOptions(
+						browser.TypeLacros,
+						chrome.ExtraArgs(chromeBypassPermissionsArgs...),
+						chrome.LacrosExtraArgs(chromeBypassPermissionsArgs...),
+					)...,
+				)).Opts()
 			},
 		},
 		Parent:          "gpuWatchDog",

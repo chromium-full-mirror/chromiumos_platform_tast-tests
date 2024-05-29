@@ -8,6 +8,7 @@ import (
 	"context"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast/core/testing"
 )
@@ -23,11 +24,11 @@ func initChromeFakeWebCamBaseFixtures() {
 		Desc:     "Similar to chromeVideo fixture but supplementing it with the use of a fake video/audio capture device (a.k.a. 'fake webcam'), see https://webrtc.org/testing/",
 		Contacts: []string{"chromeos-gfx-video@google.com"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.ExtraArgs(chromeVideoArgs...),
+			return getChromeVideoOptions(
+				browser.TypeAsh,
 				chrome.ExtraArgs(chromeFakeWebcamArgs...),
 				chrome.ExtraArgs(chromeWebRTCEncodedFrameArgs...),
-			}, nil
+			), nil
 		}),
 		Parent:          "gpuWatchDog",
 		SetUpTimeout:    chrome.FixtureSetUpTimeout,
@@ -40,11 +41,11 @@ func initChromeFakeWebCamBaseFixtures() {
 		Desc:     "Like chromeVideoWithFakeWebcam but with out-of-process video decoding disabled",
 		Contacts: []string{"chromeos-gfx-video@google.com"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.ExtraArgs(chromeVideoArgs...),
+			return getChromeVideoOptions(
+				browser.TypeAsh,
 				chrome.ExtraArgs(chromeFakeWebcamArgs...),
 				chrome.DisableFeatures("UseOutOfProcessVideoDecoding"),
-			}, nil
+			), nil
 		}),
 		Parent:          "gpuWatchDog",
 		SetUpTimeout:    chrome.FixtureSetUpTimeout,
@@ -56,12 +57,12 @@ func initChromeFakeWebCamBaseFixtures() {
 		Desc:     "Similar to chromeVideoWithFakeWebcam fixture but using the V4L2 Flat stateful VD",
 		Contacts: []string{"chromeos-gfx-video@google.com"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.ExtraArgs(chromeVideoArgs...),
+			return getChromeVideoOptions(
+				browser.TypeAsh,
 				chrome.ExtraArgs(chromeFakeWebcamArgs...),
 				chrome.EnableFeatures("V4L2FlatStatefulVideoDecoder"),
 				chrome.EnableFeatures("UseChromeOSDirectVideoDecoder"),
-			}, nil
+			), nil
 		}),
 		Parent:          "gpuWatchDog",
 		SetUpTimeout:    chrome.FixtureSetUpTimeout,
@@ -74,12 +75,12 @@ func initChromeFakeWebCamBaseFixtures() {
 		Desc:     "Similar to chromeVideoWithFakeWebcam fixture but enabling S-mode encoding and required WebRTC API testing it",
 		Contacts: []string{"chromeos-gfx-video@google.com"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.ExtraArgs(chromeVideoArgs...),
+			return getChromeVideoOptions(
+				browser.TypeAsh,
 				chrome.ExtraArgs(chromeFakeWebcamArgs...),
 				chrome.ExtraArgs(chromeWebRTCEncodedFrameArgs...),
 				chrome.EnableFeatures("VaapiVp9SModeHWEncoding"),
-			}, nil
+			), nil
 		}),
 		Parent:          "gpuWatchDog",
 		SetUpTimeout:    chrome.FixtureSetUpTimeout,
@@ -93,11 +94,11 @@ func initChromeFakeWebCamBaseFixtures() {
 		Desc:     "Similar to chromeVideoWithFakeWebcam fixture but using the out-of-process video encoder",
 		Contacts: []string{"chromeos-gfx-video@google.com"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.ExtraArgs(chromeVideoArgs...),
+			return getChromeVideoOptions(
+				browser.TypeAsh,
 				chrome.ExtraArgs(chromeFakeWebcamArgs...),
 				chrome.EnableFeatures("UseOutOfProcessVideoEncoding"),
-			}, nil
+			), nil
 		}),
 		Parent:          "gpuWatchDog",
 		SetUpTimeout:    chrome.FixtureSetUpTimeout,
@@ -111,12 +112,12 @@ func initChromeFakeWebCamBaseFixtures() {
 		Desc:     "Similar to chromeVideoWithFakeWebcam fixture but using the out-of-process video encoder and out-of-process video decoding disabled",
 		Contacts: []string{"chromeos-gfx-video@google.com"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.ExtraArgs(chromeVideoArgs...),
+			return getChromeVideoOptions(
+				browser.TypeAsh,
 				chrome.ExtraArgs(chromeFakeWebcamArgs...),
 				chrome.DisableFeatures("UseOutOfProcessVideoDecoding"),
 				chrome.EnableFeatures("UseOutOfProcessVideoEncoding"),
-			}, nil
+			), nil
 		}),
 		Parent:          "gpuWatchDog",
 		SetUpTimeout:    chrome.FixtureSetUpTimeout,
@@ -129,13 +130,13 @@ func initChromeFakeWebCamBaseFixtures() {
 		Desc:     "Similar to chromeVideoWithFakeWebcam fixture but with both hardware decoding and encoding disabled",
 		Contacts: []string{"chromeos-gfx-video@google.com"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.ExtraArgs(chromeVideoArgs...),
+			return getChromeVideoOptions(
+				browser.TypeAsh,
 				chrome.ExtraArgs(chromeFakeWebcamArgs...),
 				chrome.ExtraArgs(chromeWebRTCEncodedFrameArgs...),
 				chrome.ExtraArgs("--disable-accelerated-video-decode"),
 				chrome.ExtraArgs("--disable-accelerated-video-encode"),
-			}, nil
+			), nil
 		}),
 		Parent:          "gpuWatchDog",
 		SetUpTimeout:    chrome.FixtureSetUpTimeout,
@@ -148,12 +149,12 @@ func initChromeFakeWebCamBaseFixtures() {
 		Desc:     "Similar to chromeVideoWithFakeWebcam fixture but hardware encoding disabled",
 		Contacts: []string{"chromeos-gfx-video@google.com"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.ExtraArgs(chromeVideoArgs...),
+			return getChromeVideoOptions(
+				browser.TypeAsh,
 				chrome.ExtraArgs(chromeFakeWebcamArgs...),
 				chrome.ExtraArgs(chromeWebRTCEncodedFrameArgs...),
 				chrome.ExtraArgs("--disable-accelerated-video-encode"),
-			}, nil
+			), nil
 		}),
 		Parent:          "gpuWatchDog",
 		SetUpTimeout:    chrome.FixtureSetUpTimeout,
@@ -166,11 +167,11 @@ func initChromeFakeWebCamBaseFixtures() {
 		Desc:     "Similar to chromeVideoWithFakeWebcam fixture but the global VA-API lock is disabled if applicable",
 		Contacts: []string{"chromeos-gfx-video@google.com"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.ExtraArgs(chromeVideoArgs...),
+			return getChromeVideoOptions(
+				browser.TypeAsh,
 				chrome.ExtraArgs(chromeFakeWebcamArgs...),
 				chrome.ExtraArgs("--disable-features=GlobalVaapiLock"),
-			}, nil
+			), nil
 		}),
 		Parent:          "gpuWatchDog",
 		SetUpTimeout:    chrome.FixtureSetUpTimeout,
@@ -183,11 +184,11 @@ func initChromeFakeWebCamBaseFixtures() {
 		Desc:     "Similar to chromeVideo fixture but supplementing it with the use of a fake video/audio capture device (a.k.a. 'fake webcam'), see https://webrtc.org/testing/, and the webrtc rendering smoothness algorithm disabled",
 		Contacts: []string{"chromeos-gfx-video@google.com"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.ExtraArgs(chromeVideoArgs...),
+			return getChromeVideoOptions(
+				browser.TypeAsh,
 				chrome.ExtraArgs(chromeFakeWebcam60fpsArgs...),
 				chrome.ExtraArgs("--disable-rtc-smoothness-algorithm"),
-			}, nil
+			), nil
 		}),
 		Parent:          "gpuWatchDog",
 		SetUpTimeout:    chrome.FixtureSetUpTimeout,
@@ -203,10 +204,12 @@ func initChromeFakeWebCamFixturesLacros() {
 		Contacts: []string{"chromeos-gfx-video@google.com"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(
-				chrome.ExtraArgs(chromeVideoArgs...),
-				chrome.LacrosExtraArgs(chromeVideoArgs...),
-				chrome.ExtraArgs(chromeFakeWebcamArgs...),
-				chrome.LacrosExtraArgs(chromeBypassPermissionsArgs...))).Opts()
+				getChromeVideoOptions(
+					browser.TypeLacros,
+					chrome.ExtraArgs(chromeFakeWebcamArgs...),
+					chrome.LacrosExtraArgs(chromeBypassPermissionsArgs...),
+				)...,
+			)).Opts()
 		}),
 		Parent:          "gpuWatchDog",
 		SetUpTimeout:    chrome.FixtureSetUpTimeout,
@@ -220,11 +223,13 @@ func initChromeFakeWebCamFixturesLacros() {
 		Contacts: []string{"chromeos-gfx-video@google.com"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(
-				chrome.ExtraArgs(chromeVideoArgs...),
-				chrome.LacrosExtraArgs(chromeVideoArgs...),
-				chrome.ExtraArgs(chromeFakeWebcam60fpsArgs...),
-				chrome.LacrosExtraArgs(chromeBypassPermissionsArgs...),
-				chrome.LacrosExtraArgs("--disable-rtc-smoothness-algorithm"))).Opts()
+				getChromeVideoOptions(
+					browser.TypeLacros,
+					chrome.ExtraArgs(chromeFakeWebcam60fpsArgs...),
+					chrome.LacrosExtraArgs(chromeBypassPermissionsArgs...),
+					chrome.LacrosExtraArgs("--disable-rtc-smoothness-algorithm"),
+				)...,
+			)).Opts()
 		}),
 		Parent:          "gpuWatchDog",
 		SetUpTimeout:    chrome.FixtureSetUpTimeout,

@@ -7,6 +7,7 @@ package pre
 
 import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -14,8 +15,11 @@ import (
 func ChromeVideo() testing.Precondition { return chromeVideoPre }
 
 var chromeVideoPre = chrome.NewPrecondition("video",
-	chrome.ExtraArgs(chromeVideoArgs...),
-	chrome.ExtraArgs(chromeBypassPermissionsArgs...))
+	getChromeVideoOptions(
+		browser.TypeAsh,
+		chrome.ExtraArgs(chromeBypassPermissionsArgs...),
+	)...,
+)
 
 // ChromeVideoWithFakeWebcam returns precondition equal to ChromeVideo above,
 // supplementing it with the use of a fake video/audio capture device (a.k.a.
@@ -23,8 +27,11 @@ var chromeVideoPre = chrome.NewPrecondition("video",
 func ChromeVideoWithFakeWebcam() testing.Precondition { return chromeVideoWithFakeWebcamPre }
 
 var chromeVideoWithFakeWebcamPre = chrome.NewPrecondition("videoWithFakeWebcam",
-	chrome.ExtraArgs(chromeVideoArgs...),
-	chrome.ExtraArgs(chromeFakeWebcamArgs...))
+	getChromeVideoOptions(
+		browser.TypeAsh,
+		chrome.ExtraArgs(chromeFakeWebcamArgs...),
+	)...,
+)
 
 // ChromeCameraPerf returns a precondition that Chrome is started with camera
 // tests-specific setting and without verbose logging that can affect the

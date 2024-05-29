@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast/core/testing"
 )
@@ -24,10 +25,10 @@ func initChromeCaptureBaseFixtures() {
 		Desc:     "Logged into a user session with flag so that Chrome always picks the entire screen for getDisplayMedia(), bypassing the picker UI",
 		Contacts: []string{"chromeos-gfx-video@google.com"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.ExtraArgs(chromeVideoArgs...),
+			return getChromeVideoOptions(
+				browser.TypeAsh,
 				chrome.ExtraArgs(`--auto-select-desktop-capture-source=display`),
-			}, nil
+			), nil
 		}),
 		Parent:          "gpuWatchDog",
 		SetUpTimeout:    chrome.FixtureSetUpTimeout,
@@ -40,10 +41,10 @@ func initChromeCaptureBaseFixtures() {
 		Desc:     "Logged into a user session with flag so that Chrome always picks the Chromium window for getDisplayMedia(), bypassing the picker UI",
 		Contacts: []string{"chromeos-gfx-video@google.com"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.ExtraArgs(chromeVideoArgs...),
+			return getChromeVideoOptions(
+				browser.TypeAsh,
 				chrome.ExtraArgs(`--auto-select-window-capture-source-by-title=test`),
-			}, nil
+			), nil
 		}),
 		Parent:          "gpuWatchDog",
 		SetUpTimeout:    chrome.FixtureSetUpTimeout,
@@ -56,11 +57,11 @@ func initChromeCaptureBaseFixtures() {
 		Desc:     "Logged into a user session with flag so that Chrome always picks the current tab for getDisplayMedia(), bypassing the picker UI",
 		Contacts: []string{"chromeos-gfx-video@google.com"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.ExtraArgs(chromeVideoArgs...),
+			return getChromeVideoOptions(
+				browser.TypeAsh,
 				// Chrome automatically selects a tab page whose title contains "test".
 				chrome.ExtraArgs("--auto-select-tab-capture-source-by-title=test"),
-			}, nil
+			), nil
 		}),
 		Parent:          "gpuWatchDog",
 		SetUpTimeout:    chrome.FixtureSetUpTimeout,
@@ -73,13 +74,13 @@ func initChromeCaptureBaseFixtures() {
 		Desc:     "Like chromeTabCapture but with out-of-process video decoding disabled and forcing software encoding",
 		Contacts: []string{"chromeos-gfx-video@google.com"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.ExtraArgs(chromeVideoArgs...),
+			return getChromeVideoOptions(
+				browser.TypeAsh,
 				// Chrome automatically selects a tab page whose title contains "test".
 				chrome.ExtraArgs("--auto-select-tab-capture-source-by-title=test"),
 				chrome.ExtraArgs("--disable-accelerated-video-encode"),
 				chrome.DisableFeatures("UseOutOfProcessVideoDecoding"),
-			}, nil
+			), nil
 		}),
 		Parent:          "gpuWatchDog",
 		SetUpTimeout:    chrome.FixtureSetUpTimeout,
@@ -93,11 +94,13 @@ func initChromeCaptureBaseFixtures() {
 		Contacts: []string{"chromeos-gfx-video@google.com"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(
-				chrome.ExtraArgs(chromeVideoArgs...),
-				chrome.LacrosExtraArgs(chromeVideoArgs...),
-				// Chrome automatically selects a tab page whose title contains "test".
-				chrome.LacrosExtraArgs("--auto-select-tab-capture-source-by-title=test"),
-				chrome.LacrosExtraArgs("--disable-accelerated-video-encode"))).Opts()
+				getChromeVideoOptions(
+					browser.TypeLacros,
+					// Chrome automatically selects a tab page whose title contains "test".
+					chrome.LacrosExtraArgs("--auto-select-tab-capture-source-by-title=test"),
+					chrome.LacrosExtraArgs("--disable-accelerated-video-encode"),
+				)...,
+			)).Opts()
 		}),
 		Parent:          "gpuWatchDog",
 		SetUpTimeout:    chrome.FixtureSetUpTimeout,
@@ -110,11 +113,11 @@ func initChromeCaptureBaseFixtures() {
 		Desc:     "Logged into a user session with flag so that Chrome always picks the entire screen for getDisplayMedia(), bypassing the picker UI",
 		Contacts: []string{"chromeos-gfx-video@google.com"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.ExtraArgs(chromeVideoArgs...),
+			return getChromeVideoOptions(
+				browser.TypeAsh,
 				chrome.ExtraArgs(`--auto-select-desktop-capture-source=display`),
 				chrome.ExtraArgs("--enable-features=ZeroCopyTabCapture"),
-			}, nil
+			), nil
 		}),
 		Parent:          "gpuWatchDog",
 		SetUpTimeout:    chrome.FixtureSetUpTimeout,
@@ -127,11 +130,11 @@ func initChromeCaptureBaseFixtures() {
 		Desc:     "Logged into a user session with flag so that Chrome always picks the Chromium window for getDisplayMedia(), bypassing the picker UI",
 		Contacts: []string{"chromeos-gfx-video@google.com"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.ExtraArgs(chromeVideoArgs...),
+			return getChromeVideoOptions(
+				browser.TypeAsh,
 				chrome.ExtraArgs(`--auto-select-window-capture-source-by-title=test`),
 				chrome.ExtraArgs("--enable-features=ZeroCopyTabCapture"),
-			}, nil
+			), nil
 		}),
 		Parent:          "gpuWatchDog",
 		SetUpTimeout:    chrome.FixtureSetUpTimeout,
@@ -144,12 +147,12 @@ func initChromeCaptureBaseFixtures() {
 		Desc:     "Logged into a user session with flag so that Chrome always picks the current tab for getDisplayMedia(), bypassing the picker UI",
 		Contacts: []string{"chromeos-gfx-video@google.com"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.ExtraArgs(chromeVideoArgs...),
+			return getChromeVideoOptions(
+				browser.TypeAsh,
 				// Chrome automatically selects a tab page whose title contains "test".
 				chrome.ExtraArgs("--auto-select-tab-capture-source-by-title=test"),
 				chrome.ExtraArgs("--enable-features=ZeroCopyTabCapture"),
-			}, nil
+			), nil
 		}),
 		Parent:          "gpuWatchDog",
 		SetUpTimeout:    chrome.FixtureSetUpTimeout,
@@ -161,13 +164,13 @@ func initChromeCaptureBaseFixtures() {
 		Desc:     "Logged into a user session with flag so that Chrome always picks the current tab for getDisplayMedia(), bypassing the picker UI with software encoding",
 		Contacts: []string{"chromeos-gfx-video@google.com"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.ExtraArgs(chromeVideoArgs...),
+			return getChromeVideoOptions(
+				browser.TypeAsh,
 				// Chrome automatically selects a tab page whose title contains "test".
 				chrome.ExtraArgs("--auto-select-tab-capture-source-by-title=test"),
 				chrome.ExtraArgs("--enable-features=ZeroCopyTabCapture"),
 				chrome.ExtraArgs("--disable-accelerated-video-encode"),
-			}, nil
+			), nil
 		}),
 		Parent:          "gpuWatchDog",
 		SetUpTimeout:    chrome.FixtureSetUpTimeout,
@@ -183,9 +186,11 @@ func initChromeCaptureLacrosFixtures() {
 		Contacts: []string{"chromeos-gfx-video@google.com"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(
-				chrome.ExtraArgs(chromeVideoArgs...),
-				chrome.LacrosExtraArgs(chromeVideoArgs...),
-				chrome.LacrosExtraArgs("--auto-select-desktop-capture-source=Entire screen"))).Opts()
+				getChromeVideoOptions(
+					browser.TypeLacros,
+					chrome.LacrosExtraArgs("--auto-select-desktop-capture-source=Entire screen"),
+				)...,
+			)).Opts()
 		}),
 		Parent:          "gpuWatchDog",
 		SetUpTimeout:    chrome.FixtureSetUpTimeout + 7*time.Minute,
@@ -199,9 +204,11 @@ func initChromeCaptureLacrosFixtures() {
 		Contacts: []string{"chromeos-gfx-video@google.com"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(
-				chrome.ExtraArgs(chromeVideoArgs...),
-				chrome.LacrosExtraArgs(chromeVideoArgs...),
-				chrome.LacrosExtraArgs("--auto-select-window-capture-source-by-title=test"))).Opts()
+				getChromeVideoOptions(
+					browser.TypeLacros,
+					chrome.LacrosExtraArgs("--auto-select-window-capture-source-by-title=test"),
+				)...,
+			)).Opts()
 		}),
 		Parent:          "gpuWatchDog",
 		SetUpTimeout:    chrome.FixtureSetUpTimeout + 7*time.Minute,
@@ -215,9 +222,11 @@ func initChromeCaptureLacrosFixtures() {
 		Contacts: []string{"chromeos-gfx-video@google.com"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(
-				chrome.ExtraArgs(chromeVideoArgs...),
-				chrome.LacrosExtraArgs(chromeVideoArgs...),
-				chrome.LacrosExtraArgs("--auto-select-tab-capture-source-by-title=test"))).Opts()
+				getChromeVideoOptions(
+					browser.TypeLacros,
+					chrome.LacrosExtraArgs("--auto-select-tab-capture-source-by-title=test"),
+				)...,
+			)).Opts()
 		}),
 		Parent:          "gpuWatchDog",
 		SetUpTimeout:    chrome.FixtureSetUpTimeout + 7*time.Minute,
