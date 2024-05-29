@@ -6,6 +6,7 @@ package lacros
 
 import (
 	"context"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/lacros/migrate"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -28,6 +29,7 @@ func init() {
 		},
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "lacros"},
+		Timeout:      4 * time.Minute,
 	})
 }
 
