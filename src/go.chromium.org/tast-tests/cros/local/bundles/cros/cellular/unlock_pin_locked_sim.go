@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/cellular"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
@@ -92,6 +93,7 @@ func UnlockPinLockedSim(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create a new instance of Chrome: ", err)
 	}
+	defer cr.Close(cleanupCtx)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -103,6 +105,8 @@ func UnlockPinLockedSim(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to launch OS settings: ", err)
 	}
+	defer settings.Close(cleanupCtx)
+	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnError(cleanupCtx, s.OutDir(), s.HasError, tconn, "os_settings_ui_dump")
 
 	ui := uiauto.New(tconn).WithTimeout(5 * time.Minute)
 

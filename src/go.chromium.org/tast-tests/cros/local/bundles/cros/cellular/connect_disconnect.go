@@ -14,10 +14,12 @@ import (
 	"go.chromium.org/tast-tests/cros/local/cellular"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -43,10 +45,15 @@ func init() {
 }
 
 func ConnectDisconnect(ctx context.Context, s *testing.State) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
 	cr, err := chrome.New(ctx)
 	if err != nil {
 		s.Fatal("Failed to create a new instance of Chrome: ", err)
 	}
+	defer cr.Close(cleanupCtx)
 
 	helper := s.FixtValue().(*cellular.FixtData).Helper
 	if _, err := helper.Connect(ctx); err != nil {
@@ -67,13 +74,12 @@ func ConnectDisconnect(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to open mobile data subpage: ", err)
 	}
-	defer mdp.Close(ctx)
+	defer mdp.Close(cleanupCtx)
+	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnError(cleanupCtx, s.OutDir(), s.HasError, tconn, "os_settings_ui_dump")
 
 	if err := ossettings.GoToActiveNetworkDetails(ctx, tconn); err != nil {
 		s.Fatal("Failed to go to active cellular network detail page view: ", err)
 	}
-
-	ui := uiauto.New(tconn)
 
 	if err := mdp.WithTimeout(15 * time.Second).WaitUntilExists(ossettings.DisconnectButton)(ctx); err != nil {
 		s.Fatal("Failed to find Disconnect button in OS Settings: ", err)
@@ -92,6 +98,7 @@ func ConnectDisconnect(ctx context.Context, s *testing.State) {
 	cellularNetworkQuickSettingsView := nodewith.Role(role.Button).NameRegex(regexp.MustCompile(networkName)).Ancestor(networkDetailedView).First()
 	connectedQuickSettingsLabel := nodewith.Role(role.StaticText).NameContaining("Connected").Ancestor(cellularNetworkQuickSettingsView)
 
+	ui := uiauto.New(tconn)
 	if err := ui.WithTimeout(15 * time.Second).WaitUntilExists(connectedQuickSettingsLabel)(ctx); err != nil {
 		s.Fatal("Failed to verify network is connected in Quick Settings: ", err)
 	}

@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/cellular"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -66,21 +67,27 @@ func MigrateDefaultCustomApn(ctx context.Context, s *testing.State) {
 	testing.ContextLog(ctx, "Custom APN to migrate: ", validAPNToMigrate)
 
 	func() {
+		cleanupCtx := ctx
+		ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+		defer cancel()
+
 		cr, err := chrome.New(ctx, chrome.DisableFeatures("ApnRevamp"))
 		if err != nil {
 			s.Fatal("Failed to start Chrome: ", err)
 		}
-
-		defer cr.Close(ctx)
+		defer cr.Close(cleanupCtx)
 
 		tconn, err := cr.TestAPIConn(ctx)
 		if err != nil {
 			s.Fatal("Failed to connect Test API: ", err)
 		}
 
-		if _, err := ossettings.OpenMobileDataSubpage(ctx, tconn, cr); err != nil {
+		settings, err := ossettings.OpenMobileDataSubpage(ctx, tconn, cr)
+		if err != nil {
 			s.Fatal("Failed to open mobile data subpage: ", err)
 		}
+		defer settings.Close(cleanupCtx)
+		defer faillog.DumpUITreeWithScreenshotWithTestAPIOnError(cleanupCtx, s.OutDir(), s.HasError, tconn, "os_settings_ui_dump")
 
 		if err := ossettings.GoToActiveNetworkDetails(ctx, tconn); err != nil {
 			s.Fatal("Failed to go to active cellular network detail page view: ", err)
@@ -139,6 +146,10 @@ func MigrateDefaultCustomApn(ctx context.Context, s *testing.State) {
 		}
 	}()
 
+	cleanupCtx = ctx
+	ctx, cancel = ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
 	cr, err := chrome.New(ctx,
 		chrome.EnableFeatures("ApnRevamp"),
 		chrome.RemoveNotification(false),
@@ -146,6 +157,7 @@ func MigrateDefaultCustomApn(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
+	defer cr.Close(cleanupCtx)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -153,10 +165,11 @@ func MigrateDefaultCustomApn(ctx context.Context, s *testing.State) {
 	}
 
 	mdp, err := ossettings.OpenMobileDataSubpage(ctx, tconn, cr)
-	defer mdp.Close(ctx)
 	if err != nil {
 		s.Fatal("Failed to open mobile data subpage: ", err)
 	}
+	defer mdp.Close(cleanupCtx)
+	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnError(cleanupCtx, s.OutDir(), s.HasError, tconn, "after_relogin_os_settings_ui_dump")
 
 	if err := ossettings.GoToActiveNetworkDetails(ctx, tconn); err != nil {
 		s.Fatal("Failed to go to active cellular network detail page view: ", err)

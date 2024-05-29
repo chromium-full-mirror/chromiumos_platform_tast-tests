@@ -6,6 +6,7 @@ package cellular
 
 import (
 	"context"
+	"fmt"
 	"regexp"
 	"time"
 
@@ -22,6 +23,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast-tests/cros/local/policyutil/fixtures"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -48,6 +50,11 @@ func init() {
 
 func SimLockPolicyLockSettingOff(ctx context.Context, s *testing.State) {
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
+
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
 	// Start a Chrome instance that will fetch policies from the FakeDMS.
 	cr, err := chrome.New(ctx,
 		chrome.EnableFeatures("SimLockPolicy"),
@@ -57,7 +64,7 @@ func SimLockPolicyLockSettingOff(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Chrome login failed: ", err)
 	}
-	defer cr.Close(ctx)
+	defer cr.Close(cleanupCtx)
 
 	// Perform clean up
 	if err := policyutil.ResetChrome(ctx, fdms, cr); err != nil {
@@ -109,7 +116,6 @@ func SimLockPolicyLockSettingOff(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to connect Test API in clean up: ", err)
 	}
-	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
 
 	for _, param := range []struct {
 		name                 string // subtest name.
@@ -140,10 +146,18 @@ func SimLockPolicyLockSettingOff(ctx context.Context, s *testing.State) {
 			if err := policyutil.ServeAndRefresh(ctx, fdms, cr, []policy.Policy{deviceNetworkPolicy}); err != nil {
 				s.Fatal("Failed to ServeAndRefresh ONC policy: ", err)
 			}
+
+			cleanupCtx := ctx
+			ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+			defer cancel()
+
 			app, err := ossettings.OpenMobileDataSubpage(ctx, tconn, cr)
 			if err != nil {
 				s.Fatal("Failed to open mobile data subpage: ", err)
 			}
+			defer app.Close(cleanupCtx)
+			defer faillog.DumpUITreeWithScreenshotWithTestAPIOnError(cleanupCtx, s.OutDir(), s.HasError, tconn, fmt.Sprintf("%s_os_settings_ui_dump", param.name))
+
 			ui := uiauto.New(tconn).WithTimeout(30 * time.Second)
 
 			refreshProfileText := nodewith.NameStartingWith("Refreshing profile list").Role(role.StaticText)
@@ -173,10 +187,6 @@ func SimLockPolicyLockSettingOff(ctx context.Context, s *testing.State) {
 				if err := ui.CheckRestriction(ossettings.LockSimToggle, restriction.Disabled)(ctx); err != nil {
 					s.Fatal("Lock SIM card setting is not disabled: ", err)
 				}
-			}
-
-			if err := app.Close(ctx); err != nil {
-				s.Fatal("Failed to close settings app: ", err)
 			}
 		})
 	}
