@@ -76,13 +76,13 @@ func init() {
 			Name:      "fast_ash",
 			Fixture:   "powerAsh",
 			Timeout:   3*time.Minute + setupTimeoutBuffer + power.RecorderTimeout,
-			Val:       browsingTestParam{ConfigName: "browsing_fast", TimeParams: power.TimeParams{Interval: 5 * time.Second, Total: 3 * time.Minute}},
+			Val:       browsingTestParam{ConfigName: "browsing_3min", TimeParams: power.TimeParams{Interval: 5 * time.Second, Total: 3 * time.Minute}},
 			ExtraAttr: []string{"group:power", "power_daily", "power_weekly"},
 		}, {
 			Name:              "fast_lacros",
 			Fixture:           "powerLacros",
 			Timeout:           3*time.Minute + setupTimeoutBuffer + power.RecorderTimeout,
-			Val:               browsingTestParam{ConfigName: "browsing_fast", TimeParams: power.TimeParams{Interval: 5 * time.Second, Total: 3 * time.Minute}},
+			Val:               browsingTestParam{ConfigName: "browsing_3min", TimeParams: power.TimeParams{Interval: 5 * time.Second, Total: 3 * time.Minute}},
 			ExtraSoftwareDeps: []string{"lacros"},
 			ExtraAttr:         []string{"group:power", "power_daily", "power_weekly"},
 		}, {
