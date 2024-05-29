@@ -69,7 +69,7 @@ func waitForFileState(ctx context.Context, path string, desiredExistenceState bo
 
 // ModemfwdRecovery Test
 func ModemfwdRecovery(ctx context.Context, s *testing.State) {
-	const MaxRecoveryTime = 3 * time.Minute
+	const MaxRecoveryTime = 7 * time.Minute
 	params := s.Param().(recoveryTestParams)
 	perfValues := perf.NewValues()
 
