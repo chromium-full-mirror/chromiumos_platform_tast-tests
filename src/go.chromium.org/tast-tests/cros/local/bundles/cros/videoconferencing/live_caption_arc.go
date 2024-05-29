@@ -33,12 +33,9 @@ func init() {
 		},
 		BugComponent: "b:187682",
 		Timeout:      10 * time.Minute,
-		Attr:         []string{
-			// Disabled by TORA.  See: b/317516707
-			//	"group:external-dependency",
-			//	"group:cbx",
-			//	"cbx_feature_enabled",
-			//	"cbx_unstable",
+		Attr: []string{
+			"group:external-dependency",
+			"group:cbx", "cbx_feature_enabled", "cbx_unstable",
 		},
 		TestBedDeps:  []string{tbdep.Cbx(true)},
 		Data:         []string{fakearc.AppNameArc},

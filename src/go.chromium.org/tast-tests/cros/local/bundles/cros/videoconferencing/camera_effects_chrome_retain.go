@@ -11,7 +11,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/common"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/fakehtml"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/effectshtml"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vctray"
 	"go.chromium.org/tast-tests/cros/local/screenshot"
@@ -83,9 +83,13 @@ func CameraEffectsChromeRetain(cleanupCtx context.Context, s *testing.State) {
 
 	ui := uiauto.New(tconn)
 
-	url := srvURL + fakehtml.PageURL
+	url := srvURL + effectshtml.PageURL
 	if _, err := br.NewTab(ctx, url); err != nil {
 		s.Fatal("Fail to open the fake html: ", err)
+	}
+
+	if err := effectshtml.WaitForCameraStreamToReady(ctx, ui, vcTray); err != nil {
+		s.Fatal("Fail to wait for camera stream: ", err)
 	}
 
 	// Only test camera effects in different resolution with BackgroundBlurFull and RelightingOn.
@@ -95,7 +99,7 @@ func CameraEffectsChromeRetain(cleanupCtx context.Context, s *testing.State) {
 	}
 
 	// Take a screenshot before camera tab is closed.
-	imageBefore, err := fakehtml.GrabVideoArea(ctx, cr, tconn, ui)
+	imageBefore, err := effectshtml.GrabVideoArea(ctx, cr, tconn, ui)
 	if err != nil {
 		s.Fatal("Fail to grab camera screen shot before: ", err)
 	}
@@ -117,10 +121,14 @@ func CameraEffectsChromeRetain(cleanupCtx context.Context, s *testing.State) {
 		s.Fatal("Fail to open the fake html: ", err)
 	}
 
+	if err := effectshtml.WaitForCameraStreamToReady(ctx, ui, vcTray); err != nil {
+		s.Fatal("Fail to wait for camera stream: ", err)
+	}
+
 	var imageAfter image.Image
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		// Take a screenshot after a new tab is opened.
-		imageAfter, err = fakehtml.GrabVideoArea(ctx, cr, tconn, ui)
+		imageAfter, err = effectshtml.GrabVideoArea(ctx, cr, tconn, ui)
 		if err != nil {
 			return err
 		}
@@ -128,7 +136,7 @@ func CameraEffectsChromeRetain(cleanupCtx context.Context, s *testing.State) {
 		// Camera effects should be identical for new tab.
 		notChangedThreshold := 1.0
 		changedThreshold := 0.0
-		notChanged, changed := fakehtml.ImageDiff(imageBefore, imageAfter, 0.0)
+		notChanged, changed := effectshtml.ImageDiff(imageBefore, imageAfter, 0.0)
 		if notChanged < notChangedThreshold || changed < changedThreshold {
 			return errors.Errorf("Wrong percentage of pixel change: %f changed and %f not changed", changed, notChanged)
 		}
@@ -136,8 +144,8 @@ func CameraEffectsChromeRetain(cleanupCtx context.Context, s *testing.State) {
 		return nil
 
 	}, &testing.PollOptions{Timeout: 3 * time.Second, Interval: time.Second}); err != nil {
-		fakehtml.SaveImageToFaillog(ctx, s, imageBefore, fakehtml.BeforeEffectsImageName)
-		fakehtml.SaveImageToFaillog(ctx, s, imageAfter, fakehtml.AfterEffectsImageName)
+		effectshtml.SaveImageToFaillog(ctx, s, imageBefore, effectshtml.BeforeEffectsImageName)
+		effectshtml.SaveImageToFaillog(ctx, s, imageAfter, effectshtml.AfterEffectsImageName)
 		s.Fatal("Screenshot diff unexpected: ", err)
 	}
 }

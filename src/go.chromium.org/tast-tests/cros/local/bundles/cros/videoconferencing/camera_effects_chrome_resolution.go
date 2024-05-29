@@ -12,7 +12,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/common"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/fakehtml"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/effectshtml"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vctray"
 	"go.chromium.org/tast-tests/cros/local/screenshot"
@@ -65,27 +65,14 @@ func CameraEffectsChromeResolution(cleanupCtx context.Context, s *testing.State)
 
 	ui := uiauto.New(tconn)
 
-	url := srvURL + fakehtml.PageURL
+	url := srvURL + effectshtml.PageURL
 	conn, err := br.NewTab(ctx, url)
 	if err != nil {
 		s.Fatal("Fail to open the fake html: ", err)
 	}
 
-	if err := vcTray.SetCameraEffects(vctray.BackgroundBlurOff, false)(ctx); err != nil {
-		s.Fatalf("Failed to set camera effects to BackgroundBlur %v; PortraitRelighting off: %v",
-			vctray.BackgroundBlurOff, err)
-	}
-
-	// Take a screenshot before camera effects applied.
-	imageBefore, err := fakehtml.GrabVideoArea(ctx, cr, tconn, ui)
-	if err != nil {
-		s.Fatal("Fail to grab camera screen shot before: ", err)
-	}
-
-	// Only test camera effects in different resolution with BackgroundBlurFull and RelightingOn.
-	if err := vcTray.SetCameraEffects(vctray.BackgroundBlurFull, true)(ctx); err != nil {
-		s.Fatalf("Failed to set camera effects to BackgroundBlur %v; PortraitRelighting on: %v",
-			vctray.BackgroundBlurFull, err)
+	if err := effectshtml.WaitForCameraStreamToReady(ctx, ui, vcTray); err != nil {
+		s.Fatal("Fail to wait for camera stream: ", err)
 	}
 
 	// Run subtests to verify camera effects are correctly applied in different resolution.
@@ -116,21 +103,38 @@ func CameraEffectsChromeResolution(cleanupCtx context.Context, s *testing.State)
 				s.Fatalf("Failed to navigate to %q: %v", urlWithResolution, err)
 			}
 
-			if err := ui.WithTimeout(time.Minute).WaitUntilExists(fakehtml.VideoNode)(ctx); err != nil {
-				s.Fatal("Failed to fully load the page : ", err)
+			if err := effectshtml.WaitForCameraStreamToReady(ctx, ui, vcTray); err != nil {
+				s.Fatal("Fail to wait for camera stream: ", err)
+			}
+
+			if err := vcTray.SetCameraEffects(vctray.BackgroundBlurOff, false)(ctx); err != nil {
+				s.Fatalf("Failed to set camera effects to BackgroundBlur %v; PortraitRelighting off: %v",
+					vctray.BackgroundBlurOff, err)
+			}
+
+			// Take a screenshot before camera effects applied.
+			imageBefore, err := effectshtml.GrabVideoArea(ctx, cr, tconn, ui)
+			if err != nil {
+				s.Fatal("Fail to grab camera screen shot before: ", err)
+			}
+
+			// Only test camera effects in different resolution with BackgroundBlurFull and RelightingOn.
+			if err := vcTray.SetCameraEffects(vctray.BackgroundBlurFull, true)(ctx); err != nil {
+				s.Fatalf("Failed to set camera effects to BackgroundBlur %v; PortraitRelighting on: %v",
+					vctray.BackgroundBlurFull, err)
 			}
 
 			var imageAfter image.Image
 			if err := testing.Poll(ctx, func(ctx context.Context) error {
 				// Take a screenshot after camera effects applied.
-				imageAfter, err = fakehtml.GrabVideoArea(ctx, cr, tconn, ui)
+				imageAfter, err = effectshtml.GrabVideoArea(ctx, cr, tconn, ui)
 				if err != nil {
 					return err
 				}
 
 				notChangedThreshold := 0.2
 				changedThreshold := 0.5
-				notChanged, changed := fakehtml.ImageDiff(imageBefore, imageAfter, 0.0)
+				notChanged, changed := effectshtml.ImageDiff(imageBefore, imageAfter, 0.0)
 				if notChanged < notChangedThreshold || changed < changedThreshold {
 					return errors.Errorf("Wrong percentage of pixel change: %f changed and %f not changed", changed, notChanged)
 				}
@@ -138,8 +142,8 @@ func CameraEffectsChromeResolution(cleanupCtx context.Context, s *testing.State)
 				return nil
 
 			}, &testing.PollOptions{Timeout: 3 * time.Second, Interval: time.Second}); err != nil {
-				fakehtml.SaveImageToFaillog(ctx, s, imageBefore, fakehtml.BeforeEffectsImageName)
-				fakehtml.SaveImageToFaillog(ctx, s, imageAfter, subTest.name+fakehtml.AfterEffectsImageName)
+				effectshtml.SaveImageToFaillog(ctx, s, imageBefore, effectshtml.BeforeEffectsImageName)
+				effectshtml.SaveImageToFaillog(ctx, s, imageAfter, subTest.name+effectshtml.AfterEffectsImageName)
 				s.Fatal("Screenshot diff unexpected: ", err)
 			}
 		})

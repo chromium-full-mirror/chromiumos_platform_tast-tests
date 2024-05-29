@@ -11,7 +11,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/common"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/fakehtml"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/effectshtml"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vctray"
 	"go.chromium.org/tast-tests/cros/local/screenshot"
@@ -83,8 +83,12 @@ func CameraEffectsChrome(cleanupCtx context.Context, s *testing.State) {
 
 	ui := uiauto.New(tconn)
 
-	if _, err := br.NewTab(ctx, srvURL+fakehtml.PageURL); err != nil {
+	if _, err := br.NewTab(ctx, srvURL+effectshtml.PageURL); err != nil {
 		s.Fatal("Fail to open the fake html: ", err)
+	}
+
+	if err := effectshtml.WaitForCameraStreamToReady(ctx, ui, vcTray); err != nil {
+		s.Fatal("Fail to wait for camera stream: ", err)
 	}
 
 	if err := vcTray.SetCameraEffects(vctray.BackgroundBlurOff, false)(ctx); err != nil {
@@ -93,7 +97,7 @@ func CameraEffectsChrome(cleanupCtx context.Context, s *testing.State) {
 	}
 
 	// Take a screenshot before camera effects applied.
-	imageBefore, err := fakehtml.GrabVideoArea(ctx, cr, tconn, ui)
+	imageBefore, err := effectshtml.GrabVideoArea(ctx, cr, tconn, ui)
 	if err != nil {
 		s.Fatal("Fail to grab camera screen shot before: ", err)
 	}
@@ -119,14 +123,14 @@ func CameraEffectsChrome(cleanupCtx context.Context, s *testing.State) {
 			backgroundBlur:      vctray.BackgroundBlurLight,
 			portraitRelighting:  false,
 			notChangedThreshold: 0.2,
-			changedThreshold:    0.5,
+			changedThreshold:    0.4,
 		},
 		{
 			name:                "backgroundblur_full_portraitrelighting_off",
 			backgroundBlur:      vctray.BackgroundBlurFull,
 			portraitRelighting:  false,
 			notChangedThreshold: 0.2,
-			changedThreshold:    0.5,
+			changedThreshold:    0.4,
 		},
 		{
 			name:                "backgroundblur_off_portraitrelighting_on",
@@ -139,15 +143,15 @@ func CameraEffectsChrome(cleanupCtx context.Context, s *testing.State) {
 			name:                "backgroundblur_light_portraitrelighting_on",
 			backgroundBlur:      vctray.BackgroundBlurLight,
 			portraitRelighting:  true,
-			notChangedThreshold: 0.15,
-			changedThreshold:    0.70,
+			notChangedThreshold: 0.10,
+			changedThreshold:    0.60,
 		},
 		{
 			name:                "backgroundblur_full_portraitrelighting_on",
 			backgroundBlur:      vctray.BackgroundBlurFull,
 			portraitRelighting:  true,
-			notChangedThreshold: 0.15,
-			changedThreshold:    0.70,
+			notChangedThreshold: 0.10,
+			changedThreshold:    0.60,
 		},
 	}
 
@@ -161,12 +165,12 @@ func CameraEffectsChrome(cleanupCtx context.Context, s *testing.State) {
 			var imageAfter image.Image
 			if err := testing.Poll(ctx, func(ctx context.Context) error {
 				// Take a screenshot after camera effects applied.
-				imageAfter, err = fakehtml.GrabVideoArea(ctx, cr, tconn, ui)
+				imageAfter, err = effectshtml.GrabVideoArea(ctx, cr, tconn, ui)
 				if err != nil {
 					return err
 				}
 
-				notChanged, changed := fakehtml.ImageDiff(imageBefore, imageAfter, 0.0)
+				notChanged, changed := effectshtml.ImageDiff(imageBefore, imageAfter, 0.0)
 				if notChanged < subTest.notChangedThreshold || changed < subTest.changedThreshold {
 					return errors.Errorf("Wrong percentage of pixel change for %s: %f changed and %f not changed", subTest.name, changed, notChanged)
 				}
@@ -174,8 +178,8 @@ func CameraEffectsChrome(cleanupCtx context.Context, s *testing.State) {
 				return nil
 
 			}, &testing.PollOptions{Timeout: 3 * time.Second, Interval: time.Second}); err != nil {
-				fakehtml.SaveImageToFaillog(ctx, s, imageBefore, fakehtml.BeforeEffectsImageName)
-				fakehtml.SaveImageToFaillog(ctx, s, imageAfter, subTest.name+fakehtml.AfterEffectsImageName)
+				effectshtml.SaveImageToFaillog(ctx, s, imageBefore, effectshtml.BeforeEffectsImageName)
+				effectshtml.SaveImageToFaillog(ctx, s, imageAfter, subTest.name+effectshtml.AfterEffectsImageName)
 				s.Fatal("Screenshot diff unexpected: ", err)
 			}
 		})

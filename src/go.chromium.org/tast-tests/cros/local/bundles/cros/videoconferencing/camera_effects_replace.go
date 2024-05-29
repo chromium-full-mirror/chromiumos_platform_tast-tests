@@ -6,26 +6,21 @@ package videoconferencing
 
 import (
 	"context"
-	"net/http"
-	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/tbdep"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/common"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/data"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/fakehtml"
-	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/effectshtml"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vctray"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/videoconferencing/fixture"
-	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -65,48 +60,9 @@ func init() {
 	})
 }
 
-func CameraEffectsReplace(ctx context.Context, s *testing.State) {
-	// Shorten context to allow for cleanup.
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
-	defer cancel()
-
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
-	bt := s.FixtValue().(fixture.FixtData).BrowserType()
-
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to connect Test API: ", err)
-	}
-
-	ui := uiauto.New(tconn)
-
-	// Open video on simple javascript browser.
-	testing.ContextLog(ctx, "Opening Simple Meeting")
-	srv := httptest.NewServer(http.FileServer(s.DataFileSystem()))
-	defer srv.Close()
-
-	url := srv.URL + fakehtml.PageURL
-	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, bt, url)
-	if err != nil {
-		s.Fatal("Failed to launch browser: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
-	defer conn.Close()
-	defer conn.CloseTarget(cleanupCtx)
-
-	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
-
-	fakeHTMLUI := fakehtml.NewUI(tconn)
-	if err := fakeHTMLUI.MayBeAllowCameraAccess(ctx); err != nil {
-		s.Fatal("Failed to allow camera access: ", err)
-	}
-
-	// Take a screen shot before background replace is applied.
-	imageBefore, err := fakehtml.GrabVideoArea(ctx, cr, tconn, ui)
-	if err != nil {
-		s.Fatal("Fail to grab camera screen shot before: ", err)
-	}
+func CameraEffectsReplace(cleanupCtx context.Context, s *testing.State) {
+	ctx, tconn, cr, br, srvURL, cleanupFunc := common.Setup(cleanupCtx, s)
+	defer cleanupFunc()
 
 	// Copy background image and metadata to the BackgroundImageDirname to apply.
 	userPath, err := cryptohome.UserPath(ctx, cr.NormalizedUser())
@@ -128,13 +84,27 @@ func CameraEffectsReplace(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to copy metadata to custom-camera-backgrounds: ", err)
 	}
 
-	// Wait until vcTray is visible.
 	vcTray := vctray.New(ctx, tconn)
-	if err := uiauto.Combine("verify camera triggers vcTray",
-		vcTray.WaitUntilExists,
-		vcTray.WaitUntilState(vctray.DevCamera, vctray.DeviceInUse),
-	)(ctx); err != nil {
-		s.Fatal("Failed to verify camera triggers vcTray: ", err)
+
+	ui := uiauto.New(tconn)
+
+	if _, err := br.NewTab(ctx, srvURL+effectshtml.PageURL); err != nil {
+		s.Fatal("Fail to open the fake html: ", err)
+	}
+
+	if err := effectshtml.WaitForCameraStreamToReady(ctx, ui, vcTray); err != nil {
+		s.Fatal("Fail to wait for camera stream: ", err)
+	}
+
+	if err := vcTray.SetCameraEffects(vctray.BackgroundBlurOff, false)(ctx); err != nil {
+		s.Fatalf("Failed to set camera effects to BackgroundBlur %v; PortraitRelighting off: %v",
+			vctray.BackgroundBlurOff, err)
+	}
+
+	// Take a screen shot before background replace is applied.
+	imageBefore, err := effectshtml.GrabVideoArea(ctx, cr, tconn, ui)
+	if err != nil {
+		s.Fatal("Fail to grab camera screen shot before: ", err)
 	}
 
 	// Clicking on "Create with AI" and then agree with terms of service.
@@ -177,7 +147,7 @@ func CameraEffectsReplace(ctx context.Context, s *testing.State) {
 	}
 
 	// Take a second screenshot after camera background already applied.
-	imageAfter, err := fakehtml.GrabVideoArea(ctx, cr, tconn, ui)
+	imageAfter, err := effectshtml.GrabVideoArea(ctx, cr, tconn, ui)
 	if err != nil {
 		s.Fatal("Fail to grab camera screen shot after: ", err)
 	}
@@ -187,10 +157,10 @@ func CameraEffectsReplace(ctx context.Context, s *testing.State) {
 	// screenshot.SaveImageToFile(imageAfter, userPath, "after.png")(ctx)
 
 	// Verify two images have enough portion changed and unchanged.
-	notChanged, changed := fakehtml.ImageDiff(imageBefore, imageAfter, 0.0)
+	notChanged, changed := effectshtml.ImageDiff(imageBefore, imageAfter, 0.0)
 	if notChanged < percentageNotChanged || changed < percentageChanged {
-		fakehtml.SaveImageToFaillog(ctx, s, imageBefore, fakehtml.BeforeEffectsImageName)
-		fakehtml.SaveImageToFaillog(ctx, s, imageAfter, fakehtml.AfterEffectsImageName)
+		effectshtml.SaveImageToFaillog(ctx, s, imageBefore, effectshtml.BeforeEffectsImageName)
+		effectshtml.SaveImageToFaillog(ctx, s, imageAfter, effectshtml.AfterEffectsImageName)
 		s.Fatalf("The percentage of pixel change is wrong: %f changed and %f not changed", changed, notChanged)
 	}
 }

@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Package fakehtml contains common data types and UI libraries for fake HTML.
-package fakehtml
+// Package effectshtml contains common data types and UI libraries for fake HTML.
+package effectshtml
 
 import (
 	"context"
@@ -11,15 +11,13 @@ import (
 	"math"
 	"os"
 	"path/filepath"
-	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/prompts"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vctray"
 	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast-tests/cros/local/screenshot"
 
@@ -54,26 +52,7 @@ var rootWebArea = nodewith.Role(role.RootWebArea).Name(PageTitle)
 // VideoNode is the node showing camera.
 var VideoNode = nodewith.Role(role.Video)
 
-// NewUI creates a new instance to represent the fake HTML page UI.
-func NewUI(tconn *chrome.TestConn) UIObject {
-	return UIObject{
-		tconn: tconn,
-		ui:    uiauto.New(tconn),
-	}
-}
-
-// MayBeAllowCameraAccess allows Camera access if the prompt is shown up.
-func (htmlUI UIObject) MayBeAllowCameraAccess(ctx context.Context) error {
-	return prompts.ClearPotentialPrompts(htmlUI.tconn, 3*time.Second, prompts.AllowAVPermissionPrompt)(ctx)
-}
-
-// EnterFullScreen double clicks video frame and waits for the window to be full screen.
-func (htmlUI UIObject) EnterFullScreen(ctx context.Context) error {
-	return htmlUI.ui.RetryUntil(
-		htmlUI.ui.DoubleClick(VideoNode),
-		ash.WaitForFullscreenConditionWithTitle(htmlUI.tconn, PageTitle, true, 5*time.Second),
-	)(ctx)
-}
+var videoPauseButton = nodewith.Name("pause").Role(role.Button).Ancestor(VideoNode)
 
 // GrabVideoArea takes a screen shot of the VideoNode area.
 func GrabVideoArea(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, ui *uiauto.Context) (image.Image, error) {
@@ -139,4 +118,16 @@ func SaveImageToFaillog(ctx context.Context, s *testing.State, img image.Image, 
 	if err := screenshot.SaveImageToFile(img, dir, fileName)(ctx); err != nil {
 		s.Errorf("Can't save file: %s", fileName)
 	}
+}
+
+// WaitForCameraStreamToReady waits until camera stream is loaded and vcTray is triggered.
+func WaitForCameraStreamToReady(ctx context.Context, ui *uiauto.Context, vcTray *vctray.VCTray) error {
+	if err := ui.WaitUntilExists(videoPauseButton)(ctx); err != nil {
+		return errors.Wrap(err, "Fail to wait for camera stream to load")
+	}
+	if err := vcTray.WaitUntilState(vctray.DevCamera, vctray.DeviceInUse)(ctx); err != nil {
+		return errors.Wrap(err, "Fail to wait for VcTray to show camera is in use")
+	}
+
+	return nil
 }

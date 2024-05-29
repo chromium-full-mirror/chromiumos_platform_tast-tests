@@ -6,23 +6,19 @@ package videoconferencing
 
 import (
 	"context"
-	"net/http"
-	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/tbdep"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/common"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/data"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/fakehtml"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/effectshtml"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vctray"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/power"
-	"go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast-tests/cros/local/videoconferencing/fixture"
-	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -99,47 +95,31 @@ func init() {
 	})
 }
 
-func CameraEffectsPower(ctx context.Context, s *testing.State) {
-	// Shorten context to allow for cleanup.
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
-	defer cancel()
+func CameraEffectsPower(cleanupCtx context.Context, s *testing.State) {
+	ctx, tconn, cr, br, srvURL, cleanupFunc := common.Setup(cleanupCtx, s)
+	defer cleanupFunc()
+
+	vcTray := vctray.New(ctx, tconn)
+
+	ui := uiauto.New(tconn)
+
+	if _, err := br.NewTab(ctx, srvURL+effectshtml.PageURL); err != nil {
+		s.Fatal("Fail to open the fake html: ", err)
+	}
+
+	if err := effectshtml.WaitForCameraStreamToReady(ctx, ui, vcTray); err != nil {
+		s.Fatal("Fail to wait for camera stream: ", err)
+	}
+
+	if err := vcTray.SetCameraEffects(vctray.BackgroundBlurOff, false)(ctx); err != nil {
+		s.Fatalf("Failed to set camera effects to BackgroundBlur %v; PortraitRelighting off: %v",
+			vctray.BackgroundBlurOff, err)
+	}
 
 	param, ok := s.Param().(effectsParams)
 	if !ok {
 		s.Fatal("Failed to convert test effectsParams")
 	}
-
-	cr := s.FixtValue().(setup.PowerUIFixtureData).Cr
-	bt := s.FixtValue().(setup.PowerUIFixtureData).Bt
-
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to connect Test API: ", err)
-	}
-
-	// Open video on simple javascript browser.
-	testing.ContextLog(ctx, "Opening Simple Meeting")
-	srv := httptest.NewServer(http.FileServer(s.DataFileSystem()))
-	defer srv.Close()
-
-	url := srv.URL + fakehtml.PageURL
-	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, bt, url)
-	if err != nil {
-		s.Fatal("Failed to launch browser: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
-	defer conn.Close()
-	defer conn.CloseTarget(cleanupCtx)
-
-	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
-
-	fakeHTMLUI := fakehtml.NewUI(tconn)
-	if err := fakeHTMLUI.MayBeAllowCameraAccess(ctx); err != nil {
-		s.Fatal("Failed to allow camera access: ", err)
-	}
-
-	vcTray := vctray.New(ctx, tconn)
 
 	// Copy camera background to the backgroundImageDir to apply.
 	if param.blurLevel == vctray.BackgroundBlurImage {
