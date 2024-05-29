@@ -31,6 +31,8 @@ func addFlossBackgroundScanningFixtures() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  resetTimeout,
 		PostTestTimeout: resetTimeout,
+		Data:            []string{"big_txt.zip", "small_jpg.zip", "small_png.zip"},
+		BugComponent:    "b:1108889", // ChromeOS > Software > System Services > Cross Device
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:     "nearbyShareRemoteDataUsageOfflineNoOneBackgroundScanningPreSetupFloss",
@@ -50,5 +52,7 @@ func addFlossBackgroundScanningFixtures() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  resetTimeout,
 		PostTestTimeout: resetTimeout,
+		Data:            []string{"big_txt.zip", "small_jpg.zip", "small_png.zip"},
+		BugComponent:    "b:1108889", // ChromeOS > Software > System Services > Cross Device
 	})
 }

@@ -9,7 +9,6 @@ import (
 	"context"
 	"encoding/json"
 	"io/ioutil"
-	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -142,29 +141,11 @@ func (f *nearbyShareFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 	remoteDir := strings.TrimSpace(string(tempdir))
 	f.remoteFilePath = remoteDir
 
-	// TODO(b/307335239): Refactor to use fixture data instead of hardcoded path.
-	// Workaround to use data files downloaded in other tests.
-	// Use the built local data path if it exists, and fall back to the prebuilt data path otherwise.
-	dataPaths := []string{
-		"../platform/tast-tests/src/go.chromium.org/tast-tests/cros/remote/bundles/cros/nearbyshare/data",
-		"/usr/local/tast/data/go.chromium.org/tast-tests/cros/remote/bundles/cros/nearbyshare/data",
-		"/usr/share/tast/data/go.chromium.org/tast-tests/cros/remote/bundles/cros/nearbyshare/data",
-	}
-	pathToUse := ""
-	for _, dataPath := range dataPaths {
-		if _, err := os.Stat(filepath.Join(dataPath, f.testFiles[0])); err == nil {
-			s.Log("Test file found at ", dataPath)
-			pathToUse = dataPath
-		}
-	}
-	if pathToUse == "" {
-		s.Fatalf("Failed to find data file %v: %v", f.testFiles[0], err)
-	}
-
 	s.Log("Moving data files to DUT1 (Sender)")
-	for _, data := range f.testFiles {
-		remoteFilePath := filepath.Join(remoteDir, data)
-		if _, err := linuxssh.PutFiles(ctx, d1.Conn(), map[string]string{filepath.Join(pathToUse, data): remoteFilePath}, linuxssh.DereferenceSymlinks); err != nil {
+	for _, dataFileName := range f.testFiles {
+		dataPath := s.DataPath(dataFileName)
+		dutFilePath := filepath.Join(remoteDir, dataFileName)
+		if _, err := linuxssh.PutFiles(ctx, d1.Conn(), map[string]string{dataPath: dutFilePath}, linuxssh.DereferenceSymlinks); err != nil {
 			s.Fatalf("Failed to send data to remote data path %v: %v", remoteDir, err)
 		}
 	}

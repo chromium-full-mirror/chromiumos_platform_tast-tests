@@ -31,6 +31,8 @@ func addBasicOnlineFixtures() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  resetTimeout,
 		PostTestTimeout: resetTimeout,
+		Data:            []string{"big_txt.zip", "small_jpg.zip", "small_png.zip"},
+		BugComponent:    "b:1108889", // ChromeOS > Software > System Services > Cross Device
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:     "nearbyShareRemoteDataUsageOnlineSomeContacts",
@@ -50,6 +52,8 @@ func addBasicOnlineFixtures() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  resetTimeout,
 		PostTestTimeout: resetTimeout,
+		Data:            []string{"big_txt.zip", "small_jpg.zip", "small_png.zip"},
+		BugComponent:    "b:1108889", // ChromeOS > Software > System Services > Cross Device
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:     "nearbyShareRemoteDataUsageOnlineNoOne",
@@ -69,6 +73,8 @@ func addBasicOnlineFixtures() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  resetTimeout,
 		PostTestTimeout: resetTimeout,
+		Data:            []string{"big_txt.zip", "small_jpg.zip", "small_png.zip"},
+		BugComponent:    "b:1108889", // ChromeOS > Software > System Services > Cross Device
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:     "nearbyShareRemoteDataUsageOnlineSelfShare",
@@ -86,6 +92,8 @@ func addBasicOnlineFixtures() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  resetTimeout,
 		PostTestTimeout: resetTimeout,
+		Data:            []string{"big_txt.zip", "small_jpg.zip", "small_png.zip"},
+		BugComponent:    "b:1108889", // ChromeOS > Software > System Services > Cross Device
 	})
 
 	// Fixtures for BLE V2 tests.
@@ -108,6 +116,8 @@ func addBasicOnlineFixtures() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  resetTimeout,
 		PostTestTimeout: resetTimeout,
+		Data:            []string{"big_txt.zip", "small_jpg.zip", "small_png.zip"},
+		BugComponent:    "b:1108889", // ChromeOS > Software > System Services > Cross Device
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:     "nearbyShareNoOneBleV2",
@@ -127,5 +137,7 @@ func addBasicOnlineFixtures() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  resetTimeout,
 		PostTestTimeout: resetTimeout,
+		Data:            []string{"big_txt.zip", "small_jpg.zip", "small_png.zip"},
+		BugComponent:    "b:1108889", // ChromeOS > Software > System Services > Cross Device
 	})
 }

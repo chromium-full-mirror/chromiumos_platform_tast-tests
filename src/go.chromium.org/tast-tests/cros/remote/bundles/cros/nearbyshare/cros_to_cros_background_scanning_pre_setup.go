@@ -39,7 +39,6 @@ func init() {
 				Name:              "onboarding_flow_initiated",
 				Fixture:           "nearbyShareRemoteDataUsageOfflineNoOneBackgroundScanningPreSetup",
 				Val:               nearbycommon.TestData{Filename: "small_png.zip", TransferTimeout: nearbycommon.SmallFileTransferTimeout},
-				ExtraData:         []string{"small_png.zip"},
 				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
 				// TODO(b/225966067): Replace with companion DUT HWDep for background scanning.
@@ -55,7 +54,6 @@ func init() {
 				Name:              "onboarding_flow_initiated_unstable_sender",
 				Fixture:           "nearbyShareRemoteDataUsageOfflineNoOneBackgroundScanningPreSetup",
 				Val:               nearbycommon.TestData{Filename: "small_png.zip", TransferTimeout: nearbycommon.SmallFileTransferTimeout},
-				ExtraData:         []string{"small_png.zip"},
 				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(crossdevice.UnstableModels...)),
 				// TODO(b/225966067): Replace with companion DUT HWDep for background scanning.
@@ -69,7 +67,6 @@ func init() {
 				Name:              "onboarding_flow_initiated_unstable_receiver",
 				Fixture:           "nearbyShareRemoteDataUsageOfflineNoOneBackgroundScanningPreSetup",
 				Val:               nearbycommon.TestData{Filename: "small_png.zip", TransferTimeout: nearbycommon.SmallFileTransferTimeout},
-				ExtraData:         []string{"small_png.zip"},
 				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
 				// TODO(b/225966067): Replace with companion DUT HWDep for background scanning.
@@ -83,7 +80,6 @@ func init() {
 				Name:              "onboarding_flow_initiated_unstable_both",
 				Fixture:           "nearbyShareRemoteDataUsageOfflineNoOneBackgroundScanningPreSetup",
 				Val:               nearbycommon.TestData{Filename: "small_png.zip", TransferTimeout: nearbycommon.SmallFileTransferTimeout},
-				ExtraData:         []string{"small_png.zip"},
 				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(crossdevice.UnstableModels...)),
 				// TODO(b/225966067): Replace with companion DUT HWDep for background scanning.
@@ -95,11 +91,10 @@ func init() {
 
 			// Floss duplicate
 			{
-				Name:      "onboarding_flow_initiated_floss",
-				Fixture:   "nearbyShareRemoteDataUsageOfflineNoOneBackgroundScanningPreSetupFloss",
-				Val:       nearbycommon.TestData{Filename: "small_png.zip", TransferTimeout: nearbycommon.SmallFileTransferTimeout},
-				ExtraData: []string{"small_png.zip"},
-				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
+				Name:    "onboarding_flow_initiated_floss",
+				Fixture: "nearbyShareRemoteDataUsageOfflineNoOneBackgroundScanningPreSetupFloss",
+				Val:     nearbycommon.TestData{Filename: "small_png.zip", TransferTimeout: nearbycommon.SmallFileTransferTimeout},
+				Timeout: nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
 				// TODO(b/225966067): Replace with companion DUT HWDep for background scanning.
 				ExtraHardwareDepsForAll: map[string]hwdep.Deps{
 					// Companion DUT 1 dependency.
