@@ -1368,36 +1368,101 @@ func testparseChipBID(t *testing.T, input string, expected ChipBID, expectError 
 func TestErasedInfoPages1(t *testing.T) {
 	bid := ChipBID{IsErased: true}
 	sysinfo := Sysinfo{FactoryModeValid: false, InFactoryMode: false}
-	testwriteOnceInfoPagesAreErased(t, bid, sysinfo, true)
+	factoryConfig := uint64(0)
+	testwriteOnceInfoPagesAreErased(t, bid, sysinfo, factoryConfig, true)
 }
 
 func TestErasedInfoPages2(t *testing.T) {
 	bid := ChipBID{IsErased: false}
 	sysinfo := Sysinfo{FactoryModeValid: false, InFactoryMode: false}
-	testwriteOnceInfoPagesAreErased(t, bid, sysinfo, false)
+	factoryConfig := uint64(0)
+	testwriteOnceInfoPagesAreErased(t, bid, sysinfo, factoryConfig, false)
 }
 
 func TestErasedInfoPages3(t *testing.T) {
 	bid := ChipBID{IsErased: false}
 	sysinfo := Sysinfo{FactoryModeValid: true, InFactoryMode: true}
-	testwriteOnceInfoPagesAreErased(t, bid, sysinfo, false)
+	factoryConfig := uint64(0)
+	testwriteOnceInfoPagesAreErased(t, bid, sysinfo, factoryConfig, false)
 }
 
 func TestErasedInfoPages4(t *testing.T) {
 	bid := ChipBID{IsErased: true}
 	sysinfo := Sysinfo{FactoryModeValid: true, InFactoryMode: false}
-	testwriteOnceInfoPagesAreErased(t, bid, sysinfo, false)
+	factoryConfig := uint64(0)
+	testwriteOnceInfoPagesAreErased(t, bid, sysinfo, factoryConfig, false)
 }
 
 func TestErasedInfoPages5(t *testing.T) {
 	bid := ChipBID{IsErased: true}
 	sysinfo := Sysinfo{FactoryModeValid: true, InFactoryMode: true}
-	testwriteOnceInfoPagesAreErased(t, bid, sysinfo, true)
+	factoryConfig := uint64(0)
+	testwriteOnceInfoPagesAreErased(t, bid, sysinfo, factoryConfig, true)
 }
 
-func testwriteOnceInfoPagesAreErased(t *testing.T, bid ChipBID, sysinfo Sysinfo, expected bool) {
-	got := writeOnceInfoPagesAreErased(bid, sysinfo)
+func TestErasedInfoPages6(t *testing.T) {
+	bid := ChipBID{IsErased: true}
+	sysinfo := Sysinfo{FactoryModeValid: true, InFactoryMode: true}
+	factoryConfig := uint64(1)
+	testwriteOnceInfoPagesAreErased(t, bid, sysinfo, factoryConfig, false)
+}
+
+func testwriteOnceInfoPagesAreErased(t *testing.T, bid ChipBID, sysinfo Sysinfo, factoryConfig uint64, expected bool) {
+	got := writeOnceInfoPagesAreErased(bid, sysinfo, factoryConfig)
 	if expected != got {
-		t.Fatalf("info is erased mismatch:\ngot      %v\nexpected %v\n with bid:%+v sysinfo%+v", got, expected, bid, sysinfo)
+		t.Fatalf("info is erased mismatch:\ngot      %v\nexpected %v\n with bid:%+v sysinfo%+v factoryConfig %x", got, expected, bid, sysinfo, factoryConfig)
+	}
+}
+
+func TestParseFactoryConfig1(t *testing.T) {
+	input := `
+brdprop
+brdprop
+properties = 0x200041
+Strap config: LLdd => TPM Bus: SPI; FormFactor: Tablet
+Factory config: 0x0
+`
+	testParseFactoryConfig(t, input, 0, true)
+}
+
+func TestParseFactoryConfig2(t *testing.T) {
+	input := `
+brdprop
+brdprop
+properties = 0x200041
+Strap config: LLdd => TPM Bus: SPI; FormFactor: Tablet
+Factory config: 0xA
+`
+	testParseFactoryConfig(t, input, 10, true)
+}
+
+func TestParseFactoryConfig3(t *testing.T) {
+	input := `
+brdprop
+brdprop
+properties = 0x200041
+Strap config: LLdd => TPM Bus: SPI; FormFactor: Tablet
+Factory config: 0xf00000000000000b
+`
+	testParseFactoryConfig(t, input, 0xf00000000000000b, true)
+}
+
+func TestParseFactoryConfig4(t *testing.T) {
+	input := `
+brdprop
+properties = 0x42
+tpm board cfg = 0x0
+fc = 0xf0000000fa000000
+`
+	testParseFactoryConfig(t, input, 0xf0000000fa000000, true)
+}
+
+func testParseFactoryConfig(t *testing.T, input string, expected uint64, expectError bool) {
+	config, err := parseFactoryConfig(input)
+	if err != nil {
+		t.Fatal("error processing brdprop factory config input:", err)
+	}
+	if expected != config {
+		t.Fatalf("factory config mismatch:\ngot      %v\nexpected %v", config, expected)
 	}
 }

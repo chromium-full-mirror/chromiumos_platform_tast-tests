@@ -83,6 +83,10 @@ var (
 
 	sysinfoRE = regexp.MustCompile(sysinfoResetFlagRE + sysinfoResetCountRE + sysinfoBreadcrumbRE + sysinfoChipRE + sysinfoROKeyidRE + sysinfoRWKeyidRE + sysinfoDevidRE + sysinfoRollbackRE + sysinfoTPMModeRE + sysinfoKeyladderRE + sysinfoEKCertRE + sysinfoFactoryModeRE)
 	chipBIDRE = regexp.MustCompile(`Board ID:\s*(` + hexRE + `):(` + hexRE + `),\s*flags:?\s*(` + hexRE + `)`)
+	// regex to parse the factory config output
+	// ex Cr50 output: fc = 0x0000000000001234
+	// ex Ti50 output: Factory config: 0x0000000000001234
+	factoryConfigRE = regexp.MustCompile(`(fc =|Factory config:)\s*0x(` + hexRE + `)`)
 )
 
 // TestlabState contains possible CCD testlab states.
@@ -1286,8 +1290,8 @@ func (i *CrOSImage) ChipBID(ctx context.Context) (ChipBID, error) {
 // pages are erased. This checks the board id and sysinfo in factory mode bit.
 // If any other information is added to a write once info page, this check
 // should be updated to include it.
-func writeOnceInfoPagesAreErased(bid ChipBID, sysinfo Sysinfo) bool {
-	return bid.IsErased && (!sysinfo.FactoryModeValid || sysinfo.InFactoryMode)
+func writeOnceInfoPagesAreErased(bid ChipBID, sysinfo Sysinfo, factoryConfig uint64) bool {
+	return bid.IsErased && (!sysinfo.FactoryModeValid || sysinfo.InFactoryMode) && (factoryConfig == 0)
 }
 
 // WriteOnceInfoPagesAreErased returns True if all fields in the info pages that
@@ -1301,5 +1305,31 @@ func (i *CrOSImage) WriteOnceInfoPagesAreErased(ctx context.Context) (bool, erro
 	if err != nil {
 		return false, err
 	}
-	return writeOnceInfoPagesAreErased(bid, sysinfo), nil
+	factoryConfig, err := i.FactoryConfig(ctx)
+	if err != nil {
+		return false, err
+	}
+	return writeOnceInfoPagesAreErased(bid, sysinfo, factoryConfig), nil
+}
+
+// parseFactoryConfig converts brdprop factory config output into the uint64 value
+func parseFactoryConfig(output string) (uint64, error) {
+	match := factoryConfigRE.FindStringSubmatch(output)
+	if match == nil {
+		return 0, errors.Errorf("could not find %s in %s", factoryConfigRE, output)
+	}
+	config, err := strconv.ParseUint(match[2], 16, 64)
+	if err != nil {
+		return 0, errors.Wrapf(err, "failed to parse brdprop factory config value from %s", match[2])
+	}
+	return config, nil
+}
+
+// FactoryConfig gets the numerical value from the "brdprop" GSC command.
+func (i *CrOSImage) FactoryConfig(ctx context.Context) (uint64, error) {
+	output, err := i.safeCommand(ctx, "brdprop")
+	if err != nil {
+		return 0, errors.Wrap(err, "failed to run GSC brdprop command")
+	}
+	return parseFactoryConfig(output)
 }
