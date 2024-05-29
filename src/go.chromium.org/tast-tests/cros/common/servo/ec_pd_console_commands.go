@@ -460,43 +460,74 @@ func (s *Servo) SetDUTConsoleChannelMask(ctx context.Context, mask uint32) error
 
 // GetDUTDualRoleState accepts a port ID and checks for the PD DRP status of this port.
 func (s *Servo) GetDUTDualRoleState(ctx context.Context, port int) (USBPdDualRoleValue, error) {
+	if err := s.RequireDUTPDInfo(ctx); err != nil {
+		return "", errors.Wrap(err, "failed to get DUT PD info")
+	}
+
 	if port == PDPortUnderTest {
 		port = s.dutPDInfo.activePort
 	}
 
 	var outState string
+	var cmd string
+	var matchList []string
+	var retval USBPdDualRoleValue
 
-	matchList := []string{`dual-role toggling:\s+([\w ]+)[\r\n]`}
-
-	// Try modern `pd N dualrole` command
-	cmd := fmt.Sprintf("pd %d dualrole", port)
-
-	out, err := s.RunECCommandGetOutputNoConsoleLogs(ctx, cmd, matchList)
-	if err != nil {
-		testing.ContextLogf(
-			ctx, "EC command %q failed. Trying older version. (%q)",
-			cmd, err,
-		)
-
-		// PDC does not currently support check DRP status, default to on.
-		if s.dutPDInfo.version == PDC {
-			outState = string(USBPdDualRoleOn)
-		} else {
-			// Older DUTs running firmware from before cl:1096654 don't have per-port
-			// dualrole settings. Fall back to the old command.
-			out, err = s.RunECCommandGetOutputNoConsoleLogs(ctx, "pd dualrole", matchList)
-			if err != nil {
-				// DUT does not support DRP
-				return "", errors.Wrapf(err, "ec command %q failed. No way to check dual role state", cmd)
-			}
-			outState = out[0][1]
-		}
+	if s.dutPDInfo.version == PDC {
+		cmd = fmt.Sprintf("pdc dualrole %d", port)
+		matchList = []string{`Dual role state:\s*(TOGGLE_ON|TOGGLE_OFF|FREEZE|FORCE_SINK|FORCE_SOURCE)\r?\n`}
+	} else if s.dutPDInfo.version == TCPMv1 || s.dutPDInfo.version == TCPMv2 {
+		cmd = fmt.Sprintf("pd %d dualrole", port)
+		matchList = []string{`dual-role toggling:\s+([\w ]+)[\r\n]`}
 	} else {
-		outState = out[0][1]
+		return "", errors.Errorf("unknown TCPM version (%d)", s.dutPDInfo.version)
 	}
 
-	testing.ContextLogf(ctx, "Port %d DRP status: %q", port, outState)
-	return USBPdDualRoleValue(outState), nil
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		out, err := s.RunECCommandGetOutputNoConsoleLogs(ctx, cmd, matchList)
+		if err != nil {
+			testing.ContextLogf(ctx, "EC command %q failed: %v", cmd, err)
+
+			if s.dutPDInfo.version == TCPMv1 || s.dutPDInfo.version == TCPMv2 {
+				testing.ContextLog(ctx, "Trying older version of command")
+				// Older DUTs running firmware from before cl:1096654 don't have per-port
+				// dualrole settings. Fall back to the old command.
+				out, err = s.RunECCommandGetOutputNoConsoleLogs(ctx, "pd dualrole", matchList)
+				if err != nil {
+					// DUT does not support DRP
+					return errors.Wrapf(err, "ec command %q failed. No way to check dual role state", cmd)
+				}
+				outState = out[0][1]
+			} else { // If not TCPMv1/2 then the older version of the command will not work, return error.
+				return errors.Wrapf(err, "EC command %v failed", cmd)
+			}
+		} else {
+			outState = out[0][1]
+		}
+
+		// The PDC DRP states are output as all caps with underscore separators.
+		// Standardize output to USPdDualRoleValue options.
+		switch outState {
+		case "TOGGLE_ON", "toggle on":
+			retval = USBPdDualRoleOn
+		case "TOGGLE_OFF", "toggle off":
+			retval = USBPdDualRoleOff
+		case "FREEZE", "freeze":
+			retval = USBPdDualRoleFreeze
+		case "FORCE_SINK", "force sink":
+			retval = USBPdDualRoleSink
+		case "FORCE_SOURCE", "force source":
+			retval = USBPdDualRoleSource
+		default:
+			return errors.Errorf("unexpected dualrole output: %v", outState)
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 5 * time.Second, Interval: 1 * time.Second}); err != nil {
+		return "", errors.Wrap(err, "failed to get dual role")
+	}
+
+	testing.ContextLogf(ctx, "Port %d DRP status: %q", port, retval)
+	return retval, nil
 }
 
 // SetPDTrySrc attempts to set PD TrySrc enable or disabled.
