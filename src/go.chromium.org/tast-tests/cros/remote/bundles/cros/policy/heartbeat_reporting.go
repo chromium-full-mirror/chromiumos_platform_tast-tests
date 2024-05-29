@@ -26,6 +26,7 @@ const heartbeatReportingTimeout = 7 * time.Minute
 type heartbeatTestParams struct {
 	IsUserEvent     bool // If true, send user events from umanaged device, else send device events from managed device.
 	EnabledFeatures string
+	Autopush        bool
 }
 
 func init() {
@@ -46,31 +47,44 @@ func init() {
 		VarDeps: []string{
 			reportingutil.ManagedChromeCustomerIDPath,
 			reportingutil.EventsAPIKeyPath,
+			reportingutil.ProdEventsAPIKeyPath,
 			tape.ServiceAccountVar,
 		},
 		Params: []testing.Param{
 			{
-				Name: "report_user_heartbeat_event_from_unmanaged_device",
+				Name: "autopush_unmanaged_device",
 				Val: heartbeatTestParams{
 					IsUserEvent: true,
 					// Enable the reporting pipeline, user heartbeat events, reporting from unmanaged device, and enable multigenerational storage for FAST_BATCH priority (i.e. exclude FAST_BATCH from legacy_storage_enabled list).
 					EnabledFeatures: "EncryptedReportingPipeline, EncryptedReportingManualTestUserHeartbeatEvent, EnableReportingFromUnmanagedDevices, ClientAutomatedTest, CrOSLateBootMissiveStorage:legacy_storage_enabled/IMMEDIATE,SLOW_BATCH,BACKGROUND_BATCH,MANUAL_BATCH,SECURITY,MANUAL_BATCH_LACROS",
+					Autopush:        true,
 				},
 			},
 			{
-				Name: "report_device_heartbeat_event_from_managed_device",
+				Name: "autopush_managed_device",
 				Val: heartbeatTestParams{
 					IsUserEvent: false,
 					// Enable the reporting pipeline, device heartbeat events.
 					EnabledFeatures: "EncryptedReportingPipeline, EncryptedReportingManualTestHeartbeatEvent, ClientAutomatedTest",
+					Autopush:        true,
 				},
 			},
 			{
-				Name: "report_device_heartbeat_event_from_managed_device_using_multigenerational_storage",
+				Name: "autopush_managed_device_using_multigenerational_storage",
 				Val: heartbeatTestParams{
 					IsUserEvent: false,
 					// Enable the reporting pipeline, device heartbeat events, and multigenerational storage for FAST_BATCH priority (i.e. exclude FAST_BATCH from legacy_storage_enabled list).
 					EnabledFeatures: "EncryptedReportingPipeline, EncryptedReportingManualTestHeartbeatEvent, ClientAutomatedTest, CrOSLateBootMissiveStorage:legacy_storage_enabled/IMMEDIATE,SLOW_BATCH,BACKGROUND_BATCH,MANUAL_BATCH,SECURITY,MANUAL_BATCH_LACROS",
+					Autopush:        true,
+				},
+			},
+			{
+				Name: "prod_managed_device",
+				Val: heartbeatTestParams{
+					IsUserEvent: false,
+					// Enable the reporting pipeline, device heartbeat events.
+					EnabledFeatures: "EncryptedReportingPipeline, EncryptedReportingManualTestHeartbeatEvent, ClientAutomatedTest",
+					Autopush:        false,
 				},
 			},
 		},
@@ -81,6 +95,7 @@ func init() {
 func HeartbeatReporting(ctx context.Context, s *testing.State) {
 	customerID := s.RequiredVar(reportingutil.ManagedChromeCustomerIDPath)
 	APIKey := s.RequiredVar(reportingutil.EventsAPIKeyPath)
+	ProdAPIKey := s.RequiredVar(reportingutil.ProdEventsAPIKeyPath)
 	sa := []byte(s.RequiredVar(tape.ServiceAccountVar))
 	params := s.Param().(heartbeatTestParams)
 
@@ -131,14 +146,25 @@ func HeartbeatReporting(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set the asset policy: ", err)
 	}
 
+	// Set the URLs to use for the DM server and reporting server depending on the test params.
+	var dmServerURL string
+	var reportingServerURL string
+	if params.Autopush {
+		dmServerURL = policy.DMServerAlphaURL
+		reportingServerURL = reportingutil.ReportingServerURL
+	} else {
+		dmServerURL = policy.DMServerProdURL
+		reportingServerURL = reportingutil.ProdReportingServerURL
+	}
+
 	testStartTime := time.Now()
 	if params.IsUserEvent {
 		// This is a user event. Login with managed user, but don't enroll the device.
 		if _, err := policyClient.GAIALoginForReporting(ctx, &ps.GAIALoginForReportingRequest{
 			Username:           acc.Username,
 			Password:           acc.Password,
-			DmserverUrl:        policy.DMServerAlphaURL,
-			ReportingServerUrl: reportingutil.ReportingServerURL,
+			DmserverUrl:        dmServerURL,
+			ReportingServerUrl: reportingServerURL,
 			// Enable user heart beat events, reporting from unmanaged devices, and legacy/non-multigenerational storage for all priorities except FAST_BATCH (the priority that heartbeat events use).
 			EnabledFeatures: params.EnabledFeatures,
 		}); err != nil {
@@ -149,8 +175,8 @@ func HeartbeatReporting(ctx context.Context, s *testing.State) {
 		if _, err := policyClient.GAIAEnrollForReporting(ctx, &ps.GAIAEnrollForReportingRequest{
 			Username:           acc.Username,
 			Password:           acc.Password,
-			DmserverUrl:        policy.DMServerAlphaURL,
-			ReportingServerUrl: reportingutil.ReportingServerURL,
+			DmserverUrl:        dmServerURL,
+			ReportingServerUrl: reportingServerURL,
 			EnabledFeatures:    params.EnabledFeatures,
 			SkipLogin:          true,
 		}); err != nil {
@@ -171,18 +197,25 @@ func HeartbeatReporting(ctx context.Context, s *testing.State) {
 		var events []reportingutil.InputEvent
 		var err error
 
-		if params.IsUserEvent {
-			// Look up user events using user account info.
-			events, err = reportingutil.LookupUserEvents(ctx, customerID, APIKey, "HEARTBEAT_EVENTS", acc.Username, testStartTime)
-		} else {
+		if !params.IsUserEvent {
 			// Look up device events using client id.
 			c, err := policyClient.ClientID(ctx, &empty.Empty{})
 			clientID = c.ClientId
 			if err != nil {
 				s.Fatalf("Failed to grab client ID from device: %v:", err)
 			}
-			events, err = reportingutil.LookupEvents(ctx, customerID, clientID, APIKey, "HEARTBEAT_EVENTS", testStartTime)
+			// If the test uses the autopush server then query the autopush server for the events.
+			// Otherwise query the prod server.
+			if params.Autopush {
+				events, err = reportingutil.LookupEvents(ctx, customerID, clientID, APIKey, "HEARTBEAT_EVENTS", testStartTime)
+			} else {
+				events, err = reportingutil.LookupProdEvents(ctx, customerID, clientID, ProdAPIKey, "HEARTBEAT_EVENTS", testStartTime)
+			}
+		} else {
+			// Look up user events using user account info.
+			events, err = reportingutil.LookupUserEvents(ctx, customerID, APIKey, "HEARTBEAT_EVENTS", acc.Username, testStartTime)
 		}
+
 		if err != nil {
 			return errors.Wrap(err, "failed to look up events")
 		}

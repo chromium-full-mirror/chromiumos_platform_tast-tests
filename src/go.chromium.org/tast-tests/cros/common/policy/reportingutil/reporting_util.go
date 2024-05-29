@@ -37,6 +37,12 @@ const EventsAPIKeyPath = "policy.events_api_key"
 // ReportingServerURL is the URL to the autopush reporting server.
 const ReportingServerURL = "https://autopush-chromereporting-pa.sandbox.googleapis.com/v1"
 
+// ProdEventsAPIKeyPath is the path to the secret api key var for the production events API.
+const ProdEventsAPIKeyPath = "policy.events_api_key_prod"
+
+// ProdReportingServerURL is the URL to the production reporting server.
+const ProdReportingServerURL = "https://chromereporting-pa.googleapis.com/v1"
+
 // ReportingDirectory is the directory on the device which contains directories in which records are stored.
 const ReportingDirectory = "/var/spool/reporting"
 
@@ -164,6 +170,14 @@ func LookupEvents(ctx context.Context, obfuscatedCustomerID, clientID, apiKey, d
 func LookupUserEvents(ctx context.Context, obfuscatedCustomerID, apiKey, destination, userEmail string, testStartTime time.Time) ([]InputEvent, error) {
 	pathWithoutKey := fmt.Sprintf("%v/test/events?obfuscatedCustomerId=%v&destination=%v&userEmail=%v", ReportingServerURL, obfuscatedCustomerID, destination, userEmail)
 	testing.ContextLog(ctx, "Reporting: Querying the reporting server for user events - URL being queried = ", pathWithoutKey)
+	return LookupEventsByRequestPath(ctx, fmt.Sprintf("%v&key=%v", pathWithoutKey, apiKey), testStartTime)
+}
+
+// LookupProdEvents calls the Reporting API Server's ChromeReportingDebugService.LookupEvents
+// prod endpoint to get a list of events received by the server from a managed device.
+func LookupProdEvents(ctx context.Context, obfuscatedCustomerID, clientID, apiKey, destination string, testStartTime time.Time) ([]InputEvent, error) {
+	pathWithoutKey := fmt.Sprintf("%v/test/events?obfuscatedCustomerId=%v&deviceId=%v&destination=%v", ProdReportingServerURL, obfuscatedCustomerID, clientID, destination)
+	testing.ContextLog(ctx, "Reporting: Querying the prod reporting server for device events - URL being queried = ", pathWithoutKey)
 	return LookupEventsByRequestPath(ctx, fmt.Sprintf("%v&key=%v", pathWithoutKey, apiKey), testStartTime)
 }
 
