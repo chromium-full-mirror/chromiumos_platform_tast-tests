@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -72,6 +73,12 @@ var bruschettaVMConfigurationVar = testing.RegisterVarString(
 	"bruschetta.vm_configuration",
 	"",
 	"Path to a bruschetta VM configuration on the DUT. This is a json object representing a BruschettaVMConfiguration entry, see below refvmConfiguratoin func for a good example. If unset the default refvm configuration is used.",
+)
+
+var bruschettaKeepVM = testing.RegisterVarString(
+	"bruschetta.keep_vm",
+	"false",
+	"Boolean to indicate that the Bruschetta instance should be kept when the fixture is cleaned up, otherwise it is removed.",
 )
 
 // BruschettaHwDeps prevents tests from running on devices without enough storage or RAM.
@@ -290,7 +297,12 @@ func (f *bruschettaFixture) SetUp(ctx context.Context, s *testing.FixtState) int
 		s.Fatal("Failed to install VM: ", err)
 	}
 	defer func(ctx context.Context) {
-		if !s.HasError() {
+		keepVM, err := strconv.ParseBool(bruschettaKeepVM.Value())
+		if err != nil {
+			s.Errorf("Failed to parse bruschetta.keep_vm value %q, assuming false: %v", bruschettaKeepVM.Value(), err)
+			keepVM = false
+		}
+		if !s.HasError() || keepVM {
 			return
 		}
 
@@ -380,8 +392,15 @@ func (f *bruschettaFixture) PostTest(ctx context.Context, s *testing.FixtTestSta
 }
 
 func (f *bruschettaFixture) TearDown(ctx context.Context, s *testing.FixtState) {
-	if err := removeBruschetta(ctx, f.tconn); err != nil {
-		s.Error("Failed to remove VM after setup failure: ", err)
+	keepVM, err := strconv.ParseBool(bruschettaKeepVM.Value())
+	if err != nil {
+		s.Errorf("Failed to parse bruschetta.keep_vm value %q, assuming false: %v", bruschettaKeepVM.Value(), err)
+		keepVM = false
+	}
+	if !keepVM {
+		if err := removeBruschetta(ctx, f.tconn); err != nil {
+			s.Error("Failed to remove VM after setup failure: ", err)
+		}
 	}
 
 	if err := f.saveLogs(ctx, s.OutDir(), "tear_down"); err != nil {
