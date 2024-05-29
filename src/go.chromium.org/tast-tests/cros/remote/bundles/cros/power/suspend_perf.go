@@ -173,22 +173,22 @@ func SuspendPerf(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to suspend DUT: ", err)
 			}
 			s.Log("Ignore suspend command error if connection is lost: ", err)
-
-			// Reconnect because suspend can disconnect network.
-			cl, err = redialRPC(ctx, s.DUT(), s.RPCHint(), defaultRedialTimeoutSeconds+seconds)
-			if err != nil {
-				s.Fatal("Failed to reconnect the RPC: ", err)
-			}
-			// defer cl.Close() is already set.
-			if err := setupBrowser(ctx, cl.Conn, true, args.enableArc, args.enableLacros); err != nil {
-				s.Fatal("Failed to re-initalize test environment: ", err)
-			}
 		}
 		s.Log("Resumed")
 
+		// Reconnect because suspend can disconnect network.
+		cl, err = redialRPC(ctx, s.DUT(), s.RPCHint(), defaultRedialTimeoutSeconds+seconds)
+		if err != nil {
+			s.Fatal("Failed to reconnect the RPC: ", err)
+		}
+		// defer cl.Close() is already set.
+		if err := setupBrowser(ctx, cl.Conn, true, args.enableArc, args.enableLacros); err != nil {
+			s.Fatal("Failed to re-initalize test environment: ", err)
+		}
+
 		s.Log("Wait for suspend metrics update")
 		service = powerpb.NewSuspendPerfServiceClient(cl.Conn)
-		tconn := ui.NewTconnServiceClient(cl.Conn)
+		tconn = ui.NewTconnServiceClient(cl.Conn)
 		prev, err = waitForHistogramsUpdate(ctx, tconn, useMetrics, prev)
 		if err != nil {
 			s.Fatal("Could not observe histogram update: ", err)
