@@ -64,53 +64,6 @@ func CCAUIRecordVideoPerf(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait CPU idle: ", err)
 	}
 
-	if isFakeHal {
-		// Simulates a 4K camera. Need to add other resolutions to satisfy the minimal requirement for camera3 API.
-		if err := testutil.WriteFakeHALConfig(ctx, testutil.FakeHALConfig{
-			Cameras: []testutil.FakeCameraConfig{
-				{ID: 1, Connected: true, SupportedFormats: []*testutil.FakeCameraFormatsConfig{
-					{
-						Width:      3840,
-						Height:     2160,
-						FrameRates: []int{60, 30},
-					},
-					{
-						Width:      1920,
-						Height:     1080,
-						FrameRates: []int{30},
-					},
-					{
-						Width:      1280,
-						Height:     960,
-						FrameRates: []int{30},
-					},
-					{
-						Width:      1280,
-						Height:     720,
-						FrameRates: []int{30},
-					},
-					{
-						Width:      640,
-						Height:     480,
-						FrameRates: []int{30},
-					},
-					{
-						Width:      640,
-						Height:     360,
-						FrameRates: []int{30},
-					},
-					{
-						Width:      320,
-						Height:     240,
-						FrameRates: []int{30},
-					},
-				}},
-			},
-		}); err != nil {
-			s.Fatal("Failed to write fake HAL config: ", err)
-		}
-	}
-
 	app, err := startApp(ctx)
 	if err != nil {
 		s.Fatal("Failed to open CCA: ", err)
@@ -121,8 +74,60 @@ func CCAUIRecordVideoPerf(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	if err := app.DisableVideoResolutionFilter(ctx); err != nil {
-		s.Fatal("Failed to disable video resolution filter: ", err)
+	if isFakeHal {
+		if err := app.DisableVideoResolutionFilter(ctx); err != nil {
+			s.Fatal("Failed to disable video resolution filter: ", err)
+		}
+
+		// Writes fake HAL config after disabling video resolution filter, so a
+		// reconfigure will be triggered which guarantees the filter will be
+		// applied.
+		if err := app.TriggerConfiguration(ctx, func() error {
+			// Simulates a 4K camera. Need to add other resolutions to satisfy the minimal requirement for camera3 API.
+			return testutil.WriteFakeHALConfig(ctx, testutil.FakeHALConfig{
+				Cameras: []testutil.FakeCameraConfig{
+					{ID: 1, Connected: true, SupportedFormats: []*testutil.FakeCameraFormatsConfig{
+						{
+							Width:      3840,
+							Height:     2160,
+							FrameRates: []int{60, 30},
+						},
+						{
+							Width:      1920,
+							Height:     1080,
+							FrameRates: []int{30},
+						},
+						{
+							Width:      1280,
+							Height:     960,
+							FrameRates: []int{30},
+						},
+						{
+							Width:      1280,
+							Height:     720,
+							FrameRates: []int{30},
+						},
+						{
+							Width:      640,
+							Height:     480,
+							FrameRates: []int{30},
+						},
+						{
+							Width:      640,
+							Height:     360,
+							FrameRates: []int{30},
+						},
+						{
+							Width:      320,
+							Height:     240,
+							FrameRates: []int{30},
+						},
+					}},
+				},
+			})
+		}); err != nil {
+			s.Fatal("Failed to write fake HAL config: ", err)
+		}
 	}
 
 	if err := app.SwitchMode(ctx, cca.Video); err != nil {
