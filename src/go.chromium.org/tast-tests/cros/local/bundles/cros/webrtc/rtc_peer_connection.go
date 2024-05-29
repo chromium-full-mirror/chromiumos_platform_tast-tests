@@ -106,6 +106,18 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
 			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
+			Name: "h264_verify_hw_dec_gtfo",
+			Val: peerconnection.RTCTestParams{
+				VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
+				VerifyEncoderMode: peerconnection.NoVerifyEncoderMode,
+				Profile:           "H264",
+				StreamWidth:       defaultRTCStreamWidth,
+				StreamHeight:      defaultRTCStreamHeight,
+				BrowserType:       browser.TypeAsh,
+			},
+			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
+			Fixture:           "chromeVideoGTFOWithFakeWebcam",
+		}, {
 			Name: "h264_verify_hw_dec_v4l2_flat_stateful",
 			Val: peerconnection.RTCTestParams{
 				VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
@@ -292,6 +304,22 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
 			ExtraHardwareDeps: hwdep.D(hwdep.SupportsVP9KSVCHWDecoding()),
 			Fixture:           "chromeVideoWithFakeWebcam",
+		}, {
+			// This is a decoding test of 3 spatial layers, 3 temporal layers (each) k-SVC test, via the (experimental) API.
+			// See https://www.w3.org/TR/webrtc-svc/#scalabilitymodes for SVC identifiers.
+			Name: "vp9_svc_l3t3_key_verify_hw_dec_gtfo",
+			Val: peerconnection.RTCTestParams{
+				VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
+				VerifyEncoderMode: peerconnection.NoVerifyEncoderMode,
+				Profile:           "VP9",
+				StreamWidth:       defaultRTCStreamWidth,
+				StreamHeight:      defaultRTCStreamHeight,
+				Svc:               "L3T3_KEY",
+				BrowserType:       browser.TypeAsh,
+			},
+			ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
+			ExtraHardwareDeps: hwdep.D(hwdep.SupportsVP9KSVCHWDecoding()),
+			Fixture:           "chromeVideoGTFOWithFakeWebcam",
 		}, {
 			// This is a decoding test of 3 spatial layers, 3 temporal layers (each) S-mode test, via the (experimental) API.
 			// See https://www.w3.org/TR/webrtc-svc/#scalabilitymodes for SVC identifiers.

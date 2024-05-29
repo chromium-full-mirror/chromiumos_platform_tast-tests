@@ -82,6 +82,20 @@ func init() {
 				Fixture:           "chromeVideoWithFakeWebcam",
 			},
 			{
+				Name: "h264_720p_hw_enc_hw_dec_gtfo",
+				Val: peerconnection.RTCTestParams{
+					VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
+					VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
+					Profile:           "H264",
+					StreamWidth:       1280,
+					StreamHeight:      720,
+					BrowserType:       browser.TypeAsh,
+					TraceChromeEvents: true,
+				},
+				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_enc_h264_1080_30", "autotest-capability:hw_dec_h264_1080_30"},
+				Fixture:           "chromeVideoGTFOWithFakeWebcam",
+			},
+			{
 				Name: "h264_1080p_sw_enc_sw_dec",
 				Val: peerconnection.RTCTestParams{
 					VerifyDecoderMode: peerconnection.VerifySWDecoderUsed,
@@ -122,6 +136,20 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_enc_h264_1080_30", "autotest-capability:hw_dec_h264_1080_30"},
 				Fixture:           "chromeVideoWithFakeWebcam",
+			},
+			{
+				Name: "h264_1080p_hw_enc_hw_dec_gtfo",
+				Val: peerconnection.RTCTestParams{
+					VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
+					VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
+					Profile:           "H264",
+					StreamWidth:       1920,
+					StreamHeight:      1080,
+					BrowserType:       browser.TypeAsh,
+					TraceChromeEvents: true,
+				},
+				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_enc_h264_1080_30", "autotest-capability:hw_dec_h264_1080_30"},
+				Fixture:           "chromeVideoGTFOWithFakeWebcam",
 			},
 			{
 				Name: "vp8_720p_sw_enc_sw_dec",
@@ -1420,6 +1448,20 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_av1_1080_30", "autotest-capability:hw_dec_av1_1080_30"},
 				Fixture:           "chromeVideoLacrosWithFakeWebcam",
+			},
+			{
+				Name: "h264_720p_lacros_hw_enc_hw_dec_gtfo",
+				Val: peerconnection.RTCTestParams{
+					VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
+					VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
+					Profile:           "H264",
+					StreamWidth:       1280,
+					StreamHeight:      720,
+					BrowserType:       browser.TypeLacros,
+					TraceChromeEvents: false,
+				},
+				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_enc_h264_1080_30", "autotest-capability:hw_dec_h264_1080_30"},
+				Fixture:           "chromeVideoLacrosGTFOWithFakeWebcam",
 			},
 			{
 				Name: "vp8_1080p_tab_l1t3_sw_enc_hw_inpvd",

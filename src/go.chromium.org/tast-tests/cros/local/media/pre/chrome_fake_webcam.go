@@ -37,6 +37,25 @@ func initChromeFakeWebCamBaseFixtures() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
+		Name:     "chromeVideoGTFOWithFakeWebcam",
+		Desc:     "Similar to chromeVideoGTFO fixture but supplementing it with the use of a fake video/audio capture device (a.k.a. 'fake webcam'), see https://webrtc.org/testing/",
+		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return getChromeVideoOptions(
+				browser.TypeAsh,
+				chrome.ExtraArgs(chromeFakeWebcamArgs...),
+				chrome.ExtraArgs(chromeWebRTCEncodedFrameArgs...),
+				chrome.DisableFeatures("UseOutOfProcessVideoDecoding"),
+				chrome.EnableFeatures("UseGTFOOutOfProcessVideoDecoding"),
+			), nil
+		}),
+		Parent:          "gpuWatchDog",
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
 		Name:     "chromeVideoINPVDWithFakeWebcam",
 		Desc:     "Like chromeVideoWithFakeWebcam but with out-of-process video decoding disabled",
 		Contacts: []string{"chromeos-gfx-video@google.com"},
@@ -208,6 +227,27 @@ func initChromeFakeWebCamFixturesLacros() {
 					browser.TypeLacros,
 					chrome.ExtraArgs(chromeFakeWebcamArgs...),
 					chrome.LacrosExtraArgs(chromeBypassPermissionsArgs...),
+				)...,
+			)).Opts()
+		}),
+		Parent:          "gpuWatchDog",
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:     "chromeVideoLacrosGTFOWithFakeWebcam",
+		Desc:     "Similar to chromeVideoGTFO fixture but supplementing it with the use of a fake video/audio capture device (a.k.a. 'fake webcam'), see https://webrtc.org/testing/ (lacros)",
+		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(
+				getChromeVideoOptions(
+					browser.TypeLacros,
+					chrome.ExtraArgs(chromeFakeWebcamArgs...),
+					chrome.LacrosExtraArgs(chromeBypassPermissionsArgs...),
+					chrome.LacrosDisableFeatures("UseOutOfProcessVideoDecoding"),
+					chrome.LacrosEnableFeatures("UseGTFOOutOfProcessVideoDecoding"),
 				)...,
 			)).Opts()
 		}),

@@ -71,9 +71,10 @@ const (
 	hwEnc encoderImpl = "hw_enc"
 	oopVE encoderImpl = "hw_oopve"
 
-	swDec decoderImpl = "sw_dec"
-	hwDec decoderImpl = "hw_dec"
-	inpVD decoderImpl = "hw_inpvd"
+	swDec  decoderImpl = "sw_dec"
+	hwDec  decoderImpl = "hw_dec"
+	inpVD  decoderImpl = "hw_inpvd"
+	gtfoVD decoderImpl = "hw_dec_gtfo"
 )
 
 func isHardwareEncoderImpl(enc encoderImpl) bool {
@@ -90,7 +91,7 @@ func isHardwareDecoderImpl(dec decoderImpl) bool {
 	switch dec {
 	case swDec:
 		return false
-	case hwDec, inpVD:
+	case hwDec, inpVD, gtfoVD:
 		return true
 	}
 	panic(fmt.Sprintf("unknown decoder: %v", dec))
@@ -127,7 +128,7 @@ func softwareCodecsDeps(codec string, enc encoderImpl, dec decoderImpl) []string
 			deps = append(deps, caps.HWEncodeAV1)
 		}
 	}
-	if dec == hwDec || dec == inpVD {
+	if dec == hwDec || dec == inpVD || dec == gtfoVD {
 		switch codec {
 		case "h264":
 			deps = append(deps, caps.HWDecodeH264)
@@ -146,6 +147,11 @@ func skipTest(codec string, stream streamType, enc encoderImpl, dec decoderImpl)
 	if isHardwareEncoderImpl(enc) && !isHardwareDecoderImpl(dec) {
 		// There is no device that has a hardware encoder but no hardware decoder for any codec.
 		return true
+	}
+
+	if dec == gtfoVD {
+		// This just limits the number of GTFO OOP-VD variants.
+		return codec != "h264" || stream != vanilla || enc != hwEnc
 	}
 
 	switch stream {
@@ -195,6 +201,8 @@ func toFixture(enc encoderImpl, dec decoderImpl, stream streamType) string {
 			return "chromeVideoWithFakeWebcam"
 		case inpVD:
 			return "chromeVideoINPVDWithFakeWebcam"
+		case gtfoVD:
+			return "chromeVideoGTFOWithFakeWebcam"
 		}
 	case oopVE:
 		if stream == s3t3 {
@@ -218,7 +226,7 @@ func TestRTCPeerConnectionPerfParams(t *testing.T) {
 		for _, resolution := range []graphics.Size{k720p, k1080p} {
 			for _, stream := range []streamType{vanilla, l1t3, l2t3key, l3t3key, s3t3, simulcast} {
 				for _, enc := range []encoderImpl{swEnc, hwEnc} {
-					for _, dec := range []decoderImpl{swDec, hwDec} {
+					for _, dec := range []decoderImpl{swDec, hwDec, gtfoVD} {
 						if skipTest(codec, stream, enc, dec) {
 							continue
 						}
@@ -405,6 +413,27 @@ func TestRTCPeerConnectionPerfParams(t *testing.T) {
 			ParamData:    paramData,
 			SoftwareDeps: softwareCodecsDeps(codec, enc, dec),
 			Fixture:      "chromeVideoLacrosWithFakeWebcam",
+		}
+		sourceDatas = append(sourceDatas, sourceData)
+	}
+	{
+		codec := "h264"
+		enc := hwEnc
+		dec := gtfoVD
+		paramData := rtcTestParamsData{
+			VerifyDecoderMode: toVerifyDecoderMode(dec),
+			VerifyEncoderMode: toVerifyEncoderMode(enc),
+			Profile:           strings.ToUpper(codec),
+			StreamWidth:       k720p.Width,
+			StreamHeight:      k720p.Height,
+			BrowserType:       "browser.TypeLacros",
+			TraceChromeEvents: false,
+		}
+		sourceData := rtcPerfTestSourceData{
+			Name:         fmt.Sprintf("%s_720p_lacros_hw_enc_hw_dec_gtfo", codec),
+			ParamData:    paramData,
+			SoftwareDeps: softwareCodecsDeps(codec, enc, dec),
+			Fixture:      "chromeVideoLacrosGTFOWithFakeWebcam",
 		}
 		sourceDatas = append(sourceDatas, sourceData)
 	}
