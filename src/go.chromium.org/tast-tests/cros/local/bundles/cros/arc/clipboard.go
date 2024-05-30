@@ -104,7 +104,7 @@ func bringAndroidCopyPasteWindowToFront(ctx context.Context, tconn *chrome.TestC
 func prepareCopyInChrome(browser *browser.Browser, tconn *chrome.TestConn, uia *uiauto.Context, keyboard *input.KeyboardEventWriter, format, data, baseURL string) copyFunc {
 	return func(ctx context.Context) error {
 		if err := bringChromeCopyPasteWindowToFront(ctx, tconn); err != nil {
-			return errors.Wrap(err, "failed to bring the Chrome window forground")
+			return errors.Wrap(err, "failed to bring the Chrome window foreground")
 		}
 
 		dataBoxNode := nodewith.HasClass("data").Role(role.TextField).State(state.Editable, true).First()
@@ -153,7 +153,7 @@ func prepareCopyInChrome(browser *browser.Browser, tconn *chrome.TestConn, uia *
 func preparePasteInChrome(browser *browser.Browser, conn *browser.Conn, tconn *chrome.TestConn, uia *uiauto.Context, keyboard *input.KeyboardEventWriter, format, baseURL string) pasteFunc {
 	return func(ctx context.Context) (string, error) {
 		if err := bringChromeCopyPasteWindowToFront(ctx, tconn); err != nil {
-			return "", errors.Wrap(err, "failed to bring the Chrome window forground")
+			return "", errors.Wrap(err, "failed to bring the Chrome window foreground")
 		}
 
 		formatBoxNode := nodewith.HasClass("format").Role(role.TextField).State(state.Editable, true).First()
@@ -208,7 +208,7 @@ func prepareCopyInAndroid(d *ui.Device, tconn *chrome.TestConn, writeDataBtnID, 
 
 	return func(ctx context.Context) error {
 		if err := bringAndroidCopyPasteWindowToFront(ctx, tconn); err != nil {
-			return errors.Wrap(err, "failed to bring the Android window forground")
+			return errors.Wrap(err, "failed to bring the Android window foreground")
 		}
 
 		if err := d.Object(ui.ID(writeDataBtnID)).Click(ctx); err != nil {
@@ -235,7 +235,7 @@ func preparePasteInAndroid(d *ui.Device, tconn *chrome.TestConn, viewIDForGetTex
 
 	return func(ctx context.Context) (string, error) {
 		if err := bringAndroidCopyPasteWindowToFront(ctx, tconn); err != nil {
-			return "", errors.Wrap(err, "failed to bring the Android window forground")
+			return "", errors.Wrap(err, "failed to bring the Android window foreground")
 		}
 
 		if err := d.Object(ui.ID(pasteID)).Click(ctx); err != nil {
@@ -427,14 +427,14 @@ func Clipboard(ctx context.Context, s *testing.State) {
 		)
 		// Enable observer and wait for it to be ready to prevent a possible race.
 		if err := bringAndroidCopyPasteWindowToFront(ctx, tconn); err != nil {
-			s.Fatal("Failed to bring the Android window forground: ", err)
+			s.Fatal("Failed to bring the Android window foreground: ", err)
 		}
 		if err := d.Object(ui.ID(observerEnableID)).Click(ctx); err != nil {
 			s.Fatal("Failed to enable observer: ", err)
 		}
 		defer func() {
 			if err := bringAndroidCopyPasteWindowToFront(ctx, tconn); err != nil {
-				s.Error("Failed to bring the Android window forground: ", err)
+				s.Error("Failed to bring the Android window foreground: ", err)
 			}
 			if err := d.Object(ui.ID(observerDisableID)).WaitForExists(ctx, 10*time.Second); err != nil {
 				s.Error("Failed to wait for the disable button shown: ", err)
@@ -448,7 +448,7 @@ func Clipboard(ctx context.Context, s *testing.State) {
 		}
 
 		if err := bringChromeCopyPasteWindowToFront(ctx, tconn); err != nil {
-			s.Error("Failed to bring the Android window forground: ", err)
+			s.Error("Failed to bring the Android window foreground: ", err)
 		}
 
 		// Copy in Chrome, so the registered observer should paste the clipboard content in Android.
@@ -461,11 +461,18 @@ func Clipboard(ctx context.Context, s *testing.State) {
 
 		// Paste and Verify the result.
 		// TODO(crbug.com/1510998): Remove newContent once Chromium changes are submitted.
-		pasteAndroid := preparePasteInAndroid(d, tconn, textViewID)
-		if html, err := pasteAndroid(ctx); err != nil {
-			s.Fatal("Failed to obtain pasted text: ", err)
-		} else if html != content && html != newContent {
-			s.Errorf("Failed to copy HTML from Chrome to Android: got %q; want %q", html, content)
+		if err := bringAndroidCopyPasteWindowToFront(ctx, tconn); err != nil {
+			s.Fatal("Failed to bring the Android window foreground: ", err)
+		}
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			if html, err := d.Object(ui.ID(textViewID)).GetText(ctx); err != nil {
+				return err
+			} else if html != content && html != newContent {
+				return errors.Errorf("Observed clipboard is unexpected in Android: got %q; want %q", html, content)
+			}
+			return nil
+		}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
+			s.Fatal("Failed to observe clipboard in Android: ", err)
 		}
 	})
 
