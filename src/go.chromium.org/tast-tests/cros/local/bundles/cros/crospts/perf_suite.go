@@ -92,21 +92,21 @@ func init() {
 				Fixture: "mountUnmountPtsWorldForCrOSx86",
 				Val: &perfSuite{
 					runner:        ptsworld.NewCrosRunner(),
-					suiteName:     "compress-7zip-1.10.0",
+					suiteName:     "local/compress-7zip-1.11.0",
 					resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
 				},
 				ExtraAttr: []string{"crospts_x86"},
-				Timeout:   30 * time.Minute,
+				Timeout:   8 * time.Minute,
 			}, {
 				Name:    "compress7zip_cros_arm64",
 				Fixture: "mountUnmountPtsWorldForCrOSarm64",
 				Val: &perfSuite{
 					runner:        ptsworld.NewCrosRunner(),
-					suiteName:     "compress-7zip-1.10.0",
+					suiteName:     "local/compress-7zip-1.11.0",
 					resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
 				},
 				ExtraAttr: []string{"crospts_arm64"},
-				Timeout:   30 * time.Minute,
+				Timeout:   10 * time.Minute,
 			}, {
 				Name:    "openssl_cros_x86",
 				Fixture: "mountUnmountPtsWorldForCrOSx86",
