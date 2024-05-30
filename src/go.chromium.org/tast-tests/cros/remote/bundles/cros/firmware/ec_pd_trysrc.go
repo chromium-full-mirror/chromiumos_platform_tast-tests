@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -47,7 +48,8 @@ func init() {
 
 const (
 	pdDisconnectTime    time.Duration = 1 * time.Second
-	pdConnectTime       time.Duration = 4 * time.Second
+	pdSetupPollTimeout  time.Duration = 20 * time.Second
+	pdSetupPollInterval time.Duration = 4 * time.Second
 	pdConnectIterations int           = 20
 	pdStableDelayTime   time.Duration = 3 * time.Second
 
@@ -97,6 +99,8 @@ func executeConnectSequence(ctx context.Context, s *testing.State, trySrcSupport
 }
 
 func ECPDTrysrc(ctx context.Context, s *testing.State) {
+	var trySrcSupported bool
+
 	h := s.FixtValue().(*fixture.Value).Helper
 
 	if err := h.RequireConfig(ctx); err != nil {
@@ -122,38 +126,42 @@ func ECPDTrysrc(ctx context.Context, s *testing.State) {
 	}
 
 	// GoBigSleepLint: Setting DRP on ServoV4 ('usbc_action drp') triggers reconnect
-	// Wait some time to ensure that no operation will occur during test
-	if err := testing.Sleep(ctx, pdConnectTime); err != nil {
-		s.Fatal("Failed to sleep: ", err)
+	// poll SetPDTrySrc to make sure servo finished connecting to DUT
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		trySrcTmp, err := h.Servo.SetPDTrySrc(ctx, 1)
+		if err != nil {
+			return errors.Wrap(err, "failed to set up Try.SRC")
+		}
+
+		trySrcSupported = trySrcTmp
+		return nil
+	}, &testing.PollOptions{Timeout: pdSetupPollTimeout, Interval: pdSetupPollInterval}); err != nil {
+		s.Fatal("DUT does not support Try.SRC feature: ", err)
 	}
 
-	if trySrcSupported, err := h.Servo.SetPDTrySrc(ctx, 1); err != nil {
-		s.Fatal("DUT does not support Try.SRC feature: ", err)
-	} else {
-		if trySrcSupported {
-			// Run disconnect/connect sequence with Try.SRC enabled
-			snkOn, srcOn := executeConnectSequence(ctx, s, true)
-			totalOn := float32(snkOn + srcOn)
-			trySrcOn := float32(snkOn) * 100.0 / totalOn
-			testing.ContextLogf(ctx, "SNK ratio with Try.SRC enabled = %f", trySrcOn)
+	if trySrcSupported {
+		// Run disconnect/connect sequence with Try.SRC enabled
+		snkOn, srcOn := executeConnectSequence(ctx, s, true)
+		totalOn := float32(snkOn + srcOn)
+		trySrcOn := float32(snkOn) * 100.0 / totalOn
+		testing.ContextLogf(ctx, "SNK ratio with Try.SRC enabled = %f", trySrcOn)
 
-			if trySrcOn < pdTrySrcOnThreshold {
-				s.Fatalf("SRC %% = %.1f: Must be >  %.1f", trySrcOn, pdTrySrcOnThreshold)
-			}
+		if trySrcOn < pdTrySrcOnThreshold {
+			s.Fatalf("SRC %% = %.1f: Must be >  %.1f", trySrcOn, pdTrySrcOnThreshold)
 		}
+	}
 
-		// Run disconnect/connect sequence with Try.SRC disabled
-		snkOff, srcOff := executeConnectSequence(ctx, s, false)
-		totalOff := float32(snkOff + srcOff)
-		trySrcOff := float32(snkOff) * 100.0 / totalOff
-		testing.ContextLogf(ctx, "SNK ratio with Try.SRC disabled = %f", trySrcOff)
+	// Run disconnect/connect sequence with Try.SRC disabled
+	snkOff, srcOff := executeConnectSequence(ctx, s, false)
+	totalOff := float32(snkOff + srcOff)
+	trySrcOff := float32(snkOff) * 100.0 / totalOff
+	testing.ContextLogf(ctx, "SNK ratio with Try.SRC disabled = %f", trySrcOff)
 
-		// When Try.SRC is off, ideally the SNK/SRC ratio will be close to
-		// 50%. However, in practice there is a wide range related to the
-		// dualrole swap timers in firmware.
-		if trySrcOff < pdTrySrcOffThreshold || trySrcOff > 100-pdTrySrcOffThreshold {
-			s.Fatalf("SRC %% = %.1f: Must be > %.1f & < %.1f", trySrcOff,
-				pdTrySrcOffThreshold, 100-pdTrySrcOffThreshold)
-		}
+	// When Try.SRC is off, ideally the SNK/SRC ratio will be close to
+	// 50%. However, in practice there is a wide range related to the
+	// dualrole swap timers in firmware.
+	if trySrcOff < pdTrySrcOffThreshold || trySrcOff > 100-pdTrySrcOffThreshold {
+		s.Fatalf("SRC %% = %.1f: Must be > %.1f & < %.1f", trySrcOff,
+			pdTrySrcOffThreshold, 100-pdTrySrcOffThreshold)
 	}
 }
