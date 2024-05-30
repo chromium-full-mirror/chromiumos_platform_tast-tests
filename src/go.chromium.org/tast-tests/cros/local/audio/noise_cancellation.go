@@ -22,7 +22,12 @@ type NoiseCancellationConfig struct {
 }
 
 // WithNoiseCancellation setups noise cancellation
-func WithNoiseCancellation(ctx context.Context, config NoiseCancellationConfig, outDir string, hasError func() bool, f func(ctx context.Context)) error {
+func WithNoiseCancellation(
+	ctx context.Context, config NoiseCancellationConfig,
+	outDir string, hasError func() bool,
+	input, output string,
+	f func(ctx context.Context, cras *Cras),
+) error {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, chrome.ResetTimeout)
 	defer cancel()
@@ -51,7 +56,7 @@ func WithNoiseCancellation(ctx context.Context, config NoiseCancellationConfig, 
 		}
 	}
 
-	if err := SetupLoopback(ctx, cr, outDir, hasError); err != nil {
+	if err := SelectDevicesViaQuickSettings(ctx, cr, outDir, hasError, input, output); err != nil {
 		return errors.Wrap(err, "failed to select loopback device from the UI")
 	}
 
@@ -72,7 +77,7 @@ func WithNoiseCancellation(ctx context.Context, config NoiseCancellationConfig, 
 		return errors.Wrap(err, "failed to SetStyleTransferEnabled")
 	}
 
-	f(ctx)
+	f(ctx, cras)
 
 	return nil
 }

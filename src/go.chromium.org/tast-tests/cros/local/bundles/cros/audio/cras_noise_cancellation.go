@@ -176,7 +176,7 @@ func CrasNoiseCancellation(ctx context.Context, s *testing.State) {
 		ChromeOpts:               param.extraChromeOpts,
 	}
 
-	if err := audio.WithNoiseCancellation(ctx, apConfig, s.OutDir(), s.HasError, func(ctx context.Context) {
+	if err := audio.WithNoiseCancellation(ctx, apConfig, s.OutDir(), s.HasError, "Loopback Playback", "Loopback Capture", func(ctx context.Context, _ *audio.Cras) {
 		// Generate test file.
 		const noiseDuration = 10 * time.Second
 

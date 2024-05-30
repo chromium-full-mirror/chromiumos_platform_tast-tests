@@ -21,8 +21,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CrasCaptureLatency,
-		Desc:         "Measure the noise cancellation processing latency in CRAS using aloop with loopback_latency",
+		Func:         CrasSidetoneMultipleLoopbackLatency,
+		Desc:         "Measure the sidetone latency using multiple aloop with loopback_latency",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "normanbt@google.com"},
 		BugComponent: "b:776546",
 		Attr: []string{
@@ -30,7 +30,8 @@ func init() {
 			"group:cbx", "cbx_feature_enabled", "cbx_stable",
 		},
 		Fixture: fixture.AloopLoaded{
-			Channels: 2,
+			Channels:    2,
+			DevicePairs: 2,
 		}.Instance(),
 		Timeout:      3 * time.Minute,
 		Data:         []string{data.TheQuickBrownFoxS16LEStereo48000Wav},
@@ -41,18 +42,18 @@ func init() {
 		Params: []testing.Param{
 			{
 				Name: "no_effects",
-				Val:  crasCaptureLatencyParams{},
+				Val:  crasSidetoneMultipleLoopbackLatencyParams{},
 			},
 			{
 				Name: "nc",
-				Val: crasCaptureLatencyParams{
+				Val: crasSidetoneMultipleLoopbackLatencyParams{
 					noiseCancellationEnabled: true,
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
 			},
 			{
 				Name: "nc_ast",
-				Val: crasCaptureLatencyParams{
+				Val: crasSidetoneMultipleLoopbackLatencyParams{
 					noiseCancellationEnabled: true,
 					styleTransferEnabled:     true,
 				},
@@ -62,19 +63,27 @@ func init() {
 	})
 }
 
-type crasCaptureLatencyParams struct {
+type crasSidetoneMultipleLoopbackLatencyParams struct {
 	noiseCancellationEnabled bool
 	styleTransferEnabled     bool
 }
 
-// CrasCaptureLatency measures the capture latency with CRAS and some audio processing.
-func CrasCaptureLatency(ctx context.Context, s *testing.State) {
-	param := s.Param().(crasCaptureLatencyParams)
+// CrasSidetoneMultipleLoopbackLatency measures the sidetone latency with multiple loopback setups
+// and some audio processing.
+func CrasSidetoneMultipleLoopbackLatency(ctx context.Context, s *testing.State) {
+	param := s.Param().(crasSidetoneMultipleLoopbackLatencyParams)
 	apConfig := audio.NoiseCancellationConfig{
 		NoiseCancellationEnabled: param.noiseCancellationEnabled,
 		StyleTransferEnabled:     param.styleTransferEnabled,
 	}
-	if err := audio.WithNoiseCancellation(ctx, apConfig, s.OutDir(), s.HasError, "Loopback Playback", "Loopback Capture", func(ctx context.Context, _ *audio.Cras) {
+	if err := audio.WithNoiseCancellation(ctx, apConfig, s.OutDir(), s.HasError, "Loopback Capture", "Loopback Playback 1", func(ctx context.Context, cras *audio.Cras) {
+		if err := cras.SetSidetoneEnabled(ctx, true); err != nil {
+			s.Fatal("Failed to SetSidetoneEnabled: ", err)
+		}
+		defer func() {
+			cras.SetSidetoneEnabled(ctx, false)
+		}()
+
 		outputPath := filepath.Join(s.OutDir(), "result.txt")
 		output, err := os.Create(outputPath)
 		if err != nil {
@@ -88,13 +97,14 @@ func CrasCaptureLatency(ctx context.Context, s *testing.State) {
 			noiseThreshold = "1000"
 		)
 
+		// The audio path is the same as CrasSidetone test.
 		cmd := testexec.CommandContext(
 			ctx,
 			"loopback_latency",
 			"-i",
-			"default", // Use default so it captures from cras and do the audio processing.
+			"hw:Loopback_1,1",
 			"-o",
-			"hw:Loopback,0", // Use hw:Loopback,0 so it playbacks to the alsa device directly.
+			"hw:Loopback,0",
 			"-b",
 			bufferSize,
 			"-p",
@@ -120,6 +130,7 @@ func CrasCaptureLatency(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to parse the latency result: ", err)
 		}
+		s.Logf("Result: %+v", result)
 
 		audio.UpdatePerfValuesFromResult(perfValues, result, bufferSize)
 	}); err != nil {
