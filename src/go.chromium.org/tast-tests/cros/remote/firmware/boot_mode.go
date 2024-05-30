@@ -439,13 +439,8 @@ func (ms *ModeSwitcher) RebootToMode(ctx context.Context, toMode fwCommon.BootMo
 			if err := h.DUT.Conn().CommandContext(ctx, "crossystem", "dev_boot_usb=1", "dev_boot_signed_only=0", "dev_default_boot=usb").Run(ssh.DumpLogOnError); err != nil {
 				return errors.Wrap(err, "enabling dev_boot_usb")
 			}
-			testing.ContextLog(ctx, "Enabling USB")
-			if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
-				return err
-			}
-			testing.ContextLogf(ctx, "Sleeping %s to let USB become visible to DUT", UsbVisibleTime)
-			// GoBigSleepLint: It takes some time for usb mux state to take effect.
-			if err := testing.Sleep(ctx, UsbVisibleTime); err != nil {
+			testing.ContextLog(ctx, "Removing USB")
+			if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxOff); err != nil {
 				return err
 			}
 			testing.ContextLog(ctx, "Rebooting")
@@ -743,6 +738,17 @@ func (ms *ModeSwitcher) fwScreenToUSBDevMode(ctx context.Context, opts ...ModeSw
 	if err := h.Servo.SetDUTPDDataRole(ctx, servo.DFP); err != nil {
 		testing.ContextLogf(ctx, "Failed to set pd data role to DFP: %.400s", err)
 	}
+
+	testing.ContextLog(ctx, "Inserting a valid USB to DUT")
+	if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
+		return errors.Wrap(err, "failed to insert USB to DUT")
+	}
+	// GoBigSleepLint: It may take some time for usb mux state to
+	// take effect.
+	if err := testing.Sleep(ctx, UsbVisibleTime); err != nil {
+		return errors.Wrapf(err, "failed to sleep for %v", UsbDisableTime)
+	}
+
 	totalTimeout := h.Config.USBImageBootTimeout + h.Config.FirmwareScreen
 	if msOptsContain(opts, WaitSoftwareSync) {
 		totalTimeout += h.Config.SoftwareSyncUpdate
