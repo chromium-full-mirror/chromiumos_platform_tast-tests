@@ -8,6 +8,7 @@
     <string-array name="policies">
         <item>caCerts</item>
         <item>cameraDisabled</item>
+        <item>choosePrivateKeyRules</item>
         <item>credentialsConfigDisabled</item>
         <item>enabledSystemAppPackageNames</item>
         <item>installUnknownSourcesDisabled</item>

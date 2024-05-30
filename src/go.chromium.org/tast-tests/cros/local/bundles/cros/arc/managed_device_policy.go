@@ -7,7 +7,6 @@ package arc
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -23,6 +22,8 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc/arcent"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/imagehelpers"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
@@ -35,9 +36,12 @@ import (
 
 const (
 	devicePolicyPkg = "org.chromium.arc.testapp.devicepolicy"
+	// https://chromewebstore.google.com/detail/platformkeys-test-extensi/hoppbgdeajkagempifacalpdapphfoai?hl=en
+	platformKeysTestExtensionID = "hoppbgdeajkagempifacalpdapphfoai"
 
 	policyCaCerts                        = "caCerts"
 	policyCameraDisabled                 = "cameraDisabled"
+	policyChoosePrivateKeyRules          = "choosePrivateKeyRules"
 	policyCredentialsConfigDisabled      = "credentialsConfigDisabled"
 	policyEnabledSystemAppPackageNames   = "enabledSystemAppPackageNames"
 	policyInstallUnknownSourcesDisabled  = "installUnknownSourcesDisabled"
@@ -52,8 +56,13 @@ const (
 )
 
 var arcPolicyMap = map[string]func(ctx context.Context, s *testing.State) (policy.Policy, func(ctx context.Context), error){
-	policyCaCerts:                        staticPolicy(&policy.ArcCertificatesSyncMode{Val: 1 /*Enable sync*/}),
-	policyCameraDisabled:                 staticPolicy(&policy.VideoCaptureAllowed{Val: false}),
+	policyCaCerts:        staticPolicy(&policy.ArcCertificatesSyncMode{Val: 1 /*Enable sync*/}),
+	policyCameraDisabled: staticPolicy(&policy.VideoCaptureAllowed{Val: false}),
+	policyChoosePrivateKeyRules: staticPolicy(&policy.KeyPermissions{
+		Val: map[string]*policy.KeyPermissionsValue{
+			devicePolicyPkg: &policy.KeyPermissionsValue{AllowCorporateKeyUsage: true},
+		},
+	}),
 	policyCredentialsConfigDisabled:      staticPolicy(nil),
 	policyEnabledSystemAppPackageNames:   staticPolicy(nil),
 	policyInstallUnknownSourcesDisabled:  staticPolicy(nil),
@@ -87,6 +96,8 @@ func init() {
 			pci.SearchFlag(&policy.AudioCaptureAllowed{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.DefaultGeolocationSetting{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.DisableScreenshots{}, pci.VerifiedFunctionalityOS),
+			pci.SearchFlag(&policy.ExtensionInstallForcelist{}, pci.VerifiedFunctionalityOS),
+			pci.SearchFlag(&policy.KeyPermissions{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.OpenNetworkConfiguration{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.PrintingEnabled{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.VideoCaptureAllowed{}, pci.VerifiedFunctionalityOS),
@@ -151,6 +162,36 @@ func init() {
 			{
 				Name:              "camera_disabled_betty_vm",
 				Val:               policyCameraDisabled,
+				ExtraSoftwareDeps: []string{"android_vm", "qemu"},
+				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
+			},
+			{
+				Name:              "choose_private_key_rules",
+				Val:               policyChoosePrivateKeyRules,
+				ExtraSoftwareDeps: []string{"android_container", "no_qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "choose_private_key_rules_betty",
+				Val:               policyChoosePrivateKeyRules,
+				ExtraSoftwareDeps: []string{"android_container", "qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "choose_private_key_rules_vm",
+				Val:               policyChoosePrivateKeyRules,
+				ExtraSoftwareDeps: []string{"android_vm", "no_android_vm_t", "no_qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "choose_private_key_rules_x",
+				Val:               policyChoosePrivateKeyRules,
+				ExtraSoftwareDeps: []string{"android_vm_t", "no_qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "choose_private_key_rules_betty_vm",
+				Val:               policyChoosePrivateKeyRules,
 				ExtraSoftwareDeps: []string{"android_vm", "qemu"},
 				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
 			},
@@ -510,31 +551,47 @@ func ManagedDevicePolicy(ctx context.Context, s *testing.State) {
 
 	login := chrome.GAIALogin(creds)
 
-	caCert, err := ioutil.ReadFile(s.DataPath("managed_device_policy_ca_cert.pem"))
+	caCert, err := os.ReadFile(s.DataPath("managed_device_policy_ca_cert.pem"))
 	if err != nil {
 		s.Fatal("Failed to read ca cert: ", err)
 	}
 
-	arcEnabledPolicy := &policy.ArcEnabled{Val: true}
+	policies := []policy.Policy{&policy.ArcEnabled{Val: true}}
+
 	var packages []string
 	if policyName == policyPermittedAccessibilityServices {
 		packages = append(packages, enabledAccessibilityPkg, disabledAccessibilityPkg)
 	}
 	arcPolicy := arcent.CreateArcPolicyWithApps(packages, arcent.InstallTypeForceInstalled, arcent.PlayStoreModeBlockList)
-	// Adding a CaCert will cause credentialsConfigDisabled to be also configured.
-	caCertPolicy := &policy.OpenNetworkConfiguration{
-		Val: &policy.ONC{
-			Certificates: []*policy.ONCCertificate{
-				{
-					GUID:      "{b3aae353-cfa9-4093-9aff-9f8ee2bf8c29}",
-					TrustBits: []string{"Web"},
-					Type:      "Authority",
-					X509:      string(caCert),
+	arcPolicy.Val.Applications = append(arcPolicy.Val.Applications, policy.Application{
+		PackageName:             devicePolicyPkg,
+		InstallType:             arcent.InstallTypeAvailable,
+		VerifySignatureDisabled: true,
+	})
+	policies = append(policies, arcPolicy)
+
+	if policyName == policyCaCerts || policyName == policyCredentialsConfigDisabled {
+		// Adding a CaCert will cause credentialsConfigDisabled to be also configured.
+		policies = append(policies, &policy.OpenNetworkConfiguration{
+			Val: &policy.ONC{
+				Certificates: []*policy.ONCCertificate{
+					{
+						GUID:      "{b3aae353-cfa9-4093-9aff-9f8ee2bf8c29}",
+						TrustBits: []string{"Web"},
+						Type:      "Authority",
+						X509:      string(caCert),
+					},
 				},
 			},
-		},
+		})
 	}
-	policies := []policy.Policy{arcEnabledPolicy, arcPolicy, caCertPolicy}
+	// This policy is needed to install test app for generating corp usage keys
+	if policyName == policyChoosePrivateKeyRules {
+		policies = append(policies, &policy.ExtensionInstallForcelist{
+			Val: []string{platformKeysTestExtensionID},
+		})
+	}
+
 	fdms, err := arcent.SetUpFakePolicyServer(ctx, s.OutDir(), creds.User, policies, false /*affiliated*/)
 	if err != nil {
 		s.Fatal("Failed to setup fake policy server: ", err)
@@ -547,7 +604,13 @@ func ManagedDevicePolicy(ctx context.Context, s *testing.State) {
 		chrome.ARCSupported(),
 		chrome.UnRestrictARCCPU(),
 		chrome.DMSPolicy(fdms.URL),
-		chrome.ExtraArgs(append(arc.DisableSyncFlags(), "--vmodule=arc_policy_bridge=1")...))
+		chrome.ExtraArgs(append(
+			// to prevent unnecessary sync operations in arc
+			arc.DisableSyncFlags(),
+			// to enable verbose logging in arc policy bridge
+			"--vmodule=arc_policy_bridge=1",
+			// need to work with the extensions
+			"--force-devtools-available")...))
 	if err != nil {
 		s.Fatal("Failed to connect to Chrome: ", err)
 	}
@@ -574,6 +637,12 @@ func ManagedDevicePolicy(ctx context.Context, s *testing.State) {
 	s.Log("Installing test app")
 	if err := a.Install(ctx, arc.APKPath(apk)); err != nil {
 		s.Fatal("Failed installing app: ", err)
+	}
+
+	if policyName == policyChoosePrivateKeyRules {
+		if err := generateCorpUsageCert(ctx, cr, browser.TypeAsh); err != nil {
+			s.Fatal("Failed to generate corp usage cert: ", err)
+		}
 	}
 
 	tconn, err := cr.TestAPIConn(ctx)
@@ -644,6 +713,51 @@ func ManagedDevicePolicy(ctx context.Context, s *testing.State) {
 	if err := testPolicyEnforcement(ctx, tconn, a, d, policyName, false /*shouldSucceed*/, rl); err != nil {
 		s.Fatalf("Test for policy %s failed: %v", policyName, err)
 	}
+}
+
+func generateCorpUsageCert(ctx context.Context, cr *chrome.Chrome, bt browser.Type) error {
+	extensionURL := fmt.Sprintf("chrome-extension://%s/main.html", platformKeysTestExtensionID)
+	const (
+		statusResultTimeout  = 3 * time.Second
+		actionExecuteTimeout = 15 * time.Second
+	)
+
+	// open the extension
+	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, bt, extensionURL)
+	if err != nil {
+		return errors.Wrap(err, "failed to open the browser")
+	}
+	defer closeBrowser(ctx)
+	defer conn.Close()
+
+	clickAndWaitForStatus := func(buttonId string) error {
+		return testing.Poll(ctx, func(ctx context.Context) error {
+			if err := conn.Eval(ctx, fmt.Sprintf("document.getElementById('%s').click()", buttonId), nil); err != nil {
+				return errors.Wrapf(err, "failed to click %s button", buttonId)
+			}
+			if err := conn.WaitForExprWithTimeout(ctx, fmt.Sprintf("document.getElementById('%s-error').value.includes('OK')", buttonId), statusResultTimeout); err != nil {
+				return errors.Wrapf(err, "failed to wait for %s status", buttonId)
+			}
+			return nil
+		}, &testing.PollOptions{Timeout: actionExecuteTimeout})
+	}
+
+	// create the key
+	if err := clickAndWaitForStatus("generate"); err != nil {
+		return err
+	}
+
+	// create cert
+	if err := clickAndWaitForStatus("create-cert"); err != nil {
+		return err
+	}
+
+	// import the cert
+	if err := clickAndWaitForStatus("import-cert"); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func launchApp(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, appPackage, mainActivity string) (func(ctx context.Context), error) {

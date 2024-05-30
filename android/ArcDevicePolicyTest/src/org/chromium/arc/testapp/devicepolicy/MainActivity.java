@@ -12,6 +12,9 @@ import android.content.Context;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Bundle;
 import android.os.UserManager;
+import android.security.KeyChain;
+import android.security.KeyChainException;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -22,10 +25,13 @@ import java.io.IOException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Collections;
 import java.util.Map;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.function.Supplier;
 
 public class MainActivity extends Activity {
@@ -43,6 +49,8 @@ public class MainActivity extends Activity {
     private Map<String, Supplier<Boolean>> arcPolicies;
     private DevicePolicyManager devicePolicyManager;
     private UserManager userManager;
+    // Needed for KeyChain access that is not allowed from main thread.
+    private final Executor executor = Executors.newSingleThreadExecutor();
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -62,6 +70,7 @@ public class MainActivity extends Activity {
         arcPolicies =
                 Map.ofEntries(
                         Map.entry("caCerts", this::isCaCertSyncDisabled),
+                        Map.entry("choosePrivateKeyRules", this::isPrivateKeyInaccessible),
                         isRestrictionUnapplied(
                                 "credentialsConfigDisabled",
                                 "credentialsConfig",
@@ -122,14 +131,21 @@ public class MainActivity extends Activity {
         txtOutput.setText("");
         txtError.setText("");
 
-        boolean result;
-        if (arcPolicies.containsKey(policy)) {
-            result = arcPolicies.get(policy).get();
-        } else {
-            logError("Unrecognized policy: " + policy, null);
-            result = false;
-        }
-        txtOutput.setText(String.valueOf(result));
+        executor.execute(
+                () -> {
+                    boolean result;
+                    if (arcPolicies.containsKey(policy)) {
+                        result = arcPolicies.get(policy).get();
+                    } else {
+                        logError("Unrecognized policy: " + policy, null);
+                        result = false;
+                    }
+                    // UI updates must be done from the main thread.
+                    runOnUiThread(
+                            () -> {
+                                txtOutput.setText(String.valueOf(result));
+                            });
+                });
     }
 
     /*
@@ -161,6 +177,23 @@ public class MainActivity extends Activity {
                     }
                     return allowed;
                 });
+    }
+
+    private boolean isPrivateKeyInaccessible() {
+        String alias = KeyAccessChangedReceiver.getKeyAlias(this);
+        if (TextUtils.isEmpty(alias)) {
+            logError("private key not found", null);
+            return true;
+        }
+        PrivateKey privateKey;
+        try {
+            privateKey = KeyChain.getPrivateKey(this, alias);
+        } catch (KeyChainException | InterruptedException e) {
+            logError("private key not accessible", e);
+            return true;
+        }
+
+        return false;
     }
 
     private boolean isCaCertSyncDisabled() {
