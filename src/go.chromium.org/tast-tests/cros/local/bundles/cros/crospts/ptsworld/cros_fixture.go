@@ -9,7 +9,6 @@ package ptsworld
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"io/fs"
 	"os"
@@ -214,51 +213,6 @@ func getPtsSystemProperties(ctx context.Context) (string, string, error) {
 	return stdoutBuf.String(), stderrBuf.String(), nil
 }
 
-// blockTestsReinstall updates the system hash in pts-install.json to block the
-// test packages reinstall for the case that system hash ID string is not match
-func blockTestsReinstall(ctx context.Context, testsList []string) error {
-	// Get the system properties by running PTS system-properties command.
-	systemProperties, stderr, err := getPtsSystemProperties(ctx)
-	if err != nil {
-		return errors.Wrapf(err, "failed to get PTS system properties: %s", stderr)
-	}
-
-	// Get the system id string in based64 encoded format.
-	systemIDStr := GetPtsSystemIDString(systemProperties)
-
-	for _, test := range testsList {
-		file := CrosChroot + "/var/lib/phoronix-test-suite/installed-tests/pts/" + test + "/pts-install.json"
-		if _, err := os.Stat(file); err == nil {
-			content, err := os.ReadFile(file)
-			if err != nil {
-				return errors.Wrapf(err, "failed to read: %s", file)
-			}
-
-			var data map[string]interface{}
-			err = json.Unmarshal(content, &data)
-			if err != nil {
-				return errors.Wrapf(err, "failed to unmarshal: %s", file)
-			}
-
-			// Update system_hash by system ID
-			environment := data["test_installation"].(map[string]interface{})["environment"].(map[string]interface{})
-			environment["system_hash"] = systemIDStr
-
-			updatedJSON, err := json.MarshalIndent(data, "", "    ") // Indent for readability
-			if err != nil {
-				return errors.Wrapf(err, "failed to marshal indent: %s", file)
-			}
-
-			err = os.WriteFile(file, updatedJSON, 0644)
-			if err != nil {
-				return errors.Wrapf(err, "failed to write back: %s", file)
-			}
-		}
-	}
-
-	return nil
-}
-
 // allocateInstalledImageFile allocates a image file for installing benchmark tools
 func allocateInstalledImageFile(ctx context.Context, imageFile string) error {
 	// check imageFile exist
@@ -317,18 +271,6 @@ func (c *CrosFixture) Mount(ctx context.Context, s *testing.FixtState) error {
 		return err
 	}
 
-	// The large disk tests are the tests require more disk space which causes
-	// low disk DUTs test fail, e.g. octopus.
-	// Update the system hash to block test packages reinstall.
-	largeDiskTests := []string{"openssl-3.1.0", "compress-lz4-1.0.0", "vpxenc-3.2.0", "tensorflow-lite-1.1.0"}
-	// TODO(darrenwu): Remove the blockTestsReinstall() when split PTSWorld
-	// implemented.
-	// The split PTSWorld can help to customize the test packages,
-	// and we can reduce the required disk size. But for now, we can block the
-	// reinstallation for workaround.
-	if err := blockTestsReinstall(ctx, largeDiskTests); err != nil {
-		s.Fatal("Failed to update PTS system hash: ", err)
-	}
 	return nil
 }
 

@@ -60,7 +60,7 @@ func (r *CrosRunner) PtsWorldShell(ctx context.Context, s *testing.State, cmd st
 }
 
 // RunTestSuite runs the given test suite in PTSWorld.
-func (r *CrosRunner) RunTestSuite(ctx context.Context, s *testing.State, suiteName string, blockReinstall bool) {
+func (r *CrosRunner) RunTestSuite(ctx context.Context, s *testing.State, suiteName string) {
 	const (
 		// NO_DOWNLOAD_CACHE, NO_EXTERNAL_DEPENDENCIES and NO_FILE_HASH_CHECKS are
 		// set for running the test by local installed tests.
@@ -76,16 +76,6 @@ func (r *CrosRunner) RunTestSuite(ctx context.Context, s *testing.State, suiteNa
 		ptsFlags = "NO_DOWNLOAD_CACHE=TRUE NO_EXTERNAL_DEPENDENCIES=TRUE NO_FILE_HASH_CHECKS=TRUE NO_COMPILER_MASK=TRUE"
 		// ptsBatchRun is the batch mode test command which has no user interaction.
 		ptsBatchRun = "/phoronix-test-suite/phoronix-test-suite batch-benchmark"
-		// ptsForceInstall is the force install command which will recompile
-		// test package.
-		ptsForceInstall = "/phoronix-test-suite/phoronix-test-suite force-install"
 	)
-	// The test binary may be compiled with CFLAGS `--march=native``, which is
-	// platform dependent, so we recompile the test binary by force-install.
-	// Some packages require large disk to reinstall which causes test fail. The
-	// `blockReinstall` flag is used to avoid the test failure.
-	if !blockReinstall {
-		r.PtsWorldShell(ctx, s, fmt.Sprintf("%s %s %s", ptsFlags, ptsForceInstall, suiteName))
-	}
 	r.PtsWorldShell(ctx, s, fmt.Sprintf("%s %s %s", ptsFlags, ptsBatchRun, suiteName))
 }

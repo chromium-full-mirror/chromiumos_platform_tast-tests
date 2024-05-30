@@ -62,7 +62,7 @@ func UnpackImage(ctx context.Context, image, imagePath string) error {
 // Runner is the interface for crospts runner.
 type Runner interface {
 	// RunTestSuite runs the given test suite in PTSWorld.
-	RunTestSuite(ctx context.Context, s *testing.State, cmd string, blockReinstall bool)
+	RunTestSuite(ctx context.Context, s *testing.State, cmd string)
 	// PtsWorldShell runs the given command in PTSWorld.
 	PtsWorldShell(ctx context.Context, s *testing.State, cmd string)
 }
