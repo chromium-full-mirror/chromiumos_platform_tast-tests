@@ -35,9 +35,11 @@ import (
 type testServer struct {
 	iface     string
 	inAddr    net.IP
-	inPort    int
 	bcastAddr net.IP
-	bcastPort int
+
+	// The source port that the server uses to send out the DHCP packet. Note that
+	// RFC 2131 makes no requirements or recommendations on this port.
+	sendPort int
 
 	listenConn *net.UDPConn
 	sendConn   *net.UDPConn
@@ -46,13 +48,18 @@ type testServer struct {
 
 type testFunction func(context.Context) error
 
-func newTestServer(iface string, inAddr, bcastAddr net.IP, inPort, bcastPort int) *testServer {
+// The standard DHCP ports.
+const (
+	serverPort = 67
+	clientPort = 68
+)
+
+func newTestServer(iface string, inAddr, bcastAddr net.IP, sendPort int) *testServer {
 	return &testServer{
 		iface:     iface,
 		inAddr:    inAddr,
-		inPort:    inPort,
 		bcastAddr: bcastAddr,
-		bcastPort: bcastPort,
+		sendPort:  sendPort,
 	}
 }
 
@@ -87,7 +94,7 @@ func (s *testServer) setupAndBindSocket(ctx context.Context) (retErr error) {
 
 	// Create the listen socket.
 	lc := net.ListenConfig{Control: controlFunc}
-	listenAddr := fmt.Sprintf("%s:%d", s.inAddr.String(), s.inPort)
+	listenAddr := fmt.Sprintf("%s:%d", s.inAddr.String(), serverPort)
 	listenConn, err := lc.ListenPacket(ctx, "udp", listenAddr)
 	if err != nil {
 		listenConn.Close()
@@ -105,10 +112,10 @@ func (s *testServer) setupAndBindSocket(ctx context.Context) (retErr error) {
 	// create the sockets, but seems that the current code also works. We should
 	// revisit this part if there is any problem in the future.
 	dialer := net.Dialer{
-		LocalAddr: &net.UDPAddr{IP: s.inAddr, Port: s.inPort},
+		LocalAddr: &net.UDPAddr{IP: s.inAddr, Port: s.sendPort},
 		Control:   controlFunc,
 	}
-	bcastAddr := fmt.Sprintf("%s:%d", s.bcastAddr, s.bcastPort)
+	bcastAddr := fmt.Sprintf("%s:%d", s.bcastAddr, clientPort)
 	sendConn, err := dialer.Dial("udp", bcastAddr)
 	if err != nil {
 		return errors.Wrapf(err, "failed to connect to %s", bcastAddr)

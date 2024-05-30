@@ -23,17 +23,12 @@ type testFunc func(ctx context.Context) error
 // Returns the server after the test which can be used to verify the
 // interaction, e.g., get packets received by the server.
 func RunTestWithEnv(ctx context.Context, env *env.Env, rules []HandlingRule, testFunc testFunc) (*testServer, []error) {
-	const (
-		serverPort = 67
-		clientPort = 68
-	)
-
 	listenAddr := net.IPv4(0, 0, 0, 0)
 	broadcast := net.IPv4(255, 255, 255, 255)
 
 	ec := make(chan error)
 
-	s := newTestServer(env.VethInName, listenAddr, broadcast, serverPort, clientPort)
+	s := newTestServer(env.VethInName, listenAddr, broadcast, serverPort)
 	serverCtx, cancel := context.WithCancel(ctx)
 
 	go func(ctx context.Context) {
