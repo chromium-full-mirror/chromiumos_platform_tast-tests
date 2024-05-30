@@ -626,18 +626,14 @@ func (p *Proxy) GetPort() int {
 
 // dockerExec execs a command with Docker SDK.
 func (p *Proxy) dockerExec(ctx context.Context, stdin io.Reader, name string, args ...string) ([]byte, []byte, error) {
-	// TODO (anhdle): Implement stdin hijacking.
-	// Attach stdin if provided.
-	if stdin != nil {
-		err := errors.New("cannot direct input to docker exec command")
-		return nil, nil, err
-	}
-
 	// prepare exec
 	execConfig := types.ExecConfig{
 		AttachStdout: true,
 		AttachStderr: true,
 		Privileged:   true,
+	}
+	if stdin != nil {
+		execConfig.AttachStdin = true
 	}
 	// The only user within servod container is root, no sudo needed.
 	execConfig.Cmd = append([]string{name}, args...)
@@ -652,6 +648,21 @@ func (p *Proxy) dockerExec(ctx context.Context, stdin io.Reader, name string, ar
 	attachResp, err := p.dcl.ContainerExecAttach(ctx, execID, types.ExecStartCheck{})
 	if err != nil {
 		return nil, nil, err
+	}
+	if stdin != nil {
+		go func() {
+			// Note there is no synchronization between this and the reading from attachResp
+			// this assumes the program will not exit until stdin sends EOF, if the program
+			// exits before stdin is finished processing it the `defer attachResp.Close()`
+			// will cause io.Copy in this goroutine to error and this goroutine will exit
+			n, err := io.Copy(attachResp.Conn, stdin)
+			if err != nil {
+				testing.ContextLogf(ctx, "Error piping stdin to %q process: %v", name, err)
+			} else {
+				testing.ContextLogf(ctx, "Sent %d bytes from stdin to %q process", n, name)
+			}
+			attachResp.CloseWrite()
+		}()
 	}
 	defer attachResp.Close()
 
