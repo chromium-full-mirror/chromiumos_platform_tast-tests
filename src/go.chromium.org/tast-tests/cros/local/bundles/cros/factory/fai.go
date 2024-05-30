@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	factoryFaiPath = "/usr/local/sbin/factory_fai"
+	factoryInstallerPath = "/usr/local/sbin/factory_installer"
 )
 
 func init() {
@@ -62,7 +62,7 @@ func prepareFaiConfig(ctx context.Context) (string, error) {
 	}
 	defer tempFile.Close()
 
-	rawConfig, err := testexec.CommandContext(ctx, factoryFaiPath, "--dump-config").Output()
+	rawConfig, err := testexec.CommandContext(ctx, factoryInstallerPath, "fai", "--dump-config").Output()
 	if err != nil {
 		return "", errors.Wrap(err, "failed to dump fai config")
 	}
@@ -98,12 +98,12 @@ func FAI(ctx context.Context, s *testing.State) {
 	// File to store the FAI result.
 	faiResultFile := filepath.Join(s.OutDir(), "factory_fai_result.json")
 
-	_, stderr, err := testexec.CommandContext(ctx, factoryFaiPath, "-c", configPath, "--output-path", faiResultFile).SeparatedOutput()
+	_, stderr, err := testexec.CommandContext(ctx, factoryInstallerPath, "fai", "-c", configPath, "--output-path", faiResultFile).SeparatedOutput()
 	if len(stderr) > 0 {
-		s.Log("factory_fai stderr:", string(stderr))
+		s.Log("factory_installer stderr:", string(stderr))
 	}
 	if err != nil {
-		s.Fatal("Failed to execute factory_fai: ", err)
+		s.Fatal("Failed to execute factory_installer: ", err)
 	}
 
 	re := regexp.MustCompile(`Error: Failed to collect "(?P<component>\w+)".`)
