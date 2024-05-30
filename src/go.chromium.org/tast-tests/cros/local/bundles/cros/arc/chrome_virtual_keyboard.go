@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vkb"
 	"go.chromium.org/tast-tests/cros/local/chrome/useractions"
@@ -232,7 +233,7 @@ func chromeVirtualKeyboardFocusChangeTest(
 	if err := d.Object(ui.ID(fieldID1), ui.Focused(true)).WaitForExists(ctx, 30*time.Second); err != nil {
 		s.Fatal("Pressing the button didn't cause focusing on the field: ", err)
 	}
-	// This sleep is necessary in case VK trigger is delayed.
+	// GoBigSleepLint: This sleep is necessary in case VK trigger is delayed.
 	if err := testing.Sleep(ctx, 100*time.Millisecond); err != nil {
 		s.Fatal("Failed to sleep: ", err)
 	}
@@ -828,6 +829,11 @@ func ChromeVirtualKeyboard(ctx context.Context, s *testing.State) {
 
 	for _, test := range s.Param().([]vkTestParams) {
 		s.Run(ctx, test.name, func(ctx context.Context, s *testing.State) {
+			handler := func(msg string) {
+				faillog.DumpUITreeWithScreenshotWithTestAPIOnError(ctx, s.OutDir(), s.HasError, tconn, test.name)
+			}
+			s.AttachErrorHandlers(handler, handler)
+
 			test.fn(ctx, tconn, a, cr, d, s)
 		})
 	}

@@ -18,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
@@ -376,6 +377,11 @@ func Clipboard(ctx context.Context, s *testing.State) {
 
 	// Copy image from Chrome to Android.
 	s.Run(ctx, "CopyImageFromChromeToAndroid", func(ctx context.Context, s *testing.State) {
+		handler := func(msg string) {
+			faillog.DumpUITreeWithScreenshotWithTestAPIOnError(ctx, s.OutDir(), s.HasError, tconn, "CopyImageFromChromeToAndroid")
+		}
+		s.AttachErrorHandlers(handler, handler)
+
 		if err := testCopyImageFromChromeToAndroid(ctx, p, tconn, s.DataFileSystem()); err != nil {
 			s.Fatal("Failed to verify copying an image from a browser to an app: ", err)
 		}
@@ -419,6 +425,11 @@ func Clipboard(ctx context.Context, s *testing.State) {
 	}
 
 	s.Run(ctx, "CopyHTMLFromChromeToAndroidWithObserver", func(ctx context.Context, s *testing.State) {
+		handler := func(msg string) {
+			faillog.DumpUITreeWithScreenshotWithTestAPIOnError(ctx, s.OutDir(), s.HasError, tconn, "CopyHTMLFromChromeToAndroidWithObserver")
+		}
+		s.AttachErrorHandlers(handler, handler)
+
 		const (
 			observerEnableID   = idPrefix + "enable_observer_button"
 			observerDisableID  = idPrefix + "disable_observer_button"
@@ -518,6 +529,11 @@ func Clipboard(ctx context.Context, s *testing.State) {
 		expectedHTMLFromAndroid,
 	}} {
 		s.Run(ctx, row.name, func(ctx context.Context, s *testing.State) {
+			handler := func(msg string) {
+				faillog.DumpUITreeWithScreenshotWithTestAPIOnError(ctx, s.OutDir(), s.HasError, tconn, row.name)
+			}
+			s.AttachErrorHandlers(handler, handler)
+
 			start := time.Now()
 			if err := row.copyFunc(ctx); err != nil {
 				s.Fatal("Failed to copy: ", err)
