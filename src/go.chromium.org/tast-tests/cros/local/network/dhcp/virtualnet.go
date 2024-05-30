@@ -47,7 +47,8 @@ func RunTestWithEnv(ctx context.Context, env *env.Env, rules []HandlingRule, tes
 			ec <- err
 			return
 		}
-		defer s.conn.Close()
+		defer s.listenConn.Close()
+		defer s.sendConn.Close()
 		testing.ContextLog(ctx, "Test DHCP server started")
 		ec <- s.runLoop(ctx, rules)
 		testing.ContextLog(ctx, "Test DHCP server stopped")
