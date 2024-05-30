@@ -32,6 +32,7 @@ func init() {
 			"group:hardware",
 			"group:complementary",
 			"group:mainline", "informational",
+			"group:criticalstaging",
 		},
 		SoftwareDeps: []string{"chrome", "vpd"},
 		Params: []testing.Param{
