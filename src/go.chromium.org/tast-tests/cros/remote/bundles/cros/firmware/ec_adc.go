@@ -88,8 +88,17 @@ func ECADC(ctx context.Context, s *testing.State) {
 			continue
 		}
 		for _, ecTemperature := range ecTempsParsed {
+			// Sometimes the temp (eg 316 K) gets broken up into 2 lines resulting in it being parsed as {Name:31 TempKelvin:6}.
+			// Allow some retries for this situation as well.
 			if ecTemperature.TempKelvin > maxECTemp || ecTemperature.TempKelvin < minECTemp {
-				s.Errorf("%d: Abnormal EC temperature: %+v raw: %q", i, ecTemperature, ecTemperatureOut[0][0])
+				// Ignore up to 20 failures as it may be anomaly/poorly parse regex, but after that start failing.
+				if extraTries > 20 {
+					s.Errorf("%d: Abnormal EC temperature: %+v raw: %q", i, ecTemperature, ecTemperatureOut[0][0])
+				} else {
+					extraTries++
+					s.Logf("%d: Abnormal EC temperature: %+v raw: %q, retrying", i, ecTemperature, ecTemperatureOut[0][0])
+				}
+				continue
 			}
 		}
 	}
