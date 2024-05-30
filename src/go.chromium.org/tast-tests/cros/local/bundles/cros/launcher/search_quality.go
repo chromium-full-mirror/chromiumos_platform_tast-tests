@@ -25,8 +25,6 @@ import (
 // 17, sunny, Canberra ACT
 // 17, mostly cloudy, see more forcase for Canberra
 const weatherPattern = `(?i)^\d+,\s*.*(?:sunny|clear|cloudy|showers|rain|thunderstorms|overcast|haze|fog|mist|drizzle|snow|sleet|windy).*\bCanberra\b`
-const rotateScreenPattern = `^Rotate screen.*Shortcuts.*`
-const capsLockPattern = "^Turn on/off Caps Lock.*Shortcuts.*"
 
 // searchQualityTestCase struct encapsulates parameters for test.
 type searchQualityTestCase struct {
@@ -72,28 +70,6 @@ func init() {
 					expectedResult: "= 6912",
 					category:       "Answer Card",
 					provider:       "omnibox",
-				},
-				ExtraAttr: []string{"group:hw_agnostic"},
-			},
-			{
-				Name:    "answer_card_caps_lock",
-				Fixture: fixture.NormalLauncherSearch,
-				Val: searchQualityTestCase{
-					query:          "caps lock",
-					useRegex:       true,
-					expectedResult: capsLockPattern,
-					category:       "Answer Card",
-				},
-				ExtraAttr: []string{"group:hw_agnostic"},
-			},
-			{
-				Name:    "answer_card_screen_rotate",
-				Fixture: fixture.NormalLauncherSearch,
-				Val: searchQualityTestCase{
-					query:          "screen rotate",
-					useRegex:       true,
-					expectedResult: rotateScreenPattern,
-					category:       "Answer Card",
 				},
 				ExtraAttr: []string{"group:hw_agnostic"},
 			},
@@ -247,17 +223,38 @@ func init() {
 
 			// --- Help app test cases. ---
 			{
+				Name:    "help_caps_lock",
+				Fixture: fixture.NormalLauncherSearch,
+				Val: searchQualityTestCase{
+					query:          "caps lock",
+					useRegex:       false,
+					expectedResult: "Turn on/off Caps Lock",
+					category:       "Help",
+				},
+				ExtraAttr: []string{"group:hw_agnostic"},
+			},
+			{
 				Name:    "help_change_channel",
 				Fixture: fixture.NormalLauncherSearchWithOOBE,
 				Val: searchQualityTestCase{
 					query:          "change channel",
 					useRegex:       false,
-					expectedResult: "Switch between stable, beta and dev software",
+					expectedResult: "Switch between stable, beta & dev software",
 					category:       "Help",
 				},
 				ExtraAttr: []string{"group:hw_agnostic"},
 			},
-
+			{
+				Name:    "help_screen_rotate",
+				Fixture: fixture.NormalLauncherSearch,
+				Val: searchQualityTestCase{
+					query:          "screen rotate",
+					useRegex:       false,
+					expectedResult: "Rotate screen",
+					category:       "Help",
+				},
+				ExtraAttr: []string{"group:hw_agnostic"},
+			},
 			// --- Play store test cases. ---
 			{
 				Name:    "play_store_snapchat",
