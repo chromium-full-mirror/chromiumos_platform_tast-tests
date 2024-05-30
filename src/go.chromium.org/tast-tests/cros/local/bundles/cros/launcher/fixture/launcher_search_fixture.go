@@ -137,7 +137,6 @@ func init() {
 		SetUpTimeout:    launcherSearchSetUpTestTimeout + arcOptinTimeout,
 		PreTestTimeout:  launcherSearchPreTestTimeout,
 		PostTestTimeout: launcherSearchPostTestTimeout,
-		Vars:            []string{ui.GaiaPoolDefaultVarName},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: NormalLauncherSearchWithArc,
@@ -151,7 +150,6 @@ func init() {
 		SetUpTimeout:    launcherSearchSetUpTestTimeout + arcOptinTimeout,
 		PreTestTimeout:  launcherSearchPreTestTimeout,
 		PostTestTimeout: launcherSearchPostTestTimeout,
-		Vars:            []string{ui.GaiaPoolDefaultVarName},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: NormalLauncherSearchWithOOBE,
@@ -165,7 +163,6 @@ func init() {
 		SetUpTimeout:    launcherSearchSetUpTestTimeout + oobeTimeout,
 		PreTestTimeout:  launcherSearchPreTestTimeout,
 		PostTestTimeout: launcherSearchPostTestTimeout,
-		Vars:            []string{ui.GaiaPoolDefaultVarName},
 	})
 
 }

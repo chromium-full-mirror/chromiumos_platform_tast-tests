@@ -151,7 +151,6 @@ func init() {
 		BugComponent: "b:1079167", // ChromeOS > Software > Family
 		Impl:         NewFamilyLinkFixture("family.parentEmail", "family.parentPassword", "family.unicornEmail", "family.unicornPassword", false),
 		Vars: []string{
-			ui.GaiaPoolDefaultVarName,
 			"family.parentEmail",
 			"family.parentPassword",
 			"family.unicornEmail",
@@ -175,7 +174,6 @@ func init() {
 		BugComponent: "b:1079167", // ChromeOS > Software > Family
 		Impl:         NewFamilyLinkFixtureLacros("family.parentEmail", "family.parentPassword", "family.unicornEmail", "family.unicornPassword", false),
 		Vars: []string{
-			ui.GaiaPoolDefaultVarName,
 			"family.parentEmail",
 			"family.parentPassword",
 			"family.unicornEmail",

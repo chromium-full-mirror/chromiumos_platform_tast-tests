@@ -123,7 +123,7 @@ func init() {
 		SetUpTimeout:    chrome.GAIALoginTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
-		Vars:            []string{ui.GaiaPoolDefaultVarName, "keepState"},
+		Vars:            []string{"keepState"},
 		BugComponent:    "b:658562", // ChromeOS > Software > GuestOS
 	})
 
@@ -192,7 +192,7 @@ func init() {
 		SetUpTimeout:    chrome.GAIALoginTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
-		Vars:            []string{ui.GaiaPoolDefaultVarName, "keepState"},
+		Vars:            []string{"keepState"},
 		BugComponent:    "b:658562", // ChromeOS > Software > GuestOS
 	})
 
@@ -300,7 +300,7 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 		TearDownTimeout: uninstallationTimeout,
 		Parent:          "chromeLoggedInWithGaiaForCrostini",
-		Vars:            []string{"keepState", ui.GaiaPoolDefaultVarName},
+		Vars:            []string{"keepState"},
 		Data:            []string{GetContainerMetadataArtifact("bullseye", false), GetContainerRootfsArtifact("bullseye", false)},
 	})
 
@@ -314,7 +314,7 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 		TearDownTimeout: uninstallationTimeout,
 		Parent:          "chromeLoggedInWithGaiaForCrostiniWithoutArc",
-		Vars:            []string{"keepState", ui.GaiaPoolDefaultVarName},
+		Vars:            []string{"keepState"},
 		Data:            []string{GetContainerMetadataArtifact("bullseye", false), GetContainerRootfsArtifact("bullseye", false)},
 	})
 
@@ -328,7 +328,7 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 		TearDownTimeout: uninstallationTimeout,
 		Parent:          "chromeLoggedInWithGaiaForCrostini",
-		Vars:            []string{"keepState", ui.GaiaPoolDefaultVarName},
+		Vars:            []string{"keepState"},
 		Data:            []string{GetContainerMetadataArtifact("bookworm", false), GetContainerRootfsArtifact("bookworm", false)},
 	})
 
@@ -342,7 +342,7 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 		TearDownTimeout: uninstallationTimeout,
 		Parent:          "chromeLoggedInWithGaiaForCrostiniWithoutArc",
-		Vars:            []string{"keepState", ui.GaiaPoolDefaultVarName},
+		Vars:            []string{"keepState"},
 		Data:            []string{GetContainerMetadataArtifact("bookworm", false), GetContainerRootfsArtifact("bookworm", false)},
 	})
 

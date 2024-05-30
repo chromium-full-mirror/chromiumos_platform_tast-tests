@@ -78,7 +78,6 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 1*time.Minute,
-		Vars:         []string{ui.GaiaPoolDefaultVarName},
 		Params: []testing.Param{{
 			Name: "general_r",
 			Val:  generalLaunchGwTests,

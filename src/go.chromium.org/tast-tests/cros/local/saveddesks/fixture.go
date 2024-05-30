@@ -38,7 +38,6 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name: "savedDesksEnableWithoutArc",
 		Desc: "Saved desks features enabled without ARC",
-		Vars: []string{ui.GaiaPoolDefaultVarName},
 		Contacts: []string{
 			"cros-commercial-productivity-eng@google.com",
 			"zhumatthew@google.com",
@@ -61,7 +60,6 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name: "savedDesksEnableWithArc",
 		Desc: "Saved desks features enabled with ARC",
-		Vars: []string{ui.GaiaPoolDefaultVarName},
 		Contacts: []string{
 			"cros-commercial-productivity-eng@google.com",
 			"zhumatthew@google.com",
@@ -84,7 +82,6 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name: "savedDesksCUJEnableWithoutArc",
 		Desc: "Saved desks features enabled without ARC",
-		Vars: []string{ui.GaiaPoolDefaultVarName},
 		Contacts: []string{
 			"cros-commercial-productivity-eng@google.com",
 			"zhumatthew@google.com",
@@ -107,7 +104,6 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name: "savedDesksCUJEnableWithArc",
 		Desc: "Saved desks features enabled with ARC",
-		Vars: []string{ui.GaiaPoolDefaultVarName},
 		Contacts: []string{
 			"cros-commercial-productivity-eng@google.com",
 			"zhumatthew@google.com",
@@ -131,7 +127,6 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name: "savedDesksEnabledLacrosWithArcBooted",
 		Desc: "Saved desks features enabled with lacros and ARC",
-		Vars: []string{ui.GaiaPoolDefaultVarName},
 		Contacts: []string{
 			"cros-commercial-productivity-eng@google.com",
 			"zhumatthew@google.com",

@@ -296,7 +296,6 @@ func init() {
 			"assistive-eng@google.com",
 		},
 		BugComponent: "b:905229", // ChromeOS > Software > Assistive
-		Vars:         []string{ui.GaiaPoolDefaultVarName},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			opts := []chrome.Option{
 				chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)),

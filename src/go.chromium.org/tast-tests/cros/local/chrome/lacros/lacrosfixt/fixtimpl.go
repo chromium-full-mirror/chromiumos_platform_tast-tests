@@ -217,7 +217,6 @@ func init() {
 		Desc:         "Lacros Chrome logged into a Gaia user session",
 		Contacts:     []string{"hyungtaekim@chromium.org", "lacros-team@google.com"},
 		BugComponent: "b:1088267",
-		Vars:         []string{ui.GaiaPoolDefaultVarName},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return NewConfig(ChromeOptions(
 				chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)))).Opts()
@@ -233,10 +232,9 @@ func init() {
 		Desc:         "Lacros with Edu User Gaia Login",
 		Contacts:     []string{"kuanhuang@google.com", "lacros-team@google.com"},
 		BugComponent: "b:1088267",
-		// TODO(https://crbug.com/1380072): create new edu users and use that instead
-		Vars: []string{ui.GaiaPoolDefaultVarName},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return NewConfig(ChromeOptions(
+				// TODO(https://crbug.com/1380072): create new edu users and use that instead
 				chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)))).Opts()
 		}),
 		SetUpTimeout:    chrome.FixtureSetUpTimeout + 7*time.Minute,

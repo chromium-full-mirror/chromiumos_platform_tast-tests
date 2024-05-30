@@ -61,7 +61,6 @@ func init() {
 		SetUpTimeout:    2 * time.Minute,
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 2 * time.Minute,
-		Vars:            []string{ui.GaiaPoolDefaultVarName},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: PlayStoreWithVK,
@@ -74,7 +73,6 @@ func init() {
 		SetUpTimeout:    2 * time.Minute,
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 2 * time.Minute,
-		Vars:            []string{ui.GaiaPoolDefaultVarName},
 	})
 }
 

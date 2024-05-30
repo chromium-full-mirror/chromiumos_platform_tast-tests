@@ -74,7 +74,6 @@ func init() {
 		PreTestTimeout:  arc.PreTestTimeout,
 		PostTestTimeout: arc.PostTestTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
-		Vars:            []string{ui.GaiaPoolDefaultVarName},
 	})
 
 	testing.AddFixture(&testing.Fixture{

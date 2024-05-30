@@ -79,7 +79,6 @@ func init() {
 		BugComponent: "b:1238037",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
-		Vars:         []string{ui.GaiaPoolDefaultVarName}, // GAIA is required to install an app from Chrome Webstore.
 		Params: []testing.Param{
 			{
 				Val: resizeWindowTestParams{

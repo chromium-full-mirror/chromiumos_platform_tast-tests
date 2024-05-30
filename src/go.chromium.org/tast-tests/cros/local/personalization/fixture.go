@@ -7,7 +7,6 @@ package personalization
 import (
 	"context"
 
-	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 
@@ -201,9 +200,6 @@ func init() {
 		SetUpTimeout:    chrome.GAIALoginTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
-		Vars: []string{
-			ui.GaiaPoolDefaultVarName,
-		},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "personalizationWithTimeOfDayFeature",

@@ -70,9 +70,6 @@ func init() {
 				chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)),
 			}, nil
 		}),
-		Vars: []string{
-			ui.GaiaPoolDefaultVarName,
-		},
 		SetUpTimeout:    chrome.GAIALoginTimeout + time.Minute,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -91,9 +88,6 @@ func init() {
 				chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)),
 			)).Opts()
 		}),
-		Vars: []string{
-			ui.GaiaPoolDefaultVarName,
-		},
 		SetUpTimeout:    chrome.GAIALoginTimeout + time.Minute,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -146,9 +140,6 @@ func init() {
 				chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)),
 			}, nil
 		}),
-		Vars: []string{
-			ui.GaiaPoolDefaultVarName,
-		},
 		SetUpTimeout:    chrome.ManagedUserLoginTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,

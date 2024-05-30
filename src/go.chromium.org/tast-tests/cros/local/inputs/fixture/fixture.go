@@ -135,7 +135,6 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
-		Vars:            []string{ui.GaiaPoolDefaultVarName},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: ClamshellNonVKInGAIA,
@@ -150,7 +149,6 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
-		Vars:            []string{ui.GaiaPoolDefaultVarName},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: ClamshellVK,
@@ -624,7 +622,6 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
-		Vars:            []string{ui.GaiaPoolDefaultVarName},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: LacrosAnyVKInGAIA,
@@ -639,7 +636,6 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
-		Vars:            []string{ui.GaiaPoolDefaultVarName},
 	})
 }
 
