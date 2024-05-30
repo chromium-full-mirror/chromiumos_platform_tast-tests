@@ -582,6 +582,7 @@ type Application struct {
 \tDisabled\tbool\t`json:"disabled"`
 \tDefaultPermissionPolicy\tstring\t`json:"defaultPermissionPolicy"`
 \tManagedConfiguration\tmap[string]interface{}\t`json:"managedConfiguration"`
+\tVerifySignatureDisabled\tbool\t`json:"verifySignatureDisabled"`
 }
 
 type PermittedAccessibilityServices struct {

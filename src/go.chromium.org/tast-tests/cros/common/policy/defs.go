@@ -6645,6 +6645,7 @@ type Application struct {
 	Disabled                bool                   `json:"disabled"`
 	DefaultPermissionPolicy string                 `json:"defaultPermissionPolicy"`
 	ManagedConfiguration    map[string]interface{} `json:"managedConfiguration"`
+	VerifySignatureDisabled bool                   `json:"verifySignatureDisabled"`
 }
 
 type PermittedAccessibilityServices struct {
