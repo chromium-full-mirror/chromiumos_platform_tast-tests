@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast-tests/cros/local/network/vpn"
+	vpnManager "go.chromium.org/tast-tests/cros/local/networkui/vpn"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -163,7 +164,7 @@ func VPNUI(ctx context.Context, s *testing.State) {
 	fv := s.FixtValue().(vpn.FixtureEnv)
 	clientCertName := fmt.Sprintf("%s [%s]", fv.CertVals.CACred.Info.CommonName, fv.CertVals.ClientCred.Info.CommonName)
 
-	vpnHelper, err := ossettings.NewVPNDialogHelper(tc.vpnType, vpnProps, svcName, &clientCertName)
+	vpnHelper, err := vpnManager.NewVPNDialogHelper(tc.vpnType, vpnProps, svcName, &clientCertName)
 	if err != nil {
 		s.Fatal("Failed to create a UI helper: ", err)
 	}

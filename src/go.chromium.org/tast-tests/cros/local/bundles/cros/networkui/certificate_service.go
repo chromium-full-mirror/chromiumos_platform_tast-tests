@@ -12,11 +12,11 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/networkui/certificate"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/common"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
+	"go.chromium.org/tast-tests/cros/local/networkui/certificate"
 	pb "go.chromium.org/tast-tests/cros/services/cros/networkui"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/fsutil"

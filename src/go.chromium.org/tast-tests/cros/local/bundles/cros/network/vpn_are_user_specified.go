@@ -21,6 +21,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/hwsec"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/network/vpn"
+	vpnManager "go.chromium.org/tast-tests/cros/local/networkui/vpn"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -159,7 +160,7 @@ func joinVPN(res *vpnAreUserSpecifiedTestResource) vpnAreUserSpecifiedTestAction
 			vpn.WithCertVals(res.certVals),
 		)
 
-		_, vpnHelper, cleanup, err := ossettings.NewVPNDialogHelperWithVPNServer(ctx, cfg, vpnNetworkName)
+		_, vpnHelper, cleanup, err := vpnManager.NewVPNDialogHelperWithVPNServer(ctx, cfg, vpnNetworkName)
 		if err != nil {
 			return errors.Wrap(err, "failed to prepare vpn env for testing")
 		}

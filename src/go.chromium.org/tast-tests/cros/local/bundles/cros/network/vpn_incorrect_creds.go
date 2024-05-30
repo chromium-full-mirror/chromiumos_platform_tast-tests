@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/network/vpn"
+	vpnManager "go.chromium.org/tast-tests/cros/local/networkui/vpn"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -140,7 +141,7 @@ func VPNIncorrectCreds(ctx context.Context, s *testing.State) {
 	defer settings.Close(cleanupCtx)
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "vpn_settings_ui_dump")
 
-	vpnHelper, err := ossettings.NewVPNDialogHelper(config.Type, vpnProps, vpnName, &clientCertName)
+	vpnHelper, err := vpnManager.NewVPNDialogHelper(config.Type, vpnProps, vpnName, &clientCertName)
 	if err != nil {
 		s.Fatal("Failed to create a UI helper: ", err)
 	}
