@@ -17,7 +17,9 @@ const (
 	TheQuickBrownFoxS16LEStereo48000Wav = "the-quick-brown-fox-s16le-stereo-48000_20240528.wav"
 )
 
-// audio_long16.wav is from https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/data/voice_engine/audio_long16.wav;l=1;drc=9dc45dad1b14680f2ae0ae75dc497250e9ecd384
 const (
+	// AudioLong16Wav is from https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/data/voice_engine/audio_long16.wav;l=1;drc=9dc45dad1b14680f2ae0ae75dc497250e9ecd384
 	AudioLong16Wav = "audio_long16.wav"
+	// AudioShortSine440Wav is a 5ms sinewave with 1s of silence in front.
+	AudioShortSine440Wav = "audio_short_sine_440.wav"
 )

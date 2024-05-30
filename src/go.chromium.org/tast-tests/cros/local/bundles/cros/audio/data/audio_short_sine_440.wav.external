@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/audio/audio_short_sine_440_20240530.wav",
+  "size": 193004,
+  "sha256sum": "4c34e6733682b2fdec3a2d5adfef02022c9f59fe25c5dd624d4fac2db87843dc"
+}
