@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
@@ -40,7 +41,7 @@ func MiniVM(ctx context.Context, s *testing.State) {
 	// Setup Chrome and login as an opt-out user. mini-ARCVM should
 	// automatically start.
 	cr, err := chrome.New(ctx,
-		chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)),
+		chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)),
 		chrome.ARCSupported(),
 		chrome.ExtraArgs(arc.DisableSyncFlags()...))
 	if err != nil {

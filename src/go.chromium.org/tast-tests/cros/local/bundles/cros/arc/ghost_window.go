@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/apps"
@@ -471,7 +472,7 @@ func loginChrome(ctx context.Context, s *testing.State, creds *chrome.Creds) (*c
 	}
 	// Setup Chrome for a new cred.
 	cr, err := chrome.New(ctx,
-		chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)),
+		chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)),
 		chrome.ARCSupported(),
 		chrome.EnableFeatures(ghostWindowFeatureFlags...),
 		chrome.ExtraArgs(arc.DisableSyncFlags()...))

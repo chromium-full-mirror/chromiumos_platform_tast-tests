@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/android/ui"
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	uiCommon "go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
@@ -68,7 +69,7 @@ func Backup(ctx context.Context, s *testing.State) {
 
 	// Setup Chrome.
 	cr, err := chrome.New(ctx,
-		chrome.GAIALoginPool(s.RequiredVar(uiCommon.GaiaPoolDefaultVarName)),
+		chrome.GAIALoginPool(dma.CredsFromPool(uiCommon.GaiaPoolDefaultVarName)),
 		chrome.ARCSupported(),
 		chrome.ExtraArgs(arc.DisableSyncFlags()...))
 	if err != nil {

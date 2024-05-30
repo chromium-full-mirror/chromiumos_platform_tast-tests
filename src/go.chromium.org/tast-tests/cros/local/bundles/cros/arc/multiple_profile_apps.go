@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
@@ -43,7 +44,7 @@ func MultipleProfileApps(ctx context.Context, s *testing.State) {
 	const (
 		pkgName = "org.chromium.arc.testapp.appvaliditytast"
 	)
-	a, err := loginAndOptin(ctx, s.RequiredVar(ui.GaiaPoolDefaultVarName), s)
+	a, err := loginAndOptin(ctx, dma.CredsFromPool(ui.GaiaPoolDefaultVarName), s)
 	if err != nil {
 		s.Fatal("Failed to Login as First User : ", err)
 	}
@@ -64,7 +65,7 @@ func MultipleProfileApps(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed restarting ui : ", err)
 	}
 
-	a, err = loginAndOptin(ctx, s.RequiredVar(ui.GaiaPoolDefaultVarName), s)
+	a, err = loginAndOptin(ctx, dma.CredsFromPool(ui.GaiaPoolDefaultVarName), s)
 	if err != nil {
 		s.Fatal("Failed to Login as Second User : ", err)
 	}

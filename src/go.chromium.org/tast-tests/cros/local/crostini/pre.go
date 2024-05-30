@@ -15,6 +15,7 @@ import (
 
 	"golang.org/x/sys/unix"
 
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
@@ -619,7 +620,7 @@ func (p *preImpl) Prepare(ctx context.Context, s *testing.PreState) interface{} 
 	}
 
 	if p.loginType == loginGaia {
-		opts = append(opts, chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)))
+		opts = append(opts, chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)))
 	}
 	if useLocalImage {
 		// Retain the user's cryptohome directory and previously installed VM.

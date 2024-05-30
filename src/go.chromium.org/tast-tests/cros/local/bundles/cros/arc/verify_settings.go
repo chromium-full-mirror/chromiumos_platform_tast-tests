@@ -10,6 +10,7 @@ import (
 	"time"
 
 	androidui "go.chromium.org/tast-tests/cros/common/android/ui"
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
@@ -52,7 +53,7 @@ func init() {
 func VerifySettings(ctx context.Context, s *testing.State) {
 
 	cr, err := chrome.New(ctx,
-		chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)),
+		chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)),
 		chrome.ARCSupported(),
 		chrome.ExtraArgs(arc.DisableSyncFlags()...))
 	if err != nil {

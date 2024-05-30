@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
@@ -174,13 +175,13 @@ func (f *launcherSearchFixtureImpl) SetUp(ctx context.Context, s *testing.FixtSt
 	opts = append(opts, chrome.EnableFeatures(f.featureFlags...))
 
 	if f.CompleteOOBE {
-		opts = append(opts, chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)))
+		opts = append(opts, chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)))
 		opts = append(opts, chrome.DontSkipOOBEAfterLogin())
 		opts = append(opts, chrome.EnableFeatures("HelpAppLauncherSearch"))
 	}
 
 	if f.ARCSupported {
-		opts = append(opts, chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)))
+		opts = append(opts, chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)))
 		opts = append(opts, chrome.ARCSupported())
 		opts = append(opts, chrome.ExtraArgs(arc.DisableSyncFlags()...))
 	}

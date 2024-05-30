@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
@@ -110,7 +111,7 @@ func Optin(ctx context.Context, s *testing.State) {
 	args := s.Param().(optinTestArgs)
 
 	cr, err := chrome.New(ctx,
-		chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)),
+		chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)),
 		chrome.ARCSupported(),
 		chrome.UnRestrictARCCPU(),
 		chrome.FieldTrialConfig(args.fieldTrialConfig),

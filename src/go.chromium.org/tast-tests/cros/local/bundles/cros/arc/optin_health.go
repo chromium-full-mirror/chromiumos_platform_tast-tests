@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
@@ -66,7 +67,7 @@ func OptinHealth(ctx context.Context, s *testing.State) {
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 
-		gaiaLogin := chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName))
+		gaiaLogin := chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName))
 
 		cr, err := chrome.New(ctx,
 			gaiaLogin,

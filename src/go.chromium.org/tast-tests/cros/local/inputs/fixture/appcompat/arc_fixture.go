@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
@@ -80,7 +81,7 @@ func init() {
 func (f *arcFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	var chromeOpts []chrome.Option
 
-	chromeOpts = append(chromeOpts, chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)))
+	chromeOpts = append(chromeOpts, chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)))
 	chromeOpts = append(chromeOpts, chrome.ARCSupported())
 	chromeOpts = append(chromeOpts, chrome.ExtraArgs(arc.DisableSyncFlags()...))
 

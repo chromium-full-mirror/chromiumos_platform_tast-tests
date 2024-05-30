@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -684,7 +685,7 @@ func (f *inputsFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) int
 		case guestLogin:
 			opts = append(opts, chrome.GuestLogin())
 		case gaiaLogin:
-			opts = append(opts, chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)))
+			opts = append(opts, chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)))
 		case autocorrectToggle:
 			opts = append(opts, chrome.ExtraArgs("--enable-features=AutocorrectToggle"))
 		case assistMultiWord:

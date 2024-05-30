@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
@@ -23,7 +24,6 @@ import (
 )
 
 const (
-	accountPool   = ui.GaiaPoolDefaultVarName
 	assetLinksVar = "arc.PlayBillingAssetLinks"
 	icon          = "play_billing_icon.png"
 	index         = "play_billing_index.html"
@@ -59,7 +59,7 @@ func init() {
 	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 		return []chrome.Option{
 			chrome.ExtraArgs(append([]string{"--disable-popup-blocking"}, arc.DisableSyncFlags()...)...),
-			chrome.GAIALoginPool(s.RequiredVar(accountPool))}, nil
+			chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName))}, nil
 	}
 	testing.AddFixture(&testing.Fixture{
 		Name:     "arcBootedForPlayBilling",
@@ -74,7 +74,7 @@ func init() {
 		PreTestTimeout:  arc.PreTestTimeout,
 		PostTestTimeout: arc.PostTestTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
-		Vars:            []string{accountPool},
+		Vars:            []string{ui.GaiaPoolDefaultVarName},
 	})
 
 	testing.AddFixture(&testing.Fixture{

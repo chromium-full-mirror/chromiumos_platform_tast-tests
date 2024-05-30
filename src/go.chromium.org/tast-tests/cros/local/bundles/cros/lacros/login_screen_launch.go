@@ -11,6 +11,7 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -235,7 +236,7 @@ func isSubset(subset, superset map[int32]string) bool {
 
 func LoginScreenLaunch(ctx context.Context, s *testing.State) {
 	// Create user pod on login screen.
-	creds, err := initUserPod(ctx, s.RequiredVar(ui.GaiaPoolDefaultVarName))
+	creds, err := initUserPod(ctx, dma.CredsFromPool(ui.GaiaPoolDefaultVarName))
 	if err != nil {
 		s.Fatal("Failed to create user pod on login screen: ", err)
 	}

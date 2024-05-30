@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/android/ui"
+	"go.chromium.org/tast-tests/cros/common/dma"
 	uiCommon "go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
 	"go.chromium.org/tast-tests/cros/local/arc/swap"
@@ -243,7 +244,7 @@ func init() {
 		return []chrome.Option{
 			chrome.ExtraArgs(DisableSyncFlags()...),
 			chrome.UnRestrictARCCPU(),
-			chrome.GAIALoginPool(s.RequiredVar(uiCommon.GaiaPoolDefaultVarName)),
+			chrome.GAIALoginPool(dma.CredsFromPool(uiCommon.GaiaPoolDefaultVarName)),
 		}, nil
 	}
 	testing.AddFixture(&testing.Fixture{
@@ -273,7 +274,7 @@ func init() {
 			chrome.DisableFeatures("Floss"),
 			chrome.ExtraArgs(DisableSyncFlags()...),
 			chrome.UnRestrictARCCPU(),
-			chrome.GAIALoginPool(s.RequiredVar(uiCommon.GaiaPoolDefaultVarName)),
+			chrome.GAIALoginPool(dma.CredsFromPool(uiCommon.GaiaPoolDefaultVarName)),
 		}, nil
 	}
 	testing.AddFixture(&testing.Fixture{
@@ -306,7 +307,7 @@ func init() {
 			chrome.DisableFeatures("FlossIsAvailabilityCheckNeeded"),
 			chrome.ExtraArgs(DisableSyncFlags()...),
 			chrome.UnRestrictARCCPU(),
-			chrome.GAIALoginPool(s.RequiredVar(uiCommon.GaiaPoolDefaultVarName)),
+			chrome.GAIALoginPool(dma.CredsFromPool(uiCommon.GaiaPoolDefaultVarName)),
 		}, nil
 	}
 	testing.AddFixture(&testing.Fixture{
@@ -537,7 +538,7 @@ func init() {
 			chrome.ARCEnabled(),
 			chrome.ExtraArgs(DisableSyncFlags()...),
 			chrome.UnRestrictARCCPU(),
-			chrome.GAIALoginPool(s.RequiredVar(uiCommon.GaiaPoolDefaultVarName)))).Opts()
+			chrome.GAIALoginPool(dma.CredsFromPool(uiCommon.GaiaPoolDefaultVarName)))).Opts()
 	}
 	testing.AddFixture(&testing.Fixture{
 		Name: "lacrosWithArcBootedAndPlayStore",

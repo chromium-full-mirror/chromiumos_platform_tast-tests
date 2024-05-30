@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
@@ -117,7 +118,7 @@ func init() {
 			} else {
 				opts = append(opts, chrome.ARCDisabled())
 			}
-			return append(opts, chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName))), nil
+			return append(opts, chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName))), nil
 		}),
 		SetUpTimeout:    chrome.GAIALoginTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
@@ -186,7 +187,7 @@ func init() {
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			opts := generateChromeOpts(s)
 			opts = append(opts, chrome.ARCDisabled())
-			return append(opts, chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName))), nil
+			return append(opts, chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName))), nil
 		}),
 		SetUpTimeout:    chrome.GAIALoginTimeout,
 		ResetTimeout:    chrome.ResetTimeout,

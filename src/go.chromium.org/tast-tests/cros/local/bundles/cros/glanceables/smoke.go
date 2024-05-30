@@ -11,6 +11,7 @@ import (
 
 	"golang.org/x/exp/slices"
 
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
@@ -180,7 +181,7 @@ func Smoke(ctx context.Context, s *testing.State) {
 	} else {
 		opts = []chrome.Option{
 			chrome.EnableFeatures(param.enabledFeatures...),
-			chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)),
+			chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)),
 		}
 	}
 

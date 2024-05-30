@@ -9,6 +9,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/common/ui"
@@ -523,7 +524,7 @@ func (f *familyLinkFixture) SetUp(ctx context.Context, s *testing.FixtState) int
 	if !f.isOwner {
 		func() {
 			// Log in and log out to create a user pod on the login screen.
-			cr, err := chrome.New(ctx, chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)))
+			cr, err := chrome.New(ctx, chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)))
 			if err != nil {
 				s.Fatal("Chrome login failed: ", err)
 			}

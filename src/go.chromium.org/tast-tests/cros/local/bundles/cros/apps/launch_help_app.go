@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/apps/fixture"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/apps/pre"
@@ -186,7 +187,7 @@ func helpAppLaunchDuringOOBE(ctx context.Context, s *testing.State, isTabletMode
 	}
 
 	cr, err := chrome.New(ctx,
-		chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)),
+		chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)),
 		chrome.DontSkipOOBEAfterLogin(),
 		chrome.EnableFeatures("HelpAppFirstRun"),
 		chrome.ExtraArgs(uiMode),

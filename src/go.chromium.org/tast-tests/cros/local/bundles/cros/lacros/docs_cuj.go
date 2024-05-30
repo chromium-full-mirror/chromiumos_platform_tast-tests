@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -62,7 +63,7 @@ func DocsCUJ(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	opts := []chrome.Option{
 		chrome.DisableFeatures("FirmwareUpdaterApp"),
-		chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)),
+		chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)),
 	}
 
 	opts, err := lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(opts...)).Opts()

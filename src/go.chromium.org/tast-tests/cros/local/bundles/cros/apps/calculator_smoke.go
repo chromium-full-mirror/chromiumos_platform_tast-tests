@@ -9,6 +9,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/apps/pre"
@@ -42,7 +43,7 @@ func init() {
 
 func CalculatorSmoke(ctx context.Context, s *testing.State) {
 	cr, err := chrome.New(ctx,
-		chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)),
+		chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)),
 		chrome.EnableWebAppInstall())
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)

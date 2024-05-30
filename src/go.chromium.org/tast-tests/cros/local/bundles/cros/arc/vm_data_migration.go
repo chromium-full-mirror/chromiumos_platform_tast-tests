@@ -18,6 +18,7 @@ import (
 	goselinux "github.com/opencontainers/selinux/go-selinux"
 	"golang.org/x/sys/unix"
 
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/arc"
@@ -131,7 +132,7 @@ func signInForPreMigrationData(ctx context.Context, s *testing.State) (chrome.Cr
 	defer cancel()
 
 	cr, err := chrome.New(ctx,
-		chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)),
+		chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)),
 		chrome.ARCSupported(),
 		chrome.DisableFeatures("ArcEnableVirtioBlkForData"),
 		chrome.DisableFeatures("ArcVmDataMigration"),

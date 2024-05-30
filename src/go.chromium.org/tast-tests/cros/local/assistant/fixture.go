@@ -12,6 +12,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/common/chameleon"
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
@@ -331,7 +332,7 @@ func init() {
 		Vars:         []string{ui.GaiaPoolDefaultVarName},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
-				chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)),
+				chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)),
 				VerboseLogging(),
 				ashNoNudgesExtraArg(),
 			}, nil

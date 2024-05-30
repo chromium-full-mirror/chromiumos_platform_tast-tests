@@ -10,6 +10,7 @@ import (
 	"path"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/drivefs"
@@ -39,7 +40,7 @@ func Drivefs(ctx context.Context, s *testing.State) {
 	cr, err := chrome.New(
 		ctx,
 		chrome.ARCDisabled(),
-		chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)),
+		chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)),
 	)
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)

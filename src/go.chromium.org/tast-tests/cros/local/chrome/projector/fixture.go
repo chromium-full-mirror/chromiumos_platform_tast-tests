@@ -9,6 +9,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/common/ui"
@@ -66,7 +67,7 @@ func init() {
 		Impl: NewProjectorFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
 				chromeFlags,
-				chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)),
+				chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)),
 			}, nil
 		}),
 		Vars: []string{
@@ -87,7 +88,7 @@ func init() {
 		Impl: NewProjectorFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(
 				chromeFlags,
-				chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)),
+				chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)),
 			)).Opts()
 		}),
 		Vars: []string{
@@ -142,7 +143,7 @@ func init() {
 		Impl: NewProjectorFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
 				chromeFlags,
-				chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)),
+				chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)),
 			}, nil
 		}),
 		Vars: []string{

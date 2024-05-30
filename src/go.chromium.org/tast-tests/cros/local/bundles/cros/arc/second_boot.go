@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/arc"
@@ -57,7 +58,7 @@ func SecondBoot(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
 	defer cancel()
 
-	loginPool := s.RequiredVar(ui.GaiaPoolDefaultVarName)
+	loginPool := dma.CredsFromPool(ui.GaiaPoolDefaultVarName)
 
 	cr, err := chrome.New(ctx,
 		chrome.GAIALoginPool(loginPool),

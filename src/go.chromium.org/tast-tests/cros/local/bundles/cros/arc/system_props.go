@@ -10,8 +10,10 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
+	"go.chromium.org/tast-tests/cros/common/ui"
 	uiCommon "go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/arcent"
@@ -80,7 +82,15 @@ func SystemProps(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	primary, err := credconfig.PickRandomCreds(s.RequiredVar(args.accountPool))
+	// TODO(b/338115417): Remove if else statement after we migrate arc.managedAccountPool pool.
+	var creds string
+	if args.accountPool == ui.GaiaPoolDefaultVarName {
+		creds = dma.CredsFromPool(args.accountPool)
+	} else {
+		creds = s.RequiredVar(args.accountPool)
+	}
+
+	primary, err := credconfig.PickRandomCreds(creds)
 	if err != nil {
 		s.Fatal("Failed to get login creds: ", err)
 	}

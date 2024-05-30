@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
@@ -46,7 +47,7 @@ func OobeArc(ctx context.Context, s *testing.State) {
 	cr, err := chrome.New(ctx,
 		chrome.DontSkipOOBEAfterLogin(),
 		chrome.ARCSupported(),
-		chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)),
+		chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)),
 		// TODO(b/287862720): Update the test to go through CHOOBE flow and stop disabling the features.
 		chrome.ExtraArgs("--disable-features=OobeChoobe,OobeDisplaySize,OobeTouchpadScrollDirection"))
 

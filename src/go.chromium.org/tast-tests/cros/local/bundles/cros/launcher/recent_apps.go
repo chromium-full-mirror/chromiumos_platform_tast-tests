@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/arc"
@@ -106,7 +107,7 @@ func RecentApps(ctx context.Context, s *testing.State) {
 		opts = append(opts, chrome.UnRestrictARCCPU())
 	} else {
 		// GAIA login is required to use Chrome Web Store.
-		opts = append(opts, chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)))
+		opts = append(opts, chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)))
 	}
 
 	cr, err := chrome.New(ctx, opts...)

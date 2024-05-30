@@ -10,6 +10,7 @@ import (
 	"path"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/apps"
@@ -127,7 +128,7 @@ func init() {
 // restore it. Second regular boot is done using recoverted /data and no restore data should
 // happen.
 func RestoreData(ctx context.Context, s *testing.State) {
-	cr, err := restoreDataInitialBoot(ctx, s.RequiredVar(ui.GaiaPoolDefaultVarName))
+	cr, err := restoreDataInitialBoot(ctx, dma.CredsFromPool(ui.GaiaPoolDefaultVarName))
 	if err != nil {
 		s.Fatal("Failed to do initial optin: ", err)
 	}

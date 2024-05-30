@@ -18,6 +18,7 @@ import (
 	"github.com/mafredri/cdp/rpcc"
 
 	"go.chromium.org/tast-tests/cros/common/chrome/histogram"
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/common/ui"
@@ -1205,7 +1206,7 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 		ctx,
 		s.OutDir(),
 		lacrosCfg,
-		s.RequiredVar(ui.GaiaPoolDefaultVarName),
+		dma.CredsFromPool(ui.GaiaPoolDefaultVarName),
 		param,
 		s.RequiredVar("ui.signinProfileTestExtensionManifestKey"),
 		url,

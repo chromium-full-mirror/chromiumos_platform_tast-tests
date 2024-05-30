@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/action"
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	uiCommon "go.chromium.org/tast-tests/cros/common/ui"
 	uiperf "go.chromium.org/tast-tests/cros/local/bundles/cros/ui/perf"
@@ -71,7 +72,7 @@ func DeskButtonDeskBarPerf(ctx context.Context, s *testing.State) {
 	}
 
 	opts := []chrome.Option{chrome.EnableFeatures("DeskButton"),
-		chrome.GAIALoginPool(s.RequiredVar(uiCommon.GaiaPoolDefaultVarName))}
+		chrome.GAIALoginPool(dma.CredsFromPool(uiCommon.GaiaPoolDefaultVarName))}
 	cr, _, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, s.Param().(browser.Type), lacrosfixt.NewConfig(), opts...)
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)

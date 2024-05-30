@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
@@ -45,7 +46,7 @@ func init() {
 		BugComponent: "b:1020793", // ChromeOS Server Projects > Enterprise Management > Commercial Productivity
 		Impl: bootedWithFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
-				chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)),
+				chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)),
 				chrome.EnableFeatures("DesksTemplates", "EnableSavedDesks"),
 				chrome.DisableFeatures("DeskTemplateSync"),
 			}, nil
@@ -68,7 +69,7 @@ func init() {
 		BugComponent: "b:1020793", // ChromeOS Server Projects > Enterprise Management > Commercial Productivity
 		Impl: bootedWithARCFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
-				chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)),
+				chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)),
 				chrome.EnableFeatures("DesksTemplates", "EnableSavedDesks"),
 				chrome.DisableFeatures("DeskTemplateSync"),
 			}, nil
@@ -91,7 +92,7 @@ func init() {
 		BugComponent: "b:1020793", // ChromeOS Server Projects > Enterprise Management > Commercial Productivity
 		Impl: bootedWithFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
-				chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)),
+				chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)),
 				chrome.EnableFeatures("DesksTemplates", "EnableSavedDesks"),
 				chrome.DisableFeatures("DeskTemplateSync", "FirmwareUpdaterApp"),
 			}, nil
@@ -114,7 +115,7 @@ func init() {
 		BugComponent: "b:1020793", // ChromeOS Server Projects > Enterprise Management > Commercial Productivity
 		Impl: bootedWithARCFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
-				chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)),
+				chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)),
 				chrome.EnableFeatures("DesksTemplates", "EnableSavedDesks"),
 				chrome.DisableFeatures("DeskTemplateSync", "FirmwareUpdaterApp"),
 			}, nil
@@ -137,7 +138,7 @@ func init() {
 		},
 		BugComponent: "b:1020793", // ChromeOS Server Projects > Enterprise Management > Commercial Productivity
 		Impl: bootedWithARCFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)), chrome.EnableFeatures("DesksTemplates", "EnableSavedDesks"),
+			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)), chrome.EnableFeatures("DesksTemplates", "EnableSavedDesks"),
 				chrome.DisableFeatures("DeskTemplateSync"))).Opts()
 		}),
 		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,

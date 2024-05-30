@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/common/ui"
@@ -63,7 +64,7 @@ func ChromeGaiaAPI(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	options := []chrome.Option{chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)), chrome.DeferLogin()}
+	options := []chrome.Option{chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)), chrome.DeferLogin()}
 	if useSandboxGaia {
 		options = append(options, chrome.UseSandboxGaia())
 	}

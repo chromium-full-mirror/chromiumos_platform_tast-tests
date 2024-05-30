@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -205,7 +206,7 @@ func parseVars(s *testing.State) spVars {
 		creds.User = usernamePassword[0]
 		creds.Pass = usernamePassword[1]
 	} else {
-		creds, err = credconfig.PickRandomCreds(s.RequiredVar(ui.GaiaPoolDefaultVarName))
+		creds, err = credconfig.PickRandomCreds(dma.CredsFromPool(ui.GaiaPoolDefaultVarName))
 		if err != nil {
 			s.Fatal("Failed to get login creds: ", err)
 		}

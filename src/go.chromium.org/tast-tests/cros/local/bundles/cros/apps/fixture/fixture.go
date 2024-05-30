@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/android/ui"
+	"go.chromium.org/tast-tests/cros/common/dma"
 	uiCommon "go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -129,7 +130,7 @@ func init() {
 		return []chrome.Option{
 			chrome.EnableFeatures("MediaAppPhotosIntegrationImage:minPhotosVersionForImage/1.0"),
 			chrome.ExtraArgs(arc.DisableSyncFlags()...),
-			chrome.GAIALoginPool(s.RequiredVar(uiCommon.GaiaPoolDefaultVarName))}, nil
+			chrome.GAIALoginPool(dma.CredsFromPool(uiCommon.GaiaPoolDefaultVarName))}, nil
 	}
 	testing.AddFixture(&testing.Fixture{
 		Name:            ArcBootedWithGalleryPhotosImageFeature,

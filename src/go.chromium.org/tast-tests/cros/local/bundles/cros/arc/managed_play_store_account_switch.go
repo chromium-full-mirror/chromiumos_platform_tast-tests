@@ -10,6 +10,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/android/ui"
 	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	uiCommon "go.chromium.org/tast-tests/cros/common/ui"
@@ -209,7 +210,7 @@ func ManagedPlayStoreAccountSwitch(ctx context.Context, s *testing.State) {
 		}
 		defer d.Close(cleanupCtx)
 
-		secondaryUser, err := credconfig.PickRandomCreds(s.RequiredVar(uiCommon.GaiaPoolDefaultVarName))
+		secondaryUser, err := credconfig.PickRandomCreds(dma.CredsFromPool(uiCommon.GaiaPoolDefaultVarName))
 		if err != nil {
 			return rl.Exit("get secondary user creds", err)
 		}

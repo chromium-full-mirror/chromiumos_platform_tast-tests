@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/chrome/internal/lacros"
@@ -194,7 +195,7 @@ func init() {
 		BugComponent: "b:1034649", // ChromeOS > Test > Harness > Tast > Libraries
 		Vars:         []string{ui.GaiaPoolDefaultVarName},
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
-			return []Option{GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName))}, nil
+			return []Option{GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName))}, nil
 		}),
 		SetUpTimeout:    FixtureSetUpTimeout,
 		ResetTimeout:    ResetTimeout,

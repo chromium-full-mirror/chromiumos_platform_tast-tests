@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -129,7 +130,7 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 	options := []chrome.Option{
 		chrome.DontSkipOOBEAfterLogin(),
 		chrome.DeferLogin(),
-		chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)),
+		chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)),
 		chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")),
 		// TODO(b/315829727): Remove this as a part of post-launch cleanup.
 		chrome.EnableFeatures("LocalPasswordsForConsumers"),

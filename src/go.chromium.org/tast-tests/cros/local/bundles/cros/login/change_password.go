@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/login/signinutil"
@@ -90,7 +91,7 @@ func ChangePassword(ctx context.Context, s *testing.State) {
 	// Isolate the step to leverage `defer` pattern.
 	func() {
 		var err error
-		gaiaCreds, err = credconfig.PickRandomCreds(s.RequiredVar(ui.GaiaPoolDefaultVarName))
+		gaiaCreds, err = credconfig.PickRandomCreds(dma.CredsFromPool(ui.GaiaPoolDefaultVarName))
 		if err != nil {
 			s.Fatal("Failed to parse creds: ", err)
 		}

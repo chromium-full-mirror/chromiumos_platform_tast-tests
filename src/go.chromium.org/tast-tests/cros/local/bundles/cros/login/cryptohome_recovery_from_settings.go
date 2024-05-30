@@ -9,6 +9,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/login/signinutil"
@@ -66,7 +67,7 @@ func CryptohomeRecoveryFromSettings(ctx context.Context, s *testing.State) {
 	// Log in and log out to create a user pod on the login screen.
 	func() {
 		cr, err := chrome.New(ctx,
-			chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)),
+			chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)),
 			chrome.EnableFeatures("CryptohomeRecovery"),
 			chrome.EnableFeatures("CryptohomeRecoveryBeforeFlowSplit"),
 		)

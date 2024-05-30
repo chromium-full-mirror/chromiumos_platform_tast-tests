@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/arc"
@@ -63,7 +64,7 @@ func dozeModeAvaliable(ctx context.Context, s *testing.State) {
 	args := append(arc.DisableSyncFlags(), "--disable-sync")
 	cr, err := chrome.New(
 		ctx,
-		chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)),
+		chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)),
 		chrome.ARCSupported(),
 		// TODO(b/308366449): `ignore_battery_for_test` parameter may not work on some ARC version,
 		// in that case the test need to run without charging cable connection.

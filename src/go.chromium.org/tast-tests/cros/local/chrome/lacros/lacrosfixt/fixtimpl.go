@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
@@ -219,7 +220,7 @@ func init() {
 		Vars:         []string{ui.GaiaPoolDefaultVarName},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return NewConfig(ChromeOptions(
-				chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)))).Opts()
+				chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)))).Opts()
 		}),
 		SetUpTimeout:    chrome.FixtureSetUpTimeout + 7*time.Minute,
 		ResetTimeout:    chrome.ResetTimeout,
@@ -236,7 +237,7 @@ func init() {
 		Vars: []string{ui.GaiaPoolDefaultVarName},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return NewConfig(ChromeOptions(
-				chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)))).Opts()
+				chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)))).Opts()
 		}),
 		SetUpTimeout:    chrome.FixtureSetUpTimeout + 7*time.Minute,
 		ResetTimeout:    chrome.ResetTimeout,

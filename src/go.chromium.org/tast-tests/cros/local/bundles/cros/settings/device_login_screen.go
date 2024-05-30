@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -55,7 +56,7 @@ func DeviceLoginScreen(ctx context.Context, s *testing.State) {
 	// Logging in and out will also create a user pod on the login screen that
 	// we can use to verify keyboard settings.
 	func() {
-		cr, err := chrome.New(ctx, chrome.EnableFeatures("InputDeviceSettingsSplit"), chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)))
+		cr, err := chrome.New(ctx, chrome.EnableFeatures("InputDeviceSettingsSplit"), chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)))
 		if err != nil {
 			s.Fatal("Chrome login failed: ", err)
 		}

@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/arc"
@@ -136,7 +137,7 @@ func ResizeWindow(ctx context.Context, s *testing.State) {
 	case browserCase:
 		opts = append(opts, chrome.FakeLogin(chrome.Creds{User: fakeAccount, Pass: fakePassword}))
 	case appCase:
-		opts = append(opts, chrome.GAIALoginPool(s.RequiredVar(ui.GaiaPoolDefaultVarName)))
+		opts = append(opts, chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)))
 	case arcCase:
 		opts = append(opts, chrome.ARCEnabled(), chrome.UnRestrictARCCPU(),
 			chrome.FakeLogin(chrome.Creds{User: fakeAccount, Pass: fakePassword}))
