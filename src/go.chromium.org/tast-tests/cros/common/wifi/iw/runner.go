@@ -644,6 +644,7 @@ const (
 	ChWidth80        ChWidth = "80"
 	ChWidth80P80     ChWidth = "80+80"
 	ChWidth160       ChWidth = "160"
+	ChWidth320       ChWidth = "320"
 )
 
 // setFreqConf contains the optional information for iw "set freq" function.

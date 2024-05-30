@@ -106,6 +106,7 @@ const (
 	ChWidth80Plus80
 	ChWidth160Plus80
 	ChWidth160Plus160
+	ChWidth320
 	ChWidthUnknown
 )
 
@@ -131,6 +132,8 @@ func (cw ChWidthEnum) String() string {
 		typeStr = "160+80"
 	case ChWidth160Plus160:
 		typeStr = "160+160"
+	case ChWidth320:
+		typeStr = "320"
 	case ChWidthUnknown:
 		typeStr = ""
 	default:
@@ -237,6 +240,7 @@ const (
 	EHTChWidth80Plus80
 	EHTChWidth160Plus80
 	EHTChWidth160Plus160
+	EHTChWidth320
 )
 
 // EHTCap is the type for specifying EHT capabilities in hostapd config (eht_capab=).
@@ -1044,6 +1048,8 @@ func (c *Config) PcapFreqOptions() ([]iw.SetFreqOption, error) {
 			return []iw.SetFreqOption{iw.SetFreqChWidth(iw.ChWidth80)}, nil
 		case EHTChWidth160:
 			return []iw.SetFreqOption{iw.SetFreqChWidth(iw.ChWidth160)}, nil
+		case EHTChWidth320:
+			return []iw.SetFreqOption{iw.SetFreqChWidth(iw.ChWidth320)}, nil
 		case EHTChWidth80Plus80:
 			return nil, errors.New("unsupported 80+80 channel width")
 		case EHTChWidth160Plus80:
@@ -1157,6 +1163,8 @@ func (c *Config) ChannelWidthAndMode() (ChWidthEnum, string) {
 			width = ChWidth160Plus80
 		case EHTChWidth160Plus160:
 			width = ChWidth160Plus160
+		case EHTChWidth320:
+			width = ChWidth320
 		default:
 			if c.HTCaps&HTCapHT20 > 0 {
 				width = ChWidth20
@@ -1505,7 +1513,7 @@ func (c *Config) validateHEChWidth() error {
 }
 func (c *Config) validateEHTChWidth() error {
 	switch c.EHTChWidth {
-	case EHTChWidth20Or40, EHTChWidth80, EHTChWidth80Plus80, EHTChWidth160, EHTChWidth160Plus80, EHTChWidth160Plus160:
+	case EHTChWidth20Or40, EHTChWidth80, EHTChWidth80Plus80, EHTChWidth160, EHTChWidth160Plus80, EHTChWidth160Plus160, EHTChWidth320:
 		return nil
 	default:
 		return errors.Errorf("invalid eht_oper_chwidth %d", int(c.EHTChWidth))
