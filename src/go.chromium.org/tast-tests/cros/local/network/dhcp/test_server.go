@@ -50,8 +50,8 @@ type testFunction func(context.Context) error
 
 // The standard DHCP ports.
 const (
-	serverPort = 67
-	clientPort = 68
+	ServerPort = 67
+	ClientPort = 68
 )
 
 func newTestServer(iface string, inAddr, bcastAddr net.IP, sendPort int) *testServer {
@@ -94,7 +94,7 @@ func (s *testServer) setupAndBindSocket(ctx context.Context) (retErr error) {
 
 	// Create the listen socket.
 	lc := net.ListenConfig{Control: controlFunc}
-	listenAddr := fmt.Sprintf("%s:%d", s.inAddr.String(), serverPort)
+	listenAddr := fmt.Sprintf("%s:%d", s.inAddr.String(), ServerPort)
 	listenConn, err := lc.ListenPacket(ctx, "udp", listenAddr)
 	if err != nil {
 		listenConn.Close()
@@ -115,7 +115,7 @@ func (s *testServer) setupAndBindSocket(ctx context.Context) (retErr error) {
 		LocalAddr: &net.UDPAddr{IP: s.inAddr, Port: s.sendPort},
 		Control:   controlFunc,
 	}
-	bcastAddr := fmt.Sprintf("%s:%d", s.bcastAddr, clientPort)
+	bcastAddr := fmt.Sprintf("%s:%d", s.bcastAddr, ClientPort)
 	sendConn, err := dialer.Dial("udp", bcastAddr)
 	if err != nil {
 		return errors.Wrapf(err, "failed to connect to %s", bcastAddr)

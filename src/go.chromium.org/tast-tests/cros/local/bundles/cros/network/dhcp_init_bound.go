@@ -29,6 +29,12 @@ func init() {
 		SoftwareDeps: []string{"wifi"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Fixture:      "shillSimulatedWiFi",
+		Params: []testing.Param{{
+			Val: dhcp.ServerPort,
+		}, {
+			Name: "non_std_port",
+			Val:  54321, // random port value
+		}},
 	})
 }
 
@@ -45,6 +51,8 @@ func DHCPInitBound(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
+
+	dhcpTestServerOpt := dhcp.WithSendPort(s.Param().(int))
 
 	m, err := shill.NewManager(ctx)
 	if err != nil {
@@ -99,7 +107,7 @@ func DHCPInitBound(ctx context.Context, s *testing.State) {
 			return err
 		}
 		return nil
-	}); len(errs) > 0 {
+	}, dhcpTestServerOpt); len(errs) > 0 {
 		for _, err := range errs {
 			s.Error("Failed to verify DHCP negotiation: ", err)
 		}
@@ -124,7 +132,7 @@ func DHCPInitBound(ctx context.Context, s *testing.State) {
 			return err
 		}
 		return nil
-	}); len(errs) > 0 {
+	}, dhcpTestServerOpt); len(errs) > 0 {
 		for _, err := range errs {
 			s.Error("Failed to verify DHCP negotiation for reconnect: ", err)
 		}

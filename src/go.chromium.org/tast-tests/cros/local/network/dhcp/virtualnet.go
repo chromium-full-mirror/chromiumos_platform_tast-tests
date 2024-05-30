@@ -13,6 +13,22 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+type testServerConfig struct {
+	sendPort int
+}
+
+// TestServerOption is the configurable options to control the behavior of the
+// DHCP test server.
+type TestServerOption = func(*testServerConfig)
+
+// WithSendPort configures the test server to use port as the source port
+// instead of the standard port (67) when sending out DHCP packets.
+func WithSendPort(port int) TestServerOption {
+	return func(config *testServerConfig) {
+		config.sendPort = port
+	}
+}
+
 type testFunc func(ctx context.Context) error
 
 // RunTestWithEnv does the following steps:
@@ -22,13 +38,20 @@ type testFunc func(ctx context.Context) error
 //
 // Returns the server after the test which can be used to verify the
 // interaction, e.g., get packets received by the server.
-func RunTestWithEnv(ctx context.Context, env *env.Env, rules []HandlingRule, testFunc testFunc) (*testServer, []error) {
+func RunTestWithEnv(ctx context.Context, env *env.Env, rules []HandlingRule, testFunc testFunc, opts ...TestServerOption) (*testServer, []error) {
+	c := &testServerConfig{
+		sendPort: ServerPort,
+	}
+	for _, opt := range opts {
+		opt(c)
+	}
+
 	listenAddr := net.IPv4(0, 0, 0, 0)
 	broadcast := net.IPv4(255, 255, 255, 255)
 
 	ec := make(chan error)
 
-	s := newTestServer(env.VethInName, listenAddr, broadcast, serverPort)
+	s := newTestServer(env.VethInName, listenAddr, broadcast, c.sendPort)
 	serverCtx, cancel := context.WithCancel(ctx)
 
 	go func(ctx context.Context) {
