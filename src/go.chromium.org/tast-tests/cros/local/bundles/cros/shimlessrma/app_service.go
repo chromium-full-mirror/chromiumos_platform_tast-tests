@@ -82,7 +82,6 @@ func (shimlessRMA *AppService) NewShimlessRMA(ctx context.Context,
 	}
 
 	cr, err := chrome.New(ctx, chrome.EnableFeatures("ShimlessRMAFlow"),
-		chrome.EnableFeatures("ShimlessRMAOsUpdate"),
 		chrome.NoLogin(),
 		chrome.LoadSigninProfileExtension(req.ManifestKey),
 		chrome.ExtraArgs("--launch-rma"))
