@@ -74,19 +74,19 @@ func init() {
 				Fixture: "mountUnmountPtsWorldForCrOSx86",
 				Val: &perfSuite{
 					runner:        ptsworld.NewCrosRunner(),
-					suiteName:     "cachebench-1.1.2",
+					suiteName:     "local/cachebench-1.2.0",
 					resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
 				},
-				Timeout: 1 * time.Hour,
+				Timeout: 25 * time.Minute,
 			}, {
 				Name:    "cachebench_cros_arm64",
 				Fixture: "mountUnmountPtsWorldForCrOSarm64",
 				Val: &perfSuite{
 					runner:        ptsworld.NewCrosRunner(),
-					suiteName:     "cachebench-1.1.2",
+					suiteName:     "local/cachebench-1.2.0",
 					resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
 				},
-				Timeout: 1 * time.Hour,
+				Timeout: 25 * time.Minute,
 			}, {
 				Name:    "compress7zip_cros_x86",
 				Fixture: "mountUnmountPtsWorldForCrOSx86",
