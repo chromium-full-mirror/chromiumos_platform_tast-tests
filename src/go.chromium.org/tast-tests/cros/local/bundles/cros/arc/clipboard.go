@@ -71,13 +71,42 @@ type copyFunc func(context.Context) error
 // clipboard source and paste mechanism).
 type pasteFunc func(context.Context) (string, error)
 
+// bringChromeCopyPasteWindowToFront moves the Chrome window to the front.
+// This works for both Ash and Lacros window, but assumes that only one of these window exists.
+func bringChromeCopyPasteWindowToFront(ctx context.Context, tconn *chrome.TestConn) error {
+	const windowTitle = "ClipboardTestPage"
+	w, err := ash.FindWindow(ctx, tconn, func(w *ash.Window) bool {
+		if w.WindowType == ash.WindowTypeBrowser {
+			return w.Title == "Chrome - "+windowTitle
+		} else if w.WindowType == ash.WindowTypeLacros {
+			return w.Title == windowTitle
+		} else {
+			return false
+		}
+	})
+	if err != nil {
+		return errors.Wrap(err, "failed to find ClipboardTest window")
+	}
+	return w.ActivateWindow(ctx, tconn)
+}
+
+// bringAndroidCopyPasteWindowToFront moves the Android test app to the front.
+func bringAndroidCopyPasteWindowToFront(ctx context.Context, tconn *chrome.TestConn) error {
+	_, err := ash.BringWindowToForeground(ctx, tconn, "ArcClipboardTest")
+	return err
+}
+
 // prepareCopyInChrome sets up a copy operation with Chrome as the source
 // clipboard.
 // Due to the security reason (crbug.com/1334203), writing to the clipboard
 // works only with a user gesture. That's why this function uses clicking and
 // typing instead of running js on the page.
-func prepareCopyInChrome(browser *browser.Browser, uia *uiauto.Context, keyboard *input.KeyboardEventWriter, format, data, baseURL string) copyFunc {
+func prepareCopyInChrome(browser *browser.Browser, tconn *chrome.TestConn, uia *uiauto.Context, keyboard *input.KeyboardEventWriter, format, data, baseURL string) copyFunc {
 	return func(ctx context.Context) error {
+		if err := bringChromeCopyPasteWindowToFront(ctx, tconn); err != nil {
+			return errors.Wrap(err, "failed to bring the Chrome window forground")
+		}
+
 		dataBoxNode := nodewith.HasClass("data").Role(role.TextField).State(state.Editable, true).First()
 		formatBoxNode := nodewith.HasClass("format").Role(role.TextField).State(state.Editable, true).First()
 		copyButtonNode := nodewith.HasClass("copy").Role(role.Button).First()
@@ -121,8 +150,12 @@ func prepareCopyInChrome(browser *browser.Browser, uia *uiauto.Context, keyboard
 // For the security reason (crbug.com/1334203), reading from the clipboard
 // works only after granting the permission. That's why this function uses clicking and
 // typing instead of running js on the page.
-func preparePasteInChrome(browser *browser.Browser, conn *browser.Conn, uia *uiauto.Context, keyboard *input.KeyboardEventWriter, format, baseURL string) pasteFunc {
+func preparePasteInChrome(browser *browser.Browser, conn *browser.Conn, tconn *chrome.TestConn, uia *uiauto.Context, keyboard *input.KeyboardEventWriter, format, baseURL string) pasteFunc {
 	return func(ctx context.Context) (string, error) {
+		if err := bringChromeCopyPasteWindowToFront(ctx, tconn); err != nil {
+			return "", errors.Wrap(err, "failed to bring the Chrome window forground")
+		}
+
 		formatBoxNode := nodewith.HasClass("format").Role(role.TextField).State(state.Editable, true).First()
 		pasteButtonNode := nodewith.HasClass("paste").Role(role.Button).First()
 
@@ -170,10 +203,14 @@ func preparePasteInChrome(browser *browser.Browser, conn *browser.Conn, uia *uia
 // this helper ensures that the app and this test are in-sync with regards to
 // the text that we expect to be copied, by checking that the provided
 // viewIDForGetText contains the provided expected string.
-func prepareCopyInAndroid(d *ui.Device, writeDataBtnID, viewIDForGetText, expected string) copyFunc {
+func prepareCopyInAndroid(d *ui.Device, tconn *chrome.TestConn, writeDataBtnID, viewIDForGetText, expected string) copyFunc {
 	const copyID = idPrefix + "copy_button"
 
 	return func(ctx context.Context) error {
+		if err := bringAndroidCopyPasteWindowToFront(ctx, tconn); err != nil {
+			return errors.Wrap(err, "failed to bring the Android window forground")
+		}
+
 		if err := d.Object(ui.ID(writeDataBtnID)).Click(ctx); err != nil {
 			return errors.Wrap(err, "failed to set text in Android EditText")
 		}
@@ -193,10 +230,14 @@ func prepareCopyInAndroid(d *ui.Device, writeDataBtnID, viewIDForGetText, expect
 // destination clipboard. Specifically: in the Android helper app, the
 // "paste_button" is clicked and the contents of the provided view ID is
 // returned via GetText.
-func preparePasteInAndroid(d *ui.Device, viewIDForGetText string) pasteFunc {
+func preparePasteInAndroid(d *ui.Device, tconn *chrome.TestConn, viewIDForGetText string) pasteFunc {
 	const pasteID = idPrefix + "paste_button"
 
 	return func(ctx context.Context) (string, error) {
+		if err := bringAndroidCopyPasteWindowToFront(ctx, tconn); err != nil {
+			return "", errors.Wrap(err, "failed to bring the Android window forground")
+		}
+
 		if err := d.Object(ui.ID(pasteID)).Click(ctx); err != nil {
 			return "", errors.Wrap(err, "failed to paste")
 		}
@@ -270,7 +311,7 @@ func testCopyImageFromChromeToAndroid(ctx context.Context, p *arc.PreData, tconn
 		return errors.Wrap(err, "failed to wait for the app shown")
 	}
 
-	pasteAndroid := preparePasteInAndroid(d, textViewID)
+	pasteAndroid := preparePasteInAndroid(d, tconn, textViewID)
 	// Paste in Android.
 	androidHTML, err := pasteAndroid(ctx)
 	if err != nil {
@@ -385,25 +426,42 @@ func Clipboard(ctx context.Context, s *testing.State) {
 			observerReady      = "Observer ready"
 		)
 		// Enable observer and wait for it to be ready to prevent a possible race.
+		if err := bringAndroidCopyPasteWindowToFront(ctx, tconn); err != nil {
+			s.Fatal("Failed to bring the Android window forground: ", err)
+		}
 		if err := d.Object(ui.ID(observerEnableID)).Click(ctx); err != nil {
 			s.Fatal("Failed to enable observer: ", err)
 		}
-		defer d.Object(ui.ID(observerDisableID)).Click(ctx)
+		defer func() {
+			if err := bringAndroidCopyPasteWindowToFront(ctx, tconn); err != nil {
+				s.Error("Failed to bring the Android window forground: ", err)
+			}
+			if err := d.Object(ui.ID(observerDisableID)).WaitForExists(ctx, 10*time.Second); err != nil {
+				s.Error("Failed to wait for the disable button shown: ", err)
+			}
+			if err := d.Object(ui.ID(observerDisableID)).Click(ctx); err != nil {
+				s.Error("Failed to disable observer: ", err)
+			}
+		}()
 		if err := d.Object(ui.ID(observerTextViewID)).WaitForText(ctx, observerReady, 5*time.Second); err != nil {
 			s.Fatal("Failed to wait for observer ready: ", err)
+		}
+
+		if err := bringChromeCopyPasteWindowToFront(ctx, tconn); err != nil {
+			s.Error("Failed to bring the Android window forground: ", err)
 		}
 
 		// Copy in Chrome, so the registered observer should paste the clipboard content in Android.
 		const content = "<b>observer</b> should paste this"
 		const newContent = "<html><head></head><body><b>observer</b> should paste this</body></html>"
-		chromeCopy := prepareCopyInChrome(browser, uia, keyboard, "text/html", content, server.URL)
+		chromeCopy := prepareCopyInChrome(browser, tconn, uia, keyboard, "text/html", content, server.URL)
 		if err := chromeCopy(ctx); err != nil {
 			s.Fatal("Failed to copy in Chrome: ", err)
 		}
 
 		// Paste and Verify the result.
 		// TODO(crbug.com/1510998): Remove newContent once Chromium changes are submitted.
-		pasteAndroid := preparePasteInAndroid(d, textViewID)
+		pasteAndroid := preparePasteInAndroid(d, tconn, textViewID)
 		if html, err := pasteAndroid(ctx); err != nil {
 			s.Fatal("Failed to obtain pasted text: ", err)
 		} else if html != content && html != newContent {
@@ -433,23 +491,23 @@ func Clipboard(ctx context.Context, s *testing.State) {
 		wantPastedData string
 	}{{
 		"CopyTextFromChromeToAndroid",
-		prepareCopyInChrome(browser, uia, keyboard, "text/plain", testTextFromChrome, server.URL),
-		preparePasteInAndroid(d, editTextID),
+		prepareCopyInChrome(browser, tconn, uia, keyboard, "text/plain", testTextFromChrome, server.URL),
+		preparePasteInAndroid(d, tconn, editTextID),
 		testTextFromChrome,
 	}, {
 		"CopyTextFromAndroidToChrome",
-		prepareCopyInAndroid(d, writeTextBtnID, editTextID, expectedTextFromAndroid),
-		preparePasteInChrome(browser, conn, uia, keyboard, "text/plain", server.URL),
+		prepareCopyInAndroid(d, tconn, writeTextBtnID, editTextID, expectedTextFromAndroid),
+		preparePasteInChrome(browser, conn, tconn, uia, keyboard, "text/plain", server.URL),
 		expectedTextFromAndroid,
 	}, {
 		"CopyHTMLFromChromeToAndroid",
-		prepareCopyInChrome(browser, uia, keyboard, "text/plain", testHTMLFromChrome, server.URL),
-		preparePasteInAndroid(d, textViewID),
+		prepareCopyInChrome(browser, tconn, uia, keyboard, "text/plain", testHTMLFromChrome, server.URL),
+		preparePasteInAndroid(d, tconn, textViewID),
 		testHTMLFromChrome,
 	}, {
 		"CopyHTMLFromAndroidToChrome",
-		prepareCopyInAndroid(d, writeHTMLBtnID, textViewID, expectedHTMLFromAndroid),
-		preparePasteInChrome(browser, conn, uia, keyboard, "text/html", server.URL),
+		prepareCopyInAndroid(d, tconn, writeHTMLBtnID, textViewID, expectedHTMLFromAndroid),
+		preparePasteInChrome(browser, conn, tconn, uia, keyboard, "text/html", server.URL),
 		expectedHTMLFromAndroid,
 	}} {
 		s.Run(ctx, row.name, func(ctx context.Context, s *testing.State) {
