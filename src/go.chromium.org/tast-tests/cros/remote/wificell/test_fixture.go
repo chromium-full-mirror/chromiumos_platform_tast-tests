@@ -1569,6 +1569,49 @@ func (tf *TestFixture) AssertNoDisconnect(ctx context.Context, dutIdx DutIdx, f 
 	return nil
 }
 
+// P2PAssertNoDisconnect runs the given routine and verifies that no disconnection event
+// is captured in the same duration.
+func (tf *TestFixture) P2PAssertNoDisconnect(ctx context.Context, dutIdx DutIdx, f func(context.Context) error) error {
+	ctx, st := timing.Start(ctx, "tf.P2PAssertNoDisconnect")
+	defer st.End()
+
+	p2pDevice, err := tf.P2PDevice(ctx, P2PDevice(dutIdx))
+	if err != nil {
+		return err
+	}
+	ifaceName, err := p2pDevice.IfName(ctx, P2PIfaceType)
+	if err != nil {
+		return err
+	}
+
+	const wpaMonitorStopTimeout = 10 * time.Second
+	wpaMonitor := remotewpacli.NewRemoteWPAMonitorOnIface(tf.duts[dutIdx].dut.Conn(), ifaceName)
+	if err := wpaMonitor.Start(ctx); err != nil {
+		return errors.Wrap(err, "failed to start wpa monitor")
+	}
+
+	errf := f(ctx)
+
+	var disconnectedEvents []string
+	events, err := wpaMonitor.QuitAndCollectEvents(ctx)
+	if err != nil {
+		return err
+	}
+	for _, event := range events {
+		if evt, ok := event.(*wpacli.P2PDisconnectedEvent); ok {
+			disconnectedEvents = append(disconnectedEvents, evt.ToLogString())
+		}
+	}
+	if len(disconnectedEvents) != 0 {
+		return errors.Errorf("disconnect events captured: %v", disconnectedEvents)
+	}
+	if errf != nil {
+		return errf
+	}
+
+	return nil
+}
+
 // VerifyConnection is backwards-compatible version of VerifyConnectionFromDUT. Deprecated.
 // TODO(b/234845693): remove after stabilizing period.
 func (tf *TestFixture) VerifyConnection(ctx context.Context, ap *APIface) error {

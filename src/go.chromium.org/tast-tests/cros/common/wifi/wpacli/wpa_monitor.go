@@ -20,7 +20,10 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-const debugWPAMonitor = false
+const (
+	debugWPAMonitor = false
+	timeLayout      = "2006-01-02 15:04:05.000000"
+)
 
 // SupplicantEvent defines functions common for all wpa_supplicant events.
 type SupplicantEvent interface {
@@ -52,6 +55,13 @@ type DisconnectedEvent struct {
 type ConnectedEvent struct {
 	BSSID   string
 	RcvTime time.Time
+}
+
+// P2PDisconnectedEvent defines data of AP-STA-DISCONNECTED event.
+type P2PDisconnectedEvent struct {
+	BSSID      string
+	P2PDevAddr string
+	RcvTime    time.Time
 }
 
 // P2PGroupStartedEvent defines data of P2P-GROUP-STARTED event.
@@ -87,11 +97,17 @@ type WPAMonitor struct {
 	stdoutScanner *bufio.Scanner
 	cmd           cmd.Runner
 	lines         chan string
+	iface         string
 }
 
 // NewWPAMonitor returns runner-agnostic WPAMonitor.
 func NewWPAMonitor(c cmd.Runner) *WPAMonitor {
 	return &WPAMonitor{cmd: c}
+}
+
+// NewWPAMonitorOnIface returns runner-agnostic WPAMonitor.
+func NewWPAMonitorOnIface(c cmd.Runner, i string) *WPAMonitor {
+	return &WPAMonitor{cmd: c, iface: i}
 }
 
 type eventDef struct {
@@ -200,6 +216,18 @@ var eventDefs = []eventDef{
 			}, nil
 		},
 	},
+	{
+		// Example of AP-STA-DISCONNECTED output:
+		// <3>AP-STA-DISCONNECTED 02:76:1d:96:a6:06 p2p_dev_addr=d0:3c:1f:35:cd:08
+		regexp.MustCompile(`AP-STA-DISCONNECTED ([\da-fA-F:]+) p2p_dev_addr=([\da-fA-F:]+)`),
+		func(matches []string) (_ SupplicantEvent, firstError error) {
+			event := new(P2PDisconnectedEvent)
+			event.BSSID = matches[1]
+			event.P2PDevAddr = matches[2]
+			event.RcvTime = time.Now()
+			return event, firstError
+		},
+	},
 }
 
 // ToLogString formats the event data to string suitable for logging.
@@ -219,13 +247,16 @@ func (e *ScanResultsEvent) ToLogString() string {
 
 // ToLogString formats the event data to string suitable for logging.
 func (e *DisconnectedEvent) ToLogString() string {
-	const timeLayout = "2006-01-02 15:04:05.000000"
+	return fmt.Sprintf("%s %+v\n", e.RcvTime.Format(timeLayout), e)
+}
+
+// ToLogString formats the event data to string suitable for logging.
+func (e *P2PDisconnectedEvent) ToLogString() string {
 	return fmt.Sprintf("%s %+v\n", e.RcvTime.Format(timeLayout), e)
 }
 
 // ToLogString formats the event data to string suitable for logging.
 func (e *ConnectedEvent) ToLogString() string {
-	const timeLayout = "2006-01-02 15:04:05.000000"
 	return fmt.Sprintf("%s %+v\n", e.RcvTime.Format(timeLayout), e)
 }
 
@@ -265,7 +296,12 @@ func (w *WPAMonitor) Start(ctx context.Context) error {
 		// This situation is not much likely, but better safe than sorry.
 		return errors.New("WPAMonitor runner not set")
 	}
-	w.cmd.CreateCmd(ctx, "sudo", "-u", "wpa", "wpa_cli")
+	command := []string{"-u", "wpa", "-g", "wpa", "wpa_cli"}
+	// Caveat: if another "-i" argument is appended later, it will effectively overwrite this one.
+	if w.iface != "" {
+		command = append(command, "-i", w.iface)
+	}
+	w.cmd.CreateCmd(ctx, "sudo", command...)
 
 	stdin, err := w.cmd.StdinPipe()
 	if err != nil {
@@ -281,7 +317,7 @@ func (w *WPAMonitor) Start(ctx context.Context) error {
 		return errors.Wrap(err, "failed to start wpa_cli")
 	}
 
-	w.lines = make(chan string, 100)
+	w.lines = make(chan string, 10000)
 
 	w.stdin = stdin
 	w.stdoutScanner = bufio.NewScanner(stdout)
@@ -316,6 +352,42 @@ func (w *WPAMonitor) waitReady(ctx context.Context) error {
 			}
 		}
 	}
+}
+
+// QuitAndCollectEvents sends quit command to wpa_cli and waits until the process exits (or context deadline passes).
+// Also returns the events since WPAStartEventsLogger() was called.
+func (w *WPAMonitor) QuitAndCollectEvents(ctx context.Context) ([]SupplicantEvent, error) {
+	var supplicantEvents []SupplicantEvent
+	if w.stdin == nil || w.cmd == nil {
+		return supplicantEvents, errors.New("WPAMonitor not started")
+	}
+
+	if _, err := io.WriteString(w.stdin, "q\n"); err != nil {
+		testing.ContextLog(ctx, "Failed to send command to wpa_cli: ", err)
+	}
+	w.stdin.Close()
+	if err := w.cmd.WaitCmd(); err != nil {
+		return supplicantEvents, errors.Wrap(err, "failed to wait for wpa_cli exit")
+	}
+
+	for line := range w.lines {
+		for _, eventDef := range eventDefs {
+			if matches := eventDef.matcher.FindStringSubmatch(line); matches != nil {
+				event, error := eventDef.parseFunc(matches)
+				if error != nil {
+					error = errors.Wrapf(error, "error parsing line: %s", line)
+				}
+				supplicantEvents = append(supplicantEvents, event)
+			}
+		}
+	}
+
+	// drain w.lines in case scan goroutine is stuck on writing to a full channel
+	// and wait until it's closed there
+	for range w.lines {
+	}
+
+	return supplicantEvents, nil
 }
 
 // Stop sends quit command to wpa_cli and waits until the process exits (or context deadline passes).

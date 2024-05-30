@@ -14,6 +14,9 @@ import (
 // Runner is an alias for common wpacli Runner but only for remote execution.
 type Runner = wpacli.Runner
 
+// WPAMonitor is an alias for common wpacli WPAMonitor but only for remote execution.
+type WPAMonitor = wpacli.WPAMonitor
+
 // NewRemoteRunner creates a wpacli runner for remote execution.
 func NewRemoteRunner(host *ssh.Conn) *Runner {
 	return wpacli.NewRunner(&cmd.RemoteCmdRunner{Host: host})
@@ -22,4 +25,9 @@ func NewRemoteRunner(host *ssh.Conn) *Runner {
 // NewRemoteRunnerOnIface creates a wpacli runner for remote execution for the particular interface.
 func NewRemoteRunnerOnIface(host *ssh.Conn, iface string) *Runner {
 	return wpacli.NewRunnerOnIface(&cmd.RemoteCmdRunner{Host: host}, iface)
+}
+
+// NewRemoteWPAMonitorOnIface creates a wpacli monitor for remote execution for the particular interface.
+func NewRemoteWPAMonitorOnIface(host *ssh.Conn, iface string) *WPAMonitor {
+	return wpacli.NewWPAMonitorOnIface(&cmd.RemoteCmdRunner{Host: host}, iface)
 }
