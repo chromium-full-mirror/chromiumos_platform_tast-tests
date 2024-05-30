@@ -74,10 +74,11 @@ func init() {
 }
 
 type server struct {
-	rt   *env.Env
-	fam  l4server.Family
-	port int
-	addr net.IP
+	rtEnv  *env.Env
+	svrEnv *env.Env
+	fam    l4server.Family
+	port   int
+	addr   net.IP
 }
 
 func (s server) dst() string {
@@ -89,7 +90,8 @@ func (s server) dst() string {
 }
 
 func (s *server) cleanup(ctx context.Context) {
-	s.rt.Cleanup(ctx)
+	s.rtEnv.Cleanup(ctx)
+	s.svrEnv.Cleanup(ctx)
 }
 
 type counters struct {
@@ -197,7 +199,7 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 		keys := make(map[string]bool)
 		for _, svr := range svrs {
 			for _, src := range srcs {
-				keys[key(svr.rt.VethOutName, src, ipFamily(svr.fam))] = true
+				keys[key(svr.rtEnv.VethOutName, src, ipFamily(svr.fam))] = true
 			}
 		}
 		return keys
@@ -279,7 +281,7 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 		// Connect the VPN.
 		svr := svrs[0]
 		conn, err := vpn.StartConnection(
-			ctx, svr.rt, vpn.TypeWireGuard,
+			ctx, svr.svrEnv, vpn.TypeWireGuard,
 			// l4server is only listening on underlay address now.
 			vpn.WithAllowingReachUnderlayIP(),
 		)
@@ -319,7 +321,7 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 
 		// Spin up an HTTP server to handle the request.
 		for _, svr := range svrs {
-			if err := svr.rt.StartServer(ctx, "http", httpserver.New(httpserver.TCP4, "80", handler, nil)); err != nil {
+			if err := svr.svrEnv.StartServer(ctx, "http", httpserver.New(httpserver.TCP4, "80", handler, nil)); err != nil {
 				s.Fatal("Failed to start HTTP server: ", err)
 			}
 			test(expected,
@@ -386,7 +388,7 @@ func setup(ctx context.Context, mgr *shill.Manager, pool *subnet.Pool, fam l4ser
 		opt.EnableDHCP = true
 		opt.EnableDNS = true
 	}
-	svc, rt, err := virtualnet.CreateRouterEnv(ctx, mgr, pool, opt)
+	svc, rtEnv, svrEnv, err := virtualnet.CreateRouterServerEnv(ctx, mgr, pool, opt)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to set up %s network env", fam)
 	}
@@ -394,17 +396,20 @@ func setup(ctx context.Context, mgr *shill.Manager, pool *subnet.Pool, fam l4ser
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 	defer func() {
-		if rt != nil {
-			rt.Cleanup(cleanupCtx)
+		if rtEnv != nil {
+			rtEnv.Cleanup(cleanupCtx)
+		}
+		if svrEnv != nil {
+			svrEnv.Cleanup(cleanupCtx)
 		}
 	}()
 	if err := svc.WaitForProperty(ctx, shillconst.ServicePropertyState, shillconst.ServiceStateOnline, 10*time.Second); err != nil {
 		return nil, errors.Wrapf(err, "failed to wait for %s service", fam)
 	}
 
-	addrs, err := rt.WaitForVethInAddrs(ctx, fam == l4server.UDP4, fam == l4server.UDP6)
+	addrs, err := svrEnv.WaitForVethInAddrs(ctx, fam == l4server.UDP4, fam == l4server.UDP6)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to get %s router addrs: ", fam)
+		return nil, errors.Wrapf(err, "failed to get %s server addrs: ", fam)
 	}
 	var addr net.IP
 	if fam == l4server.UDP6 {
@@ -414,16 +419,18 @@ func setup(ctx context.Context, mgr *shill.Manager, pool *subnet.Pool, fam l4ser
 	}
 	port := network.UnusedOrRandomPort(ctx, fam)
 	udp := l4server.New(fam, port, l4server.WithAddr(addr.String()), l4server.WithMsgHandler(l4server.Reflector()))
-	if err := rt.StartServer(ctx, fam.String(), udp); err != nil {
+	if err := svrEnv.StartServer(ctx, fam.String(), udp); err != nil {
 		return nil, errors.Wrapf(err, "failed to start %s server", fam)
 	}
 	svr := &server{
-		rt:   rt,
-		fam:  fam,
-		port: port,
-		addr: addr,
+		rtEnv:  rtEnv,
+		svrEnv: svrEnv,
+		fam:    fam,
+		port:   port,
+		addr:   addr,
 	}
-	rt = nil
+	rtEnv = nil
+	svrEnv = nil
 	return svr, nil
 }
 
