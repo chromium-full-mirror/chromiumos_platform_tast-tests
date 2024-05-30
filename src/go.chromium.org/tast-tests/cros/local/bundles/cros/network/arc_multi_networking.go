@@ -47,8 +47,7 @@ func init() {
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		// TODO(b/331845752): Disable the test in CQ temporarily.
-		// TODO(b/333094589): Disable the test in criticalstaging runs temporarily.
-		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
+		Attr:         []string{"group:mainline", "group:criticalstaging", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      10 * time.Minute,
 		Params: []testing.Param{{
