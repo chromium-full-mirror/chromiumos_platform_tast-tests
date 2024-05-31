@@ -7,8 +7,10 @@ package telemetryextension
 import (
 	"context"
 
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/telemetryextension/dep"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/telemetryextension/fixture"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -23,12 +25,14 @@ func init() {
 		Attr:         []string{"group:telemetry_extension_hw"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.TelemetryExtension,
+		HardwareDeps: dep.HPModels(),
 		Params: []testing.Param{
 			// OEMs need to fill in configs to enable the fingerprint routine.
 			// See https://chromium.googlesource.com/chromium/src/+/HEAD/docs/telemetry_extension/fingerprint_diag.md
 			{
-				Name: "fingerprint_alive",
-				Val:  "fingerprint_alive",
+				Name:              "fingerprint_alive",
+				Val:               "fingerprint_alive",
+				ExtraHardwareDeps: hwdep.D(hwdep.Fingerprint()),
 			},
 		},
 	})
