@@ -44,7 +44,7 @@ func GSCSysinfo(ctx context.Context, s *testing.State) {
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
 
 	// Simulate the typing of "sysinfo" command on GSC console.
-	sysinfo, err := i.GetSysinfo(ctx)
+	sysinfo, err := i.Sysinfo(ctx)
 	if err != nil {
 		s.Fatal("Error communicating with GSC: ", err)
 	}
@@ -52,7 +52,7 @@ func GSCSysinfo(ctx context.Context, s *testing.State) {
 	// Rudimentary validation of output: find and print "DEV_ID:" line.
 	s.Log("DEV_ID: ", sysinfo.Devid)
 
-	version, err := i.GetVersionInfo(ctx)
+	version, err := i.VersionInfo(ctx)
 	if err != nil {
 		s.Fatal("Unable to get version output: ", err)
 	}

@@ -476,7 +476,7 @@ func testBuildInfoMatcher(t *testing.T, input string, expected BuildInfo) {
 	}
 }
 
-func TestGetCCDCapabilities1(t *testing.T) {
+func TestCCDCapabilities1(t *testing.T) {
 	input := `
 ccd
 State: Locked
@@ -535,10 +535,10 @@ Use 'ccd help' to print subcommands
 		AllowUnverifiedRO: CapAlways,
 	}
 
-	testGetCCDCapabilities(t, input, expected)
+	testCCDCapabilities(t, input, expected)
 }
 
-func TestGetCCDCapabilities2(t *testing.T) {
+func TestCCDCapabilities2(t *testing.T) {
 	input := `
 ccd
 State: Locked
@@ -596,10 +596,10 @@ Use 'ccd help' to print subcommands
 		OverrideBatt:    CapAlways,
 	}
 
-	testGetCCDCapabilities(t, input, expected)
+	testCCDCapabilities(t, input, expected)
 }
 
-func testGetCCDCapabilities(t *testing.T, input string, expected map[CCDCap]CCDCapState) {
+func testCCDCapabilities(t *testing.T, input string, expected map[CCDCap]CCDCapState) {
 	output, err := matchCCDCapabilities(input)
 	if err != nil {
 		t.Fatal("error processing CCD capabilities:", err)
@@ -610,7 +610,7 @@ func testGetCCDCapabilities(t *testing.T, input string, expected map[CCDCap]CCDC
 	}
 }
 
-func TestGettimeDT(t *testing.T) {
+func TestTimeDT(t *testing.T) {
 	input := `
 		gettime
 		Time: 0x0000000000a6ec69 = 10939.000 s
@@ -625,7 +625,7 @@ func TestGettimeDT(t *testing.T) {
 	testExtractGSCTime(t, input, expected)
 }
 
-func TestGettimeH1(t *testing.T) {
+func TestTimeH1(t *testing.T) {
 	input := `
 		gettime
 		Time: 0x00000000001ea5ff = 2.008575 s
@@ -649,142 +649,142 @@ func testExtractGSCTime(t *testing.T, input string, expected GSCTime) {
 	}
 }
 
-func TestUsbAdcInfoCr50(t *testing.T) {
+func TestUSBADCInfoCr50(t *testing.T) {
 	input := `PHY A`
-	_, err := matchUsbAdcInfo(input)
+	_, err := matchUSBADCInfo(input)
 	if err == nil {
 		t.Fatal("expected match failure")
 	}
 
 	input = `PHY B`
-	_, err = matchUsbAdcInfo(input)
+	_, err = matchUSBADCInfo(input)
 	if err == nil {
 		t.Fatal("expected match failure")
 	}
 }
 
-func TestUsbAdcInfoDisconnected(t *testing.T) {
+func TestUSBADCInfoDisconnected(t *testing.T) {
 	input := `
 ADC: disconnected
 ADC: CC1 = 54 mV
 ADC: CC2 = 53 mV
 `
-	expected := UsbAdcInfo{
+	expected := USBADCInfo{
 		State: UsbDisconnected,
 		Cc1Mv: 54,
 		Cc2Mv: 53,
 	}
 
-	testMatchUsbAdcInfo(t, input, expected)
+	testMatchUSBADCInfo(t, input, expected)
 }
 
-func TestUsbAdcInfoSuzyQ(t *testing.T) {
+func TestUSBADCInfoSuzyQ(t *testing.T) {
 	input := `
 ADC: connected: SuzyQ
 ADC: CC1 = 928 mV
 ADC: CC2 = 497 mV
 `
-	expected := UsbAdcInfo{
+	expected := USBADCInfo{
 		State: SuzyQConnected,
 		Cc1Mv: 928,
 		Cc2Mv: 497,
 	}
 
-	testMatchUsbAdcInfo(t, input, expected)
+	testMatchUSBADCInfo(t, input, expected)
 }
 
-func TestUsbAdcInfoSuzyQFlipped(t *testing.T) {
+func TestUSBADCInfoSuzyQFlipped(t *testing.T) {
 	input := `
 ADC: connected: SuzyQFlipped
 ADC: CC1 = 500 mV
 ADC: CC2 = 928 mV
 `
-	expected := UsbAdcInfo{
+	expected := USBADCInfo{
 		State: SuzyQFlippedConnected,
 		Cc1Mv: 500,
 		Cc2Mv: 928,
 	}
 
-	testMatchUsbAdcInfo(t, input, expected)
+	testMatchUSBADCInfo(t, input, expected)
 }
 
-func TestUsbAdcInfoServo(t *testing.T) {
+func TestUSBADCInfoServo(t *testing.T) {
 	input := `
 ADC: connected: Servo-src(Rp1A5/Rp3A0)
 ADC: CC1 = 1706 mV
 ADC: CC2 = 928 mV
 `
-	expected := UsbAdcInfo{
+	expected := USBADCInfo{
 		State: ServoConnected,
 		Cc1Mv: 1706,
 		Cc2Mv: 928,
 	}
 
-	testMatchUsbAdcInfo(t, input, expected)
+	testMatchUSBADCInfo(t, input, expected)
 }
 
-func TestUsbAdcInfoServoFlipped(t *testing.T) {
+func TestUSBADCInfoServoFlipped(t *testing.T) {
 	input := `
 ADC: connected: Servo-src(Rp3A0/Rp1A5)
 ADC: CC1 = 931 mV
 ADC: CC2 = 1706 mV
 	`
-	expected := UsbAdcInfo{
+	expected := USBADCInfo{
 		State: ServoFlippedConnected,
 		Cc1Mv: 931,
 		Cc2Mv: 1706,
 	}
 
-	testMatchUsbAdcInfo(t, input, expected)
+	testMatchUSBADCInfo(t, input, expected)
 }
 
-func TestUsbAdcInfoServoSink1(t *testing.T) {
+func TestUSBADCInfoServoSink1(t *testing.T) {
 	input := `
 ADC: connected: Servo-snk(dut:RpUSB)
 ADC: CC1 = 539 mV
 ADC: CC2 = 536 mV
 	`
-	expected := UsbAdcInfo{
+	expected := USBADCInfo{
 		State: ServoSink1Connected,
 		Cc1Mv: 539,
 		Cc2Mv: 536,
 	}
 
-	testMatchUsbAdcInfo(t, input, expected)
+	testMatchUSBADCInfo(t, input, expected)
 }
 
-func TestUsbAdcInfoServoSink2(t *testing.T) {
+func TestUSBADCInfoServoSink2(t *testing.T) {
 	input := `
 ADC: connected: Servo-snk(dut:Rp1A5)
 ADC: CC1 = 1009 mV
 ADC: CC2 = 1008 mV
 	`
-	expected := UsbAdcInfo{
+	expected := USBADCInfo{
 		State: ServoSink2Connected,
 		Cc1Mv: 1009,
 		Cc2Mv: 1008,
 	}
 
-	testMatchUsbAdcInfo(t, input, expected)
+	testMatchUSBADCInfo(t, input, expected)
 }
 
-func TestUsbAdcInfoServoSink3(t *testing.T) {
+func TestUSBADCInfoServoSink3(t *testing.T) {
 	input := `
 ADC: connected: Servo-snk(dut:Rp3A0)
 ADC: CC1 = 1827 mV
 ADC: CC2 = 1828 mV
 	`
-	expected := UsbAdcInfo{
+	expected := USBADCInfo{
 		State: ServoSink3Connected,
 		Cc1Mv: 1827,
 		Cc2Mv: 1828,
 	}
 
-	testMatchUsbAdcInfo(t, input, expected)
+	testMatchUSBADCInfo(t, input, expected)
 }
 
-func testMatchUsbAdcInfo(t *testing.T, input string, expected UsbAdcInfo) {
-	out, err := matchUsbAdcInfo(input)
+func testMatchUSBADCInfo(t *testing.T, input string, expected USBADCInfo) {
+	out, err := matchUSBADCInfo(input)
 	if err != nil {
 		t.Fatal("error processing USB ADC info:", err)
 	}
@@ -958,7 +958,7 @@ EK Cert:     Compliant
 	expected.FactoryModeValid = true
 	expected.EKCert = "Compliant"
 
-	testGetSysinfo(t, input, expectedMap, expected)
+	testSysinfo(t, input, expectedMap, expected)
 }
 
 func TestTi50Sysinfo2(t *testing.T) {
@@ -1015,7 +1015,7 @@ Chip factory mode.
 	expected.FactoryModeValid = true
 	expected.EKCert = "Compliant"
 
-	testGetSysinfo(t, input, expectedMap, expected)
+	testSysinfo(t, input, expectedMap, expected)
 }
 
 func TestCr50Sysinfo1(t *testing.T) {
@@ -1068,7 +1068,7 @@ Key Ladder:  dev
 	expected.InFactoryMode = false
 	expected.EKCert = ""
 
-	testGetSysinfo(t, input, expectedMap, expected)
+	testSysinfo(t, input, expectedMap, expected)
 }
 
 func TestCr50Sysinfo2(t *testing.T) {
@@ -1122,7 +1122,7 @@ Key Ladder:  prod
 	expected.InFactoryMode = false
 	expected.EKCert = ""
 
-	testGetSysinfo(t, input, expectedMap, expected)
+	testSysinfo(t, input, expectedMap, expected)
 }
 
 func TestCr50Sysinfo3(t *testing.T) {
@@ -1176,10 +1176,10 @@ Key Ladder:  prod
 	expected.InFactoryMode = false
 	expected.EKCert = ""
 
-	testGetSysinfo(t, input, expectedMap, expected)
+	testSysinfo(t, input, expectedMap, expected)
 }
 
-func testGetSysinfo(t *testing.T, input string, expectedMap map[string]string, expected Sysinfo) {
+func testSysinfo(t *testing.T, input string, expectedMap map[string]string, expected Sysinfo) {
 	result, err := parseSysinfo(input)
 	if err != nil {
 		t.Fatal("error processing input:", err)
@@ -1257,7 +1257,7 @@ func testConvertCr50ResetFlags(t *testing.T, input, expected uint32) {
 	}
 }
 
-func TestGetChipBID1(t *testing.T) {
+func TestChipBID1(t *testing.T) {
 	input := `Board ID: ffffffff:ffffffff, flags: ffffffff`
 	expected := ChipBID{
 		Type:           0xffffffff,
@@ -1270,7 +1270,7 @@ func TestGetChipBID1(t *testing.T) {
 	testparseChipBID(t, input, expected, false)
 }
 
-func TestGetChipBID2(t *testing.T) {
+func TestChipBID2(t *testing.T) {
 	input := `Board ID: ffffffff:00000000, flags: ffffffff`
 	expected := ChipBID{
 		Type:           0xffffffff,
@@ -1283,7 +1283,7 @@ func TestGetChipBID2(t *testing.T) {
 	testparseChipBID(t, input, expected, false)
 }
 
-func TestGetChipBID3(t *testing.T) {
+func TestChipBID3(t *testing.T) {
 	input := `Board ID: 00000000:ffffffff, flags: ffffffff`
 	expected := ChipBID{
 		Type:           0,
@@ -1296,7 +1296,7 @@ func TestGetChipBID3(t *testing.T) {
 	testparseChipBID(t, input, expected, false)
 }
 
-func TestGetChipBID4(t *testing.T) {
+func TestChipBID4(t *testing.T) {
 	input := `Board ID: ffffffff:ffffffff, flags: 00000010`
 	expected := ChipBID{
 		Type:           0xffffffff,
@@ -1309,7 +1309,7 @@ func TestGetChipBID4(t *testing.T) {
 	testparseChipBID(t, input, expected, false)
 }
 
-func TestGetChipBID5(t *testing.T) {
+func TestChipBID5(t *testing.T) {
 	input := `Board ID: 4a465a42:b5b9a5bd, flags 00000010`
 	expected := ChipBID{
 		Type:           0x4a465a42,
@@ -1322,7 +1322,7 @@ func TestGetChipBID5(t *testing.T) {
 	testparseChipBID(t, input, expected, false)
 }
 
-func TestGetChipBID6(t *testing.T) {
+func TestChipBID6(t *testing.T) {
 	input := `Board ID: 4A465A42:B5B9A5BD, flags 00000010`
 	expected := ChipBID{
 		Type:           0x4a465a42,
@@ -1335,16 +1335,16 @@ func TestGetChipBID6(t *testing.T) {
 	testparseChipBID(t, input, expected, false)
 }
 
-func TestGetChipBID7(t *testing.T) {
+func TestChipBID7(t *testing.T) {
 	input := `Board ID: gggggggg:gggggggg, flags 00000010`
 	testparseChipBID(t, input, ChipBID{}, true)
 }
 
-func TestGetChipBID8(t *testing.T) {
+func TestChipBID8(t *testing.T) {
 	input := `Board ID: ffffffff:00000000, flags gggggggg`
 	testparseChipBID(t, input, ChipBID{}, true)
 }
-func TestGetChipBID9(t *testing.T) {
+func TestChipBID9(t *testing.T) {
 	input := `Board ID: ffffffff:00000001, flags 00000010`
 	testparseChipBID(t, input, ChipBID{}, true)
 }

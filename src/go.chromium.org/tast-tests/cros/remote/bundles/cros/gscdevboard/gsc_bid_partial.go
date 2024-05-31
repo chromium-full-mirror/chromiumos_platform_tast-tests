@@ -48,7 +48,7 @@ func GSCBIDPartial(ctx context.Context, s *testing.State) {
 	tpm := b.ResetAndTpmStartup(ctx, i, ti50.FfClamshell)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC failed to boot")
 
-	bid, err := i.GetChipBID(ctx)
+	bid, err := i.ChipBID(ctx)
 	th.MustSucceed(err, "failed to get board id")
 	s.Log("Got board id")
 	if !bid.IsErased {
@@ -59,7 +59,7 @@ func GSCBIDPartial(ctx context.Context, s *testing.State) {
 	err = tpm.TpmvSetBoardID(ti50.UnsetBID, testFlags)
 	th.MustSucceed(err, "failed to set partial board id")
 
-	bid, err = i.GetChipBID(ctx)
+	bid, err = i.ChipBID(ctx)
 	th.MustSucceed(err, "failed to get board id")
 	s.Logf("Partial BID: %+v", bid)
 	if !bid.TypeIsErased {
@@ -71,7 +71,7 @@ func GSCBIDPartial(ctx context.Context, s *testing.State) {
 	err = tpm.TpmvSetBoardID(testType, testFlags)
 	th.MustSucceed(err, "failed to set board id type")
 
-	bid, err = i.GetChipBID(ctx)
+	bid, err = i.ChipBID(ctx)
 	th.MustSucceed(err, "failed to get board id")
 	s.Logf("Full BID: %+v", bid)
 	if bid.TypeIsErased || bid.Type != testType {

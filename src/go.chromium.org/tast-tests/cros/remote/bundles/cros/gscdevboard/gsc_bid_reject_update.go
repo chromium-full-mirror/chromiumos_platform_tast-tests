@@ -121,7 +121,7 @@ func GSCBIDRejectUpdate(ctx context.Context, s *testing.State) {
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC failed to boot")
 	b.WaitUntilCCDConnected(ctx)
 
-	bid, err := i.GetChipBID(ctx)
+	bid, err := i.ChipBID(ctx)
 	th.MustSucceed(err, "failed to get board id")
 	s.Log("Got board id")
 	if !bid.IsErased {
@@ -132,7 +132,7 @@ func GSCBIDRejectUpdate(ctx context.Context, s *testing.State) {
 	err = tpm.TpmvSetBoardID(testType, testFlags)
 	th.MustSucceed(err, "failed to set board id to %s", bidDesc)
 
-	bid, err = i.GetChipBID(ctx)
+	bid, err = i.ChipBID(ctx)
 	th.MustSucceed(err, "failed to get board id")
 	s.Logf("BID: %+v", bid)
 	if bid.Type != testType || bid.Flags != testFlags {

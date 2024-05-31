@@ -68,7 +68,7 @@ func GSCBIDMismatch(ctx context.Context, s *testing.State) {
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
 	b.WaitUntilCCDConnected(ctx)
 
-	version, err := i.GetVersionInfo(ctx)
+	version, err := i.VersionInfo(ctx)
 	th.MustSucceed(err, "failed to get version")
 
 	if version.BID.Flags == invalidBIDFlags {
@@ -76,7 +76,7 @@ func GSCBIDMismatch(ctx context.Context, s *testing.State) {
 		return
 	}
 
-	bid, err := i.GetChipBID(ctx)
+	bid, err := i.ChipBID(ctx)
 	th.MustSucceed(err, "failed to get board id")
 	s.Log("Got board id")
 	if !bid.IsErased {
@@ -92,14 +92,14 @@ func GSCBIDMismatch(ctx context.Context, s *testing.State) {
 	err = tpm.TpmvSetBoardID(testBIDType, invalidBIDFlags)
 	th.MustSucceed(err, "failed to set board id")
 
-	bid, err = i.GetChipBID(ctx)
+	bid, err = i.ChipBID(ctx)
 	th.MustSucceed(err, "failed to get board id")
 	s.Logf("BID: %+v", bid)
 	if bid.Type != testBIDType || bid.Flags != invalidBIDFlags {
 		s.Fatalf("board id not set correctly: expected %x:%x got %+v", testBIDType, invalidBIDFlags, bid)
 	}
 
-	version, err = i.GetVersionInfo(ctx)
+	version, err = i.VersionInfo(ctx)
 	th.MustSucceed(err, "failed to get version")
 	s.Logf("Version: %+v", version)
 

@@ -79,7 +79,7 @@ func reset(ctx context.Context, s *testing.State, b utils.DevboardHelper, i *ti5
 		s.Fatalf("GSC failed to boot after %s reset: %s", resetType, err)
 	}
 
-	sysinfo, err := i.GetSysinfo(ctx)
+	sysinfo, err := i.Sysinfo(ctx)
 	if err != nil {
 		s.Fatalf("Unable to run sysinfo: %s", err)
 	}
@@ -120,7 +120,7 @@ func GSCUpdateRateLimit(ctx context.Context, s *testing.State) {
 	reset(ctx, s, b, i, resetType)
 	b.WaitUntilCCDConnected(ctx)
 
-	gscTime, err := i.Gettime(ctx)
+	gscTime, err := i.Time(ctx)
 	th.MustSucceed(err, "failed to run gettime")
 	s.Logf("GSC time: %+v", gscTime)
 	err = b.UpdateOnce(ctx, i, imageUnderTest, releaseVer)
@@ -140,7 +140,7 @@ func GSCUpdateRateLimit(ctx context.Context, s *testing.State) {
 	// GoBigSleepLint sleeping for known required period of time.
 	testing.Sleep(ctx, updateDelay)
 
-	gscTime, err = i.Gettime(ctx)
+	gscTime, err = i.Time(ctx)
 	th.MustSucceed(err, "failed to run gettime")
 
 	err = b.UpdateOnce(ctx, i, imageUnderTest, releaseVer)

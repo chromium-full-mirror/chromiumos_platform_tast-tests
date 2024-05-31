@@ -54,7 +54,7 @@ func GSCRMAProd(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait for rma_auth: ", err)
 	}
 
-	challenge, err := i.GetRmaAuth(ctx)
+	challenge, err := i.RMAAuth(ctx)
 	if err != nil {
 		s.Fatal("Error communicating with GSC: ", err)
 	}
@@ -68,7 +68,7 @@ func GSCRMAProd(ctx context.Context, s *testing.State) {
 	}
 
 	// GSC should rate limit the challenges.
-	challenge, err = i.GetRmaAuth(ctx)
+	challenge, err = i.RMAAuth(ctx)
 	if err != nil {
 		s.Fatal("Error communicating with GSC: ", err)
 	}
@@ -84,7 +84,7 @@ func GSCRMAProd(ctx context.Context, s *testing.State) {
 	}
 
 	// GSC should give another challenge after 10 seconds.
-	challenge, err = i.GetRmaAuth(ctx)
+	challenge, err = i.RMAAuth(ctx)
 	if err != nil {
 		s.Fatal("Error communicating with GSC: ", err)
 	}

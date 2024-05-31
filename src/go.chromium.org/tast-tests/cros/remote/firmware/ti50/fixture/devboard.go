@@ -241,7 +241,7 @@ func needsUpdate(ctx context.Context, s TestingState, board *remoteTi50.DUTContr
 	// Check the running version string is found in the image file. It's possible multiple
 	// images will be built with the same minor version. The version string contains the
 	// git sha which should be unique per build.
-	versionInfo, err := i.GetVersionInfo(ctx)
+	versionInfo, err := i.VersionInfo(ctx)
 	if err != nil {
 		testing.ContextLog(ctx, "Unable to get the gsc version")
 		return false

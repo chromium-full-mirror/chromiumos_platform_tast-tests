@@ -154,7 +154,7 @@ func Cr50RBOXBufferOutput(ctx context.Context, s *testing.State) {
 	s.Log("(Re)starting GSC")
 	b.ResetAndTpmStartup(ctx, i, ti50.CcdSuzyQ, ti50.FfClamshell)
 
-	chipSKU, err := i.GetChipSKU(ctx)
+	chipSKU, err := i.ChipSKU(ctx)
 	s.Logf("Running %s test for %s", testSignal, chipSKU)
 	th.MustSucceed(err, "did not find chip SKU")
 	config, err := getRboxConfig(testSignal, chipSKU)

@@ -291,10 +291,10 @@ func (i *CrOSImage) CCDResetFactory(ctx context.Context) error {
 	return i.runCommand(ctx, "ccd reset factory")
 }
 
-// GetCCDCapabilities uses the `ccd` GSC console command to return a map of all
+// CCDCapabilities uses the `ccd` GSC console command to return a map of all
 // CCD capability states. Capabilities that are in their default states will be
 // reported as their true states.
-func (i *CrOSImage) GetCCDCapabilities(ctx context.Context) (map[CCDCap]CCDCapState, error) {
+func (i *CrOSImage) CCDCapabilities(ctx context.Context) (map[CCDCap]CCDCapState, error) {
 	output, err := i.safeCommand(ctx, "ccd")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to execute ccd open")
@@ -329,10 +329,10 @@ func matchCCDCapabilities(s string) (map[CCDCap]CCDCapState, error) {
 	return out, nil
 }
 
-// GetCCDCapability uses the `ccd` GSC console command to return the state of
+// CCDCapability uses the `ccd` GSC console command to return the state of
 // the requested CCD capability.
-func (i *CrOSImage) GetCCDCapability(ctx context.Context, capability CCDCap) (CCDCapState, error) {
-	states, err := i.GetCCDCapabilities(ctx)
+func (i *CrOSImage) CCDCapability(ctx context.Context, capability CCDCap) (CCDCapState, error) {
+	states, err := i.CCDCapabilities(ctx)
 	if err != nil {
 		return CapDefault, err
 	}
@@ -371,7 +371,7 @@ func (i *CrOSImage) Rollback(ctx context.Context) error {
 // SetCCDCapabilities uses the `ccd` GSC console command to set the device
 // capabilities to the given map.
 func (i *CrOSImage) SetCCDCapabilities(ctx context.Context, capabilities map[CCDCap]CCDCapState) error {
-	currentStates, err := i.GetCCDCapabilities(ctx)
+	currentStates, err := i.CCDCapabilities(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to get initial CCD states")
 	}
@@ -473,9 +473,9 @@ func (i *CrOSImage) SetWpAtBoot(ctx context.Context, enabled bool) error {
 	return i.runCommand(ctx, "wp "+strconv.FormatBool(enabled)+" atboot")
 }
 
-// GetCCDLevel uses the `ccd` GSC console command to get the current CCD level
+// CCDLevel uses the `ccd` GSC console command to get the current CCD level
 // state.
-func (i *CrOSImage) GetCCDLevel(ctx context.Context) (CCDLevel, error) {
+func (i *CrOSImage) CCDLevel(ctx context.Context) (CCDLevel, error) {
 	output, err := i.safeCommand(ctx, "ccd")
 	if err != nil {
 		return Lock, errors.Wrap(err, "failed get CCD command output")
@@ -502,16 +502,16 @@ func (i *CrOSImage) GetCCDLevel(ctx context.Context) (CCDLevel, error) {
 // IsCCDOpen uses the `ccd` GSC console command to check if CCD is in the open
 // state or not and returns true if so.
 func (i *CrOSImage) IsCCDOpen(ctx context.Context) (bool, error) {
-	level, err := i.GetCCDLevel(ctx)
+	level, err := i.CCDLevel(ctx)
 	if level == Open {
 		return true, err
 	}
 	return false, err
 }
 
-// GetVersionInfo uses the `version` GSC console command to returned information
+// VersionInfo uses the `version` GSC console command to returned information
 // about the running firmware.
-func (i *CrOSImage) GetVersionInfo(ctx context.Context) (VersionCommandInfo, error) {
+func (i *CrOSImage) VersionInfo(ctx context.Context) (VersionCommandInfo, error) {
 	output, err := i.safeCommand(ctx, "version")
 	if err != nil {
 		return VersionCommandInfo{}, errors.Wrap(err, "failed to run GSC version command")
@@ -537,7 +537,7 @@ func ValidateVersionInfo(version VersionCommandInfo, expectedVersion string, exp
 
 // CheckRunningVersion validates the expected version is running.
 func (i *CrOSImage) CheckRunningVersion(ctx context.Context, expectedVersion string, expectedDebug, checkBothSlots bool) (bool, error) {
-	versionInfo, err := i.GetVersionInfo(ctx)
+	versionInfo, err := i.VersionInfo(ctx)
 	if err != nil {
 		return false, err
 	}
@@ -814,8 +814,8 @@ func (i *CrOSImage) WaitForTestlabDisable(ctx context.Context, timeout time.Dura
 	return err
 }
 
-// GetBoardProperties gets the numerical value from the "brdprop" GSC command.
-func (i *CrOSImage) GetBoardProperties(ctx context.Context) (uint64, error) {
+// BoardProperties gets the numerical value from the "brdprop" GSC command.
+func (i *CrOSImage) BoardProperties(ctx context.Context) (uint64, error) {
 	output, err := i.safeCommand(ctx, "brdprop")
 	if err != nil {
 		return 0, errors.Wrap(err, "failed to run GSC brdprop command")
@@ -831,10 +831,10 @@ func (i *CrOSImage) GetBoardProperties(ctx context.Context) (uint64, error) {
 	return brdprop, nil
 }
 
-// GetBoardPropertiesTPMBus uses the "brdprop" GSC command to discover
+// BoardPropertiesTPMBus uses the "brdprop" GSC command to discover
 // transport of the TPM bus (SPI/I2C).
-func (i *CrOSImage) GetBoardPropertiesTPMBus(ctx context.Context) (TpmBus, error) {
-	brdprop, err := i.GetBoardProperties(ctx)
+func (i *CrOSImage) BoardPropertiesTPMBus(ctx context.Context) (TpmBus, error) {
+	brdprop, err := i.BoardProperties(ctx)
 	if err != nil {
 		return TpmBusInvalid, err
 	}
@@ -887,8 +887,8 @@ func extractGSCTime(out string) (GSCTime, error) {
 	return ret, nil
 }
 
-// Gettime runs the gettime command and extracts the system time information
-func (i *CrOSImage) Gettime(ctx context.Context) (GSCTime, error) {
+// Time runs the gettime command and extracts the system time information
+func (i *CrOSImage) Time(ctx context.Context) (GSCTime, error) {
 	output, err := i.Command(ctx, "gettime")
 	if err != nil {
 		return GSCTime{}, errors.Wrap(err, "failed to run GSC gettime command")
@@ -911,9 +911,9 @@ const (
 	ServoSink3Connected
 )
 
-// UsbAdcInfo contains information about the connected USB device and raw voltages
+// USBADCInfo contains information about the connected USB device and raw voltages
 // read from the ADC.
-type UsbAdcInfo struct {
+type USBADCInfo struct {
 	// UsbDeviceLinkState is the current state of the USB device link.
 	State UsbDeviceLinkState
 	// cc1Mv is the USB-C configuration channel 1 voltage.
@@ -922,17 +922,17 @@ type UsbAdcInfo struct {
 	Cc2Mv uint
 }
 
-// GetUsbAdcInfo extracts the USB ADC information from `usb` command.
-func (i *CrOSImage) GetUsbAdcInfo(ctx context.Context) (UsbAdcInfo, error) {
+// USBADCInfo extracts the USB ADC information from `usb` command.
+func (i *CrOSImage) USBADCInfo(ctx context.Context) (USBADCInfo, error) {
 	output, err := i.Command(ctx, "usb")
 	if err != nil {
-		return UsbAdcInfo{}, errors.Wrap(err, "failed to run GSC `usb` command")
+		return USBADCInfo{}, errors.Wrap(err, "failed to run GSC `usb` command")
 	}
-	return matchUsbAdcInfo(output)
+	return matchUSBADCInfo(output)
 }
 
-func matchUsbAdcInfo(s string) (UsbAdcInfo, error) {
-	ret := UsbAdcInfo{}
+func matchUSBADCInfo(s string) (USBADCInfo, error) {
+	ret := USBADCInfo{}
 	stateMatches := usbAdcStateRE.FindStringSubmatch(s)
 	if len(stateMatches) != 4 {
 		return ret, errors.New("regex failed to get correct matches from usb adc state from: " + s)
@@ -986,10 +986,10 @@ func matchUsbAdcInfo(s string) (UsbAdcInfo, error) {
 	return ret, nil
 }
 
-// GetRmaAuth runs the `rma_auth` command and returns the generate RMA challenge
+// RMAAuth runs the `rma_auth` command and returns the generate RMA challenge
 // string. The method returns an empty string if a rma_auth rate limiting
 // timeout has been triggered.
-func (i *CrOSImage) GetRmaAuth(ctx context.Context) (string, error) {
+func (i *CrOSImage) RMAAuth(ctx context.Context) (string, error) {
 	output, err := i.Command(ctx, "rma_auth")
 	if err != nil {
 		return "", errors.Wrap(err, "failed to run GSC `rma_auth` command")
@@ -1038,14 +1038,9 @@ const (
 	SKUDT ChipSKU = "D3C1"
 )
 
-// Sysinfo returns current sysinfo output
-func (i *CrOSImage) Sysinfo(ctx context.Context) (string, error) {
-	return i.Command(ctx, "sysinfo")
-}
-
-// GetSysinfo returns current sysinfo state
-func (i *CrOSImage) GetSysinfo(ctx context.Context) (Sysinfo, error) {
-	out, err := i.Sysinfo(ctx)
+// Sysinfo returns current sysinfo state
+func (i *CrOSImage) Sysinfo(ctx context.Context) (Sysinfo, error) {
+	out, err := i.Command(ctx, "sysinfo")
 	if err != nil {
 		return Sysinfo{}, errors.Wrap(err, "unable to run sysinfo")
 	}
@@ -1211,9 +1206,9 @@ func getSysinfoStruct(input map[string]string) (Sysinfo, error) {
 	return result, nil
 }
 
-// GetChipSKU returns the chip sku from sysinfo
-func (i *CrOSImage) GetChipSKU(ctx context.Context) (ChipSKU, error) {
-	sysinfo, err := i.GetSysinfo(ctx)
+// ChipSKU returns the chip sku from sysinfo
+func (i *CrOSImage) ChipSKU(ctx context.Context) (ChipSKU, error) {
+	sysinfo, err := i.Sysinfo(ctx)
 	if err != nil {
 		return "", err
 	}
@@ -1278,8 +1273,8 @@ func parseChipBID(output string) (ChipBID, error) {
 	return result, nil
 }
 
-// GetChipBID gets the current chip board id.
-func (i *CrOSImage) GetChipBID(ctx context.Context) (ChipBID, error) {
+// ChipBID gets the current chip board id.
+func (i *CrOSImage) ChipBID(ctx context.Context) (ChipBID, error) {
 	out, err := i.Command(ctx, "bid")
 	if err != nil {
 		return ChipBID{}, err
@@ -1298,11 +1293,11 @@ func writeOnceInfoPagesAreErased(bid ChipBID, sysinfo Sysinfo) bool {
 // WriteOnceInfoPagesAreErased returns True if all fields in the info pages that
 // RO protects are erased.
 func (i *CrOSImage) WriteOnceInfoPagesAreErased(ctx context.Context) (bool, error) {
-	bid, err := i.GetChipBID(ctx)
+	bid, err := i.ChipBID(ctx)
 	if err != nil {
 		return false, err
 	}
-	sysinfo, err := i.GetSysinfo(ctx)
+	sysinfo, err := i.Sysinfo(ctx)
 	if err != nil {
 		return false, err
 	}

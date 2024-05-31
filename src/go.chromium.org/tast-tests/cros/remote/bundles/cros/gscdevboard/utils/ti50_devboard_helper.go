@@ -556,7 +556,7 @@ func (h DevboardHelper) ResetAndTpmStartupForBus(ctx context.Context, i *ti50.Cr
 	th := FirmwareTestingHelper{FirmwareTestingHelperDelegate: h}
 	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
 
-	actualBus, err := i.GetBoardPropertiesTPMBus(ctx)
+	actualBus, err := i.BoardPropertiesTPMBus(ctx)
 	if err != nil {
 		h.Fatalf("Error running brdprop: %v", err)
 	}

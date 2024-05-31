@@ -111,7 +111,7 @@ func Ti50Breadcrumbs(ctx context.Context, s *testing.State) {
 }
 
 func checkBreadcrumbs(ctx context.Context, s *testing.State, i *ti50.CrOSImage, expected []int) {
-	sysinfo, err := i.GetSysinfo(ctx)
+	sysinfo, err := i.Sysinfo(ctx)
 	if err != nil {
 		s.Fatal("sysinfo failed: ", err)
 	}

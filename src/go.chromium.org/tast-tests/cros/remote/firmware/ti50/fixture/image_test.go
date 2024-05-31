@@ -8,43 +8,43 @@ import (
 	"testing"
 )
 
-func TestGetBIDInt1(t *testing.T) {
-	testGetBIDInt(t, "0x10", 16, false)
+func TestBIDInt1(t *testing.T) {
+	testBIDInt(t, "0x10", 16, false)
 }
 
-func TestGetBIDInt2(t *testing.T) {
-	testGetBIDInt(t, "10", 16, false)
+func TestBIDInt2(t *testing.T) {
+	testBIDInt(t, "10", 16, false)
 }
 
-func TestGetBIDInt3(t *testing.T) {
-	testGetBIDInt(t, "00000010", 16, false)
+func TestBIDInt3(t *testing.T) {
+	testBIDInt(t, "00000010", 16, false)
 }
 
-func TestGetBIDInt4(t *testing.T) {
-	testGetBIDInt(t, "00020000", 131072, false)
+func TestBIDInt4(t *testing.T) {
+	testBIDInt(t, "00020000", 131072, false)
 }
 
-func TestGetBIDInt5(t *testing.T) {
-	testGetBIDInt(t, "f", 15, false)
+func TestBIDInt5(t *testing.T) {
+	testBIDInt(t, "f", 15, false)
 }
 
-func TestGetBIDInt6(t *testing.T) {
-	testGetBIDInt(t, "F", 15, false)
+func TestBIDInt6(t *testing.T) {
+	testBIDInt(t, "F", 15, false)
 }
 
-func TestGetBIDInt7(t *testing.T) {
-	testGetBIDInt(t, "0xffffffff", 4294967295, false)
+func TestBIDInt7(t *testing.T) {
+	testBIDInt(t, "0xffffffff", 4294967295, false)
 }
 
-func TestGetBIDInt8(t *testing.T) {
-	testGetBIDInt(t, "0xfffffffff", 0, true)
+func TestBIDInt8(t *testing.T) {
+	testBIDInt(t, "0xfffffffff", 0, true)
 }
 
-func TestGetBIDInt9(t *testing.T) {
-	testGetBIDInt(t, "GGG", 0, true)
+func TestBIDInt9(t *testing.T) {
+	testBIDInt(t, "GGG", 0, true)
 }
 
-func testGetBIDInt(t *testing.T, input string, expected int64, expectError bool) {
+func testBIDInt(t *testing.T, input string, expected int64, expectError bool) {
 	out, err := getBIDInt(input)
 	if expectError {
 		if err == nil {

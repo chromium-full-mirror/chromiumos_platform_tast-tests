@@ -52,7 +52,7 @@ func CCDCapabilitiesOpenDefaultValues(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to reset CCD: ", err)
 	}
 
-	info, err := i.GetVersionInfo(ctx)
+	info, err := i.VersionInfo(ctx)
 	if err != nil {
 		s.Fatal("Failed to get version information: ", err)
 	}
@@ -83,7 +83,7 @@ func CCDCapabilitiesOpenDefaultValues(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	states, err := i.GetCCDCapabilities(ctx)
+	states, err := i.CCDCapabilities(ctx)
 	if err != nil {
 		s.Fatal("Failed to get CCD capabilities")
 	}

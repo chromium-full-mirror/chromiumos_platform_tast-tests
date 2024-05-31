@@ -89,7 +89,7 @@ func GSCCCDStraps(ctx context.Context, s *testing.State) {
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
 
 	// Make sure that we report that we're disconnected first
-	usbAdcInfo, err := i.GetUsbAdcInfo(ctx)
+	usbAdcInfo, err := i.USBADCInfo(ctx)
 	th.MustSucceed(err, "Error communicating with GSC")
 	if usbAdcInfo.State != ti50.UsbDisconnected {
 		s.Error("Expected GSC to report CCD disconnect, but was: ", usbAdcInfo.State)
@@ -100,7 +100,7 @@ func GSCCCDStraps(ctx context.Context, s *testing.State) {
 	th.MustSucceed(testing.Sleep(ctx, 2*time.Second), "Context expired while waiting for GSC to process the strap change") // GoBigSleepLint: Wait for GSC to process the strap change
 
 	// Check the we report the new USB ADC link state
-	usbAdcInfo, err = i.GetUsbAdcInfo(ctx)
+	usbAdcInfo, err = i.USBADCInfo(ctx)
 	th.MustSucceed(err, "Error communicating with GSC")
 	if usbAdcInfo.State != userParams.expectedState {
 		s.Errorf("Expected GSC to report %v state with no reboot, but was %v", userParams.expectedState, usbAdcInfo.State)
@@ -112,7 +112,7 @@ func GSCCCDStraps(ctx context.Context, s *testing.State) {
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
 
 	// Check that we read the correct strapping
-	usbAdcInfo, err = i.GetUsbAdcInfo(ctx)
+	usbAdcInfo, err = i.USBADCInfo(ctx)
 	th.MustSucceed(err, "Error communicating with GSC")
 	if usbAdcInfo.State != userParams.expectedState {
 		s.Errorf("Expected GSC to report %v state after reboot, but was %v", userParams.expectedState, usbAdcInfo.State)
