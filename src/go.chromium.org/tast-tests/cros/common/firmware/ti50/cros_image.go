@@ -54,19 +54,54 @@ var (
 	verRWGSCStrRE        = verRWCr50StrRE + `|` + verRWTi50StrRE + `|` + verRWLegacyTi50StrRE
 	hexRE                = `[0-9a-fA-F]+`
 	// GSC board properties
-	brdPropRE     = regexp.MustCompile(`properties = 0x(` + hexRE + `)`)
+	// ex properties = 0xa1234578
+	brdPropRE = regexp.MustCompile(`properties = 0x(` + hexRE + `)`)
+	// regex to parse ti50 gettime output
+	// example ti50 output:
+	//    gettime
+	//    Time: 0x0000000000a6ec69 = 10939.000 s
+	//    Since reset: 0x0000000000a6ec69 = 10939.497 s
+	//    Since deep sleep: 0x0000000000004a68 = 19.048 s
 	gettimeTi50RE = regexp.MustCompile(`(?s)Since reset:.*\s([0-9\.]+) s\s*Since deep sleep:.*\s([0-9\.]+) s\s`)
+	// regex to parse cr50 gettime output
+	// example cr50 output:
+	//    gettime
+	//    Time: 0x00000000001ea5ff = 2.008575 s
+	//    since cold_reset: 1683 s
 	gettimeCr50RE = regexp.MustCompile(`(?s)Time:.*\s([0-9\.]+) s\s*since cold_reset:.*\s([0-9\.]+) s\s`)
 
 	// USB ADC info regex
 	usbAdcStateRE = regexp.MustCompile(`(PHY [AB])|ADC: (disconnected)|connected: ([\S]+)`)
 	usbAdcCc1RE   = regexp.MustCompile(`ADC: CC1 = ([0-9]+) mV`)
 	usbAdcCc2RE   = regexp.MustCompile(`ADC: CC2 = ([0-9]+) mV`)
-	// RMA regex
+	// regex to parse rma_auth output
 	rmaAuthChallengeRE = regexp.MustCompile(`([A-Z0-9]{80})|(RMA Auth error)|(Must wait)`)
-	// Regex to find the chip type in H1 sysinfo output
+	// regex to find the chip type in H1 sysinfo output
 	h1SysinfoChipRE = regexp.MustCompile(`B2-(D|C)`)
 
+	// regexes to parse the sysinfo output
+	// ex Cr50 output
+	//    Reset flags: 0x00000140 (hibernate wake-pin)
+	//    Reset count: 1
+	//    Chip:        g cr50 B2-C
+	//    RO keyid:    0xaa66150f
+	//    RW keyid:    0x87b73b67
+	//    DEV_ID:      0x00000000 0x00000000
+	//    Rollback:    1/1/2 4/4/4
+	//    TPM MODE:    enabled (0)
+	//    Key Ladder:  prod
+	// ex Ti50 output
+	//    Reset flags: 0x00000001 (Cold)
+	//    Reset count: 1
+	//    Breadcrumbs: 0x0000000000001234
+	//    Chip:        g Ti50 D3C1
+	//    RO keyid:    0xabcdef01
+	//    RW keyid:    0x23456789
+	//    DEV_ID:      0x00000000 0x00000000
+	//    Rollback:    0.3/0.3/0.3 4.0/?.?/4.0
+	//    TPM MODE:    disabled (3)
+	//    Key Ladder:  prod
+	//    EK Cert:     Compliant
 	sysinfoFactoryMode   = `Chip factory mode.`
 	sysinfoResetFlagRE   = `Reset flags:\s+0x(?P<resetFlags>` + hexRE + `)\s+\S*\s*`
 	sysinfoResetCountRE  = `Reset count:\s+(?P<resetCount>\d*)\s*`
@@ -82,6 +117,9 @@ var (
 	sysinfoFactoryModeRE = `(?P<factoryMode>` + sysinfoFactoryMode + `)?`
 
 	sysinfoRE = regexp.MustCompile(sysinfoResetFlagRE + sysinfoResetCountRE + sysinfoBreadcrumbRE + sysinfoChipRE + sysinfoROKeyidRE + sysinfoRWKeyidRE + sysinfoDevidRE + sysinfoRollbackRE + sysinfoTPMModeRE + sysinfoKeyladderRE + sysinfoEKCertRE + sysinfoFactoryModeRE)
+	// regex to parse the chip bid output
+	// ex Cr50 output: Board ID: ffffffff:00000000, flags 00000010
+	// ex Ti50 output: Board ID: ffffffff:00000000, flags: 00000010
 	chipBIDRE = regexp.MustCompile(`Board ID:\s*(` + hexRE + `):(` + hexRE + `),\s*flags:?\s*(` + hexRE + `)`)
 	// regex to parse the factory config output
 	// ex Cr50 output: fc = 0x0000000000001234
