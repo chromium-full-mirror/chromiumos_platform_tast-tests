@@ -365,7 +365,7 @@ func Contains(list []string, s string) bool {
 // FormatStorageToFAT formats the specified storage to FAT format.
 func FormatStorageToFAT(ctx context.Context, mountPoint string, dut *dut.DUT, fs *dutfs.Client) error {
 	// Get the device node.
-	cmd := fmt.Sprintf("df | grep '%s' | awk '{print $1}'", mountPoint)
+	cmd := fmt.Sprintf("df | grep '%s'$ | awk '{print $1}'", mountPoint)
 	deviceNode, err := dut.Conn().CommandContext(ctx, "sh", "-c", cmd).Output(testexec.DumpLogOnError)
 	if err != nil {
 		return errors.Wrapf(err, "get device node of %s", mountPoint)
@@ -549,3 +549,272 @@ func CurrentTime(ctx context.Context, dut *dut.DUT) (time.Time, error) {
 	}
 	return t, err
 }
+<<<<<<< HEAD   (899802 Revert "fingerprint: Update and rename FpUpdater tast test")
+=======
+
+// FindDockingPowerPath returns the power_supply path of docking.
+func FindDockingPowerPath(ctx context.Context, dut *dut.DUT) (string, error) {
+	out, err := dut.Conn().CommandContext(ctx, "ls", "/sys/class/power_supply").Output(exec.DumpLogOnError)
+	if err != nil {
+		return "", errors.Wrap(err, "reterieve power supply")
+	}
+	powerChargers := strings.Split(strings.TrimSpace(string(out)), "\n")
+	for i := 0; i < len(powerChargers); i++ {
+		if !strings.Contains(powerChargers[i], "CROS_USBPD_CHARGER") {
+			continue
+		}
+		powerSupply := fmt.Sprintf("/sys/class/power_supply/%s/voltage_now", powerChargers[i])
+		out, err = dut.Conn().CommandContext(ctx, "sudo", "cat", powerSupply).Output()
+		if err != nil {
+			return "", errors.Wrap(err, "retrieve power voltage from DUT")
+		}
+		testing.ContextLogf(ctx, "voltage_now:%s", string(out))
+		if strings.TrimSpace(string(out)) == "0" {
+			return fmt.Sprint(powerChargers[i]), nil
+		}
+	}
+	return "", errors.New("can't find docking power path")
+}
+
+// VerifyDockingPower verifys the docking power > 45W.
+func VerifyDockingPower(ctx context.Context, dut *dut.DUT, powerPath string) error {
+	baseValue := 1000000
+	const powerWattage = 45
+	out, err := dut.Conn().CommandContext(ctx, "sudo", "cat", "/sys/class/power_supply/"+powerPath+"/current_max").Output()
+	if err != nil {
+		return errors.Wrap(err, "retrieve electric current from DUT")
+	}
+	currentMax, err := strconv.ParseFloat(strings.TrimSpace(string(out)), 64)
+	if err != nil {
+		return errors.Wrap(err, "converter electric current to float")
+	}
+	currentMax = currentMax / float64(baseValue)
+	out, err = dut.Conn().CommandContext(ctx, "sudo", "cat", "/sys/class/power_supply/"+powerPath+"/voltage_max_design").Output()
+	if err != nil {
+		return errors.Wrap(err, "retrieve voltage from DUT")
+	}
+	voltageMax, err := strconv.ParseFloat(strings.TrimSpace(string(out)), 64)
+	if err != nil {
+		return errors.Wrap(err, "converter voltage to float")
+	}
+	voltageMax = voltageMax / float64(baseValue)
+	power := voltageMax * currentMax
+	if power < powerWattage {
+		return errors.New("the power got:" + strconv.FormatFloat(power, 'f', -1, 64) + " want:" + strconv.Itoa(powerWattage))
+	}
+	return nil
+}
+
+// FindDeviceSpeed returns the device speed by lsusb -t.
+func FindDeviceSpeed(ctx context.Context, dut *dut.DUT, fixtureID string) (string, error) {
+	if err := ControlFixture(ctx, fixtureID, "off"); err != nil {
+		return "", errors.Wrapf(err, "disconnect from %s", fixtureID)
+	}
+	lsusbInfo := ""
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		lsusbInfoByte, err := dut.Conn().CommandContext(ctx, "lsusb", "-t").Output()
+		if err != nil {
+			return errors.Wrap(err, "execute lsusb -t command before connect fixture")
+		}
+		lsusbInfo = string(lsusbInfoByte)
+		return nil
+	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 2 * time.Second}); err != nil {
+		return "", errors.Wrap(err, "failed to find the usb info")
+	}
+
+	if err := ControlFixture(ctx, fixtureID, "on"); err != nil {
+		return "", errors.Wrapf(err, "connect to %s", fixtureID)
+	}
+
+	lsusbInfoBefore := strings.Split(strings.TrimSpace(string(lsusbInfo)), "\n")
+	speed := ""
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		lsusbInfoByte, err := dut.Conn().CommandContext(ctx, "lsusb", "-t").Output()
+		if err != nil {
+			return errors.Wrap(err, "execute lsusb -t command after connect fixture")
+		}
+		lsusbInfoAfter := strings.Split(strings.TrimSpace(string(lsusbInfoByte)), "\n")
+		exists := make(map[string]struct{})
+		for _, v := range lsusbInfoBefore {
+			exists[v] = struct{}{}
+		}
+		var diff []string
+		for _, v := range lsusbInfoAfter {
+			if _, ok := exists[v]; !ok {
+				diff = append(diff, v)
+			}
+		}
+		if len(diff) == 0 {
+			return errors.New("did not find new device")
+		}
+		for _, v := range diff {
+			lastCommaIndex := strings.LastIndex(v, ",")
+			substring := v[lastCommaIndex+1:]
+			if speed != "" && speed != substring {
+				return errors.Errorf("find the wrong speed, got:%s want:%s", speed, substring)
+			}
+			speed = substring
+		}
+
+		return nil
+	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 2 * time.Second}); err != nil {
+		return "", errors.Wrap(err, "did not find new device speed")
+	}
+	return speed, nil
+}
+
+// VerifyDeviceSpeed verifies the device speed is the same.
+func VerifyDeviceSpeed(ctx context.Context, dut *dut.DUT, fixtureID, expectDeviceSpeed string) error {
+	speed, err := FindDeviceSpeed(ctx, dut, fixtureID)
+	if err != nil {
+		return errors.Wrap(err, "can't find the device speed")
+	}
+	if speed != expectDeviceSpeed {
+		return errors.Errorf("got:%s want:%s", speed, expectDeviceSpeed)
+	}
+	return nil
+}
+
+// FindDockingConnectPort returns the docking connect port information.
+func FindDockingConnectPort(ctx context.Context, dut *dut.DUT, dockingID string) (string, error) {
+	if err := ControlFixture(ctx, dockingID, "off"); err != nil {
+		return "", errors.Wrap(err, "failed to connect to docking")
+	}
+	usbStatus, err := dut.Conn().CommandContext(ctx, "ectool", "usbpdmuxinfo").Output()
+	if err != nil {
+		return "", errors.Wrap(err, "execute ectool usbpdmuxinfo")
+	}
+	usbStatusBefore := strings.Split(strings.TrimSpace(string(usbStatus)), "\n")
+	if err := ControlFixture(ctx, dockingID, "on"); err != nil {
+		return "", errors.Wrap(err, "failed to connect to docking")
+	}
+	usbStatus, err = dut.Conn().CommandContext(ctx, "ectool", "usbpdmuxinfo").Output()
+	if err != nil {
+		return "", errors.Wrap(err, "execute ectool usbpdmuxinfo after connect to docking")
+	}
+	usbStatusAfter := strings.Split(strings.TrimSpace(string(usbStatus)), "\n")
+	exists := make(map[string]struct{})
+	for _, v := range usbStatusBefore {
+		exists[v] = struct{}{}
+	}
+	var diff []string
+	for _, v := range usbStatusAfter {
+		if _, ok := exists[v]; !ok {
+			diff = append(diff, v)
+		}
+	}
+	if len(diff) == 0 {
+		return "", errors.New("does not find docking connect status")
+	}
+	index := strings.Index(diff[0], ":")
+	return diff[0][:index], nil
+}
+
+// FindUSBConnectStatus returns the usb connect status.
+func FindUSBConnectStatus(ctx context.Context, dut *dut.DUT, dockingPort string) (string, error) {
+	usbStatus, err := dut.Conn().CommandContext(ctx, "sh", "-c", fmt.Sprintf("ectool usbpdmuxinfo | grep '%s'", dockingPort)).Output(exec.DumpLogOnError)
+	if err != nil {
+		return "", errors.Wrap(err, "execute ectool usbpdmuxinfo")
+	}
+
+	dockingStatus := strings.Split(string(usbStatus), " ")
+	TBT := strings.Replace(dockingStatus[len(dockingStatus)-2], "TBT=", "", -1)
+	USB4 := strings.Replace(dockingStatus[len(dockingStatus)-1], "USB4=", "", -1)
+	if USB4 == "1" {
+		return "USB4/TBT4", nil
+	}
+	if TBT == "1" {
+		return "TBT3", nil
+	}
+	return "USB3", nil
+}
+
+// FindEthernetSpeed returns the ethernet speed.
+func FindEthernetSpeed(ctx context.Context, dut *dut.DUT, eth string) (string, error) {
+	out, err := dut.Conn().CommandContext(ctx, "sh", "-c", fmt.Sprintf("ethtool %s | grep Speed", eth)).Output(exec.DumpLogOnError)
+	if err != nil {
+		return "", errors.Wrap(err, "check the ethernet speed")
+	}
+	return strings.TrimSpace(strings.Replace(string(out), "Speed: ", "", -1)), nil
+}
+
+// VerifyUSBTypeADeviceSpeed verifys the device speed is same.
+func VerifyUSBTypeADeviceSpeed(ctx context.Context, dut *dut.DUT, capFile string) error {
+	data, err := os.ReadFile(capFile)
+	if err != nil {
+		return errors.Wrap(err, "failed to read file")
+	}
+	cap := map[string]interface{}{}
+	if err := json.Unmarshal(data, &cap); err != nil {
+		return errors.Wrap(err, "failed to parse json")
+	}
+	usbDevices := cap["Downstream"].(map[string]interface{})["USB Type A"].(map[string]interface{})
+	for _, port := range usbDevices {
+		fixtureID := port.(map[string]interface{})["USBTypeAIDArray"].(string)
+		expectDeviceSpeed := port.(map[string]interface{})["Speed"].(string)
+		speed, err := FindDeviceSpeed(ctx, dut, fixtureID)
+		if err != nil {
+			return errors.Wrap(err, "can't find the device speed")
+		}
+		if speed != expectDeviceSpeed {
+			return errors.Errorf("got:%s want:%s", speed, expectDeviceSpeed)
+		}
+	}
+	return nil
+}
+
+// VerifyDockingInterface verifies the docking interface is the same as the one in the capabilites.json file.
+func VerifyDockingInterface(ctx context.Context, dut *dut.DUT, dockingID, capFile string) error {
+	dockingPort, err := FindDockingConnectPort(ctx, dut, dockingID)
+	if err != nil {
+		return errors.Wrap(err, "failed to find the docking port")
+	}
+	testing.ContextLog(ctx, "Found the docking port: ", dockingPort)
+	dockingInterface, err := FindUSBConnectStatus(ctx, dut, dockingPort)
+	if err != nil {
+		return errors.Wrap(err, "failed to find the docking interface")
+	}
+	testing.ContextLog(ctx, "Found the docking status: ", dockingInterface)
+	data, err := os.ReadFile(capFile)
+	if err != nil {
+		return errors.Wrap(err, "failed to read file")
+	}
+	cap := map[string]interface{}{}
+	if err := json.Unmarshal(data, &cap); err != nil {
+		return errors.Wrap(err, "failed to parse json")
+	}
+	expectedValue := cap["Upstream"].(map[string]interface{})["Interface"]
+	if dockingInterface != expectedValue {
+		return errors.Errorf("failed to check the docking interface is different with the input value: got: %q, expected: %q", dockingInterface, expectedValue)
+	}
+	return nil
+}
+
+// RemovableMountPoints should retrieve the list of mount points that have removable in its location
+func RemovableMountPoints(ctx context.Context, dut *dut.DUT) ([]string, error) {
+	var mountPoints []string
+
+	nonPollingError := false
+	// Runs lsblk and parses it for removable mount points, the only failure is if the lsblk command itself fails; not finding any matches is an acceptable result
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		lsblkOutput, err := dut.Conn().CommandContext(ctx, "sh", "-c", "lsblk -l -o mountpoint").Output(testexec.DumpLogOnError)
+		if err != nil {
+			nonPollingError = true
+			return testing.PollBreak(errors.Wrap(err, "received an incorrect result when using lsblk in the command"))
+		}
+		lines := strings.Split(strings.TrimSpace(string(lsblkOutput)), "\n")
+		for _, line := range lines {
+			if strings.Contains(line, "removable") {
+				mountPoints = append(mountPoints, line)
+			}
+		}
+		if mountPoints != nil {
+			return nil
+		}
+		return errors.New("Have not found removable mount points")
+	}, &testing.PollOptions{Timeout: 30 * time.Second, Interval: 1 * time.Second}); nonPollingError == true {
+		return nil, err
+	}
+	return mountPoints, nil
+}
+>>>>>>> CHANGE (07cbc2 Correctly get mount points of intended device)
