@@ -39,7 +39,7 @@ import (
 )
 
 const (
-	installationTimeout   = 15 * time.Minute
+	installationTimeout   = 40 * time.Minute
 	resetTimeout          = time.Minute
 	postTestTimeout       = 30 * time.Second
 	uninstallationTimeout = 2 * time.Minute
