@@ -68,10 +68,12 @@ func ExternalStorageEject(ctx context.Context, s *testing.State) {
 		}
 	}(ctx)
 
-	mountPointsBeforePlugInUSB, err := utils.GetMountPoints(ctx, dut)
-	if err == nil {
-		s.Fatal("Failed to ensure no USB devices appeared: ", err)
+	mountPointsBeforePlugInUSB, err := utils.RemovableMountPoints(ctx, dut)
+	if err != nil {
+		s.Fatal("Failed to get mount points prior to plugging in USB devices: ", err)
 	}
+
+	s.Log("Following mount points were found prior to plugging in USB devices: ", mountPointsBeforePlugInUSB)
 
 	// Plug in the USB devices.
 	if err := utils.ControlFixture(ctx, USBID, "on"); err != nil {
@@ -99,9 +101,12 @@ func ExternalStorageEject(ctx context.Context, s *testing.State) {
 	defer cs.Close(cleanupCtx, &empty.Empty{})
 
 	// Retrieve removable block devices' mount points.
-	if _, err = utils.GetMountPoints(ctx, dut); err != nil {
+	mountPointsAfterPlugInUSB, err := utils.RemovableMountPoints(ctx, dut)
+	if err != nil {
 		s.Fatal("Failed to get USB devices after sign-in account: ", err)
 	}
+
+	s.Log("Following mount points were found after plugging in USB devices: ", mountPointsAfterPlugInUSB)
 
 	// Eject all removable block devices.
 	externalStorageSvc := wwcb.NewExternalStorageServiceClient(cl.Conn)

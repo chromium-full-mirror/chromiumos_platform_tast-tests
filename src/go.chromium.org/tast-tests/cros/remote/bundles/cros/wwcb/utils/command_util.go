@@ -373,7 +373,7 @@ func Contains(list []string, s string) bool {
 // FormatStorageToFAT formats the specified storage to FAT format.
 func FormatStorageToFAT(ctx context.Context, mountPoint string, dut *dut.DUT, fs *dutfs.Client) error {
 	// Get the device node.
-	cmd := fmt.Sprintf("df | grep '%s' | awk '{print $1}'", mountPoint)
+	cmd := fmt.Sprintf("df | grep '%s'$ | awk '{print $1}'", mountPoint)
 	deviceNode, err := dut.Conn().CommandContext(ctx, "sh", "-c", cmd).Output(testexec.DumpLogOnError)
 	if err != nil {
 		return errors.Wrapf(err, "get device node of %s", mountPoint)
@@ -794,4 +794,32 @@ func VerifyDockingInterface(ctx context.Context, dut *dut.DUT, dockingID, capFil
 		return errors.Errorf("failed to check the docking interface is different with the input value: got: %q, expected: %q", dockingInterface, expectedValue)
 	}
 	return nil
+}
+
+// RemovableMountPoints should retrieve the list of mount points that have removable in its location
+func RemovableMountPoints(ctx context.Context, dut *dut.DUT) ([]string, error) {
+	var mountPoints []string
+
+	nonPollingError := false
+	// Runs lsblk and parses it for removable mount points, the only failure is if the lsblk command itself fails; not finding any matches is an acceptable result
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		lsblkOutput, err := dut.Conn().CommandContext(ctx, "sh", "-c", "lsblk -l -o mountpoint").Output(testexec.DumpLogOnError)
+		if err != nil {
+			nonPollingError = true
+			return testing.PollBreak(errors.Wrap(err, "received an incorrect result when using lsblk in the command"))
+		}
+		lines := strings.Split(strings.TrimSpace(string(lsblkOutput)), "\n")
+		for _, line := range lines {
+			if strings.Contains(line, "removable") {
+				mountPoints = append(mountPoints, line)
+			}
+		}
+		if mountPoints != nil {
+			return nil
+		}
+		return errors.New("Have not found removable mount points")
+	}, &testing.PollOptions{Timeout: 30 * time.Second, Interval: 1 * time.Second}); nonPollingError == true {
+		return nil, err
+	}
+	return mountPoints, nil
 }
