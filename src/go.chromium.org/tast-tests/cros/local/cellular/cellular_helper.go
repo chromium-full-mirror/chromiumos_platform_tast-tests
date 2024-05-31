@@ -777,6 +777,8 @@ func (h *Helper) resetShill(ctx context.Context, path string) []error {
 			return append(errs, errors.Wrap(err, "failed to copy default profile file"))
 		}
 	}
+	// GoBigSleepLint: TODO(b/340051988): prevent shill from starting before the previous disable command is finished.
+	testing.Sleep(ctx, 3*time.Second)
 	if err := upstart.RestartJob(ctx, shill.JobName, GetShillUpstartArgsForVerboseLogging()...); err != nil {
 		// No more can be done if shill doesn't start
 		return append(errs, errors.Wrap(err, "failed to restart shill"))
