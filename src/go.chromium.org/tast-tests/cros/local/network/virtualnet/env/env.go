@@ -52,6 +52,7 @@ type Env struct {
 	netJailArgs  []string
 	netnsCreated bool
 	servers      map[string]server
+	tcpdumpCmd   *testexec.Cmd
 }
 
 // A server represents a process (or processes for the same functionality)
@@ -126,6 +127,10 @@ func (e *Env) SetUp(ctx context.Context) error {
 		return errors.Wrap(err, "failed to create and connect to netns")
 	}
 
+	if err := e.startPacketCapture(ctx); err != nil {
+		return errors.Wrap(err, "failed to start packet capture")
+	}
+
 	success = true
 	return nil
 }
@@ -158,6 +163,10 @@ func (e *Env) Cleanup(ctx context.Context) error {
 		if err := server.WriteLogs(ctx, f); err != nil {
 			updateLastErrAndLog(errors.Wrapf(err, "failed to write logs for server %s in %s", serverName, e.name))
 		}
+	}
+
+	if err := e.stopPacketCapture(ctx); err != nil {
+		updateLastErrAndLog(errors.Wrapf(err, "failed to stop packet capture in netns %s", e.NetNSName))
 	}
 
 	// Remove veth interface and the netns.
@@ -503,6 +512,39 @@ func (e *Env) makeNetNS(ctx context.Context) error {
 		return errors.Wrapf(err, "failed to enable interface %s", e.VethInName)
 	}
 
+	return nil
+}
+
+func (e *Env) startPacketCapture(ctx context.Context) error {
+	dir, ok := testing.ContextOutDir(ctx)
+	if !ok {
+		return errors.New("failed to get ContextOutDir")
+	}
+
+	logPath := filepath.Join(dir, e.NetNSName+".pcap")
+	cmd := e.CreateCommandWithoutChroot(ctx,
+		"tcpdump",
+		"-i", e.VethInName, // only do capture on the main interface, to make the result easier to read
+		"-s100", // truncate the packet to reduce the size of the dump file
+		"-w", logPath)
+	if err := cmd.Start(); err != nil {
+		return err
+	}
+
+	e.tcpdumpCmd = cmd
+	return nil
+}
+
+func (e *Env) stopPacketCapture(ctx context.Context) error {
+	if e.tcpdumpCmd == nil {
+		return nil
+	}
+
+	if err := e.tcpdumpCmd.Kill(); err != nil {
+		return errors.Wrap(err, "failed to send SIGKILL to the tcpdump process")
+	}
+
+	e.tcpdumpCmd.Wait()
 	return nil
 }
 
