@@ -174,6 +174,19 @@ func TPMNotCorruptedDevMode(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to sleep for %v s: %v", firmware.UsbDisableTime, err)
 	}
 
+	// On KeyboardDevSwitcher machines, pressing space triggers the
+	// to_norm screen. Revert to the developer screen with the
+	// esc key.
+	if h.Config.ModeSwitcherType == firmware.KeyboardDevSwitcher {
+		if err := h.Servo.PressKey(ctx, "<esc>", servo.DurTab); err != nil {
+			s.Fatal("Failed to press esc: ", err)
+		}
+		// GoBigSleepLint: Sleep for model specific time.
+		if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
+			s.Fatalf("Failed to sleep for %s (KeypressDelay): %v", h.Config.KeypressDelay, err)
+		}
+	}
+
 	ms, err := firmware.NewModeSwitcher(ctx, h)
 	if err != nil {
 		s.Fatal("Creating mode switcher: ", err)
