@@ -89,6 +89,7 @@ func init() {
 		Name:            BruschettaFixture,
 		Desc:            "Set up reference VM",
 		Contacts:        []string{"clumptini+oncall@google.com"},
+		BugComponent:    "b:658562", // ChromeOS > Software > GuestOS
 		Impl:            &bruschettaFixture{},
 		SetUpTimeout:    installationTimeout + uninstallationTimeout,
 		ResetTimeout:    resetTimeout,
@@ -101,6 +102,7 @@ func init() {
 		Name:            BruschettaFixtureClamshell,
 		Desc:            "Set up reference VM in clamshell mode",
 		Contacts:        []string{"clumptini+oncall@google.com"},
+		BugComponent:    "b:658562", // ChromeOS > Software > GuestOS
 		Impl:            &bruschettaAppsFixture{deviceMode: devicemode.ClamshellMode},
 		SetUpTimeout:    installationTimeout + uninstallationTimeout,
 		ResetTimeout:    resetTimeout,
@@ -113,6 +115,7 @@ func init() {
 		Name:            BruschettaFixtureWithLacros,
 		Desc:            "Set up reference VM with Lacros",
 		Contacts:        []string{"clumptini+oncall@google.com"},
+		BugComponent:    "b:658562", // ChromeOS > Software > GuestOS
 		Impl:            &bruschettaFixture{},
 		SetUpTimeout:    installationTimeout + uninstallationTimeout,
 		ResetTimeout:    resetTimeout,
@@ -125,6 +128,7 @@ func init() {
 		Name:            BruschettaFixtureWithFieldtrialConfig,
 		Desc:            "Set up reference VM with fieldtrial config enabled",
 		Contacts:        []string{"clumptini+oncall@google.com"},
+		BugComponent:    "b:658562", // ChromeOS > Software > GuestOS
 		Impl:            &bruschettaFixture{},
 		SetUpTimeout:    installationTimeout + uninstallationTimeout,
 		ResetTimeout:    resetTimeout,
