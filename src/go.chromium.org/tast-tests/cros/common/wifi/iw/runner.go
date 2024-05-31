@@ -1654,7 +1654,7 @@ func (r *Runner) MLOLinks(ctx context.Context, iface string) (map[int]string, in
 // allMLOLinks parses MLO `link` output into mapping from link ID to BSSID.
 func allMLOLinks(out string) (map[int]string, error) {
 	kv := make(map[int]string)
-	r := regexp.MustCompile(`^Link (\d+) BSSID ([0-9a-fA-F:]{17})$`)
+	r := regexp.MustCompile(`Link (\d+) BSSID ([0-9a-fA-F:]{17})$`)
 	for _, line := range strings.Split(out, "\n") {
 		m := r.FindStringSubmatch(line)
 		if m != nil {
@@ -1670,7 +1670,7 @@ func allMLOLinks(out string) (map[int]string, error) {
 
 // ehtNSS parses `link` output and reads EHT NSS value.
 func ehtNSS(out string) (int, error) {
-	r := regexp.MustCompile(`^tx bitrate:.*EHT-NSS (\d+)`)
+	r := regexp.MustCompile(`tx bitrate:.*EHT-NSS (\d+)`)
 	for _, line := range strings.Split(out, "\n") {
 		m := r.FindStringSubmatch(line)
 		if m != nil {
@@ -1681,5 +1681,5 @@ func ehtNSS(out string) (int, error) {
 			return nss, nil
 		}
 	}
-	return 0, errors.New("failed to find EHT-NSS info")
+	return 0, errors.Errorf("failed to find EHT-NSS info: %s", out)
 }
