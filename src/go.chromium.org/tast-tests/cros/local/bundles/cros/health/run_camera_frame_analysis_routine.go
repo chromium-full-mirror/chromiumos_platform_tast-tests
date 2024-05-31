@@ -8,11 +8,13 @@ package health
 
 import (
 	"context"
+	"strconv"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/camera/cca"
 	"go.chromium.org/tast-tests/cros/local/camera/testutil"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/crosconfig"
 	"go.chromium.org/tast-tests/cros/local/croshealthd"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/ctxutil"
@@ -35,39 +37,59 @@ func init() {
 	})
 }
 
+func getCameraCount(ctx context.Context) (int, error) {
+	str, err := crosconfig.Get(ctx, "/camera", "count")
+	if err != nil {
+		if crosconfig.IsNotFound(err) {
+			return 0, nil
+		}
+		return 0, err
+	}
+	return strconv.Atoi(str)
+}
+
 func buildCameraFrameAnalysisRoutineArgs(ctx context.Context) ([]string, error) {
 	return []string{"camera_frame_analysis"}, nil
 }
 
 func RunCameraFrameAnalysisRoutine(ctx context.Context, s *testing.State) {
-	if err := upstart.EnsureJobRunning(ctx, "cros-camera-diagnostics"); err != nil {
-		s.Fatal("Failed to ensure the cros-camera-diagnostics service is running: ", err)
-	}
-
-	cr, err := chrome.New(ctx, chrome.GuestLogin())
+	cameraCount, err := getCameraCount(ctx)
 	if err != nil {
-		s.Fatal("Failed to start chrome: ", err)
+		s.Fatal("Failed to get camera count: ", err)
 	}
 
-	ctxForCleanUpTb := ctx
-	ctx, cancelCleanUpTb := ctxutil.Shorten(ctx, 5*time.Second)
-	defer cancelCleanUpTb()
+	if cameraCount != 0 {
+		if err := upstart.EnsureJobRunning(ctx, "cros-camera-diagnostics"); err != nil {
+			s.Fatal("Failed to ensure the cros-camera-diagnostics service is running: ", err)
+		}
 
-	tb, err := testutil.NewTestBridge(ctx, cr, testutil.UseRealCamera)
-	if err != nil {
-		s.Fatal("Failed to construct camera test bridge: ", err)
+		cr, err := chrome.New(ctx, chrome.GuestLogin())
+		if err != nil {
+			s.Fatal("Failed to start chrome: ", err)
+		}
+
+		ctxForCleanUpTb := ctx
+		ctx, cancelCleanUpTb := ctxutil.Shorten(ctx, 5*time.Second)
+		defer cancelCleanUpTb()
+
+		tb, err := testutil.NewTestBridge(ctx, cr, testutil.UseRealCamera)
+		if err != nil {
+			s.Fatal("Failed to construct camera test bridge: ", err)
+		}
+		defer tb.TearDown(ctxForCleanUpTb)
+
+		ctxForCleanUpApp := ctx
+		ctx, cancelCleanUpApp := ctxutil.Shorten(ctx, 5*time.Second)
+		defer cancelCleanUpApp()
+
+		app, err := cca.New(ctx, cr, s.OutDir(), tb)
+		if err != nil {
+			s.Fatal("Failed to start CCA: ", err)
+		}
+		defer app.Close(ctxForCleanUpApp)
+	} else {
+		testing.ContextLog(ctx, "Skip opening cameras due to no builtin cameras")
 	}
-	defer tb.TearDown(ctxForCleanUpTb)
-
-	ctxForCleanUpApp := ctx
-	ctx, cancelCleanUpApp := ctxutil.Shorten(ctx, 5*time.Second)
-	defer cancelCleanUpApp()
-
-	app, err := cca.New(ctx, cr, s.OutDir(), tb)
-	if err != nil {
-		s.Fatal("Failed to start CCA: ", err)
-	}
-	defer app.Close(ctxForCleanUpApp)
 
 	config := croshealthd.RoutineTestingConfigV2{
 		ArgsBuilder:    buildCameraFrameAnalysisRoutineArgs,
