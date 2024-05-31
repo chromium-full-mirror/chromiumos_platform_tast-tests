@@ -7,7 +7,9 @@ package power
 import (
 	"bufio"
 	"context"
+	"fmt"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -41,6 +43,9 @@ var (
 	octopusFilteredModels = []string{"foob", "foob360"}
 
 	allFilteredModels = append(append(nofwupdFilteredModels, namiFilteredModels...), octopusFilteredModels...)
+
+	// For Intel S0ix debugging
+	substateRequirementsPath = "/sys/kernel/debug/pmc_core/substate_requirements"
 )
 
 type fwupdMode int
@@ -178,6 +183,38 @@ func startEvTestLogging(ctx context.Context, s *testing.State) (func(), error) {
 	return stopCallback, nil
 }
 
+func setupSubstateRequirements(ctx context.Context, s *testing.State) (bool, string, error) {
+	var hasSubstateRequirements = false
+	var pmcCoreDir = filepath.Join(s.OutDir(), "pmc_core")
+	if _, err := os.Stat(substateRequirementsPath); err == nil {
+		hasSubstateRequirements = true
+		if err = os.MkdirAll(pmcCoreDir, 0755); err != nil {
+			testing.ContextLogf(ctx, "Could not create %s: %v", pmcCoreDir, err)
+			return false, pmcCoreDir, err
+		}
+	} else {
+		testing.ContextLogf(ctx, "stat(%s): %v", substateRequirementsPath, err)
+		return false, pmcCoreDir, nil
+	}
+	return hasSubstateRequirements, pmcCoreDir, nil
+}
+
+func saveSubstateRequirements(ctx context.Context, s *testing.State, outdir string, i int) error {
+	outFileName := filepath.Join(outdir, fmt.Sprintf("substate_requirements.%d", i))
+	reqs, err := ioutil.ReadFile(substateRequirementsPath)
+	if err != nil {
+		testing.ContextLog(ctx, "Could not read "+substateRequirementsPath)
+		return err
+	}
+
+	if err = ioutil.WriteFile(outFileName, reqs, 0644); err != nil {
+		testing.ContextLogf(ctx, "Failed to write %s: %v", outFileName, err)
+		return err
+	}
+
+	return nil
+}
+
 // Suspend suspends the DUT and wakes again. If the suspend fails, an
 // error is returned. If the resume fails, the DUT may stay suspended
 // indefinitely, causing the test infrastucture to mark the test as failed.
@@ -219,9 +256,22 @@ func Suspend(ctx context.Context, s *testing.State) {
 	}
 	defer stopEvtest()
 
-	for i := 0; i < params.Iterations; i++ {
-		testing.ContextLogf(ctx, "Suspend %d of %d", i+1, params.Iterations)
-		if _, err = suspend.ForDurationWithKernelFreezeTimeout(ctx, 10*time.Second, 8*time.Second); err != nil {
+	hasSubstateRequirements, reqsOutDir, err := setupSubstateRequirements(ctx, s)
+	if err != nil {
+		s.Fatalf("Couldn't create %s for substate_requirements: %v", reqsOutDir, err)
+	}
+
+	for i := 1; i <= params.Iterations; i++ {
+		testing.ContextLogf(ctx, "Suspend %d of %d", i, params.Iterations)
+		_, err := suspend.ForDurationWithKernelFreezeTimeout(ctx, 10*time.Second, 8*time.Second)
+
+		if hasSubstateRequirements {
+			if err := saveSubstateRequirements(ctx, s, reqsOutDir, i); err != nil {
+				s.Fatal("Couldn't save subsate_requirements: ", err)
+			}
+		}
+
+		if err != nil {
 			s.Fatal("Failed to suspend: ", err)
 		}
 	}
