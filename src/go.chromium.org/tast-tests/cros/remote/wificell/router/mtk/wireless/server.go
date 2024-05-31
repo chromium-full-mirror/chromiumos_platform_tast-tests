@@ -97,7 +97,7 @@ func (s *Server) initConfig(ctx context.Context) error {
 			s.uci.Set(ctx, uci.ConfigWireless, device.Name, "disabled", "1", quietFlag)
 		}
 		s.uci.Set(ctx, uci.ConfigWireless, device.Name, "band", device.Band, quietFlag)
-		s.uci.Set(ctx, uci.ConfigWireless, device.Name, "htmode", device.HtMode, quietFlag)
+		s.uci.Set(ctx, uci.ConfigWireless, device.Name, "htmode", string(device.HtMode), quietFlag)
 		if device.Country != "" {
 			s.uci.Set(ctx, uci.ConfigWireless, device.Name, "country", device.Country, quietFlag)
 		}
