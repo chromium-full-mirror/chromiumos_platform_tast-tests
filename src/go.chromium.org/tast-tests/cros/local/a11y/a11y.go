@@ -48,6 +48,14 @@ const (
 // "Long-string-to-test-select-to-speak".
 const ReadOnlyGoogleDocURL string = "https://docs.google.com/document/d/1qpu3koSIHpBzQbxeEE-dofSKXCIgdc4yJLI-o1LpCPs/view"
 
+// SetFaceGazeEnabled enables the FaceGaze accessibility feature using the
+// settings private extension API. The reason we need this is that FaceGaze is
+// still in development and hasn't been added to the accessibility features API,
+// which is used below to control other accessibility features.
+func SetFaceGazeEnabled(ctx context.Context, tconn *chrome.TestConn, enabled bool) error {
+	return tconn.Call(ctx, nil, "tast.promisify(chrome.settingsPrivate.setPref)", "settings.a11y.face_gaze.enabled", enabled)
+}
+
 // SetFeatureEnabled forcibly enables/disables the specified accessibility
 // feature using the provided connection to the extension.
 // NOTE: This can have the side effect of disabling UI elements such as toggles
@@ -104,6 +112,16 @@ func NewTabWithURL(ctx context.Context, br *browser.Browser, url string) (*brows
 	}
 
 	return c, nil
+}
+
+// VerifyFaceGazeAssetsInstalled checks if the facegaze-assets dlc is installed.
+func VerifyFaceGazeAssetsInstalled(ctxt context.Context) error {
+	const facegazeMount = "/run/imageloader/facegaze-assets/package/root"
+	if _, err := os.Stat(facegazeMount); err != nil {
+		return errors.Wrap(err, "dlc facegaze-assets is not installed")
+	}
+
+	return nil
 }
 
 // VerifySodaInstalled checks if dlc libsoda and libsoda-model-en-us are installed.
