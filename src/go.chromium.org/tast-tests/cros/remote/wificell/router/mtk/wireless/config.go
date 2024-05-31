@@ -4,8 +4,16 @@
 
 package wireless
 
+// DefaultGatewayIP is the default IP address of the gateway
+const DefaultGatewayIP = "192.168.1.1"
+
 // Constants for phy, wifi-device, wifi-iface, wifi-mld on MTK router
 const (
+	// WiFi bands
+	WiFiBand2G = "2.4G"
+	WiFiBand5G = "5G"
+	WiFiBand6G = "6G"
+
 	// WiFi phy
 	WiFiPhy2G = "phy0"
 	WiFiPhy5G = "phy1"
@@ -25,6 +33,16 @@ const (
 
 	// WiFiMld struct
 	WiFiMld = "wifi-mld"
+)
+
+// Default WiFiDevice, WiFiIface configs
+var (
+	WifiDeviceConfig2G = DeviceConfig{Name: WiFiDevice2G, Channel: 1, Disabled: false, Band: WiFiBand2G, Country: "US", HtMode: "EHT40", HtCoex: true}
+	WifiDeviceConfig5G = DeviceConfig{Name: WiFiDevice5G, Channel: 36, Disabled: false, Band: WiFiBand5G, Country: "US", HtMode: "EHT160"}
+	WifiDeviceConfig6G = DeviceConfig{Name: WiFiDevice6G, Channel: 5, Disabled: false, Band: WiFiBand6G, Country: "US", HtMode: "EHT320"}
+	WifiIfaceConfig2G  = IfaceConfig{Name: WiFiIface2G, Disabled: false, Device: WiFiDevice2G, Network: "lan", Mode: "ap", Ieee80211w: 1}
+	WifiIfaceConfig5G  = IfaceConfig{Name: WiFiIface5G, Disabled: false, Device: WiFiDevice5G, Network: "lan", Mode: "ap", Ieee80211w: 1}
+	WifiIfaceConfig6G  = IfaceConfig{Name: WiFiIface6G, Disabled: false, Device: WiFiDevice6G, Network: "lan", Mode: "ap", Ieee80211w: 1}
 )
 
 // DeviceConfig is the configuration to start hostapd on a router.

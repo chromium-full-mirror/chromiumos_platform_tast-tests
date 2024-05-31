@@ -109,7 +109,9 @@ func (s *Server) initConfig(ctx context.Context) error {
 	// Init wifi-iface configs
 	for _, iface := range s.config.IfaceConfigs {
 		s.uci.Set(ctx, uci.ConfigWireless, iface.Name, "", WiFiIface, quietFlag)
-		s.uci.Set(ctx, uci.ConfigWireless, iface.Name, "vifIdx", strconv.Itoa(iface.VifIdx), quietFlag)
+		if iface.VifIdx > 0 {
+			s.uci.Set(ctx, uci.ConfigWireless, iface.Name, "vifidx", strconv.Itoa(iface.VifIdx), quietFlag)
+		}
 		s.uci.Set(ctx, uci.ConfigWireless, iface.Name, "device", iface.Device, quietFlag)
 		s.uci.Set(ctx, uci.ConfigWireless, iface.Name, "network", iface.Network, quietFlag)
 		if iface.Disabled {

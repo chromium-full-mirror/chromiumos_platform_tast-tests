@@ -29,15 +29,6 @@ type mloSimpleConnectTestcase struct {
 	expectedSecurity string
 }
 
-var (
-	wifiDeviceConfig2G = wireless.DeviceConfig{Name: wireless.WiFiDevice2G, Channel: 1, Disabled: false, Band: "2.4G", Country: "US", HtMode: "EHT40", HtCoex: true}
-	wifiDeviceConfig5G = wireless.DeviceConfig{Name: wireless.WiFiDevice5G, Channel: 36, Disabled: false, Band: "5G", Country: "US", HtMode: "EHT160"}
-	wifiDeviceConfig6G = wireless.DeviceConfig{Name: wireless.WiFiDevice6G, Channel: 5, Disabled: false, Band: "6G", Country: "US", HtMode: "EHT320"}
-	wifiIfaceConfig2G  = wireless.IfaceConfig{Name: wireless.WiFiIface2G, Disabled: false, VifIdx: 1, Device: wireless.WiFiDevice2G, Network: "lan", Mode: "ap", Ieee80211w: 2}
-	wifiIfaceConfig5G  = wireless.IfaceConfig{Name: wireless.WiFiIface5G, Disabled: false, VifIdx: 1, Device: wireless.WiFiDevice5G, Network: "lan", Mode: "ap", Ieee80211w: 2}
-	wifiIfaceConfig6G  = wireless.IfaceConfig{Name: wireless.WiFiIface6G, Disabled: false, VifIdx: 1, Device: wireless.WiFiDevice6G, Network: "lan", Mode: "ap", Ieee80211w: 2}
-)
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: MLOSimpleConnect,
@@ -58,10 +49,10 @@ func init() {
 				Fixture: wificell.FixtureID(wificell.TFFeaturesNone),
 				Val: mloSimpleConnectTestcase{
 					apConfig: wireless.Config{
-						DeviceConfigs: []wireless.DeviceConfig{wifiDeviceConfig2G, wifiDeviceConfig5G, wifiDeviceConfig6G},
-						IfaceConfigs:  []wireless.IfaceConfig{wifiIfaceConfig2G, wifiIfaceConfig5G, wifiIfaceConfig6G},
+						DeviceConfigs: []wireless.DeviceConfig{wireless.WifiDeviceConfig2G, wireless.WifiDeviceConfig5G, wireless.WifiDeviceConfig6G},
+						IfaceConfigs:  []wireless.IfaceConfig{wireless.WifiIfaceConfig2G, wireless.WifiIfaceConfig5G, wireless.WifiIfaceConfig6G},
 						MldConfigs: []wireless.MldConfig{{Name: "apmld1", Disabled: false, Mode: "ap", Ifaces: []string{wireless.WiFiIface2G, wireless.WiFiIface5G},
-							SSID: hostapd.RandomSSID("MLO_"), Encryption: "sae", Key: "chromeos", Ieee80211w: 2}},
+							SSID: hostapd.RandomSSID("MLO_"), Encryption: "sae", Key: "chromeos", Ieee80211w: 1}},
 					},
 					secConfFac:       wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					expectedSecurity: shillconst.SecurityWPA3,
@@ -74,10 +65,10 @@ func init() {
 				Fixture: wificell.FixtureID(wificell.TFFeaturesNone),
 				Val: mloSimpleConnectTestcase{
 					apConfig: wireless.Config{
-						DeviceConfigs: []wireless.DeviceConfig{wifiDeviceConfig2G, wifiDeviceConfig5G, wifiDeviceConfig6G},
-						IfaceConfigs:  []wireless.IfaceConfig{wifiIfaceConfig2G, wifiIfaceConfig5G, wifiIfaceConfig6G},
+						DeviceConfigs: []wireless.DeviceConfig{wireless.WifiDeviceConfig2G, wireless.WifiDeviceConfig5G, wireless.WifiDeviceConfig6G},
+						IfaceConfigs:  []wireless.IfaceConfig{wireless.WifiIfaceConfig2G, wireless.WifiIfaceConfig5G, wireless.WifiIfaceConfig6G},
 						MldConfigs: []wireless.MldConfig{{Name: "apmld1", Disabled: false, Mode: "ap", Ifaces: []string{wireless.WiFiIface2G, wireless.WiFiIface6G},
-							SSID: hostapd.RandomSSID("MLO_"), Encryption: "sae", Key: "chromeos", Ieee80211w: 2}},
+							SSID: hostapd.RandomSSID("MLO_"), Encryption: "sae", Key: "chromeos", Ieee80211w: 1}},
 					},
 					secConfFac:       wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					expectedSecurity: shillconst.SecurityWPA3,
@@ -90,10 +81,10 @@ func init() {
 				Fixture: wificell.FixtureID(wificell.TFFeaturesNone),
 				Val: mloSimpleConnectTestcase{
 					apConfig: wireless.Config{
-						DeviceConfigs: []wireless.DeviceConfig{wifiDeviceConfig2G, wifiDeviceConfig5G, wifiDeviceConfig6G},
-						IfaceConfigs:  []wireless.IfaceConfig{wifiIfaceConfig2G, wifiIfaceConfig5G, wifiIfaceConfig6G},
+						DeviceConfigs: []wireless.DeviceConfig{wireless.WifiDeviceConfig2G, wireless.WifiDeviceConfig5G, wireless.WifiDeviceConfig6G},
+						IfaceConfigs:  []wireless.IfaceConfig{wireless.WifiIfaceConfig2G, wireless.WifiIfaceConfig5G, wireless.WifiIfaceConfig6G},
 						MldConfigs: []wireless.MldConfig{{Name: "apmld1", Disabled: false, Mode: "ap", Ifaces: []string{wireless.WiFiIface5G, wireless.WiFiIface6G},
-							SSID: hostapd.RandomSSID("MLO_"), Encryption: "sae", Key: "chromeos", Ieee80211w: 2}},
+							SSID: hostapd.RandomSSID("MLO_"), Encryption: "sae", Key: "chromeos", Ieee80211w: 1}},
 					},
 					secConfFac:       wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					expectedSecurity: shillconst.SecurityWPA3,
@@ -106,10 +97,10 @@ func init() {
 				Fixture: wificell.FixtureID(wificell.TFFeaturesNone),
 				Val: mloSimpleConnectTestcase{
 					apConfig: wireless.Config{
-						DeviceConfigs: []wireless.DeviceConfig{wifiDeviceConfig2G, wifiDeviceConfig5G, wifiDeviceConfig6G},
-						IfaceConfigs:  []wireless.IfaceConfig{wifiIfaceConfig2G, wifiIfaceConfig5G, wifiIfaceConfig6G},
+						DeviceConfigs: []wireless.DeviceConfig{wireless.WifiDeviceConfig2G, wireless.WifiDeviceConfig5G, wireless.WifiDeviceConfig6G},
+						IfaceConfigs:  []wireless.IfaceConfig{wireless.WifiIfaceConfig2G, wireless.WifiIfaceConfig5G, wireless.WifiIfaceConfig6G},
 						MldConfigs: []wireless.MldConfig{{Name: "apmld1", Disabled: false, Mode: "ap", Ifaces: []string{wireless.WiFiIface2G, wireless.WiFiIface5G, wireless.WiFiIface6G},
-							SSID: hostapd.RandomSSID("MLO_"), Encryption: "sae", Key: "chromeos", Ieee80211w: 2}},
+							SSID: hostapd.RandomSSID("MLO_"), Encryption: "sae", Key: "chromeos", Ieee80211w: 1}},
 					},
 					secConfFac:       wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					expectedSecurity: shillconst.SecurityWPA3,
@@ -121,7 +112,6 @@ func init() {
 }
 
 func MLOSimpleConnect(ctx context.Context, s *testing.State) {
-	const defaultGatewayIP = "192.168.1.1"
 	tf := s.FixtValue().(*wificell.TestFixture)
 	tc := s.Param().(mloSimpleConnectTestcase)
 	rt, ok := tf.Router().(*mtk.Router)
@@ -181,7 +171,7 @@ func MLOSimpleConnect(ctx context.Context, s *testing.State) {
 	s.Logf("EHT NSS is %d", nss)
 
 	ping := func(ctx context.Context) error {
-		return tf.PingFromDUT(ctx, defaultGatewayIP)
+		return tf.PingFromDUT(ctx, wireless.DefaultGatewayIP)
 	}
 	if err := tf.AssertNoDisconnect(ctx, wificell.DefaultDUT, ping); err != nil {
 		s.Fatal("Failed to ping from DUT, err: ", err)
