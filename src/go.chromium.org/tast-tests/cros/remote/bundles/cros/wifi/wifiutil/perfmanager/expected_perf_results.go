@@ -22,6 +22,9 @@ The expected throughput values depend on the following parameters:
 1- The router type:
 	a) LegacyT
 	b) OpenWrtT
+	c) UbuntuT
+	d) SoftAPT
+	e) MtkOpenWrtT
 2- The test type:
 	a) TCP_TX
 	b) TCP_RX
@@ -545,6 +548,226 @@ var expectedThroughputWiFi = map[routerSupport.RouterType]map[TestType]map[ap.Mo
 		TestTypeUDPRxSmall: {
 			ap.Mode80211axMixed: {
 				ap.ChWidth20: ExpectedTput{20, 0},
+			},
+		},
+	},
+	// TODO(b/342250330) Update expected throughput values for MtkOpenWrtT routers after
+	// running tests for a sufficient amount of time.
+	routerSupport.MtkOpenWrtT: {
+		TestTypeTCPTx: {
+			ap.Mode80211nPure: {
+				ap.ChWidth20:      ExpectedTput{61, 86},
+				ap.ChWidth40:      ExpectedTput{115, 166},
+				ap.ChWidth40Plus:  ExpectedTput{115, 166},
+				ap.ChWidth40Minus: ExpectedTput{115, 166},
+			},
+			ap.Mode80211acPure: {
+				ap.ChWidth20: ExpectedTput{74, 103},
+				ap.ChWidth40: ExpectedTput{153, 221},
+			},
+			ap.Mode80211acMixed: {
+				ap.ChWidth80: ExpectedTput{200, 400},
+			},
+			ap.Mode80211axPure: {
+				ap.ChWidth20:  ExpectedTput{74, 103},
+				ap.ChWidth40:  ExpectedTput{153, 221},
+				ap.ChWidth80:  ExpectedTput{0, 0},
+				ap.ChWidth160: ExpectedTput{0, 0},
+			},
+			ap.Mode80211axMixed: {
+				ap.ChWidth80:  ExpectedTput{200, 400},
+				ap.ChWidth160: ExpectedTput{0, 0},
+			},
+			ap.Mode80211bePure: {
+				ap.ChWidth20:  ExpectedTput{0, 0},
+				ap.ChWidth40:  ExpectedTput{0, 0},
+				ap.ChWidth80:  ExpectedTput{0, 0},
+				ap.ChWidth160: ExpectedTput{0, 0},
+				ap.ChWidth320: ExpectedTput{0, 0},
+			},
+			ap.Mode80211beMixed: {
+				ap.ChWidth80:  ExpectedTput{0, 0},
+				ap.ChWidth160: ExpectedTput{0, 0},
+			},
+		},
+		TestTypeTCPRx: {
+			ap.Mode80211nPure: {
+				ap.ChWidth20:      ExpectedTput{61, 86},
+				ap.ChWidth40:      ExpectedTput{115, 166},
+				ap.ChWidth40Plus:  ExpectedTput{115, 166},
+				ap.ChWidth40Minus: ExpectedTput{115, 166},
+			},
+			ap.Mode80211acPure: {
+				ap.ChWidth20: ExpectedTput{74, 103},
+				ap.ChWidth40: ExpectedTput{153, 221},
+			},
+			ap.Mode80211acMixed: {
+				ap.ChWidth80: ExpectedTput{200, 400},
+			},
+			ap.Mode80211axPure: {
+				ap.ChWidth20:  ExpectedTput{74, 103},
+				ap.ChWidth40:  ExpectedTput{153, 221},
+				ap.ChWidth80:  ExpectedTput{0, 0},
+				ap.ChWidth160: ExpectedTput{0, 0},
+			},
+			ap.Mode80211axMixed: {
+				ap.ChWidth80:  ExpectedTput{200, 400},
+				ap.ChWidth160: ExpectedTput{0, 0},
+			},
+			ap.Mode80211bePure: {
+				ap.ChWidth20:  ExpectedTput{0, 0},
+				ap.ChWidth40:  ExpectedTput{0, 0},
+				ap.ChWidth80:  ExpectedTput{0, 0},
+				ap.ChWidth160: ExpectedTput{0, 0},
+				ap.ChWidth320: ExpectedTput{0, 0},
+			},
+			ap.Mode80211beMixed: {
+				ap.ChWidth80:  ExpectedTput{0, 0},
+				ap.ChWidth160: ExpectedTput{0, 0},
+			},
+		},
+		TestTypeTCPBidirectional: {
+			ap.Mode80211nPure: {
+				ap.ChWidth20:      ExpectedTput{0, 0},
+				ap.ChWidth40:      ExpectedTput{0, 0},
+				ap.ChWidth40Plus:  ExpectedTput{0, 0},
+				ap.ChWidth40Minus: ExpectedTput{0, 0},
+			},
+			ap.Mode80211acPure: {
+				ap.ChWidth20: ExpectedTput{0, 0},
+				ap.ChWidth40: ExpectedTput{0, 0},
+			},
+			ap.Mode80211acMixed: {
+				ap.ChWidth80: ExpectedTput{0, 0},
+			},
+			ap.Mode80211axPure: {
+				ap.ChWidth20:  ExpectedTput{0, 0},
+				ap.ChWidth40:  ExpectedTput{0, 0},
+				ap.ChWidth80:  ExpectedTput{0, 0},
+				ap.ChWidth160: ExpectedTput{0, 0},
+			},
+			ap.Mode80211axMixed: {
+				ap.ChWidth80:  ExpectedTput{0, 0},
+				ap.ChWidth160: ExpectedTput{0, 0},
+			},
+			ap.Mode80211bePure: {
+				ap.ChWidth20:  ExpectedTput{0, 0},
+				ap.ChWidth40:  ExpectedTput{0, 0},
+				ap.ChWidth80:  ExpectedTput{0, 0},
+				ap.ChWidth160: ExpectedTput{0, 0},
+				ap.ChWidth320: ExpectedTput{0, 0},
+			},
+			ap.Mode80211beMixed: {
+				ap.ChWidth80:  ExpectedTput{0, 0},
+				ap.ChWidth160: ExpectedTput{0, 0},
+			},
+		},
+		TestTypeUDPTx: {
+			ap.Mode80211nPure: {
+				ap.ChWidth20:      ExpectedTput{72, 101},
+				ap.ChWidth40:      ExpectedTput{135, 195},
+				ap.ChWidth40Plus:  ExpectedTput{135, 195},
+				ap.ChWidth40Minus: ExpectedTput{135, 195},
+			},
+			ap.Mode80211acPure: {
+				ap.ChWidth20: ExpectedTput{87, 121},
+				ap.ChWidth40: ExpectedTput{180, 260},
+			},
+			ap.Mode80211acMixed: {
+				ap.ChWidth80: ExpectedTput{347, 500},
+			},
+			ap.Mode80211axPure: {
+				ap.ChWidth20:  ExpectedTput{87, 121},
+				ap.ChWidth40:  ExpectedTput{180, 260},
+				ap.ChWidth80:  ExpectedTput{0, 0},
+				ap.ChWidth160: ExpectedTput{0, 0},
+			},
+			ap.Mode80211axMixed: {
+				ap.ChWidth80:  ExpectedTput{347, 500},
+				ap.ChWidth160: ExpectedTput{0, 0},
+			},
+			ap.Mode80211bePure: {
+				ap.ChWidth20:  ExpectedTput{0, 0},
+				ap.ChWidth40:  ExpectedTput{0, 0},
+				ap.ChWidth80:  ExpectedTput{0, 0},
+				ap.ChWidth160: ExpectedTput{0, 0},
+				ap.ChWidth320: ExpectedTput{0, 0},
+			},
+			ap.Mode80211beMixed: {
+				ap.ChWidth80:  ExpectedTput{0, 0},
+				ap.ChWidth160: ExpectedTput{0, 0},
+			},
+		},
+		TestTypeUDPRx: {
+			ap.Mode80211nPure: {
+				ap.ChWidth20:      ExpectedTput{72, 101},
+				ap.ChWidth40:      ExpectedTput{135, 195},
+				ap.ChWidth40Plus:  ExpectedTput{135, 195},
+				ap.ChWidth40Minus: ExpectedTput{135, 195},
+			},
+			ap.Mode80211acPure: {
+				ap.ChWidth20: ExpectedTput{87, 121},
+				ap.ChWidth40: ExpectedTput{180, 260},
+			},
+			ap.Mode80211acMixed: {
+				ap.ChWidth80: ExpectedTput{347, 500},
+			},
+			ap.Mode80211axPure: {
+				ap.ChWidth20:  ExpectedTput{87, 121},
+				ap.ChWidth40:  ExpectedTput{180, 260},
+				ap.ChWidth80:  ExpectedTput{0, 0},
+				ap.ChWidth160: ExpectedTput{0, 0},
+			},
+			ap.Mode80211axMixed: {
+				ap.ChWidth80:  ExpectedTput{347, 500},
+				ap.ChWidth160: ExpectedTput{0, 0},
+			},
+			ap.Mode80211bePure: {
+				ap.ChWidth20:  ExpectedTput{0, 0},
+				ap.ChWidth40:  ExpectedTput{0, 0},
+				ap.ChWidth80:  ExpectedTput{0, 0},
+				ap.ChWidth160: ExpectedTput{0, 0},
+				ap.ChWidth320: ExpectedTput{0, 0},
+			},
+			ap.Mode80211beMixed: {
+				ap.ChWidth80:  ExpectedTput{0, 0},
+				ap.ChWidth160: ExpectedTput{0, 0},
+			},
+		},
+		TestTypeUDPBidirectional: {
+			ap.Mode80211nPure: {
+				ap.ChWidth20:      ExpectedTput{0, 0},
+				ap.ChWidth40:      ExpectedTput{0, 0},
+				ap.ChWidth40Plus:  ExpectedTput{0, 0},
+				ap.ChWidth40Minus: ExpectedTput{0, 0},
+			},
+			ap.Mode80211acPure: {
+				ap.ChWidth20: ExpectedTput{0, 0},
+				ap.ChWidth40: ExpectedTput{0, 0},
+			},
+			ap.Mode80211acMixed: {
+				ap.ChWidth80: ExpectedTput{0, 0},
+			},
+			ap.Mode80211axPure: {
+				ap.ChWidth20:  ExpectedTput{0, 0},
+				ap.ChWidth40:  ExpectedTput{0, 0},
+				ap.ChWidth80:  ExpectedTput{0, 0},
+				ap.ChWidth160: ExpectedTput{0, 0},
+			},
+			ap.Mode80211axMixed: {
+				ap.ChWidth80:  ExpectedTput{0, 0},
+				ap.ChWidth160: ExpectedTput{0, 0},
+			},
+			ap.Mode80211bePure: {
+				ap.ChWidth20:  ExpectedTput{0, 0},
+				ap.ChWidth40:  ExpectedTput{0, 0},
+				ap.ChWidth80:  ExpectedTput{0, 0},
+				ap.ChWidth160: ExpectedTput{0, 0},
+				ap.ChWidth320: ExpectedTput{0, 0},
+			},
+			ap.Mode80211beMixed: {
+				ap.ChWidth80:  ExpectedTput{0, 0},
+				ap.ChWidth160: ExpectedTput{0, 0},
 			},
 		},
 	},
