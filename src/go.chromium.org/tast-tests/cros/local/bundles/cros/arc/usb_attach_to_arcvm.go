@@ -32,7 +32,7 @@ func init() {
 		// ChromeOS > Software > ARC++ > Core > Integration
 		BugComponent: "b:1131321",
 		Attr:         []string{"group:mainline", "informational"},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "gaia"},
 		Params: []testing.Param{{
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},

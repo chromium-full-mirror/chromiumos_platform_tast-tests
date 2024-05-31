@@ -33,7 +33,7 @@ func init() {
 		BugComponent: "b:1131344",
 		Attr:         []string{"group:mainline"},
 		VarDeps:      []string{ui.GaiaPoolDefaultVarName},
-		SoftwareDeps: []string{"chrome", "play_store"},
+		SoftwareDeps: []string{"chrome", "play_store", "gaia"},
 		Params: []testing.Param{
 			{
 				ExtraAttr:         []string{"group:cq-minimal"},

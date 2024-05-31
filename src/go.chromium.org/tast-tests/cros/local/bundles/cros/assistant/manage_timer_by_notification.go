@@ -29,7 +29,7 @@ func init() {
 			"informational",
 			"group:hw_agnostic",
 		},
-		SoftwareDeps: []string{"chrome", "chrome_internal"},
+		SoftwareDeps: []string{"chrome", "chrome_internal", "gaia"},
 		Timeout:      chrome.GAIALoginTimeout + time.Minute,
 		Fixture:      "assistantWithGaia",
 	})

@@ -65,7 +65,8 @@ func init() {
 					accountPool: uiCommon.GaiaPoolDefaultVarName,
 					optin:       true,
 				},
-				ExtraAttr: []string{"informational"},
+				ExtraAttr:         []string{"informational"},
+				ExtraSoftwareDeps: []string{"gaia"},
 			}},
 	})
 }

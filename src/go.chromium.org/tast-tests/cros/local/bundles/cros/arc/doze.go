@@ -37,7 +37,7 @@ func init() {
 		Contacts:     []string{"arcvm-eng@google.com", "sstan@chromium.org"},
 		// ChromeOS > Software > ARC++ > ARCVM
 		BugComponent: "b:537221",
-		SoftwareDeps: []string{"chrome", "android_vm"},
+		SoftwareDeps: []string{"chrome", "android_vm", "gaia"},
 		Attr:         []string{"group:mainline", "informational"},
 		Timeout:      7 * time.Minute,
 		VarDeps:      []string{ui.GaiaPoolDefaultVarName},

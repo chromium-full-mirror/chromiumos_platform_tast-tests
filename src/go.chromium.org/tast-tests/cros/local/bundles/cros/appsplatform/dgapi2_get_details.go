@@ -26,7 +26,7 @@ func init() {
 		},
 		BugComponent: "b:1203766",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "gaia"},
 		Fixture:      "playBillingFixture",
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_container"},

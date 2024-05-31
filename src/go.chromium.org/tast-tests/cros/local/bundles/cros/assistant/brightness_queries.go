@@ -31,7 +31,7 @@ func init() {
 			"group:hw_agnostic",
 		},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "gaia"},
 		Fixture:      "assistantWithGaia",
 	})
 }

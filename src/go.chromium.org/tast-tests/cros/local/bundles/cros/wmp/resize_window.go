@@ -102,7 +102,8 @@ func init() {
 					caseType:    appCase,
 					browserType: browser.TypeAsh,
 				},
-				Timeout: 2*resizeTimeout + cws.InstallationTimeout, // 2 resize timeout for 2 apps (i.e., Files and CWS)
+				Timeout:           2*resizeTimeout + cws.InstallationTimeout, // 2 resize timeout for 2 apps (i.e., Files and CWS)
+				ExtraSoftwareDeps: []string{"gaia"},
 			},
 			{
 				Name: "arc",

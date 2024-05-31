@@ -41,7 +41,7 @@ func init() {
 			"ui.signinProfileTestExtensionManifestKey",
 			ui.GaiaPoolDefaultVarName,
 		},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "gaia"},
 		HardwareDeps: hwdep.D(hwdep.InternalKeyboard()),
 		Timeout:      2*chrome.GAIALoginTimeout + userutil.TakingOwnershipTimeout + time.Minute,
 	})

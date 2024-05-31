@@ -116,6 +116,7 @@ func init() {
 				showStudentBubble: false,
 				showTaskBubble:    true,
 			},
+			ExtraSoftwareDeps: []string{"gaia"},
 		}, {
 			Name: "regular_trusted_tester_flag",
 			Val: testCase{
@@ -126,6 +127,7 @@ func init() {
 				showStudentBubble: false,
 				showTaskBubble:    false,
 			},
+			ExtraSoftwareDeps: []string{"gaia"},
 		}, {
 			Name: "managed_tasks",
 			Val: testCase{
@@ -146,6 +148,7 @@ func init() {
 				showStudentBubble: false,
 				showTaskBubble:    true,
 			},
+			ExtraSoftwareDeps: []string{"gaia"},
 		}},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      chrome.ManagedUserLoginTimeout + 5*time.Minute,

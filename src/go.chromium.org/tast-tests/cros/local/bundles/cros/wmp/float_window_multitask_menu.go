@@ -39,7 +39,7 @@ func init() {
 		// ChromeOS > Software > Window Management > FloatingWindow
 		BugComponent: "b:1252568",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "gaia"},
 		Params: []testing.Param{{
 			Val: browser.TypeAsh,
 		}, {

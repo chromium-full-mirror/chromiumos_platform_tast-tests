@@ -44,7 +44,7 @@ func init() {
 		BugComponent: "b:562866",
 		Attr:         []string{"group:mainline", "informational"},
 		Timeout:      8 * time.Minute,
-		SoftwareDeps: []string{"chrome", "chrome_internal"},
+		SoftwareDeps: []string{"chrome", "chrome_internal", "gaia"},
 		Data:         []string{testImageFileWithText},
 		Params: []testing.Param{
 			{

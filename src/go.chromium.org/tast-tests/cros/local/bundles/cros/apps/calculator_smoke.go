@@ -37,7 +37,7 @@ func init() {
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		HardwareDeps: hwdep.D(pre.AppsStableModels),
 		Timeout:      5 * time.Minute,
-		SoftwareDeps: []string{"chrome", "chrome_internal"},
+		SoftwareDeps: []string{"chrome", "chrome_internal", "gaia"},
 	})
 }
 

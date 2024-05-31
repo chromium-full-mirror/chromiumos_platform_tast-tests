@@ -33,7 +33,7 @@ func init() {
 			Key:   "feature_id",
 			Value: "screenplay-513191ba-7f4b-4ae1-84a2-697d1ad31a12",
 		}},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "gaia"},
 		Params: []testing.Param{{
 			Fixture: quickanswers.Parameterize(
 				quickanswers.EnabledWithBrowserFixture,

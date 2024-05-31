@@ -38,7 +38,7 @@ func init() {
 			"antrim@chromium.org",
 		},
 		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
-		SoftwareDeps: []string{"chrome", "chrome_internal"},
+		SoftwareDeps: []string{"chrome", "chrome_internal", "gaia"},
 		Attr: []string{
 			"group:golden_tier",
 			"group:medium_low_tier",

@@ -45,6 +45,7 @@ func init() {
 			{
 				Name:              "clamshell_oobe_stable_fieldtrial_testing_config_off",
 				ExtraHardwareDeps: hwdep.D(pre.AppsStableModels),
+				ExtraSoftwareDeps: []string{"gaia"},
 				ExtraAttr:         []string{"group:mainline"},
 				Val: testParameters{
 					tabletMode:       false,
@@ -54,6 +55,7 @@ func init() {
 			}, {
 				Name:              "clamshell_oobe_stable_fieldtrial_testing_config_on",
 				ExtraHardwareDeps: hwdep.D(pre.AppsStableModels),
+				ExtraSoftwareDeps: []string{"gaia"},
 				ExtraAttr:         []string{"group:mainline", "group:chrome_uprev_cbx"},
 				Val: testParameters{
 					tabletMode:       false,
@@ -63,6 +65,7 @@ func init() {
 			}, {
 				Name:              "clamshell_oobe_unstable",
 				ExtraHardwareDeps: hwdep.D(pre.AppsUnstableModels),
+				ExtraSoftwareDeps: []string{"gaia"},
 				// b:238260020 - disable aged (>1y) unpromoted informational tests
 				// ExtraAttr:         []string{"group:mainline", "informational"},
 				Val: testParameters{
@@ -72,6 +75,7 @@ func init() {
 			}, {
 				Name:              "tablet_oobe_stable",
 				ExtraHardwareDeps: hwdep.D(pre.AppsStableModels),
+				ExtraSoftwareDeps: []string{"gaia"},
 				ExtraAttr:         []string{"group:mainline"},
 				Val: testParameters{
 					tabletMode: true,
@@ -80,6 +84,7 @@ func init() {
 			}, {
 				Name:              "tablet_oobe_unstable",
 				ExtraHardwareDeps: hwdep.D(pre.AppsUnstableModels),
+				ExtraSoftwareDeps: []string{"gaia"},
 				// b:238260020 - disable aged (>1y) unpromoted informational tests
 				// ExtraAttr:         []string{"group:mainline", "informational"},
 				Val: testParameters{

@@ -30,7 +30,7 @@ func init() {
 		Contacts:     []string{"arc-core@google.com", "cros-arc-te@google.com"},
 		// ChromeOS > Software > ARC++ > Core
 		BugComponent: "b:488493",
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "gaia"},
 		Attr:         []string{"group:mainline", "informational"},
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_container"},

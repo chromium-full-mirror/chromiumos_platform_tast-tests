@@ -82,7 +82,7 @@ func init() {
 			Name: "general_r",
 			Val:  generalLaunchGwTests,
 			// Temporarily restrict it only for ARC R, not T or above version.
-			ExtraSoftwareDeps: []string{"android_vm_r"},
+			ExtraSoftwareDeps: []string{"android_vm_r", "gaia"},
 			ExtraAttr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		}, {
 			// Not in mainline since optin is flaky. b/243451887
@@ -105,6 +105,7 @@ func init() {
 				// Temporarily skip on ARCVM virtio-blk /data enabled boards,
 				// as we cannot chown files over SSHFS.
 				"no_arcvm_virtio_blk_data",
+				"gaia",
 			},
 			ExtraAttr: []string{"group:mainline", "informational"},
 		}},

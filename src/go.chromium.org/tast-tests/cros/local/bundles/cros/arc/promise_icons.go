@@ -31,7 +31,7 @@ func init() {
 		},
 		BugComponent: "b:1203766",
 		Attr:         []string{"group:mainline", "informational"},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "gaia"},
 		Params: []testing.Param{
 			{
 				// Promise Icons requires Android R+ (android_container which includes pi will not work).

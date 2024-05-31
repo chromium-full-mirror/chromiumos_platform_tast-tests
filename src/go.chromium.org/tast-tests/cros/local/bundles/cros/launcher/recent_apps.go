@@ -75,15 +75,17 @@ func init() {
 				Timeout:           chrome.GAIALoginTimeout + arc.BootTimeout + 120*time.Second,
 			},
 			{
-				Name:    "cws_clamshell",
-				Val:     initParams{TabletMode: false, BootWithArc: false},
-				Timeout: 3*time.Minute + cws.InstallationTimeout,
+				Name:              "cws_clamshell",
+				Val:               initParams{TabletMode: false, BootWithArc: false},
+				Timeout:           3*time.Minute + cws.InstallationTimeout,
+				ExtraSoftwareDeps: []string{"gaia"},
 			},
 			{
 				Name:              "cws_tablet",
 				Val:               initParams{TabletMode: true, BootWithArc: false},
 				ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 				Timeout:           3*time.Minute + cws.InstallationTimeout,
+				ExtraSoftwareDeps: []string{"gaia"},
 			}},
 	})
 }

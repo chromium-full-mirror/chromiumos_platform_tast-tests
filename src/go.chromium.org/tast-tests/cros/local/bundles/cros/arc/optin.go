@@ -42,6 +42,7 @@ func init() {
 			"chrome",
 			"chrome_internal",
 			"play_store",
+			"gaia",
 		},
 		Params: []testing.Param{
 			{

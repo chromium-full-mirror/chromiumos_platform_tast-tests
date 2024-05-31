@@ -34,7 +34,7 @@ func init() {
 		// ChromeOS > Software > Family > Projector
 		BugComponent: "b:1080013",
 		Attr:         []string{"group:mainline", "informational"},
-		SoftwareDeps: []string{"chrome", "ondevice_speech"},
+		SoftwareDeps: []string{"chrome", "ondevice_speech", "gaia"},
 		HardwareDeps: hwdep.D(hwdep.Microphone()),
 		Timeout:      12 * time.Minute,
 		Fixture:      "projectorLogin",

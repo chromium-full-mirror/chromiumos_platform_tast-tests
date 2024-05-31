@@ -33,7 +33,7 @@ func init() {
 		// to verify that SODA is installed on non-VM devices.
 		// Don't use ondevice_speech because that would make
 		// this test a tautology.
-		SoftwareDeps: []string{"chrome", "soda"},
+		SoftwareDeps: []string{"chrome", "soda", "gaia"},
 		Timeout:      5 * time.Minute,
 		Fixture:      "projectorLogin",
 	})

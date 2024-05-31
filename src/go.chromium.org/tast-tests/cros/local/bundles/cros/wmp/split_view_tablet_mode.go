@@ -49,7 +49,7 @@ func init() {
 		// ChromeOS > Software > Window Management > Splitscreen
 		BugComponent: "b:1252451",
 		Attr:         []string{"group:mainline", "informational"},
-		SoftwareDeps: []string{"chrome", "android_vm"},
+		SoftwareDeps: []string{"chrome", "android_vm", "gaia"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Params: []testing.Param{{
 			Name: "portrait",

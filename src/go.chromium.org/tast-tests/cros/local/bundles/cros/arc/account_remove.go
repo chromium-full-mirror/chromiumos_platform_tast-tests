@@ -78,7 +78,7 @@ func init() {
 					secondaryAccountPool: arcent.LoginPoolVar,
 					optin:                true,
 				},
-				ExtraSoftwareDeps: []string{"android_container"},
+				ExtraSoftwareDeps: []string{"android_container", "gaia"},
 				ExtraAttr:         []string{"informational"},
 			},
 			{
@@ -88,7 +88,7 @@ func init() {
 					secondaryAccountPool: arcent.LoginPoolVar,
 					optin:                true,
 				},
-				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraSoftwareDeps: []string{"android_vm", "gaia"},
 				ExtraAttr:         []string{"informational"},
 			}},
 	})

@@ -43,6 +43,7 @@ func init() {
 		// ChromeOS > Software > ARC++ > Core > Play Store Setup
 		BugComponent: "b:1131344",
 		Attr:         []string{"group:mainline", "informational", "group:arc-functional"},
+		SoftwareDeps: []string{"gaia"},
 		Params: []testing.Param{{
 			Val: playStoreSearchAndLaunchTestParams{
 				MaxOptinAttempts: 2,

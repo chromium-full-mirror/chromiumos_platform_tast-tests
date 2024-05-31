@@ -40,7 +40,7 @@ func init() {
 		BugComponent:   "b:1457613",
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Attr:           []string{"group:mainline", "informational", "group:hw_agnostic"},
-		SoftwareDeps:   []string{"chrome"},
+		SoftwareDeps:   []string{"chrome", "gaia"},
 		VarDeps:        []string{ui.GaiaPoolDefaultVarName},
 		Params: []testing.Param{
 			{

@@ -33,7 +33,7 @@ func init() {
 		},
 		BugComponent: "b:1288350",
 		Attr:         []string{"group:mainline", "informational"},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "gaia"},
 		SearchFlags: []*testing.StringPair{{
 			Key:   "feature_id",
 			Value: "screenplay-fd3faffe-194b-44e1-b829-eddc3ec07639",

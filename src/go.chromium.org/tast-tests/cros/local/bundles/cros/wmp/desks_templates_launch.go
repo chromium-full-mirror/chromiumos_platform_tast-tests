@@ -41,7 +41,7 @@ func init() {
 		// Chrome OS Server Projects > Enterprise Management > Commercial Productivity
 		BugComponent: "b:1020793",
 		Attr:         []string{"group:mainline"},
-		SoftwareDeps: []string{"chrome", "chrome_internal", "no_kernel_upstream"},
+		SoftwareDeps: []string{"chrome", "chrome_internal", "no_kernel_upstream", "gaia"},
 		Timeout:      chrome.GAIALoginTimeout + arc.BootTimeout + 180*time.Second,
 		SearchFlags: []*testing.StringPair{{
 			Key: "feature_id",

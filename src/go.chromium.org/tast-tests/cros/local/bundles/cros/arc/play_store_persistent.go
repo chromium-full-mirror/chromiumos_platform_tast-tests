@@ -35,7 +35,7 @@ func init() {
 		// ChromeOS > Software > ARC++ > Core > Play Store Setup
 		BugComponent: "b:1131344",
 		Attr:         []string{"group:mainline", "informational"},
-		SoftwareDeps: []string{"arc_android_data_cros_access", "chrome"},
+		SoftwareDeps: []string{"arc_android_data_cros_access", "chrome", "gaia"},
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 3*time.Minute,
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_container"},

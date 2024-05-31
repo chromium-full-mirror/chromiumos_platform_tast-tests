@@ -79,6 +79,7 @@ func init() {
 			"chrome",
 			// ARCVM /data migration currently does not support LVM-enabled devices.
 			"no_lvm_stateful_partition",
+			"gaia",
 		},
 		Data:    []string{vmDataMigrationTestImageFilename},
 		Timeout: vmDataMigrationTestTimeout,

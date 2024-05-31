@@ -36,6 +36,7 @@ func init() {
 			"chrome",
 			"chrome_internal",
 			"play_store",
+			"gaia",
 		},
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_container"},

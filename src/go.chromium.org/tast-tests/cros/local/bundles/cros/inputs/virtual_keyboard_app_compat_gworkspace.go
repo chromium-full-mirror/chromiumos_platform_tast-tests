@@ -36,7 +36,7 @@ func init() {
 		BugComponent: "b:95887",
 		Attr:         []string{"group:inputs_appcompat_gworkspace_perbuild"},
 		LacrosStatus: testing.LacrosVariantExists,
-		SoftwareDeps: []string{"inputs_deps", "chrome", "google_virtual_keyboard"},
+		SoftwareDeps: []string{"inputs_deps", "chrome", "google_virtual_keyboard", "gaia"},
 		SearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.FrenchFrance, ime.EnglishUS}),
 		Timeout:      5 * time.Minute,
 		HardwareDeps: hwdep.D(pre.InputsStableModels),

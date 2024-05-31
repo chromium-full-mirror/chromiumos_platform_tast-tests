@@ -52,7 +52,7 @@ func init() {
 		},
 		BugComponent: "b:1203766",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "gaia"},
 		Data: []string{
 			"webshare_icon.png",
 			"webshare_manifest.json",

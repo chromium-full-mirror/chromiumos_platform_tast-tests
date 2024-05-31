@@ -47,7 +47,7 @@ func init() {
 			"hidehiko@chromium.org",
 		},
 		BugComponent: "b:1456869",
-		SoftwareDeps: []string{"chrome", "chrome_internal", "lacros"},
+		SoftwareDeps: []string{"chrome", "chrome_internal", "lacros", "gaia"},
 		VarDeps: []string{
 			"ui.signinProfileTestExtensionManifestKey",
 			ui.GaiaPoolDefaultVarName,

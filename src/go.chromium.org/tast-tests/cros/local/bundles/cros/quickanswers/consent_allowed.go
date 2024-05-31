@@ -29,7 +29,7 @@ func init() {
 			"group:mainline",
 			"informational",
 		},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "gaia"},
 		Params: []testing.Param{{
 			Fixture: quickanswers.Parameterize(
 				quickanswers.NotEnabledWithBrowserFixture,

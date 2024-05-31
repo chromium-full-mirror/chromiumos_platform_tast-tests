@@ -38,16 +38,18 @@ func init() {
 		},
 		Params: []testing.Param{
 			{
-				Name:    "regular_consumer",
-				Fixture: "projectorLogin",
+				Name:              "regular_consumer",
+				Fixture:           "projectorLogin",
+				ExtraSoftwareDeps: []string{"gaia"},
 			},
 			{
 				Name:    "supervised_child",
 				Fixture: "projectorUnicornLogin",
 			},
 			{
-				Name:    "managed_edu",
-				Fixture: "projectorEduLogin",
+				Name:              "managed_edu",
+				Fixture:           "projectorEduLogin",
+				ExtraSoftwareDeps: []string{"gaia"},
 			},
 		},
 	})

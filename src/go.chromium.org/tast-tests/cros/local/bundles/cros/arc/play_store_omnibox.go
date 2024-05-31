@@ -32,6 +32,7 @@ func init() {
 		Contacts:     []string{"chromeos-apps-foundation-core@google.com", "tsergeant@chromium.org"},
 		BugComponent: "b:1203766",
 		Attr:         []string{"group:mainline", "informational"},
+		SoftwareDeps: []string{"gaia"},
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_container", "chrome"},
 			Fixture:           "arcBootedWithPlayStore",

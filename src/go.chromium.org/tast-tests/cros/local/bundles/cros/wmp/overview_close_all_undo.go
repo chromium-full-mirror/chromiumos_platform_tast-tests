@@ -43,7 +43,7 @@ func init() {
 		// ChromeOS > Software > Window Management > Virtual Desks
 		BugComponent: "b:1238200",
 		Attr:         []string{"group:mainline", "informational"},
-		SoftwareDeps: []string{"chrome", "android_vm"},
+		SoftwareDeps: []string{"chrome", "android_vm", "gaia"},
 		Params: []testing.Param{{
 			Val: browser.TypeAsh,
 		}, {
