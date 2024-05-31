@@ -6,7 +6,6 @@ package bluetooth
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
@@ -15,12 +14,10 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bluetooth/floss"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/lockscreen"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/userutil"
-	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -67,229 +64,210 @@ func init() {
 				ExtraSoftwareDeps: []string{"bluetooth_floss"},
 			},
 		},
-		Timeout: time.Minute * 5,
+		Timeout: 5 * time.Minute,
 	})
 }
 
 // EnableDisableBluetoothWithDifferentUsers tests that the device's and users' last Bluetooth adapter states are preserved and restored between user sessions.
 func EnableDisableBluetoothWithDifferentUsers(ctx context.Context, s *testing.State) {
-	// Ensure the adapter state is cleaned up at the end of the test.
-	bt := s.Param().(enableDisableBluetoothWithDifferentUsersParams).btImpl
-	defer bt.Enable(ctx)
+	params := s.Param().(enableDisableBluetoothWithDifferentUsersParams)
 
-	enableFeatures := chrome.EnableFeatures(s.Param().(enableDisableBluetoothWithDifferentUsersParams).enableFeatures...)
-	disableFeatures := chrome.DisableFeatures(s.Param().(enableDisableBluetoothWithDifferentUsersParams).disableFeatures...)
+	enableFeatures := chrome.EnableFeatures(params.enableFeatures...)
+	disableFeatures := chrome.DisableFeatures(params.disableFeatures...)
 
 	// Create a device owner.
-	user1 := chrome.Creds{User: "test_owner@gmail.com", Pass: "test0000"}
-	s.Log("Creating user1 pod: ", user1.User)
-	if err := userutil.CreateDeviceOwner(ctx, user1.User, user1.Pass, enableFeatures, disableFeatures); err != nil {
-		s.Fatal("Failed to create device owner, user1: ", err)
+	userA := chrome.Creds{User: "test_owner@gmail.com", Pass: "test0000"}
+	if err := userutil.CreateDeviceOwner(ctx, userA.User, userA.Pass, enableFeatures, disableFeatures); err != nil {
+		s.Fatal("Failed to create device owner, userA: ", err)
 	}
 
 	// Create a second user.
-	user2 := chrome.Creds{User: "test_user2@gmail.com", Pass: "test0000"}
-	s.Log("Creating user2 pod: ", user2.User)
-	if err := userutil.CreateUser(ctx, user2.User, user2.Pass, chrome.KeepState(), enableFeatures, disableFeatures); err != nil {
-		s.Fatal("Failed to create user2: ", err)
+	userB := chrome.Creds{User: "test_user2@gmail.com", Pass: "test0000"}
+	if err := userutil.CreateUser(ctx, userB.User, userB.Pass, chrome.KeepState(), enableFeatures, disableFeatures); err != nil {
+		s.Fatal("Failed to create userB: ", err)
 	}
 
-	// Go to sign-in screen.
 	cleanupCtx := ctx
-	signInProfileTestExtension := s.RequiredVar("ui.signinProfileTestExtensionManifestKey")
-	cr, err := signOut(ctx, signInProfileTestExtension, enableFeatures, disableFeatures)
-	if err != nil {
-		s.Fatal("Failed to go to sign-in screen: ", err)
-	}
-	defer cr.Close(cleanupCtx)
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
 
+	bt := params.btImpl
 	// Ensure Bluetooth starts enabled.
 	if err := bt.Enable(ctx); err != nil {
 		s.Fatal("Failed to enable Bluetooth: ", err)
 	}
-	if err := bt.PollForAdapterState(ctx, true); err != nil {
-		s.Fatal("Adapter state not as expected: ", err)
+	// Ensure the adapter state is cleaned up at the end of the test.
+	defer bt.Enable(cleanupCtx)
+
+	signInProfileTestExtension := s.RequiredVar("ui.signinProfileTestExtensionManifestKey")
+
+	res := enableDisableBluetoothWithDifferentUsersHelper{
+		bt:     bt,
+		outdir: s.OutDir(),
 	}
 
-	tconn, err := cr.SigninProfileTestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to connect to test API: ", err)
-	}
+	for _, stage := range []struct {
+		name     string
+		loggedIn bool
+		user     chrome.Creds
+		actions  []uiauto.Action
+	}{
+		{
+			name:     "Verify Bluetooth is enabled on sign in screen",
+			loggedIn: false,
+			actions: []uiauto.Action{
+				res.verifyBluetoothState(true),
+			},
+		}, {
+			name:     "Sign in as UserA. Verify Bluetooth is enabled, then manually disable Bluetooth",
+			loggedIn: true,
+			user:     userA,
+			actions: []uiauto.Action{
+				res.verifyBluetoothState(true),
+				res.toggleBluetooth(false),
+			},
+		}, {
+			name:     "Verify Bluetooth is enabled on sign in screen, then manually disable Bluetooth",
+			loggedIn: false,
+			actions: []uiauto.Action{
+				res.verifyBluetoothState(true),
+				res.toggleBluetooth(false),
+			},
+		}, {
+			name:     "Sign in as UserB. Verify Bluetooth is enabled, then manually disable Bluetooth",
+			loggedIn: true,
+			user:     userB,
+			actions: []uiauto.Action{
+				res.verifyBluetoothState(true),
+				res.toggleBluetooth(false),
+			},
+		}, {
+			name:     "Verify Bluetooth is disabled on sign in screen",
+			loggedIn: false,
+			actions: []uiauto.Action{
+				res.verifyBluetoothState(false),
+			},
+		}, {
+			name:     "Verify Bluetooth is disabled from UserA, then manually enable Bluetooth",
+			loggedIn: true,
+			user:     userA,
+			actions: []uiauto.Action{
+				res.verifyBluetoothState(false),
+				res.toggleBluetooth(true),
+			},
+		}, {
+			name:     "Verify Bluetooth is disabled on sign in screen",
+			loggedIn: false,
+			actions: []uiauto.Action{
+				res.verifyBluetoothState(false),
+			},
+		}, {
+			name:     "Verify Bluetooth is disabled from UserB",
+			loggedIn: true,
+			user:     userB,
+			actions: []uiauto.Action{
+				res.verifyBluetoothState(false),
+			},
+		},
+	} {
+		opts := []chrome.Option{
+			chrome.KeepState(),
+			enableFeatures,
+			disableFeatures,
+		}
+		if !stage.loggedIn {
+			opts = append(opts, chrome.NoLogin())
+			opts = append(opts, chrome.LoadSigninProfileExtension(signInProfileTestExtension))
+		} else {
+			opts = append(opts, chrome.FakeLogin(stage.user))
+		}
 
-	kb, err := input.Keyboard(ctx)
-	if err != nil {
-		s.Fatal("Failed to create keyboard: ", err)
-	}
-
-	// Sign into user1.
-	if err := signIn(ctx, tconn, kb, user1); err != nil {
-		s.Fatal("Failed to sign in to user1: ", err)
-	}
-
-	// Confirm adapter is enabled.
-	if err := bt.PollForAdapterState(ctx, true); err != nil {
-		s.Fatal("Adapter state not as expected: ", err)
-	}
-
-	// Disable Bluetooth.
-	if err := toggleBluetooth(ctx, tconn, bt, false); err != nil {
-		s.Fatal("Failed to disable Bluetooth: ", err)
-	}
-
-	// Go to sign-in screen.
-	cr, err = signOut(ctx, signInProfileTestExtension, enableFeatures, disableFeatures)
-	if err != nil {
-		s.Fatal("Failed to go to sign-in screen: ", err)
-	}
-
-	// Verify Bluetooth is enabled.
-	if err := bt.PollForAdapterState(ctx, true); err != nil {
-		s.Fatal("Adapter state not as expected: ", err)
-	}
-
-	tconn, err = cr.SigninProfileTestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to connect to test API: ", err)
-	}
-
-	// Disable Bluetooth.
-	if err := toggleBluetooth(ctx, tconn, bt, false); err != nil {
-		s.Fatal("Failed to disable Bluetooth: ", err)
-	}
-
-	// Sign into user2.
-	if err := signIn(ctx, tconn, kb, user2); err != nil {
-		s.Fatal("Failed to sign in to user2: ", err)
-	}
-
-	// Confirm adapter is enabled.
-	if err := bt.PollForAdapterState(ctx, true); err != nil {
-		s.Fatal("Adapter state not as expected: ", err)
-	}
-
-	// Disable Bluetooth.
-	if err := toggleBluetooth(ctx, tconn, bt, false); err != nil {
-		s.Fatal("Failed to disable Bluetooth: ", err)
-	}
-
-	// Go to sign-in screen.
-	cr, err = signOut(ctx, signInProfileTestExtension, enableFeatures, disableFeatures)
-	if err != nil {
-		s.Fatal("Failed to go to sign-in screen: ", err)
-	}
-
-	// Verify Bluetooth is disabled.
-	if err := bt.PollForAdapterState(ctx, false); err != nil {
-		s.Fatal("Adapter state not as expected: ", err)
-	}
-
-	tconn, err = cr.SigninProfileTestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to connect to test API: ", err)
-	}
-
-	// Sign into user1.
-	if err := signIn(ctx, tconn, kb, user1); err != nil {
-		s.Fatal("Failed to sign in to user1: ", err)
-	}
-
-	// Confirm Bluetooth is disabled.
-	if err := bt.PollForAdapterState(ctx, false); err != nil {
-		s.Fatal("Adapter state not as expected: ", err)
-	}
-
-	// Enable Bluetooth.
-	if err := toggleBluetooth(ctx, tconn, bt, true); err != nil {
-		s.Fatal("Failed to enable Bluetooth: ", err)
-	}
-
-	// Go to sign-in screen.
-	cr, err = signOut(ctx, signInProfileTestExtension, enableFeatures, disableFeatures)
-	if err != nil {
-		s.Fatal("Failed to go to sign-in screen: ", err)
-	}
-
-	// Verify Bluetooth is still disabled.
-	if err := bt.PollForAdapterState(ctx, false); err != nil {
-		s.Fatal("Adapter state not as expected: ", err)
-	}
-
-	tconn, err = cr.SigninProfileTestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to connect to test API: ", err)
-	}
-
-	// Sign into user2.
-	if err := signIn(ctx, tconn, kb, user2); err != nil {
-		s.Fatal("Failed to sign in to user2: ", err)
-	}
-
-	// Confirm adapter is disabled.
-	if err := bt.PollForAdapterState(ctx, false); err != nil {
-		s.Fatal("Adapter state not as expected: ", err)
+		res.loggedIn = stage.loggedIn
+		if err := res.startNewChromeSessionAndVerify(ctx, opts, stage.actions); err != nil {
+			s.Fatalf("Failed to verify on %s stage: %v", stage.name, err)
+		}
 	}
 }
 
-// signOut signs out of the current session and goes to the sign-in screen.
-func signOut(ctx context.Context, signinProfileTestExtension string, extraOpts ...chrome.Option) (*chrome.Chrome, error) {
-	opts := append([]chrome.Option{chrome.NoLogin(),
-		chrome.KeepState(),
-		chrome.SkipForceOnlineSignInForTesting(),
-		chrome.LoadSigninProfileExtension(signinProfileTestExtension)}, extraOpts...)
-	cr, err := chrome.New(
-		ctx,
-		opts...,
-	)
-	if err != nil {
-		return nil, err
-	}
-	return cr, nil
+type enableDisableBluetoothWithDifferentUsersHelper struct {
+	cr       *chrome.Chrome
+	tconn    *chrome.TestConn
+	loggedIn bool
+	bt       bluetooth.Bluetooth
+	outdir   string
 }
 
-// signIn ensures the user is visible on the sign-in screen and signs into the user.
-func signIn(ctx context.Context, tconn *chrome.TestConn, kb *input.KeyboardEventWriter, creds chrome.Creds) error {
-	ui := uiauto.New(tconn)
-	loginWindow := nodewith.Name("Login Screen").Role(role.Window)
-	userButton := nodewith.Name(creds.User).Role(role.Button).Ancestor(loginWindow)
-	if err := uiauto.NamedCombine(fmt.Sprintf("ensure user %q is visible", creds.User),
-		ui.WaitUntilExists(userButton),
-		ui.MakeVisible(userButton),
-	)(ctx); err != nil {
+func (h *enableDisableBluetoothWithDifferentUsersHelper) startNewChromeSessionAndVerify(ctx context.Context, opts []chrome.Option, actions []uiauto.Action) error {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
+	var err error
+	h.cr, err = chrome.New(ctx, opts...)
+	if err != nil {
 		return err
 	}
+	defer func(ctx context.Context) {
+		h.cr.Close(ctx)
+		h.cr = nil
+	}(cleanupCtx)
 
-	passwordField, err := lockscreen.PasswordFieldFinder(creds.User)
+	fetchTconn := h.cr.TestAPIConn
+	if !h.loggedIn {
+		fetchTconn = h.cr.SigninProfileTestAPIConn
+	}
+
+	h.tconn, err = fetchTconn(ctx)
 	if err != nil {
-		return errors.Wrap(err, "failed to determine the password field finder")
+		return err
 	}
+	defer func() { h.tconn = nil }()
 
-	testing.ContextLog(ctx, "Start signing in to user ", creds.User)
-	if err = ui.LeftClickUntil(userButton, ui.Exists(passwordField))(ctx); err != nil {
-		return errors.Wrap(err, "failed to select the user")
+	for _, action := range actions {
+		if err := action(ctx); err != nil {
+			return err
+		}
 	}
-	if err = lockscreen.EnterPassword(ctx, tconn, creds.User, creds.Pass, kb); err != nil {
-		return errors.Wrap(err, "failed to enter password")
-	}
-	if err = lockscreen.WaitForLoggedIn(ctx, tconn, 10*time.Second); err != nil {
-		return errors.Wrap(err, "failed to wait for logged in")
-	}
-
 	return nil
 }
 
-// toggleBluetooth toggles the Bluetooth adapter state and verifies the new state equals |exp|.
-func toggleBluetooth(ctx context.Context, tconn *chrome.TestConn, bt bluetooth.Bluetooth, exp bool) error {
-	if err := quicksettings.Show(ctx, tconn); err != nil {
-		return errors.Wrap(err, "failed to show the Quick Settings")
-	}
-	defer quicksettings.Hide(ctx, tconn)
+func (h *enableDisableBluetoothWithDifferentUsersHelper) toggleBluetooth(expected bool) uiauto.Action {
+	return func(ctx context.Context) (retErr error) {
+		cleanupCtx := ctx
+		ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+		defer cancel()
 
-	ui := uiauto.New(tconn)
-	if err := ui.LeftClick(quicksettings.FeatureTileBluetoothToggle)(ctx); err != nil {
-		return errors.Wrap(err, "failed to click the Bluetooth feature tile toggle")
+		if err := quicksettings.Show(ctx, h.tconn); err != nil {
+			return errors.Wrap(err, "failed to show the Quick Settings")
+		}
+		defer quicksettings.Hide(cleanupCtx, h.tconn)
+		defer faillog.DumpUITreeWithScreenshotWithTestAPIOnError(cleanupCtx, h.outdir, func() bool { return retErr != nil }, h.tconn, "quick_setting_ui_dump")
+
+		ui := uiauto.New(h.tconn)
+		if err := ui.LeftClick(quicksettings.FeatureTileBluetoothToggle)(ctx); err != nil {
+			return errors.Wrap(err, "failed to click the Bluetooth feature tile toggle")
+		}
+
+		return h.verifyBluetoothState(expected)(ctx)
 	}
-	if err := bt.PollForAdapterState(ctx, exp); err != nil {
-		return errors.Wrap(err, "failed to toggle Bluetooth state")
+}
+
+func (h *enableDisableBluetoothWithDifferentUsersHelper) verifyBluetoothState(expected bool) uiauto.Action {
+	return func(ctx context.Context) error {
+		msg := map[bool]string{false: "off", true: "on"}
+
+		if err := h.bt.PollForAdapterState(ctx, expected); err != nil {
+			return errors.Wrapf(err, "adapter state is not %q", msg[expected])
+		}
+
+		enabled, err := quicksettings.BluetoothEnabled(ctx, h.tconn)
+		if err != nil {
+			return errors.Wrap(err, "failed to fetch the Bluetooth state from quick settings")
+		}
+		if enabled != expected {
+			return errors.Errorf("bluetooth state from quick settings is not %q", msg[expected])
+		}
+
+		return nil
 	}
-	return nil
 }
