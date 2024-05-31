@@ -30,6 +30,7 @@ import (
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 const (
@@ -84,22 +85,25 @@ func init() {
 				Val:       bootPerfWarmReboot,
 			},
 			{
-				Name:      "ec_reboot",
-				ExtraAttr: []string{"group:crosbolt", "crosbolt_weekly"},
-				Fixture:   fixture.NormalMode,
-				Val:       bootPerfEcReboot,
+				Name:              "ec_reboot",
+				ExtraAttr:         []string{"group:crosbolt", "crosbolt_weekly"},
+				ExtraHardwareDeps: hwdep.D(hwdep.ChromeEC()),
+				Fixture:           fixture.NormalMode,
+				Val:               bootPerfEcReboot,
 			},
 			{
-				Name:      "from_g3",
-				ExtraAttr: []string{"group:crosbolt", "crosbolt_weekly"},
-				Fixture:   fixture.NormalMode,
-				Val:       bootPerfFromG3,
+				Name:              "from_g3",
+				ExtraAttr:         []string{"group:crosbolt", "crosbolt_weekly"},
+				ExtraHardwareDeps: hwdep.D(hwdep.ChromeEC()),
+				Fixture:           fixture.NormalMode,
+				Val:               bootPerfFromG3,
 			},
 			{
-				Name:      "from_s5",
-				ExtraAttr: []string{"group:crosbolt", "crosbolt_weekly"},
-				Fixture:   fixture.NormalMode,
-				Val:       bootPerfFromS5,
+				Name:              "from_s5",
+				ExtraAttr:         []string{"group:crosbolt", "crosbolt_weekly"},
+				ExtraHardwareDeps: hwdep.D(hwdep.ChromeEC()),
+				Fixture:           fixture.NormalMode,
+				Val:               bootPerfFromS5,
 			},
 		},
 
