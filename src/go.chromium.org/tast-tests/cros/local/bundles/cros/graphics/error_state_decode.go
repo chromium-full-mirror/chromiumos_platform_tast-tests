@@ -7,12 +7,14 @@ package graphics
 import (
 	"context"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/graphics"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 const i915ErrorStateDecode = "/usr/bin/aubinator_error_decode"
@@ -32,8 +34,9 @@ func init() {
 			"ihf@chromium.org",
 		},
 		BugComponent: "b:995569", // ChromeOS > Platform > Graphics > GPU
-		Attr:         []string{"group:graphics", "graphics_perbuild"},
+		Attr:         []string{"group:graphics", "graphics_perbuild", "group:mainline", "group:hw_agnostic", "informational"},
 		Fixture:      "graphicsNoChrome",
+		HardwareDeps: hwdep.D(hwdep.CPUSocFamily("intel")),
 		Params: []testing.Param{
 			{
 				Name: "cfm_m120",
@@ -64,6 +67,9 @@ func init() {
 // ErrorStateDecode verifies expected behavior for error state log decoding, in particular, of
 // i915_error_state by aubinator_error_decode.
 func ErrorStateDecode(ctx context.Context, s *testing.State) {
+	// We disable the syslog checks as decoding a canned error state binary should not trigger any hangs etc.
+	// But if we decided to extend the test in the future to induce a life hang and decode that then we for
+	// sure want to ignore this synthetic problem.
 	graphics.DisableSysLogCheck(s.TestName())
 
 	testOpt := s.Param().(errorStateDecodingParams)
@@ -81,7 +87,7 @@ func ErrorStateDecode(ctx context.Context, s *testing.State) {
 
 	if testOpt.expectedMatches == nil {
 		expectedDecodedFilename := s.DataPath(filename + "_decoded.txt")
-		if err := validateDecodingFull(ctx, expectedDecodedFilename, string(stdout)); err != nil {
+		if err := validateDecodingFull(ctx, s, expectedDecodedFilename, string(stdout)); err != nil {
 			s.Error("Failed to match full decoded log: ", err)
 		}
 	} else if err := validateDecoding(ctx, string(stdout), testOpt); err != nil {
@@ -90,26 +96,28 @@ func ErrorStateDecode(ctx context.Context, s *testing.State) {
 }
 
 // validateDecodingFull verifies that the decoded error state byte-matches the expected file.
-func validateDecodingFull(ctx context.Context, expectedDecodedFilename, decodedLog string) error {
-	decodedFile, err := os.CreateTemp("", "actual_decoded.txt")
+func validateDecodingFull(ctx context.Context, s *testing.State, expectedDecodedFilename, decodedLog string) error {
+	decodedFile, err := os.Create(filepath.Join(s.OutDir(), "i915_error_state_decoded.txt"))
 	if err != nil {
-		return errors.Wrap(err, "failed to create temp file for decoded log")
+		return errors.Wrap(err, "failed to create file for decoded log")
 	}
-	defer os.Remove(decodedFile.Name())
 
 	if _, err := decodedFile.Write([]byte(decodedLog)); err != nil {
 		return errors.Wrap(err, "failed to write decoded log to temp file")
 	}
 	decodedFile.Close()
 
+	// We diff both files ignoring all whitespace using the -w option.
 	stdout, stderr, err := testexec.CommandContext(
-		ctx, "diff", expectedDecodedFilename, decodedFile.Name(),
+		ctx, "diff", "-w", expectedDecodedFilename, decodedFile.Name(),
 	).SeparatedOutput(testexec.DumpLogOnError)
 
 	// Nonempty diff is also error.
 	if err != nil {
 		return errors.Wrap(err, string(append(stdout, stderr...)))
 	}
+	// We delete the decoded file only if it is identical to the expected file, otherwise it will be uploaded for inspection.
+	os.Remove(decodedFile.Name())
 	return nil
 }
 
@@ -117,7 +125,10 @@ func validateDecodingFull(ctx context.Context, expectedDecodedFilename, decodedL
 func validateDecoding(ctx context.Context, decodedFile string, params errorStateDecodingParams) error {
 	var failedMatches []string
 	for _, ex := range params.expectedMatches {
-		if !strings.Contains(decodedFile, ex) {
+		if strings.Contains(decodedFile, ex) {
+			testing.ContextLog(ctx, "Found match: ", ex)
+		} else {
+			testing.ContextLog(ctx, "Missing match: ", ex)
 			failedMatches = append(failedMatches, ex)
 		}
 	}
