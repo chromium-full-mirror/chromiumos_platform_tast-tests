@@ -208,6 +208,16 @@ func IsVividDriverLoaded(ctx context.Context) bool {
 
 // WaitForCameraServiceBinding returns when the connection between ash-chrome and cros camera service established.
 func WaitForCameraServiceBinding(ctx context.Context) error {
+	if upstart.JobExists(ctx, "cros-camera-algo") {
+		if err := upstart.EnsureJobRunning(ctx, "cros-camera-algo"); err != nil {
+			return errors.Wrap(err, "failed to start cros-camera-algo")
+		}
+	}
+	if upstart.JobExists(ctx, "cros-camera-gpu-algo") {
+		if err := upstart.EnsureJobRunning(ctx, "cros-camera-gpu-algo"); err != nil {
+			return errors.Wrap(err, "failed to start cros-camera-gpu-algo")
+		}
+	}
 	if err := upstart.EnsureJobRunning(ctx, "cros-camera"); err != nil {
 		return errors.Wrap(err, "failed to start cros-camera")
 	}
