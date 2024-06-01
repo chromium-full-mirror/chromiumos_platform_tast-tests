@@ -81,7 +81,7 @@ func init() {
 		Func:         ManagedDevicePolicy,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "This test ensure that managed policies are applied to Android",
-		Contacts:     []string{"arc-commercial@google.com", "mhasank@google.com"},
+		Contacts:     []string{"arc-commercial@google.com", "mhasank@chromium.org"},
 		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
 		BugComponent: "b:1487630",
 		Attr:         []string{"group:mainline"},
