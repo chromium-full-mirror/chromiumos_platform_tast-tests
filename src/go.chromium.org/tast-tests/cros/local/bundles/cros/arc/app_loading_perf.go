@@ -38,15 +38,15 @@ type groupDef struct {
 }
 
 var (
-	// disabledFeatures is a list of features to disable while running the test.
-	disabledFeatures = []string{"--disable-features=ArcExternalStorageAccess", "--disable-features=FirmwareUpdaterApp"}
+	// extraArgs is a list of extra arguments to pass to Chrome.
+	extraArgs = []string{"--disable-arc-cpu-restriction", "--disable-features=ArcExternalStorageAccess", "--disable-features=FirmwareUpdaterApp"}
 
 	// arcAppLoadingBooted is a precondition similar to arc.Booted() with no opt-in and disables some heavy Android activities that use system resources.
-	arcAppLoadingBooted = arc.NewPrecondition("arcapploading_booted", nil /* GAIAVARS */, nil /* GAIALOGINPOOLVARS */, false /* O_DIRECT */, append(arc.DisableSyncFlags(), disabledFeatures...)...)
+	arcAppLoadingBooted = arc.NewPrecondition("arcapploading_booted", nil /* GAIAVARS */, nil /* GAIALOGINPOOLVARS */, false /* O_DIRECT */, append(arc.DisableSyncFlags(), extraArgs...)...)
 
-	arcAppLoadingBootedWithPvSchedEnabled = arc.NewPreconditionWithPvSchedEnabled("arcapploading_booted_with_pvsched", nil /* GAIAVARS */, nil /* GAIALOGINPOOLVARS */, false /* O_DIRECT */, append(arc.DisableSyncFlags(), disabledFeatures...)...)
+	arcAppLoadingBootedWithPvSchedEnabled = arc.NewPreconditionWithPvSchedEnabled("arcapploading_booted_with_pvsched", nil /* GAIAVARS */, nil /* GAIALOGINPOOLVARS */, false /* O_DIRECT */, append(arc.DisableSyncFlags(), extraArgs...)...)
 	// arcAppLoadingBootedLacros is a precondition similar arcAppLoadingBooted but with Lacros enabled.
-	arcAppLoadingBootedLacros = arc.NewPreconditionWithBrowserType("arcapploading_booted_lacros", browser.TypeLacros, nil /* GAIAVARS */, nil /* GAIALOGINPOOLVARS */, false /* O_DIRECT */, append(arc.DisableSyncFlags(), disabledFeatures...)...)
+	arcAppLoadingBootedLacros = arc.NewPreconditionWithBrowserType("arcapploading_booted_lacros", browser.TypeLacros, nil /* GAIAVARS */, nil /* GAIALOGINPOOLVARS */, false /* O_DIRECT */, append(arc.DisableSyncFlags(), extraArgs...)...)
 )
 
 func init() {

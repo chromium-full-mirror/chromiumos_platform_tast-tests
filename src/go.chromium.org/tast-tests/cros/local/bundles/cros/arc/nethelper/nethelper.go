@@ -45,6 +45,8 @@ const (
 	tcCmd        = "tc"
 	iptablesCmd  = "/sbin/iptables"
 	ip6tablesCmd = "/sbin/ip6tables"
+
+	debugLog = false
 )
 
 var (
@@ -216,7 +218,9 @@ func listenForClients(ctx context.Context, listener net.Listener) {
 			testing.ContextLogf(ctx, "Stop listening %s", err)
 			return
 		}
-		testing.ContextLogf(ctx, "Connection is ready %s<->%s", conn.LocalAddr().String(), conn.RemoteAddr().String())
+		if debugLog {
+			testing.ContextLogf(ctx, "Connection is ready %s<->%s", conn.LocalAddr().String(), conn.RemoteAddr().String())
+		}
 		go handleClient(ctx, conn)
 	}
 }
@@ -245,7 +249,9 @@ func handleClient(ctx context.Context, conn net.Conn) {
 		message, err := r.ReadString('\n')
 		if err != nil {
 			if err == io.EOF {
-				testing.ContextLogf(ctx, "Connection is closed %s", conn.RemoteAddr().String())
+				if debugLog {
+					testing.ContextLogf(ctx, "Connection is closed %s", conn.RemoteAddr().String())
+				}
 				return
 			}
 			testing.ContextLogf(ctx, "Connection is broken %s: %s", conn.RemoteAddr().String(), err)
@@ -261,7 +267,9 @@ func handleClient(ctx context.Context, conn net.Conn) {
 				return
 			}
 			if result == okResponse {
-				testing.ContextLogf(ctx, "Flushed system buffers and cleared caches, dentries, inodes for %s", conn.RemoteAddr().String())
+				if debugLog {
+					testing.ContextLogf(ctx, "Flushed system buffers and cleared caches, dentries, inodes for %s", conn.RemoteAddr().String())
+				}
 			}
 		case cmdReceivePayload:
 			ack := fmt.Sprintf("Ack from nethelper connection %s pid=%s", conn.LocalAddr().String(), strconv.Itoa(os.Getpid()))
@@ -269,7 +277,9 @@ func handleClient(ctx context.Context, conn net.Conn) {
 				testing.ContextLogf(ctx, "Failed to receive payload from %s: %s", conn.RemoteAddr().String(), err)
 				return
 			} else if result > 0 {
-				testing.ContextLogf(ctx, "Received %d bytes payload from %s", result, conn.RemoteAddr().String())
+				if debugLog {
+					testing.ContextLogf(ctx, "Received %d bytes payload from %s", result, conn.RemoteAddr().String())
+				}
 			}
 		case cmdGetTotalMemoryKB:
 			value, result := handleGetTotalMemoryKB(ctx)
