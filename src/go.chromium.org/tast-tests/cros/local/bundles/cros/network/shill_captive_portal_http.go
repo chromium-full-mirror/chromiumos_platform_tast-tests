@@ -20,7 +20,7 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-type params struct {
+type captivePortalHTTPParams struct {
 	serviceState         string
 	httpResponseHandler  func(rw http.ResponseWriter, req *http.Request)
 	httpsResponseHandler func(rw http.ResponseWriter, req *http.Request)
@@ -41,7 +41,7 @@ func init() {
 		Attr: []string{"group:mainline", "group:hw_agnostic"},
 		Params: []testing.Param{{
 			Name: "redirectfound",
-			Val: &params{
+			Val: &captivePortalHTTPParams{
 				serviceState:         shillconst.ServiceStateRedirectFound,
 				httpResponseHandler:  captiveportalconsts.RedirectHandler(captiveportalconsts.RedirectURL),
 				httpsResponseHandler: nil,
@@ -50,7 +50,7 @@ func init() {
 			},
 		}, {
 			Name: "managednetworkdevicepolicy",
-			Val: &params{
+			Val: &captivePortalHTTPParams{
 				serviceState:         shillconst.ServiceStateOnline,
 				httpResponseHandler:  captiveportalconsts.RedirectHandler(captiveportalconsts.RedirectURL),
 				httpsResponseHandler: nil,
@@ -59,7 +59,7 @@ func init() {
 			},
 		}, {
 			Name: "managednetworkuserpolicy",
-			Val: &params{
+			Val: &captivePortalHTTPParams{
 				serviceState:         shillconst.ServiceStateOnline,
 				httpResponseHandler:  captiveportalconsts.RedirectHandler(captiveportalconsts.RedirectURL),
 				httpsResponseHandler: nil,
@@ -68,7 +68,7 @@ func init() {
 			},
 		}, {
 			Name: "managednetworknone",
-			Val: &params{
+			Val: &captivePortalHTTPParams{
 				serviceState:         shillconst.ServiceStateRedirectFound,
 				httpResponseHandler:  captiveportalconsts.RedirectHandler(captiveportalconsts.RedirectURL),
 				httpsResponseHandler: nil,
@@ -77,7 +77,7 @@ func init() {
 			},
 		}, {
 			Name: "checkportalfalse",
-			Val: &params{
+			Val: &captivePortalHTTPParams{
 				serviceState:         shillconst.ServiceStateOnline,
 				httpResponseHandler:  captiveportalconsts.RedirectHandler(captiveportalconsts.RedirectURL),
 				httpsResponseHandler: nil,
@@ -86,7 +86,7 @@ func init() {
 			},
 		}, {
 			Name: "portalsuspected",
-			Val: &params{
+			Val: &captivePortalHTTPParams{
 				serviceState:         shillconst.ServiceStateRedirectFound,
 				httpResponseHandler:  captiveportalconsts.OkResponseHandler("portal login page"),
 				httpsResponseHandler: nil,
@@ -95,7 +95,7 @@ func init() {
 			},
 		}, {
 			Name: "online",
-			Val: &params{
+			Val: &captivePortalHTTPParams{
 				serviceState:         shillconst.ServiceStateOnline,
 				httpResponseHandler:  captiveportalconsts.NoContentHandler,
 				httpsResponseHandler: captiveportalconsts.NoContentHandler,
@@ -104,7 +104,7 @@ func init() {
 			},
 		}, {
 			Name: "noconnectivity",
-			Val: &params{
+			Val: &captivePortalHTTPParams{
 				serviceState:         shillconst.ServiceStateNoConnectivity,
 				httpResponseHandler:  nil,
 				httpsResponseHandler: nil,
@@ -113,7 +113,7 @@ func init() {
 			},
 		}, {
 			Name: "redirectfoundtempredirect",
-			Val: &params{
+			Val: &captivePortalHTTPParams{
 				serviceState:         shillconst.ServiceStateRedirectFound,
 				httpResponseHandler:  captiveportalconsts.TempRedirectHandler(captiveportalconsts.RedirectURL),
 				httpsResponseHandler: nil,
@@ -122,7 +122,7 @@ func init() {
 			},
 		}, {
 			Name: "invalidredirect",
-			Val: &params{
+			Val: &captivePortalHTTPParams{
 				serviceState:         shillconst.ServiceStateNoConnectivity,
 				httpResponseHandler:  captiveportalconsts.RedirectHandler(""),
 				httpsResponseHandler: nil,
@@ -131,7 +131,7 @@ func init() {
 			},
 		}, {
 			Name: "empty200asnwer",
-			Val: &params{
+			Val: &captivePortalHTTPParams{
 				serviceState:         shillconst.ServiceStateOnline,
 				httpResponseHandler:  captiveportalconsts.OkResponseHandler(""),
 				httpsResponseHandler: captiveportalconsts.NoContentHandler,
@@ -140,7 +140,7 @@ func init() {
 			},
 		}, {
 			Name: "1byte200answer",
-			Val: &params{
+			Val: &captivePortalHTTPParams{
 				serviceState:         shillconst.ServiceStateOnline,
 				httpResponseHandler:  captiveportalconsts.OkResponseHandler("\n"),
 				httpsResponseHandler: captiveportalconsts.NoContentHandler,
@@ -172,7 +172,7 @@ func ShillCaptivePortalHTTP(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set portal httpsurl: ", err)
 	}
 
-	params := s.Param().(*params)
+	params := s.Param().(*captivePortalHTTPParams)
 
 	var httpsCerts *certs.Certs
 	if params.httpsResponseHandler != nil {
