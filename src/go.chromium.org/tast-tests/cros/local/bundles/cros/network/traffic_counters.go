@@ -39,36 +39,76 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+type tcSourceType int
+
+const (
+	tcSourceTypeUsers tcSourceType = iota
+	tcSourceTypeVPN
+	tcSourceTypeCrostini
+	tcSourceTypeARC
+)
+
+type tcIPFamily int
+
+const (
+	tcIPv4 tcIPFamily = iota
+	tcIPv6
+)
+
+func (f tcIPFamily) ppTrafficCounterFamily() pp.TrafficCounter_IpFamily {
+	return []pp.TrafficCounter_IpFamily{pp.TrafficCounter_IPV4, pp.TrafficCounter_IPV6}[f]
+}
+
+func (f tcIPFamily) String() string {
+	return []string{"ipv4", "ipv6"}[f]
+}
+
 type tcParams struct {
-	users bool
-	vpn   bool
-	cros  bool
-	arc   bool
+	source   tcSourceType
+	ipFamily tcIPFamily
 }
 
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         TrafficCounters,
 		Desc:         "Verify patchpanel traffic counters",
-		Contacts:     []string{"cros-networking@google.com", "garrick@google.com"},
+		Contacts:     []string{"cros-networking@google.com", "jiejiang@google.com"},
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "informational"},
 		Timeout:      5 * time.Minute,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{{
-			Name: "users",
-			Val:  tcParams{users: true},
+			Name: "users_ipv4",
+			Val: tcParams{
+				source:   tcSourceTypeUsers,
+				ipFamily: tcIPv4,
+			},
 		}, {
-			Name:              "vpn",
-			Val:               tcParams{vpn: true},
+			Name: "users_ipv6",
+			Val: tcParams{
+				source:   tcSourceTypeUsers,
+				ipFamily: tcIPv6,
+			},
+		}, {
+			Name: "vpn_ipv4",
+			Val: tcParams{
+				source:   tcSourceTypeVPN,
+				ipFamily: tcIPv4,
+			},
 			ExtraSoftwareDeps: []string{"wireguard"},
 		}, {
-			Name:    "crostini",
-			Val:     tcParams{cros: true},
+			Name: "crostini_ipv4",
+			Val: tcParams{
+				source:   tcSourceTypeCrostini,
+				ipFamily: tcIPv4,
+			},
 			Fixture: "crostiniBullseye",
 		}, {
-			Name:    "arc",
-			Val:     tcParams{arc: true},
+			Name: "arc_ipv4",
+			Val: tcParams{
+				source:   tcSourceTypeARC,
+				ipFamily: tcIPv4,
+			},
 			Fixture: "arcBooted",
 		}}})
 }
@@ -83,7 +123,7 @@ type server struct {
 
 func (s server) dst() string {
 	addr := s.addr.String()
-	if s.fam == l4server.UDP6 {
+	if len(s.addr) == net.IPv6len {
 		addr = fmt.Sprintf("[%v]", addr)
 	}
 	return fmt.Sprintf("%v:%v", addr, s.port)
@@ -130,7 +170,7 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 	}
 	defer restorePortal(cleanupCtx)
 
-	if param.arc {
+	if param.source == tcSourceTypeARC {
 		restoreEthernet, err := arcnet.HideUnusedEthernet(ctx, mgr)
 		if err != nil {
 			s.Fatal("Failed to hide unused ethernet: ", err)
@@ -143,21 +183,12 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create patchpanel client: ", err)
 	}
 
-	var svrs []*server
 	pool := subnet.NewPool()
-	fams := []l4server.Family{l4server.UDP4}
-	// IPv6 tested for host user sources only.
-	if param.users {
-		fams = append(fams, l4server.UDP6)
+	svr, err := setup(ctx, mgr, pool, param.ipFamily)
+	if err != nil {
+		s.Fatal("Failed to setup router: ", err)
 	}
-	for _, fam := range fams {
-		svr, err := setup(ctx, mgr, pool, fam)
-		if err != nil {
-			s.Fatal("Failed to setup router: ", err)
-		}
-		svrs = append(svrs, svr)
-		defer svr.cleanup(cleanupCtx)
-	}
+	defer svr.cleanup(cleanupCtx)
 
 	b := make([]byte, 128)
 	rand.Seed(time.Now().UnixNano())
@@ -197,10 +228,8 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 	// and IP family.
 	counterKeys := func(srcs []pp.TrafficCounter_Source) map[string]bool {
 		keys := make(map[string]bool)
-		for _, svr := range svrs {
-			for _, src := range srcs {
-				keys[key(svr.rtEnv.VethOutName, src, ipFamily(svr.fam))] = true
-			}
+		for _, src := range srcs {
+			keys[key(svr.rtEnv.VethOutName, src, ipFamily(svr.fam))] = true
 		}
 		return keys
 	}
@@ -208,11 +237,9 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 	// Generates traffic for each source on each server and returns map keyed by
 	// the counters we expect to find based on the servers and sources provided.
 	runIO := func(users []string) {
-		for _, svr := range svrs {
-			for _, u := range users {
-				if err := txrx(ctx, svr, msg, u); err != nil {
-					s.Errorf("Failed to run i/o test for %v:%v:%v: %v", u, svr.fam.String(), svr.dst(), err)
-				}
+		for _, u := range users {
+			if err := txrx(ctx, svr, msg, u); err != nil {
+				s.Fatalf("Failed to run i/o test for %v:%v:%v: %v", u, svr.fam.String(), svr.dst(), err)
 			}
 		}
 	}
@@ -259,7 +286,7 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 	}
 
 	// Test traffic counted by user ID.
-	if param.users {
+	if param.source == tcSourceTypeUsers {
 		expected := counterKeys([]pp.TrafficCounter_Source{
 			pp.TrafficCounter_SYSTEM,
 			pp.TrafficCounter_USER,
@@ -277,9 +304,8 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 	}
 
 	// Test traffic counted for host VPN.
-	if param.vpn {
+	if param.source == tcSourceTypeVPN {
 		// Connect the VPN.
-		svr := svrs[0]
 		conn, err := vpn.StartConnection(
 			ctx, svr.svrEnv, vpn.TypeWireGuard,
 			// l4server is only listening on underlay address now.
@@ -295,7 +321,7 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 		})
 		// Inject the counter we expect to see for chrome traffic on
 		// the vpn device.
-		expected[key("vpn", pp.TrafficCounter_CHROME, ipFamily(svr.fam))] = true
+		expected[key("vpn", pp.TrafficCounter_CHROME, param.ipFamily.ppTrafficCounterFamily())] = true
 		test(
 			expected,
 			func() {
@@ -320,21 +346,19 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 		expected := counterKeys(srcs)
 
 		// Spin up an HTTP server to handle the request.
-		for _, svr := range svrs {
-			if err := svr.svrEnv.StartServer(ctx, "http", httpserver.New(httpserver.TCP4, "80", handler, nil)); err != nil {
-				s.Fatal("Failed to start HTTP server: ", err)
-			}
-			test(expected,
-				func() {
-					if err := f(svr.addr); err != nil {
-						s.Fatalf("Failed to run HTTP i/o test for %v:%v: %v", svr.fam.String(), svr.dst(), err)
-					}
-				})
+		if err := svr.svrEnv.StartServer(ctx, "http", httpserver.New(httpserver.TCP4, "80", handler, nil)); err != nil {
+			s.Fatal("Failed to start HTTP server: ", err)
 		}
+		test(expected,
+			func() {
+				if err := f(svr.addr); err != nil {
+					s.Fatalf("Failed to run HTTP i/o test for %v:%v: %v", param.ipFamily.String(), svr.dst(), err)
+				}
+			})
 	}
 
 	// Test traffic originating from Crostini.
-	if param.cros {
+	if param.source == tcSourceTypeCrostini {
 		cros := s.FixtValue().(crostini.FixtureData).Cont
 
 		vmTest(
@@ -353,7 +377,7 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 	}
 
 	// Test traffic originating from ARC++.
-	if param.arc {
+	if param.source == tcSourceTypeARC {
 		a := s.FixtValue().(*arc.PreData).ARC
 
 		vmTest(
@@ -376,21 +400,15 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 	}
 }
 
-func setup(ctx context.Context, mgr *shill.Manager, pool *subnet.Pool, fam l4server.Family) (*server, error) {
-	var opt virtualnet.EnvOptions
-	if fam == l4server.UDP6 {
-		opt.Priority = 1
-		opt.NameSuffix = "6"
-		opt.RAServer = true
-	} else {
-		opt.Priority = 2
-		opt.NameSuffix = "4"
-		opt.EnableDHCP = true
-		opt.EnableDNS = true
+func setup(ctx context.Context, mgr *shill.Manager, pool *subnet.Pool, fam tcIPFamily) (*server, error) {
+	opts := virtualnet.EnvOptions{
+		Priority:   1,
+		EnableDHCP: fam == tcIPv4,
+		RAServer:   fam == tcIPv6,
 	}
-	svc, rtEnv, svrEnv, err := virtualnet.CreateRouterServerEnv(ctx, mgr, pool, opt)
+	svc, rtEnv, svrEnv, err := virtualnet.CreateRouterServerEnv(ctx, mgr, pool, opts)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to set up %s network env", fam)
+		return nil, errors.Wrap(err, "failed to set up network env")
 	}
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
@@ -407,25 +425,28 @@ func setup(ctx context.Context, mgr *shill.Manager, pool *subnet.Pool, fam l4ser
 		return nil, errors.Wrapf(err, "failed to wait for %s service", fam)
 	}
 
-	addrs, err := svrEnv.WaitForVethInAddrs(ctx, fam == l4server.UDP4, fam == l4server.UDP6)
+	addrs, err := svrEnv.WaitForVethInAddrs(ctx, fam == tcIPv4, fam == tcIPv6)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to get %s server addrs: ", fam)
 	}
 	var addr net.IP
-	if fam == l4server.UDP6 {
+	var l4family l4server.Family
+	if fam == tcIPv6 {
 		addr = addrs.IPv6Addrs[0]
+		l4family = l4server.UDP6
 	} else {
 		addr = addrs.IPv4Addr
+		l4family = l4server.UDP4
 	}
-	port := network.UnusedOrRandomPort(ctx, fam)
-	udp := l4server.New(fam, port, l4server.WithAddr(addr.String()), l4server.WithMsgHandler(l4server.Reflector()))
+	port := network.UnusedOrRandomPort(ctx, l4family)
+	udp := l4server.New(l4family, port, l4server.WithAddr(addr.String()), l4server.WithMsgHandler(l4server.Reflector()))
 	if err := svrEnv.StartServer(ctx, fam.String(), udp); err != nil {
 		return nil, errors.Wrapf(err, "failed to start %s server", fam)
 	}
 	svr := &server{
 		rtEnv:  rtEnv,
 		svrEnv: svrEnv,
-		fam:    fam,
+		fam:    l4family,
 		port:   port,
 		addr:   addr,
 	}
@@ -464,5 +485,5 @@ func txrx(ctx context.Context, svr *server, msg, usr string) error {
 			Gid: uint32(gid),
 		},
 	}
-	return cmd.Run()
+	return cmd.Run(testexec.DumpLogOnError)
 }
