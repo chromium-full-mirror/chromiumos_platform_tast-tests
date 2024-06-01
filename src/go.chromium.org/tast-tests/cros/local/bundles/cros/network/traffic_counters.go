@@ -27,6 +27,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/network"
 	arcnet "go.chromium.org/tast-tests/cros/local/network/arc"
 	patchpanel "go.chromium.org/tast-tests/cros/local/network/patchpanel_client"
+	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/env"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/httpserver"
@@ -97,6 +98,13 @@ func init() {
 			},
 			ExtraSoftwareDeps: []string{"wireguard"},
 		}, {
+			Name: "vpn_ipv6",
+			Val: tcParams{
+				source:   tcSourceTypeVPN,
+				ipFamily: tcIPv6,
+			},
+			ExtraSoftwareDeps: []string{"wireguard"},
+		}, {
 			Name: "crostini_ipv4",
 			Val: tcParams{
 				source:   tcSourceTypeCrostini,
@@ -104,6 +112,17 @@ func init() {
 			},
 			Fixture: "crostiniBullseye",
 		}, {
+			Name: "crostini_ipv6",
+			Val: tcParams{
+				source:   tcSourceTypeCrostini,
+				ipFamily: tcIPv6,
+			},
+			Fixture: "crostiniBullseye",
+		}, {
+			// TODO(b/298006226): Add ARC IPv6 test, currently there seems to be
+			// default network selection issue there. Now that this test is not
+			// verifying multi-networking behavior for ARC, we can wait for the hide
+			// Ethernet fixture (b/258359554) and then revisit this test.
 			Name: "arc_ipv4",
 			Val: tcParams{
 				source:   tcSourceTypeARC,
@@ -308,6 +327,7 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 		// Connect the VPN.
 		conn, err := vpn.StartConnection(
 			ctx, svr.svrEnv, vpn.TypeWireGuard,
+			vpn.WithIPType(vpn.IPTypeIPv4AndIPv6),
 			// l4server is only listening on underlay address now.
 			vpn.WithAllowingReachUnderlayIP(),
 		)
@@ -316,12 +336,12 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 		}
 		defer conn.Cleanup(cleanupCtx)
 
-		expected := counterKeys([]pp.TrafficCounter_Source{
-			pp.TrafficCounter_VPN,
-		})
-		// Inject the counter we expect to see for chrome traffic on
-		// the vpn device.
-		expected[key("vpn", pp.TrafficCounter_CHROME, param.ipFamily.ppTrafficCounterFamily())] = true
+		expected := map[string]bool{
+			// Underlay counters. Note that currently the underlay is always IPv4.
+			key(svr.rtEnv.VethOutName, pp.TrafficCounter_VPN, tcIPv4.ppTrafficCounterFamily()): true,
+			// Overlay counters.
+			key("vpn", pp.TrafficCounter_CHROME, param.ipFamily.ppTrafficCounterFamily()): true,
+		}
 		test(
 			expected,
 			func() {
@@ -346,7 +366,11 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 		expected := counterKeys(srcs)
 
 		// Spin up an HTTP server to handle the request.
-		if err := svr.svrEnv.StartServer(ctx, "http", httpserver.New(httpserver.TCP4, "80", handler, nil)); err != nil {
+		httpFam := httpserver.TCP4
+		if param.ipFamily == tcIPv6 {
+			httpFam = httpserver.TCP6
+		}
+		if err := svr.svrEnv.StartServer(ctx, "http", httpserver.New(httpFam, "80", handler, nil)); err != nil {
 			s.Fatal("Failed to start HTTP server: ", err)
 		}
 		test(expected,
@@ -364,11 +388,16 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 		vmTest(
 			[]pp.TrafficCounter_Source{pp.TrafficCounter_CROSTINI_VM},
 			func(addr net.IP) error {
+				addrStr := addr.String()
+				if param.ipFamily == tcIPv6 {
+					addrStr = "[" + addrStr + "]"
+				}
+
 				// Use curl to generate some traffic to/from the HTTP server.
 				args := []string{
 					"curl",
 					"-X", "PUT",
-					"http://" + addr.String(),
+					"http://" + addrStr,
 					"--connect-timeout", "5",
 					"-d", fmt.Sprintf(`{"msg":%s}`, msg),
 				}
@@ -403,8 +432,8 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 func setup(ctx context.Context, mgr *shill.Manager, pool *subnet.Pool, fam tcIPFamily) (*server, error) {
 	opts := virtualnet.EnvOptions{
 		Priority:   1,
-		EnableDHCP: fam == tcIPv4,
-		RAServer:   fam == tcIPv6,
+		EnableDHCP: true,
+		RAServer:   true,
 	}
 	svc, rtEnv, svrEnv, err := virtualnet.CreateRouterServerEnv(ctx, mgr, pool, opts)
 	if err != nil {
@@ -425,7 +454,7 @@ func setup(ctx context.Context, mgr *shill.Manager, pool *subnet.Pool, fam tcIPF
 		return nil, errors.Wrapf(err, "failed to wait for %s service", fam)
 	}
 
-	addrs, err := svrEnv.WaitForVethInAddrs(ctx, fam == tcIPv4, fam == tcIPv6)
+	addrs, err := svrEnv.WaitForVethInAddrs(ctx, true /*ipv4*/, true /*ipv6*/)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to get %s server addrs: ", fam)
 	}
@@ -438,6 +467,13 @@ func setup(ctx context.Context, mgr *shill.Manager, pool *subnet.Pool, fam tcIPF
 		addr = addrs.IPv4Addr
 		l4family = l4server.UDP4
 	}
+
+	// Make sure that the addr is reachable. Since it's a dual stack network here,
+	// only waiting for Service to be online is not enough.
+	if err := ping.ExpectPingSuccessWithTimeout(ctx, addr.String(), "chronos", 10*time.Second); err != nil {
+		return nil, errors.Wrapf(err, "failed to verify connectivity to %s", addr.String())
+	}
+
 	port := network.UnusedOrRandomPort(ctx, l4family)
 	udp := l4server.New(l4family, port, l4server.WithAddr(addr.String()), l4server.WithMsgHandler(l4server.Reflector()))
 	if err := svrEnv.StartServer(ctx, fam.String(), udp); err != nil {
