@@ -165,16 +165,16 @@ func init() {
 				Fixture: "mountUnmountPtsWorldForCrOSx86",
 				Val: &perfSuite{
 					runner:        ptsworld.NewCrosRunner(),
-					suiteName:     "encode-mp3-1.7.4",
+					suiteName:     "local/encode-mp3-1.7.4",
 					resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
 				},
-				Timeout: 10 * time.Minute,
+				Timeout: 8 * time.Minute,
 			}, {
 				Name:    "encodemp3_cros_arm64",
 				Fixture: "mountUnmountPtsWorldForCrOSarm64",
 				Val: &perfSuite{
 					runner:        ptsworld.NewCrosRunner(),
-					suiteName:     "encode-mp3-1.7.4",
+					suiteName:     "local/encode-mp3-1.7.4",
 					resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
 				},
 				Timeout: 10 * time.Minute,
