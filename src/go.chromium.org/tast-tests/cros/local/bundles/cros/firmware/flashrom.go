@@ -20,7 +20,7 @@ func init() {
 		Contacts: []string{
 			"cros-flashrom-team@google.com", // CrOS Flashrom team
 			"chromeos-firmware@google.com",  // CrOS Firmware Developers
-			"quasisec@chromium.org",         // CrOS Flashrom Maintainer
+			"roccochen@chromium.org",        // CrOS Flashrom Maintainer
 		},
 		BugComponent: "b:750299", // ChromeOS > Platform > Enablement > Firmware > Flashrom
 		Attr:         []string{"group:mainline", "group:labqual"},

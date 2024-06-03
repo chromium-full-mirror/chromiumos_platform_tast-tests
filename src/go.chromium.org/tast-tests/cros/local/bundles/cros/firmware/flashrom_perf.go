@@ -27,7 +27,7 @@ func init() {
 		Desc: "Flashrom SPI flash E2E tests",
 		Contacts: []string{
 			"chromeos-faft@google.com",
-			"quasisec@chromium.org",
+			"roccochen@chromium.org", // CrOS Flashrom Maintainer
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		// b:238260020 - disable aged (>1y) unpromoted informational tests
