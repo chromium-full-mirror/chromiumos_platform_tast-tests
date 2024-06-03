@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/cros/metrics"
 	"go.chromium.org/tast-tests/cros/remote/memory/mempressure"
 	"go.chromium.org/tast-tests/cros/remote/tracing"
+	"go.chromium.org/tast-tests/cros/remote/tracing/linuxperf"
 	powerpb "go.chromium.org/tast-tests/cros/services/cros/power"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast/core/dut"
@@ -34,6 +35,9 @@ const (
 
 	// enablePerfettoVarName is the name of the variable to enable Perfetto trace.
 	enablePerfettoVarName = "power.SuspendPerf.enablePerfetto"
+
+	// perfEventVarName is the name of the variable to specify events for trace-cmd to collect.
+	perfEventVarName = "power.SuspendPerf.perfEvent"
 )
 
 var forceTabsVar = testing.RegisterVarString(
@@ -52,6 +56,12 @@ var enablePerfettoVar = testing.RegisterVarString(
 	enablePerfettoVarName,
 	"",
 	"Boolean value to enable Perfetto to record. Use 'yes or 'no'",
+)
+
+var perfEventVar = testing.RegisterVarString(
+	perfEventVarName,
+	"",
+	"Event name to trace by perf record (e.g. 'cpu-cycles', 'sched:sched_switch')",
 )
 
 type testArgsForSuspendPerf struct {
@@ -78,6 +88,7 @@ func init() {
 			"tast.cros.power.SuspendPerfService",
 			"tast.cros.tracing.TraceCmdService",
 			"tast.cros.tracing.PerfettoTraceService",
+			"tast.cros.tracing.linuxperf.LinuxPerfService",
 			"tast.cros.ui.ConnService",
 			"tast.cros.ui.TconnService",
 		},
@@ -195,10 +206,12 @@ func SuspendPerf(ctx context.Context, s *testing.State) {
 		s.Logf("Memory pressure: Opened tabs: %d, discarded tabs: %d", mp.OpenedTabs(), mp.DiscardedTabs(ctx))
 	}
 
-	if err := initTracing(ctx, cl); err != nil {
+	tracer := &compoundTracers{}
+
+	if err := tracer.init(ctx, cl); err != nil {
 		s.Log("Failed to initialize tracing, but this is ignorable: ", err)
 	}
-	defer cleanupTracing(ctx, s, cl)
+	defer tracer.cleanUp(ctx, s, cl)
 
 	service := powerpb.NewSuspendPerfServiceClient(cl.Conn)
 	tconn := ui.NewTconnServiceClient(cl.Conn)
@@ -214,12 +227,12 @@ func SuspendPerf(ctx context.Context, s *testing.State) {
 	}
 
 	// Trace the base metrics.
-	sess := startTracing(ctx, s, cl)
+	tracer.start(ctx, s, cl, false)
 	s.Log("Take a metric before suspend as a base metric")
 	if err := measureBaseTabSwitching(ctx, tconn, mp, args.enableLacros, pv); err != nil {
 		s.Fatal("Failed to measure base tab switching performance: ", err)
 	}
-	saveTraceData(ctx, s, cl, sess, nil, "_base")
+	tracer.save(ctx, s, cl, "_base")
 
 	// Get old (before the suspend) histograms if exist. Usually this is empty.
 	older, err := getHistograms(ctx, tconn, useMetrics)
@@ -231,11 +244,7 @@ func SuspendPerf(ctx context.Context, s *testing.State) {
 	seconds := defaultSuspendSeconds
 
 	for i := 0; i < args.numSuspend; i++ {
-		sess := startTracing(ctx, s, cl)
-		var tok *tracing.RemoteSessionToken
-		if sess != nil {
-			tok = sess.Token()
-		}
+		tracer.start(ctx, s, cl, true)
 		// Suspend and resume
 		s.Logf("Suspending DUT for %d seconds", seconds)
 		mp.Disconnect(ctx)
@@ -260,7 +269,7 @@ func SuspendPerf(ctx context.Context, s *testing.State) {
 		if err := mempressure.ConnectTestEnv(ctx, cl.Conn, args.enableArc, args.enableLacros); err != nil {
 			s.Fatal("Failed to re-initalize test environment: ", err)
 		}
-		saveTraceData(ctx, s, cl, nil, tok, fmt.Sprintf("_resumed-%d", i))
+		tracer.save(ctx, s, cl, fmt.Sprintf("_resumed-%d", i))
 
 		// Reconnect to browser via memory pressure service.
 		if err := mp.Reconnect(ctx, cl.Conn); err != nil {
@@ -268,9 +277,9 @@ func SuspendPerf(ctx context.Context, s *testing.State) {
 		}
 		// This tab switching metrics are corrected by waitForHistogramsUpdate()
 		s.Log("Tab switching after resume")
-		sess = startTracing(ctx, s, cl)
+		tracer.start(ctx, s, cl, false)
 		mp.CycleTabs(ctx, defaultCycleTabs)
-		saveTraceData(ctx, s, cl, sess, nil, fmt.Sprintf("_tabs-%d", i))
+		tracer.save(ctx, s, cl, fmt.Sprintf("_tabs-%d", i))
 
 		s.Log("Wait for suspend metrics update")
 		service = powerpb.NewSuspendPerfServiceClient(cl.Conn)
@@ -361,6 +370,14 @@ func measureBaseTabSwitching(ctx context.Context, tconn ui.TconnServiceClient, m
 	return nil
 }
 
+type compoundTracers struct {
+	instanceName  string
+	perfetto      *tracing.RemoteSession
+	perfettoToken *tracing.RemoteSessionToken
+	perf          *linuxperf.RemoteLinuxPerf
+	perfToken     *linuxperf.RemotePerfToken
+}
+
 func shouldRunTraceCmd() bool {
 	return traceCmdEventsVar.Value() != ""
 }
@@ -369,8 +386,11 @@ func shouldRunPerfetto() bool {
 	return enablePerfettoVar.Value() == "yes"
 }
 
-// initTracing creates an trace-cmd instance in DUT.
-func initTracing(ctx context.Context, cl *rpc.Client) error {
+func shouldRunPerf() bool {
+	return perfEventVar.Value() != ""
+}
+
+func (c *compoundTracers) init(ctx context.Context, cl *rpc.Client) error {
 	if !shouldRunTraceCmd() {
 		return nil
 	}
@@ -380,7 +400,11 @@ func initTracing(ctx context.Context, cl *rpc.Client) error {
 		tracing.CPUBufferKiB(defaultBufferSize),
 		tracing.InitialStop(),
 		tracing.EnableEvents(strings.Split(traceCmdEventsVar.Value(), ",")...))
-	return err
+	if err != nil {
+		return errors.Wrap(err, "failed to initialize TraceCmd")
+	}
+	c.instanceName = defaultInstanceName
+	return nil
 }
 
 // startTraceCmd attaches to trace-cmd and start it.
@@ -406,17 +430,51 @@ func startPerfetto(ctx context.Context, cl *rpc.Client) (*tracing.RemoteSession,
 	return sess, nil
 }
 
-// startTracing starts tracing in DUT.
-func startTracing(ctx context.Context, s *testing.State, cl *rpc.Client) *tracing.RemoteSession {
+func startLinuxPerf(ctx context.Context, cl *rpc.Client) (*linuxperf.RemoteLinuxPerf, error) {
+	if !shouldRunPerf() {
+		return nil, nil
+	}
+	return linuxperf.StartRemoteLinuxPerf(ctx, cl,
+		linuxperf.AllCpus(),
+		linuxperf.Stacks(),
+		linuxperf.Event(perfEventVar.Value()),
+		linuxperf.Timeout(100))
+}
+
+// start starts the tracers in remote. If `disconnect` is true, the started
+// tracing sessions will be tokenized. This means if you run save() method,
+// it will reconnect using these token instead of raw session.
+// This `disconnect` must be true if you are sure that `cl` will be renewed
+// by redial DUT, since the tracing sessions depends on the `cl` rpc.Client.
+// (e.g. suspend/resume usually need to redial the DUT)
+func (c *compoundTracers) start(ctx context.Context, s *testing.State, cl *rpc.Client, disconnect bool) {
+	var err error
+
 	if err := startTraceCmd(ctx, cl); err != nil {
 		s.Log("Failed to start trace-cmd, but this is ignorable: ", err)
 	}
 
-	sess, err := startPerfetto(ctx, cl)
+	c.perfetto, err = startPerfetto(ctx, cl)
 	if err != nil {
 		s.Log("Failed to start perfetto, but this is ignorable: ", err)
 	}
-	return sess
+
+	c.perf, err = startLinuxPerf(ctx, cl)
+	if err != nil {
+		s.Fatal("Failed to start perf, but this is ignorable: ", err)
+	}
+
+	if disconnect {
+		// Get tokens from tracers and discard the tracer instances.
+		if c.perfetto != nil {
+			c.perfettoToken = c.perfetto.Token()
+			c.perfetto = nil
+		}
+		if c.perf != nil {
+			c.perfToken = c.perf.Token()
+			c.perf = nil
+		}
+	}
 }
 
 // saveTraceCmd fetches the trace data from DUT and save it in s.OutDir().
@@ -456,22 +514,56 @@ func savePerfetto(ctx context.Context, s *testing.State, cl *rpc.Client, sess *t
 	return nil
 }
 
-// saveTraceData fetches the trace data from DUT and save it in s.OutDir().
-func saveTraceData(ctx context.Context, s *testing.State, cl *rpc.Client, sess *tracing.RemoteSession, tok *tracing.RemoteSessionToken, suffix string) {
+// savePerfData fetches the perf.data from DUT and save it in s.OutDir().
+func savePerfData(ctx context.Context, s *testing.State, cl *rpc.Client, perf *linuxperf.RemoteLinuxPerf, tok *linuxperf.RemotePerfToken, suffix string) error {
+	if !shouldRunPerf() {
+		return nil
+	}
+	dest := fmt.Sprintf("%s/perf%s.script.gz", s.OutDir(), suffix)
+	if perf == nil {
+		var err error
+		perf, err = linuxperf.ReconnectRemoteLinuxPerf(ctx, cl, tok)
+		if err != nil {
+			return errors.Wrap(err, "failed to reconnect to perf record")
+		}
+		tok = nil
+	}
+	defer func() {
+		if err := perf.Finalize(ctx); err != nil {
+			s.Log("Failed to run finilize: ", err)
+		}
+	}()
+	if err := perf.SaveScript(ctx,
+		linuxperf.Compress(),
+		linuxperf.ScriptFormat("time,comm,pid,tid,event,ip,sym,dso,trace")); err != nil {
+		return errors.Wrap(err, "failed to generate script file")
+	}
+	if err := s.DUT().GetFile(ctx, perf.ScriptDataPath(), dest); err != nil {
+		return errors.Wrap(err, "failed to copy the perfetto data file from DUT")
+	}
+
+	s.Logf("Save perf data into %q", dest)
+	return nil
+}
+
+func (c *compoundTracers) save(ctx context.Context, s *testing.State, cl *rpc.Client, suffix string) {
 	if err := saveTraceCmd(ctx, s, cl, suffix); err != nil {
 		s.Log("Ignorable: Failed to save trace-cmd data: ", err)
 	}
-	if err := savePerfetto(ctx, s, cl, sess, tok, suffix); err != nil {
+	if err := savePerfetto(ctx, s, cl, c.perfetto, c.perfettoToken, suffix); err != nil {
 		s.Log("Ignorable: Failed to save perfetto data: ", err)
+	}
+	if err := savePerfData(ctx, s, cl, c.perf, c.perfToken, suffix); err != nil {
+		s.Log("Ignorable: Failed to save perf data: ", err)
 	}
 }
 
-func cleanupTracing(ctx context.Context, s *testing.State, cl *rpc.Client) error {
+func (c *compoundTracers) cleanUp(ctx context.Context, s *testing.State, cl *rpc.Client) error {
 	if !shouldRunTraceCmd() {
 		return nil
 	}
-	s.Logf("Cleaning up a trace instance: %s", defaultInstanceName)
-	return tracing.CleanupRemoteInstance(ctx, cl, defaultInstanceName)
+	s.Logf("Cleaning up a trace instance: %s", c.instanceName)
+	return tracing.CleanupRemoteInstance(ctx, cl, c.instanceName)
 }
 
 func waitForHistogramsUpdate(ctx context.Context, tconn ui.TconnServiceClient, req []*histogramRequest, prev []*histogram.Histogram) ([]*histogram.Histogram, error) {
