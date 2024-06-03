@@ -16,6 +16,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/golang/protobuf/ptypes/empty"
 	gossh "golang.org/x/crypto/ssh"
 
 	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
@@ -2045,4 +2046,54 @@ func (h *Helper) LaunchMiniOS(ctx context.Context, kbShortcutBoot, miniOSOld boo
 		}
 	}
 	return nil
+}
+
+// ReadTPMC executes a tpmc command using provided arguments and returns the output.
+// It also stops the TPM daemon and restarts it after executing the command.
+func (h *Helper) ReadTPMC(ctx context.Context, tpmReadArgs ...string) (out string, reterr error) {
+	cleanupCtx := ctx
+	// Reserve a longer time to ensure enough time to restore the TPM daemon.
+	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Minute)
+	defer cancel()
+
+	if err := h.RequireTPMServiceClient(ctx); err != nil {
+		return "", errors.Wrap(err, "failed to create TPM service client")
+	}
+
+	if _, err := h.TPMServiceClient.NewHelper(ctx, &empty.Empty{}); err != nil {
+		return "", errors.Wrap(err, "failed to create a TPM service helper")
+	}
+	defer func(ctx context.Context) {
+		if _, err := h.TPMServiceClient.CloseHelper(ctx, &empty.Empty{}); err != nil {
+			if reterr != nil {
+				testing.ContextLog(ctx, "Failed to close TPM service helper")
+			} else {
+				reterr = errors.Wrap(err, "failed to close TPM service helper")
+			}
+		}
+	}(cleanupCtx)
+
+	if _, err := h.TPMServiceClient.StopDaemons(ctx, &empty.Empty{}); err != nil {
+		return "", errors.Wrap(err, "failed to stop TPM daemons")
+	}
+	defer func(ctx context.Context) {
+		if _, err := h.TPMServiceClient.StartDaemons(ctx, &empty.Empty{}); err != nil {
+			if reterr != nil {
+				testing.ContextLog(ctx, "Failed to restart TPM daemons")
+			} else {
+				reterr = errors.Wrap(err, "failed to restart TPM daemons")
+			}
+		}
+	}(cleanupCtx)
+
+	testing.ContextLog(ctx, "Read the specific space from the TPM with arguments ", tpmReadArgs)
+	cmd := h.DUT.Conn().CommandContext(ctx, "tpmc", tpmReadArgs...)
+	result, err := cmd.Output(ssh.DumpLogOnError)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to read the specific space")
+	}
+
+	testing.ContextLogf(ctx, "TPMC OUTPUT: %s", result)
+
+	return string(result), nil
 }

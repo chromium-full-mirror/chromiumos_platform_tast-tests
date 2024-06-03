@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/4lon/crc8"
-	"github.com/golang/protobuf/ptypes/empty"
 	"golang.org/x/exp/slices"
 
 	"go.chromium.org/tast-tests/cros/common/servo"
@@ -205,60 +204,10 @@ func TPMNotCorruptedDevMode(ctx context.Context, s *testing.State) {
 
 }
 
-// readTPMC executes a tpmc command using provided arguments and returns the output.
-// It also stops the TPM daemon and restarts it after executing the command.
-func readTPMC(ctx context.Context, h *firmware.Helper, tpmReadArgs ...string) (out string, reterr error) {
-	cleanupCtx := ctx
-	// Reserve a longer time to ensure enough time to restore the TPM daemon.
-	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Minute)
-	defer cancel()
-
-	if err := h.RequireTPMServiceClient(ctx); err != nil {
-		return "", errors.Wrap(err, "failed to create TPM service client")
-	}
-
-	if _, err := h.TPMServiceClient.NewHelper(ctx, &empty.Empty{}); err != nil {
-		return "", errors.Wrap(err, "failed to create a TPM service helper")
-	}
-	defer func(ctx context.Context) {
-		if _, err := h.TPMServiceClient.CloseHelper(ctx, &empty.Empty{}); err != nil {
-			if reterr != nil {
-				testing.ContextLog(ctx, "Failed to close TPM service helper")
-			} else {
-				reterr = errors.Wrap(err, "failed to close TPM service helper")
-			}
-		}
-	}(cleanupCtx)
-
-	if _, err := h.TPMServiceClient.StopDaemons(ctx, &empty.Empty{}); err != nil {
-		return "", errors.Wrap(err, "failed to stop TPM daemons")
-	}
-	defer func(ctx context.Context) {
-		if _, err := h.TPMServiceClient.StartDaemons(ctx, &empty.Empty{}); err != nil {
-			if reterr != nil {
-				testing.ContextLog(ctx, "Failed to restart TPM daemons")
-			} else {
-				reterr = errors.Wrap(err, "failed to restart TPM daemons")
-			}
-		}
-	}(cleanupCtx)
-
-	testing.ContextLog(ctx, "Read the kernel anti-rollback space from the TPM")
-	cmd := h.DUT.Conn().CommandContext(ctx, "tpmc", tpmReadArgs...)
-	kernelRollbackSpace, err := cmd.Output(ssh.DumpLogOnError)
-	if err != nil {
-		return "", errors.Wrap(err, "failed to read kernel anti-rollback info")
-	}
-
-	testing.ContextLogf(ctx, "TPMC OUTPUT: %s", kernelRollbackSpace)
-
-	return string(kernelRollbackSpace), nil
-}
-
 // checkTPMC verifies that the kernel anti-rollback data from the tpmc output
 // is one of the expected values.
 func checkTPMC(ctx context.Context, h *firmware.Helper) error {
-	kernelRollbackSpace, err := readTPMC(ctx, h, "read", strconv.FormatInt(kernelNvIndex, 16), strconv.FormatInt(kernelAntirollbackSpaceBytes, 16))
+	kernelRollbackSpace, err := h.ReadTPMC(ctx, "read", strconv.FormatInt(kernelNvIndex, 16), strconv.FormatInt(kernelAntirollbackSpaceBytes, 16))
 	if err != nil {
 		return errors.Wrap(err, "failed to read kernel anti-rollback info")
 	}
@@ -283,7 +232,7 @@ func checkTPMC(ctx context.Context, h *firmware.Helper) error {
 }
 
 func checkTPMCV10(ctx context.Context, h *firmware.Helper) error {
-	kernelRollbackSpace, err := readTPMC(ctx, h, "read", strconv.FormatInt(kernelNvIndex, 16), strconv.FormatInt(kernelAntirollbackSpaceBytesV10, 16))
+	kernelRollbackSpace, err := h.ReadTPMC(ctx, "read", strconv.FormatInt(kernelNvIndex, 16), strconv.FormatInt(kernelAntirollbackSpaceBytesV10, 16))
 	if err != nil {
 		return errors.Wrap(err, "failed to read kernel anti-rollback info")
 	}
