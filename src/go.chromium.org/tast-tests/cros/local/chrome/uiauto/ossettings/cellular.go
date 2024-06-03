@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/checked"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/expandable"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/restriction"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
@@ -130,6 +131,7 @@ func GoToActiveNetworkApnSubpage(ctx context.Context, tconn *chrome.TestConn, is
 	if err := uiauto.Combine("Go to APN subpage",
 		ui.WithTimeout(10*time.Second).WaitUntilExists(ApnSubpageButton.Focusable()),
 		ui.LeftClick(ApnSubpageButton.Focusable()),
+		ui.WaitUntilExists(nodewith.Name("Settings - Access point name (APN)").Role(role.RootWebArea)),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to go to APN subpage")
 	}
@@ -240,17 +242,7 @@ func CheckAutomaticallyDetectedAPNDetailesDialog(ctx context.Context, tconn *chr
 
 // ExpandPreRevampCellularNetworkDetails expands the "Network" section of a Cellular network's detail page.
 func ExpandPreRevampCellularNetworkDetails(ctx context.Context, tconn *chrome.TestConn) error {
-	ui := uiauto.New(tconn)
-
-	if err := ui.WithTimeout(30 * time.Second).WaitUntilExists(CellularNetwork.Focusable())(ctx); err != nil {
-		return errors.Wrap(err, "failed to show Network button")
-	}
-
-	if err := ui.LeftClick(CellularNetwork)(ctx); err != nil {
-		return errors.Wrap(err, "failed to expand Network address settings")
-	}
-
-	return nil
+	return expandable.EnsureExpandableSectionOpened(tconn, CellularNetwork)(ctx)
 }
 
 // EnterPreRevampOtherAPNDetails enters the APN, username, password, and whether Attach APN is enabled in the old APN UI.
