@@ -131,19 +131,23 @@ func P2PConcurrencyRoam(ctx context.Context, s *testing.State) {
 	ctx, cancel = tf.ReserveForDeconfigP2P(ctx)
 	defer cancel()
 
-	doRun := func(ctx context.Context) error {
+	verifyConnections := func(dut1, dut2 wificell.DutIdx, ap1, ap2 *wificell.APIface) {
 		if err := tf.P2PAssertPingFromGO(ctx); err != nil {
 			s.Fatal("Failed to ping the p2p client from the p2p group owner (GO): ", err)
 		}
 		if err := tf.P2PAssertPingFromClient(ctx); err != nil {
 			s.Fatal("Failed to ping p2p group owner (GO) from the p2p client: ", err)
 		}
-		if err := tf.VerifyConnectionFromDUT(ctx, wificell.DefaultDUT, rt.AP1()); err != nil {
+		if err := tf.VerifyConnectionFromDUT(ctx, dut1, ap1); err != nil {
 			s.Fatal("Failed to verify connection: ", err)
 		}
-		if err := tf.VerifyConnectionFromDUT(ctx, wificell.PeerDUT1, rt.AP1()); err != nil {
+		if err := tf.VerifyConnectionFromDUT(ctx, dut2, ap2); err != nil {
 			s.Fatal("Failed to verify connection: ", err)
 		}
+	}
+
+	doRun := func(ctx context.Context) error {
+		verifyConnections(wificell.DefaultDUT, wificell.PeerDUT1, rt.AP1(), rt.AP1())
 
 		fromBSSID := rt.AP1BSSID()
 		roamBSSID := rt.AP2BSSID()
@@ -227,33 +231,12 @@ func P2PConcurrencyRoam(ctx context.Context, s *testing.State) {
 
 		var requestParams hostapd.BSSTMReqParams
 		requestParams.Neighbors = []string{roamBSSID}
-		sendReqAndWaitConnected(wificell.DefaultDUT, fromBSSID, roamBSSID, rt.AP1(), rt.AP2(), requestParams, rt.ServicePath())
-		if err := tf.P2PAssertPingFromGO(ctx); err != nil {
-			s.Fatal("Failed to ping the p2p client from the p2p group owner (GO): ", err)
-		}
-		if err := tf.P2PAssertPingFromClient(ctx); err != nil {
-			s.Fatal("Failed to ping p2p group owner (GO) from the p2p client: ", err)
-		}
-		if err := tf.VerifyConnectionFromDUT(ctx, wificell.DefaultDUT, rt.AP2()); err != nil {
-			s.Fatal("Failed to verify connection: ", err)
-		}
-		if err := tf.VerifyConnectionFromDUT(ctx, wificell.PeerDUT1, rt.AP1()); err != nil {
-			s.Fatal("Failed to verify connection: ", err)
-		}
+		sendReqAndWaitConnected(wificell.DefaultDUT, fromBSSID, roamBSSID, rt.AP1(), rt.AP2(), requestParams, rt.ServicePathOfDUT(wificell.DefaultDUT))
+		verifyConnections(wificell.DefaultDUT, wificell.PeerDUT1, rt.AP2(), rt.AP1())
 
 		sendReqAndWaitConnected(wificell.PeerDUT1, fromBSSID, roamBSSID, rt.AP1(), rt.AP2(), requestParams, rt.ServicePathOfDUT(wificell.PeerDUT1))
-		if err := tf.P2PAssertPingFromGO(ctx); err != nil {
-			s.Fatal("Failed to ping the p2p client from the p2p group owner (GO): ", err)
-		}
-		if err := tf.P2PAssertPingFromClient(ctx); err != nil {
-			s.Fatal("Failed to ping p2p group owner (GO) from the p2p client: ", err)
-		}
-		if err := tf.VerifyConnectionFromDUT(ctx, wificell.DefaultDUT, rt.AP2()); err != nil {
-			s.Fatal("Failed to verify connection: ", err)
-		}
-		if err := tf.VerifyConnectionFromDUT(ctx, wificell.PeerDUT1, rt.AP2()); err != nil {
-			s.Fatal("Failed to verify connection: ", err)
-		}
+		verifyConnections(wificell.DefaultDUT, wificell.PeerDUT1, rt.AP2(), rt.AP2())
+
 		return nil
 	}
 
