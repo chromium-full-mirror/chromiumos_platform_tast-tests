@@ -13,6 +13,7 @@
                  android:allowBackup="false">
         <activity android:name=".MainActivity"
                   android:label="ARC Keyboard Test (Normal)"
+                  android:configChanges="screenSize|smallestScreenSize|orientation|screenLayout|keyboard|keyboardHidden"
                   android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -21,12 +22,15 @@
         </activity>
         <activity android:name=".NullEditTextActivity"
                   android:label="ARC Keyboard Test (TYPE_NULL EditText)"
+                  android:configChanges="screenSize|smallestScreenSize|orientation|screenLayout|keyboard|keyboardHidden"
                   android:exported="true"></activity>
         <activity android:name=".FocusChangeTestActivity"
                   android:label="ARC Keyboard Test (Focus Change)"
+                  android:configChanges="screenSize|smallestScreenSize|orientation|screenLayout|keyboard|keyboardHidden"
                   android:exported="true"></activity>
         <activity android:name=".OverscrollTestActivity"
                   android:label="ARC Keyboard Test (Overscroll)"
+                  android:configChanges="screenSize|smallestScreenSize|orientation|screenLayout|keyboard|keyboardHidden"
                   android:exported="true"></activity>
     </application>
 </manifest>
