@@ -74,7 +74,10 @@ func RunCameraFrameAnalysisRoutine(ctx context.Context, s *testing.State) {
 		ctx, cancelCleanUpTb := ctxutil.Shorten(ctx, 5*time.Second)
 		defer cancelCleanUpTb()
 
-		tb, err := testutil.NewTestBridge(ctx, cr, testutil.UseRealCamera)
+		// Use a fake camera to avoid issues about the real camera. Fake cameras
+		// should be sufficient to catch issues about the integration between
+		// cros_healthd and camera_diagnostics_service.
+		tb, err := testutil.NewTestBridge(ctx, cr, testutil.UseFakeHALCamera)
 		if err != nil {
 			s.Fatal("Failed to construct camera test bridge: ", err)
 		}
