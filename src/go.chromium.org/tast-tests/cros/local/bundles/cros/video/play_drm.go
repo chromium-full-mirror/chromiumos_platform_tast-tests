@@ -285,6 +285,39 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWDecodeCTRV3HEVC, "proprietary_codecs"},
 			Fixture:           pre.ChromeVideoLacrosFixture(pre.VideoFeatureFakeMediaStreamUI, pre.VideoFeatureDistinctiveIdentifier),
 		}, {
+			Name: "cencv3_hevc10_4k_ctr",
+			Val: playDrmParams{
+				fileName:    "tulip_4k_hevc10_cencv3_ctr.mpd",
+				browserType: browser.TypeAsh,
+			},
+			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
+			ExtraData:         append(play.DRMDataFiles(), "tulip_4k_hevc10_cencv3_ctr.mp4", "tulip_audio_aac_cencv3_ctr.mp4", "tulip_4k_hevc10_cencv3_ctr.mpd"),
+			ExtraHardwareDeps: hwdep.D(hwdep.SupportsHEVCVideoDecodingInChrome()),
+			ExtraSoftwareDeps: []string{caps.HWDecodeCTRV3HEVC, "proprietary_codecs"},
+			Fixture:           "chromeVideoWithDistinctiveIdentifier",
+		}, {
+			Name: "cencv3_hevc10_4k_ctr_inpvd",
+			Val: playDrmParams{
+				fileName:    "tulip_4k_hevc10_cencv3_ctr.mpd",
+				browserType: browser.TypeAsh,
+			},
+			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
+			ExtraData:         append(play.DRMDataFiles(), "tulip_4k_hevc10_cencv3_ctr.mp4", "tulip_audio_aac_cencv3_ctr.mp4", "tulip_4k_hevc10_cencv3_ctr.mpd"),
+			ExtraHardwareDeps: hwdep.D(hwdep.SupportsHEVCVideoDecodingInChrome()),
+			ExtraSoftwareDeps: []string{caps.HWDecodeCTRV3HEVC, "proprietary_codecs"},
+			Fixture:           "chromeVideoINPVDWithDistinctiveIdentifier",
+		}, {
+			Name: "cencv3_hevc10_4k_ctr_lacros",
+			Val: playDrmParams{
+				fileName:    "tulip_4k_hevc10_cencv3_ctr.mpd",
+				browserType: browser.TypeLacros,
+			},
+			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
+			ExtraData:         append(play.DRMDataFiles(), "tulip_4k_hevc10_cencv3_ctr.mp4", "tulip_audio_aac_cencv3_ctr.mp4", "tulip_4k_hevc10_cencv3_ctr.mpd"),
+			ExtraHardwareDeps: hwdep.D(hwdep.SupportsHEVCVideoDecodingInChrome()),
+			ExtraSoftwareDeps: []string{caps.HWDecodeCTRV3HEVC, "proprietary_codecs"},
+			Fixture:           pre.ChromeVideoLacrosFixture(pre.VideoFeatureFakeMediaStreamUI, pre.VideoFeatureDistinctiveIdentifier),
+		}, {
 			Name: "cencv3_vp9_cbc",
 			Val: playDrmParams{
 				fileName:    "tulip_480p_vp9_cencv3_cbc.mpd",
