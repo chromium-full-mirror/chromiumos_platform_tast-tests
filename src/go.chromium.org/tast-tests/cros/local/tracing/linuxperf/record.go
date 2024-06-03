@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 	"syscall"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
@@ -134,14 +135,20 @@ func newRecordInstanceFromOptions(ctx context.Context, o *recordOptions) (*Recor
 	if o.timeoutSeconds > 0 {
 		args = append(args, "--", "sleep", fmt.Sprintf("%d", o.timeoutSeconds))
 	}
-	pi.cmd = testexec.CommandContext(ctx, "perf", args...)
 
 	if o.background {
+		// nohup is not enough. Run nohup in the shell and redirect to
+		// /dev/null, so that the intermediate /bin/sh can detach from
+		// the subprocess.
+		script := fmt.Sprintf("nohup perf %s > /dev/null 2>&1 &", strings.Join(args, " "))
+		pi.cmd = testexec.CommandContext(ctx, "/bin/sh", "-e", "-c", script)
 		pi.cmd.SysProcAttr.Setpgid = false
 		pi.cmd.Stdin = nil
 		pi.cmd.Stdout = nil
 		pi.cmd.Stderr = nil
 		pi.background = true
+	} else {
+		pi.cmd = testexec.CommandContext(ctx, "perf", args...)
 	}
 
 	if err := pi.cmd.Start(); err != nil {
@@ -222,19 +229,6 @@ func (pi *RecordInstance) Close() error {
 // OutFile returns the output file of the perf record command.
 func (pi *RecordInstance) OutFile() string {
 	return pi.outFile
-}
-
-// Pid returns the pid of the perf record process. Errors if perf is not
-// recording.
-func (pi *RecordInstance) Pid() (int, error) {
-	if pi.cmd == nil {
-		return -1, errors.New("perf record process was leaked")
-	}
-	process := pi.cmd.Process
-	if process == nil {
-		return -1, errors.New("perf record process is not running")
-	}
-	return process.Pid, nil
 }
 
 // Leak clears all internal state of the Record wrapper. The perf record process
