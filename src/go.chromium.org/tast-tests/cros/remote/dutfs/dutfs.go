@@ -160,9 +160,21 @@ func (c *Client) MkDir(ctx context.Context, name string, mode os.FileMode) error
 	return nil
 }
 
-// CopyFile copies file between to locations on DUT.
+// CopyFile copies file between two locations on DUT.
 func (c *Client) CopyFile(ctx context.Context, source, destination string) error {
 	res, err := c.fs.CopyFile(ctx, &baserpc.CopyFileRequest{Source: source, Destination: destination})
+	if err != nil {
+		return err
+	}
+	if res.Error != nil {
+		return decodeErr(res.Error)
+	}
+	return nil
+}
+
+// CopyDir copies directory between two locations on DUT.
+func (c *Client) CopyDir(ctx context.Context, source, destination string) error {
+	res, err := c.fs.CopyDir(ctx, &baserpc.CopyDirRequest{Source: source, Destination: destination})
 	if err != nil {
 		return err
 	}

@@ -157,6 +157,18 @@ func (fs *FileSystemService) CopyFile(ctx context.Context, req *baserpc.CopyFile
 	return &res, nil
 }
 
+// CopyDir copies directory between two locations on DUT.
+func (fs *FileSystemService) CopyDir(ctx context.Context, req *baserpc.CopyDirRequest) (*baserpc.CopyDirResponse, error) {
+	var res baserpc.CopyDirResponse
+	res.Error = encodeErr(func() error {
+		if err := fsutil.CopyDir(req.Source, req.Destination); err != nil {
+			return err
+		}
+		return nil
+	}())
+	return &res, nil
+}
+
 // ReadFileAtOffset read data from given offset to data buffer.
 func (fs *FileSystemService) ReadFileAtOffset(ctx context.Context, req *baserpc.ReadFileAtOffsetRequest) (*baserpc.ReadFileAtOffsetResponse, error) {
 	var res baserpc.ReadFileAtOffsetResponse
