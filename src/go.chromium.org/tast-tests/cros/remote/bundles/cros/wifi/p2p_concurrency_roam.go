@@ -155,86 +155,22 @@ func P2PConcurrencyRoam(ctx context.Context, s *testing.State) {
 		s.Log("AP 1 BSSID: ", fromBSSID)
 		s.Log("AP 2 BSSID: ", roamBSSID)
 
-		sendReqAndWaitConnected := func(dut wificell.DutIdx, from, to string, fromAP, toAP *wificell.APIface, req hostapd.BSSTMReqParams, servicePath string) {
-			// Get the name and MAC address of the DUT WiFi interface.
-			dutIface, err := tf.DUTClientInterface(ctx, dut)
-			if err != nil {
-				s.Fatal("Unable to get DUT interface name: ", err)
-			}
-			dutMACAddr, err := tf.DUTHardwareAddr(ctx, dut)
-			if err != nil {
-				s.Fatal("Unable to get DUT MAC address: ", err)
-			}
-			dutMAC := dutMACAddr.String()
-			// Flush all scanned BSS from wpa_supplicant so that test behavior is consistent.
-			s.Log("Flushing BSS cache")
-			if err := tf.DUTWifiClient(dut).FlushBSS(ctx, dutIface, 0); err != nil {
-				s.Fatal("Failed to flush BSS list: ", err)
-			}
-			s.Logf("Waiting for roamBSSID: %s", roamBSSID)
-			if err := tf.DUTWifiClient(dut).DiscoverBSSID(ctx, roamBSSID, dutIface, []byte(testSSID)); err != nil {
-				s.Fatal("Unable to discover roam BSSID: ", err)
-			}
-			err = tf.ClearBSSIDIgnoreDUT(ctx, dut)
-			if err != nil {
-				s.Fatal("Failed to clear wpa BSSID_IGNORE: ", err)
-			}
-			// Before sending the BSSTM request, add the current BSSID into the
-			// DUT's ignorelist to avoid any any potential race condition. Adding a
-			// BSSID to the ignore list does not trigger the device to roam away
-			// from the BSSID, but it should prevent it from roaming back.
-			// NB: Each time we add the BSSID to the ignore list, it increases
-			// the duration for which the BSSID is ignored. Each wpa_cli
-			// invocation results in the BSSID being added to the ignore list
-			// twice, so the two calls here translate to 4 insertions in
-			// wpa_supplicant, which results in an ignorelist duration of 120
-			// seconds, which should be plenty.
-
-			// We add the BSSID into the ignorelist twice purposely to ensure the
-			// ignore duration is sufficient.
-			err = tf.AddToBSSIDIgnoreDUT(ctx, dut, fromBSSID)
-			if err != nil {
-				s.Fatal("Failed to add wpa BSSID_IGNORE: ", err)
-			}
-			err = tf.AddToBSSIDIgnoreDUT(ctx, dut, fromBSSID)
-			if err != nil {
-				s.Fatal("Failed to add wpa BSSID_IGNORE: ", err)
-			}
-
-			// Set up a watcher for the Shill WiFi BSSID property.
-			waitCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
-			defer cancel()
-			waitForProps, err := tf.DUTWifiClient(dut).GenerateRoamPropertyWatcher(waitCtx, to, servicePath)
-			// Send BSS Transition Management Request to client.
-			s.Logf("Sending BSS Transition Management Request from AP %s to DUT %s", from, dutMAC)
-			if err := fromAP.SendBSSTMRequest(ctx, dutMAC, req); err != nil {
-				s.Fatal("Failed to send BSS TM Request: ", err)
-			}
-
-			// Wait for the DUT to roam to the second AP, then assert that there was
-			// no disconnection during roaming.
-			s.Log("Waiting for roaming")
-			monitorResult, err := waitForProps()
-			if err != nil {
-				s.Fatal("Failed to roam within timeout: ", err)
-			}
-
-			if err := wifiutil.VerifyNoDisconnections(monitorResult); err != nil {
-				s.Fatal("DUT: failed to stay connected during the roaming process: ", err)
-			}
-			// Just for good measure make sure we're properly connected.
-			s.Log("Verifying connection to AP ", to)
-			if err := tf.VerifyConnection(ctx, toAP); err != nil {
-				s.Fatal("DUT: failed to verify connection: ", err)
-			}
-		}
-
 		var requestParams hostapd.BSSTMReqParams
 		requestParams.Neighbors = []string{roamBSSID}
-		sendReqAndWaitConnected(wificell.DefaultDUT, fromBSSID, roamBSSID, rt.AP1(), rt.AP2(), requestParams, rt.ServicePathOfDUT(wificell.DefaultDUT))
+		if err := rt.SetupDUTForRoaming(ctx, wificell.DefaultDUT, fromBSSID, roamBSSID, testSSID, true); err != nil {
+			s.Fatal("DUT: failed to roam and wait for connection: ", err)
+		}
+		if err := rt.SendBSSTMReqAndWaitConnected(ctx, wificell.DefaultDUT, fromBSSID, roamBSSID, rt.AP1(), rt.AP2(), requestParams, rt.ServicePathOfDUT(wificell.DefaultDUT), false); err != nil {
+			s.Fatal("DUT: failed to roam and wait for connection: ", err)
+		}
 		verifyConnections(wificell.DefaultDUT, wificell.PeerDUT1, rt.AP2(), rt.AP1())
 
-		sendReqAndWaitConnected(wificell.PeerDUT1, fromBSSID, roamBSSID, rt.AP1(), rt.AP2(), requestParams, rt.ServicePathOfDUT(wificell.PeerDUT1))
+		if err := rt.SetupDUTForRoaming(ctx, wificell.PeerDUT1, fromBSSID, roamBSSID, testSSID, true); err != nil {
+			s.Fatal("DUT: failed to roam and wait for connection: ", err)
+		}
+		if err := rt.SendBSSTMReqAndWaitConnected(ctx, wificell.PeerDUT1, fromBSSID, roamBSSID, rt.AP1(), rt.AP2(), requestParams, rt.ServicePathOfDUT(wificell.PeerDUT1), false); err != nil {
+			s.Fatal("DUT: failed to roam and wait for connection: ", err)
+		}
 		verifyConnections(wificell.DefaultDUT, wificell.PeerDUT1, rt.AP2(), rt.AP2())
 
 		return nil
