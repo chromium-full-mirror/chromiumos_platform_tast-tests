@@ -10,6 +10,8 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/dma"
+	"go.chromium.org/tast-tests/cros/common/drivefs"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
@@ -64,7 +66,6 @@ func init() {
 		ResetTimeout:    DriveFsSetupAndTearDownTimeout,
 		TearDownTimeout: time.Hour,
 		Vars: []string{
-			"drivefs.accountPool",
 			"drivefs.extensionClientID",
 		},
 	})
@@ -79,7 +80,6 @@ func init() {
 		ResetTimeout:    DriveFsSetupAndTearDownTimeout,
 		TearDownTimeout: time.Hour,
 		Vars: []string{
-			"drivefs.accountPool",
 			"drivefs.extensionClientID",
 		},
 	})
@@ -94,7 +94,6 @@ func init() {
 		ResetTimeout:    DriveFsSetupAndTearDownTimeout,
 		TearDownTimeout: time.Hour,
 		Vars: []string{
-			"drivefs.accountPool",
 			"drivefs.extensionClientID",
 		},
 	})
@@ -109,7 +108,6 @@ func init() {
 		ResetTimeout:    DriveFsSetupAndTearDownTimeout,
 		TearDownTimeout: time.Hour,
 		Vars: []string{
-			"drivefs.accountPool",
 			"drivefs.extensionClientID",
 		},
 	})
@@ -127,7 +125,6 @@ func init() {
 		ResetTimeout:    DriveFsSetupAndTearDownTimeout,
 		TearDownTimeout: chrome.ResetTimeout + DriveFsSetupAndTearDownTimeout,
 		Vars: []string{
-			"drivefs.accountPool",
 			"drivefs.extensionClientID",
 		},
 	})
@@ -145,7 +142,6 @@ func init() {
 		ResetTimeout:    DriveFsSetupAndTearDownTimeout,
 		TearDownTimeout: chrome.ResetTimeout + DriveFsSetupAndTearDownTimeout,
 		Vars: []string{
-			"drivefs.accountPool",
 			"drivefs.extensionClientID",
 		},
 	})
@@ -168,7 +164,6 @@ func init() {
 		ResetTimeout:    DriveFsSetupAndTearDownTimeout,
 		TearDownTimeout: chrome.ResetTimeout + DriveFsSetupAndTearDownTimeout,
 		Vars: []string{
-			"drivefs.accountPool",
 			"drivefs.extensionClientID",
 		},
 	})
@@ -187,7 +182,6 @@ func init() {
 		ResetTimeout:    DriveFsSetupAndTearDownTimeout,
 		TearDownTimeout: chrome.ResetTimeout + DriveFsSetupAndTearDownTimeout,
 		Vars: []string{
-			"drivefs.accountPool",
 			"drivefs.extensionClientID",
 		},
 	})
@@ -206,7 +200,6 @@ func init() {
 		ResetTimeout:    DriveFsSetupAndTearDownTimeout,
 		TearDownTimeout: chrome.ResetTimeout + DriveFsSetupAndTearDownTimeout,
 		Vars: []string{
-			"drivefs.accountPool",
 			"drivefs.extensionClientID",
 		},
 	})
@@ -227,7 +220,6 @@ func init() {
 		ResetTimeout:    DriveFsSetupAndTearDownTimeout,
 		TearDownTimeout: chrome.ResetTimeout + DriveFsSetupAndTearDownTimeout,
 		Vars: []string{
-			"drivefs.accountPool",
 			"drivefs.extensionClientID",
 		},
 	})
@@ -245,7 +237,6 @@ func init() {
 		ResetTimeout:    DriveFsSetupAndTearDownTimeout,
 		TearDownTimeout: chrome.ResetTimeout + DriveFsSetupAndTearDownTimeout,
 		Vars: []string{
-			"drivefs.accountPool",
 			"drivefs.extensionClientID",
 		},
 	})
@@ -263,7 +254,6 @@ func init() {
 		ResetTimeout:    DriveFsSetupAndTearDownTimeout,
 		TearDownTimeout: chrome.ResetTimeout + DriveFsSetupAndTearDownTimeout,
 		Vars: []string{
-			"drivefs.accountPool",
 			"drivefs.extensionClientID",
 		},
 	})
@@ -340,7 +330,7 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 
 	func() {
 		opts := append(f.chromeOptions,
-			chrome.GAIALoginPool(s.RequiredVar("drivefs.accountPool")),
+			chrome.GAIALoginPool(dma.CredsFromPool(drivefs.AccountPoolVarName)),
 			chrome.ExtraArgs("--get-access-token-for-test"),
 			chrome.ARCDisabled(),
 			chrome.FieldTrialConfig(f.fieldTrial),

@@ -8,6 +8,8 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/dma"
+	dfCommon "go.chromium.org/tast-tests/cros/common/drivefs"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
@@ -46,7 +48,7 @@ func init() {
 		},
 		VarDeps: []string{
 			"ui.signinProfileTestExtensionManifestKey",
-			"drivefs.accountPool",
+			dfCommon.AccountPoolVarName,
 		},
 		TestBedDeps: []string{tbdep.Cbx(true)},
 		SearchFlags: []*testing.StringPair{{
@@ -67,7 +69,7 @@ func BulkPinningDrivePinningChoobeScreen(ctx context.Context, s *testing.State) 
 	chromeOptions := []chrome.Option{
 		chrome.EnableFeatures("FeatureManagementDriveFsBulkPinning"),
 		chrome.DontSkipOOBEAfterLogin(),
-		chrome.GAIALoginPool(s.RequiredVar("drivefs.accountPool")),
+		chrome.GAIALoginPool(dma.CredsFromPool(dfCommon.AccountPoolVarName)),
 		chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")),
 	}
 

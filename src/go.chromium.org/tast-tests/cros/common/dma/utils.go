@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"strings"
 
+	"go.chromium.org/tast-tests/cros/common/drivefs"
 	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast/core/testing"
 )
@@ -20,11 +21,13 @@ var dmaEnableVar = testing.RegisterVarString(
 
 func pools() (map[string]string, map[string]string) {
 	var dmaPools = map[string]string{
-		ui.GaiaPoolDefaultVarName: ui.GaiaDMAPoolDefaultValue(),
+		ui.GaiaPoolDefaultVarName:  ui.GaiaDMAPoolDefaultValue(),
+		drivefs.AccountPoolVarName: ui.GaiaDMAPoolDefaultValue(),
 	}
 
 	var regularPools = map[string]string{
-		ui.GaiaPoolDefaultVarName: ui.GaiaPoolDefaultValue(),
+		ui.GaiaPoolDefaultVarName:  ui.GaiaPoolDefaultValue(),
+		drivefs.AccountPoolVarName: drivefs.AccountPoolValue(),
 	}
 
 	return dmaPools, regularPools

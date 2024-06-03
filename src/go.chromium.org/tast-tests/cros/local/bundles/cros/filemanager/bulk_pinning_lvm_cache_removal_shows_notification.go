@@ -11,6 +11,8 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/filemanager/bulkpinning"
 
 	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
+	"go.chromium.org/tast-tests/cros/common/dma"
+	dfCommon "go.chromium.org/tast-tests/cros/common/drivefs"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -48,9 +50,6 @@ func init() {
 			"cbx_stable",
 		},
 		TestBedDeps: []string{tbdep.Cbx(true)},
-		Vars: []string{
-			"drivefs.accountPool",
-		},
 		SearchFlags: []*testing.StringPair{{
 			Key:   "feature_id",
 			Value: "screenplay-c0cadb1a-c202-4e5b-ba26-48993419962b",
@@ -60,7 +59,7 @@ func init() {
 }
 
 func BulkPinningLvmCacheRemovalShowsNotification(ctx context.Context, s *testing.State) {
-	creds, err := credconfig.PickRandomCreds(s.RequiredVar("drivefs.accountPool"))
+	creds, err := credconfig.PickRandomCreds(dma.CredsFromPool(dfCommon.AccountPoolVarName))
 	if err != nil {
 		s.Fatal("Failed to pick random credentials to sign in with: ", err)
 	}
