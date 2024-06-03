@@ -237,21 +237,21 @@ func init() {
 				Fixture: "mountUnmountPtsWorldForCrOSx86",
 				Val: &perfSuite{
 					runner:        ptsworld.NewCrosRunner(),
-					suiteName:     "cython-bench-1.1.0",
+					suiteName:     "local/cython-bench-1.1.0",
 					resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
 				},
 				ExtraAttr: []string{"crospts_x86"},
-				Timeout:   30 * time.Minute,
+				Timeout:   8 * time.Minute,
 			}, {
 				Name:    "cythonbench_cros_arm64",
 				Fixture: "mountUnmountPtsWorldForCrOSarm64",
 				Val: &perfSuite{
 					runner:        ptsworld.NewCrosRunner(),
-					suiteName:     "cython-bench-1.1.0",
+					suiteName:     "local/cython-bench-1.1.0",
 					resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
 				},
 				ExtraAttr: []string{"crospts_arm64"},
-				Timeout:   30 * time.Minute,
+				Timeout:   12 * time.Minute,
 			}, {
 				Name:    "pyperf_cros_x86",
 				Fixture: "mountUnmountPtsWorldForCrOSx86",
