@@ -244,7 +244,7 @@ func collectMaliPerformanceCounters(ctx context.Context, interval time.Duration)
 	numSamples := int(interval / samplePeriod)
 	actualSamples := 0
 	for i := 0; i < numSamples; i++ {
-		maliStatsCmd := exec.Command("mali_stats", "-u", "100000")
+		maliStatsCmd := exec.Command("mali_stats", "-u", strconv.FormatInt(samplePeriod.Microseconds(), 10))
 		var out bytes.Buffer
 		var stderr bytes.Buffer
 		maliStatsCmd.Stdout = &out
@@ -287,8 +287,8 @@ func collectMaliPerformanceCounters(ctx context.Context, interval time.Duration)
 	}
 
 	counters = make(map[string]time.Duration)
-	counters["gpu"] = time.Duration(accuBusy / 100.0 * float64(time.Millisecond*100))
-	counters["total"] = time.Duration(float64(actualSamples) * float64(time.Millisecond*100))
+	counters["gpu"] = time.Duration(accuBusy / 100.0 * float64(samplePeriod))
+	counters["total"] = time.Duration(float64(actualSamples) * float64(samplePeriod))
 
 	return counters, 0, nil
 }
