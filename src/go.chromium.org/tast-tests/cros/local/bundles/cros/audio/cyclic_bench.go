@@ -30,15 +30,17 @@ const (
 	otherSched
 )
 
-type affinity int
+type affinity string
 
 const (
 	// defaultAff will use all the processors in round-robin order.
-	defaultAff affinity = iota
+	defaultAff affinity = "default"
 	// smallCore will run all the threads on a single small core.
-	smallCore
+	smallCore affinity = "small_core"
 	// bigCore will run all the threads on a single big core.
-	bigCore
+	bigCore affinity = "big_core"
+	// noCPU0 will use all the processors except cpu 0.
+	noCPU0 affinity = "no_cpu_0"
 )
 
 type schedConfig struct {
@@ -418,16 +420,30 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{"cpu_heterogeneous"},
 			},
+			{
+				Name:      "rr12_1thread_10ms_no_cpu_0",
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
+				Timeout:   15 * time.Minute,
+				Val: cyclicTestParameters{
+					Config: schedConfig{
+						Policy:   rrSched,
+						Priority: crasPriority,
+					},
+					Threads:             1,
+					Interval:            defaultInterval,
+					Loops:               defaultLoops,
+					Affinity:            noCPU0,
+					MaxLatencyThreshold: defaultMaxLatencyThreshold,
+					StressConfig:        nil,
+					UI:                  true,
+				},
+			},
 		},
 	})
 }
 
 func (s schedPolicy) String() string {
 	return []string{"rr", "other"}[s]
-}
-
-func (a affinity) String() string {
-	return []string{"default", "small_core", "big_core"}[a]
 }
 
 func CyclicBench(ctx context.Context, s *testing.State) {
@@ -454,7 +470,7 @@ func CyclicBench(ctx context.Context, s *testing.State) {
 		"--interval=" + strconv.Itoa(int(param.Interval/time.Microsecond)),
 		"--threads=" + strconv.Itoa(param.Threads),
 		"--loops=" + strconv.Itoa(param.Loops),
-		"--affinity=" + param.Affinity.String(),
+		"--affinity=" + string(param.Affinity),
 		"--json",
 	}
 	if param.Tracer {
