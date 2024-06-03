@@ -240,6 +240,7 @@ func collectMaliPerformanceCounters(ctx context.Context, interval time.Duration)
 	accuBusy := float64(0.0)
 	const samplePeriod = 100 * time.Millisecond
 	numSamples := int(interval / samplePeriod)
+	actualSamples := 0
 	for i := 0; i < numSamples; i++ {
 		maliStatsCmd := exec.Command("mali_stats", "-u", "100000")
 		var out bytes.Buffer
@@ -248,14 +249,23 @@ func collectMaliPerformanceCounters(ctx context.Context, interval time.Duration)
 		maliStatsCmd.Stderr = &stderr
 
 		err := maliStatsCmd.Run()
+		// The command may sometimes fail to allocate memory when
+		// devices are under heavy memory pressure.
+		// Be tolerant and don't report error due to sporadic failures.
 		if err != nil {
-			return nil, 0, errors.Wrapf(err, "error running mali_stats (%s)", stderr.String())
+			testing.ContextLogf(ctx, "Failed to run mali_stats (%s)", strings.TrimSpace(stderr.String()))
+			// GoBigSleepLint: still sleep the sample interval
+			// before the next sampling
+			if sleepErr := testing.Sleep(ctx, samplePeriod); sleepErr != nil {
+				return nil, 0, errors.Wrap(err, "error sleeping")
+			}
+			continue
 		}
 
 		percentUsage, err := strconv.ParseFloat(out.String()[:strings.Index(out.String(), "%")], 64)
 
 		if err != nil {
-			return nil, 0, errors.Wrap(err, "error parsing mali_stats output")
+			return nil, 0, errors.Wrapf(err, "error parsing mali_stats output (%s)", strings.TrimSpace(out.String()))
 		}
 
 		if percentUsage > 100.0 || percentUsage < 0.0 {
@@ -263,11 +273,20 @@ func collectMaliPerformanceCounters(ctx context.Context, interval time.Duration)
 		}
 
 		accuBusy += percentUsage
+		actualSamples++
+	}
+
+	testing.ContextLogf(ctx, "Got %d valid mali_stats samples (out of %d)", actualSamples, numSamples)
+	// Return error if we don't get enough valid samples.
+	// Note that the threshold is empirically selected and can be adjusted
+	// if needed.
+	if actualSamples < int(float64(numSamples)*0.9) {
+		return nil, 0, errors.Wrap(err, "error collecting enough mali_stats samples")
 	}
 
 	counters = make(map[string]time.Duration)
 	counters["rcs"] = time.Duration(accuBusy / 100.0 * float64(time.Millisecond*100))
-	counters["total"] = time.Duration(float64(numSamples) * float64(time.Millisecond*100))
+	counters["total"] = time.Duration(float64(actualSamples) * float64(time.Millisecond*100))
 
 	return counters, 0, nil
 }
