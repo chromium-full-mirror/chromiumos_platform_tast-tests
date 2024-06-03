@@ -6,10 +6,13 @@ syntax = "proto3";
 
 package tast.cros.power;
 
+import "google/protobuf/empty.proto";
+
 option go_package = "go.chromium.org/tast-tests/cros/services/cros/power";
 
 service SuspendPerfService {
   rpc Suspend(SuspendRequest) returns (SuspendResponse) {}
+  rpc TurnOnDisplay(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 }
 
 // SuspendRequest is for passing the seconds of suspend duration to Suspend().

@@ -14,6 +14,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // This package depends on the following services.
@@ -59,6 +60,8 @@ var tabURLs = []string{
 	"https://bleacherreport.com/",
 	"https://chrome.google.com/webstore/category/extensions",
 }
+
+var dataTabURL string = `data:text/html,<html><body><h1>Hello, World!</h1></body></html>`
 
 const (
 	tabLoadTimeout       = 20 * time.Second
@@ -291,7 +294,7 @@ func (m *RemoteMemoryPressure) getCurrentActiveTabID(ctx context.Context) (int, 
 }
 
 // CycleTabs cyclically activates the pinned tabs.
-func (m *RemoteMemoryPressure) CycleTabs(ctx context.Context) error {
+func (m *RemoteMemoryPressure) CycleTabs(ctx context.Context, cycleCount int) error {
 	alives, err := m.getNonDiscardedTabIDs(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to get discardeds tab IDs")
@@ -305,19 +308,29 @@ func (m *RemoteMemoryPressure) CycleTabs(ctx context.Context) error {
 		return true
 	}
 	count := 0
-	for _, t := range m.tabs {
-		if isDiscarded(t.tabID) {
-			continue
-		}
-		if err := t.activate(ctx); err != nil {
-			return err
-		}
-		count++
-		if count == initialTabCount {
-			break
+	for {
+		for _, t := range m.tabs {
+			if isDiscarded(t.tabID) || !t.pinned {
+				continue
+			}
+			if err := t.activate(ctx); err != nil {
+				return err
+			}
+			count++
+			if count == cycleCount {
+				return nil
+			}
 		}
 	}
-	return nil
+}
+
+// ReactivateLastTab activates last opened tab.
+func (m *RemoteMemoryPressure) ReactivateLastTab(ctx context.Context) error {
+	id := len(m.tabs) - 1
+	if m.tabs[id].closed {
+		return errors.New("failed to activate discarded tab")
+	}
+	return m.tabs[id].activate(ctx)
 }
 
 // AddTab adds a tab.
@@ -349,6 +362,49 @@ func (m *RemoteMemoryPressure) DiscardedTabs(ctx context.Context) int {
 	return len(ids)
 }
 
+// Disconnect closes conns
+func (m *RemoteMemoryPressure) Disconnect(ctx context.Context) {
+	m.conn.CloseAll(ctx, &emptypb.Empty{})
+	for _, t := range m.tabs {
+		t.closed = true
+	}
+}
+
+func contains(slice []int, target int) bool {
+	for _, value := range slice {
+		if value == target {
+			return true
+		}
+	}
+	return false
+}
+
+// Reconnect reconnects to the running mempressure browser session.
+// Note that you need to call ConnectTestEnv() or equivalent function before calling this.
+func (m *RemoteMemoryPressure) Reconnect(ctx context.Context, cc grpc.ClientConnInterface) error {
+	m.conn = ui.NewConnServiceClient(cc)
+	m.tconn = ui.NewTconnServiceClient(cc)
+
+	testing.ContextLog(ctx, "Check test connection : DiscardedTabs ", m.DiscardedTabs(ctx))
+	aliveTabs, err := m.getNonDiscardedTabIDs(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get non discarded tabs")
+	}
+
+	for _, tab := range m.tabs {
+		if !contains(aliveTabs, tab.tabID) {
+			testing.ContextLog(ctx, "Skipping discarded tab: ", tab.targetID)
+			continue
+		}
+		// Update tab's conn because ClientConnInterface can be updated.
+		tab.conn = m.conn
+		if err := tab.reconnect(ctx); err != nil {
+			testing.ContextLog(ctx, "Skipping lost tab: ", tab.targetID, err)
+		}
+	}
+	return nil
+}
+
 // Run runs a basic memory pressure loop.
 // This opens tabs at least minTab, and until it reaches maxTab or
 // a tab discard happens. Also, if cycleTab is not 0, it activates
@@ -365,9 +421,26 @@ func (m *RemoteMemoryPressure) Run(ctx context.Context, maxTab, minTab, cycleTab
 			return errors.Wrap(err, "failed to add a tab ")
 		}
 		if cycleTab > 0 && m.OpenedTabs()%cycleTab == 0 {
-			m.CycleTabs(ctx)
+			m.CycleTabs(ctx, initialTabCount)
 		}
 	}
+}
+
+// OpenCycleTabs opens tabs for CycleTabs
+func (m *RemoteMemoryPressure) OpenCycleTabs(ctx context.Context) error {
+	for i := 0; i < initialTabCount; i++ {
+		t, err := m.newTab(ctx, dataTabURL)
+		if err != nil {
+			return errors.Wrap(err, "failed to open a tab")
+		}
+		if err := m.pinTab(ctx, t); err != nil {
+			return errors.Wrap(err, "failed to pin a tab")
+		}
+		// Leaving the debug connection for a target attached results in
+		// PageDiscardingHelper treating the tab as protected. So we keep
+		// the connection for measuring the tab switching time later.
+	}
+	return nil
 }
 
 // NewRemoteMemoryPressure makes a new RemoteMemoryPressure.
@@ -390,26 +463,15 @@ func (m *RemoteMemoryPressure) Run(ctx context.Context, maxTab, minTab, cycleTab
 // This opens tabs until a tab is discarded or reaches forceTab.
 func NewRemoteMemoryPressure(ctx context.Context, cc grpc.ClientConnInterface, lacros bool) (*RemoteMemoryPressure, error) {
 	m := &RemoteMemoryPressure{
-		lacros: lacros,
-		conn:   ui.NewConnServiceClient(cc),
-		tconn:  ui.NewTconnServiceClient(cc),
+		lacros:    lacros,
+		conn:      ui.NewConnServiceClient(cc),
+		tconn:     ui.NewTconnServiceClient(cc),
+		lastIndex: 0,
 	}
 
-	urlIndex := 0
-	for i := 0; i < initialTabCount; i++ {
-		urlIndex = i % len(tabURLs)
-		t, err := m.newTab(ctx, tabURLs[urlIndex])
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to open a tab")
-		}
-		if err := m.pinTab(ctx, t); err != nil {
-			return nil, errors.Wrap(err, "failed to pin a tab")
-		}
-		// Leaving the debug connection for a target attached results in
-		// PageDiscardingHelper treating the tab as protected. So we keep
-		// the connection for measuring the tab switching time later.
+	if err := m.OpenCycleTabs(ctx); err != nil {
+		return nil, err
 	}
-	m.lastIndex = urlIndex - 1
 	return m, nil
 }
 

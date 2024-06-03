@@ -7,6 +7,7 @@ package power
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -21,14 +22,24 @@ import (
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 const (
+	// forceTabsVarName is the name of the variable to specify the number of tabs opened forcibly.
+	forceTabsVarName = "power.SuspendPerf.forceTabs"
+
 	// traceCmdEventsVarName is the name of the variable to specify events for trace-cmd to collect.
 	traceCmdEventsVarName = "power.SuspendPerf.traceCmdEvents"
 
 	// enablePerfettoVarName is the name of the variable to enable Perfetto trace.
 	enablePerfettoVarName = "power.SuspendPerf.enablePerfetto"
+)
+
+var forceTabsVar = testing.RegisterVarString(
+	forceTabsVarName,
+	"0",
+	"The number of tabs to open forcibly. This option is for '*_mem' test variants",
 )
 
 var traceCmdEventsVar = testing.RegisterVarString(
@@ -76,15 +87,15 @@ func init() {
 				numSuspend: 5,
 			},
 			ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
-			// (40 sec for histograms + 10 + 60 sec suspend/resume) * 5 times
-			Timeout: 10 * time.Minute,
+			// (40 sec for histograms + 10 + 60 sec suspend/resume) * 5 times + open tabs.
+			Timeout: 20 * time.Minute,
 		}, {
 			Name: "arc",
 			Val: testArgsForSuspendPerf{
 				numSuspend: 5,
 				enableArc:  true,
 			},
-			Timeout: 10 * time.Minute,
+			Timeout: 20 * time.Minute,
 		}, {
 			Name: "arc_lacros",
 			Val: testArgsForSuspendPerf{
@@ -92,7 +103,7 @@ func init() {
 				enableArc:    true,
 				enableLacros: true,
 			},
-			Timeout: 10 * time.Minute,
+			Timeout: 20 * time.Minute,
 		}, {
 			Name: "arc_mem",
 			Val: testArgsForSuspendPerf{
@@ -110,7 +121,8 @@ func init() {
 				enableLacros:      true,
 				enableMempressure: true,
 			},
-			Timeout: 30 * time.Minute,
+			ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
+			Timeout:   30 * time.Minute,
 		}},
 	})
 }
@@ -121,6 +133,8 @@ const (
 
 	defaultInstanceName = "suspend_perf"
 	defaultBufferSize   = 10240
+
+	defaultCycleTabs = 10
 )
 
 type histogramRequest struct {
@@ -133,16 +147,22 @@ var defaultMetrics = []*histogramRequest{
 	{Name: "Power.KernelSuspendTimeOnAC"},
 	{Name: "Power.KernelResumeTimeOnAC"},
 	{Name: "Power.DisplayAfterResumeDurationMsOnAC"},
+	{Name: "Browser.Tabs.TotalSwitchDuration3", FromLacros: true},
 }
 
 // Delay and timeout for waitHistogramsUpdate().
 var defaultWaitInterval = time.Duration(2) * time.Second
-var defaultWaitTimeout = time.Duration(40) * time.Second
+var defaultWaitTimeout = time.Duration(80) * time.Second
 
 var remoteCommandTimeout = time.Duration(3) * time.Second
 
 func SuspendPerf(ctx context.Context, s *testing.State) {
 	args := s.Param().(testArgsForSuspendPerf)
+	forceTabs, err := strconv.Atoi(forceTabsVar.Value())
+	if err != nil {
+		s.Fatal("Failed to convert ", forceTabsVarName, err)
+	}
+	pv := perf.NewValues()
 
 	var useMetrics []*histogramRequest
 	for _, m := range defaultMetrics {
@@ -161,15 +181,18 @@ func SuspendPerf(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to initalize test environment: ", err)
 	}
 
+	// Launch tabs for tab switching time.
+	mp, err := mempressure.NewRemoteMemoryPressure(ctx, cl.Conn, args.enableLacros)
+	if err != nil {
+		s.Fatal("Failed to make a RemoteMemoryPressure: ", err)
+	}
+
 	if args.enableMempressure {
-		// Add a mempressure.
-		mp, err := mempressure.NewRemoteMemoryPressure(ctx, cl.Conn, args.enableLacros)
-		if err != nil {
-			s.Fatal("Failed to make a RemoteMemoryPressure: ", err)
-		}
-		if err := mp.Run(ctx, 0, 0, 10); err != nil {
+		// Open tabs until at least one tab is discarded.
+		if err := mp.Run(ctx, forceTabs, forceTabs, 0); err != nil {
 			s.Fatal("Failed to run RemoteMemoryPressure: ", err)
 		}
+		s.Logf("Memory pressure: Opened tabs: %d, discarded tabs: %d", mp.OpenedTabs(), mp.DiscardedTabs(ctx))
 	}
 
 	if err := initTracing(ctx, cl); err != nil {
@@ -179,6 +202,24 @@ func SuspendPerf(ctx context.Context, s *testing.State) {
 
 	service := powerpb.NewSuspendPerfServiceClient(cl.Conn)
 	tconn := ui.NewTconnServiceClient(cl.Conn)
+
+	// First, turn the display on.
+	if _, err := service.TurnOnDisplay(ctx, &emptypb.Empty{}); err != nil {
+		s.Fatal("Failed to turn on display: ", err)
+	}
+
+	// Prefetch tabs for the same condition.
+	if err := mp.OpenCycleTabs(ctx); err != nil {
+		s.Fatal("Failed to open tabs for measure performance: ", err)
+	}
+
+	// Trace the base metrics.
+	sess := startTracing(ctx, s, cl)
+	s.Log("Take a metric before suspend as a base metric")
+	if err := measureBaseTabSwitching(ctx, tconn, mp, args.enableLacros, pv); err != nil {
+		s.Fatal("Failed to measure base tab switching performance: ", err)
+	}
+	saveTraceData(ctx, s, cl, sess, nil, "_base")
 
 	// Get old (before the suspend) histograms if exist. Usually this is empty.
 	older, err := getHistograms(ctx, tconn, useMetrics)
@@ -190,10 +231,14 @@ func SuspendPerf(ctx context.Context, s *testing.State) {
 	seconds := defaultSuspendSeconds
 
 	for i := 0; i < args.numSuspend; i++ {
-		tok := startTracing(ctx, s, cl)
-
+		sess := startTracing(ctx, s, cl)
+		var tok *tracing.RemoteSessionToken
+		if sess != nil {
+			tok = sess.Token()
+		}
 		// Suspend and resume
 		s.Logf("Suspending DUT for %d seconds", seconds)
+		mp.Disconnect(ctx)
 		req := powerpb.SuspendRequest{Seconds: int32(seconds)}
 		if res, err := service.Suspend(ctx, &req); err != nil {
 			if res != nil && res.Failed {
@@ -215,6 +260,17 @@ func SuspendPerf(ctx context.Context, s *testing.State) {
 		if err := mempressure.ConnectTestEnv(ctx, cl.Conn, args.enableArc, args.enableLacros); err != nil {
 			s.Fatal("Failed to re-initalize test environment: ", err)
 		}
+		saveTraceData(ctx, s, cl, nil, tok, fmt.Sprintf("_resumed-%d", i))
+
+		// Reconnect to browser via memory pressure service.
+		if err := mp.Reconnect(ctx, cl.Conn); err != nil {
+			s.Fatal("Could not recover memory pressure session: ", err)
+		}
+		// This tab switching metrics are corrected by waitForHistogramsUpdate()
+		s.Log("Tab switching after resume")
+		sess = startTracing(ctx, s, cl)
+		mp.CycleTabs(ctx, defaultCycleTabs)
+		saveTraceData(ctx, s, cl, sess, nil, fmt.Sprintf("_tabs-%d", i))
 
 		s.Log("Wait for suspend metrics update")
 		service = powerpb.NewSuspendPerfServiceClient(cl.Conn)
@@ -223,7 +279,6 @@ func SuspendPerf(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Could not observe histogram update: ", err)
 		}
-		saveTraceData(ctx, s, cl, tok, i)
 	}
 	newer := prev
 
@@ -234,10 +289,8 @@ func SuspendPerf(ctx context.Context, s *testing.State) {
 	}
 
 	// Write perf metrics from the Diff Histogram and save it.
-	pv := perf.NewValues()
 	writeMetricsFromHistograms(diff, pv)
-	err = pv.Save(s.OutDir())
-	if err != nil {
+	if err := pv.Save(s.OutDir()); err != nil {
 		s.Fatal("Failed saving perf data: ", err)
 	}
 }
@@ -261,6 +314,51 @@ func redialRPC(ctx context.Context, dut *dut.DUT, hint *testing.RPCHint, timeout
 	}
 
 	return rpc.Dial(ctx, dut, hint)
+}
+
+func measureBaseTabSwitching(ctx context.Context, tconn ui.TconnServiceClient, mp *mempressure.RemoteMemoryPressure, lacros bool, pv *perf.Values) error {
+
+	prev, err := metrics.GetHistogram(ctx, tconn, "Browser.Tabs.TotalSwitchDuration3", lacros)
+	if err != nil {
+		return errors.Wrap(err, "failed to get histogram for cyclic tabs(prev)")
+	}
+	if err := mp.CycleTabs(ctx, defaultCycleTabs); err != nil {
+		return errors.Wrap(err, "failed to do cycle tabs")
+	}
+	testing.ContextLog(ctx, "Cycke tab switching done")
+
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		post, err := metrics.GetHistogram(ctx, tconn, "Browser.Tabs.TotalSwitchDuration3", lacros)
+		if err != nil {
+			return errors.Wrap(err, "failed to get histogram for cyclic tabs(post)")
+		}
+		diff, err := post.Diff(prev)
+		if err != nil {
+			return errors.Wrap(err, "failed to make a diff histogram")
+		}
+		count := diff.TotalCount()
+		if count < defaultCycleTabs {
+			return errors.New("Some metrics are not counted yet")
+		}
+		testing.ContextLog(ctx, "Counted Browser.Tabs.TotalSwitchDuration3 is ", count)
+		return nil
+	}, &testing.PollOptions{
+		Timeout:  defaultWaitTimeout,
+		Interval: defaultWaitInterval,
+	}); err != nil {
+		return err
+	}
+
+	post, err := metrics.GetHistogram(ctx, tconn, "Browser.Tabs.TotalSwitchDuration3", lacros)
+	if err != nil {
+		return errors.Wrap(err, "failed to get histogram for cyclic tabs(post)")
+	}
+	diff, err := post.Diff(prev)
+	if err != nil {
+		return errors.Wrap(err, "failed to make a diff histogram")
+	}
+	writeMetricsFromHistogram(diff, "_base", pv)
+	return nil
 }
 
 func shouldRunTraceCmd() bool {
@@ -297,7 +395,7 @@ func startTraceCmd(ctx context.Context, cl *rpc.Client) error {
 }
 
 // startPerfetto starts perfetto and detach from it.
-func startPerfetto(ctx context.Context, cl *rpc.Client) (*tracing.RemoteSessionToken, error) {
+func startPerfetto(ctx context.Context, cl *rpc.Client) (*tracing.RemoteSession, error) {
 	if !shouldRunPerfetto() {
 		return nil, nil
 	}
@@ -305,29 +403,28 @@ func startPerfetto(ctx context.Context, cl *rpc.Client) (*tracing.RemoteSessionT
 	if err != nil {
 		return nil, err
 	}
-	tok := sess.Token()
-	return tok, nil
+	return sess, nil
 }
 
 // startTracing starts tracing in DUT.
-func startTracing(ctx context.Context, s *testing.State, cl *rpc.Client) *tracing.RemoteSessionToken {
+func startTracing(ctx context.Context, s *testing.State, cl *rpc.Client) *tracing.RemoteSession {
 	if err := startTraceCmd(ctx, cl); err != nil {
 		s.Log("Failed to start trace-cmd, but this is ignorable: ", err)
 	}
 
-	tok, err := startPerfetto(ctx, cl)
+	sess, err := startPerfetto(ctx, cl)
 	if err != nil {
 		s.Log("Failed to start perfetto, but this is ignorable: ", err)
 	}
-	return tok
+	return sess
 }
 
 // saveTraceCmd fetches the trace data from DUT and save it in s.OutDir().
-func saveTraceCmd(ctx context.Context, s *testing.State, cl *rpc.Client, i int) error {
+func saveTraceCmd(ctx context.Context, s *testing.State, cl *rpc.Client, suffix string) error {
 	if !shouldRunTraceCmd() {
 		return nil
 	}
-	dest := fmt.Sprintf("%s/trace-%d.dat", s.OutDir(), i)
+	dest := fmt.Sprintf("%s/trace%s.dat", s.OutDir(), suffix)
 	if err := tracing.SaveRemoteInstanceTraceData(ctx, cl, defaultInstanceName,
 		func(src string) error {
 			return s.DUT().GetFile(ctx, src, dest)
@@ -338,12 +435,18 @@ func saveTraceCmd(ctx context.Context, s *testing.State, cl *rpc.Client, i int) 
 	return nil
 }
 
-func savePerfetto(ctx context.Context, s *testing.State, cl *rpc.Client, tok *tracing.RemoteSessionToken, i int) error {
-	if tok == nil {
+func savePerfetto(ctx context.Context, s *testing.State, cl *rpc.Client, sess *tracing.RemoteSession, tok *tracing.RemoteSessionToken, suffix string) error {
+	if !shouldRunPerfetto() {
 		return nil
 	}
-	dest := fmt.Sprintf("%s/perfetto-%d.trace", s.OutDir(), i)
-	if err := tracing.SaveRemoteSessionTraceData(ctx, cl, tok,
+	dest := fmt.Sprintf("%s/perfetto%s.trace", s.OutDir(), suffix)
+	if tok == nil {
+		defer sess.Finalize(ctx)
+		sess.Stop(ctx)
+		if err := s.DUT().GetFile(ctx, sess.TraceDataPath(), dest); err != nil {
+			return errors.Wrap(err, "failed to copy the perfetto data file from DUT")
+		}
+	} else if err := tracing.SaveRemoteSessionTraceData(ctx, cl, tok,
 		func(src string) error {
 			return s.DUT().GetFile(ctx, src, dest)
 		}); err != nil {
@@ -354,12 +457,11 @@ func savePerfetto(ctx context.Context, s *testing.State, cl *rpc.Client, tok *tr
 }
 
 // saveTraceData fetches the trace data from DUT and save it in s.OutDir().
-func saveTraceData(ctx context.Context, s *testing.State, cl *rpc.Client, tok *tracing.RemoteSessionToken, i int) {
-	if err := saveTraceCmd(ctx, s, cl, i); err != nil {
+func saveTraceData(ctx context.Context, s *testing.State, cl *rpc.Client, sess *tracing.RemoteSession, tok *tracing.RemoteSessionToken, suffix string) {
+	if err := saveTraceCmd(ctx, s, cl, suffix); err != nil {
 		s.Log("Ignorable: Failed to save trace-cmd data: ", err)
 	}
-
-	if err := savePerfetto(ctx, s, cl, tok, i); err != nil {
+	if err := savePerfetto(ctx, s, cl, sess, tok, suffix); err != nil {
 		s.Log("Ignorable: Failed to save perfetto data: ", err)
 	}
 }
@@ -414,19 +516,19 @@ func getHistograms(ctx context.Context, tconn ui.TconnServiceClient, req []*hist
 
 func writeMetricsFromHistograms(hs []*histogram.Histogram, pv *perf.Values) {
 	for _, h := range hs {
-		writeMetricsFromHistogram(h, pv)
+		writeMetricsFromHistogram(h, "", pv)
 	}
 }
 
 // writeMetricsFromHistogram writes <histname>_mean, <histname>_p50 (median), <histname>_p100 (max) to @pv
-func writeMetricsFromHistogram(hist *histogram.Histogram, pv *perf.Values) {
+func writeMetricsFromHistogram(hist *histogram.Histogram, suffix string, pv *perf.Values) {
 	if hist.TotalCount() == 0 {
 		return
 	}
 	mean, err := hist.Mean()
 	if err == nil {
 		pv.Set(perf.Metric{
-			Name:      fmt.Sprintf("%s_mean", hist.Name),
+			Name:      fmt.Sprintf("%s%s_mean", hist.Name, suffix),
 			Unit:      "ms",
 			Direction: perf.SmallerIsBetter,
 		}, mean)
@@ -434,7 +536,7 @@ func writeMetricsFromHistogram(hist *histogram.Histogram, pv *perf.Values) {
 	p50, err := hist.Percentile(50)
 	if err == nil {
 		pv.Set(perf.Metric{
-			Name:      fmt.Sprintf("%s_p50", hist.Name),
+			Name:      fmt.Sprintf("%s%s_p50", hist.Name, suffix),
 			Unit:      "ms",
 			Direction: perf.SmallerIsBetter,
 		}, p50)
@@ -442,7 +544,7 @@ func writeMetricsFromHistogram(hist *histogram.Histogram, pv *perf.Values) {
 	p100, err := hist.Percentile(100)
 	if err == nil {
 		pv.Set(perf.Metric{
-			Name:      fmt.Sprintf("%s_p100", hist.Name),
+			Name:      fmt.Sprintf("%s%s_p100", hist.Name, suffix),
 			Unit:      "ms",
 			Direction: perf.SmallerIsBetter,
 		}, p100)

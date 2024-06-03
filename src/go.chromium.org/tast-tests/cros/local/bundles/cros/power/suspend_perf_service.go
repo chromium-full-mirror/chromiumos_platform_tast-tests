@@ -9,9 +9,11 @@ import (
 	"strconv"
 
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/types/known/emptypb"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/network"
+	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	powerpb "go.chromium.org/tast-tests/cros/services/cros/power"
 	"go.chromium.org/tast/core/errors"
@@ -48,4 +50,11 @@ func (h *SuspendPerfService) Suspend(ctx context.Context, req *powerpb.SuspendRe
 	}
 
 	return &powerpb.SuspendResponse{Failed: false}, nil
+}
+
+func (h *SuspendPerfService) TurnOnDisplay(ctx context.Context, req *emptypb.Empty) (*emptypb.Empty, error) {
+	if err := power.TurnOnDisplay(ctx); err != nil {
+		return nil, err
+	}
+	return &emptypb.Empty{}, nil
 }
