@@ -31,7 +31,8 @@ func init() {
 		Desc:         "Verifies App Details in the OS Settings App Management UI",
 		Contacts: []string{
 			"chromeos-apps-foundation-team@google.com",
-			"sharminzaman@google.com",
+			"tsergeant@google.com",
+			"djacobo@google.com",
 		},
 		BugComponent: "b:1203766",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
