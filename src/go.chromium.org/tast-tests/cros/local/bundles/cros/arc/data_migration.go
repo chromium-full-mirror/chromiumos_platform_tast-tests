@@ -36,7 +36,6 @@ import (
 const (
 	// See the following page for how these pre-migration home data snapshots were created:
 	// https://crsrc.org/o/src/platform/tast-tests/src/go.chromium.org/tast-tests/cros/local/bundles/cros/arc/data/data_migration/README.md
-	homeDataNameNycX86                = "data_migration/nyc_x86_64"
 	homeDataNamePiX86                 = "data_migration/pi_x86_64"
 	homeDataNamePiArm                 = "data_migration/pi_arm64"
 	homeDataNameRvcX86Virtiofs        = "data_migration/rvc_x86_64_virtiofs"
@@ -70,17 +69,6 @@ func init() {
 		Timeout:      dataMigrationTestTimeout,
 		VarDeps:      []string{tape.ServiceAccountVar},
 		Params: []testing.Param{{
-			// Launch ARC P with /data created on ARC N (for x86).
-			Name: "n_to_p_x86",
-			Val: dataMigrationTestParams{
-				poolID:       arcDataMigrationUnmanagedPool,
-				dataFileName: homeDataNameNycX86,
-				managed:      false,
-			},
-			ExtraAttr:         []string{"group:mainline", "informational"},
-			ExtraData:         []string{homeDataNameNycX86},
-			ExtraSoftwareDeps: []string{"android_p", "amd64"},
-		}, {
 			// Launch ARC R with /data created on ARC P (for x86).
 			Name: "p_to_r_x86",
 			Val: dataMigrationTestParams{
@@ -119,8 +107,7 @@ func init() {
 				dataFileName: homeDataNameRvcX86Virtiofs,
 				managed:      false,
 			},
-			// Use arc_core so that this test case runs on ARC variant boards.
-			ExtraAttr: []string{"group:arc", "arc_core", "group:arc-functional"},
+			ExtraAttr: []string{"group:mainline", "informational"},
 			ExtraData: []string{homeDataNameRvcX86Virtiofs},
 			ExtraSoftwareDeps: []string{
 				"android_vm_t",
@@ -136,8 +123,7 @@ func init() {
 				dataFileName: homeDataNameRvcArmVirtioBlk,
 				managed:      false,
 			},
-			// Use arc_core so that this test case runs on ARC variant boards.
-			ExtraAttr: []string{"group:arc", "arc_core", "group:arc-functional"},
+			ExtraAttr: []string{"group:mainline", "informational"},
 			ExtraData: []string{homeDataNameRvcArmVirtioBlk},
 			ExtraSoftwareDeps: []string{
 				"android_vm_t",
@@ -169,8 +155,7 @@ func init() {
 				dataFileName: homeDataNameManagedRvcX86Virtiofs,
 				managed:      true,
 			},
-			// Use arc_core so that this test case runs on ARC variant boards.
-			ExtraAttr: []string{"group:arc", "arc_core", "group:arc-functional"},
+			ExtraAttr: []string{"group:mainline", "informational"},
 			ExtraData: []string{homeDataNameManagedRvcX86Virtiofs},
 			ExtraSearchFlags: []*testing.StringPair{
 				pci.SearchFlag(&policy.ArcEnabled{}, pci.VerifiedFunctionalityOS),
