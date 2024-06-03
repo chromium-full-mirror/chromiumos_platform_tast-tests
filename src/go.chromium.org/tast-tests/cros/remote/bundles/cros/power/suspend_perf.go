@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/chrome/histogram"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/remote/cros/metrics"
+	"go.chromium.org/tast-tests/cros/remote/memory/mempressure"
 	"go.chromium.org/tast-tests/cros/remote/tracing"
 	powerpb "go.chromium.org/tast-tests/cros/services/cros/power"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
@@ -20,8 +21,6 @@ import (
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
-	"google.golang.org/grpc"
-	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 const (
@@ -45,9 +44,10 @@ var enablePerfettoVar = testing.RegisterVarString(
 )
 
 type testArgsForSuspendPerf struct {
-	numSuspend   int
-	enableLacros bool
-	enableArc    bool
+	numSuspend        int
+	enableLacros      bool
+	enableArc         bool
+	enableMempressure bool
 }
 
 func init() {
@@ -67,6 +67,7 @@ func init() {
 			"tast.cros.power.SuspendPerfService",
 			"tast.cros.tracing.TraceCmdService",
 			"tast.cros.tracing.PerfettoTraceService",
+			"tast.cros.ui.ConnService",
 			"tast.cros.ui.TconnService",
 		},
 		Params: []testing.Param{{
@@ -92,6 +93,24 @@ func init() {
 				enableLacros: true,
 			},
 			Timeout: 10 * time.Minute,
+		}, {
+			Name: "arc_mem",
+			Val: testArgsForSuspendPerf{
+				numSuspend:        5,
+				enableArc:         true,
+				enableMempressure: true,
+			},
+			// mempressure will take another 20minutes
+			Timeout: 30 * time.Minute,
+		}, {
+			Name: "arc_lacros_mem",
+			Val: testArgsForSuspendPerf{
+				numSuspend:        5,
+				enableArc:         true,
+				enableLacros:      true,
+				enableMempressure: true,
+			},
+			Timeout: 30 * time.Minute,
 		}},
 	})
 }
@@ -137,9 +156,20 @@ func SuspendPerf(ctx context.Context, s *testing.State) {
 	}
 	defer cl.Close(ctx)
 
-	// Login test user for suspend/resume.
-	if err := setupBrowser(ctx, cl.Conn, false, args.enableArc, args.enableLacros); err != nil {
+	// Login test user for memory pressure and suspend/resume.
+	if err := mempressure.NewTestEnv(ctx, cl.Conn, args.enableArc, args.enableLacros); err != nil {
 		s.Fatal("Failed to initalize test environment: ", err)
+	}
+
+	if args.enableMempressure {
+		// Add a mempressure.
+		mp, err := mempressure.NewRemoteMemoryPressure(ctx, cl.Conn, args.enableLacros)
+		if err != nil {
+			s.Fatal("Failed to make a RemoteMemoryPressure: ", err)
+		}
+		if err := mp.Run(ctx, 0, 0, 10); err != nil {
+			s.Fatal("Failed to run RemoteMemoryPressure: ", err)
+		}
 	}
 
 	if err := initTracing(ctx, cl); err != nil {
@@ -182,7 +212,7 @@ func SuspendPerf(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to reconnect the RPC: ", err)
 		}
 		// defer cl.Close() is already set.
-		if err := setupBrowser(ctx, cl.Conn, true, args.enableArc, args.enableLacros); err != nil {
+		if err := mempressure.ConnectTestEnv(ctx, cl.Conn, args.enableArc, args.enableLacros); err != nil {
 			s.Fatal("Failed to re-initalize test environment: ", err)
 		}
 
@@ -210,38 +240,6 @@ func SuspendPerf(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed saving perf data: ", err)
 	}
-}
-
-func setupBrowser(ctx context.Context, cc grpc.ClientConnInterface, reconnect, arc, lacros bool) error {
-	crs := ui.NewChromeServiceClient(cc)
-	req := &ui.NewRequest{}
-	if reconnect {
-		req.KeepState = true
-		req.TryReuseSession = true
-	}
-	if arc {
-		req.ArcMode = ui.ArcMode_ARC_MODE_ENABLED
-	}
-	if lacros {
-		req.Lacros = &ui.Lacros{}
-	}
-	// Fake login on the DUT through the chrome service.
-	if _, err := crs.New(ctx, req, grpc.WaitForReady(true)); err != nil {
-		return errors.Wrap(err, "failed to login on the DUT ")
-	}
-	if lacros {
-		las := ui.NewLacrosServiceClient(cc)
-		if reconnect {
-			if _, err := las.Connect(ctx, &emptypb.Empty{}); err != nil {
-				return errors.Wrap(err, "failed to reconnect lacros ")
-			}
-		} else {
-			if _, err := las.Launch(ctx, &emptypb.Empty{}); err != nil {
-				return errors.Wrap(err, "failed to launch lacros ")
-			}
-		}
-	}
-	return nil
 }
 
 func redialRPC(ctx context.Context, dut *dut.DUT, hint *testing.RPCHint, timeoutSeconds int) (*rpc.Client, error) {

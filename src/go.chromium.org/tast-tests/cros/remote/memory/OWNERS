@@ -1,0 +1,2 @@
+include /src/go.chromium.org/tast-tests/cros/local/memory/OWNERS
+per-file mempressure/mempressure.go = mhiramat@google.com
