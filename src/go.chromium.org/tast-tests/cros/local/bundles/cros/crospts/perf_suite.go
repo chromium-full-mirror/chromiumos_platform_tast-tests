@@ -201,19 +201,19 @@ func init() {
 				Fixture: "mountUnmountPtsWorldForCrOSx86",
 				Val: &perfSuite{
 					runner:        ptsworld.NewCrosRunner(),
-					suiteName:     "tensorflow-lite-1.1.0",
+					suiteName:     "local/tensorflow-lite-1.1.0",
 					resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
 				},
-				Timeout: 120 * time.Minute,
+				Timeout: 40 * time.Minute,
 			}, {
 				Name:    "tensorflowlite_cros_arm64",
 				Fixture: "mountUnmountPtsWorldForCrOSarm64",
 				Val: &perfSuite{
 					runner:        ptsworld.NewCrosRunner(),
-					suiteName:     "tensorflow-lite-1.1.0",
+					suiteName:     "local/tensorflow-lite-1.1.0",
 					resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
 				},
-				Timeout: 120 * time.Minute,
+				Timeout: 40 * time.Minute,
 			}, {
 				Name:    "rnnoise_cros_x86",
 				Fixture: "mountUnmountPtsWorldForCrOSx86",
