@@ -109,7 +109,7 @@ func init() {
 				Fixture: "mountUnmountPtsWorldForCrOSx86",
 				Val: &perfSuite{
 					runner:        ptsworld.NewCrosRunner(),
-					suiteName:     "openssl-3.1.0",
+					suiteName:     "local/openssl-3.3.0",
 					resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
 				},
 				Timeout: 90 * time.Minute,
@@ -118,7 +118,7 @@ func init() {
 				Fixture: "mountUnmountPtsWorldForCrOSarm64",
 				Val: &perfSuite{
 					runner:        ptsworld.NewCrosRunner(),
-					suiteName:     "openssl-3.1.0",
+					suiteName:     "local/openssl-3.3.0",
 					resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
 				},
 				Timeout: 90 * time.Minute,
