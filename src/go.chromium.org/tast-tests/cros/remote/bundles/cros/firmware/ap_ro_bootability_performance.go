@@ -1066,9 +1066,11 @@ func readCorebootName(ctx context.Context, conn *ssh.Conn, path, model, fwidMode
 	m := re.FindStringSubmatch(string(out))
 	sku := -1
 	if m != nil {
-		sku, err = strconv.Atoi(m[1])
-		if err != nil {
-			return "", errors.Wrapf(err, "parse of %q failed", m[1])
+		if m[1] != "none" {
+			sku, err = strconv.Atoi(m[1])
+			if err != nil {
+				return "", errors.Wrapf(err, "parse of SKU %q failed", m[1])
+			}
 		}
 		testing.ContextLogf(ctx, "DUT sku = %d", sku)
 	}
