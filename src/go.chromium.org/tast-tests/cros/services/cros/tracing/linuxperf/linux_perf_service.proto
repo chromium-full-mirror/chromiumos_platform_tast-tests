@@ -8,9 +8,44 @@ package tast.cros.tracing.linuxperf;
 
 option go_package = "go.chromium.org/tast-tests/cros/services/cros/tracing/linuxperf";
 
+import "google/protobuf/empty.proto";
+
+service LinuxPerfService {
+  rpc Start(LinuxPerfOptions) returns (LinuxPerfResponse) {}
+
+  rpc Stop(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
+  rpc SaveScript(LinuxPerfSaveScriptRequest)
+      returns (LinuxPerfSaveScriptResponse) {}
+
+  rpc Finalize(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
+  rpc Reconnect(LinuxPerfReconnectRequest) returns (LinuxPerfResponse) {}
+}
+
 message LinuxPerfOptions {
   repeated string args = 1;
   string out_file = 2;
   bool background = 3;
   int32 timeout_seconds = 4;
 }
+
+message LinuxPerfResponse {
+  int32 pid = 1;
+  string out_file = 2;
+  bool delete_on_close = 3;
+}
+
+message LinuxPerfReconnectRequest {
+  int32 pid = 1;
+  string out_file = 2;
+  bool delete_on_close = 3;
+}
+
+message LinuxPerfSaveScriptRequest {
+  repeated string args = 1;
+  string out_file = 2;
+  bool compress = 3;
+}
+
+message LinuxPerfSaveScriptResponse { string out_file = 1; }

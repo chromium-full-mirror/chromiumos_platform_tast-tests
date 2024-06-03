@@ -11,8 +11,13 @@
 package linuxperf
 
 import (
+	context "context"
+	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 	reflect "reflect"
 	sync "sync"
 )
@@ -95,26 +100,319 @@ func (x *LinuxPerfOptions) GetTimeoutSeconds() int32 {
 	return 0
 }
 
+type LinuxPerfResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Pid           int32  `protobuf:"varint,1,opt,name=pid,proto3" json:"pid,omitempty"`
+	OutFile       string `protobuf:"bytes,2,opt,name=out_file,json=outFile,proto3" json:"out_file,omitempty"`
+	DeleteOnClose bool   `protobuf:"varint,3,opt,name=delete_on_close,json=deleteOnClose,proto3" json:"delete_on_close,omitempty"`
+}
+
+func (x *LinuxPerfResponse) Reset() {
+	*x = LinuxPerfResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_linux_perf_service_proto_msgTypes[1]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *LinuxPerfResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LinuxPerfResponse) ProtoMessage() {}
+
+func (x *LinuxPerfResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_linux_perf_service_proto_msgTypes[1]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LinuxPerfResponse.ProtoReflect.Descriptor instead.
+func (*LinuxPerfResponse) Descriptor() ([]byte, []int) {
+	return file_linux_perf_service_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *LinuxPerfResponse) GetPid() int32 {
+	if x != nil {
+		return x.Pid
+	}
+	return 0
+}
+
+func (x *LinuxPerfResponse) GetOutFile() string {
+	if x != nil {
+		return x.OutFile
+	}
+	return ""
+}
+
+func (x *LinuxPerfResponse) GetDeleteOnClose() bool {
+	if x != nil {
+		return x.DeleteOnClose
+	}
+	return false
+}
+
+type LinuxPerfReconnectRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Pid           int32  `protobuf:"varint,1,opt,name=pid,proto3" json:"pid,omitempty"`
+	OutFile       string `protobuf:"bytes,2,opt,name=out_file,json=outFile,proto3" json:"out_file,omitempty"`
+	DeleteOnClose bool   `protobuf:"varint,3,opt,name=delete_on_close,json=deleteOnClose,proto3" json:"delete_on_close,omitempty"`
+}
+
+func (x *LinuxPerfReconnectRequest) Reset() {
+	*x = LinuxPerfReconnectRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_linux_perf_service_proto_msgTypes[2]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *LinuxPerfReconnectRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LinuxPerfReconnectRequest) ProtoMessage() {}
+
+func (x *LinuxPerfReconnectRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_linux_perf_service_proto_msgTypes[2]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LinuxPerfReconnectRequest.ProtoReflect.Descriptor instead.
+func (*LinuxPerfReconnectRequest) Descriptor() ([]byte, []int) {
+	return file_linux_perf_service_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *LinuxPerfReconnectRequest) GetPid() int32 {
+	if x != nil {
+		return x.Pid
+	}
+	return 0
+}
+
+func (x *LinuxPerfReconnectRequest) GetOutFile() string {
+	if x != nil {
+		return x.OutFile
+	}
+	return ""
+}
+
+func (x *LinuxPerfReconnectRequest) GetDeleteOnClose() bool {
+	if x != nil {
+		return x.DeleteOnClose
+	}
+	return false
+}
+
+type LinuxPerfSaveScriptRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Args     []string `protobuf:"bytes,1,rep,name=args,proto3" json:"args,omitempty"`
+	OutFile  string   `protobuf:"bytes,2,opt,name=out_file,json=outFile,proto3" json:"out_file,omitempty"`
+	Compress bool     `protobuf:"varint,3,opt,name=compress,proto3" json:"compress,omitempty"`
+}
+
+func (x *LinuxPerfSaveScriptRequest) Reset() {
+	*x = LinuxPerfSaveScriptRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_linux_perf_service_proto_msgTypes[3]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *LinuxPerfSaveScriptRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LinuxPerfSaveScriptRequest) ProtoMessage() {}
+
+func (x *LinuxPerfSaveScriptRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_linux_perf_service_proto_msgTypes[3]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LinuxPerfSaveScriptRequest.ProtoReflect.Descriptor instead.
+func (*LinuxPerfSaveScriptRequest) Descriptor() ([]byte, []int) {
+	return file_linux_perf_service_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *LinuxPerfSaveScriptRequest) GetArgs() []string {
+	if x != nil {
+		return x.Args
+	}
+	return nil
+}
+
+func (x *LinuxPerfSaveScriptRequest) GetOutFile() string {
+	if x != nil {
+		return x.OutFile
+	}
+	return ""
+}
+
+func (x *LinuxPerfSaveScriptRequest) GetCompress() bool {
+	if x != nil {
+		return x.Compress
+	}
+	return false
+}
+
+type LinuxPerfSaveScriptResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	OutFile string `protobuf:"bytes,1,opt,name=out_file,json=outFile,proto3" json:"out_file,omitempty"`
+}
+
+func (x *LinuxPerfSaveScriptResponse) Reset() {
+	*x = LinuxPerfSaveScriptResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_linux_perf_service_proto_msgTypes[4]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *LinuxPerfSaveScriptResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LinuxPerfSaveScriptResponse) ProtoMessage() {}
+
+func (x *LinuxPerfSaveScriptResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_linux_perf_service_proto_msgTypes[4]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LinuxPerfSaveScriptResponse.ProtoReflect.Descriptor instead.
+func (*LinuxPerfSaveScriptResponse) Descriptor() ([]byte, []int) {
+	return file_linux_perf_service_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *LinuxPerfSaveScriptResponse) GetOutFile() string {
+	if x != nil {
+		return x.OutFile
+	}
+	return ""
+}
+
 var File_linux_perf_service_proto protoreflect.FileDescriptor
 
 var file_linux_perf_service_proto_rawDesc = []byte{
 	0x0a, 0x18, 0x6c, 0x69, 0x6e, 0x75, 0x78, 0x5f, 0x70, 0x65, 0x72, 0x66, 0x5f, 0x73, 0x65, 0x72,
 	0x76, 0x69, 0x63, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x1b, 0x74, 0x61, 0x73, 0x74,
 	0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x74, 0x72, 0x61, 0x63, 0x69, 0x6e, 0x67, 0x2e, 0x6c, 0x69,
-	0x6e, 0x75, 0x78, 0x70, 0x65, 0x72, 0x66, 0x22, 0x8a, 0x01, 0x0a, 0x10, 0x4c, 0x69, 0x6e, 0x75,
-	0x78, 0x50, 0x65, 0x72, 0x66, 0x4f, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x12, 0x12, 0x0a, 0x04,
-	0x61, 0x72, 0x67, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x09, 0x52, 0x04, 0x61, 0x72, 0x67, 0x73,
-	0x12, 0x19, 0x0a, 0x08, 0x6f, 0x75, 0x74, 0x5f, 0x66, 0x69, 0x6c, 0x65, 0x18, 0x02, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x07, 0x6f, 0x75, 0x74, 0x46, 0x69, 0x6c, 0x65, 0x12, 0x1e, 0x0a, 0x0a, 0x62,
-	0x61, 0x63, 0x6b, 0x67, 0x72, 0x6f, 0x75, 0x6e, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x08, 0x52,
-	0x0a, 0x62, 0x61, 0x63, 0x6b, 0x67, 0x72, 0x6f, 0x75, 0x6e, 0x64, 0x12, 0x27, 0x0a, 0x0f, 0x74,
-	0x69, 0x6d, 0x65, 0x6f, 0x75, 0x74, 0x5f, 0x73, 0x65, 0x63, 0x6f, 0x6e, 0x64, 0x73, 0x18, 0x04,
-	0x20, 0x01, 0x28, 0x05, 0x52, 0x0e, 0x74, 0x69, 0x6d, 0x65, 0x6f, 0x75, 0x74, 0x53, 0x65, 0x63,
-	0x6f, 0x6e, 0x64, 0x73, 0x42, 0x41, 0x5a, 0x3f, 0x67, 0x6f, 0x2e, 0x63, 0x68, 0x72, 0x6f, 0x6d,
-	0x69, 0x75, 0x6d, 0x2e, 0x6f, 0x72, 0x67, 0x2f, 0x74, 0x61, 0x73, 0x74, 0x2d, 0x74, 0x65, 0x73,
-	0x74, 0x73, 0x2f, 0x63, 0x72, 0x6f, 0x73, 0x2f, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x73,
-	0x2f, 0x63, 0x72, 0x6f, 0x73, 0x2f, 0x74, 0x72, 0x61, 0x63, 0x69, 0x6e, 0x67, 0x2f, 0x6c, 0x69,
-	0x6e, 0x75, 0x78, 0x70, 0x65, 0x72, 0x66, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x6e, 0x75, 0x78, 0x70, 0x65, 0x72, 0x66, 0x1a, 0x1b, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2f,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2f, 0x65, 0x6d, 0x70, 0x74, 0x79, 0x2e, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x22, 0x8a, 0x01, 0x0a, 0x10, 0x4c, 0x69, 0x6e, 0x75, 0x78, 0x50, 0x65,
+	0x72, 0x66, 0x4f, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x12, 0x12, 0x0a, 0x04, 0x61, 0x72, 0x67,
+	0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x09, 0x52, 0x04, 0x61, 0x72, 0x67, 0x73, 0x12, 0x19, 0x0a,
+	0x08, 0x6f, 0x75, 0x74, 0x5f, 0x66, 0x69, 0x6c, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52,
+	0x07, 0x6f, 0x75, 0x74, 0x46, 0x69, 0x6c, 0x65, 0x12, 0x1e, 0x0a, 0x0a, 0x62, 0x61, 0x63, 0x6b,
+	0x67, 0x72, 0x6f, 0x75, 0x6e, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x08, 0x52, 0x0a, 0x62, 0x61,
+	0x63, 0x6b, 0x67, 0x72, 0x6f, 0x75, 0x6e, 0x64, 0x12, 0x27, 0x0a, 0x0f, 0x74, 0x69, 0x6d, 0x65,
+	0x6f, 0x75, 0x74, 0x5f, 0x73, 0x65, 0x63, 0x6f, 0x6e, 0x64, 0x73, 0x18, 0x04, 0x20, 0x01, 0x28,
+	0x05, 0x52, 0x0e, 0x74, 0x69, 0x6d, 0x65, 0x6f, 0x75, 0x74, 0x53, 0x65, 0x63, 0x6f, 0x6e, 0x64,
+	0x73, 0x22, 0x68, 0x0a, 0x11, 0x4c, 0x69, 0x6e, 0x75, 0x78, 0x50, 0x65, 0x72, 0x66, 0x52, 0x65,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x10, 0x0a, 0x03, 0x70, 0x69, 0x64, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x05, 0x52, 0x03, 0x70, 0x69, 0x64, 0x12, 0x19, 0x0a, 0x08, 0x6f, 0x75, 0x74, 0x5f,
+	0x66, 0x69, 0x6c, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x6f, 0x75, 0x74, 0x46,
+	0x69, 0x6c, 0x65, 0x12, 0x26, 0x0a, 0x0f, 0x64, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x5f, 0x6f, 0x6e,
+	0x5f, 0x63, 0x6c, 0x6f, 0x73, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x08, 0x52, 0x0d, 0x64, 0x65,
+	0x6c, 0x65, 0x74, 0x65, 0x4f, 0x6e, 0x43, 0x6c, 0x6f, 0x73, 0x65, 0x22, 0x70, 0x0a, 0x19, 0x4c,
+	0x69, 0x6e, 0x75, 0x78, 0x50, 0x65, 0x72, 0x66, 0x52, 0x65, 0x63, 0x6f, 0x6e, 0x6e, 0x65, 0x63,
+	0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x10, 0x0a, 0x03, 0x70, 0x69, 0x64, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x05, 0x52, 0x03, 0x70, 0x69, 0x64, 0x12, 0x19, 0x0a, 0x08, 0x6f, 0x75,
+	0x74, 0x5f, 0x66, 0x69, 0x6c, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x6f, 0x75,
+	0x74, 0x46, 0x69, 0x6c, 0x65, 0x12, 0x26, 0x0a, 0x0f, 0x64, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x5f,
+	0x6f, 0x6e, 0x5f, 0x63, 0x6c, 0x6f, 0x73, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x08, 0x52, 0x0d,
+	0x64, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x4f, 0x6e, 0x43, 0x6c, 0x6f, 0x73, 0x65, 0x22, 0x67, 0x0a,
+	0x1a, 0x4c, 0x69, 0x6e, 0x75, 0x78, 0x50, 0x65, 0x72, 0x66, 0x53, 0x61, 0x76, 0x65, 0x53, 0x63,
+	0x72, 0x69, 0x70, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x12, 0x0a, 0x04, 0x61,
+	0x72, 0x67, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x09, 0x52, 0x04, 0x61, 0x72, 0x67, 0x73, 0x12,
+	0x19, 0x0a, 0x08, 0x6f, 0x75, 0x74, 0x5f, 0x66, 0x69, 0x6c, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x07, 0x6f, 0x75, 0x74, 0x46, 0x69, 0x6c, 0x65, 0x12, 0x1a, 0x0a, 0x08, 0x63, 0x6f,
+	0x6d, 0x70, 0x72, 0x65, 0x73, 0x73, 0x18, 0x03, 0x20, 0x01, 0x28, 0x08, 0x52, 0x08, 0x63, 0x6f,
+	0x6d, 0x70, 0x72, 0x65, 0x73, 0x73, 0x22, 0x38, 0x0a, 0x1b, 0x4c, 0x69, 0x6e, 0x75, 0x78, 0x50,
+	0x65, 0x72, 0x66, 0x53, 0x61, 0x76, 0x65, 0x53, 0x63, 0x72, 0x69, 0x70, 0x74, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x19, 0x0a, 0x08, 0x6f, 0x75, 0x74, 0x5f, 0x66, 0x69, 0x6c,
+	0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x6f, 0x75, 0x74, 0x46, 0x69, 0x6c, 0x65,
+	0x32, 0xef, 0x03, 0x0a, 0x10, 0x4c, 0x69, 0x6e, 0x75, 0x78, 0x50, 0x65, 0x72, 0x66, 0x53, 0x65,
+	0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x68, 0x0a, 0x05, 0x53, 0x74, 0x61, 0x72, 0x74, 0x12, 0x2d,
+	0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x74, 0x72, 0x61, 0x63, 0x69,
+	0x6e, 0x67, 0x2e, 0x6c, 0x69, 0x6e, 0x75, 0x78, 0x70, 0x65, 0x72, 0x66, 0x2e, 0x4c, 0x69, 0x6e,
+	0x75, 0x78, 0x50, 0x65, 0x72, 0x66, 0x4f, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x1a, 0x2e, 0x2e,
+	0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x74, 0x72, 0x61, 0x63, 0x69, 0x6e,
+	0x67, 0x2e, 0x6c, 0x69, 0x6e, 0x75, 0x78, 0x70, 0x65, 0x72, 0x66, 0x2e, 0x4c, 0x69, 0x6e, 0x75,
+	0x78, 0x50, 0x65, 0x72, 0x66, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12,
+	0x38, 0x0a, 0x04, 0x53, 0x74, 0x6f, 0x70, 0x12, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65,
+	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x1a,
+	0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75,
+	0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x00, 0x12, 0x81, 0x01, 0x0a, 0x0a, 0x53, 0x61,
+	0x76, 0x65, 0x53, 0x63, 0x72, 0x69, 0x70, 0x74, 0x12, 0x37, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e,
+	0x63, 0x72, 0x6f, 0x73, 0x2e, 0x74, 0x72, 0x61, 0x63, 0x69, 0x6e, 0x67, 0x2e, 0x6c, 0x69, 0x6e,
+	0x75, 0x78, 0x70, 0x65, 0x72, 0x66, 0x2e, 0x4c, 0x69, 0x6e, 0x75, 0x78, 0x50, 0x65, 0x72, 0x66,
+	0x53, 0x61, 0x76, 0x65, 0x53, 0x63, 0x72, 0x69, 0x70, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x1a, 0x38, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x74, 0x72,
+	0x61, 0x63, 0x69, 0x6e, 0x67, 0x2e, 0x6c, 0x69, 0x6e, 0x75, 0x78, 0x70, 0x65, 0x72, 0x66, 0x2e,
+	0x4c, 0x69, 0x6e, 0x75, 0x78, 0x50, 0x65, 0x72, 0x66, 0x53, 0x61, 0x76, 0x65, 0x53, 0x63, 0x72,
+	0x69, 0x70, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x3c, 0x0a,
+	0x08, 0x46, 0x69, 0x6e, 0x61, 0x6c, 0x69, 0x7a, 0x65, 0x12, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67,
+	0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74,
+	0x79, 0x1a, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x00, 0x12, 0x75, 0x0a, 0x09, 0x52,
+	0x65, 0x63, 0x6f, 0x6e, 0x6e, 0x65, 0x63, 0x74, 0x12, 0x36, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e,
+	0x63, 0x72, 0x6f, 0x73, 0x2e, 0x74, 0x72, 0x61, 0x63, 0x69, 0x6e, 0x67, 0x2e, 0x6c, 0x69, 0x6e,
+	0x75, 0x78, 0x70, 0x65, 0x72, 0x66, 0x2e, 0x4c, 0x69, 0x6e, 0x75, 0x78, 0x50, 0x65, 0x72, 0x66,
+	0x52, 0x65, 0x63, 0x6f, 0x6e, 0x6e, 0x65, 0x63, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x1a, 0x2e, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x74, 0x72, 0x61,
+	0x63, 0x69, 0x6e, 0x67, 0x2e, 0x6c, 0x69, 0x6e, 0x75, 0x78, 0x70, 0x65, 0x72, 0x66, 0x2e, 0x4c,
+	0x69, 0x6e, 0x75, 0x78, 0x50, 0x65, 0x72, 0x66, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x22, 0x00, 0x42, 0x41, 0x5a, 0x3f, 0x67, 0x6f, 0x2e, 0x63, 0x68, 0x72, 0x6f, 0x6d, 0x69, 0x75,
+	0x6d, 0x2e, 0x6f, 0x72, 0x67, 0x2f, 0x74, 0x61, 0x73, 0x74, 0x2d, 0x74, 0x65, 0x73, 0x74, 0x73,
+	0x2f, 0x63, 0x72, 0x6f, 0x73, 0x2f, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x73, 0x2f, 0x63,
+	0x72, 0x6f, 0x73, 0x2f, 0x74, 0x72, 0x61, 0x63, 0x69, 0x6e, 0x67, 0x2f, 0x6c, 0x69, 0x6e, 0x75,
+	0x78, 0x70, 0x65, 0x72, 0x66, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -129,13 +427,28 @@ func file_linux_perf_service_proto_rawDescGZIP() []byte {
 	return file_linux_perf_service_proto_rawDescData
 }
 
-var file_linux_perf_service_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
+var file_linux_perf_service_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_linux_perf_service_proto_goTypes = []interface{}{
-	(*LinuxPerfOptions)(nil), // 0: tast.cros.tracing.linuxperf.LinuxPerfOptions
+	(*LinuxPerfOptions)(nil),            // 0: tast.cros.tracing.linuxperf.LinuxPerfOptions
+	(*LinuxPerfResponse)(nil),           // 1: tast.cros.tracing.linuxperf.LinuxPerfResponse
+	(*LinuxPerfReconnectRequest)(nil),   // 2: tast.cros.tracing.linuxperf.LinuxPerfReconnectRequest
+	(*LinuxPerfSaveScriptRequest)(nil),  // 3: tast.cros.tracing.linuxperf.LinuxPerfSaveScriptRequest
+	(*LinuxPerfSaveScriptResponse)(nil), // 4: tast.cros.tracing.linuxperf.LinuxPerfSaveScriptResponse
+	(*emptypb.Empty)(nil),               // 5: google.protobuf.Empty
 }
 var file_linux_perf_service_proto_depIdxs = []int32{
-	0, // [0:0] is the sub-list for method output_type
-	0, // [0:0] is the sub-list for method input_type
+	0, // 0: tast.cros.tracing.linuxperf.LinuxPerfService.Start:input_type -> tast.cros.tracing.linuxperf.LinuxPerfOptions
+	5, // 1: tast.cros.tracing.linuxperf.LinuxPerfService.Stop:input_type -> google.protobuf.Empty
+	3, // 2: tast.cros.tracing.linuxperf.LinuxPerfService.SaveScript:input_type -> tast.cros.tracing.linuxperf.LinuxPerfSaveScriptRequest
+	5, // 3: tast.cros.tracing.linuxperf.LinuxPerfService.Finalize:input_type -> google.protobuf.Empty
+	2, // 4: tast.cros.tracing.linuxperf.LinuxPerfService.Reconnect:input_type -> tast.cros.tracing.linuxperf.LinuxPerfReconnectRequest
+	1, // 5: tast.cros.tracing.linuxperf.LinuxPerfService.Start:output_type -> tast.cros.tracing.linuxperf.LinuxPerfResponse
+	5, // 6: tast.cros.tracing.linuxperf.LinuxPerfService.Stop:output_type -> google.protobuf.Empty
+	4, // 7: tast.cros.tracing.linuxperf.LinuxPerfService.SaveScript:output_type -> tast.cros.tracing.linuxperf.LinuxPerfSaveScriptResponse
+	5, // 8: tast.cros.tracing.linuxperf.LinuxPerfService.Finalize:output_type -> google.protobuf.Empty
+	1, // 9: tast.cros.tracing.linuxperf.LinuxPerfService.Reconnect:output_type -> tast.cros.tracing.linuxperf.LinuxPerfResponse
+	5, // [5:10] is the sub-list for method output_type
+	0, // [0:5] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
@@ -159,6 +472,54 @@ func file_linux_perf_service_proto_init() {
 				return nil
 			}
 		}
+		file_linux_perf_service_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*LinuxPerfResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_linux_perf_service_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*LinuxPerfReconnectRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_linux_perf_service_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*LinuxPerfSaveScriptRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_linux_perf_service_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*LinuxPerfSaveScriptResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -166,9 +527,9 @@ func file_linux_perf_service_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_linux_perf_service_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   1,
+			NumMessages:   5,
 			NumExtensions: 0,
-			NumServices:   0,
+			NumServices:   1,
 		},
 		GoTypes:           file_linux_perf_service_proto_goTypes,
 		DependencyIndexes: file_linux_perf_service_proto_depIdxs,
@@ -178,4 +539,228 @@ func file_linux_perf_service_proto_init() {
 	file_linux_perf_service_proto_rawDesc = nil
 	file_linux_perf_service_proto_goTypes = nil
 	file_linux_perf_service_proto_depIdxs = nil
+}
+
+// Reference imports to suppress errors if they are not otherwise used.
+var _ context.Context
+var _ grpc.ClientConnInterface
+
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the grpc package it is being compiled against.
+const _ = grpc.SupportPackageIsVersion6
+
+// LinuxPerfServiceClient is the client API for LinuxPerfService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
+type LinuxPerfServiceClient interface {
+	Start(ctx context.Context, in *LinuxPerfOptions, opts ...grpc.CallOption) (*LinuxPerfResponse, error)
+	Stop(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	SaveScript(ctx context.Context, in *LinuxPerfSaveScriptRequest, opts ...grpc.CallOption) (*LinuxPerfSaveScriptResponse, error)
+	Finalize(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	Reconnect(ctx context.Context, in *LinuxPerfReconnectRequest, opts ...grpc.CallOption) (*LinuxPerfResponse, error)
+}
+
+type linuxPerfServiceClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewLinuxPerfServiceClient(cc grpc.ClientConnInterface) LinuxPerfServiceClient {
+	return &linuxPerfServiceClient{cc}
+}
+
+func (c *linuxPerfServiceClient) Start(ctx context.Context, in *LinuxPerfOptions, opts ...grpc.CallOption) (*LinuxPerfResponse, error) {
+	out := new(LinuxPerfResponse)
+	err := c.cc.Invoke(ctx, "/tast.cros.tracing.linuxperf.LinuxPerfService/Start", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *linuxPerfServiceClient) Stop(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/tast.cros.tracing.linuxperf.LinuxPerfService/Stop", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *linuxPerfServiceClient) SaveScript(ctx context.Context, in *LinuxPerfSaveScriptRequest, opts ...grpc.CallOption) (*LinuxPerfSaveScriptResponse, error) {
+	out := new(LinuxPerfSaveScriptResponse)
+	err := c.cc.Invoke(ctx, "/tast.cros.tracing.linuxperf.LinuxPerfService/SaveScript", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *linuxPerfServiceClient) Finalize(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/tast.cros.tracing.linuxperf.LinuxPerfService/Finalize", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *linuxPerfServiceClient) Reconnect(ctx context.Context, in *LinuxPerfReconnectRequest, opts ...grpc.CallOption) (*LinuxPerfResponse, error) {
+	out := new(LinuxPerfResponse)
+	err := c.cc.Invoke(ctx, "/tast.cros.tracing.linuxperf.LinuxPerfService/Reconnect", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// LinuxPerfServiceServer is the server API for LinuxPerfService service.
+type LinuxPerfServiceServer interface {
+	Start(context.Context, *LinuxPerfOptions) (*LinuxPerfResponse, error)
+	Stop(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
+	SaveScript(context.Context, *LinuxPerfSaveScriptRequest) (*LinuxPerfSaveScriptResponse, error)
+	Finalize(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
+	Reconnect(context.Context, *LinuxPerfReconnectRequest) (*LinuxPerfResponse, error)
+}
+
+// UnimplementedLinuxPerfServiceServer can be embedded to have forward compatible implementations.
+type UnimplementedLinuxPerfServiceServer struct {
+}
+
+func (*UnimplementedLinuxPerfServiceServer) Start(context.Context, *LinuxPerfOptions) (*LinuxPerfResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Start not implemented")
+}
+func (*UnimplementedLinuxPerfServiceServer) Stop(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Stop not implemented")
+}
+func (*UnimplementedLinuxPerfServiceServer) SaveScript(context.Context, *LinuxPerfSaveScriptRequest) (*LinuxPerfSaveScriptResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SaveScript not implemented")
+}
+func (*UnimplementedLinuxPerfServiceServer) Finalize(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Finalize not implemented")
+}
+func (*UnimplementedLinuxPerfServiceServer) Reconnect(context.Context, *LinuxPerfReconnectRequest) (*LinuxPerfResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Reconnect not implemented")
+}
+
+func RegisterLinuxPerfServiceServer(s *grpc.Server, srv LinuxPerfServiceServer) {
+	s.RegisterService(&_LinuxPerfService_serviceDesc, srv)
+}
+
+func _LinuxPerfService_Start_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LinuxPerfOptions)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LinuxPerfServiceServer).Start(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/tast.cros.tracing.linuxperf.LinuxPerfService/Start",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LinuxPerfServiceServer).Start(ctx, req.(*LinuxPerfOptions))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _LinuxPerfService_Stop_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LinuxPerfServiceServer).Stop(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/tast.cros.tracing.linuxperf.LinuxPerfService/Stop",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LinuxPerfServiceServer).Stop(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _LinuxPerfService_SaveScript_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LinuxPerfSaveScriptRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LinuxPerfServiceServer).SaveScript(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/tast.cros.tracing.linuxperf.LinuxPerfService/SaveScript",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LinuxPerfServiceServer).SaveScript(ctx, req.(*LinuxPerfSaveScriptRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _LinuxPerfService_Finalize_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LinuxPerfServiceServer).Finalize(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/tast.cros.tracing.linuxperf.LinuxPerfService/Finalize",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LinuxPerfServiceServer).Finalize(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _LinuxPerfService_Reconnect_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LinuxPerfReconnectRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LinuxPerfServiceServer).Reconnect(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/tast.cros.tracing.linuxperf.LinuxPerfService/Reconnect",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LinuxPerfServiceServer).Reconnect(ctx, req.(*LinuxPerfReconnectRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+var _LinuxPerfService_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "tast.cros.tracing.linuxperf.LinuxPerfService",
+	HandlerType: (*LinuxPerfServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Start",
+			Handler:    _LinuxPerfService_Start_Handler,
+		},
+		{
+			MethodName: "Stop",
+			Handler:    _LinuxPerfService_Stop_Handler,
+		},
+		{
+			MethodName: "SaveScript",
+			Handler:    _LinuxPerfService_SaveScript_Handler,
+		},
+		{
+			MethodName: "Finalize",
+			Handler:    _LinuxPerfService_Finalize_Handler,
+		},
+		{
+			MethodName: "Reconnect",
+			Handler:    _LinuxPerfService_Reconnect_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "linux_perf_service.proto",
 }
