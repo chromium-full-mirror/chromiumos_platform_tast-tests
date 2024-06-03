@@ -497,8 +497,7 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 		s.Fatal("Could not confirm if ModemFwd is idle: ", err)
 	}
 	// Check if the modem is exported by ModemManager before initializing Starfish/NewHelper().
-	modem, err := waitForModemToBeExported(ctx)
-	if err != nil {
+	if _, err := waitForModemToBeExported(ctx); err != nil {
 		s.Fatal("Could not confirm if modem was exported: ", err)
 	}
 
@@ -523,6 +522,12 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 		s.Fatal("Failed to setup starfish module on supported setup: ", err)
 	}
 	f.sf = sfish
+
+	// Get modem after initializing starfish since SIM eject may change modem path.
+	modem, err := waitForModemToBeExported(ctx)
+	if err != nil {
+		s.Fatal("Could not confirm if modem was exported: ", err)
+	}
 
 	// check if OS version is divisible by 10. If it is, start modem logging if available
 	modemLoggingStarted, err := triggerModemLoggingConditionally(ctx)
