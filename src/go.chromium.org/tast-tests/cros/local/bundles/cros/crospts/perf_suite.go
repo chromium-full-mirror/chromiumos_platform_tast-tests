@@ -275,10 +275,10 @@ func init() {
 				Fixture: "mountUnmountPtsWorldForCrOSx86",
 				Val: &perfSuite{
 					runner:        ptsworld.NewCrosRunner(),
-					suiteName:     "ctx-clock-1.0.0",
+					suiteName:     "local/ctx-clock-1.0.0",
 					resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
 				},
-				Timeout: 15 * time.Minute,
+				Timeout: 5 * time.Minute,
 			}, {
 				Name:    "mutex_cros_x86",
 				Fixture: "mountUnmountPtsWorldForCrOSx86",
