@@ -69,7 +69,7 @@ func Default(ctx context.Context) (*Servo, error) {
 // connection is preferred. Param spec is either "host:port" or just "host" to use default port.
 // Please make sure "host" is the address reachable from DUT.
 func NewDirect(ctx context.Context, spec string) (*Servo, error) {
-	info, err := splitHostPort(spec)
+	info, err := SplitHostPort(spec)
 	if err != nil {
 		return nil, err
 	}

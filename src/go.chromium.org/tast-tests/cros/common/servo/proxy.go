@@ -85,7 +85,8 @@ func createDockerClient(ctx context.Context, dockerHost string) (*client.Client,
 	return client.NewClientWithOpts(client.WithHost(dockerHost), client.WithHTTPClient(&c), client.WithAPIVersionNegotiation())
 }
 
-type connectInfo struct {
+// ConnectInfo stores connection information to servo.
+type ConnectInfo struct {
 	Hostname        string
 	ServoPort       int
 	ServoSSHPort    int
@@ -93,8 +94,9 @@ type connectInfo struct {
 	DockerHost      string
 }
 
-func splitHostPort(servoHostPort string) (*connectInfo, error) {
-	var result connectInfo
+// SplitHostPort parses a string that represents servo connection.
+func SplitHostPort(servoHostPort string) (*ConnectInfo, error) {
+	var result ConnectInfo
 	result.Hostname = "localhost"
 	result.ServoPort = 9999
 	result.ServoSSHPort = 22
@@ -218,7 +220,7 @@ func NewProxy(ctx context.Context, servoHostPort, keyFile, keyDir string) (newPr
 		}
 	}()
 
-	connectInfo, err := splitHostPort(servoHostPort)
+	connectInfo, err := SplitHostPort(servoHostPort)
 	if err != nil {
 		return nil, err
 	}
