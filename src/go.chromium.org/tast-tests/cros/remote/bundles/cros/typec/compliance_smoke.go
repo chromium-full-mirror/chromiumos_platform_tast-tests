@@ -20,7 +20,7 @@ func init() {
 		Contacts: []string{"chromeos-usb@google.com", "jstanko@chromium.org"},
 		// ChromeOS > Platform > Technologies > USB
 		BugComponent: "b:958036",
-		Attr:         []string{"group:typec"},
+		Attr:         []string{"group:typec", "typec_compliance_ex350"},
 		Fixture:      "complianceHostFixture",
 		Timeout:      5 * time.Minute,
 	})
