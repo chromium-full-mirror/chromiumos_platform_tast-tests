@@ -154,7 +154,7 @@ var (
 			"    {{end}}" +
 			"    children {\n" +
 			"      ikev2 {\n" +
-			"        local_ts = 0.0.0.0/0,::/0\n" +
+			"        local_ts = {{.local_ts}}\n" +
 			"        remote_ts = {{.remote_ts}}\n" +
 			"        {{if .if_id}}" +
 			"        if_id_in = {{.if_id}}\n" +
@@ -455,6 +455,7 @@ func startL2TPIPsecServer(ctx context.Context, env *env.Env, config *Config) (*S
 
 		// The following values do not have effect for L2TP/IPsec VPNs. Just to
 		// avoid empty values.
+		"local_ts":               config.ipv4Subnet.String(),
 		"remote_ts":              config.ipv4Subnet.String(),
 		"client_ipv6_pool_start": config.ipv6Subnet.GetAddrEndWith(2).String(),
 		"client_ipv6_pool_end":   config.ipv6Subnet.GetAddrEndWith(254).String(),
@@ -553,16 +554,26 @@ func startIKEv2Server(ctx context.Context, env *env.Env, config *Config) (*Serve
 
 	var poolsArray []string
 	var remoteTsArray []string
+	var localTsArray []string
 	if config.IPType == IPTypeIPv4 || config.IPType == IPTypeIPv4AndIPv6 {
 		poolsArray = append(poolsArray, poolIPv4)
 		remoteTsArray = append(remoteTsArray, config.ipv4Subnet.String())
+		if len(config.includedRoutesV4) > 0 {
+			for _, prefix := range config.includedRoutesV4 {
+				localTsArray = append(localTsArray, prefix.String())
+			}
+		} else {
+			localTsArray = append(localTsArray, "0.0.0.0/0")
+		}
 	}
 	if config.IPType == IPTypeIPv6 || config.IPType == IPTypeIPv4AndIPv6 {
 		poolsArray = append(poolsArray, poolIPv6)
 		remoteTsArray = append(remoteTsArray, config.ipv6Subnet.String())
+		localTsArray = append(localTsArray, "::/0")
 	}
 	configValues["pools"] = strings.Join(poolsArray, ",")
 	configValues["remote_ts"] = strings.Join(remoteTsArray, ",")
+	configValues["local_ts"] = strings.Join(localTsArray, ",")
 
 	runner.AddConfigValues(configValues)
 

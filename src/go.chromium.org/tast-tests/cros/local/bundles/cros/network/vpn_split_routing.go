@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/network/ping"
+	"go.chromium.org/tast-tests/cros/local/network/virtualnet/subnet"
 	"go.chromium.org/tast-tests/cros/local/network/vpn"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -32,8 +33,10 @@ func init() {
 		Params: []testing.Param{{
 			Name: "openvpn",
 			Val:  vpn.TypeOpenVPN,
-		},
-		},
+		}, {
+			Name: "ikev2",
+			Val:  vpn.TypeIKEv2,
+		}},
 	})
 }
 
@@ -57,13 +60,20 @@ func VPNSplitRouting(ctx context.Context, s *testing.State) {
 	vpnEnv := networkEnv.Server1
 	physicalEnv := networkEnv.Server2
 
+	vpnSubnet, err := subnet.FromIPv4CIDR("10.11.12.0/24")
+	if err != nil {
+		s.Fatal("Failed to get subnet from CIDR string")
+	}
+	includedRoute := &net.IPNet{
+		IP:   net.ParseIP("10.11.12.0"),
+		Mask: net.CIDRMask(24, 32),
+	}
+
 	conn, err := vpn.StartConnection(ctx, vpnEnv,
 		s.Param().(vpn.Type),
 		vpn.WithCertVals(s.FixtValue().(vpn.FixtureEnv).CertVals),
-		vpn.WithIPv4IncludedRoute(&net.IPNet{
-			IP:   net.ParseIP("10.11.12.0"),
-			Mask: net.CIDRMask(24, 32),
-		}))
+		vpn.WithIPv4Subnet(vpnSubnet),
+		vpn.WithIPv4IncludedRoute(includedRoute))
 	if err != nil {
 		s.Fatal("Failed to start VPN connection: ", err)
 	}
