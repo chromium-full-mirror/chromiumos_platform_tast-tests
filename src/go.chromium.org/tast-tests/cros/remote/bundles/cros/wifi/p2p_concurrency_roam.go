@@ -131,126 +131,133 @@ func P2PConcurrencyRoam(ctx context.Context, s *testing.State) {
 	ctx, cancel = tf.ReserveForDeconfigP2P(ctx)
 	defer cancel()
 
-	if err := tf.P2PAssertPingFromGO(ctx); err != nil {
-		s.Fatal("Failed to ping the p2p client from the p2p group owner (GO): ", err)
-	}
-	if err := tf.P2PAssertPingFromClient(ctx); err != nil {
-		s.Fatal("Failed to ping p2p group owner (GO) from the p2p client: ", err)
-	}
-	if err := tf.VerifyConnectionFromDUT(ctx, wificell.DefaultDUT, rt.AP1()); err != nil {
-		s.Fatal("Failed to verify connection: ", err)
-	}
-	if err := tf.VerifyConnectionFromDUT(ctx, wificell.PeerDUT1, rt.AP1()); err != nil {
-		s.Fatal("Failed to verify connection: ", err)
-	}
-
-	fromBSSID := rt.AP1BSSID()
-	roamBSSID := rt.AP2BSSID()
-	testSSID := rt.AP1SSID()
-	s.Log("AP 1 BSSID: ", fromBSSID)
-	s.Log("AP 2 BSSID: ", roamBSSID)
-
-	sendReqAndWaitConnected := func(dut wificell.DutIdx, from, to string, fromAP, toAP *wificell.APIface, req hostapd.BSSTMReqParams, servicePath string) {
-		// Get the name and MAC address of the DUT WiFi interface.
-		dutIface, err := tf.DUTClientInterface(ctx, dut)
-		if err != nil {
-			s.Fatal("Unable to get DUT interface name: ", err)
+	doRun := func(ctx context.Context) error {
+		if err := tf.P2PAssertPingFromGO(ctx); err != nil {
+			s.Fatal("Failed to ping the p2p client from the p2p group owner (GO): ", err)
 		}
-		dutMACAddr, err := tf.DUTHardwareAddr(ctx, dut)
-		if err != nil {
-			s.Fatal("Unable to get DUT MAC address: ", err)
+		if err := tf.P2PAssertPingFromClient(ctx); err != nil {
+			s.Fatal("Failed to ping p2p group owner (GO) from the p2p client: ", err)
 		}
-		dutMAC := dutMACAddr.String()
-		// Flush all scanned BSS from wpa_supplicant so that test behavior is consistent.
-		s.Log("Flushing BSS cache")
-		if err := tf.DUTWifiClient(dut).FlushBSS(ctx, dutIface, 0); err != nil {
-			s.Fatal("Failed to flush BSS list: ", err)
+		if err := tf.VerifyConnectionFromDUT(ctx, wificell.DefaultDUT, rt.AP1()); err != nil {
+			s.Fatal("Failed to verify connection: ", err)
 		}
-		s.Logf("Waiting for roamBSSID: %s", roamBSSID)
-		if err := tf.DUTWifiClient(dut).DiscoverBSSID(ctx, roamBSSID, dutIface, []byte(testSSID)); err != nil {
-			s.Fatal("Unable to discover roam BSSID: ", err)
-		}
-		err = tf.ClearBSSIDIgnoreDUT(ctx, dut)
-		if err != nil {
-			s.Fatal("Failed to clear wpa BSSID_IGNORE: ", err)
-		}
-		// Before sending the BSSTM request, add the current BSSID into the
-		// DUT's ignorelist to avoid any any potential race condition. Adding a
-		// BSSID to the ignore list does not trigger the device to roam away
-		// from the BSSID, but it should prevent it from roaming back.
-		// NB: Each time we add the BSSID to the ignore list, it increases
-		// the duration for which the BSSID is ignored. Each wpa_cli
-		// invocation results in the BSSID being added to the ignore list
-		// twice, so the two calls here translate to 4 insertions in
-		// wpa_supplicant, which results in an ignorelist duration of 120
-		// seconds, which should be plenty.
-
-		// We add the BSSID into the ignorelist twice purposely to ensure the
-		// ignore duration is sufficient.
-		err = tf.AddToBSSIDIgnoreDUT(ctx, dut, fromBSSID)
-		if err != nil {
-			s.Fatal("Failed to add wpa BSSID_IGNORE: ", err)
-		}
-		err = tf.AddToBSSIDIgnoreDUT(ctx, dut, fromBSSID)
-		if err != nil {
-			s.Fatal("Failed to add wpa BSSID_IGNORE: ", err)
+		if err := tf.VerifyConnectionFromDUT(ctx, wificell.PeerDUT1, rt.AP1()); err != nil {
+			s.Fatal("Failed to verify connection: ", err)
 		}
 
-		// Set up a watcher for the Shill WiFi BSSID property.
-		waitCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
-		defer cancel()
-		waitForProps, err := tf.DUTWifiClient(dut).GenerateRoamPropertyWatcher(waitCtx, to, servicePath)
-		// Send BSS Transition Management Request to client.
-		s.Logf("Sending BSS Transition Management Request from AP %s to DUT %s", from, dutMAC)
-		if err := fromAP.SendBSSTMRequest(ctx, dutMAC, req); err != nil {
-			s.Fatal("Failed to send BSS TM Request: ", err)
+		fromBSSID := rt.AP1BSSID()
+		roamBSSID := rt.AP2BSSID()
+		testSSID := rt.AP1SSID()
+		s.Log("AP 1 BSSID: ", fromBSSID)
+		s.Log("AP 2 BSSID: ", roamBSSID)
+
+		sendReqAndWaitConnected := func(dut wificell.DutIdx, from, to string, fromAP, toAP *wificell.APIface, req hostapd.BSSTMReqParams, servicePath string) {
+			// Get the name and MAC address of the DUT WiFi interface.
+			dutIface, err := tf.DUTClientInterface(ctx, dut)
+			if err != nil {
+				s.Fatal("Unable to get DUT interface name: ", err)
+			}
+			dutMACAddr, err := tf.DUTHardwareAddr(ctx, dut)
+			if err != nil {
+				s.Fatal("Unable to get DUT MAC address: ", err)
+			}
+			dutMAC := dutMACAddr.String()
+			// Flush all scanned BSS from wpa_supplicant so that test behavior is consistent.
+			s.Log("Flushing BSS cache")
+			if err := tf.DUTWifiClient(dut).FlushBSS(ctx, dutIface, 0); err != nil {
+				s.Fatal("Failed to flush BSS list: ", err)
+			}
+			s.Logf("Waiting for roamBSSID: %s", roamBSSID)
+			if err := tf.DUTWifiClient(dut).DiscoverBSSID(ctx, roamBSSID, dutIface, []byte(testSSID)); err != nil {
+				s.Fatal("Unable to discover roam BSSID: ", err)
+			}
+			err = tf.ClearBSSIDIgnoreDUT(ctx, dut)
+			if err != nil {
+				s.Fatal("Failed to clear wpa BSSID_IGNORE: ", err)
+			}
+			// Before sending the BSSTM request, add the current BSSID into the
+			// DUT's ignorelist to avoid any any potential race condition. Adding a
+			// BSSID to the ignore list does not trigger the device to roam away
+			// from the BSSID, but it should prevent it from roaming back.
+			// NB: Each time we add the BSSID to the ignore list, it increases
+			// the duration for which the BSSID is ignored. Each wpa_cli
+			// invocation results in the BSSID being added to the ignore list
+			// twice, so the two calls here translate to 4 insertions in
+			// wpa_supplicant, which results in an ignorelist duration of 120
+			// seconds, which should be plenty.
+
+			// We add the BSSID into the ignorelist twice purposely to ensure the
+			// ignore duration is sufficient.
+			err = tf.AddToBSSIDIgnoreDUT(ctx, dut, fromBSSID)
+			if err != nil {
+				s.Fatal("Failed to add wpa BSSID_IGNORE: ", err)
+			}
+			err = tf.AddToBSSIDIgnoreDUT(ctx, dut, fromBSSID)
+			if err != nil {
+				s.Fatal("Failed to add wpa BSSID_IGNORE: ", err)
+			}
+
+			// Set up a watcher for the Shill WiFi BSSID property.
+			waitCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+			defer cancel()
+			waitForProps, err := tf.DUTWifiClient(dut).GenerateRoamPropertyWatcher(waitCtx, to, servicePath)
+			// Send BSS Transition Management Request to client.
+			s.Logf("Sending BSS Transition Management Request from AP %s to DUT %s", from, dutMAC)
+			if err := fromAP.SendBSSTMRequest(ctx, dutMAC, req); err != nil {
+				s.Fatal("Failed to send BSS TM Request: ", err)
+			}
+
+			// Wait for the DUT to roam to the second AP, then assert that there was
+			// no disconnection during roaming.
+			s.Log("Waiting for roaming")
+			monitorResult, err := waitForProps()
+			if err != nil {
+				s.Fatal("Failed to roam within timeout: ", err)
+			}
+
+			if err := wifiutil.VerifyNoDisconnections(monitorResult); err != nil {
+				s.Fatal("DUT: failed to stay connected during the roaming process: ", err)
+			}
+			// Just for good measure make sure we're properly connected.
+			s.Log("Verifying connection to AP ", to)
+			if err := tf.VerifyConnection(ctx, toAP); err != nil {
+				s.Fatal("DUT: failed to verify connection: ", err)
+			}
 		}
 
-		// Wait for the DUT to roam to the second AP, then assert that there was
-		// no disconnection during roaming.
-		s.Log("Waiting for roaming")
-		monitorResult, err := waitForProps()
-		if err != nil {
-			s.Fatal("Failed to roam within timeout: ", err)
+		var requestParams hostapd.BSSTMReqParams
+		requestParams.Neighbors = []string{roamBSSID}
+		sendReqAndWaitConnected(wificell.DefaultDUT, fromBSSID, roamBSSID, rt.AP1(), rt.AP2(), requestParams, rt.ServicePath())
+		if err := tf.P2PAssertPingFromGO(ctx); err != nil {
+			s.Fatal("Failed to ping the p2p client from the p2p group owner (GO): ", err)
+		}
+		if err := tf.P2PAssertPingFromClient(ctx); err != nil {
+			s.Fatal("Failed to ping p2p group owner (GO) from the p2p client: ", err)
+		}
+		if err := tf.VerifyConnectionFromDUT(ctx, wificell.DefaultDUT, rt.AP2()); err != nil {
+			s.Fatal("Failed to verify connection: ", err)
+		}
+		if err := tf.VerifyConnectionFromDUT(ctx, wificell.PeerDUT1, rt.AP1()); err != nil {
+			s.Fatal("Failed to verify connection: ", err)
 		}
 
-		if err := wifiutil.VerifyNoDisconnections(monitorResult); err != nil {
-			s.Fatal("DUT: failed to stay connected during the roaming process: ", err)
+		sendReqAndWaitConnected(wificell.PeerDUT1, fromBSSID, roamBSSID, rt.AP1(), rt.AP2(), requestParams, rt.ServicePathOfDUT(wificell.PeerDUT1))
+		if err := tf.P2PAssertPingFromGO(ctx); err != nil {
+			s.Fatal("Failed to ping the p2p client from the p2p group owner (GO): ", err)
 		}
-		// Just for good measure make sure we're properly connected.
-		s.Log("Verifying connection to AP ", to)
-		if err := tf.VerifyConnection(ctx, toAP); err != nil {
-			s.Fatal("DUT: failed to verify connection: ", err)
+		if err := tf.P2PAssertPingFromClient(ctx); err != nil {
+			s.Fatal("Failed to ping p2p group owner (GO) from the p2p client: ", err)
 		}
+		if err := tf.VerifyConnectionFromDUT(ctx, wificell.DefaultDUT, rt.AP2()); err != nil {
+			s.Fatal("Failed to verify connection: ", err)
+		}
+		if err := tf.VerifyConnectionFromDUT(ctx, wificell.PeerDUT1, rt.AP2()); err != nil {
+			s.Fatal("Failed to verify connection: ", err)
+		}
+		return nil
 	}
 
-	var requestParams hostapd.BSSTMReqParams
-	requestParams.Neighbors = []string{roamBSSID}
-	sendReqAndWaitConnected(wificell.DefaultDUT, fromBSSID, roamBSSID, rt.AP1(), rt.AP2(), requestParams, rt.ServicePath())
-	if err := tf.P2PAssertPingFromGO(ctx); err != nil {
-		s.Fatal("Failed to ping the p2p client from the p2p group owner (GO): ", err)
-	}
-	if err := tf.P2PAssertPingFromClient(ctx); err != nil {
-		s.Fatal("Failed to ping p2p group owner (GO) from the p2p client: ", err)
-	}
-	if err := tf.VerifyConnectionFromDUT(ctx, wificell.DefaultDUT, rt.AP2()); err != nil {
-		s.Fatal("Failed to verify connection: ", err)
-	}
-	if err := tf.VerifyConnectionFromDUT(ctx, wificell.PeerDUT1, rt.AP1()); err != nil {
-		s.Fatal("Failed to verify connection: ", err)
-	}
-
-	sendReqAndWaitConnected(wificell.PeerDUT1, fromBSSID, roamBSSID, rt.AP1(), rt.AP2(), requestParams, rt.ServicePathOfDUT(wificell.PeerDUT1))
-	if err := tf.P2PAssertPingFromGO(ctx); err != nil {
-		s.Fatal("Failed to ping the p2p client from the p2p group owner (GO): ", err)
-	}
-	if err := tf.P2PAssertPingFromClient(ctx); err != nil {
-		s.Fatal("Failed to ping p2p group owner (GO) from the p2p client: ", err)
-	}
-	if err := tf.VerifyConnectionFromDUT(ctx, wificell.DefaultDUT, rt.AP2()); err != nil {
-		s.Fatal("Failed to verify connection: ", err)
-	}
-	if err := tf.VerifyConnectionFromDUT(ctx, wificell.PeerDUT1, rt.AP2()); err != nil {
-		s.Fatal("Failed to verify connection: ", err)
+	if err := tf.P2PAssertNoDisconnect(ctx, wificell.DefaultDUT, doRun); err != nil {
+		s.Error("Failed to run roaming test, err: ", err)
 	}
 }
