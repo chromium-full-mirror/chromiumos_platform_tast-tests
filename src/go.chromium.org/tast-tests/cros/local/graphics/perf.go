@@ -171,9 +171,9 @@ func collectGPUPerformanceCounters(ctx context.Context, interval time.Duration) 
 // collectAMDBusyCounter gathers AMD GPU utilization stats.
 // AMD does not use the command line tool perf to report GPU utilization, but it
 // provides a sysfs file that can be read with the GPU utilization as a
-// percent, see the kernel amdgpu_pm.c file. This function reads the values
-// during interval and returns it in the counters' "rcs" and "total", imitating
-// what perf and collectGPUPerformanceCounters() would do.
+// percent, see the kernel amdgpu_pm.c file.
+// This function reads the values during interval and returns it in the
+// counters' "gpu" and "total".
 // TODO(b/181352867): Remove this method when AMD implements perf counters.
 func collectAMDBusyCounter(ctx context.Context, interval time.Duration) (counters map[string]time.Duration, megaPeriods int64, err error) {
 	// Check if context deadline allows collecting data for the given interval.
@@ -220,7 +220,7 @@ func collectAMDBusyCounter(ctx context.Context, interval time.Duration) (counter
 
 	counters = make(map[string]time.Duration)
 	// Divide accuBusy by hundred to remove the percentage.
-	counters["rcs"] = time.Duration(float64(accuBusy) / 100.0 * float64(samplePeriod))
+	counters["gpu"] = time.Duration(float64(accuBusy) / 100.0 * float64(samplePeriod))
 	counters["total"] = time.Duration(actualSamples * int(samplePeriod))
 	return counters, 0, nil
 }
@@ -230,6 +230,8 @@ func collectAMDBusyCounter(ctx context.Context, interval time.Duration) (counter
 // be found in "platform/drm-tests/mali_stats.c". Mali_stats automatically
 // take into account up/down clocking of the GPU by dividing by its maximum
 // frequency.
+// This function reads the values during interval and returns it in the
+// counters' "gpu" and "total".
 func collectMaliPerformanceCounters(ctx context.Context, interval time.Duration) (counters map[string]time.Duration, megaPeriods int64, err error) {
 	const maliFile = "/dev/mali0"
 	if _, err = os.Stat(maliFile); err != nil {
@@ -285,7 +287,7 @@ func collectMaliPerformanceCounters(ctx context.Context, interval time.Duration)
 	}
 
 	counters = make(map[string]time.Duration)
-	counters["rcs"] = time.Duration(accuBusy / 100.0 * float64(time.Millisecond*100))
+	counters["gpu"] = time.Duration(accuBusy / 100.0 * float64(time.Millisecond*100))
 	counters["total"] = time.Duration(float64(actualSamples) * float64(time.Millisecond*100))
 
 	return counters, 0, nil
@@ -629,6 +631,8 @@ func MeasureGPUCounters(ctx context.Context, t time.Duration, p perfValueInterfa
 	parseAndReportCounter(ctx, counters, "vcs", p)
 	parseAndReportCounter(ctx, counters, "vecs", p)
 	parseAndReportCounter(ctx, counters, "rc6", p)
+	// Report an unified "gpu" counter for non-Intel platforms.
+	parseAndReportCounter(ctx, counters, "gpu", p)
 
 	return nil
 }
