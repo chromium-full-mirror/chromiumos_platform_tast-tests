@@ -36,6 +36,7 @@ func init() {
 			"chrome",
 			"chrome_internal",
 			"drivefs",
+			"gaia",
 		},
 		Attr: []string{
 			"group:mainline",
