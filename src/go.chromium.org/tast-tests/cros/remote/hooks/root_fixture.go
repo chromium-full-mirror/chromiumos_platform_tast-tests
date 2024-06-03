@@ -34,6 +34,9 @@ func init() {
 		ServiceDeps: []string{
 			"tast.cros.cleanupchecks.CleanUpChecksService",
 		},
+		Vars: []string{
+			"servo", // Need by servo hook. TODO: remove after replacing it with servers.servo.
+		},
 	})
 }
 
@@ -77,7 +80,7 @@ var hooks map[string]*Hook
 // IMPORTANT: a hook will not be executed until the name
 // is added to this list.
 var orderedHooks []string = []string{
-	"exampleHook",
+	"servoHook",
 	"diskThrottler",
 	"cleanupChecksHook",
 }
@@ -128,6 +131,13 @@ func (hs *HookState) AndroidDUTLabConfig(associateHostname string) (*api.Dut, er
 // DevboardDUTLabConfig returns the lab configuration of a Devboard DUT.
 func (hs *HookState) DevboardDUTLabConfig(role string) (*api.Dut, error) {
 	return hs.fixtState.DevboardDUTLabConfig(role)
+}
+
+// Var returns the value for the named variable, which must have been registered via Vars.
+// If a value was not supplied at runtime via the -var flag to "tast run", ok will be false.
+// TODO: remove after all usage of variables are replace by global run time variables.
+func (hs *HookState) Var(name string) (val string, ok bool) {
+	return hs.fixtState.Var(name)
 }
 
 // DataFileSystem returns an http.FileSystem implementation that serves an entity's data files.
