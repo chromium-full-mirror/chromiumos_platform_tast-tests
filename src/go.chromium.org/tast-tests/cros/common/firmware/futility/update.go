@@ -44,6 +44,7 @@ type updateOptions struct {
 	hostOnly        bool
 	gbbFlags        int
 	setGBBFlags     bool
+	force           bool
 }
 
 // NewUpdateOptions returns new updateOptions with image (BIOS) file path.
@@ -103,6 +104,12 @@ func (o *updateOptions) WithGBBFlags(flags int) *updateOptions {
 	return o
 }
 
+// WithForce configures the '--force' flag to set during update.
+func (o *updateOptions) WithForce(force bool) *updateOptions {
+	o.force = force
+	return o
+}
+
 // Update calls `futility update` with provided options.
 //
 // Returns program output, and error on failure.
@@ -146,6 +153,9 @@ func (i *Instance) Update(ctx context.Context, opts *updateOptions) ([]byte, err
 	}
 	if opts.setGBBFlags {
 		cmdArgs = append(cmdArgs, "--gbb_flags", fmt.Sprintf("%#x", opts.gbbFlags))
+	}
+	if opts.force {
+		cmdArgs = append(cmdArgs, "--force")
 	}
 
 	cmdArgs = i.appendFlashArgs(cmdArgs)
