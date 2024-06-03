@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/croshealthd"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type cameraAvailabilityTestParams struct {
@@ -29,6 +30,7 @@ func init() {
 		},
 		BugComponent: "b:982097", // ChromeOS > Platform > Enablement > Health
 		SoftwareDeps: []string{"diagnostics"},
+		HardwareDeps: hwdep.D(hwdep.CameraEnumerated()),
 		Attr:         []string{"group:mainline"},
 		Fixture:      "crosHealthdRunning",
 		Params: []testing.Param{{

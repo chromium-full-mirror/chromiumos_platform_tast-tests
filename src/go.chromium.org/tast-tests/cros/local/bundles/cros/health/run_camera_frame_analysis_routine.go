@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -32,6 +33,7 @@ func init() {
 		},
 		BugComponent: "b:982097", // ChromeOS > Platform > Enablement > Health
 		SoftwareDeps: []string{"diagnostics", "chrome"},
+		HardwareDeps: hwdep.D(hwdep.CameraEnumerated()),
 		Attr:         []string{"group:mainline", "informational", "group:criticalstaging", "group:camera_dependent"},
 		Fixture:      "crosHealthdRunning",
 	})
