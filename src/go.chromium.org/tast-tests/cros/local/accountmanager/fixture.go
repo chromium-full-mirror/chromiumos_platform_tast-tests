@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/accountmanager"
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -33,9 +35,6 @@ func init() {
 		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
-		Vars: []string{
-			"accountmanager.accountPool",
-		},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToLacros",
@@ -45,7 +44,7 @@ func init() {
 		},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(
-				chrome.GAIALoginPool(s.RequiredVar("accountmanager.accountPool")),
+				chrome.GAIALoginPool(dma.CredsFromPool(accountmanager.AccountPoolVarName)),
 				chrome.EnableFeatures("ArcAccountRestrictions"),
 				chrome.ARCSupported(),
 				chrome.UnRestrictARCCPU(),
@@ -54,7 +53,6 @@ func init() {
 		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
-		Vars:            []string{"accountmanager.accountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToChromeAndArcWithLacros",
@@ -66,7 +64,6 @@ func init() {
 		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
-		Vars:            []string{"accountmanager.accountPool"},
 	})
 }
 
@@ -108,7 +105,7 @@ func (f *accountManagerTestFixture) SetUp(ctx context.Context, s *testing.FixtSt
 	defer cancel()
 
 	opts := []chrome.Option{
-		chrome.GAIALoginPool(s.RequiredVar("accountmanager.accountPool")),
+		chrome.GAIALoginPool(dma.CredsFromPool(accountmanager.AccountPoolVarName)),
 		chrome.EnableFeatures("ArcAccountRestrictions"),
 		chrome.ARCSupported(),
 		chrome.UnRestrictARCCPU(),
