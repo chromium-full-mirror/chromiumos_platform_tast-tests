@@ -320,9 +320,8 @@ func init() {
 			Name:              "vm_r_branch_uprev",
 			ExtraAttr:         []string{"group:mainline", "informational"},
 			ExtraSoftwareDeps: []string{"android_vm_r"},
-			// x86-64 ARC: akali(nami-Intel), akali360(nami-Intel), pantheon(nami-Intel), sona(nami-Intel)
-			// arm64 ARC: cozmo, damu, fennel, pico, willow (all jacuzzi)
-			ExtraHardwareDeps: hwdep.D(hwdep.Model("akali", "akali360", "pantheon", "sona", "cozmo", "damu", "fennel", "pico", "willow")),
+			// x86-64 ARC: kuldax(brask-Intel)
+			ExtraHardwareDeps: hwdep.D(hwdep.Model("kuldax")),
 			Val: testParam{
 				vmEnabled:                     true,
 				androidPackage:                "android-vm-rvc",
@@ -330,7 +329,7 @@ func init() {
 				uploadPackagesReference:       false,
 				uprevBranch:                   true,
 				dexOptCacheGen:                false,
-				requiredCPUAbisForBranchUprev: []string{"x86_64-houdini", "arm64-native"},
+				requiredCPUAbisForBranchUprev: []string{"x86_64-houdini"},
 				dataDir:                       "/tmp/data_collector",
 				tmpCachesDir:                  "",
 			},
