@@ -480,7 +480,7 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait for the reception of `ShouldSkip` value of CHOOBE screen: ", err)
 	}
 
-	if err := oobeConn.Eval(ctx, "OobeAPI.screens.ChoobeScreen.updatedShouldSkip()", &shouldSkipChoobe); err != nil {
+	if err := oobeConn.Eval(ctx, "OobeAPI.screens.ChoobeScreen.shouldSkip()", &shouldSkipChoobe); err != nil {
 		s.Fatal("Failed to evaluate whether to skip CHOOBE screen: ", err)
 	}
 
@@ -541,7 +541,7 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to wait for the reception of `ShouldSkip` value of touchpad scroll screen: ", err)
 		}
 
-		if err := oobeConn.Eval(ctx, "OobeAPI.screens.ChoobeTouchpadScrollScreen.updatedShouldSkip()", &shouldSkipTouchpadScroll); err != nil {
+		if err := oobeConn.Eval(ctx, "OobeAPI.screens.ChoobeTouchpadScrollScreen.shouldSkip()", &shouldSkipTouchpadScroll); err != nil {
 			s.Fatal("Failed to evaluate whether to skip touchpad scroll screen: ", err)
 		}
 
