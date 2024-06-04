@@ -313,7 +313,7 @@ func (s *osSettingsWifiPageTest) checkTextAndScanningIndicator(ctx context.Conte
 	// Checking the scanning text exists.
 	const searchingForNetworks = "Searching for networks…"
 	if _, err := s.settingsSvc.EvalJSWithShadowPiercer(ctx, &ossettings.EvalJSWithShadowPiercerRequest{
-		Expression: checkTextJSExpr(queryElementJSExpr("container", "localized-link[class='no-networks']"), searchingForNetworks),
+		Expression: checkTextJSExpr(queryElementJSExpr("container", "#networkListDiv localized-link"), searchingForNetworks),
 	}); err != nil {
 		return errors.Wrap(err, "failed to check the existence of scanning text")
 	}
