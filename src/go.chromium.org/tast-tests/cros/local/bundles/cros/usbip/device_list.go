@@ -22,8 +22,9 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify device listing works",
 		Contacts: []string{
-			"chromeos-engprod-syd@google.com",
-			"ashpakov@google.com",
+			"chromeos-dev-engprod@google.com",
+			"mattlui@google.com",
+			"jingrongwu@google.com",
 		},
 		BugComponent: "b:1103568", // ChromeOS -> EngProd -> Developer
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
