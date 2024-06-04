@@ -311,11 +311,11 @@ func DragDrop(ctx context.Context, s *testing.State) {
 			if wsCount := len(ws); wsCount != 2 {
 				s.Fatalf("Failed to ensure the correct number of windows, got: %d, want: 2", wsCount)
 			}
-			internalInfo, err := display.GetInternalInfo(ctx, tconn)
+			displayInfo, err := display.GetPrimaryInfo(ctx, tconn)
 			if err != nil {
 				s.Fatal("Failed to get the internal display info: ", err)
 			}
-			if _, _, err := ash.SetWindowBounds(ctx, tconn, ws[0].ID, targetBounds, internalInfo.ID); err != nil {
+			if _, _, err := ash.SetWindowBounds(ctx, tconn, ws[0].ID, targetBounds, displayInfo.ID); err != nil {
 				s.Fatal("Failed to set the window bounds: ", err)
 			}
 		}
