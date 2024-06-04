@@ -148,6 +148,14 @@ func ConsecutiveBoot(ctx context.Context, s *testing.State) {
 	if h.Config.Platform == "kukui" || h.Config.Platform == "jacuzzi" {
 		expectECReboot = true
 	}
+
+	// Based on b/268492022, octopus devices might not be able to power on from S5, wait for G3 in that case.
+	// Otherwise power on from S5 to save time waiting for G3.
+	expectedStates := []string{"S5", "G3"}
+	if h.Config.Platform == "octopus" {
+		expectedStates = []string{"G3"}
+	}
+
 	getTime := func(ctx context.Context) (int64, error) {
 		result, err := h.Servo.RunECCommandGetOutput(ctx, "gettime", []string{`Time:\s+0x(\S+)\s`})
 		if err != nil {
@@ -176,7 +184,7 @@ func ConsecutiveBoot(ctx context.Context, s *testing.State) {
 
 	// Counters to track points of failure.
 	shutdownFuncFailed := 0
-	failToGetG3 := 0
+	failToGetG3S5 := 0
 	failToPressPowerKey := 0
 	failToConnectToDUT := 0
 	incorrectBootMode := 0
@@ -203,9 +211,9 @@ func ConsecutiveBoot(ctx context.Context, s *testing.State) {
 			logFailure(errors.Wrap(err, "error in shutdown func"), i, &shutdownFuncFailed)
 		}
 
-		s.Log("Check for G3 powerstate")
-		if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, 180*time.Second, "G3"); err != nil {
-			logFailure(errors.Wrap(err, "failed to get G3 powerstate"), i, &failToGetG3)
+		s.Log("Check for G3/S5 powerstate")
+		if err := h.WaitForPowerStates(ctx, 500*time.Millisecond, 180*time.Second, expectedStates...); err != nil {
+			logFailure(errors.Wrap(err, "failed to get G3/S5 powerstate"), i, &failToGetG3S5)
 		}
 
 		s.Log("Pressing power key until device boots")
@@ -293,7 +301,7 @@ func ConsecutiveBoot(ctx context.Context, s *testing.State) {
 	if numFails > 0 {
 		s.Logf("Encountered %d errors during execution of stress test:", numFails)
 		s.Logf("\tFailed to shutdown:........%d", shutdownFuncFailed)
-		s.Logf("\tFailed to reach G3:........%d", failToGetG3)
+		s.Logf("\tFailed to reach G3/S5:.....%d", failToGetG3S5)
 		s.Logf("\tPower key failed:..........%d", failToPressPowerKey)
 		s.Logf("\tFailed to connect to DUT:..%d", failToConnectToDUT)
 		s.Logf("\tGot incorrect bootmode:....%d", incorrectBootMode)
