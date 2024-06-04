@@ -12,9 +12,22 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 )
 
-// Command returns a command in Android via adb.
+// Command returns a command in Android via adb shell 'exec ..'.
+//
+// Since this runs the command via sh, it escapes the arguments which
+// doesn't work for commands like 'cp /src/* /dst' as * is a special
+// character in shell and has a meaning in context of cp so it must not
+// be escaped. In such cases, use the ShellCommand function below.
 func (a *ARC) Command(ctx context.Context, name string, args ...string) *testexec.Cmd {
+	// TODO(mhasank): rename the command below to avoid confusion.
 	return a.device.ShellCommand(ctx, name, args...)
+}
+
+// ShellCommand runs a command in Android via adb shell without escaping the args.
+//
+// This is an alternative to Command method for cases where escaping must not be done.
+func (a *ARC) ShellCommand(ctx context.Context, args ...string) *testexec.Cmd {
+	return a.device.Command(ctx, append([]string{"shell"}, args...)...)
 }
 
 // BootstrapCommand runs a command with android-sh.
