@@ -136,7 +136,8 @@ func init() {
 		}, {
 			Name:              "vc_background_blur_on",
 			Fixture:           "ccaPowerTest",
-			ExtraSoftwareDeps: []string{caps.BuiltinMIPICamera, "camera_feature_effects"},
+			ExtraSoftwareDeps: []string{"camera_feature_effects"},
+			ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)), // Only enable on CBX devices.
 			Val: pnpCCAParams{
 				mode: cca.Video,
 				effectsConf: &pnp.EffectsParams{
@@ -147,7 +148,8 @@ func init() {
 		}, {
 			Name:              "vc_relight_on",
 			Fixture:           "ccaPowerTest",
-			ExtraSoftwareDeps: []string{caps.BuiltinMIPICamera, "camera_feature_effects"},
+			ExtraSoftwareDeps: []string{"camera_feature_effects"},
+			ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)), // Only enable on CBX devices.
 			Val: pnpCCAParams{
 				mode: cca.Video,
 				effectsConf: &pnp.EffectsParams{
@@ -158,7 +160,8 @@ func init() {
 		}, {
 			Name:              "vc_background_blur_relight_on",
 			Fixture:           "ccaPowerTest",
-			ExtraSoftwareDeps: []string{caps.BuiltinMIPICamera, "camera_feature_effects"},
+			ExtraSoftwareDeps: []string{"camera_feature_effects"},
+			ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)), // Only enable on CBX devices.
 			Val: pnpCCAParams{
 				mode: cca.Video,
 				effectsConf: &pnp.EffectsParams{

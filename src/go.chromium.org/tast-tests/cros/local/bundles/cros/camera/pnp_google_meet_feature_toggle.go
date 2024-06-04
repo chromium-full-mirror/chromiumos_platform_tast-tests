@@ -124,7 +124,8 @@ func init() {
 		}, {
 			Name:              "lacros_vc_backgroun_blur_on",
 			Fixture:           pnp.StablePowerLacrosGAIA,
-			ExtraSoftwareDeps: []string{caps.BuiltinMIPICamera, "camera_feature_effects"},
+			ExtraSoftwareDeps: []string{"camera_feature_effects"},
+			ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)), // Only enable on CBX devices.
 			Val: pnpGoogleMeetFeatureToggleParams{
 				effectsConf: &pnp.EffectsParams{
 					BlurLevel:      vctray.BackgroundBlurFull,
@@ -134,7 +135,8 @@ func init() {
 		}, {
 			Name:              "lacros_vc_relight_on",
 			Fixture:           pnp.StablePowerLacrosGAIA,
-			ExtraSoftwareDeps: []string{caps.BuiltinMIPICamera, "camera_feature_effects"},
+			ExtraSoftwareDeps: []string{"camera_feature_effects"},
+			ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)), // Only enable on CBX devices.
 			Val: pnpGoogleMeetFeatureToggleParams{
 				effectsConf: &pnp.EffectsParams{
 					BlurLevel:      vctray.BackgroundBlurOff,
@@ -144,7 +146,8 @@ func init() {
 		}, {
 			Name:              "lacros_vc_background_blur_relight_on",
 			Fixture:           pnp.StablePowerLacrosGAIA,
-			ExtraSoftwareDeps: []string{caps.BuiltinMIPICamera, "camera_feature_effects"},
+			ExtraSoftwareDeps: []string{"camera_feature_effects"},
+			ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)), // Only enable on CBX devices.
 			Val: pnpGoogleMeetFeatureToggleParams{
 				effectsConf: &pnp.EffectsParams{
 					BlurLevel:      vctray.BackgroundBlurFull,
