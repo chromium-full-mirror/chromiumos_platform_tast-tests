@@ -675,12 +675,7 @@ func BioWash(ctx context.Context, d *rpcdut.RPCDUT, reset bool) error {
 // CheckRawFPFrameFails validates that a raw frame cannot be read from the FPMCU
 // and returns an error if a raw frame can be read.
 func CheckRawFPFrameFails(ctx context.Context, d *rpcdut.RPCDUT) error {
-	const fpFrameRawAccessDeniedError = `EC result 4 (ACCESS_DENIED)
-Failed to get FP sensor frame
-`
-	const fpFrameRawAccessDeniedError2 = `ioctl -1, errno 13 (Permission denied), EC result 255 (<unknown>)
-ioctl -1, errno 13 (Permission denied), EC result 255 (<unknown>)
-ioctl -1, errno 13 (Permission denied), EC result 255 (<unknown>)
+	const fpFrameRawAccessDeniedError = `Fp Frame command failed with error: ACCESS_DENIED
 Failed to get FP sensor frame
 `
 	var stderrBuf bytes.Buffer
@@ -693,9 +688,8 @@ Failed to get FP sensor frame
 	}
 
 	stderr := string(stderrBuf.Bytes())
-	if stderr != fpFrameRawAccessDeniedError && stderr != fpFrameRawAccessDeniedError2 {
-
-		return errors.Errorf("raw fpframe command returned unexpected value, expected1: %q, expected2: %q, actual: %q", fpFrameRawAccessDeniedError, fpFrameRawAccessDeniedError2, stderr)
+	if !strings.Contains(stderr, fpFrameRawAccessDeniedError) {
+		return errors.Errorf("raw fpframe command returned unexpected value, expected: %q, actual: %q", fpFrameRawAccessDeniedError, stderr)
 	}
 
 	return nil
