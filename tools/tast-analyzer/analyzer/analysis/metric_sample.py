@@ -5,7 +5,7 @@
 from dataclasses import dataclass
 import math
 
-from analyzer.backend.results import ImprovementDirection
+from analyzer.backend.test_result import ImprovementDirection
 import scipy
 
 
@@ -53,3 +53,7 @@ class MetricSample:
         s += f"  mean={d.mean:.2f} {self.units}, std={math.sqrt(d.variance):.2f}, "
         s += f"min={d.minmax[0]:.2f}, max={d.minmax[1]:.2f}"
         return s
+
+
+SampleDict = dict[str, MetricSample]
+"""Map from metric path to MetricSample"""

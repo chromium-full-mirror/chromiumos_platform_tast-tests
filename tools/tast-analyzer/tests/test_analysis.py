@@ -1,0 +1,133 @@
+# Copyright 2024 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+from pathlib import Path
+import unittest
+
+from analyzer.analysis import analysis_cfg
+from analyzer.analysis import analysis_results
+from analyzer.analysis import analyze_results
+from analyzer.analysis import metric_sample
+from analyzer.backend import tast_results_dir
+from analyzer.backend import test_result
+
+
+FILES_DIR: Path = Path(__file__).parent.absolute().joinpath("files")
+
+
+class AnalysisTest(unittest.TestCase):
+    def _load_samples(
+        self,
+    ) -> tuple[metric_sample.SampleDict, metric_sample.SampleDict]:
+        before_results = tast_results_dir._load_results_from_results_chart_json(
+            Path("/before/tests/ui.OverviewPerf/results-chart.json"),
+            FILES_DIR.joinpath("results-chart-analysis1.json").read_text(),
+        )
+        after_results = tast_results_dir._load_results_from_results_chart_json(
+            Path("/after/tests/ui.OverviewPerf/results-chart.json"),
+            FILES_DIR.joinpath("results-chart-analysis2.json").read_text(),
+        )
+
+        before_samples = analyze_results._load_metrics_from_results_dict(
+            before_results
+        )
+        after_samples = analyze_results._load_metrics_from_results_dict(
+            after_results
+        )
+
+        return before_samples, after_samples
+
+    def test_load_samples(self) -> None:
+        before_samples, after_samples = self._load_samples()
+
+        self.assertEqual(
+            before_samples,
+            {
+                "ui.OverviewPerf.Test.One.average": metric_sample.MetricSample(
+                    test_name="ui.OverviewPerf",
+                    metric_path="ui.OverviewPerf.Test.One.average",
+                    units="percent",
+                    improvement_direction=metric_sample.ImprovementDirection.UP,
+                    value_map={"before": 0},
+                ),
+                "ui.OverviewPerf.Test.Three.average": metric_sample.MetricSample(
+                    test_name="ui.OverviewPerf",
+                    metric_path="ui.OverviewPerf.Test.Three.average",
+                    units="percent",
+                    improvement_direction=metric_sample.ImprovementDirection.UP,
+                    # Currently we take the arithmetic mean of lists of values.
+                    value_map={"before": 2},
+                ),
+                "ui.OverviewPerf.Test.Two.average": metric_sample.MetricSample(
+                    test_name="ui.OverviewPerf",
+                    metric_path="ui.OverviewPerf.Test.Two.average",
+                    units="percent",
+                    improvement_direction=metric_sample.ImprovementDirection.UP,
+                    value_map={"before": 2},
+                ),
+            },
+        )
+
+        self.assertEqual(
+            after_samples,
+            {
+                "ui.OverviewPerf.Test.One.average": metric_sample.MetricSample(
+                    test_name="ui.OverviewPerf",
+                    metric_path="ui.OverviewPerf.Test.One.average",
+                    units="percent",
+                    improvement_direction=metric_sample.ImprovementDirection.UP,
+                    value_map={"after": 0},
+                ),
+                "ui.OverviewPerf.Test.Three.average": metric_sample.MetricSample(
+                    test_name="ui.OverviewPerf",
+                    metric_path="ui.OverviewPerf.Test.Three.average",
+                    units="percent",
+                    improvement_direction=metric_sample.ImprovementDirection.UP,
+                    # Currently we take the arithmetic mean of lists of values.
+                    value_map={"after": 1},
+                ),
+                "ui.OverviewPerf.Test.Four.average": metric_sample.MetricSample(
+                    test_name="ui.OverviewPerf",
+                    metric_path="ui.OverviewPerf.Test.Four.average",
+                    units="percent",
+                    improvement_direction=metric_sample.ImprovementDirection.UP,
+                    value_map={"after": 2},
+                ),
+            },
+        )
+
+    def test_compute_metric_paths_for_comparison(self) -> None:
+        before_samples, after_samples = self._load_samples()
+
+        cfg = analysis_cfg.AnalysisCfg(
+            skip_all_zero_samples=False, minimum_sample_size=1
+        )
+        metric_paths = analysis_results.compute_metric_paths_for_comparison(
+            before_samples, after_samples, cfg
+        )
+        # We should only look at the common metric paths.
+        self.assertEqual(
+            metric_paths,
+            {
+                "ui.OverviewPerf.Test.One.average",
+                "ui.OverviewPerf.Test.Three.average",
+            },
+        )
+
+        # ui.OverviewPerf.Test.One.average has only zeros, so we should skip it.
+        cfg = analysis_cfg.AnalysisCfg(
+            skip_all_zero_samples=True, minimum_sample_size=1
+        )
+        metric_paths = analysis_results.compute_metric_paths_for_comparison(
+            before_samples, after_samples, cfg
+        )
+        self.assertEqual(metric_paths, {"ui.OverviewPerf.Test.Three.average"})
+
+        # Sample size is one for all metrics, so this should produce nothing.
+        cfg = analysis_cfg.AnalysisCfg(
+            skip_all_zero_samples=False, minimum_sample_size=2
+        )
+        metric_paths = analysis_results.compute_metric_paths_for_comparison(
+            before_samples, after_samples, cfg
+        )
+        self.assertEqual(metric_paths, set())

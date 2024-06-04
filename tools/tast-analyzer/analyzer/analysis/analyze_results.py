@@ -5,17 +5,18 @@ from collections import defaultdict
 import logging
 from pathlib import Path
 
-from analyzer.analysis.metric_sample import MetricSample
-from analyzer.backend.results import load_test_result_dict_from_json
-from analyzer.backend.results import TestResult
-from analyzer.backend.results import TestResultKey
+from analyzer.analysis import analysis_cfg
+from analyzer.analysis import analysis_results
+from analyzer.analysis import metric_sample
+from analyzer.backend import test_result
+from analyzer.frontend import cli_frontend
 import click
 
 
 def _load_metrics_from_results_dict(
-    results_dict: dict[TestResultKey, TestResult],
-) -> dict[str, MetricSample]:
-    metrics: dict[str, MetricSample] = {}
+    results_dict: dict[test_result.TestResultKey, test_result.TestResult],
+) -> metric_sample.SampleDict:
+    metrics: metric_sample.SampleDict = {}
 
     logging.info(f"Examining {len(results_dict)} records")
     for key, result in sorted(results_dict.items()):
@@ -36,7 +37,7 @@ def _load_metrics_from_results_dict(
         metric_path = key.metric_path()
         m = metrics.setdefault(
             metric_path,
-            MetricSample(
+            metric_sample.MetricSample(
                 test_name=key.test_name,
                 metric_path=metric_path,
                 units=result.units,
@@ -74,9 +75,23 @@ def _load_metrics_from_results_dict(
     required=True,
 )
 def analyze_results(compare: list[Path]):
-    before_results = load_test_result_dict_from_json(compare[0].read_text())
-    after_results = load_test_result_dict_from_json(compare[1].read_text())
-    before_metrics = _load_metrics_from_results_dict(before_results)
-    after_metrics = _load_metrics_from_results_dict(after_results)
+    before_results = test_result.load_test_result_dict_from_json(
+        compare[0].read_text()
+    )
+    after_results = test_result.load_test_result_dict_from_json(
+        compare[1].read_text()
+    )
+    before_samples = _load_metrics_from_results_dict(before_results)
+    after_samples = _load_metrics_from_results_dict(after_results)
 
-    # TODO: Do the analysis.
+    cfg = analysis_cfg.AnalysisCfg()
+
+    metric_paths = analysis_results.compute_metric_paths_for_comparison(
+        s1=before_samples, s2=after_samples, cfg=cfg
+    )
+    results = analysis_results.generate_analysis_results(
+        before_samples=before_samples,
+        after_samples=after_samples,
+        metric_paths=metric_paths,
+    )
+    cli_frontend.print_analysis_results(results)

@@ -1,0 +1,30 @@
+{
+  "Test.Four": {
+    "average": {
+      "improvement_direction": "up",
+      "type": "scalar",
+      "units": "percent",
+      "value": 2
+    }
+  },
+  "Test.One": {
+    "average": {
+      "improvement_direction": "up",
+      "type": "scalar",
+      "units": "percent",
+      "value": 0
+    }
+  },
+  "Test.Three": {
+    "average": {
+      "improvement_direction": "up",
+      "type": "list_of_scalar_values",
+      "units": "percent",
+      "values": [
+        0,
+        1,
+        2
+      ]
+    }
+  }
+}

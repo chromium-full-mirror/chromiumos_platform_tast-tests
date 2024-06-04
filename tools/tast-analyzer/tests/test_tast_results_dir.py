@@ -4,12 +4,8 @@
 from pathlib import Path
 import unittest
 
-from analyzer.backend.results import ImprovementDirection
-from analyzer.backend.results import TestResult
-from analyzer.backend.results import TestResultKey
-from analyzer.backend.tast_results_dir import (
-    _load_results_from_results_chart_json,
-)
+from analyzer.backend import tast_results_dir
+from analyzer.backend import test_result
 
 
 FILES_DIR: Path = Path(__file__).parent.absolute().joinpath("files")
@@ -18,38 +14,38 @@ FILES_DIR: Path = Path(__file__).parent.absolute().joinpath("files")
 class IngestResultsChartTest(unittest.TestCase):
     def test_results_chart(self) -> None:
         path = Path("/20231007-090228/tests/ui.OverviewPerf/results-chart.json")
-        results = _load_results_from_results_chart_json(
+        results = tast_results_dir._load_results_from_results_chart_json(
             path, FILES_DIR.joinpath("results-chart-basic.json").read_text()
         )
         expected = {
-            TestResultKey(
+            test_result.TestResultKey(
                 run_id="20231007-090228",
                 test_name="ui.OverviewPerf",
                 metric_name="Test.One",
                 variant="average",
-            ): TestResult(
+            ): test_result.TestResult(
                 units="percent",
-                improvement_direction=ImprovementDirection.UP,
+                improvement_direction=test_result.ImprovementDirection.UP,
                 value=1,
             ),
-            TestResultKey(
+            test_result.TestResultKey(
                 run_id="20231007-090228",
                 test_name="ui.OverviewPerf",
                 metric_name="Test.Two",
                 variant="average",
-            ): TestResult(
+            ): test_result.TestResult(
                 units="percent",
-                improvement_direction=ImprovementDirection.UP,
+                improvement_direction=test_result.ImprovementDirection.UP,
                 value=2,
             ),
-            TestResultKey(
+            test_result.TestResultKey(
                 run_id="20231007-090228",
                 test_name="ui.OverviewPerf",
                 metric_name="Test.Three",
                 variant="average",
-            ): TestResult(
+            ): test_result.TestResult(
                 units="percent",
-                improvement_direction=ImprovementDirection.UP,
+                improvement_direction=test_result.ImprovementDirection.UP,
                 value=[1, 2, 3],
             ),
         }

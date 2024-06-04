@@ -3,7 +3,7 @@
 # found in the LICENSE file.
 import logging
 
-from analyzer.analysis.analyze import analyze_results
+from analyzer.analysis.analyze_results import analyze_results
 from analyzer.backend.tast_results_dir import ingest_tast_results_directory
 import click
 

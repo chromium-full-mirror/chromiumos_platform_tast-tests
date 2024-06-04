@@ -4,9 +4,9 @@
 import json
 from pathlib import Path
 
-from analyzer.backend.results import ImprovementDirection
-from analyzer.backend.results import TestResult
-from analyzer.backend.results import TestResultKey
+from analyzer.backend.test_result import ImprovementDirection
+from analyzer.backend.test_result import TestResult
+from analyzer.backend.test_result import TestResultKey
 import click
 
 
