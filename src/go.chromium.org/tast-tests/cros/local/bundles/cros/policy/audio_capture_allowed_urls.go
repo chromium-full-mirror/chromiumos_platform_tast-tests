@@ -37,9 +37,9 @@ func init() {
 		Desc:         "Checking if audio capture is allowed on websites or not, depending on the value of the policy",
 		Contacts: []string{
 			"cros-engprod-muc@google.com",
-			"cj.tsai@cienet.com",
-			"cienet-development@googlegroups.com",
 			"chromeos-sw-engprod@google.com",
+			"chromeos-connectivity-cienet-external@google.com",
+			"cj.tsai@cienet.com",
 		},
 		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
