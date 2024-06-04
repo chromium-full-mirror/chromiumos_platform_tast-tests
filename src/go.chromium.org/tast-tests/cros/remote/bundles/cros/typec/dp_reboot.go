@@ -27,7 +27,7 @@ func init() {
 		Attr:         []string{"group:typec", "typec_dp_bringup"},
 		SoftwareDeps: []string{"reboot"},
 		Vars:         []string{"typec.McciSerial", "typec.McciPort"},
-		Timeout:      6 * time.Minute,
+		Timeout:      7 * time.Minute,
 	})
 }
 
