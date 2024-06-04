@@ -18,36 +18,43 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         IntegrationTestsARCVM,
+		Func:         IntegrationTestsARC,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies ARCVM hardware decode acceleration using a media::VideoDecoder by running the c2_e2e_test APK (see go/arcvm-vd)",
-		Contacts:     []string{"arcvm-platform-video@google.com"},
-		// ChromeOS > Platform > Virtualization > ARC++ & ARCVM > ARC Video
-		BugComponent: "b:632502",
+		Desc:         "Verifies ARCVM/ARC++ hardware decode acceleration using a media::VideoDecoder by running the c2_e2e_test APK",
+		Contacts: []string{
+			"chromeos-gfx-video@google.com",
+			"pmolinalopez@chromium.org",
+		},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		Attr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 		Data:         []string{c2e2etest.X86ApkName, c2e2etest.ArmApkName},
-		SoftwareDeps: []string{"chrome", "android_vm"},
+		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBootedWithVideoLoggingVD",
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		Params: []testing.Param{{
-			Name:              "h264",
+			Name:              "h264_vm",
 			Val:               arcvideo.DecodeTestOptions{TestVideo: "test-25fps.h264"},
-			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
+			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs", "android_vm"},
 			ExtraData:         []string{"test-25fps.h264", "test-25fps.h264.json"},
 		}, {
-			Name:              "vp8",
+			Name:              "vp8_vm",
 			Val:               arcvideo.DecodeTestOptions{TestVideo: "test-25fps.vp8"},
-			ExtraSoftwareDeps: []string{caps.HWDecodeVP8},
+			ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "android_vm"},
 			ExtraData:         []string{"test-25fps.vp8", "test-25fps.vp8.json"},
 		}, {
-			Name:              "vp9",
+			Name:              "vp9_vm",
 			Val:               arcvideo.DecodeTestOptions{TestVideo: "test-25fps.vp9"},
-			ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
+			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "android_vm"},
 			ExtraData:         []string{"test-25fps.vp9", "test-25fps.vp9.json"},
+		}, {
+			Name:              "h264_container_r",
+			Val:               arcvideo.DecodeTestOptions{TestVideo: "test-25fps.h264"},
+			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs", "android_container_r"},
+			ExtraData:         []string{"test-25fps.h264", "test-25fps.h264.json"},
 		}},
 	})
 }
 
-func IntegrationTestsARCVM(ctx context.Context, s *testing.State) {
+func IntegrationTestsARC(ctx context.Context, s *testing.State) {
 	arcvideo.RunAllARCVideoTests(ctx, s, s.Param().(arcvideo.DecodeTestOptions))
 }
