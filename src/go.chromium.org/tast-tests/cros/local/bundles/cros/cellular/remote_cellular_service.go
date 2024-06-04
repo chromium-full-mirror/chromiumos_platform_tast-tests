@@ -277,7 +277,10 @@ func (s *RemoteCellularService) QueryLTESignal(ctx context.Context, _ *empty.Emp
 	}
 	rsrq, err := props.GetFloat64(mmconst.SignalPropertyLteRsrq)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get signal RSRQ from properties")
+		// RSRQ isn't actually used at the moment and is optional so just log it as missing/
+		// Reset RSRQ value since error is technically an undefined behavior.
+		rsrq = 0
+		testing.ContextLog(ctx, "Failed to get signal RSRQ from properties: ", err)
 	}
 	snr, err := props.GetFloat64(mmconst.SignalPropertyLteSnr)
 	if err != nil {
