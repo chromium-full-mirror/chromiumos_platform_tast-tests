@@ -11,6 +11,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/android/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/arc/wm"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
@@ -62,6 +63,7 @@ func init() {
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic", "group:input-tools"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBootedInTabletMode",
+		Data:         []string{wm.WhiteWallpaperFileName},
 		Params: []testing.Param{{
 			Val:               stableVkTests,
 			ExtraSoftwareDeps: []string{"android_container"},
@@ -820,6 +822,11 @@ func ChromeVirtualKeyboard(ctx context.Context, s *testing.State) {
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Creating test API connection failed: ", err)
+	}
+
+	// Set a pure white wallpaper to minimize external dependencies.
+	if err := wm.SetSolidWhiteWallpaper(ctx, tconn, s); err != nil {
+		s.Fatal("Failed to set the white wallpaper: ", err)
 	}
 
 	const apk = "ArcKeyboardTest.apk"
