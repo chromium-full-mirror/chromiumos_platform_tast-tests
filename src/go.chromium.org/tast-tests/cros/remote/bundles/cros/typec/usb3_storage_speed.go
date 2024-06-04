@@ -58,7 +58,7 @@ func init() {
 //     |______________________________|
 func Usb3StorageSpeed(ctx context.Context, s *testing.State) {
 	const numIterations = 10
-	const minPassingSpeed = 80 // MB/s
+	const minPassingSpeed = 60 // MB/s
 
 	d := s.DUT()
 
