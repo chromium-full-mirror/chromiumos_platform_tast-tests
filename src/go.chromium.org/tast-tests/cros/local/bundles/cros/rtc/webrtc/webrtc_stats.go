@@ -94,7 +94,7 @@ func collectWebRTCVideoStats(ctx context.Context, conn *chrome.Conn, present boo
 				statErrs[i] = err
 				return
 			}
-			if i == numDecoders-2 {
+			if i == numDecoders-1 {
 				if err := webrtc.MeasureRTCEncodeStats(ctx, conn, readRTCReportFunc, cameraEncPerf); err != nil {
 					statErrs[i] = err
 					return
