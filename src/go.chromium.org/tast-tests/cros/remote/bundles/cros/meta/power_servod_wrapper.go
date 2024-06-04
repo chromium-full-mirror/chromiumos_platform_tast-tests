@@ -64,6 +64,12 @@ func init() {
 				Val:  testParams{},
 			},
 			{
+				Name: "manual_accum",
+				Val: testParams{
+					useAccum: true,
+				},
+			},
+			{
 				Name: "cpd_manual",
 				Val: testParams{
 					cpd:      true,
