@@ -164,6 +164,17 @@ func PNPGoogleMeetFeatureToggle(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
+	if s.Param().(pnpGoogleMeetFeatureToggleParams).cameraOff {
+		if err := upstart.StopJob(ctx, "cros-camera"); err != nil {
+			s.Fatal("Failed to stop cros-camera service: ", err)
+		}
+		defer func() {
+			if err := upstart.EnsureJobRunning(ctx, "cros-camera"); err != nil {
+				s.Fatal("Failed to start cros-camera service: ", err)
+			}
+		}()
+	}
+
 	pnpRoutine := pnp.Routine{}
 	defer pnpRoutine.Close(cleanupCtx)
 	if err := pnp.Cooldown(ctx); err != nil {
@@ -267,7 +278,6 @@ func PNPGoogleMeetFeatureToggle(ctx context.Context, s *testing.State) {
 	if err := uiauto.Combine("Configure Google Meet",
 		gm.EnterFullScreen,
 		gm.MuteIfMicAvailable,
-		gm.SwitchVideo(!s.Param().(pnpGoogleMeetFeatureToggleParams).cameraOff),
 		gm.ChangeSettings(
 			gm.SetSendResolution(googlemeet.ResolutionHD720P),
 			gm.SetReceiveResolution(googlemeet.ResolutionHD720P),
