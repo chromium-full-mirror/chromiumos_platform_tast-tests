@@ -46,7 +46,7 @@ func init() {
 		Timeout:      3 * time.Minute,
 		BugComponent: "b:817866", // Chrome OS Server Projects > Enterprise Management > Reporting
 		SoftwareDeps: []string{"chrome", "vpd"},
-		Attr:         []string{"group:golden_tier", "group:medium_low_tier", "group:hardware", "group:complementary", "group:enterprise-reporting"},
+		Attr:         []string{"group:criticalstaging", "group:mainline", "informational", "group:golden_tier", "group:medium_low_tier", "group:hardware", "group:complementary", "group:enterprise-reporting"},
 		Fixture:      fixture.FakeDMSEnrolled,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.ReportDeviceMemoryInfo{}, pci.VerifiedFunctionalityOS),

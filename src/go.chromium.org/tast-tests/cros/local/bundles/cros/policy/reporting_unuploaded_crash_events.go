@@ -40,7 +40,7 @@ func init() {
 		Timeout:      6 * time.Minute,
 		BugComponent: "b:817866", // Chrome OS Server Projects > Enterprise Management > Reporting
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:golden_tier", "group:medium_low_tier", "group:hardware", "group:complementary", "group:enterprise-reporting", "group:hw_agnostic"},
+		Attr:         []string{"group:criticalstaging", "group:mainline", "informational", "group:golden_tier", "group:medium_low_tier", "group:hardware", "group:complementary", "group:enterprise-reporting", "group:hw_agnostic"},
 		Fixture:      fixture.FakeDMSEnrolled,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.ReportDeviceCrashReportInfo{}, pci.VerifiedFunctionalityOS),
