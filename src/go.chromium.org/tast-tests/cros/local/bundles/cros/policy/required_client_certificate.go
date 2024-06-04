@@ -31,8 +31,8 @@ func init() {
 		Desc:         "Behavior of RequiredClientCertificateForDevice/User policies, check if a certificate is issued when the respective policy is set",
 		Contacts: []string{
 			"chromeos-commercial-networking@google.com", // Team
-			"pmarko@google.com",                         // Feature owner
 			"miersh@google.com",                         // Feature owner
+			"gschwarz@google.com",                       // Feature owner
 		},
 		BugComponent: "b:1000044",
 		Attr: []string{
