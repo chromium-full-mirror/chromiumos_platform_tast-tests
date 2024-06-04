@@ -197,6 +197,11 @@ type PTZSettings struct {
 // PowerTimeParams are time parameters used in power recording in CCA.
 var PowerTimeParams = power.TimeParams{Interval: 5 * time.Second, Total: 300 * time.Second}
 
+// previewTimeoutDuringInit is the maximum time to wait for the preview to become
+// active during CCA initialization. The preview takes approximately 3 seconds to
+// be ready on low-end devices.
+const previewTimeoutDuringInit = 3 * time.Second
+
 // Equal returns if PTZ settings a and b are equal.
 func (a *PTZSettings) Equal(b *PTZSettings) bool {
 	return a.Pan == b.Pan && a.Tilt == b.Tilt && a.Zoom == b.Zoom
@@ -277,7 +282,7 @@ func Init(ctx context.Context, cr *chrome.Chrome, outDir string, appLauncher tes
 		}
 	}(cleanupCtx)
 
-	if err := app.WaitForVideoActive(ctx); err != nil {
+	if err := app.waitForVideoActiveWithTimeout(ctx, previewTimeoutDuringInit); err != nil {
 		return nil, errors.Wrap(err, ErrVideoNotActive)
 	}
 
@@ -452,7 +457,7 @@ func (a *App) Restart(ctx context.Context, tb *testutil.TestBridge) error {
 
 func (a *App) checkVideoState(ctx context.Context, active bool, duration time.Duration) error {
 	cleanupCtx := ctx
-	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, duration+10*time.Second)
 	defer cancel()
 
 	code := fmt.Sprintf("CCATest.isVideoActive() === %t", active)
@@ -485,7 +490,12 @@ func (a *App) checkVideoState(ctx context.Context, active bool, duration time.Du
 
 // WaitForVideoActive waits for the video to become active for 1 second.
 func (a *App) WaitForVideoActive(ctx context.Context) error {
-	return a.checkVideoState(ctx, true, time.Second)
+	return a.waitForVideoActiveWithTimeout(ctx, time.Second)
+}
+
+// waitForVideoActiveWithTimeout waits for the video to become active for |timeout|.
+func (a *App) waitForVideoActiveWithTimeout(ctx context.Context, timeout time.Duration) error {
+	return a.checkVideoState(ctx, true, timeout)
 }
 
 // CheckNoTemporalFile checks if there is any temporal file which don't match pattern |pat| left in |dir|
