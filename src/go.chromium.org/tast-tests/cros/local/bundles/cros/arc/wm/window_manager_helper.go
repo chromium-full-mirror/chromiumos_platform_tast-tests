@@ -9,6 +9,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"strconv"
 	"strings"
 	"time"
@@ -97,6 +99,9 @@ const (
 	PinButton = "org.chromium.arc.testapp.windowmanager:id/button_pin"
 
 	deviceModeChangeWaitDuration = 5 * time.Second
+
+	// WhiteWallpaperFileName is a filename of the white wallpaper.
+	WhiteWallpaperFileName = "white_wallpaper.jpg"
 )
 
 // CheckFunc represents a function that checks certain criteria for tests.
@@ -862,5 +867,25 @@ func WaitForDeviceModeChangeApplied(ctx context.Context) error {
 	if err := testing.Sleep(ctx, deviceModeChangeWaitDuration); err != nil {
 		return errors.Wrap(err, "failed to wait for device mode change")
 	}
+	return nil
+}
+
+// SetSolidWhiteWallpaper sets the wallpaper to the solid white.
+// To use this function, |WhiteWallpaperFileName| needs to be added to Data attribute of the testcase.
+func SetSolidWhiteWallpaper(ctx context.Context, tconn *chrome.TestConn, s *testing.State) error {
+	// The below raises panic if the data is not declared on testcase resigtration.
+	s.DataPath(WhiteWallpaperFileName)
+
+	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
+	defer server.Close()
+
+	if err := tconn.Call(ctx, nil, `(url) => tast.promisify(chrome.wallpaper.setWallpaper)({
+              url: url,
+              layout: 'STRETCH',
+              filename: 'test_wallpaper'
+            })`, server.URL+"/"+WhiteWallpaperFileName); err != nil {
+		return errors.Wrap(err, "failed to set white wallpaper")
+	}
+
 	return nil
 }

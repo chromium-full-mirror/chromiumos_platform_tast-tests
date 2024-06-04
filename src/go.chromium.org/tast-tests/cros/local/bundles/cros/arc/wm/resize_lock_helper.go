@@ -9,8 +9,6 @@ import (
 	"context"
 	"image/color"
 	"math"
-	"net/http"
-	"net/http/httptest"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/arc"
@@ -98,9 +96,6 @@ const (
 	// When shadow exists, the percentage will be 70~80%, and otherwise, it will be 0%. Let's use the intermediate value.
 	borderColorPixelPercentageThreshold = 35
 	borderWidthPX                       = 6
-
-	// WhiteWallpaperFileName is a filename of the white wallpaper.
-	WhiteWallpaperFileName = "white_wallpaper.jpg"
 
 	// ShowSplashLimit is the number of times a splash screen will appear for resize-locked apps.
 	ShowSplashLimit     = 2
@@ -739,23 +734,6 @@ func checkAppManagementSettingToggleState(ctx context.Context, tconn *chrome.Tes
 
 		return nil
 	}, &testing.PollOptions{Timeout: 10 * time.Second})
-}
-
-// SetSolidWhiteWallpaper sets the wallpaper to the solid white.
-// To use this function, |WhiteWallpaperFileName| needs to be added to Data attribute of the testcase.
-func SetSolidWhiteWallpaper(ctx context.Context, tconn *chrome.TestConn, s *testing.State) error {
-	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
-	defer server.Close()
-
-	if err := tconn.Call(ctx, nil, `(url) => tast.promisify(chrome.wallpaper.setWallpaper)({
-              url: url,
-              layout: 'STRETCH',
-              filename: 'test_wallpaper'
-            })`, server.URL+"/"+WhiteWallpaperFileName); err != nil {
-		return errors.Wrap(err, "failed to set white wallpaper")
-	}
-
-	return nil
 }
 
 // ResetSplashScreenCounter resets the splash screen counter so that the splash screen shows up on the next app launch.

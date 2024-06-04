@@ -11,8 +11,6 @@ import (
 	"image"
 	"image/color"
 	"math"
-	"net/http"
-	"net/http/httptest"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -20,6 +18,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/android/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/arc/wm"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
@@ -116,7 +115,7 @@ func init() {
 		// (2) P and R WM related features has done, R is the last support version.
 		// (3) The flakness issue (UI automator and touch screen drag)
 		SoftwareDeps: []string{"chrome"},
-		Data:         []string{"ArcCompanionLibDemo.apk", "white_wallpaper.jpg"},
+		Data:         []string{"ArcCompanionLibDemo.apk", wm.WhiteWallpaperFileName},
 		Fixture:      "arcBooted",
 		Timeout:      6 * time.Minute,
 		Params: []testing.Param{{
@@ -166,14 +165,10 @@ func CompanionLibrary(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed installing app: ", err)
 	}
 
-	// Using HTTP server to provide image for wallpaper setting, because this chrome API don't support local file and gs file.
-	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
-	defer server.Close()
-
 	// Change the wallpaper to pure white for counting pixels easiler.
 	// The Wallpaper will exist continuous if the Chrome session gets reused.
-	if err := setWallpaper(ctx, tconn, server.URL+"/"+wallpaper); err != nil {
-		s.Error("Failed to set wallpaper: ", err)
+	if err := wm.SetSolidWhiteWallpaper(ctx, tconn, s); err != nil {
+		s.Fatal("Failed to set the white wallpaper: ", err)
 	}
 
 	for _, tc := range s.Param().([]companionLibTestEntry) {
