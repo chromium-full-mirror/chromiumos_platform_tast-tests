@@ -26,13 +26,16 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           InstallProfileWithUI,
 		LacrosStatus:   testing.LacrosVariantUnneeded,
-		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LifeCycleStage: testing.LifeCycleInDevelopment,
 		Desc:           "Installs an eSIM profile using the UI",
-		Contacts:       []string{"cros-connectivity@google.com", "chadduffin@google.com"},
-		BugComponent:   "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular
-		Attr:           []string{"group:cellular", "cellular_unstable", "cellular_sim_test_esim"},
-		Fixture:        "chromeLoggedInWithMojoTestEuiccAndSmdsSupport",
-		Timeout:        20 * time.Minute,
+		Contacts: []string{
+			"alfredyu@cienet.com",
+			"chromeos-connectivity-cienet-external@google.com",
+		},
+		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
+		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_test_esim"},
+		Fixture:      "chromeLoggedInWithMojoTestEuiccAndSmdsSupport",
+		Timeout:      20 * time.Minute,
 	})
 }
 

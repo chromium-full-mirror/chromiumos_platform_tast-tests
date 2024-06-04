@@ -18,13 +18,13 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           ESimNetworkName,
 		LacrosStatus:   testing.LacrosVariantUnneeded,
-		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LifeCycleStage: testing.LifeCycleInDevelopment,
 		Desc:           "Tests the carrier name on connected esim",
 		Contacts: []string{
-			"cros-connectivity@google.com",
-			"nikhilcn@google.com",
+			"alfredyu@cienet.com",
+			"chromeos-connectivity-cienet-external@google.com",
 		},
-		BugComponent: "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular
+		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:cellular", "cellular_sim_prod_esim"},
 		Fixture:      "cellularWithFunctioningSim",
