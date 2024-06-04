@@ -193,14 +193,23 @@ func FindOptInExtensionPageAndAcceptTerms(ctx context.Context, cr *chrome.Chrome
 	return nil
 }
 
+// PerformNoWait steps through opt-in flow and does not wait for it to complete.
+func PerformNoWait(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn) error {
+	return perform(ctx, cr, tconn, false /*wait*/)
+}
+
 // Perform steps through opt-in flow and waits for it to complete.
 func Perform(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn) error {
+	return perform(ctx, cr, tconn, true /*wait*/)
+}
+
+func perform(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, wait bool) error {
 	ctx, cancel := context.WithTimeout(ctx, OptinTimeout)
 	defer cancel()
 
 	SetPlayStoreEnabled(ctx, tconn, true)
 
-	if err := FindOptInExtensionPageAndAcceptTerms(ctx, cr, 2 /*maxAttempts*/, true /*wait*/); err != nil {
+	if err := FindOptInExtensionPageAndAcceptTerms(ctx, cr, 2 /*maxAttempts*/, wait); err != nil {
 		return err
 	}
 
