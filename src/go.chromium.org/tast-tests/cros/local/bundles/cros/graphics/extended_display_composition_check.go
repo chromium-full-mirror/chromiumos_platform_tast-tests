@@ -97,7 +97,7 @@ func ExtendedDisplayCompositionCheck(ctx context.Context, s *testing.State) {
 	var (
 		resolutionMenuParams  = nodewith.Name("Resolution").Role(role.ComboBoxSelect)
 		refreshRateMenuParams = nodewith.Name("Refresh Rate Menu").Role(role.ComboBoxSelect)
-		refreshRate60HzParam  = nodewith.Name("60 Hz").Role(role.ListBoxOption).First()
+		refreshRate60HzParam  = nodewith.Name("60 Hz").Role(role.MenuListOption).First()
 		builtinDisplayParams  = nodewith.Name("Mirror Built-in display").Role(role.ToggleButton)
 	)
 	numberOfDisplay := 1
