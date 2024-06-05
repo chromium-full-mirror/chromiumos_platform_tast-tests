@@ -36,7 +36,7 @@ class MetricSample:
             s += v
         return s / len(self.value_map)
 
-    def description(self, print_vals=False) -> str:
+    def description(self, print_vals: bool = False) -> str:
         """Returns a human readable description of this MetricSample.
 
         Args:

@@ -8,6 +8,7 @@ from analyzer.analysis import analysis_cfg
 from analyzer.analysis import analysis_results
 from analyzer.analysis import analyze_results
 from analyzer.analysis import metric_sample
+from analyzer.analysis import stats
 from analyzer.backend import tast_results_dir
 from analyzer.backend import test_result
 
@@ -76,7 +77,7 @@ class AnalysisTest(unittest.TestCase):
                     metric_path="ui.OverviewPerf.Test.One.average",
                     units="percent",
                     improvement_direction=metric_sample.ImprovementDirection.UP,
-                    value_map={"after": 0},
+                    value_map={"after": 1},
                 ),
                 "ui.OverviewPerf.Test.Three.average": metric_sample.MetricSample(
                     test_name="ui.OverviewPerf",
@@ -108,10 +109,10 @@ class AnalysisTest(unittest.TestCase):
         # We should only look at the common metric paths.
         self.assertEqual(
             metric_paths,
-            {
+            [
                 "ui.OverviewPerf.Test.One.average",
                 "ui.OverviewPerf.Test.Three.average",
-            },
+            ],
         )
 
         # ui.OverviewPerf.Test.One.average has only zeros, so we should skip it.
@@ -121,7 +122,7 @@ class AnalysisTest(unittest.TestCase):
         metric_paths = analysis_results.compute_metric_paths_for_comparison(
             before_samples, after_samples, cfg
         )
-        self.assertEqual(metric_paths, {"ui.OverviewPerf.Test.Three.average"})
+        self.assertEqual(metric_paths, ["ui.OverviewPerf.Test.Three.average"])
 
         # Sample size is one for all metrics, so this should produce nothing.
         cfg = analysis_cfg.AnalysisCfg(
@@ -130,4 +131,47 @@ class AnalysisTest(unittest.TestCase):
         metric_paths = analysis_results.compute_metric_paths_for_comparison(
             before_samples, after_samples, cfg
         )
-        self.assertEqual(metric_paths, set())
+        self.assertEqual(metric_paths, [])
+
+    def test_split_better_and_worse_by_mean(self) -> None:
+        before_samples, after_samples = self._load_samples()
+        cfg = analysis_cfg.AnalysisCfg(
+            skip_all_zero_samples=False, minimum_sample_size=1
+        )
+        metric_paths = analysis_results.compute_metric_paths_for_comparison(
+            before_samples, after_samples, cfg
+        )
+        self.assertEqual(
+            metric_paths,
+            [
+                "ui.OverviewPerf.Test.One.average",
+                "ui.OverviewPerf.Test.Three.average",
+            ],
+        )
+
+        results = analysis_results.generate_analysis_results(
+            before_samples=before_samples,
+            after_samples=after_samples,
+            metric_paths=metric_paths,
+        )
+        better_result = analysis_results.AnalysisResult(
+            before_sample=before_samples[metric_paths[0]],
+            after_sample=after_samples[metric_paths[0]],
+            mwu_result=stats.MannWhitneyUResult(u=0.0, p=1.0),
+        )
+        worse_result = analysis_results.AnalysisResult(
+            before_sample=before_samples[metric_paths[1]],
+            after_sample=after_samples[metric_paths[1]],
+            mwu_result=stats.MannWhitneyUResult(u=1.0, p=1.0),
+        )
+        self.assertEqual(
+            results,
+            [
+                better_result,
+                worse_result,
+            ],
+        )
+
+        better, worse = analysis_results.split_better_and_worse_by_mean(results)
+        self.assertEqual(better, [better_result])
+        self.assertEqual(worse, [worse_result])

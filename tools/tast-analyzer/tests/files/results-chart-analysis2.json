@@ -12,7 +12,7 @@
       "improvement_direction": "up",
       "type": "scalar",
       "units": "percent",
-      "value": 0
+      "value": 1
     }
   },
   "Test.Three": {

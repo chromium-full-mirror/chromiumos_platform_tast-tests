@@ -3,8 +3,8 @@
 # found in the LICENSE file.
 import logging
 
-from analyzer.analysis.analyze_results import analyze_results
-from analyzer.backend.tast_results_dir import ingest_tast_results_directory
+from analyzer.backend import tast_results_dir
+from analyzer.frontend import cli_frontend
 import click
 
 
@@ -13,8 +13,10 @@ def cli() -> None:
     pass
 
 
-cli.add_command(ingest_tast_results_directory, name="ingest-tast")
-cli.add_command(analyze_results, name="analyze-results")
+cli.add_command(
+    tast_results_dir.ingest_tast_results_directory, name="ingest-tast"
+)
+cli.add_command(cli_frontend.print_results, name="print-results")
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)

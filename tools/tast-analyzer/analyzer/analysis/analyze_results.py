@@ -9,8 +9,6 @@ from analyzer.analysis import analysis_cfg
 from analyzer.analysis import analysis_results
 from analyzer.analysis import metric_sample
 from analyzer.backend import test_result
-from analyzer.frontend import cli_frontend
-import click
 
 
 def _load_metrics_from_results_dict(
@@ -63,28 +61,18 @@ def _load_metrics_from_results_dict(
     return metrics
 
 
-@click.command()
-@click.option(
-    "-c",
-    "--compare",
-    type=click.Path(
-        exists=True, dir_okay=False, resolve_path=True, path_type=Path
-    ),
-    help="stats tests",
-    nargs=2,
-    required=True,
-)
-def analyze_results(compare: list[Path]):
+def analyze_results(
+    sample1_path: Path, sample2_path: Path, cfg: analysis_cfg.AnalysisCfg
+) -> list[analysis_results.AnalysisResult]:
+    """Returns AnalysisResults for the given saved sample data paths."""
     before_results = test_result.load_test_result_dict_from_json(
-        compare[0].read_text()
+        sample1_path.read_text()
     )
     after_results = test_result.load_test_result_dict_from_json(
-        compare[1].read_text()
+        sample2_path.read_text()
     )
     before_samples = _load_metrics_from_results_dict(before_results)
     after_samples = _load_metrics_from_results_dict(after_results)
-
-    cfg = analysis_cfg.AnalysisCfg()
 
     metric_paths = analysis_results.compute_metric_paths_for_comparison(
         s1=before_samples, s2=after_samples, cfg=cfg
@@ -94,4 +82,4 @@ def analyze_results(compare: list[Path]):
         after_samples=after_samples,
         metric_paths=metric_paths,
     )
-    cli_frontend.print_analysis_results(results)
+    return results

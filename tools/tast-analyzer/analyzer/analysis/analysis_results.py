@@ -40,6 +40,10 @@ class AnalysisResult:
         """Returns the full metric path."""
         return self.before_sample.metric_path
 
+    def is_up_better(self) -> bool:
+        """Returns if going up is better for this metric."""
+        return self.before_sample.improvement_direction.is_up_better()
+
     def summary(self) -> str:
         """Returns a human readable summary of this result."""
         s = f"{self.before_sample.metric_path}:\n"
@@ -56,7 +60,7 @@ def compute_metric_paths_for_comparison(
     s1: metric_sample.SampleDict,
     s2: metric_sample.SampleDict,
     cfg: analysis_cfg.AnalysisCfg,
-) -> set[str]:
+) -> list[str]:
     """Computes a set of metric paths to compare between s1 and s2.
 
     Args:
@@ -65,7 +69,7 @@ def compute_metric_paths_for_comparison(
         cfg: The analysis configuration.
 
     Returns:
-        A set of metric paths to compare.
+        A sorted list of metric paths to compare.
     """
     paths1 = set(s1.keys())
     paths2 = set(s2.keys())
@@ -90,14 +94,14 @@ def compute_metric_paths_for_comparison(
     logging.info(
         f"Ignoring {ignored_count} metrics, looking at {len(paths)} metrics"
     )
-    return paths
+    return sorted(paths)
 
 
 def generate_analysis_results(
     *,
     before_samples: metric_sample.SampleDict,
     after_samples: metric_sample.SampleDict,
-    metric_paths: set[str],
+    metric_paths: list[str],
 ) -> list[AnalysisResult]:
     """Generates a list of analysis results for the given sample dictionaries.
 
@@ -123,3 +127,37 @@ def generate_analysis_results(
             )
         )
     return out
+
+
+def split_better_and_worse_by_mean(
+    results: list[AnalysisResult],
+) -> tuple[list[AnalysisResult], list[AnalysisResult]]:
+    """Splits the given AnalysisResults into ones that got better and worse.
+
+    If a result has no change, it is skipped.
+
+    Args:
+        results: A list of AnalysisResults.
+
+    Returns:
+        A tuple of two lists of better and worse AnalysisResults.
+    """
+    better = []
+    worse = []
+    for result in results:
+        result.after_sample.mean()
+        sign = result.after_sample.mean() - result.before_sample.mean()
+        if sign == 0.0:
+            logging.warn(
+                f"Skipping metric with no changes - {result.metric_path()}. "
+                "This may mean a subset of the data is duplicated between the "
+                "control and experiment groups (ingested data may not have "
+                "been cleared between runs)."
+            )
+            continue
+        went_up = sign > 0.0
+        if went_up == result.is_up_better():
+            better.append(result)
+        else:
+            worse.append(result)
+    return better, worse

@@ -57,7 +57,11 @@ class TestResult:
 
     @classmethod
     def from_json(cls, s: str) -> "TestResult":
-        return TestResult(**json.loads(s))
+        variables = json.loads(s)
+        variables["improvement_direction"] = ImprovementDirection(
+            variables["improvement_direction"]
+        )
+        return TestResult(**variables)
 
 
 def load_test_result_dict_from_json(
