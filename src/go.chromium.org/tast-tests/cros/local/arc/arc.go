@@ -220,6 +220,24 @@ func (a *ARC) Abx2Xml(ctx context.Context, data []byte) ([]byte, error) {
 	return out, nil
 }
 
+// ResumeProvisioning resumes provisioning that is previously paused with androidboot.pause_provisioning=1 prop.
+func (a *ARC) ResumeProvisioning(ctx context.Context) error {
+	const (
+		appLauncherPkg           = "org.chromium.arc.applauncher"
+		resumeProvisioningIntent = "org.chromium.arc.applauncher.RESUME_PROVISIONING"
+	)
+
+	res, err := a.BroadcastIntent(ctx, resumeProvisioningIntent, appLauncherPkg)
+	if err != nil {
+		return errors.Wrap(err, "failed to broadcast resume intent")
+	}
+	if res.Result != 0 {
+		return errors.Errorf("Failed to resume provisioning: %d", res.Result)
+	}
+
+	return nil
+}
+
 // AddCaCert adds a custom CA cert in /system/etc/security/cacerts.
 func (a *ARC) AddCaCert(ctx context.Context, certPath string, certHash string) error {
 	const (
