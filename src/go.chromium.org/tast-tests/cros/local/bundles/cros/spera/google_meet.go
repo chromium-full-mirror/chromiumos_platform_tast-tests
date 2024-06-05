@@ -37,7 +37,6 @@ func init() {
 		BugComponent: "b:1025042", // ChromeOS > EngProd > Platform > SPERA > Automation
 		SoftwareDeps: []string{"chrome"},
 		Vars: []string{
-			"ui.cujAccountPool",            // CrOS login credentials.
 			"spera.cuj_mode",               // Optional. Expecting "tablet" or "clamshell".
 			"spera.collectTrace",           // Optional. Expecting "enable" or "disable", default is "disable".
 			"spera.collectWebRTCInternals", // Optional. Expecting "true" or "false", default is "false".

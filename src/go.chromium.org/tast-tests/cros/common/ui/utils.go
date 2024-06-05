@@ -9,6 +9,9 @@ import "go.chromium.org/tast/core/testing"
 // GaiaPoolDefaultVarName is the ui default pool name.
 const GaiaPoolDefaultVarName = "ui.gaiaPoolDefault"
 
+// CUJAccountPoolVarName is the ui cujAccountPool name.
+const CUJAccountPoolVarName = "ui.cujAccountPool"
+
 var gaiaPoolDefaultVar = testing.RegisterVarString(
 	GaiaPoolDefaultVarName,
 	"",
@@ -21,6 +24,12 @@ var gaiaDMAPoolDefaultVar = testing.RegisterVarString(
 	"It contains creds in ui.gaiaDMAPoolDefault",
 )
 
+var cujAccountPoolVar = testing.RegisterVarString(
+	CUJAccountPoolVarName,
+	"",
+	"It contains creds in ui.cujAccountPool",
+)
+
 // GaiaPoolDefaultValue returns credentials from ui.gaiaPoolDefault.
 func GaiaPoolDefaultValue() string {
 	return gaiaPoolDefaultVar.Value()
@@ -29,4 +38,9 @@ func GaiaPoolDefaultValue() string {
 // GaiaDMAPoolDefaultValue returns credentials from ui.gaiaDMAPoolDefault.
 func GaiaDMAPoolDefaultValue() string {
 	return gaiaDMAPoolDefaultVar.Value()
+}
+
+// CUJAccountPoolValue returns credentials from ui.cujAccountPool.
+func CUJAccountPoolValue() string {
+	return cujAccountPoolVar.Value()
 }

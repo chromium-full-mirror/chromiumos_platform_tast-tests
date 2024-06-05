@@ -23,12 +23,14 @@ var dmaEnableVar = testing.RegisterVarString(
 func pools() (map[string]string, map[string]string) {
 	var dmaPools = map[string]string{
 		ui.GaiaPoolDefaultVarName:         ui.GaiaDMAPoolDefaultValue(),
+		ui.CUJAccountPoolVarName:          ui.GaiaDMAPoolDefaultValue(),
 		drivefs.AccountPoolVarName:        ui.GaiaDMAPoolDefaultValue(),
 		accountmanager.AccountPoolVarName: ui.GaiaDMAPoolDefaultValue(),
 	}
 
 	var regularPools = map[string]string{
 		ui.GaiaPoolDefaultVarName:         ui.GaiaPoolDefaultValue(),
+		ui.CUJAccountPoolVarName:          ui.CUJAccountPoolValue(),
 		drivefs.AccountPoolVarName:        drivefs.AccountPoolValue(),
 		accountmanager.AccountPoolVarName: accountmanager.AccountPoolValue(),
 	}

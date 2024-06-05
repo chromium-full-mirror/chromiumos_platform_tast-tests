@@ -15,10 +15,12 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
@@ -238,7 +240,6 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:         "loggedInToCUJUserWithPvSchedEnabled",
@@ -258,7 +259,6 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserDisableARC",
@@ -278,7 +278,6 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	// loggedInToCUJUserARCSupported fixture is similar to loggedInToCUJUser
 	// but uses "chrome.ARCSupported" flag instead of "chrome.ARCEnabled". When
@@ -304,7 +303,6 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserEnterpriseWithWebRTCEventLogging",
@@ -352,7 +350,6 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInAndKeepStateARCSupported",
@@ -375,7 +372,6 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInAndKeepStateWithBatterySaverParent",
@@ -401,7 +397,6 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInAndKeepStateWithBatterySaver",
@@ -438,7 +433,6 @@ func init() {
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInAndKeepStateWithLowResFakeCamera",
@@ -458,7 +452,6 @@ func init() {
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserLacros",
@@ -475,7 +468,6 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	// TODO(b/302748186): Remove rounded window fixtures.
 	testing.AddFixture(&testing.Fixture{
@@ -498,7 +490,6 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserLacrosWithRoundedWindows",
@@ -520,7 +511,6 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserARCSupportedLacros",
@@ -540,7 +530,6 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInAndKeepStateLacros",
@@ -562,7 +551,6 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInAndKeepStateARCSupportedLacros",
@@ -585,7 +573,6 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInAndKeepStateLacrosWithFakeCamera",
@@ -607,7 +594,6 @@ func init() {
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInAndKeepStateLacrosWithLowResFakeCamera",
@@ -627,7 +613,6 @@ func init() {
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "enrolledLoggedInToCUJUser",
@@ -644,9 +629,6 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars: []string{
-			"ui.cujAccountPool",
-		},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "enrolledLoggedInToCUJUserLacros",
@@ -663,9 +645,6 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars: []string{
-			"ui.cujAccountPool",
-		},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithWebRTCEventLogging",
@@ -690,7 +669,6 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	// TODO(b/331565548): Remove if VsyncDecoding is launched.
 	testing.AddFixture(&testing.Fixture{
@@ -717,7 +695,6 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	// TODO(b/325918094): Remove when enough data is collected related to paravirt sched impact.
 	testing.AddFixture(&testing.Fixture{
@@ -744,7 +721,6 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithWebRTCEventLoggingDisableARC",
@@ -770,7 +746,6 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithWebRTCEventLoggingLacros",
@@ -795,7 +770,6 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithOneGroupPerRenderer",
@@ -820,7 +794,6 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithWebRTCEventLoggingWithVCEffects",
@@ -853,7 +826,6 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithWebRTCEventLoggingWithVCEffectsLacros",
@@ -886,7 +858,6 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithWebRTCEventLoggingWithBatterySaver",
@@ -913,7 +884,6 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "prepareForCUJSchedRT",
@@ -955,7 +925,6 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithFieldTrials",
@@ -977,7 +946,6 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserARCSupportedWithFieldTrials",
@@ -1000,7 +968,6 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithFieldTrialsAndWebRTCEventLogging",
@@ -1026,7 +993,6 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithFieldTrialsWithoutCooldown",
@@ -1047,7 +1013,6 @@ func init() {
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 
 	testing.AddFixture(&testing.Fixture{
@@ -1071,7 +1036,6 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserARCSupportedWithBatterySaverParent",
@@ -1095,7 +1059,6 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	// TODO(b/325918094): Remove when enough data is collected related to paravirt sched impact.
 	testing.AddFixture(&testing.Fixture{
@@ -1117,7 +1080,6 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithBatterySaver",
@@ -1152,7 +1114,6 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithoutCooldown",
@@ -1168,7 +1129,6 @@ func init() {
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithoutCooldownBenchmark",
@@ -1187,7 +1147,6 @@ func init() {
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithVulkanWithoutCooldown",
@@ -1209,7 +1168,6 @@ func init() {
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithBatterySaverWithoutCooldownParent",
@@ -1231,7 +1189,6 @@ func init() {
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithBatterySaverWithoutCooldown",
@@ -1262,7 +1219,6 @@ func init() {
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserLacrosWithoutCooldownBenchmark",
@@ -1281,7 +1237,6 @@ func init() {
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	// TODO(b/292249282): Remove when Vulkan is launched on brya and volteer.
 	testing.AddFixture(&testing.Fixture{
@@ -1304,7 +1259,6 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithBackgroundLoad50MB",
@@ -1325,7 +1279,6 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithWebRTCEventLoggingWithBackgroundLoad50MB",
@@ -1353,7 +1306,6 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithBackgroundLoad50MBWithoutCooldown",
@@ -1373,7 +1325,6 @@ func init() {
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithBackgroundLoad1GB",
@@ -1394,7 +1345,6 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithWebRTCEventLoggingWithBackgroundLoad1GB",
@@ -1422,7 +1372,6 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithBackgroundLoad1GBWithoutCooldown",
@@ -1442,7 +1391,6 @@ func init() {
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithBackgroundLoad2GB",
@@ -1463,7 +1411,6 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithWebRTCEventLoggingWithBackgroundLoad2GB",
@@ -1491,7 +1438,6 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithBackgroundLoad2GBWithoutCooldown",
@@ -1511,7 +1457,6 @@ func init() {
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithBackgroundLoad3GB",
@@ -1532,7 +1477,6 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithWebRTCEventLoggingWithBackgroundLoad3GB",
@@ -1560,7 +1504,6 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithBackgroundLoad3GBWithoutCooldown",
@@ -1580,7 +1523,6 @@ func init() {
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithBackgroundLoad4GB",
@@ -1601,7 +1543,6 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithWebRTCEventLoggingWithBackgroundLoad4GB",
@@ -1629,7 +1570,6 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithBackgroundLoad4GBWithoutCooldown",
@@ -1649,7 +1589,6 @@ func init() {
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithMlbenchmarkDataDirectory",
@@ -1669,7 +1608,6 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithWebRTCEventLoggingWithMlbenchmarkDataDirectory",
@@ -1696,7 +1634,6 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithMlbenchmarkDataDirectoryWithoutCooldown",
@@ -1715,7 +1652,6 @@ func init() {
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 }
 
@@ -1761,15 +1697,11 @@ func GetDocsBlockerConn(ctx context.Context, br *browser.Browser) (*browser.Conn
 }
 
 func loginCreds(s *testing.FixtState, useEnterprisePool bool) (credconfig.Creds, error) {
-	var variableName string
-
 	if useEnterprisePool {
-		variableName = "ui.cujEnterpriseAccountPool"
-	} else {
-		variableName = "ui.cujAccountPool"
+		return credconfig.PickRandomCreds(s.RequiredVar("ui.cujEnterpriseAccountPool"))
 	}
 
-	return credconfig.PickRandomCreds(s.RequiredVar(variableName))
+	return credconfig.PickRandomCreds(dma.CredsFromPool(ui.CUJAccountPoolVarName))
 }
 
 func startFakeDMSWithARCEnabled(ctx context.Context, outdir, user string) (fdms *fakedms.FakeDMS, retErr error) {
@@ -2045,7 +1977,6 @@ func NewWPRLoggedInToCUJUserWithoutCooldownFixture(name, desc string, contacts [
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	}
 }
 

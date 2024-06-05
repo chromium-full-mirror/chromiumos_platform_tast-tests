@@ -38,7 +38,7 @@ func init() {
 		// ChromeOS > Software > Window Management > Virtual Desks
 		BugComponent: "b:1238200",
 		Attr:         []string{"group:mainline", "informational"},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "gaia"},
 		Timeout:      120 * time.Second,
 		VarDeps:      []string{ui.GaiaPoolDefaultVarName},
 		Params: []testing.Param{{
