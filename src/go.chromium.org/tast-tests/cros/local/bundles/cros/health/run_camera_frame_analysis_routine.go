@@ -70,9 +70,10 @@ func RunCameraFrameAnalysisRoutine(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to start chrome: ", err)
 		}
 
-		ctxForCleanUpTb := ctx
-		ctx, cancelCleanUpTb := ctxutil.Shorten(ctx, 5*time.Second)
-		defer cancelCleanUpTb()
+		cleanupCtx := ctx
+		var cancel context.CancelFunc
+		ctx, cancel = ctxutil.Shorten(ctx, 10*time.Second)
+		defer cancel()
 
 		// Use a fake camera to avoid issues about the real camera. Fake cameras
 		// should be sufficient to catch issues about the integration between
@@ -81,17 +82,13 @@ func RunCameraFrameAnalysisRoutine(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to construct camera test bridge: ", err)
 		}
-		defer tb.TearDown(ctxForCleanUpTb)
-
-		ctxForCleanUpApp := ctx
-		ctx, cancelCleanUpApp := ctxutil.Shorten(ctx, 5*time.Second)
-		defer cancelCleanUpApp()
+		defer tb.TearDown(cleanupCtx)
 
 		app, err := cca.New(ctx, cr, s.OutDir(), tb)
 		if err != nil {
 			s.Fatal("Failed to start CCA: ", err)
 		}
-		defer app.Close(ctxForCleanUpApp)
+		defer app.Close(cleanupCtx)
 	} else {
 		testing.ContextLog(ctx, "Skip opening cameras due to no builtin cameras")
 	}
