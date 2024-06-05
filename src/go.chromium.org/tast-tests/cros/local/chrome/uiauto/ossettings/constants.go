@@ -354,8 +354,8 @@ var (
 	// CreateNewApnMenuBtn is the finder for the "Create new APN" menu item.
 	CreateNewApnMenuBtn = nodewith.Name("Create new APN").HasClass("dropdown-item").Role(role.MenuItem)
 
-	// DiscoverKnownApnsMenuBtn is the finder for the "Discover known APNs" menu item.
-	DiscoverKnownApnsMenuBtn = nodewith.Name("Discover more APNs").HasClass("dropdown-item").Role(role.MenuItem)
+	// ShowKnownApnsMenuBtn is the finder for the "Show known APNs" menu item.
+	ShowKnownApnsMenuBtn = nodewith.Name("Show known APNs").HasClass("dropdown-item").Role(role.MenuItem)
 
 	// UseThisApnBtn is the finder for the "Use this APN" menu item.
 	UseThisApnBtn = nodewith.Name("Use this APN").Role(role.Button)

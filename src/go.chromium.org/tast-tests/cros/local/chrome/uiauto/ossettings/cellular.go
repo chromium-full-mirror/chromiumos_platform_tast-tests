@@ -471,8 +471,8 @@ func OpenDiscoverAPNDialogFromAPNSubpage(ctx context.Context, tconn *chrome.Test
 
 	if err := uiauto.Combine("Open discover APNs dialog",
 		ui.LeftClick(MoreApnActionsTridot),
-		ui.WithTimeout(10*time.Second).WaitUntilExists(DiscoverKnownApnsMenuBtn),
-		ui.LeftClick(DiscoverKnownApnsMenuBtn),
+		ui.WithTimeout(10*time.Second).WaitUntilExists(ShowKnownApnsMenuBtn),
+		ui.LeftClick(ShowKnownApnsMenuBtn),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to open discover APNs dialog")
 	}
@@ -481,7 +481,8 @@ func OpenDiscoverAPNDialogFromAPNSubpage(ctx context.Context, tconn *chrome.Test
 
 // SelectAPNFromDialog selects the provided |apnName| when the discover new APNs dialog is open.
 func SelectAPNFromDialog(ctx context.Context, tconn *chrome.TestConn, apnName string) error {
-	apnSelection := nodewith.NameContaining(apnName).Role(role.StaticText)
+	chooseApnDialog := nodewith.Name("Choose an APN").Role(role.Dialog)
+	apnSelection := nodewith.NameContaining(apnName).Role(role.StaticText).Ancestor(chooseApnDialog)
 
 	ui := uiauto.New(tconn)
 	if err := ui.WithTimeout(3 * time.Second).WaitUntilExists(apnSelection)(ctx); err != nil {
@@ -490,9 +491,9 @@ func SelectAPNFromDialog(ctx context.Context, tconn *chrome.TestConn, apnName st
 
 	if err := uiauto.Combine("Add known APN",
 		ui.LeftClick(apnSelection),
-		ui.LeftClick(UseThisApnBtn),
-		ui.WithTimeout(3*time.Second).WaitUntilGone(UseThisApnBtn),
-		ui.EnsureGoneFor(UseThisApnBtn, 5*time.Second),
+		ui.LeftClick(ConfirmButton.Ancestor(chooseApnDialog)),
+		ui.WithTimeout(3*time.Second).WaitUntilGone(ConfirmButton.Ancestor(chooseApnDialog)),
+		ui.EnsureGoneFor(ConfirmButton.Ancestor(chooseApnDialog), 5*time.Second),
 	)(ctx); err != nil {
 		return errors.Wrapf(err, "failed to  known APN %q", apnName)
 	}
