@@ -24,14 +24,15 @@ func init() {
 			"akihiroota@chromium.org",      // Test author
 		},
 		BugComponent: "b:1546021",
-		Timeout:      2 * time.Minute,
-		Attr:         []string{"group:mainline", "informational"},
+		Timeout:      10 * time.Minute,
+		Attr:         []string{"group:mainline", "informational", "group:camera_dependent"},
+		Data:         []string{facegaze.FakeCameraVideoFile720p},
 		SoftwareDeps: []string{"chrome"},
 	})
 }
 
 func Facegaze(ctx context.Context, s *testing.State) {
-	driver, err := facegaze.SetUp(ctx)
+	driver, err := facegaze.SetUp(ctx, s.DataPath)
 	if err != nil {
 		s.Fatal("Failed to set up FaceGaze: ", err)
 	}
@@ -41,4 +42,6 @@ func Facegaze(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to tear down FaceGaze: ", err)
 		}
 	}()
+
+	driver.Start()
 }

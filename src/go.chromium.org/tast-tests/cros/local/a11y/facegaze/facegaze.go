@@ -7,9 +7,11 @@ package facegaze
 
 import (
 	"context"
+	"os"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/a11y"
+	"go.chromium.org/tast-tests/cros/local/camera/testutil"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
@@ -17,9 +19,14 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
+
+// FakeCameraVideoFile720p specifies the video file to use for FaceGaze tests.
+const FakeCameraVideoFile720p = "facegaze_camera_video_720p.y4m"
 
 // conn represents a connection to the FaceGaze background page.
 type conn struct {
@@ -81,12 +88,83 @@ func (d driver) Start() error {
 		return errors.Wrap(err, "failed to click the 'Start FaceGaze' button")
 	}
 
+	if err := testing.Poll(ctx, a11y.VerifyFaceGazeAssetsInstalled, &testing.PollOptions{Timeout: 2 * time.Minute, Interval: 10 * time.Second}); err != nil {
+		return errors.Wrap(err, "failed to wait for the facegaze-assets dlc to be installed")
+	}
+
+	return nil
+}
+
+func setUpFakeCamera(ctx context.Context, dataPath func(string) string, tdh *a11y.TearDownHelper) error {
+	cleanUpCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
+	tdh.Append(func() error {
+		cancel()
+		return nil
+	})
+
+	const cameraService = "cros-camera"
+	tdh.Append(func() error {
+		return upstart.RestartJob(cleanUpCtx, cameraService)
+	})
+
+	// Configure CrOS to use only fake HAL camera.
+	if err := testutil.SetupTestConfig(ctx, testutil.UseFakeHALCamera); err != nil {
+		return errors.Wrap(err, "failed to set up camera test config")
+	}
+	tdh.Append(func() error {
+		testutil.RemoveTestConfig(cleanUpCtx)
+		return nil
+	})
+
+	// Copy the fake camera video to where the camera module can access.
+	dutFakeHALPath, err := testutil.CopyFakeHALFrameImage(dataPath(FakeCameraVideoFile720p))
+	if err != nil {
+		return errors.Wrap(err, "failed to copy fake camera input")
+	}
+	tdh.Append(func() error {
+		return os.Remove(dutFakeHALPath)
+	})
+
+	// Write the fake HAL config to the system.
+	fakeCameraConfig := testutil.FakeCameraConfig{
+		ID:        1,
+		Connected: true,
+		Frames: &testutil.FakeCameraImageConfig{
+			Path: dutFakeHALPath,
+		},
+		SupportedFormats: []*testutil.FakeCameraFormatsConfig{{
+			Width:      320,
+			Height:     180,
+			FrameRates: []int{30}}, {
+			Width:      640,
+			Height:     360,
+			FrameRates: []int{30}}, {
+			Width:      1280,
+			Height:     720,
+			FrameRates: []int{30}},
+		},
+	}
+	fakeHALConfig := testutil.FakeHALConfig{
+		Cameras: []testutil.FakeCameraConfig{fakeCameraConfig},
+	}
+	if err := testutil.WriteFakeHALConfig(ctx, fakeHALConfig); err != nil {
+		return errors.Wrap(err, "failed to configure HAL camera")
+	}
+	tdh.Append(func() error {
+		return testutil.RemoveFakeHALConfig(cleanUpCtx)
+	})
+
+	if err := upstart.RestartJob(ctx, cameraService); err != nil {
+		return errors.Wrapf(err, "failed to restart %s after camera setup", cameraService)
+	}
+
 	return nil
 }
 
 // SetUp executes common FaceGaze setup code and returns a driver that can be
 // used to easily drive FaceGaze tests.
-func SetUp(ctx context.Context) (d driver, e error) {
+func SetUp(ctx context.Context, dataPath func(string) string) (d driver, e error) {
 	// Tears down FaceGaze if SetUp encountered an error.
 	defer func() {
 		if e != nil {
@@ -140,6 +218,10 @@ func SetUp(ctx context.Context) (d driver, e error) {
 		conn.Close()
 		return nil
 	})
+
+	if err := setUpFakeCamera(ctx, dataPath, tdh); err != nil {
+		return newNoOpDriver(tdh), errors.Wrap(err, "failed to setup the fake camera")
+	}
 
 	ui := uiauto.New(tconn).WithTimeout(10 * time.Second)
 	return driver{ctx, conn, ui, tdh}, nil

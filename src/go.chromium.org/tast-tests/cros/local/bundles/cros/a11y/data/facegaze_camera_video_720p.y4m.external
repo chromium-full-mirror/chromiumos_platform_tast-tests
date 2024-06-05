@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/a11y/facegaze_camera_video_720p_20240614.y4m",
+  "size": 242612529,
+  "sha256sum": "fa086b5c2b6c39d8d4d7ea198aa8b0d64ae1f4b3fa91913bafeceda9a8d70943"
+}
