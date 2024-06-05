@@ -106,7 +106,7 @@ func RequestMobileSiteTablet(ctx context.Context, s *testing.State) {
 	case browser.TypeLacros:
 		optsForUser = map[userType][]chrome.Option{
 			normal: {chrome.GAIALogin(parentCred)},
-			child:  {chrome.GAIALogin(childCred), chrome.EnableFeatures("LacrosForSupervisedUsers"), chrome.LacrosExtraArgs(extraArg)},
+			child:  {chrome.GAIALogin(childCred), chrome.EnableFeatures("LacrosForSupervisedUsers"), chrome.ExtraArgs(extraArg), chrome.LacrosExtraArgs(extraArg)},
 			// TODO(b/244513681): Enable guest mode test for lacros once lacros supports the guest mode.
 		}
 	default:
