@@ -34,42 +34,6 @@ type dEQPGenParamData struct {
 	HardwareDeps string // The formatted HardwareDeps string.
 }
 
-// This is selective models from each board. We tries to limit our deqp test run to these selective models to test running tast version of deqp in our lab whiling minimizing the impacts to others.
-var selectiveModels = []string{
-	"hayato",    // asurada
-	"atlas",     // atlas
-	"gladios",   // brask
-	"redrix",    // brya
-	"tomato",    // cherry
-	"babytiger", // coral
-	"ponyta",    // corsola
-	"boton",     // dedede
-	"drallion",  // drallion
-	"sion",      // fizz
-	"ciri",      // geralt
-	"kasumi",    // grunt
-	"kohaku",    // hatch
-	"cozmo",     // jacuzzi
-	"karma",     // kalista
-	"kodama",    // kukui
-	"yaviks",    // nissa
-	"nocturne",  // nocturne
-	"garfour",   // octopus
-	"wyvern",    // puff
-	"pyro",      // pyro
-	"shyvana",   // rammus
-	"electro",   // reef
-	"sand",      // sand
-	"sarien",    // sarien
-	"skyrim",    // skyrim
-	"soraka",    // soraka
-	"starmi",    // staryu
-	"homestar",  // strongbad
-	"lazor",     // trogdor
-	"lindar",    // volteer
-	"berknip",   // zork
-}
-
 func addTests(t *testing.T, p dEQPGenParamData) []dEQPGenParamData {
 	var result []dEQPGenParamData
 	tmpl, err := template.New("").Parse(p.Name)
@@ -147,14 +111,13 @@ func TestDEQPParams(t *testing.T) {
 
 	// Adding the normal run for each APIType
 	params = append(params, []dEQPGenParamData{{
-		Name:           `vk_{{.ShardCount}}_{{ printf "%02d" .ShardNum }}`,
-		Timeout:        3 * time.Hour,
-		Attr:           []string{"graphics_nightly", "graphics_cft"},
-		API:            "graphics.VK",
-		ShardCount:     10,
-		IsParallel:     true,
-		HardwareModels: selectiveModels,
-		SkipGPUFamily:  []string{"rogue"},
+		Name:          `vk_{{.ShardCount}}_{{ printf "%02d" .ShardNum }}`,
+		Timeout:       3 * time.Hour,
+		Attr:          []string{"graphics_nightly", "graphics_cft"},
+		API:           "graphics.VK",
+		ShardCount:    10,
+		IsParallel:    true,
+		SkipGPUFamily: []string{"rogue"},
 	}, {
 		Name:       `gles2`,
 		Timeout:    30 * time.Minute,
