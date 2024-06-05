@@ -944,6 +944,18 @@
   {
     "board_name": "corsola",
     "branch_name": "firmware-corsola-15194.B",
+    "firmware_build_cros_version": "15194.170.0",
+    "model_name": "chinchou"
+  },
+  {
+    "board_name": "corsola",
+    "branch_name": "firmware-corsola-15194.B",
+    "firmware_build_cros_version": "15194.170.0",
+    "model_name": "chinchou360"
+  },
+  {
+    "board_name": "corsola",
+    "branch_name": "firmware-corsola-15194.B",
     "firmware_build_cros_version": "15194.37.0",
     "model_name": "magneton"
   },
@@ -976,6 +988,12 @@
     "branch_name": "firmware-corsola-15194.B",
     "firmware_build_cros_version": "15194.92.0",
     "model_name": "steelix"
+  },
+  {
+    "board_name": "corsola",
+    "branch_name": "firmware-corsola-15194.B",
+    "firmware_build_cros_version": "15194.42.0",
+    "model_name": "tentacool"
   },
   {
     "board_name": "corsola",
@@ -2882,6 +2900,12 @@
   {
     "board_name": "nissa",
     "branch_name": "firmware-nissa-15217.B",
+    "firmware_build_cros_version": "15217.552.0",
+    "model_name": "anraggar"
+  },
+  {
+    "board_name": "nissa",
+    "branch_name": "firmware-nissa-15217.B",
     "firmware_build_cros_version": "15217.522.0",
     "model_name": "anraggar360"
   },
@@ -2889,6 +2913,12 @@
     "board_name": "nissa",
     "branch_name": "firmware-nissa-15217.B",
     "firmware_build_cros_version": "15217.538.0",
+    "model_name": "anraggar360"
+  },
+  {
+    "board_name": "nissa",
+    "branch_name": "firmware-nissa-15217.B",
+    "firmware_build_cros_version": "15217.552.0",
     "model_name": "anraggar360"
   },
   {
