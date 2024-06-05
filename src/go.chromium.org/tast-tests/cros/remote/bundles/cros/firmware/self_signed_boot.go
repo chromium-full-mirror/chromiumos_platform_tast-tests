@@ -7,6 +7,7 @@ package firmware
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -78,30 +79,6 @@ func SelfSignedBoot(ctx context.Context, s *testing.State) {
 	}
 	s.Log("Initial dev_boot_signed_only value = ", devBootSignedOnly)
 
-	getUSBDev := func(ctx context.Context) string {
-		s.Log("Inserting the USB to DUT")
-		if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
-			s.Fatal("Failed to insert USB to DUT: ", err)
-		}
-		s.Logf("Sleeping %s to let USB become visible to DUT", firmware.UsbVisibleTime)
-		// GoBigSleepLint: It may take some time for usb mux state to
-		// take effect.
-		if err := testing.Sleep(ctx, firmware.UsbVisibleTime); err != nil {
-			s.Fatalf("Failed to sleep for %v s: %v", firmware.UsbDisableTime, err)
-		}
-
-		outRaw, err := h.DUT.Conn().CommandContext(ctx, "sh", "-c", "lsblk -nd --output NAME | grep sd").Output(ssh.DumpLogOnError)
-		if err != nil {
-			s.Fatal("Failed find usb key: ", err)
-		}
-
-		out := strings.TrimSpace(string(outRaw))
-		if out == "" {
-			s.Fatal("No USB key detected: ", err)
-		}
-		return fmt.Sprintf("/dev/%s", out)
-	}
-
 	cleanupContext := ctx
 	ctx, closeFunc := ctxutil.Shorten(ctx, 5*time.Minute)
 	defer closeFunc()
@@ -110,6 +87,9 @@ func SelfSignedBoot(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set dev_boot_signed_only=1 with crossytem: ", err)
 	}
 	defer func(ctx context.Context) {
+		if err := h.EnsureDUTBooted(ctx); err != nil {
+			s.Fatal("Failed to reconnect to DUT: ", err)
+		}
 		if err := h.Reporter.CrossystemSetParam(ctx, reporters.CrossystemParamDevBootSignedOnly, devBootSignedOnly); err != nil {
 			s.Fatalf("Failed to set dev_boot_signed_only=%v with crossytem: %v", devBootSignedOnly, err)
 		}
@@ -119,6 +99,9 @@ func SelfSignedBoot(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set dev_boot_usb=1 with crossytem: ", err)
 	}
 	defer func(ctx context.Context) {
+		if err := h.EnsureDUTBooted(ctx); err != nil {
+			s.Fatal("Failed to reconnect to DUT: ", err)
+		}
 		if err := h.Reporter.CrossystemSetParam(ctx, reporters.CrossystemParamDevBootUsb, devBootUSB); err != nil {
 			s.Fatalf("Failed to set dev_boot_usb=%v with crossytem: %v", devBootUSB, err)
 		}
@@ -127,16 +110,27 @@ func SelfSignedBoot(ctx context.Context, s *testing.State) {
 	if err := developerUSBBoot(ctx, h, false); err != nil {
 		s.Fatal("Failed to boot from internal disk: ", err)
 	}
-
+	usbDev, err := grepServoUSBPathOnDUT(ctx, h)
+	if err != nil {
+		s.Fatal("Failed to get USB path on DUT: ", err)
+	}
 	s.Log("Resigning KERN_A on USB with ssd key")
 	if _, err := h.DUT.Conn().CommandContext(ctx,
 		"/usr/share/vboot/bin/make_dev_ssd.sh",
 		"--partitions", "2", // Partition ID 2 corresponds to cgpt partition "KERN_A".
-		"-i", getUSBDev(ctx),
+		"-i", usbDev,
 	).Output(ssh.DumpLogOnError); err != nil {
 		s.Fatal("Failed to resign usb with ssd keys: ", err)
 	}
 	defer func(ctx context.Context) {
+		if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
+			s.Fatal("Failed to cold reset the DUT: ", err)
+		}
+		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.DelayRebootToPing+h.Config.FirmwareScreen)
+		defer cancelWaitConnect()
+		if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
+			s.Fatal("Failed to reconnect to the DUT: ", err)
+		}
 		s.Log("Inserting the USB to DUT")
 		if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
 			s.Fatal("Failed to insert the USB to DUT: ", err)
@@ -147,21 +141,18 @@ func SelfSignedBoot(ctx context.Context, s *testing.State) {
 		if err := testing.Sleep(ctx, firmware.UsbVisibleTime); err != nil {
 			s.Fatalf("Failed to sleep for %v s: %v", firmware.UsbDisableTime, err)
 		}
-
+		usbDev, err := grepServoUSBPathOnDUT(ctx, h)
+		if err != nil {
+			s.Fatal("Failed to get USB path on DUT: ", err)
+		}
 		s.Log("Resigning KERN_A on USB with recovery key")
 		if _, err := h.DUT.Conn().CommandContext(ctx,
 			"/usr/share/vboot/bin/make_dev_ssd.sh",
 			"--partitions", "2", // Partition ID 2 corresponds to cgpt partition "KERN_A".
-			"-i", getUSBDev(ctx),
+			"-i", usbDev,
 			"--recovery_key",
 		).Output(ssh.DumpLogOnError); err != nil {
 			s.Fatal("Failed restore recovery keys: ", err)
-		}
-	}(cleanupContext)
-
-	defer func(ctx context.Context) {
-		if err := developerUSBBoot(ctx, h, false); err != nil {
-			s.Fatal("Failed to boot from internal disk: ", err)
 		}
 	}(cleanupContext)
 
@@ -211,4 +202,57 @@ func developerUSBBoot(ctx context.Context, h *firmware.Helper, expectedBootFromU
 		return errors.Errorf("expected boot from usb: %v, got %v", expectedBootFromUSB, bootedFromRemovableDevice)
 	}
 	return nil
+}
+
+func lsblkGrepUSBPaths(ctx context.Context, h *firmware.Helper) ([]string, error) {
+	outRaw, err := h.DUT.Conn().CommandContext(ctx, "sh", "-c", "lsblk -nd --output NAME").Output(ssh.DumpLogOnError)
+	if err != nil {
+		return []string{}, errors.Wrap(err, "failed to run lsblk command")
+	}
+	var usbPathSlice []string
+	usbRegex := regexp.MustCompile(`sd\w`)
+	disableMatches := usbRegex.FindAllSubmatch(outRaw, -1)
+	if disableMatches != nil {
+		for _, match := range disableMatches {
+			usbPathSlice = append(usbPathSlice, string(match[0]))
+		}
+	}
+	return usbPathSlice, nil
+}
+
+func grepServoUSBPathOnDUT(ctx context.Context, h *firmware.Helper) (string, error) {
+	testing.ContextLog(ctx, "Removing the USB")
+	if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxOff); err != nil {
+		return "", errors.Wrap(err, "failed to remove USB")
+	}
+	testing.ContextLogf(ctx, "Sleeping %s to let USB become invisible to DUT", firmware.UsbDisableTime)
+	// GoBigSleepLint: It may take some time for usb mux state to take effect.
+	if err := testing.Sleep(ctx, firmware.UsbDisableTime); err != nil {
+		return "", errors.Wrap(err, "failed to sleep for usb disable time")
+	}
+
+	disableOutSlice, err := lsblkGrepUSBPaths(ctx, h)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to get lsblk output for diabling USB")
+	}
+	disableOutString := strings.Join(disableOutSlice, " ")
+
+	testing.ContextLog(ctx, "Enabling the USB to DUT")
+	if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
+		return "", errors.Wrap(err, "failed to enable USB to DUT")
+	}
+	testing.ContextLogf(ctx, "Sleeping %s to let USB become visible to DUT", firmware.UsbVisibleTime)
+	// GoBigSleepLint: It may take some time for usb mux state to take effect.
+	if err := testing.Sleep(ctx, firmware.UsbVisibleTime); err != nil {
+		return "", errors.Wrap(err, "failed to sleep for usb visible time")
+	}
+
+	enableOutSlice, err := lsblkGrepUSBPaths(ctx, h)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to get lsblk output for enabling USB to DUT")
+	}
+	enableOutString := strings.Join(enableOutSlice, " ")
+
+	outCmp := strings.Trim(enableOutString, disableOutString)
+	return fmt.Sprintf("/dev/%s", strings.TrimSpace(outCmp)), nil
 }
