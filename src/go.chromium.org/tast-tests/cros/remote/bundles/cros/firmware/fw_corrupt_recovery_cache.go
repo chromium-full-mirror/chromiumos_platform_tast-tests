@@ -12,9 +12,11 @@ import (
 	"time"
 
 	common "go.chromium.org/tast-tests/cros/common/firmware"
+	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
+	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
 	pb "go.chromium.org/tast-tests/cros/services/cros/firmware"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/ssh"
@@ -34,7 +36,7 @@ func init() {
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		// TODO: When stable, change firmware_unstable to a different attr.
 		Attr:         []string{"group:firmware", "firmware_unstable", "firmware_usb"},
-		Timeout:      20 * time.Minute,
+		Timeout:      2 * time.Hour,
 		Vars:         []string{"firmware.skipFlashUSB"},
 		ServiceDeps:  []string{"tast.cros.firmware.BiosService"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
@@ -64,6 +66,9 @@ func FWCorruptRecoveryCache(ctx context.Context, s *testing.State) {
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to connect to servo: ", err)
 	}
+	if err := h.RequireBiosServiceClient(ctx); err != nil {
+		s.Fatal("Failed to require BiosServiceClient: ", err)
+	}
 
 	s.Log("Verifying RECOVERY_MRC_CACHE section exists")
 	err := h.DUT.Conn().CommandContext(ctx, "futility", "read", "-r", "RECOVERY_MRC_CACHE", "/dev/null").Run()
@@ -71,11 +76,6 @@ func FWCorruptRecoveryCache(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to run cmd on DUT: ", err)
 	} else if errCode, ok := testexec.ExitCode(err); !ok || errCode != 0 {
 		s.Fatal("Failed to find RECOVERY_MRC_CACHE section: ", err)
-	}
-
-	ms, err := firmware.NewModeSwitcher(ctx, h)
-	if err != nil {
-		s.Fatal("Failed to create new boot mode switcher: ", err)
 	}
 
 	s.Log("Setup USB Key")
@@ -93,10 +93,6 @@ func FWCorruptRecoveryCache(ctx context.Context, s *testing.State) {
 	}
 	if err := h.SetupUSBKey(ctx, cs); err != nil {
 		s.Fatal("USBKey not working: ", err)
-	}
-
-	if err := h.RequireBiosServiceClient(ctx); err != nil {
-		s.Fatal("Failed to require BiosServiceClient: ", err)
 	}
 
 	mrcHostBackup, err := os.CreateTemp("", "mrcHostBackup")
@@ -125,16 +121,11 @@ func FWCorruptRecoveryCache(ctx context.Context, s *testing.State) {
 	s.Log("RECOVERY_MRC_CACHE region backup is stored at: ", mrcPath.Path)
 
 	defer func(ctx context.Context) {
-		h.DisconnectDUT(ctx)
-		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
-		defer cancelWaitConnect()
-		if err := h.DUT.WaitConnect(waitConnectCtx); err != nil {
-			s.Fatal("Failed to reconnect to DUT: ", err)
-		}
 		s.Log("Reconnecting to BiosService on DUT")
 		if err := h.RequireBiosServiceClient(ctx); err != nil {
 			s.Fatal("Failed to reconnect to BiosServiceClient on DUT: ", err)
 		}
+
 		s.Log("Restoring RECOVERY_MRC_CACHE image")
 		if _, err := h.BiosServiceClient.RestoreImageSection(ctx, mrcPath); err != nil {
 			s.Error("Failed to restore MRC_RECOVERY_CACHE image: ", err)
@@ -144,33 +135,13 @@ func FWCorruptRecoveryCache(ctx context.Context, s *testing.State) {
 		if _, err := h.DUT.Conn().CommandContext(ctx, "rm", mrcPath.Path).Output(ssh.DumpLogOnError); err != nil {
 			s.Fatal("Failed to delete RECOVERY_MRC_CACHE image from DUT: ", err)
 		}
-
-		s.Log("Rebooting out of recovery")
-		if err := ms.RebootToMode(ctx, bootMode, firmware.AssumeGBBFlagsCorrect); err != nil {
-			s.Fatalf("Failed to reboot into %v mode: %v", bootMode, err)
-		}
 	}(cleanupContext)
 
-	if !h.DoesServerHaveTastHostFiles() {
-		if err := h.CopyTastFilesFromDUT(ctx); err != nil {
-			s.Fatal("Copying Tast files to Host failed: ", err)
-		}
-	}
 	s.Log("Copying kernel back up to host")
 	if err := linuxssh.GetFile(ctx, h.DUT.Conn(), mrcPath.Path, mrcHostBackup.Name(), linuxssh.PreserveSymlinks); err != nil {
 		s.Fatal("Failed to copy mrc backup to the host")
 	}
-
 	defer func(ctx context.Context) {
-		s.Log("Wait for DUT to reconnect")
-		if err := h.EnsureDUTBooted(ctx); err != nil {
-			s.Fatal("Failed to ensure the DUT is booted: ", err)
-		}
-
-		if err := h.SyncTastFilesToDUT(ctx); err != nil {
-			s.Fatal("Copying Tast files to DUT failed: ", err)
-		}
-
 		s.Log("Sync MRC backup from host to DUT")
 		if _, err := linuxssh.PutFiles(ctx, h.DUT.Conn(), map[string]string{
 			mrcHostBackup.Name(): mrcPath.Path,
@@ -188,15 +159,62 @@ func FWCorruptRecoveryCache(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to corrupt RECOVERY_MRC_CACHE section: ", err)
 	}
 
-	s.Log("Rebooting into recovery mode to rebuild RECOVERY_MRC_CACHE")
-	if err := ms.RebootToMode(ctx, common.BootModeRecovery); err != nil {
-		s.Fatal("Failed to reboot into recovery mode: ", err)
-	}
-	h.DisconnectDUT(ctx)
+	var state firmware.CheckAndSetServoCharger
+	state = h.CheckServoChargerBeforeBootingFromUSB(ctx)
 
-	s.Log("Reconnecting to DUT")
-	if err := h.WaitConnect(ctx); err != nil {
-		s.Fatal("Failed to reconnect to DUT: ", err)
+	defer func(ctx context.Context) {
+		s.Log("Rebooting out of recovery")
+		if h.DUT.Connected(ctx) {
+			// The power_state:reset command might cause an error (ec/cr50/servo: no data was sent from pty or unresponsive).
+			// To prevent this issue, send the 'reboot' command in VT2.
+			if err := h.RebootWithVT2Command(ctx, bootMode); err != nil {
+				s.Fatal("Failed to reboot with VT2 command: ", err)
+			}
+		} else {
+			// Something went wrong, and the DUT is disconnected. Use the power_state:reset command instead.
+			if err := h.CloseRPCConnection(ctx); err != nil {
+				s.Fatal("Failed to close rpc connection: ", err)
+			}
+			if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
+				s.Fatal("Failed to cold reset the DUT: ", err)
+			}
+			waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
+			defer cancelWaitConnect()
+			if err := h.WaitConnect(waitConnectCtx); err != nil {
+				s.Fatal("Failed to reconnect to DUT: ", err)
+			}
+		}
+		s.Log("Checking that DUT has booted from internal disk")
+		bootedFromRemovableDevice, err := h.Reporter.BootedFromRemovableDevice(ctx)
+		if err != nil {
+			s.Fatal("Could not determine boot device type: ", err)
+		}
+		if bootedFromRemovableDevice {
+			s.Fatalf("DUT did not boot from the internal device: got %v, want false", bootedFromRemovableDevice)
+		}
+
+		if !state.IsServoChargerConnected {
+			if err := h.SetDUTPower(ctx, true); err != nil {
+				s.Fatal("Failed to connect charger: ", err)
+			}
+			state.IsServoChargerConnected = true
+			waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 2*time.Minute)
+			defer cancelWaitConnect()
+			if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
+				s.Fatal("Failed to reconnect to the DUT: ", err)
+			}
+		}
+	}(cleanupContext)
+
+	s.Log("Rebooting into recovery mode to check if RECOVERY_MRC_CACHE needs update")
+	if err := h.BootToRecoveryMode(ctx, &state); err != nil {
+		s.Fatal("Failed to boot to recovery mode: ", err)
+	}
+
+	if isExpected, err := h.Reporter.ContainsRecoveryReason(ctx, []reporters.RecoveryReason{reporters.RecoveryReasonROManual}); err != nil {
+		s.Fatal("Failed to get the recovery reason")
+	} else if !isExpected {
+		s.Fatal("Failed to get expected recovery reason")
 	}
 
 	s.Log("Checking if recovery MRC cache has been rebuilt")

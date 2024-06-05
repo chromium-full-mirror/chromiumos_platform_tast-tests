@@ -2110,6 +2110,9 @@ func (h *Helper) ReadTPMC(ctx context.Context, tpmReadArgs ...string) (out strin
 
 // DeveloperUSBBoot checks if removing servo charger is required and performs a developer usb boot.
 func (h *Helper) DeveloperUSBBoot(ctx context.Context, state *CheckAndSetServoCharger) error {
+	if err := h.CloseRPCConnection(ctx); err != nil {
+		return errors.Wrap(err, "failed to close rpc connection")
+	}
 	ms, err := NewModeSwitcher(ctx, h)
 	if err != nil {
 		return errors.Wrap(err, "failed to create mode switcher")
@@ -2226,6 +2229,9 @@ func (h *Helper) BootToRecoveryMode(ctx context.Context, state *CheckAndSetServo
 
 // RebootWithVT2Command sends a reboot command in VT2 to reboot the DUT.
 func (h *Helper) RebootWithVT2Command(ctx context.Context, fromMode fwCommon.BootMode) error {
+	if err := h.CloseRPCConnection(ctx); err != nil {
+		return errors.Wrap(err, "failed to close rpc connection")
+	}
 	testing.ContextLog(ctx, "Rebooting the DUT")
 	if err := h.DUT.Conn().CommandContext(ctx, "reboot").Run(); err != nil && !errors.As(err, &context.DeadlineExceeded) {
 		return errors.Wrap(err, "failed to run reboot command")
