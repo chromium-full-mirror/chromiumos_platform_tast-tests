@@ -220,6 +220,58 @@ func (a *ARC) Abx2Xml(ctx context.Context, data []byte) ([]byte, error) {
 	return out, nil
 }
 
+// AddCaCert adds a custom CA cert in /system/etc/security/cacerts.
+func (a *ARC) AddCaCert(ctx context.Context, certPath string, certHash string) error {
+	const (
+		tempCertsDir   = "/data/local/tmp/cacerts"
+		systemCertsDir = "/system/etc/security/cacerts"
+	)
+
+	allSystemCerts := filepath.Join(systemCertsDir, "*")
+	allTempCerts := filepath.Join(tempCertsDir, "*")
+
+	runCmd := func(args ...string) error {
+		if err := a.ShellCommand(ctx, args...).Run(testexec.DumpLogOnError); err != nil {
+			return errors.Wrapf(err, "failed to execute command %q", strings.Join(args, " "))
+		}
+		return nil
+	}
+
+	for _, args := range [][]string{
+		{"mkdir", "-p", tempCertsDir},
+		{"cp", allSystemCerts, tempCertsDir},
+	} {
+		if err := runCmd(args...); err != nil {
+			return err
+		}
+	}
+
+	certFileName := fmt.Sprintf("%s.0", certHash)
+	if err := a.PushFile(ctx, certPath, filepath.Join(tempCertsDir, certFileName)); err != nil {
+		return err
+	}
+
+	testing.ContextLog(ctx, "Restarting adbd as root")
+	if err := a.Root(ctx); err != nil {
+		return errors.Wrap(err, "failed to start adb root")
+	}
+
+	for _, args := range [][]string{
+		{"mount", "-t", "tmpfs", "tmpfs", systemCertsDir},
+		{"mv", allTempCerts, systemCertsDir},
+		{"chown", "root:root", allSystemCerts},
+		{"chmod", "644", allSystemCerts},
+		{"chcon", "u:object_r:system_file:s0", allSystemCerts},
+		{"rm", "-r", tempCertsDir},
+	} {
+		if err := runCmd(args...); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // New waits for Android to finish booting.
 //
 // ARC must be enabled in advance by passing chrome.ARCEnabled or chrome.ARCSupported with
