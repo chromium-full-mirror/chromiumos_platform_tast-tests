@@ -233,6 +233,7 @@ var modelTemperatureThresholds = map[string]int{
 	"jelboz":     53800,
 	"jelboz360":  53800,
 	"berknip":    53800,
+	"screebo":    53000, // based on b/337618192#comment6
 	"magneto":    53000,
 	"galtic360":  53000,
 	"chronicler": 53000,
