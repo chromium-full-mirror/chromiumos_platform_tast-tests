@@ -10,10 +10,7 @@ import (
 	"os"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/dma"
-	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
-	"go.chromium.org/tast-tests/cros/local/arc/optin"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/arc/removablemedia"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -34,6 +31,7 @@ func init() {
 		BugComponent: "b:516669",
 		Attr:         []string{"group:mainline", "informational", "group:arc-functional"},
 		SoftwareDeps: []string{"chrome", "gaia"},
+		Fixture:      "arcBooted",
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_container"},
 		}, {
@@ -41,38 +39,19 @@ func init() {
 			ExtraSoftwareDeps: []string{"android_vm"},
 			ExtraAttr:         []string{"group:hw_agnostic"},
 		}},
-		Timeout: chrome.GAIALoginTimeout + arc.BootTimeout + 1*time.Minute,
-		VarDeps: []string{ui.GaiaPoolDefaultVarName},
+		Timeout: chrome.LoginTimeout + arc.BootTimeout + 1*time.Minute,
 	})
 }
 
 func EnableExternalStorage(ctx context.Context, s *testing.State) {
-	// Set up Chrome.
-	cr, err := chrome.New(ctx,
-		chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)),
-		chrome.ARCSupported(),
-		chrome.ExtraArgs(arc.DisableSyncFlags()...))
-	if err != nil {
-		s.Fatal("Failed to start Chrome: ", err)
-	}
-	defer cr.Close(ctx)
+	a := s.FixtValue().(*arc.PreData).ARC
+	cr := s.FixtValue().(*arc.PreData).Chrome
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect Test API: ", err)
 	}
 	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
-
-	// Optin to PlayStore and close the app.
-	if err := optin.PerformAndClose(ctx, cr, tconn); err != nil {
-		s.Fatal("Failed to optin to Play Store and Close: ", err)
-	}
-
-	a, err := arc.New(ctx, s.OutDir(), cr.NormalizedUser())
-	if err != nil {
-		s.Fatal("Failed to start ARC: ", err)
-	}
-	defer a.Close(ctx)
 
 	const (
 		imageSize   = 64 * 1024 * 1024
