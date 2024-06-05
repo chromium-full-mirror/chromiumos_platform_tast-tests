@@ -37,10 +37,12 @@ var (
 	adjustCameraFraming     = nodewith.NameStartingWith("Toggle Camera framing").Role(role.ToggleButton).Ancestor(bubleView)
 	noiseCancellationButton = nodewith.NameStartingWith("Toggle Noise cancellation").Role(role.ToggleButton).Ancestor(bubleView)
 
-	bgBlurOffButton            = nodewith.NameContaining("Off").Role(role.Button).Ancestor(bubleView)
-	bgBlurLightButton          = nodewith.NameContaining("Light").Role(role.Button).Ancestor(bubleView)
-	bgBlurFullButton           = nodewith.NameContaining("Full").Role(role.Button).Ancestor(bubleView)
-	bgBlurImageButton          = nodewith.NameContaining("Image").Role(role.Button).Ancestor(bubleView)
+	// The role of bgBlurButton may be "button" or "toggleButton".
+	// Therefore, the specific role is removed here.
+	bgBlurOffButton            = nodewith.NameContaining("Off").Ancestor(bubleView)
+	bgBlurLightButton          = nodewith.NameContaining("Light").Ancestor(bubleView)
+	bgBlurFullButton           = nodewith.NameContaining("Full").Ancestor(bubleView)
+	bgBlurImageButton          = nodewith.NameContaining("Image").Ancestor(bubleView)
 	createwWithAiButton        = nodewith.NameContaining("Create with AI").Role(role.Button).Ancestor(bubleView)
 	firstBackgroundImageButton = nodewith.ClassName("RecentlyUsedImageButton").Role(role.ListItem).First()
 	showAppsButton             = nodewith.NameContaining("Used by").Role(role.Button).Ancestor(bubleView)
@@ -137,15 +139,29 @@ const (
 	BackgroundBlurImage
 )
 
+// DoDefaultBgBlurButton clicks background blur button which role is equal to the button
+// or the toggle button.
+func (vcTray VCTray) DoDefaultBgBlurButton(bgBlurButton *nodewith.Finder) action.Action {
+	return func(ctx context.Context) error {
+		button := bgBlurButton.Role(role.Button)
+		toggleButton := bgBlurButton.Role(role.ToggleButton)
+		foundNode, err := vcTray.ui.FindAnyExists(ctx, button, toggleButton)
+		if err != nil {
+			return err
+		}
+		return vcTray.ui.DoDefault(foundNode)(ctx)
+	}
+}
+
 // SetBackgroundBlur selects desired background blur option.
 func (vcTray VCTray) SetBackgroundBlur(blurLevel BackgroundBlurLevel) action.Action {
 	switch blurLevel {
 	case BackgroundBlurLight:
-		return vcTray.ui.DoDefault(bgBlurLightButton)
+		return vcTray.DoDefaultBgBlurButton(bgBlurLightButton)
 	case BackgroundBlurFull:
-		return vcTray.ui.DoDefault(bgBlurFullButton)
+		return vcTray.DoDefaultBgBlurButton(bgBlurFullButton)
 	case BackgroundBlurOff:
-		return vcTray.ui.DoDefault(bgBlurOffButton)
+		return vcTray.DoDefaultBgBlurButton(bgBlurOffButton)
 	case BackgroundBlurImage:
 		return uiauto.Combine("ApplyBackgroundReplaceFromUi",
 			// TODO(b/340352012):remove the sleep after the bug is fixed.
@@ -153,7 +169,7 @@ func (vcTray VCTray) SetBackgroundBlur(blurLevel BackgroundBlurLevel) action.Act
 			// in the background. Note that we can't wait for the
 			// firstBackgroundImageButton because they are hidden after loaded.
 			uiauto.Sleep(time.Second),
-			vcTray.ui.DoDefault(bgBlurImageButton),
+			vcTray.DoDefaultBgBlurButton(bgBlurImageButton),
 			vcTray.ui.DoDefault(firstBackgroundImageButton),
 		)
 	default:
@@ -293,7 +309,7 @@ func (vcTray VCTray) ReturnToAppForWindow(appName string, tconn *chrome.TestConn
 // OpenVcBackgroundApp clicks on the Create with AI button and opens the VcBackgroundApp.
 func (vcTray VCTray) OpenVcBackgroundApp() action.Action {
 	actionsToPerform := []action.Action{vcTray.ExpandPanel}
-	actionsToPerform = append(actionsToPerform, vcTray.ui.DoDefault(bgBlurImageButton))
+	actionsToPerform = append(actionsToPerform, vcTray.DoDefaultBgBlurButton(bgBlurImageButton))
 	actionsToPerform = append(actionsToPerform, vcTray.ui.DoDefault(createwWithAiButton))
 	return uiauto.Combine("OpenVcBackgroundApp",
 		actionsToPerform...,
