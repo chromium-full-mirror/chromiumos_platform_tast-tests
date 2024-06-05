@@ -502,10 +502,10 @@ func (p *Proxy) SeparatedOutputCommand(ctx context.Context, asRoot bool, name st
 func (p *Proxy) InputCommand(ctx context.Context, asRoot bool, stdin io.Reader, name string, args ...string) error {
 	if p.isLocal() {
 		if p.isDockerized() {
-			_, _, err := p.dockerExec(ctx, stdin, name, args...)
-			if err != nil {
-				return err
-			}
+			stdout, stderr, err := p.dockerExec(ctx, stdin, name, args...)
+			testing.ContextLog(ctx, "Stdout: ", string(stdout))
+			testing.ContextLog(ctx, "Stderr: ", string(stderr))
+			return err
 		}
 		if asRoot {
 			sudoargs := append([]string{name}, args...)
