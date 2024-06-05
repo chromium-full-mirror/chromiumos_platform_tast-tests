@@ -27,7 +27,8 @@ func init() {
 		},
 		// ChromeOS > Platform > Services > Fingerprint
 		BugComponent: "b:782045",
-		Attr:         []string{"group:mainline", "group:fingerprint-cq", "group:cq-medium"},
+		// This test is fingerprint-agnostic so it can run in general mainline suites.
+		Attr: []string{"group:mainline", "group:fingerprint-cq", "group:cq-medium"},
 		// Note that hwdep for fingerprint relies on cros-config.
 		// We omit any dependencies on hwdep fingerprint so that we can detect
 		// issues where cros-config fails to mention fingerprint support.
