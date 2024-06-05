@@ -26,8 +26,13 @@ const (
 	dbusPath      = "/org/chromium/OobeConfigRestore"
 	dbusInterface = "org.chromium.OobeConfigRestore"
 
-	flexConfigDirPath  = "/mnt/stateful_partition/unencrypted/flex_config"
-	flexConfigFilePath = "/mnt/stateful_partition/unencrypted/flex_config/config.json"
+	flexConfigInitialDirPath  = "/mnt/stateful_partition/unencrypted/flex_config"
+	flexConfigInitialFilePath = "/mnt/stateful_partition/unencrypted/flex_config/config.json"
+	// Path that flex_config will be in after moved to encrypted stateful partition (ESP)
+	// on oobe_config_restore startup.
+	flexConfigESPDirPath  = "/var/lib/oobe_config_restore/flex_config"
+	flexConfigESPFilePath = "/var/lib/oobe_config_restore/flex_config/config.json"
+
 	flexConfigJSONData = "{ \"enrollmentToken\" : \"test-enrollment-token\" }"
 
 	oobeConfigRestoreUID = 20121
@@ -60,26 +65,48 @@ func FlexConfigDbusSmoke(ctx context.Context, s *testing.State) {
 		s.Fatal("Failure when checking that oobe_config_restore is running: ", err)
 	}
 
-	defer cleanUpFlexConfigDir(cleanUpCtx, s)
+	defer func() {
+		s.Log("Cleaning up Flex config dirs")
+		if err := cleanUpFlexConfigDirs(cleanUpCtx); err != nil {
+			s.Error("Failed to clean up Flex config dirs: ", err)
+		}
+	}()
 
 	s.Log("Seeding flex config JSON")
-	if err := os.Mkdir(flexConfigDirPath, 0777); err != nil {
-		s.Fatalf("Failed to create %s directory: %v", flexConfigDirPath, err)
+	if err := os.Mkdir(flexConfigInitialDirPath, 0740); err != nil {
+		s.Fatalf("Failed to create %s directory: %v", flexConfigInitialDirPath, err)
 	}
-	if err := os.WriteFile(flexConfigFilePath, []byte(flexConfigJSONData), 0777); err != nil {
-		s.Fatalf("Failed to create %s: %v", flexConfigFilePath, err)
+	if err := os.WriteFile(flexConfigInitialFilePath, []byte(flexConfigJSONData), 0640); err != nil {
+		s.Fatalf("Failed to create %s: %v", flexConfigInitialFilePath, err)
 	}
-	if err := os.Chown(flexConfigFilePath, oobeConfigRestoreUID, oobeConfigRestoreGID); err != nil {
-		s.Fatalf("Failed to chown %s: %v", flexConfigFilePath, err)
+	if err := os.Chown(flexConfigInitialFilePath, oobeConfigRestoreUID, oobeConfigRestoreGID); err != nil {
+		s.Fatalf("Failed to chown %s: %v", flexConfigInitialFilePath, err)
 	}
-	if err := os.Chown(flexConfigDirPath, oobeConfigRestoreUID, oobeConfigRestoreGID); err != nil {
-		s.Fatalf("Failed to chown %s: %v", flexConfigDirPath, err)
+	if err := os.Chown(flexConfigInitialDirPath, oobeConfigRestoreUID, oobeConfigRestoreGID); err != nil {
+		s.Fatalf("Failed to chown %s: %v", flexConfigInitialDirPath, err)
 	}
 
 	// Have to restart job after creating flex_config files as upstart config
 	// conditionally bind-mounts the flex_config dir only if it's present.
 	if err := upstart.RestartJob(ctx, "oobe_config_restore"); err != nil {
 		s.Fatal("Failed to restart oobe_config_restore daemon: ", err)
+	}
+
+	// Verify flex_config has been migrated to encrypted stateful partition after
+	// oobe_config_restore restart.
+	exists, err := pathExists(flexConfigInitialFilePath)
+	if err != nil {
+		s.Fatal("Failed to check existence of Flex config file in unencrypted stateful partition: ", err)
+	}
+	if exists {
+		s.Fatal("Flex config has not been deleted from unencrypted stateful partition")
+	}
+	exists, err = pathExists(flexConfigESPFilePath)
+	if err != nil {
+		s.Fatal("Failed to check existence of Flex config file in encrypted stateful partition: ", err)
+	}
+	if !exists {
+		s.Fatal("Flex config has not been moved to encrypted stateful partition")
 	}
 
 	_, obj, err := dbusutil.Connect(ctx, dbusName, dbus.ObjectPath(dbusPath))
@@ -111,14 +138,12 @@ func FlexConfigDbusSmoke(ctx context.Context, s *testing.State) {
 	}
 
 	// Verify directly via file system that the config file is deleted.
-	// TODO(b/324093179): Update this check to new location once token is moved
-	// to encrypted stateful.
-	_, err = os.Stat(flexConfigFilePath)
-	if os.IsExist(err) {
-		s.Fatal("Flex config still exists after calling DeleteFlexConfig")
+	exists, err = pathExists(flexConfigESPFilePath)
+	if err != nil {
+		s.Fatal("Failed to check existence of Flex config file in encrypted stateful partition: ", err)
 	}
-	if err != nil && !os.IsNotExist(err) {
-		s.Fatal("Unexpected error when trying to stat Flex config file: ", err)
+	if exists {
+		s.Fatal("Flex config still exists after calling DeleteFlexConfig")
 	}
 
 	s.Log("Calling DeleteFlexConfig DBus method again to test for FileNotFound response error")
@@ -149,13 +174,21 @@ func deleteFlexConfig(ctx context.Context, obj dbus.BusObject) error {
 	return err
 }
 
-// cleanUpFlexConfigDir ensures the flex config files are deleted during cleanup.
-//
-// TODO(b/324093179): Update this to encrypted stateful partition path, once
-// config is moved there.
-func cleanUpFlexConfigDir(ctx context.Context, s *testing.State) {
-	s.Log("Cleaning up Flex config dir")
-	if err := os.RemoveAll(flexConfigDirPath); err != nil {
-		s.Fatal("Failed to delete Flex config dir: ", err)
+func pathExists(path string) (bool, error) {
+	_, err := os.Stat(path)
+	if err != nil && !os.IsNotExist(err) {
+		return false, errors.Wrapf(err, "unexpected error when trying to stat %s", path)
 	}
+	return err == nil, nil
+}
+
+// cleanUpFlexConfigDirs ensures the flex config files are deleted during cleanup.
+func cleanUpFlexConfigDirs(ctx context.Context) error {
+	if err := os.RemoveAll(flexConfigInitialDirPath); err != nil {
+		return errors.Wrapf(err, "failed to delete Flex config dir %s", flexConfigInitialDirPath)
+	}
+	if err := os.RemoveAll(flexConfigESPDirPath); err != nil {
+		return errors.Wrapf(err, "failed to delete Flex config dir %s", flexConfigESPDirPath)
+	}
+	return nil
 }

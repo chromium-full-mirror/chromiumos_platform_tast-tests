@@ -15,15 +15,21 @@ import (
 	"go.chromium.org/tast-tests/cros/common/tape"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/remote/dutfs"
+	"go.chromium.org/tast-tests/cros/services/cros/platform"
 	ps "go.chromium.org/tast-tests/cros/services/cros/policy"
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
 )
 
 const (
-	flexConfigDirPath  = "/mnt/stateful_partition/unencrypted/flex_config"
-	flexConfigFilePath = "/mnt/stateful_partition/unencrypted/flex_config/config.json"
+	flexConfigInitialDirPath  = "/mnt/stateful_partition/unencrypted/flex_config"
+	flexConfigInitialFilePath = "/mnt/stateful_partition/unencrypted/flex_config/config.json"
+	// Path that flex_config will be in after moved to encrypted stateful partition (ESP)
+	// on oobe_config_restore startup.
+	flexConfigESPDirPath  = "/var/lib/oobe_config_restore/flex_config"
+	flexConfigESPFilePath = "/var/lib/oobe_config_restore/flex_config/config.json"
 
 	enrollmentTokenVarCEU = "policy.TokenBasedEnrollment.enrollment_token"
 
@@ -59,6 +65,7 @@ func init() {
 			"tast.cros.policy.PolicyService",
 			dutfs.ServiceName,
 			"tast.cros.tape.Service",
+			"tast.cros.platform.UpstartService",
 		},
 		VarDeps: []string{enrollmentTokenVarCEU, tape.ServiceAccountVar, "ui.signinProfileTestExtensionManifestKey"},
 		Params: []testing.Param{
@@ -87,22 +94,27 @@ func TokenBasedEnrollment(ctx context.Context, s *testing.State) {
 	defer cl.Close(ctx)
 
 	fs := dutfs.NewClient(cl.Conn)
-	defer cleanUpFlexConfigDir(cleanupCtx, s, fs)
+	defer func() {
+		s.Log("Cleaning up Flex config dirs")
+		if err := cleanUpFlexConfigDirs(cleanupCtx, fs); err != nil {
+			s.Error("Failed to clean up Flex config dirs: ", err)
+		}
+	}()
 
 	// Create Flex config dir and write enrollmentToken JSON to config file within.
-	if err := fs.MkDir(ctx, flexConfigDirPath, 0740); err != nil {
-		s.Fatalf("Failed to create %s directory: %v", flexConfigDirPath, err)
+	if err := fs.MkDir(ctx, flexConfigInitialDirPath, 0740); err != nil {
+		s.Fatalf("Failed to create %s directory: %v", flexConfigInitialDirPath, err)
 	}
 	enrollmentToken := s.RequiredVar(params.enrollmentTokenVar)
 	oobeConfigJSON := fmt.Sprintf("{ \"enrollmentToken\": \"%s\" }", enrollmentToken)
-	if err := fs.WriteFile(ctx, flexConfigFilePath, []byte(oobeConfigJSON), 0640); err != nil {
-		s.Fatalf("Failed to create %s file: %v", flexConfigFilePath, err)
+	if err := fs.WriteFile(ctx, flexConfigInitialFilePath, []byte(oobeConfigJSON), 0640); err != nil {
+		s.Fatalf("Failed to create %s file: %v", flexConfigInitialFilePath, err)
 	}
 
 	// Chown Flex config dir so oobe_config_restore daemon can read/write it.
-	chownArgs := []string{"-R", oobeConfigRestoreUID + ":" + oobeConfigRestoreGID, flexConfigDirPath}
+	chownArgs := []string{"-R", oobeConfigRestoreUID + ":" + oobeConfigRestoreGID, flexConfigInitialDirPath}
 	if err := s.DUT().Conn().CommandContext(ctx, "chown", chownArgs...).Run(testexec.DumpLogOnError); err != nil {
-		s.Fatalf("Failed to chown %s and its contents: %v", flexConfigDirPath, err)
+		s.Fatalf("Failed to chown %s and its contents: %v", flexConfigInitialDirPath, err)
 	}
 
 	tapeClient, err := tape.NewClient(ctx, []byte(s.RequiredVar(tape.ServiceAccountVar)))
@@ -115,8 +127,31 @@ func TokenBasedEnrollment(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	policyClient := ps.NewPolicyServiceClient(cl.Conn)
+	// Have to restart job after creating flex_config files as upstart config conditionally
+	// bind-mounts the flex_config dir only if it's present.
+	upstartService := platform.NewUpstartServiceClient(cl.Conn)
+	if _, err := upstartService.RestartJob(ctx, &platform.RestartJobRequest{JobName: "oobe_config_restore"}); err != nil {
+		s.Fatal("Failed to restart oobe_config_restore daemon: ", err)
+	}
 
+	// Verify flex_config has been migrated to encrypted stateful partition after
+	// oobe_config_restore restart.
+	exists, err := pathExists(ctx, fs, flexConfigInitialFilePath)
+	if err != nil {
+		s.Fatal("Failed to check existence of Flex config file in unencrypted stateful partition: ", err)
+	}
+	if exists {
+		s.Fatal("Flex config has not been deleted from unencrypted stateful partition")
+	}
+	exists, err = pathExists(ctx, fs, flexConfigESPFilePath)
+	if err != nil {
+		s.Fatal("Failed to check existence of Flex config file in encrypted stateful partition: ", err)
+	}
+	if !exists {
+		s.Fatal("Flex config has not been moved to encrypted stateful partition")
+	}
+
+	policyClient := ps.NewPolicyServiceClient(cl.Conn)
 	if _, err := policyClient.TokenBasedEnrollUsingChrome(ctx, &ps.TokenBasedEnrollUsingChromeRequest{
 		DmserverURL: params.dmServerURL,
 		ManifestKey: s.RequiredVar("ui.signinProfileTestExtensionManifestKey"),
@@ -124,18 +159,29 @@ func TokenBasedEnrollment(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to enroll using enrollment token: ", err)
 	}
 
-	_, err = os.Stat(flexConfigFilePath)
-	if os.IsExist(err) {
-		s.Fatal("Flex config has not been cleaned up after enrollment")
+	exists, err = pathExists(ctx, fs, flexConfigESPFilePath)
+	if err != nil {
+		s.Fatal("Failed to check existence of Flex config file in encrypted stateful partition: ", err)
 	}
-	if err != nil && !os.IsNotExist(err) {
-		s.Fatal("Unexpected error when trying to stat Flex config file: ", err)
+	if exists {
+		s.Fatal("Flex config was not cleaned up after enrollment")
 	}
 }
 
-func cleanUpFlexConfigDir(ctx context.Context, s *testing.State, fs *dutfs.Client) {
-	s.Log("Cleaning up Flex config dir")
-	if err := fs.RemoveAll(ctx, flexConfigDirPath); err != nil {
-		s.Fatal("Failed to delete Flex config dir: ", err)
+func cleanUpFlexConfigDirs(ctx context.Context, fs *dutfs.Client) error {
+	if err := fs.RemoveAll(ctx, flexConfigInitialDirPath); err != nil {
+		return errors.Wrapf(err, "failed to delete %s directory", flexConfigInitialDirPath)
 	}
+	if err := fs.RemoveAll(ctx, flexConfigESPDirPath); err != nil {
+		return errors.Wrapf(err, "failed to delete %s directory", flexConfigESPDirPath)
+	}
+	return nil
+}
+
+func pathExists(ctx context.Context, fs *dutfs.Client, path string) (bool, error) {
+	_, err := fs.Stat(ctx, path)
+	if err != nil && !os.IsNotExist(err) {
+		return false, errors.Wrapf(err, "unexpected error when trying to stat %s", path)
+	}
+	return err == nil, nil
 }
