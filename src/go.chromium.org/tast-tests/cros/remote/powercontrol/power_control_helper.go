@@ -62,6 +62,19 @@ func IsPrevSleepStateAvailable(ctx context.Context, dut *dut.DUT) (bool, error) 
 // only SoC that output prev_sleep_state from cbmem - See b/252884546#6 for
 // the details.
 func ValidatePrevSleepState(ctx context.Context, dut *dut.DUT, sleepStateValue int) error {
+	// Command to check if UFS controller is disabled.
+	const ufs_cmd = "cbmem -c | grep -i 'Disabling UFS'"
+	out_ufs, err_ufs := dut.Conn().CommandContext(ctx, "sh", "-c", ufs_cmd).Output()
+	if err_ufs != nil {
+		return errors.Wrapf(err_ufs, "failed to execute %q command", ufs_cmd)
+	}
+	got_ufs := strings.TrimSpace(string(out_ufs))
+	want_ufs := fmt.Sprintf("Disabling UFS")
+	if strings.Contains(got_ufs,want_ufs) {
+		sleepStateValue = 0
+		testing.ContextLog(ctx,"Warm reboot has happened after cold reboot to disable UFS controller.")
+	}
+
 	// Command to check previous sleep state.
 	const cmd = "cbmem -c | grep 'prev_sleep_state' | tail -1"
 	return testing.Poll(ctx, func(ctx context.Context) error {
