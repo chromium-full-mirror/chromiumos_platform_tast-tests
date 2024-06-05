@@ -372,6 +372,7 @@ func (s *Servo) TriggerPDSoftReset(ctx context.Context) error {
 // TriggerPDHardReset triggers a USB-PD Hard Reset from the EC/DUT-side
 func (s *Servo) TriggerPDHardReset(ctx context.Context) error {
 	var pdStateBefore *PDState
+	var cmd string
 	// Because the pass criteria expects the PE state to be the same after
 	// the hard reset as before, make sure the PE/PD state is in either
 	// the SNK_READY or SRC_READY state
@@ -396,15 +397,27 @@ func (s *Servo) TriggerPDHardReset(ctx context.Context) error {
 		return errors.Wrap(err, "could not enable EC/DUT's PD debug logs")
 	}
 
-	// Initiate hard reset from DUT
-	err := s.RunECCommand(
-		ctx,
-		fmt.Sprintf("pd %d hard", s.dutPDInfo.activePort),
-	)
-	if err != nil {
-		return errors.Wrap(err, "could not trigger hard reset on EC/DUT")
+	switch s.dutPDInfo.version {
+	case TCPMv1, TCPMv2:
+		cmd = fmt.Sprintf("pd %d hard", s.dutPDInfo.activePort)
+	case PDC:
+		cmd = fmt.Sprintf("pdc conn_reset %d hard", s.dutPDInfo.activePort)
+	default:
+		panic("Unknown TCPM version")
 	}
 
+	testing.ContextLog(ctx, "Sending hard reset: ", cmd)
+
+	// Initiate hard reset from DUT
+	out, err := s.RunECCommandGetOutput(ctx, cmd, []string{reEcPdRecv})
+
+	if err != nil {
+		// PDC does not send receive message over console, so the err msg is always fail.
+		if s.dutPDInfo.version != PDC {
+			return errors.Wrap(err, "could not trigger hard reset on EC/DUT")
+		}
+	}
+	testing.ContextLog(ctx, "hard reset reply: ", out)
 	// Hard reset should result in the DUT port being in the same power/data
 	// role and PE state it was in prior to the hard reset being initiated.
 	// Poll for this condition, if not reached, then return an error
