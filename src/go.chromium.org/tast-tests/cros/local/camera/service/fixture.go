@@ -97,7 +97,7 @@ const (
 	restartServiceWithConnector
 )
 
-// The ServiceRequest only affect the operation in Setup() and Reset().
+// The ServiceRequest only affects the operation in SetUp() and Reset().
 // TearDown() always brings the service to running, which is the default state.
 type serviceFixture struct {
 	request serviceRequest
@@ -109,6 +109,12 @@ func (f *serviceFixture) SetUp(ctx context.Context, s *testing.FixtState) interf
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
+	// First, reset any modifications (e.g. bridge to FakeHAL) made in preceding tests.
+	if err := restartCameraService(ctx); err != nil {
+		s.Fatal("Failed to restart camera service: ", err)
+	}
+
+	// Then, put the stack in the requested state.
 	if isConnectorRequested(f.request) {
 		cr, err := chrome.New(ctx, chrome.NoLogin())
 		if err != nil {
