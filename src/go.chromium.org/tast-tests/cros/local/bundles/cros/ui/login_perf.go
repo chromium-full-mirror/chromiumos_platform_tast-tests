@@ -1032,7 +1032,7 @@ func testFunction(
 		cr,
 		tLoginConn,
 		nil,
-		cujrecorder.RecorderOptions{},
+		cujrecorder.RecorderOptions{RecordLoginEvents: true},
 	)
 	if err != nil {
 		s.Fatal("Failed to create a CUJ recorder: ", err)

@@ -458,6 +458,9 @@ type RecorderOptions struct {
 	DoNotChangeDPTF      bool
 	DoNotChangeAudio     bool
 	DoNotChangeBluetooth bool
+
+	// RecordLoginEvents, if set, will enable |loginEventRecorder| to collect login metrics.
+	RecordLoginEvents bool
 }
 
 var performanceCUJDischargeThreshold = 25.0
@@ -738,19 +741,20 @@ func (r *Recorder) Reset(ctx context.Context) error {
 			r.memInfoTracker = perfSrc.NewMemoryTracker(r.arc)
 		}
 
-		r.loginEventRecorder = perfSrc.NewLoginEventRecorder(tpsMetricPrefix)
-
 		r.profilerRecorder, err = perfSrc.NewProfilerRecorder(ctx, tpsMetricPrefix, 5*time.Second, outDir)
 		if err != nil {
 			return errors.Wrap(err, "failed to create ProfilerRecorder")
 		}
 
-		// loginEventRecorder.Prepare() may not be needed because we usually start
-		// Chrome with --keep-login-events-for-testing flag that will start
-		// LoginEventRecorder data collection automatically. But we do it here
-		// just in case Chrome was started with different parameters.
-		if err := r.loginEventRecorder.Prepare(ctx, r.tconn); err != nil {
-			return errors.Wrap(err, "failed to start recording login event data")
+		if r.options.RecordLoginEvents {
+			r.loginEventRecorder = perfSrc.NewLoginEventRecorder(tpsMetricPrefix)
+			// loginEventRecorder.Prepare() may not be needed because we usually start
+			// Chrome with --keep-login-events-for-testing flag that will start
+			// LoginEventRecorder data collection automatically. But we do it here
+			// just in case Chrome was started with different parameters.
+			if err := r.loginEventRecorder.Prepare(ctx, r.tconn); err != nil {
+				return errors.Wrap(err, "failed to start recording login event data")
+			}
 		}
 	}
 
