@@ -30,9 +30,9 @@ import (
 )
 
 type playH264AV1Params struct {
-	contentURL string
-	hdcpVer    string
-	drmLogMsg  string
+	proxy     string
+	hdcpVer   string
+	drmLogMsg string
 }
 
 func init() {
@@ -51,17 +51,17 @@ func init() {
 		Params: []testing.Param{{
 			Name: "h264_subsample",
 			Val: playH264AV1Params{
-				contentURL: urlconst.H264Fullsample,
-				hdcpVer:    "HDCP2.2",
-				drmLogMsg:  "HDCP2.2 is enabled. Type 0",
+				proxy:     urlconst.ProxyHDCPV2,
+				hdcpVer:   "HDCP2.2",
+				drmLogMsg: "HDCP2.2 is enabled. Type 1",
 			},
 			Timeout: 7 * time.Minute,
 		}, {
 			Name: "av1",
 			Val: playH264AV1Params{
-				contentURL: urlconst.H264Fullsample,
-				hdcpVer:    "HDCP1.4",
-				drmLogMsg:  "HDCP is enabled",
+				proxy:     urlconst.ProxyHDCPV1,
+				hdcpVer:   "HDCP1.4",
+				drmLogMsg: "HDCP2.2 is enabled. Type 0",
 			},
 			Timeout: 7 * time.Minute,
 		}},
@@ -100,7 +100,7 @@ func PlayH264AV1OnExternalDisplay(ctx context.Context, s *testing.State) {
 	const isExtDisplay = true
 	defer cuj.SwitchWindowToDisplay(cleanupCtx, tconn, kb, !isExtDisplay)(ctx)
 
-	videoConn, err := hdcputils.LaunchShakaPlayer(ctx, cr, testData.contentURL, urlconst.ProxyHDCPV1)
+	videoConn, err := hdcputils.LaunchShakaPlayer(ctx, cr, urlconst.H264Fullsample, testData.proxy)
 	if err != nil {
 		s.Fatal("Failed to launch shaka player: ", err)
 	}

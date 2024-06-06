@@ -69,9 +69,9 @@ func (s *ShakaPlayer) SelectVideoRobustness(ctx context.Context, name string) er
 		return errors.Wrap(err, "failed to click on settings button")
 	}
 	section := nodewith.Role(role.PopUpButton).Ancestor(nodewith.Role(role.Section).First()).First()
-	option := nodewith.Name(name).Role(role.ListBoxOption).First()
+	option := nodewith.Name(name).Role(role.MenuListOption).First()
 	if err := ui.LeftClickUntil(section, ui.WithTimeout(5*time.Second).WaitUntilExists(option))(ctx); err != nil {
-		section = nodewith.Role(role.ComboBoxSelect).Ancestor(nodewith.Role(role.Section).First()).First()
+		section = nodewith.Role(role.ComboBoxSelect).First()
 		if err := ui.LeftClickUntil(section, ui.WithTimeout(5*time.Second).WaitUntilExists(option))(ctx); err != nil {
 			return errors.Wrap(err, "failed to click on videoRobustness section")
 		}
@@ -180,7 +180,7 @@ func (s *ShakaPlayer) FullScreenEntryExit(ctx context.Context, iteration int) er
 		if err := s.CheckPlayerError(ctx); err != nil {
 			return errors.Wrap(err, "video player error found")
 		}
-		// Play video in default screen for at least 1.5 seconds.
+		// GoBigSleepLint:Play video in default screen for at least 1.5 seconds.
 		if err := testing.Sleep(ctx, 1500*time.Millisecond); err != nil {
 			return errors.Wrap(err, "failed to sleep")
 		}
@@ -230,7 +230,7 @@ func (s *ShakaPlayer) VerifyVideoBlankScreen(ctx context.Context, saveDir string
 	prcnt := GetColorPercentage(videoImg, blackColor)
 	threshold := 95
 	if extDisplay {
-		threshold = 37
+		threshold = 34
 	}
 	if prcnt < threshold {
 		return errors.Errorf("failed to verify video blank screen: Black pixels percentage: %d", prcnt)

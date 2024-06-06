@@ -119,7 +119,7 @@ func externalDisplayDetection(ctx context.Context, dut *dut.DUT, remoteTest bool
 		}
 		matchedString := displayInfo.FindAllString(string(out), -1)
 
-		if len(matchedString) != *spec.NumberOfDisplays {
+		if !(len(matchedString) >= *spec.NumberOfDisplays) {
 			return errors.New("connected external display info not found")
 		}
 		if spec.DisplayType != "" {

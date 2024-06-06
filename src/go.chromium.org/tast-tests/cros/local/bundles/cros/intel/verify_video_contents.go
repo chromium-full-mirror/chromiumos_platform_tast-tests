@@ -161,6 +161,7 @@ func init() {
 				typeVal:     "Type1=1",
 				displayType: usbutils.TypeCDP,
 				is4KDisplay: true,
+				isTBTDevice: true,
 				contentUrls: []string{urlconst.HEVCCBCS, urlconst.HEVCclip},
 				proxyURL:    urlconst.ProxyHDCPV2},
 			Timeout:   7 * time.Minute,
