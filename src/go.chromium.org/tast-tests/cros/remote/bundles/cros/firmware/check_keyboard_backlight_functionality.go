@@ -353,5 +353,13 @@ func getKeyForKbLightUpAndDown(h *firmware.Helper) (string, string) {
 			kbLightDown = "<f5>"
 		}
 	}
+	modelsWithShiftedShortcuts_f11_f12 := []string{"greenbayupoc"}
+	// Some models use <f12> and <f11> instead for adjusting the kb light.
+	for _, model := range modelsWithShiftedShortcuts_f11_f12 {
+		if h.Model == model {
+			kbLightUp = "<f12>"
+			kbLightDown = "<f11>"
+		}
+	}
 	return kbLightUp, kbLightDown
 }
