@@ -14,7 +14,9 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/android/ui"
+	arcCommon "go.chromium.org/tast-tests/cros/common/arc"
 	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/testexec"
@@ -87,7 +89,7 @@ func init() {
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "play_store"},
 		VarDeps: []string{
-			arcent.LoginPoolVar,
+			arcCommon.ManagedAccountPoolVarName,
 		},
 		Data: []string{"wallpaper_image.jpeg", "managed_device_policy_ca_cert.pem"},
 		SearchFlags: []*testing.StringPair{
@@ -540,7 +542,7 @@ func ManagedDevicePolicy(ctx context.Context, s *testing.State) {
 
 	policyName := s.Param().(string)
 
-	creds, err := credconfig.PickRandomCreds(s.RequiredVar(arcent.LoginPoolVar))
+	creds, err := credconfig.PickRandomCreds(dma.CredsFromPool(arcCommon.ManagedAccountPoolVarName))
 	if err != nil {
 		s.Fatal("Failed to get login creds: ", err)
 	}

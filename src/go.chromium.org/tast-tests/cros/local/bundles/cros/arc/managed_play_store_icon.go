@@ -8,12 +8,13 @@ import (
 	"context"
 	"time"
 
+	arcCommon "go.chromium.org/tast-tests/cros/common/arc"
 	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/arc"
-	"go.chromium.org/tast-tests/cros/local/arc/arcent"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -41,7 +42,7 @@ func init() {
 		SoftwareDeps: []string{"chrome", "no_tablet_form_factor"},
 		Attr:         []string{"group:mainline"},
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
-		VarDeps:      []string{arcent.LoginPoolVar},
+		VarDeps:      []string{arcCommon.ManagedAccountPoolVarName},
 		Params: []testing.Param{{
 			Name: "enabled",
 			Val: managedPlayStoreIconTestArgs{
@@ -154,7 +155,7 @@ func ManagedPlayStoreIcon(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	creds, err := credconfig.PickRandomCreds(s.RequiredVar(arcent.LoginPoolVar))
+	creds, err := credconfig.PickRandomCreds(dma.CredsFromPool(arcCommon.ManagedAccountPoolVarName))
 	if err != nil {
 		s.Fatal("Failed to get login creds: ", err)
 	}

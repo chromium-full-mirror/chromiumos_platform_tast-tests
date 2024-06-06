@@ -10,7 +10,9 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/android/ui"
+	arcCommon "go.chromium.org/tast-tests/cros/common/arc"
 	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	uiCommon "go.chromium.org/tast-tests/cros/common/ui"
@@ -44,7 +46,7 @@ func init() {
 		SoftwareDeps: []string{"chrome", "play_store"},
 		Timeout:      15 * time.Minute,
 		VarDeps: []string{
-			arcent.LoginPoolVar,
+			arcCommon.ManagedAccountPoolVarName,
 			uiCommon.GaiaPoolDefaultVarName,
 		},
 		SearchFlags: []*testing.StringPair{
@@ -54,7 +56,7 @@ func init() {
 			{
 				Name: "managed",
 				Val: accountRemoveTestArgs{
-					primaryAccountPool:   arcent.LoginPoolVar,
+					primaryAccountPool:   arcCommon.ManagedAccountPoolVarName,
 					secondaryAccountPool: uiCommon.GaiaPoolDefaultVarName,
 					optin:                false,
 				},
@@ -64,7 +66,7 @@ func init() {
 			{
 				Name: "managed_vm",
 				Val: accountRemoveTestArgs{
-					primaryAccountPool:   arcent.LoginPoolVar,
+					primaryAccountPool:   arcCommon.ManagedAccountPoolVarName,
 					secondaryAccountPool: uiCommon.GaiaPoolDefaultVarName,
 					optin:                false,
 				},
@@ -75,7 +77,7 @@ func init() {
 				Name: "unmanaged",
 				Val: accountRemoveTestArgs{
 					primaryAccountPool:   uiCommon.GaiaPoolDefaultVarName,
-					secondaryAccountPool: arcent.LoginPoolVar,
+					secondaryAccountPool: arcCommon.ManagedAccountPoolVarName,
 					optin:                true,
 				},
 				ExtraSoftwareDeps: []string{"android_container", "gaia"},
@@ -85,7 +87,7 @@ func init() {
 				Name: "unmanaged_vm",
 				Val: accountRemoveTestArgs{
 					primaryAccountPool:   uiCommon.GaiaPoolDefaultVarName,
-					secondaryAccountPool: arcent.LoginPoolVar,
+					secondaryAccountPool: arcCommon.ManagedAccountPoolVarName,
 					optin:                true,
 				},
 				ExtraSoftwareDeps: []string{"android_vm", "gaia"},
@@ -108,7 +110,7 @@ func AccountRemove(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	primary, err := credconfig.PickRandomCreds(s.RequiredVar(args.primaryAccountPool))
+	primary, err := credconfig.PickRandomCreds(dma.CredsFromPool(args.primaryAccountPool))
 	if err != nil {
 		s.Fatal("Failed to get login creds: ", err)
 	}
@@ -158,7 +160,7 @@ func AccountRemove(ctx context.Context, s *testing.State) {
 	}
 	defer d.Close(cleanupCtx)
 
-	secondary, err := credconfig.PickRandomCreds(s.RequiredVar(args.secondaryAccountPool))
+	secondary, err := credconfig.PickRandomCreds(dma.CredsFromPool(args.secondaryAccountPool))
 	if err != nil {
 		s.Fatal("Failed to get secondary user creds: ", err)
 	}

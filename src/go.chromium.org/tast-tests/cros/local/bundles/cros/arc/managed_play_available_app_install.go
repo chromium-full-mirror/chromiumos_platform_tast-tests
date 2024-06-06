@@ -8,7 +8,9 @@ import (
 	"context"
 	"time"
 
+	arcCommon "go.chromium.org/tast-tests/cros/common/arc"
 	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/arcent"
 	"go.chromium.org/tast-tests/cros/local/arc/playstore"
@@ -31,7 +33,7 @@ func init() {
 		SoftwareDeps: []string{"chrome", "play_store"},
 		Timeout:      15 * time.Minute,
 		VarDeps: []string{
-			arcent.LoginPoolVar,
+			arcCommon.ManagedAccountPoolVarName,
 		},
 		Params: []testing.Param{
 			{
@@ -82,7 +84,7 @@ func ManagedPlayAvailableAppInstall(ctx context.Context, s *testing.State) {
 		ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 		defer cancel()
 
-		creds, err := credconfig.PickRandomCreds(s.RequiredVar(arcent.LoginPoolVar))
+		creds, err := credconfig.PickRandomCreds(dma.CredsFromPool(arcCommon.ManagedAccountPoolVarName))
 		if err != nil {
 			return rl.Exit("get login creds", err)
 		}

@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"go.chromium.org/tast-tests/cros/common/accountmanager"
+	"go.chromium.org/tast-tests/cros/common/arc"
 	"go.chromium.org/tast-tests/cros/common/drivefs"
 	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast/core/testing"
@@ -26,6 +27,7 @@ func pools() (map[string]string, map[string]string) {
 		ui.CUJAccountPoolVarName:          ui.GaiaDMAPoolDefaultValue(),
 		drivefs.AccountPoolVarName:        ui.GaiaDMAPoolDefaultValue(),
 		accountmanager.AccountPoolVarName: ui.GaiaDMAPoolDefaultValue(),
+		arc.ManagedAccountPoolVarName:     arc.ManagedDMAAccountPoolValue(),
 	}
 
 	var regularPools = map[string]string{
@@ -33,6 +35,7 @@ func pools() (map[string]string, map[string]string) {
 		ui.CUJAccountPoolVarName:          ui.CUJAccountPoolValue(),
 		drivefs.AccountPoolVarName:        drivefs.AccountPoolValue(),
 		accountmanager.AccountPoolVarName: accountmanager.AccountPoolValue(),
+		arc.ManagedAccountPoolVarName:     arc.ManagedAccountPoolValue(),
 	}
 
 	return dmaPools, regularPools

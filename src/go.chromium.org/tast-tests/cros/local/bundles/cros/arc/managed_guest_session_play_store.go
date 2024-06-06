@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	arcCommon "go.chromium.org/tast-tests/cros/common/arc"
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
@@ -38,7 +39,7 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 1*time.Minute,
 		VarDeps: []string{
-			arcent.LoginPoolVar,
+			arcCommon.ManagedAccountPoolVarName,
 		},
 		Fixture: fixture.FakeDMSEnrolled,
 		SearchFlags: []*testing.StringPair{

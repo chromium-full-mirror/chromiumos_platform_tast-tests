@@ -12,7 +12,9 @@ import (
 	"strings"
 	"time"
 
+	arcCommon "go.chromium.org/tast-tests/cros/common/arc"
 	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
@@ -47,7 +49,7 @@ func init() {
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      arcInstallLoggingTestTimeout,
-		VarDeps:      []string{tape.ServiceAccountVar, arcent.LoginPoolVar},
+		VarDeps:      []string{tape.ServiceAccountVar, arcCommon.ManagedAccountPoolVarName},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.ArcEnabled{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.ArcAppInstallEventLoggingEnabled{}, pci.VerifiedFunctionalityOS),
@@ -198,7 +200,7 @@ func ManagedAppInstallLogging(ctx context.Context, s *testing.State) {
 	}
 
 	if err := testing.Poll(ctx, func(ctx context.Context) (retErr error) {
-		creds, err := credconfig.PickRandomCreds(s.RequiredVar(arcent.LoginPoolVar))
+		creds, err := credconfig.PickRandomCreds(dma.CredsFromPool(arcCommon.ManagedAccountPoolVarName))
 		if err != nil {
 			return rl.Exit("get login creds", err)
 		}

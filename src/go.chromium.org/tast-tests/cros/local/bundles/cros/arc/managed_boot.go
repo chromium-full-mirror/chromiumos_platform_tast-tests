@@ -8,11 +8,12 @@ import (
 	"context"
 	"time"
 
+	arcCommon "go.chromium.org/tast-tests/cros/common/arc"
 	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/local/arc"
-	"go.chromium.org/tast-tests/cros/local/arc/arcent"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast-tests/cros/local/retry"
@@ -37,7 +38,7 @@ func init() {
 		SoftwareDeps: []string{"chrome", "play_store"},
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		VarDeps: []string{
-			arcent.LoginPoolVar,
+			arcCommon.ManagedAccountPoolVarName,
 		},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.ArcEnabled{}, pci.VerifiedFunctionalityOS),
@@ -118,7 +119,7 @@ func ManagedBoot(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	if err := testing.Poll(ctx, func(ctx context.Context) (retErr error) {
-		creds, err := credconfig.PickRandomCreds(s.RequiredVar(arcent.LoginPoolVar))
+		creds, err := credconfig.PickRandomCreds(dma.CredsFromPool(arcCommon.ManagedAccountPoolVarName))
 		if err != nil {
 			return rl.Exit("get login creds", err)
 		}

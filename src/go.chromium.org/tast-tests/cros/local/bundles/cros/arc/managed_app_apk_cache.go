@@ -13,7 +13,9 @@ import (
 	"strings"
 	"time"
 
+	arcCommon "go.chromium.org/tast-tests/cros/common/arc"
 	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
@@ -48,7 +50,7 @@ func init() {
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "play_store"},
 		Timeout:      arcApkCacheTestTimeout,
-		VarDeps:      []string{tape.ServiceAccountVar, arcent.LoginPoolVar},
+		VarDeps:      []string{tape.ServiceAccountVar, arcCommon.ManagedAccountPoolVarName},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.ArcEnabled{}, pci.VerifiedFunctionalityOS),
 		},
@@ -100,7 +102,7 @@ func ManagedAppApkCache(ctx context.Context, s *testing.State) {
 			return rl.Retry("delete apk cache directory: ", err)
 		}
 
-		creds, err := credconfig.PickNRandomCreds(s.RequiredVar(arcent.LoginPoolVar), 2 /*n*/)
+		creds, err := credconfig.PickNRandomCreds(dma.CredsFromPool(arcCommon.ManagedAccountPoolVarName), 2 /*n*/)
 		if err != nil {
 			return rl.Exit("get login creds", err)
 		}

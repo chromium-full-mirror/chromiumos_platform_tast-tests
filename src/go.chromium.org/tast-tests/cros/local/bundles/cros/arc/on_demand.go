@@ -8,7 +8,9 @@ import (
 	"context"
 	"time"
 
+	arcCommon "go.chromium.org/tast-tests/cros/common/arc"
 	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/apps"
@@ -33,7 +35,7 @@ func init() {
 		// ChromeOS > Software > ARC++ > ARCVM
 		BugComponent: "b:883059",
 		Attr:         []string{"group:mainline", "group:arc-functional", "group:hw_agnostic", "informational"},
-		VarDeps:      []string{"arc.managedAccountPool"},
+		VarDeps:      []string{arcCommon.ManagedAccountPoolVarName},
 		SoftwareDeps: []string{"chrome", "android_vm"},
 		Timeout:      (chrome.ManagedUserLoginTimeout + arc.BootTimeout) * 2,
 	})
@@ -127,7 +129,7 @@ func performRegularBoot(ctx context.Context, outDir string, creds chrome.Creds, 
 func OnDemand(ctx context.Context, s *testing.State) {
 	// Run this test as a managed user.
 	// ARC on Demand is enabled only for managed users. See go/arc-on-demand-v1.
-	creds, err := credconfig.PickRandomCreds(s.RequiredVar("arc.managedAccountPool"))
+	creds, err := credconfig.PickRandomCreds(dma.CredsFromPool(arcCommon.ManagedAccountPoolVarName))
 	if err != nil {
 		s.Fatal("Failed to get credentials: ", err)
 	}

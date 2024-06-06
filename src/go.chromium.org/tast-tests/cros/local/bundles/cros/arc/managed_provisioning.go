@@ -8,7 +8,9 @@ import (
 	"context"
 	"time"
 
+	arcCommon "go.chromium.org/tast-tests/cros/common/arc"
 	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/local/arc"
@@ -35,7 +37,7 @@ func init() {
 		BugComponent: "b:1487630",
 		Attr:         []string{"group:mainline", "group:arc-functional"},
 		VarDeps: []string{
-			arcent.LoginPoolVar,
+			arcCommon.ManagedAccountPoolVarName,
 		},
 		SoftwareDeps: []string{
 			"chrome",
@@ -121,16 +123,16 @@ func ManagedProvisioning(ctx context.Context, s *testing.State) {
 
 	arcPolicy := &policy.ArcPolicy{
 		Val: &policy.ArcPolicyValue{
-			Applications:              []policy.Application{},
-			PlayStoreMode:             arcent.PlayStoreModeAllowList,
-			DpsInteractionsDisabled:   true,
+			Applications:            []policy.Application{},
+			PlayStoreMode:           arcent.PlayStoreModeAllowList,
+			DpsInteractionsDisabled: true,
 		},
 	}
 	arcEnabledPolicy := &policy.ArcEnabled{Val: true, Stat: policy.StatusSet}
 	policies := []policy.Policy{arcEnabledPolicy, arcPolicy}
 
 	if err := testing.Poll(ctx, func(ctx context.Context) (retErr error) {
-		creds, err := credconfig.PickRandomCreds(s.RequiredVar(arcent.LoginPoolVar))
+		creds, err := credconfig.PickRandomCreds(dma.CredsFromPool(arcCommon.ManagedAccountPoolVarName))
 		if err != nil {
 			return rl.Exit("get login creds", err)
 		}

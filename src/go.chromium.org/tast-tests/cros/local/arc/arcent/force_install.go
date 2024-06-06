@@ -25,9 +25,6 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-// LoginPoolVar is the account pool information.
-const LoginPoolVar = "arc.managedAccountPool"
-
 // InstallTypeForceInstalled is the install type for app that is force-installed.
 const InstallTypeForceInstalled = "FORCE_INSTALLED"
 
@@ -166,9 +163,9 @@ func CreateArcPolicyWithApps(packages []string, installType, playStoreMode strin
 
 	arcPolicy := &policy.ArcPolicy{
 		Val: &policy.ArcPolicyValue{
-			Applications:              appsInPolicy,
-			PlayStoreMode:             playStoreMode,
-			DpsInteractionsDisabled:   true,
+			Applications:            appsInPolicy,
+			PlayStoreMode:           playStoreMode,
+			DpsInteractionsDisabled: true,
 		},
 	}
 
