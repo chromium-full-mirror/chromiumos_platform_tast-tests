@@ -114,8 +114,6 @@ func (cfg *Config) Opts() ([]chrome.Option, error) {
 	}
 	opts = append(opts, chrome.LacrosExtraArgs(args...))
 
-	opts = append(opts, chrome.ExtraArgs("--disable-disallow-lacros")) // Forcibly allow to enable lacros.
-
 	if cfg.enableHDR {
 		// Enable the piecewise_HDR transfer function currently used for HDR rendering in chrome.
 		opts = append(opts, chrome.EnableFeatures("UseHDRTransferFunction"))
