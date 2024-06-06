@@ -29,6 +29,7 @@ type powerG3Params struct {
 	PowerStateTimeout time.Duration
 	RemovePower       bool
 	SetRecMode        bool
+	CheckUSB          bool
 }
 
 func init() {
@@ -69,6 +70,17 @@ func init() {
 				Val: powerG3Params{
 					PowerOffMethod: powerStateOff,
 				},
+				Fixture: fixture.NormalMode,
+			},
+			{
+				Name: "power_state_usb_plugged_in",
+				// TODO: When stable, change firmware_unstable to a different attr.
+				ExtraAttr: []string{"firmware_unstable", "firmware_usb"},
+				Val: powerG3Params{
+					PowerOffMethod: powerStateOff,
+					CheckUSB:       true,
+				},
+				Timeout: 120 * time.Minute,
 				Fixture: fixture.NormalMode,
 			},
 			{
@@ -116,6 +128,13 @@ func ECPowerG3(ctx context.Context, s *testing.State) {
 	}
 
 	tc := s.Param().(powerG3Params)
+
+	if tc.CheckUSB {
+		cs := s.CloudStorage()
+		if err := h.SetupUSBKey(ctx, cs); err != nil {
+			s.Fatal("USBKey not working: ", err)
+		}
+	}
 
 	if tc.RemovePower {
 		h.SetDUTPower(ctx, false)
@@ -174,6 +193,16 @@ func ECPowerG3(ctx context.Context, s *testing.State) {
 		testing.Sleep(ctx, 10*time.Second)
 		if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "G3"); err != nil {
 			s.Fatal("Failed to get G3 powerstate: ", err)
+		}
+		if tc.CheckUSB {
+			s.Log("Setting DFP mode")
+			if err := h.Servo.SetDUTPDDataRole(ctx, servo.DFP); err != nil {
+				s.Logf("Failed to set pd data role to DFP: %.400s", err)
+			}
+			s.Log("Inserting a valid USB to DUT")
+			if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
+				s.Fatal("Failed to set USBMux: ", err)
+			}
 		}
 		s.Log("Power DUT back on with power state on")
 		if err := h.Servo.SetPowerState(ctx, servo.PowerStateOn); err != nil {
