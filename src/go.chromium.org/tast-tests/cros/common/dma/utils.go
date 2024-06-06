@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/arc"
 	"go.chromium.org/tast-tests/cros/common/drivefs"
 	"go.chromium.org/tast-tests/cros/common/ui"
+	"go.chromium.org/tast-tests/cros/common/wallpaper"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -23,19 +24,21 @@ var dmaEnableVar = testing.RegisterVarString(
 
 func pools() (map[string]string, map[string]string) {
 	var dmaPools = map[string]string{
-		ui.GaiaPoolDefaultVarName:         ui.GaiaDMAPoolDefaultValue(),
-		ui.CUJAccountPoolVarName:          ui.GaiaDMAPoolDefaultValue(),
-		drivefs.AccountPoolVarName:        ui.GaiaDMAPoolDefaultValue(),
-		accountmanager.AccountPoolVarName: ui.GaiaDMAPoolDefaultValue(),
-		arc.ManagedAccountPoolVarName:     arc.ManagedDMAAccountPoolValue(),
+		ui.GaiaPoolDefaultVarName:                ui.GaiaDMAPoolDefaultValue(),
+		ui.CUJAccountPoolVarName:                 ui.GaiaDMAPoolDefaultValue(),
+		drivefs.AccountPoolVarName:               ui.GaiaDMAPoolDefaultValue(),
+		accountmanager.AccountPoolVarName:        ui.GaiaDMAPoolDefaultValue(),
+		arc.ManagedAccountPoolVarName:            arc.ManagedDMAAccountPoolValue(),
+		wallpaper.GooglePhotosAccountPoolVarName: wallpaper.GooglePhotosDMAAccountPoolValue(),
 	}
 
 	var regularPools = map[string]string{
-		ui.GaiaPoolDefaultVarName:         ui.GaiaPoolDefaultValue(),
-		ui.CUJAccountPoolVarName:          ui.CUJAccountPoolValue(),
-		drivefs.AccountPoolVarName:        drivefs.AccountPoolValue(),
-		accountmanager.AccountPoolVarName: accountmanager.AccountPoolValue(),
-		arc.ManagedAccountPoolVarName:     arc.ManagedAccountPoolValue(),
+		ui.GaiaPoolDefaultVarName:                ui.GaiaPoolDefaultValue(),
+		ui.CUJAccountPoolVarName:                 ui.CUJAccountPoolValue(),
+		drivefs.AccountPoolVarName:               drivefs.AccountPoolValue(),
+		accountmanager.AccountPoolVarName:        accountmanager.AccountPoolValue(),
+		arc.ManagedAccountPoolVarName:            arc.ManagedAccountPoolValue(),
+		wallpaper.GooglePhotosAccountPoolVarName: wallpaper.GooglePhotosAccountPoolValue(),
 	}
 
 	return dmaPools, regularPools

@@ -46,7 +46,7 @@ func init() {
 			Key:   "feature_id",
 			Value: "screenplay-5d88ff46-9f09-4e3c-aef2-df56852ead57",
 		}},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "gaia"},
 		Timeout:      5 * time.Minute,
 		Fixture:      "personalizationWithGooglePhotosWallpaper",
 		Params: []testing.Param{{

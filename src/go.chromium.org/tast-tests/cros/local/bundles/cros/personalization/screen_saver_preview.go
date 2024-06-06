@@ -36,7 +36,7 @@ func init() {
 			Key:   "feature_id",
 			Value: "screenplay-972ece72-afe4-413f-a9b1-709c815c7f59",
 		}},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "gaia"},
 		Timeout:      6 * time.Minute,
 		Fixture:      "personalizationScreenSaverClamshell",
 	})

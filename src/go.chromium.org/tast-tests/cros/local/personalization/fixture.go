@@ -7,6 +7,8 @@ package personalization
 import (
 	"context"
 
+	"go.chromium.org/tast-tests/cros/common/dma"
+	"go.chromium.org/tast-tests/cros/common/wallpaper"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 
@@ -132,15 +134,12 @@ func init() {
 		// is disabled to prevent flakiness caused by wallpaper cross device sync.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
-				chrome.GAIALoginPool(s.RequiredVar("wallpaper.googlePhotosAccountPool")),
+				chrome.GAIALoginPool(dma.CredsFromPool(wallpaper.GooglePhotosAccountPoolVarName)),
 				chrome.EnableFeatures("WallpaperGooglePhotosIntegration"),
 				chrome.EnableFeatures("WallpaperGooglePhotosSharedAlbums"),
 				chrome.ExtraArgs("--disable-sync"),
 			}, nil
 		}),
-		Vars: []string{
-			"wallpaper.googlePhotosAccountPool",
-		},
 		SetUpTimeout:    chrome.GAIALoginTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
@@ -174,16 +173,13 @@ func init() {
 		BugComponent: "b:1006527",
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
-				chrome.GAIALoginPool(s.RequiredVar("wallpaper.googlePhotosAccountPool")),
+				chrome.GAIALoginPool(dma.CredsFromPool(wallpaper.GooglePhotosAccountPoolVarName)),
 				getTimeOfDayOption(),
 			}, nil
 		}),
 		SetUpTimeout:    chrome.GAIALoginTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
-		Vars: []string{
-			"wallpaper.googlePhotosAccountPool",
-		},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "personalizationScreenSaverClamshell",

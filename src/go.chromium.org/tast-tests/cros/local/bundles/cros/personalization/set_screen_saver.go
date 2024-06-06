@@ -32,7 +32,7 @@ func init() {
 			Value: "screenplay-e92e2d70-5969-4405-9cdd-c3ecee573f81",
 		}},
 		VarDeps:      []string{"ambient.username", "ambient.password"},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "gaia"},
 		Timeout:      5 * time.Minute,
 		Fixture:      "personalizationScreenSaverClamshell",
 		Params: []testing.Param{
