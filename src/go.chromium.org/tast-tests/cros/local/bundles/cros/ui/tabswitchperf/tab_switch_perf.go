@@ -318,19 +318,24 @@ func testBody(ctx context.Context, test *tabSwitchVariables) error {
 		}
 		// Switch through tabs in a skip-order fashion.
 		// Note: when skipSize = N-1, then the skip-order is 1,1,1,1 ... N times
-		// Therefore i + skipSize + 1 % N holds when 0 <= skipSize < N-1
+		// And when skipSize >= N, it is effectively equal to skipSize % N.
+		// When skipSize = N, the skip-order will be 1,2,3,4 ... N.
 		skipSize := 0
 		i := 0
 		currentTab := 0
 		endTime := time.Now().Add(coreTestDuration/time.Duration(len(test.webPages)) + time.Second)
 		test.recorder.Annotate(ctx, "Start_tab_switching_"+data.name)
 		for time.Now().Before(endTime) {
+			// Only collect the tracing data at the very beginning (first web pages, first skip-order).
+			// Start and stop tracing at the beginning (i == 0) of the skip-order.
 			if index == 0 && i == 0 {
+				// Start tracing at the beginning of the skipSize 0.
 				if skipSize == 0 {
 					// See go/trace-in-cuj-tests about rules for tracing.
 					if err := test.recorder.StartTracing(ctx, test.outDir, test.perfettoConfigPath); err != nil {
 						return errors.Wrap(err, "failed to start tracing")
 					}
+					// Stop tracing at the beginning of the skipSize 1.
 				} else if skipSize == 1 {
 					if err := test.recorder.StopTracing(ctx); err != nil {
 						return errors.Wrap(err, "failed to stop tracing")
@@ -368,7 +373,7 @@ func testBody(ctx context.Context, test *tabSwitchVariables) error {
 			if i == len(conns)-1 {
 				i = 0
 				currentTab = 0
-				skipSize = (skipSize + 1) % len(conns)
+				skipSize++
 			} else {
 				i++
 			}
