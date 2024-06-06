@@ -153,7 +153,7 @@ func UIPerf(ctx context.Context, s *testing.State) {
 func createDirectoryListing(ctx context.Context, folderPath string, files int) error {
 	for i := 0; i < files; i++ {
 		filePath := filepath.Join(folderPath, fmt.Sprintf("File-%d.txt", i))
-		if err := ioutil.WriteFile(filePath, []byte("blah"), 0644); err != nil {
+		if err := ioutil.WriteFile(filePath, []byte("blah"), 0666); err != nil {
 			return errors.Wrapf(err, "failed to create file with path %q", filePath)
 		}
 	}
@@ -162,7 +162,7 @@ func createDirectoryListing(ctx context.Context, folderPath string, files int) e
 
 func testDirectoryListing(ctx context.Context, s *testing.State, files *filesapp.FilesApp, ew *input.KeyboardEventWriter, testCase, downloadsPath string, totalFiles int) error {
 	folderPath := filepath.Join(downloadsPath, testCase)
-	if err := os.MkdirAll(folderPath, 0644); err != nil {
+	if err := os.MkdirAll(folderPath, 0777); err != nil {
 		return errors.Wrapf(err, "failed to create directory %q", folderPath)
 	}
 	defer os.RemoveAll(folderPath)
@@ -196,7 +196,7 @@ func testDirectoryListing(ctx context.Context, s *testing.State, files *filesapp
 func testAvailableAppsListing(ctx context.Context, s *testing.State, files *filesapp.FilesApp, ew *input.KeyboardEventWriter, testCase, downloadsPath string, totalApps int) error {
 	const totalFiles = 100
 	folderPath := filepath.Join(downloadsPath, testCase)
-	if err := os.MkdirAll(folderPath, 0644); err != nil {
+	if err := os.MkdirAll(folderPath, 0777); err != nil {
 		return errors.Wrapf(err, "failed to create directory %q", folderPath)
 	}
 	defer os.RemoveAll(folderPath)
