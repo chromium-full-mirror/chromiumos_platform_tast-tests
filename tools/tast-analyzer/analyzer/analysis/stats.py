@@ -7,7 +7,7 @@ from analyzer.analysis import metric_sample
 from scipy import stats
 
 
-@dataclasses.dataclass(frozen=True, kw_only=True, order=True)
+@dataclasses.dataclass(kw_only=True, order=True)
 class MannWhitneyUResult:
     u: float
     """The U-statistic value."""

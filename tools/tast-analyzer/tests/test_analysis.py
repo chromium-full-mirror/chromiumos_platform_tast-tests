@@ -10,7 +10,6 @@ from analyzer.analysis import analyze_results
 from analyzer.analysis import metric_sample
 from analyzer.analysis import stats
 from analyzer.backend import tast_results_dir
-from analyzer.backend import test_result
 
 
 FILES_DIR: Path = Path(__file__).parent.absolute().joinpath("files")
@@ -175,3 +174,37 @@ class AnalysisTest(unittest.TestCase):
         better, worse = analysis_results.split_better_and_worse_by_mean(results)
         self.assertEqual(better, [better_result])
         self.assertEqual(worse, [worse_result])
+
+    def _make_analysis_result(
+        self, u: float, p: float
+    ) -> analysis_results.AnalysisResult:
+        placeholder = metric_sample.MetricSample(
+            test_name="placeholder",
+            metric_path="placeholder",
+            units="placeholder",
+            improvement_direction=metric_sample.ImprovementDirection.UP,
+            value_map={},
+        )
+        return analysis_results.AnalysisResult(
+            before_sample=placeholder,
+            after_sample=placeholder,
+            mwu_result=stats.MannWhitneyUResult(u=u, p=p),
+        )
+
+    def test_prune_results(self) -> None:
+        cfg = analysis_cfg.AnalysisCfg(
+            alpha=0.01, multiple_test_cfg=analysis_cfg.MultipleTestCfg.FWER
+        )
+        results = [
+            self._make_analysis_result(u=0.0, p=0.001),
+            self._make_analysis_result(u=0.0, p=0.002),
+            self._make_analysis_result(u=0.0, p=0.003),
+            self._make_analysis_result(u=0.0, p=0.004),
+            self._make_analysis_result(u=0.0, p=0.005),
+            self._make_analysis_result(u=0.0, p=0.006),
+        ]
+        pruned = analyze_results._prune_results(results, cfg)
+        self.assertEqual(len(pruned), 2)
+        # Check p-values were adjusted.
+        self.assertEqual(pruned[0].mwu_result.p, 0.006)
+        self.assertEqual(pruned[1].mwu_result.p, 0.01)

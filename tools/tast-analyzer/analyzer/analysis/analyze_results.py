@@ -2,6 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 from collections import defaultdict
+import copy
 import logging
 from pathlib import Path
 
@@ -9,6 +10,7 @@ from analyzer.analysis import analysis_cfg
 from analyzer.analysis import analysis_results
 from analyzer.analysis import metric_sample
 from analyzer.backend import test_result
+from statsmodels.stats import multitest
 
 
 def _load_metrics_from_results_dict(
@@ -61,6 +63,25 @@ def _load_metrics_from_results_dict(
     return metrics
 
 
+def _prune_results(
+    results: list[analysis_results.AnalysisResult],
+    cfg: analysis_cfg.AnalysisCfg,
+) -> list[analysis_results.AnalysisResult]:
+    """Prune results that are not significant."""
+    out_results = []
+    p_values = [r.mwu_result.p for r in results]
+    rejects, p_corrected, _, _ = multitest.multipletests(
+        p_values, alpha=cfg.alpha, method=cfg.multiple_test_cfg.scipy_name()
+    )
+    for r, reject, p in zip(results, rejects, p_corrected):
+        # Reject the null hypothesis (that they are the same).
+        if reject:
+            r = copy.deepcopy(r)
+            r.mwu_result.p = p
+            out_results.append(r)
+    return out_results
+
+
 def analyze_results(
     sample1_path: Path, sample2_path: Path, cfg: analysis_cfg.AnalysisCfg
 ) -> list[analysis_results.AnalysisResult]:
@@ -82,4 +103,4 @@ def analyze_results(
         after_samples=after_samples,
         metric_paths=metric_paths,
     )
-    return results
+    return _prune_results(results, cfg)
