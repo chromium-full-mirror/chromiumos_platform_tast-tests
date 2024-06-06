@@ -42,6 +42,7 @@ func init() {
 		Vars:         []string{"DockingID", "ExtDispID1", "ExtDispID2", "wwcbIPPowerIp", "newTestItem"},
 		ServiceDeps:  []string{"tast.cros.wwcb.DisplayService", "tast.cros.apps.AppsService", "tast.cros.browser.ChromeService"},
 		Data:         []string{"Capabilities.json"},
+		Timeout:      10 * time.Minute,
 		Params: []testing.Param{
 			{
 				Name:      "fast",
