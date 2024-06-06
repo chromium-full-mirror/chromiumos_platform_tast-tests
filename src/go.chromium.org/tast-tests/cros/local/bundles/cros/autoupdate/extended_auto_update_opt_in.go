@@ -56,7 +56,6 @@ func ExtendedAutoUpdateOptIn(ctx context.Context, s *testing.State) {
 	// Logs in with a fresh owner of the device. Only device owner can see the opt in UI.
 	chrome, err := chromepkg.New(
 		ctx,
-		chromepkg.ExtraArgs("--enable-features=ExtendedUpdatesOptInFeature"),
 	)
 	if err != nil {
 		s.Fatal("Chrome login failed: ", err)
@@ -92,7 +91,7 @@ func ExtendedAutoUpdateOptIn(ctx context.Context, s *testing.State) {
 	ui := uiauto.New(testConn)
 
 	// TODO(b/333670429) Update to use other identifiers instead of Name once we have accessibility labels.
-	extendedAutoUpdateText := nodewith.NameContaining("You can extend updates")
+	extendedAutoUpdateText := nodewith.NameContaining("Turn on extended security updates")
 	// Developer tools have the same button name, use first here as it's the only
 	// way to distinguish the two.
 	setUpButton := nodewith.Role(role.Button).Name("Set up").First()
