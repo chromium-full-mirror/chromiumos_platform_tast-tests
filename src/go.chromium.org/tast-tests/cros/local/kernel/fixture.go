@@ -112,13 +112,17 @@ func (i *schedRTFixture) SetUp(ctx context.Context, s *testing.FixtState) interf
 
 	for _, fairServer := range fairServers {
 		periodPath := fairServer + "/period"
-		if err := os.WriteFile(periodPath, []byte("50000000"), 0644); err != nil {
+		if err := os.WriteFile(periodPath, []byte("100000000"), 0644); err != nil {
 			s.Fatal("Failed to reset fair_server period: ", err)
 		}
 
 		runtimePath := fairServer + "/runtime"
-		if err := os.WriteFile(runtimePath, []byte("25000000"), 0644); err != nil {
+		if err := os.WriteFile(runtimePath, []byte("20000000"), 0644); err != nil {
 			s.Fatal("Failed to reset fair_server runtime: ", err)
+		}
+
+		if err := os.WriteFile(periodPath, []byte("25000000"), 0644); err != nil {
+			s.Fatal("Failed to reset fair_server period: ", err)
 		}
 	}
 
