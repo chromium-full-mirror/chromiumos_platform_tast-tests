@@ -7,6 +7,7 @@ package youtubemusic
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/android/ui"
@@ -80,10 +81,12 @@ func (yt *YouTubeMusic) Play(ctx context.Context, song *apputil.Media) error {
 		return err
 	}
 
+	// Matching the subtitle object by a pattern instead of the exact text, as the subtitle of the song contains the number of views.
+	subtitleRegex := fmt.Sprintf(`^%s .* plays$`, song.Subtitle)
 	if err := uiauto.Combine("search a new song to play",
 		yt.Search(song.Query),
 		apputil.FindAndClick(yt.Device.Object(ui.ID(songBtnObjID), ui.Text("Songs")), defaultUITimeout),
-		apputil.FindAndClick(yt.Device.Object(ui.ID(subtitleObjID), ui.Text(song.Subtitle)), defaultUITimeout), // Multiple songs with the same title might exist, hence, the subtitle is used.
+		apputil.FindAndClick(yt.Device.Object(ui.ID(subtitleObjID), ui.TextMatches(subtitleRegex)), defaultUITimeout),
 	)(ctx); err != nil {
 		return err
 	}
@@ -188,6 +191,7 @@ func (yt *YouTubeMusic) SkipPrompts(ctx context.Context) error {
 		{yt.Device.Object(ui.DescriptionStartsWith("SKIP")), "SKIP", false},
 		{yt.Device.Object(ui.Text("NO, THANKS")), "NO, THANKS", false},
 		{yt.Device.Object(ui.Text("NO THANKS")), "NO THANKS", false},
+		{yt.Device.Object(ui.Text("No thanks")), "No thanks", false},
 		{yt.Device.Object(ui.Description("NO THANKS")), "NO THANKS", false},
 		{yt.Device.Object(ui.Description("Close")), "Close", false},
 		{yt.Device.Object(ui.Text("NOT NOW")), "NOT NOW", false},

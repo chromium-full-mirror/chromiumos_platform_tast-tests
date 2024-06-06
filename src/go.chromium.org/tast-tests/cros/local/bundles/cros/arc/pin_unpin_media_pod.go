@@ -174,7 +174,7 @@ func PinUnpinMediaPod(ctx context.Context, s *testing.State) {
 	// Unpin media pod if it is pinned by default.
 	if err := uiauto.IfSuccessThen(
 		ui.WaitUntilExists(quicksettings.PinnedMediaControls),
-		quicksettings.UnpinMediaControlsPod(tconn),
+		quicksettings.UnpinMediaControlsPod(tconn, kb),
 	)(ctx); err != nil {
 		s.Fatal("Failed to ensure media controls pod is unpinned: ", err)
 	}
@@ -189,7 +189,7 @@ func PinUnpinMediaPod(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to pin and verify: ", err)
 	}
 
-	if err := unpinAndVerify(ctx, ui, tconn)(ctx); err != nil {
+	if err := unpinAndVerify(ctx, ui, tconn, kb)(ctx); err != nil {
 		s.Fatal("Failed to unpin and verify: ", err)
 	}
 
@@ -219,14 +219,14 @@ func focusOnAppWindowAndPlay(tconn *chrome.TestConn, pkgName string, player appu
 }
 
 // unpinAndVerify unpins media pod and verify it is appeared in quick settings.
-func unpinAndVerify(ctx context.Context, ui *uiauto.Context, tconn *chrome.TestConn) uiauto.Action {
+func unpinAndVerify(ctx context.Context, ui *uiauto.Context, tconn *chrome.TestConn, kb *input.KeyboardEventWriter) uiauto.Action {
 	dialogView := nodewith.Ancestor(quicksettings.MediaControlsDialog)
 
 	return uiauto.Combine("unpin and find media pod in quick settings",
 		ui.LeftClick(quicksettings.PinnedMediaControls),
-		ui.WaitUntilExists(dialogView.Role(role.ListItem).NameStartingWith(ytMusicVideo)),
-		ui.WaitUntilExists(dialogView.Role(role.ListItem).NameStartingWith(vlcVideoSubtitle)),
-		quicksettings.UnpinMediaControlsPod(tconn),
+		ui.WaitUntilExists(dialogView.Role(role.StaticText).NameStartingWith(ytMusicVideo)),
+		ui.WaitUntilExists(dialogView.Role(role.StaticText).NameStartingWith(vlcVideoSubtitle)),
+		quicksettings.UnpinMediaControlsPod(tconn, kb),
 		reopenQuickSettings(tconn),
 		ui.WaitUntilExists(quicksettings.MediaControlsPod()),
 	)

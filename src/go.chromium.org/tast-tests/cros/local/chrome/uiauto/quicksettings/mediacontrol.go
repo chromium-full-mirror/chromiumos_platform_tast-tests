@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast-tests/cros/local/input"
 )
 
 // MediaControlsDetailView is the detailed Media controls view within the Quick Settings.
@@ -25,24 +26,26 @@ var MediaControlsDialog = nodewith.Role(role.Dialog).Name("Media controls").HasC
 
 // MediaControlsPod returns the 'Media controls' pod in Quick Settings.
 func MediaControlsPod() *nodewith.Finder {
-	return nodewith.NameStartingWith("Media controls").HasClass("UnifiedMediaControlsView").Ancestor(QsRootFinder)
+	return nodewith.Role(role.ScrollView).HasClass("MediaScrollView").Ancestor(QsRootFinder)
 }
 
 // PinMediaControlsPod pins the Media controls pod from the detail page.
 func PinMediaControlsPod(tconn *chrome.TestConn) uiauto.Action {
 	ui := uiauto.New(tconn)
 	return uiauto.Combine("click pin button and check the widget",
-		ui.LeftClick(nodewith.Name("Pin to shelf").HasClass("IconButton").Ancestor(MediaControlsDetailView)),
+		ui.LeftClick(nodewith.Name("Pin to shelf").HasClass("PinButton").Ancestor(MediaControlsDetailView)),
 		ui.WaitUntilExists(PinnedMediaControls),
 	)
 }
 
 // UnpinMediaControlsPod unpins the media controls widget from shelf.
-func UnpinMediaControlsPod(tconn *chrome.TestConn) uiauto.Action {
+func UnpinMediaControlsPod(tconn *chrome.TestConn, kb *input.KeyboardEventWriter) uiauto.Action {
 	ui := uiauto.New(tconn)
 	return uiauto.Combine("open media controls widget and unpin",
 		ui.WithInterval(time.Second).LeftClickUntil(PinnedMediaControls, ui.Exists(MediaControlsDialog)),
 		ui.LeftClick(nodewith.Role(role.ToggleButton).Name("Unpin").Ancestor(MediaControlsDialog)),
+		// Dismissing the pod is necessary or the widget will stay on the shelf, jeopardizing the validation.
+		kb.AccelAction("Esc"),
 		ui.WaitUntilGone(PinnedMediaControls),
 	)
 }

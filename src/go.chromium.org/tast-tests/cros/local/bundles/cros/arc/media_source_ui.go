@@ -140,7 +140,7 @@ func MediaSourceUI(ctx context.Context, s *testing.State) {
 			ui := uiauto.New(tconn)
 			// Unpin media pod if it is pinned by default.
 			if err := ui.WaitUntilExists(quicksettings.PinnedMediaControls)(ctx); err == nil {
-				if err := quicksettings.UnpinMediaControlsPod(tconn)(ctx); err != nil {
+				if err := quicksettings.UnpinMediaControlsPod(tconn, kb)(ctx); err != nil {
 					s.Fatal("Failed to unpin media control pod: ", err)
 				}
 			}
