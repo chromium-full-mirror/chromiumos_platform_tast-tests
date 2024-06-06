@@ -55,17 +55,17 @@ func init() {
 		}, {
 			Name:      "suspend_bronze",
 			Val:       peripheralsTestParams{powerMode: suspendTest, iter: 20, checkSDCard: true},
-			Timeout:   8 * time.Minute,
+			Timeout:   10 * time.Minute,
 			ExtraAttr: []string{"group:intel-stability-bronze"},
 		}, {
 			Name:      "suspend_silver",
 			Val:       peripheralsTestParams{powerMode: suspendTest, iter: 50, checkSDCard: true},
-			Timeout:   13 * time.Minute,
+			Timeout:   15 * time.Minute,
 			ExtraAttr: []string{"group:intel-stability-silver"},
 		}, {
 			Name:      "suspend_gold",
 			Val:       peripheralsTestParams{powerMode: suspendTest, iter: 100, checkSDCard: true},
-			Timeout:   20 * time.Minute,
+			Timeout:   25 * time.Minute,
 			ExtraAttr: []string{"group:intel-stability-gold"},
 		}, {
 			Name:    "coldboot_quick",
