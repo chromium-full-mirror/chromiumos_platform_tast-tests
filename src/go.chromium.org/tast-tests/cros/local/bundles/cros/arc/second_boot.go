@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
 	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/apps"
@@ -30,23 +31,11 @@ func init() {
 		SoftwareDeps: []string{"play_store", "chrome", "gaia"},
 		Params: []testing.Param{{
 			ExtraAttr:         []string{"informational"},
-			ExtraSoftwareDeps: []string{"android_container", "no_qemu"},
-		}, {
-			Name:              "betty",
-			ExtraAttr:         []string{"informational"},
-			ExtraSoftwareDeps: []string{"android_container", "qemu"},
+			ExtraSoftwareDeps: []string{"android_container"},
 		}, {
 			Name:              "vm",
 			ExtraAttr:         []string{"informational"},
-			ExtraSoftwareDeps: []string{"android_vm", "no_qemu", "no_android_vm_t"},
-		}, {
-			Name:              "x",
-			ExtraAttr:         []string{"informational"},
-			ExtraSoftwareDeps: []string{"android_vm", "no_qemu", "android_vm_t"},
-		}, {
-			Name:              "betty_vm",
-			ExtraAttr:         []string{"informational"},
-			ExtraSoftwareDeps: []string{"android_vm", "qemu"},
+			ExtraSoftwareDeps: []string{"android_vm"},
 		}},
 		Timeout: (chrome.LoginTimeout * 2) + (arc.BootTimeout * 2) + 5*time.Minute,
 		VarDeps: []string{ui.GaiaPoolDefaultVarName},
@@ -58,13 +47,14 @@ func SecondBoot(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
 	defer cancel()
 
-	loginPool := dma.CredsFromPool(ui.GaiaPoolDefaultVarName)
-
-	cr, err := chrome.New(ctx,
-		chrome.GAIALoginPool(loginPool),
+	creds, err := credconfig.PickRandomCreds(dma.CredsFromPool(ui.GaiaPoolDefaultVarName))
+	options := []chrome.Option{
+		chrome.FakeLogin(creds),
 		chrome.UnRestrictARCCPU(),
-		chrome.ARCSupported(),
-		chrome.ExtraArgs(arc.DisableSyncFlags()...))
+		chrome.ARCEnabled(),
+		chrome.ExtraArgs(append(arc.DisableSyncFlags(), "--disable-arc-opt-in-verification")...),
+	}
+	cr, err := chrome.New(ctx, options...)
 	if err != nil {
 		s.Fatal("Failed to connect to Chrome: ", err)
 	}
@@ -72,13 +62,13 @@ func SecondBoot(ctx context.Context, s *testing.State) {
 		cr.Close(cleanupCtx)
 	}()
 
-	if err := optin.PerformWithRetry(ctx, cr, 2 /*maxAttempts*/); err != nil {
-		s.Fatal("Failed to optin to Play Store: ", err)
-	}
-
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create test API connection: ", err)
+	}
+
+	if err := apps.Launch(ctx, tconn, apps.PlayStore.ID); err != nil {
+		s.Fatal("Failed to launch Play Store: ", err)
 	}
 
 	if err := optin.WaitForPlayStoreShown(ctx, tconn, time.Minute); err != nil {
@@ -90,11 +80,7 @@ func SecondBoot(ctx context.Context, s *testing.State) {
 	s.Log("First session complete. Starting second session")
 
 	cr, err = chrome.New(ctx,
-		chrome.GAIALogin(cr.Creds()),
-		chrome.UnRestrictARCCPU(),
-		chrome.ARCSupported(),
-		chrome.KeepState(),
-		chrome.ExtraArgs(arc.DisableSyncFlags()...))
+		append(options, chrome.KeepState())...)
 	if err != nil {
 		s.Fatal("Failed to re-connect to Chrome: ", err)
 	}
