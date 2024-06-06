@@ -718,7 +718,9 @@ func VerifyResolvConfContents(ctx context.Context, config Config, proxyEnabled b
 	return nil
 }
 
-// expectedNameserversWithoutDNSProxy gets the expected /etc/resolv.conf nameservers without DNS proxy overwriting it.
+// expectedNameserversWithoutDNSProxy gets the expected /etc/resolv.conf
+// nameservers without DNS proxy overwriting it. The ordering assert is not
+// honored for StaticIPConfig where IPv4 may have a higher priority.
 func expectedNameserversWithoutDNSProxy(ctx context.Context, config Config) []template.HTML {
 	var nss []template.HTML
 	for _, ns := range config.IPv6Nameservers {

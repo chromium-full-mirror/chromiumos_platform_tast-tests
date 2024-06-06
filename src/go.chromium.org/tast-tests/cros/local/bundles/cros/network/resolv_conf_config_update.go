@@ -154,8 +154,12 @@ func ResolvConfConfigUpdate(ctx context.Context, s *testing.State) {
 	staticIPConfigNameServers := newConfig.IPv4Nameservers
 	if params.ipv6 {
 		newConfig.IPv6Nameservers = []string{"2222::2221", "2222::2222"}
-		// StaticIPConfig does not differentiate between IPv4 and IPv6.
-		staticIPConfigNameServers = append(staticIPConfigNameServers, newConfig.IPv6Nameservers...)
+		// StaticIPConfig does not differentiate between IPv4 and IPv6. Put IPv6 at
+		// first because in the current implementation of shill, the ordering of
+		// name servers in StaticIPConfig will be honored, but it's not convenient
+		// to represent this ordering in the dns package in tast where IPv6 is
+		// preferred, so we put the IPv6 ones at first here to match their ordering.
+		staticIPConfigNameServers = append(newConfig.IPv6Nameservers, staticIPConfigNameServers...)
 	}
 	svcStaticIPConfig := map[string]interface{}{
 		shillconst.IPConfigPropertySearchDomains: newConfig.IPv4DomainSearchList,
