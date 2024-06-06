@@ -15,7 +15,7 @@ import (
 	"go.chromium.org/tast/core/shutil"
 )
 
-// ShellCommand returns a command in Android shell via adb.
+// ShellCommand runs a command in Android shell via adb shell exec.
 func (d *Device) ShellCommand(ctx context.Context, name string, args ...string) *testexec.Cmd {
 	// adb shell executes the command via /bin/sh, so here it is necessary
 	// to escape.
@@ -23,7 +23,14 @@ func (d *Device) ShellCommand(ctx context.Context, name string, args ...string) 
 	return d.Command(ctx, "shell", cmd)
 }
 
-// SendIntentCommand returns a Cmd to send an intent with "am start" command.
+// ShellCommandUnsafe runs a command in Android via adb shell without escaping the args.
+//
+// This is an alternative to ShellCommand method for cases where escaping must not be done.
+func (d *Device) ShellCommandUnsafe(ctx context.Context, args ...string) *testexec.Cmd {
+	return d.Command(ctx, append([]string{"shell"}, args...)...)
+}
+
+// SendIntentCommand runs a Cmd to send an intent with "am start" command.
 func (d *Device) SendIntentCommand(ctx context.Context, action, data string) *testexec.Cmd {
 	args := []string{"start", "-a", action}
 	if len(data) > 0 {

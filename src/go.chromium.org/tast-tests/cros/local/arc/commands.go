@@ -19,7 +19,6 @@ import (
 // character in shell and has a meaning in context of cp so it must not
 // be escaped. In such cases, use the ShellCommand function below.
 func (a *ARC) Command(ctx context.Context, name string, args ...string) *testexec.Cmd {
-	// TODO(mhasank): rename the command below to avoid confusion.
 	return a.device.ShellCommand(ctx, name, args...)
 }
 
@@ -27,7 +26,7 @@ func (a *ARC) Command(ctx context.Context, name string, args ...string) *testexe
 //
 // This is an alternative to Command method for cases where escaping must not be done.
 func (a *ARC) ShellCommand(ctx context.Context, args ...string) *testexec.Cmd {
-	return a.device.Command(ctx, append([]string{"shell"}, args...)...)
+	return a.device.ShellCommandUnsafe(ctx, args...)
 }
 
 // BootstrapCommand runs a command with android-sh.
