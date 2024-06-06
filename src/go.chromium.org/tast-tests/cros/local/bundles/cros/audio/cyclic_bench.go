@@ -8,6 +8,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"path/filepath"
 	"strconv"
 	"time"
@@ -60,6 +61,7 @@ type cyclicTestParameters struct {
 	ShouldFail          bool          // Whether the test should fail based on the threshold. This should only be true for tests that simulate actual CRAS specs to prevent noise.
 	UI                  bool          // Test with UI running or not.
 	Tracer              bool          // Test with ftrace running or not.
+	ThreadedNAPI        bool          // Test with Threaded NAPI or not.
 }
 
 const (
@@ -438,12 +440,94 @@ func init() {
 					UI:                  true,
 				},
 			},
+			{
+				Name:      "rr12_1thread_10ms_threaded_napi",
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
+				Timeout:   15 * time.Minute,
+				Val: cyclicTestParameters{
+					Config: schedConfig{
+						Policy:   rrSched,
+						Priority: crasPriority,
+					},
+					Threads:             1,
+					Interval:            defaultInterval,
+					Loops:               defaultLoops,
+					Affinity:            defaultAff,
+					MaxLatencyThreshold: defaultMaxLatencyThreshold,
+					StressConfig:        nil,
+					UI:                  true,
+					ThreadedNAPI:        true,
+				},
+			},
 		},
 	})
 }
 
 func (s schedPolicy) String() string {
 	return []string{"rr", "other"}[s]
+}
+
+// cpuConfigEntry holds a single CPU config entry.
+type cpuConfigEntry struct {
+	path  string
+	value string
+}
+
+// enableThreadedNAPI enables threaded NAPI, which uses dedicated kernel threads
+// instead of software IRQ context to handle NAPI processing.
+func enableThreadedNAPI(ctx context.Context) (func(ctx context.Context) error, error) {
+	configPatterns := []cpuConfigEntry{
+		{"/sys/class/net/eth[0-9]*/threaded", "1"},
+	}
+
+	var optimizedConfig []cpuConfigEntry
+	// Expands patterns in configPatterns and pack actual configs into
+	// optimizedConfig.
+	for _, config := range configPatterns {
+		paths, err := filepath.Glob(config.path)
+		if err != nil {
+			return nil, err
+		}
+		for _, path := range paths {
+			optimizedConfig = append(optimizedConfig, cpuConfigEntry{
+				path,
+				config.value,
+			})
+		}
+	}
+
+	origConfig, err := applyConfig(ctx, optimizedConfig)
+	undo := func(ctx context.Context) error {
+		_, err := applyConfig(ctx, origConfig)
+		return err
+	}
+	if err != nil {
+		undo(ctx)
+		return nil, err
+	}
+	return undo, nil
+}
+
+// applyConfig applies the specified frequency scaling configuration. A slice of
+// cpuConfigEntry needs to be provided and will be processed in order. A slice
+// of the original cpuConfigEntry values that were successfully processed is
+// returned in reverse order so the caller can restore the original config by
+// passing the slice to this function as is.
+func applyConfig(ctx context.Context, cpuConfig []cpuConfigEntry) ([]cpuConfigEntry, error) {
+	var origConfig []cpuConfigEntry
+	for _, config := range cpuConfig {
+		origValue, err := ioutil.ReadFile(config.path)
+		if err != nil {
+			return origConfig, err
+		}
+		if err = ioutil.WriteFile(config.path, []byte(config.value), 0644); err != nil {
+			return origConfig, err
+		}
+		// Inserts a new entry at the front of origConfig.
+		e := cpuConfigEntry{config.path, string(origValue)}
+		origConfig = append([]cpuConfigEntry{e}, origConfig...)
+	}
+	return origConfig, nil
 }
 
 func CyclicBench(ctx context.Context, s *testing.State) {
@@ -483,6 +567,21 @@ func CyclicBench(ctx context.Context, s *testing.State) {
 			"--stress_policy="+param.StressConfig.Policy.String(),
 			"--stress_priority="+strconv.Itoa(param.StressConfig.Priority),
 			"--workers="+strconv.Itoa(defaultStressWorker))
+	}
+	if param.ThreadedNAPI {
+		var err error
+		var restoreThreadedNAPI func(ctx context.Context) error
+		// CPU frequency scaling and thermal throttling might influence our test results.
+		if restoreThreadedNAPI, err = enableThreadedNAPI(ctx); err != nil {
+			s.Error("Failed to enable threaded NAPI: ", err)
+		}
+		defer func() {
+			if restoreThreadedNAPI != nil {
+				if err = restoreThreadedNAPI(ctx); err != nil {
+					testing.ContextLog(ctx, "Failed to restore threaded NAPI to original values: ", err)
+				}
+			}
+		}()
 	}
 
 	//GoBigSleepLint: Wait for the system being stablized.
