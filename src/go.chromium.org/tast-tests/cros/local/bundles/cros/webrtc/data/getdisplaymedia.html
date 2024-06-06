@@ -12,6 +12,7 @@ async function start(surface) {
   await drawCanvasAlternatingColours(320, 240, 30);
   return new Promise((resolve, reject) => {
     const video = document.querySelector('video');
+    video.style.display = 'none';
 
     const displayMediaOptions = {
       video: {
