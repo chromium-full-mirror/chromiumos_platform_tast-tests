@@ -21,9 +21,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test setting screen saver video and starting playback",
 		Contacts: []string{
-			"assistive-eng@google.com",
-			"chromeos-sw-engprod@google.com",
-			"esum@google.com",
+			"cros-personalization@google.com",
+			"chromeos-consumer-engprod@google.com",
 		},
 		// ChromeOS > Software > Personalization
 		BugComponent: "b:1006527",

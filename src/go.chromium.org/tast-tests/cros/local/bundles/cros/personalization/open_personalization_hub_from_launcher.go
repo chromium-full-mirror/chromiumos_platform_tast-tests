@@ -23,9 +23,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test opening personalization hub app by searching in launcher",
 		Contacts: []string{
-			"assistive-eng@google.com",
-			"pzliu@google.com",
-			"chromeos-sw-engprod@google.com",
+			"cros-personalization@google.com",
+			"chromeos-consumer-engprod@google.com",
 		},
 		// ChromeOS > Software > Personalization
 		BugComponent: "b:1006527",

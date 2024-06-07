@@ -29,7 +29,7 @@ func init() {
 		Desc:         "Checks that rainbow mode updates the correct number of keys for each device",
 		Contacts: []string{
 			"cros-peripherals@google.com",
-			"michaelcheco@google.com",
+			"chromeos-consumer-engprod@google.com",
 		},
 		// ChromeOS > Software > System Services > Peripherals > Keyboard
 		BugComponent: "b:1131926",
