@@ -684,7 +684,7 @@ func ToggleAppManagementSettingToggle(ctx context.Context, tconn *chrome.TestCon
 
 // toggleAppManagementSettingToggleViaClick toggles the resize-lock setting toggle via click.
 func toggleAppManagementSettingToggleViaClick(ctx context.Context, tconn *chrome.TestConn) error {
-	return uiauto.New(tconn).WithTimeout(10 * time.Second).LeftClick(nodewith.Name(AppManagementSettingToggleName))(ctx)
+	return uiauto.New(tconn).WithTimeout(10 * time.Second).LeftClick(nodewith.Name(AppManagementSettingToggleName).Role(role.ToggleButton))(ctx)
 }
 
 // OpenAppManagementSetting opens the app management page if the given app.
@@ -722,7 +722,7 @@ func CloseAppManagementSetting(ctx context.Context, tconn *chrome.TestConn) erro
 func checkAppManagementSettingToggleState(ctx context.Context, tconn *chrome.TestConn, mode ResizeLockMode) error {
 	uia := uiauto.New(tconn)
 	return testing.Poll(ctx, func(ctx context.Context) error {
-		settingToggle, err := uia.WithTimeout(2*time.Second).Info(ctx, nodewith.Name(AppManagementSettingToggleName))
+		settingToggle, err := uia.WithTimeout(2*time.Second).Info(ctx, nodewith.Name(AppManagementSettingToggleName).Role(role.ToggleButton))
 		if err != nil {
 			return errors.Wrap(err, "failed to find the resize lock setting toggle on the app-management page")
 		}
