@@ -238,6 +238,7 @@ func testChangeWindowState(ctx context.Context, tconn *chrome.TestConn, keyboard
 		return errors.Wrapf(err, "failed to start %s", activityName)
 	}
 	defer activity.Stop(ctx, tconn)
+	defer activity.CloseWindow(ctx, tconn)
 
 	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), func() bool { return retErr != nil }, cr, "ui_dump_"+testName)
 
@@ -284,6 +285,7 @@ func testPIP(ctx context.Context, tconn *chrome.TestConn, keyboard *input.Keyboa
 		return errors.Wrapf(err, "failed to start %s", activityName)
 	}
 	defer activity.Stop(ctx, tconn)
+	defer activity.CloseWindow(ctx, tconn)
 
 	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), func() bool { return retErr != nil }, cr, "ui_dump_"+testName)
 
@@ -365,6 +367,7 @@ func testTablet(ctx context.Context, tconn *chrome.TestConn, keyboard *input.Key
 		return errors.Wrapf(err, "failed to start %s", activityName)
 	}
 	defer activity.Stop(cleanupCtx, tconn)
+	defer activity.CloseWindow(ctx, tconn)
 
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), func() bool { return retErr != nil }, cr, "ui_dump_"+testName)
 
@@ -409,6 +412,7 @@ func testNonResizeLocked(ctx context.Context, tconn *chrome.TestConn, keyboard *
 		return errors.Wrapf(err, "failed to start %s", activityName)
 	}
 	defer activity.Stop(ctx, tconn)
+	defer activity.CloseWindow(ctx, tconn)
 
 	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), func() bool { return retErr != nil }, cr, "ui_dump_"+testName)
 
@@ -478,6 +482,7 @@ func testFullyLockedApp(ctx context.Context, tconn *chrome.TestConn, keyboard *i
 		return errors.Wrapf(err, "failed to start %s", wm.ResizeLockUnresizablePortraitActivityName)
 	}
 	defer activity.Stop(ctx, tconn)
+	defer activity.CloseWindow(ctx, tconn)
 
 	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), func() bool { return retErr != nil }, cr, "ui_dump_"+testName)
 
@@ -540,6 +545,7 @@ func testSplash(ctx context.Context, tconn *chrome.TestConn, keyboard *input.Key
 			return errors.Wrapf(err, "failed to start %s", test.activityName)
 		}
 		defer activity.Stop(ctx, tconn)
+		defer activity.CloseWindow(ctx, tconn)
 
 		if err := wm.CheckResizeLockState(ctx, tconn, cr, activity, wm.PhoneResizeLockMode, i < wm.ShowSplashLimit /* isSplashVisible */); err != nil {
 			return errors.Wrapf(err, "failed to verify resize lock state of %s", wm.ResizeLockMainActivityName)
@@ -552,6 +558,9 @@ func testSplash(ctx context.Context, tconn *chrome.TestConn, keyboard *input.Key
 		}
 
 		// Close and reopen the activity, and verify that the splash is not shown on the same app more than once.
+		if err := activity.CloseWindow(ctx, tconn); err != nil {
+			return errors.Wrapf(err, "failed to close the window %s", test.activityName)
+		}
 		if err := activity.Stop(ctx, tconn); err != nil {
 			return errors.Wrapf(err, "failed to stop %s", test.activityName)
 		}
@@ -611,6 +620,7 @@ func testResizeLockedAppCUJInternal(ctx context.Context, tconn *chrome.TestConn,
 		return errors.Wrapf(err, "failed to start %s", wm.ResizeLockMainActivityName)
 	}
 	defer activity.Stop(ctx, tconn)
+	defer activity.CloseWindow(ctx, tconn)
 
 	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), func() bool { return retErr != nil }, cr, "ui_dump_"+testName)
 
@@ -659,6 +669,9 @@ func testResizeLockedAppCUJInternal(ctx context.Context, tconn *chrome.TestConn,
 		}
 
 		// Verify that relaunching an app doesn't cause any inconsistency.
+		if err := activity.CloseWindow(ctx, tconn); err != nil {
+			return errors.Wrapf(err, "failed to close the window %s", wm.ResizeLockMainActivityName)
+		}
 		if err := activity.Stop(ctx, tconn); err != nil {
 			return errors.Wrapf(err, "failed to stop %s", wm.ResizeLockMainActivityName)
 		}

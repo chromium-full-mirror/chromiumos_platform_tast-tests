@@ -923,6 +923,11 @@ func dragWithPause(ctx context.Context, tconn *chrome.TestConn, from, to coords.
 	return mouse.Move(tconn, to, t)(ctx)
 }
 
+// Close all windows of this activity
+func (ac *Activity) CloseWindow(ctx context.Context, tconn *chrome.TestConn) error {
+	return ash.CloseAllWindowsMatching(ctx, tconn, func(window *ash.Window) bool { return window.ARCPackageName == ac.pkgName })
+}
+
 // ToAshWindowState returns equivalent ash WindowStateType for the arc WindowState.
 func (s WindowState) ToAshWindowState() (ash.WindowStateType, error) {
 	switch s {
