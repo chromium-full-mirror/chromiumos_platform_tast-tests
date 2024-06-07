@@ -52,7 +52,7 @@ func SecondBoot(ctx context.Context, s *testing.State) {
 		chrome.FakeLogin(creds),
 		chrome.UnRestrictARCCPU(),
 		chrome.ARCEnabled(),
-		chrome.ExtraArgs(append(arc.DisableSyncFlags(), "--disable-arc-opt-in-verification")...),
+		chrome.ExtraArgs(arc.DisableSyncFlags()...),
 	}
 	cr, err := chrome.New(ctx, options...)
 	if err != nil {
