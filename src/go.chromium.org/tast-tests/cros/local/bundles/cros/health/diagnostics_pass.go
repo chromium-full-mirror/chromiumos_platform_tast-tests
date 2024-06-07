@@ -25,20 +25,6 @@ func init() {
 		Attr:         []string{"group:mainline"},
 		// TODO(b/277548688): Monitor test results and promote stable tests to critical.
 		Params: []testing.Param{{
-			// Contact: byronlee@google.com
-			Name:              "battery_capacity",
-			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineBatteryCapacity),
-			Fixture:           "crosHealthdRunning",
-			ExtraAttr:         []string{"informational"},
-			ExtraHardwareDeps: hwdep.D(hwdep.Battery()),
-		}, {
-			// Contact: byronlee@google.com
-			Name:              "battery_health",
-			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineBatteryHealth),
-			Fixture:           "crosHealthdRunning",
-			ExtraAttr:         []string{"informational"},
-			ExtraHardwareDeps: hwdep.D(hwdep.Battery()),
-		}, {
 			// Contact: yycheng@google.com
 			Name:    "urandom",
 			Val:     croshealthd.NewRoutineParams(croshealthd.RoutineURandom),
