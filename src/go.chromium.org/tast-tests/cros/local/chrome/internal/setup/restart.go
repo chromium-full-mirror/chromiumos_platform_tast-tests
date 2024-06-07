@@ -263,6 +263,14 @@ func RestartChromeForTesting(ctx context.Context, cfg *config.Config, extArgs, l
 		disabledFeatures = append(disabledFeatures, "OptimizationGuideModelDownloading")
 	}
 
+	// The Welcome Tour will show to the `new users`. Our proxy for "new" is
+	// based on app list sync state. A number of tests disable sync to reduce
+	// flakiness. Therefore we disable the `WelcomeTour`` feature unless the test
+	// explicitly enabled it.
+	if !contains(enabledFeatures, "WelcomeTour") {
+		disabledFeatures = append(disabledFeatures, "WelcomeTour")
+	}
+
 	if len(enabledFeatures) != 0 {
 		args = append(args, "--enable-features="+strings.Join(enabledFeatures, ","))
 	}
