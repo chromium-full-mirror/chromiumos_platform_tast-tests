@@ -1054,7 +1054,7 @@ func (tf *TestFixture) ConfigureAPOnRouterIDWithConfs(ctx context.Context, idx R
 			if err != nil {
 				return nil, err
 			}
-			capturer, err = tf.PcapRouter().StartCapture(ctx, tf.UniqueAPName(), config.Channel, config.OpClass, freqOps)
+			capturer, err = tf.PcapRouter().StartCapture(ctx, tf.UniqueAPName(), config.Channel, config.Is6GHz, freqOps)
 			if err != nil {
 				return nil, errors.Wrap(err, "failed to start capturer")
 			}
@@ -1064,7 +1064,7 @@ func (tf *TestFixture) ConfigureAPOnRouterIDWithConfs(ctx context.Context, idx R
 				}
 			}()
 			if capturer != nil {
-				freq, err := hostapd.ChannelToFrequencyWithOpClass(config.Channel, config.OpClass)
+				freq, err := hostapd.ChannelToFrequencyWithBand(config.Channel, config.Is6GHz)
 				if err != nil {
 					return nil, errors.Wrap(err, "failed to calculate the frequency of the capturer")
 				}
@@ -1643,7 +1643,7 @@ func (dd *dutData) verifyStaConnection(ctx context.Context, routerConn *ssh.Conn
 	if err != nil {
 		return errors.Wrap(err, "failed to get the radio configuration")
 	}
-	serverFreq, err := hostapd.ChannelToFrequencyWithOpClass(chConfig.Number, ap.Config().OpClass)
+	serverFreq, err := hostapd.ChannelToFrequencyWithBand(chConfig.Number, ap.Config().Is6GHz)
 	if err != nil {
 		return errors.Wrap(err, "failed to get server frequency")
 	}
@@ -2272,7 +2272,7 @@ func (tf *TestFixture) StartTethering(ctx context.Context, dutIdx DutIdx, ops []
 		if err != nil {
 			return nil, nil, err
 		}
-		capturer, err = tf.PcapRouter().StartCapture(ctx, tf.UniqueAPName(), config.Channel, config.OpClass, freqOps)
+		capturer, err = tf.PcapRouter().StartCapture(ctx, tf.UniqueAPName(), config.Channel, config.Is6GHz, freqOps)
 		if err != nil {
 			return nil, nil, errors.Wrap(err, "failed to start capturer")
 		}

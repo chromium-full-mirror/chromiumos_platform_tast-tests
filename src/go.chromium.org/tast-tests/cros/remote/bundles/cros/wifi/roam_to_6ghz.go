@@ -81,7 +81,7 @@ func RoamTo6GHz(ctx context.Context, s *testing.State) {
 		SecConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherCCMP))}
 	higherBandApConfig := hostapd.ApConfig{
 		ApOpts: []hostapd.Option{hostapd.Mode(hostapd.Mode80211axPure), hostapd.Channel(21), hostapd.HTCaps(hostapd.HTCapHT20),
-			hostapd.HEChWidth(hostapd.HEChWidth20Or40), hostapd.OpClass(131), hostapd.PMF(hostapd.PMFRequired), hostapd.BeaconInterval(20)},
+			hostapd.HEChWidth(hostapd.HEChWidth20Or40), hostapd.Is6GHz(), hostapd.PMF(hostapd.PMFRequired), hostapd.BeaconInterval(20)},
 		SecConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP))}
 
 	// Configure the legacy band AP and connect the DUT to it, then configure

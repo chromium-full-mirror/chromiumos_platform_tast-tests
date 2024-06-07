@@ -247,7 +247,7 @@ func (r *Router) StopWireless(ctx context.Context, ws *wireless.Server) error {
 }
 
 // StartCapture starts a packet capturer.
-func (r *Router) StartCapture(ctx context.Context, name string, ch, opClass int, freqOps []iw.SetFreqOption, pcapOps ...pcap.Option) (_ *pcap.Capturer, retErr error) {
+func (r *Router) StartCapture(ctx context.Context, name string, ch int, is6GHz bool, freqOps []iw.SetFreqOption, pcapOps ...pcap.Option) (_ *pcap.Capturer, retErr error) {
 	return nil, nil
 }
 

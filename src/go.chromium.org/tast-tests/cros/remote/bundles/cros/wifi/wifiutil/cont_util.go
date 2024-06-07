@@ -100,7 +100,7 @@ func setupPcapOnRouter(ctx context.Context, r support.Capture,
 	if err != nil {
 		return errors.Wrap(err, "failed to get Freq Opts")
 	}
-	capturer, err := r.StartCapture(ctx, apName, apConf.Channel, apConf.OpClass, freqOps)
+	capturer, err := r.StartCapture(ctx, apName, apConf.Channel, apConf.Is6GHz, freqOps)
 	if err != nil {
 		return errors.Wrap(err, "failed to start capturer")
 	}

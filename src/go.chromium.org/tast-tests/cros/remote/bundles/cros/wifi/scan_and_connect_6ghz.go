@@ -79,7 +79,6 @@ func ScanAndConnect6GHz(ctx context.Context, s *testing.State) {
 
 	const (
 		apChannel = 193
-		opClass   = 131
 	)
 	tf := s.FixtValue().(*wificell.TestFixture)
 	tc := s.Param().(scanAndConnect6GHzTestCase)
@@ -151,7 +150,7 @@ func ScanAndConnect6GHz(ctx context.Context, s *testing.State) {
 		}
 
 		ap6GHzOpts := []hostapd.Option{hostapd.SSID(hostapd.RandomSSID("6GHz_")), hostapd.Mode(hostapd.Mode80211axPure),
-			hostapd.HTCaps(hostapd.HTCapHT20), hostapd.HEChWidth(hostapd.HEChWidth20Or40), hostapd.OpClass(opClass),
+			hostapd.HTCaps(hostapd.HTCapHT20), hostapd.HEChWidth(hostapd.HEChWidth20Or40), hostapd.Is6GHz(),
 			hostapd.Channel(apChannel), hostapd.SpectrumManagement(), hostapd.PMF(hostapd.PMFRequired)}
 		secConfFac := wpa.NewConfigFactory("chromeos",
 			wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP))
@@ -159,7 +158,7 @@ func ScanAndConnect6GHz(ctx context.Context, s *testing.State) {
 		if tc.isOutOfBand {
 			// Set up the 5 GHz AP for an out-of-band discovery, i.e., the 6 GHz AP is co-located
 			ap5GHzOpts := []hostapd.Option{hostapd.SSID(hostapd.RandomSSID("5GHz_")), hostapd.Mode(hostapd.Mode80211acPure),
-				hostapd.HTCaps(hostapd.HTCapHT20), hostapd.OpClass(0), hostapd.Channel(40), hostapd.SpectrumManagement()}
+				hostapd.HTCaps(hostapd.HTCapHT20), hostapd.Channel(40), hostapd.SpectrumManagement()}
 			apConfigs = append(apConfigs, hostapd.ApConfig{ApOpts: ap6GHzOpts, SecConfFac: secConfFac})
 			apConfigs = append(apConfigs, hostapd.ApConfig{ApOpts: ap5GHzOpts, SecConfFac: nil})
 		} else {
@@ -182,7 +181,7 @@ func ScanAndConnect6GHz(ctx context.Context, s *testing.State) {
 
 		var conf *hostapd.Config
 		for _, conf = range ap.Configs() {
-			if conf.OpClass == opClass && conf.Channel == apChannel {
+			if conf.Is6GHz && conf.Channel == apChannel {
 				break
 			}
 		}
@@ -206,7 +205,7 @@ func ScanAndConnect6GHz(ctx context.Context, s *testing.State) {
 		if !ok {
 			return nil, errors.Wrap(err, "failed to get the capturers")
 		}
-		freq, err := hostapd.ChannelToFrequencyWithOpClass(apChannel, opClass)
+		freq, err := hostapd.ChannelToFrequencyWithBand(apChannel, true)
 		if err != nil {
 			s.Fatal(err, "Failed to get the frequency of the 6 GHz AP")
 		}

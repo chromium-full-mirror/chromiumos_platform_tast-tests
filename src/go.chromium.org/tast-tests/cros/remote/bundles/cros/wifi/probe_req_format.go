@@ -62,7 +62,7 @@ func ProbeReqFormat(ctx context.Context, s *testing.State) {
 	}
 
 	// Collect probe requests on channel 1.
-	pcapPath, err := wifiutil.ScanAndCollectPcap(ctx, tf, "malfromed_probe", 10, 1 /*channel*/, 0 /*opClass*/)
+	pcapPath, err := wifiutil.ScanAndCollectPcap(ctx, tf, "malfromed_probe", 10, 1 /*channel*/, false /*is6GHz*/)
 	if err != nil {
 		s.Fatal("Failed to collect packet: ", err)
 	}

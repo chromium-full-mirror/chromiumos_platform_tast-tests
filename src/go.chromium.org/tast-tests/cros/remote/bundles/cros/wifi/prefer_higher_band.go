@@ -64,7 +64,7 @@ func init() {
 				Name: "5ghz_6ghz",
 				Val: preferHigherBandTestCase{
 					lowerBandApOpts:  []hostapd.Option{hostapd.Mode(hostapd.Mode80211axPure), hostapd.HTCaps(hostapd.HTCapHT20), hostapd.HEChWidth(hostapd.HEChWidth20Or40), hostapd.Channel(48)},
-					higherBandApOpts: []hostapd.Option{hostapd.Mode(hostapd.Mode80211axPure), hostapd.HTCaps(hostapd.HTCapHT20), hostapd.HEChWidth(hostapd.HEChWidth20Or40), hostapd.Channel(21), hostapd.PMF(hostapd.PMFRequired), hostapd.OpClass(131)},
+					higherBandApOpts: []hostapd.Option{hostapd.Mode(hostapd.Mode80211axPure), hostapd.HTCaps(hostapd.HTCapHT20), hostapd.HEChWidth(hostapd.HEChWidth20Or40), hostapd.Channel(21), hostapd.PMF(hostapd.PMFRequired), hostapd.Is6GHz()},
 					secConfFac:       wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 				},
 				// TODO(b/317288421): Promote test to stable by removing wificell_unstable attribute.
@@ -78,7 +78,7 @@ func init() {
 				Name: "2ghz_6ghz",
 				Val: preferHigherBandTestCase{
 					lowerBandApOpts:  []hostapd.Option{hostapd.Mode(hostapd.Mode80211axPure), hostapd.HTCaps(hostapd.HTCapHT20), hostapd.HEChWidth(hostapd.HEChWidth20Or40), hostapd.Channel(1)},
-					higherBandApOpts: []hostapd.Option{hostapd.Mode(hostapd.Mode80211axPure), hostapd.HTCaps(hostapd.HTCapHT20), hostapd.HEChWidth(hostapd.HEChWidth20Or40), hostapd.Channel(21), hostapd.PMF(hostapd.PMFRequired), hostapd.OpClass(131)},
+					higherBandApOpts: []hostapd.Option{hostapd.Mode(hostapd.Mode80211axPure), hostapd.HTCaps(hostapd.HTCapHT20), hostapd.HEChWidth(hostapd.HEChWidth20Or40), hostapd.Channel(21), hostapd.PMF(hostapd.PMFRequired), hostapd.Is6GHz()},
 					secConfFac:       wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 				},
 				// TODO(b/317288421): Promote test to stable by removing wificell_unstable attribute.

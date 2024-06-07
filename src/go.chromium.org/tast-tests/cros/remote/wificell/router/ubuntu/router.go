@@ -301,8 +301,8 @@ func (r *Router) Close(ctx context.Context) error {
 
 // phy finds an suitable phy for the given channel and target interface type t.
 // The selected phy index is returned.
-func (r *Router) phy(ctx context.Context, channel, opClass int, t iw.IfType) (int, error) {
-	freq, err := hostapd.ChannelToFrequencyWithOpClass(channel, opClass)
+func (r *Router) phy(ctx context.Context, channel int, is6GHz bool, t iw.IfType) (int, error) {
+	freq, err := hostapd.ChannelToFrequencyWithBand(channel, is6GHz)
 	if err != nil {
 		return 0, errors.Errorf("channel %d not available", channel)
 	}
@@ -321,7 +321,7 @@ func (r *Router) phy(ctx context.Context, channel, opClass int, t iw.IfType) (in
 			return id, nil
 		}
 	}
-	return 0, errors.Errorf("cannot find supported phy for channel=%d", channel)
+	return 0, errors.Errorf("cannot find supported phy for channel=%d, is6GHz=%t", channel, is6GHz)
 }
 
 // phySupportsFrequency returns true if any band of the given phy supports
@@ -336,11 +336,11 @@ func phySupportsFrequency(phy *iw.Phy, freq int) bool {
 }
 
 // netDev finds an available interface suitable for the given channel and type.
-func (r *Router) netDev(ctx context.Context, channel, opClass int, t iw.IfType) (*iw.NetDev, error) {
+func (r *Router) netDev(ctx context.Context, channel int, is6GHz bool, t iw.IfType) (*iw.NetDev, error) {
 	ctx, st := timing.Start(ctx, "netDev")
 	defer st.End()
 
-	phyID, err := r.phy(ctx, channel, opClass, t)
+	phyID, err := r.phy(ctx, channel, is6GHz, t)
 	if err != nil {
 		return nil, err
 	}
@@ -384,7 +384,7 @@ func (r *Router) StartHostapd(ctx context.Context, name string, confs ...*hostap
 
 	var ifaces []*hostapd.Iface
 	for _, conf := range confs {
-		nd, err := r.netDev(ctx, conf.Channel, conf.OpClass, iw.IfTypeManaged)
+		nd, err := r.netDev(ctx, conf.Channel, conf.Is6GHz, iw.IfTypeManaged)
 		if err != nil {
 			return nil, err
 		}
@@ -491,15 +491,15 @@ func (r *Router) StopHTTP(ctx context.Context, httpServer *http.Server) error {
 // After getting a Capturer instance, c, the caller should call r.StopCapture(ctx, c) at the end,
 // and use the shortened ctx (provided by r.ReserveForStopCapture(ctx, c)) before r.StopCapture()
 // to reserve time for it to run.
-func (r *Router) StartCapture(ctx context.Context, name string, ch, opClass int, freqOps []iw.SetFreqOption, pcapOps ...pcap.Option) (ret *pcap.Capturer, retErr error) {
-	nd, err := r.netDev(ctx, ch, opClass, iw.IfTypeMonitor)
+func (r *Router) StartCapture(ctx context.Context, name string, ch int, is6GHz bool, freqOps []iw.SetFreqOption, pcapOps ...pcap.Option) (ret *pcap.Capturer, retErr error) {
+	nd, err := r.netDev(ctx, ch, is6GHz, iw.IfTypeMonitor)
 	if err != nil {
 		return nil, err
 	}
 	ctx, st := timing.Start(ctx, "router.StartCapture")
 	defer st.End()
 
-	freq, err := hostapd.ChannelToFrequencyWithOpClass(ch, opClass)
+	freq, err := hostapd.ChannelToFrequencyWithBand(ch, is6GHz)
 	if err != nil {
 		return nil, err
 	}

@@ -898,7 +898,7 @@ func TestConfigFormat(t *testing.T) {
 				SSID:             "ssid",
 				Mode:             Mode80211axPure,
 				Channel:          5,
-				OpClass:          131,
+				Is6GHz:           true,
 				HTCaps:           HTCapHT40Plus,
 				VHTCaps:          []VHTCap{VHTCapSGI80},
 				VHTCenterChannel: 7,
@@ -911,7 +911,7 @@ func TestConfigFormat(t *testing.T) {
 			verify: map[string]string{
 				"hw_mode":                      "a",
 				"channel":                      "5",
-				"op_class":                     "131",
+				"op_class":                     "133",
 				"ieee80211n":                   "1",
 				"ht_capab":                     "[HT40+]",
 				"ieee80211ac":                  "1",

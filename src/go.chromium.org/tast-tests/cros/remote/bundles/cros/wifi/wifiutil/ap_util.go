@@ -37,7 +37,7 @@ func ConfigureAP(ctx context.Context, s *testing.State, apParams []hostapd.Optio
 		return nil
 	}
 
-	freq, err = hostapd.ChannelToFrequencyWithOpClass(ap.Config().Channel, ap.Config().OpClass)
+	freq, err = hostapd.ChannelToFrequencyWithBand(ap.Config().Channel, ap.Config().Is6GHz)
 	if err != nil {
 		deconfig(ctx, ap)
 		s.Fatalf("Failed to get frequency for channel %d: %v", ap.Config().Channel, err)

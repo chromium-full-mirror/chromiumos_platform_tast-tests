@@ -231,7 +231,9 @@ type HECap string
 // EHTChWidthEnum is the type for specifying operating channel width in hostapd config (eht_oper_chwidth=).
 type EHTChWidthEnum int
 
-// EHTChWidth enums.
+// EHTChWidth enums. Only the first four values are actually used to determine
+// the correct oper_chwidth in hostap. We use the remaining four internally in
+// tast-tests to determine the op_class on 6GHz.
 const (
 	// EHTChWidth20Or40 is the default value when none of EHTChWidth* specified.
 	EHTChWidth20Or40 EHTChWidthEnum = iota
@@ -460,17 +462,13 @@ func Channel(ch int) Option {
 	}
 }
 
-// OpClass returns an Option which sets the operating class in hostapd config.
-// OpClass and Channel together uniquely identify channels across different
-// bands including the 6GHz band. For backwards compatibility, if the OpClass is
-// not specified, the channel is assumed to be in the 2.4GHz or 5GHz band.
-// If the operating class is in the range [131, 137], the channel will be mapped
-// to a frequency in the 6GHz band.
+// Is6GHz returns an Option which indicates that operating class should be
+// specified in hostapd config.
 // Refer to Table E-4 in IEEE Std 802.11ax-2021 for valid
 // channel-operating class pairs in the 6GHz band.
-func OpClass(opClass int) Option {
+func Is6GHz() Option {
 	return func(c *Config) {
-		c.OpClass = opClass
+		c.Is6GHz = true
 	}
 }
 
@@ -778,7 +776,7 @@ type Config struct {
 	SSID               string
 	Mode               ModeEnum
 	Channel            int
-	OpClass            int
+	Is6GHz             bool
 	HTCaps             HTCap
 	VHTCaps            []VHTCap
 	VHTCenterChannel   int
@@ -930,17 +928,18 @@ func (c *Config) Format(iface, ctrlPath string) (string, error) {
 		configure(k, v)
 	}
 
-	if c.OpClass != 0 {
-		if Is6GHzOpClass(c.OpClass) {
-			// Only configure operating class in hostapd if it is needed to
-			// disambiguate a 6GHz channel from a 2.4/5GHz channel.
-			configure("op_class", strconv.Itoa(c.OpClass))
-			// Set country code to US to enable the DUT to actively scan for the
-			// AP on 6GHz.
-			configure("country_code", "US")
-		} else {
-			return "", errors.New("operating class outside of [131, 137] is not handled in testing hostapd config")
+	if c.Is6GHz {
+		channelWidth, _ := c.ChannelWidthAndMode()
+		opClass, err := OpClass6GHz(channelWidth, c.Channel)
+		if err != nil {
+			return "", err
 		}
+		// Only configure operating class in hostapd if it is needed to
+		// disambiguate a 6GHz channel from a 2.4/5GHz channel.
+		configure("op_class", strconv.Itoa(int(opClass)))
+		// Set country code to US to enable the DUT to actively scan for the
+		// AP on 6GHz.
+		configure("country_code", "US")
 	}
 
 	// If HostapdConfig has provided "ieee80211w" then do not overwrite it.
@@ -1181,7 +1180,7 @@ func (c *Config) ChannelWidthAndMode() (ChWidthEnum, string) {
 // OperatingBandAndFreq returns the operating band and frequency.
 func (c *Config) OperatingBandAndFreq() (BandEnum, int, error) {
 	var band BandEnum
-	freq, err := ChannelToFrequencyWithOpClass(c.Channel, c.OpClass)
+	freq, err := ChannelToFrequencyWithBand(c.Channel, c.Is6GHz)
 	if err != nil {
 		return BandUnknown, 0, err
 	}
@@ -1261,6 +1260,11 @@ func (c *Config) validate() error {
 
 	if err := c.validateChannel(); err != nil {
 		return err
+	}
+	if c.Is6GHz {
+		if err := c.validateCenterChannel6GHz(); err != nil {
+			return err
+		}
 	}
 	if c.BeaconInterval != 0 && (c.BeaconInterval > 65535 || c.BeaconInterval < 15) {
 		return errors.Errorf("invalid beacon interval setting %d", c.BeaconInterval)
@@ -1358,7 +1362,7 @@ func supportHT40Minus(ch int) bool {
 }
 
 func (c *Config) validateChannel() error {
-	f, err := ChannelToFrequencyWithOpClass(c.Channel, c.OpClass)
+	f, err := ChannelToFrequencyWithBand(c.Channel, c.Is6GHz)
 	if err != nil {
 		return errors.Errorf("invalid channel: %d", err)
 	}
@@ -1377,7 +1381,7 @@ func (c *Config) validateChannel() error {
 
 	htPlus := supportHT40Plus(c.Channel)
 	htMinus := supportHT40Minus(c.Channel)
-	if Is6GHzOpClass(c.OpClass) && (c.HTCaps&HTCapHT40 > 0 || c.HTCaps&HTCapHT40Plus > 0 || c.HTCaps&HTCapHT40Minus > 0) {
+	if c.Is6GHz && (c.HTCaps&HTCapHT40 > 0 || c.HTCaps&HTCapHT40Plus > 0 || c.HTCaps&HTCapHT40Minus > 0) {
 		return errors.New("6GHz channels do not support HTCap40+/-")
 	}
 	if c.HTCaps&HTCapHT40 > 0 && !htPlus && !htMinus {
@@ -1415,7 +1419,7 @@ func (c *Config) hwMode() (string, error) {
 		return string(c.Mode), nil
 	}
 	if c.is80211n() || c.is80211ac() || c.is80211ax() || c.is80211be() {
-		f, err := ChannelToFrequencyWithOpClass(c.Channel, c.OpClass)
+		f, err := ChannelToFrequencyWithBand(c.Channel, c.Is6GHz)
 		if err != nil {
 			return "", err
 		}
@@ -1511,6 +1515,7 @@ func (c *Config) validateHEChWidth() error {
 		return errors.Errorf("invalid he_oper_chwidth %d", int(c.HEChWidth))
 	}
 }
+
 func (c *Config) validateEHTChWidth() error {
 	switch c.EHTChWidth {
 	case EHTChWidth20Or40, EHTChWidth80, EHTChWidth80Plus80, EHTChWidth160, EHTChWidth160Plus80, EHTChWidth160Plus160, EHTChWidth320:
@@ -1519,6 +1524,26 @@ func (c *Config) validateEHTChWidth() error {
 		return errors.Errorf("invalid eht_oper_chwidth %d", int(c.EHTChWidth))
 	}
 }
+
+func (c *Config) validateCenterChannel6GHz() error {
+	centerChannel := c.Channel
+	if (c.is80211ax() || c.is80211be()) && (c.HECenterChannel != 0) {
+		centerChannel = c.HECenterChannel
+	}
+	if c.is80211be() && (c.EHTCenterChannel != 0) {
+		centerChannel = c.EHTCenterChannel
+	}
+	channelWidth, _ := c.ChannelWidthAndMode()
+	opClass, err := OpClass6GHz(channelWidth, c.Channel)
+	if err != nil {
+		return errors.Wrap(err, "failed to get operating class")
+	}
+	if err = Validate6GHzOpClass(centerChannel, opClass); err != nil {
+		return errors.Wrap(err, "invalid center channel")
+	}
+	return nil
+}
+
 func (c *Config) validatePMF() error {
 	switch c.PMF {
 	case PMFDisabled:

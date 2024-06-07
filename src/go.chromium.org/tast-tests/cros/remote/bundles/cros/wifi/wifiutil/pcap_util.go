@@ -60,7 +60,7 @@ func VerifyMACUsedForScan(ctx context.Context, tf *wificell.TestFixture, ap *wif
 
 	timeoutCtx, cancel := context.WithTimeout(ctx, 60*time.Second)
 	defer cancel()
-	pcapPath, err := ScanAndCollectPcap(timeoutCtx, tf, name, 5, ap.Config().Channel, ap.Config().OpClass)
+	pcapPath, err := ScanAndCollectPcap(timeoutCtx, tf, name, 5, ap.Config().Channel, ap.Config().Is6GHz)
 	if err != nil {
 		return errors.Wrap(err, "failed to collect pcap")
 	}
@@ -185,8 +185,8 @@ func ConnectAndCollectPcap(ctx context.Context, tf *wificell.TestFixture, apOps 
 
 // ScanAndCollectPcap requests active scans and collect pcap file on channel ch.
 // Path to the pcap file is returned.
-// For 2.4/5GHz channels, operating class is irrelevant and should be set to 0.
-func ScanAndCollectPcap(fullCtx context.Context, tf *wificell.TestFixture, name string, scanCount, ch, opClass int) (string, error) {
+// For 2.4/5GHz channels, is6GHz should be set to false.
+func ScanAndCollectPcap(fullCtx context.Context, tf *wificell.TestFixture, name string, scanCount, ch int, is6GHz bool) (string, error) {
 	action := func(ctx context.Context) error {
 		testing.ContextLog(ctx, "Request active scans")
 		req := &wifi.RequestScansRequest{Count: int32(scanCount)}
@@ -199,16 +199,16 @@ func ScanAndCollectPcap(fullCtx context.Context, tf *wificell.TestFixture, name 
 	if err != nil {
 		return "", errors.Wrap(err, "unable to get standard pcap device")
 	}
-	return CollectPcapForAction(fullCtx, p, name, ch, opClass, nil, action)
+	return CollectPcapForAction(fullCtx, p, name, ch, is6GHz, nil, action)
 }
 
 // CollectPcapForAction starts a capture on the specified channel, performs a
 // custom action, and then stops the capture. The path to the pcap file is
 // returned.
-// For 2.4/5GHz channels, operating class is irrelevant and should be set to 0.
-func CollectPcapForAction(fullCtx context.Context, rt support.Capture, name string, ch, opClass int, freqOps []iw.SetFreqOption, action func(context.Context) error) (string, error) {
+// For 2.4/5GHz channels, is6GHz should be set to false.
+func CollectPcapForAction(fullCtx context.Context, rt support.Capture, name string, ch int, is6GHz bool, freqOps []iw.SetFreqOption, action func(context.Context) error) (string, error) {
 	capturer, err := func() (ret *pcap.Capturer, retErr error) {
-		capturer, err := rt.StartCapture(fullCtx, name, ch, opClass, freqOps)
+		capturer, err := rt.StartCapture(fullCtx, name, ch, is6GHz, freqOps)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to start capturer")
 		}

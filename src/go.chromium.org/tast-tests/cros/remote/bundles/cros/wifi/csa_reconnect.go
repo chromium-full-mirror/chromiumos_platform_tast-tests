@@ -65,7 +65,7 @@ func CSAReconnect(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get Freq Opts: ", err)
 	}
-	capturer, err := pcapPrimCh.StartCapture(ctx, tf.UniqueAPName(), alterChannel, 0 /*opClass*/, freqOps)
+	capturer, err := pcapPrimCh.StartCapture(ctx, tf.UniqueAPName(), alterChannel, false /*is6GHz*/, freqOps)
 	if err != nil {
 		s.Fatal("Failed to start capturer: ", err)
 	}

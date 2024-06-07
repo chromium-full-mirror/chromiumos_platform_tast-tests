@@ -113,7 +113,7 @@ func MBOAssocDisallow(ctx context.Context, s *testing.State) {
 	// collect probe response after triggering scans) but cannot be too large to
 	// compromise the efficiency.
 	const scanNum = 3
-	pcapPath, err := wifiutil.ScanAndCollectPcap(ctx, tf, "mbo_probresp_or_beacon", scanNum, channel, 0 /*opClass*/)
+	pcapPath, err := wifiutil.ScanAndCollectPcap(ctx, tf, "mbo_probresp_or_beacon", scanNum, channel, false /*is6GHz*/)
 	if err != nil {
 		s.Fatal("Failed to collect packet: ", err)
 	}
@@ -201,7 +201,7 @@ func MBOAssocDisallow(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get legacy router: ", err)
 	}
-	pcapPath, err = wifiutil.CollectPcapForAction(ctx, router, "mbo_assoc_disallow", channel, 0 /*opClass*/, freqOpts, expectFailConnect)
+	pcapPath, err = wifiutil.CollectPcapForAction(ctx, router, "mbo_assoc_disallow", channel, false /*is6GHz*/, freqOpts, expectFailConnect)
 	if err != nil {
 		s.Fatal("Failed to collect pcap: ", err)
 	}

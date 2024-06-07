@@ -129,7 +129,7 @@ func APSupportedRates(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Unable to get standard pcap: ", err)
 	}
-	pcapPath, err := wifiutil.CollectPcapForAction(ctx, standardPcap, "connect", ap.Config().Channel, 0 /*opClass*/, freqOpts, testAction)
+	pcapPath, err := wifiutil.CollectPcapForAction(ctx, standardPcap, "connect", ap.Config().Channel, false /*is6GHz*/, freqOpts, testAction)
 	if err != nil {
 		s.Fatal("Failed to collect pcap or perform action: ", err)
 	}

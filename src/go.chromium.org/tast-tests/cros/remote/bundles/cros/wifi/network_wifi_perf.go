@@ -148,7 +148,7 @@ func init() {
 				Name: "he20_6ghz",
 				Val: []networkWifiPerfTestCase{{
 					apOpts: []ap.Option{ap.Mode(ap.Mode80211axPure), ap.Channel(21), ap.HTCaps(ap.HTCapHT20),
-						ap.HEChWidth(ap.HEChWidth20Or40), ap.OpClass(131), ap.PMF(ap.PMFRequired)},
+						ap.HEChWidth(ap.HEChWidth20Or40), ap.Is6GHz(), ap.PMF(ap.PMFRequired)},
 					secConfFac: wpa.NewConfigFactory("chromeos",
 						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					powerSave: false, shouldTputRequired: false,
@@ -161,7 +161,7 @@ func init() {
 				Name: "he40_6ghz",
 				Val: []networkWifiPerfTestCase{{
 					apOpts: []ap.Option{ap.Mode(ap.Mode80211axPure), ap.Channel(21), ap.HTCaps(ap.HTCapLDPC), ap.HECenterChannel(19),
-						ap.HEChWidth(ap.HEChWidth20Or40), ap.OpClass(131), ap.PMF(ap.PMFRequired)},
+						ap.HEChWidth(ap.HEChWidth20Or40), ap.Is6GHz(), ap.PMF(ap.PMFRequired)},
 					secConfFac: wpa.NewConfigFactory("chromeos",
 						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					powerSave: false, shouldTputRequired: false,
@@ -175,7 +175,7 @@ func init() {
 				Val: []networkWifiPerfTestCase{{
 					apOpts: []ap.Option{ap.Mode(ap.Mode80211axPure), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
 						ap.VHTCaps(ap.VHTCapSGI80), ap.HECenterChannel(7), ap.HEChWidth(ap.HEChWidth80),
-						ap.OpClass(131), ap.PMF(ap.PMFRequired)},
+						ap.Is6GHz(), ap.PMF(ap.PMFRequired)},
 					secConfFac: wpa.NewConfigFactory("chromeos",
 						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					powerSave: false, shouldTputRequired: false,
@@ -189,7 +189,7 @@ func init() {
 				Val: []networkWifiPerfTestCase{{
 					apOpts: []ap.Option{ap.Mode(ap.Mode80211axMixed), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
 						ap.VHTCaps(ap.VHTCapSGI80), ap.HECenterChannel(7), ap.HEChWidth(ap.HEChWidth80),
-						ap.OpClass(131), ap.PMF(ap.PMFRequired)},
+						ap.Is6GHz(), ap.PMF(ap.PMFRequired)},
 					secConfFac: wpa.NewConfigFactory("chromeos",
 						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					powerSave: false, shouldTputRequired: false,
@@ -203,7 +203,7 @@ func init() {
 				Val: []networkWifiPerfTestCase{{
 					apOpts: []ap.Option{ap.Mode(ap.Mode80211axPure), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
 						ap.VHTCaps(ap.VHTCapSGI160), ap.HECenterChannel(15), ap.HEChWidth(ap.HEChWidth160),
-						ap.OpClass(131), ap.PMF(ap.PMFRequired)},
+						ap.Is6GHz(), ap.PMF(ap.PMFRequired)},
 					secConfFac: wpa.NewConfigFactory("chromeos",
 						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					powerSave: false, shouldTputRequired: false,
@@ -217,7 +217,7 @@ func init() {
 				Val: []networkWifiPerfTestCase{{
 					apOpts: []ap.Option{ap.Mode(ap.Mode80211axMixed), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
 						ap.VHTCaps(ap.VHTCapSGI160), ap.HECenterChannel(15), ap.HEChWidth(ap.HEChWidth160),
-						ap.OpClass(131), ap.PMF(ap.PMFRequired)},
+						ap.Is6GHz(), ap.PMF(ap.PMFRequired)},
 					secConfFac: wpa.NewConfigFactory("chromeos",
 						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					powerSave: false, shouldTputRequired: false,
@@ -509,7 +509,7 @@ func NetworkWifiPerf(ctx context.Context, s *testing.State) {
 
 		// For 6GHz tests, initialize the DUT regdomain to US so that the DUT is
 		// able to actively scan the 6GHz band.
-		if ap.Is6GHzOpClass(apIface.Config().OpClass) {
+		if apIface.Config().Is6GHz {
 			initialRegDomain, err := tf.InitializeRegdomainUS(ctx)
 			if err != nil {
 				s.Fatal("Failed to initialize the regulatory domain: ", err)

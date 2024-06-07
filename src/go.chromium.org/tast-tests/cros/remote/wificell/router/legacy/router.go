@@ -538,7 +538,7 @@ func (r *Router) StopHTTP(ctx context.Context, httpServer *http.Server) error {
 // After getting a Capturer instance, c, the caller should call r.StopCapture(ctx, c) at the end,
 // and use the shortened ctx (provided by r.ReserveForStopCapture(ctx, c)) before r.StopCapture()
 // to reserve time for it to run.
-func (r *Router) StartCapture(ctx context.Context, name string, ch, opClass int, freqOps []iw.SetFreqOption, pcapOps ...pcap.Option) (ret *pcap.Capturer, retErr error) {
+func (r *Router) StartCapture(ctx context.Context, name string, ch int, is6GHz bool, freqOps []iw.SetFreqOption, pcapOps ...pcap.Option) (ret *pcap.Capturer, retErr error) {
 	nd, err := r.netDev(ctx, ch, iw.IfTypeMonitor)
 	if err != nil {
 		return nil, err

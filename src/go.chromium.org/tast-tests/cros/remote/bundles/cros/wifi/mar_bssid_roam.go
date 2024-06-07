@@ -172,7 +172,7 @@ func MARBSSIDRoam(ctx context.Context, s *testing.State) {
 	}
 
 	var servicePath string
-	pcapPath, err := wifiutil.CollectPcapForAction(ctx, pcapDevice, "connect", ap1.Config().Channel, 0 /*opClass*/, freqOpts,
+	pcapPath, err := wifiutil.CollectPcapForAction(ctx, pcapDevice, "connect", ap1.Config().Channel, false /*is6GHz*/, freqOpts,
 		func(ctx context.Context) error {
 			resp, err := tf.ConnectWifiAP(ctx, ap1, dutcfg.ConnProperties(configProps))
 			if err != nil {
@@ -270,7 +270,7 @@ func MARBSSIDRoam(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get Freq Opts: ", err)
 	}
-	pcapPath, err = wifiutil.CollectPcapForAction(ctx, pcapDevice, "verify", ap2.Config().Channel, 0 /*opClass*/, freqOpts,
+	pcapPath, err = wifiutil.CollectPcapForAction(ctx, pcapDevice, "verify", ap2.Config().Channel, false /*is6GHz*/, freqOpts,
 		func(ctx context.Context) error {
 			if err := tf.VerifyConnection(ctx, ap2); err != nil {
 				return errors.Wrap(err, "DUT: failed to verify connection")

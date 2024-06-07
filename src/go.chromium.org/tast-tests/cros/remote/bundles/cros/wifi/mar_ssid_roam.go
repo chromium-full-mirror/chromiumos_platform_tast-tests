@@ -165,7 +165,7 @@ func MARSSIDRoam(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get Freq Opts: ", err)
 	}
-	pcapPath, err := wifiutil.CollectPcapForAction(ctx, pcapDevice, "connect", ap1.Config().Channel, 0 /*opClass*/, freqOpts,
+	pcapPath, err := wifiutil.CollectPcapForAction(ctx, pcapDevice, "connect", ap1.Config().Channel, false /*is6GHz*/, freqOpts,
 		func(ctx context.Context) error {
 			_, err := tf.ConnectWifiAP(ctx, ap1, dutcfg.ConnProperties(configProps))
 			if err != nil {
@@ -225,7 +225,7 @@ func MARSSIDRoam(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get Freq Opts: ", err)
 	}
 
-	pcapPath, err = wifiutil.CollectPcapForAction(ctx, pcapDevice, "connect2", ap2.Config().Channel, 0 /*opClass*/, freqOpts,
+	pcapPath, err = wifiutil.CollectPcapForAction(ctx, pcapDevice, "connect2", ap2.Config().Channel, false /*is6GHz*/, freqOpts,
 		func(ctx context.Context) error {
 			_, err := tf.ConnectWifiAP(ctx, ap2, dutcfg.ConnProperties(configProps))
 			if err != nil {
@@ -280,7 +280,7 @@ func MARSSIDRoam(ctx context.Context, s *testing.State) {
 	}
 	s.Log("MAC after forced roaming: ", roamMAC)
 
-	pcapPath, err = wifiutil.CollectPcapForAction(ctx, pcapDevice, "verify", ap1.Config().Channel, 0 /*opClass*/, freqOpts,
+	pcapPath, err = wifiutil.CollectPcapForAction(ctx, pcapDevice, "verify", ap1.Config().Channel, false /*is6GHz*/, freqOpts,
 		func(ctx context.Context) error {
 			if err := tf.VerifyConnection(ctx, ap1); err != nil {
 				return errors.Wrap(err, "DUT: failed to verify connection")

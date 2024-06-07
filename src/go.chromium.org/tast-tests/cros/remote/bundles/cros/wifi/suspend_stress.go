@@ -136,7 +136,7 @@ func init() {
 						apConfigs: []hostapd.ApConfig{
 							{
 								ApOpts: []hostapd.Option{hostapd.Mode(hostapd.Mode80211axPure), hostapd.Channel(21), hostapd.HTCaps(hostapd.HTCapHT20),
-									hostapd.HEChWidth(hostapd.HEChWidth20Or40), hostapd.OpClass(131), hostapd.PMF(hostapd.PMFRequired)},
+									hostapd.HEChWidth(hostapd.HEChWidth20Or40), hostapd.Is6GHz(), hostapd.PMF(hostapd.PMFRequired)},
 								SecConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 							},
 						},
@@ -157,7 +157,7 @@ func init() {
 						apConfigs: []hostapd.ApConfig{
 							{
 								ApOpts: []hostapd.Option{hostapd.Mode(hostapd.Mode80211axPure), hostapd.Channel(9), hostapd.HTCaps(hostapd.HTCapHT20),
-									hostapd.HEChWidth(hostapd.HEChWidth20Or40), hostapd.OpClass(131), hostapd.PMF(hostapd.PMFRequired)},
+									hostapd.HEChWidth(hostapd.HEChWidth20Or40), hostapd.Is6GHz(), hostapd.PMF(hostapd.PMFRequired)},
 								SecConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 							}, {
 								ApOpts: []hostapd.Option{hostapd.Mode(hostapd.Mode80211acPure), hostapd.HTCaps(hostapd.HTCapHT20), hostapd.Channel(40), hostapd.SpectrumManagement()},
@@ -180,7 +180,7 @@ func init() {
 						apConfigs: []hostapd.ApConfig{
 							{
 								ApOpts: []hostapd.Option{hostapd.Mode(hostapd.Mode80211axPure), hostapd.Channel(9), hostapd.HTCaps(hostapd.HTCapHT20),
-									hostapd.HEChWidth(hostapd.HEChWidth20Or40), hostapd.OpClass(131), hostapd.PMF(hostapd.PMFRequired)},
+									hostapd.HEChWidth(hostapd.HEChWidth20Or40), hostapd.Is6GHz(), hostapd.PMF(hostapd.PMFRequired)},
 								SecConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 							}, {
 								ApOpts:     []hostapd.Option{hostapd.Mode(hostapd.Mode80211acPure), hostapd.HTCaps(hostapd.HTCapHT20), hostapd.Channel(40), hostapd.SpectrumManagement(), hostapd.PMF(hostapd.PMFRequired)},
@@ -294,7 +294,7 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 		// For PSC 6GHz channels, spin up a non-colocated 5GHz AP for the
 		// duration of the test so that the regulatory domain is set to US upon
 		// each suspend-resume.
-		if hostapd.Is6GHzOpClass(apMain.Config().OpClass) && !isColocated {
+		if (apMain.Config().Is6GHz) && !isColocated {
 			ap5GHzOpts := append([]hostapd.Option{hostapd.Mode(hostapd.Mode80211acPure),
 				hostapd.HTCaps(hostapd.HTCapHT20), hostapd.Channel(40), hostapd.SpectrumManagement()})
 			ap5GHz, err := tf.ConfigureAP(ctx, ap5GHzOpts, nil)

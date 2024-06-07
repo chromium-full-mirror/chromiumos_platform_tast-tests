@@ -113,7 +113,7 @@ func init() {
 					pmfRequiredAP1: true,
 					ap1Opts:        []hostapd.Option{hostapd.Mode(hostapd.Mode80211axMixed), hostapd.Channel(40), hostapd.HTCaps(hostapd.HTCapHT20), hostapd.SpectrumManagement()},
 					ap2Opts: []hostapd.Option{hostapd.Mode(hostapd.Mode80211axPure), hostapd.Channel(21), hostapd.HTCaps(hostapd.HTCapHT20),
-						hostapd.HEChWidth(hostapd.HEChWidth20Or40), hostapd.OpClass(131), hostapd.PMF(hostapd.PMFRequired)},
+						hostapd.HEChWidth(hostapd.HEChWidth20Or40), hostapd.Is6GHz(), hostapd.PMF(hostapd.PMFRequired)},
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
 				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E"},

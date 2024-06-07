@@ -268,7 +268,7 @@ func simpleConnect80211axe() []*simpleConnectParams {
 		Val: []simpleConnectParamsVal{{
 			APConfigs: []apConfigVal{{
 				APOpts: `ap.Mode(ap.Mode80211axPure), ap.Channel(21), ap.HTCaps(ap.HTCapHT20),
-					ap.HEChWidth(ap.HEChWidth20Or40), ap.OpClass(131), ap.PMF(ap.PMFRequired)`,
+					ap.HEChWidth(ap.HEChWidth20Or40), ap.Is6GHz(), ap.PMF(ap.PMFRequired)`,
 				SecConfFac: "owe.NewConfigFactory(owe.ModePureOWE)",
 			}},
 			ExpectedSecurity: "shillconst.SecurityOWE",
@@ -285,7 +285,7 @@ func simpleConnect80211axe() []*simpleConnectParams {
 		Val: []simpleConnectParamsVal{{
 			APConfigs: []apConfigVal{{
 				APOpts: `ap.Mode(ap.Mode80211axPure), ap.Channel(21), ap.HTCaps(ap.HTCapHT20),
-					ap.HEChWidth(ap.HEChWidth20Or40), ap.OpClass(131), ap.PMF(ap.PMFRequired)`,
+					ap.HEChWidth(ap.HEChWidth20Or40), ap.Is6GHz(), ap.PMF(ap.PMFRequired)`,
 				SecConfFac: `wpa.NewConfigFactory("chromeos",
 					wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP),)`,
 			}},
@@ -303,7 +303,7 @@ func simpleConnect80211axe() []*simpleConnectParams {
 		Val: []simpleConnectParamsVal{{
 			APConfigs: []apConfigVal{{
 				APOpts: `ap.Mode(ap.Mode80211axPure), ap.Channel(21), ap.HTCaps(ap.HTCapLDPC), ap.HECenterChannel(19),
-					ap.HEChWidth(ap.HEChWidth20Or40), ap.OpClass(131), ap.PMF(ap.PMFRequired)`,
+					ap.HEChWidth(ap.HEChWidth20Or40), ap.Is6GHz(), ap.PMF(ap.PMFRequired)`,
 				SecConfFac: `wpa.NewConfigFactory("chromeos",
 					wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP),)`,
 			}},
@@ -322,7 +322,7 @@ func simpleConnect80211axe() []*simpleConnectParams {
 			APConfigs: []apConfigVal{{
 				APOpts: `ap.Mode(ap.Mode80211axMixed), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
 					ap.VHTCaps(ap.VHTCapSGI80), ap.HECenterChannel(7), ap.HEChWidth(ap.HEChWidth80),
-					ap.OpClass(131), ap.PMF(ap.PMFRequired)`,
+					ap.Is6GHz(), ap.PMF(ap.PMFRequired)`,
 				SecConfFac: `wpa.NewConfigFactory("chromeos",
 					wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP),)`,
 			}},
@@ -342,7 +342,7 @@ func simpleConnect80211axe() []*simpleConnectParams {
 			APConfigs: []apConfigVal{{
 				APOpts: `ap.Mode(ap.Mode80211axPure), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
 					ap.VHTCaps(ap.VHTCapSGI80), ap.HECenterChannel(7), ap.HEChWidth(ap.HEChWidth80),
-					ap.OpClass(131), ap.PMF(ap.PMFRequired)`,
+					ap.Is6GHz(), ap.PMF(ap.PMFRequired)`,
 				SecConfFac: `wpa.NewConfigFactory("chromeos",
 					wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP),)`,
 			}},
@@ -361,7 +361,7 @@ func simpleConnect80211axe() []*simpleConnectParams {
 			APConfigs: []apConfigVal{{
 				APOpts: `ap.Mode(ap.Mode80211axMixed), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
 					ap.VHTCaps(ap.VHTCapSGI160), ap.HECenterChannel(15), ap.HEChWidth(ap.HEChWidth160),
-					ap.OpClass(131), ap.PMF(ap.PMFRequired)`,
+					ap.Is6GHz(), ap.PMF(ap.PMFRequired)`,
 				SecConfFac: `wpa.NewConfigFactory("chromeos",
 					wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP),)`,
 			}},
@@ -381,7 +381,7 @@ func simpleConnect80211axe() []*simpleConnectParams {
 			APConfigs: []apConfigVal{{
 				APOpts: `ap.Mode(ap.Mode80211axPure), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
 					ap.VHTCaps(ap.VHTCapSGI160), ap.HECenterChannel(15), ap.HEChWidth(ap.HEChWidth160),
-					ap.OpClass(131), ap.PMF(ap.PMFRequired)`,
+					ap.Is6GHz(), ap.PMF(ap.PMFRequired)`,
 				SecConfFac: `wpa.NewConfigFactory("chromeos",
 					wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP),)`,
 			}},

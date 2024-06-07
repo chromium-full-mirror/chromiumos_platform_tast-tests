@@ -66,6 +66,31 @@ var freqToChannelMap = map[int]int{
 	5825: 165,
 }
 
+// OpClass6GHzEnum is the type for specifying the operating class in
+// hostapd config on 6GHz.
+type OpClass6GHzEnum int
+
+const (
+	opClass20MHz       OpClass6GHzEnum = 131
+	opClass40MHz       OpClass6GHzEnum = 132
+	opClass80MHz       OpClass6GHzEnum = 133
+	opClass160MHz      OpClass6GHzEnum = 134
+	opClass80Plus80MHz OpClass6GHzEnum = 135
+	opClassCh2         OpClass6GHzEnum = 136
+	opClass320MHz      OpClass6GHzEnum = 137
+)
+
+// Excludes channel 2 because its operating class is determined by channel
+// number rather than channel width.
+var chWidthToOpClass = map[ChWidthEnum]OpClass6GHzEnum{
+	ChWidth20:       opClass20MHz,
+	ChWidth40:       opClass40MHz,
+	ChWidth80:       opClass80MHz,
+	ChWidth160:      opClass160MHz,
+	ChWidth80Plus80: opClass80Plus80MHz,
+	ChWidth320:      opClass320MHz,
+}
+
 const (
 	base6GHzFreq   int = 5950
 	channel2       int = 2
@@ -79,14 +104,21 @@ const (
 	first6GHz40MHzChannel  int = 3
 	first6GHz80MHzChannel  int = 7
 	first6GHz160MHzChannel int = 15
-	opClass20MHz           int = 131
-	opClass40MHz           int = 132
-	opClass80MHz           int = 133
-	opClass160MHz          int = 134
-	opClass80Plus80MHz     int = 135
-	opClassCh2             int = 136
-	opClass320MHz          int = 137
 )
+
+// OpClass6GHz maps channel width to operating class in the 6GHz band. Except
+// for channel 2 which has a unique operating class.
+func OpClass6GHz(channelWidth ChWidthEnum, channel int) (OpClass6GHzEnum, error) {
+	if channel == 2 {
+		return opClassCh2, nil
+	}
+	for cw, opClass := range chWidthToOpClass {
+		if cw == channelWidth {
+			return opClass, nil
+		}
+	}
+	return 0, errors.Errorf("cannnot determine the op class for the given channel width=%s and channel=%d", channelWidth.String(), channel)
+}
 
 // FrequencyToChannel maps center frequency (in MHz) to the corresponding channel.
 func FrequencyToChannel(freq int) (int, error) {
@@ -108,14 +140,9 @@ func FrequencyToChannel(freq int) (int, error) {
 	return ch, nil
 }
 
-// Is6GHzOpClass returns whether a given operating class is in the 6GHz band.
-func Is6GHzOpClass(opClass int) bool {
-	return opClass >= 131 && opClass <= 137
-}
-
 // Validate6GHzOpClass checks that the correct operating class is used for a
-// given channel in the 6GHz band.
-func Validate6GHzOpClass(ch, opClass int) error {
+// given center channel in the 6GHz band.
+func Validate6GHzOpClass(ch int, opClass OpClass6GHzEnum) error {
 	if ch < min6GHzChannel || ch > max6GHzChannel {
 		return errors.New("channel is out of range")
 	}
@@ -141,26 +168,18 @@ func Validate6GHzOpClass(ch, opClass int) error {
 	return nil
 }
 
-// ChannelToFrequencyWithOpClass maps channel id and operating class to its
-// center frequency (in MHz). For the 2.4/5GHz band, the operating class will be
-// ignored. If the operating class is in the range [131, 137], the channel will
-// be mapped to a frequency in the 6GHz band.
-func ChannelToFrequencyWithOpClass(target, opClass int) (int, error) {
-	// If the operating class is specified and is in the range [131, 137], the
-	// channel id is mapped to a frequency in the 6GHz band.
-	if Is6GHzOpClass(opClass) {
-		if err := Validate6GHzOpClass(target, opClass); err != nil {
-			return 0, err
+// ChannelToFrequencyWithBand maps channel id to its center frequency (in MHz).
+func ChannelToFrequencyWithBand(target int, is6GHz bool) (int, error) {
+	if is6GHz {
+		if target < min6GHzChannel || target > max6GHzChannel {
+			return 0, errors.New("channel is out of range")
 		}
-		if opClass == opClassCh2 && target == channel2 {
+		if target == channel2 {
 			return min6GHzFreq, nil
 		}
-		f := base6GHzFreq + target*5
-		return f, nil
+		return base6GHzFreq + target*5, nil
 	}
 
-	// If the operating class is not specified or out of the range
-	// [131, 137], map to a frequency in the 2.4GHz/5GHz band.
 	for f, ch := range freqToChannelMap {
 		if ch == target {
 			return f, nil
@@ -172,5 +191,5 @@ func ChannelToFrequencyWithOpClass(target, opClass int) (int, error) {
 // ChannelToFrequency is kept for backwards compatibility with cases where
 // the operating class is not specified.
 func ChannelToFrequency(ch int) (int, error) {
-	return ChannelToFrequencyWithOpClass(ch, 0)
+	return ChannelToFrequencyWithBand(ch, false)
 }
