@@ -1986,11 +1986,11 @@ func (h *Helper) SetMiniOSPriority(ctx context.Context, expectedPriority string)
 	return h.Reporter.CrossystemSetParam(ctx, reporters.CrossystemParamMiniOSPriority, expectedPriority)
 }
 
-// CheckHasBatteryWithServoTypeC checks whether the DUT has a battery,
+// checkHasBatteryWithServoTypeC checks whether the DUT has a battery,
 // and whether the connected servo is a servo type-C. One scenario where
 // this method can be called is before disconnecting the servo charger to
 // make booting the USB more stable.
-func (h *Helper) CheckHasBatteryWithServoTypeC(ctx context.Context) (bool, error) {
+func (h *Helper) checkHasBatteryWithServoTypeC(ctx context.Context) (bool, error) {
 	batteryExists, err := h.CheckBatteryAvailable(ctx)
 	if err != nil {
 		return false, errors.Wrap(err, "failed to check if battery is available")
@@ -2002,10 +2002,17 @@ func (h *Helper) CheckHasBatteryWithServoTypeC(ctx context.Context) (bool, error
 	return batteryExists && supportPDRole, nil
 }
 
+// CheckAndSetServoCharger contains the current servo charger state and
+// the state whether the charger can be removed safely before booting from USB.
+type CheckAndSetServoCharger struct {
+	IsServoChargerConnected    bool
+	RemoveServoChargerRequired bool
+}
+
 // CheckServoChargerBeforeBootingFromUSB returns current charger state and
 // whether the charger can be removed safely before booting from USB.
-func (h *Helper) CheckServoChargerBeforeBootingFromUSB(ctx context.Context) (isChargerConnected, removeCharger bool) {
-	ok, err := h.CheckHasBatteryWithServoTypeC(ctx)
+func (h *Helper) CheckServoChargerBeforeBootingFromUSB(ctx context.Context) CheckAndSetServoCharger {
+	ok, err := h.checkHasBatteryWithServoTypeC(ctx)
 	if err != nil {
 		testing.ContextLog(ctx, "Unable to determine battery and servo connection type info: ", err)
 	}
@@ -2013,7 +2020,7 @@ func (h *Helper) CheckServoChargerBeforeBootingFromUSB(ctx context.Context) (isC
 	if err != nil {
 		testing.ContextLog(ctx, "Failed to check charger status")
 	}
-	return attached, ok && attached
+	return CheckAndSetServoCharger{IsServoChargerConnected: attached, RemoveServoChargerRequired: ok && attached}
 }
 
 // LaunchMiniOS sets minios_priority if needed, and launches minios.

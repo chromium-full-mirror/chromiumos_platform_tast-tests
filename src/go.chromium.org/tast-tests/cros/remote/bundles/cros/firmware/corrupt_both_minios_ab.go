@@ -54,7 +54,8 @@ func CorruptBothMiniOSAB(ctx context.Context, s *testing.State) {
 		s.Fatal("Creating mode switcher: ", err)
 	}
 
-	chargerAttached, removeChargerRequired := h.CheckServoChargerBeforeBootingFromUSB(ctx)
+	var state firmware.CheckAndSetServoCharger
+	state = h.CheckServoChargerBeforeBootingFromUSB(ctx)
 
 	cs := s.CloudStorage()
 	if err := h.SetupUSBKey(ctx, cs); err != nil {
@@ -106,10 +107,11 @@ func CorruptBothMiniOSAB(ctx context.Context, s *testing.State) {
 		if err := ms.ModeAwareReboot(ctx, firmware.ColdReset); err != nil {
 			s.Error("Failed to reboot: ", err)
 		}
-		if !chargerAttached {
+		if !state.IsServoChargerConnected {
 			if err := h.SetDUTPower(ctx, true); err != nil {
 				s.Fatal("Failed to connect charger: ", err)
 			}
+			state.IsServoChargerConnected = true
 			waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 2*time.Minute)
 			defer cancelWaitConnect()
 			if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
@@ -134,11 +136,11 @@ func CorruptBothMiniOSAB(ctx context.Context, s *testing.State) {
 	if err := h.LaunchMiniOS(ctx, true, false); err != nil {
 		s.Fatal("Failed to launch MiniOS: ", err)
 	}
-	if removeChargerRequired {
+	if state.RemoveServoChargerRequired {
 		if err := h.SetDUTPower(ctx, false); err != nil {
 			s.Fatal("Failed to remove charger: ", err)
 		}
-		chargerAttached = false
+		state.IsServoChargerConnected = false
 		// GoBigSleepLint: Wait for a while between removing the charger and
 		// booting the DUT from USB to prevent USB disconnected issues.
 		if err := testing.Sleep(ctx, 5*time.Second); err != nil {
@@ -146,6 +148,10 @@ func CorruptBothMiniOSAB(ctx context.Context, s *testing.State) {
 		}
 	}
 
+	s.Log("Setting DFP mode")
+	if err := h.Servo.SetDUTPDDataRole(ctx, servo.DFP); err != nil {
+		s.Logf("Failed to set pd data role to DFP: %.400s", err)
+	}
 	s.Log("Inserting a valid USB to DUT")
 	if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
 		s.Fatal("Failed to insert a valid USB to the DUT: ", err)
@@ -182,16 +188,16 @@ func CorruptBothMiniOSAB(ctx context.Context, s *testing.State) {
 	}
 	usbBoot = false
 
-	if removeChargerRequired {
+	if state.RemoveServoChargerRequired {
 		if err := h.SetDUTPower(ctx, true); err != nil {
 			s.Fatal("Failed to connect charger: ", err)
 		}
+		state.IsServoChargerConnected = true
 		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 2*time.Minute)
 		defer cancelWaitConnect()
 		if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
 			s.Fatal("Failed to reconnect to the DUT: ", err)
 		}
-		chargerAttached = true
 	}
 
 	h.DisconnectDUT(ctx)

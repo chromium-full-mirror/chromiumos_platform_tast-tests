@@ -107,8 +107,23 @@ func SelfSignedBoot(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupContext)
 
-	if err := developerUSBBoot(ctx, h, false); err != nil {
+	var state firmware.CheckAndSetServoCharger
+	state = h.CheckServoChargerBeforeBootingFromUSB(ctx)
+
+	if err := developerUSBBoot(ctx, h, false, &state); err != nil {
 		s.Fatal("Failed to boot from internal disk: ", err)
+	}
+
+	if !state.IsServoChargerConnected {
+		if err := h.SetDUTPower(ctx, true); err != nil {
+			s.Fatal("Failed to connect charger: ", err)
+		}
+		state.IsServoChargerConnected = true
+		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 2*time.Minute)
+		defer cancelWaitConnect()
+		if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
+			s.Fatal("Failed to reconnect to the DUT: ", err)
+		}
 	}
 	usbDev, err := grepServoUSBPathOnDUT(ctx, h)
 	if err != nil {
@@ -130,6 +145,17 @@ func SelfSignedBoot(ctx context.Context, s *testing.State) {
 		defer cancelWaitConnect()
 		if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
 			s.Fatal("Failed to reconnect to the DUT: ", err)
+		}
+		if !state.IsServoChargerConnected {
+			if err := h.SetDUTPower(ctx, true); err != nil {
+				s.Fatal("Failed to connect charger: ", err)
+			}
+			state.IsServoChargerConnected = true
+			waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 2*time.Minute)
+			defer cancelWaitConnect()
+			if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
+				s.Fatal("Failed to reconnect to the DUT: ", err)
+			}
 		}
 		s.Log("Inserting the USB to DUT")
 		if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
@@ -156,12 +182,12 @@ func SelfSignedBoot(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupContext)
 
-	if err := developerUSBBoot(ctx, h, true); err != nil {
+	if err := developerUSBBoot(ctx, h, true, &state); err != nil {
 		s.Fatal("Failed to boot from USB: ", err)
 	}
 }
 
-func developerUSBBoot(ctx context.Context, h *firmware.Helper, expectedBootFromUSB bool) error {
+func developerUSBBoot(ctx context.Context, h *firmware.Helper, expectedBootFromUSB bool, state *firmware.CheckAndSetServoCharger) error {
 	ms, err := firmware.NewModeSwitcher(ctx, h)
 	if err != nil {
 		return errors.Wrap(err, "failed to create mode switcher")
@@ -172,6 +198,17 @@ func developerUSBBoot(ctx context.Context, h *firmware.Helper, expectedBootFromU
 	}
 	if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
 		return errors.Wrap(err, "failed to cold reset the DUT")
+	}
+	if state.RemoveServoChargerRequired {
+		if err := h.SetDUTPower(ctx, false); err != nil {
+			return errors.Wrap(err, "failed to remove charger")
+		}
+		state.IsServoChargerConnected = false
+		// GoBigSleepLint: Wait for a while between removing the charger and
+		// booting the DUT from USB to prevent USB disconnected issues.
+		if err := testing.Sleep(ctx, 5*time.Second); err != nil {
+			return errors.Wrap(err, "failed to sleep")
+		}
 	}
 	testing.ContextLog(ctx, "Setting DFP mode")
 	if err := h.Servo.SetDUTPDDataRole(ctx, servo.DFP); err != nil {

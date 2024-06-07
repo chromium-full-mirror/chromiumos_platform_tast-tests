@@ -25,11 +25,6 @@ type recScreenMiniOSTestParams struct {
 	kbShortcutBoot bool
 }
 
-type checkAndSetServoCharger struct {
-	removeCharger      bool
-	isChargerConnected bool
-}
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: RecScreenMiniOS,
@@ -99,8 +94,8 @@ func RecScreenMiniOS(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	var state checkAndSetServoCharger
-	state.isChargerConnected, state.removeCharger = h.CheckServoChargerBeforeBootingFromUSB(ctx)
+	var state firmware.CheckAndSetServoCharger
+	state = h.CheckServoChargerBeforeBootingFromUSB(ctx)
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 4*time.Minute)
@@ -109,7 +104,7 @@ func RecScreenMiniOS(ctx context.Context, s *testing.State) {
 	defer func(ctx context.Context) {
 		if miniOSConnectTimeoutErr.err != nil {
 			cs := s.CloudStorage()
-			if err := state.restoreDUTConnectionWithUSB(ctx, h, cs); err != nil {
+			if err := restoreDUTConnectionWithUSB(ctx, h, cs, &state); err != nil {
 				s.Error("Failed to restore DUT connection with USB: ", err)
 			} else {
 				saveLogPath := filepath.Join(s.OutDir(), "check_minios_corrupted.log")
@@ -131,11 +126,11 @@ func RecScreenMiniOS(ctx context.Context, s *testing.State) {
 		if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
 			s.Error("Failed to reconnect to dut: ", err)
 		}
-		if !state.isChargerConnected {
+		if !state.IsServoChargerConnected {
 			if err := h.SetDUTPower(ctx, true); err != nil {
 				s.Fatal("Failed to connect charger: ", err)
 			}
-			state.isChargerConnected = true
+			state.IsServoChargerConnected = true
 			waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 2*time.Minute)
 			defer cancelWaitConnect()
 			if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
@@ -180,20 +175,24 @@ func RecScreenMiniOS(ctx context.Context, s *testing.State) {
 	}
 }
 
-func (ckchg *checkAndSetServoCharger) restoreDUTConnectionWithUSB(ctx context.Context, h *firmware.Helper, cs *testing.CloudStorage) error {
+func restoreDUTConnectionWithUSB(ctx context.Context, h *firmware.Helper, cs *testing.CloudStorage, state *firmware.CheckAndSetServoCharger) error {
 	if err := h.SetupUSBKey(ctx, cs); err != nil {
 		return errors.Wrap(err, "usbkey not working")
 	}
-	if ckchg.removeCharger {
+	if state.RemoveServoChargerRequired {
 		if err := h.SetDUTPower(ctx, false); err != nil {
 			return errors.Wrap(err, "failed to remove charger")
 		}
-		ckchg.isChargerConnected = false
+		state.IsServoChargerConnected = false
 		// GoBigSleepLint: Wait for a while between removing the charger and
 		// booting the DUT from USB to prevent USB disconnected issues.
 		if err := testing.Sleep(ctx, 5*time.Second); err != nil {
 			return errors.Wrap(err, "failed to sleep")
 		}
+	}
+	testing.ContextLog(ctx, "Setting DFP mode")
+	if err := h.Servo.SetDUTPDDataRole(ctx, servo.DFP); err != nil {
+		testing.ContextLogf(ctx, "Failed to set pd data role to DFP: %.400s", err)
 	}
 	testing.ContextLog(ctx, "Inserting a valid USB to DUT")
 	if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
