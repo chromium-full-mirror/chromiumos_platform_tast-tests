@@ -138,6 +138,16 @@ func init() {
 				IsPowerQual:           false,
 			},
 			Timeout: 3 * time.Hour,
+		}, {
+			Name: "power_test_prep_lab",
+			Val: power.ChargeParams{
+				MinChargePercentage:   65.0,
+				MaxChargePercentage:   70.0,
+				DischargeOnCompletion: true,
+				IsCustomized:          false,
+				IsPowerQual:           false,
+			},
+			Timeout: 3 * time.Hour,
 		}},
 	})
 }
