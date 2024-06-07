@@ -197,6 +197,12 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 		defer restoreEthernet(cleanupCtx)
 	}
 
+	// Make sure that the Ethernet services have the default values for the
+	// properties we care about.
+	if err := virtualnet.ResetEthernetProperties(ctx, mgr); err != nil {
+		s.Fatal("Failed to reset ethernet properties: ", err)
+	}
+
 	pc, err := patchpanel.New(ctx)
 	if err != nil {
 		s.Fatal("Failed to create patchpanel client: ", err)
