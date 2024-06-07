@@ -22,7 +22,10 @@ func init() {
 		Func:         ChangeDeviceLanguage,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Change device language and validate new langauge after restart",
-		Contacts:     []string{"cros-borders-eng@google.com", "xiuwen@google.com"},
+		Contacts: []string{
+			"cros-borders-eng@google.com",
+			"chromeos-consumer-engprod@google.com",
+		},
 		BugComponent: "b:1282854",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
@@ -75,6 +78,7 @@ func ChangeDeviceLanguage(ctx context.Context, s *testing.State) {
 	cr = nil
 
 	// Sleep a short time to ensure reboot button is safely clicked.
+	// TODO: Improve logic to wait for an event as per GoBigSleepLint
 	if err := testing.Sleep(ctx, 1*time.Second); err != nil {
 		s.Fatal("Failed to sleep: ", err)
 	}

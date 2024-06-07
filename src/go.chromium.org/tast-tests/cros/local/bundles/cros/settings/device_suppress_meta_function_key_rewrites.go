@@ -28,8 +28,7 @@ func init() {
 		Desc:         "Test if user can suppress meta + function key rewrites",
 		Contacts: []string{
 			"cros-peripherals@google.com",
-			"wangdanny@google.com",
-			"dpad@google.com",
+			"chromeos-consumer-engprod@google.com",
 		},
 		// ChromeOS > Software > System Services > Peripherals > Keyboard
 		BugComponent: "b:1131926",

@@ -29,10 +29,10 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DeviceLoginScreen,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Device settings work on the login screen",
+		Desc:         "Device keyboard remapping settings work on the login screen",
 		Contacts: []string{
 			"cros-peripherals@google.com",
-			"michaelcheco@google.com",
+			"chromeos-consumer-engprod@google.com",
 		},
 		// ChromeOS > Software > System Services > Peripherals > Keyboard
 		BugComponent: "b:1131926",

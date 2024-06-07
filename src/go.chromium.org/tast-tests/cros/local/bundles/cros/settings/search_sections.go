@@ -47,7 +47,7 @@ func init() {
 		Desc:         "Search with keywords and verify the related results from OS Settings",
 		Contacts: []string{
 			"cros-settings@google.com",
-			"chromeos-sw-engprod@google.com",
+			"chromeos-consumer-engprod@google.com",
 		},
 		// ChromeOS > Software > Settings
 		BugComponent: "b:1246072",

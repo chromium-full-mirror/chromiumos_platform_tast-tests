@@ -29,7 +29,7 @@ func init() {
 		Desc:         "Test mouse key customization to a keyboard action in device settings",
 		Contacts: []string{
 			"cros-peripherals@google.com",
-			"dpad@google.com",
+			"chromeos-consumer-engprod@google.com",
 		},
 		// ChromeOS > Software > Fundamentals > Peripherals > Mouse
 		BugComponent: "b:1131847",

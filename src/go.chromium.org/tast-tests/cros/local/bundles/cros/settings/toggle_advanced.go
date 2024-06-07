@@ -24,7 +24,7 @@ func init() {
 		Desc:         "Checks that the Advanced section of ChromeOS Settings can be expanded and collapsed",
 		Contacts: []string{
 			"cros-settings@google.com",
-			"chromeos-sw-engprod@google.com",
+			"chromeos-consumer-engprod@google.com",
 		},
 		// ChromeOS > Software > Settings
 		BugComponent: "b:1246072",

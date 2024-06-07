@@ -32,7 +32,7 @@ func init() {
 		Desc:         "Verify the simulate right-click touchpad setting",
 		Contacts: []string{
 			"cros-peripherals@google.com",
-			"michaelcheco@google.com",
+			"chromeos-consumer-engprod@google.com",
 		},
 		// ChromeOS > Software > System Services > Peripherals > Touchpad
 		BugComponent: "b:1131849",

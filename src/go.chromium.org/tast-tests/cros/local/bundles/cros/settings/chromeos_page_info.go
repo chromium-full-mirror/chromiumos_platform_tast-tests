@@ -30,7 +30,7 @@ func init() {
 		Desc:         "Check the ChromeOS page shows enough information to user",
 		Contacts: []string{
 			"cros-settings@google.com",
-			"chromeos-sw-engprod@google.com",
+			"chromeos-consumer-engprod@google.com",
 		},
 		// OS > Systems > Settings
 		BugComponent: "b:1246072",

@@ -27,7 +27,7 @@ func init() {
 		Desc:         "Checks the terms of service link is clickable within help page",
 		Contacts: []string{
 			"cros-settings@google.com",
-			"chromeos-sw-engprod@google.com",
+			"chromeos-consumer-engprod@google.com",
 		},
 		// OS > Systems > Settings
 		BugComponent: "b:1246072",
@@ -104,7 +104,7 @@ func checkTermsOfService(ctx context.Context, cr *chrome.Chrome, tconn *chrome.T
 	return verifyContent(ctx, cr, outDir, ui)
 }
 
-// Verify that the header of the chrome://terms/ page appears and contains the correct string.
+// verifyContent in the header of the chrome://terms/ page appears and contains the correct string.
 func verifyContent(ctx context.Context, cr *chrome.Chrome, outDir string, ui *uiauto.Context) (err error) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)

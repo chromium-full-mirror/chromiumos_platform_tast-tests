@@ -28,7 +28,7 @@ func init() {
 		Desc:         "Open OS Settings and check main sections are displayed properly",
 		Contacts: []string{
 			"cros-settings@google.com",
-			"chromeos-sw-engprod@google.com",
+			"chromeos-consumer-engprod@google.com",
 		},
 		// OS > Systems > Settings
 		BugComponent: "b:1246072",
