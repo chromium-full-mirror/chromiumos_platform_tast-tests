@@ -39,11 +39,11 @@ func init() {
 			"tij@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		Attr:         []string{"group:firmware", "firmware_unstable"},
+		Attr:         []string{"group:firmware", "firmware_unstable", "firmware_usb"},
 		ServiceDeps:  []string{"tast.cros.firmware.KernelService"},
 		Vars:         []string{"firmware.skipFlashUSB"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
-		Timeout:      30 * time.Minute,
+		Timeout:      2 * time.Hour,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{
 			{
@@ -192,6 +192,9 @@ func CorruptBothKernelCopies(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to prioritize KERN-A: ", err)
 	}
 
+	var state firmware.CheckAndSetServoCharger
+	state = h.CheckServoChargerBeforeBootingFromUSB(ctx)
+
 	s.Log("Performing mode aware reboot to ensure boot to copy A")
 	if err := ms.ModeAwareReboot(ctx, firmware.ColdReset); err != nil {
 		s.Fatal("Failed to reboot: ", err)
@@ -246,32 +249,10 @@ func CorruptBothKernelCopies(ctx context.Context, s *testing.State) {
 	needsUSBRestore := true
 	defer func(ctx context.Context) {
 		if needsUSBRestore {
-			if err := h.Servo.SetPowerState(ctx, servo.PowerStateRec); err != nil {
-				s.Fatal("Failed to perform power state reset")
+			s.Log("Booting to recovery mode to restore kernel from USB")
+			if err := h.BootToRecoveryMode(ctx, &state); err != nil {
+				s.Fatal("Failed to boot to recovery mode: ", err)
 			}
-			if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
-				s.Fatal("Setting usb mux state to dut: ")
-			}
-			// Expect to go to recovery mode and set recovery reason in event log.
-			if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
-				s.Fatal("Failed to perform power state reset")
-			}
-
-			connectCtx, cancel := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
-			defer cancel()
-			if err := h.WaitConnect(connectCtx); err != nil {
-				s.Fatal("Failed to connect to DUT: ", err)
-			}
-
-			bootedFromRemovableDevice, err := h.Reporter.BootedFromRemovableDevice(ctx)
-			if err != nil {
-				testing.ContextLog(ctx, "Could not determine boot device type: ", err)
-			}
-			if !bootedFromRemovableDevice {
-				testing.ContextLog(ctx, "DUT booted from disk")
-				return
-			}
-
 			s.Log("Restore KERN-A")
 			if err := restoreKernelHeaderFromUSB(ctx, h, diskPath, "2"); err != nil {
 				s.Fatal("Failed to restore KERN-A: ", err)
@@ -284,6 +265,18 @@ func CorruptBothKernelCopies(ctx context.Context, s *testing.State) {
 			s.Log("Performing mode aware reboot to boot to original bootmode")
 			if err := ms.RebootToMode(ctx, bootMode, firmware.AllowGBBForce); err != nil {
 				s.Fatal("Failed to reboot: ", err)
+			}
+
+			if !state.IsServoChargerConnected {
+				if err := h.SetDUTPower(ctx, true); err != nil {
+					s.Fatal("Failed to connect charger: ", err)
+				}
+				state.IsServoChargerConnected = true
+				waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 2*time.Minute)
+				defer cancelWaitConnect()
+				if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
+					s.Fatal("Failed to reconnect to the DUT: ", err)
+				}
 			}
 
 			s.Log("Syncing TAST File from host")
@@ -309,27 +302,10 @@ func CorruptBothKernelCopies(ctx context.Context, s *testing.State) {
 	}
 
 	if !h.Config.NoBrokenScreenInDev {
-		s.Log("Going to recovery mode (power_state:rec)")
-		if err := h.Servo.SetPowerState(ctx, servo.PowerStateRec); err != nil {
-			s.Fatal("Failed to warm reset the DUT: ", err)
+		s.Log("Booting to recovery mode")
+		if err := h.BootToRecoveryMode(ctx, &state); err != nil {
+			s.Fatal("Failed to boot to recovery mode: ", err)
 		}
-	}
-	if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
-		s.Fatal("Setting usb mux state to dut: ")
-	}
-
-	connectCtx, cancel := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
-	defer cancel()
-	if err := h.WaitConnect(connectCtx); err != nil {
-		s.Fatal("Failed to connect to DUT: ", err)
-	}
-
-	bootedFromRemovableDevice, err = h.Reporter.BootedFromRemovableDevice(ctx)
-	if err != nil {
-		testing.ContextLog(ctx, "Could not determine boot device type: ", err)
-	}
-	if !bootedFromRemovableDevice {
-		testing.ContextLog(ctx, "DUT unexpectedly booted from disk")
 	}
 
 	hasRecRes, err := h.Reporter.ContainsRecoveryReason(ctx, []reporters.RecoveryReason{
@@ -353,7 +329,7 @@ func CorruptBothKernelCopies(ctx context.Context, s *testing.State) {
 		s.Error("Failed to restore KERN-B: ", err)
 	}
 
-	if err := ms.RebootToMode(ctx, bootMode); err != nil {
+	if err := h.RebootWithVT2Command(ctx, bootMode); err != nil {
 		s.Fatal("Failed to reboot back to original boot mode: ", err)
 	}
 
@@ -362,9 +338,21 @@ func CorruptBothKernelCopies(ctx context.Context, s *testing.State) {
 		testing.ContextLog(ctx, "Could not determine boot device type: ", err)
 	}
 	if bootedFromRemovableDevice {
-		s.Fatal(ctx, "DUT unexpectedly booted from usb")
+		s.Fatal("DUT unexpectedly booted from usb")
 	}
 	needsUSBRestore = false
+
+	if !state.IsServoChargerConnected {
+		if err := h.SetDUTPower(ctx, true); err != nil {
+			s.Fatal("Failed to connect charger: ", err)
+		}
+		state.IsServoChargerConnected = true
+		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 2*time.Minute)
+		defer cancelWaitConnect()
+		if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
+			s.Fatal("Failed to reconnect to the DUT: ", err)
+		}
+	}
 
 	if err := h.RequireKernelServiceClient(ctx); err != nil {
 		s.Fatal("Failed to connect to kernel service: ", err)
