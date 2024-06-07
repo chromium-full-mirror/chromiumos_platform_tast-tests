@@ -66,6 +66,13 @@ func init() {
 			},
 			ExtraHardwareDeps: hwdep.D(hwdep.InternalTouchpad()),
 		}, {
+			Name: "with_touchpad_flex",
+			Val: touchpadInfoTestParams{
+				TouchpadValidation: true,
+			},
+			ExtraSoftwareDeps: []string{"flex_device"},
+			ExtraHardwareDeps: hwdep.D(hwdep.Touchpad()),
+		}, {
 			Name: "",
 			Val: touchpadInfoTestParams{
 				TouchpadValidation: false,
