@@ -102,6 +102,7 @@ func init() {
 				Name:              "from_s5",
 				ExtraAttr:         []string{"group:crosbolt", "crosbolt_weekly"},
 				ExtraHardwareDeps: hwdep.D(hwdep.ChromeEC()),
+				ExtraSoftwareDeps: []string{"s5_inactivity_timeout"},
 				Fixture:           fixture.NormalMode,
 				Val:               bootPerfFromS5,
 			},
