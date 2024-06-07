@@ -43,7 +43,7 @@ func init() {
 		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
 		BugComponent: "b:1487630",
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
-		SoftwareDeps: []string{"chrome", "play_store"},
+		SoftwareDeps: []string{"chrome", "play_store", "gaia"},
 		Timeout:      15 * time.Minute,
 		VarDeps: []string{
 			arcCommon.ManagedAccountPoolVarName,
@@ -80,7 +80,7 @@ func init() {
 					secondaryAccountPool: arcCommon.ManagedAccountPoolVarName,
 					optin:                true,
 				},
-				ExtraSoftwareDeps: []string{"android_container", "gaia"},
+				ExtraSoftwareDeps: []string{"android_container"},
 				ExtraAttr:         []string{"informational"},
 			},
 			{
@@ -90,7 +90,7 @@ func init() {
 					secondaryAccountPool: arcCommon.ManagedAccountPoolVarName,
 					optin:                true,
 				},
-				ExtraSoftwareDeps: []string{"android_vm", "gaia"},
+				ExtraSoftwareDeps: []string{"android_vm"},
 				ExtraAttr:         []string{"informational"},
 			}},
 	})

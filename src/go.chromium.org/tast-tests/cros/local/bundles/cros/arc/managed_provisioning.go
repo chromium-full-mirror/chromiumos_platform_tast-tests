@@ -43,6 +43,7 @@ func init() {
 			"chrome",
 			"chrome_internal",
 			"play_store",
+			"gaia",
 		},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.ArcEnabled{}, pci.VerifiedFunctionalityOS),

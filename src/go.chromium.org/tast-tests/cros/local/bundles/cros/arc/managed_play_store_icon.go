@@ -39,7 +39,7 @@ func init() {
 		Contacts:     []string{"arc-commercial@google.com", "yaohuali@google.com"},
 		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
 		BugComponent: "b:1487630",
-		SoftwareDeps: []string{"chrome", "no_tablet_form_factor"},
+		SoftwareDeps: []string{"chrome", "no_tablet_form_factor", "gaia"},
 		Attr:         []string{"group:mainline"},
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		VarDeps:      []string{arcCommon.ManagedAccountPoolVarName},

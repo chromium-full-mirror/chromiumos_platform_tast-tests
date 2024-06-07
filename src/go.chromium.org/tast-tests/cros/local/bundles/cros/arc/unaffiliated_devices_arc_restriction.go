@@ -39,7 +39,7 @@ func init() {
 		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
 		BugComponent: "b:1487630",
 		Attr:         []string{"group:mainline"},
-		SoftwareDeps: []string{"chrome", "play_store"},
+		SoftwareDeps: []string{"chrome", "play_store", "gaia"},
 		Timeout:      8 * time.Minute,
 		Fixture:      fixture.CleanOwnership,
 		VarDeps: []string{

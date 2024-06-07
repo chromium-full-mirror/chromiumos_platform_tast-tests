@@ -35,7 +35,7 @@ func init() {
 		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
 		BugComponent: "b:1487630",
 		Attr:         []string{"group:mainline"},
-		SoftwareDeps: []string{"chrome", "play_store"},
+		SoftwareDeps: []string{"chrome", "play_store", "gaia"},
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		VarDeps: []string{
 			arcCommon.ManagedAccountPoolVarName,

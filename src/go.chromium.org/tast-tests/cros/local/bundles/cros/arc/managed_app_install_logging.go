@@ -47,7 +47,7 @@ func init() {
 		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
 		BugComponent: "b:1487630",
 		Attr:         []string{"group:mainline"},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "gaia"},
 		Timeout:      arcInstallLoggingTestTimeout,
 		VarDeps:      []string{tape.ServiceAccountVar, arcCommon.ManagedAccountPoolVarName},
 		SearchFlags: []*testing.StringPair{
