@@ -240,7 +240,6 @@ func loginAndConnectToChrome(ctx, cleanupCtx context.Context, fdms *fakedms.Fake
 	opts = append(opts, chrome.ARCSupported())
 	opts = append(opts, chrome.UnRestrictARCCPU())
 	opts = append(opts, chrome.DMSPolicy(fdms.URL))
-	opts = append(opts, chrome.EnableFeatures("UnaffiliatedDeviceArcRestriction"))
 	opts = append(opts, chrome.ExtraArgs(arc.DisableSyncFlags()...))
 	cr, err := chrome.New(
 		ctx,
