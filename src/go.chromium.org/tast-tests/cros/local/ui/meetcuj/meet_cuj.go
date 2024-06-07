@@ -1310,6 +1310,10 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 				return errors.Wrap(err, "failed to start screen sharing")
 			}
 
+			if err := googledocs.ClickOnSlidesWebArea(tconn)(ctx); err != nil {
+				return errors.Wrap(err, "failed to click on slide's web area")
+			}
+
 			// Ensure the slides deck gets scrolled.
 			if err := scrollDownPage(ctx, collaborationConn, kw, "document.getElementsByClassName('punch-filmstrip-scroll')[0]"); err != nil {
 				return err
@@ -1360,6 +1364,10 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 				return errors.Wrap(err, "failed to start screen sharing")
 			}
 			expectedParticipantCount++
+
+			if err := googledocs.ClickOnSheetsWebArea(tconn)(ctx); err != nil {
+				return errors.Wrap(err, "failed to click on sheets's web area")
+			}
 
 			// Ensure the sheets deck gets scrolled.
 			if err := scrollDownPage(ctx, collaborationConn, kw, "document.getElementsByClassName('native-scrollbar-y')[0]"); err != nil {
@@ -1616,12 +1624,16 @@ func scrollDownPage(ctx context.Context, conn *chrome.Conn, kw *input.KeyboardEv
 	return ensureElementGetsScrolled(ctx, conn, element)
 }
 
+var (
+	stopPresentingRe     = regexp.MustCompile("(Stop presenting|Stop sharing)")
+	stopPresentingButton = nodewith.NameRegex(stopPresentingRe).Role(role.Button).First()
+)
+
 // startPresenting starts to present |presentTabTitle| tab in Google Meet.
 // It will only start present if there's nothing being shared now.
 func startPresenting(ctx context.Context, conn *chrome.Conn, ui *uiauto.Context, meetHelper *googlemeet.HRTelemetryHelper, kw *input.KeyboardEventWriter, presentTabTitle string) error {
 	// Only start sharing if it's not presenting anything now.
-	stopSharing := nodewith.Name("Stop sharing").Role(role.Button).First()
-	if err := ui.Exists(stopSharing)(ctx); err == nil {
+	if err := ui.Exists(stopPresentingButton)(ctx); err == nil {
 		return nil
 	}
 
@@ -1632,7 +1644,6 @@ func startPresenting(ctx context.Context, conn *chrome.Conn, ui *uiauto.Context,
 	// Select the tab to present. Avoid directly tapping on the screen
 	// due to miscalculated node bounds for Lacros tablet devices.
 	waitForPresentTabFocus := ui.WithTimeout(5 * time.Second).WaitUntilExists(nodewith.NameContaining(presentTabTitle).HasClass("AXVirtualView").Focused())
-	stopPresenting := nodewith.Name("Stop presenting").Role(role.Button)
 	if err := uiauto.NamedCombine(fmt.Sprintf("select tab %q to screenshare", presentTabTitle),
 		ui.EnsureFocused(nodewith.HasClass("TableView").Role(role.ListGrid)),
 		// If the presenting tab is not focused, press the down
@@ -1648,7 +1659,7 @@ func startPresenting(ctx context.Context, conn *chrome.Conn, ui *uiauto.Context,
 		// Some low-end DUTs may take a long time to actually get to
 		// the presenting page. Wait for the "Stop presenting" to appear
 		// to ensure the page is being shared.
-		ui.WithTimeout(time.Minute).WaitUntilExists(stopPresenting),
+		ui.WithTimeout(time.Minute).WaitUntilExists(stopPresentingButton),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to select the tab to share")
 	}
@@ -1665,10 +1676,9 @@ func startPresenting(ctx context.Context, conn *chrome.Conn, ui *uiauto.Context,
 
 // stopPresenting stops presenting in Google Meet.
 func stopPresenting(ctx context.Context, ui *uiauto.Context) error {
-	stopPresenting := nodewith.Name("Stop presenting").Role(role.Button)
-	return uiauto.NamedCombine("stop presenting",
-		ui.LeftClick(stopPresenting),
-		ui.WithTimeout(30*time.Second).WaitUntilGone(stopPresenting),
+	return uiauto.NamedAction("stop presenting",
+		ui.WithTimeout(time.Minute).DoDefaultUntil(stopPresentingButton,
+			ui.WaitUntilGone(stopPresentingButton)),
 	)(ctx)
 }
 

@@ -100,3 +100,9 @@ func ChangeSheetFontSize(tconn *chrome.TestConn, size string) action.Action {
 		waitForDocsSaved(tconn),
 	))
 }
+
+// ClickOnSheetsWebArea clicks on sheets's web area.
+func ClickOnSheetsWebArea(tconn *chrome.TestConn) action.Action {
+	ui := uiauto.New(tconn)
+	return ui.LeftClick(sheetsWebArea)
+}
