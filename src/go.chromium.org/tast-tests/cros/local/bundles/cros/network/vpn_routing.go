@@ -172,6 +172,7 @@ func VPNRouting(ctx context.Context, s *testing.State) {
 	opts := []vpn.Option{
 		vpn.WithCertVals(s.FixtValue().(vpn.FixtureEnv).CertVals),
 		vpn.WithIPType(tc.ipType),
+		vpn.WithProxyConfig(), // b/344798084
 	}
 	if tc.sameSubnetForOverlayUnderlay {
 		ipv4Subnet := func() *subnet.IPv4Subnet {

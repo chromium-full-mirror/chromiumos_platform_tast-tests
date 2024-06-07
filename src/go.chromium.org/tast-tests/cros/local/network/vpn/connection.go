@@ -33,6 +33,7 @@ type Config struct {
 	MTU           int
 	Metered       bool
 	SearchDomains []string
+	proxyConfig   string
 
 	IPsecAuthType IPsecAuthType
 
@@ -172,6 +173,17 @@ func WithMetered(val bool) Option {
 func WithSearchDomains(val []string) Option {
 	return func(c *Config) {
 		c.SearchDomains = val
+	}
+}
+
+// WithProxyConfig configures a fake PAC config on the VPN service. Empty by
+// default. The main purpose of this option is to make sure that the network
+// validation mode of a VPN service won't be affected by the ProxyConfig
+// property (b/344798084), and thus the value does not matter as long as the
+// mode value is not "direct".
+func WithProxyConfig() Option {
+	return func(c *Config) {
+		c.proxyConfig = "{\"mode\":\"pac_script\",\"pac_mandatory\":false,\"pac_url\":\"url\"}"
 	}
 }
 
@@ -628,17 +640,16 @@ func CreateProperties(server, secondServer *Server) (*ShillProperties, error) {
 		return nil, err
 	}
 
-	if server != nil {
-		config := server.Config
-		properties.raw["Metered"] = config.Metered
-		staticIPConfig, ok := properties.raw["StaticIPConfig"].(map[string]interface{})
-		if !ok {
-			staticIPConfig = make(map[string]interface{})
-			properties.raw["StaticIPConfig"] = staticIPConfig
-		}
-		staticIPConfig["Mtu"] = config.MTU
-		staticIPConfig["SearchDomains"] = config.SearchDomains
+	config := server.Config
+	properties.raw["ProxyConfig"] = config.proxyConfig
+	properties.raw["Metered"] = config.Metered
+	staticIPConfig, ok := properties.raw["StaticIPConfig"].(map[string]interface{})
+	if !ok {
+		staticIPConfig = make(map[string]interface{})
+		properties.raw["StaticIPConfig"] = staticIPConfig
 	}
+	staticIPConfig["Mtu"] = config.MTU
+	staticIPConfig["SearchDomains"] = config.SearchDomains
 
 	return properties, nil
 }
