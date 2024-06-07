@@ -18,7 +18,10 @@ func init() {
 		Func:         EnableAndDisableMultipleTimes,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Enable/disable Google Assistant service multiple times and checks the running status",
-		Contacts:     []string{"assistive-eng@google.com"},
+		Contacts: []string{
+			"cros-assistive@google.com",
+			"chromeos-consumer-engprod@google.com",
+		},
 		BugComponent: "b:905229", // ChromeOS > Software > Assistive
 		Attr: []string{
 			"group:mainline",

@@ -26,7 +26,10 @@ func init() {
 		Func:         CheckShutdownCrash,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Check if there was a shutdown crash when Assistant is enabled",
-		Contacts:     []string{"assistive-eng@google.com"},
+		Contacts: []string{
+			"cros-assistive@google.com",
+			"chromeos-consumer-engprod@google.com",
+		},
 		BugComponent: "b:905229", // ChromeOS > Software > Assistive
 		Attr: []string{
 			"group:mainline",

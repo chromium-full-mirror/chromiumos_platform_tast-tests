@@ -18,7 +18,10 @@ func init() {
 		Func:         StartupInSignedInMode,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Starts Google Assistant service in signed-in mode and checks the running status",
-		Contacts:     []string{"assistive-eng@google.com"},
+		Contacts: []string{
+			"cros-assistive@google.com",
+			"chromeos-consumer-engprod@google.com",
+		},
 		BugComponent: "b:905229", // ChromeOS > Software > Assistive
 		Attr: []string{
 			"group:mainline",

@@ -21,7 +21,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests Assistant to set timer",
 		BugComponent: "b:905229", // ChromeOS > Software > Assistive
-		Contacts:     []string{"assistive-eng@google.com"},
+		Contacts: []string{
+			"cros-assistive@google.com",
+			"chromeos-consumer-engprod@google.com",
+		},
 		Attr: []string{
 			"group:mainline",
 			"informational",

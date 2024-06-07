@@ -21,7 +21,10 @@ func init() {
 		Func:         OpenSettings,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests opening the Settings app using an Assistant query",
-		Contacts:     []string{"assistive-eng@google.com"},
+		Contacts: []string{
+			"cros-assistive@google.com",
+			"chromeos-consumer-engprod@google.com",
+		},
 		BugComponent: "b:905229", // ChromeOS > Software > Assistive
 		Attr: []string{
 			"group:mainline",

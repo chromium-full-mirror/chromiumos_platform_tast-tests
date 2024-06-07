@@ -22,7 +22,10 @@ func init() {
 		Func:         VolumeQueries,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests setting, increasing, and decreasing volume actions via Assistant",
-		Contacts:     []string{"assistive-eng@google.com"},
+		Contacts: []string{
+			"cros-assistive@google.com",
+			"chromeos-consumer-engprod@google.com",
+		},
 		BugComponent: "b:905229", // ChromeOS > Software > Assistive
 		Attr: []string{
 			"group:mainline",

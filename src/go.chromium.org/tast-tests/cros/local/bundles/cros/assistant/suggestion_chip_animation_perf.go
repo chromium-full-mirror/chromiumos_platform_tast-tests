@@ -33,7 +33,10 @@ func init() {
 		Func:         SuggestionChipAnimationPerf,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures the animation smoothness of Assistant suggestion chips",
-		Contacts:     []string{"assistive-eng@google.com"},
+		Contacts: []string{
+			"cros-assistive@google.com",
+			"chromeos-consumer-engprod@google.com",
+		},
 		BugComponent: "b:905229", // ChromeOS > Software > Assistive
 		Attr: []string{
 			"group:crosbolt",

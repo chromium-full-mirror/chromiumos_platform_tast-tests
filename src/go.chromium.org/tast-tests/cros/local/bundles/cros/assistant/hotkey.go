@@ -20,7 +20,10 @@ func init() {
 		Func:         Hotkey,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test Assistant hotkey to toggle launcher",
-		Contacts:     []string{"assistive-eng@google.com"},
+		Contacts: []string{
+			"cros-assistive@google.com",
+			"chromeos-consumer-engprod@google.com",
+		},
 		BugComponent: "b:905229", // ChromeOS > Software > Assistive
 		Attr: []string{
 			"group:mainline",
