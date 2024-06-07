@@ -17,7 +17,6 @@ import (
 	uiCommon "go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/arcent"
-	"go.chromium.org/tast-tests/cros/local/arc/optin"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 
 	"go.chromium.org/tast/core/ctxutil"
@@ -26,7 +25,6 @@ import (
 
 type systemPropsTestArgs struct {
 	accountPool string
-	optin       bool
 }
 
 const systemPropsVar = "arc.SystemProps.Props"
@@ -55,7 +53,6 @@ func init() {
 				Name: "managed_vm",
 				Val: systemPropsTestArgs{
 					accountPool: arcCommon.ManagedAccountPoolVarName,
-					optin:       false,
 				},
 				ExtraAttr: []string{"informational"},
 			},
@@ -63,7 +60,6 @@ func init() {
 				Name: "unmanaged_vm",
 				Val: systemPropsTestArgs{
 					accountPool: uiCommon.GaiaPoolDefaultVarName,
-					optin:       true,
 				},
 				ExtraAttr: []string{"informational"},
 			}},
@@ -82,12 +78,12 @@ func SystemProps(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	primary, err := credconfig.PickRandomCreds(dma.CredsFromPool(args.accountPool))
+	creds, err := credconfig.PickRandomCreds(dma.CredsFromPool(args.accountPool))
 	if err != nil {
 		s.Fatal("Failed to get login creds: ", err)
 	}
 
-	fdms, err := arcent.SetupPolicyServerWithArcApps(ctx, s.OutDir(), primary.User, []string{}, arcent.InstallTypeAvailable, arcent.PlayStoreModeAllowList)
+	fdms, err := arcent.SetupPolicyServerWithArcApps(ctx, s.OutDir(), creds.User, []string{}, arcent.InstallTypeAvailable, arcent.PlayStoreModeAllowList)
 	if err != nil {
 		s.Fatal("Failed to setup fake policy server: ", err)
 	}
@@ -95,8 +91,8 @@ func SystemProps(ctx context.Context, s *testing.State) {
 
 	cr, err := chrome.New(
 		ctx,
-		chrome.GAIALogin(primary),
-		chrome.ARCSupported(),
+		chrome.FakeLogin(creds),
+		chrome.ARCEnabled(),
 		chrome.UnRestrictARCCPU(),
 		chrome.DMSPolicy(fdms.URL),
 		chrome.ExtraArgs(arc.DisableSyncFlags()...))
@@ -104,12 +100,6 @@ func SystemProps(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to Chrome: ", err)
 	}
 	defer cr.Close(cleanupCtx)
-
-	if args.optin {
-		if err := optin.PerformWithRetry(ctx, cr, 2 /*maxAttempts*/); err != nil {
-			s.Fatal("Failed to optin to Play Store")
-		}
-	}
 
 	a, err := arc.NewWithTimeout(ctx, s.OutDir(), bootTimeout, cr.NormalizedUser())
 	if err != nil {
