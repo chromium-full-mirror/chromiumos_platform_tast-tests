@@ -440,70 +440,68 @@ func CheckKeyBackingStoreExists(ctx context.Context, keysetPath, userName string
 	return nil
 }
 
-// TestPinCounterWithAuthSession tests that PIN is locked out after too many wrong trials and can be reset by the correct password.
-func TestPinCounterWithAuthSession(ctx context.Context, authSessionID, passwordLabel, userPassword, pinLabel, userPin, wrongPin string, client *hwsec.CryptohomeClient) error {
-	const numberOfWrongAttemptToNotLock = 4
-	const numberOfWrongAttemptToLock = 5
-	// Try authenticate with wrong PIN to increase the PIN counter, but don't lock out.
-	for i := 0; i < numberOfWrongAttemptToNotLock; i++ {
-		_, err := client.AuthenticatePinAuthFactor(ctx, authSessionID, pinLabel, wrongPin)
-		if err == nil {
-			return errors.Wrap(err, "authentication with wrong PIN succeeded unexpectedly")
-		}
-	}
-
-	// Authenticate with correct PIN factor should reset the counter since it is not locked out yet.
-	if _, err := client.AuthenticatePinAuthFactor(ctx, authSessionID, pinLabel, userPin); err != nil {
-		return errors.Wrap(err, "authenticating with correct PIN failed")
-	}
-
-	// Try authenticate with wrong PIN 5 times to lock out the PIN.
-	replyError := &uda.AuthenticateAuthFactorReply{}
-	var err error
-	for i := 0; i < numberOfWrongAttemptToLock; i++ {
-		replyError, err = client.AuthenticatePinAuthFactor(ctx, authSessionID, pinLabel, wrongPin)
-		if err == nil {
-			return errors.Wrap(err, "authentication with wrong PIN succeeded unexpectedly")
-		}
-	}
-	if replyError.Error != uda.CryptohomeErrorCode_CRYPTOHOME_ERROR_CREDENTIAL_LOCKED {
-		return errors.Errorf("PIN is not locked out after too many wrong attempts. The received wrong error message is: %v", replyError.Error)
-	}
-
-	// Authenticate with correct PIN should fail since the PIN is locked out.
-	replyError, err = client.AuthenticatePinAuthFactor(ctx, authSessionID, pinLabel, userPin)
-	if err == nil {
-		return errors.Wrap(err, "authenticating with correct PIN after PIN lock out succeded unexpectedly, should have failed")
-	}
-	if replyError.Error != uda.CryptohomeErrorCode_CRYPTOHOME_ERROR_TPM_DEFEND_LOCK {
-		return errors.Errorf("PIN should have been in locked out state, but it is not. The error message received is: %v", replyError.Error)
-	}
-
-	// Authenticate with password AuthFactor and reset the PIN counter.
-	if _, err := client.AuthenticateAuthFactor(ctx, authSessionID, passwordLabel, userPassword); err != nil {
-		return errors.Wrap(err, "failed to authenticate with password AuthFactor after PIN is locked")
-	}
-
-	// Authenticate with correct PIN should now succeed.
-	if _, err := client.AuthenticatePinAuthFactor(ctx, authSessionID, pinLabel, userPin); err != nil {
-		return errors.Wrap(err, "authenticating with correct PIN failed after the counter is reset")
-	}
-	return nil
-}
-
 // TestPinCounterMechanism tests that PIN is locked out after too many wrong trials and can be reset by the correct password
 func TestPinCounterMechanism(ctx context.Context, userName, passwordLabel, userPassword, pinLabel, userPin, wrongPin string, client *hwsec.CryptohomeClient) error {
 	const numberOfWrongAttemptToNotLock = 4
 	const numberOfWrongAttemptToLock = 5
+	if err := client.WithAuthSession(ctx, userName, false, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
+		// Try authenticate with wrong PIN to increase the PIN counter, but don't lock out.
+		for i := 0; i < numberOfWrongAttemptToNotLock; i++ {
+			_, err := client.AuthenticatePinAuthFactor(ctx, authSessionID, pinLabel, wrongPin)
+			if err == nil {
+				return errors.Wrap(err, "authentication with wrong PIN succeeded unexpectedly")
+			}
+		}
 
-	// Start an Auth session and get an authSessionID.
-	_, authSessionID, err := client.StartAuthSession(ctx, userName, false /*ephemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT)
-	if err != nil {
-		return errors.Wrap(err, "failed to start Auth session")
+		// Authenticate with correct PIN factor should reset the counter since it is not locked out yet.
+		if _, err := client.AuthenticatePinAuthFactor(ctx, authSessionID, pinLabel, userPin); err != nil {
+			return errors.Wrap(err, "authenticating with correct PIN failed")
+		}
+		return nil
+	}); err != nil {
+		return err
 	}
-	defer client.InvalidateAuthSession(ctx, authSessionID)
 
-	return TestPinCounterWithAuthSession(ctx, authSessionID, passwordLabel, userPassword, pinLabel, userPin, wrongPin, client)
+	for _, intent := range []uda.AuthIntent{uda.AuthIntent_AUTH_INTENT_DECRYPT, uda.AuthIntent_AUTH_INTENT_VERIFY_ONLY} {
+		if err := client.WithAuthSession(ctx, userName, false, intent, func(authSessionID string) error {
+			// Test lockout reset behavior in both verify and decrypt intent.
+			// Try authenticate with wrong PIN 5 times to lock out the PIN.
+			replyError := &uda.AuthenticateAuthFactorReply{}
+			var err error
+			for i := 0; i < numberOfWrongAttemptToLock; i++ {
+				replyError, err = client.AuthenticatePinAuthFactor(ctx, authSessionID, pinLabel, wrongPin)
+				if err == nil {
+					return errors.Wrap(err, "authentication with wrong PIN succeeded unexpectedly")
+				}
+			}
+			if replyError.Error != uda.CryptohomeErrorCode_CRYPTOHOME_ERROR_CREDENTIAL_LOCKED {
+				return errors.Errorf("PIN is not locked out after too many wrong attempts. The received wrong error message is: %v", replyError.Error)
+			}
+
+			// Authenticate with correct PIN should fail since the PIN is locked out.
+			replyError, err = client.AuthenticatePinAuthFactor(ctx, authSessionID, pinLabel, userPin)
+			if err == nil {
+				return errors.Wrap(err, "authenticating with correct PIN after PIN lock out succeded unexpectedly, should have failed")
+			}
+			if replyError.Error != uda.CryptohomeErrorCode_CRYPTOHOME_ERROR_TPM_DEFEND_LOCK {
+				return errors.Errorf("PIN should have been in locked out state, but it is not. The error message received is: %v", replyError.Error)
+			}
+
+			// Authenticate with password AuthFactor and reset the PIN counter.
+			if _, err := client.AuthenticateAuthFactor(ctx, authSessionID, passwordLabel, userPassword); err != nil {
+				return errors.Wrap(err, "failed to authenticate with password AuthFactor after PIN is locked")
+			}
+
+			// Authenticate with correct PIN should now succeed.
+			if _, err := client.AuthenticatePinAuthFactor(ctx, authSessionID, pinLabel, userPin); err != nil {
+				return errors.Wrap(err, "authenticating with correct PIN failed after the counter is reset")
+			}
+			return nil
+		}); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // CheckCliErrorCode examines that the error from cryptohome cli invocation contains the desired error code.

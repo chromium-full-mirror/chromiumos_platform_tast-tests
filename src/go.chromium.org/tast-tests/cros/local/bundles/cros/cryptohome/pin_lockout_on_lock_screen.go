@@ -105,19 +105,8 @@ func PinLockoutOnLockScreen(ctx context.Context, s *testing.State) {
 		defer client.Unmount(ctxForCleanup, userName)
 
 		// Test that PIN reset with password.
-		if err := cryptohome.TestPinCounterWithAuthSession(ctx, authSessionID, passwordLabel, userPassword, pinLabel, userPin, wrongPin, client); err != nil {
+		if err := cryptohome.TestPinCounterMechanism(ctx, userName, passwordLabel, userPassword, pinLabel, userPin, wrongPin, client); err != nil {
 			return errors.Wrap(err, "failed in testing PIN lockout and reset mechanism with decrypt intent")
-		}
-
-		// Test pin counter mechanism with lock screen.
-		if err := client.WithAuthSession(ctx, userName, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_VERIFY_ONLY, func(authSessionID string) error {
-			// Test that PIN reset with correct password works after the update.
-			if err := cryptohome.TestPinCounterWithAuthSession(ctx, authSessionID, passwordLabel, userPassword, pinLabel, userPin, wrongPin, client); err != nil {
-				return errors.Wrap(err, "failed in testing PIN lockout and reset mechanism with verify intent")
-			}
-			return nil
-		}); err != nil {
-			return errors.Wrap(err, "failed to check pin counter mechanism")
 		}
 		return nil
 	}); err != nil {
