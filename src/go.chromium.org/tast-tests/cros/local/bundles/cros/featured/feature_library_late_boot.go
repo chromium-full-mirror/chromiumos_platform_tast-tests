@@ -42,7 +42,8 @@ func init() {
 		Desc:         "Verify features are enabled/disabled as expected and parameters are unchanged",
 		Contacts: []string{
 			"chromeos-data-eng@google.com",
-			"iby@chromium.org",
+			"bgeffon@chromium.org",
+			"joelaf@google.com",
 		},
 		BugComponent: "b:1096648",
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},

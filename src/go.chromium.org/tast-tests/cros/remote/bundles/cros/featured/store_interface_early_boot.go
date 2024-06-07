@@ -29,7 +29,8 @@ func init() {
 		Desc:         "Verify data store exists after featured restarts and boot attempts field incremented",
 		Contacts: []string{
 			"chromeos-data-eng@google.com",
-			"iby@chromium.org",
+			"joelaf@google.com",
+			"bgeffon@chromium.org",
 		},
 		BugComponent: "b:1096648",
 		SoftwareDeps: []string{"reboot"},
