@@ -129,6 +129,7 @@ func init() {
 			Val:               searchSettingsVals{tabletMode: false, testCases: fingerprintTestCases},
 		}, {
 			Name:              "fingerprint_tests_tablet_mode",
+			ExtraAttr:         []string{"informational"},
 			ExtraHardwareDeps: hwdep.D(hwdep.Fingerprint(), hwdep.InternalDisplay()),
 			Val:               searchSettingsVals{tabletMode: true, testCases: fingerprintTestCases},
 		}},
