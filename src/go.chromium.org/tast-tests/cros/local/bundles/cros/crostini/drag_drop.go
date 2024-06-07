@@ -137,7 +137,7 @@ func DragDrop(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get user's MyFiles path: ", err)
 	}
 	path := filepath.Join(myFilesPath, dirDragFromFilesapp)
-	if err := os.Mkdir(path, 0644); err != nil {
+	if err := os.Mkdir(path, 0777); err != nil {
 		s.Fatalf("Create dir %s failed: %s", path, err)
 	}
 	defer os.Remove(path)

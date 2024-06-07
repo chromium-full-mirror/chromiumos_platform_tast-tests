@@ -90,7 +90,7 @@ func RestoreTPMOwnerPasswordIfNeeded(ctx context.Context, dc *hwsec.DaemonContro
 func CreateFakeAttestationDatabase(ctx context.Context, helper *FullHelperLocal) (lastError error) {
 	dc := helper.DaemonController()
 	// Create dir to back up attestation database.
-	if err := os.MkdirAll(path.Dir(attestationDBBackupPath), 0644); err != nil {
+	if err := os.MkdirAll(path.Dir(attestationDBBackupPath), 0777); err != nil {
 		return errors.Wrap(err, "failed to create dir to back up attestation db")
 	}
 
