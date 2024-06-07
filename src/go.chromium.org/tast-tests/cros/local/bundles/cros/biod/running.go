@@ -7,6 +7,7 @@ package biod
 import (
 	"context"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -25,6 +26,7 @@ func init() {
 		Attr:         []string{"group:fingerprint-cq"},
 		SoftwareDeps: []string{"biometrics_daemon"},
 		HardwareDeps: hwdep.D(hwdep.Fingerprint()),
+		TestBedDeps:  []string{tbdep.Fingerprint},
 	})
 }
 
