@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
+	"go.chromium.org/tast-tests/cros/common/wifi/security"
 	"go.chromium.org/tast-tests/cros/common/wifi/security/wpa"
 	"go.chromium.org/tast-tests/cros/remote/wifi/iw"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
@@ -31,6 +32,8 @@ import (
 type preferHigherBandTestCase struct {
 	lowerBandApOpts  []hostapd.Option
 	higherBandApOpts []hostapd.Option
+	// If unassigned, use default security config: open network.
+	secConfFac security.ConfigFactory
 }
 
 func init() {
@@ -54,6 +57,7 @@ func init() {
 				Val: preferHigherBandTestCase{
 					lowerBandApOpts:  []hostapd.Option{hostapd.Mode(hostapd.Mode80211acPure), hostapd.HTCaps(hostapd.HTCapHT20), hostapd.Channel(1), hostapd.VHTChWidth(hostapd.VHTChWidth20Or40), hostapd.PMF(hostapd.PMFRequired)},
 					higherBandApOpts: []hostapd.Option{hostapd.Mode(hostapd.Mode80211acPure), hostapd.HTCaps(hostapd.HTCapHT20), hostapd.Channel(48), hostapd.VHTChWidth(hostapd.VHTChWidth20Or40), hostapd.PMF(hostapd.PMFRequired)},
+					secConfFac:       wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherCCMP)),
 				},
 			},
 			{
@@ -61,11 +65,13 @@ func init() {
 				Val: preferHigherBandTestCase{
 					lowerBandApOpts:  []hostapd.Option{hostapd.Mode(hostapd.Mode80211axPure), hostapd.HTCaps(hostapd.HTCapHT20), hostapd.HEChWidth(hostapd.HEChWidth20Or40), hostapd.Channel(48)},
 					higherBandApOpts: []hostapd.Option{hostapd.Mode(hostapd.Mode80211axPure), hostapd.HTCaps(hostapd.HTCapHT20), hostapd.HEChWidth(hostapd.HEChWidth20Or40), hostapd.Channel(21), hostapd.PMF(hostapd.PMFRequired), hostapd.OpClass(131)},
+					secConfFac:       wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 				},
 				// TODO(b/317288421): Promote test to stable by removing wificell_unstable attribute.
 				ExtraAttr:         []string{"wificell_unstable"},
-				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E),
+				ExtraSoftwareDeps: []string{"wpa3_sae"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
+				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E),
 				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel"}`,
 			},
 			{
@@ -73,11 +79,13 @@ func init() {
 				Val: preferHigherBandTestCase{
 					lowerBandApOpts:  []hostapd.Option{hostapd.Mode(hostapd.Mode80211axPure), hostapd.HTCaps(hostapd.HTCapHT20), hostapd.HEChWidth(hostapd.HEChWidth20Or40), hostapd.Channel(1)},
 					higherBandApOpts: []hostapd.Option{hostapd.Mode(hostapd.Mode80211axPure), hostapd.HTCaps(hostapd.HTCapHT20), hostapd.HEChWidth(hostapd.HEChWidth20Or40), hostapd.Channel(21), hostapd.PMF(hostapd.PMFRequired), hostapd.OpClass(131)},
+					secConfFac:       wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 				},
 				// TODO(b/317288421): Promote test to stable by removing wificell_unstable attribute.
 				ExtraAttr:         []string{"wificell_unstable"},
-				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E),
+				ExtraSoftwareDeps: []string{"wpa3_sae"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
+				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E),
 				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel"}`,
 			},
 		},
@@ -132,10 +140,9 @@ func PreferHigherBand(ctx context.Context, s *testing.State) {
 	}
 
 	ssid := hostapd.RandomSSID("TAST_TEST_")
-	secConfFac := wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP))
 	apConfigs := []hostapd.ApConfig{
-		{ApOpts: append([]hostapd.Option{hostapd.SSID(ssid)}, tc.lowerBandApOpts...), SecConfFac: secConfFac},
-		{ApOpts: append([]hostapd.Option{hostapd.SSID(ssid)}, tc.higherBandApOpts...), SecConfFac: secConfFac},
+		{ApOpts: append([]hostapd.Option{hostapd.SSID(ssid)}, tc.lowerBandApOpts...), SecConfFac: tc.secConfFac},
+		{ApOpts: append([]hostapd.Option{hostapd.SSID(ssid)}, tc.higherBandApOpts...), SecConfFac: tc.secConfFac},
 	}
 	apIface, err := tf.ConfigureMultiAP(ctx, wificell.DefaultRouter, apConfigs)
 	if err != nil {
@@ -181,7 +188,7 @@ func PreferHigherBand(ctx context.Context, s *testing.State) {
 		s.Error("Failed to expect a service with two WiFi frequencies: ", err)
 	}
 	s.Log("Verified. Asserting the connection")
-	secConf, err := secConfFac.Gen()
+	secConf, err := tc.secConfFac.Gen()
 	if err != nil {
 		s.Error("Failed to generate security config: ", err)
 	}
