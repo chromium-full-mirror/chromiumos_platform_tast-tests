@@ -10,6 +10,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/accountmanager"
 	"go.chromium.org/tast-tests/cros/common/arc"
+	"go.chromium.org/tast-tests/cros/common/connectivityfwdumps"
 	"go.chromium.org/tast-tests/cros/common/drivefs"
 	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/common/wallpaper"
@@ -24,21 +25,23 @@ var dmaEnableVar = testing.RegisterVarString(
 
 func pools() (map[string]string, map[string]string) {
 	var dmaPools = map[string]string{
-		ui.GaiaPoolDefaultVarName:                ui.GaiaDMAPoolDefaultValue(),
-		ui.CUJAccountPoolVarName:                 ui.GaiaDMAPoolDefaultValue(),
-		drivefs.AccountPoolVarName:               ui.GaiaDMAPoolDefaultValue(),
-		accountmanager.AccountPoolVarName:        ui.GaiaDMAPoolDefaultValue(),
-		arc.ManagedAccountPoolVarName:            arc.ManagedDMAAccountPoolValue(),
-		wallpaper.GooglePhotosAccountPoolVarName: wallpaper.GooglePhotosDMAAccountPoolValue(),
+		ui.GaiaPoolDefaultVarName:                   ui.GaiaDMAPoolDefaultValue(),
+		ui.CUJAccountPoolVarName:                    ui.GaiaDMAPoolDefaultValue(),
+		drivefs.AccountPoolVarName:                  ui.GaiaDMAPoolDefaultValue(),
+		accountmanager.AccountPoolVarName:           ui.GaiaDMAPoolDefaultValue(),
+		arc.ManagedAccountPoolVarName:               arc.ManagedDMAAccountPoolValue(),
+		wallpaper.GooglePhotosAccountPoolVarName:    wallpaper.GooglePhotosDMAAccountPoolValue(),
+		connectivityfwdumps.GaiaLoginAccountVarName: arc.ManagedDMAAccountPoolValue(),
 	}
 
 	var regularPools = map[string]string{
-		ui.GaiaPoolDefaultVarName:                ui.GaiaPoolDefaultValue(),
-		ui.CUJAccountPoolVarName:                 ui.CUJAccountPoolValue(),
-		drivefs.AccountPoolVarName:               drivefs.AccountPoolValue(),
-		accountmanager.AccountPoolVarName:        accountmanager.AccountPoolValue(),
-		arc.ManagedAccountPoolVarName:            arc.ManagedAccountPoolValue(),
-		wallpaper.GooglePhotosAccountPoolVarName: wallpaper.GooglePhotosAccountPoolValue(),
+		ui.GaiaPoolDefaultVarName:                   ui.GaiaPoolDefaultValue(),
+		ui.CUJAccountPoolVarName:                    ui.CUJAccountPoolValue(),
+		drivefs.AccountPoolVarName:                  drivefs.AccountPoolValue(),
+		accountmanager.AccountPoolVarName:           accountmanager.AccountPoolValue(),
+		arc.ManagedAccountPoolVarName:               arc.ManagedAccountPoolValue(),
+		wallpaper.GooglePhotosAccountPoolVarName:    wallpaper.GooglePhotosAccountPoolValue(),
+		connectivityfwdumps.GaiaLoginAccountVarName: connectivityfwdumps.GaiaLoginAccountValue(),
 	}
 
 	return dmaPools, regularPools

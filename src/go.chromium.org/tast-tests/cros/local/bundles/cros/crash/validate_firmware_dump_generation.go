@@ -16,6 +16,8 @@ import (
 	"github.com/godbus/dbus/v5"
 
 	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
+	"go.chromium.org/tast-tests/cros/common/connectivityfwdumps"
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
@@ -76,10 +78,10 @@ func init() {
 		// ChromeOS > Platform > Connectivity > WiFi
 		BugComponent:    "b:893827",
 		Attr:            []string{"group:mainline", "group:wificell", "wificell_func"},
-		SoftwareDeps:    []string{"chrome", "fbpreprocessord"},
+		SoftwareDeps:    []string{"chrome", "fbpreprocessord", "gaia"},
 		HardwareDeps:    hwdep.D(hwdep.WifiIntel()),
 		Requirements:    []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc},
-		VarDeps:         []string{"connectivityfwdumps.gaiaLoginAccount"},
+		VarDeps:         []string{connectivityfwdumps.GaiaLoginAccountVarName},
 		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.UserFeedbackWithLowLevelDebugDataAllowed{}, pci.VerifiedFunctionalityOS),
@@ -332,7 +334,7 @@ func firmwareDumpValidator(ctx context.Context, rl *retry.Loop, s *testing.State
 		s.Fatal("Failed to connect to session manager: ", err)
 	}
 
-	creds, err := credconfig.PickRandomCreds(s.RequiredVar("connectivityfwdumps.gaiaLoginAccount"))
+	creds, err := credconfig.PickRandomCreds(dma.CredsFromPool(connectivityfwdumps.GaiaLoginAccountVarName))
 	if err != nil {
 		s.Fatal("Failed to parse managed user creds: ", err)
 	}
