@@ -20,7 +20,7 @@ func init() {
 		Desc:         "Test that clicks through OOBE to enrollment screen",
 		Contacts: []string{
 			"cros-oobe@google.com",
-			"chromeos-sw-engprod@google.com",
+			"chromeos-consumer-engprod@google.com",
 			"bchikhaoui@google.com",
 			"bohdanty@google.com",
 		},

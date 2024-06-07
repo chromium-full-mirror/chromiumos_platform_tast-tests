@@ -25,8 +25,8 @@ func init() {
 		Desc:         "Test Theme Selection screen during OOBE to support light/dark/auto themes",
 		Contacts: []string{
 			"cros-oobe@google.com",
+			"chromeos-consumer-engprod@google.com",
 			"bohdanty@google.com",
-			"chromeos-sw-engprod@google.com",
 		},
 		BugComponent: "b:1263090", // ChromeOS > Software > OOBE
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},

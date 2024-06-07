@@ -29,9 +29,9 @@ func init() {
 		Desc:         "Tests that non critical update applied during oobe for consumer users and ignored for commercial users",
 		Contacts: []string{
 			"cros-oobe@google.com",
+			"chromeos-consumer-engprod@google.com",
 			"bchikhaoui@google.com",
 			"bohdanty@google.com",
-			"chromeos-sw-engprod@google.com",
 		},
 		BugComponent: "b:1263090", // ChromeOS > Software > OOBE
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},

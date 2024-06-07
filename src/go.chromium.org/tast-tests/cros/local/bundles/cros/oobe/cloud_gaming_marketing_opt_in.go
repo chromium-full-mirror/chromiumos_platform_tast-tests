@@ -22,8 +22,8 @@ func init() {
 		Desc:         "Test that we show gaming-specific marketing opt in screen on a cloud gaming board",
 		Contacts: []string{
 			"cros-oobe@google.com",
+			"chromeos-consumer-engprod@google.com",
 			"bohdanty@google.com",
-			"chromeos-sw-engprod@google.com",
 		},
 		BugComponent: "b:1263090", // ChromeOS > Software > OOBE
 		Attr:         []string{"group:mainline", "informational"},

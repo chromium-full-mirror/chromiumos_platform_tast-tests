@@ -23,8 +23,8 @@ func init() {
 		Desc:         "Test whether we show gesture navigation screens for a new users",
 		Contacts: []string{
 			"cros-oobe@google.com",
+			"chromeos-consumer-engprod@google.com",
 			"bohdanty@google.com",
-			"chromeos-sw-engprod@google.com",
 		},
 		BugComponent: "b:1263090", // ChromeOS > Software > OOBE
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},

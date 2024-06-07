@@ -20,10 +20,10 @@ func init() {
 		Desc:         "Smoke test that clicks through OOBE",
 		Contacts: []string{
 			"cros-oobe@google.com",
+			"chromeos-consumer-engprod@google.com",
+			"cros-exp-wg+testresults@google.com", // for fieldtrial_testing_config
 			"bohdanty@google.com",
 			"rrsilva@google.com",
-			"chromeos-sw-engprod@google.com",
-			"cros-exp-wg+testresults@google.com", // for fieldtrial_testing_config
 		},
 		BugComponent: "b:1263090", // ChromeOS > Software > OOBE
 		Attr:         []string{"group:mainline", "group:hw_agnostic", "group:cq-medium"},
