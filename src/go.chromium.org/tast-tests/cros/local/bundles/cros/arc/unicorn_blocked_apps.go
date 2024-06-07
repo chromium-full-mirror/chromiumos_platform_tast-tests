@@ -38,22 +38,12 @@ func init() {
 		VarDeps: []string{unicorn.ParentUserVar, unicorn.ParentPasswordVar, unicorn.ChildUserVar, unicorn.ChildPasswordVar},
 		Params: []testing.Param{
 			{
-				ExtraSoftwareDeps: []string{"android_container", "no_qemu"},
-				ExtraAttr:         []string{"informational"},
-			},
-			{
-				Name:              "betty",
-				ExtraSoftwareDeps: []string{"android_container", "qemu"},
+				ExtraSoftwareDeps: []string{"android_container"},
 				ExtraAttr:         []string{"informational"},
 			},
 			{
 				Name:              "vm",
-				ExtraSoftwareDeps: []string{"android_vm", "no_android_vm_t", "no_qemu"},
-				ExtraAttr:         []string{"informational"},
-			},
-			{
-				Name:              "x",
-				ExtraSoftwareDeps: []string{"android_vm_t", "no_qemu"},
+				ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},
 				ExtraAttr:         []string{"informational"},
 			},
 			{

@@ -58,7 +58,7 @@ func init() {
 			{
 				// TODO(b/306175841): remove this test once the UseEncryptedReportingPipelineToReportArcAppInstallEvents experiment is rolled out.
 				ExtraAttr:         []string{"informational"},
-				ExtraSoftwareDeps: []string{"android_container", "no_qemu"},
+				ExtraSoftwareDeps: []string{"android_container"},
 				Val: managedAppInstallLoggingParam{
 					UseEncryptedReportingPipelineToReportArcAppInstallEvents: false,
 				},
@@ -66,7 +66,7 @@ func init() {
 			{
 				// Report and log events using the encrypted reporting pipeline.
 				Name:              "using_encrypted_reporting",
-				ExtraSoftwareDeps: []string{"android_container", "no_qemu"},
+				ExtraSoftwareDeps: []string{"android_container"},
 				ExtraAttr:         []string{"group:enterprise-reporting-daily", "group:enterprise-reporting"},
 				Val: managedAppInstallLoggingParam{
 					UseEncryptedReportingPipelineToReportArcAppInstallEvents: true,
@@ -75,7 +75,7 @@ func init() {
 			{
 				// TODO(b/306175841): remove this test once the UseEncryptedReportingPipelineToReportArcAppInstallEvents experiment is rolled out.
 				Name:              "vm",
-				ExtraSoftwareDeps: []string{"android_vm", "no_android_vm_t", "no_qemu"},
+				ExtraSoftwareDeps: []string{"android_vm"},
 				ExtraAttr:         []string{"informational"},
 				Val: managedAppInstallLoggingParam{
 					UseEncryptedReportingPipelineToReportArcAppInstallEvents: false,
@@ -83,41 +83,7 @@ func init() {
 			},
 			{
 				Name:              "vm_using_encrypted_reporting",
-				ExtraSoftwareDeps: []string{"android_vm", "no_android_vm_t", "no_qemu"},
-				ExtraAttr:         []string{"informational", "group:enterprise-reporting-daily", "group:enterprise-reporting"},
-				Val: managedAppInstallLoggingParam{
-					UseEncryptedReportingPipelineToReportArcAppInstallEvents: true,
-				},
-			},
-			{
-				// TODO(b/306175841): remove this test once the UseEncryptedReportingPipelineToReportArcAppInstallEvents experiment is rolled out.
-				Name:              "x",
-				ExtraSoftwareDeps: []string{"android_vm_t", "no_qemu"},
-				ExtraAttr:         []string{"informational"},
-				Val: managedAppInstallLoggingParam{
-					UseEncryptedReportingPipelineToReportArcAppInstallEvents: false,
-				},
-			},
-			{
-				Name:              "x_using_encrypted_reporting",
-				ExtraSoftwareDeps: []string{"android_vm_t", "no_qemu"},
-				ExtraAttr:         []string{"informational", "group:enterprise-reporting-daily", "group:enterprise-reporting"},
-				Val: managedAppInstallLoggingParam{
-					UseEncryptedReportingPipelineToReportArcAppInstallEvents: true,
-				},
-			},
-			{
-				// TODO(b/306175841): remove this test once the UseEncryptedReportingPipelineToReportArcAppInstallEvents experiment is rolled out.
-				Name:              "betty",
-				ExtraSoftwareDeps: []string{"android_container", "qemu"},
-				ExtraAttr:         []string{"informational"},
-				Val: managedAppInstallLoggingParam{
-					UseEncryptedReportingPipelineToReportArcAppInstallEvents: false,
-				},
-			},
-			{
-				Name:              "betty_using_encrypted_reporting",
-				ExtraSoftwareDeps: []string{"android_container", "qemu"},
+				ExtraSoftwareDeps: []string{"android_vm"},
 				ExtraAttr:         []string{"informational", "group:enterprise-reporting-daily", "group:enterprise-reporting"},
 				Val: managedAppInstallLoggingParam{
 					UseEncryptedReportingPipelineToReportArcAppInstallEvents: true,

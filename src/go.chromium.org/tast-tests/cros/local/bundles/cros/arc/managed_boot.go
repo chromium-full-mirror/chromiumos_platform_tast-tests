@@ -47,24 +47,12 @@ func init() {
 			{
 				Name:              "disabled",
 				Val:               arcDisabled,
-				ExtraSoftwareDeps: []string{"android_container", "no_qemu"},
-			},
-			{
-				Name:              "disabled_betty",
-				Val:               arcDisabled,
-				ExtraSoftwareDeps: []string{"android_container", "qemu"},
-				ExtraAttr:         []string{"informational"},
+				ExtraSoftwareDeps: []string{"android_container"},
 			},
 			{
 				Name:              "disabled_vm",
 				Val:               arcDisabled,
-				ExtraSoftwareDeps: []string{"android_vm", "no_android_vm_t", "no_qemu"},
-			},
-			{
-				Name:              "disabled_x",
-				Val:               arcDisabled,
-				ExtraSoftwareDeps: []string{"android_vm_t", "no_qemu"},
-				ExtraAttr:         []string{"informational"},
+				ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},
 			},
 			{
 				Name:              "disabled_betty_vm",
@@ -75,24 +63,12 @@ func init() {
 			{
 				Name:              "enabled",
 				Val:               arcEnabled,
-				ExtraSoftwareDeps: []string{"android_container", "no_qemu"},
-			},
-			{
-				Name:              "enabled_betty",
-				Val:               arcEnabled,
-				ExtraSoftwareDeps: []string{"android_container", "qemu"},
-				ExtraAttr:         []string{"informational"},
+				ExtraSoftwareDeps: []string{"android_container"},
 			},
 			{
 				Name:              "enabled_vm",
 				Val:               arcEnabled,
-				ExtraSoftwareDeps: []string{"android_vm", "no_android_vm_t", "no_qemu"},
-				ExtraAttr:         []string{"informational"},
-			},
-			{
-				Name:              "enabled_x",
-				Val:               arcEnabled,
-				ExtraSoftwareDeps: []string{"android_vm_t", "no_qemu"},
+				ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},
 				ExtraAttr:         []string{"informational"},
 			},
 			{

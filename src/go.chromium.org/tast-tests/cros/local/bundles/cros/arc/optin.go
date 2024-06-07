@@ -65,25 +65,19 @@ func init() {
 			{
 				Name:              "vm",
 				ExtraAttr:         []string{"group:cq-minimal"},
-				ExtraSoftwareDeps: []string{"android_vm", "no_android_vm_t"},
+				ExtraSoftwareDeps: []string{"android_vm"},
 				Val:               optinTestArgs{preprod: false, fieldTrialConfig: chrome.FieldTrialConfigDefault},
 			},
 			{
-				Name:              "x",
+				Name:              "fieldtrial_testing_config_off_vm",
 				ExtraAttr:         []string{"informational"},
-				ExtraSoftwareDeps: []string{"android_vm_t"},
-				Val:               optinTestArgs{preprod: false, fieldTrialConfig: chrome.FieldTrialConfigDefault},
-			},
-			{
-				Name:              "fieldtrial_testing_config_off_x",
-				ExtraAttr:         []string{"informational"},
-				ExtraSoftwareDeps: []string{"android_vm_t"},
+				ExtraSoftwareDeps: []string{"android_vm"},
 				Val:               optinTestArgs{preprod: false, fieldTrialConfig: chrome.FieldTrialConfigDisable},
 			},
 			{
-				Name:              "fieldtrial_testing_config_on_x",
+				Name:              "fieldtrial_testing_config_on_vm",
 				ExtraAttr:         []string{"informational", "group:chrome_uprev_cbx"},
-				ExtraSoftwareDeps: []string{"android_vm_t"},
+				ExtraSoftwareDeps: []string{"android_vm"},
 				Val:               optinTestArgs{preprod: false, fieldTrialConfig: chrome.FieldTrialConfigEnable},
 			},
 			{

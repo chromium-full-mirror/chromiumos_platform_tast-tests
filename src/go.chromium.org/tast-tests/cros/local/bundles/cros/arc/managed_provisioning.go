@@ -51,48 +51,36 @@ func init() {
 		Params: []testing.Param{
 			{
 				Val:               chrome.FieldTrialConfigDefault,
-				ExtraSoftwareDeps: []string{"android_container", "no_qemu"},
+				ExtraSoftwareDeps: []string{"android_container"},
 			},
 			{
 				Name:              "fieldtrial_testing_config_off",
 				Val:               chrome.FieldTrialConfigDisable,
-				ExtraSoftwareDeps: []string{"android_container", "no_qemu"},
+				ExtraSoftwareDeps: []string{"android_container"},
 				ExtraAttr:         []string{"informational"},
 			},
 			{
 				Name:              "fieldtrial_testing_config_on",
 				Val:               chrome.FieldTrialConfigEnable,
-				ExtraSoftwareDeps: []string{"android_container", "no_qemu"},
+				ExtraSoftwareDeps: []string{"android_container"},
 				ExtraAttr:         []string{"informational", "group:chrome_uprev_cbx"},
 			},
 			{
 				Name:              "vm",
 				Val:               chrome.FieldTrialConfigDefault,
-				ExtraSoftwareDeps: []string{"android_vm", "no_android_vm_t", "no_qemu"},
+				ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},
 			},
 			{
-				Name:              "x",
-				Val:               chrome.FieldTrialConfigDefault,
-				ExtraSoftwareDeps: []string{"android_vm_t", "no_qemu"},
-				ExtraAttr:         []string{"informational"},
-			},
-			{
-				Name:              "fieldtrial_testing_config_off_x",
+				Name:              "fieldtrial_testing_config_off_vm",
 				Val:               chrome.FieldTrialConfigDisable,
-				ExtraSoftwareDeps: []string{"android_vm_t", "no_qemu"},
+				ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},
 				ExtraAttr:         []string{"informational"},
 			},
 			{
-				Name:              "fieldtrial_testing_config_on_x",
+				Name:              "fieldtrial_testing_config_on_vm",
 				Val:               chrome.FieldTrialConfigEnable,
-				ExtraSoftwareDeps: []string{"android_vm_t", "no_qemu"},
+				ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},
 				ExtraAttr:         []string{"informational", "group:chrome_uprev_cbx"},
-			},
-			{
-				Name:              "betty",
-				Val:               chrome.FieldTrialConfigDefault,
-				ExtraSoftwareDeps: []string{"android_container", "qemu"},
-				ExtraAttr:         []string{"informational"},
 			},
 			{
 				Name:              "betty_vm",
