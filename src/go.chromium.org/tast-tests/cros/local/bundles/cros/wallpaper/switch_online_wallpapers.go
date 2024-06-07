@@ -25,9 +25,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test quickly switching online wallpapers in the new wallpaper app",
 		Contacts: []string{
-			"assistive-eng@google.com",
-			"jasontt@google.com",
-			"chromeos-sw-engprod@google.com",
+			"cros-personalization@google.com",
+			"chromeos-consumer-engprod@google.com",
 		},
 		// ChromeOS > Software > Personalization
 		BugComponent: "b:1006527",
