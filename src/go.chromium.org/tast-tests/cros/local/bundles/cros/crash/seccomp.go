@@ -26,7 +26,7 @@ func init() {
 		Desc: "Test to check that seccomp policy files are captured",
 		Contacts: []string{
 			"chromeos-data-eng@google.com",
-			"iby@chromium.org",
+			"enlightened@chromium.org",
 			"allenwebb@chromium.org",
 			"jorgelo@google.com",
 		},

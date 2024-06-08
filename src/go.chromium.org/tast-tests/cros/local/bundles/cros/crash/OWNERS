@@ -1,3 +1,5 @@
 include /src/go.chromium.org/tast-tests/cros/common/crash/OWNERS
 
 per-file kernel*.go=swboyd@chromium.org, dianders@chromium.org, arowa@google.com
+per-file seccomp.go=enlightened@chromium.org, iby@chromium.org
+per-file selinux_violation.go=enlightened@chromium.org, iby@chromium.org
