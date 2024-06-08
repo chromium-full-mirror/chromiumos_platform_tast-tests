@@ -1,8 +1,9 @@
 set noparent
 
-# Telemetry team
 iby@chromium.org
-mutexlox@chromium.org
+hirthanan@google.com
+andrewbregger@google.com
+eugenex@google.com
 nsinghal@google.com
 
 # Tast team for bulk/emergencies
