@@ -1,1 +1,4 @@
 include /src/go.chromium.org/tast-tests/cros/common/crash/OWNERS
+
+per-file kernel_crash.go=swboyd@chromium.org, dianders@chromium.org
+per-file watchdog_crash.go=swboyd@chromium.org, dianders@chromium.org
