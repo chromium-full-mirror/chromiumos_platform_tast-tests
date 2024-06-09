@@ -58,3 +58,11 @@ func getAngle(points []*hmrNode) float64 {
 	}
 	return 2*math.Pi - tanAngle
 }
+
+// applySkew applies a skew to point's coorX, based on the relative location of it's coorY to the bottom of the screen.
+func applySkew(points []*hmrNode, skew, yMax float64) []*hmrNode {
+	for i := range points {
+		points[i].coorX = points[i].coorX + skew*points[i].coorY/yMax
+	}
+	return points
+}
