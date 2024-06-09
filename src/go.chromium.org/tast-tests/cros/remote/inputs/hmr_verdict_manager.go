@@ -97,10 +97,13 @@ func DetermineFullImageVerdict(referenceFileName, resultFileName string, calibra
 	resultScaled := applyScale(resultPoints, calibrationData.ScaleFactorX, calibrationData.ScaleFactorY)
 	resultScaledOffset := applyOffset(resultScaled, calibrationData.OffsetX, calibrationData.OffsetY)
 
-	// Note: Temporarily required, as tast cannot be built with unused variables. Will be removed in next commit.
-	_, _ = referenceDerotatedDeskewedScaledOffset, resultScaledOffset
+	referencePaths := extractReferencePaths(referenceDerotatedDeskewedScaledOffset)
+	if len(referencePaths) == 0 {
+		return nil, errors.Errorf("no reference paths could be extracted from %v", referenceFileName)
+	}
 
-	// TODO(b/343548793): Extract paths from reference data.
+	// Note: Temporarily required, as tast cannot be built with unused variables. Will be removed in next commit.
+	_, _ = referencePaths, resultScaledOffset
 	// TODO(b/343548793): Extract paths from result data.
 	// TODO(b/343548793): Run sliding window analysis on reference and result paths.
 	return nil, nil
