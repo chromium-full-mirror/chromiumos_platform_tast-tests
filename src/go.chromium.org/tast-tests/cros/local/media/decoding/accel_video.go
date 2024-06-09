@@ -21,6 +21,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/sysutil"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/shutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -105,14 +106,29 @@ func generateCmdArgs(outDir, filename string, parameters TestParams) []string {
 
 // runAccelVideoTestCmd runs execCmd with args and also applying filter.
 // Returns the values returned by gtest.Run() as-is.
-func runAccelVideoTestCmd(ctx context.Context, execCmd, filter, logfilepath string, args []string) (*gtest.Report, error) {
-	if report, err := gtest.New(
+func runAccelVideoTestCmd(ctx context.Context, execCmd, filter, logfilepath string, args []string, verbose bool) (*gtest.Report, error) {
+	t := gtest.New(
 		filepath.Join(chrome.BinTestDir, execCmd),
 		gtest.Logfile(logfilepath),
 		gtest.ExtraArgs(args...),
 		gtest.Filter(filter),
 		gtest.UID(int(sysutil.ChronosUID)),
-	).Run(ctx); err != nil {
+	)
+
+	args, err := t.Args()
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to get GTest args: ", err)
+		return nil, err
+	} else if verbose {
+		// Always print gtest args for inspection in verbose mode.
+		testing.ContextLog(ctx, "Running: ", shutil.EscapeSlice(args))
+	}
+
+	if report, err := t.Run(ctx); err != nil {
+		if !verbose {
+			// Avoid double-printing the args in verbose mode.
+			testing.ContextLog(ctx, "Test vector failed: ", shutil.EscapeSlice(args))
+		}
 		return report, err
 	}
 	return nil, nil
@@ -146,7 +162,7 @@ func RunAccelVideoTest(ctx context.Context, outDir, filename string, parameters 
 
 	const exec = "video_decode_accelerator_tests"
 	if report, err := runAccelVideoTestCmd(ctx,
-		exec, "", filepath.Join(outDir, exec+".log"), args); err != nil {
+		exec, "", filepath.Join(outDir, exec+".log"), args, true); err != nil {
 		msg := fmt.Sprintf("failed to run %v with video %s", exec, filename)
 		if report != nil {
 			for _, name := range report.FailedTestNames() {
@@ -196,7 +212,7 @@ func RunAccelVideoTestWithTestVectors(ctx context.Context, outDir string, testVe
 		hasFailed := false
 		if _, err = runAccelVideoTestCmd(ctx,
 			exec, "VideoDecoderTest.FlushAtEndOfStream",
-			filepath.Join(outDir, exec+"_"+filename+".log"), args); err != nil {
+			filepath.Join(outDir, exec+"_"+filename+".log"), args, false); err != nil {
 			hasFailed = true
 			if errors.Is(err, context.DeadlineExceeded) {
 				testing.ContextLog(ctx, "Test timeout, vector didn't run (unexpected): ", filename)
@@ -286,7 +302,7 @@ func RunAccelVideoPerfTest(ctx context.Context, outDir, filename string, paramet
 		}
 		if report, err := runAccelVideoTestCmd(ctx, exec,
 			fmt.Sprintf("*%s", test.gTestName),
-			filepath.Join(outDir, exec+"."+test.gTestName+".log"), args); err != nil {
+			filepath.Join(outDir, exec+"."+test.gTestName+".log"), args, true); err != nil {
 			msg := fmt.Sprintf("failed to run %v with video %s", exec, filename)
 			if report != nil {
 				for _, name := range report.FailedTestNames() {
