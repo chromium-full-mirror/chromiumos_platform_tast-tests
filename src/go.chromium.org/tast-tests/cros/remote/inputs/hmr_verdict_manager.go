@@ -10,6 +10,12 @@ import (
 	"go.chromium.org/tast/core/errors"
 )
 
+// Reference image is in mm by default, on a 13.3 diagonal screen.
+const (
+	defaultReferenceScreenHeight = 165.6
+	defaultReferenceScreenWidth  = 294.4
+)
+
 // DetermineSingleLineVerdict runs analysis over a HMR CSV output file and returns the result of all validations run.
 func DetermineSingleLineVerdict(fileName string, widthResolution, heightResolution float64) ([]ValidationResult, error) {
 	unscaledPoints, err := readCSV(fileName)
@@ -60,8 +66,40 @@ func DetermineSingleLineVerdict(fileName string, widthResolution, heightResoluti
 // It does this by performing a comparison between the result file, and the reference file (the CSV file used to generate the gcode file run on the HMR).
 // The reference file is scaled to mm on a 13.3 inch diagnonal screen. The result file is raw unscaled data scaled in pixels, taken directly from the DUT.
 func DetermineFullImageVerdict(referenceFileName, resultFileName string, calibrationData CalibrationData, resultScreenWidth, resultScreenHeight float64) (*FullImageResult, error) {
-	// TODO(b/343548793): Read point data from reference and result files.
-	// TODO(b/343548793): Apply calibration data correction to reference and result data.
+	referencePoints, err := readCSV(referenceFileName)
+	if err != nil {
+		return nil, err
+	}
+	resultPoints, err := readCSV(resultFileName)
+	if err != nil {
+		return nil, err
+	}
+
+	// calibrationData contains information regarding known data errors in this HMR/DUT setup.
+	// As the result image was captured via this HMR setup, the data errors will be present in it.
+	// As the reference image was generated manually by hand and not in this HMR/DUT setup, the data errors will not be present.
+	// Therefore these data errors should manually be applied to the reference image, so that the images align.
+	referenceDerotated := applyRotation(referencePoints, calibrationData.RotationError)
+
+	referenceDerotatedDeskewed := applySkew(referenceDerotated,
+		calibrationData.SkewErrorRelativeToScreenWidth*defaultReferenceScreenWidth,
+		defaultReferenceScreenHeight)
+
+	// Scales reference image to be same size as result image's screen.
+	referenceDerotatedDeskewedScaled := applyScale(referenceDerotatedDeskewed,
+		resultScreenWidth/defaultReferenceScreenWidth,
+		resultScreenHeight/defaultReferenceScreenHeight)
+	referenceDerotatedDeskewedScaledOffset := applyOffset(referenceDerotatedDeskewedScaled,
+		calibrationData.OffsetX,
+		calibrationData.OffsetY)
+
+	// Scales result image from pixels to mm.
+	resultScaled := applyScale(resultPoints, calibrationData.ScaleFactorX, calibrationData.ScaleFactorY)
+	resultScaledOffset := applyOffset(resultScaled, calibrationData.OffsetX, calibrationData.OffsetY)
+
+	// Note: Temporarily required, as tast cannot be built with unused variables. Will be removed in next commit.
+	_, _ = referenceDerotatedDeskewedScaledOffset, resultScaledOffset
+
 	// TODO(b/343548793): Extract paths from reference data.
 	// TODO(b/343548793): Extract paths from result data.
 	// TODO(b/343548793): Run sliding window analysis on reference and result paths.
