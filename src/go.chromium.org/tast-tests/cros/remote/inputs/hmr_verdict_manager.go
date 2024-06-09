@@ -55,3 +55,15 @@ func DetermineSingleLineVerdict(fileName string, widthResolution, heightResoluti
 
 	return results, errs
 }
+
+// DetermineFullImageVerdict performs a full image analysis on a HMR's CSV result file.
+// It does this by performing a comparison between the result file, and the reference file (the CSV file used to generate the gcode file run on the HMR).
+// The reference file is scaled to mm on a 13.3 inch diagnonal screen. The result file is raw unscaled data scaled in pixels, taken directly from the DUT.
+func DetermineFullImageVerdict(referenceFileName, resultFileName string, calibrationData CalibrationData, resultScreenWidth, resultScreenHeight float64) (*FullImageResult, error) {
+	// TODO(b/343548793): Read point data from reference and result files.
+	// TODO(b/343548793): Apply calibration data correction to reference and result data.
+	// TODO(b/343548793): Extract paths from reference data.
+	// TODO(b/343548793): Extract paths from result data.
+	// TODO(b/343548793): Run sliding window analysis on reference and result paths.
+	return nil, nil
+}
