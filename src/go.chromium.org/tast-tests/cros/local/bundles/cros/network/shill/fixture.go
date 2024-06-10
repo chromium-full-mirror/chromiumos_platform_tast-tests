@@ -8,11 +8,14 @@ package shill
 
 import (
 	"context"
+	"os"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/local/network"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast-tests/cros/local/upstart"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -34,6 +37,40 @@ func init() {
 		TearDownTimeout: ResetShillTimeout + 5*time.Second,
 		Impl:            &shillFixture{},
 	})
+}
+
+// ResetShill does a best effort removing any modifications to the shill
+// configuration and resetting it in a known default state.
+func ResetShill(ctx context.Context) []error {
+	var errs []error
+	if err := upstart.StopJob(ctx, shill.JobName); err != nil {
+		errs = append(errs, errors.Wrap(err, "failed to stop shill"))
+	}
+	if err := os.Remove(shillconst.DefaultProfilePath); err != nil && !os.IsNotExist(err) {
+		errs = append(errs, errors.Wrap(err, "failed to remove default profile"))
+	}
+	if err := upstart.RestartJob(ctx, shill.JobName); err != nil {
+		// No more can be done if shill doesn't start
+		return append(errs, errors.Wrap(err, "failed to restart shill"))
+	}
+	manager, err := shill.NewManager(ctx)
+	if err != nil {
+		// No more can be done if a manger interface cannot be created
+		return append(errs, errors.Wrap(err, "failed to create new shill manager"))
+	}
+	if err = manager.PopAllUserProfiles(ctx); err != nil {
+		errs = append(errs, errors.Wrap(err, "failed to pop all user profiles"))
+	}
+
+	// Wait until a service is connected.
+	expectProps := map[string]interface{}{
+		shillconst.ServicePropertyIsConnected: true,
+	}
+	if _, err := manager.WaitForServiceProperties(ctx, expectProps, ResetShillTimeout); err != nil {
+		errs = append(errs, errors.Wrap(err, "failed to wait for connected service"))
+	}
+
+	return errs
 }
 
 // shillFixture implements testing.FixtureImpl.
@@ -65,7 +102,7 @@ func (f *shillFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
 		}
 	}()
 
-	if errs := shill.ResetShill(ctx); len(errs) != 0 {
+	if errs := ResetShill(ctx); len(errs) != 0 {
 		for _, err := range errs {
 			s.Error("ResetShill error: ", err)
 		}
@@ -88,7 +125,7 @@ func (f *shillFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 		s.Error("Failed to restart ui: ", err)
 	}
 
-	if errs := shill.ResetShill(ctx); len(errs) != 0 {
+	if errs := ResetShill(ctx); len(errs) != 0 {
 		for _, err := range errs {
 			s.Error("ResetShill error: ", err)
 		}
