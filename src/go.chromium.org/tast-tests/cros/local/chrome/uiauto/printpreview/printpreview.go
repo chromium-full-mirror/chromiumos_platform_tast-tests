@@ -256,7 +256,7 @@ func setDropdownInternal(ui *uiauto.Context, dropdown *nodewith.Finder, value st
 		ui.WithTimeout(10*time.Second).WaitUntilExists(option),
 		ui.DoDefault(option),
 		ui.DoDefault(dropdown),
-		ui.WithTimeout(10*time.Second).WaitUntilGone(option),
+		ui.WithTimeout(10*time.Second).WaitUntilExists(dropdown.Collapsed()),
 	)
 }
 
