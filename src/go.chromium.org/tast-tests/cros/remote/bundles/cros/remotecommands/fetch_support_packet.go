@@ -200,8 +200,13 @@ func FetchSupportPacket(ctx context.Context, s *testing.State) {
 			if !isRelevantEvent(*logUploadEvent) {
 				continue
 			}
+			// We skip the check if the event doesn't contain remote command details.
+			// It means the log upload is not triggered by a remote command.
+			if logUploadEvent.RemoteCommandDetails == nil {
+				continue
+			}
 			//  Verify that the command ID is set correctly.
-			if *logUploadEvent.CommandID != commandID {
+			if logUploadEvent.RemoteCommandDetails.CommandID == nil || *logUploadEvent.RemoteCommandDetails.CommandID != commandID {
 				return errors.New("expected command ID not found")
 			}
 			// The upload shouldn't contain error.
@@ -210,7 +215,7 @@ func FetchSupportPacket(ctx context.Context, s *testing.State) {
 				return errors.Errorf("upload status contains an error: (%s) %s", *uploadTracker.Status.Code, *uploadTracker.Status.ErrorMessage)
 			}
 			// The access parameters will contain the location of uploaded file in the server. It can't be empty.
-			if *uploadTracker.AccessParameters == "" {
+			if uploadTracker.AccessParameters == nil || *uploadTracker.AccessParameters == "" {
 				return errors.New("access parameters can't be empty")
 			}
 			// Verify that the uploaded file size matches the total file size.

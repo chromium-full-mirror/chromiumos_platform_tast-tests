@@ -96,10 +96,15 @@ type LogoutEvent struct{}
 
 // LogUploadEvent mirrors the logUploadEvent JSON field.
 type LogUploadEvent struct {
-	UploadSettings       *UploadSettings `json:"uploadSettings"`
-	UploadTracker        *UploadTracker  `json:"uploadTracker"`
-	CommandID            *string         `json:"commandId"`
-	CommandResultPayload *string         `json:"commandResultPayload"`
+	UploadSettings       *UploadSettings       `json:"uploadSettings"`
+	UploadTracker        *UploadTracker        `json:"uploadTracker"`
+	RemoteCommandDetails *RemoteCommandDetails `json:"remoteCommandDetails"`
+}
+
+// RemoteCommandDetails is a struct representation of message based on chrome/browser/policy/messaging_layer/proto/synced/log_upload_event.proto.
+type RemoteCommandDetails struct {
+	CommandID            *string `json:"commandId"`
+	CommandResultPayload *string `json:"commandResultPayload"`
 }
 
 // UploadSettings is a struct representation of message based on components/reporting/proto/synced/upload_tracker.proto.
