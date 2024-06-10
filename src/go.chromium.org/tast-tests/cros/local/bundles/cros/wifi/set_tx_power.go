@@ -28,6 +28,7 @@ func init() {
 			// Updating the SAR tables in CBFS can break this test.
 			"group:firmware", "firmware_bios", "firmware_level5",
 		},
+		SoftwareDeps:    []string{"no_kernel_upstream"},
 		Requirements:    []string{tdreq.WiFiRegSupportDynamicPowerTable, tdreq.WiFiRegSupportStaticSAR, tdreq.WiFiRegSupportDynamicSAR, tdreq.WiFiRegSupportGeoSAR, tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates, "sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
 		VariantCategory: `{"name": "All_Models"}`,
 		Params: []testing.Param{
