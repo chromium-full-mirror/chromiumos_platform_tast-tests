@@ -1,0 +1,5 @@
+# Tast team for bulk/emergencies
+include /OWNERS.tast
+
+# Team OWNERS
+include chromiumos/owners:v1:/platform/OWNERS.cfm
