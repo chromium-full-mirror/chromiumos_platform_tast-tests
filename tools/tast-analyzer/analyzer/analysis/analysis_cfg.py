@@ -62,3 +62,16 @@ class AnalysisCfg:
 
     multiple_test_cfg: MultipleTestCfg = MultipleTestCfg.FWER
     """The multiple test procedure to use."""
+
+    prune_regex_include: str | None = None
+    """Filter analyzed metrics to only those that match this regex."""
+
+    prune_regex_exclude: str | None = None
+    """Filter analyzed metrics to only those that do not match this regex.
+    Excluding overrides including."""
+
+    prune_outliers: bool = False
+    """Whether to prune outlier values.
+
+    This uses a simple strategy of removing one maximum and one minimum value
+    from each sample."""

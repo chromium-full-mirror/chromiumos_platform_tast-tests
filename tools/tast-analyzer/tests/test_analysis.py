@@ -1,6 +1,7 @@
 # Copyright 2024 The ChromiumOS Authors
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
+import copy
 from pathlib import Path
 import unittest
 
@@ -191,7 +192,7 @@ class AnalysisTest(unittest.TestCase):
             mwu_result=stats.MannWhitneyUResult(u=u, p=p),
         )
 
-    def test_prune_results(self) -> None:
+    def test_prune_non_significant_results(self) -> None:
         cfg = analysis_cfg.AnalysisCfg(
             alpha=0.01, multiple_test_cfg=analysis_cfg.MultipleTestCfg.FWER
         )
@@ -203,8 +204,109 @@ class AnalysisTest(unittest.TestCase):
             self._make_analysis_result(u=0.0, p=0.005),
             self._make_analysis_result(u=0.0, p=0.006),
         ]
-        pruned = analyze_results._prune_results(results, cfg)
+        pruned = analyze_results._prune_non_significant_results(results, cfg)
         self.assertEqual(len(pruned), 2)
         # Check p-values were adjusted.
         self.assertEqual(pruned[0].mwu_result.p, 0.006)
         self.assertEqual(pruned[1].mwu_result.p, 0.01)
+
+    def test_prune_regex_include(self) -> None:
+        before_samples, after_samples = self._load_samples()
+
+        test_two_path = "ui.OverviewPerf.Test.Two.average"
+        test_three_path = "ui.OverviewPerf.Test.Three.average"
+
+        self.assertEqual(
+            before_samples,
+            analyze_results._prune_regex_include(before_samples, "Test.*"),
+        )
+        self.assertEqual(
+            {}, analyze_results._prune_regex_include(before_samples, "^Test$")
+        )
+        self.assertEqual(
+            {test_three_path: before_samples[test_three_path]},
+            analyze_results._prune_regex_include(before_samples, "Test\.Three"),
+        )
+        self.assertEqual(
+            {test_three_path: before_samples[test_three_path]},
+            analyze_results._prune_regex_include(before_samples, "Test.*ee"),
+        )
+        self.assertEqual(
+            {test_two_path: before_samples[test_two_path]},
+            analyze_results._prune_regex_include(before_samples, "Test.*o"),
+        )
+        self.assertEqual(
+            {test_three_path: after_samples[test_three_path]},
+            analyze_results._prune_regex_include(
+                after_samples, "^ui\.OverviewPerf\.Test\.Three\.average$"
+            ),
+        )
+
+    def test_prune_regex_exclude(self) -> None:
+        before_samples, after_samples = self._load_samples()
+
+        test_two_path = "ui.OverviewPerf.Test.Two.average"
+        test_three_path = "ui.OverviewPerf.Test.Three.average"
+
+        self.assertEqual(
+            {},
+            analyze_results._prune_regex_exclude(before_samples, "Test.*"),
+        )
+        self.assertEqual(
+            before_samples,
+            analyze_results._prune_regex_exclude(before_samples, "^Test$"),
+        )
+        self.assertEqual(
+            {k: v for k, v in before_samples.items() if k != test_three_path},
+            analyze_results._prune_regex_exclude(before_samples, "Test\.Three"),
+        )
+        self.assertEqual(
+            {k: v for k, v in before_samples.items() if k != test_three_path},
+            analyze_results._prune_regex_exclude(before_samples, "Test.*ee"),
+        )
+        self.assertEqual(
+            {k: v for k, v in before_samples.items() if k != test_two_path},
+            analyze_results._prune_regex_exclude(before_samples, "Test.*o"),
+        )
+        self.assertEqual(
+            {k: v for k, v in after_samples.items() if k != test_three_path},
+            analyze_results._prune_regex_exclude(
+                after_samples, "^ui\.OverviewPerf\.Test\.Three\.average$"
+            ),
+        )
+
+    def test_prune_outliers(self) -> None:
+        samples = {
+            "test.name.metric.path": metric_sample.MetricSample(
+                test_name="ui.OverviewPerf",
+                metric_path="test.name.metric.path",
+                units="percent",
+                improvement_direction=metric_sample.ImprovementDirection.UP,
+                value_map={},
+            )
+        }
+        samples_pruned = copy.deepcopy(samples)
+        self.assertEqual(
+            samples_pruned,
+            analyze_results._prune_outliers(samples),
+        )
+
+        samples["test.name.metric.path"].value_map["test1"] = 1
+        self.assertEqual(
+            samples_pruned,
+            analyze_results._prune_outliers(samples),
+        )
+
+        samples["test.name.metric.path"].value_map["test2"] = 2
+        self.assertEqual(
+            samples_pruned,
+            analyze_results._prune_outliers(samples),
+        )
+
+        # Remove highest and lowest.
+        samples["test.name.metric.path"].value_map["test3"] = 3
+        samples_pruned["test.name.metric.path"].value_map["test2"] = 2
+        self.assertEqual(
+            samples_pruned,
+            analyze_results._prune_outliers(samples),
+        )

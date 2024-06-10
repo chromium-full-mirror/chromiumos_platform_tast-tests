@@ -3,8 +3,10 @@
 # found in the LICENSE file.
 from collections import defaultdict
 import copy
+import dataclasses
 import logging
 from pathlib import Path
+import re
 
 from analyzer.analysis import analysis_cfg
 from analyzer.analysis import analysis_results
@@ -63,7 +65,7 @@ def _load_metrics_from_results_dict(
     return metrics
 
 
-def _prune_results(
+def _prune_non_significant_results(
     results: list[analysis_results.AnalysisResult],
     cfg: analysis_cfg.AnalysisCfg,
 ) -> list[analysis_results.AnalysisResult]:
@@ -82,6 +84,40 @@ def _prune_results(
     return out_results
 
 
+def _prune_regex_include(
+    metrics: metric_sample.SampleDict, regex: str
+) -> metric_sample.SampleDict:
+    return {
+        path: sample
+        for path, sample in metrics.items()
+        if re.search(regex, path)
+    }
+
+
+def _prune_regex_exclude(
+    metrics: metric_sample.SampleDict, regex: str
+) -> metric_sample.SampleDict:
+    return {
+        path: sample
+        for path, sample in metrics.items()
+        if not re.search(regex, path)
+    }
+
+
+def _prune_outliers(
+    metrics: metric_sample.SampleDict,
+) -> metric_sample.SampleDict:
+    out_metrics = {}
+    for k, v in metrics.items():
+        vals = sorted(v.value_map.items(), key=lambda x: x[1])
+        if len(vals):
+            del vals[0]
+        if len(vals):
+            del vals[-1]
+        out_metrics[k] = dataclasses.replace(v, value_map=dict(vals))
+    return out_metrics
+
+
 def analyze_results(
     sample1_path: Path, sample2_path: Path, cfg: analysis_cfg.AnalysisCfg
 ) -> list[analysis_results.AnalysisResult]:
@@ -95,6 +131,26 @@ def analyze_results(
     before_samples = _load_metrics_from_results_dict(before_results)
     after_samples = _load_metrics_from_results_dict(after_results)
 
+    if cfg.prune_outliers:
+        before_samples = _prune_outliers(before_samples)
+        after_samples = _prune_outliers(after_samples)
+
+    if cfg.prune_regex_include:
+        before_samples = _prune_regex_include(
+            before_samples, cfg.prune_regex_include
+        )
+        after_samples = _prune_regex_include(
+            after_samples, cfg.prune_regex_include
+        )
+
+    if cfg.prune_regex_exclude:
+        before_samples = _prune_regex_exclude(
+            before_samples, cfg.prune_regex_exclude
+        )
+        after_samples = _prune_regex_exclude(
+            after_samples, cfg.prune_regex_exclude
+        )
+
     metric_paths = analysis_results.compute_metric_paths_for_comparison(
         s1=before_samples, s2=after_samples, cfg=cfg
     )
@@ -103,4 +159,5 @@ def analyze_results(
         after_samples=after_samples,
         metric_paths=metric_paths,
     )
-    return _prune_results(results, cfg)
+
+    return _prune_non_significant_results(results, cfg)
