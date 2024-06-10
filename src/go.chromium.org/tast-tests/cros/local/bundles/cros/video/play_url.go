@@ -6,6 +6,7 @@ package video
 
 import (
 	"context"
+	"net/url"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/media/caps"
@@ -219,7 +220,8 @@ func PlayURL(ctx context.Context, s *testing.State) {
 		s.Fatal("Video failed to start playing: ", err)
 	}
 
-	isPlatform, _, err := devtools.GetVideoDecoder(ctx, observer, testOpt.url)
+	u, _ := url.Parse(testOpt.url)
+	isPlatform, _, err := devtools.GetVideoDecoder(ctx, observer, u.Host+u.Path)
 	if err != nil {
 		s.Fatal("Failed to parse Media DevTools: ", err)
 	}

@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/mafredri/cdp/protocol/media"
@@ -49,8 +50,8 @@ func getVideoCodecs(ctx context.Context, observer media.PlayerPropertiesChangedC
 		}
 
 		for _, s := range reply.Properties {
-			if s.Name == "kFrameUrl" && s.Value != url {
-				return errors.New("failed to find the expected URL in Media DevTools")
+			if s.Name == "kFrameUrl" && !strings.Contains(s.Value, url) {
+				return errors.Errorf("failed to find the expected URL (%s) in Media DevTools", url)
 			}
 
 			if s.Name == platformProperty {
