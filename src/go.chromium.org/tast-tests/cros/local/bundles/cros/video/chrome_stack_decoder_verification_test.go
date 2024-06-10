@@ -35,6 +35,7 @@ var vp9FilesFromBugs = map[string]string{
 
 var av1FilesFromBugs = map[string]string{
 	"235138734": "test_vectors/av1/files_from_bugs/b_235138734_test-25fps-one-to-four-tiles.av1.ivf",
+	"346405213": "test_vectors/av1/files_from_bugs/b_346405213_reference-frame-scaling-test.ivf",
 }
 
 var h265FilesFromBugs = map[string]string{

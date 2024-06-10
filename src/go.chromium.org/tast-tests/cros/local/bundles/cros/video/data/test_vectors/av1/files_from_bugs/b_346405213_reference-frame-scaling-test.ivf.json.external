@@ -1,0 +1,5 @@
+{
+  "sha256sum": "370a6ac3bb4cca265de26ee991853a2f82190ba9af64d7b9639592ec4fdf17f9",
+  "size": 11687,
+  "url": "gs://chromiumos-test-assets-public/tast/cros/video/test_vectors/av1/files_from_bugs/b_346405213_reference-frame-scaling-test_20240610.ivf.json"
+}

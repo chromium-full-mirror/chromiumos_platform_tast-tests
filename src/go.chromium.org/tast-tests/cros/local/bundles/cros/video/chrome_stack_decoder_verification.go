@@ -1483,6 +1483,20 @@ func init() {
 				},
 			},
 			{
+				Name:              "av1_files_from_bugs_346405213",
+				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
+				ExtraSoftwareDeps: []string{caps.HWDecodeAV1},
+				ExtraData:         appendJSONFiles([]string{"test_vectors/av1/files_from_bugs/b_346405213_reference-frame-scaling-test.ivf"}),
+				Timeout:           calculateTestTimeout([]string{"test_vectors/av1/files_from_bugs/b_346405213_reference-frame-scaling-test.ivf"}, "av1_files_from_bugs_346405213"),
+				Val: chromeStackDecoderVerificationTestParam{
+					videoFiles:      []string{"test_vectors/av1/files_from_bugs/b_346405213_reference-frame-scaling-test.ivf"},
+					validatorType:   decoding.MD5,
+					mustFail:        false,
+					enabledFeatures: []string{},
+				},
+			},
+			{
 				Name:              "hevc_files_from_bugs_321622872",
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
@@ -2179,6 +2193,20 @@ func init() {
 				Timeout:           calculateTestTimeout([]string{"test_vectors/av1/files_from_bugs/b_235138734_test-25fps-one-to-four-tiles.av1.ivf"}, "v4l2_flat_av1_files_from_bugs_235138734"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      []string{"test_vectors/av1/files_from_bugs/b_235138734_test-25fps-one-to-four-tiles.av1.ivf"},
+					validatorType:   decoding.MD5,
+					mustFail:        false,
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
+				},
+			},
+			{
+				Name:              "v4l2_flat_av1_files_from_bugs_346405213",
+				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
+				ExtraSoftwareDeps: []string{caps.HWDecodeAV1, "v4l2_codec"},
+				ExtraData:         appendJSONFiles([]string{"test_vectors/av1/files_from_bugs/b_346405213_reference-frame-scaling-test.ivf"}),
+				Timeout:           calculateTestTimeout([]string{"test_vectors/av1/files_from_bugs/b_346405213_reference-frame-scaling-test.ivf"}, "v4l2_flat_av1_files_from_bugs_346405213"),
+				Val: chromeStackDecoderVerificationTestParam{
+					videoFiles:      []string{"test_vectors/av1/files_from_bugs/b_346405213_reference-frame-scaling-test.ivf"},
 					validatorType:   decoding.MD5,
 					mustFail:        false,
 					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
