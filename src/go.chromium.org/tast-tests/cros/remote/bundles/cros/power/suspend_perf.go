@@ -519,7 +519,7 @@ func savePerfData(ctx context.Context, s *testing.State, cl *rpc.Client, perf *l
 	if !shouldRunPerf() {
 		return nil
 	}
-	dest := fmt.Sprintf("%s/perf%s.script.gz", s.OutDir(), suffix)
+	dest := fmt.Sprintf("%s/perf%s.data", s.OutDir(), suffix)
 	if perf == nil {
 		var err error
 		perf, err = linuxperf.ReconnectRemoteLinuxPerf(ctx, cl, tok)
@@ -533,12 +533,10 @@ func savePerfData(ctx context.Context, s *testing.State, cl *rpc.Client, perf *l
 			s.Log("Failed to run finilize: ", err)
 		}
 	}()
-	if err := perf.SaveScript(ctx,
-		linuxperf.Compress(),
-		linuxperf.ScriptFormat("time,comm,pid,tid,event,ip,sym,dso,trace")); err != nil {
-		return errors.Wrap(err, "failed to generate script file")
+	if err := perf.Stop(ctx); err != nil {
+		return errors.Wrap(err, "failed to stop perf tracing")
 	}
-	if err := s.DUT().GetFile(ctx, perf.ScriptDataPath(), dest); err != nil {
+	if err := s.DUT().GetFile(ctx, perf.TraceDataPath(), dest); err != nil {
 		return errors.Wrap(err, "failed to copy the perfetto data file from DUT")
 	}
 
