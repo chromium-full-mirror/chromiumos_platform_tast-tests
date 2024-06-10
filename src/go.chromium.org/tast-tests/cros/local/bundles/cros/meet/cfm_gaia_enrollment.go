@@ -45,6 +45,7 @@ func CfmGAIAEnrollment(ctx context.Context, s *testing.State) {
 
 	opts := append([]chrome.Option{
 		chrome.ExtraArgs("--enable-logging", "--vmodule="+strings.Join(tags, ","))},
+		chrome.NoLogin(),
 		chrome.GAIAEnterpriseEnroll(chrome.Creds{User: cfmUser, Pass: cfmPassword}))
 
 	opts = append(opts, chrome.DontSkipOOBEAfterLogin(),
@@ -57,28 +58,9 @@ func CfmGAIAEnrollment(ctx context.Context, s *testing.State) {
 	}
 	defer cr.Close(ctx)
 
-	oobeConn, err := cr.WaitForOOBEConnection(ctx)
+	oobeConn, err := cr.WaitForCFMConnection(ctx)
 	if err != nil {
-		s.Fatal("Failed to create OOBE connection: ", err)
+		s.Fatal("Failed to load CFM OOBE connection: ", err)
 	}
 	defer oobeConn.Close()
-
-	if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.EnrollmentScreen.isVisible()"); err != nil {
-		s.Fatal("Failed to wait for the enrollment screen to be visible: ", err)
-	}
-
-	const enrollmentSuccessScreen = "OobeAPI.screens.EnterpriseEnrollmentScreen.successStep.isReadyForTesting()"
-	const enrollmentWaitingTime = 30 * time.Second
-
-	if err := oobeConn.WaitForExprFailOnErrWithTimeout(ctx, enrollmentSuccessScreen, enrollmentWaitingTime); err != nil {
-		s.Fatal("Failed to wait for the enrollment screen to be ready for testing: ", err)
-	}
-
-	if err := oobeConn.Eval(ctx, "OobeAPI.screens.EnterpriseEnrollmentScreen.successStep.clickNext()", nil); err != nil {
-		s.Fatal("Failed to click the enrollment done button: ", err)
-	}
-
-	if err := oobeConn.WaitForExprFailOnErr(ctx, "!OobeAPI.screens.EnterpriseEnrollmentScreen.isEnrollmentInProgress()"); err != nil {
-		s.Fatal("Failed to wait for enrollment to complete: ", err)
-	}
 }
