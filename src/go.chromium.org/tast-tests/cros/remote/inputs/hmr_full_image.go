@@ -4,7 +4,11 @@
 
 package inputs
 
-import "math"
+import (
+	"math"
+
+	"go.chromium.org/tast/core/errors"
+)
 
 const (
 	minReferencePathSize = 10
@@ -68,4 +72,80 @@ func extractReferencePaths(points []*hmrNode) [][]*hmrNode {
 	}
 
 	return paths
+}
+
+// extractResultsPaths extracts paths from the results dataset, using the
+// smallest epsilon value possible.
+func extractResultsPaths(resultPoints []*hmrNode, referencePaths [][]*hmrNode, resultScreenDiagonalDistance float64) ([][]*hmrNode, float64, error) {
+	var finalResultPaths [][]*hmrNode
+	epsilon := -1.0
+	left := 0.0
+	right := resultScreenDiagonalDistance
+	// Perform a binary search until the smallest epsilon value that creates the same number of results paths as reference paths is found.
+	for left <= right {
+		mid := math.Floor((left + right) / 2)
+		resultPaths := matchReferencePathToResultPath(resultPoints, referencePaths, mid)
+		if len(resultPaths) < len(referencePaths) {
+			left = mid + 1
+		} else {
+			right = mid - 1
+			if len(resultPaths) == len(referencePaths) {
+				epsilon = mid
+				finalResultPaths = resultPaths
+			}
+		}
+	}
+
+	if epsilon < 0 {
+		return nil, -1, errors.New("could not find a valid epsilon")
+	}
+	return finalResultPaths, epsilon, nil
+}
+
+// matchReferencePathToResultPath attempts to extract a result path from the
+// results dataset. This involves matching the start and end points of each of
+// the reference paths, to points within the results dataset within epsilon
+// value.
+func matchReferencePathToResultPath(resultPoints []*hmrNode, referencePaths [][]*hmrNode, epsilon float64) [][]*hmrNode {
+	var resultPaths [][]*hmrNode
+	var path []*hmrNode
+	// Keep track of the next reference path that we're trying to match.
+	referencePathIdx := 0
+	// Iterate through all results points.
+	// When we find a result point with pressure > 0, that was preceded by a result point with pressure == 0, and the result point is within epsilon distance of the start of the next reference path, we create a new result path.
+	// We continue iterating through result points until we find a point with == 0, preceded by a point with pressure > 0, and within epsilon distance of the end of the next reference path, we then close the result path, and increment the reference path counter.
+	for i := range resultPoints {
+		if resultPoints[i].pressure > 0 {
+			if len(path) > 0 {
+				// If pressure > 0 and a path exists, add this point to the path.
+				path = append(path, resultPoints[i])
+			} else {
+				// If pressure > 0, and the previous point's pressure == 0, and the point is within epsilon of the next reference points start point. Create a new path.
+				referencePathStartPoint := referencePaths[referencePathIdx][0]
+				if (i == 0 || resultPoints[i-1].pressure == 0) && euclideanDistance(resultPoints[i], referencePathStartPoint) <= epsilon {
+					path = append(path, resultPoints[i])
+				}
+			}
+		} else {
+			if len(path) > 0 {
+				// If pressure == 0, and the previous point's pressure > 0, and the previous point was within epsilon of the next reference points end point. Close the path.
+				referencePathEndPoint := referencePaths[referencePathIdx][len(referencePaths[referencePathIdx])-1]
+				if resultPoints[i-1].pressure > 0 && euclideanDistance(resultPoints[i-1], referencePathEndPoint) <= epsilon {
+					resultPaths = append(resultPaths, path)
+					referencePathIdx++
+					if referencePathIdx >= len(referencePaths) {
+						break
+					}
+					path = []*hmrNode{}
+				} else {
+					// If pressure == 0 and an open path exists. Add this point to it.
+					path = append(path, resultPoints[i])
+				}
+			}
+		}
+	}
+	if len(path) > 0 {
+		resultPaths = append(resultPaths, path)
+	}
+	return resultPaths
 }

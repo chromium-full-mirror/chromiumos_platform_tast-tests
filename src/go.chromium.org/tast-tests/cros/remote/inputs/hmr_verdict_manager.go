@@ -6,6 +6,7 @@ package inputs
 
 import (
 	"fmt"
+	"math"
 
 	"go.chromium.org/tast/core/errors"
 )
@@ -102,9 +103,14 @@ func DetermineFullImageVerdict(referenceFileName, resultFileName string, calibra
 		return nil, errors.Errorf("no reference paths could be extracted from %v", referenceFileName)
 	}
 
+	screenDiagonalDistance := math.Sqrt(math.Pow(resultScreenWidth, 2) + math.Pow(resultScreenHeight, 2))
+	resultPaths, epsilon, err := extractResultsPaths(resultScaledOffset, referencePaths, screenDiagonalDistance)
+	if err != nil {
+		return nil, err
+	}
+
 	// Note: Temporarily required, as tast cannot be built with unused variables. Will be removed in next commit.
-	_, _ = referencePaths, resultScaledOffset
-	// TODO(b/343548793): Extract paths from result data.
+	_, _, _ = referencePaths, resultPaths, epsilon
 	// TODO(b/343548793): Run sliding window analysis on reference and result paths.
 	return nil, nil
 }
