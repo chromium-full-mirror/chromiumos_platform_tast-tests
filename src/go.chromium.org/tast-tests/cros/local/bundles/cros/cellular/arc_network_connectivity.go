@@ -21,7 +21,7 @@ func init() {
 		Contacts:       []string{"chromeos-cellular-team@google.com", "madhavadas@google.com"},
 		BugComponent:   "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:           []string{"group:cellular", "cellular_sim_active"},
-		SoftwareDeps:   []string{"chrome", "vm_host"},
+		SoftwareDeps:   []string{"arc", "chrome", "vm_host"},
 		Fixture:        "cellularArcBooted",
 		Timeout:        4 * time.Minute,
 	})
