@@ -265,6 +265,12 @@ func ReconnectTraceInstance(ctx context.Context, name string) (*TraceInstance, e
 
 // Options for CreateTraceInstance()
 
+// EmptyTraceCmdOptions returns an empty array of traceCmdOption.
+func EmptyTraceCmdOptions() []traceCmdOption {
+	var opts []traceCmdOption
+	return opts
+}
+
 // RecordOnDiskMode specifies the TraceInstance run trace-cmd running on disk recording.
 func RecordOnDiskMode(outPath string) traceCmdOption {
 	return func(config *traceCmdConfig) {

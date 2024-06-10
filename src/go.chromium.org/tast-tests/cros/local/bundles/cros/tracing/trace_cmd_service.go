@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+// Package tracing implements service for tracing by trace-cmd and perfetto.
 package tracing
 
 import (
@@ -12,6 +13,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 
+	"go.chromium.org/tast-tests/cros/local/tracing"
 	tcpb "go.chromium.org/tast-tests/cros/services/cros/tracing"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -29,7 +31,7 @@ func init() {
 type TraceCmdService struct {
 	s *testing.ServiceState
 
-	ti *TraceInstance
+	ti *tracing.TraceInstance
 }
 
 // Remote test needs to call CreateInstance or AttachInstance first for attaching
@@ -49,31 +51,31 @@ func (t *TraceCmdService) CreateInstance(ctx context.Context, req *tcpb.TraceCmd
 	}
 
 	// Build options
-	var opts []traceCmdOption
+	opts := tracing.EmptyTraceCmdOptions()
 	if req.BufferSizeKb != 0 {
-		opts = append(opts, CPUBufferKiB(int(req.BufferSizeKb)))
+		opts = append(opts, tracing.CPUBufferKiB(int(req.BufferSizeKb)))
 	}
 	if len(req.Events) != 0 {
 		var events []string
 		for _, e := range req.Events {
 			// If the event is specified with filter or trigger, use EnableEventWith() option.
 			if e.Filter != "" || e.Trigger != "" {
-				opts = append(opts, EnableEventWith(e.Name, e.Filter, e.Trigger))
+				opts = append(opts, tracing.EnableEventWith(e.Name, e.Filter, e.Trigger))
 			} else {
 				// Or, just collect event names and set by EnableEvents().
 				events = append(events, e.Name)
 			}
 		}
 		if len(events) != 0 {
-			opts = append(opts, EnableEvents(events...))
+			opts = append(opts, tracing.EnableEvents(events...))
 		}
 	}
 	if req.EnableFtrace {
-		opts = append(opts, EnableFunctionTracer(req.FtraceFunctions...))
+		opts = append(opts, tracing.EnableFunctionTracer(req.FtraceFunctions...))
 
 	}
 
-	ti, err := CreateTraceInstance(ctx, req.Name, opts...)
+	ti, err := tracing.CreateTraceInstance(ctx, req.Name, opts...)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create a new instance")
 	}
@@ -99,7 +101,7 @@ func (t *TraceCmdService) ReconnectInstance(ctx context.Context, req *tcpb.Trace
 		return nil, errors.New("no instance name specified")
 	}
 
-	ti, err := ReconnectTraceInstance(ctx, req.Name)
+	ti, err := tracing.ReconnectTraceInstance(ctx, req.Name)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to attach an existing instance")
 	}
@@ -164,7 +166,7 @@ func (t *TraceCmdService) Finalize(ctx context.Context, req *empty.Empty) (*empt
 
 // CleanupAll removes all trace instances.
 func (t *TraceCmdService) CleanupAll(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
-	if err := CleanupAllTraceInstances(ctx); err != nil {
+	if err := tracing.CleanupAllTraceInstances(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to cleanup all instances")
 	}
 	return &empty.Empty{}, nil

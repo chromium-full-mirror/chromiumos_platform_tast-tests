@@ -143,6 +143,7 @@ import (
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/tflite"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/timberslide"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/touchpad"
+	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/tracing"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/tracing/linuxperf"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/typec"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/u2fd"

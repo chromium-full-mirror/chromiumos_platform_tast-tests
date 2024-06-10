@@ -23,6 +23,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/procutil"
 	"go.chromium.org/tast-tests/cros/local/upstart"
+	pb "go.chromium.org/tast-tests/cros/services/cros/tracing"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -44,15 +45,6 @@ type Session struct {
 	traceDataPath     string
 }
 
-// SessionToken stores the current session state so that ReconnectBackgroundSession
-// can reconnect to the session using it. External program should not change it.
-type SessionToken struct {
-	pid               int
-	useTempFile       bool
-	compressTraceData bool
-	traceDataPath     string
-}
-
 func createTempFileForTrace() (*os.File, error) {
 	return ioutil.TempFile("", "perfetto-trace-*.pb")
 }
@@ -64,6 +56,12 @@ type option struct {
 }
 
 type traceSessionOption func(*option)
+
+// EmptyTraceSessionOptions returns an empty array of traceSessionOption.
+func EmptyTraceSessionOptions() []traceSessionOption {
+	var opts []traceSessionOption
+	return opts
+}
 
 // WithTraceDataPath configures the session with trace data written to the given path.
 func WithTraceDataPath(path string) traceSessionOption {
@@ -145,12 +143,12 @@ func (sess *Session) Wait(ctx context.Context) error {
 	return nil
 }
 
-// Token returns a token for reconnect.
-func (sess *Session) Token() (*SessionToken, error) {
-	if sess.cmd != nil {
-		return nil, errors.New("failed to get token because it is not running in background")
+// Token returns PerfettoSessionToken for reconnect to running session.
+func (sess *Session) Token() (*pb.PerfettoSessionToken, error) {
+	if sess.proc == nil {
+		return nil, errors.New("failed to get pid")
 	}
-	return &SessionToken{pid: int(sess.proc.Pid), useTempFile: sess.useTempFile, compressTraceData: sess.compressTraceData, traceDataPath: sess.traceDataPath}, nil
+	return &pb.PerfettoSessionToken{Pid: int32(sess.proc.Pid), UseTempFile: sess.useTempFile, CompressTraceData: sess.compressTraceData, TraceDataPath: sess.traceDataPath}, nil
 }
 
 // RunMetrics collects the result with trace_processor_shell.
@@ -385,15 +383,15 @@ func StartSessionAndWaitUntilDone(ctx context.Context, configFile string, opts .
 // The caller should call Finalize() to perform the final actions with the
 // tracing session whether the test is successful or not.
 // Or, the caller can Disconnect() to perform detaching from current trace.
-func ReconnectBackgroundSession(ctx context.Context, tok *SessionToken) (*Session, error) {
-	if tok.pid <= 0 {
-		return nil, errors.Errorf("wrong pid (%d) is specified", tok.pid)
+func ReconnectBackgroundSession(ctx context.Context, tok *pb.PerfettoSessionToken) (*Session, error) {
+	if tok.Pid <= 0 {
+		return nil, errors.Errorf("wrong pid (%d) is specified", tok.Pid)
 	}
-	if _, err := os.Stat(tok.traceDataPath); err != nil {
-		return nil, errors.Wrapf(err, "trace data file (%s) does not exist", tok.traceDataPath)
+	if _, err := os.Stat(tok.TraceDataPath); err != nil {
+		return nil, errors.Wrapf(err, "trace data file (%s) does not exist", tok.TraceDataPath)
 	}
 	// The perfetto trace daemon can have exited already (e.g. after "duration_ms" elapsed).
 	// So ignore error.
-	proc, _ := process.NewProcess(int32(tok.pid))
-	return &Session{cmd: nil, proc: proc, useTempFile: tok.useTempFile, compressTraceData: tok.compressTraceData, traceDataPath: tok.traceDataPath}, nil
+	proc, _ := process.NewProcess(tok.Pid)
+	return &Session{cmd: nil, proc: proc, useTempFile: tok.UseTempFile, compressTraceData: tok.CompressTraceData, traceDataPath: tok.TraceDataPath}, nil
 }

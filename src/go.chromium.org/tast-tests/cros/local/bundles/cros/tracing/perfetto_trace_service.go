@@ -12,6 +12,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 
+	"go.chromium.org/tast-tests/cros/local/tracing"
 	pb "go.chromium.org/tast-tests/cros/services/cros/tracing"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -35,7 +36,7 @@ func init() {
 type PerfettoTraceService struct {
 	s *testing.ServiceState
 
-	sess *Session
+	sess *tracing.Session
 }
 
 // Start starts a session with given configuration.
@@ -45,25 +46,25 @@ type PerfettoTraceService struct {
 // temporary config file and use it.
 func (s *PerfettoTraceService) Start(ctx context.Context, req *pb.PerfettoOption) (*pb.PerfettoResponse, error) {
 	if s.sess != nil {
-		return nil, errors.New("This service already connected to a session")
+		return nil, errors.New("this service already connected to a session")
 	}
-	var opt []traceSessionOption
+	opts := tracing.EmptyTraceSessionOptions()
 	if req.TraceDataPath != "" {
-		opt = append(opt, WithTraceDataPath(req.TraceDataPath))
+		opts = append(opts, tracing.WithTraceDataPath(req.TraceDataPath))
 	}
 	if req.CompressTraceData {
 		if req.TraceDataPath == "" {
 			return nil, errors.New("CompressTraceData option requires TraceDataPath")
 		}
-		opt = append(opt, WithCompression())
+		opts = append(opts, tracing.WithCompression())
 	}
 	if req.Background {
-		opt = append(opt, InBackground())
+		opts = append(opts, tracing.InBackground())
 	}
 	config := req.GetFilePath()
 	if config == "" {
 		if req.GetData() == "" {
-			return nil, errors.New("Either config file path or config data is required")
+			return nil, errors.New("either config file path or config data is required")
 		}
 		f, err := os.CreateTemp("", "perfettotrace-*.pbtxt")
 		if err != nil {
@@ -78,19 +79,18 @@ func (s *PerfettoTraceService) Start(ctx context.Context, req *pb.PerfettoOption
 	}
 	defer os.Remove(config)
 
-	sess, err := StartSession(ctx, config, opt...)
+	sess, err := tracing.StartSession(ctx, config, opts...)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to start new trace session")
 	}
 	var token *pb.PerfettoSessionToken = nil
 	if req.Background {
-		tok, err := sess.Token()
+		token, err = sess.Token()
 		if err != nil {
 			sess.Stop(ctx)
 			sess.Finalize(ctx)
 			return nil, errors.Wrap(err, "failed to get token for the session")
 		}
-		token = &pb.PerfettoSessionToken{Pid: int32(tok.pid), UseTempFile: tok.useTempFile, CompressTraceData: tok.compressTraceData, TraceDataPath: tok.traceDataPath}
 	}
 	s.sess = sess
 
@@ -100,7 +100,7 @@ func (s *PerfettoTraceService) Start(ctx context.Context, req *pb.PerfettoOption
 // Stop stops a perfetto tracing session.
 func (s *PerfettoTraceService) Stop(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
 	if s.sess == nil {
-		return nil, errors.New("This is not started nor connected to any session")
+		return nil, errors.New("this is not started nor connected to any session")
 	}
 	if err := s.sess.Stop(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to stop trace session")
@@ -125,7 +125,7 @@ func (s *PerfettoTraceService) Reconnect(ctx context.Context, req *pb.PerfettoSe
 	if s.sess != nil {
 		return nil, errors.New("this service already connected to a session")
 	}
-	sess, err := ReconnectBackgroundSession(ctx, &SessionToken{pid: int(req.Pid), useTempFile: req.UseTempFile, compressTraceData: req.CompressTraceData, traceDataPath: req.TraceDataPath})
+	sess, err := tracing.ReconnectBackgroundSession(ctx, req)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to reconnect a session")
 	}
