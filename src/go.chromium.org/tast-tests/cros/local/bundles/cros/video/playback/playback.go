@@ -28,6 +28,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast-tests/cros/local/graphics"
+	"go.chromium.org/tast-tests/cros/local/graphics/modetest"
 	"go.chromium.org/tast-tests/cros/local/media/devtools"
 	"go.chromium.org/tast-tests/cros/local/tracing"
 	"go.chromium.org/tast/core/ctxutil"
@@ -397,8 +398,13 @@ func measurePerformance(ctx context.Context, params measureParams) error {
 	if err := graphics.UpdatePerfMetricFromHistogram(ctx, params.tconn, platformdecodeHistogram, initPlatformdecodeHistogram, p.GetUnderlyingValues(), "platform_video_decode_delay"); err != nil {
 		return errors.Wrap(err, "failed to calculate Platform Decode perf metric")
 	}
-	if err := graphics.UpdateOverlaysMetricFromHistogram(ctx, params.tconn, overlaysHistogram, initOverlaysHistogram, minPromotedOverlayValue, maxPromotedOverlayValue, p.GetUnderlyingValues(), "overlays"); err != nil {
-		return errors.Wrap(err, "failed to calculate overlays metric")
+	highRefreshRateMonitor, _ := isHighRefreshRateMonitor(ctx)
+	if !highRefreshRateMonitor {
+		if err := graphics.UpdateOverlaysMetricFromHistogram(ctx, params.tconn, overlaysHistogram, initOverlaysHistogram, minPromotedOverlayValue, maxPromotedOverlayValue, p.GetUnderlyingValues(), "overlays"); err != nil {
+			return errors.Wrap(err, "failed to calculate overlays metric")
+		}
+	} else {
+		testing.ContextLog(ctx, "Skipping overlay reporting on high refresh rate monitors (b/331288645)")
 	}
 
 	if err := sampleDroppedFrames(ctx, params.conn, p.GetUnderlyingValues()); err != nil {
@@ -595,4 +601,21 @@ func measureContextSwitch(ctx context.Context, measurementDuration time.Duration
 		gpuMain.avgDuration = time.Duration(mainSumRunnableDur/mainRunnableCnt) * time.Microsecond
 	}
 	return gpu, gpuMain, nil
+}
+
+func isHighRefreshRateMonitor(ctx context.Context) (bool, error) {
+	crtcs, err := modetest.Crtcs(ctx)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to read crtcs from modetest")
+	}
+	for _, crtc := range crtcs {
+		if crtc.Mode == nil {
+			continue
+		}
+		if crtc.Mode.Refresh > 61.0 {
+			testing.ContextLogf(ctx, "Found high refresh rate monitor: %f", crtc.Mode.Refresh)
+			return true, nil
+		}
+	}
+	return false, nil
 }
