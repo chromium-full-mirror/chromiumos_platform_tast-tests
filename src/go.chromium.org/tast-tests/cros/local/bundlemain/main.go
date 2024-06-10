@@ -14,6 +14,11 @@ import (
 	"os"
 	"time"
 
+	"go.chromium.org/tast/core/bundle"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
+
+	"go.chromium.org/tast-tests/cros/common/bundleutil"
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/local/crash"
 	"go.chromium.org/tast-tests/cros/local/disk"
@@ -23,9 +28,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast-tests/cros/local/syslog"
 	"go.chromium.org/tast-tests/cros/local/upstart"
-	"go.chromium.org/tast/core/bundle"
-	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/testing"
 )
 
 const (
@@ -33,7 +35,6 @@ const (
 	statefulPartition = "/mnt/stateful_partition"
 
 	mib                 = 1024 * 1024
-	lowSpaceThreshold   = 100 * mib
 	spaceUsageThreshold = 10 * mib
 )
 
@@ -49,7 +50,7 @@ func ensureDiskSpace(ctx context.Context, purgeable []string) (uint64, error) {
 		if err != nil {
 			return 0, err
 		}
-		if free >= lowSpaceThreshold {
+		if free >= bundleutil.LowSpaceThreshold() {
 			return free, nil
 		}
 		if err := os.Remove(path); err != nil {
@@ -137,7 +138,7 @@ func testHookLocal(ctx context.Context, s *testing.TestHookState) func(ctx conte
 		s.Log("Failed to ensure disk space: ", err)
 	} else {
 		checkFreeSpace = true
-		if freeSpaceBefore < lowSpaceThreshold {
+		if freeSpaceBefore < bundleutil.LowSpaceThreshold() {
 			s.Logf("Low disk space before starting test: %d MiB available", freeSpaceBefore/mib)
 		}
 	}
