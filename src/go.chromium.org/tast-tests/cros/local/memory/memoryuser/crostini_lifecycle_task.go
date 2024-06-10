@@ -149,7 +149,7 @@ func FillCrostiniMemory(ctx context.Context, cont *vm.Container, unitMiB int64, 
 		}
 		for _, unit := range units {
 			if !unit.StillAlive(ctx) {
-				testing.ContextLogf(ctx, "FillChromeOSMemory started %d units of %d MiB before first kill", len(units), unitMiB)
+				testing.ContextLogf(ctx, "FillCrostiniMemory started %d units of %d MiB before first kill", len(units), unitMiB)
 				return cleanup, nil
 			}
 		}
