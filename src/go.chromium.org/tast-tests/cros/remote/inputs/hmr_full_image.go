@@ -4,6 +4,8 @@
 
 package inputs
 
+import "math"
+
 const (
 	minReferencePathSize = 10
 )
@@ -24,6 +26,10 @@ type PathResult struct {
 	ReferencePathLength  int
 	ResultPathLength     int
 	BubbleRadius         float64 // value in (mm) used in the sliding window analysis for this path.
+}
+
+func euclideanDistance(pointA, pointB *hmrNode) float64 {
+	return math.Sqrt(math.Pow(pointA.coorX-pointB.coorX, 2) + math.Pow(pointA.coorY-pointB.coorY, 2))
 }
 
 // extractReferencePaths extracts a set of paths from reference point data.
