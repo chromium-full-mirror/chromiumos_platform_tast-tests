@@ -24,7 +24,7 @@ func init() {
 		Contacts:     []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
 		// ChromeOS > Software > ARC++ > Framework > IME VK
 		BugComponent: "b:537350",
-		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic", "group:input-tools", "group:criticalstaging"},
+		Attr:         []string{"group:mainline", "group:hw_agnostic", "group:input-tools"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBooted",
 		Params: []testing.Param{{
