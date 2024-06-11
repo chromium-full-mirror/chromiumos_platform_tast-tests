@@ -5,6 +5,7 @@
 package cleanupchecks
 
 import (
+	"bytes"
 	"context"
 	"os"
 	"os/exec"
@@ -25,6 +26,7 @@ var listOfAllChecks = map[string]*CleanUpCheck{
 	"CheckIfTastBundlesLocalFileExists":   {Check: checkIfTastBundlesLocalFileExists, RecordState: nil, Level: Fast, Enabled: true},
 	"CheckIfRootfsVerificationIsTurnedOn": {Check: checkIfRootfsVerificationIsTurnedOn, RecordState: nil, Level: Fast, Enabled: true},
 	"CheckIfDeviceIsEnrolled":             {Check: checkIfDeviceIsEnrolled, RecordState: recordStateDeviceEnrolled, Level: Fast, Enabled: true},
+	"checkIfDNSChanged":                   {Check: checkIfDNSChanged, RecordState: recordDNSStatus, Level: Fast, Enabled: true},
 }
 
 // CleanUpChecks can be defined here or in some other package which will be imported in this file.
@@ -94,4 +96,52 @@ func checkIfDeviceIsEnrolled(ctx context.Context, data *cs.PreTestData) error {
 		return errors.Errorf("checkIfDeviceIsEnrolled: device enrolled state has changed; before: %v after: %v", data.GetBoolData(), isEnrolled)
 	}
 	return nil
+}
+
+// recordDNSStatus records the DNS settings before running the test.
+func recordDNSStatus(ctx context.Context) (*cs.PreTestData, error) {
+	currentDNSServers, err := extractDNSServers()
+	if err != nil {
+		return nil, errors.New("recordDNSStatus: failed to get DNS status")
+	}
+
+	data := &cs.PreTestData{
+		Data: &cs.PreTestData_ByteData{
+			ByteData: currentDNSServers,
+		},
+	}
+	return data, nil
+}
+
+// checkIfDNSChanged checks the device DNS settings after the test and compare it with the settings before the test.
+func checkIfDNSChanged(ctx context.Context, data *cs.PreTestData) error {
+	currentDNSServers, err := extractDNSServers()
+	if err != nil {
+		return errors.New("checkIfDNSChanged: failed to get DNS status")
+	}
+
+	if !bytes.Equal(data.GetByteData(), currentDNSServers) {
+		return errors.Errorf("checkIfDNSChanged: DNS servers have changed; before: %s after: %s", data.GetByteData(), currentDNSServers)
+	}
+	return nil
+}
+
+// extractDNSServers extracts the DNS servers from the output of the resolvectl status command.
+func extractDNSServers() ([]byte, error) {
+	cmdline, err := exec.Command("cat", "/etc/resolv.conf").Output()
+	if err != nil {
+		return nil, errors.New("extractDNSServers: failed to read kernel cmdline")
+	}
+
+	var dnsServers []string
+	for _, line := range strings.Split(string(cmdline), "\n") {
+		if strings.HasPrefix(line, "nameserver") {
+			dnsServers = append(dnsServers, strings.TrimSpace(strings.TrimPrefix(line, "nameserver")))
+		}
+	}
+	var buf bytes.Buffer
+	for _, str := range dnsServers {
+		buf.WriteString(str)
+	}
+	return buf.Bytes(), nil
 }
