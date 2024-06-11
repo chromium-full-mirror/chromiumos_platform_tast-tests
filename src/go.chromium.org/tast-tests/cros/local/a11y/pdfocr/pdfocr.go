@@ -16,7 +16,6 @@ import (
 	"os"
 	"path/filepath"
 	"syscall"
-	"time"
 
 	"go.chromium.org/tast-tests/cros/local/a11y"
 	"go.chromium.org/tast-tests/cros/local/a11y/tts"
@@ -24,9 +23,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/dlc"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast-tests/cros/local/upstart"
@@ -42,14 +38,6 @@ const (
 	// Status node message when PDF OCR finished converting image to text. This
 	// must be synced with `IDS_PDF_OCR_COMPLETED` defined in the Chromium repo.
 	StatusReadyMessage = "This PDF is inaccessible. Text extracted, powered by Google AI"
-	// Subpage url in the Settings
-	SettingsSubPageURL = "textToSpeech"
-	// Toggle menu name in the Settings. This must be synced with
-	// `IDS_SETTINGS_PDF_OCR_TITLE` defined in the Chromium repo.
-	SettingsToggleName = "Extract text from PDF"
-	// Menu entry name in the context menu. This must be synced with
-	// `IDS_CONTENT_CONTEXT_PDF_OCR_MENU_OPTION` defined in the Chromium repo.
-	ContextMenuName = "Extract text from PDF"
 	// Disclaimer message added to the beginning of extracted text. This must be
 	// sycned with `IDS_PDF_OCR_RESULT_BEGIN` defined in the Chromium repo.
 	DisclaimerMessageStart = "Start of extracted text"
@@ -237,41 +225,6 @@ func SetUpHTTPServer(ctx, cleanupCtx context.Context, dataFS http.FileSystem, bt
 	})
 
 	return setupData, nil
-}
-
-// TurnOnFromContextMenu turns on PDF OCR from the Context menu in PDF Viewer.
-func TurnOnFromContextMenu(ctx context.Context, ui *uiauto.Context, pdfRoot *nodewith.Finder) error {
-	pdfOCRMenuEntry := nodewith.Name(ContextMenuName).Role(role.MenuItemCheckBox)
-	// In the scenario of DLC failure, it sometimes need to retry turning on PDF
-	// OCR from the Context Menu after recovering the DLC failure.
-	if err := uiauto.Retry(3, uiauto.NamedCombine("Turn on PDF OCR from the Context Menu",
-		ui.WithTimeout(5*time.Second).WaitUntilExists(pdfRoot),
-		ui.RightClick(pdfRoot),
-		ui.WithTimeout(5*time.Second).WaitUntilExists(pdfOCRMenuEntry),
-		ui.LeftClick(pdfOCRMenuEntry),
-		// Need to wait for pdfRoot again as turning on PDF OCR re-creates a PDF a11y tree.
-		ui.WithTimeout(5*time.Second).WaitUntilExists(pdfRoot),
-		ui.RightClick(pdfRoot),
-		ui.WithTimeout(5*time.Second).WaitUntilExists(pdfOCRMenuEntry),
-		ui.WithTimeout(5*time.Second).WaitUntilCheckedState(pdfOCRMenuEntry, true),
-		ui.LeftClick(pdfRoot),
-	))(ctx); err != nil {
-		return errors.Wrap(err, "failed to turn on PDF OCR from the Context Menu")
-	}
-
-	return nil
-}
-
-// ExpectDownloadFailureUtterance waits to receive the download failure utterance.
-func ExpectDownloadFailureUtterance(ctx context.Context, sm *tts.SpeechMonitor) error {
-	if err := sm.Consume(ctx, []tts.SpeechExpectation{
-		tts.NewStringExpectation("Downloading text recognition files"),
-		tts.NewRegexExpectation("Can't download text recognition files*"),
-	}); err != nil {
-		errors.Wrap(err, "failed to check the ChromeVox announcement for PDF OCR dlc failure")
-	}
-
-	return nil
 }
 
 // moveDir moves a directory from srcDir to dstDir, using fsutil.MoveFile(), and

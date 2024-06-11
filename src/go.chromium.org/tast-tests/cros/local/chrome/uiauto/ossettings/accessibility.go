@@ -8,7 +8,6 @@ import (
 	"context"
 
 	"go.chromium.org/tast-tests/cros/common/action"
-	"go.chromium.org/tast-tests/cros/local/a11y/pdfocr"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -34,41 +33,6 @@ func ToggleLiveCaption(cr *chrome.Chrome, tconn *chrome.TestConn, value bool) ac
 		return uiauto.Combine("toggle live caption",
 			ui.WaitUntilExists(nodewith.Name(liveCaptionToggleName).Role(role.ToggleButton)),
 			settings.SetToggleOption(cr, liveCaptionToggleName, value),
-		)(ctx)
-	}
-}
-
-// TogglePDFOCR toggles on/off the PDF OCR feature in the Accessibiility page.
-func TogglePDFOCR(cr *chrome.Chrome, tconn *chrome.TestConn, value bool) action.Action {
-	return func(ctx context.Context) error {
-		ui := uiauto.New(tconn)
-		ttsHeading := nodewith.NameStartingWith("Text-to-Speech").Role(role.Heading)
-		settings, err := LaunchAtPageURL(ctx, tconn, cr, pdfocr.SettingsSubPageURL, ui.Exists(ttsHeading))
-		if err != nil {
-			return errors.Wrap(err, "failed to open Text-to-Speech setting page")
-		}
-		defer settings.Close(ctx)
-		return uiauto.Combine("toggle PDF OCR",
-			ui.WaitUntilExists(nodewith.Name(pdfocr.SettingsToggleName).Role(role.ToggleButton)),
-			settings.SetToggleOption(cr, pdfocr.SettingsToggleName, value),
-		)(ctx)
-	}
-}
-
-// CheckPDFOCRToggle checks if PDF OCR is toggled on/off.
-func CheckPDFOCRToggle(cr *chrome.Chrome, tconn *chrome.TestConn, toggled bool) action.Action {
-	return func(ctx context.Context) error {
-		ui := uiauto.New(tconn)
-		ttsHeading := nodewith.NameStartingWith("Text-to-Speech").Role(role.Heading)
-		settings, err := LaunchAtPageURL(ctx, tconn, cr, pdfocr.SettingsSubPageURL, ui.Exists(ttsHeading))
-		if err != nil {
-			return errors.Wrap(err, "failed to open Text-to-Speech setting page")
-		}
-		defer settings.Close(ctx)
-		pdfOcrToggle := nodewith.Name(pdfocr.SettingsToggleName).Role(role.ToggleButton)
-		return uiauto.Combine("toggle PDF OCR",
-			ui.WaitUntilExists(pdfOcrToggle),
-			ui.WaitUntilCheckedState(pdfOcrToggle, toggled),
 		)(ctx)
 	}
 }

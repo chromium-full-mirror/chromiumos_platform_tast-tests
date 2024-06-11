@@ -24,9 +24,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PDFOCRFromContextMenu,
+		Func:         PDFOCRSinglePage,
 		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Test the PDF OCR feature and check its menu entry in the Context Menu",
+		Desc:         "Test the PDF OCR feature using a single-page PDF",
 		Contacts: []string{
 			"chrome-screen-ai@google.com", // Mailing list
 			"kyungjunlee@google.com",      // Test author
@@ -47,7 +47,7 @@ func init() {
 	})
 }
 
-func PDFOCRFromContextMenu(ctx context.Context, s *testing.State) {
+func PDFOCRSinglePage(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
@@ -88,14 +88,7 @@ func PDFOCRFromContextMenu(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait for screen-ai dlc to be installed: ", err)
 	}
 
-	// PDF OCR is already on, so its menu entry in the context menu should be already checked.
-	pdfOCRMenuEntry := nodewith.Name(pdfocr.ContextMenuName).Role(role.MenuItemCheckBox)
-	if err := uiauto.Combine("Check the PDF OCR menu entry in the Context Menu",
-		ui.WithTimeout(5*time.Second).RightClickUntil(pdfRoot, ui.WaitUntilCheckedState(pdfOCRMenuEntry, true)),
-	)(ctx); err != nil {
-		s.Fatal("Failed to wait for the PDF OCR menu entry to be checked: ", err)
-	}
-
+	// PDF OCR is already on, so wait for PDF OCR to finish extracting text from an inaccessible PDF.
 	status := nodewith.Name(pdfocr.StatusReadyMessage).Role(role.Status)
 	ocredText := nodewith.Name(pdfocr.TextInPDFImage).Role(role.StaticText)
 	// Check if PDF OCR successfully extracts text from the inaccessible PDF.
