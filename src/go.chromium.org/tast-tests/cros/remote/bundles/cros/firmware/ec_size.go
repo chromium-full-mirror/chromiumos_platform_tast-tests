@@ -35,6 +35,7 @@ func init() {
 // Please keep items alphabetized.
 var chipSizeMap = map[string]int{
 	"it82102.ax":          1024,
+	"it82102.bx":          1024,
 	"it81202.bx":          1024,
 	"it81202.cx":          1024,
 	"it81202.dx":          1024,
