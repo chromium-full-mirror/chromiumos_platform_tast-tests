@@ -8,6 +8,7 @@ import (
 	"math"
 
 	"go.chromium.org/tast/core/errors"
+	"gonum.org/v1/gonum/mat"
 )
 
 const (
@@ -34,6 +35,33 @@ type PathResult struct {
 
 func euclideanDistance(pointA, pointB *hmrNode) float64 {
 	return math.Sqrt(math.Pow(pointA.coorX-pointB.coorX, 2) + math.Pow(pointA.coorY-pointB.coorY, 2))
+}
+
+// leastSquaredFit performs a polynomial fitting on a set of points using least squared, and returns the coefficients.
+func leastSquaredFit(x, y []float64, degree int) ([]float64, error) {
+	if len(x) != len(y) {
+		return nil, errors.Errorf("length of x and y arrays must be the same. len(x): %v len(y): %v", len(x), len(y))
+	}
+	numberOfCoefficients := degree + 1
+
+	xVals := make([]float64, numberOfCoefficients*len(x))
+	for i := range x {
+		for j := 0; j < numberOfCoefficients; j++ {
+			xVals[i*numberOfCoefficients+j] = math.Pow(x[i], float64(j))
+		}
+	}
+
+	xMatrix := mat.NewDense(len(x), numberOfCoefficients, xVals)
+	yMatrix := mat.NewDense(len(y), 1, y)
+
+	resultMatrix := mat.NewDense(numberOfCoefficients, 1, nil)
+	err := resultMatrix.Solve(xMatrix, yMatrix)
+	if err != nil {
+		return nil, err
+	}
+
+	coefs := mat.Col(nil, 0, resultMatrix)
+	return coefs, nil
 }
 
 // extractReferencePaths extracts a set of paths from reference point data.
