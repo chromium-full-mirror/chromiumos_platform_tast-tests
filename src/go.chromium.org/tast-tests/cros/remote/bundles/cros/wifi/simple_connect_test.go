@@ -764,9 +764,8 @@ func simpleConnectWPA3() []*simpleConnectParams {
 		Val:               mkOps("Optional", "MixedWPA3", ""),
 		ExtraRequirements: []string{tdreq.WiFiGenSupportPMF, tdreq.WiFiSecSupportWPA3Personal},
 	}, {
-		Name:      "wpa3extmixed",
-		Fixture:   defaultFixture,
-		ExtraAttr: []string{"wificell_unstable"},
+		Name:    "wpa3extmixed",
+		Fixture: defaultFixture,
 		// We enforce wpa3_sae support here as we expect devices to connect to SAE-EXT-KEY mode in mixed mode.
 		ExtraSoftwareDeps: []string{"wpa3_sae"},
 		ExtraSoftwareDepsDoc: []string{
@@ -792,7 +791,6 @@ func simpleConnectWPA3() []*simpleConnectParams {
 	}, {
 		Name:              "wpa3ext",
 		Fixture:           defaultFixture,
-		ExtraAttr:         []string{"wificell_unstable"},
 		ExtraSoftwareDeps: []string{"wpa3_sae"},
 		ExtraSoftwareDepsDoc: []string{
 			"Not all WiFi chips support SAE. We enable the feature as a Software dependency for now, but eventually",

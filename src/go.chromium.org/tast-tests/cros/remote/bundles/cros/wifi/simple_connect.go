@@ -894,9 +894,8 @@ func init() {
 				ExtraRequirements: []string{"wifi-gen-0006-v01", "wifi-sec-0002-v01"},
 			}, {
 				// Verifies that DUT can connect to an AP in WPA3-SAE-EXT ("mixed") mode. WiFi alliance requires PMF in this mode.
-				Name:      "wpa3extmixed",
-				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
-				ExtraAttr: []string{"wificell_unstable"},
+				Name:    "wpa3extmixed",
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				// Not all WiFi chips support SAE. We enable the feature as a Software dependency for now, but eventually
 				// this will require a hardware dependency (crbug.com/1070299).
 				ExtraSoftwareDeps: []string{"wpa3_sae"},
@@ -942,9 +941,8 @@ func init() {
 				ExtraRequirements: []string{"wifi-gen-0006-v01", "wifi-sec-0002-v01"},
 			}, {
 				// Verifies that DUT can connect to an AP in WPA3-SAE-EXT ("pure") mode. WiFi alliance requires PMF in this mode.
-				Name:      "wpa3ext",
-				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
-				ExtraAttr: []string{"wificell_unstable"},
+				Name:    "wpa3ext",
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				// Not all WiFi chips support SAE. We enable the feature as a Software dependency for now, but eventually
 				// this will require a hardware dependency (crbug.com/1070299).
 				ExtraSoftwareDeps: []string{"wpa3_sae"},
