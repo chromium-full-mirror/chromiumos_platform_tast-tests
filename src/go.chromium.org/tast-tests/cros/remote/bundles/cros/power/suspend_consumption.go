@@ -41,7 +41,6 @@ func init() {
 		Desc: "Tests that power consumption in suspend meets requirements",
 		Contacts: []string{
 			"chromeos-faft@google.com",
-			"robertzieba@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware"},

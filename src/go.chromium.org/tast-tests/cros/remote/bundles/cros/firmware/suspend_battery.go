@@ -35,7 +35,6 @@ func init() {
 		Desc: "Tests that the DUT suspends and resumes properly while on battery power",
 		Contacts: []string{
 			"chromeos-faft@google.com",
-			"robertzieba@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		// TODO: When stable, change firmware_unstable to a different attr.
