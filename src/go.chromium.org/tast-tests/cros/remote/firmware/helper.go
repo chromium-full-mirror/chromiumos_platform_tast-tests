@@ -2104,3 +2104,142 @@ func (h *Helper) ReadTPMC(ctx context.Context, tpmReadArgs ...string) (out strin
 
 	return string(result), nil
 }
+
+// DeveloperUSBBoot checks if removing servo charger is required and performs a developer usb boot.
+func (h *Helper) DeveloperUSBBoot(ctx context.Context, state *CheckAndSetServoCharger) error {
+	ms, err := NewModeSwitcher(ctx, h)
+	if err != nil {
+		return errors.Wrap(err, "failed to create mode switcher")
+	}
+	testing.ContextLog(ctx, "Removing the USB to DUT")
+	if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxOff); err != nil {
+		return errors.Wrap(err, "failed to remove USB")
+	}
+	if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
+		return errors.Wrap(err, "failed to cold reset the DUT")
+	}
+	testing.ContextLog(ctx, "Waiting for DUT to reach the firmware screen before bypassing dev")
+	if err := h.WaitFirmwareScreen(ctx, h.Config.FirmwareScreen); err != nil {
+		return errors.Wrap(err, "failed to get to firmware screen")
+	}
+	testing.ContextLog(ctx, "Resetting firmware screen timeout")
+	if err := h.Servo.PressKey(ctx, " ", servo.DurTab); err != nil {
+		return errors.Wrap(err, "failed to press space key to reset firmware screen timeout")
+	}
+	if state.RemoveServoChargerRequired {
+		if err := h.SetDUTPower(ctx, false); err != nil {
+			return errors.Wrap(err, "failed to remove charger")
+		}
+		state.IsServoChargerConnected = false
+		// GoBigSleepLint: Wait for a while between removing the charger and
+		// booting the DUT from USB to prevent USB disconnected issues.
+		if err := testing.Sleep(ctx, 5*time.Second); err != nil {
+			return errors.Wrap(err, "failed to sleep")
+		}
+	}
+	testing.ContextLog(ctx, "Setting DFP mode")
+	if err := h.Servo.SetDUTPDDataRole(ctx, servo.DFP); err != nil {
+		testing.ContextLogf(ctx, "Failed to set pd data role to DFP: %.400s", err)
+	}
+	// On KeyboardDevSwitcher machines, pressing space triggers the
+	// to_norm screen. Revert to the developer screen with the
+	// esc key.
+	if h.Config.ModeSwitcherType == KeyboardDevSwitcher {
+		testing.ContextLog(ctx, "Returning back to developer screen")
+		if err := h.Servo.PressKey(ctx, "<esc>", servo.DurTab); err != nil {
+			return errors.Wrap(err, "failed to press esc")
+		}
+		// GoBigSleepLint: Sleep for model specific time.
+		if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
+			return errors.Wrapf(err, "failed to sleep for %s (KeypressDelay)", h.Config.KeypressDelay)
+		}
+	}
+	testing.ContextLog(ctx, "Inserting the USB to DUT")
+	if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
+		return errors.Wrap(err, "failed to insert USB to DUT")
+	}
+	params := RunBypasser{BypasserMethod: ms.BypassDevBootUSB, RepeatBypasser: true, WaitUntilDUTConnected: h.Config.USBImageBootTimeout}
+	if err := ms.RunBypasserUntilDUTConnected(ctx, params); err != nil {
+		return errors.Wrap(err, "failed to transition from fw screen to usb boot")
+	}
+	testing.ContextLog(ctx, "Expecting that DUT booted from USB")
+	bootedFromRemovableDevice, err := h.Reporter.BootedFromRemovableDevice(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to determine boot device type")
+	}
+	if !bootedFromRemovableDevice {
+		return errors.New("dut did not boot from removable device")
+	}
+	return nil
+}
+
+// BootToRecoveryMode checks if removing servo charger is required and performs a recovery usb boot.
+func (h *Helper) BootToRecoveryMode(ctx context.Context, state *CheckAndSetServoCharger) error {
+	ms, err := NewModeSwitcher(ctx, h)
+	if err != nil {
+		return errors.Wrap(err, "failed to create mode switcher")
+	}
+	if err := ms.EnableRecMode(ctx, servo.PowerStateRec, servo.USBMuxOff); err != nil {
+		return errors.Wrap(err, "failed to reboot the DUT into the recovery screen")
+	}
+	testing.ContextLog(ctx, "Waiting for DUT to reach the firmware screen")
+	if err := h.WaitFirmwareScreen(ctx, h.Config.FirmwareScreenRecMode); err != nil {
+		return errors.Wrap(err, "failed to get to firmware screen")
+	}
+	if state.RemoveServoChargerRequired {
+		if err := h.SetDUTPower(ctx, false); err != nil {
+			return errors.Wrap(err, "failed to remove charger")
+		}
+		state.IsServoChargerConnected = false
+		// GoBigSleepLint: Wait for a while between removing the charger and
+		// booting the DUT from USB to prevent USB disconnected issues.
+		if err := testing.Sleep(ctx, 5*time.Second); err != nil {
+			return errors.Wrap(err, "failed to sleep")
+		}
+	}
+	testing.ContextLog(ctx, "Setting DFP mode")
+	if err := h.Servo.SetDUTPDDataRole(ctx, servo.DFP); err != nil {
+		testing.ContextLogf(ctx, "Failed to set pd data role to DFP: %.400s", err)
+	}
+	testing.ContextLog(ctx, "Inserting the USB to DUT")
+	if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
+		return errors.Wrap(err, "failed to insert USB to DUT")
+	}
+	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.USBImageBootTimeout)
+	defer cancelWaitConnect()
+	if err := h.WaitConnect(waitConnectCtx, ResetEthernetDongle); err != nil {
+		return errors.Wrap(err, "failed to reconnect to the DUT")
+	}
+	testing.ContextLog(ctx, "Checking that DUT has booted from a removable device")
+	fromRemovableDevice, err := h.Reporter.BootedFromRemovableDevice(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to check for the boot device type")
+	}
+	if !fromRemovableDevice {
+		return errors.New("DUT did not boot from a removable device")
+	}
+	return nil
+}
+
+// RebootWithVT2Command sends a reboot command in VT2 to reboot the DUT.
+func (h *Helper) RebootWithVT2Command(ctx context.Context, fromMode fwCommon.BootMode) error {
+	testing.ContextLog(ctx, "Rebooting the DUT")
+	if err := h.DUT.Conn().CommandContext(ctx, "reboot").Run(); err != nil && !errors.As(err, &context.DeadlineExceeded) {
+		return errors.Wrap(err, "failed to run reboot command")
+	}
+	waitDisconnectCtx, cancelWaitDisconnect := context.WithTimeout(ctx, 1*time.Minute)
+	defer cancelWaitDisconnect()
+	if err := h.DUT.WaitUnreachable(waitDisconnectCtx); err != nil {
+		return errors.Wrap(err, "failed to wait for DUT to become unreachable")
+	}
+	reconnectTimeout := h.Config.DelayRebootToPing
+	if fromMode == fwCommon.BootModeDev {
+		reconnectTimeout = h.Config.DelayRebootToPing + DevScreenTimeout
+	}
+	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, reconnectTimeout)
+	defer cancelWaitConnect()
+	if err := h.WaitConnect(waitConnectCtx, ResetEthernetDongle); err != nil {
+		return errors.Wrap(err, "failed to reconnect to the DUT")
+	}
+	return nil
+}
