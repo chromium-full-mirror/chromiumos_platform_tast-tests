@@ -34,9 +34,11 @@ func init() {
 			"ihf@chromium.org",
 		},
 		BugComponent: "b:995569", // ChromeOS > Platform > Graphics > GPU
-		Attr:         []string{"group:graphics", "graphics_perbuild", "group:mainline", "group:hw_agnostic", "informational"},
+		// Although the test is HW agnostic, VM images currently do not include
+		// mesa-iris/aubinator_error_decode.
+		Attr:         []string{"group:graphics", "graphics_perbuild", "group:mainline", "informational"},
 		Fixture:      "graphicsNoChrome",
-		HardwareDeps: hwdep.D(hwdep.CPUSocFamily("intel")),
+		HardwareDeps: hwdep.D(hwdep.CPUSocFamily("intel"), hwdep.SkipOnModel("amd64-generic", "betty", "caroline", "reven")),
 		Params: []testing.Param{
 			{
 				Name: "cfm_m120",
@@ -85,28 +87,33 @@ func ErrorStateDecode(ctx context.Context, s *testing.State) {
 		s.Fatalf("%s failed on %s: %s", i915ErrorStateDecode, filename, output)
 	}
 
+	outdir := s.OutDir()
+	decodedFile, err := os.Create(filepath.Join(outdir, "i915_error_state_decoded.txt"))
+	if err != nil {
+		s.Error("Failed to create file for decoded log: ", err)
+	}
+
+	if _, err := decodedFile.Write([]byte(stdout)); err != nil {
+		s.Error(err, "failed to write decoded log to temp file: ", err)
+	}
+	decodedFile.Close()
+
 	if testOpt.expectedMatches == nil {
 		expectedDecodedFilename := s.DataPath(filename + "_decoded.txt")
-		if err := validateDecodingFull(ctx, s, expectedDecodedFilename, string(stdout)); err != nil {
+		if err := validateDecodingFull(ctx, expectedDecodedFilename, decodedFile); err != nil {
 			s.Error("Failed to match full decoded log: ", err)
 		}
 	} else if err := validateDecoding(ctx, string(stdout), testOpt); err != nil {
 		s.Error("Decoding failed to validate: ", err)
 	}
+
+	// We delete the decoded file if there are no errors. For full test, this is if and only if if it
+	// is identical to the expected file. Otherwise, it will be uploaded for inspection.
+	os.Remove(decodedFile.Name())
 }
 
 // validateDecodingFull verifies that the decoded error state byte-matches the expected file.
-func validateDecodingFull(ctx context.Context, s *testing.State, expectedDecodedFilename, decodedLog string) error {
-	decodedFile, err := os.Create(filepath.Join(s.OutDir(), "i915_error_state_decoded.txt"))
-	if err != nil {
-		return errors.Wrap(err, "failed to create file for decoded log")
-	}
-
-	if _, err := decodedFile.Write([]byte(decodedLog)); err != nil {
-		return errors.Wrap(err, "failed to write decoded log to temp file")
-	}
-	decodedFile.Close()
-
+func validateDecodingFull(ctx context.Context, expectedDecodedFilename string, decodedFile *os.File) error {
 	// We diff both files ignoring all whitespace using the -w option.
 	stdout, stderr, err := testexec.CommandContext(
 		ctx, "diff", "-w", expectedDecodedFilename, decodedFile.Name(),
@@ -116,8 +123,6 @@ func validateDecodingFull(ctx context.Context, s *testing.State, expectedDecoded
 	if err != nil {
 		return errors.Wrap(err, string(append(stdout, stderr...)))
 	}
-	// We delete the decoded file only if it is identical to the expected file, otherwise it will be uploaded for inspection.
-	os.Remove(decodedFile.Name())
 	return nil
 }
 
@@ -136,6 +141,5 @@ func validateDecoding(ctx context.Context, decodedFile string, params errorState
 	if failedMatches != nil {
 		return errors.Errorf("%d expected matches missing: %v", len(failedMatches), failedMatches)
 	}
-
 	return nil
 }
