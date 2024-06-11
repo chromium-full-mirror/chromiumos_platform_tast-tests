@@ -508,9 +508,9 @@ func (s *Servo) GetDUTDualRoleState(ctx context.Context, port int) (USBPdDualRol
 		// The PDC DRP states are output as all caps with underscore separators.
 		// Standardize output to USPdDualRoleValue options.
 		switch outState {
-		case "TOGGLE_ON", "toggle on":
+		case "TOGGLE_ON", "toggle on", "on":
 			retval = USBPdDualRoleOn
-		case "TOGGLE_OFF", "toggle off":
+		case "TOGGLE_OFF", "toggle off", "off":
 			retval = USBPdDualRoleOff
 		case "FREEZE", "freeze":
 			retval = USBPdDualRoleFreeze
