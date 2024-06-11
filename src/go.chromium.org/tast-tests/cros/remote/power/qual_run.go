@@ -19,7 +19,7 @@ import (
 	"gonum.org/v1/gonum/stat"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
-	"go.chromium.org/tast-tests/cros/common/power"
+	cp "go.chromium.org/tast-tests/cros/common/power"
 	"go.chromium.org/tast-tests/cros/common/power/powerpb"
 	"go.chromium.org/tast-tests/cros/common/utils"
 	"go.chromium.org/tast-tests/cros/remote/power/config"
@@ -55,6 +55,11 @@ type QualRun struct {
 	// skippedTests holds skipped tests.
 	skippedTests []string
 }
+
+const (
+	failedTestCountKey  = "failed_test_count"
+	failedTestCountUnit = "count"
+)
 
 // NewQualRun returns a new QualRun from a test configuration URL.
 func NewQualRun(ctx context.Context, url string, dut *dut.DUT, rpcHint *testing.RPCHint) (*QualRun, error) {
@@ -154,30 +159,30 @@ func (r *QualRun) AddTestResults(ctx context.Context, tests, skippedTests []stri
 			}
 			// Since there are more than one power log json files, read power metrics
 			// from different json files for different metrics.
-			_, systemPowerKeyOK := average[power.SystemPowerKey]
+			_, systemPowerKeyOK := average[cp.SystemPowerKey]
 			if systemPowerKeyOK {
-				r.testPowers[t].Average.DischargeRate = average[power.SystemPowerKey].(float64)
+				r.testPowers[t].Average.DischargeRate = average[cp.SystemPowerKey].(float64)
 			}
-			_, minutesBatteryLifeKeyOK := average[power.MinutesBatteryLifeKey]
-			_, minutesBatteryLifeTestedKeyOK := average[power.MinutesBatteryLifeTestedKey]
+			_, minutesBatteryLifeKeyOK := average[cp.MinutesBatteryLifeKey]
+			_, minutesBatteryLifeTestedKeyOK := average[cp.MinutesBatteryLifeTestedKey]
 			if minutesBatteryLifeKeyOK && minutesBatteryLifeTestedKeyOK {
-				r.testPowers[t].Average.MinutesBatteryLife = average[power.MinutesBatteryLifeKey].(float64)
-				r.testPowers[t].Average.MinutesBatteryLifeTested = average[power.MinutesBatteryLifeTestedKey].(float64)
+				r.testPowers[t].Average.MinutesBatteryLife = average[cp.MinutesBatteryLifeKey].(float64)
+				r.testPowers[t].Average.MinutesBatteryLifeTested = average[cp.MinutesBatteryLifeTestedKey].(float64)
 			}
 
-			if _, browsingConfigversionKeyOK := average[power.BrowsingTestConfigVersionKey]; browsingConfigversionKeyOK {
-				r.testPowers[t].Average.BrowsingTestConfigVersion = average[power.BrowsingTestConfigVersionKey].(float64)
+			if _, browsingConfigversionKeyOK := average[cp.BrowsingTestConfigVersionKey]; browsingConfigversionKeyOK {
+				r.testPowers[t].Average.BrowsingTestConfigVersion = average[cp.BrowsingTestConfigVersionKey].(float64)
 			}
 
-			if _, browsingURLConfigversionKeyOK := average[power.BrowsingTestCachedSiteVersionKey]; browsingURLConfigversionKeyOK {
-				r.testPowers[t].Average.BrowsingTestCachedSiteVersion = average[power.BrowsingTestCachedSiteVersionKey].(float64)
+			if _, browsingURLConfigversionKeyOK := average[cp.BrowsingTestCachedSiteVersionKey]; browsingURLConfigversionKeyOK {
+				r.testPowers[t].Average.BrowsingTestCachedSiteVersion = average[cp.BrowsingTestCachedSiteVersionKey].(float64)
 			}
 
-			if _, arcVPBAppVersionKeyOK := average[power.ArcVPBAppVersionKey]; arcVPBAppVersionKeyOK {
-				r.testPowers[t].Average.ArcVPBTestAppVersion = average[power.ArcVPBAppVersionKey].(float64)
+			if _, arcVPBAppVersionKeyOK := average[cp.ArcVPBAppVersionKey]; arcVPBAppVersionKeyOK {
+				r.testPowers[t].Average.ArcVPBTestAppVersion = average[cp.ArcVPBAppVersionKey].(float64)
 			}
 			// Record other average values.
-			for _, key := range []string{power.BacklightPercentNonlinearKey, power.BacklightPercentLinearKey} {
+			for _, key := range []string{cp.BacklightPercentNonlinearKey, cp.BacklightPercentLinearKey} {
 				if value, ok := average[key]; ok {
 					r.otherInfo[key] = value
 				}
@@ -188,7 +193,7 @@ func (r *QualRun) AddTestResults(ctx context.Context, tests, skippedTests []stri
 }
 
 // GenerateReport generates the power qual run test report.
-func (r *QualRun) GenerateReport(ctx context.Context, outputDir, testName string) error {
+func (r *QualRun) GenerateReport(ctx context.Context, outputDir, testName string, failedTestCount int) error {
 	// The power qual test final result.
 	res := result.Result{
 		FormatVersion: result.FormatVersion,
@@ -221,47 +226,46 @@ func (r *QualRun) GenerateReport(ctx context.Context, outputDir, testName string
 			if t.Weight == 0 {
 				continue
 			}
-			power := r.testPowers[t.Name]
-			if power == nil {
+			powerResult := r.testPowers[t.Name]
+			if powerResult == nil {
 				testing.ContextLogf(ctx, "No power test result for %s", t.Name)
 				missingTestResultFlag = true
 				break
 			}
-			if power.Average.MinutesBatteryLifeTested < t.MinRunningTime {
-				testing.ContextLogf(ctx, "Test running time %f is less than min_running_time %f", power.Average.MinutesBatteryLifeTested, t.MinRunningTime)
+			if powerResult.Average.MinutesBatteryLifeTested < t.MinRunningTime {
+				testing.ContextLogf(ctx, "Test running time %f is less than min_running_time %f", powerResult.Average.MinutesBatteryLifeTested, t.MinRunningTime)
 				disqualifiedRunningTimeFlag = true
 				break
 			}
 			// Collect minutes_battery_life_tested for each subtest in perf.Values.
 			pv.Set(perf.Metric{
-				Name:      p.Name + "." + t.Name + "." + "minutes_battery_life_tested",
+				Name:      p.Name + "." + t.Name + "." + cp.MinutesBatteryLifeTestedKey,
 				Unit:      "minute",
 				Direction: perf.SmallerIsBetter,
-			}, power.Average.MinutesBatteryLifeTested)
+			}, powerResult.Average.MinutesBatteryLifeTested)
 			if strings.Contains(strings.ToLower(t.Name), "browsing") {
 				pv.Set(perf.Metric{
-					Name:      p.Name + "." + t.Name + "." + "browsing_test_config_version",
+					Name:      p.Name + "." + t.Name + "." + cp.BrowsingTestConfigVersionKey,
 					Unit:      "unit",
 					Direction: perf.BiggerIsBetter,
-				}, power.Average.BrowsingTestConfigVersion)
+				}, powerResult.Average.BrowsingTestConfigVersion)
 				pv.Set(perf.Metric{
-					Name:      p.Name + "." + t.Name + "." + "browsing_test_cached_site_version",
+					Name:      p.Name + "." + t.Name + "." + cp.BrowsingTestCachedSiteVersionKey,
 					Unit:      "unit",
 					Direction: perf.BiggerIsBetter,
-				}, power.Average.BrowsingTestCachedSiteVersion)
+				}, powerResult.Average.BrowsingTestCachedSiteVersion)
 			}
 			if strings.Contains(strings.ToLower(t.Name), "arcvideoplayback") {
 				pv.Set(perf.Metric{
-					Name:      p.Name + "." + t.Name + "." + "arc_video_app_version",
+					Name:      p.Name + "." + t.Name + "." + cp.ArcVPBAppVersionKey,
 					Unit:      "unit",
 					Direction: perf.BiggerIsBetter,
-				}, power.Average.ArcVPBTestAppVersion)
+				}, powerResult.Average.ArcVPBTestAppVersion)
 			}
-			persona.Tests = append(persona.Tests, result.Test{Name: t.Name, Weight: t.Weight, Power: *power})
-			minutesBatteryLifeValues = append(minutesBatteryLifeValues, power.Average.MinutesBatteryLife)
-			dischargeRateValues = append(dischargeRateValues, power.Average.DischargeRate)
+			persona.Tests = append(persona.Tests, result.Test{Name: t.Name, Weight: t.Weight, Power: *powerResult})
+			minutesBatteryLifeValues = append(minutesBatteryLifeValues, powerResult.Average.MinutesBatteryLife)
+			dischargeRateValues = append(dischargeRateValues, powerResult.Average.DischargeRate)
 			weights = append(weights, t.Weight)
-			minutesBatteryLifeTestedTotal += power.Average.MinutesBatteryLifeTested
 		}
 		if missingTestResultFlag {
 			testing.ContextLogf(ctx, "No aggregated power test results for persona %s because some test results in that persona is missing", p.Name)
@@ -275,20 +279,15 @@ func (r *QualRun) GenerateReport(ctx context.Context, outputDir, testName string
 		dischargeRate := stat.Mean(dischargeRateValues, weights)
 		// Collect battery metrics for each persona in perf.Values.
 		pv.Set(perf.Metric{
-			Name:      p.Name + "." + power.MinutesBatteryLifeKey,
+			Name:      p.Name + "." + cp.MinutesBatteryLifeKey,
 			Unit:      "minute",
 			Direction: perf.BiggerIsBetter,
 		}, minutesBatteryLife)
-		pv.Set(perf.Metric{
-			Name:      p.Name + "." + power.MinutesBatteryLifeTestedKey,
-			Unit:      "minute",
-			Direction: perf.SmallerIsBetter,
-		}, minutesBatteryLifeTestedTotal)
-		for _, key := range []string{power.BacklightPercentNonlinearKey, power.BacklightPercentLinearKey} {
+		for _, key := range []string{cp.BacklightPercentNonlinearKey, cp.BacklightPercentLinearKey} {
 			if value, ok := r.otherInfo[key].(float64); ok {
 				pv.Set(perf.Metric{
 					Name:      p.Name + "." + key,
-					Unit:      power.GeneralPerfMetricTypeUnit,
+					Unit:      cp.GeneralPerfMetricTypeUnit,
 					Direction: perf.BiggerIsBetter,
 				}, value)
 			}
@@ -300,25 +299,25 @@ func (r *QualRun) GenerateReport(ctx context.Context, outputDir, testName string
 		// them again. Set no prefix to the metric name to satisfy the library
 		// checking.
 		pvLocal.Set(perf.Metric{
-			Name:      power.MinutesBatteryLifeKey,
+			Name:      cp.MinutesBatteryLifeKey,
 			Unit:      "minute",
 			Direction: perf.BiggerIsBetter,
 		}, minutesBatteryLife)
 		pvLocal.Set(perf.Metric{
-			Name:      power.MinutesBatteryLifeTestedKey,
+			Name:      cp.MinutesBatteryLifeTestedKey,
 			Unit:      "minute",
 			Direction: perf.SmallerIsBetter,
 		}, minutesBatteryLifeTestedTotal)
-		for _, key := range []string{power.BacklightPercentNonlinearKey, power.BacklightPercentLinearKey} {
+		for _, key := range []string{cp.BacklightPercentNonlinearKey, cp.BacklightPercentLinearKey} {
 			if value, ok := r.otherInfo[key].(float64); ok {
 				pvLocal.Set(perf.Metric{
 					Name:      key,
-					Unit:      power.GeneralPerfMetricTypeUnit,
+					Unit:      cp.GeneralPerfMetricTypeUnit,
 					Direction: perf.BiggerIsBetter,
 				}, value)
 			}
 		}
-		powerLog, err := power.CreateSaveUploadPowerLog(ctx, outputDir, testName+"."+p.Name, "_"+p.Name, pvLocal, nil, r.deviceInfo, nil)
+		powerLog, err := cp.CreateSaveUploadPowerLog(ctx, outputDir, testName+"."+p.Name, "_"+p.Name, pvLocal, nil, r.deviceInfo, nil)
 		if err != nil {
 			return errors.Wrap(err, "failed to create power log")
 		}
@@ -334,6 +333,12 @@ func (r *QualRun) GenerateReport(ctx context.Context, outputDir, testName string
 
 		res.Personas = append(res.Personas, persona)
 	}
+
+	pv.Set(perf.Metric{
+		Name:      testName + "." + failedTestCountKey,
+		Unit:      failedTestCountUnit,
+		Direction: perf.SmallerIsBetter,
+	}, float64(failedTestCount))
 
 	qualResultBytes, err := json.MarshalIndent(res, "", " ")
 	if err != nil {

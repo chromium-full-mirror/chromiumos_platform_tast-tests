@@ -129,26 +129,29 @@ func PowerQual(ctx context.Context, s *testing.State) {
 		testGroups = append(testGroups, run.UnorderedTests)
 	}
 
+	var failedTestCount int
 	for i, tests := range testGroups {
 		resultsDir := filepath.Join(s.OutDir(), fmt.Sprintf("power_qual_tests_%d", i))
 		s.Logf("Start to run test(s) %v and save results in %s", tests, resultsDir)
 		skippedTests, testErrs := runAndEvaluate(runCtx, s, flags, tests, resultsDir, skipPolicy)
 
 		if len(testErrs) != 0 {
-			s.Log("Current test group has the following errors:")
-			for index, testErr := range testErrs {
-				s.Logf("Error %d: %v", index, testErr)
+			failedTestCount++
+			for _, testErr := range testErrs {
+				s.Error("Test group failed with error: ", testErr)
 			}
-			s.Log("Continue to run the following test group")
-			continue
+			if i != len(testGroups)-1 {
+				s.Log("Continue to run the following test group")
+				continue
+			}
 		}
 		if err := run.AddTestResults(ctx, tests, skippedTests, resultsDir); err != nil {
-			s.Log("Failed to add test results: ", err)
+			s.Error("Failed to add test results: ", err)
 		}
 	}
 
-	if err := run.GenerateReport(ctx, s.OutDir(), s.TestName()); err != nil {
-		s.Log("Failed to generate power qual test results: ", err)
+	if err := run.GenerateReport(ctx, s.OutDir(), s.TestName(), failedTestCount); err != nil {
+		s.Error("Failed to generate power qual test results: ", err)
 	}
 }
 
