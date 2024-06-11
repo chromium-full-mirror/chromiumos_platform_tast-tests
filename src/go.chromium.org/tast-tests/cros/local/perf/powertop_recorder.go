@@ -13,6 +13,7 @@ import (
 	"golang.org/x/sys/unix"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	pm "go.chromium.org/tast-tests/cros/local/power/metrics"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -73,7 +74,7 @@ func (t *PowertopRecorder) Start(ctx context.Context) error {
 	}
 
 	var err error
-	t.cpu0StartMaxFreq, err = cpuScalingFreq("cpu0", "max")
+	t.cpu0StartMaxFreq, err = pm.CPUScalingFreq("cpu0", "max")
 	if err != nil {
 		return errors.Wrap(err, "failed to get cpu0 scaling_max_freq")
 	}
@@ -98,7 +99,7 @@ func (t *PowertopRecorder) Stop(ctx context.Context) error {
 	}
 	t.cmd = nil
 
-	cpu0MaxFreq, err := cpuScalingFreq("cpu0", "max")
+	cpu0MaxFreq, err := pm.CPUScalingFreq("cpu0", "max")
 	if err != nil {
 		return errors.Wrap(err, "failed to get cpu0 scaling_max_freq")
 	}

@@ -1131,7 +1131,7 @@ func (r *Recorder) startRecording(ctx context.Context) (runCtx context.Context, 
 	if r.options.Mode == Perf || r.options.Mode == CUJ {
 		// Create a TPS timeline aligned with r.startedAtTm.
 		r.tpsTimeline, err = perf.NewTimeline(ctx, []perf.TimelineDatasource{
-			perfSrc.NewCPUUsageSource("CPU"),
+			pm.NewCPUUsageSource("CPU"),
 			perfSrc.NewThermalDataSource(),
 			perfSrc.NewThermalStateDataSource(true /*ignoreChargerType*/),
 			r.gpuDataSource,

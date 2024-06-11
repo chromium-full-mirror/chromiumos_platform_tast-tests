@@ -14,6 +14,7 @@ type MetricClass string
 
 // List of MetricClass available.
 const (
+	CPUFreqClass        MetricClass = "cpu_freq"
 	CPUIdleStateClass   MetricClass = "cpu_idle_state"
 	RAPLPowerClass      MetricClass = "rapl_power"
 	SysfsThermalClass   MetricClass = "sysfs_thermal"
@@ -37,6 +38,8 @@ func TestMetrics(classes ...MetricClass) []perf.TimelineDatasource {
 	var metrics []perf.TimelineDatasource
 	for _, class := range classes {
 		switch class {
+		case CPUFreqClass:
+			metrics = append(metrics, NewCPUUsageSource("cpu_freq"))
 		case CPUIdleStateClass:
 			metrics = append(metrics, NewCpuidleStateMetrics())
 		case RAPLPowerClass:
@@ -69,6 +72,7 @@ func TestMetrics(classes ...MetricClass) []perf.TimelineDatasource {
 // for power metrics without battery metrics.
 func TestMetricsWithoutBatteryInfo() []perf.TimelineDatasource {
 	return []perf.TimelineDatasource{
+		NewCPUUsageSource("cpu_freq"),
 		NewCpuidleStateMetrics(),
 		NewRAPLPowerMetrics(),
 		NewSysfsThermalMetrics(),

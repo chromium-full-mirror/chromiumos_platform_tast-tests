@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package perf
+package metrics
 
 import (
 	"bufio"
@@ -18,6 +18,7 @@ import (
 	"github.com/shirou/gopsutil/v3/cpu"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
+	"go.chromium.org/tast-tests/cros/common/power"
 	"go.chromium.org/tast/core/errors"
 )
 
@@ -89,9 +90,9 @@ func cpuFreq(cpuName, freqType string) (float64, error) {
 	return float64(freq), nil
 }
 
-// cpuScalingFreq reads frequency data from cpufreq/scaling_`type`_freq where `type` can be
+// CPUScalingFreq reads frequency data from cpufreq/scaling_`type`_freq where `type` can be
 // `max`, `min` or `cur`.
-func cpuScalingFreq(cpuName, freqType string) (float64, error) {
+func CPUScalingFreq(cpuName, freqType string) (float64, error) {
 	data, err := ioutil.ReadFile(filepath.Join(
 		"/sys/devices/system/cpu", cpuName, "cpufreq", fmt.Sprintf("scaling_%s_freq", freqType)))
 	if err != nil {
@@ -246,7 +247,7 @@ func (s *CPUUsageSource) Snapshot(ctx context.Context, values *perf.Values) erro
 			Name:      s.name + "." + time.CPU,
 			Variant:   "usage",
 			Multiple:  true,
-			Unit:      "percent",
+			Unit:      power.CPUUsageMetricTypeUnit,
 			Direction: perf.SmallerIsBetter,
 			Interval:  s.intervalName,
 		}, percent)
@@ -257,14 +258,14 @@ func (s *CPUUsageSource) Snapshot(ctx context.Context, values *perf.Values) erro
 			// `cpuinfo_cur_freq` is expected to be the frequency the hardware actually
 			// runs at. If that frequency cannot be determined, this attribute should
 			// not be present. In this case we use scaling_cur_freq instead.
-			if freq, err = cpuScalingFreq(time.CPU, "cur"); err != nil {
+			if freq, err = CPUScalingFreq(time.CPU, "cur"); err != nil {
 				return err
 			}
 		}
 		values.Append(perf.Metric{
 			Name:      s.name + "." + time.CPU + ".Frequency",
 			Multiple:  true,
-			Unit:      "MHz",
+			Unit:      power.CPUFreqMetricTypeUnit,
 			Direction: perf.BiggerIsBetter,
 			Interval:  s.intervalName,
 		}, freq/1000)
@@ -272,16 +273,16 @@ func (s *CPUUsageSource) Snapshot(ctx context.Context, values *perf.Values) erro
 			maxFreq := s.cpuMaxFreqs[time.CPU]
 			values.Set(perf.Metric{
 				Name:      s.name + "." + time.CPU + ".MaxFrequency",
-				Unit:      "MHz",
+				Unit:      power.CPUFreqMetricTypeUnit,
 				Direction: perf.BiggerIsBetter,
 			}, maxFreq/1000)
-			maxScalingFreq, err := cpuScalingFreq(time.CPU, "max")
+			maxScalingFreq, err := CPUScalingFreq(time.CPU, "max")
 			if err != nil {
 				return err
 			}
 			values.Set(perf.Metric{
 				Name:      s.name + "." + time.CPU + ".MaxScalingFrequency",
-				Unit:      "MHz",
+				Unit:      power.CPUFreqMetricTypeUnit,
 				Direction: perf.BiggerIsBetter,
 			}, maxScalingFreq/1000)
 			s.maxFreqReported[time.CPU] = true
@@ -328,7 +329,7 @@ func (s *CPUUsageSource) Snapshot(ctx context.Context, values *perf.Values) erro
 		values.Append(perf.Metric{
 			Name:      s.name + ".ARM",
 			Multiple:  true,
-			Unit:      "percent",
+			Unit:      power.CPUUsageMetricTypeUnit,
 			Direction: perf.SmallerIsBetter,
 			Interval:  s.intervalName,
 		}, 100*armCPUUsage/s.totalCPUCapacity)
@@ -337,7 +338,7 @@ func (s *CPUUsageSource) Snapshot(ctx context.Context, values *perf.Values) erro
 	values.Append(perf.Metric{
 		Name:      s.name,
 		Multiple:  true,
-		Unit:      "percent",
+		Unit:      power.CPUUsageMetricTypeUnit,
 		Direction: perf.SmallerIsBetter,
 		Interval:  s.intervalName,
 	}, totalPercent/float64(len(times)))

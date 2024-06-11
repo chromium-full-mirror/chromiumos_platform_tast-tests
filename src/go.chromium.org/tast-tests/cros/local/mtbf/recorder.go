@@ -11,6 +11,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/perf"
 	perfSrc "go.chromium.org/tast-tests/cros/local/perf"
+	pm "go.chromium.org/tast-tests/cros/local/power/metrics"
 	"go.chromium.org/tast/core/errors"
 )
 
@@ -29,7 +30,7 @@ type Recorder struct {
 // then starts recording it.
 func NewRecorder(ctx context.Context) (*Recorder, error) {
 	sources := []perf.TimelineDatasource{
-		perfSrc.NewCPUUsageSource("CPU"),
+		pm.NewCPUUsageSource("CPU"),
 		perfSrc.NewThermalDataSource(),
 		perfSrc.NewMemoryDataSource("RAM.Absolute", "RAM.Diff.Absolute", "RAM"),
 	}

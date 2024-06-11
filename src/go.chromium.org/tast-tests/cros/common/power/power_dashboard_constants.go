@@ -15,6 +15,7 @@ const DashboardUploadTimeout = 5 * time.Minute
 // filter on power_dashboard.
 const (
 	CPUIdleMetricType          = "cpuidle."
+	CPUFreqMetricType          = "cpu_freq."
 	CPUUsageMetricType         = "cpu_usage."
 	FanMetricType              = "fan."
 	FPSMetricType              = "fps."
@@ -40,6 +41,7 @@ const (
 
 // Units for each metric type.
 const (
+	CPUFreqMetricTypeUnit          = "MHz"
 	CPUIdleMetricTypeUnit          = "percent"
 	CPUUsageMetricTypeUnit         = "percent"
 	FanMetricTypeUnit              = "rpm"
@@ -87,6 +89,7 @@ var validMetricTypeMap = map[string]bool{
 	"other":             true,
 	"battery":           true,
 	"cpuidle":           true,
+	"cpu_freq":          true,
 	"cpu_usage":         true,
 	"fan":               true,
 	"fps":               true,
