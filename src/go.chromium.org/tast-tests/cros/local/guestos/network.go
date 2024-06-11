@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast-tests/cros/local/network/routing"
+	"go.chromium.org/tast-tests/cros/local/network/virtualnet/tayga"
 	"go.chromium.org/tast-tests/cros/local/vm"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -80,7 +81,47 @@ func NetworkConnectivity(ctx context.Context, guest vm.Guest, v6only bool, testE
 		}
 	}
 
+	// Verify CLAT in v6-only environment.
+	if v6only {
+		if err := verifyCLAT(ctx, guest, testEnv); err != nil {
+			errs = append(errs, errors.Wrap(err, "failed to verify CLAT in guest"))
+		}
+	}
+
 	return errs
+}
+
+func verifyCLAT(ctx context.Context, guest vm.Guest, testEnv *routing.SimpleNetworkEnv) error {
+	testing.ContextLog(ctx, "Verifying CLAT setup")
+
+	v4Pool, err := testEnv.Pool.AllocNextIPv4Subnet()
+	if err != nil {
+		return errors.Wrap(err, "failed to get IPv4 address pool for CLAT testing")
+	}
+	v6Pool, err := testEnv.Pool.AllocNextIPv6Subnet()
+	if err != nil {
+		return errors.Wrap(err, "failed to get IPv6 address pool for CLAT testing")
+	}
+
+	if err := testEnv.Router.StartServer(ctx, "tayga", tayga.New(v4Pool, v6Pool)); err != nil {
+		return errors.Wrap(err, "failed to start tayga for PLAT")
+	}
+
+	// To verify CLAT, we need a global IPv4 address, because TAYGA will refuse to
+	// translate packet with an address composed of the Well-Known Prefix and a
+	// non-global IPv4 address. Install 100.100.100.100 onto one of the interface
+	// in virtualnet. This is not ideal but won't be harmful given that it's
+	// isolated by netns.
+	publicIP := "100.100.100.100"
+	if err := testEnv.Router.RunWithoutChroot(ctx, "ip", "addr", "add", "dev", testEnv.Server.VethOutName, publicIP+"/32"); err != nil {
+		return errors.Wrap(err, "failed to install public IPv4 address in virtualnet")
+	}
+
+	if err := pingWithRetryAndTimeout(ctx, guest, publicIP, 10*time.Second); err != nil {
+		return errors.Wrap(err, "failed to verify IPv4 connectivity via CLAT")
+	}
+
+	return nil
 }
 
 func checkAddress(ctx context.Context, guest vm.Guest, ipv6 bool, timeout time.Duration) error {
