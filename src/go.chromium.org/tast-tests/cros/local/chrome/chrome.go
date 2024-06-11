@@ -31,6 +31,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/logsaver"
 	"go.chromium.org/tast-tests/cros/local/minidump"
+	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast/core/caller"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -316,6 +317,11 @@ func New(ctx context.Context, opts ...Option) (c *Chrome, retErr error) {
 	origCtx := ctx
 	ctx, cancel := context.WithTimeout(origCtx, timeout)
 	defer cancel()
+
+	// Gaia Profiling: background internet check with timeout.
+	if cfg.LoginMode() == config.GAIALogin {
+		checkInternetConnectivityInBackground(ctx, 40*time.Second)
+	}
 
 	// Check whether ctx is long enough.
 	deadline, _ := ctx.Deadline()
@@ -977,4 +983,24 @@ func saveChromeLog(ctx context.Context, logFilename string) error {
 		testing.ContextLog(ctx, "No output directory exists, not saving log file")
 	}
 	return nil
+}
+
+// checkInternetConnectivityInBackground doing network diagnostics to debug DUT connection issues.
+// It using VerifyInternetConnectivity to determine whether the device can access the network.
+func checkInternetConnectivityInBackground(ctx context.Context, timeout time.Duration) {
+	go func() {
+		checkInternetConnectivityStart := time.Now()
+
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			if err := ping.VerifyInternetConnectivity(ctx, timeout); err != nil {
+				return errors.Wrap(err, "DUT no internet connectivity")
+			}
+
+			duration := time.Now().Sub(checkInternetConnectivityStart)
+			testing.ContextLog(ctx, "DUT network verification finished in: ", duration)
+			return nil
+		}, &testing.PollOptions{Timeout: timeout}); err != nil {
+			testing.ContextLog(ctx, "Timeout while checking internet connectivity: ", err)
+		}
+	}()
 }
