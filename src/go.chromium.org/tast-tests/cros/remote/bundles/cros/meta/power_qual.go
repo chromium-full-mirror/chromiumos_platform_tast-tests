@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/bounds"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/meta/tastrun"
 	"go.chromium.org/tast-tests/cros/remote/power"
 	"go.chromium.org/tast/core/errors"
@@ -89,6 +90,48 @@ func init() {
 	})
 }
 
+var powerQualBounds = []bounds.MetricBounds{{
+	// pwr-batLife-0009-v03 requirements
+	Test:   bounds.MatchRegexp(`\.(qual|browsingheavy)$`),
+	Metric: bounds.MatchRegexp(`.*(BrowsingHeavy|BrowsingHeavyQual)\.minutes_battery_life$`),
+	Bounds: bounds.Min(480),
+}, {
+	// pwr-batLife-0010-v03 requirements
+	Test: bounds.MatchRegexp(`\.(qual|videoplayback)$`),
+	// Add ^ to distinguish VideoPlayback from ARCVideoPlayback
+	Metric: bounds.MatchRegexp(`^(VideoPlayback|VideoPlaybackQual)\.minutes_battery_life$`),
+	Bounds: bounds.Min(480),
+}, {
+	// pwr-batLife-0011-v03 requirements
+	Test:   bounds.MatchRegexp(`\.(qual|videocall)$`),
+	Metric: bounds.MatchRegexp(`.*(VideoCall|VideoCallQual)\.minutes_battery_life$`),
+	Bounds: bounds.Min(240),
+}, {
+	// pwr-batLife-0012-v01 requirements
+	Test:   bounds.MatchRegexp(`\.(qual|browsing)$`),
+	Metric: bounds.MatchRegexp(`.*(Browsing|BrowsingQual)\.minutes_battery_life$`),
+	Bounds: bounds.Min(600),
+}, {
+	// pwr-batLife-0009-v03, pwr-batLife-0010-v03, pwr-batLife-0011-v03, pwr-batLife-0012-v01
+	Test:   bounds.MatchRegexp(`\.(qual|videoplayback|videocall|browsing)$`),
+	Metric: bounds.MatchRegexp(`.*\.level_backlight_percent_linear$`),
+	Bounds: bounds.Between(20, 100),
+}, {
+	// pwr-batLife-0009-v03, pwr-batLife-0012-v01
+	Test:   bounds.MatchRegexp(`\.(qual|browsing|browsingheavy)$`),
+	Metric: bounds.MatchRegexp(`.*\.browsing_test_cached_site_version$`),
+	Bounds: bounds.Between(20230809, 40000000),
+}, {
+	// pwr-batLife-0009-v03, pwr-batLife-0012-v01
+	Test:   bounds.MatchRegexp(`\.(qual|browsing|browsingheavy)$`),
+	Metric: bounds.MatchRegexp(`.*\.browsing_test_config_version$`),
+	Bounds: bounds.Between(20230920, 40000000),
+}, {
+	Test:   bounds.MatchRegexp(`\.qual$`),
+	Metric: bounds.MatchRegexp(`.*\.arc_video_app_version$`),
+	Bounds: bounds.Between(1004000, 4000000),
+}}
+
 func PowerQual(ctx context.Context, s *testing.State) {
 	configURL := s.Param().(string)
 
@@ -152,6 +195,9 @@ func PowerQual(ctx context.Context, s *testing.State) {
 
 	if err := run.GenerateReport(ctx, s.OutDir(), s.TestName(), failedTestCount); err != nil {
 		s.Error("Failed to generate power qual test results: ", err)
+	}
+	if err := bounds.EvaluateResults(ctx, powerQualBounds, s.OutDir()); err != nil {
+		s.Fatalf("Failed bounds check: %s", err)
 	}
 }
 

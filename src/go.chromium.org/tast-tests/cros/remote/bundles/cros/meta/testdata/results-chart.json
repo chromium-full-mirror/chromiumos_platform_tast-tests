@@ -1,0 +1,586 @@
+{
+  "ARCVideoPlayback.level_backlight_percent_linear": {
+    "summary": {
+      "improvement_direction": "up",
+      "type": "scalar",
+      "units": "point",
+      "value": 31.054167
+    }
+  },
+  "ARCVideoPlayback.level_backlight_percent_nonlinear": {
+    "summary": {
+      "improvement_direction": "up",
+      "type": "scalar",
+      "units": "point",
+      "value": 54.650219
+    }
+  },
+  "ARCVideoPlayback.minutes_battery_life": {
+    "summary": {
+      "improvement_direction": "up",
+      "type": "scalar",
+      "units": "minute",
+      "value": 402.09488227534587
+    }
+  },
+  "ARCVideoPlayback.minutes_battery_life_tested": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "scalar",
+      "units": "minute",
+      "value": 60.00025630373333
+    }
+  },
+  "ARCVideoPlayback.power.ARCVideoPlayback.exoplayer_vp9_1080_30fps_ash.arc_video_app_version": {
+    "summary": {
+      "improvement_direction": "up",
+      "type": "scalar",
+      "units": "unit",
+      "value": 1004000
+    }
+  },
+  "ARCVideoPlayback.power.ARCVideoPlayback.exoplayer_vp9_1080_30fps_ash.minutes_battery_life_tested": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "scalar",
+      "units": "minute",
+      "value": 60.00025630373333
+    }
+  },
+  "Browsing.level_backlight_percent_linear": {
+    "summary": {
+      "improvement_direction": "up",
+      "type": "scalar",
+      "units": "point",
+      "value": 31.054167
+    }
+  },
+  "Browsing.level_backlight_percent_nonlinear": {
+    "summary": {
+      "improvement_direction": "up",
+      "type": "scalar",
+      "units": "point",
+      "value": 54.650219
+    }
+  },
+  "Browsing.minutes_battery_life": {
+    "summary": {
+      "improvement_direction": "up",
+      "type": "scalar",
+      "units": "minute",
+      "value": 843.4970054480092
+    }
+  },
+  "Browsing.minutes_battery_life_tested": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "scalar",
+      "units": "minute",
+      "value": 60.00031442305
+    }
+  },
+  "Browsing.power.Browsing.ash.browsing_test_cached_site_version": {
+    "summary": {
+      "improvement_direction": "up",
+      "type": "scalar",
+      "units": "unit",
+      "value": 20230809
+    }
+  },
+  "Browsing.power.Browsing.ash.browsing_test_config_version": {
+    "summary": {
+      "improvement_direction": "up",
+      "type": "scalar",
+      "units": "unit",
+      "value": 20230920
+    }
+  },
+  "Browsing.power.Browsing.ash.minutes_battery_life_tested": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "scalar",
+      "units": "minute",
+      "value": 60.00031442305
+    }
+  },
+  "BrowsingHeavy.level_backlight_percent_linear": {
+    "summary": {
+      "improvement_direction": "up",
+      "type": "scalar",
+      "units": "point",
+      "value": 31.054167
+    }
+  },
+  "BrowsingHeavy.level_backlight_percent_nonlinear": {
+    "summary": {
+      "improvement_direction": "up",
+      "type": "scalar",
+      "units": "point",
+      "value": 54.650219
+    }
+  },
+  "BrowsingHeavy.minutes_battery_life": {
+    "summary": {
+      "improvement_direction": "up",
+      "type": "scalar",
+      "units": "minute",
+      "value": 726.1245254758384
+    }
+  },
+  "BrowsingHeavy.minutes_battery_life_tested": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "scalar",
+      "units": "minute",
+      "value": 60.000148654983334
+    }
+  },
+  "BrowsingHeavy.power.Browsing.heavy_ash.browsing_test_cached_site_version": {
+    "summary": {
+      "improvement_direction": "up",
+      "type": "scalar",
+      "units": "unit",
+      "value": 20230809
+    }
+  },
+  "BrowsingHeavy.power.Browsing.heavy_ash.browsing_test_config_version": {
+    "summary": {
+      "improvement_direction": "up",
+      "type": "scalar",
+      "units": "unit",
+      "value": 20230920
+    }
+  },
+  "BrowsingHeavy.power.Browsing.heavy_ash.minutes_battery_life_tested": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "scalar",
+      "units": "minute",
+      "value": 60.000148654983334
+    }
+  },
+  "Consumer.level_backlight_percent_linear": {
+    "summary": {
+      "improvement_direction": "up",
+      "type": "scalar",
+      "units": "point",
+      "value": 31.054167
+    }
+  },
+  "Consumer.level_backlight_percent_nonlinear": {
+    "summary": {
+      "improvement_direction": "up",
+      "type": "scalar",
+      "units": "point",
+      "value": 54.650219
+    }
+  },
+  "Consumer.minutes_battery_life": {
+    "summary": {
+      "improvement_direction": "up",
+      "type": "scalar",
+      "units": "minute",
+      "value": 572.9336929817918
+    }
+  },
+  "Consumer.minutes_battery_life_tested": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "scalar",
+      "units": "minute",
+      "value": 330.01336320135
+    }
+  },
+  "Consumer.power.ARCVideoPlayback.exoplayer_vp9_1080_30fps_ash.arc_video_app_version": {
+    "summary": {
+      "improvement_direction": "up",
+      "type": "scalar",
+      "units": "unit",
+      "value": 1004000
+    }
+  },
+  "Consumer.power.ARCVideoPlayback.exoplayer_vp9_1080_30fps_ash.minutes_battery_life_tested": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "scalar",
+      "units": "minute",
+      "value": 60.00025630373333
+    }
+  },
+  "Consumer.power.Browsing.ash.browsing_test_cached_site_version": {
+    "summary": {
+      "improvement_direction": "up",
+      "type": "scalar",
+      "units": "unit",
+      "value": 20230809
+    }
+  },
+  "Consumer.power.Browsing.ash.browsing_test_config_version": {
+    "summary": {
+      "improvement_direction": "up",
+      "type": "scalar",
+      "units": "unit",
+      "value": 20230920
+    }
+  },
+  "Consumer.power.Browsing.ash.minutes_battery_life_tested": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "scalar",
+      "units": "minute",
+      "value": 60.00031442305
+    }
+  },
+  "Consumer.power.GamingApp.asphalt8.minutes_battery_life_tested": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "scalar",
+      "units": "minute",
+      "value": 60.00710776936667
+    }
+  },
+  "Consumer.power.GamingApp.super_tux_kart.minutes_battery_life_tested": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "scalar",
+      "units": "minute",
+      "value": 30.005237203216666
+    }
+  },
+  "Consumer.power.VideoPlayback.h264_1080_30fps_1hr_ash.minutes_battery_life_tested": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "scalar",
+      "units": "minute",
+      "value": 60.00018253525
+    }
+  },
+  "Consumer.power.VideoPlayback.vp9_1080_30fps_1hr_ash.minutes_battery_life_tested": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "scalar",
+      "units": "minute",
+      "value": 60.00026496673333
+    }
+  },
+  "EDU.level_backlight_percent_linear": {
+    "summary": {
+      "improvement_direction": "up",
+      "type": "scalar",
+      "units": "point",
+      "value": 31.054167
+    }
+  },
+  "EDU.level_backlight_percent_nonlinear": {
+    "summary": {
+      "improvement_direction": "up",
+      "type": "scalar",
+      "units": "point",
+      "value": 54.650219
+    }
+  },
+  "EDU.minutes_battery_life": {
+    "summary": {
+      "improvement_direction": "up",
+      "type": "scalar",
+      "units": "minute",
+      "value": 673.0695126736297
+    }
+  },
+  "EDU.minutes_battery_life_tested": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "scalar",
+      "units": "minute",
+      "value": 270.01294112955003
+    }
+  },
+  "EDU.power.Browsing.heavy_ash.browsing_test_cached_site_version": {
+    "summary": {
+      "improvement_direction": "up",
+      "type": "scalar",
+      "units": "unit",
+      "value": 20230809
+    }
+  },
+  "EDU.power.Browsing.heavy_ash.browsing_test_config_version": {
+    "summary": {
+      "improvement_direction": "up",
+      "type": "scalar",
+      "units": "unit",
+      "value": 20230920
+    }
+  },
+  "EDU.power.Browsing.heavy_ash.minutes_battery_life_tested": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "scalar",
+      "units": "minute",
+      "value": 60.000148654983334
+    }
+  },
+  "EDU.power.GamingApp.asphalt8.minutes_battery_life_tested": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "scalar",
+      "units": "minute",
+      "value": 60.00710776936667
+    }
+  },
+  "EDU.power.GamingApp.super_tux_kart.minutes_battery_life_tested": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "scalar",
+      "units": "minute",
+      "value": 30.005237203216666
+    }
+  },
+  "EDU.power.VideoPlayback.h264_1080_30fps_1hr_ash.minutes_battery_life_tested": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "scalar",
+      "units": "minute",
+      "value": 60.00018253525
+    }
+  },
+  "EDU.power.VideoPlayback.vp9_1080_30fps_1hr_ash.minutes_battery_life_tested": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "scalar",
+      "units": "minute",
+      "value": 60.00026496673333
+    }
+  },
+  "ENT.level_backlight_percent_linear": {
+    "summary": {
+      "improvement_direction": "up",
+      "type": "scalar",
+      "units": "point",
+      "value": 31.054167
+    }
+  },
+  "ENT.level_backlight_percent_nonlinear": {
+    "summary": {
+      "improvement_direction": "up",
+      "type": "scalar",
+      "units": "point",
+      "value": 54.650219
+    }
+  },
+  "ENT.minutes_battery_life": {
+    "summary": {
+      "improvement_direction": "up",
+      "type": "scalar",
+      "units": "minute",
+      "value": 562.1127061096555
+    }
+  },
+  "ENT.minutes_battery_life_tested": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "scalar",
+      "units": "minute",
+      "value": 265.00144221895005
+    }
+  },
+  "ENT.power.ARCVideoPlayback.exoplayer_vp9_1080_30fps_ash.arc_video_app_version": {
+    "summary": {
+      "improvement_direction": "up",
+      "type": "scalar",
+      "units": "unit",
+      "value": 1004000
+    }
+  },
+  "ENT.power.ARCVideoPlayback.exoplayer_vp9_1080_30fps_ash.minutes_battery_life_tested": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "scalar",
+      "units": "minute",
+      "value": 60.00025630373333
+    }
+  },
+  "ENT.power.Browsing.heavy_ash.browsing_test_cached_site_version": {
+    "summary": {
+      "improvement_direction": "up",
+      "type": "scalar",
+      "units": "unit",
+      "value": 20230809
+    }
+  },
+  "ENT.power.Browsing.heavy_ash.browsing_test_config_version": {
+    "summary": {
+      "improvement_direction": "up",
+      "type": "scalar",
+      "units": "unit",
+      "value": 20230920
+    }
+  },
+  "ENT.power.Browsing.heavy_ash.minutes_battery_life_tested": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "scalar",
+      "units": "minute",
+      "value": 60.000148654983334
+    }
+  },
+  "ENT.power.VideoCall.25m_ash.minutes_battery_life_tested": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "scalar",
+      "units": "minute",
+      "value": 25.00058975825
+    }
+  },
+  "ENT.power.VideoPlayback.h264_1080_30fps_1hr_ash.minutes_battery_life_tested": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "scalar",
+      "units": "minute",
+      "value": 60.00018253525
+    }
+  },
+  "ENT.power.VideoPlayback.vp9_1080_30fps_1hr_ash.minutes_battery_life_tested": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "scalar",
+      "units": "minute",
+      "value": 60.00026496673333
+    }
+  },
+  "Gaming.level_backlight_percent_linear": {
+    "summary": {
+      "improvement_direction": "up",
+      "type": "scalar",
+      "units": "point",
+      "value": 31.054167
+    }
+  },
+  "Gaming.level_backlight_percent_nonlinear": {
+    "summary": {
+      "improvement_direction": "up",
+      "type": "scalar",
+      "units": "point",
+      "value": 54.650219
+    }
+  },
+  "Gaming.minutes_battery_life": {
+    "summary": {
+      "improvement_direction": "up",
+      "type": "scalar",
+      "units": "minute",
+      "value": 302.58611419053193
+    }
+  },
+  "Gaming.minutes_battery_life_tested": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "scalar",
+      "units": "minute",
+      "value": 90.01234497258334
+    }
+  },
+  "Gaming.power.GamingApp.asphalt8.minutes_battery_life_tested": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "scalar",
+      "units": "minute",
+      "value": 60.00710776936667
+    }
+  },
+  "Gaming.power.GamingApp.super_tux_kart.minutes_battery_life_tested": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "scalar",
+      "units": "minute",
+      "value": 30.005237203216666
+    }
+  },
+  "VideoCall.level_backlight_percent_linear": {
+    "summary": {
+      "improvement_direction": "up",
+      "type": "scalar",
+      "units": "point",
+      "value": 31.054167
+    }
+  },
+  "VideoCall.level_backlight_percent_nonlinear": {
+    "summary": {
+      "improvement_direction": "up",
+      "type": "scalar",
+      "units": "point",
+      "value": 54.650219
+    }
+  },
+  "VideoCall.minutes_battery_life": {
+    "summary": {
+      "improvement_direction": "up",
+      "type": "scalar",
+      "units": "minute",
+      "value": 325.6453051044805
+    }
+  },
+  "VideoCall.minutes_battery_life_tested": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "scalar",
+      "units": "minute",
+      "value": 25.00058975825
+    }
+  },
+  "VideoCall.power.VideoCall.25m_ash.minutes_battery_life_tested": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "scalar",
+      "units": "minute",
+      "value": 25.00058975825
+    }
+  },
+  "VideoPlayback.level_backlight_percent_linear": {
+    "summary": {
+      "improvement_direction": "up",
+      "type": "scalar",
+      "units": "point",
+      "value": 31.054167
+    }
+  },
+  "VideoPlayback.level_backlight_percent_nonlinear": {
+    "summary": {
+      "improvement_direction": "up",
+      "type": "scalar",
+      "units": "point",
+      "value": 54.650219
+    }
+  },
+  "VideoPlayback.minutes_battery_life": {
+    "summary": {
+      "improvement_direction": "up",
+      "type": "scalar",
+      "units": "minute",
+      "value": 653.8788217934509
+    }
+  },
+  "VideoPlayback.minutes_battery_life_tested": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "scalar",
+      "units": "minute",
+      "value": 120.00044750198333
+    }
+  },
+  "VideoPlayback.power.VideoPlayback.h264_1080_30fps_1hr_ash.minutes_battery_life_tested": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "scalar",
+      "units": "minute",
+      "value": 60.00018253525
+    }
+  },
+  "VideoPlayback.power.VideoPlayback.vp9_1080_30fps_1hr_ash.minutes_battery_life_tested": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "scalar",
+      "units": "minute",
+      "value": 60.00026496673333
+    }
+  }
+}
