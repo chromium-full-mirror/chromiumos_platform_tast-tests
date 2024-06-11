@@ -19,7 +19,6 @@ import (
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
 
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
 )
@@ -93,6 +92,7 @@ func UnplugExternalStorageWhileSuspend(ctx context.Context, s *testing.State) {
 	if err := utils.InitFixture(ctx); err != nil {
 		s.Fatal("Failed to initialize fixtures: ", err)
 	}
+
 	// Plug external storage.
 	if err := utils.ControlFixture(ctx, usbID, "on"); err != nil {
 		s.Fatal("Failed to connect to the external storage: ", err)
@@ -145,6 +145,12 @@ func UnplugExternalStorageWhileSuspend(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to login to chrome after resume: ", err)
 	}
 
+	beforeMountPoints, err := utils.RemovableMountPoints(ctx, dut)
+	if err != nil {
+		s.Fatal("Failed to get mountpoints external storage USB Device: ", err)
+	}
+	s.Log("Following mount points were found prior to plugging in external storage USB Device: ", beforeMountPoints)
+
 	// Plug external storage.
 	if err := utils.ControlFixture(ctx, usbID, "on"); err != nil {
 		s.Fatal("Failed to plug the external storage after resume: ", err)
@@ -162,16 +168,15 @@ func UnplugExternalStorageWhileSuspend(ctx context.Context, s *testing.State) {
 	if _, err := appsSvc.LaunchApp(ctx, &pb.LaunchAppRequest{AppName: "Files", TimeoutSecs: 60}); err != nil {
 		s.Fatal("Failed to launch Files app after resume: ", err)
 	}
-	var mountPoints []string
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		mountPoints, err = utils.GetMountPoints(ctx, dut)
-		if err != nil {
-			return errors.Wrap(err, "can't get mount points")
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 200 * time.Microsecond}); err != nil {
-		s.Fatal("Failed to get mount points: ", err)
+
+	afterMountPoints, err := utils.RemovableMountPoints(ctx, dut)
+	if err != nil {
+		s.Fatal("Failed to get mountpoints after connecting external storage USB Device: ", err)
 	}
+	s.Log("Following mount points were found after plugging in external storage USB device: ", afterMountPoints)
+
+	mountPoints := utils.FindDifference(afterMountPoints, beforeMountPoints)
+	s.Log("Following mount points are new and identified as the external storage USB device and will be used: ", mountPoints)
 
 	for _, mountPoint := range mountPoints {
 		usbTextPath := filepath.Join(mountPoint, "sample.txt")
