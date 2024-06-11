@@ -329,7 +329,8 @@ func (fd FixtData) Chrome() *chrome.Chrome {
 	return fd.cr
 }
 
-// BrowserType returns the browser type setup in fixture.
+// BrowserType returns the browser type setup in fixture. This adds support for
+// browser.HasBrowserType interface.
 func (fd FixtData) BrowserType() browser.Type {
 	return fd.bt
 }

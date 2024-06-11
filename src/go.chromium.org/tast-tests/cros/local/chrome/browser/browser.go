@@ -22,6 +22,12 @@ import (
 // Type indicates the type of Chrome browser to be used.
 type Type string
 
+// HasBrowserType is an interface for fixture values that contain Type. It
+// allows retrieval of the browser type.
+type HasBrowserType interface {
+	BrowserType() Type
+}
+
 const (
 	// TypeAsh refers to Ash Chrome (the system browser).
 	TypeAsh Type = "ash"

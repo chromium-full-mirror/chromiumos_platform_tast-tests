@@ -1137,6 +1137,17 @@ type PowerUIFixtureData struct {
 	ARC       *arc.ARC
 }
 
+// Chrome returns Chrome. This adds support for chrome.HasChrome interface.
+func (fd PowerUIFixtureData) Chrome() *chrome.Chrome {
+	return fd.Cr
+}
+
+// BrowserType returns the browser type setup in fixture. This adds support for
+// browser.HasBrowserType interface.
+func (fd PowerUIFixtureData) BrowserType() browser.Type {
+	return fd.Bt
+}
+
 // NewPowerUIFixture returns a FixtureImpl to set device to use the specified
 // browser, various power test options and power fixture options.
 func NewPowerUIFixture(pto PowerTestOptions, pfo PowerFixtureOptions) testing.FixtureImpl {
