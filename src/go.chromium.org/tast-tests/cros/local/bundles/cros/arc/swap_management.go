@@ -7,6 +7,7 @@ package arc
 import (
 	"context"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -20,14 +21,11 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-// The ratio for checking expected swap usage difference to avoid flakiness due to other swap activities.
-const swapMemDiffThresholdRatio = 0.9
-
 type swapManagementTestParams struct {
-	// Extra Chrome command line options
-	chromeArgs []string
 	// Expected swap area name
 	swapAreaName string
+	// Whether virtual swap is enabled
+	virtualSwapEnabled bool
 }
 
 func init() {
@@ -47,9 +45,14 @@ func init() {
 		Params: []testing.Param{{
 			Name: "zram",
 			Val: swapManagementTestParams{
-				// Enable ZRAM with the size of 1GB
-				chromeArgs:   []string{"--enable-features=ArcGuestZram:size/1073741824"},
-				swapAreaName: "/dev/block/zram0",
+				swapAreaName:       "/dev/block/zram0",
+				virtualSwapEnabled: false,
+			},
+		}, {
+			Name: "pmem",
+			Val: swapManagementTestParams{
+				swapAreaName:       "/dev/block/pmem0",
+				virtualSwapEnabled: true,
 			},
 		}},
 		Timeout: chrome.LoginTimeout + arc.BootTimeout + time.Minute,
@@ -57,7 +60,11 @@ func init() {
 }
 
 const (
-	memoryToAllocate int64 = 100 * memory.MiB
+	// The ratio for checking expected swap usage difference to avoid flakiness due to other swap activities.
+	swapMemDiffThresholdRatio               = 0.9
+	memoryToAllocate          int64         = 100 * memory.MiB
+	guestSwapSize             int64         = 1 * memory.GiB
+	swapInterval              time.Duration = time.Second
 )
 
 func SwapManagement(ctx context.Context, s *testing.State) {
@@ -66,7 +73,12 @@ func SwapManagement(ctx context.Context, s *testing.State) {
 	defer arc.RestoreArcvmDevConf(ctx)
 
 	testParams := s.Param().(swapManagementTestParams)
-	cr, err := chrome.New(ctx, chrome.ARCEnabled(), chrome.UnRestrictARCCPU(), chrome.ExtraArgs(testParams.chromeArgs...))
+	guestSwapFeature := fmt.Sprintf("ArcGuestZram:size/%d", guestSwapSize)
+	if testParams.virtualSwapEnabled {
+		guestSwapFeature += fmt.Sprintf("/virtual_swap_enabled/true/virtual_swap_interval_ms/%d", swapInterval/time.Millisecond)
+	}
+
+	cr, err := chrome.New(ctx, chrome.ARCEnabled(), chrome.UnRestrictARCCPU(), chrome.EnableFeatures(guestSwapFeature))
 	if err != nil {
 		s.Fatal("Failed to connect to Chrome: ", err)
 	}
@@ -111,7 +123,12 @@ func SwapManagement(ctx context.Context, s *testing.State) {
 	if err := allocateMemoryTask.Run(ctx, a, tconn); err != nil {
 		s.Fatal("Failed to run ArcLifecycleUnit: ", err)
 	}
-	defer allocateMemoryTask.Close(ctx, a)
+	memoryTaskClosed := false
+	defer func() {
+		if !memoryTaskClosed {
+			allocateMemoryTask.Close(ctx, a)
+		}
+	}()
 
 	memoryTaskPackageName := allocateMemoryTask.PackageName()
 	// Invoke per process reclaim for the memory allocator.
@@ -140,9 +157,36 @@ func SwapManagement(ctx context.Context, s *testing.State) {
 
 	swapMemDiffThreshold := int64(float64(memoryToAllocate) * swapMemDiffThresholdRatio)
 	if swapInfoAfterReclaim.used-swapInfoOnBoot.used < swapMemDiffThreshold {
-		s.Fatalf("Swap usaged did not increase as expected after per process memory reclaim."+
+		s.Fatalf("Swap usage did not increase as expected after per process memory reclaim."+
 			" Swap used before: %d, after: %d, allocated memory to reclaim: %d",
 			swapInfoOnBoot.used, swapInfoAfterReclaim.used, memoryToAllocate)
+	}
+
+	if testParams.virtualSwapEnabled {
+		// GoBigSleepLint: Wait for crosvm to swap out the VMA.
+		testing.Sleep(ctx, swapInterval+time.Second)
+
+		hostSwapInfoBeforeAppKill, err := getHostSwapInfo(ctx)
+		if err != nil {
+			s.Fatal("Failed to get host swap info: ", err)
+		}
+		s.Logf("Host swap info before app kill: %s", hostSwapInfoBeforeAppKill)
+
+		// Also verifies the swap usage from host is reduced after the memory task is closed.
+		allocateMemoryTask.Close(ctx, a)
+		memoryTaskClosed = true
+
+		hostSwapInfoAfterAppKill, err := getHostSwapInfo(ctx)
+		if err != nil {
+			s.Fatal("Failed to get host swap info: ", err)
+		}
+		s.Logf("Host swap info after app kill: %s", hostSwapInfoAfterAppKill)
+
+		if hostSwapInfoBeforeAppKill.used-hostSwapInfoAfterAppKill.used < swapMemDiffThreshold {
+			s.Fatalf("Host swap usage did not decrease as expected after app kill."+
+				" Swap used before: %d, after: %d, allocated memory from Android app: %d",
+				hostSwapInfoBeforeAppKill.used, hostSwapInfoAfterAppKill.used, memoryToAllocate)
+		}
 	}
 }
 
@@ -162,7 +206,21 @@ func getSwapInfo(ctx context.Context, a *arc.ARC) (*swapInfo, error) {
 		return nil, errors.Wrap(err, "failed to read /proc/swaps file")
 	}
 
-	lines := strings.Split(string(output), "\n")
+	return parseSwapInfo(output)
+}
+
+func getHostSwapInfo(ctx context.Context) (*swapInfo, error) {
+	procSwap, err := os.ReadFile("/proc/swaps")
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to read /proc/swaps file")
+	}
+
+	return parseSwapInfo(procSwap)
+}
+
+// parseSwapInfo parses swap info from the content of /proc/swaps
+func parseSwapInfo(procSwapsContent []byte) (*swapInfo, error) {
+	lines := strings.Split(string(procSwapsContent), "\n")
 	if len(lines) < 2 {
 		return nil, nil
 	}
