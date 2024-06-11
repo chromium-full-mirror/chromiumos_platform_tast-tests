@@ -30,6 +30,8 @@ type suspendStressParam struct {
 	apConfigs []hostapd.ApConfig
 	// isColocated indicates whether the 6GHz AP is co-located.
 	isColocated bool
+	// sameSSID indicates whether or not to put the 6GHz AP on the same SSID as the co-located AP.
+	sameSSID bool
 }
 
 func init() {
@@ -169,6 +171,31 @@ func init() {
 				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E"},
 			},
 			{
+				Name:              "6ghz_non_psc_same_ssid",
+				ExtraSoftwareDeps: []string{"wpa3_sae"},
+				ExtraAttr:         []string{"wificell_func", "wificell_suspend", "wificell_unstable"},
+				Val: []suspendStressParam{
+					{ // 6GHz AP is on a non-PSC channel with legacy AP advertisement on the same SSID. Expect that we connect directly to the 6GHz AP.
+						suspendCount: 5,
+						apConfigs: []hostapd.ApConfig{
+							{
+								ApOpts: []hostapd.Option{hostapd.Mode(hostapd.Mode80211axPure), hostapd.Channel(9), hostapd.HTCaps(hostapd.HTCapHT20),
+									hostapd.HEChWidth(hostapd.HEChWidth20Or40), hostapd.OpClass(131), hostapd.PMF(hostapd.PMFRequired)},
+								SecConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+							}, {
+								ApOpts:     []hostapd.Option{hostapd.Mode(hostapd.Mode80211acPure), hostapd.HTCaps(hostapd.HTCapHT20), hostapd.Channel(40), hostapd.SpectrumManagement(), hostapd.PMF(hostapd.PMFRequired)},
+								SecConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+							},
+						},
+						isColocated: true,
+						sameSSID:    true,
+					},
+				},
+				ExtraRequirements: []string{"wifi-gen-0003-v01", "wifi-rf-0006-v01"},
+				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
+				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E"},
+			},
+			{
 				Name:      "stress_80211n24ht40",
 				ExtraAttr: []string{"wificell_stress"},
 				Timeout:   baseTimeout + suspendIterationTimeout*690,
@@ -242,7 +269,13 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 		}
 	}()
 
-	testOnce := func(ctx context.Context, s *testing.State, suspendCount int, apConfigs []hostapd.ApConfig, isColocated bool) {
+	testOnce := func(ctx context.Context, s *testing.State, suspendCount int, apConfigs []hostapd.ApConfig, isColocated, sameSSID bool) {
+		if sameSSID {
+			ssid := hostapd.RandomSSID("TAST_SUSPEND_STRESS_")
+			for _, config := range apConfigs {
+				config.ApOpts = append(config.ApOpts, hostapd.SSID(ssid))
+			}
+		}
 		// Configure the main AP and the colocated legacy band AP for the
 		// non-PSC test case.
 		apMain, err := tf.ConfigureMultiAP(ctx, wificell.DefaultRouter, apConfigs)
@@ -307,6 +340,20 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 					s.Logf("Suspend stress iteration count: %d", i+1)
 				}
 			}
+
+			if sameSSID {
+				service, err := tf.WifiClient().QueryService(ctx)
+				if err != nil {
+					s.Error("Failed to get the active WiFi service from DUT: ", err)
+				}
+				_, freqHigherBand, err := apMain.Config().OperatingBandAndFreq()
+				if err != nil {
+					s.Error("Failed to get the frequency from the AP config: ", err)
+				}
+				if service.Wifi.Frequency != uint32(freqHigherBand) {
+					s.Errorf("Got frequency %d; want %d", service.Wifi.Frequency, freqHigherBand)
+				}
+			}
 		}
 
 		if len(connectTimes) == 0 {
@@ -350,7 +397,7 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 	testcases := s.Param().([]suspendStressParam)
 	for i, tc := range testcases {
 		subtest := func(ctx context.Context, s *testing.State) {
-			testOnce(ctx, s, tc.suspendCount, tc.apConfigs, tc.isColocated)
+			testOnce(ctx, s, tc.suspendCount, tc.apConfigs, tc.isColocated, tc.sameSSID)
 		}
 		if !s.Run(ctx, fmt.Sprintf("Testcase #%d", i), subtest) {
 			// Stop if one of the subtest's parameter set fails the test.
