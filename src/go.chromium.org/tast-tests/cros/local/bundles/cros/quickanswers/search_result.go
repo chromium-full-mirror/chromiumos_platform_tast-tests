@@ -68,7 +68,7 @@ func SearchResult(ctx context.Context, s *testing.State) {
 	// Right click the selected word and ensure the Quick Answers UI shows up with the definition result.
 	ui := uiauto.New(tconn)
 	quickAnswers := nodewith.ClassName("QuickAnswersView")
-	definitionResult := nodewith.NameContaining("twenty plane faces").ClassName("QuickAnswersTextLabel")
+	definitionResult := quickanswers.ResultTextContains("twenty plane faces")
 	if err := uiauto.Combine("Show context menu",
 		ui.RightClick(queryFinder),
 		ui.WaitUntilExists(quickAnswers),

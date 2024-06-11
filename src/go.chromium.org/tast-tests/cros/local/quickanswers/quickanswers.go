@@ -27,6 +27,13 @@ const (
 	prefValueConsentStatusUnknown = 0
 )
 
+// ResultTextContains returns a nodewith.Finder to find a node in a result
+// containing a specified text.
+func ResultTextContains(text string) *nodewith.Finder {
+	return nodewith.NameContaining(text).Role(role.StaticText).
+		Ancestor(nodewith.ClassName("ResultView"))
+}
+
 // ResetPref resets quick answers pref values to default values.
 func ResetPref(ctx context.Context, tconn *chrome.TestConn) error {
 	// prefPathConsentStatus is not in chrome.settingsPrivate.setPref.

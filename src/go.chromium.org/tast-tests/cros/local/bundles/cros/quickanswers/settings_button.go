@@ -66,7 +66,7 @@ func SettingsButton(ctx context.Context, s *testing.State) {
 	ui := uiauto.New(tconn)
 	quickAnswers := nodewith.ClassName("QuickAnswersView")
 	settingsButton := nodewith.ClassName("ImageButton").Name("Open Quick Answers settings")
-	unitConversionResult := nodewith.NameContaining("110.231").ClassName("QuickAnswersTextLabel")
+	unitConversionResult := quickanswers.ResultTextContains("110.231")
 	if err := uiauto.Combine("Show context menu",
 		ui.RightClick(queryFinder),
 		ui.WaitUntilExists(quickAnswers),

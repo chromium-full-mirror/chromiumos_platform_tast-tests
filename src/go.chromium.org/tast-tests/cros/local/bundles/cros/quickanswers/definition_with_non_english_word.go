@@ -112,7 +112,7 @@ func DefinitionWithNonEnglishWord(ctx context.Context, s *testing.State) {
 	// Right click the selected word and ensure the Quick Answers UI shows
 	// up with the definition result.
 	quickAnswers := nodewith.ClassName("QuickAnswersView")
-	definitionResult := nodewith.NameContaining(responseKeyword).ClassName("QuickAnswersTextLabel")
+	definitionResult := quickanswers.ResultTextContains(responseKeyword)
 	if err := uiauto.Combine("Show context menu",
 		ui.RightClick(queryFinder),
 		ui.WaitUntilExists(quickAnswers),

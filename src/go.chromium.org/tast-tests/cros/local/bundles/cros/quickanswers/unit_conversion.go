@@ -68,7 +68,7 @@ func UnitConversion(ctx context.Context, s *testing.State) {
 	// Right click the selected units and ensure the Quick Answers UI shows up with the conversion result in pounds.
 	ui := uiauto.New(tconn)
 	quickAnswers := nodewith.ClassName("QuickAnswersView")
-	unitConversionResult := nodewith.NameContaining("110.231").ClassName("QuickAnswersTextLabel")
+	unitConversionResult := quickanswers.ResultTextContains("110.231")
 	if err := uiauto.Combine("Show context menu",
 		ui.RightClick(queryFinder),
 		ui.WaitUntilExists(quickAnswers),

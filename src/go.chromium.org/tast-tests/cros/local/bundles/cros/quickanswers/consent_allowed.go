@@ -74,7 +74,7 @@ func ConsentAllowed(ctx context.Context, s *testing.State) {
 	// Left click the allow button and ensure the Quick Answers UI shows up
 	// with the query result.
 	quickAnswers := nodewith.ClassName("QuickAnswersView")
-	definitionResult := nodewith.NameContaining("twenty plane faces").ClassName("QuickAnswersTextLabel")
+	definitionResult := quickanswers.ResultTextContains("twenty plane faces")
 	if err := uiauto.Combine("Show Quick Answers query result",
 		ui.LeftClick(allowButton),
 		ui.WaitUntilExists(quickAnswers),

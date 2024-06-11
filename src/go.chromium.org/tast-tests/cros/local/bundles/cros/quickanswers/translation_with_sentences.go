@@ -68,9 +68,8 @@ func TranslationWithSentences(ctx context.Context, s *testing.State) {
 	// Right click the selected query sentence and ensure the Quick Answers UI shows up with the translation result.
 	ui := uiauto.New(tconn)
 	quickAnswers := nodewith.ClassName("QuickAnswersView")
-	translationResult := nodewith.NameContaining("organize the world's information").
-		NameContaining("make it universally accessible and useful").
-		ClassName("QuickAnswersTextLabel")
+	translationResult := quickanswers.ResultTextContains("organize the world's information").
+		NameContaining("make it universally accessible and useful")
 	if err := uiauto.Combine("Show context menu",
 		ui.RightClick(queryFinder),
 		ui.WaitUntilExists(quickAnswers),
