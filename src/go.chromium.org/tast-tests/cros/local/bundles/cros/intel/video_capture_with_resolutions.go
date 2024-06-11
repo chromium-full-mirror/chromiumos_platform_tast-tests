@@ -48,7 +48,7 @@ func VideoCaptureWithResolutions(ctx context.Context, s *testing.State) {
 		}
 		// since DUT has single camera skipping back-facing-camera test.
 		if numCameras <= 1 {
-			s.Fatal("DUT don't have back facing camera")
+			s.Fatal("Failed as DUT does not have Environment Camera")
 		}
 	}
 

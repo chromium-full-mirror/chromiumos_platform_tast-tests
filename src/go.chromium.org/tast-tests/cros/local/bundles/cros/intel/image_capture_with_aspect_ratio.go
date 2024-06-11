@@ -63,7 +63,7 @@ func ImageCaptureWithAspectRatio(ctx context.Context, s *testing.State) {
 		}
 		// since DUT has single camera failing world-facing-camera test.
 		if numCameras <= 1 {
-			s.Fatal("DUT don't have world facing camera")
+			s.Fatal("Failed as DUT does not have Environment Camera")
 		}
 	}
 
