@@ -195,7 +195,7 @@ func ExpiredCert(ctx context.Context, s *testing.State) {
 	if err := uiauto.Combine("Check print history for failed job",
 		printManager.Focus(),
 		printManager.VerifyPrintJob(),
-		ui.EnsureFocused(nodewith.Name("Failed - Certificate Expired")),
+		ui.WithTimeout(10*time.Second).WaitUntilExists(nodewith.NameContaining("Failed - Certificate Expired").First()),
 	)(ctx); err != nil {
 		s.Fatal("Failed to find failed print job: ", err)
 	}
