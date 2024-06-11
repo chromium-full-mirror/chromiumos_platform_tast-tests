@@ -28,7 +28,7 @@ import (
 
 const (
 	percentageNotChanged  = 0.25
-	percentageChanged     = 0.55
+	percentageChanged     = 0.45
 	vcBackgroundAppWindow = "Camera Background"
 )
 

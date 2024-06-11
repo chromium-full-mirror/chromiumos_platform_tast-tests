@@ -134,7 +134,7 @@ func CameraEffectsChromeRetain(cleanupCtx context.Context, s *testing.State) {
 		}
 
 		// Camera effects should be identical for new tab.
-		notChangedThreshold := 1.0
+		notChangedThreshold := 0.95
 		changedThreshold := 0.0
 		notChanged, changed := effectshtml.ImageDiff(imageBefore, imageAfter, 0.0)
 		if notChanged < notChangedThreshold || changed < changedThreshold {

@@ -125,6 +125,11 @@ func WaitForCameraStreamToReady(ctx context.Context, ui *uiauto.Context, vcTray 
 	if err := ui.WaitUntilExists(videoPauseButton)(ctx); err != nil {
 		return errors.Wrap(err, "Fail to wait for camera stream to load")
 	}
+
+	if err := vcTray.WaitUntilExists(ctx); err != nil {
+		return errors.Wrap(err, "Fail to wait for VcTray to show")
+	}
+
 	if err := vcTray.WaitUntilState(vctray.DevCamera, vctray.DeviceInUse)(ctx); err != nil {
 		return errors.Wrap(err, "Fail to wait for VcTray to show camera is in use")
 	}

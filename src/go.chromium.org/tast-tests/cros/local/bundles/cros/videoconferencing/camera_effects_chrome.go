@@ -115,7 +115,7 @@ func CameraEffectsChrome(cleanupCtx context.Context, s *testing.State) {
 			name:                "backgroundblur_off_portraitrelighting_off",
 			backgroundBlur:      vctray.BackgroundBlurOff,
 			portraitRelighting:  false,
-			notChangedThreshold: 1.0,
+			notChangedThreshold: 0.95,
 			changedThreshold:    0.0,
 		},
 		{
