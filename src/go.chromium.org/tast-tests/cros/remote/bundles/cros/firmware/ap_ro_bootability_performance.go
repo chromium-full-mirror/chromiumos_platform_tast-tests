@@ -798,16 +798,13 @@ func downloadAndUntarFwFile(ctx context.Context, s *testing.State, h *firmware.H
 				testing.ContextLog(ctx, "Failed to download the file: ", err)
 				continue
 			}
+
 			// Copy firmware files to the local host.
-			if filesToFlash.APFirmwareFile != "" {
-				if err := h.ServoProxy.GetFile(ctx, false, fmt.Sprintf("%s/%s", tmpDirServo, filesToFlash.APFirmwareFile), fmt.Sprintf("%s/%s", tmpDir, filesToFlash.APFirmwareFile)); err != nil {
-					return nil, errors.Wrap(err, "failed to copy AP firmware file from servo host")
-				}
+			if err := h.ServoProxy.GetFile(ctx, false, fmt.Sprintf("%s/%s", tmpDirServo, filesToFlash.APFirmwareFile), fmt.Sprintf("%s/%s", tmpDir, filesToFlash.APFirmwareFile)); err != nil {
+				return nil, errors.Wrap(err, "failed to copy AP firmware file from servo host")
 			}
-			if filesToFlash.ECFirmwareFile != "" {
-				if err := h.ServoProxy.GetFile(ctx, false, fmt.Sprintf("%s/%s", tmpDirServo, filesToFlash.ECFirmwareFile), fmt.Sprintf("%s/%s", tmpDir, filesToFlash.ECFirmwareFile)); err != nil {
-					return nil, errors.Wrap(err, "failed to copy EC firmware file from servo host")
-				}
+			if err := h.ServoProxy.GetFile(ctx, false, fmt.Sprintf("%s/%s", tmpDirServo, filesToFlash.ECFirmwareFile), fmt.Sprintf("%s/%s", tmpDir, filesToFlash.ECFirmwareFile)); err != nil {
+				return nil, errors.Wrap(err, "failed to copy EC firmware file from servo host")
 			}
 			if filesToFlash.MonitorFile != "" {
 				if err := h.ServoProxy.GetFile(ctx, false, fmt.Sprintf("%s/%s", tmpDirServo, filesToFlash.MonitorFile), fmt.Sprintf("%s/%s", tmpDir, filesToFlash.MonitorFile)); err != nil {
@@ -818,7 +815,7 @@ func downloadAndUntarFwFile(ctx context.Context, s *testing.State, h *firmware.H
 		}
 	}
 
-	return nil, errors.Errorf("unable to get firmware file for board: %s, model: %s, firmware ID: %s", fwToTest.Board, fwToTest.Model, fwToTest.FwID)
+	return nil, errors.Errorf("unable to get both AP and EC firmware files for board: %s, model: %s, firmware ID: %s", fwToTest.Board, fwToTest.Model, fwToTest.FwID)
 }
 
 // flashDUTAndReboot will send the bin files to a directory in the DUT, flash the files into the DUT with the bios service 'WriteImageFromMultiSectionFile'
@@ -862,7 +859,7 @@ func flashDUTAndReboot(ctx context.Context, h *firmware.Helper, fwInfo *flashFwI
 			return errors.Wrap(err, "failed to get EC IDs")
 		}
 
-		testing.ContextLogf(flashingCtx, "Flashing DUT with file: %s using section: %v", fwInfo.ec.path, fwInfo.ap.section)
+		testing.ContextLogf(flashingCtx, "Flashing DUT with file: %s using section: %v", fwInfo.ec.path, fwpb.ImageSection_EmptyImageSection)
 		if _, err := h.BiosServiceClient.WriteImageFromMultiSectionFile(flashingCtx, &fwpb.FWSectionInfo{Programmer: fwpb.Programmer_ECProgrammer, Path: filePathOnDut, Section: fwpb.ImageSection_EmptyImageSection}); err != nil {
 			return errors.Wrap(err, "failed to flash DUT with the multi-section bin file")
 		}
