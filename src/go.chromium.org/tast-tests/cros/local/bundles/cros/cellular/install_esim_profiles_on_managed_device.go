@@ -125,10 +125,12 @@ func InstallESIMProfilesOnManagedDevice(ctx context.Context, s *testing.State) {
 	activationCode := activationCodes[0]
 	s.Log("Fetched Stork profile with activation code: ", activationCode)
 
-	manager, err := mojo.Manager(ctx, cr, slot)
+	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
-		s.Fatal("Failed to create Mojo interface to esim_manager")
+		s.Fatal("Failed to connect to test API")
 	}
+
+	manager := mojo.NewESimManager(cr, tconn)
 
 	euiccs, err := manager.AvailableEuicc(ctx)
 	if err != nil {

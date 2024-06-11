@@ -78,7 +78,6 @@ type FixtData struct {
 
 // eSimMojoFixture implements testing.FixtureImpl.
 type eSimMojoFixture struct {
-	manager             *ESimManager
 	cr                  *chrome.Chrome
 	isTestEuicc         bool
 	smdsSupportRequired bool
@@ -122,24 +121,22 @@ func (f *eSimMojoFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	if err != nil {
 		s.Fatal("Chrome login failed: ", err)
 	}
+	chrome.Lock()
+	f.cr = cr
 
-	manager, err := Manager(ctx, cr, slot)
+	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
-		s.Fatal("Failed to create Mojo interface to esim_manager")
+		s.Fatal("Failed to connect to test API")
 	}
 
-	f.cr = cr
-	f.manager = manager
-
-	euiccs, err := f.manager.AvailableEuicc(ctx)
+	manager := NewESimManager(cr, tconn)
+	euiccs, err := manager.AvailableEuicc(ctx)
 	if err != nil {
 		s.Fatal("Failed to get available eUICCs via Mojo: ", err)
 	}
-
 	if slot >= len(euiccs) {
 		s.Fatal("Failed to determine correct eUICC, slot index out of range")
 	}
-
 	euicc := &euiccs[slot]
 
 	euiccProperties, err := euicc.Properties(ctx)
@@ -148,14 +145,11 @@ func (f *eSimMojoFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	}
 	s.Log("Using eUICC: ", euiccProperties.Eid)
 
-	return &FixtData{Euicc: euicc, Manager: f.manager, Cr: f.cr}
+	return &FixtData{Euicc: euicc, Manager: manager, Cr: f.cr}
 }
 
 func (f *eSimMojoFixture) TearDown(ctx context.Context, s *testing.FixtState) {
-	if err := f.manager.JS.Release(ctx); err != nil {
-		s.Fatal("Failed to release eSIM Mojo JS object: ", err)
-	}
-
+	chrome.Unlock()
 	if err := f.cr.Close(ctx); err != nil {
 		s.Log("Failed to close Chrome connection: ", err)
 	}
