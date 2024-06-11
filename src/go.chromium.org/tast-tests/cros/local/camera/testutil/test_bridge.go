@@ -280,11 +280,20 @@ func (t *TestBridge) TearDown(ctx context.Context) error {
 			}
 		}()
 	}
+	if err := RemoveTestBridgeConfigs(ctx); err != nil {
+		testing.ContextLog(ctx, "Failed to remove bridge configs: ", err)
+	}
+	return nil
+}
+
+// RemoveTestBridgeConfigs removes all the configs created by TestBridge. It is meant to be called in fixtures
+// that need to ensure the clean state. Fixtures/tests that actually use the TestBridge do not need to call it.
+func RemoveTestBridgeConfigs(ctx context.Context) error {
 	if err := RemoveFakeHALConfig(ctx); err != nil {
-		testing.ContextLog(ctx, "Failed to remove fake hal config: ", err)
+		return err
 	}
 	if err := RemoveTestConfig(ctx); err != nil {
-		testing.ContextLog(ctx, "Failed to remove test config: ", err)
+		return err
 	}
 	return nil
 }

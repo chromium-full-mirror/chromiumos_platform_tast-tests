@@ -110,6 +110,10 @@ func (f *serviceFixture) SetUp(ctx context.Context, s *testing.FixtState) interf
 	defer cancel()
 
 	// First, reset any modifications (e.g. bridge to FakeHAL) made in preceding tests.
+	if err := testutil.RemoveTestBridgeConfigs(ctx); err != nil {
+		s.Fatal("Failed to clean-up camera TestBridge: ", err)
+	}
+
 	if err := restartCameraService(ctx); err != nil {
 		s.Fatal("Failed to restart camera service: ", err)
 	}
