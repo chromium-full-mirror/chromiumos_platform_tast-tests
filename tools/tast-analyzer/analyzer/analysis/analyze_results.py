@@ -131,24 +131,24 @@ def analyze_results(
     before_samples = _load_metrics_from_results_dict(before_results)
     after_samples = _load_metrics_from_results_dict(after_results)
 
-    if cfg.prune_outliers:
+    if cfg.remove_outliers:
         before_samples = _prune_outliers(before_samples)
         after_samples = _prune_outliers(after_samples)
 
-    if cfg.prune_regex_include:
+    if cfg.metric_include_regex:
         before_samples = _prune_regex_include(
-            before_samples, cfg.prune_regex_include
+            before_samples, cfg.metric_include_regex
         )
         after_samples = _prune_regex_include(
-            after_samples, cfg.prune_regex_include
+            after_samples, cfg.metric_include_regex
         )
 
-    if cfg.prune_regex_exclude:
+    if cfg.metric_exclude_regex:
         before_samples = _prune_regex_exclude(
-            before_samples, cfg.prune_regex_exclude
+            before_samples, cfg.metric_exclude_regex
         )
         after_samples = _prune_regex_exclude(
-            after_samples, cfg.prune_regex_exclude
+            after_samples, cfg.metric_exclude_regex
         )
 
     metric_paths = analysis_results.compute_metric_paths_for_comparison(

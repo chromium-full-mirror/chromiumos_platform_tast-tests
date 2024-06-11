@@ -8,7 +8,12 @@ from analyzer.frontend import cli_frontend
 import click
 
 
-@click.group()
+CONTEXT_SETTINGS = {
+    "show_default": True,
+}
+
+
+@click.group(context_settings=CONTEXT_SETTINGS)
 def cli() -> None:
     pass
 

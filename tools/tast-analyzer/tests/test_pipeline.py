@@ -19,9 +19,9 @@ class PipelineTest(unittest.TestCase):
             minimum_sample_size=1,
             alpha=1.0,
             multiple_test_cfg=analysis_cfg.MultipleTestCfg.FWER,
-            prune_regex_exclude=None,
-            prune_regex_include=None,
-            prune_outliers=False,
+            metric_exclude_regex=None,
+            metric_include_regex=None,
+            remove_outliers=False,
         )
         results_unpruned = analyze_results.analyze_results(
             FILES_DIR.joinpath("results-chart-complex1.json"),
@@ -30,9 +30,9 @@ class PipelineTest(unittest.TestCase):
         )
         cfg_pruned = dataclasses.replace(
             cfg,
-            prune_regex_exclude="2windows",
-            prune_regex_include="TabletMode",
-            prune_outliers=True,
+            metric_exclude_regex="2windows",
+            metric_include_regex="TabletMode",
+            remove_outliers=True,
         )
         results_pruned = analyze_results.analyze_results(
             FILES_DIR.joinpath("results-chart-complex1.json"),

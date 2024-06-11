@@ -75,8 +75,71 @@ def _compare_results(
     nargs=2,
     required=True,
 )
-def print_results(compare: list[Path]) -> None:
-    clicfg = _CliFrontendCfg()
+@click.option(
+    "--skip-all-zero/--no-skip-all-zero",
+    type=bool,
+    help="whether to skip samples with all zero values",
+    default=True,
+)
+@click.option(
+    "--minimum-sample-size",
+    type=int,
+    help="minimum sample size to include in the analysis",
+    default=1,
+)
+@click.option(
+    "-p",
+    "--alpha-value",
+    type=float,
+    help="statistical significance level to use",
+    default=0.05,
+)
+@click.option(
+    "-m",
+    "--multiple-test-correction",
+    type=click.Choice(list(analysis_cfg.MultipleTestCfg)),
+    help="correction method to use for multiple tests",
+    default=analysis_cfg.MultipleTestCfg.FWER,
+)
+@click.option(
+    "--metric-include-regex",
+    type=str,
+    help="regex to include metric paths by",
+    required=False,
+)
+@click.option(
+    "--metric-exclude-regex",
+    type=str,
+    help="regex to exclude metric paths by",
+    required=False,
+)
+@click.option(
+    "--remove-outliers/--no-remove-outliers",
+    type=bool,
+    help="clip min and max values as outliers",
+    default=False,
+)
+def print_results(
+    compare: list[Path],
+    skip_all_zero: bool,
+    minimum_sample_size: int,
+    alpha_value: float,
+    multiple_test_correction: analysis_cfg.MultipleTestCfg,
+    metric_include_regex: str | None,
+    metric_exclude_regex: str | None,
+    remove_outliers: bool,
+) -> None:
+    cfg = analysis_cfg.AnalysisCfg(
+        skip_all_zero_samples=skip_all_zero,
+        minimum_sample_size=minimum_sample_size,
+        alpha=alpha_value,
+        multiple_test_cfg=multiple_test_correction,
+        metric_exclude_regex=metric_exclude_regex,
+        metric_include_regex=metric_include_regex,
+        remove_outliers=remove_outliers,
+    )
+
+    clicfg = _CliFrontendCfg(cfg=cfg)
     results = analyze_results.analyze_results(
         compare[0], compare[1], clicfg.cfg
     )
