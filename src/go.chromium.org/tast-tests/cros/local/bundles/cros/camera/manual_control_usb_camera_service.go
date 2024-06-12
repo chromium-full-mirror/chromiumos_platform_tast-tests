@@ -10,16 +10,21 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/media/caps"
+	"github.com/golang/protobuf/ptypes/empty"
+	"google.golang.org/grpc"
+
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/camera/cca"
 	"go.chromium.org/tast-tests/cros/local/camera/testutil"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/upstart"
+	"go.chromium.org/tast-tests/cros/services/cros/camera"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/fsutil"
@@ -58,17 +63,10 @@ type result struct {
 }
 
 func init() {
-	testing.AddTest(&testing.Test{
-		Func:         ManualControlUSBCamera,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Check the functionality of manual controlling usb cameras",
-		Contacts:     []string{"chromeos-camera-eng@google.com", "esker@chromium.org"},
-		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
-		Attr:         []string{"group:mainline", "informational"},
-		SoftwareDeps: []string{caps.BuiltinUSBCamera},
-		Fixture:      "ccaLaunched",
-		Vars:         []string{saveImageKey},
-		Timeout:      10 * time.Minute,
+	testing.AddService(&testing.Service{
+		Register: func(srv *grpc.Server, s *testing.ServiceState) {
+			camera.RegisterManualControlUSBCameraServiceServer(srv, &ManualControlUSBCameraService{s: s})
+		},
 	})
 }
 
@@ -313,50 +311,141 @@ func controlCameraByVideoNode(ctx context.Context, videoNode string, saveImage b
 	return controlResult, nil
 }
 
-func ManualControlUSBCamera(ctx context.Context, s *testing.State) {
+func getFacingByVidPid(ctx context.Context, targetVidPid string) (camera.Facing, error) {
+	crosConfigPathPrefix := "/run/chromeos-config/v1/camera"
+	cameraCountCmd := testexec.CommandContext(
+		ctx, "cat", crosConfigPathPrefix+"/count")
+	cameraCountOutput, err := cameraCountCmd.Output(testexec.DumpLogOnError)
+	if err != nil {
+		return camera.Facing_FACING_UNSET, errors.Wrapf(err, "failed to run command %s", cameraCountCmd)
+	}
+
+	cameraCount, err := strconv.Atoi(strings.TrimSpace(string(cameraCountOutput)))
+	if err != nil {
+		return camera.Facing_FACING_UNSET, errors.Wrapf(err, "failed to convert %s to integer", cameraCountOutput)
+	}
+	for i := 0; i < cameraCount; i++ {
+		cameraIDDir := crosConfigPathPrefix + "/devices/" + strconv.Itoa(i) + "/ids"
+		findTarget := false
+		err := filepath.Walk(cameraIDDir, func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+
+			if !info.IsDir() {
+				vidPidCmd := testexec.CommandContext(ctx, "cat", path)
+				vidPidOutput, err := vidPidCmd.Output(testexec.DumpLogOnError)
+				if err != nil {
+					return errors.Wrapf(err, "failed to run command %s", vidPidCmd)
+				}
+				if strings.TrimSpace(string(vidPidOutput)) == targetVidPid {
+					findTarget = true
+				}
+			}
+			return nil
+		})
+		if err != nil {
+			return camera.Facing_FACING_UNSET, errors.Wrapf(err, "failed to traverse directory %s", cameraIDDir)
+		}
+
+		if findTarget {
+			facingCmd := testexec.CommandContext(ctx, "cat", crosConfigPathPrefix+"/devices/"+strconv.Itoa(i)+"/facing")
+			facingOutput, err := facingCmd.Output(testexec.DumpLogOnError)
+			if err != nil {
+				return camera.Facing_FACING_UNSET, errors.Wrapf(err, "failed to run command %s", facingCmd)
+			}
+			facing := strings.TrimSpace(string(facingOutput))
+			if facing == "back" {
+				return camera.Facing_FACING_BACK, nil
+			} else if facing == "front" {
+				return camera.Facing_FACING_FRONT, nil
+			} else {
+				return camera.Facing_FACING_UNSET, nil
+			}
+		}
+	}
+	return camera.Facing_FACING_UNSET, nil
+}
+
+type ManualControlUSBCameraService struct {
+	s *testing.ServiceState
+}
+
+func (f *ManualControlUSBCameraService) ValidateControl(ctx context.Context, req *camera.ValidateControlRequest) (*empty.Empty, error) {
 	// Reserve some time to cleanup, even if it fails due to ctx timeout.
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
 	if err := upstart.RestartJob(cleanupCtx, "cros-camera"); err != nil {
-		s.Fatal("Failed to restart cros-camera service: ", err)
+		return nil, errors.Wrap(err, "failed to restart cros-camera service")
 	}
 
-	app := s.FixtValue().(cca.FixtureData).App()
+	outDir, ok := testing.ContextOutDir(ctx)
+	if !ok {
+		return nil, errors.New("failed to get remote output directory")
+	}
+
+	// Start CCA
+	cr, err := chrome.New(ctx)
+	if err != nil {
+		return nil, err
+	}
+	tb, err := testutil.NewTestBridge(ctx, cr, testutil.UseRealCamera)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to construct test bridge")
+	}
+	defer tb.TearDown(cleanupCtx)
+	if err := cca.ClearSavedDir(ctx, cr); err != nil {
+		return nil, errors.Wrap(err, "failed to clear saved directory")
+	}
+	app, err := cca.New(ctx, cr, outDir, tb)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to open CCA")
+	}
+	defer app.Close(cleanupCtx)
+
 	usbCameraList, err := testutil.USBCamerasFromV4L2Test(ctx)
 	if err != nil {
-		s.Fatal("Failed to get usb camera list: ", err)
+		return nil, errors.Wrap(err, "failed to get usb camera list")
 	}
 
-	saveImage := false
 	var controlResults []result
-	if saveImageString, hasSaveImage := s.Var(saveImageKey); hasSaveImage {
-		saveImage, err = strconv.ParseBool(saveImageString)
-		if err != nil {
-			s.Fatalf("Failed to parse %s from a string to a bool", saveImageString)
-		}
-	}
 	for _, videoNode := range usbCameraList {
 		defer func() {
 			if err := resetCameraUserControl(ctx, videoNode); err != nil {
-				s.Fatalf("Failed to reset all camera user controls of videoNode %s", videoNode)
+				testing.ContextLogf(ctx, "Failed to reset all camera user controls of videoNode %s", videoNode)
 			}
-
 		}()
-		controlResult, err := controlCameraByVideoNode(ctx, videoNode, saveImage, app, s.OutDir())
+		usbCameraVersion, err := testutil.GetUsbCameraVersion(ctx, videoNode)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to get usb camera version from videoNode %s", videoNode)
+		}
+		vidPid := usbCameraVersion.IDVendor + ":" + usbCameraVersion.IDProduct
+
+		facing, err := getFacingByVidPid(ctx, vidPid)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to get facing by vid:pid %s", vidPid)
+		}
+		if facing != req.Facing {
+			testing.ContextLogf(ctx, "Vid:pid %s is with facing %s, different with request %s so skipped", vidPid, facing, req.Facing)
+			continue
+		}
+
+		controlResult, err := controlCameraByVideoNode(ctx, videoNode, req.SaveImage, app, outDir)
 		controlResults = append(controlResults, *controlResult)
 		if err != nil {
-			s.Fatalf("Failed to control camera with video node %s: %s", videoNode, err)
+			return nil, errors.Wrapf(err, "failed to control camera with video node %s", videoNode)
 		}
 	}
 
 	jsonData, err := json.MarshalIndent(controlResults, "", " ")
 	if err != nil {
-		s.Fatal("Failed to marshal the control result: ", err)
+		return nil, errors.Wrap(err, "failed to marshal the control result")
 	}
-	outputResultPath := path.Join(s.OutDir(), outputResultFileName)
+	outputResultPath := path.Join(outDir, outputResultFileName)
 	if err := os.WriteFile(outputResultPath, jsonData, 0644); err != nil {
-		s.Fatalf("Failed to write the JSON data to path %s", outputResultPath)
+		return nil, errors.Wrapf(err, "failed to write the JSON data to path %s", outputResultPath)
 	}
+	return &empty.Empty{}, nil
 }

@@ -1,0 +1,25 @@
+// Copyright 2024 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+syntax = "proto3";
+
+package tast.cros.camera;
+
+import "google/protobuf/empty.proto";
+import "cca_service.proto";
+
+option go_package = "go.chromium.org/tast-tests/cros/services/cros/camera";
+
+// ManualControlUSBCameraService provides RPC methods to check USB camera user
+// control support.
+service ManualControlUSBCameraService {
+  // ValidateControl checks user controls one by one and dumps error if not
+  // supported.
+  rpc ValidateControl(ValidateControlRequest) returns (google.protobuf.Empty) {}
+}
+
+message ValidateControlRequest {
+  bool save_image = 1;
+  Facing facing = 2;
+}
