@@ -24,6 +24,7 @@ type IPConfig struct {
 
 // IPProperties wraps all the properties in an IPConfig D-Bus object. See
 // ipconfig-api.txt in shill for their definitions.
+// Deprecated: Use NetworkConfig in this package instead.
 type IPProperties struct {
 	Address                  string
 	Gateway                  string

@@ -143,6 +143,7 @@ const (
 	ServicePropertyIPConfig          = "IPConfig"
 	ServicePropertyIsConnected       = "IsConnected"
 	ServicePropertyMode              = "Mode"
+	ServicePropertyNetworkConfig     = "NetworkConfig"
 	ServicePropertyState             = "State"
 	ServicePropertyStaticIPConfig    = "StaticIPConfig"
 	ServicePropertyStrength          = "Strength"

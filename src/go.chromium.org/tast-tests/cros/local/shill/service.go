@@ -74,6 +74,7 @@ func (s *Service) GetDeviceInterface(ctx context.Context) (string, error) {
 }
 
 // GetCurrentIPConfig returns the IPConfig for this Service.
+// Deprecated: Consider using GetNetworkConfig instead.
 func (s *Service) GetCurrentIPConfig(ctx context.Context) (*IPConfig, error) {
 	serviceProps, err := s.GetProperties(ctx)
 	if err != nil {
@@ -92,6 +93,7 @@ func (s *Service) GetCurrentIPConfig(ctx context.Context) (*IPConfig, error) {
 
 // GetIPConfigs returns the IPConfig objects list of the associated Device. Note
 // that this is not the IPConfig object of the Service.
+// Deprecated: Consider using GetNetworkConfig instead.
 func (s *Service) GetIPConfigs(ctx context.Context) ([]*IPConfig, error) {
 	device, err := s.GetDevice(ctx)
 	if err != nil {
@@ -140,6 +142,26 @@ func (s *Service) GetIPv4Address(ctx context.Context) (string, error) {
 // Service due to the implementation in shill.
 func (s *Service) GetIPv6Address(ctx context.Context) (string, error) {
 	return s.getIPAddressWithMethod(ctx, []string{"ipv6"})
+}
+
+// GetNetworkConfig returns the NetworkConfig on the services. Returns err if
+// the parsing failed. Note that the fields in the returned NetworkConfig can be
+// all empty on success, the caller needs to read the detailed fields to check
+// if the service has IPv4 or IPv6 configured.
+func (s *Service) GetNetworkConfig(ctx context.Context) (*NetworkConfig, error) {
+	props, err := s.GetProperties(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to get properties")
+	}
+	val, err := props.Get(shillconst.ServicePropertyNetworkConfig)
+	if err != nil {
+		return nil, err
+	}
+	dict, ok := val.(map[string]interface{})
+	if !ok {
+		return nil, errors.New("NetworkConfig property is not a dict")
+	}
+	return parseNetworkConfigProperty(ctx, dict)
 }
 
 // GetSignalStrength return the current signal strength
