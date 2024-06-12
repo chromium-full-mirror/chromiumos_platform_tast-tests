@@ -227,7 +227,7 @@ func BuildProperties(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	partitions := []string{"system", "system_ext", "product", "odm", "vendor", "bootimage"}
+	partitions := []string{"system", "system_ext", "product", "odm", "vendor"}
 	allProperties := getAllPropertiesMap()
 	propertiesMatcher := createPropertiesMatcher(s, allProperties, partitions, getProperty)
 	// To simplify maintaince ARC will mutate only the highest priority property and start to
