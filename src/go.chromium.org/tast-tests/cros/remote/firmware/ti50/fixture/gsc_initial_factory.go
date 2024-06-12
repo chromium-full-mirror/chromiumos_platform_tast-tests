@@ -96,6 +96,13 @@ func eraseInfoPage(ctx context.Context, v *Value, s TestingState) {
 		s.Fatal("Erase command did not work: ", eraseOutput)
 	}
 	testing.ContextLog(ctx, "GSC INFO page erased")
+
+	isErased, err := i.WriteOnceInfoPagesAreErased(ctx)
+	mustSucceed(s, err, "checking info pages")
+	testing.ContextLogf(ctx, "IsErased: %t", isErased)
+	if !isErased {
+		s.Fatal("Failed to erase pages: ", eraseOutput)
+	}
 }
 
 func eraseAPROVerificationSettings(ctx context.Context, v *Value, s TestingState) {
