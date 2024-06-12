@@ -67,9 +67,9 @@ func avlInfoFromStorageInfo(storageInfo []byte, diskType DiskType) (avl.Info, er
 		}
 	case UfsDisk:
 		patterns = map[string]*regexp.Regexp{
-			"model":    regexp.MustCompile(`^Model: (?P<param>\S+)$`),
-			"vendor":   regexp.MustCompile(`^Vendor: (?P<vendor>\S+)$`),
-			"firmware": regexp.MustCompile(`^Firmware: (?P<firmware>\S+)$`),
+			"model":    regexp.MustCompile(`^Model: (?P<param>\S+)`),
+			"vendor":   regexp.MustCompile(`^Vendor: (?P<vendor>\S+)`),
+			"firmware": regexp.MustCompile(`^Firmware: (?P<firmware>\S+)`),
 		}
 		format = func(matched map[string]string) avl.Info {
 			return avl.Info{
