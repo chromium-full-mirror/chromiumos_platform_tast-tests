@@ -51,12 +51,6 @@ func init() {
 func FwupdDbusTests(ctx context.Context, s *testing.State) {
 	fwd := s.FixtValue().(*fwupd.FixtData).Fwupd
 
-	fwupdVersion, err := fwd.Version()
-	if err != nil {
-		s.Fatal("Unable to get FWUPD version: ", err)
-	}
-	s.Log("FWUPD version detected: ", fwupdVersion)
-
 	var expectedReleases = []fwupd.Release{
 		fwupd.Release{
 			Name:       fwupd.FakeWebcamReleaseName,
@@ -86,7 +80,7 @@ func FwupdDbusTests(ctx context.Context, s *testing.State) {
 
 	// Get device using GUID
 	var device *fwupd.Device
-	device, err = fwd.DeviceByGUID(ctx, fwupd.FakeWebcamGUID)
+	device, err := fwd.DeviceByGUID(ctx, fwupd.FakeWebcamGUID)
 	if err != nil {
 		s.Fatal("Failed to detect expected device using GUID: ", err)
 	}

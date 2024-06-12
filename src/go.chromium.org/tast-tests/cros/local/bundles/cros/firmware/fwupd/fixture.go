@@ -49,8 +49,8 @@ func (f *fwupdFixture) SetUp(ctx context.Context, s *testing.FixtState) interfac
 	// Refresh LVFS metadata.
 	cmd := testexec.CommandContext(ctx, "/usr/bin/fwupdmgr", "refresh", "--force", "--json")
 
-	if _, err := cmd.Output(testexec.DumpLogOnError); err != nil {
-		s.Errorf("Metadata refresh failed: %q: %v", shutil.EscapeSlice(cmd.Args), err)
+	if output, err := cmd.Output(testexec.DumpLogOnError); err != nil {
+		s.Errorf("Metadata refresh failed: %q: err: %v output: %v", shutil.EscapeSlice(cmd.Args), err, output)
 	}
 	return &FixtData{Fwupd: f.Fwupd}
 }
@@ -64,6 +64,12 @@ func (f *fwupdFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
 	if err := f.Fwupd.RestartDaemon(ctx); err != nil {
 		s.Fatal("Failed to restart fwupd: ", err)
 	}
+
+	fwupdVersion, err := f.Fwupd.Version(ctx)
+	if err != nil {
+		s.Fatal("Unable to get FWUPD version: ", err)
+	}
+	s.Log("FWUPD version detected: ", fwupdVersion)
 }
 
 func (f *fwupdFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {}

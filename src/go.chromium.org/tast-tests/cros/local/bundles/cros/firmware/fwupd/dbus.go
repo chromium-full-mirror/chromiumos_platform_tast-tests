@@ -8,6 +8,7 @@ import (
 	"context"
 	"os"
 	"reflect"
+	"time"
 
 	"github.com/godbus/dbus/v5"
 
@@ -263,11 +264,16 @@ func (fwupd *Fwupd) DeviceDowngradeVersion(ctx context.Context, deviceID string)
 }
 
 // Version returns the version of fwupd daemon.
-func (fwupd *Fwupd) Version() (string, error) {
+func (fwupd *Fwupd) Version(ctx context.Context) (string, error) {
 	var version dbus.Variant
 	var err error
 
-	if version, err = fwupd.obj.GetProperty(DbusInterface + ".DaemonVersion"); err != nil {
+	// Test may restart fwupd before running. Wait for fwupd to initialize.
+	// Setting timeout at arbitrary 10 seconds.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		version, err = fwupd.obj.GetProperty(DbusInterface + ".DaemonVersion")
+		return err
+	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
 		return "", errors.Wrap(err, "failed to get FWUPD version")
 	}
 

@@ -80,14 +80,9 @@ func init() {
 func FwupdDeviceDfu(ctx context.Context, s *testing.State) {
 	fwd := s.FixtValue().(*fwupd.FixtData).Fwupd
 
-	fwupdVersion, err := fwd.Version()
-	if err != nil {
-		s.Fatal("Unable to get FWUPD version: ", err)
-	}
-	s.Log("FWUPD version detected: ", fwupdVersion)
-
 	var device *fwupd.Device
 	var target string
+	var err error
 	// Device ID or GUID are required,
 	// if both passed -- the device ID is preferable.
 	if expectedID, ok := s.Var("fwupd.deviceId"); ok {
