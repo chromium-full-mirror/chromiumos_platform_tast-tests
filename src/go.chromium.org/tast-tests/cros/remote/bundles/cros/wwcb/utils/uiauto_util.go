@@ -282,7 +282,7 @@ func OpenDeviceSettings(ctx context.Context, subItem string, appsSvc pb.AppsServ
 		return errors.Wrap(err, "click device button")
 	}
 
-	if _, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: subItemFinder}); err != nil {
+	if _, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: subItemFinder, Timeout: durationpb.New(time.Duration(10) * time.Second)}); err != nil {
 		return errors.Wrapf(err, "wait %s button", subItem)
 	}
 	if _, err := uiautoSvc.DoDefault(ctx, &ui.DoDefaultRequest{Finder: subItemFinder}); err != nil {
