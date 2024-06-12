@@ -225,7 +225,9 @@ class AnalysisTest(unittest.TestCase):
         )
         self.assertEqual(
             {test_three_path: before_samples[test_three_path]},
-            analyze_results._prune_regex_include(before_samples, "Test\.Three"),
+            analyze_results._prune_regex_include(
+                before_samples, r"Test\.Three"
+            ),
         )
         self.assertEqual(
             {test_three_path: before_samples[test_three_path]},
@@ -238,7 +240,7 @@ class AnalysisTest(unittest.TestCase):
         self.assertEqual(
             {test_three_path: after_samples[test_three_path]},
             analyze_results._prune_regex_include(
-                after_samples, "^ui\.OverviewPerf\.Test\.Three\.average$"
+                after_samples, r"^ui\.OverviewPerf\.Test\.Three\.average$"
             ),
         )
 
@@ -258,7 +260,9 @@ class AnalysisTest(unittest.TestCase):
         )
         self.assertEqual(
             {k: v for k, v in before_samples.items() if k != test_three_path},
-            analyze_results._prune_regex_exclude(before_samples, "Test\.Three"),
+            analyze_results._prune_regex_exclude(
+                before_samples, r"Test\.Three"
+            ),
         )
         self.assertEqual(
             {k: v for k, v in before_samples.items() if k != test_three_path},
@@ -271,7 +275,7 @@ class AnalysisTest(unittest.TestCase):
         self.assertEqual(
             {k: v for k, v in after_samples.items() if k != test_three_path},
             analyze_results._prune_regex_exclude(
-                after_samples, "^ui\.OverviewPerf\.Test\.Three\.average$"
+                after_samples, r"^ui\.OverviewPerf\.Test\.Three\.average$"
             ),
         )
 

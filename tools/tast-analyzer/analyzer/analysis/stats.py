@@ -26,13 +26,26 @@ def mannwhitneyu(
     """Computes the Mann-Whitney U-statistic between two metric samples.
 
     Args:
-      s1: The first metric sample.
-      s2: The second metric sample.
+        s1: The first metric sample.
+        s2: The second metric sample.
 
     Returns:
-      A MannWhitneyUResult with the U-statistic and p-value.
+        A MannWhitneyUResult with the U-statistic and p-value.
     """
     x = list(s1.value_map.values())
     y = list(s2.value_map.values())
     u, p = stats.mannwhitneyu(x, y, alternative="two-sided")
     return MannWhitneyUResult(u=u, p=p)
+
+
+def signed_change(before: float, after: float) -> float:
+    """Returns the signed change proportion between two values.
+
+    Args:
+        before: The value before the change.
+        after: The value after the change.
+
+    Returns:
+        The signed change as a proportion.
+    """
+    return (after - before) / before

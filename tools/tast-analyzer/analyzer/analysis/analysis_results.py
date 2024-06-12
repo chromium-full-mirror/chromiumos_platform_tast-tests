@@ -47,9 +47,16 @@ class AnalysisResult:
     def summary(self) -> str:
         """Returns a human readable summary of this result."""
         s = f"{self.before_sample.metric_path}:\n"
+
+        signed_change = stats.signed_change(
+            self.before_sample.mean(), self.after_sample.mean()
+        )
         s += (
             f"  {self.mwu_result.summary()}, "
-            f"dir={self.before_sample.improvement_direction}\n"
+            f"dir={self.before_sample.improvement_direction}, "
+            f"n=({len(self.before_sample.value_map)}, "
+            f"{len(self.after_sample.value_map)}), "
+            f"%change={100.0*signed_change:.2f}\n"
         )
         s += self.before_sample.description() + "\n"
         s += self.after_sample.description()
