@@ -39,6 +39,15 @@ func init() {
 		SetUpTimeout:    FixtureSetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: ResetTimeout,
+		Params: []testing.FixtureParam{
+			// The default fixture using no param.
+			{},
+			// The fixture using Ethernet-hide.
+			{
+				Name:   "ehide",
+				Parent: "ehide",
+			},
+		},
 	})
 
 	testing.AddFixture(&testing.Fixture{

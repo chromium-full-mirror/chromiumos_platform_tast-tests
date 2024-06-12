@@ -44,7 +44,7 @@ func init() {
 			Val: dnsProxyCaptivePortalTestParams{
 				relog: false,
 			},
-			Fixture: "chromeLoggedIn",
+			Fixture: "chromeLoggedIn.ehide",
 			Timeout: 3 * time.Minute,
 		}, {
 			Name: "relog",
@@ -52,6 +52,7 @@ func init() {
 				relog: true,
 			},
 			ExtraSoftwareDeps: []string{"arc"},
+			Fixture:           "ehide",
 			Timeout:           10 * time.Minute,
 		}},
 	})
@@ -67,22 +68,6 @@ func DNSProxyCaptivePortal(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create manager proxy: ", err)
 	}
 
-	// Disable the physical ethernet so that the only Ethernet service
-	// available is the veth service created below.
-	if enableFunc, err := m.DisableTechnologyForTesting(ctx, shill.TechnologyEthernet); err != nil {
-		s.Fatal("Unable to disable Ethernet: ", err)
-	} else if enableFunc != nil {
-		newCtx, cancel := ctxutil.Shorten(ctx, shill.EnableWaitTime)
-		defer cancel()
-		defer enableFunc(ctx)
-		ctx = newCtx
-	}
-
-	if enabled, err := m.IsEnabled(ctx, shill.TechnologyEthernet); err != nil {
-		s.Fatal("Error calling IsEnabled: ", err)
-	} else if enabled {
-		s.Fatal("Ethernet is still enabled")
-	}
 	if err := m.EnablePortalDetection(ctx); err != nil {
 		s.Fatal("Enable Portal Detection failed: ", err)
 	}
