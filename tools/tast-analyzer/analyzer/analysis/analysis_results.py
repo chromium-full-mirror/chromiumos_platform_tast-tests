@@ -8,7 +8,7 @@ import logging
 
 from analyzer.analysis import analysis_cfg
 from analyzer.analysis import metric_sample
-from analyzer.analysis import stats
+from analyzer.analysis import stats_util
 from analyzer.analysis.metric_sample import MetricSample
 
 
@@ -20,7 +20,7 @@ class AnalysisResult:
     after_sample: MetricSample
     """The sample corresponding to the experiment group."""
 
-    mwu_result: stats.MannWhitneyUResult
+    mwu_result: stats_util.MannWhitneyUResult
     """The result of the analysis using the MannWhitneyU test."""
 
     def __post__init__(self) -> None:
@@ -44,19 +44,26 @@ class AnalysisResult:
         """Returns if going up is better for this metric."""
         return self.before_sample.improvement_direction.is_up_better()
 
+    def mean_change_better(self) -> float:
+        """Returns the proportion change by which the mean has gotten better."""
+        change = stats_util.signed_change(
+            self.before_sample.mean(), self.after_sample.mean()
+        )
+        if self.is_up_better():
+            return change
+        else:
+            return -change
+
     def summary(self) -> str:
         """Returns a human readable summary of this result."""
         s = f"{self.before_sample.metric_path}:\n"
 
-        signed_change = stats.signed_change(
-            self.before_sample.mean(), self.after_sample.mean()
-        )
         s += (
             f"  {self.mwu_result.summary()}, "
             f"dir={self.before_sample.improvement_direction}, "
             f"n=({len(self.before_sample.value_map)}, "
             f"{len(self.after_sample.value_map)}), "
-            f"%change={100.0*signed_change:.2f}\n"
+            f"%better={100.0*self.mean_change_better():.2f}%\n"
         )
         s += self.before_sample.description() + "\n"
         s += self.after_sample.description()
@@ -125,7 +132,7 @@ def generate_analysis_results(
         before_sample = before_samples[metric_path]
         after_sample = after_samples[metric_path]
 
-        mwu_result = stats.mannwhitneyu(before_sample, after_sample)
+        mwu_result = stats_util.mannwhitneyu(before_sample, after_sample)
         out.append(
             AnalysisResult(
                 before_sample=before_sample,

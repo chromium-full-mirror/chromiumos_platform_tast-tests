@@ -6,6 +6,7 @@
 import dataclasses
 import enum
 from pathlib import Path
+import statistics
 
 from analyzer.analysis import analysis_cfg
 from analyzer.analysis import analysis_results
@@ -15,11 +16,9 @@ import click
 
 
 class _CliAnalysis(enum.StrEnum):
-    PRINT_BETTER_WORSE = "print_better_worse"
     PRINT_TEST_BREAKDOWN = "print_test_breakdown"
     PRINT_BY_PCT_CHANGE = "print_by_pct_change"
-    PRINT_BY_T_STAT = "print_by_t_stat"
-    PRINT_MEAN_PCT_CHANGE = "print_mean_pct_change"
+    PRINT_MEDIAN_PCT_CHANGE = "print_median_pct_change"
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True, order=True)
@@ -50,18 +49,50 @@ def _compare_results(
 ) -> None:
     better, worse = analysis_results.split_better_and_worse_by_mean(results)
 
+    print(f"Comparison from {s1_name} to {s2_name}:")
     print(f"{len(results)} metrics, {len(better)} better, {len(worse)} worse")
 
-    if _CliAnalysis.PRINT_BETTER_WORSE in analyses:
-        print(f"{len(worse)} GOT WORSE FROM {s1_name} to {s2_name}")
-        _print_results(worse)
+    def mean_change_key(r: analysis_results.AnalysisResult) -> float:
+        return r.mean_change_better()
+
+    if _CliAnalysis.PRINT_BY_PCT_CHANGE in analyses:
+        better_by_pct_change = sorted(better, key=mean_change_key, reverse=True)
+        worse_by_pct_change = sorted(worse, key=mean_change_key)
+        print(f"{len(better_by_pct_change)} better by %change of mean")
+        _print_results(better_by_pct_change)
+        print()
+        print(f"{len(worse_by_pct_change)} worse by %change of mean")
+        _print_results(worse_by_pct_change)
         print()
 
-        print(f"{len(better)} GOT BETTER FROM {s1_name} to {s2_name}")
-        _print_results(better)
-        print()
+    if _CliAnalysis.PRINT_TEST_BREAKDOWN in analyses:
+        test_names = sorted(set(r.test_name() for r in results))
+        better_by_test = {
+            name: [r for r in better if r.test_name() == name]
+            for name in test_names
+        }
+        worse_by_test = {
+            name: [r for r in worse if r.test_name() == name]
+            for name in test_names
+        }
 
-    # TODO: implement other analyses
+        for test_name in test_names:
+            print("Better for", test_name)
+            better = sorted(
+                better_by_test[test_name], key=mean_change_key, reverse=True
+            )
+            _print_results(better)
+            print()
+            print("Worse for", test_name)
+            worse = sorted(worse_by_test[test_name], key=mean_change_key)
+            _print_results(worse)
+            print()
+            print()
+
+    if _CliAnalysis.PRINT_MEDIAN_PCT_CHANGE in analyses:
+        change_better = [r.mean_change_better() for r in results]
+        median = statistics.median(change_better)
+        print(f"Median improvement in mean: {100.0*median:.2}%")
 
 
 @click.command()
@@ -74,6 +105,14 @@ def _compare_results(
     help="stats tests",
     nargs=2,
     required=True,
+)
+@click.option(
+    "-a",
+    "--analyses",
+    type=click.Choice(list(_CliAnalysis)),
+    help="analyses to run",
+    default=[_CliAnalysis.PRINT_TEST_BREAKDOWN],
+    multiple=True,
 )
 @click.option(
     "--skip-all-zero/--no-skip-all-zero",
@@ -121,6 +160,7 @@ def _compare_results(
 )
 def print_results(
     compare: list[Path],
+    analyses: list[_CliAnalysis],
     skip_all_zero: bool,
     minimum_sample_size: int,
     alpha_value: float,
@@ -139,7 +179,7 @@ def print_results(
         remove_outliers=remove_outliers,
     )
 
-    clicfg = _CliFrontendCfg(cfg=cfg)
+    clicfg = _CliFrontendCfg(cfg=cfg, analyses=analyses)
     results = analyze_results.analyze_results(
         compare[0], compare[1], clicfg.cfg
     )

@@ -9,7 +9,7 @@ from analyzer.analysis import analysis_cfg
 from analyzer.analysis import analysis_results
 from analyzer.analysis import analyze_results
 from analyzer.analysis import metric_sample
-from analyzer.analysis import stats
+from analyzer.analysis import stats_util
 from analyzer.backend import tast_results_dir
 
 
@@ -157,12 +157,12 @@ class AnalysisTest(unittest.TestCase):
         better_result = analysis_results.AnalysisResult(
             before_sample=before_samples[metric_paths[0]],
             after_sample=after_samples[metric_paths[0]],
-            mwu_result=stats.MannWhitneyUResult(u=0.0, p=1.0),
+            mwu_result=stats_util.MannWhitneyUResult(u=0.0, p=1.0),
         )
         worse_result = analysis_results.AnalysisResult(
             before_sample=before_samples[metric_paths[1]],
             after_sample=after_samples[metric_paths[1]],
-            mwu_result=stats.MannWhitneyUResult(u=1.0, p=1.0),
+            mwu_result=stats_util.MannWhitneyUResult(u=1.0, p=1.0),
         )
         self.assertEqual(
             results,
@@ -189,7 +189,7 @@ class AnalysisTest(unittest.TestCase):
         return analysis_results.AnalysisResult(
             before_sample=placeholder,
             after_sample=placeholder,
-            mwu_result=stats.MannWhitneyUResult(u=u, p=p),
+            mwu_result=stats_util.MannWhitneyUResult(u=u, p=p),
         )
 
     def test_prune_non_significant_results(self) -> None:
