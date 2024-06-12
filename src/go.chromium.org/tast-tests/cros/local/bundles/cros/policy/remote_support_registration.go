@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast/core/testing"
 
 	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
@@ -39,8 +40,7 @@ func init() {
 		},
 		BugComponent: "b:1129862",
 		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
-		SoftwareDeps: []string{"chrome"},
-		Vars:         []string{"policy.managedUserAccountPool"},
+		SoftwareDeps: []string{"chrome", "gaia"},
 		Timeout:      3 * time.Minute,
 		Params: []testing.Param{{
 			Fixture: fixture.FakeDMS,
@@ -63,7 +63,7 @@ func RemoteSupportRegistration(ctx context.Context, s *testing.State) {
 	isLacros := s.Param().(browser.Type) == browser.TypeLacros
 
 	gaiaCreds, err := credconfig.PickRandomCreds(
-		s.RequiredVar("policy.managedUserAccountPool"))
+		dma.CredsFromPool(policy.ManagedUserAccountPoolVarName))
 	if err != nil {
 		s.Fatal("Failed to parse managed user creds: ", err)
 	}

@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/arc"
 	"go.chromium.org/tast-tests/cros/common/connectivityfwdumps"
 	"go.chromium.org/tast-tests/cros/common/drivefs"
+	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/common/wallpaper"
 	"go.chromium.org/tast/core/testing"
@@ -32,6 +33,7 @@ func pools() (map[string]string, map[string]string) {
 		arc.ManagedAccountPoolVarName:               arc.ManagedDMAAccountPoolValue(),
 		wallpaper.GooglePhotosAccountPoolVarName:    wallpaper.GooglePhotosDMAAccountPoolValue(),
 		connectivityfwdumps.GaiaLoginAccountVarName: arc.ManagedDMAAccountPoolValue(),
+		policy.ManagedUserAccountPoolVarName:        arc.ManagedDMAAccountPoolValue(),
 	}
 
 	var regularPools = map[string]string{
@@ -42,6 +44,7 @@ func pools() (map[string]string, map[string]string) {
 		arc.ManagedAccountPoolVarName:               arc.ManagedAccountPoolValue(),
 		wallpaper.GooglePhotosAccountPoolVarName:    wallpaper.GooglePhotosAccountPoolValue(),
 		connectivityfwdumps.GaiaLoginAccountVarName: connectivityfwdumps.GaiaLoginAccountValue(),
+		policy.ManagedUserAccountPoolVarName:        policy.ManagedUserAccountPoolValue(),
 	}
 
 	return dmaPools, regularPools

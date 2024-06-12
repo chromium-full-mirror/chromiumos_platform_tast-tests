@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast/core/testing"
 
 	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
@@ -41,8 +42,8 @@ func init() {
 			"group:hardware",
 			"group:hw_agnostic",
 		},
-		SoftwareDeps: []string{"chrome"},
-		VarDeps:      []string{"policy.managedUserAccountPool"},
+		SoftwareDeps: []string{"chrome", "gaia"},
+		VarDeps:      []string{policy.ManagedUserAccountPoolVarName},
 		Fixture:      fixture.FakeDMS,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.WallpaperGooglePhotosIntegrationEnabled{},
@@ -60,7 +61,7 @@ func WallpaperGooglePhotosIntegrationEnabled(ctx context.Context, s *testing.Sta
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 
 	gaiaCreds, err := credconfig.PickRandomCreds(
-		s.RequiredVar("policy.managedUserAccountPool"))
+		dma.CredsFromPool(policy.ManagedUserAccountPoolVarName))
 	if err != nil {
 		s.Fatal("Failed to parse managed user cred: ", err)
 	}

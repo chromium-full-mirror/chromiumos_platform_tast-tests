@@ -15,6 +15,7 @@ import (
 	"golang.org/x/exp/slices"
 
 	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
@@ -66,10 +67,10 @@ func init() {
 			"shahinmd@google.com", // Test author.
 		},
 		BugComponent: "b:1129862",
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "gaia"},
 		Vars:         []string{tbuVar},
 		Attr:         []string{"group:golden_tier"},
-		VarDeps: []string{"policy.managedUserAccountPool",
+		VarDeps: []string{policy.ManagedUserAccountPoolVarName,
 			"ui.bond_credentials"},
 		Params: []testing.Param{{
 			Name:    "umbrella",
@@ -343,7 +344,7 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 	}
 	defer kb.Close(cleanupCtx)
 
-	gaiaCreds, err := credconfig.PickRandomCreds(s.RequiredVar("policy.managedUserAccountPool"))
+	gaiaCreds, err := credconfig.PickRandomCreds(dma.CredsFromPool(policy.ManagedUserAccountPoolVarName))
 	if err != nil {
 		s.Fatal("Failed to parse managed user creds: ", err)
 	}

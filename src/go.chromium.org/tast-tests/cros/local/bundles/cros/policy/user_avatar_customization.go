@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
@@ -43,7 +44,7 @@ func init() {
 			"group:hw_agnostic",
 		},
 		SoftwareDeps: []string{"chrome"},
-		VarDeps:      []string{"policy.managedUserAccountPool"},
+		VarDeps:      []string{policy.ManagedUserAccountPoolVarName},
 		Timeout:      5 * time.Minute,
 		Fixture:      fixture.FakeDMS,
 		SearchFlags: []*testing.StringPair{
@@ -66,7 +67,7 @@ func UserAvatarCustomization(ctx context.Context, s *testing.State) {
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 
 	gaiaCreds, err := credconfig.PickRandomCreds(
-		s.RequiredVar("policy.managedUserAccountPool"))
+		dma.CredsFromPool(policy.ManagedUserAccountPoolVarName))
 	if err != nil {
 		s.Fatal("Failed to parse managed user creds: ", err)
 	}

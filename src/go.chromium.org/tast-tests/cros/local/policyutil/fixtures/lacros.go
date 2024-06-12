@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
@@ -99,7 +100,7 @@ func init() {
 		TearDownTimeout: chrome.ResetTimeout,
 		PostTestTimeout: 15 * time.Second,
 		Parent:          fixture.PersistentLacros,
-		Vars:            []string{"policy.ManagedUser.accountPool"},
+		Vars:            []string{policy.ManagedUserAccountPoolVarName},
 	})
 
 	// LacrosPolicyRealUserLoggedIn is similar to LacrosPolicyLoggedInRealUser, but instead starts up a Chrome instance
@@ -278,7 +279,7 @@ func (p *policyRealUserFixture) SetUp(ctx context.Context, s *testing.FixtState)
 	}
 	p.fdms = fdms
 
-	gaiaCreds, err := credconfig.PickRandomCreds(s.RequiredVar("policy.ManagedUser.accountPool"))
+	gaiaCreds, err := credconfig.PickRandomCreds(dma.CredsFromPool(policy.ManagedUserAccountPoolVarName))
 	if err != nil {
 		s.Fatal("Failed to parse managed user creds: ", err)
 	}
