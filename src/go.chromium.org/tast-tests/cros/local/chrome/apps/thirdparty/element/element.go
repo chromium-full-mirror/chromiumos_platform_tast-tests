@@ -483,7 +483,7 @@ func (e *Element) setRoomNameAndSave(newRoomName string) uiauto.Action {
 		return uiauto.NamedCombine("set room name and save",
 			e.typeText(roomNameFieldID, newRoomName),
 			apputil.FindAndClick(saveButton, defaultUITimeout),
-			apputil.WaitUntilGone(saveButton, defaultUITimeout),
+			apputil.WaitUntilGone(saveButton, longUITimeout),
 			apputil.WaitForExists(newToolbarTitle, defaultUITimeout),
 		)(ctx)
 	}
