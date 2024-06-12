@@ -109,6 +109,11 @@ func ExternalMouseSpeedAndPrimaryButton(ctx context.Context, s *testing.State) {
 	if err := utils.ControlFixture(ctx, USBID, "on"); err != nil {
 		s.Fatal("Failed to replug the external mouse: ", err)
 	}
+
+	// Initial mouse movement required for ChromeOS to recognize the mouse emulator
+	if err := utils.MouseMove(ctx, 50, 50); err != nil {
+		s.Fatal("Failed to move mouse: ", err)
+	}
 	if err := verifyMouseSpeed(ctx, appsSvc, uiautoSvc, fs, detectMouseSpeed); err != nil {
 		s.Fatal("Failed to verify mouse speed after replug: ", err)
 	}
@@ -126,6 +131,10 @@ func ExternalMouseSpeedAndPrimaryButton(ctx context.Context, s *testing.State) {
 	loginReq = &ui.NewRequest{LoginMode: ui.LoginMode_LOGIN_MODE_GUEST_LOGIN}
 	if _, err := cs.New(ctx, loginReq, grpc.WaitForReady(true)); err != nil {
 		s.Fatal("Failed to sign in as guest: ", err)
+	}
+	// Initial mouse movement required for ChromeOS to recognize the mouse emulator
+	if err := utils.MouseMove(ctx, 50, 50); err != nil {
+		s.Fatal("Failed to move mouse: ", err)
 	}
 	if err := utils.VerifyGuestLearnMore(ctx, appsSvc, uiautoSvc); err != nil {
 		s.Fatal("Failed to verify guest learn more: ", err)

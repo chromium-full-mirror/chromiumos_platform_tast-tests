@@ -16,6 +16,7 @@ import (
 	inputspb "go.chromium.org/tast-tests/cros/services/cros/inputs"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	"google.golang.org/grpc"
+        durationpb "google.golang.org/protobuf/types/known/durationpb"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
@@ -282,7 +283,7 @@ func OpenDeviceSettings(ctx context.Context, subItem string, appsSvc pb.AppsServ
 		return errors.Wrap(err, "click device button")
 	}
 
-	if _, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: subItemFinder}); err != nil {
+	if _, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: subItemFinder, Timeout: durationpb.New(time.Duration(10) * time.Second)}); err != nil {
 		return errors.Wrapf(err, "wait %s button", subItem)
 	}
 	if _, err := uiautoSvc.DoDefault(ctx, &ui.DoDefaultRequest{Finder: subItemFinder}); err != nil {
