@@ -403,7 +403,7 @@ func CreateWifiRouterEnv(ctx context.Context, apIf string, m *shill.Manager, poo
 	}
 
 	// Remove the DHCP lease file if it exists one to make sure we have a clean setup.
-	leaseFile := fmt.Sprintf("/var/lib/dhcpcd/wifi_any_%s_managed_none.lease", hexSSID)
+	leaseFile := fmt.Sprintf("/var/lib/dhcpcd7/wifi_any_%s_managed_none.lease", hexSSID)
 	if _, err := os.Stat(leaseFile); err == nil {
 		testing.ContextLogf(ctx, "DHCP lease file exists for %s, removing it", ssid)
 		if err := os.Remove(leaseFile); err != nil {
