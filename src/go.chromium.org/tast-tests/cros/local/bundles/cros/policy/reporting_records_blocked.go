@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"go.chromium.org/chromiumos/reporting"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
@@ -46,24 +45,6 @@ func init() {
 	})
 }
 
-func triggerLockUnlockEvent(ctx context.Context, tconn *chrome.TestConn, keyboard *input.KeyboardEventWriter, username, password string) error {
-	// Lock the screen
-	if err := quicksettings.LockScreen(ctx, tconn); err != nil {
-		return errors.Wrap(err, "fail to lock")
-	}
-
-	// Unlock the screen.
-	if err := lockscreen.WaitForPasswordField(ctx, tconn, username, 10*time.Second); err != nil {
-		return errors.Wrap(err, "failed to wait for the password field")
-	}
-
-	if err := lockscreen.EnterPassword(ctx, tconn, username, password, keyboard); err != nil {
-		return errors.Wrap(err, "failed to enter password")
-	}
-
-	return nil
-}
-
 func ReportingRecordsBlocked(ctx context.Context, s *testing.State) {
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 	// Update affiliation and policies.
@@ -93,9 +74,18 @@ func ReportingRecordsBlocked(ctx context.Context, s *testing.State) {
 		s.Fatal("Reporting server creation failed: ", err)
 	}
 
+	// Set the fake config file on the go to block the lock/unlock destination.
+	testing.ContextLog(ctx, "Reporting: Setting the fake config file")
+	server.SetFakeConfigFile(&erpserver.ResponseConfigFile{
+		Version:             111111,
+		ConfigFileSignature: "XjZLPbyAJuhpG0khSHNU7uexbuyLil9ceZcEE7zjRchZytV0ybMoRO59JjbVHHeTNpPslw7rpyg6px3J+so2DA==",
+		BlockedEventConfigs: []erpserver.EventConfig{erpserver.EventConfig{
+			Destination: "LOCK_UNLOCK_EVENTS",
+		}}})
+
 	// Setting filter to only return lock unlock and login logout events.
 	server.SetFilter(func(wr *reporting.WrappedRecord) bool {
-		return *wr.Record.Destination == reporting.Destination_LOCK_UNLOCK_EVENTS || *wr.Record.Destination == reporting.Destination_LOGIN_LOGOUT_EVENTS || *wr.Record.Destination == reporting.Destination_PERIPHERAL_EVENTS
+		return *wr.Record.Destination == reporting.Destination_LOCK_UNLOCK_EVENTS || *wr.Record.Destination == reporting.Destination_LOGIN_LOGOUT_EVENTS
 	})
 
 	// Start the server.
@@ -127,59 +117,20 @@ func ReportingRecordsBlocked(ctx context.Context, s *testing.State) {
 	}
 	defer keyboard.Close(ctx)
 
-	// Trigger lock and unlock events.
-	testing.ContextLog(ctx, "Triggering lock/unlock events")
-	if err := triggerLockUnlockEvent(ctx, tconn, keyboard, fixtures.Username, fixtures.Password); err != nil {
-		s.Fatal("Failed to trigger lock unlock event and USB event: ", err)
-	}
-
-	testing.ContextLog(ctx, "Checking the events")
-	ch := make(chan *reporting.WrappedRecord)
-	lockUnlockEvents := 0
-	loginLogoutEvents := 0
-	// We are supposed to get 3 events, 1 login record and 2 lock/unlock records.
-	for i := 0; i < 3; i++ {
-		go func() {
-			record := server.NextRecord()
-			ch <- record
-		}()
-	}
-	for i := 0; i < 3; i++ {
-		record := <-ch
-		if record == nil {
-			s.Errorf("Record %d is nil", i)
-		}
-		if *record.Record.Destination == reporting.Destination_LOCK_UNLOCK_EVENTS {
-			lockUnlockEvents++
-		} else if *record.Record.Destination == reporting.Destination_LOGIN_LOGOUT_EVENTS {
-			loginLogoutEvents++
-		}
-		testing.ContextLog(ctx, "current event: ", record)
-	}
-
-	if lockUnlockEvents != 2 && loginLogoutEvents != 1 {
-		s.Errorf("Expected 2 lock unlock events and 1 peripheral event, got %d lock unlock events and %d login logout events", lockUnlockEvents, loginLogoutEvents)
-	}
-
-	// Set the fake config file on the go to block the lock/unlock destination.
-	testing.ContextLog(ctx, "Setting the fake config file")
-	server.SetFakeConfigFile(&erpserver.ResponseConfigFile{
-		Version:             111111,
-		ConfigFileSignature: "XjZLPbyAJuhpG0khSHNU7uexbuyLil9ceZcEE7zjRchZytV0ybMoRO59JjbVHHeTNpPslw7rpyg6px3J+so2DA==",
-		BlockedEventConfigs: []erpserver.EventConfig{erpserver.EventConfig{
-			Destination: "LOCK_UNLOCK_EVENTS",
-		}}})
-
-	testing.ContextLog(ctx, "Sleeping for 2 mins")
-	// GoBigSleepLint: Let 2 minutes pass to make sure that the configuration gets populated.
-	if err := testing.Sleep(ctx, 2*time.Minute); err != nil {
-		s.Fatal("Failed to sleep for 2 minutes: ", err)
-	}
-
 	// Trigger lock and unlock events. Both of this events shouldn't be reported since we blocked the destination.
-	testing.ContextLog(ctx, "Triggering lock/unlock and logout events")
-	if err := triggerLockUnlockEvent(ctx, tconn, keyboard, fixtures.Username, fixtures.Password); err != nil {
-		s.Fatal("Failed to trigger lock unlock event and USB event: ", err)
+	testing.ContextLog(ctx, "Reporting: Triggering lock/unlock and logout events")
+	// Lock the screen
+	if err := quicksettings.LockScreen(ctx, tconn); err != nil {
+		s.Fatal("Failed to lock: ", err)
+	}
+
+	// Unlock the screen.
+	if err := lockscreen.WaitForPasswordField(ctx, tconn, fixtures.Username, 10*time.Second); err != nil {
+		s.Fatal("Failed to unlock: ", err)
+	}
+
+	if err := lockscreen.EnterPassword(ctx, tconn, fixtures.Username, fixtures.Password, keyboard); err != nil {
+		s.Fatal("Failed to enter password: ", err)
 	}
 
 	// Trigger a logout event. Only this one should be reported.
@@ -187,12 +138,23 @@ func ReportingRecordsBlocked(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to logout: ", err)
 	}
 
-	// Verify that the logout event got reported correctly.
-	record := server.NextRecord()
-	if record == nil {
-		s.Fatal("Record is nil")
+	ch := make(chan *reporting.WrappedRecord)
+	// We are supposed to get 2 events, 1 login record and 1 logout record.
+	// The lock/unlock records should not get reported since we blocked that destination.
+	for i := 0; i < 2; i++ {
+		go func() {
+			record := server.NextRecord()
+			ch <- record
+		}()
 	}
-	if *record.Record.Destination != reporting.Destination_LOGIN_LOGOUT_EVENTS {
-		s.Fatal("Record is not login/logout destination, got destination = ", *record.Record.Destination)
+	for i := 0; i < 2; i++ {
+		record := <-ch
+		if record == nil {
+			s.Errorf("Record %d is nil", i)
+		}
+
+		if *record.Record.Destination != reporting.Destination_LOGIN_LOGOUT_EVENTS {
+			s.Fatal("Expected login logout event, got: ", record, "wanted: LOGIN_LOGOUT_EVENTS")
+		}
 	}
 }
