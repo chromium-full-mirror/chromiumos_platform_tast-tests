@@ -10,21 +10,11 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/media/caps"
+	"go.chromium.org/tast-tests/cros/local/camera/testutil"
 	"go.chromium.org/tast-tests/cros/local/gtest"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
-
-// TODO(b/331445568): Skip until we solve the flakiness. Remove when resolved.
-var flakyModel = []string{"homestar"}
-
-// TODO(b/243048705): skip the test on faulty flash. Remove when resolved.
-var flakyCamera1 = []string{"0408:3028", "0408:4021", "05c8:03f4"}
-
-// TODO(b/340123520): skip the test on flaky camera. Remove when resolved.
-var flakyCamera2 = []string{"13d3:56ec"}
-
-var flakyCamera = append(flakyCamera1, flakyCamera2...)
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -38,14 +28,14 @@ func init() {
 		Fixture:      fixture.CameraConnectorReady,
 		Params: []testing.Param{
 			{
-				ExtraHardwareDeps: hwdep.D(hwdep.CameraEnumerated(), hwdep.SkipOnModel(flakyModel...), hwdep.SkipOnCameraUSBModule(flakyCamera...)),
+				ExtraHardwareDeps: hwdep.D(hwdep.CameraEnumerated(), hwdep.SkipOnModel(testutil.FlakyMIPIModel...), hwdep.SkipOnCameraUSBModule(testutil.FlakyUSBCamera...)),
 			}, {
 				Name:              "flaky_model",
-				ExtraHardwareDeps: hwdep.D(hwdep.Model(flakyModel...)),
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(testutil.FlakyMIPIModel...)),
 				ExtraAttr:         []string{"informational"},
 			}, {
 				Name:              "flaky_camera",
-				ExtraHardwareDeps: hwdep.D(hwdep.CameraUSBModule(flakyCamera...)),
+				ExtraHardwareDeps: hwdep.D(hwdep.CameraUSBModule(testutil.FlakyUSBCamera...)),
 				ExtraAttr:         []string{"informational"},
 			},
 		},

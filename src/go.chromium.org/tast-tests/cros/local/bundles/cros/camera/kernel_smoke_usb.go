@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/crosconfig"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -32,6 +33,15 @@ func init() {
 		Attr:         []string{"group:mainline", "informational", "group:camera-stability", "group:camera-kernelnext"},
 		SoftwareDeps: []string{caps.BuiltinUSBCamera},
 		Fixture:      fixture.CameraServiceStopped,
+		Params: []testing.Param{
+			{
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnCameraUSBModule(testutil.FlakyUSBCamera...)),
+			}, {
+				Name:              "flaky_camera",
+				ExtraHardwareDeps: hwdep.D(hwdep.CameraUSBModule(testutil.FlakyUSBCamera...)),
+				ExtraAttr:         []string{"informational"},
+			},
+		},
 	})
 }
 
