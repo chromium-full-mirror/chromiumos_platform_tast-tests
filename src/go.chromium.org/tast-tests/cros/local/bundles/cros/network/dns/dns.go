@@ -426,7 +426,7 @@ func DigMatch(ctx context.Context, re *regexp.Regexp, match bool) error {
 // queryDNS queries DNS to |addr| through UDP port 53 and returns the response.
 func queryDNS(ctx context.Context, msg []byte, addr string) ([]byte, error) {
 	var d net.Dialer
-	conn, err := d.DialContext(ctx, "udp", addr+":53")
+	conn, err := d.DialContext(ctx, "udp", net.JoinHostPort(addr, "53"))
 	if err != nil {
 		return nil, err
 	}
