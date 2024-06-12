@@ -84,6 +84,11 @@ func InitSimulator(ctx context.Context) error {
 		if err := SinglePressKeyboard(ctx, ChatKeyCodes["G"].KeyCodeBytes, 100*time.Millisecond); err != nil {
 			return errors.Wrap(err, "failed to press 'g'")
 		}
+
+		// Initial mouse movement required for ChromeOS to recognize the mouse emulator
+		if err := MouseMove(ctx, 50, 50); err != nil {
+			return errors.Wrap(err, "failed to move mouse")
+		}
 	} else {
 		return errors.New("failed to find simulator")
 	}
