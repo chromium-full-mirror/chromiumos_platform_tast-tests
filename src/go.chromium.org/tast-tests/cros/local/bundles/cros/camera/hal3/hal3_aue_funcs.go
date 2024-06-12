@@ -92,6 +92,9 @@ func SetupAUE(ctx context.Context) (action.Action, error) {
 	}
 
 	const crosCameraAlgoJobName = "cros-camera-algo"
+	if !upstart.JobExists(ctx, crosCameraAlgoJobName) {
+		return func(ctx context.Context) error { return nil }, nil
+	}
 	if err := upstart.StopJob(ctx, crosCameraAlgoJobName); err != nil {
 		return nil, errors.Wrapf(err, "failed to stop job %q", crosCameraAlgoJobName)
 	}
