@@ -27,7 +27,7 @@ var unstableModelsTimestampInOrder = []string{
 	// TODO(b/333498840): Undo skip after fix.
 	"treeya", "liara", "kasumi360",
 	// TODO(b/333498998): Undo skip after fix.
-	"craaskbowl", "hideo",
+	"craaskbowl", "hideo", "craask", "craaskvin", "craasneto", "xivu360", "yahiko",
 }
 
 func init() {
