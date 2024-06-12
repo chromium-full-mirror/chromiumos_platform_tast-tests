@@ -35,6 +35,7 @@ func AdbSetup(ctx context.Context, phoneIP string) (*adb.Device, bool, error) {
 			break
 		} else {
 			testing.ContextLog(ctx, "Failed to launch adb server")
+			// GoBigSleepLint: Pre-existing call to sleep.
 			testing.Sleep(ctx, 3*time.Second)
 		}
 	}
@@ -61,6 +62,7 @@ func AdbSetup(ctx context.Context, phoneIP string) (*adb.Device, bool, error) {
 				break
 			} else {
 				testing.ContextLog(ctx, "Failed to list adb devices")
+				// GoBigSleepLint: Pre-existing call to sleep.
 				testing.Sleep(ctx, 3*time.Second)
 			}
 		}
@@ -177,22 +179,25 @@ func AddAccount(ctx context.Context, d *adb.Device, username, password string) e
 	// TODO(b/187795521): Re-adding the account immediately after removing it is flaky so retry until there is a deterministic indicator.
 	retries := 3
 	for i := 0; i < retries; i++ {
+		// GoBigSleepLint: Pre-existing call to sleep.
 		testing.Sleep(ctx, 3*time.Second)
 		addAccountCmd := d.ShellCommand(ctx, "am", "instrument", "-w",
 			"-e", "account", username, "-e", "password", password, "com.google.android.tradefed.account/.AddAccount",
 		)
-		accountAdded := true
-		if out, err := addAccountCmd.Output(); err != nil {
+
+		out, err := addAccountCmd.Output()
+		if err != nil {
 			testing.ContextLogf(ctx, "Failed to add account to the device (%v)", err.Error())
-			accountAdded = false
-		} else if !strings.Contains(string(out), "INSTRUMENTATION_RESULT: result=SUCCESS") {
+			continue
+		}
+
+		// Log when this happens, but attempt to proceed anyway
+		if !strings.Contains(string(out), "INSTRUMENTATION_RESULT: result=SUCCESS") {
 			testing.ContextLogf(ctx, "Failed to add account to the device (%v)", string(out))
-			accountAdded = false
 		}
-		if accountAdded {
-			testing.ContextLogf(ctx, "Nearby GAIA user added after %d attempts", i+1)
-			return nil
-		}
+
+		testing.ContextLogf(ctx, "Nearby GAIA user added after %d attempts", i+1)
+		return nil
 	}
 	return errors.New("failed to add GAIA acccount to Android after multiple attempts")
 }
@@ -271,6 +276,7 @@ func ConfigureDevice(ctx context.Context, d *adb.Device, rooted bool) error {
 			break
 		} else {
 			testing.ContextLog(ctx, "Failed to clear previous logcat logs")
+			// GoBigSleepLint: Pre-existing call to sleep.
 			testing.Sleep(ctx, 3*time.Second)
 		}
 	}
