@@ -181,9 +181,6 @@ func ShillCallboxHotspot(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to cellular service: ", err)
 	}
 
-	//TODO(b/267804414): SetTetheringAllowed is only needed during fishfooding and can be removed later.
-	helper.Manager.SetTetheringAllowed(ctx, true)
-
 	if err := helper.Manager.SetExperimentalTetheringFunctionality(ctx, true); err != nil {
 		s.Fatal("Unable to set ExperimentalTetheringFunctionality: ", err)
 	}

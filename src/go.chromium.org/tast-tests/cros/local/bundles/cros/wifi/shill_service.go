@@ -3837,22 +3837,6 @@ func (s *ShillService) startShillTethering(ctx context.Context, request *wifi.Te
 		}
 	}(ctx)
 
-	if err := manager.SetProperty(ctx, shillconst.ManagerTetheringAllowed, true); err != nil {
-		return errors.Wrap(err, "failed to set ManagerTetheringAllowed")
-	}
-	defer func(ctx context.Context) {
-		if retErr == nil {
-			return
-		}
-		if err := manager.SetProperty(ctx, shillconst.ManagerTetheringAllowed, false); err != nil {
-			if retErr != nil {
-				testing.ContextLogf(ctx, "Failed to remove profile %q and the test has already failed: %v", wifiTestProfileName, err)
-			} else {
-				retErr = errors.Wrapf(err, "failed to remove profile %q", wifiTestProfileName)
-			}
-		}
-	}(ctx)
-
 	if err := manager.ConfigureTethering(ctx, serviceProps); err != nil {
 		return errors.Wrap(err, "failed to configure tethering")
 	}
@@ -3927,9 +3911,6 @@ func (s *ShillService) stopShillTethering(ctx context.Context, request *wifi.Sto
 		utils.CollectFirstErr(ctx, &firstErr, errors.Wrapf(err, "failed to reach a correct tethering state %s", shillconst.TetheringStateIdle))
 	}
 
-	if err := manager.SetProperty(ctx, shillconst.ManagerTetheringAllowed, false); err != nil {
-		utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to clear ManagerTetheringAllowed"))
-	}
 	if err := manager.RemoveFakeUserProfile(ctx, wifiTestProfileName); err != nil {
 		utils.CollectFirstErr(ctx, &firstErr, errors.Wrapf(err, "failed to remove fake profile %q", wifiTestProfileName))
 	}

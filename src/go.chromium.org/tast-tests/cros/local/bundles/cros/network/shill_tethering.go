@@ -146,11 +146,6 @@ func ShillTethering(ctx context.Context, s *testing.State) {
 
 	// Configure and enable the tethering, and wait until the tethering is enabled.
 	s.Log("Enable the tething with the interface ", apIface, " with phy_index ", apPhyIndex, " into shill")
-	if err := shillMgr.SetTetheringAllowed(ctx, true); err != nil {
-		s.Fatal("Failed to enable tethering: ", err)
-	}
-	defer shillMgr.SetTetheringAllowed(cleanupCtx, false)
-
 	serviceProps := map[string]interface{}{
 		shillconst.TetheringConfBand:                      "2.4GHz",
 		shillconst.TetheringConfSSID:                      hex.EncodeToString([]byte(ssid)),

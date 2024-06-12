@@ -105,12 +105,6 @@ func ShillHotspotPreconditions(ctx context.Context, s *testing.State) {
 		cellular.CheckIfL850VerizonAndFixDefaultAPN(ctx)
 	}(cleanupCtx)
 
-	// TODO(b/267804414): Set tethering Allowed is only needed during fishfooding and can be removed later.
-	testing.ContextLog(ctx, "Set tethering allowed")
-	if err := helper.Manager.SetTetheringAllowed(ctx, true); err != nil {
-		s.Fatal("Unable to set tethering allowed: ", err)
-	}
-
 	if err := helper.Manager.SetExperimentalTetheringFunctionality(ctx, true); err != nil {
 		s.Fatal("Unable to set ExperimentalTetheringFunctionality: ", err)
 	}

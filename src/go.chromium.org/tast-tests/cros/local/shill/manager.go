@@ -1013,14 +1013,6 @@ func (m *Manager) CheckTetheringReadiness(ctx context.Context) (string, error) {
 	return status, nil
 }
 
-// SetTetheringAllowed sets the TetheringAllowed property.
-func (m *Manager) SetTetheringAllowed(ctx context.Context, allowed bool) error {
-	if err := m.SetProperty(ctx, shillconst.ManagerPropertyTetheringAllowed, allowed); err != nil {
-		return errors.Wrapf(err, "failed to set tethering allowed to %t", allowed)
-	}
-	return nil
-}
-
 // SetExperimentalTetheringFunctionality sets the ExperimentalTetheringFunctionality property.
 func (m *Manager) SetExperimentalTetheringFunctionality(ctx context.Context, value bool) error {
 	if err := m.SetProperty(ctx, shillconst.ManagerPropertyExperimentalTetheringFunctionality, value); err != nil {
