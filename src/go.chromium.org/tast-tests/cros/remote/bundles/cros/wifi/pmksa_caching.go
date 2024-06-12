@@ -48,11 +48,9 @@ func init() {
 		Desc: "Verifies that 802.1x authentication (EAP exchange) or non-Open authentication is bypassed if FT is enabled or PMKSA is done using PMK caching when it is available",
 		Contacts: []string{
 			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
-			"junyuu@chromium.org",             // Test author
 		},
-		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
-		// TODO: b/315386450 - Stabilize wifi.PMKSACaching test
-		Attr:            []string{"group:wificell", "wificell_func", "wificell_unstable"},
+		BugComponent:    "b:893827", // ChromeOS > Platform > Connectivity > WiFi
+		Attr:            []string{"group:wificell", "wificell_func"},
 		TestBedDeps:     []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
 		ServiceDeps:     []string{wificell.ShillServiceName},
 		Requirements:    []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
