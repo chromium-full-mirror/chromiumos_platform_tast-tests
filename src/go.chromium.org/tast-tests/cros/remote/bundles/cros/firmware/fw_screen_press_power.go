@@ -34,7 +34,7 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level2", "firmware_usb"},
-		Requirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
+		Requirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01"},
 		Vars:         []string{"firmware.skipFlashUSB"},
 		Timeout:      2 * time.Hour,
 		Params: []testing.Param{{
@@ -44,6 +44,7 @@ func init() {
 				bootMode:     fwCommon.BootModeDev,
 				bootToScreen: fwCommon.FwDeveloperScreen,
 			},
+			ExtraRequirements: []string{"sys-fw-0025-v01"},
 		}, {
 			Name:    "to_norm_screen",
 			Fixture: fixture.DevMode,
@@ -51,6 +52,7 @@ func init() {
 				bootMode:     fwCommon.BootModeDev,
 				bootToScreen: fwCommon.FwToNormScreen,
 			},
+			ExtraRequirements: []string{"sys-fw-0025-v01"},
 		}, {
 			Name:    "broken_screen",
 			Fixture: fixture.NormalMode,
@@ -58,6 +60,7 @@ func init() {
 				bootMode:     fwCommon.BootModeNormal,
 				bootToScreen: fwCommon.FwBrokenScreen,
 			},
+			ExtraRequirements: []string{"sys-fw-0025-v01"},
 		}, {
 			Name:    "rec_screen",
 			Fixture: fixture.NormalMode,
@@ -65,6 +68,7 @@ func init() {
 				bootMode:     fwCommon.BootModeNormal,
 				bootToScreen: fwCommon.FwRecoveryScreen,
 			},
+			ExtraAttr: []string{"firmware_ro"},
 		}, {
 			Name:    "invalid_screen",
 			Fixture: fixture.NormalMode,
@@ -72,6 +76,7 @@ func init() {
 				bootMode:     fwCommon.BootModeNormal,
 				bootToScreen: fwCommon.FwInvalidScreen,
 			},
+			ExtraRequirements: []string{"sys-fw-0025-v01"},
 		}},
 	})
 }
