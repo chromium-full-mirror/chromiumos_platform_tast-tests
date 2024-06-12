@@ -24,7 +24,7 @@ func init() {
 		Desc:         "Run single_frame_upsampler_test to verify libupsampler.so library works",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "julianachang@chromium.org"},
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
-		Attr:         []string{"group:camera_dependent", "group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"camera_feature_super_res"},
 		Data: []string{
 			upsamplerTestInputImage,

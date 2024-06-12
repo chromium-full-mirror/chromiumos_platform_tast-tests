@@ -44,7 +44,7 @@ func init() {
 		Contacts:     []string{"chromeos-camera-eng@google.com", "esker@chromium.org"},
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
 		VarDeps:      []string{"ui.bond_credentials"},
-		Attr:         []string{"group:crosbolt", "crosbolt_perbuild", "group:camera_dependent"},
+		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      initTimePNPGoogleMeetFeatureToggle + pnp.PNPTimeParams.Total + power.RecorderTimeout,
 		Params: []testing.Param{{

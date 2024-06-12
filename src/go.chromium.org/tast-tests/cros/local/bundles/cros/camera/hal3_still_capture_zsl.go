@@ -20,7 +20,7 @@ func init() {
 		Desc:         "Verifies camera still capture with ZSL function with HAL3 interface",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "beckerh@chromium.org", "xinggu@chromium.org"},
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
-		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera", "group:camera_dependent"},
+		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
 		SoftwareDeps: []string{"arc", "arc_camera3", "chrome", caps.BuiltinCamera},
 		Fixture:      "chromeLoggedIn",
 		Timeout:      3*time.Minute + hal3.AdditionalTimeout,

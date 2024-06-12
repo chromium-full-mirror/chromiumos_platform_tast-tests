@@ -20,7 +20,7 @@ func init() {
 		Desc:         "Verifies that CCA can take portrait mode photo",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
-		Attr:         []string{"group:mainline", "informational", "group:camera_dependent"},
+		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"camera_app", "camera_feature_portrait_mode", "chrome", caps.BuiltinOrVividCamera},
 		Data:         []string{"pink-nature-1920x1080.jpg", "portrait_4096x3072.jpg"},
 		Fixture:      "ccaLaunchedWithFakeHALCamera",

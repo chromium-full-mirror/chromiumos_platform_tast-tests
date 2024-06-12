@@ -20,7 +20,7 @@ func init() {
 		Desc:         "Verifies JPEG decode accelerator works in USB HALv3",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "beckerh@chromium.org", "shik@chromium.org", "xinggu@chromium.org"},
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
-		Attr:         []string{"group:mainline", "informational", "group:camera-postsubmit", "group:camera-libcamera", "group:camera_dependent"},
+		Attr:         []string{"group:mainline", "informational", "group:camera-postsubmit", "group:camera-libcamera"},
 		SoftwareDeps: []string{"arc", "arc_camera3", "chrome", caps.HWDecodeJPEG, caps.BuiltinUSBCamera},
 		Fixture:      "chromeLoggedIn",
 		Timeout:      4*time.Minute + hal3.AdditionalTimeout,

@@ -40,7 +40,7 @@ func init() {
 		Desc:         "Collect power metrics for CCA",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "esker@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
-		Attr:         []string{"group:crosbolt", "crosbolt_perbuild", "group:camera_dependent"},
+		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{caps.BuiltinCamera, "chrome", "camera_app"},
 		Timeout:      initTimePNPCCA + pnp.PNPTimeParams.Total + power.RecorderTimeout,
 		Params: []testing.Param{{

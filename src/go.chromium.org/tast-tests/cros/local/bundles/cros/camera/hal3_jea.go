@@ -22,7 +22,7 @@ func init() {
 		Contacts:     []string{"chromeos-camera-eng@google.com", "beckerh@chromium.org", "shik@chromium.org", "xinggu@chromium.org"},
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
 		SoftwareDeps: []string{"arc", "arc_camera3", "chrome", caps.HWEncodeJPEG},
-		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera", "group:camera_dependent"},
+		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
 		Fixture:      "chromeLoggedIn",
 		Timeout:      4*time.Minute + hal3.AdditionalTimeout,
 		Params: []testing.Param{{

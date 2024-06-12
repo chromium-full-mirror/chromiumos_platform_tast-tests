@@ -20,7 +20,7 @@ func init() {
 		Desc:         "Verifies camera still capture function with HAL3 interface",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "beckerh@chromium.org", "shik@chromium.org", "xinggu@chromium.org"},
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
-		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera", "group:camera_dependent"},
+		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
 		SoftwareDeps: []string{"arc", "arc_camera3", "chrome", caps.BuiltinCamera},
 		Fixture:      "chromeLoggedIn",
 		// Krane needs 4 minutes and 30 seconds for whole dark environment(covering the camera lens).

@@ -44,7 +44,7 @@ func init() {
 		Desc:         "Collect benchmark metrics of ChromeOS Camera features",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "esker@chromium.org"},
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
-		Attr:         []string{"group:crosbolt", "crosbolt_perbuild", "group:camera_dependent"},
+		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{caps.BuiltinCamera, "chrome", "camera_app"},
 		Fixture:      pnp.StablePowerNoUI,
 		Timeout:      initTimePNPFeatureBenchmark + pnp.PNPTimeParams.Total + power.RecorderTimeout,

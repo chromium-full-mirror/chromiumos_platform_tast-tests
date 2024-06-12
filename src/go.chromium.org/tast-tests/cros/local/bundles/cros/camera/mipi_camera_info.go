@@ -24,7 +24,7 @@ func init() {
 		Desc:         "Collect camera modules info",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "hidenorik@chromium.org"},
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
-		Attr:         []string{"group:mainline", "informational", "group:camera_dependent", "group:camera-stability"},
+		Attr:         []string{"group:mainline", "informational", "group:camera-stability"},
 		SoftwareDeps: []string{caps.BuiltinMIPICamera},
 		HardwareDeps: hwdep.D(hwdep.CameraEnumerated()),
 		Fixture:      fixture.CameraServiceStopped,
