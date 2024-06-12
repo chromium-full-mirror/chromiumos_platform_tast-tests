@@ -197,7 +197,10 @@ func QosNetworkControl(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to obtain service IP properties: ", err)
 	}
-	s.Logf("IP configuration: client=%s gateway=%s", props.Address, props.Gateway)
+	if len(props.NameServers) < 1 {
+		s.Fatal("Failed to obtain at least one name server from service properties")
+	}
+	s.Logf("IP configuration: client=%s gateway=%s nameservers=%v", props.Address, props.Gateway, props.NameServers)
 
 	s.Logf("Generating HTTP GET request on %s", testURL)
 
@@ -246,7 +249,7 @@ func QosNetworkControl(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to restart DNS proxy: ", err)
 	}
 
-	dohServer := httpserver.New(httpserver.TCP4, "443", dns.DoHResponder(ctx, props.Gateway), httpsCerts)
+	dohServer := httpserver.New(httpserver.TCP4, "443", dns.DoHResponder(ctx, props.NameServers[0]), httpsCerts)
 	if err := wifi.Router.StartServer(ctx, "doh_server", dohServer); err != nil {
 		s.Fatal("Failed to start DoH HTTPS server: ", err)
 	}
