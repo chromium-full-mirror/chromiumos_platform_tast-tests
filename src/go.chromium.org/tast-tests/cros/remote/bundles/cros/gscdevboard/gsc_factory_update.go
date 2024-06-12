@@ -31,13 +31,15 @@ func init() {
 			Val:       "0.3.22",
 			ExtraAttr: []string{"gsc_h1_shield"},
 		}, {
-			Name:      "ti50_0_23_30",
-			Val:       "0.23.30",
-			ExtraAttr: []string{"gsc_dt_shield"},
+			Name: "ti50_0_23_30",
+			Val:  "0.23.30",
+			// TODO(b/346777155): reenable after bug is resolved
+			//ExtraAttr: []string{"gsc_dt_shield"},
 		}, {
-			Name:      "ti50_0_23_74",
-			Val:       "0.23.74",
-			ExtraAttr: []string{"gsc_dt_shield"},
+			Name: "ti50_0_23_74",
+			Val:  "0.23.74",
+			// TODO(b/346777155): reenable after bug is resolved
+			//ExtraAttr: []string{"gsc_dt_shield"},
 		}},
 	})
 }
