@@ -172,8 +172,10 @@ func ThermalCooldown(ctx context.Context, p ThermalCooldownParams) error {
 			return errors.Wrap(err, "not enough temperature samples")
 		}
 
-		stdDev := stat.StdDev(samples, nil)
+		mean, stdDev := stat.MeanStdDev(samples, nil)
 		samples = samples[1:]
+
+		testing.ContextLogf(ctx, "Cooling down. Average temperature is %f with a standard deviation of %f", mean, stdDev)
 
 		if stdDev > p.MaxStandardDeviation {
 			return errors.Wrap(err, "temperature is changing more than specified standard deviation")
@@ -477,7 +479,7 @@ func NewRecorder(ctx context.Context, interval time.Duration, outDir, testName s
 }
 
 // EnableTracing enables and configures perfetto tracing in the recorder.
-func (r *Recorder) EnableTracing(ctx context.Context, traceConfigPath, traceFileName string) error {
+func (r *Recorder) EnableTracing(traceConfigPath, traceFileName string) error {
 	if r.isRecording {
 		return errors.New("cannot enable tracing while recording")
 	}
@@ -488,7 +490,7 @@ func (r *Recorder) EnableTracing(ctx context.Context, traceConfigPath, traceFile
 }
 
 // DisableTracing disables tracing in the recorder.
-func (r *Recorder) DisableTracing(ctx context.Context) error {
+func (r *Recorder) DisableTracing() error {
 	if r.isRecording {
 		return errors.New("cannot disable tracing while recording")
 	}

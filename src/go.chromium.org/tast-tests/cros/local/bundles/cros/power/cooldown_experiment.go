@@ -11,6 +11,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
+	"go.chromium.org/tast-tests/cros/local/tracing"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -68,6 +69,7 @@ func init() {
 		Fixture:      setup.PowerNoUINoWiFi,
 		Timeout:      30 * time.Minute,
 		Attr:         []string{"group:power", "power_daily_misc"},
+		Data:         []string{tracing.TBMTracedProbesConfigFile},
 		Params: []testing.Param{{
 			Name: "original",
 			Val: experimentConfig{
@@ -105,6 +107,8 @@ func CooldownExperiment(ctx context.Context, s *testing.State) {
 	r := power.NewRecorder(ctx, recordingInterval, s.OutDir(), s.TestName())
 	defer r.Close(cleanupCtx)
 
+	r.EnableTracing(s.DataPath(tracing.TBMTracedProbesConfigFile), "trace.data")
+
 	if err := r.Start(ctx); err != nil {
 		s.Fatal("Failed to start recording: ", err)
 	}
@@ -128,15 +132,18 @@ func CooldownExperiment(ctx context.Context, s *testing.State) {
 	r.EndCheckpoint(stressTestCheckpoint)
 	cooldownCheckpoint := r.StartCheckpoint("cooldown")
 
+	// We want to upload metrics even if cooldown failed for debugging purposes,
+	// thus the cooldown error needs to be delayed to the end of the test.
 	conf := s.Param().(experimentConfig)
+	var cooldownErr error
 	if conf.useThermal {
-		if err := power.ThermalCooldown(ctx, conf.cooldownParams); err != nil {
-			s.Fatal("Failed to thermal cooldown CPU: ", err)
-		}
+		cooldownErr = power.ThermalCooldown(ctx, conf.cooldownParams)
 	} else {
-		if err := power.Cooldown(ctx); err != nil {
-			s.Fatal("Failed to cooldown CPU: ", err)
-		}
+		cooldownErr = power.Cooldown(ctx)
+	}
+
+	if cooldownErr != nil {
+		testing.ContextLog(ctx, "Continue testing after failing to cooldown CPU with error: ", cooldownErr)
 	}
 
 	r.EndCheckpoint(cooldownCheckpoint)
@@ -151,5 +158,9 @@ func CooldownExperiment(ctx context.Context, s *testing.State) {
 
 	if err := r.Finish(ctx); err != nil {
 		s.Fatal("Failed to finish recording: ", err)
+	}
+
+	if cooldownErr != nil {
+		s.Fatal("Test finished with cooldown failure: ", cooldownErr)
 	}
 }
