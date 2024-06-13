@@ -622,8 +622,16 @@ func (h *Helper) ConnectWithTimeout(ctx context.Context, connectTimeout time.Dur
 		if isConnected, err := service.IsConnected(ctx); err != nil {
 			return nil, errors.Wrapf(err, "unable to get the connected state for %q", name)
 		} else if !isConnected {
-			if err := h.ConnectToServiceWithTimeout(ctx, service, connectTimeout); err != nil {
+			// TODO(b/331252593): Revert the timeout to connectTimeout after the issue is fixed.
+			// The service can't be connected within the given timeout sometimes, extend the timeout for debugging purposes.
+			extendedTimeout := connectTimeout + longTimeout
+			start := time.Now()
+			if err := h.ConnectToServiceWithTimeout(ctx, service, extendedTimeout); err != nil {
 				return nil, errors.Wrapf(err, "unable to connect to the default service %q", name)
+			}
+			elapsed := time.Since(start)
+			if elapsed > connectTimeout {
+				return nil, errors.Errorf("connecting to the default service %q took longer than expected: time elapsed: %s; timeout: %s", name, elapsed, connectTimeout)
 			}
 		}
 
