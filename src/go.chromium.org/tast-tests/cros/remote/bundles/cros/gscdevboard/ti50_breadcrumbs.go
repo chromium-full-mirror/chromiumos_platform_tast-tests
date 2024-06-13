@@ -115,7 +115,7 @@ func checkBreadcrumbs(ctx context.Context, s *testing.State, i *ti50.CrOSImage, 
 	if err != nil {
 		s.Fatal("sysinfo failed: ", err)
 	}
-	s.Logf("Breadcrumbs: %x", sysinfo.Breadcrumbs)
+	s.Logf("Breadcrumbs: 0x%s", sysinfo.Breadcrumbs)
 	// Decode from u64 into the list of breadcrumb event values. Each value is stored as 4 bits, so
 	// one char of the hex string.
 	var got []int
