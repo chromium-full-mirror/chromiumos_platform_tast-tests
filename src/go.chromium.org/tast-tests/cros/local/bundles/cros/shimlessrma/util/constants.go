@@ -87,4 +87,45 @@ var ShimlessRmaEnabledModelsCritical = []string{
 	"pujjoteen"}
 
 // ShimlessRmaEnabledModelsStaging are models with Shimless RMA support and pending to be enlisted to critical model list.
-var ShimlessRmaEnabledModelsStaging = []string{}
+var ShimlessRmaEnabledModelsStaging = []string{
+	// corsola
+	"tentacool",
+	"tentacruel",
+	"chinchou",
+	"chinchou360",
+	// dedede
+	"magma",
+	"magneto",
+	"magister",
+	"magpie",
+	"maglet",
+	"storo",
+	"storo360",
+	"galtic",
+	"galtic360",
+	"galith",
+	"galith360",
+	"galnat",
+	"galnat360",
+	"galith",
+	"lantis",
+	"landia",
+	"landrid",
+	"drawper",
+	"drawcia",
+	// nissa
+	"pujjo1e",
+	"yaviks",
+	"yavijo",
+	"yahiko",
+	"joxer",
+	// staryu
+	"starmie",
+	// brya
+	"marasov",
+	"felwinter",
+	"osiris",
+	"kano",
+	// strongbad
+	"homestar",
+}
