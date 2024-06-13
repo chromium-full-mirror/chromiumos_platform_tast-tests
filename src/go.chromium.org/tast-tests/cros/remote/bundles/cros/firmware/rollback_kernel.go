@@ -33,7 +33,7 @@ func init() {
 			"tij@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		Attr:         []string{"group:firmware"},
+		Attr:         []string{"group:firmware", "firmware_unstable"},
 		ServiceDeps:  []string{"tast.cros.firmware.KernelService"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{
@@ -44,11 +44,10 @@ func init() {
 				Timeout: 30 * time.Minute,
 			},
 			{
-				Name:      "dev",
-				Fixture:   fixture.DevModeGBB,
-				Val:       common.BootModeDev,
-				Timeout:   30 * time.Minute,
-				ExtraAttr: []string{"firmware_unstable"},
+				Name:    "dev",
+				Fixture: fixture.DevModeGBB,
+				Val:     common.BootModeDev,
+				Timeout: 30 * time.Minute,
 			},
 		},
 	})
@@ -248,10 +247,10 @@ func RollbackKernel(ctx context.Context, s *testing.State) {
 		s.Fatal("Setting power state to reset failed: ", err)
 	}
 
-	// Waiting until keyboard is ready so we know we made it to recovery screen and recovery reason is set.
-	if err := h.Servo.WaitFirmwareKeyboardNoCmd(ctx, h.Config.FirmwareScreen); err != nil {
-		// If this fails, this is the same as sleeping for the waitTimeout
-		testing.ContextLog(ctx, "Failed to wait for keyboard: ", err)
+	testing.ContextLogf(ctx, "Waiting for %s (firmware screen)", h.Config.FirmwareScreenRecMode)
+	// GoBigSleepLint: Allow time for DUT to reach firmware screen.
+	if err := testing.Sleep(ctx, h.Config.FirmwareScreenRecMode); err != nil {
+		s.Fatal("Failed to wait for firmware screen: ", err)
 	}
 
 	if err := bootToDevAndRestore(ctx, h, ms, rolledBackKernB); err != nil {
@@ -316,13 +315,11 @@ func RollbackKernel(ctx context.Context, s *testing.State) {
 }
 
 func bootToDevAndRestore(ctx context.Context, h *firmware.Helper, ms *firmware.ModeSwitcher, restoreB bool) error {
-
-	if err := h.Servo.SetPowerState(ctx, servo.PowerStateRec); err != nil {
-		testing.ContextLog(ctx, "Failed to set power_state:rec: ", err)
+	if err := ms.EnableRecMode(ctx, servo.PowerStateRec, servo.USBMuxOff); err != nil {
+		return err
 	}
-
-	if err := ms.TriggerRecToDev(ctx); err != nil {
-		return errors.Wrap(err, "failed to go from rec to dev mode")
+	if err := ms.RecScreenToDevMode(ctx); err != nil {
+		return errors.Wrap(err, "moving from firmware screen to dev mode")
 	}
 
 	connectCtx, cancel := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
@@ -365,7 +362,7 @@ func bootToDevAndRestore(ctx context.Context, h *firmware.Helper, ms *firmware.M
 	h.DisconnectDUT(ctx)
 	connectCtx1, cancel1 := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
 	defer cancel1()
-	if err := h.WaitConnect(connectCtx1); err != nil {
+	if err := h.WaitConnect(connectCtx1, firmware.ResetEthernetDongle); err != nil {
 		return errors.Wrap(err, "failed to connect to DUT")
 	}
 
