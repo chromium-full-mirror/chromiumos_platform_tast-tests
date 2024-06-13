@@ -41,7 +41,7 @@ func init() {
 				CheckRoutineV2:     false,
 			},
 			// TODO(b/280388091): Promote tast to critical
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			ExtraAttr: []string{"informational"},
 		}, {
 			Name: "v1_passed",
 			Val: sensitiveSensorRoutineTestParams{
@@ -49,7 +49,7 @@ func init() {
 				CheckRoutineV2:     false,
 			},
 			// TODO(b/280388091): Promote tast to critical
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			ExtraAttr: []string{"informational"},
 		}, {
 			Name: "v2_finished",
 			Val: sensitiveSensorRoutineTestParams{
@@ -57,7 +57,7 @@ func init() {
 				CheckRoutineV2:     true,
 			},
 			// TODO(b/280388091): Promote tast to critical
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			ExtraAttr: []string{"informational"},
 		}, {
 			Name: "v2_passed",
 			Val: sensitiveSensorRoutineTestParams{
@@ -65,7 +65,7 @@ func init() {
 				CheckRoutineV2:     true,
 			},
 			// TODO(b/280388091): Promote tast to critical
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			ExtraAttr: []string{"informational"},
 		}},
 	})
 }
