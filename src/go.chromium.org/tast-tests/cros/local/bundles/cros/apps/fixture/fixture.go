@@ -32,6 +32,7 @@ const (
 // List of fixture names for Essential Apps.
 const (
 	LoggedIn                               = "loggedIn"
+	LoggedInAppParentalControls            = "loggedInAppParentalControls"
 	LoggedInFieldTrialConfigDisable        = "loggedInFieldTrialConfigDisable"
 	LoggedInFieldTrialConfigEnable         = "loggedInFieldTrialConfigEnable"
 	LoggedInDisableInstall                 = "loggedInDisableAutoInstall"
@@ -52,6 +53,21 @@ func init() {
 		Contacts:        []string{"cros-ca-eng@google.com"},
 		BugComponent:    "b:385700", // ChromeOS > Software > Consumer > Apps Suite
 		Impl:            eaFixture(browser.TypeAsh, true),
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+		SetUpTimeout:    chrome.LoginTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: LoggedInAppParentalControls,
+		Desc: "Logged into a user session with on-device parental controls enabled",
+		Contacts: []string{"cros-families-eng+test@google.com",
+			"chromeos-consumer-engprod@google.com",
+		},
+		BugComponent:    "b:1090157", // ChromeOS > Software > Family > Parental guidance
+		Impl:            eaFixture(browser.TypeAsh, true, chrome.ARCSupported(), chrome.EnableFeatures("OnDeviceAppControls", "ForceOnDeviceAppControlsForAllRegions")),
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
 		SetUpTimeout:    chrome.LoginTimeout,
