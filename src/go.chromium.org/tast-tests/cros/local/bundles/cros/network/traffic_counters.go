@@ -274,15 +274,25 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 	// genTraffic is expected to generate traffic where both tx and rx should
 	// larger than msgLen.
 	test := func(keys map[string]bool, genTraffic func()) {
-		// Generate initial set of counters.
+		// Generate initial set of counters and verify we have all expected
+		// counters. Since patchpanel may need some time to install the iptables
+		// rules even after routing is ready, use a Poll here.
 		testing.ContextLog(ctx, "Generating traffic to get counters for baseline")
-		genTraffic()
-		base := getCounters(keys)
-		// Verify we have all expected counters.
-		for k := range keys {
-			if _, ok := base[k]; !ok {
-				s.Errorf("Expected baseline counter missing: %s", k)
+		var base map[string]*counters
+		if err := testing.Poll(ctx, func(context.Context) error {
+			genTraffic()
+			base := getCounters(keys)
+			for k := range keys {
+				if _, ok := base[k]; !ok {
+					return errors.Errorf("expected baseline counter missing %v", k)
+				}
 			}
+			return nil
+		}, &testing.PollOptions{
+			Timeout:  10 * time.Second,
+			Interval: 2 * time.Second,
+		}); err != nil {
+			s.Fatal("Expected baseline counter missing: ", err)
 		}
 
 		// Generate comparison set. Generate traffic a few times to make sure the
