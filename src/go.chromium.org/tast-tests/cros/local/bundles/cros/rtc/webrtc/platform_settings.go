@@ -40,10 +40,14 @@ func setUpAudio(ctx context.Context, noiseCancellation, styleTransfer bool) erro
 	return nil
 }
 
-// enableCameraEffects turns on the platform video conferencing effects (platform blurring and relighting).
+// enableCameraEffects turns on the platform video conferencing effects (platform blurring, relighting, and face retouching).
 // The effects are reset when the returned function is invoked.
-func enableCameraEffects(ctx context.Context, blur, relight bool) (func(), error) {
-	resetEffects, err := effects.ApplyPlatformEffects(ctx, blur, relight, effects.KAuto)
+func enableCameraEffects(ctx context.Context, blur, relight, retouch bool) (func(), error) {
+	blurLevel := effects.KBlurDisabled
+	if blur {
+		blurLevel = effects.KBlurMedium
+	}
+	resetEffects, err := effects.ApplyPlatformEffects(ctx, relight, retouch, blurLevel, effects.KAuto)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to enable platform blurring")
 	}

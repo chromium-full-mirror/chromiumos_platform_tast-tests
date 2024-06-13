@@ -161,7 +161,7 @@ func runNonStep(ctx context.Context, tconn, bTconn *chrome.TestConn, s *testing.
 		var cancel context.CancelFunc
 		ctx, cancel = ctxutil.Shorten(ctx, time.Second)
 		defer cancel()
-		resetEffects, err := enableCameraEffects(effectsCtx, params.Blur, params.Relight)
+		resetEffects, err := enableCameraEffects(effectsCtx, params.Blur, params.Relight, false /* retouch */)
 		if err != nil {
 			return err
 		}

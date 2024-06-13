@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
@@ -36,6 +37,20 @@ type DataResult struct {
 	FpsData      []float64 `json:"fpsData"`
 }
 
+// BlurLevel is an enum to select the blur type.
+type BlurLevel string
+
+// BlurLevel strings.
+const (
+	KBlurDisabled BlurLevel = "disabled"
+	KBlurLowest   BlurLevel = "lowest"
+	KBlurLight    BlurLevel = "light"
+	KBlurMedium   BlurLevel = "medium"
+	KBlurHeavy    BlurLevel = "heavy"
+	KBlurMaximum  BlurLevel = "maximum"
+	KBlurImage    BlurLevel = "image"
+)
+
 // ModelType is an enum to select the segmentation model type.
 type ModelType string
 
@@ -55,7 +70,7 @@ const (
 )
 
 // ApplyPlatformEffects applies the configured platform effects.
-func ApplyPlatformEffects(ctx context.Context, blur, relight bool, modelType ModelType) (func(ctx context.Context) error, error) {
+func ApplyPlatformEffects(ctx context.Context, relight, retouch bool, blurLevel BlurLevel, modelType ModelType) (func(ctx context.Context) error, error) {
 	testing.ContextLog(ctx, "Configuring platform effects")
 	if err := os.Mkdir(platformEffectsOverrideDir, 0755); err != nil && !os.IsExist(err) {
 		return nil, errors.Wrap(err, "failed to write platform override")
@@ -64,17 +79,29 @@ func ApplyPlatformEffects(ctx context.Context, blur, relight bool, modelType Mod
 	// This configuration format may change, update as needed.
 	platformEffects := struct {
 		Effect                string `json:"effect"`
+		BlurLevel             string `json:"blur_level"`
 		SegmentationModelType string `json:"segmentation_model_type"`
 		GpuAPI                string `json:"gpu_api"`
 	}{
 		Effect: "none",
 	}
-	if blur && relight {
-		platformEffects.Effect = "blur_relight"
-	} else if blur {
-		platformEffects.Effect = "blur"
-	} else if relight {
-		platformEffects.Effect = "relight"
+	if blurLevel != KBlurDisabled || relight || retouch {
+		var effects []string
+		if blurLevel != KBlurDisabled {
+			if blurLevel == KBlurImage {
+				effects = append(effects, "replace")
+			} else {
+				effects = append(effects, "blur")
+				platformEffects.BlurLevel = string(blurLevel)
+			}
+		}
+		if relight {
+			effects = append(effects, "relight")
+		}
+		if retouch {
+			effects = append(effects, "retouch")
+		}
+		platformEffects.Effect = strings.Join(effects, "_")
 	}
 
 	platformEffects.GpuAPI = "vulkan"

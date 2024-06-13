@@ -6,8 +6,6 @@ package videoconferencing
 
 import (
 	"context"
-	"os"
-	"path/filepath"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/tbdep"
@@ -15,24 +13,27 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/data"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/effectshtml"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vctray"
-	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/power"
+	"go.chromium.org/tast-tests/cros/local/videoconferencing/effects"
 	"go.chromium.org/tast-tests/cros/local/videoconferencing/fixture"
-	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 const (
-	testDuration = 5 * time.Minute
+	testDuration   = 5 * time.Minute
+	warmupDuration = 5 * time.Second
 )
 
 type effectsParams struct {
-	// Blur level, vctray.BackgroundBlurOff means off, and vctray.BackgroundBlurImage means background replace.
-	blurLevel vctray.BackgroundBlurLevel
+	// Blur level, effects.BlurDisabled means off, and effects.BlurImage means background replace.
+	blurLevel effects.BlurLevel
 
 	// Whether to enable portrait relight or not.
 	relightEnabled bool
+
+	// Whether to enable face retouch or not.
+	retouchEnabled bool
 }
 
 func init() {
@@ -65,29 +66,49 @@ func init() {
 			{
 				Name: "no_effects",
 				Val: effectsParams{
-					blurLevel:      vctray.BackgroundBlurOff,
+					blurLevel:      effects.KBlurDisabled,
 					relightEnabled: false,
+					retouchEnabled: false,
 				},
 			},
 			{
 				Name: "blur_only",
 				Val: effectsParams{
-					blurLevel:      vctray.BackgroundBlurFull,
+					blurLevel:      effects.KBlurMaximum,
 					relightEnabled: false,
+					retouchEnabled: false,
 				},
 			},
 			{
 				Name: "relight_only",
 				Val: effectsParams{
-					blurLevel:      vctray.BackgroundBlurOff,
+					blurLevel:      effects.KBlurDisabled,
 					relightEnabled: true,
+					retouchEnabled: false,
 				},
 			},
 			{
 				Name: "replace_only",
 				Val: effectsParams{
-					blurLevel:      vctray.BackgroundBlurImage,
+					blurLevel:      effects.KBlurImage,
 					relightEnabled: false,
+					retouchEnabled: false,
+				},
+			},
+			{
+				Name: "retouch_only",
+				Val: effectsParams{
+					blurLevel:      effects.KBlurDisabled,
+					relightEnabled: false,
+					retouchEnabled: true,
+				},
+			},
+			{
+				Name: "relight_and_retouch",
+				Val: effectsParams{
+					blurLevel:      effects.KBlurDisabled,
+					relightEnabled: true,
+					retouchEnabled: true,
 				},
 			},
 		},
@@ -95,8 +116,14 @@ func init() {
 }
 
 func CameraEffectsPower(cleanupCtx context.Context, s *testing.State) {
-	ctx, tconn, cr, br, srvURL, cleanupFunc := common.Setup(cleanupCtx, s)
+	ctx, tconn, _, br, srvURL, cleanupFunc := common.Setup(cleanupCtx, s)
 	defer cleanupFunc()
+
+	r := power.NewRecorder(ctx, 5*time.Second, s.OutDir(), s.TestName())
+	defer r.Close(cleanupCtx)
+	if err := r.Cooldown(ctx); err != nil {
+		s.Error("Cooldown failed: ", err)
+	}
 
 	vcTray := vctray.New(ctx, tconn)
 
@@ -105,9 +132,9 @@ func CameraEffectsPower(cleanupCtx context.Context, s *testing.State) {
 		s.Fatal("Fail to wait for camera stream: ", err)
 	}
 
-	if err := vcTray.SetCameraEffects(vctray.BackgroundBlurOff, false)(ctx); err != nil {
-		s.Fatalf("Failed to set camera effects to BackgroundBlur %v; PortraitRelighting off: %v",
-			vctray.BackgroundBlurOff, err)
+	if _, err := effects.ApplyPlatformEffects(ctx, false, false, effects.KBlurDisabled, effects.KAuto); err != nil {
+		s.Fatalf("Failed to set camera effects to PortraitRelighting off; Retouch off; BackgroundBlur %v: %v",
+			effects.KBlurDisabled, err)
 	}
 
 	param, ok := s.Param().(effectsParams)
@@ -115,38 +142,21 @@ func CameraEffectsPower(cleanupCtx context.Context, s *testing.State) {
 		s.Fatal("Failed to convert test effectsParams")
 	}
 
-	// Copy camera background to the backgroundImageDir to apply.
-	if param.blurLevel == vctray.BackgroundBlurImage {
-		userPath, err := cryptohome.UserPath(ctx, cr.NormalizedUser())
-		if err != nil {
-			s.Fatal("Failed to get user's userPath path: ", err)
-		}
-
-		imagePath := filepath.Join(userPath, data.BackgroundImageDirname)
-
-		if err := os.MkdirAll(imagePath, 0777); err != nil {
-			s.Fatal("Failed to create image path: ", err)
-		}
-		if err := fsutil.CopyFile(
-			s.DataPath(data.BackgroundImageJpg), filepath.Join(imagePath, data.BackgroundImageJpg)); err != nil {
-			s.Fatal("Failed to copy image to custom-camera-backgrounds: ", err)
-		}
-		if err := fsutil.CopyFile(
-			s.DataPath(data.BackgroundMetadata), filepath.Join(imagePath, data.BackgroundMetadata)); err != nil {
-			s.Fatal("Failed to copy metadata to custom-camera-backgrounds: ", err)
-		}
-	}
-
 	// Set camera effects.
-	if err := vcTray.SetCameraEffects(param.blurLevel, param.relightEnabled)(ctx); err != nil {
-		s.Fatalf("Failed to set camera effects to BackgroundBlur %v; PortraitRelighting %v: %v",
-			param.blurLevel, param.relightEnabled, err)
+	resetEffects, err := effects.ApplyPlatformEffects(ctx, param.relightEnabled, param.retouchEnabled, param.blurLevel, effects.KAuto)
+	if err != nil {
+		s.Fatalf("Failed to set camera effects to PortraitRelighting %v; Retouch %v; BackgroundBlur %v: %v",
+			param.relightEnabled, param.retouchEnabled, param.blurLevel, err)
 	}
+	defer func() {
+		if err := resetEffects(ctx); err != nil {
+			testing.ContextLog(ctx, "Failed to reset platform effects: ", err)
+		}
+	}()
 
-	r := power.NewRecorder(ctx, 5*time.Second, s.OutDir(), s.TestName())
-	defer r.Close(cleanupCtx)
-	if err := r.Cooldown(ctx); err != nil {
-		s.Error("Cooldown failed: ", err)
+	// GoBigSleepLint: Wait a few seconds for setting camera effects to take effect.
+	if err := testing.Sleep(ctx, warmupDuration); err != nil {
+		s.Fatal("Failed to sleep: ", err)
 	}
 
 	// Start to track power metrics.
