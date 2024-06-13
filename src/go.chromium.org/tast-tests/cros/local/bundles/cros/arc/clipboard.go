@@ -64,6 +64,12 @@ func init() {
 // idPrefix is the prefix to all view IDs in the helper Android app.
 const idPrefix = "org.chromium.arc.testapp.clipboard:id/"
 
+// sleepTimeAfterCopy is a time to sleep after triggering a copy.
+// It takes time for clipboard data to go between Chrome and Android,
+// but there's no way to tell whether the data is actually passed between them
+// without actually invoking paste action.
+const sleepTimeAfterCopy = 2 * time.Second
+
 // A copyFunc encapsulates a "copy" operation which is predecided (e.g. data to
 // be copied and clipboard destination).
 type copyFunc func(context.Context) error
@@ -470,6 +476,11 @@ func Clipboard(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to copy in Chrome: ", err)
 		}
 
+		// GoBigSleepLint - wait a bit to make sure clipboard data goes through the vm boundary.
+		if err := testing.Sleep(ctx, sleepTimeAfterCopy); err != nil {
+			s.Error("Failed to sleep: ", err)
+		}
+
 		// Paste and Verify the result.
 		// TODO(crbug.com/1510998): Remove newContent once Chromium changes are submitted.
 		if err := bringAndroidCopyPasteWindowToFront(ctx, tconn); err != nil {
@@ -537,6 +548,11 @@ func Clipboard(ctx context.Context, s *testing.State) {
 			start := time.Now()
 			if err := row.copyFunc(ctx); err != nil {
 				s.Fatal("Failed to copy: ", err)
+			}
+
+			// GoBigSleepLint - wait a bit to make sure clipboard data goes through the vm boundary.
+			if err := testing.Sleep(ctx, sleepTimeAfterCopy); err != nil {
+				s.Error("Failed to sleep: ", err)
 			}
 
 			// Rather than assuming the copy is effective ~immediately, we have to
