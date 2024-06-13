@@ -12,7 +12,9 @@ import (
 	"go.chromium.org/tast-tests/cros/local/cellular"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -39,6 +41,10 @@ func CustomDefaultAttachApnDisableEnableBehavior(ctx context.Context, s *testing
 		s.Fatal("Failed to set roaming property: ", err)
 	}
 
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
 	cr, err := chrome.New(ctx, chrome.EnableFeatures("ApnRevamp"))
 	if err != nil {
 		s.Fatal("Failed to create a new instance of Chrome: ", err)
@@ -64,7 +70,8 @@ func CustomDefaultAttachApnDisableEnableBehavior(ctx context.Context, s *testing
 	if err != nil {
 		s.Fatal("Failed to open mobile data subpage: ", err)
 	}
-	defer mdp.Close(ctx)
+	defer mdp.Close(cleanupCtx)
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ossettings")
 
 	if err := ossettings.GoToActiveNetworkApnSubpage(ctx, tconn, true /*isFromMobileDataSubpage*/); err != nil {
 		s.Fatal("Failed to go to apn subpage: ", err)
@@ -205,7 +212,7 @@ func CustomDefaultAttachApnDisableEnableBehavior(ctx context.Context, s *testing
 
 	// Enable currently enabled attach APN and verify connection.
 	if err := ossettings.ClickAPNMoreActionsButtonOfType(ctx, tconn, apnName, ossettings.ApnDisabled, true /*isAttach*/, false /*isDefault*/); err != nil {
-		s.Fatal("Failed to click on more actions button of attach APN to enable")
+		s.Fatal("Failed to click on more actions button of attach APN to enable: ", err)
 	}
 
 	if err := ui.LeftClick(ossettings.EnableBtn)(ctx); err != nil {
