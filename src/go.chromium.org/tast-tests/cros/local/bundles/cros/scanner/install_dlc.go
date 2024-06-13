@@ -31,7 +31,6 @@ func init() {
 			"group:hw_agnostic",
 			"group:mainline",
 			"group:paper-io",
-			"group:criticalstaging",
 			"informational",
 			"paper-io_scanning",
 		},
