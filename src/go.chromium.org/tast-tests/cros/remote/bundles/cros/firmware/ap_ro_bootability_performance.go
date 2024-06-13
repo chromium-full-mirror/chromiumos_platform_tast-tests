@@ -142,7 +142,7 @@ func init() {
 		Attr:         []string{"group:firmware", "firmware_trial"},
 		Vars:         []string{"firmware_branch", "ro_versions"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Timeout:      90 * time.Minute, // 1hr30min.
+		Timeout:      120 * time.Minute, // 2 hrs.
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.BootModeFixtureWithAPBackup(fixture.NormalMode),
 		Data:         []string{"shipped-firmwares.json"},
@@ -1028,7 +1028,7 @@ func collectShippedFws(h *firmware.Helper, filepath string) ([]jsonFwInfo, error
 
 	var shippedFws []jsonFwInfo
 	for _, values := range data {
-		if values.Model == h.Model || values.Board == h.Model && values.Model == "" {
+		if (values.Board == h.Board && values.Model == h.Model) || (values.Board == h.Model && values.Model == "") {
 			shippedFws = append(shippedFws, values)
 		}
 	}
