@@ -22,4 +22,5 @@ service ManualControlUSBCameraService {
 message ValidateControlRequest {
   bool save_image = 1;
   Facing facing = 2;
+  string cameraUserControlValidateScriptPath = 3;
 }

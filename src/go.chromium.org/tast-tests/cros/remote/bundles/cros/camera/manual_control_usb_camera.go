@@ -6,20 +6,25 @@ package camera
 
 import (
 	"context"
+	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast-tests/cros/remote/camera/camerabox"
 	"go.chromium.org/tast-tests/cros/services/cros/camera"
 	pb "go.chromium.org/tast-tests/cros/services/cros/camerabox"
+	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
 )
 
 const (
-	saveImageKey     = "camera.ManualControlUSBCamera.SaveImage"
-	chartHostnameKey = "chart"
-	chartImagePath   = "third_party/cts_portrait_scene.jpg"
+	saveImageKey                            = "camera.ManualControlUSBCamera.SaveImage"
+	chartHostnameKey                        = "chart"
+	chartImagePath                          = "third_party/cts_portrait_scene.jpg"
+	cameraUserControlValidateScriptName     = "camera_user_control_validate.py"
+	manualControlImageConfigProtoPythonName = "manual_control_image_config_pb2.py"
 )
 
 type manualControlUSBCameraParams struct {
@@ -36,7 +41,7 @@ func init() {
 		Attr:         []string{"group:camerabox"},
 		SoftwareDeps: []string{caps.BuiltinUSBCamera, "chrome"},
 		ServiceDeps:  []string{"tast.cros.camera.ManualControlUSBCameraService"},
-		Data:         []string{chartImagePath},
+		Data:         []string{chartImagePath, cameraUserControlValidateScriptName, manualControlImageConfigProtoPythonName},
 		Fixture:      "cameraboxFixture",
 		Vars:         []string{saveImageKey, chartHostnameKey},
 		Timeout:      10 * time.Minute,
@@ -76,6 +81,20 @@ func ManualControlUSBCamera(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to take a photo of test scene: ", err)
 	}
 
+	// Prepare data on DUT.
+	tempdir, err := dut.Conn().CommandContext(ctx, "mktemp", "-d", "/tmp/camerabox_align_XXXXXX").Output()
+	tempdirPath := strings.TrimSpace(string(tempdir))
+	cameraUserControlValidateScriptPath := filepath.Join(tempdirPath, cameraUserControlValidateScriptName)
+	manualControlImageConfigProtoPythonPath := filepath.Join(tempdirPath, manualControlImageConfigProtoPythonName)
+	defer dut.Conn().CommandContext(ctx, "rm", "-r", tempdirPath).Output()
+	if _, err := linuxssh.PutFiles(
+		ctx, dut.Conn(), map[string]string{
+			s.DataPath(cameraUserControlValidateScriptName):     cameraUserControlValidateScriptPath,
+			s.DataPath(manualControlImageConfigProtoPythonName): manualControlImageConfigProtoPythonPath,
+		}, linuxssh.DereferenceSymlinks); err != nil {
+		s.Fatalf("Failed to send data to remote temp dir %s: %s", tempdirPath, err)
+	}
+
 	// Connect to the gRPC server on the DUT.
 	client, err := cameraboxFixtureData.ConnectToDUT(ctx, dut, s.RPCHint())
 	if err != nil {
@@ -88,7 +107,7 @@ func ManualControlUSBCamera(ctx context.Context, s *testing.State) {
 	if saveImageString, hasSaveImage := s.Var(saveImageKey); hasSaveImage {
 		saveImage, err = strconv.ParseBool(saveImageString)
 		if err != nil {
-			s.Fatalf("Failed to parse %s from a string to a bool", saveImageString)
+			s.Fatalf("Failed to parse %s from a string to a bool: %s", saveImageString, err)
 		}
 	}
 
@@ -102,8 +121,9 @@ func ManualControlUSBCamera(ctx context.Context, s *testing.State) {
 	}
 
 	if _, err = manualControlClient.ValidateControl(ctx, &camera.ValidateControlRequest{
-		SaveImage: saveImage,
-		Facing:    manualControlFacing,
+		SaveImage:                           saveImage,
+		Facing:                              manualControlFacing,
+		CameraUserControlValidateScriptPath: cameraUserControlValidateScriptPath,
 	}); err != nil {
 		s.Fatal("Remote call RunTest() failed: ", err)
 	}

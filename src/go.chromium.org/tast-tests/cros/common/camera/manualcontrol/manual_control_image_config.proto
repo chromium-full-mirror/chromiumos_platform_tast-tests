@@ -1,0 +1,42 @@
+// Copyright 2024 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+syntax = "proto3";
+
+package manualcontrol;
+option go_package = "go.chromium.org/tast-tests/cros/common/camera/manualcontrol";
+
+enum Control {
+  BRIGHTNESS = 0;
+  CONTRAST = 1;
+  SATURATION = 2;
+  SHARPNESS = 3;
+  WHITE_BALANCE = 4;
+  HUE = 5;
+}
+
+message ManualControlImageConfig {
+  Control control_name = 1;
+  string vid_pid = 2;
+  string image_path_prefix = 3;
+  int32 num_level = 4;
+  double level_distance = 5;
+  double min_max_distance = 6;
+}
+
+message ManualControlImageConfigs {
+  repeated ManualControlImageConfig configs = 1;
+  string report_output_path = 2;
+}
+
+message ManualControlReport {
+  Control control_name = 1;
+  string vid_pid = 2;
+  repeated double raw_metrics = 3;
+  bool command_functionality_test_result = 4;
+  bool level_distance_test_result = 5;
+  bool min_max_distance_test_result = 6;
+}
+
+message ManualControlReports { repeated ManualControlReport reports = 1; }
