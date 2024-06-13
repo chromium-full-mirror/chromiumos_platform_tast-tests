@@ -65,10 +65,11 @@ func Translation(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to select a query: ", err)
 	}
 
-	// Right click the selected query word and ensure the Quick Answers UI shows up with the translation result.
+	// Right click the selected query word and ensure the Quick Answers UI
+	// shows up with the translation result.
 	ui := uiauto.New(tconn)
 	quickAnswers := nodewith.ClassName("QuickAnswersView")
-	translationResult := quickanswers.ResultTextContains("information")
+	translationResult := quickanswers.ResultTextContains("mission")
 	if err := uiauto.Combine("Show context menu",
 		ui.RightClick(queryFinder),
 		ui.WaitUntilExists(quickAnswers),

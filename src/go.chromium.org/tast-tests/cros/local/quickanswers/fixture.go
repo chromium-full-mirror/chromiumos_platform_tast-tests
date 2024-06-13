@@ -117,8 +117,8 @@ func withBrowserFixtureParams() []testing.FixtureParam {
 		{
 			Name: VariantTranslation,
 			Val: withBrowserFixtureParam{
-				// En-translation: information
-				queryWord: "信息",
+				// En-translation: mission
+				queryWord: "使命",
 			},
 		},
 		{
