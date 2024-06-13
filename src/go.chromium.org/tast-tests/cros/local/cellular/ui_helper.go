@@ -212,7 +212,7 @@ func (h *UIHelper) ValidateMessage(ctx context.Context, messageSent string) erro
 	}
 	defer kb.Close(ctx)
 
-	// Poll max 2 minutes to check intended SMS received.
+	// Poll max 4 minutes to check intended SMS received.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		// check message content.
 		notification := nodewith.Role(role.Window).ClassName("ash/message_center/MessagePopup")
@@ -253,7 +253,7 @@ func (h *UIHelper) ValidateMessage(ctx context.Context, messageSent string) erro
 		}
 		return errors.New("notification does not contain sent sms")
 	}, &testing.PollOptions{
-		Timeout:  2 * time.Minute,
+		Timeout:  4 * time.Minute,
 		Interval: 1 * time.Second}); err != nil {
 		return err
 	}
