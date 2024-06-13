@@ -526,8 +526,16 @@ func SplitView(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	if err := testSnapLeftRightFromOverview(ctx, cleanupCtx, tconn, d, pc, leftAct, rightAct); err != nil {
-		s.Fatal("Failed to snap windows from overview: ", err)
+	if params.tablet {
+		if err := testSnapLeftRightFromOverview(ctx, cleanupCtx, tconn, d, pc, leftAct, rightAct); err != nil {
+			s.Fatal("Failed to snap windows from overview: ", err)
+		}
+	} else {
+		// In clamshell mode, snapping from overview creates a snap group, which has a different resizing behavior, so we use shortcut keys here.
+		// TODO(b/346893519): Add resizing verification for snap groups.
+		if err := testSnapLeftRightViaKeyboardShortcut(ctx, tconn, d, leftAct, rightAct); err != nil {
+			s.Fatal("Failed to snap windows via keyboard shortcut: ", err)
+		}
 	}
 
 	// Resize snapped windows.
