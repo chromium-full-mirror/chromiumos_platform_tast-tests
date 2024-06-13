@@ -30,7 +30,7 @@ func init() {
 		},
 		// ChromeOS > Platform > Virtualization > VM Technology
 		BugComponent: "b:930563",
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"android_vm", "chrome"},
 		Fixture:      "arcBootedS2Idle",
 		Timeout:      12 * time.Minute,
