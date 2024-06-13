@@ -40,7 +40,6 @@ func init() {
 			"group:hw_agnostic",
 			"group:mainline",
 			"informational",
-			"group:criticalstaging",
 		},
 		Fixture: fixture.ChromeEnrolledLoggedIn,
 		SearchFlags: []*testing.StringPair{
