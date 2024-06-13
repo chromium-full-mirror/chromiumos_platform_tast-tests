@@ -31,7 +31,7 @@ func init() {
 		// ChromeOS > Security > Hardening
 		BugComponent: "b:1040049",
 		SoftwareDeps: []string{"selinux"},
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline", "informational"},
 	})
 }
 
