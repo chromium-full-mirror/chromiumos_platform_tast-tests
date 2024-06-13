@@ -168,7 +168,7 @@ func init() {
 				isListenTest: false,
 				processCount: 100,
 			},
-			ExtraAttr: []string{"group:mainline", "group:criticalstaging", "informational", "group:secagentd_bpf"},
+			ExtraAttr: []string{"group:mainline", "informational", "group:secagentd_bpf"},
 		},
 			{
 				Name: "listen_tcp",
@@ -178,7 +178,7 @@ func init() {
 					isListenTest: true,
 					processCount: 1,
 				},
-				ExtraAttr: []string{"group:mainline", "group:criticalstaging", "informational", "group:secagentd_bpf"},
+				ExtraAttr: []string{"group:mainline", "informational", "group:secagentd_bpf"},
 			},
 			{
 				Name: "listen_tcp_v6",
@@ -188,7 +188,7 @@ func init() {
 					isListenTest: true,
 					processCount: 1,
 				},
-				ExtraAttr: []string{"group:mainline", "group:criticalstaging", "informational", "group:secagentd_bpf"},
+				ExtraAttr: []string{"group:mainline", "informational", "group:secagentd_bpf"},
 			},
 		},
 	})
