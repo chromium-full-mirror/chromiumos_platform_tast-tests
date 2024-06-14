@@ -77,13 +77,14 @@ func (as *Asphalt8) EnterGameScene(ctx context.Context) error {
 	kb := as.kb
 	ud := uidetection.NewDefault(as.tconn).WithScreenshotStrategy(uidetection.ImmediateScreenshot)
 
-	notNowButton := as.d.Object(androidui.Text("Not now"), androidui.ClassName("android.widget.Button"))
+	profileDismissReg := `(Not now|Cancel)`
+	profileDismissButton := as.d.Object(androidui.TextMatches(profileDismissReg), androidui.ClassName("android.widget.Button"))
 	actionBarRoot := as.d.Object(androidui.ID(asphalt8IDPrefix + "action_bar_root"))
 	gameScene := uidetection.CustomIcon(as.dataPath(Asphalt8IconGameScene), uidetection.MinConfidence(0.65))
 	raceNow := uidetection.TextBlock([]string{"RACE", "NOW!"})
 	return uiauto.NamedCombine("enter game scene",
 		// Dismiss the profile dialog if it exists.
-		cuj.ClickIfExist(notNowButton, longUITimeout),
+		cuj.ClickIfExist(profileDismissButton, longUITimeout),
 		cuj.WaitForExists(actionBarRoot, defaultUITimeout),
 		uiauto.NamedAction("press enter to skip animation", kb.AccelAction("Enter")),
 		// On low-end devices, wait up to 2 minutes for the 'RACE-NOW' button.
