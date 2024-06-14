@@ -251,7 +251,7 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get crossystem fwid: ", err)
 	}
-	re := regexp.MustCompile(`Google_([a-z-A-Z]*)\.(\d*\.\d*.\d*)`)
+	re := regexp.MustCompile(`Google_([a-z-A-Z_]*)\.(\d*\.\d*.\d*)`)
 	match := re.FindStringSubmatch(initialRwFwid)
 	if len(match) != 3 {
 		s.Fatalf("Unexpected fw id format from crossystem %v, got: %s", reporters.CrossystemParamFwid, initialRwFwid)
