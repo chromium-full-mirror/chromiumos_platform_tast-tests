@@ -63,6 +63,7 @@ func reset(ctx context.Context, s *testing.State, b utils.DevboardHelper, i *ti5
 	switch resetType {
 	case reboot:
 		s.Log("Running reboot")
+		i.CCDOpen(ctx)
 		i.SendConsoleRebootCmd(ctx)
 		resetFlag = rebootFlag
 	case powerOn:
