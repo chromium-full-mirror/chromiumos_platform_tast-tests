@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/calendar"
 	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -298,10 +299,9 @@ func init() {
 		Contacts: []string{"cros-status-area-eng@google.com", "leandre@google.com", "jiamingc@google.com"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return NewConfig(ChromeOptions(
-				chrome.GAIALoginPool(s.RequiredVar("calendar.googleCalendarAccountPool")),
+				chrome.GAIALoginPool(dma.CredsFromPool(calendar.GoogleCalendarAccountPoolVarName)),
 				chrome.EnableFeatures("PrivacyIndicators"))).Opts()
 		}),
-		Vars:            []string{"calendar.googleCalendarAccountPool"},
 		SetUpTimeout:    chrome.LoginTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,

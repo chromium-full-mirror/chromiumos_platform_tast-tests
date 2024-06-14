@@ -29,7 +29,7 @@ func init() {
 		},
 		BugComponent: "b:1246126", // ChromeOS > Software > System UI Surfaces > Status Area > Calendar
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "gaia"},
 		SearchFlags: []*testing.StringPair{{
 			Key:   "feature_id",
 			Value: "screenplay-e5592965-ad75-451b-8d24-3d1a5662ef7a",
@@ -63,10 +63,9 @@ func ShowEvents(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to click the date tray: ", err)
 	}
 
-	calendarView := nodewith.HasClass("CalendarView")
-	mainHeaderTriView := nodewith.HasClass("TriView").Ancestor(calendarView).Nth(0)
-	mainHeaderContainer := nodewith.HasClass("View").Ancestor(mainHeaderTriView).Nth(1)
-	mainHeader := nodewith.Name("Calendar").HasClass("Label").Ancestor(mainHeaderContainer)
+	calendarView := nodewith.ClassName("CalendarView")
+	mainHeaderTriView := nodewith.ClassName("TriView").Ancestor(calendarView).Nth(0)
+	mainHeader := nodewith.Name("Calendar").ClassName("Label").Ancestor(mainHeaderTriView)
 
 	if err := ui.WaitUntilExists(mainHeader)(ctx); err != nil {
 		s.Fatal("Failed to find calendar main label after opening calendar view: ", err)
@@ -92,10 +91,8 @@ func ShowEvents(ctx context.Context, s *testing.State) {
 	// Clicks on a Monday's cell to show the event list view.
 	scrollView := nodewith.HasClass("ScrollView").Ancestor(calendarView).Nth(0)
 	scrollViewport := nodewith.HasClass("ScrollView::Viewport").Ancestor(scrollView).Nth(0)
-	contentView := nodewith.HasClass("View").Ancestor(scrollViewport).Nth(0)
-	currentMonthView := nodewith.HasClass("View").Ancestor(contentView).Nth(3)
-	firstMondayDateCell := nodewith.HasClass("CalendarDateCellView").Ancestor(currentMonthView).Nth(1)
-	firstTuesdayDateCell := nodewith.HasClass("CalendarDateCellView").Ancestor(currentMonthView).Nth(2)
+	firstMondayDateCell := nodewith.HasClass("CalendarDateCellView").Ancestor(scrollViewport).Nth(1)
+	firstTuesdayDateCell := nodewith.HasClass("CalendarDateCellView").Ancestor(scrollViewport).Nth(2)
 	scrollViewBounds, err := ui.Location(ctx, scrollView)
 	if err != nil {
 		s.Fatal("Failed to find calendar scroll view bounds: ", err)
@@ -194,8 +191,7 @@ func ShowEvents(ctx context.Context, s *testing.State) {
 
 	// Calendar list view should show "Open in Google calendar" if there's no events.
 	openButtonContentView := nodewith.HasClass("View").Ancestor(eventContentView).Nth(0)
-	openButtonView := nodewith.HasClass("PillButton").Ancestor(openButtonContentView)
-	openButtonLabelView := nodewith.Name("Open in Google Calendar").HasClass("LabelButtonLabel").Ancestor(openButtonView)
+	openButtonLabelView := nodewith.Name("Open in Google Calendar").HasClass("LabelButtonLabel").Ancestor(openButtonContentView)
 	if err := ui.WaitUntilExists(openButtonLabelView)(ctx); err != nil {
 		s.Fatal("Failed to find the Open in Google calendar label after clicking on the first Tuesday date cell: ", err)
 	}

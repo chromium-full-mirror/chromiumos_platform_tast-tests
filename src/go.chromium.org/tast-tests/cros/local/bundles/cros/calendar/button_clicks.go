@@ -27,7 +27,7 @@ func init() {
 		},
 		BugComponent: "b:1246126", // ChromeOS > Software > System UI Surfaces > Status Area > Calendar
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "gaia"},
 		SearchFlags: []*testing.StringPair{{
 			Key:   "feature_id",
 			Value: "screenplay-e5592965-ad75-451b-8d24-3d1a5662ef7a",
@@ -58,8 +58,7 @@ func ButtonClicks(ctx context.Context, s *testing.State) {
 
 	calendarView := nodewith.ClassName("CalendarView")
 	mainHeaderTriView := nodewith.ClassName("TriView").Ancestor(calendarView).Nth(0)
-	mainHeaderContainer := nodewith.ClassName("View").Ancestor(mainHeaderTriView).Nth(1)
-	mainHeader := nodewith.Name("Calendar").ClassName("Label").Ancestor(mainHeaderContainer)
+	mainHeader := nodewith.Name("Calendar").ClassName("Label").Ancestor(mainHeaderTriView)
 
 	if err := ui.WaitUntilExists(mainHeader)(ctx); err != nil {
 		s.Fatal("Failed to find calendar main label after opening calendar view: ", err)
@@ -147,7 +146,7 @@ func ButtonClicks(ctx context.Context, s *testing.State) {
 	}
 
 	// Check if the DateTime setting page within the OS Settings was opened.
-	matcher := chrome.MatchTargetURL("chrome://os-settings/dateTime")
+	matcher := chrome.MatchTargetURL("chrome://os-settings/systemPreferences")
 	conn, err := cr.NewConnForTarget(ctx, matcher)
 	if err != nil {
 		s.Fatal("Failed to open the date and time settings: ", err)

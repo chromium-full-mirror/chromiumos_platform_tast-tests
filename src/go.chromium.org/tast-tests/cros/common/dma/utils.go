@@ -10,6 +10,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/accountmanager"
 	"go.chromium.org/tast-tests/cros/common/arc"
+	"go.chromium.org/tast-tests/cros/common/calendar"
 	"go.chromium.org/tast-tests/cros/common/connectivityfwdumps"
 	"go.chromium.org/tast-tests/cros/common/drivefs"
 	"go.chromium.org/tast-tests/cros/common/policy"
@@ -34,6 +35,8 @@ func pools() (map[string]string, map[string]string) {
 		wallpaper.GooglePhotosAccountPoolVarName:    wallpaper.GooglePhotosDMAAccountPoolValue(),
 		connectivityfwdumps.GaiaLoginAccountVarName: arc.ManagedDMAAccountPoolValue(),
 		policy.ManagedUserAccountPoolVarName:        arc.ManagedDMAAccountPoolValue(),
+		calendar.GoogleCalendarAccountPoolVarName:   calendar.GoogleCalendarDMAAccountPoolValue(),
+		calendar.UpcomingEventsAccountVarName:       calendar.UpcomingEventsDMAAccountValue(),
 	}
 
 	var regularPools = map[string]string{
@@ -45,6 +48,8 @@ func pools() (map[string]string, map[string]string) {
 		wallpaper.GooglePhotosAccountPoolVarName:    wallpaper.GooglePhotosAccountPoolValue(),
 		connectivityfwdumps.GaiaLoginAccountVarName: connectivityfwdumps.GaiaLoginAccountValue(),
 		policy.ManagedUserAccountPoolVarName:        policy.ManagedUserAccountPoolValue(),
+		calendar.GoogleCalendarAccountPoolVarName:   calendar.GoogleCalendarAccountPoolValue(),
+		calendar.UpcomingEventsAccountVarName:       calendar.UpcomingEventsAccountValue(),
 	}
 
 	return dmaPools, regularPools

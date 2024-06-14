@@ -27,7 +27,7 @@ func init() {
 		},
 		BugComponent: "b:1246126", // ChromeOS > Software > System UI Surfaces > Status Area > Calendar
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "gaia"},
 		SearchFlags: []*testing.StringPair{{
 			Key:   "feature_id",
 			Value: "screenplay-fed70290-27e6-403a-8956-d3ba9671fc90",
@@ -49,10 +49,10 @@ func ShowUpNext(ctx context.Context, s *testing.State) {
 
 	// Opens calendar view.
 	dateTray := nodewith.HasClass("DateTray")
-	calendarView := nodewith.HasClass("CalendarView")
+	calendarView := nodewith.ClassName("CalendarView")
 	if err := uiauto.Combine("Open calendar view",
 		ui.DoDefault(dateTray),
-		ui.WaitForLocation(calendarView),
+		ui.WaitUntilExists(calendarView),
 	)(ctx); err != nil {
 		s.Fatal("Failed to open Calendar View: ", err)
 	}

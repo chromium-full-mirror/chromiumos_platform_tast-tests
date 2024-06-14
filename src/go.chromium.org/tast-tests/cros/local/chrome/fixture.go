@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/calendar"
 	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/ui"
@@ -154,9 +155,8 @@ func init() {
 		Desc:     "Logged into a session with Gaia user where there are calendar events",
 		Contacts: []string{"jiamingc@google.com"},
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
-			return []Option{GAIALoginPool(s.RequiredVar("calendar.googleCalendarAccountPool")), EnableFeatures("CalendarView")}, nil
+			return []Option{GAIALoginPool(dma.CredsFromPool(calendar.GoogleCalendarAccountPoolVarName)), EnableFeatures("CalendarView")}, nil
 		}),
-		Vars:            []string{"calendar.googleCalendarAccountPool"},
 		SetUpTimeout:    FixtureSetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: ResetTimeout,
@@ -167,9 +167,8 @@ func init() {
 		Desc:     "Logged into a session with Gaia user where there are events set up to join Hangout meetings",
 		Contacts: []string{"leandre@google.com", "jiamingc@google.com"},
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
-			return []Option{GAIALoginPool(s.RequiredVar("calendar.googleCalendarAccountPool")), EnableFeatures("PrivacyIndicators")}, nil
+			return []Option{GAIALoginPool(dma.CredsFromPool(calendar.GoogleCalendarAccountPoolVarName)), EnableFeatures("PrivacyIndicators")}, nil
 		}),
-		Vars:            []string{"calendar.googleCalendarAccountPool"},
 		SetUpTimeout:    FixtureSetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: ResetTimeout,
@@ -180,9 +179,8 @@ func init() {
 		Desc:     "Logged into a session with Gaia user where there are upcoming events",
 		Contacts: []string{"cros-status-area-eng@google.com", "samcackett@google.com"},
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
-			return []Option{GAIALoginPool(s.RequiredVar("calendar.upcomingEventsAccountPool")), EnableFeatures("CalendarJelly")}, nil
+			return []Option{GAIALoginPool(dma.CredsFromPool(calendar.UpcomingEventsAccountVarName)), EnableFeatures("CalendarJelly")}, nil
 		}),
-		Vars:            []string{"calendar.upcomingEventsAccountPool"},
 		SetUpTimeout:    FixtureSetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: ResetTimeout,

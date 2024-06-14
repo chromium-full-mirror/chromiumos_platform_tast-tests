@@ -30,7 +30,7 @@ func init() {
 		Contacts:     []string{"cros-status-area-eng@google.com", "leandre@chromium.org"},
 		BugComponent: "b:1246070", // ChromeOS > Software > System UI Surfaces > Status Area
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "gaia"},
 		VarDeps: []string{
 			"ui.PrivacyIndicators.meet_code",
 		},
