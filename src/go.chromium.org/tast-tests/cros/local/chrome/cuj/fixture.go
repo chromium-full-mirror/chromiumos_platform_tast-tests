@@ -828,6 +828,38 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithWebRTCEventLoggingWithVCEffectsAndStudioMic",
+		Desc: "CUJ test fixture with WebRTC event logging and VC platform effects, including studio mic, enabled",
+		Contacts: []string{
+			"sammc@chromium.org",
+			"cranelw@google.com",
+			"cros-sw-perf@google.com",
+			"cros-pe-pnp@google.com",
+		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
+		Data:         docsBlockerFiles,
+		Impl: &loggedInToCUJUserFixture{
+			chromeExtraOpts: []chrome.Option{
+				chrome.ExtraArgs(webRTCEventLogCommandFlag),
+				chrome.EnableFeatures(
+					"PreferConstantFrameRate",
+					"CrOSLateBootAudioStyleTransfer",
+					"ShowLiveCaptionInVideoConferenceTray",
+					"SystemLiveCaption",
+					"VideoConference",
+				),
+			},
+			bt:          browser.TypeAsh,
+			docsBlocker: true,
+		},
+		Parent:          "prepareForCUJ",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithWebRTCEventLoggingWithVCEffectsLacros",
 		Desc: "CUJ test fixture with WebRTC event logging, VC platform effects enabled and lacros",
 		Contacts: []string{

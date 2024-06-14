@@ -97,6 +97,7 @@ type MeetTest struct {
 	AdjustLighting    bool                    // Whether to turn on the platform-level adjust lighting feature.
 	LiveCaptions      bool                    // Whether to turn on live captioning.
 	NoiseCancellation bool                    // Whether to turn on noise cancellation.
+	StudioMic         bool                    // Whether to turn on studio mic.
 	ZoomOut           bool                    // Whether to zoom out on both the browser and display.
 	TabSwitchDocs     bool                    // Whether to switch between Docs and Meet. It cannot be true if docs is false.
 	Duration          time.Duration           // Duration of the meet call. Must be less than test timeout.
@@ -708,7 +709,8 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 	if meet.LiveCaptions ||
 		meet.AdjustLighting ||
 		meet.BackgroundBlur ||
-		meet.NoiseCancellation {
+		meet.NoiseCancellation ||
+		meet.StudioMic {
 		testing.ContextLog(ctx, "Toggling platform VC effects")
 		vct := vctray.New(ctx, tconn)
 		blur := vctray.BackgroundBlurOff
@@ -719,9 +721,18 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 			vct.SetLiveCaption(meet.LiveCaptions),
 			vct.SetAdjustLighting(meet.AdjustLighting),
 			vct.SetBackgroundBlur(blur),
-			vct.SetNoiseCancellation(meet.NoiseCancellation),
 		)(ctx); err != nil {
 			return pv, errors.Wrap(err, "failed to configure platform VC effects")
+		}
+		// Studio mic and noise cancellation don't appear at the same time.
+		if meet.StudioMic {
+			if err := vct.ChangeSettingsInPanel(vct.SetStudioMic(meet.StudioMic))(ctx); err != nil {
+				return pv, errors.Wrap(err, "failed to configure platform VC effects: studio mic")
+			}
+		} else if meet.NoiseCancellation {
+			if err := vct.ChangeSettingsInPanel(vct.SetNoiseCancellation(meet.NoiseCancellation))(ctx); err != nil {
+				return pv, errors.Wrap(err, "failed to configure platform VC effects: noise cancellation")
+			}
 		}
 	}
 

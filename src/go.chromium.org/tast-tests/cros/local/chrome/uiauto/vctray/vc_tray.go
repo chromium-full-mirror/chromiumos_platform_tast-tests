@@ -37,6 +37,7 @@ var (
 	liveCaptionButton       = nodewith.NameStartingWith("Toggle Live Caption").Role(role.ToggleButton).Ancestor(bubleView)
 	adjustCameraFraming     = nodewith.NameStartingWith("Toggle Camera framing").Role(role.ToggleButton).Ancestor(bubleView)
 	noiseCancellationButton = nodewith.NameStartingWith("Toggle Noise cancellation").Role(role.ToggleButton).Ancestor(bubleView)
+	studioMicButton         = nodewith.NameStartingWith("Toggle Studio mic").Role(role.ToggleButton).Ancestor(bubleView)
 
 	buttonNameRegexp           = regexp.MustCompile(`.*Button.*`)
 	bgBlurOffButton            = nodewith.NameContaining("Off").ClassNameRegex(buttonNameRegexp).Ancestor(bubleView)
@@ -214,6 +215,11 @@ func (vcTray VCTray) SetAdjustLighting(expectedOn bool) action.Action {
 // SetNoiseCancellation toggles on/off the "Noise cancellation" option.
 func (vcTray VCTray) SetNoiseCancellation(expectedOn bool) action.Action {
 	return vcTray.SetFeature(noiseCancellationButton, expectedOn)
+}
+
+// SetStudioMic toggles on/off the "Studio mic" option.
+func (vcTray VCTray) SetStudioMic(expectedOn bool) action.Action {
+	return vcTray.SetFeature(studioMicButton, expectedOn)
 }
 
 // SetCameraFraming toggles on/off the "Camera Framing" option.
