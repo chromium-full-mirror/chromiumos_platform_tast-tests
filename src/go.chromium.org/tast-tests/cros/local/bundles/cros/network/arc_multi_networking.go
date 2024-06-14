@@ -91,7 +91,7 @@ func ARCMultiNetworking(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, 20*time.Second)
 	defer cancel()
 
-	startARC := func() *arc.ARC {
+	startARC := func(ctx context.Context) *arc.ARC {
 		// We don't need a fresh Chrome login, so use KeepState() to make it faster.
 		cr, err := chrome.New(
 			ctx, chrome.ARCEnabled(),
@@ -113,7 +113,7 @@ func ARCMultiNetworking(ctx context.Context, s *testing.State) {
 			s.Fatalf("Failed to close arc observer: %s", err)
 		}
 	}
-	a := startARC()
+	a := startARC(ctx)
 	defer closeARC(cleanupCtx, a)
 	shillManager, err := shill.NewManager(ctx)
 	if err != nil {
@@ -206,7 +206,7 @@ func ARCMultiNetworking(ctx context.Context, s *testing.State) {
 		ipAddrs := []net.IP{rsw.routerAddr, rsw.serverAddr}
 		for _, ip := range ipAddrs {
 			if err := arcnet.ExpectPingSuccess(ctx, a, arcIfName, ip.String()); err != nil {
-				s.Fatalf("Failed to ping %s", ip.String())
+				s.Fatalf("Failed to ping %s: %s", ip.String(), err)
 			}
 		}
 	}
@@ -248,7 +248,7 @@ func ARCMultiNetworking(ctx context.Context, s *testing.State) {
 	checkARCConnect(routerBNew, a)
 
 	s.Log("Rebooting ARC")
-	aNew := startARC()
+	aNew := startARC(ctx)
 	defer closeARC(cleanupCtx, aNew)
 	checkARCConnect(routerANew, aNew)
 	checkARCConnect(routerBNew, aNew)
