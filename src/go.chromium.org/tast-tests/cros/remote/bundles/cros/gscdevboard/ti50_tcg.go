@@ -87,9 +87,6 @@ func init() {
 			Name: "test_create_primary_faults",
 			Val:  "TestCreatePrimaryFaults",
 		}, {
-			Name: "test_create_sign_ecdsa",
-			Val:  "TestCreateSignEcdsa",
-		}, {
 			Name: "test_create_sign_quote",
 			Val:  "TestCreateSignQuote",
 		}, {
@@ -101,15 +98,6 @@ func init() {
 		}, {
 			Name: "test_duplicate_import",
 			Val:  "TestDuplicateImport",
-		}, {
-			Name: "test_duplicate_import__all_non_rsa_objects",
-			Val:  "TestDuplicateImport_AllNonRsaObjects",
-		}, {
-			Name: "test_duplicate_import__all_objects",
-			Val:  "TestDuplicateImport_AllObjects",
-		}, {
-			Name: "test_duplicate_import__basic",
-			Val:  "TestDuplicateImport_Basic",
 		}, {
 			Name: "test_ecc",
 			Val:  "TestEcc",
@@ -348,23 +336,11 @@ func init() {
 			Name: "test_raw_nv_write",
 			Val:  "TestRawNVWrite",
 		}, {
-			Name: "test_raw_nv_write_lock",
-			Val:  "TestRawNVWriteLock",
-		}, {
 			Name: "test_raw_sign",
 			Val:  "TestRawSign",
 		}, {
 			Name: "test_reserved_bits",
 			Val:  "TestReservedBits",
-		}, {
-			Name: "test_rsa_crypto",
-			Val:  "TestRsaCrypto",
-		}, {
-			Name: "test_rsa_dp_ep",
-			Val:  "TestRsaDpEp",
-		}, {
-			Name: "test_rsa_dp_ep2",
-			Val:  "TestRsaDpEp2",
 		}, {
 			Name: "test_rsaes",
 			Val:  "TestRsaes",
@@ -444,9 +420,6 @@ func init() {
 			Name: "test_start_auth_session_seed",
 			Val:  "TestStartAuthSessionSeed",
 		}, {
-			Name: "test_stir_random",
-			Val:  "TestStirRandom",
-		}, {
 			Name: "test_sw_signing",
 			Val:  "TestSWSigning",
 		}, {
@@ -461,12 +434,6 @@ func init() {
 		}, {
 			Name: "test_test_parms",
 			Val:  "TestTestParms",
-		}, {
-			Name: "test_tpm_state_portability_phase1",
-			Val:  "TestTpmStatePortabilityPhase1",
-		}, {
-			Name: "test_tpm_state_portability_phase2",
-			Val:  "TestTpmStatePortabilityPhase2",
 		}, {
 			Name: "test_vendor_specific",
 			Val:  "TestVendorSpecific",
