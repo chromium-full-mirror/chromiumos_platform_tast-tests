@@ -15,6 +15,8 @@ import (
 const (
 	defaultReferenceScreenHeight = 165.6
 	defaultReferenceScreenWidth  = 294.4
+	// FullImageMSEThreshold is mean squared error threshold for passing full image test.
+	FullImageMSEThreshold = 5000
 )
 
 // DetermineSingleLineVerdict runs analysis over a HMR CSV output file and returns the result of all validations run.
@@ -109,8 +111,18 @@ func DetermineFullImageVerdict(referenceFileName, resultFileName string, calibra
 		return nil, err
 	}
 
-	// Note: Temporarily required, as tast cannot be built with unused variables. Will be removed in next commit.
-	_, _, _ = referencePaths, resultPaths, epsilon
-	// TODO(b/343548793): Run sliding window analysis on reference and result paths.
-	return nil, nil
+	pathResults, err := runSlidingWindowAnalysis(referencePaths, resultPaths, screenDiagonalDistance)
+	var passed bool
+	var totalMSE float64
+	for _, pathResult := range pathResults {
+		totalMSE += pathResult.PathMSE
+	}
+
+	if err != nil || totalMSE > FullImageMSEThreshold {
+		passed = false
+	} else {
+		passed = true
+	}
+
+	return &FullImageResult{Passed: passed, TotalMSE: totalMSE, Epsilon: epsilon, PathResults: pathResults}, err
 }

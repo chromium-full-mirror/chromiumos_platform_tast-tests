@@ -8,11 +8,17 @@ import (
 	"math"
 
 	"go.chromium.org/tast/core/errors"
+	"gonum.org/v1/gonum/floats"
 	"gonum.org/v1/gonum/mat"
+	"gonum.org/v1/gonum/stat"
 )
 
 const (
-	minReferencePathSize = 10
+	minReferencePathSize   = 10
+	fitR2Threshold         = 0.95
+	maxReferenceWindowSize = 10
+	minReferenceWindowSize = 10
+	maxPolynomialSize      = 3
 )
 
 // FullImageResult contains the output of the HMR full image sliding analysis.
@@ -35,6 +41,34 @@ type PathResult struct {
 
 func euclideanDistance(pointA, pointB *hmrNode) float64 {
 	return math.Sqrt(math.Pow(pointA.coorX-pointB.coorX, 2) + math.Pow(pointA.coorY-pointB.coorY, 2))
+}
+
+// evaluatePolynomial returns the result of a polynomial function with a given x value.
+func evaluatePolynomial(x float64, coefs []float64) float64 {
+	val := 0.0
+	for i := range coefs {
+		val = val + coefs[i]*math.Pow(x, float64(i))
+	}
+	return val
+}
+
+// getWindowView extracts a contiguous subsection from a path of HMR nodes.
+// The start and end indexes given are a closed range.
+func getWindowView(path []*hmrNode, start, end int) ([]*hmrNode, error) {
+	var window []*hmrNode
+	if start < 0 || end >= len(path) {
+		return window, errors.Errorf("invalid indexes provided - start index: %v, end index: %v, path length: %v", start, end, len(path))
+	}
+	for start <= end {
+		window = append(window, path[start])
+		start++
+	}
+	return window, nil
+}
+
+// isVertical returns true if the coordinate points given are orientated vertically.
+func isVertical(x, y []float64) bool {
+	return floats.Max(x)-floats.Min(x) < floats.Max(y)-floats.Min(y)
 }
 
 // leastSquaredFit performs a polynomial fitting on a set of points using least squared, and returns the coefficients.
@@ -109,7 +143,8 @@ func extractResultsPaths(resultPoints []*hmrNode, referencePaths [][]*hmrNode, r
 	epsilon := -1.0
 	left := 0.0
 	right := resultScreenDiagonalDistance
-	// Perform a binary search until the smallest epsilon value that creates the same number of results paths as reference paths is found.
+	// Perform a binary search until the smallest epsilon value that creates
+	// the same number of results paths as reference paths is found.
 	for left <= right {
 		mid := math.Floor((left + right) / 2)
 		resultPaths := matchReferencePathToResultPath(resultPoints, referencePaths, mid)
@@ -176,4 +211,166 @@ func matchReferencePathToResultPath(resultPoints []*hmrNode, referencePaths [][]
 		resultPaths = append(resultPaths, path)
 	}
 	return resultPaths
+}
+
+// calculateMSE calculates the mean squared error of the points in the results
+// window, using a fitted line generated from the points in the reference window.
+func calculateMSE(refWindow, resWindow []*hmrNode) (bool, float64, error) {
+	var x, y []float64
+	for i := range refWindow {
+		x = append(x, float64(refWindow[i].coorX))
+		y = append(y, float64(refWindow[i].coorY))
+	}
+
+	// Inverts the axes to make y the independent variable and x the dependent variable.
+	vertical := isVertical(x, y)
+	if vertical {
+		x, y = y, x
+	}
+
+	var coefs []float64
+	var r2 float64
+	var err error
+	for degree := 1; degree <= maxPolynomialSize; degree++ {
+		coefs, err = leastSquaredFit(x, y, degree)
+		if err != nil {
+			continue
+		}
+
+		var predicted []float64
+		for i := range x {
+			predicted = append(predicted, evaluatePolynomial(x[i], coefs))
+		}
+
+		// Fits are required to be greater than a threshold to be deemed successful.
+		r2 = stat.RSquaredFrom(predicted, y, nil)
+		if r2 >= fitR2Threshold {
+			break
+		}
+	}
+
+	var windowTotalMSE float64
+	for i := range resWindow {
+		if vertical {
+			windowTotalMSE += math.Pow(resWindow[i].coorX-evaluatePolynomial(resWindow[i].coorY, coefs), 2)
+		} else {
+			windowTotalMSE += math.Pow(resWindow[i].coorY-evaluatePolynomial(resWindow[i].coorX, coefs), 2)
+		}
+	}
+
+	return r2 >= fitR2Threshold, windowTotalMSE, err
+}
+
+// walkPath performs a walk along the reference path and attempts to perform a walk along the
+// results path. This involves iterating through the reference path and constructing a sliding
+// window of reference points. On each iteration, all result points within bubbleRadius of the
+// newly iterated reference point are added to the results window. Likewise, when a reference point
+// is removed from the reference window, all result points within bubbleRadius of this reference point
+// are removed from the results window. Calculations are continually calculated of the discrepancies
+// between the reference window and results window.
+func walkPath(referencePath, resultPath []*hmrNode, bubbleRadius float64) (bool, *PathResult, error) {
+	var totalPathMSE, numberOfCalculations, numberOfSuccessfulFits float64
+	referenceWindowTail := 0
+	resultWindowHead, resultWindowTail := -1, 0
+
+	for referenceWindowHead := range referencePath {
+		// Each iteration of loop expands front of reference window.
+
+		// Add any result nodes within the newly added reference node's bubble
+		// radius to the result window.
+		for resultWindowHead+1 < len(resultPath) && euclideanDistance(resultPath[resultWindowHead+1], referencePath[referenceWindowHead]) <= bubbleRadius {
+			resultWindowHead++
+		}
+
+		// If the size of the reference window is now larger than the max size,
+		// remove the last node.
+		if referenceWindowHead-referenceWindowTail+1 > maxReferenceWindowSize {
+			// Remove result nodes within bubble radius of the removed reference node.
+			for resultWindowHead >= resultWindowTail && euclideanDistance(resultPath[resultWindowTail], referencePath[referenceWindowTail]) <= bubbleRadius {
+				resultWindowTail++
+			}
+			referenceWindowTail++
+		}
+
+		// Can calculate values if the reference window is larger than the
+		// min window size, and the result window has at least 1 node.
+		if referenceWindowHead-referenceWindowTail+1 >= minReferenceWindowSize && resultWindowHead >= resultWindowTail {
+			referenceWindow, err := getWindowView(referencePath, referenceWindowTail, referenceWindowHead)
+			if err != nil {
+				return false, nil, errors.Wrap(err, "failed to get window view")
+			}
+			resultWindow, err := getWindowView(resultPath, resultWindowTail, resultWindowHead)
+			if err != nil {
+				return false, nil, errors.Wrap(err, "failed to get window view")
+			}
+			fitSuccessful, windowMSE, err := calculateMSE(referenceWindow, resultWindow)
+			if err != nil {
+				return false, nil, errors.Wrapf(err, "failed to calculate MSE for a reference window. Window points: %v", referenceWindow)
+			}
+			totalPathMSE += windowMSE
+			if fitSuccessful {
+				numberOfSuccessfulFits++
+			}
+			numberOfCalculations++
+		}
+
+	}
+
+	reachedEndOfPath := resultWindowHead == len(resultPath)-1
+	return reachedEndOfPath, &PathResult{
+		PathMSE:              totalPathMSE / numberOfCalculations,
+		SuccessfulFitRate:    numberOfSuccessfulFits / numberOfCalculations,
+		NumberOfCalculations: numberOfCalculations,
+		ReferencePathLength:  len(referencePath),
+		ResultPathLength:     len(resultPath),
+		BubbleRadius:         bubbleRadius,
+	}, nil
+}
+
+// runSlidingWindowAnalysis performs a sliding window analysis over pairs
+// of reference and results paths. Diagonal distance refers theoretical
+// maximum distance that two points could be from one another, the screen's
+// diagonal size.
+func runSlidingWindowAnalysis(referencePaths, resultPaths [][]*hmrNode, diagonalDistance float64) ([]*PathResult, error) {
+	var pathResults []*PathResult
+	var errs error
+
+	for i, referencePath := range referencePaths {
+		resultPath := resultPaths[i]
+		var successfulPathResult *PathResult
+		var pathErrorChain, pathErr error
+
+		left := 0.0
+		right := diagonalDistance
+		// Performs a binary search to find the smallest bubble radius that
+		// successfully walks down the results path.
+		for left <= right {
+			mid := math.Floor((left + right) / 2)
+
+			reachedEndOfPath, pathResult, err := walkPath(referencePath, resultPath, mid)
+			if err != nil {
+				pathErr = errors.Wrapf(err, "failed to walk path due to error (bubble radius %vmm)", mid)
+			} else if !reachedEndOfPath {
+				pathErr = errors.Errorf("failed to walk to end of path (bubble radius %vmm)", mid)
+			} else if pathResult.SuccessfulFitRate < fitR2Threshold {
+				pathErr = errors.Errorf("successful fit rate of path curve fitting (%v) was below threshold (%v) (bubble radius %vmm)", pathResult.SuccessfulFitRate, fitR2Threshold, mid)
+			} else {
+				successfulPathResult = pathResult
+				right = mid - 1
+				continue
+			}
+			pathErrorChain = errors.Join(pathErrorChain, pathErr)
+			left = mid + 1
+		}
+		if successfulPathResult != nil {
+			pathResults = append(pathResults, successfulPathResult)
+		} else {
+			// Only return errors for failing to walk down a path if no
+			// successful walk could be performed on the path.
+			err := errors.Wrapf(pathErrorChain, "failed to find a bubble radius that could traverse the path correctly (path number: %v, reference path length: %v, reference path start: x:%v, y:%v)", i, len(referencePath), referencePath[0].coorX, referencePath[0].coorY)
+			errs = errors.Join(errs, err)
+		}
+	}
+
+	return pathResults, errs
 }
