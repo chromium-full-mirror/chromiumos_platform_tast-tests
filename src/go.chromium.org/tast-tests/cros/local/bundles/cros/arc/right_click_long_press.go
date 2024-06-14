@@ -58,6 +58,21 @@ func RightClickLongPress(ctx context.Context, s *testing.State) {
 	}
 	defer cleanupTabletMode(cleanupCtx)
 
+	if err := wm.ResetSplashScreenCounter(ctx, tconn); err != nil {
+		s.Fatal("Failed to reset splash screen counter: ", err)
+	}
+
+	// Uninstall the test app if it's already installed so that per-app settings get cleared.
+	installed, err := a.PackageInstalled(ctx, wm.ResizeLockTestPkgName)
+	if err != nil {
+		s.Fatal("Failed to get package install status: ", err)
+	}
+	if installed {
+		testing.ContextLog(ctx, "The test app is already installed. Trying to uninstall")
+		if err := a.Uninstall(ctx, wm.ResizeLockTestPkgName); err != nil {
+			s.Fatal("Failed to uninstall app: ", err)
+		}
+	}
 	if err := a.Install(ctx, arc.APKPath(apk), adb.InstallOptionFromPlayStore); err != nil {
 		s.Fatal("Failed to install the app: ", err)
 	}
@@ -70,11 +85,19 @@ func RightClickLongPress(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to start the activity %q", activityName)
 	}
 
-	// Close the splash screen if it's shown.
-	if err := wm.CheckVisibility(ctx, tconn, wm.ArcSplashScreenDialogViewClassName, true); err == nil {
-		if err := wm.CloseSplash(ctx, tconn, wm.InputMethodClick, nil); err != nil {
-			s.Fatal("Failed to close splash: ", err)
-		}
+	if err := ash.WaitForVisible(ctx, tconn, act.PackageName()); err != nil {
+		s.Fatal("Failed to wait until the activity gets visible: ", err)
+	}
+	if err := d.WaitForIdle(ctx, 10*time.Second); err != nil {
+		s.Fatal("Failed to wait for Android to be idle: ", err)
+	}
+
+	// Close the compat mode splash dialog.
+	if err := wm.CheckVisibility(ctx, tconn, wm.ArcSplashScreenDialogViewClassName, true); err != nil {
+		s.Fatal("Failed to wait for splash: ", err)
+	}
+	if err := wm.CloseSplash(ctx, tconn, wm.InputMethodClick, nil); err != nil {
+		s.Fatal("Failed to close splash: ", err)
 	}
 
 	window, err := ash.GetARCAppWindowInfo(ctx, tconn, pkg)
@@ -82,11 +105,15 @@ func RightClickLongPress(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get ARC app window info: ", err)
 	}
 
+	const fieldID = pkg + ":id/long_press_count"
+
+	if err := d.Object(ui.ID(fieldID)).WaitForText(ctx, "0", 30*time.Second); err != nil {
+		s.Fatal("Failed to wait for the target view: ", err)
+	}
+
 	if err := mouse.Click(tconn, window.TargetBounds.CenterPoint(), mouse.RightButton)(ctx); err != nil {
 		s.Fatal("Failed to right click the activity: ", err)
 	}
-
-	const fieldID = pkg + ":id/long_press_count"
 
 	if err := d.Object(ui.ID(fieldID)).WaitForText(ctx, "1", 30*time.Second); err != nil {
 		s.Fatal("Failed to wait for long press: ", err)

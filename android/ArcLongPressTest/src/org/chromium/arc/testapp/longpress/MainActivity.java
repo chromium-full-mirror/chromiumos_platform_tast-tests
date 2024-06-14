@@ -9,6 +9,8 @@ package org.chromium.arc.testapp.longpress;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.TextView;
 
@@ -26,6 +28,8 @@ public class MainActivity extends Activity implements View.OnLongClickListener {
         mLongPressCountView = findViewById(R.id.long_press_count);
 
         mMainView.setOnLongClickListener(this);
+
+        mLongPressCountView.setText("0");
     }
 
     @Override
@@ -33,5 +37,13 @@ public class MainActivity extends Activity implements View.OnLongClickListener {
         mLongPressCount++;
         mLongPressCountView.setText(Integer.toString(mLongPressCount));
         return true;
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        if ((event.getButtonState() & MotionEvent.BUTTON_SECONDARY) != 0) {
+            Log.e("LongPress", "Observed right button event: " + event);
+        }
+        return super.onTouchEvent(event);
     }
 }
