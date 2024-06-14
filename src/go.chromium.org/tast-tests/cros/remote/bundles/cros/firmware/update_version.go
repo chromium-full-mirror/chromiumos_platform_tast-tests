@@ -50,7 +50,7 @@ func init() {
 		// TODO: When stable, change firmware_unstable to a different attr.
 		Attr:         []string{"group:firmware", "firmware_unstable", "firmware_usb"},
 		Timeout:      120 * time.Minute,
-		ServiceDeps:  []string{"tast.cros.firmware.BiosService", "tast.cros.firmware.TPMService"},
+		ServiceDeps:  []string{"tast.cros.firmware.UtilsService", "tast.cros.firmware.BiosService", "tast.cros.firmware.TPMService"},
 		SoftwareDeps: []string{"flashrom"},
 		Params: []testing.Param{
 			{
@@ -87,7 +87,7 @@ func UpdateVersion(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create config: ", err)
 	}
 	if err := h.RequireRPCClient(ctx); err != nil {
-		s.Fatal("Requiring RPC client")
+		s.Fatal("Requiring RPC client: ", err)
 	}
 
 	// Check if the DUT's active RW firmware is RWA. If not, reboot to RWA.
