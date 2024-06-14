@@ -91,12 +91,10 @@ func ExternalStorageFormat(ctx context.Context, s *testing.State) {
 		}
 	}(ctx)
 
-	before, err := utils.RemovableMountPoints(ctx, dut)
-	if err != nil {
-		s.Fatal("Failed to get mount points prior to plugging in new USB devices: ", err)
+	before, err := utils.GetMountPoints(ctx, dut)
+	if err == nil {
+		s.Fatal("Failed to ensure no USB devices appeared: ", err)
 	}
-
-	s.Log("Mount points prior to plugging in USB devices: ", before)
 
 	// Plug in the USB devices.
 	if err := utils.ControlFixture(ctx, USBID, "on"); err != nil {
@@ -136,18 +134,11 @@ func ExternalStorageFormat(ctx context.Context, s *testing.State) {
 	defer dut.Conn().CommandContext(cleanupCtx, "rm", remoteTXTPath).Output()
 
 	// Retrieve USB path.
-	afterMountPoints, err := utils.RemovableMountPoints(ctx, dut)
+	mountPoints, err := utils.GetMountPoints(ctx, dut)
 	if err != nil {
-		s.Fatal("Failed to get mount points after plugging in USB devices: ", err)
+		s.Fatal("Failed to get original USB devices before format: ", err)
 	}
-	s.Log("Mount points after plugging in USB devices: ", afterMountPoints)
-
-	mountPoints := utils.FindDifference(afterMountPoints, before)
-	s.Log("Found following new mount points: ", mountPoints)
-
 	mountPoint := mountPoints[0]
-
-	s.Logf("Using %s as mount point for newly plugged in USB device", mountPoint)
 
 	output, err := dut.Conn().CommandContext(ctx, "sh", "-c", fmt.Sprintf("df | grep '%s' | awk '{print $1}' | head -n 1", mountPoint)).Output(testexec.DumpLogOnError)
 	if err != nil {

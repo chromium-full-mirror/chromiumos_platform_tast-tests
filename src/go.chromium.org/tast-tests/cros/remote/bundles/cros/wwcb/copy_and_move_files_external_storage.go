@@ -102,12 +102,6 @@ func CopyAndMoveFilesExternalStorage(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get original USB devices: ", err)
 	}
 
-	// Get mount points before turning on External Storage fixture
-	beforeMountPoints, err := utils.RemovableMountPoints(ctx, dut)
-	if err != nil {
-		s.Fatal("Failed to get initial mount points: ", err)
-	}
-
 	if err := utils.ControlFixture(ctx, usbID, "on"); err != nil {
 		s.Fatal("Failed to plug the external storage media: ", err)
 	}
@@ -128,11 +122,10 @@ func CopyAndMoveFilesExternalStorage(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to check number of USB devices after plug: ", err)
 	}
 
-	var afterMountPoints = []string{}
-
+	var mountPoints = []string{}
 	// Retrieve USB path.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		afterMountPoints, err = utils.GetMountPoints(ctx, dut)
+		mountPoints, err = utils.GetMountPoints(ctx, dut)
 		if err != nil {
 			return errors.Wrap(err, "failed to get mount point")
 		}
@@ -140,8 +133,6 @@ func CopyAndMoveFilesExternalStorage(ctx context.Context, s *testing.State) {
 	}, &testing.PollOptions{Timeout: verifyTimeout, Interval: verifyInterval}); err != nil {
 		s.Fatal("Failed to retrieve USB path after plug")
 	}
-
-	var mountPoints = utils.FindDifference(afterMountPoints, beforeMountPoints)
 
 	for _, path := range mountPoints {
 		testing.ContextLogf(ctx, "Format %s", path)
