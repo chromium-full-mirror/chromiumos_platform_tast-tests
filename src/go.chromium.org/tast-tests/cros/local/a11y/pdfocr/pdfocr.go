@@ -212,7 +212,7 @@ func SetUpHTTPServer(ctx, cleanupCtx context.Context, dataFS http.FileSystem, bt
 	})
 
 	// Launch browser with the PDF OCR feature flag for both Ash and Lacros Chrome.
-	opts := []chrome.Option{chrome.EnableFeatures("PdfOcr")}
+	opts := []chrome.Option{chrome.EnableFeatures("PdfOcr", "MediaAppPdfA11yOcr")}
 	lacrosConfig := lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(chrome.LacrosEnableFeatures("PdfOcr")))
 	cr, err := browserfixt.NewChrome(ctx, bt, lacrosConfig, opts...)
 	if err != nil {
