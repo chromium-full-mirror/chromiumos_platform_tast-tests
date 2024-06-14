@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/cellular"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/expandable"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
@@ -174,7 +175,7 @@ func SimLockPolicyLockSettingOff(ctx context.Context, s *testing.State) {
 
 			if err := uiauto.Combine("Go to detail page and expand advanced section",
 				ui.LeftClick(networkNameDetail),
-				ui.LeftClick(ossettings.CellularAdvanced),
+				expandable.EnsureExpandableSectionOpened(tconn, ossettings.CellularAdvanced),
 			)(ctx); err != nil {
 				s.Fatal("Failed: ", err)
 			}
