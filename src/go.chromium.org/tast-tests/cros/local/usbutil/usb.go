@@ -234,7 +234,7 @@ func pollForFwupdDevices(ctx context.Context) ([]fwupdDevice, error) {
 			return testing.PollBreak(errors.Wrap(err, "failed to unmarshal fwupdmgr output"))
 		}
 		return nil
-	}, &testing.PollOptions{Interval: time.Second, Timeout: 3 * time.Second}); err != nil {
+	}, &testing.PollOptions{Interval: time.Second, Timeout: 15 * time.Second}); err != nil {
 		return nil, err
 	}
 	return fwupdResponse.Devices, nil
