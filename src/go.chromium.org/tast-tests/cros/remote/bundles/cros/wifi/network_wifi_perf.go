@@ -47,9 +47,8 @@ func init() {
 			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
 		},
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
-		// TODO(b/310040283): Promote test to stable by removing wificell_unstable attribute.
-		Attr:        []string{"group:wificell", "wificell_perf", "wificell_unstable"},
-		TestBedDeps: []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
+		Attr:         []string{"group:wificell", "wificell_perf"},
+		TestBedDeps:  []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
 		ServiceDeps: []string{
 			wificell.ShillServiceName,
 			"tast.cros.autoupdate.UpdateService",
@@ -69,6 +68,8 @@ func init() {
 					apOpts:    []ap.Option{ap.Mode(ap.Mode80211axPure), ap.Channel(157), ap.HTCaps(ap.HTCapHT20, ap.HTCapLDPC), ap.HEChWidth(ap.HEChWidth20Or40)},
 					powerSave: false, shouldTputRequired: false,
 				}},
+				// TODO(b/347339428): Promote test to stable by removing wificell_unstable attribute.
+				ExtraAttr:         []string{"wificell_unstable"},
 				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX),
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax()),
 				ExtraRequirements: []string{tdreq.WiFiTputHE20TCPTx, tdreq.WiFiTputHE20TCPRx, tdreq.WiFiTputHE20TCPRxTx, tdreq.WiFiTputHE20UDPTx, tdreq.WiFiTputHE20UDPRx, tdreq.WiFiTputHE20UDPRxTx},
@@ -85,6 +86,8 @@ func init() {
 					secConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers(wpa.CipherCCMP)),
 					powerSave:  false, shouldTputRequired: false,
 				}},
+				// TODO(b/347339428): Promote test to stable by removing wificell_unstable attribute.
+				ExtraAttr:         []string{"wificell_unstable"},
 				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX),
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax()),
 				ExtraRequirements: []string{tdreq.WiFiTputHE20TCPTx, tdreq.WiFiTputHE20TCPRx, tdreq.WiFiTputHE20TCPRxTx, tdreq.WiFiTputHE20UDPTx, tdreq.WiFiTputHE20UDPRx, tdreq.WiFiTputHE20UDPRxTx},
@@ -96,6 +99,8 @@ func init() {
 					apOpts:    []ap.Option{ap.Mode(ap.Mode80211axPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT40, ap.HTCapLDPC), ap.HEChWidth(ap.HEChWidth20Or40)},
 					powerSave: false, shouldTputRequired: false,
 				}},
+				// TODO(b/347339428): Promote test to stable by removing wificell_unstable attribute.
+				ExtraAttr:         []string{"wificell_unstable"},
 				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX),
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax()),
 				ExtraRequirements: []string{tdreq.WiFiTputHE40TCPTx, tdreq.WiFiTputHE40TCPRx, tdreq.WiFiTputHE40TCPRxTx, tdreq.WiFiTputHE40UDPTx, tdreq.WiFiTputHE40UDPRx, tdreq.WiFiTputHE40UDPRxTx},
@@ -108,6 +113,8 @@ func init() {
 					secConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers(wpa.CipherCCMP)),
 					powerSave:  false, shouldTputRequired: false,
 				}},
+				// TODO(b/347339428): Promote test to stable by removing wificell_unstable attribute.
+				ExtraAttr:         []string{"wificell_unstable"},
 				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX),
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax()),
 				ExtraRequirements: []string{tdreq.WiFiTputHE40TCPTx, tdreq.WiFiTputHE40TCPRx, tdreq.WiFiTputHE40TCPRxTx, tdreq.WiFiTputHE40UDPTx, tdreq.WiFiTputHE40UDPRx, tdreq.WiFiTputHE40UDPRxTx},
@@ -122,6 +129,8 @@ func init() {
 					apOpts:    []ap.Option{ap.Mode(ap.Mode80211axMixed), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC), ap.VHTCaps(ap.VHTCapSGI80, ap.VHTCapMaxAMPDULenExp6), ap.VHTCenterChannel(155), ap.VHTChWidth(ap.VHTChWidth80), ap.HECenterChannel(155), ap.HEChWidth(ap.HEChWidth80)},
 					powerSave: false, shouldTputRequired: false,
 				}},
+				// TODO(b/347339428): Promote test to stable by removing wificell_unstable attribute.
+				ExtraAttr:         []string{"wificell_unstable"},
 				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX),
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax()),
 				ExtraRequirements: []string{tdreq.WiFiTputHE80TCPTx, tdreq.WiFiTputHE80TCPRx, tdreq.WiFiTputHE80TCPRxTx, tdreq.WiFiTputHE80UDPTx, tdreq.WiFiTputHE80UDPRx, tdreq.WiFiTputHE80UDPRxTx},
@@ -138,11 +147,12 @@ func init() {
 					secConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModeMixedWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					powerSave:  false, shouldTputRequired: false,
 				}},
+				// TODO(b/347339428): Promote test to stable by removing wificell_unstable attribute.
+				ExtraAttr:         []string{"wificell_unstable"},
 				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX),
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax()),
 				ExtraRequirements: []string{tdreq.WiFiGenSupportPMF, tdreq.WiFiTputHE80TCPTx, tdreq.WiFiTputHE80TCPRx, tdreq.WiFiTputHE80TCPRxTx, tdreq.WiFiTputHE80UDPTx, tdreq.WiFiTputHE80UDPRx, tdreq.WiFiTputHE80UDPRxTx},
 			},
-			// TODO(b/323903848) Stabilize WiFi 6E/7 performance tests
 			{
 				// Network: WPA3-SAE ("pure") HE20 802.11axe.
 				Name: "he20_6ghz",
@@ -153,6 +163,8 @@ func init() {
 						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					powerSave: false, shouldTputRequired: false,
 				}},
+				// TODO(b/323903848): Promote test to stable by removing wificell_unstable attribute.
+				ExtraAttr:         []string{"wificell_unstable"},
 				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E),
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
 			},
@@ -166,6 +178,8 @@ func init() {
 						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					powerSave: false, shouldTputRequired: false,
 				}},
+				// TODO(b/323903848): Promote test to stable by removing wificell_unstable attribute.
+				ExtraAttr:         []string{"wificell_unstable"},
 				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E),
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
 			},
@@ -180,6 +194,8 @@ func init() {
 						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					powerSave: false, shouldTputRequired: false,
 				}},
+				// TODO(b/323903848): Promote test to stable by removing wificell_unstable attribute.
+				ExtraAttr:         []string{"wificell_unstable"},
 				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E),
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
 			},
@@ -194,6 +210,8 @@ func init() {
 						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					powerSave: false, shouldTputRequired: false,
 				}},
+				// TODO(b/323903848): Promote test to stable by removing wificell_unstable attribute.
+				ExtraAttr:         []string{"wificell_unstable"},
 				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E),
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
 			},
@@ -208,6 +226,8 @@ func init() {
 						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					powerSave: false, shouldTputRequired: false,
 				}},
+				// TODO(b/323903848): Promote test to stable by removing wificell_unstable attribute.
+				ExtraAttr:         []string{"wificell_unstable"},
 				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E),
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
 			},
@@ -222,6 +242,8 @@ func init() {
 						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					powerSave: false, shouldTputRequired: false,
 				}},
+				// TODO(b/323903848): Promote test to stable by removing wificell_unstable attribute.
+				ExtraAttr:         []string{"wificell_unstable"},
 				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E),
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
 			},
@@ -238,6 +260,8 @@ func init() {
 						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					powerSave: false, shouldTputRequired: false,
 				}},
+				// TODO(b/323903848): Promote test to stable by removing wificell_unstable attribute.
+				ExtraAttr:         []string{"wificell_unstable"},
 				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_BE),
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211be()),
 			},
@@ -254,6 +278,8 @@ func init() {
 						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					powerSave: false, shouldTputRequired: false,
 				}},
+				// TODO(b/323903848): Promote test to stable by removing wificell_unstable attribute.
+				ExtraAttr:         []string{"wificell_unstable"},
 				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_BE),
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211be()),
 			},
@@ -271,6 +297,8 @@ func init() {
 						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					powerSave: false, shouldTputRequired: false,
 				}},
+				// TODO(b/323903848): Promote test to stable by removing wificell_unstable attribute.
+				ExtraAttr:         []string{"wificell_unstable"},
 				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_BE),
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211be()),
 			},
@@ -287,6 +315,8 @@ func init() {
 						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					powerSave: false, shouldTputRequired: false,
 				}},
+				// TODO(b/323903848): Promote test to stable by removing wificell_unstable attribute.
+				ExtraAttr:         []string{"wificell_unstable"},
 				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_BE),
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211be()),
 			},
