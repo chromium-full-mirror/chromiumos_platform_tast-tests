@@ -494,6 +494,20 @@ func init() {
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:     fixture.ChromeLoggedInDisableSyncWithFaceGaze,
+		Desc:     "Logged into a user session with FaceGaze enabled",
+		Contacts: []string{"akihiroota@chromium.org"},
+		// ChromeOS > Software > Experiences > Accessibility > Features > FaceGaze
+		BugComponent: "b:1546021",
+		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
+			return []Option{ExtraArgs("--disable-sync"), EnableFeatures("AccessibilityFaceGaze")}, nil
+		}),
+		SetUpTimeout:    FixtureSetUpTimeout,
+		ResetTimeout:    ResetTimeout,
+		TearDownTimeout: ResetTimeout,
+	})
 }
 
 // OptionsCallback is the function used to set up the fixture by returning Chrome options.

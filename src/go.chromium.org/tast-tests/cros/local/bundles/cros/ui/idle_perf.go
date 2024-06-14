@@ -8,7 +8,9 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/perf"
+	"go.chromium.org/tast-tests/cros/local/a11y/facegaze"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
@@ -27,6 +29,7 @@ type testType int
 const (
 	testTypeARC testType = iota
 	testTypeBrowser
+	testTypeFaceGaze
 )
 
 const (
@@ -52,8 +55,11 @@ func init() {
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Attr:         []string{"group:cuj"},
 		SoftwareDeps: []string{"chrome"},
-		Data:         []string{cujrecorder.SystemTraceConfigFile},
-		Timeout:      cuj.CPUStablizationTimeout + idleDuration,
+		Data: []string{
+			cujrecorder.SystemTraceConfigFile,
+			facegaze.FakeCameraVideoFile720p,
+		},
+		Timeout: cuj.CPUStablizationTimeout + idleDuration,
 
 		Params: []testing.Param{{
 			Val:               idlePerfTest{testType: testTypeARC},
@@ -74,6 +80,10 @@ func init() {
 				browserType: browser.TypeAsh,
 			},
 			Fixture: "chromeLoggedInDisableSync",
+		}, {
+			Name:    "facegaze",
+			Val:     idlePerfTest{testType: testTypeFaceGaze},
+			Fixture: fixture.ChromeLoggedInDisableSyncWithFaceGaze,
 		}},
 	})
 }
@@ -93,6 +103,8 @@ func IdlePerf(ctx context.Context, s *testing.State) {
 		cr = s.FixtValue().(*arc.PreData).Chrome
 		a = s.FixtValue().(*arc.PreData).ARC
 	case testTypeBrowser:
+		fallthrough
+	case testTypeFaceGaze:
 		cr = s.FixtValue().(chrome.HasChrome).Chrome()
 	}
 
@@ -120,6 +132,20 @@ func IdlePerf(ctx context.Context, s *testing.State) {
 		}
 		defer closeBrowser(closeCtx)
 		defer conn.Close()
+	} else if idleTest.testType == testTypeFaceGaze {
+		facegazeDriver, err := facegaze.SetUp(ctx, cr, s.DataPath)
+		if err != nil {
+			s.Fatal("Failed to set up FaceGaze: ", err)
+		}
+
+		bTconn = facegazeDriver.Tconn
+		defer func() {
+			if err := facegazeDriver.TearDown(); err != nil {
+				s.Error("Failed to tear down FaceGaze: ", err)
+			}
+		}()
+
+		facegazeDriver.Start()
 	}
 
 	// Recorder with no additional config; it records and reports memory usage and

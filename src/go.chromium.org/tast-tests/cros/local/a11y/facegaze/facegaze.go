@@ -13,9 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/a11y"
 	"go.chromium.org/tast-tests/cros/local/camera/testutil"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
@@ -59,10 +56,11 @@ func newConn(ctx context.Context, c *chrome.Chrome) (_ *conn, e error) {
 // returned by SetUp. Most notably, TearDown() should be run in a defer
 // statement by the calling test to properly clean up FaceGaze.
 type driver struct {
-	ctx  context.Context
-	conn *conn
-	ui   *uiauto.Context
-	tdh  *a11y.TearDownHelper
+	ctx   context.Context
+	conn  *conn
+	Tconn *chrome.TestConn
+	ui    *uiauto.Context
+	tdh   *a11y.TearDownHelper
 }
 
 func newNoOpDriver(tdh *a11y.TearDownHelper) driver {
@@ -164,7 +162,7 @@ func setUpFakeCamera(ctx context.Context, dataPath func(string) string, tdh *a11
 
 // SetUp executes common FaceGaze setup code and returns a driver that can be
 // used to easily drive FaceGaze tests.
-func SetUp(ctx context.Context, dataPath func(string) string) (d driver, e error) {
+func SetUp(ctx context.Context, cr *chrome.Chrome, dataPath func(string) string) (d driver, e error) {
 	// Tears down FaceGaze if SetUp encountered an error.
 	defer func() {
 		if e != nil {
@@ -180,17 +178,6 @@ func SetUp(ctx context.Context, dataPath func(string) string) (d driver, e error
 	tdh.Append(func() error {
 		cancel()
 		return nil
-	})
-
-	cr, err := browserfixt.NewChrome(ctx, browser.TypeAsh, lacrosfixt.NewConfig(),
-		// Enforce FaceGaze feature flag.
-		chrome.EnableFeatures("AccessibilityFaceGaze"),
-	)
-	if err != nil {
-		return newNoOpDriver(tdh), errors.Wrap(err, "failed to start chrome")
-	}
-	tdh.Append(func() error {
-		return cr.Close(cleanUpCtx)
 	})
 
 	tconn, err := cr.TestAPIConn(ctx)
@@ -224,5 +211,5 @@ func SetUp(ctx context.Context, dataPath func(string) string) (d driver, e error
 	}
 
 	ui := uiauto.New(tconn).WithTimeout(10 * time.Second)
-	return driver{ctx, conn, ui, tdh}, nil
+	return driver{ctx, conn, tconn, ui, tdh}, nil
 }

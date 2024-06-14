@@ -76,4 +76,6 @@ const (
 	ChromeLoggedInWithSchedQoS = "chromeLoggedInWithSchedQoS"
 	// Logged in to a user session with oak feature enabled.
 	ChromeLoggedInWithOak = "chromeLoggedInWithOak"
+	// Logged into a user session with FaceGaze enabled.
+	ChromeLoggedInDisableSyncWithFaceGaze = "chromeLoggedInDisableSyncWithFaceGaze"
 )

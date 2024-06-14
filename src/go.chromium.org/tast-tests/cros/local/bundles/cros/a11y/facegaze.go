@@ -10,7 +10,9 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/local/a11y/facegaze"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -28,11 +30,13 @@ func init() {
 		Attr:         []string{"group:mainline", "informational", "group:camera_dependent"},
 		Data:         []string{facegaze.FakeCameraVideoFile720p},
 		SoftwareDeps: []string{"chrome"},
+		Fixture:      fixture.ChromeLoggedInDisableSyncWithFaceGaze,
 	})
 }
 
 func Facegaze(ctx context.Context, s *testing.State) {
-	driver, err := facegaze.SetUp(ctx, s.DataPath)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	driver, err := facegaze.SetUp(ctx, cr, s.DataPath)
 	if err != nil {
 		s.Fatal("Failed to set up FaceGaze: ", err)
 	}
