@@ -419,7 +419,7 @@ func (f *mediaFixtureImpl) PreTest(ctx context.Context, s *testing.FixtTestState
 	}
 
 	if !f.disableScreenRecorder {
-		f.recorder = uiauto.CreateAndStartScreenRecorder(ctx, f.tconn)
+		f.recorder = uiauto.CreateAndStartScreenRecorderWithAutoSelect(ctx, f.tconn)
 	}
 
 	// Clean up lacros browser b:324957897
