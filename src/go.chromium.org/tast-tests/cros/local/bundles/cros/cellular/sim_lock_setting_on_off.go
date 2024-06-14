@@ -11,6 +11,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/cellular"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/expandable"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/ctxutil"
@@ -95,7 +96,7 @@ func SimLockSettingOnOff(ctx context.Context, s *testing.State) {
 	if err := uiauto.Combine("Toggle on the SIM Lock setting",
 		ui.LeftClick(ossettings.ActiveCellularBtn),
 		ui.WithTimeout(90*time.Second).WaitUntilExists(ossettings.ConnectedStatus),
-		ui.WithTimeout(30*time.Second).LeftClick(ossettings.CellularAdvanced),
+		expandable.EnsureExpandableSectionOpened(tconn, ossettings.CellularAdvanced),
 		ui.LeftClick(ossettings.LockSimToggle),
 		ui.WaitUntilExists(ossettings.EnterButton),
 		kb.TypeAction(currentPin),

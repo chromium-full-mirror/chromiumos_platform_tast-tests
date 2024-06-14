@@ -130,7 +130,7 @@ func GoToActiveNetworkApnSubpage(ctx context.Context, tconn *chrome.TestConn, is
 	ui := uiauto.New(tconn).WithTimeout(30 * time.Second)
 	if err := uiauto.Combine("Go to APN subpage",
 		ui.WithTimeout(10*time.Second).WaitUntilExists(ApnSubpageButton.Focusable()),
-		ui.LeftClick(ApnSubpageButton.Focusable()),
+		ui.DoDefault(ApnSubpageButton.Focusable()),
 		ui.WaitUntilExists(nodewith.Name("Settings - Access point name (APN)").Role(role.RootWebArea)),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to go to APN subpage")
