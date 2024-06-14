@@ -58,6 +58,10 @@ func init() {
 					DMServer: policy.DMServerProdURL,
 					PoolID:   tape.Enrollment,
 				},
+				// TODO b/346725308 Refactor to use utility and known dependency list.
+				ExtraSearchFlags: []*testing.StringPair{{
+					Key: "external_dependency", Value: "DMServerProd",
+				}},
 			},
 			{
 				Name: "autopush",
@@ -65,6 +69,10 @@ func init() {
 					DMServer: policy.DMServerAlphaURL,
 					PoolID:   tape.Enrollment,
 				},
+				// TODO b/346725308 Refactor to use utility and known dependency list.
+				ExtraSearchFlags: []*testing.StringPair{{
+					Key: "external_dependency", Value: "DMServerAlpha",
+				}},
 			},
 			{
 				Name: "autopush_new_saml",
@@ -72,6 +80,10 @@ func init() {
 					DMServer: policy.DMServerAlphaURL,
 					PoolID:   tape.Crosprqa4Com,
 				},
+				// TODO b/346725308 Refactor to use utility and known dependency list.
+				ExtraSearchFlags: []*testing.StringPair{{
+					Key: "external_dependency", Value: "DMServerAlpha",
+				}},
 			},
 			{
 				Name: "staging",
@@ -79,6 +91,10 @@ func init() {
 					DMServer: policy.DMServerStagingURL,
 					PoolID:   tape.Enrollment,
 				},
+				// TODO b/346725308 Refactor to use utility and known dependency list.
+				ExtraSearchFlags: []*testing.StringPair{{
+					Key: "external_dependency", Value: "DMServerStaging",
+				}},
 			},
 			{
 				Name: "staging_new_saml",
@@ -86,6 +102,10 @@ func init() {
 					DMServer: policy.DMServerStagingURL,
 					PoolID:   tape.Crosprqa4Com,
 				},
+				// TODO b/346725308 Refactor to use utility and known dependency list.
+				ExtraSearchFlags: []*testing.StringPair{{
+					Key: "external_dependency", Value: "DMServerStaging",
+				}},
 			},
 		},
 		Vars: []string{

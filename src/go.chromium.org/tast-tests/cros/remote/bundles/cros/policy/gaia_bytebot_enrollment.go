@@ -45,6 +45,10 @@ func init() {
 					DMServer: policy.DMServerAlphaURL,
 					PoolID:   tape.ChromeosbytebotCom,
 				},
+				// TODO b/346725308 Refactor to use utility and known dependency list.
+				ExtraSearchFlags: []*testing.StringPair{{
+					Key: "external_dependency", Value: "DMServerAlpha",
+				}},
 			},
 			{
 				Name: "staging",
@@ -52,6 +56,10 @@ func init() {
 					DMServer: policy.DMServerStagingURL,
 					PoolID:   tape.ChromeosbytebotCom,
 				},
+				// TODO b/346725308 Refactor to use utility and known dependency list.
+				ExtraSearchFlags: []*testing.StringPair{{
+					Key: "external_dependency", Value: "DMServerStaging",
+				}},
 			},
 			{
 				Name:      "live",
@@ -60,6 +68,10 @@ func init() {
 					DMServer: policy.DMServerProdURL,
 					PoolID:   tape.ChromeosbytebotCom,
 				},
+				// TODO b/346725308 Refactor to use utility and known dependency list.
+				ExtraSearchFlags: []*testing.StringPair{{
+					Key: "external_dependency", Value: "DMServerProd",
+				}},
 			},
 		},
 		Vars: []string{
