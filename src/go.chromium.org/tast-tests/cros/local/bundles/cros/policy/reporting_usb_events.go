@@ -134,8 +134,8 @@ func ReportingUsbEvents(ctx context.Context, s *testing.State) {
 		if err := proto.Unmarshal(record.Record.Data, &m); err != nil {
 			s.Errorf("Could not parse telemetry metric record %d: %s", i, err)
 		}
-		if m.GetEventData().GetType() != reporting.MetricEventType_USB_ADDED {
-			s.Errorf("Event type not matched, got %s but wanted MetricEventType_USB_ADDED", m.GetEventData().GetType())
+		if m.GetEventData().GetType() != reporting.MetricEventType_USB_ADDED || m.GetEventData().GetType() != reporting.MetricEventType_USB_REMOVED {
+			s.Errorf("Event type not matched, got %s but wanted MetricEventType_USB_ADDED or MetricEventType_USB_REMOVED", m.GetEventData().GetType())
 		}
 	}
 }
