@@ -88,11 +88,8 @@ func CameraEffectsReplace(cleanupCtx context.Context, s *testing.State) {
 
 	ui := uiauto.New(tconn)
 
-	if _, err := br.NewTab(ctx, srvURL+effectshtml.PageURL); err != nil {
-		s.Fatal("Fail to open the fake html: ", err)
-	}
-
-	if err := effectshtml.WaitForCameraStreamToReady(ctx, ui, vcTray); err != nil {
+	url := srvURL + effectshtml.PageURL
+	if err := effectshtml.OpenURLAndWaitForStreamToReady(ctx, tconn, br, url, vcTray); err != nil {
 		s.Fatal("Fail to wait for camera stream: ", err)
 	}
 

@@ -14,7 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/common"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/data"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/effectshtml"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vctray"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/power"
@@ -101,13 +100,8 @@ func CameraEffectsPower(cleanupCtx context.Context, s *testing.State) {
 
 	vcTray := vctray.New(ctx, tconn)
 
-	ui := uiauto.New(tconn)
-
-	if _, err := br.NewTab(ctx, srvURL+effectshtml.PageURL); err != nil {
-		s.Fatal("Fail to open the fake html: ", err)
-	}
-
-	if err := effectshtml.WaitForCameraStreamToReady(ctx, ui, vcTray); err != nil {
+	url := srvURL + effectshtml.PageURL
+	if err := effectshtml.OpenURLAndWaitForStreamToReady(ctx, tconn, br, url, vcTray); err != nil {
 		s.Fatal("Fail to wait for camera stream: ", err)
 	}
 

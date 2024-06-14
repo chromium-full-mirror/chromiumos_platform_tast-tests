@@ -518,6 +518,23 @@ func WaitForCondition(ctx context.Context, tconn *chrome.TestConn, predicate fun
 	}, pollOptions)
 }
 
+// WaitForAllWindowCondition waits for all windows to satisfy the given predicate.
+func WaitForAllWindowCondition(ctx context.Context, tconn *chrome.TestConn, predicate func(window *Window) bool) error {
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		ws, err := GetAllWindows(ctx, tconn)
+		if err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to get the window list"))
+		}
+
+		for _, window := range ws {
+			if !predicate(window) {
+				return errors.New("Some windows do not satisfy the condition")
+			}
+		}
+		return nil
+	}, defaultPollOptions)
+}
+
 // SwapWindowsInSplitView swaps the positions of snapped windows in split view.
 func SwapWindowsInSplitView(ctx context.Context, tconn *chrome.TestConn) error {
 	return tconn.Call(ctx, nil, "tast.promisify(chrome.autotestPrivate.swapWindowsInSplitView)")

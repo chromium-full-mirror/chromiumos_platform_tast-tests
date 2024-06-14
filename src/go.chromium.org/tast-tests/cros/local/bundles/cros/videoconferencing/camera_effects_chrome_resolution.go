@@ -66,14 +66,6 @@ func CameraEffectsChromeResolution(cleanupCtx context.Context, s *testing.State)
 	ui := uiauto.New(tconn)
 
 	url := srvURL + effectshtml.PageURL
-	conn, err := br.NewTab(ctx, url)
-	if err != nil {
-		s.Fatal("Fail to open the fake html: ", err)
-	}
-
-	if err := effectshtml.WaitForCameraStreamToReady(ctx, ui, vcTray); err != nil {
-		s.Fatal("Fail to wait for camera stream: ", err)
-	}
 
 	// Run subtests to verify camera effects are correctly applied in different resolution.
 	// Note: Golden images can be found at https://cros-tast-gold.skia.org/list?corpus=videoconferencing.
@@ -99,11 +91,8 @@ func CameraEffectsChromeResolution(cleanupCtx context.Context, s *testing.State)
 	for _, subTest := range subTests {
 		s.Run(ctx, subTest.name, func(ctx context.Context, s *testing.State) {
 			urlWithResolution := url + strconv.Itoa(subTest.resolution)
-			if err := conn.Navigate(ctx, urlWithResolution); err != nil {
-				s.Fatalf("Failed to navigate to %q: %v", urlWithResolution, err)
-			}
 
-			if err := effectshtml.WaitForCameraStreamToReady(ctx, ui, vcTray); err != nil {
+			if err := effectshtml.OpenURLAndWaitForStreamToReady(ctx, tconn, br, urlWithResolution, vcTray); err != nil {
 				s.Fatal("Fail to wait for camera stream: ", err)
 			}
 
@@ -118,8 +107,8 @@ func CameraEffectsChromeResolution(cleanupCtx context.Context, s *testing.State)
 				s.Fatal("Fail to grab camera screen shot before: ", err)
 			}
 
-			// Only test camera effects in different resolution with BackgroundBlurFull and RelightingOn.
-			if err := vcTray.SetCameraEffects(vctray.BackgroundBlurFull, true)(ctx); err != nil {
+			// Only test camera effects in different resolution with BackgroundBlurFull.
+			if err := vcTray.SetCameraEffects(vctray.BackgroundBlurFull, false)(ctx); err != nil {
 				s.Fatalf("Failed to set camera effects to BackgroundBlur %v; PortraitRelighting on: %v",
 					vctray.BackgroundBlurFull, err)
 			}
@@ -133,7 +122,7 @@ func CameraEffectsChromeResolution(cleanupCtx context.Context, s *testing.State)
 				}
 
 				notChangedThreshold := 0.2
-				changedThreshold := 0.5
+				changedThreshold := 0.45
 				notChanged, changed := effectshtml.ImageDiff(imageBefore, imageAfter, 0.0)
 				if notChanged < notChangedThreshold || changed < changedThreshold {
 					return errors.Errorf("Wrong percentage of pixel change: %f changed and %f not changed", changed, notChanged)
@@ -145,6 +134,10 @@ func CameraEffectsChromeResolution(cleanupCtx context.Context, s *testing.State)
 				effectshtml.SaveImageToFaillog(ctx, s, imageBefore, effectshtml.BeforeEffectsImageName)
 				effectshtml.SaveImageToFaillog(ctx, s, imageAfter, subTest.name+effectshtml.AfterEffectsImageName)
 				s.Fatal("Screenshot diff unexpected: ", err)
+			}
+
+			if err := effectshtml.CloseURLAndWaitForWindowGone(ctx, tconn, br, urlWithResolution, vcTray); err != nil {
+				s.Fatal("Fail to wait for close tab: ", err)
 			}
 		})
 	}

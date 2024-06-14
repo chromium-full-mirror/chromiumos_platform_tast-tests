@@ -11,8 +11,11 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -120,9 +123,19 @@ func SaveImageToFaillog(ctx context.Context, s *testing.State, img image.Image, 
 	}
 }
 
-// WaitForCameraStreamToReady waits until camera stream is loaded and vcTray is triggered.
-func WaitForCameraStreamToReady(ctx context.Context, ui *uiauto.Context, vcTray *vctray.VCTray) error {
-	if err := ui.WaitUntilExists(videoPauseButton)(ctx); err != nil {
+// OpenURLAndWaitForStreamToReady waits until camera stream is loaded and vcTray is triggered.
+func OpenURLAndWaitForStreamToReady(ctx context.Context, tconn *browser.TestConn, br *browser.Browser, url string, vcTray *vctray.VCTray) error {
+	if _, err := br.NewTab(ctx, url); err != nil {
+		return err
+	}
+
+	if _, err := ash.WaitForAnyWindow(ctx, tconn, func(w *ash.Window) bool {
+		return strings.Contains(w.Title, PageTitle) && w.IsVisible && !w.IsAnimating
+	}); err != nil {
+		return err
+	}
+
+	if err := uiauto.New(tconn).WaitUntilExists(videoPauseButton)(ctx); err != nil {
 		return errors.Wrap(err, "Fail to wait for camera stream to load")
 	}
 
@@ -132,6 +145,23 @@ func WaitForCameraStreamToReady(ctx context.Context, ui *uiauto.Context, vcTray 
 
 	if err := vcTray.WaitUntilState(vctray.DevCamera, vctray.DeviceInUse)(ctx); err != nil {
 		return errors.Wrap(err, "Fail to wait for VcTray to show camera is in use")
+	}
+
+	return nil
+}
+
+// CloseURLAndWaitForWindowGone close the tab with the url and wait until vcTray disappears.
+func CloseURLAndWaitForWindowGone(ctx context.Context, tconn *browser.TestConn, br *browser.Browser, url string, vcTray *vctray.VCTray) error {
+	if err := br.CloseWithURL(ctx, url); err != nil {
+		return errors.Wrap(err, "Fail to close url")
+	}
+
+	if err := ash.WaitForAllWindowCondition(ctx, tconn, func(w *ash.Window) bool { return !strings.Contains(w.Title, PageTitle) }); err != nil {
+		return err
+	}
+
+	if err := vcTray.WaitUntilGone(ctx); err != nil {
+		return errors.Wrap(err, "Fail to wait for VcTray to disappear")
 	}
 
 	return nil

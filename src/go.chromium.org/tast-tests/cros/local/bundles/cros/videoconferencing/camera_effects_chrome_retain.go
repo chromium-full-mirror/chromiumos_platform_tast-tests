@@ -84,11 +84,7 @@ func CameraEffectsChromeRetain(cleanupCtx context.Context, s *testing.State) {
 	ui := uiauto.New(tconn)
 
 	url := srvURL + effectshtml.PageURL
-	if _, err := br.NewTab(ctx, url); err != nil {
-		s.Fatal("Fail to open the fake html: ", err)
-	}
-
-	if err := effectshtml.WaitForCameraStreamToReady(ctx, ui, vcTray); err != nil {
+	if err := effectshtml.OpenURLAndWaitForStreamToReady(ctx, tconn, br, url, vcTray); err != nil {
 		s.Fatal("Fail to wait for camera stream: ", err)
 	}
 
@@ -104,24 +100,11 @@ func CameraEffectsChromeRetain(cleanupCtx context.Context, s *testing.State) {
 		s.Fatal("Fail to grab camera screen shot before: ", err)
 	}
 
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		if err := br.CloseWithURL(ctx, url); err != nil {
-			return err
-		}
-		if err := vcTray.WaitUntilGone(ctx); err != nil {
-			return err
-		}
-
-		return nil
-	}, &testing.PollOptions{Timeout: 3 * time.Second, Interval: 100 * time.Microsecond}); err != nil {
-		s.Fatal("Failed to close the tab: ", err)
+	if err := effectshtml.CloseURLAndWaitForWindowGone(ctx, tconn, br, url, vcTray); err != nil {
+		s.Fatal("Fail to wait for close tab: ", err)
 	}
 
-	if _, err := br.NewTab(ctx, url); err != nil {
-		s.Fatal("Fail to open the fake html: ", err)
-	}
-
-	if err := effectshtml.WaitForCameraStreamToReady(ctx, ui, vcTray); err != nil {
+	if err := effectshtml.OpenURLAndWaitForStreamToReady(ctx, tconn, br, url, vcTray); err != nil {
 		s.Fatal("Fail to wait for camera stream: ", err)
 	}
 
