@@ -79,7 +79,7 @@ func init() {
 		Desc:         "Measure how long it takes to wrap the PID space by spawning threads",
 		Contacts:     []string{"cros-core-systems-perf@google.com", "kawasin@google.com"},
 		BugComponent: "b:167279", // ChromeOS > Platform > baseOS > Performance
-		Attr:         []string{"group:mainline", "group:criticalstaging", "informational"},
+		Attr:         []string{"group:mainline"},
 		Timeout:      40 * time.Second,
 	})
 }
