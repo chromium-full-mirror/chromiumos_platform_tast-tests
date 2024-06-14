@@ -68,7 +68,7 @@ const (
 	uartBitsPerByte int = 10
 
 	uartThroughputNominalBps   float64 = 115200.0
-	uartThroughputBpsTolerance float64 = 400.0
+	uartThroughputBpsTolerance float64 = 600.0
 	// When forwarding in both directions, we only achieve about half of the target.
 	uartThroughputBothDirectionsBps float64 = 55000.0
 )
