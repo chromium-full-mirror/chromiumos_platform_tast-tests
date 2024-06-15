@@ -7,12 +7,18 @@ package inputs
 import (
 	"context"
 	"encoding/json"
+	"path/filepath"
 	"strconv"
 	"time"
 
+	"github.com/golang/protobuf/ptypes/empty"
+	"go.chromium.org/tast-tests/cros/common/action"
 	reporters "go.chromium.org/tast-tests/cros/remote/firmware/reporters"
 	input "go.chromium.org/tast-tests/cros/remote/inputs"
+	inputspb "go.chromium.org/tast-tests/cros/services/cros/inputs"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -114,6 +120,10 @@ func HumanMotionRobotFullImage(ctx context.Context, s *testing.State) {
 	// Example: human_motion_robot_full_image_simple-13.3-16_9-20240523.nc
 	baseFileName := referenceFileData.filename + "-" + strconv.FormatFloat(screenSize, 'f', -1, 64) + "-" + aspectRatio + "-" + referenceFileData.date
 	gcodeFileName := baseFileName + ".nc"
+	hostTouchLogFileName := baseFileName + ".csv"
+
+	hostTouchLogFilePath := filepath.Join(s.OutDir(), hostTouchLogFileName)
+	hostRawTouchLogFilePath := filepath.Join(s.OutDir(), "raw_"+hostTouchLogFileName)
 
 	// Checks that the GCode file is already loaded on HMR.
 	fileExists, err := hmrInterface.RPC("FileExists").Args(gcodeFileName).CallForBool(ctx)
@@ -124,6 +134,68 @@ func HumanMotionRobotFullImage(ctx context.Context, s *testing.State) {
 		s.Fatalf("Gcode file (%s) not found on HMR", gcodeFileName)
 	}
 
-	// TODO(b/343548313): Run HMR job and collect touch events.
+	serviceErrorChannel := make(chan error)
+	dutEvtestService := inputspb.NewStylusEvtestCaptureServiceClient(client.Conn)
+
+	go func() {
+		// Start recording evtest stylus touch data from DUT.
+		dutResponse, err := dutEvtestService.StartStylusDataCapture(ctx, &empty.Empty{})
+		if err != nil {
+			serviceErrorChannel <- errors.Wrap(err, "failed to run StartStylusDataCapture")
+			return
+		}
+		// Copy file from DUT to Host machine.
+		dutTouchLogFilePath := dutResponse.GetStylusLogPath()
+		if err := linuxssh.GetFile(ctx, s.DUT().Conn(), dutTouchLogFilePath, hostRawTouchLogFilePath, linuxssh.PreserveSymlinks); err != nil {
+			serviceErrorChannel <- errors.Wrap(err, "failed to copy file from DUT to Host")
+			return
+		}
+		serviceErrorChannel <- nil
+	}()
+
+	// Begins executing HMR motions on DUT.
+	if err := hmrInterface.RPC("StartJob").Args(gcodeFileName).Call(ctx); err != nil {
+		s.Fatal("Failed to start job: ", err)
+	}
+
+	// Polls TouchHost for progress of HMR job. Blocks until the HMR job is complete.
+	prevProgress := -1.0
+	if err := action.Retry(100, func(ctx context.Context) error {
+		progress, err := hmrInterface.RPC("GetProgress").Args().CallForFloat64(ctx)
+		if err != nil {
+			s.Fatal("Failed to poll progress: ", err)
+			return err
+		}
+		// progress resets to 0 when job is complete.
+		if prevProgress <= progress {
+			prevProgress = progress
+			return errors.Errorf("HMR job is still in progress (%f%%)", progress*100)
+		}
+		return nil
+	}, 3*time.Second)(ctx); err != nil {
+		s.Fatal("HMR Job did not complete in time")
+		hmrInterface.RPC("StopJob").Call(ctx)
+	}
+
+	// Stop DUT evtest stylus touch data capture.
+	if _, err := dutEvtestService.StopStylusDataCapture(ctx, &empty.Empty{}); err != nil {
+		s.Fatal("Failed to run StopStylusDataCapture: ", err)
+	}
+	// Wait until stylus touch data file has been copied from DUT to Host.
+	serviceResponse := <-serviceErrorChannel
+	if serviceResponse != nil {
+		s.Fatal("Failed to collect touch logs from DUT: ", serviceResponse)
+	}
+
+	// Delete stylus touch data file from DUT.
+	if _, err := dutEvtestService.CleanUp(ctx, &empty.Empty{}); err != nil {
+		s.Error("Failed to run CleanUp: ", err)
+	}
+
+	// Clean stylus touch data of common errors.
+	if err := input.RemoveCommonDataErrorsFromStylusLogFile(hostRawTouchLogFilePath, hostTouchLogFilePath); err != nil {
+		s.Error("Failed to clean raw touchlog file: ", err)
+	}
+
 	// TODO(b/343548793): Full image analysis.
 }
