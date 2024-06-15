@@ -12,7 +12,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/genparams"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/video/playback"
-	"go.chromium.org/tast-tests/cros/local/media/pre"
 )
 
 // To regenerate the test parameters by running the following in a chroot:
@@ -56,9 +55,6 @@ func genPlaybackPerfParam(codec, file string, resolution, fps int, dec, nameSuff
 	}
 
 	brwType := "browser.TypeAsh"
-	if strings.Contains(nameSuffix, "lacros") {
-		brwType = "browser.TypeLacros"
-	}
 	deps := playback.GenSwDeps(codec, resolution, fps, dec)
 	if len(extendDeps) > 0 {
 		deps = append(deps, extendDeps...)
@@ -194,54 +190,6 @@ func TestPlaybackPerfConfig(t *testing.T) {
 			"long_gtfo", "chromeVideoGTFO", []string{"drm_atomic"})
 		// "rogue" is for MT8173 hana.
 		param.HardwareDeps = append(param.HardwareDeps, "hwdep.SkipGPUFamily(\"rogue\")", "hwdep.InternalDisplay()")
-		param.MeasureRoughness = true
-		param.Duration = measurementDurationLong
-		params = append(params, param)
-	}
-
-	// lacros
-	for _, resolution := range []int{720, 1080, 2160} {
-		fpss := []int{30}
-		if resolution >= 1080 {
-			fpss = append(fpss, 60)
-		}
-		for _, fps := range fpss {
-			param := genPlaybackPerfParam("h264", playback.GenDataPath("h264", resolution, fps),
-				resolution, fps, "hw", "lacros", pre.ChromeVideoLacrosFixture(pre.VideoFeatureFakeMediaStreamUI), []string{"lacros"})
-			if resolution == 1080 && fps == 30 {
-				param.MeasureSteadyStateMetrics = true
-			}
-			params = append(params, param)
-		}
-	}
-
-	// Long lacros
-	for _, codec := range []string{"h264", "hevc", "vp9", "av1"} {
-		resolution, fps, dec := 1080, 30, "hw"
-		file := playbackPerfLongFile[codec]
-		param := genPlaybackPerfParam(codec, file, resolution, fps, dec,
-			"long_lacros", pre.ChromeVideoLacrosFixture(pre.VideoFeatureFakeMediaStreamUI),
-			[]string{"drm_atomic", "lacros"})
-		// "rogue" is for MT8173 hana.
-		param.HardwareDeps = append(param.HardwareDeps, "hwdep.SkipGPUFamily(\"rogue\")", "hwdep.InternalDisplay()")
-		if codec == "h264" {
-			param.MeasureSteadyStateMetrics = true
-		}
-		param.MeasureRoughness = true
-		param.Duration = measurementDurationLong
-		params = append(params, param)
-	}
-
-	// Long lacros with GTFO OOP-VD
-	{
-		codec, resolution, fps, dec := "h264", 1080, 30, "hw"
-		file := playbackPerfLongFile[codec]
-		param := genPlaybackPerfParam(codec, file, resolution, fps, dec,
-			"long_lacros_gtfo", pre.ChromeVideoLacrosFixture(pre.VideoFeatureFakeMediaStreamUI, pre.VideoFeatureGTFO),
-			[]string{"drm_atomic", "lacros"})
-		// "rogue" is for MT8173 hana.
-		param.HardwareDeps = append(param.HardwareDeps, "hwdep.SkipGPUFamily(\"rogue\")", "hwdep.InternalDisplay()")
-		param.MeasureSteadyStateMetrics = true
 		param.MeasureRoughness = true
 		param.Duration = measurementDurationLong
 		params = append(params, param)

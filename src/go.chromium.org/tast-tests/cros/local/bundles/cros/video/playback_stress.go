@@ -19,7 +19,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PlaybackStress,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Playback in Chrome browser with system goes to suspend/resume cycle",
 		Contacts: []string{
 			"chromeos-gfx-video@google.com",

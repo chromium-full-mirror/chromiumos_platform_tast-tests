@@ -13,7 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/video/play"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
-	"go.chromium.org/tast-tests/cros/local/media/pre"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -28,7 +27,7 @@ type seekTest struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Seek,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that seeking works in Chrome, either with or without resolution changes",
 		Contacts: []string{
 			"chromeos-gfx-video@google.com",
@@ -82,28 +81,6 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
 			Fixture:           "chromeVideoINPVD",
 		}, {
-			Name: "h264_lacros",
-			Val: seekTest{
-				filename:    "720_h264.mp4",
-				numSeeks:    25,
-				browserType: browser.TypeLacros,
-			},
-			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
-			ExtraData:         []string{"720_h264.mp4"},
-			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs", "lacros"},
-			Fixture:           pre.ChromeVideoLacrosFixture(pre.VideoFeatureFakeMediaStreamUI),
-		}, {
-			Name: "h264_lacros_gtfo",
-			Val: seekTest{
-				filename:    "720_h264.mp4",
-				numSeeks:    25,
-				browserType: browser.TypeLacros,
-			},
-			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
-			ExtraData:         []string{"720_h264.mp4"},
-			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs", "lacros"},
-			Fixture:           pre.ChromeVideoLacrosFixture(pre.VideoFeatureFakeMediaStreamUI, pre.VideoFeatureGTFO),
-		}, {
 			Name: "hevc",
 			Val: seekTest{
 				filename:    "720_hevc.mp4",
@@ -137,17 +114,6 @@ func init() {
 			ExtraData:         []string{"720_vp9.webm"},
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
 			Fixture:           "chromeVideo",
-		}, {
-			Name: "vp9_lacros",
-			Val: seekTest{
-				filename:    "720_vp9.webm",
-				numSeeks:    25,
-				browserType: browser.TypeLacros,
-			},
-			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
-			ExtraData:         []string{"720_vp9.webm"},
-			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "lacros"},
-			Fixture:           pre.ChromeVideoLacrosFixture(pre.VideoFeatureFakeMediaStreamUI),
 		}, {
 			Name: "switch_av1",
 			Val: seekTest{

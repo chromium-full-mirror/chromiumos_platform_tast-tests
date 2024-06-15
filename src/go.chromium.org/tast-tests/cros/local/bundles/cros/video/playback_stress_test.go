@@ -85,14 +85,7 @@ func genPlaybackStressParam(param playbackStressParam) playback.ParamData {
 	testName := strings.Join(nameSuffices, "_")
 
 	fixture := "chromeVideoStress"
-	if strings.Contains(param.nameSuffix, "lacros") {
-		fixture = "chromeVideoStressLacros"
-	}
-
 	brwType := "browser.TypeAsh"
-	if strings.Contains(param.nameSuffix, "lacros") {
-		brwType = "browser.TypeLacros"
-	}
 	deps := append(playback.GenSwDeps(param.codec, param.resolution, param.fps, "hw"), param.extendDeps...)
 
 	var extraAttr []string

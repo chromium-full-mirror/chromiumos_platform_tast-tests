@@ -19,7 +19,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/media/constants"
 	"go.chromium.org/tast-tests/cros/local/media/histogram"
-	"go.chromium.org/tast-tests/cros/local/media/pre"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -41,7 +40,7 @@ type pepperVideoDecodeTestParam struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PepperVideoDecode,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that simple video playback in Pepper (NaCl) is working",
 		Contacts: []string{
 			"chromeos-gfx-video@google.com",
@@ -65,16 +64,6 @@ func init() {
 			Val:               pepperVideoDecodeTestParam{browserType: browser.TypeAsh, verifyHWMode: verifySWPathWasUsed},
 			ExtraSoftwareDeps: []string{"proprietary_codecs"},
 			Fixture:           "chromeVideoNaClWithSWDecoding",
-		}, {
-			Name:              "h264_hw_lacros",
-			Val:               pepperVideoDecodeTestParam{browserType: browser.TypeLacros, verifyHWMode: verifyMojoVDPathWasUsed},
-			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs", "lacros"},
-			Fixture:           pre.ChromeVideoLacrosFixture(pre.VideoFeatureFakeMediaStreamUI, pre.VideoFeatureNaCl),
-		}, {
-			Name:              "h264_sw_lacros",
-			Val:               pepperVideoDecodeTestParam{browserType: browser.TypeLacros, verifyHWMode: verifySWPathWasUsed},
-			ExtraSoftwareDeps: []string{"proprietary_codecs", "lacros"},
-			Fixture:           pre.ChromeVideoLacrosFixture(pre.VideoFeatureFakeMediaStreamUI, pre.VideoFeatureNaCl, pre.VideoFeatureSWDecoding),
 		}},
 	})
 }

@@ -414,16 +414,6 @@ var chromeVideoLacrosFixtureGenerator = fixtureGenerator{
 func initChromeVideoLacrosFixtures() {
 	combos := []featureComboType{
 		comb(chromeVideo, VideoFeatureFakeMediaStreamUI),
-		comb(chromeVideo, VideoFeatureFakeMediaStreamUI, VideoFeatureGTFO),
-		comb(chromeVideo, VideoFeatureFakeMediaStreamUI, VideoFeatureNaCl),
-		comb(chromeVideo, VideoFeatureFakeMediaStreamUI, VideoFeatureNaCl, VideoFeatureSWDecoding),
-		comb(chromeVideo, VideoFeatureGuestLogin),
-		comb(chromeVideo, VideoFeatureGuestLogin, VideoFeatureGTFO),
-		comb(chromeVideo, VideoFeatureAshComposited),
-		comb(chromeVideo, VideoFeatureAshComposited, VideoFeatureGTFO),
-		comb(chromeVideo, VideoFeatureLacrosComposited),
-		comb(chromeVideo, VideoFeatureLacrosComposited, VideoFeatureGTFO),
-		comb(chromeVideo, VideoFeatureFakeMediaStreamUI, VideoFeatureDistinctiveIdentifier),
 		comb(chromeVideo, VideoFeatureFakeMediaStreamUI, VideoFeatureVCDInUtilityProcess),
 	}
 
@@ -439,61 +429,12 @@ func initChromeVideoLacrosFixtures() {
 				chrome.LacrosExtraArgs(chromeBypassPermissionsArgs...),
 			},
 		},
-		VideoFeatureNaCl: {
-			"NaCl",
-			[]chrome.Option{
-				chrome.ExtraArgs("--enable-nacl"),
-				chrome.LacrosExtraArgs("--enable-nacl"),
-			},
-		},
-		VideoFeatureSWDecoding: {
-			"SWDecoding",
-			[]chrome.Option{
-				chrome.ExtraArgs("--disable-accelerated-video-decode"),
-				chrome.LacrosExtraArgs("--disable-accelerated-video-decode"),
-			},
-		},
-		VideoFeatureGuestLogin: {
-			"Guest",
-			[]chrome.Option{
-				chrome.GuestLogin(),
-			},
-		},
-		VideoFeatureAshComposited: {
-			"AshComposited",
-			[]chrome.Option{
-				chrome.ExtraArgs("--enable-hardware-overlays=\"\""),
-			},
-		},
-		VideoFeatureLacrosComposited: {
-			"LacrosComposited",
-			[]chrome.Option{
-				chrome.LacrosExtraArgs("--enable-hardware-overlays=\"\""),
-			},
-		},
-		VideoFeatureDistinctiveIdentifier: {
-			"DistinctiveIdentifier",
-			[]chrome.Option{
-				chrome.ExtraArgs(chromeAllowDistinctiveIdentifierArgs...),
-				chrome.LacrosExtraArgs(chromeAllowDistinctiveIdentifierArgs...),
-			},
-		},
 		VideoFeatureVCDInUtilityProcess: {
 			"VCDInUtilityProcess",
 			[]chrome.Option{
 				chrome.DisableFeatures("RunVideoCaptureServiceInBrowserProcess"),
 			},
 		},
-		VideoFeatureGTFO: {
-			"GTFO",
-			[]chrome.Option{
-				chrome.LacrosDisableFeatures("UseOutOfProcessVideoDecoding"),
-				chrome.LacrosEnableFeatures("UseGTFOOutOfProcessVideoDecoding"),
-			},
-		},
-	}
-	if len(featureMap) != numChromeVideoFeatures {
-		panic("Missing feature declaration in featureMap")
 	}
 
 	chromeVideoLacrosFixtureGenerator.initialize(combos, featureMap)

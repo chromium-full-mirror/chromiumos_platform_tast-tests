@@ -11,7 +11,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/video/webcodecs"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
-	"go.chromium.org/tast-tests/cros/local/media/pre"
 	"go.chromium.org/tast-tests/cros/local/media/videotype"
 	"go.chromium.org/tast/core/testing"
 )
@@ -19,7 +18,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         WebCodecsEncode,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that WebCodecs encoding API works, maybe verifying use of a hardware accelerator",
 		Contacts: []string{
 			"greenjustin@google.com",
@@ -45,11 +44,6 @@ func init() {
 			Val:               webcodecs.TestEncodeArgs{Codec: videotype.H264, Acceleration: webcodecs.PreferHardware, BitrateMode: "constant", BrowserType: browser.TypeAsh, NumOfEncoders: 3},
 			ExtraSoftwareDeps: []string{"proprietary_codecs", caps.HWEncodeH264},
 			Fixture:           "chromeVideo",
-		}, {
-			Name:              "h264_hw_lacros",
-			Val:               webcodecs.TestEncodeArgs{Codec: videotype.H264, Acceleration: webcodecs.PreferHardware, BitrateMode: "constant", BrowserType: browser.TypeLacros, NumOfEncoders: 1},
-			ExtraSoftwareDeps: []string{"proprietary_codecs", caps.HWEncodeH264, "lacros"},
-			Fixture:           pre.ChromeVideoLacrosFixture(pre.VideoFeatureFakeMediaStreamUI),
 		}, {
 			Name:              "h264_hw_oopve",
 			Val:               webcodecs.TestEncodeArgs{Codec: videotype.H264, Acceleration: webcodecs.PreferHardware, BitrateMode: "constant", VerifyOutOfProcessVideoEncodingIsUsed: true, BrowserType: browser.TypeAsh, NumOfEncoders: 1},
@@ -105,11 +99,6 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP8},
 			Fixture:           "chromeVideo",
 		}, {
-			Name:              "vp8_hw_lacros",
-			Val:               webcodecs.TestEncodeArgs{Codec: videotype.VP8, Acceleration: webcodecs.PreferHardware, BitrateMode: "constant", BrowserType: browser.TypeLacros, NumOfEncoders: 1},
-			ExtraSoftwareDeps: []string{caps.HWEncodeVP8, "lacros"},
-			Fixture:           pre.ChromeVideoLacrosFixture(pre.VideoFeatureFakeMediaStreamUI),
-		}, {
 			Name:              "vp8_hw_oopve",
 			Val:               webcodecs.TestEncodeArgs{Codec: videotype.VP8, Acceleration: webcodecs.PreferHardware, BitrateMode: "constant", VerifyOutOfProcessVideoEncodingIsUsed: true, BrowserType: browser.TypeAsh, NumOfEncoders: 1},
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP8},
@@ -146,11 +135,6 @@ func init() {
 			Val:               webcodecs.TestEncodeArgs{Codec: videotype.VP9, Acceleration: webcodecs.PreferHardware, BitrateMode: "constant", BrowserType: browser.TypeAsh, NumOfEncoders: 3},
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP9},
 			Fixture:           "chromeVideo",
-		}, {
-			Name:              "vp9_hw_lacros",
-			Val:               webcodecs.TestEncodeArgs{Codec: videotype.VP9, Acceleration: webcodecs.PreferHardware, BitrateMode: "constant", BrowserType: browser.TypeLacros, NumOfEncoders: 1},
-			ExtraSoftwareDeps: []string{caps.HWEncodeVP9, "lacros"},
-			Fixture:           pre.ChromeVideoLacrosFixture(pre.VideoFeatureFakeMediaStreamUI),
 		}, {
 			Name:              "vp9_hw_oopve",
 			Val:               webcodecs.TestEncodeArgs{Codec: videotype.VP9, Acceleration: webcodecs.PreferHardware, BitrateMode: "constant", VerifyOutOfProcessVideoEncodingIsUsed: true, BrowserType: browser.TypeAsh, NumOfEncoders: 1},
