@@ -43,7 +43,7 @@ func init() {
 		// ChromeOS > Software > Personalization
 		BugComponent: "b:1006527",
 		Attr:         []string{"group:mainline", "informational"},
-		SoftwareDeps: []string{"chrome", caps.BuiltinCamera},
+		SoftwareDeps: []string{"chrome", caps.BuiltinCamera, "gaia"},
 		Fixture:      "personalizationWithGaiaLogin",
 		Timeout:      3 * time.Minute,
 		Params: []testing.Param{

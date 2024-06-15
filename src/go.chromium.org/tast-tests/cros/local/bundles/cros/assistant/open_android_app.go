@@ -36,7 +36,7 @@ func init() {
 			Key:   "feature_id",
 			Value: "screenplay-175332b6-9163-4913-b4f0-eca92143fa3f",
 		}},
-		SoftwareDeps: []string{"chrome", "chrome_internal"},
+		SoftwareDeps: []string{"chrome", "chrome_internal", "gaia"},
 		Fixture:      "assistantWithArc",
 		Timeout:      3 * time.Minute,
 		Params: []testing.Param{{

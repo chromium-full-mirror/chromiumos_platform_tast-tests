@@ -29,7 +29,7 @@ func init() {
 			"informational",
 			"group:hw_agnostic",
 		},
-		SoftwareDeps: []string{"chrome", "chrome_internal"},
+		SoftwareDeps: []string{"chrome", "chrome_internal", "gaia"},
 		Fixture:      "assistantWithArc",
 		Timeout:      3 * time.Minute,
 		Params: []testing.Param{{

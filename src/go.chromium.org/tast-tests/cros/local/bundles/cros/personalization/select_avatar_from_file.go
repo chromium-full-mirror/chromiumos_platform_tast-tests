@@ -41,7 +41,7 @@ func init() {
 		BugComponent: "b:1006527",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		VarDeps:      []string{"ambient.username", "ambient.password"},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "gaia"},
 		Timeout:      3 * time.Minute,
 		Fixture:      "personalizationWithGaiaLogin",
 	})

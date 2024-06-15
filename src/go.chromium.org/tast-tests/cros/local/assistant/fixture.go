@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/action"
+	"go.chromium.org/tast-tests/cros/common/assistant"
 	"go.chromium.org/tast-tests/cros/common/chameleon"
 	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/ui"
@@ -104,10 +105,7 @@ func init() {
 	fixtureConfig.PlayStoreOptin = true
 	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 		return []chrome.Option{
-			chrome.GAIALogin(chrome.Creds{
-				User: s.RequiredVar("assistant.username"),
-				Pass: s.RequiredVar("assistant.password"),
-			}),
+			chrome.GAIALoginPool(dma.CredsFromPool(assistant.AccountPoolVarName)),
 			VerboseLogging(),
 			ashNoNudgesExtraArg(),
 			chrome.ExtraArgs(arc.DisableSyncFlags()...),
@@ -128,7 +126,6 @@ func init() {
 		},
 		// ChromeOS > Software > Assistive
 		BugComponent:    "b:905229",
-		Vars:            []string{"assistant.username", "assistant.password"},
 		Impl:            arc.NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
 		ResetTimeout:    arc.ResetTimeout,
@@ -146,7 +143,7 @@ func init() {
 		},
 		// ChromeOS > Software > Assistive
 		BugComponent:    "b:905229",
-		Vars:            []string{"assistant.username", "assistant.password", "ui.signinProfileTestExtensionManifestKey"},
+		Vars:            []string{"ui.signinProfileTestExtensionManifestKey"},
 		Impl:            NewOOBEFixture(),
 		SetUpTimeout:    30 * time.Second,
 		PostTestTimeout: 30 * time.Second,
@@ -162,13 +159,9 @@ func init() {
 		},
 		// ChromeOS > Software > Assistive
 		BugComponent: "b:905229",
-		Vars:         []string{"assistant.username", "assistant.password"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
-				chrome.GAIALogin(chrome.Creds{
-					User: s.RequiredVar("assistant.username"),
-					Pass: s.RequiredVar("assistant.password"),
-				}),
+				chrome.GAIALoginPool(dma.CredsFromPool(assistant.AccountPoolVarName)),
 				VerboseLogging(),
 				ashNoNudgesExtraArg(),
 				chrome.ExtraArgs(arc.DisableSyncFlags()...),
@@ -649,10 +642,7 @@ func (f *oobeFixture) SetUp(ctx context.Context, s *testing.FixtState) interface
 		ashNoNudgesExtraArg(),
 		chrome.NoLogin(),
 		chrome.DeferLogin(),
-		chrome.GAIALogin(chrome.Creds{
-			User: s.RequiredVar("assistant.username"),
-			Pass: s.RequiredVar("assistant.password"),
-		}),
+		chrome.GAIALoginPool(dma.CredsFromPool(assistant.AccountPoolVarName)),
 		chrome.DontSkipOOBEAfterLogin(),
 		chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")),
 	}

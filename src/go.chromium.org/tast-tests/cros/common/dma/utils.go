@@ -10,6 +10,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/accountmanager"
 	"go.chromium.org/tast-tests/cros/common/arc"
+	"go.chromium.org/tast-tests/cros/common/assistant"
 	"go.chromium.org/tast-tests/cros/common/calendar"
 	"go.chromium.org/tast-tests/cros/common/connectivityfwdumps"
 	"go.chromium.org/tast-tests/cros/common/drivefs"
@@ -27,29 +28,32 @@ var dmaEnableVar = testing.RegisterVarString(
 
 func pools() (map[string]string, map[string]string) {
 	var dmaPools = map[string]string{
-		ui.GaiaPoolDefaultVarName:                   ui.GaiaDMAPoolDefaultValue(),
-		ui.CUJAccountPoolVarName:                    ui.GaiaDMAPoolDefaultValue(),
-		drivefs.AccountPoolVarName:                  ui.GaiaDMAPoolDefaultValue(),
+
 		accountmanager.AccountPoolVarName:           ui.GaiaDMAPoolDefaultValue(),
 		arc.ManagedAccountPoolVarName:               arc.ManagedDMAAccountPoolValue(),
-		wallpaper.GooglePhotosAccountPoolVarName:    wallpaper.GooglePhotosDMAAccountPoolValue(),
-		connectivityfwdumps.GaiaLoginAccountVarName: arc.ManagedDMAAccountPoolValue(),
-		policy.ManagedUserAccountPoolVarName:        arc.ManagedDMAAccountPoolValue(),
+		assistant.AccountPoolVarName:                ui.GaiaDMAPoolDefaultValue(),
 		calendar.GoogleCalendarAccountPoolVarName:   calendar.GoogleCalendarDMAAccountPoolValue(),
 		calendar.UpcomingEventsAccountVarName:       calendar.UpcomingEventsDMAAccountValue(),
+		connectivityfwdumps.GaiaLoginAccountVarName: arc.ManagedDMAAccountPoolValue(),
+		drivefs.AccountPoolVarName:                  ui.GaiaDMAPoolDefaultValue(),
+		policy.ManagedUserAccountPoolVarName:        arc.ManagedDMAAccountPoolValue(),
+		ui.GaiaPoolDefaultVarName:                   ui.GaiaDMAPoolDefaultValue(),
+		ui.CUJAccountPoolVarName:                    ui.GaiaDMAPoolDefaultValue(),
+		wallpaper.GooglePhotosAccountPoolVarName:    wallpaper.GooglePhotosDMAAccountPoolValue(),
 	}
 
 	var regularPools = map[string]string{
-		ui.GaiaPoolDefaultVarName:                   ui.GaiaPoolDefaultValue(),
-		ui.CUJAccountPoolVarName:                    ui.CUJAccountPoolValue(),
-		drivefs.AccountPoolVarName:                  drivefs.AccountPoolValue(),
 		accountmanager.AccountPoolVarName:           accountmanager.AccountPoolValue(),
 		arc.ManagedAccountPoolVarName:               arc.ManagedAccountPoolValue(),
-		wallpaper.GooglePhotosAccountPoolVarName:    wallpaper.GooglePhotosAccountPoolValue(),
-		connectivityfwdumps.GaiaLoginAccountVarName: connectivityfwdumps.GaiaLoginAccountValue(),
-		policy.ManagedUserAccountPoolVarName:        policy.ManagedUserAccountPoolValue(),
+		assistant.AccountPoolVarName:                assistant.AccountPoolValue(),
 		calendar.GoogleCalendarAccountPoolVarName:   calendar.GoogleCalendarAccountPoolValue(),
 		calendar.UpcomingEventsAccountVarName:       calendar.UpcomingEventsAccountValue(),
+		connectivityfwdumps.GaiaLoginAccountVarName: connectivityfwdumps.GaiaLoginAccountValue(),
+		drivefs.AccountPoolVarName:                  drivefs.AccountPoolValue(),
+		policy.ManagedUserAccountPoolVarName:        policy.ManagedUserAccountPoolValue(),
+		ui.GaiaPoolDefaultVarName:                   ui.GaiaPoolDefaultValue(),
+		ui.CUJAccountPoolVarName:                    ui.CUJAccountPoolValue(),
+		wallpaper.GooglePhotosAccountPoolVarName:    wallpaper.GooglePhotosAccountPoolValue(),
 	}
 
 	return dmaPools, regularPools

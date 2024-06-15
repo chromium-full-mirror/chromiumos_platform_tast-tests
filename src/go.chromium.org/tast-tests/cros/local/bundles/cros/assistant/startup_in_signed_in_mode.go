@@ -8,6 +8,8 @@ import (
 	"context"
 	"time"
 
+	assistantRemote "go.chromium.org/tast-tests/cros/common/assistant"
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/local/assistant"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast/core/testing"
@@ -28,18 +30,15 @@ func init() {
 			"informational",
 			"group:hw_agnostic",
 		},
-		SoftwareDeps: []string{"chrome", "chrome_internal"},
-		VarDeps:      []string{"assistant.username", "assistant.password"},
+		SoftwareDeps: []string{"chrome", "chrome_internal", "gaia"},
+		VarDeps:      []string{assistantRemote.AccountPoolVarName},
 		Timeout:      chrome.GAIALoginTimeout + time.Minute,
 	})
 }
 
 func StartupInSignedInMode(ctx context.Context, s *testing.State) {
 	opts := []chrome.Option{
-		chrome.GAIALogin(chrome.Creds{
-			User: s.RequiredVar("assistant.username"),
-			Pass: s.RequiredVar("assistant.password"),
-		}),
+		chrome.GAIALoginPool(dma.CredsFromPool(assistantRemote.AccountPoolVarName)),
 		assistant.VerboseLogging()}
 
 	// Start Chrome browser and log in using a test account.
