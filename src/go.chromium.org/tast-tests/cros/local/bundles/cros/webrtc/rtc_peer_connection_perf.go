@@ -20,7 +20,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         RTCPeerConnectionPerf,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures WebRTC decode performance in terms of CPU usage and decode time with and without hardware acceleration",
 		Contacts: []string{
 			"hiroh@chromium.org",
@@ -1506,76 +1506,6 @@ func init() {
 				Fixture:           "chromeVideoINPVDWithFakeWebcam",
 			},
 			{
-				Name: "h264_720p_lacros_hw_enc_hw_dec",
-				Val: peerconnection.RTCTestParams{
-					VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
-					VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
-					Profile:           "H264",
-					StreamWidth:       1280,
-					StreamHeight:      720,
-					BrowserType:       browser.TypeLacros,
-					TraceChromeEvents: false,
-				},
-				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_enc_h264_1080_30", "autotest-capability:hw_dec_h264_1080_30"},
-				Fixture:           "chromeVideoLacrosWithFakeWebcam",
-			},
-			{
-				Name: "vp8_720p_lacros_hw_enc_hw_dec",
-				Val: peerconnection.RTCTestParams{
-					VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
-					VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
-					Profile:           "VP8",
-					StreamWidth:       1280,
-					StreamHeight:      720,
-					BrowserType:       browser.TypeLacros,
-					TraceChromeEvents: false,
-				},
-				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp8_1080_30", "autotest-capability:hw_dec_vp8_1080_30"},
-				Fixture:           "chromeVideoLacrosWithFakeWebcam",
-			},
-			{
-				Name: "vp9_720p_lacros_hw_enc_hw_dec",
-				Val: peerconnection.RTCTestParams{
-					VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
-					VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
-					Profile:           "VP9",
-					StreamWidth:       1280,
-					StreamHeight:      720,
-					BrowserType:       browser.TypeLacros,
-					TraceChromeEvents: false,
-				},
-				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp9_1080_30", "autotest-capability:hw_dec_vp9_1080_30"},
-				Fixture:           "chromeVideoLacrosWithFakeWebcam",
-			},
-			{
-				Name: "av1_720p_lacros_hw_enc_hw_dec",
-				Val: peerconnection.RTCTestParams{
-					VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
-					VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
-					Profile:           "AV1",
-					StreamWidth:       1280,
-					StreamHeight:      720,
-					BrowserType:       browser.TypeLacros,
-					TraceChromeEvents: false,
-				},
-				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_av1_1080_30", "autotest-capability:hw_dec_av1_1080_30"},
-				Fixture:           "chromeVideoLacrosWithFakeWebcam",
-			},
-			{
-				Name: "h264_720p_lacros_hw_enc_hw_dec_gtfo",
-				Val: peerconnection.RTCTestParams{
-					VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
-					VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
-					Profile:           "H264",
-					StreamWidth:       1280,
-					StreamHeight:      720,
-					BrowserType:       browser.TypeLacros,
-					TraceChromeEvents: false,
-				},
-				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_enc_h264_1080_30", "autotest-capability:hw_dec_h264_1080_30"},
-				Fixture:           "chromeVideoLacrosGTFOWithFakeWebcam",
-			},
-			{
 				Name: "vp8_1080p_tab_l1t3_sw_enc_hw_inpvd",
 				Val: peerconnection.RTCTestParams{
 					VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
@@ -1590,22 +1520,6 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp8_1080_30"},
 				Fixture:           "chromeTabCaptureWithINPVDAndSWEncoding",
-			},
-			{
-				Name: "vp8_1080p_tab_l1t3_lacros_sw_enc_hw_dec",
-				Val: peerconnection.RTCTestParams{
-					VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
-					VerifyEncoderMode: peerconnection.VerifySWEncoderUsed,
-					Profile:           "VP8",
-					StreamWidth:       1920,
-					StreamHeight:      1080,
-					Svc:               "L1T3",
-					DisplayMediaType:  peerconnection.CaptureTab,
-					BrowserType:       browser.TypeLacros,
-					TraceChromeEvents: false,
-				},
-				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp8_1080_30"},
-				Fixture:           "chromeTabCaptureWithLacrosAndSWEncoding",
 			},
 			{
 				Name: "h264_720p_hw_enc_hw_dec_global_vaapi_lock_disabled",

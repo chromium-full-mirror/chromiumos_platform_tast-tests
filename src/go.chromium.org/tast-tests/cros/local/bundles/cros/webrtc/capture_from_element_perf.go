@@ -11,14 +11,13 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/webrtc/capturefromelement"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
-	"go.chromium.org/tast-tests/cros/local/media/pre"
 	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CaptureFromElementPerf,
-		LacrosStatus: testing.LacrosVariantUnknown,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Collects performance values for WebRTC captureStream() (canvas, video)",
 		Contacts: []string{
 			"chromeos-gfx-video@google.com",
@@ -43,20 +42,6 @@ func init() {
 				BrowserType:  browser.TypeAsh,
 			},
 			Fixture: "chromeVideoWithFakeWebcam",
-		}, {
-			Name: "canvas_lacros",
-			Val: capturefromelement.TestParam{
-				CanvasSource: capturefromelement.UseGlClearColor,
-				BrowserType:  browser.TypeLacros,
-			},
-			Fixture: pre.ChromeVideoLacrosFixture(pre.VideoFeatureFakeMediaStreamUI),
-		}, {
-			Name: "canvas_from_video_lacros",
-			Val: capturefromelement.TestParam{
-				CanvasSource: capturefromelement.UseVideo,
-				BrowserType:  browser.TypeLacros,
-			},
-			Fixture: "chromeVideoLacrosWithFakeWebcam",
 		}},
 		//TODO(b/199174572): add a test case for "video" capture.
 	})

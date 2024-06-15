@@ -25,7 +25,7 @@ const (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         RTCPeerConnection,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that WebRTC RTCPeerConnection works, maybe verifying use of a hardware accelerator",
 		Contacts: []string{
 			"hiroh@chromium.org",
@@ -455,18 +455,6 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWEncodeH264, "proprietary_codecs"},
 			Fixture:           "chromeZeroCopyTabCapture",
 		}, {
-			Name: "h264_lacros_verify_hw_enc",
-			Val: peerconnection.RTCTestParams{
-				VerifyDecoderMode: peerconnection.NoVerifyDecoderMode,
-				VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
-				Profile:           "H264",
-				StreamWidth:       defaultRTCStreamWidth,
-				StreamHeight:      defaultRTCStreamHeight,
-				BrowserType:       browser.TypeLacros,
-			},
-			ExtraSoftwareDeps: []string{caps.HWEncodeH264, "proprietary_codecs", "lacros"},
-			Fixture:           "chromeVideoLacrosWithFakeWebcam",
-		}, {
 			Name: "h264_cam_verify_hw_enc",
 			Val: peerconnection.RTCTestParams{
 				VerifyDecoderMode: peerconnection.NoVerifyDecoderMode,
@@ -503,18 +491,6 @@ func init() {
 			},
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP8},
 			Fixture:           "chromeVideoWithFakeWebcam",
-		}, {
-			Name: "vp8_lacros_verify_hw_enc",
-			Val: peerconnection.RTCTestParams{
-				VerifyDecoderMode: peerconnection.NoVerifyDecoderMode,
-				VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
-				Profile:           "VP8",
-				StreamWidth:       defaultRTCStreamWidth,
-				StreamHeight:      defaultRTCStreamHeight,
-				BrowserType:       browser.TypeLacros,
-			},
-			ExtraSoftwareDeps: []string{caps.HWEncodeVP8, "lacros"},
-			Fixture:           "chromeVideoLacrosWithFakeWebcam",
 		}, {
 			Name: "vp8_cam_verify_hw_enc",
 			Val: peerconnection.RTCTestParams{
@@ -635,18 +611,6 @@ func init() {
 			},
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP9},
 			Fixture:           "chromeVideoWithFakeWebcam",
-		}, {
-			Name: "vp9_lacros_verify_hw_enc",
-			Val: peerconnection.RTCTestParams{
-				VerifyDecoderMode: peerconnection.NoVerifyDecoderMode,
-				VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
-				Profile:           "VP9",
-				StreamWidth:       defaultRTCStreamWidth,
-				StreamHeight:      defaultRTCStreamHeight,
-				BrowserType:       browser.TypeLacros,
-			},
-			ExtraSoftwareDeps: []string{caps.HWEncodeVP9},
-			Fixture:           "chromeVideoLacrosWithFakeWebcam",
 		}, {
 			Name: "vp9_1080p_verify_hw_enc",
 			Val: peerconnection.RTCTestParams{

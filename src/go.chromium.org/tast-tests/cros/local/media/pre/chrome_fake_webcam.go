@@ -270,47 +270,4 @@ func initChromeFakeWebCamFixturesLacros() {
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:         "chromeVideoLacrosGTFOWithFakeWebcam",
-		Desc:         "Similar to chromeVideoGTFO fixture but supplementing it with the use of a fake video/audio capture device (a.k.a. 'fake webcam'), see https://webrtc.org/testing/ (lacros)",
-		Contacts:     []string{"chromeos-gfx-video@google.com"},
-		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(
-				getChromeVideoOptions(
-					browser.TypeLacros,
-					chrome.ExtraArgs(chromeFakeWebcamArgs...),
-					chrome.LacrosExtraArgs(chromeBypassPermissionsArgs...),
-					chrome.LacrosDisableFeatures("UseOutOfProcessVideoDecoding"),
-					chrome.LacrosEnableFeatures("UseGTFOOutOfProcessVideoDecoding"),
-				)...,
-			)).Opts()
-		}),
-		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.FixtureSetUpTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:         "chromeVideoLacrosWithFakeWebcamAndZeroLatencyRtc",
-		Desc:         "Similar to chromeVideo fixture but supplementing it with the use of a fake video/audio capture device (a.k.a. 'fake webcam'), see https://webrtc.org/testing/, and the webrtc rendering smoothness algorithm disabled (lacros)",
-		Contacts:     []string{"chromeos-gfx-video@google.com"},
-		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(
-				getChromeVideoOptions(
-					browser.TypeLacros,
-					chrome.ExtraArgs(chromeFakeWebcam60fpsArgs...),
-					chrome.LacrosExtraArgs(chromeBypassPermissionsArgs...),
-					chrome.LacrosExtraArgs("--disable-rtc-smoothness-algorithm"),
-				)...,
-			)).Opts()
-		}),
-		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.FixtureSetUpTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
 }

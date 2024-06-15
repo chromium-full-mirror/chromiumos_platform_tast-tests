@@ -28,7 +28,7 @@ type videoPlaybackDelayParams struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VideoPlaybackDelay,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Runs a webrtc playback-only connection to get performance numbers",
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		Contacts: []string{
@@ -53,21 +53,6 @@ func init() {
 			Val:               videoPlaybackDelayParams{profile: "H264", browserType: browser.TypeAsh},
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
 			Fixture:           "chromeVideoWithFakeWebcamAndZeroLatencyRtc",
-		}, {
-			Name:              "vp8_lacros",
-			Val:               videoPlaybackDelayParams{profile: "VP8", browserType: browser.TypeLacros},
-			ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "lacros"},
-			Fixture:           "chromeVideoLacrosWithFakeWebcamAndZeroLatencyRtc",
-		}, {
-			Name:              "vp9_lacros",
-			Val:               videoPlaybackDelayParams{profile: "VP9", browserType: browser.TypeLacros},
-			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "lacros"},
-			Fixture:           "chromeVideoLacrosWithFakeWebcamAndZeroLatencyRtc",
-		}, {
-			Name:              "h264_lacros",
-			Val:               videoPlaybackDelayParams{profile: "H264", browserType: browser.TypeLacros},
-			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs", "lacros"},
-			Fixture:           "chromeVideoLacrosWithFakeWebcamAndZeroLatencyRtc",
 		}},
 	})
 }

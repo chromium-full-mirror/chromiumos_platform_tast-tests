@@ -430,49 +430,6 @@ func TestRTCPeerConnectionPerfParams(t *testing.T) {
 		}
 	}
 
-	// LaCrOS test cases.
-	for _, codec := range []string{"h264", "vp8", "vp9", "av1"} {
-		enc := hwEnc
-		dec := hwDec
-		paramData := rtcTestParamsData{
-			VerifyDecoderMode: toVerifyDecoderMode(dec),
-			VerifyEncoderMode: toVerifyEncoderMode(enc),
-			Profile:           strings.ToUpper(codec),
-			StreamWidth:       k720p.Width,
-			StreamHeight:      k720p.Height,
-			BrowserType:       "browser.TypeLacros",
-			TraceChromeEvents: false,
-		}
-		sourceData := rtcPerfTestSourceData{
-			Name:         fmt.Sprintf("%s_720p_lacros_hw_enc_hw_dec", codec),
-			ParamData:    paramData,
-			SoftwareDeps: softwareCodecsDeps(codec, enc, dec),
-			Fixture:      "chromeVideoLacrosWithFakeWebcam",
-		}
-		sourceDatas = append(sourceDatas, sourceData)
-	}
-	{
-		codec := "h264"
-		enc := hwEnc
-		dec := gtfoVD
-		paramData := rtcTestParamsData{
-			VerifyDecoderMode: toVerifyDecoderMode(dec),
-			VerifyEncoderMode: toVerifyEncoderMode(enc),
-			Profile:           strings.ToUpper(codec),
-			StreamWidth:       k720p.Width,
-			StreamHeight:      k720p.Height,
-			BrowserType:       "browser.TypeLacros",
-			TraceChromeEvents: false,
-		}
-		sourceData := rtcPerfTestSourceData{
-			Name:         fmt.Sprintf("%s_720p_lacros_hw_enc_hw_dec_gtfo", codec),
-			ParamData:    paramData,
-			SoftwareDeps: softwareCodecsDeps(codec, enc, dec),
-			Fixture:      "chromeVideoLacrosGTFOWithFakeWebcam",
-		}
-		sourceDatas = append(sourceDatas, sourceData)
-	}
-
 	// Tab capture + INP-VD test case.
 	tabCaptureINPVDParamData := rtcTestParamsData{
 		VerifyDecoderMode: toVerifyDecoderMode(inpVD),
@@ -492,26 +449,6 @@ func TestRTCPeerConnectionPerfParams(t *testing.T) {
 		Fixture:      "chromeTabCaptureWithINPVDAndSWEncoding",
 	}
 	sourceDatas = append(sourceDatas, tabCaptureINPVDSourceData)
-
-	// Tab capture + LaCrOS test case.
-	tabCaptureLacrosParamData := rtcTestParamsData{
-		VerifyDecoderMode: toVerifyDecoderMode(hwDec),
-		VerifyEncoderMode: toVerifyEncoderMode(swEnc),
-		Profile:           "VP8",
-		StreamWidth:       k1080p.Width,
-		StreamHeight:      k1080p.Height,
-		Svc:               "L1T3",
-		DisplayMediaType:  "peerconnection.CaptureTab",
-		BrowserType:       "browser.TypeLacros",
-		TraceChromeEvents: false,
-	}
-	tabCaptureLacrosSourceData := rtcPerfTestSourceData{
-		Name:         "vp8_1080p_tab_l1t3_lacros_sw_enc_hw_dec",
-		ParamData:    tabCaptureLacrosParamData,
-		SoftwareDeps: softwareCodecsDeps("vp8", swEnc, hwDec),
-		Fixture:      "chromeTabCaptureWithLacrosAndSWEncoding",
-	}
-	sourceDatas = append(sourceDatas, tabCaptureLacrosSourceData)
 
 	// Vaapi lock disabled test cases.
 	for _, codec := range []string{"h264", "vp8", "vp9", "av1"} {

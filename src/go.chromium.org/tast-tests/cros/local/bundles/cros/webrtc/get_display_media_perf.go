@@ -26,7 +26,7 @@ type getDisplayMediaTestParams struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         GetDisplayMediaPerf,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that WebRTC getDisplayMedia() (screen, window, tab capture) works and collects performance data",
 		Contacts: []string{
 			"chromeos-gfx-video@google.com",
@@ -70,22 +70,6 @@ func init() {
 			Name:    "tab_zero_copy",
 			Val:     getDisplayMediaTestParams{surfaceType: "browser", browserType: browser.TypeAsh},
 			Fixture: "chromeZeroCopyTabCapture",
-		}, {
-			Name:              "monitor_lacros",
-			Val:               getDisplayMediaTestParams{surfaceType: "monitor", browserType: browser.TypeLacros},
-			Fixture:           "chromeScreenCaptureLacros",
-			ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay(), hwdep.NoExternalDisplay()),
-			ExtraSoftwareDeps: []string{"lacros"},
-		}, {
-			Name:              "window_lacros",
-			Val:               getDisplayMediaTestParams{surfaceType: "window", browserType: browser.TypeLacros},
-			Fixture:           "chromeWindowCaptureLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-		}, {
-			Name:              "tab_lacros",
-			Val:               getDisplayMediaTestParams{surfaceType: "browser", browserType: browser.TypeLacros},
-			Fixture:           "chromeTabCaptureLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
 		}},
 	})
 }

@@ -28,7 +28,7 @@ type mediaRecorderPerfTest struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         MediaRecorderPerf,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Captures performance data about MediaRecorder for both SW and HW",
 		Contacts: []string{
 			"bchoobineh@google.com",
@@ -85,11 +85,6 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWEncodeH264, "proprietary_codecs"},
 			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
-			Name:              "h264_hw_lacros",
-			Val:               mediaRecorderPerfTest{enableHWAccel: true, profile: videotype.H264BaselineProf, browserType: browser.TypeLacros},
-			ExtraSoftwareDeps: []string{caps.HWEncodeH264, "proprietary_codecs", "lacros"},
-			Fixture:           "chromeVideoLacrosWithFakeWebcam",
-		}, {
 			Name:              "vp8_hw",
 			Val:               mediaRecorderPerfTest{enableHWAccel: true, profile: videotype.VP8Prof, browserType: browser.TypeAsh},
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP8},
@@ -99,11 +94,6 @@ func init() {
 			Val:               mediaRecorderPerfTest{enableHWAccel: true, profile: videotype.VP8Prof, resolution: graphics.Size{Width: 1920, Height: 1080}, browserType: browser.TypeAsh},
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP8},
 			Fixture:           "chromeVideoWithFakeWebcam",
-		}, {
-			Name:              "vp8_hw_lacros",
-			Val:               mediaRecorderPerfTest{enableHWAccel: true, profile: videotype.VP8Prof, browserType: browser.TypeLacros},
-			ExtraSoftwareDeps: []string{caps.HWEncodeVP8, "lacros"},
-			Fixture:           "chromeVideoLacrosWithFakeWebcam",
 		}, {
 			Name:              "vp9_hw",
 			Val:               mediaRecorderPerfTest{enableHWAccel: true, profile: videotype.VP9Prof, browserType: browser.TypeAsh},
@@ -115,11 +105,6 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP9},
 			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
-			Name:              "vp9_hw_lacros",
-			Val:               mediaRecorderPerfTest{enableHWAccel: true, profile: videotype.VP9Prof, browserType: browser.TypeLacros},
-			ExtraSoftwareDeps: []string{caps.HWEncodeVP9, "lacros"},
-			Fixture:           "chromeVideoLacrosWithFakeWebcam",
-		}, {
 			Name:              "av1_hw",
 			Val:               mediaRecorderPerfTest{enableHWAccel: true, profile: videotype.AV1MainProf, browserType: browser.TypeAsh},
 			ExtraSoftwareDeps: []string{caps.HWEncodeAV1},
@@ -129,11 +114,6 @@ func init() {
 			Val:               mediaRecorderPerfTest{enableHWAccel: true, profile: videotype.AV1MainProf, resolution: graphics.Size{Width: 1920, Height: 1080}, browserType: browser.TypeAsh},
 			ExtraSoftwareDeps: []string{caps.HWEncodeAV1},
 			Fixture:           "chromeVideoWithFakeWebcam",
-		}, {
-			Name:              "av1_hw_lacros",
-			Val:               mediaRecorderPerfTest{enableHWAccel: true, profile: videotype.AV1MainProf, browserType: browser.TypeLacros},
-			ExtraSoftwareDeps: []string{caps.HWEncodeAV1, "lacros"},
-			Fixture:           "chromeVideoLacrosWithFakeWebcam",
 		}},
 	})
 }
