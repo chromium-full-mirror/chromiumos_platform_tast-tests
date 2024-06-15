@@ -197,5 +197,29 @@ func HumanMotionRobotFullImage(ctx context.Context, s *testing.State) {
 		s.Error("Failed to clean raw touchlog file: ", err)
 	}
 
-	// TODO(b/343548793): Full image analysis.
+	referenceFilePath := s.DataPath(referenceFileData.filename + ".csv")
+	fullImageResult, err := input.DetermineFullImageVerdict(referenceFilePath, hostTouchLogFilePath, calibrationData, dutScreenWidthInMM, dutScreenHeightInMM)
+	if err != nil {
+		s.Error("Errors occurred while trying to determine verdict: ", err)
+	}
+
+	if fullImageResult != nil {
+		if fullImageResult.Passed {
+			s.Logf("Passed Test: Full Image MSE (%v) was less than threshold (%v)", fullImageResult.TotalMSE, input.FullImageMSEThreshold)
+		} else if err == nil {
+			// Full Image MSE is irrelevant if an error is returned.
+			s.Errorf("Failed Test: Full Image MSE (%v) was greater than threshold (%v)", fullImageResult.TotalMSE, input.FullImageMSEThreshold)
+		}
+		s.Logf("Epsilon used: %vmm", fullImageResult.Epsilon)
+		s.Log("Successfully analysed paths info:")
+		for _, pathResult := range fullImageResult.PathResults {
+			s.Logf("Path MSE: %v, Successful fit rate: %v, Reference path length: %v, Result path length: %v, Number of calculations: %v, Bubble radius: %vmm",
+				pathResult.PathMSE,
+				pathResult.SuccessfulFitRate,
+				pathResult.ReferencePathLength,
+				pathResult.ResultPathLength,
+				pathResult.NumberOfCalculations,
+				pathResult.BubbleRadius)
+		}
+	}
 }
