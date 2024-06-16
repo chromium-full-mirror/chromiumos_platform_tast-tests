@@ -5,7 +5,7 @@
 package ehideconst
 
 // EhidePath is the path for the ehide script.
-const EhidePath = "/usr/bin/ehide"
+const EhidePath = "ehide"
 
 // EhideStateOn is the "on" state for ehide.
 const EhideStateOn = "on"
