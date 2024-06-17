@@ -241,7 +241,7 @@ func ExpandMoreSettings(ctx context.Context, tconn *chrome.TestConn) error {
 // setDropdownInternal changes the selected option of a dropdown menu to the
 // desired value.
 func setDropdownInternal(ui *uiauto.Context, dropdown *nodewith.Finder, value string) uiauto.Action {
-	option := nodewith.Name(value).Role(role.MenuListOption)
+	option := nodewith.Name(value).Role(role.MenuListOption).Ancestor(dropdown)
 
 	return uiauto.Combine(fmt.Sprintf("expand dropdown and select option '%s'", value),
 		ui.WithTimeout(10*time.Second).WaitUntilExists(dropdown.Focusable()),
