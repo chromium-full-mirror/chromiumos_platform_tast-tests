@@ -12,7 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -70,7 +69,9 @@ func Cr50TPMManufactured(ctx context.Context, s *testing.State) {
 	}(cleanupCtx)
 
 	tpmRe := regexp.MustCompile(`tpm_manufactured: manufactured`)
-	if err := h.Servo.PollForRegexp(ctx, servo.CR50UARTStream, tpmRe, 60*time.Second); err != nil {
-		s.Fatal(errors.Wrap(err, "GSC output parsing failed"))
+	if found, err := h.Servo.PollForRegexp(ctx, servo.CR50UARTStream, tpmRe, 60*time.Second); err != nil {
+		s.Fatal("GSC output parsing failed: ", err)
+	} else if !found {
+		s.Fatalf("Did not find %s", tpmRe)
 	}
 }

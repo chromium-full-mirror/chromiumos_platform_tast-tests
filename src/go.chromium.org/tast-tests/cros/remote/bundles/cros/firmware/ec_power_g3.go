@@ -6,12 +6,14 @@ package firmware
 
 import (
 	"context"
+	"regexp"
 	"time"
 
 	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -113,6 +115,7 @@ func init() {
 					PowerStateTimeout: 11 * time.Second,
 				},
 				Fixture: fixture.NormalMode,
+				Timeout: 15 * time.Minute,
 			},
 		},
 	})
@@ -209,15 +212,66 @@ func ECPowerG3(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to power on DUT with power state on: ", err)
 		}
 	} else {
-		s.Logf("Power DUT back on with power button press of %s", h.Config.HoldPwrButtonPowerOn)
-		if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.Dur(h.Config.HoldPwrButtonPowerOn)); err != nil {
-			s.Fatalf("Failed to power on DUT by pressing power button for hold_pwr_button_poweron(%s): %v", h.Config.HoldPwrButtonPowerOn, err)
+		closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
+		if err != nil {
+			s.Fatal("Failed to enable capture EC UART: ", err)
+		}
+		defer func() {
+			if err := closeUART(ctx); err != nil {
+				s.Fatal("Failed to disable capture EC UART: ", err)
+			}
+		}()
+
+		apUnresponsiveMsg := regexp.MustCompile(`MKBP: The AP is failing to respond despite being powered on`)
+		for i := 0; i < 3; i++ {
+			s.Log("Attempting to power DUT back on with power button press of ", h.Config.HoldPwrButtonPowerOn)
+			if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.Dur(h.Config.HoldPwrButtonPowerOn)); err != nil {
+				s.Fatalf("Failed to power on DUT by pressing power button for hold_pwr_button_poweron (%s): %v", h.Config.HoldPwrButtonPowerOn, err)
+			}
+			found, err := h.Servo.PollForRegexp(ctx, servo.ECUARTStream, apUnresponsiveMsg, 1*time.Minute)
+			if err != nil {
+				s.Fatal("GSC output parsing failed: ", err)
+			}
+			if found {
+				pollForPowerStateG3 := func(ctx context.Context) (bool, error) {
+					type g3NotFoundErr struct {
+						*errors.E
+					}
+					if err := testing.Poll(ctx, func(ctx context.Context) error {
+						currPowerState, err := h.Servo.GetECSystemPowerState(ctx)
+						if err != nil {
+							return errors.Wrap(err, "failed to get power state")
+						}
+						if currPowerState != "G3" {
+							return &g3NotFoundErr{errors.Errorf("expected power state G3, but got power state %q", currPowerState)}
+						}
+						return nil
+					}, &testing.PollOptions{Interval: 5 * time.Second, Timeout: 30 * time.Second}); err != nil {
+						if _, ok := errors.Unwrap(err).(*g3NotFoundErr); ok {
+							return false, nil
+						}
+						return false, errors.Wrap(err, "failed to get power state")
+					}
+					return true, nil
+				}
+				isG3PowerState, err := pollForPowerStateG3(ctx)
+				if err != nil {
+					s.Fatal("Failed to get power state G3: ", err)
+				}
+				if isG3PowerState {
+					s.Logf("Captured %q and got power state G3. Retry pressing power button", apUnresponsiveMsg)
+				} else {
+					s.Logf("Captured %q and but did not get power state G3. Continue reconnecting to the DUT", apUnresponsiveMsg)
+					break
+				}
+			} else {
+				s.Logf("Did not capture %q. Continue reconnecting to the DUT", apUnresponsiveMsg)
+				break
+			}
 		}
 	}
-
 	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
 	defer cancelWaitConnect()
-
 	if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
 		currPowerState, stateErr := h.Servo.GetECSystemPowerState(ctx)
 		if stateErr != nil {

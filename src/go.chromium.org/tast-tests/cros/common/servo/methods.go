@@ -1501,8 +1501,11 @@ func (s *Servo) EnableUARTCapture(ctx context.Context, uart OnOffControl) (close
 }
 
 // PollForRegexp polls a UART for one or more strings for up to timeout, returning nil if found. You may need to call EnableUARTCapture() before rebooting to capture boot time logs.
-func (s *Servo) PollForRegexp(ctx context.Context, uart StringControl, toFind *regexp.Regexp, timeout time.Duration) error {
+func (s *Servo) PollForRegexp(ctx context.Context, uart StringControl, toFind *regexp.Regexp, timeout time.Duration) (bool, error) {
 	var leftoverLines string
+	type regexpNotFoundErr struct {
+		*errors.E
+	}
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		if lines, err := s.GetQuotedString(ctx, uart); err != nil {
@@ -1524,12 +1527,14 @@ func (s *Servo) PollForRegexp(ctx context.Context, uart StringControl, toFind *r
 				}
 			}
 		}
-		return errors.Errorf("failed to find %q", toFind)
+		return &regexpNotFoundErr{E: errors.Errorf("failed to find %q", toFind)}
 	}, &testing.PollOptions{Interval: time.Millisecond * 200, Timeout: timeout}); err != nil {
-		return errors.Wrap(err, "UART output-parsing failed")
+		if _, ok := errors.Unwrap(err).(*regexpNotFoundErr); ok {
+			return false, nil
+		}
+		return false, errors.Wrap(err, "UART output-parsing failed")
 	}
-
-	return nil
+	return true, nil
 }
 
 // IsServoTypeC checks if the dut connection type is type-c.

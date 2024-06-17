@@ -146,8 +146,10 @@ func AltfwMode(ctx context.Context, s *testing.State) {
 
 	s.Log("Look for AP uart")
 	ubootRe := regexp.MustCompile(`U-Boot 20`)
-	if err := h.Servo.PollForRegexp(ctx, servo.APUARTStream, ubootRe, 60*time.Second); err != nil {
-		s.Fatal(errors.Wrap(err, "failed to find U-Boot prompt"))
+	if found, err := h.Servo.PollForRegexp(ctx, servo.APUARTStream, ubootRe, 60*time.Second); err != nil {
+		s.Fatal("GSC output parsing failed: ", err)
+	} else if !found {
+		s.Fatal("Did not find U-Boot prompt")
 	}
 
 	s.Log("Stop U-Boot autoboot")

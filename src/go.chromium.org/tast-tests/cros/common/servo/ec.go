@@ -500,8 +500,10 @@ func (s *Servo) WaitFirmwareKeyboardNoCmd(ctx context.Context, timeout time.Dura
 		return errors.Wrap(err, "failed to enable capture EC UART")
 	}
 	defer func() { retErr = errors.Join(retErr, closeUART(ctx)) }()
-	if err := s.PollForRegexp(ctx, ECUARTStream, keyboardReadyRe, timeout); err != nil {
-		return errors.Wrap(err, "failed to find keyboard enable")
+	if found, err := s.PollForRegexp(ctx, ECUARTStream, keyboardReadyRe, timeout); err != nil {
+		return errors.Wrap(err, "gsc output parsing failed")
+	} else if !found {
+		return errors.Errorf("did not capture %s", keyboardReadyRe)
 	}
 
 	return nil

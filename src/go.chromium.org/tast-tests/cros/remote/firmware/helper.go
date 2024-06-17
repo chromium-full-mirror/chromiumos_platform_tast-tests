@@ -1583,10 +1583,10 @@ func (h *Helper) WaitDUTConnectDuringBootFromUSB(ctx context.Context, expBoot bo
 			defer func() {
 				if retErr != nil {
 					tpmRstAsserted := regexp.MustCompile(`tpm_rst_asserted|PLT_RST_L ASSERTED`)
-					if err := h.Servo.PollForRegexp(ctx, servo.CR50UARTStream, tpmRstAsserted, 10*time.Second); err != nil {
-						retErr = errors.Join(retErr, err)
-					} else {
+					if found, err := h.Servo.PollForRegexp(ctx, servo.CR50UARTStream, tpmRstAsserted, 10*time.Second); found {
 						retErr = errors.Join(retErr, errors.New("unexpected reset captured"))
+					} else {
+						retErr = errors.Join(retErr, err)
 					}
 				}
 				retErr = errors.Join(retErr, closeUART(ctx))
