@@ -30,7 +30,9 @@ func pools() (map[string]string, map[string]string) {
 	var dmaPools = map[string]string{
 
 		accountmanager.AccountPoolVarName:           ui.GaiaDMAPoolDefaultValue(),
+		arc.DrivefsPoolVarName:                      ui.GaiaDMAPoolDefaultValue(),
 		arc.ManagedAccountPoolVarName:               arc.ManagedDMAAccountPoolValue(),
+		arc.SharesheetPoolVarName:                   ui.GaiaDMAPoolDefaultValue(),
 		assistant.AccountPoolVarName:                ui.GaiaDMAPoolDefaultValue(),
 		calendar.GoogleCalendarAccountPoolVarName:   calendar.GoogleCalendarDMAAccountPoolValue(),
 		calendar.UpcomingEventsAccountVarName:       calendar.UpcomingEventsDMAAccountValue(),
@@ -44,7 +46,9 @@ func pools() (map[string]string, map[string]string) {
 
 	var regularPools = map[string]string{
 		accountmanager.AccountPoolVarName:           accountmanager.AccountPoolValue(),
+		arc.DrivefsPoolVarName:                      arc.DrivefsPoolValue(),
 		arc.ManagedAccountPoolVarName:               arc.ManagedAccountPoolValue(),
+		arc.SharesheetPoolVarName:                   arc.SharesheetPoolValue(),
 		assistant.AccountPoolVarName:                assistant.AccountPoolValue(),
 		calendar.GoogleCalendarAccountPoolVarName:   calendar.GoogleCalendarAccountPoolValue(),
 		calendar.UpcomingEventsAccountVarName:       calendar.UpcomingEventsAccountValue(),

@@ -12,6 +12,8 @@ import (
 	"path/filepath"
 	"time"
 
+	arcCommon "go.chromium.org/tast-tests/cros/common/arc"
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/arc/storage"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -30,9 +32,9 @@ func init() {
 		// ChromeOS > Software > ARC++ > Storage
 		BugComponent: "b:516669",
 		Attr:         []string{"group:mainline", "group:arc-functional", "group:hw_agnostic"},
-		SoftwareDeps: []string{"chrome", "chrome_internal", "drivefs"},
+		SoftwareDeps: []string{"chrome", "chrome_internal", "drivefs", "gaia"},
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
-		VarDeps:      []string{"arc.Drivefs.user1", "arc.Drivefs.password1"},
+		VarDeps:      []string{arcCommon.DrivefsPoolVarName},
 		Params: []testing.Param{
 			{
 				ExtraSoftwareDeps: []string{"android_container"},
@@ -55,10 +57,7 @@ func Drivefs(ctx context.Context, s *testing.State) {
 		ctx,
 		chrome.ARCEnabled(),
 		chrome.UnRestrictARCCPU(),
-		chrome.GAIALogin(chrome.Creds{
-			User: s.RequiredVar("arc.Drivefs.user1"),
-			Pass: s.RequiredVar("arc.Drivefs.password1"),
-		}),
+		chrome.GAIALoginPool(dma.CredsFromPool(arcCommon.DrivefsPoolVarName)),
 	)
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)

@@ -12,6 +12,8 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/android/ui"
+	arcCommon "go.chromium.org/tast-tests/cros/common/arc"
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/apps"
@@ -37,7 +39,7 @@ func init() {
 			"chromeos-apps-foundation-team@google.com",
 		},
 		BugComponent: "b:1203766",
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "gaia"},
 		Timeout:      7 * time.Minute,
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		Params: []testing.Param{{
@@ -47,8 +49,7 @@ func init() {
 			ExtraSoftwareDeps: []string{"android_vm"},
 		}},
 		VarDeps: []string{
-			"arc.Sharesheet.username",
-			"arc.Sharesheet.password",
+			arcCommon.SharesheetPoolVarName,
 		},
 	})
 }
@@ -61,16 +62,13 @@ func Sharesheet(ctx context.Context, s *testing.State) {
 		fileContentsID       = "org.chromium.arc.testapp.chromesharesheet:id/file_content"
 	)
 
-	username := s.RequiredVar("arc.Sharesheet.username")
-	password := s.RequiredVar("arc.Sharesheet.password")
-
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
 	// Setup Chrome.
 	cr, err := chrome.New(ctx,
-		chrome.GAIALogin(chrome.Creds{User: username, Pass: password}),
+		chrome.GAIALoginPool(dma.CredsFromPool(arcCommon.SharesheetPoolVarName)),
 		chrome.ARCEnabled(),
 		chrome.UnRestrictARCCPU(),
 		chrome.ExtraArgs(arc.DisableSyncFlags()...))
