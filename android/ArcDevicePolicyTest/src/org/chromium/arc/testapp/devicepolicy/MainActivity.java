@@ -244,6 +244,8 @@ public class MainActivity extends Activity {
 
     private void logError(String message, Exception e) {
         Log.e(TAG, message, e);
-        txtError.setText(message + (e == null ? "" : " " + e.toString()));
+        runOnUiThread(()->{
+            txtError.setText(message + (e == null ? "" : " " + e.toString()));
+        });
     }
 }
