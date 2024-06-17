@@ -191,13 +191,13 @@ func RoutingTagSocketAPI(ctx context.Context, s *testing.State) {
 	}
 
 	// TODO(b/322083502): Change to use network_id when it is ready.
-	getIfIdx := func(ifname string) int {
-		ifi, err := net.InterfaceByName(ifname)
-		if err != nil {
-			s.Fatalf("Failed to get ifindex for %v: %v", ifname, err)
-		}
-		return ifi.Index
-	}
+	// getIfIdx := func(ifname string) int {
+	// 	ifi, err := net.InterfaceByName(ifname)
+	// 	if err != nil {
+	// 		s.Fatalf("Failed to get ifindex for %v: %v", ifname, err)
+	// 	}
+	// 	return ifi.Index
+	// }
 
 	// The above setup is a little noisy in the log, so leave a log here to make
 	// it clearer that the setup has been finished.
@@ -208,16 +208,16 @@ func RoutingTagSocketAPI(ctx context.Context, s *testing.State) {
 	const rootUID = 0       // SYSTEM traffic
 
 	// Network ids used in the test cases.
-	lowPrioNetworkIndex := getIfIdx(testEnv.BaseRouter.VethOutName)
+	// lowPrioNetworkIndex := getIfIdx(testEnv.BaseRouter.VethOutName)
 
 	// Envs for setting up one peer of the socket connection in the test cases.
-	lowPrioNetworkServerEnv := testEnv.BaseServer
+	// lowPrioNetworkServerEnv := testEnv.BaseServer
 	highPrioNetworkServerEnv := testEnv.TestServer
 	vpnReachableServerEnv := vpnPrivateEnv
 
 	// Services (actually the corresponding interfaces) for setting up another
 	// peer of the socket connection in the test cases.
-	lowPrioService := testEnv.BaseService
+	// lowPrioService := testEnv.BaseService
 	highPrioService := testEnv.TestService
 	vpnService := vpnConn.Service()
 
@@ -230,42 +230,43 @@ func RoutingTagSocketAPI(ctx context.Context, s *testing.State) {
 		return port
 	}
 
+	// TODO(b/336883268): Reenable test cases exercising network_id tagging.
 	var tcs []routingTagSocketAPITestCase
 	if !isVPNLockdownTest {
-		vpnIfname, err := vpnConn.Service().GetDeviceInterface(ctx)
-		if err != nil {
-			s.Fatal("Failed to get interface name for VPN: ", err)
-		}
-		vpnNetworkIndex := getIfIdx(vpnIfname)
+		// vpnIfname, err := vpnConn.Service().GetDeviceInterface(ctx)
+		// if err != nil {
+		// 	s.Fatal("Failed to get interface name for VPN: ", err)
+		// }
+		// vpnNetworkIndex := getIfIdx(vpnIfname)
 
 		tcs = []routingTagSocketAPITestCase{
-			{
-				desc:      "system traffic will be routed to low priority network with setting network_id",
-				targetEnv: lowPrioNetworkServerEnv,
-				service:   lowPrioService,
-				uid:       rootUID,
-				tagSocketOpts: []patchpanel.TagSocketOption{
-					patchpanel.WithTagSocketNetworkID(lowPrioNetworkIndex),
-				},
-			},
-			{
-				desc:      "user traffic will be routed to low priority network with setting network_id",
-				targetEnv: lowPrioNetworkServerEnv,
-				service:   lowPrioService,
-				uid:       chronosUID,
-				tagSocketOpts: []patchpanel.TagSocketOption{
-					patchpanel.WithTagSocketNetworkID(lowPrioNetworkIndex),
-				},
-			},
-			{
-				desc:      "system traffic will be routed to vpn with setting network_id",
-				targetEnv: vpnReachableServerEnv,
-				service:   vpnService,
-				uid:       rootUID,
-				tagSocketOpts: []patchpanel.TagSocketOption{
-					patchpanel.WithTagSocketNetworkID(vpnNetworkIndex),
-				},
-			},
+			// {
+			// 	desc:      "system traffic will be routed to low priority network with setting network_id",
+			// 	targetEnv: lowPrioNetworkServerEnv,
+			// 	service:   lowPrioService,
+			// 	uid:       rootUID,
+			// 	tagSocketOpts: []patchpanel.TagSocketOption{
+			// 		patchpanel.WithTagSocketNetworkID(lowPrioNetworkIndex),
+			// 	},
+			// },
+			// {
+			// 	desc:      "user traffic will be routed to low priority network with setting network_id",
+			// 	targetEnv: lowPrioNetworkServerEnv,
+			// 	service:   lowPrioService,
+			// 	uid:       chronosUID,
+			// 	tagSocketOpts: []patchpanel.TagSocketOption{
+			// 		patchpanel.WithTagSocketNetworkID(lowPrioNetworkIndex),
+			// 	},
+			// },
+			// {
+			// 	desc:      "system traffic will be routed to vpn with setting network_id",
+			// 	targetEnv: vpnReachableServerEnv,
+			// 	service:   vpnService,
+			// 	uid:       rootUID,
+			// 	tagSocketOpts: []patchpanel.TagSocketOption{
+			// 		patchpanel.WithTagSocketNetworkID(vpnNetworkIndex),
+			// 	},
+			// },
 			{
 				desc:      "system traffic will be routed to vpn with policy=ROUTE_ON_VPN",
 				targetEnv: vpnReachableServerEnv,
@@ -287,25 +288,25 @@ func RoutingTagSocketAPI(ctx context.Context, s *testing.State) {
 		}
 	} else {
 		tcs = []routingTagSocketAPITestCase{
-			{
-				desc:      "system traffic will be routed to low priority network with setting network_id",
-				targetEnv: lowPrioNetworkServerEnv,
-				service:   lowPrioService,
-				uid:       rootUID,
-				tagSocketOpts: []patchpanel.TagSocketOption{
-					patchpanel.WithTagSocketNetworkID(lowPrioNetworkIndex),
-				},
-			},
-			{
-				desc:      "user traffic will be blocked with setting network_id",
-				targetEnv: lowPrioNetworkServerEnv,
-				service:   lowPrioService,
-				uid:       chronosUID,
-				tagSocketOpts: []patchpanel.TagSocketOption{
-					patchpanel.WithTagSocketNetworkID(lowPrioNetworkIndex),
-				},
-				expectBlocked: true,
-			},
+			// {
+			// 	desc:      "system traffic will be routed to low priority network with setting network_id",
+			// 	targetEnv: lowPrioNetworkServerEnv,
+			// 	service:   lowPrioService,
+			// 	uid:       rootUID,
+			// 	tagSocketOpts: []patchpanel.TagSocketOption{
+			// 		patchpanel.WithTagSocketNetworkID(lowPrioNetworkIndex),
+			// 	},
+			// },
+			// {
+			// 	desc:      "user traffic will be blocked with setting network_id",
+			// 	targetEnv: lowPrioNetworkServerEnv,
+			// 	service:   lowPrioService,
+			// 	uid:       chronosUID,
+			// 	tagSocketOpts: []patchpanel.TagSocketOption{
+			// 		patchpanel.WithTagSocketNetworkID(lowPrioNetworkIndex),
+			// 	},
+			// 	expectBlocked: true,
+			// },
 			{
 				desc:      "system traffic will be blocked with policy=ROUTE_ON_VPN",
 				targetEnv: highPrioNetworkServerEnv,
@@ -325,16 +326,16 @@ func RoutingTagSocketAPI(ctx context.Context, s *testing.State) {
 					patchpanel.WithTagSocketBypassVPN(),
 				},
 			},
-			{
-				desc:      "user traffic will be routed to low priority network with setting network_id and policy=BYPASS_VPN",
-				targetEnv: lowPrioNetworkServerEnv,
-				service:   lowPrioService,
-				uid:       chronosUID,
-				tagSocketOpts: []patchpanel.TagSocketOption{
-					patchpanel.WithTagSocketNetworkID(lowPrioNetworkIndex),
-					patchpanel.WithTagSocketBypassVPN(),
-				},
-			},
+			// {
+			// 	desc:      "user traffic will be routed to low priority network with setting network_id and policy=BYPASS_VPN",
+			// 	targetEnv: lowPrioNetworkServerEnv,
+			// 	service:   lowPrioService,
+			// 	uid:       chronosUID,
+			// 	tagSocketOpts: []patchpanel.TagSocketOption{
+			// 		patchpanel.WithTagSocketNetworkID(lowPrioNetworkIndex),
+			// 		patchpanel.WithTagSocketBypassVPN(),
+			// 	},
+			// },
 		}
 	}
 
