@@ -18,7 +18,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VideoCUJ,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures the performance of a critical user journey of watching a video",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
@@ -34,12 +34,6 @@ func init() {
 				Val:       browser.TypeAsh,
 				ExtraAttr: []string{"group:cuj"},
 				Fixture:   "loggedInToCUJUser",
-			}, {
-				Name:              "lacros",
-				Val:               browser.TypeLacros,
-				ExtraAttr:         []string{"group:cuj"},
-				Fixture:           "loggedInToCUJUserLacros",
-				ExtraSoftwareDeps: []string{"lacros"},
 			},
 			// Experimental variants.
 			{

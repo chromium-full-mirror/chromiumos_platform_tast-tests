@@ -125,7 +125,7 @@ type loginPerfTestParam struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         LoginPerf,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures performance and UI smoothness of ChromeOS login",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
@@ -194,90 +194,6 @@ func init() {
 				[]string{},         // enabledFeatures
 			},
 		}, {
-			Name:              "lacros_rootfs_noarc_2windows",
-			ExtraAttr:         []string{"group:cuj", "cuj_loginperf"},
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val: loginPerfTestParam{
-				2,                  // windows
-				noarc,              // arcMode
-				false,              // tabletMode
-				browser.TypeLacros, // browserType
-				lacros.Rootfs,      // lacrosSelection
-				true,               // preloadLacros
-				[]string{deferARC}, // disabledFeatures
-				[]string{},         // enabledFeatures
-			},
-		}, {
-			Name:              "lacros_rootfs_noarc",
-			ExtraAttr:         []string{"group:cuj", "cuj_loginperf"},
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val: loginPerfTestParam{
-				8,                  // windows
-				noarc,              // arcMode
-				false,              // tabletMode
-				browser.TypeLacros, // browserType
-				lacros.Rootfs,      // lacrosSelection
-				true,               // preloadLacros
-				[]string{deferARC}, // disabledFeatures
-				[]string{},         // enabledFeatures
-			},
-		}, {
-			Name:              "lacros_rootfs_2windows",
-			ExtraAttr:         []string{"group:cuj", "cuj_loginperf"},
-			ExtraSoftwareDeps: []string{"lacros", "arc"},
-			Val: loginPerfTestParam{
-				2,                  // windows
-				arcenabled,         // arcMode
-				false,              // tabletMode
-				browser.TypeLacros, // browserType
-				lacros.Rootfs,      // lacrosSelection
-				true,               // preloadLacros
-				[]string{deferARC}, // disabledFeatures
-				[]string{},         // enabledFeatures
-			},
-		}, {
-			Name:              "lacros_rootfs",
-			ExtraAttr:         []string{"group:cuj", "cuj_loginperf"},
-			ExtraSoftwareDeps: []string{"lacros", "arc"},
-			Val: loginPerfTestParam{
-				8,                  // windows
-				arcenabled,         // arcMode
-				false,              // tabletMode
-				browser.TypeLacros, // browserType
-				lacros.Rootfs,      // lacrosSelection
-				true,               // preloadLacros
-				[]string{deferARC}, // disabledFeatures
-				[]string{},         // enabledFeatures
-			},
-		}, {
-			Name:              "lacros_rootfs_nopreload_noarc",
-			ExtraAttr:         []string{"group:cuj", "cuj_loginperf"},
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val: loginPerfTestParam{
-				8,                  // windows
-				noarc,              // arcMode
-				false,              // tabletMode
-				browser.TypeLacros, // browserType
-				lacros.Rootfs,      // lacrosSelection
-				false,              // preloadLacros
-				[]string{deferARC}, // disabledFeatures
-				[]string{},         // enabledFeatures
-			},
-		}, {
-			Name:              "lacros_rootfs_nopreload",
-			ExtraAttr:         []string{"group:cuj", "cuj_loginperf"},
-			ExtraSoftwareDeps: []string{"lacros", "arc"},
-			Val: loginPerfTestParam{
-				8,                  // windows
-				arcenabled,         // arcMode
-				false,              // tabletMode
-				browser.TypeLacros, // browserType
-				lacros.Rootfs,      // lacrosSelection
-				false,              // preloadLacros
-				[]string{deferARC}, // disabledFeatures
-				[]string{},         // enabledFeatures
-			},
-		}, {
 			Name:              "tablet",
 			ExtraAttr:         []string{"group:cuj", "cuj_loginperf"},
 			ExtraSoftwareDeps: []string{"arc"},
@@ -290,49 +206,6 @@ func init() {
 				false,              // preloadLacros
 				[]string{deferARC}, // disabledFeatures
 				[]string{},         // enabledFeatures
-			},
-		}, {
-			Name:              "lacros_rootfs_tablet",
-			ExtraAttr:         []string{"group:cuj", "cuj_loginperf"},
-			ExtraSoftwareDeps: []string{"lacros", "arc"},
-			Val: loginPerfTestParam{
-				8,                  // windows
-				arcenabled,         // arcMode
-				true,               // tabletMode
-				browser.TypeLacros, // browserType
-				lacros.Rootfs,      // lacrosSelection
-				true,               // preloadLacros
-				[]string{deferARC}, // disabledFeatures
-				[]string{},         // enabledFeatures
-			},
-		}, {
-			// Planned configuration for our production.
-			Name:              "lacros_chrome_rootfs_prod",
-			ExtraAttr:         []string{"group:cuj", "cuj_loginperf"},
-			ExtraSoftwareDeps: []string{"lacros", "arc"},
-			Val: loginPerfTestParam{
-				8,                  // windows
-				arcenabled,         // arcMode
-				false,              // tabletMode
-				browser.TypeLacros, // browserType
-				lacros.Rootfs,      // lacrosSelection
-				true,               // preloadLacros
-				[]string{},         // disabledFeatures
-				[]string{deferARC}, // enabledFeatures
-			},
-		}, {
-			Name:              "lacros_chrome_rootfs_prod_2windows",
-			ExtraAttr:         []string{"group:cuj", "cuj_loginperf"},
-			ExtraSoftwareDeps: []string{"lacros", "arc"},
-			Val: loginPerfTestParam{
-				2,                  // windows
-				arcenabled,         // arcMode
-				false,              // tabletMode
-				browser.TypeLacros, // browserType
-				lacros.Rootfs,      // lacrosSelection
-				true,               // preloadLacros
-				[]string{},         // disabledFeatures
-				[]string{deferARC}, // enabledFeatures
 			},
 		}},
 	})

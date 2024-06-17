@@ -55,7 +55,7 @@ type aquariumParamData struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         WebGLAquarium,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Runs WebGL aquarium demo from a local build and reports metrics",
 		Contacts: []string{
 			"chromeos-gfx@google.com",
@@ -83,24 +83,6 @@ func init() {
 			Val: aquariumParamData{
 				fishCount:   1000,
 				browserType: browser.TypeAsh,
-			},
-		}, {
-			Name:              "50_fishes_lacros",
-			Fixture:           "chromeGraphicsLacros",
-			ExtraData:         []string{webGlAquarium},
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val: aquariumParamData{
-				fishCount:   50,
-				browserType: browser.TypeLacros,
-			},
-		}, {
-			Name:              "1000_fishes_lacros",
-			Fixture:           "chromeGraphicsLacros",
-			ExtraData:         []string{webGlAquarium},
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val: aquariumParamData{
-				fishCount:   1000,
-				browserType: browser.TypeLacros,
 			},
 		}},
 	})

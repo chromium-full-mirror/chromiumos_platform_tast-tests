@@ -27,7 +27,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DragWindowFromShelfPerf,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures the presentation time of dragging a window from the shelf in tablet mode",
 		Contacts: []string{
 			"chromeos-wm-corexp@google.com",
@@ -43,11 +43,6 @@ func init() {
 		Params: []testing.Param{{
 			Fixture: "chromeLoggedIn",
 			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			Fixture:           "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               browser.TypeLacros,
 		}},
 	})
 }

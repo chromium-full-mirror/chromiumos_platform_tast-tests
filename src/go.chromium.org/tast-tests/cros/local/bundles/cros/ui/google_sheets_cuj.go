@@ -19,7 +19,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         GoogleSheetsCUJ,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures the total performance of critical user journey for Google Sheets",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
@@ -42,16 +42,6 @@ func init() {
 				ExtraAttr: []string{"group:cuj"},
 				Fixture:   "loggedInToCUJUserWithoutCooldown",
 			},
-			{
-				Name: "lacros",
-				Val: googlesheetscuj.TestParam{
-					BrowserType: browser.TypeLacros,
-				},
-				ExtraAttr:         []string{"group:cuj"},
-				Fixture:           "loggedInToCUJUserLacrosWithoutCooldown",
-				ExtraSoftwareDeps: []string{"lacros"},
-			},
-
 			// Experimental variants.
 			{
 				Name: "field_trials",

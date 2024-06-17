@@ -19,7 +19,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DocsCUJ,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures the total performance of the critical user journey for Google Docs",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
@@ -35,11 +35,6 @@ func init() {
 			{
 				Val:     browser.TypeAsh,
 				Fixture: "loggedInToCUJUser",
-			}, {
-				Name:              "lacros",
-				Val:               browser.TypeLacros,
-				Fixture:           "loggedInToCUJUserLacros",
-				ExtraSoftwareDeps: []string{"lacros"},
 			},
 
 			// Experimental variants.

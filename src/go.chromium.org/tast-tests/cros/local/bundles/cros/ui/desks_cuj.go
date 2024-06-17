@@ -20,7 +20,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DesksCUJ,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures the performance of critical user journey for virtual desks",
 		Contacts:     []string{"cros-sw-perf@google.com", "ramsaroop@google.com"},
 		BugComponent: "b:1045832",
@@ -53,14 +53,6 @@ func init() {
 				ExtraAttr:         []string{"group:cuj", "cuj_experimental"},
 				ExtraHardwareDeps: hwdep.D(hwdep.HasParavirtSchedControl()),
 				Fixture:           "loggedInToCUJUserWithPvSchedEnabled",
-			}, {
-				Name: "lacros",
-				Val: deskscuj.TestParam{
-					BrowserType: browser.TypeLacros,
-				},
-				ExtraAttr:         []string{"group:cuj"},
-				ExtraSoftwareDeps: []string{"lacros"},
-				Fixture:           "loggedInToCUJUserLacros",
 			},
 
 			// Experimental variants.
@@ -89,15 +81,6 @@ func init() {
 				},
 				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
 				Fixture:   "loggedInToCUJUserWithRoundedWindows",
-			},
-			{
-				Name: "rounded_windows_lacros",
-				Val: deskscuj.TestParam{
-					BrowserType: browser.TypeLacros,
-				},
-				ExtraSoftwareDeps: []string{"lacros"},
-				ExtraAttr:         []string{"group:cuj", "cuj_experimental"},
-				Fixture:           "loggedInToCUJUserLacrosWithRoundedWindows",
 			},
 			// TODO(b/292249282): Remove when Vulkan is launched on brya, volteer, and skyrim
 			{

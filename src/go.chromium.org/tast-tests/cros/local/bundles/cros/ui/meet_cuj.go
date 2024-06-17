@@ -22,7 +22,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         MeetCUJ,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures the performance of critical user journey for Google Meet",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
@@ -164,24 +164,6 @@ func init() {
 					BrowserType: browser.TypeAsh,
 				},
 				Fixture: "loggedInToCUJUserWithWebRTCEventLoggingWithPvSchedEnabled",
-			},
-			{
-				Name:      "docs_lacros",
-				Timeout:   meetcuj.DefaultTestTimeout,
-				ExtraAttr: []string{"group:cuj"},
-				Val: meetcuj.MeetTest{
-					Bots:        []int{1, 3, 15},
-					Layout:      googlemeet.TiledLayout,
-					Present:     true,
-					Docs:        true,
-					Split:       true,
-					Cam:         true,
-					ZoomOut:     true,
-					Effects:     true,
-					BrowserType: browser.TypeLacros,
-				},
-				Fixture:           "loggedInToCUJUserWithWebRTCEventLoggingLacros",
-				ExtraSoftwareDeps: []string{"lacros"},
 			}, {
 				Name:      "docs_no_effects",
 				Timeout:   meetcuj.DefaultTestTimeout,
@@ -406,28 +388,6 @@ func init() {
 				},
 				Fixture: "loggedInToCUJUserWithWebRTCEventLoggingWithVCEffectsAndStudioMic",
 			}, {
-				Name:              "docs_platform_effects_lacros",
-				Timeout:           meetcuj.DefaultTestTimeout,
-				ExtraAttr:         []string{"group:cuj"},
-				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
-				Val: meetcuj.MeetTest{
-					Bots:              []int{1, 3, 15},
-					Layout:            googlemeet.TiledLayout,
-					Present:           true,
-					Docs:              true,
-					Split:             true,
-					Cam:               true,
-					ZoomOut:           true,
-					BackgroundBlur:    true,
-					AdjustLighting:    true,
-					LiveCaptions:      true,
-					NoiseCancellation: true,
-					BrowserType:       browser.TypeLacros,
-					BotsOptions:       []bond.AddBotsOption{bond.WithAudio("what_color_is_cheese_32bit_48k_stereo.raw")},
-				},
-				Fixture:           "loggedInToCUJUserWithWebRTCEventLoggingWithVCEffectsLacros",
-				ExtraSoftwareDeps: []string{"lacros"},
-			}, {
 				Name:    "docs_battery_saver",
 				Timeout: meetcuj.DefaultTestTimeout,
 				Val: meetcuj.MeetTest{
@@ -602,21 +562,6 @@ func init() {
 					FakeCamHALCfg: meetcuj.FakeCamHALCfg720p,
 				},
 				Fixture: "loggedInToCUJUserWithWebRTCEventLogging",
-			}, {
-				Name:    "lacros_4p_present_notes_split",
-				Timeout: meetcuj.DefaultTestTimeout,
-				Val: meetcuj.MeetTest{
-					Bots:          []int{3},
-					Layout:        googlemeet.TiledLayout,
-					Present:       true,
-					Docs:          true,
-					Split:         true,
-					Cam:           true,
-					BrowserType:   browser.TypeLacros,
-					FakeCamHALCfg: meetcuj.FakeCamHALCfg720p,
-				},
-				Fixture:           "loggedInToCUJUserWithWebRTCEventLoggingLacros",
-				ExtraSoftwareDeps: []string{"lacros"},
 			},
 			// TODO(b/331565548): Remove if VsyncDecoding is launched.
 			{

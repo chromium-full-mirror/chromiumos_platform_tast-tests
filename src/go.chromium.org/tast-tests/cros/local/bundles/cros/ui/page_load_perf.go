@@ -25,7 +25,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PageLoadPerf,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures FCP and LCP performance",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
@@ -41,11 +41,6 @@ func init() {
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild", "crosbolt_fsi_check"},
 				Val:       browser.TypeAsh,
 				Fixture:   "tabSwitchPerfWPRAsh",
-			}, {
-				Name:              "lacros",
-				Val:               browser.TypeLacros,
-				Fixture:           "tabSwitchPerfWPRLacros",
-				ExtraSoftwareDeps: []string{"lacros"},
 			},
 		},
 	})

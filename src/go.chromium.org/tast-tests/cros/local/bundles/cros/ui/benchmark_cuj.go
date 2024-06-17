@@ -22,7 +22,7 @@ const defaultTimeout = 15*time.Minute + cujrecorder.CooldownTimeout
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         BenchmarkCUJ,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "CUJ running browser benchmarks",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
@@ -59,30 +59,6 @@ func init() {
 				},
 			},
 			{
-				Name:      "lacros_speedometer",
-				ExtraAttr: []string{"group:cuj"},
-				Timeout:   defaultTimeout,
-				Fixture:   "loggedInToCUJUserLacrosWithoutCooldownBenchmark",
-				Val: benchmarkcuj.BenchmarkTest{
-					BrowserType:   browser.TypeLacros,
-					BenchmarkInfo: benchmarkcuj.SpeedometerInfo,
-					RecorderMode:  cujrecorder.Benchmark,
-				},
-				ExtraSoftwareDeps: []string{"lacros"},
-			},
-			{
-				Name:      "lacros_speedometer3",
-				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
-				Timeout:   defaultTimeout,
-				Fixture:   "loggedInToCUJUserLacrosWithoutCooldownBenchmark",
-				Val: benchmarkcuj.BenchmarkTest{
-					BrowserType:   browser.TypeLacros,
-					BenchmarkInfo: benchmarkcuj.Speedometer3Info,
-					RecorderMode:  cujrecorder.Benchmark,
-				},
-				ExtraSoftwareDeps: []string{"lacros"},
-			},
-			{
 				Name:      "motionmark",
 				ExtraAttr: []string{"group:cuj"},
 				Timeout:   defaultTimeout,
@@ -92,18 +68,6 @@ func init() {
 					BenchmarkInfo: benchmarkcuj.MotionMarkInfo,
 					RecorderMode:  cujrecorder.Benchmark,
 				},
-			},
-			{
-				Name:      "lacros_motionmark",
-				ExtraAttr: []string{"group:cuj"},
-				Timeout:   defaultTimeout,
-				Fixture:   "loggedInToCUJUserLacrosWithoutCooldownBenchmark",
-				Val: benchmarkcuj.BenchmarkTest{
-					BrowserType:   browser.TypeLacros,
-					BenchmarkInfo: benchmarkcuj.MotionMarkInfo,
-					RecorderMode:  cujrecorder.Benchmark,
-				},
-				ExtraSoftwareDeps: []string{"lacros"},
 			},
 			{
 				Name:              "vulkan_motionmark",
@@ -129,18 +93,6 @@ func init() {
 				},
 			},
 			{
-				Name:      "lacros_motionmark1_3",
-				ExtraAttr: []string{"group:cuj"},
-				Timeout:   defaultTimeout,
-				Fixture:   "loggedInToCUJUserLacrosWithoutCooldownBenchmark",
-				Val: benchmarkcuj.BenchmarkTest{
-					BrowserType:   browser.TypeLacros,
-					BenchmarkInfo: benchmarkcuj.MotionMark1_3Info,
-					RecorderMode:  cujrecorder.Benchmark,
-				},
-				ExtraSoftwareDeps: []string{"lacros"},
-			},
-			{
 				Name:              "vulkan_motionmark1_3",
 				ExtraAttr:         []string{"group:cuj"},
 				Timeout:           defaultTimeout,
@@ -164,18 +116,6 @@ func init() {
 				},
 			},
 			{
-				Name:      "lacros_jetstream",
-				ExtraAttr: []string{"group:cuj"},
-				Timeout:   defaultTimeout,
-				Fixture:   "loggedInToCUJUserLacrosWithoutCooldownBenchmark",
-				Val: benchmarkcuj.BenchmarkTest{
-					BrowserType:   browser.TypeLacros,
-					BenchmarkInfo: benchmarkcuj.JetStreamInfo,
-					RecorderMode:  cujrecorder.Benchmark,
-				},
-				ExtraSoftwareDeps: []string{"lacros"},
-			},
-			{
 				Name:      "kraken",
 				ExtraAttr: []string{"group:cuj"},
 				Timeout:   defaultTimeout,
@@ -185,18 +125,6 @@ func init() {
 					BenchmarkInfo: benchmarkcuj.KrakenInfo,
 					RecorderMode:  cujrecorder.Benchmark,
 				},
-			},
-			{
-				Name:      "lacros_kraken",
-				ExtraAttr: []string{"group:cuj"},
-				Timeout:   defaultTimeout,
-				Fixture:   "loggedInToCUJUserLacrosWithoutCooldownBenchmark",
-				Val: benchmarkcuj.BenchmarkTest{
-					BrowserType:   browser.TypeLacros,
-					BenchmarkInfo: benchmarkcuj.KrakenInfo,
-					RecorderMode:  cujrecorder.Benchmark,
-				},
-				ExtraSoftwareDeps: []string{"lacros"},
 			},
 			{
 				Name:      "octane",
@@ -210,18 +138,6 @@ func init() {
 				},
 			},
 			{
-				Name:      "lacros_octane",
-				ExtraAttr: []string{"group:cuj"},
-				Timeout:   defaultTimeout,
-				Fixture:   "loggedInToCUJUserLacrosWithoutCooldownBenchmark",
-				Val: benchmarkcuj.BenchmarkTest{
-					BrowserType:   browser.TypeLacros,
-					BenchmarkInfo: benchmarkcuj.OctaneInfo,
-					RecorderMode:  cujrecorder.Benchmark,
-				},
-				ExtraSoftwareDeps: []string{"lacros"},
-			},
-			{
 				Name:      "webxprt4",
 				ExtraAttr: []string{"group:cuj", "cuj_weekly"},
 				Timeout:   30*time.Minute + cujrecorder.CooldownTimeout,
@@ -231,18 +147,6 @@ func init() {
 					BenchmarkInfo: benchmarkcuj.WebXPRT4Info,
 					RecorderMode:  cujrecorder.Benchmark,
 				},
-			},
-			{
-				Name:      "lacros_webxprt4",
-				ExtraAttr: []string{"group:cuj", "cuj_weekly"},
-				Timeout:   30*time.Minute + cujrecorder.CooldownTimeout,
-				Fixture:   "loggedInToCUJUserLacrosWithoutCooldownBenchmark",
-				Val: benchmarkcuj.BenchmarkTest{
-					BrowserType:   browser.TypeLacros,
-					BenchmarkInfo: benchmarkcuj.WebXPRT4Info,
-					RecorderMode:  cujrecorder.Benchmark,
-				},
-				ExtraSoftwareDeps: []string{"lacros"},
 			},
 			{
 				Name:              "vulkan_webxprt4",
@@ -434,16 +338,6 @@ func init() {
 				Fixture: "loggedInToCUJUserWithoutCooldownBenchmark",
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeAsh,
-					BenchmarkInfo: benchmarkcuj.BmarkInfo,
-					RecorderMode:  cujrecorder.Benchmark,
-				},
-			},
-			{
-				Name:    "lacros_bmark",
-				Timeout: defaultTimeout,
-				Fixture: "loggedInToCUJUserLacrosWithoutCooldownBenchmark",
-				Val: benchmarkcuj.BenchmarkTest{
-					BrowserType:   browser.TypeLacros,
 					BenchmarkInfo: benchmarkcuj.BmarkInfo,
 					RecorderMode:  cujrecorder.Benchmark,
 				},

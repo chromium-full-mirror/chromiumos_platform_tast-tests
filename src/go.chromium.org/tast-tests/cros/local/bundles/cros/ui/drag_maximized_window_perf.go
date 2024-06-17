@@ -27,7 +27,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DragMaximizedWindowPerf,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures the animation smoothness of dragging a maximized window in clamshell mode",
 		Contacts:     []string{"cros-sw-perf@google.com", "chromeos-wm-corexp@google.com", "sammiequon@chromium.org"},
 		// ChromeOS > Software > Window Management
@@ -42,12 +42,6 @@ func init() {
 			{
 				Fixture: "chromeLoggedIn",
 				Val:     browser.TypeAsh,
-			},
-			{
-				Name:              "lacros",
-				Fixture:           "lacros",
-				ExtraSoftwareDeps: []string{"lacros"},
-				Val:               browser.TypeLacros,
 			},
 		},
 	})

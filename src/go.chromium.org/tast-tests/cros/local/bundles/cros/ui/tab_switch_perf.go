@@ -17,7 +17,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         TabSwitchPerf,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures the performance of tab-switching",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
@@ -38,13 +38,6 @@ func init() {
 					BrowserType: browser.TypeAsh,
 				},
 				Fixture: "tabSwitchPerfWPRAsh",
-			}, {
-				Name: "lacros",
-				Val: tabswitchperf.TabSwitchParam{
-					BrowserType: browser.TypeLacros,
-				},
-				Fixture:           "tabSwitchPerfWPRLacros",
-				ExtraSoftwareDeps: []string{"lacros"},
 			},
 		},
 	})

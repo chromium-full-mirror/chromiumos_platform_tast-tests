@@ -34,7 +34,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         GoogleSlidesCUJ,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures the total performance of critical user journey for Google Slides",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
@@ -49,11 +49,6 @@ func init() {
 		Params: []testing.Param{{
 			Val:     browser.TypeAsh,
 			Fixture: "loggedInToCUJUser",
-		}, {
-			Name:              "lacros",
-			Val:               browser.TypeLacros,
-			Fixture:           "loggedInToCUJUserLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
 		}},
 	})
 }

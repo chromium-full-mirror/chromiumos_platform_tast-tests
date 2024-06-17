@@ -30,7 +30,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         WindowCyclePerf,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures the animation smoothness of window cycle animations when Alt + tabbing",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
@@ -46,12 +46,6 @@ func init() {
 			Val:               browser.TypeAsh,
 			Fixture:           "chromeLoggedIn",
 			ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay()),
-		}, {
-			Name:              "lacros",
-			Val:               browser.TypeLacros,
-			Fixture:           "lacros",
-			ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay()),
-			ExtraSoftwareDeps: []string{"lacros"},
 		}, {
 			// Pilot test on "noibat" that has HDMI dongle installed.
 			Name:              "noibat",

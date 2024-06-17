@@ -24,7 +24,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SnapPerf,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures the animation smoothess of snapping windows in clamshell mode",
 		Contacts:     []string{"cros-sw-perf@google.com", "chromeos-wm-corexp@google.com", "sammiequon@chromium.org"},
 		// ChromeOS > Software > Window Management
@@ -35,11 +35,6 @@ func init() {
 		Params: []testing.Param{{
 			Fixture: "chromeLoggedIn",
 			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			Fixture:           "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               browser.TypeLacros,
 		}},
 	})
 }

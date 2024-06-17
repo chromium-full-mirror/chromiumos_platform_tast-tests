@@ -40,7 +40,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         OverviewPerf,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures animation smoothness of entering/exiting the overview mode",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
@@ -55,12 +55,6 @@ func init() {
 			Val:     browser.TypeAsh,
 			Fixture: "chromeLoggedIn",
 			Timeout: cujrecorder.CooldownTimeout + 20*time.Minute,
-		}, {
-			Name:              "lacros",
-			Val:               browser.TypeLacros,
-			Fixture:           "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Timeout:           cujrecorder.CooldownTimeout + 20*time.Minute,
 		}, {
 			Name:    "passthrough",
 			Val:     browser.TypeAsh,
