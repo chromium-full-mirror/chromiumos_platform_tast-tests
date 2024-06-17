@@ -33,7 +33,6 @@ func init() {
 		Attr: []string{
 			"group:mainline",
 			"group:video_conference",
-			"video_conference_cq_critical",
 			"group:cbx", "cbx_feature_enabled", "cbx_unstable",
 			"informational",
 		},
