@@ -38,7 +38,7 @@ func init() {
 			Fixture: "chromeLoggedIn",
 		}, {
 			Name:    "cloud",
-			Fixture: "personalizationWithAvatarsCloudMigration",
+			Fixture: "personalizationDefault",
 		}},
 	})
 }

@@ -38,7 +38,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.Model(personalization.RgbSupportedModels...)),
 		Timeout:      3 * time.Minute,
-		Fixture:      "personalizationWithRgbKeyboard",
+		Fixture:      "personalizationDefault",
 	})
 }
 

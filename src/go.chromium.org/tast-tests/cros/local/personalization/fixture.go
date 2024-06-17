@@ -15,12 +15,6 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-func getTimeOfDayOption() chrome.Option {
-	return chrome.EnableFeatures(
-		"TimeOfDayScreenSaver",
-		"TimeOfDayWallpaper")
-}
-
 func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name: "personalizationWithClamshell",
@@ -85,34 +79,17 @@ func init() {
 		},
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name: "personalizationWithRgbKeyboard",
-		Desc: "Login with Personalization Hub and RGB Keyboard enabled",
+		Name: "personalizationDefault",
+		Desc: "Default login with Personalization Hub",
 		Contacts: []string{
-			"thuongphan@google.com",
+			"pzliu@google.com",
 			"chromeos-sw-engprod@google.com",
 			"assistive-eng@google.com",
 		},
 		// ChromeOS > Software > Personalization
 		BugComponent: "b:1006527",
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{chrome.EnableFeatures("RgbKeyboard")}, nil
-		}),
-		SetUpTimeout:    chrome.FixtureSetUpTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: "personalizationWithMultizoneRgbKeyboard",
-		Desc: "Login with Personalization Hub with Multi-zone RGB Keyboard enabled",
-		Contacts: []string{
-			"thuongphan@google.com",
-			"chromeos-sw-engprod@google.com",
-			"assistive-eng@google.com",
-		},
-		// ChromeOS > Software > Personalization
-		BugComponent: "b:1006527",
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{chrome.EnableFeatures("RgbKeyboard", "MultiZoneRgbKeyboard")}, nil
+			return []chrome.Option{}, nil
 		}),
 		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
@@ -135,29 +112,10 @@ func init() {
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
 				chrome.GAIALoginPool(dma.CredsFromPool(wallpaper.GooglePhotosAccountPoolVarName)),
-				chrome.EnableFeatures("WallpaperGooglePhotosIntegration"),
-				chrome.EnableFeatures("WallpaperGooglePhotosSharedAlbums"),
 				chrome.ExtraArgs("--disable-sync"),
 			}, nil
 		}),
 		SetUpTimeout:    chrome.GAIALoginTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: "personalizationWithAvatarsCloudMigration",
-		Desc: "Login with Personalization Hub and Avatars Cloud migration enabled",
-		Contacts: []string{
-			"updowndota@google.com",
-			"chromeos-sw-engprod@google.com",
-			"assistive-eng@google.com",
-		},
-		// ChromeOS > Software > Personalization
-		BugComponent: "b:1006527",
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{chrome.EnableFeatures("AvatarsCloudMigration")}, nil
-		}),
-		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -174,7 +132,6 @@ func init() {
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
 				chrome.GAIALoginPool(dma.CredsFromPool(wallpaper.GooglePhotosAccountPoolVarName)),
-				getTimeOfDayOption(),
 			}, nil
 		}),
 		SetUpTimeout:    chrome.GAIALoginTimeout,
@@ -198,23 +155,6 @@ func init() {
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name: "personalizationWithTimeOfDayFeature",
-		Desc: "Login with Personalization Hub with Time of Day feature enabled",
-		Contacts: []string{
-			"assistive-eng@google.com",
-			"chromeos-sw-engprod@google.com",
-			"jasontt@google.com",
-		},
-		// ChromeOS > Software > Personalization
-		BugComponent: "b:1006527",
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{getTimeOfDayOption()}, nil
-		}),
-		SetUpTimeout:    chrome.FixtureSetUpTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
 		Name: "personalizationWithTimeOfDayFeatureClamshell",
 		Desc: "Login with Personalization Hub with Time of Day feature enabled in clamshell mode",
 		Contacts: []string{
@@ -225,7 +165,7 @@ func init() {
 		// ChromeOS > Software > Personalization
 		BugComponent:    "b:1006527",
 		Impl:            &clamshellFixture{},
-		Parent:          "personalizationWithTimeOfDayFeature",
+		Parent:          "personalizationDefault",
 		SetUpTimeout:    chrome.GAIALoginTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
