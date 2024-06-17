@@ -24,7 +24,7 @@ func init() {
 		Contacts: []string{
 			"chromeos-dev-engprod@google.com",
 			"mattlui@google.com",
-			"jingrongwu@google.com",
+			"jinrongwu@google.com",
 		},
 		BugComponent: "b:1103568", // ChromeOS -> EngProd -> Developer
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
