@@ -22,7 +22,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that experimental testbeds with multiple Android peers can be accessed in lab infrastructure",
 		Contacts: []string{
-			"chromeos-cellular-team@google.com",
+			"chromeos-uwb-team@google.com",
 			"jstanko@google.com",
 		},
 		BugComponent: "b:1133455",
