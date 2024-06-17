@@ -30,7 +30,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ExampleCUJ,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Example of using the CUJ Recorder",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
@@ -44,12 +44,6 @@ func init() {
 			{
 				Fixture: "loggedInToCUJUser",
 				Val:     browser.TypeAsh,
-			},
-			{
-				Name:              "lacros",
-				Fixture:           "loggedInToCUJUserLacros",
-				Val:               browser.TypeLacros,
-				ExtraSoftwareDeps: []string{"lacros"},
 			},
 		},
 	})

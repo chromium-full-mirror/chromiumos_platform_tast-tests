@@ -29,7 +29,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         AssignToNewDesk,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Assign apps to a new desk",
 		Contacts: []string{
 			"chromeos-wm@google.com",
@@ -44,11 +44,6 @@ func init() {
 		Params: []testing.Param{{
 			Val:     browser.TypeAsh,
 			Fixture: "loggedInToCUJUserARCSupported",
-		}, {
-			Name:              "lacros",
-			Val:               browser.TypeLacros,
-			Fixture:           "loggedInToCUJUserARCSupportedLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
 		}},
 		SearchFlags: []*testing.StringPair{
 			{

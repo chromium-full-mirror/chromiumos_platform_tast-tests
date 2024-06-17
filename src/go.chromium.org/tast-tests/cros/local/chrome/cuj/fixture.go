@@ -29,7 +29,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -120,14 +119,6 @@ var disableChargeBatteryBeforeTest = testing.RegisterVarString(
 var minimumBatteryCapacity = 25.0
 var chargeBatteryTestPollOpt = &testing.PollOptions{Interval: 60 * time.Second, Timeout: 3 * time.Minute}
 
-// EnableWaylandLoggingVar is a runtime variable that specifies
-// whether to enable Wayland logging into Lacros logs.
-var EnableWaylandLoggingVar = testing.RegisterVarString(
-	"cuj.enableWaylandLogging",
-	"",
-	"A boolean string (true/false) signifying whether to enable Wayland logging into Lacros logs",
-)
-
 var extraArgsVar = testing.RegisterVarString(
 	"cuj.extraArgs",
 	"",
@@ -138,18 +129,6 @@ var extraFeaturesVar = testing.RegisterVarString(
 	"cuj.extraFeatures",
 	"",
 	"A comma separated list of extra features to be passed into Chrome",
-)
-
-var lacrosExtraArgsVar = testing.RegisterVarString(
-	"cuj.lacrosExtraArgs",
-	"",
-	"A comma separated list of extra args to be passed into Lacros Chrome",
-)
-
-var lacrosExtraFeaturesVar = testing.RegisterVarString(
-	"cuj.lacrosExtraFeatures",
-	"",
-	"A comma separated list of extra features to be passed into Lacros Chrome",
 )
 
 // DocsBlocker extension files.
@@ -453,22 +432,6 @@ func init() {
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
 	})
-	testing.AddFixture(&testing.Fixture{
-		Name: "loggedInToCUJUserLacros",
-		Desc: "Fixture used for lacros variation of UI CUJ tests",
-		Contacts: []string{
-			"xiyuan@chromium.org",
-			"cros-sw-perf@google.com",
-		},
-		BugComponent:    "b:1045832", // ChromeOS > Software > Performance > TPS
-		Impl:            &loggedInToCUJUserFixture{bt: browser.TypeLacros},
-		Parent:          "prepareForCUJ",
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
-		PostTestTimeout: postTestTimeout,
-	})
 	// TODO(b/302748186): Remove rounded window fixtures.
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithRoundedWindows",
@@ -492,129 +455,6 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name: "loggedInToCUJUserLacrosWithRoundedWindows",
-		Desc: "Fixture used for lacros variation of UI CUJ tests with Rounded Windows feature enabled",
-		Contacts: []string{
-			"zoraiznaeem@chromium.org",
-			"cros-sw-perf@google.com",
-		},
-		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
-		Impl: &loggedInToCUJUserFixture{
-			bt: browser.TypeLacros,
-			chromeExtraOpts: []chrome.Option{
-				chrome.EnableFeatures("RoundedWindows"),
-			},
-		},
-		Parent:          "prepareForCUJ",
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
-		PostTestTimeout: postTestTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: "loggedInToCUJUserARCSupportedLacros",
-		Desc: "Fixture used for lacros variation of UI CUJ tests with ARC supported",
-		Contacts: []string{
-			"ramsaroop@google.com",
-			"cros-sw-perf@google.com",
-		},
-		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
-		Impl: &loggedInToCUJUserFixture{
-			bt:           browser.TypeLacros,
-			arcSupported: true,
-		},
-		Parent:          "prepareForCUJ",
-		SetUpTimeout:    setUpWithOptinTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
-		PostTestTimeout: postTestTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: "loggedInAndKeepStateLacros",
-		Desc: "Fixture keeping login status and used for lacros variation of CUJ tests",
-		Contacts: []string{
-			"xliu@cienet.com",
-			"cros-sw-perf@google.com",
-		},
-		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
-		Impl: &loggedInToCUJUserFixture{
-			keepState: true,
-			bt:        browser.TypeLacros,
-			// Some tests will connect to websites hosted locally with HTTPs and this flag allows invalid certificates for resources loaded from localhost.
-			chromeExtraOpts: []chrome.Option{chrome.LacrosExtraArgs("--allow-insecure-localhost")},
-		},
-		Parent:          "prepareForCUJWithCharge",
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
-		PostTestTimeout: postTestTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: "loggedInAndKeepStateARCSupportedLacros",
-		Desc: "Fixture keeping login status and used for lacros variation of CUJ tests with ARC supported",
-		Contacts: []string{
-			"ramsaroop@google.com",
-			"cros-sw-perf@google.com",
-		},
-		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
-		Impl: &loggedInToCUJUserFixture{
-			keepState:    true,
-			arcSupported: true,
-			bt:           browser.TypeLacros,
-			// Some tests will connect to websites hosted locally with HTTPs and this flag allows invalid certificates for resources loaded from localhost.
-			chromeExtraOpts: []chrome.Option{chrome.LacrosExtraArgs("--allow-insecure-localhost")},
-		},
-		Parent:          "prepareForCUJWithCharge",
-		SetUpTimeout:    setUpWithOptinTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
-		PostTestTimeout: postTestTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: "loggedInAndKeepStateLacrosWithFakeCamera",
-		Desc: "Fixture keeping login status, used fake camera for lacros variation of CUJ tests",
-		Contacts: []string{
-			"jane.yang@cienet.com",
-			"cros-sw-perf@google.com",
-		},
-		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
-		Data:         []string{highResFakeCameraFileName},
-		Impl: &loggedInToCUJUserFixture{
-			bt:                 browser.TypeLacros,
-			keepState:          true,
-			fakeCamera:         true,
-			fakeCameraFileName: highResFakeCameraFileName,
-			chromeExtraOpts:    []chrome.Option{chrome.LacrosExtraArgs("--allow-insecure-localhost")},
-		},
-		Parent:          "prepareForCUJWithCharge",
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: "loggedInAndKeepStateLacrosWithLowResFakeCamera",
-		Desc: "Fixture keeping login status, used low resolution fake camera for lacros variation of CUJ tests",
-		Contacts: []string{
-			"jane.yang@cienet.com",
-			"cros-sw-perf@google.com",
-		},
-		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
-		Data:         append(docsBlockerFiles, lowResFakeCameraFileName),
-		Impl: &loggedInToCUJUserFixture{
-			bt:                 browser.TypeLacros,
-			keepState:          true,
-			fakeCamera:         true,
-			fakeCameraFileName: lowResFakeCameraFileName},
-		Parent:          "prepareForCUJWithCharge",
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
 		Name: "enrolledLoggedInToCUJUser",
 		Desc: "Logged in with gaia user on an enrolled device",
 		Contacts: []string{
@@ -623,22 +463,6 @@ func init() {
 		},
 		BugComponent:    "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl:            &loggedInToCUJUserFixture{},
-		Parent:          "prepareForCUJEnrolledWithCharge",
-		SetUpTimeout:    chrome.EnrollmentAndLoginTimeout + chrome.GAIALoginTimeout + optin.OptinTimeout + 2*time.Minute,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
-		PostTestTimeout: postTestTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: "enrolledLoggedInToCUJUserLacros",
-		Desc: "Logged in with gaia user on an enrolled device and used for lacros variation of CUJ tests",
-		Contacts: []string{
-			"jane.yang@cienet.com",
-			"cros-sw-perf@google.com",
-		},
-		BugComponent:    "b:1045832", // ChromeOS > Software > Performance > TPS
-		Impl:            &loggedInToCUJUserFixture{bt: browser.TypeLacros},
 		Parent:          "prepareForCUJEnrolledWithCharge",
 		SetUpTimeout:    chrome.EnrollmentAndLoginTimeout + chrome.GAIALoginTimeout + optin.OptinTimeout + 2*time.Minute,
 		ResetTimeout:    resetTimeout,
@@ -748,30 +572,6 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name: "loggedInToCUJUserWithWebRTCEventLoggingLacros",
-		Desc: "Lacros variation of loggedInToCUJUserWithWebRTCEventLogging",
-		Contacts: []string{
-			"ramsaroop@google.com",
-			"cros-sw-perf@google.com",
-		},
-		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
-		Data:         docsBlockerFiles,
-		Impl: &loggedInToCUJUserFixture{
-			chromeExtraOpts: []chrome.Option{
-				chrome.EnableFeatures("PreferConstantFrameRate"),
-				chrome.ExtraArgs(webRTCEventLogCommandFlag),
-			},
-			bt:          browser.TypeLacros,
-			docsBlocker: true,
-		},
-		Parent:          "prepareForCUJ",
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
-		PostTestTimeout: postTestTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithOneGroupPerRenderer",
 		Desc: "CUJ test fixture with the OneGroupPerRenderer feature enabled",
 		Contacts: []string{
@@ -850,38 +650,6 @@ func init() {
 				),
 			},
 			bt:          browser.TypeAsh,
-			docsBlocker: true,
-		},
-		Parent:          "prepareForCUJ",
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
-		PostTestTimeout: postTestTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: "loggedInToCUJUserWithWebRTCEventLoggingWithVCEffectsLacros",
-		Desc: "CUJ test fixture with WebRTC event logging, VC platform effects enabled and lacros",
-		Contacts: []string{
-			"ramsaroop@google.com",
-			"sammc@chromium.org",
-			"cros-sw-perf@google.com",
-			"cros-pe-pnp@google.com",
-		},
-		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
-		Data:         docsBlockerFiles,
-		Impl: &loggedInToCUJUserFixture{
-			chromeExtraOpts: []chrome.Option{
-				chrome.ExtraArgs(webRTCEventLogCommandFlag),
-				chrome.EnableFeatures(
-					"PreferConstantFrameRate",
-					"CrOSLateBootAudioAPNoiseCancellation",
-					"ShowLiveCaptionInVideoConferenceTray",
-					"SystemLiveCaption",
-					"VideoConference",
-				),
-			},
-			bt:          browser.TypeLacros,
 			docsBlocker: true,
 		},
 		Parent:          "prepareForCUJ",
@@ -1238,39 +1006,6 @@ func init() {
 		SetUpTimeout:    batterySaverTimeout,
 		TearDownTimeout: batterySaverTimeout,
 		PreTestTimeout:  batterySaverTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: "loggedInToCUJUserLacrosWithoutCooldown",
-		Desc: "Lacros CUJ fixture that skips CPU cooldown",
-		Contacts: []string{
-			"vincentchiang@google.com",
-			"cros-sw-perf@google.com",
-		},
-		BugComponent:    "b:1045832", // ChromeOS > Software > Performance > TPS
-		Impl:            &loggedInToCUJUserFixture{bt: browser.TypeLacros},
-		Parent:          "prepareForCUJWithoutCooldown",
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PostTestTimeout: postTestTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: "loggedInToCUJUserLacrosWithoutCooldownBenchmark",
-		Desc: "Lacros CUJ fixture that skips CPU cooldown and have benchmark flags enabled",
-		Contacts: []string{
-			"vincentchiang@google.com",
-			"cros-sw-perf@google.com",
-		},
-		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
-		Impl: &loggedInToCUJUserFixture{
-			bt:              browser.TypeLacros,
-			chromeExtraOpts: []chrome.Option{chrome.ExtraArgs(benchmarkFlags...)},
-		},
-		Parent:          "prepareForCUJWithoutCooldown",
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PostTestTimeout: postTestTimeout,
 	})
 	// TODO(b/292249282): Remove when Vulkan is launched on brya and volteer.
 	testing.AddFixture(&testing.Fixture{
@@ -2114,8 +1849,7 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 		// memory metric.
 		const MemLogDelayArg = "--test-memory-log-delay-in-minutes=6"
 		opts = append(opts,
-			chrome.ExtraArgs(MemLogDelayArg),
-			chrome.LacrosExtraArgs(MemLogDelayArg))
+			chrome.ExtraArgs(MemLogDelayArg))
 
 		extraArgs := extraArgsVar.Value()
 		if extraArgs != "" {
@@ -2129,38 +1863,10 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 			opts = append(opts, chrome.EnableFeatures(strings.Split(extraFeatures, ",")...))
 		}
 
-		lacrosExtraArgs := lacrosExtraArgsVar.Value()
-		if lacrosExtraArgs != "" {
-			testing.ContextLog(ctx, "Adding extra args to Lacros Chrome: ", lacrosExtraArgs)
-			opts = append(opts, chrome.LacrosExtraArgs(strings.Split(lacrosExtraArgs, ",")...))
+		if f.docsBlocker {
+			opts = append(opts, chrome.UnpackedExtension(docsBlockerExtDir))
 		}
 
-		lacrosExtraFeatures := lacrosExtraFeaturesVar.Value()
-		if lacrosExtraFeatures != "" {
-			testing.ContextLog(ctx, "Enabling additional features in Lacros Chrome: ", lacrosExtraFeatures)
-			opts = append(opts, chrome.LacrosEnableFeatures(strings.Split(lacrosExtraFeatures, ",")...))
-		}
-
-		if f.bt == browser.TypeLacros {
-			if strings.ToLower(EnableWaylandLoggingVar.Value()) == "true" {
-				opts = append(opts, chrome.ExtraArgs("--lacros-chrome-additional-env=WAYLAND_DEBUG=1"))
-			}
-
-			opts, err = lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(opts...)).Opts()
-			if err != nil {
-				s.Fatal("Failed to get lacros options: ", err)
-			}
-
-			if f.docsBlocker {
-				opts = append(opts, chrome.LacrosUnpackedExtension(docsBlockerExtDir))
-			}
-
-			opts = append(opts, chrome.EnableFeatures("LacrosProfileMigrationForceOff"))
-		} else {
-			if f.docsBlocker {
-				opts = append(opts, chrome.UnpackedExtension(docsBlockerExtDir))
-			}
-		}
 		if f.fakeCamera && strings.ToLower(EnableRealCameraVar.Value()) != "true" {
 			fakeCameraOpts := []string{
 				// See https://webrtc.github.io/webrtc-org/testing/.

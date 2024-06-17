@@ -130,7 +130,6 @@ import (
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/shimlessrma"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/shortcutcustomization"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/smartlock"
-	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/spera"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/starfish"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/storage"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/supporttool"

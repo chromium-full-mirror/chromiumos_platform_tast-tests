@@ -29,7 +29,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         WindowStateTransitionsCUJ,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures the performance of critical user journey for window state transitions",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
@@ -43,11 +43,6 @@ func init() {
 		Params: []testing.Param{{
 			Val:     browser.TypeAsh,
 			Fixture: "loggedInToCUJUser",
-		}, {
-			Name:              "lacros",
-			Val:               browser.TypeLacros,
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           "loggedInToCUJUserLacros",
 		}},
 	})
 }

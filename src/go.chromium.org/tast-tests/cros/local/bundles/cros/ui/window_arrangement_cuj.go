@@ -22,7 +22,7 @@ func init() {
 		// improved, re-add it to the CUJ suite. Currently, the test is not
 		// run in the lab due to hard to resolve failures.
 		Func:         WindowArrangementCUJ,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures the performance of critical user journey for window arrangements",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
@@ -50,24 +50,6 @@ func init() {
 				},
 				Fixture: "loggedInToCUJUser",
 			},
-			{
-				Name: "lacros",
-				Val: windowarrangementcuj.TestParam{
-					BrowserType: browser.TypeLacros,
-				},
-				Fixture:           "loggedInToCUJUserLacros",
-				ExtraSoftwareDeps: []string{"lacros"},
-			},
-			{
-				Name:              "tablet_mode_lacros",
-				ExtraHardwareDeps: hwdep.D(hwdep.TouchScreen()),
-				Val: windowarrangementcuj.TestParam{
-					BrowserType: browser.TypeLacros,
-					Tablet:      true,
-				},
-				Fixture:           "loggedInToCUJUserLacros",
-				ExtraSoftwareDeps: []string{"lacros"},
-			},
 			// TODO(b/292249282): Remove when Vulkan is launched on brya, volteer, and skyrim
 			{
 				Name: "vulkan",
@@ -86,14 +68,6 @@ func init() {
 					BrowserType: browser.TypeAsh,
 				},
 				Fixture: "loggedInToCUJUserWithRoundedWindows",
-			},
-			{
-				Name: "rounded_windows_lacros",
-				Val: windowarrangementcuj.TestParam{
-					BrowserType: browser.TypeLacros,
-				},
-				ExtraSoftwareDeps: []string{"lacros"},
-				Fixture:           "loggedInToCUJUserLacrosWithRoundedWindows",
 			},
 		},
 	})

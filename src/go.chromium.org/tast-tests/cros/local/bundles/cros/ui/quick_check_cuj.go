@@ -35,7 +35,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         QuickCheckCUJ,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures the smoothess of screen unlock and open an gmail thread",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
@@ -49,11 +49,6 @@ func init() {
 		Params: []testing.Param{{
 			Val:     browser.TypeAsh,
 			Fixture: "loggedInToCUJUser",
-		}, {
-			Name:              "lacros",
-			Val:               browser.TypeLacros,
-			Fixture:           "loggedInToCUJUserLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
 		}},
 	})
 }
