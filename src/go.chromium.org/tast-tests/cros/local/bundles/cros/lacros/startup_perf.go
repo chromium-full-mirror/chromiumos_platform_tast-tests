@@ -64,7 +64,8 @@ func init() {
 		Desc:         "Captures startup metrics for Lacros configurations and modes",
 		Contacts:     []string{"lacros-team@google.com", "hidehiko@chromium.org"},
 		BugComponent: "b:1456869",
-		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
+		// TODO(to b/347782221): StartupPerf is constantly failing.
+		// Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      chrome.GAIALoginTimeout + 10*time.Minute,
 		Params: []testing.Param{{
@@ -393,7 +394,7 @@ func setAlwaysRestoreSettings(ctx context.Context, tconn *chrome.TestConn) error
 	settings.Close(ctx)
 
 	// TODO(crbug.com/1314785)
-	// According to the PRD of Full Restore go/chrome-os-full-restore-dd, it uses a throttle of
+	// GoBigSleepLint: According to the PRD of Full Restore go/chrome-os-full-restore-dd, it uses a throttle of
 	// 2.5s to save the app launching and window statue information to the backend. Therefore,
 	// sleep 3 seconds here.
 	testing.Sleep(ctx, 3*time.Second)
