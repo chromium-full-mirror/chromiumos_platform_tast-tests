@@ -969,6 +969,7 @@ func init() {
 		Impl: &loggedInToCUJUserFixture{
 			chromeExtraOpts: []chrome.Option{
 				chrome.ExtraArgs("--enable-field-trial-config"),
+				chrome.EnableFeatures("DisablePrivacySandboxPrompts"),
 			},
 			bt: browser.TypeAsh,
 		},
@@ -1037,6 +1038,7 @@ func init() {
 		Impl: &loggedInToCUJUserFixture{
 			chromeExtraOpts: []chrome.Option{
 				chrome.ExtraArgs("--enable-field-trial-config"),
+				chrome.EnableFeatures("DisablePrivacySandboxPrompts"),
 			},
 			bt: browser.TypeAsh,
 		},
