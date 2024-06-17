@@ -104,7 +104,7 @@ func (tm *TaskManager) Close(ctx context.Context, tconn *chrome.TestConn) error 
 
 // FindProcess returns the finder of a process node in the task manager.
 func FindProcess() *nodewith.Finder {
-	return nodewith.HasClass("AXVirtualView").Role(role.Cell).Ancestor(rootFinder)
+	return nodewith.HasClass("AXVirtualView").Role(role.GridCell).Ancestor(rootFinder)
 }
 
 // FindNthProcess returns the finder of the nth row and the first column of the process node in the task manager.

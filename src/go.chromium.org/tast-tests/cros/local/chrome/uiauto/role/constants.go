@@ -106,6 +106,7 @@ const (
 	GraphicsObject         Role = "graphicsObject"
 	GraphicsSymbol         Role = "graphicsSymbol"
 	Grid                   Role = "grid"
+	GridCell               Role = "gridCell"
 	Group                  Role = "group"
 	Header                 Role = "header"
 	HeaderAsNonLandmark    Role = "headerAsNonLandmark"
