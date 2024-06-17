@@ -54,7 +54,6 @@ func init() {
 		Contacts: []string{
 			// Crostini
 			"clumptini+oncall@google.com",
-			"sidereal@google.com",
 			// Data team
 			"iby@chromium.org",
 			"chromeos-data-eng@google.com",

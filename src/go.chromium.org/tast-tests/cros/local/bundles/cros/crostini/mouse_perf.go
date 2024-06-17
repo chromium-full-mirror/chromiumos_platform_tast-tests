@@ -25,7 +25,7 @@ func init() {
 		Func:         MousePerf,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Performance test for mouse responsiveness",
-		Contacts:     []string{"clumptini@google.com", "hollingum@google.com"},
+		Contacts:     []string{"clumptini@google.com"},
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		Data:         []string{"mouse_perf.py"},
 		SoftwareDeps: []string{"chrome", "vm_host"},
