@@ -26,10 +26,10 @@ func init() {
 		Name: "chromeUIDisabledWith1BTPeerFlossDisabled",
 		Desc: "Disables Chrome UI, enables Bluetooth, and connects to 1 btpeer",
 		Contacts: []string{
-			"chadduffin@chromium.org",
-			"cros-connectivity@google.com",
+			"jiangzp@google.com",
+			"chromeos-bt-team@google.com",
 		},
-		BugComponent: "b:979076", // ChromeOS > EngProd > Platform > Connectivity > Bluetooth
+		BugComponent: "b:167317", // ChromeOS > Platform > Connectivity > Bluetooth
 		Impl: newFixture(&fixtureFeatures{
 			EnableChromeUI: false,
 			BTPeerCount:    1,
@@ -313,10 +313,10 @@ func init() {
 		Name: "chromeUIDisabledWith1BTPeerFlossEnabled",
 		Desc: "Disables Chrome UI, enables Bluetooth, and connects to 1 btpeer",
 		Contacts: []string{
-			"chadduffin@chromium.org",
-			"cros-connectivity@google.com",
+			"jiangzp@google.com",
+			"chromeos-bt-team@google.com",
 		},
-		BugComponent: "b:979076", // ChromeOS > EngProd > Platform > Connectivity > Bluetooth
+		BugComponent: "b:167317", // ChromeOS > Platform > Connectivity > Bluetooth
 		Impl: newFixture(&fixtureFeatures{
 			EnableChromeUI: false,
 			BTPeerCount:    1,
@@ -342,10 +342,10 @@ func init() {
 		Name: "chromeUIDisabledWith2BTPeersFlossDisabled",
 		Desc: "Disables Chrome UI, enables Bluetooth, and connects to 2 btpeers",
 		Contacts: []string{
-			"chadduffin@chromium.org",
-			"cros-connectivity@google.com",
+			"jiangzp@google.com",
+			"chromeos-bt-team@google.com",
 		},
-		BugComponent: "b:979076", // ChromeOS > EngProd > Platform > Connectivity > Bluetooth
+		BugComponent: "b:167317", // ChromeOS > Platform > Connectivity > Bluetooth
 		Impl: newFixture(&fixtureFeatures{
 			EnableChromeUI: false,
 			BTPeerCount:    2,
@@ -371,10 +371,10 @@ func init() {
 		Name: "chromeUIDisabledWith2BTPeersFlossEnabled",
 		Desc: "Disables Chrome UI, enables Bluetooth, and connects to 2 btpeers",
 		Contacts: []string{
-			"chadduffin@chromium.org",
-			"cros-connectivity@google.com",
+			"jiangzp@google.com",
+			"chromeos-bt-team@google.com",
 		},
-		BugComponent: "b:979076", // ChromeOS > EngProd > Platform > Connectivity > Bluetooth
+		BugComponent: "b:167317", // ChromeOS > Platform > Connectivity > Bluetooth
 		Impl: newFixture(&fixtureFeatures{
 			EnableChromeUI: false,
 			BTPeerCount:    2,
@@ -400,10 +400,10 @@ func init() {
 		Name: "chromeUIDisabledWith3BTPeersFlossDisabled",
 		Desc: "Disables Chrome UI, enables Bluetooth, and connects to 3 btpeers",
 		Contacts: []string{
-			"chadduffin@chromium.org",
-			"cros-connectivity@google.com",
+			"jiangzp@google.com",
+			"chromeos-bt-team@google.com",
 		},
-		BugComponent: "b:979076", // ChromeOS > EngProd > Platform > Connectivity > Bluetooth
+		BugComponent: "b:167317", // ChromeOS > Platform > Connectivity > Bluetooth
 		Impl: newFixture(&fixtureFeatures{
 			EnableChromeUI: false,
 			BTPeerCount:    3,
@@ -429,10 +429,10 @@ func init() {
 		Name: "chromeUIDisabledWith3BTPeersFlossEnabled",
 		Desc: "Disables Chrome UI, enables Bluetooth, and connects to 3 btpeers",
 		Contacts: []string{
-			"chadduffin@chromium.org",
-			"cros-connectivity@google.com",
+			"jiangzp@google.com",
+			"chromeos-bt-team@google.com",
 		},
-		BugComponent: "b:979076", // ChromeOS > EngProd > Platform > Connectivity > Bluetooth
+		BugComponent: "b:167317", // ChromeOS > Platform > Connectivity > Bluetooth
 		Impl: newFixture(&fixtureFeatures{
 			EnableChromeUI: false,
 			BTPeerCount:    3,
@@ -458,10 +458,10 @@ func init() {
 		Name: "chromeUIDisabledWith4BTPeersFlossDisabled",
 		Desc: "Disables Chrome UI, enables Bluetooth, and connects to 4 btpeers",
 		Contacts: []string{
-			"chadduffin@chromium.org",
-			"cros-connectivity@google.com",
+			"jiangzp@google.com",
+			"chromeos-bt-team@google.com",
 		},
-		BugComponent: "b:979076", // ChromeOS > EngProd > Platform > Connectivity > Bluetooth
+		BugComponent: "b:167317", // ChromeOS > Platform > Connectivity > Bluetooth
 		Impl: newFixture(&fixtureFeatures{
 			EnableChromeUI: false,
 			BTPeerCount:    4,
@@ -487,10 +487,10 @@ func init() {
 		Name: "chromeUIDisabledWith4BTPeersFlossEnabled",
 		Desc: "Disables Chrome UI, enables Bluetooth, and connects to 4 btpeers",
 		Contacts: []string{
-			"chadduffin@chromium.org",
-			"cros-connectivity@google.com",
+			"jiangzp@google.com",
+			"chromeos-bt-team@google.com",
 		},
-		BugComponent: "b:979076", // ChromeOS > EngProd > Platform > Connectivity > Bluetooth
+		BugComponent: "b:167317", // ChromeOS > Platform > Connectivity > Bluetooth
 		Impl: newFixture(&fixtureFeatures{
 			EnableChromeUI: false,
 			BTPeerCount:    4,
