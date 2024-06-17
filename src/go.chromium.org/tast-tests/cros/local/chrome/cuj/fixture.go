@@ -1771,6 +1771,7 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 		}
 		opts := []chrome.Option{
 			chrome.ExtraArgs("--disable-sync", "--disable-drive-fs-for-testing"),
+			chrome.DisableFeatures("PeripheralNotification"),
 		}
 		// Enable WPR mode. Do not use GAIA login as replay won't connect to real servers.
 		if f.wprArchive != "" {
