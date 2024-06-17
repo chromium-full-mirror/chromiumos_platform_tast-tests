@@ -31,7 +31,7 @@ func init() {
 		Contacts: []string{
 			"chromeos-cross-device-eng@google.com",
 			"chromeos-sw-engprod@google.com",
-			"kyleshima@chromium.org",
+			"jonmann@chromium.org",
 		},
 		BugComponent: "b:1131837",
 		Attr:         []string{"group:cross-device", "cross-device_phonehub"},
