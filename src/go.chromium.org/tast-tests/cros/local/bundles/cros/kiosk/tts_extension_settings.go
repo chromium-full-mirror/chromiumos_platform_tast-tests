@@ -28,7 +28,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         TTSExtensionSettings,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that the accessbility extensions settings can be opened in PWA Kiosk",
 		Contacts: []string{
 			"chromeos-kiosk-eng+TAST@google.com",
@@ -54,16 +54,6 @@ func init() {
 					&policy.FloatingAccessibilityMenuEnabled{Val: true},
 				},
 			},
-		}, {
-			Name: "lacros",
-			Val: kioskmode.TestData{
-				IsLacros: true,
-				Policies: []policy.Policy{
-					&policy.LacrosAvailability{Val: "lacros_only"},
-					&policy.FloatingAccessibilityMenuEnabled{Val: true},
-				},
-			},
-			ExtraSoftwareDeps: []string{"lacros"},
 		}},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.FloatingAccessibilityMenuEnabled{}, pci.VerifiedFunctionalityUI),
