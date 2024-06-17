@@ -639,8 +639,7 @@ func simpleConnectGCMP() []*simpleConnectParams {
 	return []*simpleConnectParams{{
 		Name:    "gcmp_128",
 		Fixture: defaultFixture,
-		Doc: append(simpleConnectDocPref("a WiFi5 GCMP-128 network on WPA3."),
-			"TODO(b/337103884) Replace TestBedDep with GCMP-feature requirement once available."),
+		Doc:     simpleConnectDocPref("a WiFi5 GCMP-128 network on WPA3."),
 		Val: []simpleConnectParamsVal{{
 			APConfigs: []apConfigVal{{
 				APOpts: `ap.Mode(ap.Mode80211acPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT40Plus),
@@ -652,12 +651,11 @@ func simpleConnectGCMP() []*simpleConnectParams {
 			ExpectedSecurity: wpaModeToShillSecurity(`PureWPA3`),
 		}},
 		ExtraHardwareDeps:      `hwdep.D(hwdep.WifiGCMP())`,
-		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX},
+		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_GCMP},
 	}, {
 		Name:    "gcmp_256",
 		Fixture: defaultFixture,
-		Doc: append(simpleConnectDocPref("a WiFi5 GCMP-256 network on WPA3."),
-			"TODO(b/337103884) Replace TestBedDep with GCMP-feature requirement once available."),
+		Doc:     simpleConnectDocPref("a WiFi5 GCMP-256 network on WPA3."),
 		Val: []simpleConnectParamsVal{{
 			APConfigs: []apConfigVal{{
 				APOpts: `ap.Mode(ap.Mode80211acPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT40Plus),
@@ -669,12 +667,11 @@ func simpleConnectGCMP() []*simpleConnectParams {
 			ExpectedSecurity: wpaModeToShillSecurity(`PureWPA3`),
 		}},
 		ExtraHardwareDeps:      `hwdep.D(hwdep.WifiGCMP())`,
-		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX},
+		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_GCMP},
 	}, {
 		Name:    "gcmp_ccmp",
 		Fixture: defaultFixture,
-		Doc: append(simpleConnectDocPref("a WiFi5 network that supports CCMP and GCMP on WPA2."),
-			"TODO(b/337103884) Replace TestBedDep with GCMP-feature requirement once available."),
+		Doc:     simpleConnectDocPref("a WiFi5 network that supports CCMP and GCMP on WPA2."),
 		Val: []simpleConnectParamsVal{{
 			APConfigs: []apConfigVal{{
 				APOpts: `ap.Mode(ap.Mode80211acPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT40Plus),
@@ -684,7 +681,7 @@ func simpleConnectGCMP() []*simpleConnectParams {
 			}},
 			ExpectedSecurity: wpaModeToShillSecurity(`PureWPA2`),
 		}},
-		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX},
+		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_GCMP},
 	}}
 }
 

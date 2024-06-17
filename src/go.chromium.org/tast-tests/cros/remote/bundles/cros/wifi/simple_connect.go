@@ -668,7 +668,6 @@ func init() {
 				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_BE"},
 			}, {
 				// Verifies that DUT can connect to a WiFi5 GCMP-128 network on WPA3.
-				// TODO(b/337103884) Replace TestBedDep with GCMP-feature requirement once available.
 				Name:    "gcmp_128",
 				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
@@ -682,10 +681,9 @@ func init() {
 					expectedSecurity: shillconst.SecurityWPA3,
 				}},
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiGCMP()),
-				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_AX"},
+				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_GCMP"},
 			}, {
 				// Verifies that DUT can connect to a WiFi5 GCMP-256 network on WPA3.
-				// TODO(b/337103884) Replace TestBedDep with GCMP-feature requirement once available.
 				Name:    "gcmp_256",
 				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
@@ -699,10 +697,9 @@ func init() {
 					expectedSecurity: shillconst.SecurityWPA3,
 				}},
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiGCMP()),
-				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_AX"},
+				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_GCMP"},
 			}, {
 				// Verifies that DUT can connect to a WiFi5 network that supports CCMP and GCMP on WPA2.
-				// TODO(b/337103884) Replace TestBedDep with GCMP-feature requirement once available.
 				Name:    "gcmp_ccmp",
 				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
@@ -714,7 +711,7 @@ func init() {
 					}},
 					expectedSecurity: shillconst.SecurityWPA2,
 				}},
-				ExtraTestBedDeps: []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_AX"},
+				ExtraTestBedDeps: []string{"wifi_router_features:WIFI_ROUTER_FEATURE_GCMP"},
 			}, {
 				// Verifies that DUT can connect to an OWE network on 2.4GHz.
 				Name:    "owe",
