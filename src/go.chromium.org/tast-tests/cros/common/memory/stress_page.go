@@ -6,9 +6,10 @@ package memory
 
 import (
 	"bytes"
-	"encoding/base64"
 	"fmt"
 	"html/template"
+
+	"go.chromium.org/tast-tests/cros/common/utils"
 )
 
 const htmlTemplate = `
@@ -76,6 +77,5 @@ func CompileMemoryStressDataURL(allocMiB int, ratio float32) string {
 		// The template must never fails.
 		panic(err)
 	}
-	// url.QueryEscape() is not the use case because it can't escape some characters.
-	return "data:text/html;base64," + base64.StdEncoding.EncodeToString(htmlBuffer.Bytes())
+	return utils.CompileHTMLDataURL(htmlBuffer.Bytes())
 }

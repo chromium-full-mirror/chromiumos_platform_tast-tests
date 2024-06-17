@@ -6,6 +6,7 @@ package utils
 
 import (
 	"context"
+	"encoding/base64"
 	"io"
 	"net/http"
 
@@ -29,4 +30,10 @@ func FetchFromURL(ctx context.Context, url string) (string, error) {
 		return "", errors.Wrap(err, "failed to read response body")
 	}
 	return string(body), nil
+}
+
+// CompileHTMLDataURL returns a base64 encoded HTML data url string.
+func CompileHTMLDataURL(context []byte) string {
+	// url.QueryEscape() is not the use case because it can't escape some characters.
+	return "data:text/html;base64," + base64.StdEncoding.EncodeToString(context)
 }

@@ -6,8 +6,6 @@ package sched
 
 import (
 	"context"
-	"net/http"
-	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -17,12 +15,26 @@ import (
 	"github.com/shirou/gopsutil/v3/process"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
+	"go.chromium.org/tast-tests/cros/common/utils"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash/ashproc"
 	"go.chromium.org/tast-tests/cros/local/chrome/chromeproc"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
+
+const simpleHTML = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Simple Page</title>
+</head>
+<body>
+    <h1>Simple Page</h1>
+</body>
+</html>
+`
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -99,16 +111,16 @@ func isQoSEligibleProcess(ctx context.Context, s *testing.State, p *process.Proc
 	return !strings.Contains(cmdline, "--type=zygote") && !strings.Contains(cmdline, "--type=broker")
 }
 
-func countBackgroundProcesses(ctx context.Context, s *testing.State, processes []*process.Process) int {
-	var count int
+func getBackgroundProcessIds(ctx context.Context, s *testing.State, processes []*process.Process) map[int32]struct{} {
+	pids := make(map[int32]struct{})
 	for _, p := range processes {
 		if cgroup, err := getCPUCgroup(p.Pid); err != nil {
 			s.Fatalf("Failed to get cpu cgroup for process %d: %v", p.Pid, err)
 		} else if cgroup == "/resourced/background" {
-			count++
+			pids[p.Pid] = struct{}{}
 		}
 	}
-	return count
+	return pids
 }
 
 func ChromeQoS(ctx context.Context, s *testing.State) {
@@ -141,10 +153,9 @@ func ChromeQoS(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to verify Chrome processes: ", err)
 	}
 
-	// Open a page.
-	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
-	defer server.Close()
-	testURL := server.URL + "/simple.html"
+	// Use data url to open simple pages. Each page is counted as a different origin and launches
+	// different renderer processes.
+	testURL := utils.CompileHTMLDataURL([]byte(simpleHTML))
 
 	conn, err := br.NewTab(ctx, testURL)
 	if err != nil {
@@ -156,10 +167,10 @@ func ChromeQoS(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get renderer processes: ", err)
 	}
-	nBefore := countBackgroundProcesses(ctx, s, rendererProcesses)
+	pidsBefore := getBackgroundProcessIds(ctx, s, rendererProcesses)
 
-	// By opening a new tab, the page (simple.html) goes to background.
-	conn2, err := br.NewTab(ctx, "")
+	// By opening a new tab, the existing page goes to background.
+	conn2, err := br.NewTab(ctx, testURL)
 	if err != nil {
 		s.Fatal("Failed to open new tab: ", err)
 	}
@@ -170,15 +181,16 @@ func ChromeQoS(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to get renderer processes: ", err)
 		}
-		nAfter := countBackgroundProcesses(ctx, s, rendererProcesses)
+		pidsAfter := getBackgroundProcessIds(ctx, s, rendererProcesses)
 
-		if nAfter <= nBefore {
-			return errors.Errorf("Background renderer processes not increased: before %v, after: %v", nBefore, nAfter)
+		for pid := range pidsAfter {
+			if _, ok := pidsBefore[pid]; !ok {
+				s.Logf("New background renderer process %d is found", pid)
+				return nil
+			}
 		}
 
-		s.Logf("Background renderer processes increased: before %v, after: %v", nBefore, nAfter)
-
-		return nil
+		return errors.Errorf("There is no new background renderer processes: before %v, after: %v", pidsBefore, pidsAfter)
 	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
 		s.Fatal("Failed to verify background renderer processes: ", err)
 	}
