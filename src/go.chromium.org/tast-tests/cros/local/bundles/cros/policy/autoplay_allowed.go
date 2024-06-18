@@ -41,11 +41,6 @@ func init() {
 		Params: []testing.Param{{
 			Fixture: fixture.ChromePolicyLoggedIn,
 			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.LacrosPolicyLoggedIn,
-			Val:               browser.TypeLacros,
 		}},
 		Data: []string{"autoplay_allowed.html", "audio.mp3"},
 		SearchFlags: []*testing.StringPair{
