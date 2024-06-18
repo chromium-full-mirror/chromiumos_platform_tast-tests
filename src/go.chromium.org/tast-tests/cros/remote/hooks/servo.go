@@ -88,6 +88,10 @@ func (h *servoHook) SetUp(ctx context.Context, s *HookState) error {
 		testing.ContextLog(ctx, "Do not support localhost servo")
 		return nil
 	}
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to connect to servo: ", err)
+		return nil
+	}
 
 	// If we can get a new proxy, we know servod is running.
 	if err := h.connector.startServo(ctx); err != nil {
