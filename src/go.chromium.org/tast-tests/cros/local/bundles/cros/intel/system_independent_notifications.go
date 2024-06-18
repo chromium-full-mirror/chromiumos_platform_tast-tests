@@ -132,19 +132,19 @@ func SystemIndependentNotifications(ctx context.Context, s *testing.State) {
 	}
 
 	// Sets to headphone using cardnumber by linking to soc and converting analog to digital signals.
-	if err := testexec.CommandContext(ctx, "sh", "-c", "amixer c0 cset name='IF1 01 ADC Swap Mux' L/L").Run(); err != nil {
+	if err := testexec.CommandContext(ctx, "sh", "-c", "amixer c0 cset name='IF1 01 ADC Swap Mux' L/L").Run(testexec.DumpLogOnError); err != nil {
 		s.Fatal("Failed to set headphone from card number: ", err)
 	}
 	// Allows Headphone jack to switch on.
-	if err := testexec.CommandContext(ctx, "sh", "-c", "amixer -c0 cset name='Headphone Jack Switch' on").Run(); err != nil {
+	if err := testexec.CommandContext(ctx, "sh", "-c", "amixer -c0 cset name='Headphone Jack Switch' on").Run(testexec.DumpLogOnError); err != nil {
 		s.Fatal("Failed to switch on headphone jack: ", err)
 	}
 	// Switches to left side of headphone by converting digital signls to analog.
-	if err := testexec.CommandContext(ctx, "sh", "-c", "amixer -c0 cset name='Stereo1 DAC MIXL DAC L1 Switch' 1").Run(); err != nil {
+	if err := testexec.CommandContext(ctx, "sh", "-c", "amixer", "-c0", "cset", "name=Stereo1 DAC MIXL DAC L1 Switch", "1").Run(testexec.DumpLogOnError); err != nil {
 		s.Fatal("Failed to switch to left side of headphone: ", err)
 	}
 	// Switches to right side of headphone by converting digital signals to analog.
-	if err := testexec.CommandContext(ctx, "sh", "-c", "amixer -c0 cset name='Stereo1 DAC MIXL DAC R1 Switch' 1").Run(); err != nil {
+	if err := testexec.CommandContext(ctx, "sh", "-c", "amixer", "-c0", "cset", "name='Stereo1 DAC MIXL DAC R1 Switch", "1").Run(testexec.DumpLogOnError); err != nil {
 		s.Fatal("Failed to switch to right side of headphone: ", err)
 	}
 
