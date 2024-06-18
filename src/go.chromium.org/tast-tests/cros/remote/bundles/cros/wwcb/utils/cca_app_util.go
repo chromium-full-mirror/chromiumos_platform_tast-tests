@@ -16,6 +16,8 @@ import (
 	"strings"
 	"time"
 
+	durationpb "google.golang.org/protobuf/types/known/durationpb"
+
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/remote/dutfs"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
@@ -98,6 +100,14 @@ var (
 			{Value: &ui.NodeWith_Name{Name: "Switch to next camera"}},
 			{Value: &ui.NodeWith_Focusable{}},
 			{Value: &ui.NodeWith_Ancestor{Ancestor: CameraWindowFinder}},
+		},
+	}
+
+	// gotItDialogueFinder is the finder used to click the got it button that pops up when app is opened
+	gotItDialogueFinder = &ui.Finder{
+		NodeWiths: []*ui.NodeWith{
+			{Value: &ui.NodeWith_Name{Name: "Got it"}},
+			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_BUTTON}},
 		},
 	}
 )
@@ -331,6 +341,8 @@ func ConnectExternalCamera(ctx context.Context, dut *dut.DUT, extCameraID string
 
 // SwitchCCADevice clicks the "switch device" button on the CCA app.
 func SwitchCCADevice(ctx context.Context, dut *dut.DUT, uiautoSvc ui.AutomationServiceClient, expectedDevices []string) error {
+
+
 	return testing.Poll(ctx, func(ctx context.Context) error {
 		currentDevice, err := CCAUseDevice(ctx, dut)
 		if err != nil {
@@ -341,6 +353,19 @@ func SwitchCCADevice(ctx context.Context, dut *dut.DUT, uiautoSvc ui.AutomationS
 			return nil
 		}
 
+		gotitResponse, err := uiautoSvc.IsNodeFound(ctx, &ui.IsNodeFoundRequest{Finder: gotItDialogueFinder})
+		if err != nil{
+			return errors.Wrap(err, "error checking if the Get sharper details with enhanced zoom got it button is there")
+		}
+
+		if gotitResponse.Found{
+			if _, err := uiautoSvc.LeftClick(ctx, &ui.LeftClickRequest{Finder: gotItDialogueFinder}); err != nil{
+				return errors.Wrap(err, "failed to click the got it button")
+			}
+			if _, err := uiautoSvc.WaitUntilGone(ctx, &ui.WaitUntilGoneRequest{Finder: gotItDialogueFinder, Timeout: durationpb.New(time.Duration(2) * time.Second)}); err != nil{
+				return errors.Wrap(err, "failed to wait for got it button to disappear")
+			}
+		}
 		if _, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: switchDeviceFinder}); err != nil {
 			return errors.Wrap(err, "failed to wait for switch button")
 		}
@@ -397,6 +422,20 @@ func CropCCAPreview(ctx context.Context, uiautoSvc ui.AutomationServiceClient, s
 	builtinDisplayInfo, err := uiautoSvc.Info(ctx, &ui.InfoRequest{Finder: BuiltinDisplayFinder})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get built-in display info")
+	}
+
+	gotitResponse, err := uiautoSvc.IsNodeFound(ctx, &ui.IsNodeFoundRequest{Finder: gotItDialogueFinder})
+	if err != nil{
+		return nil, errors.Wrap(err, "error checking if the Get sharper details with enhanced zoom got it button is there")
+	}
+
+	if gotitResponse.Found{
+		if _, err := uiautoSvc.LeftClick(ctx, &ui.LeftClickRequest{Finder: gotItDialogueFinder}); err != nil{
+			return nil, errors.Wrap(err, "failed to click the got it button")
+		}
+		if _, err := uiautoSvc.WaitUntilGone(ctx, &ui.WaitUntilGoneRequest{Finder: gotItDialogueFinder, Timeout: durationpb.New(time.Duration(2) * time.Second)}); err != nil{
+			return nil, errors.Wrap(err, "failed to wait for got it button to disappear")
+		}
 	}
 
 	previewContentInfo, err := uiautoSvc.Info(ctx, &ui.InfoRequest{Finder: previewContentFinder})
