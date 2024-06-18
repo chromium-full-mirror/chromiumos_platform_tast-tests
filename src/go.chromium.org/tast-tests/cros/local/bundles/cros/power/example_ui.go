@@ -114,8 +114,17 @@ func ExampleUI(ctx context.Context, s *testing.State) {
 	interval := s.Param().(power.TimeParams).Interval
 	total := s.Param().(power.TimeParams).Total
 
-	// Open a window with about:blank tab on the target browser.
-	conn, _, cleanup, err := browserfixt.SetUpWithURL(ctx, cr, bt, "about:blank")
+	const blankPageContents = `data:text/html,
+		<html>
+			<body>
+				<style media='(prefers-color-scheme: dark)'>
+					body { background: black;}
+				</style>
+			</body>
+		</html>`
+
+	// Render an entirely white or black blank page in the browser in accordance with the OS theme.
+	conn, _, cleanup, err := browserfixt.SetUpWithURL(ctx, cr, bt, blankPageContents)
 	if err != nil {
 		s.Fatal("Failed to open a blank new tab: ", err)
 	}
