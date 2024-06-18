@@ -25,7 +25,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks Web Handwriting Recognition API works, even if ml_service doesn't support ondevice_handwriting",
 		Contacts: []string{
-			"chrome-knowledge-eng@google.com",
+			"ml-service-team@google.com",
+			"amoylan@google.com",
 		},
 		BugComponent: "b:187682",
 		Timeout:      3 * time.Minute,
