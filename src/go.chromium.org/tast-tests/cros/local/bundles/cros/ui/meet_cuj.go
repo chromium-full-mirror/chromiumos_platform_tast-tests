@@ -205,7 +205,7 @@ func init() {
 			}, {
 				Name:              "docs_audio_effects_studio_mic",
 				Timeout:           meetcuj.DefaultTestTimeout,
-				ExtraAttr:         []string{"group:cuj"},
+				ExtraAttr:         []string{"group:cuj", "group:crosbolt", "crosbolt_perbuild"},
 				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
 				Val: meetcuj.MeetTest{
 					Bots:         []int{1, 3, 15},
@@ -242,7 +242,7 @@ func init() {
 			}, {
 				Name:              "docs_studio_mic",
 				Timeout:           meetcuj.DefaultTestTimeout,
-				ExtraAttr:         []string{"group:cuj"},
+				ExtraAttr:         []string{"group:cuj", "group:crosbolt", "crosbolt_perbuild"},
 				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
 				Val: meetcuj.MeetTest{
 					Bots:        []int{1, 3, 15},
@@ -369,7 +369,7 @@ func init() {
 			}, {
 				Name:              "docs_platform_effects_studio_mic",
 				Timeout:           meetcuj.DefaultTestTimeout,
-				ExtraAttr:         []string{"group:cuj"},
+				ExtraAttr:         []string{"group:cuj", "group:crosbolt", "crosbolt_perbuild"},
 				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
 				Val: meetcuj.MeetTest{
 					Bots:           []int{1, 3, 15},
