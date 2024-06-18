@@ -37,8 +37,8 @@ func init() {
 		Desc:         "Checks live caption works",
 		Contacts: []string{
 			"ml-service-team@google.com",
-			"alanlxl@chromium.org",
 			"amoylan@chromium.org",
+			"robsc@chromium.org",
 		},
 		// Software > Machine Intelligence > libsoda & ChromeOS Live Caption
 		BugComponent: "b:1116342",
