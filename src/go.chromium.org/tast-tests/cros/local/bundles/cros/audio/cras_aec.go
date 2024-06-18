@@ -27,7 +27,6 @@ func init() {
 		BugComponent: "b:776546",
 		Attr: []string{
 			"group:mainline",
-			"informational", "group:criticalstaging",
 		},
 		Data:         []string{data.AudioLong16Wav},
 		Timeout:      3 * time.Minute,
@@ -72,6 +71,9 @@ func init() {
 					channels: 2,
 				},
 				Fixture: crasAECFixture(2),
+				ExtraAttr: []string{
+					"informational",
+				},
 			},
 			{
 				Name: "16000_stereo",
