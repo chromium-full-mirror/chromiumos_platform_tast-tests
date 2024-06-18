@@ -44,7 +44,7 @@ func init() {
 		BugComponent: "b:1475606",
 		Contacts: []string{
 			"chromeos-pvs-eng@google.com",
-			"jackgelinas@google.com",
+			"bbrotherton@google.com",
 		},
 		Impl:            &pvsFixture{},
 		SetUpTimeout:    10 * time.Minute,

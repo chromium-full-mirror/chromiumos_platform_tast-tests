@@ -21,7 +21,7 @@ func init() {
 		BugComponent: "b:1110659",
 		Contacts: []string{
 			"chromeos-pvs-eng@google.com",
-			"jackgelinas@google.com",
+			"bbrotherton@google.com",
 		},
 		Attr:    []string{"group:pvs", "pvs_shop_daily"},
 		Timeout: 20 * time.Minute,

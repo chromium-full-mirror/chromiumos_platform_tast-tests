@@ -22,7 +22,7 @@ func init() {
 		BugComponent: "b:1110659",
 		Contacts: []string{
 			"chromeos-pvs-eng@google.com",
-			"jackgelinas@google.com",
+			"bbrotherton@google.com",
 		},
 		Data:    []string{passCriteriaKeyval, passCritieraTestPlan},
 		Attr:    []string{"group:pvs", "pvs_perbuild"},

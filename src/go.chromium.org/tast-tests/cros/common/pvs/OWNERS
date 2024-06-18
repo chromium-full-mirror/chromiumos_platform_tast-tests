@@ -4,12 +4,7 @@
 set noparent
 
 # PVS Team
-bbrotherton@google.com
-jackgelinas@google.com
-jparkerh@google.com
-ssoltysyak@google.com
-weingartner@google.com
-ephront@google.com
+include chromiumos/owners:v1:/pvs/OWNERS.tests
 
 # Tast Owners
 include /OWNERS.tast
