@@ -15,6 +15,7 @@ import (
 	pb "go.chromium.org/tast-tests/cros/services/cros/apps"
 	inputspb "go.chromium.org/tast-tests/cros/services/cros/inputs"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
+	"google.golang.org/grpc"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
@@ -339,6 +340,15 @@ func VerifyGuestLearnMore(ctx context.Context, appsSvc pb.AppsServiceClient, uia
 		if _, err := uiautoSvc.LeftClick(ctx, &ui.LeftClickRequest{Finder: finder}); err != nil {
 			return errors.Wrap(err, "failed to click")
 		}
+	}
+	return nil
+}
+
+// DumpUITreeWithScreenshotToFile dumps the UI tree and screenshot at the time of error to faillog
+func DumpUITreeWithScreenshotToFile(ctx context.Context, conn *grpc.ClientConn, filePrefix string) error {
+	svc := ui.NewChromeUIServiceClient(conn)
+	if _, err := svc.DumpUITreeWithScreenshotToFile(ctx, &ui.DumpUITreeWithScreenshotToFileRequest{FilePrefix: filePrefix}); err != nil {
+		return err
 	}
 	return nil
 }

@@ -42,6 +42,7 @@ func init() {
 			"tast.cros.apps.AppsService",
 			"tast.cros.ui.AutomationService",
 			"tast.cros.wwcb.DisplayService",
+			"tast.cros.ui.ChromeUIService",
 		},
 	})
 }
@@ -84,6 +85,15 @@ func CCAUnplugExternalCamera(ctx context.Context, s *testing.State) {
 	appsSvc := pb.NewAppsServiceClient(cl.Conn)
 	uiautoSvc := ui.NewAutomationServiceClient(cl.Conn)
 	fs := dutfs.NewClient(cl.Conn)
+
+	s.AttachErrorHandlers(
+		func(errMsg string) {
+			utils.DumpUITreeWithScreenshotToFile(cleanupCtx, cl.Conn, "ui_dump_error")
+		},
+		func(errMsg string) {
+			utils.DumpUITreeWithScreenshotToFile(cleanupCtx, cl.Conn, "ui_dump_fatal")
+		},
+	)
 
 	// Open the red image on the external display.
 	testImageFilename := "test_image_red_color.jpg"

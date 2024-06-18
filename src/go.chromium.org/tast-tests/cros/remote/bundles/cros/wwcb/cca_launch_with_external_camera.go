@@ -36,6 +36,7 @@ func init() {
 			"tast.cros.apps.AppsService",
 			"tast.cros.ui.AutomationService",
 			"tast.cros.wwcb.DisplayService",
+			"tast.cros.ui.ChromeUIService",
 		},
 	})
 }
@@ -64,6 +65,15 @@ func CCALaunchWithExternalCamera(ctx context.Context, s *testing.State) {
 
 	appsSvc := pb.NewAppsServiceClient(cl.Conn)
 	uiautoSvc := ui.NewAutomationServiceClient(cl.Conn)
+
+	s.AttachErrorHandlers(
+		func(errMsg string) {
+			utils.DumpUITreeWithScreenshotToFile(cleanupCtx, cl.Conn, "ui_dump_error")
+		},
+		func(errMsg string) {
+			utils.DumpUITreeWithScreenshotToFile(cleanupCtx, cl.Conn, "ui_dump_fatal")
+		},
+	)
 
 	// Check USB webcam can be detect properly (lsusb, dmesg, etc...).
 	builtinDevices, err := utils.DevicesFromV4L2(ctx, dut)
