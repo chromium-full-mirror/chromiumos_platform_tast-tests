@@ -58,7 +58,16 @@ type paramData struct {
 }
 
 func genCombinedDeps(format string, deps []string) string {
-	dependencies := strings.Join(deps, ", ")
+	allKeys := make(map[string]bool)
+	var dedupedDeps []string
+	for _, item := range deps {
+		if _, value := allKeys[item]; !value {
+			allKeys[item] = true
+			dedupedDeps = append(dedupedDeps, item)
+		}
+	}
+
+	dependencies := strings.Join(dedupedDeps, ", ")
 	if len(dependencies) > 0 {
 		return fmt.Sprintf(format, dependencies)
 	}
@@ -431,7 +440,7 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 		params = append(params, genFilesFromBugs(paramData{
 			Name:            fmt.Sprintf("%sh264_files_from_bugs", testGroup),
 			Attr:            perBuildAttrs,
-			HardwareDeps:    "hwdep.D(hwdep.SkipGPUFamily(\"rogue\"))",
+			HardwareDeps:    genCombinedDeps("hwdep.D(%s)", []string{"hwdep.SkipGPUFamily(\"rogue\")", param.HardwareDeps}),
 			SoftwareDeps:    genCombinedDeps("[]string{%s}", []string{"caps.HWDecodeH264", "\"proprietary_codecs\"", param.SoftwareDeps}),
 			ValidatorType:   "decoding.MD5",
 			EnabledFeatures: param.EnabledFeatures,
@@ -439,7 +448,7 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 		params = append(params, genFilesFromBugs(paramData{
 			Name:            fmt.Sprintf("%sh264_4k_files_from_bugs", testGroup),
 			Attr:            perBuildAttrs,
-			HardwareDeps:    "hwdep.D(hwdep.SkipGPUFamily(\"rogue\"))",
+			HardwareDeps:    genCombinedDeps("hwdep.D(%s)", []string{"hwdep.SkipGPUFamily(\"rogue\")", param.HardwareDeps}),
 			SoftwareDeps:    genCombinedDeps("[]string{%s}", []string{"caps.HWDecodeH264_4K", "\"proprietary_codecs\"", param.SoftwareDeps}),
 			ValidatorType:   "decoding.MD5",
 			EnabledFeatures: param.EnabledFeatures,
@@ -447,7 +456,7 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 		params = append(params, genFilesFromBugs(paramData{
 			Name:            fmt.Sprintf("%svp9_files_from_bugs", testGroup),
 			Attr:            perBuildAttrs,
-			HardwareDeps:    "hwdep.D(hwdep.SkipGPUFamily(\"rogue\"))",
+			HardwareDeps:    genCombinedDeps("hwdep.D(%s)", []string{"hwdep.SkipGPUFamily(\"rogue\")", param.HardwareDeps}),
 			SoftwareDeps:    genCombinedDeps("[]string{%s}", []string{"caps.HWDecodeVP9", param.SoftwareDeps}),
 			ValidatorType:   "decoding.MD5",
 			EnabledFeatures: param.EnabledFeatures,
@@ -455,7 +464,7 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 		params = append(params, genFilesFromBugs(paramData{
 			Name:            fmt.Sprintf("%sav1_files_from_bugs", testGroup),
 			Attr:            perBuildAttrs,
-			HardwareDeps:    "hwdep.D(hwdep.SkipGPUFamily(\"rogue\"))",
+			HardwareDeps:    genCombinedDeps("hwdep.D(%s)", []string{"hwdep.SkipGPUFamily(\"rogue\")", param.HardwareDeps}),
 			SoftwareDeps:    genCombinedDeps("[]string{%s}", []string{"caps.HWDecodeAV1", param.SoftwareDeps}),
 			ValidatorType:   "decoding.MD5",
 			EnabledFeatures: param.EnabledFeatures,
@@ -463,7 +472,7 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 		params = append(params, genFilesFromBugs(paramData{
 			Name:            fmt.Sprintf("%shevc_files_from_bugs", testGroup),
 			Attr:            perBuildAttrs,
-			HardwareDeps:    "hwdep.D(hwdep.SkipGPUFamily(\"rogue\"))",
+			HardwareDeps:    genCombinedDeps("hwdep.D(%s)", []string{"hwdep.SkipGPUFamily(\"rogue\")", param.HardwareDeps}),
 			SoftwareDeps:    genCombinedDeps("[]string{%s}", []string{"caps.HWDecodeHEVC", "\"proprietary_codecs\"", param.SoftwareDeps}),
 			ValidatorType:   "decoding.MD5",
 			EnabledFeatures: param.EnabledFeatures,

@@ -2061,7 +2061,7 @@ func init() {
 			{
 				Name:              "v4l2_flat_h264_files_from_bugs_149068426",
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue"), hwdep.SupportsV4L2FlatVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs", "v4l2_codec"},
 				ExtraData:         appendJSONFiles([]string{"test_vectors/h264/files_from_bugs/b_149068426_invalid_video_layout_mtk_8183_with_direct_videodecoder.h264"}),
 				Timeout:           calculateTestTimeout([]string{"test_vectors/h264/files_from_bugs/b_149068426_invalid_video_layout_mtk_8183_with_direct_videodecoder.h264"}, "v4l2_flat_h264_files_from_bugs_149068426"),
@@ -2075,7 +2075,7 @@ func init() {
 			{
 				Name:              "v4l2_flat_h264_files_from_bugs_172838252",
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue"), hwdep.SupportsV4L2FlatVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs", "v4l2_codec"},
 				ExtraData:         appendJSONFiles([]string{"test_vectors/h264/files_from_bugs/b_172838252_pixelated_video_on_rk3399.h264"}),
 				Timeout:           calculateTestTimeout([]string{"test_vectors/h264/files_from_bugs/b_172838252_pixelated_video_on_rk3399.h264"}, "v4l2_flat_h264_files_from_bugs_172838252"),
@@ -2089,7 +2089,7 @@ func init() {
 			{
 				Name:              "v4l2_flat_h264_files_from_bugs_174733646",
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue"), hwdep.SupportsV4L2FlatVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs", "v4l2_codec"},
 				ExtraData:         appendJSONFiles([]string{"test_vectors/h264/files_from_bugs/b_174733646_video_with_out_of_order_frames_mtk_8173.h264"}),
 				Timeout:           calculateTestTimeout([]string{"test_vectors/h264/files_from_bugs/b_174733646_video_with_out_of_order_frames_mtk_8173.h264"}, "v4l2_flat_h264_files_from_bugs_174733646"),
@@ -2103,7 +2103,7 @@ func init() {
 			{
 				Name:              "v4l2_flat_h264_files_from_bugs_210895987",
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue"), hwdep.SupportsV4L2FlatVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs", "v4l2_codec"},
 				ExtraData:         appendJSONFiles([]string{"test_vectors/h264/files_from_bugs/b_210895987_still-colors-360p.h264"}),
 				Timeout:           calculateTestTimeout([]string{"test_vectors/h264/files_from_bugs/b_210895987_still-colors-360p.h264"}, "v4l2_flat_h264_files_from_bugs_210895987"),
@@ -2117,7 +2117,7 @@ func init() {
 			{
 				Name:              "v4l2_flat_h264_files_from_bugs_276358257",
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue"), hwdep.SupportsV4L2FlatVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs", "v4l2_codec"},
 				ExtraData:         appendJSONFiles([]string{"test_vectors/h264/files_from_bugs/b_276358257__amd_gpu_gen3_lockup.h264"}),
 				Timeout:           calculateTestTimeout([]string{"test_vectors/h264/files_from_bugs/b_276358257__amd_gpu_gen3_lockup.h264"}, "v4l2_flat_h264_files_from_bugs_276358257"),
@@ -2131,7 +2131,7 @@ func init() {
 			{
 				Name:              "v4l2_flat_h264_files_from_bugs_299320432",
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue"), hwdep.SupportsV4L2FlatVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs", "v4l2_codec"},
 				ExtraData:         appendJSONFiles([]string{"test_vectors/h264/files_from_bugs/b_299320432__amd_skyrim_system_hang.h264"}),
 				Timeout:           calculateTestTimeout([]string{"test_vectors/h264/files_from_bugs/b_299320432__amd_skyrim_system_hang.h264"}, "v4l2_flat_h264_files_from_bugs_299320432"),
@@ -2145,7 +2145,7 @@ func init() {
 			{
 				Name:              "v4l2_flat_h264_4k_files_from_bugs_22704778",
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue"), hwdep.SupportsV4L2FlatVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeH264_4K, "proprietary_codecs", "v4l2_codec"},
 				ExtraData:         appendJSONFiles([]string{"test_vectors/h264/files_from_bugs/b_227047778_mtk_8195_artifacts.h264"}),
 				Timeout:           calculateTestTimeout([]string{"test_vectors/h264/files_from_bugs/b_227047778_mtk_8195_artifacts.h264"}, "v4l2_flat_h264_4k_files_from_bugs_22704778"),
@@ -2159,7 +2159,7 @@ func init() {
 			{
 				Name:              "v4l2_flat_vp9_files_from_bugs_177839888",
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue"), hwdep.SupportsV4L2FlatVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "v4l2_codec"},
 				ExtraData:         appendJSONFiles([]string{"test_vectors/vp9/files_from_bugs/b_177839888__rk3399_vp9_artifacts_with_video_decoder_japanews24.ivf"}),
 				Timeout:           calculateTestTimeout([]string{"test_vectors/vp9/files_from_bugs/b_177839888__rk3399_vp9_artifacts_with_video_decoder_japanews24.ivf"}, "v4l2_flat_vp9_files_from_bugs_177839888"),
@@ -2173,7 +2173,7 @@ func init() {
 			{
 				Name:              "v4l2_flat_vp9_files_from_bugs_251040563",
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue"), hwdep.SupportsV4L2FlatVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "v4l2_codec"},
 				ExtraData:         appendJSONFiles([]string{"test_vectors/vp9/files_from_bugs/b_251040563_webrtc_libvpx.vp9.ivf"}),
 				Timeout:           calculateTestTimeout([]string{"test_vectors/vp9/files_from_bugs/b_251040563_webrtc_libvpx.vp9.ivf"}, "v4l2_flat_vp9_files_from_bugs_251040563"),
@@ -2187,7 +2187,7 @@ func init() {
 			{
 				Name:              "v4l2_flat_av1_files_from_bugs_235138734",
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue"), hwdep.SupportsV4L2FlatVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeAV1, "v4l2_codec"},
 				ExtraData:         appendJSONFiles([]string{"test_vectors/av1/files_from_bugs/b_235138734_test-25fps-one-to-four-tiles.av1.ivf"}),
 				Timeout:           calculateTestTimeout([]string{"test_vectors/av1/files_from_bugs/b_235138734_test-25fps-one-to-four-tiles.av1.ivf"}, "v4l2_flat_av1_files_from_bugs_235138734"),
@@ -2201,7 +2201,7 @@ func init() {
 			{
 				Name:              "v4l2_flat_av1_files_from_bugs_346405213",
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue"), hwdep.SupportsV4L2FlatVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeAV1, "v4l2_codec"},
 				ExtraData:         appendJSONFiles([]string{"test_vectors/av1/files_from_bugs/b_346405213_reference-frame-scaling-test.ivf"}),
 				Timeout:           calculateTestTimeout([]string{"test_vectors/av1/files_from_bugs/b_346405213_reference-frame-scaling-test.ivf"}, "v4l2_flat_av1_files_from_bugs_346405213"),
@@ -2215,7 +2215,7 @@ func init() {
 			{
 				Name:              "v4l2_flat_hevc_files_from_bugs_321622872",
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue"), hwdep.SupportsV4L2FlatVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeHEVC, "proprietary_codecs", "v4l2_codec"},
 				ExtraData:         appendJSONFiles([]string{"test_vectors/hevc/files_from_bugs/b_321622872__bands_across_screen_4k.hevc"}),
 				Timeout:           calculateTestTimeout([]string{"test_vectors/hevc/files_from_bugs/b_321622872__bands_across_screen_4k.hevc"}, "v4l2_flat_hevc_files_from_bugs_321622872"),
