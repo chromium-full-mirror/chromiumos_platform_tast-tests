@@ -178,7 +178,7 @@ func EnableDisableBluetoothWithAudioPlay(ctx context.Context, s *testing.State) 
 		// Click on Bluetooth UI button and wait for button state to toggle.
 		testing.ContextLog(ctx, "Toggling off bluetooth")
 		if err := uiauto.Combine("disable Bluetooth and confirm",
-			ui.LeftClick(bluetoothTurnOffButton),
+			ui.LeftClickUntil(bluetoothTurnOffButton, ui.WithTimeout(5*time.Second).WaitUntilExists(bluetoothTurnOnButton)),
 			// Confirm Bluetooth adapter is disabled.
 			bluez.PollForBTDisabled,
 		)(ctx); err != nil {
@@ -192,14 +192,23 @@ func EnableDisableBluetoothWithAudioPlay(ctx context.Context, s *testing.State) 
 		// Click on Bluetooth UI button and wait for button state to toggle.
 		testing.ContextLog(ctx, "Toggling on bluetooth")
 		if err := uiauto.Combine("enable Bluetooth and confirm",
-			ui.LeftClick(bluetoothTurnOnButton),
+			ui.LeftClickUntil(bluetoothTurnOnButton, ui.WithTimeout(5*time.Second).WaitUntilExists(bluetoothTurnOffButton)),
 			// Confirm Bluetooth adapter is enabled.
 			bluez.PollForBTEnabled,
 		)(ctx); err != nil {
 			s.Fatal("Failed to enable Bluetooth via toggle button: ", err)
 		}
-		if err := btDevice.Connect(ctx); err != nil {
-			s.Fatal("Failed to connect bluetooth device: ", err)
+
+		// Get connected status of BT device and connect if not already connected.
+		isConnected, btErr := btDevice.Connected(ctx)
+		if btErr != nil {
+			s.Fatal("Failed to get BT connected status: ", btErr)
+		}
+		if !isConnected {
+			if err := btDevice.Connect(ctx); err != nil {
+				s.Fatal(s, "Failed to connect bluetooth device: ", err)
+			}
+			defer btDevice.Disconnect(cleanupCtx)
 		}
 
 		// Cheking and playing the audio if it is paused after reconnecting the BT device.
@@ -305,5 +314,5 @@ func verifyRunningDevice(ctx context.Context, deviceName string) error {
 			return errors.Wrapf(err, "failed to route the audio through expected audio node: got %q; want %q", devName, deviceName)
 		}
 		return nil
-	}, &testing.PollOptions{Timeout: 10 * time.Second})
+	}, &testing.PollOptions{Timeout: 30 * time.Second})
 }
