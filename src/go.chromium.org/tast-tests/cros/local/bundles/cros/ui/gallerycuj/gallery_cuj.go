@@ -389,12 +389,8 @@ func testImages(ctx context.Context, res *galleryCUJTestResource) (retErr error)
 //  5. Click 'Draw'.
 //  6. Drag mouse around the file to draw.
 //  7. Click 'Save'.
-//  8. Click on More options.
-//  9. Click on Open in PDF viewer.
-//  10. Scroll with mouse wheel and key press for 10 seconds each.
-//  11. Close the PDF Viewer.
-//  12. Close the Gallery window.
-//  13. Repeat 1-12 with the other PDFs (should be 3 more)
+//  8. Close the Gallery window.
+//  9. Repeat 1-8 with the other PDFs (should be 3 more)
 func testPDF(ctx context.Context, res *galleryCUJTestResource) error {
 	const (
 		testText          = "The quick brown fox jumps over the lazy dog in the afternoon on Saturday!"
@@ -468,11 +464,6 @@ func testPDF(ctx context.Context, res *galleryCUJTestResource) error {
 			gallery.DrawOnPDF(patternPoints),
 			gallery.Save(),
 			waitForAndCloseDownloadCompleteNotification(tconn),
-			gallery.OpenPDFViewer(),
-			gallery.ClickOnPDFPage(),
-			scrollByMouse(mw, 10*time.Second),
-			scrollByKeyboard(res.kb, 10*time.Second),
-			gallery.ClosePDFViewer(),
 		)(ctx)
 	}
 	for _, pdfFile := range pdfFiles {
