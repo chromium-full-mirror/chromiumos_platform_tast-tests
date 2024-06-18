@@ -30,7 +30,7 @@ type testParams struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         AllowedApps,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that managed guest sessions only show allowed applications in the launcher",
 		Contacts: []string{
 			"chromeos-kiosk-eng+TAST@google.com",
@@ -51,11 +51,6 @@ func init() {
 			{
 				Name: "ash",
 				Val:  testParams{isLacros: false},
-			},
-			{
-				Name:              "lacros",
-				ExtraSoftwareDeps: []string{"lacros"},
-				Val:               testParams{isLacros: true},
 			},
 		},
 		SearchFlags: []*testing.StringPair{
