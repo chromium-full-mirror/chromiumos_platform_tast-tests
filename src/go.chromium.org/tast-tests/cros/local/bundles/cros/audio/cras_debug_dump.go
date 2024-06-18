@@ -24,7 +24,6 @@ func init() {
 		BugComponent: "b:776546",
 		Attr: []string{
 			"group:mainline",
-			"informational", "group:criticalstaging",
 		},
 		Timeout:      3 * time.Minute,
 		LacrosStatus: testing.LacrosVariantUnneeded,
