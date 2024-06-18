@@ -253,6 +253,26 @@ func init() {
 				serverName: "webgl_aquarium_static",
 				url:        "aquarium.html",
 			},
+		}, {
+			Name: "webglaquarium_gl",
+			Val: graphicsWebContentVal{
+				data:       "webgl_aquarium_static_20221212.tar.zst",
+				serverName: "webgl_aquarium_static",
+				url:        "aquarium.html",
+				chromeOpt: []chrome.Option{
+					chrome.DisableFeatures("Vulkan", "DefaultANGLEVulkan", "VulkanFromANGLE"),
+				},
+			},
+		}, {
+			Name: "webglaquarium_vulkan",
+			Val: graphicsWebContentVal{
+				data:       "webgl_aquarium_static_20221212.tar.zst",
+				serverName: "webgl_aquarium_static",
+				url:        "aquarium.html",
+				chromeOpt: []chrome.Option{
+					chrome.EnableFeatures("Vulkan", "DefaultANGLEVulkan", "VulkanFromANGLE"),
+				},
+			},
 		}},
 	})
 }
@@ -269,9 +289,10 @@ type graphicsWebContentFixture struct {
 }
 
 type graphicsWebContentVal struct {
-	data       string // data is the zst file that contains the content.
-	serverName string // serverName is the uncompressed folder name that we should start httpServer on.
-	url        string // url is the url to access the main content.
+	data       string          // data is the zst file that contains the content.
+	serverName string          // serverName is the uncompressed folder name that we should start httpServer on.
+	url        string          // url is the url to access the main content.
+	chromeOpt  []chrome.Option // Additional Chrome Option to set.
 }
 
 func (f *graphicsWebContentFixture) Reset(ctx context.Context) error {
@@ -306,14 +327,15 @@ func (f *graphicsWebContentFixture) PostTest(ctx context.Context, s *testing.Fix
 }
 
 func (f *graphicsWebContentFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
-	cr, err := chrome.New(ctx, f.fOpt...)
+	val := s.Param().(graphicsWebContentVal)
+	opts := append(f.fOpt, val.chromeOpt...)
+	cr, err := chrome.New(ctx, opts...)
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
 	chrome.Lock()
 	f.cr = cr
 
-	val := s.Param().(graphicsWebContentVal)
 	if val.data != "" {
 		tempDir, err := os.MkdirTemp("/tmp", "")
 		if err != nil {
