@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/cellular"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/cellularconst"
 )
 
 type apnTestParam struct {
@@ -126,8 +127,16 @@ func ShillApn(ctx context.Context, s *testing.State) {
 	if err := helper.WaitForModemRegisteredAfterReset(ctx, 60*time.Second); err != nil {
 		s.Fatal("Modem not registered: ", err)
 	}
-
-	if _, err := helper.ConnectWithTimeout(ctx, 5*time.Second); err != nil {
+	modemType, err := cellular.GetModemType(ctx)
+	if err != nil {
+		s.Fatalf("Failed to get modem type: %s", err)
+	}
+	connectTimeOut := 5 * time.Second
+	// b/346425058: In the lab, it takes longer to get the IPv6 on trogdor/strongbad
+	if modemType == cellularconst.ModemTypeSC7180 && (strings.HasSuffix(s.TestName(), "attach_ipv6") || strings.HasSuffix(s.TestName(), "null_attach_ipv6")) {
+		connectTimeOut = 15 * time.Second
+	}
+	if _, err := helper.ConnectWithTimeout(ctx, connectTimeOut); err != nil {
 		s.Fatal("Failed to connect to cellular service: ", err)
 	}
 
