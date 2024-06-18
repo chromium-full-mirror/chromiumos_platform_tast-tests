@@ -12,6 +12,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 
+	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wifi/wifiutil"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
@@ -106,6 +107,18 @@ func NetworkScan(ctx context.Context, s *testing.State) {
 	defer cancel()
 	defer tf.DeconfigAP(cleanupCtx, ap)
 
+	// Finding the AP before opening the UI since the target AP's presence is a part of criteria of scanning validation and we want the target AP to be presented at the beginning.
+	props := map[string]interface{}{
+		shillconst.ServicePropertyType: shillconst.TypeWifi,
+		shillconst.ServicePropertyName: ap.Config().SSID,
+	}
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		_, err = tf.WifiClient().GetServicePath(ctx, props)
+		return err
+	}, &testing.PollOptions{Timeout: shillconst.DefaultTimeout, Interval: time.Second}); err != nil {
+		s.Fatalf("Failed to find wifi service %q: %v", ap.Config().SSID, err)
+	}
+
 	test := param.test(rpcClient.Conn, param.uiReq)
 	if err := test.openUI(ctx); err != nil {
 		s.Fatal("Failed to open page: ", err)
@@ -130,7 +143,7 @@ func NetworkScan(ctx context.Context, s *testing.State) {
 			return nil
 		}
 		if err := test.isScanning(ctx); err != nil {
-			return testing.PollBreak(errors.Wrap(err, "failed to ensure the searching networks text is present"))
+			return testing.PollBreak(errors.Wrap(err, "failed to ensure the searching networks text is presented"))
 		}
 		s.Log("UI is scanning")
 
@@ -141,7 +154,7 @@ func NetworkScan(ctx context.Context, s *testing.State) {
 		s.Logf("UI has finished scanning (%d/%d)", scanCount, expectedScanCount)
 
 		if err := test.isNetworkListPopulated(ctx, ap.Config().SSID); err != nil {
-			return testing.PollBreak(errors.Wrap(err, "failed to ensure the network are present"))
+			return testing.PollBreak(errors.Wrap(err, "failed to ensure the network is presented"))
 		}
 		s.Log("The network list is populated")
 
