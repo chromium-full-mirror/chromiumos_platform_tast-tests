@@ -16,9 +16,6 @@ import (
 	commonash "go.chromium.org/tast-tests/cros/common/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/holdingspace"
@@ -34,25 +31,23 @@ import (
 type testFunc func(*downloadArguments, uiauto.Action) uiauto.Action
 
 type downloadParams struct {
-	testfunc    testFunc
-	browserType browser.Type
-	files       []string
+	testfunc testFunc
+	files    []string
 }
 
 // downloadArguments holds resources to perform the holdingspace.Download tests.
 type downloadArguments struct {
-	tconn       *chrome.TestConn
-	kb          *input.KeyboardEventWriter
-	ui          *uiauto.Context
-	browserType browser.Type
-	outDir      string
-	files       []string
+	tconn  *chrome.TestConn
+	kb     *input.KeyboardEventWriter
+	ui     *uiauto.Context
+	outDir string
+	files  []string
 }
 
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Download,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies download behavior in holding space",
 		BugComponent: "b:1268276", // ChromeOS > Software > System UI Surfaces > HoldingSpace
 		Contacts: []string{
@@ -70,165 +65,62 @@ func init() {
 		Params: []testing.Param{{
 			Name: "cancel",
 			Val: downloadParams{
-				testfunc:    testDownloadCancel,
-				browserType: browser.TypeAsh,
-				files:       []string{"download.html"},
+				testfunc: testDownloadCancel,
+				files:    []string{"download.html"},
 			},
 		}, {
 			Name: "cancel_multiple",
 			Val: downloadParams{
-				testfunc:    testDownloadCancel,
-				browserType: browser.TypeAsh,
-				files:       []string{"download1.html", "download2.html"},
+				testfunc: testDownloadCancel,
+				files:    []string{"download1.html", "download2.html"},
 			},
 		}, {
 			Name: "launch",
 			Val: downloadParams{
-				testfunc:    testDownloadLaunch,
-				browserType: browser.TypeAsh,
-				files:       []string{"download.html"},
+				testfunc: testDownloadLaunch,
+				files:    []string{"download.html"},
 			},
 		}, {
 			Name: "launch_multiple",
 			Val: downloadParams{
-				testfunc:    testDownloadLaunch,
-				browserType: browser.TypeAsh,
-				files:       []string{"download1.html", "download2.html"},
+				testfunc: testDownloadLaunch,
+				files:    []string{"download1.html", "download2.html"},
 			},
 		}, {
 			Name: "pause_and_resume",
 			Val: downloadParams{
-				testfunc:    testDownloadPauseAndResume,
-				browserType: browser.TypeAsh,
-				files:       []string{"download.html"},
+				testfunc: testDownloadPauseAndResume,
+				files:    []string{"download.html"},
 			},
 		}, {
 			Name: "pause_and_resume_multiple",
 			Val: downloadParams{
-				testfunc:    testDownloadPauseAndResume,
-				browserType: browser.TypeAsh,
-				files:       []string{"download1.html", "download2.html"},
+				testfunc: testDownloadPauseAndResume,
+				files:    []string{"download1.html", "download2.html"},
 			},
 		}, {
 			Name: "pin_and_unpin",
 			Val: downloadParams{
-				testfunc:    testDownloadPinAndUnpin,
-				browserType: browser.TypeAsh,
-				files:       []string{"download.html"},
+				testfunc: testDownloadPinAndUnpin,
+				files:    []string{"download.html"},
 			},
 		}, {
 			Name: "pin_unpin_multiple",
 			Val: downloadParams{
-				testfunc:    testDownloadPinAndUnpin,
-				browserType: browser.TypeAsh,
-				files:       []string{"download1.html", "download2.html"},
+				testfunc: testDownloadPinAndUnpin,
+				files:    []string{"download1.html", "download2.html"},
 			},
 		}, {
 			Name: "remove",
 			Val: downloadParams{
-				testfunc:    testDownloadRemove,
-				browserType: browser.TypeAsh,
-				files:       []string{"download.html"},
+				testfunc: testDownloadRemove,
+				files:    []string{"download.html"},
 			},
 		}, {
 			Name: "remove_multiple",
 			Val: downloadParams{
-				testfunc:    testDownloadRemove,
-				browserType: browser.TypeAsh,
-				files:       []string{"download1.html", "download2.html"},
-			},
-		}, {
-			Name: "lacros_cancel",
-			Val: downloadParams{
-				testfunc:    testDownloadCancel,
-				browserType: browser.TypeLacros,
-				files:       []string{"download.html"},
-			},
-			ExtraSoftwareDeps: []string{"lacros"},
-		}, {
-			Name: "lacros_cancel_multiple",
-			Val: downloadParams{
-				testfunc:    testDownloadCancel,
-				browserType: browser.TypeLacros,
-				files:       []string{"download1.html", "download2.html"},
-			},
-		}, {
-			Name: "lacros_launch",
-			Val: downloadParams{
-				testfunc:    testDownloadLaunch,
-				browserType: browser.TypeLacros,
-				files:       []string{"download.html"},
-			},
-			ExtraSoftwareDeps: []string{"lacros"},
-		}, {
-			Name: "lacros_launch_multiple",
-			Val: downloadParams{
-				testfunc:    testDownloadLaunch,
-				browserType: browser.TypeLacros,
-				files:       []string{"download1.html", "download2.html"},
-			},
-			ExtraSoftwareDeps: []string{"lacros"},
-		}, {
-			Name: "lacros_pause_and_resume",
-			Val: downloadParams{
-				testfunc:    testDownloadPauseAndResume,
-				browserType: browser.TypeLacros,
-				files:       []string{"download.html"},
-			},
-			ExtraSoftwareDeps: []string{"lacros"},
-		}, {
-			Name: "lacros_pause_and_resume_multiple",
-			Val: downloadParams{
-				testfunc:    testDownloadPauseAndResume,
-				browserType: browser.TypeLacros,
-				files:       []string{"download1.html", "download2.html"},
-			},
-		}, {
-			Name: "lacros_pin_and_unpin",
-			Val: downloadParams{
-				testfunc:    testDownloadPinAndUnpin,
-				browserType: browser.TypeLacros,
-				files:       []string{"download.html"},
-			},
-			ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-		}, {
-			Name: "lacros_pin_and_unpin_unstable",
-			Val: downloadParams{
-				testfunc:    testDownloadPinAndUnpin,
-				browserType: browser.TypeLacros,
-				files:       []string{"download.html"},
-			},
-			ExtraSoftwareDeps: []string{"lacros", "lacros_unstable"},
-		}, {
-			Name: "lacros_pin_unpin_multiple",
-			Val: downloadParams{
-				testfunc:    testDownloadPinAndUnpin,
-				browserType: browser.TypeLacros,
-				files:       []string{"download1.html", "download2.html"},
-			},
-			ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-		}, {
-			Name: "lacros_pin_unpin_multiple_unstable",
-			Val: downloadParams{
-				testfunc:    testDownloadPinAndUnpin,
-				browserType: browser.TypeLacros,
-				files:       []string{"download1.html", "download2.html"},
-			},
-			ExtraSoftwareDeps: []string{"lacros", "lacros_unstable"},
-		}, {
-			Name: "lacros_remove",
-			Val: downloadParams{
-				testfunc:    testDownloadRemove,
-				browserType: browser.TypeLacros,
-				files:       []string{"download.html"},
-			},
-			ExtraSoftwareDeps: []string{"lacros"},
-		}, {
-			Name: "lacros_remove_multiple",
-			Val: downloadParams{
-				testfunc:    testDownloadRemove,
-				browserType: browser.TypeLacros,
-				files:       []string{"download1.html", "download2.html"},
+				testfunc: testDownloadRemove,
+				files:    []string{"download1.html", "download2.html"},
 			},
 		}},
 	})
@@ -253,20 +145,17 @@ var (
 // completion, the user should be able to pin the download.
 func Download(ctx context.Context, s *testing.State) {
 	params := s.Param().(downloadParams)
-	bt := params.browserType
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	// Connect to a fresh ash-chrome instance (cr) to ensure holding space first-run state,
-	// also get a browser instance (br) for browser functionality in common.
-	cr, br, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, bt, lacrosfixt.NewConfig())
+	// Connect to a fresh ash-chrome instance (cr) to ensure holding space first-run state.
+	cr, err := chrome.New(ctx)
 	if err != nil {
-		s.Fatalf("Failed to connect to %v browser: %v", bt, err)
+		s.Fatal("Failed to connect to Chrome: ", err)
 	}
 	defer cr.Close(cleanupCtx)
-	defer closeBrowser(cleanupCtx)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -280,12 +169,11 @@ func Download(ctx context.Context, s *testing.State) {
 	defer kb.Close(ctx)
 
 	arg := &downloadArguments{
-		tconn:       tconn,
-		kb:          kb,
-		ui:          uiauto.New(tconn),
-		browserType: bt,
-		outDir:      s.OutDir(),
-		files:       params.files,
+		tconn:  tconn,
+		kb:     kb,
+		ui:     uiauto.New(tconn),
+		outDir: s.OutDir(),
+		files:  params.files,
 	}
 
 	// Ensure the tray does not exist prior adding anything to holding space.
@@ -337,7 +225,7 @@ func Download(ctx context.Context, s *testing.State) {
 		// browser has finished navigating to the desired URL. Since we actually want
 		// to start a download and not navigate the browser we'll use a redirect
 		// workaround to satisfy the requirement to navigate.
-		conn, err := br.NewConn(ctx, server.URL+"?redirect=true&file="+file)
+		conn, err := cr.NewConn(ctx, server.URL+"?redirect=true&file="+file)
 		if err != nil {
 			s.Fatal("Failed to connect to local server: ", err)
 		}

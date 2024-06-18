@@ -11,9 +11,9 @@ import (
 	"path/filepath"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/capturemode"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -28,14 +28,13 @@ import (
 )
 
 type dragDropParams struct {
-	count       int
-	browserType browser.Type
+	count int
 }
 
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ChromeBrowserDragAndDrop,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests dragging and dropping files from Holding Space to Chrome Browser",
 		BugComponent: "b:1268276", // ChromeOS > Software > System UI Surfaces > HoldingSpace
 		Contacts: []string{
@@ -54,37 +53,19 @@ func init() {
 			Name:    "single_file",
 			Fixture: "chromeLoggedIn",
 			Val: dragDropParams{
-				count:       1,
-				browserType: browser.TypeAsh,
+				count: 1,
 			},
 		}, {
 			Name:    "multiple_files",
 			Fixture: "chromeLoggedIn",
 			Val: dragDropParams{
-				count:       2,
-				browserType: browser.TypeAsh,
-			},
-		}, {
-			Name:              "single_file_lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           "lacros",
-			Val: dragDropParams{
-				count:       1,
-				browserType: browser.TypeLacros,
-			},
-		}, {
-			Name:              "multiple_files_lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           "lacros",
-			Val: dragDropParams{
-				count:       2,
-				browserType: browser.TypeLacros,
+				count: 2,
 			},
 		}},
 	})
 }
 
-const dragAndDropTestPageURL = `data:text/html, 
+const dragAndDropTestPageURL = `data:text/html,
 <script>
 	document.addEventListener('DOMContentLoaded', (event) => {
 
@@ -117,17 +98,12 @@ const dragAndDropTestPageURL = `data:text/html,
 
 func ChromeBrowserDragAndDrop(ctx context.Context, s *testing.State) {
 	params := s.Param().(dragDropParams)
-	bt := params.browserType
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	cr, l, cs, err := lacros.Setup(ctx, s.FixtValue(), bt)
-	if err != nil {
-		s.Fatal("Failed to initialize test: ", err)
-	}
-	defer lacros.CloseLacros(cleanupCtx, l)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -137,7 +113,7 @@ func ChromeBrowserDragAndDrop(ctx context.Context, s *testing.State) {
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_dump")
 
 	// Open the html in chrome.
-	conn, err := cs.NewConn(ctx, dragAndDropTestPageURL)
+	conn, err := cr.NewConn(ctx, dragAndDropTestPageURL)
 	if err != nil {
 		s.Fatal("Failed to open new tab: ", err)
 	}
@@ -190,7 +166,7 @@ func ChromeBrowserDragAndDrop(ctx context.Context, s *testing.State) {
 		return nil
 	}
 
-	brw, err := ash.FindWindow(ctx, tconn, ash.BrowserTypeMatch(bt))
+	brw, err := ash.FindWindow(ctx, tconn, ash.BrowserTypeMatch(browser.TypeAsh))
 	if err != nil {
 		s.Fatal("Failed to get browser window: ", err)
 	}

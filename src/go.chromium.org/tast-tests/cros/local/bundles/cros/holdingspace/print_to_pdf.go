@@ -9,11 +9,10 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"time"
 
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/holdingspace"
@@ -22,18 +21,15 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
-type printToPdfParams struct {
-	browserType browser.Type
-}
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PrintToPDF,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies print to pdf file appears in holding space",
 		BugComponent: "b:1268276", // ChromeOS > Software > System UI Surfaces > HoldingSpace
 		Contacts: []string{
@@ -48,44 +44,32 @@ func init() {
 			Key:   "feature_id",
 			Value: "screenplay-cbd2ebb4-8f09-4902-a7ae-9eb7619f7409",
 		}},
-		Params: []testing.Param{{
-			Name: "ash",
-			Val: printToPdfParams{
-				browserType: browser.TypeAsh,
-			},
-		}, {
-			Name: "lacros",
-			Val: printToPdfParams{
-				browserType: browser.TypeLacros,
-			},
-			ExtraSoftwareDeps: []string{"lacros"},
-		}},
 	})
 }
 
 // PrintToPDF verifies that after printing to pdf, the file is displayed in the Downloads
 // section of Holding Space.
 func PrintToPDF(ctx context.Context, s *testing.State) {
-	params := s.Param().(printToPdfParams)
-	bt := params.browserType
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
 
-	cr, br, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, bt, lacrosfixt.NewConfig())
+	cr, err := chrome.New(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect to Chrome: ", err)
 	}
-	defer cr.Close(ctx)
-	defer closeBrowser(ctx)
+	defer cr.Close(cleanupCtx)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect to test API: ", err)
 	}
 
-	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "print_to_pdf")
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "print_to_pdf")
 
 	// Open a new Chrome window with an empty browser tab for us to to test printing to
 	// pdf with.
-	conn, err := br.NewConn(ctx, "")
+	conn, err := cr.NewConn(ctx, "")
 	if err != nil {
 		s.Fatal("Failed to create a new Chrome window: ", err)
 	}
@@ -94,10 +78,8 @@ func PrintToPDF(ctx context.Context, s *testing.State) {
 	// Wait for the tab to load.
 	const expectedTabTitle = "about:blank"
 	_, err = ash.FindOnlyWindow(ctx, tconn, func(w *ash.Window) bool {
-		return (bt == browser.TypeAsh && w.WindowType == ash.WindowTypeBrowser) ||
-			(bt == browser.TypeLacros && w.WindowType == ash.WindowTypeLacros) &&
-				w.IsActive &&
-				regexp.MustCompile(expectedTabTitle).MatchString(w.Title)
+		return w.WindowType == ash.WindowTypeBrowser && w.IsActive &&
+			regexp.MustCompile(expectedTabTitle).MatchString(w.Title)
 	})
 	if err != nil {
 		s.Fatalf("Failed to find active window with title having %q as a substring: %v",
