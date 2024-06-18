@@ -31,11 +31,11 @@ func init() {
 		Params: []testing.Param{
 			{
 				Name:              "released",
-				ExtraHardwareDeps: common.ReleasedDeviceDeps,
+				ExtraHardwareDeps: common.ReleasedDeviceDeps(),
 			}, {
 				Name:              "unreleased",
 				Fixture:           fixture.DecryptProbeConfig,
-				ExtraHardwareDeps: common.UnreleasedDeviceDeps,
+				ExtraHardwareDeps: common.UnreleasedDeviceDeps(),
 			},
 		},
 	})

@@ -7,10 +7,22 @@ package common
 
 import "go.chromium.org/tast/core/testing/hwdep"
 
-// ReleasedDeviceDeps is a hardware dependency that only runs a test on DUTs
+// ReleasedDeviceDeps returns a hardware dependency that only runs a test on DUTs
 // that has normal probe configs without private probe configs.
-var ReleasedDeviceDeps = hwdep.D(hwdep.RuntimeProbeConfig(), hwdep.RuntimeProbeConfigPrivate(false))
+func ReleasedDeviceDeps(extraDeps ...hwdep.Condition) hwdep.Deps {
+	deps := append(
+		[]hwdep.Condition{hwdep.RuntimeProbeConfig(), hwdep.RuntimeProbeConfigPrivate(false)},
+		extraDeps...,
+	)
+	return hwdep.D(deps...)
+}
 
-// UnreleasedDeviceDeps is a hardware dependency that only runs a test on DUTs
+// UnreleasedDeviceDeps returns a hardware dependency that only runs a test on DUTs
 // that has private probe configs.
-var UnreleasedDeviceDeps = hwdep.D(hwdep.RuntimeProbeConfigPrivate(true))
+func UnreleasedDeviceDeps(extraDeps ...hwdep.Condition) hwdep.Deps {
+	deps := append(
+		[]hwdep.Condition{hwdep.RuntimeProbeConfigPrivate(true)},
+		extraDeps...,
+	)
+	return hwdep.D(deps...)
+}
