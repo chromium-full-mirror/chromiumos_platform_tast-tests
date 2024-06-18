@@ -37,8 +37,6 @@ func init() {
 			Name:    "audio_driver",
 			Val:     croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineAudioDriver},
 			Fixture: "crosHealthdRunning",
-			// TODO(b/295499944): Promote tast to critical
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
 			// Contact: yycheng@google.com
 			Name:    "cpu_cache_v2",

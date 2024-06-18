@@ -24,11 +24,6 @@ func init() {
 		SoftwareDeps: []string{"diagnostics"},
 		Attr:         []string{"group:mainline"},
 		Params: []testing.Param{{
-			// Contact: kerker@google.com
-			Name:    "audio_driver",
-			Val:     croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineAudioDriver},
-			Fixture: "crosHealthdRunning",
-		}, {
 			// Contact: dennyh@google.com
 			Name:              "ufs_lifetime",
 			Val:               croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineUFSLifetime},
