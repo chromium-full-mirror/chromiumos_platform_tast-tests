@@ -103,6 +103,10 @@ func eraseInfoPage(ctx context.Context, v *Value, s TestingState) {
 	if !isErased {
 		s.Fatal("Failed to erase pages: ", eraseOutput)
 	}
+
+	version, err := i.VersionInfo(ctx)
+	mustSucceed(s, err, "checking version")
+	testing.ContextLogf(ctx, "version: %+v", version)
 }
 
 func eraseAPROVerificationSettings(ctx context.Context, v *Value, s TestingState) {
