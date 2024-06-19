@@ -48,6 +48,7 @@ import (
 	localPerf "go.chromium.org/tast-tests/cros/local/perf"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
 	"go.chromium.org/tast-tests/cros/local/upstart"
+	"go.chromium.org/tast-tests/cros/local/videoconferencing/effects"
 	"go.chromium.org/tast-tests/cros/local/webrtcinternals"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -95,6 +96,7 @@ type MeetTest struct {
 	Effects           bool                    // Whether to turn on visual effects within Meet.
 	BackgroundBlur    bool                    // Whether to turn on platform-level background blur.
 	AdjustLighting    bool                    // Whether to turn on the platform-level adjust lighting feature.
+	Retouch           bool                    // Whether to turn on the platform-level face retouch feature.
 	LiveCaptions      bool                    // Whether to turn on live captioning.
 	NoiseCancellation bool                    // Whether to turn on noise cancellation.
 	StudioMic         bool                    // Whether to turn on studio mic.
@@ -709,13 +711,16 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 	if meet.LiveCaptions ||
 		meet.AdjustLighting ||
 		meet.BackgroundBlur ||
+		meet.Retouch ||
 		meet.NoiseCancellation ||
 		meet.StudioMic {
 		testing.ContextLog(ctx, "Toggling platform VC effects")
 		vct := vctray.New(ctx, tconn)
 		blur := vctray.BackgroundBlurOff
+		blurLevel := effects.KBlurDisabled
 		if meet.BackgroundBlur {
 			blur = vctray.BackgroundBlurFull
+			blurLevel = effects.KBlurMaximum
 		}
 		if err := vct.ChangeSettingsInPanel(
 			vct.SetLiveCaption(meet.LiveCaptions),
@@ -724,6 +729,8 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 		)(ctx); err != nil {
 			return pv, errors.Wrap(err, "failed to configure platform VC effects")
 		}
+		// Retouch is not part of the VC panel yet. Use effects_config_override.json to turn it on.
+		effects.ApplyPlatformEffects(ctx, meet.AdjustLighting, meet.Retouch, blurLevel, effects.KAuto)
 		// Studio mic and noise cancellation don't appear at the same time.
 		if meet.StudioMic {
 			if err := vct.ChangeSettingsInPanel(vct.SetStudioMic(meet.StudioMic))(ctx); err != nil {
