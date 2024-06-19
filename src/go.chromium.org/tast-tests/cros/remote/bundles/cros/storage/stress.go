@@ -6,6 +6,8 @@ package storage
 
 import (
 	"context"
+	"io/ioutil"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -70,11 +72,12 @@ func Stress(ctx context.Context, s *testing.State) {
 
 	runTimeSec := s.Param().(string)
 	out, err := util.RunCmdWithStringOutput(ctx, s.DUT(), "stressapptest", "-m", "8", "-s", runTimeSec, "-d", disk.Path)
+	ioutil.WriteFile(filepath.Join(s.OutDir(), "stressapptest_result.txt"), []byte(out), 0644)
 	if err != nil {
 		s.Fatal("Failed to run stressapptest: ", err)
 	}
 
 	if !strings.Contains(out, "PASS") {
-		s.Fatalf("stressapptest failed: %s", out)
+		s.Fatal("stressapptest failed")
 	}
 }
