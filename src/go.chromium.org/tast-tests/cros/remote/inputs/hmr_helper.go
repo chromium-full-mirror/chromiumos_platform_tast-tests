@@ -46,6 +46,12 @@ type CalibrationData struct {
 	OffsetY                        float64 // in mm.
 }
 
+// physicalScreenSize contains the dimensions of a DUT's screen in mm.
+type physicalScreenSize struct {
+	height float64
+	width  float64
+}
+
 var (
 	hmrTouchhostHostname = testing.RegisterVarString(
 		"inputs.hmr_touchhost_hostname",
@@ -56,7 +62,26 @@ var (
 		"inputs.hmr_touchhost_port",
 		"9992",
 		"Port for xmlrpc server on HMR Touchhost")
+
+	// Retrieving the dimensions of the DUT's screen directly from it is sometimes
+	// inaccurate. DUT dimensions should be added to this list as HMR's are
+	// onboarded that use them.
+	screenSizesInMM = map[string]physicalScreenSize{
+		"morphius": physicalScreenSize{height: 167.2, width: 292.6},
+		"kodama":   physicalScreenSize{height: 217.3, width: 135.3},
+		"kohaku":   physicalScreenSize{height: 165.2, width: 293.8},
+	}
 )
+
+// GetScreenDimensions queries the screen size map, and returns the height and
+// width, respectively, of the model's screen.
+func GetScreenDimensions(model string) (float64, float64, error) {
+	screenSize, exists := screenSizesInMM[model]
+	if !exists {
+		return -1, -1, errors.Errorf("model: %v does not exist in the screen size map", model)
+	}
+	return screenSize.height, screenSize.width, nil
+}
 
 // ParseHMRRuntimeVariables parses and returns the Touchhost hostname and port runtime variables for HMR tests.
 func ParseHMRRuntimeVariables(d *dut.DUT) (string, int, error) {
