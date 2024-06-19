@@ -33,9 +33,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded, // Browser only used to trigger VC UI.
 		Desc:         "Checks Speak-On-Mute power usage",
 		Contacts: []string{
-			"chrome-knowledge-eng@google.com",
-			"chenjih@google.com",
-			"aaronyu@google.com",
+			"cros-video-conference-tast-tests@google.com",
+			"charleszhao@google.com",
 		},
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		TestBedDeps:  []string{tbdep.Cbx(true)},

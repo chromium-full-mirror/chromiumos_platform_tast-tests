@@ -76,8 +76,8 @@ func init() {
 		Name: loggedIn,
 		Desc: "A fixture with fake user logged in",
 		Contacts: []string{
-			"chrome-knowledge-eng@google.com",
-			"xiuwen@google.com",
+			"cros-video-conference-tast-tests@google.com",
+			"charleszhao@google.com",
 		},
 		BugComponent:    "b:187682",
 		Impl:            baseSetupFixture(browser.TypeAsh, nil),
@@ -93,8 +93,8 @@ func init() {
 		Name: loggedInLacros,
 		Desc: "A fixture with fake user logged in Lacros",
 		Contacts: []string{
-			"chrome-knowledge-eng@google.com",
-			"xiuwen@google.com",
+			"cros-video-conference-tast-tests@google.com",
+			"charleszhao@google.com",
 		},
 		BugComponent:    "b:187682",
 		Impl:            baseSetupFixture(browser.TypeLacros, nil),
@@ -110,8 +110,8 @@ func init() {
 		Name: noLoggedIn,
 		Desc: "A fixture with no user logged in",
 		Contacts: []string{
-			"chrome-knowledge-eng@google.com",
-			"xiuwen@google.com",
+			"cros-video-conference-tast-tests@google.com",
+			"charleszhao@google.com",
 		},
 		BugComponent: "b:187682",
 		Impl: baseSetupFixture(browser.TypeAsh, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
@@ -129,8 +129,8 @@ func init() {
 		Name: baseLoggedInWithFakeVCExtension,
 		Desc: "A fixture with fake user logged in and fake VC extension installed",
 		Contacts: []string{
-			"chrome-knowledge-eng@google.com",
-			"xiuwen@google.com",
+			"cros-video-conference-tast-tests@google.com",
+			"charleszhao@google.com",
 		},
 		BugComponent:    "b:187682",
 		Data:            fakeVCExtensionFiles,
@@ -147,8 +147,8 @@ func init() {
 		Name: baseLoggedInLacrosWithFakeVCExtension,
 		Desc: "A fixture with fake user logged in Lacros and fake VC extension installed",
 		Contacts: []string{
-			"chrome-knowledge-eng@google.com",
-			"xiuwen@google.com",
+			"cros-video-conference-tast-tests@google.com",
+			"charleszhao@google.com",
 		},
 		BugComponent:    "b:187682",
 		Data:            fakeVCExtensionFiles,

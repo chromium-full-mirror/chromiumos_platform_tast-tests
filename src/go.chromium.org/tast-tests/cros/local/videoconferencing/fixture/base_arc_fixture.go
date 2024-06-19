@@ -33,8 +33,8 @@ func init() {
 		Name: loggedInARCForVideoConferencing,
 		Desc: "A fixture with ARC booted, but not PlayStore",
 		Contacts: []string{
-			"chrome-knowledge-eng@google.com",
-			"xiuwen@google.com",
+			"cros-video-conference-tast-tests@google.com",
+			"charleszhao@google.com",
 		},
 		BugComponent:    "b:187682",
 		Impl:            arc.NewArcBootedFixture(fixtureConfig),

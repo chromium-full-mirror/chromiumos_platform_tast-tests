@@ -28,8 +28,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Verify camera effects using screen test",
 		Contacts: []string{
-			"chromeos-platform-ml@google.com",
-			"xiuwen@google.com",
+			"cros-video-conference-tast-tests@google.com",
+			"charleszhao@google.com",
 		},
 		BugComponent: "b:187682",
 		Attr: []string{

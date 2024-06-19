@@ -26,8 +26,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks VC tray returns to app in a virtual desktop",
 		Contacts: []string{
-			"chrome-knowledge-eng@google.com",
-			"xiuwen@google.com",
+			"cros-video-conference-tast-tests@google.com",
+			"charleszhao@google.com",
 		},
 		BugComponent: "b:187682",
 		Timeout:      3 * time.Minute,

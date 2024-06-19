@@ -29,8 +29,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks Camera Effects in different resolution",
 		Contacts: []string{
-			"chromeos-platform-ml@google.com",
-			"xiuwen@google.com",
+			"cros-video-conference-tast-tests@google.com",
+			"charleszhao@google.com",
 		},
 		BugComponent: "b:187682",
 		Timeout:      10 * time.Minute,

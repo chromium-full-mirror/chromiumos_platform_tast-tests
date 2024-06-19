@@ -35,8 +35,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Checks on-device live caption works in tabs and pwas",
 		Contacts: []string{
-			"chrome-knowledge-eng@google.com",
-			"xiuwen@google.com",
+			"cros-video-conference-tast-tests@google.com",
+			"charleszhao@google.com",
 		},
 		BugComponent: "b:187682",
 		Timeout:      10 * time.Minute,

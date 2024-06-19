@@ -35,8 +35,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks Speak-On-Mute is functional in Google Meet",
 		Contacts: []string{
-			"chrome-knowledge-eng@google.com",
-			"xiuwen@google.com",
+			"cros-video-conference-tast-tests@google.com",
+			"charleszhao@google.com",
 		},
 		Attr: []string{
 			"group:external-dependency",

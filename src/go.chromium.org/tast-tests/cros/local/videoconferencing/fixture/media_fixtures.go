@@ -109,8 +109,8 @@ func init() {
 		Name: LoggedInWithFakeHALAndEffectsEnabled,
 		Desc: "A fixture with fake user logged in using fake HAL camera with platform effects enabled",
 		Contacts: []string{
-			"chrome-knowledge-eng@google.com",
-			"xiuwen@google.com",
+			"cros-video-conference-tast-tests@google.com",
+			"charleszhao@google.com",
 		},
 		BugComponent:    "b:187682",
 		Data:            []string{fakeHALImageInput},
@@ -127,8 +127,8 @@ func init() {
 		Name: LoggedInWithFakeHALAndEffectsEnabledNoScreenRecorder,
 		Desc: "A fixture with fake user logged in using fake HAL camera with platform effects enabled without the screen recorder",
 		Contacts: []string{
-			"chrome-knowledge-eng@google.com",
-			"xiuwen@google.com",
+			"cros-video-conference-tast-tests@google.com",
+			"charleszhao@google.com",
 		},
 		BugComponent:    "b:187682",
 		Data:            []string{fakeHALImageInput},
@@ -145,8 +145,8 @@ func init() {
 		Name: LoggedInWithFakeHALAndEffectsDisabled,
 		Desc: "A fixture with fake user logged in using fake HAL camera with platform effects enabled",
 		Contacts: []string{
-			"chrome-knowledge-eng@google.com",
-			"xiuwen@google.com",
+			"cros-video-conference-tast-tests@google.com",
+			"charleszhao@google.com",
 		},
 		BugComponent:    "b:187682",
 		Data:            []string{fakeHALImageInput},
@@ -163,8 +163,8 @@ func init() {
 		Name: LoggedInLacrosWithFakeHALAndEffectsDisabled,
 		Desc: "A fixture with fake user logged in Lacros using fake HAL camera with platform effects disabled",
 		Contacts: []string{
-			"chrome-knowledge-eng@google.com",
-			"xiuwen@google.com",
+			"cros-video-conference-tast-tests@google.com",
+			"charleszhao@google.com",
 		},
 		BugComponent:    "b:187682",
 		Data:            []string{fakeHALImageInput},
@@ -181,8 +181,8 @@ func init() {
 		Name: LoggedInLacrosWithFakeHALAndEffectsEnabled,
 		Desc: "A fixture with fake user logged in Lacros using fake HAL camera with platform effects enabled",
 		Contacts: []string{
-			"chrome-knowledge-eng@google.com",
-			"xiuwen@google.com",
+			"cros-video-conference-tast-tests@google.com",
+			"charleszhao@google.com",
 		},
 		BugComponent:    "b:187682",
 		Data:            []string{fakeHALImageInput},
@@ -199,8 +199,8 @@ func init() {
 		Name: LoggedInARCWithInternalCameraAndEffectsDisabled,
 		Desc: "A fixture with test user logged in and ARC booted using internal camera with platform effects disabled",
 		Contacts: []string{
-			"chrome-knowledge-eng@google.com",
-			"xiuwen@google.com",
+			"cros-video-conference-tast-tests@google.com",
+			"charleszhao@google.com",
 		},
 		BugComponent:    "b:187682",
 		Data:            []string{fakeHALImageInput},
@@ -217,8 +217,8 @@ func init() {
 		Name: NoLogInWithInternalCameraAndEffectsEnabled,
 		Desc: "A fixture with no user logged in using internal camera with platform effects enabled",
 		Contacts: []string{
-			"chrome-knowledge-eng@google.com",
-			"xiuwen@google.com",
+			"cros-video-conference-tast-tests@google.com",
+			"charleszhao@google.com",
 		},
 		BugComponent:    "b:187682",
 		Impl:            mediaSetupFixture(internalCameraWithPlatformEffectsEnabled),
@@ -234,8 +234,8 @@ func init() {
 		Name: LoggedInWithFakeVCExtension,
 		Desc: "A fixture with fake user logged in and fake VC extension installed",
 		Contacts: []string{
-			"chrome-knowledge-eng@google.com",
-			"xiuwen@google.com",
+			"cros-video-conference-tast-tests@google.com",
+			"charleszhao@google.com",
 		},
 		BugComponent:    "b:187682",
 		Data:            []string{fakeHALImageInput},
@@ -252,8 +252,8 @@ func init() {
 		Name: LoggedInLacrosWithFakeVCExtension,
 		Desc: "A fixture with fake user logged in Lacros and fake VC extension installed",
 		Contacts: []string{
-			"chrome-knowledge-eng@google.com",
-			"xiuwen@google.com",
+			"cros-video-conference-tast-tests@google.com",
+			"charleszhao@google.com",
 		},
 		BugComponent:    "b:187682",
 		Data:            []string{fakeHALImageInput},
@@ -271,7 +271,7 @@ func init() {
 		Desc: "Log in with a fake powerloadtest user, setup power, disable wifi and screen recorder",
 		Contacts: []string{
 			"chromeos-platform-power@google.com",
-			"xiuwen@google.com",
+			"charleszhao@google.com",
 		},
 		BugComponent: "b:187682",
 		Impl: setup.NewPowerUIFixture(setup.PowerTestOptions{

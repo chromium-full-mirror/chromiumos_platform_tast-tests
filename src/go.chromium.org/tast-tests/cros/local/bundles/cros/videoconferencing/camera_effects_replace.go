@@ -38,7 +38,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks camera effects background replace",
 		Contacts: []string{
-			"chromeos-platform-ml@google.com",
+			"cros-video-conference-tast-tests@google.com",
 			"charleszhao@google.com",
 		},
 		BugComponent: "b:187682",

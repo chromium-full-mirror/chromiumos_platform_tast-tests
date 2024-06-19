@@ -28,8 +28,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks Video Effects retains after re-launching vc apps",
 		Contacts: []string{
-			"chromeos-platform-ml@google.com",
-			"xiuwen@google.com",
+			"cros-video-conference-tast-tests@google.com",
+			"charleszhao@google.com",
 		},
 		BugComponent: "b:187682",
 		Timeout:      10 * time.Minute,

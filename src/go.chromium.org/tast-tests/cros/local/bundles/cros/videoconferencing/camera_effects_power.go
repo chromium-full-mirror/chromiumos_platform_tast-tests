@@ -42,8 +42,9 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded, // Browser only used to trigger VC UI.
 		Desc:         "Checks camera effects power usage",
 		Contacts: []string{
-			"chromeos-platform-ml@google.com",
+			"cros-video-conference-tast-tests@google.com",
 			"charleszhao@google.com",
+			"okuji@google.com",
 		},
 		BugComponent: "b:187682",
 		Attr: []string{

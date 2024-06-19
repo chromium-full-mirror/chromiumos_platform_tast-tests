@@ -26,8 +26,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks VC tray can be triggered by Chrome tab",
 		Contacts: []string{
-			"chrome-knowledge-eng@google.com",
-			"xiuwen@google.com",
+			"cros-video-conference-tast-tests@google.com",
 			"charleszhao@google.com",
 		},
 		BugComponent: "b:187682",

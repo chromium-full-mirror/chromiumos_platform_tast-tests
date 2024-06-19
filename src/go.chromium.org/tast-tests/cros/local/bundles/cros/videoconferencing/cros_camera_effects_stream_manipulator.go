@@ -23,7 +23,8 @@ func init() {
 		Timeout: 2 * time.Minute,
 		Contacts: []string{
 			"chromeos-platform-ml-accelerators@google.com",
-			"zhaon@google.com",
+			"cros-video-conference-tast-tests@google.com",
+			"charleszhao@google.com",
 		},
 		BugComponent: "b:1140118",
 		Attr: []string{
