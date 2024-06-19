@@ -1,3 +1,4 @@
 .vscode/
 *.json
 !tests/files/*.json
+plots/

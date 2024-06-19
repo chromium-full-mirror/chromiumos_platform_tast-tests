@@ -5,7 +5,7 @@ from collections import defaultdict
 import copy
 import dataclasses
 import logging
-from pathlib import Path
+import pathlib
 import re
 
 from analyzer.analysis import analysis_cfg
@@ -119,7 +119,9 @@ def _prune_outliers(
 
 
 def analyze_results(
-    sample1_path: Path, sample2_path: Path, cfg: analysis_cfg.AnalysisCfg
+    sample1_path: pathlib.Path,
+    sample2_path: pathlib.Path,
+    cfg: analysis_cfg.AnalysisCfg,
 ) -> list[analysis_results.AnalysisResult]:
     """Returns AnalysisResults for the given saved sample data paths."""
     before_results = test_result.load_test_result_dict_from_json(

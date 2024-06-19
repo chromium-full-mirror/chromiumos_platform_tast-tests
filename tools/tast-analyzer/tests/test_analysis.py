@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 import copy
-from pathlib import Path
+import pathlib
 import unittest
 
 from analyzer.analysis import analysis_cfg
@@ -13,7 +13,9 @@ from analyzer.analysis import stats_util
 from analyzer.backend import tast_results_dir
 
 
-FILES_DIR: Path = Path(__file__).parent.absolute().joinpath("files")
+FILES_DIR: pathlib.Path = (
+    pathlib.Path(__file__).parent.absolute().joinpath("files")
+)
 
 
 class AnalysisTest(unittest.TestCase):
@@ -21,11 +23,11 @@ class AnalysisTest(unittest.TestCase):
         self,
     ) -> tuple[metric_sample.SampleDict, metric_sample.SampleDict]:
         before_results = tast_results_dir._load_results_from_results_chart_json(
-            Path("/before/tests/ui.OverviewPerf/results-chart.json"),
+            pathlib.Path("/before/tests/ui.OverviewPerf/results-chart.json"),
             FILES_DIR.joinpath("results-chart-analysis1.json").read_text(),
         )
         after_results = tast_results_dir._load_results_from_results_chart_json(
-            Path("/after/tests/ui.OverviewPerf/results-chart.json"),
+            pathlib.Path("/after/tests/ui.OverviewPerf/results-chart.json"),
             FILES_DIR.joinpath("results-chart-analysis2.json").read_text(),
         )
 

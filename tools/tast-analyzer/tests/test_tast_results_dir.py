@@ -1,19 +1,24 @@
 # Copyright 2024 The ChromiumOS Authors
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
-from pathlib import Path
+
+import pathlib
 import unittest
 
 from analyzer.backend import tast_results_dir
 from analyzer.backend import test_result
 
 
-FILES_DIR: Path = Path(__file__).parent.absolute().joinpath("files")
+FILES_DIR: pathlib.Path = (
+    pathlib.Path(__file__).parent.absolute().joinpath("files")
+)
 
 
 class IngestResultsChartTest(unittest.TestCase):
     def test_results_chart(self) -> None:
-        path = Path("/20231007-090228/tests/ui.OverviewPerf/results-chart.json")
+        path = pathlib.Path(
+            "/20231007-090228/tests/ui.OverviewPerf/results-chart.json"
+        )
         results = tast_results_dir._load_results_from_results_chart_json(
             path, FILES_DIR.joinpath("results-chart-basic.json").read_text()
         )

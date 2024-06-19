@@ -2,14 +2,16 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 import dataclasses
-from pathlib import Path
+import pathlib
 import unittest
 
 from analyzer.analysis import analysis_cfg
 from analyzer.analysis import analyze_results
 
 
-FILES_DIR: Path = Path(__file__).parent.absolute().joinpath("files")
+FILES_DIR: pathlib.Path = (
+    pathlib.Path(__file__).parent.absolute().joinpath("files")
+)
 
 
 class PipelineTest(unittest.TestCase):

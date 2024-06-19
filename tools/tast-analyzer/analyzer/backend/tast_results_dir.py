@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 import json
-from pathlib import Path
+import pathlib
 
 from analyzer.backend.test_result import ImprovementDirection
 from analyzer.backend.test_result import TestResult
@@ -11,7 +11,7 @@ import click
 
 
 def _load_results_from_results_chart_json(
-    path: Path, json_str: str
+    path: pathlib.Path, json_str: str
 ) -> dict[TestResultKey, TestResult]:
     results_dict: dict[TestResultKey, TestResult] = {}
     # Tast results dir format is: <test run id>/tests/<test name>/
@@ -52,7 +52,9 @@ def _load_results_from_results_chart_json(
     return results_dict
 
 
-def _load_results_from_tast_dir(path: Path) -> dict[TestResultKey, TestResult]:
+def _load_results_from_tast_dir(
+    path: pathlib.Path,
+) -> dict[TestResultKey, TestResult]:
     """Extracts values from results-chart.json and returns them as a dictionary."""
 
     paths = path.glob("*/tests/*/results-chart.json")
@@ -72,18 +74,20 @@ def _load_results_from_tast_dir(path: Path) -> dict[TestResultKey, TestResult]:
 @click.option(
     "--output_path",
     type=click.Path(
-        exists=False, dir_okay=False, resolve_path=True, path_type=Path
+        exists=False, dir_okay=False, resolve_path=True, path_type=pathlib.Path
     ),
-    default=Path("data.json"),
+    default=pathlib.Path("data.json"),
     help="path to output summary JSON file",
 )
 @click.argument(
     "input_path",
     type=click.Path(
-        exists=True, file_okay=False, resolve_path=True, path_type=Path
+        exists=True, file_okay=False, resolve_path=True, path_type=pathlib.Path
     ),
 )
-def ingest_tast_results_directory(input_path: Path, output_path: Path) -> None:
+def ingest_tast_results_directory(
+    input_path: pathlib.Path, output_path: pathlib.Path
+) -> None:
     """Ingest the Tast results directory, like: /tmp/tast/results/.
 
     This will output a JSON file containing all the performance test results

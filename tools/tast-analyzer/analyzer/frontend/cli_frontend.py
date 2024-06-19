@@ -5,13 +5,14 @@
 
 import dataclasses
 import enum
-from pathlib import Path
+import logging
+import pathlib
 import statistics
 
 from analyzer.analysis import analysis_cfg
 from analyzer.analysis import analysis_results
 from analyzer.analysis import analyze_results
-from analyzer.analysis.analysis_results import AnalysisResult
+from analyzer.frontend import plot_util
 import click
 
 
@@ -34,7 +35,7 @@ class _CliFrontendCfg:
     """The CLI analyses to run."""
 
 
-def _print_results(results: list[AnalysisResult]) -> None:
+def _print_results(results: list[analysis_results.AnalysisResult]) -> None:
     """Prints a human readable summary of the analysis results."""
     for r in results:
         print(r.summary())
@@ -100,7 +101,7 @@ def _compare_results(
     "-c",
     "--compare",
     type=click.Path(
-        exists=True, dir_okay=False, resolve_path=True, path_type=Path
+        exists=True, dir_okay=False, resolve_path=True, path_type=pathlib.Path
     ),
     help="stats tests",
     nargs=2,
@@ -113,6 +114,21 @@ def _compare_results(
     help="analyses to run",
     default=[_CliAnalysis.PRINT_TEST_BREAKDOWN],
     multiple=True,
+)
+@click.option(
+    "--plots",
+    type=click.Choice(list(plot_util.PlotKind)),
+    help="plots to generate",
+    default=[],
+    multiple=True,
+)
+@click.option(
+    "--plot-dir",
+    type=click.Path(
+        exists=False, file_okay=False, resolve_path=True, path_type=pathlib.Path
+    ),
+    help="directory to output plots in",
+    required=False,
 )
 @click.option(
     "--skip-all-zero/--no-skip-all-zero",
@@ -159,8 +175,10 @@ def _compare_results(
     default=False,
 )
 def print_results(
-    compare: list[Path],
+    compare: list[pathlib.Path],
     analyses: list[_CliAnalysis],
+    plots: list[plot_util.PlotKind],
+    plot_dir: pathlib.Path | None,
     skip_all_zero: bool,
     minimum_sample_size: int,
     alpha_value: float,
@@ -189,3 +207,14 @@ def print_results(
         results=results,
         analyses=clicfg.analyses,
     )
+    if plots:
+        assert plot_dir, "must specify a plot directory for plotting"
+        logging.info("Creating plots (this may take a long time)...")
+        plot_util.init_plotting()
+        plot_util.create_plots(
+            s1_name=compare[0].name,
+            s2_name=compare[1].name,
+            results=results,
+            plots=plots,
+            plot_dir=plot_dir,
+        )

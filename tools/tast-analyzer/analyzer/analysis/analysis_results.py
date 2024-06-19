@@ -40,6 +40,10 @@ class AnalysisResult:
         """Returns the full metric path."""
         return self.before_sample.metric_path
 
+    def units(self) -> str:
+        """Returns the units of the quantity."""
+        return self.before_sample.units
+
     def is_up_better(self) -> bool:
         """Returns if going up is better for this metric."""
         return self.before_sample.improvement_direction.is_up_better()
