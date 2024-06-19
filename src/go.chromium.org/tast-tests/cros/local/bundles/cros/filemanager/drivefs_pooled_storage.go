@@ -8,6 +8,8 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/dma"
+	"go.chromium.org/tast-tests/cros/common/filemanager"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -19,8 +21,7 @@ import (
 )
 
 type testCase struct {
-	user                      string
-	pass                      string
+	pool                      string
 	expectedBannerClass       string
 	expectedStorageMeterClass string
 }
@@ -39,6 +40,7 @@ func init() {
 			"chrome",
 			"chrome_internal",
 			"drivefs",
+			"gaia",
 		},
 		Attr: []string{
 			"group:drivefs-cq",
@@ -47,34 +49,28 @@ func init() {
 			"informational",
 		},
 		VarDeps: []string{
-			"filemanager.DrivefsPooledStorage.OrgFullUsername",
-			"filemanager.DrivefsPooledStorage.OrgFullPassword",
-			"filemanager.DrivefsPooledStorage.FullUsername",
-			"filemanager.DrivefsPooledStorage.FullPassword",
-			"filemanager.DrivefsPooledStorage.WarnUsername",
-			"filemanager.DrivefsPooledStorage.WarnPassword",
+			filemanager.FullAccountPoolVarName,
+			filemanager.OrgFullAccountPoolVarName,
+			filemanager.WarnAccountPoolVarName,
 		},
 		Params: []testing.Param{{
 			Name: "low",
 			Val: testCase{
-				user:                      "filemanager.DrivefsPooledStorage.WarnUsername",
-				pass:                      "filemanager.DrivefsPooledStorage.WarnPassword",
+				pool:                      filemanager.WarnAccountPoolVarName,
 				expectedBannerClass:       "tast-drive-low-individual-space",
 				expectedStorageMeterClass: "",
 			},
 		}, {
 			Name: "full_individual",
 			Val: testCase{
-				user:                      "filemanager.DrivefsPooledStorage.FullUsername",
-				pass:                      "filemanager.DrivefsPooledStorage.FullPassword",
+				pool:                      filemanager.FullAccountPoolVarName,
 				expectedBannerClass:       "tast-drive-out-of-individual-space",
 				expectedStorageMeterClass: "tast-storage-meter-empty",
 			},
 		}, {
 			Name: "full_organization",
 			Val: testCase{
-				user:                      "filemanager.DrivefsPooledStorage.OrgFullUsername",
-				pass:                      "filemanager.DrivefsPooledStorage.OrgFullPassword",
+				pool:                      filemanager.OrgFullAccountPoolVarName,
 				expectedBannerClass:       "tast-drive-out-of-organization-space",
 				expectedStorageMeterClass: "",
 			},
@@ -86,10 +82,7 @@ func DrivefsPooledStorage(ctx context.Context, s *testing.State) {
 	tc := s.Param().(testCase)
 
 	// Start up Chrome.
-	cr, err := chrome.New(ctx, chrome.GAIALogin(chrome.Creds{
-		User: s.RequiredVar(tc.user),
-		Pass: s.RequiredVar(tc.pass),
-	}))
+	cr, err := chrome.New(ctx, chrome.GAIALoginPool(dma.CredsFromPool(tc.pool)))
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
@@ -98,7 +91,7 @@ func DrivefsPooledStorage(ctx context.Context, s *testing.State) {
 	defer cancel()
 	defer cr.Close(cleanupCtx)
 
-	driveFsClient, err := drivefs.NewDriveFs(ctx, s.RequiredVar(tc.user))
+	driveFsClient, err := drivefs.NewDriveFs(ctx, cr.Creds().User)
 	if err != nil {
 		s.Fatal("Failed waiting for DriveFS to start: ", err)
 	}

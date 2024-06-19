@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/calendar"
 	"go.chromium.org/tast-tests/cros/common/connectivityfwdumps"
 	"go.chromium.org/tast-tests/cros/common/drivefs"
+	"go.chromium.org/tast-tests/cros/common/filemanager"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/common/wallpaper"
@@ -38,6 +39,9 @@ func pools() (map[string]string, map[string]string) {
 		calendar.UpcomingEventsAccountVarName:       calendar.UpcomingEventsDMAAccountValue(),
 		connectivityfwdumps.GaiaLoginAccountVarName: arc.ManagedDMAAccountPoolValue(),
 		drivefs.AccountPoolVarName:                  ui.GaiaDMAPoolDefaultValue(),
+		filemanager.FullAccountPoolVarName:          filemanager.FullDMAAccountPoolValue(),
+		filemanager.OrgFullAccountPoolVarName:       filemanager.OrgFullDMAAccountPoolValue(),
+		filemanager.WarnAccountPoolVarName:          filemanager.WarnDMAAccountPoolValue(),
 		policy.ManagedUserAccountPoolVarName:        arc.ManagedDMAAccountPoolValue(),
 		ui.GaiaPoolDefaultVarName:                   ui.GaiaDMAPoolDefaultValue(),
 		ui.CUJAccountPoolVarName:                    ui.GaiaDMAPoolDefaultValue(),
@@ -54,6 +58,9 @@ func pools() (map[string]string, map[string]string) {
 		calendar.UpcomingEventsAccountVarName:       calendar.UpcomingEventsAccountValue(),
 		connectivityfwdumps.GaiaLoginAccountVarName: connectivityfwdumps.GaiaLoginAccountValue(),
 		drivefs.AccountPoolVarName:                  drivefs.AccountPoolValue(),
+		filemanager.FullAccountPoolVarName:          filemanager.FullAccountPoolValue(),
+		filemanager.OrgFullAccountPoolVarName:       filemanager.OrgFullAccountPoolValue(),
+		filemanager.WarnAccountPoolVarName:          filemanager.WarnAccountPoolValue(),
 		policy.ManagedUserAccountPoolVarName:        policy.ManagedUserAccountPoolValue(),
 		ui.GaiaPoolDefaultVarName:                   ui.GaiaPoolDefaultValue(),
 		ui.CUJAccountPoolVarName:                    ui.CUJAccountPoolValue(),
