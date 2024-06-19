@@ -107,6 +107,7 @@ func CameraEffectsChromeRetain(cleanupCtx context.Context, s *testing.State) {
 	if err := effectshtml.OpenURLAndWaitForStreamToReady(ctx, tconn, br, url, vcTray); err != nil {
 		s.Fatal("Fail to wait for camera stream: ", err)
 	}
+	s.Log("OpenURLAndWaitForStreamToReady successfully after closing the tab")
 
 	var imageAfter image.Image
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
@@ -115,6 +116,7 @@ func CameraEffectsChromeRetain(cleanupCtx context.Context, s *testing.State) {
 		if err != nil {
 			return err
 		}
+		s.Log("GrabVideoArea successfully")
 
 		// Camera effects should be identical for new tab.
 		notChangedThreshold := 0.95

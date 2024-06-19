@@ -91,14 +91,18 @@ func GrabVideoArea(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestCon
 
 // ImageDiff returns whether two images have enough portion changed and unchanged.
 func ImageDiff(img1, img2 image.Image, threshold float64) (float64, float64) {
-	var bounds image.Rectangle = img1.Bounds()
-	numOfPixel := float64(bounds.Max.X-bounds.Min.X+1) * float64(bounds.Max.Y-bounds.Min.Y+1)
+	var bounds1 image.Rectangle = img1.Bounds()
+	var bounds2 image.Rectangle = img2.Bounds()
+	var width = int(math.Min(float64(bounds1.Max.X-bounds1.Min.X+1), float64(bounds2.Max.X-bounds2.Min.X+1)))
+	var height = int(math.Min(float64(bounds1.Max.Y-bounds1.Min.Y+1), float64(bounds2.Max.Y-bounds2.Min.Y+1)))
+
+	numOfPixel := float64(width) * float64(height)
 	numOfSamePixel := 0.0
 	numOfDiffPixel := 0.0
-	for x := bounds.Min.X; x <= bounds.Max.X; x++ {
-		for y := bounds.Min.Y; y <= bounds.Max.Y; y++ {
-			r1, g1, b1, _ := img1.At(x, y).RGBA()
-			r2, g2, b2, _ := img2.At(x, y).RGBA()
+	for x := 0; x < width; x++ {
+		for y := 0; y < height; y++ {
+			r1, g1, b1, _ := img1.At(x+bounds1.Min.X, y+bounds1.Min.Y).RGBA()
+			r2, g2, b2, _ := img2.At(x+bounds2.Min.X, y+bounds2.Min.Y).RGBA()
 			dis := math.Abs(float64(r1)-float64(r2)) + math.Abs(float64(g1)-float64(g2)) + math.Abs(float64(b1)-float64(b2))
 			if dis <= threshold {
 				numOfSamePixel += 1.0
