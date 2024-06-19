@@ -372,7 +372,9 @@ func (i *bootModeImpl) SetUp(ctx context.Context, s *testing.FixtState) interfac
 		i.value.Helper = s.ParentValue().(*BaseValue).Helper
 	}
 
-	if !i.copyTastFiles {
+	if i.copyTastFiles {
+		i.value.Helper.AllowServices()
+	} else {
 		i.value.Helper.DisallowServices()
 	}
 
@@ -443,13 +445,20 @@ func (i *impl) Reset(ctx context.Context) error {
 // Reset is called by the framework after each test (except for the last one) to do a
 // light-weight reset of the environment to the original state.
 func (i *firmwareBackupAPImpl) Reset(ctx context.Context) error {
-	// Nothing to do here.
+	// Close the servo to reset pd role, watchdogs, etc.
+	i.value.Helper.CloseServo(ctx)
+	// Close the RPC client in case the DUT rebooted at some point, and it doesn't recover well.
+	i.value.Helper.CloseRPCConnection(ctx)
 	return nil
 }
 
 // Reset is called by the framework after each test (except for the last one) to do a
 // light-weight reset of the environment to the original state.
 func (i *bootModeImpl) Reset(ctx context.Context) error {
+	// Close the servo to reset pd role, watchdogs, etc.
+	i.value.Helper.CloseServo(ctx)
+	// Close the RPC client in case the DUT rebooted at some point, and it doesn't recover well.
+	i.value.Helper.CloseRPCConnection(ctx)
 	return nil
 }
 
