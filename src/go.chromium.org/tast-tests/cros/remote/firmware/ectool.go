@@ -68,7 +68,7 @@ func (ec *ECTool) Command(ctx context.Context, args ...string) *ssh.Cmd {
 func (ec *ECTool) Version(ctx context.Context) (string, error) {
 	output, err := ec.Command(ctx, "version").Output(ssh.DumpLogOnError)
 	if err != nil {
-		return "", errors.Wrap(err, "running 'ectool version' on DUT")
+		return "", errors.Wrap(err, "failed to run 'ectool version' on DUT")
 	}
 
 	// Parse output to determine whether RO or RW is the active firmware.
@@ -92,6 +92,23 @@ func (ec *ECTool) Version(ctx context.Context) (string, error) {
 		return "", errors.Errorf("failed to match regexp %s in ectool version output: %s", reActiveFWVersion, output)
 	}
 	return string(match[1]), nil
+}
+
+// RORWVersion returns the EC RO and RW version.
+func (ec *ECTool) RORWVersion(ctx context.Context) (string, string, error) {
+	output, err := ec.Command(ctx, "version").Output(ssh.DumpLogOnError)
+	if err != nil {
+		return "", "", errors.Wrap(err, "failed to run 'ectool version' on DUT")
+	}
+	roVersion := reROVersion.FindSubmatch(output)
+	if len(roVersion) == 0 {
+		return "", "", errors.Errorf("failed to match regexp %s in ectool version output: %s", reROVersion, output)
+	}
+	rwVersion := reRWVersion.FindSubmatch(output)
+	if len(rwVersion) == 0 {
+		return "", "", errors.Errorf("failed to match regexp %s in ectool version output: %s", reRWVersion, output)
+	}
+	return string(roVersion[1]), string(rwVersion[1]), nil
 }
 
 type hashinfo struct {

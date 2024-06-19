@@ -347,7 +347,7 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 
 	// Get the newest RW firmware version ID available on the DUT.
 	// This version would be the to-be-qualified RW_new firmware.
-	rwNewID, testArgs.imageSectionRW, err = getNewestRWIDAvailable(ctx, filepath.Join(tmpDir, apFwBackup), rwA, rwB)
+	rwNewID, testArgs.imageSectionRW, err = getNewestRWIDAvailable(ctx, apBackupOnHost, rwA, rwB)
 	if err != nil {
 		s.Fatal("Failed while dissecting the bin file: ", err)
 	}
@@ -531,7 +531,7 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 			// Check that the result deviation from the baseline is acceptable.
 			s.Log("Checking that the result deviation from the baseline is acceptable")
 			if err := checkDeviation(ctx, h, baseline, speedResult); err != nil {
-				s.Fatalf("Deviation with RO_old + RW_new ( %s + %s ) failed: %v", shippedFwVersions[len(shippedFwVersions)-1], rwNewID, err)
+				s.Fatalf("Deviation with RO_old + RW_new ( %s + %s ) failed: %v", shippedFwVersions[len(shippedFwVersions)-1].FwID, rwNewID, err)
 			}
 		}
 
@@ -568,7 +568,7 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 
 			s.Log("Checking that the result deviation from the baseline is acceptable")
 			if err := checkDeviation(ctx, h, baseline, speedResult); err != nil {
-				s.Fatalf("Deviation with RO_old-%d + RW_new ( %s + %s ) failed: %v", n, shippedFwVersions[i], rwNewID, err)
+				s.Fatalf("Deviation with RO_old-%d + RW_new ( %s + %s ) failed: %v", n, shippedFwVersions[i].FwID, rwNewID, err)
 			}
 		}
 
@@ -688,7 +688,7 @@ func verifyShippedFwIDsToBeTested(ctx context.Context, s *testing.State, h *firm
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to collect shipped firmwares")
 		}
-		testing.ContextLogf(ctx, "SHIPPED firmwares found for model %s:", h.Model)
+		testing.ContextLogf(ctx, "SHIPPED firmwares found for board: %s, model: %s", h.Board, h.Model)
 	}
 
 	// Sort the shipped firmware versions so that they will be flashed accordingly
@@ -851,9 +851,15 @@ func flashDUTAndReboot(ctx context.Context, h *firmware.Helper, fwInfo *flashFwI
 			return errors.Wrap(err, "failed to get EC IDs")
 		}
 
-		testing.ContextLogf(flashingCtx, "Flashing DUT with file: %s using section: %v", fwInfo.ec.path, fwpb.ImageSection_EmptyImageSection)
-		if _, err := h.BiosServiceClient.WriteImageFromMultiSectionFile(flashingCtx, &fwpb.FWSectionInfo{Programmer: fwpb.Programmer_ECProgrammer, Path: filePathOnDut, Section: fwpb.ImageSection_EmptyImageSection}); err != nil {
-			return errors.Wrap(err, "failed to flash DUT with the multi-section bin file")
+		if originECRO, originECRW, err := firmware.NewECTool(h.DUT, firmware.ECToolNameMain).RORWVersion(ctx); err != nil {
+			return errors.Wrap(err, "failed to read ectool version")
+		} else if originECRO == fwInfo.ec.ro.id && originECRW == fwInfo.ec.rw.id {
+			testing.ContextLog(flashingCtx, "The versions of EC RO and RW are same as original ones. Flashing skipped")
+		} else {
+			testing.ContextLogf(flashingCtx, "Flashing DUT with file: %s using section: %v", fwInfo.ec.path, fwpb.ImageSection_EmptyImageSection)
+			if _, err := h.BiosServiceClient.WriteImageFromMultiSectionFile(flashingCtx, &fwpb.FWSectionInfo{Programmer: fwpb.Programmer_ECProgrammer, Path: filePathOnDut, Section: fwpb.ImageSection_EmptyImageSection}); err != nil {
+				return errors.Wrap(err, "failed to flash DUT with the multi-section bin file")
+			}
 		}
 	}
 
@@ -1028,13 +1034,13 @@ func collectShippedFws(h *firmware.Helper, filepath string) ([]jsonFwInfo, error
 
 	var shippedFws []jsonFwInfo
 	for _, values := range data {
-		if (values.Board == h.Board && values.Model == h.Model) || (values.Board == h.Model && values.Model == "") {
+		if (values.Board == strings.Split(h.Board, "-")[0] && values.Model == h.Model) || (values.Board == h.Model && values.Model == "") {
 			shippedFws = append(shippedFws, values)
 		}
 	}
 
 	if len(shippedFws) == 0 {
-		return nil, errors.Errorf("did not find any shipped fw for %s", h.Model)
+		return nil, errors.Errorf("did not find any shipped fw for board: %s, model: %s", h.Board, h.Model)
 	}
 
 	return shippedFws, nil

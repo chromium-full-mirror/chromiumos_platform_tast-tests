@@ -7,7 +7,6 @@ package firmware
 import (
 	"context"
 	"path/filepath"
-	"regexp"
 	"time"
 
 	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
@@ -21,13 +20,6 @@ import (
 	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
-)
-
-// Used to match the RO/RW versions reported by EC Tool, as declared here:
-// https://chromium.googlesource.com/chromiumos/platform/ec/+/main/util/ectool.c
-var (
-	reROVersion = regexp.MustCompile(`RO version:\s*(\S+)\s`)
-	reRWVersion = regexp.MustCompile(`RW version:\s*(\S+)\s`)
 )
 
 var (
@@ -122,7 +114,7 @@ func DisableEnableECSWSync(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to send data to remote data path %v: %v", ecPathLocal, err)
 	}
 
-	ro1, rw1, err := checkECVersion(ctx, h.DUT)
+	ro1, rw1, err := firmware.NewECTool(h.DUT, firmware.ECToolNameMain).RORWVersion(ctx)
 	if err != nil {
 		s.Fatal("Failed to read ectool version: ", err)
 	}
@@ -141,7 +133,7 @@ func DisableEnableECSWSync(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to reboot DUT: ", err)
 	}
 
-	ro2, rw2, err := checkECVersion(ctx, h.DUT)
+	ro2, rw2, err := firmware.NewECTool(h.DUT, firmware.ECToolNameMain).RORWVersion(ctx)
 	if err != nil {
 		s.Fatal("Failed to read ectool version: ", err)
 	}
@@ -162,7 +154,7 @@ func DisableEnableECSWSync(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to perform mode aware reboot: ", err)
 	}
 
-	ro3, rw3, err := checkECVersion(ctx, h.DUT)
+	ro3, rw3, err := firmware.NewECTool(h.DUT, firmware.ECToolNameMain).RORWVersion(ctx)
 	if err != nil {
 		s.Fatal("Failed to read ectool version: ", err)
 	}
@@ -181,31 +173,13 @@ func DisableEnableECSWSync(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to reboot DUT: ", err)
 	}
 
-	ro4, rw4, err := checkECVersion(ctx, h.DUT)
+	ro4, rw4, err := firmware.NewECTool(h.DUT, firmware.ECToolNameMain).RORWVersion(ctx)
 	if err != nil {
 		s.Fatal("Failed to read ectool version: ", err)
 	}
 	if ro4 == rw4 && ro4 != ro3 {
 		s.Fatalf("Failed to verify EC version, RW and RO regions of EC should not be the same version got %s=%s (RO, RW), RO version of EC should be version of EC flashed got %s=%s (RO, RO)", ro4, rw4, ro3, ro4)
 	}
-}
-
-// checkECVersion returns ro/rw version from ectool.
-func checkECVersion(ctx context.Context, dut *dut.DUT) (string, string, error) {
-	ec := firmware.NewECTool(dut, firmware.ECToolNameMain)
-	output, err := ec.Command(ctx, "version").Output(ssh.DumpLogOnError)
-	if err != nil {
-		return "", "", errors.Wrap(err, "failed to run 'ectool version' on DUT")
-	}
-	roVersion := reROVersion.FindSubmatch(output)
-	if len(roVersion) == 0 {
-		return "", "", errors.Errorf("failed to match regexp %s in ectool version output: %s", reROVersion, output)
-	}
-	rwVersion := reRWVersion.FindSubmatch(output)
-	if len(rwVersion) == 0 {
-		return "", "", errors.Errorf("failed to match regexp %s in ectool version output: %s", reRWVersion, output)
-	}
-	return string(roVersion[1]), string(rwVersion[1]), nil
 }
 
 // flashEC flashes DUT using flashrom.
