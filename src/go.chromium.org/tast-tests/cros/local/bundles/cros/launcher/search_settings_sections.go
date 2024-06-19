@@ -179,9 +179,11 @@ func SearchSettingsSections(ctx context.Context, s *testing.State) {
 			ui := uiauto.New(tconn)
 			result := launcher.SearchResultListItemFinder.NameStartingWith(tc.searchResult).First()
 			if err := uiauto.Combine("search for result in launcher",
-				launcher.Open(tconn),
-				launcher.Search(tconn, kb, tc.searchTerm),
-				ui.WaitUntilExists(result),
+				uiauto.Retry(5, uiauto.Combine("open launcher and type query",
+					launcher.HideLauncher(tconn, !testParams.tabletMode),
+					launcher.Open(tconn),
+					launcher.Search(tconn, kb, tc.searchTerm),
+					ui.WaitUntilExists(result))),
 				ui.LeftClick(result),
 			)(ctx); err != nil {
 				s.Fatalf("Failed to search for result %q in launcher: %v", tc.searchTerm, err)
