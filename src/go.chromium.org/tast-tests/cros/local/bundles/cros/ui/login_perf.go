@@ -49,8 +49,7 @@ import (
 )
 
 const (
-	ensureWorkVisibleHistogram                            = "GPU.EnsureWorkVisibleDuration"
-	ensureWorkVisibleLowResHistogram                      = "GPU.EnsureWorkVisibleDurationLowRes"
+	establishGpuChannelSyncTime                           = "GPU.EstablishGpuChannelSyncTime"
 	allBrowserWindowsCreated                              = "Ash.LoginSessionRestore.AllBrowserWindowsCreated"
 	allBrowserWindowsShown                                = "Ash.LoginSessionRestore.AllBrowserWindowsShown"
 	allBrowserWindowsPresented                            = "Ash.LoginSessionRestore.AllBrowserWindowsPresented"
@@ -1006,15 +1005,13 @@ func storeHistograms(
 		}
 		valueName := hist.Name
 		switch hist.Name {
-		case ensureWorkVisibleHistogram:
-			reportMaxHistogramValue(ctx, pv, hist, "microsecond", valueName)
 		case allBrowserWindowsCreated,
 			allBrowserWindowsPresented,
 			allBrowserWindowsShown,
 			allShelfIconsLoaded,
 			ashTastBootTimeLogin2,
 			bootTimeLogin3,
-			ensureWorkVisibleLowResHistogram,
+			establishGpuChannelSyncTime,
 			shelfLoginAnimationEnd,
 			ashTastArcUIAvailableAfterLoginDuration,
 			arcTastUIAvailableTimeDelta,
@@ -1114,8 +1111,7 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 	}
 
 	allHistograms := []string{
-		ensureWorkVisibleHistogram,
-		ensureWorkVisibleLowResHistogram,
+		establishGpuChannelSyncTime,
 		allBrowserWindowsCreated,
 		allBrowserWindowsShown,
 		allShelfIconsLoaded,
