@@ -24,7 +24,7 @@ import (
 )
 
 const (
-	fetchSupportPacketEnrollmentTimeout       = 5 * time.Minute
+	fetchSupportPacketEnrollmentTimeout       = 6 * time.Minute
 	fetchSupportPacketIssueCommandRetries     = 3
 	fetchSupportPacketIssueCommandRetryDelay  = 20 * time.Second
 	fetchSupportPacketCommandExecutionTimeout = 10 * time.Minute
@@ -111,7 +111,7 @@ func FetchSupportPacket(ctx context.Context, s *testing.State) {
 
 	timeout := int32(fetchSupportPacketTestTimeout.Seconds())
 	// Create an account manager and lease a test account for the duration of the test.
-	accManager, acc, err := tape.NewOwnedTestAccountManagerFromClient(ctx, tapeClient /*lock=*/, true, tape.WithTimeout(timeout), tape.WithPoolID(tape.LogUploadEnabled))
+	accManager, acc, err := tape.NewOwnedTestAccountManagerFromClient(ctx, tapeClient /*lock=*/, false, tape.WithTimeout(timeout), tape.WithPoolID(tape.LogUploadEnabled))
 	if err != nil {
 		s.Fatal("Failed to create an account manager and lease an account: ", err)
 	}
