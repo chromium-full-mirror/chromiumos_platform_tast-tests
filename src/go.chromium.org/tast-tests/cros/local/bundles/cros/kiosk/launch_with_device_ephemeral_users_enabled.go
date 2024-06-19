@@ -11,7 +11,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosproc"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/kioskmode"
 	"go.chromium.org/tast/core/ctxutil"
@@ -19,7 +18,6 @@ import (
 )
 
 type ephemeralModeTestData struct {
-	IsLacros    bool
 	IsEphemeral bool
 	Policies    []policy.Policy
 }
@@ -27,7 +25,7 @@ type ephemeralModeTestData struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         LaunchWithDeviceEphemeralUsersEnabled,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that Kiosk configuration starts correctly with DeviceEphemeralUsersEnabled policy set to true",
 		Contacts: []string{
 			"chromeos-kiosk-eng+TAST@google.com",
@@ -47,53 +45,25 @@ func init() {
 		Timeout:      kioskmode.SetupDuration + 2*kioskmode.LaunchDuration + kioskmode.CleanupDuration,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DeviceEphemeralUsersEnabled{}, pci.VerifiedFunctionalityOS),
-			pci.SearchFlag(&policy.LacrosAvailability{}, pci.VerifiedFunctionalityOS),
 		},
 		Params: []testing.Param{
 			{
-				Name: "ash_unset",
+				Name: "unset",
 				Val: ephemeralModeTestData{
-					IsLacros:    false,
 					IsEphemeral: false,
 					Policies:    []policy.Policy{&policy.DeviceEphemeralUsersEnabled{Stat: policy.StatusUnset}},
 				},
 			},
 			{
-				Name: "ash_true",
+				Name: "true",
 				Val: ephemeralModeTestData{
-					IsLacros:    false,
 					IsEphemeral: true,
 					Policies:    []policy.Policy{&policy.DeviceEphemeralUsersEnabled{Val: true}},
 				},
 			},
 			{
-				Name: "ash_false",
+				Name: "false",
 				Val: ephemeralModeTestData{
-					IsLacros:    false,
-					IsEphemeral: false,
-					Policies:    []policy.Policy{&policy.DeviceEphemeralUsersEnabled{Val: false}},
-				},
-			},
-			{
-				Name: "lacros_unset",
-				Val: ephemeralModeTestData{
-					IsLacros:    true,
-					IsEphemeral: false,
-					Policies:    []policy.Policy{&policy.DeviceEphemeralUsersEnabled{Stat: policy.StatusUnset}},
-				},
-			},
-			{
-				Name: "lacros_true",
-				Val: ephemeralModeTestData{
-					IsLacros:    true,
-					IsEphemeral: true,
-					Policies:    []policy.Policy{&policy.DeviceEphemeralUsersEnabled{Val: true}},
-				},
-			},
-			{
-				Name: "lacros_false",
-				Val: ephemeralModeTestData{
-					IsLacros:    true,
 					IsEphemeral: false,
 					Policies:    []policy.Policy{&policy.DeviceEphemeralUsersEnabled{Val: false}},
 				},
@@ -110,18 +80,12 @@ func LaunchWithDeviceEphemeralUsersEnabled(ctx context.Context, s *testing.State
 		kioskmode.AutoLaunch(kioskmode.KioskAppAccountID),
 		kioskmode.ExtraPolicies(param.Policies),
 	}
-	if param.IsLacros {
-		opts = append(opts, kioskmode.PublicAccountPolicies(
-			kioskmode.KioskAppAccountID,
-			&policy.LacrosAvailability{Val: "lacros_only"},
-		))
-	}
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, kioskmode.CleanupDuration)
 	defer cancel()
 
-	kiosk, cr, err := kioskmode.New(ctx, fdms, s.RequiredVar("ui.signinProfileTestExtensionManifestKey"), opts...)
+	kiosk, _, err := kioskmode.New(ctx, fdms, s.RequiredVar("ui.signinProfileTestExtensionManifestKey"), opts...)
 	if err != nil {
 		s.Fatal("Failed to start Chrome in Kiosk mode: ", err)
 	}
@@ -143,16 +107,5 @@ func LaunchWithDeviceEphemeralUsersEnabled(ctx context.Context, s *testing.State
 	userID := kioskmode.DeviceLocalAccountUserID(&kioskmode.KioskAppAccountInfo)
 	if err := cryptohome.WaitForUserMountAndValidateType(ctx, userID, expectedMountType); err != nil {
 		s.Fatal("Failed to wait for user mount and validate type: : ", err)
-	}
-
-	if param.IsLacros {
-		testing.ContextLog(ctx, "Checking if Kiosk started in Lacros mode")
-		tconn, err := cr.TestAPIConn(ctx)
-		if err != nil {
-			s.Fatal("Failed to create Test API connection: ", err)
-		}
-		if _, err = lacrosproc.Root(ctx, tconn); err != nil {
-			s.Fatal("Failed to get lacros proc: ", err)
-		}
 	}
 }
