@@ -147,7 +147,7 @@ func init() {
 				Fixture: "mountUnmountPtsWorldForCrOSx86",
 				Val: &perfSuite{
 					runner:        ptsworld.NewCrosRunner(),
-					suiteName:     "compress-lz4-1.0.0",
+					suiteName:     "local/compress-lz4-1.0.0",
 					resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
 				},
 				Timeout: 13 * time.Minute,
@@ -156,7 +156,7 @@ func init() {
 				Fixture: "mountUnmountPtsWorldForCrOSarm64",
 				Val: &perfSuite{
 					runner:        ptsworld.NewCrosRunner(),
-					suiteName:     "compress-lz4-1.0.0",
+					suiteName:     "local/compress-lz4-1.0.0",
 					resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
 				},
 				Timeout: 13 * time.Minute,
