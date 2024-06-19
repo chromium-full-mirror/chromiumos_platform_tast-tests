@@ -18,16 +18,16 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 )
 
-// The timeout for setup and teardown. Set it a bit longer than the sum of
-// waitForConnectionTimeout and waitForEhideStateTimeout.
+// The timeout for setup and teardown. Set it a bit longer than
+// waitForEhideStateTimeout.
 const ehideTimeout = 30 * time.Second
 
 // In ehide we wait for 10 seconds for the setup of IPv4 and IPv6 addresses,
 // each. Here we wait a maximum of 25 seconds, which is slightly longer than
 // the sum of the maximum possible waiting time for the appearance of IPv4 and
 // IPv6 addresses.
-const waitForConnectionTimeout = 25 * time.Second
-const waitForEhideStateTimeout = 3 * time.Second
+const waitForEhideStateTimeout = 25 * time.Second
+const waitForEhideStateInterval = 1 * time.Second
 const postTestTimeout = 5 * time.Second
 
 func init() {
@@ -56,13 +56,6 @@ func (f *ehideFixture) SetUp(ctx context.Context, s *testing.FixtState) interfac
 		s.Fatal("Failed to start ehide: ", err)
 	}
 
-	// Set a timeout to wait for connection.
-	connectTimeout, connectCancel := context.WithTimeout(ctx, waitForConnectionTimeout)
-	defer connectCancel()
-	if err := d.WaitConnect(connectTimeout); err != nil {
-		s.Fatal("Failed to wait for DUT connection: ", err)
-	}
-
 	if err := waitForEhideState(ctx, d, ehideconst.EhideStateOn); err != nil {
 		s.Fatal("Failed to wait for ehide turning on: ", err)
 	}
@@ -89,13 +82,6 @@ func (f *ehideFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 		s.Fatal("Failed to stop ehide: ", err)
 	}
 
-	// Set a timeout to wait for connection.
-	connectTimeout, connectCancel := context.WithTimeout(ctx, waitForConnectionTimeout)
-	defer connectCancel()
-	if err := d.WaitConnect(connectTimeout); err != nil {
-		s.Fatal("Failed to wait for DUT connection: ", err)
-	}
-
 	if err := waitForEhideState(ctx, d, ehideconst.EhideStateOff); err != nil {
 		s.Fatal("Failed to wait for ehide turing off: ", err)
 	}
@@ -112,13 +98,16 @@ func getState(ctx context.Context, dut *dut.DUT) (string, error) {
 
 func waitForEhideState(ctx context.Context, dut *dut.DUT, state string) error {
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if e := dut.Connect(ctx); e != nil {
+			return e
+		}
 		if s, e := getState(ctx, dut); e != nil {
 			return e
 		} else if s != state {
 			return errors.Errorf("got current state %s, want %s", s, state)
 		}
 		return nil
-	}, &testing.PollOptions{Timeout: waitForEhideStateTimeout}); err != nil {
+	}, &testing.PollOptions{Timeout: waitForEhideStateTimeout, Interval: waitForEhideStateInterval}); err != nil {
 		return errors.Errorf("failed to wait for ehide: %s", err)
 	}
 	return nil
