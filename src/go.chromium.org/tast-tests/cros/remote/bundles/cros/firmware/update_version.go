@@ -15,7 +15,6 @@ import (
 	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
 	"go.chromium.org/tast-tests/cros/common/firmware/bios"
 	"go.chromium.org/tast-tests/cros/common/firmware/futility"
-	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/dutfs"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
@@ -27,20 +26,30 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+type keyVersType int
+
+const (
+	fwDataKeyVer keyVersType = iota
+	kernelSubkeyVer
+)
+
 type updateVersionTc struct {
 	makekeyFile string
 	commonFile  string
+	keyVersion  keyVersType
 }
 
 var (
-	fwDataKeyVerMakekeyFile = "fwDataKeyVer/make_keys.sh"
-	fwDataKeyVerCommonFile  = "fwDataKeyVer/common.sh"
+	fwDataKeyVerMakekeyFile    = "fwDataKeyVer/make_keys.sh"
+	fwDataKeyVerCommonFile     = "fwDataKeyVer/common.sh"
+	kernelSubkeyVerMakekeyFile = "kernelSubkeyVer/make_keys.sh"
+	kernelSubkeyVerCommonFile  = "kernelSubkeyVer/common.sh"
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: UpdateVersion,
-		Desc: "Update the firmware data key version with autoupdate mode",
+		Desc: "Verify if the key version matches the expectation after autoupdate mode",
 		Contacts: []string{
 			"chromeos-faft@google.com",
 			"cienet-firmware@cienet.corp-partner.google.com",
@@ -48,7 +57,7 @@ func init() {
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Vars:         []string{"firmware.skipFlashUSB"},
 		// TODO: When stable, change firmware_unstable to a different attr.
-		Attr:         []string{"group:firmware", "firmware_unstable", "firmware_usb"},
+		Attr:         []string{"group:firmware", "firmware_unstable"},
 		Timeout:      120 * time.Minute,
 		ServiceDeps:  []string{"tast.cros.firmware.UtilsService", "tast.cros.firmware.BiosService", "tast.cros.firmware.TPMService"},
 		SoftwareDeps: []string{"flashrom"},
@@ -60,6 +69,18 @@ func init() {
 				Val: &updateVersionTc{
 					makekeyFile: fwDataKeyVerMakekeyFile,
 					commonFile:  fwDataKeyVerCommonFile,
+					keyVersion:  fwDataKeyVer,
+				},
+				ExtraAttr: []string{"firmware_usb"},
+			},
+			{
+				Name:      "kernel_subkey_version",
+				Fixture:   fixture.BootModeFixtureWithAPBackup(fixture.DevModeGBB),
+				ExtraData: []string{kernelSubkeyVerMakekeyFile, kernelSubkeyVerCommonFile},
+				Val: &updateVersionTc{
+					makekeyFile: kernelSubkeyVerMakekeyFile,
+					commonFile:  kernelSubkeyVerCommonFile,
+					keyVersion:  kernelSubkeyVer,
 				},
 			},
 		},
@@ -71,8 +92,9 @@ func UpdateVersion(ctx context.Context, s *testing.State) {
 		tempDir = "/usr/local/tmp/faft"
 	)
 	var (
-		backupManager = s.FixtValue().(*fixture.Value).BackupManager
-		h             = s.FixtValue().(*fixture.Value).Helper
+		pv            = s.FixtValue().(*fixture.Value)
+		backupManager = pv.BackupManager
+		h             = pv.Helper
 		workDir       = filepath.Join(tempDir, "autest")
 		apBinary      = filepath.Join(workDir, "bios.bin")
 		keysDir       = filepath.Join(workDir, "keys")
@@ -87,7 +109,7 @@ func UpdateVersion(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create config: ", err)
 	}
 	if err := h.RequireRPCClient(ctx); err != nil {
-		s.Fatal("Requiring RPC client: ", err)
+		s.Fatal("Failed to require RPC client: ", err)
 	}
 
 	// Check if the DUT's active RW firmware is RWA. If not, reboot to RWA.
@@ -110,61 +132,87 @@ func UpdateVersion(ctx context.Context, s *testing.State) {
 	if exist, err := fs.Exists(ctx, tempDir); err != nil {
 		s.Fatal("Failed to check if temp dir is exist: ", err)
 	} else if exist {
-		// If temp dir is exist, remove it first.
 		if err := fs.RemoveAll(ctx, tempDir); err != nil {
 			s.Fatal("Failed to remove temp dir: ", err)
 		}
 	}
+
+	s.Log("Creating temp directories")
 	if err := fs.MkDir(ctx, tempDir, 0777); err != nil {
 		s.Fatal("Failed to make the temp directory: ", err)
 	}
 	defer func(ctx context.Context) {
-		s.Log("Cleanup directories")
+		if err := h.RequireRPCClient(ctx); err != nil {
+			s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
+		}
+		s.Log("Cleaning up temp directories")
 		fs := dutfs.NewClient(h.RPCClient.Conn)
 		if err := fs.RemoveAll(ctx, tempDir); err != nil {
 			s.Fatal("Failed to remove temp dir: ", err)
 		}
 	}(cleanupCtx)
 
-	initFwid, err := h.Reporter.CrossystemParam(ctx, reporters.CrossystemParamFwid)
+	var err error
+	var initFwid string
+	initFwid, err = h.Reporter.CrossystemParam(ctx, reporters.CrossystemParamFwid)
 	if err != nil {
-		s.Fatal("Failed to get crossystem fwid: ", err)
+		s.Fatal("Failed to get init fwid: ", err)
 	}
 
-	skipFlashUSB := false
-	if skipFlashUSBStr, ok := s.Var("firmware.skipFlashUSB"); ok {
-		skipFlashUSB, err = strconv.ParseBool(skipFlashUSBStr)
-		if err != nil {
-			s.Fatalf("Invalid value for var firmware.skipFlashUSB: got %q, want true/false", skipFlashUSBStr)
+	var initTpmDatakeyVer uint16
+	if tc.keyVersion == fwDataKeyVer {
+		skipFlashUSB := false
+		if skipFlashUSBStr, ok := s.Var("firmware.skipFlashUSB"); ok {
+			skipFlashUSB, err = strconv.ParseBool(skipFlashUSBStr)
+			if err != nil {
+				s.Fatalf("Invalid value for var firmware.skipFlashUSB: got %q, want true/false", skipFlashUSBStr)
+			}
 		}
-	}
-	cs := s.CloudStorage()
-	if skipFlashUSB {
-		cs = nil
-	}
-	if err := h.SetupUSBKey(ctx, cs); err != nil {
-		s.Fatal("USBKey not working: ", err)
+		cs := s.CloudStorage()
+		if skipFlashUSB {
+			cs = nil
+		}
+		if err := h.SetupUSBKey(ctx, cs); err != nil {
+			s.Fatal("USBKey not working: ", err)
+		}
+		initTpmDatakeyVer, err = getTPMDataKeyVer(ctx, h)
+		if err != nil {
+			s.Fatal("Failed to get TPM data key version: ", err)
+		}
+		s.Logf("Initial TPM data key version is %s", fmt.Sprint(initTpmDatakeyVer))
 	}
 
-	s.Log("Copy the AP firmware binary to the DUT")
+	s.Log("Copying the AP firmware binary to the DUT")
 	if err := backupManager.CopyBackupToDut(ctx, h.DUT, fixture.FirmwareAP, apBinary); err != nil {
 		s.Fatal("Failed to copy AP firmware binary to DUT: ", err)
 	}
 
-	initTpmDatakeyVer, err := getTPMDataKeyVer(ctx, h)
-	if err != nil {
-		s.Fatal("Failed to get TPM data key version: ", err)
+	var keyVerOpts firmware.KeyVersOptions
+	switch tc.keyVersion {
+	case fwDataKeyVer:
+		keyVerOpts = firmware.KeyVersOptions{
+			Section: bios.FWSignAImageSection,
+			Type:    firmware.FwDataKey,
+		}
+	case kernelSubkeyVer:
+		keyVerOpts = firmware.KeyVersOptions{
+			Section: bios.FWSignAImageSection,
+			Type:    firmware.KernelSubkey,
+		}
+	default:
+		s.Fatal("Invalid key version: ", tc.keyVersion)
 	}
-	initFwDataKeyVer, err := h.GetCurrentFwDataKeyVersion(ctx, bios.FWSignAImageSection)
+
+	initKeyVer, err := h.GetCurrentKeyVersion(ctx, keyVerOpts)
 	if err != nil {
-		s.Fatal("Failed to get firmware data key version: ", err)
+		s.Fatal("Failed to get current key version: ", err)
 	}
-	s.Logf("initTpmDatakeyVer is %v, initFwDataKeyVer is %v", initTpmDatakeyVer, initFwDataKeyVer)
+	s.Logf("Initial key version is %s", fmt.Sprint(initKeyVer))
 
-	newDataKeyVer := initFwDataKeyVer + 1
-	s.Logf("Firmware version will update to version %s", fmt.Sprint(newDataKeyVer))
+	newKeyVer := initKeyVer + 1
+	s.Logf("Firmware version will update to version %s", fmt.Sprint(newKeyVer))
 
-	s.Log("Prepare the key files that are going to be resigned")
+	s.Log("Preparing the key files that are going to be resigned")
 	if err := prepareKeyfile(ctx, h, keysDir); err != nil {
 		s.Fatal("Failed to prepare the key files: ", err)
 	}
@@ -178,7 +226,7 @@ func UpdateVersion(ctx context.Context, s *testing.State) {
 	}
 
 	// Generate the files required for signing by executing the file make_keys.sh.
-	if err := h.DUT.Conn().CommandContext(ctx, "/bin/bash", filepath.Join(workDir, tc.makekeyFile), fmt.Sprint(newDataKeyVer)).Run(ssh.DumpLogOnError); err != nil {
+	if err := h.DUT.Conn().CommandContext(ctx, "/bin/bash", filepath.Join(workDir, tc.makekeyFile), fmt.Sprint(newKeyVer)).Run(ssh.DumpLogOnError); err != nil {
 		s.Fatalf("Failed to execute %v on DUT: %v", filepath.Join(workDir, tc.makekeyFile), err)
 	}
 
@@ -204,8 +252,8 @@ func UpdateVersion(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to check firmware tries: ", err)
 	}
 
-	// It should update the inactive RW firmware (RWB) to new firmware data key version.
-	s.Log("Update the firmware with autoUpdate mode")
+	// It should update the inactive RW firmware (RWB) to new key version.
+	s.Log("Updating the firmware with autoupdate mode")
 	autoupdateOpts := futility.
 		NewUpdateOptions(filepath.Join(workDir, "output.bin")).
 		WithMode(futility.UpdateModeAutoUpdate).
@@ -215,17 +263,31 @@ func UpdateVersion(ctx context.Context, s *testing.State) {
 	if _, err := futilityInstance.Update(ctx, autoupdateOpts); err != nil {
 		s.Fatal("Failed to use futility to autoupdate inactive firmware (RWB): ", err)
 	}
-	defer func(ctx context.Context) {
-		// Ensure tpm data key version is same as original one.
-		currentTpmDatakeyVer, err := getTPMDataKeyVer(ctx, h)
-		if err != nil {
-			s.Error("Failed to get TPM data key version: ", err)
-		}
 
-		if currentTpmDatakeyVer != initTpmDatakeyVer {
-			s.Log("Reset TPM and reboot DUT")
-			if err := resetTpmAndReboot(ctx, h); err != nil {
-				s.Fatal("Failed to reset TPM: ", err)
+	var state firmware.CheckAndSetServoCharger
+	state = h.CheckServoChargerBeforeBootingFromUSB(ctx)
+
+	defer func(ctx context.Context) {
+		if tc.keyVersion == fwDataKeyVer {
+			// Ensure tpm data key version is same as original one.
+			if currentTpmDatakeyVer, err := getTPMDataKeyVer(ctx, h); err != nil {
+				s.Error("Failed to get TPM data key version: ", err)
+			} else if currentTpmDatakeyVer != initTpmDatakeyVer {
+				s.Log("Resetting TPM and rebooting DUT")
+				if err := resetTpmAndReboot(ctx, pv, state); err != nil {
+					s.Fatal("Failed to reset TPM: ", err)
+				}
+				if !state.IsServoChargerConnected {
+					if err := h.SetDUTPower(ctx, true); err != nil {
+						s.Fatal("Failed to connect charger: ", err)
+					}
+					state.IsServoChargerConnected = true
+					waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 2*time.Minute)
+					defer cancelWaitConnect()
+					if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
+						s.Fatal("Failed to reconnect to the DUT: ", err)
+					}
+				}
 			}
 		}
 	}(cleanupCtx)
@@ -243,20 +305,25 @@ func UpdateVersion(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to check firmware tries: ", err)
 	}
 
-	if err := rebootDUTAndRequireRPCClient(ctx, h); err != nil {
-		s.Fatal("Failed to reboot DUT: ", err)
+	if tc.keyVersion == fwDataKeyVer {
+		if err := rebootDUTAndRequireRPCClient(ctx, h); err != nil {
+			s.Fatal("Failed to reboot DUT: ", err)
+		}
+
+		if err := fwTriesChecker(ctx, h, "B", 0); err != nil {
+			s.Fatal("Failed to check firmware tries: ", err)
+		}
 	}
 
-	if err := fwTriesChecker(ctx, h, "B", 0); err != nil {
-		s.Fatal("Failed to check firmware tries: ", err)
-	}
+	// Set the firmware section to B to verify the key version of the firmware section B.
+	// This ensures that the updated firmware (RWB) is being checked after the auto-update.
+	keyVerOpts.Section = bios.FWSignBImageSection
 
-	if err := checkDataKeyVer(ctx, h, newDataKeyVer, bios.FWSignBImageSection); err != nil {
-		s.Fatal("Failed to check the data key version: ", err)
+	if err := checkKeyVer(ctx, h, newKeyVer, keyVerOpts); err != nil {
+		s.Fatal("Failed to check the key version: ", err)
 	}
 
 	s.Log("Rollback the DUT with recovery mode using original bios binary file")
-
 	if err := backupManager.CopyBackupToDut(ctx, h.DUT, fixture.FirmwareAP, apBinary); err != nil {
 		s.Fatal("Failed to copy AP firmware binary to DUT: ", err)
 	}
@@ -272,10 +339,27 @@ func UpdateVersion(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to use futility update to restore the firmware: ", err)
 	}
 
-	// Reset the TPM to avoid encountering the 'RW firmware key version rollback detect' issue after reboot.
-	s.Log("Reset TPM and reboot DUT")
-	if err := resetTpmAndReboot(ctx, h); err != nil {
-		s.Fatal("Failed to reset TPM and reboot DUT: ", err)
+	if tc.keyVersion == fwDataKeyVer {
+		// Reset the TPM to avoid encountering the 'RW firmware key version rollback detect' issue after reboot.
+		s.Log("Resetting TPM and rebooting DUT")
+		if err := resetTpmAndReboot(ctx, pv, state); err != nil {
+			s.Error("Failed to reset TPM and reboot DUT: ", err)
+		}
+		if !state.IsServoChargerConnected {
+			if err := h.SetDUTPower(ctx, true); err != nil {
+				s.Fatal("Failed to connect charger: ", err)
+			}
+			state.IsServoChargerConnected = true
+			waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 2*time.Minute)
+			defer cancelWaitConnect()
+			if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
+				s.Fatal("Failed to reconnect to the DUT: ", err)
+			}
+		}
+	} else if tc.keyVersion == kernelSubkeyVer {
+		if err := h.RebootWithVT2Command(ctx, pv.BootMode); err != nil {
+			s.Fatal("Failed to reboot with VT2 command: ", err)
+		}
 	}
 
 	// Get the firmware ID from 'crossystem fwid' and check if it is the same as the original one.
@@ -289,9 +373,9 @@ func UpdateVersion(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to check firmware tries: ", err)
 	}
 
-	// Check if the firmware data key version is rollback to original one.
-	if err := checkDataKeyVer(ctx, h, initFwDataKeyVer, bios.FWSignBImageSection); err != nil {
-		s.Fatal("Failed to check the data key version: ", err)
+	// Check if the key version is rollback to original one.
+	if err := checkKeyVer(ctx, h, initKeyVer, keyVerOpts); err != nil {
+		s.Fatal("Failed to check the key version: ", err)
 	}
 }
 
@@ -322,38 +406,30 @@ func getTPMDataKeyVer(ctx context.Context, h *firmware.Helper) (uint16, error) {
 	return uint16(highByte<<8 + lowByte), nil
 }
 
-// fwTriesChecker check if the specific 'crossystem' outputs are as expected.
+// fwTriesChecker checks if the specific 'crossystem' outputs are as expected.
 func fwTriesChecker(ctx context.Context, h *firmware.Helper, expectedMainFwAct string, expectedTryCount int) error {
-	expectedMainFwAct = strings.ToUpper(expectedMainFwAct)
 	expectedCrossParam := map[reporters.CrossystemParam]string{
-		reporters.CrossystemParamMainfwAct: expectedMainFwAct,
-	}
-	expectedCrossParam[reporters.CrossystemParamFWTryCount] = fmt.Sprint(expectedTryCount)
-
-	for k, v := range expectedCrossParam {
-		actureValue, err := h.Reporter.CrossystemParam(ctx, k)
-		if err != nil {
-			return errors.Wrapf(err, "failed to get crossystem %v", k)
-		}
-		if actureValue != v {
-			return errors.Errorf("expected %v but got %v", v, actureValue)
-		}
+		reporters.CrossystemParamMainfwAct:  strings.ToUpper(expectedMainFwAct),
+		reporters.CrossystemParamFWTryCount: fmt.Sprint(expectedTryCount),
 	}
 
+	if matched, err := h.Reporter.CrossystemChecker(ctx, expectedCrossParam); err != nil {
+		return errors.Wrap(err, "failed to verify crossystem params")
+	} else if !matched {
+		return errors.New("failed to verify fw_try_count and mainfw_act are not as expected")
+	}
 	return nil
 }
 
 // rebootDUTAndRequireRPCClient reboot the DUT and require the BiosServiceClient.
 func rebootDUTAndRequireRPCClient(ctx context.Context, h *firmware.Helper) error {
-	h.CloseRPCConnection(ctx)
-	if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
-		return errors.Wrap(err, "failed to reset DUT")
+	ms, err := firmware.NewModeSwitcher(ctx, h)
+	if err != nil {
+		return errors.Wrap(err, "creating mode switcher")
 	}
 
-	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
-	defer cancelWaitConnect()
-	if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
-		return errors.Wrap(err, "failed to reconnect to DUT")
+	if err := ms.ModeAwareReboot(ctx, firmware.WarmReset); err != nil {
+		return errors.Wrap(err, "failed to reboot DUT")
 	}
 
 	if err := h.RequireRPCClient(ctx); err != nil {
@@ -362,42 +438,42 @@ func rebootDUTAndRequireRPCClient(ctx context.Context, h *firmware.Helper) error
 	return nil
 }
 
-// checkDataKeyVer checks if the data key version
-// obtained from the current firmware section and TPM are both as expected.
-func checkDataKeyVer(ctx context.Context, h *firmware.Helper, expectedVer uint16, sec bios.ImageSection) error {
-	testing.ContextLog(ctx, "Check the datakey version of TPM and firmware")
-	// Get the data key version from current firmware section.
-	actualFwDataKeyVer, err := h.GetCurrentFwDataKeyVersion(ctx, sec)
+// checkKeyVer checks if the key version obtained from the current firmware section is as expected.
+// If the key version type is firmware data key, it will also check the TPM data key version.
+func checkKeyVer(ctx context.Context, h *firmware.Helper, expectedVer uint16, keyVerOpts firmware.KeyVersOptions) error {
+	// Get the key version from current firmware section.
+	actualKeyVer, err := h.GetCurrentKeyVersion(ctx, keyVerOpts)
 	if err != nil {
-		return errors.Wrap(err, "failed to get firmware data key version")
-	}
-	// Get the data key version from TPM.
-	actualTpmDataKeyVer, err := getTPMDataKeyVer(ctx, h)
-	if err != nil {
-		return errors.Wrap(err, "failed to get TPM data key version")
+		return errors.Wrap(err, "failed to get actual key version")
 	}
 
-	if actualFwDataKeyVer != expectedVer || actualTpmDataKeyVer != expectedVer {
-		return errors.Errorf("Data key version should be %v, but got (fwver, tpm_fwver) = (%v, %v)", expectedVer, actualFwDataKeyVer, actualTpmDataKeyVer)
+	switch keyVerOpts.Type {
+	case firmware.FwDataKey:
+		actualTpmDataKeyVer, err := getTPMDataKeyVer(ctx, h)
+		if err != nil {
+			return errors.Wrap(err, "failed to get TPM data key version")
+		}
+		if actualKeyVer != expectedVer || actualTpmDataKeyVer != expectedVer {
+			return errors.Errorf("firmware data key version should be %v, but got (fwver, tpm_fwver) = (%v, %v)", expectedVer, actualKeyVer, actualTpmDataKeyVer)
+		}
+	case firmware.KernelSubkey:
+		if actualKeyVer != expectedVer {
+			return errors.Errorf("kernel subkey version should be %v, but got %v", expectedVer, actualKeyVer)
+		}
+	default:
+		return errors.New("invalid key version type")
 	}
-	testing.ContextLog(ctx, "Update success, now datakey version is ", actualFwDataKeyVer)
+
+	testing.ContextLog(ctx, "Update success, now key version is ", actualKeyVer)
 	return nil
 }
 
-// resetTpmAndReboot reset the TPM's data key version and reboot.
-func resetTpmAndReboot(ctx context.Context, h *firmware.Helper) error {
-	ms, err := firmware.NewModeSwitcher(ctx, h)
-	if err != nil {
-		return errors.Wrap(err, "failed to create new boot mode switcher")
-	}
+// resetTpmAndReboot resets the TPM's data key version and reboots.
+func resetTpmAndReboot(ctx context.Context, pv *fixture.Value, state firmware.CheckAndSetServoCharger) error {
+	h := pv.Helper
 	testing.ContextLog(ctx, "Rebooting the DUT to recovery screen")
-	if err := ms.EnableRecMode(ctx, servo.PowerStateRec, servo.USBMuxDUT); err != nil {
-		return errors.Wrap(err, "failed to reboot to recovery screen")
-	}
-
-	testing.ContextLog(ctx, "Checking if DUT boots from the USB")
-	if err := h.WaitDUTConnectDuringBootFromUSB(ctx, true); err != nil {
-		return errors.Wrap(err, "failed to boot from the USB")
+	if err := h.BootToRecoveryMode(ctx, &state); err != nil {
+		return errors.Wrap(err, "failed to boot to recovery mode")
 	}
 
 	testing.ContextLog(ctx, "Running TPM recovery command - chromeos-tpm-recovery to clear tpm data")
@@ -408,22 +484,13 @@ func resetTpmAndReboot(ctx context.Context, h *firmware.Helper) error {
 	}
 	testing.ContextLog(ctx, "TPM recovery command output : ", string(out))
 
-	h.CloseRPCConnection(ctx)
-	testing.ContextLog(ctx, "Reboot the DUT")
-	if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
-		return errors.Wrap(err, "faild to reset DUT")
+	if err := h.RebootWithVT2Command(ctx, pv.BootMode); err != nil {
+		return errors.Wrap(err, "failed to reboot with VT2 command")
 	}
-
-	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
-	defer cancelWaitConnect()
-	if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
-		return errors.Wrap(err, "failed to reconnect to dut")
-	}
-
 	return nil
 }
 
-// prepareKeyfile prepare the key files that are going to be resigned.
+// prepareKeyfile prepares the key files that are going to be resigned.
 func prepareKeyfile(ctx context.Context, h *firmware.Helper, keysDir string) error {
 	fs := dutfs.NewClient(h.RPCClient.Conn)
 	if err := fs.RemoveAll(ctx, keysDir); err != nil {

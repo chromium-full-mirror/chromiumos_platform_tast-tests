@@ -2260,8 +2260,24 @@ func (h *Helper) RebootWithVT2Command(ctx context.Context, fromMode fwCommon.Boo
 	return nil
 }
 
-// GetCurrentFwDataKeyVersion retrieves the RWA's or RWB's firmware data key version.
-func (h *Helper) GetCurrentFwDataKeyVersion(ctx context.Context, sec bios.ImageSection) (fwDataKeyVer uint16, err error) {
+// KeyVersOptions defines the options for retrieving RWA's or RWB's key version information.
+type KeyVersOptions struct {
+	Section bios.ImageSection
+	Type    KeyType
+}
+
+// KeyType represents the type of key version.
+type KeyType int
+
+const (
+	// FwDataKey indicates the firmware data key version.
+	FwDataKey KeyType = iota
+	// KernelSubkey indicates the kernel subkey version.
+	KernelSubkey
+)
+
+// GetCurrentKeyVersion retrieves the RWA's or RWB's key version.
+func (h *Helper) GetCurrentKeyVersion(ctx context.Context, opts KeyVersOptions) (uint16, error) {
 	if err := h.RequireRPCClient(ctx); err != nil {
 		return 0, errors.Wrap(err, "failed to require RPC client")
 	}
@@ -2285,25 +2301,34 @@ func (h *Helper) GetCurrentFwDataKeyVersion(ctx context.Context, sec bios.ImageS
 		return 0, errors.Errorf("failed to read AP firmware: %v, got futility log: %s", err, string(log))
 	}
 
-	opts := futility.NewShowOptions(biosBin)
-	out, err := futilityInstance.Show(ctx, opts)
+	showOpts := futility.NewShowOptions(biosBin)
+	out, err := futilityInstance.Show(ctx, showOpts)
 	if err != nil {
 		return 0, errors.Wrapf(err, "failed to use futility to show %v, got futility log: %s", biosBin, string(out))
 	}
 
-	secPattern := fmt.Sprintf("bios::%v::keyblock::data_key::version::", sec)
+	var versionPattern string
+	switch opts.Type {
+	case FwDataKey:
+		versionPattern = fmt.Sprintf("bios::%v::keyblock::data_key::version::", opts.Section)
+	case KernelSubkey:
+		versionPattern = fmt.Sprintf("bios::%v::preamble::kernel_subkey::version::", opts.Section)
+	default:
+		return 0, errors.New("invalid key version type")
+	}
+
 	lines := strings.Split(string(out), "\n")
 	for _, line := range lines {
-		if strings.HasPrefix(line, secPattern) {
+		if strings.HasPrefix(line, versionPattern) {
 			parts := strings.Split(line, "::")
-			fwDataKeyTmp, err := strconv.ParseUint(parts[len(parts)-1], 10, 16)
+			versionTmp, err := strconv.ParseUint(parts[len(parts)-1], 10, 16)
 			if err != nil {
 				return 0, errors.Wrapf(err, "failed to parse string %v to uint64", parts[len(parts)-1])
 			}
-			fwDataKeyVer = uint16(fwDataKeyTmp)
-			testing.ContextLogf(ctx, "The current firmware data key version of section %s is %d", sec, fwDataKeyVer)
-			return fwDataKeyVer, nil
+			version := uint16(versionTmp)
+			testing.ContextLogf(ctx, "The current key version of section %s is %d", opts.Section, version)
+			return version, nil
 		}
 	}
-	return 0, errors.Errorf("failed to find the secPattern %q. The output of 'futility show': %s", secPattern, out)
+	return 0, errors.Errorf("failed to find the key version pattern %q. The output of 'futility show': %s", versionPattern, out)
 }
