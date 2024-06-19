@@ -99,6 +99,12 @@ var cyclicBenchUnstableModels = []string{
 	"burnet", "willow",
 	// hana
 	"hana", "hana64",
+	// scarlet
+	"dru",
+	// nissa
+	"anraggar", "anraggar360", "gothrax", "joxer", "xivu", "yaviks", "yavilly",
+	// kukui
+	"kodama",
 }
 
 func init() {
