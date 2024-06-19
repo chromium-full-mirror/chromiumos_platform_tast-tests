@@ -15,7 +15,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/a11y"
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosproc"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -46,25 +45,14 @@ func init() {
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
 		Fixture:      fixture.FakeDMSEnrolled,
 		Timeout:      kioskmode.SetupDuration + kioskmode.LaunchDuration + kioskmode.CleanupDuration + time.Minute,
-		Params: []testing.Param{{
-			Name: "ash",
-			Val: kioskmode.TestData{
-				IsLacros: false,
-				Policies: []policy.Policy{
-					&policy.FloatingAccessibilityMenuEnabled{Val: true},
-				},
-			},
-		}},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.FloatingAccessibilityMenuEnabled{}, pci.VerifiedFunctionalityUI),
-			pci.SearchFlag(&policy.LacrosAvailability{}, pci.VerifiedFunctionalityOS),
 		},
 	})
 }
 
 func TTSExtensionSettings(ctx context.Context, s *testing.State) {
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
-	param := s.Param().(kioskmode.TestData)
 
 	cleanupKioskCtx := ctx
 	ctx, cancelKioskCtx := ctxutil.Shorten(ctx, kioskmode.CleanupDuration)
@@ -75,7 +63,10 @@ func TTSExtensionSettings(ctx context.Context, s *testing.State) {
 		fdms,
 		s.RequiredVar("ui.signinProfileTestExtensionManifestKey"),
 		kioskmode.AutoLaunch(kioskmode.KioskAppAccountID),
-		kioskmode.PublicAccountPolicies(kioskmode.KioskAppAccountID, param.Policies),
+		kioskmode.PublicAccountPolicies(
+			kioskmode.KioskAppAccountID,
+			[]policy.Policy{&policy.FloatingAccessibilityMenuEnabled{Val: true}},
+		),
 	)
 	if err != nil {
 		s.Fatal("Failed to create Chrome in Kiosk mode: ", err)
@@ -93,17 +84,6 @@ func TTSExtensionSettings(ctx context.Context, s *testing.State) {
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
-	}
-
-	if param.IsLacros {
-		if _, err = lacrosproc.Root(ctx, tconn); err != nil {
-			s.Fatal("Failed to get lacros proc: ", err)
-		}
-		s.Log("http://b/281993208 sleep 5 seconds before checking UI tree in lacros")
-		// GoBigSleepLint: TODO(b/281993208) lacros needs some time before we can check the UI tree.
-		if err := testing.Sleep(ctx, 5*time.Second); err != nil {
-			s.Fatal("Failed to sleep before checking UI tree in lacros: ", err)
-		}
 	}
 
 	// Mute the device to avoid noisiness.
