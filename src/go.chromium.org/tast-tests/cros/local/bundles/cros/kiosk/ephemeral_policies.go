@@ -8,14 +8,12 @@ import (
 	"context"
 	"os"
 	"path/filepath"
-	"time"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosproc"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/kioskmode"
 	"go.chromium.org/tast/core/ctxutil"
@@ -25,7 +23,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         EphemeralPolicies,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks kiosk state persistance with combinations of policy DeviceEphemeralUsersEnabled and DeviceLocalAccountInfo.EphemeralMode",
 		Contacts: []string{
 			"chromeos-kiosk-eng+TAST@google.com",
@@ -41,22 +39,10 @@ func init() {
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DeviceEphemeralUsersEnabled{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.DeviceLocalAccounts{}, pci.VerifiedFunctionalityOS),
-			pci.SearchFlag(&policy.LacrosAvailability{}, pci.VerifiedFunctionalityOS),
 		},
 		SoftwareDeps: []string{"reboot", "chrome"},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
 		Fixture:      fixture.FakeDMSEnrolled,
-		Params: []testing.Param{
-			{
-				Name: "ash",
-				Val:  kioskmode.TestData{IsLacros: false},
-			},
-			{
-				Name:              "lacros",
-				Val:               kioskmode.TestData{IsLacros: true},
-				ExtraSoftwareDeps: []string{"lacros"},
-			},
-		},
 		// Timeout is (num test cases) * (num stages) * (test time)
 		Timeout: 3 * 2 * testCaseTimeout,
 	})
@@ -65,15 +51,6 @@ func init() {
 const testCaseTimeout = kioskmode.SetupDuration + kioskmode.LaunchDuration + kioskmode.CleanupDuration
 
 func EphemeralPolicies(ctx context.Context, s *testing.State) {
-	isLacros := s.Param().(kioskmode.TestData).IsLacros
-
-	// variant is an AccountID prefix to separate Ash/Lacros profiles and prevent profile migrations
-	// (which would trigger a Lacros restart and cause Lacros tests to fail; e.g. in b/277886466).
-	variant := "ash"
-	if isLacros {
-		variant = "lacros"
-	}
-
 	// Each test case simulates running a different Kiosk app twice: the first time, to "init" the
 	// kiosk homedirs; and the second time, to "verify" if the homedirs were persisted or removed.
 	// These test cases are purposely NOT isolated from each other, to test interactions between them.
@@ -91,21 +68,21 @@ func EphemeralPolicies(ctx context.Context, s *testing.State) {
 		// In production, AccountID can be any string (URLs, for WebKioskApps, etc.)
 		{
 			// Test the DeviceEphemeralUsersEnabled policy alone.
-			AccountID:      variant + "_true_unset@managedchrome.com",
+			AccountID:      "true_unset@managedchrome.com",
 			DevicePolicy:   &policy.DeviceEphemeralUsersEnabled{Val: true},
 			EphemeralMode:  policy.EphemeralModeUnset,
 			ExpectedResult: "ephemeral",
 		},
 		{
 			// Override the device policy with EphemeralModeDisable.
-			AccountID:      variant + "_true_disable@managedchrome.com",
+			AccountID:      "true_disable@managedchrome.com",
 			DevicePolicy:   &policy.DeviceEphemeralUsersEnabled{Val: true},
 			EphemeralMode:  policy.EphemeralModeDisable,
 			ExpectedResult: "permanent",
 		},
 		{
 			// Override the device policy with EphemeralModeEnable.
-			AccountID:      variant + "_false_enable@managedchrome.com",
+			AccountID:      "false_enable@managedchrome.com",
 			DevicePolicy:   &policy.DeviceEphemeralUsersEnabled{Val: false},
 			EphemeralMode:  policy.EphemeralModeEnable,
 			ExpectedResult: "ephemeral",
@@ -129,7 +106,6 @@ func EphemeralPolicies(ctx context.Context, s *testing.State) {
 
 	for _, stage := range []string{"init", "verify"} {
 		for i, tc := range testCases {
-
 			if success := s.Run(ctx, stage+"_"+tc.AccountID, func(ctx context.Context, s *testing.State) {
 				ctx, cancel := context.WithTimeout(ctx, testCaseTimeout)
 				defer cancel()
@@ -146,21 +122,12 @@ func EphemeralPolicies(ctx context.Context, s *testing.State) {
 					// KeepState prevents the homedir from being wiped on login.
 					opts = append(opts, kioskmode.ExtraChromeOptions(chrome.KeepState()))
 				}
-				if isLacros {
-					// Here we have to pass lacros availabiilty for all kiosk accounts to
-					// prevent issues with data migrations.
-					for _, testCase := range testCases {
-						opts = append(opts, kioskmode.PublicAccountPolicies(testCase.AccountID, []policy.Policy{
-							&policy.LacrosAvailability{Val: "lacros_only"},
-						}))
-					}
-				}
 
 				cleanupCtx := ctx
 				ctx, cancelCleanup := ctxutil.Shorten(ctx, kioskmode.CleanupDuration)
 				defer cancelCleanup()
 
-				kiosk, cr, err := kioskmode.New(ctx, fdms, s.RequiredVar("ui.signinProfileTestExtensionManifestKey"), opts...)
+				kiosk, _, err := kioskmode.New(ctx, fdms, s.RequiredVar("ui.signinProfileTestExtensionManifestKey"), opts...)
 				if err != nil {
 					s.Fatal("Failed to create Chrome in Kiosk mode: ", err)
 				}
@@ -208,20 +175,6 @@ func EphemeralPolicies(ctx context.Context, s *testing.State) {
 					}
 				default:
 					s.Fatal("Unexpected stage: ", stage)
-				}
-
-				if isLacros {
-					ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
-					defer cancel()
-
-					testing.ContextLog(ctx, "Checking if kiosk is running in Lacros")
-					tconn, err := cr.TestAPIConn(ctx)
-					if err != nil {
-						s.Fatal("Failed to create Test API connection: ", err)
-					}
-					if _, err = lacrosproc.Root(ctx, tconn); err != nil {
-						s.Fatal("Failed to get lacros proc: ", err)
-					}
 				}
 			}); !success {
 				s.Fatalf("Failed to run %q subtest, no need to execute follow-up subtests", stage+"_"+tc.AccountID)
