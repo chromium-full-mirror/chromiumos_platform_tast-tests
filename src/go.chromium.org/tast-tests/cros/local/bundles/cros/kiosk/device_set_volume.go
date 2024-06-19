@@ -12,8 +12,6 @@ import (
 	empb "go.chromium.org/chromiumos/policy/chromium/policy/enterprise_management_proto"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
-	"go.chromium.org/tast-tests/cros/common/pci"
-	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
@@ -27,7 +25,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DeviceSetVolume,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks the behavior of sending device set volume remote command",
 		Contacts: []string{
 			"chromeos-kiosk-eng+TAST@google.com",
@@ -45,24 +43,7 @@ func init() {
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
 		Fixture:      fixture.FakeDMSEnrolled,
 		Timeout:      kioskmode.SetupDuration + kioskmode.LaunchDuration + kioskmode.CleanupDuration + 30*time.Second,
-		Params: []testing.Param{
-			{
-				Name: "ash",
-				Val:  kioskmode.TestData{IsLacros: false},
-			},
-			{
-				Name:              "lacros",
-				ExtraSoftwareDeps: []string{"lacros"},
-				Val: kioskmode.TestData{
-					IsLacros: true,
-					Policies: []policy.Policy{
-						&policy.LacrosAvailability{Val: "lacros_only"},
-					},
-				},
-			},
-		},
 		SearchFlags: []*testing.StringPair{
-			pci.SearchFlag(&policy.LacrosAvailability{}, pci.VerifiedFunctionalityOS),
 			{
 				Key: "feature_id",
 				// Test remote volume level command.
@@ -74,7 +55,6 @@ func init() {
 
 func DeviceSetVolume(ctx context.Context, s *testing.State) {
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
-	param := s.Param().(kioskmode.TestData)
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, kioskmode.CleanupDuration)
@@ -84,7 +64,6 @@ func DeviceSetVolume(ctx context.Context, s *testing.State) {
 		ctx,
 		fdms,
 		s.RequiredVar("ui.signinProfileTestExtensionManifestKey"),
-		kioskmode.PublicAccountPolicies(kioskmode.WebKioskAccountID, param.Policies),
 		kioskmode.AutoLaunch(kioskmode.WebKioskAccountID),
 	)
 	if err != nil {
