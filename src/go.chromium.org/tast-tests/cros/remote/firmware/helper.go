@@ -276,6 +276,13 @@ func (h *Helper) DisallowServices() {
 	h.disallowServices = true
 }
 
+// AllowServices allows use of RequireRPCClient for the lifetime of this Helper.
+func (h *Helper) AllowServices() {
+	if h.DUT != nil {
+		h.disallowServices = false
+	}
+}
+
 // RequireRPCClient creates a client connection to the DUT's gRPC server, unless a connection already exists.
 func (h *Helper) RequireRPCClient(ctx context.Context) error {
 	if h.disallowServices {
