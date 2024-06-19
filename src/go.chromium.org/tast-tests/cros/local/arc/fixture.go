@@ -61,26 +61,6 @@ func init() {
 		},
 	})
 
-	// arcBootedWithNoDownloadsBindMount is a fixture similar to arcBooted, except
-	// that it runs RemoveBindMount fixture before it.
-	// TODO(b/328698041): Remove this after removal of bind mount is released.
-	testing.AddFixture(&testing.Fixture{
-		Name: "arcBootedWithNoDownloadsBindMount",
-		Desc: "ARC is booted with no downloads bind mount",
-		Contacts: []string{
-			"wenbojie@chromium.org",
-			"chromeos-files-syd@google.com",
-		},
-		BugComponent:    "b:167289",
-		Impl:            NewArcBootedFixture(DefaultBootedFixtureConfig()),
-		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
-		ResetTimeout:    ResetTimeout,
-		PreTestTimeout:  PreTestTimeout,
-		PostTestTimeout: PostTestTimeout,
-		TearDownTimeout: ResetTimeout,
-		Parent:          "removeBindMountFixture",
-	})
-
 	// arcBootedWithoutUIAutomator is a fixture similar to arcBooted, except
 	// that UI Automator is not enabled.
 	fixtureConfig := DefaultBootedFixtureConfig()

@@ -26,28 +26,15 @@ func init() {
 		// ChromeOS > Software > ARC++ > Storage
 		BugComponent: "b:516669",
 		SoftwareDeps: []string{"chrome"},
+		Fixture:      "arcBooted",
 		Data:         []string{"capybara.jpg"},
 		Attr:         []string{"group:mainline", "group:arc-functional", "group:hw_agnostic"},
 		Params: []testing.Param{{
-			Fixture:           "arcBooted",
 			ExtraSoftwareDeps: []string{"android_container"},
 		}, {
 			Name:              "vm",
-			Fixture:           "arcBooted",
 			ExtraSoftwareDeps: []string{"android_vm"},
 			ExtraAttr:         []string{"informational"},
-		}, {
-			Name:              "no_bind_mount",
-			Fixture:           "arcBootedWithNoDownloadsBindMount",
-			ExtraSoftwareDeps: []string{"android_container"},
-			ExtraAttr:         []string{"informational"},
-			Timeout:           10 * time.Minute,
-		}, {
-			Name:              "vm_no_bind_mount",
-			Fixture:           "arcBootedWithNoDownloadsBindMount",
-			ExtraSoftwareDeps: []string{"android_vm"},
-			ExtraAttr:         []string{"informational"},
-			Timeout:           10 * time.Minute,
 		}},
 	})
 }

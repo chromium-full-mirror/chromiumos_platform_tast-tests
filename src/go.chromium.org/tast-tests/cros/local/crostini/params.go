@@ -150,12 +150,6 @@ type Param struct {
 	// be added to all params of the test case as well.
 	TestLacros bool
 
-	// TestNoDownloadsBindMount controls whether the test case tests without
-	// downloads bind mount or not. If yes, an extra param will be added with
-	// fixture crostini<DebianVersion>NoDownloadsBindMount.
-	// TODO(b/328698041): Remove this after removal of bind mount is released.
-	TestNoDownloadsBindMount bool
-
 	// DeviceMode indicates whether the tests explicitly use use tablet mode
 	// or clamshell mode.
 	// The fixtures will force enable the given display mode in PreTest and
@@ -252,7 +246,7 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 	var itLacros = []iterator{{debianVersion: vm.DebianBullseye, stable: true}, {debianVersion: vm.DebianBookworm, stable: true}}
 
 	for _, testCase := range baseCases {
-		iterate := func(i iterator, bt browser.Type, testNoDownloadsBindMount bool) {
+		iterate := func(i iterator, bt browser.Type) {
 			if testCase.LowPerfEligible {
 				if testCase.OnlyStableBoards {
 					log.Fatal("LowPerfEligible and OnlyStableBoards are mutually exclusive")
@@ -312,10 +306,6 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 
 			if testCase.UseGaiaLogin {
 				name = combineName(name, "gaia")
-			}
-
-			if testNoDownloadsBindMount {
-				name = combineName(name, "no_downloads_bind_mount")
 			}
 
 			var extraAttr []string
@@ -392,8 +382,6 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 					fixture = fmt.Sprintf("\"crostini%sGaia%s\"", strings.Title(i.debianVersion.Codename), arcStatus)
 				} else if bt == browser.TypeLacros {
 					fixture = fmt.Sprintf("\"crostini%sWithLacros%s\"", strings.Title(i.debianVersion.Codename), arcStatus)
-				} else if testNoDownloadsBindMount {
-					fixture = fmt.Sprintf("\"crostini%sNoDownloadsBindMount\"", strings.Title(i.debianVersion.Codename))
 				} else {
 					fixture = fmt.Sprintf("\"crostini%s%s\"", strings.Title(i.debianVersion.Codename), arcStatus)
 				}
@@ -454,16 +442,11 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 		}
 
 		for _, i := range itChrome {
-			iterate(i, "", false /*testNoDownloadsBindMount*/)
+			iterate(i, "")
 		}
 		if testCase.TestLacros {
 			for _, i := range itLacros {
-				iterate(i, browser.TypeLacros, false /*testNoDownloadsBindMount*/)
-			}
-		}
-		if testCase.TestNoDownloadsBindMount {
-			for _, i := range itChrome {
-				iterate(i, "", true /*testNoDownloadsBindMount*/)
+				iterate(i, browser.TypeLacros)
 			}
 		}
 	}
