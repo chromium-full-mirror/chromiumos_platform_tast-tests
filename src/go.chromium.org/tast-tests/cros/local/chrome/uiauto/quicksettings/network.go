@@ -112,5 +112,5 @@ func NetworkDetailedViewMobileDataToggle(ctx context.Context, tconn *chrome.Test
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get network detailed view")
 	}
-	return nodewith.Role(role.Button).NameContaining("Toggle mobile data").Ancestor(networkDetailedView), nil
+	return nodewith.Role(role.Switch).NameContaining("Mobile data").Ancestor(networkDetailedView), nil
 }
