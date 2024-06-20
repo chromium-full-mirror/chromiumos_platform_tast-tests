@@ -439,3 +439,12 @@ var (
 
 // MoreActionsButtonNamePrefix is the name prefix of MoreActionsButton.
 const MoreActionsButtonNamePrefix = "More actions for "
+
+// Elements of the settings authentication dialog.
+var (
+	// The view node for the newer AuthPanel-based dialog.
+	AuthPanelDialogViewNode = nodewith.ClassName("InSessionAuthDialogContentsView")
+
+	// The dialog node for the older password dialog.
+	PasswordDialogNode = nodewith.Name("Confirm your password").Role(role.Dialog)
+)

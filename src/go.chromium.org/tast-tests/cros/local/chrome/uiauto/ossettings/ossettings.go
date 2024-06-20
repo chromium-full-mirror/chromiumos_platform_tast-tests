@@ -134,15 +134,13 @@ func LaunchAtAppMgmtPage(ctx context.Context, tconn *chrome.TestConn, cr *chrome
 
 // ConfirmPassword enters the provided password in OS Settings, to open password-protected pages.
 func ConfirmPassword(ctx context.Context, cr *chrome.Chrome, password string) error {
-	passwordNode := nodewith.Name("Confirm your password").Role(role.Dialog)
-
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to create Test API connection")
 	}
 
 	uia := uiauto.New(tconn)
-	if err := uia.WaitUntilExists(passwordNode.First())(ctx); err != nil {
+	if err := uia.WaitUntilAnyExists(AuthPanelDialogViewNode.First(), PasswordDialogNode.First())(ctx); err != nil {
 		return errors.Wrap(err, "failed to find password dialog")
 	}
 
@@ -156,8 +154,44 @@ func ConfirmPassword(ctx context.Context, cr *chrome.Chrome, password string) er
 		return errors.Wrap(err, "failed to type password")
 	}
 
-	if err := uia.WaitUntilGone(passwordNode)(ctx); err != nil {
-		return errors.Wrap(err, "failed to wait until password dialog is gone")
+	if err := uia.WaitUntilGone(AuthPanelDialogViewNode)(ctx); err != nil {
+		return errors.Wrap(err, "AuthPanel is still present after entering password")
+	}
+	if err := uia.WaitUntilGone(PasswordDialogNode)(ctx); err != nil {
+		return errors.Wrap(err, "password dialog is still present after entering password")
+	}
+
+	return nil
+}
+
+// CancelPassword cancels out of a password prompt in OS Settings.
+func CancelPassword(ctx context.Context, cr *chrome.Chrome) error {
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to create Test API connection")
+	}
+
+	uia := uiauto.New(tconn)
+	if err := uia.WaitUntilAnyExists(AuthPanelDialogViewNode.First(), PasswordDialogNode.First())(ctx); err != nil {
+		return errors.Wrap(err, "failed to find password dialog")
+	}
+
+	keyboard, err := input.Keyboard(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to open keyboard device")
+	}
+	defer keyboard.Close(ctx)
+
+	// The simplest way to cancel out is via an ESC.
+	if err := keyboard.Type(ctx, "\x1b"); err != nil {
+		return errors.Wrap(err, "failed to hit ESC")
+	}
+
+	if err := uia.WaitUntilGone(AuthPanelDialogViewNode)(ctx); err != nil {
+		return errors.Wrap(err, "AuthPanel is still present after cancelling")
+	}
+	if err := uia.WaitUntilGone(PasswordDialogNode)(ctx); err != nil {
+		return errors.Wrap(err, "password dialog is still present after cancelling")
 	}
 
 	return nil

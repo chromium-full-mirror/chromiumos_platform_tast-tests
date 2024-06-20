@@ -9,16 +9,11 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/userutil"
-	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/login"
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -106,7 +101,7 @@ func OpenSettings(ctx context.Context, s *testing.State) {
 		expectedPath = "/osPrivacy/lockScreen"
 	} else {
 		// The page is password protected, cancelling should kick us out.
-		if err := cancelPassword(ctx, cr); err != nil {
+		if err := ossettings.CancelPassword(ctx, cr); err != nil {
 			s.Fatal("Failed to cancel: ", err)
 		}
 		expectedPath = "/osPrivacy"
@@ -120,37 +115,6 @@ func OpenSettings(ctx context.Context, s *testing.State) {
 	if settingsPath != expectedPath {
 		s.Fatalf("Did not land on the correct settings path, expected %q, got %q", expectedPath, settingsPath)
 	}
-}
-
-// cancelPassword enters the provided password in OS Settings, to open password-protected pages.
-func cancelPassword(ctx context.Context, cr *chrome.Chrome) error {
-	passwordNode := nodewith.Name("Confirm your password").Role(role.Dialog)
-
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to create Test API connection")
-	}
-
-	uia := uiauto.New(tconn)
-	if err := uia.WaitUntilExists(passwordNode.First())(ctx); err != nil {
-		return errors.Wrap(err, "failed to find password dialog")
-	}
-
-	keyboard, err := input.Keyboard(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to open keyboard device")
-	}
-	defer keyboard.Close(ctx)
-
-	if err := keyboard.Type(ctx, "\x1b"); err != nil {
-		return errors.Wrap(err, "failed to hit ESC")
-	}
-
-	if err := uia.WaitUntilGone(passwordNode)(ctx); err != nil {
-		return errors.Wrap(err, "failed to wait until password dialog is gone")
-	}
-
-	return nil
 }
 
 // getSettingsPath returns the current path of the OS Settings screen
