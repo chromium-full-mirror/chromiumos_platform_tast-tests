@@ -46,6 +46,11 @@ func (s *Session) Run(ctx context.Context, config *Config) (*Result, History, er
 	for len(history)+failureCount < maxMeasurementSamples &&
 		failureCount < maxMeasurementFailures {
 		result, err := runner.Run(ctx, 3)
+		if errors.Is(err, context.Canceled) || errors.Is(ctx.Err(), context.Canceled) {
+			// If context has been canceled, it means we've been gently asked
+			// to discontinue. Discard the last result but return what we have.
+			break
+		}
 		if err != nil {
 			failureCount++
 			continue
