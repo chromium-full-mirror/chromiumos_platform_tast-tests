@@ -8,7 +8,7 @@ package fixtures
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"time"
 
@@ -224,7 +224,7 @@ func (k *kioskFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
 	}
 
 	// Dump all policies as seen by Chrome to the tests OutDir.
-	if err := ioutil.WriteFile(filepath.Join(s.OutDir(), "policies.json"), b, 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(s.OutDir(), "policies.json"), b, 0644); err != nil {
 		s.Error("Failed to dump policies to file: ", err)
 	}
 }

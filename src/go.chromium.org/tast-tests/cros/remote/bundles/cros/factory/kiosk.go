@@ -8,7 +8,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"time"
 
@@ -96,7 +96,7 @@ func dumpEntries(entries []*debugEntry, path string) error {
 	if err != nil {
 		return err
 	}
-	if err = ioutil.WriteFile(path, marshaledEntries, 0644); err != nil {
+	if err = os.WriteFile(path, marshaledEntries, 0644); err != nil {
 		return err
 	}
 	return nil

@@ -10,7 +10,6 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 	"time"
@@ -325,7 +324,7 @@ func WaitForCrxInCache(ctx context.Context, id string) error {
 	defer st.End()
 
 	return testing.Poll(ctx, func(ctx context.Context) error {
-		files, err := ioutil.ReadDir(crxCachePath)
+		files, err := os.ReadDir(crxCachePath)
 		if err != nil {
 			if errors.Is(err, os.ErrNotExist) {
 				return errors.Wrap(err, "Kiosk crx cache does not exist yet")

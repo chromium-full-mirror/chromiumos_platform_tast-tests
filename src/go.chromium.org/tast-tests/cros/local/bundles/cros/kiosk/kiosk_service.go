@@ -7,7 +7,6 @@ package kiosk
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
 	"os"
 
 	"github.com/golang/protobuf/ptypes/empty"
@@ -87,7 +86,7 @@ func (c *KioskService) ConfirmKioskStartedWithReader(ctx context.Context, req *e
 
 // StartKiosk starts kiosk in autolaunch mode and local DMServer.
 func (c *KioskService) StartKiosk(ctx context.Context, req *empty.Empty) (_ *empty.Empty, retErr error) {
-	tmpdir, err := ioutil.TempDir("", "fdms-")
+	tmpdir, err := os.MkdirTemp("", "fdms-")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create temp dir")
 	}

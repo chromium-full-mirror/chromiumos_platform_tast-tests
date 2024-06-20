@@ -6,7 +6,6 @@ package mgs
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -85,7 +84,8 @@ func FilesApp(ctx context.Context, s *testing.State) {
 	}()
 
 	if err := fsutil.CopyFile(
-		s.DataPath(fileName), filepath.Join(downloadsPath, fileName)); err != nil {
+		s.DataPath(fileName), filepath.Join(downloadsPath, fileName),
+	); err != nil {
 		s.Fatal("Failed to copy file to Downloads: ", err)
 	}
 
@@ -110,7 +110,7 @@ func FilesApp(ctx context.Context, s *testing.State) {
 // removeAllFilesInDirectory removes all files in a directory.
 // TODO(b/268604942): Move to a common package and reuse it in tests.
 func removeAllFilesInDirectory(directory string) error {
-	files, err := ioutil.ReadDir(directory)
+	files, err := os.ReadDir(directory)
 	if err != nil {
 		return errors.Wrapf(err, "failed to read files in %s", directory)
 	}
