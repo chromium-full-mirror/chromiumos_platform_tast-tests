@@ -11,7 +11,9 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -67,9 +69,11 @@ func ToggleCellularFromQuickSettings(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get mobile data toggle: ", err)
 	}
 
+	mobileDataContainer := nodewith.Role(role.GenericContainer).NameContaining("Mobile data is turned on")
+
 	// Quick settings does not use a button with a checked state, so look for the name.
 	if err := uiauto.Combine("Wait until cellular is enabled in UI and not inhibited",
-		ui.WaitUntilExists(mobileDataToggle.NameContaining("Mobile data is turned on")),
+		ui.WaitUntilExists(mobileDataToggle.Ancestor(mobileDataContainer)),
 		ui.WaitUntilEnabled(mobileDataToggle),
 	)(ctx); err != nil {
 		s.Fatal("Failed: ", err)
@@ -90,14 +94,13 @@ func ToggleCellularFromQuickSettings(ctx context.Context, s *testing.State) {
 		}
 
 		// Quick settings does not use a button with a checked state, so look for the name.
-		var name string
 		if state {
-			name = "Mobile data is turned on"
+			mobileDataContainer = nodewith.Role(role.GenericContainer).NameContaining("Mobile data is turned on")
 		} else {
-			name = "Mobile data is turned off"
+			mobileDataContainer = nodewith.Role(role.GenericContainer).NameContaining("Mobile data is turned off")
 		}
 		if err := uiauto.Combine("Wait until cellular is in expected state in UI and not inhibited",
-			ui.WaitUntilExists(mobileDataToggle.NameContaining(name)),
+			ui.WaitUntilExists(mobileDataToggle.Ancestor(mobileDataContainer)),
 			ui.WaitUntilEnabled(mobileDataToggle),
 		)(ctx); err != nil {
 			s.Fatal("Failed: ", err)
