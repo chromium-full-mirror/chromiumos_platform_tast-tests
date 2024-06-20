@@ -47,6 +47,7 @@ func TestChromeStackDecoderPerfParams(t *testing.T) {
 		Name               string
 		File               string
 		ConcurrentDecoders bool
+		HardwareDeps       string
 		SoftwareDeps       []string
 		Metadata           []string
 		Attr               []string
@@ -62,6 +63,7 @@ func TestChromeStackDecoderPerfParams(t *testing.T) {
 		"v4l2_flat_": paramData{
 			SoftwareDeps:    []string{"v4l2_codec"},
 			EnabledFeatures: []string{"V4L2FlatVideoDecoder"},
+			HardwareDeps:    "hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding())",
 		},
 	}
 
@@ -84,6 +86,7 @@ func TestChromeStackDecoderPerfParams(t *testing.T) {
 					param := paramData{
 						Name:         fmt.Sprintf("%s%s_%sp_%sfps", groupPrefix, codec, resolution, frameRate),
 						File:         dataPath,
+						HardwareDeps: groupParam.HardwareDeps,
 						SoftwareDeps: fillSwDeps(codec, resolution, frameRate),
 						Metadata:     []string{dataPath, dataPath + ".json"},
 						Attr:         []string{"graphics_video_decodeaccel"},
@@ -128,6 +131,9 @@ func TestChromeStackDecoderPerfParams(t *testing.T) {
 			enabledFeatures: {{ .EnabledFeatures | fmt }},
 		},
 		Timeout: {{ .Timeout | fmt }},
+		{{ if .HardwareDeps }}
+		ExtraHardwareDeps: {{ .HardwareDeps }},
+		{{ end }}
 		{{ if .SoftwareDeps }}
 		ExtraSoftwareDeps: {{ .SoftwareDeps | fmt }},
 		{{ end }}
