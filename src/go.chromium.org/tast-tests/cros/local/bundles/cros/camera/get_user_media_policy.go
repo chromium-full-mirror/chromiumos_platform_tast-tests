@@ -6,6 +6,7 @@ package camera
 
 import (
 	"context"
+	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
@@ -82,11 +83,12 @@ func GetUserMediaPolicy(ctx context.Context, s *testing.State) {
 	}
 	defer conn.Close()
 
+	permissionDeniedRegex := regexp.MustCompile("Permission denied$")
 	if err := conn.Call(ctx, nil, `async () => {
 		return navigator.mediaDevices.getUserMedia({video: true});
 	}`); err == nil { // It is doesn't fail, it is unexpected.
 		s.Fatal("Failed to ban getUserMedia() by the policy")
-	} else if err.Error() != "DOMException: Permission denied" {
+	} else if !permissionDeniedRegex.MatchString(err.Error()) {
 		s.Fatal("Unexpected error when calling getUserMedia(): ", err)
 	}
 }
