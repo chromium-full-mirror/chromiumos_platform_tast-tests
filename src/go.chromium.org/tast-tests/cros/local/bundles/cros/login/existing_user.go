@@ -8,6 +8,8 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/dma"
+	"go.chromium.org/tast-tests/cros/common/floatingworkspace"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -38,12 +40,11 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 		},
 		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
-		SoftwareDeps: []string{"chrome", "chrome_internal"},
+		SoftwareDeps: []string{"chrome", "chrome_internal", "gaia"},
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		VarDeps: []string{
 			"ui.signinProfileTestExtensionManifestKey",
 		},
-		Vars:    []string{"floatingworkspace.cros_username", "floatingworkspace.cros_password"},
 		Timeout: 2*chrome.GAIALoginTimeout + userutil.TakingOwnershipTimeout + time.Minute,
 		Params: []testing.Param{
 			{
@@ -141,7 +142,7 @@ func ExistingUser(ctx context.Context, s *testing.State) {
 // can be user for the offline login afterwards.
 func logInWithGaiaPassword(ctx context.Context, s *testing.State) (c *chrome.Chrome, creds chrome.Creds) {
 	cr, err := chrome.New(ctx,
-		chrome.GAIALogin(chrome.Creds{User: s.RequiredVar("floatingworkspace.cros_username"), Pass: s.RequiredVar("floatingworkspace.cros_password")}))
+		chrome.GAIALoginPool(dma.CredsFromPool(floatingworkspace.AccountVarName)))
 	if err != nil {
 		s.Fatal("Chrome login failed: ", err)
 	}
@@ -157,7 +158,7 @@ func logInWithLocalPassword(ctx context.Context, s *testing.State) (c *chrome.Ch
 
 	cr, err := login.SetupUserWithLocalPassword(ctx,
 		localPassword,
-		chrome.GAIALogin(chrome.Creds{User: s.RequiredVar("floatingworkspace.cros_username"), Pass: s.RequiredVar("floatingworkspace.cros_password")}),
+		chrome.GAIALoginPool(dma.CredsFromPool(floatingworkspace.AccountVarName)),
 	)
 	if err != nil {
 		s.Fatal("Failed to setup user: ", err)

@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/dev"
 	"go.chromium.org/tast-tests/cros/common/drivefs"
 	"go.chromium.org/tast-tests/cros/common/filemanager"
+	"go.chromium.org/tast-tests/cros/common/floatingworkspace"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/common/wallpaper"
@@ -48,6 +49,7 @@ func pools() (map[string]string, map[string]string) {
 		filemanager.FullAccountPoolVarName:          filemanager.FullDMAAccountPoolValue(),
 		filemanager.OrgFullAccountPoolVarName:       filemanager.OrgFullDMAAccountPoolValue(),
 		filemanager.WarnAccountPoolVarName:          filemanager.WarnDMAAccountPoolValue(),
+		floatingworkspace.AccountVarName:            ui.GaiaDMAPoolDefaultValue(),
 		policy.ManagedUserAccountPoolVarName:        arc.ManagedDMAAccountPoolValue(),
 		ui.GaiaPoolDefaultVarName:                   ui.GaiaDMAPoolDefaultValue(),
 		ui.CUJAccountPoolVarName:                    ui.GaiaDMAPoolDefaultValue(),
@@ -71,6 +73,7 @@ func pools() (map[string]string, map[string]string) {
 		filemanager.FullAccountPoolVarName:          filemanager.FullAccountPoolValue(),
 		filemanager.OrgFullAccountPoolVarName:       filemanager.OrgFullAccountPoolValue(),
 		filemanager.WarnAccountPoolVarName:          filemanager.WarnAccountPoolValue(),
+		floatingworkspace.AccountVarName:            floatingworkspace.AccountValue(),
 		policy.ManagedUserAccountPoolVarName:        policy.ManagedUserAccountPoolValue(),
 		ui.GaiaPoolDefaultVarName:                   ui.GaiaPoolDefaultValue(),
 		ui.CUJAccountPoolVarName:                    ui.CUJAccountPoolValue(),

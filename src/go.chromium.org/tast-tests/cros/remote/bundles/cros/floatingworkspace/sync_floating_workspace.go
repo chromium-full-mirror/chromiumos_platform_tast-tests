@@ -10,6 +10,8 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
+	"go.chromium.org/tast-tests/cros/common/dma"
+	floatingworkspaceCommon "go.chromium.org/tast-tests/cros/common/floatingworkspace"
 	"go.chromium.org/tast-tests/cros/services/cros/floatingworkspace"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
@@ -31,7 +33,6 @@ func init() {
 		ServiceDeps:  []string{"tast.cros.floatingworkspace.TemplateSyncService"},
 		Timeout:      420 * time.Second,
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
-		Vars:         []string{"floatingworkspace.cros_username", "floatingworkspace.cros_password"},
 	})
 }
 
@@ -46,8 +47,10 @@ func SyncFloatingWorkspace(ctx context.Context, s *testing.State) {
 
 	fls1 := floatingworkspace.NewTemplateSyncServiceClient(client1.Conn)
 	loginReq := &floatingworkspace.CrOSLoginRequest{}
-	loginReq.Username = s.RequiredVar("floatingworkspace.cros_username")
-	loginReq.Password = s.RequiredVar("floatingworkspace.cros_password")
+	loginReq.Username, loginReq.Password, err = dma.UserPassFromPool(floatingworkspaceCommon.AccountVarName)
+	if err != nil {
+		s.Fatal("Failed to get username and password: ", err)
+	}
 	loginReq.SignInOption = s.RequiredVar("ui.signinProfileTestExtensionManifestKey")
 	if _, err = fls1.NewChromeLogin(ctx, loginReq); err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
