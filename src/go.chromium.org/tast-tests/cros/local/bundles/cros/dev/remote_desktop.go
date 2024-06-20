@@ -10,6 +10,8 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/dev"
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
@@ -32,6 +34,71 @@ type rdpVars struct {
 	extraArgs []string
 }
 
+var variousPlatformModels = []string{
+	"atlas",
+	"careena",
+	"dru",
+	"eve",
+	"kohaku",
+	"krane",
+	"nocturne",
+}
+
+var dededeModels = []string{
+	"beadrix",
+	"beetley",
+	"blipper",
+	"bookem",
+	"boten",
+	"botenflex",
+	"boxy",
+	"bugzzy",
+	"cret",
+	"cret360",
+	"dexi",
+	"dibbi",
+	"dita",
+	"drawcia",
+	"drawlat",
+	"drawman",
+	"drawper",
+	"galith",
+	"galith360",
+	"gallop",
+	"galnat",
+	"galnat360",
+	"galtic",
+	"galtic360",
+	"kracko",
+	"kracko360",
+	"landia",
+	"landrid",
+	"lantis",
+	"madoo",
+	"magister",
+	"maglet",
+	"maglia",
+	"maglith",
+	"magma",
+	"magneto",
+	"magolor",
+	"magpie",
+	"metaknight",
+	"oscino",
+	"pasara",
+	"peezer",
+	"pirette",
+	"pirika",
+	"palutena",
+	"sasuke",
+	"sasukette",
+	"shotzo",
+	"storo",
+	"storo360",
+	"taranza",
+	"waddledee",
+}
+
 func init() {
 	// Example usage:
 	// $ tast run -var=user=<username> -var=pass=<password> <dut ip> dev.RemoteDesktop
@@ -42,14 +109,13 @@ func init() {
 		Desc:         "Connect to Chrome Remote Desktop for working remotely",
 		Contacts:     []string{"chromoting-team@google.com", "shik@chromium.org"},
 		BugComponent: "b:47377", // Chrome > Chromoting
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "gaia"},
 		Vars: []string{
 			// For running manually.
 			"user", "pass", "contact", "wait", "extra_args", "reset",
 		},
 		VarDeps: []string{
-			// For automated testing.
-			"dev.username", "dev.password",
+			dev.AccountVarName,
 		},
 		Params: []testing.Param{{
 			// For running manually.
@@ -62,9 +128,10 @@ func init() {
 			// TODO(b/151111783): This is a speculative fix to limit the number of sessions. It
 			// seems that the test account is throttled by the CRD backend, so the test is failing
 			// with a periodic pattern. The model list is handcrafted to cover various platforms.
-			ExtraHardwareDeps: hwdep.D(hwdep.Model("atlas", "careena", "dru", "eve", "kohaku",
-				"krane", "nocturne")),
-			Val: browser.TypeAsh,
+			// Please keep dededeModels. It's important for DMA testing.
+			// Although it's a long list, it only add 2 test runs per build.
+			ExtraHardwareDeps: hwdep.D(hwdep.Model(append(variousPlatformModels, dededeModels...)...)),
+			Val:               browser.TypeAsh,
 		}, {
 			Name:              "lacros",
 			ExtraSoftwareDeps: []string{"lacros"},
@@ -74,9 +141,8 @@ func init() {
 			Name:              "test_lacros",
 			ExtraAttr:         []string{"group:mainline", "informational"},
 			ExtraSoftwareDeps: []string{"lacros"},
-			ExtraHardwareDeps: hwdep.D(hwdep.Model("atlas", "careena", "dru", "eve", "kohaku",
-				"krane", "nocturne")),
-			Val: browser.TypeLacros,
+			ExtraHardwareDeps: hwdep.D(hwdep.Model(append(variousPlatformModels, dededeModels...)...)),
+			Val:               browser.TypeLacros,
 		}},
 	})
 }
@@ -84,14 +150,20 @@ func init() {
 // getVars extracts the testing parameters from testing.State. The user
 // provided credentials would override the credentials from config file.
 func getVars(s *testing.State) rdpVars {
+
+	defaultUser, defaultPass, err := dma.UserPassFromPool(dev.AccountVarName)
+	if err != nil {
+		s.Fatal("Failed to pick up creds: ", err)
+	}
+
 	user, hasUser := s.Var("user")
 	if !hasUser {
-		user = s.RequiredVar("dev.username")
+		user = defaultUser
 	}
 
 	pass, hasPass := s.Var("pass")
 	if !hasPass {
-		pass = s.RequiredVar("dev.password")
+		pass = defaultPass
 	}
 
 	contact, hasContact := s.Var("contact")
