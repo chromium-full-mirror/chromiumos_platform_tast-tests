@@ -90,10 +90,10 @@ const (
 	// RotationAnimationDuration is the time to wait for an animation to complete.
 	RotationAnimationDuration = 750 * time.Millisecond
 
-	// SplitScreenDividerThickness is the width of the divider when in tablet mode. This comes from:
-	// http://cs/eureka_internal/chromium/src/ash/wm/splitview/split_view_constants.h;l=32;rcl=62c9f9769fdd621050662f3cde82d5672e75271f
+	// SplitScreenDividerThickness is the width of the split divider. This comes from:
+	// https://source.chromium.org/chromium/chromium/src/+/main:chromeos/ui/wm/constants.h;l=23;drc=90cac1911508d3d682a67c97aa62483eb712f69a
 	// Window widths may be adjusted by up to this amount when in split screen mode.
-	SplitScreenDividerThickness = 8
+	SplitScreenDividerThickness = 6
 
 	// PinButton is the id of the button to enter screen lock/pinned state.
 	PinButton = "org.chromium.arc.testapp.windowmanager:id/button_pin"

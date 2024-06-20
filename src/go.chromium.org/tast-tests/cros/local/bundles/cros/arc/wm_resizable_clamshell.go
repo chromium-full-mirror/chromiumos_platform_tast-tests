@@ -839,7 +839,7 @@ func wmRC22(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Devic
 
 		rWant := coords.NewRect(pdInfo.WorkArea.Width/2, 0, pdInfo.WorkArea.Width/2, pdInfo.WorkArea.Height)
 
-		if !coords.CompareBoundsWithMargin(rightWInfo.BoundsInRoot, rWant, 1 /* margin */) {
+		if !coords.CompareBoundsWithMargin(rightWInfo.BoundsInRoot, rWant, wm.SplitScreenDividerThickness) {
 			return errors.Errorf("invalid snapped to the right activity bounds: got %+v; want %+v",
 				rightWInfo.BoundsInRoot, rWant)
 		}
