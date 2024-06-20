@@ -62,6 +62,7 @@ var GrammarEnabledModels = []string{
 	"octopus",
 	"nocturne",
 	"hatch",
+	"jacuzzi", // arm64 model
 }
 
 // MultiwordEnabledModels is a subset of boards where multiword suggestions are
