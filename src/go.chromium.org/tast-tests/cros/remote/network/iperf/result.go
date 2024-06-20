@@ -6,7 +6,9 @@ package iperf
 
 import (
 	"context"
+	"fmt"
 	"math"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -36,6 +38,22 @@ type Result struct {
 	PercentLoss    float64
 	StdDeviation   BitRate
 	Jitter         []time.Duration
+}
+
+// String implements stringer interface to facilitate logging.
+func (r Result) String() string {
+	if len(r.Jitter) > 0 {
+		sort.Slice(r.Jitter, func(i, j int) bool {
+			return r.Jitter[i] < r.Jitter[j]
+		})
+		// Pick 90th percentile value. We want to exclude top 10% of recorded jitters,
+		// so we can be pretty convinced that 90% of our traffic fits under the maximum acceptable jitter threshold.
+		jitter := r.Jitter[(len(r.Jitter)-1)*9/10]
+		return fmt.Sprintf("{Duration: %v, Throughput: %.0f+-%.3fMbps (S->C: %.0fMbps C->S: %.0fMbps), Loss: %3.2f%%, Jitter: %v}",
+			r.Duration, r.Throughput/Mbps, r.StdDeviation/Mbps, r.ServerToClient/Mbps, r.ClientToServer/Mbps, r.PercentLoss*100.0, jitter)
+	}
+	return fmt.Sprintf("{Duration: %v, Throughput: %.0f+-%.3fMbps (S->C: %.0fMbps C->S: %.0fMbps), Loss: %3.2f%%}",
+		r.Duration, r.Throughput/Mbps, r.StdDeviation/Mbps, r.ServerToClient/Mbps, r.ClientToServer/Mbps, r.PercentLoss*100.0)
 }
 
 func isClientToServer(localAddr, localPort string, config *Config) bool {
