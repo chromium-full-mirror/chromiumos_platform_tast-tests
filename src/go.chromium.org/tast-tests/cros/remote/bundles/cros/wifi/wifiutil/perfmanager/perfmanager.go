@@ -76,7 +76,7 @@ func NewTestManager(ctx context.Context, dutConn, routerConn, pcapConn *ssh.Conn
 	var use2WaySetup bool
 	var peerDevice *ssh.Conn
 	var peerDeviceIPAddress string
-	if routerType != routerSupport.LegacyT {
+	if routerType != routerSupport.LegacyT || pcapConn == nil {
 		testing.ContextLog(ctx, "using 2-way setup")
 		use2WaySetup = true
 		peerDevice = routerConn
