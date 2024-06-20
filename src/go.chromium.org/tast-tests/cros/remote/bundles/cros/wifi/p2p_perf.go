@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/common/wifi/p2p"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wifi/wifiutil"
 	"go.chromium.org/tast-tests/cros/remote/network/iperf"
 	"go.chromium.org/tast-tests/cros/remote/wifi/iw"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
@@ -89,7 +90,15 @@ func P2PPerf(ctx context.Context, s *testing.State) {
 
 	testing.ContextLogf(ctx, "P2P channel configuration: Channel Number = %d, Frequency = %d, Width = %d", chConfig.Number, chConfig.Freq, chConfig.Width)
 
-	finalResult, err := tf.P2PPerf(ctx)
+	p2pGO, err := tf.P2PDevice(ctx, wificell.P2PDeviceDUT)
+	if err != nil {
+		s.Fatal("Failed to run performance test: ", err)
+	}
+	p2pClient, err := tf.P2PDevice(ctx, wificell.P2PDeviceCompanionDUT)
+	if err != nil {
+		s.Fatal("Failed to run performance test: ", err)
+	}
+	finalResult, err := wifiutil.P2PPerf(ctx, p2pGO, p2pClient)
 	if err != nil {
 		s.Fatal("Failed to run performance test: ", err)
 	}

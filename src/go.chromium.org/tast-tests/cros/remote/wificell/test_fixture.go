@@ -18,7 +18,6 @@ import (
 	"github.com/google/gopacket/layers"
 	"google.golang.org/protobuf/types/known/emptypb"
 
-	"go.chromium.org/tast-tests/cros/common/network/firewall"
 	"go.chromium.org/tast-tests/cros/common/network/ping"
 	"go.chromium.org/tast-tests/cros/common/network/protoutil"
 	"go.chromium.org/tast-tests/cros/common/perf"
@@ -32,7 +31,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/wifi/security/wpa"
 	"go.chromium.org/tast-tests/cros/common/wifi/wpacli"
 	"go.chromium.org/tast-tests/cros/remote/hwsec"
-	remotefirewall "go.chromium.org/tast-tests/cros/remote/network/firewall"
 	"go.chromium.org/tast-tests/cros/remote/network/iperf"
 	remoteping "go.chromium.org/tast-tests/cros/remote/network/ping"
 	remotearping "go.chromium.org/tast-tests/cros/remote/wifi/arping"
@@ -1978,65 +1976,6 @@ func (tf *TestFixture) P2PAssertPingFromGO(ctx context.Context, opts ...ping.Opt
 func (tf *TestFixture) P2PAssertPingFromClient(ctx context.Context, opts ...ping.Option) error {
 	testing.ContextLog(ctx, "Ping p2p group owner (GO) from p2p client")
 	return tf.AssertConnectionBetweenP2PDevices(ctx, tf.p2pClient, tf.p2pGO, P2PIfaceType, P2PIfaceType, opts...)
-}
-
-// P2PPerf pings the p2p client from the group owner (GO) device.
-func (tf *TestFixture) P2PPerf(ctx context.Context) (*iperf.Result, error) {
-	// p2pGOFirewallParams is a set of parameters needed for unblocking p2p tcp traffic on the p2p GO.
-	var p2pGOFirewallParams = []firewall.RuleOption{
-		firewall.OptionWait(5),
-		firewall.OptionAppendRule(firewall.InputChain),
-		firewall.OptionSource(utils.P2PGOIPAddress),
-		firewall.OptionProto(firewall.L4ProtoTCP),
-		firewall.OptionMatch(firewall.L4ProtoTCP),
-		firewall.OptionJumpTarget(firewall.TargetAccept),
-	}
-
-	// p2pClientFirewallParams is a set of parameters needed for unblocking p2p tcp traffic on the p2p client.
-	var p2pClientFirewallParams = []firewall.RuleOption{
-		firewall.OptionWait(5),
-		firewall.OptionAppendRule(firewall.InputChain),
-		firewall.OptionSource(utils.P2PClientIPAddress),
-		firewall.OptionProto(firewall.L4ProtoTCP),
-		firewall.OptionMatch(firewall.L4ProtoTCP),
-		firewall.OptionJumpTarget(firewall.TargetAccept),
-	}
-
-	firewallRunnerGO := remotefirewall.NewRemoteRunner(tf.p2pGO.Conn())
-	firewallRunnerClient := remotefirewall.NewRemoteRunner(tf.p2pClient.Conn())
-	if err := firewallRunnerGO.ExecuteCommand(ctx, p2pGOFirewallParams...); err != nil {
-		return nil, errors.Wrap(err, "failed to set P2P GO iptable rule")
-	}
-	if err := firewallRunnerClient.ExecuteCommand(ctx, p2pClientFirewallParams...); err != nil {
-		return nil, errors.Wrap(err, "failed to set P2P Client iptable rule")
-	}
-
-	// Configuring the p2p GO as an iperf server and the p2p client as an iperf client.
-	p2pIperfConfig, err := iperf.NewConfig(iperf.ProtocolTCP, utils.P2PClientIPAddress, utils.P2PGOIPAddress, []iperf.ConfigOption{}...)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to configure iperf on the p2p link")
-	}
-
-	client, err := iperf.NewRemoteClient(ctx, tf.p2pClient.Conn())
-	if err != nil {
-		return nil, errors.Wrap(err, "failed ot create Iperf client")
-	}
-	defer client.Close(ctx)
-
-	server, err := iperf.NewRemoteServer(ctx, tf.p2pGO.Conn())
-	if err != nil {
-		return nil, errors.Wrap(err, "failed ot create Iperf server")
-	}
-	defer server.Close(ctx)
-
-	session := iperf.NewSession(client, server)
-
-	finalResult, _, err := session.Run(ctx, p2pIperfConfig)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to run Iperf session")
-	}
-
-	return finalResult, nil
 }
 
 // SAPPerf verifies performance between AP and STA.
