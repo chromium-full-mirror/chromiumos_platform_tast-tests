@@ -21,7 +21,7 @@ func init() {
 		Timeout:      30 * time.Second,
 		Contacts:     []string{"cros-networking@google.com", "chenzikai@google.com"},
 		BugComponent: "b:1493959", // ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		Fixture:      "ehide",
 	})
 }
