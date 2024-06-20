@@ -80,7 +80,7 @@ func EhideCommandSupport(ctx context.Context, s *testing.State) {
 	}
 	hostname := hostnameSplit[0]
 	port := hostnameSplit[1]
-	dutDirWithHostname := fmt.Sprintf("%s:%s", hostname, dutDir)
+	remotePath := fmt.Sprintf("root@%s:%s", hostname, dutDir)
 
 	// Defer the file removal function.
 	defer func() {
@@ -94,15 +94,15 @@ func EhideCommandSupport(ctx context.Context, s *testing.State) {
 	s.Logf("Testing %s", testingCmd)
 	switch testingCmd {
 	case "rsync":
-		if err := testexec.CommandContext(ctx, "rsync", "-e", fmt.Sprintf("ssh -p %s", port), localPath, dutDirWithHostname).Run(testexec.DumpLogOnError); err != nil {
+		if err := testexec.CommandContext(ctx, "rsync", "-e", fmt.Sprintf("ssh -p %s", port), localPath, remotePath).Run(testexec.DumpLogOnError); err != nil {
 			s.Fatal("Failed to run rsync: ", err)
 		}
 	case "scp":
-		if err := testexec.CommandContext(ctx, "scp", "-P", port, localPath, dutDirWithHostname).Run(testexec.DumpLogOnError); err != nil {
+		if err := testexec.CommandContext(ctx, "scp", "-P", port, localPath, remotePath).Run(testexec.DumpLogOnError); err != nil {
 			s.Fatal("Failed to run scp: ", err)
 		}
 	case "sftp":
-		if err := runSFTP(ctx, localPath, dutDirWithHostname); err != nil {
+		if err := runSFTP(ctx, localPath, remotePath); err != nil {
 			s.Fatal("Failed to run sftp: ", err)
 		}
 	}
@@ -134,12 +134,12 @@ func removeDUTFile(ctx context.Context, d *dut.DUT, dutPath string) error {
 	return nil
 }
 
-func runSFTP(ctx context.Context, localPath, dutDirWithHostname string) error {
+func runSFTP(ctx context.Context, localPath, remotePath string) error {
 	// Set a short timeout for sftp to avoid sftp blocking the test.
 	sftpCtx, sftpCtxCancel := context.WithTimeout(ctx, 15*time.Second)
 	defer sftpCtxCancel()
 
-	cmd := testexec.CommandContext(sftpCtx, "sftp", dutDirWithHostname)
+	cmd := testexec.CommandContext(sftpCtx, "sftp", remotePath)
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		return errors.Wrap(err, "failed to get stdin pipe")
