@@ -10,6 +10,7 @@ import (
 	"time"
 
 	androidui "go.chromium.org/tast-tests/cros/common/android/ui"
+	arcCommon "go.chromium.org/tast-tests/cros/common/arc"
 	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/common/ui"
@@ -50,7 +51,7 @@ func init() {
 			ExtraSoftwareDeps: []string{"android_vm"},
 		}},
 		Timeout: chrome.LoginTimeout + arc.BootTimeout + 6*time.Minute,
-		VarDeps: []string{ui.GaiaPoolDefaultVarName, "arc.parentUser", "arc.parentPassword"},
+		VarDeps: []string{ui.GaiaPoolDefaultVarName, arcCommon.ParentAccountVarName},
 	})
 }
 
@@ -98,12 +99,17 @@ func MultipleArcProfile(ctx context.Context, s *testing.State) {
 	}
 	defer d.Close(ctx)
 
+	user, pass, err := dma.UserPassFromPool(arcCommon.ParentAccountVarName)
+	if err != nil {
+		s.Fatal("Failed to get parent account: ", err)
+	}
+
 	s.Log("Add ARC Account")
-	if err := addARCAccount(ctx, d, tconn, s); err != nil {
+	if err := addARCAccount(ctx, d, tconn, user, pass, s); err != nil {
 		s.Fatal("Failed to Add Account: ", err)
 	}
 
-	if err := arc.SwitchPlayStoreAccount(ctx, d, tconn, s.RequiredVar("arc.parentUser")); err != nil {
+	if err := arc.SwitchPlayStoreAccount(ctx, d, tconn, user); err != nil {
 		s.Fatal("Failed to Switch Account: ", err)
 	}
 
@@ -156,11 +162,10 @@ func openARCSettings(ctx context.Context, tconn *chrome.TestConn) error {
 }
 
 // addARCAccount adds a second ARC account from ARC Settings->Accounts Screen.
-func addARCAccount(ctx context.Context, arcDevice *androidui.Device, tconn *chrome.TestConn, s *testing.State) error {
-	ui := uiauto.New(tconn)
-	secondUser := s.RequiredVar("arc.parentUser")
-	secondPassword := s.RequiredVar("arc.parentPassword")
+func addARCAccount(ctx context.Context, arcDevice *androidui.Device, tconn *chrome.TestConn,
+	secondUser, secondPassword string, s *testing.State) error {
 
+	ui := uiauto.New(tconn)
 	// Set up keyboard.
 	kb, err := input.Keyboard(ctx)
 	if err != nil {

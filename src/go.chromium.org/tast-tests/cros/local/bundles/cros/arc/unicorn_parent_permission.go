@@ -10,6 +10,8 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/android/ui"
+	arcCommon "go.chromium.org/tast-tests/cros/common/arc"
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
@@ -33,9 +35,9 @@ func init() {
 		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
 		BugComponent: "b:1487630",
 		Attr:         []string{"group:mainline", "group:arc-functional"},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "gaia"},
 		Timeout:      10 * time.Minute,
-		VarDeps:      []string{"arc.parentUser"},
+		VarDeps:      []string{arcCommon.ParentAccountVarName},
 		Params: []testing.Param{
 			{
 				ExtraSoftwareDeps: []string{"android_container"},
@@ -63,7 +65,10 @@ func UnicornParentPermission(ctx context.Context, s *testing.State) {
 		playStoreSearchText    = "Search for apps & games"
 		appPkgName             = "com.instagram.android"
 	)
-	parentUser := s.RequiredVar("arc.parentUser")
+	parentUser, _, err := dma.UserPassFromPool(arcCommon.ParentAccountVarName)
+	if err != nil {
+		s.Fatal("Failed to get parent account: ", err)
+	}
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	tconn := s.FixtValue().(familylink.HasTestConn).TestConn()
 

@@ -11,6 +11,8 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/action"
 	androidui "go.chromium.org/tast-tests/cros/common/android/ui"
+	arcCommon "go.chromium.org/tast-tests/cros/common/arc"
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
@@ -34,7 +36,7 @@ func init() {
 		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
 		BugComponent: "b:1487630",
 		Attr:         []string{"group:mainline", "group:arc-functional"},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "gaia"},
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		Params: []testing.Param{
 			{
@@ -51,7 +53,7 @@ func init() {
 				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
 				ExtraSoftwareDeps: []string{"android_vm", "qemu"},
 			}},
-		VarDeps: []string{"arc.parentUser", "arc.parentPassword"},
+		VarDeps: []string{arcCommon.ParentAccountVarName},
 		Fixture: "familyLinkUnicornArcPolicyLogin",
 	})
 }
@@ -96,9 +98,13 @@ func UnicornCannotAddNonEduAccount(ctx context.Context, s *testing.State) {
 	}
 	defer d.Close(ctx)
 
-	nonEduUserEmail := s.RequiredVar("arc.parentUser")
-	nonEduUserPass := s.RequiredVar("arc.parentPassword")
-	parentPassword := s.RequiredVar("arc.parentPassword")
+	user, pass, err := dma.UserPassFromPool(arcCommon.ParentAccountVarName)
+	if err != nil {
+		s.Fatal("Failed to get parent account: ", err)
+	}
+	nonEduUserEmail := user
+	nonEduUserPass := pass
+	parentPassword := pass
 	s.Log("Add non-EDU ARC account and verify")
 	if err := openAndroidSettingsAndAddAccount(ctx, d, cr, tconn, parentPassword, nonEduUserEmail, nonEduUserPass); err != nil {
 		s.Fatal("Failed to Open Android Settigns and Add Account: ", err)

@@ -8,6 +8,8 @@ import (
 	"context"
 	"time"
 
+	arcCommon "go.chromium.org/tast-tests/cros/common/arc"
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
@@ -66,11 +68,8 @@ func init() {
 		Desc:         "Fixture setting persistent policy user for a Family Link account",
 		Contacts:     []string{"xiqiruan@chromium.org", "vsavu@google.com", "chromeos-commercial-remote-management@google.com"},
 		BugComponent: "b:1111617", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Policy Stack
-		Vars: []string{
-			"arc.childUser",
-		},
 		Impl: &persistentFixture{
-			policyUserVar:                       "arc.childUser",
+			policyUserVar:                       arcCommon.ChildAccountVarName,
 			persistentDisableDomainVerification: &[]bool{true}[0],
 		},
 		SetUpTimeout:    5 * time.Second,
@@ -168,8 +167,17 @@ func (p *persistentFixture) SetUp(ctx context.Context, s *testing.FixtState) int
 
 	// Load policyUser from policyUserVar before using.
 	if p.policyUserVar != "" {
-		policyUser := s.RequiredVar(p.policyUserVar)
-		p.policyUser = &policyUser
+		if p.policyUserVar == arcCommon.ChildAccountVarName {
+			user, _, err := dma.UserPassFromPool(p.policyUserVar)
+			if err != nil {
+				s.Fatal("Failed to get policy user account: ", err)
+			}
+			p.policyUser = &user
+		} else {
+			policyUser := s.RequiredVar(p.policyUserVar)
+			p.policyUser = &policyUser
+		}
+
 	}
 
 	p.fdms.SetPersistentPolicies(p.policies)

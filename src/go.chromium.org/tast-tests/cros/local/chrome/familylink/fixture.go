@@ -7,8 +7,10 @@ package familylink
 
 import (
 	"context"
+	"fmt"
 	"time"
 
+	arcCommon "go.chromium.org/tast-tests/cros/common/arc"
 	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
@@ -238,14 +240,8 @@ func init() {
 			"cros-families-eng+test@google.com",
 			"agawronska@chromium.org",
 		},
-		BugComponent: "b:1079167", // ChromeOS > Software > Family
-		Impl:         NewFamilyLinkFixture("arc.parentUser", "arc.parentPassword", "arc.childUser", "arc.childPassword", true, chrome.ARCSupported()),
-		Vars: []string{
-			"arc.parentUser",
-			"arc.parentPassword",
-			"arc.childUser",
-			"arc.childPassword",
-		},
+		BugComponent:    "b:1079167", // ChromeOS > Software > Family
+		Impl:            NewFamilyLinkFixture(arcCommon.ParentAccountVarName, "", arcCommon.ChildAccountVarName, "", true, chrome.ARCSupported()),
 		SetUpTimeout:    chrome.GAIALoginChildTimeout + arc.BootTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -303,12 +299,8 @@ func init() {
 			"cros-families-eng+test@google.com",
 			"agawronska@chromium.org",
 		},
-		BugComponent: "b:1079167", // ChromeOS > Software > Family
-		Impl:         NewFamilyLinkFixture("arc.parentUser", "arc.parentPassword", "", "", true, chrome.ARCSupported(), chrome.ExtraArgs(arc.DisableSyncFlags()...)),
-		Vars: []string{
-			"arc.parentUser",
-			"arc.parentPassword",
-		},
+		BugComponent:    "b:1079167", // ChromeOS > Software > Family
+		Impl:            NewFamilyLinkFixture(arcCommon.ParentAccountVarName, "", "", "", true, chrome.ARCSupported(), chrome.ExtraArgs(arc.DisableSyncFlags()...)),
 		SetUpTimeout:    chrome.GAIALoginTimeout + arc.BootTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -346,14 +338,8 @@ func init() {
 			"cros-families-eng+test@google.com",
 			"agawronska@chromium.org",
 		},
-		BugComponent: "b:1079167", // ChromeOS > Software > Family
-		Impl:         NewFamilyLinkFixture("arc.parentUser", "arc.parentPassword", "arc.childUser", "arc.childPassword", true, chrome.ARCSupported(), chrome.ExtraArgs(arc.DisableSyncFlags()...)),
-		Vars: []string{
-			"arc.parentUser",
-			"arc.parentPassword",
-			"arc.childUser",
-			"arc.childPassword",
-		},
+		BugComponent:    "b:1079167", // ChromeOS > Software > Family
+		Impl:            NewFamilyLinkFixture(arcCommon.ParentAccountVarName, "", arcCommon.ChildAccountVarName, "", true, chrome.ARCSupported(), chrome.ExtraArgs(arc.DisableSyncFlags()...)),
 		SetUpTimeout:    chrome.GAIALoginChildTimeout + arc.BootTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -465,17 +451,39 @@ var _ fakedms.HasFakeDMS = FixtData{}
 var _ HasPolicyUser = FixtData{}
 
 func (f *familyLinkFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
-	parentUser := s.RequiredVar(f.parentUser)
-	parentPass := s.RequiredVar(f.parentPassword)
+	var parentUser, parentPass string
+	if f.parentUser == arcCommon.ParentAccountVarName {
+		user, pass, err := dma.UserPassFromPool(f.parentUser)
+		if err != nil {
+			panic(fmt.Sprintf("Failed to get parent account: %v", err))
+		}
+		parentUser = user
+		parentPass = pass
+	} else {
+		parentUser = s.RequiredVar(f.parentUser)
+		parentPass = s.RequiredVar(f.parentPassword)
+	}
 
 	// Dev tools are necessary for the test instrumentation to work, but by default
 	// disabled for supervised users. Always force enable them in supervised users tests.
 	f.opts = append(f.opts, chrome.ExtraArgs("--force-devtools-available"))
 
+	var childUser, childPass string
+	dmaChildLogin := f.childUser == arcCommon.ChildAccountVarName
 	isChildLogin := len(f.childUser) > 0 && len(f.childPassword) > 0
-	if isChildLogin {
-		childUser := s.RequiredVar(f.childUser)
-		childPass := s.RequiredVar(f.childPassword)
+	if isChildLogin || dmaChildLogin {
+		if dmaChildLogin {
+			user, pass, err := dma.UserPassFromPool(f.childUser)
+			if err != nil {
+				panic(fmt.Sprintf("Failed to get child account: %v", err))
+			}
+			childUser = user
+			childPass = pass
+		} else {
+			childUser = s.RequiredVar(f.childUser)
+			childPass = s.RequiredVar(f.childPassword)
+		}
+
 		f.opts = append(f.opts, chrome.GAIALogin(chrome.Creds{
 			User:       childUser,
 			Pass:       childPass,
@@ -497,7 +505,7 @@ func (f *familyLinkFixture) SetUp(ctx context.Context, s *testing.FixtState) int
 		}
 
 		if isChildLogin {
-			f.policyUser = s.RequiredVar(f.childUser)
+			f.policyUser = childUser
 		} else {
 			f.policyUser = parentUser
 		}

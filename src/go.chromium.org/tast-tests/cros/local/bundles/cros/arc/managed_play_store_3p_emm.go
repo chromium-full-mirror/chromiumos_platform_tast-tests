@@ -6,9 +6,10 @@ package arc
 
 import (
 	"context"
-	"strings"
 	"time"
 
+	arcCommon "go.chromium.org/tast-tests/cros/common/arc"
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/local/arc"
@@ -21,10 +22,6 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-const (
-	managed3pEmmAccountVar = "arc.managed3pEmmAccount"
-)
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ManagedPlayStore3pEmm,
@@ -34,9 +31,9 @@ func init() {
 		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
 		BugComponent: "b:1487630",
 		Attr:         []string{"group:mainline", "group:arc-functional"},
-		SoftwareDeps: []string{"chrome", "play_store"},
+		SoftwareDeps: []string{"chrome", "play_store", "gaia"},
 		Timeout:      15 * time.Minute,
-		VarDeps:      []string{managed3pEmmAccountVar},
+		VarDeps:      []string{arcCommon.Managed3pEmmAccountVarName},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.ArcEnabled{}, pci.VerifiedFunctionalityOS),
 		},
@@ -75,14 +72,18 @@ func ManagedPlayStore3pEmm(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
 	defer cancel()
 
-	managed3pEmmAccount := strings.Split(s.RequiredVar(managed3pEmmAccountVar), ":")
+	user, pass, err := dma.UserPassFromPool(arcCommon.Managed3pEmmAccountVarName)
+	if err != nil {
+		s.Fatal("Failed to pick up creds: ", err)
+	}
+
 	login := chrome.GAIALogin(chrome.Creds{
-		User: managed3pEmmAccount[0],
-		Pass: managed3pEmmAccount[1],
+		User: user,
+		Pass: pass,
 	})
 
 	if err := testing.Poll(ctx, func(ctx context.Context) (retErr error) {
-		fdms, err := policyutil.SetUpFakePolicyServer(ctx, s.OutDir(), managed3pEmmAccount[0], policies)
+		fdms, err := policyutil.SetUpFakePolicyServer(ctx, s.OutDir(), user, policies)
 		if err != nil {
 			return rl.Exit("setup fake policy server", err)
 		}

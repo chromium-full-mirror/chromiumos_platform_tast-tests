@@ -8,6 +8,8 @@ import (
 	"context"
 	"time"
 
+	arcCommon "go.chromium.org/tast-tests/cros/common/arc"
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/local/arc"
@@ -33,9 +35,10 @@ func init() {
 			"chrome",
 			"chrome_internal",
 			"play_store",
+			"gaia",
 		},
 		Timeout: 15 * time.Minute,
-		VarDeps: []string{unicorn.ParentUserVar, unicorn.ParentPasswordVar, unicorn.ChildUserVar, unicorn.ChildPasswordVar},
+		VarDeps: []string{arcCommon.ChildAccountVarName, arcCommon.ParentAccountVarName},
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_container"},
 			ExtraAttr:         []string{"informational"},
@@ -68,7 +71,15 @@ func UnicornDisabledApps(ctx context.Context, s *testing.State) {
 		Errorf:      s.Errorf,
 		Logf:        s.Logf}
 
-	childUser := s.RequiredVar(unicorn.ChildUserVar)
+	childUser, childPass, err := dma.UserPassFromPool(arcCommon.ChildAccountVarName)
+	if err != nil {
+		s.Fatal("Failed to get child account: ", err)
+	}
+
+	parentUser, parentPass, err := dma.UserPassFromPool(arcCommon.ParentAccountVarName)
+	if err != nil {
+		s.Fatal("Failed to get parent account: ", err)
+	}
 	arcPolicy := arcent.CreateArcPolicyWithApps([]string{disabledPackage}, arcent.InstallTypeAvailable, arcent.PlayStoreModeBlockList)
 	arcPolicy.Val.Applications[0].Disabled = true
 	arcEnabledPolicy := &policy.ArcEnabled{Val: true}
@@ -87,9 +98,9 @@ func UnicornDisabledApps(ctx context.Context, s *testing.State) {
 	if err := testing.Poll(ctx, func(ctx context.Context) (retErr error) {
 		cr, err := unicorn.StartChromeWithARC(ctx,
 			childUser,
-			s.RequiredVar(unicorn.ChildPasswordVar),
-			s.RequiredVar(unicorn.ParentUserVar),
-			s.RequiredVar(unicorn.ParentPasswordVar),
+			childPass,
+			parentUser,
+			parentPass,
 			fdms.URL)
 		if err != nil {
 			return rl.Retry("start Chrome", err)

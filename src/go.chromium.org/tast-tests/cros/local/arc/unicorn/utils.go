@@ -15,17 +15,6 @@ import (
 	"go.chromium.org/tast/core/errors"
 )
 
-const (
-	// ParentUserVar is the username of the parent
-	ParentUserVar = "arc.parentUser"
-	// ParentPasswordVar is the password of the parent
-	ParentPasswordVar = "arc.parentPassword"
-	// ChildUserVar is the username of the child
-	ChildUserVar = "arc.childUser"
-	// ChildPasswordVar is the password of the child
-	ChildPasswordVar = "arc.childPassword"
-)
-
 // SetUpFakePolicyServer sets up a fake policy server for unicorn account.
 func SetUpFakePolicyServer(ctx context.Context, outDir, policyUser string, policies []policy.Policy) (fdms *fakedms.FakeDMS, retErr error) {
 	fdms, err := fakedms.New(ctx, outDir)

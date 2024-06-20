@@ -8,6 +8,8 @@ import (
 	"context"
 	"time"
 
+	arcCommon "go.chromium.org/tast-tests/cros/common/arc"
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -38,7 +40,7 @@ func init() {
 			ExtraAttr:         []string{"group:hw_agnostic"},
 		}},
 		Timeout: chrome.GAIALoginTimeout + arc.BootTimeout + 35*time.Minute,
-		VarDeps: []string{"arc.parentUser", "arc.parentPassword"},
+		VarDeps: []string{arcCommon.ParentAccountVarName},
 	})
 }
 
@@ -58,8 +60,10 @@ func OobeArcAppOpen(ctx context.Context, s *testing.State) {
 		"com.google.android.videos",
 	}
 
-	username := s.RequiredVar("arc.parentUser")
-	password := s.RequiredVar("arc.parentPassword")
+	username, password, err := dma.UserPassFromPool(arcCommon.ParentAccountVarName)
+	if err != nil {
+		s.Fatal("Failed to get parent account: ", err)
+	}
 
 	cr, err := chrome.New(ctx,
 		chrome.DontSkipOOBEAfterLogin(),

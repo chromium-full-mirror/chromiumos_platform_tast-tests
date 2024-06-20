@@ -10,6 +10,8 @@ import (
 	"time"
 
 	androidui "go.chromium.org/tast-tests/cros/common/android/ui"
+	arcCommon "go.chromium.org/tast-tests/cros/common/arc"
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
@@ -33,7 +35,7 @@ func init() {
 		// ChromeOS > Software > Family > Parental controls
 		BugComponent: "b:1090157",
 		Attr:         []string{"group:mainline", "informational"},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "gaia"},
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_p"},
 		}, {
@@ -41,7 +43,7 @@ func init() {
 			ExtraSoftwareDeps: []string{"android_vm"},
 		}},
 		Timeout: chrome.GAIALoginTimeout + 5*time.Minute,
-		VarDeps: []string{"arc.parentUser", "arc.parentPassword", "family.eduEmail", "family.eduPassword"},
+		VarDeps: []string{arcCommon.ParentAccountVarName, "family.eduEmail", "family.eduPassword"},
 		Fixture: "familyLinkUnicornArcPolicyLogin",
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.ArcEnabled{}, pci.VerifiedFunctionalityUI),
@@ -54,8 +56,10 @@ func EducoexistenceArc(ctx context.Context, s *testing.State) {
 	tconn := s.FixtValue().(familylink.HasTestConn).TestConn()
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 
-	parentUser := s.RequiredVar("arc.parentUser")
-	parentPass := s.RequiredVar("arc.parentPassword")
+	parentUser, parentPass, err := dma.UserPassFromPool(arcCommon.ParentAccountVarName)
+	if err != nil {
+		s.Fatal("Failed to get parent account: ", err)
+	}
 	eduUser := s.RequiredVar("family.eduEmail")
 	eduPass := s.RequiredVar("family.eduPassword")
 

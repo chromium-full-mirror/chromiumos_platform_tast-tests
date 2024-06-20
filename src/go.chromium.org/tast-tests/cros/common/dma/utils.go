@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/arc"
 	"go.chromium.org/tast-tests/cros/common/assistant"
 	"go.chromium.org/tast-tests/cros/common/calendar"
+	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
 	"go.chromium.org/tast-tests/cros/common/connectivityfwdumps"
 	"go.chromium.org/tast-tests/cros/common/drivefs"
 	"go.chromium.org/tast-tests/cros/common/filemanager"
@@ -31,8 +32,11 @@ func pools() (map[string]string, map[string]string) {
 	var dmaPools = map[string]string{
 
 		accountmanager.AccountPoolVarName:           ui.GaiaDMAPoolDefaultValue(),
+		arc.ChildAccountVarName:                     arc.ChildDMAAccountValue(),
 		arc.DrivefsPoolVarName:                      ui.GaiaDMAPoolDefaultValue(),
+		arc.Managed3pEmmAccountVarName:              arc.ManagedDMAAccountPoolValue(),
 		arc.ManagedAccountPoolVarName:               arc.ManagedDMAAccountPoolValue(),
+		arc.ParentAccountVarName:                    arc.ParentDMAAccountValue(),
 		arc.SharesheetPoolVarName:                   ui.GaiaDMAPoolDefaultValue(),
 		assistant.AccountPoolVarName:                ui.GaiaDMAPoolDefaultValue(),
 		calendar.GoogleCalendarAccountPoolVarName:   calendar.GoogleCalendarDMAAccountPoolValue(),
@@ -50,8 +54,11 @@ func pools() (map[string]string, map[string]string) {
 
 	var regularPools = map[string]string{
 		accountmanager.AccountPoolVarName:           accountmanager.AccountPoolValue(),
+		arc.ChildAccountVarName:                     arc.ChildAccountValue(),
 		arc.DrivefsPoolVarName:                      arc.DrivefsPoolValue(),
+		arc.Managed3pEmmAccountVarName:              arc.Managed3pEmmAccountValue(),
 		arc.ManagedAccountPoolVarName:               arc.ManagedAccountPoolValue(),
+		arc.ParentAccountVarName:                    arc.ParentAccountValue(),
 		arc.SharesheetPoolVarName:                   arc.SharesheetPoolValue(),
 		assistant.AccountPoolVarName:                assistant.AccountPoolValue(),
 		calendar.GoogleCalendarAccountPoolVarName:   calendar.GoogleCalendarAccountPoolValue(),
@@ -74,7 +81,7 @@ func enabled() bool {
 	return strings.ToLower(dmaEnableVar.Value()) == "true"
 }
 
-// CredsFromPool return proper credentials based on DMA status.
+// CredsFromPool returns proper credentials based on DMA status.
 func CredsFromPool(pool string) string {
 	dmaPools, regularPools := pools()
 
@@ -93,4 +100,15 @@ func CredsFromPool(pool string) string {
 	}
 
 	return creds
+}
+
+// UserPassFromPool returns a random username, password, error (if present) from pool.
+func UserPassFromPool(pool string) (user, pass string, err error) {
+	creds := CredsFromPool(pool)
+	cred, err := credconfig.PickRandomCreds(creds)
+	if err != nil {
+		return "", "", err
+	}
+
+	return cred.User, cred.Pass, nil
 }

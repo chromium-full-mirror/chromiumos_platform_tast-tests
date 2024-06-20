@@ -31,7 +31,7 @@ func init() {
 		BugComponent: "b:1487630",
 		Attr:         []string{"group:mainline", "group:arc-functional"},
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 3*time.Minute,
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "gaia"},
 		Params: []testing.Param{
 			{
 				ExtraSoftwareDeps: []string{"android_container"},
