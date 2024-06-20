@@ -49,7 +49,7 @@ func init() {
 		Timeout:      15 * time.Minute,
 		Params: []testing.Param{{
 			Name:      "simple",
-			Val:       referenceFileData{filename: simpleReferenceFileName, date: "20240523"},
+			Val:       referenceFileData{filename: simpleReferenceFileName, date: "20240620"},
 			ExtraData: []string{simpleReferenceFileName + ".csv"},
 		}},
 	})
