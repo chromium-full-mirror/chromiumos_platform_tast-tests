@@ -461,6 +461,11 @@ func (a *DUTControlAndreiboard) RunTcgTests(ctx context.Context, outdir, testSui
 
 // PhysicalUart opens a handle for communication to/from a physical UART on the chip under test.
 func (a *DUTControlAndreiboard) PhysicalUart(name common.UartName) common.SerialChannel {
+	return a.PhysicalUartWithBaud(name, UartBaud)
+}
+
+// PhysicalUartWithBaud returns a PhysicalUart with custom baud.
+func (a *DUTControlAndreiboard) PhysicalUartWithBaud(name common.UartName, baud int) common.SerialChannel {
 	readTimeout := common.UartTimeoutDefault
 	if name == common.UartConsole {
 		readTimeout = common.UartConsoleTimeout
@@ -473,7 +478,7 @@ func (a *DUTControlAndreiboard) PhysicalUart(name common.UartName) common.Serial
 	uartOpener := &DUTControlRawUARTPortOpener{
 		Client:      a.client,
 		Uart:        string(name),
-		Baud:        UartBaud,
+		Baud:        baud,
 		DataLen:     consoleDataLen,
 		ReadTimeout: readTimeout,
 		LogName:     logName,
@@ -484,6 +489,11 @@ func (a *DUTControlAndreiboard) PhysicalUart(name common.UartName) common.Serial
 // CcdSerialInterface opens a handle for communication to/from a USB interface on the chip under
 // test.
 func (a *DUTControlAndreiboard) CcdSerialInterface(name common.UartName, readTimeout time.Duration) common.SerialChannel {
+	return a.CcdSerialInterfaceWithBaud(name, readTimeout, UartBaud)
+}
+
+// CcdSerialInterfaceWithBaud returns a CcdSerialInterface with custom baud.
+func (a *DUTControlAndreiboard) CcdSerialInterfaceWithBaud(name common.UartName, readTimeout time.Duration, baud int) common.SerialChannel {
 	var ep dutcontrol.CCDSerialEndPoint
 	switch name {
 	case common.UartAP:
@@ -502,7 +512,7 @@ func (a *DUTControlAndreiboard) CcdSerialInterface(name common.UartName, readTim
 	uartOpener := &DUTControlCCDPortOpener{
 		Client:      a.client,
 		Ep:          ep,
-		Baud:        UartBaud,
+		Baud:        baud,
 		DataLen:     consoleDataLen,
 		ReadTimeout: readTimeout,
 		LogName:     "ccd_" + string(name) + ".log",
