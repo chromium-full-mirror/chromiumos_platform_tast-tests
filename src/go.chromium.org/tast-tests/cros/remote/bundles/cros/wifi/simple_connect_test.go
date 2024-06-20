@@ -940,11 +940,10 @@ func simpleConnectWPA3() []*simpleConnectParams {
 			"Not all WiFi chips support SAE. We enable the feature as a Software dependency for now, but eventually",
 			"this will require a hardware dependency (crbug.com/1070299).",
 		},
-		Doc:               simpleConnectDocPref(`an AP in WPA3-SAE-EXT ("mixed") mode. WiFi alliance requires PMF in this mode.`),
-		Val:               mkOps("Optional", "MixedWPA3Ext", "wpa.KeyMgmtSAEEXT"),
-		ExtraRequirements: []string{tdreq.WiFiGenSupportPMF, tdreq.WiFiSecSupportWPA3Personal},
-		// TODO(b/339435290) Refine testbed dep to work for routers w/ AKM24 support.
-		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX},
+		Doc:                    simpleConnectDocPref(`an AP in WPA3-SAE-EXT ("mixed") mode. WiFi alliance requires PMF in this mode.`),
+		Val:                    mkOps("Optional", "MixedWPA3Ext", "wpa.KeyMgmtSAEEXT"),
+		ExtraRequirements:      []string{tdreq.WiFiGenSupportPMF, tdreq.WiFiSecSupportWPA3Personal},
+		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_SAE_EXT_KEY},
 	}, {
 		Name:              "wpa3",
 		Fixture:           defaultFixture,
@@ -964,11 +963,10 @@ func simpleConnectWPA3() []*simpleConnectParams {
 			"Not all WiFi chips support SAE. We enable the feature as a Software dependency for now, but eventually",
 			"this will require a hardware dependency (crbug.com/1070299).",
 		},
-		Doc:               simpleConnectDocPref(`an AP in WPA3-SAE-EXT ("pure") mode. WiFi alliance requires PMF in this mode.`),
-		Val:               mkOps("Required", "PureWPA3Ext", "wpa.KeyMgmtSAEEXT"),
-		ExtraRequirements: []string{tdreq.WiFiGenSupportPMF, tdreq.WiFiSecSupportWPA3Personal},
-		// TODO(b/339435290) Refine testbed dep to work for routers w/ AKM24 support.
-		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX},
+		Doc:                    simpleConnectDocPref(`an AP in WPA3-SAE-EXT ("pure") mode. WiFi alliance requires PMF in this mode.`),
+		Val:                    mkOps("Required", "PureWPA3Ext", "wpa.KeyMgmtSAEEXT"),
+		ExtraRequirements:      []string{tdreq.WiFiGenSupportPMF, tdreq.WiFiSecSupportWPA3Personal},
+		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_SAE_EXT_KEY},
 	}}
 }
 

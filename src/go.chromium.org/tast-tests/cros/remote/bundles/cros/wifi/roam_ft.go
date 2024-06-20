@@ -134,8 +134,7 @@ func init() {
 				expectedFtKeyMgmt:    wpa.KeyMgmtFTSAEEXT,
 				expectedNonFtKeyMgmt: wpa.KeyMgmtSAEEXT,
 			},
-			// TODO(b/339435290) Refine testbed dep to work for routers w/ AKM24 support.
-			ExtraTestBedDeps: []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_AX"},
+			ExtraTestBedDeps: []string{"wifi_router_features:WIFI_ROUTER_FEATURE_SAE_EXT_KEY"},
 		}, {
 			Name:              "sae_ext",
 			ExtraAttr:         []string{"wificell_unstable"},
@@ -151,8 +150,7 @@ func init() {
 				expectedFtKeyMgmt:    wpa.KeyMgmtFTSAEEXT,
 				expectedNonFtKeyMgmt: wpa.KeyMgmtSAEEXT,
 			},
-			// TODO(b/339435290) Refine testbed dep to work for routers w/ AKM24 support.
-			ExtraTestBedDeps: []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_AX"},
+			ExtraTestBedDeps: []string{"wifi_router_features:WIFI_ROUTER_FEATURE_SAE_EXT_KEY"},
 		},
 		},
 	})

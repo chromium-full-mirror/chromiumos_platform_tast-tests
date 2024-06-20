@@ -1079,7 +1079,7 @@ func init() {
 					expectedKeyMgmt:  wpa.KeyMgmtSAEEXT,
 				}},
 				ExtraRequirements: []string{"wifi-gen-0006-v01", "wifi-sec-0002-v01"},
-				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_AX"},
+				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_SAE_EXT_KEY"},
 			}, {
 				// Verifies that DUT can connect to an AP in WPA3-SAE ("pure") mode. WiFi alliance requires PMF in this mode.
 				Name:    "wpa3",
@@ -1126,7 +1126,7 @@ func init() {
 					expectedKeyMgmt:  wpa.KeyMgmtSAEEXT,
 				}},
 				ExtraRequirements: []string{"wifi-gen-0006-v01", "wifi-sec-0002-v01"},
-				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_AX"},
+				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_SAE_EXT_KEY"},
 			}, {
 				// Verifies that DUT can connect to a protected 802.11ac network supporting for WPA.
 				Name:    "wpavht80",
