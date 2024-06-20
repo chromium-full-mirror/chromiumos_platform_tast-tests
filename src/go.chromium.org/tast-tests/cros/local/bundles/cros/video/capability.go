@@ -40,6 +40,7 @@ var capabilitiesToVerify = map[string]caps.Capability{
 	"hw_video_acc_h264_4k":          {Name: caps.HWDecodeH264_4K, Optional: true},
 	"hw_video_acc_vp8_4k":           {Name: caps.HWDecodeVP8_4K, Optional: true},
 	"hw_video_acc_vp9_4k":           {Name: caps.HWDecodeVP9_4K, Optional: true},
+	"hw_video_acc_vp9_2_4k":         {Name: caps.HWDecodeVP9_2_4K, Optional: true},
 	"hw_video_acc_av1_4k":           {Name: caps.HWDecodeAV1_4K, Optional: true},
 	"hw_video_acc_av1_4k_10bpp":     {Name: caps.HWDecodeAV1_4K10BPP, Optional: true},
 	"hw_video_acc_hevc_4k":          {Name: caps.HWDecodeHEVC4K, Optional: true},
