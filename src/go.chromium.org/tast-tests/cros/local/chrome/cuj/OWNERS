@@ -3,11 +3,10 @@ set noparent
 # Software Performance Team
 ramsaroop@google.com
 yichenz@chromium.org
-vincentchiang@google.com
+vincentchiang@chromium.org
 
 # Add only if none of the members above are available
 achuith@chromium.org
-alemate@chromium.org
 xiyuan@chromium.org
 
 # Tast team for bulk/emergencies
