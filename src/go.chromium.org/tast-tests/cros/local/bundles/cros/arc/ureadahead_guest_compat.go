@@ -44,13 +44,12 @@ func init() {
 
 func UreadaheadGuestCompat(ctx context.Context, s *testing.State) {
 	const (
+		logName = "readahead.log"
 		// Must use BootstrapCommand since exec-cros-binary is not accessible by adb.
-		execCmd               = "/system/bin/exec-cros-binary"
-		catCmd                = "/system/bin/cat"
-		logName               = "readahead.log"
-		fontsPath             = "/system/etc/fonts.xml"
-		crosUreadaheadOldPath = "/var/run/arc/sbin/ureadahead"
-		crosUreadaheadNewPath = "/var/run/arc/ro/sbin/ureadahead"
+		execCrosBinaryPath = "/system/bin/exec-cros-binary"
+		crosUreadaheadPath = "/var/run/arc/ro/sbin/ureadahead"
+		catCmd             = "/system/bin/cat"
+		fontsPath          = "/system/etc/fonts.xml"
 	)
 
 	outDir := s.OutDir()
@@ -66,18 +65,8 @@ func UreadaheadGuestCompat(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to enable trace events")
 	}
 
-	// TODO(b/237618542): Clean up this block once we complete the /var/run/arc migration.
-	ureadaheadPath := ""
-	if err := arc.BootstrapCommand(ctx, "/system/bin/find", crosUreadaheadNewPath).Run(testexec.DumpLogOnError); err == nil {
-		ureadaheadPath = crosUreadaheadNewPath
-	} else if err := arc.BootstrapCommand(ctx, "/system/bin/find", crosUreadaheadOldPath).Run(testexec.DumpLogOnError); err == nil {
-		ureadaheadPath = crosUreadaheadOldPath
-	} else {
-		s.Fatal("Failed to find ureadahead binary")
-	}
-
 	// Verify generate mode can run to completion with timeout since otherwise ureadahead process doesn't complete.
-	generateCmd := arc.BootstrapCommand(ctx, execCmd, ureadaheadPath, "--force-trace", "--use-existing-trace-events",
+	generateCmd := arc.BootstrapCommand(ctx, execCrosBinaryPath, crosUreadaheadPath, "--force-trace", "--use-existing-trace-events",
 		"--force-ssd-mode", "--verbose", "--timeout=5")
 	stdoutPipe, err := generateCmd.StdoutPipe()
 	if err != nil {
