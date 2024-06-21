@@ -17,7 +17,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/exec"
 	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
 )
@@ -85,7 +84,11 @@ func EhideCommandSupport(ctx context.Context, s *testing.State) {
 	// Defer the file removal function.
 	defer func() {
 		if err := removeDUTFile(ctx, d, dutPath); err != nil {
-			s.Error("Failed to remove the test file on DUT: ", err)
+			if s.HasError() {
+				s.Log("Failed to remove the test file on DUT: ", err)
+			} else {
+				s.Error("Failed to remove the test file on DUT: ", err)
+			}
 		}
 	}()
 
@@ -124,9 +127,9 @@ func verifyDUTFile(ctx context.Context, d *dut.DUT, dutPath, testFileData string
 }
 
 func removeDUTFile(ctx context.Context, d *dut.DUT, dutPath string) error {
-	if err := d.Conn().CommandContext(ctx, "rm", dutPath).Run(exec.DumpLogOnError); err != nil {
+	if out, err := d.Conn().CommandContext(ctx, "rm", dutPath).CombinedOutput(); err != nil {
 		// OK if the file does not exist.
-		if strings.Contains(err.Error(), "No such file or directory") {
+		if strings.Contains(string(out), "No such file or directory") {
 			return nil
 		}
 		return err
