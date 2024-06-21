@@ -149,17 +149,13 @@ func RecoveryCacheBootKeys(ctx context.Context, s *testing.State) {
 	// Boot to recovery mode once and back to make sure the memory training cache was created
 	// so the first part of the test can verify the cache gets used.
 	s.Log("Rebooting to recovery mode")
-	if err := h.Servo.SetPowerState(ctx, servo.PowerStateRec); err != nil {
-		s.Fatal("Failed to set power_state to rec: ", err)
-	}
-	s.Log("Wait for powerstate S0")
-	if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "S0"); err != nil {
-		s.Fatal("Failed to get S0 powerstate")
+	if err := ms.RebootToMode(ctx, common.BootModeRecovery); err != nil {
+		s.Fatal("Failed to reboot to USB in recovery mode: ", err)
 	}
 
 	s.Log("Rebooting to test boot mode: ", bootMode)
 	if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
-		s.Fatal("Failed to set power_state to rec: ", err)
+		s.Fatal("Failed to cold reset the DUT: ", err)
 	}
 	waitConnectCtx, cancel := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
 	defer cancel()
