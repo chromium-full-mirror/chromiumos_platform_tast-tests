@@ -27,7 +27,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test rsync, scp, and sftp commands when ehide is enabled",
 		Timeout:      1 * time.Minute,
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		Contacts:     []string{"cros-networking@google.com", "chenzikai@google.com"},
 		BugComponent: "b:1493959", // ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		Fixture:      "ehide",
