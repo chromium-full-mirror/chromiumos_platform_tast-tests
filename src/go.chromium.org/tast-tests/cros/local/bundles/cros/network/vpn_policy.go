@@ -8,21 +8,26 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/crypto/certificate"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast-tests/cros/local/network/vpn"
+	certManager "go.chromium.org/tast-tests/cros/local/networkui/certificate"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type vpnPolicyTestCase struct {
 	isDevicePolicy bool
 	vpnType        vpn.Type
+	serverOptions  []vpn.Option
 }
 
 func init() {
@@ -59,6 +64,17 @@ func init() {
 					vpnType:        vpn.TypeL2TPIPsec,
 				},
 			},
+			{
+				Name: "openvpn",
+				Val: vpnPolicyTestCase{
+					isDevicePolicy: false,
+					vpnType:        vpn.TypeOpenVPN,
+					serverOptions: []vpn.Option{
+						vpn.WithOpenVPNUseUserPassword(),
+					},
+				},
+				ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
+			},
 		},
 	})
 }
@@ -93,7 +109,8 @@ func VPNPolicy(ctx context.Context, s *testing.State) {
 
 	tc := s.Param().(vpnPolicyTestCase)
 
-	server, err := vpn.StartServer(ctx, networkEnv.Server1, tc.vpnType)
+	serverOpts := tc.serverOptions
+	server, err := vpn.StartServer(ctx, networkEnv.Server1, tc.vpnType, serverOpts...)
 	if err != nil {
 		s.Fatal("Failed to start VPN server: ", err)
 	}
@@ -101,6 +118,8 @@ func VPNPolicy(ctx context.Context, s *testing.State) {
 
 	testing.ContextLog(ctx, "VPN server started as ", server.UnderlayIP)
 
+	// A random-generated GUID. Need to be consistent in VPN ONC and Cert ONC.
+	const serverCACertGUID = "{b3aae353-cfa9-4093-9aff-9f8ee2bf8c29}"
 	vpnONC := &policy.ONCVPN{}
 	switch tc.vpnType {
 	case vpn.TypeL2TPIPsec:
@@ -118,12 +137,41 @@ func VPNPolicy(ctx context.Context, s *testing.State) {
 				PSK:                "preshared-key",
 			},
 		}
+	case vpn.TypeOpenVPN:
+		vpnONC = &policy.ONCVPN{
+			AutoConnect: false,
+			Host:        server.UnderlayIP,
+			Type:        "OpenVPN",
+			OpenVPN: &policy.ONCOpenVPN{
+				ClientCertType: "Pattern",
+				ClientCertPattern: &policy.ONCClientCertPattern{
+					Issuer: &policy.ONCSubjectPattern{
+						CommonName: "chromelab-wifi-testbed-root.mtv.google.com",
+					},
+				},
+				UserAuthenticationType: "Password",
+				// `openvpnUsername` and `openvpnPassword` in vpn/server.go.
+				Username: "username",
+				Password: "password",
+				ServerCARefs: []string{
+					serverCACertGUID,
+				},
+			},
+		}
 	default:
 		s.Fatalf("Unsupported VPN type %s", tc.vpnType)
 	}
 
 	serviceGUID := s.TestName() + "_guid"
 	onc := &policy.ONC{
+		Certificates: []*policy.ONCCertificate{
+			{
+				GUID:      serverCACertGUID,
+				TrustBits: []string{"Web"},
+				Type:      "Authority",
+				X509:      string(certificate.TestCert1().CACred.Cert),
+			},
+		},
 		NetworkConfigurations: []*policy.ONCNetworkConfiguration{
 			{
 				GUID: serviceGUID,
@@ -145,9 +193,35 @@ func VPNPolicy(ctx context.Context, s *testing.State) {
 		}
 	}
 
+	// Insert client certificate (into user slot).
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Failed to create Test API connection: ", err)
+	}
+	certManager.CreateCertAndImport(
+		ctx,
+		cr,
+		tconn,
+		browser.TypeAsh,
+		certificate.TestCert1(),
+		certManager.TypeImportAndBind,
+		"", /* password */
+		0,  /* trust settings for the CA certificate */
+	)
+	defer certManager.DeleteCert(
+		tconn,
+		cr.Browser(),
+		certManager.NewCertData(certificate.TestCert1(), certManager.TypeClient),
+		certManager.NewCertData(certificate.TestCert1(), certManager.TypeCA),
+	)(cleanupCtx)
+
 	if err := policyutil.ServeAndRefresh(ctx, fdms, cr, []policy.Policy{netPolicy}); err != nil {
 		s.Fatal("Failed to update policy: ", err)
 	}
+	// GoBigSleepLint: Time for Chrome to pick up client certificate based on
+	// ClientCertPattern and apply to shill service. There is no signal to poll
+	// for the readiness of this operation.
+	testing.Sleep(ctx, 5*time.Second)
 
 	service, err := vpn.FindVPNService(ctx, m, serviceGUID)
 	if err != nil {
