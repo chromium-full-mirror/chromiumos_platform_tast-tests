@@ -1752,6 +1752,7 @@ func NewWPRLoggedInToCUJUserWithoutCooldownFixture(name, desc string, contacts [
 func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	var cr *chrome.Chrome
 	var setupCompleted bool // Whether the SetUp function is successfully completed.
+	disableARC := f.disableARC || !arc.Supported()
 
 	func() {
 		var docsBlockerExtDir string
@@ -1792,7 +1793,7 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 		if f.keepState {
 			opts = append(opts, chrome.KeepState())
 		}
-		if !f.disableARC {
+		if !disableARC {
 			// When arcSupported is set, use the chrome.ARCSupported flag to
 			// enable the real Play Store optin procedure, so that the tests
 			// can install ARC Apps and open ARC windows to do the test.
@@ -1949,7 +1950,7 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 	// Do Play Store optin if needed.
 	// ARC policy for Enterprise accounts is controlled by managed policies and
 	// optin procedure should be skipped.
-	if enablePlayStore && !f.disableARC && f.arcSupported && !f.useEnterprisePool {
+	if enablePlayStore && !disableARC && f.arcSupported && !f.useEnterprisePool {
 		func() {
 			const playStorePackageName = "com.android.vending"
 			ctx, cancel := context.WithTimeout(ctx, optin.OptinTimeout+time.Minute)
@@ -1991,7 +1992,7 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 	}
 
 	var a *arc.ARC
-	if !f.disableARC {
+	if !disableARC {
 		func() {
 			ctx, cancel := context.WithTimeout(ctx, arc.BootTimeout)
 			defer cancel()
