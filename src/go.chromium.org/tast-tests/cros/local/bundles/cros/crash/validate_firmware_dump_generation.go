@@ -352,7 +352,6 @@ func firmwareDumpValidator(ctx context.Context, rl *retry.Loop, s *testing.State
 		ctx,
 		login,
 		chrome.DMSPolicy(fdms.URL),
-		chrome.EnableFeatures("CrOSLateBootAllowFirmwareDumps"),
 	)
 	if err != nil {
 		return rl.Retry("connect to Chrome", err)
@@ -595,7 +594,6 @@ func firmwareDumpValidator(ctx context.Context, rl *retry.Loop, s *testing.State
 		ctx,
 		login,
 		chrome.DMSPolicy(fdms.URL),
-		chrome.EnableFeatures("CrOSLateBootAllowFirmwareDumps"),
 	)
 	if err != nil {
 		return rl.Retry("connect to Chrome", err)
