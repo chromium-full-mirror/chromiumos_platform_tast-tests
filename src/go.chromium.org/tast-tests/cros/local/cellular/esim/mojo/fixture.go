@@ -30,20 +30,6 @@ func init() {
 		Parent:          "cellularTestESIM",
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name: "chromeLoggedInWithMojoEuicc",
-		Desc: "Logs into a user session and creates a JS object for accessing mojo eSIM API calls for eUICCS",
-		Contacts: []string{
-			"jstanko@google.com",
-			"cros-connectivity@google.com",
-		},
-		BugComponent:    "b:1131774", // ChromeOS > Software > Fundamentals > Connectivity > Cellular
-		Impl:            newESimMojoFixture(),
-		SetUpTimeout:    chrome.LoginTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-		Parent:          "cellular",
-	})
-	testing.AddFixture(&testing.Fixture{
 		Name: "chromeLoggedInWithMojoTestEuiccAndSmdsSupport",
 		Desc: "Logs into a user session and creates a JS object for accessing mojo eSIM API calls for test eUICCS and Smds support",
 		Contacts: []string{
