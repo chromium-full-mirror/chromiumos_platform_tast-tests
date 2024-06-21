@@ -102,7 +102,7 @@ func IppowerIP(dutIP string) (string, error) {
 			resp.Body.Close()
 			continue
 		}
-		if strings.Contains(string(body), "<!--CGI-DATABEG-->") {
+		if strings.Contains(string(body), "p61=") {
 			resp.Body.Close()
 			return fmt.Sprintf("%s.%d", subnet, i), nil
 		}
@@ -126,8 +126,8 @@ func CheckIppowerStatus(ip string) error {
 	if err != nil {
 		return errors.Errorf("unable to read the body content from %s", ip)
 	}
-	if !strings.Contains(string(body), "<!--CGI-DATABEG-->") {
-		return errors.New("the content returned by IP Power does not contain '<!--CGI-DATABEG-->'")
+	if !strings.Contains(string(body), "p61=") {
+		return errors.New("the content returned by IP Power does not contain 'p61='")
 	}
 	return nil
 }
