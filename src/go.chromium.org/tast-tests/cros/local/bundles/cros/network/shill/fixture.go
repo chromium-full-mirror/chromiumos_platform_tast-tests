@@ -37,6 +37,15 @@ func init() {
 		PostTestTimeout: 5 * time.Second,
 		TearDownTimeout: ResetShillTimeout + 5*time.Second,
 		Impl:            &shillFixture{},
+		Params: []testing.FixtureParam{
+			// The default fixture using no param.
+			{},
+			// The fixture using Ethernet-hide.
+			{
+				Name:   "ehide",
+				Parent: "ehide",
+			},
+		},
 	})
 }
 
