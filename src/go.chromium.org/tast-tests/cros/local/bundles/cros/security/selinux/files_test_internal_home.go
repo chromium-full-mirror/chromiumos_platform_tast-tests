@@ -35,10 +35,10 @@ func CheckHomeDirectory(ctx context.Context, s *testing.State) {
 		// other tests, and shouldn't matter in real OS in users'
 		// environment.
 		{`/home/chromeos-test(/.*)?`, skipTest},
-		{`/home/chronos/user/MyFiles(/.*)?`, mediaRWFileContextPattern},
+		{`/home/chronos/user/(Downloads|MyFiles)(/.*)?`, mediaRWFileContextPattern},
 		// Not logged in users doesn't have real data bind-mounted (cros_home_chronos).
 		{`/home/chronos/user(/.*)?`, `(cros_home_shadow_uid_user|cros_home_chronos)`},
-		{`/home/chronos/u-[0-9a-f]*/MyFiles(/.*)?`, mediaRWFileContextPattern},
+		{`/home/chronos/u-[0-9a-f]*/(Downloads|MyFiles)(/.*)?`, mediaRWFileContextPattern},
 		// Not logged in users doesn't have real data bind-mounted (cros_home_chronos).
 		{`/home/chronos/u-.*`, `(cros_home_shadow_uid_user|cros_home_chronos)`},
 		{`/home/chronos/crash(/.*)?`, `cros_home_chronos_crash`},
@@ -58,7 +58,7 @@ func CheckHomeDirectory(ctx context.Context, s *testing.State) {
 		// Not logged in users doesn't have real data bind-mounted (cros_home_root).
 		{`/home/root/.*`, `(cros_home_shadow_uid_root|cros_home_root)`},
 		{`/home/user`, `cros_home_user`},
-		{`/home/user/[0-9a-f]*/MyFiles(/.*)?`, mediaRWFileContextPattern},
+		{`/home/user/[0-9a-f]*/(Downloads|MyFiles)(/.*)?`, mediaRWFileContextPattern},
 		// Not logged in users doesn't have real data bind-mounted (cros_home_user).
 		{`/home/user/.*`, `(cros_home_shadow_uid_user|cros_home_user)`},
 		{`/home/\.shadow(|/(salt|salt\.sum|install_attributes\.pb.*|\.can_attempt_ownership))`, `cros_home_shadow`},
@@ -86,8 +86,8 @@ func CheckHomeDirectory(ctx context.Context, s *testing.State) {
 		{`/home/\.shadow/[0-9a-f]*/mount/root/(?:\.cache/)?smbproviderd(/.*)?`, `cros_home_shadow_uid_root_smbproviderd`},
 		{`/home/\.shadow/[0-9a-f]*/mount/root/(?:\.cache/)?usb_bouncer(/.*)?`, `cros_home_shadow_uid_root_usb_bouncer`},
 		{`/home/\.shadow/[0-9a-f]*/mount/root(/.*)?`, `cros_home_shadow_uid_root`},
-		{`/home/\.shadow/[0-9a-f]*/mount/user/MyFiles(/.*)?`, mediaRWFileContextPattern},
-		// We cannot distinguish MyFiles for users not logged in but created by other tests.
+		{`/home/\.shadow/[0-9a-f]*/mount/user/(Downloads|MyFiles)(/.*)?`, mediaRWFileContextPattern},
+		// We cannot distinguish Downloads or MyFiles for users not logged in but created by other tests.
 		{`/home/\.shadow/[0-9a-f]*/mount/user(/.*)?`, `(cros_home_shadow_uid_user|media_rw_data_file|cros_downloads_file)`},
 		{`/home/\.shadow/[0-9a-f]*/cache/user(/.*)?`, `cros_home_shadow_uid_user`},
 		// Not logged in users are not decrypted. Skip it.
