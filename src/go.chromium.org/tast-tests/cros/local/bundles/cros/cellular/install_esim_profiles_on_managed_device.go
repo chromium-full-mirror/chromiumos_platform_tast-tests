@@ -94,7 +94,7 @@ func InstallESIMProfilesOnManagedDevice(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
 	defer cancel()
 
-	cr, err := startChromeWithFakeDMS(ctx, fdms, slot, true)
+	cr, err := startChromeWithFakeDMS(ctx, fdms, slot)
 	if err != nil {
 		s.Fatal("Chrome login failed: ", err)
 	}
@@ -252,7 +252,7 @@ func installESIMProfileViaPolicy(ctx context.Context, euicc *hermes.EUICC, fdms 
 	return nil
 }
 
-func startChromeWithFakeDMS(ctx context.Context, fdms *fakedms.FakeDMS, slot int, smdsSupportRequired bool) (*chrome.Chrome, error) {
+func startChromeWithFakeDMS(ctx context.Context, fdms *fakedms.FakeDMS, slot int) (*chrome.Chrome, error) {
 	// Start a Chrome instance that will fetch policies from the FakeDMS.
 	chromeOpts := []chrome.Option{
 		chrome.EnableFeatures("UseStorkSmdsServerAddress"),
@@ -262,9 +262,6 @@ func startChromeWithFakeDMS(ctx context.Context, fdms *fakedms.FakeDMS, slot int
 	}
 	if slot == 1 {
 		chromeOpts = append(chromeOpts, chrome.EnableFeatures("CellularUseSecondEuicc"))
-	}
-	if smdsSupportRequired {
-		chromeOpts = append(chromeOpts, chrome.EnableFeatures("SmdsSupport"))
 	}
 	cr, err := chrome.New(ctx, chromeOpts...)
 	if err != nil {

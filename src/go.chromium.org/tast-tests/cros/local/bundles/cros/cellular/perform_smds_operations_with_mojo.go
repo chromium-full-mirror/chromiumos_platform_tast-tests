@@ -34,7 +34,7 @@ func init() {
 		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
 		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_test_esim"},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "chromeLoggedInWithMojoTestEuiccAndSmdsSupport",
+		Fixture:      "chromeLoggedInWithMojoTestEuicc",
 		Timeout:      10 * time.Minute,
 		Params: []testing.Param{{
 			// Ensures non-empty activation codes.
