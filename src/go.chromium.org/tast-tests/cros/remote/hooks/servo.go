@@ -85,10 +85,12 @@ func (h *servoHook) SetUp(ctx context.Context, s *HookState) error {
 		h.connector, err = newSSHConnector(ctx, h.servoHost, h.keyFile,
 			h.keyDir, h.dutTopology, connInfo)
 	} else {
+		h.connector = nil
 		testing.ContextLog(ctx, "Do not support localhost servo")
 		return nil
 	}
 	if err != nil {
+		h.connector = nil
 		testing.ContextLog(ctx, "Failed to connect to servo: ", err)
 		return nil
 	}
@@ -206,6 +208,9 @@ func newSSHConnector(ctx context.Context, servoHost, keyFile, keyDir string,
 }
 
 func (sc *sshConnector) startServo(ctx context.Context) error {
+	if sc == nil {
+		return nil
+	}
 	hst := sc.hst
 	port := sc.connInfo.ServoPort
 	sshPort := sc.connInfo.ServoSSHPort
@@ -251,6 +256,9 @@ func (sc *sshConnector) startServo(ctx context.Context) error {
 }
 
 func (sc *sshConnector) servoRunning(ctx context.Context) bool {
+	if sc == nil {
+		return false
+	}
 	if sc.proxy != nil {
 		return proxyRunning(ctx, sc.proxy)
 	}
@@ -308,6 +316,9 @@ func newContainerConnector(ctx context.Context, servoHost, keyFile, keyDir strin
 }
 
 func (cc *containerConnector) startServo(ctx context.Context) (err error) {
+	if cc == nil {
+		return nil
+	}
 	if proxyRunning(ctx, cc.proxy) {
 		testing.ContextLog(ctx, "Servo has already been running")
 		return nil
@@ -343,6 +354,9 @@ func (cc *containerConnector) getFile(ctx context.Context, src, dst string, star
 }
 
 func (cc *containerConnector) servoRunning(ctx context.Context) bool {
+	if cc == nil {
+		return false
+	}
 	return proxyRunning(ctx, cc.proxy)
 }
 
