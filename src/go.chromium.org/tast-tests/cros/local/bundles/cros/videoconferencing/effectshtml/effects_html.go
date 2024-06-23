@@ -117,9 +117,15 @@ func ImageDiff(img1, img2 image.Image, threshold float64) (float64, float64) {
 
 // SaveImageToFaillog saves image to faillog for debugging.
 func SaveImageToFaillog(ctx context.Context, s *testing.State, img image.Image, fileName string) {
+	if img == nil {
+		s.Errorf("Can't save a nil as image to: %s", fileName)
+		return
+	}
+
 	dir := filepath.Join(s.OutDir(), faillogDir)
 	if err := os.MkdirAll(dir, 0777); err != nil {
 		s.Errorf("Can't create path: %s", dir)
+		return
 	}
 
 	if err := screenshot.SaveImageToFile(img, dir, fileName)(ctx); err != nil {

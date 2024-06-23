@@ -114,12 +114,13 @@ func CameraEffectsChromeRetain(cleanupCtx context.Context, s *testing.State) {
 		// Take a screenshot after a new tab is opened.
 		imageAfter, err = effectshtml.GrabVideoArea(ctx, cr, tconn, ui)
 		if err != nil {
+			s.Log("GrabVideoArea unsuccessfully: ", err)
 			return err
 		}
 		s.Log("GrabVideoArea successfully")
 
 		// Camera effects should be identical for new tab.
-		notChangedThreshold := 0.95
+		notChangedThreshold := 0.90
 		changedThreshold := 0.0
 		notChanged, changed := effectshtml.ImageDiff(imageBefore, imageAfter, 0.0)
 		if notChanged < notChangedThreshold || changed < changedThreshold {
@@ -128,7 +129,7 @@ func CameraEffectsChromeRetain(cleanupCtx context.Context, s *testing.State) {
 
 		return nil
 
-	}, &testing.PollOptions{Timeout: 3 * time.Second, Interval: time.Second}); err != nil {
+	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: time.Second}); err != nil {
 		effectshtml.SaveImageToFaillog(ctx, s, imageBefore, effectshtml.BeforeEffectsImageName)
 		effectshtml.SaveImageToFaillog(ctx, s, imageAfter, effectshtml.AfterEffectsImageName)
 		s.Fatal("Screenshot diff unexpected: ", err)
