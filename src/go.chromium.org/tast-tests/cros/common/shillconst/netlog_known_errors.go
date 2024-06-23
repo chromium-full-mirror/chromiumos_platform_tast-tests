@@ -15,9 +15,9 @@ type AllowedEntry struct {
 // InitializeAllowedEntries returns the allowed log entries with Counter = 0.
 func InitializeAllowedEntries() []AllowedEntry {
 	return []AllowedEntry{
-		{"dhcpcd", "", ".*eth\\d: checksum failure from.*", 0},
-		{"dhcpcd", "", ".*eth\\d: DHCP lease expired.*", 0},
-		{"dhcpcd", "", ".*eth.*: truncated packet.*", 0},
+		{"dhcpcd7", "", ".*eth\\d: checksum failure from.*", 0},
+		{"dhcpcd7", "", ".*eth\\d: DHCP lease expired.*", 0},
+		{"dhcpcd7", "", ".*eth.*: truncated packet.*", 0},
 		{"dnsproxyd", "client.cc", ".*Unable to get properties for device.*", 0},
 		{"dnsproxyd", "client.cc", ".*Unable to get connected service properties for device.*", 0},
 		{"dnsproxyd", "client.cc", ".*Unable to get properties for the default service.*", 0},
