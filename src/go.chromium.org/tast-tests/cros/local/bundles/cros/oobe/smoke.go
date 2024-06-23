@@ -27,7 +27,7 @@ func init() {
 		},
 		BugComponent: "b:1263090", // ChromeOS > Software > OOBE
 		Attr:         []string{"group:mainline", "group:hw_agnostic", "group:cq-medium"},
-		SoftwareDeps: []string{"chrome", "non_meets_device"},
+		SoftwareDeps: []string{"chrome", "non_meet_device"},
 		Params: []testing.Param{{
 			Name: "fieldtrial_testing_config_on",
 			Val:  chrome.FieldTrialConfigEnable,

@@ -30,7 +30,7 @@ func init() {
 		},
 		BugComponent: "b:543707", // Communications > Video (Meet) > Platforms > Rooms > Core Devices (OS & Hardware)
 		Attr:         []string{"group:meet", "group:mainline", "informational", "group:hw_agnostic"},
-		SoftwareDeps: []string{"chrome", "meets_device"},
+		SoftwareDeps: []string{"chrome", "meet_device"},
 	})
 }
 
