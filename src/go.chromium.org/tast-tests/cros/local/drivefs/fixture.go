@@ -99,20 +99,6 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:            "driveFsStartedLacros",
-		Desc:            "Lacros variant of driveFsStarted",
-		Contacts:        []string{"chromeos-files-syd@google.com"},
-		BugComponent:    "b:167289",
-		Impl:            &fixture{bt: browser.TypeLacros},
-		SetUpTimeout:    chrome.GAIALoginTimeout + DriveFsSetupAndTearDownTimeout,
-		ResetTimeout:    DriveFsSetupAndTearDownTimeout,
-		TearDownTimeout: time.Hour,
-		Vars: []string{
-			"drivefs.extensionClientID",
-		},
-	})
-
-	testing.AddFixture(&testing.Fixture{
 		Name:         "driveFsStartedTrashEnabled",
 		Desc:         "Ensures DriveFS is mounted and provides an authenticated Drive API Client",
 		Contacts:     []string{"benreich@chromium.org", "chromeos-files-syd@google.com"},

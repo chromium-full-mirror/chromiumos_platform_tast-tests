@@ -212,24 +212,6 @@ func init() {
 		Data: []string{GetContainerMetadataArtifact("bullseye", false), GetContainerRootfsArtifact("bullseye", false)},
 	})
 
-	// crostiniBullseyeNoDownloadsBindMount is similar to crostiniBullseye, except
-	// that it has chromeLoggedInForCrostiniNoDownloadsBindMount as its parent.
-	// TODO(b/328698041): Remove this after removal of bind mount is released.
-	testing.AddFixture(&testing.Fixture{
-		Name:            "crostiniBullseyeNoDownloadsBindMount",
-		Desc:            "Install Crostini with Bullseye without downloads bind mount",
-		Contacts:        []string{"chromeos-files-syd@google.com"},
-		BugComponent:    "b:167289",
-		Impl:            &crostiniFixture{preData: preTestDataBullseye},
-		SetUpTimeout:    installationTimeout + uninstallationTimeout,
-		ResetTimeout:    checkContainerTimeout,
-		PostTestTimeout: postTestTimeout,
-		TearDownTimeout: uninstallationTimeout,
-		Parent:          "chromeLoggedInForCrostiniNoDownloadsBindMount",
-		Vars:            []string{"keepState"},
-		Data:            []string{GetContainerMetadataArtifact("bullseye", false), GetContainerRootfsArtifact("bullseye", false)},
-	})
-
 	testing.AddFixture(&testing.Fixture{
 		Name:            "crostiniBullseyeWithoutArc",
 		Desc:            "Install Crostini with Bullseye without ARC enabled",
