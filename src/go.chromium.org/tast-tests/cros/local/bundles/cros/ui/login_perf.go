@@ -28,8 +28,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -110,18 +108,12 @@ var cmdlineVarMinSuccessfulRuns = testing.RegisterVarString(
 //   - windows: 8
 //   - arcMode: arcenabled
 //   - tabletMode: false
-//   - browserType: browser.TypeAsh
-//   - lacrosSelection: lacros.NotSelected (i.e. Ash)
-//   - preloadLacros: true
 type loginPerfTestParam struct {
-	windows          int              // Number of session restored windows.
-	arcMode          string           // ARC mode to test.
-	tabletMode       bool             // Whether to run the test in tablet mode.
-	browserType      browser.Type     // browser.{TypeAsh/TypeLacros}
-	lacrosSelection  lacros.Selection // lacros.{Omaha,Rootfs}
-	preloadLacros    bool             // Whether to enable LacrosLaunchAtLoginScreen feature.
-	disabledFeatures []string         // Controls ash-chrome features to be disabled.
-	enabledFeatures  []string         // Controls ash-chrome features to be enabled.
+	windows          int      // Number of session restored windows.
+	arcMode          string   // ARC mode to test.
+	tabletMode       bool     // Whether to run the test in tablet mode.
+	disabledFeatures []string // Controls ash-chrome features to be disabled.
+	enabledFeatures  []string // Controls ash-chrome features to be enabled.
 }
 
 func init() {
@@ -149,9 +141,6 @@ func init() {
 				8,                  // windows
 				arcenabled,         // arcMode
 				false,              // tabletMode
-				browser.TypeAsh,    // browserType
-				lacros.NotSelected, // lacrosSelection
-				false,              // preloadLacros
 				[]string{deferARC}, // disabledFeatures
 				[]string{},         // enabledFeatures
 			},
@@ -162,9 +151,6 @@ func init() {
 				2,                  // windows
 				noarc,              // arcMode
 				false,              // tabletMode
-				browser.TypeAsh,    // browserType
-				lacros.NotSelected, // lacrosSelection
-				false,              // preloadLacros
 				[]string{deferARC}, // disabledFeatures
 				[]string{},         // enabledFeatures
 			},
@@ -175,9 +161,6 @@ func init() {
 				8,                  // windows
 				noarc,              // arcMode
 				false,              // tabletMode
-				browser.TypeAsh,    // browserType
-				lacros.NotSelected, // lacrosSelection
-				false,              // preloadLacros
 				[]string{deferARC}, // disabledFeatures
 				[]string{},         // enabledFeatures
 			},
@@ -189,9 +172,6 @@ func init() {
 				2,                  // windows
 				arcenabled,         // arcMode
 				false,              // tabletMode
-				browser.TypeAsh,    // browserType
-				lacros.NotSelected, // lacrosSelection
-				false,              // preloadLacros
 				[]string{deferARC}, // disabledFeatures
 				[]string{},         // enabledFeatures
 			},
@@ -203,9 +183,6 @@ func init() {
 				8,                  // windows
 				arcenabled,         // arcMode
 				true,               // tabletMode
-				browser.TypeAsh,    // browserType
-				lacros.NotSelected, // lacrosSelection
-				false,              // preloadLacros
 				[]string{deferARC}, // disabledFeatures
 				[]string{},         // enabledFeatures
 			},
@@ -219,9 +196,6 @@ func init() {
 				8,                              // windows
 				arcenabled,                     // arcMode
 				false,                          // tabletMode
-				browser.TypeAsh,                // browserType
-				lacros.NotSelected,             // lacrosSelection
-				false,                          // preloadLacros
 				[]string{deferARC},             // disabledFeatures
 				[]string{deferOccludedTabLoad}, // enabledFeatures
 			},
@@ -236,7 +210,6 @@ type loginPerfTestConfig struct {
 	currentWindows       int                // Test will ensure that at least this number of windows will be restored.
 	expectHistograms     []string           // The list of expected histograms. Test will wait for all of them to get reported.
 	inTabletMode         bool               // Whether Chrome should run in tablet mode.
-	lacrosCfg            *lacrosfixt.Config // Lacros configuration.
 	param                loginPerfTestParam // Tast subtest parameters.
 	windows              int                // Number of restored windows as configured.
 	signinExtManifestKey string             // Key used for login extension.
@@ -264,21 +237,6 @@ func loginPerfStartToLoginScreen(
 		chrome.ExtraArgs("--disable-sync"),
 		chrome.DisableFeatures(testConfig.param.disabledFeatures...),
 		chrome.EnableFeatures(testConfig.param.enabledFeatures...),
-	}
-	if testConfig.param.browserType == browser.TypeLacros {
-		defaultOpts, err := testConfig.lacrosCfg.Opts()
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to get default options")
-		}
-		options = append(options, defaultOpts...)
-	}
-	if testConfig.param.preloadLacros {
-		options = append(options, chrome.EnableFeatures("LacrosLaunchAtLoginScreen"))
-		options = append(options, chrome.ExtraArgs("--force-lacros-launch-at-login-screen-for-testing"))
-		testing.ContextLog(ctx, "loginPerfStartToLoginScreen: Enabling LacrosLaunchAtLoginScreen feature")
-	} else {
-		options = append(options, chrome.DisableFeatures("LacrosLaunchAtLoginScreen"))
-		testing.ContextLog(ctx, "loginPerfStartToLoginScreen: Disabling LacrosLaunchAtLoginScreen feature")
 	}
 
 	// Drop caches to simulate cold boot.
@@ -343,20 +301,19 @@ func loginPerfDoLogin(
 	ctx context.Context,
 	cr *chrome.Chrome,
 	credentials chrome.Creds,
-	browserType browser.Type,
-) (retL *lacros.Lacros, lacrosConnectTime *time.Duration, retErr error) {
+) (retErr error) {
 	useUIAuto, err := strconv.ParseBool(cmdlineVarUseUIAuto.Value())
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "invalid value for ui.LoginPerf.use_uiauto")
+		return errors.Wrap(err, "invalid value for ui.LoginPerf.use_uiauto")
 	}
 
 	outdir, ok := testing.ContextOutDir(ctx)
 	if !ok {
-		return nil, nil, errors.New("no output directory exists")
+		return errors.New("no output directory exists")
 	}
 	tLoginConn, err := cr.SigninProfileTestAPIConn(ctx)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "creating login test API connection failed")
+		return errors.Wrap(err, "creating login test API connection failed")
 	}
 	defer faillog.DumpUITreeOnError(ctx, outdir, func() bool { return retErr != nil }, tLoginConn)
 
@@ -365,23 +322,23 @@ func loginPerfDoLogin(
 	// We can check in the UI for the password field to exist, which seems to be a good enough indicator that
 	// the field is ready for keyboard input.
 	if err := lockscreen.WaitForPasswordField(ctx, tLoginConn, credentials.User, 15*time.Second); err != nil {
-		return nil, nil, errors.Wrap(err, "password text field did not appear in the ui")
+		return errors.Wrap(err, "password text field did not appear in the ui")
 	}
 
 	if !useUIAuto {
 		if err := tLoginConn.ResetAutomation(ctx); err != nil {
-			return nil, nil, errors.Wrap(err, "failed to reset automation feature")
+			return errors.Wrap(err, "failed to reset automation feature")
 		}
 	}
 
 	kb, err := input.Keyboard(ctx)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed to get keyboard")
+		return errors.Wrap(err, "failed to get keyboard")
 	}
 	defer kb.Close(ctx)
 
 	if err := kb.Type(ctx, credentials.Pass+"\n"); err != nil {
-		return nil, nil, errors.Wrap(err, "entering password failed")
+		return errors.Wrap(err, "entering password failed")
 	}
 
 	// Check if the login was successful using the API.
@@ -391,40 +348,16 @@ func loginPerfDoLogin(
 		func(st lockscreen.State) bool { return st.LoggedIn },
 		30*time.Second,
 	); err != nil {
-		return nil, nil, errors.Wrapf(err, "failed waiting to log in: last state: %+v", st)
+		return errors.Wrapf(err, "failed waiting to log in: last state: %+v", st)
 	}
 
 	if useUIAuto {
 		if err := ash.WaitForShelf(ctx, tLoginConn, 120*time.Second); err != nil {
-			return nil, nil, errors.Wrap(err, "shelf did not appear after logging in")
+			return errors.Wrap(err, "shelf did not appear after logging in")
 		}
 	}
 
-	if browserType == browser.TypeLacros {
-		tconn, err := cr.TestAPIConn(ctx)
-		if err != nil {
-			return nil, nil, errors.Wrap(err, "failed to connect to test api")
-		}
-		startTime := time.Now()
-		// lacros.Connect() fails if DevTools connection file was already created, but Chrome does not accept connections.
-		// Retry for 20 seconds.
-		for deadline := time.Now().Add(20 * time.Second); time.Now().Before(deadline); {
-			retL, err = lacros.Connect(ctx, tconn)
-			if err == nil {
-				duration := time.Since(startTime)
-				lacrosConnectTime = &duration
-				testing.ContextLogf(ctx, "loginPerfDoLogin: Connecting to lacros took %s", duration.Round(time.Millisecond))
-				return retL, lacrosConnectTime, err
-			}
-			testing.ContextLog(ctx, "loginPerfDoLogin: Connect to lacros failed. Sleeping for 10 milliseconds before retry")
-			// GoBigSleepLint: This is sleep between retries.
-			if err := testing.Sleep(ctx, 10*time.Millisecond); err != nil {
-				return nil, nil, errors.Wrap(err, "failed to wait for lacros-chrome test connection")
-			}
-		}
-		return nil, nil, errors.Wrap(err, "timed out retrying connection to Lacros")
-	}
-	return nil, nil, nil
+	return nil
 }
 
 // waitForLoginAnimationEnd waits until the post login animation is complete.
@@ -448,31 +381,21 @@ func waitForLoginAnimationEnd(ctx context.Context, tconn *chrome.TestConn) error
 	return nil
 }
 
-// loginPerfCreateWindows creates |n| windows and for Ash or Lacros.
+// loginPerfCreateWindows creates |n| windows and for Ash.
 func loginPerfCreateWindows(
 	ctx context.Context,
 	cr *chrome.Chrome,
-	l *lacros.Lacros,
 	url string,
 	n int,
 ) error {
-	if l != nil {
-		for i := 0; i < n; i++ {
-			conn, err := l.NewConn(ctx, url, browser.WithNewWindow())
-			if err != nil {
-				return errors.Wrapf(err, "(%d) failed to connect to the %q restore URL", i, url)
-			}
-			defer conn.Close()
-		}
-	} else {
-		tconn, err := cr.TestAPIConn(ctx)
-		if err != nil {
-			return errors.Wrap(err, "failed to connect to Ash test api")
-		}
-		if err := ash.CreateWindows(ctx, tconn, cr, url, n); err != nil {
-			return errors.Wrap(err, "failed to create browser windows")
-		}
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to connect to Ash test api")
 	}
+	if err := ash.CreateWindows(ctx, tconn, cr, url, n); err != nil {
+		return errors.Wrap(err, "failed to create browser windows")
+	}
+
 	return nil
 }
 
@@ -524,7 +447,7 @@ func reportMaxHistogramValue(
 }
 
 // logout is a proxy to chrome.autotestPrivate.logout
-func logout(ctx context.Context, cr *chrome.Chrome, l *lacros.Lacros) error {
+func logout(ctx context.Context, cr *chrome.Chrome) error {
 	if cr == nil {
 		testing.ContextLog(ctx, "Sign out: skipped (no chrome)")
 		return nil
@@ -549,18 +472,6 @@ func logout(ctx context.Context, cr *chrome.Chrome, l *lacros.Lacros) error {
 		return errors.Wrap(err, "failed to watch for D-Bus signals")
 	}
 	defer sw.Close(ctx)
-
-	if l != nil {
-		// TODO(crbug.com/1318180): at the moment for Lacros, we're not
-		// getting SetUpWithNewChrome close closure because when used
-		// it'd close all resources including targets and wouldn't let
-		// the session to properly restore later during
-		// performRegularLogin. As a short term workaround we're
-		// closing Lacros resources using CloseResources fn instead,
-		// though ideally we want to use SetUpWithNewChrome close
-		// closure when it's properly implemented.
-		l.CloseResources(ctx)
-	}
 
 	if err := tconn.Call(ctx, nil, "chrome.autotestPrivate.logout"); err != nil {
 		if errors.Is(err, rpcc.ErrConnClosing) {
@@ -617,8 +528,7 @@ func setAlwaysRestoreSettings(ctx context.Context, tconn *chrome.TestConn) error
 // initializeLoginPerfTest initializes user session state that will be restored
 // in subsequent test runs.
 func initializeLoginPerfTest(ctx context.Context,
-	sOutDir string,
-	lacrosConfig *lacrosfixt.Config,
+	sOutDir,
 	loginPool string,
 	param loginPerfTestParam,
 	signinExtManifestKey,
@@ -649,21 +559,7 @@ func initializeLoginPerfTest(ctx context.Context,
 		// We enable ARC initially to fully initialize it.
 		options = append(options, chrome.ARCSupported(), disableARCSyncOption)
 	}
-	if param.browserType == browser.TypeLacros {
-		defaultOpts, err := lacrosConfig.Opts()
-		if err != nil {
-			return chrome.Creds{}, errors.Wrap(err, "failed to get default options")
-		}
-		options = append(options, defaultOpts...)
-	}
-	if param.preloadLacros {
-		options = append(options, chrome.EnableFeatures("LacrosLaunchAtLoginScreen"))
-		options = append(options, chrome.ExtraArgs("--force-lacros-launch-at-login-screen-for-testing"))
-		testing.ContextLog(ctx, "initializeLoginPerfTest: Enabling LacrosLaunchAtLoginScreen feature")
-	} else {
-		options = append(options, chrome.DisableFeatures("LacrosLaunchAtLoginScreen"))
-		testing.ContextLog(ctx, "initializeLoginPerfTest: Disabling LacrosLaunchAtLoginScreen feature")
-	}
+
 	cr, err := chrome.New(ctx, options...)
 	if err != nil {
 		return chrome.Creds{}, errors.Wrap(err, "chrome login failed")
@@ -692,15 +588,6 @@ func initializeLoginPerfTest(ctx context.Context,
 		testing.ContextLog(ctx, "Optin finished")
 	} else {
 		testing.ContextLog(ctx, "ARC++ is not supported. Running test without ARC")
-	}
-
-	var l *lacros.Lacros
-	if param.browserType == browser.TypeLacros {
-		var err error
-		l, err = lacros.Launch(ctx, tconn)
-		if err != nil {
-			return chrome.Creds{}, errors.Wrap(err, "failed to launch lacros-chrome")
-		}
 	}
 
 	// Wait for ARC++ aps to download and initialize.
@@ -743,7 +630,7 @@ func initializeLoginPerfTest(ctx context.Context,
 	if err := setAlwaysRestoreSettings(ctx, tconn); err != nil {
 		return chrome.Creds{}, errors.Wrap(err, "failed to adjust always restore settings")
 	}
-	if err := logout(ctx, cr, l); err != nil {
+	if err := logout(ctx, cr); err != nil {
 		return creds, errors.Wrap(err, "failed to log out")
 	}
 	cr = nil
@@ -757,7 +644,6 @@ func initializeLoginPerfTest(ctx context.Context,
 			arcOpt:               []chrome.Option{},
 			creds:                creds,
 			inTabletMode:         false,
-			lacrosCfg:            lacrosConfig,
 			param:                param,
 			windows:              param.windows,
 			signinExtManifestKey: signinExtManifestKey,
@@ -776,7 +662,7 @@ func initializeLoginPerfTest(ctx context.Context,
 			}
 		}()
 
-		l, _, err := loginPerfDoLogin(ctx, cr, creds, param.browserType)
+		err = loginPerfDoLogin(ctx, cr, creds)
 		if err != nil {
 			return err
 		}
@@ -795,7 +681,7 @@ func initializeLoginPerfTest(ctx context.Context,
 			return errors.Wrap(err, "failed to check number of existing windows before creating new ones")
 		}
 		testing.ContextLogf(ctx, "Before creating windows: visible=%d", visible)
-		if err := loginPerfCreateWindows(ctx, cr, l, url, param.windows); err != nil {
+		if err := loginPerfCreateWindows(ctx, cr, url, param.windows); err != nil {
 			return err
 		}
 		testing.ContextLog(ctx, "Sign out: sleep for 20 seconds to let session settle")
@@ -803,7 +689,7 @@ func initializeLoginPerfTest(ctx context.Context,
 		if err := testing.Sleep(ctx, 20*time.Second); err != nil {
 			return errors.Wrap(err, "failed to sleep for 20 seconds")
 		}
-		if err := logout(ctx, cr, l); err != nil {
+		if err := logout(ctx, cr); err != nil {
 			return errors.Wrap(err, "failed to log out")
 		}
 		cr = nil
@@ -825,18 +711,14 @@ func testFunction(
 	runTracing bool,
 ) (
 	*chrome.Chrome,
-	*lacros.Lacros,
 	[]*histogram.Histogram,
 	map[perf.Metric][]float64,
 	error,
 ) {
 	cr, err := loginPerfStartToLoginScreen(ctx, testConfig)
 	if err != nil {
-		return cr, nil, nil, nil, errors.Wrap(err, "failed to start to login screen")
+		return cr, nil, nil, errors.Wrap(err, "failed to start to login screen")
 	}
-
-	var lacrosConnectTime *time.Duration
-	var l *lacros.Lacros
 
 	// The actual test function
 	testFunc := func(ctx context.Context, stopTracing func(ctx context.Context) error) error {
@@ -850,7 +732,7 @@ func testFunction(
 		if err != nil {
 			s.Fatal("ps aux failed with: ", err)
 		}
-		l, lacrosConnectTime, err = loginPerfDoLogin(ctx, cr, testConfig.creds, testConfig.param.browserType)
+		err = loginPerfDoLogin(ctx, cr, testConfig.creds)
 		if err != nil {
 			return errors.Wrap(err, "failed to log in")
 		}
@@ -907,7 +789,7 @@ func testFunction(
 	// Full test run, instantiate recorders.
 	tLoginConn, err := cr.SigninProfileTestAPIConn(ctx)
 	if err != nil {
-		return cr, l, nil, nil, errors.Wrap(err, "creating login test api connection failed")
+		return cr, nil, nil, errors.Wrap(err, "creating login test api connection failed")
 	}
 	// Shorten context a bit to allow for cleanup.
 	closeCtx := ctx
@@ -928,7 +810,6 @@ func testFunction(
 	}
 	defer cujRecorder.Close(closeCtx)
 
-	// TODO(b/237400719): support lacros
 	for _, metricConfig := range [][]cujrecorder.MetricConfig{
 		cujrecorder.AshCommonMetricConfigs(),
 		cujrecorder.BrowserCommonMetricConfigs(),
@@ -984,23 +865,17 @@ func testFunction(
 		return err
 	}
 	if err := cujRecorder.Run(ctx, cujFunc); err != nil {
-		return cr, l, nil, nil, errors.Wrap(err, "failed to run the test scenario")
+		return cr, nil, nil, errors.Wrap(err, "failed to run the test scenario")
 	}
 	tpsValues := perf.NewValues()
 	if err := cujRecorder.Record(ctx, tpsValues); err != nil {
-		return cr, l, nil, nil, errors.Wrap(err, "failed to collect the data from the recorder")
+		return cr, nil, nil, errors.Wrap(err, "failed to collect the data from the recorder")
 	}
 	if err := cujRecorder.SaveTraceFiles(ctx); err != nil {
 		testing.ContextLog(ctx, "Failed to save trace files: ", err)
 	}
-	if lacrosConnectTime != nil {
-		tpsValues.Set(perf.Metric{
-			Name:      "Ash.Tast.LacrosConnectTime",
-			Unit:      "millisecond",
-			Direction: perf.SmallerIsBetter,
-		}, float64(lacrosConnectTime.Milliseconds()))
-	}
-	return cr, l, histograms, tpsValues.GetValues(), err
+
+	return cr, histograms, tpsValues.GetValues(), err
 }
 
 // storeHistograms transforms []*histogram.Histogram test results into perf Values to report.
@@ -1055,10 +930,6 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	param := s.Param().(loginPerfTestParam)
-	lacrosCfg := lacrosfixt.NewConfig(
-		lacrosfixt.Selection(param.lacrosSelection),
-		lacrosfixt.KeepAlive(true), // Enable keep alive to emulate production environment.
-	)
 
 	// Run an http server to serve the test contents for accessing from the chrome browsers.
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
@@ -1092,7 +963,6 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 	creds, err := initializeLoginPerfTest(
 		ctx,
 		s.OutDir(),
-		lacrosCfg,
 		dma.CredsFromPool(ui.GaiaPoolDefaultVarName),
 		param,
 		s.RequiredVar("ui.signinProfileTestExtensionManifestKey"),
@@ -1162,7 +1032,6 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 		param.windows,
 		allHistograms,
 		inTabletMode,
-		lacrosCfg,
 		param,
 		windows,
 		s.RequiredVar("ui.signinProfileTestExtensionManifestKey"),
@@ -1172,7 +1041,6 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 	// runs, because Chrome connection must to be
 	// closed only after histograms are stored.
 	var cr *chrome.Chrome
-	var l *lacros.Lacros
 
 	testName := s.TestName()
 	s.Logf("Starting test: %q", testName)
@@ -1191,7 +1059,7 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 				var tpsValues map[perf.Metric][]float64
 				var err error
 				// Fill in external 'cr', 'l'.
-				cr, l, histograms, tpsValues, err = testFunction(ctx, s, name, testConfig, false)
+				cr, histograms, tpsValues, err = testFunction(ctx, s, name, testConfig, false)
 				r.Values().MergeWithSuffix("", tpsValues)
 				return histograms, err
 			}),
@@ -1219,7 +1087,7 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 			); err != nil {
 				return errors.Wrap(err, "storeHistograms failed")
 			}
-			if err := logout(ctx, cr, l); err != nil {
+			if err := logout(ctx, cr); err != nil {
 				return errors.Wrap(err, "failed to log out")
 			}
 			cr = nil
@@ -1240,7 +1108,7 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 	var tracingHistograms []*metrics.Histogram
 	var tpsValues map[perf.Metric][]float64
 
-	cr, l, tracingHistograms, tpsValues, err = testFunction(ctx, s, fmt.Sprintf("%s-tracing", testName), testConfig, true)
+	cr, tracingHistograms, tpsValues, err = testFunction(ctx, s, fmt.Sprintf("%s-tracing", testName), testConfig, true)
 	defer func() {
 		// cr is not valid after logout.
 		if cr == nil {
@@ -1273,7 +1141,7 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 			s.Logf("%s-tracing %s: %v", testName, metric.Name, values)
 		}
 	}
-	if err := logout(ctx, cr, l); err != nil {
+	if err := logout(ctx, cr); err != nil {
 		s.Logf("WARNING: Failed to sign out from the tracing session %s-tracing: %v", testName, err)
 	}
 	cr = nil
