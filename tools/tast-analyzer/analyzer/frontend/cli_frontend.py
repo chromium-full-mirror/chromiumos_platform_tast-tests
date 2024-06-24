@@ -112,7 +112,10 @@ def _compare_results(
     "--analyses",
     type=click.Choice(list(_CliAnalysis)),
     help="analyses to run",
-    default=[_CliAnalysis.PRINT_TEST_BREAKDOWN],
+    default=[
+        _CliAnalysis.PRINT_TEST_BREAKDOWN,
+        _CliAnalysis.PRINT_MEDIAN_PCT_CHANGE,
+    ],
     multiple=True,
 )
 @click.option(
