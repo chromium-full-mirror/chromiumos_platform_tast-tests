@@ -81,10 +81,11 @@ const (
 	TypeL2TPIPsec
 	TypeOpenVPN
 	TypeWireGuard
+	TypeToyVPNServer // only for server setup, not for connection or client
 )
 
 func (t Type) String() string {
-	return []string{"IKEv2", "L2TP/IPsec", "OpenVPN", "WireGuard"}[t]
+	return []string{"IKEv2", "L2TP/IPsec", "OpenVPN", "WireGuard", "ToyVPNServer"}[t]
 }
 
 // IPsecAuthType represent the authentication type for an IPsec-based VPN

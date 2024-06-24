@@ -15,6 +15,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/crypto/certificate"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/env"
+	"go.chromium.org/tast-tests/cros/local/network/vpn/internal/toyserver"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -364,6 +365,9 @@ var (
 	}
 )
 
+// ToyVPNServerPort is the default TCP port of the toy VPN server.
+const ToyVPNServerPort = 8888
+
 // Server represents a VPN server that can be used in the test.
 type Server struct {
 	OverlayIfname string
@@ -375,6 +379,7 @@ type Server struct {
 	stopCommands  [][]string
 	pidFiles      []string
 	logFiles      []string
+	stopFunc      func(context.Context) error
 }
 
 // StartServer starts a VPN server of type in the given env.
@@ -400,6 +405,8 @@ func StartServerWithConfig(ctx context.Context, env *env.Env, config *Config) (*
 			return startOpenVPNServer(ctx, env, config)
 		case TypeWireGuard:
 			return startWireGuardServer(ctx, env, config)
+		case TypeToyVPNServer:
+			return startToyVPNServer(ctx, env, config)
 		default:
 			return nil, errors.Errorf("unexpected VPN type %s", config.Type)
 		}
@@ -747,6 +754,47 @@ func startWireGuardServer(ctx context.Context, env *env.Env, config *Config) (*S
 	return server, nil
 }
 
+func startToyVPNServer(ctx context.Context, env *env.Env, config *Config) (retServer *Server, retErr error) {
+	const ifname = "tun3"
+
+	underlayIPs, err := env.GetVethInAddrs(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get addrs in virtualnet Env")
+	}
+
+	serverOverlayIPv4 := config.ipv4Subnet.GetAddrEndWith(1).String()
+	clientOverlayIPv4 := config.ipv4Subnet.GetAddrEndWith(2).String()
+
+	toyServer := toyserver.New()
+	defer func() {
+		if retErr != nil {
+			if err := toyServer.TearDown(ctx); err != nil {
+				testing.ContextLog(ctx, "Failed to tear down ToyVPNServer after setup failure: ", err)
+			}
+		}
+	}()
+
+	if err := toyServer.SetUp(ctx, env, ToyVPNServerPort, ifname, serverOverlayIPv4); err != nil {
+		return nil, errors.Wrap(err, "failed to set up ToyVPNServer")
+	}
+
+	if err := env.RunWithoutChroot(ctx, "ip", "route", "add", clientOverlayIPv4+"/32", "dev", ifname); err != nil {
+		return nil, errors.Wrap(err, "failed to install overlay route for ToyVPNServer")
+	}
+
+	testing.ContextLogf(ctx, "ToyVPNServer listening at %s:%d", underlayIPs.IPv4Addr.String(), ToyVPNServerPort)
+	go toyServer.RunLoop(ctx)
+
+	return &Server{
+		OverlayIfname: ifname,
+		OverlayIPv4:   serverOverlayIPv4,
+		UnderlayIP:    underlayIPs.IPv4Addr.String(),
+
+		// The added route will be removed when the interface is removed in toyServer.TearDown.
+		stopFunc: toyServer.TearDown,
+	}, nil
+}
+
 // StopServer stop VPN server instance.
 func (s *Server) StopServer(ctx context.Context) error {
 	runner := s.serverRunner
@@ -762,10 +810,21 @@ func (s *Server) StopServer(ctx context.Context) error {
 		}
 	}
 
+	if s.stopFunc != nil {
+		if err := s.stopFunc(ctx); err != nil {
+			return errors.Wrap(err, "failed to run stop function for vpn server")
+		}
+	}
+
 	return nil
 }
 
 func (s *Server) collectLogs(ctx context.Context) error {
+	// Not all server has a serverRunner.
+	if s.serverRunner == nil {
+		return nil
+	}
+
 	var getLogErr error
 	content, err := s.serverRunner.GetLogContents(ctx, s.logFiles)
 	if err != nil {
@@ -802,9 +861,12 @@ func (s *Server) Exit(ctx context.Context) error {
 		lastErr = err
 	}
 
-	if err := s.serverRunner.Shutdown(ctx); err != nil {
-		testing.ContextLog(ctx, "Failed to shutdown the serverRunner: ", err)
-		lastErr = err
+	// Not all server has a serverRunner.
+	if s.serverRunner != nil {
+		if err := s.serverRunner.Shutdown(ctx); err != nil {
+			testing.ContextLog(ctx, "Failed to shutdown the serverRunner: ", err)
+			lastErr = err
+		}
 	}
 
 	return lastErr
