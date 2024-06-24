@@ -14,7 +14,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/android/ui"
 	"go.chromium.org/tast-tests/cros/common/camera/chart"
-	dutcontrol "go.chromium.org/tast-tests/cros/common/camera/dut"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/assistant"
 	"go.chromium.org/tast-tests/cros/local/audio"
@@ -31,7 +30,6 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/fsutil"
-	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -65,20 +63,6 @@ var (
 )
 
 func init() {
-	testing.AddFixture(&testing.Fixture{
-		Name:            "ccaLaunchedInCameraBox",
-		Desc:            "Launched CCA in a Camera Box",
-		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
-		BugComponent:    "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
-		Impl:            &fixture{launchCCAInCameraBox: true, launchCCA: true},
-		Parent:          "remoteCameraBox",
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    testBridgeSetUpTimeout,
-		PreTestTimeout:  ccaSetUpTimeout,
-		PostTestTimeout: ccaTearDownTimeout,
-		TearDownTimeout: tearDownTimeout,
-	})
-
 	testing.AddFixture(&testing.Fixture{
 		Name:            "ccaLaunched",
 		Desc:            "Launched CCA",
@@ -515,22 +499,18 @@ type FixtureData struct {
 	// RunTestWithApp runs the given function with the handling of the app
 	// start/stop.
 	RunTestWithApp func(context.Context, TestWithAppFunc, TestWithAppParams) error
-	// PrepareChart prepares chart by loading the given scene. It only works for
-	// CameraBox.
-	PrepareChart func(ctx context.Context, addr, contentPath string) error
 	// SetDebugParams sets the debug parameters for current test.
 	SetDebugParams func(params DebugParams)
 }
 
 type fixture struct {
-	cr            *chrome.Chrome
-	arc           *arc.ARC
-	tb            *testutil.TestBridge
-	app           *App
-	outDir        string
-	chart         *chart.Chart
-	cameraScene   string
-	brightnessVal string
+	cr          *chrome.Chrome
+	arc         *arc.ARC
+	tb          *testutil.TestBridge
+	app         *App
+	outDir      string
+	chart       *chart.Chart
+	cameraScene string
 
 	lacros                 bool
 	useCameraType          testutil.UseCameraType
@@ -540,7 +520,6 @@ type fixture struct {
 	bypassPermission       bool
 	forceClamshell         bool
 	guestMode              bool
-	launchCCAInCameraBox   bool
 	forceEnableAutoFraming bool
 	forceEnableSuperRes    bool
 	powerTest              bool
@@ -551,7 +530,6 @@ type fixture struct {
 	enableFeatures         []feature
 	disableFeatures        []feature
 	screenRecorder         *uiauto.ScreenRecorder
-	tabletIP               string
 	cleanup                func(context.Context) error
 }
 
@@ -664,23 +642,6 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 			}
 		}()
 	}
-	if f.launchCCAInCameraBox {
-		f.brightnessVal, err = dutcontrol.CCADimBacklight(ctx)
-		if err != nil {
-			s.Fatal("Failed to set brightness: ", err)
-		}
-		defer func() {
-			if !success {
-				dutcontrol.CCARestoreBacklight(cleanupCtx, f.brightnessVal)
-			}
-		}()
-
-		tabletIP := ""
-		if err := s.ParentFillValue(&tabletIP); err != nil {
-			s.Fatal("Failed to get tabletIP from the remote fixture: ", err)
-		}
-		f.tabletIP = tabletIP
-	}
 	if f.requireAudioLoopback {
 		if err := audio.SetupLoopback(ctx, cr, s.OutDir(), s.HasError); err != nil {
 			crastestclient.DumpAudioDiagnostics(cleanupCtx, s.OutDir())
@@ -738,7 +699,6 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 		ResetTestBridge: f.resetTestBridge,
 		SwitchScene:     f.switchScene,
 		RunTestWithApp:  f.runTestWithApp,
-		PrepareChart:    f.prepareChart,
 		SetDebugParams:  f.setDebugParams,
 	}
 }
@@ -770,11 +730,6 @@ func (f *fixture) TearDown(ctx context.Context, s *testing.FixtState) {
 		s.Error("Failed to tear down Chrome: ", err)
 	}
 	f.cr = nil
-	if f.launchCCAInCameraBox {
-		if err := dutcontrol.CCARestoreBacklight(ctx, f.brightnessVal); err != nil {
-			s.Error("Restore Backlight failed: ", err)
-		}
-	}
 	if f.cameraScene != "" {
 		if err := os.RemoveAll(f.cameraScene); err != nil {
 			s.Error("Failed to remove camera scene: ", err)
@@ -996,38 +951,6 @@ func (f *fixture) runTestWithApp(ctx context.Context, testFunc TestWithAppFunc, 
 	}(cleanupCtx)
 
 	return testFunc(ctx, app)
-}
-
-func (f *fixture) prepareChart(ctx context.Context, addr, contentPath string) (retErr error) {
-	if addr == "" {
-		if f.tabletIP == "" {
-			return errors.New("chart device is neither found nor specified")
-		}
-		addr = f.tabletIP
-	}
-
-	var sopt ssh.Options
-	ssh.ParseTarget(addr, &sopt)
-	sopt.KeyDir = chart.SSHKeysDir
-	sopt.ConnectTimeout = 10 * time.Second
-	conn, err := ssh.New(ctx, &sopt)
-	if err != nil {
-		return errors.Wrap(err, "failed to connect to chart tablet")
-	}
-	// No need to close ssh connection since chart will handle it when cleaning
-	// up.
-
-	c, namePaths, err := chart.SetUp(ctx, conn, f.outDir, []string{contentPath})
-	if err != nil {
-		return errors.Wrap(err, "failed to prepare chart tablet")
-	}
-
-	if err := c.Display(ctx, namePaths[0]); err != nil {
-		return errors.Wrap(err, "failed to display chart on chart tablet")
-	}
-
-	f.chart = c
-	return nil
 }
 
 func (f *fixture) testBridge() *testutil.TestBridge {

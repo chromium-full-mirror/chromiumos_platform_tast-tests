@@ -70,7 +70,6 @@ import (
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/oobe/fixture"
 	_ "go.chromium.org/tast-tests/cros/remote/camera"           // import fixture for camera tests
 	_ "go.chromium.org/tast-tests/cros/remote/camera/camerabox" // import fixture for camerabox tests
-	_ "go.chromium.org/tast-tests/cros/remote/camera/cca"       // import fixture for cca tests
 	_ "go.chromium.org/tast-tests/cros/remote/cellular"         // import fixture for local cellular tests
 	_ "go.chromium.org/tast-tests/cros/remote/cryptohome"       // import fixture for cryptohome tests
 	_ "go.chromium.org/tast-tests/cros/remote/demomode"         // import fixture for local-only demo mode tests
