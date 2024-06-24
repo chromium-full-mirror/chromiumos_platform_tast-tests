@@ -82,7 +82,7 @@ func init() {
 				return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(chrome.LacrosEnableFeatures("ChromeLabs"))).Opts()
 			},
 		},
-		Contacts:        []string{"samicolon@google.com", "chromeos-commercial-remote-management@google.com"},
+		Contacts:        []string{"chromeos-commercial-remote-management@google.com"},
 		SetUpTimeout:    chrome.LoginTimeout + 7*time.Minute + cleanupTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,

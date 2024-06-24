@@ -81,7 +81,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:         fixture.ChromePolicyLoggedInFeatureChromeLabs,
 		Desc:         "Logged into a user session with chrome labs enabled",
-		Contacts:     []string{"samicolon@google.com", "chromeos-commercial-remote-management@google.com"},
+		Contacts:     []string{"chromeos-commercial-remote-management@google.com"},
 		BugComponent: "b:1111617", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Policy Stack
 		Impl: &policyChromeFixture{
 			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
