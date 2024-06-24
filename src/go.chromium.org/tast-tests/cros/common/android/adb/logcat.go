@@ -32,6 +32,11 @@ func (d *Device) WaitForLogcat(ctx context.Context, pred func(string) bool, sinc
 		return "", errors.New("only 1 quitFunc is supported")
 	}
 
+	// Increase the buffer size to ensure all logs can be read.
+	if err := d.SetLogcatBufferSize(ctx, 1024*20 /* 20 MiB */); err != nil {
+		return "", errors.Wrap(err, "failed to set logcat buffer size")
+	}
+
 	var cmdArgs []string
 	if since != "" {
 		if !LogcatTimestampLongPattern.MatchString(string(since)) {
@@ -200,6 +205,15 @@ func (d *Device) LogcatDeviceTime(ctx context.Context) (LogcatTimestampLong, err
 		return "", errors.Wrap(err, "failed to retrieve the device time")
 	}
 	return LogcatTimestampLong(out), nil
+}
+
+// SetLogcatBufferSize sets the size of all the ring buffers in logd to the
+// given size in KiB.
+func (d *Device) SetLogcatBufferSize(ctx context.Context, sizeKiB int64) error {
+	if err := d.Command(ctx, "logcat", fmt.Sprintf("--buffer-size=%dK", sizeKiB)).Run(testexec.DumpLogOnError); err != nil {
+		return errors.Wrap(err, "failed to set logcat buffer size")
+	}
+	return nil
 }
 
 const logcatTimestampLayout = "01-02 15:04:05.000"
