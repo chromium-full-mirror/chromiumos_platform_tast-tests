@@ -20,7 +20,7 @@ func init() {
 		Func:         FwSplashScreen,
 		Desc:         "Test to validate the firmware splash screen feature",
 		Contacts:     []string{"digehlot@google.com", "chromeos-firmware@google.com"},
-		BugComponent: "b:298890318", // ChromeOS > Platform >  baseOS > Firmware > AP
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		HardwareDeps: hwdep.D(hwdep.FirmwareSplashScreen()),
 		Attr:         []string{"group:firmware", "firmware_unstable"},
 		Fixture:      fixture.NormalMode,
