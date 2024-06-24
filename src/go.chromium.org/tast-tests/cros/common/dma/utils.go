@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/connectivityfwdumps"
 	"go.chromium.org/tast-tests/cros/common/dev"
 	"go.chromium.org/tast-tests/cros/common/drivefs"
+	"go.chromium.org/tast-tests/cros/common/enterpriseconnectors"
 	"go.chromium.org/tast-tests/cros/common/filemanager"
 	"go.chromium.org/tast-tests/cros/common/floatingworkspace"
 	"go.chromium.org/tast-tests/cros/common/policy"
@@ -46,6 +47,9 @@ func pools() (map[string]string, map[string]string) {
 		connectivityfwdumps.GaiaLoginAccountVarName: arc.ManagedDMAAccountPoolValue(),
 		dev.AccountVarName:                          ui.GaiaDMAPoolDefaultValue(),
 		drivefs.AccountPoolVarName:                  ui.GaiaDMAPoolDefaultValue(),
+		enterpriseconnectors.AshAccount1VarName:     enterpriseconnectors.AshDMAAccount1Value(),
+		enterpriseconnectors.AshAccount2VarName:     enterpriseconnectors.AshDMAAccount2Value(),
+		enterpriseconnectors.AshAccount3VarName:     enterpriseconnectors.AshDMAAccount3Value(),
 		filemanager.FullAccountPoolVarName:          filemanager.FullDMAAccountPoolValue(),
 		filemanager.OrgFullAccountPoolVarName:       filemanager.OrgFullDMAAccountPoolValue(),
 		filemanager.WarnAccountPoolVarName:          filemanager.WarnDMAAccountPoolValue(),
@@ -70,6 +74,9 @@ func pools() (map[string]string, map[string]string) {
 		connectivityfwdumps.GaiaLoginAccountVarName: connectivityfwdumps.GaiaLoginAccountValue(),
 		dev.AccountVarName:                          dev.AccountValue(),
 		drivefs.AccountPoolVarName:                  drivefs.AccountPoolValue(),
+		enterpriseconnectors.AshAccount1VarName:     enterpriseconnectors.AshAccount1Value(),
+		enterpriseconnectors.AshAccount2VarName:     enterpriseconnectors.AshAccount2Value(),
+		enterpriseconnectors.AshAccount3VarName:     enterpriseconnectors.AshAccount3Value(),
 		filemanager.FullAccountPoolVarName:          filemanager.FullAccountPoolValue(),
 		filemanager.OrgFullAccountPoolVarName:       filemanager.OrgFullAccountPoolValue(),
 		filemanager.WarnAccountPoolVarName:          filemanager.WarnAccountPoolValue(),

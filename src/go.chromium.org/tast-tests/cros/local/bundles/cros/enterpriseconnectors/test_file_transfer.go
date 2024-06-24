@@ -61,6 +61,7 @@ func init() {
 		SoftwareDeps: []string{
 			"chrome",
 			"chrome_internal",
+			"gaia",
 		},
 		Attr: []string{
 			"group:hw_agnostic",

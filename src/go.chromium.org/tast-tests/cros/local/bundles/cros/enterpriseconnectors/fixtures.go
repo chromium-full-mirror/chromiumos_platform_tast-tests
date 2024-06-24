@@ -8,6 +8,8 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/dma"
+	"go.chromium.org/tast-tests/cros/common/enterpriseconnectors"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast/core/testing"
@@ -24,17 +26,12 @@ func init() {
 			"webprotect-eng@google.com",
 		},
 		BugComponent: "b:1240978",
-		Impl: CreateFixture(
-			"enterpriseconnectors.ash_username3",
-			"enterpriseconnectors.ash_password3",
+		Impl: createFixtureByPool(
+			enterpriseconnectors.AshAccount3VarName,
 		),
 		SetUpTimeout:    chrome.FixtureSetUpTimeout + 3*time.Minute,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
-		Vars: []string{
-			"enterpriseconnectors.ash_username3",
-			"enterpriseconnectors.ash_password3",
-		},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "ashGaiaSignedInProdPolicyWPEnabledBlockExtra",
@@ -45,17 +42,12 @@ func init() {
 			"webprotect-eng@google.com",
 		},
 		BugComponent: "b:1240978",
-		Impl: CreateFixture(
-			"enterpriseconnectors.ash_username1",
-			"enterpriseconnectors.ash_password1",
+		Impl: createFixtureByPool(
+			enterpriseconnectors.AshAccount1VarName,
 		),
 		SetUpTimeout:    chrome.FixtureSetUpTimeout + 3*time.Minute,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
-		Vars: []string{
-			"enterpriseconnectors.ash_username1",
-			"enterpriseconnectors.ash_password1",
-		},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "ashGaiaSignedInProdPolicyWPDisabled",
@@ -66,17 +58,12 @@ func init() {
 			"webprotect-eng@google.com",
 		},
 		BugComponent: "b:1240978",
-		Impl: CreateFixture(
-			"enterpriseconnectors.ash_username2",
-			"enterpriseconnectors.ash_password2",
+		Impl: createFixtureByPool(
+			enterpriseconnectors.AshAccount2VarName,
 		),
 		SetUpTimeout:    chrome.FixtureSetUpTimeout + 3*time.Minute,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
-		Vars: []string{
-			"enterpriseconnectors.ash_username2",
-			"enterpriseconnectors.ash_password2",
-		},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "lacrosGaiaSignedInProdPolicyWPEnabledAllowExtra",
@@ -150,6 +137,19 @@ func CreateFixture(user, pw string) testing.FixtureImpl {
 		return lacrosfixt.NewConfig(
 			lacrosfixt.ChromeOptions(
 				chrome.GAIALogin(chrome.Creds{User: username, Pass: password}),
+				chrome.ProdPolicy(),
+				chrome.EnableFeatures("FileTransferEnterpriseConnector", "FileTransferEnterpriseConnectorUI", "NewFilesPolicyUX"),
+				chrome.ExtraArgs("--disable-search-engine-choice-screen"),
+			),
+		).Opts()
+	})
+}
+
+func createFixtureByPool(account string) testing.FixtureImpl {
+	return chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+		return lacrosfixt.NewConfig(
+			lacrosfixt.ChromeOptions(
+				chrome.GAIALoginPool(dma.CredsFromPool(account)),
 				chrome.ProdPolicy(),
 				chrome.EnableFeatures("FileTransferEnterpriseConnector", "FileTransferEnterpriseConnectorUI", "NewFilesPolicyUX"),
 				chrome.ExtraArgs("--disable-search-engine-choice-screen"),
