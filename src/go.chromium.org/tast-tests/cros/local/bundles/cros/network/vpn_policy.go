@@ -75,6 +75,18 @@ func init() {
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
 			},
+			{
+				Name: "ikev2",
+				Val: vpnPolicyTestCase{
+					isDevicePolicy: false,
+					vpnType:        vpn.TypeIKEv2,
+					serverOptions: []vpn.Option{
+						vpn.WithIPsecAuthType(vpn.AuthTypeCert),
+					},
+				},
+				ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
+				ExtraSoftwareDeps: []string{"ikev2"},
+			},
 		},
 	})
 }
@@ -153,6 +165,25 @@ func VPNPolicy(ctx context.Context, s *testing.State) {
 				// `openvpnUsername` and `openvpnPassword` in vpn/server.go.
 				Username: "username",
 				Password: "password",
+				ServerCARefs: []string{
+					serverCACertGUID,
+				},
+			},
+		}
+	case vpn.TypeIKEv2:
+		vpnONC = &policy.ONCVPN{
+			AutoConnect: false,
+			Host:        server.UnderlayIP,
+			Type:        "IPsec",
+			IPsec: &policy.ONCIPsec{
+				AuthenticationType: "Cert",
+				IKEVersion:         2,
+				ClientCertType:     "Pattern",
+				ClientCertPattern: &policy.ONCClientCertPattern{
+					Issuer: &policy.ONCSubjectPattern{
+						CommonName: "chromelab-wifi-testbed-root.mtv.google.com",
+					},
+				},
 				ServerCARefs: []string{
 					serverCACertGUID,
 				},
