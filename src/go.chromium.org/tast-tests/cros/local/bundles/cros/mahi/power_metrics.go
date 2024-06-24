@@ -60,6 +60,7 @@ func init() {
 		Timeout:      20*time.Minute + power.RecorderTimeout,
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.FeatureLevel(1)), // Only enable on CBX devices.
+		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		Params: []testing.Param{
 			{
 				Name: "mahi_disabled_100_pages",
@@ -151,7 +152,7 @@ func PowerMetrics(ctx context.Context, s *testing.State) {
 	defer kb.Close(ctx)
 
 	// Unzip the local html files.
-	localHTMLPath := path.Join(os.TempDir(), "a11y.mahi_power")
+	localHTMLPath := path.Join(os.TempDir(), "mahi.power_metrics")
 	if err := os.MkdirAll(localHTMLPath, 0755); err != nil {
 		s.Fatal("Failed to create local html directory: ", err)
 	}
