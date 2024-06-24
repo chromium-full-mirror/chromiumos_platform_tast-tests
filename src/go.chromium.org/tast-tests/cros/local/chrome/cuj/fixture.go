@@ -1077,6 +1077,47 @@ func init() {
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
 	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithForceComposition",
+		Desc: "Chrome from a pre-built image with composition forced on",
+		Contacts: []string{
+			"ramsaroop@google.com",
+			"cros-sw-perf@google.com",
+		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
+		Impl: &loggedInToCUJUserFixture{
+			chromeExtraOpts: []chrome.Option{
+				chrome.ExtraArgs("--enable-hardware-overlays=\"\""),
+			},
+			bt: browser.TypeAsh,
+		},
+		Parent:          "prepareForCUJ",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithForceNonDelegated",
+		Desc: "Chrome from a pre-built image with both delegated compositing and hw overlays forced off",
+		Contacts: []string{
+			"ramsaroop@google.com",
+			"cros-sw-perf@google.com",
+		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
+		Impl: &loggedInToCUJUserFixture{
+			chromeExtraOpts: []chrome.Option{
+				chrome.ExtraArgs("--enable-hardware-overlays=\"\""),
+				chrome.DisableFeatures("DelegatedCompositing"),
+			},
+			bt: browser.TypeAsh,
+		},
+		Parent:          "prepareForCUJ",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
 }
 
 func prepareDocsBlockerExtension(s *testing.FixtState) (string, error) {
