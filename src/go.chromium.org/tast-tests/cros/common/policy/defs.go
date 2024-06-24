@@ -30784,11 +30784,12 @@ type ONCWifi struct {
 }
 
 type ONCVPN struct {
-	AutoConnect bool      `json:"AutoConnect"`
-	Host        string    `json:"Host"`
-	IPsec       *ONCIPsec `json:"IPsec,omitempty"`
-	L2TP        *ONCL2TP  `json:"L2TP,omitempty"`
-	Type        string    `json:"Type"`
+	AutoConnect bool        `json:"AutoConnect"`
+	Host        string      `json:"Host"`
+	IPsec       *ONCIPsec   `json:"IPsec,omitempty"`
+	L2TP        *ONCL2TP    `json:"L2TP,omitempty"`
+	OpenVPN     *ONCOpenVPN `json:"OpenVPN,omitempty"`
+	Type        string      `json:"Type"`
 }
 
 type ONCL2TP struct {
@@ -30797,9 +30798,31 @@ type ONCL2TP struct {
 }
 
 type ONCIPsec struct {
-	AuthenticationType string `json:"AuthenticationType"`
-	IKEVersion         int    `json:"IKEVersion"`
-	PSK                string `json:"PSK,omitempty"`
+	AuthenticationType string                `json:"AuthenticationType"`
+	IKEVersion         int                   `json:"IKEVersion"`
+	PSK                string                `json:"PSK,omitempty"`
+	ClientCertType     string                `json:"ClientCertType,omitempty"`
+	ClientCertRef      string                `json:"ClientCertRef,omitempty"`
+	ClientCertPattern  *ONCClientCertPattern `json:"ClientCertPattern,omitempty"`
+	ServerCARefs       []string              `json:"ServerCARefs,omitempty"`
+}
+
+type ONCOpenVPN struct {
+	ClientCertType         string                `json:"ClientCertType,omitempty"`
+	ClientCertRef          string                `json:"ClientCertRef,omitempty"`
+	ClientCertPattern      *ONCClientCertPattern `json:"ClientCertPattern,omitempty"`
+	UserAuthenticationType string                `json:"UserAuthenticationType,omitempty"`
+	Username               string                `json:"Username,omitempty"`
+	Password               string                `json:"Password,omitempty"`
+	ServerCARefs           []string              `json:"ServerCARefs,omitempty"`
+}
+
+type ONCClientCertPattern struct {
+	Issuer *ONCSubjectPattern `json:"Issuer,omitempty"`
+}
+
+type ONCSubjectPattern struct {
+	CommonName string `json:"CommonName,omitempty"`
 }
 
 type ONCCellular struct {

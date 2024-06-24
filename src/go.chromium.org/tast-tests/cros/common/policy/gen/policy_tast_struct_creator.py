@@ -121,6 +121,7 @@ type ONCVPN struct {
 \tHost\tstring\t`json:"Host"`
 \tIPsec\t*ONCIPsec\t`json:"IPsec,omitempty"`
 \tL2TP\t*ONCL2TP\t`json:"L2TP,omitempty"`
+\tOpenVPN\t*ONCOpenVPN\t`json:"OpenVPN,omitempty"`
 \tType\tstring\t`json:"Type"`
 }
 
@@ -133,6 +134,28 @@ type ONCIPsec struct {
 \tAuthenticationType\tstring\t`json:"AuthenticationType"`
 \tIKEVersion\tint\t`json:"IKEVersion"`
 \tPSK\tstring\t`json:"PSK,omitempty"`
+\tClientCertType\tstring\t`json:"ClientCertType,omitempty"`
+\tClientCertRef\tstring\t`json:"ClientCertRef,omitempty"`
+\tClientCertPattern\t*ONCClientCertPattern\t`json:"ClientCertPattern,omitempty"`
+\tServerCARefs\t[]string\t`json:"ServerCARefs,omitempty"`
+}
+
+type ONCOpenVPN struct {
+\tClientCertType\tstring\t`json:"ClientCertType,omitempty"`
+\tClientCertRef\tstring\t`json:"ClientCertRef,omitempty"`
+\tClientCertPattern\t*ONCClientCertPattern\t`json:"ClientCertPattern,omitempty"`
+\tUserAuthenticationType\tstring\t`json:"UserAuthenticationType,omitempty"`
+\tUsername\tstring\t`json:"Username,omitempty"`
+\tPassword\tstring\t`json:"Password,omitempty"`
+\tServerCARefs\t[]string\t`json:"ServerCARefs,omitempty"`
+}
+
+type ONCClientCertPattern struct {
+\tIssuer\t*ONCSubjectPattern\t`json:"Issuer,omitempty"`
+}
+
+type ONCSubjectPattern struct {
+\tCommonName\tstring\t`json:"CommonName,omitempty"`
 }
 
 type ONCCellular struct {
