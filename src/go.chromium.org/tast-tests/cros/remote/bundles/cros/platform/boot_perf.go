@@ -16,6 +16,7 @@ import (
 
 	empty "github.com/golang/protobuf/ptypes/empty"
 
+	"go.chromium.org/tast-tests/cros/common/bounds"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/servo"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
@@ -101,6 +102,30 @@ func init() {
 			{
 				Name:              "from_s5",
 				ExtraAttr:         []string{"group:crosbolt", "crosbolt_weekly"},
+				ExtraHardwareDeps: hwdep.D(hwdep.ChromeEC()),
+				ExtraSoftwareDeps: []string{"s5_inactivity_timeout"},
+				Fixture:           fixture.NormalMode,
+				Val:               bootPerfFromS5,
+			},
+			// Variants of each test case that checks against defined bounds
+			{
+				Name: "default_bounds",
+				Val:  bootPerfWarmReboot,
+			},
+			{
+				Name:              "ec_reboot_bounds",
+				ExtraHardwareDeps: hwdep.D(hwdep.ChromeEC()),
+				Fixture:           fixture.NormalMode,
+				Val:               bootPerfEcReboot,
+			},
+			{
+				Name:              "from_g3_bounds",
+				ExtraHardwareDeps: hwdep.D(hwdep.ChromeEC()),
+				Fixture:           fixture.NormalMode,
+				Val:               bootPerfFromG3,
+			},
+			{
+				Name:              "from_s5_bounds",
 				ExtraHardwareDeps: hwdep.D(hwdep.ChromeEC()),
 				ExtraSoftwareDeps: []string{"s5_inactivity_timeout"},
 				Fixture:           fixture.NormalMode,
@@ -399,6 +424,12 @@ func collectExtraDebugInfo(ctx context.Context, s *testing.State) (bool, error) 
 
 // BootPerf is the function that reboots the client and collect boot perf data.
 func BootPerf(ctx context.Context, s *testing.State) {
+	metricBounds := []bounds.MetricBounds{{
+		Test:   bounds.MatchRegexp(`_bounds$`),
+		Metric: bounds.MatchRegexp(`\.seconds_power_on_to_login$`),
+		Bounds: bounds.Max(8.0),
+	}}
+
 	d := s.DUT()
 
 	// Parse test options.
@@ -526,5 +557,8 @@ func BootPerf(ctx context.Context, s *testing.State) {
 	}
 	if err := pv.Save(s.OutDir()); err != nil {
 		s.Error("Failed saving perf data: ", err)
+	}
+	if err := bounds.EvaluateResults(ctx, metricBounds, s.OutDir()); err != nil {
+		s.Error("Failed bounds check: ", err)
 	}
 }
