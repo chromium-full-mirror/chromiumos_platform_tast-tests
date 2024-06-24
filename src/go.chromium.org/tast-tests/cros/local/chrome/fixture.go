@@ -488,7 +488,7 @@ func init() {
 		// ChromeOS > Software > Window Management > PostLoginRestoreAndGlanceables
 		BugComponent: "b:1488650",
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
-			return []Option{EnableFeatures("OakFeature")}, nil
+			return []Option{EnableFeatures("ForestFeature")}, nil
 		}),
 		SetUpTimeout:    FixtureSetUpTimeout,
 		ResetTimeout:    ResetTimeout,
