@@ -131,7 +131,7 @@ func (b *BatteryService) PowerSettingInIdleMode(ctx context.Context, req *empty.
 		return nil, errors.Wrap(err, "failed to left click on idle action while charging in combo box")
 	}
 
-	keepDisplayOnListBox := nodewith.Name("Keep display on").Role(role.ListBoxOption)
+	keepDisplayOnListBox := nodewith.Name("Keep display on").Role(role.MenuListOption).First()
 	if err := ui.LeftClick(keepDisplayOnListBox)(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to left click on keep display in list box")
 	}
