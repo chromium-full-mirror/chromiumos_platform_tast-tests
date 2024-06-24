@@ -5,6 +5,8 @@
 import dataclasses
 import enum
 
+from analyzer.analysis import stats_util
+
 
 class MultipleTestCfg(enum.StrEnum):
     """Configuration for how to handle ensemble statistical testing.
@@ -59,6 +61,16 @@ class AnalysisCfg:
 
     alpha: float = 0.05
     """The significance level for the analysis."""
+
+    hypothesis_test_params: stats_util.HypothesisTestParameters = (
+        dataclasses.field(default_factory=stats_util.HypothesisTestParameters)
+    )
+    """The parameters for the hypothesis test."""
+
+    bootstrap_params: stats_util.BootstrapParameters = dataclasses.field(
+        default_factory=stats_util.BootstrapParameters
+    )
+    """The parameters for the bootstrap test."""
 
     multiple_test_cfg: MultipleTestCfg = MultipleTestCfg.FWER
     """The multiple test procedure to use."""

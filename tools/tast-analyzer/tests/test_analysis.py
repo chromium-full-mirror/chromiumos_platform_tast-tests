@@ -2,6 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 import copy
+import dataclasses
 import pathlib
 import unittest
 
@@ -103,7 +104,11 @@ class AnalysisTest(unittest.TestCase):
         before_samples, after_samples = self._load_samples()
 
         cfg = analysis_cfg.AnalysisCfg(
-            skip_all_zero_samples=False, minimum_sample_size=1
+            skip_all_zero_samples=False,
+            minimum_sample_size=1,
+            hypothesis_test_params=stats_util.HypothesisTestParameters(
+                statistic_kind=stats_util.TestStatisticKind.RANK_SUM
+            ),
         )
         metric_paths = analysis_results.compute_metric_paths_for_comparison(
             before_samples, after_samples, cfg
@@ -118,17 +123,15 @@ class AnalysisTest(unittest.TestCase):
         )
 
         # ui.OverviewPerf.Test.One.average has only zeros, so we should skip it.
-        cfg = analysis_cfg.AnalysisCfg(
-            skip_all_zero_samples=True, minimum_sample_size=1
-        )
+        cfg = dataclasses.replace(cfg, skip_all_zero_samples=True)
         metric_paths = analysis_results.compute_metric_paths_for_comparison(
             before_samples, after_samples, cfg
         )
         self.assertEqual(metric_paths, ["ui.OverviewPerf.Test.Three.average"])
 
         # Sample size is one for all metrics, so this should produce nothing.
-        cfg = analysis_cfg.AnalysisCfg(
-            skip_all_zero_samples=False, minimum_sample_size=2
+        cfg = dataclasses.replace(
+            cfg, skip_all_zero_samples=False, minimum_sample_size=2
         )
         metric_paths = analysis_results.compute_metric_paths_for_comparison(
             before_samples, after_samples, cfg
@@ -138,7 +141,11 @@ class AnalysisTest(unittest.TestCase):
     def test_split_better_and_worse_by_mean(self) -> None:
         before_samples, after_samples = self._load_samples()
         cfg = analysis_cfg.AnalysisCfg(
-            skip_all_zero_samples=False, minimum_sample_size=1
+            skip_all_zero_samples=False,
+            minimum_sample_size=1,
+            hypothesis_test_params=stats_util.HypothesisTestParameters(
+                statistic_kind=stats_util.TestStatisticKind.RANK_SUM
+            ),
         )
         metric_paths = analysis_results.compute_metric_paths_for_comparison(
             before_samples, after_samples, cfg
@@ -155,16 +162,34 @@ class AnalysisTest(unittest.TestCase):
             before_samples=before_samples,
             after_samples=after_samples,
             metric_paths=metric_paths,
+            hypothesis_params=stats_util.HypothesisTestParameters(
+                statistic_kind=stats_util.TestStatisticKind.RANK_SUM
+            ),
+            bootstrap_params=stats_util.BootstrapParameters(
+                statistic_kind=stats_util.TestStatisticKind.RANK_SUM
+            ),
         )
         better_result = analysis_results.AnalysisResult(
             before_sample=before_samples[metric_paths[0]],
             after_sample=after_samples[metric_paths[0]],
-            mwu_result=stats_util.MannWhitneyUResult(u=0.0, p=1.0),
+            hypothesis_result=stats_util.HypothesisTestResult(
+                statistic_kind=stats_util.TestStatisticKind.RANK_SUM,
+                u=0.0,
+                p=1.0,
+            ),
+            before_bootstrap=None,
+            after_bootstrap=None,
         )
         worse_result = analysis_results.AnalysisResult(
             before_sample=before_samples[metric_paths[1]],
             after_sample=after_samples[metric_paths[1]],
-            mwu_result=stats_util.MannWhitneyUResult(u=1.0, p=1.0),
+            hypothesis_result=stats_util.HypothesisTestResult(
+                statistic_kind=stats_util.TestStatisticKind.RANK_SUM,
+                u=1.0,
+                p=1.0,
+            ),
+            before_bootstrap=None,
+            after_bootstrap=None,
         )
         self.assertEqual(
             results,
@@ -191,12 +216,20 @@ class AnalysisTest(unittest.TestCase):
         return analysis_results.AnalysisResult(
             before_sample=placeholder,
             after_sample=placeholder,
-            mwu_result=stats_util.MannWhitneyUResult(u=u, p=p),
+            hypothesis_result=stats_util.HypothesisTestResult(
+                statistic_kind=stats_util.TestStatisticKind.RANK_SUM, u=u, p=p
+            ),
+            before_bootstrap=None,
+            after_bootstrap=None,
         )
 
     def test_prune_non_significant_results(self) -> None:
         cfg = analysis_cfg.AnalysisCfg(
-            alpha=0.01, multiple_test_cfg=analysis_cfg.MultipleTestCfg.FWER
+            alpha=0.01,
+            multiple_test_cfg=analysis_cfg.MultipleTestCfg.FWER,
+            hypothesis_test_params=stats_util.HypothesisTestParameters(
+                statistic_kind=stats_util.TestStatisticKind.RANK_SUM
+            ),
         )
         results = [
             self._make_analysis_result(u=0.0, p=0.001),
@@ -209,8 +242,8 @@ class AnalysisTest(unittest.TestCase):
         pruned = analyze_results._prune_non_significant_results(results, cfg)
         self.assertEqual(len(pruned), 2)
         # Check p-values were adjusted.
-        self.assertEqual(pruned[0].mwu_result.p, 0.006)
-        self.assertEqual(pruned[1].mwu_result.p, 0.01)
+        self.assertEqual(pruned[0].hypothesis_result.p, 0.006)
+        self.assertEqual(pruned[1].hypothesis_result.p, 0.01)
 
     def test_prune_regex_include(self) -> None:
         before_samples, after_samples = self._load_samples()

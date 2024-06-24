@@ -12,14 +12,15 @@ import statistics
 from analyzer.analysis import analysis_cfg
 from analyzer.analysis import analysis_results
 from analyzer.analysis import analyze_results
+from analyzer.analysis import stats_util
 from analyzer.frontend import plot_util
 import click
 
 
 class _CliAnalysis(enum.StrEnum):
-    PRINT_TEST_BREAKDOWN = "print_test_breakdown"
-    PRINT_BY_PCT_CHANGE = "print_by_pct_change"
-    PRINT_MEDIAN_PCT_CHANGE = "print_median_pct_change"
+    PRINT_TEST_BREAKDOWN = "print-test-breakdown"
+    PRINT_BY_PCT_CHANGE = "print-by-pct-change"
+    PRINT_MEDIAN_PCT_CHANGE = "print-median-pct-change"
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True, order=True)
@@ -146,6 +147,31 @@ def _compare_results(
     default=1,
 )
 @click.option(
+    "--statistic-kind",
+    type=click.Choice(list(stats_util.TestStatisticKind)),
+    help="test statistic to use - rank-sum will use Mann-Whitney U which is "
+    "faster but less powerful",
+    default=stats_util.TestStatisticKind.MEAN,
+)
+@click.option(
+    "--resamples",
+    type=int,
+    help="number of resamples to use for resampling methods",
+    default=99999,
+)
+@click.option(
+    "--deterministic/--no-deterministic",
+    type=bool,
+    help="whether to use deterministic resampling",
+    default=False,
+)
+@click.option(
+    "--confidence",
+    type=float,
+    help="confidence interval to report for the test statistic [0, 1.0]",
+    default=0.95,
+)
+@click.option(
     "-p",
     "--alpha-value",
     type=float,
@@ -184,6 +210,10 @@ def print_results(
     plot_dir: pathlib.Path | None,
     skip_all_zero: bool,
     minimum_sample_size: int,
+    statistic_kind: stats_util.TestStatisticKind,
+    resamples: int,
+    deterministic: bool,
+    confidence: float,
     alpha_value: float,
     multiple_test_correction: analysis_cfg.MultipleTestCfg,
     metric_include_regex: str | None,
@@ -194,6 +224,17 @@ def print_results(
         skip_all_zero_samples=skip_all_zero,
         minimum_sample_size=minimum_sample_size,
         alpha=alpha_value,
+        hypothesis_test_params=stats_util.HypothesisTestParameters(
+            statistic_kind=statistic_kind,
+            resamples=resamples,
+            deterministic=deterministic,
+        ),
+        bootstrap_params=stats_util.BootstrapParameters(
+            statistic_kind=statistic_kind,
+            resamples=resamples,
+            deterministic=deterministic,
+            confidence=confidence,
+        ),
         multiple_test_cfg=multiple_test_correction,
         metric_exclude_regex=metric_exclude_regex,
         metric_include_regex=metric_include_regex,

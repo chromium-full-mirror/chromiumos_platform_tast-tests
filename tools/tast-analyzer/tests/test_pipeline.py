@@ -7,6 +7,7 @@ import unittest
 
 from analyzer.analysis import analysis_cfg
 from analyzer.analysis import analyze_results
+from analyzer.analysis import stats_util
 
 
 FILES_DIR: pathlib.Path = (
@@ -15,16 +16,9 @@ FILES_DIR: pathlib.Path = (
 
 
 class PipelineTest(unittest.TestCase):
-    def test_analyze_results_pruning(self) -> None:
-        cfg = analysis_cfg.AnalysisCfg(
-            skip_all_zero_samples=False,
-            minimum_sample_size=1,
-            alpha=1.0,
-            multiple_test_cfg=analysis_cfg.MultipleTestCfg.FWER,
-            metric_exclude_regex=None,
-            metric_include_regex=None,
-            remove_outliers=False,
-        )
+    def _test_analyze_results_pruning_with_cfg(
+        self, cfg: analysis_cfg.AnalysisCfg
+    ) -> None:
         results_unpruned = analyze_results.analyze_results(
             FILES_DIR.joinpath("results-chart-complex1.json"),
             FILES_DIR.joinpath("results-chart-complex2.json"),
@@ -64,3 +58,59 @@ class PipelineTest(unittest.TestCase):
                     ),
                     f"Expected {unpruned.metric_path()} to be in the pruned results.",
                 )
+
+    def test_analyze_results_pruning(self) -> None:
+        rank_sum_cfg = analysis_cfg.AnalysisCfg(
+            skip_all_zero_samples=False,
+            minimum_sample_size=1,
+            alpha=1.0,
+            hypothesis_test_params=stats_util.HypothesisTestParameters(
+                statistic_kind=stats_util.TestStatisticKind.RANK_SUM
+            ),
+            bootstrap_params=stats_util.BootstrapParameters(
+                statistic_kind=stats_util.TestStatisticKind.RANK_SUM
+            ),
+            multiple_test_cfg=analysis_cfg.MultipleTestCfg.FWER,
+            metric_exclude_regex=None,
+            metric_include_regex=None,
+            remove_outliers=False,
+        )
+        self._test_analyze_results_pruning_with_cfg(rank_sum_cfg)
+
+        mean_cfg = dataclasses.replace(
+            rank_sum_cfg,
+            hypothesis_test_params=stats_util.HypothesisTestParameters(
+                statistic_kind=stats_util.TestStatisticKind.MEAN
+            ),
+            bootstrap_params=stats_util.BootstrapParameters(
+                statistic_kind=stats_util.TestStatisticKind.MEAN
+            ),
+        )
+        self._test_analyze_results_pruning_with_cfg(mean_cfg)
+
+    def test_analyze_results_bias_estimate(self) -> None:
+        cfg = analysis_cfg.AnalysisCfg(
+            skip_all_zero_samples=False,
+            alpha=1.0,
+            hypothesis_test_params=stats_util.HypothesisTestParameters(
+                deterministic=True,
+            ),
+            bootstrap_params=stats_util.BootstrapParameters(
+                deterministic=True,
+            ),
+            multiple_test_cfg=analysis_cfg.MultipleTestCfg.FWER,
+        )
+        results = analyze_results.analyze_results(
+            FILES_DIR.joinpath("results-chart-complex1.json"),
+            FILES_DIR.joinpath("results-chart-complex2.json"),
+            cfg,
+        )
+        results_by_path = {v.metric_path(): v for v in results}
+        result = results_by_path[
+            "ui.Test.Ash.Overview.AnimationSmoothness.Enter"
+            ".ClamshellMode.2windows.average"
+        ]
+        assert result.before_bootstrap
+        assert result.after_bootstrap
+        self.assertAlmostEqual(result.before_bootstrap.bias_estimate, 0.0022606)
+        self.assertAlmostEqual(result.after_bootstrap.bias_estimate, -0.0028447)

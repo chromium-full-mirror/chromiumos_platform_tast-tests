@@ -71,7 +71,7 @@ def _prune_non_significant_results(
 ) -> list[analysis_results.AnalysisResult]:
     """Prune results that are not significant."""
     out_results = []
-    p_values = [r.mwu_result.p for r in results]
+    p_values = [r.hypothesis_result.p for r in results]
     rejects, p_corrected, _, _ = multitest.multipletests(
         p_values, alpha=cfg.alpha, method=cfg.multiple_test_cfg.scipy_name()
     )
@@ -79,7 +79,7 @@ def _prune_non_significant_results(
         # Reject the null hypothesis (that they are the same).
         if reject:
             r = copy.deepcopy(r)
-            r.mwu_result.p = p
+            r.hypothesis_result.p = p
             out_results.append(r)
     return out_results
 
@@ -160,6 +160,8 @@ def analyze_results(
         before_samples=before_samples,
         after_samples=after_samples,
         metric_paths=metric_paths,
+        hypothesis_params=cfg.hypothesis_test_params,
+        bootstrap_params=cfg.bootstrap_params,
     )
 
     return _prune_non_significant_results(results, cfg)

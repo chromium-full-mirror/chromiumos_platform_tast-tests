@@ -20,8 +20,16 @@ class AnalysisResult:
     after_sample: MetricSample
     """The sample corresponding to the experiment group."""
 
-    mwu_result: stats_util.MannWhitneyUResult
-    """The result of the analysis using the MannWhitneyU test."""
+    hypothesis_result: stats_util.HypothesisTestResult
+    """The result of running the hypothesis test."""
+
+    before_bootstrap: stats_util.BootstrapResult | None
+    """The result of running a bootstrap to compute confidence intervals
+    on the control group."""
+
+    after_bootstrap: stats_util.BootstrapResult | None
+    """The result of running a bootstrap to compute confidence intervals
+    on the experiment group."""
 
     def __post__init__(self) -> None:
         assert self.before_sample.test_name == self.after_sample.test_name
@@ -58,19 +66,41 @@ class AnalysisResult:
         else:
             return -change
 
+    @staticmethod
+    def _confidence_fmt(bootstrap: stats_util.BootstrapResult) -> str:
+        kind = bootstrap.statistic_kind.value
+        confidence = bootstrap.confidence_interval.confidence
+        low = bootstrap.confidence_interval.low
+        high = bootstrap.confidence_interval.high
+        bias = bootstrap.bias_estimate
+
+        return f", {kind} {100*confidence:.1f}%=[{low:.2f}, {high:.2f}], E[bias]={bias:.2f}"
+
     def summary(self) -> str:
         """Returns a human readable summary of this result."""
         s = f"{self.before_sample.metric_path}:\n"
 
         s += (
-            f"  {self.mwu_result.summary()}, "
+            f"  {self.hypothesis_result.summary()}, "
             f"dir={self.before_sample.improvement_direction}, "
             f"n=({len(self.before_sample.value_map)}, "
             f"{len(self.after_sample.value_map)}), "
             f"%better={100.0*self.mean_change_better():.2f}%\n"
         )
-        s += self.before_sample.description() + "\n"
-        s += self.after_sample.description()
+
+        before_confidence = (
+            self._confidence_fmt(self.before_bootstrap)
+            if self.before_bootstrap
+            else ""
+        )
+        s += f"{self.before_sample.description()}{before_confidence}\n"
+
+        after_confidence = (
+            self._confidence_fmt(self.after_bootstrap)
+            if self.after_bootstrap
+            else ""
+        )
+        s += self.after_sample.description() + after_confidence
         return s
 
 
@@ -120,6 +150,8 @@ def generate_analysis_results(
     before_samples: metric_sample.SampleDict,
     after_samples: metric_sample.SampleDict,
     metric_paths: list[str],
+    hypothesis_params: stats_util.HypothesisTestParameters,
+    bootstrap_params: stats_util.BootstrapParameters,
 ) -> list[AnalysisResult]:
     """Generates a list of analysis results for the given sample dictionaries.
 
@@ -136,12 +168,23 @@ def generate_analysis_results(
         before_sample = before_samples[metric_path]
         after_sample = after_samples[metric_path]
 
-        mwu_result = stats_util.mannwhitneyu(before_sample, after_sample)
+        hypothesis_result = hypothesis_params.run_hypothesis_test(
+            before_sample, after_sample
+        )
+        before_bootstrap = bootstrap_params.run_one_sample_bootstrap(
+            before_sample
+        )
+        after_bootstrap = bootstrap_params.run_one_sample_bootstrap(
+            after_sample
+        )
+
         out.append(
             AnalysisResult(
                 before_sample=before_sample,
                 after_sample=after_sample,
-                mwu_result=mwu_result,
+                hypothesis_result=hypothesis_result,
+                before_bootstrap=before_bootstrap,
+                after_bootstrap=after_bootstrap,
             )
         )
     return out
