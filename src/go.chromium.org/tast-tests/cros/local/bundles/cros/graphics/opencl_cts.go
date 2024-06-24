@@ -20078,6 +20078,8 @@ func OpenclCts(ctx context.Context, s *testing.State) {
 	os.Setenv("CLVK_MAX_MEM_ALLOC_SIZE_MB", "1024")
 	// CL_FILTER_LINEAR is not required for the compliance. Run the CTS without CL_FILTER_LINEAR support.
 	os.Setenv("CLVK_SUPPORTS_FILTER_LINEAR", "0")
+	// Default DEVICE_EXTENSIONS is only needed for performance purpose. Run the CTS without it.
+	os.Setenv("CLVK_DEVICE_EXTENSIONS", "")
 
 	// api_null_buffer_arg requires physical addressing to pass
 	// Do not run everything with physical addressing because it impacts performance
