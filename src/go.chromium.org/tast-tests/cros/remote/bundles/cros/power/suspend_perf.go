@@ -458,11 +458,13 @@ func (c *compoundTracers) start(ctx context.Context, s *testing.State, cl *rpc.C
 	if err != nil {
 		s.Log("Failed to start perfetto, but this is ignorable: ", err)
 	}
+	c.perfettoToken = nil
 
 	c.perf, err = startLinuxPerf(ctx, cl)
 	if err != nil {
 		s.Fatal("Failed to start perf, but this is ignorable: ", err)
 	}
+	c.perfToken = nil
 
 	if disconnect {
 		// Get tokens from tracers and discard the tracer instances.
