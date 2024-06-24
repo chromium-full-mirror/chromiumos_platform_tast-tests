@@ -30,7 +30,7 @@ func init() {
 			"chromeos-faft@google.com", // Owning team list
 			"shurst@google.com",        // Test author
 		},
-		BugComponent: "b:194910335", // ChromeOS > Platform > Enablement > Firmware > FAFT
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		// TODO: When stable, move to firmware_pd.
 		Data:         []string{firmware.ConfigFile},
 		Attr:         []string{"group:firmware", "firmware_pd_unstable"},
