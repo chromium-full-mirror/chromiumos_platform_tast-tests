@@ -69,7 +69,9 @@ func init() {
 		Data: []string{nearbysnippet.ZipName, crossdevice.AccountUtilZip},
 		Contacts: []string{
 			"chromeos-sw-engprod@google.com",
+			"hansenmichael@google.com",
 		},
+		BugComponent: "b:1131838", // ChromeOS > Software > System Services > Cross Device > Nearby Share
 		Vars: []string{
 			defaultAndroidUsername,
 			defaultAndroidPassword,
@@ -91,7 +93,9 @@ func init() {
 		Data: []string{nearbysnippet.ZipName, crossdevice.AccountUtilZip},
 		Contacts: []string{
 			"chromeos-sw-engprod@google.com",
+			"hansenmichael@google.com",
 		},
+		BugComponent: "b:1131838", // ChromeOS > Software > System Services > Cross Device > Nearby Share
 		Vars: []string{
 			devAndroidUsername,
 			devAndroidPassword,
@@ -113,7 +117,9 @@ func init() {
 		Data: []string{nearbysnippet.ZipName, crossdevice.AccountUtilZip},
 		Contacts: []string{
 			"chromeos-sw-engprod@google.com",
+			"hansenmichael@google.com",
 		},
+		BugComponent: "b:1131838", // ChromeOS > Software > System Services > Cross Device > Nearby Share
 		Vars: []string{
 			prodAndroidUsername,
 			prodAndroidPassword,
@@ -274,7 +280,7 @@ func configureAndroidNearbySettings(ctx context.Context, androidNearby *nearbysn
 	}
 	// GoBigSleepLint: sleep to wait for Nearby Share to become enabled on Android.
 	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
-		return errors.Wrap(err, "failed to sleep after setting Nearby disabld via snippets")
+		return errors.Wrap(err, "failed to sleep after setting Nearby disabled via snippets")
 	}
 
 	if err := androidNearby.SetupDevice(ctx, dataUsage, visibility, name); err != nil {

@@ -71,9 +71,10 @@ func init() {
 		Impl: NewCrossDeviceAndroid(Feature{Name: PhoneHub}),
 		Data: []string{AccountUtilZip, MultideviceSnippetZipName},
 		Contacts: []string{
-			"kyleshima@chromium.org",
 			"chromeos-sw-engprod@google.com",
+			"hansenmichael@google.com",
 		},
+		BugComponent: "b:1131837", // ChromeOS > Software > System Services > Cross Device > Phone Hub
 		Vars: []string{
 			defaultCrossDeviceUsername,
 			defaultCrossDevicePassword,
@@ -110,9 +111,10 @@ func init() {
 		Impl: NewCrossDeviceAndroid(Feature{Name: PhoneHub}),
 		Data: []string{AccountUtilZip, MultideviceSnippetZipName},
 		Contacts: []string{
-			"jasonrhee@google.com",
 			"chromeos-sw-engprod@google.com",
+			"hansenmichael@google.com",
 		},
+		BugComponent: "b:1131837", // ChromeOS > Software > System Services > Cross Device > Phone Hub
 		Vars: []string{
 			defaultCrossDeviceUsername,
 			defaultCrossDevicePassword,
@@ -149,9 +151,10 @@ func init() {
 		Impl: NewCrossDeviceAndroid(Feature{Name: SmartLock}),
 		Data: []string{AccountUtilZip, MultideviceSnippetZipName},
 		Contacts: []string{
-			"kyleshima@chromium.org",
 			"chromeos-sw-engprod@google.com",
+			"hansenmichael@google.com",
 		},
+		BugComponent: "b:1131772", // ChromeOS > Software > System Services > Cross Device > Smart Lock
 		Vars: []string{
 			smartLockUsername,
 			smartLockPassword,
