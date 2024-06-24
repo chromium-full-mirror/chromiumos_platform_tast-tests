@@ -18,17 +18,20 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 )
 
-// The timeout for setup and teardown. Set it a bit longer than
-// waitForEhideStateTimeout.
-const ehideTimeout = 30 * time.Second
+// A relatively large timeout for fixture stability.
+const ehideTimeout = 1 * time.Minute
 
-// In ehide we wait for 10 seconds for the setup of IPv4 and IPv6 addresses,
-// each. Here we wait a maximum of 25 seconds, which is slightly longer than
-// the sum of the maximum possible waiting time for the appearance of IPv4 and
-// IPv6 addresses.
-const waitForEhideStateTimeout = 25 * time.Second
+// Set the connection timeout to a relatively long time (15 seconds) so that we
+// can make sure that the connection can be established within the time limit
+// if SSH is ready.
+const connTimeout = 15 * time.Second
+
+// The getState() function should return immediately. If it has not returned in
+// 15 seconds, we can infer that the SSH connection has hanged due to the ehide
+// startup or shutdown.
+const getStateTimeout = 15 * time.Second
 const waitForEhideStateInterval = 1 * time.Second
-const postTestTimeout = 5 * time.Second
+const postTestTimeout = 15 * time.Second
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
@@ -52,11 +55,20 @@ type ehideFixture struct {
 
 func (f *ehideFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	d := s.DUT()
-	if err := d.Conn().CommandContext(ctx, ehideconst.EhidePath, "start").Run(testexec.DumpLogOnError); err != nil {
-		s.Fatal("Failed to start ehide: ", err)
+	startErr := d.Conn().CommandContext(ctx, ehideconst.EhidePath, "start").Run(testexec.DumpLogOnError)
+	if startErr != nil && strings.Contains(startErr.Error(), "Process exited with status") {
+		// "Process exited with status" indicates that ehide has exited due to
+		// an unexpected error. Report it and return here.
+		s.Fatal("Failed to start ehide: ", startErr)
 	}
+	// Otherwise, either there is no error, or the error comes from the SSH
+	// connection closed by ehide. This often happens so don't log anything
+	// here. Only report the error if the ehide state verification fails later.
 
 	if err := waitForEhideState(ctx, d, ehideconst.EhideStateOn); err != nil {
+		if startErr != nil {
+			s.Error("Failed to start ehide: ", startErr)
+		}
 		s.Fatal("Failed to wait for ehide turning on: ", err)
 	}
 	return nil
@@ -78,11 +90,20 @@ func (f *ehideFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
 
 func (f *ehideFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 	d := s.DUT()
-	if err := d.Conn().CommandContext(ctx, ehideconst.EhidePath, "stop").Run(testexec.DumpLogOnError); err != nil {
-		s.Fatal("Failed to stop ehide: ", err)
+	stopErr := d.Conn().CommandContext(ctx, ehideconst.EhidePath, "stop").Run(testexec.DumpLogOnError)
+	if stopErr != nil && strings.Contains(stopErr.Error(), "Process exited with status") {
+		// "Process exited with status" indicates that ehide has exited due to
+		// an unexpected error. Report it and return here.
+		s.Fatal("Failed to stop ehide: ", stopErr)
 	}
+	// Otherwise, either there is no error, or the error comes from the SSH
+	// connection closed by ehide. This often happens so don't log anything
+	// here. Only report the error if the ehide state verification fails later.
 
 	if err := waitForEhideState(ctx, d, ehideconst.EhideStateOff); err != nil {
+		if stopErr != nil {
+			s.Error("Failed to stop ehide: ", stopErr)
+		}
 		s.Fatal("Failed to wait for ehide turing off: ", err)
 	}
 }
@@ -98,16 +119,24 @@ func getState(ctx context.Context, dut *dut.DUT) (string, error) {
 
 func waitForEhideState(ctx context.Context, dut *dut.DUT, state string) error {
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		if e := dut.Connect(ctx); e != nil {
-			return e
+		connCtx, connCancel := context.WithTimeout(ctx, connTimeout)
+		defer connCancel()
+		if err := dut.Connect(connCtx); err != nil {
+			return err
 		}
-		if s, e := getState(ctx, dut); e != nil {
-			return e
+		getStateCtx, getStateCancel := context.WithTimeout(ctx, getStateTimeout)
+		defer getStateCancel()
+		if s, err := getState(getStateCtx, dut); err != nil {
+			return err
 		} else if s != state {
 			return errors.Errorf("got current state %s, want %s", s, state)
 		}
 		return nil
-	}, &testing.PollOptions{Timeout: waitForEhideStateTimeout, Interval: waitForEhideStateInterval}); err != nil {
+	}, &testing.PollOptions{
+		// We don't specify the polling timeout so that the timeout only happens
+		// when the context exceeds the deadline.
+		Interval: waitForEhideStateInterval,
+	}); err != nil {
 		return errors.Errorf("failed to wait for ehide: %s", err)
 	}
 	return nil
