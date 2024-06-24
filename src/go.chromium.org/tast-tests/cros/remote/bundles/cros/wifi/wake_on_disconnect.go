@@ -26,8 +26,11 @@ func init() {
 			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
 		},
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
+		// This test is currently unscheduled due to lack of WakeOnWifi feature support.
+		// Once this feature is implemented, please add the  attributes:
+		// "wificell_func", "wificell_suspend", and "wificell_unstable"
+		Attr: []string{"group:wificell"},
 		// TODO(b/187362093): Add a SoftwareDep for wake_on_wifi.
-		Attr:            []string{"group:wificell", "wificell_func", "wificell_suspend", "wificell_unstable"},
 		TestBedDeps:     []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
 		ServiceDeps:     []string{wificell.ShillServiceName},
 		Fixture:         wificell.FixtureID(wificell.TFFeaturesNone),
