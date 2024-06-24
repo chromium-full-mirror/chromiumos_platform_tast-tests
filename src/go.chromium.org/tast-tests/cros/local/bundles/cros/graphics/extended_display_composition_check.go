@@ -81,13 +81,16 @@ func ExtendedDisplayCompositionCheck(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	if testOpt.tabletMode {
-		cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, true)
-		if err != nil {
-			s.Fatal("Failed to enable tablet mode: ", err)
-		}
-		defer cleanup(cleanupCtx)
+	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, testOpt.tabletMode)
+	if err != nil {
+		s.Fatal("Failed to enable tablet mode: ", err)
 	}
+
+	defer func(ctx context.Context) {
+		if err := cleanup(ctx); err != nil {
+			s.Fatal("Failed to transition back to laptop mode: ", err)
+		}
+	}(cleanupCtx)
 
 	const (
 		settingsDeviceText  = "Device"
