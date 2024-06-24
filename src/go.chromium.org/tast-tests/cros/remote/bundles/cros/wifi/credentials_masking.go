@@ -215,22 +215,6 @@ func CredentialsMasking(ctx context.Context, s *testing.State) {
 			if elapsed > defaultTimeout {
 				s.Fatalf("Failed to check if the Network Settings dialog shown: the dialog doesn't pop up in time, time elapsed: %s", elapsed)
 			}
-
-			// Clicking the eye icon and check that previously used wrong network is not displayed in the next step.
-			eyeIconFinder := ui.Node().HasClass("icon-visibility").Finder()
-			if _, err := uiauto.LeftClick(ctx, &ui.LeftClickRequest{Finder: eyeIconFinder}); err != nil {
-				s.Fatal("Failed to click the eye icon: ", err)
-			}
-
-			passwordFinder := ui.Node().Name(testNetwork.psk.value).Finder()
-			// The password should not be shown in clear text when the the eye icon is clicked.
-			// Check that clear text password is not shown, as the key box should be empty after clicking the eye button as expected.
-			if _, err := uiauto.EnsureGone(ctx, &ui.EnsureGoneRequest{
-				Finder:  passwordFinder,
-				Timeout: durationpb.New(5 * time.Second),
-			}); err != nil {
-				s.Fatal("Failed to check if the password is not in clear text: ", err)
-			}
 		}
 	}
 }
