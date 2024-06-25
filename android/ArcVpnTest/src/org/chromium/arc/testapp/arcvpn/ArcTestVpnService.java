@@ -17,14 +17,14 @@ import android.content.IntentFilter;
 import android.net.ConnectivityManager;
 import android.net.LinkProperties;
 import android.net.Network;
-import android.net.NetworkInfo;
 import android.net.VpnService;
-import android.os.Handler;
-import android.os.HandlerThread;
 import android.os.ParcelFileDescriptor;
 import android.util.Log;
 
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.DatagramPacket;
@@ -33,6 +33,9 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class ArcTestVpnService extends VpnService {
     private static final String TAG = ArcTestVpnService.class.getSimpleName();
@@ -50,12 +53,26 @@ public class ArcTestVpnService extends VpnService {
     private static final String MESSAGE_KEY = "message";
     private static final String ADDRESS_KEY = "address";
     private static final String PORT_KEY = "port";
+    private static final String OVERLAY_ADDRESS_KEY = "overlay_address";
 
     // Values used for protocol intent key.
     // These fields are in sync with l4server.Family in:
     // platform/tast-tests/src/go.chromium.org/tast-tests/cros/local/network/virtualnet/l4server/l4server.go
     private static final String PROTOCOL_TCP = "tcp";
     private static final String PROTOCOL_UDP = "udp";
+
+    // The default overlay address installed onto the TUN interface, if it's not specified in the
+    // intent for launching the VPN service.
+    private static final String DEFAULT_OVERLAY_ADDRESS = "192.168.2.2";
+
+    // The default MTU value on the TUN interface. This is the default but usually not a good enough
+    // value for a VPN interface.
+    private static final int DEFAULT_MTU = 1500;
+
+    // The header size of a message in the protocol of the toy VPN server. See the package doc in
+    // platform/tast-tests/src/go.chromium.org/tast-tests/cros/local/network/vpn/internal/toyserver
+    // for more details.
+    private static final int TOY_VPN_MESSAGE_HEADER_SIZE = 4;
 
     // Metadata for the notification.
     private static final int NOTIFICATION_ID = 1;
@@ -82,6 +99,12 @@ public class ArcTestVpnService extends VpnService {
 
     // Last setup socket family. Used to send message from last setup socket.
     private String mLastSetupSocketFamily;
+
+    // Maximum transmission unit of the VPN connection.
+    private final int mMtu = DEFAULT_MTU;
+
+    // A separate worker thread to sequentialize the one-off tasks.
+    ExecutorService mExecutor = Executors.newSingleThreadExecutor();
 
     public class ArcVpnBroadcastReceiver extends BroadcastReceiver {
         private static final String TAG = "ArcVpnBroadcastReceiver";
@@ -145,7 +168,16 @@ public class ArcTestVpnService extends VpnService {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         showNotification();
-        setUpVpnService();
+
+        String overlayAddress = intent.getStringExtra(OVERLAY_ADDRESS_KEY);
+        setUpVpnService(overlayAddress == null ? DEFAULT_OVERLAY_ADDRESS : overlayAddress);
+
+        String ifname = intent.getStringExtra(INTERFACE_KEY);
+        String serverAddress = intent.getStringExtra(ADDRESS_KEY);
+        int serverPort = intent.getIntExtra(PORT_KEY, 0);
+        if (ifname != null && serverAddress != null && serverPort != 0) {
+            connectToToyVpnServer(ifname, serverAddress, serverPort);
+        }
 
         mBroadcastReceiver = new ArcVpnBroadcastReceiver();
         IntentFilter intentFilter = new IntentFilter();
@@ -202,17 +234,37 @@ public class ArcTestVpnService extends VpnService {
                         .build());
     }
 
+    /**
+     * Connects to the toy VPN server listening at `address`:`port` via interface `ifname`. Also
+     * starts the packet forwarding between the TCP connection tun interface after that.
+     */
+    private void connectToToyVpnServer(String ifname, String address, int port) {
+        try {
+            mAddress = InetAddress.getByName(address);
+            mPort = port;
+        } catch (UnknownHostException e) {
+            Log.e(TAG, "Address is unknown, setup socket failed", e);
+            return;
+        }
+        setupTcpSocket(ifname);
+        startForwarding();
+    }
+
     /** Registers ourselves as an actual VpnService and sets up the underlying interface. */
-    private void setUpVpnService() {
+    private void setUpVpnService(String overlayAddress) {
         VpnService.prepare(getApplicationContext());
 
         mTunFd = new VpnService.Builder()
-                .addAddress("192.168.2.2", 24)
+                .addAddress(overlayAddress, 24)
                 .addRoute("0.0.0.0", 0)
                 // Useful so ARC doesn't use the host's DNS servers as a fallback. This shouldn't
                 // functionally change the VPN behavior, but may affect ARC's networking behavior
                 // on syncing host->ARC DNS servers.
                 .addDnsServer("8.8.8.8")
+                // Make sure read on the returned tun fd will be blocked, so that our programming
+                // model will be easier.
+                .setBlocking(true)
+                .setMtu(mMtu)
                 .establish();
     }
 
@@ -223,23 +275,23 @@ public class ArcTestVpnService extends VpnService {
      * socket for sending messages.
      */
     private void setupTcpSocket(String ifname) {
-        new Thread(() -> {
-                try {
-                    Network net = getNetworkByInterface(ifname);
-                    if (net == null) {
-                        Log.e(TAG, "Network with specified interface name does not exist, set up "
-                                + "socket failed.");
-                        return;
-                    }
-                    mTcpSocket = net.getSocketFactory().createSocket();
-                    protect(mTcpSocket);
-                    mTcpSocket.connect(new InetSocketAddress(mAddress, mPort));
-                    mWriter = new PrintWriter(mTcpSocket.getOutputStream(), /*autoFlush=*/ true);
-                    mLastSetupSocketFamily = PROTOCOL_TCP;
-                } catch (IOException e) {
-                    Log.e(TAG, "Error opening TCP socket", e);
+        mExecutor.submit(() -> {
+            try {
+                Network net = getNetworkByInterface(ifname);
+                if (net == null) {
+                    Log.e(TAG, "Network with specified interface name does not exist, set up "
+                            + "socket failed.");
+                    return;
                 }
-        }).start();
+                mTcpSocket = net.getSocketFactory().createSocket();
+                protect(mTcpSocket);
+                mTcpSocket.connect(new InetSocketAddress(mAddress, mPort));
+                mWriter = new PrintWriter(mTcpSocket.getOutputStream(), /*autoFlush=*/ true);
+                mLastSetupSocketFamily = PROTOCOL_TCP;
+            } catch (IOException e) {
+                Log.e(TAG, "Error opening TCP socket", e);
+            }
+        });
     }
 
     /**
@@ -247,7 +299,7 @@ public class ArcTestVpnService extends VpnService {
      * {@link #setupTcpSocket()}.
      */
     public void sendTcpMessage(String msg) {
-        new Thread(() -> {
+        mExecutor.submit(() -> {
             try {
                 if (mWriter == null) {
                     Log.e(TAG, "TCP socket has not been set up yet, send message failed.");
@@ -257,7 +309,7 @@ public class ArcTestVpnService extends VpnService {
             } catch (Exception e) {
                 Log.e(TAG, "Failed to send TCP messages", e);
             }
-        }).start();
+        });
     }
 
     /**
@@ -267,7 +319,7 @@ public class ArcTestVpnService extends VpnService {
      * socket for sending messages.
      */
     private void setupUdpSocket(String ifname) {
-        new Thread(() -> {
+        mExecutor.submit(() -> {
             try {
                 Network net = getNetworkByInterface(ifname);
                 if (net == null) {
@@ -283,7 +335,7 @@ public class ArcTestVpnService extends VpnService {
             } catch (IOException e) {
                 Log.e(TAG, "Error opening UDP socket", e);
             }
-        }).start();
+        });
     }
 
     /**
@@ -291,7 +343,7 @@ public class ArcTestVpnService extends VpnService {
      * {@link #setupUdpSocket()}.
      */
     public void sendUdpMessage(String msg) {
-        new Thread(() -> {
+        mExecutor.submit(() -> {
             try {
                 if (mUdpSocket == null) {
                     Log.e(TAG, "UDP socket has not been set up yet, send message failed.");
@@ -303,7 +355,110 @@ public class ArcTestVpnService extends VpnService {
             } catch (IOException e) {
                 Log.e(TAG, "Failed to send UDP messages", e);
             }
-        }).start();
+        });
+    }
+
+    /**
+     * A helper function to read input into `b`. Different from the `read()` on InputStream, this
+     * function will try to read exactly len bytes before return. Returns -1 if EOF is reached
+     * before `len` bytes are read.
+     */
+    static private int readExact(InputStream input, byte[] b, int len) throws IOException {
+        int readTotal = 0;
+        while (readTotal < len) {
+            int cnt = input.read(b, readTotal, len - readTotal);
+            if (cnt == -1) {
+                return -1;
+            }
+            readTotal += cnt;
+        }
+        return readTotal;
+    }
+
+    /**
+     * Starts two threads to do the bidirectional forwarding between TUN device and TCP socket.
+     */
+    private void startForwarding() {
+        // Wrap this as a task and post it in the executor because the TCP socket is set up
+        // asynchronously.
+        mExecutor.submit(() -> {
+            if (mTcpSocket == null) {
+                Log.e(TAG, "TCP connection to the server has not been established");
+                return;
+            }
+            if (mTunFd == null) {
+                Log.e(TAG, "TUN device is not ready");
+                return;
+            }
+
+            // TCP -> TUN. Read a message from TCP connection which contains a packet length and an
+            // IP packet, and write the IP packet to the TUN device. Note that for a TCP socket, it
+            // cannot be guaranteed that one read can get the whole message or packet, and thus we
+            // need to do a loop to read until we get enough bytes.
+            new Thread(()-> {
+                try {
+                    byte[] headerBytes = new byte[TOY_VPN_MESSAGE_HEADER_SIZE];
+                    InputStream input = mTcpSocket.getInputStream();
+                    try (OutputStream output = new FileOutputStream(mTunFd.getFileDescriptor())) {
+                        while (true) {
+                            // Read the header as length.
+                            int readCnt = readExact(
+                                    input, headerBytes, TOY_VPN_MESSAGE_HEADER_SIZE);
+                            if (readCnt != TOY_VPN_MESSAGE_HEADER_SIZE) {
+                                Log.i(TAG, "Read header bytes returned " + readCnt
+                                        + ", assume connection ended");
+                                break;
+                            }
+                            int length = ByteBuffer.wrap(headerBytes).getInt();
+
+                            // Read the payload as packet.
+                            byte[] payloadBytes = new byte[length];
+                            readCnt = readExact(input, payloadBytes, length);
+                            if (readCnt != length) {
+                                Log.e(TAG, "Failed to read the payload, got " + readCnt
+                                        + ", want " + length);
+                                break;
+                            }
+
+                            // Write the packet to tun interface.
+                            output.write(payloadBytes);
+                        }
+                    }
+                } catch (IOException e) {
+                    Log.e(TAG, "Failed to forward from TCP connection to TUN device", e);
+                }
+            }).start();
+
+            // TUN -> TCP. Read an IP packet from the TUN device, compose a message which is the
+            // length of this packet and the IP packet itself, and write it to the TCP connection.
+            new Thread(()-> {
+                try {
+                    byte[] payloadBytes = new byte[mMtu * 2];
+                    OutputStream output = mTcpSocket.getOutputStream();
+                    try (InputStream input = new FileInputStream(mTunFd.getFileDescriptor())) {
+                        while (true) {
+                            // Read the packet.
+                            int readCnt = input.read(payloadBytes);
+                            if (readCnt == -1) {
+                                Log.i(TAG, "Read returned -1, assume connection ended");
+                                break;
+                            }
+
+                            // Write the length as header.
+                            byte[] headerBytes = ByteBuffer.allocate(TOY_VPN_MESSAGE_HEADER_SIZE)
+                                                           .putInt(readCnt)
+                                                           .array();
+                            output.write(headerBytes);
+
+                            // Write the packet as payload.
+                            output.write(payloadBytes, /*off=*/0, readCnt);
+                        }
+                    }
+                } catch (IOException e) {
+                    Log.e(TAG, "Failed to forward from TUN device to TCP connection", e);
+                }
+            }).start();
+        });
     }
 
     /**

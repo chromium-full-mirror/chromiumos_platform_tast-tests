@@ -14,6 +14,7 @@ public class VpnLaunchReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        context.startForegroundService(new Intent(context, ArcTestVpnService.class));
+        context.startForegroundService(
+                new Intent(context, ArcTestVpnService.class).putExtras(intent));
     }
 }

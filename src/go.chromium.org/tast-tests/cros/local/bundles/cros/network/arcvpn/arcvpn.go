@@ -95,10 +95,29 @@ func SetARCVPNEnabled(ctx context.Context, a *arc.ARC, enabled bool) error {
 // StartARCVPN starts the ARC test vpn app by broadcasting an intent that the ArcVpnTestApp
 // BroadcastReceiver receives.
 func StartARCVPN(ctx context.Context, a *arc.ARC) error {
+	return broadcastLaunchVPNIntent(ctx, a)
+}
+
+// StartARCVPNWithToyServer starts the ARC test vpn app with connecting to
+// vpnServer, by broadcasting an intent that the ArcVpnTestApp BroadcastReceiver
+// receives.
+func StartARCVPNWithToyServer(ctx context.Context, a *arc.ARC, arcIfname string, vpnServer *vpn.Server) error {
+	args := []string{
+		"--es", "interface", arcIfname,
+		"--es", "address", vpnServer.UnderlayIP,
+		"--ei", "port", strconv.Itoa(vpn.ToyVPNServerPort),
+		"--es", "overlay_address", vpnServer.Config.GetOverlayConfig().ClientIPv4,
+	}
+	return broadcastLaunchVPNIntent(ctx, a, args...)
+}
+
+func broadcastLaunchVPNIntent(ctx context.Context, a *arc.ARC, extraArgs ...string) error {
 	// Only components with android.permission.BIND_VPN_SERVICE can bind to
 	// VPNs, so we can't directly start the service from a non-root shell.
 	// Instead, have a broadcast receiver ask that the system start the VPN.
-	if _, err := a.BroadcastIntent(ctx, VPNTestAppBroadcast, "--include-stopped-packages", "--receiver-include-background"); err != nil {
+	args := []string{"--include-stopped-packages", "--receiver-include-background"}
+	args = append(args, extraArgs...)
+	if _, err := a.BroadcastIntent(ctx, VPNTestAppBroadcast, args...); err != nil {
 		return errors.Wrapf(err, "failed to send %s intent", VPNTestAppBroadcast)
 	}
 	return nil

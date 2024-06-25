@@ -3,9 +3,21 @@
 This Android app installs, preauthorizes and starts a VpnService to register a VPN with the Android
 networking stack, setup sockets and send messages out of the tun interface.
 
-Before the tunnel can be created, the app must be installed and preauthorized, which is already provided by this package. Afterwards, starting the service should work. To start the service, run
+Before the tunnel can be created, the app must be installed and preauthorized, which is already provided by this package. Afterwards, starting the service should work.
+
+To start the service, run
 
 `adb shell am broadcast -a org.chromium.arc.testapp.arcvpn.LAUNCH_VPN --receiver-include-background`
+
+Alternatively, if the app is supposed to connect to [the toy VPN server](https://crrev.com/c/5647430) for tunneling the traffic, run
+
+```
+adb shell am broadcast -a org.chromium.arc.testapp.arcvpn.LAUNCH_VPN \
+        --receiver-include-background \
+        --es interface <ARC_IFNAME> \
+        --es address <SERVER_IP> --ei port <SERVER_TCP_PORT> \
+        --es overlay_address <LOCAL_OVERLAY_IPV4>
+```
 
 We can setup socket by passing command with protocol(either `tcp` or `udp`), remote peer address and port, and interface name interface name in ARC that we want to setup socket with:
 

@@ -383,3 +383,16 @@ const (
 	// IPTypeIPv4AndIPv6 is used for supporting the dual stack.
 	IPTypeIPv4AndIPv6
 )
+
+// OverlayConfig contains a subset of properties of Config that can be used to
+// config overlay datapath. This will mainly be used by the ARC VPN test app.
+type OverlayConfig struct {
+	ClientIPv4 string
+}
+
+// GetOverlayConfig returns OverlayConfig of this Config.
+func (c *Config) GetOverlayConfig() *OverlayConfig {
+	return &OverlayConfig{
+		ClientIPv4: c.ipv4Subnet.GetAddrEndWith(2).String(),
+	}
+}
