@@ -71,12 +71,6 @@ const (
 	ChromeTAPEEnrolledLoggedIn = "chromeTAPEEnrolledLoggedIn"
 )
 
-// Fixtures defined in go.chromium.org/tast-tests/cros/local/mgs/fixture.go.
-const (
-	ManagedGuestSessionWithPWA       = "managedGuestSessionWithPWA"
-	ManagedGuestSessionWithPWALacros = "managedGuestSessionWithPWALacros"
-)
-
 // Fixtures defined in go.chromium.org/tast-tests/cros/local/policyutil/fixtures/lacros.go.
 const (
 	// LacrosPolicyLoggedIn is a fixture name.
