@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // LaunchAtHotspotSubpage launch OS settings and navigate to Hotspot subpage.
@@ -38,11 +39,21 @@ func (s *OSSettings) ToggleHotspot(ctx context.Context, tconn *chrome.TestConn, 
 		return errors.Wrap(err, "failed to close all notifications before toggle hotspot")
 	}
 
-	s.SetToggleOption(cr, toggleName, expected)(ctx)
+	if err := s.SetToggleOption(cr, toggleName, expected)(ctx); err != nil {
+		return errors.Wrap(err, "failed to set toggle option as expected")
+	}
 
 	if expected {
 		const notificationTitle = "Hotspot is on (Wi-Fi is off)"
-		if _, err := ash.WaitForNotification(ctx, tconn, time.Minute, ash.WaitTitle(notificationTitle)); err != nil {
+		// Logging all notifications found for further troubleshooting,
+		// as the hotspot appears to have automatically turned off somehow.
+		// TODO(b/351070946): Remove the logs once the issue has been identified or got fixed.
+		predicate := func(n *ash.Notification) bool {
+			testing.ContextLog(ctx, "Notification title: ", n.Title)
+			testing.ContextLog(ctx, "Notification message: ", n.Message)
+			return n.Title == notificationTitle
+		}
+		if _, err := ash.WaitForNotification(ctx, tconn, time.Minute, predicate); err != nil {
 			return errors.Wrap(err, "failed to wait for notification with title: Hotspot is on (Wi-Fi is off)")
 		}
 

@@ -87,6 +87,7 @@ func HotspotAutoDisable(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to open hotspot subpage: ", err)
 	}
+	defer hs.Close(cleanupCtx)
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
 	// Verify auto disable toggle is on
