@@ -37,41 +37,36 @@ func init() {
 			"jbettis@chromium.org",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		Attr:         []string{"group:firmware"},
+		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level3"},
+		Requirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Timeout:      25 * time.Minute,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{
 			{
-				Name:              "body_normal",
-				Fixture:           fixture.BootModeFixtureWithAPBackup(fixture.NormalMode),
-				ExtraAttr:         []string{"firmware_bios", "firmware_level3"},
-				ExtraRequirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
+				Name:    "body_normal",
+				Fixture: fixture.BootModeFixtureWithAPBackup(fixture.NormalMode),
 				Val: &corruptTestVal{
 					bios.FWBodyAImageSection, bios.FWBodyBImageSection,
 				},
 			},
 			{
-				Name:              "body_dev",
-				Fixture:           fixture.BootModeFixtureWithAPBackup(fixture.DevModeGBB),
-				ExtraAttr:         []string{"firmware_bios", "firmware_level3"},
-				ExtraRequirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
+				Name:    "body_dev",
+				Fixture: fixture.BootModeFixtureWithAPBackup(fixture.DevModeGBB),
 				Val: &corruptTestVal{
 					bios.FWBodyAImageSection, bios.FWBodyBImageSection,
 				},
 			},
 			{
-				Name:      "sig_normal",
-				Fixture:   fixture.BootModeFixtureWithAPBackup(fixture.NormalMode),
-				ExtraAttr: []string{"firmware_unstable"},
+				Name:    "sig_normal",
+				Fixture: fixture.BootModeFixtureWithAPBackup(fixture.NormalMode),
 				Val: &corruptTestVal{
 					bios.FWSignAImageSection, bios.FWSignBImageSection,
 				},
 			},
 			{
-				Name:      "sig_dev",
-				Fixture:   fixture.BootModeFixtureWithAPBackup(fixture.DevModeGBB),
-				ExtraAttr: []string{"firmware_unstable"},
+				Name:    "sig_dev",
+				Fixture: fixture.BootModeFixtureWithAPBackup(fixture.DevModeGBB),
 				Val: &corruptTestVal{
 					bios.FWSignAImageSection, bios.FWSignBImageSection,
 				},
