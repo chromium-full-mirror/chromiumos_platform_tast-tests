@@ -381,3 +381,26 @@ func (t *TpmHandle) TpmvSetFactoryConfig(config uint64) (uint32, error) {
 	}
 	return errorCode, nil
 }
+
+// TpmvTurnUpdateOn sends the vendor command to turn on the pending update.
+func (t *TpmHandle) TpmvTurnUpdateOn(delay uint16) error {
+	delayStr := fmt.Sprintf("%04x", delay)
+	var tpmvTurnUpdateOn, _ = hex.DecodeString("8001" + // tag: TPM_ST_NO_SESSIONS
+		"0000000e" + // size
+		"20000000" + // ordinal: vendor
+		"0018" + // subcommand: TurnUpdateOn
+		delayStr)
+
+	response, err := t.Send(tpmvTurnUpdateOn)
+	if err != nil {
+		return err
+	}
+	errorCode, err := getTPMVResponseStatus(response)
+	if err != nil {
+		return err
+	}
+	if errorCode != 0 {
+		return errors.Errorf("TurnUpdateOn command returned error: 0x%x", errorCode)
+	}
+	return nil
+}
