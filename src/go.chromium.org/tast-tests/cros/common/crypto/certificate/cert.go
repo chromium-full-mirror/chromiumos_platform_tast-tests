@@ -563,6 +563,10 @@ TjIiWCzjzpYKgAW5dpaKWjdtkUh+wi9eQT1N93MHAS0shD9heU2uFJuO2kH8e1UD
 jmVJAz/r8UhpSQTsQSYo/Opx7rOKsetFbY920+4pkLtizvXFq4N8VQ==
 -----END RSA PRIVATE KEY-----
 `,
+		Info: Info{
+			Organization: "", // This certificate doesn't have the organization information.
+			CommonName:   "chromelab-wifi-testbed-root.mtv.google.com",
+		},
 	},
 	ServerCred: Credential{
 		Cert: `-----BEGIN CERTIFICATE-----
@@ -619,6 +623,10 @@ ef0HNXS8E57SHJK4Gwz68IV9uerry3Xumv5PbipBcZJmwsUpuI35T87L7VPd1/0+
 VeHnvF4GdYCApvqJVwYEX5MJ9k+c0Qk4oNbhcC7G6LPxsyy7qs4fqg==
 -----END RSA PRIVATE KEY-----
 `,
+		Info: Info{
+			Organization: "", // This certificate doesn't have the organization information.
+			CommonName:   "chromelab-wifi-testbed-server.mtv.google.com",
+		},
 	},
 	ClientCred: Credential{
 		Cert: `-----BEGIN CERTIFICATE-----
@@ -673,6 +681,10 @@ Zu+dWIQ0jqq4ph1cCJBdVkScW3QHztVhkYmNtUyLPeIt8v01bwp+JrhRCj7hyvXh
 ddDg7MhEp4kd8a+GXiojn8xgztzzeM0gNXEO8+VHNxHQycRKbj3Y
 -----END RSA PRIVATE KEY-----
 `,
+		Info: Info{
+			Organization: "", // This certificate doesn't have the organization information.
+			CommonName:   "chromelab-wifi-testbed-client.mtv.google.com",
+		},
 	},
 	ExpiredServerCred: Credential{
 		Cert: `-----BEGIN CERTIFICATE-----
@@ -729,6 +741,10 @@ ef0HNXS8E57SHJK4Gwz68IV9uerry3Xumv5PbipBcZJmwsUpuI35T87L7VPd1/0+
 VeHnvF4GdYCApvqJVwYEX5MJ9k+c0Qk4oNbhcC7G6LPxsyy7qs4fqg==
 -----END RSA PRIVATE KEY-----
 `,
+		Info: Info{
+			Organization: "", // This certificate doesn't have the organization information.
+			CommonName:   "chromelab-wifi-testbed-server.mtv.google.com",
+		},
 	},
 }
 
