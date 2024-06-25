@@ -103,7 +103,7 @@ var (
 	//    Key Ladder:  prod
 	//    EK Cert:     Compliant
 	sysinfoFactoryMode   = `Chip factory mode.`
-	sysinfoResetFlagRE   = `Reset flags:\s+0x(?P<resetFlags>` + hexRE + `)\s+\S*\s*`
+	sysinfoResetFlagRE   = `Reset flags:\s+0x(?P<resetFlags>` + hexRE + `)\s+\([^)]*\)\s*`
 	sysinfoResetCountRE  = `Reset count:\s+(?P<resetCount>\d*)\s*`
 	sysinfoBreadcrumbRE  = `(Breadcrumbs:\s+0x(?P<breadcrumbs>` + hexRE + `))?\s*`
 	sysinfoChipRE        = `Chip:\s+g\s+(?P<chipName>Ti50|cr50) (?P<chipSKU>\S+)\s*`

@@ -1179,6 +1179,60 @@ Key Ladder:  prod
 	testSysinfo(t, input, expectedMap, expected)
 }
 
+func TestCr50Sysinfo4(t *testing.T) {
+	input := `
+Reset flags: 0x00000140 (hibernate wake-pin)
+Reset count: 1
+Chip:        g cr50 B2-C
+RO keyid:    0xaa66150f
+RW keyid:    0x87b73b67
+DEV_ID:      0x11111111 0xaaaaaaaa
+Rollback:    2/2/2 4/4/4
+TPM MODE:    enabled (0)
+Key Ladder:  prod
+`
+	expectedMap := make(map[string]string)
+
+	expectedMap["breadcrumbs"] = ""
+	expectedMap["resetFlags"] = "00000140"
+	expectedMap["resetCount"] = "1"
+	expectedMap["chipName"] = "cr50"
+	expectedMap["chipSKU"] = "B2-C"
+	expectedMap["roKeyid"] = "0xaa66150f"
+	expectedMap["rwKeyid"] = "0x87b73b67"
+	expectedMap["devid"] = "0x11111111 0xaaaaaaaa"
+	expectedMap["roRollback"] = "2/2/2"
+	expectedMap["rwRollback"] = "4/4/4"
+	expectedMap["tpmMode"] = "enabled"
+	expectedMap["tpmModeStatus"] = "0"
+	expectedMap["keyladder"] = "prod"
+	expectedMap["ekCert"] = ""
+	expectedMap["factoryMode"] = ""
+
+	expected := Sysinfo{}
+	expected.Breadcrumbs = ""
+	expected.ResetFlags = GscResetFlagHibernate
+	expected.OriginalResetFlags = 0x00000140
+	expected.ResetCount = 1
+	expected.ChipName = "cr50"
+	expected.ChipSKU = SKUH1Clamshell
+	expected.ROKeyid = "0xaa66150f"
+	expected.RWKeyid = "0x87b73b67"
+	expected.Devid = "0x11111111 0xaaaaaaaa"
+	expected.RORollback = "2/2/2"
+	expected.RWRollback = "4/4/4"
+	expected.TpmMode = "enabled"
+	expected.TpmModeStatus = 0
+	expected.Keyladder = "prod"
+	expected.TpmEnabled = true
+	expected.ProdKeyladder = true
+	expected.FactoryModeValid = false
+	expected.InFactoryMode = false
+	expected.EKCert = ""
+
+	testSysinfo(t, input, expectedMap, expected)
+}
+
 func testSysinfo(t *testing.T, input string, expectedMap map[string]string, expected Sysinfo) {
 	result, err := parseSysinfo(input)
 	if err != nil {
