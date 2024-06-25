@@ -2,10 +2,11 @@ set noparent
 
 # ChromeOS USB team
 bleung@chromium.org
-grundler@chromium.org
 jthies@chromium.org
-pmalani@chromium.org
-wonchung@chromium.org
+ukaszb@google.com
+bszpila@google.com
+danielgeorgem@google.com
+vincentchungzt@google.com
 
 # ChromeOS SIE team for QPOP Automation
 rickytlchang@chromium.org
