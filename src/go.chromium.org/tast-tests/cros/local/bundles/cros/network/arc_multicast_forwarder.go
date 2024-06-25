@@ -17,7 +17,6 @@ import (
 	arcnet "go.chromium.org/tast-tests/cros/local/network/arc"
 	"go.chromium.org/tast-tests/cros/local/network/hwsim"
 	"go.chromium.org/tast-tests/cros/local/network/multicast"
-	patchpanel "go.chromium.org/tast-tests/cros/local/network/patchpanel_client"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/subnet"
 	"go.chromium.org/tast-tests/cros/local/shill"
@@ -27,12 +26,10 @@ import (
 )
 
 // multicastForwarderTestCase defines ARC multicast lock held status
-// and device power state we want to use in this test.
+// and device type in this test.
 type multicastForwarderTestCase struct {
 	// Whether ARC multicast lock is held by any app.
 	multicastLockHeld bool
-	// Whether device is in idle power state or not.
-	deviceIdle bool
 	// Whether it is a test to test WiFi multicast traffic or ethernet multicast traffic
 	isWifi bool
 }
@@ -41,7 +38,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ARCMulticastForwarder,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks if multicast forwarder works correctly with Android multicast lock and Android interactive state on ARC",
+		Desc:         "Checks if multicast forwarder works correctly with Android multicast lock held status on ARC",
 		Contacts:     []string{"cros-networking@google.com", "chuweih@google.com"},
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
@@ -51,66 +48,30 @@ func init() {
 		Fixture:      "shillSimulatedWiFiWithArcBooted",
 		Params: []testing.Param{
 			{
-				Name: "idle_multicast_lock_not_held_wifi",
+				Name: "multicast_lock_not_held_wifi",
 				Val: multicastForwarderTestCase{
 					multicastLockHeld: false,
-					deviceIdle:        true,
 					isWifi:            true,
 				},
 				ExtraSoftwareDeps: []string{"arc"},
 			}, {
-				Name: "idle_multicast_lock_not_held_ethernet",
+				Name: "multicast_lock_not_held_ethernet",
 				Val: multicastForwarderTestCase{
 					multicastLockHeld: false,
-					deviceIdle:        true,
 					isWifi:            false,
 				},
 				ExtraSoftwareDeps: []string{"arc"},
 			}, {
-				Name: "idle_multicast_lock_held_wifi",
+				Name: "multicast_lock_held_wifi",
 				Val: multicastForwarderTestCase{
 					multicastLockHeld: true,
-					deviceIdle:        true,
 					isWifi:            true,
 				},
 				ExtraSoftwareDeps: []string{"arc"},
 			}, {
-				Name: "idle_multicast_lock_held_ethernet",
+				Name: "multicast_lock_held_ethernet",
 				Val: multicastForwarderTestCase{
 					multicastLockHeld: true,
-					deviceIdle:        true,
-					isWifi:            false,
-				},
-				ExtraSoftwareDeps: []string{"arc"},
-			}, {
-				Name: "interactive_multicast_lock_held_wifi",
-				Val: multicastForwarderTestCase{
-					multicastLockHeld: true,
-					deviceIdle:        false,
-					isWifi:            true,
-				},
-				ExtraSoftwareDeps: []string{"arc"},
-			}, {
-				Name: "interactive_multicast_lock_held_ethernet",
-				Val: multicastForwarderTestCase{
-					multicastLockHeld: true,
-					deviceIdle:        false,
-					isWifi:            false,
-				},
-				ExtraSoftwareDeps: []string{"arc"},
-			}, {
-				Name: "interactive_multicast_lock_not_held_wifi",
-				Val: multicastForwarderTestCase{
-					multicastLockHeld: false,
-					deviceIdle:        false,
-					isWifi:            true,
-				},
-				ExtraSoftwareDeps: []string{"arc"},
-			}, {
-				Name: "interactive_multicast_lock_not_held_ethernet",
-				Val: multicastForwarderTestCase{
-					multicastLockHeld: false,
-					deviceIdle:        false,
 					isWifi:            false,
 				},
 				ExtraSoftwareDeps: []string{"arc"},
@@ -119,19 +80,14 @@ func init() {
 	})
 }
 
-// ARCMulticastForwarder tests that multicast traffic on WiFi is only allowed
-// when Android multicast lock is held and Android power state is interactive,
-// and multicast traffic on ethernet is only allowed when Android power state is
-// interactive.
+// ARCMulticastForwarder tests that inbound multicast traffic on WiFi is only allowed
+// when Android multicast lock is held, while outbound multicast traffic and multicast
+// traffic on ethernet is always allowed.
 func ARCMulticastForwarder(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	pc, err := patchpanel.New(ctx)
-	if err != nil {
-		s.Fatal("Failed to create patchpanel client: ", err)
-	}
 	manager, err := shill.NewManager(ctx)
 	if err != nil {
 		s.Fatal("Failed creating shill manager proxy: ", err)
@@ -225,32 +181,10 @@ func ARCMulticastForwarder(ctx context.Context, s *testing.State) {
 	// Skipped SSDP IPv6 expectations as we don't currently have the firewall rule.
 
 	// If this is a WiFi multicast traffic test, inbound multicast traffic should only be expected
-	// when Android multicast lock is held and device is not idle. If this is an ethernet multicast
-	// traffic test, inbound multicast traffic is expected as long as device is not idle.
-	// Outbound multicast traffic is always allowed.
+	// when Android multicast lock is held.
+	// Outbound multicast traffic and multicast traffic on ethernet device is always allowed.
 	multicastLockHeld := s.Param().(multicastForwarderTestCase).multicastLockHeld
-	deviceIdle := s.Param().(multicastForwarderTestCase).deviceIdle
-	var expectInboundPacketReceived bool
-	if isWifi {
-		expectInboundPacketReceived = multicastLockHeld && !deviceIdle
-	} else {
-		expectInboundPacketReceived = !deviceIdle
-	}
-
-	if deviceIdle {
-		if _, err := pc.NotifyAndroidInteractiveState(ctx, false); err != nil {
-			s.Fatal("Failed to set interactive state: ", err)
-		}
-		defer func() {
-			if _, err := pc.NotifyAndroidInteractiveState(cleanupCtx, true); err != nil {
-				s.Fatal("Failed to set interactive state: ", err)
-			}
-		}()
-	} else {
-		if _, err := pc.NotifyAndroidInteractiveState(ctx, true); err != nil {
-			s.Fatal("Failed to set interactive state: ", err)
-		}
-	}
+	expectInboundPacketReceived := !isWifi || multicastLockHeld
 
 	if multicastLockHeld {
 		if err := d.Object(ui.ID(multicast.AcquireLockButtonID)).Click(ctx); err != nil {
