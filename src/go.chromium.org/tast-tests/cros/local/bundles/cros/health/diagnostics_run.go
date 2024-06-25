@@ -91,20 +91,6 @@ func init() {
 			Fixture: "crosHealthdRunning",
 		}, {
 			// Contact: weiluanwang@google.com
-			Name:    "http_firewall",
-			Val:     croshealthd.NewRoutineParams(croshealthd.RoutineHTTPFirewall),
-			Fixture: "crosHealthdRunning",
-			// TODO(b/281464322): Promote to critical.
-			ExtraAttr: []string{"informational"},
-		}, {
-			// Contact: weiluanwang@google.com
-			Name:    "https_firewall",
-			Val:     croshealthd.NewRoutineParams(croshealthd.RoutineHTTPSFirewall),
-			Fixture: "crosHealthdRunning",
-			// TODO(b/281464322): Promote to critical.
-			ExtraAttr: []string{"informational"},
-		}, {
-			// Contact: weiluanwang@google.com
 			// Cannot be added to DiagnosticsPass.* since that requires the
 			// routine to be run in a good network environment. The
 			// DiagnosticsPass.* counterpart will be flaky in a normal lab.
