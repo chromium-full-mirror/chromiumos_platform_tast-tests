@@ -30,6 +30,7 @@ func addARCFixtures() {
 			"chromeos-sw-engprod@google.com",
 			"arc-app-dev@google.com",
 		},
+		BugComponent:    "b:537221", // ChromeOS > Software > ARC++ > Framework > Chrome Integration
 		SetUpTimeout:    3*time.Minute + crossdevice.BugReportDuration,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -51,6 +52,7 @@ func addARCFixtures() {
 			"chromeos-sw-engprod@google.com",
 			"arc-app-dev@google.com",
 		},
+		BugComponent:    "b:537221", // ChromeOS > Software > ARC++ > Framework > Chrome Integration
 		Parent:          "nearbyShareGAIALoginARCEnabled",
 		SetUpTimeout:    3*time.Minute + crossdevice.BugReportDuration,
 		ResetTimeout:    resetTimeout,

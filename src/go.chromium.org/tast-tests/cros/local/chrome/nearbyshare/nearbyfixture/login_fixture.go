@@ -334,8 +334,9 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 			"arc-app-dev@google.com",
 		},
-		Parent: "nearbyShareAndroidSetup",
-		Impl:   NewNearbyShareLogin(true, false, false, defaultMediums, nil),
+		BugComponent: "b:537221", // ChromeOS > Software > ARC++ > Framework > Chrome Integration
+		Parent:       "nearbyShareAndroidSetup",
+		Impl:         NewNearbyShareLogin(true, false, false, defaultMediums, nil),
 		Vars: []string{
 			defaultCrOSUsername,
 			defaultCrOSPassword,
