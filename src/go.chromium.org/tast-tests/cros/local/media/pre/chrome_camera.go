@@ -15,9 +15,10 @@ import (
 
 func initChromeCameraPerfFixtures() {
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeCameraPerf",
-		Desc:     "Logged into a user session with camera tests-specific setting and without verbose logging that can affect the performance. This fixture should be used only for performance tests",
-		Contacts: []string{"chromeos-camera-eng@google.com"},
+		Name:         "chromeCameraPerf",
+		Desc:         "Logged into a user session with camera tests-specific setting and without verbose logging that can affect the performance. This fixture should be used only for performance tests",
+		Contacts:     []string{"chromeos-camera-eng@google.com"},
+		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
 				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
@@ -30,9 +31,10 @@ func initChromeCameraPerfFixtures() {
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeCameraPerfLacros",
-		Desc:     "Logged into a user session on Lacros without verbose logging that can affect the performance",
-		Contacts: []string{"chromeos-camera-eng@google.com"},
+		Name:         "chromeCameraPerfLacros",
+		Desc:         "Logged into a user session on Lacros without verbose logging that can affect the performance",
+		Contacts:     []string{"chromeos-camera-eng@google.com"},
+		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(
 				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
@@ -46,9 +48,10 @@ func initChromeCameraPerfFixtures() {
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeCameraPerfWithVCDInUtilityProcess",
-		Desc:     "Similar to chromeCameraPerf fixture but running VCD in the utility process",
-		Contacts: []string{"chromeos-camera-eng@google.com"},
+		Name:         "chromeCameraPerfWithVCDInUtilityProcess",
+		Desc:         "Similar to chromeCameraPerf fixture but running VCD in the utility process",
+		Contacts:     []string{"chromeos-camera-eng@google.com"},
+		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
 				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
@@ -62,9 +65,10 @@ func initChromeCameraPerfFixtures() {
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeCameraPerfLacrosWithVCDInUtilityProcess",
-		Desc:     "Similar to chromeCameraPerfLacros fixture but running VCD in the utility process",
-		Contacts: []string{"chromeos-camera-eng@google.com"},
+		Name:         "chromeCameraPerfLacrosWithVCDInUtilityProcess",
+		Desc:         "Similar to chromeCameraPerfLacros fixture but running VCD in the utility process",
+		Contacts:     []string{"chromeos-camera-eng@google.com"},
+		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(
 				chrome.ExtraArgs(chromeBypassPermissionsArgs...),

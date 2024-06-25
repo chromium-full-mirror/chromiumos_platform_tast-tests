@@ -371,9 +371,10 @@ func initChromeVideoBaseFixtures() {
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoWithVCDInUtilityProcess",
-		Desc:     "Similar to chromeVideo fixture but running VCD in the utility process",
-		Contacts: []string{"chromeos-gfx-video@google.com", "seannli@google.com"},
+		Name:         "chromeVideoWithVCDInUtilityProcess",
+		Desc:         "Similar to chromeVideo fixture but running VCD in the utility process",
+		Contacts:     []string{"chromeos-camera-eng@google.com", "seannli@google.com"},
+		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
 				browser.TypeAsh,

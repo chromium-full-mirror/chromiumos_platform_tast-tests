@@ -35,9 +35,10 @@ func initChromeVideoPowerFixtures() {
 	// TODO(b/333930542): Remove the fixture with VCD in utility process when it is
 	// the default.
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoPower",
-		Desc:     "Logged into a user session with a condition that logging is enabled and unnecessary or unstable utilities are disabled for power evaluation",
-		Contacts: []string{"chromeos-camera-eng@google.com", "seannli@google.com"},
+		Name:         "chromeVideoPower",
+		Desc:         "Logged into a user session with a condition that logging is enabled and unnecessary or unstable utilities are disabled for power evaluation",
+		Contacts:     []string{"chromeos-camera-eng@google.com", "seannli@google.com"},
+		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Impl: powersetup.NewPowerUIFixture(MinPowerTestOptions, powersetup.PowerFixtureOptions{
 			BrowserType: browser.TypeAsh,
 			BrowserExtraOpts: getChromeVideoOptions(
