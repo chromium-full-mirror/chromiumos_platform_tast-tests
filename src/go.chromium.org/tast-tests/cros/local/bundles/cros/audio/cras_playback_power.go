@@ -29,7 +29,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.Speaker()),
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
-		Timeout:      10*time.Minute + power.RecorderTimeout,
+		Timeout:      25*time.Minute + power.RecorderTimeout,
 		Params: []testing.Param{
 			{
 				Name:    "baseline",
@@ -115,7 +115,7 @@ func CrasPlaybackPower(ctx context.Context, s *testing.State) {
 
 	const (
 		interval     = 5 * time.Second // Power metrics collect interval.
-		testDuration = 5 * time.Minute
+		testDuration = 20 * time.Minute
 		blockSize    = 480
 	)
 
