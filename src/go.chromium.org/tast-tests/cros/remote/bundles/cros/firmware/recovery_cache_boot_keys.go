@@ -39,7 +39,10 @@ func init() {
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_usb"},
 		Vars:         []string{"firmware.skipFlashUSB"},
-		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
+		// There are RECOVERY MRC CACHE and APOB CACHE on board skyrim, but it
+		// seems to prioritize the use of APOB CACHE. Skip the models of board
+		// skyrim in this test.
+		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.SkipOnModel("markarth", "frostflow", "crystaldrift", "skyrim15w", "whiterun")),
 		SoftwareDeps: []string{"has_recovery_mrc_cache"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{
