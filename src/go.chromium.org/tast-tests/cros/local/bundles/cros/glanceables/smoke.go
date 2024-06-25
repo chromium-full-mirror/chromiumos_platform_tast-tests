@@ -9,8 +9,6 @@ import (
 	"regexp"
 	"time"
 
-	"golang.org/x/exp/slices"
-
 	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
@@ -54,7 +52,7 @@ func init() {
 		BugComponent: "b:1362950",
 		Attr:         []string{"group:mainline", "informational"},
 		SearchFlags: []*testing.StringPair{
-			pci.SearchFlag(&policy.GlanceablesEnabled{}, pci.VerifiedFunctionalityOS), {
+			pci.SearchFlag(&policy.ContextualGoogleIntegrationsEnabled{}, pci.VerifiedFunctionalityOS), {
 				Key:   "feature_id",
 				Value: "screenplay-ace3b729-5402-40cd-b2bf-d488bc95b7e2",
 			},
@@ -72,17 +70,7 @@ func init() {
 				isManaged:         true,
 				user:              "glanceables.Smoke.studentUsername",
 				pass:              "glanceables.Smoke.studentPassword",
-				enabledFeatures:   []string{"GlanceablesV2"},
-				showStudentBubble: true,
-				showTaskBubble:    true,
-			},
-		}, {
-			Name: "student_trusted_tester",
-			Val: testCase{
-				isManaged:         true,
-				user:              "glanceables.Smoke.studentUsername",
-				pass:              "glanceables.Smoke.studentPassword",
-				enabledFeatures:   []string{"GlanceablesV2TrustedTesters"},
+				enabledFeatures:   []string{"GlanceablesTimeManagementClassroomStudentView", "GlanceablesTimeManagementTasksView"},
 				showStudentBubble: true,
 				showTaskBubble:    true,
 			},
@@ -92,17 +80,7 @@ func init() {
 				isManaged:         true,
 				user:              "glanceables.Smoke.regularUsername",
 				pass:              "glanceables.Smoke.regularPassword",
-				enabledFeatures:   []string{"GlanceablesV2"},
-				showStudentBubble: false,
-				showTaskBubble:    true,
-			},
-		}, {
-			Name: "managed_trusted_tester",
-			Val: testCase{
-				isManaged:         true,
-				user:              "glanceables.Smoke.regularUsername",
-				pass:              "glanceables.Smoke.regularPassword",
-				enabledFeatures:   []string{"GlanceablesV2TrustedTesters"},
+				enabledFeatures:   []string{"GlanceablesTimeManagementTasksView"},
 				showStudentBubble: false,
 				showTaskBubble:    true,
 			},
@@ -112,20 +90,9 @@ func init() {
 				isManaged:         false,
 				user:              "",
 				pass:              "",
-				enabledFeatures:   []string{"GlanceablesV2"},
+				enabledFeatures:   []string{"GlanceablesTimeManagementTasksView"},
 				showStudentBubble: false,
 				showTaskBubble:    true,
-			},
-			ExtraSoftwareDeps: []string{"gaia"},
-		}, {
-			Name: "regular_trusted_tester_flag",
-			Val: testCase{
-				isManaged:         false,
-				user:              "",
-				pass:              "",
-				enabledFeatures:   []string{"GlanceablesV2TrustedTesters"},
-				showStudentBubble: false,
-				showTaskBubble:    false,
 			},
 			ExtraSoftwareDeps: []string{"gaia"},
 		}, {
@@ -167,7 +134,7 @@ func Smoke(ctx context.Context, s *testing.State) {
 	var policies []policy.Policy
 	var fdms *fakedms.FakeDMS
 	if param.isManaged {
-		policies = []policy.Policy{&policy.GlanceablesEnabled{Val: true}}
+		policies = []policy.Policy{&policy.ContextualGoogleIntegrationsEnabled{Val: true}}
 
 		fdmsLocal, err := policyutil.SetUpFakePolicyServer(ctx, s.OutDir(), s.RequiredVar(param.user), policies)
 		if err != nil {
@@ -216,11 +183,11 @@ func Smoke(ctx context.Context, s *testing.State) {
 
 	if param.isManaged {
 		// Serve disabled policy and refresh policies to trigger the UI update.
-		if err := policyutil.ServeAndRefresh(ctx, fdms, cr, []policy.Policy{&policy.GlanceablesEnabled{Val: false}}); err != nil {
+		if err := policyutil.ServeAndRefresh(ctx, fdms, cr, []policy.Policy{&policy.ContextualGoogleIntegrationsEnabled{Val: false}}); err != nil {
 			s.Fatal("Failed to reset policies in Chrome: ", err)
 		}
 
-		if err := verifyGlanceableBubblesVisibility(ctx, ui, slices.Contains(param.enabledFeatures, "GlanceablesTimeManagementTasksView"), false); err != nil {
+		if err := verifyGlanceableBubblesVisibility(ctx, ui, false, false); err != nil {
 			s.Fatal("Failed verifying bubbles with glanceables disabled by policy: ", err)
 		}
 	}
@@ -232,7 +199,7 @@ func verifyGlanceableBubblesVisibility(ctx context.Context, ui *uiauto.Context, 
 		return errors.Wrap(err, "failed to open the glanceables bubble")
 	}
 
-	studentView := nodewith.ClassName("ClassroomBubbleStudentView")
+	studentView := nodewith.ClassNameRegex(regexp.MustCompile("ClassroomBubbleStudentView|GlanceablesClassroomStudentView"))
 	isUIElementVisible, err := isGlanceablesBubbleVisible(ctx, ui, studentView)
 	if err != nil {
 		return errors.Wrap(err, "failed to check visibility of glanceables student bubble")
@@ -268,7 +235,7 @@ func openGlanceablesBubble(ctx context.Context, ui *uiauto.Context) error {
 
 	calendarView := nodewith.ClassName("CalendarView")
 	mainHeaderTriView := nodewith.ClassName("TriView").Ancestor(calendarView).Nth(0)
-	buttonsContainer := nodewith.ClassName("RelayoutView").Ancestor(mainHeaderTriView).Nth(2)
+	buttonsContainer := nodewith.ClassName("SizeRangeLayout").Ancestor(mainHeaderTriView).Nth(2)
 	todayButton := nodewith.Ancestor(buttonsContainer).Nth(0)
 
 	if err := ui.WaitUntilExists(todayButton)(ctx); err != nil {
