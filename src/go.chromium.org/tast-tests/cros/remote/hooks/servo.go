@@ -50,7 +50,7 @@ const (
 // is running, set up connection with servo.
 func (h *servoHook) SetUp(ctx context.Context, s *HookState) error {
 	h.servoHost = func() string {
-		if servoHost, err := servers.Server(servers.Servo, ""); err == nil {
+		if servoHost, err := servers.Server(servers.Servo, ""); err == nil && servoHost != "" {
 			return servoHost
 		}
 		// Remove after we replace the use of the variable "servo".
