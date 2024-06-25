@@ -87,14 +87,16 @@ func DiagnosticsApp(ctx context.Context, s *testing.State) {
 		s.Fatal("Could not click the navigation menu button: ", err)
 	}
 
-	// Cache finder for button which saves logs.
+	// Cache finders for buttons used to save logs.
 	dxLogButton := diagnosticsapp.DxLogButton.Ancestor(dxRootnode)
+	saveButton := nodewith.Name("Save").Role(role.Button)
 
 	ui := uiauto.New(tconn)
 	if err := uiauto.Combine("Save logs and verify file appears in holding space",
 		ui.MakeVisible(dxLogButton),
 		ui.LeftClick(dxLogButton),
-		ui.LeftClick(nodewith.Name("Save").Role(role.Button)),
+		ui.WaitUntilEnabled(saveButton),
+		ui.LeftClick(saveButton),
 		ui.LeftClick(holdingspace.FindTray()),
 		ui.WaitUntilExists(holdingspace.FindDownloadChip().Name(filename)),
 	)(ctx); err != nil {
