@@ -356,6 +356,12 @@ service DutControl {
   // Run a generic gsctool command.
   rpc GSCToolCommand(CommandRequest) returns (CommandResponse);
 
+  // Run a generic gsctool command over OTT provided SPI TPM bus.
+  rpc GSCToolCommandViaTpmSPI(CommandRequest) returns (CommandResponse);
+
+  // Run a generic gsctool command over OTT provided I2C TPM bus.
+  rpc GSCToolCommandViaTpmI2C(CommandRequest) returns (CommandResponse);
+
   // Run a generic flashrom command.
   rpc FlashromCommand(CommandRequest) returns (CommandResponse);
 

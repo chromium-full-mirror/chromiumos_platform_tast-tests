@@ -54,4 +54,10 @@ func GSCTPM(ctx context.Context, s *testing.State) {
 		s.Error("boot mode error: ", err)
 	}
 	s.Logf("Read boot mode %d", bm)
+
+	out, err := b.GSCToolCommandViaTPM(ctx, bus, "", "--fwver")
+	if err != nil {
+		s.Error("Could not get version via TPM: ", err)
+	}
+	s.Logf("GSC version: %s", out)
 }

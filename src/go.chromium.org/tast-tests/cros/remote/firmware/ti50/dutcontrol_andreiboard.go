@@ -243,6 +243,16 @@ func (a *DUTControlAndreiboard) Reset(ctx context.Context) error {
 
 // GSCToolCommand executes gsctool via the DutControl service.
 func (a *DUTControlAndreiboard) GSCToolCommand(ctx context.Context, image string, args ...string) (output []byte, err error) {
+	return a.gsctoolCommand(ctx, nil, image, args...)
+}
+
+// GSCToolCommandViaTPM executes gsctool via the DutControl service.
+func (a *DUTControlAndreiboard) GSCToolCommandViaTPM(ctx context.Context, bus ti50.TpmBus, image string, args ...string) (output []byte, err error) {
+	return a.gsctoolCommand(ctx, &bus, image, args...)
+}
+
+// gsctoolCommand executes gsctool via USB or TPM interface
+func (a *DUTControlAndreiboard) gsctoolCommand(ctx context.Context, bus *ti50.TpmBus, image string, args ...string) (output []byte, err error) {
 	var cArgs []*dutcontrol.CommandArg
 	for _, a := range args {
 		cArgs = append(cArgs, &dutcontrol.CommandArg{Type: &dutcontrol.CommandArg_Plain{Plain: a}})
@@ -255,7 +265,17 @@ func (a *DUTControlAndreiboard) GSCToolCommand(ctx context.Context, image string
 		cArgs = append(cArgs, &dutcontrol.CommandArg{Type: &dutcontrol.CommandArg_File{File: imageBytes}})
 	}
 	req := &dutcontrol.CommandRequest{Args: cArgs}
-	resp, err := a.client.GSCToolCommand(ctx, req)
+
+	var resp *dutcontrol.CommandResponse
+	if bus == nil {
+		resp, err = a.client.GSCToolCommand(ctx, req)
+	} else if *bus == ti50.TpmBusI2c {
+		resp, err = a.client.GSCToolCommandViaTpmI2C(ctx, req)
+	} else if *bus == ti50.TpmBusSpi {
+		resp, err = a.client.GSCToolCommandViaTpmSPI(ctx, req)
+	} else {
+		return nil, errors.Errorf("invalid TPM bus: %s", *bus)
+	}
 	if err != nil {
 		return nil, errors.Wrapf(err, "request %s", strings.Join(args, " "))
 	}
