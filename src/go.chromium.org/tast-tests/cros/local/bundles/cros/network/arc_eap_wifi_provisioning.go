@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/eap"
 	"go.chromium.org/tast-tests/cros/local/hostapd"
 	"go.chromium.org/tast-tests/cros/local/network/hwsim"
+	certManager "go.chromium.org/tast-tests/cros/local/networkui/certificate"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -87,6 +88,7 @@ func ARCEAPWifiProvisioning(ctx context.Context, s *testing.State) {
 
 	// Get ARC handle to provision credentials.
 	a := s.FixtValue().(*hwsim.ShillSimulatedWiFi).ARC
+	cr := s.FixtValue().(*hwsim.ShillSimulatedWiFi).Chrome
 
 	apIface, clientIface := ifaces.AP[0], ifaces.Client[0]
 
@@ -149,6 +151,25 @@ func ARCEAPWifiProvisioning(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to forget network: ", err)
 		}
 	}(cleanupCtx)
+
+	// Forgetting network does not remove the certs tied to the network.
+	// Manually clean up the certs to avoid leaking them to the next tests.
+	if apAuth == eap.AuthTLS {
+		defer func(ctx context.Context) {
+			tconn, err := cr.TestAPIConn(ctx)
+			if err != nil {
+				s.Error("Failed to create Test API connection: ", err)
+				return
+			}
+			if err := certManager.DeleteCert(
+				tconn,
+				cr.Browser(),
+				certManager.NewCertData(testCerts, certManager.TypeClient),
+			)(ctx); err != nil {
+				s.Error("Failed to delete certificate: ", err)
+			}
+		}(cleanupCtx)
+	}
 
 	wifi, err := shill.NewWifiManager(ctx, m)
 	if err != nil {
