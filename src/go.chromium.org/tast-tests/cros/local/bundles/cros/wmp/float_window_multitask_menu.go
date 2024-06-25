@@ -30,7 +30,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         FloatWindowMultitaskMenu,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test that the float multitask menu works",
 		Contacts: []string{
 			"chromeos-wm@google.com",
@@ -40,15 +40,8 @@ func init() {
 		BugComponent: "b:1252568",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "gaia"},
-		Params: []testing.Param{{
-			Val: browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			Val:               browser.TypeLacros,
-			ExtraSoftwareDeps: []string{"lacros"},
-		}},
-		Timeout: chrome.GAIALoginTimeout + arc.BootTimeout + 2*time.Minute,
-		VarDeps: []string{ui.GaiaPoolDefaultVarName},
+		Timeout:      chrome.GAIALoginTimeout + arc.BootTimeout + 2*time.Minute,
+		VarDeps:      []string{ui.GaiaPoolDefaultVarName},
 		SearchFlags: []*testing.StringPair{{
 			Key:   "feature_id",
 			Value: "screenplay-f4dbfe9b-7a0d-4759-885a-79b1925d6cd0",
@@ -62,7 +55,7 @@ func FloatWindowMultitaskMenu(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	bt := s.Param().(browser.Type)
+	bt := browser.TypeAsh
 	cr, br, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, bt, lacrosfixt.NewConfig(),
 		chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)),
 		chrome.EnableFeatures("WindowLayoutMenu"),

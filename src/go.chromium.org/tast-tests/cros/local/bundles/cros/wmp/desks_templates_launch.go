@@ -29,7 +29,7 @@ type dtTestParams struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DesksTemplatesLaunch,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks desks templates can be launched",
 		Contacts: []string{
 			"chromeos-wms@google.com",
@@ -52,12 +52,6 @@ func init() {
 		Params: []testing.Param{{
 			Fixture: "savedDesksEnableWithoutArc",
 			Val:     dtTestParams{[]apps.App{apps.FilesSWA}, false},
-		}, {
-			Name:              "lacros",
-			Fixture:           "savedDesksEnabledLacrosWithArcBooted",
-			Val:               dtTestParams{[]apps.App{apps.FilesSWA, apps.PlayStore}, true},
-			ExtraSoftwareDeps: []string{"lacros", "android_vm"},
-			ExtraAttr:         []string{"informational"},
 		}, {
 			Name:              "arc_enabled",
 			Fixture:           "savedDesksEnableWithArc",

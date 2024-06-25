@@ -27,7 +27,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ImmersiveMode,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that immersive mode works correctly",
 		Contacts: []string{
 			"chromeos-wm@google.com",
@@ -37,15 +37,7 @@ func init() {
 		BugComponent: "b:1252580",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
-		Params: []testing.Param{{
-			Fixture: "chromeLoggedIn",
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			Fixture:           "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               browser.TypeLacros,
-		}},
+		Fixture:      "chromeLoggedIn",
 	})
 }
 
@@ -88,7 +80,7 @@ func ImmersiveMode(ctx context.Context, s *testing.State) {
 	}
 
 	// Ensure that there is only one open window that is the primary browser. Wait for the browser to be visible to avoid a race that may cause test flakiness.
-	bt := s.Param().(browser.Type)
+	bt := browser.TypeAsh
 	bw, err := wmputils.EnsureOnlyBrowserWindowOpen(ctx, tconn, bt)
 	if err != nil {
 		s.Fatal("Failed to ensure one browser window: ", err)

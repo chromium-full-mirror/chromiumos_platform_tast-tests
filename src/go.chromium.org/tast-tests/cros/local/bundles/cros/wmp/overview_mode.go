@@ -26,7 +26,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         OverviewMode,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that overview mode works correctly",
 		Contacts: []string{
 			"chromeos-wm@google.com",
@@ -36,15 +36,7 @@ func init() {
 		BugComponent: "b:1252584",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
-		Params: []testing.Param{{
-			Fixture: "chromeLoggedIn",
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			Fixture:           "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               browser.TypeLacros,
-		}},
+		Fixture:      "chromeLoggedIn",
 	})
 }
 
@@ -75,7 +67,7 @@ func OverviewMode(ctx context.Context, s *testing.State) {
 
 	ac := uiauto.New(tconn)
 
-	bt := s.Param().(browser.Type)
+	bt := browser.TypeAsh
 	browserApp, err := apps.PrimaryBrowser(ctx, tconn)
 	if err != nil {
 		s.Fatal("Could not find browser app info: ", err)

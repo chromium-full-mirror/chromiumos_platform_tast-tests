@@ -31,7 +31,7 @@ const (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         OverviewDragWindowToNewDesk,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that drag window to new desk in overview mode works correctly",
 		Contacts: []string{
 			"chromeos-wm@google.com",
@@ -54,15 +54,7 @@ func init() {
 				Value: "screenplay-97e91de9-7126-4997-b0f3-707c3ff48fce",
 			}},
 		SoftwareDeps: []string{"chrome"},
-		Params: []testing.Param{{
-			Fixture: "chromeLoggedIn",
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			Fixture:           "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               browser.TypeLacros,
-		}},
+		Fixture:      "chromeLoggedIn",
 	})
 }
 
@@ -92,7 +84,7 @@ func OverviewDragWindowToNewDesk(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to ensure no window is open: ", err)
 	}
 
-	blankConn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, s.Param().(browser.Type), chrome.BlankURL)
+	blankConn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, chrome.BlankURL)
 	if err != nil {
 		s.Fatal("Failed to set up Chrome: ", err)
 	}

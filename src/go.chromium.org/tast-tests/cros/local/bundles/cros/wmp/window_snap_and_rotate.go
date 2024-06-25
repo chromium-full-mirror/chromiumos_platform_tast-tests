@@ -32,7 +32,7 @@ type windowSnapAndRotateTestParam struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         WindowSnapAndRotate,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "In clamshell mode, checks that snap in landscape and portrait works properly",
 		Contacts: []string{
 			"chromeos-wm@google.com",
@@ -51,16 +51,6 @@ func init() {
 			Name:    "landscape",
 			Fixture: "chromeLoggedIn",
 			Val:     windowSnapAndRotateTestParam{portrait: false, bt: browser.TypeAsh},
-		}, {
-			Name:              "portrait_lacros",
-			Fixture:           "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               windowSnapAndRotateTestParam{portrait: true, bt: browser.TypeLacros},
-		}, {
-			Name:              "landscape_lacros",
-			Fixture:           "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               windowSnapAndRotateTestParam{portrait: false, bt: browser.TypeLacros},
 		}},
 	})
 }

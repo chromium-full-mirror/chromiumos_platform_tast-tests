@@ -27,7 +27,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VirtualDesksShortcuts,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that virtual desks shortcuts works correctly",
 		Contacts: []string{
 			"chromeos-wm@google.com",
@@ -37,6 +37,7 @@ func init() {
 		BugComponent: "b:1238200",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
+		Fixture:      "chromeLoggedIn",
 		SearchFlags: []*testing.StringPair{
 			{
 				Key:   "feature_id",
@@ -58,15 +59,6 @@ func init() {
 				Key:   "feature_id",
 				Value: "screenplay-353dbfd4-4666-4e1f-be6c-7a210f95069d",
 			}},
-		Params: []testing.Param{{
-			Fixture: "chromeLoggedIn",
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			Fixture:           "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               browser.TypeLacros,
-		}},
 	})
 }
 
@@ -105,7 +97,7 @@ func VirtualDesksShortcuts(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	bt := s.Param().(browser.Type)
+	bt := browser.TypeAsh
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {

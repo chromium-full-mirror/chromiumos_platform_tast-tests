@@ -38,13 +38,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      chrome.GAIALoginTimeout + arc.BootTimeout + 120*time.Second,
 		VarDeps:      []string{ui.GaiaPoolDefaultVarName},
-		Params: []testing.Param{{
-			Fixture: "chromeLoggedIn",
-		}, {
-			Name:              "lacros",
-			Fixture:           "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-		}},
+		Fixture:      "chromeLoggedIn",
 		SearchFlags: []*testing.StringPair{
 			{
 				Key:   "feature_id",
@@ -117,12 +111,12 @@ func MoveTabToAnotherWindowMenu(ctx context.Context, s *testing.State) {
 		}
 	}
 	ac := uiauto.New(tconn)
-	if err := verifyTabGroupMenu(ctx, tconn, ac); err != nil {
+	if err := verifyTabGroupMenu(ctx, tconn, ac, s); err != nil {
 		s.Fatal("Failed to verify the tab group menu: ", err)
 	}
 }
 
-func verifyTabGroupMenu(ctx context.Context, tconn *chrome.TestConn, ac *uiauto.Context) error {
+func verifyTabGroupMenu(ctx context.Context, tconn *chrome.TestConn, ac *uiauto.Context, s *testing.State) error {
 	info, err := ash.GetDesksInfo(ctx, tconn)
 	if err != nil {
 		return errors.Wrap(err, "failed to get the desk info")
@@ -155,11 +149,11 @@ func verifyTabGroupMenu(ctx context.Context, tconn *chrome.TestConn, ac *uiauto.
 
 	// Verify the tab group menu.
 	for i := 2; i <= numDesks; i++ {
-		deskItem := nodewith.ClassName("MenuItemView").Name(fmt.Sprintf("Desk Desk %d has 1 browser windows open", i))
+		deskItem := nodewith.ClassName("MenuItemView").Name(fmt.Sprintf("Desk %d", i))
 		if err := ac.WithTimeout(5 * time.Second).WaitUntilExists(deskItem)(ctx); err != nil {
 			return errors.Wrapf(err, "failed to find Desk %d item", i)
 		}
-		tabItem := nodewith.ClassName("MenuItemView").Name(fmt.Sprintf("New Tab belongs to desk Desk %d", i))
+		tabItem := nodewith.ClassName("MenuItemView").Name("New Tab")
 		if err := ac.WithTimeout(5 * time.Second).WaitUntilExists(tabItem)(ctx); err != nil {
 			return errors.Wrapf(err, "failed to find the tab item of Desk %d", i)
 		}

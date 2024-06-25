@@ -102,7 +102,7 @@ var arcPipTests = pipTestParams{
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Pip,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests window behavior of PiP windows",
 		Contacts: []string{
 			"chromeos-wm-corexp@google.com",
@@ -118,10 +118,6 @@ func init() {
 		Timeout:      chrome.GAIALoginTimeout + arc.BootTimeout + 2*time.Minute,
 		Params: []testing.Param{{
 			Val: ashPipTests,
-		}, {
-			Name:              "lacros",
-			Val:               lacrosPipTests,
-			ExtraSoftwareDeps: []string{"lacros"},
 		}, {
 			Name:              "arc",
 			Val:               arcPipTests,

@@ -26,7 +26,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         WindowCaptionButton,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that window caption buttons work properly",
 		Contacts: []string{
 			"chromeos-wm@google.com",
@@ -36,15 +36,7 @@ func init() {
 		BugComponent: "b:1238037",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
-		Params: []testing.Param{{
-			Fixture: "chromeLoggedIn",
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			Fixture:           "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               browser.TypeLacros,
-		}},
+		Fixture:      "chromeLoggedIn",
 	})
 }
 
@@ -85,7 +77,7 @@ func WindowCaptionButton(ctx context.Context, s *testing.State) {
 	}
 
 	// Ensure that there is only one open window that is the primary browser.
-	bt := s.Param().(browser.Type)
+	bt := browser.TypeAsh
 	bw, err := wmputils.EnsureOnlyBrowserWindowOpen(ctx, tconn, bt)
 	if err != nil {
 		s.Fatal("Failed to ensure only one browser window is open: ", err)

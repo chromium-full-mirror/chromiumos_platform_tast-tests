@@ -31,7 +31,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         AdminTemplatesLaunch,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks admin templates can be launched",
 		Contacts: []string{
 			"chromeos-wms@google.com",
@@ -50,14 +50,7 @@ func init() {
 			pci.SearchFlag(&policy.PreconfiguredDeskTemplates{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.DeskTemplatesEnabled{}, pci.VerifiedFunctionalityUI),
 		},
-		Params: []testing.Param{{
-			Fixture: fixture.ChromeAdminDeskTemplatesLoggedIn,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.LacrosAdminDeskTemplatesLoggedIn,
-			ExtraAttr:         []string{"informational"},
-		}},
+		Fixture: fixture.ChromeAdminDeskTemplatesLoggedIn,
 	})
 }
 

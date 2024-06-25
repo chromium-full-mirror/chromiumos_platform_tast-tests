@@ -69,7 +69,7 @@ type resizeWindowTestParams struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ResizeWindow,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Resize different windows by dragging 4 corners and 4 sides",
 		Contacts: []string{
 			"chromeos-wm@google.com",
@@ -86,15 +86,6 @@ func init() {
 					browserType: browser.TypeAsh,
 				},
 				Timeout: resizeTimeout, // 1 resize timeout for 1 app (i.e., Chrome browser)
-			},
-			{
-				Name: "lacros",
-				Val: resizeWindowTestParams{
-					caseType:    browserCase,
-					browserType: browser.TypeLacros,
-				},
-				ExtraSoftwareDeps: []string{"lacros"},
-				Timeout:           resizeTimeout, // 1 resize timeout for 1 app (i.e., Lacros Chrome browser)
 			},
 			{
 				Name: "apps",

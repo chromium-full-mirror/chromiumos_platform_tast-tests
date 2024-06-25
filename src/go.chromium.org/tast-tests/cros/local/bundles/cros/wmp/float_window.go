@@ -27,7 +27,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         FloatWindow,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test that the float shortcut works on a floatable window",
 		Contacts: []string{
 			"chromeos-wm@google.com",
@@ -37,15 +37,8 @@ func init() {
 		BugComponent: "b:1252568",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "arc", "gaia"},
-		Params: []testing.Param{{
-			Val: browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               browser.TypeLacros,
-		}},
-		Timeout: chrome.GAIALoginTimeout + arc.BootTimeout + 2*time.Minute,
-		VarDeps: []string{ui.GaiaPoolDefaultVarName},
+		Timeout:      chrome.GAIALoginTimeout + arc.BootTimeout + 2*time.Minute,
+		VarDeps:      []string{ui.GaiaPoolDefaultVarName},
 		SearchFlags: []*testing.StringPair{{
 			Key:   "feature_id",
 			Value: "screenplay-f4dbfe9b-7a0d-4759-885a-79b1925d6cd0",
@@ -64,7 +57,7 @@ func FloatWindow(ctx context.Context, s *testing.State) {
 		chrome.ARCSupported(),
 		chrome.ExtraArgs(arc.DisableSyncFlags()...)}
 
-	bt := s.Param().(browser.Type)
+	bt := browser.TypeAsh
 	cr, _, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, bt, lacrosfixt.NewConfig(), opts...)
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)

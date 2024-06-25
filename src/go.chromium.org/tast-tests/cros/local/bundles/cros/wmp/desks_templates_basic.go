@@ -23,7 +23,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DesksTemplatesBasic,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks desks can be saved as a desk template",
 		Contacts: []string{
 			"chromeos-wms@google.com",
@@ -46,12 +46,6 @@ func init() {
 		Params: []testing.Param{{
 			Fixture: "savedDesksEnableWithoutArc",
 			Val:     []apps.App{apps.FilesSWA},
-		}, {
-			Name:              "lacros",
-			Fixture:           "savedDesksEnabledLacrosWithArcBooted",
-			Val:               []apps.App{apps.FilesSWA, apps.PlayStore},
-			ExtraSoftwareDeps: []string{"lacros", "android_vm"},
-			ExtraAttr:         []string{"informational"},
 		}, {
 			Name:              "arc_enabled",
 			Fixture:           "savedDesksEnableWithArc",

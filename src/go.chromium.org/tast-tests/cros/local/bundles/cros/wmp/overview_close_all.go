@@ -35,7 +35,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         OverviewCloseAll,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that windows and desk can be closed",
 		Contacts: []string{
 			"chromeos-wm@google.com",
@@ -45,14 +45,7 @@ func init() {
 		BugComponent: "b:1238200",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "android_vm", "gaia"},
-		Params: []testing.Param{{
-			Val: browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			Val:               browser.TypeLacros,
-			ExtraSoftwareDeps: []string{"lacros"},
-		}},
-		Timeout: chrome.GAIALoginTimeout + arc.BootTimeout + 120*time.Second,
+		Timeout:      chrome.GAIALoginTimeout + arc.BootTimeout + 120*time.Second,
 		SearchFlags: []*testing.StringPair{
 			{
 				Key:   "feature_id",
@@ -72,7 +65,7 @@ func OverviewCloseAll(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	bt := s.Param().(browser.Type)
+	bt := browser.TypeAsh
 	cr, _, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, bt, lacrosfixt.NewConfig(),
 		chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)),
 		chrome.EnableFeatures("DesksCloseAll"),
@@ -155,16 +148,6 @@ func OverviewCloseAll(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to exit overview mode: ", err)
 	}
 
-	// If we are in lacros-chrome, then browserfixt.SetUp has already opened a
-	// blank browser window in the first desk. In that case, we want to move the
-	// already-existing browser window over to the second desk with a keyboard
-	// shortcut and wait for the window to finish moving.
-	if bt == browser.TypeLacros {
-		if err := ash.MoveActiveWindowToAdjacentDesk(ctx, tconn, ash.WindowMovementDirectionRight); err != nil {
-			s.Fatal("Failed to move lacros window to desk 2: ", err)
-		}
-	}
-
 	// Activates the second desk and launch app windows on it.
 	if err := ash.ActivateDeskAtIndex(ctx, tconn, 1); err != nil {
 		s.Fatal("Failed to activate desk 2: ", err)
@@ -174,10 +157,6 @@ func OverviewCloseAll(ctx context.Context, s *testing.State) {
 	// lacros-chrome we will already have a chrome window, so if that is the case
 	// then we can skip opening another browser window.
 	for _, app := range []apps.App{apps.PlayStore, apps.Chrome, apps.FilesSWA} {
-		if bt == browser.TypeLacros && app == apps.Chrome {
-			continue
-		}
-
 		if err := apps.Launch(ctx, tconn, app.ID); err != nil {
 			s.Fatalf("Failed to open %s: %v", app.Name, err)
 		}

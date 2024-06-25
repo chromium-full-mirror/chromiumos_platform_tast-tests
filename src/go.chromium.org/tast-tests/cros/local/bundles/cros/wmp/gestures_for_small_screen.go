@@ -6,6 +6,7 @@ package wmp
 
 import (
 	"context"
+	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/apps"
@@ -36,15 +37,7 @@ func init() {
 		BugComponent: "b:1252584",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
-		Params: []testing.Param{{
-			Fixture: "chromeLoggedIn",
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			Fixture:           "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               browser.TypeLacros,
-		}},
+		Fixture:      "chromeLoggedIn",
 		SearchFlags: []*testing.StringPair{{
 			Key:   "feature_id",
 			Value: "screenplay-7df32372-e146-4b37-870e-9c342985288a",
@@ -87,7 +80,7 @@ func GesturesForSmallScreen(ctx context.Context, s *testing.State) {
 	}
 
 	// Ensure that there is only one open window that is the primary browser. Wait for the browser to be visible to avoid a race that may cause test flakiness.
-	bt := s.Param().(browser.Type)
+	bt := browser.TypeAsh
 	bw, err := wmputils.EnsureOnlyBrowserWindowOpen(ctx, tconn, bt)
 	if err != nil {
 		s.Fatal("Expected the window to be fullscreen but got: ", err)
@@ -119,7 +112,7 @@ func GesturesForSmallScreen(ctx context.Context, s *testing.State) {
 
 	hotseat := nodewith.ClassName("HotseatWidget")
 	appList := nodewith.ClassName("AppList")
-	dropTargetView := nodewith.ClassName("DropTargetView")
+	dropTargetView := nodewith.NameRegex(regexp.MustCompile(".*New Tab")).ClassName("OverviewItemView")
 
 	// Swipe up from shelf to open overview.
 	if err := uiauto.Combine(

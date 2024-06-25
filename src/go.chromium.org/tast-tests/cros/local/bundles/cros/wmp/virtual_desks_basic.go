@@ -29,7 +29,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VirtualDesksBasic,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that virtual desks works correctly",
 		Contacts: []string{
 			"chromeos-wm@google.com",
@@ -56,13 +56,6 @@ func init() {
 				Key:   "feature_id",
 				Value: "screenplay-2e1d03c8-d145-4fe5-b68f-04301d32199b",
 			}},
-		Params: []testing.Param{{
-			Val: browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			Val:               browser.TypeLacros,
-			ExtraSoftwareDeps: []string{"lacros"},
-		}},
 		Timeout: 2 * time.Minute,
 	})
 }
@@ -81,7 +74,7 @@ func VirtualDesksBasic(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	bt := s.Param().(browser.Type)
+	bt := browser.TypeAsh
 	cr, _, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, bt, lacrosfixt.NewConfig())
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)

@@ -23,7 +23,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         WindowCycleAllDesks,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks Alt+Tab and Alt+Shift+Tab functionality for cycling windows for all desks",
 		Contacts: []string{
 			"chromeos-wm@google.com",
@@ -50,14 +50,7 @@ func init() {
 				Key:   "feature_id",
 				Value: "screenplay-f2f7491e-e6ee-429e-9d56-aa386a2db2ca",
 			}},
-		Params: []testing.Param{{
-			Fixture: "chromeLoggedIn",
-		}, {
-			Name:              "lacros",
-			Fixture:           "lacros",
-			ExtraAttr:         []string{"informational"},
-			ExtraSoftwareDeps: []string{"lacros"},
-		}},
+		Fixture: "chromeLoggedIn",
 	})
 }
 

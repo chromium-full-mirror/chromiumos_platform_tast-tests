@@ -40,7 +40,7 @@ type splitViewTabletModeTestParam struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SplitViewTabletMode,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "In tablet mode, checks split view works properly",
 		Contacts: []string{
 			"chromeos-wm@google.com",
@@ -57,14 +57,6 @@ func init() {
 		}, {
 			Name: "landscape",
 			Val:  splitViewTabletModeTestParam{false, browser.TypeAsh},
-		}, {
-			Name:              "portrait_lacros",
-			Val:               splitViewTabletModeTestParam{true, browser.TypeLacros},
-			ExtraSoftwareDeps: []string{"lacros"},
-		}, {
-			Name:              "landscape_lacros",
-			Val:               splitViewTabletModeTestParam{false, browser.TypeLacros},
-			ExtraSoftwareDeps: []string{"lacros"},
 		}},
 		Timeout: chrome.GAIALoginTimeout + arc.BootTimeout + 120*time.Second,
 		VarDeps: []string{ui.GaiaPoolDefaultVarName},
