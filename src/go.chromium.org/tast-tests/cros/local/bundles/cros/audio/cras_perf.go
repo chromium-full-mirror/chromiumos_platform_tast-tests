@@ -52,7 +52,6 @@ func init() {
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "yuhsuan@chromium.org", "cychiang@chromium.org", "paulhsia@chromium.org"},
 		BugComponent: "b:776546",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
-		Fixture:      fixture.UIStopped{Parent: "rebootForAudioDSPFixture"}.Instance(),
 		Timeout:      5 * time.Minute,
 		Params: []testing.Param{
 			{
@@ -62,6 +61,7 @@ func init() {
 					Capture:        false,
 					CaptureEffects: effectsNone,
 				},
+				Fixture:           fixture.UIStopped{Parent: "rebootForAudioDSPFixture"}.Instance(),
 				ExtraHardwareDeps: hwdep.D(hwdep.Speaker(), hwdep.SkipOnModel(unstableModelsPlaybackCapture...)),
 			},
 			{
@@ -71,6 +71,7 @@ func init() {
 					Capture:        true,
 					CaptureEffects: effectsNone,
 				},
+				Fixture:           fixture.UIStopped{Parent: "rebootForAudioDSPFixture"}.Instance(),
 				ExtraHardwareDeps: hwdep.D(hwdep.Microphone(), hwdep.SkipOnModel(unstableModelsPlaybackCapture...)),
 			},
 			{
@@ -80,6 +81,7 @@ func init() {
 					Capture:        true,
 					CaptureEffects: effectsNone,
 				},
+				Fixture:           fixture.UIStopped{Parent: "rebootForAudioDSPFixture"}.Instance(),
 				ExtraHardwareDeps: hwdep.D(hwdep.Microphone(), hwdep.Speaker(), hwdep.SkipOnModel(unstableModelsPlaybackCapture...)),
 			},
 			{
@@ -89,6 +91,7 @@ func init() {
 					Capture:        true,
 					CaptureEffects: effectsCrasAec,
 				},
+				Fixture:           fixture.UIStopped{Parent: "rebootForAudioDSPFixture"}.Instance(),
 				ExtraHardwareDeps: hwdep.D(hwdep.Microphone(), hwdep.Speaker(), hwdep.SkipOnModel(unstableModelsPlaybackCapture...)),
 			},
 			{
@@ -98,7 +101,28 @@ func init() {
 					Capture:        true,
 					CaptureEffects: effectsDspAec,
 				},
+				Fixture:           fixture.UIStopped{Parent: "rebootForAudioDSPFixture"}.Instance(),
 				ExtraHardwareDeps: hwdep.D(hwdep.Microphone(), hwdep.Speaker(), hwdep.SkipOnModel(unstableModelsPlaybackCapture...), hwdep.Model(internal.DSPAECModels...)),
+			},
+			{
+				Name: "playback_baseline",
+				Val: testParameters{
+					Playback:       true,
+					Capture:        false,
+					CaptureEffects: effectsNone,
+				},
+				Fixture:           "powerAshPlatformAudioNoDSPOffload",
+				ExtraHardwareDeps: hwdep.D(hwdep.Speaker(), hwdep.Model(internal.DSPOffloadDRCEQModels...), hwdep.SkipOnModel(unstableModelsPlaybackCapture...)),
+			},
+			{
+				Name: "playback_dsp_offload",
+				Val: testParameters{
+					Playback:       true,
+					Capture:        false,
+					CaptureEffects: effectsNone,
+				},
+				Fixture:           "powerAshPlatformAudioDSPOffload",
+				ExtraHardwareDeps: hwdep.D(hwdep.Speaker(), hwdep.Model(internal.DSPOffloadDRCEQModels...), hwdep.SkipOnModel(unstableModelsPlaybackCapture...)),
 			},
 		},
 	})
