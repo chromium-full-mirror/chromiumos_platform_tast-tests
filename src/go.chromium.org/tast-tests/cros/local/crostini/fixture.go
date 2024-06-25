@@ -174,6 +174,7 @@ func init() {
 		Name:            "crostiniBullseye",
 		Desc:            "Install Crostini with Bullseye",
 		Contacts:        []string{"clumptini+oncall@google.com"},
+		BugComponent:    "b:1122570", // ChromeOS > Software > GuestOS > Crostini
 		Impl:            &crostiniFixture{preData: preTestDataBullseye},
 		SetUpTimeout:    installationTimeout + uninstallationTimeout,
 		ResetTimeout:    checkContainerTimeout,
@@ -190,6 +191,7 @@ func init() {
 		Name:            "crostiniBullseyeWithoutArc",
 		Desc:            "Install Crostini with Bullseye without ARC enabled",
 		Contacts:        []string{"clumptini+oncall@google.com"},
+		BugComponent:    "b:1122570", // ChromeOS > Software > GuestOS > Crostini
 		Impl:            &crostiniFixture{preData: preTestDataBullseye},
 		SetUpTimeout:    installationTimeout + uninstallationTimeout,
 		ResetTimeout:    checkContainerTimeout,
@@ -204,6 +206,7 @@ func init() {
 		Name:            "crostiniBookworm",
 		Desc:            "Install Crostini with Bookworm",
 		Contacts:        []string{"clumptini+oncall@google.com"},
+		BugComponent:    "b:1122570", // ChromeOS > Software > GuestOS > Crostini
 		Impl:            &crostiniFixture{preData: preTestDataBookworm},
 		SetUpTimeout:    installationTimeout + uninstallationTimeout,
 		ResetTimeout:    checkContainerTimeout,
@@ -218,6 +221,7 @@ func init() {
 		Name:            "crostiniBookwormWithoutArc",
 		Desc:            "Install Crostini with Bookworm without ARC enabled",
 		Contacts:        []string{"clumptini+oncall@google.com"},
+		BugComponent:    "b:1122570", // ChromeOS > Software > GuestOS > Crostini
 		Impl:            &crostiniFixture{preData: preTestDataBookworm},
 		SetUpTimeout:    installationTimeout + uninstallationTimeout,
 		ResetTimeout:    checkContainerTimeout,
@@ -232,6 +236,7 @@ func init() {
 		Name:            "crostiniBullseyeGaia",
 		Desc:            "Install Crostini with Bullseye in Chrome logged in with Gaia",
 		Contacts:        []string{"clumptini+oncall@google.com"},
+		BugComponent:    "b:1122570", // ChromeOS > Software > GuestOS > Crostini
 		Impl:            &crostiniFixture{preData: preTestDataBullseye},
 		SetUpTimeout:    installationTimeout + uninstallationTimeout,
 		ResetTimeout:    checkContainerTimeout,
@@ -246,6 +251,7 @@ func init() {
 		Name:            "crostiniBullseyeGaiaWithoutArc",
 		Desc:            "Install Crostini with Bullseye in Chrome logged in with Gaia without ARC enabled",
 		Contacts:        []string{"clumptini+oncall@google.com"},
+		BugComponent:    "b:1122570", // ChromeOS > Software > GuestOS > Crostini
 		Impl:            &crostiniFixture{preData: preTestDataBullseye},
 		SetUpTimeout:    installationTimeout + uninstallationTimeout,
 		ResetTimeout:    checkContainerTimeout,
@@ -260,6 +266,7 @@ func init() {
 		Name:            "crostiniBookwormGaia",
 		Desc:            "Install Crostini with Bookworm in Chrome logged in with Gaia",
 		Contacts:        []string{"clumptini+oncall@google.com"},
+		BugComponent:    "b:1122570", // ChromeOS > Software > GuestOS > Crostini
 		Impl:            &crostiniFixture{preData: preTestDataBookworm},
 		SetUpTimeout:    installationTimeout + uninstallationTimeout,
 		ResetTimeout:    checkContainerTimeout,
@@ -274,6 +281,7 @@ func init() {
 		Name:            "crostiniBookwormGaiaWithoutArc",
 		Desc:            "Install Crostini with Bookworm in Chrome logged in with Gaia without ARC enabled",
 		Contacts:        []string{"clumptini+oncall@google.com"},
+		BugComponent:    "b:1122570", // ChromeOS > Software > GuestOS > Crostini
 		Impl:            &crostiniFixture{preData: preTestDataBookworm},
 		SetUpTimeout:    installationTimeout + uninstallationTimeout,
 		ResetTimeout:    checkContainerTimeout,
@@ -288,6 +296,7 @@ func init() {
 		Name:            "crostiniBullseyeLargeContainer",
 		Desc:            "Install Crostini with Bullseye in large container with apps installed",
 		Contacts:        []string{"clumptini+oncall@google.com"},
+		BugComponent:    "b:1122570", // ChromeOS > Software > GuestOS > Crostini
 		Impl:            &crostiniFixture{preData: preTestDataBullseyeLC},
 		SetUpTimeout:    installationTimeout + uninstallationTimeout,
 		ResetTimeout:    checkContainerTimeout,
@@ -302,6 +311,7 @@ func init() {
 		Name:            "crostiniBookwormLargeContainer",
 		Desc:            "Install Crostini with Bookworm in large container with apps installed",
 		Contacts:        []string{"clumptini+oncall@google.com"},
+		BugComponent:    "b:1122570", // ChromeOS > Software > GuestOS > Crostini
 		Impl:            &crostiniFixture{preData: preTestDataBookwormLC},
 		SetUpTimeout:    installationTimeout + uninstallationTimeout,
 		ResetTimeout:    checkContainerTimeout,
@@ -316,6 +326,7 @@ func init() {
 		Name:            "crostiniBullseyeWithLacros",
 		Desc:            "Install Crostini with Bullseye and enable Lacros",
 		Contacts:        []string{"clumptini+oncall@google.com"},
+		BugComponent:    "b:1122570", // ChromeOS > Software > GuestOS > Crostini
 		Impl:            &crostiniFixture{preData: preTestDataBullseye},
 		SetUpTimeout:    installationTimeout + uninstallationTimeout,
 		ResetTimeout:    checkContainerTimeout,
@@ -330,6 +341,7 @@ func init() {
 		Name:            "crostiniBullseyeWithLacrosWithoutArc",
 		Desc:            "Install Crostini with Bullseye and enable Lacros without ARC enabled",
 		Contacts:        []string{"clumptini+oncall@google.com"},
+		BugComponent:    "b:1122570", // ChromeOS > Software > GuestOS > Crostini
 		Impl:            &crostiniFixture{preData: preTestDataBullseye},
 		SetUpTimeout:    installationTimeout + uninstallationTimeout,
 		ResetTimeout:    checkContainerTimeout,
@@ -344,6 +356,7 @@ func init() {
 		Name:            "crostiniBookwormWithLacros",
 		Desc:            "Install Crostini with Bookworm and enable Lacros",
 		Contacts:        []string{"clumptini+oncall@google.com"},
+		BugComponent:    "b:1122570", // ChromeOS > Software > GuestOS > Crostini
 		Impl:            &crostiniFixture{preData: preTestDataBookworm},
 		SetUpTimeout:    installationTimeout + uninstallationTimeout,
 		ResetTimeout:    checkContainerTimeout,
@@ -358,6 +371,7 @@ func init() {
 		Name:            "crostiniBookwormWithLacrosWithoutArc",
 		Desc:            "Install Crostini with Bookworm and enable Lacros without ARC enabled",
 		Contacts:        []string{"clumptini+oncall@google.com"},
+		BugComponent:    "b:1122570", // ChromeOS > Software > GuestOS > Crostini
 		Impl:            &crostiniFixture{preData: preTestDataBookworm},
 		SetUpTimeout:    installationTimeout + uninstallationTimeout,
 		ResetTimeout:    checkContainerTimeout,

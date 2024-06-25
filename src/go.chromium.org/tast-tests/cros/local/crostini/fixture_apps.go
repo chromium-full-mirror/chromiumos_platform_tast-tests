@@ -24,6 +24,7 @@ func init() {
 		Name:            "crostiniBullseyeLargeContainerTablet",
 		Desc:            "Install Crostini with Bullseye in large container with apps installed in tablet mode",
 		Contacts:        []string{"clumptini+oncall@google.com"},
+		BugComponent:    "b:1122570", // ChromeOS > Software > GuestOS > Crostini
 		Impl:            &crostiniAppsFixture{deviceMode: devicemode.TabletMode},
 		SetUpTimeout:    installationTimeout + uninstallationTimeout,
 		PreTestTimeout:  preTestTimeout,
@@ -37,6 +38,7 @@ func init() {
 		Name:            "crostiniBullseyeLargeContainerClamshell",
 		Desc:            "Install Crostini with Bullseye in large container with apps installed in clamshell mode",
 		Contacts:        []string{"clumptini+oncall@google.com"},
+		BugComponent:    "b:1122570", // ChromeOS > Software > GuestOS > Crostini
 		Impl:            &crostiniAppsFixture{deviceMode: devicemode.ClamshellMode},
 		SetUpTimeout:    installationTimeout + uninstallationTimeout,
 		PreTestTimeout:  preTestTimeout,
@@ -50,6 +52,7 @@ func init() {
 		Name:            "crostiniBookwormLargeContainerTablet",
 		Desc:            "Install Crostini with Bookworm in large container with apps installed in tablet mode",
 		Contacts:        []string{"clumptini+oncall@google.com"},
+		BugComponent:    "b:1122570", // ChromeOS > Software > GuestOS > Crostini
 		Impl:            &crostiniAppsFixture{deviceMode: devicemode.TabletMode},
 		SetUpTimeout:    installationTimeout + uninstallationTimeout,
 		PreTestTimeout:  preTestTimeout,
@@ -63,6 +66,7 @@ func init() {
 		Name:            "crostiniBookwormLargeContainerClamshell",
 		Desc:            "Install Crostini with Bookworm in large container with apps installed in clamshell mode",
 		Contacts:        []string{"clumptini+oncall@google.com"},
+		BugComponent:    "b:1122570", // ChromeOS > Software > GuestOS > Crostini
 		Impl:            &crostiniAppsFixture{deviceMode: devicemode.ClamshellMode},
 		SetUpTimeout:    installationTimeout + uninstallationTimeout,
 		PreTestTimeout:  preTestTimeout,
