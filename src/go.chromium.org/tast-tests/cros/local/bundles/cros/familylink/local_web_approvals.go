@@ -9,6 +9,8 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/dma"
+	"go.chromium.org/tast-tests/cros/common/family"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
@@ -34,9 +36,9 @@ func init() {
 		// ChromeOS > Software > Family > Parental controls
 		BugComponent: "b:1090157",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "gaia"},
 		Timeout:      5 * time.Minute,
-		Vars:         []string{"unicorn.matureSite", "family.parentEmail", "family.parentPassword"},
+		Vars:         []string{"unicorn.matureSite"},
 		Params: []testing.Param{{
 			Val:     browser.TypeAsh,
 			Fixture: "familyLinkUnicornLogin",
@@ -89,8 +91,10 @@ func LocalWebApprovals(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to load parent access widget: ", err)
 	}
 
-	parentEmail := s.RequiredVar("family.parentEmail")
-	parentPassword := s.RequiredVar("family.parentPassword")
+	parentEmail, parentPassword, err := dma.UserPassFromPool(family.ParentAccountVarName)
+	if err != nil {
+		s.Fatal("Failed to get parent user and pass: ", err)
+	}
 	if err := familylink.NavigateParentAccessDialogAuthentication(ctx, tconn, parentEmail, parentPassword); err != nil {
 		s.Fatal("Failed to navigate parent access widget: ", err)
 	}

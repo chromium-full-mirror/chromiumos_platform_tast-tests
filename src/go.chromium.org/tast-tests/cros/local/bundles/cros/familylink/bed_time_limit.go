@@ -11,6 +11,8 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/dma"
+	"go.chromium.org/tast-tests/cros/common/family"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -36,9 +38,9 @@ func init() {
 		// ChromeOS > Software > Family > Parental controls
 		BugComponent: "b:1090157",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "gaia"},
 		Timeout:      10 * time.Minute,
-		VarDeps:      []string{"family.unicornEmail", "family.unicornPassword"},
+		VarDeps:      []string{family.UnicornAccountVarName},
 		Fixture:      "familyLinkUnicornPolicyLogin",
 	})
 }
@@ -117,7 +119,10 @@ func BedTimeLimit(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Waiting for bed time ends in ", bedTimeDuration)
-	childUser := strings.ToLower(s.RequiredVar("family.unicornEmail"))
+	childUser, childPass, err := dma.UserPassFromPool(family.UnicornAccountVarName)
+	if err != nil {
+		s.Fatal("Failed to get child user: ", err)
+	}
 	if err := lockscreen.WaitForPasswordField(ctx, tconn, childUser, bedTimeDuration+lockStateUpdateTimeOut); err != nil {
 		s.Error("Password text field did not appear in the UI: ", err)
 	}
@@ -129,7 +134,7 @@ func BedTimeLimit(ctx context.Context, s *testing.State) {
 	}
 	defer kb.Close(ctx)
 	if err := lockscreen.EnterPassword(ctx, tconn, childUser,
-		s.RequiredVar("family.unicornPassword"), kb); err != nil {
+		childPass, kb); err != nil {
 		s.Fatal("Entering password failed: ", err)
 	}
 	if st, err := lockscreen.WaitState(ctx, tconn,

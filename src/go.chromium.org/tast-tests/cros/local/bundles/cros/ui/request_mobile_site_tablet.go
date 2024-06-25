@@ -10,6 +10,8 @@ import (
 	"regexp"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/dma"
+	"go.chromium.org/tast-tests/cros/common/family"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
@@ -37,13 +39,11 @@ func init() {
 		BugComponent:   "b:1238037", // ChromeOS > Software > Window Management
 		LifeCycleStage: testing.LifeCycleInDevelopment,
 		Attr:           []string{"group:mainline", "informational", "group:hw_agnostic"},
-		SoftwareDeps:   []string{"chrome", "chrome_internal"},
+		SoftwareDeps:   []string{"chrome", "chrome_internal", "gaia"},
 		Timeout:        12 * time.Minute,
 		VarDeps: []string{
-			"family.parentEmail",
-			"family.parentPassword",
-			"family.unicornEmail",
-			"family.unicornPassword",
+			family.ParentAccountVarName,
+			family.UnicornAccountVarName,
 		},
 		Params: []testing.Param{
 			{
@@ -79,13 +79,24 @@ type mobileTestResources struct {
 
 // RequestMobileSiteTablet tests request mobile site function on websites under different types of login account.
 func RequestMobileSiteTablet(ctx context.Context, s *testing.State) {
+
+	pUser, pPass, err := dma.UserPassFromPool(family.ParentAccountVarName)
+	if err != nil {
+		s.Fatal("Failed to get parent user and pass: ", err)
+	}
+
+	uUser, uPass, err := dma.UserPassFromPool(family.UnicornAccountVarName)
+	if err != nil {
+		s.Fatal("Failed to get parent user and pass: ", err)
+	}
+
 	parentCred := chrome.Creds{
-		User: s.RequiredVar("family.parentEmail"),
-		Pass: s.RequiredVar("family.parentPassword"),
+		User: pUser,
+		Pass: pPass,
 	}
 	childCred := chrome.Creds{
-		User:       s.RequiredVar("family.unicornEmail"),
-		Pass:       s.RequiredVar("family.unicornPassword"),
+		User:       uUser,
+		Pass:       uPass,
 		ParentUser: parentCred.User,
 		ParentPass: parentCred.Pass,
 	}

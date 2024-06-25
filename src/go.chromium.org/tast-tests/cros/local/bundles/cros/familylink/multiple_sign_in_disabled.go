@@ -8,6 +8,8 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/dma"
+	"go.chromium.org/tast-tests/cros/common/family"
 	"go.chromium.org/tast-tests/cros/local/chrome/familylink"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -32,7 +34,7 @@ func init() {
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "gaia"},
 		Timeout:      5 * time.Minute,
-		VarDeps:      []string{"family.unicornEmail"},
+		VarDeps:      []string{family.UnicornAccountVarName},
 		Fixture:      "familyLinkUnicornLoginNonOwner",
 	})
 }
@@ -62,7 +64,10 @@ func MultipleSignInDisabled(ctx context.Context, s *testing.State) {
 	defer ui.LeftClick(quicksettings.PowerMenuButton)(ctx)
 
 	s.Log("Attempting to add multiple profiles")
-	userEmail := s.RequiredVar("family.unicornEmail")
+	userEmail, _, err := dma.UserPassFromPool(family.UnicornAccountVarName)
+	if err != nil {
+		s.Fatal("Failed to get child user: ", err)
+	}
 	s.Logf("Looking for user email menu item %q", userEmail)
 	emailMenuItem := nodewith.NameContaining(userEmail).Role(role.MenuItem)
 	if err := ui.WaitUntilExists(emailMenuItem)(ctx); err != nil {

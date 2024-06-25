@@ -10,6 +10,7 @@ import (
 
 	arcCommon "go.chromium.org/tast-tests/cros/common/arc"
 	"go.chromium.org/tast-tests/cros/common/dma"
+	"go.chromium.org/tast-tests/cros/common/family"
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
@@ -50,11 +51,8 @@ func init() {
 		Desc:         "Fixture setting persistent policy user for a Family Link account",
 		Contacts:     []string{"xiqiruan@chromium.org", "vsavu@google.com", "chromeos-commercial-remote-management@google.com"},
 		BugComponent: "b:1111617", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Policy Stack
-		Vars: []string{
-			"family.unicornEmail",
-		},
 		Impl: &persistentFixture{
-			policyUserVar:                       "family.unicornEmail",
+			policyAccountVar:                    family.UnicornAccountVarName,
 			persistentDisableDomainVerification: &[]bool{true}[0],
 		},
 		SetUpTimeout:    5 * time.Second,
@@ -69,7 +67,7 @@ func init() {
 		Contacts:     []string{"xiqiruan@chromium.org", "vsavu@google.com", "chromeos-commercial-remote-management@google.com"},
 		BugComponent: "b:1111617", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Policy Stack
 		Impl: &persistentFixture{
-			policyUserVar:                       arcCommon.ChildAccountVarName,
+			policyAccountVar:                    arcCommon.ChildAccountVarName,
 			persistentDisableDomainVerification: &[]bool{true}[0],
 		},
 		SetUpTimeout:    5 * time.Second,
@@ -84,10 +82,10 @@ func init() {
 		Contacts:     []string{"sun.tsai@cienet.com", "vsavu@google.com", "chromeos-commercial-remote-management@google.com"},
 		BugComponent: "b:1111617", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Policy Stack
 		Vars: []string{
-			"family.gellerEmail",
+			family.GellerAccountVarName,
 		},
 		Impl: &persistentFixture{
-			policyUserVar:                       "family.gellerEmail",
+			policyAccountVar:                    family.GellerAccountVarName,
 			persistentDisableDomainVerification: &[]bool{true}[0],
 		},
 		SetUpTimeout:    5 * time.Second,
@@ -148,10 +146,13 @@ type persistentFixture struct {
 	// policyUser is the persistentuser account that used as policyUser in policy blob.
 	// Keep nil if unused.
 	policyUser *string
-	// The policyUserVar is the account variable (i.e. "family.unicornEmail") when using
+	// The policyUserVar is the account variable (i.e. "projector.eduEmail") when using
 	// a different account instead of tast-user@managedchrome.com for policy test.
 	// It is used to set the value of the policyUser variable above.
 	policyUserVar string
+
+	// policyAccountVar is the account:pass variable (i.e. "email:pass")
+	policyAccountVar string
 
 	// persistentDisableDomainVerification is used to sign any domain.
 	persistentDisableDomainVerification *bool
@@ -167,17 +168,16 @@ func (p *persistentFixture) SetUp(ctx context.Context, s *testing.FixtState) int
 
 	// Load policyUser from policyUserVar before using.
 	if p.policyUserVar != "" {
-		if p.policyUserVar == arcCommon.ChildAccountVarName {
-			user, _, err := dma.UserPassFromPool(p.policyUserVar)
-			if err != nil {
-				s.Fatal("Failed to get policy user account: ", err)
-			}
-			p.policyUser = &user
-		} else {
-			policyUser := s.RequiredVar(p.policyUserVar)
-			p.policyUser = &policyUser
-		}
+		policyUser := s.RequiredVar(p.policyUserVar)
+		p.policyUser = &policyUser
+	}
 
+	if p.policyAccountVar != "" {
+		user, _, err := dma.UserPassFromPool(p.policyAccountVar)
+		if err != nil {
+			s.Fatal("Failed to get policy user account: ", err)
+		}
+		p.policyUser = &user
 	}
 
 	p.fdms.SetPersistentPolicies(p.policies)

@@ -12,6 +12,7 @@ import (
 
 	arcCommon "go.chromium.org/tast-tests/cros/common/arc"
 	"go.chromium.org/tast-tests/cros/common/dma"
+	"go.chromium.org/tast-tests/cros/common/family"
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/common/ui"
@@ -29,28 +30,24 @@ import (
 const resetTimeout = 30 * time.Second
 
 // NewFamilyLinkFixture creates a new implementation of the Family Link fixture.
-func NewFamilyLinkFixture(parentUser, parentPassword, childUser, childPassword string, isOwner bool, opts ...chrome.Option) testing.FixtureImpl {
+func NewFamilyLinkFixture(parentAccountVar, childAccountVar string, isOwner bool, opts ...chrome.Option) testing.FixtureImpl {
 	return &familyLinkFixture{
-		opts:           opts,
-		parentUser:     parentUser,
-		parentPassword: parentPassword,
-		childUser:      childUser,
-		childPassword:  childPassword,
-		isOwner:        isOwner,
-		isLacros:       false,
+		opts:             opts,
+		parentAccountVar: parentAccountVar,
+		childAccountVar:  childAccountVar,
+		isOwner:          isOwner,
+		isLacros:         false,
 	}
 }
 
 // NewFamilyLinkFixtureLacros creates a new implementation of the Family Link fixture for Lacros.
-func NewFamilyLinkFixtureLacros(parentUser, parentPassword, childUser, childPassword string, isOwner bool, opts ...chrome.Option) testing.FixtureImpl {
+func NewFamilyLinkFixtureLacros(parentAccountVar, childAccountVar string, isOwner bool, opts ...chrome.Option) testing.FixtureImpl {
 	return &familyLinkFixture{
-		opts:           opts,
-		parentUser:     parentUser,
-		parentPassword: parentPassword,
-		childUser:      childUser,
-		childPassword:  childPassword,
-		isOwner:        isOwner,
-		isLacros:       true,
+		opts:             opts,
+		parentAccountVar: parentAccountVar,
+		childAccountVar:  childAccountVar,
+		isOwner:          isOwner,
+		isLacros:         true,
 	}
 }
 
@@ -62,14 +59,8 @@ func init() {
 			"cros-families-eng+test@google.com",
 			"agawronska@chromium.org",
 		},
-		BugComponent: "b:1079167", // ChromeOS > Software > Family
-		Impl:         NewFamilyLinkFixture("family.parentEmail", "family.parentPassword", "family.unicornEmail", "family.unicornPassword", true),
-		Vars: []string{
-			"family.parentEmail",
-			"family.parentPassword",
-			"family.unicornEmail",
-			"family.unicornPassword",
-		},
+		BugComponent:    "b:1079167", // ChromeOS > Software > Family
+		Impl:            NewFamilyLinkFixture(family.ParentAccountVarName, family.UnicornAccountVarName, true),
 		SetUpTimeout:    chrome.GAIALoginChildTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -84,14 +75,8 @@ func init() {
 			"cros-families-eng+test@google.com",
 			"agawronska@chromium.org",
 		},
-		BugComponent: "b:1079167", // ChromeOS > Software > Family
-		Impl:         NewFamilyLinkFixtureLacros("family.parentEmail", "family.parentPassword", "family.unicornEmail", "family.unicornPassword", true),
-		Vars: []string{
-			"family.parentEmail",
-			"family.parentPassword",
-			"family.unicornEmail",
-			"family.unicornPassword",
-		},
+		BugComponent:    "b:1079167", // ChromeOS > Software > Family
+		Impl:            NewFamilyLinkFixtureLacros(family.ParentAccountVarName, family.UnicornAccountVarName, true),
 		SetUpTimeout:    chrome.GAIALoginChildTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -106,14 +91,8 @@ func init() {
 			"cros-families-eng+test@google.com",
 			"agawronska@chromium.org",
 		},
-		BugComponent: "b:1079167", // ChromeOS > Software > Family
-		Impl:         NewFamilyLinkFixture("family.parentEmail", "family.parentPassword", "family.unicornAllowlistEmail", "family.unicornAllowlistPassword", true),
-		Vars: []string{
-			"family.parentEmail",
-			"family.parentPassword",
-			"family.unicornAllowlistEmail",
-			"family.unicornAllowlistPassword",
-		},
+		BugComponent:    "b:1079167", // ChromeOS > Software > Family
+		Impl:            NewFamilyLinkFixture(family.ParentAccountVarName, family.UnicornAllowlistAccountVarName, true),
 		SetUpTimeout:    chrome.GAIALoginChildTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -128,14 +107,8 @@ func init() {
 			"cros-families-eng+test@google.com",
 			"agawronska@chromium.org",
 		},
-		BugComponent: "b:1079167", // ChromeOS > Software > Family
-		Impl:         NewFamilyLinkFixtureLacros("family.parentEmail", "family.parentPassword", "family.unicornAllowlistEmail", "family.unicornAllowlistPassword", true),
-		Vars: []string{
-			"family.parentEmail",
-			"family.parentPassword",
-			"family.unicornAllowlistEmail",
-			"family.unicornAllowlistPassword",
-		},
+		BugComponent:    "b:1079167", // ChromeOS > Software > Family
+		Impl:            NewFamilyLinkFixtureLacros(family.ParentAccountVarName, family.UnicornAllowlistAccountVarName, true),
 		SetUpTimeout:    chrome.GAIALoginChildTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -150,14 +123,8 @@ func init() {
 			"cros-families-eng+test@google.com",
 			"agawronska@chromium.org",
 		},
-		BugComponent: "b:1079167", // ChromeOS > Software > Family
-		Impl:         NewFamilyLinkFixture("family.parentEmail", "family.parentPassword", "family.unicornEmail", "family.unicornPassword", false),
-		Vars: []string{
-			"family.parentEmail",
-			"family.parentPassword",
-			"family.unicornEmail",
-			"family.unicornPassword",
-		},
+		BugComponent:    "b:1079167", // ChromeOS > Software > Family
+		Impl:            NewFamilyLinkFixture(family.ParentAccountVarName, family.UnicornAccountVarName, false),
 		SetUpTimeout:    chrome.GAIALoginChildTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -173,14 +140,8 @@ func init() {
 			"hyungtaekim@chromium.org",
 			"agawronska@chromium.org",
 		},
-		BugComponent: "b:1079167", // ChromeOS > Software > Family
-		Impl:         NewFamilyLinkFixtureLacros("family.parentEmail", "family.parentPassword", "family.unicornEmail", "family.unicornPassword", false),
-		Vars: []string{
-			"family.parentEmail",
-			"family.parentPassword",
-			"family.unicornEmail",
-			"family.unicornPassword",
-		},
+		BugComponent:    "b:1079167", // ChromeOS > Software > Family
+		Impl:            NewFamilyLinkFixtureLacros(family.ParentAccountVarName, family.UnicornAccountVarName, false),
 		SetUpTimeout:    chrome.GAIALoginChildTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -195,14 +156,8 @@ func init() {
 			"cros-families-eng+test@google.com",
 			"agawronska@chromium.org",
 		},
-		BugComponent: "b:1079167", // ChromeOS > Software > Family
-		Impl:         NewFamilyLinkFixture("family.parentEmail", "family.parentPassword", "family.gellerEmail", "family.gellerPassword", true),
-		Vars: []string{
-			"family.parentEmail",
-			"family.parentPassword",
-			"family.gellerEmail",
-			"family.gellerPassword",
-		},
+		BugComponent:    "b:1079167", // ChromeOS > Software > Family
+		Impl:            NewFamilyLinkFixture(family.ParentAccountVarName, family.GellerAccountVarName, true),
 		SetUpTimeout:    chrome.GAIALoginChildTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -218,14 +173,8 @@ func init() {
 			"hyungtaekim@chromium.org",
 			"agawronska@chromium.org",
 		},
-		BugComponent: "b:1079167", // ChromeOS > Software > Family
-		Impl:         NewFamilyLinkFixtureLacros("family.parentEmail", "family.parentPassword", "family.gellerEmail", "family.gellerPassword", true),
-		Vars: []string{
-			"family.parentEmail",
-			"family.parentPassword",
-			"family.gellerEmail",
-			"family.gellerPassword",
-		},
+		BugComponent:    "b:1079167", // ChromeOS > Software > Family
+		Impl:            NewFamilyLinkFixtureLacros(family.ParentAccountVarName, family.GellerAccountVarName, true),
 		SetUpTimeout:    chrome.GAIALoginChildTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -241,7 +190,7 @@ func init() {
 			"agawronska@chromium.org",
 		},
 		BugComponent:    "b:1079167", // ChromeOS > Software > Family
-		Impl:            NewFamilyLinkFixture(arcCommon.ParentAccountVarName, "", arcCommon.ChildAccountVarName, "", true, chrome.ARCSupported()),
+		Impl:            NewFamilyLinkFixture(arcCommon.ParentAccountVarName, arcCommon.ChildAccountVarName, true, chrome.ARCSupported()),
 		SetUpTimeout:    chrome.GAIALoginChildTimeout + arc.BootTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -256,14 +205,8 @@ func init() {
 			"cros-families-eng+test@google.com",
 			"agawronska@chromium.org",
 		},
-		BugComponent: "b:1079167", // ChromeOS > Software > Family
-		Impl:         NewFamilyLinkFixture("family.parentEmail", "family.parentPassword", "family.griffinEmail", "family.griffinPassword", true),
-		Vars: []string{
-			"family.parentEmail",
-			"family.parentPassword",
-			"family.griffinEmail",
-			"family.griffinPassword",
-		},
+		BugComponent:    "b:1079167", // ChromeOS > Software > Family
+		Impl:            NewFamilyLinkFixture(family.ParentAccountVarName, family.GriffinAccountVarName, true),
 		SetUpTimeout:    chrome.GAIALoginChildTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -278,14 +221,8 @@ func init() {
 			"cros-families-eng+test@google.com",
 			"agawronska@chromium.org",
 		},
-		BugComponent: "b:1079167", // ChromeOS > Software > Family
-		Impl:         NewFamilyLinkFixtureLacros("family.parentEmail", "family.parentPassword", "family.griffinEmail", "family.griffinPassword", true),
-		Vars: []string{
-			"family.parentEmail",
-			"family.parentPassword",
-			"family.griffinEmail",
-			"family.griffinPassword",
-		},
+		BugComponent:    "b:1079167", // ChromeOS > Software > Family
+		Impl:            NewFamilyLinkFixtureLacros(family.ParentAccountVarName, family.GriffinAccountVarName, true),
 		SetUpTimeout:    chrome.GAIALoginChildTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -300,7 +237,7 @@ func init() {
 			"agawronska@chromium.org",
 		},
 		BugComponent:    "b:1079167", // ChromeOS > Software > Family
-		Impl:            NewFamilyLinkFixture(arcCommon.ParentAccountVarName, "", "", "", true, chrome.ARCSupported(), chrome.ExtraArgs(arc.DisableSyncFlags()...)),
+		Impl:            NewFamilyLinkFixture(arcCommon.ParentAccountVarName, "", true, chrome.ARCSupported(), chrome.ExtraArgs(arc.DisableSyncFlags()...)),
 		SetUpTimeout:    chrome.GAIALoginTimeout + arc.BootTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -315,14 +252,8 @@ func init() {
 			"cros-families-eng+test@google.com",
 			"agawronska@chromium.org",
 		},
-		BugComponent: "b:1079167", // ChromeOS > Software > Family
-		Impl:         NewFamilyLinkFixture("family.parentEmail", "family.parentPassword", "family.unicornEmail", "family.unicornPassword", true),
-		Vars: []string{
-			"family.parentEmail",
-			"family.parentPassword",
-			"family.unicornEmail",
-			"family.unicornPassword",
-		},
+		BugComponent:    "b:1079167", // ChromeOS > Software > Family
+		Impl:            NewFamilyLinkFixture(family.ParentAccountVarName, family.UnicornAccountVarName, true),
 		SetUpTimeout:    chrome.GAIALoginChildTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -339,7 +270,7 @@ func init() {
 			"agawronska@chromium.org",
 		},
 		BugComponent:    "b:1079167", // ChromeOS > Software > Family
-		Impl:            NewFamilyLinkFixture(arcCommon.ParentAccountVarName, "", arcCommon.ChildAccountVarName, "", true, chrome.ARCSupported(), chrome.ExtraArgs(arc.DisableSyncFlags()...)),
+		Impl:            NewFamilyLinkFixture(arcCommon.ParentAccountVarName, arcCommon.ChildAccountVarName, true, chrome.ARCSupported(), chrome.ExtraArgs(arc.DisableSyncFlags()...)),
 		SetUpTimeout:    chrome.GAIALoginChildTimeout + arc.BootTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -355,14 +286,8 @@ func init() {
 			"cros-families-eng+test@google.com",
 			"agawronska@chromium.org",
 		},
-		BugComponent: "b:1079167", // ChromeOS > Software > Family
-		Impl:         NewFamilyLinkFixture("family.parentEmail", "family.parentPassword", "family.gellerEmail", "family.gellerPassword", true, chrome.ARCSupported(), chrome.ExtraArgs(arc.DisableSyncFlags()...)),
-		Vars: []string{
-			"family.parentEmail",
-			"family.parentPassword",
-			"family.gellerEmail",
-			"family.gellerPassword",
-		},
+		BugComponent:    "b:1079167", // ChromeOS > Software > Family
+		Impl:            NewFamilyLinkFixture(family.ParentAccountVarName, family.GellerAccountVarName, true, chrome.ARCSupported(), chrome.ExtraArgs(arc.DisableSyncFlags()...)),
 		SetUpTimeout:    chrome.GAIALoginChildTimeout + arc.BootTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -373,16 +298,18 @@ func init() {
 }
 
 type familyLinkFixture struct {
-	cr             *chrome.Chrome
-	opts           []chrome.Option
-	fdms           *fakedms.FakeDMS
-	policyUser     string
-	parentUser     string
-	parentPassword string
-	childUser      string
-	childPassword  string
-	isOwner        bool
-	isLacros       bool
+	cr               *chrome.Chrome
+	opts             []chrome.Option
+	fdms             *fakedms.FakeDMS
+	policyUser       string
+	parentAccountVar string
+	parentUser       string
+	parentPassword   string
+	childAccountVar  string
+	childUser        string
+	childPassword    string
+	isOwner          bool
+	isLacros         bool
 }
 
 // FixtData holds information made available to tests that specify this Fixture.
@@ -452,8 +379,8 @@ var _ HasPolicyUser = FixtData{}
 
 func (f *familyLinkFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	var parentUser, parentPass string
-	if f.parentUser == arcCommon.ParentAccountVarName {
-		user, pass, err := dma.UserPassFromPool(f.parentUser)
+	if f.parentAccountVar != "" {
+		user, pass, err := dma.UserPassFromPool(f.parentAccountVar)
 		if err != nil {
 			panic(fmt.Sprintf("Failed to get parent account: %v", err))
 		}
@@ -469,11 +396,11 @@ func (f *familyLinkFixture) SetUp(ctx context.Context, s *testing.FixtState) int
 	f.opts = append(f.opts, chrome.ExtraArgs("--force-devtools-available"))
 
 	var childUser, childPass string
-	dmaChildLogin := f.childUser == arcCommon.ChildAccountVarName
+	dmaChildLogin := f.childAccountVar != ""
 	isChildLogin := len(f.childUser) > 0 && len(f.childPassword) > 0
 	if isChildLogin || dmaChildLogin {
 		if dmaChildLogin {
-			user, pass, err := dma.UserPassFromPool(f.childUser)
+			user, pass, err := dma.UserPassFromPool(f.childAccountVar)
 			if err != nil {
 				panic(fmt.Sprintf("Failed to get child account: %v", err))
 			}

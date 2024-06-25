@@ -9,6 +9,8 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/dma"
+	"go.chromium.org/tast-tests/cros/common/family"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
@@ -33,13 +35,12 @@ func init() {
 		// ChromeOS > Software > Family > Parental controls
 		BugComponent: "b:1090157",
 		Attr:         []string{"group:mainline", "informational"},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "gaia"},
 		// This test has a long timeout because syncing settings can occasionally
 		// take a long time.
 		Timeout: 5 * time.Minute,
 		VarDeps: []string{
-			"family.parentEmail",
-			"family.parentPassword",
+			family.ParentAccountVarName,
 		},
 		Params: []testing.Param{{
 			Val:     browser.TypeAsh,
@@ -98,8 +99,10 @@ func ExtensionApprovals(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to ask permission for extension: ", err)
 	}
 
-	parentEmail := s.RequiredVar("family.parentEmail")
-	parentPassword := s.RequiredVar("family.parentPassword")
+	parentEmail, parentPassword, err := dma.UserPassFromPool(family.ParentAccountVarName)
+	if err != nil {
+		s.Fatal("Failed to get parent user and pass: ", err)
+	}
 	if err := familylink.NavigateParentAccessDialogAuthentication(ctx, tconn, parentEmail, parentPassword); err != nil {
 		s.Fatal("Failed to navigate parent access widget: ", err)
 	}

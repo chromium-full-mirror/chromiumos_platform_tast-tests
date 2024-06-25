@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/dev"
 	"go.chromium.org/tast-tests/cros/common/drivefs"
 	"go.chromium.org/tast-tests/cros/common/enterpriseconnectors"
+	"go.chromium.org/tast-tests/cros/common/family"
 	"go.chromium.org/tast-tests/cros/common/filemanager"
 	"go.chromium.org/tast-tests/cros/common/floatingworkspace"
 	"go.chromium.org/tast-tests/cros/common/policy"
@@ -50,6 +51,12 @@ func pools() (map[string]string, map[string]string) {
 		enterpriseconnectors.AshAccount1VarName:     enterpriseconnectors.AshDMAAccount1Value(),
 		enterpriseconnectors.AshAccount2VarName:     enterpriseconnectors.AshDMAAccount2Value(),
 		enterpriseconnectors.AshAccount3VarName:     enterpriseconnectors.AshDMAAccount3Value(),
+		family.HohAccountVarName:                    family.HohDMAAccountValue(),
+		family.ParentAccountVarName:                 family.ParentDMAAccountValue(),
+		family.UnicornAllowlistAccountVarName:       family.UnicornAllowlistDMAAccountValue(),
+		family.UnicornAccountVarName:                family.UnicornDMAAccountValue(),
+		family.GellerAccountVarName:                 family.GellerDMAAccountValue(),
+		family.GriffinAccountVarName:                family.GriffinDMAAccountValue(),
 		filemanager.FullAccountPoolVarName:          filemanager.FullDMAAccountPoolValue(),
 		filemanager.OrgFullAccountPoolVarName:       filemanager.OrgFullDMAAccountPoolValue(),
 		filemanager.WarnAccountPoolVarName:          filemanager.WarnDMAAccountPoolValue(),
@@ -77,6 +84,12 @@ func pools() (map[string]string, map[string]string) {
 		enterpriseconnectors.AshAccount1VarName:     enterpriseconnectors.AshAccount1Value(),
 		enterpriseconnectors.AshAccount2VarName:     enterpriseconnectors.AshAccount2Value(),
 		enterpriseconnectors.AshAccount3VarName:     enterpriseconnectors.AshAccount3Value(),
+		family.HohAccountVarName:                    family.HohAccountValue(),
+		family.ParentAccountVarName:                 family.ParentAccountValue(),
+		family.UnicornAllowlistAccountVarName:       family.UnicornAllowlistAccountValue(),
+		family.UnicornAccountVarName:                family.UnicornAccountValue(),
+		family.GellerAccountVarName:                 family.GellerAccountValue(),
+		family.GriffinAccountVarName:                family.GriffinAccountValue(),
 		filemanager.FullAccountPoolVarName:          filemanager.FullAccountPoolValue(),
 		filemanager.OrgFullAccountPoolVarName:       filemanager.OrgFullAccountPoolValue(),
 		filemanager.WarnAccountPoolVarName:          filemanager.WarnAccountPoolValue(),

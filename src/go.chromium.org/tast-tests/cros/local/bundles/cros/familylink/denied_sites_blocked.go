@@ -34,7 +34,7 @@ func init() {
 		// ChromeOS > Software > Family > Parental controls
 		BugComponent: "b:1090157",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "gaia"},
 		Timeout:      5 * time.Minute,
 		Vars:         []string{"unicorn.blockedSite"},
 		Params: []testing.Param{{

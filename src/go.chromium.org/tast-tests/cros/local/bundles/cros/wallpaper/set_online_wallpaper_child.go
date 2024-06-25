@@ -35,7 +35,7 @@ func init() {
 			Key:   "feature_id",
 			Value: "screenplay-2502e146-d4a3-4251-baba-d3cd24f18b45",
 		}},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "gaia"},
 		VarDeps:      []string{"unicorn.wallpaperCategory", "unicorn.wallpaperName"},
 		Fixture:      "familyLinkUnicornLogin",
 		Timeout:      5 * time.Minute,

@@ -9,6 +9,8 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/dma"
+	"go.chromium.org/tast-tests/cros/common/family"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/familylink"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -30,9 +32,8 @@ func init() {
 		// ChromeOS > Software > Family > Parental controls
 		BugComponent: "b:1090157",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "gaia"},
 		Timeout:      chrome.GAIALoginTimeout + 5*time.Minute,
-		Vars:         []string{"family.parentEmail", "family.parentPassword"},
 		Fixture:      "familyLinkUnicornLogin",
 	})
 }
@@ -41,10 +42,15 @@ func NonEducoexistenceInsession(ctx context.Context, s *testing.State) {
 	tconn := s.FixtValue().(familylink.HasTestConn).TestConn()
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
-	unicornParentUser := s.RequiredVar("family.parentEmail")
-	unicornParentPass := s.RequiredVar("family.parentPassword")
-	nonEduUser := s.RequiredVar("family.parentEmail")
-	nonEduPass := s.RequiredVar("family.parentPassword")
+	unicornParentUser, unicornParentPass, err := dma.UserPassFromPool(family.ParentAccountVarName)
+	if err != nil {
+		s.Fatal("Failed to get parent user and pass: ", err)
+	}
+
+	nonEduUser, nonEduPass, err := dma.UserPassFromPool(family.ParentAccountVarName)
+	if err != nil {
+		s.Fatal("Failed to get parent user and pass: ", err)
+	}
 
 	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
 

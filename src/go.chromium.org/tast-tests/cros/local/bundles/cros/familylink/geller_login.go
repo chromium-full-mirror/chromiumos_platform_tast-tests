@@ -9,6 +9,8 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/dma"
+	"go.chromium.org/tast-tests/cros/common/family"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/familylink"
@@ -27,7 +29,7 @@ func init() {
 		// ChromeOS > Software > Family > Parental controls
 		BugComponent: "b:1090157",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "gaia"},
 		Timeout:      2 * time.Minute,
 		Params: []testing.Param{{
 			Fixture: "familyLinkGellerLogin",
@@ -39,7 +41,7 @@ func init() {
 			Val:               browser.TypeLacros,
 		}},
 		VarDeps: []string{
-			"family.gellerEmail",
+			family.GellerAccountVarName,
 		},
 	})
 }
@@ -59,7 +61,13 @@ func GellerLogin(ctx context.Context, s *testing.State) {
 	if tconn == nil {
 		s.Fatal("Failed to create test API connection")
 	}
-	if err := familylink.VerifyUserSignedIntoBrowserAsChild(ctx, cr, tconn, s.Param().(browser.Type), s.RequiredVar("family.gellerEmail"), s.OutDir()); err != nil {
+
+	user, _, err := dma.UserPassFromPool(family.GellerAccountVarName)
+	if err != nil {
+		s.Fatal("Failed to get child user: ", err)
+	}
+
+	if err := familylink.VerifyUserSignedIntoBrowserAsChild(ctx, cr, tconn, s.Param().(browser.Type), user, s.OutDir()); err != nil {
 		s.Fatal("Failed to verify user signed into browser: ", err)
 	}
 }
