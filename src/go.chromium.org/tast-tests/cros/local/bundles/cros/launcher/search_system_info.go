@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 const cpuPattern = `^Showing CPU information. CPU usage snapshot, (\d+)\%. Temperature (\d+)\s+degrees celsius, current speed: ([\d.]+)GHz.`
@@ -67,6 +68,7 @@ func init() {
 					expectedResult: batteryPattern,
 					category:       "Answer Card",
 				},
+				ExtraHardwareDeps: hwdep.D(hwdep.Battery()),
 			},
 			{
 				Name: "storage_answer_card",
