@@ -584,6 +584,7 @@ func init() {
 			"pjlee@google.com",
 			"cuicuiruan@google.com",
 		},
+		BugComponent:    "b:1373988", // ChromeOS > Software > ARC++ > Gaming
 		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,
@@ -611,6 +612,7 @@ func init() {
 			"pjlee@google.com",
 			"cuicuiruan@google.com",
 		},
+		BugComponent:    "b:1373988", // ChromeOS > Software > ARC++ > Gaming
 		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,
