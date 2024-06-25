@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package power
+package usb
 
 import (
 	"context"
@@ -31,10 +31,11 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         HidWake,
-		Desc:         "Checks that HID events correctly wake the DUT",
-		BugComponent: "b:1361410",
-		Contacts:     []string{"chromeos-platform-power@google.com", "jthies@google.com"},
+		Func: HidWake,
+		Desc: "Checks that HID events correctly wake the DUT",
+		// ChromeOS > Platform > Technologies > USB
+		BugComponent: "b:958036",
+		Contacts:     []string{"chromeos-usb-champs@google.com", "jthies@google.com"},
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"usb_hid_wake"},
 		Vars:         []string{"servo"},
