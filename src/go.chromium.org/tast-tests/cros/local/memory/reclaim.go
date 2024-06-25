@@ -74,16 +74,21 @@ func (r *Reclaimer) allocate(fd, size, prot, flags int, keyName string, postMmap
 		return err
 	}
 	unix.Sync()
-	// GoBigSleepLint: Wait the kernel update counters accordingly.
-	testing.Sleep(r.ctx, time.Second)
 
-	cur, err := ReadSmapsRollup()
+	err = testing.Poll(r.ctx, func(ctx context.Context) error {
+		cur, err := ReadSmapsRollup()
+		if err != nil {
+			return err
+		}
+
+		if prev[keyName] >= cur[keyName] {
+			return errors.Errorf("failed to allocate %s memory: %d >= %d", keyName, prev[keyName], cur[keyName])
+		}
+
+		return nil
+	}, &testing.PollOptions{Timeout: 10 * time.Second})
 	if err != nil {
 		return err
-	}
-
-	if prev[keyName] >= cur[keyName] {
-		return errors.Errorf("failed to allocate %s memory: %d >= %d", keyName, prev[keyName], cur[keyName])
 	}
 
 	r.buffers = append(r.buffers, buf)
@@ -177,19 +182,19 @@ func (r *Reclaimer) reclaim(name, keyName string) error {
 	// Give the system some time to reclaim memory.
 	// However, this is unreliable.
 	unix.Sync()
-	// GoBigSleepLint: Wait the kernel handles the reclaim request and update counters accordingly.
-	testing.Sleep(r.ctx, time.Second)
 
-	cur, err := ReadSmapsRollup()
-	if err != nil {
-		return err
-	}
+	return testing.Poll(r.ctx, func(ctx context.Context) error {
+		cur, err := ReadSmapsRollup()
+		if err != nil {
+			return err
+		}
 
-	if prev[keyName] <= cur[keyName] {
-		return errors.Errorf("failed to reclaim %s memory: %d <= %d", keyName, prev[keyName], cur[keyName])
-	}
+		if prev[keyName] <= cur[keyName] {
+			return errors.Errorf("failed to reclaim %s memory: %d <= %d", keyName, prev[keyName], cur[keyName])
+		}
 
-	return nil
+		return nil
+	}, &testing.PollOptions{Timeout: 10 * time.Second})
 }
 
 // ReclaimAnonymous reclaims anonymous memory.
