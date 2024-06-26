@@ -10,6 +10,7 @@ import (
 	"time"
 
 	upstartcommon "go.chromium.org/tast-tests/cros/common/upstart"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast-tests/cros/local/videoconferencing/effects"
 	"go.chromium.org/tast-tests/cros/local/videoconferencing/fixture"
@@ -17,6 +18,7 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+const dlcID = "ml-core-internal"
 const dlcCLCacheDir = "/run/imageloader/ml-core-internal/package/root/cl_cache"
 
 func init() {
@@ -42,6 +44,11 @@ func init() {
 }
 
 func OpenCLCacher(ctx context.Context, s *testing.State) {
+	if err := launcher.InstallDlc(ctx, []string{dlcID}); err != nil {
+		s.Fatal("Failed to install DLC: ", err)
+	}
+	s.Logf("DLC %s installed", dlcID)
+
 	s.Log("Clearing cache in: " + effects.OpenCLCacheDir)
 	if err := effects.ClearOpenCLCache(); err != nil {
 		s.Fatal("Failed to clear opencl_cache: ", err)
