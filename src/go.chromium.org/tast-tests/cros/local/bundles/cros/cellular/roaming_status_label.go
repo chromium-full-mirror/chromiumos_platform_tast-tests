@@ -28,10 +28,10 @@ func init() {
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Checks the roaming label status on a roaming and non roaming SIM",
 		Contacts: []string{
-			"cros-connectivity@google.com",
-			"nikhilcn@google.com",
+			"chromeos-connectivity-cienet-external@google.com",
+			"alfred.yu@cienet.com",
 		},
-		BugComponent: "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular
+		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:cellular"},
 		Params: []testing.Param{
