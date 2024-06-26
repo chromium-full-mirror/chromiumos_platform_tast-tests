@@ -572,30 +572,6 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name: "loggedInToCUJUserWithOneGroupPerRenderer",
-		Desc: "CUJ test fixture with the OneGroupPerRenderer feature enabled",
-		Contacts: []string{
-			"ramsaroop@google.com",
-			"cros-sw-perf@google.com",
-		},
-		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
-		Data:         docsBlockerFiles,
-		Impl: &loggedInToCUJUserFixture{
-			chromeExtraOpts: []chrome.Option{
-				chrome.EnableFeatures("OneGroupPerRenderer", "PreferConstantFrameRate"),
-				chrome.ExtraArgs(webRTCEventLogCommandFlag),
-			},
-			bt:          browser.TypeAsh,
-			docsBlocker: true,
-		},
-		Parent:          "prepareForCUJ",
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
-		PostTestTimeout: postTestTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithWebRTCEventLoggingWithVCEffects",
 		Desc: "CUJ test fixture with WebRTC event logging and VC platform effects enabled",
 		Contacts: []string{
@@ -834,29 +810,6 @@ func init() {
 		},
 		Parent:          "prepareForCUJ",
 		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
-		PostTestTimeout: postTestTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: "loggedInToCUJUserARCSupportedWithBatterySaverParent",
-		Desc: "CUJ test fixture with ARC supported and battery saver without Android",
-		Contacts: []string{
-			"ramsaroop@google.com",
-			"cros-vm-technology@google.com",
-			"cros-sw-perf@google.com",
-		},
-		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
-		Impl: &loggedInToCUJUserFixture{
-			bt:           browser.TypeAsh,
-			arcSupported: true,
-			chromeExtraOpts: []chrome.Option{
-				chrome.EnableFeatures("CrosBatterySaver", "CrosBatterySaverAlwaysOn"),
-			},
-		},
-		Parent:          "prepareForCUJ",
-		SetUpTimeout:    setUpWithOptinTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
