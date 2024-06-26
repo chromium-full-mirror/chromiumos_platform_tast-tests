@@ -35,7 +35,6 @@ func init() {
 			"cbe-device-trust-eng@google.com",
 			"cros-3pidp@google.com",
 			"lmasopust@google.com",
-			"rodmartin@google.com",
 		},
 		BugComponent: "b:1163683",
 		SoftwareDeps: []string{

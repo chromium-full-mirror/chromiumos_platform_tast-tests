@@ -36,7 +36,6 @@ func init() {
 			"cbe-device-trust-eng@google.com",
 			"cros-3pidp@google.com",
 			"lmasopust@google.com",
-			"rodmartin@google.com",
 		},
 		SoftwareDeps: []string{
 			"chrome",
