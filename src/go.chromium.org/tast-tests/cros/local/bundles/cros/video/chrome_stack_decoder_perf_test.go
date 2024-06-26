@@ -62,7 +62,7 @@ func TestChromeStackDecoderPerfParams(t *testing.T) {
 		"": paramData{},
 		"v4l2_flat_": paramData{
 			SoftwareDeps:    []string{"v4l2_codec"},
-			EnabledFeatures: []string{"V4L2FlatVideoDecoder"},
+			EnabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
 			HardwareDeps:    "hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding())",
 		},
 	}

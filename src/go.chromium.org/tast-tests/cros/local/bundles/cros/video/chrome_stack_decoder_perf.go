@@ -285,7 +285,7 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/av1/1080p_30fps_300frames.av1.ivf",
 					runConcurrentDecodersOnly: false,
-					enabledFeatures:           []string{"V4L2FlatVideoDecoder"},
+					enabledFeatures:           []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 				Timeout:           2 * time.Minute,
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
@@ -298,7 +298,7 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/av1/1080p_60fps_600frames.av1.ivf",
 					runConcurrentDecodersOnly: false,
-					enabledFeatures:           []string{"V4L2FlatVideoDecoder"},
+					enabledFeatures:           []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 				Timeout:           2 * time.Minute,
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
@@ -311,7 +311,7 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/av1/2160p_30fps_300frames.av1.ivf",
 					runConcurrentDecodersOnly: false,
-					enabledFeatures:           []string{"V4L2FlatVideoDecoder"},
+					enabledFeatures:           []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 				Timeout:           4 * time.Minute,
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
@@ -324,7 +324,7 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/av1/2160p_60fps_600frames.av1.ivf",
 					runConcurrentDecodersOnly: false,
-					enabledFeatures:           []string{"V4L2FlatVideoDecoder"},
+					enabledFeatures:           []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 				Timeout:           4 * time.Minute,
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
@@ -337,7 +337,7 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/h264/1080p_30fps_300frames.h264",
 					runConcurrentDecodersOnly: false,
-					enabledFeatures:           []string{"V4L2FlatVideoDecoder"},
+					enabledFeatures:           []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 				Timeout:           2 * time.Minute,
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
@@ -350,7 +350,7 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/h264/1080p_60fps_600frames.h264",
 					runConcurrentDecodersOnly: false,
-					enabledFeatures:           []string{"V4L2FlatVideoDecoder"},
+					enabledFeatures:           []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 				Timeout:           2 * time.Minute,
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
@@ -363,7 +363,7 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/h264/2160p_30fps_300frames.h264",
 					runConcurrentDecodersOnly: false,
-					enabledFeatures:           []string{"V4L2FlatVideoDecoder"},
+					enabledFeatures:           []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 				Timeout:           4 * time.Minute,
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
@@ -376,7 +376,7 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/h264/2160p_60fps_600frames.h264",
 					runConcurrentDecodersOnly: false,
-					enabledFeatures:           []string{"V4L2FlatVideoDecoder"},
+					enabledFeatures:           []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 				Timeout:           4 * time.Minute,
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
@@ -389,7 +389,7 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/hevc/1080p_30fps_300frames.hevc",
 					runConcurrentDecodersOnly: false,
-					enabledFeatures:           []string{"V4L2FlatVideoDecoder"},
+					enabledFeatures:           []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 				Timeout:           2 * time.Minute,
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
@@ -402,7 +402,7 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/hevc/1080p_60fps_600frames.hevc",
 					runConcurrentDecodersOnly: false,
-					enabledFeatures:           []string{"V4L2FlatVideoDecoder"},
+					enabledFeatures:           []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 				Timeout:           2 * time.Minute,
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
@@ -415,7 +415,7 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/hevc/2160p_30fps_300frames.hevc",
 					runConcurrentDecodersOnly: false,
-					enabledFeatures:           []string{"V4L2FlatVideoDecoder"},
+					enabledFeatures:           []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 				Timeout:           4 * time.Minute,
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
@@ -428,7 +428,7 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/hevc/2160p_60fps_600frames.hevc",
 					runConcurrentDecodersOnly: false,
-					enabledFeatures:           []string{"V4L2FlatVideoDecoder"},
+					enabledFeatures:           []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 				Timeout:           4 * time.Minute,
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
@@ -441,7 +441,7 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/vp8/1080p_30fps_300frames.vp8.ivf",
 					runConcurrentDecodersOnly: false,
-					enabledFeatures:           []string{"V4L2FlatVideoDecoder"},
+					enabledFeatures:           []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 				Timeout:           2 * time.Minute,
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
@@ -454,7 +454,7 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/vp8/1080p_60fps_600frames.vp8.ivf",
 					runConcurrentDecodersOnly: false,
-					enabledFeatures:           []string{"V4L2FlatVideoDecoder"},
+					enabledFeatures:           []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 				Timeout:           2 * time.Minute,
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
@@ -467,7 +467,7 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/vp8/2160p_30fps_300frames.vp8.ivf",
 					runConcurrentDecodersOnly: false,
-					enabledFeatures:           []string{"V4L2FlatVideoDecoder"},
+					enabledFeatures:           []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 				Timeout:           4 * time.Minute,
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
@@ -480,7 +480,7 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/vp8/2160p_60fps_600frames.vp8.ivf",
 					runConcurrentDecodersOnly: false,
-					enabledFeatures:           []string{"V4L2FlatVideoDecoder"},
+					enabledFeatures:           []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 				Timeout:           4 * time.Minute,
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
@@ -493,7 +493,7 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/vp9/1080p_30fps_300frames.vp9.ivf",
 					runConcurrentDecodersOnly: false,
-					enabledFeatures:           []string{"V4L2FlatVideoDecoder"},
+					enabledFeatures:           []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 				Timeout:           2 * time.Minute,
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
@@ -506,7 +506,7 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/vp9/1080p_60fps_600frames.vp9.ivf",
 					runConcurrentDecodersOnly: false,
-					enabledFeatures:           []string{"V4L2FlatVideoDecoder"},
+					enabledFeatures:           []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 				Timeout:           2 * time.Minute,
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
@@ -519,7 +519,7 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/vp9/2160p_30fps_300frames.vp9.ivf",
 					runConcurrentDecodersOnly: false,
-					enabledFeatures:           []string{"V4L2FlatVideoDecoder"},
+					enabledFeatures:           []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 				Timeout:           4 * time.Minute,
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
@@ -532,7 +532,7 @@ func init() {
 				Val: chromeStackDecoderPerfParams{
 					dataPath:                  "perf/vp9/2160p_60fps_600frames.vp9.ivf",
 					runConcurrentDecodersOnly: false,
-					enabledFeatures:           []string{"V4L2FlatVideoDecoder"},
+					enabledFeatures:           []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 				Timeout:           4 * time.Minute,
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),

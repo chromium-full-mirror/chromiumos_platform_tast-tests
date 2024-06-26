@@ -1521,7 +1521,7 @@ func init() {
 					videoFiles:      av1CommonFiles,
 					validatorType:   decoding.MD5,
 					mustFail:        false,
-					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 			},
 			{
@@ -1535,7 +1535,7 @@ func init() {
 					videoFiles:      av1Aom8bitFiles["quantizer"],
 					validatorType:   decoding.MD5,
 					mustFail:        false,
-					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 			},
 			{
@@ -1549,7 +1549,7 @@ func init() {
 					videoFiles:      av1Aom8bitFiles["size_under_64x64"],
 					validatorType:   decoding.MD5,
 					mustFail:        false,
-					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 			},
 			{
@@ -1563,7 +1563,7 @@ func init() {
 					videoFiles:      av1Aom8bitFiles["size"],
 					validatorType:   decoding.MD5,
 					mustFail:        false,
-					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 			},
 			{
@@ -1577,7 +1577,7 @@ func init() {
 					videoFiles:      av1Aom8bitFiles["allintra"],
 					validatorType:   decoding.MD5,
 					mustFail:        false,
-					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 			},
 			{
@@ -1591,7 +1591,7 @@ func init() {
 					videoFiles:      av1Aom8bitFiles["cdfupdate"],
 					validatorType:   decoding.MD5,
 					mustFail:        false,
-					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 			},
 			{
@@ -1605,7 +1605,7 @@ func init() {
 					videoFiles:      av1Aom8bitFiles["motionvec"],
 					validatorType:   decoding.MD5,
 					mustFail:        false,
-					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 			},
 			{
@@ -1620,7 +1620,7 @@ func init() {
 					videoFiles:      av1FilmGrainFiles,
 					validatorType:   decoding.SSIM,
 					mustFail:        false,
-					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 			},
 			{
@@ -1634,7 +1634,7 @@ func init() {
 					videoFiles:      av110BitCommonFiles,
 					validatorType:   decoding.MD5,
 					mustFail:        false,
-					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 			},
 			{
@@ -1649,7 +1649,7 @@ func init() {
 					videoFiles:      av110BitFilmGrainFiles,
 					validatorType:   decoding.SSIM,
 					mustFail:        false,
-					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 			},
 			{
@@ -1663,7 +1663,7 @@ func init() {
 					videoFiles:      h264InvalidBitstreams,
 					validatorType:   decoding.MD5,
 					mustFail:        true,
-					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
 					ignoredSysLogs:  []graphics.SysLogCategory{graphics.SysLogMediatekVideoErrors},
 				},
 			},
@@ -1678,7 +1678,7 @@ func init() {
 					videoFiles:      h264Files["baseline"],
 					validatorType:   decoding.MD5,
 					mustFail:        false,
-					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 			},
 			{
@@ -1692,7 +1692,7 @@ func init() {
 					videoFiles:      h264Files["main"],
 					validatorType:   decoding.MD5,
 					mustFail:        false,
-					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 			},
 			{
@@ -1706,7 +1706,7 @@ func init() {
 					videoFiles:      h264Files["high"],
 					validatorType:   decoding.MD5,
 					mustFail:        false,
-					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 			},
 			{
@@ -1720,7 +1720,7 @@ func init() {
 					videoFiles:      h264Files["first_mb_in_slice"],
 					validatorType:   decoding.MD5,
 					mustFail:        false,
-					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 			},
 			{
@@ -1734,7 +1734,7 @@ func init() {
 					videoFiles:      vp8ComprehensiveFiles,
 					validatorType:   decoding.MD5,
 					mustFail:        false,
-					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 			},
 			{
@@ -1748,7 +1748,7 @@ func init() {
 					videoFiles:      vp8InterFiles,
 					validatorType:   decoding.MD5,
 					mustFail:        false,
-					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 			},
 			{
@@ -1762,7 +1762,7 @@ func init() {
 					videoFiles:      vp8InterMultiCoeffFiles,
 					validatorType:   decoding.MD5,
 					mustFail:        false,
-					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 			},
 			{
@@ -1776,7 +1776,7 @@ func init() {
 					videoFiles:      vp8InterSegmentFiles,
 					validatorType:   decoding.MD5,
 					mustFail:        false,
-					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 			},
 			{
@@ -1790,7 +1790,7 @@ func init() {
 					videoFiles:      vp8IntraFiles,
 					validatorType:   decoding.MD5,
 					mustFail:        false,
-					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 			},
 			{
@@ -1804,7 +1804,7 @@ func init() {
 					videoFiles:      vp8IntraMultiCoeffSegmentFiles,
 					validatorType:   decoding.MD5,
 					mustFail:        false,
-					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 			},
 			{
@@ -1818,7 +1818,7 @@ func init() {
 					videoFiles:      vp8IntraSegmentFiles,
 					validatorType:   decoding.MD5,
 					mustFail:        false,
-					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 			},
 			{
@@ -1832,7 +1832,7 @@ func init() {
 					videoFiles:      vp90Group1Buf,
 					validatorType:   decoding.MD5,
 					mustFail:        false,
-					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 			},
 			{
@@ -1846,7 +1846,7 @@ func init() {
 					videoFiles:      vp90Group1FrmResize,
 					validatorType:   decoding.MD5,
 					mustFail:        false,
-					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 			},
 			{
@@ -1860,7 +1860,7 @@ func init() {
 					videoFiles:      vp90Group1GfDist,
 					validatorType:   decoding.MD5,
 					mustFail:        false,
-					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 			},
 			{
@@ -1874,7 +1874,7 @@ func init() {
 					videoFiles:      vp90Group1OddSize,
 					validatorType:   decoding.MD5,
 					mustFail:        false,
-					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 			},
 			{
@@ -1888,7 +1888,7 @@ func init() {
 					videoFiles:      vp90Group1Sub8x8,
 					validatorType:   decoding.MD5,
 					mustFail:        false,
-					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 			},
 			{
@@ -1902,7 +1902,7 @@ func init() {
 					videoFiles:      vp90Group1Sub8x8Sf,
 					validatorType:   decoding.MD5,
 					mustFail:        false,
-					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 			},
 			{
@@ -1916,7 +1916,7 @@ func init() {
 					videoFiles:      vp92Group1Buf,
 					validatorType:   decoding.MD5,
 					mustFail:        false,
-					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 			},
 			{
@@ -1930,7 +1930,7 @@ func init() {
 					videoFiles:      vp92Group1FrmResize,
 					validatorType:   decoding.MD5,
 					mustFail:        false,
-					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 			},
 			{
@@ -1944,7 +1944,7 @@ func init() {
 					videoFiles:      vp92Group1GfDist,
 					validatorType:   decoding.MD5,
 					mustFail:        false,
-					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 			},
 			{
@@ -1958,7 +1958,7 @@ func init() {
 					videoFiles:      vp92Group1OddSize,
 					validatorType:   decoding.MD5,
 					mustFail:        false,
-					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 			},
 			{
@@ -1972,7 +1972,7 @@ func init() {
 					videoFiles:      vp92Group1Sub8x8,
 					validatorType:   decoding.MD5,
 					mustFail:        false,
-					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 			},
 			{
@@ -1986,7 +1986,7 @@ func init() {
 					videoFiles:      vp92Group1Sub8x8Sf,
 					validatorType:   decoding.MD5,
 					mustFail:        false,
-					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 			},
 			{
@@ -1999,7 +1999,7 @@ func init() {
 					videoFiles:      vp9SVCFiles,
 					validatorType:   decoding.MD5,
 					mustFail:        false,
-					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 			},
 			{
@@ -2013,7 +2013,7 @@ func init() {
 					videoFiles:      hevcCommonFiles["1"],
 					validatorType:   decoding.MD5,
 					mustFail:        false,
-					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 			},
 			{
@@ -2027,7 +2027,7 @@ func init() {
 					videoFiles:      hevcCommonFiles["2"],
 					validatorType:   decoding.MD5,
 					mustFail:        false,
-					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 			},
 			{
@@ -2041,7 +2041,7 @@ func init() {
 					videoFiles:      hevcCommonFiles["3"],
 					validatorType:   decoding.MD5,
 					mustFail:        false,
-					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 			},
 			{
@@ -2055,7 +2055,7 @@ func init() {
 					videoFiles:      hevcCommonFiles["4"],
 					validatorType:   decoding.MD5,
 					mustFail:        false,
-					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 			},
 			{
@@ -2069,7 +2069,7 @@ func init() {
 					videoFiles:      []string{"test_vectors/h264/files_from_bugs/b_149068426_invalid_video_layout_mtk_8183_with_direct_videodecoder.h264"},
 					validatorType:   decoding.MD5,
 					mustFail:        false,
-					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 			},
 			{
@@ -2083,7 +2083,7 @@ func init() {
 					videoFiles:      []string{"test_vectors/h264/files_from_bugs/b_172838252_pixelated_video_on_rk3399.h264"},
 					validatorType:   decoding.MD5,
 					mustFail:        false,
-					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 			},
 			{
@@ -2097,7 +2097,7 @@ func init() {
 					videoFiles:      []string{"test_vectors/h264/files_from_bugs/b_174733646_video_with_out_of_order_frames_mtk_8173.h264"},
 					validatorType:   decoding.MD5,
 					mustFail:        false,
-					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 			},
 			{
@@ -2111,7 +2111,7 @@ func init() {
 					videoFiles:      []string{"test_vectors/h264/files_from_bugs/b_210895987_still-colors-360p.h264"},
 					validatorType:   decoding.MD5,
 					mustFail:        false,
-					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 			},
 			{
@@ -2125,7 +2125,7 @@ func init() {
 					videoFiles:      []string{"test_vectors/h264/files_from_bugs/b_276358257__amd_gpu_gen3_lockup.h264"},
 					validatorType:   decoding.MD5,
 					mustFail:        false,
-					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 			},
 			{
@@ -2139,7 +2139,7 @@ func init() {
 					videoFiles:      []string{"test_vectors/h264/files_from_bugs/b_299320432__amd_skyrim_system_hang.h264"},
 					validatorType:   decoding.MD5,
 					mustFail:        false,
-					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 			},
 			{
@@ -2153,7 +2153,7 @@ func init() {
 					videoFiles:      []string{"test_vectors/h264/files_from_bugs/b_227047778_mtk_8195_artifacts.h264"},
 					validatorType:   decoding.MD5,
 					mustFail:        false,
-					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 			},
 			{
@@ -2167,7 +2167,7 @@ func init() {
 					videoFiles:      []string{"test_vectors/vp9/files_from_bugs/b_177839888__rk3399_vp9_artifacts_with_video_decoder_japanews24.ivf"},
 					validatorType:   decoding.MD5,
 					mustFail:        false,
-					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 			},
 			{
@@ -2181,7 +2181,7 @@ func init() {
 					videoFiles:      []string{"test_vectors/vp9/files_from_bugs/b_251040563_webrtc_libvpx.vp9.ivf"},
 					validatorType:   decoding.MD5,
 					mustFail:        false,
-					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 			},
 			{
@@ -2195,7 +2195,7 @@ func init() {
 					videoFiles:      []string{"test_vectors/av1/files_from_bugs/b_235138734_test-25fps-one-to-four-tiles.av1.ivf"},
 					validatorType:   decoding.MD5,
 					mustFail:        false,
-					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 			},
 			{
@@ -2209,7 +2209,7 @@ func init() {
 					videoFiles:      []string{"test_vectors/av1/files_from_bugs/b_346405213_reference-frame-scaling-test.ivf"},
 					validatorType:   decoding.MD5,
 					mustFail:        false,
-					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 			},
 			{
@@ -2223,7 +2223,7 @@ func init() {
 					videoFiles:      []string{"test_vectors/hevc/files_from_bugs/b_321622872__bands_across_screen_4k.hevc"},
 					validatorType:   decoding.MD5,
 					mustFail:        false,
-					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
 				},
 			},
 		},

@@ -345,7 +345,6 @@ func initChromeVideoBaseFixtures() {
 			return getChromeVideoOptions(
 				browser.TypeAsh,
 				chrome.EnableFeatures("V4L2FlatStatefulVideoDecoder"),
-				chrome.EnableFeatures("V4L2FlatVideoDecoder"),
 				chrome.EnableFeatures("UseChromeOSDirectVideoDecoder"),
 			), nil
 		}),
