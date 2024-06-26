@@ -35,7 +35,10 @@ const (
 	ExoPlayerAPKFileName = "arc_video_playback/exoplayer.apk"
 	exoPlayerPkg         = "androidx.media3.demo.main"
 	exoPlayerIDPrefix    = exoPlayerPkg + ":id/"
+	exoPlayerViewID      = exoPlayerIDPrefix + "player_view"
 )
+
+var exoPlayerWindow = nodewith.Role(role.Window).Name(apps.ExoPlayer.Name).First()
 
 // ExoPlayerApp defines the members related to ExoPlayer.
 type ExoPlayerApp struct {
@@ -197,7 +200,7 @@ func (e *ExoPlayerApp) EnsurePlaying(ctx context.Context) error {
 		return errors.New("error message appears")
 	}
 	ui := uiauto.New(e.tconn)
-	playerView := e.d.Object(androidui.ID(exoPlayerIDPrefix + "player_view"))
+	playerView := e.d.Object(androidui.ID(exoPlayerViewID))
 	playBtn := e.d.Object(androidui.ID(exoPlayerIDPrefix+"exo_play_pause"), androidui.ClassName(imageBtnClassName))
 	playVideo := uiauto.NamedCombine("play video",
 		cuj.FindAndClick(playBtn, defaultUITimeout),
@@ -213,7 +216,6 @@ func (e *ExoPlayerApp) EnsurePlaying(ctx context.Context) error {
 func (e *ExoPlayerApp) ChangeToResizable(ctx context.Context) error {
 	ui := uiauto.New(e.tconn)
 
-	exoPlayerWindow := nodewith.Role(role.Window).Name(apps.ExoPlayer.Name).First()
 	centerBtn := nodewith.Role(role.Button).HasClass("FrameCenterButton").Ancestor(exoPlayerWindow)
 	resizeBtn := nodewith.Role(role.Button).HasClass("FrameSizeButton").NameRegex(regexp.MustCompile("(Maximize|Restore)")).Ancestor(exoPlayerWindow)
 	foundBtn, err := ui.FindAnyExists(ctx, centerBtn, resizeBtn)
@@ -250,4 +252,25 @@ func (e *ExoPlayerApp) ChangeToResizable(ctx context.Context) error {
 // Close the resources related to video.
 func (e *ExoPlayerApp) Close(ctx context.Context) error {
 	return util.CloseApp(ctx, e.tconn, exoPlayerPkg)
+}
+
+// ID returns the ID of the app.
+func (e *ExoPlayerApp) ID() string {
+	return apps.ExoPlayer.ID
+}
+
+// Name returns the name of the app.
+func (e *ExoPlayerApp) Name() string {
+	return apps.ExoPlayer.Name
+}
+
+// CloseVideo closes the video.
+func (e *ExoPlayerApp) CloseVideo(ctx context.Context) error {
+	ui := uiauto.New(e.tconn)
+	backButton := nodewith.Name("Back button").Role(role.Button).Ancestor(exoPlayerWindow)
+	playerView := e.d.Object(androidui.ID(exoPlayerViewID))
+	return uiauto.NamedCombine("close video",
+		ui.LeftClick(backButton),
+		cuj.WaitUntilGone(playerView, defaultUITimeout),
+	)(ctx)
 }
