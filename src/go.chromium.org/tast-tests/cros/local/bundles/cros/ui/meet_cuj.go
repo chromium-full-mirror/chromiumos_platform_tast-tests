@@ -101,6 +101,22 @@ func init() {
 					BrowserType: browser.TypeAsh,
 				},
 				Fixture: "loggedInToCUJUserWithWebRTCEventLogging",
+			}, {
+				Name:      "docs_arc_disabled",
+				Timeout:   meetcuj.DefaultTestTimeout,
+				ExtraAttr: []string{"group:cuj"},
+				Val: meetcuj.MeetTest{
+					Bots:        []int{1, 3, 15},
+					Layout:      googlemeet.TiledLayout,
+					Present:     true,
+					Docs:        true,
+					Split:       true,
+					Cam:         true,
+					ZoomOut:     true,
+					Effects:     true,
+					BrowserType: browser.TypeAsh,
+				},
+				Fixture: "loggedInToCUJUserWithWebRTCEventLoggingDisableARC",
 			},
 			{
 				Name:      "docs_echo_measured",

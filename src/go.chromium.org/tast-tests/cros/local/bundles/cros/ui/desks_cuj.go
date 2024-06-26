@@ -45,6 +45,13 @@ func init() {
 				ExtraAttr: []string{"group:cuj", "group:crosbolt", "crosbolt_release_gates"},
 				Fixture:   "loggedInToCUJUser",
 			}, {
+				Name: "arc_disabled",
+				Val: deskscuj.TestParam{
+					BrowserType: browser.TypeAsh,
+				},
+				ExtraAttr: []string{"group:cuj"},
+				Fixture:   "loggedInToCUJUserDisableARC",
+			}, {
 				Name:         "pvsched",
 				BugComponent: "b:167279",
 				Val: deskscuj.TestParam{
