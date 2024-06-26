@@ -32,17 +32,18 @@ func RecordWindowScreenCapture(ctx context.Context, tconn *chrome.TestConn, down
 	centerPoint := activeWindow.BoundsInRoot.CenterPoint()
 
 	if err = uiauto.Combine("start recording an open window",
-		ui.LeftClick(nodewith.Role(role.ToggleButton).Name("Screen record")),
-		ui.LeftClick(nodewith.Role(role.ToggleButton).Name("Record window")),
+		ui.LeftClick(nodewith.Role(role.Button).Name("Screen record")),
+		ui.LeftClick(nodewith.Role(role.Button).Name("Record window")),
 		mouse.Move(tconn, centerPoint, 200*time.Millisecond),
 		ui.LeftClick(nodewith.Role(role.Window).First()),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to start recording an open window")
 	}
 
+	// Sleep is used to define length of time we are recording video, this is an exception to GoBigSleepLint.
 	testing.Sleep(ctx, 10*time.Second)
 
-	if err := ui.LeftClick(nodewith.Name("Stop screen recording").First())(ctx); err != nil {
+	if err := ui.LeftClick(nodewith.HasClass("StopRecordingButtonTray").Name("Stop screen recording").First())(ctx); err != nil {
 		return errors.Wrap(err, "failed to stop recording an open window")
 	}
 
@@ -64,6 +65,8 @@ func RecordWindowScreenShare(ctx context.Context, tconn *chrome.TestConn, downlo
 	if err := recorder.Start(ctx, tconn); err != nil {
 		errors.Wrap(err, "failed to start screen recorder")
 	}
+
+	// Sleep is used to define length of time we are recording video, this is an exception to GoBigSleepLint.
 	testing.Sleep(ctx, 10*time.Second)
 
 	if err := recorder.Stop(ctx); err != nil {

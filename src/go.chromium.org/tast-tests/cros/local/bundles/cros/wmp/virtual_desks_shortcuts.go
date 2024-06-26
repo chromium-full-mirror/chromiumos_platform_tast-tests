@@ -228,12 +228,16 @@ func VirtualDesksShortcuts(ctx context.Context, s *testing.State) {
 	if err := ash.SetOverviewModeAndWait(ctx, tconn, true); err != nil {
 		s.Fatal("Failed to enter overview mode: ", err)
 	}
+
+	desk1MiniView := nodewith.ClassName("DeskMiniView").Name("Desk: Desk 1")
+	desk2MiniView := nodewith.ClassName("DeskMiniView").Name("Desk: Desk 2")
+
 	if err := uiauto.Combine(
 		"rename desks",
-		ac.DoDefault(nodewith.ClassName("DeskNameView").Name("Desk 1")),
+		ac.DoDefault(nodewith.ClassName("DeskNameView").Name("Desk name").Ancestor(desk1MiniView)),
 		kb.TypeAction("desk one"),
 		kb.AccelAction("Enter"),
-		ac.DoDefault(nodewith.ClassName("DeskNameView").Name("Desk 2")),
+		ac.DoDefault(nodewith.ClassName("DeskNameView").Name("Desk name").Ancestor(desk2MiniView)),
 		kb.TypeAction("desk two"),
 		kb.AccelAction("Enter"),
 	)(ctx); err != nil {

@@ -85,9 +85,9 @@ func CaptureModeEntryPoints(ctx context.Context, s *testing.State) {
 	// region.
 	ac := uiauto.New(tconn)
 	unifiedSystemTray := nodewith.HasClass("UnifiedSystemTray")
-	captureModeBarView := nodewith.HasClass("CaptureModeBarView")
-	captureModeFeaturePod := nodewith.HasClass("FeaturePodIconButton").Name("Screen capture")
-	partialCaptureModeLabel := nodewith.Name("Drag to select an area to capture")
+	captureModeBarView := nodewith.HasClass("CaptureModeBarWidget")
+	captureModeFeaturePod := nodewith.HasClass("FeatureTile").Name("Screen capture")
+	partialCaptureModeLabel := nodewith.HasClass("Label").Name("Drag to select an area to capture")
 	if err := uiauto.Combine(
 		"enter partial screen capture mode from system tray",
 		ac.LeftClick(unifiedSystemTray),

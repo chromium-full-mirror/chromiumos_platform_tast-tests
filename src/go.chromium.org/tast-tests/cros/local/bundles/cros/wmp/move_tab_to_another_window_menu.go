@@ -26,7 +26,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         MoveTabToAnotherWindowMenu,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Check if the move tab to another window menu is grouped by desks",
 		Contacts: []string{
 			"chromeos-wm@google.com",
@@ -153,7 +153,7 @@ func verifyTabGroupMenu(ctx context.Context, tconn *chrome.TestConn, ac *uiauto.
 		if err := ac.WithTimeout(5 * time.Second).WaitUntilExists(deskItem)(ctx); err != nil {
 			return errors.Wrapf(err, "failed to find Desk %d item", i)
 		}
-		tabItem := nodewith.ClassName("MenuItemView").Name("New Tab")
+		tabItem := nodewith.ClassName("MenuItemView").Name("New Tab").First()
 		if err := ac.WithTimeout(5 * time.Second).WaitUntilExists(tabItem)(ctx); err != nil {
 			return errors.Wrapf(err, "failed to find the tab item of Desk %d", i)
 		}

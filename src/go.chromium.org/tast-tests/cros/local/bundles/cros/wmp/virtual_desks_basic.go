@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/pointer"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/state"
 	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/ctxutil"
@@ -139,8 +140,8 @@ func VirtualDesksBasic(ctx context.Context, s *testing.State) {
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_dump")
 
 	// Creates new desk.
-	addDeskButton := nodewith.ClassName("ZeroStateIconButton")
-	newDeskNameView := nodewith.ClassName("DeskNameView").Name("Desk 2")
+	addDeskButton := nodewith.ClassName("DeskIconButton").Name("Add new desk")
+	newDeskNameView := nodewith.ClassName("DeskNameView").Name("Desk name").State(state.Focused, true)
 	newDeskName := "new desk"
 	newDeskMiniView :=
 		nodewith.ClassName("DeskMiniView").Name(fmt.Sprintf("Desk: %s", newDeskName))
@@ -229,7 +230,7 @@ func VirtualDesksBasic(ctx context.Context, s *testing.State) {
 	}
 
 	// Delete the new desk.
-	closeDeskButton := nodewith.HasClass("CloseButton").NameStartingWith("Combine").Ancestor(newDeskMiniView)
+	closeDeskButton := nodewith.HasClass("DeskActionButton").NameStartingWith("Combine").Ancestor(newDeskMiniView)
 	if err := uiauto.Combine(
 		"Delete a new desk",
 		ac.DoDefault(closeDeskButton),

@@ -26,6 +26,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/pointer"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/state"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -129,14 +130,14 @@ func OverviewCloseAll(ctx context.Context, s *testing.State) {
 	defer ash.SetOverviewModeAndWait(cleanupCtx, tconn, false)
 	defer ash.CleanUpDesks(cleanupCtx, tconn)
 
-	newDeskButton := nodewith.ClassName("ZeroStateIconButton")
-	desk2NameView := nodewith.ClassName("DeskNameView").Name("Desk 2")
+	newDeskButton := nodewith.ClassName("DeskIconButton").Name("Add new desk")
+	desk2NameView := nodewith.ClassName("DeskNameView").Name("Desk name").State(state.Focused, true)
 	desk2Name := "BusyDesk"
 	if err := uiauto.Combine(
 		"create a new desk by clicking new desk button",
 		ac.DoDefault(newDeskButton),
 		// The focus on the new desk should be on the desk name field.
-		ac.WaitUntilExists(desk2NameView.Focused()),
+		ac.WaitUntilExists(desk2NameView),
 		kb.TypeAction(desk2Name),
 		kb.AccelAction("Enter"),
 	)(ctx); err != nil {
@@ -195,7 +196,7 @@ func OverviewCloseAll(ctx context.Context, s *testing.State) {
 	}
 
 	// Finds the "Close All" button.
-	closeAllButton := nodewith.ClassName("CloseButton").Name("Close desk and windows")
+	closeAllButton := nodewith.ClassName("DeskActionButton").Name("Close BusyDesk and windows")
 
 	// Closes a desk and windows on it.
 	if err := pc.Click(closeAllButton)(ctx); err != nil {

@@ -65,13 +65,14 @@ func NightLightColorTemperature(ctx context.Context, s *testing.State) {
 	ui := uiauto.New(tconn)
 
 	// Turn on night light and open display settings by clicking pod button in quick settings.
-	nightLightIconButton := nodewith.HasClass("FeaturePodIconButton").NameContaining("Night Light")
 	if err := uiauto.Combine(
 		"Click night light pod button and its sub label in quick settings",
 		ui.LeftClick(nodewith.HasClass("UnifiedSystemTray")),
-		ui.LeftClick(nightLightIconButton),
-		ui.LeftClick(nodewith.HasClass("FeaturePodLabelButton").Name("Show display settings")),
-		ui.WaitUntilExists(nodewith.HasClass("BrowserFrame").Name("Settings - Displays")),
+		ui.LeftClick(nodewith.HasClass("IconButton").NameContaining("Night Light")),
+		ui.LeftClick(nodewith.HasClass("IconButton").Name("Show display settings")),
+		ui.WaitUntilExists(nodewith.HasClass("DisplayDetailedView")),
+		ui.LeftClick(nodewith.HasClass("IconButton").Name("Show display settings")),
+		ui.WaitUntilExists(nodewith.HasClass("BrowserFrame").Name("Settings - Display")),
 	)(ctx); err != nil {
 		s.Fatal("Failed to enable night light and open display settings by clicking pod button in quick settings: ", err)
 	}

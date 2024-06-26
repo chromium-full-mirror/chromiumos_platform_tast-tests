@@ -102,13 +102,13 @@ func RecordPartialScreen(ctx context.Context, s *testing.State) {
 	}
 
 	// Start partial screen recording via UI.
-	screenRecordToggleButton := nodewith.HasClass("IconButton").Name("Screen record")
-	recordPartialScreenToggleButton := nodewith.HasClass("IconButton").Name("Record partial screen")
+	screenRecordToggleButton := nodewith.HasClass("IconSliderButton").Name("Screen record")
+	recordPartialScreenToggleButton := nodewith.HasClass("IconSliderButton").Name("Record partial screen")
 	dragStartPt := info.WorkArea.CenterPoint().Sub(coords.Point{X: 100, Y: 100})
 	dragEndPt := info.WorkArea.CenterPoint().Add(coords.Point{X: 100, Y: 100})
 	// The click point must be outside of drag area (i.e. outside of dragStartPt - dragEndPt rectangle).
 	dragClearPt := info.WorkArea.BottomCenter()
-	stopRecordButton := nodewith.HasClass("TrayBackgroundView").Name("Stop screen recording")
+	stopRecordButton := nodewith.HasClass("StopRecordingButtonTray").Name("Stop screen recording")
 	recordTakenLabel := nodewith.HasClass("Label").Name("Screen recording taken")
 
 	// Enter screen capture mode.
@@ -128,8 +128,8 @@ func RecordPartialScreen(ctx context.Context, s *testing.State) {
 		// Drag to select an area to record.
 		mouse.Drag(tconn, dragStartPt, dragEndPt, time.Second),
 		kb.AccelAction("enter"),
-		// Record partial screen for about 30 seconds.
-		uiauto.Sleep(30*time.Second),
+		// Record partial screen for about 15 seconds.
+		uiauto.Sleep(15*time.Second),
 		ac.LeftClick(stopRecordButton),
 		// Check if the screen record is taken.
 		ac.WaitUntilExists(recordTakenLabel),

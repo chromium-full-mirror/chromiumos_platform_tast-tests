@@ -87,8 +87,8 @@ func CaptureModeDemoToolsKeyComboViewer(ctx context.Context, s *testing.State) {
 	defer wmputils.EnsureCaptureModeActivated(tconn, false)(cleanupCtx)
 
 	var (
-		screenRecordToggleButton     = nodewith.HasClass("IconButton").Name("Screen record")
-		recordFullscreenToggleButton = nodewith.HasClass("IconButton").Name("Record full screen")
+		screenRecordToggleButton     = nodewith.HasClass("IconSliderButton").Name("Screen record")
+		recordFullscreenToggleButton = nodewith.HasClass("IconSliderButton").Name("Record full screen")
 		captureModeSettingsButton    = nodewith.HasClass("IconButton").Name("Settings")
 		captureSettingsWiget         = nodewith.HasClass("CaptureModeSettingsWidget")
 		demoToolsToggleSwitch        = nodewith.HasClass("Switch").Name("Show clicks and keys")
@@ -115,7 +115,7 @@ func CaptureModeDemoToolsKeyComboViewer(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create a keyboard: ", err)
 	}
 
-	stopRecordButton := nodewith.HasClass("TrayBackgroundView").Name("Stop screen recording")
+	stopRecordButton := nodewith.HasClass("StopRecordingButtonTray").Name("Stop screen recording")
 	if err = uiauto.Combine(
 		"Enter video recording",
 		kb.AccelAction("Enter"),

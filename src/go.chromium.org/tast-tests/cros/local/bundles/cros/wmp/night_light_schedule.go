@@ -8,7 +8,6 @@ import (
 	"context"
 	"fmt"
 	"regexp"
-	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -68,49 +67,21 @@ func NightLightSchedule(ctx context.Context, s *testing.State) {
 
 	ui := uiauto.New(tconn)
 
-	// Turn on night light by clicking the night light pod icon in quick settings.
-	nightLightIconButton := nodewith.HasClass("IconButton").NameContaining("Night Light")
+	// Turn on night light and open display settings by clicking pod button in quick settings.
 	if err := uiauto.Combine(
-		"Click night light pod in quick settings",
+		"Click night light pod button and its sub label in quick settings",
 		ui.LeftClick(nodewith.HasClass("UnifiedSystemTray")),
-		ui.LeftClick(nightLightIconButton),
-	)(ctx); err != nil {
-		s.Fatal("Failed to click night light pod in quick settings: ", err)
-	}
-
-	nightLightEnabled, err := settings.NightLightEnabled(ctx, tconn)
-	if err != nil {
-		s.Fatal("Failed to get night light enabled state: ", err)
-	}
-
-	if !nightLightEnabled {
-		s.Fatal("Failed to enable night light by clicking pod button")
-	}
-
-	nightLightIconButtonInfo, err := ui.Info(ctx, nightLightIconButton)
-	if err != nil {
-		s.Fatal("Failed to get info from night light icon button: ", err)
-	}
-
-	if strings.Contains(nightLightIconButtonInfo.Name, "Night Light is off") {
-		s.Logf("Night Light Pod Button Name: %s", nightLightIconButtonInfo.Name)
-		s.Fatal("After clicking night light pod button, it still shows \"Night light is off\"")
-	}
-
-	// Open display settings by clicking the chevron button right after night light pod and the gear button.
-	if err := uiauto.Combine(
-		"Show display settings by clicking night light sub label",
-		// The chevron button.
+		ui.LeftClick(nodewith.HasClass("IconButton").NameContaining("Night Light")),
 		ui.LeftClick(nodewith.HasClass("IconButton").Name("Show display settings")),
-		// The gear button.
+		ui.WaitUntilExists(nodewith.HasClass("DisplayDetailedView")),
 		ui.LeftClick(nodewith.HasClass("IconButton").Name("Show display settings")),
-		ui.WaitUntilExists(nodewith.HasClass("BrowserFrame").Name("Settings - Displays")),
+		ui.WaitUntilExists(nodewith.HasClass("BrowserFrame").Name("Settings - Display")),
 	)(ctx); err != nil {
-		s.Fatal("Failed to click night light sub label to show display settings: ", err)
+		s.Fatal("Failed to enable night light and open display settings by clicking pod button in quick settings: ", err)
 	}
 
 	// Change night light schedule to custom in drop box.
-	customScheduleOption := nodewith.Role("listBoxOption").Name("Custom")
+	customScheduleOption := nodewith.Role("menuListOption").Name("Custom")
 	startTimeKnob := nodewith.HasClass("knob").NameContaining("Start time")
 	endTimeKnob := nodewith.HasClass("knob").NameContaining("End time")
 	if err := uiauto.Combine(
@@ -166,7 +137,7 @@ func NightLightSchedule(ctx context.Context, s *testing.State) {
 	inSchedule := compareTime(currentTime, startTime) >= 0 && compareTime(currentTime, endTime) < 0
 
 	// Get current night light enabled state.
-	nightLightEnabled, err = settings.NightLightEnabled(ctx, tconn)
+	nightLightEnabled, err := settings.NightLightEnabled(ctx, tconn)
 	if err != nil {
 		s.Fatal("Failed to get night light enabled state: ", err)
 	}
@@ -176,6 +147,19 @@ func NightLightSchedule(ctx context.Context, s *testing.State) {
 		s.Fatal("Night light should be on when current time is in schedule")
 	} else if !inSchedule && nightLightEnabled {
 		s.Fatal("Night light should be off when current time is not in schedule")
+	}
+
+	colorTempContainer := nodewith.Role("genericContainer").Name("Color temperature")
+
+	// Rollback and turn off night light if ON.
+	if nightLightEnabled {
+		if err := uiauto.Combine(
+			"Turn off night light and color temperature section disappears",
+			ui.LeftClick(nodewith.Role("toggleButton").Name("Night Light")),
+			ui.WaitUntilGone(colorTempContainer),
+		)(ctx); err != nil {
+			s.Fatal("Failed to turn off the night light and make color temperature section disappear: ", err)
+		}
 	}
 }
 

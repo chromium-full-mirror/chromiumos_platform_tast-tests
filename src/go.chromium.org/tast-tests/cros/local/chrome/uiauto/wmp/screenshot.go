@@ -97,11 +97,11 @@ func StartFullScreenRecording(tconn *chrome.TestConn) action.Action {
 	ui := uiauto.New(tconn)
 
 	return uiauto.Combine("take full screen recording",
-		ui.LeftClick(nodewith.Role(role.ToggleButton).Name("Screen record")),
-		ui.LeftClick(nodewith.Role(role.ToggleButton).Name("Record full screen")),
-		ui.WaitUntilExists(nodewith.NameRegex(regexp.MustCompile("(Click|Tap) anywhere to record full screen"))), // Different names for clamshell/tablet mode.
-		ui.LeftClick(nodewith.Role(role.Window).First()),                                                         // Click on the center of root window to take the screenshot.
-		ui.WaitUntilExists(nodewith.HasClass("TrayBackgroundView").Name("Stop screen recording")),
+		ui.LeftClick(nodewith.Role(role.Button).Name("Screen record")),
+		ui.LeftClick(nodewith.Role(role.Button).Name("Record full screen")),
+		ui.WaitUntilExists(nodewith.NameRegex(regexp.MustCompile("(Click|Tap) anywhere to record full screen")).First()), // Different names for clamshell/tablet mode.
+		ui.LeftClick(nodewith.Role(role.Window).First()),                                                                 // Click on the center of root window to take the screenshot.
+		ui.WaitUntilExists(nodewith.HasClass("StopRecordingButtonTray").Name("Stop screen recording")),
 	)
 }
 
@@ -110,7 +110,7 @@ func EndScreenRecording(tconn *chrome.TestConn) action.Action {
 	ui := uiauto.New(tconn)
 
 	return uiauto.Combine("end screen recording",
-		ui.LeftClick(nodewith.HasClass("TrayBackgroundView").Name("Stop screen recording")),
+		ui.LeftClick(nodewith.HasClass("StopRecordingButtonTray").Name("Stop screen recording")),
 		ui.WaitUntilExists(nodewith.HasClass("Label").Name("Screen recording taken")),
 	)
 }
@@ -150,11 +150,11 @@ func ensureInScreenCaptureMode(ctx context.Context, tconn *chrome.TestConn) erro
 	ui := uiauto.New(tconn)
 	// To make sure "Screen capture" is launched correctly, verify the existence of these buttons.
 	for _, btn := range []*nodewith.Finder{
-		nodewith.Role(role.ToggleButton).Name("Screenshot"),
-		nodewith.Role(role.ToggleButton).Name("Screen record"),
-		nodewith.Role(role.ToggleButton).NameRegex(regexp.MustCompile("(Take|Record) full screen.*")),
-		nodewith.Role(role.ToggleButton).NameRegex(regexp.MustCompile("(Take|Record) partial screen.*")),
-		nodewith.Role(role.ToggleButton).NameRegex(regexp.MustCompile("(Take|Record) window.*")),
+		nodewith.Role(role.Button).Name("Screenshot"),
+		nodewith.Role(role.Button).Name("Screen record"),
+		nodewith.Role(role.Button).NameRegex(regexp.MustCompile("(Take|Record) full screen.*")),
+		nodewith.Role(role.Button).NameRegex(regexp.MustCompile("(Take|Record) partial screen.*")),
+		nodewith.Role(role.Button).NameRegex(regexp.MustCompile("(Take|Record) window.*")),
 		nodewith.Role(role.ToggleButton).Name("Settings"),
 		nodewith.Role(role.Button).Name("Close").HasClass("IconButton"),
 	} {
@@ -171,10 +171,10 @@ func takeFullScreenshot(ctx context.Context, tconn *chrome.TestConn) error {
 	ui := uiauto.New(tconn)
 
 	if err := uiauto.Combine("take full screenshot",
-		ui.LeftClick(nodewith.Role(role.ToggleButton).Name("Screenshot")),
-		ui.LeftClick(nodewith.Role(role.ToggleButton).Name("Take full screen screenshot")),
-		ui.WaitUntilExists(nodewith.NameRegex(regexp.MustCompile("(Click|Tap) anywhere to capture full screen"))), // Different names for clamshell/tablet mode.
-		ui.LeftClick(nodewith.Role(role.Window).First()),                                                          // Click on the center of root window to take the screenshot.
+		ui.LeftClick(nodewith.Role(role.Button).Name("Screenshot")),
+		ui.LeftClick(nodewith.Role(role.Button).Name("Take full screen screenshot")),
+		ui.WaitUntilExists(nodewith.NameRegex(regexp.MustCompile("(Click|Tap) anywhere to capture full screen")).First()), // Different names for clamshell/tablet mode.
+		ui.LeftClick(nodewith.Role(role.Window).First()),                                                                  // Click on the center of root window to take the screenshot.
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to take fullscreen screenshot")
 	}
@@ -193,9 +193,9 @@ func takePartialScreenshot(ctx context.Context, tconn *chrome.TestConn) error {
 	captureSurfaceCenterPt := captureSurfaceBounds.CenterPoint()
 
 	if err = uiauto.Combine("take partial screenshot in small region",
-		ui.LeftClick(nodewith.Role(role.ToggleButton).Name("Screenshot")),
-		ui.LeftClick(nodewith.Role(role.ToggleButton).Name("Take partial screenshot")),
-		ui.WaitUntilExists(nodewith.NameRegex(regexp.MustCompile("Drag to select an area to capture"))), // Different names for clamshell/tablet mode.
+		ui.LeftClick(nodewith.Role(role.Button).Name("Screenshot")),
+		ui.LeftClick(nodewith.Role(role.Button).Name("Take partial screenshot")),
+		ui.WaitUntilExists(nodewith.NameRegex(regexp.MustCompile("Drag to select an area to capture")).First()), // Different names for clamshell/tablet mode.
 		mouse.Move(tconn, coords.NewPoint(10, 10), 0),
 		mouse.Press(tconn, mouse.LeftButton),
 		mouse.Move(tconn, coords.NewPoint(15, 15), 0),
@@ -248,8 +248,8 @@ func takeWindowScreenshot(ctx context.Context, tconn *chrome.TestConn) error {
 	centerPoint := activeWindow.BoundsInRoot.CenterPoint()
 
 	if err = uiauto.Combine("take window screenshot",
-		ui.LeftClick(nodewith.Role(role.ToggleButton).Name("Screenshot")),
-		ui.LeftClick(nodewith.Role(role.ToggleButton).Name("Take window screenshot")),
+		ui.LeftClick(nodewith.Role(role.Button).Name("Screenshot")),
+		ui.LeftClick(nodewith.Role(role.Button).Name("Take window screenshot")),
 		mouse.Move(tconn, centerPoint, time.Second),      // Different names for clamshell/tablet mode.
 		ui.LeftClick(nodewith.Role(role.Window).First()), // Click on the center of root window to take the screenshot.
 	)(ctx); err != nil {
