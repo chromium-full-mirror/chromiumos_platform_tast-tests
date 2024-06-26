@@ -153,12 +153,6 @@ func UpdateVersion(ctx context.Context, s *testing.State) {
 	}(cleanupCtx)
 
 	var err error
-	var initFwid string
-	initFwid, err = h.Reporter.CrossystemParam(ctx, reporters.CrossystemParamFwid)
-	if err != nil {
-		s.Fatal("Failed to get init fwid: ", err)
-	}
-
 	var initTpmDatakeyVer uint16
 	if tc.keyVersion == fwDataKeyVer {
 		skipFlashUSB := false
@@ -274,7 +268,7 @@ func UpdateVersion(ctx context.Context, s *testing.State) {
 				s.Error("Failed to get TPM data key version: ", err)
 			} else if currentTpmDatakeyVer != initTpmDatakeyVer {
 				s.Log("Resetting TPM and rebooting DUT")
-				if err := resetTpmAndReboot(ctx, pv, state); err != nil {
+				if err := resetTpmAndReboot(ctx, pv, &state); err != nil {
 					s.Fatal("Failed to reset TPM: ", err)
 				}
 				if !state.IsServoChargerConnected {
@@ -294,6 +288,11 @@ func UpdateVersion(ctx context.Context, s *testing.State) {
 
 	if err := rebootDUTAndRequireRPCClient(ctx, h); err != nil {
 		s.Fatal("Failed to reboot DUT: ", err)
+	}
+
+	fwidAfterAutoUpdate, err := h.Reporter.CrossystemParam(ctx, reporters.CrossystemParamFwid)
+	if err != nil {
+		s.Fatal("Failed to get current fwid after autoupdate: ", err)
 	}
 
 	// Mark RWB firmware is a good firmware to finish the firmware autoUpdate procedure.
@@ -342,7 +341,7 @@ func UpdateVersion(ctx context.Context, s *testing.State) {
 	if tc.keyVersion == fwDataKeyVer {
 		// Reset the TPM to avoid encountering the 'RW firmware key version rollback detect' issue after reboot.
 		s.Log("Resetting TPM and rebooting DUT")
-		if err := resetTpmAndReboot(ctx, pv, state); err != nil {
+		if err := resetTpmAndReboot(ctx, pv, &state); err != nil {
 			s.Error("Failed to reset TPM and reboot DUT: ", err)
 		}
 		if !state.IsServoChargerConnected {
@@ -362,11 +361,11 @@ func UpdateVersion(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	// Get the firmware ID from 'crossystem fwid' and check if it is the same as the original one.
-	if currentFwid, err := h.Reporter.CrossystemParam(ctx, reporters.CrossystemParamFwid); err != nil {
-		s.Fatal("Failed to get crossystem fwid: ", err)
-	} else if currentFwid != initFwid {
-		s.Fatalf("Current fwid (%v) is not equal to the original fwid (%v)", currentFwid, initFwid)
+	// Check if the FWID after rollback is the same as the one obtained after the autoupdate.
+	if fwidAfterRollback, err := h.Reporter.CrossystemParam(ctx, reporters.CrossystemParamFwid); err != nil {
+		s.Fatal("Failed to get current fwid after rollback: ", err)
+	} else if fwidAfterRollback != fwidAfterAutoUpdate {
+		s.Fatalf("The fwid (%v) after rollback is not equal to the fwid (%v) after autoupdate", fwidAfterRollback, fwidAfterAutoUpdate)
 	}
 
 	if err := fwTriesChecker(ctx, h, "B", 0); err != nil {
@@ -469,10 +468,10 @@ func checkKeyVer(ctx context.Context, h *firmware.Helper, expectedVer uint16, ke
 }
 
 // resetTpmAndReboot resets the TPM's data key version and reboots.
-func resetTpmAndReboot(ctx context.Context, pv *fixture.Value, state firmware.CheckAndSetServoCharger) error {
+func resetTpmAndReboot(ctx context.Context, pv *fixture.Value, state *firmware.CheckAndSetServoCharger) error {
 	h := pv.Helper
 	testing.ContextLog(ctx, "Rebooting the DUT to recovery screen")
-	if err := h.BootToRecoveryMode(ctx, &state); err != nil {
+	if err := h.BootToRecoveryMode(ctx, state); err != nil {
 		return errors.Wrap(err, "failed to boot to recovery mode")
 	}
 
