@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast-tests/cros/local/dlc"
 	"go.chromium.org/tast-tests/cros/local/gtest"
@@ -20,7 +21,7 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-const exec = "screen_ai_ocr_test"
+const exec = "screen_ai_ocr_perf_test"
 const dlcID = "screen-ai"
 
 var images = []string{"no_text_3264x2448_20240320.jpg", "one_line_3264x2448_20240320.jpg", "full_of_text_3264x2448_20240320.jpg"}
@@ -36,10 +37,10 @@ func init() {
 		BugComponent: "b:1272894", // ChromeOS Public Tracker > Experiences > Accessibility > Machine Intelligence
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		Data:         images,
-		// Some devices took a minute to perform OCR on an image with full of
-		// text (see b/317166889), and the test binary performs OCR eight
-		// times. Shorten this once we fix the slowness on those devices.
-		Timeout: 20 * time.Minute,
+		// Some devices took 10 seconds to perform OCR on an image with full of
+		// text, and the test binary performs OCR for 8 times on an image. Set
+		// total timeout to 10 * 8 * 3 (images) = 240 seconds.
+		Timeout: 4 * time.Minute,
 	})
 }
 
@@ -76,7 +77,7 @@ func OCRPerf(ctx context.Context, s *testing.State) {
 
 func runOcrPerformanceTest(ctx context.Context, outputDir, reportPath, imagePath string, p *perf.Values) error {
 	report, err := gtest.New(
-		exec,
+		filepath.Join(chrome.BinTestDir, exec),
 		gtest.Logfile(filepath.Join(outputDir, exec+".log")),
 		gtest.ExtraArgs(
 			"--output_path="+reportPath,
