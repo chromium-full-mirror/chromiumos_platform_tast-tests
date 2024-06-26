@@ -609,7 +609,7 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 				s.Fatal("Failed to restart modem: ", err)
 			}
 		}
-		// on starfish setups, modemfwd needs to be running to be faithful to real world scenario
+		// On starfish setups, modemfwd needs to run to install the correct FW after the SIM is selected.
 		if err := modemfwd.StartAndWaitForQuiescence(ctx); err != nil {
 			s.Fatalf("Failed to start %q: %s", modemfwd.JobName, err)
 		}
@@ -689,16 +689,14 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 		}
 	}
 	f.cr = cr
-	if f.sf == nil {
-		var err error
-		if f.modemfwdStopped, err = stopJob(ctx, modemfwd.JobName); err != nil {
-			s.Fatalf("Failed to stop job: %q, %s", modemfwd.JobName, err)
-		}
-		if f.modemfwdStopped {
-			s.Logf("Stopped %q", modemfwd.JobName)
-		} else {
-			s.Logf("%q not running", modemfwd.JobName)
-		}
+
+	if f.modemfwdStopped, err = stopJob(ctx, modemfwd.JobName); err != nil {
+		s.Fatalf("Failed to stop job: %q, %s", modemfwd.JobName, err)
+	}
+	if f.modemfwdStopped {
+		s.Logf("Stopped %q", modemfwd.JobName)
+	} else {
+		s.Logf("%q not running", modemfwd.JobName)
 	}
 
 	if upstart.JobExists(ctx, hermes.JobName) {
