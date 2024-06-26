@@ -66,13 +66,19 @@ func ValidatePrevSleepState(ctx context.Context, dut *dut.DUT, sleepStateValue i
 	const ufs_cmd = "cbmem -c | grep -i 'Disabling UFS'"
 	out_ufs, err_ufs := dut.Conn().CommandContext(ctx, "sh", "-c", ufs_cmd).Output()
 	if err_ufs != nil {
-		return errors.Wrapf(err_ufs, "failed to execute %q command", ufs_cmd)
+		if !strings.Contains(string(err_ufs.Error()), "Process exited with status 1") {
+			return errors.Wrapf(err_ufs, "failed to execute %q command", ufs_cmd)
+		}
 	}
-	got_ufs := strings.TrimSpace(string(out_ufs))
-	want_ufs := fmt.Sprintf("Disabling UFS")
-	if strings.Contains(got_ufs,want_ufs) {
-		sleepStateValue = 0
-		testing.ContextLog(ctx,"Warm reboot has happened after cold reboot to disable UFS controller.")
+	
+	if len(out_ufs) != 0 {
+		got_ufs := strings.TrimSpace(string(out_ufs))
+		want_ufs := fmt.Sprintf("Disabling UFS")
+
+		if strings.Contains(got_ufs, want_ufs) {
+			sleepStateValue = 0
+			testing.ContextLog(ctx, "Warm reboot has happened after cold reboot to disable UFS controller.")
+		}
 	}
 
 	// Command to check previous sleep state.
