@@ -36,7 +36,7 @@ func init() {
 		BugComponent: "b:995569", // ChromeOS > Platform > Graphics > GPU
 		// Although the test is HW agnostic, VM images currently do not include
 		// mesa-iris/aubinator_error_decode.
-		Attr:         []string{"group:graphics", "graphics_perbuild", "group:mainline", "informational"},
+		Attr:         []string{"group:graphics", "graphics_perbuild", "group:mainline", "group:criticalstaging", "informational"},
 		Fixture:      "graphicsNoChrome",
 		HardwareDeps: hwdep.D(hwdep.CPUSocFamily("intel"), hwdep.SkipOnModel("amd64-generic", "betty", "caroline", "reven")),
 		Params: []testing.Param{
