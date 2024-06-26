@@ -10,7 +10,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/resourced"
 	"go.chromium.org/tast-tests/cros/local/sched"
-	"go.chromium.org/tast-tests/cros/local/sysutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -22,6 +21,7 @@ func init() {
 		Contacts:     []string{"chromeos-memory@google.com", "vovoy@chromium.org"},
 		BugComponent: "b:167286", // ChromeOS > Platform > System > Memory Management
 		Attr:         []string{"group:mainline"},
+		SoftwareDeps: []string{"pidfd_open"},
 		Timeout:      2 * time.Minute,
 	})
 }
@@ -30,16 +30,6 @@ func SchedQos(ctx context.Context, s *testing.State) {
 	rm, err := resourced.NewClient(ctx)
 	if err != nil {
 		s.Fatal("Failed to create Resource Manager client: ", err)
-	}
-
-	version, _, err := sysutil.KernelVersionAndArch()
-	if err != nil {
-		s.Fatal("Failed to get kernel version to check that schedqos is supported: ", err)
-	}
-	// schedqos is only supported on ChromeOS Kernels 5.4 and later.
-	if !version.IsOrLater(5, 4) {
-		testing.ContextLogf(ctx, "Skipping schedqos verification because kernel version is %q", version.String())
-		return
 	}
 
 	p, err := sched.CreateSampleProcessThreadPair(ctx, nil)
