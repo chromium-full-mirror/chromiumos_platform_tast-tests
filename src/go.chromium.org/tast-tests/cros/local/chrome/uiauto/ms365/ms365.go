@@ -76,7 +76,7 @@ func AppWithCreds(ctx context.Context, tconn *chrome.TestConn, creds credconfig.
 // InputUserName waits for the Microsoft sign in window and input the username.
 func (ms *Ms365) InputUserName(userName string) uiauto.Action {
 	msSignInWindow := nodewith.Role(role.RootWebArea).Name("Sign in to your account")
-	usernameInput := nodewith.Ancestor(msSignInWindow).Role(role.TextField).NameContaining("email")
+	usernameInput := nodewith.Ancestor(msSignInWindow).Role(role.TextField).NameRegex(regexp.MustCompile(".*(email|someone@example.com).*"))
 
 	return uiauto.Combine("MS SignIn",
 		ms.ui.WaitUntilExists(msSignInWindow),
