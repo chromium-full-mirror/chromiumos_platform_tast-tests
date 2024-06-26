@@ -71,7 +71,7 @@ func Stress(ctx context.Context, s *testing.State) {
 	}
 
 	runTimeSec := s.Param().(string)
-	out, err := util.RunCmdWithStringOutput(ctx, s.DUT(), "stressapptest", "-m", "8", "-s", runTimeSec, "-d", disk.Path)
+	out, err := util.RunCmdWithStringOutput(ctx, s.DUT(), "stressapptest", "-m", "8", "-s", runTimeSec, "--destructive", "-d", disk.Path)
 	ioutil.WriteFile(filepath.Join(s.OutDir(), "stressapptest_result.txt"), []byte(out), 0644)
 	if err != nil {
 		s.Fatal("Failed to run stressapptest: ", err)
