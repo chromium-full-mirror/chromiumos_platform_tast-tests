@@ -43,7 +43,7 @@ func init() {
 		},
 		BugComponent: "b:1052117", // ChromeOS > Software > ARC++ > EngProd
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
-		SoftwareDeps: []string{"chrome", "chrome_internal", "arc"},
+		SoftwareDeps: []string{"chrome", "chrome_internal", "arc", "gaia"},
 		Data:         []string{testfile},
 		// There are two apps to be installed in this case.
 		Timeout: 2*time.Minute + 2*apputil.InstallationTimeout,

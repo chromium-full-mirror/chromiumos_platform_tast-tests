@@ -36,7 +36,7 @@ func init() {
 		BugComponent: "b:883059",
 		Attr:         []string{"group:mainline", "group:arc-functional", "group:hw_agnostic", "informational"},
 		VarDeps:      []string{arcCommon.ManagedAccountPoolVarName},
-		SoftwareDeps: []string{"chrome", "android_vm"},
+		SoftwareDeps: []string{"chrome", "android_vm", "gaia"},
 		Timeout:      (chrome.ManagedUserLoginTimeout + arc.BootTimeout) * 2,
 	})
 }

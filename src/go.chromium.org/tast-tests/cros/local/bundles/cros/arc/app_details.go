@@ -36,7 +36,7 @@ func init() {
 		},
 		BugComponent: "b:1203766",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
-		SoftwareDeps: []string{"chrome", "android_vm_t"},
+		SoftwareDeps: []string{"chrome", "android_vm_t", "gaia"},
 		Fixture:      "arcBootedWithPlayStore",
 		Timeout:      10 * time.Minute,
 	})

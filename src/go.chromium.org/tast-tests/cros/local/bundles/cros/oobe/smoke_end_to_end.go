@@ -44,7 +44,7 @@ func init() {
 		},
 		BugComponent: "b:1263090", // ChromeOS > Software > OOBE
 		Attr:         []string{"group:mainline", "informational"},
-		SoftwareDeps: []string{"chrome", "non_meet_device"},
+		SoftwareDeps: []string{"chrome", "non_meet_device", "gaia"},
 		VarDeps: []string{
 			"ui.signinProfileTestExtensionManifestKey",
 			ui.GaiaPoolDefaultVarName,
