@@ -77,8 +77,8 @@ type browsingConfig struct {
 
 const (
 	// VideoSrc is the video used for this test.
-	VideoSrc  = "multitaskingapp/vp9_720_60fps.webm"
-	videoName = "vp9_720_60fps"
+	VideoSrc      = "multitaskingapp/vp9_720_60fps.webm"
+	videoFileName = "vp9_720_60fps.webm"
 )
 
 // Run runs the MultitaskingApp test.
@@ -135,9 +135,9 @@ func Run(ctx context.Context, resources *TestResources, params *TestParams) (ret
 	}
 	defer socialApp.Uninstall(closeCtx)
 
-	videoApp := arcvideoplayback.NewMxPlayerApp(cr, tconn, kb, a, d, dataPath).(*arcvideoplayback.MxPlayerApp)
+	videoApp := arcvideoplayback.NewExoPlayerApp(cr, tconn, kb, a, d, dataPath).(*arcvideoplayback.ExoPlayerApp)
 	if err := videoApp.Install(ctx); err != nil {
-		return errors.Wrap(err, "failed to install MxPlayer app")
+		return errors.Wrap(err, "failed to install video app")
 	}
 	defer videoApp.Uninstall(closeCtx)
 	cleanupFile, err := videoApp.CopyFileToFolder(ctx, VideoSrc)
@@ -168,20 +168,13 @@ func Run(ctx context.Context, resources *TestResources, params *TestParams) (ret
 		return errors.Wrap(err, "failed to set Element window state and wait")
 	}
 
-	// Launch MxPlayer app and arrange window.
 	if err := videoApp.Launch(ctx); err != nil {
-		return errors.Wrap(err, "failed to launch MxPlayer app")
+		return errors.Wrap(err, "failed to launch video app")
 	}
 	defer videoApp.Close(closeCtx)
 
-	if err := uiauto.NamedCombine("set up MxPlayer",
-		videoApp.DismissPrompts,
-		videoApp.ChangeToResizable,
-	)(ctx); err != nil {
-		return err
-	}
-	if err := arrangeWindow(ctx, tconn, apps.MxPlayer.ID, ash.WindowStateNormal, params.TabletMode); err != nil {
-		return errors.Wrap(err, "failed to set MxPlayer window state and wait")
+	if err := arrangeWindow(ctx, tconn, videoApp.ID(), ash.WindowStateNormal, params.TabletMode); err != nil {
+		return errors.Wrap(err, "failed to set video app window state and wait")
 	}
 
 	// Launch Chrome window and arrange window.
@@ -370,23 +363,23 @@ func socialAppActivity(ctx context.Context, tconn *chrome.TestConn, uiHandler cu
 	return nil
 }
 
-// videoAppActivity defines test scenario of video app (MxPlayer in this case).
-// Play a video on MxPlayer for a while, then close the video.
-func videoAppActivity(ctx context.Context, uiHandler cuj.UIActionHandler, isFirstRun bool, videoApp *arcvideoplayback.MxPlayerApp, videoPlayTime time.Duration) error {
-	setLoopOn := func(ctx context.Context) error {
-		// The loop settings of the video will be remembered. Only set the loop on
-		// when it's the first time playing the video.
+// videoAppActivity defines test scenario of video app.
+// Play a video on for a while, then close the video.
+func videoAppActivity(ctx context.Context, uiHandler cuj.UIActionHandler, isFirstRun bool, videoApp *arcvideoplayback.ExoPlayerApp, videoPlayTime time.Duration) error {
+	dismissPrompt := func(ctx context.Context) error {
+		// The permission prompts only need to be dismissed once.
 		if isFirstRun {
-			return videoApp.SetLoopOn(ctx)
+			return videoApp.DismissPrompts(ctx)
 		}
 		return nil
 	}
 	message := fmt.Sprintf("play a video for %v", videoPlayTime)
 	return uiauto.NamedCombine(message,
-		uiHandler.SwitchToAppWindow(apps.MxPlayer.Name),
-		videoApp.OpenAndPlayVideo(videoName),
-		setLoopOn,
+		uiHandler.SwitchToAppWindow(videoApp.Name()),
+		videoApp.PlayVideoInLoop(videoFileName),
+		dismissPrompt,
+		videoApp.EnsurePlaying,
 		uiauto.Sleep(videoPlayTime),
-		videoApp.CloseVideo(videoName),
+		videoApp.CloseVideo,
 	)(ctx)
 }

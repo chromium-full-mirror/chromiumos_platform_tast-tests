@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/power/arcvideoplayback"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/power/multitaskingapp"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/power/socialapp"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
@@ -44,7 +45,7 @@ func init() {
 		BugComponent: "b:1361410", // ChromeOS > Platform > System > Core Power
 		// Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome", "arc"},
-		Data:         []string{multitaskingapp.VideoSrc},
+		Data:         []string{multitaskingapp.VideoSrc, arcvideoplayback.ExoPlayerAPKFileName},
 		Vars:         socialapp.ElementApkURLVars, // Optional. The URL of the APK file of Element app.
 		Timeout:      multiTaskingAppTimeout,
 		Params: []testing.Param{
