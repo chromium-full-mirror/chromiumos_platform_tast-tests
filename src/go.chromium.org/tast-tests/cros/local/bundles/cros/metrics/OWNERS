@@ -1,0 +1,5 @@
+# ChromiumOS Metrics
+include chromiumos/platform2:/metrics/OWNERS
+
+# Structured metrics
+include chromiumos/platform2:/metrics/structured/OWNERS
