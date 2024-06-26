@@ -85,7 +85,7 @@ func init() {
 			"hidenorik@chromium.org",
 		},
 		BugComponent: "b:1481072", // ChromeOS > Platform > Technologies > Camera > Kernel
-		Attr:         []string{"group:mainline", "informational", "group:camera-stability", "group:camera-kernelnext"},
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging", "group:camera-stability", "group:camera-kernelnext"},
 		SoftwareDeps: []string{caps.BuiltinMIPICamera},
 		HardwareDeps: hwdep.D(hwdep.CameraEnumerated(), hwdep.SkipOnModel(unsupportedModel...)),
 		Data:         configFiles(),
