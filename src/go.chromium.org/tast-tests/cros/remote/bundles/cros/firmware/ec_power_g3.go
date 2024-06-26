@@ -140,7 +140,13 @@ func ECPowerG3(ctx context.Context, s *testing.State) {
 	}
 
 	if tc.RemovePower {
-		h.SetDUTPower(ctx, false)
+		s.Log("Removing charger")
+		if err := h.SetDUTPower(ctx, false); err != nil {
+			s.Fatal("Failed to remove charger: ", err)
+		}
+		if err := h.Servo.RemoveCCDWatchdogs(ctx); err != nil {
+			s.Fatal("Failed to remove watchdog main: ", err)
+		}
 	}
 
 	if tc.SetRecMode {
@@ -281,7 +287,10 @@ func ECPowerG3(ctx context.Context, s *testing.State) {
 	}
 
 	if tc.RemovePower {
-		h.SetDUTPower(ctx, true)
+		s.Log("Connecting charger")
+		if err := h.SetDUTPower(ctx, true); err != nil {
+			s.Fatal("Failed to connect charger: ", err)
+		}
 		// Restoring power with servo_v4 can cause ethernet failure, so reconnect afterwards
 		if err := h.WaitConnect(ctx); err != nil {
 			s.Fatal("Failed to reconnect to DUT after restarting: ", err)
