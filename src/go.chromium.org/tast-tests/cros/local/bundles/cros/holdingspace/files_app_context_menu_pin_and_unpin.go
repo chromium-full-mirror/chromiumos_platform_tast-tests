@@ -22,6 +22,8 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
+	"go.chromium.org/tast-tests/cros/local/cryptohome/cleanup"
+	"go.chromium.org/tast-tests/cros/local/disk"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -82,10 +84,10 @@ func FilesAppContextMenuPinAndUnpin(ctx context.Context, s *testing.State) {
 		s.Fatal("Could not open filesapp: ", err)
 	}
 
-	if err := verifyTipInModes(ctx, tconn, true /* isTablet */); err != nil {
+	if err := verifyTip(ctx, tconn, true /* tabletModeEnabled */); err != nil {
 		s.Fatal("Failed to verify tip in tablet mode: ", err)
 	}
-	if err := verifyTipInModes(ctx, tconn, false /* isTablet */); err != nil {
+	if err := verifyTip(ctx, tconn, false /* tabletModeEnabled */); err != nil {
 		s.Fatal("Failed to verify tip in clamshell mode: ", err)
 	}
 
@@ -125,19 +127,36 @@ func FilesAppContextMenuPinAndUnpin(ctx context.Context, s *testing.State) {
 	}
 }
 
-// verifyTipInModes verifies that Files app displays the educational tip "Create a shortcut for your files" both in clamshell and tablet mode.
-func verifyTipInModes(ctx context.Context, tconn *chrome.TestConn, isTablet bool) error {
+// verifyTip verifies that the Files app displays the expected educational tip.
+func verifyTip(ctx context.Context, tconn *chrome.TestConn, tabletModeEnabled bool) error {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
 	defer cancel()
 
-	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, isTablet)
+	cleanupFunc, err := ash.EnsureTabletModeEnabled(ctx, tconn, tabletModeEnabled)
 	if err != nil {
-		return errors.Wrapf(err, "failed to ensure tablet mode enabled is %t", isTablet)
+		return errors.Wrapf(err, "failed to ensure tablet mode enabled is %t", tabletModeEnabled)
 	}
-	defer cleanup(cleanupCtx)
+	defer cleanupFunc(cleanupCtx)
 
-	return uiauto.New(tconn).WaitUntilExists(nodewith.Name("Create a shortcut for your files").Role(role.StaticText))(ctx)
+	freeSpace, err := disk.FreeSpace(cleanup.UserHome)
+	if err != nil {
+		return errors.Wrap(err, "failed to retrieve free disk space")
+	}
+
+	// In most cases, the holding space tip is expected to take priority.
+	expectedTip := nodewith.Name("Create a shortcut for your files").Role(role.StaticText)
+	unexpectedTip := nodewith.Name("Caution: These files are temporary and may be automatically deleted to free up disk space.").Role(role.StaticText)
+
+	// The low disk space tip takes priority when there is <= 1 GiB remaining.
+	if freeSpace <= 1*cleanup.GiB {
+		expectedTip, unexpectedTip = unexpectedTip, expectedTip
+	}
+
+	ui := uiauto.New(tconn)
+	return uiauto.Combine("verify tip",
+		ui.WaitUntilExists(expectedTip),
+		ui.EnsureGoneFor(unexpectedTip, 1*time.Second))(ctx)
 }
 
 // createTarget creates the target if it is not in the specific file path.
