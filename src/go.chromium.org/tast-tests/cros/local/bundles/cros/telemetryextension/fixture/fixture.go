@@ -39,6 +39,9 @@ const (
 
 const (
 	cleanupTimeout = chrome.ResetTimeout + 20*time.Second
+	// Add some buffer to avoid timeout issue during login.
+	chromeLoginTimeout = chrome.LoginTimeout + 20*time.Second
+	setUpTimeout       = chromeLoginTimeout + userutil.TakingOwnershipTimeout + 30*time.Second + cleanupTimeout
 
 	crosHealthdJobName = "cros_healthd"
 )
@@ -50,7 +53,7 @@ func init() {
 		Contacts:        []string{"chromeos-oem-services@google.com"},
 		BugComponent:    "b:982097",
 		Impl:            newTelemetryExtensionFixture(),
-		SetUpTimeout:    chrome.LoginTimeout + 30*time.Second + cleanupTimeout,
+		SetUpTimeout:    setUpTimeout,
 		TearDownTimeout: cleanupTimeout,
 		PreTestTimeout:  10 * time.Second,
 		PostTestTimeout: 10 * time.Second,
@@ -62,7 +65,7 @@ func init() {
 		Contacts:        []string{"chromeos-oem-services@google.com"},
 		BugComponent:    "b:982097",
 		Impl:            newTelemetryExtensionFixture(skipOEMNameCheck()),
-		SetUpTimeout:    chrome.LoginTimeout + 30*time.Second + cleanupTimeout,
+		SetUpTimeout:    setUpTimeout,
 		TearDownTimeout: cleanupTimeout,
 		PreTestTimeout:  10 * time.Second,
 		PostTestTimeout: 10 * time.Second,
@@ -74,7 +77,7 @@ func init() {
 		Contacts:        []string{"chromeos-oem-services@google.com"},
 		BugComponent:    "b:982097",
 		Impl:            newTelemetryExtensionFixture(lacros(), skipOEMNameCheck()),
-		SetUpTimeout:    chrome.LoginTimeout + 30*time.Second + cleanupTimeout,
+		SetUpTimeout:    setUpTimeout,
 		TearDownTimeout: cleanupTimeout,
 		PreTestTimeout:  10 * time.Second,
 		PostTestTimeout: 10 * time.Second,
@@ -270,6 +273,7 @@ func (f *telemetryExtensionFixture) setupChromeForConsumers(ctx context.Context,
 
 	opts := []chrome.Option{
 		chrome.EnableFeatures("TelemetryExtensionPendingApprovalApi"),
+		chrome.CustomLoginTimeout(chromeLoginTimeout),
 	}
 	f.addSkipOEMNameCheckChromeArg(ctx, &opts)
 
