@@ -58,6 +58,13 @@ func init() {
 				Name: "fieldtrial_testing_config_on",
 				Val:  arcBootedFixtureArgs{chrome.FieldTrialConfigEnable},
 			},
+			{
+				// The fixture using Ethernet-hide (platform2/ethernet-hide). This will
+				// boot ARC without Internet connection.
+				Name:          "ehide",
+				Parent:        "ehide",
+				ExtraContacts: []string{"chenzikai@google.com", "cros-networking@google.com"},
+			},
 		},
 	})
 

@@ -119,16 +119,19 @@ func init() {
 			},
 			Fixture: "crostiniBullseye",
 		}, {
-			// TODO(b/298006226): Add ARC IPv6 test, currently there seems to be
-			// default network selection issue there. Now that this test is not
-			// verifying multi-networking behavior for ARC, we can wait for the hide
-			// Ethernet fixture (b/258359554) and then revisit this test.
 			Name: "arc_ipv4",
 			Val: tcParams{
 				source:   tcSourceTypeARC,
 				ipFamily: tcIPv4,
 			},
-			Fixture: "arcBooted",
+			Fixture: "arcBooted.ehide",
+		}, {
+			Name: "arc_ipv6",
+			Val: tcParams{
+				source:   tcSourceTypeARC,
+				ipFamily: tcIPv6,
+			},
+			Fixture: "arcBooted.ehide",
 		}}})
 }
 
@@ -428,13 +431,10 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 		vmTest(
 			[]pp.TrafficCounter_Source{pp.TrafficCounter_ARC},
 			func(addr net.IP) error {
-				// Use dumpsys to generate some traffic to/from the HTTP server.
-				// - "host_default" to force using the default network on the host since
-				//   the network selection in ARC might not be the same as the host on
-				//   T+. See b/265877162.
-				// - Note that we cannot control the tx packet length here. We should
-				//   consider switching to use the QoS test app which can send and
-				//   receive UDP packets directly.
+				// Use dumpsys to generate some traffic to/from the HTTP server. Note
+				// that we cannot control the tx packet length here. We should consider
+				// switching to use the QoS test app which can send and receive UDP
+				// packets directly.
 				args := []string{
 					"wifi",
 					"tools", "http", "host_default",
