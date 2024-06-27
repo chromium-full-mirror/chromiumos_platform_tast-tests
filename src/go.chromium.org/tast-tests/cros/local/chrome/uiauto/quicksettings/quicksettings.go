@@ -200,7 +200,8 @@ func ensureVisible(ctx context.Context, tconn *chrome.TestConn) (func(ctx contex
 	}
 
 	if !shown {
-		if err := Show(ctx, tconn); err != nil {
+		// Give it a chance to retry to ensure Quick Settings to be shown as it can be collapsed by other UI events.
+		if err := ShowWithRetry(ctx, tconn, 30*time.Second); err != nil {
 			return nil, err
 		}
 		return func(ctx context.Context) error {

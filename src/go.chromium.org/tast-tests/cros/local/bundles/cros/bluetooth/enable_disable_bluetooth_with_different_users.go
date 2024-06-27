@@ -237,7 +237,7 @@ func (h *enableDisableBluetoothWithDifferentUsersHelper) toggleBluetooth(expecte
 		ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 		defer cancel()
 
-		if err := quicksettings.Show(ctx, h.tconn); err != nil {
+		if err := quicksettings.ShowWithRetry(ctx, h.tconn, 30*time.Second); err != nil {
 			return errors.Wrap(err, "failed to show the Quick Settings")
 		}
 		defer quicksettings.Hide(cleanupCtx, h.tconn)
