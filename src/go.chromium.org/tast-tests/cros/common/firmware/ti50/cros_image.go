@@ -1082,7 +1082,7 @@ const (
 
 // Sysinfo returns current sysinfo state
 func (i *CrOSImage) Sysinfo(ctx context.Context) (Sysinfo, error) {
-	out, err := i.Command(ctx, "sysinfo")
+	out, err := i.safeCommand(ctx, "sysinfo")
 	if err != nil {
 		return Sysinfo{}, errors.Wrap(err, "unable to run sysinfo")
 	}
