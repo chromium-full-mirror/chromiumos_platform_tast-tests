@@ -97,6 +97,9 @@ func ProbeWifiInfo(ctx context.Context, s *testing.State) {
 					s.Fatal("Failed to validate empty LinkInfo data")
 				}
 			} else {
+				if ifc.WirelessInterfaces.LinkInfo == nil {
+					s.Fatal("Failed to get LinkInfo")
+				}
 				if ifc.WirelessInterfaces.LinkInfo.AccessPointAddress == "" {
 					s.Fatal("Failed to get AccessPointAddress")
 				}
