@@ -24,7 +24,7 @@ func init() {
 		Contacts: []string{"cros-networking@google.com", "jiejiang@google.com"},
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		// DHCP hostname property is written into the default profile but not user
 		// profile. Use shillReset to guarantee it is clean before and after the
 		// test.
