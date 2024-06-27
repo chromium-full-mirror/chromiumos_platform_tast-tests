@@ -1,0 +1,1320 @@
+// Copyright 2024 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package firmware
+
+import (
+	"context"
+	"fmt"
+	"os"
+	"path/filepath"
+	"regexp"
+	"strconv"
+	"strings"
+	"sync"
+	"time"
+
+	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/remote/dutfs"
+	"go.chromium.org/tast-tests/cros/remote/firmware"
+	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
+)
+
+// EcStress attempts to stress the EC in different dimensions to induce
+// a crash. To achieve the performance and concurrency necessary to stress
+// the EC, many of the standard APIs and interfaces cannot be used. Since
+// not standard interfaces are used, this test can be unstable.
+
+func init() {
+	testing.AddTest(&testing.Test{
+		Func: EcStress,
+		Desc: "Stress EC to cause watchdog",
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"robbarnes@google.com",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
+		ServiceDeps:  []string{"tast.cros.firmware.UtilsService"},
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
+		SoftwareDeps: []string{"chrome"},
+		Fixture:      fixture.NormalMode,
+		Vars: []string{
+			"firmware.EcStress.suspend",
+			"firmware.EcStress.sensors",
+			"firmware.EcStress.keyscan",
+			"firmware.EcStress.flash",
+			"firmware.EcStress.pd",
+			"firmware.EcStress.period",
+		},
+		Timeout: time.Hour,
+		Params: []testing.Param{
+			{
+				Name: "bare",
+				Val: ecStressParams{
+					flash:   false,
+					keyscan: false,
+					pd:      false,
+					sensors: false,
+					suspend: false,
+				},
+			},
+			{
+				Name: "flash",
+				Val: ecStressParams{
+					flash:   true,
+					keyscan: false,
+					pd:      false,
+					sensors: false,
+					suspend: false,
+				},
+			},
+			{
+				Name: "keyscan",
+				Val: ecStressParams{
+					flash:   false,
+					keyscan: true,
+					pd:      false,
+					sensors: false,
+					suspend: false,
+				},
+			},
+			{
+				Name: "pd",
+				Val: ecStressParams{
+					flash:   false,
+					keyscan: false,
+					pd:      true,
+					sensors: false,
+					suspend: false,
+				},
+			},
+			{
+				Name: "sensors",
+				Val: ecStressParams{
+					flash:   false,
+					keyscan: false,
+					pd:      false,
+					sensors: true,
+					suspend: false,
+				},
+			},
+			{
+				Name: "suspend",
+				Val: ecStressParams{
+					flash:   false,
+					keyscan: false,
+					pd:      false,
+					sensors: false,
+					suspend: true,
+				},
+			},
+			{
+				Name: "flash_keyscan",
+				Val: ecStressParams{
+					flash:   true,
+					keyscan: true,
+					pd:      false,
+					sensors: false,
+					suspend: false,
+				},
+			},
+			{
+				Name: "flash_pd",
+				Val: ecStressParams{
+					flash:   true,
+					keyscan: false,
+					pd:      true,
+					sensors: false,
+					suspend: false,
+				},
+			},
+			{
+				Name: "flash_sensors",
+				Val: ecStressParams{
+					flash:   true,
+					keyscan: false,
+					pd:      false,
+					sensors: true,
+					suspend: false,
+				},
+			},
+			{
+				Name: "flash_suspend",
+				Val: ecStressParams{
+					flash:   true,
+					keyscan: false,
+					pd:      false,
+					sensors: false,
+					suspend: true,
+				},
+			},
+			{
+				Name: "keyscan_pd",
+				Val: ecStressParams{
+					flash:   false,
+					keyscan: true,
+					pd:      true,
+					sensors: false,
+					suspend: false,
+				},
+			},
+			{
+				Name: "keyscan_sensors",
+				Val: ecStressParams{
+					flash:   false,
+					keyscan: true,
+					pd:      false,
+					sensors: true,
+					suspend: false,
+				},
+			},
+			{
+				Name: "keyscan_suspend",
+				Val: ecStressParams{
+					flash:   false,
+					keyscan: true,
+					pd:      false,
+					sensors: false,
+					suspend: true,
+				},
+			},
+			{
+				Name: "pd_sensors",
+				Val: ecStressParams{
+					flash:   false,
+					keyscan: false,
+					pd:      true,
+					sensors: true,
+					suspend: false,
+				},
+			},
+			{
+				Name: "pd_suspend",
+				Val: ecStressParams{
+					flash:   false,
+					keyscan: false,
+					pd:      true,
+					sensors: false,
+					suspend: true,
+				},
+			},
+			{
+				Name: "sensors_suspend",
+				Val: ecStressParams{
+					flash:   false,
+					keyscan: false,
+					pd:      false,
+					sensors: true,
+					suspend: true,
+				},
+			},
+			{
+				Name: "flash_keyscan_pd",
+				Val: ecStressParams{
+					flash:   true,
+					keyscan: true,
+					pd:      true,
+					sensors: false,
+					suspend: false,
+				},
+			},
+			{
+				Name: "flash_keyscan_sensors",
+				Val: ecStressParams{
+					flash:   true,
+					keyscan: true,
+					pd:      false,
+					sensors: true,
+					suspend: false,
+				},
+			},
+			{
+				Name: "flash_keyscan_suspend",
+				Val: ecStressParams{
+					flash:   true,
+					keyscan: true,
+					pd:      false,
+					sensors: false,
+					suspend: true,
+				},
+			},
+			{
+				Name: "flash_pd_sensors",
+				Val: ecStressParams{
+					flash:   true,
+					keyscan: false,
+					pd:      true,
+					sensors: true,
+					suspend: false,
+				},
+			},
+			{
+				Name: "flash_pd_suspend",
+				Val: ecStressParams{
+					flash:   true,
+					keyscan: false,
+					pd:      true,
+					sensors: false,
+					suspend: true,
+				},
+			},
+			{
+				Name: "flash_sensors_suspend",
+				Val: ecStressParams{
+					flash:   true,
+					keyscan: false,
+					pd:      false,
+					sensors: true,
+					suspend: true,
+				},
+			},
+			{
+				Name: "keyscan_pd_sensors",
+				Val: ecStressParams{
+					flash:   false,
+					keyscan: true,
+					pd:      true,
+					sensors: true,
+					suspend: false,
+				},
+			},
+			{
+				Name: "keyscan_pd_suspend",
+				Val: ecStressParams{
+					flash:   false,
+					keyscan: true,
+					pd:      true,
+					sensors: false,
+					suspend: true,
+				},
+			},
+			{
+				Name: "keyscan_sensors_suspend",
+				Val: ecStressParams{
+					flash:   false,
+					keyscan: true,
+					pd:      false,
+					sensors: true,
+					suspend: true,
+				},
+			},
+			{
+				Name: "pd_sensors_suspend",
+				Val: ecStressParams{
+					flash:   false,
+					keyscan: false,
+					pd:      true,
+					sensors: true,
+					suspend: true,
+				},
+			},
+			{
+				Name: "flash_keyscan_pd_sensors",
+				Val: ecStressParams{
+					flash:   true,
+					keyscan: true,
+					pd:      true,
+					sensors: true,
+					suspend: false,
+				},
+				ExtraAttr: []string{"group:firmware", "firmware_stress"},
+			},
+			{
+				Name: "flash_keyscan_pd_suspend",
+				Val: ecStressParams{
+					flash:   true,
+					keyscan: true,
+					pd:      true,
+					sensors: false,
+					suspend: true,
+				},
+				ExtraAttr: []string{"group:firmware", "firmware_stress"},
+			},
+			{
+				Name: "flash_keyscan_sensors_suspend",
+				Val: ecStressParams{
+					flash:   true,
+					keyscan: true,
+					pd:      false,
+					sensors: true,
+					suspend: true,
+				},
+				ExtraAttr: []string{"group:firmware", "firmware_stress"},
+			},
+			{
+				Name: "flash_pd_sensors_suspend",
+				Val: ecStressParams{
+					flash:   true,
+					keyscan: false,
+					pd:      true,
+					sensors: true,
+					suspend: true,
+				},
+				ExtraAttr: []string{"group:firmware", "firmware_stress"},
+			},
+			{
+				Name: "keyscan_pd_sensors_suspend",
+				Val: ecStressParams{
+					flash:   false,
+					keyscan: true,
+					pd:      true,
+					sensors: true,
+					suspend: true,
+				},
+				ExtraAttr: []string{"group:firmware", "firmware_stress"},
+			},
+			{
+				Name: "all",
+				Val: ecStressParams{
+					flash:   true,
+					keyscan: true,
+					pd:      true,
+					sensors: true,
+					suspend: true,
+				},
+				ExtraAttr: []string{"group:firmware", "firmware_stress"},
+			},
+		},
+	})
+}
+
+type ecStressParams struct {
+	suspend bool
+	sensors bool
+	keyscan bool
+	flash   bool
+	pd      bool
+}
+
+type cancelfunc func() error
+
+const defaultStressPeriod = 30 * time.Second
+const timeoutPadding = 20 * time.Second
+const iioBasePath = "/sys/bus/iio/devices"
+const crashDir = "/var/spool/crash"
+const keyboardWakeupPath = "/sys/devices/platform/i8042/serio0/power/wakeup"
+
+var watchdogPanicReason = regexp.MustCompile(`(?i)dead6664`)
+var watchdogWarnPanicReason = regexp.MustCompile(`(?i)dead6668`)
+
+// errNoDeviceFound is returned by parser function when no device matches.
+var errNoDeviceFound = errors.New("no Device found")
+
+// errUnknownDeviceFound is returned by parser for unsupported devices, like
+// lid angle or acpi-als light sensor.
+var errUnknownDeviceFound = errors.New("unknown Device found")
+
+// Sensor represents one sensor on the DUT.
+type sensor struct {
+	Path          string
+	Name          string
+	Location      string
+	IioID         uint
+	ID            uint
+	Scale         float64
+	MinFrequency  int
+	MaxFrequency  int
+	OldSysfsStyle bool
+}
+
+// SensorReading is one reading from a sensor.
+type sensorReading struct {
+	// Data contains all values read from the sensor.
+	// Its length depends on the type of sensor being used.
+	Data  []float64
+	ID    uint
+	Flags uint8
+	// Timestamp is the duration from the boot time of the DUT to the time the
+	// reading was taken
+	Timestamp time.Duration
+}
+
+const (
+	// Accel is an accelerometer sensor.
+	accel string = "cros-ec-accel"
+	// Gyro is a gyroscope sensor.
+	gyro string = "cros-ec-gyro"
+	// Mag is a magnetometer sensor.
+	mag string = "cros-ec-mag"
+	// Light is a light or proximity sensor.
+	light string = "cros-ec-light"
+	// Baro is a barometer.
+	baro string = "cros-ec-baro"
+	// Ring is a special sensor for ChromeOS that produces a stream of data from
+	// all sensors on the DUT.
+	ring string = "cros-ec-ring"
+	// Activity is a special sensor for ChromeOS that produces several kind of
+	// activity events by the data of other sensors.
+	activity string = "cros-ec-activity"
+)
+
+const (
+	// Base means that the sensor is located in the base of the DUT.
+	base string = "accel-base"
+	// Lid means that the sensor is located in the lid of the DUT.
+	lid string = "accel-display"
+	// Camera means that the sensor is located near the camera.
+	camera string = "accel-camera"
+	// None means that the sensor location is not known or not applicable.
+	none string = "none"
+)
+
+// cros ec data flags from ec_commands.h
+const (
+	flushFlag      = 0x01
+	timestampFlag  = 0x02
+	wakeupFlag     = 0x04
+	tabletModeFlag = 0x08
+	odrFlag        = 0x10
+)
+
+var sensorNames = map[string]struct{}{
+	accel:    {},
+	baro:     {},
+	gyro:     {},
+	light:    {},
+	mag:      {},
+	ring:     {},
+	activity: {},
+}
+
+var sensorLocations = map[string]struct{}{
+	base:   {},
+	lid:    {},
+	camera: {},
+}
+
+var sensorLegacyLocationConverters = map[string]string{
+	"base":   base,
+	"lid":    lid,
+	"camera": camera,
+}
+
+// readingNames is a map from the type of sensor to the sensor specific part of the
+// sysfs filename for reading raw sensor values. For example the x axis can be read
+// from in_accel_x_raw for an accelerometer and in_anglvel_x_raw for a gyroscope.
+var readingNames = map[string]string{
+	accel: "accel",
+	gyro:  "anglvel",
+	mag:   "magn",
+	light: "illuminance",
+}
+
+func getBoolVar(s *testing.State, varName string) *bool {
+	valueStr, ok := s.Var(varName)
+	if ok {
+		if value, err := strconv.ParseBool(valueStr); err != nil {
+			s.Fatalf("Invalid value for var %v: %v", varName, valueStr)
+		} else {
+			return &value
+		}
+	}
+	return nil
+}
+
+func getIntVar(s *testing.State, varName string) *int {
+	var value int
+	valueStr, ok := s.Var(varName)
+	if ok {
+		value64, err := strconv.ParseInt(valueStr, 10, 32)
+		if err != nil {
+			s.Fatalf("Invalid value for var %v: %v", varName, valueStr)
+		}
+		value = int(value64)
+		return &value
+	}
+	return nil
+}
+
+func startTask(ctx context.Context, timeout time.Duration, task, done func(context.Context) error) cancelfunc {
+	errChan := make(chan error, 1)
+	taskCtx, cancel := context.WithTimeout(ctx, timeout)
+	go func() {
+		defer close(errChan)
+		for {
+			select {
+			case <-taskCtx.Done():
+				if done != nil {
+					errChan <- done(ctx)
+				}
+				return
+			default:
+				if task == nil {
+					continue
+				}
+				if err := task(taskCtx); err != nil {
+					// Ignore errors returned after taskCtx is done
+					if taskCtx.Err() == nil {
+						errChan <- err
+						cancel()
+					}
+				}
+
+			}
+		}
+	}()
+	return func() error {
+		cancel()
+		return <-errChan
+	}
+}
+
+// ****** Utilities for managing background processes on remote DUT *****
+
+func startBackgroundProcess(ctx context.Context, h *firmware.Helper, cmd, outputFile string, timeout time.Duration) (cancelfunc, error) {
+	testing.ContextLogf(ctx, "Starting background process with %v timeout: %q", timeout, cmd)
+	// This starts a background progress with nohup and a timeout
+	wrappedCmd := fmt.Sprintf("{ nohup timeout -s 9 %vs bash -c '%s' </dev/null &> %s & }; echo $!", (timeout + timeoutPadding).Seconds(), cmd, outputFile)
+	finalCmd := h.DUT.Conn().CommandContext(ctx, "bash", "-c", wrappedCmd)
+	out, err := finalCmd.Output()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to start background process")
+	}
+	outStr := strings.TrimSpace(string(out))
+	pid, err := strconv.Atoi(outStr)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to parse pid %s", outStr)
+	}
+	testing.ContextLogf(ctx, "Background process pid: %d", pid)
+
+	return startTask(ctx, timeout, nil,
+		func(backgroundCtx context.Context) error {
+			if err := connectDut(ctx, h); err != nil {
+				return errors.Wrapf(err, "failed to connect to DUT after finishing background process %d", pid)
+			}
+			if rebooted, err := dutRebooted(ctx, h); err != nil {
+				return err
+			} else if rebooted {
+				// No need to kill background process if dut rebooted
+				return nil
+			}
+			if err := killProcess(ctx, h, pid); err != nil {
+				return errors.Wrapf(err, "failed to kill background process %d", pid)
+			}
+			return nil
+		},
+	), nil
+}
+
+func killProcess(ctx context.Context, h *firmware.Helper, pid int) error {
+	testing.ContextLogf(ctx, "Killing background process %d", pid)
+	if running, err := processIsRunning(ctx, h, pid); err != nil {
+		return errors.Wrapf(err, "failed to check if process %d is running", pid)
+	} else if !running {
+		return nil
+	}
+	if err := h.DUT.Conn().CommandContext(ctx, "kill", strconv.Itoa(pid)).Run(); err != nil {
+		if err.Error() == "Process exited with status 1" {
+			// The process probably ended before it was killed, ignore this error
+		} else {
+			testing.ContextLogf(ctx, "Error while attempting to kill process %d: %v", pid, err)
+			return err
+		}
+	}
+	if running, err := processIsRunning(ctx, h, pid); err != nil {
+		return errors.Wrapf(err, "failed to check if process %d is running", pid)
+	} else if !running {
+		return nil
+	}
+	return errors.Errorf("failed to kill process %d", pid)
+}
+
+func processIsRunning(ctx context.Context, h *firmware.Helper, pid int) (bool, error) {
+	err := h.DUT.Conn().CommandContext(ctx, "ps", "-p", strconv.Itoa(pid)).Run()
+	if err == nil {
+		return true, nil
+	}
+	if err.Error() == "Process exited with status 1" {
+		return false, nil
+	}
+	return false, err
+}
+
+// ****** Crash Utility Functions ******
+
+func clearCrashes(ctx context.Context, h *firmware.Helper) error {
+	fs := dutfs.NewClient(h.RPCClient.Conn)
+	// Remove all files under crashesDir
+	files, err := fs.ReadDir(ctx, crashDir)
+	if err != nil {
+		return errors.Wrapf(err, "failed to read crash dir %s", crashDir)
+	}
+	for _, file := range files {
+		testing.ContextLogf(ctx, "removing crash file: %s", file.Name())
+		if err := fs.Remove(ctx, filepath.Join(crashDir, file.Name())); err != nil {
+			return errors.Wrapf(err, "failed to remove crash file %s", file.Name())
+		}
+	}
+	crashes, err := getCrashes(ctx, h)
+	if err != nil {
+		return errors.Wrapf(err, "crash files still exist after removing: %v", crashes)
+	}
+	return nil
+}
+
+func getCrashes(ctx context.Context, h *firmware.Helper) ([]string, error) {
+	fs := dutfs.NewClient(h.RPCClient.Conn)
+	files, err := fs.ReadDir(ctx, crashDir)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to read crash dir %q", crashDir)
+	}
+	var crashes []string
+	for _, file := range files {
+		testing.ContextLogf(ctx, "Found crash file: %s", file.Name())
+		crashes = append(crashes, file.Name())
+	}
+	return crashes, nil
+}
+
+func parseEcCrashes(ctx context.Context, h *firmware.Helper, crashFiles []string) ([]string, error) {
+	fs := dutfs.NewClient(h.RPCClient.Conn)
+	var ecCrashMagicIDs = map[string]string{
+		"dead6660": "div-by-0",
+		"dead6661": "stack-overflow",
+		"dead6662": "pd-crash",
+		"dead6663": "assert",
+		"dead6664": "watchdog",
+		"dead6665": "bad-rng",
+		"dead6666": "pmic-fault",
+		"dead6667": "exit",
+		"dead6668": "watchdog-warning",
+	}
+	var ecCrashes []string
+	for _, crashFile := range crashFiles {
+		if strings.HasSuffix(crashFile, ".eccrash") {
+			data, err := fs.ReadFile(ctx, filepath.Join(crashDir, crashFile))
+			if err != nil {
+				return nil, err
+			}
+			dataStr := string(data)
+			for ecCrashMagicID, crashType := range ecCrashMagicIDs {
+				if strings.Contains(dataStr, ecCrashMagicID) {
+					ecCrashes = append(ecCrashes, crashType)
+					break
+				}
+			}
+		}
+	}
+	return ecCrashes, nil
+}
+
+// ****** Sensor Utility Functions ******
+
+func getSensors(ctx context.Context, h *firmware.Helper) ([]*sensor, error) {
+	var ret []*sensor
+
+	fs := dutfs.NewClient(h.RPCClient.Conn)
+
+	// Some systems will not have any iio devices; this case should not be an error.
+	if _, err := fs.Stat(ctx, iioBasePath); os.IsNotExist(err) {
+		return ret, nil
+	}
+
+	files, err := fs.ReadDir(ctx, iioBasePath)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, file := range files {
+		sensor, err := parseSensor(ctx, fs, file.Name())
+		if err != nil {
+			if !errors.Is(err, errNoDeviceFound) && !errors.Is(err, errUnknownDeviceFound) {
+				testing.ContextLogf(ctx, "Parsing sensor %s FAILED: %+v", file.Name(), err)
+			}
+			continue
+		}
+		testing.ContextLogf(ctx, "Found sensor %s with max frequency %d", sensor.Name, sensor.MaxFrequency)
+		ret = append(ret, sensor)
+	}
+
+	return ret, nil
+}
+
+// ReadAttr reads the device's attr file and returns the value.
+func (d *sensor) ReadAttr(ctx context.Context, fs *dutfs.Client, attr string) (string, error) {
+	a, err := fs.ReadFile(ctx, filepath.Join(iioBasePath, d.Path, attr))
+	if err != nil {
+		return "", errors.Wrapf(err, "error reading attribute %q of %v", attr, d.Path)
+	}
+	return strings.TrimSpace(string(a)), nil
+}
+
+// parseSensor reads the sysfs directory at iioBasePath/devName and returns a
+// Sensor if it is a valid EC sensor.
+func parseSensor(ctx context.Context, fs *dutfs.Client, devName string) (*sensor, error) {
+	var sensor sensor
+	var location string = none
+	var name string
+	var id, minFreq, maxFreq int
+	var scale float64
+	var zeroInt, zeroFrac, minInt, minFrac, maxInt, maxFrac int
+
+	if _, err := fmt.Sscanf(devName, "iio:device%d", &sensor.IioID); err != nil {
+		// Could be a trigger, skip.
+		return nil, errNoDeviceFound
+	}
+
+	sensor.Path = devName
+
+	name, err := sensor.ReadAttr(ctx, fs, "name")
+	if err != nil {
+		return nil, errors.Wrap(err, "sensor has no name")
+	}
+	if _, ok := sensorNames[name]; !ok {
+		return nil, errUnknownDeviceFound
+	}
+
+	if location, err := sensor.ReadAttr(ctx, fs, "label"); err == nil {
+		if _, ok := sensorLocations[location]; !ok {
+			return nil, errors.Errorf("unknown sensor label %q", location)
+		}
+	} else if loc, err := sensor.ReadAttr(ctx, fs, "location"); err == nil {
+		// |location| attribute is for older kernels.
+		var ok bool
+		location, ok = sensorLegacyLocationConverters[loc]
+		if !ok {
+			return nil, errors.Errorf("unknown sensor location %q", loc)
+		}
+	}
+
+	s, err := sensor.ReadAttr(ctx, fs, "scale")
+	if err == nil {
+		scale, err = strconv.ParseFloat(s, 64)
+		if err != nil {
+			return nil, errors.Wrapf(err, "invalid scale %q", s)
+		}
+	}
+
+	i, err := sensor.ReadAttr(ctx, fs, "id")
+	if err == nil {
+		id, err = strconv.Atoi(i)
+		if err != nil {
+			return nil, errors.Wrapf(err, "bad sensor id %q", i)
+		}
+
+		if id < 0 {
+			return nil, errors.Errorf("invalid sensor id %v", id)
+		}
+	}
+
+	_, err = sensor.ReadAttr(ctx, fs, "frequency")
+	sensor.OldSysfsStyle = err == nil
+
+	if sensor.OldSysfsStyle {
+		f, err := sensor.ReadAttr(ctx, fs, "min_frequency")
+		if err == nil {
+			minFreq, err = strconv.Atoi(f)
+			if err != nil {
+				return nil, errors.Wrapf(err, "invalid min frequency %q", f)
+			}
+		}
+
+		f, err = sensor.ReadAttr(ctx, fs, "max_frequency")
+		if err == nil {
+			maxFreq, err = strconv.Atoi(f)
+			if err != nil {
+				return nil, errors.Wrapf(err, "invalid max frequency %q", f)
+			}
+		}
+	} else {
+		f, err := sensor.ReadAttr(ctx, fs, "sampling_frequency_available")
+		if err == nil {
+			_, err = fmt.Sscanf(f, "%d.%06d %d.%06d %d.%06d",
+				&zeroInt, &zeroFrac, &minInt, &minFrac, &maxInt, &maxFrac)
+			if err != nil {
+				return nil, errors.Wrapf(err, "invalid frequency range %q", f)
+			}
+			if zeroInt != 0 || zeroFrac != 0 {
+				return nil, errors.Wrapf(err, "frequency range must start with 0 %q", f)
+			}
+			// In this code, frequency unit is mHz. iio now reports frequency in Hz with
+			// 6 digits of precision.
+			// So 12.5Hz will be printed 12.500000.
+			// Int will be 12, Frac 500000.
+			minFreq = minInt*1000 + minFrac/1000
+			maxFreq = maxInt*1000 + maxFrac/1000
+		}
+	}
+
+	sensor.Name = name
+	sensor.Location = location
+	sensor.ID = uint(id)
+	sensor.Scale = scale
+	sensor.MinFrequency = minFreq
+	sensor.MaxFrequency = maxFreq
+
+	return &sensor, nil
+}
+
+func startSensorStressTask(ctx context.Context, h *firmware.Helper, sn *sensor, timeout time.Duration) (cancelfunc, error) {
+
+	testing.ContextLog(ctx, "Starting sensor stress task")
+	channels := "timestamp"
+	if sn.Name == accel {
+		channels += " accel_x accel_y accel_z"
+	} else if sn.Name == gyro {
+		channels += " anglvel_x anglvel_y anglvel_z"
+	} else if sn.Name == mag {
+		channels += " magn_x magn_y magn_z"
+	} else if sn.Name == ring {
+		return nil, errors.New("Kernel must be compiled with USE=iioservice")
+	} else {
+		// This sensor is not supported by this test, skip.
+		return nil, errors.Errorf("Sensor %s is not supported", sn.Name)
+	}
+
+	iioserviceCmd := fmt.Sprintf("iioservice_simpleclient --frequency=%d.%03d --channels=%s --device_id=%d --samples=%d",
+		sn.MaxFrequency/1000, sn.MaxFrequency%1000, channels, sn.IioID, int(timeout.Seconds()*float64(sn.MaxFrequency)/1000))
+	return startBackgroundProcess(ctx, h, iioserviceCmd, fmt.Sprintf("/tmp/%s.out", sn.Path), timeout)
+}
+
+// ****** Keyboard Utility Functions ******
+
+func enableKeyboardWakeup(ctx context.Context, h *firmware.Helper) error {
+	testing.ContextLog(ctx, "Enabling keyboard wakeup")
+	fs := dutfs.NewClient(h.RPCClient.Conn)
+	return fs.WriteFile(ctx, keyboardWakeupPath, []byte("enabled"), 0644)
+}
+
+func disableKeyboardWakeup(ctx context.Context, h *firmware.Helper) error {
+	testing.ContextLog(ctx, "Disabling keyboard wakeup")
+	fs := dutfs.NewClient(h.RPCClient.Conn)
+	return fs.WriteFile(ctx, keyboardWakeupPath, []byte("disabled"), 0644)
+}
+
+// pressKey presses and holds the 'h' key
+// It doesn't matter which key is pressed for these tests
+func pressKey(ctx context.Context, h *firmware.Helper) error {
+	testing.ContextLog(ctx, "Pressing key")
+	if err := h.Servo.RunECCommand(ctx, "kbpress 3 2 1"); err != nil {
+		return errors.Wrap(err, "failed to press key")
+	}
+	return nil
+}
+
+// releaseKey releases the 'h' key
+func releaseKey(ctx context.Context, h *firmware.Helper) error {
+	testing.ContextLog(ctx, "Releasing key")
+	if err := h.Servo.RunECCommand(ctx, "kbpress 3 2 0"); err != nil {
+		return errors.Wrap(err, "failed to release key")
+	}
+	return nil
+}
+
+func tapPowerBtn(ctx context.Context, h *firmware.Helper) error {
+	testing.ContextLog(ctx, "Pressing pwr button")
+	if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.DurPress); err != nil {
+		return errors.Wrap(err, "failed to press power key on DUT")
+	}
+	return nil
+}
+
+// ****** Flash Utility Functions ******
+
+func startFlashStressTask(ctx context.Context, h *firmware.Helper, timeout time.Duration) (cancelfunc, error) {
+	testing.ContextLog(ctx, "Starting Flash Stress Task")
+	const logOutputPath = "/tmp/ec_stress_flash_read.log"
+	ec := firmware.NewECTool(h.DUT, firmware.ECToolNameMain)
+	flashSize, err := ec.FlashSize(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get EC flash size")
+	}
+	if flashSize <= 0 {
+		return nil, errors.Errorf("flash size %d is invalid", flashSize)
+	}
+	cmd := fmt.Sprintf("while true; do ectool flashread 0 %d /dev/null; done;", flashSize)
+	remoteFlashStressCancel, err := startBackgroundProcess(ctx, h, cmd, logOutputPath, timeout)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to start flash stress task")
+	}
+
+	return startTask(ctx, timeout,
+		nil,
+		func(flashCtx context.Context) error {
+			testing.ContextLog(ctx, "Flash Stress Task Done")
+			if err := connectDut(ctx, h); err != nil {
+				return errors.Wrap(err, "failed to connect to DUT after finishing flash stress task")
+			}
+			if rebooted, err := dutRebooted(ctx, h); err != nil {
+				return err
+			} else if rebooted {
+				// No cleanup or checks needed if dut rebooted
+				return nil
+			}
+			if err := remoteFlashStressCancel(); err != nil {
+				return errors.Wrap(err, "failed to stop flash stress task")
+			}
+			fs := dutfs.NewClient(h.RPCClient.Conn)
+			logOutput, err := fs.ReadFile(ctx, logOutputPath)
+			if err != nil {
+				return errors.Wrap(err, "failed to stop flash stress task")
+			}
+			// "done." will be printed after every complete read of the flash
+			flashReadCount := strings.Count(string(logOutput), "done.")
+			testing.ContextLog(ctx, "Flash Stress Cycle Count: ", flashReadCount)
+			if flashReadCount < 1 {
+				return errors.New("failed to complete a full flash read")
+			}
+			return nil
+		},
+	), nil
+}
+
+// ****** Suspend Utility Functions ******
+
+func startSuspendStressTask(ctx context.Context, h *firmware.Helper, timeout, wakePeriod, suspendPeriod time.Duration) (cancelfunc, error) {
+	testing.ContextLogf(ctx, "Starting Suspend Stress Task with wakePeriod=%v, suspendPeriod=%v", wakePeriod, suspendPeriod)
+	// powerd_dbus_suspend is not used because user input from the keyboard prevents suspend
+	cmd := fmt.Sprintf("while true; do echo +%v > /sys/class/rtc/rtc0/wakealarm; echo mem > /sys/power/state; sleep %v; done;", suspendPeriod.Seconds(), wakePeriod.Seconds())
+	remoteSuspendStressCancel, err := startBackgroundProcess(ctx, h, cmd, "/tmp/ec_suspend_stress.out", timeout)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to start suspend stress task")
+	}
+
+	var suspendCount = 0
+	return startTask(ctx, timeout,
+		func(suspendCtx context.Context) error {
+			if err := h.WaitForPowerStates(suspendCtx, firmware.PowerStateInterval, timeout, "S0ix", "S3"); err != nil {
+				return errors.Wrap(err, "DUT failed to suspend")
+			}
+			suspendCount++
+			testing.ContextLogf(ctx, "DUT suspended #%d", suspendCount)
+			if err := h.WaitForPowerStates(suspendCtx, firmware.PowerStateInterval, timeout, "S0"); err != nil {
+				return errors.Wrap(err, "DUT failed wake")
+			}
+			testing.ContextLogf(ctx, "DUT awake #%d", suspendCount)
+			return nil
+		},
+		func(suspendCtx context.Context) error {
+			testing.ContextLogf(ctx, "Suspend Stress Task Done; %v suspend cycles;", suspendCount)
+			if err := remoteSuspendStressCancel(); err != nil {
+				return err
+			}
+			if suspendCount < 1 {
+				return errors.New("DUT never suspended")
+			}
+			return nil
+		},
+	), nil
+}
+
+func startPdStressTask(ctx context.Context, h *firmware.Helper, timeout time.Duration) (cancelfunc, error) {
+	testing.ContextLog(ctx, "Starting PD Stress Task")
+	// Enabling dual role port (DRP) will cause more stress on EC PD stack
+	if err := h.Servo.ServoSetDualRole(ctx, servo.USBPdDualRoleOn); err != nil {
+		return nil, errors.Wrap(err, "could not enable DRP on Servo")
+	}
+
+	// GoBigSleepLint: Setting DRP on ServoV4 ('usbc_action drp') triggers reconnect
+	// Wait some time to ensure that no operation will occur during test
+	if err := testing.Sleep(ctx, 4*time.Second); err != nil {
+		return nil, errors.Wrap(err, "failed to sleep")
+	}
+
+	if err := h.Servo.SetString(ctx, "servo_uart_regexp", "None"); err != nil {
+		return nil, errors.Wrap(err, "falied to clear Servo UART Regexp")
+	}
+
+	var disconnectCount = 0
+	return startTask(ctx, timeout,
+		func(pdCtx context.Context) error {
+			const repeatCount = 100
+			const sleepPeriod = 0.05
+			if err := h.ServoProxy.RunCommandQuiet(pdCtx, true, "dut-control", "servo_uart_cmd:fakedisconnect 0 0", fmt.Sprintf("sleep:%v", sleepPeriod), fmt.Sprintf("--repeat=%v", repeatCount), fmt.Sprintf("--port=%d", h.ServoProxy.GetPort())); err != nil {
+				return err
+			}
+			disconnectCount += repeatCount
+			testing.ContextLogf(ctx, "PD Disconnect #%v", disconnectCount)
+			return nil
+		},
+		func(pdCtx context.Context) error {
+			testing.ContextLogf(ctx, "PD Stress Task Done; %v Disconnects", disconnectCount)
+			if err := h.Servo.ServoSetDualRole(ctx, servo.USBPdDualRoleOff); err != nil {
+				return errors.Wrap(err, "failed to disable DRP on Servo")
+			}
+			return nil
+		},
+	), nil
+}
+
+func getParams(s *testing.State) ecStressParams {
+	params := s.Param().(ecStressParams)
+	if val := getBoolVar(s, "firmware.EcStress.keyscan"); val != nil {
+		params.keyscan = *val
+	}
+	if val := getBoolVar(s, "firmware.EcStress.suspend"); val != nil {
+		params.suspend = *val
+	}
+	if val := getBoolVar(s, "firmware.EcStress.flash"); val != nil {
+		params.flash = *val
+	}
+	if val := getBoolVar(s, "firmware.EcStress.sensors"); val != nil {
+		params.sensors = *val
+	}
+	if val := getBoolVar(s, "firmware.EcStress.pd"); val != nil {
+		params.pd = *val
+	}
+	return params
+}
+
+var connectDutMutex sync.Mutex
+
+func disconnectDut(ctx context.Context, h *firmware.Helper) error {
+
+	// Calling connectDut/disconnectDut from various go routines can cause issues
+	// Enforce one at a time
+	connectDutMutex.Lock()
+	defer connectDutMutex.Unlock()
+
+	if err := h.CloseRPCConnection(ctx); err != nil {
+		return errors.Wrap(err, "failed to close rpc connection")
+	}
+	if err := h.DUT.Disconnect(ctx); err != nil {
+		return errors.Wrap(err, "failed to disconnect DUT")
+	}
+	return nil
+}
+
+func connectDut(ctx context.Context, h *firmware.Helper) error {
+
+	// Calling connectDut/disconnectDut from various go routines can cause issues
+	// Enforce one at a time
+	connectDutMutex.Lock()
+	defer connectDutMutex.Unlock()
+
+	if err := h.RequireServo(ctx); err != nil {
+		return errors.Wrap(err, "failed to connect to servo")
+	}
+
+	state, err := h.Servo.GetECSystemPowerState(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get EC power state")
+	}
+	if state != "S0" {
+		testing.ContextLogf(ctx, "DUT is power sate %v, attempting to wake", state)
+		tapPowerBtn(ctx, h)
+		if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "S0"); err != nil {
+			return errors.Wrap(err, "failed to wake DUT")
+		}
+	}
+
+	if h.DUT.Connected(ctx) {
+		if err := h.RequireRPCClient(ctx); err != nil {
+			return errors.Wrap(err, "failed to connect rpc client on DUT")
+		}
+		return nil
+	}
+
+	if err := h.CloseRPCConnection(ctx); err != nil {
+		return errors.Wrap(err, "failed to close rpc connection")
+	}
+
+	if err := h.WaitConnect(ctx); err != nil {
+		return errors.Wrap(err, "failed to wait for connect to DUT")
+	}
+
+	if err := h.RequireRPCClient(ctx); err != nil {
+		return errors.Wrap(err, "failed to connect rpc client on DUT")
+	}
+
+	return nil
+}
+
+func dumpParams(ctx context.Context, params ecStressParams, period time.Duration) {
+	testing.ContextLogf(ctx, "Stress Keyscan:\t%v", params.keyscan)
+	testing.ContextLogf(ctx, "Stress Flash:\t%v", params.flash)
+	testing.ContextLogf(ctx, "Stress PD:\t\t%v", params.pd)
+	testing.ContextLogf(ctx, "Stress Sensors:\t%v", params.sensors)
+	testing.ContextLogf(ctx, "Stress Suspend:\t%v", params.suspend)
+	testing.ContextLogf(ctx, "Stress Period:\t%v", period)
+}
+
+var originalBootID string
+
+func dutRebooted(ctx context.Context, h *firmware.Helper) (bool, error) {
+	newBootID, err := h.Reporter.BootID(ctx)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to get boot id")
+	}
+	return originalBootID != newBootID, nil
+}
+
+func EcStress(ctx context.Context, s *testing.State) {
+	var stressPeriod = defaultStressPeriod
+	var err error
+	if val := getIntVar(s, "firmware.EcStress.period"); val != nil {
+		stressPeriod = time.Duration(*val) * time.Second
+	}
+	params := getParams(s)
+	dumpParams(ctx, params, stressPeriod)
+
+	h := s.FixtValue().(*fixture.Value).Helper
+
+	if err := connectDut(ctx, h); err != nil {
+		s.Fatal("Failed to connect to DUT: ", err)
+	}
+
+	if err := h.Servo.RemoveCCDWatchdogs(ctx); err != nil {
+		s.Fatal("Failed to remove ccd watchdog: ", err)
+	}
+
+	// Clear crashes so we know if a new crash occurred
+	if err := clearCrashes(ctx, h); err != nil {
+		s.Fatal("Failed to clear crashes: ", err)
+	}
+
+	// Collect the current boot ID to detect reboots
+	if bootID, err := h.Reporter.BootID(ctx); err != nil {
+		s.Fatal("Failed to get boot id: ", err)
+	} else {
+		originalBootID = bootID
+	}
+
+	var sensorStressTasksCancel []cancelfunc
+	if params.sensors {
+		// Start a sensor stress task for each sesnor
+		sensors, err := getSensors(ctx, h)
+		if err != nil {
+			s.Fatal("Failed getting sensors on DUT: ", err)
+		}
+		if len(sensors) < 1 {
+			s.Fatal("Failed to find any sensors")
+		}
+		for _, sn := range sensors {
+			if sn.Name == "cros-ec-activity" {
+				// Skip this sensor
+				continue
+			}
+			cancel, err := startSensorStressTask(ctx, h, sn, stressPeriod+timeoutPadding)
+			if err != nil {
+				s.Fatalf("Failed to start stress task for sensor %s: %v", sn.Name, err)
+			}
+			defer cancel()
+			sensorStressTasksCancel = append(sensorStressTasksCancel, cancel)
+		}
+	}
+
+	var flashStressTaskCancel cancelfunc
+	if params.flash {
+		flashStressTaskCancel, err = startFlashStressTask(ctx, h, stressPeriod+timeoutPadding)
+		if err != nil {
+			s.Fatal("Failed to start flash stress task: ", err)
+		}
+		defer flashStressTaskCancel()
+	}
+
+	var suspendStressTaskCancel cancelfunc
+	if params.suspend {
+		if params.keyscan {
+			// Keyboard must be suppressed as a wake source
+			if err := disableKeyboardWakeup(ctx, h); err != nil {
+				s.Log("Failed to disable keyboard wakeup source: ", err)
+			} else {
+				defer enableKeyboardWakeup(ctx, h)
+			}
+		}
+		suspendStressTaskCancel, err = startSuspendStressTask(ctx, h, stressPeriod+timeoutPadding, time.Second*7, time.Second*7)
+		if err != nil {
+			s.Fatal("Failed to start suspend stress task: ", err)
+		}
+		defer suspendStressTaskCancel()
+		// Suspend stress causes SSH to disconnect
+		disconnectDut(ctx, h)
+	}
+
+	if params.keyscan {
+		// Press and hold key
+		pressKey(ctx, h)
+		defer releaseKey(ctx, h)
+	}
+
+	var pdStressTaskCancel cancelfunc
+	if params.pd {
+		// GoBigSleepLint: PD stress breaks SSH connection, wait a second to make sure previous requests are done
+		if err := testing.Sleep(ctx, time.Second*1); err != nil {
+			s.Fatal("Failed to sleep during stress period: ", err)
+		}
+		pdStressTaskCancel, err = startPdStressTask(ctx, h, stressPeriod+timeoutPadding)
+		if err != nil {
+			s.Fatal("Failed to start PD stress task: ", err)
+		}
+		defer pdStressTaskCancel()
+		// PD stress causes SSH to disconnect
+		disconnectDut(ctx, h)
+	}
+
+	s.Logf("Waiting %v seconds while EC is being stressed", stressPeriod.Seconds())
+	// GoBigSleepLint: Wait while EC is being stressed
+	if err := testing.Sleep(ctx, stressPeriod); err != nil {
+		s.Fatal("Failed to sleep during stress period: ", err)
+	}
+
+	s.Log("Stress period over, cleaning up")
+
+	if params.pd {
+		if err := pdStressTaskCancel(); err != nil {
+			s.Error("pd stress task failure: ", err)
+		}
+	}
+
+	if params.keyscan {
+		releaseKey(ctx, h)
+	}
+
+	// Remaining cleanup requires DUT to be connected
+	if err := connectDut(ctx, h); err != nil {
+		s.Fatal("Failed to connect to DUT after stress period: ", err)
+	}
+
+	if params.suspend {
+		if err := suspendStressTaskCancel(); err != nil {
+			s.Error("suspend stress task failure: ", err)
+		}
+	}
+
+	if params.flash {
+		if err := flashStressTaskCancel(); err != nil {
+			s.Error("flash stress task failure: ", err)
+		}
+	}
+
+	if params.sensors {
+		for _, sensorTaskCancel := range sensorStressTasksCancel {
+			if err := sensorTaskCancel(); err != nil {
+				s.Error("sensor stress task failure: ", err)
+			}
+		}
+	}
+
+	crashes, err := getCrashes(ctx, h)
+	if err != nil {
+		s.Fatal("Failed to check for crashes after stress period: ", err)
+	}
+
+	for _, crashFile := range crashes {
+		s.Log("crash file detected: ", crashFile)
+	}
+
+	ecCrashes, err := parseEcCrashes(ctx, h, crashes)
+	if err != nil {
+		s.Fatal("Failed to parse ec crashes: ", err)
+	}
+
+	if len(ecCrashes) > 0 {
+		for _, ecCrash := range ecCrashes {
+			s.Error("EC crash detected: ", ecCrash)
+		}
+	}
+
+	if rebooted, err := dutRebooted(ctx, h); err != nil {
+		s.Fatal("Failed to check if dut rebooted: ", err)
+	} else if rebooted {
+		s.Error("DUT rebooted unexpectedly")
+	}
+
+}
