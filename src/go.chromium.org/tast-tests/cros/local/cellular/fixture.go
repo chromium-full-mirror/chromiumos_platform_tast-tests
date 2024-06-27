@@ -207,20 +207,6 @@ func init() {
 		Vars:            []string{"autotest_host_info_labels"},
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name:            "cellularWithFakeDMSEnrolledAndFunctioningSIM",
-		Desc:            "Cellular tests are safe to run that require a functioning SIM and a fake DMS (for managed eSIM profiles) is running",
-		Contacts:        []string{"cros-connectivity@google.com", "jiajunz@google.com"},
-		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		SetUpTimeout:    3 * time.Minute,
-		ResetTimeout:    5 * time.Second,
-		PreTestTimeout:  4 * time.Minute,
-		PostTestTimeout: 3 * time.Minute,
-		TearDownTimeout: 5 * time.Second,
-		Impl:            newCellularFixture().setUseFakeDMS(true).setCheckSIM(true),
-		Parent:          fixture.FakeDMSEnrolled,
-		Vars:            []string{"autotest_host_info_labels"},
-	})
-	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularWithFakeDMSEnrolledAndSIMLockCleared",
 		Desc:            "Cellular tests are safe to run that require a functioning SIM and a fake DMS (for managed eSIM profiles) is running",
 		Contacts:        []string{"cros-connectivity@google.com", "jiajunz@google.com"},
