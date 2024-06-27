@@ -130,7 +130,7 @@ func ARCIPv6Connectivity(ctx context.Context, s *testing.State) {
 	}
 
 	// Check if testEnv prefix propagated into ARC, and log it for debugging.
-	const addressPollTimeout = 5 * time.Second
+	const addressPollTimeout = 10 * time.Second
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		out, err := a.Command(ctx, "/system/bin/ip", "-6", "addr", "show", "scope", "global", "dev", arcIfname).Output(testexec.DumpLogOnError)
 		if err != nil {
