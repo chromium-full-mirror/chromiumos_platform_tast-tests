@@ -454,5 +454,17 @@ func Ti50TCG(ctx context.Context, s *testing.State) {
 
 	s.Log("Starting TCG tests")
 	testSuite := s.Param().(string)
-	th.MustSucceed(b.RunTcgTests(ctx, s.OutDir(), testSuite), "Tests failed.")
+
+	err := b.RunTcgTests(ctx, s.OutDir(), testSuite)
+
+	// The test starts with a GSC power-on reset. If sysinfo shows GSC did a
+	// hard reset, that means GSC crashed during the test.
+	sysinfo, sysinfoErr := i.Sysinfo(ctx)
+	if sysinfoErr != nil {
+		s.Error("Failed to get sysinfo", sysinfoErr)
+	} else if sysinfo.ResetFlags&ti50.GscResetFlagHard != 0 {
+		s.Error("GSC crashed during test")
+	}
+
+	th.MustSucceed(err, "Tests failed.")
 }
