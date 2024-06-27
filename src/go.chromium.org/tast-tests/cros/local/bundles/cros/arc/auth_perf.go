@@ -44,8 +44,6 @@ type testParam struct {
 	// maxErrorBootCount is the number of maximum allowed boot errors.
 	maxErrorBootCount int
 	chromeArgs        []string
-	// Whether to enable multiple workers feature for block devices in crosvm.
-	useMultipleWorkersBlock bool
 	// Whether to enable Perfetto tracing
 	tracingEnabled bool
 }
@@ -123,15 +121,6 @@ func init() {
 				browserType:       browser.TypeAsh,
 				maxErrorBootCount: 3,
 				chromeArgs:        []string{"--enable-features=ArcEnableVirtioBlkForData"},
-			},
-		}, {
-			Name:              "unmanaged_multipleworkers_virtio_blk_vm",
-			ExtraSoftwareDeps: []string{"android_vm"},
-			Val: testParam{
-				browserType:             browser.TypeAsh,
-				maxErrorBootCount:       3,
-				chromeArgs:              []string{"--enable-features=ArcEnableVirtioBlkForData"},
-				useMultipleWorkersBlock: true,
 			},
 		}, {
 			Name:              "unmanaged_vm",
@@ -239,19 +228,6 @@ func AuthPerf(ctx context.Context, s *testing.State) {
 
 	param := s.Param().(testParam)
 	maxErrorBootCount := param.maxErrorBootCount
-
-	arcvmDevConf := ""
-
-	if param.useMultipleWorkersBlock {
-		arcvmDevConf += "BLOCK_MULTIPLE_WORKERS=true\n"
-	}
-
-	if arcvmDevConf != "" {
-		if err := arc.WriteArcvmDevConf(ctx, arcvmDevConf); err != nil {
-			s.Fatal("Failed to set arcvm_dev.conf: ", err)
-		}
-		defer arc.RestoreArcvmDevConf(ctx)
-	}
 
 	var gaia chrome.Option
 	if param.username != "" {
