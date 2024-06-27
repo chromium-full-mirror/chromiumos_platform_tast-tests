@@ -930,6 +930,11 @@ func (h *Helper) SetDUTPower(ctx context.Context, powerOn bool) error {
 			}
 			testing.ContextLogf(ctx, "Set %s:%s", servo.DTSMode, servo.On)
 		}
+
+		if err := h.Servo.ServoCcOff(ctx); err != nil {
+			return errors.Wrap(err, "cannot force CC off on Servo")
+		}
+
 		if err := h.Servo.SetPDRole(ctx, role); err != nil {
 			return errors.Wrap(err, "set pd role")
 		}

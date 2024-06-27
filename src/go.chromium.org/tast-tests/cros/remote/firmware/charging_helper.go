@@ -314,20 +314,25 @@ func PollToSetChargerStatus(ctx context.Context, h *Helper, attachCharger bool) 
 
 	// Verify that DUT charger is in expected state.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		// We do the check before Set Power in every loop so the DUT waits 10s after Set Power before
+		// checking if charger is attached instead of checking immediately after Set.
+		ok, err := h.Servo.GetChargerAttached(ctx)
+		if err != nil {
+			testing.ContextLog(ctx, "GetChargerAttached failed: ", err)
+			err = errors.Wrap(err, "error checking whether charger is attached")
+		} else if ok != attachCharger {
+			testing.ContextLogf(ctx, "GetChargerAttached got %v, want %v", ok, attachCharger)
+			err = errors.Errorf("expected charger attached state: %v", attachCharger)
+		} else {
+			return nil
+		}
+
 		testing.ContextLogf(ctx, "Set servo role to %s", srcOrSnk)
 		if err := h.SetDUTPower(ctx, attachCharger); err != nil {
 			return err // SetDUTPower might return PollBreak, so don't wrap.
 		}
 
-		ok, err := h.Servo.GetChargerAttached(ctx)
-		if err != nil {
-			testing.ContextLog(ctx, "GetChargerAttached failed: ", err)
-			return errors.Wrap(err, "error checking whether charger is attached")
-		} else if ok != attachCharger {
-			testing.ContextLogf(ctx, "GetChargerAttached got %v, want %v", ok, attachCharger)
-			return errors.Errorf("expected charger attached state: %v", attachCharger)
-		}
-		return nil
+		return err
 		// Metaknight takes a worst case of ~120s to notice the charger, so retry for 200s instead.
 		// Include extra time to account for setting charger status with RPM.
 	}, &testing.PollOptions{Timeout: 300 * time.Second, Interval: 10 * time.Second}); err != nil {
