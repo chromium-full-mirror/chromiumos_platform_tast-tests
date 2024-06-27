@@ -7,6 +7,7 @@ package cellular
 import (
 	"context"
 	"fmt"
+	"path/filepath"
 	"regexp"
 	"time"
 
@@ -100,6 +101,17 @@ func UnlockPinLockedSim(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
+	screenRecorder, err := uiauto.NewScreenRecorder(ctx, tconn)
+	if err != nil {
+		s.Log("Failed to create screen recorder: ", err)
+	} else {
+		if screenRecorder.Start(ctx, tconn); err != nil {
+			s.Log("Failed to start screen recorder: ", err)
+		} else {
+			defer screenRecorder.StopAndSaveOnError(cleanupCtx, filepath.Join(s.OutDir(), "record.webm"), s.HasError)
+		}
+	}
+
 	// Opening the mobile data page via ossettings.OpenMobileDataSubpage() will not work if the device does not support multisim and the SIM is locked.
 	settings, err := ossettings.Launch(ctx, tconn)
 	if err != nil {
@@ -122,7 +134,7 @@ func UnlockPinLockedSim(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to open the keyboard: ", err)
 	}
-	defer kb.Close(ctx)
+	defer kb.Close(cleanupCtx)
 
 	if err := ossettings.WaitUntilRefreshProfileCompletes(ctx, tconn); err != nil {
 		s.Fatal("Failed to wait until refresh profile complete: ", err)
