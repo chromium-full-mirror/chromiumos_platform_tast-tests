@@ -39,6 +39,7 @@ func init() {
 		Fixture:      "wwcbStorage",
 		ServiceDeps: []string{
 			"tast.cros.browser.ChromeService",
+			"tast.cros.ui.ChromeUIService",
 		},
 	})
 }
@@ -76,6 +77,9 @@ func CopyAndMoveFilesExternalStorage(ctx context.Context, s *testing.State) {
 
 	dut := s.DUT()
 	fs := dutfs.NewClient(cl.Conn)
+
+	// Dump the UI tree and screenshot on any failure
+	utils.AttachErrorHandlersForUITreeDump(cleanupCtx, s, cl.Conn)
 
 	defer func(ctx context.Context) {
 		if s.HasError() {

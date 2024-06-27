@@ -35,7 +35,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"servo"},
 		Fixture:      "wwcbStorage",
-		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.apps.AppsService"},
+		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.apps.AppsService", "tast.cros.ui.ChromeUIService"},
 		Data:         []string{"sample.txt"},
 		Params: []testing.Param{{
 			Name: "clamshell_mode",
@@ -110,6 +110,9 @@ func ExternalStorageBootWithMediaConnect(ctx context.Context, s *testing.State) 
 	defer cs.Close(cleanupCtx, &empty.Empty{})
 	// GoBigSleepLint: Sleep a little bit to ensure logging in.
 	testing.Sleep(ctx, 5*time.Second)
+
+	// Dump the UI tree and screenshot on any failure
+	utils.AttachErrorHandlersForUITreeDump(cleanupCtx, s, cl.Conn)
 
 	// Launch the Files app.
 	appsSvc := pb.NewAppsServiceClient(cl.Conn)

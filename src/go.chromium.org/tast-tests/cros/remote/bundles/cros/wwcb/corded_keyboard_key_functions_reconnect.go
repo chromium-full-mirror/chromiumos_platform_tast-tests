@@ -31,7 +31,7 @@ func init() {
 		Attr:         []string{"group:wwcb", "group:pasit", "pasit_hid"},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"servo", "USBID"},
-		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.ui.AutomationService", "tast.cros.apps.AppsService", "tast.cros.inputs.KeyboardService"},
+		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.ui.AutomationService", "tast.cros.apps.AppsService", "tast.cros.inputs.KeyboardService", "tast.cros.ui.ChromeUIService"},
 		Params: []testing.Param{{
 			Name:    "clamshell_mode",
 			Fixture: "enableServoAndDisableTabletMode",
@@ -63,6 +63,9 @@ func CordedKeyboardKeyFunctionsReconnect(ctx context.Context, s *testing.State) 
 		s.Fatal("Failed to start chrome: ", err)
 	}
 	defer cs.Close(cleanupCtx, &empty.Empty{})
+
+	// Dump the UI tree and screenshot on any failure
+	utils.AttachErrorHandlersForUITreeDump(cleanupCtx, s, cl.Conn)
 
 	// Initialize fixtures to find the connected devices.
 	if err := utils.InitFixture(ctx); err != nil {

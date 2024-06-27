@@ -105,6 +105,7 @@ func init() {
 			"tast.cros.ui.AutomationService",
 			"tast.cros.wwcb.DisplayService",
 			"tast.cros.inputs.KeyboardService",
+			"tast.cros.ui.ChromeUIService",
 		},
 		Params: []testing.Param{
 			{
@@ -135,6 +136,9 @@ func NightLightViaDock(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
 	defer cs.Close(cleanupCtx, &empty.Empty{})
+
+	// Dump the UI tree and screenshot on any failure
+	utils.AttachErrorHandlersForUITreeDump(cleanupCtx, s, cl.Conn)
 
 	fs := dutfs.NewClient(cl.Conn)
 	displaySvc := wwcb.NewDisplayServiceClient(cl.Conn)

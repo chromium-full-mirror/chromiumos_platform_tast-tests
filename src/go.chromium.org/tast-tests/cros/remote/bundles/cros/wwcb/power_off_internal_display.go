@@ -31,7 +31,7 @@ func init() {
 		Attr:         []string{"group:wwcb", "group:pasit"},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"DockingID", "ExtDispID1", "wwcbIPPowerIp", "newTestItem"},
-		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.wwcb.DisplayService"},
+		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.wwcb.DisplayService", "tast.cros.ui.ChromeUIService"},
 		Data:         []string{"Capabilities.json"},
 		Params: []testing.Param{
 			{
@@ -63,6 +63,8 @@ func PowerOffInternalDisplay(ctx context.Context, s *testing.State) {
 	}
 	defer cs.Close(cleanupCtx, &empty.Empty{})
 
+	// Dump the UI tree and screenshot on any failure
+	utils.AttachErrorHandlersForUITreeDump(cleanupCtx, s, cl.Conn)
 	displaySvc := wwcb.NewDisplayServiceClient(cl.Conn)
 
 	// Initialize fixtures to find the connected devices.

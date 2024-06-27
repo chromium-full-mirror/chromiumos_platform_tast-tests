@@ -29,7 +29,7 @@ func init() {
 		Attr:         []string{"group:wwcb", "group:pasit", "pasit_hid"},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"USBID"},
-		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.ui.AutomationService"},
+		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.ui.AutomationService", "tast.cros.ui.ChromeUIService"},
 	})
 }
 func ShortKeysCombinationsWithEmulator(ctx context.Context, s *testing.State) {
@@ -51,6 +51,10 @@ func ShortKeysCombinationsWithEmulator(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to the RPC service on the DUT after power the chrombook on: ", err)
 	}
 	defer cl.Close(cleanupCtx)
+
+	// Dump the UI tree and screenshot on any failure
+	utils.AttachErrorHandlersForUITreeDump(cleanupCtx, s, cl.Conn)
+
 	// Initialize fixtures to find the connected devices.
 	if err := utils.InitFixture(ctx); err != nil {
 		s.Fatal("Failed to initialize fixtures: ", err)

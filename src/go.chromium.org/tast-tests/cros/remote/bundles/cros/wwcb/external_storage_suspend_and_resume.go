@@ -35,7 +35,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"servo"},
 		Fixture:      "wwcbStorage",
-		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.apps.AppsService"},
+		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.apps.AppsService", "tast.cros.ui.ChromeUIService"},
 		Data:         []string{"sample.txt"},
 		Params: []testing.Param{{
 			Name: "clamshell_mode",
@@ -107,6 +107,9 @@ func ExternalStorageSuspendAndResume(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start chrome after power the chrombook on: ", err)
 	}
 	defer cs.Close(cleanupCtx, &empty.Empty{})
+
+	// Dump the UI tree and screenshot on any failure
+	utils.AttachErrorHandlersForUITreeDump(cleanupCtx, s, cl.Conn)
 
 	if err := utils.SuspendDUT(ctx, s.DUT(), pxy); err != nil {
 		s.Fatal("Failed to perform powerdbus suspend after sign-in account: ", err)

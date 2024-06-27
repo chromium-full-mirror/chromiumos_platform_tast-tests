@@ -40,6 +40,7 @@ func init() {
 			"tast.cros.apps.AppsService",
 			"tast.cros.ui.AutomationService",
 			"tast.cros.wwcb.DisplayService",
+			"tast.cros.ui.ChromeUIService",
 		},
 		Data: []string{"Capabilities.json", utils.VideoFile},
 		Params: []testing.Param{
@@ -71,6 +72,9 @@ func DisconnectDisplayWhileSuspendDUT(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to initialize the RPC service on the DUT: ", err)
 	}
 	defer cl.Close(cleanupCtx)
+
+	// Dump the UI tree and screenshot on any failure
+	utils.AttachErrorHandlersForUITreeDump(cleanupCtx, s, cl.Conn)
 
 	// Start Chrome on the DUT.
 	cs := ui.NewChromeServiceClient(cl.Conn)

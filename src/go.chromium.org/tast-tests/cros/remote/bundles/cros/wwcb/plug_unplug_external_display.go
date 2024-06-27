@@ -39,6 +39,7 @@ func init() {
 			"tast.cros.apps.AppsService",
 			"tast.cros.ui.AutomationService",
 			"tast.cros.wwcb.DisplayService",
+			"tast.cros.ui.ChromeUIService",
 		},
 		Data: []string{"Capabilities.json", utils.VideoFile},
 		Params: []testing.Param{
@@ -72,6 +73,7 @@ func PlugUnplugExternalDisplay(ctx context.Context, s *testing.State) {
 	}
 	defer cs.Close(cleanupCtx, &empty.Empty{})
 
+	utils.AttachErrorHandlersForUITreeDump(cleanupCtx, s, cl.Conn)
 	// Initialize fixtures to find the connected devices.
 	if err := utils.InitFixture(ctx); err != nil {
 		s.Fatal("Failed to initialize the fixture: ", err)

@@ -352,3 +352,15 @@ func DumpUITreeWithScreenshotToFile(ctx context.Context, conn *grpc.ClientConn, 
 	}
 	return nil
 }
+
+// AttachErrorHandlersForUITreeDump attaches the error handlers to the testing.State that will dump the UI Tree whenever there's an error
+func AttachErrorHandlersForUITreeDump(cleanupCtx context.Context, s *testing.State, conn *grpc.ClientConn) {
+	s.AttachErrorHandlers(
+		func(errMsg string) {
+			DumpUITreeWithScreenshotToFile(cleanupCtx, conn, "ui_dump_error")
+		},
+		func(errMsg string) {
+			DumpUITreeWithScreenshotToFile(cleanupCtx, conn, "ui_dump_fatal")
+		},
+	)
+}

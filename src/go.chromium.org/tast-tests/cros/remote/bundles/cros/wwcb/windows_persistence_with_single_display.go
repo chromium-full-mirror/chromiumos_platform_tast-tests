@@ -37,7 +37,7 @@ func init() {
 		Attr:         []string{"group:wwcb", "group:pasit"},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"DockingID", "ExtDispID1", "wwcbIPPowerIp", "newTestItem"},
-		ServiceDeps:  []string{"tast.cros.wwcb.DisplayService", "tast.cros.apps.AppsService", "tast.cros.browser.ChromeService"},
+		ServiceDeps:  []string{"tast.cros.wwcb.DisplayService", "tast.cros.apps.AppsService", "tast.cros.browser.ChromeService", "tast.cros.ui.ChromeUIService"},
 		Data:         []string{"Capabilities.json"},
 		Params: []testing.Param{
 			{
@@ -68,6 +68,9 @@ func WindowsPersistenceWithSingleDisplay(ctx context.Context, s *testing.State) 
 		s.Fatal("Failed to start Chrome: ", err)
 	}
 	defer cs.Close(cleanupCtx, &empty.Empty{})
+
+	// Dump the UI tree and screenshot on any failure
+	utils.AttachErrorHandlersForUITreeDump(cleanupCtx, s, cl.Conn)
 
 	displaySvc := wwcb.NewDisplayServiceClient(cl.Conn)
 	appsSvc := pb.NewAppsServiceClient(cl.Conn)

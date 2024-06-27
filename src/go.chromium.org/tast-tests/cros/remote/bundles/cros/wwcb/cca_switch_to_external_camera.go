@@ -72,14 +72,8 @@ func CCASwitchToExternalCamera(ctx context.Context, s *testing.State) {
 	uiautoSvc := ui.NewAutomationServiceClient(cl.Conn)
 	fs := dutfs.NewClient(cl.Conn)
 
-	s.AttachErrorHandlers(
-		func(errMsg string) {
-			utils.DumpUITreeWithScreenshotToFile(cleanupCtx, cl.Conn, "ui_dump_error")
-		},
-		func(errMsg string) {
-			utils.DumpUITreeWithScreenshotToFile(cleanupCtx, cl.Conn, "ui_dump_fatal")
-		},
-	)
+	// Dump the UI tree and screenshot on any failure
+	utils.AttachErrorHandlersForUITreeDump(cleanupCtx, s, cl.Conn)
 
 	// Because the hardware environment is designed so that the Chromebook’s front camera faces the external monitor.
 	// Open the red image on the external display and check the CCA app preview.

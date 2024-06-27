@@ -35,6 +35,7 @@ func init() {
 			"tast.cros.apps.AppsService",
 			"tast.cros.ui.AutomationService",
 			"tast.cros.inputs.KeyboardService",
+			"tast.cros.ui.ChromeUIService",
 		},
 		Params: []testing.Param{{
 			Name:    "clamshell_mode",
@@ -98,6 +99,9 @@ func CordedKeyboardFunctionalityCheckAfterRebootDUT(ctx context.Context, s *test
 	appsSvc := pb.NewAppsServiceClient(cl.Conn)
 	uiautoSvc := ui.NewAutomationServiceClient(cl.Conn)
 	keyboardSvc := inputspb.NewKeyboardServiceClient(cl.Conn)
+
+	// Dump the UI tree and screenshot on any failure
+	utils.AttachErrorHandlersForUITreeDump(cleanupCtx, s, cl.Conn)
 
 	if err := utils.InitSimulator(ctx); err != nil {
 		s.Fatal("Failed to initialize simulator: ", err)

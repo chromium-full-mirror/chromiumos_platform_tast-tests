@@ -36,7 +36,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"servo"},
 		Fixture:      "wwcbStorage",
-		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.apps.AppsService", "tast.cros.ui.AutomationService"},
+		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.apps.AppsService", "tast.cros.ui.AutomationService", "tast.cros.ui.ChromeUIService"},
 		Data:         []string{"sample.txt"},
 		Params: []testing.Param{{
 			Name: "clamshell_mode",
@@ -123,6 +123,9 @@ func PlugExternalStorageWhileSuspend(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to initialize to chrome login: ", err)
 	}
 	defer cs.Close(cleanupCtx, &empty.Empty{})
+
+	// Dump the UI tree and screenshot on any failure
+	utils.AttachErrorHandlersForUITreeDump(cleanupCtx, s, cl.Conn)
 
 	// Unplug external storage.
 	if err := tf.Helper.DeactivateDeviceByID(ctx, usbID); err != nil {

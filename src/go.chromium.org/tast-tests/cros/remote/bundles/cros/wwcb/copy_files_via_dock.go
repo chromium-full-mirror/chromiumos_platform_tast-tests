@@ -30,7 +30,7 @@ import (
 )
 
 const (
-	sampleTXT = "sample.txt"
+	sampleTXT        = "sample.txt"
 	removableDirPath = "/media/removable"
 )
 
@@ -44,7 +44,7 @@ func init() {
 		Attr:         []string{"group:wwcb", "group:pasit"},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"DockingID", "USBTypeAIDArray", "wwcbIPPowerIp", "newTestItem"},
-		ServiceDeps:  []string{"tast.cros.browser.ChromeService"},
+		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.ui.ChromeUIService"},
 		Data:         []string{"Capabilities.json", sampleTXT},
 		Params: []testing.Param{
 			{
@@ -83,6 +83,9 @@ func CopyFilesViaDock(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
 	defer cs.Close(cleanupCtx, &empty.Empty{})
+
+	// Dump the UI tree and screenshot on any failure
+	utils.AttachErrorHandlersForUITreeDump(cleanupCtx, s, cl.Conn)
 
 	// Open IP power to supply docking power.
 	if err := utils.OpenIppower(ctx, []int{1}); err != nil {

@@ -66,14 +66,8 @@ func CCALaunchWithExternalCamera(ctx context.Context, s *testing.State) {
 	appsSvc := pb.NewAppsServiceClient(cl.Conn)
 	uiautoSvc := ui.NewAutomationServiceClient(cl.Conn)
 
-	s.AttachErrorHandlers(
-		func(errMsg string) {
-			utils.DumpUITreeWithScreenshotToFile(cleanupCtx, cl.Conn, "ui_dump_error")
-		},
-		func(errMsg string) {
-			utils.DumpUITreeWithScreenshotToFile(cleanupCtx, cl.Conn, "ui_dump_fatal")
-		},
-	)
+	// Dump the UI tree and screenshot on any failure
+	utils.AttachErrorHandlersForUITreeDump(cleanupCtx, s, cl.Conn)
 
 	// Check USB webcam can be detect properly (lsusb, dmesg, etc...).
 	builtinDevices, err := utils.DevicesFromV4L2(ctx, dut)

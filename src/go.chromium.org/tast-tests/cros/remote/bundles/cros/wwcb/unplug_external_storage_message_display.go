@@ -35,7 +35,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"servo"},
 		Fixture:      "wwcbStorage",
-		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.apps.AppsService", "tast.cros.ui.AutomationService"},
+		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.apps.AppsService", "tast.cros.ui.AutomationService", "tast.cros.ui.ChromeUIService"},
 		Data:         []string{"sample.txt"},
 		Params: []testing.Param{{
 			Name: "clamshell_mode",
@@ -102,6 +102,10 @@ func UnplugExternalStorageMessageDisplay(ctx context.Context, s *testing.State) 
 		s.Fatal("Failed to login Chrome: ", err)
 	}
 	defer cs.Close(cleanupCtx, &empty.Empty{})
+
+	// Dump the UI tree and screenshot on any failure
+	utils.AttachErrorHandlersForUITreeDump(cleanupCtx, s, cl.Conn)
+
 	// Push file to remote.
 	remoteTextPath, err := utils.PushFileToDUT(ctx, s, dut, "sample.txt", "/tmp")
 	if err != nil {

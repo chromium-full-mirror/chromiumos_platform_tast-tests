@@ -38,7 +38,7 @@ func init() {
 			Name: "tablet_mode",
 			Val:  true,
 		}},
-		ServiceDeps: []string{"tast.cros.browser.ChromeService", "tast.cros.apps.AppsService", "tast.cros.ui.AutomationService"},
+		ServiceDeps: []string{"tast.cros.browser.ChromeService", "tast.cros.apps.AppsService", "tast.cros.ui.AutomationService", "tast.cros.ui.ChromeUIService"},
 	})
 }
 func RaidenSettingsForTypecCable(ctx context.Context, s *testing.State) {
@@ -88,6 +88,9 @@ func RaidenSettingsForTypecCable(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
 	defer cs.Close(cleanupCtx, &empty.Empty{})
+
+	// Dump the UI tree and screenshot on any failure
+	utils.AttachErrorHandlersForUITreeDump(cleanupCtx, s, cl.Conn)
 
 	appsSvc := pb.NewAppsServiceClient(cl.Conn)
 	uiautoSvc := ui.NewAutomationServiceClient(cl.Conn)

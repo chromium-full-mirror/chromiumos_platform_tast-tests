@@ -35,7 +35,7 @@ func init() {
 		Attr:         []string{"group:wwcb", "group:pasit", "pasit_storage"},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"servo"},
-		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.apps.AppsService", "tast.cros.wwcb.ExternalStorageService"},
+		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.apps.AppsService", "tast.cros.wwcb.ExternalStorageService", "tast.cros.ui.ChromeUIService"},
 		Data:         []string{"sample.txt"},
 		Params: []testing.Param{{
 			Name:    "clamshell_mode",
@@ -94,6 +94,9 @@ func ExternalStorageEject(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start Chrome after power the chromebook on: ", err)
 	}
 	defer cs.Close(cleanupCtx, &empty.Empty{})
+
+	// Dump the UI tree and screenshot on any failure
+	utils.AttachErrorHandlersForUITreeDump(cleanupCtx, s, cl.Conn)
 
 	// Retrieve removable block devices' mount points.
 	mountPointsAfterPlugInUSB, err := utils.RemovableMountPoints(ctx, dut)

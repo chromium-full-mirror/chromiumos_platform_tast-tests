@@ -42,6 +42,7 @@ func init() {
 			"tast.cros.apps.AppsService",
 			"tast.cros.ui.AutomationService",
 			"tast.cros.wwcb.DisplayService",
+			"tast.cros.ui.ChromeUIService",
 		},
 		Params: []testing.Param{
 			{
@@ -81,6 +82,9 @@ func ShutdownDUTWithExternalDisplay(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to initailze Chrome: ", err)
 	}
 	defer cs.Close(cleanupCtx, &empty.Empty{})
+
+	// Dump the UI tree and screenshot on any failure
+	utils.AttachErrorHandlersForUITreeDump(cleanupCtx, s, cl.Conn)
 
 	displaySvc := wwcb.NewDisplayServiceClient(cl.Conn)
 	appsSvc := pb.NewAppsServiceClient(cl.Conn)

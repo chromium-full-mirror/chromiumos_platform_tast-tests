@@ -35,7 +35,9 @@ func init() {
 			"tast.cros.browser.ChromeService",
 			"tast.cros.apps.AppsService",
 			"tast.cros.inputs.KeyboardService",
-			"tast.cros.ui.AutomationService"},
+			"tast.cros.ui.AutomationService",
+			"tast.cros.ui.ChromeUIService",
+		},
 		Params: []testing.Param{{
 			Name:    "clamshell_mode",
 			Fixture: "enableServoAndDisableTabletMode",
@@ -86,6 +88,9 @@ func UsbKeyboardFunctionalWithGuest(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start chrome after power the chrombook on: ", err)
 	}
 	defer cs.Close(cleanupCtx, &empty.Empty{})
+
+	// Dump the UI tree and screenshot on any failure
+	utils.AttachErrorHandlersForUITreeDump(cleanupCtx, s, cl.Conn)
 
 	// Plug in the USB devices.
 	if err := utils.ControlFixture(ctx, USBID, "on"); err != nil {

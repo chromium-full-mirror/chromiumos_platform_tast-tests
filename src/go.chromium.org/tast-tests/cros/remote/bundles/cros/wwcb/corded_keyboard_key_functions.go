@@ -31,7 +31,7 @@ func init() {
 		Attr:         []string{"group:wwcb", "group:pasit", "pasit_hid"},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"servo", "USBID"},
-		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.ui.AutomationService", "tast.cros.apps.AppsService", "tast.cros.inputs.KeyboardService"},
+		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.ui.AutomationService", "tast.cros.apps.AppsService", "tast.cros.inputs.KeyboardService", "tast.cros.ui.ChromeUIService"},
 		Params: []testing.Param{{
 			Name:    "clamshell_mode",
 			Fixture: "enableServoAndDisableTabletMode",
@@ -55,6 +55,9 @@ func CordedKeyboardKeyFunctions(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
 	}
 	defer cl.Close(cleanupCtx)
+
+	// Dump the UI tree and screenshot on any failure
+	utils.AttachErrorHandlersForUITreeDump(cleanupCtx, s, cl.Conn)
 
 	// Start Chrome on the DUT.
 	cs := ui.NewChromeServiceClient(cl.Conn)

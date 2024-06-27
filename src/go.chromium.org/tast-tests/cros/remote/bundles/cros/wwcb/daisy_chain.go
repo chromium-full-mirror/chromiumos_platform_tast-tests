@@ -38,6 +38,7 @@ func init() {
 			"tast.cros.apps.AppsService",
 			"tast.cros.ui.AutomationService",
 			"tast.cros.wwcb.DisplayService",
+			"tast.cros.ui.ChromeUIService",
 		},
 		Data: []string{"Capabilities.json", utils.VideoFile},
 	})
@@ -65,6 +66,9 @@ func DaisyChain(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to initialize Chrome: ", err)
 	}
 	defer cs.Close(cleanupCtx, &empty.Empty{})
+
+	// Dump the UI tree and screenshot on any failure
+	utils.AttachErrorHandlersForUITreeDump(cleanupCtx, s, cl.Conn)
 
 	// Push file to remote.
 	dut := s.DUT()

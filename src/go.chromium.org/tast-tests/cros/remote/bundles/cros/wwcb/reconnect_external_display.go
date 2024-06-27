@@ -33,8 +33,15 @@ func init() {
 		Attr:         []string{"group:wwcb", "group:pasit"},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"servo", "DockingID", "ExtDispID1", "wwcbIPPowerIp", "newTestItem"},
-		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.apps.AppsService", "tast.cros.ui.AutomationService", "tast.cros.wwcb.DisplayService", "tast.cros.inputs.KeyboardService"},
-		Data:         []string{"Capabilities.json"},
+		ServiceDeps: []string{
+			"tast.cros.browser.ChromeService",
+			"tast.cros.apps.AppsService",
+			"tast.cros.ui.AutomationService",
+			"tast.cros.wwcb.DisplayService",
+			"tast.cros.inputs.KeyboardService",
+			"tast.cros.ui.ChromeUIService",
+		},
+		Data: []string{"Capabilities.json"},
 		Params: []testing.Param{
 			{
 				Name:      "fast",
@@ -64,6 +71,9 @@ func ReconnectExternalDisplay(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
 	defer cs.Close(cleanupCtx, &empty.Empty{})
+
+	// Dump the UI tree and screenshot on any failure
+	utils.AttachErrorHandlersForUITreeDump(cleanupCtx, s, cl.Conn)
 
 	// Initialize fixtures to find the connected devices.
 	if err := utils.InitFixture(ctx); err != nil {

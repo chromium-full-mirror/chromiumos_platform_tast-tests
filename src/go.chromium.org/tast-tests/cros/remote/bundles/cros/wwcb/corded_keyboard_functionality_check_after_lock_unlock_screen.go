@@ -55,6 +55,7 @@ func init() {
 			"tast.cros.apps.AppsService",
 			"tast.cros.ui.AutomationService",
 			"tast.cros.inputs.KeyboardService",
+			"tast.cros.ui.ChromeUIService",
 		}, Params: []testing.Param{{
 			Name:    "clamshell_mode",
 			Fixture: "enableServoAndDisableTabletMode",
@@ -87,6 +88,9 @@ func CordedKeyboardFunctionalityCheckAfterLockUnlockScreen(ctx context.Context, 
 		s.Fatal("Failed to start Chrome: ", err)
 	}
 	defer cs.Close(cleanupCtx, &empty.Empty{})
+
+	// Dump the UI tree and screenshot on any failure
+	utils.AttachErrorHandlersForUITreeDump(cleanupCtx, s, cl.Conn)
 
 	// Initialize fixtures to find the connected devices.
 	if err := utils.InitFixture(ctx); err != nil {
