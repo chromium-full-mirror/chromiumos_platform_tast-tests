@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/media/imgcmp"
+	"go.chromium.org/tast-tests/cros/local/personalization"
 	"go.chromium.org/tast-tests/cros/local/screenshot"
 	"go.chromium.org/tast-tests/cros/local/wallpaper"
 	"go.chromium.org/tast-tests/cros/local/wallpaper/constants"
@@ -45,7 +46,7 @@ func init() {
 		}},
 		SoftwareDeps: []string{"chrome", "gaia"},
 		Timeout:      5 * time.Minute,
-		Fixture:      "personalizationWithGooglePhotosWallpaper",
+		Fixture:      personalization.GooglePhotosFixture,
 		Params: []testing.Param{{
 			Name: "from_album",
 			Val: dailyRefreshGooglePhotosWallpaperParams{

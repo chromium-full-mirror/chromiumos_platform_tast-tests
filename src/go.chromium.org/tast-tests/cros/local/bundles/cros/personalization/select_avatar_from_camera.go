@@ -44,7 +44,7 @@ func init() {
 		BugComponent: "b:1006527",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", caps.BuiltinCamera, "gaia"},
-		Fixture:      "personalizationWithGaiaLogin",
+		Fixture:      personalization.GaiaFixture,
 		Timeout:      3 * time.Minute,
 		Params: []testing.Param{
 			{

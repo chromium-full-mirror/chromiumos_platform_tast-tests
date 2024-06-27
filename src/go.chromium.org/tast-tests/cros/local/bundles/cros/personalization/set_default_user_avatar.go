@@ -34,12 +34,7 @@ func init() {
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      3 * time.Minute,
-		Params: []testing.Param{{
-			Fixture: "chromeLoggedIn",
-		}, {
-			Name:    "cloud",
-			Fixture: "personalizationDefault",
-		}},
+		Fixture:      personalization.BaseFixture,
 	})
 }
 

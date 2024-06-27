@@ -41,7 +41,7 @@ func init() {
 		}},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,
-		Fixture:      "personalizationWithClamshell",
+		Fixture:      personalization.ClamshellFixture,
 	})
 }
 

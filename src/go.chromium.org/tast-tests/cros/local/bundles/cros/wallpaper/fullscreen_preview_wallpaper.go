@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
+	"go.chromium.org/tast-tests/cros/local/personalization"
 	"go.chromium.org/tast-tests/cros/local/wallpaper"
 	"go.chromium.org/tast-tests/cros/local/wallpaper/constants"
 	"go.chromium.org/tast/core/ctxutil"
@@ -41,7 +42,7 @@ func init() {
 		Data:         []string{constants.LocalWallpaperFilename},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,
-		Fixture:      "chromeLoggedIn",
+		Fixture:      personalization.BaseFixture,
 	})
 }
 

@@ -37,7 +37,7 @@ func init() {
 		}},
 		SoftwareDeps: []string{"chrome", "gaia"},
 		Timeout:      6 * time.Minute,
-		Fixture:      "personalizationScreenSaverClamshell",
+		Fixture:      personalization.GooglePhotosClamshellFixture,
 	})
 }
 

@@ -10,6 +10,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/ambient"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/personalization"
 
 	"go.chromium.org/tast/core/testing"
 )
@@ -33,7 +34,7 @@ func init() {
 		VarDeps:      []string{"ambient.username", "ambient.password"},
 		SoftwareDeps: []string{"chrome", "gaia"},
 		Timeout:      5 * time.Minute,
-		Fixture:      "personalizationScreenSaverClamshell",
+		Fixture:      personalization.GooglePhotosClamshellFixture,
 		Params: []testing.Param{
 			{
 				Name: "google_photos",

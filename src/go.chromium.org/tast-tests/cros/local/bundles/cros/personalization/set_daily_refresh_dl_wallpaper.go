@@ -39,7 +39,7 @@ func init() {
 		}},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      3 * time.Minute,
-		Fixture:      "personalizationWithClamshell",
+		Fixture:      personalization.ClamshellFixture,
 	})
 }
 
@@ -62,7 +62,7 @@ func SetDailyRefreshDLWallpaper(ctx context.Context, s *testing.State) {
 
 	// The test has a dependency of network speed, so we give uiauto.Context ample
 	// time to wait for nodes to load.
-	ui := uiauto.New(tconn).WithTimeout(30 * time.Second)
+	ui := uiauto.New(tconn).WithTimeout(60 * time.Second)
 
 	if err := uiauto.Combine("select Elements collection and enable daily refresh",
 		personalization.OpenPersonalizationHub(ui),

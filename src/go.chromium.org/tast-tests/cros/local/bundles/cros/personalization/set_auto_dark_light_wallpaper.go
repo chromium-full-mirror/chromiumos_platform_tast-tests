@@ -45,7 +45,7 @@ func init() {
 		}},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      3 * time.Minute,
-		Fixture:      "personalizationWithClamshell",
+		Fixture:      personalization.ClamshellFixture,
 		Params: []testing.Param{
 			{
 				Name: "dark",

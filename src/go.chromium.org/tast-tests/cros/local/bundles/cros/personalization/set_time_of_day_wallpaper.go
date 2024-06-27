@@ -37,7 +37,7 @@ func init() {
 		TestBedDeps:  []string{tbdep.Cbx(true)},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,
-		Fixture:      "personalizationWithTimeOfDayFeatureClamshell",
+		Fixture:      personalization.ClamshellFixture,
 	})
 }
 

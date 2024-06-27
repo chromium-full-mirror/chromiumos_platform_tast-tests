@@ -43,7 +43,7 @@ func init() {
 		VarDeps:      []string{"ambient.username", "ambient.password"},
 		SoftwareDeps: []string{"chrome", "gaia"},
 		Timeout:      3 * time.Minute,
-		Fixture:      "personalizationWithGaiaLogin",
+		Fixture:      personalization.GaiaFixture,
 	})
 }
 

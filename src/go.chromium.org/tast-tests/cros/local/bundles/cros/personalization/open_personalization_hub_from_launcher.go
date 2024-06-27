@@ -34,7 +34,7 @@ func init() {
 			Value: "screenplay-e92e2d70-5969-4405-9cdd-c3ecee573f81",
 		}},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "chromeLoggedIn",
+		Fixture:      personalization.BaseFixture,
 	})
 }
 

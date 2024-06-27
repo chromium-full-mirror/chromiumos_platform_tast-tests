@@ -47,7 +47,7 @@ func init() {
 		}},
 		SoftwareDeps: []string{"chrome", "gaia"},
 		Timeout:      5 * time.Minute,
-		Fixture:      "personalizationWithGooglePhotosWallpaper",
+		Fixture:      personalization.GooglePhotosFixture,
 		Params: []testing.Param{{
 			Name: "from_album",
 			Val: setGooglePhotosWallpaperParams{
