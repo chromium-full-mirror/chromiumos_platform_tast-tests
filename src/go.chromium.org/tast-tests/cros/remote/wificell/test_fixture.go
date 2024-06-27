@@ -812,8 +812,8 @@ func (tf *TestFixture) rebootRouter(ctx context.Context, rd *routerData) error {
 		return nil
 	}
 
-	if rd.object.RouterType() != support.OpenWrtT {
-		testing.ContextLogf(ctx, "Skipping reboot of %s: Router is not an OpenWrt router", routerName)
+	if rd.object.RouterType() != support.OpenWrtT && rd.object.RouterType() != support.UbuntuT {
+		testing.ContextLogf(ctx, "Skipping reboot of %s: Router is not an OpenWrt or Ubuntu router", routerName)
 		return nil
 	}
 
