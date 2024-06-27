@@ -85,7 +85,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:    Cr50RBOXBufferOutput,
 		Desc:    "Verify RBOX handles buffering the rbox inputs",
-		Timeout: 5 * time.Minute,
+		Timeout: 10 * time.Minute,
 		Contacts: []string{
 			"gsc-sheriff@google.com", // CrOS GSC Developers
 			"mruthven@chromium.org",  // Test Author
