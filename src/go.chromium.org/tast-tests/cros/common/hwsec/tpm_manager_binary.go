@@ -26,7 +26,7 @@ func newTPMManagerBinary(r CmdRunner) *tpmManagerBinary {
 
 // call is a simple utility that helps to call tpm_manager_client.
 func (c *tpmManagerBinary) call(ctx context.Context, args ...string) ([]byte, error) {
-	return c.runner.Run(ctx, "tpm_manager_client", args...)
+	return c.runner.RunWithCombinedOutput(ctx, "tpm_manager_client", args...)
 }
 
 // defineSpace calls "tpm_manager_client define_space".

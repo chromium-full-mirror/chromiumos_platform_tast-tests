@@ -57,6 +57,10 @@ func hwsecGetTPMStatus(ctx context.Context, s *testing.TestHookState) (*hwsec.No
 }
 
 func hwsecCheckTPMState(ctx context.Context, s *testing.TestHookState, origStatus *hwsec.NonsensitiveStatusInfo, origCounter int) error {
+	if err := s.DUT().Conn().CommandContext(ctx, "which", "tpm_manager_client").Run(); err != nil {
+		return nil
+	}
+
 	r := reporters.New(s.DUT())
 
 	rootPart, err := reporters.RootPartition(ctx, r)

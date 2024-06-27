@@ -12,6 +12,7 @@ package bundlemain
 import (
 	"context"
 	"os"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast/core/bundle"
@@ -177,7 +178,11 @@ func testHookLocal(ctx context.Context, s *testing.TestHookState) func(ctx conte
 	return func(ctx context.Context, s *testing.TestHookState) {
 		// Ensure the TPM is in the expect state after tast finish.
 		if err := hwsecCheckTPMState(ctx, hwsecTpmStatus, hwsecDACounter); err != nil {
-			s.Error("Failed to check TPM state: ", err)
+			if strings.Contains(err.Error(), `exec: "tpm_manager_client": executable file not found`) {
+				s.Log("Ignoring TPM error: ", err)
+			} else {
+				s.Error("Failed to check TPM state: ", err)
+			}
 		}
 
 		if s.HasError() {
