@@ -72,5 +72,5 @@ func CompanionDeviceHostname(dutHost, suffix string) (string, error) {
 
 // IsCloudBot returns true if it running on cloudbots vm.
 func IsCloudBot() bool {
-	return strings.HasPrefix(os.Getenv("SWARMING_BOT_ID"), "cloudbots-")
+	return os.Getenv("CLOUDBOTS_LAB_DOMAIN") != ""
 }
