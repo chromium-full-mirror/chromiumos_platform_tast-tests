@@ -31,6 +31,7 @@ func init() {
 		Contacts: []string{
 			"emaamari@google.com", "team-dent@google.com",
 		},
+		BugComponent:    "b:1279804", // ChromeOS > Software > Commercial (Enterprise) > Identity > Account Manager
 		Impl:            &accountManagerTestFixture{},
 		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
 		ResetTimeout:    resetTimeout,
@@ -42,6 +43,7 @@ func init() {
 		Contacts: []string{
 			"emaamari@google.com", "team-dent@google.com",
 		},
+		BugComponent: "b:1279804", // ChromeOS > Software > Commercial (Enterprise) > Identity > Account Manager
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(
 				chrome.GAIALoginPool(dma.CredsFromPool(accountmanager.AccountPoolVarName)),
@@ -60,6 +62,7 @@ func init() {
 		Contacts: []string{
 			"emaamari@google.com", "team-dent@google.com",
 		},
+		BugComponent:    "b:1279804", // ChromeOS > Software > Commercial (Enterprise) > Identity > Account Manager
 		Impl:            &accountManagerTestFixture{isLacros: true},
 		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
 		ResetTimeout:    resetTimeout,
@@ -113,6 +116,7 @@ func (f *accountManagerTestFixture) SetUp(ctx context.Context, s *testing.FixtSt
 	}
 
 	if f.isLacros {
+		opts = append(opts, chrome.DisableFeatures("SecondaryAccountAllowedInArcPolicy"))
 		var err error
 		opts, err = lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(opts...)).Opts()
 		if err != nil {
