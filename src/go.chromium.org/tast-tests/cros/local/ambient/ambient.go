@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -529,6 +530,11 @@ func SetScreenSaverHelper(ctx context.Context, cr *chrome.Chrome, testParams Tes
 			return errors.Wrap(err, "failed to create clamshell action handler")
 		}
 		defer uiHandler.Close(cleanupCtx)
+
+		// Mute the device to avoid noisiness.
+		if err := crastestclient.Mute(ctx); err != nil {
+			errors.Wrap(err, "failed to mute device")
+		}
 
 		// Open up an arbitrary Youtube video to test "media string". The name of
 		// the media playing should be displayed in the screen saver.
