@@ -21,6 +21,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/bundleutil"
 	"go.chromium.org/tast-tests/cros/common/hwsec"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/crash"
 	"go.chromium.org/tast-tests/cros/local/disk"
 	"go.chromium.org/tast-tests/cros/local/faillog"
@@ -221,6 +222,10 @@ func testHookLocal(ctx context.Context, s *testing.TestHookState) func(ctx conte
 }
 
 func runHookLocal(ctx context.Context) (func(context.Context) error, error) {
+	if err := testexec.CommandContext(ctx, "which", "initctl").Run(); err != nil {
+		return nil, nil
+	}
+
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 

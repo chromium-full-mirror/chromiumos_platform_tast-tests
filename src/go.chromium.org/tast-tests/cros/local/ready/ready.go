@@ -87,6 +87,22 @@ func Wait(ctx context.Context, systemServicesTimeout time.Duration) error {
 		testing.ContextLog(ctx, "Failed to delete core dumps: ", err)
 	}
 
+	if err := testexec.CommandContext(ctx, "which", "initctl").Run(); err != nil {
+		testing.ContextLog(ctx, "Skip waiting for upstart jobs")
+	} else if err := ensureSystemService(ctx, systemServicesTimeout); err != nil {
+		return err
+	}
+
+	testing.ContextLog(ctx, "setting up backup attestation db with fake google keys")
+	if err := hwsec.BackupAttestationDbWithFakeGoogleKeys(ctx); err != nil {
+		testing.ContextLog(ctx, "Failed to backup attestation database: ", err)
+	}
+	testing.ContextLog(ctx, "backup attestation db setup complete")
+
+	return nil
+}
+
+func ensureSystemService(ctx context.Context, systemServicesTimeout time.Duration) error {
 	// If system-services doesn't enter "start/running", everything's probably broken, so give up.
 	testing.ContextLog(ctx, "Ensuring system-services service is running")
 	const systemServicesJob = "system-services"
@@ -164,13 +180,6 @@ func Wait(ctx context.Context, systemServicesTimeout time.Duration) error {
 		}
 	}
 	testing.ContextLog(ctx, "cryptohomed service is running")
-
-	testing.ContextLog(ctx, "setting up backup attestation db with fake google keys")
-	if err := hwsec.BackupAttestationDbWithFakeGoogleKeys(ctx); err != nil {
-		testing.ContextLog(ctx, "Failed to backup attestation database: ", err)
-	}
-	testing.ContextLog(ctx, "backup attestation db setup complete")
-
 	return nil
 }
 
