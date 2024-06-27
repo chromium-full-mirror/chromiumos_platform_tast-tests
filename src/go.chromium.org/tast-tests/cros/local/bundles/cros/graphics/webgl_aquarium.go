@@ -6,13 +6,20 @@ package graphics
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"sync"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast-tests/cros/local/graphics"
 	"go.chromium.org/tast-tests/cros/local/screenshot"
@@ -24,6 +31,7 @@ const (
 	runFishesFor = 30 * time.Second
 	// The time to wait just after stating to play the aquarium so that CPU usage gets stable.
 	stabilizationDuration = 5 * time.Second
+	webGlAquarium         = "webgl_aquarium_static_20221212.tar.zst"
 )
 
 var (
@@ -40,7 +48,8 @@ var (
 )
 
 type aquariumParamData struct {
-	fishCount int
+	fishCount   int
+	browserType browser.Type
 }
 
 func init() {
@@ -56,32 +65,24 @@ func init() {
 		BugComponent: "b:995569",
 		Attr:         []string{"graphics_perbuild", "group:graphics", "group:mainline", "informational"},
 		Timeout:      7 * time.Minute,
+		Data:         []string{webGlAquarium},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
-			Name:    "50_fishes",
-			Fixture: "chromeGraphicsWebContent.webglaquarium_gl",
+			Name:      "50_fishes",
+			Fixture:   "chromeGraphics",
+			ExtraData: []string{webGlAquarium},
 			Val: aquariumParamData{
-				fishCount: 50,
+				fishCount:   50,
+				browserType: browser.TypeAsh,
 			},
 		}, {
 			Name:      "1000_fishes",
-			Fixture:   "chromeGraphicsWebContent.webglaquarium_gl",
+			Fixture:   "chromeGraphics",
+			ExtraData: []string{webGlAquarium},
 			ExtraAttr: []string{"group:crosbolt", "crosbolt_fsi_check"},
 			Val: aquariumParamData{
-				fishCount: 1000,
-			},
-		}, {
-			Name:    "50_fishes_vulkan",
-			Fixture: "chromeGraphicsWebContent.webglaquarium_vulkan",
-			Val: aquariumParamData{
-				fishCount: 50,
-			},
-		}, {
-			Name:      "1000_fishes_vulkan",
-			Fixture:   "chromeGraphicsWebContent.webglaquarium_vulkan",
-			ExtraAttr: []string{"group:crosbolt", "crosbolt_fsi_check"},
-			Val: aquariumParamData{
-				fishCount: 1000,
+				fishCount:   1000,
+				browserType: browser.TypeAsh,
 			},
 		}},
 	})
@@ -105,23 +106,42 @@ func WebGLAquarium(ctx context.Context, s *testing.State) {
 		s.Log("WARNING: Failed to wait until CPU is cooled down: ", err)
 	}
 	numFish := s.Param().(aquariumParamData).fishCount
-
-	br := s.FixtValue().(chrome.HasChrome).Chrome()
-	conn, err := br.NewConnForTarget(ctx, func(t *chrome.Target) bool {
-		return strings.HasSuffix(t.URL, "aquarium.html")
-	})
+	webGlAquariumSrc := s.DataPath(webGlAquarium)
+	webglLocalDir, err := os.MkdirTemp("", "")
 	if err != nil {
-		s.Fatal("Failed to find aquarium.html: ", err)
+		s.Fatal("Failed to created temp dir: ", err)
 	}
+	defer os.RemoveAll(webglLocalDir)
+	if err := testexec.CommandContext(ctx, "tar", "-xf", webGlAquariumSrc, "-C", webglLocalDir).Run(testexec.DumpLogOnError); err != nil {
+		s.Logf("Failed to extract %s: %s", webGlAquarium, err)
+	}
+	server := httptest.NewServer(http.FileServer(http.Dir(webglLocalDir + "/webgl_aquarium_static")))
+	defer server.Close()
+	s.Logf("Extracted %s", webGlAquarium)
+
+	url := path.Join(server.URL, "aquarium.html")
+	browserType := s.Param().(aquariumParamData).browserType
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browserType, url)
+	if err != nil {
+		s.Fatal("Failed to set up browser: ", err)
+	}
+	defer closeBrowser(ctx)
+	defer conn.Close()
+
 	// Dump debug files and take a screenshot if test fails.
 	defer func() {
 		if !s.HasError() {
 			return
 		}
 		path := filepath.Join(s.OutDir(), "screenshot.png")
-		screenshot.CaptureChrome(ctx, br, path)
+		screenshot.CaptureChrome(ctx, cr, path)
 		graphics.DumpGraphicsDebugFiles(ctx, s.OutDir())
 	}()
+
+	if err = conn.WaitForExpr(ctx, "document.readyState === 'complete'"); err != nil {
+		s.Fatal("Page failed to load: ", err)
+	}
 	if err = conn.WaitForExpr(ctx, "gl !== null"); err != nil {
 		s.Fatal("Failed to create gl context: ", err)
 	}
