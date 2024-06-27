@@ -66,15 +66,7 @@ func init() {
 			Name:    "ash",
 			Val:     browser.TypeAsh,
 			Fixture: "driveFsStartedBulkPinningEnabled",
-		},
-		// TODO(b/295775123): Uncomment when LaCrOS is enabled on CBX boards.
-		// {
-		// 	Name:              "lacros",
-		// 	Val:               browser.TypeLacros,
-		// 	ExtraSoftwareDeps: []string{"lacros"},
-		// 	Fixture:           "driveFsStartedWithNativeMessagingAndBulkPinningEnabledLacros",
-		// },
-		},
+		}},
 	})
 }
 

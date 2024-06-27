@@ -191,26 +191,6 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:         "driveFsStartedWithNativeMessagingAndBulkPinningEnabledLacros",
-		Desc:         "Lacros variant of driveFsStartedWithNativeMessagingLacros",
-		Contacts:     []string{"benreich@chromium.org", "chromeos-files-syd@google.com"},
-		BugComponent: "b:167289",
-		Impl: &fixture{
-			enableBulkPinning: true,
-			drivefsOptions: CliArgsMap{
-				CliKeyFeatures: {
-					"switchblade_dss": "true",
-				},
-			}, bt: browser.TypeLacros},
-		SetUpTimeout:    chrome.GAIALoginTimeout + DriveFsSetupAndTearDownTimeout,
-		ResetTimeout:    DriveFsSetupAndTearDownTimeout,
-		TearDownTimeout: chrome.ResetTimeout + DriveFsSetupAndTearDownTimeout,
-		Vars: []string{
-			"drivefs.extensionClientID",
-		},
-	})
-
-	testing.AddFixture(&testing.Fixture{
 		Name:         "driveFsStartedWithOfficeEnabled",
 		Desc:         "Ensures DriveFS is mounted with #upload-to-office enabled",
 		Contacts:     []string{"lucmult@chromium.org", "chromeos-files-syd@google.com"},

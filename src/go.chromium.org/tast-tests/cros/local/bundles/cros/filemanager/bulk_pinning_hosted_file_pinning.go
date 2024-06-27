@@ -56,15 +56,7 @@ func init() {
 		Params: []testing.Param{{
 			Val:     browser.TypeAsh,
 			Fixture: "driveFsStartedBulkPinningEnabled",
-		},
-		// TODO(b/295775123): Uncomment when LaCrOS is enabled on CBX boards.
-		// {
-		// 	Name:              "lacros",
-		// 	Val:               browser.TypeLacros,
-		// 	ExtraSoftwareDeps: []string{"lacros"},
-		// 	Fixture:           "driveFsStartedWithNativeMessagingAndBulkPinningEnabledLacros",
-		// },
-		},
+		}},
 		// TODO(crbug/1112246): Reduce timeout period once push notifications fixed.
 		Timeout: 10 * time.Minute,
 	})
