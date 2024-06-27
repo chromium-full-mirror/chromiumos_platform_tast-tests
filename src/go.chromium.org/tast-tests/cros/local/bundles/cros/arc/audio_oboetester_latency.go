@@ -14,7 +14,8 @@ import (
 	"go.chromium.org/tast-tests/cros/common/android/ui"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/arc"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/arc/audio"
+	"go.chromium.org/tast-tests/cros/local/audio"
+	arcaudio "go.chromium.org/tast-tests/cros/local/bundles/cros/arc/audio"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -93,12 +94,17 @@ func AudioOboetesterLatency(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
+	// Restart CRAS to reset state that might affect this test (e.g. system mute)
+	if _, err := audio.RestartCras(ctx); err != nil {
+		s.Fatal("Failed to restart cras: ", err)
+	}
+
 	// Reserve time to remove input file and unload ALSA loopback at the end of the test.
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, cleanupTime)
 	defer cancel()
 
-	cleanup, err := audio.SetupLoopbackDevice(ctx, cr, s.OutDir(), s.HasError)
+	cleanup, err := arcaudio.SetupLoopbackDevice(ctx, cr, s.OutDir(), s.HasError)
 	if err != nil {
 		s.Fatal("Failed to setup loopback device: ", err)
 	}
