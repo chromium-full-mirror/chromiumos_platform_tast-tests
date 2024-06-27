@@ -277,12 +277,12 @@ func RollbackKernel(ctx context.Context, s *testing.State) {
 			return errors.Wrap(err, "failed to get event log")
 		}
 		// Case insensitive to match with different log messages.
-		re := regexp.MustCompile(`(?i)recovery mode.*0x([a-fA-F0-9]+)`)
+		re := regexp.MustCompile(`((?i)recovery mode|recovery_reason).*0x([a-fA-F0-9]+)`)
 		for _, event := range events {
 			if match := re.FindStringSubmatch(event.Message); match != nil {
-				eventInt, err := strconv.ParseInt(match[1], 16, 64)
+				eventInt, err := strconv.ParseInt(match[2], 16, 64)
 				if err != nil {
-					s.Logf("Failed to parse %s as an int", match[1])
+					s.Logf("Failed to parse %s as an int", match[2])
 				}
 				recModeEvents[eventInt] = event.Message
 			}
