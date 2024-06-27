@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/gtest"
+	"go.chromium.org/tast/core/shutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -30,11 +31,16 @@ func init() {
 
 func AutoFraming(ctx context.Context, s *testing.State) {
 	const gtestExecutable = "auto_framing_test"
-	if _, err := gtest.New(
+	t := gtest.New(
 		gtestExecutable,
 		gtest.Logfile(filepath.Join(s.OutDir(), gtestExecutable+".log")),
-		gtest.ExtraArgs("--test_image_path="+s.DataPath(autoFramingTestImageFile)),
-	).Run(ctx); err != nil {
-		s.Errorf("Failed to run %v: %v", gtestExecutable, err)
+		gtest.ExtraArgs("--test_image_path="+s.DataPath(autoFramingTestImageFile)))
+	args, err := t.Args()
+	if err != nil {
+		s.Fatal("Failed to get GTest execution args: ", err)
+	}
+	s.Log("Running ", shutil.EscapeSlice(args))
+	if _, err := t.Run(ctx); err != nil {
+		s.Fatalf("Failed to run %v: %v", gtestExecutable, err)
 	}
 }
