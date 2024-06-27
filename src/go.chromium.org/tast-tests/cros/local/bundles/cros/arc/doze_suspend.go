@@ -28,8 +28,8 @@ func init() {
 			"cros-vm-technology@google.com",
 			"stevensd@google.com",
 		},
-		// ChromeOS > Platform > Virtualization > VM Technology
-		BugComponent: "b:930563",
+		// ChromeOS > Platform > baseOS > Virtualization
+		BugComponent: "b:882513",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"android_vm", "chrome"},
 		Fixture:      "arcBootedS2Idle",
