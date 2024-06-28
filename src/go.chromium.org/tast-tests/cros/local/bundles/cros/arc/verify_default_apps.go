@@ -27,7 +27,7 @@ func init() {
 		BugComponent: "b:1052117",
 		Attr:         []string{"group:arc", "arc_core", "group:arc-functional", "group:hw_agnostic"},
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 2*time.Minute,
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "gaia"},
 		Fixture:      "arcBootedWithPlayStore",
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_p"},

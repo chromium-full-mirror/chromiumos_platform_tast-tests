@@ -27,13 +27,13 @@ func init() {
 		// ChromeOS > Software > ARC++ > EngProd
 		BugComponent: "b:1052117",
 		Attr:         []string{"group:arc", "arc_core", "group:arc-functional"},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "gaia"},
 		VarDeps:      []string{ui.GaiaPoolDefaultVarName},
 		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_container", "chrome"},
+			ExtraSoftwareDeps: []string{"android_container"},
 		}, {
 			Name:              "vm",
-			ExtraSoftwareDeps: []string{"android_vm", "chrome"},
+			ExtraSoftwareDeps: []string{"android_vm"},
 			ExtraAttr:         []string{"group:hw_agnostic"},
 		}},
 		Timeout: 16 * time.Minute,
