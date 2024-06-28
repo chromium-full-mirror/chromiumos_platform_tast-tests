@@ -86,60 +86,38 @@ func PDProtocol(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to sleep during firmware screen: ", err)
 	}
 
-	// Check the PD state, it should not be PE_SRC_Ready or PD_STATE_SRC_READY
-	// since we cannot be a source in the recovery screen
+	// Check the PD state; it should NOT be source-ready since we cannot be a
+	// source in the recovery screen
 	state, err := h.Servo.GetDUTPDState(ctx)
 	if err != nil {
 		s.Fatal("Failed to check current PD state: ", err)
 	}
-
-	if _, ok := map[string]bool{
-		"PD_STATE_SRC_READY": true,
-		"PE_SRC_Ready":       true,
-	}[state.PEStateName]; ok {
-		s.Fatal("Power state must not be SRC ready")
+	if state.IsSourceReady() {
+		s.Fatalf("Power state must not be source-ready. Got state %q", state.GetStateName())
 	}
 
 	// Set the Servo as a source, renegotiation should start and the PE
 	// state should end up as 'ready'
 	if err := h.Servo.SetPDRole(ctx, servo.PDRoleSrc); err != nil {
-		s.Fatal("Failed to set servoV4 to SNK: ", err)
+		s.Fatal("Failed to set servoV4 to source: ", err)
 	}
 
-	// Poll the PD state, it should end up on PE_SNK_Ready or
-	// PD_STATE_SNK_READY since we can be a sink in recovery mode.
-	// We can poll here, because as soon as the state reaches 'ready', we
-	// can call the test a success.
-	if err := checkPEStates(ctx, s, h, map[string]bool{
-		"PD_STATE_SNK_READY": true,
-		"PE_SNK_Ready":       true,
-		"SNK_READY":          true,
-	}); err != nil {
-		s.Fatal("Failed to verify power state: ", err)
-	}
-}
-
-// checkPEStates checks that the PE state reaches one of the states provided in
-// expectedStates. This function will begin polling the PE state via
-// Servo.GetDUTPDState() and will report an error if the state was never one of
-// the states set to 'true' in the map 'expectedStates'.
-func checkPEStates(ctx context.Context, s *testing.State, h *firmware.Helper, expectedStates map[string]bool) error {
-	// Poll for at least the duration it takes to get to the firmware screen
+	// Poll the DUT PD state, it should end up sink-ready since we can be a sink
+	// in recovery mode. We can poll here, because as soon as the state reaches
+	// 'ready', we can call the test a success.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		// Get the PD state for the port under test
 		state, err := h.Servo.GetDUTPDState(ctx)
 		if err != nil {
 			return err
 		}
-		// Verify that we're in one of the expected states
-		if _, ok := expectedStates[state.PEStateName]; !ok {
-			return errors.Errorf("invalid PE state: %s", state.PEStateName)
+		// Keep polling until we are sink-ready
+		if !state.IsSinkReady() {
+			return errors.Errorf("PD state is not sink-ready: %q", state.GetStateName())
 		}
 		return nil
 	}, &testing.PollOptions{Timeout: h.Config.FirmwareScreen}); err != nil {
 		// We hit the timeout
-		return err
+		s.Fatal("Failed to verify power state: ", err)
 	}
-	// We got to the right state in time
-	return nil
 }

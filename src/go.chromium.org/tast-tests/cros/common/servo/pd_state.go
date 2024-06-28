@@ -300,6 +300,22 @@ func (pdState *PDState) IsPDReady() bool {
 	return pdState.IsSourceReady() || pdState.IsSinkReady()
 }
 
+// GetStateName returns the reported PD state name for a PDC or TCPM DUT. Note: each
+// TCPMVersion has its own set of states. Use this only for logging or like-for-like
+// comparison --never against fixed constants. Use IsSourceReady(), IsSinkReady(),
+// or IsPDReady() helper methods for checking states instead.
+func (pdState *PDState) GetStateName() string {
+	switch pdState.Version {
+	case TCPMv1:
+		fallthrough
+	case TCPMv2:
+		return pdState.PEStateName
+	case PDC:
+		return pdState.PDCState
+	}
+	panic("Unknown TCPM ver")
+}
+
 // Compare verifies that the connection state, power role, and data role between two
 // PDState objects is equivalent and returns nil if so, or an error message.
 func (pdState *PDState) Compare(pdStateAfter *PDState) error {
