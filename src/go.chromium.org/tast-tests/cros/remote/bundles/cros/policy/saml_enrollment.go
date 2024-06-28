@@ -48,6 +48,10 @@ func init() {
 					DMServer: policy.DMServerAlphaURL,
 					PoolID:   tape.EnrollmentSAML,
 				},
+				// TODO b/346725308 Refactor to use utility and known dependency list.
+				ExtraSearchFlags: []*testing.StringPair{{
+					Key: "external_dependency", Value: "DMServerAlpha",
+				}},
 			},
 			{
 				Name: "staging",
@@ -55,6 +59,10 @@ func init() {
 					DMServer: policy.DMServerStagingURL,
 					PoolID:   tape.EnrollmentSAML,
 				},
+				// TODO b/346725308 Refactor to use utility and known dependency list.
+				ExtraSearchFlags: []*testing.StringPair{{
+					Key: "external_dependency", Value: "DMServerStaging",
+				}},
 			},
 		},
 		Vars: []string{

@@ -75,6 +75,10 @@ func init() {
 					dmServerURL:        policy.DMServerAlphaURL,
 					enrollmentTokenVar: enrollmentTokenVarCEU,
 				},
+				// TODO b/346725308 Refactor to use utility and known dependency list.
+				ExtraSearchFlags: []*testing.StringPair{{
+					Key: "external_dependency", Value: "DMServerAlpha",
+				}},
 			},
 		},
 	})

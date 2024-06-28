@@ -52,6 +52,10 @@ func init() {
 					password: "policy.GAIANoLicenseEnrollment.password",
 					dmserver: policy.DMServerAlphaURL,
 				},
+				// TODO b/346725308 Refactor to use utility and known dependency list.
+				ExtraSearchFlags: []*testing.StringPair{{
+					Key: "external_dependency", Value: "DMServerAlpha",
+				}},
 			},
 			{
 				Name: "staging",
@@ -60,6 +64,10 @@ func init() {
 					password: "policy.GAIANoLicenseEnrollment.password",
 					dmserver: policy.DMServerStagingURL,
 				},
+				// TODO b/346725308 Refactor to use utility and known dependency list.
+				ExtraSearchFlags: []*testing.StringPair{{
+					Key: "external_dependency", Value: "DMServerStaging",
+				}},
 			},
 		},
 		Vars: []string{

@@ -68,7 +68,10 @@ func init() {
 					DeviceProvisionToken: "policy.ZeroTouchEnrollment.device_provision_token",
 					CustomerID:           "policy.ZeroTouchEnrollment.customer_id",
 					BatchKey:             "policy.ZeroTouchEnrollment.batch_key",
-				},
+				}, // TODO b/346725308 Refactor to use utility and known dependency list.
+				ExtraSearchFlags: []*testing.StringPair{{
+					Key: "external_dependency", Value: "DMServerAlpha",
+				}},
 			},
 		},
 		Vars: []string{
