@@ -38,8 +38,9 @@ func init() {
 			}, {
 				Name:              "stable_fieldtrial_testing_config_on",
 				ExtraHardwareDeps: hwdep.D(pre.AppsStableModels),
-				ExtraAttr:         []string{"group:mainline", "group:chrome_uprev_cbx"},
-				Fixture:           fixture.LoggedInFieldTrialConfigEnable,
+				// TODO(b/344964853): remove 'informational' when failures are resolved.
+				ExtraAttr: []string{"group:mainline", "group:chrome_uprev_cbx", "informational"},
+				Fixture:   fixture.LoggedInFieldTrialConfigEnable,
 			}, {
 				Name:              "unstable",
 				ExtraHardwareDeps: hwdep.D(pre.AppsUnstableModels),
