@@ -7,7 +7,6 @@ package video
 import (
 	"fmt"
 	"path/filepath"
-	"sort"
 	"strings"
 	"testing"
 	"time"
@@ -148,30 +147,6 @@ func TestPlatformDecodingParams(t *testing.T) {
 		})
 	}
 
-	// Generate VAAPI HEVC tests from bugs.
-	for _, testGroup := range []string{"main"} {
-		bugIDs := make([]string, 0, len(hevcFilesFromBugs[testGroup]))
-		// Sort the keys so the order of output of the tests is deterministic.
-		for k := range hevcFilesFromBugs[testGroup] {
-			bugIDs = append(bugIDs, k)
-		}
-		sort.Strings(bugIDs)
-		for _, bugID := range bugIDs {
-			files := fmt.Sprintf("hevcFilesFromBugs[\"%s\"][\"%s\"]", testGroup, bugID)
-
-			params = append(params, paramData{
-				Name:               fmt.Sprintf("vaapi_hevc_%s_bug_%s", testGroup, bugID),
-				Decoder:            filepath.Join(chrome.BinTestDir, "decode_test"),
-				DecoderArgsBuilder: "platform.HEVCDecodeVAAPIargs",
-				Files:              files,
-				Timeout:            time.Minute,
-				SoftwareDeps:       []string{"vaapi", caps.HWDecodeHEVC},
-				Metadata:           files,
-				Attr:               []string{"graphics_video_hevc", "graphics_perbuild"},
-			})
-		}
-	}
-
 	// Generate VAAPI VP8 tests.
 	for _, testGroup := range []string{"inter", "inter_multi_coeff", "inter_segment", "intra", "intra_multi_coeff", "intra_segment", "comprehensive"} {
 		files := fmt.Sprintf("vp8Files[\"%s\"]", testGroup)
@@ -203,6 +178,91 @@ func TestPlatformDecodingParams(t *testing.T) {
 			Attr:               []string{"graphics_video_h264", "graphics_perbuild"},
 		}
 		params = append(params, param)
+	}
+
+	// Generates VAAPI tests from bugs files
+	for _, bugID := range sortedStringKeys(h264FilesFromBugs) {
+		files := fmt.Sprintf("[]string{\"%s\"}", h264FilesFromBugs[bugID])
+		param := paramData{
+			Name:               fmt.Sprintf("vaapi_h264_files_from_bugs_%s", bugID),
+			Decoder:            filepath.Join(chrome.BinTestDir, "decode_test"),
+			DecoderArgsBuilder: "platform.H264DecodeVAAPIargs",
+			Files:              files,
+			Timeout:            defaultTimeout,
+			SoftwareDeps:       []string{"vaapi", caps.HWDecodeH264},
+			Metadata:           files,
+			Attr:               []string{"graphics_video_h264", "graphics_perbuild"},
+		}
+		params = append(params, param)
+	}
+	for _, bugID := range sortedStringKeys(h2644kFilesFromBugs) {
+		files := fmt.Sprintf("[]string{\"%s\"}", h2644kFilesFromBugs[bugID])
+		param := paramData{
+			Name:               fmt.Sprintf("vaapi_h264_4k_files_from_bugs_%s", bugID),
+			Decoder:            filepath.Join(chrome.BinTestDir, "decode_test"),
+			DecoderArgsBuilder: "platform.H264DecodeVAAPIargs",
+			Files:              files,
+			Timeout:            defaultTimeout,
+			SoftwareDeps:       []string{"vaapi", caps.HWDecodeH264_4K},
+			Metadata:           files,
+			Attr:               []string{"graphics_video_h264", "graphics_perbuild"},
+		}
+		params = append(params, param)
+	}
+	for _, bugID := range sortedStringKeys(vp9FilesFromBugs) {
+		files := fmt.Sprintf("[]string{\"%s\"}", vp9FilesFromBugs[bugID])
+		param := paramData{
+			Name:               fmt.Sprintf("vaapi_vp9_files_from_bugs_%s", bugID),
+			Decoder:            filepath.Join(chrome.BinTestDir, "decode_test"),
+			DecoderArgsBuilder: "platform.VP9DecodeVAAPIargs",
+			Files:              files,
+			Timeout:            defaultTimeout,
+			SoftwareDeps:       []string{"vaapi", caps.HWDecodeVP9},
+			Metadata:           files,
+			Attr:               []string{"graphics_video_vp9", "graphics_perbuild"},
+		}
+		params = append(params, param)
+	}
+	for _, bugID := range sortedStringKeys(av1FilesFromBugs) {
+		files := fmt.Sprintf("[]string{\"%s\"}", av1FilesFromBugs[bugID])
+		param := paramData{
+			Name:               fmt.Sprintf("vaapi_av1_files_from_bugs_%s", bugID),
+			Decoder:            filepath.Join(chrome.BinTestDir, "decode_test"),
+			DecoderArgsBuilder: "platform.AV1DecodeVAAPIargs",
+			Files:              files,
+			Timeout:            defaultTimeout,
+			SoftwareDeps:       []string{"vaapi", caps.HWDecodeAV1},
+			Metadata:           files,
+			Attr:               []string{"graphics_video_av1", "graphics_perbuild"},
+		}
+		params = append(params, param)
+	}
+	for _, bugID := range sortedStringKeys(h265FilesFromBugs) {
+		files := fmt.Sprintf("[]string{\"%s\"}", h265FilesFromBugs[bugID])
+		param := paramData{
+			Name:               fmt.Sprintf("vaapi_hevc_files_from_bugs_%s", bugID),
+			Decoder:            filepath.Join(chrome.BinTestDir, "decode_test"),
+			DecoderArgsBuilder: "platform.HEVCDecodeVAAPIargs",
+			Files:              files,
+			Timeout:            defaultTimeout,
+			SoftwareDeps:       []string{"vaapi", caps.HWDecodeHEVC},
+			Metadata:           files,
+			Attr:               []string{"graphics_video_hevc", "graphics_perbuild"},
+		}
+		params = append(params, param)
+	}
+	for _, bugID := range sortedStringKeys(hevcFilesFromBugs) {
+		files := fmt.Sprintf("hevcFilesFromBugs[\"%s\"]", bugID)
+		params = append(params, paramData{
+			Name:               fmt.Sprintf("vaapi_hevc_files_from_bugs_%s", bugID),
+			Decoder:            filepath.Join(chrome.BinTestDir, "decode_test"),
+			DecoderArgsBuilder: "platform.HEVCDecodeVAAPIargs",
+			Files:              files,
+			Timeout:            time.Minute,
+			SoftwareDeps:       []string{"vaapi", caps.HWDecodeHEVC},
+			Metadata:           files,
+			Attr:               []string{"graphics_video_hevc", "graphics_perbuild"},
+		})
 	}
 
 	// Generate V4L2 tests.
@@ -581,28 +641,89 @@ func TestPlatformDecodingParams(t *testing.T) {
 		params = append(params, param)
 	}
 
-	// Generate ffmpeg HEVC tests from bugs.
-	for _, testGroup := range []string{"main"} {
-		bugIDs := make([]string, 0, len(hevcFilesFromBugs[testGroup]))
-		// Sort the keys so the order of output of the tests is deterministic.
-		for k := range hevcFilesFromBugs[testGroup] {
-			bugIDs = append(bugIDs, k)
+	// Generate ffmpeg VAAPI tests from bugs files
+	for _, bugID := range sortedStringKeys(h264FilesFromBugs) {
+		files := fmt.Sprintf("[]string{\"%s\"}", h264FilesFromBugs[bugID])
+		param := paramData{
+			Name:               fmt.Sprintf("ffmpeg_vaapi_h264_files_from_bugs_%s", bugID),
+			Decoder:            ffmpegMD5Path,
+			DecoderArgsBuilder: "platform.FFMPEGMD5DecodeVAAPIArgs",
+			Files:              files,
+			Timeout:            defaultTimeout,
+			SoftwareDeps:       []string{"vaapi", caps.HWDecodeH264},
+			Metadata:           files,
+			Attr:               []string{"graphics_video_h264", "graphics_perbuild"},
 		}
-		sort.Strings(bugIDs)
-		for _, bugID := range bugIDs {
-			files := fmt.Sprintf("hevcFilesFromBugs[\"%s\"][\"%s\"]", testGroup, bugID)
-
-			params = append(params, paramData{
-				Name:               fmt.Sprintf("ffmpeg_vaapi_hevc_%s_bug_%s", testGroup, bugID),
-				Decoder:            ffmpegMD5Path,
-				DecoderArgsBuilder: "platform.FFMPEGMD5DecodeVAAPIArgs",
-				Files:              files,
-				Timeout:            time.Minute,
-				SoftwareDeps:       []string{"vaapi", caps.HWDecodeHEVC},
-				Metadata:           files,
-				Attr:               []string{"graphics_video_hevc", "graphics_nightly"},
-			})
+		params = append(params, param)
+	}
+	for _, bugID := range sortedStringKeys(h2644kFilesFromBugs) {
+		files := fmt.Sprintf("[]string{\"%s\"}", h2644kFilesFromBugs[bugID])
+		param := paramData{
+			Name:               fmt.Sprintf("ffmpeg_vaapi_h264_4k_files_from_bugs_%s", bugID),
+			Decoder:            ffmpegMD5Path,
+			DecoderArgsBuilder: "platform.FFMPEGMD5DecodeVAAPIArgs",
+			Files:              files,
+			Timeout:            defaultTimeout,
+			SoftwareDeps:       []string{"vaapi", caps.HWDecodeH264_4K},
+			Metadata:           files,
+			Attr:               []string{"graphics_video_h264", "graphics_perbuild"},
 		}
+		params = append(params, param)
+	}
+	for _, bugID := range sortedStringKeys(vp9FilesFromBugs) {
+		files := fmt.Sprintf("[]string{\"%s\"}", vp9FilesFromBugs[bugID])
+		param := paramData{
+			Name:               fmt.Sprintf("ffmpeg_vaapi_vp9_files_from_bugs_%s", bugID),
+			Decoder:            ffmpegMD5Path,
+			DecoderArgsBuilder: "platform.FFMPEGMD5DecodeVAAPIArgs",
+			Files:              files,
+			Timeout:            defaultTimeout,
+			SoftwareDeps:       []string{"vaapi", caps.HWDecodeVP9},
+			Metadata:           files,
+			Attr:               []string{"graphics_video_vp9", "graphics_perbuild"},
+		}
+		params = append(params, param)
+	}
+	for _, bugID := range sortedStringKeys(av1FilesFromBugs) {
+		files := fmt.Sprintf("[]string{\"%s\"}", av1FilesFromBugs[bugID])
+		param := paramData{
+			Name:               fmt.Sprintf("ffmpeg_vaapi_av1_files_from_bugs_%s", bugID),
+			Decoder:            ffmpegMD5Path,
+			DecoderArgsBuilder: "platform.FFMPEGMD5DecodeVAAPIArgs",
+			Files:              files,
+			Timeout:            defaultTimeout,
+			SoftwareDeps:       []string{"vaapi", caps.HWDecodeAV1},
+			Metadata:           files,
+			Attr:               []string{"graphics_video_av1", "graphics_perbuild"},
+		}
+		params = append(params, param)
+	}
+	for _, bugID := range sortedStringKeys(h265FilesFromBugs) {
+		files := fmt.Sprintf("[]string{\"%s\"}", h265FilesFromBugs[bugID])
+		param := paramData{
+			Name:               fmt.Sprintf("ffmpeg_vaapi_hevc_files_from_bugs_%s", bugID),
+			Decoder:            ffmpegMD5Path,
+			DecoderArgsBuilder: "platform.FFMPEGMD5DecodeVAAPIArgs",
+			Files:              files,
+			Timeout:            defaultTimeout,
+			SoftwareDeps:       []string{"vaapi", caps.HWDecodeHEVC},
+			Metadata:           files,
+			Attr:               []string{"graphics_video_hevc", "graphics_perbuild"},
+		}
+		params = append(params, param)
+	}
+	for _, bugID := range sortedStringKeys(hevcFilesFromBugs) {
+		files := fmt.Sprintf("hevcFilesFromBugs[\"%s\"]", bugID)
+		params = append(params, paramData{
+			Name:               fmt.Sprintf("ffmpeg_vaapi_hevc_files_from_bugs_%s", bugID),
+			Decoder:            ffmpegMD5Path,
+			DecoderArgsBuilder: "platform.FFMPEGMD5DecodeVAAPIArgs",
+			Files:              files,
+			Timeout:            time.Minute,
+			SoftwareDeps:       []string{"vaapi", caps.HWDecodeHEVC},
+			Metadata:           files,
+			Attr:               []string{"graphics_video_hevc", "graphics_perbuild"},
+		})
 	}
 
 	code := genparams.Template(t, `{{ range . }}{

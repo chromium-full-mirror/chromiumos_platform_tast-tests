@@ -4,6 +4,11 @@
 
 package video
 
+import (
+	"reflect"
+	"sort"
+)
+
 func appendJSONFiles(videoFiles []string) []string {
 	var tf []string
 	for _, file := range videoFiles {
@@ -11,6 +16,31 @@ func appendJSONFiles(videoFiles []string) []string {
 		tf = append(tf, file+".json")
 	}
 	return tf
+}
+
+// Produces a sorted slice of dict keys. This is needed to iterate maps in order.
+// dict is expected to be a map[string]any (e.g. map[string]string]).
+func sortedStringKeys(dict any) []string {
+	v := reflect.ValueOf(dict)
+	if !v.IsValid() {
+		return []string{}
+	}
+	if v.Kind() != reflect.Map {
+		return []string{}
+	}
+
+	keyValues := v.MapKeys()
+	keys := make([]string, len(keyValues))
+	for i, v := range keyValues {
+		// This will fail if the given map key type is not string.
+		key, ok := v.Interface().(string)
+		if !ok {
+			return nil
+		}
+		keys[i] = key
+	}
+	sort.Strings(keys)
+	return keys
 }
 
 var av1Files = map[string][]string{
@@ -246,6 +276,11 @@ var av1FilmGrainFiles = []string{
 
 var av110BitFilmGrainFiles = []string{
 	"test_vectors/av1/10-bit/av1-1-b10-23-film_grain-50.ivf",
+}
+
+var av1FilesFromBugs = map[string]string{
+	"235138734": "test_vectors/av1/files_from_bugs/b_235138734_test-25fps-one-to-four-tiles.av1.ivf",
+	"346405213": "test_vectors/av1/files_from_bugs/b_346405213_reference-frame-scaling-test.ivf",
 }
 
 var vp8Files = map[string][]string{
@@ -613,45 +648,47 @@ var hevcFiles = map[string][]string{
 
 // b(242711007): These test vectors are failing for VAAPI, but since we have removed
 // them from the hevc Files map, they are no longer being used in V4l2 tests.
-var hevcFilesFromBugs = map[string]map[string][]string{
-	"main": {
-		"239819547": {
-			"test_vectors/hevc/main/BUMPING_A_ericsson_1.hevc",
-			"test_vectors/hevc/main/NoOutPrior_B_Qualcomm_1.hevc",
-		},
-		"239927523": {
-			"test_vectors/hevc/main/NUT_A_ericsson_5.hevc",
-			"test_vectors/hevc/main/RAP_A_docomo_6.hevc",
-			"test_vectors/hevc/main/RAP_B_Bossen_2.hevc",
-		},
-		"239936640": {
-			"test_vectors/hevc/main/SLIST_A_Sony_5.hevc",
-			"test_vectors/hevc/main/SLIST_B_Sony_9.hevc",
-			"test_vectors/hevc/main/SLIST_C_Sony_4.hevc",
-			"test_vectors/hevc/main/SLIST_D_Sony_9.hevc",
-		},
-		"241775056": {
-			"test_vectors/hevc/main/POC_A_Bossen_3.hevc",
-		},
-		"241731431": {
-			"test_vectors/hevc/main/RPS_D_ericsson_6.hevc",
-		},
-		"241733687": {
-			"test_vectors/hevc/main/CONFWIN_A_Sony_1.hevc",
-		},
-		"241727534": {
-			"test_vectors/hevc/main/RPLM_B_qualcomm_4.hevc",
-		},
-		"241731425": {
-			"test_vectors/hevc/main/VPSSPSPPS_A_MainConcept_1.hevc",
-		},
-		"241772308": {
-			"test_vectors/hevc/main/NoOutPrior_A_Qualcomm_1.hevc",
-		},
-		"242708185": {
-			"test_vectors/hevc/main/RPS_C_ericsson_5.hevc",
-		},
+var hevcFilesFromBugs = map[string][]string{
+	"239819547": {
+		"test_vectors/hevc/main/BUMPING_A_ericsson_1.hevc",
+		"test_vectors/hevc/main/NoOutPrior_B_Qualcomm_1.hevc",
 	},
+	"239927523": {
+		"test_vectors/hevc/main/NUT_A_ericsson_5.hevc",
+		"test_vectors/hevc/main/RAP_A_docomo_6.hevc",
+		"test_vectors/hevc/main/RAP_B_Bossen_2.hevc",
+	},
+	"239936640": {
+		"test_vectors/hevc/main/SLIST_A_Sony_5.hevc",
+		"test_vectors/hevc/main/SLIST_B_Sony_9.hevc",
+		"test_vectors/hevc/main/SLIST_C_Sony_4.hevc",
+		"test_vectors/hevc/main/SLIST_D_Sony_9.hevc",
+	},
+	"241775056": {
+		"test_vectors/hevc/main/POC_A_Bossen_3.hevc",
+	},
+	"241731431": {
+		"test_vectors/hevc/main/RPS_D_ericsson_6.hevc",
+	},
+	"241733687": {
+		"test_vectors/hevc/main/CONFWIN_A_Sony_1.hevc",
+	},
+	"241727534": {
+		"test_vectors/hevc/main/RPLM_B_qualcomm_4.hevc",
+	},
+	"241731425": {
+		"test_vectors/hevc/main/VPSSPSPPS_A_MainConcept_1.hevc",
+	},
+	"241772308": {
+		"test_vectors/hevc/main/NoOutPrior_A_Qualcomm_1.hevc",
+	},
+	"242708185": {
+		"test_vectors/hevc/main/RPS_C_ericsson_5.hevc",
+	},
+}
+
+var h265FilesFromBugs = map[string]string{
+	"321622872": "test_vectors/hevc/files_from_bugs/b_321622872__bands_across_screen_4k.hevc",
 }
 
 // These files come from the WebM test streams and are grouped according to
@@ -1192,6 +1229,11 @@ var vp9SVCFiles = []string{
 	"test_vectors/vp9/kSVC/ksvc_3sl_3tl_key100.ivf",
 }
 
+var vp9FilesFromBugs = map[string]string{
+	"177839888": "test_vectors/vp9/files_from_bugs/b_177839888__rk3399_vp9_artifacts_with_video_decoder_japanews24.ivf",
+	"251040563": "test_vectors/vp9/files_from_bugs/b_251040563_webrtc_libvpx.vp9.ivf",
+}
+
 var h264Files = map[string][]string{
 	"baseline": {
 		"test_vectors/h264/baseline/AUD_MW_E.h264",
@@ -1368,6 +1410,19 @@ var h264InvalidBitstreams = []string{
 	"test_vectors/h264/files_from_bugs/b_277849540__malformed_h264_vlct_16x16.h264",
 	"test_vectors/h264/files_from_bugs/b_277849540__malformed_h264_vlct_4x4.h264",
 	"test_vectors/h264/files_from_bugs/b_277849540__malformed_h264_vlct_8x8.h264",
+}
+
+var h264FilesFromBugs = map[string]string{
+	"149068426": "test_vectors/h264/files_from_bugs/b_149068426_invalid_video_layout_mtk_8183_with_direct_videodecoder.h264",
+	"172838252": "test_vectors/h264/files_from_bugs/b_172838252_pixelated_video_on_rk3399.h264",
+	"174733646": "test_vectors/h264/files_from_bugs/b_174733646_video_with_out_of_order_frames_mtk_8173.h264",
+	"210895987": "test_vectors/h264/files_from_bugs/b_210895987_still-colors-360p.h264",
+	"276358257": "test_vectors/h264/files_from_bugs/b_276358257__amd_gpu_gen3_lockup.h264",
+	"299320432": "test_vectors/h264/files_from_bugs/b_299320432__amd_skyrim_system_hang.h264",
+}
+
+var h2644kFilesFromBugs = map[string]string{
+	"22704778": "test_vectors/h264/files_from_bugs/b_227047778_mtk_8195_artifacts.h264",
 }
 
 // Software Q08C conversion is expensive, so we only run this on a representative sub-sample of our test vectors.

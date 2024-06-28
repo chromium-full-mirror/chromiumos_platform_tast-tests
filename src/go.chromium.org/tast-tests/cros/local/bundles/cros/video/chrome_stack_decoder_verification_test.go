@@ -15,32 +15,6 @@ import (
 
 // To regenerate the test parameters by running the following in a chroot:
 // TAST_GENERATE_UPDATE=1 ~/chromiumos/src/platform/tast/tools/go.sh test -count=1 go.chromium.org/tast-tests/cros/local/bundles/cros/video
-var h264FilesFromBugs = map[string]string{
-	"149068426": "test_vectors/h264/files_from_bugs/b_149068426_invalid_video_layout_mtk_8183_with_direct_videodecoder.h264",
-	"172838252": "test_vectors/h264/files_from_bugs/b_172838252_pixelated_video_on_rk3399.h264",
-	"174733646": "test_vectors/h264/files_from_bugs/b_174733646_video_with_out_of_order_frames_mtk_8173.h264",
-	"210895987": "test_vectors/h264/files_from_bugs/b_210895987_still-colors-360p.h264",
-	"276358257": "test_vectors/h264/files_from_bugs/b_276358257__amd_gpu_gen3_lockup.h264",
-	"299320432": "test_vectors/h264/files_from_bugs/b_299320432__amd_skyrim_system_hang.h264",
-}
-
-var h2644kFilesFromBugs = map[string]string{
-	"22704778": "test_vectors/h264/files_from_bugs/b_227047778_mtk_8195_artifacts.h264",
-}
-
-var vp9FilesFromBugs = map[string]string{
-	"177839888": "test_vectors/vp9/files_from_bugs/b_177839888__rk3399_vp9_artifacts_with_video_decoder_japanews24.ivf",
-	"251040563": "test_vectors/vp9/files_from_bugs/b_251040563_webrtc_libvpx.vp9.ivf",
-}
-
-var av1FilesFromBugs = map[string]string{
-	"235138734": "test_vectors/av1/files_from_bugs/b_235138734_test-25fps-one-to-four-tiles.av1.ivf",
-	"346405213": "test_vectors/av1/files_from_bugs/b_346405213_reference-frame-scaling-test.ivf",
-}
-
-var h265FilesFromBugs = map[string]string{
-	"321622872": "test_vectors/hevc/files_from_bugs/b_321622872__bands_across_screen_4k.hevc",
-}
 
 type paramData struct {
 	Name         string
@@ -77,13 +51,7 @@ func genCombinedDeps(format string, deps []string) string {
 // genFilesFromBugs generates multiple test cases for each files in the filesFromBugs map. The key of filesFromBugs would be appended in the test name and value will be assigned to VideoFiles.
 func genFilesFromBugs(defaultParam paramData, filesFromBugs map[string]string) []paramData {
 	var result []paramData
-	// Iterate the map in order
-	keys := make([]string, 0)
-	for k := range filesFromBugs {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	for _, key := range keys {
+	for _, key := range sortedStringKeys(filesFromBugs) {
 		data := defaultParam
 		data.Name = data.Name + "_" + key
 		data.VideoFiles = "[]string{\"" + filesFromBugs[key] + "\"}"
@@ -485,6 +453,18 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 			ValidatorType:   "decoding.MD5",
 			EnabledFeatures: param.EnabledFeatures,
 		}, h265FilesFromBugs)...)
+
+		for _, bugID := range sortedStringKeys(hevcFilesFromBugs) {
+			params = append(params, []paramData{{
+				Name:            fmt.Sprintf("%shevc_files_from_bugs_%s", testGroup, bugID),
+				Attr:            perBuildAttrs,
+				HardwareDeps:    genCombinedDeps("hwdep.D(%s)", []string{param.HardwareDeps}),
+				SoftwareDeps:    genCombinedDeps("[]string{%s}", []string{"caps.HWDecodeHEVC", param.SoftwareDeps}),
+				VideoFiles:      fmt.Sprintf("hevcFilesFromBugs[\"%s\"]", bugID),
+				ValidatorType:   "decoding.MD5",
+				EnabledFeatures: param.EnabledFeatures,
+			}}...)
+		}
 	}
 
 	code := genparams.Template(t, `{{ range . }}{
