@@ -253,7 +253,7 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 			Attr:            perBuildAttrs,
 			HardwareDeps:    genCombinedDeps("hwdep.D(%s)", []string{param.HardwareDeps}),
 			SoftwareDeps:    genCombinedDeps("[]string{%s}", []string{"caps.HWDecodeVP8", param.SoftwareDeps}),
-			VideoFiles:      "vp8ComprehensiveFiles",
+			VideoFiles:      "vp8Files[\"comprehensive\"]",
 			ValidatorType:   "decoding.MD5",
 			EnabledFeatures: param.EnabledFeatures,
 		}, {
@@ -261,7 +261,7 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 			Attr:            perBuildAttrs,
 			HardwareDeps:    genCombinedDeps("hwdep.D(%s)", []string{param.HardwareDeps}),
 			SoftwareDeps:    genCombinedDeps("[]string{%s}", []string{"caps.HWDecodeVP8", param.SoftwareDeps}),
-			VideoFiles:      "vp8InterFiles",
+			VideoFiles:      "vp8Files[\"inter\"]",
 			ValidatorType:   "decoding.MD5",
 			EnabledFeatures: param.EnabledFeatures,
 		}, {
@@ -269,7 +269,7 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 			Attr:            perBuildAttrs,
 			HardwareDeps:    genCombinedDeps("hwdep.D(%s)", []string{param.HardwareDeps}),
 			SoftwareDeps:    genCombinedDeps("[]string{%s}", []string{"caps.HWDecodeVP8", param.SoftwareDeps}),
-			VideoFiles:      "vp8InterMultiCoeffFiles",
+			VideoFiles:      "vp8Files[\"inter_multi_coeff\"]",
 			ValidatorType:   "decoding.MD5",
 			EnabledFeatures: param.EnabledFeatures,
 		}, {
@@ -277,7 +277,7 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 			Attr:            perBuildAttrs,
 			HardwareDeps:    genCombinedDeps("hwdep.D(%s)", []string{param.HardwareDeps}),
 			SoftwareDeps:    genCombinedDeps("[]string{%s}", []string{"caps.HWDecodeVP8", param.SoftwareDeps}),
-			VideoFiles:      "vp8InterSegmentFiles",
+			VideoFiles:      "vp8Files[\"inter_segment\"]",
 			ValidatorType:   "decoding.MD5",
 			EnabledFeatures: param.EnabledFeatures,
 		}, {
@@ -285,7 +285,7 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 			Attr:            perBuildAttrs,
 			HardwareDeps:    genCombinedDeps("hwdep.D(%s)", []string{param.HardwareDeps}),
 			SoftwareDeps:    genCombinedDeps("[]string{%s}", []string{"caps.HWDecodeVP8", param.SoftwareDeps}),
-			VideoFiles:      "vp8IntraFiles",
+			VideoFiles:      "vp8Files[\"intra\"]",
 			ValidatorType:   "decoding.MD5",
 			EnabledFeatures: param.EnabledFeatures,
 		}, {
@@ -293,7 +293,7 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 			Attr:            perBuildAttrs,
 			HardwareDeps:    genCombinedDeps("hwdep.D(%s)", []string{param.HardwareDeps}),
 			SoftwareDeps:    genCombinedDeps("[]string{%s}", []string{"caps.HWDecodeVP8", param.SoftwareDeps}),
-			VideoFiles:      "vp8IntraMultiCoeffSegmentFiles",
+			VideoFiles:      "vp8Files[\"intra_multi_coeff\"]",
 			ValidatorType:   "decoding.MD5",
 			EnabledFeatures: param.EnabledFeatures,
 		}, {
@@ -301,7 +301,7 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 			Attr:            perBuildAttrs,
 			HardwareDeps:    genCombinedDeps("hwdep.D(%s)", []string{param.HardwareDeps}),
 			SoftwareDeps:    genCombinedDeps("[]string{%s}", []string{"caps.HWDecodeVP8", param.SoftwareDeps}),
-			VideoFiles:      "vp8IntraSegmentFiles",
+			VideoFiles:      "vp8Files[\"intra_segment\"]",
 			ValidatorType:   "decoding.MD5",
 			EnabledFeatures: param.EnabledFeatures,
 		}, {
