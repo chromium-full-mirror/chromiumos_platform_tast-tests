@@ -21,6 +21,9 @@ import (
 // A relatively large timeout for fixture stability.
 const ehideTimeout = 1 * time.Minute
 
+// The timeout to wait for connection at the beginning.
+const waitConnectTimeout = 30 * time.Second
+
 // Set the connection timeout to a relatively long time (15 seconds) so that we
 // can make sure that the connection can be established within the time limit
 // if SSH is ready.
@@ -55,6 +58,20 @@ type ehideFixture struct {
 
 func (f *ehideFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	d := s.DUT()
+
+	// Since the SSH connection is not guaranteed at the remote fixture setup
+	// (b/239013478), make sure the DUT is connected at the beginning.
+	if err := d.Health(ctx); err != nil {
+		s.Log("Failed DUT connection check at the beginning: ", err)
+
+		// Try to reconnect to the DUT.
+		waitConnectCtx, waitConnectCancel := context.WithTimeout(ctx, waitConnectTimeout)
+		defer waitConnectCancel()
+		if err := d.WaitConnect(waitConnectCtx); err != nil {
+			s.Fatal("Failed to wait for DUT connection at the beginning: ", err)
+		}
+	}
+
 	startErr := d.Conn().CommandContext(ctx, ehideconst.EhidePath, "start").Run(testexec.DumpLogOnError)
 	if startErr != nil && strings.Contains(startErr.Error(), "Process exited with status") {
 		// "Process exited with status" indicates that ehide has exited due to
