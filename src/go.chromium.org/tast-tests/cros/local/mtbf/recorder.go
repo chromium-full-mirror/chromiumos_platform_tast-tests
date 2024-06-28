@@ -30,7 +30,7 @@ type Recorder struct {
 // then starts recording it.
 func NewRecorder(ctx context.Context) (*Recorder, error) {
 	sources := []perf.TimelineDatasource{
-		pm.NewCPUUsageSource("CPU"),
+		pm.NewCPUUsageSource("CPU", true /*reportCPUUsage*/),
 		perfSrc.NewThermalDataSource(),
 		perfSrc.NewMemoryDataSource("RAM.Absolute", "RAM.Diff.Absolute", "RAM"),
 	}

@@ -39,7 +39,7 @@ func TestMetrics(classes ...MetricClass) []perf.TimelineDatasource {
 	for _, class := range classes {
 		switch class {
 		case CPUFreqClass:
-			metrics = append(metrics, NewCPUUsageSource("cpu_freq"))
+			metrics = append(metrics, NewCPUUsageSource("cpu_freq", false))
 		case CPUIdleStateClass:
 			metrics = append(metrics, NewCpuidleStateMetrics())
 		case RAPLPowerClass:
@@ -72,7 +72,7 @@ func TestMetrics(classes ...MetricClass) []perf.TimelineDatasource {
 // for power metrics without battery metrics.
 func TestMetricsWithoutBatteryInfo() []perf.TimelineDatasource {
 	return []perf.TimelineDatasource{
-		NewCPUUsageSource("cpu_freq"),
+		NewCPUUsageSource("cpu_freq", false),
 		NewCpuidleStateMetrics(),
 		NewRAPLPowerMetrics(),
 		NewSysfsThermalMetrics(),

@@ -49,6 +49,9 @@ type CPUUsageSource struct {
 	cpuCapacities map[string]float64
 	// `totalCPUCapacity` is the sum of all CPUs' capacities.
 	totalCPUCapacity float64
+	// reportCPUUsage indicates whether this data source should include per-cpu
+	// usage metrics.
+	reportCPUUsage bool
 }
 
 func cpuUtilization(prev, time cpu.TimesStat) float64 {
@@ -175,7 +178,7 @@ func diffTimeInState(cur, prev map[int64]float64) (map[int64]float64, error) {
 
 // NewCPUUsageSource creates a new instance of CPUUsageSource for the given
 // metric name.
-func NewCPUUsageSource(name string) *CPUUsageSource {
+func NewCPUUsageSource(name string, reportCPUUsage bool) *CPUUsageSource {
 	if name == "" {
 		name = "CPUUsage"
 	}
@@ -187,6 +190,7 @@ func NewCPUUsageSource(name string) *CPUUsageSource {
 		cpuMaxFreqs:      map[string]float64{},
 		cpuCapacities:    map[string]float64{},
 		totalCPUCapacity: 0,
+		reportCPUUsage:   reportCPUUsage,
 	}
 }
 
@@ -243,14 +247,16 @@ func (s *CPUUsageSource) Snapshot(ctx context.Context, values *perf.Values) erro
 			prevTime = cpu.TimesStat{}
 		}
 		percent = cpuUtilization(prevTime, time)
-		values.Append(perf.Metric{
-			Name:      s.name + "." + time.CPU,
-			Variant:   "usage",
-			Multiple:  true,
-			Unit:      power.CPUUsageMetricTypeUnit,
-			Direction: perf.SmallerIsBetter,
-			Interval:  s.intervalName,
-		}, percent)
+		if s.reportCPUUsage {
+			values.Append(perf.Metric{
+				Name:      s.name + "." + time.CPU,
+				Variant:   "usage",
+				Multiple:  true,
+				Unit:      power.CPUUsageMetricTypeUnit,
+				Direction: perf.SmallerIsBetter,
+				Interval:  s.intervalName,
+			}, percent)
+		}
 		totalPercent += percent
 		s.prevStats[time.CPU] = time
 		freq, err := cpuFreq(time.CPU, "cur")
@@ -325,24 +331,24 @@ func (s *CPUUsageSource) Snapshot(ctx context.Context, values *perf.Values) erro
 	}
 
 	// Only record ARM CPU usage on ARM devices.
-	if s.totalCPUCapacity != 0 && armCPUUsage != 0.0 {
+	if s.reportCPUUsage {
+		if s.totalCPUCapacity != 0 && armCPUUsage != 0.0 {
+			values.Append(perf.Metric{
+				Name:      s.name + ".ARM",
+				Multiple:  true,
+				Unit:      power.CPUUsageMetricTypeUnit,
+				Direction: perf.SmallerIsBetter,
+				Interval:  s.intervalName,
+			}, 100*armCPUUsage/s.totalCPUCapacity)
+		}
 		values.Append(perf.Metric{
-			Name:      s.name + ".ARM",
+			Name:      s.name,
 			Multiple:  true,
 			Unit:      power.CPUUsageMetricTypeUnit,
 			Direction: perf.SmallerIsBetter,
 			Interval:  s.intervalName,
-		}, 100*armCPUUsage/s.totalCPUCapacity)
+		}, totalPercent/float64(len(times)))
 	}
-
-	values.Append(perf.Metric{
-		Name:      s.name,
-		Multiple:  true,
-		Unit:      power.CPUUsageMetricTypeUnit,
-		Direction: perf.SmallerIsBetter,
-		Interval:  s.intervalName,
-	}, totalPercent/float64(len(times)))
-
 	return nil
 }
 
