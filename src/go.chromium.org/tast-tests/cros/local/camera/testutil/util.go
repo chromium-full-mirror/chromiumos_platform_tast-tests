@@ -22,6 +22,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/chromeproc"
+	"go.chromium.org/tast-tests/cros/local/crosconfig"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -364,5 +365,37 @@ func KillVideoCaptureServiceProcess(ctx context.Context) error {
 	}, &testing.PollOptions{Interval: 1 * time.Second, Timeout: 3 * time.Second}); err != nil {
 		return errors.Wrap(err, "failed to launch a new video capture service")
 	}
+	return nil
+}
+
+// CheckBuiltinCameraEnumeration checks whether all the builtin cameras are enumerated.
+func CheckBuiltinCameraEnumeration(ctx context.Context) error {
+	countStr, err := crosconfig.Get(ctx, "/camera", "count")
+	if err != nil {
+		return err
+	}
+	numTotalCam, err := strconv.Atoi(countStr)
+	if err != nil {
+		return err
+	}
+
+	// Detect builtin USB cameras.
+	usbCams, err := BuiltinUsbCamerasFromV4L2Test(ctx)
+	if err != nil {
+		return err
+	}
+	numUsbCam := len(usbCams)
+
+	// Detect MIPI cameras.
+	mipiCams, err := MIPICamerasFromCrOSCameraTool(ctx)
+	if err != nil {
+		return err
+	}
+	numMipiCam := len(mipiCams)
+
+	if numUsbCam+numMipiCam != numTotalCam {
+		return errors.Errorf("failed to enumerate all built-in cameras (found %v usb, %v mipi)", numUsbCam, numMipiCam)
+	}
+
 	return nil
 }
