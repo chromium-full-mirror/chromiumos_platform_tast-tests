@@ -192,13 +192,12 @@ func EnableDisableBluetoothWithAudioPlay(ctx context.Context, s *testing.State) 
 		// Click on Bluetooth UI button and wait for button state to toggle.
 		testing.ContextLog(ctx, "Toggling on bluetooth")
 		if err := uiauto.Combine("enable Bluetooth and confirm",
-			ui.LeftClickUntil(bluetoothTurnOnButton, ui.WithTimeout(5*time.Second).WaitUntilExists(bluetoothTurnOffButton)),
+			ui.LeftClick(bluetoothTurnOnButton),
 			// Confirm Bluetooth adapter is enabled.
 			bluez.PollForBTEnabled,
 		)(ctx); err != nil {
 			s.Fatal("Failed to enable Bluetooth via toggle button: ", err)
 		}
-
 		// Get connected status of BT device and connect if not already connected.
 		isConnected, btErr := btDevice.Connected(ctx)
 		if btErr != nil {
@@ -210,7 +209,6 @@ func EnableDisableBluetoothWithAudioPlay(ctx context.Context, s *testing.State) 
 			}
 			defer btDevice.Disconnect(cleanupCtx)
 		}
-
 		// Cheking and playing the audio if it is paused after reconnecting the BT device.
 		playPauseButton := nodewith.Name("Toggle play pause").Role(role.Button)
 		_, err := crastestclient.WaitForStreams(ctx, 3*time.Second)
