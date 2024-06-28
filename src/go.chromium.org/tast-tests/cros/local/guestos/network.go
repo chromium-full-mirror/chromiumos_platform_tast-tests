@@ -74,7 +74,7 @@ func NetworkConnectivity(ctx context.Context, guest vm.Guest, v6only bool, testE
 	// Verify reachability to destinations in the guest
 	const pingPollTimeout = 20 * time.Second
 	for _, ip := range pingAddrs {
-		if err := pingWithRetryAndTimeout(ctx, guest, ip, pingPollTimeout); err != nil {
+		if err := PingWithRetryAndTimeout(ctx, guest, ip, pingPollTimeout); err != nil {
 			errs = append(errs, errors.Wrapf(err, "failed to ping %s from guest", ip))
 		} else {
 			testing.ContextLogf(ctx, "Succeeded to ping %s from guest", ip)
@@ -117,7 +117,7 @@ func verifyCLAT(ctx context.Context, guest vm.Guest, testEnv *routing.SimpleNetw
 		return errors.Wrap(err, "failed to install public IPv4 address in virtualnet")
 	}
 
-	if err := pingWithRetryAndTimeout(ctx, guest, publicIP, 10*time.Second); err != nil {
+	if err := PingWithRetryAndTimeout(ctx, guest, publicIP, 10*time.Second); err != nil {
 		return errors.Wrap(err, "failed to verify IPv4 connectivity via CLAT")
 	}
 
@@ -144,7 +144,9 @@ func checkAddress(ctx context.Context, guest vm.Guest, ipv6 bool, timeout time.D
 	}, &testing.PollOptions{Timeout: timeout})
 }
 
-func pingWithRetryAndTimeout(ctx context.Context, guest vm.Guest, addr string, timeout time.Duration) error {
+// PingWithRetryAndTimeout verifies ping connectivity to addr from guest within
+// timeout.
+func PingWithRetryAndTimeout(ctx context.Context, guest vm.Guest, addr string, timeout time.Duration) error {
 	numRetries := 0
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		output, err := guest.Command(ctx, "ping", "-c1", "-w2", addr).Output()

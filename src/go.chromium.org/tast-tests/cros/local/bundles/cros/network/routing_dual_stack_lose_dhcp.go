@@ -8,6 +8,10 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/arc"
+	"go.chromium.org/tast-tests/cros/local/crostini"
+	"go.chromium.org/tast-tests/cros/local/guestos"
+	arcnet "go.chromium.org/tast-tests/cros/local/network/arc"
 	"go.chromium.org/tast-tests/cros/local/network/dhcp"
 	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast-tests/cros/local/network/routing"
@@ -15,6 +19,13 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+)
+
+type lostDHCPTestCase int
+
+const (
+	loseDHCPTestCaseARC lostDHCPTestCase = iota
+	lostDHCPTestCaseCrostini
 )
 
 func init() {
@@ -27,6 +38,15 @@ func init() {
 		Attr:         []string{"group:network", "network_platform"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Timeout:      3 * time.Minute,
+		Params: []testing.Param{{
+			Name:    "arc",
+			Val:     loseDHCPTestCaseARC,
+			Fixture: "arcBooted",
+		}, {
+			Name:    "crostini",
+			Val:     lostDHCPTestCaseCrostini,
+			Fixture: "crostiniBullseye",
+		}},
 	})
 }
 
@@ -157,6 +177,27 @@ func RoutingDualStackLoseDHCP(ctx context.Context, s *testing.State) {
 	for _, addr := range []string{routerAddr.IPv4Addr.String(), serverAddr.IPv4Addr.String()} {
 		if err := ping.ExpectPingFailure(ctx, addr, "root"); err != nil {
 			s.Errorf("%s should not be reachable: %v", addr, err)
+		}
+	}
+
+	// Verify guest network.
+	tc := s.Param().(lostDHCPTestCase)
+	ipv6Addr := serverAddr.IPv6Addrs[0].String()
+	switch tc {
+	case loseDHCPTestCaseARC:
+		a := s.FixtValue().(*arc.PreData).ARC
+		vethName := testEnv.TestRouter.VethOutName
+		arcIfname, err := arcnet.GetARCInterfaceName(ctx, vethName)
+		if err != nil {
+			s.Fatalf("Failed to get ARC interface name corresponding to %s: %v", vethName, err)
+		}
+		if err := arcnet.ExpectPingSuccess(ctx, a, arcIfname, ipv6Addr); err != nil {
+			s.Errorf("Failed to verify IPv6 reachability to %s from ARC: %v", ipv6Addr, err)
+		}
+	case lostDHCPTestCaseCrostini:
+		cont := s.FixtValue().(crostini.FixtureData).Cont
+		if err := guestos.PingWithRetryAndTimeout(ctx, cont, ipv6Addr, 5*time.Second); err != nil {
+			s.Errorf("Failed to verify IPv6 reachability to %s from Crostini: %v", ipv6Addr, err)
 		}
 	}
 }
