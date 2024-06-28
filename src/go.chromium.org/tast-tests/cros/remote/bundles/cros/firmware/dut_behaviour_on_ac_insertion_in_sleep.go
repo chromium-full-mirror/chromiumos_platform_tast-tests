@@ -162,10 +162,10 @@ func DUTBehaviourOnACInsertionInSleep(ctx context.Context, s *testing.State) {
 	if err := h.DUT.Conn().CommandContext(powerOffCtx, "powerd_dbus_suspend").Run(); err != nil && !errors.Is(err, context.DeadlineExceeded) {
 		s.Fatal("Failed to power off DUT: ", err)
 	}
-	sdCtx, cancel := context.WithTimeout(ctx, 20*time.Second)
-	defer cancel()
-	if err := dut.WaitUnreachable(sdCtx); err != nil {
-		s.Fatal("Failed to wait for unreachable: ", err)
+
+	if err := powercontrol.WaitForSuspendState(ctx, h); err != nil {
+		s.Fatal("Failed to verify suspend state: ", err)
+
 	}
 	s.Log("Attaching power supply")
 	if err := h.SetDUTPower(ctx, true); err != nil {
