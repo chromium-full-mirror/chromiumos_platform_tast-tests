@@ -30,15 +30,20 @@ func init() {
 			"hidenorik@chromium.org",
 		},
 		BugComponent: "b:1481072", // ChromeOS > Platform > Technologies > Camera > Kernel
-		Attr:         []string{"group:mainline", "informational", "group:camera-stability", "group:camera-kernelnext"},
+		Attr:         []string{"group:mainline", "group:camera-stability", "group:camera-kernelnext"},
 		SoftwareDeps: []string{caps.BuiltinUSBCamera},
 		Fixture:      fixture.CameraServiceStopped,
 		Params: []testing.Param{
 			{
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnCameraUSBModule(testutil.FlakyUSBCamera...)),
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(testutil.FlakyUSBModel...), hwdep.SkipOnCameraUSBModule(testutil.FlakyUSBCamera...)),
+				ExtraAttr:         []string{"informational"},
 			}, {
 				Name:              "flaky_camera",
 				ExtraHardwareDeps: hwdep.D(hwdep.CameraUSBModule(testutil.FlakyUSBCamera...)),
+				ExtraAttr:         []string{"informational"},
+			}, {
+				Name:              "flaky_model",
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(testutil.FlakyUSBModel...)),
 				ExtraAttr:         []string{"informational"},
 			},
 		},

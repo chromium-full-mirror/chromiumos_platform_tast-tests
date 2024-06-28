@@ -35,16 +35,16 @@ func init() {
 			{
 				// TODO(b/346995892): IPU6 driver in upstream doesn't work with the HAL. Remove once supported.
 				ExtraSoftwareDeps: []string{"no_kernel_upstream"},
-				ExtraHardwareDeps: hwdep.D(hwdep.CameraEnumerated(), hwdep.SkipOnModel(testutil.FlakyMIPIModel...), hwdep.SkipOnCameraUSBModule(testutil.FlakyUSBCamera...)),
+				ExtraHardwareDeps: hwdep.D(hwdep.CameraEnumerated(), hwdep.SkipOnModel(testutil.FlakyModel...), hwdep.SkipOnCameraUSBModule(testutil.FlakyUSBCamera...)),
 				Val:               testParam{Count: 1},
 			}, {
 				Name:              "twice",
-				ExtraHardwareDeps: hwdep.D(hwdep.CameraEnumerated(), hwdep.SkipOnModel(testutil.FlakyMIPIModel...), hwdep.SkipOnCameraUSBModule(testutil.FlakyUSBCamera...)),
+				ExtraHardwareDeps: hwdep.D(hwdep.CameraEnumerated(), hwdep.SkipOnModel(testutil.FlakyModel...), hwdep.SkipOnCameraUSBModule(testutil.FlakyUSBCamera...)),
 				Val:               testParam{Count: 2},
 				ExtraAttr:         []string{"informational"},
 			}, {
 				Name:              "flaky_model",
-				ExtraHardwareDeps: hwdep.D(hwdep.Model(testutil.FlakyMIPIModel...)),
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(testutil.FlakyModel...)),
 				Val:               testParam{Count: 1},
 				ExtraAttr:         []string{"informational"},
 			}, {
