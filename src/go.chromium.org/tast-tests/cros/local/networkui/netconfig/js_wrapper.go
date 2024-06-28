@@ -26,9 +26,11 @@ async function() {
     async getManagedProperties(guid) {
       response = await this.getCrosNetworkConfig().getManagedProperties(guid);
 
-      // Delete mojo uint64 typed properties because BigInt cannot be
-      // serialized.
-      delete response.result.trafficCounterProperties.lastResetTime;
+      if (response && response.result && response.result.trafficCounterProperties) {
+        // Delete mojo uint64 typed properties because BigInt cannot be
+        // serialized.
+        delete response.result.trafficCounterProperties.lastResetTime;
+      }
 
       return response.result;
     },
