@@ -79,7 +79,9 @@ const (
 	// WithBrowserFixture.
 	BaseLacrosFixture = "quickAnswersLacrosFixture"
 
-	variantNotEnabled = "notEnabled"
+	// VariantNotEnabled is a variant where Quick Answers prefs are default state,
+	// i.e., not enabled.
+	VariantNotEnabled = "notEnabled"
 
 	lacrosFixtureInternal = "quickAnswersLoggedInFixtureLacros"
 
@@ -175,7 +177,7 @@ func quickAnswersFixtureParams(browserType browser.Type) []testing.FixtureParam 
 			},
 		},
 		{
-			Name: variantNotEnabled,
+			Name: VariantNotEnabled,
 			Val: quickAnswersFixtureParam{
 				state:       StateNotEnabled,
 				browserType: browserType,
@@ -235,7 +237,7 @@ func init() {
 			"yawano@google.com",
 		},
 		BugComponent:    "b:905229", // ChromeOS > Software > Assistive
-		Parent:          Parameterize(BaseFixture, variantNotEnabled),
+		Parent:          Parameterize(BaseFixture, VariantNotEnabled),
 		Impl:            &withBrowserFixture{},
 		Params:          withBrowserFixtureParams(),
 		SetUpTimeout:    setUpTimeout,
@@ -250,7 +252,7 @@ func init() {
 			"yawano@google.com",
 		},
 		BugComponent:    "b:905229", // ChromeOS > Software > Assistive
-		Parent:          Parameterize(BaseLacrosFixture, variantNotEnabled),
+		Parent:          Parameterize(BaseLacrosFixture, VariantNotEnabled),
 		Impl:            &withBrowserFixture{},
 		Params:          withBrowserFixtureParams(),
 		SetUpTimeout:    setUpTimeout,
@@ -309,8 +311,9 @@ func init() {
 
 }
 
-type hasBrowserType interface {
-	browserType() browser.Type
+// HasBrowserType is an interface for getting a browser type tied to a fixture.
+type HasBrowserType interface {
+	BrowserType() browser.Type
 }
 
 // State is a state of quick answers pref.
@@ -337,7 +340,7 @@ type quickAnswersFixture struct {
 	state    State
 }
 
-func (f *quickAnswersFixture) browserType() browser.Type {
+func (f *quickAnswersFixture) BrowserType() browser.Type {
 	return f.bt
 }
 
@@ -435,7 +438,7 @@ func (f *withBrowserFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 	param := s.Param().(withBrowserFixtureParam)
 	f.queryWord = param.queryWord
 	f.languageCodes = param.languageCodes
-	f.bt = s.ParentValue().(hasBrowserType).browserType()
+	f.bt = s.ParentValue().(HasBrowserType).BrowserType()
 	f.cr = s.ParentValue().(chrome.HasChrome).Chrome()
 
 	tconn, err := f.cr.TestAPIConn(ctx)
