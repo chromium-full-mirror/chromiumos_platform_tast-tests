@@ -163,6 +163,7 @@ func PhysicalKeyboardAlphanumeric(ctx context.Context, s *testing.State) {
 	actionName := "keyboard check"
 	if err := uiauto.UserAction(actionName,
 		uiauto.Combine(actionName,
+			kb.AccelAction("Esc"),
 			its.Clear(inputField),
 			its.ClickFieldAndWaitForActive(inputField),
 			kb.TypeAction(keyValues),
