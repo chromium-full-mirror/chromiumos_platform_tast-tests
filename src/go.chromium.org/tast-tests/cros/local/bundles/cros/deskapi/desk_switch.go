@@ -49,6 +49,10 @@ func init() {
 			ExtraSoftwareDeps: []string{"lacros"},
 			Fixture:           fixture.DeskAPILacros,
 		}},
+		// TODO b/346725308 Refactor to use utility and known dependency list.
+		SearchFlags: []*testing.StringPair{{
+			Key: "external_dependency", Value: "DMServerAlpha",
+		}},
 	})
 }
 
