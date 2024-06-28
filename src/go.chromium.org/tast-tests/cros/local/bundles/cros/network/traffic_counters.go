@@ -24,6 +24,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/crostini"
+	"go.chromium.org/tast-tests/cros/local/guestos"
 	"go.chromium.org/tast-tests/cros/local/network"
 	arcnet "go.chromium.org/tast-tests/cros/local/network/arc"
 	patchpanel "go.chromium.org/tast-tests/cros/local/network/patchpanel_client"
@@ -404,6 +405,11 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 	if param.source == tcSourceTypeCrostini {
 		cros := s.FixtValue().(crostini.FixtureData).Cont
 
+		// Before we start the test, make sure the routing system is ready.
+		if err := guestos.PingWithRetryAndTimeout(ctx, cros, svr.addr.String(), 10*time.Second); err != nil {
+			s.Fatalf("Failed to wait for ping connectivity to %s in Crostini", svr.addr.String())
+		}
+
 		vmTest(
 			[]pp.TrafficCounter_Source{pp.TrafficCounter_CROSTINI_VM},
 			func(addr net.IP) error {
@@ -528,7 +534,7 @@ func txrx(ctx context.Context, svr *server, msg, usr string) error {
 		"|",
 		"socat",
 		"-",
-		fmt.Sprintf("%v:%v,sp=%v,reuseaddr", svr.fam.String(), svr.dst(), network.UnusedOrRandomPort(ctx, svr.fam)),
+		fmt.Sprintf("%v:%v", svr.fam.String(), svr.dst()),
 	}
 	cmd := testexec.CommandContext(ctx, "bash", "-c", strings.Join(args, " "))
 	cmd.Cmd.SysProcAttr = &syscall.SysProcAttr{
