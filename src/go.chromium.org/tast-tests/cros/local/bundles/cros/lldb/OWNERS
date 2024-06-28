@@ -1,0 +1,7 @@
+set noparent
+
+# ChromeOS Toolchain team
+include chromiumos/third_party/toolchain-utils:/OWNERS.toolchain
+
+# Tast team for bulk/emergencies
+include /OWNERS.tast

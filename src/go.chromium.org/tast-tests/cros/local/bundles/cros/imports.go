@@ -75,6 +75,7 @@ import (
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/labqual"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/lacros"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/launcher"
+	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/lldb"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/lockscreen"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/login"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/loginapi"
