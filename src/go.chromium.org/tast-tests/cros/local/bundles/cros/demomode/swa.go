@@ -48,6 +48,10 @@ func init() {
 				shouldRunOnline: true,
 			},
 			Fixture: fixture.PostDemoModeOOBEAlpha,
+			// TODO (b/346725308): Refactor to use utility and known dependency list.
+			ExtraSearchFlags: []*testing.StringPair{{
+				Key: "external_dependency", Value: "DMServerAlpha",
+			}},
 		}, {
 			Name: "online_prod",
 			Val: demoModeSWATestCase{
@@ -55,6 +59,10 @@ func init() {
 				shouldRunOnline: true,
 			},
 			Fixture: fixture.PostDemoModeOOBEProd,
+			// TODO (b/346725308): Refactor to use utility and known dependency list.
+			ExtraSearchFlags: []*testing.StringPair{{
+				Key: "external_dependency", Value: "DMServerProd",
+			}},
 		}, {
 			// DMServer URL is irrelevant for offline test case, so we don't have two separate cases
 			Name: "offline",
@@ -63,6 +71,10 @@ func init() {
 				shouldRunOnline: false,
 			},
 			Fixture: fixture.PostDemoModeOOBEAlpha,
+			// TODO (b/346725308): Refactor to use utility and known dependency list.
+			ExtraSearchFlags: []*testing.StringPair{{
+				Key: "external_dependency", Value: "DMServerAlpha",
+			}},
 		}},
 	})
 }

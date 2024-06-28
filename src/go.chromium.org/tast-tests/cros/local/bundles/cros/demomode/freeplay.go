@@ -41,10 +41,18 @@ func init() {
 			Name:    "alpha",
 			Val:     policy.DMServerAlphaURL, // DMServerURL
 			Fixture: fixture.PostDemoModeOOBEAlpha,
+			// TODO (b/346725308): Refactor to use utility and known dependency list.
+			ExtraSearchFlags: []*testing.StringPair{{
+				Key: "external_dependency", Value: "DMServerAlpha",
+			}},
 		}, {
 			Name:    "prod",
 			Val:     policy.DMServerProdURL, // DMServerURL
 			Fixture: fixture.PostDemoModeOOBEProd,
+			// TODO (b/346725308): Refactor to use utility and known dependency list.
+			ExtraSearchFlags: []*testing.StringPair{{
+				Key: "external_dependency", Value: "DMServerProd",
+			}},
 		}},
 	})
 }

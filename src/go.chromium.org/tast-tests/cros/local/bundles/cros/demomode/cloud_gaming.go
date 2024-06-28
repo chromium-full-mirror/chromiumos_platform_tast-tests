@@ -47,6 +47,10 @@ func init() {
 		// Demo Mode doesn't support VMs, use "crossystem" to exclude VMs.
 		SoftwareDeps: []string{"chrome", "chrome_internal", "arc", "tpm2", "crossystem"},
 		HardwareDeps: hwdep.D(hwdep.Model(cloudGamingModels...)),
+		// TODO (b/346725308): Refactor to use utility and known dependency list.
+		SearchFlags: []*testing.StringPair{{
+			Key: "external_dependency", Value: "DMServerAlpha",
+		}},
 	})
 }
 

@@ -33,6 +33,10 @@ func init() {
 		// is only shown for chrome-branded builds when the device is ARC-capable.
 		// Demo Mode doesn't support VMs, use "crossystem" to exclude VMs.
 		SoftwareDeps: []string{"chrome", "chrome_internal", "arc", "tpm2", "tpm_clear_allowed", "crossystem"},
+		// TODO (b/346725308): Refactor to use utility and known dependency list.
+		SearchFlags: []*testing.StringPair{{
+			Key: "external_dependency", Value: "DMServerProd",
+		}},
 	})
 }
 
