@@ -55,9 +55,10 @@ func initChromeVideoFixtures() {
 
 func initChromeVideoBaseFixtures() {
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideo",
-		Desc:     "Logged into a user session with logging enabled",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Name:         "chromeVideo",
+		Desc:         "Logged into a user session with logging enabled",
+		Contacts:     []string{"chromeos-gfx-video@google.com"},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
 				browser.TypeAsh,
@@ -70,9 +71,10 @@ func initChromeVideoBaseFixtures() {
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoGTFO",
-		Desc:     "Logged into a user session with logging enabled and GTFO OOP-VD enabled",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Name:         "chromeVideoGTFO",
+		Desc:         "Logged into a user session with logging enabled and GTFO OOP-VD enabled",
+		Contacts:     []string{"chromeos-gfx-video@google.com"},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
 				browser.TypeAsh,
@@ -87,9 +89,10 @@ func initChromeVideoBaseFixtures() {
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoINPVD",
-		Desc:     "Logged into a user session with logging and out-of-process video decoding disabled",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Name:         "chromeVideoINPVD",
+		Desc:         "Logged into a user session with logging and out-of-process video decoding disabled",
+		Contacts:     []string{"chromeos-gfx-video@google.com"},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
 				browser.TypeAsh,
@@ -104,9 +107,10 @@ func initChromeVideoBaseFixtures() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoNaCl",
-		Desc:     "Logged into a user session with logging, NaCl and the MojoVideoDecoder-for-Pepper enabled",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Name:         "chromeVideoNaCl",
+		Desc:         "Logged into a user session with logging, NaCl and the MojoVideoDecoder-for-Pepper enabled",
+		Contacts:     []string{"chromeos-gfx-video@google.com"},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
 				browser.TypeAsh,
@@ -121,9 +125,10 @@ func initChromeVideoBaseFixtures() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoNaClWithSWDecoding",
-		Desc:     "Similar to chromeVideoNaClWithMojoVideoDecoder but making sure Chrome does not use any potential hardware accelerated decoding",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Name:         "chromeVideoNaClWithSWDecoding",
+		Desc:         "Similar to chromeVideoNaClWithMojoVideoDecoder but making sure Chrome does not use any potential hardware accelerated decoding",
+		Contacts:     []string{"chromeos-gfx-video@google.com"},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
 				browser.TypeAsh,
@@ -141,9 +146,10 @@ func initChromeVideoBaseFixtures() {
 
 	// TODO(b/248528896): Remove once out-of-process video encoding is enabled by default.
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoWithOOPVE",
-		Desc:     "Similar to chromeVideo fixture but enabling out-of-process video encoding",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Name:         "chromeVideoWithOOPVE",
+		Desc:         "Similar to chromeVideo fixture but enabling out-of-process video encoding",
+		Contacts:     []string{"chromeos-gfx-video@google.com"},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
 				browser.TypeAsh,
@@ -158,9 +164,10 @@ func initChromeVideoBaseFixtures() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoWithGuestLogin",
-		Desc:     "Similar to chromeVideo fixture but forcing login as a guest",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Name:         "chromeVideoWithGuestLogin",
+		Desc:         "Similar to chromeVideo fixture but forcing login as a guest",
+		Contacts:     []string{"chromeos-gfx-video@google.com"},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
 				browser.TypeAsh,
@@ -173,9 +180,10 @@ func initChromeVideoBaseFixtures() {
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoGTFOWithGuestLogin",
-		Desc:     "Similar to chromeVideoGTFO fixture but forcing login as a guest",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Name:         "chromeVideoGTFOWithGuestLogin",
+		Desc:         "Similar to chromeVideoGTFO fixture but forcing login as a guest",
+		Contacts:     []string{"chromeos-gfx-video@google.com"},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
 				browser.TypeAsh,
@@ -190,9 +198,10 @@ func initChromeVideoBaseFixtures() {
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoINPVDWithGuestLogin",
-		Desc:     "Like chromeVideoWithGuestLogin but with out-of-process video decoding disabled",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Name:         "chromeVideoINPVDWithGuestLogin",
+		Desc:         "Like chromeVideoWithGuestLogin but with out-of-process video decoding disabled",
+		Contacts:     []string{"chromeos-gfx-video@google.com"},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
 				browser.TypeAsh,
@@ -207,9 +216,10 @@ func initChromeVideoBaseFixtures() {
 	})
 	// TODO(crbug.com/958166): Use simply ChromeVideo() when HDR is launched.
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoWithHDRScreen",
-		Desc:     "Similar to chromeVideo fixture but enabling the HDR screen if present",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Name:         "chromeVideoWithHDRScreen",
+		Desc:         "Similar to chromeVideo fixture but enabling the HDR screen if present",
+		Contacts:     []string{"chromeos-gfx-video@google.com"},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
 				browser.TypeAsh,
@@ -223,9 +233,10 @@ func initChromeVideoBaseFixtures() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeCompositedVideo",
-		Desc:     "Similar to chromeVideo fixture but disabling hardware overlays entirely to force video to be composited",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Name:         "chromeCompositedVideo",
+		Desc:         "Similar to chromeVideo fixture but disabling hardware overlays entirely to force video to be composited",
+		Contacts:     []string{"chromeos-gfx-video@google.com"},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
 				browser.TypeAsh,
@@ -238,9 +249,10 @@ func initChromeVideoBaseFixtures() {
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeCompositedVideoGTFO",
-		Desc:     "Similar to chromeVideoGTFO fixture but disabling hardware overlays entirely to force video to be composited",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Name:         "chromeCompositedVideoGTFO",
+		Desc:         "Similar to chromeVideoGTFO fixture but disabling hardware overlays entirely to force video to be composited",
+		Contacts:     []string{"chromeos-gfx-video@google.com"},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
 				browser.TypeAsh,
@@ -255,9 +267,10 @@ func initChromeVideoBaseFixtures() {
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoWithSWDecoding",
-		Desc:     "Similar to chromeVideo fixture but making sure Chrome does not use any potential hardware accelerated decoding",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Name:         "chromeVideoWithSWDecoding",
+		Desc:         "Similar to chromeVideo fixture but making sure Chrome does not use any potential hardware accelerated decoding",
+		Contacts:     []string{"chromeos-gfx-video@google.com"},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
 				browser.TypeAsh,
@@ -272,9 +285,10 @@ func initChromeVideoBaseFixtures() {
 
 	// TODO(crbug.com/958166): Use simply ChromeVideoWithSWDecoding() when HDR is launched.
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoWithSWDecodingAndHDRScreen",
-		Desc:     "Similar to chromeVideoWithSWDecoding but also enalbing the HDR screen if present",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Name:         "chromeVideoWithSWDecodingAndHDRScreen",
+		Desc:         "Similar to chromeVideoWithSWDecoding but also enalbing the HDR screen if present",
+		Contacts:     []string{"chromeos-gfx-video@google.com"},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
 				browser.TypeAsh,
@@ -288,9 +302,10 @@ func initChromeVideoBaseFixtures() {
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoWithDistinctiveIdentifier",
-		Desc:     "Similar to chromeVideo fixture but also allows a distinctive identifier which is needed for HWDRM",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Name:         "chromeVideoWithDistinctiveIdentifier",
+		Desc:         "Similar to chromeVideo fixture but also allows a distinctive identifier which is needed for HWDRM",
+		Contacts:     []string{"chromeos-gfx-video@google.com"},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
 				browser.TypeAsh,
@@ -304,9 +319,10 @@ func initChromeVideoBaseFixtures() {
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoINPVDWithDistinctiveIdentifier",
-		Desc:     "Like chromeVideoWithDistinctiveIdentifier but with out-of-process video decoding disabled",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Name:         "chromeVideoINPVDWithDistinctiveIdentifier",
+		Desc:         "Like chromeVideoWithDistinctiveIdentifier but with out-of-process video decoding disabled",
+		Contacts:     []string{"chromeos-gfx-video@google.com"},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
 				browser.TypeAsh,
@@ -321,9 +337,10 @@ func initChromeVideoBaseFixtures() {
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoWithIntelMediaCompression",
-		Desc:     "Similar to chromeVideo fixture but enabling media compression by Intel",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Name:         "chromeVideoWithIntelMediaCompression",
+		Desc:         "Similar to chromeVideo fixture but enabling media compression by Intel",
+		Contacts:     []string{"chromeos-gfx-video@google.com"},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
 				browser.TypeAsh,
@@ -338,9 +355,10 @@ func initChromeVideoBaseFixtures() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoWithV4L2FlatDecoder",
-		Desc:     "Similar to chromeVideo fixture but enabling V4L2 Flat stateful decoder",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Name:         "chromeVideoWithV4L2FlatDecoder",
+		Desc:         "Similar to chromeVideo fixture but enabling V4L2 Flat stateful decoder",
+		Contacts:     []string{"chromeos-gfx-video@google.com"},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
 				browser.TypeAsh,
@@ -354,9 +372,10 @@ func initChromeVideoBaseFixtures() {
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoWithBatchDecodingInRenderer",
-		Desc:     "Similar to chromeVideo fixture but enabling batch decoding for non-MF renderer path",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Name:         "chromeVideoWithBatchDecodingInRenderer",
+		Desc:         "Similar to chromeVideo fixture but enabling batch decoding for non-MF renderer path",
+		Contacts:     []string{"chromeos-gfx-video@google.com"},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
 				browser.TypeAsh,
@@ -387,9 +406,10 @@ func initChromeVideoBaseFixtures() {
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoWithReducedHardwareVideoDecoderBuffers",
-		Desc:     "Similar to chromeVideo fixture but reduce the number of required renderer pipeline buffers to fill video frame pool",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Name:         "chromeVideoWithReducedHardwareVideoDecoderBuffers",
+		Desc:         "Similar to chromeVideo fixture but reduce the number of required renderer pipeline buffers to fill video frame pool",
+		Contacts:     []string{"chromeos-gfx-video@google.com"},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
 				browser.TypeAsh,

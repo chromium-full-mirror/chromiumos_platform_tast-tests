@@ -21,9 +21,10 @@ func initChromeCaptureFixtures() {
 
 func initChromeCaptureBaseFixtures() {
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeScreenCapture",
-		Desc:     "Logged into a user session with flag so that Chrome always picks the entire screen for getDisplayMedia(), bypassing the picker UI",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Name:         "chromeScreenCapture",
+		Desc:         "Logged into a user session with flag so that Chrome always picks the entire screen for getDisplayMedia(), bypassing the picker UI",
+		Contacts:     []string{"chromeos-gfx-video@google.com"},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
 				browser.TypeAsh,
@@ -37,9 +38,10 @@ func initChromeCaptureBaseFixtures() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeWindowCapture",
-		Desc:     "Logged into a user session with flag so that Chrome always picks the Chromium window for getDisplayMedia(), bypassing the picker UI",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Name:         "chromeWindowCapture",
+		Desc:         "Logged into a user session with flag so that Chrome always picks the Chromium window for getDisplayMedia(), bypassing the picker UI",
+		Contacts:     []string{"chromeos-gfx-video@google.com"},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
 				browser.TypeAsh,
@@ -53,9 +55,10 @@ func initChromeCaptureBaseFixtures() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeTabCapture",
-		Desc:     "Logged into a user session with flag so that Chrome always picks the current tab for getDisplayMedia(), bypassing the picker UI",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Name:         "chromeTabCapture",
+		Desc:         "Logged into a user session with flag so that Chrome always picks the current tab for getDisplayMedia(), bypassing the picker UI",
+		Contacts:     []string{"chromeos-gfx-video@google.com"},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
 				browser.TypeAsh,
@@ -70,9 +73,10 @@ func initChromeCaptureBaseFixtures() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeTabCaptureWithINPVDAndSWEncoding",
-		Desc:     "Like chromeTabCapture but with out-of-process video decoding disabled and forcing software encoding",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Name:         "chromeTabCaptureWithINPVDAndSWEncoding",
+		Desc:         "Like chromeTabCapture but with out-of-process video decoding disabled and forcing software encoding",
+		Contacts:     []string{"chromeos-gfx-video@google.com"},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
 				browser.TypeAsh,
@@ -89,9 +93,10 @@ func initChromeCaptureBaseFixtures() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeTabCaptureWithLacrosAndSWEncoding",
-		Desc:     "Like chromeTabCapture but with LaCrOS and software encoding",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Name:         "chromeTabCaptureWithLacrosAndSWEncoding",
+		Desc:         "Like chromeTabCapture but with LaCrOS and software encoding",
+		Contacts:     []string{"chromeos-gfx-video@google.com"},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(
 				getChromeVideoOptions(
@@ -109,9 +114,10 @@ func initChromeCaptureBaseFixtures() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeZeroCopyScreenCapture",
-		Desc:     "Logged into a user session with flag so that Chrome always picks the entire screen for getDisplayMedia(), bypassing the picker UI",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Name:         "chromeZeroCopyScreenCapture",
+		Desc:         "Logged into a user session with flag so that Chrome always picks the entire screen for getDisplayMedia(), bypassing the picker UI",
+		Contacts:     []string{"chromeos-gfx-video@google.com"},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
 				browser.TypeAsh,
@@ -126,9 +132,10 @@ func initChromeCaptureBaseFixtures() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeZeroCopyWindowCapture",
-		Desc:     "Logged into a user session with flag so that Chrome always picks the Chromium window for getDisplayMedia(), bypassing the picker UI",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Name:         "chromeZeroCopyWindowCapture",
+		Desc:         "Logged into a user session with flag so that Chrome always picks the Chromium window for getDisplayMedia(), bypassing the picker UI",
+		Contacts:     []string{"chromeos-gfx-video@google.com"},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
 				browser.TypeAsh,
@@ -143,9 +150,10 @@ func initChromeCaptureBaseFixtures() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeZeroCopyTabCapture",
-		Desc:     "Logged into a user session with flag so that Chrome always picks the current tab for getDisplayMedia(), bypassing the picker UI",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Name:         "chromeZeroCopyTabCapture",
+		Desc:         "Logged into a user session with flag so that Chrome always picks the current tab for getDisplayMedia(), bypassing the picker UI",
+		Contacts:     []string{"chromeos-gfx-video@google.com"},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
 				browser.TypeAsh,
@@ -160,9 +168,10 @@ func initChromeCaptureBaseFixtures() {
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeZeroCopyTabCaptureAndSWEncoding",
-		Desc:     "Logged into a user session with flag so that Chrome always picks the current tab for getDisplayMedia(), bypassing the picker UI with software encoding",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Name:         "chromeZeroCopyTabCaptureAndSWEncoding",
+		Desc:         "Logged into a user session with flag so that Chrome always picks the current tab for getDisplayMedia(), bypassing the picker UI with software encoding",
+		Contacts:     []string{"chromeos-gfx-video@google.com"},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
 				browser.TypeAsh,
@@ -181,9 +190,10 @@ func initChromeCaptureBaseFixtures() {
 
 func initChromeCaptureLacrosFixtures() {
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeScreenCaptureLacros",
-		Desc:     "Logged into a user session with flag so that Chrome always picks the entire screen for getDisplayMedia(), bypassing the picker UI (lacros)",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Name:         "chromeScreenCaptureLacros",
+		Desc:         "Logged into a user session with flag so that Chrome always picks the entire screen for getDisplayMedia(), bypassing the picker UI (lacros)",
+		Contacts:     []string{"chromeos-gfx-video@google.com"},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(
 				getChromeVideoOptions(
@@ -199,9 +209,10 @@ func initChromeCaptureLacrosFixtures() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeWindowCaptureLacros",
-		Desc:     "Logged into a user session with flag so that Chrome always picks the Chromium window for getDisplayMedia(), bypassing the picker UI (lacros)",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Name:         "chromeWindowCaptureLacros",
+		Desc:         "Logged into a user session with flag so that Chrome always picks the Chromium window for getDisplayMedia(), bypassing the picker UI (lacros)",
+		Contacts:     []string{"chromeos-gfx-video@google.com"},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(
 				getChromeVideoOptions(
@@ -217,9 +228,10 @@ func initChromeCaptureLacrosFixtures() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeTabCaptureLacros",
-		Desc:     "Logged into a user session with flag so that Chrome always picks the current tab for getDisplayMedia(), bypassing the picker UI (lacros)",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Name:         "chromeTabCaptureLacros",
+		Desc:         "Logged into a user session with flag so that Chrome always picks the current tab for getDisplayMedia(), bypassing the picker UI (lacros)",
+		Contacts:     []string{"chromeos-gfx-video@google.com"},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(
 				getChromeVideoOptions(

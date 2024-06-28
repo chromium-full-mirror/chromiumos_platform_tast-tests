@@ -23,9 +23,10 @@ import (
 func initChromeVideoStressFixtures() {
 	// Primarily used in stress testing to not reset Chrome state between each test runs.
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoStress",
-		Desc:     "Logged into a user session with logging enabled",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Name:         "chromeVideoStress",
+		Desc:         "Logged into a user session with logging enabled",
+		Contacts:     []string{"chromeos-gfx-video@google.com"},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: &chromeVideoStressImpl{
 			browserType: browser.TypeAsh,
 			fOpt: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
@@ -42,9 +43,10 @@ func initChromeVideoStressFixtures() {
 	})
 	// Same as chromeVideoLacros but used for stress testing.
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoStressLacros",
-		Desc:     "Logged into a user session with logging enabled (lacros)",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Name:         "chromeVideoStressLacros",
+		Desc:         "Logged into a user session with logging enabled (lacros)",
+		Contacts:     []string{"chromeos-gfx-video@google.com"},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: &chromeVideoStressImpl{
 			browserType: browser.TypeLacros,
 			fOpt: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {

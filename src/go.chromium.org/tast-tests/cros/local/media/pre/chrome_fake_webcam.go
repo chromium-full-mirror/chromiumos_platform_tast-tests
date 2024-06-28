@@ -20,9 +20,10 @@ func initChromeFakeWebCamFixtures() {
 
 func initChromeFakeWebCamBaseFixtures() {
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoWithFakeWebcam",
-		Desc:     "Similar to chromeVideo fixture but supplementing it with the use of a fake video/audio capture device (a.k.a. 'fake webcam'), see https://webrtc.org/testing/",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Name:         "chromeVideoWithFakeWebcam",
+		Desc:         "Similar to chromeVideo fixture but supplementing it with the use of a fake video/audio capture device (a.k.a. 'fake webcam'), see https://webrtc.org/testing/",
+		Contacts:     []string{"chromeos-gfx-video@google.com"},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
 				browser.TypeAsh,
@@ -37,9 +38,10 @@ func initChromeFakeWebCamBaseFixtures() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoGTFOWithFakeWebcam",
-		Desc:     "Similar to chromeVideoGTFO fixture but supplementing it with the use of a fake video/audio capture device (a.k.a. 'fake webcam'), see https://webrtc.org/testing/",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Name:         "chromeVideoGTFOWithFakeWebcam",
+		Desc:         "Similar to chromeVideoGTFO fixture but supplementing it with the use of a fake video/audio capture device (a.k.a. 'fake webcam'), see https://webrtc.org/testing/",
+		Contacts:     []string{"chromeos-gfx-video@google.com"},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
 				browser.TypeAsh,
@@ -56,9 +58,10 @@ func initChromeFakeWebCamBaseFixtures() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoINPVDWithFakeWebcam",
-		Desc:     "Like chromeVideoWithFakeWebcam but with out-of-process video decoding disabled",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Name:         "chromeVideoINPVDWithFakeWebcam",
+		Desc:         "Like chromeVideoWithFakeWebcam but with out-of-process video decoding disabled",
+		Contacts:     []string{"chromeos-gfx-video@google.com"},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
 				browser.TypeAsh,
@@ -72,9 +75,10 @@ func initChromeFakeWebCamBaseFixtures() {
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoWithFakeWebcamAndV4L2FlatStatefulDecoder",
-		Desc:     "Similar to chromeVideoWithFakeWebcam fixture but using the V4L2 Flat stateful VD",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Name:         "chromeVideoWithFakeWebcamAndV4L2FlatStatefulDecoder",
+		Desc:         "Similar to chromeVideoWithFakeWebcam fixture but using the V4L2 Flat stateful VD",
+		Contacts:     []string{"chromeos-gfx-video@google.com"},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
 				browser.TypeAsh,
@@ -90,9 +94,10 @@ func initChromeFakeWebCamBaseFixtures() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoWithFakeWebcamAndHWSModeEncoding",
-		Desc:     "Similar to chromeVideoWithFakeWebcam fixture but enabling S-mode encoding and required WebRTC API testing it",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Name:         "chromeVideoWithFakeWebcamAndHWSModeEncoding",
+		Desc:         "Similar to chromeVideoWithFakeWebcam fixture but enabling S-mode encoding and required WebRTC API testing it",
+		Contacts:     []string{"chromeos-gfx-video@google.com"},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
 				browser.TypeAsh,
@@ -109,9 +114,10 @@ func initChromeFakeWebCamBaseFixtures() {
 
 	// TODO(b/248528896): Remove once out-of-process video encoding is enabled by default.
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoWithFakeWebcamAndOOPVE",
-		Desc:     "Similar to chromeVideoWithFakeWebcam fixture but using the out-of-process video encoder",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Name:         "chromeVideoWithFakeWebcamAndOOPVE",
+		Desc:         "Similar to chromeVideoWithFakeWebcam fixture but using the out-of-process video encoder",
+		Contacts:     []string{"chromeos-gfx-video@google.com"},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
 				browser.TypeAsh,
@@ -127,9 +133,10 @@ func initChromeFakeWebCamBaseFixtures() {
 
 	// TODO(b/248528896): Remove once both out-of-process video decoding and encoding are enabled by default.
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoWithFakeWebcamAndINPVDAndOOPVE",
-		Desc:     "Similar to chromeVideoWithFakeWebcam fixture but using the out-of-process video encoder and out-of-process video decoding disabled",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Name:         "chromeVideoWithFakeWebcamAndINPVDAndOOPVE",
+		Desc:         "Similar to chromeVideoWithFakeWebcam fixture but using the out-of-process video encoder and out-of-process video decoding disabled",
+		Contacts:     []string{"chromeos-gfx-video@google.com"},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
 				browser.TypeAsh,
@@ -145,9 +152,10 @@ func initChromeFakeWebCamBaseFixtures() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoWithFakeWebcamAndNoHwAcceleration",
-		Desc:     "Similar to chromeVideoWithFakeWebcam fixture but with both hardware decoding and encoding disabled",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Name:         "chromeVideoWithFakeWebcamAndNoHwAcceleration",
+		Desc:         "Similar to chromeVideoWithFakeWebcam fixture but with both hardware decoding and encoding disabled",
+		Contacts:     []string{"chromeos-gfx-video@google.com"},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
 				browser.TypeAsh,
@@ -164,9 +172,10 @@ func initChromeFakeWebCamBaseFixtures() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoWithFakeWebcamAndSWEncoding",
-		Desc:     "Similar to chromeVideoWithFakeWebcam fixture but hardware encoding disabled",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Name:         "chromeVideoWithFakeWebcamAndSWEncoding",
+		Desc:         "Similar to chromeVideoWithFakeWebcam fixture but hardware encoding disabled",
+		Contacts:     []string{"chromeos-gfx-video@google.com"},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
 				browser.TypeAsh,
@@ -205,9 +214,10 @@ func initChromeFakeWebCamBaseFixtures() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoWithFakeWebcamAndGlobalVaapiLockDisabled",
-		Desc:     "Similar to chromeVideoWithFakeWebcam fixture but the global VA-API lock is disabled if applicable",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Name:         "chromeVideoWithFakeWebcamAndGlobalVaapiLockDisabled",
+		Desc:         "Similar to chromeVideoWithFakeWebcam fixture but the global VA-API lock is disabled if applicable",
+		Contacts:     []string{"chromeos-gfx-video@google.com"},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
 				browser.TypeAsh,
@@ -222,9 +232,10 @@ func initChromeFakeWebCamBaseFixtures() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoWithFakeWebcamAndZeroLatencyRtc",
-		Desc:     "Similar to chromeVideo fixture but supplementing it with the use of a fake video/audio capture device (a.k.a. 'fake webcam'), see https://webrtc.org/testing/, and the webrtc rendering smoothness algorithm disabled",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Name:         "chromeVideoWithFakeWebcamAndZeroLatencyRtc",
+		Desc:         "Similar to chromeVideo fixture but supplementing it with the use of a fake video/audio capture device (a.k.a. 'fake webcam'), see https://webrtc.org/testing/, and the webrtc rendering smoothness algorithm disabled",
+		Contacts:     []string{"chromeos-gfx-video@google.com"},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
 				browser.TypeAsh,
@@ -241,9 +252,10 @@ func initChromeFakeWebCamBaseFixtures() {
 
 func initChromeFakeWebCamFixturesLacros() {
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoLacrosWithFakeWebcam",
-		Desc:     "Similar to chromeVideo fixture but supplementing it with the use of a fake video/audio capture device (a.k.a. 'fake webcam'), see https://webrtc.org/testing/ (lacros)",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Name:         "chromeVideoLacrosWithFakeWebcam",
+		Desc:         "Similar to chromeVideo fixture but supplementing it with the use of a fake video/audio capture device (a.k.a. 'fake webcam'), see https://webrtc.org/testing/ (lacros)",
+		Contacts:     []string{"chromeos-gfx-video@google.com"},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(
 				getChromeVideoOptions(
@@ -260,9 +272,10 @@ func initChromeFakeWebCamFixturesLacros() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoLacrosGTFOWithFakeWebcam",
-		Desc:     "Similar to chromeVideoGTFO fixture but supplementing it with the use of a fake video/audio capture device (a.k.a. 'fake webcam'), see https://webrtc.org/testing/ (lacros)",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Name:         "chromeVideoLacrosGTFOWithFakeWebcam",
+		Desc:         "Similar to chromeVideoGTFO fixture but supplementing it with the use of a fake video/audio capture device (a.k.a. 'fake webcam'), see https://webrtc.org/testing/ (lacros)",
+		Contacts:     []string{"chromeos-gfx-video@google.com"},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(
 				getChromeVideoOptions(
@@ -281,9 +294,10 @@ func initChromeFakeWebCamFixturesLacros() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoLacrosWithFakeWebcamAndZeroLatencyRtc",
-		Desc:     "Similar to chromeVideo fixture but supplementing it with the use of a fake video/audio capture device (a.k.a. 'fake webcam'), see https://webrtc.org/testing/, and the webrtc rendering smoothness algorithm disabled (lacros)",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Name:         "chromeVideoLacrosWithFakeWebcamAndZeroLatencyRtc",
+		Desc:         "Similar to chromeVideo fixture but supplementing it with the use of a fake video/audio capture device (a.k.a. 'fake webcam'), see https://webrtc.org/testing/, and the webrtc rendering smoothness algorithm disabled (lacros)",
+		Contacts:     []string{"chromeos-gfx-video@google.com"},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(
 				getChromeVideoOptions(
