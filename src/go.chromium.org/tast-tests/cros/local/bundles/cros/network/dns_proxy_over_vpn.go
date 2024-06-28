@@ -12,7 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/dns"
-	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/crostini"
 	arcnet "go.chromium.org/tast-tests/cros/local/network/arc"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/certs"
@@ -133,24 +132,15 @@ func DNSProxyOverVPN(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	var (
-		cr   *chrome.Chrome
 		a    *arc.ARC
 		cont *vm.Container
 	)
 
 	params := s.Param().(dnsProxyOverVPNTestParams)
-	if params.chrome {
-		cr = s.FixtValue().(chrome.HasChrome).Chrome()
-	} else if params.arc {
+	if params.arc {
 		a = s.FixtValue().(*arc.PreData).ARC
-		cr = s.FixtValue().(*arc.PreData).Chrome
 	} else if params.crostini {
-		cr = s.FixtValue().(crostini.FixtureData).Chrome
 		cont = s.FixtValue().(crostini.FixtureData).Cont
-	}
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
 	if params.crostini {
@@ -230,7 +220,7 @@ func DNSProxyOverVPN(ctx context.Context, s *testing.State) {
 	}
 
 	// Toggle plain-text DNS or secureDNS depending on test parameter.
-	cleanup, err := dns.SetDoHMode(ctx, cr, tconn, params.mode, dns.ExampleDoHProvider)
+	cleanup, err := dns.SetDoHModeViaShill(ctx, params.mode, dns.ExampleDoHProvider)
 	if err != nil {
 		s.Fatal("Failed to set DNS-over-HTTPS mode: ", err)
 	}

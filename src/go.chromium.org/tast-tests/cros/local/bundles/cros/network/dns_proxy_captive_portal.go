@@ -6,7 +6,6 @@ package network
 
 import (
 	"context"
-	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/crypto/certificate"
@@ -22,7 +21,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -163,7 +161,7 @@ func DNSProxyCaptivePortal(ctx context.Context, s *testing.State) {
 	}
 	if a != nil {
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			return verifyARCNameservers(ctx, a)
+			return dns.VerifyARCNameservers(ctx, a)
 		}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
 			s.Error("Failed to verify ARC: ", err)
 		}
@@ -243,36 +241,9 @@ func DNSProxyCaptivePortal(ctx context.Context, s *testing.State) {
 	}
 	if a != nil {
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			return verifyARCNameservers(ctx, a)
+			return dns.VerifyARCNameservers(ctx, a)
 		}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
 			s.Error("Failed to verify ARC: ", err)
 		}
 	}
-}
-
-// verifyARCNameservers verifies that ARC's nameservers contains DNS proxy address.
-// The name servers are taken from MojoLinkProperties of ARC's `dumpsys wifi arc-networks`.
-func verifyARCNameservers(ctx context.Context, a *arc.ARC) error {
-	out, err := a.Command(ctx, "dumpsys", "wifi", "arc-networks").Output()
-	if err != nil {
-		return errors.Wrap(err, "failed to get ARC networks")
-	}
-	matches := dns.ARCNameserversRE.FindAllStringSubmatch(string(out), -1)
-	if len(matches) == 0 {
-		return errors.New("empty name server")
-	}
-	for _, m := range matches {
-		f := false
-		// Index 0 contains the full match, start from index 1.
-		for i := 1; i < len(m); i++ {
-			if strings.Contains(m[i], dns.DNSProxyIPv4Prefix) {
-				f = true
-				break
-			}
-		}
-		if !f {
-			return errors.Errorf("invalid name server: %v", m)
-		}
-	}
-	return nil
 }

@@ -14,6 +14,7 @@ import (
 	"os"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
@@ -256,6 +257,61 @@ func setDoHMode(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, 
 		return err
 	}
 	return nil
+}
+
+// SetDoHModeViaShill updates the DNSProxyDOHProviders in shill's Manager for
+// the DoH setup. dohProvider will only be used when the mode is DoHAlwaysOn.
+// Returns a function to restore the shill property to the value before this
+// function is called.
+func SetDoHModeViaShill(ctx context.Context, mode DoHMode, dohProvider string) (func(context.Context), error) {
+	currentProps, err := getDoHProviders(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get current DoH providers configuration in shill")
+	}
+
+	m, err := shill.NewManager(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create shill client")
+	}
+
+	// Get the name servers on the current default service. It will be used in the automatic mode.
+	svc, err := m.FindMatchingService(ctx, map[string]interface{}{
+		shillconst.ServicePropertyState: shillconst.ServiceStateOnline,
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to obtain online service")
+	}
+	networkConfig, err := svc.GetNetworkConfig(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get NetworkConfig on the default service")
+	}
+	var nameServers []string
+	for _, ns := range networkConfig.NameServers {
+		nameServers = append(nameServers, ns.String())
+	}
+
+	var newProps map[string]interface{}
+	switch mode {
+	case DoHOff:
+		newProps = map[string]interface{}{}
+	case DoHAutomatic:
+		// We need to override the DoH provider <-> nameserver mapping that Chrome
+		// gave to shill. This is necessary because we want to test the behavior of
+		// the automatic upgrade. Without overriding, devices with an arbitrary
+		// nameserver without known DoH provider will only do Do53.
+		newProps = map[string]interface{}{dohProvider: strings.Join(nameServers, ",")}
+	case DoHAlwaysOn:
+		newProps = map[string]interface{}{dohProvider: ""}
+	}
+	if err := m.SetDNSProxyDOHProviders(ctx, newProps); err != nil {
+		return nil, errors.Wrapf(err, "failed to update DoH providers property to %v in shill", newProps)
+	}
+
+	return func(ctx context.Context) {
+		if err := m.SetDNSProxyDOHProviders(ctx, currentProps); err != nil {
+			testing.ContextLogf(ctx, "Failed to restore DoH providers property to %v in shill", currentProps)
+		}
+	}, nil
 }
 
 // RandDomain returns a random domain name that can be useful for avoiding caching while testing DNS queries.
@@ -744,4 +800,31 @@ func expectedNameserversWithDNSProxy(ctx context.Context, config Config) []templ
 		nssRE = append(nssRE, "([a-f0-9:]+:+)+[a-f0-9]+")
 	}
 	return nssRE
+}
+
+// VerifyARCNameservers verifies that ARC's nameservers contains DNS proxy address.
+// The name servers are taken from MojoLinkProperties of ARC's `dumpsys wifi arc-networks`.
+func VerifyARCNameservers(ctx context.Context, a *arc.ARC) error {
+	out, err := a.Command(ctx, "dumpsys", "wifi", "arc-networks").Output()
+	if err != nil {
+		return errors.Wrap(err, "failed to get ARC networks")
+	}
+	matches := ARCNameserversRE.FindAllStringSubmatch(string(out), -1)
+	if len(matches) == 0 {
+		return errors.New("empty name server")
+	}
+	for _, m := range matches {
+		f := false
+		// Index 0 contains the full match, start from index 1.
+		for i := 1; i < len(m); i++ {
+			if strings.Contains(m[i], DNSProxyIPv4Prefix) {
+				f = true
+				break
+			}
+		}
+		if !f {
+			return errors.Errorf("invalid name server: %v", m)
+		}
+	}
+	return nil
 }

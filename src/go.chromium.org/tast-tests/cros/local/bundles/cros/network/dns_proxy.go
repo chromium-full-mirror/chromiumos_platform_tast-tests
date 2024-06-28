@@ -6,14 +6,11 @@ package network
 
 import (
 	"context"
-	"strings"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/dns"
-	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/crostini"
 	"go.chromium.org/tast-tests/cros/local/network"
 	arcnet "go.chromium.org/tast-tests/cros/local/network/arc"
@@ -133,24 +130,15 @@ func DNSProxy(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	var (
-		cr   *chrome.Chrome
 		a    *arc.ARC
 		cont *vm.Container
 	)
 
 	params := s.Param().(dnsProxyTestParams)
-	if params.chrome {
-		cr = s.FixtValue().(chrome.HasChrome).Chrome()
-	} else if params.arc {
+	if params.arc {
 		a = s.FixtValue().(*arc.PreData).ARC
-		cr = s.FixtValue().(*arc.PreData).Chrome
 	} else if params.crostini {
-		cr = s.FixtValue().(crostini.FixtureData).Chrome
 		cont = s.FixtValue().(crostini.FixtureData).Cont
-	}
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
 	if params.crostini {
@@ -195,12 +183,21 @@ func DNSProxy(ctx context.Context, s *testing.State) {
 	}
 	defer env.Cleanup(cleanupCtx)
 
-	// Toggle plain-text DNS or secureDNS depending on test parameter.
-	cleanup, err := dns.SetDoHMode(ctx, cr, tconn, params.mode, dns.ExampleDoHProvider)
+	// Configure DoH mode via shill.
+	cleanup, err := dns.SetDoHModeViaShill(ctx, params.mode, dns.ExampleDoHProvider)
 	if err != nil {
 		s.Fatal("Failed to set DNS-over-HTTPS mode: ", err)
 	}
 	defer cleanup(cleanupCtx)
+
+	// Make sure that ARC gets the DNS proxy address before proceeding the tests.
+	if params.arc {
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			return dns.VerifyARCNameservers(ctx, a)
+		}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
+			s.Fatal("Failed to wait for ARC to get the nameservers config: ", err)
+		}
+	}
 
 	// By default, DNS query should work.
 	var tc []dns.ProxyTestCase
@@ -231,32 +228,6 @@ func DNSProxy(ctx context.Context, s *testing.State) {
 	var blocks []*dns.Block
 	switch params.mode {
 	case dns.DoHAutomatic:
-		// We need to override the DoH provider <-> nameserver mapping that Chrome gave to shill.
-		// This is necessary because we want to test the behavior of the automatic upgrade.
-		// Without overriding, devices with an arbitrary nameserver without known DoH provider will only do Do53.
-		svc, err := m.FindMatchingService(ctx, map[string]interface{}{
-			shillconst.ServicePropertyState: shillconst.ServiceStateOnline,
-		})
-		if err != nil {
-			s.Fatal("Failed to obtain online service: ", err)
-		}
-		cfgs, err := svc.GetIPConfigs(ctx)
-		if err != nil {
-			s.Fatal("Failed to get IP configuration: ", err)
-		}
-		var ns []string
-		for _, cfg := range cfgs {
-			ip, err := cfg.GetIPProperties(ctx)
-			if err != nil {
-				s.Fatal("Failed to get IP properties: ", err)
-			}
-			ns = append(ns, ip.NameServers...)
-		}
-		s.Log("Found nameservers: ", ns)
-		if err := m.SetDNSProxyDOHProviders(ctx, map[string]interface{}{dns.ExampleDoHProvider: strings.Join(ns[:], ",")}); err != nil {
-			s.Fatal("Failed to set dns-proxy DoH providers: ", err)
-		}
-
 		// Confirm blocking plaintext still works (DoH preferred/used).
 		blocks = append(blocks, dns.NewPlaintextBlock(nss, physIfs, ""))
 		// Verify blocking HTTPS also works (fallback).

@@ -105,10 +105,8 @@ func DNSProxyCustomNameserver(ctx context.Context, s *testing.State) {
 
 	// Ensure plaintext query.
 	pre := s.PreValue().(*multivm.PreData)
-	cr := pre.Chrome
 	a := multivm.ARCFromPre(pre)
-	tconn := pre.TestAPIConn
-	cleanup, err := dns.SetDoHMode(ctx, cr, tconn, dns.DoHOff, "" /* dohProvider */)
+	cleanup, err := dns.SetDoHModeViaShill(ctx, dns.DoHOff, "" /* dohProvider */)
 	if err != nil {
 		s.Fatal("Failed to set DNS-over-HTTPS mode: ", err)
 	}
