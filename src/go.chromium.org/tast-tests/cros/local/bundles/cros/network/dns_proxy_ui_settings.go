@@ -54,16 +54,16 @@ func DNSProxyUISettings(ctx context.Context, s *testing.State) {
 	// Defer a function to reset the state to automatic. This is also part of the
 	// test.
 	defer func() {
-		if _, err := dns.SetDoHMode(ctx, cr, tconn, dns.DoHAutomatic, "" /*dohProvider*/); err != nil {
+		if err := dns.SetDoHModeViaUI(ctx, cr, tconn, dns.DoHAutomatic, "" /*dohProvider*/); err != nil {
 			s.Fatal("Failed to set DNS-over-HTTPS mode to automatic: ", err)
 		}
 	}()
 
-	if _, err := dns.SetDoHMode(ctx, cr, tconn, dns.DoHAlwaysOn, dns.ExampleDoHProvider); err != nil {
+	if err := dns.SetDoHModeViaUI(ctx, cr, tconn, dns.DoHAlwaysOn, dns.ExampleDoHProvider); err != nil {
 		s.Fatal("Failed to set DNS-over-HTTPS mode to always-on: ", err)
 	}
 
-	if _, err := dns.SetDoHMode(ctx, cr, tconn, dns.DoHOff, "" /*dohProvider*/); err != nil {
+	if err := dns.SetDoHModeViaUI(ctx, cr, tconn, dns.DoHOff, "" /*dohProvider*/); err != nil {
 		s.Fatal("Failed to set DNS-over-HTTPS mode to off: ", err)
 	}
 }

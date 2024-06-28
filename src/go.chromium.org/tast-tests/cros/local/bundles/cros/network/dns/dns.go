@@ -152,21 +152,10 @@ func GetClientString(c Client) string {
 	}
 }
 
-// SetDoHMode updates ChromeOS setting to change DNS-over-HTTPS mode.
-// Returns a cleanup that updates the DoH mode to DoH off.
-func SetDoHMode(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, mode DoHMode, dohProvider string) (func(context.Context), error) {
-	if err := setDoHMode(ctx, cr, tconn, mode, dohProvider); err != nil {
-		return nil, err
-	}
-	return func(ctx context.Context) {
-		if err := setDoHMode(ctx, cr, tconn, DoHOff, "" /* dohProvider */); err != nil {
-			testing.ContextLog(ctx, "Failed to cleanup DoH mode to DoH off: ", err)
-		}
-	}, nil
-}
-
-// setDoHMode updates ChromeOS setting to change DNS-over-HTTPS mode.
-func setDoHMode(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, mode DoHMode, dohProvider string) error {
+// SetDoHModeViaUI updates ChromeOS setting to change DNS-over-HTTPS mode via UI
+// interaction. Prefer using SetDoHModeViaShill is the test is not intended to
+// verify this UI interaction.
+func SetDoHModeViaUI(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, mode DoHMode, dohProvider string) error {
 	conn, err := apps.LaunchOSSettings(ctx, cr, "chrome://os-settings/osPrivacy")
 	if err != nil {
 		return errors.Wrap(err, "failed to get connection to OS Settings")
