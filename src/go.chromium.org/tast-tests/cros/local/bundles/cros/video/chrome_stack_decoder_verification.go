@@ -195,100 +195,6 @@ var h264Files = map[string][]string{
 	},
 }
 
-var vp90Group1Buf = []string{
-	"test_vectors/vp9/Profile_0_8bit/buf/crowd_run_256X144_fr15_bd8_8buf_l1.ivf",
-	"test_vectors/vp9/Profile_0_8bit/buf/grass_1_256X144_fr15_bd8_8buf_l1.ivf",
-	"test_vectors/vp9/Profile_0_8bit/buf/street1_1_256X144_fr15_bd8_8buf_l1.ivf",
-	"test_vectors/vp9/Profile_0_8bit/buf/crowd_run_384X192_fr30_bd8_8buf_l11.ivf",
-	"test_vectors/vp9/Profile_0_8bit/buf/grass_1_384X192_fr30_bd8_8buf_l11.ivf",
-	"test_vectors/vp9/Profile_0_8bit/buf/street1_1_384X192_fr30_bd8_8buf_l11.ivf",
-}
-
-var vp90Group1FrmResize = []string{
-	"test_vectors/vp9/Profile_0_8bit/frm_resize/crowd_run_256X144_fr15_bd8_frm_resize_l1.ivf",
-	"test_vectors/vp9/Profile_0_8bit/frm_resize/grass_1_256X144_fr15_bd8_frm_resize_l1.ivf",
-	"test_vectors/vp9/Profile_0_8bit/frm_resize/street1_1_256X144_fr15_bd8_frm_resize_l1.ivf",
-	"test_vectors/vp9/Profile_0_8bit/frm_resize/crowd_run_384X192_fr30_bd8_frm_resize_l11.ivf",
-	"test_vectors/vp9/Profile_0_8bit/frm_resize/grass_1_384X192_fr30_bd8_frm_resize_l11.ivf",
-	"test_vectors/vp9/Profile_0_8bit/frm_resize/street1_1_384X192_fr30_bd8_frm_resize_l11.ivf",
-}
-
-var vp90Group1GfDist = []string{
-	"test_vectors/vp9/Profile_0_8bit/gf_dist/crowd_run_256X144_fr15_bd8_gf_dist_4_l1.ivf",
-	"test_vectors/vp9/Profile_0_8bit/gf_dist/grass_1_256X144_fr15_bd8_gf_dist_4_l1.ivf",
-	"test_vectors/vp9/Profile_0_8bit/gf_dist/street1_1_256X144_fr15_bd8_gf_dist_4_l1.ivf",
-	"test_vectors/vp9/Profile_0_8bit/gf_dist/crowd_run_384X192_fr30_bd8_gf_dist_4_l11.ivf",
-	"test_vectors/vp9/Profile_0_8bit/gf_dist/grass_1_384X192_fr30_bd8_gf_dist_4_l11.ivf",
-	"test_vectors/vp9/Profile_0_8bit/gf_dist/street1_1_384X192_fr30_bd8_gf_dist_4_l11.ivf",
-}
-
-var vp90Group1OddSize = []string{
-	"test_vectors/vp9/Profile_0_8bit/odd_size/crowd_run_248X144_fr15_bd8_odd_size_l1.ivf",
-	"test_vectors/vp9/Profile_0_8bit/odd_size/grass_1_248X144_fr15_bd8_odd_size_l1.ivf",
-	"test_vectors/vp9/Profile_0_8bit/odd_size/street1_1_248X144_fr15_bd8_odd_size_l1.ivf",
-	"test_vectors/vp9/Profile_0_8bit/odd_size/crowd_run_376X184_fr30_bd8_odd_size_l11.ivf",
-	"test_vectors/vp9/Profile_0_8bit/odd_size/grass_1_376X184_fr30_bd8_odd_size_l11.ivf",
-	"test_vectors/vp9/Profile_0_8bit/odd_size/street1_1_376X184_fr30_bd8_odd_size_l11.ivf",
-}
-
-var vp90Group1Sub8x8 = []string{
-	"test_vectors/vp9/Profile_0_8bit/sub8X8/crowd_run_256X144_fr15_bd8_sub8X8_l1.ivf",
-	"test_vectors/vp9/Profile_0_8bit/sub8X8/grass_1_256X144_fr15_bd8_sub8X8_l1.ivf",
-	"test_vectors/vp9/Profile_0_8bit/sub8X8/street1_1_256X144_fr15_bd8_sub8X8_l1.ivf",
-	"test_vectors/vp9/Profile_0_8bit/sub8X8/crowd_run_384X192_fr30_bd8_sub8X8_l11.ivf",
-	"test_vectors/vp9/Profile_0_8bit/sub8X8/grass_1_384X192_fr30_bd8_sub8X8_l11.ivf",
-	"test_vectors/vp9/Profile_0_8bit/sub8X8/street1_1_384X192_fr30_bd8_sub8X8_l11.ivf",
-}
-
-var vp90Group1Sub8x8Sf = []string{
-	"test_vectors/vp9/Profile_0_8bit/sub8x8_sf/crowd_run_256X144_fr15_bd8_sub8x8_sf_l1.ivf",
-	"test_vectors/vp9/Profile_0_8bit/sub8x8_sf/grass_1_256X144_fr15_bd8_sub8x8_sf_l1.ivf",
-	"test_vectors/vp9/Profile_0_8bit/sub8x8_sf/street1_1_256X144_fr15_bd8_sub8x8_sf_l1.ivf",
-	"test_vectors/vp9/Profile_0_8bit/sub8x8_sf/crowd_run_384X192_fr30_bd8_sub8x8_sf_l11.ivf",
-	"test_vectors/vp9/Profile_0_8bit/sub8x8_sf/grass_1_384X192_fr30_bd8_sub8x8_sf_l11.ivf",
-	"test_vectors/vp9/Profile_0_8bit/sub8x8_sf/street1_1_384X192_fr30_bd8_sub8x8_sf_l11.ivf",
-}
-
-var vp92Group1Buf = []string{
-	"test_vectors/vp9/Profile_2_10bit/buf/grass_1_256X144_fr15_bd10_8buf_l1.ivf",
-	"test_vectors/vp9/Profile_2_10bit/buf/street1_1_256X144_fr15_bd10_8buf_l1.ivf",
-	"test_vectors/vp9/Profile_2_10bit/buf/crowd_run_256X144_fr15_bd10_8buf_l1.ivf",
-}
-
-var vp92Group1FrmResize = []string{
-	"test_vectors/vp9/Profile_2_10bit/frm_resize/grass_1_256X144_fr15_bd10_frm_resize_l1.ivf",
-	"test_vectors/vp9/Profile_2_10bit/frm_resize/street1_1_256X144_fr15_bd10_frm_resize_l1.ivf",
-	"test_vectors/vp9/Profile_2_10bit/frm_resize/crowd_run_256X144_fr15_bd10_frm_resize_l1.ivf",
-}
-
-var vp92Group1GfDist = []string{
-	"test_vectors/vp9/Profile_2_10bit/gf_dist/crowd_run_256X144_fr15_bd10_gf_dist_4_l1.ivf",
-	"test_vectors/vp9/Profile_2_10bit/gf_dist/grass_1_256X144_fr15_bd10_gf_dist_4_l1.ivf",
-	"test_vectors/vp9/Profile_2_10bit/gf_dist/street1_1_256X144_fr15_bd10_gf_dist_4_l1.ivf",
-}
-
-var vp92Group1OddSize = []string{
-	"test_vectors/vp9/Profile_2_10bit/odd_size/crowd_run_248X144_fr15_bd10_odd_size_l1.ivf",
-	"test_vectors/vp9/Profile_2_10bit/odd_size/street1_1_248X144_fr15_bd10_odd_size_l1.ivf",
-	"test_vectors/vp9/Profile_2_10bit/odd_size/grass_1_248X144_fr15_bd10_odd_size_l1.ivf",
-}
-
-var vp92Group1Sub8x8 = []string{
-	"test_vectors/vp9/Profile_2_10bit/sub8X8/crowd_run_256X144_fr15_bd10_sub8X8_l1.ivf",
-	"test_vectors/vp9/Profile_2_10bit/sub8X8/street1_1_256X144_fr15_bd10_sub8X8_l1.ivf",
-	"test_vectors/vp9/Profile_2_10bit/sub8X8/grass_1_256X144_fr15_bd10_sub8X8_l1.ivf",
-}
-
-var vp92Group1Sub8x8Sf = []string{
-	"test_vectors/vp9/Profile_2_10bit/sub8x8_sf/street1_1_256X144_fr15_bd10_sub8x8_sf_l1.ivf",
-	"test_vectors/vp9/Profile_2_10bit/sub8x8_sf/grass_1_256X144_fr15_bd10_sub8x8_sf_l1.ivf",
-	"test_vectors/vp9/Profile_2_10bit/sub8x8_sf/crowd_run_256X144_fr15_bd10_sub8x8_sf_l1.ivf",
-}
-
-var vp9SVCFiles = []string{
-	"test_vectors/vp9/kSVC/ksvc_3sl_3tl_key100.ivf",
-}
-
 func appendJSONFiles(videoFiles []string) []string {
 	var tf []string
 	for _, file := range videoFiles {
@@ -680,10 +586,10 @@ func init() {
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
-				ExtraData:         appendJSONFiles(vp90Group1Buf),
-				Timeout:           calculateTestTimeout(vp90Group1Buf, "vp9_0_group1_buf"),
+				ExtraData:         appendJSONFiles(vp9WebmFiles["profile_0"]["group1"]["buf"]),
+				Timeout:           calculateTestTimeout(vp9WebmFiles["profile_0"]["group1"]["buf"], "vp9_0_group1_buf"),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:      vp90Group1Buf,
+					videoFiles:      vp9WebmFiles["profile_0"]["group1"]["buf"],
 					validatorType:   decoding.MD5,
 					mustFail:        false,
 					enabledFeatures: []string{},
@@ -694,10 +600,10 @@ func init() {
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnV4L2StatelessVideoDecoding(), hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
-				ExtraData:         appendJSONFiles(vp90Group1FrmResize),
-				Timeout:           calculateTestTimeout(vp90Group1FrmResize, "vp9_0_group1_frm_resize"),
+				ExtraData:         appendJSONFiles(vp9WebmFiles["profile_0"]["group1"]["frm_resize"]),
+				Timeout:           calculateTestTimeout(vp9WebmFiles["profile_0"]["group1"]["frm_resize"], "vp9_0_group1_frm_resize"),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:      vp90Group1FrmResize,
+					videoFiles:      vp9WebmFiles["profile_0"]["group1"]["frm_resize"],
 					validatorType:   decoding.MD5,
 					mustFail:        false,
 					enabledFeatures: []string{},
@@ -708,10 +614,10 @@ func init() {
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
-				ExtraData:         appendJSONFiles(vp90Group1GfDist),
-				Timeout:           calculateTestTimeout(vp90Group1GfDist, "vp9_0_group1_gf_dist"),
+				ExtraData:         appendJSONFiles(vp9WebmFiles["profile_0"]["group1"]["gf_dist"]),
+				Timeout:           calculateTestTimeout(vp9WebmFiles["profile_0"]["group1"]["gf_dist"], "vp9_0_group1_gf_dist"),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:      vp90Group1GfDist,
+					videoFiles:      vp9WebmFiles["profile_0"]["group1"]["gf_dist"],
 					validatorType:   decoding.MD5,
 					mustFail:        false,
 					enabledFeatures: []string{},
@@ -722,10 +628,10 @@ func init() {
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
-				ExtraData:         appendJSONFiles(vp90Group1OddSize),
-				Timeout:           calculateTestTimeout(vp90Group1OddSize, "vp9_0_group1_odd_size"),
+				ExtraData:         appendJSONFiles(vp9WebmFiles["profile_0"]["group1"]["odd_size"]),
+				Timeout:           calculateTestTimeout(vp9WebmFiles["profile_0"]["group1"]["odd_size"], "vp9_0_group1_odd_size"),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:      vp90Group1OddSize,
+					videoFiles:      vp9WebmFiles["profile_0"]["group1"]["odd_size"],
 					validatorType:   decoding.MD5,
 					mustFail:        false,
 					enabledFeatures: []string{},
@@ -736,10 +642,10 @@ func init() {
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
-				ExtraData:         appendJSONFiles(vp90Group1Sub8x8),
-				Timeout:           calculateTestTimeout(vp90Group1Sub8x8, "vp9_0_group1_sub8x8"),
+				ExtraData:         appendJSONFiles(vp9WebmFiles["profile_0"]["group1"]["sub8x8"]),
+				Timeout:           calculateTestTimeout(vp9WebmFiles["profile_0"]["group1"]["sub8x8"], "vp9_0_group1_sub8x8"),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:      vp90Group1Sub8x8,
+					videoFiles:      vp9WebmFiles["profile_0"]["group1"]["sub8x8"],
 					validatorType:   decoding.MD5,
 					mustFail:        false,
 					enabledFeatures: []string{},
@@ -750,10 +656,10 @@ func init() {
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnV4L2StatelessVideoDecoding(), hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
-				ExtraData:         appendJSONFiles(vp90Group1Sub8x8Sf),
-				Timeout:           calculateTestTimeout(vp90Group1Sub8x8Sf, "vp9_0_group1_sub8x8_sf"),
+				ExtraData:         appendJSONFiles(vp9WebmFiles["profile_0"]["group1"]["sub8x8_sf"]),
+				Timeout:           calculateTestTimeout(vp9WebmFiles["profile_0"]["group1"]["sub8x8_sf"], "vp9_0_group1_sub8x8_sf"),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:      vp90Group1Sub8x8Sf,
+					videoFiles:      vp9WebmFiles["profile_0"]["group1"]["sub8x8_sf"],
 					validatorType:   decoding.MD5,
 					mustFail:        false,
 					enabledFeatures: []string{},
@@ -764,10 +670,10 @@ func init() {
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9_2},
-				ExtraData:         appendJSONFiles(vp92Group1Buf),
-				Timeout:           calculateTestTimeout(vp92Group1Buf, "vp9_2_group1_buf"),
+				ExtraData:         appendJSONFiles(vp9WebmFiles["profile_2"]["group1"]["buf"]),
+				Timeout:           calculateTestTimeout(vp9WebmFiles["profile_2"]["group1"]["buf"], "vp9_2_group1_buf"),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:      vp92Group1Buf,
+					videoFiles:      vp9WebmFiles["profile_2"]["group1"]["buf"],
 					validatorType:   decoding.MD5,
 					mustFail:        false,
 					enabledFeatures: []string{},
@@ -778,10 +684,10 @@ func init() {
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnV4L2StatelessVideoDecoding(), hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9_2},
-				ExtraData:         appendJSONFiles(vp92Group1FrmResize),
-				Timeout:           calculateTestTimeout(vp92Group1FrmResize, "vp9_2_group1_frm_resize"),
+				ExtraData:         appendJSONFiles(vp9WebmFiles["profile_2"]["group1"]["frm_resize"]),
+				Timeout:           calculateTestTimeout(vp9WebmFiles["profile_2"]["group1"]["frm_resize"], "vp9_2_group1_frm_resize"),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:      vp92Group1FrmResize,
+					videoFiles:      vp9WebmFiles["profile_2"]["group1"]["frm_resize"],
 					validatorType:   decoding.MD5,
 					mustFail:        false,
 					enabledFeatures: []string{},
@@ -792,10 +698,10 @@ func init() {
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9_2},
-				ExtraData:         appendJSONFiles(vp92Group1GfDist),
-				Timeout:           calculateTestTimeout(vp92Group1GfDist, "vp9_2_group1_gf_dist"),
+				ExtraData:         appendJSONFiles(vp9WebmFiles["profile_2"]["group1"]["gf_dist"]),
+				Timeout:           calculateTestTimeout(vp9WebmFiles["profile_2"]["group1"]["gf_dist"], "vp9_2_group1_gf_dist"),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:      vp92Group1GfDist,
+					videoFiles:      vp9WebmFiles["profile_2"]["group1"]["gf_dist"],
 					validatorType:   decoding.MD5,
 					mustFail:        false,
 					enabledFeatures: []string{},
@@ -806,10 +712,10 @@ func init() {
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9_2},
-				ExtraData:         appendJSONFiles(vp92Group1OddSize),
-				Timeout:           calculateTestTimeout(vp92Group1OddSize, "vp9_2_group1_odd_size"),
+				ExtraData:         appendJSONFiles(vp9WebmFiles["profile_2"]["group1"]["odd_size"]),
+				Timeout:           calculateTestTimeout(vp9WebmFiles["profile_2"]["group1"]["odd_size"], "vp9_2_group1_odd_size"),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:      vp92Group1OddSize,
+					videoFiles:      vp9WebmFiles["profile_2"]["group1"]["odd_size"],
 					validatorType:   decoding.MD5,
 					mustFail:        false,
 					enabledFeatures: []string{},
@@ -820,10 +726,10 @@ func init() {
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9_2},
-				ExtraData:         appendJSONFiles(vp92Group1Sub8x8),
-				Timeout:           calculateTestTimeout(vp92Group1Sub8x8, "vp9_2_group1_sub8x8"),
+				ExtraData:         appendJSONFiles(vp9WebmFiles["profile_2"]["group1"]["sub8x8"]),
+				Timeout:           calculateTestTimeout(vp9WebmFiles["profile_2"]["group1"]["sub8x8"], "vp9_2_group1_sub8x8"),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:      vp92Group1Sub8x8,
+					videoFiles:      vp9WebmFiles["profile_2"]["group1"]["sub8x8"],
 					validatorType:   decoding.MD5,
 					mustFail:        false,
 					enabledFeatures: []string{},
@@ -834,10 +740,10 @@ func init() {
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnV4L2StatelessVideoDecoding(), hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9_2},
-				ExtraData:         appendJSONFiles(vp92Group1Sub8x8Sf),
-				Timeout:           calculateTestTimeout(vp92Group1Sub8x8Sf, "vp9_2_group1_sub8x8_sf"),
+				ExtraData:         appendJSONFiles(vp9WebmFiles["profile_2"]["group1"]["sub8x8_sf"]),
+				Timeout:           calculateTestTimeout(vp9WebmFiles["profile_2"]["group1"]["sub8x8_sf"], "vp9_2_group1_sub8x8_sf"),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:      vp92Group1Sub8x8Sf,
+					videoFiles:      vp9WebmFiles["profile_2"]["group1"]["sub8x8_sf"],
 					validatorType:   decoding.MD5,
 					mustFail:        false,
 					enabledFeatures: []string{},
@@ -1410,10 +1316,10 @@ func init() {
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "v4l2_codec"},
-				ExtraData:         appendJSONFiles(vp90Group1Buf),
-				Timeout:           calculateTestTimeout(vp90Group1Buf, "v4l2_flat_vp9_0_group1_buf"),
+				ExtraData:         appendJSONFiles(vp9WebmFiles["profile_0"]["group1"]["buf"]),
+				Timeout:           calculateTestTimeout(vp9WebmFiles["profile_0"]["group1"]["buf"], "v4l2_flat_vp9_0_group1_buf"),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:      vp90Group1Buf,
+					videoFiles:      vp9WebmFiles["profile_0"]["group1"]["buf"],
 					validatorType:   decoding.MD5,
 					mustFail:        false,
 					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
@@ -1424,10 +1330,10 @@ func init() {
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnV4L2StatelessVideoDecoding(), hwdep.SupportsV4L2FlatVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "v4l2_codec"},
-				ExtraData:         appendJSONFiles(vp90Group1FrmResize),
-				Timeout:           calculateTestTimeout(vp90Group1FrmResize, "v4l2_flat_vp9_0_group1_frm_resize"),
+				ExtraData:         appendJSONFiles(vp9WebmFiles["profile_0"]["group1"]["frm_resize"]),
+				Timeout:           calculateTestTimeout(vp9WebmFiles["profile_0"]["group1"]["frm_resize"], "v4l2_flat_vp9_0_group1_frm_resize"),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:      vp90Group1FrmResize,
+					videoFiles:      vp9WebmFiles["profile_0"]["group1"]["frm_resize"],
 					validatorType:   decoding.MD5,
 					mustFail:        false,
 					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
@@ -1438,10 +1344,10 @@ func init() {
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "v4l2_codec"},
-				ExtraData:         appendJSONFiles(vp90Group1GfDist),
-				Timeout:           calculateTestTimeout(vp90Group1GfDist, "v4l2_flat_vp9_0_group1_gf_dist"),
+				ExtraData:         appendJSONFiles(vp9WebmFiles["profile_0"]["group1"]["gf_dist"]),
+				Timeout:           calculateTestTimeout(vp9WebmFiles["profile_0"]["group1"]["gf_dist"], "v4l2_flat_vp9_0_group1_gf_dist"),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:      vp90Group1GfDist,
+					videoFiles:      vp9WebmFiles["profile_0"]["group1"]["gf_dist"],
 					validatorType:   decoding.MD5,
 					mustFail:        false,
 					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
@@ -1452,10 +1358,10 @@ func init() {
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "v4l2_codec"},
-				ExtraData:         appendJSONFiles(vp90Group1OddSize),
-				Timeout:           calculateTestTimeout(vp90Group1OddSize, "v4l2_flat_vp9_0_group1_odd_size"),
+				ExtraData:         appendJSONFiles(vp9WebmFiles["profile_0"]["group1"]["odd_size"]),
+				Timeout:           calculateTestTimeout(vp9WebmFiles["profile_0"]["group1"]["odd_size"], "v4l2_flat_vp9_0_group1_odd_size"),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:      vp90Group1OddSize,
+					videoFiles:      vp9WebmFiles["profile_0"]["group1"]["odd_size"],
 					validatorType:   decoding.MD5,
 					mustFail:        false,
 					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
@@ -1466,10 +1372,10 @@ func init() {
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "v4l2_codec"},
-				ExtraData:         appendJSONFiles(vp90Group1Sub8x8),
-				Timeout:           calculateTestTimeout(vp90Group1Sub8x8, "v4l2_flat_vp9_0_group1_sub8x8"),
+				ExtraData:         appendJSONFiles(vp9WebmFiles["profile_0"]["group1"]["sub8x8"]),
+				Timeout:           calculateTestTimeout(vp9WebmFiles["profile_0"]["group1"]["sub8x8"], "v4l2_flat_vp9_0_group1_sub8x8"),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:      vp90Group1Sub8x8,
+					videoFiles:      vp9WebmFiles["profile_0"]["group1"]["sub8x8"],
 					validatorType:   decoding.MD5,
 					mustFail:        false,
 					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
@@ -1480,10 +1386,10 @@ func init() {
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnV4L2StatelessVideoDecoding(), hwdep.SupportsV4L2FlatVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "v4l2_codec"},
-				ExtraData:         appendJSONFiles(vp90Group1Sub8x8Sf),
-				Timeout:           calculateTestTimeout(vp90Group1Sub8x8Sf, "v4l2_flat_vp9_0_group1_sub8x8_sf"),
+				ExtraData:         appendJSONFiles(vp9WebmFiles["profile_0"]["group1"]["sub8x8_sf"]),
+				Timeout:           calculateTestTimeout(vp9WebmFiles["profile_0"]["group1"]["sub8x8_sf"], "v4l2_flat_vp9_0_group1_sub8x8_sf"),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:      vp90Group1Sub8x8Sf,
+					videoFiles:      vp9WebmFiles["profile_0"]["group1"]["sub8x8_sf"],
 					validatorType:   decoding.MD5,
 					mustFail:        false,
 					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
@@ -1494,10 +1400,10 @@ func init() {
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9_2, "v4l2_codec"},
-				ExtraData:         appendJSONFiles(vp92Group1Buf),
-				Timeout:           calculateTestTimeout(vp92Group1Buf, "v4l2_flat_vp9_2_group1_buf"),
+				ExtraData:         appendJSONFiles(vp9WebmFiles["profile_2"]["group1"]["buf"]),
+				Timeout:           calculateTestTimeout(vp9WebmFiles["profile_2"]["group1"]["buf"], "v4l2_flat_vp9_2_group1_buf"),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:      vp92Group1Buf,
+					videoFiles:      vp9WebmFiles["profile_2"]["group1"]["buf"],
 					validatorType:   decoding.MD5,
 					mustFail:        false,
 					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
@@ -1508,10 +1414,10 @@ func init() {
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnV4L2StatelessVideoDecoding(), hwdep.SupportsV4L2FlatVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9_2, "v4l2_codec"},
-				ExtraData:         appendJSONFiles(vp92Group1FrmResize),
-				Timeout:           calculateTestTimeout(vp92Group1FrmResize, "v4l2_flat_vp9_2_group1_frm_resize"),
+				ExtraData:         appendJSONFiles(vp9WebmFiles["profile_2"]["group1"]["frm_resize"]),
+				Timeout:           calculateTestTimeout(vp9WebmFiles["profile_2"]["group1"]["frm_resize"], "v4l2_flat_vp9_2_group1_frm_resize"),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:      vp92Group1FrmResize,
+					videoFiles:      vp9WebmFiles["profile_2"]["group1"]["frm_resize"],
 					validatorType:   decoding.MD5,
 					mustFail:        false,
 					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
@@ -1522,10 +1428,10 @@ func init() {
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9_2, "v4l2_codec"},
-				ExtraData:         appendJSONFiles(vp92Group1GfDist),
-				Timeout:           calculateTestTimeout(vp92Group1GfDist, "v4l2_flat_vp9_2_group1_gf_dist"),
+				ExtraData:         appendJSONFiles(vp9WebmFiles["profile_2"]["group1"]["gf_dist"]),
+				Timeout:           calculateTestTimeout(vp9WebmFiles["profile_2"]["group1"]["gf_dist"], "v4l2_flat_vp9_2_group1_gf_dist"),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:      vp92Group1GfDist,
+					videoFiles:      vp9WebmFiles["profile_2"]["group1"]["gf_dist"],
 					validatorType:   decoding.MD5,
 					mustFail:        false,
 					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
@@ -1536,10 +1442,10 @@ func init() {
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9_2, "v4l2_codec"},
-				ExtraData:         appendJSONFiles(vp92Group1OddSize),
-				Timeout:           calculateTestTimeout(vp92Group1OddSize, "v4l2_flat_vp9_2_group1_odd_size"),
+				ExtraData:         appendJSONFiles(vp9WebmFiles["profile_2"]["group1"]["odd_size"]),
+				Timeout:           calculateTestTimeout(vp9WebmFiles["profile_2"]["group1"]["odd_size"], "v4l2_flat_vp9_2_group1_odd_size"),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:      vp92Group1OddSize,
+					videoFiles:      vp9WebmFiles["profile_2"]["group1"]["odd_size"],
 					validatorType:   decoding.MD5,
 					mustFail:        false,
 					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
@@ -1550,10 +1456,10 @@ func init() {
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9_2, "v4l2_codec"},
-				ExtraData:         appendJSONFiles(vp92Group1Sub8x8),
-				Timeout:           calculateTestTimeout(vp92Group1Sub8x8, "v4l2_flat_vp9_2_group1_sub8x8"),
+				ExtraData:         appendJSONFiles(vp9WebmFiles["profile_2"]["group1"]["sub8x8"]),
+				Timeout:           calculateTestTimeout(vp9WebmFiles["profile_2"]["group1"]["sub8x8"], "v4l2_flat_vp9_2_group1_sub8x8"),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:      vp92Group1Sub8x8,
+					videoFiles:      vp9WebmFiles["profile_2"]["group1"]["sub8x8"],
 					validatorType:   decoding.MD5,
 					mustFail:        false,
 					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
@@ -1564,10 +1470,10 @@ func init() {
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnV4L2StatelessVideoDecoding(), hwdep.SupportsV4L2FlatVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9_2, "v4l2_codec"},
-				ExtraData:         appendJSONFiles(vp92Group1Sub8x8Sf),
-				Timeout:           calculateTestTimeout(vp92Group1Sub8x8Sf, "v4l2_flat_vp9_2_group1_sub8x8_sf"),
+				ExtraData:         appendJSONFiles(vp9WebmFiles["profile_2"]["group1"]["sub8x8_sf"]),
+				Timeout:           calculateTestTimeout(vp9WebmFiles["profile_2"]["group1"]["sub8x8_sf"], "v4l2_flat_vp9_2_group1_sub8x8_sf"),
 				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:      vp92Group1Sub8x8Sf,
+					videoFiles:      vp9WebmFiles["profile_2"]["group1"]["sub8x8_sf"],
 					validatorType:   decoding.MD5,
 					mustFail:        false,
 					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},

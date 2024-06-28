@@ -309,7 +309,7 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 			Attr:            perBuildAttrs,
 			HardwareDeps:    genCombinedDeps("hwdep.D(%s)", []string{param.HardwareDeps}),
 			SoftwareDeps:    genCombinedDeps("[]string{%s}", []string{"caps.HWDecodeVP9", param.SoftwareDeps}),
-			VideoFiles:      "vp90Group1Buf",
+			VideoFiles:      "vp9WebmFiles[\"profile_0\"][\"group1\"][\"buf\"]",
 			ValidatorType:   "decoding.MD5",
 			EnabledFeatures: param.EnabledFeatures,
 		}, {
@@ -317,7 +317,7 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 			Attr:            perBuildAttrs,
 			HardwareDeps:    genCombinedDeps("hwdep.D(%s)", []string{"hwdep.SkipOnV4L2StatelessVideoDecoding()", param.HardwareDeps}),
 			SoftwareDeps:    genCombinedDeps("[]string{%s}", []string{"caps.HWDecodeVP9", param.SoftwareDeps}),
-			VideoFiles:      "vp90Group1FrmResize",
+			VideoFiles:      "vp9WebmFiles[\"profile_0\"][\"group1\"][\"frm_resize\"]",
 			ValidatorType:   "decoding.MD5",
 			EnabledFeatures: param.EnabledFeatures,
 		}, {
@@ -325,7 +325,7 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 			Attr:            perBuildAttrs,
 			HardwareDeps:    genCombinedDeps("hwdep.D(%s)", []string{param.HardwareDeps}),
 			SoftwareDeps:    genCombinedDeps("[]string{%s}", []string{"caps.HWDecodeVP9", param.SoftwareDeps}),
-			VideoFiles:      "vp90Group1GfDist",
+			VideoFiles:      "vp9WebmFiles[\"profile_0\"][\"group1\"][\"gf_dist\"]",
 			ValidatorType:   "decoding.MD5",
 			EnabledFeatures: param.EnabledFeatures,
 		}, {
@@ -333,7 +333,7 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 			Attr:            perBuildAttrs,
 			HardwareDeps:    genCombinedDeps("hwdep.D(%s)", []string{param.HardwareDeps}),
 			SoftwareDeps:    genCombinedDeps("[]string{%s}", []string{"caps.HWDecodeVP9", param.SoftwareDeps}),
-			VideoFiles:      "vp90Group1OddSize",
+			VideoFiles:      "vp9WebmFiles[\"profile_0\"][\"group1\"][\"odd_size\"]",
 			ValidatorType:   "decoding.MD5",
 			EnabledFeatures: param.EnabledFeatures,
 		}, {
@@ -341,7 +341,7 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 			Attr:            perBuildAttrs,
 			HardwareDeps:    genCombinedDeps("hwdep.D(%s)", []string{param.HardwareDeps}),
 			SoftwareDeps:    genCombinedDeps("[]string{%s}", []string{"caps.HWDecodeVP9", param.SoftwareDeps}),
-			VideoFiles:      "vp90Group1Sub8x8",
+			VideoFiles:      "vp9WebmFiles[\"profile_0\"][\"group1\"][\"sub8x8\"]",
 			ValidatorType:   "decoding.MD5",
 			EnabledFeatures: param.EnabledFeatures,
 		}, {
@@ -349,7 +349,7 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 			Attr:            perBuildAttrs,
 			HardwareDeps:    genCombinedDeps("hwdep.D(%s)", []string{"hwdep.SkipOnV4L2StatelessVideoDecoding()", param.HardwareDeps}),
 			SoftwareDeps:    genCombinedDeps("[]string{%s}", []string{"caps.HWDecodeVP9", param.SoftwareDeps}),
-			VideoFiles:      "vp90Group1Sub8x8Sf",
+			VideoFiles:      "vp9WebmFiles[\"profile_0\"][\"group1\"][\"sub8x8_sf\"]",
 			ValidatorType:   "decoding.MD5",
 			EnabledFeatures: param.EnabledFeatures,
 		}, {
@@ -357,7 +357,7 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 			Attr:            perBuildAttrs,
 			HardwareDeps:    genCombinedDeps("hwdep.D(%s)", []string{param.HardwareDeps}),
 			SoftwareDeps:    genCombinedDeps("[]string{%s}", []string{"caps.HWDecodeVP9_2", param.SoftwareDeps}),
-			VideoFiles:      "vp92Group1Buf",
+			VideoFiles:      "vp9WebmFiles[\"profile_2\"][\"group1\"][\"buf\"]",
 			ValidatorType:   "decoding.MD5",
 			EnabledFeatures: param.EnabledFeatures,
 		}, {
@@ -365,7 +365,7 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 			Attr:            perBuildAttrs,
 			HardwareDeps:    genCombinedDeps("hwdep.D(%s)", []string{"hwdep.SkipOnV4L2StatelessVideoDecoding()", param.HardwareDeps}),
 			SoftwareDeps:    genCombinedDeps("[]string{%s}", []string{"caps.HWDecodeVP9_2", param.SoftwareDeps}),
-			VideoFiles:      "vp92Group1FrmResize",
+			VideoFiles:      "vp9WebmFiles[\"profile_2\"][\"group1\"][\"frm_resize\"]",
 			ValidatorType:   "decoding.MD5",
 			EnabledFeatures: param.EnabledFeatures,
 		}, {
@@ -373,7 +373,7 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 			Attr:            perBuildAttrs,
 			HardwareDeps:    genCombinedDeps("hwdep.D(%s)", []string{param.HardwareDeps}),
 			SoftwareDeps:    genCombinedDeps("[]string{%s}", []string{"caps.HWDecodeVP9_2", param.SoftwareDeps}),
-			VideoFiles:      "vp92Group1GfDist",
+			VideoFiles:      "vp9WebmFiles[\"profile_2\"][\"group1\"][\"gf_dist\"]",
 			ValidatorType:   "decoding.MD5",
 			EnabledFeatures: param.EnabledFeatures,
 		}, {
@@ -381,7 +381,7 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 			Attr:            perBuildAttrs,
 			HardwareDeps:    genCombinedDeps("hwdep.D(%s)", []string{param.HardwareDeps}),
 			SoftwareDeps:    genCombinedDeps("[]string{%s}", []string{"caps.HWDecodeVP9_2", param.SoftwareDeps}),
-			VideoFiles:      "vp92Group1OddSize",
+			VideoFiles:      "vp9WebmFiles[\"profile_2\"][\"group1\"][\"odd_size\"]",
 			ValidatorType:   "decoding.MD5",
 			EnabledFeatures: param.EnabledFeatures,
 		}, {
@@ -389,7 +389,7 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 			Attr:            perBuildAttrs,
 			HardwareDeps:    genCombinedDeps("hwdep.D(%s)", []string{param.HardwareDeps}),
 			SoftwareDeps:    genCombinedDeps("[]string{%s}", []string{"caps.HWDecodeVP9_2", param.SoftwareDeps}),
-			VideoFiles:      "vp92Group1Sub8x8",
+			VideoFiles:      "vp9WebmFiles[\"profile_2\"][\"group1\"][\"sub8x8\"]",
 			ValidatorType:   "decoding.MD5",
 			EnabledFeatures: param.EnabledFeatures,
 		}, {
@@ -397,7 +397,7 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 			Attr:            perBuildAttrs,
 			HardwareDeps:    genCombinedDeps("hwdep.D(%s)", []string{"hwdep.SkipOnV4L2StatelessVideoDecoding()", param.HardwareDeps}),
 			SoftwareDeps:    genCombinedDeps("[]string{%s}", []string{"caps.HWDecodeVP9_2", param.SoftwareDeps}),
-			VideoFiles:      "vp92Group1Sub8x8Sf",
+			VideoFiles:      "vp9WebmFiles[\"profile_2\"][\"group1\"][\"sub8x8_sf\"]",
 			ValidatorType:   "decoding.MD5",
 			EnabledFeatures: param.EnabledFeatures,
 		}, {
