@@ -38,8 +38,16 @@ func (s EffectState) String() string {
 	}
 }
 
-func amixerCget(ctx context.Context, cardID, arg string) (EffectState, error) {
-	bout, berr, err := testexec.CommandContext(ctx, "amixer", "-c"+cardID, "cget", arg).SeparatedOutput()
+func amixerCget(ctx context.Context, cardID, nameExpr string) (EffectState, error) {
+	available, err := hasControl(ctx, cardID, nameExpr)
+	if err != nil {
+		return EffectUnavailable, errors.Wrap(err, "hasControl()")
+	}
+	if !available {
+		return EffectUnavailable, nil
+	}
+
+	bout, berr, err := testexec.CommandContext(ctx, "amixer", "-c"+cardID, "cget", nameExpr).SeparatedOutput()
 	stdout := string(bout)
 	stderr := string(berr)
 	if err != nil {
@@ -50,7 +58,7 @@ func amixerCget(ctx context.Context, cardID, arg string) (EffectState, error) {
 			return EffectUnavailable, nil
 		}
 		// Other exit codes are unexpected.
-		return EffectUnavailable, errors.Wrapf(err, "cannot get %q; stderr: %q", arg, stderr)
+		return EffectUnavailable, errors.Wrapf(err, "cannot get %q; stderr: %q", nameExpr, stderr)
 	}
 	if strings.Contains(stdout, ": values=off") {
 		return EffectDisabled, nil
@@ -58,7 +66,7 @@ func amixerCget(ctx context.Context, cardID, arg string) (EffectState, error) {
 	if strings.Contains(stdout, ": values=on") {
 		return EffectEnabled, nil
 	}
-	return EffectUnavailable, errors.Errorf("cannot tell %q state from %q; stderr: %q", arg, stdout, stderr)
+	return EffectUnavailable, errors.Errorf("cannot tell %q state from %q; stderr: %q", nameExpr, stdout, stderr)
 }
 
 func hasCardID(cards []audio.Card, id string) bool {
@@ -79,7 +87,17 @@ func DSPEchoCancellationState(ctx context.Context) (EffectState, error) {
 
 	// Redrix and friends.
 	if id := "sofrt5682"; hasCardID(cards, id) {
-		b, err := testexec.CommandContext(ctx, "sof-ctl", "-Dhw:"+id, "-c", "name='GOOGLE_RTC_AUDIO_PROCESSING10.0 Config'", "-r", "-b").CombinedOutput(testexec.DumpLogOnError)
+		const nameExpr = "name='GOOGLE_RTC_AUDIO_PROCESSING10.0 Config'"
+
+		available, err := hasControl(ctx, id, nameExpr)
+		if err != nil {
+			return EffectUnavailable, errors.Wrap(err, "hasControl()")
+		}
+		if !available {
+			return EffectUnavailable, nil
+		}
+
+		b, err := testexec.CommandContext(ctx, "sof-ctl", "-Dhw:"+id, "-c", nameExpr, "-r", "-b").CombinedOutput(testexec.DumpLogOnError)
 		if err != nil {
 			return EffectUnavailable, errors.Wrap(err, "error running sof-ctl")
 		}
@@ -112,4 +130,12 @@ func DSPNoiseCancellationState(ctx context.Context) (EffectState, error) {
 		return amixerCget(ctx, id, "name='RTNR3.0 rtnr_enable_3'")
 	}
 	return EffectUnavailable, nil
+}
+
+func hasControl(ctx context.Context, cardID, nameExpr string) (bool, error) {
+	output, err := testexec.CommandContext(ctx, "amixer", "-c"+cardID, "controls").Output(testexec.DumpLogOnError)
+	if err != nil {
+		return false, errors.Wrap(err, "error running amixer")
+	}
+	return strings.Contains(string(output), nameExpr), nil
 }

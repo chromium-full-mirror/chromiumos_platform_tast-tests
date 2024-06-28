@@ -48,6 +48,7 @@ var (
 const (
 	apAEC = "echo_cancellation"
 	apNC  = "noise_cancellation"
+	apBF  = "beamforming"
 )
 
 func init() {
@@ -56,9 +57,7 @@ func init() {
 		Desc:         "Check effects are executed on the right component",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
 		BugComponent: "b:776546",
-		Attr: []string{
-			"group:mainline",
-		},
+		Attr:         []string{},
 		Timeout:      30 * time.Second,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{
@@ -79,6 +78,7 @@ func init() {
 				},
 				Fixture:           crasEffectsHasAPNC,
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAECModels...)),
+				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
 				Name: "dsp_0x0_conflict",
@@ -96,6 +96,7 @@ func init() {
 				},
 				Fixture:           crasEffectsHasAPNC,
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAECModels...)),
+				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
 				Name: "dsp_0x10_conflict", // 0x10 is exactly the same as 0x0.
@@ -113,6 +114,7 @@ func init() {
 				},
 				Fixture:           crasEffectsHasAPNC,
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAECModels...)),
+				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
 				Name: "dsp_0x10_0x11_conflict",
@@ -131,6 +133,7 @@ func init() {
 				},
 				Fixture:           crasEffectsHasAPNC,
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAECModels...)),
+				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
 				Name: "dsp_0x0_dont_care",
@@ -152,6 +155,7 @@ func init() {
 				},
 				Fixture:           crasEffectsHasAPNC,
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAECModels...)),
+				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
 				Name: "dsp_aec_0x0_conflict",
@@ -170,6 +174,7 @@ func init() {
 				},
 				Fixture:           crasEffectsHasAPNC,
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAECModels...)),
+				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
 				Name: "dsp_aec_0x0_dont_care",
@@ -192,6 +197,7 @@ func init() {
 				},
 				Fixture:           crasEffectsHasAPNC,
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAECModels...)),
+				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
 				Name: "dsp_echo_ref_blocked_by_selection",
@@ -209,6 +215,7 @@ func init() {
 				},
 				Fixture:           crasEffectsHasAPNC,
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAECModels...)),
+				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
 				Name: "dsp_echo_ref_blocked_by_playback",
@@ -227,6 +234,7 @@ func init() {
 				},
 				Fixture:           crasEffectsHasAPNC,
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAECModels...)),
+				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
 				Name: "dsp_echo_ref_not_blocked_by_playback",
@@ -245,6 +253,7 @@ func init() {
 				},
 				Fixture:           crasEffectsHasAPNC,
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAECModels...)),
+				ExtraAttr:         []string{"group:mainline"},
 			},
 			// NC provider tests with both DSP and AP NC.
 			{
@@ -266,6 +275,7 @@ func init() {
 				},
 				Fixture:           crasEffectsHasAPNC,
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
+				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
 				Name: "nc_both_disabled",
@@ -286,6 +296,7 @@ func init() {
 				},
 				Fixture:           crasEffectsHasAPNC,
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
+				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
 				Name: "nc_both_fallback_ap",
@@ -306,6 +317,7 @@ func init() {
 				},
 				Fixture:           crasEffectsHasAPNC,
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
+				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
 				Name: "nc_both_fallback_ap_disabled",
@@ -326,6 +338,7 @@ func init() {
 				},
 				Fixture:           crasEffectsHasAPNC,
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
+				ExtraAttr:         []string{"group:mainline"},
 			},
 			// NC provider tests with only DSP NC.
 			{
@@ -344,6 +357,7 @@ func init() {
 				},
 				Fixture:           crasEffectsHasNoAPNC,
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPNCOnlyModels...)),
+				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
 				Name: "nc_only_dsp_block_select_internal_speaker",
@@ -361,6 +375,7 @@ func init() {
 				},
 				Fixture:           crasEffectsHasNoAPNC,
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPNCOnlyModels...)),
+				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
 				Name: "nc_only_dsp_block_pin_internal_speaker",
@@ -379,6 +394,7 @@ func init() {
 				},
 				Fixture:           crasEffectsHasNoAPNC,
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPNCOnlyModels...)),
+				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
 				Name: "nc_only_dsp_enabled_with_aec",
@@ -396,6 +412,7 @@ func init() {
 				},
 				Fixture:           crasEffectsHasNoAPNC,
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPNCOnlyModels...)),
+				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
 				Name: "nc_only_dsp_block_select_internal_speaker_with_aec",
@@ -413,6 +430,7 @@ func init() {
 				},
 				Fixture:           crasEffectsHasNoAPNC,
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPNCOnlyModels...)),
+				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
 				Name: "nc_only_dsp_block_pin_internal_speaker_with_aec",
@@ -431,6 +449,7 @@ func init() {
 				},
 				Fixture:           crasEffectsHasNoAPNC,
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPNCOnlyModels...)),
+				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
 				Name: "forced_voice_isolation_with_nc_button_disabled",
@@ -448,6 +467,7 @@ func init() {
 				},
 				Fixture:           crasEffectsHasAPNC,
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
+				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
 				Name: "forced_voice_isolation_with_nc_button_enabled",
@@ -465,6 +485,7 @@ func init() {
 				},
 				Fixture:           crasEffectsHasAPNC,
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
+				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
 				Name: "forced_disabled_voice_isolation_with_nc_button_disabled",
@@ -482,6 +503,7 @@ func init() {
 				},
 				Fixture:           crasEffectsHasAPNC,
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
+				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
 				Name: "forced_disabled_voice_isolation_with_nc_button_enabled",
@@ -499,6 +521,7 @@ func init() {
 				},
 				Fixture:           crasEffectsHasAPNC,
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
+				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
 				Name: "nc_then_unprocessed_stream",
@@ -517,6 +540,7 @@ func init() {
 				},
 				Fixture:           crasEffectsHasAPNC,
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
+				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
 				Name: "unprocessed_then_nc_stream",
@@ -535,6 +559,26 @@ func init() {
 				},
 				Fixture:           crasEffectsHasAPNC,
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
+				ExtraAttr:         []string{"group:mainline"},
+			},
+			{
+				Name: "beamforming",
+				Val: crasEffectsParam{
+					noiseCancellationEnabled: true,
+					inputDevice:              "INTERNAL_MIC",
+					outputDevice:             "INTERNAL_SPEAKER",
+					captureClients: []captureConfig{
+						{effects: 0x300, expectAPEffects: []string{apNC, apBF}}, // Force enable NC.
+						{effects: 0x100, expectAPEffects: nil},                  // unprocessed.
+					},
+					expectDSPEffects: dspEffects{
+						AEC: internal.EffectUnavailable,
+						NC:  internal.EffectUnavailable,
+					},
+				},
+				Fixture: crasEffectsHasAPNC,
+				// TODO: Schedule this on omniknight.3mic.
+				ExtraAttr: []string{},
 			},
 		},
 	})
@@ -667,8 +711,10 @@ func CrasEffects(ctx context.Context, s *testing.State) {
 	// b/301912218: This is needed because CRAS & the use case manager
 	// assume that the modifiers are turned off initially,
 	// e.g. on CRAS restart.
-	if err := resetNCState(ctx); err != nil {
-		s.Fatal("resetNCState failed: ", err)
+	if param.expectDSPEffects.NC != internal.EffectUnavailable {
+		if err := resetNCState(ctx); err != nil {
+			s.Fatal("resetNCState failed: ", err)
+		}
 	}
 
 	if err := audio.SelectIODevices(ctx, cras, param.inputDevice, param.outputDevice); err != nil {
