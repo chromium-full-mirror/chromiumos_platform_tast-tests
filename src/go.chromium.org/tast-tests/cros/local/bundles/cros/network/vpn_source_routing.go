@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/network/ping"
+	"go.chromium.org/tast-tests/cros/local/network/testhooks"
 	"go.chromium.org/tast-tests/cros/local/network/vpn"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -18,7 +19,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VPNSourceRouting,
 		Desc:         "Verify traffic from different sources is routed to the correct interface",
-		Contacts:     []string{"cros-networking@google.com", "garrick@google.com"},
+		Contacts:     []string{"cros-networking@google.com", "jiejiang@google.com"},
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"ikev2"},
@@ -33,6 +34,17 @@ func VPNSourceRouting(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, 10*time.Second)
 	defer cancel()
+
+	hookEnv, err := testhooks.RunNetworkTestHooks(ctx,
+		testhooks.NewSaveNetLogHook(),
+		testhooks.NewDumpHostOnFailureHook(),
+		testhooks.NewResetVirtualnetHook(),
+	)
+	if err != nil {
+		s.Fatal("Failed to run network test hooks: ", err)
+	}
+	s.AttachErrorHandlers(hookEnv.OnErrorHandler, hookEnv.OnFatalHandler)
+	defer hookEnv.TearDownWithLogFailures(cleanupCtx, s.HasError)
 
 	networkEnv, err := vpn.CreateNetworkTopology(ctx)
 	if err != nil {
