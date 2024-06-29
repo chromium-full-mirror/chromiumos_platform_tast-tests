@@ -30,7 +30,7 @@ func init() {
 		BugComponent: "b:1373988",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "arcBootedWithInputOverlayAlphaV2",
+		Fixture:      "arcBootedWithGameDashboard",
 		Params: []testing.Param{
 			{
 				ExtraSoftwareDeps: []string{"android_container"},
@@ -59,28 +59,31 @@ func InputOverlayDisplay(ctx context.Context, s *testing.State) {
 		s.Log("Display CUJ #1: hide game overlay")
 		topTapKey := nodewith.Name(gio.TopTapKeyName).HasClass("LabelButtonLabel")
 		upMoveKey := nodewith.Name(gio.UpMoveKey).HasClass("LabelButtonLabel")
+		gameDashboardButton := nodewith.Name("Game dashboard").HasClass("GameDashboardButton")
+		gameControlsHintButton := nodewith.NameContaining("controls").HasClass("FeatureTile")
+		gameControlsFeatureButton := nodewith.HasClass("Switch")
+		gameControlsEdit := nodewith.NameContaining("controls").HasClass("GameDashboardMainMenuView::GameControlsDetailsRow")
+		editingListDone := nodewith.Name("Done editing").HasClass("PillButton")
+
 		if err := uiauto.Combine("hide game overlay",
-			// Close educational dialog.
-			ui.LeftClick(nodewith.Name("Got it").HasClass("LabelButtonLabel")),
-			// Open game controls.
-			ui.LeftClick(nodewith.Name("Game controls").HasClass("MenuEntryView")),
-			// Tap bottom menu switch.
-			ui.LeftClick(nodewith.Name("Show key mapping").HasClass("ToggleButton")),
-			// Exit out of menu.
-			ui.LeftClick(nodewith.Name("Close game controls").HasClass("ImageButton")),
-			ui.WaitUntilGone(nodewith.Name("Close game controls").HasClass("ImageButton")),
+			// Open game dashboard main menu.
+			ui.LeftClickUntil(gameDashboardButton, ui.Exists(gameControlsHintButton)),
+			// Hide Game Controls.
+			ui.LeftClick(gameControlsHintButton),
+			// Close game dashboard main menu.
+			ui.LeftClick(gameDashboardButton),
 			// Poll UI elements no longer exist, but overlay is still responsive.
 			ui.Gone(topTapKey),
 			gio.TapOverlayButton(kb, gio.TopTapKey, &params, gio.TopTap),
 			ui.Gone(upMoveKey),
 			gio.MoveOverlayButton(kb, gio.UpMoveKey, &params),
 			// Poll edits can still be done.
-			ui.LeftClick(nodewith.Name("Game controls").HasClass("MenuEntryView")),
-			ui.LeftClick(nodewith.Name("Edit").HasClass("LabelButtonLabel")),
-			ui.WaitUntilExists(topTapKey),
-			ui.WaitUntilExists(upMoveKey),
+			ui.LeftClickUntil(gameDashboardButton, ui.Exists(gameControlsHintButton)),
+			ui.LeftClick(gameControlsEdit),
+			ui.WaitUntilExists(topTapKey.First()),
+			ui.WaitUntilExists(upMoveKey.First()),
 			// Exit out.
-			ui.LeftClick(nodewith.Name("Cancel").HasClass("LabelButtonLabel")),
+			ui.LeftClick(editingListDone),
 		)(ctx); err != nil {
 			s.Error("Failed to verify game overlay hidden: ", err)
 			// Reset activity.
@@ -92,22 +95,20 @@ func InputOverlayDisplay(ctx context.Context, s *testing.State) {
 		// CUJ: Disable game overlay.
 		s.Log("Display CUJ #2: disable game overlay")
 		if err := uiauto.Combine("disable game overlay",
-			// Open game controls.
-			ui.LeftClick(nodewith.Name("Game controls").HasClass("MenuEntryView")),
-			// Tap top menu switch.
-			ui.LeftClick(nodewith.Name("Game controls").HasClass("ToggleButton")),
-			// Exit out of menu.
-			ui.LeftClick(nodewith.Name("Close game controls").HasClass("ImageButton")),
-			ui.WaitUntilGone(nodewith.Name("Close game controls").HasClass("ImageButton")),
+			// Open game dashboard main menu.
+			ui.LeftClickUntil(gameDashboardButton, ui.Exists(gameControlsFeatureButton)),
+			// Tap Controls switch button.
+			ui.LeftClick(gameControlsFeatureButton),
+			ui.LeftClick(gameDashboardButton),
 			// Poll UI elements no longer exist, and overlay is unresponsive.
 			ui.Gone(topTapKey),
 			not(gio.TapOverlayButton(kb, gio.TopTapKey, &params, gio.TopTap)),
 			ui.Gone(upMoveKey),
 			not(gio.MoveOverlayButton(kb, gio.UpMoveKey, &params)),
-			// Check "Customize" button disabled.
-			ui.LeftClick(nodewith.Name("Game controls").HasClass("MenuEntryView")),
-			ui.LeftClick(nodewith.Name("Edit").HasClass("LabelButtonLabel")),
-			not(ui.Gone(nodewith.Name("Edit").HasClass("LabelButtonLabel"))),
+			ui.LeftClick(gameDashboardButton),
+			// Check edit button disabled.
+			ui.LeftClick(gameControlsEdit),
+			not(ui.Gone(gameControlsEdit)),
 		)(ctx); err != nil {
 			s.Error("Failed to verify game overlay disabled: ", err)
 		}
