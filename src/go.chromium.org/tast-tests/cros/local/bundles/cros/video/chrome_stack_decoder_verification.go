@@ -17,6 +17,184 @@ import (
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
+// These are invalid bistreams one way or another that are decoded correctly
+// (no artifacts) with a software decoder but not when using certain hardware
+// decoder implementations. These tests are expected to fail long-term, but it's
+// interesting to have them to verify that e.g. the driver doesn't crash.
+var h264InvalidBitstreams = []string{
+	"test_vectors/h264/files_from_bugs/b_234651916_big_buck_bunny_artifacts_rk3399.h264",
+	"test_vectors/h264/files_from_bugs/b_184041918_Webex_out_of_order_h264_frames.h264",
+	"test_vectors/h264/files_from_bugs/b_277849540__malformed_h264_vlct_16x16.h264",
+	"test_vectors/h264/files_from_bugs/b_277849540__malformed_h264_vlct_4x4.h264",
+	"test_vectors/h264/files_from_bugs/b_277849540__malformed_h264_vlct_8x8.h264",
+}
+
+var h264Files = map[string][]string{
+	"baseline": {
+		"test_vectors/h264/baseline/AUD_MW_E.h264",
+		"test_vectors/h264/baseline/BA1_Sony_D.h264",
+		"test_vectors/h264/baseline/BA2_Sony_F.h264",
+		"test_vectors/h264/baseline/BAMQ1_JVC_C.h264",
+		"test_vectors/h264/baseline/BAMQ2_JVC_C.h264",
+		"test_vectors/h264/baseline/BANM_MW_D.h264",
+		"test_vectors/h264/baseline/BA_MW_D.h264",
+		"test_vectors/h264/baseline/CI_MW_D.h264",
+		"test_vectors/h264/baseline/CVSE2_Sony_B.h264",
+		"test_vectors/h264/baseline/HCBP1_HHI_A.h264",
+		"test_vectors/h264/baseline/HCBP2_HHI_A.h264",
+		"test_vectors/h264/baseline/LS_SVA_D.h264",
+		"test_vectors/h264/baseline/MIDR_MW_D.h264",
+		"test_vectors/h264/baseline/MPS_MW_A.h264",
+		"test_vectors/h264/baseline/MR1_MW_A.h264",
+		"test_vectors/h264/baseline/MR2_MW_A.h264",
+		"test_vectors/h264/baseline/NL1_Sony_D.h264",
+		"test_vectors/h264/baseline/NL2_Sony_H.h264",
+		"test_vectors/h264/baseline/NLMQ1_JVC_C.h264",
+		"test_vectors/h264/baseline/NLMQ2_JVC_C.h264",
+		"test_vectors/h264/baseline/NRF_MW_E.h264",
+		"test_vectors/h264/baseline/SVA_BA1_B.h264",
+		"test_vectors/h264/baseline/SVA_BA2_D.h264",
+		"test_vectors/h264/baseline/SVA_NL1_B.h264",
+		"test_vectors/h264/baseline/SVA_NL2_E.h264",
+
+		// The following test vectors are disabled because they don't verify that
+		// |max_num_reorder_frames| is smaller or equal to the DPB size, see
+		// b/216179527.
+		//"test_vectors/h264/baseline/MR2_TANDBERG_E.h264",
+		//"test_vectors/h264/baseline/MR3_TANDBERG_B.h264",
+		//"test_vectors/h264/baseline/MR4_TANDBERG_C.h264",
+		//"test_vectors/h264/baseline/MR5_TANDBERG_C.h264",
+	},
+	"main": {
+		"test_vectors/h264/main/CABA1_SVA_B.h264",
+		"test_vectors/h264/main/CABA1_Sony_D.h264",
+		"test_vectors/h264/main/CABA2_SVA_B.h264",
+		"test_vectors/h264/main/CABA2_Sony_E.h264",
+		"test_vectors/h264/main/CABA3_SVA_B.h264",
+		"test_vectors/h264/main/CABA3_Sony_C.h264",
+		"test_vectors/h264/main/CABA3_TOSHIBA_E.h264",
+		"test_vectors/h264/main/CACQP3_Sony_D.h264",
+		"test_vectors/h264/main/CANL1_SVA_B.h264",
+		"test_vectors/h264/main/CANL1_Sony_E.h264",
+		"test_vectors/h264/main/CANL1_TOSHIBA_G.h264",
+		"test_vectors/h264/main/CANL2_SVA_B.h264",
+		"test_vectors/h264/main/CANL2_Sony_E.h264",
+		"test_vectors/h264/main/CANL3_SVA_B.h264",
+		"test_vectors/h264/main/CANL3_Sony_C.h264",
+		"test_vectors/h264/main/CANL4_SVA_B.h264",
+		"test_vectors/h264/main/CAPCM1_Sand_E.h264",
+		"test_vectors/h264/main/CAPCMNL1_Sand_E.h264",
+		"test_vectors/h264/main/CAPM3_Sony_D.h264",
+		"test_vectors/h264/main/CAQP1_Sony_B.h264",
+		"test_vectors/h264/main/CAWP1_TOSHIBA_E.h264",
+		"test_vectors/h264/main/CAWP5_TOSHIBA_E.h264",
+		"test_vectors/h264/main/CVBS3_Sony_C.h264",
+		"test_vectors/h264/main/CVPCMNL1_SVA_C.h264",
+		"test_vectors/h264/main/CVPCMNL2_SVA_C.h264",
+		"test_vectors/h264/main/CVSE3_Sony_H.h264",
+		"test_vectors/h264/main/CVSEFDFT3_Sony_E.h264",
+		"test_vectors/h264/main/CVWP1_TOSHIBA_E.h264",
+		"test_vectors/h264/main/CVWP2_TOSHIBA_E.h264",
+		"test_vectors/h264/main/CVWP3_TOSHIBA_E.h264",
+		"test_vectors/h264/main/CVWP5_TOSHIBA_E.h264",
+		"test_vectors/h264/main/NL3_SVA_E.h264",
+		"test_vectors/h264/main/camp_mot_frm0_full.h264",
+		"test_vectors/h264/main/cvmp_mot_frm0_full_B.h264",
+		"test_vectors/h264/main/src19td.IBP.h264",
+		"test_vectors/h264/main/HCMP1_HHI_A.h264",
+
+		// The following test vectors are disabled because they don't verify the
+		// SPS's |frame_mbs_only_flag|, i.e. they contain interlaced macroblocks
+		// which are not supported, see b/216319263.
+		//"test_vectors/h264/main/CAMA1_Sony_C.h264",
+		//"test_vectors/h264/main/CAMA1_TOSHIBA_B.h264",
+		//"test_vectors/h264/main/CAMA3_Sand_E.h264",
+		//"test_vectors/h264/main/CAMACI3_Sony_C.h264",
+		//"test_vectors/h264/main/CAMANL1_TOSHIBA_B.h264",
+		//"test_vectors/h264/main/CAMANL2_TOSHIBA_B.h264",
+		//"test_vectors/h264/main/CAMANL3_Sand_E.h264",
+		//"test_vectors/h264/main/CAMASL3_Sony_B.h264",
+		//"test_vectors/h264/main/CAMP_MOT_MBAFF_L30.h264",
+		//"test_vectors/h264/main/CAMP_MOT_MBAFF_L31.h264",
+		//"test_vectors/h264/main/CANLMA2_Sony_C.h264",
+		//"test_vectors/h264/main/CANLMA3_Sony_C.h264",
+		//"test_vectors/h264/main/CVCANLMA2_Sony_C.h264",
+		//"test_vectors/h264/main/CVMA1_Sony_D.h264",
+		//"test_vectors/h264/main/CVMA1_TOSHIBA_B.h264",
+		//"test_vectors/h264/main/CVMANL1_TOSHIBA_B.h264",
+		//"test_vectors/h264/main/CVMANL2_TOSHIBA_B.h264",
+		//"test_vectors/h264/main/CVMAQP2_Sony_G.h264",
+		//"test_vectors/h264/main/CVMAQP3_Sony_D.h264",
+		//"test_vectors/h264/main/camp_mot_mbaff0_full.h264",
+		//"test_vectors/h264/main/cvmp_mot_mbaff0_full_B.h264",
+	},
+	// The following test vectors are separated because they don't verify that all
+	// slice header's |first_mb_in_slice| is zero, which is not supported by
+	// Chromium's parsers (see b/216179527). Stateful decoders, who have their own
+	// H.264 parsers, might support them, though.
+	"first_mb_in_slice": {
+		"test_vectors/h264/baseline/BA1_FT_C.h264",
+		"test_vectors/h264/baseline/BASQP1_Sony_C.h264",
+		"test_vectors/h264/baseline/CI1_FT_B.h264",
+		"test_vectors/h264/baseline/SVA_Base_B.h264",
+		"test_vectors/h264/baseline/SVA_CL1_E.h264",
+		"test_vectors/h264/baseline/SVA_FM1_E.h264",
+		"test_vectors/h264/baseline/MR1_BT_A.h264",
+		"test_vectors/h264/main/CABACI3_Sony_B.h264",
+		"test_vectors/h264/main/CABAST3_Sony_E.h264",
+		"test_vectors/h264/main/CABASTBR3_Sony_B.h264",
+		"test_vectors/h264/main/SL1_SVA_B.h264",
+	},
+	"high": {
+		"test_vectors/h264/high/FREH12_B.h264",
+		"test_vectors/h264/high/FREH1_B.h264",
+		"test_vectors/h264/high/FREH2_B.h264",
+		"test_vectors/h264/high/FREH3.h264",
+		"test_vectors/h264/high/FREH8.h264",
+		"test_vectors/h264/high/FREH9.h264",
+		"test_vectors/h264/high/HCAFR1_HHI.h264",
+		"test_vectors/h264/high/HCAFR2_HHI.h264",
+		"test_vectors/h264/high/HCAFR3_HHI.h264",
+		"test_vectors/h264/high/HCAFR4_HHI.h264",
+		"test_vectors/h264/high/HCHP1_HHI_B.h264",
+		"test_vectors/h264/high/HCHP2_HHI_A.h264",
+		"test_vectors/h264/high/HPCADQ_BRCM_B.h264",
+		"test_vectors/h264/high/HPCALQ_BRCM_B.h264",
+		"test_vectors/h264/high/HPCANL_BRCM_C.h264",
+		"test_vectors/h264/high/HPCAQ2LQ_BRCM_B.h264",
+		"test_vectors/h264/high/HPCA_BRCM_C.h264",
+		"test_vectors/h264/high/HPCVNL_BRCM_A.h264",
+		"test_vectors/h264/high/HPCV_BRCM_A.h264",
+
+		// The following test vectors are disabled as they are interlaced
+		// bitstreams indicated by the |frame_mbs_only_flag| being set to 0.
+		// Since interlaced H.264 bitstreams are not supported and is not
+		// planned on being supported, these bitstreams are disabled.
+		// "test_vectors/h264/high/FREH10.h264",
+		// "test_vectors/h264/high/FREH11.h264",
+		// "test_vectors/h264/high/FREH4.h264",
+		// "test_vectors/h264/high/FREH5.h264",
+		// "test_vectors/h264/high/FREH6.h264",
+		// "test_vectors/h264/high/FREH7_B.h264",
+		// "test_vectors/h264/high/FREXT01_JVC_D.h264",
+		// "test_vectors/h264/high/FREXT02_JVC_C.h264",
+		// "test_vectors/h264/high/FRExt_MMCO4_Sony_B.h264",
+		// "test_vectors/h264/high/HCAFF1_HHI.h264",
+		// "test_vectors/h264/high/HCAMFF1_HHI.h264",
+		// "test_vectors/h264/high/HCHP3_HHI_A.h264",
+		// "test_vectors/h264/high/HPCAFLNL_BRCM_C.h264",
+		// "test_vectors/h264/high/HPCAFL_BRCM_C.h264",
+		// "test_vectors/h264/high/HPCAMAPALQ_BRCM_B.h264",
+		// "test_vectors/h264/high/HPCAMOLQ_BRCM_B.h264",
+		// "test_vectors/h264/high/HPCVFLNL_BRCM_A.h264",
+		// "test_vectors/h264/high/HPCVFL_BRCM_A.h264",
+		// "test_vectors/h264/high/HPCVMOLQ_BRCM_B.h264",
+		// "test_vectors/h264/high/HVLCFI0_Sony_B.h264",
+		// "test_vectors/h264/high/HVLCMFF0_Sony_B.h264",
+		// "test_vectors/h264/high/HVLCPFF0_Sony_B.h264",
+	},
+}
+
 func appendJSONFiles(videoFiles []string) []string {
 	var tf []string
 	for _, file := range videoFiles {
