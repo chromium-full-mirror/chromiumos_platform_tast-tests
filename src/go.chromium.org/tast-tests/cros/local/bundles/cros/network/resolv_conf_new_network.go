@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/dns"
-	"go.chromium.org/tast-tests/cros/local/network/dumputil"
+	"go.chromium.org/tast-tests/cros/local/network/testhooks"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/env"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/subnet"
 	"go.chromium.org/tast-tests/cros/local/network/vpn"
@@ -92,24 +92,22 @@ func ResolvConfNewNetwork(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, 10*time.Second)
 	defer cancel()
 
-	// Dump network info on failure.
-	errorHandler := dumputil.CreateErrorHandler(cleanupCtx)
-	s.AttachErrorHandlers(errorHandler, errorHandler)
+	hookEnv, err := testhooks.RunNetworkTestHooks(ctx,
+		testhooks.NewSaveNetLogHook(),
+		testhooks.NewDumpHostOnFailureHook(),
+		testhooks.NewResetVirtualnetHook(),
+		testhooks.NewDisablePortalDetectionHook(),
+	)
+	if err != nil {
+		s.Fatal("Failed to run network test hooks: ", err)
+	}
+	s.AttachErrorHandlers(hookEnv.OnErrorHandler, hookEnv.OnFatalHandler)
+	defer hookEnv.TearDownWithLogFailures(cleanupCtx, s.HasError)
 
-	// Shill-related setup.
 	m, err := shill.NewManager(ctx)
 	if err != nil {
 		s.Fatal("Failed to create manager proxy: ", err)
 	}
-	testing.ContextLog(ctx, "Disabling portal detection")
-	if err := m.DisablePortalDetection(ctx); err != nil {
-		s.Fatal("Failed to disable portal detection: ", err)
-	}
-	defer func() {
-		if err := m.EnablePortalDetection(cleanupCtx); err != nil {
-			testing.ContextLog(cleanupCtx, "Failed to re-enable portal detection: ", err)
-		}
-	}()
 
 	params := s.Param().(resolvConfNewNetworkTestParams)
 	pool := subnet.NewPool()

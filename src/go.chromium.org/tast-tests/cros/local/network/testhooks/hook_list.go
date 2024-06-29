@@ -35,3 +35,33 @@ func NewSaveNetLogHook() hook {
 func NewTcpdumpHook() hook {
 	return &tcpdumpHook{}
 }
+
+// NewResetVirtualnetHook creates a hook which resets the states which may be
+// changed by virtualnet or affect virtualnet environment, e.g., the
+// EphemeralPriority on Services. It's recommended to have this hook if the test
+// relies on virtualnet package. Note that the setup of this hook should happen
+// before the setup of any virtualnet env, and the teardown of this hook should
+// happen after the teardown of any virtualnet env, i.e., if the virtualnet
+// setup is in the fixture, then having this hook in the test can cause
+// unexpected behaviors.
+func NewResetVirtualnetHook() hook {
+	return &resetVirtualnetHook{}
+}
+
+// NewDisablePortalDetectionHook creates a hook which disables portal detection
+// in shill in setup, and restores the portal detection config in teardown. This
+// hook is helpful if the test doesn't care and wants to skip the network
+// validation step so that the service state can go to online directly after
+// connected.
+func NewDisablePortalDetectionHook() hook {
+	return &togglePortalDetectionHook{enable: false}
+}
+
+// NewEnablePortalDetectionHook creates a hook which enables portal detection in
+// shill in setup, and restores the portal detection config in teardown. Note
+// that portal detection is enabled by default, but a lot of tast tests change
+// this value and may not do a proper cleanup. This hook is helpful to guarantee
+// that the portal detection is enabled in the test.
+func NewEnablePortalDetectionHook() hook {
+	return &togglePortalDetectionHook{enable: true}
+}
