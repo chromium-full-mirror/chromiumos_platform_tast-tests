@@ -4,14 +4,6 @@
 
 package video
 
-func appendJSONFiles(videoFiles []string) []string {
-	var tf []string
-	for _, file := range videoFiles {
-		tf = append(tf, file)
-		tf = append(tf, file+".json")
-	}
-	return tf
-}
 
 var av1Files = map[string][]string{
 	"8bit": {
@@ -1368,12 +1360,4 @@ var h264InvalidBitstreams = []string{
 	"test_vectors/h264/files_from_bugs/b_277849540__malformed_h264_vlct_16x16.h264",
 	"test_vectors/h264/files_from_bugs/b_277849540__malformed_h264_vlct_4x4.h264",
 	"test_vectors/h264/files_from_bugs/b_277849540__malformed_h264_vlct_8x8.h264",
-}
-
-// Software Q08C conversion is expensive, so we only run this on a representative sub-sample of our test vectors.
-var q08cFiles = []string{
-	"test_vectors/vp9/Profile_0_8bit/buf/crowd_run_1080X512_fr30_bd8_8buf_l3.ivf",
-	"test_vectors/vp8/vp80-00-comprehensive-001.ivf",
-	"test_vectors/h264/baseline/AUD_MW_E.h264",
-	"test_vectors/h264/main/CABA1_SVA_B.h264",
 }

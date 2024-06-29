@@ -17,6 +17,15 @@ import (
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
+func appendJSONFiles(videoFiles []string) []string {
+	var tf []string
+	for _, file := range videoFiles {
+		tf = append(tf, file)
+		tf = append(tf, file+".json")
+	}
+	return tf
+}
+
 const defaultPerVideoTimeoutHD = time.Minute
 const defaultPerVideoTimeout4K = 4 * time.Minute
 
