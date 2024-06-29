@@ -414,7 +414,7 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 			Attr:            perBuildAttrs,
 			HardwareDeps:    genCombinedDeps("hwdep.D(%s)", []string{param.HardwareDeps}),
 			SoftwareDeps:    genCombinedDeps("[]string{%s}", []string{"caps.HWDecodeHEVC", param.SoftwareDeps}),
-			VideoFiles:      "hevcFiles[\"main_part_1\"]",
+			VideoFiles:      "hevcCommonFiles[\"1\"]",
 			ValidatorType:   "decoding.MD5",
 			EnabledFeatures: param.EnabledFeatures,
 		}, {
@@ -422,7 +422,7 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 			Attr:            perBuildAttrs,
 			HardwareDeps:    genCombinedDeps("hwdep.D(%s)", []string{param.HardwareDeps}),
 			SoftwareDeps:    genCombinedDeps("[]string{%s}", []string{"caps.HWDecodeHEVC", param.SoftwareDeps}),
-			VideoFiles:      "hevcFiles[\"main_part_2\"]",
+			VideoFiles:      "hevcCommonFiles[\"2\"]",
 			ValidatorType:   "decoding.MD5",
 			EnabledFeatures: param.EnabledFeatures,
 		}, {
@@ -430,7 +430,7 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 			Attr:            perBuildAttrs,
 			HardwareDeps:    genCombinedDeps("hwdep.D(%s)", []string{param.HardwareDeps}),
 			SoftwareDeps:    genCombinedDeps("[]string{%s}", []string{"caps.HWDecodeHEVC", param.SoftwareDeps}),
-			VideoFiles:      "hevcFiles[\"main_part_3\"]",
+			VideoFiles:      "hevcCommonFiles[\"3\"]",
 			ValidatorType:   "decoding.MD5",
 			EnabledFeatures: param.EnabledFeatures,
 		}, {
@@ -438,7 +438,7 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 			Attr:            perBuildAttrs,
 			HardwareDeps:    genCombinedDeps("hwdep.D(%s)", []string{param.HardwareDeps}),
 			SoftwareDeps:    genCombinedDeps("[]string{%s}", []string{"caps.HWDecodeHEVC", param.SoftwareDeps}),
-			VideoFiles:      "hevcFiles[\"main_part_4\"]",
+			VideoFiles:      "hevcCommonFiles[\"4\"]",
 			ValidatorType:   "decoding.MD5",
 			EnabledFeatures: param.EnabledFeatures,
 		},
