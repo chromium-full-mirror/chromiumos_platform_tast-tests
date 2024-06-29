@@ -121,7 +121,7 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 			Attr:            perBuildAttrs,
 			HardwareDeps:    genCombinedDeps("hwdep.D(%s)", []string{param.HardwareDeps}),
 			SoftwareDeps:    genCombinedDeps("[]string{%s}", []string{"caps.HWDecodeAV1", param.SoftwareDeps}),
-			VideoFiles:      "av1Files[\"8bit\"]",
+			VideoFiles:      "av1CommonFiles",
 			ValidatorType:   "decoding.MD5",
 			EnabledFeatures: param.EnabledFeatures,
 		}, {
@@ -186,15 +186,7 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 			Attr:            perBuildAttrs,
 			HardwareDeps:    genCombinedDeps("hwdep.D(%s)", []string{param.HardwareDeps}),
 			SoftwareDeps:    genCombinedDeps("[]string{%s}", []string{"caps.HWDecodeAV1_10BPP", param.SoftwareDeps}),
-			VideoFiles:      "av1Files[\"10bit\"]",
-			ValidatorType:   "decoding.MD5",
-			EnabledFeatures: param.EnabledFeatures,
-		}, {
-			Name:            fmt.Sprintf("%sav1_10bit_common_quantizer", testGroup),
-			Attr:            perBuildAttrs,
-			HardwareDeps:    genCombinedDeps("hwdep.D(%s)", []string{param.HardwareDeps}),
-			SoftwareDeps:    genCombinedDeps("[]string{%s}", []string{"caps.HWDecodeAV1_10BPP", param.SoftwareDeps}),
-			VideoFiles:      "av1Files[\"10bit_quantizer\"]",
+			VideoFiles:      "av110BitCommonFiles",
 			ValidatorType:   "decoding.MD5",
 			EnabledFeatures: param.EnabledFeatures,
 		}, {
