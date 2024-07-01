@@ -39,17 +39,18 @@ func init() {
 		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Follows the user flow to create, connect, disconnect, and forget a VPN service via UI, verify the availability of proxy settings for a connected VPN",
 		Contacts: []string{
-			"cros-networking@google.com",
-			"jiejiang@google.com",
-			"cros-connectivity@google.com",
-			"chromeos-connectivity-engprod@google.com",
-			"shijinabraham@google.com",
-			"chadduffin@chromium.org",
+			// These contacts are commented out so that they can be added back in once the tests are stabilized.
+			// These are commented out instead of removed outright to avoid losing any contacts in the process.
+			// "cros-networking@google.com",
+			// "jiejiang@google.com",
+			// "cros-connectivity@google.com",
+			// "chromeos-connectivity-engprod@google.com",
+			// "shijinabraham@google.com",
+			// "chadduffin@chromium.org",
 			"ryan.liu@cienet.com",
 			"chromeos-connectivity-cienet-external@google.com",
 		},
-		// ChromeOS > Platform > System > Networking > Continuous Maintenance
-		BugComponent:   "b:1493959",
+		BugComponent:   "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
 		LifeCycleStage: testing.LifeCycleInDevelopment,
 		Attr:           []string{"group:mainline", "informational"},
 		SoftwareDeps:   []string{"chrome"},

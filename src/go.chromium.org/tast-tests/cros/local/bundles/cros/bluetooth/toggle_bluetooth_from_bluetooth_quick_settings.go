@@ -20,11 +20,11 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           ToggleBluetoothFromBluetoothQuickSettings,
 		LacrosStatus:   testing.LacrosVariantUnneeded,
-		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LifeCycleStage: testing.LifeCycleInDevelopment,
 		Desc:           "Checks that Bluetooth can be enabled and disabled from within the Bluetooth Quick Settings",
 		Contacts: []string{
-			"cros-connectivity@google.com",
-			"chadduffin@chromium.org",
+			"alfredyu@cienet.com",
+			"chromeos-connectivity-cienet-external@google.com",
 		},
 		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
 		Attr:         []string{"group:bluetooth"},
