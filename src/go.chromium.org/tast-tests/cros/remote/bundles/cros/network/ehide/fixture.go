@@ -48,12 +48,13 @@ func init() {
 		SetUpTimeout:    ehideTimeout,
 		TearDownTimeout: ehideTimeout,
 		PostTestTimeout: postTestTimeout,
-		Impl:            &ehideFixture{},
+		Impl:            &ehideFixture{alreadyStarted: false},
 	})
 }
 
 // ehideFixture implements testing.FixtureImpl.
 type ehideFixture struct {
+	alreadyStarted bool // whether ehide has already started before the fixture setup
 }
 
 func (f *ehideFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
@@ -70,6 +71,19 @@ func (f *ehideFixture) SetUp(ctx context.Context, s *testing.FixtState) interfac
 		if err := d.WaitConnect(waitConnectCtx); err != nil {
 			s.Fatal("Failed to wait for DUT connection at the beginning: ", err)
 		}
+	}
+
+	// Check whether ehide has already started.
+	if ehideState, err := getState(ctx, d); err != nil {
+		s.Fatal("Failed to get ehide state: ", err)
+	} else {
+		f.alreadyStarted = ehideState == ehideconst.EhideStateOn
+	}
+
+	// If ehide has already started, don't start it again.
+	if f.alreadyStarted {
+		s.Log("Ehide has already started")
+		return nil
 	}
 
 	startErr := d.Conn().CommandContext(ctx, ehideconst.EhidePath, "start").Run(testexec.DumpLogOnError)
@@ -107,6 +121,15 @@ func (f *ehideFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
 
 func (f *ehideFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 	d := s.DUT()
+
+	// If ehide has already started at the beginning, it could be either run
+	// intentionally, or left over from the previous session. Either way, don't
+	// stop it.
+	if f.alreadyStarted {
+		s.Log("Won't stop ehide since it was running at the beginning")
+		return
+	}
+
 	stopErr := d.Conn().CommandContext(ctx, ehideconst.EhidePath, "stop").Run(testexec.DumpLogOnError)
 	if stopErr != nil && strings.Contains(stopErr.Error(), "Process exited with status") {
 		// "Process exited with status" indicates that ehide has exited due to
