@@ -26,8 +26,9 @@ import (
 )
 
 type liveCaptionParams struct {
-	browserType      browser.Type // One of browser.Type{Ash,LaCrOS}.
-	fieldTrialConfig int          // One of chrome.FieldTrialConfig{Enabled,Disabled}.
+	browserType           browser.Type // One of browser.Type{Ash,LaCrOS}.
+	fieldTrialConfig      int          // One of chrome.FieldTrialConfig{Enabled,Disabled}.
+	liveTranslateLanguage string       // If non empty, the language to set translation to.
 }
 
 func init() {
@@ -45,24 +46,30 @@ func init() {
 		Timeout:      5 * time.Minute,
 		SoftwareDeps: []string{"chrome", "ondevice_speech"},
 		Attr:         []string{"group:mainline"},
-		Params: []testing.Param{{
-			Name: "fieldtrial_testing_config_off",
-			Val:  liveCaptionParams{browser.TypeAsh, chrome.FieldTrialConfigDisable},
-		}, {
-			Name:              "lacros_fieldtrial_testing_config_off",
-			ExtraAttr:         []string{"informational"},
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               liveCaptionParams{browser.TypeLacros, chrome.FieldTrialConfigDisable},
-		}, {
-			Name:      "fieldtrial_testing_config_on",
-			ExtraAttr: []string{"informational"},
-			Val:       liveCaptionParams{browser.TypeLacros, chrome.FieldTrialConfigEnable},
-		}, {
-			Name:              "lacros_fieldtrial_testing_config_on",
-			ExtraAttr:         []string{"informational"},
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               liveCaptionParams{browser.TypeLacros, chrome.FieldTrialConfigEnable},
-		}},
+		Params: []testing.Param{
+			{
+				Name: "fieldtrial_testing_config_off",
+				Val:  liveCaptionParams{browser.TypeAsh, chrome.FieldTrialConfigDisable, ""},
+			}, {
+				Name:              "lacros_fieldtrial_testing_config_off",
+				ExtraAttr:         []string{"informational"},
+				ExtraSoftwareDeps: []string{"lacros"},
+				Val:               liveCaptionParams{browser.TypeLacros, chrome.FieldTrialConfigDisable, ""},
+			}, {
+				Name:      "fieldtrial_testing_config_on",
+				ExtraAttr: []string{"informational"},
+				Val:       liveCaptionParams{browser.TypeLacros, chrome.FieldTrialConfigEnable, ""},
+			}, {
+
+				Name:      "fieldtrial_testing_config_on_translate",
+				ExtraAttr: []string{"informational"},
+				Val:       liveCaptionParams{browser.TypeLacros, chrome.FieldTrialConfigEnable, "French"},
+			}, {
+				Name:              "lacros_fieldtrial_testing_config_on",
+				ExtraAttr:         []string{"informational"},
+				ExtraSoftwareDeps: []string{"lacros"},
+				Val:               liveCaptionParams{browser.TypeLacros, chrome.FieldTrialConfigEnable, ""},
+			}},
 		Data: []string{
 			"live_caption.html",
 			"voice_en_hello.wav",
@@ -84,7 +91,7 @@ func LiveCaption(ctx context.Context, s *testing.State) {
 	// Launch browser.
 	cr, err := browserfixt.NewChrome(ctx, params.browserType, lacrosfixt.NewConfig(),
 		chrome.ExtraArgs("--autoplay-policy=no-user-gesture-required"), // Allow media autoplay.
-		chrome.EnableFeatures("OnDeviceSpeechRecognition", "LayoutMediaNGContainer"),
+		chrome.EnableFeatures("OnDeviceSpeechRecognition", "LayoutMediaNGContainer", "LiveTranslate"),
 		chrome.FieldTrialConfig(params.fieldTrialConfig),
 	)
 	if err != nil {
@@ -100,6 +107,14 @@ func LiveCaption(ctx context.Context, s *testing.State) {
 
 	if err := ossettings.ToggleLiveCaption(cr, tconn, true)(ctx); err != nil {
 		s.Fatal("Failed to toggle on live caption: ", err)
+	}
+
+	// if asked to test live translate, do so.
+	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "live translate ui tree")
+	if params.liveTranslateLanguage != "" {
+		if err := ossettings.ToggleLiveTranslate(cr, tconn, true, params.liveTranslateLanguage)(ctx); err != nil {
+			s.Fatal("Failed to toggle on live translate: ", err)
+		}
 	}
 
 	// Wait until dlc libsoda and libsoda-model-en-us are installed.

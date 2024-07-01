@@ -363,6 +363,22 @@ func (s *OSSettings) SetDropDownOption(cr *chrome.Chrome, optionName, expected s
 	)
 }
 
+// SetDropDownNthOption sets a dropdown index N to a value.
+func (s *OSSettings) SetDropDownNthOption(cr *chrome.Chrome, optionName, expected string, index int) uiauto.Action {
+	optionFinder := nodewith.Name(optionName).Role(role.ComboBoxSelect).Nth(index)
+	// TODO(b/339349824): remove old finder once crrev.com/c/5513503 upreved.
+	oldSettingFinder := nodewith.Name(optionName).Role(role.ListBoxOption)
+	settingFinder := nodewith.Name(expected).Role(role.MenuListOption)
+	return uiauto.Combine("set drop down option",
+		s.DoDefault(optionFinder),
+		uiauto.IfFailThen(
+			s.DoDefault(settingFinder),
+			s.DoDefault(oldSettingFinder),
+		),
+		uiauto.Sleep(time.Second),
+	)
+}
+
 // IsToggleOptionEnabled checks whether the toggle option is enabled or not.
 func (s *OSSettings) IsToggleOptionEnabled(ctx context.Context, cr *chrome.Chrome, optionName string) (bool, error) {
 	toggleButtonCSSSelector := fmt.Sprintf(`cr-toggle[aria-label=%q]`, optionName)
