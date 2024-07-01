@@ -11,12 +11,8 @@ import (
 	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/wmp/wmputils"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
@@ -55,8 +51,7 @@ func FloatWindowMultitaskMenu(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	bt := browser.TypeAsh
-	cr, br, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, bt, lacrosfixt.NewConfig(),
+	cr, err := chrome.New(ctx,
 		chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)),
 		chrome.EnableFeatures("WindowLayoutMenu"),
 		chrome.ARCSupported(),
@@ -65,7 +60,6 @@ func FloatWindowMultitaskMenu(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
 	defer cr.Close(cleanupCtx)
-	defer closeBrowser(cleanupCtx)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -79,15 +73,18 @@ func FloatWindowMultitaskMenu(ctx context.Context, s *testing.State) {
 	defer cleanup(cleanupCtx)
 
 	// Open a new tab in order to show Chrome UI.
-	conn, err := br.NewConn(ctx, chrome.NewTabURL)
+	conn, err := cr.NewConn(ctx, chrome.NewTabURL)
 	if err != nil {
 		s.Fatal(err, "Failed to open new Chrome window")
 	}
 	defer conn.Close()
 
-	bw, err := wmputils.EnsureOnlyBrowserWindowOpen(ctx, tconn, bt)
+	ws, err := ash.GetAllWindows(ctx, tconn)
 	if err != nil {
-		s.Fatal("Failed to ensure 1 browser window open: ", err)
+		s.Fatal("Failed to get the window list: ", err)
+	}
+	if len(ws) != 1 {
+		s.Fatal("Expected 1 window, got ", len(ws))
 	}
 
 	pc := pointer.NewMouse(tconn)
@@ -98,7 +95,7 @@ func FloatWindowMultitaskMenu(ctx context.Context, s *testing.State) {
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_dump")
 
 	// Set the Chrome window to normal state before testing the caption button actions.
-	if err := ash.SetWindowStateAndWait(ctx, tconn, bw.ID, ash.WindowStateNormal); err != nil {
+	if err := ash.SetWindowStateAndWait(ctx, tconn, ws[0].ID, ash.WindowStateNormal); err != nil {
 		s.Fatal("Failed to set Chrome window state to \"Normal\": ", err)
 	}
 
@@ -111,9 +108,9 @@ func FloatWindowMultitaskMenu(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to click the Float button: ", err)
 	}
 	if err := ash.WaitForCondition(ctx, tconn, func(w *ash.Window) bool {
-		return w.ID == bw.ID && w.State == ash.WindowStateFloated && !w.IsAnimating
+		return w.ID == ws[0].ID && w.State == ash.WindowStateFloated && !w.IsAnimating
 	}, &pollOpts); err != nil {
-		s.Fatalf("Unexpected Chrome window state: got %s, want %s: %v", bw.State, ash.WindowStateFloated, err)
+		s.Fatalf("Unexpected Chrome window state: got %s, want %s: %v", ws[0].State, ash.WindowStateFloated, err)
 	}
 
 	// Test that the "Exit float" button restores the window state.
@@ -122,9 +119,9 @@ func FloatWindowMultitaskMenu(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to click the Unfloat button: ", err)
 	}
 	if err := ash.WaitForCondition(ctx, tconn, func(w *ash.Window) bool {
-		return w.ID == bw.ID && w.State == ash.WindowStateNormal && !w.IsAnimating
+		return w.ID == ws[0].ID && w.State == ash.WindowStateNormal && !w.IsAnimating
 	}, &pollOpts); err != nil {
-		s.Fatalf("Unexpected Chrome window state: got %s, want %s: %v", bw.State, ash.WindowStateNormal, err)
+		s.Fatalf("Unexpected Chrome window state: got %s, want %s: %v", ws[0].State, ash.WindowStateNormal, err)
 	}
 
 	// Test that the left "Half" button snaps the window to the left.
@@ -136,9 +133,9 @@ func FloatWindowMultitaskMenu(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to click the Left Half button: ", err)
 	}
 	if err := ash.WaitForCondition(ctx, tconn, func(w *ash.Window) bool {
-		return w.ID == bw.ID && w.State == ash.WindowStatePrimarySnapped && !w.IsAnimating
+		return w.ID == ws[0].ID && w.State == ash.WindowStatePrimarySnapped && !w.IsAnimating
 	}, &pollOpts); err != nil {
-		s.Fatalf("Unexpected Chrome window state: got %s, want %s: %v", bw.State, ash.WindowStatePrimarySnapped, err)
+		s.Fatalf("Unexpected Chrome window state: got %s, want %s: %v", ws[0].State, ash.WindowStatePrimarySnapped, err)
 	}
 
 	// Test that the right "Half" button snaps the window to the right.
@@ -150,9 +147,9 @@ func FloatWindowMultitaskMenu(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to click the Right Half button: ", err)
 	}
 	if err := ash.WaitForCondition(ctx, tconn, func(w *ash.Window) bool {
-		return w.ID == bw.ID && w.State == ash.WindowStateSecondarySnapped && !w.IsAnimating
+		return w.ID == ws[0].ID && w.State == ash.WindowStateSecondarySnapped && !w.IsAnimating
 	}, &pollOpts); err != nil {
-		s.Fatalf("Unexpected Chrome window state: got %s, want %s: %v", bw.State, ash.WindowStateSecondarySnapped, err)
+		s.Fatalf("Unexpected Chrome window state: got %s, want %s: %v", ws[0].State, ash.WindowStateSecondarySnapped, err)
 	}
 }
 

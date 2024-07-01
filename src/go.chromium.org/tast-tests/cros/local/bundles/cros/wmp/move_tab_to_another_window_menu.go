@@ -77,9 +77,9 @@ func MoveTabToAnotherWindowMenu(ctx context.Context, s *testing.State) {
 	}
 
 	// Open a browser window on Desk 1.
-	browserApp, err := apps.PrimaryBrowser(ctx, tconn)
+	browserApp, err := apps.ChromeOrChromium(ctx, tconn)
 	if err != nil {
-		s.Fatal("Could not find browser app info: ", err)
+		s.Fatal("Failed to find Chrome or Chromium app: ", err)
 	}
 	if err := apps.Launch(ctx, tconn, browserApp.ID); err != nil {
 		s.Fatal("Failed to launch chrome: ", err)
@@ -99,9 +99,9 @@ func MoveTabToAnotherWindowMenu(ctx context.Context, s *testing.State) {
 		}
 
 		// Open a browser window.
-		browserApp, err := apps.PrimaryBrowser(ctx, tconn)
+		browserApp, err := apps.ChromeOrChromium(ctx, tconn)
 		if err != nil {
-			s.Fatal("Could not find browser app info: ", err)
+			s.Fatal("Failed to find Chrome or Chromium app: ", err)
 		}
 		if err := apps.Launch(ctx, tconn, browserApp.ID); err != nil {
 			s.Fatal("Failed to launch chrome: ", err)
@@ -117,6 +117,7 @@ func MoveTabToAnotherWindowMenu(ctx context.Context, s *testing.State) {
 }
 
 func verifyTabGroupMenu(ctx context.Context, tconn *chrome.TestConn, ac *uiauto.Context, s *testing.State) error {
+	// Verify the tab group menu.
 	info, err := ash.GetDesksInfo(ctx, tconn)
 	if err != nil {
 		return errors.Wrap(err, "failed to get the desk info")
@@ -153,10 +154,16 @@ func verifyTabGroupMenu(ctx context.Context, tconn *chrome.TestConn, ac *uiauto.
 		if err := ac.WithTimeout(5 * time.Second).WaitUntilExists(deskItem)(ctx); err != nil {
 			return errors.Wrapf(err, "failed to find Desk %d item", i)
 		}
-		tabItem := nodewith.ClassName("MenuItemView").Name("New Tab").First()
-		if err := ac.WithTimeout(5 * time.Second).WaitUntilExists(tabItem)(ctx); err != nil {
-			return errors.Wrapf(err, "failed to find the tab item of Desk %d", i)
-		}
+	}
+
+	// Verify the number of new tabs.
+	tabItem := nodewith.ClassName("MenuItemView").Name("New Tab")
+	currentTabsInfo, err := ac.NodesInfo(ctx, tabItem)
+	if err != nil {
+		return errors.Wrap(err, "falied to get information from the current tabs")
+	}
+	if len(currentTabsInfo) != numDesks-1 {
+		return errors.Errorf("expected exactly %d new tabs, but found %d", numDesks-1, len(currentTabsInfo))
 	}
 	return nil
 }

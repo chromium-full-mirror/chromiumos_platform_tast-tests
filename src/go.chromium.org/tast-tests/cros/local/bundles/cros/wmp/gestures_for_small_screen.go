@@ -10,10 +10,8 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/apps"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/wmp/wmputils"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -70,22 +68,24 @@ func GesturesForSmallScreen(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to ensure no window is open before test starts: ", err)
 	}
 
-	// Open a browser window either ash-chrome or lacros-chrome.
-	browserApp, err := apps.PrimaryBrowser(ctx, tconn)
+	// Open a browser window.
+	browserApp, err := apps.ChromeOrChromium(ctx, tconn)
 	if err != nil {
-		s.Fatal("Could not find browser app info: ", err)
+		s.Fatal("Failed to find Chrome or Chromium app: ", err)
 	}
 	if err := apps.Launch(ctx, tconn, browserApp.ID); err != nil {
 		s.Fatal("Failed to launch chrome: ", err)
 	}
 
 	// Ensure that there is only one open window that is the primary browser. Wait for the browser to be visible to avoid a race that may cause test flakiness.
-	bt := browser.TypeAsh
-	bw, err := wmputils.EnsureOnlyBrowserWindowOpen(ctx, tconn, bt)
+	ws, err := ash.GetAllWindows(ctx, tconn)
 	if err != nil {
-		s.Fatal("Expected the window to be fullscreen but got: ", err)
+		s.Fatal("Failed to get the window list: ", err)
 	}
-	defer bw.CloseWindow(cleanupCtx, tconn)
+	if len(ws) != 1 {
+		s.Fatal("Expected 1 window, got ", len(ws))
+	}
+	defer ws[0].CloseWindow(cleanupCtx, tconn)
 
 	const uiTimeout = 5 * time.Second
 	ac := uiauto.New(tconn)
@@ -128,12 +128,12 @@ func GesturesForSmallScreen(ctx context.Context, s *testing.State) {
 	}
 
 	// Wait for the window to finish animating before activating.
-	if err := ash.WaitWindowFinishAnimating(ctx, tconn, bw.ID); err != nil {
+	if err := ash.WaitWindowFinishAnimating(ctx, tconn, ws[0].ID); err != nil {
 		s.Fatal("Failed to wait for the window animation: ", err)
 	}
 
 	// Activate chrome window and exit from overview.
-	if err := bw.ActivateWindow(ctx, tconn); err != nil {
+	if err := ws[0].ActivateWindow(ctx, tconn); err != nil {
 		s.Fatal("Failed to activate chrome window: ", err)
 	}
 
@@ -160,12 +160,12 @@ func GesturesForSmallScreen(ctx context.Context, s *testing.State) {
 	rightSwipeOffset := coords.NewPoint(width/4, 0)
 
 	// Wait for the window to finish animating before activating.
-	if err := ash.WaitWindowFinishAnimating(ctx, tconn, bw.ID); err != nil {
+	if err := ash.WaitWindowFinishAnimating(ctx, tconn, ws[0].ID); err != nil {
 		s.Fatal("Failed to wait for the window animation: ", err)
 	}
 
 	// Activate chrome window.
-	if err := bw.ActivateWindow(ctx, tconn); err != nil {
+	if err := ws[0].ActivateWindow(ctx, tconn); err != nil {
 		s.Fatal("Failed to activate chrome window: ", err)
 	}
 

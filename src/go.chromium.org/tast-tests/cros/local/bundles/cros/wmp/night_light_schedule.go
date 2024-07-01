@@ -73,20 +73,21 @@ func NightLightSchedule(ctx context.Context, s *testing.State) {
 		ui.LeftClick(nodewith.HasClass("UnifiedSystemTray")),
 		ui.LeftClick(nodewith.HasClass("IconButton").NameContaining("Night Light")),
 		ui.LeftClick(nodewith.HasClass("IconButton").Name("Show display settings")),
-		ui.WaitUntilExists(nodewith.HasClass("DisplayDetailedView")),
+		ui.WaitUntilExists(nodewith.HasClass("Label").Name("Display")),
 		ui.LeftClick(nodewith.HasClass("IconButton").Name("Show display settings")),
-		ui.WaitUntilExists(nodewith.HasClass("BrowserFrame").Name("Settings - Display")),
+		ui.WaitUntilExists(nodewith.HasClass("BrowserFrame").NameContaining("Settings - Display")),
 	)(ctx); err != nil {
 		s.Fatal("Failed to enable night light and open display settings by clicking pod button in quick settings: ", err)
 	}
 
 	// Change night light schedule to custom in drop box.
-	customScheduleOption := nodewith.Role("menuListOption").Name("Custom")
+	comboSelectSchedule := nodewith.Role("comboBoxSelect").Name("Schedule")
+	customScheduleOption := nodewith.Name("Custom").Ancestor(comboSelectSchedule)
 	startTimeKnob := nodewith.HasClass("knob").NameContaining("Start time")
 	endTimeKnob := nodewith.HasClass("knob").NameContaining("End time")
 	if err := uiauto.Combine(
 		"Choose custom night light schedule",
-		ui.LeftClick(nodewith.Role("comboBoxSelect").Name("Schedule")),
+		ui.LeftClick(comboSelectSchedule),
 		ui.LeftClick(customScheduleOption),
 		ui.WaitUntilExists(startTimeKnob),
 	)(ctx); err != nil {

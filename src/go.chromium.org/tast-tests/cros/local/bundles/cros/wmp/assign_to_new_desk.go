@@ -13,7 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/event"
@@ -41,10 +40,7 @@ func init() {
 		SoftwareDeps: []string{"chrome", "gaia"},
 		Timeout:      2 * time.Minute,
 		VarDeps:      []string{ui.GaiaPoolDefaultVarName},
-		Params: []testing.Param{{
-			Val:     browser.TypeAsh,
-			Fixture: "loggedInToCUJUserARCSupported",
-		}},
+		Fixture:      "loggedInToCUJUserARCSupported",
 		SearchFlags: []*testing.StringPair{
 			{
 				Key:   "feature_id",
@@ -103,7 +99,7 @@ func AssignToNewDesk(ctx context.Context, s *testing.State) {
 	}
 
 	// Find correct Chrome browser app.
-	chromeApp, err := apps.PrimaryBrowser(ctx, tconn)
+	chromeApp, err := apps.ChromeOrChromium(ctx, tconn)
 	if err != nil {
 		s.Fatal("Failed to find Chrome or Chromium app: ", err)
 	}

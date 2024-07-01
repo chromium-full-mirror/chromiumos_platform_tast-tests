@@ -9,10 +9,8 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/apps"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/wmp/wmputils"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -70,22 +68,24 @@ func ImmersiveMode(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to ensure no window is open: ", err)
 	}
 
-	// Open a browser window either ash-chrome or lacros-chrome.
-	browserApp, err := apps.PrimaryBrowser(ctx, tconn)
+	// Open a browser window.
+	browserApp, err := apps.ChromeOrChromium(ctx, tconn)
 	if err != nil {
-		s.Fatal("Could not find browser app info: ", err)
+		s.Fatal("Failed to find Chrome or Chromium app: ", err)
 	}
 	if err := apps.Launch(ctx, tconn, browserApp.ID); err != nil {
 		s.Fatal("Failed to launch chrome: ", err)
 	}
 
 	// Ensure that there is only one open window that is the primary browser. Wait for the browser to be visible to avoid a race that may cause test flakiness.
-	bt := browser.TypeAsh
-	bw, err := wmputils.EnsureOnlyBrowserWindowOpen(ctx, tconn, bt)
+	ws, err := ash.GetAllWindows(ctx, tconn)
 	if err != nil {
-		s.Fatal("Failed to ensure one browser window: ", err)
+		s.Fatal("Failed to get the window list: ", err)
 	}
-	defer bw.CloseWindow(closeCtx, tconn)
+	if len(ws) != 1 {
+		s.Fatal("Expected 1 window, got ", len(ws))
+	}
+	defer ws[0].CloseWindow(closeCtx, tconn)
 
 	// Press the zoom toggle key to trigger immersive mode.
 	kb, err := input.Keyboard(ctx)
@@ -106,9 +106,9 @@ func ImmersiveMode(ctx context.Context, s *testing.State) {
 
 	// Check the chrome window is in immersive mode.
 	if err := ash.WaitForCondition(ctx, tconn, func(w *ash.Window) bool {
-		return w.ID == bw.ID && w.State == ash.WindowStateFullscreen && !w.IsAnimating
+		return w.ID == ws[0].ID && w.State == ash.WindowStateFullscreen && !w.IsAnimating
 	}, &testing.PollOptions{Timeout: timeout, Interval: time.Second}); err != nil {
-		s.Fatalf("Expected the window to be fullscreen but it is %s", bw.State)
+		s.Fatalf("Expected the window to be fullscreen but it is %s", ws[0].State)
 	}
 
 	// Launcher should be hidden in immersive mode.

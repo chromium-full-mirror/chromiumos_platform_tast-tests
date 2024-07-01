@@ -17,16 +17,12 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/event"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/pointer"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/state"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -65,8 +61,7 @@ func OverviewCloseAllUndo(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	bt := browser.TypeAsh
-	cr, _, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, bt, lacrosfixt.NewConfig(),
+	cr, err := chrome.New(ctx,
 		chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)),
 		chrome.EnableFeatures("DesksCloseAll"),
 		chrome.ARCSupported(),
@@ -75,7 +70,6 @@ func OverviewCloseAllUndo(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
 	defer cr.Close(cleanupCtx)
-	defer closeBrowser(cleanupCtx)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -90,9 +84,12 @@ func OverviewCloseAllUndo(ctx context.Context, s *testing.State) {
 
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
-	// Ensure there is no window open before test starts. (Except we should have one lacros window open in lacros)
-	if err := ash.CloseAllButOneLacrosWindow(ctx, tconn); err != nil {
+	// Ensure there is no window and desks open before test starts.
+	if err := ash.CloseAllWindows(ctx, tconn); err != nil {
 		s.Fatal("Failed to ensure no unexpected windows are open: ", err)
+	}
+	if err := ash.CleanUpDesks(ctx, tconn); err != nil {
+		s.Fatal("Failed to ensure no unexpected desks are open: ", err)
 	}
 
 	ac := uiauto.New(tconn)
@@ -129,14 +126,12 @@ func OverviewCloseAllUndo(ctx context.Context, s *testing.State) {
 	defer ash.SetOverviewModeAndWait(cleanupCtx, tconn, false)
 	defer ash.CleanUpDesks(cleanupCtx, tconn)
 
-	newDeskButton := nodewith.ClassName("DeskIconButton").Name("Add new desk")
-	desk2NameView := nodewith.ClassName("DeskNameView").Name("Desk name").State(state.Focused, true)
+	newDeskButton := nodewith.Role("button").Name("Add new desk")
 	desk2Name := "BusyDesk"
 	if err := uiauto.Combine(
 		"create a new desk by clicking new desk button",
 		ac.DoDefault(newDeskButton),
 		// The focus on the new desk should be on the desk name field.
-		ac.WaitUntilExists(desk2NameView),
 		kb.TypeAction(desk2Name),
 		kb.AccelAction("Enter"),
 	)(ctx); err != nil {
@@ -153,9 +148,7 @@ func OverviewCloseAllUndo(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to activate desk 2: ", err)
 	}
 
-	// Opens PlayStore, Chrome and Files. As mentioned above, if we are in
-	// lacros-chrome we will already have a chrome window, so if that is the case
-	// then we can skip opening another browser window.
+	// Opens PlayStore, Chrome and Files.
 	for _, app := range []apps.App{apps.PlayStore, apps.Chrome, apps.FilesSWA} {
 		if err := apps.Launch(ctx, tconn, app.ID); err != nil {
 			s.Fatalf("Failed to open %s: %v", app.Name, err)
@@ -195,7 +188,7 @@ func OverviewCloseAllUndo(ctx context.Context, s *testing.State) {
 	}
 
 	// Finds the "Close All" button.
-	closeAllButton := nodewith.ClassName("DeskActionButton").Name("Close BusyDesk and windows")
+	closeAllButton := nodewith.Role("button").NameContaining("Close").Ancestor(desk2DeskMiniView)
 
 	// Closes a desk and windows on it.
 	if err := pc.Click(closeAllButton)(ctx); err != nil {

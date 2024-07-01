@@ -13,7 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/checked"
@@ -41,10 +40,7 @@ func init() {
 		SoftwareDeps: []string{"chrome", "gaia"},
 		Timeout:      120 * time.Second,
 		VarDeps:      []string{ui.GaiaPoolDefaultVarName},
-		Params: []testing.Param{{
-			Val:     browser.TypeAsh,
-			Fixture: "loggedInToCUJUserARCSupported",
-		}},
+		Fixture:      "loggedInToCUJUserARCSupported",
 		SearchFlags: []*testing.StringPair{
 			{
 				Key:   "feature_id",
@@ -84,9 +80,9 @@ func AssignToAllDesks(ctx context.Context, s *testing.State) {
 
 	ac := uiauto.New(tconn)
 
-	chromeApp, err := apps.PrimaryBrowser(ctx, tconn)
+	chromeApp, err := apps.ChromeOrChromium(ctx, tconn)
 	if err != nil {
-		s.Fatal("Could not find the Chrome app: ", err)
+		s.Fatal("Failed to find Chrome or Chromium app: ", err)
 	}
 
 	// Install an arc app.
@@ -129,12 +125,7 @@ func AssignToAllDesks(ctx context.Context, s *testing.State) {
 	}
 
 	appsList := []apps.App{chromeApp, apps.Terminal, arcApp}
-	bt := s.Param().(browser.Type)
 	for _, app := range appsList {
-		if bt == browser.TypeLacros && app == chromeApp {
-			cr.Browser().NewConn(ctx, chrome.BlankURL)
-			continue
-		}
 		if err := apps.Launch(ctx, tconn, app.ID); err != nil {
 			s.Fatalf("Failed to launch %s: %v", app.Name, err)
 		}
@@ -209,11 +200,6 @@ func AssignToAllDesks(ctx context.Context, s *testing.State) {
 
 	// 10. Re-open the 3 kinds of windows and assign them to all desks. Then re-assign them to a specific desk.
 	for _, app := range appsList {
-		// For the lacros browser, we don't need to do the launch step.
-		if bt == browser.TypeLacros && app == chromeApp {
-			cr.Browser().NewConn(ctx, chrome.BlankURL)
-			continue
-		}
 		if err := apps.Launch(ctx, tconn, app.ID); err != nil {
 			s.Fatalf("Failed to launch %s: %v", app.Name, err)
 		}

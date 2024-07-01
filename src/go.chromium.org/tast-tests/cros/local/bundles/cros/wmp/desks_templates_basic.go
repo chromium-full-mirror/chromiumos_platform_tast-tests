@@ -97,9 +97,9 @@ func DesksTemplatesBasic(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to delete saved desks: ", err)
 	}
 	// Opens PlayStore, Browser and Files.
-	browserApp, err := apps.PrimaryBrowser(ctx, tconn)
+	browserApp, err := apps.ChromeOrChromium(ctx, tconn)
 	if err != nil {
-		s.Fatal("Could not find the primary browser app info: ", err)
+		s.Fatal("Failed to find Chrome or Chromium app: ", err)
 	}
 	appsList = append(appsList, browserApp)
 
