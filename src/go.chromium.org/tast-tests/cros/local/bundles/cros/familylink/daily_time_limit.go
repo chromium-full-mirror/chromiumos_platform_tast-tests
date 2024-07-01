@@ -173,8 +173,11 @@ func DailyTimeLimit(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to find keyboard: ", err)
 	}
 	defer kb.Close(ctx)
-	if err := lockscreen.EnterPassword(ctx, tconn, childUser,
-		s.RequiredVar("family.unicornPassword"), kb); err != nil {
+	_, pass, err := dma.UserPassFromPool(family.UnicornAccountVarName)
+	if err != nil {
+		s.Fatal("Failed to get family password: ", pass)
+	}
+	if err := lockscreen.EnterPassword(ctx, tconn, childUser, pass, kb); err != nil {
 		s.Fatal("Entering password failed: ", err)
 	}
 	if st, err := lockscreen.WaitState(ctx, tconn,
