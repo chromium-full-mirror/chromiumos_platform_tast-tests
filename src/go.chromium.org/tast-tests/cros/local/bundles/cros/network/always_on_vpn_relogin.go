@@ -32,7 +32,7 @@ func init() {
 		Func:         AlwaysOnVPNRelogin,
 		Desc:         "Host VPN client can be configured as always-on VPN and connected automatically after logout and login",
 		Contacts:     []string{"cros-networking@google.com", "chuweih@google.com"},
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:network", "network_platform"},
 		SoftwareDeps: []string{"chrome"},
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
