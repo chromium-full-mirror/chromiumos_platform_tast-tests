@@ -31,12 +31,15 @@ type keyVersType int
 const (
 	fwDataKeyVer keyVersType = iota
 	kernelSubkeyVer
+	fwVer
 )
 
 type updateVersionTc struct {
-	makekeyFile string
-	commonFile  string
-	keyVersion  keyVersType
+	makekeyFile         string
+	commonFile          string
+	keyVersion          keyVersType
+	tpmNvRAMHighByteIdx int
+	tpmNvRAMLowByteIdx  int
 }
 
 var (
@@ -67,9 +70,11 @@ func init() {
 				Fixture:   fixture.BootModeFixtureWithAPBackup(fixture.NormalMode),
 				ExtraData: []string{fwDataKeyVerMakekeyFile, fwDataKeyVerCommonFile},
 				Val: &updateVersionTc{
-					makekeyFile: fwDataKeyVerMakekeyFile,
-					commonFile:  fwDataKeyVerCommonFile,
-					keyVersion:  fwDataKeyVer,
+					makekeyFile:         fwDataKeyVerMakekeyFile,
+					commonFile:          fwDataKeyVerCommonFile,
+					keyVersion:          fwDataKeyVer,
+					tpmNvRAMHighByteIdx: 5,
+					tpmNvRAMLowByteIdx:  4,
 				},
 				ExtraAttr: []string{"firmware_usb"},
 			},
@@ -82,6 +87,16 @@ func init() {
 					commonFile:  kernelSubkeyVerCommonFile,
 					keyVersion:  kernelSubkeyVer,
 				},
+			},
+			{
+				Name:    "firmware_version",
+				Fixture: fixture.BootModeFixtureWithAPBackup(fixture.NormalMode),
+				Val: &updateVersionTc{
+					keyVersion:          fwVer,
+					tpmNvRAMHighByteIdx: 3,
+					tpmNvRAMLowByteIdx:  2,
+				},
+				ExtraAttr: []string{"firmware_usb"},
 			},
 		},
 	})
@@ -123,6 +138,9 @@ func UpdateVersion(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to reboot DUT: ", err)
 		}
 	}
+	if err := fwTriesChecker(ctx, h, "A", 0); err != nil {
+		s.Fatal("Failed to check firmware tries: ", err)
+	}
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Minute)
@@ -153,8 +171,8 @@ func UpdateVersion(ctx context.Context, s *testing.State) {
 	}(cleanupCtx)
 
 	var err error
-	var initTpmDatakeyVer uint16
-	if tc.keyVersion == fwDataKeyVer {
+	var initTpmNvRAM uint16
+	if tc.keyVersion == fwDataKeyVer || tc.keyVersion == fwVer {
 		skipFlashUSB := false
 		if skipFlashUSBStr, ok := s.Var("firmware.skipFlashUSB"); ok {
 			skipFlashUSB, err = strconv.ParseBool(skipFlashUSBStr)
@@ -169,11 +187,12 @@ func UpdateVersion(ctx context.Context, s *testing.State) {
 		if err := h.SetupUSBKey(ctx, cs); err != nil {
 			s.Fatal("USBKey not working: ", err)
 		}
-		initTpmDatakeyVer, err = getTPMDataKeyVer(ctx, h)
+
+		initTpmNvRAM, err = getTPMNvRAM(ctx, h, tc)
 		if err != nil {
-			s.Fatal("Failed to get TPM data key version: ", err)
+			s.Fatal("Failed to get TPM version: ", err)
 		}
-		s.Logf("Initial TPM data key version is %s", fmt.Sprint(initTpmDatakeyVer))
+		s.Logf("Initial TPM version is %s", fmt.Sprint(initTpmNvRAM))
 	}
 
 	s.Log("Copying the AP firmware binary to the DUT")
@@ -193,6 +212,11 @@ func UpdateVersion(ctx context.Context, s *testing.State) {
 			Section: bios.FWSignAImageSection,
 			Type:    firmware.KernelSubkey,
 		}
+	case fwVer:
+		keyVerOpts = firmware.KeyVersOptions{
+			Section: bios.FWSignAImageSection,
+			Type:    firmware.FWVersion,
+		}
 	default:
 		s.Fatal("Invalid key version: ", tc.keyVersion)
 	}
@@ -204,6 +228,7 @@ func UpdateVersion(ctx context.Context, s *testing.State) {
 	s.Logf("Initial key version is %s", fmt.Sprint(initKeyVer))
 
 	newKeyVer := initKeyVer + 1
+	resignFWVersion := int(newKeyVer)
 	s.Logf("Firmware version will update to version %s", fmt.Sprint(newKeyVer))
 
 	s.Log("Preparing the key files that are going to be resigned")
@@ -211,17 +236,21 @@ func UpdateVersion(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to prepare the key files: ", err)
 	}
 
-	// Send the shell scripts used to resign the keys from the host to the DUT.
-	if _, err := linuxssh.PutFiles(ctx, h.DUT.Conn(), map[string]string{s.DataPath(tc.makekeyFile): filepath.Join(workDir, tc.makekeyFile)}, linuxssh.DereferenceSymlinks); err != nil {
-		s.Fatalf("Failed to send %v to DUT: %v", tc.makekeyFile, err)
-	}
-	if _, err := linuxssh.PutFiles(ctx, h.DUT.Conn(), map[string]string{s.DataPath(tc.commonFile): filepath.Join(workDir, tc.commonFile)}, linuxssh.DereferenceSymlinks); err != nil {
-		s.Fatalf("Failed to send %v to DUT: %v", tc.commonFile, err)
-	}
+	if tc.makekeyFile != "" && tc.commonFile != "" {
+		// Send the shell scripts used to resign the keys from the host to the DUT.
+		if _, err := linuxssh.PutFiles(ctx, h.DUT.Conn(), map[string]string{s.DataPath(tc.makekeyFile): filepath.Join(workDir, tc.makekeyFile)}, linuxssh.DereferenceSymlinks); err != nil {
+			s.Fatalf("Failed to send %v to DUT: %v", tc.makekeyFile, err)
+		}
+		if _, err := linuxssh.PutFiles(ctx, h.DUT.Conn(), map[string]string{s.DataPath(tc.commonFile): filepath.Join(workDir, tc.commonFile)}, linuxssh.DereferenceSymlinks); err != nil {
+			s.Fatalf("Failed to send %v to DUT: %v", tc.commonFile, err)
+		}
 
-	// Generate the files required for signing by executing the file make_keys.sh.
-	if err := h.DUT.Conn().CommandContext(ctx, "/bin/bash", filepath.Join(workDir, tc.makekeyFile), fmt.Sprint(newKeyVer)).Run(ssh.DumpLogOnError); err != nil {
-		s.Fatalf("Failed to execute %v on DUT: %v", filepath.Join(workDir, tc.makekeyFile), err)
+		// Generate the files required for signing by executing the file make_keys.sh.
+		if err := h.DUT.Conn().CommandContext(ctx, "/bin/bash", filepath.Join(workDir, tc.makekeyFile), fmt.Sprint(newKeyVer)).Run(ssh.DumpLogOnError); err != nil {
+			s.Fatalf("Failed to execute %v on DUT: %v", filepath.Join(workDir, tc.makekeyFile), err)
+		}
+
+		resignFWVersion = 1
 	}
 
 	// Sign the BIOS binary file to generate a new binary file (output.bin) with an updated data key version.
@@ -236,14 +265,10 @@ func UpdateVersion(ctx context.Context, s *testing.State) {
 		WithSignPrivatePath(filepath.Join(keysDir, "firmware_data_key.vbprivk")).
 		WithKeyBlockPath(filepath.Join(keysDir, "firmware.keyblock")).
 		WithKernelKeyPath(filepath.Join(keysDir, "kernel_subkey.vbpubk")).
-		WithVersion(1)
+		WithVersion(resignFWVersion)
 
 	if _, err := futilityInstance.SignBIOS(ctx, signOpts); err != nil {
 		s.Fatal("Failed to use futility to autoupdate inactive firmware (RWB): ", err)
-	}
-
-	if err := fwTriesChecker(ctx, h, "A", 0); err != nil {
-		s.Fatal("Failed to check firmware tries: ", err)
 	}
 
 	// It should update the inactive RW firmware (RWB) to new key version.
@@ -263,10 +288,10 @@ func UpdateVersion(ctx context.Context, s *testing.State) {
 
 	defer func(ctx context.Context) {
 		if tc.keyVersion == fwDataKeyVer {
-			// Ensure tpm data key version is same as original one.
-			if currentTpmDatakeyVer, err := getTPMDataKeyVer(ctx, h); err != nil {
-				s.Error("Failed to get TPM data key version: ", err)
-			} else if currentTpmDatakeyVer != initTpmDatakeyVer {
+			// Ensure tpm NvRam content is same as original one.
+			if currentTpmNvRAM, err := getTPMNvRAM(ctx, h, tc); err != nil {
+				s.Error("Failed to get TPM NvRam content: ", err)
+			} else if currentTpmNvRAM != initTpmNvRAM {
 				s.Log("Resetting TPM and rebooting DUT")
 				if err := resetTpmAndReboot(ctx, pv, &state); err != nil {
 					s.Fatal("Failed to reset TPM: ", err)
@@ -304,7 +329,7 @@ func UpdateVersion(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to check firmware tries: ", err)
 	}
 
-	if tc.keyVersion == fwDataKeyVer {
+	if tc.keyVersion == fwDataKeyVer || tc.keyVersion == fwVer {
 		if err := rebootDUTAndRequireRPCClient(ctx, h); err != nil {
 			s.Fatal("Failed to reboot DUT: ", err)
 		}
@@ -318,7 +343,7 @@ func UpdateVersion(ctx context.Context, s *testing.State) {
 	// This ensures that the updated firmware (RWB) is being checked after the auto-update.
 	keyVerOpts.Section = bios.FWSignBImageSection
 
-	if err := checkKeyVer(ctx, h, newKeyVer, keyVerOpts); err != nil {
+	if err := checkKeyVer(ctx, h, newKeyVer, keyVerOpts, tc); err != nil {
 		s.Fatal("Failed to check the key version: ", err)
 	}
 
@@ -338,7 +363,7 @@ func UpdateVersion(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to use futility update to restore the firmware: ", err)
 	}
 
-	if tc.keyVersion == fwDataKeyVer {
+	if tc.keyVersion == fwDataKeyVer || tc.keyVersion == fwVer {
 		// Reset the TPM to avoid encountering the 'RW firmware key version rollback detect' issue after reboot.
 		s.Log("Resetting TPM and rebooting DUT")
 		if err := resetTpmAndReboot(ctx, pv, &state); err != nil {
@@ -373,16 +398,16 @@ func UpdateVersion(ctx context.Context, s *testing.State) {
 	}
 
 	// Check if the key version is rollback to original one.
-	if err := checkKeyVer(ctx, h, initKeyVer, keyVerOpts); err != nil {
+	if err := checkKeyVer(ctx, h, initKeyVer, keyVerOpts, tc); err != nil {
 		s.Fatal("Failed to check the key version: ", err)
 	}
 }
 
-// getTPMDataKeyVer retrieves the data key version from TPM.
-func getTPMDataKeyVer(ctx context.Context, h *firmware.Helper) (uint16, error) {
+// getTPMNvRAM retrieves the NvRam content from TPM based on its high and low byte.
+func getTPMNvRAM(ctx context.Context, h *firmware.Helper, tc *updateVersionTc) (uint16, error) {
 	tpmFwKeyVersion, err := h.ReadTPMC(ctx, "read", fmt.Sprintf("0x%x", fwCommon.TpmFirmwareNvIndex), fmt.Sprintf("0x%x", fwCommon.TpmFirmwareNvSize))
 	if err != nil {
-		return 0, errors.Wrap(err, "failed to read tpm data key version")
+		return 0, errors.Wrap(err, "failed to read tpm NvRam content")
 	}
 
 	// Check that there are no extra lines of output beyond the expected single line of TPM data.
@@ -393,13 +418,13 @@ func getTPMDataKeyVer(ctx context.Context, h *firmware.Helper) (uint16, error) {
 
 	dataBytes := strings.Split(lines[0], " ")
 
-	highByte, err := strconv.ParseUint(dataBytes[5], 10, 8)
+	highByte, err := strconv.ParseUint(dataBytes[tc.tpmNvRAMHighByteIdx], 10, 8)
 	if err != nil {
-		return 0, errors.Wrapf(err, "failed to convert high byte %v", dataBytes[5])
+		return 0, errors.Wrapf(err, "failed to convert high byte %v", dataBytes[tc.tpmNvRAMHighByteIdx])
 	}
-	lowByte, err := strconv.ParseUint(dataBytes[4], 10, 8)
+	lowByte, err := strconv.ParseUint(dataBytes[tc.tpmNvRAMLowByteIdx], 10, 8)
 	if err != nil {
-		return 0, errors.Wrapf(err, "failed to convert low byte %v", dataBytes[4])
+		return 0, errors.Wrapf(err, "failed to convert low byte %v", dataBytes[tc.tpmNvRAMLowByteIdx])
 	}
 
 	return uint16(highByte<<8 + lowByte), nil
@@ -439,7 +464,7 @@ func rebootDUTAndRequireRPCClient(ctx context.Context, h *firmware.Helper) error
 
 // checkKeyVer checks if the key version obtained from the current firmware section is as expected.
 // If the key version type is firmware data key, it will also check the TPM data key version.
-func checkKeyVer(ctx context.Context, h *firmware.Helper, expectedVer uint16, keyVerOpts firmware.KeyVersOptions) error {
+func checkKeyVer(ctx context.Context, h *firmware.Helper, expectedVer uint16, keyVerOpts firmware.KeyVersOptions, tc *updateVersionTc) error {
 	// Get the key version from current firmware section.
 	actualKeyVer, err := h.GetCurrentKeyVersion(ctx, keyVerOpts)
 	if err != nil {
@@ -448,12 +473,14 @@ func checkKeyVer(ctx context.Context, h *firmware.Helper, expectedVer uint16, ke
 
 	switch keyVerOpts.Type {
 	case firmware.FwDataKey:
-		actualTpmDataKeyVer, err := getTPMDataKeyVer(ctx, h)
+		fallthrough
+	case firmware.FWVersion:
+		actualTpmVer, err := getTPMNvRAM(ctx, h, tc)
 		if err != nil {
-			return errors.Wrap(err, "failed to get TPM data key version")
+			return errors.Wrap(err, "failed to get TPM version")
 		}
-		if actualKeyVer != expectedVer || actualTpmDataKeyVer != expectedVer {
-			return errors.Errorf("firmware data key version should be %v, but got (fwver, tpm_fwver) = (%v, %v)", expectedVer, actualKeyVer, actualTpmDataKeyVer)
+		if actualKeyVer != expectedVer || actualTpmVer != expectedVer {
+			return errors.Errorf("expected version should be %v, but got (fwver, tpm_fwver) = (%v, %v)", expectedVer, actualKeyVer, actualTpmVer)
 		}
 	case firmware.KernelSubkey:
 		if actualKeyVer != expectedVer {

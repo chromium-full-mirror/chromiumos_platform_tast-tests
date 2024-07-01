@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // CrossystemParam represents known Crossystem attributes.
@@ -153,6 +154,7 @@ func (r *Reporter) CrossystemChecker(ctx context.Context, expected map[Crossyste
 			return false, errors.Wrapf(err, "failed to get crossystem %v value", key)
 		}
 		if actualVal != expectedVal {
+			testing.ContextLogf(ctx, "Crossystem %s got: %q, want: %q", key, actualVal, expectedVal)
 			return false, nil
 		}
 	}

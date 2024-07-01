@@ -2283,6 +2283,8 @@ const (
 	FwDataKey KeyType = iota
 	// KernelSubkey indicates the kernel subkey version.
 	KernelSubkey
+	// FWVersion indicates the firmware version.
+	FWVersion
 )
 
 // GetCurrentKeyVersion retrieves the RWA's or RWB's key version.
@@ -2322,6 +2324,8 @@ func (h *Helper) GetCurrentKeyVersion(ctx context.Context, opts KeyVersOptions) 
 		versionPattern = fmt.Sprintf("bios::%v::keyblock::data_key::version::", opts.Section)
 	case KernelSubkey:
 		versionPattern = fmt.Sprintf("bios::%v::preamble::kernel_subkey::version::", opts.Section)
+	case FWVersion:
+		versionPattern = fmt.Sprintf("bios::%v::preamble::firmware_version::", opts.Section)
 	default:
 		return 0, errors.New("invalid key version type")
 	}
