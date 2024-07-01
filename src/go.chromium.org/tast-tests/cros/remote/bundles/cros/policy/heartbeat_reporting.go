@@ -59,6 +59,11 @@ func init() {
 					EnabledFeatures: "EncryptedReportingPipeline, EncryptedReportingManualTestUserHeartbeatEvent, EnableReportingFromUnmanagedDevices, ClientAutomatedTest, CrOSLateBootMissiveStorage:legacy_storage_enabled/IMMEDIATE,SLOW_BATCH,BACKGROUND_BATCH,MANUAL_BATCH,SECURITY,MANUAL_BATCH_LACROS",
 					Autopush:        true,
 				},
+				// TODO(b/346725308): Refactor to use utility and known dependency list.
+				ExtraSearchFlags: []*testing.StringPair{
+					{Key: "external_dependency", Value: "DMServerAlpha"},
+					{Key: "external_dependency", Value: "ReportingServiceAutoPush"},
+				},
 			},
 			{
 				Name: "autopush_managed_device",
@@ -67,6 +72,11 @@ func init() {
 					// Enable the reporting pipeline, device heartbeat events.
 					EnabledFeatures: "EncryptedReportingPipeline, EncryptedReportingManualTestHeartbeatEvent, ClientAutomatedTest",
 					Autopush:        true,
+				},
+				// TODO(b/346725308): Refactor to use utility and known dependency list.
+				ExtraSearchFlags: []*testing.StringPair{
+					{Key: "external_dependency", Value: "DMServerAlpha"},
+					{Key: "external_dependency", Value: "ReportingServiceAutoPush"},
 				},
 			},
 			{
@@ -77,6 +87,11 @@ func init() {
 					EnabledFeatures: "EncryptedReportingPipeline, EncryptedReportingManualTestHeartbeatEvent, ClientAutomatedTest, CrOSLateBootMissiveStorage:legacy_storage_enabled/IMMEDIATE,SLOW_BATCH,BACKGROUND_BATCH,MANUAL_BATCH,SECURITY,MANUAL_BATCH_LACROS",
 					Autopush:        true,
 				},
+				// TODO(b/346725308): Refactor to use utility and known dependency list.
+				ExtraSearchFlags: []*testing.StringPair{
+					{Key: "external_dependency", Value: "DMServerAlpha"},
+					{Key: "external_dependency", Value: "ReportingServiceAutoPush"},
+				},
 			},
 			{
 				Name: "prod_managed_device",
@@ -85,6 +100,11 @@ func init() {
 					// Enable the reporting pipeline, device heartbeat events.
 					EnabledFeatures: "EncryptedReportingPipeline, EncryptedReportingManualTestHeartbeatEvent, ClientAutomatedTest",
 					Autopush:        false,
+				},
+				// TODO(b/346725308): Refactor to use utility and known dependency list.
+				ExtraSearchFlags: []*testing.StringPair{
+					{Key: "external_dependency", Value: "DMServerProd"},
+					{Key: "external_dependency", Value: "ReportingServiceProd"},
 				},
 			},
 		},

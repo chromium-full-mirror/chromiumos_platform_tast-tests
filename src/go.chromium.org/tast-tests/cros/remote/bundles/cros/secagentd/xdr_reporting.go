@@ -66,6 +66,8 @@ func init() {
 		},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DeviceReportXDREvents{}, pci.VerifiedValue),
+			{Key: "external_dependency", Value: "DMServerAlpha"},
+			{Key: "external_dependency", Value: "ReportingServiceAutoPush"},
 		},
 	})
 }

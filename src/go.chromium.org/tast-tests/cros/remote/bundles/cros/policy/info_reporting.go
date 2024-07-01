@@ -67,6 +67,11 @@ func init() {
 				}},
 			},
 		},
+		// TODO(b/346725308): Refactor to use utility and known dependency list.
+		SearchFlags: []*testing.StringPair{
+			{Key: "external_dependency", Value: "DMServerAlpha"},
+			{Key: "external_dependency", Value: "ReportingServiceAutoPush"},
+		},
 		VarDeps: []string{
 			reportingutil.EventsAPIKeyPath,
 			tape.ServiceAccountVar,
