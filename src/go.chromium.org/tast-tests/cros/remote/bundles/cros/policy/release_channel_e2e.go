@@ -81,7 +81,9 @@ func init() {
 				// channel=lts
 				// COM_FOUND_CUJ11_TASK3_WF3.
 				Value: "screenplay-a1bdf4ff-f14d-43a5-90ec-17a4bd2cb397",
-			}},
+			},
+				{Key: "external_dependency", Value: "DMServerAlpha"},
+			},
 		}, {
 			Name:    "stable",
 			Timeout: releaseChannelE2ETimeout,
@@ -99,7 +101,10 @@ func init() {
 				// channel=stable
 				// COM_FOUND_CUJ11_TASK3_WF2.
 				Value: "screenplay-54300da1-e6b1-4664-a175-ff3fc644a17b",
-			}},
+			},
+
+				{Key: "external_dependency", Value: "DMServerAlpha"},
+			},
 		}, {
 			Name:    "beta",
 			Timeout: releaseChannelE2ETimeout,
@@ -117,7 +122,9 @@ func init() {
 				// channel=beta
 				// COM_FOUND_CUJ11_TASK3_WF1.
 				Value: "screenplay-cbd3450e-2c0e-4da8-9d55-8977a34e5e4b",
-			}},
+			},
+				{Key: "external_dependency", Value: "DMServerAlpha"},
+			},
 		}, {
 			Name:    "lts_omaha",
 			Timeout: omahaUpdateE2ETimeout + releaseChannelE2ETimeout,
@@ -134,6 +141,11 @@ func init() {
 					"CHROMEOS_RELEASE_VERSION": "^15662[.].*",
 				},
 			},
+			// TODO(b/346725308): Refactor to use utility and known dependency list.
+			ExtraSearchFlags: []*testing.StringPair{
+				{Key: "external_dependency", Value: "DMServerAlpha"},
+				{Key: "external_dependency", Value: "OmahaProd"},
+			},
 		}, {
 			Name:    "stable_omaha",
 			Timeout: omahaUpdateE2ETimeout + releaseChannelE2ETimeout,
@@ -148,6 +160,11 @@ func init() {
 					"CHROMEOS_RELEASE_TRACK": "^stable-channel$",
 				},
 			},
+			// TODO(b/346725308): Refactor to use utility and known dependency list.
+			ExtraSearchFlags: []*testing.StringPair{
+				{Key: "external_dependency", Value: "DMServerAlpha"},
+				{Key: "external_dependency", Value: "OmahaProd"},
+			},
 		}, {
 			Name:    "beta_omaha",
 			Timeout: omahaUpdateE2ETimeout + releaseChannelE2ETimeout,
@@ -161,6 +178,11 @@ func init() {
 				expectedLSBReleaseRegex: map[string]string{
 					"CHROMEOS_RELEASE_TRACK": "^beta-channel$",
 				},
+			},
+			// TODO(b/346725308): Refactor to use utility and known dependency list.
+			ExtraSearchFlags: []*testing.StringPair{
+				{Key: "external_dependency", Value: "DMServerAlpha"},
+				{Key: "external_dependency", Value: "OmahaProd"},
 			},
 		}},
 	})

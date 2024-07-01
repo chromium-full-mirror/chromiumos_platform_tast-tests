@@ -84,6 +84,10 @@ func init() {
 				},
 				expectedParameters: []string{"targetversionprefix=\"15662.\""},
 			},
+			// TODO(b/346725308): Refactor to use utility and known dependency list.
+			ExtraSearchFlags: []*testing.StringPair{
+				{Key: "external_dependency", Value: "DMServerAlpha"},
+			},
 		}, {
 			Name:    "stable",
 			Timeout: majorVersionPinningE2ETimeout,
@@ -95,6 +99,10 @@ func init() {
 					&policy.DeviceTargetVersionPrefix{Stat: policy.StatusSet, Val: "15823."},
 				},
 				expectedParameters: []string{"targetversionprefix=\"15823.\""},
+			},
+			// TODO(b/346725308): Refactor to use utility and known dependency list.
+			ExtraSearchFlags: []*testing.StringPair{
+				{Key: "external_dependency", Value: "DMServerAlpha"},
 			},
 		}, {
 			Name:    "lts_omaha",
@@ -113,6 +121,11 @@ func init() {
 					"CHROMEOS_RELEASE_VERSION": "^15662[.].+[.].+$",
 				},
 			},
+			// TODO(b/346725308): Refactor to use utility and known dependency list.
+			ExtraSearchFlags: []*testing.StringPair{
+				{Key: "external_dependency", Value: "DMServerAlpha"},
+				{Key: "external_dependency", Value: "OmahaProd"},
+			},
 		}, {
 			Name:    "stable_omaha",
 			Timeout: majorVersionPinningE2ETimeout + pinningOmahaUpdateE2ETimeout,
@@ -129,6 +142,11 @@ func init() {
 					"CHROMEOS_RELEASE_TRACK":   "^stable-channel$",
 					"CHROMEOS_RELEASE_VERSION": "^15823[.].+[.].+$",
 				},
+			},
+			// TODO(b/346725308): Refactor to use utility and known dependency list.
+			ExtraSearchFlags: []*testing.StringPair{
+				{Key: "external_dependency", Value: "DMServerAlpha"},
+				{Key: "external_dependency", Value: "OmahaProd"},
 			},
 		}},
 	})
