@@ -85,11 +85,21 @@ func init() {
 			"hidenorik@chromium.org",
 		},
 		BugComponent: "b:1481072", // ChromeOS > Platform > Technologies > Camera > Kernel
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging", "group:camera-stability", "group:camera-kernelnext"},
+		Attr:         []string{"group:mainline", "group:camera-stability", "group:camera-kernelnext"},
 		SoftwareDeps: []string{caps.BuiltinMIPICamera},
 		HardwareDeps: hwdep.D(hwdep.CameraEnumerated(), hwdep.SkipOnModel(unsupportedModel...)),
 		Data:         configFiles(),
 		Fixture:      fixture.CameraServiceStopped,
+		Params: []testing.Param{
+			{
+				// TODO(b/346995892): IPU6 driver in upstream doesn't work with the HAL. Remove once supported.
+				ExtraSoftwareDeps: []string{"no_kernel_upstream"},
+				ExtraAttr:         []string{"informational", "group:criticalstaging"},
+			}, {
+				Name:      "all",
+				ExtraAttr: []string{"informational"},
+			},
+		},
 	})
 }
 

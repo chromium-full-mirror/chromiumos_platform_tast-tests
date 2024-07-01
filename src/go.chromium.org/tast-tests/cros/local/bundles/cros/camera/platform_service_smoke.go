@@ -33,6 +33,8 @@ func init() {
 		Fixture:      fixture.CameraConnectorReady,
 		Params: []testing.Param{
 			{
+				// TODO(b/346995892): IPU6 driver in upstream doesn't work with the HAL. Remove once supported.
+				ExtraSoftwareDeps: []string{"no_kernel_upstream"},
 				ExtraHardwareDeps: hwdep.D(hwdep.CameraEnumerated(), hwdep.SkipOnModel(testutil.FlakyMIPIModel...), hwdep.SkipOnCameraUSBModule(testutil.FlakyUSBCamera...)),
 				Val:               testParam{Count: 1},
 			}, {
