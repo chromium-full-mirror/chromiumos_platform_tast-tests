@@ -37,6 +37,7 @@ func init() {
 		Contacts: []string{
 			"chromeos-commercial-supportability@google.com", // Team
 			"iremuguz@google.com",                           // Test author
+			"cros-debugd@google.com",                        // Debugd team
 		},
 		BugComponent: "b:1111615",
 		Attr: []string{

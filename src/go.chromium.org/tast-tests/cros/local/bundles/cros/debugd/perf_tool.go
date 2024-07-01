@@ -37,6 +37,7 @@ func init() {
 		Contacts: []string{
 			"cwp-team@google.com",
 			"shantuo@google.com",
+			"cros-debugd@google.com",
 		},
 		BugComponent: "b:87200",
 		SoftwareDeps: []string{"chrome"},

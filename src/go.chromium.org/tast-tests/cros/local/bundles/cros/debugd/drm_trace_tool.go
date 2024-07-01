@@ -37,12 +37,13 @@ func init() {
 		Contacts: []string{
 			"chromeos-gfx-display@chromium.org",
 			"ddavenport@chromium.org",
+			"cros-debugd@google.com",
 		},
 		// ChromeOS > Platform > Graphics > Display
 		BugComponent: "b:188154",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "drm_trace"},
-		Timeout:      4 * time.Minute + upstart.UIRestartTimeout + 2 * chrome.LoginTimeout,
+		Timeout:      4*time.Minute + upstart.UIRestartTimeout + 2*chrome.LoginTimeout,
 		Params: []testing.Param{
 			{
 				Name:              "stable",

@@ -23,6 +23,7 @@ func init() {
 		Contacts: []string{
 			"project-bolton@google.com",
 			"bmgordon@chromium.org",
+			"cros-debugd@google.com",
 		},
 		// ChromeOS > Platform > Services > Printing
 		BugComponent: "b:167231",
@@ -60,7 +61,7 @@ func Printer(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to debugd: ", err)
 	}
 
-	if err := printer.ResetCups(ctx, /*usePrintscanmgr=*/false); err != nil {
+	if err := printer.ResetCups(ctx, false /*usePrintscanmgr*/); err != nil {
 		s.Fatal("Failed to reset cupsd: ", err)
 	}
 
