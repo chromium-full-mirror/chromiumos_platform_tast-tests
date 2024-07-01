@@ -526,6 +526,7 @@ func (e *Env) startPacketCapture(ctx context.Context) error {
 		"tcpdump",
 		"-i", e.VethInName, // only do capture on the main interface, to make the result easier to read
 		"-s100", // truncate the packet to reduce the size of the dump file
+		"-U",    // write direct to file per each packet rather than buffered
 		"-w", logPath)
 	if err := cmd.Start(); err != nil {
 		return err
@@ -540,8 +541,8 @@ func (e *Env) stopPacketCapture(ctx context.Context) error {
 		return nil
 	}
 
-	if err := e.tcpdumpCmd.Kill(); err != nil {
-		return errors.Wrap(err, "failed to send SIGKILL to the tcpdump process")
+	if err := e.tcpdumpCmd.Signal(unix.SIGTERM); err != nil {
+		return errors.Wrap(err, "failed to send SIGTERM to the tcpdump process")
 	}
 
 	e.tcpdumpCmd.Wait()
