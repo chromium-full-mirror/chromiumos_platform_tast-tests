@@ -50,7 +50,7 @@ func init() {
 		},
 		BugComponent: "b:1271043", // Chrome OS Server Projects > Enterprise Management >> Chrome Commercial Backend >> Onboarding >> Enterprise Enrollment
 		Fixture:      fixture.CleanOwnership,
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"reven_oobe_config"},
 	})
 }
