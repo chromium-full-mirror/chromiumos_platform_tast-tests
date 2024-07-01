@@ -30,6 +30,7 @@ type powerG3Params struct {
 	PowerOffMethod    powerOffMethod
 	PowerStateTimeout time.Duration
 	RemovePower       bool
+	SetRecScreen      bool
 	SetRecMode        bool
 	CheckUSB          bool
 }
@@ -46,6 +47,7 @@ func init() {
 		Attr:         []string{"group:firmware"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		LacrosStatus: testing.LacrosVariantUnneeded,
+		Fixture:      fixture.NormalMode,
 		Params: []testing.Param{
 			{
 				Name:              "shutdown",
@@ -54,7 +56,6 @@ func init() {
 				Val: powerG3Params{
 					PowerOffMethod: shutdownCommand,
 				},
-				Fixture: fixture.NormalMode,
 			},
 			{
 				Name:              "power_button",
@@ -63,7 +64,6 @@ func init() {
 				Val: powerG3Params{
 					PowerOffMethod: longPowerButtonPress,
 				},
-				Fixture: fixture.NormalMode,
 			},
 			{
 				Name:              "power_state",
@@ -72,7 +72,6 @@ func init() {
 				Val: powerG3Params{
 					PowerOffMethod: powerStateOff,
 				},
-				Fixture: fixture.NormalMode,
 			},
 			{
 				Name: "power_state_usb_plugged_in",
@@ -83,7 +82,6 @@ func init() {
 					CheckUSB:       true,
 				},
 				Timeout: 120 * time.Minute,
-				Fixture: fixture.NormalMode,
 			},
 			{
 				Name: "power_state_snk",
@@ -94,15 +92,15 @@ func init() {
 					PowerOffMethod: powerStateOff,
 					RemovePower:    true,
 				},
-				Fixture: fixture.NormalMode,
 			},
 			{
 				Name:      "power_state_rec_off",
 				ExtraAttr: []string{"firmware_unstable"},
 				Val: powerG3Params{
 					PowerOffMethod: powerStateOff,
+					SetRecMode:     true,
 				},
-				Fixture: fixture.RecModeNoServices,
+				Timeout: 120 * time.Minute,
 			},
 			{
 				Name: "power_button_from_ro",
@@ -110,11 +108,10 @@ func init() {
 				ExtraAttr: []string{"firmware_unstable"},
 				Val: powerG3Params{
 					PowerOffMethod: longPowerButtonPress,
-					SetRecMode:     true,
+					SetRecScreen:   true,
 					// Verify if the power state transitions to G3 after PowerStateTimeout.
 					PowerStateTimeout: 11 * time.Second,
 				},
-				Fixture: fixture.NormalMode,
 				Timeout: 15 * time.Minute,
 			},
 		},
@@ -128,6 +125,10 @@ func ECPowerG3(ctx context.Context, s *testing.State) {
 	}
 	if err := h.RequireConfig(ctx); err != nil {
 		s.Fatal("Failed to get fw-testing-config: ", err)
+	}
+	ms, err := firmware.NewModeSwitcher(ctx, h)
+	if err != nil {
+		s.Fatal("Failed to create mode switcher: ", err)
 	}
 
 	tc := s.Param().(powerG3Params)
@@ -149,11 +150,7 @@ func ECPowerG3(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	if tc.SetRecMode {
-		ms, err := firmware.NewModeSwitcher(ctx, h)
-		if err != nil {
-			s.Fatal("Failed to create mode switcher: ", err)
-		}
+	if tc.SetRecScreen {
 		s.Log("Booting the DUT to the recovery screen")
 		if err := ms.EnableRecMode(ctx, servo.PowerStateRec, servo.USBMuxOff); err != nil {
 			s.Fatal("Failed to boot to recovery screen: ", err)
@@ -161,6 +158,13 @@ func ECPowerG3(ctx context.Context, s *testing.State) {
 		s.Log("Waiting for DUT to reach the firmware screen")
 		if err := h.WaitFirmwareScreen(ctx, h.Config.FirmwareScreenRecMode); err != nil {
 			s.Fatal("Failed to get to firmware screen: ", err)
+		}
+	}
+
+	if tc.SetRecMode {
+		s.Log("Rebooting into recovery mode")
+		if err := ms.RebootToMode(ctx, fwCommon.BootModeRecovery); err != nil {
+			s.Fatal("Failed to reboot into recovery mode: ", err)
 		}
 	}
 
@@ -267,7 +271,7 @@ func ECPowerG3(ctx context.Context, s *testing.State) {
 				if isG3PowerState {
 					s.Logf("Captured %q and got power state G3. Retry pressing power button", apUnresponsiveMsg)
 				} else {
-					s.Logf("Captured %q and but did not get power state G3. Continue reconnecting to the DUT", apUnresponsiveMsg)
+					s.Logf("Captured %q but did not get power state G3. Continue reconnecting to the DUT", apUnresponsiveMsg)
 					break
 				}
 			} else {
@@ -292,7 +296,7 @@ func ECPowerG3(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to connect charger: ", err)
 		}
 		// Restoring power with servo_v4 can cause ethernet failure, so reconnect afterwards
-		if err := h.WaitConnect(ctx); err != nil {
+		if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
 			s.Fatal("Failed to reconnect to DUT after restarting: ", err)
 		}
 	}
