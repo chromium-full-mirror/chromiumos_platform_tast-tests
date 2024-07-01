@@ -120,11 +120,26 @@ func SetAutoDarkLightWallpaper(ctx context.Context, s *testing.State) {
 	}
 }
 
+func waitUntilSelected(ac *uiauto.Context, finder *nodewith.Finder) uiauto.Action {
+	return func(ctx context.Context) error {
+		return testing.Poll(ctx, func(ctx context.Context) error {
+			nodeInfo, err := ac.Info(ctx, finder)
+			if err != nil {
+				return err
+			}
+			if !nodeInfo.Selected {
+				return errors.Wrapf(err, "%v selected state is not %v", nodeInfo.Name, true)
+			}
+			return nil
+		}, &testing.PollOptions{Timeout: 2 * time.Second})
+	}
+}
+
 // selectDLWallpaper selects an image in a D/L collection and sets it as wallpaper.
 func selectDLWallpaper(ctx context.Context, ui *uiauto.Context, collection string) error {
-	imagesFinder := nodewith.Role(role.ListBoxOption).Ancestor(nodewith.Role(role.Main).Name(collection))
+	allImages := nodewith.Role(role.ListBoxOption).Ancestor(nodewith.Role(role.Main).Name(collection))
 
-	images, err := ui.NodesInfo(ctx, imagesFinder)
+	images, err := ui.NodesInfo(ctx, allImages)
 	if err != nil {
 		return errors.Wrapf(err, "failed to find images in %v collection", collection)
 	}
@@ -133,12 +148,21 @@ func selectDLWallpaper(ctx context.Context, ui *uiauto.Context, collection strin
 	}
 
 	// Select 3rd image as wallpaper.
-	selectedImage := images[2]
-	if err := uiauto.Combine("set D/L wallpaper",
-		ui.MouseClickAtLocation(0, selectedImage.Location.CenterPoint()),
-		ui.WaitUntilExists(nodewith.Role(role.Heading).NameContaining(selectedImage.Name)),
-	)(ctx); err != nil {
-		return errors.Wrapf(err, "failed to select Element image %v", selectedImage.Name)
+	imageFinder := allImages.Nth(2)
+
+	imageInfo, err := ui.Info(ctx, imageFinder)
+	if err != nil {
+		return errors.Wrap(err, "failed to get info for 3rd Element image")
 	}
+
+	if err := uiauto.Combine("Click Element image",
+		ui.WithTimeout(10*time.Second).LeftClickUntil(
+			imageFinder,
+			waitUntilSelected(ui, imageFinder),
+		),
+		ui.WaitUntilExists(nodewith.Role(role.Heading).NameContaining(imageInfo.Name)))(ctx); err != nil {
+		return errors.Wrapf(err, "failed to click Element image %v", imageInfo.Name)
+	}
+
 	return nil
 }
