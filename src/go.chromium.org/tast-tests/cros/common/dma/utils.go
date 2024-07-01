@@ -10,6 +10,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/accountmanager"
 	"go.chromium.org/tast-tests/cros/common/arc"
+	"go.chromium.org/tast-tests/cros/common/arcappcompat"
 	"go.chromium.org/tast-tests/cros/common/assistant"
 	"go.chromium.org/tast-tests/cros/common/calendar"
 	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
@@ -36,6 +37,7 @@ func pools() (map[string]string, map[string]string) {
 	var dmaPools = map[string]string{
 
 		accountmanager.AccountPoolVarName:           ui.GaiaDMAPoolDefaultValue(),
+		arcappcompat.AccountVarName:                 arcappcompat.DmaAccountValue(),
 		arc.ChildAccountVarName:                     arc.ChildDMAAccountValue(),
 		arc.DrivefsPoolVarName:                      ui.GaiaDMAPoolDefaultValue(),
 		arc.Managed3pEmmAccountVarName:              arc.ManagedDMAAccountPoolValue(),
@@ -69,6 +71,7 @@ func pools() (map[string]string, map[string]string) {
 
 	var regularPools = map[string]string{
 		accountmanager.AccountPoolVarName:           accountmanager.AccountPoolValue(),
+		arcappcompat.AccountVarName:                 arcappcompat.AccountValue(),
 		arc.ChildAccountVarName:                     arc.ChildAccountValue(),
 		arc.DrivefsPoolVarName:                      arc.DrivefsPoolValue(),
 		arc.Managed3pEmmAccountVarName:              arc.Managed3pEmmAccountValue(),
