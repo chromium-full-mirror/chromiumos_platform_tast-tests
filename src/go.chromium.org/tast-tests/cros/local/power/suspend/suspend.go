@@ -69,6 +69,13 @@ func For(t time.Duration) Param {
 	return &intParam{namedParam{"suspend_for_sec"}, int(t.Seconds())}
 }
 
+// WakeUpTimeout is the duration for setting an RTC alarm to fire immediately
+// after the specified interval. This ensures that device resumes while testing
+// remotely.
+func WakeUpTimeout(t time.Duration) Param {
+	return &intParam{namedParam{"wakeup_timeout"}, int(t.Seconds())}
+}
+
 // Default timeout for Timeout(...) Param. 30 seconds gives us enough time for
 // suspend operations plus the freeze of userspace (from userspace) to timeout.
 // kDefaultMaxSuspendDelayTimeout (for suspend delays from other processes) is

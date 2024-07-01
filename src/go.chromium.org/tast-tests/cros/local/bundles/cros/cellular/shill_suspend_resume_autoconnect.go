@@ -9,10 +9,10 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/shillconst"
-	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/cellular"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/hermes"
+	"go.chromium.org/tast-tests/cros/local/power/suspend"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -104,7 +104,8 @@ func ShillSuspendResumeAutoconnect(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to enable AutoConnect: ", err)
 	}
 
-	if err := testexec.CommandContext(ctx, "powerd_dbus_suspend", "--suspend_for_sec=10").Run(); err != nil {
+	// Use wake up timeout to ensure device recovery.
+	if _, err := suspend.Request(ctx, suspend.Delay(0), suspend.For(10*time.Second), suspend.WakeUpTimeout(15*time.Second)); err != nil {
 		s.Fatal("Failed to perform system suspend (precondition): ", err)
 	}
 

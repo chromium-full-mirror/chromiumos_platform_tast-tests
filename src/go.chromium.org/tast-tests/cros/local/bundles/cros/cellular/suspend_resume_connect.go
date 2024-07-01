@@ -11,7 +11,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/hermesconst"
 	"go.chromium.org/tast-tests/cros/common/networkui/netconfigtypes"
 	"go.chromium.org/tast-tests/cros/common/shillconst"
-	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/cellular"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -19,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast-tests/cros/local/hermes"
 	"go.chromium.org/tast-tests/cros/local/modemmanager"
+	"go.chromium.org/tast-tests/cros/local/power/suspend"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -110,7 +110,8 @@ func SuspendResumeConnect(ctx context.Context, s *testing.State) {
 		s.Log("Disconnect successfully")
 	}
 
-	if err := testexec.CommandContext(ctx, "powerd_dbus_suspend", "--suspend_for_sec=15").Run(); err != nil {
+	// Use wake up timeout to ensure device recovery.
+	if _, err := suspend.Request(ctx, suspend.Delay(0), suspend.For(15*time.Second), suspend.WakeUpTimeout(20*time.Second)); err != nil {
 		s.Fatal("Failed to suspend and resume: ", err)
 	}
 
@@ -144,7 +145,8 @@ func SuspendResumeConnect(ctx context.Context, s *testing.State) {
 	}
 	defer cleanup1(cleanupCtx)
 
-	if err := testexec.CommandContext(ctx, "powerd_dbus_suspend", "--suspend_for_sec=15").Run(); err != nil {
+	// Use wake up timeout to ensure device recovery.
+	if _, err := suspend.Request(ctx, suspend.Delay(0), suspend.For(15*time.Second), suspend.WakeUpTimeout(20*time.Second)); err != nil {
 		s.Fatal("Failed to suspend and resume: ", err)
 	}
 
