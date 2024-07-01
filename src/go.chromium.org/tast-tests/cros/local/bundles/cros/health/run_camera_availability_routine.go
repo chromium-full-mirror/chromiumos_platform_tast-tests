@@ -15,10 +15,6 @@ import (
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
-type cameraAvailabilityTestParams struct {
-	runCameraDiagnosticServiceCheck bool
-}
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         RunCameraAvailabilityRoutine,
@@ -31,45 +27,23 @@ func init() {
 		BugComponent: "b:982097", // ChromeOS > Platform > Enablement > Health
 		SoftwareDeps: []string{"diagnostics"},
 		HardwareDeps: hwdep.D(hwdep.CameraEnumerated()),
-		Attr:         []string{"group:mainline"},
-		Fixture:      "crosHealthdRunning",
-		Params: []testing.Param{{
-			// TODO(b/304912538): Enable `runCameraDiagnosticServiceCheck` when
-			// the camera diagnostic service is enabled.
-			Name: "camera_diagnostic_service_check_disabled",
-			Val: cameraAvailabilityTestParams{
-				runCameraDiagnosticServiceCheck: false,
-			},
-			// TODO(b/315739688): Promote to critical.
-			ExtraAttr: []string{"informational"},
-		}},
+		// TODO(b/315739688): Promote to critical.
+		Attr:    []string{"group:mainline", "informational", "group:criticalstaging"},
+		Fixture: "crosHealthdRunning",
 	})
 }
 
-func buildCameraAvailabilityRoutineArgs(params cameraAvailabilityTestParams) func(context.Context) ([]string, error) {
-	return func(context.Context) ([]string, error) {
-		var runCameraDiagnosticServiceCheckArg string
-		if params.runCameraDiagnosticServiceCheck {
-			runCameraDiagnosticServiceCheckArg = "true"
-		} else {
-			runCameraDiagnosticServiceCheckArg = "false"
-		}
-		return []string{
-			"camera_availability",
-			"--run_camera_diagnostic_service_available_check=" + runCameraDiagnosticServiceCheckArg,
-		}, nil
-	}
+func buildCameraAvailabilityRoutineArgs(ctx context.Context) ([]string, error) {
+	return []string{"camera_availability"}, nil
 }
 
 func RunCameraAvailabilityRoutine(ctx context.Context, s *testing.State) {
-	params := s.Param().(cameraAvailabilityTestParams)
-
 	if err := upstart.EnsureJobRunning(ctx, "cros-camera"); err != nil {
 		s.Fatal("Failed to ensure the cros-camera service is running: ", err)
 	}
 
 	config := croshealthd.RoutineTestingConfigV2{
-		ArgsBuilder:    buildCameraAvailabilityRoutineArgs(params),
+		ArgsBuilder:    buildCameraAvailabilityRoutineArgs,
 		RoutineRunner:  croshealthd.RunDiagV2,
 		ResultVerifier: croshealthd.VerifyRoutineV2PassedOrUnsupported,
 	}
