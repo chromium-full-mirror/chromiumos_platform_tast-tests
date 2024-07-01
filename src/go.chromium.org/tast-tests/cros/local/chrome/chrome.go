@@ -161,6 +161,7 @@ var prePackages = []string{
 	"go.chromium.org/tast-tests/cros/local/vdi/fixtures",
 	"go.chromium.org/tast-tests/cros/local/wpr",
 	"go.chromium.org/tast-tests/cros/local/saveddesks",
+	"go.chromium.org/tast-tests/cros/local/cellular/esim/mojo",
 }
 
 // Lock prevents from New or Chrome.Close from being called until Unlock is called.
