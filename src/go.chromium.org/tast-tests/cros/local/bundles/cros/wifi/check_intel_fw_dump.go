@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/crash"
 	"go.chromium.org/tast-tests/cros/local/network/iface"
 	"go.chromium.org/tast-tests/cros/local/shill"
+	"go.chromium.org/tast-tests/cros/local/wifi"
 	"go.chromium.org/tast-tests/cros/local/wifi/intelfwextractor"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -42,6 +43,7 @@ func init() {
 		// Flex does not update the driver and does not need to recheck the functionality
 		// of the firmware dump, so skip this test on reven.
 		HardwareDeps:    hwdep.D(hwdep.WifiIntel(), hwdep.SkipOnModel("reven")),
+		Fixture:         "wiphyEnabled",
 		Requirements:    []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
 		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 	})
@@ -82,11 +84,7 @@ func CheckIntelFWDump(ctx context.Context, s *testing.State) {
 	}
 	defer crash.TearDownCrashTest(ctxForTearingDownCrashTest)
 
-	m, err := shill.NewManager(ctx)
-	if err != nil {
-		s.Fatal("Failed to create shill manager proxy: ", err)
-	}
-
+	m := s.FixtValue().(*wifi.WiphyEnabledFixtureData).ShillManager
 	ifaceName, err := shill.WifiInterface(ctx, m, 5*time.Second)
 	if err != nil {
 		s.Fatal("Failed to get the WiFi interface: ", err)

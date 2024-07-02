@@ -17,6 +17,7 @@ import (
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/shill"
+	"go.chromium.org/tast-tests/cros/local/wifi"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -44,6 +45,7 @@ func init() {
 			// verify with this test, so we skip all versions of this test on eve.
 			// See b/181055964 for more details.
 			hwdep.SkipOnModel("eve")),
+		Fixture:         "wiphyEnabled",
 		Requirements:    []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates, "sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
 		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 	})
@@ -530,10 +532,7 @@ func CheckIntelSARTable(ctx context.Context, s *testing.State) {
 		// Vendor ID for Intel WiFi.
 		intelVendorID = "0x8086"
 	)
-	manager, err := shill.NewManager(ctx)
-	if err != nil {
-		s.Fatal("Failed creating shill manager proxy: ", err)
-	}
+	manager := s.FixtValue().(*wifi.WiphyEnabledFixtureData).ShillManager
 	// Verify that the DUT uses Intel WiFi.
 	netIf, err := shill.WifiInterface(ctx, manager, time.Duration(2)*time.Second)
 	if err != nil {

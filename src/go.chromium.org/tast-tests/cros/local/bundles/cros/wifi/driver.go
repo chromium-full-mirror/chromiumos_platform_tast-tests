@@ -15,6 +15,7 @@ import (
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast-tests/cros/local/sysutil"
+	"go.chromium.org/tast-tests/cros/local/wifi"
 	"go.chromium.org/tast/core/lsbrelease"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/wlan"
@@ -31,6 +32,7 @@ func init() {
 		// Run on both Tast CQ and suite:wifi_matfunc.
 		Attr:         []string{"group:mainline", "group:wificell", "wificell_func"},
 		SoftwareDeps: []string{"wifi", "no_kernel_upstream"},
+		Fixture:      "wiphyEnabled",
 		// List of requirements this test satisfies.
 		Requirements:    []string{tdreq.WiFiDrvSupportCrOS, tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
 		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
@@ -169,10 +171,7 @@ func Driver(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	manager, err := shill.NewManager(ctx)
-	if err != nil {
-		s.Fatal("Failed creating shill manager proxy: ", err)
-	}
+	manager := s.FixtValue().(*wifi.WiphyEnabledFixtureData).ShillManager
 
 	netIf, err := shill.WifiInterface(ctx, manager, 5*time.Second)
 	if err != nil {

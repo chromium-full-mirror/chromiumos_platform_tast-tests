@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/wifi/wpacli"
 	"go.chromium.org/tast-tests/cros/local/network/cmd"
 	"go.chromium.org/tast-tests/cros/local/shill"
+	"go.chromium.org/tast-tests/cros/local/wifi"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -28,17 +29,14 @@ func init() {
 		BugComponent:    "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		Attr:            []string{"group:mainline", "group:wificell", "wificell_func", "group:cq-medium"},
 		SoftwareDeps:    []string{"wifi"},
+		Fixture:         "wiphyEnabled",
 		Requirements:    []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
 		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 	})
 }
 
 func WPAValidity(ctx context.Context, s *testing.State) {
-	manager, err := shill.NewManager(ctx)
-	if err != nil {
-		s.Fatal("Failed creating shill manager proxy: ", err)
-	}
-
+	manager := s.FixtValue().(*wifi.WiphyEnabledFixtureData).ShillManager
 	iface, err := shill.WifiInterface(ctx, manager, 5*time.Second)
 	if err != nil {
 		s.Fatal("Could not get a WiFi interface: ", err)

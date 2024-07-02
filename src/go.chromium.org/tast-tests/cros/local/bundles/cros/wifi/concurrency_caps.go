@@ -24,6 +24,7 @@ func init() {
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		Attr:         []string{"group:mainline", "group:wificell", "wificell_unstable", "informational"},
 		SoftwareDeps: []string{"wifi"},
+		Fixture:      "wiphyEnabled",
 	})
 }
 

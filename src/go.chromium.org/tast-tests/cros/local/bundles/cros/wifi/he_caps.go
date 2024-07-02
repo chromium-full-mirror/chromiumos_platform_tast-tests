@@ -26,6 +26,7 @@ func init() {
 		Attr:            []string{"group:mainline", "group:wificell", "wificell_func", "group:labqual"},
 		SoftwareDeps:    []string{"wifi"},
 		HardwareDeps:    hwdep.D(hwdep.Wifi80211ax()),
+		Fixture:         "wiphyEnabled",
 		Requirements:    []string{tdreq.WiFiGenSupport80211ax, tdreq.WiFiGenSupport6E, tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
 		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 	})

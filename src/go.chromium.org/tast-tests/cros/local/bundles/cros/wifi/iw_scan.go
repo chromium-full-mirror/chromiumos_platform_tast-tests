@@ -11,6 +11,7 @@ import (
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/local/network/ip"
 	"go.chromium.org/tast-tests/cros/local/shill"
+	"go.chromium.org/tast-tests/cros/local/wifi"
 	"go.chromium.org/tast-tests/cros/local/wifi/iw"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -27,16 +28,14 @@ func init() {
 		Attr:            []string{"group:mainline", "group:wificell", "wificell_func"},
 		SoftwareDeps:    []string{"wifi"},
 		HardwareDeps:    hwdep.D(hwdep.WifiNotMarvell()),
+		Fixture:         "wiphyEnabled",
 		Requirements:    []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
 		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 	})
 }
 
 func IWScan(ctx context.Context, s *testing.State) {
-	manager, err := shill.NewManager(ctx)
-	if err != nil {
-		s.Fatal("Failed creating shill manager proxy: ", err)
-	}
+	manager := s.FixtValue().(*wifi.WiphyEnabledFixtureData).ShillManager
 
 	iface, err := shill.WifiInterface(ctx, manager, 5*time.Second)
 	if err != nil {
