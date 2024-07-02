@@ -65,7 +65,7 @@ func HumanMotionRobotLinearity(ctx context.Context, s *testing.State) {
 		s.Fatal("Error setting up SSH tunnel to touchhost: ", err)
 	}
 
-	hmrInterface, err := input.NewHMRInterface(ctx, "127.0.0.1", 9992)
+	hmrInterface, err := input.NewHMRInterface(ctx, "127.0.0.1", touchhostConnectionManager.DronePort)
 	if err != nil {
 		s.Fatal("Error generating new HMR interface: ", err)
 	}

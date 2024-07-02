@@ -77,7 +77,7 @@ func HumanMotionRobotFullImage(ctx context.Context, s *testing.State) {
 	}
 	defer client.Close(ctx)
 
-	hmrInterface, err := input.NewHMRInterface(ctx, "127.0.0.1", 9992)
+	hmrInterface, err := input.NewHMRInterface(ctx, "127.0.0.1", touchhostConnectionManager.DronePort)
 	if err != nil {
 		s.Fatal("Error generating new HMR interface: ", err)
 	}
