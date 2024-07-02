@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
+	"go.chromium.org/tast-tests/cros/common/bounds"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	ps "go.chromium.org/tast-tests/cros/common/power/powerpb"
 	"go.chromium.org/tast-tests/cros/common/servo"
@@ -76,6 +77,16 @@ func init() {
 		ServiceDeps: []string{"tast.common.power.powerpb.LocalInfoService"},
 	})
 }
+
+var lpcMetricBounds = []bounds.MetricBounds{{
+	Test:   bounds.MatchRegexp(`\.suspend$`),
+	Metric: bounds.MatchRegexp(`lifetime$`),
+	Bounds: bounds.Min(10),
+}, {
+	Test:   bounds.MatchRegexp(`\.shutdown$`),
+	Metric: bounds.MatchRegexp(`mw_mean$`),
+	Bounds: bounds.Max(10),
+}}
 
 func LowPowerConsumption(ctx context.Context, s *testing.State) {
 	// Fixture helper from "NormalMode" fixture
@@ -217,6 +228,18 @@ func LowPowerConsumption(ctx context.Context, s *testing.State) {
 		Direction: perf.SmallerIsBetter,
 		Multiple:  true,
 	}, mwSamples...)
+	mwMean := func(samples []float64) float64 {
+		sum := 0.0
+		for _, sample := range samples {
+			sum += sample
+		}
+		return sum / float64(len(samples))
+	}(mwSamples)
+	lpmPerf.Set(perf.Metric{
+		Name:      "mw_mean",
+		Unit:      "milliwatts",
+		Direction: perf.SmallerIsBetter,
+	}, mwMean)
 	lpmPerf.Set(perf.Metric{
 		Name:      "ma",
 		Unit:      "milliamps",
@@ -260,6 +283,10 @@ func LowPowerConsumption(ctx context.Context, s *testing.State) {
 	// Make sure that the watchdog on ccd is re-enabled
 	if err := h.Servo.WatchdogAdd(ctx, servo.WatchdogCCD); err != nil {
 		s.Fatal("Failed to switch CCD watchdog on: ", err)
+	}
+
+	if err := bounds.EvaluateResults(ctx, lpcMetricBounds, s.OutDir()); err != nil {
+		s.Fatal("Failed bounds check: ", err)
 	}
 }
 
