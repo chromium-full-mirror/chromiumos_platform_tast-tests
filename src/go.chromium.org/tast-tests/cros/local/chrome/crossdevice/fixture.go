@@ -72,8 +72,8 @@ func init() {
 		Name: "crossdeviceOnboardedAllFeatures",
 		Desc: "User is signed in (with GAIA) to CrOS and paired with an Android phone with all Cross Device features enabled",
 		Contacts: []string{
-			"kyleshima@chromium.org",
-			"chromeos-sw-engprod@google.com",
+			"chromeos-cross-device-eng@google.com",
+			"hansenmichael@google.com",
 		},
 		Parent: "crossdeviceAndroidSetupPhoneHub",
 		Impl: NewCrossDeviceOnboarded(FixtureOptions{true, true, true, false, true}, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
@@ -97,8 +97,8 @@ func init() {
 		Name: "crossdeviceOnboardedAllFeaturesRerun",
 		Desc: "Temporary Re-run fixture for tests that fail initially on crossdeviceOnboardedAllFeatures fixture",
 		Contacts: []string{
-			"jasonrhee@google.com",
-			"chromeos-sw-engprod@google.com",
+			"chromeos-cross-device-eng@google.com",
+			"hansenmichael@google.com",
 		},
 		Parent: "crossdeviceAndroidSetupPhoneHubRerun",
 		Impl: NewCrossDeviceOnboarded(FixtureOptions{true, true, true, false, true}, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
@@ -120,8 +120,8 @@ func init() {
 		Name: "crossdeviceOnboarded",
 		Desc: "User is signed in (with GAIA) to CrOS and paired with an Android phone with default Cross Device features enabled",
 		Contacts: []string{
-			"kyleshima@chromium.org",
-			"chromeos-sw-engprod@google.com",
+			"chromeos-cross-device-eng@google.com",
+			"hansenmichael@google.com",
 		},
 		Parent: "crossdeviceAndroidSetupSmartLock",
 		Impl: NewCrossDeviceOnboarded(FixtureOptions{false, false, true, false, false}, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
@@ -143,8 +143,8 @@ func init() {
 		Name: "crossdeviceNoSignIn",
 		Desc: "User is not signed in (with GAIA) to CrOS but fixture requires control of an Android phone. Does not skip OOBE",
 		Contacts: []string{
-			"kyleshima@chromium.org",
-			"chromeos-sw-engprod@google.com",
+			"chromeos-cross-device-eng@google.com",
+			"hansenmichael@google.com",
 		},
 		Parent: "crossdeviceAndroidSetupPhoneHub",
 		Impl: NewCrossDeviceOnboarded(FixtureOptions{false, false, false, true, false}, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
@@ -167,8 +167,8 @@ func init() {
 		Name: "crossdeviceOnboardedNoLock",
 		Desc: "User is signed in (with GAIA) to CrOS and paired with an Android phone with default Cross Device features enabled. Doesn't lock the fixture before starting the test",
 		Contacts: []string{
-			"kyleshima@chromium.org",
-			"chromeos-sw-engprod@google.com",
+			"chromeos-cross-device-eng@google.com",
+			"hansenmichael@google.com",
 		},
 		Parent: "crossdeviceAndroidSetupSmartLock",
 		Impl: NewCrossDeviceOnboarded(FixtureOptions{false, false, false, false, false}, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
@@ -192,8 +192,8 @@ func init() {
 		Name: "lacrosCrossdeviceOnboardedAllFeatures",
 		Desc: "User is signed in (with GAIA) to CrOS and paired with an Android phone with all Cross Device features enabled with lacros enabled",
 		Contacts: []string{
-			"kyleshima@chromium.org",
-			"chromeos-sw-engprod@google.com",
+			"chromeos-cross-device-eng@google.com",
+			"hansenmichael@google.com",
 		},
 		Parent: "crossdeviceAndroidSetupPhoneHub",
 		Impl: NewCrossDeviceOnboarded(FixtureOptions{true, true, true, false, true}, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
@@ -218,8 +218,8 @@ func init() {
 		Name: "crossdeviceOnboardedAllFeaturesFloss",
 		Desc: "User is signed in (with GAIA) to CrOS and paired with an Android phone with all Cross Device features enabled (floss)",
 		Contacts: []string{
-			"kyleshima@chromium.org",
-			"chromeos-sw-engprod@google.com",
+			"chromeos-cross-device-eng@google.com",
+			"hansenmichael@google.com",
 		},
 		Parent: "crossdeviceAndroidSetupPhoneHub",
 		Impl: NewCrossDeviceOnboarded(FixtureOptions{true, true, true, false, true}, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
@@ -243,8 +243,8 @@ func init() {
 		Name: "crossdeviceOnboardedAllFeaturesFlossRerun",
 		Desc: "User is signed in (with GAIA) to CrOS and paired with an Android phone with all Cross Device features enabled (floss)",
 		Contacts: []string{
-			"kyleshima@chromium.org",
-			"chromeos-sw-engprod@google.com",
+			"chromeos-cross-device-eng@google.com",
+			"hansenmichael@google.com",
 		},
 		Parent: "crossdeviceAndroidSetupPhoneHubRerun",
 		Impl: NewCrossDeviceOnboarded(FixtureOptions{true, true, true, false, true}, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
@@ -266,8 +266,8 @@ func init() {
 		Name: "crossdeviceOnboardedFloss",
 		Desc: "User is signed in (with GAIA) to CrOS and paired with an Android phone with default Cross Device features enabled (floss)",
 		Contacts: []string{
-			"kyleshima@chromium.org",
-			"chromeos-sw-engprod@google.com",
+			"chromeos-cross-device-eng@google.com",
+			"hansenmichael@google.com",
 		},
 		Parent: "crossdeviceAndroidSetupSmartLock",
 		Impl: NewCrossDeviceOnboarded(FixtureOptions{false, false, true, false, false}, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
@@ -289,8 +289,8 @@ func init() {
 		Name: "crossdeviceNoSignInFloss",
 		Desc: "User is not signed in (with GAIA) to CrOS but fixture requires control of an Android phone. Does not skip OOBE (floss)",
 		Contacts: []string{
-			"kyleshima@chromium.org",
-			"chromeos-sw-engprod@google.com",
+			"chromeos-cross-device-eng@google.com",
+			"hansenmichael@google.com",
 		},
 		Parent: "crossdeviceAndroidSetupPhoneHub",
 		Impl: NewCrossDeviceOnboarded(FixtureOptions{false, false, true, true, false}, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
@@ -313,8 +313,8 @@ func init() {
 		Name: "crossdeviceOnboardedNoLockFloss",
 		Desc: "User is signed in (with GAIA) to CrOS and paired with an Android phone with default Cross Device features enabled. Doesn't lock the fixture before starting the test (floss)",
 		Contacts: []string{
-			"kyleshima@chromium.org",
-			"chromeos-sw-engprod@google.com",
+			"chromeos-cross-device-eng@google.com",
+			"hansenmichael@google.com",
 		},
 		Parent: "crossdeviceAndroidSetupSmartLock",
 		Impl: NewCrossDeviceOnboarded(FixtureOptions{false, false, false, false, false}, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
@@ -337,8 +337,8 @@ func init() {
 		Name: "lacrosCrossdeviceOnboardedAllFeaturesFloss",
 		Desc: "User is signed in (with GAIA) to CrOS and paired with an Android phone with all Cross Device features enabled with lacros enabled (floss)",
 		Contacts: []string{
-			"kyleshima@chromium.org",
-			"chromeos-sw-engprod@google.com",
+			"chromeos-cross-device-eng@google.com",
+			"hansenmichael@google.com",
 		},
 		Parent: "crossdeviceAndroidSetupPhoneHub",
 		Impl: NewCrossDeviceOnboarded(FixtureOptions{true, true, true, false, true}, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {

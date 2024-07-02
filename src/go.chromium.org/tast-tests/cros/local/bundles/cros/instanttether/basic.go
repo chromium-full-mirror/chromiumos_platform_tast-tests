@@ -30,8 +30,7 @@ func init() {
 		Desc:         "Checks basic Instant Tether functionality",
 		Contacts: []string{
 			"chromeos-cross-device-eng@google.com",
-			"chromeos-sw-engprod@google.com",
-			"kyleshima@chromium.org",
+			"hansenmichael@google.com",
 		},
 		// ChromeOS > Software > System Services > Cross Device > Instant Tethering
 		BugComponent: "b:1131910",
