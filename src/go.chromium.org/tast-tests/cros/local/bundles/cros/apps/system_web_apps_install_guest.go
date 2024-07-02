@@ -19,7 +19,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that system web apps are installed in guest mode",
 		Contacts: []string{
-			"cros-apps-platform-core@google.com",
+			"cros-web-apps-team@google.com",
 		},
 		BugComponent: "b:1168727",
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},

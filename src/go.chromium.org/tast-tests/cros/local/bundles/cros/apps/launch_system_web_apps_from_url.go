@@ -27,7 +27,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that System Web Apps can launch through their URL",
 		Contacts: []string{
-			"cros-apps-platform-core@google.com",
+			"cros-web-apps-team@google.com",
 		},
 		BugComponent: "b:1168727",
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
