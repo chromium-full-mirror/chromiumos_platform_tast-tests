@@ -292,7 +292,7 @@ var (
 		cellularconst.ModemTypeL850:   *newDlcSpec(39, 39),
 		cellularconst.ModemTypeFM350:  *newDlcSpec(156, 156),
 		cellularconst.ModemTypeFM101:  *newDlcSpec(200, 200),
-		cellularconst.ModemTypeEM060:  *newDlcSpec(300, 300),
+		cellularconst.ModemTypeEM060:  *newDlcSpec(100, 300),
 		cellularconst.ModemTypeLCUK54: *newDlcSpec(200, 200),
 		cellularconst.ModemTypeRW101:  *newDlcSpec(200, 200),
 		cellularconst.ModemTypeRW135:  *newDlcSpec(200, 310),
