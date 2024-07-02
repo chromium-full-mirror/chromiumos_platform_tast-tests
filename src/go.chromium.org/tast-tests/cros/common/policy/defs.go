@@ -28851,6 +28851,37 @@ func (p *JavaScriptOptimizerBlockedForSites) Equal(iface interface{}) bool {
 }
 
 // ****************************************************************************
+// 1280. PromotionsEnabled
+// This policy can be modified without rebooting.
+// ****************************************************************************
+type PromotionsEnabled struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *PromotionsEnabled) Name() string          { return "PromotionsEnabled" }
+func (p *PromotionsEnabled) Scope() Scope          { return ScopeUser }
+func (p *PromotionsEnabled) Status() Status        { return p.Stat }
+func (p *PromotionsEnabled) UntypedV() interface{} { return p.Val }
+func (p *PromotionsEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *PromotionsEnabled) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *PromotionsEnabled) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
 // JSON deserialization logic (used by policy.Unmarshal).
 // ****************************************************************************
 
@@ -30625,6 +30656,8 @@ func newByName(name string) (Policy, error) {
 		return &JavaScriptOptimizerAllowedForSites{}, nil
 	case "JavaScriptOptimizerBlockedForSites":
 		return &JavaScriptOptimizerBlockedForSites{}, nil
+	case "PromotionsEnabled":
+		return &PromotionsEnabled{}, nil
 	default:
 		return nil, errors.New("Unknown policy " + name)
 	}
