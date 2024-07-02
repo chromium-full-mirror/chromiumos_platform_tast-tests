@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
-	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
@@ -44,25 +43,14 @@ func init() {
 		Vars:         []string{"firmware.skipFlashUSB"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Timeout:      2 * time.Hour,
+		Fixture:      fixture.NormalMode,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Params: []testing.Param{
-			{
-				Name:    "normal",
-				Fixture: fixture.NormalMode,
-				Val:     fwCommon.BootModeNormal,
-			},
-			{
-				Name:    "dev",
-				Fixture: fixture.DevModeGBB,
-				Val:     fwCommon.BootModeDev,
-			},
-		},
 	})
 }
 
 func CorruptBothKernelCopies(ctx context.Context, s *testing.State) {
-	h := s.FixtValue().(*fixture.Value).Helper
-	bootMode := s.Param().(fwCommon.BootMode)
+	pv := s.FixtValue().(*fixture.Value)
+	h := pv.Helper
 
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to connect to servo: ", err)
@@ -263,7 +251,7 @@ func CorruptBothKernelCopies(ctx context.Context, s *testing.State) {
 			}
 
 			s.Log("Performing mode aware reboot to boot to original bootmode")
-			if err := ms.RebootToMode(ctx, bootMode, firmware.AllowGBBForce); err != nil {
+			if err := ms.RebootToMode(ctx, pv.BootMode, firmware.AllowGBBForce); err != nil {
 				s.Fatal("Failed to reboot: ", err)
 			}
 
@@ -329,7 +317,7 @@ func CorruptBothKernelCopies(ctx context.Context, s *testing.State) {
 		s.Error("Failed to restore KERN-B: ", err)
 	}
 
-	if err := h.RebootWithVT2Command(ctx, bootMode); err != nil {
+	if err := h.RebootWithVT2Command(ctx, pv.BootMode); err != nil {
 		s.Fatal("Failed to reboot back to original boot mode: ", err)
 	}
 
