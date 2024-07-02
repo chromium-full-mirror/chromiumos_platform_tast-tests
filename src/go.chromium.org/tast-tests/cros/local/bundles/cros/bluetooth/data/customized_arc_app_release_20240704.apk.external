@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/bluetooth/customized_arc_app_release_20240704.apk",
+  "size": 4669816,
+  "sha256sum": "62e63dca5f639738fda762a23d5528514b57e98a6f31e80351b6af8f9b42757b"
+}

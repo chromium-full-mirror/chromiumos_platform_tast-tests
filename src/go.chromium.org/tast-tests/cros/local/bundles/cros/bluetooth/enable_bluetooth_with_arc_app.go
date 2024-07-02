@@ -7,17 +7,14 @@ package bluetooth
 import (
 	"context"
 	"path/filepath"
-	"regexp"
 	"time"
 
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 
 	"go.chromium.org/tast-tests/cros/common/android/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/apputil"
-	"go.chromium.org/tast-tests/cros/local/arc/optin"
 	"go.chromium.org/tast-tests/cros/local/bluetooth/facade"
 	"go.chromium.org/tast-tests/cros/local/bluetooth/facade/common"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -30,13 +27,12 @@ const (
 	androidVMT string = "android_vm_t"
 )
 
-// Match the old version string of "1.x.x", "2.0.x" or "2.1.x".
-var regexpOldVersionOfBluetoothApp = regexp.MustCompile(`^(1\.\d+|2\.(0|1))\.\d+`)
-
 type testParam struct {
 	stackType  common.BluetoothStackType
 	androidDep string
 }
+
+const apkName = "customized_arc_app_release_20240704.apk"
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -44,7 +40,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify that user can turn Bluetooth on with an ARC++ app",
 		Contacts: []string{
-			"kinwang.lao@cienet.com",
+			"vic.lee@cienet.com",
 			"chromeos-connectivity-cienet-external@google.com",
 		},
 		// ChromeOS > Software > System Services > Connectivity > Bluetooth
@@ -52,6 +48,7 @@ func init() {
 		LifeCycleStage: testing.LifeCycleInDevelopment,
 		Attr:           []string{"group:bluetooth"},
 		SoftwareDeps:   []string{"chrome", "arc"},
+		Data:           []string{apkName},
 		Params: []testing.Param{{
 			Name:              "android_p_bluez",
 			Fixture:           "arcBootedWithPlayStoreAndBluetoothBlueZ",
@@ -142,43 +139,29 @@ func EnableBluetoothWithArcApp(ctx context.Context, s *testing.State) {
 
 	const (
 		// The ARC++ app used for controlling Bluetooth.
-		pkgName = "com.manjul.bluetoothsdp"
-
-		idPrefix          = pkgName + ":id/"
-		bluetoothSwitchID = idPrefix + "on_off_switch"
+		appName                   = "Test Bluetooth ARC app for Tast"
+		pkgName                   = "com.example.testbluetootharcappfortast"
+		idPrefix                  = pkgName + ":id/"
+		bluetoothStatusID         = idPrefix + "txt_bt_activation"
+		turnOffBluetoothButtonID  = idPrefix + "btn_turn_off_bt"
+		turnOnBluetoothButtonID   = idPrefix + "btn_turn_on_bt"
+		permissionStatusID        = idPrefix + "txt_bt_permission"
+		requestPermissionButtonID = idPrefix + "btn_request_bt"
 
 		defaultUITimeout = 15 * time.Second
-		retryTimes       = 3
 	)
 
 	recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn)
 	defer uiauto.StopAndSaveOnError(cleanupCtx, recorder, filepath.Join(s.OutDir(), "screen_recording.webm"), s.HasError)
 
-	// We do not provide a name when installing the app since it is not required.
-	// Further, the name as shown in the Play Store may not match the actual name of the app itself.
-	// To handle this edge-case we determine the correct name to use based on the version of the app that we install.
-	app, err := apputil.NewApp(ctx, kb, tconn, a, d, "" /* appName */, pkgName)
+	app, err := apputil.NewApp(ctx, kb, tconn, a, d, appName, pkgName)
 	if err != nil {
 		s.Fatal("Failed to create the instance of app: ", err)
 	}
 
-	if err := uiauto.Retry(retryTimes, func(ctx context.Context) error {
-		if err := app.Install(ctx); err != nil {
-			if err := optin.ClosePlayStore(ctx, tconn); err != nil {
-				s.Log("Failed to close Play Store: ", err)
-			}
-			return err
-		}
-		return nil
-	})(ctx); err != nil {
-		s.Fatal("Failed to install the bluetooth app: ", err)
+	if err := a.Install(ctx, s.DataPath(apkName)); err != nil {
+		s.Fatal("Failed to install the APK: ", err)
 	}
-
-	appName, err := appNameBasedOnVersion(ctx, app)
-	if err != nil {
-		s.Fatal("Failed to get the app name: ", err)
-	}
-	app.AppName = appName
 
 	s.Log("Turning Bluetooth off")
 	if err := btFacade.SetPowered(ctx, false); err != nil {
@@ -191,45 +174,39 @@ func EnableBluetoothWithArcApp(ctx context.Context, s *testing.State) {
 	}
 	defer app.Close(cleanupCtx, cr, s.HasError, s.OutDir())
 
-	if err := apputil.DismissMobilePrompt(ctx, tconn); err != nil {
-		s.Fatal("Failed to dismiss 'designed for mobile' prompt: ", err)
-	}
-
-	turnOnBluetoothObj := d.Object(ui.ResourceID(bluetoothSwitchID), ui.Checked(false))
-	turnOffBluetoothObj := d.Object(ui.ResourceID(bluetoothSwitchID), ui.Checked(true))
-	denyNotificationObj := d.Object(ui.TextMatches("Don’t allow"))
-
-	var (
-		allowBluetoothObj *ui.Object
-		denyLocationObj   *ui.Object
-	)
 	// The texts are different across Android versions.
-	switch androidDep {
-	case androidP:
+	var allowBluetoothObj *ui.Object
+	if androidDep == androidP {
 		allowBluetoothObj = d.Object(ui.Text("ALLOW"))
-		denyLocationObj = d.Object(ui.Text("DENY"))
-	case androidR:
+	} else if androidDep == androidR || androidDep == androidVMT {
 		allowBluetoothObj = d.Object(ui.Text("Allow"))
-		denyLocationObj = d.Object(ui.Text("Deny"))
-	case androidVMT:
-		allowBluetoothObj = d.Object(ui.Text("Allow"))
-		denyLocationObj = d.Object(ui.Text("Don’t allow"))
-	default:
+	} else {
 		s.Fatal("Unsupported ARC type: ", androidDep)
 	}
 
-	// Turning Bluetooth on from ARC++ app.
-	if err := uiauto.Combine("turn Bluetooth on",
-		// Check for potential notification permission popup and deny it as notifications are not needed
-		// for upcoming test.
-		apputil.ClickIfExist(denyNotificationObj, defaultUITimeout),
-		// This switch does not sync with the Bluetooth state on DUT when the app is just launched,
+	requestPermissionObj := d.Object(ui.ID(requestPermissionButtonID), ui.Text("Request"))
+	permissionStatusObj := d.Object(ui.ID(permissionStatusID), ui.Text("OK"))
+	turnOnBluetoothObj := d.Object(ui.ID(turnOnBluetoothButtonID), ui.Text("Turn On"))
+	turnOffBluetoothObj := d.Object(ui.ID(turnOffBluetoothButtonID), ui.Text("Turn Off"))
+	bluetoothOnStatusObj := d.Object(ui.ID(bluetoothStatusID), ui.Text("Bluetooth: On"))
+	bluetoothOffStatusObj := d.Object(ui.ID(bluetoothStatusID), ui.Text("Bluetooth: Off"))
+
+	if err := uiauto.Combine("requesting Bluetooth permission",
+		// According to Android guidelines, Bluetooth permission is needed to ensure user awareness and consent.
+		apputil.FindAndClick(requestPermissionObj, defaultUITimeout),
+		apputil.FindAndClick(allowBluetoothObj, defaultUITimeout),
+		apputil.WaitForExists(permissionStatusObj, defaultUITimeout),
+	)(ctx); err != nil {
+		s.Fatalf("Failed to request Bluetooth permission from ARC++ app %q: %v", app.AppName, err)
+	}
+
+	if err := uiauto.Combine("turning Bluetooth on",
+		// This status does not sync with the Bluetooth state on DUT when the app is just launched
 		// ensuring it is "OFF" to proceed since we have turned the Bluetooth off earlier.
-		apputil.ClickIfExist(turnOffBluetoothObj, defaultUITimeout),
+		apputil.WaitForExists(bluetoothOffStatusObj, defaultUITimeout),
 		apputil.FindAndClick(turnOnBluetoothObj, defaultUITimeout),
 		apputil.FindAndClick(allowBluetoothObj, defaultUITimeout),
-		// Deny location permission as scanning for nearby devices feature is not relevant for upcoming test.
-		apputil.FindAndClick(denyLocationObj, defaultUITimeout),
+		apputil.WaitForExists(bluetoothOnStatusObj, defaultUITimeout),
 	)(ctx); err != nil {
 		s.Fatalf("Failed to turn Bluetooth on from ARC++ app %q: %v", app.AppName, err)
 	}
@@ -241,9 +218,12 @@ func EnableBluetoothWithArcApp(ctx context.Context, s *testing.State) {
 		s.Fatal("Bluetooth is not ON")
 	}
 
-	// Turning Bluetooth off from ARC++ app.
-	if err := apputil.FindAndClick(turnOffBluetoothObj, defaultUITimeout)(ctx); err != nil {
-		s.Fatal("Failed to click the Bluetooth toggle: ", err)
+	if err := uiauto.Combine("turning Bluetooth off",
+		apputil.FindAndClick(turnOffBluetoothObj, defaultUITimeout),
+		apputil.FindAndClick(allowBluetoothObj, defaultUITimeout),
+		apputil.WaitForExists(bluetoothOffStatusObj, defaultUITimeout),
+	)(ctx); err != nil {
+		s.Fatalf("Failed to turn Bluetooth off from ARC++ app %q: %v", app.AppName, err)
 	}
 
 	// Verify that ARC++ app cannot turn ChromeOS Bluetooth off.
@@ -252,28 +232,4 @@ func EnableBluetoothWithArcApp(ctx context.Context, s *testing.State) {
 	} else if !isBtOn {
 		s.Fatal("Bluetooth is not ON")
 	}
-}
-
-// appNameBasedOnVersion returns the app name based on the version of the app.
-//
-// The method is included as the name of the app can be different across different versions and the version of the app available on the Play Store could be different as well.
-// The known mapping of app name to app version is:
-//   - Bluetooth Pair: 2.1.x and before
-//   - Bluetooth Finder: 2.2.0 and later
-//
-// This method can be deprecated once the the app available on the Play Store is fixed.
-func appNameBasedOnVersion(ctx context.Context, app *apputil.App) (string, error) {
-	appVersion, err := app.GetVersion(ctx)
-	if err != nil {
-		return "", errors.Wrap(err, "failed to get app version")
-	}
-
-	const (
-		oldAppName = "Bluetooth Pair"
-		newAppName = "Bluetooth Finder"
-	)
-	if regexpOldVersionOfBluetoothApp.MatchString(appVersion) {
-		return oldAppName, nil
-	}
-	return newAppName, nil
 }
