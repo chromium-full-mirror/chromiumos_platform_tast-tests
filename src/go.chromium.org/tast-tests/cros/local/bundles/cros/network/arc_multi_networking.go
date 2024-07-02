@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	arcnet "go.chromium.org/tast-tests/cros/local/network/arc"
+	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast-tests/cros/local/network/testhooks"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/env"
@@ -169,11 +170,16 @@ func ARCMultiNetworking(ctx context.Context, s *testing.State) {
 		}
 		rsw.routerAddr, err = getIPv4Address(rsw.router)
 		if err != nil {
-			s.Errorf("Failed to get router %s IP: %s", opt.NameSuffix, err)
+			s.Fatalf("Failed to get router %s IP: %s", opt.NameSuffix, err)
 		}
 		rsw.serverAddr, err = getIPv4Address(rsw.server)
 		if err != nil {
-			s.Errorf("Failed to get server %s IP: %s", opt.NameSuffix, err)
+			s.Fatalf("Failed to get server %s IP: %s", opt.NameSuffix, err)
+		}
+		// Ping router to check the basic connectivity on the host. The server cannot be used since the created env is
+		// not always the default network ExpectPingSuccessWithTimeout uses.
+		if err := ping.ExpectPingSuccessWithTimeout(ctx, rsw.routerAddr.String(), "root", 10*time.Second); err != nil {
+			s.Fatalf("Failed to ping router %s on host: %s", rsw.routerAddr.String(), err)
 		}
 		rsw.ifName = rsw.router.VethOutName
 		rsw.nameSuffix = opt.NameSuffix
