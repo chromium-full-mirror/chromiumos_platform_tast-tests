@@ -274,11 +274,11 @@ var (
 	}
 
 	dlcSpecsPerModem = map[cellularconst.ModemType]dlcSpecs{
-		cellularconst.ModemTypeL850:  *newDlcSpec(39, 43),
-		cellularconst.ModemTypeFM350: *newDlcSpec(156, 165),
-		cellularconst.ModemTypeFM101: *newDlcSpec(200, 310),
-		cellularconst.ModemTypeEM060: *newDlcSpec(292, 310),
-		cellularconst.ModemTypeRW101: *newDlcSpec(200, 310),
+		cellularconst.ModemTypeL850:  *newDlcSpec(39, 39),
+		cellularconst.ModemTypeFM350: *newDlcSpec(156, 156),
+		cellularconst.ModemTypeFM101: *newDlcSpec(200, 200),
+		cellularconst.ModemTypeEM060: *newDlcSpec(300, 300),
+		cellularconst.ModemTypeRW101: *newDlcSpec(200, 200),
 		cellularconst.ModemTypeRW135: *newDlcSpec(200, 310),
 	}
 )
