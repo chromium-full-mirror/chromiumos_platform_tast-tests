@@ -9,65 +9,40 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/cpu"
-	"go.chromium.org/tast-tests/cros/local/power/util"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"gonum.org/v1/gonum/stat"
 )
 
-// ThermalCooldownParams contains parameters for thermally cooling down device.
-type ThermalCooldownParams struct {
-	// Number of consecutive samples used to check the cooldown progress.
-	SampleCount int
+// ThermalSteadyStateConfig contains parameters used for cooling down device
+// to a thermal steady state.
+type ThermalSteadyStateConfig struct {
+	// Number of consecutive samples used to compute mean and standard deviation
+	// of temperature.
+	SampleSize int
 	// Sampling interval.
 	Interval time.Duration
 	// Maximum amount of time allowed for the device to cooldown.
 	Timeout time.Duration
-	// Maximum deviation acceptable from the samples.
+	// Maximum standard deviation acceptable from the samples, this determines the
+	// strictness of thermal steady state.
 	MaxStandardDeviation float64
+	// Temperature threshold for cooldown to pass even if it failed to reach
+	// the desired thermal steady state.
+	MaxTempAtTimeout float64
 }
 
-// ThermalCooldown tries to cooldown DUT to a steady state quickly by
-// setting fans to 100% and wait until the temperature meets the
-// stopping criteria defined in ThermalCooldownParams.
-func ThermalCooldown(ctx context.Context, p ThermalCooldownParams) error {
-	// The retry parameters are set based on similar utilities in autotest.
-	// crsrc.org/o/src/third_party/autotest/files/client/cros/power/power_status.py;l=2492
-	const (
-		retryAttempts  = 3
-		ecCommandDelay = 2 * time.Second
-	)
-
-	setFanMaxDuty := func(ctx context.Context) error {
-		return util.RunCommandWithRetry(ctx,
-			retryAttempts,
-			ecCommandDelay,
-			"unable to set fan to max duty cycle using ectool",
-			"ectool", "fanduty", "100")
-	}
-
-	setFanAutoCtrl := func(ctx context.Context) error {
-		return util.RunCommandWithRetry(ctx,
-			retryAttempts,
-			ecCommandDelay,
-			"unable to set fan to auto using using ectool",
-			"ectool", "autofanctrl")
-	}
-
-	// Some fanless devices return error when setting fan speed. Avoid setting
-	// fan speed for these devices. For fanless devices which do not return
-	// error, setting fan speed would make no functional difference.
-	useFanForCooldown := setFanAutoCtrl(ctx) == nil
-
+// waitUntilThermalSteadyState waits until the device reaches the specified
+// thermal steady state. If the device cannot reach the steady state before
+// timeout, it would still PASS if the mean temperature of the samples <= MaxTempAtTimeout.
+func waitUntilThermalSteadyState(ctx context.Context, config ThermalSteadyStateConfig) error {
 	samples := make([]float64, 0)
+	unstableTempFailure := false
+	mean := 0.0
+	stdDev := 0.0
 
-	if err := testing.Poll(ctx, func(context.Context) error {
-		if useFanForCooldown {
-			if err := setFanMaxDuty(ctx); err != nil {
-				return err
-			}
-		}
-
+	err := testing.Poll(ctx, func(context.Context) error {
+		unstableTempFailure = false
 		temp, _, err := cpu.Temperature(ctx)
 		if err != nil {
 			return testing.PollBreak(errors.Wrap(err, "failed to read CPU temperature"))
@@ -75,44 +50,33 @@ func ThermalCooldown(ctx context.Context, p ThermalCooldownParams) error {
 
 		samples = append(samples, float64(temp)/1000)
 
-		if len(samples) < p.SampleCount {
-			return errors.Wrap(err, "not enough temperature samples")
+		if len(samples) < config.SampleSize {
+			return errors.New("not enough temperature samples")
 		}
 
-		mean, stdDev := stat.MeanStdDev(samples, nil)
+		mean, stdDev = stat.MeanStdDev(samples, nil)
 		samples = samples[1:]
 
-		testing.ContextLogf(ctx, "Cooling down. Average temperature is %f with a standard deviation of %f", mean, stdDev)
+		testing.ContextLogf(ctx, "Mean temperature is %f with a standard deviation of %f", mean, stdDev)
 
-		if stdDev > p.MaxStandardDeviation {
-			return errors.Wrap(err, "temperature is changing more than specified standard deviation")
+		if stdDev > config.MaxStandardDeviation {
+			unstableTempFailure = true
+			return errors.New("temperature is changing more than specified standard deviation")
 		}
 
 		return nil
 	}, &testing.PollOptions{
-		Timeout:  p.Timeout,
-		Interval: p.Interval,
-	}); err != nil {
-		err = errors.Wrap(err, "failed to cooldown")
+		Timeout:  config.Timeout,
+		Interval: config.Interval,
+	})
 
-		if useFanForCooldown {
-			if fanErr := setFanAutoCtrl(ctx); fanErr != nil {
-				fanErr = errors.Wrap(fanErr, "also failed to reset fan to auto")
-				err = errors.Join(err, fanErr)
-			}
+	if err != nil {
+		if unstableTempFailure && mean <= config.MaxTempAtTimeout {
+			testing.ContextLogf(ctx, "Did not reach thermal steady state but %f degrees is cool enough", mean)
+			testing.ContextLog(ctx, "Allow this device to pass thermal steady state cooldown")
+			return nil
 		}
-
-		return err
-	}
-
-	if useFanForCooldown {
-		if err := setFanAutoCtrl(ctx); err != nil {
-			return err
-		}
-	}
-
-	if err := Cooldown(ctx); err != nil {
-		return err
+		return errors.Wrap(err, "failed to cooldown to thermal steady state")
 	}
 
 	return nil
