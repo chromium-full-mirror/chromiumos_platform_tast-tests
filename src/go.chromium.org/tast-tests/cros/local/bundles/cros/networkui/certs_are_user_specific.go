@@ -11,9 +11,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/crypto/certificate"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/dropdown"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -29,7 +26,6 @@ import (
 
 type certsAreUserSpecificTestParams struct {
 	surfaceUnderTest certsAreUserSpecificTestUI
-	browserType      browser.Type
 }
 
 const (
@@ -44,10 +40,7 @@ const (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: CertsAreUserSpecific,
-		// This test launches a web page so there should be a lacros variant.
-		// Lacros test will be added once the issue(crbug/1366609) is fixed.
-		LacrosStatus: testing.LacrosVariantNeeded,
-		Desc:         "Verify that the imported certificates are user specific",
+		Desc: "Verify that the imported certificates are user specific",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"chromeos-connectivity-engprod@google.com",
@@ -66,19 +59,16 @@ func init() {
 				Name: "certificate_manager",
 				Val: &certsAreUserSpecificTestParams{
 					surfaceUnderTest: &uiCertManager{},
-					browserType:      browser.TypeAsh,
 				},
 			}, {
 				Name: "join_vpn_dialog",
 				Val: &certsAreUserSpecificTestParams{
 					surfaceUnderTest: &uiJoinVPN{},
-					browserType:      browser.TypeAsh,
 				},
 			}, {
 				Name: "join_wifi_dialog",
 				Val: &certsAreUserSpecificTestParams{
 					surfaceUnderTest: &uiJoinWiFi{},
-					browserType:      browser.TypeAsh,
 				},
 			},
 		},
@@ -119,16 +109,15 @@ func CertsAreUserSpecific(ctx context.Context, s *testing.State) {
 			ctx, cancel := ctxutil.Shorten(ctx, 2*time.Minute)
 			defer cancel()
 
-			certs, err := test.user.loginAndImportCerts(ctx, certificate.TestCert1(), params.browserType, test.importType)
+			certs, err := test.user.loginAndImportCerts(ctx, certificate.TestCert1(), test.importType)
 			if err != nil {
 				s.Fatal("Failed to import certs: ", err)
 			}
-			defer test.user.loginAndDeleteCerts(cleanupCtx, certs, params.browserType)
+			defer test.user.loginAndDeleteCerts(cleanupCtx, certs)
 
 			res := &certsAreUserSpecificTestResource{
-				testCerts:   certs,
-				browserType: params.browserType,
-				outDir:      s.OutDir(),
+				testCerts: certs,
+				outDir:    s.OutDir(),
 			}
 
 			for _, user := range []*certsAreUserSpecificTestUser{secondaryTestUser, testGuestUser} {
@@ -139,7 +128,7 @@ func CertsAreUserSpecific(ctx context.Context, s *testing.State) {
 					defer cancel()
 
 					var err error
-					if res.cr, err = browserfixt.NewChrome(ctx, res.browserType, lacrosfixt.NewConfig(), user.loginOption, chrome.KeepState()); err != nil {
+					if res.cr, err = chrome.New(ctx, user.loginOption, chrome.KeepState()); err != nil {
 						s.Fatal("Failed to start Chrome: ", err)
 					}
 					defer res.cr.Close(cleanupCtx)
@@ -188,11 +177,10 @@ func verifyNotInstalledByUI(ctx context.Context, tconn *chrome.TestConn, certs [
 }
 
 type certsAreUserSpecificTestResource struct {
-	cr          *chrome.Chrome
-	tconn       *chrome.TestConn
-	testCerts   []*certManager.CertData
-	browserType browser.Type
-	outDir      string
+	cr        *chrome.Chrome
+	tconn     *chrome.TestConn
+	testCerts []*certManager.CertData
+	outDir    string
 }
 
 type certsAreUserSpecificTestUI interface {
@@ -305,21 +293,9 @@ func (uiCertManager) uiName() string           { return "Certificate Manager" }
 func (uiCertManager) uiRoot() *nodewith.Finder { return nil }
 
 func (n *uiCertManager) launchUI(ctx context.Context, resource *certsAreUserSpecificTestResource) (retErr error) {
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
-	defer cancel()
+	var err error
+	n.Manager, err = certManager.Launch(ctx, resource.tconn, resource.cr)
 
-	browser, closeBrowser, err := browserfixt.SetUp(ctx, resource.cr, resource.browserType)
-	if err != nil {
-		return errors.Wrap(err, "failed to set up browser")
-	}
-	defer func(ctx context.Context) {
-		if retErr != nil {
-			closeBrowser(ctx)
-		}
-	}(cleanupCtx)
-
-	n.Manager, err = certManager.Launch(ctx, resource.tconn, browser)
 	return err
 }
 
@@ -343,31 +319,30 @@ type certsAreUserSpecificTestUser struct {
 	isGuest     bool
 }
 
-func (u *certsAreUserSpecificTestUser) loginAndImportCerts(ctx context.Context, certs certificate.CertStore, browserType browser.Type, importType certManager.ImportType) (_ []*certManager.CertData, retErr error) {
+func (u *certsAreUserSpecificTestUser) loginAndImportCerts(ctx context.Context, certs certificate.CertStore, importType certManager.ImportType) (_ []*certManager.CertData, retErr error) {
 	// Reserve a longer time in case the certificate needs to be deleted.
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
 	defer cancel()
 
-	cr, browser, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, browserType, lacrosfixt.NewConfig(), u.loginOption)
+	cr, err := chrome.New(ctx, u.loginOption)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to start Chrome and launch browser")
+		return nil, errors.Wrap(err, "failed to start Chrome")
 	}
 	defer cr.Close(cleanupCtx)
-	defer closeBrowser(cleanupCtx)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed creating test API connection")
 	}
 
-	manager, err := certManager.Launch(ctx, tconn, browser)
+	manager, err := certManager.Launch(ctx, tconn, cr)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to launch certificate manager")
 	}
 	defer manager.Close(cleanupCtx)
 
-	if err := manager.CreateCertAndImport(ctx, cr, browserType, certs, importType, "" /* password */, 0 /* trustSettings */); err != nil {
+	if err := manager.CreateCertAndImport(ctx, cr, certs, importType, "" /* password */, 0 /* trustSettings */); err != nil {
 		return nil, errors.Wrap(err, "failed to import certificates")
 	}
 
@@ -377,7 +352,7 @@ func (u *certsAreUserSpecificTestUser) loginAndImportCerts(ctx context.Context, 
 	}, nil
 }
 
-func (u *certsAreUserSpecificTestUser) loginAndDeleteCerts(ctx context.Context, certs []*certManager.CertData, browserType browser.Type) error {
+func (u *certsAreUserSpecificTestUser) loginAndDeleteCerts(ctx context.Context, certs []*certManager.CertData) error {
 	if u.isGuest {
 		// No further action is required as the certificates will become invalid upon exiting guest mode.
 		return nil
@@ -387,19 +362,18 @@ func (u *certsAreUserSpecificTestUser) loginAndDeleteCerts(ctx context.Context, 
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	cr, browser, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, browserType, lacrosfixt.NewConfig(), u.loginOption, chrome.KeepState())
+	cr, err := chrome.New(ctx, u.loginOption, chrome.KeepState())
 	if err != nil {
-		return errors.Wrap(err, "failed to start Chrome and launch browser")
+		return errors.Wrap(err, "failed to start Chrome")
 	}
 	defer cr.Close(cleanupCtx)
-	defer closeBrowser(cleanupCtx)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed creating test API connection")
 	}
 
-	manager, err := certManager.Launch(ctx, tconn, browser)
+	manager, err := certManager.Launch(ctx, tconn, cr)
 	if err != nil {
 		return errors.Wrap(err, "failed to launch certificate manager")
 	}

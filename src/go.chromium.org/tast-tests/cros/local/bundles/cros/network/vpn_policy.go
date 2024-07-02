@@ -13,7 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast-tests/cros/local/network/vpn"
 	certManager "go.chromium.org/tast-tests/cros/local/networkui/certificate"
@@ -33,7 +32,6 @@ type vpnPolicyTestCase struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VPNPolicy,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test that VPN can correctly be configured from device and user policy",
 		Contacts:     []string{"cros-networking@google.com", "taoyl@google.com"},
 		BugComponent: "b:1493959",
@@ -229,19 +227,12 @@ func VPNPolicy(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
-	certManager.CreateCertAndImport(
-		ctx,
-		cr,
-		tconn,
-		browser.TypeAsh,
-		certificate.TestCert1(),
-		certManager.TypeImportAndBind,
-		"", /* password */
-		0,  /* trust settings for the CA certificate */
-	)
+	if err := certManager.CreateCertAndImport(ctx, cr, tconn, certificate.TestCert1(), certManager.TypeImportAndBind, "" /* password */, 0 /* trustSettings */); err != nil {
+		s.Fatal("Failed to create and import certificates: ", err)
+	}
 	defer certManager.DeleteCert(
 		tconn,
-		cr.Browser(),
+		cr,
 		certManager.NewCertData(certificate.TestCert1(), certManager.TypeClient),
 		certManager.NewCertData(certificate.TestCert1(), certManager.TypeCA),
 	)(cleanupCtx)

@@ -9,10 +9,10 @@ import (
 	"fmt"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	"go.chromium.org/tast-tests/cros/common/crypto/certificate"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/common/wifi/security/wpaeap"
 	cert "go.chromium.org/tast-tests/cros/remote/network"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
@@ -30,7 +30,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:           CertsUsableAndPersist,
-		LacrosStatus:   testing.LacrosVariantNeeded,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Verify that installed certificates are usable and persist after different test scenarios",
 		Contacts: []string{
@@ -44,7 +43,6 @@ func init() {
 		TestBedDeps:  []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
 		ServiceDeps: []string{
 			"tast.cros.browser.ChromeService",
-			"tast.cros.browser.LacrosService",
 			"tast.cros.ui.ChromeUIService",
 			"tast.cros.networkui.CertificateService",
 			"tast.cros.wifi.WifiService",
@@ -75,7 +73,6 @@ func init() {
 					numTrials:    3,
 				},
 			},
-			// TODO(crbug/1366609): Enable lacros test once the bug is fixed.
 		},
 		Timeout: 15 * time.Minute,
 	})
@@ -83,12 +80,12 @@ func init() {
 
 type certsUsableTestParams struct {
 	// testScenario is the action to be tested, certificate should be usable and persist after this action.
-	testScenario func(ctx context.Context, tf *wificell.TestFixture, isLacros bool) error
+	testScenario func(ctx context.Context, tf *wificell.TestFixture) error
 
 	// numTrials is a number of the trials for the test scenario.
 	numTrials int
 
-	shouldAutoConnect, isLacros bool
+	shouldAutoConnect bool
 }
 
 type certificateDetail struct {
@@ -127,9 +124,6 @@ func CertsUsableAndPersist(ctx context.Context, s *testing.State) {
 	params := s.Param().(*certsUsableTestParams)
 
 	startChromeReq := &ui.NewRequest{}
-	if params.isLacros {
-		startChromeReq.Lacros = &ui.Lacros{}
-	}
 
 	rpcClient := tf.DUTRPC(wificell.DefaultDUT)
 	crSvc := ui.NewChromeServiceClient(rpcClient.Conn)
@@ -138,17 +132,8 @@ func CertsUsableAndPersist(ctx context.Context, s *testing.State) {
 	}
 	defer crSvc.Close(cleanupCtx, &emptypb.Empty{})
 
-	if params.isLacros {
-		lacrosSvc := ui.NewLacrosServiceClient(rpcClient.Conn)
-		if _, err := lacrosSvc.Launch(ctx, &emptypb.Empty{}); err != nil {
-			s.Fatal("Failed to launch lacros: ", err)
-		}
-		defer lacrosSvc.Close(cleanupCtx, &emptypb.Empty{})
-	}
-
 	certSvc := networkui.NewCertificateServiceClient(rpcClient.Conn)
 	if _, err := certSvc.Init(ctx, &networkui.InitRequest{
-		IsLacros: params.isLacros,
 		InitType: networkui.InitRequest_LAUNCH,
 	}); err != nil {
 		s.Fatal("Failed to initialize the certificate service: ", err)
@@ -242,7 +227,7 @@ func CertsUsableAndPersist(ctx context.Context, s *testing.State) {
 			}
 
 			for i := 0; i < params.numTrials; i++ {
-				if err := params.testScenario(ctx, tf, params.isLacros); err != nil {
+				if err := params.testScenario(ctx, tf); err != nil {
 					s.Fatal("Failed to complete the test scenario: ", err)
 				}
 			}
@@ -274,8 +259,8 @@ func CertsUsableAndPersist(ctx context.Context, s *testing.State) {
 
 // suspendAndRestore suspends the DUT for a while and then
 // restores resources associate with chrome.Chrome instance,
-// including chrome.Chrome instance, lacros and certificate manager.
-func suspendAndRestore(ctx context.Context, tf *wificell.TestFixture, isLacros bool) error {
+// including chrome.Chrome instance and certificate manager.
+func suspendAndRestore(ctx context.Context, tf *wificell.TestFixture) error {
 	wifiClient := tf.DUTWifiClient(wificell.DefaultDUT)
 	if err := wifiClient.Suspend(ctx, 5*time.Second); err != nil {
 		return errors.Wrap(err, "failed to suspend DUT")
@@ -287,16 +272,8 @@ func suspendAndRestore(ctx context.Context, tf *wificell.TestFixture, isLacros b
 		return errors.Wrap(err, "failed to reconnect to the Chrome session")
 	}
 
-	if isLacros {
-		lacrosSvc := ui.NewLacrosServiceClient(rpcClient.Conn)
-		if _, err := lacrosSvc.Connect(ctx, &emptypb.Empty{}); err != nil {
-			return errors.Wrap(err, "failed to reconnect to lacros")
-		}
-	}
-
 	certSvc := networkui.NewCertificateServiceClient(rpcClient.Conn)
 	if _, err := certSvc.Init(ctx, &networkui.InitRequest{
-		IsLacros: isLacros,
 		InitType: networkui.InitRequest_CONNECT,
 	}); err != nil {
 		return errors.Wrap(err, "failed to reconnect to the certificate service")
@@ -307,19 +284,12 @@ func suspendAndRestore(ctx context.Context, tf *wificell.TestFixture, isLacros b
 
 // reLoginAndRestore re-login the chrome.Chrome session by starting a new one.
 // This method also ensure resources are all well-managed by closing them before re-login.
-func reLoginAndRestore(ctx context.Context, tf *wificell.TestFixture, isLacros bool) error {
+func reLoginAndRestore(ctx context.Context, tf *wificell.TestFixture) error {
 	rpcClient := tf.DUTRPC(wificell.DefaultDUT)
 
 	certSvc := networkui.NewCertificateServiceClient(rpcClient.Conn)
 	if _, err := certSvc.Close(ctx, &emptypb.Empty{}); err != nil {
 		return errors.Wrap(err, "failed to close the certificate manager")
-	}
-
-	lacrosSvc := ui.NewLacrosServiceClient(rpcClient.Conn)
-	if isLacros {
-		if _, err := lacrosSvc.Close(ctx, &emptypb.Empty{}); err != nil {
-			return errors.Wrap(err, "failed to close the lacros")
-		}
 	}
 
 	crSvc := ui.NewChromeServiceClient(rpcClient.Conn)
@@ -328,21 +298,12 @@ func reLoginAndRestore(ctx context.Context, tf *wificell.TestFixture, isLacros b
 	}
 
 	startChromeReq := &ui.NewRequest{KeepState: true}
-	if isLacros {
-		startChromeReq.Lacros = &ui.Lacros{}
-	}
+
 	if _, err := crSvc.New(ctx, startChromeReq); err != nil {
 		return errors.Wrap(err, "failed to re-login to the chrome")
 	}
 
-	if isLacros {
-		if _, err := lacrosSvc.Launch(ctx, &emptypb.Empty{}); err != nil {
-			return errors.Wrap(err, "failed to launch the lacros")
-		}
-	}
-
 	if _, err := certSvc.Init(ctx, &networkui.InitRequest{
-		IsLacros: isLacros,
 		InitType: networkui.InitRequest_LAUNCH,
 	}); err != nil {
 		return errors.Wrap(err, "failed to initialize the certificate service")

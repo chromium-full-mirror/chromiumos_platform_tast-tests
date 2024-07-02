@@ -42,24 +42,20 @@ type CertService struct {
 // Init initializes the certificate service by creating the essential resources.
 // Caller must call the Init function before calling any other interfaces.
 func (sv *CertService) Init(ctx context.Context, req *pb.InitRequest) (*emptypb.Empty, error) {
-	return common.UseTconn(ctx, sv.sharedObject, func(tconn *chrome.TestConn) (_ *emptypb.Empty, retErr error) {
+	return common.UseTconn(ctx, sv.sharedObject, func(tconn *chrome.TestConn) (*emptypb.Empty, error) {
 		cr := sv.sharedObject.Chrome
 		if cr == nil {
 			return &emptypb.Empty{}, errors.New("Chrome has not been started")
 		}
 
-		br, err := sv.sharedObject.Browser(req.IsLacros)
-		if err != nil {
-			return &emptypb.Empty{}, errors.Wrap(err, "failed to get browser from shared object")
-		}
-
+		var err error
 		switch val := req.InitType; val {
 		case pb.InitRequest_LAUNCH:
 			if sv.manager != nil {
 				return &emptypb.Empty{}, errors.New("the Certificates Manager is already launched")
 			}
 
-			if sv.manager, err = certificate.Launch(ctx, tconn, br); err != nil {
+			if sv.manager, err = certificate.Launch(ctx, tconn, cr); err != nil {
 				return &emptypb.Empty{}, errors.Wrap(err, "failed to launch the Certificates Manager")
 			}
 		case pb.InitRequest_CONNECT:
@@ -67,7 +63,7 @@ func (sv *CertService) Init(ctx context.Context, req *pb.InitRequest) (*emptypb.
 				return &emptypb.Empty{}, errors.New("Certificates Manager hasn't been launched")
 			}
 
-			if err := sv.manager.Connect(ctx, tconn, br); err != nil {
+			if err := sv.manager.Connect(ctx, tconn, cr); err != nil {
 				return &emptypb.Empty{}, errors.Wrap(err, "failed to connect to the Certificates Manager")
 			}
 		default:

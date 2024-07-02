@@ -43,7 +43,7 @@ message InitRequest {
     CONNECT = 2;
   }
 
-  bool is_lacros = 1;
+  bool is_lacros = 1 [ deprecated = true ];
   Type init_type = 2;
 }
 

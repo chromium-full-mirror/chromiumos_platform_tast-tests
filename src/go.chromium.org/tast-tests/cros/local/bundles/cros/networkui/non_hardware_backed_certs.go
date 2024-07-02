@@ -15,7 +15,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/dropdown"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -39,7 +38,6 @@ const (
 
 type nonHardwareBackedCertsTestResource struct {
 	cr     *chrome.Chrome
-	br     *browser.Browser
 	tconn  *chrome.TestConn
 	outDir string
 
@@ -53,9 +51,8 @@ type nonHardwareBackedCertsVerifyFunc func(context.Context, *nonHardwareBackedCe
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         NonHardwareBackedCerts,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify the behavior of certificates which are non-hardware backed",
+		Func: NonHardwareBackedCerts,
+		Desc: "Verify the behavior of certificates which are non-hardware backed",
 		Contacts: []string{
 			// "cros-connectivity@google.com",
 			// "chromeos-connectivity-engprod@google.com",
@@ -99,11 +96,11 @@ func NonHardwareBackedCerts(ctx context.Context, s *testing.State) {
 	ctx, cancelDeleteCertsCtx := ctxutil.Shorten(ctx, deleteCertTimeout)
 	defer cancelDeleteCertsCtx()
 
-	res := newNonHardwareBackedCertsTestResource(cr, cr.Browser(), tconn, certificate.TestCert1(), s.OutDir())
-	if err := certManager.CreateCertAndImport(ctx, cr, tconn, browser.TypeAsh, certificate.TestCert1(), certManager.TypeImport, "" /* password */, 0 /* trustSettings */); err != nil {
+	res := newNonHardwareBackedCertsTestResource(cr, tconn, certificate.TestCert1(), s.OutDir())
+	if err := certManager.CreateCertAndImport(ctx, cr, tconn, certificate.TestCert1(), certManager.TypeImport, "" /* password */, 0 /* trustSettings */); err != nil {
 		s.Fatal("Failed to create and import certificates: ", err)
 	}
-	defer certManager.DeleteCert(tconn, cr.Browser(), res.clientCerts, res.caCerts)(deleteCertsCtx)
+	defer certManager.DeleteCert(tconn, cr, res.clientCerts, res.caCerts)(deleteCertsCtx)
 
 	verifies := s.Param().([]nonHardwareBackedCertsVerifyFunc)
 	for _, verify := range verifies {
@@ -113,12 +110,11 @@ func NonHardwareBackedCerts(ctx context.Context, s *testing.State) {
 	}
 }
 
-func newNonHardwareBackedCertsTestResource(cr *chrome.Chrome, br *browser.Browser, tconn *chrome.TestConn, certs certificate.CertStore, outDir string) *nonHardwareBackedCertsTestResource {
+func newNonHardwareBackedCertsTestResource(cr *chrome.Chrome, tconn *chrome.TestConn, certs certificate.CertStore, outDir string) *nonHardwareBackedCertsTestResource {
 	client := certManager.NewCertData(certs, certManager.TypeClient)
 	ca := certManager.NewCertData(certs, certManager.TypeCA)
 	return &nonHardwareBackedCertsTestResource{
 		cr:          cr,
-		br:          br,
 		tconn:       tconn,
 		outDir:      outDir,
 		certStore:   certs,
@@ -191,7 +187,7 @@ func certsCanBeExported(ctx context.Context, res *nonHardwareBackedCertsTestReso
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	manager, err := certManager.Launch(ctx, res.tconn, res.br)
+	manager, err := certManager.Launch(ctx, res.tconn, res.cr)
 	if err != nil {
 		return errors.Wrap(err, "failed to launch the certificates manager")
 	}

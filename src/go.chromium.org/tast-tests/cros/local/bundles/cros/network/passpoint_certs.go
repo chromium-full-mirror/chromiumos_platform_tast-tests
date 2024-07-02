@@ -34,7 +34,6 @@ func init() {
 		Fixture:      "arcBooted",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"wifi", "chrome", "arc"},
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Timeout:      7 * time.Minute,
 	})
 }
@@ -83,7 +82,7 @@ func PasspointCerts(ctx context.Context, s *testing.State) {
 		}
 		certificate.DeleteCert(
 			tconn,
-			cr.Browser(),
+			cr,
 			certificate.NewCertData(passpoint.TestCerts, certificate.TypeClient),
 		)(ctx)
 	}(cleanupCtx)

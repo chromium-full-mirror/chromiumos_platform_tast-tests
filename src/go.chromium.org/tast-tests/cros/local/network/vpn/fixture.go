@@ -14,7 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/pkcs11/netcertstore"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/userutil"
 	"go.chromium.org/tast-tests/cros/local/hwsec"
 	"go.chromium.org/tast-tests/cros/local/logsaver"
@@ -493,13 +492,11 @@ func (c *certsManagerUI) install(ctx context.Context, cr *chrome.Chrome, tconn *
 	if c.cr == nil || c.tconn == nil {
 		return nil, errors.New("failed to import certificates by the certificate manager: Chrome not yet started")
 	}
-	// TODO(crbug/1366609): Support Lacros once the issue has been resolved.
-	browserType := browser.TypeAsh
+
 	return &CertVals{Credentials: c.certs}, certManager.CreateCertAndImport(
 		ctx,
 		c.cr,
 		c.tconn,
-		browserType,
 		c.certs,
 		c.importType,
 		"", /* password */
@@ -513,7 +510,7 @@ func (c *certsManagerUI) delete(ctx context.Context) error {
 	}
 	return certManager.DeleteCert(
 		c.tconn,
-		c.cr.Browser(),
+		c.cr,
 		certManager.NewCertData(c.certs, certManager.TypeClient),
 		certManager.NewCertData(c.certs, certManager.TypeCA),
 	)(ctx)

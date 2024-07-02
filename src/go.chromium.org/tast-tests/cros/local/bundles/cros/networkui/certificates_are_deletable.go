@@ -11,8 +11,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/crypto/certificate"
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
@@ -24,10 +22,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: CertificatesAreDeletable,
-		// This test launches a web page so there should be a lacros variant.
-		// Lacros test will be added once the issue(crbug/1366609) is fixed.
-		LacrosStatus:   testing.LacrosVariantNeeded,
+		Func:           CertificatesAreDeletable,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Verify that ChromeOS User/CA certificates can be deleted",
 		Contacts: []string{
@@ -37,14 +32,8 @@ func init() {
 		BugComponent: "b:1318544", // ChromeOS > Software > System Services > Connectivity > General
 		Attr:         []string{"group:network", "network_e2e"},
 		SoftwareDeps: []string{"chrome"},
+		Fixture:      fixture.ChromeLoggedIn,
 		Timeout:      5 * time.Minute,
-		Params: []testing.Param{
-			{
-				Fixture: fixture.ChromeLoggedIn,
-				Val:     browser.TypeAsh,
-			},
-			// TODO(crbug/1366609): Enable lacros test once the bug is fixed.
-		},
 	})
 }
 
@@ -87,13 +76,7 @@ func CertificatesAreDeletable(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
-	browser, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
-	if err != nil {
-		s.Fatal("Failed to set up browser: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
-
-	manager, err := certManager.Launch(ctx, tconn, browser)
+	manager, err := certManager.Launch(ctx, tconn, cr)
 	if err != nil {
 		s.Fatal("Failed to launch the certificates manager: ", err)
 	}

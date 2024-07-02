@@ -13,7 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/networkui/netconfigtypes"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/networkui/proxysettings"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -30,16 +29,12 @@ import (
 type vpnUITestCase struct {
 	vpnType       vpn.Type
 	ipsecAuthType vpn.IPsecAuthType
-	browserType   browser.Type
 }
 
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: VPNUI,
-		// This test launches a web page so there should be a lacros variant.
-		// Lacros test will be added once the issue (crbug/1366609) is fixed.
-		LacrosStatus: testing.LacrosVariantNeeded,
-		Desc:         "Follows the user flow to create, connect, disconnect, and forget a VPN service via UI, verify the availability of proxy settings for a connected VPN",
+		Desc: "Follows the user flow to create, connect, disconnect, and forget a VPN service via UI, verify the availability of proxy settings for a connected VPN",
 		Contacts: []string{
 			// These contacts are commented out so that they can be added back in once the tests are stabilized.
 			// These are commented out instead of removed outright to avoid losing any contacts in the process.
@@ -129,7 +124,6 @@ func init() {
 			Val: vpnUITestCase{
 				vpnType:       vpn.TypeIKEv2,
 				ipsecAuthType: vpn.AuthTypeEAP,
-				browserType:   browser.TypeAsh,
 			},
 			ExtraSoftwareDeps: []string{"ikev2"},
 		}, {

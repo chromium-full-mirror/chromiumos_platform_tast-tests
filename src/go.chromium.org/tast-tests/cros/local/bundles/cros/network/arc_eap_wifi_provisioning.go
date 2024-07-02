@@ -47,7 +47,6 @@ func init() {
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Fixture:      "shillSimulatedWiFiWithArcBooted",
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Timeout:      7 * time.Minute,
 		Requirements: []string{tdreq.WiFiGenSupportWiFi},
 		Params: []testing.Param{
@@ -163,7 +162,7 @@ func ARCEAPWifiProvisioning(ctx context.Context, s *testing.State) {
 			}
 			if err := certManager.DeleteCert(
 				tconn,
-				cr.Browser(),
+				cr,
 				certManager.NewCertData(testCerts, certManager.TypeClient),
 			)(ctx); err != nil {
 				s.Error("Failed to delete certificate: ", err)

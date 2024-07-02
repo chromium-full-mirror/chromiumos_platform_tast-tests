@@ -186,6 +186,7 @@ type InitRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
+	// Deprecated: Do not use.
 	IsLacros bool             `protobuf:"varint,1,opt,name=is_lacros,json=isLacros,proto3" json:"is_lacros,omitempty"`
 	InitType InitRequest_Type `protobuf:"varint,2,opt,name=init_type,json=initType,proto3,enum=tast.cros.networkui.InitRequest_Type" json:"init_type,omitempty"`
 }
@@ -222,6 +223,7 @@ func (*InitRequest) Descriptor() ([]byte, []int) {
 	return file_certificate_service_proto_rawDescGZIP(), []int{0}
 }
 
+// Deprecated: Do not use.
 func (x *InitRequest) GetIsLacros() bool {
 	if x != nil {
 		return x.IsLacros

@@ -20,8 +20,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/crypto/certificate"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filepicker"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
@@ -96,8 +94,8 @@ const certManagerURL = "chrome://settings/certificates"
 
 // Launch launches the Certificates Manager and returns a Manager instance.
 // Close should be explicitly called to close the Certificates Manager.
-func Launch(ctx context.Context, tconn *chrome.TestConn, br *browser.Browser) (*Manager, error) {
-	conn, err := br.NewConn(ctx, certManagerURL)
+func Launch(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome) (*Manager, error) {
+	conn, err := cr.NewConn(ctx, certManagerURL)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to launch the Certificates Manager")
 	}
@@ -111,8 +109,8 @@ func Launch(ctx context.Context, tconn *chrome.TestConn, br *browser.Browser) (*
 // Connect connects to an existing Certificates Manager page.
 // The Certificates Manager page should be opened before calling this function.
 // The current connection to the Certificates Manager page would be closed before creating a new connection.
-func (m *Manager) Connect(ctx context.Context, tconn *chrome.TestConn, br *browser.Browser) error {
-	conn, err := br.NewConnForTarget(ctx, chrome.MatchTargetURL(certManagerURL))
+func (m *Manager) Connect(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome) error {
+	conn, err := cr.Browser().NewConnForTarget(ctx, chrome.MatchTargetURL(certManagerURL))
 	if err != nil {
 		return errors.Wrap(err, "failed to connect to the Certificates Manager")
 	}
@@ -200,22 +198,22 @@ func (m *Manager) ImportCACert(fileName string, org Organization, trustSettings 
 }
 
 // CreateCertAndImport creates and imports the CA certificate and the client certificate contained in the CertStore.
-func CreateCertAndImport(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, bt browser.Type, certs certificate.CertStore, importType ImportType, password string, trustSettings CATrustSettings) error {
+func CreateCertAndImport(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, certs certificate.CertStore, importType ImportType, password string, trustSettings CATrustSettings) error {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	manager, err := Launch(ctx, tconn, cr.Browser())
+	manager, err := Launch(ctx, tconn, cr)
 	if err != nil {
 		return errors.Wrap(err, "failed to launch the certificates manager")
 	}
 	defer manager.Close(cleanupCtx)
 
-	return manager.CreateCertAndImport(ctx, cr, bt, certs, importType, password, trustSettings)
+	return manager.CreateCertAndImport(ctx, cr, certs, importType, password, trustSettings)
 }
 
 // CreateCertAndImport creates and imports the CA certificate and the client certificate contained in the CertStore.
-func (m *Manager) CreateCertAndImport(ctx context.Context, cr *chrome.Chrome, bt browser.Type, certs certificate.CertStore, importType ImportType, password string, trustSettings CATrustSettings) (retErr error) {
+func (m *Manager) CreateCertAndImport(ctx context.Context, cr *chrome.Chrome, certs certificate.CertStore, importType ImportType, password string, trustSettings CATrustSettings) (retErr error) {
 	// Reserve a longer time in case the certificate needs to be deleted.
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
@@ -251,7 +249,7 @@ func (m *Manager) CreateCertAndImport(ctx context.Context, cr *chrome.Chrome, bt
 		if cr.LoginMode() == "Guest" {
 			// Leveraging the browser and file system accessing UI to store the certificate under guest user's encrypted
 			// home directory as the mounted path for a guest user session is not available (crrev.com/c/3412613).
-			removeCertFromFilesApp, err := downloadFromLocalHTTPServer(ctx, cr, bt, filename, certDest.FullPath())
+			removeCertFromFilesApp, err := downloadFromLocalHTTPServer(ctx, cr, filename, certDest.FullPath())
 			if err != nil {
 				return err
 			}
@@ -293,7 +291,7 @@ func (m *Manager) CreateCertAndImport(ctx context.Context, cr *chrome.Chrome, bt
 
 // downloadFromLocalHTTPServer starts a local HTTP server during the function call, then download the file from the browser.
 // TODO(crrev.com/c/3412613): Remove this workaround once the download folder of the guest user can be utilized.
-func downloadFromLocalHTTPServer(ctx context.Context, cr *chrome.Chrome, bt browser.Type, fileName, filePath string) (func(ctx context.Context) error, error) {
+func downloadFromLocalHTTPServer(ctx context.Context, cr *chrome.Chrome, fileName, filePath string) (func(ctx context.Context) error, error) {
 	fileContent, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read the file")
@@ -321,13 +319,7 @@ func downloadFromLocalHTTPServer(ctx context.Context, cr *chrome.Chrome, bt brow
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, bt)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to launch a browser")
-	}
-	defer closeBrowser(cleanupCtx)
-
-	conn, err := br.NewConn(ctx, server.URL)
+	conn, err := cr.NewConn(ctx, server.URL)
 	if err != nil {
 		return nil, err
 	}
@@ -373,13 +365,13 @@ func downloadFromLocalHTTPServer(ctx context.Context, cr *chrome.Chrome, bt brow
 }
 
 // DeleteCert deletes the certificate from the Certificates Manager.
-func DeleteCert(tconn *chrome.TestConn, br *browser.Browser, certs ...*CertData) uiauto.Action {
+func DeleteCert(tconn *chrome.TestConn, cr *chrome.Chrome, certs ...*CertData) uiauto.Action {
 	return func(ctx context.Context) error {
 		cleanupCtx := ctx
 		ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 		defer cancel()
 
-		manager, err := Launch(ctx, tconn, br)
+		manager, err := Launch(ctx, tconn, cr)
 		if err != nil {
 			return errors.Wrap(err, "failed to launch the certificate manager")
 		}

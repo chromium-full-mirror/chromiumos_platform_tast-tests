@@ -9,15 +9,11 @@ import (
 	"fmt"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/tbdep"
-	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/ssh"
-	"go.chromium.org/tast/core/testing"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	"go.chromium.org/tast-tests/cros/common/crypto/certificate"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/common/wifi/security"
 	"go.chromium.org/tast-tests/cros/common/wifi/security/tunneled1x"
 	"go.chromium.org/tast-tests/cros/common/wifi/security/wpaeap"
@@ -27,14 +23,16 @@ import (
 	"go.chromium.org/tast-tests/cros/services/cros/chrome/uiauto/quicksettings"
 	"go.chromium.org/tast-tests/cros/services/cros/networkui"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/ssh"
+	"go.chromium.org/tast/core/testing"
 )
 
 // handleCredentialTestParam is the parameter for the test.
 type handleCredentialTestParam struct {
 	// isLoggedIn indicates the login mode.
 	isLoggedIn bool
-	// isLacros records the browser type is Lacros or not.
-	isLacros bool
 	// securityConfig holds the configurations to configure the WiFi AP.
 	securityConfig security.ConfigFactory
 	// joinWifiOption defines the credential details of the WiFi in the "Join Wi-Fi" dialog.
@@ -62,7 +60,6 @@ const (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:           HandleIncorrectCredentials,
-		LacrosStatus:   testing.LacrosVariantExists,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Verify ChromeOS handles incorrect credentials gracefully and displays error messages correctly",
 		Contacts: []string{
@@ -79,7 +76,6 @@ func init() {
 			wifiutil.JoinWifiServiceNames,
 			wificell.ShillServiceName,
 			"tast.cros.browser.ChromeService",
-			"tast.cros.browser.LacrosService",
 			"tast.cros.networkui.CertificateService",
 			wifiutil.FaillogServiceName,
 		),
@@ -208,7 +204,6 @@ func init() {
 					verification: openJoinWiFiDialogAndVerifyErrorMessage,
 				},
 			},
-			// TODO(crbug/1366609): Enable lacros test once the bug is fixed.
 		},
 	})
 }
@@ -241,11 +236,6 @@ func HandleIncorrectCredentials(ctx context.Context, s *testing.State) {
 		startChromeReq.SigninProfileTestExtensionId = s.RequiredVar("ui.signinProfileTestExtensionManifestKey")
 	}
 
-	isLacros := param.isLacros
-	if isLacros {
-		startChromeReq.Lacros = &ui.Lacros{}
-	}
-
 	rpcClient := tf.DUTRPC(wificell.DefaultDUT)
 	crSvc := ui.NewChromeServiceClient(rpcClient.Conn)
 	if _, err := crSvc.New(ctx, startChromeReq); err != nil {
@@ -253,19 +243,10 @@ func HandleIncorrectCredentials(ctx context.Context, s *testing.State) {
 	}
 	defer crSvc.Close(cleanupCtx, &emptypb.Empty{})
 
-	if isLacros {
-		lacros := ui.NewLacrosServiceClient(rpcClient.Conn)
-		if _, err := lacros.Launch(ctx, &emptypb.Empty{}); err != nil {
-			s.Fatal("Failed to launch Lacros: ", err)
-		}
-		defer lacros.Close(cleanupCtx, &emptypb.Empty{})
-	}
-
 	// The certificates couldn't be imported on OOBE, and the Certificates Manager is only available when DUT is logged in.
 	if isLoggedIn {
 		certSvc := networkui.NewCertificateServiceClient(rpcClient.Conn)
 		if _, err := certSvc.Init(ctx, &networkui.InitRequest{
-			IsLacros: isLacros,
 			InitType: networkui.InitRequest_LAUNCH,
 		}); err != nil {
 			s.Fatal("Failed to set up resource and launch the certificates manager: ", err)
