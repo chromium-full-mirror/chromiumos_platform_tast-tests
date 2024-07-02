@@ -107,6 +107,16 @@ func LaunchCreationFlow(ctx context.Context, tconn *chrome.TestConn, launchAnnot
 	clickOrTapAnywhereToRecord := nodewith.NameRegex(clickOrTapRegex).Role(role.StaticText)
 	stopRecordingButton := nodewith.Name("Stop screen recording").Role(role.Button)
 
+	dialog := nodewith.Name("New transcript language").Role(role.Dialog)
+	continueButton := nodewith.Name("Continue").Role(role.Button)
+	clickContinueButton := uiauto.Combine("click continue button",
+		ui.WaitUntilExists(continueButton),
+		ui.LeftClick(continueButton),
+	)
+	if err := uiauto.IfSuccessThen(ui.WithTimeout(5*time.Second).WaitUntilExists(dialog), clickContinueButton)(ctx); err != nil {
+		return errors.Wrap(err, "failed to click Continue on dialog")
+	}
+
 	testing.ContextLog(ctx, "Starting the new screencast creation flow")
 	if err := uiauto.Combine("starting the new screencast creation flow",
 		ui.WaitUntilExists(newScreencastButton),
