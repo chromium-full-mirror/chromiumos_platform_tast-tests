@@ -67,6 +67,12 @@ func init() {
 				}, {
 					apOpts:    []ap.Option{ap.Mode(ap.Mode80211axPure), ap.Channel(157), ap.HTCaps(ap.HTCapHT20, ap.HTCapLDPC), ap.HEChWidth(ap.HEChWidth20Or40)},
 					powerSave: false, shouldTputRequired: false,
+				}, {
+					apOpts:    []ap.Option{ap.Mode(ap.Mode80211axPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT20, ap.HTCapLDPC), ap.HEChWidth(ap.HEChWidth20Or40)},
+					powerSave: true, shouldTputRequired: false,
+				}, {
+					apOpts:    []ap.Option{ap.Mode(ap.Mode80211axPure), ap.Channel(157), ap.HTCaps(ap.HTCapHT20, ap.HTCapLDPC), ap.HEChWidth(ap.HEChWidth20Or40)},
+					powerSave: true, shouldTputRequired: false,
 				}},
 				// TODO(b/347339428): Promote test to stable by removing wificell_unstable attribute.
 				ExtraAttr:         []string{"wificell_unstable"},
@@ -85,6 +91,14 @@ func init() {
 					apOpts:     []ap.Option{ap.Mode(ap.Mode80211axPure), ap.Channel(157), ap.HTCaps(ap.HTCapHT20, ap.HTCapLDPC), ap.HEChWidth(ap.HEChWidth20Or40)},
 					secConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers(wpa.CipherCCMP)),
 					powerSave:  false, shouldTputRequired: false,
+				}, {
+					apOpts:     []ap.Option{ap.Mode(ap.Mode80211axPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT20, ap.HTCapLDPC), ap.HEChWidth(ap.HEChWidth20Or40)},
+					secConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers(wpa.CipherCCMP)),
+					powerSave:  true, shouldTputRequired: false,
+				}, {
+					apOpts:     []ap.Option{ap.Mode(ap.Mode80211axPure), ap.Channel(157), ap.HTCaps(ap.HTCapHT20, ap.HTCapLDPC), ap.HEChWidth(ap.HEChWidth20Or40)},
+					secConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers(wpa.CipherCCMP)),
+					powerSave:  true, shouldTputRequired: false,
 				}},
 				// TODO(b/347339428): Promote test to stable by removing wificell_unstable attribute.
 				ExtraAttr:         []string{"wificell_unstable"},
@@ -98,6 +112,9 @@ func init() {
 				Val: []networkWifiPerfTestCase{{
 					apOpts:    []ap.Option{ap.Mode(ap.Mode80211axPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT40, ap.HTCapLDPC), ap.HEChWidth(ap.HEChWidth20Or40)},
 					powerSave: false, shouldTputRequired: false,
+				}, {
+					apOpts:    []ap.Option{ap.Mode(ap.Mode80211axPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT40, ap.HTCapLDPC), ap.HEChWidth(ap.HEChWidth20Or40)},
+					powerSave: true, shouldTputRequired: false,
 				}},
 				// TODO(b/347339428): Promote test to stable by removing wificell_unstable attribute.
 				ExtraAttr:         []string{"wificell_unstable"},
@@ -112,6 +129,10 @@ func init() {
 					apOpts:     []ap.Option{ap.Mode(ap.Mode80211axPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT40, ap.HTCapLDPC), ap.HEChWidth(ap.HEChWidth20Or40)},
 					secConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers(wpa.CipherCCMP)),
 					powerSave:  false, shouldTputRequired: false,
+				}, {
+					apOpts:     []ap.Option{ap.Mode(ap.Mode80211axPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT40, ap.HTCapLDPC), ap.HEChWidth(ap.HEChWidth20Or40)},
+					secConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers(wpa.CipherCCMP)),
+					powerSave:  true, shouldTputRequired: false,
 				}},
 				// TODO(b/347339428): Promote test to stable by removing wificell_unstable attribute.
 				ExtraAttr:         []string{"wificell_unstable"},
@@ -128,6 +149,12 @@ func init() {
 				}, {
 					apOpts:    []ap.Option{ap.Mode(ap.Mode80211axMixed), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC), ap.VHTCaps(ap.VHTCapSGI80, ap.VHTCapMaxAMPDULenExp6), ap.VHTCenterChannel(155), ap.VHTChWidth(ap.VHTChWidth80), ap.HECenterChannel(155), ap.HEChWidth(ap.HEChWidth80)},
 					powerSave: false, shouldTputRequired: false,
+				}, {
+					apOpts:    []ap.Option{ap.Mode(ap.Mode80211axMixed), ap.Channel(44), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC), ap.VHTCaps(ap.VHTCapSGI80, ap.VHTCapMaxAMPDULenExp6), ap.VHTCenterChannel(42), ap.VHTChWidth(ap.VHTChWidth80), ap.HECenterChannel(42), ap.HEChWidth(ap.HEChWidth80)},
+					powerSave: true, shouldTputRequired: false,
+				}, {
+					apOpts:    []ap.Option{ap.Mode(ap.Mode80211axMixed), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC), ap.VHTCaps(ap.VHTCapSGI80, ap.VHTCapMaxAMPDULenExp6), ap.VHTCenterChannel(155), ap.VHTChWidth(ap.VHTChWidth80), ap.HECenterChannel(155), ap.HEChWidth(ap.HEChWidth80)},
+					powerSave: true, shouldTputRequired: false,
 				}},
 				// TODO(b/347339428): Promote test to stable by removing wificell_unstable attribute.
 				ExtraAttr:         []string{"wificell_unstable"},
@@ -146,6 +173,14 @@ func init() {
 					apOpts:     []ap.Option{ap.Mode(ap.Mode80211axMixed), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC), ap.VHTCaps(ap.VHTCapSGI80, ap.VHTCapRXLDPC, ap.VHTCapMaxAMPDULenExp6), ap.VHTCenterChannel(155), ap.VHTChWidth(ap.VHTChWidth80), ap.HECenterChannel(155), ap.HEChWidth(ap.HEChWidth80), ap.PMF(ap.PMFRequired)},
 					secConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModeMixedWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					powerSave:  false, shouldTputRequired: false,
+				}, {
+					apOpts:     []ap.Option{ap.Mode(ap.Mode80211axMixed), ap.Channel(44), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC), ap.VHTCaps(ap.VHTCapSGI80, ap.VHTCapRXLDPC, ap.VHTCapMaxAMPDULenExp6), ap.VHTCenterChannel(42), ap.VHTChWidth(ap.VHTChWidth80), ap.HECenterChannel(42), ap.HEChWidth(ap.HEChWidth80), ap.PMF(ap.PMFRequired)},
+					secConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModeMixedWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+					powerSave:  true, shouldTputRequired: false,
+				}, {
+					apOpts:     []ap.Option{ap.Mode(ap.Mode80211axMixed), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC), ap.VHTCaps(ap.VHTCapSGI80, ap.VHTCapRXLDPC, ap.VHTCapMaxAMPDULenExp6), ap.VHTCenterChannel(155), ap.VHTChWidth(ap.VHTChWidth80), ap.HECenterChannel(155), ap.HEChWidth(ap.HEChWidth80), ap.PMF(ap.PMFRequired)},
+					secConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModeMixedWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+					powerSave:  true, shouldTputRequired: false,
 				}},
 				// TODO(b/347339428): Promote test to stable by removing wificell_unstable attribute.
 				ExtraAttr:         []string{"wificell_unstable"},
@@ -162,6 +197,12 @@ func init() {
 					secConfFac: wpa.NewConfigFactory("chromeos",
 						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					powerSave: false, shouldTputRequired: false,
+				}, {
+					apOpts: []ap.Option{ap.Mode(ap.Mode80211axPure), ap.Channel(21), ap.HTCaps(ap.HTCapHT20),
+						ap.HEChWidth(ap.HEChWidth20Or40), ap.Is6GHz(), ap.PMF(ap.PMFRequired)},
+					secConfFac: wpa.NewConfigFactory("chromeos",
+						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+					powerSave: true, shouldTputRequired: false,
 				}},
 				// TODO(b/323903848): Promote test to stable by removing wificell_unstable attribute.
 				ExtraAttr:         []string{"wificell_unstable"},
@@ -177,6 +218,12 @@ func init() {
 					secConfFac: wpa.NewConfigFactory("chromeos",
 						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					powerSave: false, shouldTputRequired: false,
+				}, {
+					apOpts: []ap.Option{ap.Mode(ap.Mode80211axPure), ap.Channel(21), ap.HTCaps(ap.HTCapLDPC), ap.HECenterChannel(19),
+						ap.HEChWidth(ap.HEChWidth20Or40), ap.Is6GHz(), ap.PMF(ap.PMFRequired)},
+					secConfFac: wpa.NewConfigFactory("chromeos",
+						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+					powerSave: true, shouldTputRequired: false,
 				}},
 				// TODO(b/323903848): Promote test to stable by removing wificell_unstable attribute.
 				ExtraAttr:         []string{"wificell_unstable"},
@@ -193,6 +240,13 @@ func init() {
 					secConfFac: wpa.NewConfigFactory("chromeos",
 						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					powerSave: false, shouldTputRequired: false,
+				}, {
+					apOpts: []ap.Option{ap.Mode(ap.Mode80211axPure), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
+						ap.VHTCaps(ap.VHTCapSGI80), ap.HECenterChannel(7), ap.HEChWidth(ap.HEChWidth80),
+						ap.Is6GHz(), ap.PMF(ap.PMFRequired)},
+					secConfFac: wpa.NewConfigFactory("chromeos",
+						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+					powerSave: true, shouldTputRequired: false,
 				}},
 				// TODO(b/323903848): Promote test to stable by removing wificell_unstable attribute.
 				ExtraAttr:         []string{"wificell_unstable"},
@@ -209,6 +263,13 @@ func init() {
 					secConfFac: wpa.NewConfigFactory("chromeos",
 						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					powerSave: false, shouldTputRequired: false,
+				}, {
+					apOpts: []ap.Option{ap.Mode(ap.Mode80211axMixed), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
+						ap.VHTCaps(ap.VHTCapSGI80), ap.HECenterChannel(7), ap.HEChWidth(ap.HEChWidth80),
+						ap.Is6GHz(), ap.PMF(ap.PMFRequired)},
+					secConfFac: wpa.NewConfigFactory("chromeos",
+						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+					powerSave: true, shouldTputRequired: false,
 				}},
 				// TODO(b/323903848): Promote test to stable by removing wificell_unstable attribute.
 				ExtraAttr:         []string{"wificell_unstable"},
@@ -225,6 +286,13 @@ func init() {
 					secConfFac: wpa.NewConfigFactory("chromeos",
 						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					powerSave: false, shouldTputRequired: false,
+				}, {
+					apOpts: []ap.Option{ap.Mode(ap.Mode80211axPure), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
+						ap.VHTCaps(ap.VHTCapSGI160), ap.HECenterChannel(15), ap.HEChWidth(ap.HEChWidth160),
+						ap.Is6GHz(), ap.PMF(ap.PMFRequired)},
+					secConfFac: wpa.NewConfigFactory("chromeos",
+						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+					powerSave: true, shouldTputRequired: false,
 				}},
 				// TODO(b/323903848): Promote test to stable by removing wificell_unstable attribute.
 				ExtraAttr:         []string{"wificell_unstable"},
@@ -241,6 +309,13 @@ func init() {
 					secConfFac: wpa.NewConfigFactory("chromeos",
 						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					powerSave: false, shouldTputRequired: false,
+				}, {
+					apOpts: []ap.Option{ap.Mode(ap.Mode80211axMixed), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
+						ap.VHTCaps(ap.VHTCapSGI160), ap.HECenterChannel(15), ap.HEChWidth(ap.HEChWidth160),
+						ap.Is6GHz(), ap.PMF(ap.PMFRequired)},
+					secConfFac: wpa.NewConfigFactory("chromeos",
+						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+					powerSave: true, shouldTputRequired: false,
 				}},
 				// TODO(b/323903848): Promote test to stable by removing wificell_unstable attribute.
 				ExtraAttr:         []string{"wificell_unstable"},
@@ -259,6 +334,15 @@ func init() {
 					secConfFac: wpa.NewConfigFactory("chromeos",
 						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					powerSave: false, shouldTputRequired: false,
+				}, {
+					apOpts: []ap.Option{
+						ap.Mode(ap.Mode80211bePure), ap.Channel(40), ap.HTCaps(ap.HTCapHT20),
+						ap.EHTChWidth(ap.EHTChWidth20Or40), ap.EHTCenterChannel(40),
+						ap.PMF(ap.PMFRequired),
+					},
+					secConfFac: wpa.NewConfigFactory("chromeos",
+						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+					powerSave: true, shouldTputRequired: false,
 				}},
 				// TODO(b/323903848): Promote test to stable by removing wificell_unstable attribute.
 				ExtraAttr:         []string{"wificell_unstable"},
@@ -277,6 +361,15 @@ func init() {
 					secConfFac: wpa.NewConfigFactory("chromeos",
 						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					powerSave: false, shouldTputRequired: false,
+				}, {
+					apOpts: []ap.Option{
+						ap.Mode(ap.Mode80211bePure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40, ap.HTCapLDPC),
+						ap.EHTChWidth(ap.EHTChWidth20Or40), ap.EHTCenterChannel(159),
+						ap.PMF(ap.PMFRequired),
+					},
+					secConfFac: wpa.NewConfigFactory("chromeos",
+						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+					powerSave: true, shouldTputRequired: false,
 				}},
 				// TODO(b/323903848): Promote test to stable by removing wificell_unstable attribute.
 				ExtraAttr:         []string{"wificell_unstable"},
@@ -296,6 +389,16 @@ func init() {
 					secConfFac: wpa.NewConfigFactory("chromeos",
 						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					powerSave: false, shouldTputRequired: false,
+				}, {
+					apOpts: []ap.Option{
+						ap.Mode(ap.Mode80211bePure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC),
+						ap.VHTCaps(ap.VHTCapSGI80), ap.VHTCenterChannel(155), ap.VHTChWidth(ap.VHTChWidth80),
+						ap.EHTCenterChannel(155), ap.EHTChWidth(ap.EHTChWidth80),
+						ap.PMF(ap.PMFRequired),
+					},
+					secConfFac: wpa.NewConfigFactory("chromeos",
+						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+					powerSave: true, shouldTputRequired: false,
 				}},
 				// TODO(b/323903848): Promote test to stable by removing wificell_unstable attribute.
 				ExtraAttr:         []string{"wificell_unstable"},
@@ -314,6 +417,15 @@ func init() {
 					secConfFac: wpa.NewConfigFactory("chromeos",
 						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					powerSave: false, shouldTputRequired: false,
+				}, {
+					apOpts: []ap.Option{
+						ap.Mode(ap.Mode80211beMixed), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC),
+						ap.VHTCaps(ap.VHTCapSGI80), ap.VHTCenterChannel(155), ap.VHTChWidth(ap.VHTChWidth80),
+						ap.EHTCenterChannel(155), ap.EHTChWidth(ap.EHTChWidth80), ap.PMF(ap.PMFRequired),
+					},
+					secConfFac: wpa.NewConfigFactory("chromeos",
+						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+					powerSave: true, shouldTputRequired: false,
 				}},
 				// TODO(b/323903848): Promote test to stable by removing wificell_unstable attribute.
 				ExtraAttr:         []string{"wificell_unstable"},
@@ -343,6 +455,14 @@ func init() {
 					apOpts:     []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(157), ap.HTCaps(ap.HTCapHT20)},
 					secConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers(wpa.CipherCCMP)),
 					powerSave:  false, shouldTputRequired: false,
+				}, {
+					apOpts:     []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(1), ap.HTCaps(ap.HTCapHT20)},
+					secConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers(wpa.CipherCCMP)),
+					powerSave:  true, shouldTputRequired: false,
+				}, {
+					apOpts:     []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(157), ap.HTCaps(ap.HTCapHT20)},
+					secConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers(wpa.CipherCCMP)),
+					powerSave:  true, shouldTputRequired: false,
 				}},
 				ExtraRequirements: []string{tdreq.WiFiTputHT20UDPTx, tdreq.WiFiTputHT20UDPRx, tdreq.WiFiTputHT20UDPRxTx, tdreq.WiFiTputHT20TCPTx, tdreq.WiFiTputHT20TCPRx, tdreq.WiFiTputHT20TCPRxTx},
 			},
@@ -355,6 +475,12 @@ func init() {
 				}, {
 					apOpts:    []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus)},
 					powerSave: false, shouldTputRequired: false,
+				}, {
+					apOpts:    []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(1), ap.HTCaps(ap.HTCapHT40)},
+					powerSave: true, shouldTputRequired: false,
+				}, {
+					apOpts:    []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus)},
+					powerSave: true, shouldTputRequired: false,
 				}},
 				ExtraRequirements: []string{tdreq.WiFiTputHT40UDPTx, tdreq.WiFiTputHT40UDPRx, tdreq.WiFiTputHT40UDPRxTx, tdreq.WiFiTputHT40TCPTx, tdreq.WiFiTputHT40TCPRx, tdreq.WiFiTputHT40TCPRxTx},
 			},
@@ -369,6 +495,14 @@ func init() {
 					apOpts:     []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus)},
 					secConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers(wpa.CipherCCMP)),
 					powerSave:  false, shouldTputRequired: false,
+				}, {
+					apOpts:     []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(1), ap.HTCaps(ap.HTCapHT40)},
+					secConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers(wpa.CipherCCMP)),
+					powerSave:  true, shouldTputRequired: false,
+				}, {
+					apOpts:     []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus)},
+					secConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers(wpa.CipherCCMP)),
+					powerSave:  true, shouldTputRequired: false,
 				}},
 				ExtraRequirements: []string{tdreq.WiFiTputHT40UDPTx, tdreq.WiFiTputHT40UDPRx, tdreq.WiFiTputHT40UDPRxTx, tdreq.WiFiTputHT40TCPTx, tdreq.WiFiTputHT40TCPRx, tdreq.WiFiTputHT40TCPRxTx},
 			},
@@ -378,6 +512,9 @@ func init() {
 				Val: []networkWifiPerfTestCase{{
 					apOpts:    []ap.Option{ap.Mode(ap.Mode80211acPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT20), ap.VHTChWidth(ap.VHTChWidth20Or40), ap.VHTCaps(ap.VHTCapMaxAMPDULenExp7)},
 					powerSave: false, shouldTputRequired: false,
+				}, {
+					apOpts:    []ap.Option{ap.Mode(ap.Mode80211acPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT20), ap.VHTChWidth(ap.VHTChWidth20Or40), ap.VHTCaps(ap.VHTCapMaxAMPDULenExp7)},
+					powerSave: true, shouldTputRequired: false,
 				}},
 				ExtraRequirements: []string{tdreq.WiFiTputVHT20UDPTx, tdreq.WiFiTputVHT20UDPRx, tdreq.WiFiTputVHT20UDPRxTx, tdreq.WiFiTputVHT20TCPTx, tdreq.WiFiTputVHT20TCPRx, tdreq.WiFiTputVHT20TCPRxTx},
 			},
@@ -388,6 +525,10 @@ func init() {
 					apOpts:     []ap.Option{ap.Mode(ap.Mode80211acPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT20), ap.VHTChWidth(ap.VHTChWidth20Or40), ap.VHTCaps(ap.VHTCapMaxAMPDULenExp7)},
 					secConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers(wpa.CipherCCMP)),
 					powerSave:  false, shouldTputRequired: false,
+				}, {
+					apOpts:     []ap.Option{ap.Mode(ap.Mode80211acPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT20), ap.VHTChWidth(ap.VHTChWidth20Or40), ap.VHTCaps(ap.VHTCapMaxAMPDULenExp7)},
+					secConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers(wpa.CipherCCMP)),
+					powerSave:  true, shouldTputRequired: false,
 				}},
 				ExtraRequirements: []string{tdreq.WiFiTputVHT20UDPTx, tdreq.WiFiTputVHT20UDPRx, tdreq.WiFiTputVHT20UDPRxTx, tdreq.WiFiTputVHT20TCPTx, tdreq.WiFiTputVHT20TCPRx, tdreq.WiFiTputVHT20TCPRxTx},
 			},
@@ -397,6 +538,9 @@ func init() {
 				Val: []networkWifiPerfTestCase{{
 					apOpts:    []ap.Option{ap.Mode(ap.Mode80211acPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT40), ap.VHTChWidth(ap.VHTChWidth20Or40), ap.VHTCaps(ap.VHTCapMaxAMPDULenExp7)},
 					powerSave: false, shouldTputRequired: false,
+				}, {
+					apOpts:    []ap.Option{ap.Mode(ap.Mode80211acPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT40), ap.VHTChWidth(ap.VHTChWidth20Or40), ap.VHTCaps(ap.VHTCapMaxAMPDULenExp7)},
+					powerSave: true, shouldTputRequired: false,
 				}},
 				ExtraRequirements: []string{tdreq.WiFiTputVHT40UDPTx, tdreq.WiFiTputVHT40UDPRx, tdreq.WiFiTputVHT40UDPRxTx, tdreq.WiFiTputVHT40TCPTx, tdreq.WiFiTputVHT40TCPRx, tdreq.WiFiTputVHT40TCPRxTx},
 			},
@@ -407,6 +551,10 @@ func init() {
 					apOpts:     []ap.Option{ap.Mode(ap.Mode80211acPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT40), ap.VHTChWidth(ap.VHTChWidth20Or40), ap.VHTCaps(ap.VHTCapMaxAMPDULenExp7)},
 					secConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers(wpa.CipherCCMP)),
 					powerSave:  false, shouldTputRequired: false,
+				}, {
+					apOpts:     []ap.Option{ap.Mode(ap.Mode80211acPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT40), ap.VHTChWidth(ap.VHTChWidth20Or40), ap.VHTCaps(ap.VHTCapMaxAMPDULenExp7)},
+					secConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers(wpa.CipherCCMP)),
+					powerSave:  true, shouldTputRequired: false,
 				}},
 				ExtraRequirements: []string{tdreq.WiFiTputVHT40UDPTx, tdreq.WiFiTputVHT40UDPRx, tdreq.WiFiTputVHT40UDPRxTx, tdreq.WiFiTputVHT40TCPTx, tdreq.WiFiTputVHT40TCPRx, tdreq.WiFiTputVHT40TCPRxTx},
 			},
@@ -419,6 +567,12 @@ func init() {
 				}, {
 					apOpts:    []ap.Option{ap.Mode(ap.Mode80211acMixed), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus), ap.VHTCaps(ap.VHTCapSGI80, ap.VHTCapMaxAMPDULenExp7), ap.VHTCenterChannel(155), ap.VHTChWidth(ap.VHTChWidth80)},
 					powerSave: false, shouldTputRequired: false,
+				}, {
+					apOpts:    []ap.Option{ap.Mode(ap.Mode80211acMixed), ap.Channel(44), ap.HTCaps(ap.HTCapHT40Plus), ap.VHTCaps(ap.VHTCapSGI80, ap.VHTCapMaxAMPDULenExp7), ap.VHTCenterChannel(42), ap.VHTChWidth(ap.VHTChWidth80)},
+					powerSave: true, shouldTputRequired: false,
+				}, {
+					apOpts:    []ap.Option{ap.Mode(ap.Mode80211acMixed), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus), ap.VHTCaps(ap.VHTCapSGI80, ap.VHTCapMaxAMPDULenExp7), ap.VHTCenterChannel(155), ap.VHTChWidth(ap.VHTChWidth80)},
+					powerSave: true, shouldTputRequired: false,
 				}},
 				ExtraRequirements: []string{tdreq.WiFiTputVHT80UDPTx, tdreq.WiFiTputVHT80UDPRx, tdreq.WiFiTputVHT80UDPRxTx, tdreq.WiFiTputVHT80TCPTx, tdreq.WiFiTputVHT80TCPRx, tdreq.WiFiTputVHT80TCPRxTx},
 			},
@@ -433,6 +587,14 @@ func init() {
 					apOpts:     []ap.Option{ap.Mode(ap.Mode80211acMixed), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus), ap.VHTCaps(ap.VHTCapSGI80, ap.VHTCapMaxAMPDULenExp7), ap.VHTCenterChannel(155), ap.VHTChWidth(ap.VHTChWidth80), ap.PMF(ap.PMFRequired)},
 					secConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModeMixedWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					powerSave:  false, shouldTputRequired: false,
+				}, {
+					apOpts:     []ap.Option{ap.Mode(ap.Mode80211acMixed), ap.Channel(44), ap.HTCaps(ap.HTCapHT40Plus), ap.VHTCaps(ap.VHTCapSGI80, ap.VHTCapMaxAMPDULenExp7), ap.VHTCenterChannel(42), ap.VHTChWidth(ap.VHTChWidth80), ap.PMF(ap.PMFRequired)},
+					secConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModeMixedWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+					powerSave:  true, shouldTputRequired: false,
+				}, {
+					apOpts:     []ap.Option{ap.Mode(ap.Mode80211acMixed), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus), ap.VHTCaps(ap.VHTCapSGI80, ap.VHTCapMaxAMPDULenExp7), ap.VHTCenterChannel(155), ap.VHTChWidth(ap.VHTChWidth80), ap.PMF(ap.PMFRequired)},
+					secConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModeMixedWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+					powerSave:  true, shouldTputRequired: false,
 				}},
 				ExtraRequirements: []string{tdreq.WiFiGenSupportPMF, tdreq.WiFiTputVHT80UDPTx, tdreq.WiFiTputVHT80UDPRx, tdreq.WiFiTputVHT80UDPRxTx, tdreq.WiFiTputVHT80TCPTx, tdreq.WiFiTputVHT80TCPRx, tdreq.WiFiTputVHT80TCPRxTx},
 			},
