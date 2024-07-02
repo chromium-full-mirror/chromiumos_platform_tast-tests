@@ -33,8 +33,6 @@ const (
 	ChromePolicyLoggedInLockscreen = "chromePolicyLoggedInLockscreen"
 	// ChromeEnrolledLoggedInShortMetricsInterval is a fixture name.
 	ChromeEnrolledLoggedInShortMetricsInterval = "chromeEnrolledLoggedInShortMetricsInterval"
-	// ChromePolicyLoggedInIsolatedApp is a fixture name.
-	ChromePolicyLoggedInIsolatedApp = "chromePolicyLoggedInIsolatedApp"
 	// ChromePolicyLoggedInFeatureJourneys is a fixture name.
 	ChromePolicyLoggedInFeatureJourneys = "chromePolicyLoggedInFeatureJourneys"
 	// ChromePolicyLoggedInFeatureChromeLabs is a fixture name.

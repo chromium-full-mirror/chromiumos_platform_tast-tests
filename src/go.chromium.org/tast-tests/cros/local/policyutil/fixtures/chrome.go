@@ -62,23 +62,6 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:         fixture.ChromePolicyLoggedInIsolatedApp,
-		Desc:         "Logged into a user session with web app isolation enabled",
-		Contacts:     []string{"simonha@google.com", "chromeos-commercial-remote-management@google.com"},
-		BugComponent: "b:1111617", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Policy Stack
-		Impl: &policyChromeFixture{
-			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-				return []chrome.Option{chrome.EnableFeatures("WebAppEnableIsolatedStorage")}, nil
-			},
-		},
-		SetUpTimeout:    chrome.ManagedUserLoginTimeout + cleanupTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-		PostTestTimeout: 15 * time.Second,
-		Parent:          fixture.FakeDMS,
-	})
-
-	testing.AddFixture(&testing.Fixture{
 		Name:         fixture.ChromePolicyLoggedInFeatureChromeLabs,
 		Desc:         "Logged into a user session with chrome labs enabled",
 		Contacts:     []string{"chromeos-commercial-remote-management@google.com"},
