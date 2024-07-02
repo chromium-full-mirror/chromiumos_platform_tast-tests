@@ -564,8 +564,8 @@ func TestPlatformDecodingParams(t *testing.T) {
 	// Generate ffmpeg VAAPI AV1 tests.
 	params = append(params, paramData{
 		Name:               "ffmpeg_vaapi_av1",
-		Decoder:            filepath.Join(chrome.BinTestDir, "decode_test"),
-		DecoderArgsBuilder: "platform.AV1DecodeVAAPIargs",
+		Decoder:            ffmpegMD5Path,
+		DecoderArgsBuilder: "platform.FFMPEGMD5DecodeVAAPIArgs",
 		Files:              "av1Files[\"8bit\"]",
 		Timeout:            defaultTimeout,
 		// These SoftwareDeps do not include the 10 bit version of AV1.
@@ -578,8 +578,8 @@ func TestPlatformDecodingParams(t *testing.T) {
 		files := fmt.Sprintf("av1Aom8bitFiles[\"%s\"]", cat)
 		param := paramData{
 			Name:               fmt.Sprintf("ffmpeg_vaapi_av1_8bit_%s", cat),
-			Decoder:            filepath.Join(chrome.BinTestDir, "decode_test"),
-			DecoderArgsBuilder: "platform.AV1DecodeVAAPIargs",
+			Decoder:            ffmpegMD5Path,
+			DecoderArgsBuilder: "platform.FFMPEGMD5DecodeVAAPIArgs",
 			Files:              files,
 			Timeout:            defaultTimeout,
 			// These SoftwareDeps do not include the 10 bit version of AV1.
