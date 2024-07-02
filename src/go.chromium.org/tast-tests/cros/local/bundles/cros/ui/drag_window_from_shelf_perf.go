@@ -30,7 +30,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures the presentation time of dragging a window from the shelf in tablet mode",
 		Contacts: []string{
-			"chromeos-wm-corexp@google.com",
+			"chromeos-wm@google.com",
 			"cros-sw-perf@google.com",
 			"tbarzic@chromium.org",
 			"xdai@chromium.org",

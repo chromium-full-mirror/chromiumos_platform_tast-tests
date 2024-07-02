@@ -25,7 +25,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures the smoothness of the desk-activation and removal animations",
 		Contacts: []string{
-			"chromeos-wms@google.com",
+			"chromeos-wm@google.com",
 			"dandersson@google.com",
 			"chromeos-sw-engprod@google.com",
 		},

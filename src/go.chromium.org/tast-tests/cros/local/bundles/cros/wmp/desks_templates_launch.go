@@ -32,7 +32,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks desks templates can be launched",
 		Contacts: []string{
-			"chromeos-wms@google.com",
+			"chromeos-wm@google.com",
 			"cros-commercial-productivity-eng@google.com",
 			"chromeos-sw-engprod@google.com",
 			"zhumatthew@google.com",

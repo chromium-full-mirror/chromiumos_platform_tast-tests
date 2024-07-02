@@ -28,7 +28,7 @@ func init() {
 		Desc:         "Measures the presentation time of scrolling the overview grid in tablet mode",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
-			"chromeos-wm-corexp@google.com",
+			"chromeos-wm@google.com",
 			"sammiequon@chromium.org",
 		},
 		// ChromeOS > Software > Window Management > OverviewMode

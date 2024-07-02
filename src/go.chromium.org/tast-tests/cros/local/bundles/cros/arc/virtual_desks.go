@@ -28,7 +28,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Tests the placement of an ARC app in a virtual desk",
 		Contacts: []string{
-			"chromeos-wms@google.com",
+			"chromeos-wm@google.com",
 			"dandersson@chromium.org",
 			"arc-framework+tast@google.com",
 			"chromeos-sw-engprod@google.com",

@@ -52,7 +52,7 @@ func init() {
 		Contacts: []string{
 			"cros-sw-perf@google.com",
 			"xiyuan@chromium.org",
-			"chromeos-wm-corexp@google.com",
+			"chromeos-wm@google.com",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},

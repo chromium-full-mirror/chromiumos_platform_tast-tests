@@ -29,7 +29,7 @@ func init() {
 		Func:         DragMaximizedWindowPerf,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures the animation smoothness of dragging a maximized window in clamshell mode",
-		Contacts:     []string{"cros-sw-perf@google.com", "chromeos-wm-corexp@google.com", "sammiequon@chromium.org"},
+		Contacts:     []string{"cros-sw-perf@google.com", "chromeos-wm@google.com", "sammiequon@chromium.org"},
 		// ChromeOS > Software > Window Management
 		BugComponent: "b:1238037",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},

@@ -33,7 +33,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measures the performance of using the trackpad to change desks",
 		Contacts: []string{
-			"chromeos-wms@google.com",
+			"chromeos-wm@google.com",
 			"chromeos-sw-engprod@google.com",
 			"dandersson@google.com",
 			"richui@google.com",

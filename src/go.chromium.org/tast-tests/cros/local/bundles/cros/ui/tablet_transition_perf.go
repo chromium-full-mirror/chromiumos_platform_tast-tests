@@ -25,7 +25,7 @@ func init() {
 		Func:         TabletTransitionPerf,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures the animation smoothess of animating to and from tablet mode",
-		Contacts:     []string{"cros-sw-perf@google.com", "chromeos-wm-corexp@google.com", "sammiequon@chromium.org"},
+		Contacts:     []string{"cros-sw-perf@google.com", "chromeos-wm@google.com", "sammiequon@chromium.org"},
 		// ChromeOS > Software > Window Management > TabletMode
 		BugComponent: "b:1253116",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},

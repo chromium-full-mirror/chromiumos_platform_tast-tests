@@ -40,8 +40,7 @@ func init() {
 			"yongshun@google.com",
 			"sammiequon@google.com",
 			"dandersson@google.com",
-			"chromeos-wm-corexp@google.com",
-			"chromeos-wms@google.com",
+			"chromeos-wm@google.com",
 		},
 		// ChromeOS > Software > Window Management > Virtual Desks
 		BugComponent: "b:1238200",

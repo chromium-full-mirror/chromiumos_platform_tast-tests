@@ -29,7 +29,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Check if the performance around window controlling is good enough; go/cros-ui-perftests-cq#heading=h.fwfk0yg3teo1",
 		Contacts: []string{
-			"chromeos-wm-corexp@google.com",
+			"chromeos-wm@google.com",
 			"cros-sw-perf@google.com",
 			"oshima@chromium.org",
 			"afakhry@chromium.org",
@@ -168,7 +168,7 @@ func WindowControl(ctx context.Context, s *testing.State) {
 				return errors.Wrap(err, "failed to move the mouse")
 			}
 		}
-		// Needs to wait a bit before releasing the mouse, otherwise the window
+		// GoBigSleepLint: Needs to wait a bit before releasing the mouse, otherwise the window
 		// may not get back to be maximized.  See https://crbug.com/1158548.
 		if err := testing.Sleep(ctx, time.Second); err != nil {
 			return errors.Wrap(err, "failed to wait")
@@ -218,7 +218,7 @@ func WindowControl(ctx context.Context, s *testing.State) {
 		if err := kw.Accel(ctx, "Tab"); err != nil {
 			return errors.Wrap(err, "failed to hit tab")
 		}
-		// Right now we don't have good events to wait for the alt-tab switching,
+		// GoBigSleepLint: Right now we don't have good events to wait for the alt-tab switching,
 		// so simply waiting for 500 msecs.
 		if err := testing.Sleep(ctx, 500*time.Millisecond); err != nil {
 			return errors.Wrap(err, "failed to wait for the ")
@@ -226,7 +226,7 @@ func WindowControl(ctx context.Context, s *testing.State) {
 		if err := kw.AccelRelease(ctx, "Alt"); err != nil {
 			return errors.Wrap(err, "failed to release the alt key")
 		}
-		// Right now we don't have good events to wait for the alt-tab switching,
+		// GoBigSleepLint: Right now we don't have good events to wait for the alt-tab switching,
 		// so simply waiting for 500 msecs.
 		if err := testing.Sleep(ctx, 500*time.Millisecond); err != nil {
 			return errors.Wrap(err, "failed to wait for the ")

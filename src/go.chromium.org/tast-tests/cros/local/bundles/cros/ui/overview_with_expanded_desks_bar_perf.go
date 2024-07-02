@@ -32,8 +32,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measures the performance of entering and exiting overview with the desks bar expanded",
 		Contacts: []string{
-			"chromeos-wm-corexp@google.com",
-			"chromeos-wms@google.com",
+			"chromeos-wm@google.com",
 			"dandersson@google.com",
 			"sammiequon@google.com",
 			"yongshun@google.com",

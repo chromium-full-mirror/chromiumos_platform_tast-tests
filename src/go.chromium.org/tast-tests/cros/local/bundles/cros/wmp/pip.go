@@ -105,7 +105,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests window behavior of PiP windows",
 		Contacts: []string{
-			"chromeos-wm-corexp@google.com",
+			"chromeos-wm@google.com",
 			"chromeos-sw-engprod@google.com",
 			"takise@chromium.org",
 		},
