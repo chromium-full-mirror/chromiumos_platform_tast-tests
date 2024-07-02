@@ -28,8 +28,9 @@ func init() {
 			"chrome-knowledge-eng@google.com",
 			"jmpollock@google.com",
 		},
-		Impl:   baseSetupFixture(),
-		Parent: setup.PowerNoUIWiFi,
+		Impl:         baseSetupFixture(),
+		BugComponent: "b:1140118", // ChromeOS > Platform > Technologies > Machine Learning > ML Accelerators
+		Parent:       setup.PowerNoUIWiFi,
 	})
 }
 
