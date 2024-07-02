@@ -183,7 +183,7 @@ func init() {
 			}, {
 				Name:      "docs_no_effects",
 				Timeout:   meetcuj.DefaultTestTimeout,
-				ExtraAttr: []string{"group:cuj"},
+				ExtraAttr: []string{"group:cuj", "group:crosbolt", "crosbolt_perbuild"},
 				// Platform VC effects become available at feature level 1. Refer to
 				// the feature database in platform/feature-management{,-private}.
 				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
@@ -336,7 +336,7 @@ func init() {
 			}, {
 				Name:              "docs_adjust_lighting",
 				Timeout:           meetcuj.DefaultTestTimeout,
-				ExtraAttr:         []string{"group:cuj"},
+				ExtraAttr:         []string{"group:cuj", "group:crosbolt", "crosbolt_perbuild"},
 				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
 				Val: meetcuj.MeetTest{
 					Bots:           []int{1, 3, 15},
@@ -354,7 +354,7 @@ func init() {
 			}, {
 				Name:              "docs_retouch",
 				Timeout:           meetcuj.DefaultTestTimeout,
-				ExtraAttr:         []string{"group:cuj"},
+				ExtraAttr:         []string{"group:cuj", "group:crosbolt", "crosbolt_perbuild"},
 				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
 				Val: meetcuj.MeetTest{
 					Bots:          []int{1, 3, 15},
@@ -372,7 +372,7 @@ func init() {
 			}, {
 				Name:              "docs_adjust_lighting_and_retouch",
 				Timeout:           meetcuj.DefaultTestTimeout,
-				ExtraAttr:         []string{"group:cuj"},
+				ExtraAttr:         []string{"group:cuj", "group:crosbolt", "crosbolt_perbuild"},
 				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
 				Val: meetcuj.MeetTest{
 					Bots:           []int{1, 3, 15},
