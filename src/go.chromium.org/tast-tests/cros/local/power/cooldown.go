@@ -175,3 +175,74 @@ func afterIdleTemperature(ctx context.Context, cfg CooldownConfig) <-chan error 
 		return err
 	})
 }
+
+// NewCooldown cools down device as specified by the CooldownConfig.
+func NewCooldown(ctx context.Context, cfg CooldownConfig) (err error) {
+	// Keep fans running at max RPM throughout cooldown.
+	fanStatus, resetFan := KeepFanMax(ctx, cfg.UseFan)
+
+	// Reset fans to auto upon return and append error message if it failed.
+	defer func() {
+		if rErr := resetFan(ctx); err != nil && rErr != nil {
+			rErr = errors.Wrap(rErr, "another failure occured while resetting fans")
+			err = errors.Join(err, rErr)
+		} else if rErr != nil {
+			err = rErr
+		}
+	}()
+
+	// All cooldowns are included, execution depends on cooldownConfig.
+	cooldowns := []cooldownProcedure{
+		afterThermalSteadyState,
+		afterIdleTemperature,
+		afterCPUIdle,
+		afterPackageStateIdle,
+		afterIOCooldown,
+	}
+
+	// Perform cooldowns in sequential order.
+	for _, c := range cooldowns {
+		select {
+		case err = <-c(ctx, cfg):
+		case err = <-fanStatus:
+		}
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// StrictCooldownTimeout is the maximum time allowed for strict cooldown.
+const StrictCooldownTimeout = 15 * time.Minute
+
+// StrictCooldown ensures the device is cooled down as much as possible,
+// including temperature, CPU usage and package state, and IO. It does not
+// guarantee the device reaches a specific temperature on completion but does
+// ensures the device cannot be cooled down further. It should be used before
+// any test setup but not after it, otherwise cooldown may fail due to system is
+// not fully idling.
+func StrictCooldown(ctx context.Context) error {
+	cfg := CooldownConfig{
+		// Accelerate cooldown when possible.
+		UseFan: true,
+		// Long timeout ensures devices reach steady state, low standard
+		// deviation ensures devices cannot be cooled down further, and low
+		// temperature threshold at timeout allows high variance device to
+		// continue cooldown.
+		SteadyStateConfig: &ThermalSteadyStateConfig{
+			SampleSize:           60,
+			Interval:             time.Second,
+			Timeout:              10 * time.Minute,
+			MaxStandardDeviation: 1.0,
+			MaxTempAtTimeout:     37.5,
+		},
+		// Cooldown in other areas as well.
+		CPUIdle:          true,
+		PackageStateIdle: true,
+		IOIdle:           true,
+	}
+	return NewCooldown(ctx, cfg)
+}
