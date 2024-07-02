@@ -7,7 +7,7 @@ package firmware
 import (
 	"context"
 	"os"
-	"regexp"
+	"path/filepath"
 	"strconv"
 	"time"
 
@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
+	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
 	pb "go.chromium.org/tast-tests/cros/services/cros/firmware"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -218,9 +219,9 @@ func RollbackKernel(ctx context.Context, s *testing.State) {
 		return
 	}
 
-	connectCtx0, cancel0 := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
-	defer cancel0()
-	if err := h.WaitConnect(connectCtx0, firmware.ResetEthernetDongle); err != nil {
+	connectCtx, cancel := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
+	defer cancel()
+	if err := h.WaitConnect(connectCtx, firmware.ResetEthernetDongle); err != nil {
 		s.Fatal("Failed to connect to DUT and failed to boot to KERN-B: ", err)
 	}
 
@@ -242,15 +243,31 @@ func RollbackKernel(ctx context.Context, s *testing.State) {
 
 	rolledBackKernB = true
 
-	h.DisconnectDUT(ctx)
-	if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
-		s.Fatal("Setting power state to reset failed: ", err)
+	s.Log("Rebooting the DUT")
+	if err := h.DUT.Conn().CommandContext(ctx, "reboot").Run(); err != nil && !errors.As(err, &context.DeadlineExceeded) {
+		s.Fatal("Failed to run reboot command: ", err)
 	}
+	waitDisconnectCtx, cancelWaitDisconnect := context.WithTimeout(ctx, 1*time.Minute)
+	defer cancelWaitDisconnect()
+	if err := h.DUT.WaitUnreachable(waitDisconnectCtx); err != nil {
+		s.Fatal("Failed to wait for DUT to become unreachable, warm reset failed: ", err)
+	}
+	s.Log("Waiting for DUT to reach the firmware screen")
+	if err := h.WaitFirmwareScreen(ctx, h.Config.FirmwareScreenRecMode); err != nil {
+		s.Fatal("Failed to get to firmware screen: ", err)
+	}
+	s.Log("Checking if DUT stays at the Broken Screen")
+	brokenToDevWaitConnectCtx, cancelWaitConnectBrokenToDev := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
+	defer cancelWaitConnectBrokenToDev()
 
-	testing.ContextLogf(ctx, "Waiting for %s (firmware screen)", h.Config.FirmwareScreenRecMode)
-	// GoBigSleepLint: Allow time for DUT to reach firmware screen.
-	if err := testing.Sleep(ctx, h.Config.FirmwareScreenRecMode); err != nil {
-		s.Fatal("Failed to wait for firmware screen: ", err)
+	err = h.WaitConnect(brokenToDevWaitConnectCtx, firmware.ResetEthernetDongle)
+	switch err.(type) {
+	case nil:
+		s.Fatal("DUT woke up unexpectedly")
+	default:
+		if !errors.As(err, &context.DeadlineExceeded) {
+			s.Fatal("Unexpected error occurred: ", err)
+		}
 	}
 
 	if err := bootToDevAndRestore(ctx, h, ms, rolledBackKernB); err != nil {
@@ -271,45 +288,32 @@ func RollbackKernel(ctx context.Context, s *testing.State) {
 	}
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		var recModeEvents = map[int64]string{}
 		events, err := h.Reporter.EventlogList(ctx)
 		if err != nil {
 			return errors.Wrap(err, "failed to get event log")
 		}
-		// Case insensitive to match with different log messages.
-		re := regexp.MustCompile(`((?i)recovery mode|recovery_reason).*0x([a-fA-F0-9]+)`)
-		for _, event := range events {
-			if match := re.FindStringSubmatch(event.Message); match != nil {
-				eventInt, err := strconv.ParseInt(match[2], 16, 64)
-				if err != nil {
-					s.Logf("Failed to parse %s as an int", match[2])
-				}
-				recModeEvents[eventInt] = event.Message
-			}
-		}
-
 		foundExpRecReason := false
-		if len(recModeEvents) == 0 {
-			return errors.Errorf("expected recovery reason in eventlog but found none, got events: %v", events)
-		}
-		for _, recRes := range []int64{
-			0x48, // No bootable disk found.
-			0x5b, // No bootable kernel found on disk.
-			0x43, // OS kernel failed signature check.
+		for _, recRes := range []reporters.RecoveryReason{
+			reporters.RecoveryReasonDeprecatedRWNoDisk,
+			reporters.RecoveryReasonRWNoKernel,
+			reporters.RecoveryReasonRWInvalidOS,
 		} {
-			if val, ok := recModeEvents[recRes]; ok {
-				s.Logf("Found recovery reason 0x%x: %s", recRes, val)
+			if h.Reporter.CheckRecoveryEventExists(ctx, events, recRes) {
 				foundExpRecReason = true
 				break
 			}
 		}
 		if !foundExpRecReason {
-			return errors.Errorf("Did not find expected recovery reasons in event log, found the following reasons for recovery instead: %v", recModeEvents)
+			return errors.Errorf("Did not find expected recovery reasons in event log. Events: %v", events)
 		}
 		return nil
 	}, &testing.PollOptions{
 		Timeout: 1 * time.Minute,
 	}); err != nil {
+		saveEventLogPath := filepath.Join(s.OutDir(), "eventlog.txt")
+		if err := h.SaveEventLog(ctx, saveEventLogPath); err != nil {
+			s.Error("Failed to save event log: ", err)
+		}
 		s.Fatal("Looking for recovery reason: ", err)
 	}
 }
@@ -320,12 +324,6 @@ func bootToDevAndRestore(ctx context.Context, h *firmware.Helper, ms *firmware.M
 	}
 	if err := ms.RecScreenToDevMode(ctx); err != nil {
 		return errors.Wrap(err, "moving from firmware screen to dev mode")
-	}
-
-	connectCtx, cancel := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
-	defer cancel()
-	if err := h.WaitConnect(connectCtx); err != nil {
-		return errors.Wrap(err, "failed to connect to DUT")
 	}
 
 	bootedFromRemovableDevice, err := h.Reporter.BootedFromRemovableDevice(ctx)
@@ -360,9 +358,9 @@ func bootToDevAndRestore(ctx context.Context, h *firmware.Helper, ms *firmware.M
 	}
 
 	h.DisconnectDUT(ctx)
-	connectCtx1, cancel1 := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
-	defer cancel1()
-	if err := h.WaitConnect(connectCtx1, firmware.ResetEthernetDongle); err != nil {
+	connectCtx, cancel := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
+	defer cancel()
+	if err := h.WaitConnect(connectCtx, firmware.ResetEthernetDongle); err != nil {
 		return errors.Wrap(err, "failed to connect to DUT")
 	}
 

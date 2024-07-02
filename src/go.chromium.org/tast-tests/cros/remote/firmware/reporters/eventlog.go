@@ -294,6 +294,20 @@ func findRecoveryReasonFromEvents(events []Event) []RecoveryReasonString {
 	return recoveryReasonFound
 }
 
+// CheckRecoveryEventExists checks if specific recovery reason exists
+// in eventlog.
+func (r *Reporter) CheckRecoveryEventExists(ctx context.Context, events []Event, expRecoveryReason RecoveryReason) bool {
+	for _, event := range events {
+		recoveryReasonFound := findRecoveryReasonFromEvents([]Event{event})
+		expectedRecoveryReasonString, _ := r.GetRecoveryReasonString(ctx, expRecoveryReason)
+		if len(recoveryReasonFound) != 0 && recoveryReasonFound[0] == expectedRecoveryReasonString {
+			testing.ContextLog(ctx, "Found expected recovery reason: ", expectedRecoveryReasonString)
+			return true
+		}
+	}
+	return false
+}
+
 // CheckRecoveryEventsInEventLog checks for recovery reasons found from
 // 'elogtool list' against the expected ones.
 func (r *Reporter) CheckRecoveryEventsInEventLog(ctx context.Context, newEvents []Event, expRecoveryReasons []RecoveryReason) error {
