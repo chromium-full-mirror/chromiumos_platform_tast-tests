@@ -26,7 +26,7 @@ func init() {
 		},
 		// ChromeOS > Security > Hardening
 		BugComponent: "b:1040049",
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline"},
 		// TODO(b/201790026): The lkdtm resides on the debugfs,
 		// which is not accessible when integrity mode is
 		// enabled.
