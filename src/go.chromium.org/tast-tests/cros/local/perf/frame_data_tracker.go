@@ -309,6 +309,16 @@ func (t *FrameDataTracker) Record(pv *perf.Values) {
 	for _, data := range t.dsData.Throughput {
 		pv.Append(smMetric, float64(data))
 	}
+
+	jdMetric := perf.Metric{
+		Name:      t.prefix + "Display.JankDurations",
+		Multiple:  true,
+		Unit:      "ms",
+		Direction: perf.SmallerIsBetter,
+	}
+	for _, data := range t.dsData.JankDurations {
+		pv.Append(jdMetric, data)
+	}
 }
 
 // NewFrameDataTracker creates a new instance for FrameDataTracker.
