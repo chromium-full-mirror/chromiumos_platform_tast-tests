@@ -44,7 +44,7 @@ func pools() (map[string]string, map[string]string) {
 		arc.ManagedAccountPoolVarName:               arc.ManagedDMAAccountPoolValue(),
 		arc.ParentAccountVarName:                    arc.ParentDMAAccountValue(),
 		arc.SharesheetPoolVarName:                   ui.GaiaDMAPoolDefaultValue(),
-		assistant.AccountPoolVarName:                ui.GaiaDMAPoolDefaultValue(),
+		assistant.AccountPoolVarName:                assistant.DmaAccountPoolValue(),
 		calendar.GoogleCalendarAccountPoolVarName:   calendar.GoogleCalendarDMAAccountPoolValue(),
 		calendar.UpcomingEventsAccountVarName:       calendar.UpcomingEventsDMAAccountValue(),
 		connectivityfwdumps.GaiaLoginAccountVarName: arc.ManagedDMAAccountPoolValue(),
