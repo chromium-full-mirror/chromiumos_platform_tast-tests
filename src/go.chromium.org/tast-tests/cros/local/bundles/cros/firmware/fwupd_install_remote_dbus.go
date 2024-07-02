@@ -8,6 +8,7 @@ import (
 	"context"
 	"strings"
 
+	"github.com/godbus/dbus/v5"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/firmware/fwupd"
 	"go.chromium.org/tast/core/testing"
 )
@@ -48,30 +49,10 @@ func FwupdInstallRemoteDBus(ctx context.Context, s *testing.State) {
 	if strings.Compare(device.Version, fwupd.FakeWebcamBaseVersion) != 0 {
 		s.Fatalf("Unexpected device version: %s; want %s", device.Version, fwupd.FakeWebcamBaseVersion)
 	}
-
-	// Check if the target version is in the list.
-	release, err := fwd.FindReleaseByVersion(ctx, device.DeviceId, fwupd.FakeWebcamUpdateVersion)
+	// Empty install options
+	var installOptions = map[string]dbus.Variant{}
+	err = fwd.InstallDeviceByVersion(ctx, device, fwupd.FakeWebcamUpdateVersion, installOptions)
 	if err != nil {
-		s.Fatalf("Failed to find release %s: %v", fwupd.FakeWebcamUpdateVersion, err)
-	}
-
-	// Install the firmware file if needed and get the absolute file path.
-	releaseFile, err := fwupd.DownloadFile(ctx, release.Uri, fwupd.CacheDir)
-	if err != nil {
-		s.Fatal("Failed to download release: ", err)
-	}
-	s.Log("Using the firmware file: ", releaseFile)
-
-	if err := fwd.Install(device.DeviceId, releaseFile); err != nil {
-		s.Fatal("Failed to install: ", err)
-	}
-
-	// Check the version after install.
-	if device, err = fwd.DeviceByID(ctx, device.DeviceId); err != nil {
-		s.Fatal("Failed to detect the device after flashing: ", err)
-	}
-	// Updated version for the fake device must match the expected version.
-	if strings.Compare(device.Version, fwupd.FakeWebcamUpdateVersion) != 0 {
-		s.Fatalf("Unexpected device version after update: %s; want %s", device.Version, fwupd.FakeWebcamUpdateVersion)
+		s.Fatal("Failed to install new version: ", err)
 	}
 }

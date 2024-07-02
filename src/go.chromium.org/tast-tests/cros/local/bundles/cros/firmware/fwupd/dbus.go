@@ -8,6 +8,7 @@ import (
 	"context"
 	"os"
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/godbus/dbus/v5"
@@ -148,7 +149,7 @@ func (fwupd *Fwupd) releasesFromDbusCall(dbusMethod, deviceID string) ([]map[str
 }
 
 // Install opens the local file and calls the dbus Install method from `fwupd`.
-func (fwupd *Fwupd) Install(deviceID, cabFile string) error {
+func (fwupd *Fwupd) Install(deviceID, cabFile string, installOptions map[string]dbus.Variant) error {
 	if !fwupd.conn.SupportsUnixFDs() {
 		return errors.New("Unix FDs are not supported")
 	}
@@ -167,7 +168,7 @@ func (fwupd *Fwupd) Install(deviceID, cabFile string) error {
 		0,
 		deviceID,
 		fdCab,
-		map[string]dbus.Variant{}, // Empty options
+		installOptions,
 	)
 
 	if call.Err != nil {
@@ -178,7 +179,7 @@ func (fwupd *Fwupd) Install(deviceID, cabFile string) error {
 }
 
 // RestartDaemon restarts fwupd with the dbus method Quit call,
-// proces should be restarted by service automatically.
+// process should be restarted by service automatically.
 func (fwupd *Fwupd) RestartDaemon(ctx context.Context) error {
 	// Stop daemon.
 	if call := fwupd.obj.Call(DbusInterface+"."+QuitMethod, 0); call.Err != nil {
@@ -324,4 +325,37 @@ func (fwupd *Fwupd) FindReleaseByVersion(ctx context.Context, deviceID, expected
 		}
 	}
 	return nil, errors.Errorf("failed to find version: %s", expectedVersion)
+}
+
+// InstallDeviceByVersion installs a fw version on a device.
+func (fwupd *Fwupd) InstallDeviceByVersion(ctx context.Context, device *Device, version string, installOptions map[string]dbus.Variant) (err error) {
+	// Check if the target version is in the list.
+	release, err := fwupd.FindReleaseByVersion(ctx, device.DeviceId, version)
+	if err != nil {
+		return errors.Wrapf(err, "failed to find release %s", version)
+	}
+
+	// Install the firmware file if needed and get the absolute file path.
+	releaseFile, err := DownloadFile(ctx, release.Uri, CacheDir)
+	if err != nil {
+		return err
+	}
+
+	testing.ContextLog(ctx, "Installing version: ", version)
+	if err := fwupd.Install(device.DeviceId, releaseFile, installOptions); err != nil {
+		return errors.Wrap(err, "failed to install")
+	}
+
+	// Check if device is still available and has no problems.
+	if device, err = fwupd.DeviceByID(ctx, device.DeviceId); err != nil {
+		return errors.Wrap(err, "failed to detect the device after flashing")
+	}
+	if device.Problems != 0 {
+		errors.Errorf("unable to use %q due detected problems: %s", device.Name, device.UpdateError)
+	}
+	// Verify the current version for the device matches the expected version.
+	if strings.Compare(device.Version, version) != 0 {
+		return errors.Errorf("unexpected device version after update: %s; want %s", device.Version, version)
+	}
+	return nil
 }
