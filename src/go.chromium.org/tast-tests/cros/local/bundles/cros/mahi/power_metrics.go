@@ -53,7 +53,7 @@ func init() {
 		Contacts: []string{
 			"ml-service-team@google.com",
 			"alanlxl@google.com",
-			"chenjh@google.com",
+			"chenjih@google.com",
 			"thanhdng@google.com",
 		},
 		BugComponent: "b:1116342",
