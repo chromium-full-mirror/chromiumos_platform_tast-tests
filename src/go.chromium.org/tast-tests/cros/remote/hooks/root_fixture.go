@@ -83,6 +83,7 @@ var orderedHooks []string = []string{
 	"servoHook",
 	"diskThrottler",
 	"cleanupChecksHook",
+	"debugInfoHook", // Prefer to run this hook at the end if possible.
 }
 
 // HookState includes certain fixture state information that is
