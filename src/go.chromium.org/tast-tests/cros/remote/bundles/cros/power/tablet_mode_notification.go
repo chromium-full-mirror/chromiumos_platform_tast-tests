@@ -26,7 +26,7 @@ func init() {
 		Func:         TabletModeNotification,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies the EC's tablet mode change notification is received by the AP (powerd)",
-		BugComponent: "b:1361410",
+		BugComponent: "b:167114", // ChromeOS > Platform > baseOS > Firmware > EC
 		Contacts:     []string{"chromeos-platform-power@google.com", "timvp@google.com", "cros-fw-engprod@google.com"},
 		ServiceDeps:  []string{"tast.cros.security.BootLockboxService"},
 		SoftwareDeps: []string{"chrome"},
