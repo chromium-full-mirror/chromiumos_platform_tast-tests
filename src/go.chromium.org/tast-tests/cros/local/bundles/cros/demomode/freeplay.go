@@ -94,14 +94,16 @@ func Freeplay(ctx context.Context, s *testing.State) {
 	// ID, as this is unchanging (derived from the URL for PWAs or the package name for
 	// Android Apps).
 	var freeplayAppsToIDs = map[string]string{
-		"Zoom":          "jldpdkiafafcejhceeincjmlkmibemgj",
-		"Youtube":       "agimnkijcaahngcdmfeangaknmldooml",
-		"GoogleDocs":    "cepkndkdlbllfhpfhledabdcdbidehkd",
-		"BeFunky":       "fjoomcalbeohjbnlcneddljemclcekeg",
-		"SumoPaint":     "genadphlobhbpdnafiphnppelkagmghm",
-		"Spotify":       "pjibgclleladliembfgfagdaldikeohf",
-		"GooglePhotos":  "fdbkkojdbojonckghlanfaopfakedeca",
-		"StardewValley": "ljibeljdcmpldadfgijmbaocjibloonn",
+		"Zoom":         "jldpdkiafafcejhceeincjmlkmibemgj",
+		"Youtube":      "agimnkijcaahngcdmfeangaknmldooml",
+		"GoogleDocs":   "cepkndkdlbllfhpfhledabdcdbidehkd",
+		"BeFunky":      "fjoomcalbeohjbnlcneddljemclcekeg",
+		"SumoPaint":    "genadphlobhbpdnafiphnppelkagmghm",
+		"Spotify":      "pjibgclleladliembfgfagdaldikeohf",
+		"GooglePhotos": "fdbkkojdbojonckghlanfaopfakedeca",
+		// Temporarily unpin Stardew Valley (b/343228202) but still have it installed.
+		// Pin it back once Stardew Valley issue (b/328569631) is fixed.
+		// "StardewValley": "ljibeljdcmpldadfgijmbaocjibloonn",
 	}
 
 	for appName, appID := range freeplayAppsToIDs {
