@@ -64,8 +64,13 @@ func testECUART(ctx context.Context, s *testing.State, b utils.DevboardHelper, i
 	defer uart.Close(ctx)
 
 	// Flush out any data.
-	uart.WriteSerial(ctx, []byte("AB\r\n"))
-	_, _, err = ccd.ReadSerialSubmatch(ctx, regexp.MustCompile(`AB\r\n`))
+	for i := 0; i < 3; i++ {
+		uart.WriteSerial(ctx, []byte("AB\r\n"))
+		_, _, err = ccd.ReadSerialSubmatch(ctx, regexp.MustCompile(`AB\r\n`))
+		if err == nil {
+			break
+		}
+	}
 	th.MustSucceed(err, "Error clearing buffer")
 
 	// Send data to UART, expecting to read it out of the USB interface.
