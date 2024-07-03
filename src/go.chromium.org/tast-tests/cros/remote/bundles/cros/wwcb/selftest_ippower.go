@@ -33,7 +33,8 @@ func init() {
 
 func SelftestIppower(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	// Extend the timeout to 160 seconds to make sure the test can be completed.
+	ctx, cancel := ctxutil.Shorten(ctx, 160*time.Second)
 	defer cancel()
 
 	// Set up the servo attached to the DUT.

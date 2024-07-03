@@ -88,7 +88,7 @@ func CloseIppower(ctx context.Context, ports []int) error {
 func IppowerIP(dutIP string) (string, error) {
 	subnet := strings.Join(strings.Split(dutIP, ".")[:3], ".")
 	client := http.Client{
-		Timeout: 300 * time.Millisecond,
+		Timeout: 600 * time.Millisecond,
 	}
 
 	for i := 1; i < 255; i++ {
@@ -114,7 +114,7 @@ func IppowerIP(dutIP string) (string, error) {
 // CheckIppowerStatus is for check if IP Power is online.
 func CheckIppowerStatus(ip string) error {
 	client := http.Client{
-		Timeout: 300 * time.Millisecond,
+		Timeout: 600 * time.Millisecond,
 	}
 	url := fmt.Sprintf("http://%s/set.cmd?user=%s+pass=%s+cmd=getpower", ip, user, password)
 	resp, err := client.Get(url)
