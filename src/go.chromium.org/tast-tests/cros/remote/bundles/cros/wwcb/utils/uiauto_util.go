@@ -16,6 +16,7 @@ import (
 	inputspb "go.chromium.org/tast-tests/cros/services/cros/inputs"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	"google.golang.org/grpc"
+	durationpb "google.golang.org/protobuf/types/known/durationpb"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
@@ -87,22 +88,15 @@ func OpenMediaFileOnFilesapp(ctx context.Context, uiautoSvc ui.AutomationService
 
 // ClickOnPlayButton clicks button to play the file on Gallery.
 func ClickOnPlayButton(ctx context.Context, uiautoSvc ui.AutomationServiceClient) error {
-	gallerFullScreenButtonFinder := ui.Node().Name("Toggle fullscreen").Role(ui.Role_ROLE_BUTTON).Finder()
-
-	if _, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: gallerFullScreenButtonFinder}); err != nil {
-		return errors.Wrap(err, "failed to wait for full screen button to show")
-	}
-
-	if _, err := uiautoSvc.LeftClick(ctx, &ui.LeftClickRequest{Finder: gallerFullScreenButtonFinder}); err != nil {
-		return errors.Wrap(err, "failed to click on full screen button")
-	}
-
 	galleryPlayButtonFinder := ui.Node().Name("Toggle play pause").Role(ui.Role_ROLE_BUTTON).Finder()
 
-	if _, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: galleryPlayButtonFinder}); err != nil {
+	if _, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: galleryPlayButtonFinder, Timeout: durationpb.New(time.Duration(5) * time.Second)}); err != nil {
 		return errors.Wrap(err, "failed to wait for play button to show")
 	}
 
+	if _, err := uiautoSvc.EnsureFocused(ctx, &ui.EnsureFocusedRequest{Finder: galleryPlayButtonFinder}); err != nil {
+		return errors.Wrap(err, "failed to ensure play button is focused")
+	}
 	if _, err := uiautoSvc.LeftClick(ctx, &ui.LeftClickRequest{Finder: galleryPlayButtonFinder}); err != nil {
 		return errors.Wrap(err, "failed to click on play button")
 	}

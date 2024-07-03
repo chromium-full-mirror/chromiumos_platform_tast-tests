@@ -235,10 +235,11 @@ func VerifyVideo(ctx context.Context, s *testing.State, uid string, duration int
 					}
 				}
 
-				testing.ContextLog(ctx, "detect color: "+frameColor)
+				testing.ContextLog(ctx, "Detect color: "+frameColor)
+				testing.ContextLogf(ctx, "Expected color %s", detectVideoColor[detectColorCount])
 				if frameColor == detectVideoColor[detectColorCount] {
+					testing.ContextLogf(ctx, "%s color detected, incrementing colorCount", frameColor)
 					detectColorCount++
-
 					if detectColorCount > 2 {
 						break
 					}
@@ -323,7 +324,7 @@ func filterColorPixelValue(p Pixel) Pixel {
 }
 
 // getAvgPixelFromWebcam is for get avg pixel from webcam.
-func getAvgPixelFromWebcam(ctx context.Context, s *testing.State, devPort string, logStr string) (Pixel, error) {
+func getAvgPixelFromWebcam(ctx context.Context, s *testing.State, devPort, logStr string) (Pixel, error) {
 	var p Pixel
 	cam, err := webcam.Open(devPort)
 

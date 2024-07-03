@@ -73,7 +73,14 @@ func PlugUnplugExternalDisplay(ctx context.Context, s *testing.State) {
 	}
 	defer cs.Close(cleanupCtx, &empty.Empty{})
 
-	utils.AttachErrorHandlersForUITreeDump(cleanupCtx, s, cl.Conn)
+	s.AttachErrorHandlers(
+		func(errMsg string) {
+			utils.DumpUITreeWithScreenshotToFile(cleanupCtx, cl.Conn, "ui_dump_error")
+		},
+		func(errMsg string) {
+			utils.DumpUITreeWithScreenshotToFile(cleanupCtx, cl.Conn, "ui_dump_fatal")
+		},
+	)
 	// Initialize fixtures to find the connected devices.
 	if err := utils.InitFixture(ctx); err != nil {
 		s.Fatal("Failed to initialize the fixture: ", err)
@@ -144,7 +151,7 @@ func PlugUnplugExternalDisplay(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to close Gallery app: ", err)
 	}
 
-	// Open the video on the external display and verify the external display performace.
+	// Open the video on the external display and verify the external display performance.
 	remoteAudioPath, err := utils.PushFileToDUT(ctx, s, dut, utils.VideoFile, utils.MyFilesPath)
 	if err != nil {
 		s.Fatal("Failed to initialize the push file to DUT's MyFiles directory: ", err)
