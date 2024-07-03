@@ -117,7 +117,7 @@ func UpdateDutFirmware(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to disable hardware write protect: ", err)
 	}
 	s.Log("Disabling software write protect")
-	if err := h.ServoProxy.RunCommand(ctx, false, "futility", "flash", "--wp-disable", fmt.Sprintf("--servo_port=%d", h.ServoProxy.GetPort())); err != nil {
+	if err := h.ServoProxy.RunCommand(ctx, true, "futility", "flash", "--wp-disable", fmt.Sprintf("--servo_port=%d", h.ServoProxy.GetPort())); err != nil {
 		s.Fatalf("write protect disable failed at %q", err)
 	}
 	s.Log("Disabling software write protect completed")
@@ -329,14 +329,14 @@ func flashECFirmware(ctx context.Context, s *testing.State, h *firmware.Helper, 
 // flashAPFirmware flashes the provided AP firmware on the DUT and restores the original AP firmware in the end.
 func flashAPFirmware(ctx context.Context, s *testing.State, h *firmware.Helper, servoTmpDir, firmwarePathVal, localFirmwarePathVal, ecChip, initialROFwid, initialRwFwid string) {
 	s.Log("Backing up AP firmware")
-	if err := h.ServoProxy.RunCommand(ctx, false, "futility", "read", fmt.Sprintf("--servo_port=%d", h.ServoProxy.GetPort()), fmt.Sprintf("%s/%s", servoTmpDir, backupFirmwareFile)); err != nil {
+	if err := h.ServoProxy.RunCommand(ctx, true, "futility", "read", fmt.Sprintf("--servo_port=%d", h.ServoProxy.GetPort()), fmt.Sprintf("%s/%s", servoTmpDir, backupFirmwareFile)); err != nil {
 		s.Fatal("Failed to read fw using futility: ", err)
 	}
 	s.Log("Completed backup of existing AP fw")
 	// Check that the DUT has initial fw in the end
 	defer func() {
 		s.Log("Flashing DUT with backup AP firmware file")
-		if err := h.ServoProxy.RunCommand(ctx, false, "futility", "update", "-i", fmt.Sprintf("%s/%s", servoTmpDir, backupFirmwareFile), fmt.Sprintf("--servo_port=%d", h.ServoProxy.GetPort()), "--gbb_flags=0x18"); err != nil {
+		if err := h.ServoProxy.RunCommand(ctx, true, "futility", "update", "-i", fmt.Sprintf("%s/%s", servoTmpDir, backupFirmwareFile), fmt.Sprintf("--servo_port=%d", h.ServoProxy.GetPort()), "--gbb_flags=0x18"); err != nil {
 			s.Log("Failed to flash DUT backup FW bin file: ", err)
 		} else {
 			s.Log("Completed flashing of backup AP fw")
@@ -356,7 +356,7 @@ func flashAPFirmware(ctx context.Context, s *testing.State, h *firmware.Helper, 
 	}
 
 	s.Log("Flashing DUT AP with downloaded firmware file")
-	if err := h.ServoProxy.RunCommand(ctx, false, "futility", "update", "-i", fmt.Sprintf("%s/%s", servoTmpDir, firmware.APFirmwareFileToFlash), fmt.Sprintf("--servo_port=%d", h.ServoProxy.GetPort()), "--gbb_flags=0x18"); err != nil {
+	if err := h.ServoProxy.RunCommand(ctx, true, "futility", "update", "-i", fmt.Sprintf("%s/%s", servoTmpDir, firmware.APFirmwareFileToFlash), fmt.Sprintf("--servo_port=%d", h.ServoProxy.GetPort()), "--gbb_flags=0x18"); err != nil {
 		s.Fatal("Failed to flash firmware bin file: ", err)
 	}
 	s.Log("Completed flashing of downloaded fw")
@@ -512,7 +512,7 @@ func backupECFirmware(ctx context.Context, s *testing.State, h *firmware.Helper,
 	if strings.HasPrefix(ecChip, "it8") {
 		flashCmd += " --nouse_i2c_pseudo"
 	}
-	if err := h.ServoProxy.RunCommand(ctx, false, "bash", "-c", flashCmd); err != nil {
+	if err := h.ServoProxy.RunCommand(ctx, true, "bash", "-c", flashCmd); err != nil {
 		s.Fatal("Failed to backup EC firmware: ", err)
 	}
 	if err := safeRebootDut(ctx, h); err != nil {
@@ -532,7 +532,7 @@ func runECFirmwareFlashServo(ctx context.Context, s *testing.State, h *firmware.
 	if strings.HasPrefix(ecChip, "it8") {
 		flashECArgs = append(flashECArgs, "--nouse_i2c_pseudo")
 	}
-	if err := h.ServoProxy.RunCommand(ctx, false, "flash_ec", flashECArgs...); err != nil {
+	if err := h.ServoProxy.RunCommand(ctx, true, "flash_ec", flashECArgs...); err != nil {
 		s.Fatal("Failed to flash EC firmware bin file: ", err)
 	}
 	if err := h.EnsureDUTBooted(ctx); err != nil {
