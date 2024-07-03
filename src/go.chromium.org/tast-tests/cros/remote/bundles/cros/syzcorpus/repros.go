@@ -51,7 +51,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:     Repros,
 		Desc:     "Test that runs syzkaller repros",
-		Contacts: []string{"chromeos-kernel@google.com", "zsm@chromium.org"},
+		Contacts: []string{"chromeos-kernel@google.com", "shraash@google.com"},
 		// ChromeOS > Platform > System > Kernel > Syzkaller > Syzkaller-Dev > Syzcorpus
 		BugComponent: "b:1148019",
 		Timeout:      30 * time.Minute,

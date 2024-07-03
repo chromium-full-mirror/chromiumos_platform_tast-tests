@@ -168,7 +168,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:     Wrapper,
 		Desc:     "Wrapper test that runs Syzkaller",
-		Contacts: []string{"chromeos-kernel@google.com", "zsm@chromium.org"},
+		Contacts: []string{"chromeos-kernel@google.com", "shraash@google.com"},
 		// ChromeOS > Platform > System > Kernel > Syzkaller > Syzkaller-Dev > CTP-Infra
 		BugComponent: "b:1047538",
 		SoftwareDeps: []string{"pstore", "reboot"},
