@@ -34,7 +34,6 @@ const (
 	VPNTestAppPkg               = "org.chromium.arc.testapp.arcvpn"
 	VPNTestAppSvc               = "org.chromium.arc.testapp.arcvpn.ArcTestVpnService"
 	VPNTestAppBroadcast         = "org.chromium.arc.testapp.arcvpn.LAUNCH_VPN"
-	VPNTestAppSetupSocketIntent = "org.chromium.arc.testapp.arcvpn.SETUP_SOCKET"
 	VPNTestAppSendMessageIntent = "org.chromium.arc.testapp.arcvpn.SEND_MESSAGE"
 	TunIP                       = "192.168.2.2"
 )
@@ -96,6 +95,33 @@ func SetARCVPNEnabled(ctx context.Context, a *arc.ARC, enabled bool) error {
 // BroadcastReceiver receives.
 func StartARCVPN(ctx context.Context, a *arc.ARC) error {
 	return broadcastLaunchVPNIntent(ctx, a)
+}
+
+// StartARCVPNAndSetupSocket starts the ARC test vpn app by broadcasting an
+// intent that the ArcVpnTestApp
+// BroadcastReceiver receives, and meanwhile sets up a socket using:
+// (1) given address and port of the remote peer we want to connect to
+// (2) protocol of the socket (One of l4server.TCP* or l4server.UDP*)
+// (3) name of the interface in ARC we want to use to setup the socket
+// This methods combines starting service and setting up socket since a delay
+// between the service starts and the first intent can be received by the
+// service is observed. Combining two can make sure socket is set up when
+// service is ready.
+func StartARCVPNAndSetupSocket(ctx context.Context, a *arc.ARC, family l4server.Family, ifname, address string, port int) error {
+	if family == l4server.TCP6 || family == l4server.TCP4 {
+		family = l4server.TCP
+	}
+	if family == l4server.UDP4 || family == l4server.UDP6 {
+		family = l4server.UDP
+	}
+
+	args := []string{
+		"--es", "sockproto", family.String(),
+		"--es", "sockinterface", ifname,
+		"--es", "sockaddress", address,
+		"--ei", "sockport", strconv.Itoa(port),
+	}
+	return broadcastLaunchVPNIntent(ctx, a, args...)
 }
 
 // StartARCVPNWithToyServer starts the ARC test vpn app with connecting to
@@ -171,31 +197,6 @@ func ForceStopARCVPN(ctx context.Context, a *arc.ARC) error {
 
 	if err := WaitForARCServiceState(ctx, a, FacadeVPNPkg, FacadeVPNSvc, false); err != nil {
 		return errors.Wrapf(err, "failed to stop %s", FacadeVPNSvc)
-	}
-	return nil
-}
-
-// SetupSocket sets up a socket using:
-// (1) given address and port of the remote peer we want to connect to
-// (2) protocol of the socket (One of l4server.TCP* or l4server.UDP*)
-// (3) name of the interface in ARC we want to use to setup the socket
-// When called multiple times in one test, the older socket will be replaced by
-// newly setup socket for sending messages.
-func SetupSocket(ctx context.Context, a *arc.ARC, family l4server.Family, ifname, address string, port int) error {
-	if family == l4server.TCP6 || family == l4server.TCP4 {
-		family = l4server.TCP
-	}
-	if family == l4server.UDP4 || family == l4server.UDP6 {
-		family = l4server.UDP
-	}
-
-	if _, err := a.BroadcastIntent(ctx,
-		VPNTestAppSetupSocketIntent,
-		"--es", "proto", family.String(),
-		"--es", "interface", ifname,
-		"--es", "address", address,
-		"--ei", "port", strconv.Itoa(port)); err != nil {
-		return errors.Wrap(err, "setup socket failed")
 	}
 	return nil
 }

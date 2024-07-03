@@ -40,20 +40,23 @@ import java.util.concurrent.Executors;
 public class ArcTestVpnService extends VpnService {
     private static final String TAG = ArcTestVpnService.class.getSimpleName();
 
-    // Intent for setting up a socket.
-    private static final String SETUP_SOCKET =
-            "org.chromium.arc.testapp.arcvpn.SETUP_SOCKET";
     // Intent for sending a message through the last set up socket.
     private static final String SEND_MESSAGE =
             "org.chromium.arc.testapp.arcvpn.SEND_MESSAGE";
 
-    // Keys used for setting intent.
-    private static final String PROTOCOL_KEY = "proto";
+    // Keys used for setting intent extras for setting up VPN service.
+    private static final String OVERLAY_ADDRESS_KEY = "overlay_address";
+    // Keys used for setting intent extras for connecting to toy VPN server.
     private static final String INTERFACE_KEY = "interface";
-    private static final String MESSAGE_KEY = "message";
     private static final String ADDRESS_KEY = "address";
     private static final String PORT_KEY = "port";
-    private static final String OVERLAY_ADDRESS_KEY = "overlay_address";
+    // Keys used for setting intent extras for setting up test socket and sending messages to this
+    // socket.
+    private static final String SOCKET_PROTOCOL_KEY = "sockproto";
+    private static final String SOCKET_INTERFACE_KEY = "sockinterface";
+    private static final String SOCKET_ADDRESS_KEY = "sockaddress";
+    private static final String SOCKET_PORT_KEY = "sockport";
+    private static final String MESSAGE_KEY = "message";
 
     // Values used for protocol intent key.
     // These fields are in sync with l4server.Family in:
@@ -77,6 +80,9 @@ public class ArcTestVpnService extends VpnService {
     // Metadata for the notification.
     private static final int NOTIFICATION_ID = 1;
     private static final String NOTIFICATION_CHANNEL_ID = TAG;
+
+    // Invalid port number.
+    private static final int INVALID_PORT = -1;
 
     // Saved as a member variable so the fd is seen as still being used. Otherwise it might get
     // closed from under us and also cause the tun interface to be closed as well.
@@ -111,38 +117,7 @@ public class ArcTestVpnService extends VpnService {
 
         @Override
         public void onReceive(Context context, Intent intent) {
-            // Setup socket by given protocol, address and port.
-            if (SETUP_SOCKET.equals(intent.getAction())) {
-                String proto = intent.getStringExtra(PROTOCOL_KEY);
-                String ifname = intent.getStringExtra(INTERFACE_KEY);
-                String address = intent.getStringExtra(ADDRESS_KEY);
-                if (address == null) {
-                    Log.e(TAG, "Address is not correctly set, setup socket failed.");
-                    return;
-                }
-                try {
-                    mAddress = InetAddress.getByName(address);
-                } catch (UnknownHostException e) {
-                    Log.e(TAG, "Address is unknown, setup socket failed..");
-                    return;
-                }
-                mPort = intent.getIntExtra(PORT_KEY, -1);
-                if (mPort == -1) {
-                    Log.e(TAG, "Port is invalid, setup socket failed..");
-                    return;
-                }
-                switch (proto) {
-                    case PROTOCOL_TCP:
-                        setupTcpSocket(ifname);
-                        break;
-                    case PROTOCOL_UDP:
-                        setupUdpSocket(ifname);
-                        break;
-                    default:
-                        Log.e(TAG, "Invalid procotol: " + proto + ", setup socket failed.");
-                        break;
-                }
-            } else if (SEND_MESSAGE.equals(intent.getAction())) {
+            if (SEND_MESSAGE.equals(intent.getAction())) {
                 String message = intent.getStringExtra(MESSAGE_KEY);
                 if (message == null) {
                     Log.e(TAG, "Message is not correctly set, send message failed.");
@@ -174,18 +149,46 @@ public class ArcTestVpnService extends VpnService {
 
         String ifname = intent.getStringExtra(INTERFACE_KEY);
         String serverAddress = intent.getStringExtra(ADDRESS_KEY);
-        int serverPort = intent.getIntExtra(PORT_KEY, 0);
-        if (ifname != null && serverAddress != null && serverPort != 0) {
+        int serverPort = intent.getIntExtra(PORT_KEY, INVALID_PORT);
+        if (ifname != null && serverAddress != null && serverPort != INVALID_PORT) {
             connectToToyVpnServer(ifname, serverAddress, serverPort);
         }
 
         mBroadcastReceiver = new ArcVpnBroadcastReceiver();
         IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(SETUP_SOCKET);
         intentFilter.addAction(SEND_MESSAGE);
         registerReceiver(mBroadcastReceiver, intentFilter);
 
+        // Setup socket if arguments are given.
+        String sock_proto = intent.getStringExtra(SOCKET_PROTOCOL_KEY);
+        String sock_ifname = intent.getStringExtra(SOCKET_INTERFACE_KEY);
+        String sock_address = intent.getStringExtra(SOCKET_ADDRESS_KEY);
+        mPort = intent.getIntExtra(SOCKET_PORT_KEY, INVALID_PORT);
+        setupSocket(sock_proto, sock_ifname, sock_address);
         return START_NOT_STICKY;
+    }
+
+    /** Setup socket by given protocol, address and port. */
+    private void setupSocket(String proto, String ifname, String address) {
+        if (address == null || ifname == null || mPort == INVALID_PORT) {
+            return;
+        }
+        try {
+            mAddress = InetAddress.getByName(address);
+        } catch (UnknownHostException e) {
+            Log.e(TAG, "Address is unknown, setup socket failed, message:", e);
+            return;
+        }
+        switch (proto) {
+            case PROTOCOL_TCP:
+                setupTcpSocket(ifname);
+                break;
+            case PROTOCOL_UDP:
+                setupUdpSocket(ifname);
+                break;
+            default:
+                Log.e(TAG, "Invalid procotol: " + proto + ", setup socket failed.");
+        }
     }
 
     /** Called when the system has deactivated the underlying interface. */

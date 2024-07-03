@@ -19,9 +19,17 @@ adb shell am broadcast -a org.chromium.arc.testapp.arcvpn.LAUNCH_VPN \
         --es overlay_address <LOCAL_OVERLAY_IPV4>
 ```
 
-We can setup socket by passing command with protocol(either `tcp` or `udp`), remote peer address and port, and interface name interface name in ARC that we want to setup socket with:
+if a socket is required to be set up when service is started, run:
 
-`adb shell am broadcast -a org.chromium.arc.testapp.arcvpn.SETUP_SOCKET --es proto <PROTO> --es address <ADDR> --ei port <PORT> --es interface <IFNAME>`
+```
+adb shell am broadcast -a org.chromium.arc.testapp.arcvpn.LAUNCH_VPN \
+        --receiver-include-background \
+        --es sockinterface <ARC_IFNAME> \
+        --es sockaddress <DST_ADDR> --ei sockport <DST_PORT> \
+        --es sockproto <PROTOCOL>
+```
+
+The socket is set up with protocol(either `tcp` or `udp`), remote peer address and port, and interface name interface name in ARC that we want to setup socket with.
 
 After setting up socket, we can send messages from the last setup socket by command:
 

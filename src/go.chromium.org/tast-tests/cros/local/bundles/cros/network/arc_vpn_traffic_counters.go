@@ -159,21 +159,6 @@ func ARCVPNTrafficCounters(ctx context.Context, s *testing.State) {
 	}
 	defer cleanupFunc(cleanupCtx)
 
-	testing.ContextLog(ctx, "Starting ArcVpnTest app")
-	if err := arcvpn.StartARCVPN(ctx, a); err != nil {
-		s.Fatal("Failed to send ArcVpnTest app: ", err)
-	}
-	defer func() {
-		if err := arcvpn.ForceStopARCVPN(cleanupCtx, a); err != nil {
-			s.Error("Failed to clean up ARC VPN: ", err)
-		}
-	}()
-
-	// Make sure the test app is connected.
-	if err := arcvpn.WaitForARCServiceState(ctx, a, arcvpn.VPNTestAppPkg, arcvpn.VPNTestAppSvc, true); err != nil {
-		s.Fatalf("Failed to start %s: %v", arcvpn.VPNTestAppSvc, err)
-	}
-
 	pc, err := patchpanel.New(ctx)
 	if err != nil {
 		s.Fatal("Failed to create patchpanel client: ", err)
@@ -197,8 +182,20 @@ func ARCVPNTrafficCounters(ctx context.Context, s *testing.State) {
 			guestIfname = device.GuestIfname
 		}
 	}
-	if err := arcvpn.SetupSocket(ctx, a, networkFam, guestIfname, addr.String(), port); err != nil {
-		s.Fatal("Failed to set socket: ", err)
+
+	testing.ContextLog(ctx, "Starting ArcVpnTest app and setting up the socket")
+	if err := arcvpn.StartARCVPNAndSetupSocket(ctx, a, networkFam, guestIfname, addr.String(), port); err != nil {
+		s.Fatal("Failed to start ArcVpnTest app and setup socket: ", err)
+	}
+	defer func() {
+		if err := arcvpn.ForceStopARCVPN(cleanupCtx, a); err != nil {
+			s.Error("Failed to clean up ARC VPN: ", err)
+		}
+	}()
+
+	// Make sure the test app is connected.
+	if err := arcvpn.WaitForARCServiceState(ctx, a, arcvpn.VPNTestAppPkg, arcvpn.VPNTestAppSvc, true); err != nil {
+		s.Fatalf("Failed to start %s: %v", arcvpn.VPNTestAppSvc, err)
 	}
 
 	// Send message packets and check difference of outgoing bytes from simulated WiFi interface.
