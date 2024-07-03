@@ -26,9 +26,9 @@ func init() {
 		Func: DBus,
 		Desc: "Check that hpsd can be connected to via dbus",
 		Contacts: []string{
-			"eunicesun@google.com",
 			"jmpollock@google.com",
 			"pmarheine@google.com",
+			"xiuwen@google.com",
 			"chromeos-hps-swe@google.com",
 		},
 		BugComponent: "b:1140302",
