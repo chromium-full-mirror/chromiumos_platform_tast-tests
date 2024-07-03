@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -4157,22 +4158,43 @@ func PlatformDecoding(ctx context.Context, s *testing.State) {
 	stopOnFailure := shouldStopOnFailure(s)
 
 	for _, filename := range testOpt.filenames {
-		testing.ContextLogf(ctx, "Running %s on %s", exec, filename)
+		testing.ContextLogf(ctx, "Running %s with %s", exec, filename)
 		args := testOpt.decoderArgsBuilder(ctx, s.DataPath(filename))
 		args = append(args, platform.MD5Args(exec, md5LogPath)...)
-		stdout, stderr, err := testexec.CommandContext(
-			ctx,
-			validatePath,
-			"--exec="+exec,
-			fmt.Sprintf("--args=%s", strings.Join(args, " ")),
-			fmt.Sprintf("--metadata=%s.json", s.DataPath(filename)),
-			fmt.Sprintf("--md5=%s", md5LogPath),
-		).SeparatedOutput(testexec.DumpLogOnError)
+
+		decode := func() ([]byte, error) {
+			return testexec.CommandContext(
+				ctx,
+				validatePath,
+				"--exec="+exec,
+				fmt.Sprintf("--args=%s", strings.Join(args, " ")),
+				fmt.Sprintf("--metadata=%s.json", s.DataPath(filename)),
+				fmt.Sprintf("--md5=%s", md5LogPath),
+			).CombinedOutput(testexec.DumpLogOnError)
+		}
+
+		output, err := decode()
+		if err == nil {
+			continue
+		}
+		testing.ContextLogf(ctx, "%v failed: %s", exec, string(output))
+
+		// Run again the same cmd with LIBVA_TRACING defined.
+		if strings.Contains(s.TestName(), "vaapi") {
+			os.Setenv("LIBVA_TRACE", filepath.Join(s.OutDir(), filepath.Base(filename)+".libva_trace"))
+			testing.ContextLogf(ctx, "Running %s a second time with tracing saved into %s", exec, os.Getenv("LIBVA_TRACE"))
+			secondRunOutput, err := decode()
+			os.Unsetenv("LIBVA_TRACE")
+			if err != nil {
+				testing.ContextLogf(ctx, "%v failed twice: %s", exec, string(secondRunOutput))
+			} else {
+				testing.ContextLogf(ctx, "%v passed on second run with: %s", exec, string(secondRunOutput))
+				continue
+			}
+		}
 
 		if err != nil {
-			output := append(stdout, stderr...)
-			testing.ContextLogf(ctx, "%v failed : %s", exec, string(output))
-			if expErr := expectation.ReportErrorf("%v failed on %s: %v", exec, filename, err); expErr != nil {
+			if expErr := expectation.ReportErrorf("%v failed with %s: %v", exec, filename, err); expErr != nil {
 				s.Error("Unexpected error: ", expErr)
 			}
 			if stopOnFailure {
