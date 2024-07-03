@@ -58,8 +58,9 @@ var cleanRegex = regexp.MustCompile(
 		`|@PJL SET JOBTIME = .*` +
 		`|@PJL PRINTLOG ITEM = 2,.*` +
 		// For HP jobs, JobAcct4,JobAcc5, DMINFO, and TIMESTAMP contain
-		// time-specific values.
-		`|@PJL SET JOBATTR="JobAcct[45]=.*` +
+		// time-specific values.  JobAcct2 contains the hostname.  Sometimes this is
+		// localhost and other times it's chromeos8-rowX-rackX-hostX, for example.
+		`|@PJL SET JOBATTR="JobAcct[245]=.*` +
 		`|@PJL DMINFO ASCIIHEX=".*` +
 		`|@PJL SET TIMESTAMP=[0-9]+` +
 		// For HP jobs, the proxy inserts a port number and the direct
@@ -71,6 +72,9 @@ var cleanRegex = regexp.MustCompile(
 		// For Ricoh jobs, "usercode (\d+)" contains the date
 		// and time of the print job.
 		`|usrcode \(\d+\)` +
+		// For Ricoh PS jobs, the hostname is contained here.  Sometimes this is
+		// localhost and other times it's chromeos8-rowX-rackX-hostX, for example.
+		`|/HostName \([^\)]*\)` +
 		// For Ricoh PS jobs, the time is contained here.
 		`|/Time \(\d+\)` +
 		// For Ricoh jobs, "(\d+) lppswd" contains the date
