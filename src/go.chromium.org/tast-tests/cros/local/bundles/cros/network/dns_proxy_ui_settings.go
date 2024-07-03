@@ -10,6 +10,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/dns"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/network/testhooks"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/subnet"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -37,6 +38,18 @@ func DNSProxyUISettings(ctx context.Context, s *testing.State) {
 	// seconds to allow for our cleanup code to run.
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, 10*time.Second)
+
+	hookEnv, err := testhooks.RunNetworkTestHooks(ctx,
+		testhooks.NewSaveNetLogHook(),
+		testhooks.NewTcpdumpHook(),
+		testhooks.NewDumpHostOnFailureHook(),
+	)
+	if err != nil {
+		s.Fatal("Failed to run network test hooks: ", err)
+	}
+	s.AttachErrorHandlers(hookEnv.OnErrorHandler, hookEnv.OnFatalHandler)
+	defer hookEnv.TearDownWithLogFailures(cleanupCtx, s.HasError)
+
 	defer cancel()
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	tconn, err := cr.TestAPIConn(ctx)
@@ -51,19 +64,15 @@ func DNSProxyUISettings(ctx context.Context, s *testing.State) {
 	}
 	defer env.Cleanup(cleanupCtx)
 
-	// Defer a function to reset the state to automatic. This is also part of the
-	// test.
-	defer func() {
-		if err := dns.SetDoHModeViaUI(ctx, cr, tconn, dns.DoHAutomatic, "" /*dohProvider*/); err != nil {
-			s.Fatal("Failed to set DNS-over-HTTPS mode to automatic: ", err)
-		}
-	}()
-
 	if err := dns.SetDoHModeViaUI(ctx, cr, tconn, dns.DoHAlwaysOn, dns.ExampleDoHProvider); err != nil {
 		s.Fatal("Failed to set DNS-over-HTTPS mode to always-on: ", err)
 	}
 
 	if err := dns.SetDoHModeViaUI(ctx, cr, tconn, dns.DoHOff, "" /*dohProvider*/); err != nil {
 		s.Fatal("Failed to set DNS-over-HTTPS mode to off: ", err)
+	}
+
+	if err := dns.SetDoHModeViaUI(ctx, cr, tconn, dns.DoHAutomatic, "" /*dohProvider*/); err != nil {
+		s.Fatal("Failed to set DNS-over-HTTPS mode to automatic: ", err)
 	}
 }

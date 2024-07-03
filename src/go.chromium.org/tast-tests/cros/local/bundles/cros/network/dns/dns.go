@@ -54,6 +54,10 @@ const (
 	DoHAlwaysOn
 )
 
+func (m DoHMode) String() string {
+	return []string{"off", "automatic", "always-on"}[m]
+}
+
 // Client defines the client resolving DNS.
 type Client int
 
@@ -156,6 +160,8 @@ func GetClientString(c Client) string {
 // interaction. Prefer using SetDoHModeViaShill is the test is not intended to
 // verify this UI interaction.
 func SetDoHModeViaUI(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, mode DoHMode, dohProvider string) error {
+	testing.ContextLogf(ctx, "Configuring DoH mode to %s via UI", mode)
+
 	conn, err := apps.LaunchOSSettings(ctx, cr, "chrome://os-settings/osPrivacy")
 	if err != nil {
 		return errors.Wrap(err, "failed to get connection to OS Settings")
@@ -235,16 +241,20 @@ func SetDoHModeViaUI(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestC
 			return errors.Wrap(err, "failed to enable DoH with a custom provider")
 		}
 	}
+
+	testing.ContextLog(ctx, "UI operation done. Waiting for shill property change")
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		if m, err := getDoHMode(ctx); err != nil {
 			return err
 		} else if m != mode {
-			return errors.New("failed to get the correct DoH mode")
+			return errors.Errorf("failed to get the correct DoH mode: got %s, want %s", m, mode)
 		}
 		return nil
 	}, &testing.PollOptions{Timeout: 3 * time.Second}); err != nil {
 		return err
 	}
+
+	testing.ContextLog(ctx, "DoH mode changed to ", mode.String())
 	return nil
 }
 
