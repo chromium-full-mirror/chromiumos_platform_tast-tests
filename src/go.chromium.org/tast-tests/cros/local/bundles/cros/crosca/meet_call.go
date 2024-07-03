@@ -458,13 +458,20 @@ func MeetCall(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	isBtEnabled, err := bluetooth.IsEnabled(ctx)
+	s.Log("Check bluetooth enablement status")
+	// Use a short context to ensure bluetooth checking returns.
+	btCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+	isBtEnabled, err := bluetooth.IsEnabled(btCtx)
+	if err != nil {
+		s.Log("Failed to check bluetooth enablement status: ", err)
+	}
 	if isBtEnabled {
-		testing.ContextLog(ctx, "Start to disable bluetooth")
+		s.Log("Start to disable bluetooth")
 		if err := bluetooth.Disable(ctx); err != nil {
 			s.Fatal("Failed to disable bluetooth: ", err)
 		}
-		testing.ContextLog(ctx, "Bluetooth disabled")
+		s.Log("Bluetooth disabled")
 		defer func(ctx context.Context) {
 			if err := bluetooth.Enable(ctx); err != nil {
 				s.Fatal("Failed to connect bluetooth: ", err)
@@ -472,10 +479,12 @@ func MeetCall(ctx context.Context, s *testing.State) {
 		}(closeCtx)
 	}
 
+	s.Log("Start to turn off camera")
 	// Turn off camera to avoid background inconsistency.
 	cameraButton := nodewith.NameStartingWith("Turn off camera").Role(role.Button)
 	if err := uiauto.Combine("Turn off camera",
 		kb.AccelAction("Ctrl+Tab"),
+		ui.WaitUntilExists(cameraButton),
 		ui.LeftClick(cameraButton),
 	)(ctx); err != nil {
 		s.Fatal("Failed to turn off camera: ", err)
