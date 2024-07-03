@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/familylink"
 	"go.chromium.org/tast/core/testing"
 )
@@ -17,7 +16,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         AddPersonFlow,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that you can add a Unicorn user through the Add Person flow",
 		Contacts: []string{
 			"cros-families-eng+test@google.com",
@@ -28,15 +27,7 @@ func init() {
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "gaia"},
 		Timeout:      5 * time.Minute,
-		Params: []testing.Param{{
-			Fixture: "familyLinkUnicornLoginNonOwner",
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           "familyLinkUnicornLoginNonOwnerWithLacros",
-			Val:               browser.TypeLacros,
-		}},
+		Fixture:      "familyLinkUnicornLoginNonOwner",
 	})
 }
 

@@ -12,8 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/family"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/familylink"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -26,7 +24,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ExtensionApprovals,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks if Unicorn user can add extension with parent permission",
 		Contacts: []string{
 			"cros-families-eng+test@google.com",
@@ -42,46 +40,29 @@ func init() {
 		VarDeps: []string{
 			family.ParentAccountVarName,
 		},
-		Params: []testing.Param{{
-			Val:     browser.TypeAsh,
-			Fixture: "familyLinkUnicornLogin",
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               browser.TypeLacros,
-			Fixture:           "familyLinkUnicornLoginWithLacros",
-		}},
+		Fixture: "familyLinkUnicornLogin",
 	})
 }
 
 func ExtensionApprovals(ctx context.Context, s *testing.State) {
 	// Reserve ten seconds for cleanup.
-	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
-	tconn := s.FixtValue().(familylink.HasTestConn).TestConn()
-
 	if cr == nil {
 		s.Fatal("Failed to start Chrome")
 	}
+	tconn := s.FixtValue().(familylink.HasTestConn).TestConn()
 	if tconn == nil {
 		s.Fatal("Failed to create test API connection")
 	}
 
-	if err := familylink.WaitForBoolPrefValueFromAshOrLacros(ctx, tconn, s.Param().(browser.Type), "profile.managed.extensions_may_request_permissions", true, 4*time.Minute); err != nil {
+	if err := familylink.WaitForBoolPrefValue(ctx, tconn, "profile.managed.extensions_may_request_permissions", true, 4*time.Minute); err != nil {
 		s.Fatal("Failed to wait for pref: ", err)
 	}
 
-	// Set up browser.
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
-	if err != nil {
-		s.Fatal("Failed to set up browser: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
-
-	if err := familylink.AddExtension(ctx, cr, tconn, br); err != nil {
+	if err := familylink.AddExtension(ctx, cr, tconn); err != nil {
 		s.Fatal("Failed to add extension: ", err)
 	}
 

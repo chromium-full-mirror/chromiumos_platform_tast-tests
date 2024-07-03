@@ -10,8 +10,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/familylink"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -25,7 +23,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DeniedSitesBlocked,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that parent-blocked sites are blocked for Unicorn users",
 		Contacts: []string{
 			"cros-families-eng+test@google.com",
@@ -37,21 +35,12 @@ func init() {
 		SoftwareDeps: []string{"chrome", "gaia"},
 		Timeout:      5 * time.Minute,
 		Vars:         []string{"unicorn.blockedSite"},
-		Params: []testing.Param{{
-			Fixture: "familyLinkUnicornLogin",
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           "familyLinkUnicornLoginWithLacros",
-			Val:               browser.TypeLacros,
-		}},
+		Fixture:      "familyLinkUnicornLogin",
 	})
 }
 
 func DeniedSitesBlocked(ctx context.Context, s *testing.State) {
 	// Reserve time for cleanup.
-	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
@@ -64,16 +53,15 @@ func DeniedSitesBlocked(ctx context.Context, s *testing.State) {
 
 	ui := uiauto.New(tconn)
 
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
+	conn, err := cr.NewConn(ctx, blockedSite)
 	if err != nil {
-		s.Fatal("Failed to set up browser: ", err)
+		s.Fatal("Failed to open browser to mature site: ", err)
 	}
-	defer closeBrowser(cleanupCtx)
+	defer conn.Close()
 
 	// The allow/block list can take a while to sync so loop checking
 	// for the website to be blocked.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		conn, err := br.NewConn(ctx, blockedSite)
 		if err != nil {
 			return testing.PollBreak(errors.Wrap(err, "failed to open browser to website"))
 		}

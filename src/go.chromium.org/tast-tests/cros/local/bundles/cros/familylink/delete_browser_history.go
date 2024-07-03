@@ -10,8 +10,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/familylink"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -25,7 +23,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DeleteBrowserHistory,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that a Unicorn Account can delete browsing history",
 		Contacts: []string{
 			"cros-families-eng+test@google.com",
@@ -37,15 +35,7 @@ func init() {
 		SoftwareDeps: []string{"chrome", "gaia"},
 		Timeout:      5 * time.Minute,
 		Vars:         []string{"unicorn.allowedSite", "unicorn.allowedSiteTitle"},
-		Params: []testing.Param{{
-			Fixture: "familyLinkUnicornLogin",
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           "familyLinkUnicornLoginWithLacros",
-			Val:               browser.TypeLacros,
-		}},
+		Fixture:      "familyLinkUnicornLogin",
 	})
 }
 
@@ -64,11 +54,10 @@ func DeleteBrowserHistory(ctx context.Context, s *testing.State) {
 
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
-	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, s.Param().(browser.Type), siteURL)
+	conn, err := cr.NewConn(ctx, siteURL)
 	if err != nil {
 		s.Fatal("Failed to navigate to site: ", err)
 	}
-	defer closeBrowser(cleanupCtx)
 	defer conn.Close()
 
 	testing.ContextLog(ctx, "Checking for site in browsing history")
@@ -85,8 +74,9 @@ func DeleteBrowserHistory(ctx context.Context, s *testing.State) {
 	if err = conn.Navigate(ctx, "chrome://settings/clearBrowserData"); err != nil {
 		s.Fatal("Failed to navigate to chrome://settings/clearBrowserData: ", err)
 	}
-	if err = ui.DoDefault(nodewith.ClassName("action-button").Name("Clear data"))(ctx); err != nil {
-		s.Fatal("Failed to click 'Clear data' button: ", err)
+
+	if err = ui.DoDefault(nodewith.ClassName("action-button").Name("Delete data"))(ctx); err != nil {
+		s.Fatal("Failed to click 'Delete data' button: ", err)
 	}
 
 	testing.ContextLog(ctx, "Verifying site no longer present in browsing history")

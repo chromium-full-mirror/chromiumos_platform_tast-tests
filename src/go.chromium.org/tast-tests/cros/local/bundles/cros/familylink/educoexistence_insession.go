@@ -20,7 +20,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         EducoexistenceInsession,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks if in-session EDU Coexistence flow is working",
 		Contacts: []string{
 			"cros-families-eng+test@google.com",
@@ -32,13 +32,7 @@ func init() {
 		SoftwareDeps: []string{"chrome", "gaia"},
 		Timeout:      chrome.GAIALoginTimeout + 5*time.Minute,
 		VarDeps:      []string{family.ParentAccountVarName, "family.eduEmail", "family.eduPassword"},
-		Params: []testing.Param{{
-			Fixture: "familyLinkUnicornLogin",
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           "familyLinkUnicornLoginWithLacros",
-		}},
+		Fixture:      "familyLinkUnicornLogin",
 	})
 }
 
@@ -55,13 +49,8 @@ func EducoexistenceInsession(ctx context.Context, s *testing.State) {
 
 	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
 
-	s.Log("Launching the in-session Edu Coexistence flow")
+	s.Logf("Launching the in-session Edu Coexistence flow with account %s", eduUser)
 	if err := familylink.AddEduSecondaryAccount(ctx, cr, tconn, parentUser, parentPass, eduUser, eduPass, true /*verifyEduSecondaryAddSuccess*/); err != nil {
 		s.Fatal("Failed to complete the in-session Edu Coexistence flow: ", err)
 	}
-
-	// TODO(b/254131536): Check the EDU account is added as secondary to browser web page.
-	// Now that the multi profile in Lacros is disabled for supervised users,
-	// the experience in Ash and Lacros should be similar:
-	// one browser profile with 2 accounts (supervised account as primary and EDU account as secondary).
 }

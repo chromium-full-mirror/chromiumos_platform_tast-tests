@@ -18,7 +18,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/internal/login"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -396,7 +395,8 @@ func boolPref(ctx context.Context, tconn *chrome.TestConn, prefName string) (boo
 	return value.Value, nil
 }
 
-func waitForBoolPrefValue(ctx context.Context, tconn *chrome.TestConn, prefName string, expectedValue bool, timeout time.Duration) error {
+// WaitForBoolPrefValue waits for the specified pref value to load.
+func WaitForBoolPrefValue(ctx context.Context, tconn *chrome.TestConn, prefName string, expectedValue bool, timeout time.Duration) error {
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		value, err := boolPref(ctx, tconn, prefName)
 		if err != nil {
@@ -412,35 +412,14 @@ func waitForBoolPrefValue(ctx context.Context, tconn *chrome.TestConn, prefName 
 	return nil
 }
 
-// WaitForBoolPrefValueFromAshOrLacros waits for the specified pref value to load.
-func WaitForBoolPrefValueFromAshOrLacros(ctx context.Context, tconn *chrome.TestConn, bt browser.Type, prefName string, expectedValue bool, timeout time.Duration) error {
-	if bt == browser.TypeAsh {
-		return waitForBoolPrefValue(ctx, tconn, prefName, expectedValue, timeout)
-	}
-
-	// Launch Lacros so that we can sync the preference and poll its status.
-	l, err := lacros.Launch(ctx, tconn)
-	if err != nil {
-		return err
-	}
-	// Ensure we close Lacros before we return.
-	defer l.Close(ctx)
-
-	ltconn, err := l.TestAPIConn(ctx)
-	if err != nil {
-		return err
-	}
-	return waitForBoolPrefValue(ctx, ltconn, prefName, expectedValue, timeout)
-}
-
 // AddExtension attempts to add an extension from the Chrome Webstore.
-func AddExtension(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, br *browser.Browser) error {
+func AddExtension(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn) error {
 	testing.ContextLog(ctx, "Adding extension as a supervised user")
 
 	// Open webstore in browser.
 	const extensionID = "djflhoibgkdhkhhcedjiklpkjnoahfmg" // Google-developed extension from Chrome Store.
 	const extensionURL = "https://chrome.google.com/webstore/detail/" + extensionID + "?hl=en"
-	conn, err := br.NewConn(ctx, extensionURL, browser.WithNewWindow())
+	conn, err := cr.NewConn(ctx, extensionURL, browser.WithNewWindow())
 	if err != nil {
 		return errors.Wrap(err, "failed to open webstore")
 	}
@@ -571,7 +550,7 @@ func maybeSelectParentFromDropdown(ctx context.Context, tconn *chrome.TestConn, 
 	}
 
 	testing.ContextLog(ctx, "Selecting parent from dropdown")
-	dropdown := nodewith.Name("Parent account selector").Role(role.ComboBoxMenuButton)
+	dropdown := nodewith.Role(role.ComboBoxMenuButton).NameContaining("Parent account selector")
 	if err := ui.DoDefault(dropdown)(ctx); err != nil {
 		return errors.Wrap(err, "failed to click account selector")
 	}
