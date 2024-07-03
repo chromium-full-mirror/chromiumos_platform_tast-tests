@@ -1,0 +1,11 @@
+set noparent
+
+# ChromeOS Personalization team
+cowmoo@google.com
+jasontt@chromium.org
+thuongphan@chromium.org
+ericamlee@google.com
+pzliu@google.com
+
+# Tast team for bulk/emergencies
+include /OWNERS.tast
