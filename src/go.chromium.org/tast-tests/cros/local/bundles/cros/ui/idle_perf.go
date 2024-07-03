@@ -45,7 +45,7 @@ type idlePerfTest struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         IdlePerf,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures the CPU usage while the desktop is idle",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
@@ -66,15 +66,7 @@ func init() {
 			Fixture:           "arcBootedRestricted",
 			ExtraSoftwareDeps: []string{"arc"},
 		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val: idlePerfTest{
-				testType:    testTypeBrowser,
-				browserType: browser.TypeLacros,
-			},
-			Fixture: "lacrosDisableSync",
-		}, {
-			Name: "ash",
+			Name: "arc_disabled",
 			Val: idlePerfTest{
 				testType:    testTypeBrowser,
 				browserType: browser.TypeAsh,
