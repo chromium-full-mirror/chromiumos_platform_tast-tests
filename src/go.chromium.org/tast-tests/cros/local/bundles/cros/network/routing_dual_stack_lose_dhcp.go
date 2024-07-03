@@ -39,13 +39,15 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Timeout:      3 * time.Minute,
 		Params: []testing.Param{{
-			Name:    "arc",
-			Val:     loseDHCPTestCaseARC,
-			Fixture: "arcBooted",
+			Name:              "arc",
+			Val:               loseDHCPTestCaseARC,
+			Fixture:           "arcBooted",
+			ExtraSoftwareDeps: []string{"arc"},
 		}, {
-			Name:    "crostini",
-			Val:     lostDHCPTestCaseCrostini,
-			Fixture: "crostiniBullseye",
+			Name:              "crostini",
+			Val:               lostDHCPTestCaseCrostini,
+			Fixture:           "crostiniBullseye",
+			ExtraSoftwareDeps: []string{"vm_host"},
 		}},
 	})
 }

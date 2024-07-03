@@ -111,28 +111,32 @@ func init() {
 				source:   tcSourceTypeCrostini,
 				ipFamily: tcIPv4,
 			},
-			Fixture: "crostiniBullseye",
+			Fixture:           "crostiniBullseye",
+			ExtraSoftwareDeps: []string{"vm_host"},
 		}, {
 			Name: "crostini_ipv6",
 			Val: tcParams{
 				source:   tcSourceTypeCrostini,
 				ipFamily: tcIPv6,
 			},
-			Fixture: "crostiniBullseye",
+			Fixture:           "crostiniBullseye",
+			ExtraSoftwareDeps: []string{"vm_host"},
 		}, {
 			Name: "arc_ipv4",
 			Val: tcParams{
 				source:   tcSourceTypeARC,
 				ipFamily: tcIPv4,
 			},
-			Fixture: "arcBooted.ehide",
+			Fixture:           "arcBooted.ehide",
+			ExtraSoftwareDeps: []string{"arc"},
 		}, {
 			Name: "arc_ipv6",
 			Val: tcParams{
 				source:   tcSourceTypeARC,
 				ipFamily: tcIPv6,
 			},
-			Fixture: "arcBooted.ehide",
+			Fixture:           "arcBooted.ehide",
+			ExtraSoftwareDeps: []string{"arc"},
 		}}})
 }
 
