@@ -47,10 +47,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Behavior of AutofillCreditCardEnabled policy, checking the correspoding toggle button states (restriction and checked) after setting the policy",
 		Contacts: []string{
-			"chrome-autofill@google.com", // Feature owner
+			"chrome-payments-team@google.com", // Feature owner
 			"dp-chromeos-eng@google.com",
 		},
-		BugComponent: "b:1456764",
+		BugComponent: "b:1457039",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
 		Params: []testing.Param{{
