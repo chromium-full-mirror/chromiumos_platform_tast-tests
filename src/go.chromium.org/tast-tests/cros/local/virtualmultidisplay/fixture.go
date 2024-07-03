@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/android/ui"
-	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/sysutil"
@@ -44,25 +43,6 @@ func init() {
 		ResetTimeout:    30 * time.Second,
 		PostTestTimeout: 30 * time.Second,
 		TearDownTimeout: 30 * time.Second,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name: fixture.ChromeLoggedInMultiDisplay,
-		Desc: "Logged into a user session with multi dipslay",
-		Contacts: []string{
-			"arc-framework+tast@google.com",
-			"brpol@chromium.org",
-		},
-		BugComponent: "b:536857", // ChromeOS > Software > ARC++ > Framework > Tests
-		Parent:       VirtualMultiDisplay,
-		Impl: chrome.NewLoggedInFixtureWithParentState(func(s *testing.FixtState) interface{} {
-			return s.ParentValue()
-		}, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{chrome.ExtraArgs("--drm-virtual-connector-is-external", "--use-first-display-as-internal")}, nil
-		}),
-		SetUpTimeout:    chrome.LoginTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
 	})
 
 	fixtureConfig := arc.DefaultBootedFixtureConfig()
