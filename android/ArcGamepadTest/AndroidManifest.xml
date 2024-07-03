@@ -9,6 +9,7 @@
         android:allowBackup="false"
         android:label="ARC Gamepad Test">
         <activity android:name=".MainActivity" android:exported="true">
+            <meta-data android:name="WindowManagerPreference:FreeformWindowSize" android:value="maximize" />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
