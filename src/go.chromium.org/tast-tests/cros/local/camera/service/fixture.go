@@ -109,13 +109,17 @@ func (f *serviceFixture) SetUp(ctx context.Context, s *testing.FixtState) interf
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	// First, reset any modifications (e.g. bridge to FakeHAL) made in preceding tests.
-	if err := testutil.RemoveTestBridgeConfigs(ctx); err != nil {
-		s.Fatal("Failed to clean-up camera TestBridge: ", err)
-	}
+	// First, reset any modifications (e.g. bridge to FakeHAL) made in preceding tests,
+	// unless we are stopping the camera service. It's important to skip this step for
+	// stopService to test the kernel API independent of the service status.
+	if f.request != stopService {
+		if err := testutil.RemoveTestBridgeConfigs(ctx); err != nil {
+			s.Fatal("Failed to clean-up camera TestBridge: ", err)
+		}
 
-	if err := restartCameraService(ctx); err != nil {
-		s.Fatal("Failed to restart camera service: ", err)
+		if err := restartCameraService(ctx); err != nil {
+			s.Fatal("Failed to restart camera service: ", err)
+		}
 	}
 
 	// Then, put the stack in the requested state.
@@ -193,5 +197,4 @@ func restartCameraService(ctx context.Context) error {
 	}
 	// WaitForCameraServiceBinding includes a call to EnsureJobRunning.
 	return testutil.WaitForCameraServiceBinding(ctx)
-
 }
