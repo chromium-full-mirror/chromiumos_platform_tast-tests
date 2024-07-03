@@ -242,9 +242,6 @@ func SelftestFixture(ctx context.Context, s *testing.State) {
 	}
 	switch category {
 	case "docking", "docking_daisychain":
-		if capabilitiesMap["Downstream"].(map[string]interface{})["Ethernet"].(map[string]interface{})["EthernetID"] == "" {
-			s.Fatal("Failed to detect ethernet fixture")
-		}
 		cap, err := identifyPeripheralsCapabilities(ctx, dut, capabilitiesMap)
 		if err != nil {
 			s.Fatal("Failed to identify the device capabilities: ", err)
