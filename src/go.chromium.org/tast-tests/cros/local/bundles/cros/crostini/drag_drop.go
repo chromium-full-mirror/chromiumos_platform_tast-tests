@@ -269,10 +269,10 @@ func dragFromCrostini(ctx context.Context, pre crostini.FixtureData, files *file
 	// Drag near the bottom of the Files app to avoid accidentally dropping on existing files or directories.
 	dropPoint := coords.Point{
 		X: filesWindow.BoundsInRoot.CenterPoint().X,
-		Y: filesWindow.BoundsInRoot.Bottom() - 100,
+		Y: filesWindow.BoundsInRoot.Bottom() - 110,
 	}
 	dragDrop := func(ctx context.Context) error {
-		if err = mouse.DragWithDelay(tconn, dragPoint, dropPoint, time.Second, 200*time.Millisecond)(ctx); err != nil {
+		if err = mouse.DragWithDelay(tconn, dragPoint, dropPoint, time.Second, 500*time.Millisecond)(ctx); err != nil {
 			return errors.Wrap(err, "drag and drop")
 		}
 		return nil
