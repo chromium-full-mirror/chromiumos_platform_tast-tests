@@ -24,6 +24,8 @@ type bootTestArgs struct {
 	checkVMMMS bool
 	// Value for FieldTrialConfig Chrome parameter
 	fieldTrialConfig int
+	// Boot and allow Doze Mode to kick in quickly.
+	quickDozeMode bool
 }
 
 func init() {
@@ -95,6 +97,20 @@ func init() {
 					fieldTrialConfig: chrome.FieldTrialConfigDefault,
 				},
 				ExtraAttr:         []string{"group:mainline", "group:hw_agnostic"},
+				ExtraSoftwareDeps: []string{"android_vm"},
+				Timeout:           chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
+			},
+			{
+				Name: "vm_quickdoze",
+				Val: bootTestArgs{
+					numTrials:        1,
+					fieldTrialConfig: chrome.FieldTrialConfigDefault,
+					quickDozeMode:    true,
+					chromeArgs: []string{
+						"--enable-features=ArcIdleManager:ignore_battery_for_test/true/delay_ms/10000",
+					},
+				},
+				ExtraAttr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 				ExtraSoftwareDeps: []string{"android_vm"},
 				Timeout:           chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 			},
@@ -220,11 +236,16 @@ func runBoot(ctx context.Context, s *testing.State) {
 	}
 	defer reader.Close()
 
-	cr, err := chrome.New(ctx,
+	opts := []chrome.Option{
 		chrome.ARCEnabled(),
-		chrome.UnRestrictARCCPU(),
 		chrome.FieldTrialConfig(args.fieldTrialConfig),
-		chrome.ExtraArgs(args.chromeArgs...))
+		chrome.ExtraArgs(args.chromeArgs...),
+	}
+	if !args.quickDozeMode {
+		opts = append(opts, chrome.UnRestrictARCCPU())
+	}
+
+	cr, err := chrome.New(ctx, opts...)
 	if err != nil {
 		s.Fatal("Failed to connect to Chrome: ", err)
 	}
