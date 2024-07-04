@@ -223,7 +223,16 @@ func getFileNamePools(ctx context.Context, fwidModel string, fwType FWType) ([]s
 func extractFirmwareFile(ctx context.Context, h *Helper, devserver, gcsFirmwareFilePath, servoTmpDir, firmwareFileName string, fileNamePool []string) string {
 	for _, filename := range fileNamePool {
 		testImageURL := fmt.Sprintf("%s/extract/%s?file=%s", devserver, gcsFirmwareFilePath, filename)
-		testing.ContextLogf(ctx, "Downloading image file %q", filename)
+		testing.ContextLogf(ctx, "Trying to download image file %q", filename)
+
+		if httpCode, err := h.ServoProxy.OutputCommand(ctx, false, "curl", "-sIL", "-w", "%{http_code}", "-o", "/dev/null", testImageURL); err != nil {
+			testing.ContextLogf(ctx, "Failed to get HTTP code for %s: %v", filename, err)
+			continue
+		} else if string(httpCode) != "200" {
+			testing.ContextLogf(ctx, "HTTP code is: %s, skip the file name: %s", string(httpCode), filename)
+			continue
+		}
+
 		if err := h.ServoProxy.RunCommand(ctx, false, "curl", "-s", "-S", "-fL", testImageURL, "--output", fmt.Sprintf("%s/%s", servoTmpDir, firmwareFileName)); err != nil {
 			testing.ContextLogf(ctx, "Failed to extract image file at %q: %v", testImageURL, err)
 			continue
