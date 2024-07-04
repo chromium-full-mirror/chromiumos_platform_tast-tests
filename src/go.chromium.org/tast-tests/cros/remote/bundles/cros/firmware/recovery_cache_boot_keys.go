@@ -14,7 +14,6 @@ import (
 
 	common "go.chromium.org/tast-tests/cros/common/firmware"
 	"go.chromium.org/tast-tests/cros/common/flashrom"
-	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast/core/errors"
@@ -151,19 +150,29 @@ func RecoveryCacheBootKeys(ctx context.Context, s *testing.State) {
 
 	// Boot to recovery mode once and back to make sure the memory training cache was created
 	// so the first part of the test can verify the cache gets used.
+	var state firmware.CheckAndSetServoCharger
+	state = h.CheckServoChargerBeforeBootingFromUSB(ctx)
+
 	s.Log("Rebooting to recovery mode")
-	if err := ms.RebootToMode(ctx, common.BootModeRecovery); err != nil {
-		s.Fatal("Failed to reboot to USB in recovery mode: ", err)
+	if err := h.BootToRecoveryMode(ctx, &state, false); err != nil {
+		s.Fatal("Failed to boot to recovery mode: ", err)
 	}
+	defer func() {
+		if !state.IsServoChargerConnected {
+			if err := h.SetDUTPower(ctx, true); err != nil {
+				s.Fatal("Failed to connect charger: ", err)
+			}
+		}
+	}()
 
 	s.Log("Rebooting to test boot mode: ", bootMode)
-	if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
-		s.Fatal("Failed to cold reset the DUT: ", err)
+	if err := h.RebootWithVT2Command(ctx, bootMode); err != nil {
+		s.Fatal("Failed to reboot with VT2 command: ", err)
 	}
-	waitConnectCtx, cancel := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
-	defer cancel()
-	if err := h.WaitConnect(waitConnectCtx); err != nil {
-		s.Fatal("Failed to connect to DUT: ", err)
+	if !state.IsServoChargerConnected {
+		if err := h.SetDUTPower(ctx, true); err != nil {
+			s.Fatal("Failed to connect charger: ", err)
+		}
 	}
 
 	for i := 0; i < numIters; i++ {
@@ -183,8 +192,8 @@ func RecoveryCacheBootKeys(ctx context.Context, s *testing.State) {
 
 		// Boot back to recovery, expect the cache to be used.
 		s.Log("Rebooting to recovery mode")
-		if err := ms.RebootToMode(ctx, common.BootModeRecovery); err != nil {
-			s.Fatal("Failed to reboot to USB in recovery mode: ", err)
+		if err := h.BootToRecoveryMode(ctx, &state, false); err != nil {
+			s.Fatal("Failed to boot to recovery mode: ", err)
 		}
 
 		cbmemLog, err := h.DUT.Conn().CommandContext(ctx, "sh", "-c", "cbmem -1 | grep MRC").Output(ssh.DumpLogOnError)
@@ -201,13 +210,18 @@ func RecoveryCacheBootKeys(ctx context.Context, s *testing.State) {
 		s.Log("Found expected messages in cbmem log: ", match[0])
 
 		// Reset test to start from boot mode that is being tested.
-		s.Logf("Rebooting to %s mode", bootMode)
-		if err := ms.RebootToMode(ctx, bootMode, firmware.AllowGBBForce); err != nil {
-			s.Fatalf("Failed to reboot back to %v mode: %v", bootMode, err)
+		s.Log("Rebooting to test boot mode: ", bootMode)
+		if err := h.RebootWithVT2Command(ctx, bootMode); err != nil {
+			s.Fatal("Failed to reboot with VT2 command: ", err)
+		}
+		if !state.IsServoChargerConnected {
+			if err := h.SetDUTPower(ctx, true); err != nil {
+				s.Fatal("Failed to connect charger: ", err)
+			}
 		}
 
 		// Force memory training on recovery mode boot.
-		if err := ms.RebootToMode(ctx, common.BootModeRecovery, firmware.RecoveryForceMRCBoot); err != nil {
+		if err := h.BootToRecoveryMode(ctx, &state, true); err != nil {
 			s.Fatal("Failed to reboot to USB with rec_force_mrc boot: ", err)
 		}
 
@@ -222,9 +236,14 @@ func RecoveryCacheBootKeys(ctx context.Context, s *testing.State) {
 		}
 		s.Log("Found expected messages in cbmem log: ", match[0])
 
-		s.Logf("Rebooting back to %s mode", bootMode)
-		if err := ms.RebootToMode(ctx, bootMode, firmware.AllowGBBForce); err != nil {
-			s.Fatalf("Failed to reboot back to %v mode: %v", bootMode, err)
+		s.Log("Rebooting to test boot mode: ", bootMode)
+		if err := h.RebootWithVT2Command(ctx, bootMode); err != nil {
+			s.Fatal("Failed to reboot with VT2 command: ", err)
+		}
+		if !state.IsServoChargerConnected {
+			if err := h.SetDUTPower(ctx, true); err != nil {
+				s.Fatal("Failed to connect charger: ", err)
+			}
 		}
 	}
 
@@ -253,13 +272,12 @@ func moveECToRW(ctx context.Context, h *firmware.Helper, ms *firmware.ModeSwitch
 		return errors.Wrapf(err, "EC booted to %s, expected to be in RW", activeCopy)
 	}
 
-	if err := ms.RebootToMode(ctx, bootMode, firmware.AllowGBBForce); err != nil {
-		return errors.Wrapf(err, "failed to reboot back to %v mode", bootMode)
-	}
-	waitConnectCtx, cancel := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
-	defer cancel()
-	if err := h.WaitConnect(waitConnectCtx); err != nil {
-		return errors.Wrap(err, "failed to connect to DUT")
+	if err := h.RebootWithVT2Command(ctx, bootMode); err != nil {
+		currPowerState, getPowerStateErr := h.Servo.GetECSystemPowerState(ctx)
+		if getPowerStateErr != nil {
+			return errors.Wrap(getPowerStateErr, "failed to get EC power state")
+		}
+		return errors.Wrapf(err, "failed to reboot with VT2 command and got power state: %v", currPowerState)
 	}
 
 	return nil

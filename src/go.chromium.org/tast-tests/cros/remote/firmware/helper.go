@@ -2192,12 +2192,16 @@ func (h *Helper) DeveloperUSBBoot(ctx context.Context, state *CheckAndSetServoCh
 }
 
 // BootToRecoveryMode checks if removing servo charger is required and performs a recovery usb boot.
-func (h *Helper) BootToRecoveryMode(ctx context.Context, state *CheckAndSetServoCharger) error {
+func (h *Helper) BootToRecoveryMode(ctx context.Context, state *CheckAndSetServoCharger, forceMRCBoot bool) error {
 	ms, err := NewModeSwitcher(ctx, h)
 	if err != nil {
 		return errors.Wrap(err, "failed to create mode switcher")
 	}
-	if err := ms.EnableRecMode(ctx, servo.PowerStateRec, servo.USBMuxOff); err != nil {
+	recType := servo.PowerStateRec
+	if forceMRCBoot {
+		recType = servo.PowerStateRecForceMRC
+	}
+	if err := ms.EnableRecMode(ctx, recType, servo.USBMuxOff); err != nil {
 		return errors.Wrap(err, "failed to reboot the DUT into the recovery screen")
 	}
 	testing.ContextLog(ctx, "Waiting for DUT to reach the firmware screen")

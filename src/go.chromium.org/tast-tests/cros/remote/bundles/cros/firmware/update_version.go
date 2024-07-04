@@ -498,7 +498,7 @@ func checkKeyVer(ctx context.Context, h *firmware.Helper, expectedVer uint16, ke
 func resetTpmAndReboot(ctx context.Context, pv *fixture.Value, state *firmware.CheckAndSetServoCharger) error {
 	h := pv.Helper
 	testing.ContextLog(ctx, "Rebooting the DUT to recovery screen")
-	if err := h.BootToRecoveryMode(ctx, state); err != nil {
+	if err := h.BootToRecoveryMode(ctx, state, false); err != nil {
 		return errors.Wrap(err, "failed to boot to recovery mode")
 	}
 

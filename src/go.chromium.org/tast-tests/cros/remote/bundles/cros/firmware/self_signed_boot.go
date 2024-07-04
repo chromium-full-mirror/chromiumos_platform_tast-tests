@@ -102,7 +102,7 @@ func SelfSignedBoot(ctx context.Context, s *testing.State) {
 	var state firmware.CheckAndSetServoCharger
 	state = h.CheckServoChargerBeforeBootingFromUSB(ctx)
 
-	if err := h.BootToRecoveryMode(ctx, &state); err != nil {
+	if err := h.BootToRecoveryMode(ctx, &state, false); err != nil {
 		s.Fatal("Failed to boot to recovery mode: ", err)
 	}
 

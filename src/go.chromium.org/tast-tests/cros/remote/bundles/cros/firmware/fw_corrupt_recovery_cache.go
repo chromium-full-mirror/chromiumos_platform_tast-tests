@@ -207,7 +207,7 @@ func FWCorruptRecoveryCache(ctx context.Context, s *testing.State) {
 	}(cleanupContext)
 
 	s.Log("Rebooting into recovery mode to check if RECOVERY_MRC_CACHE needs update")
-	if err := h.BootToRecoveryMode(ctx, &state); err != nil {
+	if err := h.BootToRecoveryMode(ctx, &state, false); err != nil {
 		s.Fatal("Failed to boot to recovery mode: ", err)
 	}
 

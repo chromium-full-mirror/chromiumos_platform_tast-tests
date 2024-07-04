@@ -238,7 +238,7 @@ func CorruptBothKernelCopies(ctx context.Context, s *testing.State) {
 	defer func(ctx context.Context) {
 		if needsUSBRestore {
 			s.Log("Booting to recovery mode to restore kernel from USB")
-			if err := h.BootToRecoveryMode(ctx, &state); err != nil {
+			if err := h.BootToRecoveryMode(ctx, &state, false); err != nil {
 				s.Fatal("Failed to boot to recovery mode: ", err)
 			}
 			s.Log("Restore KERN-A")
@@ -306,7 +306,7 @@ func CorruptBothKernelCopies(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Booting to recovery mode")
-	if err := h.BootToRecoveryMode(ctx, &state); err != nil {
+	if err := h.BootToRecoveryMode(ctx, &state, false); err != nil {
 		s.Fatal("Failed to boot to recovery mode: ", err)
 	}
 
