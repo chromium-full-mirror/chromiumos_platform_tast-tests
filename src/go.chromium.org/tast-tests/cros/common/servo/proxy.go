@@ -539,7 +539,7 @@ func (p *Proxy) InputCommand(ctx context.Context, asRoot bool, stdin io.Reader, 
 func (p *Proxy) GetFile(ctx context.Context, asRoot bool, remoteFile, localFile string) error {
 	if p.isLocal() {
 		if p.isDockerized() {
-			outFile, err := os.OpenFile(localFile, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
+			outFile, err := os.OpenFile(localFile, os.O_WRONLY|os.O_CREATE, 0666)
 			if err != nil {
 				return errors.Wrap(err, "could not create local file")
 			}
@@ -560,7 +560,7 @@ func (p *Proxy) GetFile(ctx context.Context, asRoot bool, remoteFile, localFile 
 		if asRoot {
 			// This is effectively copying the file from root to the user running the test.
 			cmd := testexec.CommandContext(ctx, "sudo", "cat", remoteFile)
-			outFile, err := os.OpenFile(localFile, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
+			outFile, err := os.OpenFile(localFile, os.O_WRONLY|os.O_CREATE, 0666)
 			if err != nil {
 				return errors.Wrap(err, "could not create local file")
 			}
