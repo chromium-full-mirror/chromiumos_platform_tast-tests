@@ -157,7 +157,8 @@ func ControlAutoconnectWithUI(ctx context.Context, s *testing.State) {
 
 	param := s.Param().(controlAutoconnectWithUIParam)
 
-	apConfig := wpa.NewConfigFactory("password", wpa.Mode(param.wpaMode), wpa.Ciphers2(wpa.CipherCCMP))
+	const networkPsk = "password"
+	apConfig := wpa.NewConfigFactory(networkPsk, wpa.Mode(param.wpaMode), wpa.Ciphers2(wpa.CipherCCMP))
 	for _, cfg := range []struct {
 		// id is the identifier of the network.
 		id apIdentifier
@@ -217,7 +218,7 @@ func ControlAutoconnectWithUI(ctx context.Context, s *testing.State) {
 		defer cancel()
 		defer tf.DeconfigAP(cleanupCtx, accessPoint)
 
-		ap[cfg.id] = &apUtil{APIface: accessPoint, tf: tf}
+		ap[cfg.id] = &apUtil{APIface: accessPoint, tf: tf, networkPsk: networkPsk}
 	}
 	cleanupCtx = ctx
 	ctx, cancel = tf.ReserveForDisconnect(ctx)
@@ -306,15 +307,17 @@ func startChromeAndPerformAction(ctx context.Context, tf *wificell.TestFixture, 
 
 type apUtil struct {
 	*wificell.APIface
-	tf *wificell.TestFixture
+	tf         *wificell.TestFixture
+	networkPsk string
 }
 
 func (ap *apUtil) connectAndWaitForItToBeKnownNetwork(ctx context.Context) error {
-	if _, err := ap.tf.ConnectWifiAPFromDUT(ctx, wificell.DefaultDUT, ap.APIface); err != nil {
-		return errors.Wrapf(err, "failed to connect to AP %q", ap.Config().SSID)
-	}
-	if err := ap.ensureConnectedState(true)(ctx); err != nil {
-		return errors.Wrapf(err, "failed to wait for the AP %q is connected", ap.Config().SSID)
+	wifiSvc := wifi.NewWifiServiceClient(ap.tf.DUTRPC(wificell.DefaultDUT).Conn)
+	if _, err := wifiSvc.JoinWifiFromQuickSettings(ctx, &wifi.JoinWifiRequest{
+		Ssid:     ap.Config().SSID,
+		Security: &wifi.JoinWifiRequest_Psk{Psk: ap.networkPsk},
+	}); err != nil {
+		return errors.Wrapf(err, "failed to join Wi-Fi %q from Quick Settings", ap.Config().SSID)
 	}
 	return nil
 }
