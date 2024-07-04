@@ -52,6 +52,8 @@ type nonRemovableBlockDeviceInfo struct {
 	DiscardTimeSecondsSinceLastBoot *jsontypes.Uint64 `json:"discard_time_seconds_since_last_boot"`
 	ManufacturerID                  uint8             `json:"manufacturer_id"`
 	DeviceInfo                      *blockDeviceInfo  `json:"device_info"`
+	IsRotational                    *bool             `json:"is_rotational"`
+	Purpose                         *string           `json:"purpose"`
 }
 
 type blockDeviceResult struct {
