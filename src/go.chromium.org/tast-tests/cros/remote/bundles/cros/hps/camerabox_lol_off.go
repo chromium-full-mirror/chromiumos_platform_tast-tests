@@ -29,9 +29,9 @@ func init() {
 		Desc:         "Verify that HPS does not dim the screen quickly when LoL is off",
 		Data:         []string{hpsutil.PersonPresentPageArchiveFilename},
 		Contacts: []string{
-			"eunicesun@google.com",
 			"jmpollock@google.com",
 			"pmarheine@google.com",
+			"xiuwen@google.com",
 			"chromeos-hps-swe@google.com",
 		},
 		BugComponent: "b:1140302",

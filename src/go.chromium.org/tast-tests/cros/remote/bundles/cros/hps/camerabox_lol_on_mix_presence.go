@@ -37,9 +37,9 @@ func init() {
 		Desc:         "Verify that the HPS can dim/lock as expected when LOL enabled",
 		Data:         []string{hpsutil.PersonPresentPageArchiveFilename},
 		Contacts: []string{
-			"eunicesun@google.com",
 			"jmpollock@google.com",
 			"pmarheine@google.com",
+			"xiuwen@google.com",
 			"chromeos-hps-swe@google.com",
 		},
 		BugComponent: "b:1140302",

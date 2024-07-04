@@ -47,9 +47,9 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that the hps detects single person in backlit environments",
 		Contacts: []string{
-			"eunicesun@google.com",
 			"jmpollock@google.com",
 			"pmarheine@google.com",
+			"xiuwen@google.com",
 			"chromeos-hps-swe@google.com",
 		},
 		BugComponent: "b:1140302",
@@ -205,7 +205,7 @@ func Gooigi(ctx context.Context, s *testing.State) {
 				pyCom.Wait()
 			}()
 
-			// Allow time for hardware to configure and start as well as HPS auto exposure to react to light conditions.
+			// GoBigSleepLint: Allow time for hardware to configure and start as well as HPS auto exposure to react to light conditions.
 			if err := testing.Sleep(ctx, duration*time.Second); err != nil {
 				s.Fatal("Failed to sleep: ", err)
 			}
@@ -221,6 +221,7 @@ func Gooigi(ctx context.Context, s *testing.State) {
 
 			status.notify = result
 
+			// GoBigSleepLint: Sleep is part of the procedure of the test.
 			if err := testing.Sleep(ctx, 5*time.Second); err != nil {
 				s.Fatal("Failed to sleep: ", err)
 			}

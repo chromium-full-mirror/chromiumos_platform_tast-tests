@@ -34,9 +34,9 @@ func init() {
 		Desc:         "Verify that HPS does not respond when SPA is off",
 		Data:         []string{hpsutil.PersonPresentPageArchiveFilename},
 		Contacts: []string{
-			"eunicesun@google.com",
 			"jmpollock@google.com",
 			"pmarheine@google.com",
+			"xiuwen@google.com",
 			"chromeos-hps-swe@google.com",
 		},
 		BugComponent: "b:1140302",
@@ -149,6 +149,7 @@ func CameraboxSPA(ctx context.Context, s *testing.State) {
 	// Index i is representing the number of people in an image too.
 	for key, val := range hostPaths {
 		displayChart.Display(ctx, val)
+		// GoBigSleepLint: sleep to wait for a certain interval.
 		testing.Sleep(ctx, time.Second*5)
 		result, err := client.CheckSPAEyeIcon(ctx, &empty.Empty{})
 		if err != nil {
