@@ -29,7 +29,7 @@ func init() {
 		Desc:         "Checks on-device live caption works in ARC++",
 		Contacts: []string{
 			"cros-video-conference-tast-tests@google.com",
-			"charleszhao@google.com",
+			"xiuwen@google.com",
 		},
 		BugComponent: "b:187682",
 		Timeout:      10 * time.Minute,

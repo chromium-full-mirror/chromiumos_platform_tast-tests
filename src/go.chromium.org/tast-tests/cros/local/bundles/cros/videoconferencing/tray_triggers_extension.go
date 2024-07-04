@@ -26,7 +26,7 @@ func init() {
 		Desc:         "Checks VC tray can be triggered by Chrome extension",
 		Contacts: []string{
 			"cros-video-conference-tast-tests@google.com",
-			"charleszhao@google.com",
+			"xiuwen@google.com",
 		},
 		BugComponent: "b:187682",
 		Timeout:      3 * time.Minute,

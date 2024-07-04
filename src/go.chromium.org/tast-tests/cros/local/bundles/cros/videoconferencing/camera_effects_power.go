@@ -43,7 +43,7 @@ func init() {
 		Desc:         "Checks camera effects power usage",
 		Contacts: []string{
 			"cros-video-conference-tast-tests@google.com",
-			"charleszhao@google.com",
+			"xiuwen@google.com",
 			"okuji@google.com",
 		},
 		BugComponent: "b:187682",

@@ -39,7 +39,7 @@ func init() {
 		Desc:         "Checks camera effects background replace",
 		Contacts: []string{
 			"cros-video-conference-tast-tests@google.com",
-			"charleszhao@google.com",
+			"xiuwen@google.com",
 		},
 		BugComponent: "b:187682",
 		Attr: []string{

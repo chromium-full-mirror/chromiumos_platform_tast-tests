@@ -29,7 +29,7 @@ func init() {
 		Contacts: []string{
 			"chromeos-platform-ml-accelerators@google.com",
 			"cros-video-conference-tast-tests@google.com",
-			"charleszhao@google.com",
+			"xiuwen@google.com",
 		},
 		BugComponent: "b:1212695",
 		Attr: []string{

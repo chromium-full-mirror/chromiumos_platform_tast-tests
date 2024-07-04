@@ -36,7 +36,7 @@ func init() {
 		Desc:         "Checks Speak-On-Mute is functional in Google Meet",
 		Contacts: []string{
 			"cros-video-conference-tast-tests@google.com",
-			"charleszhao@google.com",
+			"xiuwen@google.com",
 		},
 		Attr: []string{
 			"group:external-dependency",

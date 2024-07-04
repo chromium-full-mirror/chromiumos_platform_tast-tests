@@ -34,7 +34,7 @@ func init() {
 		Desc: "A fixture with ARC booted, but not PlayStore",
 		Contacts: []string{
 			"cros-video-conference-tast-tests@google.com",
-			"charleszhao@google.com",
+			"xiuwen@google.com",
 		},
 		BugComponent:    "b:187682",
 		Impl:            arc.NewArcBootedFixture(fixtureConfig),

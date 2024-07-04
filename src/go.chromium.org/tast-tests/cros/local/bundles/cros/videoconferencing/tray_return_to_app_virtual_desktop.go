@@ -27,7 +27,7 @@ func init() {
 		Desc:         "Checks VC tray returns to app in a virtual desktop",
 		Contacts: []string{
 			"cros-video-conference-tast-tests@google.com",
-			"charleszhao@google.com",
+			"xiuwen@google.com",
 		},
 		BugComponent: "b:187682",
 		Timeout:      3 * time.Minute,

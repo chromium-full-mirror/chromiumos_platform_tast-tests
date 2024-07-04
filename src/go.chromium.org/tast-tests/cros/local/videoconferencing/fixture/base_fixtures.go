@@ -30,8 +30,6 @@ const (
 
 	baseLoggedInWithFakeVCExtension       = "baseLoggedInWithFakeVCExtension"
 	baseLoggedInLacrosWithFakeVCExtension = "baseLoggedInLacrosWithFakeVCExtension"
-
-	noLoggedIn = "noLoggedInForVideoConferencing"
 )
 
 const (
@@ -77,7 +75,7 @@ func init() {
 		Desc: "A fixture with fake user logged in",
 		Contacts: []string{
 			"cros-video-conference-tast-tests@google.com",
-			"charleszhao@google.com",
+			"xiuwen@google.com",
 		},
 		BugComponent:    "b:187682",
 		Impl:            baseSetupFixture(browser.TypeAsh, nil),
@@ -94,29 +92,10 @@ func init() {
 		Desc: "A fixture with fake user logged in Lacros",
 		Contacts: []string{
 			"cros-video-conference-tast-tests@google.com",
-			"charleszhao@google.com",
+			"xiuwen@google.com",
 		},
 		BugComponent:    "b:187682",
 		Impl:            baseSetupFixture(browser.TypeLacros, nil),
-		Parent:          fixture.AloopLoaded{Channels: 2}.Instance(),
-		SetUpTimeout:    chrome.LoginTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name: noLoggedIn,
-		Desc: "A fixture with no user logged in",
-		Contacts: []string{
-			"cros-video-conference-tast-tests@google.com",
-			"charleszhao@google.com",
-		},
-		BugComponent: "b:187682",
-		Impl: baseSetupFixture(browser.TypeAsh, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{chrome.NoLogin()}, nil
-		}),
 		Parent:          fixture.AloopLoaded{Channels: 2}.Instance(),
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
@@ -130,7 +109,7 @@ func init() {
 		Desc: "A fixture with fake user logged in and fake VC extension installed",
 		Contacts: []string{
 			"cros-video-conference-tast-tests@google.com",
-			"charleszhao@google.com",
+			"xiuwen@google.com",
 		},
 		BugComponent:    "b:187682",
 		Data:            fakeVCExtensionFiles,
@@ -148,7 +127,7 @@ func init() {
 		Desc: "A fixture with fake user logged in Lacros and fake VC extension installed",
 		Contacts: []string{
 			"cros-video-conference-tast-tests@google.com",
-			"charleszhao@google.com",
+			"xiuwen@google.com",
 		},
 		BugComponent:    "b:187682",
 		Data:            fakeVCExtensionFiles,

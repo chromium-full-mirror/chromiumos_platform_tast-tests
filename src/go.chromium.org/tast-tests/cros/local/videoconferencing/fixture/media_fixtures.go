@@ -39,8 +39,6 @@ const (
 
 // List of fixture names for video conferencing testing.
 const (
-	NoLogInWithInternalCameraAndEffectsEnabled = "noLogInWithInternalCameraAndEffectsEnabled"
-
 	// Fixtures with fake login.
 	LoggedInWithFakeHALAndEffectsEnabled        = "loggedInWithFakeHALAndEffectsEnabled"
 	LoggedInLacrosWithFakeHALAndEffectsEnabled  = "loggedInLacrosWithFakeHALAndEffectsEnabled"
@@ -110,7 +108,7 @@ func init() {
 		Desc: "A fixture with fake user logged in using fake HAL camera with platform effects enabled",
 		Contacts: []string{
 			"cros-video-conference-tast-tests@google.com",
-			"charleszhao@google.com",
+			"xiuwen@google.com",
 		},
 		BugComponent:    "b:187682",
 		Data:            []string{fakeHALImageInput},
@@ -128,7 +126,7 @@ func init() {
 		Desc: "A fixture with fake user logged in using fake HAL camera with platform effects enabled without the screen recorder",
 		Contacts: []string{
 			"cros-video-conference-tast-tests@google.com",
-			"charleszhao@google.com",
+			"xiuwen@google.com",
 		},
 		BugComponent:    "b:187682",
 		Data:            []string{fakeHALImageInput},
@@ -146,7 +144,7 @@ func init() {
 		Desc: "A fixture with fake user logged in using fake HAL camera with platform effects enabled",
 		Contacts: []string{
 			"cros-video-conference-tast-tests@google.com",
-			"charleszhao@google.com",
+			"xiuwen@google.com",
 		},
 		BugComponent:    "b:187682",
 		Data:            []string{fakeHALImageInput},
@@ -164,7 +162,7 @@ func init() {
 		Desc: "A fixture with fake user logged in Lacros using fake HAL camera with platform effects disabled",
 		Contacts: []string{
 			"cros-video-conference-tast-tests@google.com",
-			"charleszhao@google.com",
+			"xiuwen@google.com",
 		},
 		BugComponent:    "b:187682",
 		Data:            []string{fakeHALImageInput},
@@ -182,7 +180,7 @@ func init() {
 		Desc: "A fixture with fake user logged in Lacros using fake HAL camera with platform effects enabled",
 		Contacts: []string{
 			"cros-video-conference-tast-tests@google.com",
-			"charleszhao@google.com",
+			"xiuwen@google.com",
 		},
 		BugComponent:    "b:187682",
 		Data:            []string{fakeHALImageInput},
@@ -200,7 +198,7 @@ func init() {
 		Desc: "A fixture with test user logged in and ARC booted using internal camera with platform effects disabled",
 		Contacts: []string{
 			"cros-video-conference-tast-tests@google.com",
-			"charleszhao@google.com",
+			"xiuwen@google.com",
 		},
 		BugComponent:    "b:187682",
 		Data:            []string{fakeHALImageInput},
@@ -214,28 +212,11 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name: NoLogInWithInternalCameraAndEffectsEnabled,
-		Desc: "A fixture with no user logged in using internal camera with platform effects enabled",
-		Contacts: []string{
-			"cros-video-conference-tast-tests@google.com",
-			"charleszhao@google.com",
-		},
-		BugComponent:    "b:187682",
-		Impl:            mediaSetupFixture(internalCameraWithPlatformEffectsEnabled),
-		Parent:          noLoggedIn,
-		SetUpTimeout:    chrome.LoginTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
 		Name: LoggedInWithFakeVCExtension,
 		Desc: "A fixture with fake user logged in and fake VC extension installed",
 		Contacts: []string{
 			"cros-video-conference-tast-tests@google.com",
-			"charleszhao@google.com",
+			"xiuwen@google.com",
 		},
 		BugComponent:    "b:187682",
 		Data:            []string{fakeHALImageInput},
@@ -253,7 +234,7 @@ func init() {
 		Desc: "A fixture with fake user logged in Lacros and fake VC extension installed",
 		Contacts: []string{
 			"cros-video-conference-tast-tests@google.com",
-			"charleszhao@google.com",
+			"xiuwen@google.com",
 		},
 		BugComponent:    "b:187682",
 		Data:            []string{fakeHALImageInput},
@@ -271,7 +252,7 @@ func init() {
 		Desc: "Log in with a fake powerloadtest user, setup power, disable wifi and screen recorder",
 		Contacts: []string{
 			"chromeos-platform-power@google.com",
-			"charleszhao@google.com",
+			"xiuwen@google.com",
 		},
 		BugComponent: "b:187682",
 		Impl: setup.NewPowerUIFixture(setup.PowerTestOptions{

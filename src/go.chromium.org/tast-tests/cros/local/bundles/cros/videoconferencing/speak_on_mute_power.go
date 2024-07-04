@@ -34,7 +34,7 @@ func init() {
 		Desc:         "Checks Speak-On-Mute power usage",
 		Contacts: []string{
 			"cros-video-conference-tast-tests@google.com",
-			"charleszhao@google.com",
+			"xiuwen@google.com",
 		},
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		TestBedDeps:  []string{tbdep.Cbx(true)},
