@@ -58,7 +58,7 @@ func init() {
 			Name:              "container_r",
 			Val:               "arc_print_vm_ippusb_golden.pwg",
 			ExtraSoftwareDeps: []string{"android_container_r"},
-			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("elm", "hana")),
+			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("elm", "hana", "maple", "sycamore360")),
 			ExtraData:         []string{"arc_print_vm_ippusb_golden.pwg"},
 			ExtraAttr:         []string{"group:cq-medium"},
 		}, {
