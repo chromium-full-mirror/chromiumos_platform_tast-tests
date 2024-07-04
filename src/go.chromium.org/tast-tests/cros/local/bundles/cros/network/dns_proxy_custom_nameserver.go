@@ -9,10 +9,10 @@ import (
 	"runtime"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/dns"
-	"go.chromium.org/tast-tests/cros/local/crostini"
-	"go.chromium.org/tast-tests/cros/local/multivm"
 	arcnet "go.chromium.org/tast-tests/cros/local/network/arc"
+	"go.chromium.org/tast-tests/cros/local/network/testhooks"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/subnet"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast/core/ctxutil"
@@ -28,10 +28,9 @@ func init() {
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "informational"},
-		SoftwareDeps: []string{"chrome", "vm_host", "arc", "dlc", "no_kernel_upstream"},
-		Data:         []string{crostini.GetContainerMetadataArtifact("bullseye", false), crostini.GetContainerRootfsArtifact("bullseye", false), digExecutable()},
-		Pre:          multivm.ArcCrostiniStarted(),
-		HardwareDeps: crostini.CrostiniStable,
+		SoftwareDeps: []string{"chrome", "arc", "no_kernel_upstream"},
+		Data:         []string{digExecutable()},
+		Fixture:      "arcBooted",
 		Timeout:      5 * time.Minute,
 	})
 }
@@ -44,6 +43,20 @@ func DNSProxyCustomNameserver(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, 10*time.Second)
 	defer cancel()
+
+	a := s.FixtValue().(*arc.PreData).ARC
+
+	hookEnv, err := testhooks.RunNetworkTestHooks(ctx,
+		testhooks.NewSaveNetLogHook(),
+		testhooks.NewTcpdumpHook(),
+		testhooks.NewDumpHostOnFailureHook(),
+		testhooks.NewDumpARCOnFailureHook(a),
+	)
+	if err != nil {
+		s.Fatal("Failed to run network test hooks: ", err)
+	}
+	s.AttachErrorHandlers(hookEnv.OnErrorHandler, hookEnv.OnFatalHandler)
+	defer hookEnv.TearDownWithLogFailures(cleanupCtx, s.HasError)
 
 	m, err := shill.NewManager(ctx)
 	if err != nil {
@@ -103,9 +116,14 @@ func DNSProxyCustomNameserver(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get custom DNS nameserver's IP address: ", err)
 	}
 
+	// Make sure that ARC gets the DNS proxy address before proceeding the tests.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		return dns.VerifyARCNameservers(ctx, a)
+	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
+		s.Fatal("Failed to wait for ARC to get the nameservers config: ", err)
+	}
+
 	// Ensure plaintext query.
-	pre := s.PreValue().(*multivm.PreData)
-	a := multivm.ARCFromPre(pre)
 	cleanup, err := dns.SetDoHModeViaShill(ctx, dns.DoHOff, "" /* dohProvider */)
 	if err != nil {
 		s.Fatal("Failed to set DNS-over-HTTPS mode: ", err)
@@ -114,7 +132,7 @@ func DNSProxyCustomNameserver(ctx context.Context, s *testing.State) {
 
 	p, err := dns.InstallDigInARC(ctx, a, s.DataPath(digExecutable()))
 	if err != nil {
-		s.Error("Failed to install dig in ARC: ", err)
+		s.Fatal("Failed to install dig in ARC: ", err)
 	}
 
 	// By default, host DNS queries work as-is.
@@ -126,7 +144,7 @@ func DNSProxyCustomNameserver(ctx context.Context, s *testing.State) {
 		{Client: dns.ARC},
 	}
 	if errs := dns.TestQueryDNSProxy(ctx, tc, a, nil, dns.NewQueryOptions()); len(errs) > 0 {
-		s.Error("Failed initial DNS check: ", errs)
+		s.Fatal("Failed initial DNS check: ", errs)
 	}
 
 	// Confirm that host queries to a different nameserver also work.
@@ -134,7 +152,7 @@ func DNSProxyCustomNameserver(ctx context.Context, s *testing.State) {
 	opts.Nameserver = addrs.IPv4Addr.To4().String()
 	opts.ARCDigPath = p
 	if errs := dns.TestQueryDNSProxy(ctx, tc, a, nil, opts); len(errs) > 0 {
-		s.Error("Failed nameserver confirmation check: ", errs)
+		s.Fatal("Failed nameserver confirmation check: ", errs)
 	}
 
 	// Now block plaintext DNS traffic to that server and confirm failure to verify.
