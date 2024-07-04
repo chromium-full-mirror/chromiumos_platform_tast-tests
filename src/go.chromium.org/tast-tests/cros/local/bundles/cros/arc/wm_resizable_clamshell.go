@@ -830,16 +830,16 @@ func wmRC22(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Devic
 		if err != nil {
 			return errors.Wrap(err, "failed to get arc app window info for left activity")
 		}
-		lWant := coords.NewRect(0, 0, pdInfo.WorkArea.Width/2, pdInfo.WorkArea.Height)
+		lWant := coords.NewRect(0, 0, pdInfo.WorkArea.Width/2-wm.SplitScreenDividerThickness/2, pdInfo.WorkArea.Height)
 
 		if leftWInfo.BoundsInRoot != lWant {
 			return errors.Errorf("invalid snapped to the left activity bounds: got %+v; want %+v",
 				leftWInfo.BoundsInRoot, lWant)
 		}
 
-		rWant := coords.NewRect(pdInfo.WorkArea.Width/2, 0, pdInfo.WorkArea.Width/2, pdInfo.WorkArea.Height)
+		rWant := coords.NewRect(pdInfo.WorkArea.Width/2+wm.SplitScreenDividerThickness/2, 0, pdInfo.WorkArea.Width/2-wm.SplitScreenDividerThickness/2, pdInfo.WorkArea.Height)
 
-		if !coords.CompareBoundsWithMargin(rightWInfo.BoundsInRoot, rWant, wm.SplitScreenDividerThickness) {
+		if !coords.CompareBoundsWithMargin(rightWInfo.BoundsInRoot, rWant, 1) {
 			return errors.Errorf("invalid snapped to the right activity bounds: got %+v; want %+v",
 				rightWInfo.BoundsInRoot, rWant)
 		}
