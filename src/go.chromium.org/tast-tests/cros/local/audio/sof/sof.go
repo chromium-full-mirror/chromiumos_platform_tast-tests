@@ -7,11 +7,58 @@ package sof
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"strings"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
 )
+
+// DSPEffect tells the effect type on DSP.
+type DSPEffect int
+
+// DSP effect types.
+const (
+	DSPNoiseCancellation DSPEffect = iota
+	DSPEchoCancellation
+)
+
+func (e DSPEffect) String() string {
+	switch e {
+	case DSPNoiseCancellation:
+		return "nc"
+	case DSPEchoCancellation:
+		return "aec"
+	default:
+		return fmt.Sprintf("unknown%d", int(e))
+	}
+}
+
+// DSPEffectState tells whether an effect is available or in use.
+type DSPEffectState int
+
+// DSP effect states.
+const (
+	DSPEffectUnavailable DSPEffectState = iota
+	DSPEffectExists
+	DSPEffectOff
+	DSPEffectOn
+)
+
+func (s DSPEffectState) String() string {
+	switch s {
+	case DSPEffectUnavailable:
+		return "Unavailable"
+	case DSPEffectExists:
+		return "Exists"
+	case DSPEffectOff:
+		return "Off"
+	case DSPEffectOn:
+		return "On"
+	default:
+		return fmt.Sprintf("UnknownState%d", int(s))
+	}
+}
 
 // ProfileArtifact is the inner struct for Profile.
 type ProfileArtifact struct {
@@ -51,4 +98,31 @@ func GetProfile(ctx context.Context) (*Profile, error) {
 		return nil, errors.Wrap(err, "unmarshal SOF profile")
 	}
 	return prof, nil
+}
+
+func dspEffectStateFromString(str string) (DSPEffectState, error) {
+	switch str {
+	case DSPEffectExists.String():
+		return DSPEffectExists, nil
+	case DSPEffectOff.String():
+		return DSPEffectOff, nil
+	case DSPEffectOn.String():
+		return DSPEffectOn, nil
+	default:
+		return DSPEffectUnavailable, errors.Errorf("invalid string=%s", str)
+	}
+}
+
+// GetCstate fetches component state of DSP effect from sof_helper devtool dump.
+func GetCstate(ctx context.Context, effect DSPEffect) (DSPEffectState, error) {
+	cmd := testexec.CommandContext(ctx, "sof_helper", "cstate", effect.String(), "--expect")
+	stdout, stderr, err := cmd.SeparatedOutput(testexec.DumpLogOnError)
+	if err != nil {
+		// Catch errors with no control detected for the given DSP effect.
+		if strings.Contains(string(stderr), "no control is detected") {
+			return DSPEffectUnavailable, nil
+		}
+		return DSPEffectUnavailable, errors.Wrap(err, "call sof_tests")
+	}
+	return dspEffectStateFromString(strings.TrimSpace(string(stdout)))
 }

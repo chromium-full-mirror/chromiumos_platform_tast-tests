@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/debug"
 	"go.chromium.org/tast-tests/cros/local/audio/fixture"
+	"go.chromium.org/tast-tests/cros/local/audio/sof"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/audio/internal"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/crosconfig"
@@ -72,8 +73,8 @@ func init() {
 						{effects: 0x11, expectAPEffects: nil},
 					},
 					expectDSPEffects: dspEffects{
-						AEC: internal.EffectEnabled,
-						NC:  internal.EffectEnabled,
+						AEC: sof.DSPEffectOn,
+						NC:  sof.DSPEffectOn,
 					},
 				},
 				Fixture:           crasEffectsHasAPNC,
@@ -90,8 +91,8 @@ func init() {
 						{effects: 0x0, expectAPEffects: []string{apNC}},
 					},
 					expectDSPEffects: dspEffects{
-						AEC: internal.EffectDisabled, // DSP AEC blocked.
-						NC:  internal.EffectDisabled, // DSP AEC blocked.
+						AEC: sof.DSPEffectOff, // DSP AEC blocked.
+						NC:  sof.DSPEffectOff, // DSP AEC blocked.
 					},
 				},
 				Fixture:           crasEffectsHasAPNC,
@@ -108,8 +109,8 @@ func init() {
 						{effects: 0x10, expectAPEffects: []string{apNC}},
 					},
 					expectDSPEffects: dspEffects{
-						AEC: internal.EffectDisabled, // DSP AEC blocked.
-						NC:  internal.EffectDisabled, // DSP AEC blocked.
+						AEC: sof.DSPEffectOff, // DSP AEC blocked.
+						NC:  sof.DSPEffectOff, // DSP AEC blocked.
 					},
 				},
 				Fixture:           crasEffectsHasAPNC,
@@ -127,8 +128,8 @@ func init() {
 						{effects: 0x11, expectAPEffects: []string{apAEC, apNC}},
 					},
 					expectDSPEffects: dspEffects{
-						AEC: internal.EffectDisabled, // DSP AEC blocked.
-						NC:  internal.EffectDisabled, // DSP AEC blocked.
+						AEC: sof.DSPEffectOff, // DSP AEC blocked.
+						NC:  sof.DSPEffectOff, // DSP AEC blocked.
 					},
 				},
 				Fixture:           crasEffectsHasAPNC,
@@ -149,8 +150,8 @@ func init() {
 						},
 					},
 					expectDSPEffects: dspEffects{
-						AEC: internal.EffectDisabled,
-						NC:  internal.EffectEnabled, // NC enabled.
+						AEC: sof.DSPEffectOff,
+						NC:  sof.DSPEffectOn, // NC enabled.
 					},
 				},
 				Fixture:           crasEffectsHasAPNC,
@@ -168,8 +169,8 @@ func init() {
 						{effects: 0x0, expectAPEffects: []string{apNC}},
 					},
 					expectDSPEffects: dspEffects{
-						AEC: internal.EffectDisabled, // DSP AEC blocked.
-						NC:  internal.EffectDisabled, // DSP AEC blocked.
+						AEC: sof.DSPEffectOff, // DSP AEC blocked.
+						NC:  sof.DSPEffectOff, // DSP AEC blocked.
 					},
 				},
 				Fixture:           crasEffectsHasAPNC,
@@ -191,8 +192,8 @@ func init() {
 						},
 					},
 					expectDSPEffects: dspEffects{
-						AEC: internal.EffectEnabled,
-						NC:  internal.EffectEnabled, // NC enabled.
+						AEC: sof.DSPEffectOn,
+						NC:  sof.DSPEffectOn, // NC enabled.
 					},
 				},
 				Fixture:           crasEffectsHasAPNC,
@@ -209,8 +210,8 @@ func init() {
 						{effects: 0x11, expectAPEffects: []string{apAEC, apNC}},
 					},
 					expectDSPEffects: dspEffects{
-						AEC: internal.EffectDisabled, // Blocked by echo reference: user selection.
-						NC:  internal.EffectDisabled, // Blocked by echo reference: user selection.
+						AEC: sof.DSPEffectOff, // Blocked by echo reference: user selection.
+						NC:  sof.DSPEffectOff, // Blocked by echo reference: user selection.
 					},
 				},
 				Fixture:           crasEffectsHasAPNC,
@@ -228,8 +229,8 @@ func init() {
 						{effects: 0x11, expectAPEffects: []string{apAEC, apNC}},
 					},
 					expectDSPEffects: dspEffects{
-						AEC: internal.EffectDisabled, // Blocked by echo reference: playback.
-						NC:  internal.EffectDisabled, // Blocked by echo reference: playback.
+						AEC: sof.DSPEffectOff, // Blocked by echo reference: playback.
+						NC:  sof.DSPEffectOff, // Blocked by echo reference: playback.
 					},
 				},
 				Fixture:           crasEffectsHasAPNC,
@@ -247,8 +248,8 @@ func init() {
 						{effects: 0x11, expectAPEffects: nil},
 					},
 					expectDSPEffects: dspEffects{
-						AEC: internal.EffectEnabled,
-						NC:  internal.EffectEnabled,
+						AEC: sof.DSPEffectOn,
+						NC:  sof.DSPEffectOn,
 					},
 				},
 				Fixture:           crasEffectsHasAPNC,
@@ -269,8 +270,8 @@ func init() {
 						},
 					},
 					expectDSPEffects: dspEffects{
-						AEC: internal.EffectEnabled,
-						NC:  internal.EffectEnabled,
+						AEC: sof.DSPEffectOn,
+						NC:  sof.DSPEffectOn,
 					},
 				},
 				Fixture:           crasEffectsHasAPNC,
@@ -290,8 +291,8 @@ func init() {
 						},
 					},
 					expectDSPEffects: dspEffects{
-						AEC: internal.EffectEnabled,
-						NC:  internal.EffectDisabled,
+						AEC: sof.DSPEffectOn,
+						NC:  sof.DSPEffectOff,
 					},
 				},
 				Fixture:           crasEffectsHasAPNC,
@@ -311,8 +312,8 @@ func init() {
 						},
 					},
 					expectDSPEffects: dspEffects{
-						AEC: internal.EffectDisabled,
-						NC:  internal.EffectDisabled,
+						AEC: sof.DSPEffectOff,
+						NC:  sof.DSPEffectOff,
 					},
 				},
 				Fixture:           crasEffectsHasAPNC,
@@ -332,8 +333,8 @@ func init() {
 						},
 					},
 					expectDSPEffects: dspEffects{
-						AEC: internal.EffectDisabled,
-						NC:  internal.EffectDisabled,
+						AEC: sof.DSPEffectOff,
+						NC:  sof.DSPEffectOff,
 					},
 				},
 				Fixture:           crasEffectsHasAPNC,
@@ -351,8 +352,8 @@ func init() {
 						{effects: 0, expectAPEffects: nil}, // Effects=0 should not block.
 					},
 					expectDSPEffects: dspEffects{
-						AEC: internal.EffectUnavailable,
-						NC:  internal.EffectEnabled,
+						AEC: sof.DSPEffectUnavailable,
+						NC:  sof.DSPEffectOn,
 					},
 				},
 				Fixture:           crasEffectsHasNoAPNC,
@@ -369,8 +370,8 @@ func init() {
 						{effects: 0, expectAPEffects: nil}, // Effects=0 should not block.
 					},
 					expectDSPEffects: dspEffects{
-						AEC: internal.EffectUnavailable,
-						NC:  internal.EffectDisabled,
+						AEC: sof.DSPEffectUnavailable,
+						NC:  sof.DSPEffectOff,
 					},
 				},
 				Fixture:           crasEffectsHasNoAPNC,
@@ -388,8 +389,8 @@ func init() {
 					},
 					addPlaybackPinDevice: "INTERNAL_SPEAKER", // Using internal speaker should block DSP NC.
 					expectDSPEffects: dspEffects{
-						AEC: internal.EffectUnavailable,
-						NC:  internal.EffectDisabled,
+						AEC: sof.DSPEffectUnavailable,
+						NC:  sof.DSPEffectOff,
 					},
 				},
 				Fixture:           crasEffectsHasNoAPNC,
@@ -406,8 +407,8 @@ func init() {
 						{effects: 0x1, expectAPEffects: []string{apAEC}}, // Effects=1 should not block.
 					},
 					expectDSPEffects: dspEffects{
-						AEC: internal.EffectUnavailable,
-						NC:  internal.EffectEnabled,
+						AEC: sof.DSPEffectUnavailable,
+						NC:  sof.DSPEffectOn,
 					},
 				},
 				Fixture:           crasEffectsHasNoAPNC,
@@ -424,8 +425,8 @@ func init() {
 						{effects: 0x1, expectAPEffects: []string{apAEC}}, // Effects=1 should not block.
 					},
 					expectDSPEffects: dspEffects{
-						AEC: internal.EffectUnavailable,
-						NC:  internal.EffectDisabled,
+						AEC: sof.DSPEffectUnavailable,
+						NC:  sof.DSPEffectOff,
 					},
 				},
 				Fixture:           crasEffectsHasNoAPNC,
@@ -443,8 +444,8 @@ func init() {
 					},
 					addPlaybackPinDevice: "INTERNAL_SPEAKER", // Using internal speaker should block DSP NC.
 					expectDSPEffects: dspEffects{
-						AEC: internal.EffectUnavailable,
-						NC:  internal.EffectDisabled,
+						AEC: sof.DSPEffectUnavailable,
+						NC:  sof.DSPEffectOff,
 					},
 				},
 				Fixture:           crasEffectsHasNoAPNC,
@@ -461,8 +462,8 @@ func init() {
 						{effects: 0x310, expectAPEffects: []string{apNC}}, // Force enable NC.
 					},
 					expectDSPEffects: dspEffects{
-						AEC: internal.EffectDisabled,
-						NC:  internal.EffectDisabled,
+						AEC: sof.DSPEffectOff,
+						NC:  sof.DSPEffectOff,
 					},
 				},
 				Fixture:           crasEffectsHasAPNC,
@@ -479,8 +480,8 @@ func init() {
 						{effects: 0x310, expectAPEffects: []string{apNC}}, // Force enable NC.
 					},
 					expectDSPEffects: dspEffects{
-						AEC: internal.EffectDisabled,
-						NC:  internal.EffectDisabled,
+						AEC: sof.DSPEffectOff,
+						NC:  sof.DSPEffectOff,
 					},
 				},
 				Fixture:           crasEffectsHasAPNC,
@@ -497,8 +498,8 @@ func init() {
 						{effects: 0x100, expectAPEffects: nil}, // Force disable NC.
 					},
 					expectDSPEffects: dspEffects{
-						AEC: internal.EffectDisabled,
-						NC:  internal.EffectDisabled,
+						AEC: sof.DSPEffectOff,
+						NC:  sof.DSPEffectOff,
 					},
 				},
 				Fixture:           crasEffectsHasAPNC,
@@ -515,8 +516,8 @@ func init() {
 						{effects: 0x100, expectAPEffects: nil}, // Force disable NC.
 					},
 					expectDSPEffects: dspEffects{
-						AEC: internal.EffectDisabled,
-						NC:  internal.EffectDisabled,
+						AEC: sof.DSPEffectOff,
+						NC:  sof.DSPEffectOff,
 					},
 				},
 				Fixture:           crasEffectsHasAPNC,
@@ -534,8 +535,8 @@ func init() {
 						{effects: 0x100, expectAPEffects: nil},            // unprocessed.
 					},
 					expectDSPEffects: dspEffects{
-						AEC: internal.EffectDisabled,
-						NC:  internal.EffectDisabled,
+						AEC: sof.DSPEffectOff,
+						NC:  sof.DSPEffectOff,
 					},
 				},
 				Fixture:           crasEffectsHasAPNC,
@@ -553,8 +554,8 @@ func init() {
 						{effects: 0x310, expectAPEffects: []string{apNC}}, // unprocessed.
 					},
 					expectDSPEffects: dspEffects{
-						AEC: internal.EffectDisabled,
-						NC:  internal.EffectDisabled,
+						AEC: sof.DSPEffectOff,
+						NC:  sof.DSPEffectOff,
 					},
 				},
 				Fixture:           crasEffectsHasAPNC,
@@ -572,8 +573,8 @@ func init() {
 						{effects: 0x100, expectAPEffects: nil},                  // unprocessed.
 					},
 					expectDSPEffects: dspEffects{
-						AEC: internal.EffectUnavailable,
-						NC:  internal.EffectUnavailable,
+						AEC: sof.DSPEffectUnavailable,
+						NC:  sof.DSPEffectUnavailable,
 					},
 				},
 				Fixture: crasEffectsHasAPNC,
@@ -595,8 +596,8 @@ type crasEffectsParam struct {
 
 // dspEffects observed and expected.
 type dspEffects struct {
-	AEC internal.EffectState
-	NC  internal.EffectState
+	AEC sof.DSPEffectState
+	NC  sof.DSPEffectState
 }
 
 type streamState struct {
@@ -711,7 +712,7 @@ func CrasEffects(ctx context.Context, s *testing.State) {
 	// b/301912218: This is needed because CRAS & the use case manager
 	// assume that the modifiers are turned off initially,
 	// e.g. on CRAS restart.
-	if param.expectDSPEffects.NC != internal.EffectUnavailable {
+	if param.expectDSPEffects.NC != sof.DSPEffectUnavailable {
 		if err := resetNCState(ctx); err != nil {
 			s.Fatal("resetNCState failed: ", err)
 		}
@@ -783,11 +784,11 @@ func CrasEffects(ctx context.Context, s *testing.State) {
 	}
 
 	currentProcessingState := func(ctx context.Context) *effectState {
-		dspAEC, err := internal.DSPEchoCancellationState(ctx)
+		dspAEC, err := sof.GetCstate(ctx, sof.DSPEchoCancellation)
 		if err != nil {
 			s.Fatal("Cannot get DSPEchoCancellationState: ", err)
 		}
-		dspNC, err := internal.DSPNoiseCancellationState(ctx)
+		dspNC, err := sof.GetCstate(ctx, sof.DSPNoiseCancellation)
 		if err != nil {
 			s.Fatal("Cannot get DSPNoiseCancellationState: ", err)
 		}
