@@ -116,6 +116,14 @@ func init() {
 			},
 			Timeout: 20 * time.Minute,
 		}, {
+			Name: "mem",
+			Val: testArgsForSuspendPerf{
+				numSuspend:        5,
+				enableMempressure: true,
+			},
+			// mempressure will take another 20minutes
+			Timeout: 30 * time.Minute,
+		}, {
 			Name: "arc_mem",
 			Val: testArgsForSuspendPerf{
 				numSuspend:        5,
