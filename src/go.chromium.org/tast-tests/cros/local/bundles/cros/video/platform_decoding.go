@@ -4186,7 +4186,7 @@ func PlatformDecoding(ctx context.Context, s *testing.State) {
 		args := testOpt.decoderArgsBuilder(ctx, s.DataPath(filename))
 		args = append(args, platform.MD5Args(exec, md5LogPath)...)
 
-		decode := func() ([]byte, error) {
+		decode := func() ([]byte, []byte, error) {
 			return testexec.CommandContext(
 				ctx,
 				validatePath,
@@ -4194,36 +4194,41 @@ func PlatformDecoding(ctx context.Context, s *testing.State) {
 				fmt.Sprintf("--args=%s", strings.Join(args, " ")),
 				fmt.Sprintf("--metadata=%s.json", s.DataPath(filename)),
 				fmt.Sprintf("--md5=%s", md5LogPath),
-			).CombinedOutput(testexec.DumpLogOnError)
+			).SeparatedOutput(testexec.DumpLogOnError)
 		}
 
-		output, err := decode()
+		runOutput, runError, err := decode()
 		if err == nil {
 			continue
 		}
-		testing.ContextLogf(ctx, "%v failed: %s", exec, string(output))
+		testing.ContextLogf(ctx, "%v first run output:\n%s", exec, string(runOutput)) // NOLINT
+		testing.ContextLogf(ctx, "%v first run failed: %s", exec, string(runError))   // NOLINT
 
 		// Run again the same cmd with LIBVA_TRACING defined.
 		if strings.Contains(s.TestName(), "vaapi") {
 			os.Setenv("LIBVA_TRACE", filepath.Join(s.OutDir(), filepath.Base(filename)+".libva_trace"))
-			testing.ContextLogf(ctx, "Running %s a second time with tracing saved into %s", exec, os.Getenv("LIBVA_TRACE"))
-			secondRunOutput, err := decode()
+			testing.ContextLogf(
+				ctx, "Running %s a second time with tracing saved into %s.libva_trace*",
+				exec, filepath.Join("tests", filepath.Base(s.OutDir()), filepath.Base(filename)))
+			secondRunOutput, secondRunError, err := decode()
 			os.Unsetenv("LIBVA_TRACE")
-			if err != nil {
-				testing.ContextLogf(ctx, "%v failed twice: %s", exec, string(secondRunOutput))
-			} else {
-				testing.ContextLogf(ctx, "%v passed on second run with: %s", exec, string(secondRunOutput))
+
+			testing.ContextLogf(ctx, "%v second run output:\n%s", exec, string(secondRunOutput)) // NOLINT
+
+			if err == nil {
+				testing.ContextLogf(ctx, "%v second run passed", exec)
 				continue
 			}
+
+			testing.ContextLogf(ctx, "%v failed twice: %s", exec, string(secondRunError)) // NOLINT
 		}
 
-		if err != nil {
-			if expErr := expectation.ReportErrorf("%v failed with %s: %v", exec, filename, err); expErr != nil {
-				s.Error("Unexpected error: ", expErr)
-			}
-			if stopOnFailure {
-				return
-			}
+		// If we reached here, we have a non-nil err, so check expectations.
+		if expErr := expectation.ReportErrorf("%v: %s", err, string(runError)); expErr != nil {
+			s.Error(expErr)
+		}
+		if stopOnFailure {
+			return
 		}
 		// TODO(jchinlee): Investigate saving failing frames.
 	}
