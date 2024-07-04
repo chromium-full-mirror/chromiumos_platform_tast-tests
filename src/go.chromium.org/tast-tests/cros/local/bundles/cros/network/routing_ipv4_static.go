@@ -34,7 +34,7 @@ func init() {
 			// Apply static IP when the network is connecting.
 			Name:      "apply_when_connecting",
 			Val:       true,
-			ExtraAttr: []string{"informational"},
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}},
 	})
 }
