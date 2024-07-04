@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
@@ -41,6 +42,7 @@ func init() {
 			"chrome",
 			"chrome_internal",
 			"drivefs",
+			"gaia",
 		},
 		Attr: []string{
 			"group:cbx",
@@ -95,8 +97,10 @@ func BulkPinningEnterpriseChoobeScreen(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, 10*time.Second)
 	defer cancel()
 
-	username := s.RequiredVar("accountmanager.managedusername")
-	password := s.RequiredVar("accountmanager.managedpassword")
+	username, password, err := dma.UserPassFromPool(policy.ManagedUserAccountPoolVarName)
+	if err != nil {
+		s.Fatal("Failed to get username and password: ", err)
+	}
 
 	param, ok := s.Param().(bulkPinningPolicyTest)
 	if !ok {

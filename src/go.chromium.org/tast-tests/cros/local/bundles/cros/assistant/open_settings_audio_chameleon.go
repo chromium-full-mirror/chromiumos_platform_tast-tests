@@ -39,7 +39,7 @@ func init() {
 			"group:hw_agnostic",
 		},
 		Data:         []string{soundFile},
-		SoftwareDeps: []string{"chrome", "chrome_internal"},
+		SoftwareDeps: []string{"chrome", "chrome_internal", "gaia"},
 		Fixture:      "assistantWithAudioBox",
 	})
 }
