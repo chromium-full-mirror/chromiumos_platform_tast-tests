@@ -40,6 +40,7 @@ func init() {
 			},
 		}),
 		Parent:          "gpuWatchHangs",
+		BugComponent:    "b:1045832", // ChromeOS > Software > Performance > TPS
 		SetUpTimeout:    powersetup.SetUpTimeout,
 		ResetTimeout:    powersetup.ResetTimeout,
 		TearDownTimeout: powersetup.TearDownTimeout,
@@ -74,6 +75,7 @@ func init() {
 			},
 		}),
 		Parent:          "gpuWatchHangs",
+		BugComponent:    "b:1045832", // ChromeOS > Software > Performance > TPS
 		SetUpTimeout:    powersetup.SetUpTimeout,
 		ResetTimeout:    powersetup.ResetTimeout,
 		TearDownTimeout: powersetup.TearDownTimeout,

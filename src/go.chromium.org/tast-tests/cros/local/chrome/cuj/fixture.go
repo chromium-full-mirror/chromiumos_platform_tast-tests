@@ -1692,6 +1692,7 @@ func NewWPRLoggedInToCUJUserWithoutCooldownFixture(name, desc string, contacts [
 			wprMode:    mode,
 			wprArchive: archive,
 		},
+		BugComponent:    "b:1045832", // ChromeOS > Software > Performance > TPS
 		Data:            data,
 		Parent:          "prepareForCUJWithoutCooldown",
 		SetUpTimeout:    setUpTimeout,

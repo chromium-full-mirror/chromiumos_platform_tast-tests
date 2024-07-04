@@ -53,10 +53,11 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:     fixture.ChromeLoggedInDisableSync,
 		Desc:     "Logged into a user session with --disable-sync flag",
-		Contacts: []string{"dhaddock@chromium.org"},
+		Contacts: []string{"dhaddock@chromium.org", "cros-sw-perf@google.com"},
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
 			return []Option{ExtraArgs("--disable-sync")}, nil
 		}),
+		BugComponent:    "b:1045832", // ChromeOS > Software > Performance > TPS
 		SetUpTimeout:    FixtureSetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: ResetTimeout,
@@ -149,11 +150,12 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:     fixture.ChromeLoggedInWith100FakeAppsPassthroughCmdDecoder,
 		Desc:     "Logged into a user session with 100 fake apps and the passthrough command decoder enabled",
-		Contacts: []string{"hob@chromium.org"},
+		Contacts: []string{"hob@chromium.org", "cros-sw-perf@google.com"},
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
 			return []Option{EnableFeatures("DefaultPassthroughCommandDecoder")}, nil
 		}),
 		Parent:          "install100Apps",
+		BugComponent:    "b:1045832", // ChromeOS > Software > Performance > TPS
 		SetUpTimeout:    FixtureSetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: ResetTimeout,

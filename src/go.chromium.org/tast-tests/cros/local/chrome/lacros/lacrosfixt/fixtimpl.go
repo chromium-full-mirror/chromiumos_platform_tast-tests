@@ -75,11 +75,12 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:     "lacrosPerfForceComposition",
 		Desc:     "Lacros Chrome from a pre-built image with composition forced on",
-		Contacts: []string{"hidehiko@chromium.org", "edcourtney@chromium.org"},
+		Contacts: []string{"hidehiko@chromium.org", "edcourtney@chromium.org", "cros-sw-perf@google.com"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return NewConfig(ChromeOptions(chrome.ExtraArgs("--enable-hardware-overlays=\"\""),
 				chrome.DisableFeatures("FirmwareUpdaterApp"))).Opts()
 		}),
+		BugComponent:    "b:1045832", // ChromeOS > Software > Performance > TPS
 		SetUpTimeout:    chrome.FixtureSetUpTimeout + 7*time.Minute,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
@@ -90,12 +91,13 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:     "lacrosPerfForceNonDelegated",
 		Desc:     "Lacros Chrome from a pre-built image with both delegated compositing and hw overlays forced off",
-		Contacts: []string{"petermcneeley@chromium.org", "edcourtney@chromium.org"},
+		Contacts: []string{"petermcneeley@chromium.org", "edcourtney@chromium.org", "cros-sw-perf@google.com"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return NewConfig(ChromeOptions(chrome.ExtraArgs("--enable-hardware-overlays=\"\""),
 				chrome.LacrosDisableFeatures("DelegatedCompositing"),
 				chrome.DisableFeatures("FirmwareUpdaterApp"))).Opts()
 		}),
+		BugComponent:    "b:1045832", // ChromeOS > Software > Performance > TPS
 		SetUpTimeout:    chrome.FixtureSetUpTimeout + 7*time.Minute,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
