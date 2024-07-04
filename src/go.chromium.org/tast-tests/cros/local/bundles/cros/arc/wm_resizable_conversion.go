@@ -270,9 +270,37 @@ func wmRV20(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Devic
 	// }, &testing.PollOptions{Timeout: 5 * time.Second})}
 }
 
+func resetLockedOrientationInTabletMode(ctx context.Context, tconn *chrome.TestConn) error {
+	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, true)
+	if err != nil {
+		return errors.Wrap(err, "failed to ensure if tablet mode is enabled")
+	}
+	defer cleanup(ctx)
+
+	if err := wm.WaitForDeviceModeChangeApplied(ctx); err != nil {
+		return errors.Wrap(err, "failed to wait for device mode change")
+	}
+
+	// Rotate the screen 0 degree.
+	if _, err := wm.RotateDisplay(ctx, tconn, display.Rotate0); err != nil {
+		return errors.Wrap(err, "failed to rotate the display by 0 degrees")
+	}
+	// Display should be landscape.
+	if err := wm.WaitForDisplayOrientation(ctx, tconn, display.OrientationLandscapePrimary); err != nil {
+		return errors.Wrap(err, "failed to wait for display orientation")
+	}
+
+	return nil
+}
+
 // wmRV21 covers resizable/conversion undefined orientation.
 // Expected behavior is defined in: go/arc-wm-r RV21 resizable/conversion: undefined orientation.
 func wmRV21(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Device) error {
+	// Previous tests may have locked the orientation to any other than primary-landscape.
+	if err := resetLockedOrientationInTabletMode(ctx, tconn); err != nil {
+		return errors.Wrap(err, "failed to reset locked orientation in tablet mode")
+	}
+
 	// Start an unspecified activity.
 	act, err := arc.NewActivity(a, wm.Pkg24, wm.ResizableUnspecifiedActivity)
 	if err != nil {
@@ -413,6 +441,10 @@ func wmRV21(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Devic
 // wmRV22 covers resizable/conversion: split screen.
 // Expected behavior is defined in: go/arc-wm-r RV22: resizable/conversion: split screen.
 func wmRV22(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Device) (retErr error) {
+	// Previous tests may have locked the orientation to any other than primary-landscape.
+	if err := resetLockedOrientationInTabletMode(ctx, tconn); err != nil {
+		return errors.Wrap(err, "failed to reset locked orientation in tablet mode")
+	}
 	// This test handles a lot of transitions so save off the initial device states
 	// and return to them at the end of the test.
 	originalTabletMode, err := ash.TabletModeEnabled(ctx, tconn)
