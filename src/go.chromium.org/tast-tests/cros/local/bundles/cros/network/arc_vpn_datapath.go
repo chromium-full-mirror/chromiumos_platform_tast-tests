@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/shillconst"
-	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/arcvpn"
 	arcutil "go.chromium.org/tast-tests/cros/local/network/arc"
@@ -97,21 +96,11 @@ func ARCVPNDatapath(ctx context.Context, s *testing.State) {
 	}()
 
 	// Install and start the test app.
-	testing.ContextLog(ctx, "Installing ArcVpnTest.apk")
-	if err := a.Install(ctx, arc.APKPath(arcvpn.VPNTestAppAPK)); err != nil {
-		s.Fatal("Failed to install app: ", err)
+	cleanupFunc, err := arcvpn.InstallAndPreAuthorizeARCVPN(ctx, a)
+	if err != nil {
+		s.Fatal("Failed to set up ARC VPN test app")
 	}
-	defer func() {
-		testing.ContextLog(cleanupCtx, "Uninstalling ArcVpnTest.apk")
-		if err := a.Uninstall(cleanupCtx, arcvpn.VPNTestAppPkg); err != nil {
-			s.Fatal("Failed to uninstall ArcVpnTest.apk: ", err)
-		}
-	}()
-
-	testing.ContextLog(ctx, "Preauthorizing ArcVpnTest")
-	if _, err := a.Command(ctx, "dumpsys", "wifi", "authorize-vpn", arcvpn.VPNTestAppPkg).Output(testexec.DumpLogOnError); err != nil {
-		s.Fatal("Failed to execute authorize-vpn command: ", err)
-	}
+	defer cleanupFunc(cleanupCtx)
 
 	ifname, err := arcutil.GetARCInterfaceName(ctx, networkEnv.Router.VethOutName)
 	if err != nil {

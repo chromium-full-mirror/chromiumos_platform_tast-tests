@@ -50,7 +50,7 @@ func SetUpHostVPN(ctx context.Context, vpnType vpn.Type, opts ...vpn.Option) (*v
 // InstallAndPreAuthorizeARCVPN installs ARC VPN app and pre-authorizes the
 // package so that the Android system doesn't create a pop UI asking the user
 // to authorize the VPN app. The caller is responsible to call the returned
-// cleanup function to uninstall the app
+// cleanup function to uninstall the app.
 func InstallAndPreAuthorizeARCVPN(ctx context.Context, a *arc.ARC) (func(context.Context), error) {
 	testing.ContextLog(ctx, "Installing ArcVpnTest.apk")
 	if err := a.Install(ctx, arc.APKPath(VPNTestAppAPK)); err != nil {

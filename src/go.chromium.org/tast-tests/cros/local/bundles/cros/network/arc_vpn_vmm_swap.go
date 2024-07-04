@@ -8,12 +8,12 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/swap"
 	"go.chromium.org/tast-tests/cros/local/arc/vm"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/arcvpn"
 	"go.chromium.org/tast-tests/cros/local/network/ping"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -37,6 +37,10 @@ func init() {
 }
 
 func ArcVpnVmmSwap(ctx context.Context, s *testing.State) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(cleanupCtx, 10*time.Second)
+	defer cancel()
+
 	cr := s.FixtValue().(*arc.PreData).Chrome
 	a := s.FixtValue().(*arc.PreData).ARC
 
@@ -71,13 +75,11 @@ func ArcVpnVmmSwap(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Starting VPN")
-	if err := a.Install(ctx, arc.APKPath(arcvpn.VPNTestAppAPK)); err != nil {
-		s.Fatal("Failed to install app: ", err)
+	cleanupFunc, err := arcvpn.InstallAndPreAuthorizeARCVPN(ctx, a)
+	if err != nil {
+		s.Fatal("Failed to set up ARC VPN test app")
 	}
-
-	if _, err := a.Command(ctx, "dumpsys", "wifi", "authorize-vpn", arcvpn.VPNTestAppPkg).Output(testexec.DumpLogOnError); err != nil {
-		s.Fatal("Failed to execute authorize-vpn command: ", err)
-	}
+	defer cleanupFunc(cleanupCtx)
 
 	if err := arcvpn.StartARCVPN(ctx, a); err != nil {
 		s.Fatal("Failed to send ArcVpnTest app: ", err)
