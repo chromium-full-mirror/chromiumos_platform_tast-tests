@@ -16,12 +16,12 @@ import (
 // EnsureExpandableSectionOpened returns an action to retry to expand the section until it is expanded.
 func EnsureExpandableSectionOpened(tconn *chrome.TestConn, section *nodewith.Finder) uiauto.Action {
 	ui := uiauto.New(tconn)
-	return uiauto.Combine("expand the section",
-		ui.WaitUntilExists(section),
-		ui.MakeVisible(section),
-		ui.RetryUntil(
+	return ui.RetryUntil(
+		uiauto.Combine("expand the section",
+			ui.WaitUntilExists(section),
+			ui.EnsureFocused(section),
 			ui.LeftClick(section),
-			ui.WithTimeout(3*time.Second).WaitUntilExists(section.Expanded()),
 		),
+		ui.WithTimeout(3*time.Second).WaitUntilExists(section.Expanded()),
 	)
 }

@@ -589,3 +589,13 @@ func CommonSections() map[string]*nodewith.Finder {
 
 	return sections
 }
+
+// WaitForQuiescence wait until the settings page is stabled.
+func (s *OSSettings) WaitForQuiescence(ctx context.Context, cr *chrome.Chrome, timeout time.Duration) error {
+	conn, err := s.ChromeConn(ctx, cr)
+	if err != nil {
+		return errors.Wrap(err, "failed to connect to settings page")
+	}
+	defer conn.Close()
+	return webutil.WaitForQuiescence(ctx, conn, timeout)
+}

@@ -20,6 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/checked"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/expandable"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/lockscreen"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -102,10 +103,15 @@ const (
 // ExpandProxySettingsSection ensures the proxy settings section of a network to be expanded.
 // This method should only be called from the network detail page of a network within OS Settings.
 // Calling on the WebUI before login fails since the proxy settings are not within an expandable section.
-func ExpandProxySettingsSection(ctx context.Context, tconn *chrome.TestConn) error {
+func ExpandProxySettingsSection(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn) error {
 	// This method should only be called from the network detail page of a network within OS Settings,
 	// so all nodes should be scoped under the OS-Settings.
 	settings := ossettings.New(tconn)
+
+	// Make sure the settings page is stable before proceed with UI actions.
+	if err := settings.WaitForQuiescence(ctx, cr, 10*time.Second); err != nil {
+		return errors.Wrap(err, "failed to wait for OS settings to quiescence")
+	}
 
 	if err := settings.WaitUntilExists(ossettings.ShowProxySettingsButton)(ctx); err != nil {
 		return errors.Wrap(err, "failed to find the 'Show proxy settings' button")
@@ -114,13 +120,7 @@ func ExpandProxySettingsSection(ctx context.Context, tconn *chrome.TestConn) err
 	return uiauto.IfSuccessThen(
 		settings.WaitUntilExists(ossettings.ShowProxySettingsButton.Collapsed()),
 		uiauto.Combine("expand 'Proxy' section",
-			settings.MakeVisible(ossettings.ShowProxySettingsButton),
-			settings.WaitUntilExists(ossettings.ShowProxySettingsButton.Visible()),
-			settings.LeftClickUntil(
-				// Expand 'Proxy' section.
-				ossettings.ShowProxySettingsButton,
-				settings.WithTimeout(5*time.Second).WaitUntilExists(ossettings.ShowProxySettingsButton.Expanded()),
-			),
+			expandable.EnsureExpandableSectionOpened(tconn, ossettings.ShowProxySettingsButton),
 			settings.MakeVisible(ossettings.ProxyDropDownMenu),
 			settings.WaitUntilExists(ossettings.ProxyDropDownMenu.Visible()),
 			// Wait for the Proxy section to be stable.
@@ -286,7 +286,7 @@ func (m *Manager) Launch(ctx context.Context, cr *chrome.Chrome, tconn *chrome.T
 		}
 
 		// The proxy-settings section will be collapsed when device is logged in.
-		if err := ExpandProxySettingsSection(ctx, tconn); err != nil {
+		if err := ExpandProxySettingsSection(ctx, cr, tconn); err != nil {
 			return errors.Wrap(err, "failed to expand proxy option on settings")
 		}
 	default:
