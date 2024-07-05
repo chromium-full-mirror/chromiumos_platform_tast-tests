@@ -8,10 +8,12 @@ package health
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptest"
 	"strconv"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/camera/cca"
+	"go.chromium.org/tast-tests/cros/local/camera/testpage"
 	"go.chromium.org/tast-tests/cros/local/camera/testutil"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/crosconfig"
@@ -34,6 +36,7 @@ func init() {
 		BugComponent: "b:982097", // ChromeOS > Platform > Enablement > Health
 		SoftwareDeps: []string{"diagnostics", "chrome"},
 		HardwareDeps: hwdep.D(hwdep.CameraEnumerated()),
+		Data:         []string{"camera_page.html", "camera_page.js"},
 		Attr:         []string{"group:mainline", "informational", "group:camera_dependent", "group:criticalstaging"},
 		Fixture:      "crosHealthdRunning",
 	})
@@ -65,7 +68,11 @@ func RunCameraFrameAnalysisRoutine(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to ensure the cros-camera-diagnostics service is running: ", err)
 		}
 
-		cr, err := chrome.New(ctx, chrome.GuestLogin())
+		cr, err := chrome.New(
+			ctx,
+			chrome.GuestLogin(),
+			chrome.ExtraArgs("--use-fake-ui-for-media-stream"), // Bypass permission.
+		)
 		if err != nil {
 			s.Fatal("Failed to start chrome: ", err)
 		}
@@ -78,17 +85,28 @@ func RunCameraFrameAnalysisRoutine(ctx context.Context, s *testing.State) {
 		// Use a fake camera to avoid issues about the real camera. Fake cameras
 		// should be sufficient to catch issues about the integration between
 		// cros_healthd and camera_diagnostics_service.
-		tb, err := testutil.NewTestBridge(ctx, cr, testutil.UseFakeHALCamera)
-		if err != nil {
-			s.Fatal("Failed to construct camera test bridge: ", err)
+		if err := testutil.SetupTestConfig(ctx, testutil.UseFakeHALCamera); err != nil {
+			s.Fatal("Failed to setup test config: ", err)
 		}
-		defer tb.TearDown(cleanupCtx)
+		defer testutil.RemoveTestConfig(cleanupCtx)
 
-		app, err := cca.New(ctx, cr, s.OutDir(), tb)
-		if err != nil {
-			s.Fatal("Failed to start CCA: ", err)
+		if err := testutil.SetupFakeHALConfig(ctx); err != nil {
+			s.Fatal("Failed to setup fake hal config: ", err)
 		}
-		defer app.Close(cleanupCtx)
+		defer testutil.RemoveFakeHALConfig(cleanupCtx)
+
+		if err := upstart.RestartJob(ctx, "cros-camera"); err != nil {
+			s.Fatal("Failed to restart cros-camera after test config setup: ", err)
+		}
+
+		server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
+		defer server.Close()
+
+		webPage := testpage.New(server.URL)
+		if err := webPage.Open(ctx, cr); err != nil {
+			s.Fatal("Failed to open web page: ", err)
+		}
+		defer webPage.Close(cleanupCtx)
 	} else {
 		testing.ContextLog(ctx, "Skip opening cameras due to no builtin cameras")
 	}
