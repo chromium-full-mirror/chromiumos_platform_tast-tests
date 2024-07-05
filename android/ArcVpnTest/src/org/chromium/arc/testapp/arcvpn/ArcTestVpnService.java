@@ -46,6 +46,7 @@ public class ArcTestVpnService extends VpnService {
 
     // Keys used for setting intent extras for setting up VPN service.
     private static final String OVERLAY_ADDRESS_KEY = "overlay_address";
+    private static final String DNS_SERVER_KEY = "dns_server";
     // Keys used for setting intent extras for connecting to toy VPN server.
     private static final String INTERFACE_KEY = "interface";
     private static final String ADDRESS_KEY = "address";
@@ -67,6 +68,11 @@ public class ArcTestVpnService extends VpnService {
     // The default overlay address installed onto the TUN interface, if it's not specified in the
     // intent for launching the VPN service.
     private static final String DEFAULT_OVERLAY_ADDRESS = "192.168.2.2";
+
+    // Useful so ARC doesn't use the host's DNS servers as a fallback. This shouldn't functionally
+    // change the VPN behavior, but may affect ARC's networking behavior on syncing host->ARC DNS
+    // servers.
+    private static final String DEFAULT_DNS_SERVER = "8.8.8.8";
 
     // The default MTU value on the TUN interface. This is the default but usually not a good enough
     // value for a VPN interface.
@@ -141,7 +147,10 @@ public class ArcTestVpnService extends VpnService {
         showNotification();
 
         String overlayAddress = intent.getStringExtra(OVERLAY_ADDRESS_KEY);
-        setUpVpnService(overlayAddress == null ? DEFAULT_OVERLAY_ADDRESS : overlayAddress);
+        String dnsServer = intent.getStringExtra(DNS_SERVER_KEY);
+        setUpVpnService(
+                overlayAddress == null ? DEFAULT_OVERLAY_ADDRESS : overlayAddress,
+                dnsServer == null ? DEFAULT_DNS_SERVER : dnsServer);
 
         String ifname = intent.getStringExtra(INTERFACE_KEY);
         String serverAddress = intent.getStringExtra(ADDRESS_KEY);
@@ -251,16 +260,13 @@ public class ArcTestVpnService extends VpnService {
     }
 
     /** Registers ourselves as an actual VpnService and sets up the underlying interface. */
-    private void setUpVpnService(String overlayAddress) {
+    private void setUpVpnService(String overlayAddress, String dnsServer) {
         VpnService.prepare(getApplicationContext());
 
         mTunFd = new VpnService.Builder()
                 .addAddress(overlayAddress, 24)
                 .addRoute("0.0.0.0", 0)
-                // Useful so ARC doesn't use the host's DNS servers as a fallback. This shouldn't
-                // functionally change the VPN behavior, but may affect ARC's networking behavior
-                // on syncing host->ARC DNS servers.
-                .addDnsServer("8.8.8.8")
+                .addDnsServer(dnsServer)
                 // Make sure read on the returned tun fd will be blocked, so that our programming
                 // model will be easier.
                 .setBlocking(true)

@@ -827,3 +827,36 @@ func VerifyARCNameservers(ctx context.Context, a *arc.ARC) error {
 	}
 	return nil
 }
+
+// VerifyDNSResolve verifies whether the name resolution of |domain| by |user| is as expected.
+//
+//	expectResolvable == false: wanted non-resolavable
+//	expectResolvable == true, len(expectedIP) != 0: wanted resolvable into expectedIP
+//	expectResolvable == true, len(expectedIP) == 0: wanted resolvable (into any IP)
+func VerifyDNSResolve(ctx context.Context, user, domain string, expectResolvable bool, expectedIP string) error {
+	out, err := testexec.CommandContext(ctx, "sudo", "-u", user, "/usr/local/bin/dig", "+short", domain, "+tries=2", "+timeout=2").Output()
+	if err != nil {
+		return errors.Wrapf(err, "running dig %s as user %s failed:", domain, user)
+	}
+
+	trimmedOut := strings.TrimSpace(string(out))
+	if len(trimmedOut) == 0 {
+		if expectResolvable {
+			if len(expectedIP) != 0 {
+				return errors.Errorf("As user %s, %s cannot be resolved, want: %s", user, domain, expectedIP)
+			}
+			return errors.Errorf("As user %s, %s cannot be resolved, want: resolvable", user, domain)
+		}
+		testing.ContextLogf(ctx, "As user %s, %s cannot be resolved, as expected", user, domain)
+		return nil
+	}
+
+	if !expectResolvable {
+		return errors.Errorf("As user %s, %s resolved into %s, want: non-resolvable", user, domain, trimmedOut)
+	}
+	if len(expectedIP) != 0 && trimmedOut != expectedIP {
+		return errors.Errorf("As user %s, %s resolved into %s, want %s", user, domain, trimmedOut, expectedIP)
+	}
+	testing.ContextLogf(ctx, "As user %s, %s resolved into %s", user, domain, trimmedOut)
+	return nil
+}

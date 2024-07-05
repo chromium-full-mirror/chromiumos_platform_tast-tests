@@ -6,14 +6,17 @@ package network
 
 import (
 	"context"
+	"net"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/arcvpn"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/dns"
 	arcutil "go.chromium.org/tast-tests/cros/local/network/arc"
 	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast-tests/cros/local/network/testhooks"
+	"go.chromium.org/tast-tests/cros/local/network/virtualnet/dnsmasq"
 	"go.chromium.org/tast-tests/cros/local/network/vpn"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast/core/ctxutil"
@@ -95,6 +98,26 @@ func ARCVPNDatapath(ctx context.Context, s *testing.State) {
 		}
 	}()
 
+	// Start a DNS server. This server is only reachable via VPN.
+	const domain = "domain.test"
+	const vpnResolveResult = "203.0.113.33"
+	if err := vpnEnv.StartServer(ctx, "dnsmasq", dnsmasq.New(
+		dnsmasq.WithResolveHost(domain, net.ParseIP(vpnResolveResult)),
+		dnsmasq.WithInterface(server.OverlayIfname),
+	)); err != nil {
+		s.Fatal("Failed to start dnsmasq on vpn server: ", err)
+	}
+
+	// The resolve result on physical network. By default, it should be the router
+	// address for a network created by vpn.CreateNetworkTopology().
+	physicalResolveResult := func() string {
+		routerAddrs, err := networkEnv.Router.GetVethInAddrs(ctx)
+		if err != nil {
+			s.Fatal("Failed to get router addrs: ", err)
+		}
+		return routerAddrs.IPv4Addr.String()
+	}()
+
 	// Install and start the test app.
 	cleanupFunc, err := arcvpn.InstallAndPreAuthorizeARCVPN(ctx, a)
 	if err != nil {
@@ -139,6 +162,8 @@ func ARCVPNDatapath(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait for VPN service connected in shill")
 	}
 
+	s.Log("VPN connected in shill. Verifying routing")
+
 	privateEnv, err := networkEnv.CreatePrivateEnv(ctx, server, vpnEnv)
 	if err != nil {
 		s.Fatal("Failed to create VPN private env: ", err)
@@ -175,7 +200,18 @@ func ARCVPNDatapath(ctx context.Context, s *testing.State) {
 	}
 	for _, ip := range physicalIPs {
 		if err := ping.ExpectPingSuccessWithTimeout(ctx, ip.ip, "root", 5*time.Second); err != nil {
-			s.Errorf("Failed to ping %s %s as root: %v", ip.role, ip.ip, err)
+			s.Fatalf("Failed to ping %s %s as root: %v", ip.role, ip.ip, err)
 		}
+	}
+
+	s.Log("VPN routing verified. Verifying DNS")
+
+	// Verify that the private domain will be resolved to different addresses for
+	// user traffic and system traffic.
+	if err := dns.VerifyDNSResolve(ctx, "chronos", domain, true, vpnResolveResult); err != nil {
+		s.Fatalf("Failed to resolve %s as chronos: %v", domain, err)
+	}
+	if err := dns.VerifyDNSResolve(ctx, "root", domain, true, physicalResolveResult); err != nil {
+		s.Fatalf("Failed to resolve %s as root: %v", domain, err)
 	}
 }

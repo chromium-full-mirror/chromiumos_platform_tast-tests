@@ -7,11 +7,10 @@ package network
 import (
 	"context"
 	"net"
-	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/shillconst"
-	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/dns"
 	"go.chromium.org/tast-tests/cros/local/network/dumputil"
 	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast-tests/cros/local/network/routing"
@@ -19,7 +18,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/dnsmasq"
 	"go.chromium.org/tast-tests/cros/local/network/vpn"
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -139,50 +137,17 @@ func VPNDNS(ctx context.Context, s *testing.State) {
 	// Verify that user and system traffic are using correct DNS correspondingly.
 	// The first verification is relaxed with a timeout for dnsproxy to finish initialization.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		return verifyDNS(ctx, "chronos", privateDomain, true, privateDomainAddr)
+		return dns.VerifyDNSResolve(ctx, "chronos", privateDomain, true, privateDomainAddr)
 	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
 		s.Error("DNS verification failure: ", err)
 	}
-	if err := verifyDNS(ctx, "root", privateDomain, false, ""); err != nil {
+	if err := dns.VerifyDNSResolve(ctx, "root", privateDomain, false, ""); err != nil {
 		s.Error("DNS verification failure: ", err)
 	}
-	if err := verifyDNS(ctx, "root", routing.TestDomainNameV4, true, ""); err != nil {
+	if err := dns.VerifyDNSResolve(ctx, "root", routing.TestDomainNameV4, true, ""); err != nil {
 		s.Error("DNS verification failure: ", err)
 	}
-	if err := verifyDNS(ctx, "chronos", routing.TestDomainNameV4, false, ""); err != nil {
+	if err := dns.VerifyDNSResolve(ctx, "chronos", routing.TestDomainNameV4, false, ""); err != nil {
 		s.Error("DNS verification failure: ", err)
 	}
-}
-
-// verifyDNS verifies whether the name resolution of |domain| by |user| is as expected.
-//
-//	expectResolvable == false: wanted non-resolavable
-//	expectResolvable == true, len(expectedIP) != 0: wanted resolvable into expectedIP
-//	expectResolvable == true, len(expectedIP) == 0: wanted resolvable (into any IP)
-func verifyDNS(ctx context.Context, user, domain string, expectResolvable bool, expectedIP string) error {
-	out, err := testexec.CommandContext(ctx, "sudo", "-u", user, "/usr/local/bin/dig", "+short", domain, "+tries=2", "+timeout=2").Output()
-	if err != nil {
-		return errors.Wrapf(err, "running dig %s as user %s failed:", domain, user)
-	}
-
-	trimmedOut := strings.TrimSpace(string(out))
-	if len(trimmedOut) == 0 {
-		if expectResolvable {
-			if len(expectedIP) != 0 {
-				return errors.Errorf("As user %s, %s cannot be resolved, want: %s", user, domain, expectedIP)
-			}
-			return errors.Errorf("As user %s, %s cannot be resolved, want: resolvable", user, domain)
-		}
-		testing.ContextLogf(ctx, "As user %s, %s cannot be resolved, as expected", user, domain)
-		return nil
-	}
-
-	if !expectResolvable {
-		return errors.Errorf("As user %s, %s resolved into %s, want: non-resolvable", user, domain, trimmedOut)
-	}
-	if len(expectedIP) != 0 && trimmedOut != expectedIP {
-		return errors.Errorf("As user %s, %s resolved into %s, want %s", user, domain, trimmedOut, expectedIP)
-	}
-	testing.ContextLogf(ctx, "As user %s, %s resolved into %s", user, domain, trimmedOut)
-	return nil
 }
