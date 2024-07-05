@@ -251,9 +251,6 @@ func loginPerfStartToLoginScreen(
 			return nil, errors.Wrap(err, "failed to get default options")
 		}
 		options = append(options, defaultOpts...)
-	} else {
-		// For Ash we need to force session restore in another way.
-		options = append(options, chrome.ForceLaunchBrowser())
 	}
 	if testConfig.param.preloadLacros {
 		options = append(options, chrome.EnableFeatures("LacrosLaunchAtLoginScreen"))
@@ -567,24 +564,24 @@ func logout(ctx context.Context, cr *chrome.Chrome, l *lacros.Lacros) error {
 // avoid possible noise when collecting the browser login time performance at restoring time, this
 // function also makes sure to close the OS settings app before returning.
 func setAlwaysRestoreSettings(ctx context.Context, tconn *chrome.TestConn) error {
-	settings, err := ossettings.LaunchAtPage(ctx, tconn, ossettings.Apps)
+	settings, err := ossettings.LaunchAtPage(ctx, tconn, ossettings.SystemPreferences)
 	if err != nil {
-		return errors.Wrap(err, "failed to launch apps settings page")
+		return errors.Wrap(err, "failed to launch system preferences page")
 	}
+
+	restoreButtonNode := nodewith.Name("Restore session on startup").Role(role.ComboBoxSelect)
+	alwaysRestoreOptionNode := nodewith.Name("Always restore").Role(role.MenuListOption)
+
 	ui := uiauto.New(tconn)
-	restoreButtonNode := nodewith.Name("Restore apps on startup").Role(role.ComboBoxSelect)
-	if err := uiauto.IfSuccessThen(
+	if err := uiauto.Combine("set \"Always restore\" setting in the settings app",
 		ui.WaitUntilExists(restoreButtonNode),
-		ui.DoDefault(restoreButtonNode))(ctx); err != nil {
+		ui.DoDefault(restoreButtonNode),
+		ui.WaitUntilExists(alwaysRestoreOptionNode),
+		ui.DoDefault(alwaysRestoreOptionNode),
+	)(ctx); err != nil {
 		return err
 	}
 
-	alwaysRestoreOptionNode := nodewith.Name("Always restore").Role(role.ListBoxOption)
-	if err := uiauto.IfSuccessThen(
-		ui.WaitUntilExists(alwaysRestoreOptionNode),
-		ui.DoDefault(alwaysRestoreOptionNode))(ctx); err != nil {
-		return err
-	}
 	if err := settings.Close(ctx); err != nil {
 		return err
 	}
