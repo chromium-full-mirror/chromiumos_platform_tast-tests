@@ -481,12 +481,7 @@ func createWireGuardProperties(server, secondServer *Server) (*ShillProperties, 
 	// Assumes the DNS server is on the first peer.
 	var nameServers []string
 	if server != nil {
-		if server.Config.IPType != IPTypeIPv6 {
-			nameServers = append(nameServers, server.OverlayIPv4)
-		}
-		if server.Config.IPType != IPTypeIPv4 {
-			nameServers = append(nameServers, server.OverlayIPv6)
-		}
+		nameServers = []string{server.Config.getDNSAddress()}
 	}
 
 	properties := map[string]interface{}{

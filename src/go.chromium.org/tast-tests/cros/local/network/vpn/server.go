@@ -74,10 +74,10 @@ var (
 			"      net = 2\n" +
 			"    }\n" +
 			"  }\n" +
-			"{{if .push_dns}}\n" +
+			"{{if .dns_server}}\n" +
 			"  plugins {\n" +
 			"    attr {\n" +
-			"      dns = {{.server_ipv4}}\n" +
+			"      dns = {{.dns_server}}\n" +
 			"    }\n" +
 			"  }\n" +
 			"{{end}}\n" +
@@ -233,7 +233,7 @@ var (
 			"debug\n" +
 			"lock\n" +
 			"proxyarp\n" +
-			"ms-dns {{.dns_server}}\n",
+			"{{if .dns_server}}ms-dns {{.dns_server}}\n{{end}}",
 	}
 )
 
@@ -318,7 +318,7 @@ var (
 			"tmp-dir /tmp\n" +
 			"{{if .default_route}}push \"redirect-gateway {{.flags}}\"\n {{end}}" +
 			"{{range .push_route}}push \"route {{.addr}} {{.mask}}\"\n{{end}}" +
-			"{{if .ipv4_dns}}push \"dhcp-option DNS {{.ipv4_dns}}\"\n {{end}}" +
+			"{{if .dns_server}}push \"dhcp-option DNS {{.dns_server}}\"\n {{end}}" +
 			"{{.optional_user_verification}}\n",
 	}
 )
@@ -478,7 +478,7 @@ func startL2TPIPsecServer(ctx context.Context, env *env.Env, config *Config) (*s
 		"chap_secret":            chapSecret,
 		"charon_logfile":         charonLogFile,
 		"server_ipv4":            serverIPv4,
-		"dns_server":             serverIPv4,
+		"dns_server":             config.getDNSAddress(),
 		"client_ipv4_pool_start": config.ipv4Subnet.GetAddrEndWith(2).String(),
 		"client_ipv4_pool_end":   config.ipv4Subnet.GetAddrEndWith(254).String(),
 
@@ -553,7 +553,7 @@ func startIKEv2Server(ctx context.Context, env *env.Env, config *Config) (*serve
 		"chap_secret":    chapSecret,
 		"charon_logfile": charonLogFile,
 		"if_id":          ikev2InterfaceID,
-		"push_dns":       true,
+		"dns_server":     config.getDNSAddress(),
 
 		"server_ipv4":            serverIPv4,
 		"client_ipv4_pool_start": config.ipv4Subnet.GetAddrEndWith(2).String(),
@@ -656,7 +656,7 @@ func startOpenVPNServer(ctx context.Context, env *env.Env, config *Config) (*ser
 		"status_file":                  openvpnStatusFile,
 		"username":                     openvpnUsername,
 		"log_file":                     openvpnLogFile,
-		"ipv4_dns":                     config.getServerOverlayIPv4(),
+		"dns_server":                   config.getDNSAddress(),
 		"ipv4_subnet":                  fmt.Sprintf("%s %s", v4Subnet.IP.String(), v4Subnet.MaskString()),
 		"ipv6_subnet":                  v6Subnet.String(),
 	}

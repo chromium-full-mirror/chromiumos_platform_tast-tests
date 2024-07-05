@@ -54,6 +54,12 @@ type Config struct {
 
 	allowReachUnderlayIPFromVPN bool
 
+	// Parameters for configure DNS, only one of them can take effect. These
+	// parameters are set by the WithDNS*() options. Also see the comments there.
+	dnsUseDefaultIPv4 bool
+	dnsUseDefaultIPv6 bool
+	dnsAddress        string
+
 	autoConnect bool
 }
 
@@ -116,7 +122,9 @@ func getDefaultIPv6Subnet(cidr string) *subnet.IPv6Subnet {
 // Option is used in NewConfig() function to generate a VPN Config object
 type Option = func(*Config)
 
-// NewConfig creates a config object for a given VPN type
+// NewConfig creates a config object for a given VPN type. Note that currently
+// it's possible to create an invalid Config (e.g., having an IPv6 DNS on IPv4
+// VPN). We may want to have some validation somewhere.
 func NewConfig(vpnType Type, opts ...Option) *Config {
 	c := &Config{
 		Type:               vpnType,
@@ -126,6 +134,9 @@ func NewConfig(vpnType Type, opts ...Option) *Config {
 		wgServerListenPort: 12345,
 		ipv4Subnet:         getDefaultIPv4Subnet(defaultIPv4SubnetCIDR),
 		ipv6Subnet:         getDefaultIPv6Subnet(defaultIPv6SubnetCIDR),
+		dnsUseDefaultIPv4:  true,
+		dnsUseDefaultIPv6:  false,
+		dnsAddress:         "",
 		autoConnect:        true,
 	}
 	for _, opt := range opts {
@@ -350,6 +361,40 @@ func WithAllowingReachUnderlayIP() Option {
 	}
 }
 
+// WithDNSUseDefaultIPv4 configures VPN to use the server overlay IPv4 as the
+// DNS server. Currently only one DNS server is allowed, and the last WithDNS*()
+// option will take effect. This is the default option.
+func WithDNSUseDefaultIPv4() Option {
+	return func(c *Config) {
+		c.dnsUseDefaultIPv4 = true
+		c.dnsUseDefaultIPv6 = false
+		c.dnsAddress = ""
+	}
+}
+
+// WithDNSUseDefaultIPv6 configures VPN to use the server overlay IPv6 as the
+// DNS server. Currently only one DNS server is allowed, and the last WithDNS*()
+// option will take effect.
+func WithDNSUseDefaultIPv6() Option {
+	return func(c *Config) {
+		c.dnsUseDefaultIPv4 = false
+		c.dnsUseDefaultIPv6 = true
+		c.dnsAddress = ""
+	}
+}
+
+// WithDNSAddress configures VPN to use the input ip as the DNS server.
+// Currently only one DNS server is allowed, and the last WithDNS*() option will
+// take effect. Call this function with an empty string will create an option to
+// disable DNS on the VPN connection.
+func WithDNSAddress(ip string) Option {
+	return func(c *Config) {
+		c.dnsUseDefaultIPv4 = false
+		c.dnsUseDefaultIPv6 = false
+		c.dnsAddress = ip
+	}
+}
+
 // WithoutAutoConnect disables auto connecting in StartConnection(), i.e., the
 // function will return with leaving the service disconnected.
 func WithoutAutoConnect() Option {
@@ -403,4 +448,14 @@ func (c *Config) getServerOverlayIPv4() string {
 
 func (c *Config) getServerOverlayIPv6() string {
 	return c.ipv6Subnet.GetAddrEndWith(1).String()
+}
+
+func (c *Config) getDNSAddress() string {
+	if c.dnsUseDefaultIPv4 {
+		return c.getServerOverlayIPv4()
+	}
+	if c.dnsUseDefaultIPv6 {
+		return c.getServerOverlayIPv6()
+	}
+	return c.dnsAddress
 }
