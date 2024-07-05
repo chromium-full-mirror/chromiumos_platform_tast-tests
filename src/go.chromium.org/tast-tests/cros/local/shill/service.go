@@ -297,6 +297,11 @@ func (s *Service) getModemState(ctx context.Context) (mmconst.ModemState, error)
 // * Service.Error to be set to an error value, in which case that is returned as an error.
 // Any failure also returns an error.
 func (s *Service) WaitForConnectedOrError(ctx context.Context) error {
+	svcType, err := s.GetType(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get technology of the Service")
+	}
+
 	return testing.Poll(ctx, func(ctx context.Context) error {
 		props, err := s.GetProperties(ctx)
 		if err != nil {
@@ -317,6 +322,11 @@ func (s *Service) WaitForConnectedOrError(ctx context.Context) error {
 		// Treat "no-failure" Error values the same as the no error case.
 		if errorStr != shillconst.ServiceErrorNoFailure {
 			return testing.PollBreak(errors.New(errorStr))
+		}
+
+		// The following check is only for Cellular.
+		if svcType != shillconst.TypeCellular {
+			return errors.New("not connected and no error")
 		}
 
 		// There is no error on the shill service. Our connection attempt
