@@ -222,6 +222,46 @@ func (r *Runner) AddIP(ctx context.Context, iface string, ip net.IP, maskLen int
 	return nil
 }
 
+func parseIPAddrOutput(in string) ([]net.IP, error) {
+	fields := strings.Fields(in)
+	if len(fields) < 3 {
+		return nil, errors.Errorf("output: %v does not contain IP address, is interface down?", in)
+	}
+	var ret []net.IP
+	for _, addr := range fields[2:] {
+		ip, _, err := net.ParseCIDR(addr)
+		if err != nil {
+			return ret, err
+		}
+		ret = append(ret, ip)
+	}
+	return ret, nil
+}
+
+// IPAddr gets IPv4/IPv6 address of the iface.
+func (r *Runner) IPAddr(ctx context.Context, iface string) ([]net.IP, error) {
+	args := []string{"-brief", "addr", "show", "dev", iface}
+	output, err := r.cmd.Output(ctx, "ip", args...)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to read address from %s", iface)
+	}
+	return parseIPAddrOutput(string(output))
+}
+
+// IsIPv6Configured checks if a valid IPv6 is configured on the interface.
+func (r *Runner) IsIPv6Configured(ctx context.Context, iface string) (bool, error) {
+	ips, err := r.IPAddr(ctx, iface)
+	if err != nil {
+		return false, err
+	}
+	for _, ip := range ips {
+		if len(ip) == net.IPv6len && ip.IsGlobalUnicast() {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
 // DeleteIP deletes IPv4/IPv6 settings from the interface (iface).
 func (r *Runner) DeleteIP(ctx context.Context, iface string, ip net.IP, maskLen int) error {
 	args := []string{"addr", "del", fmt.Sprintf("%s/%d", ip.String(), maskLen), "dev", iface}

@@ -327,3 +327,33 @@ func TestLinkWithPrefix(t *testing.T) {
 		}
 	}
 }
+
+func TestIpAddrSh(t *testing.T) {
+	testcases := []struct {
+		shouldFail bool
+		out        string
+		expect     []net.IP
+	}{
+		{
+			shouldFail: false,
+			out:        `eth0 UP 192.168.100.126/24 fe80::0102:03ff:fe04:0506/64`,
+			expect:     []net.IP{net.IPv4(192, 168, 100, 126), {0xfe, 0x80, 0, 0, 0, 0, 0, 0, 0x01, 0x02, 0x03, 0xff, 0xfe, 0x04, 0x05, 0x06}},
+		},
+	}
+
+	for i, tc := range testcases {
+		got, err := parseIPOutput(tc.out)
+		if err != nil && !tc.shouldFail {
+			t.Errorf("case#%d failed with err=%v", i, err)
+			continue
+		}
+		if len(tc.expect) == 0 {
+			if len(got) != 0 {
+				t.Errorf("case#%d got: %v, want: %v", i, got, tc.expect)
+			}
+		} else if !reflect.DeepEqual(got, tc.expect) {
+			t.Errorf("case#%d got: %v, want: %v", i, got, tc.expect)
+		}
+	}
+
+}
