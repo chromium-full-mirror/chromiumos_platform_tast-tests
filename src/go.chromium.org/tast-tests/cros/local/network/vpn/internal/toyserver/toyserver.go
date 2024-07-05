@@ -95,6 +95,8 @@ func (s *Server) SetUp(ctx context.Context, e *virtualnet.Env, serverPort int, t
 	s.listener = listener
 	s.mtu = mtu
 
+	testing.ContextLogf(ctx, "ToyVPNServer listening at 0.0.0.0:%d in %s", serverPort, e.NetNSName)
+
 	return nil
 }
 

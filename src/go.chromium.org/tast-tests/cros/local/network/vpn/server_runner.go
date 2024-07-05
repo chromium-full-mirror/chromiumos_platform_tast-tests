@@ -49,9 +49,8 @@ func newServerRunner(virtualNetEnv *env.Env) *serverRunner {
 	}
 }
 
-// Startup starts the VPN server in virtualNetEnv. Returns the IPv4 address
-// inside NetEnv, which can be used to reach the VPN server.
-func (n *serverRunner) Startup(ctx context.Context) (string, error) {
+// Startup starts the VPN server in virtualNetEnv.
+func (n *serverRunner) Startup(ctx context.Context) error {
 	success := false
 	defer func() {
 		if success {
@@ -62,31 +61,25 @@ func (n *serverRunner) Startup(ctx context.Context) (string, error) {
 		}
 	}()
 
-	addrs, err := n.virtualNetEnv.GetVethInAddrs(ctx)
-	if err != nil {
-		return "", errors.Wrap(err, "failed to get addrs from base env")
-	}
-	netnsIP := addrs.IPv4Addr.String()
-
 	for _, rootdir := range n.netRootDirectories {
 		// Use MkdirAll to ignore errors when the path already exists.
 		if err := os.MkdirAll(n.virtualNetEnv.ChrootPath(rootdir), os.ModePerm); err != nil {
-			return "", errors.Wrapf(err, "failed to create root dir %s inside chroot", rootdir)
+			return errors.Wrapf(err, "failed to create root dir %s inside chroot", rootdir)
 		}
 	}
 
 	if err := n.writeConfigs(); err != nil {
-		return "", errors.Wrap(err, "failed writing the configs")
+		return errors.Wrap(err, "failed writing the configs")
 	}
 
 	n.startupCmd = n.virtualNetEnv.CreateCommand(ctx, "/bin/bash", filepath.Join("/", startup))
 	n.startupCmd.Env = append(os.Environ(), n.NetEnv...)
 	if err := n.startupCmd.Start(); err != nil {
-		return "", errors.Wrap(err, "failed to run minijail")
+		return errors.Wrap(err, "failed to run minijail")
 	}
 
 	success = true
-	return netnsIP, nil
+	return nil
 }
 
 // Shutdown stops the cmds running by this object.

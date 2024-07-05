@@ -416,6 +416,12 @@ func StartServerWithConfig(ctx context.Context, env *env.Env, config *Config) (*
 	// Make a copy of the config, in case that the caller changes it later.
 	server.Config = *config
 
+	underlayIPs, err := env.GetVethInAddrs(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get addrs in virtualnet Env")
+	}
+	server.UnderlayIP = underlayIPs.IPv4Addr.String()
+
 	if !server.Config.allowReachUnderlayIPFromVPN {
 		if server.OverlayIPv4 != "" {
 			if err := env.RunWithoutChroot(ctx, "iptables", "-I", "INPUT", "-i", server.OverlayIfname, "!", "-d", server.OverlayIPv4, "-j", "DROP", "-w"); err != nil {
@@ -492,8 +498,7 @@ func startL2TPIPsecServer(ctx context.Context, env *env.Env, config *Config) (*S
 	xl2tpdCmdStr := fmt.Sprintf("%s -c /%s -C /tmp/l2tpd.control", xl2tpdCommand, xl2tpdConfigFile)
 	runner.AddStartupCommand(xl2tpdCmdStr)
 
-	underlayIP, err := runner.Startup(ctx)
-	if err != nil {
+	if err := runner.Startup(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to start L2TP/IPsec server")
 	}
 
@@ -506,7 +511,6 @@ func startL2TPIPsecServer(ctx context.Context, env *env.Env, config *Config) (*S
 		return nil, errors.Wrap(err, "failed to load swanctl config")
 	}
 
-	server.UnderlayIP = underlayIP
 	server.OverlayIPv4 = serverIPv4
 	return server, nil
 }
@@ -592,8 +596,7 @@ func startIKEv2Server(ctx context.Context, env *env.Env, config *Config) (*Serve
 	runner.AddStartupCommand(fmt.Sprintf("ip addr add dev xfrm1 %s/%d", serverIPv6, config.ipv6Subnet.PrefixLen()))
 	runner.AddStartupCommand("ip link set dev xfrm1 up")
 
-	underlayIP, err := runner.Startup(ctx)
-	if err != nil {
+	if err := runner.Startup(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to start IKEv2 VPN server")
 	}
 
@@ -606,7 +609,6 @@ func startIKEv2Server(ctx context.Context, env *env.Env, config *Config) (*Serve
 		return nil, errors.Wrap(err, "failed to load swanctl config")
 	}
 
-	server.UnderlayIP = underlayIP
 	if config.IPType == IPTypeIPv4 || config.IPType == IPTypeIPv4AndIPv6 {
 		server.OverlayIPv4 = serverIPv4
 	}
@@ -693,11 +695,9 @@ func startOpenVPNServer(ctx context.Context, env *env.Env, config *Config) (*Ser
 		"OPENSSL_CHROMIUM_SKIP_TRUSTED_PURPOSE_CHECK=1",
 	}
 
-	underlayIP, err := runner.Startup(ctx)
-	if err != nil {
+	if err := runner.Startup(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to start OpenVPN server")
 	}
-	server.UnderlayIP = underlayIP
 	server.OverlayIPv4 = v4Subnet.GetAddrEndWith(1).String()
 	server.OverlayIPv6 = v6Subnet.GetAddrEndWith(1).String()
 	return server, nil
@@ -745,8 +745,7 @@ func startWireGuardServer(ctx context.Context, env *env.Env, config *Config) (*S
 	runner.AddStartupCommand("ip route add " + clientIPv4 + " dev wg1")
 	runner.AddStartupCommand("ip route add " + clientIPv6 + " dev wg1")
 
-	var err error
-	if server.UnderlayIP, err = runner.Startup(ctx); err != nil {
+	if err := runner.Startup(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to start WireGuard server")
 	}
 	return server, nil
@@ -754,11 +753,6 @@ func startWireGuardServer(ctx context.Context, env *env.Env, config *Config) (*S
 
 func startToyVPNServer(ctx context.Context, env *env.Env, config *Config) (retServer *Server, retErr error) {
 	const ifname = "tun3"
-
-	underlayIPs, err := env.GetVethInAddrs(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get addrs in virtualnet Env")
-	}
 
 	serverOverlayIPv4 := config.ipv4Subnet.GetAddrEndWith(1).String()
 	clientOverlayIPv4 := config.ipv4Subnet.GetAddrEndWith(2).String()
@@ -785,13 +779,11 @@ func startToyVPNServer(ctx context.Context, env *env.Env, config *Config) (retSe
 		return nil, errors.Wrap(err, "failed to install overlay route for ToyVPNServer")
 	}
 
-	testing.ContextLogf(ctx, "ToyVPNServer listening at %s:%d", underlayIPs.IPv4Addr.String(), ToyVPNServerPort)
 	go toyServer.RunLoop(ctx)
 
 	return &Server{
 		OverlayIfname: ifname,
 		OverlayIPv4:   serverOverlayIPv4,
-		UnderlayIP:    underlayIPs.IPv4Addr.String(),
 
 		// The added route will be removed when the interface is removed in toyServer.TearDown.
 		stopFunc: toyServer.TearDown,
