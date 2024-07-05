@@ -83,6 +83,7 @@ func CreateNetworkTopology(ctx context.Context) (*Network, error) {
 		Priority:   5,
 		EnableDHCP: true,
 		RAServer:   true,
+		EnableDNS:  true,
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to start router and server env")
