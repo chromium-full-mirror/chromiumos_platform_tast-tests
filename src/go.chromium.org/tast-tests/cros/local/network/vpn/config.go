@@ -396,3 +396,11 @@ func (c *Config) GetOverlayConfig() *OverlayConfig {
 		ClientIPv4: c.ipv4Subnet.GetAddrEndWith(2).String(),
 	}
 }
+
+func (c *Config) getServerOverlayIPv4() string {
+	return c.ipv4Subnet.GetAddrEndWith(1).String()
+}
+
+func (c *Config) getServerOverlayIPv6() string {
+	return c.ipv6Subnet.GetAddrEndWith(1).String()
+}

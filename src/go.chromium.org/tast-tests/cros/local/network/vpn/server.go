@@ -366,18 +366,26 @@ var (
 // ToyVPNServerPort is the default TCP port of the toy VPN server.
 const ToyVPNServerPort = 8888
 
+// serverCore contains the fields which need different setup for each server
+// type.
+type serverCore struct {
+	OverlayIfname string
+
+	serverRunner *serverRunner
+	stopCommands [][]string
+	pidFiles     []string
+	logFiles     []string
+	stopFunc     func(context.Context) error
+}
+
 // Server represents a VPN server that can be used in the test.
 type Server struct {
-	OverlayIfname string
-	OverlayIPv4   string
-	OverlayIPv6   string
-	UnderlayIP    string
-	Config        Config
-	serverRunner  *serverRunner
-	stopCommands  [][]string
-	pidFiles      []string
-	logFiles      []string
-	stopFunc      func(context.Context) error
+	*serverCore
+
+	OverlayIPv4 string
+	OverlayIPv6 string
+	UnderlayIP  string
+	Config      Config
 }
 
 // StartServer starts a VPN server of type in the given env.
@@ -393,7 +401,7 @@ func StartServerWithConfig(ctx context.Context, env *env.Env, config *Config) (*
 		return nil, errors.New("env should not be nil")
 	}
 
-	server, err := func() (*Server, error) {
+	serverCore, err := func() (*serverCore, error) {
 		switch config.Type {
 		case TypeIKEv2:
 			return startIKEv2Server(ctx, env, config)
@@ -413,14 +421,24 @@ func StartServerWithConfig(ctx context.Context, env *env.Env, config *Config) (*
 		return nil, err
 	}
 
-	// Make a copy of the config, in case that the caller changes it later.
-	server.Config = *config
+	server := &Server{
+		serverCore: serverCore,
+		// Make a copy of the config, in case that the caller changes it later.
+		Config: *config,
+	}
 
 	underlayIPs, err := env.GetVethInAddrs(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get addrs in virtualnet Env")
 	}
 	server.UnderlayIP = underlayIPs.IPv4Addr.String()
+
+	if config.IPType == IPTypeIPv4 || config.IPType == IPTypeIPv4AndIPv6 {
+		server.OverlayIPv4 = config.getServerOverlayIPv4()
+	}
+	if config.IPType == IPTypeIPv6 || config.IPType == IPTypeIPv4AndIPv6 {
+		server.OverlayIPv6 = config.getServerOverlayIPv6()
+	}
 
 	if !server.Config.allowReachUnderlayIPFromVPN {
 		if server.OverlayIPv4 != "" {
@@ -439,9 +457,9 @@ func StartServerWithConfig(ctx context.Context, env *env.Env, config *Config) (*
 }
 
 // startL2TPIPsecServer starts a L2TP/IPsec server.
-func startL2TPIPsecServer(ctx context.Context, env *env.Env, config *Config) (*Server, error) {
+func startL2TPIPsecServer(ctx context.Context, env *env.Env, config *Config) (*serverCore, error) {
 	runner := newServerRunner(env)
-	server := &Server{
+	server := &serverCore{
 		OverlayIfname: "ppp0",
 		serverRunner:  runner,
 		stopCommands:  [][]string{},
@@ -454,7 +472,7 @@ func startL2TPIPsecServer(ctx context.Context, env *env.Env, config *Config) (*S
 	runner.AddConfigTemplates(strongSwanConfigs)
 	runner.AddConfigTemplates(l2tpConfigs)
 
-	serverIPv4 := config.ipv4Subnet.GetAddrEndWith(1).String()
+	serverIPv4 := config.getServerOverlayIPv4()
 	configValues := map[string]interface{}{
 		"chap_user":              chapUser,
 		"chap_secret":            chapSecret,
@@ -511,14 +529,13 @@ func startL2TPIPsecServer(ctx context.Context, env *env.Env, config *Config) (*S
 		return nil, errors.Wrap(err, "failed to load swanctl config")
 	}
 
-	server.OverlayIPv4 = serverIPv4
 	return server, nil
 }
 
 // startIKEv2Server starts an IKEv2 server.
-func startIKEv2Server(ctx context.Context, env *env.Env, config *Config) (*Server, error) {
+func startIKEv2Server(ctx context.Context, env *env.Env, config *Config) (*serverCore, error) {
 	runner := newServerRunner(env)
-	server := &Server{
+	server := &serverCore{
 		OverlayIfname: "xfrm1",
 		serverRunner:  runner,
 		stopCommands:  [][]string{{"/bin/ip", "link", "del", "xfrm1"}},
@@ -529,8 +546,8 @@ func startIKEv2Server(ctx context.Context, env *env.Env, config *Config) (*Serve
 	runner.AddRootDirectories(strongSwanDirectories)
 	runner.AddConfigTemplates(strongSwanConfigs)
 
-	serverIPv4 := config.ipv4Subnet.GetAddrEndWith(1).String()
-	serverIPv6 := config.ipv6Subnet.GetAddrEndWith(1).String()
+	serverIPv4 := config.getServerOverlayIPv4()
+	serverIPv6 := config.getServerOverlayIPv6()
 	configValues := map[string]interface{}{
 		"chap_user":      chapUser,
 		"chap_secret":    chapSecret,
@@ -609,20 +626,13 @@ func startIKEv2Server(ctx context.Context, env *env.Env, config *Config) (*Serve
 		return nil, errors.Wrap(err, "failed to load swanctl config")
 	}
 
-	if config.IPType == IPTypeIPv4 || config.IPType == IPTypeIPv4AndIPv6 {
-		server.OverlayIPv4 = serverIPv4
-	}
-	if config.IPType == IPTypeIPv6 || config.IPType == IPTypeIPv4AndIPv6 {
-		server.OverlayIPv6 = serverIPv6
-	}
-
 	return server, nil
 }
 
 // startOpenVPNServer starts an OpenVPN server.
-func startOpenVPNServer(ctx context.Context, env *env.Env, config *Config) (*Server, error) {
+func startOpenVPNServer(ctx context.Context, env *env.Env, config *Config) (*serverCore, error) {
 	runner := newServerRunner(env)
-	server := &Server{
+	server := &serverCore{
 		OverlayIfname: "tun0",
 		serverRunner:  runner,
 		stopCommands:  [][]string{},
@@ -646,7 +656,7 @@ func startOpenVPNServer(ctx context.Context, env *env.Env, config *Config) (*Ser
 		"status_file":                  openvpnStatusFile,
 		"username":                     openvpnUsername,
 		"log_file":                     openvpnLogFile,
-		"ipv4_dns":                     v4Subnet.GetAddrEndWith(1),
+		"ipv4_dns":                     config.getServerOverlayIPv4(),
 		"ipv4_subnet":                  fmt.Sprintf("%s %s", v4Subnet.IP.String(), v4Subnet.MaskString()),
 		"ipv6_subnet":                  v6Subnet.String(),
 	}
@@ -698,13 +708,11 @@ func startOpenVPNServer(ctx context.Context, env *env.Env, config *Config) (*Ser
 	if err := runner.Startup(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to start OpenVPN server")
 	}
-	server.OverlayIPv4 = v4Subnet.GetAddrEndWith(1).String()
-	server.OverlayIPv6 = v6Subnet.GetAddrEndWith(1).String()
 	return server, nil
 }
 
 // startWireGuardServer starts a WireGuard server.
-func startWireGuardServer(ctx context.Context, env *env.Env, config *Config) (*Server, error) {
+func startWireGuardServer(ctx context.Context, env *env.Env, config *Config) (*serverCore, error) {
 	if net.ParseIP(config.wgClientIPv4) == nil {
 		return nil, errors.Errorf("config.wgClientIPv4 is not valid, got %s", config.wgClientIPv4)
 	}
@@ -713,14 +721,12 @@ func startWireGuardServer(ctx context.Context, env *env.Env, config *Config) (*S
 	}
 
 	runner := newServerRunner(env)
-	server := &Server{
+	server := &serverCore{
 		OverlayIfname: "wg1",
 		serverRunner:  runner,
 		stopCommands:  [][]string{{"/bin/ip", "link", "del", "wg1"}},
 		pidFiles:      []string{},
 		logFiles:      []string{}, // No log for WireGuard server.
-		OverlayIPv4:   config.ipv4Subnet.GetAddrEndWith(1).String(),
-		OverlayIPv6:   config.ipv6Subnet.GetAddrEndWith(1).String(),
 	}
 
 	clientIPv4 := config.wgClientIPv4
@@ -739,8 +745,8 @@ func startWireGuardServer(ctx context.Context, env *env.Env, config *Config) (*S
 	runner.AddConfigValues(configValues)
 	runner.AddStartupCommand("ip link add wg1 type wireguard")
 	runner.AddStartupCommand("wg setconf wg1 /" + wgConfigFile)
-	runner.AddStartupCommand("ip addr add dev wg1 " + server.OverlayIPv4)
-	runner.AddStartupCommand("ip addr add dev wg1 " + server.OverlayIPv6)
+	runner.AddStartupCommand("ip addr add dev wg1 " + config.getServerOverlayIPv4())
+	runner.AddStartupCommand("ip addr add dev wg1 " + config.getServerOverlayIPv6())
 	runner.AddStartupCommand("ip link set dev wg1 up")
 	runner.AddStartupCommand("ip route add " + clientIPv4 + " dev wg1")
 	runner.AddStartupCommand("ip route add " + clientIPv6 + " dev wg1")
@@ -751,10 +757,10 @@ func startWireGuardServer(ctx context.Context, env *env.Env, config *Config) (*S
 	return server, nil
 }
 
-func startToyVPNServer(ctx context.Context, env *env.Env, config *Config) (retServer *Server, retErr error) {
+func startToyVPNServer(ctx context.Context, env *env.Env, config *Config) (retServer *serverCore, retErr error) {
 	const ifname = "tun3"
 
-	serverOverlayIPv4 := config.ipv4Subnet.GetAddrEndWith(1).String()
+	serverOverlayIPv4 := config.getServerOverlayIPv4()
 	clientOverlayIPv4 := config.ipv4Subnet.GetAddrEndWith(2).String()
 
 	toyServer := toyserver.New()
@@ -781,9 +787,8 @@ func startToyVPNServer(ctx context.Context, env *env.Env, config *Config) (retSe
 
 	go toyServer.RunLoop(ctx)
 
-	return &Server{
+	return &serverCore{
 		OverlayIfname: ifname,
-		OverlayIPv4:   serverOverlayIPv4,
 
 		// The added route will be removed when the interface is removed in toyServer.TearDown.
 		stopFunc: toyServer.TearDown,
