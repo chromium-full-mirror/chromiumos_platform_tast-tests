@@ -367,10 +367,12 @@ func OrientationFromBounds(bounds coords.Rect) string {
 
 // ToggleFullscreen toggles fullscreen by injecting the Zoom Toggle keycode.
 func ToggleFullscreen(ctx context.Context, tconn *chrome.TestConn) error {
-	ew, err := input.Keyboard(ctx)
+	// Better to always use virtual keyboard to get the correct mapping via `input.KeyboardTopRowLayout`. See the method comment (https://source.chromium.org/chromiumos/chromiumos/codesearch/+/main:src/platform/tast-tests/src/go.chromium.org/tast-tests/cros/local/input/keyboard_top_row_layout.go;l=58-61;drc=0e7533be1b2e20e90b11427534947eeefd18a94b) for details.
+	ew, err := input.VirtualKeyboard(ctx)
 	if err != nil {
 		return err
 	}
+	defer ew.Close(ctx)
 	l, err := input.KeyboardTopRowLayout(ctx, ew)
 	if err != nil {
 		return err
