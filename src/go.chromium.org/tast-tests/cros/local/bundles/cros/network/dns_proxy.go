@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/crostini"
 	"go.chromium.org/tast-tests/cros/local/network"
 	arcnet "go.chromium.org/tast-tests/cros/local/network/arc"
+	"go.chromium.org/tast-tests/cros/local/network/testhooks"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/subnet"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast-tests/cros/local/vm"
@@ -140,6 +141,18 @@ func DNSProxy(ctx context.Context, s *testing.State) {
 	} else if params.crostini {
 		cont = s.FixtValue().(crostini.FixtureData).Cont
 	}
+
+	hookEnv, err := testhooks.RunNetworkTestHooks(ctx,
+		testhooks.NewSaveNetLogHook(),
+		testhooks.NewTcpdumpHook(),
+		testhooks.NewDumpHostOnFailureHook(),
+		testhooks.NewDumpARCOnFailureHook(a),
+	)
+	if err != nil {
+		s.Fatal("Failed to run network test hooks: ", err)
+	}
+	s.AttachErrorHandlers(hookEnv.OnErrorHandler, hookEnv.OnFatalHandler)
+	defer hookEnv.TearDownWithLogFailures(cleanupCtx, s.HasError)
 
 	if params.crostini {
 		// Ensure connectivity is available.
