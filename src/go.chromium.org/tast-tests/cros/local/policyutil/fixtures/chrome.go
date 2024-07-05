@@ -61,23 +61,6 @@ func init() {
 		Parent:          fixture.FakeDMS,
 	})
 
-	testing.AddFixture(&testing.Fixture{
-		Name:         fixture.ChromePolicyLoggedInFeatureChromeLabs,
-		Desc:         "Logged into a user session with chrome labs enabled",
-		Contacts:     []string{"chromeos-commercial-remote-management@google.com"},
-		BugComponent: "b:1111617", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Policy Stack
-		Impl: &policyChromeFixture{
-			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-				return []chrome.Option{chrome.EnableFeatures("ChromeLabs")}, nil
-			},
-		},
-		SetUpTimeout:    chrome.ManagedUserLoginTimeout + cleanupTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-		PostTestTimeout: 15 * time.Second,
-		Parent:          fixture.FakeDMS,
-	})
-
 	// TODO(b/218907052): Remove fixture after Journeys flag  is enabled by default.
 	testing.AddFixture(&testing.Fixture{
 		Name:         fixture.ChromePolicyLoggedInFeatureJourneys,
