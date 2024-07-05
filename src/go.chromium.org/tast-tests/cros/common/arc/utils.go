@@ -21,16 +21,19 @@ const Managed3pEmmAccountVarName = "arc.managed3pEmmAccount"
 // ChildAccountVarName is the arc child account.
 const ChildAccountVarName = "arc.childAccount"
 
-// ChildDMAAccountVarName is the arc child dma account.
-const childDMAAccountVarName = "arc.childDMAAccount"
+// PlayAutoInstallAccountVarName is arc PlayAutoInstall account.
+const PlayAutoInstallAccountVarName = "arc.PlayAutoInstall.account"
 
 // ParentAccountVarName is the arc parent account.
 const ParentAccountVarName = "arc.parentAccount"
 
-// ParentDMAAccountVarName is the arc parent account.
+const childDMAAccountVarName = "arc.childDMAAccount"
+
 const parentDMAAccountVarName = "arc.parentDMAAccount"
 
 const managedDMAAccountPoolVarName = "arc.managedDMAAccountPool"
+
+const playAutoInstallDMAAccountVarName = "arc.PlayAutoInstall.dmaAccount"
 
 var managedAccountPoolVar = testing.RegisterVarString(
 	ManagedAccountPoolVarName,
@@ -86,6 +89,18 @@ var parentDMAAccountVar = testing.RegisterVarString(
 	"It contains creds in arc.parentDMAAccount",
 )
 
+var playAutoInstallAccountVar = testing.RegisterVarString(
+	PlayAutoInstallAccountVarName,
+	"",
+	"It contains creds in arc.PlayAutoInstall.account",
+)
+
+var playAutoInstallDMAAccountVar = testing.RegisterVarString(
+	playAutoInstallDMAAccountVarName,
+	"",
+	"It contains creds in arc.PlayAutoInstall.dmaAccount",
+)
+
 // ManagedAccountPoolValue returns credentials from arc.managedAccountPool.
 func ManagedAccountPoolValue() string {
 	return managedAccountPoolVar.Value()
@@ -129,4 +144,14 @@ func ParentAccountValue() string {
 // ParentDMAAccountValue returns credentials from arc.parentDMAAccount.
 func ParentDMAAccountValue() string {
 	return parentDMAAccountVar.Value()
+}
+
+// PlayAutoInstallAccountValue returns credentials from arc.PlayAutoInstall.account
+func PlayAutoInstallAccountValue() string {
+	return playAutoInstallAccountVar.Value()
+}
+
+// PlayAutoInstallDMAAccountValue returns credentials from arc.PlayAutoInstall.dmaAccount
+func PlayAutoInstallDMAAccountValue() string {
+	return playAutoInstallDMAAccountVar.Value()
 }

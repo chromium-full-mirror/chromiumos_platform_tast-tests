@@ -12,6 +12,8 @@ import (
 	"strings"
 	"time"
 
+	arcCommon "go.chromium.org/tast-tests/cros/common/arc"
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -32,7 +34,7 @@ func init() {
 		// ChromeOS > Software > ARC++ > Core > Play Store Setup
 		BugComponent: "b:1131344",
 		Attr:         []string{"group:mainline", "informational"},
-		SoftwareDeps: []string{"arc_android_data_cros_access", "chrome"},
+		SoftwareDeps: []string{"arc_android_data_cros_access", "chrome", "gaia"},
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_container", "chrome"},
 			Val:               browser.TypeAsh,
@@ -50,15 +52,17 @@ func init() {
 			Val:               browser.TypeLacros,
 		}},
 		Timeout: chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
-		VarDeps: []string{"arc.PlayAutoInstall.username", "arc.PlayAutoInstall.password"},
+		VarDeps: []string{arcCommon.PlayAutoInstallAccountVarName},
 	})
 }
 
 func PlayAutoInstall(ctx context.Context, s *testing.State) {
 	// Note, ARC produces pailist.txt only for this account. Changing this account would lead to test failures.
 	// TODO(khmel): Switch to pool of accounts ui.GaiaPoolDefaultVarName.
-	username := s.RequiredVar("arc.PlayAutoInstall.username")
-	password := s.RequiredVar("arc.PlayAutoInstall.password")
+	username, password, err := dma.UserPassFromPool(arcCommon.PlayAutoInstallAccountVarName)
+	if err != nil {
+		s.Fatal("Failed to get username and password: ", err)
+	}
 
 	const (
 		// Path to file to read of list of apps triggered by PlayAutoInstall flow (PAI).

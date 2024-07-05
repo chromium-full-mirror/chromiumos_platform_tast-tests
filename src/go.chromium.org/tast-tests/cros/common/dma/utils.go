@@ -35,7 +35,6 @@ var dmaEnableVar = testing.RegisterVarString(
 
 func pools() (map[string]string, map[string]string) {
 	var dmaPools = map[string]string{
-
 		accountmanager.AccountPoolVarName:           ui.GaiaDMAPoolDefaultValue(),
 		arcappcompat.AccountVarName:                 arcappcompat.DmaAccountValue(),
 		arc.ChildAccountVarName:                     arc.ChildDMAAccountValue(),
@@ -43,6 +42,7 @@ func pools() (map[string]string, map[string]string) {
 		arc.Managed3pEmmAccountVarName:              arc.ManagedDMAAccountPoolValue(),
 		arc.ManagedAccountPoolVarName:               arc.ManagedDMAAccountPoolValue(),
 		arc.ParentAccountVarName:                    arc.ParentDMAAccountValue(),
+		arc.PlayAutoInstallAccountVarName:           arc.PlayAutoInstallDMAAccountValue(),
 		arc.SharesheetPoolVarName:                   ui.GaiaDMAPoolDefaultValue(),
 		assistant.AccountPoolVarName:                assistant.DmaAccountPoolValue(),
 		calendar.GoogleCalendarAccountPoolVarName:   calendar.GoogleCalendarDMAAccountPoolValue(),
@@ -77,6 +77,7 @@ func pools() (map[string]string, map[string]string) {
 		arc.Managed3pEmmAccountVarName:              arc.Managed3pEmmAccountValue(),
 		arc.ManagedAccountPoolVarName:               arc.ManagedAccountPoolValue(),
 		arc.ParentAccountVarName:                    arc.ParentAccountValue(),
+		arc.PlayAutoInstallAccountVarName:           arc.PlayAutoInstallAccountValue(),
 		arc.SharesheetPoolVarName:                   arc.SharesheetPoolValue(),
 		assistant.AccountPoolVarName:                assistant.AccountPoolValue(),
 		calendar.GoogleCalendarAccountPoolVarName:   calendar.GoogleCalendarAccountPoolValue(),
