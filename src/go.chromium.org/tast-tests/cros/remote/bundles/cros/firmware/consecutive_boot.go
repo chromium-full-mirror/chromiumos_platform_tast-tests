@@ -157,7 +157,7 @@ func ConsecutiveBoot(ctx context.Context, s *testing.State) {
 	}
 
 	getTime := func(ctx context.Context) (int64, error) {
-		result, err := h.Servo.RunECCommandGetOutput(ctx, "gettime", []string{`Time:\s+0x(\S+)\s`})
+		result, err := h.Servo.RunECCommandGetOutputNoConsoleLogs(ctx, "gettime", []string{`Time:\s+0x(\S+)\s`})
 		if err != nil {
 			return 0, errors.Wrap(err, "failed to get ec time")
 		}
