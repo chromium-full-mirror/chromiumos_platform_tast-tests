@@ -59,8 +59,9 @@ func DumpNetworkInfo(ctx context.Context, filename string) error {
 		}
 	}
 
-	// Dumps ip-addr.
+	// Dumps ip-addr in root and all other netns.
 	runCmdAndLog("ip", "addr")
+	runCmdAndLog("ip", "-all", "netns", "exec", "ip", "addr")
 
 	// Dumps ip-rule.
 	for _, family := range []string{"-4", "-6"} {
@@ -72,10 +73,14 @@ func DumpNetworkInfo(ctx context.Context, filename string) error {
 		runCmdAndLog("ip", family, "route", "list", "table", "all")
 	}
 
-	// Dumps conntrack.
-	for _, family := range []string{"ipv4", "ipv6"} {
-		runCmdAndLog("conntrack", "-L", "-f", family)
-	}
+	// Dumps conntrack. Filters out SSDP (dport=1900) and MDNS (dport=5353)
+	// connections since they are very noisy in the lab network and in general
+	// they are not very helpful here. Also dumps the counters in case we want to
+	// know how noisy it is.
+	runCmdAndLog("sh", "-c", "conntrack -L -f ipv4 | grep -v -e 'dport=1900' -e 'dport=5353'")
+	runCmdAndLog("sh", "-c", "conntrack -L -f ipv6 | grep -v -e 'dport=1900' -e 'dport=5353'")
+	runCmdAndLog("conntrack", "-C", "conntrack")
+	runCmdAndLog("conntrack", "-C", "expect")
 
 	// Dumps socket statistics.
 	for _, family := range []string{"-4", "-6"} {
