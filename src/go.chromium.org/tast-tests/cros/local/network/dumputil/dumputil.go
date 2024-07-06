@@ -34,90 +34,65 @@ func DumpNetworkInfo(ctx context.Context, filename string) error {
 	}
 	defer f.Close()
 
-	runCmdAndLog := func(cmd string, args ...string) error {
+	var errs []error
+
+	runCmdAndLog := func(cmd string, args ...string) {
 		fullCmd := cmd + " " + strings.Join(args, " ")
 		header := "$ " + fullCmd + "\n"
 		o, err := testexec.CommandContext(ctx, cmd, args...).Output()
 		if err != nil {
-			return errors.Wrap(err, "failed to execute "+fullCmd)
+			errs = append(errs, errors.Wrap(err, "failed to execute "+fullCmd))
+			return
 		}
 		if _, err := f.WriteString(header + string(o) + "\n"); err != nil {
-			return errors.Wrap(err, "failed to write contents for "+fullCmd)
+			errs = append(errs, errors.Wrap(err, "failed to write contents for "+fullCmd))
+			return
 		}
-		return nil
 	}
-
-	var lastErr error
 
 	// Dumps iptables.
 	for _, iptablesCmd := range []string{"iptables", "ip6tables"} {
 		for _, table := range []string{"filter", "nat", "mangle"} {
 			// `-n` to avoid reverse DNS lookups since DNS service may not be
 			// available in the test environment.
-			if err := runCmdAndLog(iptablesCmd, "-L", "-x", "-v", "-t", table, "-n", "-w", "3"); err != nil {
-				testing.ContextLog(ctx, "Failed to run and log iptables: ", err)
-				lastErr = err
-			}
+			runCmdAndLog(iptablesCmd, "-L", "-x", "-v", "-t", table, "-n", "-w", "3")
 		}
 	}
 
 	// Dumps ip-addr.
-	if err := runCmdAndLog("ip", "addr"); err != nil {
-		testing.ContextLog(ctx, "Failed to run and log ip-addr: ", err)
-		lastErr = err
-	}
+	runCmdAndLog("ip", "addr")
 
 	// Dumps ip-rule.
 	for _, family := range []string{"-4", "-6"} {
-		if err := runCmdAndLog("ip", family, "rule"); err != nil {
-			testing.ContextLog(ctx, "Failed to run and log ip-rule: ", err)
-			lastErr = err
-		}
+		runCmdAndLog("ip", family, "rule")
 	}
 
 	// Dumps ip-route.
 	for _, family := range []string{"-4", "-6"} {
-		if err := runCmdAndLog("ip", family, "route", "list", "table", "all"); err != nil {
-			testing.ContextLog(ctx, "Failed to run and log ip-route: ", err)
-			lastErr = err
-		}
+		runCmdAndLog("ip", family, "route", "list", "table", "all")
 	}
 
 	// Dumps conntrack.
 	for _, family := range []string{"ipv4", "ipv6"} {
-		if err := runCmdAndLog("conntrack", "-L", "-f", family); err != nil {
-			testing.ContextLog(ctx, "Failed to run and log conntrack: ", err)
-			lastErr = err
-		}
+		runCmdAndLog("conntrack", "-L", "-f", family)
 	}
 
 	// Dumps socket statistics.
 	for _, family := range []string{"-4", "-6"} {
-		if err := runCmdAndLog("ss", family, "-api"); err != nil {
-			testing.ContextLog(ctx, "Failed to run and log ss: ", err)
-			lastErr = err
-		}
+		runCmdAndLog("ss", family, "-api")
 	}
 
 	// Dump shill status.
-	if err := runCmdAndLog("/usr/local/lib/flimflam/test/list-manager"); err != nil {
-		testing.ContextLog(ctx, "Failed to run and log list-manager for shill: ", err)
-		lastErr = err
-	}
-	if err := runCmdAndLog("/usr/local/lib/flimflam/test/list-profiles"); err != nil {
-		testing.ContextLog(ctx, "Failed to run and log list-profiles for shill: ", err)
-		lastErr = err
-	}
-	if err := runCmdAndLog("/usr/local/lib/flimflam/test/list-devices"); err != nil {
-		testing.ContextLog(ctx, "Failed to run and log list-devices for shill: ", err)
-		lastErr = err
-	}
-	if err := runCmdAndLog("/usr/local/lib/flimflam/test/list-connected-services"); err != nil {
-		testing.ContextLog(ctx, "Failed to run and log list-connected-services for shill: ", err)
-		lastErr = err
+	runCmdAndLog("/usr/local/lib/flimflam/test/list-manager")
+	runCmdAndLog("/usr/local/lib/flimflam/test/list-profiles")
+	runCmdAndLog("/usr/local/lib/flimflam/test/list-devices")
+	runCmdAndLog("/usr/local/lib/flimflam/test/list-connected-services")
+
+	for _, err := range errs {
+		testing.ContextLog(ctx, "Failed to run cmd: ", err)
 	}
 
-	return lastErr
+	return errors.Join(errs...)
 }
 
 // CreateErrorHandler creates an error handler to dump network info on test
