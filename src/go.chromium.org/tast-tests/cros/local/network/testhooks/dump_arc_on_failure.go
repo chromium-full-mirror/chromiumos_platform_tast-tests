@@ -9,6 +9,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/arc"
 	arcutil "go.chromium.org/tast-tests/cros/local/network/arc"
+	"go.chromium.org/tast/core/testing"
 )
 
 // dumpARCOnFailureHook implements hook interface.
@@ -24,14 +25,23 @@ func (h *dumpARCOnFailureHook) name() string {
 }
 
 func (h *dumpARCOnFailureHook) setUp(ctx context.Context) error {
+	if h.a == nil {
+		testing.ContextLogf(ctx, "Skip setup of %s due to empty arc.ARC", h.name())
+	}
 	h.errorHandler = arcutil.CreateNetworkDumpsysErrorHandler(ctx, h.a)
 	return nil
 }
 
 func (h *dumpARCOnFailureHook) onError(errMsg string) {
+	if h.errorHandler == nil {
+		return
+	}
 	h.errorHandler(errMsg)
 }
 
 func (h *dumpARCOnFailureHook) OnFatal(errMsg string) {
+	if h.errorHandler == nil {
+		return
+	}
 	h.errorHandler(errMsg)
 }

@@ -8,11 +8,14 @@ import "go.chromium.org/tast-tests/cros/local/arc"
 
 // This file contains the available hook list.
 
-// NewDumpARCOnFailureHook creates a hook which dumps network information
-// inside on ARC on failures. s.AttachErrorHandlers() should be called to make
-// this hook have effect. The passed in arc must be valid when the error
-// happens. We can change the parameter to a closure to get arc if it might be
-// changed in the test.
+// NewDumpARCOnFailureHook creates a hook which dumps network information inside
+// on ARC on failures. s.AttachErrorHandlers() should be called to make this
+// hook have effect. The passed in arc must be valid when the error happens. We
+// can change the parameter to a closure to get arc if it might be changed in
+// the test. The passed in arc can be nil, in which case the execution of this
+// hook will be skipped. This might be helpful if the test only holds this
+// object conditionally, so that it won't need to build the hook list
+// conditionally.
 func NewDumpARCOnFailureHook(arc *arc.ARC) hook {
 	return &dumpARCOnFailureHook{a: arc}
 }
