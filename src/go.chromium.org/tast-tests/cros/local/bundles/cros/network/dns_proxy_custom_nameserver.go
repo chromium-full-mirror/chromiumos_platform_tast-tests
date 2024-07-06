@@ -142,7 +142,7 @@ func DNSProxyCustomNameserver(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get DNS proxy's network namespaces: ", err)
 	}
-	if errs := dns.NewPlaintextBlock(nss, []string{env.Router.VethOutName}, opts.Nameserver).Run(ctx, func(ctx context.Context) {
+	if errs := dns.NewPlaintextBlock(nss, []string{env.Router.VethOutName}, opts.Nameserver, "" /*excludeHexStr*/).Run(ctx, func(ctx context.Context) {
 		for i := 0; i < len(tc); i++ {
 			tc[i].ExpectErr = true
 		}

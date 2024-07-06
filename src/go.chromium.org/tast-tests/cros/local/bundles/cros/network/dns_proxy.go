@@ -242,7 +242,7 @@ func DNSProxy(ctx context.Context, s *testing.State) {
 	switch params.mode {
 	case dns.DoHAutomatic:
 		// Confirm blocking plaintext still works (DoH preferred/used).
-		blocks = append(blocks, dns.NewPlaintextBlock(nss, physIfs, ""))
+		blocks = append(blocks, dns.NewPlaintextBlock(nss, physIfs, "" /*dest*/, dns.ExampleDoHProviderHexString))
 		// Verify blocking HTTPS also works (fallback).
 		blocks = append(blocks, dns.NewDoHBlock(nss, physIfs))
 		// Chrome isn't tested since it manages it's own DoH flow.
@@ -258,7 +258,7 @@ func DNSProxy(ctx context.Context, s *testing.State) {
 		}
 	case dns.DoHOff:
 		// Verify blocking plaintext causes queries fail (no DoH option).
-		blocks = append(blocks, dns.NewPlaintextBlock(nss, physIfs, ""))
+		blocks = append(blocks, dns.NewPlaintextBlock(nss, physIfs, "" /*dest*/, "" /*excludeHexStr*/))
 		if params.chrome {
 			tc = []dns.ProxyTestCase{{Client: dns.System, ExpectErr: true}, {Client: dns.User, ExpectErr: true}, {Client: dns.Chrome, ExpectErr: true}}
 		} else if params.arc {

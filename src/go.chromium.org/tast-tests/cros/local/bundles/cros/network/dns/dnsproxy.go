@@ -120,15 +120,16 @@ func (c ipCmd) args() []string {
 }
 
 type rule struct {
-	ipc    ipCmd
-	op     string
-	chain  string
-	dest   string
-	dport  int
-	proto  string
-	oif    string
-	owner  string
-	target string
+	ipc           ipCmd
+	op            string
+	chain         string
+	dest          string
+	dport         int
+	proto         string
+	oif           string
+	owner         string
+	excludeHexStr string
+	target        string
 }
 
 func (r rule) cmd() string {
@@ -152,10 +153,14 @@ func (r rule) args() []string {
 	if r.owner != "" {
 		args = append(args, []string{"-m", "owner", "--uid-owner", r.owner}...)
 	}
+	if r.excludeHexStr != "" {
+		// Hex string needs to be wrapped by `||`.
+		args = append(args, []string{"-m", "string", "--algo", "bm", "!", "--hex-string", "|" + r.excludeHexStr + "|"}...)
+	}
 	return append(args, []string{"-j", r.target, "-w"}...)
 }
 
-func newPlaintextDropRules(nss, ifs []string, dest string) []rule {
+func newPlaintextDropRules(nss, ifs []string, dest, excludeHexStr string) []rule {
 	var famv6 []bool
 	if dest != "" {
 		if net.ParseIP(dest).To4() != nil {
@@ -170,9 +175,10 @@ func newPlaintextDropRules(nss, ifs []string, dest string) []rule {
 	}
 	var rules []rule
 	r := rule{
-		dest:   dest,
-		dport:  53,
-		target: "DROP",
+		dest:          dest,
+		dport:         53,
+		excludeHexStr: excludeHexStr,
+		target:        "DROP",
 	}
 	for _, v6 := range famv6 {
 		r.ipc.v6 = v6
@@ -275,11 +281,13 @@ func newDoHVPNDropRules(ns string) []rule {
 	return rules
 }
 
-// NewPlaintextBlock creates a Block that will block any UDP or TCP packets egressing from
-// the namespaces in |nss| or interface in |ifs| on port 53, optionally, to |dest|.
-func NewPlaintextBlock(nss, ifs []string, dest string) *Block {
+// NewPlaintextBlock creates a Block that will block any UDP or TCP packets
+// egressing from the namespaces in nss or interface in ifs on port 53,
+// optionally, to dest. If excludeHexStr is not empty, packets containing this
+// string pattern will be allowed.
+func NewPlaintextBlock(nss, ifs []string, dest, excludeHexStr string) *Block {
 	return &Block{
-		rules: newPlaintextDropRules(nss, ifs, dest),
+		rules: newPlaintextDropRules(nss, ifs, dest, excludeHexStr),
 	}
 }
 

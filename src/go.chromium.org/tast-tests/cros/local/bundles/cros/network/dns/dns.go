@@ -105,6 +105,10 @@ const GoogleDoHProvider = "https://dns.google/dns-query"
 // The URL must match the CA certificate used by virtualnet/certs/cert.go.
 const ExampleDoHProvider = "https://www.example.com/dns-query"
 
+// ExampleDoHProviderHexString is the hex string representation of
+// ExampleDoHProvider in a DNS query. This maps to "3www7example3com0".
+const ExampleDoHProviderHexString = "03777777076578616d706c6503636f6d00"
+
 // DNSProxyIPv4Prefix is the prefix used for DNS proxy's namespaces.
 const DNSProxyIPv4Prefix = "100.115.92"
 
