@@ -10,6 +10,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/dns"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/network/testhooks"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/subnet"
 	"go.chromium.org/tast/core/ctxutil"
@@ -56,6 +57,9 @@ func DNSProxyUISettings(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
+
+	dumpUI := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "dnsui" /*prefix*/)
+	s.AttachErrorHandlers(dumpUI, dumpUI)
 
 	// Set up virtualnet environment. Always-on mode needs the DoH server to be responding.
 	env, err := dns.NewEnv(ctx, subnet.NewPool())

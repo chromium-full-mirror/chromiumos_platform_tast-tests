@@ -190,12 +190,17 @@ func SetDoHModeViaUI(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestC
 		if err := toggleSecureDNS(ctx, checked.True); err != nil {
 			return err
 		}
+
+		// Note: the nodes below exist at the beginning, but their properties
+		// (visible, expanded, collapsed, etc.) will change when we perform the UI
+		// operations, so we should not only check the existence of the nodes but
+		// also with their properties.
 		selectNode := nodewith.Name("Select DNS provider").Role(role.ComboBoxSelect)
 		optionNode := nodewith.Name("Network default").Role(role.MenuListOption)
 		if err := uiauto.Combine("enable secure DNS automatic mode",
 			ac.WithTimeout(10*time.Second).WaitUntilExists(selectNode),
-			ac.WithInterval(3*time.Second).LeftClickUntil(selectNode, ac.Exists(optionNode)),
-			ac.LeftClick(optionNode),
+			ac.WithInterval(3*time.Second).LeftClickUntil(selectNode, ac.Exists(selectNode.Expanded())),
+			ac.WithInterval(3*time.Second).LeftClickUntil(optionNode, ac.Exists(selectNode.Collapsed())),
 		)(ctx); err != nil {
 			return err
 		}
@@ -218,7 +223,7 @@ func SetDoHModeViaUI(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestC
 		if err := uiauto.Combine("enable DoH always on with a custom provider",
 			// Click add custom DNS service provider option.
 			ac.WithTimeout(10*time.Second).WaitUntilExists(selectNode),
-			ac.WithInterval(3*time.Second).LeftClickUntil(selectNode, ac.Exists(optionNode)),
+			ac.WithInterval(3*time.Second).LeftClickUntil(selectNode, ac.Exists(selectNode.Expanded())),
 			ac.WithInterval(3*time.Second).LeftClickUntil(optionNode, ac.Exists(textNode)),
 			// Input a custom DoH provider.
 			ac.EnsureFocused(textNode),
