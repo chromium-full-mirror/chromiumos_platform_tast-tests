@@ -21,6 +21,11 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+type vpnDNSTestCase struct {
+	vpnType vpn.Type
+	isIPv6  bool
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VPNDNS,
@@ -36,18 +41,50 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		Fixture:      "vpnEnvWithCerts",
 		Params: []testing.Param{{
-			Name: "openvpn",
-			Val:  vpn.TypeOpenVPN,
+			Name: "ikev2_ipv4",
+			Val: vpnDNSTestCase{
+				vpnType: vpn.TypeIKEv2,
+				isIPv6:  false,
+			},
+			ExtraSoftwareDeps: []string{"ikev2"},
 		}, {
-			Name:              "ikev2",
-			Val:               vpn.TypeIKEv2,
+			Name: "ikev2_ipv6",
+			Val: vpnDNSTestCase{
+				vpnType: vpn.TypeIKEv2,
+				isIPv6:  true,
+			},
 			ExtraSoftwareDeps: []string{"ikev2"},
 		}, {
 			Name: "l2tp_ipsec",
-			Val:  vpn.TypeL2TPIPsec,
+			Val: vpnDNSTestCase{
+				vpnType: vpn.TypeL2TPIPsec,
+				isIPv6:  false,
+			},
 		}, {
-			Name:              "wireguard",
-			Val:               vpn.TypeWireGuard,
+			Name: "openvpn_ipv4",
+			Val: vpnDNSTestCase{
+				vpnType: vpn.TypeOpenVPN,
+				isIPv6:  false,
+			},
+		}, {
+			Name: "openvpn_ipv6",
+			Val: vpnDNSTestCase{
+				vpnType: vpn.TypeOpenVPN,
+				isIPv6:  true,
+			},
+		}, {
+			Name: "wireguard_ipv4",
+			Val: vpnDNSTestCase{
+				vpnType: vpn.TypeWireGuard,
+				isIPv6:  false,
+			},
+			ExtraSoftwareDeps: []string{"wireguard"},
+		}, {
+			Name: "wireguard_ipv6",
+			Val: vpnDNSTestCase{
+				vpnType: vpn.TypeWireGuard,
+				isIPv6:  true,
+			},
 			ExtraSoftwareDeps: []string{"wireguard"},
 		},
 		},
@@ -117,9 +154,24 @@ func VPNDNS(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to verify physical connectivity to vpn env: ", err)
 	}
 
-	conn, err := vpn.StartConnection(ctx, vpnServer,
-		s.Param().(vpn.Type),
+	// Start the VPN connection. The VPN overlay will always be dual-stack (except
+	// for L2TP/IPsec), and the configured DNS server address will be IPv4 or
+	// IPv6-only depending on the test case. We mainly care about if the DNS can
+	// be configured properly on DUT instead of the detailed resolve result, so
+	// the DNS server in the test will always only return A records.
+	testCase := s.Param().(vpnDNSTestCase)
+	opts := []vpn.Option{
+		vpn.WithIPType(vpn.IPTypeIPv4AndIPv6),
 		vpn.WithCertVals(s.FixtValue().(vpn.FixtureEnv).CertVals),
+	}
+	if testCase.isIPv6 {
+		opts = append(opts, vpn.WithDNSUseDefaultIPv6())
+	} else {
+		opts = append(opts, vpn.WithDNSUseDefaultIPv4())
+	}
+	conn, err := vpn.StartConnection(ctx, vpnServer,
+		testCase.vpnType,
+		opts...,
 	)
 	if err != nil {
 		s.Fatal("Failed to start VPN connection: ", err)
@@ -132,6 +184,23 @@ func VPNDNS(ctx context.Context, s *testing.State) {
 
 	if err := ping.ExpectPingSuccessWithTimeout(ctx, conn.Server.OverlayIPv4, "chronos", 10*time.Second); err != nil {
 		s.Fatalf("Failed to ping server overlay %s: %v", conn.Server.OverlayIPv4, err)
+	}
+
+	// Verify the VPN DNS config.
+	networkConfig, err := conn.Service().GetNetworkConfig(ctx)
+	if err != nil {
+		s.Fatal("Failed to get NetworkConfig on VPN service")
+	}
+	// Always log the name servers configured on the service.
+	s.Log("Got VPN DNS configuration: ", networkConfig.NameServers)
+	if testCase.isIPv6 {
+		if len(networkConfig.IPv4NameServers()) != 0 || len(networkConfig.IPv6NameServers()) == 0 {
+			s.Fatal("Unexpected VPN DNS configuration, want only IPv6 name servers")
+		}
+	} else {
+		if len(networkConfig.IPv4NameServers()) == 0 || len(networkConfig.IPv6NameServers()) != 0 {
+			s.Fatal("Unexpected VPN DNS configuration, want only IPv4 name servers")
+		}
 	}
 
 	// Verify that user and system traffic are using correct DNS correspondingly.
