@@ -8,12 +8,12 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/dns"
 	"go.chromium.org/tast-tests/cros/local/crostini"
 	"go.chromium.org/tast-tests/cros/local/network"
 	arcnet "go.chromium.org/tast-tests/cros/local/network/arc"
+	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast-tests/cros/local/network/testhooks"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/subnet"
 	"go.chromium.org/tast-tests/cros/local/shill"
@@ -156,10 +156,8 @@ func DNSProxy(ctx context.Context, s *testing.State) {
 
 	if params.crostini {
 		// Ensure connectivity is available.
-		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			return testexec.CommandContext(ctx, "/bin/ping", "-c1", "-w1", "8.8.8.8").Run()
-		}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
-			s.Log("Failed to ping 8.8.8.8: ", err)
+		if err := ping.VerifyInternetConnectivity(ctx, 5*time.Second); err != nil {
+			s.Log("Failed to verify Internet connectivity in the host")
 		}
 
 		// Ensure connectivity is available inside Crostini's container.
