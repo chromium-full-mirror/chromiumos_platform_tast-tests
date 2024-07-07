@@ -196,14 +196,24 @@ func DNSProxy(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	// By default, DNS query should work.
+	// By default, DNS query should work. Set AllowRetry to true in Chrome and
+	// Crostini to be more permissive on the first attempt. We just restart
+	// dnsproxy and switch the default network, it's expected that DNS has not
+	// been ready on the system or there may be transient inconsistent state on
+	// the system, and currently we don't have a good way to query that all things
+	// are ready. For ARC, the readiness is already verified above.
+	// TODO(jasongustaman): Verify resolv.conf at least before the query.
 	var tc []dns.ProxyTestCase
 	if params.chrome {
-		tc = []dns.ProxyTestCase{{Client: dns.System}, {Client: dns.User}, {Client: dns.Chrome}}
+		tc = []dns.ProxyTestCase{
+			{Client: dns.System, AllowRetry: true},
+			{Client: dns.User, AllowRetry: true},
+			{Client: dns.Chrome, AllowRetry: true},
+		}
 	} else if params.arc {
 		tc = []dns.ProxyTestCase{{Client: dns.ARC}}
 	} else if params.crostini {
-		tc = []dns.ProxyTestCase{{Client: dns.Crostini}}
+		tc = []dns.ProxyTestCase{{Client: dns.Crostini, AllowRetry: true}}
 	}
 	if errs := dns.TestQueryDNSProxy(ctx, tc, a, cont, dns.NewQueryOptions()); len(errs) != 0 {
 		for _, err := range errs {
