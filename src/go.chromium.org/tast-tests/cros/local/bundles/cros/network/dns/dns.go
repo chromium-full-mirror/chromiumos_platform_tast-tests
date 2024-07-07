@@ -74,6 +74,10 @@ const (
 	ARC
 )
 
+func (c Client) String() string {
+	return []string{"system", "user", "Chrome", "Crostini", "ARC"}[c]
+}
+
 // Config defines a DNS-related config.
 type Config struct {
 	IPv4Nameservers      []string
@@ -141,24 +145,6 @@ search{{range .search_lists}} {{.}}{{end}}
 {{end -}}
 options single-request timeout:1 attempts:5
 `
-
-// GetClientString get the string representation of a DNS client.
-func GetClientString(c Client) string {
-	switch c {
-	case System:
-		return "system"
-	case User:
-		return "user"
-	case Chrome:
-		return "Chrome"
-	case Crostini:
-		return "Crostini"
-	case ARC:
-		return "ARC"
-	default:
-		return ""
-	}
-}
 
 // SetDoHModeViaUI updates ChromeOS setting to change DNS-over-HTTPS mode via UI
 // interaction. Prefer using SetDoHModeViaShill is the test is not intended to
@@ -338,6 +324,14 @@ func NewQueryOptions() *QueryOptions {
 	}
 }
 
+func (o QueryOptions) String() string {
+	s := o.Domain + " via "
+	if len(o.Nameserver) == 0 {
+		return s + "default dns"
+	}
+	return s + o.Nameserver
+}
+
 func (o QueryOptions) digArgs() []string {
 	args := []string{o.Domain}
 	if o.Nameserver != "" {
@@ -394,14 +388,15 @@ type ProxyTestCase struct {
 func TestQueryDNSProxy(ctx context.Context, tcs []ProxyTestCase, a *arc.ARC, cont *vm.Container, opts *QueryOptions) []error {
 	var errs []error
 	for _, tc := range tcs {
+		testing.ContextLogf(ctx, "Resolving %s as %s, expect failure: %t, allow retry: %t", opts, tc.Client, tc.ExpectErr, tc.AllowRetry)
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
 			var err error
 			qErr := QueryDNS(ctx, tc.Client, a, cont, opts)
 			if qErr != nil && !tc.ExpectErr {
-				err = errors.Wrapf(qErr, "DNS query failed for %s", GetClientString(tc.Client))
+				err = errors.Wrapf(qErr, "DNS query failed for %s", tc.Client)
 			}
 			if qErr == nil && tc.ExpectErr {
-				err = errors.Errorf("successful DNS query for %s, but expected failure", GetClientString(tc.Client))
+				err = errors.Errorf("successful DNS query for %s, but expected failure", tc.Client)
 			}
 			if !tc.AllowRetry {
 				return testing.PollBreak(err)

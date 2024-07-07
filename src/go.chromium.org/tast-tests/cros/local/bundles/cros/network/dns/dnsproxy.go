@@ -58,6 +58,11 @@ func (o blockOp) String() string {
 // Block is a mechanism for using ip rules-based blocking in a scoped/safe way.
 type Block struct {
 	rules []rule
+	tag   string // for logging
+}
+
+func (b Block) String() string {
+	return b.tag
 }
 
 // do installs or deletes the blocking rules.
@@ -85,11 +90,14 @@ func (b Block) Run(ctx context.Context, f func(context.Context)) (errs []error) 
 	defer func() {
 		errs = append(errs, b.do(ctxCleanup, opDelete)...)
 	}()
+
+	testing.ContextLog(ctx, "Start DNS test in condition ", b)
 	// Insert the blocking rules.
 	if errs := b.do(ctx, opInsert); len(errs) > 0 {
 		return errs
 	}
 	f(ctx)
+	testing.ContextLog(ctx, "Finished DNS test in condition ", b)
 	return nil
 }
 
@@ -288,6 +296,7 @@ func newDoHVPNDropRules(ns string) []rule {
 func NewPlaintextBlock(nss, ifs []string, dest, excludeHexStr string) *Block {
 	return &Block{
 		rules: newPlaintextDropRules(nss, ifs, dest, excludeHexStr),
+		tag:   "block_do53",
 	}
 }
 
@@ -296,6 +305,7 @@ func NewPlaintextBlock(nss, ifs []string, dest, excludeHexStr string) *Block {
 func NewDoHBlock(nss, ifs []string) *Block {
 	return &Block{
 		rules: newDoHDropRules(nss, ifs),
+		tag:   "block_doh",
 	}
 }
 
@@ -304,6 +314,7 @@ func NewDoHBlock(nss, ifs []string) *Block {
 func NewVPNBlock(ns string) *Block {
 	return &Block{
 		rules: newVPNDropRules(ns),
+		tag:   "block_vpn",
 	}
 }
 
@@ -312,6 +323,7 @@ func NewVPNBlock(ns string) *Block {
 func NewDoHVPNBlock(ns string) *Block {
 	return &Block{
 		rules: newDoHVPNDropRules(ns),
+		tag:   "block_vpn_doh",
 	}
 }
 

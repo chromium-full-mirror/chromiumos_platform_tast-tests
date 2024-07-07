@@ -223,7 +223,7 @@ func DNSProxy(ctx context.Context, s *testing.State) {
 	}
 	if errs := dns.TestQueryDNSProxy(ctx, tc, a, cont, dns.NewQueryOptions()); len(errs) != 0 {
 		for _, err := range errs {
-			s.Error("Failed DNS query check: ", err)
+			s.Error("Failed DNS query check in the default setup: ", err)
 		}
 	}
 
@@ -281,10 +281,10 @@ func DNSProxy(ctx context.Context, s *testing.State) {
 	for _, block := range blocks {
 		if errs := block.Run(ctx, func(ctx context.Context) {
 			if errs := dns.TestQueryDNSProxy(ctx, tc, a, cont, dns.NewQueryOptions()); len(errs) != 0 {
-				s.Error("Failed DNS query check: ", errs)
+				s.Errorf("Failed DNS query check in condition %s: %v", block, errs)
 			}
 		}); len(errs) > 0 {
-			s.Fatal("Failed to block DNS: ", errs)
+			s.Fatalf("Failed to block DNS in condition %s: %v", block, errs)
 		}
 	}
 }
