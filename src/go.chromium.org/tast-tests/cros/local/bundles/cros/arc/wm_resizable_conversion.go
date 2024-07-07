@@ -275,7 +275,10 @@ func resetLockedOrientationInTabletMode(ctx context.Context, tconn *chrome.TestC
 	if err != nil {
 		return errors.Wrap(err, "failed to ensure if tablet mode is enabled")
 	}
-	defer cleanup(ctx)
+	defer func(ctx context.Context) {
+		cleanup(ctx)
+		wm.WaitForDeviceModeChangeApplied(ctx)
+	}(ctx)
 
 	if err := wm.WaitForDeviceModeChangeApplied(ctx); err != nil {
 		return errors.Wrap(err, "failed to wait for device mode change")
