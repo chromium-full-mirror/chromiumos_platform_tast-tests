@@ -9,7 +9,7 @@ package testutil
 // The list to be used in the hardware dependency field.
 
 // FlakyUSBCamera is a list of flaky USB cameras.
-var FlakyUSBCamera = append(flakyUSBCamera1, flakyUSBCamera2...)
+var FlakyUSBCamera = append(append(flakyUSBCamera1, flakyUSBCamera2...), flakyUSBCamera3...)
 
 // FlakyMIPIModel is a list of models with a flaky MIPI camera.
 var FlakyMIPIModel = flakyMIPIModel1
@@ -31,6 +31,10 @@ var flakyUSBCamera1 = []string{"0408:3028", "0408:4021", "05c8:03f4"}
 // TODO(b/340123520): skip the test on flaky camera. Remove when resolved. (See also flakyUSBModel4)
 // We need to skip by VID:PID, because the camera often gets disconnected on use.
 var flakyUSBCamera2 = []string{"13d3:56ec"}
+
+// TODO(b/351688757): skip the test on flaky camera. Remove when resolved.
+// We need to skip by VID:PID, because the camera fails to set control/format.
+var flakyUSBCamera3 = []string{"0408:302f"}
 
 // TODO(b/348997906): skip the test on flaky model. Remove when resolved or better workaround landed.
 var flakyUSBModel1 = []string{"pazquel"}
