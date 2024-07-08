@@ -323,6 +323,14 @@ func createIKEv2Properties(server *Server) (*ShillProperties, error) {
 		"Type":          "vpn",
 	}
 
+	// TestCert1 is the one we really use in the test. Put it in the middle to
+	// make sure that it can be accepted no matter the order. See b/351762667.
+	caCertPEMs := []string{
+		certificate.TestCert2().CACred.Cert,
+		certificate.TestCert1().CACred.Cert,
+		certificate.TestCert3().CACred.Cert,
+	}
+
 	switch config.IPsecAuthType {
 	case AuthTypePSK:
 		properties["IKEv2.AuthenticationType"] = "PSK"
@@ -331,7 +339,7 @@ func createIKEv2Properties(server *Server) (*ShillProperties, error) {
 		properties["IKEv2.PSK"] = ipsecPresharedKey
 	case AuthTypeCert:
 		properties["IKEv2.AuthenticationType"] = "Cert"
-		properties["IKEv2.CACertPEM"] = []string{certificate.TestCert1().CACred.Cert}
+		properties["IKEv2.CACertPEM"] = caCertPEMs
 		if config.CertVals != nil && config.CertVals.Store != nil {
 			properties["IKEv2.ClientCertID"] = config.CertVals.Store.id
 			properties["IKEv2.ClientCertSlot"] = config.CertVals.Store.slot
@@ -339,7 +347,7 @@ func createIKEv2Properties(server *Server) (*ShillProperties, error) {
 		properties["IKEv2.RemoteIdentity"] = ikeServerIdentity
 	case AuthTypeEAP:
 		properties["IKEv2.AuthenticationType"] = "EAP"
-		properties["IKEv2.CACertPEM"] = []string{certificate.TestCert1().CACred.Cert}
+		properties["IKEv2.CACertPEM"] = caCertPEMs
 		properties["EAP.EAP"] = "MSCHAPV2"
 		properties["EAP.Identity"] = xauthUser
 		properties["EAP.Password"] = xauthPassword
