@@ -40,9 +40,30 @@ func init() {
 		SoftwareDeps: []string{"ec_hibernate"},
 		Timeout:      15 * time.Minute,
 		Params: []testing.Param{{
-			Name:              "lid_switch",
-			ExtraHardwareDeps: hwdep.D(hwdep.Lid()),
-			Val:               wakeDUTWithLidSwitch,
+			Name: "lid_switch",
+			ExtraHardwareDeps: hwdep.D(hwdep.Lid(), hwdep.SkipOnModel(
+				// The lid_switch variant of this test requires servo_micro. Please skip on C2D2 devices.
+				"craask",
+				"crystaldrift",
+				"dochi",
+				"drawman",
+				"frostflow",
+				"joxer",
+				"karis",
+				"magolor",
+				"markarth",
+				"nipperkin",
+				"nirwen",
+				"screebo",
+				"screebo4es",
+				"skyrim15w",
+				"storo",
+				"taeko",
+				"tomato",
+				"yaviks",
+				"yavikso",
+			)),
+			Val: wakeDUTWithLidSwitch,
 		}, {
 			Name: "power_button",
 			Val:  wakeDUTWithPwrBtn,
@@ -82,7 +103,7 @@ func ECWakeFromULP(ctx context.Context, s *testing.State) {
 	if !hasMicroOrC2D2 {
 		s.Fatal("There is no servo micro or C2D2 connected")
 	} else if wakeSrc == wakeDUTWithLidSwitch && hasC2D2 {
-		s.Fatal("The servo is c2d2, we expect a servo_micro to wake DUT by lid switch")
+		s.Fatal("A servo_micro to wake DUT by lid switch, please add this model to the skip list for lid_switch test")
 	}
 
 	cleanupCtx := ctx
