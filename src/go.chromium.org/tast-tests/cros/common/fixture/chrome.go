@@ -44,8 +44,6 @@ const (
 	ChromeLoggedInWithLauncherContinueSection = "chromeLoggedInWithLauncherContinueSection"
 	// Log in and proceed with the post-login OOBE flow.
 	ChromeLoggedInWithOobe = "chromeLoggedInWithOobe"
-	// Logged into a user session with OS Feedback and OsFeedbackSaveReportToLocalForE2ETesting enabled.
-	ChromeLoggedInWithOsFeedbackSaveReportToLocalForE2ETesting = "chromeLoggedInWithOsFeedbackSaveReportToLocalForE2ETesting"
 	// Log in and proceed with the post-login OOBE flow with the accessibility button enabled on the marketing opt-in screen.
 	ChromeLoggedInWithOobeAndAccessibilityButtonEnabled = "chromeLoggedInWithOobeAndAccessibilityButtonEnabled"
 	// Logged into a user session with printer setup assistance and jelly flags enabled.

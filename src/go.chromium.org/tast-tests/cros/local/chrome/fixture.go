@@ -261,20 +261,6 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     fixture.ChromeLoggedInWithOsFeedbackSaveReportToLocalForE2ETesting,
-		Desc:     "Logged into a user session with OS Feedback and OsFeedbackSaveReportToLocalForE2ETesting enabled",
-		Contacts: []string{"wangdanny@google.com"},
-		// ChromeOS > Data > Engineering > Feedback
-		BugComponent: "b:1033360",
-		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
-			return []Option{EnableFeatures("SkipSendingFeedbackReportInTastTests", "OsFeedbackSaveReportToLocalForE2ETesting")}, nil
-		}),
-		SetUpTimeout:    FixtureSetUpTimeout,
-		ResetTimeout:    ResetTimeout,
-		TearDownTimeout: ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
 		Name:         fixture.ChromeLoggedInWithOobeAndAccessibilityButtonEnabled,
 		Desc:         "Log in and proceed with the post-login OOBE flow with the accessibility button enabled on the marketing opt-in screen",
 		Contacts:     []string{"bohdanty@google.com", "cros-oobe@google.com"},
