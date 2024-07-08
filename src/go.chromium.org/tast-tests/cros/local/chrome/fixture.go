@@ -356,20 +356,6 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeLoggedInWithInputDeviceSettingsSplit",
-		Desc:     "Logged into a user session with InputDeviceSettingsSplit enabled",
-		Contacts: []string{"wangdanny@google.com"},
-		// ChromeOS > Software > Fundamentals > Peripherals > Keyboard
-		BugComponent: "b:1131926",
-		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
-			return []Option{EnableFeatures("InputDeviceSettingsSplit", "AllowScrollSettings", "PeripheralCustomization")}, nil
-		}),
-		SetUpTimeout:    FixtureSetUpTimeout,
-		ResetTimeout:    ResetTimeout,
-		TearDownTimeout: ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
 		Name:     "chromeLoggedInWithShortcutCustomizationApp",
 		Desc:     "Logged into a user session with ShortcutCustomizationApp, OnlyShowNewShortcutsApp and SearchInShortcutsApp enabled",
 		Contacts: []string{"jimmyxgong@google.com", "cros-peripherals@google.com"},
