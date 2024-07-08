@@ -261,10 +261,9 @@ func simpleConnect80211ax() []*simpleConnectParams {
 
 func simpleConnect80211axe() []*simpleConnectParams {
 	return []*simpleConnectParams{{
-		Name:      "80211axeowe",
-		Fixture:   defaultFixture,
-		Doc:       simpleConnectDocPref("an OWE 802.11ax network on 6GHz PSC channel 21 with a channel width of 20MHz."),
-		ExtraAttr: []string{"wificell_unstable"},
+		Name:    "80211axeowe",
+		Fixture: defaultFixture,
+		Doc:     simpleConnectDocPref("an OWE 802.11ax network on 6GHz PSC channel 21 with a channel width of 20MHz."),
 		Val: []simpleConnectParamsVal{{
 			APConfigs: []apConfigVal{{
 				APOpts: `ap.Mode(ap.Mode80211axPure), ap.Channel(21), ap.HTCaps(ap.HTCapHT20),
@@ -280,7 +279,6 @@ func simpleConnect80211axe() []*simpleConnectParams {
 		Name:              "80211axe20",
 		Fixture:           defaultFixture,
 		Doc:               simpleConnectDocPref("a WPA3-SAE (\"pure\") 802.11ax network on 6GHz PSC channel 21 with a channel width of 20MHz."),
-		ExtraAttr:         []string{"wificell_unstable"},
 		ExtraSoftwareDeps: []string{"wpa3_sae"},
 		Val: []simpleConnectParamsVal{{
 			APConfigs: []apConfigVal{{
@@ -298,7 +296,6 @@ func simpleConnect80211axe() []*simpleConnectParams {
 		Name:              "80211axe40",
 		Fixture:           defaultFixture,
 		Doc:               simpleConnectDocPref("a WPA3-SAE (\"pure\") 802.11ax network on 6GHz PSC channel 21 with a channel width of 40MHz."),
-		ExtraAttr:         []string{"wificell_unstable"},
 		ExtraSoftwareDeps: []string{"wpa3_sae"},
 		Val: []simpleConnectParamsVal{{
 			APConfigs: []apConfigVal{{
@@ -316,7 +313,6 @@ func simpleConnect80211axe() []*simpleConnectParams {
 		Name:              "80211axe80mixed",
 		Fixture:           defaultFixture,
 		Doc:               simpleConnectDocPref("a WPA3-SAE (\"mixed\") 802.11ax network on 6GHz PSC channel 5 with center channel of 7 and channel width of 80MHz."),
-		ExtraAttr:         []string{"wificell_unstable"},
 		ExtraSoftwareDeps: []string{"wpa3_sae"},
 		Val: []simpleConnectParamsVal{{
 			APConfigs: []apConfigVal{{
@@ -334,7 +330,6 @@ func simpleConnect80211axe() []*simpleConnectParams {
 	}, {
 		Name:              "80211axe80pure",
 		Fixture:           defaultFixture,
-		ExtraAttr:         []string{"wificell_unstable"},
 		ExtraSoftwareDeps: []string{"wpa3_sae"},
 		Doc: append(simpleConnectDocPref("a WPA3-SAE (\"pure\") 802.11ax network on 6GHz PSC channel 5 with center channel of 7 and channel width of 80MHz."),
 			"The router is forced to use HE WiFi standard."),
@@ -355,7 +350,6 @@ func simpleConnect80211axe() []*simpleConnectParams {
 		Name:              "80211axe160mixed",
 		Fixture:           defaultFixture,
 		Doc:               simpleConnectDocPref("a WPA3-SAE (\"mixed\") 802.11ax network on 6GHz PSC channel 5 with center channel of 15 and channel width of 160MHz."),
-		ExtraAttr:         []string{"wificell_unstable"},
 		ExtraSoftwareDeps: []string{"wpa3_sae"},
 		Val: []simpleConnectParamsVal{{
 			APConfigs: []apConfigVal{{
@@ -371,9 +365,8 @@ func simpleConnect80211axe() []*simpleConnectParams {
 		ExtraRequirements:      []string{tdreq.WiFiGenSupport6E, tdreq.WiFiRf6E160MHz},
 		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E},
 	}, {
-		Name:      "80211axe160pure",
-		Fixture:   defaultFixture,
-		ExtraAttr: []string{"wificell_unstable"},
+		Name:    "80211axe160pure",
+		Fixture: defaultFixture,
 		Doc: append(simpleConnectDocPref("a WPA3-SAE (\"pure\") 802.11ax network on 6GHz PSC channel 5 with center channel of 15 and channel width of 160MHz."),
 			"The router is forced to use HE WiFi standard."),
 		ExtraSoftwareDeps: []string{"wpa3_sae"},

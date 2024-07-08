@@ -304,9 +304,8 @@ func init() {
 				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_AX"},
 			}, {
 				// Verifies that DUT can connect to an OWE 802.11ax network on 6GHz PSC channel 21 with a channel width of 20MHz.
-				Name:      "80211axeowe",
-				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
-				ExtraAttr: []string{"wificell_unstable"},
+				Name:    "80211axeowe",
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
 					apConfigs: []ap.ApConfig{{
 						ApOpts: []ap.Option{ap.Mode(ap.Mode80211axPure), ap.Channel(21), ap.HTCaps(ap.HTCapHT20),
@@ -322,7 +321,6 @@ func init() {
 				// Verifies that DUT can connect to a WPA3-SAE ("pure") 802.11ax network on 6GHz PSC channel 21 with a channel width of 20MHz.
 				Name:              "80211axe20",
 				Fixture:           wificell.FixtureID(wificell.TFFeaturesCapture),
-				ExtraAttr:         []string{"wificell_unstable"},
 				ExtraSoftwareDeps: []string{"wpa3_sae"},
 				Val: []simpleConnectTestcase{{
 					apConfigs: []ap.ApConfig{{
@@ -340,7 +338,6 @@ func init() {
 				// Verifies that DUT can connect to a WPA3-SAE ("pure") 802.11ax network on 6GHz PSC channel 21 with a channel width of 40MHz.
 				Name:              "80211axe40",
 				Fixture:           wificell.FixtureID(wificell.TFFeaturesCapture),
-				ExtraAttr:         []string{"wificell_unstable"},
 				ExtraSoftwareDeps: []string{"wpa3_sae"},
 				Val: []simpleConnectTestcase{{
 					apConfigs: []ap.ApConfig{{
@@ -358,7 +355,6 @@ func init() {
 				// Verifies that DUT can connect to a WPA3-SAE ("mixed") 802.11ax network on 6GHz PSC channel 5 with center channel of 7 and channel width of 80MHz.
 				Name:              "80211axe80mixed",
 				Fixture:           wificell.FixtureID(wificell.TFFeaturesCapture),
-				ExtraAttr:         []string{"wificell_unstable"},
 				ExtraSoftwareDeps: []string{"wpa3_sae"},
 				Val: []simpleConnectTestcase{{
 					apConfigs: []ap.ApConfig{{
@@ -378,7 +374,6 @@ func init() {
 				// The router is forced to use HE WiFi standard.
 				Name:              "80211axe80pure",
 				Fixture:           wificell.FixtureID(wificell.TFFeaturesCapture),
-				ExtraAttr:         []string{"wificell_unstable"},
 				ExtraSoftwareDeps: []string{"wpa3_sae"},
 				Val: []simpleConnectTestcase{{
 					apConfigs: []ap.ApConfig{{
@@ -397,7 +392,6 @@ func init() {
 				// Verifies that DUT can connect to a WPA3-SAE ("mixed") 802.11ax network on 6GHz PSC channel 5 with center channel of 15 and channel width of 160MHz.
 				Name:              "80211axe160mixed",
 				Fixture:           wificell.FixtureID(wificell.TFFeaturesCapture),
-				ExtraAttr:         []string{"wificell_unstable"},
 				ExtraSoftwareDeps: []string{"wpa3_sae"},
 				Val: []simpleConnectTestcase{{
 					apConfigs: []ap.ApConfig{{
@@ -417,7 +411,6 @@ func init() {
 				// The router is forced to use HE WiFi standard.
 				Name:              "80211axe160pure",
 				Fixture:           wificell.FixtureID(wificell.TFFeaturesCapture),
-				ExtraAttr:         []string{"wificell_unstable"},
 				ExtraSoftwareDeps: []string{"wpa3_sae"},
 				Val: []simpleConnectTestcase{{
 					apConfigs: []ap.ApConfig{{
