@@ -1016,6 +1016,18 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_hevc", "graphics_perbuild"},
 			},
 			{
+				Name: "vaapi_hevc_files_from_bugs_251179086",
+				Val: platformDecodingParams{
+					filenames:          hevcFilesFromBugs["251179086"],
+					decoder:            "/usr/local/libexec/chrome-binary-tests/decode_test",
+					decoderArgsBuilder: platform.HEVCDecodeVAAPIargs,
+				},
+				Timeout:           1 * time.Minute,
+				ExtraSoftwareDeps: []string{"vaapi", "autotest-capability:hw_dec_hevc_1080_30"},
+				ExtraData:         appendJSONFiles(hevcFilesFromBugs["251179086"]),
+				ExtraAttr:         []string{"graphics_video_hevc", "graphics_perbuild"},
+			},
+			{
 				Name: "v4l2_stateful_vp9_0_group1_buf",
 				Val: platformDecodingParams{
 					filenames:          vp9WebmFiles["profile_0"]["group1"]["buf"],
@@ -4077,6 +4089,18 @@ func init() {
 				Timeout:           1 * time.Minute,
 				ExtraSoftwareDeps: []string{"vaapi", "autotest-capability:hw_dec_hevc_1080_30"},
 				ExtraData:         appendJSONFiles(hevcFilesFromBugs["242708185"]),
+				ExtraAttr:         []string{"graphics_video_hevc", "graphics_perbuild"},
+			},
+			{
+				Name: "ffmpeg_vaapi_hevc_files_from_bugs_251179086",
+				Val: platformDecodingParams{
+					filenames:          hevcFilesFromBugs["251179086"],
+					decoder:            "/usr/local/graphics/ffmpeg_md5sum",
+					decoderArgsBuilder: platform.FFMPEGMD5DecodeVAAPIArgs,
+				},
+				Timeout:           1 * time.Minute,
+				ExtraSoftwareDeps: []string{"vaapi", "autotest-capability:hw_dec_hevc_1080_30"},
+				ExtraData:         appendJSONFiles(hevcFilesFromBugs["251179086"]),
 				ExtraAttr:         []string{"graphics_video_hevc", "graphics_perbuild"},
 			},
 		},

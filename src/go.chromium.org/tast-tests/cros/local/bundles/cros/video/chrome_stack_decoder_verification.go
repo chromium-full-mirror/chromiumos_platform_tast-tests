@@ -940,6 +940,20 @@ func init() {
 				},
 			},
 			{
+				Name:              "hevc_files_from_bugs_251179086",
+				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
+				ExtraSoftwareDeps: []string{caps.HWDecodeHEVC},
+				ExtraData:         appendJSONFiles(hevcFilesFromBugs["251179086"]),
+				Timeout:           calculateTestTimeout(hevcFilesFromBugs["251179086"], "hevc_files_from_bugs_251179086"),
+				Val: chromeStackDecoderVerificationTestParam{
+					videoFiles:      hevcFilesFromBugs["251179086"],
+					validatorType:   decoding.MD5,
+					mustFail:        false,
+					enabledFeatures: []string{},
+				},
+			},
+			{
 				Name:              "v4l2_flat_av1_common",
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
@@ -1804,6 +1818,20 @@ func init() {
 				Timeout:           calculateTestTimeout(hevcFilesFromBugs["242708185"], "v4l2_flat_hevc_files_from_bugs_242708185"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      hevcFilesFromBugs["242708185"],
+					validatorType:   decoding.MD5,
+					mustFail:        false,
+					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
+				},
+			},
+			{
+				Name:              "v4l2_flat_hevc_files_from_bugs_251179086",
+				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
+				ExtraSoftwareDeps: []string{caps.HWDecodeHEVC, "v4l2_codec"},
+				ExtraData:         appendJSONFiles(hevcFilesFromBugs["251179086"]),
+				Timeout:           calculateTestTimeout(hevcFilesFromBugs["251179086"], "v4l2_flat_hevc_files_from_bugs_251179086"),
+				Val: chromeStackDecoderVerificationTestParam{
+					videoFiles:      hevcFilesFromBugs["251179086"],
 					validatorType:   decoding.MD5,
 					mustFail:        false,
 					enabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
