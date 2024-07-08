@@ -2248,7 +2248,7 @@ func (h *Helper) RebootWithVT2Command(ctx context.Context, fromMode fwCommon.Boo
 	if err := h.DUT.Conn().CommandContext(ctx, "reboot").Run(); err != nil && !errors.As(err, &context.DeadlineExceeded) {
 		return errors.Wrap(err, "failed to run reboot command")
 	}
-	waitDisconnectCtx, cancelWaitDisconnect := context.WithTimeout(ctx, 1*time.Minute)
+	waitDisconnectCtx, cancelWaitDisconnect := context.WithTimeout(ctx, 2*time.Minute)
 	defer cancelWaitDisconnect()
 	if err := h.DUT.WaitUnreachable(waitDisconnectCtx); err != nil {
 		return errors.Wrap(err, "failed to wait for DUT to become unreachable")
@@ -2260,7 +2260,11 @@ func (h *Helper) RebootWithVT2Command(ctx context.Context, fromMode fwCommon.Boo
 	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, reconnectTimeout)
 	defer cancelWaitConnect()
 	if err := h.WaitConnect(waitConnectCtx, ResetEthernetDongle); err != nil {
-		return errors.Wrap(err, "failed to reconnect to the DUT")
+		currPowerState, getPowerStateErr := h.Servo.GetECSystemPowerState(ctx)
+		if getPowerStateErr != nil {
+			return errors.Wrap(getPowerStateErr, "failed to get EC power state while reconnecting to the DUT")
+		}
+		return errors.Wrapf(err, "failed to reconnect to the DUT and got power state: %v", currPowerState)
 	}
 	return nil
 }
