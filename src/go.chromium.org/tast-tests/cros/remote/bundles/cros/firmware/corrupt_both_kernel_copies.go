@@ -274,26 +274,40 @@ func CorruptBothKernelCopies(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupContext)
 
-	h.DisconnectDUT(ctx)
-
 	if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxOff); err != nil {
 		s.Fatal("Setting usb mux state to off: ", err)
 	}
-	s.Log("Rebooting the DUT with a warm reset")
-	if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
-		s.Fatal("Failed to warm reset the DUT: ", err)
+
+	s.Log("Rebooting the DUT")
+	if err := h.DUT.Conn().CommandContext(ctx, "reboot").Run(); err != nil && !errors.As(err, &context.DeadlineExceeded) {
+		s.Fatal("Failed to run reboot command: ", err)
 	}
-	s.Log("Waiting for DUT to reach broken fw screen")
-	// GoBigSleepLint: Wait for the recovery reason to get set.
-	if err := testing.Sleep(ctx, h.Config.DelayRebootToPing); err != nil {
-		s.Fatal("Sleep failed: ", err)
+	waitDisconnectCtx, cancelWaitDisconnect := context.WithTimeout(ctx, 2*time.Minute)
+	defer cancelWaitDisconnect()
+	if err := h.DUT.WaitUnreachable(waitDisconnectCtx); err != nil {
+		s.Fatal("Failed to wait for DUT to become unreachable, reboot cmd failed: ", err)
+	}
+	s.Log("Waiting for DUT to reach the firmware screen")
+	if err := h.WaitFirmwareScreen(ctx, h.Config.FirmwareScreenRecMode); err != nil {
+		s.Fatal("Failed to get to firmware screen: ", err)
+	}
+	s.Log("Checking if DUT stays at the Broken Screen")
+	brokenToDevWaitConnectCtx, cancelWaitConnectBrokenToDev := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
+	defer cancelWaitConnectBrokenToDev()
+
+	err = h.WaitConnect(brokenToDevWaitConnectCtx, firmware.ResetEthernetDongle)
+	switch err.(type) {
+	case nil:
+		s.Fatal("DUT woke up unexpectedly")
+	default:
+		if !errors.As(err, &context.DeadlineExceeded) {
+			s.Fatal("Unexpected error occurred: ", err)
+		}
 	}
 
-	if !h.Config.NoBrokenScreenInDev {
-		s.Log("Booting to recovery mode")
-		if err := h.BootToRecoveryMode(ctx, &state); err != nil {
-			s.Fatal("Failed to boot to recovery mode: ", err)
-		}
+	s.Log("Booting to recovery mode")
+	if err := h.BootToRecoveryMode(ctx, &state); err != nil {
+		s.Fatal("Failed to boot to recovery mode: ", err)
 	}
 
 	hasRecRes, err := h.Reporter.ContainsRecoveryReason(ctx, []reporters.RecoveryReason{
