@@ -181,6 +181,29 @@ func initChromeFakeWebCamBaseFixtures() {
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 
+	// TODO(b/351090228): Remove the test cases after the experiment is complete.
+	testing.AddFixture(&testing.Fixture{
+		Name:     "chromeVideoWithFakeWebcamAndAllowHwEncoderForLowResolutions",
+		Desc:     "Similar to chromeVideoWithFakeWebcam fixture and allowing hw encoders for low resolutions",
+		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return getChromeVideoOptions(
+				browser.TypeAsh,
+				chrome.ExtraArgs(chromeFakeWebcamArgs...),
+				chrome.ExtraArgs(chromeWebRTCEncodedFrameArgs...),
+				// Disable the 360p resolution guards.
+				chrome.DisableFeatures("ForceSoftwareForLowResolutions"),
+				// Disable VA-API small resolution guards.
+				chrome.DisableFeatures("VaapiEnforceVideoMinMaxResolution"),
+				chrome.DisableFeatures("VaapiVideoMinResolutionForPerformance"),
+			), nil
+		}),
+		Parent:          "gpuWatchDog",
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
 	testing.AddFixture(&testing.Fixture{
 		Name:     "chromeVideoWithFakeWebcamAndGlobalVaapiLockDisabled",
 		Desc:     "Similar to chromeVideoWithFakeWebcam fixture but the global VA-API lock is disabled if applicable",

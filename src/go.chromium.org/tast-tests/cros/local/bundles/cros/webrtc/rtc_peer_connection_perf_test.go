@@ -363,6 +363,41 @@ func TestRTCPeerConnectionPerfParams(t *testing.T) {
 		sourceDatas = append(sourceDatas, sourceData)
 	}
 
+	// Low resolution test cases.
+	// TODO(b/351090228): Remove the test cases after the experiment is complete.
+	for _, enc := range []encoderImpl{swEnc, hwEnc} {
+		for _, codec := range []string{"vp9", "av1"} {
+			for _, resolution := range []graphics.Size{
+				graphics.Size{Width: 240, Height: 135},
+				graphics.Size{Width: 320, Height: 180},
+			} {
+				dec := hwDec
+				paramData := rtcTestParamsData{
+					VerifyDecoderMode: toVerifyDecoderMode(dec),
+					VerifyEncoderMode: toVerifyEncoderMode(enc),
+					Profile:           strings.ToUpper(codec),
+					StreamWidth:       resolution.Width,
+					StreamHeight:      resolution.Height,
+					BrowserType:       "browser.TypeAsh",
+					TraceChromeEvents: true,
+				}
+
+				fixture := "chromeVideoWithFakeWebcamAndSWEncoding"
+				if enc == hwEnc {
+					fixture = "chromeVideoWithFakeWebcamAndAllowHwEncoderForLowResolutions"
+				}
+
+				sourceData := rtcPerfTestSourceData{
+					Name:         fmt.Sprintf("%s_%dp_%s_%s", codec, resolution.Height, enc, dec),
+					ParamData:    paramData,
+					SoftwareDeps: softwareCodecsDeps(codec, enc, dec),
+					Fixture:      fixture,
+				}
+				sourceDatas = append(sourceDatas, sourceData)
+			}
+		}
+	}
+
 	// INP-VD and OOP-VE test cases.
 	for _, codec := range []string{"h264", "vp8", "vp9", "av1"} {
 		for _, ed := range [][]interface{}{
