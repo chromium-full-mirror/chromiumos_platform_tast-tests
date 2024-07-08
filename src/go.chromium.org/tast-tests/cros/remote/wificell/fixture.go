@@ -96,6 +96,7 @@ func init() {
 	params[TFFeaturesRouters] = "Wificell setup with multiple routers"
 	params[TFFeaturesRouters|TFFeaturesAttenuator] = "WiFi roaming setup with multiple routers and attenuators"
 	params[TFFeaturesEnroll] = "Wificell setup with router and pcap object and chrome enrolled"
+	params[TFFeaturesEnroll|TFFeaturesCapture] = "Wificell setup with router and pcap object and chrome enrolled with Capturer on pcap"
 	params[TFFeaturesCompanionDUT] = "Wificell setup with companion Chromebook DUT"
 	params[TFFeaturesCompanionDUT|TFFeaturesSelfManagedAP] = "Wificell setup with companion Chromebook DUT and a self managed AP"
 	params[TFFeaturesCompanionDUT|TFFeaturesCapture] = "Wificell setup with companion Chromebook DUT and packet capture from the pcap device"
@@ -148,17 +149,19 @@ func init() {
 		if f&TFFeaturesCompanionDUT != 0 {
 			fixtures[f].Vars = append(fixtures[f].Vars, fixtureVarInvokeMethod)
 		}
+		if f&TFFeaturesEnroll != 0 {
+			fixtures[f].ServiceDeps = append(
+				fixtures[f].ServiceDeps,
+				OwnershipServiceName,
+				PolicyServiceName,
+				ScreenshotServiceName,
+			)
+			fixtures[f].SetUpTimeout = 10 * time.Minute
+			fixtures[f].TearDownTimeout = 8 * time.Minute
+		}
 	}
 
-	// Non-default values.
-	fixtures[TFFeaturesEnroll].ServiceDeps = append(
-		fixtures[TFFeaturesEnroll].ServiceDeps,
-		"tast.cros.hwsec.OwnershipService",
-		"tast.cros.policy.PolicyService",
-		"tast.cros.graphics.ScreenshotService",
-	)
-	fixtures[TFFeaturesEnroll].SetUpTimeout = 10 * time.Minute
-	fixtures[TFFeaturesEnroll].TearDownTimeout = 8 * time.Minute
+	// Non-default values (if any).
 
 	// Register prepared fixtures.
 	for _, f := range fixtures {

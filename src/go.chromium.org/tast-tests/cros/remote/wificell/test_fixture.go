@@ -105,6 +105,15 @@ const (
 
 	// WifiUIServiceName is the name of the Wi-Fi ui service.
 	WifiUIServiceName = "tast.cros.wifi.WifiService"
+
+	// OwnershipServiceName is the name of the ownership service.
+	OwnershipServiceName = "tast.cros.hwsec.OwnershipService"
+
+	// PolicyServiceName  is the name of the policy service.
+	PolicyServiceName = "tast.cros.policy.PolicyService"
+
+	// ScreenshotService  is the name of the screenshot service.
+	ScreenshotServiceName = "tast.cros.graphics.ScreenshotService"
 )
 
 // P2PDevice is used as p2p device type.
