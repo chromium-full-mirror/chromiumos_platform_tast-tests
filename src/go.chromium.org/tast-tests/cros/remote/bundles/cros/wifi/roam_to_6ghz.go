@@ -34,9 +34,8 @@ func init() {
 			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
 			"rmekonnen@google.com",            // Test author
 		},
-		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
-		// TODO(b/333388420) Stabilize RoamTo6GHz test
-		Attr:            []string{"group:wificell", "wificell_func", "wificell_unstable"},
+		BugComponent:    "b:893827", // ChromeOS > Platform > Connectivity > WiFi
+		Attr:            []string{"group:wificell", "wificell_func"},
 		TestBedDeps:     []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking, "wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E"},
 		ServiceDeps:     []string{wificell.ShillServiceName},
 		Fixture:         wificell.FixtureID(wificell.TFFeaturesCapture),
