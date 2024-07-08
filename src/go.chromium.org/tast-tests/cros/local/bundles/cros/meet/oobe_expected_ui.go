@@ -67,89 +67,114 @@ func OOBEExpectedUI(ctx context.Context, s *testing.State) {
 	}
 
 	jsExp := `
-	function queryShadowRoot(element, selector) {
-		if (window.getComputedStyle(element).visibility === "hidden" ||
-			element.offsetHeight == 0 ||
-			element.offsetWidth == 0 ||
-			element.hidden) {
-			return []
-		}
+    function queryShadowRoot(element, selector) {
+        if (window.getComputedStyle(element).visibility === "hidden" ||
+            element.offsetHeight == 0 ||
+            element.offsetWidth == 0 ||
+            element.hidden) {
+            return []
+        }
 
-		let matches = element.shadowRoot ? Array.from(element.shadowRoot
-                  .querySelectorAll(selector)) : [];
+        let matches = element.shadowRoot ? Array.from(element.shadowRoot
+                .querySelectorAll(selector)) : [];
 
-		if (element.shadowRoot) {
-			let childShadowHosts = element.shadowRoot.querySelectorAll('*');
-			childShadowHosts.forEach(child => {
-				if (child.shadowRoot) {
-					matches = matches.concat(queryShadowRoot(child,
-                                          selector));
-				}
-			});
-		}
+        if (element.shadowRoot) {
+            let childShadowHosts = element.shadowRoot.querySelectorAll('*');
+            childShadowHosts.forEach(child => {
+                if (child.shadowRoot) {
+                    matches = matches.concat(queryShadowRoot(child,
+                                        selector));
+                }
+            });
+        }
 
-		let childElements = element.querySelectorAll('*');
-		childElements.forEach(child => {
-			if (child.shadowRoot) {
-				matches = matches.concat(queryShadowRoot(child, selector));
-			}
-		});
+        let childElements = element.querySelectorAll('*');
+        childElements.forEach(child => {
+            if (child.shadowRoot) {
+                matches = matches.concat(queryShadowRoot(child, selector));
+            }
+        });
 
-		return matches;
-	}
+        return matches;
+    }
 
-	elements = queryShadowRoot(document.querySelector("#connect")
-          .shadowRoot.querySelector("#welcomeScreen"), '#button');
+    elements = queryShadowRoot(document.querySelector("#connect")
+        .shadowRoot.querySelector("#welcomeScreen"), '#button');
 
-	const expTextIcon = {"color": "rgb(26, 115, 232)",
-		"font-family": '"Google Sans", Roboto, sans-serif',
-		"font-size": "22px",
-		"background-color": "rgba(0, 0, 0, 0)"};
-	const expButton = {"color": "rgb(255, 255, 255)",
-		"font-family": '"Google Sans", Roboto, sans-serif',
-		"font-size": "22px",
-		"background-color": "rgb(26, 115, 232)"};
+    const expTextIcon = {"color": "rgb(26, 115, 232)",
+        "font-family": 'GSTR, "Google Sans", Roboto, sans-serif',
+        "font-size": "22px",
+        "background-color": "rgba(0, 0, 0, 0)"};
+    const expButton = {"color": "rgb(255, 255, 255)",
+        "font-family": 'GSTR, "Google Sans", Roboto, sans-serif',
+        "font-size": "22px",
+        "background-color": "rgb(26, 115, 232)"};
+    const expPopUp = {"color": "rgb(33, 26, 20)",
+        "font-family": 'GSTR, "Google Sans", Roboto, sans-serif',
+        "font-size": "13px",
+        "background-color": "rgb(255, 220, 191)"};
 
-	const errLog = [];
+    const errLog = [];
 
-	elements.forEach(element => {
-		if (element.className != 'action-button') {
-			for (const aspect in expTextIcon) {
-				var computed = window.getComputedStyle(element, null)
-                                  .getPropertyValue(aspect);
-				if (computed != expTextIcon[aspect]) {
-					console.log("Element name:", element);
-					console.log("Real:", computed);
-					console.log("Aspect:", aspect);
-					console.log("Expected:", expTextIcon[aspect]);
-					errLog.push("'" + element.tagName + ": " + element.innerText + "' had '"
-                                          + aspect + "' value: " + computed +
-                                          " but expected: " + expTextIcon[aspect]);
-				}
-			}
+    elements.forEach(element => {
+        if (element.className == 'action-button') {
+            for (const aspect in expButton) {
+                var computed = window.getComputedStyle(element, null)
+                                .getPropertyValue(aspect);
+                if (computed != expButton[aspect]) {
+                    errLog.push("'" + element.tagName + ": " + element.innerText + "' had '"
+                                        + aspect + "' value: " + computed +
+                                        " but expected: " + expButton[aspect]);
+                }
+            }
+        } else if (element.parentNode.getRootNode().host.parentNode.className == "layout vertical welcome-left-buttons") {
+            var computedStyles = [element];
+
+            let childIcon = element.querySelectorAll('hd-iron-icon');
+            if (childIcon.length > 0) {
+                computedStyles.push(childIcon[0]);
+            } else {
+                console.log("No icon found.");
+            }
+
+            let childText = element.querySelectorAll('.fallback');
+            if (childText.length > 0) {
+                computedStyles.push(childText[0]);
+            } else {
+                console.log("No text found.");
+            }
+
+            for (const aspect in expTextIcon) {
+                for (let i = 0; i < computedStyles.length; i++) {
+                    var computed = window.getComputedStyle(computedStyles[i], null)
+                                .getPropertyValue(aspect);
+                    if (computed != expTextIcon[aspect]) {
+                        errLog.push("'" + element.tagName + "/" + computedStyles[i].tagName + ": " + element.innerText + "' had '"
+                                            + aspect + "' value: " + computed +
+                                            " but expected: " + expTextIcon[aspect]);
+                    }
+                }
+            }
 		} else {
-			for (const aspect in expButton) {
-				var computed = window.getComputedStyle(element, null)
-                                  .getPropertyValue(aspect);
-				if (computed != expButton[aspect]) {
-					console.log("Element name:", element);
-					console.log("Real:", computed);
-					console.log("Aspect:", aspect);
-					console.log("Expected:", expButton[aspect]);
-					errLog.push("'" + element.tagName + ": " + element.innerText + "' had '"
-                                          + aspect + "' value: " + computed +
-                                          " but expected: " + expButton[aspect]);
-				}
-			}
+            for (const aspect in expPopUp) {
+                var computed = window.getComputedStyle(element, null)
+                                .getPropertyValue(aspect);
+                if (computed != expPopUp[aspect]) {
+                    errLog.push("'" + element.tagName + ": " + element.innerText + "' had '"
+                                        + aspect + "' value: " + computed +
+                                        " but expected: " + expPopUp[aspect]);
+                }
+            }
 		}
-	});
+    });
 
-	if (errLog.length > 0) {
-		throw new Error(errLog);
-	}
+    if (errLog.length > 0) {
+        throw new Error(errLog);
+    }
 	`
 
 	if err := oobeConn.Eval(ctx, jsExp, nil); err != nil {
-		s.Fatal("Elements did not match their expected values: ", err)
+		errMsg := "\n" + strings.ReplaceAll(err.Error(), ",'", ",\n'")
+		s.Fatal("Elements did not match their expected values: ", errMsg)
 	}
 }
