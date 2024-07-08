@@ -38,7 +38,6 @@ func init() {
 		Desc: "Verifies connectivity to network that has security upgraded from None to TransOwe and then to Owe",
 		Contacts: []string{
 			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
-			"andrzejo@google.com",             // author
 		},
 		BugComponent:    "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		Attr:            []string{"group:wificell", "wificell_func"},

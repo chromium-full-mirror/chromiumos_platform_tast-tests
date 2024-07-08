@@ -42,7 +42,6 @@ func init() {
 		Desc: "Verifies that DUT can see two APs in the same network and prefer higher band one",
 		Contacts: []string{
 			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
-			"arowa@google.com",                // Author
 		},
 		BugComponent:    "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		Attr:            []string{"group:wificell", "wificell_func"},
