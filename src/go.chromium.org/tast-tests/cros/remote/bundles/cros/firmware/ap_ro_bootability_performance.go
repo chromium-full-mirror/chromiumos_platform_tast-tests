@@ -121,6 +121,10 @@ const (
 	// case the result is found outside the expected deviation.
 	maxSpeedTestRetry = 3
 
+	// maxSpeedTestDisconnectRetry sets the maximum number of attempts to re-run the
+	// speed test in case the disconnection occurs.
+	maxSpeedTestDisconnectRetry = 3
+
 	// Name of the files that will contain the backup firmware.
 	apFwBackup = "apFwBackup.bin"
 	ecFwBackup = "ecFwBackup.bin"
@@ -902,9 +906,19 @@ func testWithDifferentScenario(ctx context.Context, h *firmware.Helper, fwInfo *
 
 	// Perform the speed test.
 	testing.ContextLog(ctx, "Performing the speed test")
-	speedResult, err := speedTest(ctx, h)
-	if err != nil {
-		return 0.0, errors.Wrap(err, "failed to perform Speedometer test")
+	var speedResult float64
+	if err := func() error {
+		for attempt := 1; attempt <= maxSpeedTestDisconnectRetry; attempt++ {
+			speedResult, err = speedTest(ctx, h)
+			if err != nil {
+				testing.ContextLogf(ctx, "Failed to perform speed test during attempt %d, error: %v", attempt, err)
+				continue
+			}
+			return nil
+		}
+		return errors.Wrap(err, "failed to perform Speedometer test")
+	}(); err != nil {
+		return 0.0, err
 	}
 	return speedResult, err
 }
@@ -963,7 +977,7 @@ func speedTest(ctx context.Context, h *firmware.Helper) (float64, error) {
 		return 0.0, errors.Wrap(err, "failed while performing the Speedometer benchmark")
 	}
 
-	// Pars the output of the test as a float for later math operations.
+	// Parse the output of the test as a float for later math operations.
 	result, err := strconv.ParseFloat(sptest.Result, 64)
 	if err != nil {
 		return 0.0, errors.Wrap(err, "failed to convert the result into float")
