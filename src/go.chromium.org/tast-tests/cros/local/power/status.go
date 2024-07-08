@@ -84,8 +84,10 @@ func GetStatus(ctx context.Context) (*pb.Status, error) {
 // "line_power_connected" from dump_power_status does not reflect the
 // true state of battery on Jacuzzi and Kukui.
 // See http://screen/nfuH74JL4vsua4m.png.
+// Brox uses the battery status as a temporary workaround.
+// TODO(b/351728957): Remove the exception of Brox when the final solutions are merged.
 func IsLinePowerConnected(s *pb.Status) bool {
-	if util.SupportChargeOverride() {
+	if util.SupportChargeOverride() && util.GetBoard() != "brox" {
 		return s.LinePowerConnected
 	}
 	// s.BatteryStatus should be used here instead of s.BatteryDischarging, as
