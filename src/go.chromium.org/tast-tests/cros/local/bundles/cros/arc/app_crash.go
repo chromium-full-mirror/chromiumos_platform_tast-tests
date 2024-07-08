@@ -24,7 +24,7 @@ func init() {
 			"arc-core@google.com",
 			"jhorwich@google.com",
 			// Data team
-			"iby@chromium.org",
+			"hirthanan@google.com",
 			"chromeos-data-eng@google.com",
 		},
 		BugComponent: "b:153255",

@@ -20,7 +20,7 @@ func init() {
 		Desc: "Check that only one crash_sender runs at a time",
 		Contacts: []string{
 			"chromeos-data-eng@google.com",
-			"iby@chromium.org",
+			"hirthanan@google.com",
 			"nya@chromium.org", // ported to Tast
 		},
 		BugComponent: "b:1032705",

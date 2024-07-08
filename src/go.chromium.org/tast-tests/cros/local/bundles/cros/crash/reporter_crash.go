@@ -28,7 +28,7 @@ func init() {
 		Desc:         "Verifies crash_reporter itself crashing is captured through anomaly detector",
 		Contacts: []string{
 			"chromeos-data-eng@google.com",
-			"iby@chromium.org",
+			"hirthanan@google.com",
 		},
 		BugComponent: "b:1032705",
 		Params: []testing.Param{{

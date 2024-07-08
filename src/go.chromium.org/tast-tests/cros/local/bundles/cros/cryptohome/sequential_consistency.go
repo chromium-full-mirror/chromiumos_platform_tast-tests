@@ -37,7 +37,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SequentialConsistency,
 		Desc:         "Checks that different processes don't have inconsistent views of cryptohome",
-		Contacts:     []string{"iby@chromium.org", "cryptohome-core@google.com"},
+		Contacts:     []string{"cryptohome-core@google.com"},
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		LacrosStatus: testing.LacrosVariantUnneeded,

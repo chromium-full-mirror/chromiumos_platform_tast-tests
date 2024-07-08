@@ -66,7 +66,7 @@ func init() {
 		Func:         ServiceFailure,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify service failures are logged as expected",
-		Contacts:     []string{"chromeos-data-eng@google.com", "iby@chromium.org"},
+		Contacts:     []string{"chromeos-data-eng@google.com", "hirthanan@google.com"},
 		BugComponent: "b:1032705",
 		Attr:         []string{"group:mainline"},
 		Params: []testing.Param{{

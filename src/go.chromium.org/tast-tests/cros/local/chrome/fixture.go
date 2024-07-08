@@ -279,7 +279,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:         fixture.ChromeLoggedInWithStackSampledMetrics,
 		Desc:         "Logged into a user session; stack-sampled metrics on turned on",
-		Contacts:     []string{"iby@google.com", "chromeos-data-eng@google.com"},
+		Contacts:     []string{"chromeos-data-eng@google.com", "hirthanan@google.com"},
 		BugComponent: "b:1087262",
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
 			return []Option{EnableStackSampledMetrics(), ExtraArgs("--metrics-recording-only", "--record-stack-sampling-data")}, nil
@@ -372,7 +372,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:         fixture.ChromeLoggedInWithFieldTrialConfigEnable,
 		Desc:         "Logged into a user session with FieldTrialConfigEnable",
-		Contacts:     []string{"iby@chromium.org", "cros-exp-wg@google.com"},
+		Contacts:     []string{"cros-exp-wg@google.com"},
 		BugComponent: "b:1096648",
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
 			return []Option{FieldTrialConfig(FieldTrialConfigEnable)}, nil
@@ -385,7 +385,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:         fixture.ChromeLoggedInWithFieldTrialConfigDisable,
 		Desc:         "Logged into a user session with FieldTrialConfigDisable",
-		Contacts:     []string{"iby@chromium.org", "cros-exp-wg@google.com"},
+		Contacts:     []string{"cros-exp-wg@google.com"},
 		BugComponent: "b:1096648",
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
 			return []Option{FieldTrialConfig(FieldTrialConfigDisable)}, nil
@@ -398,7 +398,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:         fixture.ChromeLoggedInWithFieldTrialConfigEnableAndVerboseConsent,
 		Desc:         "Logged into a user session with FieldTrialConfigEnable and verbose consent flags enabled",
-		Contacts:     []string{"iby@chromium.org", "cros-exp-wg@google.com"},
+		Contacts:     []string{"cros-exp-wg@google.com"},
 		BugComponent: "b:1096648",
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
 			return []Option{
@@ -414,7 +414,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:         fixture.ChromeLoggedInWithFieldTrialConfigDisableAndVerboseConsent,
 		Desc:         "Logged into a user session with FieldTrialConfigDisable",
-		Contacts:     []string{"iby@chromium.org", "cros-exp-wg@google.com"},
+		Contacts:     []string{"cros-exp-wg@google.com"},
 		BugComponent: "b:1096648",
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
 			return []Option{

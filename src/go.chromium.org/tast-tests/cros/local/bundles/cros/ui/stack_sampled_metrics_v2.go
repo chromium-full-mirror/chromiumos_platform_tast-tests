@@ -40,7 +40,7 @@ func init() {
 		Desc:         "Check that stack-sampled metrics work",
 		Contacts: []string{
 			"chromeos-data-eng@google.com",
-			"iby@chromium.org",
+			"hirthanan@google.com",
 		},
 		BugComponent: "b:1087262",
 		Attr:         []string{"group:mainline"},

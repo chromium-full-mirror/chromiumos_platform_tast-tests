@@ -70,7 +70,7 @@ func init() {
 		Func:         ChromeCrashReporterMetrics,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that anomaly detector reports whether crash_reporter was invoked",
-		Contacts:     []string{"chromeos-data-eng@google.com", "iby@chromium.org"},
+		Contacts:     []string{"chromeos-data-eng@google.com", "hirthanan@google.com"},
 		BugComponent: "b:1032705",
 		SoftwareDeps: []string{"chrome", "metrics_consent"},
 		Attr:         []string{"group:mainline"},

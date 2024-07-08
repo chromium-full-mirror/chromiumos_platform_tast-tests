@@ -10,13 +10,13 @@ import (
 	"path/filepath"
 	"time"
 
-	"google.golang.org/protobuf/proto"
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
+	"google.golang.org/protobuf/proto"
 )
 
 const (
@@ -34,7 +34,7 @@ func init() {
 		Func:         ChromettoStackProfiling,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that Chrometto can gather stack data",
-		Contacts:     []string{"chrometto-bugs@google.com", "iby@chromium.org"},
+		Contacts:     []string{"chrometto-bugs@google.com"},
 		BugComponent: "b:582280", // Android > Android OS & Apps > Web on Android Performance > Chrometto
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "stack_sampled_metrics"},

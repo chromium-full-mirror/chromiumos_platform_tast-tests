@@ -33,7 +33,7 @@ func init() {
 			"chromeos-faft@google.com",
 			"chromeos-data-eng@google.com",
 			"robbarnes@google.com",
-			"iby@chromium.org",
+			"hirthanan@google.com",
 		},
 		BugComponent: "b:167114",
 		Attr:         []string{"group:mainline", "informational", "group:firmware", "firmware_ec"},
