@@ -552,7 +552,10 @@ func (i *bootModeImpl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 	if err != nil {
 		s.Fatal("Failed to get current boot mode: ", err)
 	}
-	if mode != common.BootModeRecovery && mode != common.BootModeUSBDev {
+	if err := i.value.Helper.RequireConfig(ctx); err != nil {
+		s.Fatal("Failed to read config: ", err)
+	}
+	if mode != common.BootModeRecovery && mode != common.BootModeUSBDev && i.value.Helper.Config.HasECCapability(firmware.ECBattery) {
 		// Ensure that the charger is attached before boot mode transition. If it's not,
 		// some machines, for example lazor and limozeen, might enter the hibernation state
 		// due to being idle at G3.
