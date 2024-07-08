@@ -167,32 +167,6 @@ func init() {
 		PreTestTimeout:  UsbipModulesLoadedTimeout,
 		PostTestTimeout: UsbipModulesLoadedTimeout,
 	})
-	testing.AddFixture(&testing.Fixture{
-		Name:            "virtualUSBPrinterModulesLoadedWithLacrosPrinterSetupAssistance",
-		Desc:            "Kernel modules necessary for `virtual-usb-printer` loaded (with `lacrosPrinterSetupAssistanceEnabled` fixture)",
-		Contacts:        []string{"cros-peripherals@google.com", "ashleydp@google.com"},
-		// ChromeOS > Software > Fundamentals > Peripherals > Printing
-		BugComponent: 	 "b:1131981",
-		Impl:            &LoadModuleFixture{},
-		Parent:          "lacrosPrinterSetupAssistanceEnabled",
-		SetUpTimeout:    UsbipModulesLoadedTimeout,
-		TearDownTimeout: UsbipModulesLoadedTimeout,
-		PreTestTimeout:  UsbipModulesLoadedTimeout,
-		PostTestTimeout: UsbipModulesLoadedTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name:            "virtualUSBPrinterModulesLoadedWithPrinterSetupAssistance",
-		Desc:            "Kernel modules necessary for `virtual-usb-printer` loaded (with `chromeLoggedInWithPrinterSetupAssistance` fixture)",
-		Contacts:        []string{"cros-peripherals@google.com", "ashleydp@google.com"},
-		// ChromeOS > Software > Fundamentals > Peripherals > Printing
-		BugComponent: 	 "b:1131981",
-		Impl:            &LoadModuleFixture{},
-		Parent:          "chromeLoggedInWithPrinterSetupAssistance",
-		SetUpTimeout:    UsbipModulesLoadedTimeout,
-		TearDownTimeout: UsbipModulesLoadedTimeout,
-		PreTestTimeout:  UsbipModulesLoadedTimeout,
-		PostTestTimeout: UsbipModulesLoadedTimeout,
-	})
 }
 
 // LoadModuleFixture loads kernel modules required for usbip to work
