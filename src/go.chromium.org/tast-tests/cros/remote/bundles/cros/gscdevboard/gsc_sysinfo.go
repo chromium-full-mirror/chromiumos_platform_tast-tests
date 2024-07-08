@@ -20,8 +20,8 @@ func init() {
 		Desc:    "Most basic test of the gsc sysinfo command",
 		Timeout: 30 * time.Second,
 		Contacts: []string{
-			"gsc-sheriff@google.com", // CrOS GSC Developers
-			"jbk@chromium.org",       // Test Author
+			"cros-hwsec@google.com", // CrOS GSC Developers
+			"jbk@chromium.org",      // Test Author
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
 		Attr: []string{"group:gsc",

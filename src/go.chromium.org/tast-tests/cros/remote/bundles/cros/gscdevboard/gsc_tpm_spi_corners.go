@@ -21,7 +21,7 @@ func init() {
 		Desc:    "Test TPM SPI corner cases",
 		Timeout: 5 * time.Minute,
 		Contacts: []string{
-			"gsc-sheriff@google.com", // CrOS GSC Developers
+			"cros-hwsec@google.com", // CrOS GSC Developers
 			"jbk@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT

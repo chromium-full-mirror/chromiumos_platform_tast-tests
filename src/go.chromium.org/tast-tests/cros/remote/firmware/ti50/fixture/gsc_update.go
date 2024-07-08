@@ -21,7 +21,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            GSCUpdate,
 		Desc:            "Ensure the correct gsc image is running before every test",
-		Contacts:        []string{"gsc-sheriff@google.com", "mruthven@google.com"},
+		Contacts:        []string{"cros-hwsec@google.com", "mruthven@google.com"},
 		BugComponent:    "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
 		Impl:            &updateImpl{},
 		SetUpTimeout:    rescueTwiceTimeout,

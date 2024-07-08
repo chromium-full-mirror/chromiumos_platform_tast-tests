@@ -51,7 +51,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            SystemDevboard,
 		Desc:            "Uses devboardsvc to flash a system image",
-		Contacts:        []string{"gsc-sheriff@google.com", "ecgh@google.com"},
+		Contacts:        []string{"cros-hwsec@google.com", "ecgh@google.com"},
 		BugComponent:    "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
 		Impl:            &devboardFixture{image: SystemImage},
 		Vars:            []string{DevBoardService, BuildURL, FwConfigJSON, Chip, Variant, Slot},
@@ -65,7 +65,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            SystemTestAutoDevboard,
 		Desc:            "Uses devboardsvc to flash a system_test_auto image",
-		Contacts:        []string{"gsc-sheriff@google.com", "ecgh@google.com"},
+		Contacts:        []string{"cros-hwsec@google.com", "ecgh@google.com"},
 		BugComponent:    "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
 		Impl:            &devboardFixture{image: SystemTestAutoImage},
 		Vars:            []string{DevBoardService, BuildURL, FwConfigJSON, Chip, Variant, Slot},
@@ -79,7 +79,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            SystemTestAuto2Devboard,
 		Desc:            "Uses devboardsvc to flash a system_test_auto_2 image",
-		Contacts:        []string{"gsc-sheriff@google.com", "ecgh@google.com"},
+		Contacts:        []string{"cros-hwsec@google.com", "ecgh@google.com"},
 		BugComponent:    "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
 		Impl:            &devboardFixture{image: SystemTestAuto2Image},
 		Vars:            []string{DevBoardService, BuildURL, FwConfigJSON, Chip, Variant, Slot},

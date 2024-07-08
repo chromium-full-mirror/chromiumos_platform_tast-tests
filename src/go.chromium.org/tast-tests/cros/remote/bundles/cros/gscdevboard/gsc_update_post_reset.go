@@ -26,7 +26,7 @@ func init() {
 		Desc:    "Verify GSC post reset does not turn on the update until PLT_RST_L is asserted or TurnUpdateOn is sent",
 		Timeout: 7 * time.Minute,
 		Contacts: []string{
-			"gsc-sheriff@google.com",
+			"cros-hwsec@google.com",
 			"mruthven@chromium.org",
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50

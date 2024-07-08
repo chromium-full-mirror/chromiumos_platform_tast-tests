@@ -34,7 +34,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:           GSCOpenCCD,
 		Desc:           "Ensures that CCD is open and TPM is cleared before every test",
-		Contacts:       []string{"gsc-sheriff@google.com", "ecgh@google.com"},
+		Contacts:       []string{"cros-hwsec@google.com", "ecgh@google.com"},
 		BugComponent:   "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
 		Impl:           &ccdOpenImpl{},
 		PreTestTimeout: testLabOpenTimeout,

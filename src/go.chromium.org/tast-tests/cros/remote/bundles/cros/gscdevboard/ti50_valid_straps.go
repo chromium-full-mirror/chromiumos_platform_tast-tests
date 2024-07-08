@@ -28,7 +28,7 @@ func init() {
 		Desc:    "Test Ti50 strap configuration using a dev board",
 		Timeout: 60 * time.Second,
 		Contacts: []string{
-			"gsc-sheriff@google.com", // CrOS GSC Developers
+			"cros-hwsec@google.com", // CrOS GSC Developers
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
 		Attr: []string{"group:gsc",

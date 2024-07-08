@@ -23,8 +23,8 @@ func init() {
 		Desc:    "Tests changing EC UART settings",
 		Timeout: 90 * time.Second,
 		Contacts: []string{
-			"gsc-sheriff@google.com", // CrOS GSC Developers
-			"ecgh@chromium.org",      // Test Author
+			"cros-hwsec@google.com", // CrOS GSC Developers
+			"ecgh@chromium.org",     // Test Author
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
 		Attr: []string{"group:gsc",

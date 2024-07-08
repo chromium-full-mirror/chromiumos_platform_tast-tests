@@ -61,7 +61,7 @@ func init() {
 		Desc:    "Verify AP RO verification feature with valid and invalid settings",
 		Timeout: 15 * time.Minute,
 		Contacts: []string{
-			"gsc-sheriff@google.com", // CrOS GSC Developers
+			"cros-hwsec@google.com", // CrOS GSC Developers
 			"kupiakos@google.com",
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50

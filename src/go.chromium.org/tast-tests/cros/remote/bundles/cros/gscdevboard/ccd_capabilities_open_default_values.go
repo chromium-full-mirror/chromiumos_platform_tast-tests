@@ -27,7 +27,7 @@ func init() {
 		Desc:    "Test the OpenNoDevMode and OpenFromUSB CCD capability default values based on ToT/PrePVT/MP image",
 		Timeout: 30 * time.Second,
 		Contacts: []string{
-			"gsc-sheriff@google.com", // CrOS GSC Developers
+			"cros-hwsec@google.com", // CrOS GSC Developers
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
 		Attr:         []string{"group:gsc", "gsc_dt_ab", "gsc_dt_shield", "gsc_h1_shield", "gsc_image_ti50", "gsc_nightly"},

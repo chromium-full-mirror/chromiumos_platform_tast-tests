@@ -29,8 +29,8 @@ func init() {
 		Desc:    "Test ti50 deep/normal sleep",
 		Timeout: 40 * time.Minute,
 		Contacts: []string{
-			"gsc-sheriff@google.com", // CrOS GSC Developers
-			"jbk@chromium.org",       // Test Author
+			"cros-hwsec@google.com", // CrOS GSC Developers
+			"jbk@chromium.org",      // Test Author
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
 		Attr:         []string{"group:gsc", "gsc_dt_ab", "gsc_dt_shield", "gsc_ot_shield", "gsc_image_ti50", "gsc_nightly"},

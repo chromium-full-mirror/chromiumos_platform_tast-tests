@@ -20,7 +20,7 @@ func init() {
 		Desc:    "Verify the factory image can update to the image under test",
 		Timeout: 10 * time.Minute,
 		Contacts: []string{
-			"gsc-sheriff@google.com",
+			"cros-hwsec@google.com",
 			"mruthven@chromium.org",
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50

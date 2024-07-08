@@ -45,7 +45,7 @@ func init() {
 		Desc:    "Verify GSC can set the board id flags without setting the type",
 		Timeout: 7 * time.Minute,
 		Contacts: []string{
-			"gsc-sheriff@google.com",
+			"cros-hwsec@google.com",
 			"mruthven@chromium.org",
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50

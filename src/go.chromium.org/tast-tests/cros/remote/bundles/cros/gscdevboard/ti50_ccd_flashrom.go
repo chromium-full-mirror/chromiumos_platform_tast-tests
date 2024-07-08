@@ -22,7 +22,7 @@ func init() {
 		Desc:    "Measure flashrom speed over CCD",
 		Timeout: 15 * time.Minute,
 		Contacts: []string{
-			"gsc-sheriff@google.com", // CrOS GSC Developers
+			"cros-hwsec@google.com", // CrOS GSC Developers
 			"ecgh@google.com",
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50

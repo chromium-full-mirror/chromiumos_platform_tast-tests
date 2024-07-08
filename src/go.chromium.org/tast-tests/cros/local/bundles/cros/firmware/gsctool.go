@@ -21,8 +21,8 @@ func init() {
 		Desc: "Checks that gsctool can communicate with the GSC",
 		Contacts: []string{
 			"chromeos-faft@google.com",
-			"mruthven@chromium.org",  // GSC Firmware Developer
-			"gsc-sheriff@google.com", // GSC Firmware Developers
+			"mruthven@chromium.org", // GSC Firmware Developer
+			"cros-hwsec@google.com", // GSC Firmware Developers
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		SoftwareDeps: []string{"gsc"},
