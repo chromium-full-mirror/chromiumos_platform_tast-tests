@@ -162,7 +162,7 @@ func initCheck(ctx context.Context, h *firmware.Helper, s *testing.State) error 
 
 // checkGSCTPMMode verifies iff TPM Mode returned by GSC's sysinfo command is equal to expectedMode.
 func checkGSCTPMMode(ctx context.Context, h *firmware.Helper, expectedMode tpmMode) error {
-	if out, err := h.Servo.RunCR50CommandGetOutput(ctx, "sysinfo", []string{`TPM\s+MODE:\s+(enabled \(\d\)|disabled \(\d\))`}); err != nil {
+	if out, err := h.Servo.RunGSCCommandGetOutput(ctx, "sysinfo", []string{`TPM\s+MODE:\s+(enabled \(\d\)|disabled \(\d\))`}); err != nil {
 		return errors.Wrap(err, "failed to run sysinfo command on the GSC")
 	} else if out[0][1] != string(expectedMode) {
 		return errors.Errorf("incorrect TPM mode info from GSC: got %q want %q", out[0][1], expectedMode)
@@ -201,7 +201,7 @@ func setGSCToolTPMMode(ctx context.Context, h *firmware.Helper, opt string, reqC
 
 // checkGSCKeyLadder verifies iff Key Ladder State returned by GSC's sysinfo command is present in expectedKeyLadders.
 func checkGSCKeyLadder(ctx context.Context, h *firmware.Helper, expectedKeyLadders ...keyLadderState) error {
-	out, err := h.Servo.RunCR50CommandGetOutput(ctx, "sysinfo", []string{`Key\s+Ladder:\s+(enabled|prod|dev|disabled)`})
+	out, err := h.Servo.RunGSCCommandGetOutput(ctx, "sysinfo", []string{`Key\s+Ladder:\s+(enabled|prod|dev|disabled)`})
 	if err != nil {
 		return errors.Wrap(err, "failed to run sysinfo command on the GSC")
 	}

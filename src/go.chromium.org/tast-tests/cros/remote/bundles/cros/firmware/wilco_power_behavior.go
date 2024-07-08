@@ -125,7 +125,7 @@ func WilcoPowerBehavior(ctx context.Context, s *testing.State) {
 
 	s.Log("Verifying DUT's AP is off")
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		apState, err := h.Servo.RunCR50CommandGetOutput(ctx, "ccdstate", []string{`AP:(\s+\w+)`})
+		apState, err := h.Servo.RunGSCCommandGetOutput(ctx, "ccdstate", []string{`AP:(\s+\w+)`})
 		if err != nil {
 			return errors.Wrap(err, "failed to run cr50 command")
 		}
@@ -196,7 +196,7 @@ func WilcoPowerBehavior(ctx context.Context, s *testing.State) {
 			checkGpio    = `(` + foundGpio + `|` + paramInvalid + `)`
 		)
 		cmd := "gpioget TPM_RST_L"
-		out, err := h.Servo.RunCR50CommandGetOutput(ctx, cmd, []string{checkGpio})
+		out, err := h.Servo.RunGSCCommandGetOutput(ctx, cmd, []string{checkGpio})
 		if err != nil {
 			s.Fatalf("Failed to run command %v: %v", cmd, err)
 		}

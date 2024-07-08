@@ -42,7 +42,7 @@ func H1Console(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to require servo: ", err)
 	}
 
-	strings, err := h.Servo.RunCR50CommandGetOutput(ctx, "sysinfo", []string{`Chip:\s*([^\n]*)\n`})
+	strings, err := h.Servo.RunGSCCommandGetOutput(ctx, "sysinfo", []string{`Chip:\s*([^\n]*)\n`})
 	if err != nil {
 		s.Fatal("cr50 console sysinfo command: ", err)
 	}

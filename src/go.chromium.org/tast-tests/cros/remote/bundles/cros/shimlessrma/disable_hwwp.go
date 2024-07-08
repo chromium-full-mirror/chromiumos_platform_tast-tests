@@ -205,7 +205,7 @@ func DisableHWWP(ctx context.Context, s *testing.State) {
 		s.Error("Fail to sleep: ", err)
 	}
 
-	if err := firmwareHelper.Servo.RunCR50Command(ctx, "bpforce follow_batt_pres atboot"); err != nil {
+	if err := firmwareHelper.Servo.RunGSCCommand(ctx, "bpforce follow_batt_pres atboot"); err != nil {
 		s.Fatal("Fail to connect battery: ", err)
 	}
 

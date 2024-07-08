@@ -255,7 +255,7 @@ func (h *Helper) EnsureDUTBooted(ctx context.Context) error {
 		testing.ContextLog(ctx, "Failed to get gsc_ccd_level: ", err)
 	} else if val != servo.Open {
 		testing.ContextLogf(ctx, "CCD is not open, got %q. Attempting to unlock", val)
-		if err := h.Servo.SetString(ctx, servo.CR50Testlab, servo.Open); err != nil {
+		if err := h.Servo.SetString(ctx, servo.GSCTestlab, servo.Open); err != nil {
 			testing.ContextLog(ctx, "Failed to unlock CCD: ", err)
 		}
 	}
@@ -1004,7 +1004,7 @@ func (h *Helper) OpenCCD(ctx context.Context, ensureTestlab, resetCCD bool) erro
 				return errors.Wrap(err, "while opening CCD with no testlab")
 			}
 		} else {
-			if err := h.Servo.SetString(ctx, servo.CR50Testlab, servo.Open); err != nil {
+			if err := h.Servo.SetString(ctx, servo.GSCTestlab, servo.Open); err != nil {
 				return errors.Wrap(err, "while opening CCD with testlab")
 			}
 
@@ -1025,7 +1025,7 @@ func (h *Helper) OpenCCD(ctx context.Context, ensureTestlab, resetCCD bool) erro
 
 	// By request, reset capabilities to factory mode.
 	if resetCCD {
-		out, err := h.Servo.RunCR50CommandGetOutput(ctx, "ccd reset factory", []string{`[^>]*> `})
+		out, err := h.Servo.RunGSCCommandGetOutput(ctx, "ccd reset factory", []string{`[^>]*> `})
 		if err != nil {
 			return errors.Wrap(err, "failed resetting capabilities to factory mode")
 		}
@@ -1042,14 +1042,14 @@ func (h *Helper) OpenCCD(ctx context.Context, ensureTestlab, resetCCD bool) erro
 // GetTestlabState will try to get the current ccd testlab state by servo or gsctool command.
 func (h *Helper) GetTestlabState(ctx context.Context) (string, error) {
 	// Verify if cr50_testlab control exists.
-	hasTestlab, err := h.Servo.HasControl(ctx, string(servo.CR50Testlab))
+	hasTestlab, err := h.Servo.HasControl(ctx, string(servo.GSCTestlab))
 	if err != nil {
 		return "", errors.Wrap(err, "failed while checking for cr50_testlab control")
 	}
 
 	var testlab string
 	if hasTestlab {
-		testlab, err = h.Servo.GetString(ctx, servo.CR50Testlab)
+		testlab, err = h.Servo.GetString(ctx, servo.GSCTestlab)
 		if err != nil {
 			testing.ContextLog(ctx, "WARNING: failed to get cr50_testlab: ", err)
 		}
@@ -1215,7 +1215,7 @@ func (h *Helper) OpenCCDNoTestlab(ctx context.Context) (retErr error) {
 
 	// Enable stream for cr50 log, so that if the process for opening ccd
 	// fails later, we could process the log for error messaging.
-	closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.CR50UARTCapture)
+	closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.GSCUARTCapture)
 	if err != nil {
 		return errors.Wrap(err, "failed to enable capture Cr50 UART")
 	}
@@ -1225,7 +1225,7 @@ func (h *Helper) OpenCCDNoTestlab(ctx context.Context) (retErr error) {
 	// Otherwise, we need to send the request through the AP.
 	if openFromUSB == "Y" {
 		testing.ContextLog(ctx, "Opening CCD by USB")
-		err = h.Servo.RunCR50Command(ctx, "ccd open")
+		err = h.Servo.RunGSCCommand(ctx, "ccd open")
 	} else {
 		testing.ContextLog(ctx, "Opening CCD by gsctool")
 		err = h.DUT.Conn().CommandContext(ctx, "gsctool", "-a", "-o").Start()
@@ -1255,7 +1255,7 @@ func (h *Helper) OpenCCDNoTestlab(ctx context.Context) (retErr error) {
 				// this failure in the returned error message.
 				errorMsg := errors.Wrap(err, "failed to wait for DUT to become unreachable")
 				captureCr50Msg := `nvmem_erase_tpm_data_selective: adding var failed!`
-				out, err := h.GetUartOutputAndSaveToFile(ctx, servo.CR50UARTStream, "open_ccd_cr50")
+				out, err := h.GetUartOutputAndSaveToFile(ctx, servo.GSCUARTStream, "open_ccd_cr50")
 				if err != nil {
 					return err
 				}
@@ -1282,7 +1282,7 @@ func (h *Helper) OpenCCDNoTestlab(ctx context.Context) (retErr error) {
 			// and failing the test. Document this failure in the returned error message.
 			errorMsg := errors.Wrap(err, "failed to reconnect to DUT")
 			captureCr50Msg := `tpm_reset_request: already scheduled`
-			out, err := h.GetUartOutputAndSaveToFile(ctx, servo.CR50UARTStream, "open_ccd_cr50")
+			out, err := h.GetUartOutputAndSaveToFile(ctx, servo.GSCUARTStream, "open_ccd_cr50")
 			if err != nil {
 				return err
 			}
@@ -1575,20 +1575,20 @@ func (h *Helper) WaitDUTConnectDuringBootFromUSB(ctx context.Context, expBoot bo
 				}
 			}
 		}()
-		if hasControl, err := h.Servo.HasControl(ctx, string(servo.CR50UARTCapture)); err != nil {
-			return errors.Wrapf(err, "failed while checking for %s control", servo.CR50UARTCapture)
+		if hasControl, err := h.Servo.HasControl(ctx, string(servo.GSCUARTCapture)); err != nil {
+			return errors.Wrapf(err, "failed while checking for %s control", servo.GSCUARTCapture)
 		} else if hasControl {
 			// We found a few instances where the DUT reset in the middle of
 			// booting the USB in recovery mode, for example, on crota and delbin.
 			// Capture relevant Uart messages to report these instances.
-			closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.CR50UARTCapture)
+			closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.GSCUARTCapture)
 			if err != nil {
 				return errors.Wrap(err, "failed to enable Cr50 uart capture")
 			}
 			defer func() {
 				if retErr != nil {
 					tpmRstAsserted := regexp.MustCompile(`tpm_rst_asserted|PLT_RST_L ASSERTED`)
-					if found, err := h.Servo.PollForRegexp(ctx, servo.CR50UARTStream, tpmRstAsserted, 10*time.Second); found {
+					if found, err := h.Servo.PollForRegexp(ctx, servo.GSCUARTStream, tpmRstAsserted, 10*time.Second); found {
 						retErr = errors.Join(retErr, errors.New("unexpected reset captured"))
 					} else {
 						retErr = errors.Join(retErr, err)
@@ -1597,7 +1597,7 @@ func (h *Helper) WaitDUTConnectDuringBootFromUSB(ctx context.Context, expBoot bo
 				retErr = errors.Join(retErr, closeUART(ctx))
 			}()
 			// Read the UART stream just to make sure there isn't buffered data.
-			if _, err := h.Servo.GetQuotedString(ctx, servo.CR50UARTStream); err != nil {
+			if _, err := h.Servo.GetQuotedString(ctx, servo.GSCUARTStream); err != nil {
 				return errors.Wrap(err, "failed to read GSC UART")
 			}
 		}

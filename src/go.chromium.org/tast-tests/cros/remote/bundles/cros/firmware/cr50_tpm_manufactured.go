@@ -45,20 +45,20 @@ func Cr50TPMManufactured(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 60*time.Second)
 	defer cancel()
 	s.Log("Capturing GSC log")
-	if err := h.Servo.SetOnOff(ctx, servo.CR50UARTCapture, servo.On); err != nil {
+	if err := h.Servo.SetOnOff(ctx, servo.GSCUARTCapture, servo.On); err != nil {
 		s.Fatal("Failed to capture GSC UART: ", err)
 	}
 	defer func(ctx context.Context) {
-		if err := h.Servo.SetOnOff(ctx, servo.CR50UARTCapture, servo.Off); err != nil {
+		if err := h.Servo.SetOnOff(ctx, servo.GSCUARTCapture, servo.Off); err != nil {
 			s.Fatal("Failed to disable capture GSC UART: ", err)
 		}
 	}(cleanupCtx)
 	// Read the UART stream just to make sure there isn't buffered data.
-	if _, err := h.Servo.GetQuotedString(ctx, servo.CR50UARTStream); err != nil {
+	if _, err := h.Servo.GetQuotedString(ctx, servo.GSCUARTStream); err != nil {
 		s.Fatal("Failed to read UART: ", err)
 	}
 	s.Log("Rebooting GSC")
-	if err := h.Servo.RunCR50Command(ctx, "reboot"); err != nil {
+	if err := h.Servo.RunGSCCommand(ctx, "reboot"); err != nil {
 		s.Fatal("Failed to send reboot command: ", err)
 	}
 	// Wait a little at the end of the test to make sure the GSC finishes booting before the next test runs.
@@ -69,7 +69,7 @@ func Cr50TPMManufactured(ctx context.Context, s *testing.State) {
 	}(cleanupCtx)
 
 	tpmRe := regexp.MustCompile(`tpm_manufactured: manufactured`)
-	if found, err := h.Servo.PollForRegexp(ctx, servo.CR50UARTStream, tpmRe, 60*time.Second); err != nil {
+	if found, err := h.Servo.PollForRegexp(ctx, servo.GSCUARTStream, tpmRe, 60*time.Second); err != nil {
 		s.Fatal("GSC output parsing failed: ", err)
 	} else if !found {
 		s.Fatalf("Did not find %s", tpmRe)

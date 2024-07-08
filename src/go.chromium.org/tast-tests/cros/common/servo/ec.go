@@ -321,7 +321,7 @@ func (s *Servo) OpenCCD(ctx context.Context) error {
 			return errors.Wrap(err, "failed to get gsc_ccd_level")
 		} else if val != Open {
 			testing.ContextLogf(ctx, "CCD is not open, got %q. Attempting to unlock", val)
-			if err := s.SetString(ctx, CR50Testlab, Open); err != nil {
+			if err := s.SetString(ctx, GSCTestlab, Open); err != nil {
 				return errors.Wrap(err, "failed to unlock CCD")
 			}
 		}

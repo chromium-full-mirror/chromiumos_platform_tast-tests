@@ -65,7 +65,7 @@ func ServoGSCFlags(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to get gsc_ccd_level")
 		} else if val != servo.Open {
 			s.Logf("CCD is not open, got %q. Attempting to unlock", val)
-			if err := h.Servo.SetString(ctx, servo.CR50Testlab, servo.Open); err != nil {
+			if err := h.Servo.SetString(ctx, servo.GSCTestlab, servo.Open); err != nil {
 				s.Fatal("Failed to unlock CCD")
 			}
 		}

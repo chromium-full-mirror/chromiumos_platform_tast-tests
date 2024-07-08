@@ -149,11 +149,11 @@ func WilcoTPMKeyLadderVerification(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 60*time.Second)
 	defer cancel()
 	s.Log("Capturing GSC log")
-	if err := h.Servo.SetOnOff(ctx, servo.CR50UARTCapture, servo.On); err != nil {
+	if err := h.Servo.SetOnOff(ctx, servo.GSCUARTCapture, servo.On); err != nil {
 		s.Fatal("Failed to capture GSC UART: ", err)
 	}
 	defer func(ctx context.Context) {
-		if err := h.Servo.SetOnOff(ctx, servo.CR50UARTCapture, servo.Off); err != nil {
+		if err := h.Servo.SetOnOff(ctx, servo.GSCUARTCapture, servo.Off); err != nil {
 			s.Fatal("Failed to disable capture GSC UART: ", err)
 		}
 	}(cleanupCtx)
@@ -238,7 +238,7 @@ func WilcoTPMKeyLadderVerification(ctx context.Context, s *testing.State) {
 		currentState.dutConnected = step.expectDUTReconnected
 
 		s.Log("Verifying TPM and Key Ladder states")
-		output, err := h.Servo.RunCR50CommandGetOutput(ctx, "sysinfo", []string{
+		output, err := h.Servo.RunGSCCommandGetOutput(ctx, "sysinfo", []string{
 			`TPM\s+MODE:\s+(enabled \(\d\)|disabled \(\d\))\s*`,
 			`Key\s+Ladder:\s+(prod|dev|disabled)\s*`})
 		if err != nil {
@@ -289,7 +289,7 @@ func enterDiagMode(ctx context.Context, h *firmware.Helper) error {
 		return errors.Errorf("failed to boot to recovery screen. Found AP: %s%s", apPower, screen)
 	}
 	// Read the UART stream just to make sure there isn't buffered data.
-	if _, err := h.Servo.GetQuotedString(ctx, servo.CR50UARTStream); err != nil {
+	if _, err := h.Servo.GetQuotedString(ctx, servo.GSCUARTStream); err != nil {
 		return errors.Wrap(err, "failed to read GSC UART")
 	}
 	testing.ContextLog(ctx, "Pressing F12")
@@ -311,7 +311,7 @@ func enterDiagMode(ctx context.Context, h *firmware.Helper) error {
 		return errors.Wrap(err, "failed to sleep")
 	}
 	testing.ContextLog(ctx, "Scanning GSC log to verify entry to diagnostics mode")
-	out, err := h.Servo.GetQuotedString(ctx, servo.CR50UARTStream)
+	out, err := h.Servo.GetQuotedString(ctx, servo.GSCUARTStream)
 	if err != nil {
 		return errors.Wrap(err, "failed to read GSC Uart")
 	}

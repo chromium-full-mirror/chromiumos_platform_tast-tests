@@ -69,7 +69,7 @@ func Cr50DevMode(ctx context.Context, s *testing.State) {
 
 // checkCr50TPMInfo parses the output of ccd command in cr50 console and verifies that TPM value matches the current boot mode
 func checkCr50TPMInfo(ctx context.Context, h *firmware.Helper, expectedValue string) error {
-	output, err := h.Servo.RunCR50CommandGetOutput(ctx, "ccd", []string{`TPM\s*:\s*(\S*)\s*\n`})
+	output, err := h.Servo.RunGSCCommandGetOutput(ctx, "ccd", []string{`TPM\s*:\s*(\S*)\s*\n`})
 	if err != nil {
 		return errors.Wrap(err, "failed to get boot mode info from cr50 CCD")
 	}

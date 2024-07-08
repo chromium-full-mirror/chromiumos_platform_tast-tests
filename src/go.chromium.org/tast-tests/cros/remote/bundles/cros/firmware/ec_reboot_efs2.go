@@ -91,7 +91,7 @@ func ECRebootEFS2(ctx context.Context, s *testing.State) {
 
 	// Try to open CCD at the end of the test in case something after this test needs it.
 	defer func() {
-		h.Servo.RunCR50Command(ctx, "ccd testlab open")
+		h.Servo.RunGSCCommand(ctx, "ccd testlab open")
 	}()
 
 	outDir, ok := testing.ContextOutDir(ctx)
@@ -171,12 +171,12 @@ func doECRebootEFS2Iteration(ctx context.Context, s *testing.State, h *firmware.
 	s.Log("Rebooting")
 	if gscReboot {
 		// Use GSC console to reboot GSC.
-		if err := h.Servo.RunCR50Command(ctx, "reboot"); err != nil {
+		if err := h.Servo.RunGSCCommand(ctx, "reboot"); err != nil {
 			return ecOutput.String(), errors.Wrap(err, "failed to reboot GSC")
 		}
 	} else {
 		// Use GSC console to reboot EC.
-		if err := h.Servo.RunCR50Command(ctx, "ecrst pulse"); err != nil {
+		if err := h.Servo.RunGSCCommand(ctx, "ecrst pulse"); err != nil {
 			return ecOutput.String(), errors.Wrap(err, "failed to ecrst pulse")
 		}
 	}

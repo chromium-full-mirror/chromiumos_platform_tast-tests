@@ -78,12 +78,12 @@ func Cr50Unlock(ctx context.Context, s *testing.State) {
 		s.Fatal("FwUtils.VerifyGsctoolCommand() failed: ", err)
 	}
 	s.Log("Try to unlock CCD using wrong password and intentionally do not wait after executing the command")
-	_, err = h.Servo.RunCR50CommandGetOutput(ctx, "ccd unlock "+FwUtils.CCDWrongPassword, []string{`Access\s+Denied`})
+	_, err = h.Servo.RunGSCCommandGetOutput(ctx, "ccd unlock "+FwUtils.CCDWrongPassword, []string{`Access\s+Denied`})
 	if err != nil {
 		s.Fatal("ccd unlock did not deny to unlock CCD using wrong password: ", err)
 	}
 	s.Log("Try to unlock CCD using the right password and verify that the rate limit prevents unlock")
-	_, err = h.Servo.RunCR50CommandGetOutput(ctx, "ccd unlock "+FwUtils.CCDPassword, []string{`Busy`})
+	_, err = h.Servo.RunGSCCommandGetOutput(ctx, "ccd unlock "+FwUtils.CCDPassword, []string{`Busy`})
 	if err != nil {
 		s.Fatal("ccd unlock did not deny to unlock CCD using wrong password: ", err)
 	}

@@ -73,7 +73,7 @@ func APROVerificationReboot(ctx context.Context, s *testing.State) {
 			if err := h.Servo.OpenCCD(ctx); err != nil {
 				s.Fatal("Failed to open ccd: ", err)
 			}
-			if err := h.Servo.RunCR50Command(ctx, "ccd set AllowUnverifiedRo Default"); err != nil {
+			if err := h.Servo.RunGSCCommand(ctx, "ccd set AllowUnverifiedRo Default"); err != nil {
 				s.Fatal("Failed to disable AllowUnverifiedRo: ", err)
 			}
 			s.Log("Set AllowUnverifiedRo to Default! This will prevent AP boot")
@@ -83,7 +83,7 @@ func APROVerificationReboot(ctx context.Context, s *testing.State) {
 				if err := h.Servo.OpenCCD(ctx); err != nil {
 					s.Fatal("Failed to open ccd: ", err)
 				}
-				if err := h.Servo.RunCR50Command(ctx, "ccd set AllowUnverifiedRo Always"); err != nil {
+				if err := h.Servo.RunGSCCommand(ctx, "ccd set AllowUnverifiedRo Always"); err != nil {
 					s.Fatal("Failed to enable AllowUnverifiedRo: ", err)
 				}
 			}()
@@ -95,7 +95,7 @@ func APROVerificationReboot(ctx context.Context, s *testing.State) {
 	// Test OS image reboots, it "helpfully" disables software write protect, which we do
 	// not want for this test.
 	s.Log("Setting HWWP enabled at GSC (re)boot")
-	if err := h.Servo.RunCR50Command(ctx, "wp enable atboot"); err != nil {
+	if err := h.Servo.RunGSCCommand(ctx, "wp enable atboot"); err != nil {
 		s.Fatal("Failed to enable write protect at boot: ", err)
 	}
 

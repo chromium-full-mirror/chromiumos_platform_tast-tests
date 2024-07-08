@@ -556,7 +556,7 @@ func (uiHelper *UIHelper) openCCDIfNotOpen() action.Action {
 		if val, err := uiHelper.FirmwareHelper.Servo.GetString(ctx, servo.GSCCCDLevel); err != nil {
 			return err
 		} else if val != servo.Open {
-			if err := uiHelper.FirmwareHelper.Servo.SetString(ctx, servo.CR50Testlab, servo.Open); err != nil {
+			if err := uiHelper.FirmwareHelper.Servo.SetString(ctx, servo.GSCTestlab, servo.Open); err != nil {
 				return err
 			}
 		}
@@ -730,13 +730,13 @@ func (uiHelper *UIHelper) enterIntoTextInput(content, textInputName string) acti
 
 func (uiHelper *UIHelper) disconnectBatteryByCr50() action.Action {
 	return func(ctx context.Context) error {
-		return uiHelper.FirmwareHelper.Servo.RunCR50Command(ctx, "bpforce disconnect atboot")
+		return uiHelper.FirmwareHelper.Servo.RunGSCCommand(ctx, "bpforce disconnect atboot")
 	}
 }
 
 func (uiHelper *UIHelper) connectBatteryByCr50() action.Action {
 	return func(ctx context.Context) error {
-		return uiHelper.FirmwareHelper.Servo.RunCR50Command(ctx, "bpforce follow_batt_pres atboot")
+		return uiHelper.FirmwareHelper.Servo.RunGSCCommand(ctx, "bpforce follow_batt_pres atboot")
 	}
 }
 

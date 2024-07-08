@@ -237,12 +237,12 @@ func ScreenWakeTabletMode(ctx context.Context, s *testing.State) {
 	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
 		s.Fatal("Failed to sleep for a few seconds: ", err)
 	}
-	hasControl, err := h.Servo.HasControl(ctx, string(servo.CR50UARTCapture))
+	hasControl, err := h.Servo.HasControl(ctx, string(servo.GSCUARTCapture))
 	if err != nil {
-		s.Fatalf("Failed while checking for %s control", servo.CR50UARTCapture)
+		s.Fatalf("Failed while checking for %s control", servo.GSCUARTCapture)
 	}
 	if hasControl {
-		closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.CR50UARTCapture)
+		closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.GSCUARTCapture)
 		if err != nil {
 			s.Fatal("Failed to enable Cr50 uart capture: ", err)
 		}
@@ -252,7 +252,7 @@ func ScreenWakeTabletMode(ctx context.Context, s *testing.State) {
 			}
 		}()
 		// Read the UART stream just to make sure there isn't buffered data.
-		if _, err := h.Servo.GetQuotedString(ctx, servo.CR50UARTStream); err != nil {
+		if _, err := h.Servo.GetQuotedString(ctx, servo.GSCUARTStream); err != nil {
 			s.Fatal("Failed to read GSC UART: ", err)
 		}
 	}
@@ -270,7 +270,7 @@ func ScreenWakeTabletMode(ctx context.Context, s *testing.State) {
 		// Found some DUTs, such as corsola and nissa, taking longer to complete the crypto process
 		// after running touchscreen.NewChrome(). On average, it takes 10 seconds to complete.
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			out, err := h.Servo.GetQuotedString(ctx, servo.CR50UARTStream)
+			out, err := h.Servo.GetQuotedString(ctx, servo.GSCUARTStream)
 			if err != nil {
 				return errors.Wrap(err, "failed to read GSC UART")
 			}

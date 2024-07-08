@@ -77,13 +77,13 @@ func Cr50OpenOnBattery(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set CCD capability: ", err)
 	}
 	defer func(ctx context.Context) {
-		if err := h.Servo.RunCR50Command(ctx, "bpforce follow_batt_pres"); err != nil {
-			s.Fatal("RunCR50Command() returned an error: ", err)
+		if err := h.Servo.RunGSCCommand(ctx, "bpforce follow_batt_pres"); err != nil {
+			s.Fatal("RunGSCCommand() returned an error: ", err)
 		}
 	}(cleanupCtx)
 	s.Log("Check open in dev mode when battery forced connected")
-	if err := h.Servo.RunCR50Command(ctx, "bpforce connect"); err != nil {
-		s.Fatal("RunCR50Command() returned an error: ", err)
+	if err := h.Servo.RunGSCCommand(ctx, "bpforce connect"); err != nil {
+		s.Fatal("RunGSCCommand() returned an error: ", err)
 	}
 	s.Log("Lock CCD")
 	if err := FwUtils.VerifyGsctoolCommand(ctx, h, FwUtils.LockGSC, FwUtils.CCDLocked, FwUtils.CCDPasswordNone, false, false, false); err != nil {
@@ -110,8 +110,8 @@ func Cr50OpenOnBattery(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to switch to normal mode: ", err)
 	}
 	s.Log("Check open in normal mode when battery forced connected")
-	if err := h.Servo.RunCR50Command(ctx, "bpforce connect"); err != nil {
-		s.Fatal("RunCR50Command() returned an error: ", err)
+	if err := h.Servo.RunGSCCommand(ctx, "bpforce connect"); err != nil {
+		s.Fatal("RunGSCCommand() returned an error: ", err)
 	}
 	s.Log("Lock CCD")
 	if err := FwUtils.VerifyGsctoolCommand(ctx, h, FwUtils.LockGSC, FwUtils.CCDLocked, FwUtils.CCDPasswordNone, false, false, false); err != nil {
@@ -126,8 +126,8 @@ func Cr50OpenOnBattery(ctx context.Context, s *testing.State) {
 		s.Fatal("FwUtils.VerifyCr50Command failed: ", err)
 	}
 	s.Log("Check open in normal mode when battery forced disconnected")
-	if err := h.Servo.RunCR50Command(ctx, "bpforce disconnect"); err != nil {
-		s.Fatal("RunCR50Command() returned an error: ", err)
+	if err := h.Servo.RunGSCCommand(ctx, "bpforce disconnect"); err != nil {
+		s.Fatal("RunGSCCommand() returned an error: ", err)
 	}
 	s.Log("Lock CCD")
 	if err := FwUtils.VerifyGsctoolCommand(ctx, h, FwUtils.LockGSC, FwUtils.CCDLocked, FwUtils.CCDPasswordNone, false, false, false); err != nil {
@@ -241,8 +241,8 @@ func Cr50OpenOnBattery(ctx context.Context, s *testing.State) {
 		}
 
 		s.Log("Reboot GSC to get out from EC hibernation")
-		if err := h.Servo.RunCR50Command(ctx, "reboot"); err != nil {
-			s.Fatal("RunCR50Command() returned an error: ", err)
+		if err := h.Servo.RunGSCCommand(ctx, "reboot"); err != nil {
+			s.Fatal("RunGSCCommand() returned an error: ", err)
 		}
 		s.Log("Connecting power supply")
 		if err := h.SetDUTPower(ctx, true); err != nil {
@@ -274,9 +274,9 @@ func Cr50OpenOnBattery(ctx context.Context, s *testing.State) {
 
 // getDeepSleepCount gets the deep sleep count from idle command in Cr50 console.
 func getDeepSleepCount(ctx context.Context, h *firmware.Helper) (string, error) {
-	out, err := h.Servo.RunCR50CommandGetOutput(ctx, "idle", []string{`deep\s*sleep\s*count:\s*(\d+)`})
+	out, err := h.Servo.RunGSCCommandGetOutput(ctx, "idle", []string{`deep\s*sleep\s*count:\s*(\d+)`})
 	if err != nil {
-		return "", errors.Wrap(err, "RunCR50CommandGetOutput() returned an error")
+		return "", errors.Wrap(err, "RunGSCCommandGetOutput() returned an error")
 	}
 	return out[0][1], nil
 }

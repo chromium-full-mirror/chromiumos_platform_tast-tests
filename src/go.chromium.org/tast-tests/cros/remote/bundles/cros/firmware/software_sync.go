@@ -147,7 +147,7 @@ func SoftwareSync(ctx context.Context, s *testing.State) {
 		}
 
 		s.Log("Corrupting ECRW hashcode in TPM kernel NV index")
-		if err := h.Servo.RunCR50Command(ctx, "ec_comm corrupt"); err != nil {
+		if err := h.Servo.RunGSCCommand(ctx, "ec_comm corrupt"); err != nil {
 			s.Fatal("Failed to corrupt ECRW hashcode: ", err)
 		}
 		s.Log("Reboot EC, verify RO, reboot AP, check hash")

@@ -182,7 +182,7 @@ func VerifyCr50Command(ctx context.Context, h *firmware.Helper, cmd, expectCCDSt
 	if err != nil {
 		return errors.Wrap(err, "failed to get boot id")
 	}
-	err = h.Servo.RunCR50Command(ctx, cmd)
+	err = h.Servo.RunGSCCommand(ctx, cmd)
 	if err != nil {
 		return errors.Wrapf(err, "failed to execute %q", cmd)
 	}
@@ -310,11 +310,11 @@ func WaitForDUTReboot(ctx context.Context, h *firmware.Helper, bootID string) er
 
 // GetCCDStatePasswd gets values of State and Password fields from ccd command.
 func GetCCDStatePasswd(ctx context.Context, h *firmware.Helper) (string, string, error) {
-	out, err := h.Servo.RunCR50CommandGetOutput(ctx, "ccd", []string{
+	out, err := h.Servo.RunGSCCommandGetOutput(ctx, "ccd", []string{
 		`State:\s*(\S+)\s*\n`,
 		`Password:\s*(\S+)\s*\n`})
 	if err != nil {
-		return "", "", errors.Wrap(err, "function RunCR50CommandGetOutput() returned an error")
+		return "", "", errors.Wrap(err, "function RunGSCCommandGetOutput() returned an error")
 	}
 	return out[0][1], out[1][1], nil
 }
@@ -350,7 +350,7 @@ func Cr50Cleanup(ctx context.Context, h *firmware.Helper) error {
 	}
 	if ccdState != CCDOpened {
 		testing.ContextLog(ctx, "Running ccd testlab open from Cr50 console")
-		if err := h.Servo.RunCR50Command(ctx, "ccd testlab open"); err != nil {
+		if err := h.Servo.RunGSCCommand(ctx, "ccd testlab open"); err != nil {
 			return errors.Wrap(err, `failed to execute "ccd testlab open"`)
 		}
 		// GoBigSleepLint: This sleep is needed to allow ccd settings to get set.
@@ -359,7 +359,7 @@ func Cr50Cleanup(ctx context.Context, h *firmware.Helper) error {
 		}
 	}
 	testing.ContextLog(ctx, "Reset CCD")
-	if _, err = h.Servo.RunCR50CommandGetOutput(ctx, "ccd reset", []string{`Resetting\s+all\s+settings`}); err != nil {
+	if _, err = h.Servo.RunGSCCommandGetOutput(ctx, "ccd reset", []string{`Resetting\s+all\s+settings`}); err != nil {
 		return errors.Wrap(err, "ccd reset failed")
 	}
 	return err

@@ -15,21 +15,21 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-// These are the Cr50 Servo controls which can be get/set with a string value.
+// These are the GSC Servo controls which can be get/set with a string value.
 const (
-	CR50Testlab     StringControl = "cr50_testlab"
-	CR50UARTCmd     StringControl = "cr50_uart_cmd"
-	CR50UARTRegexp  StringControl = "cr50_uart_regexp"
-	CR50UARTStream  StringControl = "cr50_uart_stream"
 	GSCCCDLevel     StringControl = "gsc_ccd_level"
 	GSCECReset      StringControl = "gsc_ec_reset"
 	GSCECResetPulse StringControl = "gsc_ecrst_pulse"
+	GSCTestlab      StringControl = "gsc_testlab"
+	GSCUARTCmd      StringControl = "gsc_uart_cmd"
+	GSCUARTRegexp   StringControl = "gsc_uart_regexp"
+	GSCUARTStream   StringControl = "gsc_uart_stream"
 	GSCVersion      StringControl = "gsc_version"
 )
 
 // These controls accept only "on" and "off" as values.
 const (
-	CR50UARTCapture OnOffControl = "cr50_uart_capture"
+	GSCUARTCapture OnOffControl = "gsc_uart_capture"
 )
 
 // CCD levels
@@ -87,26 +87,26 @@ const (
 	CapIfOpened     CCDCapState = "IfOpened"
 )
 
-// RunCR50Command runs the given command on the Cr50 on the device.
-func (s *Servo) RunCR50Command(ctx context.Context, cmd string) error {
-	if err := s.SetString(ctx, CR50UARTRegexp, "None"); err != nil {
-		return errors.Wrap(err, "Clearing CR50 UART Regexp")
+// RunGSCCommand runs the given command on the GSC on the device.
+func (s *Servo) RunGSCCommand(ctx context.Context, cmd string) error {
+	if err := s.SetString(ctx, GSCUARTRegexp, "None"); err != nil {
+		return errors.Wrap(err, "Clearing GSC UART Regexp")
 	}
-	return s.SetString(ctx, CR50UARTCmd, cmd)
+	return s.SetString(ctx, GSCUARTCmd, cmd)
 }
 
-// RunCR50CommandGetOutput runs the given command on the Cr50 on the device and returns the output matching patterns.
-func (s *Servo) RunCR50CommandGetOutput(ctx context.Context, cmd string, patterns []string) ([][]string, error) {
-	err := s.SetStringList(ctx, CR50UARTRegexp, patterns)
+// RunGSCCommandGetOutput runs the given command on the GSC on the device and returns the output matching patterns.
+func (s *Servo) RunGSCCommandGetOutput(ctx context.Context, cmd string, patterns []string) ([][]string, error) {
+	err := s.SetStringList(ctx, GSCUARTRegexp, patterns)
 	if err != nil {
-		return nil, errors.Wrapf(err, "setting CR50UARTRegexp to %s", patterns)
+		return nil, errors.Wrapf(err, "setting GSCUARTRegexp to %s", patterns)
 	}
-	defer s.SetString(ctx, CR50UARTRegexp, "None")
-	err = s.SetString(ctx, CR50UARTCmd, cmd)
+	defer s.SetString(ctx, GSCUARTRegexp, "None")
+	err = s.SetString(ctx, GSCUARTCmd, cmd)
 	if err != nil {
-		return nil, errors.Wrapf(err, "setting CR50UARTCmd to %s", cmd)
+		return nil, errors.Wrapf(err, "setting GSCUARTCmd to %s", cmd)
 	}
-	iList, err := s.GetStringList(ctx, CR50UARTCmd)
+	iList, err := s.GetStringList(ctx, GSCUARTCmd)
 	if err != nil {
 		return nil, errors.Wrap(err, "decoding string list")
 	}
@@ -115,7 +115,7 @@ func (s *Servo) RunCR50CommandGetOutput(ctx context.Context, cmd string, pattern
 
 // CheckGSCBootMode verifies that the boot mode as reported by GSC's ec_comm command is as expected.
 func (s *Servo) CheckGSCBootMode(ctx context.Context, expectedModes []string) error {
-	output, err := s.RunCR50CommandGetOutput(ctx, "ec_comm", []string{`boot_mode\s*:\s*(\S+)\s`})
+	output, err := s.RunGSCCommandGetOutput(ctx, "ec_comm", []string{`boot_mode\s*:\s*(\S+)\s`})
 	if err != nil {
 		return errors.Wrap(err, "failed to get boot mode")
 	}
@@ -131,7 +131,7 @@ func (s *Servo) CheckGSCBootMode(ctx context.Context, expectedModes []string) er
 func (s *Servo) SetTestlab(ctx context.Context, option TestlabState) error {
 	// Verify CCD is open.
 	regExpCcdOpen := `State:\s*Opened`
-	if _, err := s.RunCR50CommandGetOutput(ctx, "ccd", []string{regExpCcdOpen}); err != nil {
+	if _, err := s.RunGSCCommandGetOutput(ctx, "ccd", []string{regExpCcdOpen}); err != nil {
 		return errors.Wrap(err, "ccd is not open")
 	}
 
@@ -145,7 +145,7 @@ func (s *Servo) SetTestlab(ctx context.Context, option TestlabState) error {
 	}
 
 	testing.ContextLogf(ctx, "Setting testlab to %q", option)
-	if err := s.RunCR50Command(ctx, "ccd testlab "+string(option)); err != nil {
+	if err := s.RunGSCCommand(ctx, "ccd testlab "+string(option)); err != nil {
 		return errors.Wrapf(err, "failed setting testlab to %q", option)
 	}
 
@@ -155,15 +155,15 @@ func (s *Servo) SetTestlab(ctx context.Context, option TestlabState) error {
 	}
 
 	// Press the power button for up to 20 seconds, and space a 1 second
-	// interval between these presses. The Cr50 console doesn't care about
+	// interval between these presses. The GSC console doesn't care about
 	// extra presses in between. As long as all the required presses are hit,
 	// testlab state would change.
 	testing.ContextLog(ctx, "Starting power button presses")
 	ppTimeout := 20 * time.Second
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		testlab, err := s.GetString(ctx, CR50Testlab)
+		testlab, err := s.GetString(ctx, GSCTestlab)
 		if err != nil {
-			return errors.Wrap(err, "failed to get cr50_testlab")
+			return errors.Wrap(err, "failed to get gsc_testlab")
 		}
 		if testlab == string(option) {
 			return nil
@@ -196,7 +196,7 @@ func (s *Servo) GetCCDCapability(ctx context.Context, capability CCDCap) (int, s
 	var out [][]string
 	var err error
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		out, err = s.RunCR50CommandGetOutput(ctx, "ccd", []string{re})
+		out, err = s.RunGSCCommandGetOutput(ctx, "ccd", []string{re})
 		if err != nil {
 			return errors.Wrap(err, "failed to get capability state")
 		}
@@ -236,8 +236,8 @@ func (s *Servo) SetCCDCapability(ctx context.Context, capabilities map[CCDCap]CC
 		// Ensure the state we want is set.
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
 			cmd := fmt.Sprintf("ccd set %s %s", capability, state)
-			if err := s.RunCR50Command(ctx, cmd); err != nil {
-				return errors.Wrapf(err, "failed to send command %q to cr50", cmd)
+			if err := s.RunGSCCommand(ctx, cmd); err != nil {
+				return errors.Wrapf(err, "failed to send command %q to gsc", cmd)
 			}
 
 			currState, _, err := s.GetCCDCapability(ctx, capability)
@@ -260,7 +260,7 @@ func (s *Servo) SetCCDCapability(ctx context.Context, capabilities map[CCDCap]CC
 // ensures all Python regex patterns appear at least once in the response. This
 // function will throw a pretty printed error otherwise.
 func (s *Servo) CheckGSCCommandOutput(ctx context.Context, cmd string, regexs []string) error {
-	matches, err := s.RunCR50CommandGetOutput(ctx, cmd, regexs)
+	matches, err := s.RunGSCCommandGetOutput(ctx, cmd, regexs)
 	if err != nil {
 		return errors.Wrap(err, "failed to run `"+cmd+"` on GSC, expected regex patterns = {"+strings.Join(regexs, ",")+"}")
 	}
@@ -283,7 +283,7 @@ func (s *Servo) LockCCD(ctx context.Context) error {
 }
 
 /*
-GetAPState runs the 'ccdstate' command in the cr50 console,
+GetAPState runs the 'ccdstate' command in the gsc console,
 and returns information about AP's status as follows:
 1. "off", which means that the ap is off.
 2. "on (K)", which means that the dut has jumped into kernel.
@@ -292,7 +292,7 @@ and returns information about AP's status as follows:
 func (s *Servo) GetAPState(ctx context.Context) (string, string, error) {
 	cmd := "ccdstate"
 	regex := []string{`AP:\s*(\w*)\s*\((\w*|)\)`}
-	matches, err := s.RunCR50CommandGetOutput(ctx, cmd, regex)
+	matches, err := s.RunGSCCommandGetOutput(ctx, cmd, regex)
 	if err != nil {
 		return "", "", errors.Wrapf(err, "while running %s", cmd)
 	}
@@ -312,7 +312,7 @@ func (s *Servo) GetAPState(ctx context.Context) (string, string, error) {
 // attached to a host and we want to target our device specifically.
 func (s *Servo) GetGscUSBSerialNumberDescriptor(ctx context.Context) (string, error) {
 	regex := `DEV_ID:\s+0x([0-9a-fA-F]+)\s+0x([0-9a-fA-F]+)`
-	matches, err := s.RunCR50CommandGetOutput(ctx, "sysinfo", []string{regex})
+	matches, err := s.RunGSCCommandGetOutput(ctx, "sysinfo", []string{regex})
 	if err != nil {
 		return "", errors.Wrap(err, "failed to match GSC `sysinfo` command output")
 	}

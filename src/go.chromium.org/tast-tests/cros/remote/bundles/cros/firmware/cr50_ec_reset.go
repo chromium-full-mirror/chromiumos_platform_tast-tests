@@ -101,10 +101,10 @@ func wakeEC(ctx context.Context, h *firmware.Helper, method wakeECMethod) error 
 			errors.Wrapf(err, "failed to set %s to off", method)
 		}
 	} else {
-		if err := h.Servo.RunCR50Command(ctx, "ecrst on"); err != nil {
+		if err := h.Servo.RunGSCCommand(ctx, "ecrst on"); err != nil {
 			errors.Wrapf(err, "failed to set %s to on", method)
 		}
-		if err := h.Servo.RunCR50Command(ctx, "ecrst off"); err != nil {
+		if err := h.Servo.RunGSCCommand(ctx, "ecrst off"); err != nil {
 			errors.Wrapf(err, "failed to set %s to off", method)
 		}
 	}
@@ -122,13 +122,13 @@ func wakeEC(ctx context.Context, h *firmware.Helper, method wakeECMethod) error 
 
 // basicEcrstTest will check ability to connect to an EC console when it is in reset state brought by ecrst
 func basicEcrstTest(ctx context.Context, h *firmware.Helper) error {
-	if err := h.Servo.RunCR50Command(ctx, "ecrst on"); err != nil {
+	if err := h.Servo.RunGSCCommand(ctx, "ecrst on"); err != nil {
 		return errors.Wrap(err, "failed to send a `ecrst on` command to CR50")
 	}
 	if err := h.Servo.CheckUnresponsiveEC(ctx); err != nil {
 		return errors.New("failed to use cr50 ecrst to hold the EC in reset")
 	}
-	if err := h.Servo.RunCR50Command(ctx, "ecrst off"); err != nil {
+	if err := h.Servo.RunGSCCommand(ctx, "ecrst off"); err != nil {
 		return errors.Wrap(err, "failed to send a `ecrst off` command to CR50")
 	}
 	// we want to check that EC is responsive, so CheckUnresponsiveEC should return an error
@@ -148,7 +148,7 @@ func guaranteeECIsUp(ctx context.Context, h *firmware.Helper) error {
 	if err := h.Servo.SetOnOff(ctx, servo.ColdReset, servo.Off); err != nil {
 		return errors.Wrap(err, "failed to set cold_reset to off")
 	}
-	if err := h.Servo.RunCR50Command(ctx, "ecrst off"); err != nil {
+	if err := h.Servo.RunGSCCommand(ctx, "ecrst off"); err != nil {
 		return errors.Wrap(err, "failed to send a `ecrst off` command to CR50")
 	}
 	if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.DurTab); err != nil {

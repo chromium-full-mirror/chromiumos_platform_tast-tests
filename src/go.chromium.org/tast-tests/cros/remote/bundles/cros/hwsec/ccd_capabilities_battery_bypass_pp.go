@@ -110,7 +110,7 @@ func CCDCapabilitiesBatteryBypassPP(ctx context.Context, s *testing.State) {
 	}
 
 	// Make sure that CCD capabilities are in their default states
-	if err := h.Servo.RunCR50Command(ctx, "ccd reset"); err != nil {
+	if err := h.Servo.RunGSCCommand(ctx, "ccd reset"); err != nil {
 		s.Fatal("Failed to reset CCD: ", err)
 	}
 
