@@ -113,8 +113,16 @@ func NetworkScan(ctx context.Context, s *testing.State) {
 		shillconst.ServicePropertyName: ap.Config().SSID,
 	}
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		_, err = tf.WifiClient().GetServicePath(ctx, props)
-		return err
+		if err := tf.WifiClient().RequestScan(ctx); err != nil {
+			return errors.Wrap(err, "request scan")
+		}
+		if _, err := tf.WifiClient().WaitScanIdle(ctx, &emptypb.Empty{}); err != nil {
+			return errors.Wrap(err, "wait for scan to be done")
+		}
+		if _, err = tf.WifiClient().GetServicePath(ctx, props); err != nil {
+			return errors.Wrap(err, "get expected service path")
+		}
+		return nil
 	}, &testing.PollOptions{Timeout: shillconst.DefaultTimeout, Interval: time.Second}); err != nil {
 		s.Fatalf("Failed to find wifi service %q: %v", ap.Config().SSID, err)
 	}
