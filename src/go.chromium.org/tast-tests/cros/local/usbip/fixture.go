@@ -25,7 +25,7 @@ func init() {
 		Name: "usbipModulesLoaded",
 		Desc: "Kernel modules necessary for `usbip` loaded",
 		Contacts: []string{
-			"chromeos-engprod-syd@google.com",
+			"chromeos-dev-engprod@google.com",
 			"mattlui@google.com",
 		},
 		BugComponent:    "b:1103568", // ChromeOS -> EngProd -> Developer
@@ -39,7 +39,7 @@ func init() {
 		Name: "usbipServer",
 		Desc: "A running USBIP server for device emulation",
 		Contacts: []string{
-			"chromeos-engprod-syd@google.com",
+			"chromeos-dev-engprod@google.com",
 			"mattlui@google.com",
 		},
 		BugComponent:    "b:1103568", // ChromeOS -> EngProd -> Developer
