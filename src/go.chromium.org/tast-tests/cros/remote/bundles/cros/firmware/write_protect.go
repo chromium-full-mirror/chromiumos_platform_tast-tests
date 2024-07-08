@@ -10,11 +10,13 @@ import (
 	"os"
 	"time"
 
+	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
 	"go.chromium.org/tast-tests/cros/common/flashrom"
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
+	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
 	pb "go.chromium.org/tast-tests/cros/services/cros/firmware"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -142,9 +144,11 @@ func WriteProtect(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to connect to the DUT: ", err)
 		}
 
-		testing.ContextLog(ctx, "Disable Write Protect")
-		if err := setWriteProtect(ctx, h, target, false); err != nil {
-			s.Error("Failed to disable FW write protect state: ", err)
+		if out, err := h.Servo.GetString(ctx, servo.FWWPState); err != nil || out != string(servo.FWWPStateOff) {
+			testing.ContextLog(ctx, "Disable Write Protect")
+			if err := setWriteProtect(ctx, h, target, false); err != nil {
+				s.Error("Failed to disable FW write protect state: ", err)
+			}
 		}
 
 		if needsRestore {
@@ -236,25 +240,26 @@ func setWriteProtect(ctx context.Context, h *firmware.Helper, target wpTarget, e
 		enableStr = "disable"
 	}
 
-	if target == targetBIOS {
-		var flashromConfig flashrom.Config
-		flash, ctx, shutdown, _, err := flashromConfig.
-			FlashromInit(flashrom.VerbosityDebug).
-			ProgrammerInit(flashrom.ProgrammerHost, "").
-			SetDut(h.DUT).
-			Probe(ctx)
-		defer func() {
-			if err := shutdown(); err != nil {
-				if retErr == nil {
-					retErr = errors.Wrap(err, "failed to shutdown flashromInstance")
-				} else {
-					testing.ContextLog(ctx, "Failed to shutdown flashromInstance: ", err)
-				}
+	var flashromConfig flashrom.Config
+	flash, ctx, shutdown, _, err := flashromConfig.
+		FlashromInit(flashrom.VerbosityDebug).
+		ProgrammerInit(flashrom.ProgrammerHost, "").
+		SetDut(h.DUT).
+		Probe(ctx)
+	defer func() {
+		if err := shutdown(); err != nil {
+			if retErr == nil {
+				retErr = errors.Wrap(err, "failed to shutdown flashromInstance")
+			} else {
+				testing.ContextLog(ctx, "Failed to shutdown flashromInstance: ", err)
 			}
-		}()
-		if err != nil {
-			return errors.Wrap(err, "flashrom probe failed, unable to build flashrom instance")
 		}
+	}()
+	if err != nil {
+		return errors.Wrap(err, "flashrom probe failed, unable to build flashrom instance")
+	}
+
+	if target == targetBIOS {
 		apWPFunc := flash.SoftwareWriteProtectEnable
 		if !enable {
 			apWPFunc = flash.SoftwareWriteProtectDisable
@@ -264,7 +269,6 @@ func setWriteProtect(ctx context.Context, h *firmware.Helper, target wpTarget, e
 		if _, err := apWPFunc(ctx); err != nil {
 			return errors.Wrapf(err, "failed to set AP wp to %s", enableStr)
 		}
-
 	} else {
 		if err := h.Servo.RunECCommand(ctx, fmt.Sprintf("flashwp %v", enableStr)); err != nil {
 			return errors.Wrapf(err, "failed to %s flashwp", enableStr)
@@ -276,6 +280,41 @@ func setWriteProtect(ctx context.Context, h *firmware.Helper, target wpTarget, e
 			return errors.Wrapf(err, "failed to %s firmware write protect", enableStr)
 		}
 	}
+
+	cleanupContext := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Minute)
+	defer cancel()
+
+	state := h.CheckServoChargerBeforeBootingFromUSB(ctx)
+	defer func(ctx context.Context) {
+		if enable && retErr != nil && target == targetBIOS {
+			if err := h.BootToRecoveryMode(ctx, &state, false); err != nil {
+				testing.ContextLog(ctx, "Failed to boot to recovery mode: ", err)
+			}
+
+			recReason, err := h.Reporter.CrossystemParam(ctx, reporters.CrossystemParamRecoveryReason)
+			if err != nil {
+				testing.ContextLog(ctx, "Failed to get crossystem recovery_reason value: ", err)
+			}
+			testing.ContextLog(ctx, "Recovery reason is: ", recReason)
+
+			if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateOff); err != nil {
+				testing.ContextLog(ctx, "Failed to disable firmware write protect: ", err)
+			}
+
+			if _, err := flash.SoftwareWriteProtectDisable(ctx); err != nil {
+				testing.ContextLogf(ctx, "Failed to set AP wp to %s", enableStr)
+			}
+
+			if err := h.RebootWithVT2Command(ctx, fwCommon.BootModeRecovery); err != nil {
+				testing.ContextLog(ctx, "Failed to reboot back to original boot mode: ", err)
+			}
+
+			if err := h.SetDUTPower(ctx, true); err != nil {
+				testing.ContextLog(ctx, "Failed to connect charger: ", err)
+			}
+		}
+	}(cleanupContext)
 
 	testing.ContextLog(ctx, "Performing mode aware reboot")
 	if err := ms.ModeAwareReboot(ctx, firmware.ColdReset, firmware.AllowGBBForce); err != nil {
