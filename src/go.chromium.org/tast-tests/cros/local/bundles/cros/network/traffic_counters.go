@@ -113,6 +113,7 @@ func init() {
 			},
 			Fixture:           "crostiniBullseye",
 			ExtraSoftwareDeps: []string{"vm_host"},
+			ExtraHardwareDeps: crostini.CrostiniStable,
 		}, {
 			Name: "crostini_ipv6",
 			Val: tcParams{
@@ -121,6 +122,7 @@ func init() {
 			},
 			Fixture:           "crostiniBullseye",
 			ExtraSoftwareDeps: []string{"vm_host"},
+			ExtraHardwareDeps: crostini.CrostiniStable,
 		}, {
 			Name: "arc_ipv4",
 			Val: tcParams{
