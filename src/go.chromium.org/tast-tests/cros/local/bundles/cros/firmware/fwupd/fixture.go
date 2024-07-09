@@ -50,7 +50,7 @@ func (f *fwupdFixture) SetUp(ctx context.Context, s *testing.FixtState) interfac
 	cmd := testexec.CommandContext(ctx, "/usr/bin/fwupdmgr", "refresh", "--force", "--json")
 
 	if output, err := cmd.Output(testexec.DumpLogOnError); err != nil {
-		s.Errorf("Metadata refresh failed: %q: err: %v output: %v", shutil.EscapeSlice(cmd.Args), err, output)
+		s.Errorf("Metadata refresh failed: %q: err: %v output: %v", shutil.EscapeSlice(cmd.Args), err, string(output[:]))
 	}
 	return &FixtData{Fwupd: f.Fwupd}
 }

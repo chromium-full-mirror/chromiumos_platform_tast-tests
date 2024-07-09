@@ -19,6 +19,8 @@ import (
 )
 
 const (
+	// ActivateMethod - Method name to activate firmware update on a device
+	ActivateMethod = "Activate"
 	// DbusName bus
 	DbusName = "org.freedesktop.fwupd"
 	// DbusPath object path
@@ -146,6 +148,14 @@ func (fwupd *Fwupd) releasesFromDbusCall(dbusMethod, deviceID string) ([]map[str
 	}
 
 	return releases, nil
+}
+
+func (fwupd *Fwupd) callActivateForDeviceID(deviceID string) error {
+	if call := fwupd.obj.Call(DbusInterface+"."+ActivateMethod, 0, deviceID); call.Err != nil {
+		return errors.Wrap(call.Err, "failed to call "+ActivateMethod)
+	}
+
+	return nil
 }
 
 // Install opens the local file and calls the dbus Install method from `fwupd`.
@@ -328,7 +338,7 @@ func (fwupd *Fwupd) FindReleaseByVersion(ctx context.Context, deviceID, expected
 }
 
 // InstallDeviceByVersion installs a fw version on a device.
-func (fwupd *Fwupd) InstallDeviceByVersion(ctx context.Context, device *Device, version string, installOptions map[string]dbus.Variant) (err error) {
+func (fwupd *Fwupd) InstallDeviceByVersion(ctx context.Context, device *Device, version string, installOptions map[string]dbus.Variant, activateRequired bool) (err error) {
 	// Check if the target version is in the list.
 	release, err := fwupd.FindReleaseByVersion(ctx, device.DeviceId, version)
 	if err != nil {
@@ -342,13 +352,31 @@ func (fwupd *Fwupd) InstallDeviceByVersion(ctx context.Context, device *Device, 
 	}
 
 	testing.ContextLog(ctx, "Installing version: ", version)
-	if err := fwupd.Install(device.DeviceId, releaseFile, installOptions); err != nil {
-		return errors.Wrap(err, "failed to install")
+	// Poll because if a device was recently activated, it may not be ready for another fw version.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if err := fwupd.Install(device.DeviceId, releaseFile, installOptions); err != nil {
+			return errors.Wrap(err, "failed to install")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 20 * time.Minute, Interval: 10 * time.Second}); err != nil {
+		return errors.Wrap(err, "failed to find device")
+	}
+	if activateRequired {
+		testing.ContextLog(ctx, "Activating firmware")
+		if err := fwupd.callActivateForDeviceID(device.DeviceId); err != nil {
+			return errors.Wrap(err, "failed to activate")
+		}
 	}
 
 	// Check if device is still available and has no problems.
-	if device, err = fwupd.DeviceByID(ctx, device.DeviceId); err != nil {
-		return errors.Wrap(err, "failed to detect the device after flashing")
+	// Wait up to 1 minute since "activate" can take cause the device to restart and won't be enumerated during that time.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if device, err = fwupd.DeviceByID(ctx, device.DeviceId); err != nil {
+			return errors.Wrap(err, "failed to detect the device after flashing")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: time.Minute, Interval: 3 * time.Second}); err != nil {
+		return errors.Wrap(err, "failed to find device")
 	}
 	if device.Problems != 0 {
 		errors.Errorf("unable to use %q due detected problems: %s", device.Name, device.UpdateError)

@@ -51,7 +51,7 @@ func FwupdInstallRemoteDBus(ctx context.Context, s *testing.State) {
 	}
 	// Empty install options
 	var installOptions = map[string]dbus.Variant{}
-	err = fwd.InstallDeviceByVersion(ctx, device, fwupd.FakeWebcamUpdateVersion, installOptions)
+	err = fwd.InstallDeviceByVersion(ctx, device, fwupd.FakeWebcamUpdateVersion, installOptions, false)
 	if err != nil {
 		s.Fatal("Failed to install new version: ", err)
 	}

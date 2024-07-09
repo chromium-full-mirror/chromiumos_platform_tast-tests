@@ -30,6 +30,9 @@ func init() {
 			"fwupd.baseFwVersion",
 			"fwupd.newFwVersion",
 		},
+		Vars: []string{
+			"fwupd.activateRequired",
+		},
 		Fixture: "prepareFwupd",
 		Timeout: 30 * time.Minute,
 	})
@@ -37,6 +40,16 @@ func init() {
 
 func FwupdPasit(ctx context.Context, s *testing.State) {
 	fwd := s.FixtValue().(*fwupd.FixtData).Fwupd
+
+	var activateRequired = false
+	if activate, ok := s.Var("fwupd.activateRequired"); ok {
+		if activate != "true" && activate != "false" {
+			s.Fatal("fwupd.activateRequired variable only accepts 'true' or 'false' values")
+		}
+		if activate == "true" {
+			activateRequired = true
+		}
+	}
 
 	var deviceGUID = s.RequiredVar("fwupd.deviceGuid")
 	device, err := fwd.DeviceByGUID(ctx, deviceGUID)
@@ -55,7 +68,7 @@ func FwupdPasit(ctx context.Context, s *testing.State) {
 			"allow-older":     dbus.MakeVariant(true),
 		}
 	// Install base version on device
-	err = fwd.InstallDeviceByVersion(ctx, device, s.RequiredVar("fwupd.baseFwVersion"), installOptions)
+	err = fwd.InstallDeviceByVersion(ctx, device, s.RequiredVar("fwupd.baseFwVersion"), installOptions, activateRequired)
 	if err != nil {
 		s.Fatal("Failed to successfully install base version: ", err)
 	}
@@ -73,8 +86,11 @@ func FwupdPasit(ctx context.Context, s *testing.State) {
 	}
 
 	// Install new version on device
-	err = fwd.InstallDeviceByVersion(ctx, device, newFwVersion, installOptions)
+	// Don't allow older or re-install. Needs to strictly be an upgrade.
+	// This also makes sure that the base version provided is older than the new version.
+	emptyInstallOptions := map[string]dbus.Variant{}
+	err = fwd.InstallDeviceByVersion(ctx, device, newFwVersion, emptyInstallOptions, activateRequired)
 	if err != nil {
-		s.Fatal("Failed to successfully install base version: ", err)
+		s.Fatal("Failed to successfully install new version: ", err)
 	}
 }
