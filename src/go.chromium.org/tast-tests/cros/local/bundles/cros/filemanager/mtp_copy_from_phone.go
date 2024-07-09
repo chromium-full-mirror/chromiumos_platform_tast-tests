@@ -34,7 +34,7 @@ func init() {
 			"mattlui@google.com",
 		},
 		Attr:         []string{"group:mtp"},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "gaia"},
 		Timeout:      3 * time.Minute,
 		Fixture:      "mtpWithAndroid",
 		SearchFlags: []*testing.StringPair{

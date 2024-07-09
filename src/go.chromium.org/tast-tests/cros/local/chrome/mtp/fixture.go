@@ -7,10 +7,13 @@ package mtp
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/android/adb"
+	arcCommon "go.chromium.org/tast-tests/cros/common/arc"
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	localadb "go.chromium.org/tast-tests/cros/local/android/adb"
 	"go.chromium.org/tast-tests/cros/local/arc"
@@ -30,25 +33,20 @@ const (
 )
 
 // NewMTPFixture creates a new implementation of MTP fixture with an Android device.
-func NewMTPFixture(User, Password string, opts ...chrome.Option) testing.FixtureImpl {
+func NewMTPFixture(AccountVar string, opts ...chrome.Option) testing.FixtureImpl {
 	return &mtpFixture{
-		opts:     opts,
-		User:     User,
-		Password: Password,
+		opts:       opts,
+		AccountVar: AccountVar,
 	}
 }
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
-		Name:         "mtpWithAndroid",
-		Desc:         "User login with ARC enabled and secondary connected Android phone setup in MTP mode",
-		Contacts:     []string{"jinrongwu@google.com", "arc-storage@google.com"},
-		BugComponent: "b:153255", // ChromeOS > Software > ARC++ > Storage
-		Impl:         NewMTPFixture("arc.MTP.user", "arc.MTP.password", chrome.ARCEnabled(), chrome.ExtraArgs(arc.DisableSyncFlags()...)),
-		Vars: []string{
-			"arc.MTP.user",
-			"arc.MTP.password",
-		},
+		Name:            "mtpWithAndroid",
+		Desc:            "User login with ARC enabled and secondary connected Android phone setup in MTP mode",
+		Contacts:        []string{"jinrongwu@google.com", "arc-storage@google.com"},
+		BugComponent:    "b:153255", // ChromeOS > Software > ARC++ > Storage
+		Impl:            NewMTPFixture(arcCommon.MtpAccountVarName, chrome.ARCEnabled(), chrome.ExtraArgs(arc.DisableSyncFlags()...)),
 		SetUpTimeout:    chrome.GAIALoginTimeout + arc.BootTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -58,10 +56,9 @@ func init() {
 }
 
 type mtpFixture struct {
-	cr       *chrome.Chrome
-	opts     []chrome.Option
-	User     string
-	Password string
+	cr         *chrome.Chrome
+	opts       []chrome.Option
+	AccountVar string
 }
 
 // FixtData holds information made available to tests that specify this Fixture.
@@ -72,8 +69,10 @@ type FixtData struct {
 }
 
 func (f *mtpFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
-	User := s.RequiredVar(f.User)
-	Pass := s.RequiredVar(f.Password)
+	User, Pass, err := dma.UserPassFromPool(f.AccountVar)
+	if err != nil {
+		panic(fmt.Sprintf("Failed to get user and pass: %v", err))
+	}
 
 	f.opts = append(f.opts, chrome.GAIALogin(chrome.Creds{
 		User: User,

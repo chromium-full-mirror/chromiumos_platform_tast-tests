@@ -27,6 +27,9 @@ const PlayAutoInstallAccountVarName = "arc.PlayAutoInstall.account"
 // ParentAccountVarName is the arc parent account.
 const ParentAccountVarName = "arc.parentAccount"
 
+// MtpAccountVarName is the arc MTP account.
+const MtpAccountVarName = "arc.MTP.account"
+
 const childDMAAccountVarName = "arc.childDMAAccount"
 
 const parentDMAAccountVarName = "arc.parentDMAAccount"
@@ -101,6 +104,12 @@ var playAutoInstallDMAAccountVar = testing.RegisterVarString(
 	"It contains creds in arc.PlayAutoInstall.dmaAccount",
 )
 
+var mtpAccountVar = testing.RegisterVarString(
+	MtpAccountVarName,
+	"",
+	"It contains creds in arc.MTP.account",
+)
+
 // ManagedAccountPoolValue returns credentials from arc.managedAccountPool.
 func ManagedAccountPoolValue() string {
 	return managedAccountPoolVar.Value()
@@ -154,4 +163,9 @@ func PlayAutoInstallAccountValue() string {
 // PlayAutoInstallDMAAccountValue returns credentials from arc.PlayAutoInstall.dmaAccount
 func PlayAutoInstallDMAAccountValue() string {
 	return playAutoInstallDMAAccountVar.Value()
+}
+
+// MtpAccountValue returns credentials from arc.MTP.account
+func MtpAccountValue() string {
+	return mtpAccountVar.Value()
 }

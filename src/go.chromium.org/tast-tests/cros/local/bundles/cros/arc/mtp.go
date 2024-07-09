@@ -37,7 +37,7 @@ func init() {
 		// ChromeOS > Software > ARC++ > Storage
 		BugComponent: "b:516669",
 		Attr:         []string{"group:mtp"},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "gaia"},
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 1*time.Minute,
 		Fixture:      "mtpWithAndroid",
 		Params: []testing.Param{
