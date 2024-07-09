@@ -6,6 +6,7 @@ package wallpaper
 
 import (
 	"context"
+	"fmt"
 	"image"
 	"image/color"
 	"image/png"
@@ -58,43 +59,47 @@ func init() {
 	})
 }
 
-// The minimum amount that `low` values must be lower than `high` values.
-const minimumDiff uint32 = 20
+// RGBA values are in the range [0, 65536)
+const (
+	// The minimum amount that the primary color must be greater than secondary colors
+	minimumPrimaryColorDiff uint32 = 10000
+	// The maximum amount that secondary colors can differ
+	maximumSecondaryColorDiff = 4000
+	minimumAlpha              = 65000
+)
 
-// lowLessThanHigh tests that every value in `low` is smaller than every value in `high`
-func lowLessThanHigh(low, high []uint32) bool {
-	var maxLow uint32 = 0
-	for _, value := range low {
-		if value > maxLow {
-			maxLow = value
-		}
+func isPrimaryColor(primary, x, y, alpha uint32) bool {
+	if alpha <= minimumAlpha {
+		return false
 	}
 
-	var minHigh uint32 = math.MaxUint32
-	for _, value := range high {
-		if value < minHigh {
-			minHigh = value
-		}
+	if primary <= x || primary-x <= minimumPrimaryColorDiff {
+		return false
 	}
-	return maxLow+minimumDiff <= minHigh
+
+	if primary <= y || primary-y <= minimumPrimaryColorDiff {
+		return false
+	}
+
+	return uint32(math.Abs(float64(x)-float64(y))) < maximumSecondaryColorDiff
 }
 
-// isRedBlue tests that green channel is at least `minimumDiff` less than red and blue.
-func isRedBlue(c color.Color) bool {
-	r, g, b, _ := c.RGBA()
-	return lowLessThanHigh([]uint32{g}, []uint32{r, b})
+// isRed tests that red is highest and {green,blue} are similar.
+func isRed(c color.Color) bool {
+	r, g, b, a := c.RGBA()
+	return isPrimaryColor(r, g, b, a)
 }
 
-// isGreenBlue tests that red channel is at least `minimumDiff` less than green and blue.
-func isGreenBlue(c color.Color) bool {
-	r, g, b, _ := c.RGBA()
-	return lowLessThanHigh([]uint32{r}, []uint32{g, b})
+// isGreen tests that green is highest and {red, blue} are similar.
+func isGreen(c color.Color) bool {
+	r, g, b, a := c.RGBA()
+	return isPrimaryColor(g, r, b, a)
 }
 
-// isBlue tests that red and green channel are at least `minimumDiff` less than blue.
+// isBlue tests that blue is highest and {red, green} are similar.
 func isBlue(c color.Color) bool {
-	r, g, b, _ := c.RGBA()
-	return lowLessThanHigh([]uint32{r, g}, []uint32{b})
+	r, g, b, a := c.RGBA()
+	return isPrimaryColor(b, r, g, a)
 }
 
 func saveLockscreenJpg(outdir string, image image.Image) error {
@@ -106,6 +111,12 @@ func saveLockscreenJpg(outdir string, image image.Image) error {
 		return errors.Wrap(err, "failed to write lockscreen.jpg")
 	}
 	return nil
+}
+
+// printRGBA prints the values in range [0, 65536) rather than the color.Color default of [0, 255].
+func printRGBA(c color.Color) string {
+	r, g, b, a := c.RGBA()
+	return fmt.Sprintf("{%d, %d, %d, %d}", r, g, b, a)
 }
 
 // LockscreenWallpaper verifies that a reference red, green, blue wallpaper can be seen in blurred form when the screen is locked.
@@ -195,10 +206,10 @@ func LockscreenWallpaper(ctx context.Context, s *testing.State) {
 	// blue is the largest region in the image, so system UI should do color extraction and shift the lockscreen towards blue.
 	// Verify that a pixel sampled from the red area is red+blue, a pixel sampled from the green area is green+blue,
 	// and a pixel sampled from the blue area is very blue.
-	if !isRedBlue(red) || !isGreenBlue(green) || !isBlue(blue) {
+	if !isRed(red) || !isGreen(green) || !isBlue(blue) {
 		if err = saveLockscreenJpg(s.OutDir(), lockscreenImage); err != nil {
 			s.Error("Failed to save debug lockscreen image: ", err)
 		}
-		s.Fatalf("Failed to verify wallpaper on lockscreen: red - %v, green - %v, blue - %v", red, green, blue)
+		s.Fatalf("Failed to verify wallpaper on lockscreen: red - %s, green - %s, blue - %s", printRGBA(red), printRGBA(green), printRGBA(blue))
 	}
 }
