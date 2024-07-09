@@ -11,7 +11,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -29,12 +28,12 @@ const (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DoNotDisturbOSSettings,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks the Do Not Disturb toggle in the OS Settings Notifications subpage",
 		Contacts: []string{
 			"cros-status-area-eng@google.com",
+			"chromeos-consumer-engprod@google.com",
 			"newcomer@google.com",
-			"chromeos-sw-engprod@google.com",
 		},
 		BugComponent: "b:1246021", // ChromeOS > Software > System UI Surfaces > Notifications
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
@@ -43,15 +42,7 @@ func init() {
 			Key:   "feature_id",
 			Value: "screenplay-08f123fc-aca9-4e05-89ba-b5f4f5fec998",
 		}},
-		Params: []testing.Param{{
-			Fixture: "chromeLoggedIn",
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			Fixture:           "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               browser.TypeLacros,
-		}},
+		Fixture: "chromeLoggedIn",
 	})
 }
 
@@ -65,18 +56,6 @@ func DoNotDisturbOSSettings(ctx context.Context, s *testing.State) {
 
 	ui := uiauto.New(tconn).WithTimeout(waitForNotificationTimeout)
 
-	// Setup a browser.
-	bt := s.Param().(browser.Type)
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, bt)
-	if err != nil {
-		s.Fatal("Failed to open the browser: ", err)
-	}
-	defer closeBrowser(ctx)
-	bTconn, err := br.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatalf("Failed to create Test API connection for %v browser: %v", bt, err)
-	}
-
 	// Launch Notification Subpage.
 	appNotificationPageHeading := nodewith.NameStartingWith("Notifications").Role(role.Heading).Ancestor(ossettings.WindowFinder)
 	appSettings, err := ossettings.LaunchAtPageURL(ctx, tconn, cr, "app-notifications", ui.Exists(appNotificationPageHeading))
@@ -85,7 +64,7 @@ func DoNotDisturbOSSettings(ctx context.Context, s *testing.State) {
 	}
 
 	// Toggle ON the DND Toggle.
-	const dndTitle = "Do not disturb"
+	const dndTitle = "Do Not Disturb"
 	if err := appSettings.LeftClick(nodewith.Name(dndTitle).Role(role.ToggleButton))(ctx); err != nil {
 		s.Fatal("Failed to toggle on DND: ", err)
 	}
@@ -98,7 +77,7 @@ func DoNotDisturbOSSettings(ctx context.Context, s *testing.State) {
 	}
 
 	// Confirm that notification doesn't show when DND is toggled on.
-	if _, err := browser.CreateTestNotification(ctx, bTconn, browser.NotificationTypeBasic, notificationTitle, "SHOULD NOT SHOW"); err != nil {
+	if _, err := browser.CreateTestNotification(ctx, tconn, browser.NotificationTypeBasic, notificationTitle, "SHOULD NOT SHOW"); err != nil {
 		s.Fatal("Failed to create test notification")
 	}
 	if _, err := ash.WaitForNotification(ctx, tconn, waitForNotificationTimeout, ash.WaitTitle(notificationTitle)); err != nil {
@@ -115,7 +94,7 @@ func DoNotDisturbOSSettings(ctx context.Context, s *testing.State) {
 	}
 
 	// Confirm that notification shows when DND is toggled off.
-	if _, err := browser.CreateTestNotification(ctx, bTconn, browser.NotificationTypeBasic, notificationTitle, "SHOULD SHOW"); err != nil {
+	if _, err := browser.CreateTestNotification(ctx, tconn, browser.NotificationTypeBasic, notificationTitle, "SHOULD SHOW"); err != nil {
 		s.Fatal("Failed to create test notification")
 	}
 	if _, err := ash.WaitForNotification(ctx, tconn, waitForNotificationTimeout, ash.WaitTitle(notificationTitle)); err != nil {

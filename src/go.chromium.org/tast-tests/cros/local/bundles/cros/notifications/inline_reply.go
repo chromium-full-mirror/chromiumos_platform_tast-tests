@@ -14,8 +14,6 @@ import (
 	"go.chromium.org/tast/core/testing"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -29,10 +27,11 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           InlineReply,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantExists,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
 		Desc:           "Verify inline reply for Chrome notification works",
 		Contacts: []string{
-			"chromeos-sw-engprod@google.com",
+			"cros-status-area-eng@google.com",
+			"chromeos-consumer-engprod@google.com",
 		},
 		// ChromeOS > Software > System UI Surfaces > Notifications
 		BugComponent: "b:1246021",
@@ -42,15 +41,7 @@ func init() {
 			Key:   "feature_id",
 			Value: "screenplay-1f4894b3-96dd-44f1-a8c5-800eb7aedcbd",
 		}},
-		Params: []testing.Param{{
-			Fixture: "chromeLoggedIn",
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           "lacros",
-			Val:               browser.TypeLacros,
-		}},
+		Fixture: "chromeLoggedIn",
 	})
 }
 
@@ -58,24 +49,16 @@ func init() {
 func InlineReply(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
-	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
-	if err != nil {
-		s.Fatal("Failed to set up browser: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
-
 	// TODO(crbug.com/1311030): Update this website with the notification test page when it is fully functional.
-	conn, err := br.NewConn(ctx, "https://tests.peter.sh/notification-generator")
+	conn, err := cr.NewConn(ctx, "https://tests.peter.sh/notification-generator")
 	if err != nil {
 		s.Fatal("Failed to open the web page: ", err)
 	}
 	defer conn.Close()
-	defer conn.CloseTarget(cleanupCtx)
-	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_dump")
+	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_dump")
 
 	if err := webutil.WaitForQuiescence(ctx, conn, 15*time.Second); err != nil {
 		s.Fatal("Failed to wait for page to achieve quiescence: ", err)
@@ -94,8 +77,7 @@ func InlineReply(ctx context.Context, s *testing.State) {
 	if err := uiauto.Combine("request permission",
 		ui.WaitUntilExists(permissionBtn),
 		ui.MakeVisible(permissionBtn),
-		// TODO(b/236799853): Use ui.LeftClick after this issue on lacros is resolved.
-		ui.DoDefault(permissionBtn),
+		ui.LeftClick(permissionBtn),
 	)(ctx); err != nil {
 		s.Fatal("Failed to grant the notification permission: ", err)
 	}
@@ -133,8 +115,7 @@ func InlineReply(ctx context.Context, s *testing.State) {
 	if err := uiauto.Combine("send notification",
 		ui.WaitUntilExists(sendBtn), // This is to make sure that the node exists in the UI tree before calling MakeVisible on it.
 		ui.MakeVisible(sendBtn),
-		// TODO(b/236799853): Use ui.LeftClick after node position mismatching issue is resolved.
-		ui.DoDefault(sendBtn),
+		ui.LeftClick(sendBtn),
 	)(ctx); err != nil {
 		s.Fatal("Failed to complete the combined steps: ", err)
 	}

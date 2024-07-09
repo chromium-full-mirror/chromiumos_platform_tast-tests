@@ -11,7 +11,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
@@ -28,13 +27,12 @@ const uiTimeout = 30 * time.Second
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Smoke,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that notifications appear in notification centre and can be interacted with",
 		Contacts: []string{
 			"cros-status-area-eng@google.com",
-			"chromeos-sw-engprod@google.com",
+			"chromeos-consumer-engprod@google.com",
 			"amehfooz@chromium.org",
-			"cros-system-ui-eng@google.com",
 		},
 		BugComponent: "b:1246021", // ChromeOS > Software > System UI Surfaces > Notifications
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
@@ -46,15 +44,7 @@ func init() {
 			Key:   "feature_id",
 			Value: "screenplay-39d4666a-39dc-40ed-a918-75acf57335a0",
 		}},
-		Params: []testing.Param{{
-			Fixture: "chromeLoggedIn",
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			Fixture:           "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               browser.TypeLacros,
-		}},
+		Fixture: "chromeLoggedIn",
 	})
 }
 
@@ -66,18 +56,6 @@ func Smoke(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
-	// Setup a browser.
-	bt := s.Param().(browser.Type)
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, bt)
-	if err != nil {
-		s.Fatal("Failed to open the browser: ", err)
-	}
-	defer closeBrowser(ctx)
-	bTconn, err := br.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatalf("Failed to create Test API connection for %v browser: %v", bt, err)
-	}
-
 	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
 
 	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, false)
@@ -87,7 +65,7 @@ func Smoke(ctx context.Context, s *testing.State) {
 	defer cleanup(ctx)
 
 	s.Log("Creating notification")
-	if _, err := browser.CreateTestNotification(ctx, bTconn, browser.NotificationTypeBasic, "TestNotification1", "blahhh"); err != nil {
+	if _, err := browser.CreateTestNotification(ctx, tconn, browser.NotificationTypeBasic, "TestNotification1", "blahhh"); err != nil {
 		s.Fatal("Failed to create test notification: ", err)
 	}
 	s.Log("Checking that notification appears")
@@ -137,7 +115,7 @@ func Smoke(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to close notification: ", err)
 	}
 	s.Log("Firing another notification while notification centre is open")
-	if _, err := browser.CreateTestNotification(ctx, bTconn, browser.NotificationTypeBasic, "TestNotification2", "testttt"); err != nil {
+	if _, err := browser.CreateTestNotification(ctx, tconn, browser.NotificationTypeBasic, "TestNotification2", "testttt"); err != nil {
 		s.Fatal("Failed to create test notification: ", err)
 	}
 	s.Log("Closing notification from notification centre")

@@ -13,7 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -25,13 +24,11 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ClearAll,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that the 'Clear all' button dismisses all notifications",
 		Contacts: []string{
 			"cros-status-area-eng@google.com",
-			"chromeos-sw-engprod@google.com",
-			"amehfooz@chromium.org",
-			"cros-system-ui-eng@google.com",
+			"chromeos-consumer-engprod@google.com",
 		},
 		BugComponent: "b:1246021", // ChromeOS > Software > System UI Surfaces > Notifications
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
@@ -40,15 +37,7 @@ func init() {
 			Key:   "feature_id",
 			Value: "screenplay-39d4666a-39dc-40ed-a918-75acf57335a0",
 		}},
-		Params: []testing.Param{{
-			Fixture: "chromeLoggedIn",
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			Fixture:           "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               browser.TypeLacros,
-		}},
+		Fixture: "chromeLoggedIn",
 	})
 }
 
@@ -63,18 +52,6 @@ func ClearAll(ctx context.Context, s *testing.State) {
 	}
 	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
 
-	// Setup a browser.
-	bt := s.Param().(browser.Type)
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, bt)
-	if err != nil {
-		s.Fatal("Failed to open the browser: ", err)
-	}
-	defer closeBrowser(ctx)
-	bTconn, err := br.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatalf("Failed to create Test API connection for %v browser: %v", bt, err)
-	}
-
 	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, false)
 	if err != nil {
 		s.Fatal("Failed to ensure DUT is not in tablet mode: ", err)
@@ -85,7 +62,7 @@ func ClearAll(ctx context.Context, s *testing.State) {
 	const n = 10
 	for i := 0; i < n; i++ {
 		title := fmt.Sprintf("%s%d", baseTitle, i)
-		if _, err := browser.CreateTestNotification(ctx, bTconn, browser.NotificationTypeBasic, title, "blahhh"); err != nil {
+		if _, err := browser.CreateTestNotification(ctx, tconn, browser.NotificationTypeBasic, title, "blahhh"); err != nil {
 			s.Fatalf("Failed to create test notification %v: %v", i, err)
 		}
 		if _, err := ash.WaitForNotification(ctx, tconn, uiTimeout, ash.WaitTitle(title)); err != nil {

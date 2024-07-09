@@ -10,9 +10,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
@@ -26,40 +23,25 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         NotificationImageDrag,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that the notification image drag feature works as expected",
 		Contacts: []string{
-			"chromeos-sw-engprod@google.com",
+			"cros-status-area-eng@google.com",
+			"chromeos-consumer-engprod@google.com",
 			"andrewxu@chromium.org",
-			"cros-system-ui-eng@google.com",
 		},
 		BugComponent: "b:1246021", // Chrome OS > Software > System UI Surfaces > Notifications
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
-		Params: []testing.Param{{
-			Val: browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               browser.TypeLacros,
-		}},
+		Fixture:      "chromeLoggedIn",
 	})
 }
 
 func NotificationImageDrag(ctx context.Context, s *testing.State) {
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
-	defer cancel()
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
-	// Launch browser with the notification image drag enabled.
-	bt := s.Param().(browser.Type)
-	cr, err := browserfixt.NewChrome(ctx, bt, lacrosfixt.NewConfig(),
-		chrome.EnableFeatures("NotificationImageDrag"),
-	)
-	if err != nil {
-		s.Fatal("Failed to start chrome: ", err)
-	}
-	defer cr.Close(cleanupCtx)
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -70,23 +52,16 @@ func NotificationImageDrag(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to ensure DUT is not in tablet mode: ", err)
 	}
-	defer cleanup(cleanupCtx)
+	defer cleanup(ctx)
 
-	// Setup a browser.
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, bt)
-	if err != nil {
-		s.Fatal("Failed to open the browser: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
-
-	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
+	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
 
 	// Open a blank web page.
-	conn, err := br.NewConn(ctx, "about:blank")
+	conn, err := cr.NewConn(ctx, "about:blank")
 	if err != nil {
 		s.Fatal("Failed to open page: ", err)
 	}
-	defer conn.CloseTarget(cleanupCtx)
+	defer conn.Close()
 
 	vkb, err := input.VirtualKeyboard(ctx)
 	if err != nil {

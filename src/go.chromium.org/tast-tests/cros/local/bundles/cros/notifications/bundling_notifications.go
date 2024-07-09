@@ -36,8 +36,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests that bundling notifications appear in notification centre can be interacted with",
 		Contacts: []string{
-			"chromeos-sw-engprod@google.com",
-			"awendy@google.com",
+			"cros-status-area-eng@google.com",
+			"chromeos-consumer-engprod@google.com",
 		},
 		// ChromeOS > Software > System UI Surfaces > Notifications
 		BugComponent: "b:1246021",
