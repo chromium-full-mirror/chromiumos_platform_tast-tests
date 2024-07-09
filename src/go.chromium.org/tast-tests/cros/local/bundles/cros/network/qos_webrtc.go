@@ -28,7 +28,7 @@ func init() {
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Fixture:      "shillSimulatedWiFi",
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline"},
 		// TODO(b/317282580#comment2): Remove `no_kernel_upstream` once
 		// crrev.com/c/5119091 is in the kernel upstream branch.
 		SoftwareDeps: []string{"bpf", "wifi", "chrome", "no_kernel_upstream"},
