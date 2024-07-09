@@ -75,12 +75,11 @@ func VerifyUSBAudioConnection(ctx context.Context, dut *dut.DUT, isConnected boo
 // VerifyDisplayCount verifies the number of dislpays is as expected.
 func VerifyDisplayCount(ctx context.Context, dut *dut.DUT, want int) error {
 	return testing.Poll(ctx, func(ctx context.Context) error {
-		cmd := fmt.Sprintf("ls /sys/class/drm | grep card0-")
+		cmd := fmt.Sprintf("ls /sys/class/drm | grep card'[0-9]'-")
 		out, err := dut.Conn().CommandContext(ctx, "sh", "-c", cmd).Output()
 		if err != nil {
 			return errors.Wrap(err, "list display from DUT")
 		}
-
 		displayCount := 0
 		for _, item := range strings.Split(strings.TrimSpace(string(out)), "\n") {
 			cmd := fmt.Sprintf("cat /sys/class/drm/%s/status", item)
@@ -88,7 +87,6 @@ func VerifyDisplayCount(ctx context.Context, dut *dut.DUT, want int) error {
 			if err != nil {
 				return errors.Wrap(err, "retrieve display status from DUT")
 			}
-
 			if strings.TrimSpace(string(out)) == "connected" {
 				displayCount++
 			}
