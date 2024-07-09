@@ -43,7 +43,7 @@ func init() {
 		Contacts:     []string{"launcher-search-notify@google.com", "xiuwen@google.com"},
 		BugComponent: "b:1257106",
 		Attr:         []string{"group:launcher_search_quality_daily"},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "gaia"},
 		Timeout:      10 * time.Minute,
 
 		Params: []testing.Param{

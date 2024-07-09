@@ -30,7 +30,7 @@ func init() {
 		BugComponent: "b:95887",
 		Attr:         []string{"group:inputs_appcompat_arc_perbuild"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		SoftwareDeps: []string{"inputs_deps", "chrome", "chrome_internal"},
+		SoftwareDeps: []string{"inputs_deps", "chrome", "chrome_internal", "gaia"},
 		Timeout:      5 * time.Minute,
 		Fixture:      fixture.PlayStoreWithVK,
 	})
