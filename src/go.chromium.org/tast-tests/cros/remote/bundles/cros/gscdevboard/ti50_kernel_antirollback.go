@@ -52,6 +52,8 @@ func Ti50KernelAntirollback(ctx context.Context, s *testing.State) {
 	i := ti50.MustOpenCrOSImage(ctx, b, s)
 	defer i.Close(ctx)
 
+	f := s.FixtValue().(*fixture.Value)
+
 	tpm := b.ResetAndTpmStartup(ctx, i, ti50.CcdSuzyQ, ti50.FfClamshell)
 	th.MustSucceed(tpm.TpmvCommitNvmem(), "Failed to enable Nvmem writes.")
 
@@ -155,6 +157,14 @@ func Ti50KernelAntirollback(ctx context.Context, s *testing.State) {
 	s.Log("Undefine NV space")
 	if err := tpm.NvUndefineSpace(attr); err != nil {
 		s.Fatal("Undefine failed: ")
+	}
+
+	// Cr50 does not update the EFS2 cache when the space is delected and
+	// it is not worth change the behavior. Reboot as a permanent
+	// workaround to reload the EFS2 hash which is a proxy for the kernel
+	// file.
+	if f.TestbedProperties.TestbedType == ti50.GscH1Shield {
+		th.MustSucceed(i.Reboot(ctx), "GSC rebooted")
 	}
 
 	s.Log("Check kernel hash (should fail)")
