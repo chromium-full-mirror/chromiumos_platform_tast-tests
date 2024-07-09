@@ -466,6 +466,60 @@ func init() {
 				},
 				ExtraData: []string{"to_print.pdf", "printer_unsupported_GenericPostScript.ppd.gz", "printer_pin_print_unsupported_golden.ps"},
 			}, {
+				Name: "custom_h400_h350",
+				Val: &ippprint.Params{
+					PPDFile:      "printer_add_custom_h400_h350_printer_rastertoH400_H350.ppd.gz",
+					PrintFile:    "receipt_70mmx80mm.pdf",
+					ExpectedFile: "printer_add_custom_h400_h350_printer_rastertoH400_H350.bin",
+				},
+				ExtraData: []string{"receipt_70mmx80mm.pdf", "printer_add_custom_h400_h350_printer_rastertoH400_H350.ppd.gz", "printer_add_custom_h400_h350_printer_rastertoH400_H350.bin"},
+				ExtraAttr: []string{"informational"},
+			}, {
+				Name: "custom_k3",
+				Val: &ippprint.Params{
+					PPDFile:      "printer_add_custom_k3_printer_rastertoK3.ppd.gz",
+					PrintFile:    "receipt_70mmx80mm.pdf",
+					ExpectedFile: "printer_add_custom_k3_printer_rastertoK3.bin",
+				},
+				ExtraData: []string{"receipt_70mmx80mm.pdf", "printer_add_custom_k3_printer_rastertoK3.ppd.gz", "printer_add_custom_k3_printer_rastertoK3.bin"},
+				ExtraAttr: []string{"informational"},
+			}, {
+				Name: "custom_kpm180h",
+				Val: &ippprint.Params{
+					PPDFile:      "printer_add_custom_kpm180h_printer_rastertoKPM180H.ppd.gz",
+					PrintFile:    "receipt_70mmx80mm.pdf",
+					ExpectedFile: "printer_add_custom_kpm180h_printer_rastertoKPM180H.bin",
+				},
+				ExtraData: []string{"receipt_70mmx80mm.pdf", "printer_add_custom_kpm180h_printer_rastertoKPM180H.ppd.gz", "printer_add_custom_kpm180h_printer_rastertoKPM180H.bin"},
+				ExtraAttr: []string{"informational"},
+			}, {
+				Name: "custom_kpm300h3",
+				Val: &ippprint.Params{
+					PPDFile:      "printer_add_custom_kpm300h3_printer_rastertoKPM300H3.ppd.gz",
+					PrintFile:    "receipt_70mmx80mm.pdf",
+					ExpectedFile: "printer_add_custom_kpm300h3_printer_rastertoKPM300H3.bin",
+				},
+				ExtraData: []string{"receipt_70mmx80mm.pdf", "printer_add_custom_kpm300h3_printer_rastertoKPM300H3.ppd.gz", "printer_add_custom_kpm300h3_printer_rastertoKPM300H3.bin"},
+				ExtraAttr: []string{"informational"},
+			}, {
+				Name: "custom_kpm862",
+				Val: &ippprint.Params{
+					PPDFile:      "printer_add_custom_kpm862_printer_rastertoKPM862.ppd.gz",
+					PrintFile:    "receipt_70mmx80mm.pdf",
+					ExpectedFile: "printer_add_custom_kpm862_printer_rastertoKPM862.bin",
+				},
+				ExtraData: []string{"receipt_70mmx80mm.pdf", "printer_add_custom_kpm862_printer_rastertoKPM862.ppd.gz", "printer_add_custom_kpm862_printer_rastertoKPM862.bin"},
+				ExtraAttr: []string{"informational"},
+			}, {
+				Name: "custom_kube",
+				Val: &ippprint.Params{
+					PPDFile:      "printer_add_custom_kube_printer_rastertoKUBE.ppd.gz",
+					PrintFile:    "receipt_70mmx80mm.pdf",
+					ExpectedFile: "printer_add_custom_kube_printer_rastertoKUBE.bin",
+				},
+				ExtraData: []string{"receipt_70mmx80mm.pdf", "printer_add_custom_kube_printer_rastertoKUBE.ppd.gz", "printer_add_custom_kube_printer_rastertoKUBE.bin"},
+				ExtraAttr: []string{"informational"},
+			}, {
 				Name: "custom_modus3_ca",
 				Val: &ippprint.Params{
 					PPDFile:      "printer_add_custom_modus3_ca_printer_rasterToMODUS3_CA.ppd.gz",
@@ -473,6 +527,51 @@ func init() {
 					ExpectedFile: "printer_add_custom_modus3_ca_printer_rasterToMODUS3_CA.bin",
 				},
 				ExtraData: []string{"receipt_70mmx80mm.pdf", "printer_add_custom_modus3_ca_printer_rasterToMODUS3_CA.ppd.gz", "printer_add_custom_modus3_ca_printer_rasterToMODUS3_CA.bin"},
+				ExtraAttr: []string{"informational"},
+			}, {
+				Name: "custom_p3",
+				Val: &ippprint.Params{
+					PPDFile:      "printer_add_custom_p3_printer_rastertoP3.ppd.gz",
+					PrintFile:    "receipt_70mmx80mm.pdf",
+					ExpectedFile: "printer_add_custom_p3_printer_rastertoP3.bin",
+				},
+				ExtraData: []string{"receipt_70mmx80mm.pdf", "printer_add_custom_p3_printer_rastertoP3.ppd.gz", "printer_add_custom_p3_printer_rastertoP3.bin"},
+				ExtraAttr: []string{"informational"},
+			}, {
+				Name: "custom_tg2460_h_ej",
+				Val: &ippprint.Params{
+					PPDFile:      "printer_add_custom_tg2460_h_ej_printer_rastertoTG2460-H-EJ.ppd.gz",
+					PrintFile:    "receipt_70mmx80mm.pdf",
+					ExpectedFile: "printer_add_custom_tg2460_h_ej_printer_rastertoTG2460-H-EJ.bin",
+				},
+				ExtraData: []string{"receipt_70mmx80mm.pdf", "printer_add_custom_tg2460_h_ej_printer_rastertoTG2460-H-EJ.ppd.gz", "printer_add_custom_tg2460_h_ej_printer_rastertoTG2460-H-EJ.bin"},
+				ExtraAttr: []string{"informational"},
+			}, {
+				Name: "custom_tg2460h",
+				Val: &ippprint.Params{
+					PPDFile:      "printer_add_custom_tg2460h_printer_rastertoTG2460H.ppd.gz",
+					PrintFile:    "receipt_70mmx80mm.pdf",
+					ExpectedFile: "printer_add_custom_tg2460h_printer_rastertoTG2460H.bin",
+				},
+				ExtraData: []string{"receipt_70mmx80mm.pdf", "printer_add_custom_tg2460h_printer_rastertoTG2460H.ppd.gz", "printer_add_custom_tg2460h_printer_rastertoTG2460H.bin"},
+				ExtraAttr: []string{"informational"},
+			}, {
+				Name: "custom_tg2480h",
+				Val: &ippprint.Params{
+					PPDFile:      "printer_add_custom_tg2480h_printer_rastertoTG2480H.ppd.gz",
+					PrintFile:    "receipt_70mmx80mm.pdf",
+					ExpectedFile: "printer_add_custom_tg2480h_printer_rastertoTG2480H.bin",
+				},
+				ExtraData: []string{"receipt_70mmx80mm.pdf", "printer_add_custom_tg2480h_printer_rastertoTG2480H.ppd.gz", "printer_add_custom_tg2480h_printer_rastertoTG2480H.bin"},
+				ExtraAttr: []string{"informational"},
+			}, {
+				Name: "custom_vkp80iii",
+				Val: &ippprint.Params{
+					PPDFile:      "printer_add_custom_vkp80iii_printer_rastertoVKP80III.ppd.gz",
+					PrintFile:    "receipt_70mmx80mm.pdf",
+					ExpectedFile: "printer_add_custom_vkp80iii_printer_rastertoVKP80III.bin",
+				},
+				ExtraData: []string{"receipt_70mmx80mm.pdf", "printer_add_custom_vkp80iii_printer_rastertoVKP80III.ppd.gz", "printer_add_custom_vkp80iii_printer_rastertoVKP80III.bin"},
 				ExtraAttr: []string{"informational"},
 			}, {
 				Name: "epson_thermal_receipt",

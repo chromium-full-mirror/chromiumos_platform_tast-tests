@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/printer/printer_add_custom_h400_h350_printer_rastertoH400_H350_20240704.ppd.gz",
+  "size": 2107,
+  "sha256sum": "cf3b8e42707f605bc5682f8ae6ead396cbc1fb334e245ff13ef6b744e3a8ccd7"
+}

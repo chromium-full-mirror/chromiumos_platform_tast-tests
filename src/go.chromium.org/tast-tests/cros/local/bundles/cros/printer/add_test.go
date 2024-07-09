@@ -147,7 +147,18 @@ func TestAddParams(t *testing.T) {
 		test("unsupported_pin", "printer_unsupported_GenericPostScript.ppd.gz", "printer_pin_print_unsupported_golden.ps", ippprint.WithJobPassword("1234")),
 
 		// Receipt printers
+		iTestCustomInput("custom_h400_h350", "printer_add_custom_h400_h350_printer_rastertoH400_H350.ppd.gz", "receipt_70mmx80mm.pdf", "printer_add_custom_h400_h350_printer_rastertoH400_H350.bin"),
+		iTestCustomInput("custom_k3", "printer_add_custom_k3_printer_rastertoK3.ppd.gz", "receipt_70mmx80mm.pdf", "printer_add_custom_k3_printer_rastertoK3.bin"),
+		iTestCustomInput("custom_kpm180h", "printer_add_custom_kpm180h_printer_rastertoKPM180H.ppd.gz", "receipt_70mmx80mm.pdf", "printer_add_custom_kpm180h_printer_rastertoKPM180H.bin"),
+		iTestCustomInput("custom_kpm300h3", "printer_add_custom_kpm300h3_printer_rastertoKPM300H3.ppd.gz", "receipt_70mmx80mm.pdf", "printer_add_custom_kpm300h3_printer_rastertoKPM300H3.bin"),
+		iTestCustomInput("custom_kpm862", "printer_add_custom_kpm862_printer_rastertoKPM862.ppd.gz", "receipt_70mmx80mm.pdf", "printer_add_custom_kpm862_printer_rastertoKPM862.bin"),
+		iTestCustomInput("custom_kube", "printer_add_custom_kube_printer_rastertoKUBE.ppd.gz", "receipt_70mmx80mm.pdf", "printer_add_custom_kube_printer_rastertoKUBE.bin"),
 		iTestCustomInput("custom_modus3_ca", "printer_add_custom_modus3_ca_printer_rasterToMODUS3_CA.ppd.gz", "receipt_70mmx80mm.pdf", "printer_add_custom_modus3_ca_printer_rasterToMODUS3_CA.bin"),
+		iTestCustomInput("custom_p3", "printer_add_custom_p3_printer_rastertoP3.ppd.gz", "receipt_70mmx80mm.pdf", "printer_add_custom_p3_printer_rastertoP3.bin"),
+		iTestCustomInput("custom_tg2460_h_ej", "printer_add_custom_tg2460_h_ej_printer_rastertoTG2460-H-EJ.ppd.gz", "receipt_70mmx80mm.pdf", "printer_add_custom_tg2460_h_ej_printer_rastertoTG2460-H-EJ.bin"),
+		iTestCustomInput("custom_tg2460h", "printer_add_custom_tg2460h_printer_rastertoTG2460H.ppd.gz", "receipt_70mmx80mm.pdf", "printer_add_custom_tg2460h_printer_rastertoTG2460H.bin"),
+		iTestCustomInput("custom_tg2480h", "printer_add_custom_tg2480h_printer_rastertoTG2480H.ppd.gz", "receipt_70mmx80mm.pdf", "printer_add_custom_tg2480h_printer_rastertoTG2480H.bin"),
+		iTestCustomInput("custom_vkp80iii", "printer_add_custom_vkp80iii_printer_rastertoVKP80III.ppd.gz", "receipt_70mmx80mm.pdf", "printer_add_custom_vkp80iii_printer_rastertoVKP80III.bin"),
 		iTestCustomInput("epson_thermal_receipt", "printer_add_epson_thermal_receipt.ppd", "receipt_70mmx80mm.pdf", "receipt_70mmx80mm.bin"),
 		iTestCustomInput("hwasung", "printer_add_hwasung_printer_rastertohwasung.ppd.gz", "receipt_70mmx80mm.pdf", "printer_add_hwasung_printer_rastertohwasung.bin"),
 	})

@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/printer/printer_add_custom_kube_printer_rastertoKUBE_20240704.bin",
+  "size": 9455,
+  "sha256sum": "ad3546fda31a13eb6858e8d577dd7bc9ffb1ef45d20679fd0779ea1cec435915"
+}

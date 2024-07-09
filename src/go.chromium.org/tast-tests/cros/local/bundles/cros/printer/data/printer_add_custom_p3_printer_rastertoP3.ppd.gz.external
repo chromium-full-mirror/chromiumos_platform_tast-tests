@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/printer/printer_add_custom_p3_printer_rastertoP3_20240704.ppd.gz",
+  "size": 1741,
+  "sha256sum": "6f8bd193bd2e9626d22dbe784ad3298e9d1fa56017f0759d610c0d7078589b2b"
+}

@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/printer/printer_add_custom_kpm300h3_printer_rastertoKPM300H3_20240704.ppd.gz",
+  "size": 3927,
+  "sha256sum": "c731d72871734f3c449a822a100858c90cfb85f4106c680ac6fe1583f6ea6f0f"
+}

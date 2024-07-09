@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/printer/printer_add_custom_kpm180h_printer_rastertoKPM180H_20240704.ppd.gz",
+  "size": 3096,
+  "sha256sum": "948caeb1744c86d8b815b2c2c94dc1eacf4c885d9c8e4ac47edd3d706b126a3b"
+}

@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/printer/printer_add_custom_kpm862_printer_rastertoKPM862_20240704.ppd.gz",
+  "size": 2135,
+  "sha256sum": "6d87a6f37804516091c1dc8c3e1cb4fc1d70ad6affece50e93b21cfb50388244"
+}
