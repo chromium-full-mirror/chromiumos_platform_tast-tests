@@ -772,7 +772,12 @@ func startToyVPNServer(ctx context.Context, env *env.Env, config *Config) (retSe
 		}
 	}()
 
-	if err := toyServer.SetUp(ctx, env, ToyVPNServerPort, ifname, serverOverlayIPv4); err != nil {
+	mtu := 1500
+	if config.MTU != 0 {
+		mtu = config.MTU
+	}
+
+	if err := toyServer.SetUp(ctx, env, ToyVPNServerPort, ifname, serverOverlayIPv4, mtu); err != nil {
 		return nil, errors.Wrap(err, "failed to set up ToyVPNServer")
 	}
 

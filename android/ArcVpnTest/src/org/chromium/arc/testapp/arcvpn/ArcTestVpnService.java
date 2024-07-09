@@ -47,6 +47,7 @@ public class ArcTestVpnService extends VpnService {
     // Keys used for setting intent extras for setting up VPN service.
     private static final String OVERLAY_ADDRESS_KEY = "overlay_address";
     private static final String DNS_SERVER_KEY = "dns_server";
+    private static final String MTU_KEY = "mtu";
     // Keys used for setting intent extras for connecting to toy VPN server.
     private static final String INTERFACE_KEY = "interface";
     private static final String ADDRESS_KEY = "address";
@@ -108,9 +109,6 @@ public class ArcTestVpnService extends VpnService {
     // Last setup socket family. Used to send message from last setup socket.
     private String mLastSetupSocketFamily;
 
-    // Maximum transmission unit of the VPN connection.
-    private final int mMtu = DEFAULT_MTU;
-
     // A separate worker thread to sequentialize the one-off tasks.
     ExecutorService mExecutor = Executors.newSingleThreadExecutor();
 
@@ -148,15 +146,16 @@ public class ArcTestVpnService extends VpnService {
 
         String overlayAddress = intent.getStringExtra(OVERLAY_ADDRESS_KEY);
         String dnsServer = intent.getStringExtra(DNS_SERVER_KEY);
+        int mtu = intent.getIntExtra(MTU_KEY, DEFAULT_MTU);
         setUpVpnService(
                 overlayAddress == null ? DEFAULT_OVERLAY_ADDRESS : overlayAddress,
-                dnsServer == null ? DEFAULT_DNS_SERVER : dnsServer);
+                dnsServer == null ? DEFAULT_DNS_SERVER : dnsServer, mtu);
 
         String ifname = intent.getStringExtra(INTERFACE_KEY);
         String serverAddress = intent.getStringExtra(ADDRESS_KEY);
         int serverPort = intent.getIntExtra(PORT_KEY, INVALID_PORT);
         if (ifname != null && serverAddress != null && serverPort != INVALID_PORT) {
-            connectToToyVpnServer(ifname, serverAddress, serverPort);
+            connectToToyVpnServer(ifname, serverAddress, serverPort, mtu);
         }
 
         mBroadcastReceiver = new ArcVpnBroadcastReceiver();
@@ -247,7 +246,7 @@ public class ArcTestVpnService extends VpnService {
      * Connects to the toy VPN server listening at `address`:`port` via interface `ifname`. Also
      * starts the packet forwarding between the TCP connection tun interface after that.
      */
-    private void connectToToyVpnServer(String ifname, String address, int port) {
+    private void connectToToyVpnServer(String ifname, String address, int port, int mtu) {
         InetAddress inetAddress;
         try {
             inetAddress = InetAddress.getByName(address);
@@ -256,11 +255,11 @@ public class ArcTestVpnService extends VpnService {
             return;
         }
         setupTcpSocket(ifname, inetAddress, port);
-        startForwarding();
+        startForwarding(mtu);
     }
 
     /** Registers ourselves as an actual VpnService and sets up the underlying interface. */
-    private void setUpVpnService(String overlayAddress, String dnsServer) {
+    private void setUpVpnService(String overlayAddress, String dnsServer, int mtu) {
         VpnService.prepare(getApplicationContext());
 
         mTunFd = new VpnService.Builder()
@@ -270,7 +269,7 @@ public class ArcTestVpnService extends VpnService {
                 // Make sure read on the returned tun fd will be blocked, so that our programming
                 // model will be easier.
                 .setBlocking(true)
-                .setMtu(mMtu)
+                .setMtu(mtu)
                 .establish();
     }
 
@@ -384,7 +383,7 @@ public class ArcTestVpnService extends VpnService {
     /**
      * Starts two threads to do the bidirectional forwarding between TUN device and TCP socket.
      */
-    private void startForwarding() {
+    private void startForwarding(int mtu) {
         // Wrap this as a task and post it in the executor because the TCP socket is set up
         // asynchronously.
         mExecutor.submit(() -> {
@@ -439,7 +438,7 @@ public class ArcTestVpnService extends VpnService {
             // length of this packet and the IP packet itself, and write it to the TCP connection.
             new Thread(()-> {
                 try {
-                    byte[] payloadBytes = new byte[mMtu * 2];
+                    byte[] payloadBytes = new byte[mtu * 2];
                     OutputStream output = mTcpSocket.getOutputStream();
                     try (InputStream input = new FileInputStream(mTunFd.getFileDescriptor())) {
                         while (true) {

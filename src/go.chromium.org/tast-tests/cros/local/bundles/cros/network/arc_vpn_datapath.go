@@ -7,9 +7,12 @@ package network
 import (
 	"context"
 	"net"
+	"strconv"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/shillconst"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/arcvpn"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/dns"
@@ -83,8 +86,12 @@ func ARCVPNDatapath(ctx context.Context, s *testing.State) {
 		s.Fatal("Cannot reach physical env by IPv6: ", err)
 	}
 
+	// Use a not very common MTU value to verify that it's set properly.
+	const mtu = 1390
+
 	opts := []vpn.Option{
 		vpn.WithIPType(vpn.IPTypeIPv4),
+		vpn.WithMTU(mtu),
 	}
 	config := vpn.NewConfig(vpn.TypeToyVPNServer, opts...)
 
@@ -213,5 +220,21 @@ func ARCVPNDatapath(ctx context.Context, s *testing.State) {
 	}
 	if err := dns.VerifyDNSResolve(ctx, "root", domain, true, physicalResolveResult); err != nil {
 		s.Fatalf("Failed to resolve %s as root: %v", domain, err)
+	}
+
+	// Verify that MTU is set properly on the arcbr0 interface.
+	actualMTU := func() int {
+		o, err := testexec.CommandContext(ctx, "sh", "-c", "ip -j link show arcbr0 | jq '.[0].mtu'").Output(testexec.DumpLogOnError)
+		if err != nil {
+			s.Fatal("Failed to run ip cmd to get MTU: ", err)
+		}
+		v, err := strconv.Atoi(strings.TrimSpace(string(o)))
+		if err != nil {
+			s.Fatal("Failed to parse MTU value: ", err)
+		}
+		return v
+	}()
+	if actualMTU != mtu {
+		s.Errorf("MTU is unexpected on arcbr0: got %d, want %d", actualMTU, mtu)
 	}
 }

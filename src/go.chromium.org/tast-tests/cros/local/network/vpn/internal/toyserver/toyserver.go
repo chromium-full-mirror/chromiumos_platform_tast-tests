@@ -39,6 +39,7 @@ import (
 	"io"
 	"net"
 	"os"
+	"strconv"
 	"sync"
 	"unsafe"
 
@@ -53,6 +54,7 @@ import (
 
 // Server represents a toy VPN server.
 type Server struct {
+	mtu      int
 	tunFD    *os.File
 	listener net.Listener
 }
@@ -66,7 +68,7 @@ func New() *Server {
 // SetUp does the following setups: 1) create a tun device in e, configure
 // serverOverlayIPv4 on it and bring it up, and 2) listen to incoming tcp
 // connection at `0.0.0.0:serverPort`.
-func (s *Server) SetUp(ctx context.Context, e *virtualnet.Env, serverPort int, tunIfname, serverOverlayIPv4 string) error {
+func (s *Server) SetUp(ctx context.Context, e *virtualnet.Env, serverPort int, tunIfname, serverOverlayIPv4 string, mtu int) error {
 	// We only need to enter netns in this function. After we get the fd for the
 	// tun device and create the socket for TCP connection, we can go back to the
 	// root netns.
@@ -82,7 +84,7 @@ func (s *Server) SetUp(ctx context.Context, e *virtualnet.Env, serverPort int, t
 	}
 	s.tunFD = tunFD
 
-	if err := configureTunDevice(ctx, tunIfname, serverOverlayIPv4); err != nil {
+	if err := configureTunDevice(ctx, tunIfname, serverOverlayIPv4, mtu); err != nil {
 		return errors.Wrap(err, "failed to configure tun device")
 	}
 
@@ -91,6 +93,7 @@ func (s *Server) SetUp(ctx context.Context, e *virtualnet.Env, serverPort int, t
 		return errors.Wrapf(err, "failed to listen on %d for TCP connection", serverPort)
 	}
 	s.listener = listener
+	s.mtu = mtu
 
 	return nil
 }
@@ -118,10 +121,7 @@ func (s *Server) TearDown(ctx context.Context) error {
 // interface and the TCP connection. This function won't return until failure
 // (or TearDown is called), so the caller may want to run this in a goroutine.
 func (s *Server) RunLoop(ctx context.Context) {
-	const (
-		tag       = "ToyVPNServer"
-		pktBufLen = 1500
-	)
+	const tag = "ToyVPNServer"
 
 	testing.ContextLogf(ctx, "%s: waiting for TCP connection", tag)
 	conn, err := s.listener.Accept()
@@ -143,7 +143,7 @@ func (s *Server) RunLoop(ctx context.Context) {
 			testing.ContextLogf(ctx, "%s: tun-to-tcp forwarder finished", tag)
 		}()
 
-		buf := make([]byte, pktBufLen)
+		buf := make([]byte, s.mtu*2) // make a large enough buffer
 		for {
 			n, err := s.tunFD.Read(buf)
 			if err != nil {
@@ -227,7 +227,7 @@ func openTunDevice(ctx context.Context, name string) (*os.File, error) {
 	return os.NewFile(uintptr(fd), "/dev/net/tun"), nil
 }
 
-func configureTunDevice(ctx context.Context, name, ipv4Addr string) error {
+func configureTunDevice(ctx context.Context, name, ipv4Addr string, mtu int) error {
 	// Install ip address.
 	if err := testexec.CommandContext(ctx, "ip", "addr", "add", ipv4Addr+"/32", "dev", name).Run(testexec.DumpLogOnError); err != nil {
 		return errors.Wrap(err, "failed to configure ip address")
@@ -239,7 +239,7 @@ func configureTunDevice(ctx context.Context, name, ipv4Addr string) error {
 	}
 
 	// Bring the interface up.
-	if err := testexec.CommandContext(ctx, "ip", "link", "set", "up", "dev", name).Run(testexec.DumpLogOnError); err != nil {
+	if err := testexec.CommandContext(ctx, "ip", "link", "set", "mtu", strconv.Itoa(mtu), "up", "dev", name).Run(testexec.DumpLogOnError); err != nil {
 		return errors.Wrap(err, "failed to bring the interface up")
 	}
 

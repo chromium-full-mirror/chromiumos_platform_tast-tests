@@ -134,6 +134,7 @@ func StartARCVPNWithToyServer(ctx context.Context, a *arc.ARC, arcIfname string,
 		"--ei", "port", strconv.Itoa(vpn.ToyVPNServerPort),
 		"--es", "overlay_address", vpnServer.Config.GetOverlayConfig().ClientIPv4,
 		"--es", "dns_server", vpnServer.OverlayIPv4,
+		"--ei", "mtu", strconv.Itoa(vpnServer.Config.MTU),
 	}
 	return broadcastLaunchVPNIntent(ctx, a, args...)
 }

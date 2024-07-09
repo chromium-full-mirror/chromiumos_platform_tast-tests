@@ -17,7 +17,8 @@ adb shell am broadcast -a org.chromium.arc.testapp.arcvpn.LAUNCH_VPN \
         --es interface <ARC_IFNAME> \
         --es address <SERVER_IP> --ei port <SERVER_TCP_PORT> \
         --es overlay_address <LOCAL_OVERLAY_IPV4> \
-        --es dns_server <DNS_SERVER>
+        --es dns_server <DNS_SERVER> \
+        --ei mtu <MTU>
 ```
 
 if a socket is required to be set up when service is started, run:
