@@ -31,8 +31,8 @@ var (
 	maxPortNum = 4
 )
 
-// wwcbIPPowerIP is a variable to set IP address of IP Power 9858MT to send HTTP request in WWCB tests.
-var wwcbIPPowerIP = testing.RegisterVarString(
+// WWCBIPPowerIP is a variable to set IP address of IP Power 9858MT to send HTTP request in WWCB tests.
+var WWCBIPPowerIP = testing.RegisterVarString(
 	"utils.wwcbIPPowerIp",
 	"192.168.1.168",
 	"A variable to set IP address of IP Power 9858MT to send HTTP request in WWCB tests.",
@@ -50,7 +50,7 @@ func OpenIppower(ctx context.Context, ports []int) error {
 		myport += s
 	}
 
-	url := fmt.Sprintf("http://%s/set.cmd?user=%s+pass=%s+cmd=setpower%s", wwcbIPPowerIP.Value(), user, password, myport)
+	url := fmt.Sprintf("http://%s/set.cmd?user=%s+pass=%s+cmd=setpower%s", WWCBIPPowerIP.Value(), user, password, myport)
 	testing.ContextLogf(ctx, "request: %s", url)
 	resp, err := http.Get(url)
 	if err != nil {
@@ -74,7 +74,7 @@ func CloseIppower(ctx context.Context, ports []int) error {
 		myport += s
 	}
 
-	url := fmt.Sprintf("http://%s/set.cmd?user=%s+pass=%s+cmd=setpower%s", wwcbIPPowerIP.Value(), user, password, myport)
+	url := fmt.Sprintf("http://%s/set.cmd?user=%s+pass=%s+cmd=setpower%s", WWCBIPPowerIP.Value(), user, password, myport)
 	testing.ContextLogf(ctx, "request: %s", url)
 	resp, err := http.Get(url)
 	if err != nil {

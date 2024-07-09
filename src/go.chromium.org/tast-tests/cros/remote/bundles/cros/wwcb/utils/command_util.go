@@ -252,6 +252,7 @@ func ListEthernets(ctx context.Context, dut *dut.DUT) ([]string, error) {
 // FindDockEthernet returns docking ethernet interface name.
 func FindDockEthernet(ctx context.Context, dut *dut.DUT, defaultEth []string) (string, error) {
 	var diff []string
+	index := 0
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		current, err := ListEthernets(ctx, dut)
 		if err != nil {
@@ -259,14 +260,29 @@ func FindDockEthernet(ctx context.Context, dut *dut.DUT, defaultEth []string) (s
 		}
 
 		diff = FindDifference(current, defaultEth)
-		if len(diff) != 1 {
-			return errors.Errorf("unexpected number of Ethernet detected; got %d, want 1", len(diff))
+		diffCount := 0
+		for i := range diff {
+			if err := pingNetwork(ctx, dut, diff[i], WWCBIPPowerIP.Value()); err == nil {
+				diffCount++
+				index = i
+			}
+		}
+
+		if diffCount != 1 {
+			return errors.Errorf("unexpected number of Ethernet detected; got %d, want 1", diffCount)
 		}
 		return nil
 	}, &testing.PollOptions{Timeout: sshPollingTimeout, Interval: 200 * time.Millisecond}); err != nil {
 		return "", err
 	}
-	return diff[0], nil
+	return diff[index], nil
+}
+
+// pingNetwork verifies whether the network interface is available or not.
+func pingNetwork(ctx context.Context, dut *dut.DUT, ifName, target string) error {
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		return dut.Conn().CommandContext(ctx, "ping", "-I", ifName, "-c", "3", target).Run()
+	}, &testing.PollOptions{Timeout: 20 * time.Second, Interval: 200 * time.Microsecond})
 }
 
 // FindDifference finds the elements in one array but no in the other.
