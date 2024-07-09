@@ -12,9 +12,13 @@ import (
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/wlan"
 )
 
-const wifiDefaultTimeout = 30 * time.Second
+const (
+	wifiDefaultTimeout = 30 * time.Second
+	intelVendorNum     = "0x8086"
+)
 
 // debugDataType keeps the output file name and the command to collect debug data.
 var debugDataType = map[string]string{
@@ -85,6 +89,24 @@ func (f *wiphyEnabledFixture) PreTest(ctx context.Context, s *testing.FixtTestSt
 		for file, cmd := range debugDataType {
 			if e := SaveDebugData(ctx, s.OutDir(), file, cmd); e != nil {
 				s.Error("Failed to save debug data: ", e)
+			}
+		}
+		if devInfo, e := wlan.DeviceInfo(); e != nil {
+			s.Error("Failed to obtain WiFi device info: ", e)
+		} else if devInfo.Vendor == intelVendorNum {
+			// Firmware dump operations and existing crash data types are only
+			// supported on Intel WiFi chips for now.
+			if e := TriggerFirmwareDump(ctx); e != nil {
+				s.Error("Failed to trigger firmware dump: ", e)
+			} else {
+				t := 3 * time.Second
+				s.Logf("Waiting %v for WiFi firmware dump collection", t)
+				// GoBigSleepLint: Wait 3 seconds to make sure the firmware dump generation
+				// is complete and all files are propagated to under /var/spool/crash.
+				testing.Sleep(ctx, t)
+			}
+			if e := SaveCrashData(ctx, s.OutDir()); e != nil {
+				s.Error("Failed to save crash data: ", e)
 			}
 		}
 		s.Fatal("Failed to get the WiFi interface: ", err)
