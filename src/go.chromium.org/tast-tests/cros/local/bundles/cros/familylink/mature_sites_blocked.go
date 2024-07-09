@@ -10,8 +10,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/familylink"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -24,7 +22,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         MatureSitesBlocked,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that matures sites are blocked for Unicorn users",
 		Contacts: []string{
 			"cros-families-eng+test@google.com",
@@ -36,21 +34,12 @@ func init() {
 		SoftwareDeps: []string{"chrome", "gaia"},
 		Timeout:      5 * time.Minute,
 		Vars:         []string{"unicorn.matureSite"},
-		Params: []testing.Param{{
-			Fixture: "familyLinkUnicornLogin",
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           "familyLinkUnicornLoginWithLacros",
-			Val:               browser.TypeLacros,
-		}},
+		Fixture:      "familyLinkUnicornLogin",
 	})
 }
 
 func MatureSitesBlocked(ctx context.Context, s *testing.State) {
 	// Reserve time for cleanup.
-	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
@@ -61,11 +50,10 @@ func MatureSitesBlocked(ctx context.Context, s *testing.State) {
 
 	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
 
-	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, s.Param().(browser.Type), matureSite)
+	conn, err := cr.NewConn(ctx, matureSite)
 	if err != nil {
 		s.Fatal("Failed to navigate to website: ", err)
 	}
-	defer closeBrowser(cleanupCtx)
 	defer conn.Close()
 
 	ui := uiauto.New(tconn)

@@ -6,13 +6,11 @@ package familylink
 
 import (
 	"context"
-	"regexp"
 	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/familylink"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -26,7 +24,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ParentalControlsLink,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify 'Parental controls' setting opens family website when Play Store is disabled",
 		Contacts: []string{
 			"cros-families-eng+test@google.com",
@@ -37,36 +35,21 @@ func init() {
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "gaia"},
 		Timeout:      time.Minute,
-		Params: []testing.Param{{
-			Fixture: "familyLinkGellerLogin", // Expecting ARC to be disabled in this test.
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           "familyLinkGellerLoginWithLacros", // Expecting ARC to be disabled in this test.
-			Val:               browser.TypeLacros,
-		}},
+		Fixture:      "familyLinkGellerLogin", // Expecting ARC to be disabled in this test.
 	})
 }
 
 const familyURL = "myaccount.google.com/family/details"
 
+// ParentalControlsLink verifies 'Parental controls' opens https://families.google.com/families.
 func ParentalControlsLink(ctx context.Context, s *testing.State) {
-	var (
-		cr    = s.FixtValue().(chrome.HasChrome).Chrome()
-		tconn = s.FixtValue().(familylink.HasTestConn).TestConn()
-		ui    = uiauto.New(tconn)
-	)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	tconn := s.FixtValue().(familylink.HasTestConn).TestConn()
+	ui := uiauto.New(tconn)
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
-
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
-	if err != nil {
-		s.Fatal("Failed to set up browser: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
 
 	settings, err := ossettings.LaunchAtPage(ctx, tconn, nodewith.Name("Accounts").Role(role.Link))
 	if err != nil {
@@ -79,20 +62,14 @@ func ParentalControlsLink(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	nodeName := "Your family on Google"
-	browserWindow := nodewith.NameContaining(nodeName).HasClass("BrowserFrame")
-	if s.Param().(browser.Type) == browser.TypeLacros {
-		browserWindow = nodewith.NameContaining(nodeName).ClassNameRegex(regexp.MustCompile(`^ExoShellSurface(-\d+)?$`))
-	}
-
 	if err := uiauto.Combine("open parental controls",
 		ui.LeftClick(nodewith.NameContaining("Parental controls Open").FinalAncestor(ossettings.WindowFinder)),
-		ui.WaitUntilExists(browserWindow),
+		ui.WaitUntilExists(nodewith.NameContaining("family").HasClass("BrowserFrame")),
 	)(ctx); err != nil {
 		s.Fatal(`Failed to verify the functionality of "Parental controls" settings: `, err)
 	}
 
-	tabs, err := br.CurrentTabs(ctx)
+	tabs, err := browser.CurrentTabs(ctx, tconn)
 	if err != nil {
 		s.Fatal("Failed to find current tabs: ", err)
 	}
@@ -100,7 +77,8 @@ func ParentalControlsLink(ctx context.Context, s *testing.State) {
 	if len(tabs) != 1 {
 		s.Fatalf("Failed to verify the expected page opened: unexpected tab number: want 1, got %d", len(tabs))
 	}
+
 	if !strings.Contains(tabs[0].URL, familyURL) {
-		s.Errorf("Failed to verify the expected page opened: want %q, got %q", familyURL, tabs[0].URL)
+		s.Fatalf("Failed to verify the expected page opened: want %q, got %q", familyURL, tabs[0].URL)
 	}
 }

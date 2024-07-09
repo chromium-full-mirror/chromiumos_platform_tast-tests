@@ -22,7 +22,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         IncognitoModeDisabled,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests that incognito mode is disabled for Unicorn users",
 		Contacts: []string{
 			"cros-families-eng+test@google.com",
@@ -33,13 +33,7 @@ func init() {
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "gaia"},
 		Timeout:      time.Minute,
-		Params: []testing.Param{{
-			Fixture: "familyLinkUnicornLogin",
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           "familyLinkUnicornLoginWithLacros",
-		}},
+		Fixture:      "familyLinkUnicornLogin",
 	})
 }
 
@@ -51,13 +45,13 @@ func IncognitoModeDisabled(ctx context.Context, s *testing.State) {
 	ui := uiauto.New(tconn)
 
 	// Get the primary browser.
-	chromeApp, err := apps.PrimaryBrowser(ctx, tconn)
+	chromeApp, err := apps.ChromeOrChromium(ctx, tconn)
 	if err != nil {
-		s.Fatal("Could not find the Chrome app: ", err)
+		s.Fatal("Failed to find Chrome or Chromium app: ", err)
 	}
 
 	// Chrome app name doesn't exactly match the chrome shelf name so modify it here for simpler code later.
-	if chromeApp.Name == apps.Chrome.Name && chromeApp.ID != apps.Lacros.ID {
+	if chromeApp.Name == apps.Chrome.Name {
 		chromeApp.Name = "Google Chrome"
 	}
 

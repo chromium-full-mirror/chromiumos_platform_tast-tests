@@ -12,7 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/family"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/familylink"
 	"go.chromium.org/tast/core/testing"
 )
@@ -20,7 +19,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         UnicornLogin,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks if Unicorn login is working",
 		Contacts: []string{
 			"cros-families-eng+test@google.com",
@@ -32,19 +31,11 @@ func init() {
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "gaia"},
 		Timeout:      time.Minute,
+		Fixture:      "familyLinkUnicornLogin",
 		VarDeps: []string{
 			family.ParentAccountVarName,
 			family.UnicornAccountVarName,
 		},
-		Params: []testing.Param{{
-			Val:     browser.TypeAsh,
-			Fixture: "familyLinkUnicornLogin",
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               browser.TypeLacros,
-			Fixture:           "familyLinkUnicornLoginWithLacros",
-		}},
 	})
 }
 
@@ -62,7 +53,7 @@ func UnicornLogin(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get parent user and pass: ", err)
 	}
-	if err := familylink.VerifyUserSignedIntoBrowserAsChild(ctx, cr, tconn, s.Param().(browser.Type), user, s.OutDir()); err != nil {
+	if err := familylink.VerifyUserSignedIntoBrowserAsChild(ctx, cr, tconn, user, s.OutDir()); err != nil {
 		s.Fatal("Failed to verify user signed into browser: ", err)
 	}
 }

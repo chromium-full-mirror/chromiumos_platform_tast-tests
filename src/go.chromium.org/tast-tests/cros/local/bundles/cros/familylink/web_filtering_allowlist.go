@@ -10,8 +10,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/familylink"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -24,7 +22,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         WebFilteringAllowlist,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that web filtering allowlist mode work correctly: websites on the list are allowed and websites outside of the list are blocked",
 		Contacts: []string{
 			"cros-families-eng+test@google.com",
@@ -36,21 +34,12 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,
 		Vars:         []string{"unicorn.siteOnAllowlist", "unicorn.siteNotOnAllowlist", "unicorn.siteOnAllowlistNodeName"},
-		Params: []testing.Param{{
-			Fixture: "familyLinkUnicornWebAllowlistLogin",
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           "familyLinkUnicornWebAllowlistLoginWithLacros",
-			Val:               browser.TypeLacros,
-		}},
+		Fixture:      "familyLinkUnicornWebAllowlistLogin",
 	})
 }
 
 func WebFilteringAllowlist(ctx context.Context, s *testing.State) {
 	// Reserve time for cleanup.
-	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
@@ -61,16 +50,11 @@ func WebFilteringAllowlist(ctx context.Context, s *testing.State) {
 
 	s.Log("Opening a URL that is not on allowlist")
 	notOnAllowlist := s.RequiredVar("unicorn.siteNotOnAllowlist")
-	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, s.Param().(browser.Type), notOnAllowlist)
+	conn, err := cr.NewConn(ctx, notOnAllowlist)
 	if err != nil {
 		s.Fatal("Failed to navigate to site NOT on allowlist : ", err)
 	}
-
-	// Defer evaluation of arguments.
-	defer func() {
-		conn.Close()
-		closeBrowser(cleanupCtx)
-	}()
+	defer conn.Close()
 
 	s.Log("Verifying that URL not on allowlist has been blocked")
 	ui := uiauto.New(tconn)
@@ -78,16 +62,13 @@ func WebFilteringAllowlist(ctx context.Context, s *testing.State) {
 		s.Fatal("Site NOT on allowlist is NOT blocked for Unicorn user: ", err)
 	}
 
-	// Close the browser before testing another URL.
-	conn.Close()
-	closeBrowser(cleanupCtx)
-
 	s.Log("Opening a URL that is on allowlist")
 	onAllowlist := s.RequiredVar("unicorn.siteOnAllowlist")
-	conn, _, closeBrowser, err = browserfixt.SetUpWithURL(ctx, cr, s.Param().(browser.Type), onAllowlist)
+	conn, err = cr.NewConn(ctx, onAllowlist)
 	if err != nil {
 		s.Fatal("Failed to navigate to site on allowlist : ", err)
 	}
+	defer conn.Close()
 
 	s.Log("Verifying that URL on allowlist has been loaded")
 	onAllowlistNode := s.RequiredVar("unicorn.siteOnAllowlistNodeName")

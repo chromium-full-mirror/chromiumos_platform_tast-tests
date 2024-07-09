@@ -12,7 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/family"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/familylink"
 	"go.chromium.org/tast/core/testing"
 )
@@ -20,7 +19,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         GellerLogin,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks if Geller login is working",
 		Contacts: []string{
 			"cros-families-eng+test@google.com",
@@ -31,15 +30,7 @@ func init() {
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "gaia"},
 		Timeout:      2 * time.Minute,
-		Params: []testing.Param{{
-			Fixture: "familyLinkGellerLogin",
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           "familyLinkGellerLoginWithLacros",
-			Val:               browser.TypeLacros,
-		}},
+		Fixture:      "familyLinkGellerLogin",
 		VarDeps: []string{
 			family.GellerAccountVarName,
 		},
@@ -49,12 +40,6 @@ func init() {
 func GellerLogin(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	tconn := s.FixtValue().(familylink.HasTestConn).TestConn()
-
-	// TODO(b/254891227):Fix sleep when chrome.New() doesn't have a race condition and improve logic to wait for an event as per GoBigSleepLint
-	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
-		s.Fatal("Failed to wait for Login to complete: ", err)
-	}
-
 	if cr == nil {
 		s.Fatal("Failed to start Chrome")
 	}
@@ -67,7 +52,7 @@ func GellerLogin(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get child user: ", err)
 	}
 
-	if err := familylink.VerifyUserSignedIntoBrowserAsChild(ctx, cr, tconn, s.Param().(browser.Type), user, s.OutDir()); err != nil {
+	if err := familylink.VerifyUserSignedIntoBrowserAsChild(ctx, cr, tconn, user, s.OutDir()); err != nil {
 		s.Fatal("Failed to verify user signed into browser: ", err)
 	}
 }

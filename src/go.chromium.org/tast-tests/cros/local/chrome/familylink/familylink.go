@@ -16,7 +16,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/internal/login"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -278,21 +277,19 @@ func CreateUsageTimeLimitPolicy() *policy.UsageTimeLimit {
 
 // VerifyUserSignedIntoBrowserAsChild creates and opens the browser, then checks that the provided email is signed in and recognized as a child user.
 // Note that `cr` and `tconn` passed in should be from ash-chrome.
-func VerifyUserSignedIntoBrowserAsChild(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, bt browser.Type, email, outDir string) (err error) {
+func VerifyUserSignedIntoBrowserAsChild(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, email, outDir string) (err error) {
 	testing.ContextLog(ctx, "Verifying user is signed in as a child in the browser")
 
 	// Reserve time for cleanup.
-	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
 	// Set up browser and open a new tab window.
 	testing.ContextLog(ctx, "Opening browser with family link internals page")
-	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, bt, "chrome://family-link-user-internals/")
+	conn, err := cr.NewConn(ctx, "chrome://family-link-user-internals/")
 	if err != nil {
 		return errors.Wrap(err, "failed to set up browser")
 	}
-	defer closeBrowser(cleanupCtx)
 	defer conn.Close()
 
 	ui := uiauto.New(tconn).WithTimeout(time.Minute)
