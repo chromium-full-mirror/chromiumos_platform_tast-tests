@@ -19,10 +19,11 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ShowUpNext,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks the up next view shows correctly on the sys ui calendar view",
 		Contacts: []string{
 			"cros-status-area-eng@google.com",
+			"chromeos-consumer-engprod@google.com",
 			"samcackett@google.com",
 		},
 		BugComponent: "b:1246126", // ChromeOS > Software > System UI Surfaces > Status Area > Calendar

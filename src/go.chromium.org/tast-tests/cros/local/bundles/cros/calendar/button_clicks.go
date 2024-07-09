@@ -18,11 +18,12 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ButtonClicks,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks the basic interacting with calendar view",
 		Contacts: []string{
 			"cros-calendar@google.com",
 			"cros-status-area-eng@google.com",
+			"chromeos-consumer-engprod@google.com",
 			"jiamingc@chromium.org",
 		},
 		BugComponent: "b:1246126", // ChromeOS > Software > System UI Surfaces > Status Area > Calendar
