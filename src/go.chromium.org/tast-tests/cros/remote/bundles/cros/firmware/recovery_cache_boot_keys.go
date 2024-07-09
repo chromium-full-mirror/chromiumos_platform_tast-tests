@@ -13,7 +13,9 @@ import (
 	"time"
 
 	common "go.chromium.org/tast-tests/cros/common/firmware"
+	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
 	"go.chromium.org/tast-tests/cros/common/flashrom"
+	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast/core/errors"
@@ -272,12 +274,17 @@ func moveECToRW(ctx context.Context, h *firmware.Helper, ms *firmware.ModeSwitch
 		return errors.Wrapf(err, "EC booted to %s, expected to be in RW", activeCopy)
 	}
 
-	if err := h.RebootWithVT2Command(ctx, bootMode); err != nil {
-		currPowerState, getPowerStateErr := h.Servo.GetECSystemPowerState(ctx)
-		if getPowerStateErr != nil {
-			return errors.Wrap(getPowerStateErr, "failed to get EC power state")
-		}
-		return errors.Wrapf(err, "failed to reboot with VT2 command and got power state: %v", currPowerState)
+	if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
+		return errors.Wrap(err, "failed to reset DUT")
+	}
+	reconnectTimeout := h.Config.DelayRebootToPing
+	if bootMode == fwCommon.BootModeDev {
+		reconnectTimeout = reconnectTimeout + h.Config.FirmwareScreen + firmware.DevScreenTimeout
+	}
+	waitConnectCtx, cancel := context.WithTimeout(ctx, reconnectTimeout)
+	defer cancel()
+	if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
+		return errors.Wrap(err, "failed to connect to DUT")
 	}
 
 	return nil
