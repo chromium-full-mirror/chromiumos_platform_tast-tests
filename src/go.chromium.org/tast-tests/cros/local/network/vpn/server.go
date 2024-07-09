@@ -223,9 +223,7 @@ var (
 
 		"etc/ppp/chap-secrets": "{{.chap_user}}        *       {{.chap_secret}}      *",
 
-		"etc/ppp/options.xl2tpd": "ipcp-accept-local\n" +
-			"ipcp-accept-remote\n" +
-			"noccp\n" +
+		"etc/ppp/options.xl2tpd": "noccp\n" +
 			"auth\n" +
 			"crtscts\n" +
 			"idle 1800\n" +
