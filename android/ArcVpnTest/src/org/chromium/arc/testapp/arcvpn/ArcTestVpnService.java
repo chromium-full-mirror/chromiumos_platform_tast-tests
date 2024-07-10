@@ -142,6 +142,7 @@ public class ArcTestVpnService extends VpnService {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.d(TAG, "onStartCommand is called");
         showNotification();
 
         String overlayAddress = intent.getStringExtra(OVERLAY_ADDRESS_KEY);
@@ -156,12 +157,11 @@ public class ArcTestVpnService extends VpnService {
         int serverPort = intent.getIntExtra(PORT_KEY, INVALID_PORT);
         if (ifname != null && serverAddress != null && serverPort != INVALID_PORT) {
             connectToToyVpnServer(ifname, serverAddress, serverPort, mtu);
+        } else {
+            Log.d(TAG, "Arguments for connecting to toy VPN server is invalid, ifname: " + ifname +
+                    ", server address: " + serverAddress + ", server port: " + serverPort +
+                    ", ignore if this is expected");
         }
-
-        mBroadcastReceiver = new ArcVpnBroadcastReceiver();
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(SEND_MESSAGE);
-        registerReceiver(mBroadcastReceiver, intentFilter);
 
         // Setup socket if arguments are given.
         String sockProto = intent.getStringExtra(SOCKET_PROTOCOL_KEY);
@@ -171,12 +171,22 @@ public class ArcTestVpnService extends VpnService {
         if (sockProto != null && sockIfname != null && sockAddress != null
                 && sockPort != INVALID_PORT) {
             setupSocket(sockProto, sockIfname, sockAddress, sockPort);
+        } else {
+            Log.d(TAG, "Arguments for setting up socket is invalid, proto: " + sockProto +
+                    ", ifname: " + sockIfname + ", address: " + sockAddress + ", port: " +
+                    sockPort + ", ignore if this is expected");
         }
+        mBroadcastReceiver = new ArcVpnBroadcastReceiver();
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(SEND_MESSAGE);
+        registerReceiver(mBroadcastReceiver, intentFilter);
         return START_NOT_STICKY;
     }
 
     /** Setup socket by connecting to address:port with proto via ifname. */
     private void setupSocket(String proto, String ifname, String address, int port) {
+        Log.d(TAG, "Start setting up socket, proto: " + proto + ", ifname: " + ifname +
+                ", address: "+ address + ", port: " + port);
         InetAddress inetAddress;
         try {
             inetAddress = InetAddress.getByName(address);
@@ -247,6 +257,8 @@ public class ArcTestVpnService extends VpnService {
      * starts the packet forwarding between the TCP connection tun interface after that.
      */
     private void connectToToyVpnServer(String ifname, String address, int port, int mtu) {
+        Log.d(TAG, "Start connecting to toy VPN server, ifname: " + ifname +", address: "+
+                address + ", port: " + port + ", mtu: " + mtu);
         InetAddress inetAddress;
         try {
             inetAddress = InetAddress.getByName(address);
@@ -281,6 +293,8 @@ public class ArcTestVpnService extends VpnService {
      */
     private void setupTcpSocket(String ifname, InetAddress address, int port) {
         mExecutor.submit(() -> {
+            Log.d(TAG, "Start setting up TCP socket, ifname: "+ifname +
+            ", address: "+ address.toString() + ", port: " + port);
             try {
                 Network net = getNetworkByInterface(ifname);
                 if (net == null) {
@@ -293,6 +307,7 @@ public class ArcTestVpnService extends VpnService {
                 mTcpSocket.connect(new InetSocketAddress(address, port));
                 mWriter = new PrintWriter(mTcpSocket.getOutputStream(), /*autoFlush=*/ true);
                 mLastSetupSocketFamily = PROTOCOL_TCP;
+                Log.d(TAG, "Setting up TCP socket succeed");
             } catch (IOException e) {
                 Log.e(TAG, "Error opening TCP socket", e);
             }
@@ -305,12 +320,14 @@ public class ArcTestVpnService extends VpnService {
      */
     public void sendTcpMessage(String msg) {
         mExecutor.submit(() -> {
+            Log.d(TAG, "sendTcpMessage");
             try {
                 if (mWriter == null) {
                     Log.e(TAG, "TCP socket has not been set up yet, send message failed.");
                     return;
                 }
                 mWriter.println(msg);
+                Log.d(TAG, "sendTcpMessage succeed");
             } catch (Exception e) {
                 Log.e(TAG, "Failed to send TCP messages", e);
             }
@@ -325,6 +342,8 @@ public class ArcTestVpnService extends VpnService {
      */
     private void setupUdpSocket(String ifname, InetAddress address, int port) {
         mExecutor.submit(() -> {
+            Log.d(TAG, "Start setting up UDP socket, ifname: "+ifname+
+            ", address: "+ address.toString() + ", port: " + port);
             try {
                 Network net = getNetworkByInterface(ifname);
                 if (net == null) {
@@ -337,6 +356,7 @@ public class ArcTestVpnService extends VpnService {
                 protect(mUdpSocket);
                 mUdpSocket.connect(address, port);
                 mLastSetupSocketFamily = PROTOCOL_UDP;
+                Log.d(TAG, "Setting up UDP socket succeed");
             } catch (IOException e) {
                 Log.e(TAG, "Error opening UDP socket", e);
             }
@@ -350,6 +370,7 @@ public class ArcTestVpnService extends VpnService {
     public void sendUdpMessage(String msg) {
         mExecutor.submit(() -> {
             try {
+                Log.d(TAG, "sendUdpMessage");
                 if (mUdpSocket == null) {
                     Log.e(TAG, "UDP socket has not been set up yet, send message failed.");
                     return;
@@ -357,6 +378,7 @@ public class ArcTestVpnService extends VpnService {
                 DatagramPacket dp = new DatagramPacket(msg.getBytes(), msg.length(),
                         mUdpSocket.getRemoteSocketAddress());
                 mUdpSocket.send(dp);
+                Log.d(TAG, "sendUdpMessage succeed");
             } catch (IOException e) {
                 Log.e(TAG, "Failed to send UDP messages", e);
             }
