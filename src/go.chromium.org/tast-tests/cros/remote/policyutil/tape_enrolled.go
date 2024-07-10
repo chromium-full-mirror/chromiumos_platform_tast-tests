@@ -13,6 +13,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"go.chromium.org/tast-tests/cros/common/fixture"
+	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/tape"
 	"go.chromium.org/tast-tests/cros/services/cros/graphics"
 	pspb "go.chromium.org/tast-tests/cros/services/cros/policy"
@@ -126,84 +127,6 @@ func init() {
 			tape.ServiceAccountVar,
 		},
 	})
-	testing.AddFixture(&testing.Fixture{
-		Name: fixture.EnterpriseConnectorsMGSLacrosWebProtectDisabledEnrolled,
-		Desc: "Enrolls using real DMServer by using a TAPE account with Autolaunch MGS and pre-applied policies for Lacros web protect disabled",
-		Contacts: []string{
-			"cros-enterprise-connectors@google.com",
-			"webprotect-eng@google.com",
-			"mohamedaomar@google.com",
-		},
-		BugComponent:    "b:1111632", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Enrollment
-		Impl:            &tapeEnrolledFixt{},
-		SetUpTimeout:    enrollmentSetupTimeout,
-		TearDownTimeout: 5 * time.Minute,
-		ResetTimeout:    15 * time.Second,
-		PostTestTimeout: 15 * time.Second,
-		Parent:          fixture.EnterpriseConnectorsMGSLacrosWebProtectDisabledAccount,
-		ServiceDeps: []string{
-			"tast.cros.policy.PolicyService",
-			"tast.cros.hwsec.OwnershipService",
-			"tast.cros.baserpc.FileSystem",
-			"tast.cros.tape.Service",
-			"tast.cros.graphics.ScreenshotService",
-		},
-		Vars: []string{
-			tape.ServiceAccountVar,
-		},
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: fixture.EnterpriseConnectorsMGSLacrosWebProtectEnabledAllowEnrolled,
-		Desc: "Enrolls using real DMServer by using a TAPE account with Autolaunch MGS and pre-applied policies for Lacros web protect enabled and allowed",
-		Contacts: []string{
-			"cros-enterprise-connectors@google.com",
-			"webprotect-eng@google.com",
-			"mohamedaomar@google.com",
-		},
-		BugComponent:    "b:1111632", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Enrollment
-		Impl:            &tapeEnrolledFixt{},
-		SetUpTimeout:    enrollmentSetupTimeout,
-		TearDownTimeout: 5 * time.Minute,
-		ResetTimeout:    15 * time.Second,
-		PostTestTimeout: 15 * time.Second,
-		Parent:          fixture.EnterpriseConnectorsMGSLacrosWebProtectEnabledAllowAccount,
-		ServiceDeps: []string{
-			"tast.cros.policy.PolicyService",
-			"tast.cros.hwsec.OwnershipService",
-			"tast.cros.baserpc.FileSystem",
-			"tast.cros.tape.Service",
-			"tast.cros.graphics.ScreenshotService",
-		},
-		Vars: []string{
-			tape.ServiceAccountVar,
-		},
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: fixture.EnterpriseConnectorsMGSLacrosWebProtectEnabledBlockEnrolled,
-		Desc: "Enrolls using real DMServer by using a TAPE account with Autolaunch MGS and pre-applied policies for Lacros web protect enabled and blocked",
-		Contacts: []string{
-			"cros-enterprise-connectors@google.com",
-			"webprotect-eng@google.com",
-			"mohamedaomar@google.com",
-		},
-		BugComponent:    "b:1111632", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Enrollment
-		Impl:            &tapeEnrolledFixt{},
-		SetUpTimeout:    enrollmentSetupTimeout,
-		TearDownTimeout: 5 * time.Minute,
-		ResetTimeout:    15 * time.Second,
-		PostTestTimeout: 15 * time.Second,
-		Parent:          fixture.EnterpriseConnectorsMGSLacrosWebProtectEnabledBlockAccount,
-		ServiceDeps: []string{
-			"tast.cros.policy.PolicyService",
-			"tast.cros.hwsec.OwnershipService",
-			"tast.cros.baserpc.FileSystem",
-			"tast.cros.tape.Service",
-			"tast.cros.graphics.ScreenshotService",
-		},
-		Vars: []string{
-			tape.ServiceAccountVar,
-		},
-	})
 }
 
 type tapeEnrolledFixt struct {
@@ -283,8 +206,9 @@ func (e *tapeEnrolledFixt) SetUp(ctx context.Context, s *testing.FixtState) inte
 
 	policyClient := pspb.NewPolicyServiceClient(rpcClient.Conn)
 	if _, err := policyClient.GAIAEnrollUsingChrome(ctx, &pspb.GAIAEnrollUsingChromeRequest{
-		Username: e.account.Username,
-		Password: e.account.Password,
+		Username:    e.account.Username,
+		Password:    e.account.Password,
+		DmserverURL: policy.DMServerAlphaURL,
 	}); err != nil {
 		s.Fatal("Failed to enroll using Chrome: ", err)
 	}
