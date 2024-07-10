@@ -83,9 +83,20 @@ func NonConnectedCellularHasNoApn(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
+	// Open Quick Settings for monitor the connection status.
+	if err := quicksettings.NavigateToNetworkDetailedView(ctx, tconn); err != nil {
+		s.Fatal("Failed to open Quick Settings: ", err)
+	}
+
 	helper := s.FixtValue().(*cellular.FixtData).Helper
 	if _, err := helper.Connect(ctx); err != nil {
+		// Distinguish this faillog from the other one before selecting network, this one is only for connection error.
+		faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), func() bool { return true }, cr, "debug_connection_status")
 		s.Fatal("Failed to connect to the default cellular service: ", err)
+	}
+
+	if err := quicksettings.Hide(ctx, tconn); err != nil {
+		s.Fatal("Failed to hide Quick Settings: ", err)
 	}
 
 	name, err := helper.GetCurrentNetworkName(ctx)
@@ -96,7 +107,7 @@ func NonConnectedCellularHasNoApn(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
-	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
 	if err = quicksettings.SelectNetwork(ctx, tconn, name); err != nil {
 		s.Fatal("Failed to open the Quick Settings and select the default cellular service from the network detailed view: ", err)
