@@ -221,13 +221,23 @@ func UpdateVersion(ctx context.Context, s *testing.State) {
 		s.Fatal("Invalid key version: ", tc.keyVersion)
 	}
 
-	initKeyVer, err := h.GetCurrentKeyVersion(ctx, keyVerOpts)
+	// Get RWA key version to check if the RWA and RWB key versions are the same.
+	initRWAKeyVer, err := h.GetCurrentKeyVersion(ctx, keyVerOpts)
 	if err != nil {
-		s.Fatal("Failed to get current key version: ", err)
+		s.Fatal("Failed to get current key version of RWA: ", err)
 	}
-	s.Logf("Initial key version is %s", fmt.Sprint(initKeyVer))
 
-	newKeyVer := initKeyVer + 1
+	// Get RWB key version
+	keyVerOpts.Section = bios.FWSignBImageSection
+	initRWBKeyVer, err := h.GetCurrentKeyVersion(ctx, keyVerOpts)
+	if err != nil {
+		s.Fatal("Failed to get current key version of RWB: ", err)
+	} else if initRWBKeyVer != initRWAKeyVer {
+		s.Fatalf("The key version of RWA (%v) is not equal to RWB (%v) at the beginning, expected RWA and RWB have same key version", initRWAKeyVer, initRWBKeyVer)
+	}
+	s.Logf("Initial key version is %s", fmt.Sprint(initRWBKeyVer))
+
+	newKeyVer := initRWBKeyVer + 1
 	resignFWVersion := int(newKeyVer)
 	s.Logf("Firmware version will update to version %s", fmt.Sprint(newKeyVer))
 
@@ -285,39 +295,83 @@ func UpdateVersion(ctx context.Context, s *testing.State) {
 
 	var state firmware.CheckAndSetServoCharger
 	state = h.CheckServoChargerBeforeBootingFromUSB(ctx)
+	fwidAfterAutoUpdate := new(string)
 
-	defer func(ctx context.Context) {
-		if tc.keyVersion == fwDataKeyVer {
-			// Ensure tpm NvRam content is same as original one.
-			if currentTpmNvRAM, err := getTPMNvRAM(ctx, h, tc); err != nil {
-				s.Error("Failed to get TPM NvRam content: ", err)
-			} else if currentTpmNvRAM != initTpmNvRAM {
-				s.Log("Resetting TPM and rebooting DUT")
-				if err := resetTpmAndReboot(ctx, pv, &state); err != nil {
-					s.Fatal("Failed to reset TPM: ", err)
+	defer func(ctx context.Context, fwidAfterAutoUpdate *string) {
+		testing.ContextLog(ctx, "Make sure DUT is connected before cleanup")
+		if err := h.EnsureDUTBooted(ctx); err != nil {
+			s.Fatal("Failed to connect to the DUT: ", err)
+		}
+
+		s.Log("Rollback the DUT with recovery mode using original bios binary file")
+		if err := backupManager.CopyBackupToDut(ctx, h.DUT, fixture.FirmwareAP, apBinary); err != nil {
+			s.Fatal("Failed to copy AP firmware binary to DUT: ", err)
+		}
+
+		recoveryOpts := futility.
+			NewUpdateOptions(apBinary).
+			WithMode(futility.UpdateModeRecovery).
+			WithWriteProtection(futility.WriteProtectionEnable).
+			WithHostOnly(true).
+			WithForce(true)
+
+		if _, err := futilityInstance.Update(ctx, recoveryOpts); err != nil {
+			s.Fatal("Failed to use futility update to restore the firmware: ", err)
+		}
+
+		if tc.keyVersion == fwDataKeyVer || tc.keyVersion == fwVer {
+			// Reset the TPM to avoid encountering the 'RW firmware key version rollback detect' issue after reboot.
+			s.Log("Resetting TPM and rebooting DUT")
+			if err := resetTpmAndReboot(ctx, pv, &state); err != nil {
+				s.Error("Failed to reset TPM and reboot DUT: ", err)
+			}
+			if !state.IsServoChargerConnected {
+				if err := h.SetDUTPower(ctx, true); err != nil {
+					s.Fatal("Failed to connect charger: ", err)
 				}
-				if !state.IsServoChargerConnected {
-					if err := h.SetDUTPower(ctx, true); err != nil {
-						s.Fatal("Failed to connect charger: ", err)
-					}
-					state.IsServoChargerConnected = true
-					waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 2*time.Minute)
-					defer cancelWaitConnect()
-					if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
-						s.Fatal("Failed to reconnect to the DUT: ", err)
-					}
+				state.IsServoChargerConnected = true
+				waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 2*time.Minute)
+				defer cancelWaitConnect()
+				if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
+					s.Fatal("Failed to reconnect to the DUT: ", err)
 				}
 			}
+		} else if tc.keyVersion == kernelSubkeyVer {
+			if err := h.RebootWithVT2Command(ctx, pv.BootMode); err != nil {
+				s.Fatal("Failed to reboot with VT2 command: ", err)
+			}
 		}
-	}(cleanupCtx)
+
+		// If there were any errors before, we do not need further verification.
+		if s.HasError() {
+			return
+		}
+
+		// Check if the FWID after rollback is the same as the one obtained after the autoupdate.
+		if fwidAfterRollback, err := h.Reporter.CrossystemParam(ctx, reporters.CrossystemParamFwid); err != nil {
+			s.Fatal("Failed to get current fwid after rollback: ", err)
+		} else if fwidAfterRollback != *fwidAfterAutoUpdate {
+			s.Fatalf("The fwid (%v) after rollback is not equal to the fwid (%v) after autoupdate", fwidAfterRollback, fwidAfterAutoUpdate)
+		}
+
+		if err := fwTriesChecker(ctx, h, "B", 0); err != nil {
+			s.Fatal("Failed to check firmware tries: ", err)
+		}
+
+		// Check if the key version is rollback to original one.
+		if err := checkKeyVer(ctx, h, initRWAKeyVer, keyVerOpts, tc); err != nil {
+			s.Fatal("Failed to check the key version: ", err)
+		}
+	}(cleanupCtx, fwidAfterAutoUpdate)
 
 	if err := rebootDUTAndRequireRPCClient(ctx, h); err != nil {
 		s.Fatal("Failed to reboot DUT: ", err)
 	}
 
-	fwidAfterAutoUpdate, err := h.Reporter.CrossystemParam(ctx, reporters.CrossystemParamFwid)
-	if err != nil {
+	if fwidTmp, err := h.Reporter.CrossystemParam(ctx, reporters.CrossystemParamFwid); err != nil {
 		s.Fatal("Failed to get current fwid after autoupdate: ", err)
+	} else {
+		*fwidAfterAutoUpdate = fwidTmp
 	}
 
 	// Mark RWB firmware is a good firmware to finish the firmware autoUpdate procedure.
@@ -339,66 +393,8 @@ func UpdateVersion(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	// Set the firmware section to B to verify the key version of the firmware section B.
-	// This ensures that the updated firmware (RWB) is being checked after the auto-update.
-	keyVerOpts.Section = bios.FWSignBImageSection
-
+	// Verify that the RWB firmware is updated after the auto-update.
 	if err := checkKeyVer(ctx, h, newKeyVer, keyVerOpts, tc); err != nil {
-		s.Fatal("Failed to check the key version: ", err)
-	}
-
-	s.Log("Rollback the DUT with recovery mode using original bios binary file")
-	if err := backupManager.CopyBackupToDut(ctx, h.DUT, fixture.FirmwareAP, apBinary); err != nil {
-		s.Fatal("Failed to copy AP firmware binary to DUT: ", err)
-	}
-
-	recoveryOpts := futility.
-		NewUpdateOptions(apBinary).
-		WithMode(futility.UpdateModeRecovery).
-		WithWriteProtection(futility.WriteProtectionEnable).
-		WithHostOnly(true).
-		WithForce(true)
-
-	if _, err := futilityInstance.Update(ctx, recoveryOpts); err != nil {
-		s.Fatal("Failed to use futility update to restore the firmware: ", err)
-	}
-
-	if tc.keyVersion == fwDataKeyVer || tc.keyVersion == fwVer {
-		// Reset the TPM to avoid encountering the 'RW firmware key version rollback detect' issue after reboot.
-		s.Log("Resetting TPM and rebooting DUT")
-		if err := resetTpmAndReboot(ctx, pv, &state); err != nil {
-			s.Error("Failed to reset TPM and reboot DUT: ", err)
-		}
-		if !state.IsServoChargerConnected {
-			if err := h.SetDUTPower(ctx, true); err != nil {
-				s.Fatal("Failed to connect charger: ", err)
-			}
-			state.IsServoChargerConnected = true
-			waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 2*time.Minute)
-			defer cancelWaitConnect()
-			if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
-				s.Fatal("Failed to reconnect to the DUT: ", err)
-			}
-		}
-	} else if tc.keyVersion == kernelSubkeyVer {
-		if err := h.RebootWithVT2Command(ctx, pv.BootMode); err != nil {
-			s.Fatal("Failed to reboot with VT2 command: ", err)
-		}
-	}
-
-	// Check if the FWID after rollback is the same as the one obtained after the autoupdate.
-	if fwidAfterRollback, err := h.Reporter.CrossystemParam(ctx, reporters.CrossystemParamFwid); err != nil {
-		s.Fatal("Failed to get current fwid after rollback: ", err)
-	} else if fwidAfterRollback != fwidAfterAutoUpdate {
-		s.Fatalf("The fwid (%v) after rollback is not equal to the fwid (%v) after autoupdate", fwidAfterRollback, fwidAfterAutoUpdate)
-	}
-
-	if err := fwTriesChecker(ctx, h, "B", 0); err != nil {
-		s.Fatal("Failed to check firmware tries: ", err)
-	}
-
-	// Check if the key version is rollback to original one.
-	if err := checkKeyVer(ctx, h, initKeyVer, keyVerOpts, tc); err != nil {
 		s.Fatal("Failed to check the key version: ", err)
 	}
 }
