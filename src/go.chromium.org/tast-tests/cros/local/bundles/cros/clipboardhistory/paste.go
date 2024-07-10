@@ -11,8 +11,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/browser/browserui"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/clipboardhistory"
@@ -21,21 +19,16 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-type pasteTestParams struct {
-	pasteType   clipboardhistory.PasteType
-	browserType browser.Type
-}
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Paste,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies different methods for pasting from clipboard history",
 		BugComponent: "b:1268414", // ChromeOS > Software > System UI Surfaces > EnhancedClipboard
 		Contacts: []string{
 			"multipaste-eng@google.com",
 			"cros-system-ui-eng@google.com",
-			"chromeos-sw-engprod@google.com",
+			"chromeos-consumer-engprod@google.com",
 			"newcomer@google.com",
 		},
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
@@ -45,50 +38,17 @@ func init() {
 			Value: "screenplay-8bcf8422-65f2-44c9-8a12-c1ebf9807271",
 		}},
 		Params: []testing.Param{{
-			Name: "click_ash",
-			Val: pasteTestParams{
-				pasteType:   clipboardhistory.Click,
-				browserType: browser.TypeAsh,
-			},
+			Name:    "click_ash",
+			Val:     clipboardhistory.Click,
 			Fixture: "chromeLoggedIn",
 		}, {
-			Name: "click_lacros",
-			Val: pasteTestParams{
-				pasteType:   clipboardhistory.Click,
-				browserType: browser.TypeLacros,
-			},
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           "lacros",
-		}, {
-			Name: "enter_ash",
-			Val: pasteTestParams{
-				pasteType:   clipboardhistory.Enter,
-				browserType: browser.TypeAsh,
-			},
+			Name:    "enter_ash",
+			Val:     clipboardhistory.Enter,
 			Fixture: "chromeLoggedIn",
 		}, {
-			Name: "enter_lacros",
-			Val: pasteTestParams{
-				pasteType:   clipboardhistory.Enter,
-				browserType: browser.TypeLacros,
-			},
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           "lacros",
-		}, {
-			Name: "toggle_ash",
-			Val: pasteTestParams{
-				pasteType:   clipboardhistory.Toggle,
-				browserType: browser.TypeAsh,
-			},
+			Name:    "toggle_ash",
+			Val:     clipboardhistory.Toggle,
 			Fixture: "chromeLoggedIn",
-		}, {
-			Name: "toggle_lacros",
-			Val: pasteTestParams{
-				pasteType:   clipboardhistory.Toggle,
-				browserType: browser.TypeLacros,
-			},
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           "lacros",
 		}},
 	})
 }
@@ -108,15 +68,7 @@ func Paste(ctx context.Context, s *testing.State) {
 	}
 	ui := uiauto.New(tconn).WithTimeout(10 * time.Second)
 
-	params := s.Param().(pasteTestParams)
-
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, params.browserType)
-	if err != nil {
-		s.Fatal("Failed to open the browser: ", err)
-	}
-	defer closeBrowser(ctx)
-
-	conn, err := br.NewConn(ctx, "")
+	conn, err := cr.NewConn(ctx, "")
 	if err != nil {
 		s.Fatal("Failed to connect to chrome: ", err)
 	}
@@ -137,7 +89,7 @@ func Paste(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to add %q to clipboard history: %v", text, err)
 	}
 
-	if err := clipboardhistory.PasteAndVerify(tconn, ui, kb, browserui.AddressBarFinder, clipboardhistory.ClipboardHistoryMenuFromShortcut, text, params.pasteType)(ctx); err != nil {
+	if err := clipboardhistory.PasteAndVerify(tconn, ui, kb, browserui.AddressBarFinder, clipboardhistory.ClipboardHistoryMenuFromShortcut, text, s.Param().(clipboardhistory.PasteType))(ctx); err != nil {
 		s.Fatal("Failed to paste from clipboard history: ", err)
 	}
 }

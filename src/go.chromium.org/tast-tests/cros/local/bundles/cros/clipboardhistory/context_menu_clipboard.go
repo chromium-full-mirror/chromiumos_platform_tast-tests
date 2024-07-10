@@ -11,9 +11,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/browser/browserui"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/clipboardhistory"
@@ -31,15 +28,11 @@ type clipboardResource struct {
 	ui    *uiauto.Context
 	kb    *input.KeyboardEventWriter
 	cr    *chrome.Chrome
-	bt    browser.Type
 	tconn *chrome.TestConn
 	text  string
 }
 
 type clipboardHistoryTestParam struct {
-	// browserType indicates the browser type under testing.
-	browserType browser.Type
-
 	// source indicates the source of the pasted clipboard history data.
 	source clipboardhistory.PasteSource
 
@@ -50,13 +43,13 @@ type clipboardHistoryTestParam struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ContextMenuClipboard,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies the clipboard option in the context menu is working properly within several apps by left-clicking an option",
 		BugComponent: "b:1268414", // ChromeOS > Software > System UI Surfaces > EnhancedClipboard
 		Contacts: []string{
 			"multipaste-eng@google.com",
 			"cros-system-ui-eng@google.com",
-			"chromeos-sw-engprod@google.com",
+			"chromeos-consumer-engprod@google.com",
 			"newcomer@google.com",
 		},
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
@@ -67,60 +60,23 @@ func init() {
 		}},
 		Params: []testing.Param{{
 			Name: "ash",
-			Val: clipboardHistoryTestParam{browser.TypeAsh,
-				clipboardhistory.ClipboardHistoryMenuFromContextMenu, false /*tabletMode=*/},
-		}, {
-			Name: "lacros",
-			Val: clipboardHistoryTestParam{browser.TypeLacros,
-				clipboardhistory.ClipboardHistoryMenuFromContextMenu, false /*tabletMode=*/},
-			ExtraSoftwareDeps: []string{"lacros"},
+			Val:  clipboardHistoryTestParam{clipboardhistory.ClipboardHistoryMenuFromContextMenu, false /*tabletMode=*/},
 		}, {
 			Name: "ash_from_submenu",
-			Val: clipboardHistoryTestParam{browser.TypeAsh,
-				clipboardhistory.ClipboardHistorySubmenu, false /*tabletMode=*/},
-		}, {
-			Name: "lacros_from_submenu",
-			Val: clipboardHistoryTestParam{browser.TypeLacros,
-				clipboardhistory.ClipboardHistorySubmenu, false /*tabletMode=*/},
-			ExtraSoftwareDeps: []string{"lacros"},
+			Val:  clipboardHistoryTestParam{clipboardhistory.ClipboardHistorySubmenu, false /*tabletMode=*/},
 		}, {
 			Name: "ash_from_submenu_standalone_menu",
-			Val: clipboardHistoryTestParam{browser.TypeAsh,
-				clipboardhistory.ClipboardHistoryMenuFromContextMenuSubmenu, false /*tabletMode=*/},
-		}, {
-			Name: "lacros_from_submenu_standalone_menu",
-			Val: clipboardHistoryTestParam{browser.TypeLacros,
-				clipboardhistory.ClipboardHistoryMenuFromContextMenuSubmenu, false /*tabletMode=*/},
-			ExtraSoftwareDeps: []string{"lacros"},
+			Val:  clipboardHistoryTestParam{clipboardhistory.ClipboardHistoryMenuFromContextMenuSubmenu, false /*tabletMode=*/},
 		}, {
 			Name: "ash_tablet",
-			Val: clipboardHistoryTestParam{browser.TypeAsh,
-				clipboardhistory.ClipboardHistoryMenuFromContextMenu, true /*tabletMode=*/},
-		},
-			{
-				Name: "lacros_tablet",
-				Val: clipboardHistoryTestParam{browser.TypeLacros,
-					clipboardhistory.ClipboardHistoryMenuFromContextMenu, true /*tabletMode=*/},
-				ExtraSoftwareDeps: []string{"lacros"},
-			}, {
-				Name: "ash_from_submenu_tablet",
-				Val: clipboardHistoryTestParam{browser.TypeAsh,
-					clipboardhistory.ClipboardHistorySubmenu, true /*tabletMode=*/},
-			}, {
-				Name: "lacros_from_submenu_tablet",
-				Val: clipboardHistoryTestParam{browser.TypeLacros,
-					clipboardhistory.ClipboardHistorySubmenu, true /*tabletMode=*/},
-				ExtraSoftwareDeps: []string{"lacros"},
-			}, {
-				Name: "ash_from_submenu_standalone_menu_tablet",
-				Val: clipboardHistoryTestParam{browser.TypeAsh,
-					clipboardhistory.ClipboardHistoryMenuFromContextMenuSubmenu, true /*tabletMode=*/},
-			}, {
-				Name: "lacros_from_submenu_standalone_menu_tablet",
-				Val: clipboardHistoryTestParam{browser.TypeLacros,
-					clipboardhistory.ClipboardHistoryMenuFromContextMenuSubmenu, true /*tabletMode=*/},
-				ExtraSoftwareDeps: []string{"lacros"},
-			}},
+			Val:  clipboardHistoryTestParam{clipboardhistory.ClipboardHistoryMenuFromContextMenu, true /*tabletMode=*/},
+		}, {
+			Name: "ash_from_submenu_tablet",
+			Val:  clipboardHistoryTestParam{clipboardhistory.ClipboardHistorySubmenu, true /*tabletMode=*/},
+		}, {
+			Name: "ash_from_submenu_standalone_menu_tablet",
+			Val:  clipboardHistoryTestParam{clipboardhistory.ClipboardHistoryMenuFromContextMenuSubmenu, true /*tabletMode=*/},
+		}},
 	})
 }
 
@@ -144,7 +100,7 @@ func ContextMenuClipboard(ctx context.Context, s *testing.State) {
 		option = chrome.DisableFeatures(features...)
 	}
 
-	cr, err := browserfixt.NewChrome(ctx, testParam.browserType, lacrosfixt.NewConfig(), option)
+	cr, err := chrome.New(ctx, option)
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
@@ -170,7 +126,6 @@ func ContextMenuClipboard(ctx context.Context, s *testing.State) {
 		ui:    uiauto.New(tconn),
 		kb:    kb,
 		cr:    cr,
-		bt:    testParam.browserType,
 		tconn: tconn,
 		text:  "abc",
 	}
@@ -191,13 +146,7 @@ func ContextMenuClipboard(ctx context.Context, s *testing.State) {
 }
 
 func verifyChrome(ctx context.Context, s *testing.State, res *clipboardResource, source clipboardhistory.PasteSource) {
-	br, closeBrowser, err := browserfixt.SetUp(ctx, res.cr, res.bt)
-	if err != nil {
-		s.Fatal("Failed to open the browser: ", err)
-	}
-	defer closeBrowser(ctx)
-
-	conn, err := br.NewConn(ctx, "")
+	conn, err := res.cr.NewConn(ctx, "")
 	if err != nil {
 		s.Fatal("Failed to connect to Chrome: ", err)
 	}
