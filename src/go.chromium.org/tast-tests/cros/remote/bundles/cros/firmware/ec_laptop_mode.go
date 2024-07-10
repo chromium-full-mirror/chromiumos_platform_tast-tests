@@ -452,15 +452,8 @@ func ECLaptopMode(ctx context.Context, s *testing.State) {
 			}
 		}
 
-		// Differentiate the press durations on Zork from the other platforms.
-		// Depending on Stainless results, a new flag may be created from
-		// fw-testing-configs for a more general use.
 		var whiteScreenPwrDur time.Duration
-		if h.Config.Platform == "zork" {
-			whiteScreenPwrDur = 1500 * time.Millisecond
-		} else {
-			whiteScreenPwrDur = 2 * time.Second
-		}
+		whiteScreenPwrDur = h.Config.WhiteScreenPowerPressTime
 		s.Logf("Pressing and holding the power button for %s seconds", whiteScreenPwrDur)
 		if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.Dur(whiteScreenPwrDur)); err != nil {
 			s.Fatalf("Failed to press and hold on the power button for %s: %v", whiteScreenPwrDur, err)
