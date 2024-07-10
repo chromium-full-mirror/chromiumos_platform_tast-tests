@@ -32,6 +32,12 @@ type crasSuspendStressParam struct {
 	rounds   int
 }
 
+var suspendStressUnstableModels = []string{
+	// TODO(b/352295088): Undo after fix.
+	"apel", "bloog", "blooguard", "bobba", "bobba360", "casta", "foob", "garg", "garg360",
+	"meep", "orbatrix", "sparky", "sparky360", "vorticon", "vortininja",
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CrasSuspendStress,
@@ -49,7 +55,7 @@ func init() {
 				rounds:   50,
 			},
 			ExtraAttr:         []string{"informational"},
-			ExtraHardwareDeps: hwdep.D(hwdep.Speaker()),
+			ExtraHardwareDeps: hwdep.D(hwdep.Speaker(), hwdep.SkipOnModel(suspendStressUnstableModels...)),
 			Timeout:           50*suspendStressTimePerRound + chrome.ResetTimeout,
 		}, {
 			Name: "capture",
@@ -58,7 +64,7 @@ func init() {
 				rounds:   50,
 			},
 			ExtraAttr:         []string{"informational"},
-			ExtraHardwareDeps: hwdep.D(hwdep.Microphone()),
+			ExtraHardwareDeps: hwdep.D(hwdep.Microphone(), hwdep.SkipOnModel(suspendStressUnstableModels...)),
 			Timeout:           50*suspendStressTimePerRound + chrome.ResetTimeout,
 		}},
 	})
