@@ -136,8 +136,6 @@ func IdlePerf(ctx context.Context, s *testing.State) {
 				s.Error("Failed to tear down FaceGaze: ", err)
 			}
 		}()
-
-		facegazeDriver.Start()
 	}
 
 	// Recorder with no additional config; it records and reports memory usage and

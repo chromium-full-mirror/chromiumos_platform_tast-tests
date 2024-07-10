@@ -46,6 +46,4 @@ func Facegaze(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to tear down FaceGaze: ", err)
 		}
 	}()
-
-	driver.Start()
 }

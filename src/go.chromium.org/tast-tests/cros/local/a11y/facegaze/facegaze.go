@@ -14,8 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/camera/testutil"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -71,26 +69,6 @@ func newNoOpDriver(tdh *a11y.TearDownHelper) driver {
 // implementation of TearDown.
 func (d driver) TearDown() error {
 	return d.tdh.TearDown()
-}
-
-func (d driver) Start() error {
-	// Click the "Start FaceGaze" button.
-	ctx := d.ctx
-	ui := d.ui
-
-	button := nodewith.Role(role.Button).NameContaining("Click to start FaceGaze").Onscreen()
-	if err := uiauto.Combine("Click the 'Start FaceGaze' button",
-		ui.WaitUntilExists(button),
-		ui.DoDefault(button),
-	)(ctx); err != nil {
-		return errors.Wrap(err, "failed to click the 'Start FaceGaze' button")
-	}
-
-	if err := testing.Poll(ctx, a11y.VerifyFaceGazeAssetsInstalled, &testing.PollOptions{Timeout: 2 * time.Minute, Interval: 10 * time.Second}); err != nil {
-		return errors.Wrap(err, "failed to wait for the facegaze-assets dlc to be installed")
-	}
-
-	return nil
 }
 
 func setUpFakeCamera(ctx context.Context, dataPath func(string) string, tdh *a11y.TearDownHelper) error {
@@ -208,6 +186,12 @@ func SetUp(ctx context.Context, cr *chrome.Chrome, dataPath func(string) string)
 
 	if err := setUpFakeCamera(ctx, dataPath, tdh); err != nil {
 		return newNoOpDriver(tdh), errors.Wrap(err, "failed to setup the fake camera")
+	}
+
+	// When FaceGaze is enabled, it will automatically trigger an install of the
+	// facegaze-assets DLC, so wait for it to be installed before continuing.
+	if err := testing.Poll(ctx, a11y.VerifyFaceGazeAssetsInstalled, &testing.PollOptions{Timeout: 2 * time.Minute, Interval: 10 * time.Second}); err != nil {
+		return newNoOpDriver(tdh), errors.Wrap(err, "failed to wait for the facegaze-assets dlc to be installed")
 	}
 
 	ui := uiauto.New(tconn).WithTimeout(10 * time.Second)
