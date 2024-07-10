@@ -15,12 +15,9 @@ import (
 	"github.com/shirou/gopsutil/v3/process"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
-	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash/ashproc"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/chromeproc"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosproc"
 	"go.chromium.org/tast-tests/cros/local/tracing"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -29,7 +26,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PerfettoChromeProducer,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests Chrome connecting to the Perfetto system tracing service",
 		Contacts: []string{
 			"baseos-perf@google.com",
@@ -41,17 +38,6 @@ func init() {
 		Params: []testing.Param{{
 			Val:     browser.TypeAsh,
 			Fixture: "chromeLoggedIn",
-		}, {
-			Name:              "lacros",
-			Val:               browser.TypeLacros,
-			Fixture:           "lacros",
-			ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-		}, {
-			Name:              "lacros_unstable",
-			Val:               browser.TypeLacros,
-			Fixture:           "lacros",
-			ExtraSoftwareDeps: []string{"lacros", "lacros_unstable"},
-			ExtraAttr:         []string{"informational"},
 		}},
 	})
 }
@@ -122,30 +108,6 @@ func waitForChromeProducers(ctx context.Context, f func() ([]*process.Process, e
 	})
 }
 
-// lacrosProducerProcesses lists Lacros processes that should connect to the tracing service.
-// This includes the browser, gpu and renderer processes. Utility, plugin, zygote and plugin processes are not listed.
-func lacrosProducerProcesses(ctx context.Context, tconn *chrome.TestConn) ([]*process.Process, error) {
-	var procs []*process.Process
-	p, err := lacrosproc.Root(ctx, tconn)
-	if err != nil {
-		return nil, err
-	}
-	procs = append(procs, p)
-
-	ps, err := lacrosproc.GPUProcesses(ctx, tconn)
-	if err != nil {
-		return nil, err
-	}
-	procs = append(procs, ps...)
-
-	ps, err = lacrosproc.RendererProcesses(ctx, tconn)
-	if err != nil {
-		return nil, err
-	}
-	procs = append(procs, ps...)
-	return procs, nil
-}
-
 // ashProducerProcesses lists Ash processes that should connect to the tracing service.
 // This includes the browser, gpu and renderer processes. Utility, plugin, zygote and plugin processes are not listed.
 func ashProducerProcesses() ([]*process.Process, error) {
@@ -179,32 +141,7 @@ func PerfettoChromeProducer(ctx context.Context, s *testing.State) {
 		s.Fatal("Tracing services not running: ", err)
 	}
 
-	var f func() ([]*process.Process, error)
-	lacrosBrowserType := s.Param().(browser.Type)
-	// Launch Lacros to make it connect to the tracing service daemon.
-	if lacrosBrowserType == browser.TypeLacros {
-		cr, l, _, err := lacros.Setup(ctx, s.FixtValue(), lacrosBrowserType)
-		if err != nil {
-			s.Fatal("Failed to setup lacros: ", err)
-		}
-
-		tconn, err := cr.TestAPIConn(ctx)
-		if err != nil {
-			s.Fatal("Failed to create Test API connection: ", err)
-		}
-
-		f = func(ctx context.Context, tconn *chrome.TestConn) func() ([]*process.Process, error) {
-			return func() ([]*process.Process, error) {
-				return lacrosProducerProcesses(ctx, tconn)
-			}
-		}(ctx, tconn)
-
-		defer lacros.CloseLacros(ctx, l)
-	} else {
-		f = ashProducerProcesses
-	}
-
-	if err = waitForChromeProducers(ctx, f); err != nil {
+	if err = waitForChromeProducers(ctx, ashProducerProcesses); err != nil {
 		s.Fatal("Failed in waiting for Chrome producers: ", err)
 	}
 }
