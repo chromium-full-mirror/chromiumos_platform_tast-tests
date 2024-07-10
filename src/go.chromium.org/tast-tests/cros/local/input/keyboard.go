@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"math/big"
 	"os"
+	"path"
 	"strings"
 	"time"
 
@@ -102,6 +103,20 @@ func FindPhysicalKeyboardName(ctx context.Context) (bool, string, error) {
 		return success, "", err
 	}
 	return success, info.name, err
+}
+
+// FindPhysicalKeyboardSysPath returns the full /sys/devices path for the physical keyboard device, if present.
+func FindPhysicalKeyboardSysPath(ctx context.Context) (bool, string, error) {
+	success, info, err := findPhysicalKeyboardDevInfo(ctx)
+	if err != nil {
+		return false, "", err
+	}
+
+	if info == nil {
+		return success, "", nil
+	}
+
+	return success, path.Join(sysfsDir, info.sysfs), nil
 }
 
 // FindPowerKeyDevice returns the path to the power key device if the device

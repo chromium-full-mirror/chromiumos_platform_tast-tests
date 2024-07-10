@@ -7,6 +7,7 @@ package inputs
 import (
 	"context"
 
+	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -30,7 +31,16 @@ func init() {
 }
 
 func FunctionRowPhysmapFile(ctx context.Context, s *testing.State) {
-	// TODO(b/351726739): Get the physical keyboard location in the FS (under /sys/class/input).
+	// Find the full /sys/devices path of the physical keyboard,
+	// e.g. "/sys/devices/platform/i8042/serio0/input/input2".
+	foundPhysicalKeyboard, _, err := input.FindPhysicalKeyboardSysPath(ctx)
+	if err != nil {
+		s.Fatal("Failed to query system for physical keyboard: ", err)
+	}
+	if !foundPhysicalKeyboard {
+		s.Fatal("No physical keyboard connected")
+	}
+
 	// TODO(b/351726739): Ensure the function_row_physmap file exists at <keyboard location>/device/function_row_physmap.
 	// TODO(b/351726739): Parse all scan codes in the file into hex numbers and validate at least 10 exist.
 	// TODO(b/351726739): Ensure every scan code is a valid Vivaldi scan code and that all scan codes are not zero.
