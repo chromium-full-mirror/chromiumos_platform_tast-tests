@@ -207,7 +207,7 @@ func (v *kioskFixtureState) SetUp(ctx context.Context, s *testing.FixtState) int
 		fdms,
 		v.signinTestExtensionManifestKey,
 		kioskmode.CustomLocalAccounts(&v.accountsConfiguration),
-		kioskmode.PublicAccountPolicies(vdiAccountID, v.extraPublicAccountPolicies),
+		kioskmode.PublicAccountPolicies(vdiAccountID, v.extraPublicAccountPolicies...),
 		kioskmode.AutoLaunch(vdiAccountID),
 	)
 	if err != nil {

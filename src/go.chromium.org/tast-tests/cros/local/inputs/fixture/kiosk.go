@@ -14,11 +14,11 @@ import (
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
-	"go.chromium.org/tast-tests/cros/local/inputs/inputactions"
-	"go.chromium.org/tast-tests/cros/local/inputs/testserver"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosproc"
 	"go.chromium.org/tast-tests/cros/local/chrome/useractions"
+	"go.chromium.org/tast-tests/cros/local/inputs/inputactions"
+	"go.chromium.org/tast-tests/cros/local/inputs/testserver"
 	"go.chromium.org/tast-tests/cros/local/kioskmode"
 
 	"go.chromium.org/tast/core/ctxutil"
@@ -180,7 +180,7 @@ func (k *inputsKioskFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 		kioskmode.AutoLaunch(webKioskAccountID),
 		kioskmode.CustomLocalAccounts(localAccountsConfiguration),
 		kioskmode.ExtraChromeOptions(k.extraOpts...),
-		kioskmode.PublicAccountPolicies(webKioskAccountID, k.extraPublicAccountPolicies),
+		kioskmode.PublicAccountPolicies(webKioskAccountID, k.extraPublicAccountPolicies...),
 	)
 	if err != nil {
 		s.Fatal("Failed to start Chrome in Kiosk mode: ", err)

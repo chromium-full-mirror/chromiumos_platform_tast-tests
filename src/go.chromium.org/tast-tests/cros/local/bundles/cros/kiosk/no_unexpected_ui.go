@@ -109,7 +109,7 @@ func (param noUnexpectedUITestParam) kioskModeOptions(ctx context.Context) ([]ki
 	if param.isLacros {
 		options = append(options, kioskmode.PublicAccountPolicies(
 			accountID,
-			[]policy.Policy{&policy.LacrosAvailability{Val: "lacros_only"}},
+			&policy.LacrosAvailability{Val: "lacros_only"},
 		))
 	}
 

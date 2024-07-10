@@ -83,7 +83,10 @@ func FloatingAccessibilityMenuEnabled(ctx context.Context, s *testing.State) {
 		ctx,
 		fdms,
 		s.RequiredVar("ui.signinProfileTestExtensionManifestKey"),
-		kioskmode.PublicAccountPolicies(kioskmode.WebKioskAccountID, append(param.Policies, &policy.FloatingAccessibilityMenuEnabled{Val: true})),
+		kioskmode.PublicAccountPolicies(
+			kioskmode.WebKioskAccountID,
+			append(param.Policies, &policy.FloatingAccessibilityMenuEnabled{Val: true})...,
+		),
 		kioskmode.AutoLaunch(kioskmode.WebKioskAccountID),
 	)
 	if err != nil {

@@ -42,7 +42,7 @@ func AutoLaunch(accountID string) Option {
 }
 
 // PublicAccountPolicies adds policies that will be applied to the account.
-func PublicAccountPolicies(accountID string, policies []policy.Policy) Option {
+func PublicAccountPolicies(accountID string, policies ...policy.Policy) Option {
 	return func(cfg *MutableConfig) error {
 		if cfg.PublicAccountPolicies == nil {
 			cfg.PublicAccountPolicies = make(map[string][]policy.Policy)

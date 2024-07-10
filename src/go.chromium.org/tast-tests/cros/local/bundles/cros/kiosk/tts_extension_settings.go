@@ -65,7 +65,7 @@ func TTSExtensionSettings(ctx context.Context, s *testing.State) {
 		kioskmode.AutoLaunch(kioskmode.KioskAppAccountID),
 		kioskmode.PublicAccountPolicies(
 			kioskmode.KioskAppAccountID,
-			[]policy.Policy{&policy.FloatingAccessibilityMenuEnabled{Val: true}},
+			&policy.FloatingAccessibilityMenuEnabled{Val: true},
 		),
 	)
 	if err != nil {

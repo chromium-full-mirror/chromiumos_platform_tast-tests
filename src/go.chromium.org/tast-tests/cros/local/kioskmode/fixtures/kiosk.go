@@ -132,7 +132,7 @@ func (k *kioskFixture) SetUp(ctx context.Context, s *testing.FixtState) interfac
 		fdms,
 		k.signinTestExtensionManifestKey,
 		kioskmode.AutoLaunch(k.autoLaunchKioskAppID),
-		kioskmode.PublicAccountPolicies(k.autoLaunchKioskAppID, k.extraPublicAccountPolicies),
+		kioskmode.PublicAccountPolicies(k.autoLaunchKioskAppID, k.extraPublicAccountPolicies...),
 	)
 	if err != nil {
 		// Defer screenshot capture to make sure err is reported first.

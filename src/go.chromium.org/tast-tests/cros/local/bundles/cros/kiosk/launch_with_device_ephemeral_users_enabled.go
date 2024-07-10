@@ -111,8 +111,10 @@ func LaunchWithDeviceEphemeralUsersEnabled(ctx context.Context, s *testing.State
 		kioskmode.ExtraPolicies(param.Policies),
 	}
 	if param.IsLacros {
-		opts = append(opts, kioskmode.PublicAccountPolicies(kioskmode.KioskAppAccountID,
-			[]policy.Policy{&policy.LacrosAvailability{Val: "lacros_only"}}))
+		opts = append(opts, kioskmode.PublicAccountPolicies(
+			kioskmode.KioskAppAccountID,
+			&policy.LacrosAvailability{Val: "lacros_only"},
+		))
 	}
 
 	cleanupCtx := ctx
