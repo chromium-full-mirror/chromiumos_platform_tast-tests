@@ -144,22 +144,7 @@ func DNSProxyOverVPN(ctx context.Context, s *testing.State) {
 	}
 
 	if params.crostini {
-		// Ensure connectivity is available.
-		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			return testexec.CommandContext(ctx, "/bin/ping", "-c1", "-w1", "8.8.8.8").Run()
-		}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
-			s.Log("Failed to ping 8.8.8.8: ", err)
-		}
-
-		// Ensure connectivity is available inside Crostini's container.
-		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			return cont.Command(ctx, "ping", "-c1", "-w1", "8.8.8.8").Run()
-		}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
-			s.Log("Failed to ping 8.8.8.8 from Crostini: ", err)
-		}
-
-		// Install dig in container after the DoH mode is set up properly.
-		if err := dns.InstallDigInContainer(ctx, cont); err != nil {
+		if err := dns.VerifyDigInstalledInContainer(ctx, cont); err != nil {
 			s.Fatal("Failed to install dig in container: ", err)
 		}
 	}

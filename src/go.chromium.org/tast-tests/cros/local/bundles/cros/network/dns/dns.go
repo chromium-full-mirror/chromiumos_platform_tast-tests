@@ -427,10 +427,9 @@ func InstallDigInARC(ctx context.Context, a *arc.ARC, execPath string) (string, 
 	return p, nil
 }
 
-// InstallDigInContainer verifies dig is installed in the container.
-// Does not actually install dig.
-func InstallDigInContainer(ctx context.Context, cont *vm.Container) error {
-	return cont.Command(ctx, "dig", "-v").Run()
+// VerifyDigInstalledInContainer verifies dig is installed in the container.
+func VerifyDigInstalledInContainer(ctx context.Context, cont *vm.Container) error {
+	return cont.Command(ctx, "dig", "-v").Run(testexec.DumpLogOnError)
 }
 
 // getDoHProviders returns the current DNS-over-HTTPS providers.
