@@ -9,27 +9,33 @@ import (
 	"strings"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/bluetooth/bluez"
+	bz "go.chromium.org/tast-tests/cros/local/bluetooth/bluez"
+	"go.chromium.org/tast-tests/cros/local/bluetooth/facade/bluez"
 	"go.chromium.org/tast-tests/cros/local/bluetooth/facade/floss"
 	"go.chromium.org/tast/core/testing"
 )
 
 func disableBluezAdapter(ctx context.Context) (CleanupCallback, error) {
-	if adapters, err := bluez.Adapters(ctx); err == nil && len(adapters) == 0 {
+	if adapters, err := bz.Adapters(ctx); err == nil && len(adapters) == 0 {
 		testing.ContextLog(ctx, "Bluetooth adapter is missing")
 		return func(ctx context.Context) error { return nil }, nil
 	}
-	if state, err := bluez.IsEnabled(ctx); err == nil && state == false {
-		testing.ContextLog(ctx, "Bluetooth adapter is disabled")
+	b, err := bluez.NewBluetoothBluezFacade(ctx)
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to create bluetooth facade")
+		return func(ctx context.Context) error { return nil }, err
+	}
+	if state, err := b.IsPoweredOn(ctx); err == nil && state == false {
+		testing.ContextLog(ctx, "Bluetooth adapter is powered off")
 		return func(ctx context.Context) error { return nil }, nil
 	}
-	testing.ContextLog(ctx, "Disabling the bluez adapter")
-	if err := bluez.Disable(ctx); err != nil {
+	testing.ContextLog(ctx, "Power off the bluez adapter")
+	if err := b.SetPowered(ctx, false); err != nil {
 		return func(ctx context.Context) error { return nil }, err
 	}
 	return func(ctx context.Context) error {
-		testing.ContextLog(ctx, "Enabling the bluez adapter")
-		return bluez.Enable(ctx)
+		testing.ContextLog(ctx, "Power on the bluez adapter")
+		return b.SetPowered(ctx, true)
 	}, nil
 }
 
@@ -38,13 +44,18 @@ func disableFlossAdapter(ctx context.Context) (CleanupCallback, error) {
 		testing.ContextLog(ctx, "Bluetooth adapter is missing or disabled")
 		return func(ctx context.Context) error { return nil }, nil
 	}
-	testing.ContextLog(ctx, "Disabling the floss adapter")
-	if err := floss.SetFlossEnabled(ctx, false); err != nil {
+	b, err := floss.NewBluetoothFlossFacade(ctx)
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to create bluetooth facade")
+		return func(ctx context.Context) error { return nil }, err
+	}
+	testing.ContextLog(ctx, "Power off the floss adapter")
+	if err := b.SetPowered(ctx, false); err != nil {
 		return func(ctx context.Context) error { return nil }, err
 	}
 	return func(ctx context.Context) error {
-		testing.ContextLog(ctx, "Enabling the floss adapter")
-		return floss.SetFlossEnabled(ctx, true)
+		testing.ContextLog(ctx, "Power on the floss adapter")
+		return b.SetPowered(ctx, true)
 	}, nil
 }
 
