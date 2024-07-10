@@ -33,6 +33,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/session"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast-tests/cros/local/upstart"
+	"go.chromium.org/tast-tests/cros/local/wifi"
 	"go.chromium.org/tast-tests/cros/local/wifi/intelfwextractor"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -262,8 +263,6 @@ func firmwareDumpValidator(ctx context.Context, rl *retry.Loop, s *testing.State
 			the dump files are deleted on session change.
 	*/
 	const (
-		iwlwifiDir          = "/sys/kernel/debug/iwlwifi"
-		fwDbgCollectPath    = "/iwlmvm/fw_dbg_collect"
 		fbpreprocessordPath = "/run/daemon-store/fbpreprocessord/"
 		processedDumpPath   = "/processed_dumps"
 		rawDumpDirComponent = "/raw_dumps"
@@ -324,7 +323,7 @@ func firmwareDumpValidator(ctx context.Context, rl *retry.Loop, s *testing.State
 		s.Fatal("Failed to get the network parent device name: ", err)
 	}
 
-	fwDbgCollect := filepath.Join(iwlwifiDir, devName, fwDbgCollectPath)
+	fwDbgCollect := filepath.Join(wifi.IwlwifiDir, devName, wifi.IwlwififwDbgCollect)
 	if _, err := os.Stat(fwDbgCollect); err != nil {
 		s.Fatalf("Failed to get the file information for %s: %v", fwDbgCollect, err)
 	}

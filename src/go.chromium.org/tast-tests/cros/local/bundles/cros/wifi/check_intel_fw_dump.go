@@ -51,15 +51,13 @@ func init() {
 
 func CheckIntelFWDump(ctx context.Context, s *testing.State) {
 	const (
-		iwlwifiDir       = "/sys/kernel/debug/iwlwifi"
-		devCoreDumpName  = `devcoredump_iwlwifi\.\d{8}\.\d{6}\.\d+\.\d+\.devcore.gz`
-		metaDumpName     = `devcoredump_iwlwifi\.\d{8}\.\d{6}\.\d+\.\d+\.meta`
-		logDumpName      = `devcoredump_iwlwifi\.\d{8}\.\d{6}\.\d+\.\d+\.log`
-		fwDbgCollectPath = "/iwlmvm/fw_dbg_collect"
+		devCoreDumpName = `devcoredump_iwlwifi\.\d{8}\.\d{6}\.\d+\.\d+\.devcore.gz`
+		metaDumpName    = `devcoredump_iwlwifi\.\d{8}\.\d{6}\.\d+\.\d+\.meta`
+		logDumpName     = `devcoredump_iwlwifi\.\d{8}\.\d{6}\.\d+\.\d+\.log`
 	)
 
 	// Verify that DUT has Intel WiFi.
-	if _, err := os.Stat(iwlwifiDir); os.IsNotExist(err) {
+	if _, err := os.Stat(wifi.IwlwifiDir); os.IsNotExist(err) {
 		s.Fatal("iwlwifi directory does not exist on DUT, skipping test")
 	}
 
@@ -97,7 +95,7 @@ func CheckIntelFWDump(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get the network parent device name: ", err)
 	}
 
-	fwDbgCollect := filepath.Join(filepath.Join(iwlwifiDir, devName), fwDbgCollectPath)
+	fwDbgCollect := filepath.Join(filepath.Join(wifi.IwlwifiDir, devName), wifi.IwlwififwDbgCollect)
 	if _, err := os.Stat(fwDbgCollect); err != nil {
 		s.Fatalf("Failed to get the file information for %s: %v", fwDbgCollect, err)
 	}
