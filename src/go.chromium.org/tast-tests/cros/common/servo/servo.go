@@ -34,8 +34,6 @@ type Servo struct {
 	hasC2D2            bool
 	isDualV4           bool
 	isPDTester         bool
-	// TODO(b/194310192): Unify the servo UART regexp controls in servod.
-	uartRegexp StringControl
 
 	// For PD tests, this caches the information about the PD port on the DUT.
 	dutPDInfo *DUTPDInfo

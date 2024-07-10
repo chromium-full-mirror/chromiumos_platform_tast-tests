@@ -50,8 +50,7 @@ const (
 	TopUSBKeyMux          StringControl = "top_usbkey_mux"
 	Type                  StringControl = "servo_type"
 	UARTCmd               StringControl = "servo_uart_cmd"
-	UARTRegexp            StringControl = "servo_v4_uart_regexp"
-	UARTRegexpV4p1        StringControl = "servo_v4p1_uart_regexp"
+	UARTRegexp            StringControl = "servo_uart_regexp"
 	USBArbKey             StringControl = "usb_arb_key"
 	USBArbKeyConfig       StringControl = "usb_arb_key_config"
 	USBCPolarity          StringControl = "usbc_polarity"
@@ -1197,11 +1196,7 @@ func (s *Servo) WatchdogRemove(ctx context.Context, val WatchdogValue) error {
 
 // RunServoCommand runs the given command on the servo console.
 func (s *Servo) RunServoCommand(ctx context.Context, cmd string) error {
-	if s.uartRegexp == "" {
-		return errors.New("Required servo control 'uartRegexp' not available. Run test using servo_v4/v4p1")
-	}
-
-	if err := s.SetString(ctx, s.uartRegexp, "None"); err != nil {
+	if err := s.SetString(ctx, UARTRegexp, "None"); err != nil {
 		return errors.Wrap(err, "Clearing Servo UART Regexp")
 	}
 	return s.SetString(ctx, UARTCmd, cmd)
@@ -1210,15 +1205,11 @@ func (s *Servo) RunServoCommand(ctx context.Context, cmd string) error {
 // RunServoCommandGetOutput runs the given command on the servo v4 UART and
 // returns the output matching patterns.
 func (s *Servo) RunServoCommandGetOutput(ctx context.Context, cmd string, patterns []string) ([][]string, error) {
-	if s.uartRegexp == "" {
-		return nil, errors.New("Required servo control 'uartRegexp' not available. Run test using servo_v4/v4p1")
+	if err := s.SetStringList(ctx, UARTRegexp, patterns); err != nil {
+		return nil, errors.Wrapf(err, "setting %s to %s", UARTRegexp, patterns)
 	}
 
-	if err := s.SetStringList(ctx, s.uartRegexp, patterns); err != nil {
-		return nil, errors.Wrapf(err, "setting %s to %s", s.uartRegexp, patterns)
-	}
-
-	defer s.SetString(ctx, s.uartRegexp, "None")
+	defer s.SetString(ctx, UARTRegexp, "None")
 
 	if err := s.SetString(ctx, UARTCmd, cmd); err != nil {
 		return nil, errors.Wrapf(err, "setting %s to %s", string(UARTCmd), cmd)
@@ -1331,19 +1322,6 @@ func (s *Servo) GetServoType(ctx context.Context) (string, error) {
 	s.isPDTester = isPDTester
 	s.dutCCDController = dutCCDController
 	s.dutDebugController = dutDebugController
-
-	// Cache the servo UART regexp control, which varies based on the servo V4 type
-	// TODO(b/194310192): Unify the interface name at servod.
-	if hasV4, err := s.HasControl(ctx, string(UARTRegexp)); err != nil {
-		return "", errors.Wrapf(err, "failed to run HasControl for %s", string(UARTRegexp))
-	} else if hasV4 {
-		s.uartRegexp = UARTRegexp
-	}
-	if hasV4p1, err := s.HasControl(ctx, string(UARTRegexpV4p1)); err != nil {
-		return "", errors.Wrapf(err, "failed to run HasControl for %s", string(UARTRegexpV4p1))
-	} else if hasV4p1 {
-		s.uartRegexp = UARTRegexpV4p1
-	}
 
 	return s.servoType, nil
 }
