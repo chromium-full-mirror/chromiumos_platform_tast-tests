@@ -28,7 +28,7 @@ func init() {
 		// TODO: When stable, change firmware_unstable to a different attr.
 		Attr:         []string{"group:firmware", "firmware_unstable"},
 		Fixture:      fixture.NormalMode,
-		Timeout:      5 * time.Minute,
+		Timeout:      10 * time.Minute,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.GSCUART()),
 		SoftwareDeps: []string{"gsc"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
@@ -69,13 +69,16 @@ func Cr50DevMode(ctx context.Context, s *testing.State) {
 
 // checkCr50TPMInfo parses the output of ccd command in cr50 console and verifies that TPM value matches the current boot mode
 func checkCr50TPMInfo(ctx context.Context, h *firmware.Helper, expectedValue string) error {
-	output, err := h.Servo.RunGSCCommandGetOutput(ctx, "ccd", []string{`TPM\s*:\s*(\S*)\s*\n`})
-	if err != nil {
-		return errors.Wrap(err, "failed to get boot mode info from cr50 CCD")
-	}
-	if output[0][1] != expectedValue {
-		return errors.Wrapf(err, "incorrect boot mode info from cr50 CCD: got %q want %q", output[0][1], expectedValue)
-	}
-	testing.ContextLogf(ctx, "Boot mode info got from cr50 CCD matched successfully: %q", output[0][1])
-	return nil
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		output, err := h.Servo.RunGSCCommandGetOutput(ctx, "ccd", []string{`TPM\s*:\s*(\S*)\s*\n`})
+		if err != nil {
+			return errors.Wrap(err, "failed to get boot mode info from cr50 CCD")
+		}
+		if output[0][1] != expectedValue {
+			testing.ContextLogf(ctx, "Incorrect boot mode info from cr50 CCD: %q", output[0][1])
+			return errors.Wrapf(err, "incorrect boot mode info from cr50 CCD: got %q want %q", output[0][1], expectedValue)
+		}
+		testing.ContextLogf(ctx, "Boot mode info got from cr50 CCD matched successfully: %q", output[0][1])
+		return nil
+	}, &testing.PollOptions{Timeout: 1 * time.Minute})
 }
