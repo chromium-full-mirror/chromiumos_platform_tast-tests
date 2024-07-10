@@ -46,9 +46,8 @@ type dragTest struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         OverviewDragWindowPerf,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Measures the presentation time of window dragging in overview in tablet mode",
+		Func: OverviewDragWindowPerf,
+		Desc: "Measures the presentation time of window dragging in overview in tablet mode",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
 			"xiyuan@chromium.org",
@@ -85,36 +84,6 @@ func init() {
 				l:  "DragToClose",
 				df: dragToClose,
 				bt: browser.TypeAsh,
-			},
-		}, {
-			Name:              "normal_drag_lacros",
-			Fixture:           "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val: dragTest{
-				dt: dragTypeNormal,
-				l:  "NormalDrag",
-				df: normalDrag,
-				bt: browser.TypeLacros,
-			},
-		}, {
-			Name:              "drag_to_snap_lacros",
-			Fixture:           "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val: dragTest{
-				dt: dragTypeSnap,
-				l:  "DragToSnap",
-				df: dragToSnap,
-				bt: browser.TypeLacros,
-			},
-		}, {
-			Name:              "drag_to_close_lacros",
-			Fixture:           "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val: dragTest{
-				dt: dragTypeClose,
-				l:  "DragToClose",
-				df: dragToClose,
-				bt: browser.TypeLacros,
 			},
 		}},
 	})

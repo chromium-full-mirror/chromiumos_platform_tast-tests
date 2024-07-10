@@ -27,9 +27,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ScreenRotationPerf,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Measures animation smoothness of screen rotation in tablet mode",
+		Func: ScreenRotationPerf,
+		Desc: "Measures animation smoothness of screen rotation in tablet mode",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
 			"xiyuan@chromium.org",
@@ -43,11 +42,6 @@ func init() {
 		Params: []testing.Param{{
 			Fixture: "chromeLoggedIn",
 			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			Fixture:           "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               browser.TypeLacros,
 		}},
 		Timeout: 3 * time.Minute,
 	})

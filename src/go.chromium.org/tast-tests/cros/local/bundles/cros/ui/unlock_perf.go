@@ -26,9 +26,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         UnlockPerf,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Measures animation smoothness of screen unlock",
+		Func: UnlockPerf,
+		Desc: "Measures animation smoothness of screen unlock",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
 			"xiyuan@chromium.org",
@@ -42,11 +41,6 @@ func init() {
 		Params: []testing.Param{{
 			Val:     browser.TypeAsh,
 			Fixture: "chromeLoggedIn",
-		}, {
-			Name:              "lacros",
-			Val:               browser.TypeLacros,
-			Fixture:           "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
 		}, {
 			Name:    "passthrough",
 			Val:     browser.TypeAsh,

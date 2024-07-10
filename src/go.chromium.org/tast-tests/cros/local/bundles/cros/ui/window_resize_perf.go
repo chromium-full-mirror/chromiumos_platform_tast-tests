@@ -29,9 +29,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         WindowResizePerf,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Measures animation smoothness of resizing a window",
+		Func: WindowResizePerf,
+		Desc: "Measures animation smoothness of resizing a window",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
 			"xiyuan@chromium.org",
@@ -46,11 +45,6 @@ func init() {
 			{
 				Val:     browser.TypeAsh,
 				Fixture: "chromeLoggedIn",
-			}, {
-				Name:              "lacros",
-				Val:               browser.TypeLacros,
-				ExtraSoftwareDeps: []string{"lacros"},
-				Fixture:           "lacros",
 			},
 		},
 	})
