@@ -170,8 +170,24 @@ func SaveNetworkDumpsys(ctx context.Context, a *arc.ARC, outDir string) error {
 	return cmd.Run(testexec.DumpLogOnError)
 }
 
-// CreateNetworkDumpsysErrorHandler creates an error handler to dump network info on test
-// failures. This should be used together with s.AttachErrorHandlers(). Example:
+// saveARCSocketInfoDump saves 'adb shell ss' output of the ARC sockets to a log file
+func saveARCSocketInfoDump(ctx context.Context, a *arc.ARC, outDir string) error {
+	dateString := time.Now().Format(time.RFC3339) // "2006-01-02T15:04:05Z07:00" format
+	filename := "arc-network-info_" + dateString + ".txt"
+	path := filepath.Join(outDir, filename)
+	file, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	cmd := a.Command(ctx, "ss", "-api")
+	cmd.Stdout = file
+	return cmd.Run(testexec.DumpLogOnError)
+}
+
+// CreateNetworkDumpsysErrorHandler creates an error handler to dump network info and ARC socket
+// info on test failures. This should be used together with s.AttachErrorHandlers(). Example:
 //
 //	errorHandler := arc.CreateNetworkDumpsysErrorHandler(cleanupCtx, a)
 //	s.AttachErrorHandlers(errorHandler, errorHandler)
@@ -183,6 +199,9 @@ func CreateNetworkDumpsysErrorHandler(ctx context.Context, a *arc.ARC) func(stri
 		}
 		if err := SaveNetworkDumpsys(ctx, a, outdir); err != nil {
 			testing.ContextLog(ctx, "Failed to save ARC network dumpsys: ", err)
+		}
+		if err := saveARCSocketInfoDump(ctx, a, outdir); err != nil {
+			testing.ContextLog(ctx, "Failed to save ARC network info dump: ", err)
 		}
 	}
 }
