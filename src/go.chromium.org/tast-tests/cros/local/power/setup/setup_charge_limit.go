@@ -63,11 +63,11 @@ func waitForChargeLimit(ctx context.Context) error {
 func StopChargeLimit(ctx context.Context, prefs *TmpPrefs) (CleanupCallback, error) {
 	if err := prefs.SetTmpPref(ctx, "charge_limit_enabled", "0"); err != nil {
 		testing.ContextLog(ctx, "Failed to set charge_limit_enabled pref to 0: ", err)
-		return nil, err
+		return nil, errors.Wrap(err, "set charge_limit_enabled")
 	}
 	if err := prefs.CommitTmpPrefs(ctx, waitForChargeLimit); err != nil {
 		testing.ContextLog(ctx, "Failed to commit pref change for charge_limit_enabled: ", err)
-		return nil, err
+		return nil, errors.Wrap(err, "commit prefs")
 	}
 	// There's no need for a CleanupCallback, since TmpPrefs will wipe any
 	// changes we made in its CleanupCallback.
