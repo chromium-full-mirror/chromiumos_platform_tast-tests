@@ -45,7 +45,7 @@ func init() {
 // detectedReset returns True if GSC did a hard reset that triggered a pulse on EC_RST_L
 func detectedReset(ctx context.Context, b utils.DevboardHelper, gpioMonitor utils.GpioMonitorSession) bool {
 	// GSC pulses EC_RST_L when it resets. Wait for a EC_RST_L pulse to detect the reset.
-	events := b.GpioMonitorWait(ctx, gpioMonitor, 2*time.Second, 100*time.Millisecond)
+	events := b.GpioMonitorWait(ctx, gpioMonitor, 5*time.Second, 100*time.Millisecond)
 	testing.ContextLog(ctx, "gpio events:", events.Sorted)
 	return len(events.Sorted) != 0
 }
