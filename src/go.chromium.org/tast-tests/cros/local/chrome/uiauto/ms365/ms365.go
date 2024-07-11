@@ -73,6 +73,24 @@ func AppWithCreds(ctx context.Context, tconn *chrome.TestConn, creds credconfig.
 	return &Ms365{ui: ui, kb: kb, tconn: tconn, UserName: creds.User, Password: creds.Pass}, nil
 }
 
+// ChooseSearchEngine proceeds through "ChooseSearchEngine" popup that is opened on a first run in some regions.
+func (ms *Ms365) ChooseSearchEngine() uiauto.Action {
+	chooseSearchEngine := nodewith.Role(role.Window).ClassName("SearchEngineChoiceDialogView")
+	firstSearchEngine := nodewith.Ancestor(chooseSearchEngine).Role(role.RadioButton).First()
+	firstSearchEngineOnscreen := nodewith.Ancestor(firstSearchEngine).Onscreen().First()
+	closeButton := nodewith.Ancestor(chooseSearchEngine).Role(role.Button).ClassName("action-button")
+
+	return func(ctx context.Context) error {
+		if err := ms.ui.EnsureGoneFor(chooseSearchEngine, 5*time.Second)(ctx); err != nil {
+			return uiauto.Combine("Choosing search engine",
+				ms.ui.DoDefaultUntil(firstSearchEngine, ms.ui.Exists(firstSearchEngineOnscreen)),
+				ms.ui.DoDefaultUntil(closeButton, ms.ui.Gone(chooseSearchEngine)),
+			)(ctx)
+		}
+		return nil
+	}
+}
+
 // InputUserName waits for the Microsoft sign in window and input the username.
 func (ms *Ms365) InputUserName(userName string) uiauto.Action {
 	msSignInWindow := nodewith.Role(role.RootWebArea).Name("Sign in to your account")
@@ -80,12 +98,24 @@ func (ms *Ms365) InputUserName(userName string) uiauto.Action {
 
 	return uiauto.Combine("MS SignIn",
 		ms.ui.WaitUntilExists(msSignInWindow),
+		ms.ChooseSearchEngine(),
 		ms.ui.WaitUntilExists(usernameInput.Visible()),
 		ms.ui.LeftClickUntilFocused(usernameInput),
 		ms.kb.TypeAction(userName),
 		ms.kb.AccelAction("Enter"),
 		ms.ui.WaitUntilGone(usernameInput.Visible()),
 	)
+}
+
+// UsePasswordInsteadOfCode proceeds when Microsoft tries to send a code during login.
+func (ms *Ms365) UsePasswordInsteadOfCode(msSignInWindow *nodewith.Finder) uiauto.Action {
+	useYourPasswordInsteadButton := nodewith.Ancestor(msSignInWindow).Role(role.Button).Name("Use your password instead")
+	return func(ctx context.Context) error {
+		if err := ms.ui.EnsureGoneFor(useYourPasswordInsteadButton, 5*time.Second)(ctx); err != nil {
+			return ms.ui.DoDefaultUntil(useYourPasswordInsteadButton, ms.ui.Gone(useYourPasswordInsteadButton))(ctx)
+		}
+		return nil
+	}
 }
 
 // InputPassword waits for the Microsoft "input password" screen and input the password.
@@ -95,12 +125,26 @@ func (ms *Ms365) InputPassword(password string) uiauto.Action {
 
 	return uiauto.Combine("MS SignIn Password",
 		ms.ui.WaitUntilExists(msPasswordWindow.Visible()),
+		ms.UsePasswordInsteadOfCode(msPasswordWindow),
 		ms.ui.WaitUntilExists(passwordInput.Visible()),
 		ms.ui.LeftClickUntilFocused(passwordInput),
 		ms.kb.TypeAction(password),
 		ms.kb.AccelAction("Enter"),
 		ms.ui.WaitUntilGone(passwordInput.Visible()),
 	)
+}
+
+// ConfirmSignIn proceeds through optional Microsoft security information dialog shown after entering login.
+func (ms *Ms365) ConfirmSignIn() uiauto.Action {
+	msConfirmSignInWindow := nodewith.Role(role.RootWebArea).Name("Is your security info still accurate?")
+	msConfirmSignInButton := nodewith.Ancestor(msConfirmSignInWindow).Role(role.StaticText).Name("Looks good!")
+
+	return func(ctx context.Context) error {
+		if err := ms.ui.EnsureGoneFor(msConfirmSignInWindow, 5*time.Second)(ctx); err != nil {
+			return ms.ui.DoDefaultUntil(msConfirmSignInButton, ms.ui.Gone(msConfirmSignInButton))(ctx)
+		}
+		return nil
+	}
 }
 
 // StaySignedIn waits for the Microsoft "Stayed Signed in?" screen and clicks YES.
@@ -111,7 +155,7 @@ func (ms *Ms365) StaySignedIn() uiauto.Action {
 
 	return uiauto.Combine("MS Stay Signed In",
 		ms.ui.WaitUntilExists(msStaySignedInButton),
-		ms.ui.LeftClickUntil(msStaySignedInButton, ms.ui.Gone(msStaySignedInButton)),
+		ms.ui.DoDefaultUntil(msStaySignedInButton, ms.ui.Gone(msStaySignedInButton)),
 	)
 }
 
@@ -124,7 +168,7 @@ func (ms *Ms365) AcceptPermissionIfNeeded(setupCompleteDialogFinder *nodewith.Fi
 		runAcceptPermission := uiauto.Combine("MS permission screen",
 			ms.ui.WaitUntilExists(msAcceptPermissionButton),
 			ms.kb.TypeKeyAction(input.KEY_END),
-			ms.ui.LeftClickUntil(msAcceptPermissionButton, ms.ui.Gone(msAcceptPermissionButton)),
+			ms.ui.DoDefaultUntil(msAcceptPermissionButton, ms.ui.Gone(msAcceptPermissionButton)),
 		)
 
 		// When the permission dialog doesn't show it goes directly to Setup Complete dialog.
@@ -152,6 +196,7 @@ func (ms *Ms365) LoginToMicrosoft365(setupCompleteDialogFinder *nodewith.Finder,
 			}
 			return uiauto.Combine("Input password and stay signed in",
 				ms.InputPassword(ms.Password),
+				ms.ConfirmSignIn(),
 				ms.StaySignedIn(),
 			)(ctx)
 		},
