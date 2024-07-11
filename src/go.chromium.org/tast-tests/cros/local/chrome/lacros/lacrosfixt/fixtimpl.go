@@ -276,24 +276,6 @@ func init() {
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 
-	// lacrosPrinterSetupAssistanceEnabled is the same as lacros but has flags
-	// for printer setup assistance feature tests.
-	testing.AddFixture(&testing.Fixture{
-		Name:     "lacrosPrinterSetupAssistanceEnabled",
-		Desc:     "Lacros Chrome from a pre-built image with printer setup assistance and jelly flags enabled",
-		Contacts: []string{"cros-peripherals@google.com", "ashleydp@google.com"},
-		// ChromeOS > Software > Fundamentals > Peripherals > Printing
-		BugComponent: "b:1131981",
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return NewConfig(ChromeOptions(
-				chrome.EnableFeatures("PrintManagementSetupAssistance", "PrintPreviewDiscoveredPrinters", "PrintSettingsRevamp", "PrintSettingsPrinterStatus"),
-				chrome.LacrosEnableFeatures("PrintPreviewSetupAssistance"))).Opts()
-		}),
-		SetUpTimeout:    chrome.FixtureSetUpTimeout + 7*time.Minute,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
 	// lacrosLoggedInWithCalendarEvents is similar chromeLoggedInWithCalendarEvents but with Lacros enabled.
 	testing.AddFixture(&testing.Fixture{
 		Name:     "lacrosLoggedInWithCalendarEvents",
