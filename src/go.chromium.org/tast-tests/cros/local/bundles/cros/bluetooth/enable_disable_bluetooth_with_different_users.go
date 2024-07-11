@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/local/bluetooth"
 	"go.chromium.org/tast-tests/cros/local/bluetooth/bluez"
 	"go.chromium.org/tast-tests/cros/local/bluetooth/floss"
@@ -42,6 +43,7 @@ func init() {
 		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
 		Attr:         []string{"group:bluetooth"},
 		SoftwareDeps: []string{"chrome"},
+		TestBedDeps:  []string{tbdep.BluetoothStateNormal},
 		HardwareDeps: hwdep.D(hwdep.Bluetooth()),
 		Fixture:      fixture.CleanOwnership,
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},

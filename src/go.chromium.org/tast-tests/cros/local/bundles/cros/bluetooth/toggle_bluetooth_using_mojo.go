@@ -7,6 +7,7 @@ package bluetooth
 import (
 	"context"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/local/bluetooth/mojo"
 	"go.chromium.org/tast/core/testing"
 )
@@ -24,6 +25,7 @@ func init() {
 		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
 		Attr:         []string{"group:bluetooth"},
 		SoftwareDeps: []string{"chrome"},
+		TestBedDeps:  []string{tbdep.BluetoothStateNormal},
 		Params: []testing.Param{{
 			Name:      "floss_disabled",
 			Fixture:   "bluetoothMojoJSObjectWithBlueZ",

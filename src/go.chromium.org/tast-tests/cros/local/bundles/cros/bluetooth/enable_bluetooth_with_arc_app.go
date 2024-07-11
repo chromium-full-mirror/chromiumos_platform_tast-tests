@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast/core/testing"
 
 	"go.chromium.org/tast-tests/cros/common/android/ui"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/apputil"
 	"go.chromium.org/tast-tests/cros/local/bluetooth/facade"
@@ -48,6 +49,7 @@ func init() {
 		LifeCycleStage: testing.LifeCycleInDevelopment,
 		Attr:           []string{"group:bluetooth"},
 		SoftwareDeps:   []string{"chrome", "arc"},
+		TestBedDeps:    []string{tbdep.BluetoothStateNormal},
 		Data:           []string{apkName},
 		Params: []testing.Param{{
 			Name:              "android_p_bluez",
