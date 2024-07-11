@@ -34,7 +34,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         BubbleLauncherAnimationPerf,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures animation smoothness of bubble launcher animations",
 		Contacts: []string{
 			"cros-system-ui-eng@google.com",
@@ -51,11 +51,6 @@ func init() {
 		Params: []testing.Param{{
 			Fixture: "install100Apps",
 			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			Fixture:           "install100LacrosApps",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               browser.TypeLacros,
 		}},
 	})
 }

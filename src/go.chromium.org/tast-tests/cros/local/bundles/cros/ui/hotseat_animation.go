@@ -44,7 +44,7 @@ type hotseatTestVal struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         HotseatAnimation,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures the framerate of the hotseat animation in tablet mode",
 		Contacts: []string{
 			"cros-system-ui-eng@google.com",
@@ -65,25 +65,10 @@ func init() {
 			Name:    "overflow_shelf",
 			Val:     hotseatTestVal{overflow, browser.TypeAsh},
 			Fixture: "chromeLoggedInWith100FakeApps",
-		}, { // TODO(https://crbug.com/1083068): when the flag shelf-hide-buttons-in-tablet is removed, delete this sub-test.
+		}, {
 			Name:    "shelf_with_navigation_widget",
 			Val:     hotseatTestVal{showNavigationWidget, browser.TypeAsh},
 			Fixture: "install100Apps",
-		}, {
-			Name:              "non_overflow_shelf_lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               hotseatTestVal{nonOverflow, browser.TypeLacros},
-			Fixture:           "lacrosWith100FakeApps",
-		}, {
-			Name:              "overflow_shelf_lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               hotseatTestVal{overflow, browser.TypeLacros},
-			Fixture:           "lacrosWith100FakeApps",
-		}, {
-			Name:              "shelf_with_navigation_widget_lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               hotseatTestVal{showNavigationWidget, browser.TypeLacros},
-			Fixture:           "install100LacrosApps",
 		}},
 	})
 }

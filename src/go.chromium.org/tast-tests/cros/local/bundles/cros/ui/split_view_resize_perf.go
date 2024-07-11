@@ -63,11 +63,6 @@ func init() {
 				Fixture: "chromeLoggedIn",
 				Timeout: 5 * time.Minute,
 			},
-			{
-				Name:    "webui",
-				Val:     splitViewResizeWebUI,
-				Timeout: 5 * time.Minute,
-			},
 		},
 	})
 }
