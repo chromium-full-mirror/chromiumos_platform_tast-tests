@@ -80,7 +80,7 @@ func init() {
 			"cros-suspend-resume@google.com",
 			"mhiramat@google.com",
 		},
-		BugComponent: "b:256693104",
+		BugComponent: "b:167279", // ChromeOS > Platform > baseOS > Performance
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps: []string{
 			"tast.cros.browser.ChromeService",
