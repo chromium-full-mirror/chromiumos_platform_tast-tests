@@ -240,7 +240,7 @@ type BatteryServiceClient interface {
 	// New logs into a Chrome session as a fake user. Close must be called later
 	// to clean up the associated resources.
 	New(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	// Close releases the resources obtained by New.
+	// Close releases the resources obtained by New or StopChargeLimit.
 	Close(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// PrepareBattery drains or charges DUT battery to a specific percentage
 	// range.
@@ -249,6 +249,7 @@ type BatteryServiceClient interface {
 	// setting will be restored on Close.
 	StopChargeLimit(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// PowerSettingInIdleMode provides power settings required during IDLE mode.
+	// You must call New() before calling this method.
 	PowerSettingInIdleMode(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// DisableBatteryCharging
 	DisableBatteryCharging(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
@@ -332,7 +333,7 @@ type BatteryServiceServer interface {
 	// New logs into a Chrome session as a fake user. Close must be called later
 	// to clean up the associated resources.
 	New(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
-	// Close releases the resources obtained by New.
+	// Close releases the resources obtained by New or StopChargeLimit.
 	Close(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
 	// PrepareBattery drains or charges DUT battery to a specific percentage
 	// range.
@@ -341,6 +342,7 @@ type BatteryServiceServer interface {
 	// setting will be restored on Close.
 	StopChargeLimit(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
 	// PowerSettingInIdleMode provides power settings required during IDLE mode.
+	// You must call New() before calling this method.
 	PowerSettingInIdleMode(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
 	// DisableBatteryCharging
 	DisableBatteryCharging(context.Context, *emptypb.Empty) (*emptypb.Empty, error)

@@ -50,16 +50,21 @@ func (b *BatteryService) New(ctx context.Context, req *empty.Empty) (*empty.Empt
 		return nil, err
 	}
 	b.cr = cr
-
-	prefs := &setup.TmpPrefs{}
-	cl, err := prefs.InitTmpPrefs(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	b.prefs = prefs
-	b.cleanup = cl
 	return &empty.Empty{}, nil
+}
+
+func (b *BatteryService) initPrefs(ctx context.Context) error {
+	if b.prefs == nil {
+		prefs := &setup.TmpPrefs{}
+		cl, err := prefs.InitTmpPrefs(ctx)
+		if err != nil {
+			return err
+		}
+
+		b.prefs = prefs
+		b.cleanup = cl
+	}
+	return nil
 }
 
 // Close releases the resources obtained by New.
@@ -78,6 +83,7 @@ func (b *BatteryService) Close(ctx context.Context, req *empty.Empty) (*empty.Em
 		}
 	}
 	b.cleanup = nil
+	b.prefs = nil
 	return &empty.Empty{}, err
 }
 
@@ -97,6 +103,9 @@ func (b *BatteryService) PrepareBattery(ctx context.Context, req *power.BatteryR
 func (b *BatteryService) StopChargeLimit(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
 	if !setup.ChargeLimitEnabled(ctx) || !setup.ChargeControlV2Support(ctx) {
 		return &empty.Empty{}, nil
+	}
+	if err := b.initPrefs(ctx); err != nil {
+		return &empty.Empty{}, errors.Wrap(err, "initPrefs failed")
 	}
 	if _, err := setup.StopChargeLimit(ctx, b.prefs); err != nil {
 		return nil, errors.Wrap(err, "failed to stop Charge Limit")

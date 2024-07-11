@@ -16,7 +16,7 @@ service BatteryService {
   // to clean up the associated resources.
   rpc New(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 
-  // Close releases the resources obtained by New.
+  // Close releases the resources obtained by New or StopChargeLimit.
   rpc Close(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 
   // PrepareBattery drains or charges DUT battery to a specific percentage
@@ -28,6 +28,7 @@ service BatteryService {
   rpc StopChargeLimit(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 
   // PowerSettingInIdleMode provides power settings required during IDLE mode.
+  // You must call New() before calling this method.
   rpc PowerSettingInIdleMode(google.protobuf.Empty)
       returns (google.protobuf.Empty) {}
 
