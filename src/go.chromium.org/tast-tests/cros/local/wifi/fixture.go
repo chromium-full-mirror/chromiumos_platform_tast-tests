@@ -83,7 +83,9 @@ func (f *wiphyEnabledFixture) PreTest(ctx context.Context, s *testing.FixtTestSt
 	_, err := shill.WifiInterface(ctx, f.data.ShillManager, wifiDefaultTimeout)
 	if err != nil {
 		for file, cmd := range debugDataType {
-			SaveDebugData(ctx, s, file, cmd)
+			if e := SaveDebugData(ctx, s.OutDir(), file, cmd); e != nil {
+				s.Error("Failed to save debug data: ", e)
+			}
 		}
 		s.Fatal("Failed to get the WiFi interface: ", err)
 	}
