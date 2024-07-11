@@ -69,9 +69,7 @@ func (f *cameraFixture) ensureBuiltinCameraEnumerated(ctx context.Context) error
 }
 
 func (f *cameraFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
-	// TODO(b/324145508): We now assume that all the errors can be fixed by waiting.
-	// Monitor the results of the PlatformServiceSmoke test that uses this fixture.
-	// Delete this comment once it proves to be enough. Ref: b/239013478.
+	// Make sure we are connected to the DUT. Ref: b/239013478.
 	if err := s.DUT().Health(ctx); err != nil {
 		s.Log("Failed connection check: ", err)
 
