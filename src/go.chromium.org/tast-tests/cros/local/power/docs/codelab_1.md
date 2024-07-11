@@ -77,11 +77,21 @@ the Chrome instance as `Cr`.
 ```
 
 The test then performs any test specific setup. In the case of [ExampleUI] test,
-it opens the browser with a blank page and maximizes the browser window.
+it opens the browser with a blank page (black if dark theme is turned on)
+and maximizes the browser window.
 
 ```go
-	// Open a window with about:blank tab on the target browser.
-	conn, _, cleanup, err := browserfixt.SetUpWithURL(ctx, cr, bt, "about:blank")
+	const blankPageContents = `data:text/html,
+		<html>
+			<body>
+				<style media='(prefers-color-scheme: dark)'>
+					body { background: black;}
+				</style>
+			</body>
+		</html>`
+
+	// Render an entirely white or black blank page in the browser in accordance with the OS theme.
+	conn, _, cleanup, err := browserfixt.SetUpWithURL(ctx, cr, bt, blankPageContents)
 	if err != nil {
 		s.Fatal("Failed to open a blank new tab: ", err)
 	}
