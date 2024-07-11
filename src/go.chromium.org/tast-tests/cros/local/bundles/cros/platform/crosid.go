@@ -25,8 +25,7 @@ func init() {
 
 func CrosID(ctx context.Context, s *testing.State) {
 	out, err := testexec.CommandContext(ctx, "crosid", "-v").CombinedOutput()
-	status, ok := testexec.ExitCode(err)
-	if !ok {
-		s.Fatalf("crosid exited with status %d: %s", status, string(out))
+	if err != nil {
+		s.Fatalf("crosid failed: %+v %s", err, string(out))
 	}
 }
