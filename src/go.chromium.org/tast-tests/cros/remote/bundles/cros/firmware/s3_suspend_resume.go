@@ -255,7 +255,7 @@ func S3SuspendResume(ctx context.Context, s *testing.State) {
 	}
 }
 
-// eventMessagesContainMatch verifies whether mosys event log contains matching eventlog.
+// eventMessagesContainMatch verifies whether event log contains matching eventlog.
 func eventMessagesContainMatch(ctx context.Context, events []reporters.Event, re *regexp.Regexp) bool {
 	for _, event := range events {
 		if re.MatchString(event.Message) {

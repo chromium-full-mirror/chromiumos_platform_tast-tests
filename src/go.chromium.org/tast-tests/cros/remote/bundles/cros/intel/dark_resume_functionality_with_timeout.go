@@ -175,7 +175,7 @@ func verifyDarkResumeStatus(ctx context.Context, dut *dut.DUT, matchString strin
 	}, &testing.PollOptions{Timeout: 10 * time.Second})
 }
 
-// eventMessageContainsMatch verifies whether mosys event log contains matching eventlog.
+// eventMessageContainsMatch verifies whether event log contains matching eventlog.
 func eventMessageContainsMatch(ctx context.Context, events []reporters.Event, re *regexp.Regexp) bool {
 	for _, event := range events {
 		if re.MatchString(event.Message) {
