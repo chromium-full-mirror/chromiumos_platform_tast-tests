@@ -400,6 +400,14 @@ func (i *CrOSImage) SendConsoleRebootCmd(ctx context.Context) error {
 	return nil
 }
 
+// Reboot issues the reboot command and waits until GSC stops printing output.
+func (i *CrOSImage) Reboot(ctx context.Context) error {
+	if err := i.SendConsoleRebootCmd(ctx); err != nil {
+		return err
+	}
+	return i.WaitUntilBooted(ctx)
+}
+
 // Rollback issues the rollback command but does not listen for a response since the GSC
 // is expected to reboot. Note that this does not detect if rollback was not performed because
 // it's missing from the image.
