@@ -76,13 +76,10 @@ func CrasSuspendStress(ctx context.Context, s *testing.State) {
 	runCtx, cancel := ctxutil.Shorten(ctx, chrome.ResetTimeout)
 	defer cancel()
 
-	// Chrome browser is NOT turned off to better simulate the real use case.
-	cr, err := chrome.New(
-		runCtx,
-		// org.chromium.ChromeFeaturesService does not need login to work.
-		// Don't login to speed up the test.
-		chrome.NoLogin(),
-	)
+	// Run suspend stress test in guest mode, which is aligned to power.SuspendStressInGuestMode
+	// in case there's unexpected behavior of suspend without logging-in.
+	opts := []chrome.Option{chrome.GuestLogin(), chrome.KeepState()}
+	cr, err := chrome.New(runCtx, opts...)
 	if err != nil {
 		s.Fatal("Cannot start Chrome: ", err)
 	}
