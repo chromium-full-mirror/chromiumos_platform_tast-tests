@@ -45,7 +45,6 @@ func init() {
 		Desc:         "Test behavior of DataLeakPreventionRulesList policy with clipboard blocked restriction by drag and drop",
 		Contacts: []string{
 			"chromeos-dlp@google.com",
-			"ayaelattar@google.com",
 		},
 		BugComponent: "b:892101",
 		SoftwareDeps: []string{"chrome"},

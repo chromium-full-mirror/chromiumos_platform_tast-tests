@@ -49,7 +49,6 @@ func init() {
 		Desc:         "Test behavior of DataLeakPreventionRulesList policy with clipboard warning/block restriction by copy and paste",
 		Contacts: []string{
 			"chromeos-dlp@google.com",
-			"ayaelattar@google.com",
 			"accorsi@google.com",
 		},
 		BugComponent: "b:892101",

@@ -38,7 +38,6 @@ func init() {
 		Desc:         "Test behavior of DataLeakPreventionRulesList policy with screen sharing restrictions while sharing a Chrome tab",
 		Contacts: []string{
 			"chromeos-dlp@google.com",
-			"ayaelattar@google.com",
 		},
 		BugComponent: "b:892101",
 		SoftwareDeps: []string{"chrome"},
