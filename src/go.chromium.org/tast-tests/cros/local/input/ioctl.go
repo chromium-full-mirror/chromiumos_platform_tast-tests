@@ -60,6 +60,12 @@ func iow(typ, nr uint, size uintptr) uint {
 	return ioc(iocWrite, typ, nr, size)
 }
 
+// iowr returns an encoded write/read ioctl request. See iowr for arguments.
+// This is analogous to the _IOWR C macro.
+func iowr(typ, nr uint, size uintptr) uint {
+	return ioc(iocWrite|iocRead, typ, nr, size)
+}
+
 // ioctl makes an ioctl system call against fd using the supplied encoded request and data.
 func ioctl(fd int, req uint, data uintptr) error {
 	if _, _, errno := unix.RawSyscall(unix.SYS_IOCTL, uintptr(fd), uintptr(req), data); errno != 0 {
