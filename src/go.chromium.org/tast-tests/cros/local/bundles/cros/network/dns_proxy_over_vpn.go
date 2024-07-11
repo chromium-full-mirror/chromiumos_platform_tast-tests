@@ -13,7 +13,9 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/dns"
 	"go.chromium.org/tast-tests/cros/local/crostini"
+	"go.chromium.org/tast-tests/cros/local/guestos"
 	arcnet "go.chromium.org/tast-tests/cros/local/network/arc"
+	"go.chromium.org/tast-tests/cros/local/network/testhooks"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/certs"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/env"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/subnet"
@@ -41,7 +43,7 @@ func init() {
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "informational"},
-		SoftwareDeps: []string{"chrome", "no_kernel_upstream"},
+		SoftwareDeps: []string{"chrome", "no_kernel_upstream", "ikev2"},
 		Timeout:      7 * time.Minute,
 		Params: []testing.Param{{
 			Name: "chrome_doh_off",
@@ -143,6 +145,18 @@ func DNSProxyOverVPN(ctx context.Context, s *testing.State) {
 		cont = s.FixtValue().(crostini.FixtureData).Cont
 	}
 
+	hookEnv, err := testhooks.RunNetworkTestHooks(ctx,
+		testhooks.NewSaveNetLogHook(),
+		testhooks.NewTcpdumpHook(),
+		testhooks.NewDumpHostOnFailureHook(),
+		testhooks.NewDumpARCOnFailureHook(a),
+	)
+	if err != nil {
+		s.Fatal("Failed to run network test hooks: ", err)
+	}
+	s.AttachErrorHandlers(hookEnv.OnErrorHandler, hookEnv.OnFatalHandler)
+	defer hookEnv.TearDownWithLogFailures(cleanupCtx, s.HasError)
+
 	if params.crostini {
 		if err := dns.VerifyDigInstalledInContainer(ctx, cont); err != nil {
 			s.Fatal("Failed to install dig in container: ", err)
@@ -184,6 +198,19 @@ func DNSProxyOverVPN(ctx context.Context, s *testing.State) {
 		}
 	}()
 
+	// Wait for routing setup ready for guests. Host is verified in
+	// connectToVPN().
+	if params.arc {
+		if err := arcnet.ExpectPingSuccess(ctx, a, "" /*network*/, conn.Server.OverlayIPv4); err != nil {
+			s.Fatal("Failed to wait for ARC able to use VPN: ", err)
+		}
+	}
+	if params.crostini {
+		if err := guestos.PingWithRetryAndTimeout(ctx, cont, conn.Server.OverlayIPv4, 10*time.Second); err != nil {
+			s.Fatal("Failed to wait for Crostini able to use VPN: ", err)
+		}
+	}
+
 	// Wait for the updated network configuration (VPN) to be propagated to the proxy.
 	if err := waitUntilNATIptablesConfigured(ctx); err != nil {
 		s.Fatal("iptables NAT output is not fully configured: ", err)
@@ -200,7 +227,7 @@ func DNSProxyOverVPN(ctx context.Context, s *testing.State) {
 	}
 	if errs := dns.TestQueryDNSProxy(ctx, defaultTC, a, cont, dns.NewQueryOptions()); len(errs) != 0 {
 		for _, err := range errs {
-			s.Error("Failed DNS query check: ", err)
+			s.Error("Failed DNS query check in the default setup: ", err)
 		}
 	}
 
@@ -283,7 +310,7 @@ func connectToVPN(ctx context.Context, pool *subnet.Pool, router *env.Env, https
 	}()
 
 	// Connect to VPN.
-	conn, err := vpn.StartConnection(ctx, server, vpn.TypeL2TPIPsec)
+	conn, err := vpn.StartConnection(ctx, server, vpn.TypeIKEv2)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed to start VPN connection")
 	}
