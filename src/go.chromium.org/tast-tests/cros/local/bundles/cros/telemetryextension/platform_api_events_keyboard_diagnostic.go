@@ -29,8 +29,7 @@ func init() {
 			"group:medium_low_tier",
 			"group:hardware",
 			"group:complementary",
-			"group:mainline", "informational",
-			"group:criticalstaging",
+			"group:mainline",
 		},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{
@@ -39,12 +38,14 @@ func init() {
 				Fixture:           fixture.TelemetryExtensionSkipOEMNameCheck,
 				ExtraHardwareDeps: hwdep.D(hwdep.InternalKeyboard()),
 				Val:               true, // has keyboard
+				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			},
 			{
 				Name:              "ash_no_keyboard",
 				Fixture:           fixture.TelemetryExtensionSkipOEMNameCheck,
 				ExtraHardwareDeps: hwdep.D(hwdep.NoInternalKeyboard()),
 				Val:               false, // has keyboard
+				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			},
 			{
 				Name:              "lacros_keyboard",
@@ -52,6 +53,7 @@ func init() {
 				Fixture:           fixture.TelemetryExtensionSkipOEMNameCheckLacros,
 				ExtraHardwareDeps: hwdep.D(hwdep.InternalKeyboard()),
 				Val:               true, // has keyboard
+				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			},
 			{
 				Name:              "lacros_no_keyboard",

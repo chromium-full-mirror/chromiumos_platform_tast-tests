@@ -28,15 +28,14 @@ func init() {
 			"group:hardware",
 			"group:complementary",
 			"group:mainline",
-			"informational",
 			"group:hw_agnostic",
-			"group:criticalstaging",
 		},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{
 			{
-				Name:    "ash",
-				Fixture: fixture.TelemetryExtensionSkipOEMNameCheck,
+				Name:      "ash",
+				Fixture:   fixture.TelemetryExtensionSkipOEMNameCheck,
+				ExtraAttr: []string{"informational", "group:criticalstaging"},
 			},
 			{
 				Name:              "lacros",
