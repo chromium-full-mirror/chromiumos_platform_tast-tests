@@ -18,7 +18,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SearchResult,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test Quick Answers card click should bring up search result",
 		Contacts: []string{
 			"cros-assistive@google.com",
@@ -35,19 +35,10 @@ func init() {
 			Value: "screenplay-2f2657f3-db9a-4fd1-a277-708fb17af8f6",
 		}},
 		SoftwareDeps: []string{"chrome", "gaia"},
-		Params: []testing.Param{{
-			Fixture: quickanswers.Parameterize(
-				quickanswers.EnabledWithBrowserFixture,
-				quickanswers.VariantSingleWord,
-			),
-		}, {
-			Name: "lacros",
-			Fixture: quickanswers.Parameterize(
-				quickanswers.EnabledWithBrowserLacrosFixture,
-				quickanswers.VariantSingleWord,
-			),
-			ExtraSoftwareDeps: []string{"lacros"},
-		}}})
+		Fixture: quickanswers.Parameterize(
+			quickanswers.EnabledWithBrowserFixture,
+			quickanswers.VariantSingleWord,
+		)})
 }
 
 // SearchResult tests Quick Answers card click should bring up search result.

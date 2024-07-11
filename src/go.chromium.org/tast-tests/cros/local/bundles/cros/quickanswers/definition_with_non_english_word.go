@@ -17,7 +17,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DefinitionWithNonEnglishWord,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test Quick Answers definition feature on non-English words",
 		Contacts: []string{
 			"cros-assistive@google.com",
@@ -74,18 +74,6 @@ func init() {
 					quickanswers.VariantSingleWordDe,
 				),
 				Val: "dreimal",
-			},
-			// We won't need to test all variants for Lacros.
-			// For lacros, focus is to test that preferred languages pref is
-			// working correctly with Lacros.
-			{
-				Name: "lacros",
-				Fixture: quickanswers.Parameterize(
-					quickanswers.EnabledWithBrowserLacrosFixture,
-					quickanswers.VariantSingleWordEs,
-				),
-				Val:               "cinco lados",
-				ExtraSoftwareDeps: []string{"lacros"},
 			},
 		},
 	})

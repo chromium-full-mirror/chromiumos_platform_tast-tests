@@ -17,7 +17,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Translation,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test Quick Answers translation feature",
 		Contacts: []string{
 			"cros-assistive@google.com",
@@ -34,19 +34,10 @@ func init() {
 			Value: "screenplay-513191ba-7f4b-4ae1-84a2-697d1ad31a12",
 		}},
 		SoftwareDeps: []string{"chrome", "gaia"},
-		Params: []testing.Param{{
-			Fixture: quickanswers.Parameterize(
-				quickanswers.EnabledWithBrowserFixture,
-				quickanswers.VariantTranslation,
-			),
-		}, {
-			Name: "lacros",
-			Fixture: quickanswers.Parameterize(
-				quickanswers.EnabledWithBrowserLacrosFixture,
-				quickanswers.VariantTranslation,
-			),
-			ExtraSoftwareDeps: []string{"lacros"},
-		}},
+		Fixture: quickanswers.Parameterize(
+			quickanswers.EnabledWithBrowserFixture,
+			quickanswers.VariantTranslation,
+		),
 	})
 }
 

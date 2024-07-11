@@ -18,7 +18,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ConsentImpressionCap,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test Quick Answers consent impression cap logic",
 		Contacts: []string{
 			"cros-assistive@google.com",
@@ -30,22 +30,10 @@ func init() {
 			"group:mainline",
 			"informational",
 		},
-		SoftwareDeps: []string{"chrome", "gaia"},
-		Params: []testing.Param{
-			{
-				Fixture: quickanswers.Parameterize(
-					quickanswers.NotEnabledWithBrowserFixture,
-					quickanswers.VariantSingleWord,
-				),
-			}, {
-				Name: "lacros",
-				Fixture: quickanswers.Parameterize(
-					quickanswers.NotEnabledWithBrowserLacrosFixture,
-					quickanswers.VariantSingleWord,
-				),
-				ExtraSoftwareDeps: []string{"lacros"},
-			},
-		},
+		Fixture: quickanswers.Parameterize(
+			quickanswers.NotEnabledWithBrowserFixture,
+			quickanswers.VariantSingleWord,
+		),
 	})
 }
 

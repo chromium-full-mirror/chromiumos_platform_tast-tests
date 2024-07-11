@@ -19,7 +19,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PhoneticsAudioButton,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test Quick Answers phonetics audio button",
 		Contacts: []string{
 			"cros-assistive@google.com",
@@ -31,19 +31,10 @@ func init() {
 			"informational",
 		},
 		SoftwareDeps: []string{"chrome", "gaia"},
-		Params: []testing.Param{{
-			Fixture: quickanswers.Parameterize(
-				quickanswers.EnabledWithBrowserFixture,
-				quickanswers.VariantSingleWord,
-			),
-		}, {
-			Name: "lacros",
-			Fixture: quickanswers.Parameterize(
-				quickanswers.EnabledWithBrowserLacrosFixture,
-				quickanswers.VariantSingleWord,
-			),
-			ExtraSoftwareDeps: []string{"lacros"},
-		}},
+		Fixture: quickanswers.Parameterize(
+			quickanswers.EnabledWithBrowserFixture,
+			quickanswers.VariantSingleWord,
+		),
 	})
 }
 

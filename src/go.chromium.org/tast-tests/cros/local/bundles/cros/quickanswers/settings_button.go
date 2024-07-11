@@ -18,7 +18,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SettingsButton,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test Quick Answers settings button",
 		Contacts: []string{
 			"cros-assistive@google.com",
@@ -31,19 +31,10 @@ func init() {
 			"informational",
 		},
 		SoftwareDeps: []string{"chrome", "gaia"},
-		Params: []testing.Param{{
-			Fixture: quickanswers.Parameterize(
-				quickanswers.EnabledWithBrowserFixture,
-				quickanswers.VariantUnitConversion,
-			),
-		}, {
-			Name: "lacros",
-			Fixture: quickanswers.Parameterize(
-				quickanswers.EnabledWithBrowserLacrosFixture,
-				quickanswers.VariantUnitConversion,
-			),
-			ExtraSoftwareDeps: []string{"lacros"},
-		}}})
+		Fixture: quickanswers.Parameterize(
+			quickanswers.EnabledWithBrowserFixture,
+			quickanswers.VariantUnitConversion,
+		)})
 }
 
 // SettingsButton tests Quick Answers settings button.

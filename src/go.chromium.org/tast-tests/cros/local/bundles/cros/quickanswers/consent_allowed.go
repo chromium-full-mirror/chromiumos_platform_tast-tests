@@ -17,11 +17,11 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ConsentAllowed,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test Quick Answers consent flow",
 		Contacts: []string{
 			"assistive-eng@google.com",
-			"chromeos-sw-engprod@google.com",
+			"chromeos-consumer-engprod@google.com",
 		},
 		BugComponent: "b:905229", // ChromeOS > Software > Assistive
 		Attr: []string{
@@ -29,20 +29,11 @@ func init() {
 			"group:mainline",
 			"informational",
 		},
+		Fixture: quickanswers.Parameterize(
+			quickanswers.NotEnabledWithBrowserFixture,
+			quickanswers.VariantSingleWord,
+		),
 		SoftwareDeps: []string{"chrome", "gaia"},
-		Params: []testing.Param{{
-			Fixture: quickanswers.Parameterize(
-				quickanswers.NotEnabledWithBrowserFixture,
-				quickanswers.VariantSingleWord,
-			),
-		}, {
-			Name: "lacros",
-			Fixture: quickanswers.Parameterize(
-				quickanswers.NotEnabledWithBrowserLacrosFixture,
-				quickanswers.VariantSingleWord,
-			),
-			ExtraSoftwareDeps: []string{"lacros"},
-		}},
 	})
 }
 

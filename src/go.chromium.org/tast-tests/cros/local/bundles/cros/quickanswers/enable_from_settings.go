@@ -8,7 +8,6 @@ import (
 	"context"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -21,11 +20,11 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         EnableFromSettings,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test enabling Quick Answers from settings",
 		Contacts: []string{
 			"assistive-eng@google.com",
-			"chromeos-sw-engprod@google.com",
+			"chromeos-consumer-engprod@google.com",
 		},
 		BugComponent: "b:905229", // ChromeOS > Software > Assistive
 		Attr: []string{
@@ -34,19 +33,10 @@ func init() {
 			"informational",
 		},
 		SoftwareDeps: []string{"chrome", "gaia"},
-		Params: []testing.Param{{
-			Fixture: quickanswers.Parameterize(
-				quickanswers.BaseFixture,
-				quickanswers.VariantNotEnabled,
-			),
-		}, {
-			Name: "lacros",
-			Fixture: quickanswers.Parameterize(
-				quickanswers.BaseLacrosFixture,
-				quickanswers.VariantNotEnabled,
-			),
-			ExtraSoftwareDeps: []string{"lacros"},
-		}},
+		Fixture: quickanswers.Parameterize(
+			quickanswers.BaseFixture,
+			quickanswers.VariantNotEnabled,
+		),
 	})
 }
 
@@ -88,13 +78,10 @@ func EnableFromSettings(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to close os settings: ", err)
 	}
 
-	bt := s.FixtValue().(quickanswers.HasBrowserType).BrowserType()
-	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(
-		ctx, cr, bt, quickanswers.BuildDataURL(queryWord))
+	conn, err := cr.NewConn(ctx, quickanswers.BuildDataURL(queryWord))
 	// defer is last-in-first-out. Execution order needs to be:
 	// ui tree dump -> close browser -> close conn.
 	defer conn.Close()
-	defer closeBrowser(ctx)
 	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "browser_ui")
 	if err != nil {
 		s.Fatal("Failed to open a browser: ", err)

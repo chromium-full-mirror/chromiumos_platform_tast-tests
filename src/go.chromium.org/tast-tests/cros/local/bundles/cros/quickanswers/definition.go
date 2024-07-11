@@ -17,7 +17,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Definition,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test Quick Answers definition feature",
 		Contacts: []string{
 			"cros-assistive@google.com",
@@ -34,22 +34,10 @@ func init() {
 			Value: "screenplay-c94b404a-ac8f-4119-93d5-775d59b8ac20",
 		}},
 		SoftwareDeps: []string{"chrome", "gaia"},
-		Params: []testing.Param{
-			{
-				Fixture: quickanswers.Parameterize(
-					quickanswers.EnabledWithBrowserFixture,
-					quickanswers.VariantSingleWord,
-				),
-			},
-			{
-				Name: "lacros",
-				Fixture: quickanswers.Parameterize(
-					quickanswers.EnabledWithBrowserLacrosFixture,
-					quickanswers.VariantSingleWord,
-				),
-				ExtraSoftwareDeps: []string{"lacros"},
-			},
-		},
+		Fixture: quickanswers.Parameterize(
+			quickanswers.EnabledWithBrowserFixture,
+			quickanswers.VariantSingleWord,
+		),
 	})
 }
 

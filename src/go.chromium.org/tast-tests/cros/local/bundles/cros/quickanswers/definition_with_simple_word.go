@@ -17,7 +17,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DefinitionWithSimpleWord,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test Quick Answers always trigger for single word feature",
 		Contacts: []string{
 			"cros-assistive@google.com",
@@ -36,20 +36,10 @@ func init() {
 			Key:   "feature_id",
 			Value: "screenplay-eec006a9-871b-4742-85c4-5979ac7323c9",
 		}},
-		SoftwareDeps: []string{"chrome", "gaia"},
-		Params: []testing.Param{{
-			Fixture: quickanswers.Parameterize(
-				quickanswers.EnabledWithBrowserFixture,
-				quickanswers.VariantSimpleWord,
-			),
-		}, {
-			Name: "lacros",
-			Fixture: quickanswers.Parameterize(
-				quickanswers.EnabledWithBrowserFixture,
-				quickanswers.VariantSimpleWord,
-			),
-			ExtraSoftwareDeps: []string{"lacros"},
-		}},
+		Fixture: quickanswers.Parameterize(
+			quickanswers.EnabledWithBrowserFixture,
+			quickanswers.VariantSimpleWord,
+		),
 	})
 }
 
