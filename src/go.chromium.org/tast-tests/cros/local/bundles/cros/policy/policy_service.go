@@ -34,8 +34,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/common"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/media/vm"
-	"go.chromium.org/tast-tests/cros/local/network/dumputil"
-	"go.chromium.org/tast-tests/cros/local/network/ping"
+	"go.chromium.org/tast-tests/cros/local/network/diag"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast-tests/cros/local/policyutil/externaldata"
 	"go.chromium.org/tast-tests/cros/local/session"
@@ -423,15 +422,8 @@ func (c *PolicyService) EnrollUsingChrome(ctx context.Context, req *ppb.EnrollUs
 
 	// Make sure we have a network connection.
 	if !vm.IsRunningOnVM() {
-		if err := ping.VerifyInternetConnectivity(ctx, 10*time.Second); err != nil {
-			dumpfile := "network_dump_ping_" + time.Now().Format("030405000") + ".txt"
-
-			if err := dumputil.DumpNetworkInfo(ctx, dumpfile); err != nil {
-				testing.ContextLog(ctx, "Failed to dump network info after a ping expectation failure: ", err)
-			}
-			testing.ContextLog(ctx, "Ping expectation failed, current network info dumped into ", dumpfile)
-
-			return nil, errors.Wrap(err, "pre login network connection tests failed")
+		if networkError := diag.DUTNetworkCheckAndResolve(ctx); err != nil {
+			return nil, errors.Wrap(networkError, "pre login network connection tests failed")
 		}
 	}
 
