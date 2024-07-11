@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
@@ -432,7 +433,7 @@ func (p *policyChromeFixture) SetUp(ctx context.Context, s *testing.FixtState) i
 			[]byte(s.RequiredVar(tape.ServiceAccountVar)),
 			false, /*lock*/
 			tape.WithTimeout(timeout),
-			tape.WithPoolID(tape.DefaultManaged))
+			tape.WithPoolID(dma.TapePool(tape.DefaultManaged)))
 		p.tapeAccountManager = accountManager // store for cleanup in TearDown
 		if err != nil {
 			s.Fatal("Failed to request owned test account from TAPE: ", err)

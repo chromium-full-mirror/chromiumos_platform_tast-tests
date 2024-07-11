@@ -36,6 +36,11 @@ const (
 	ZTETestAutomation                                   = "zte-test-automation"
 )
 
+// PoolIds for DMA owned test accounts.
+const (
+	DmaDefaultManaged = "dma_default_managed"
+)
+
 // PoolIds for unmanaged owned test accounts.
 const (
 	// For `accountmanager` package.

@@ -24,6 +24,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/floatingworkspace"
 	"go.chromium.org/tast-tests/cros/common/nearbyshare"
 	"go.chromium.org/tast-tests/cros/common/policy"
+	"go.chromium.org/tast-tests/cros/common/tape"
 	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/common/wallpaper"
 	"go.chromium.org/tast/core/testing"
@@ -123,6 +124,13 @@ func pools() (map[string]string, map[string]string) {
 	return dmaPools, regularPools
 }
 
+// tapePools returns pool->pool mapping from  non-dma account pools to dma account pools.
+func tapePools() map[string]string {
+	return map[string]string{
+		tape.DefaultManaged: tape.DmaDefaultManaged,
+	}
+}
+
 func enabled() bool {
 	return strings.ToLower(dmaEnableVar.Value()) == "true"
 }
@@ -157,4 +165,19 @@ func UserPassFromPool(pool string) (user, pass string, err error) {
 	}
 
 	return cred.User, cred.Pass, nil
+}
+
+// TapePool returns appropriate account pool based on DMA status.
+// This function is similar to CredsFromPool, however it is intended for
+// use with Tape API which has different semantics and separate account database.
+func TapePool(pool string) string {
+	if !enabled() {
+		return pool
+	}
+	tapePools := tapePools()
+	dmaPool, ok := tapePools[pool]
+	if !ok {
+		panic(fmt.Sprintf("Tape pool %q not onboarded DMA yet", pool))
+	}
+	return dmaPool
 }
