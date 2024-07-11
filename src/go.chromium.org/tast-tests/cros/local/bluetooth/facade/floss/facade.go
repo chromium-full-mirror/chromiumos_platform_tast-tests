@@ -6,6 +6,7 @@ package floss
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/audio"
@@ -83,6 +84,11 @@ func SetFlossEnabled(ctx context.Context, enabled bool) error {
 		return errors.Wrap(err, "failed to initialize CRAS client")
 	}
 	if err := crasClient.SetFlossEnabled(ctx, enabled); err != nil {
+		// Restart CRAS if the pending messages reach the limit
+		if strings.Contains(err.Error(), `the maximum number of pending messages for service per connection has been reached`) {
+			testing.ContextLog(ctx, "Restart CRAS to clean up bad dbus status")
+			audio.RestartCras(ctx)
+		}
 		return errors.Wrapf(err, "failed to call SetFlossEnabled(%t) with CRAS client", enabled)
 	}
 
