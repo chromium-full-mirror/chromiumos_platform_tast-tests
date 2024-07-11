@@ -156,34 +156,30 @@ func (ad *androidDeviceData) waitForP2PNetworkInfo(ctx context.Context) (string,
 		if err != nil {
 			return errors.Wrap(err, "failed to get the p2p interface name")
 		}
-
-		if len(ifaceOut) == 0 {
+		iface = strings.TrimSuffix(string(ifaceOut), "\n")
+		if len(iface) == 0 {
 			return errors.New("failed to find the p2p IP interface")
 		}
+		testing.ContextLogf(ctx, "Android P2P GO Interface: %s", iface)
 
-		ipAddrOut, err := ad.labstation.host.CommandContext(ctx, "adb", "-s", ad.serialNumber, "shell", "ip", "route", "|", "grep", "p2p", "|", "awk", "'{print $9}'").Output(ssh.DumpLogOnError)
+		ipAddrOut, err := ad.labstation.host.CommandContext(ctx, "adb", "-s", ad.serialNumber, "shell", "ip", "-4", "addr", "sh", "dev", string(iface), "|", "grep", "inet", "|", "awk", "'{print $2}'").Output(ssh.DumpLogOnError)
 		if err != nil {
 			return errors.Wrap(err, "failed to get the p2p interface IP address")
 		}
-
-		if len(ipAddrOut) == 0 {
+		ipAddr = strings.TrimSuffix(string(ipAddrOut), "\n")
+		if len(ipAddr) < 10 {
 			return errors.New("failed to find the p2p IP address")
 		}
+		testing.ContextLogf(ctx, "Android P2P GO IP Address: %s", ipAddr)
 
-		macAddrOut, err := ad.labstation.host.CommandContext(ctx, "adb", "-s", ad.serialNumber, "shell", "ip", "link", "sh", "dev", string(ifaceOut), "|", "grep", "link", "|", "awk", "'{print $2}'").Output(ssh.DumpLogOnError)
+		macAddrOut, err := ad.labstation.host.CommandContext(ctx, "adb", "-s", ad.serialNumber, "shell", "ip", "link", "sh", "dev", string(iface), "|", "grep", "link", "|", "awk", "'{print $2}'").Output(ssh.DumpLogOnError)
 		if err != nil {
 			return errors.Wrap(err, "failed to get the p2p interface MAC address")
 		}
-
-		if len(macAddrOut) == 0 {
+		macAddr = strings.TrimSuffix(string(macAddrOut), "\n")
+		if len(macAddr) < 17 {
 			return errors.New("failed to find the p2p MAC address")
 		}
-
-		iface = strings.TrimSuffix(string(ifaceOut), "\n")
-		ipAddr = strings.TrimSuffix(string(ipAddrOut), "\n") + "/24"
-		macAddr = strings.TrimSuffix(string(macAddrOut), "\n")
-		testing.ContextLogf(ctx, "Android P2P GO Interface: %s", iface)
-		testing.ContextLogf(ctx, "Android P2P GO IP Address: %s", ipAddr)
 		testing.ContextLogf(ctx, "Android P2P GO MAC Address: %s", macAddr)
 
 		return nil
