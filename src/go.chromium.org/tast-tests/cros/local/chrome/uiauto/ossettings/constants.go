@@ -182,12 +182,6 @@ var HotspotTurningOnSublabel = nodewith.Name("Turning on…").Role(role.StaticTe
 // HotspotOffSublabel is the finder for the disabled hotspot status label in both Network page and Hotspot subpage.
 var HotspotOffSublabel = nodewith.Name("Off").Role(role.StaticText)
 
-// HotspotNameTextField is the finder for the hotspot ssid text field in the hotspot configuration dialog
-var HotspotNameTextField = nodewith.Name("Hotspot name").Role(role.TextField)
-
-// HotspotConfigureButton is the finder for the button to open up hotspot configuration dialog.
-var HotspotConfigureButton = nodewith.Name("Configure").Role(role.Button)
-
 // AddCellularButton is the finder for the Add Cellular button in cellular network list.
 var AddCellularButton = nodewith.NameStartingWith("Add Cellular").Role(role.Button)
 
@@ -456,4 +450,22 @@ var (
 
 	// The dialog node for the older password dialog.
 	PasswordDialogNode = nodewith.Name("Confirm your password").Role(role.Dialog)
+)
+
+// Elements in "Hotspot" subpage.
+var (
+	// HotspotHeading is the finder for the heading of the Hotspot page.
+	HotspotHeading = nodewith.Name("Hotspot").Role(role.Heading)
+
+	// HotspotConfigureButton is the finder for the button to open up the hotspot configuration dialog.
+	HotspotConfigureButton = nodewith.Name("Configure").Role(role.Button)
+)
+
+// Elements in the hotspot configuration dialog.
+var (
+	// HotspotConfigurationDialog is the finder for the hotspot the hotspot configuration dialog.
+	HotspotConfigurationDialog = nodewith.Name("Configure Chromebook hotspot").Role(role.Dialog)
+
+	// HotspotNameTextField is the finder for the hotspot ssid text field in the hotspot configuration dialog
+	HotspotNameTextField = nodewith.Name("Hotspot name").Role(role.TextField).Ancestor(HotspotConfigurationDialog)
 )

@@ -88,6 +88,7 @@ func HotspotUpdateConfigurationWhenHotspotOn(ctx context.Context, s *testing.Sta
 	if err != nil {
 		s.Fatal("Failed to open hotspot subpage: ", err)
 	}
+	defer hs.Close(cleanupCtx)
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
 	tc, err := helper.Manager.GetTetheringConfig(ctx)
@@ -105,7 +106,7 @@ func HotspotUpdateConfigurationWhenHotspotOn(ctx context.Context, s *testing.Sta
 	}
 
 	const newSsid = "new_ssid"
-	if err := hs.RenameHotspotSsid(ctx, newSsid)(ctx); err != nil {
+	if err := hs.RenameHotspotSsid(ctx, cr, newSsid)(ctx); err != nil {
 		s.Fatal("Failed to rename hotspot ssid: ", err)
 	}
 
