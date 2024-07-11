@@ -29,9 +29,10 @@ func init() {
 		BugComponent: "b:1493959",
 		Fixture:      "shillSimulatedWiFi",
 		Attr:         []string{"group:mainline"},
+		// `no_chrome_dcheck`: To avoid chrome crashes affecting the test execution.
 		// TODO(b/317282580#comment2): Remove `no_kernel_upstream` once
 		// crrev.com/c/5119091 is in the kernel upstream branch.
-		SoftwareDeps: []string{"bpf", "wifi", "chrome", "no_kernel_upstream"},
+		SoftwareDeps: []string{"bpf", "wifi", "chrome", "no_chrome_dcheck", "no_kernel_upstream"},
 		Data:         webrtc.TestFiles(),
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Timeout:      5 * time.Minute, // need to start Chrome in the test
