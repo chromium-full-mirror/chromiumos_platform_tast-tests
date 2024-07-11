@@ -67,6 +67,7 @@ func InitializeAllowedEntries() []AllowedEntry {
 		// {"shill", "unknown", ".*", 0},
 		// 'modem in failed state' errors are handled in shill. Because they are DBus errors, suppressing them is difficult:
 		{"shill", "utils.cc", ".*AddDBusError.*org.freedesktop.ModemManager1.Error.Core.WrongState, Message=modem in failed state", 0},
+		{"shill", "utils.cc", ".*AddDBusError.*org.freedesktop.ModemManager1.Error.Core.WrongState, Message=Wrong state: modem in failed state", 0},
 		{"shill", "wifi.cc", ".*does not support MAC address randomization.*", 0}, // b/241418700
 		{"wpa_supplicant", "", ".*Could not set interface wlan0 flags \\(UP\\): Input\\/output error.*", 0},
 		{"wpa_supplicant", "", ".*nl80211: Could not set interface 'wlan0' UP.*", 0},
