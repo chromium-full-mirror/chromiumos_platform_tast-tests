@@ -82,15 +82,11 @@ func CheckEOPState(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to send IOCTL_MEI_CONNECT_CLIENT command: ", err)
 	}
 
-	maxMsgLengthStr := hex.EncodeToString(heciMKHIToLe[:4])
-	maxMsgLength, err := strconv.Atoi(maxMsgLengthStr)
-	if err != nil {
-		s.Fatal("Failed to convert maxMsgLengthStr to int: ", err)
-	}
+	maxMsgLength := binary.LittleEndian.Uint32(heciMKHIToLe[:4])
 
 	protocolVersion := int(heciMKHIToLe[4])
 
-	s.Logf("ME protocol version: %d, maxMsgLength: %d", protocolVersion, maxMsgLength)
+	s.Logf("ME protocol version: %d, maxMsgLength: %v", protocolVersion, maxMsgLength)
 
 	if protocolVersion < 2 {
 		file.Close()
@@ -147,7 +143,7 @@ func CheckEOPState(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to convert eopStateStr to int: ", err)
 	}
-	s.Logf("Command Response: GroupID=%x, CmdPlus0x80=%x, Result=%x, EOPState=%x", groupIDResp, commandPlus80, result, eopState)
+	s.Logf("Command Response: GroupID=%x, CmdPlus0x80=%x, Result=%x, State=%x", groupIDResp, commandPlus80, result, eopState)
 
 	if (groupIDResp != groupID) || (commandPlus80 != (command | 0x80)) {
 		s.Fatal("ME didn't respond to Query EOP State")
