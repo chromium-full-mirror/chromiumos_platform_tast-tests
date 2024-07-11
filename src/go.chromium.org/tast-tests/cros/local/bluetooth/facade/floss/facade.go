@@ -171,14 +171,6 @@ func (b *BluetoothFlossFacade) initializeAdapterSpecificDBusClients(ctx context.
 
 // Disable will turn off the bluetooth daemons and power off adapter.
 func (b *BluetoothFlossFacade) Disable(ctx context.Context) error {
-	// Clear client-dependent objects.
-	if b.discoveryObserver != nil {
-		if err := b.discoveryObserver.Close(ctx); err != nil {
-			return err
-		}
-		b.discoveryObserver = nil
-	}
-
 	// Power off adapter.
 	if err := b.SetPowered(ctx, false); err != nil {
 		return errors.Wrap(err, "failed to disable floss adapter")
@@ -231,13 +223,6 @@ func (b *BluetoothFlossFacade) Reset(ctx context.Context, powerOn bool) error {
 		if err := b.SetPowered(ctx, true); err != nil {
 			return errors.Wrap(err, "failed to enable floss adapter")
 		}
-	}
-	if b.discoveryObserver != nil {
-		testing.ContextLog(ctx, "Closing preexisting discovery observer")
-		if err := b.discoveryObserver.Close(ctx); err != nil {
-			return err
-		}
-		b.discoveryObserver = nil
 	}
 	testing.ContextLog(ctx, "Checking for known devices")
 	deviceAddresses, err := b.Devices(ctx)
@@ -365,6 +350,13 @@ func (b *BluetoothFlossFacade) SetPowered(ctx context.Context, powered bool) err
 		b.adapterEnabled = true
 		testing.ContextLogf(ctx, "Successfully started and enabled floss adapter with HCI %d", b.adapterHCI)
 	} else {
+		if b.discoveryObserver != nil {
+			testing.ContextLog(ctx, "Closing preexisting discovery observer")
+			if err := b.discoveryObserver.Close(ctx); err != nil {
+				return err
+			}
+			b.discoveryObserver = nil
+		}
 		testing.ContextLogf(ctx, "Stopping floss adapter with HCI %d", b.adapterHCI)
 		if err := b.managerClient.Stop(ctx, b.adapterHCI); err != nil {
 			return err
