@@ -46,6 +46,7 @@ func init() {
 		Vars:         []string{"DockingID", "USBTypeAIDArray", "wwcbIPPowerIp", "newTestItem"},
 		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.ui.ChromeUIService"},
 		Data:         []string{"Capabilities.json", sampleTXT},
+		Timeout:      utils.TestingTimeout,
 		Params: []testing.Param{
 			{
 				Name:      "fast",

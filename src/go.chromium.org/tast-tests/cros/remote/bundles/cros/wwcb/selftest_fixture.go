@@ -31,7 +31,7 @@ func init() {
 		Vars:         []string{"servo", "category"},
 		ServiceDeps:  []string{"tast.cros.browser.ChromeService"},
 		Data:         []string{"Capabilities.json"},
-		Timeout:      20 * time.Minute,
+		Timeout:      utils.TestingTimeout,
 	})
 }
 func SelftestFixture(ctx context.Context, s *testing.State) {

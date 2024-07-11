@@ -35,7 +35,7 @@ func init() {
 		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.ui.ChromeUIService"},
 		Vars:         []string{"servo", "DockingID", "ExtDispID1", "EthernetID", "USBTypeAIDArray", "wwcbIPPowerIp", "newTestItem"},
 		Data:         []string{"Capabilities.json"},
-		Timeout:      10 * time.Minute,
+		Timeout:      utils.TestingTimeout,
 		Params: []testing.Param{{
 			Name: "clamshell_mode",
 			Val:  false,
