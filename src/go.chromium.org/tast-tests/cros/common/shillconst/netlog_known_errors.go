@@ -38,6 +38,7 @@ func InitializeAllowedEntries() []AllowedEntry {
 		{"patchpaneld", "shill_client.cc", ".*Empty interface name for shill Device \\/device\\/eth\\d.*", 0},
 		{"patchpaneld", "shill_client.cc", ".*Failed to obtain service.*GetProperties.*signature.*doesn't exist.*", 0},
 		{"patchpaneld", "shill_client.cc", ".*Unable to get Manager properties.*", 0}, // b/257637872
+		{"patchpaneld", "shill_client.cc", ".*Unable to get Service properties.*", 0}, // b/352394652
 		{"patchpaneld", "shill_client.cc", ".*Unknown interface name eth\\d.*", 0},
 		{"patchpaneld", "shill_client.cc", ".*Unable to get shill Device properties for \\/device\\/eth\\d.*", 0},                 // b/299130290
 		{"patchpaneld", "shill_client.cc", ".*Failed to update properties of Device \\/device\\/eth\\d.*", 0},                     // b/299130290
