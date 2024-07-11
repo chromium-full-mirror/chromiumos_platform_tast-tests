@@ -333,17 +333,8 @@ func (tf *TestFixture) initializeDuts(ctx, daemonCtx context.Context) error {
 		}
 		d.bluetoothClient = bluetooth.NewBluetoothServiceClient(d.rpc.Conn)
 
-		// Set DUT to use bluez bluetooth stack and enable bluetooth.
-		if _, err := d.bluetoothClient.SetBluetoothStack(ctx, &bluetooth.SetBluetoothStackRequest{
-			StackType: bluetooth.BluetoothStackType_BLUETOOTH_STACK_TYPE_BLUEZ,
-		}); err != nil {
-			testing.ContextLog(ctx, "Failed to set DUT bluetooth stack to bluez: ", err)
-			// Try floss if setting bluez fails
-			if _, err := d.bluetoothClient.SetBluetoothStack(ctx, &bluetooth.SetBluetoothStackRequest{
-				StackType: bluetooth.BluetoothStackType_BLUETOOTH_STACK_TYPE_FLOSS,
-			}); err != nil {
-				return errors.Wrap(err, "failed to set DUT bluetooth stack to bluez or floss")
-			}
+		if _, err := d.bluetoothClient.SetupBluetoothFacade(ctx, &empty.Empty{}); err != nil {
+			return errors.Wrap(err, "failed to setup bluetooth facade on DUT")
 		}
 		if _, err := d.bluetoothClient.Enable(ctx, &empty.Empty{}); err != nil {
 			return errors.Wrap(err, "failed to enable bluetooth on DUT")

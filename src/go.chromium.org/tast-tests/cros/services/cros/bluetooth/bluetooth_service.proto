@@ -25,6 +25,10 @@ option go_package = "go.chromium.org/tast-tests/cros/services/cros/bluetooth";
 // for performing UI actions. For UI-based bluetooth actions, use the
 // BluetoothUIService instead.
 service BluetoothService {
+  // SetupBluetoothFacade initialize the BluetoothFacade
+  rpc SetupBluetoothFacade(google.protobuf.Empty)
+      returns (google.protobuf.Empty) {}
+
   // SetBluetoothStack configures the DUT to use the specified bluetooth stack
   // and initializes the BluetoothFacade as needed.
   //
