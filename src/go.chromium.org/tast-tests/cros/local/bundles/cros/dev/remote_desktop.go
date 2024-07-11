@@ -109,7 +109,7 @@ func init() {
 		Desc:         "Connect to Chrome Remote Desktop for working remotely",
 		Contacts:     []string{"chromoting-team@google.com", "shik@chromium.org"},
 		BugComponent: "b:47377", // Chrome > Chromoting
-		SoftwareDeps: []string{"chrome", "gaia"},
+		SoftwareDeps: []string{"chrome"},
 		Vars: []string{
 			// For running manually.
 			"user", "pass", "contact", "wait", "extra_args", "reset",
@@ -131,6 +131,7 @@ func init() {
 			// Please keep dededeModels. It's important for DMA testing.
 			// Although it's a long list, it only add 2 test runs per build.
 			ExtraHardwareDeps: hwdep.D(hwdep.Model(append(variousPlatformModels, dededeModels...)...)),
+			ExtraSoftwareDeps: []string{"gaia"},
 			Val:               browser.TypeAsh,
 		}, {
 			Name:              "lacros",
