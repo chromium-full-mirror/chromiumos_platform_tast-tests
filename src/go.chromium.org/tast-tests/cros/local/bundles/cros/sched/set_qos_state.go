@@ -115,7 +115,7 @@ func SetQoSState(ctx context.Context, s *testing.State) {
 	}
 
 	// Set thread state
-	if err := rm.SetThreadState(ctx, pChronos.Pid, pChronos.Tid, resourced.QoSThreadUrgentBursty); err != nil {
+	if err := rm.SetThreadState(ctx, pChronos.Pid, pChronos.Tid, resourced.QoSThreadUrgent); err != nil {
 		s.Fatal("Failed to set thread state: ", err)
 	}
 	// Set thread state for the main thread
