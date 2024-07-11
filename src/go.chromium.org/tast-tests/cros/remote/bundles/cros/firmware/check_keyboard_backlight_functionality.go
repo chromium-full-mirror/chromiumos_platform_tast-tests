@@ -196,10 +196,19 @@ func CheckKeyboardBacklightFunctionality(ctx context.Context, s *testing.State) 
 			}
 		}
 	case lidCloseAndOpen:
+		cleanupCtx := ctx
+		ctx, cancel := ctxutil.Shorten(ctx, 15*time.Second)
+		defer cancel()
+
 		s.Logf("Clearing %s", powerdLogPath)
 		if err := h.DUT.Conn().CommandContext(ctx, "truncate", "--size=0", powerdLogPath).Run(); err != nil {
 			s.Fatal("Failed to clear powerd log file: ", err)
 		}
+		defer func(ctx context.Context) {
+			if err := linuxssh.GetFile(ctx, s.DUT().Conn(), powerdLogPath, filepath.Join(s.OutDir(), "powerdLatest.txt"), linuxssh.DereferenceSymlinks); err != nil {
+				s.Fatal("Failed to copy power log to local machine: ", err)
+			}
+		}(cleanupCtx)
 		if err := checkKBLightWhenLidClosedOpen(ctx, h); err != nil {
 			s.Fatal("Failed to verify keyboard backlight level when lid is closed and reopened: ", err)
 		}
@@ -223,6 +232,12 @@ func checkKBLightWhenLidClosedOpen(ctx context.Context, h *firmware.Helper) erro
 		return errors.Wrap(err, "failed to wait for DUT to reach G3, S3 or S0ix power state")
 	}
 
+	powerState, err := h.Servo.GetECSystemPowerState(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get the power state of the DUT")
+	}
+	testing.ContextLog(ctx, "DUT current power state is: ", powerState)
+
 	if err := h.Servo.OpenLid(ctx); err != nil {
 		return err
 	}
@@ -244,7 +259,7 @@ func checkKBLightWhenLidClosedOpen(ctx context.Context, h *firmware.Helper) erro
 		}
 		return nil
 	}, &testing.PollOptions{Timeout: 30 * time.Second, Interval: 1 * time.Second}); err != nil {
-		return err
+		return errors.Wrapf(err, "did not find keyboard backlight values, got power state %v when lid close", powerState)
 	}
 
 	kbLightClosedLid := kbLightValues[0]
@@ -353,9 +368,9 @@ func getKeyForKbLightUpAndDown(h *firmware.Helper) (string, string) {
 			kbLightDown = "<f5>"
 		}
 	}
-	modelsWithShiftedShortcuts_f11_f12 := []string{"greenbayupoc"}
+	modelsWithShiftedShortcutsF11F12 := []string{"greenbayupoc"}
 	// Some models use <f12> and <f11> instead for adjusting the kb light.
-	for _, model := range modelsWithShiftedShortcuts_f11_f12 {
+	for _, model := range modelsWithShiftedShortcutsF11F12 {
 		if h.Model == model {
 			kbLightUp = "<f12>"
 			kbLightDown = "<f11>"
