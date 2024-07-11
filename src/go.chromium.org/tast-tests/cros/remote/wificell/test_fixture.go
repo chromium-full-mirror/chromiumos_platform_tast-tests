@@ -323,12 +323,8 @@ func (tf *TestFixture) initializeDuts(ctx, daemonCtx context.Context) error {
 			ShillServiceClient: wifi.NewShillServiceClient(d.rpc.Conn),
 		}
 		d.bluetoothClient = bluetooth.NewBluetoothServiceClient(d.rpc.Conn)
-
-		// Set DUT to use bluez bluetooth stack and enable bluetooth.
-		if _, err := d.bluetoothClient.SetBluetoothStack(ctx, &bluetooth.SetBluetoothStackRequest{
-			StackType: bluetooth.BluetoothStackType_BLUETOOTH_STACK_TYPE_BLUEZ,
-		}); err != nil {
-			return errors.Wrap(err, "failed to set DUT bluetooth stack to bluez")
+		if _, err := d.bluetoothClient.SetupBluetoothFacade(ctx, &empty.Empty{}); err != nil {
+			return errors.Wrap(err, "failed to setup bluetooth facade on DUT")
 		}
 		if _, err := d.bluetoothClient.Enable(ctx, &empty.Empty{}); err != nil {
 			return errors.Wrap(err, "failed to enable bluetooth on DUT")
