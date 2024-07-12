@@ -162,7 +162,7 @@ func ResolvConfCrash(ctx context.Context, s *testing.State) {
 		}
 		// This results in zombie child processes.
 		defer func() {
-			if err := testexec.CommandContext(cleanupCtx, "pkill", "-9", dns.ProxyProcName).Run(testexec.DumpLogOnError); err != nil {
+			if err := dns.KillAllDNSProxyProcs(cleanupCtx); err != nil {
 				testing.ContextLog(cleanupCtx, "Failed to stop unwanted DNS proxy processes: ", err)
 			}
 		}()

@@ -355,11 +355,35 @@ func waitForDNSProxyProcesses(ctx context.Context) error {
 
 // RestartDNSProxy stops dnsproxyd processes and re-start them.
 func RestartDNSProxy(ctx context.Context) error {
-	if err := testexec.CommandContext(ctx, "initctl", "restart", "dns-proxy").Run(); err != nil {
-		return errors.Wrap(err, "failed to restart DNS proxy")
+	if err := testexec.CommandContext(ctx, "stop", "dns-proxy").Run(testexec.DumpLogOnError); err != nil {
+		return errors.Wrap(err, "failed to stop DNS proxy")
+	}
+	// To make sure that there won't be leftover dns-proxy processes which may
+	// affect the following checks of the number of running processes.
+	if err := KillAllDNSProxyProcs(ctx); err != nil {
+		return errors.Wrap(err, "failed to kill remaining DNS proxy processes")
+	}
+	if err := testexec.CommandContext(ctx, "start", "dns-proxy").Run(testexec.DumpLogOnError); err != nil {
+		return errors.Wrap(err, "failed to start DNS proxy")
 	}
 	if err := waitForDNSProxyProcesses(ctx); err != nil {
 		return errors.Wrap(err, "failed to wait for DNS proxy processes started")
+	}
+	return nil
+}
+
+// KillAllDNSProxyProcs sends SIGKILL to all dns-proxy processes.
+func KillAllDNSProxyProcs(ctx context.Context) error {
+	err := testexec.CommandContext(ctx, "pkill", "-9", ProxyProcName).Run()
+	if err == nil {
+		return nil
+	}
+	exitCode, ok := testexec.ExitCode(err)
+	if !ok {
+		return errors.Wrap(err, "failed to run pkill")
+	}
+	if exitCode != 1 {
+		return errors.Errorf("unexpected exit code of pkill: %d", exitCode)
 	}
 	return nil
 }
