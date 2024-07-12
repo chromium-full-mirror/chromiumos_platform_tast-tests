@@ -22,7 +22,8 @@ import (
 const ehideTimeout = 1 * time.Minute
 
 // The timeout to wait for connection at the beginning.
-const waitConnectTimeout = 30 * time.Second
+const waitConnectTimeout = 45 * time.Second
+const waitConnectInterval = 1 * time.Second
 
 // Set the connection timeout to a relatively long time (15 seconds) so that we
 // can make sure that the connection can be established within the time limit
@@ -65,10 +66,18 @@ func (f *ehideFixture) SetUp(ctx context.Context, s *testing.FixtState) interfac
 	if err := d.Health(ctx); err != nil {
 		s.Log("Failed DUT connection check at the beginning: ", err)
 
-		// Try to reconnect to the DUT.
-		waitConnectCtx, waitConnectCancel := context.WithTimeout(ctx, waitConnectTimeout)
-		defer waitConnectCancel()
-		if err := d.WaitConnect(waitConnectCtx); err != nil {
+		// Try to reconnect to the DUT by polling.
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			connCtx, connCancel := context.WithTimeout(ctx, connTimeout)
+			defer connCancel()
+			if err := d.Connect(connCtx); err != nil {
+				return err
+			}
+			return nil
+		}, &testing.PollOptions{
+			Timeout:  waitConnectTimeout,
+			Interval: waitConnectInterval,
+		}); err != nil {
 			s.Fatal("Failed to wait for DUT connection at the beginning: ", err)
 		}
 	}
