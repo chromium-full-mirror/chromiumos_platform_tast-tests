@@ -349,26 +349,31 @@ func (o QueryOptions) digArgs() []string {
 	return args
 }
 
-// QueryDNS resolves a domain through DNS with a specific client.
-func QueryDNS(ctx context.Context, c Client, a *arc.ARC, cont *vm.Container, opts *QueryOptions) error {
+// queryDNS resolves a domain through DNS with a specific client.
+func queryDNS(ctx context.Context, c Client, a *arc.ARC, cont *vm.Container, opts *QueryOptions, dumpLogOnError bool) error {
+	var execOpts []testexec.RunOption
+	if dumpLogOnError {
+		execOpts = append(execOpts, testexec.DumpLogOnError)
+	}
+
 	args := opts.digArgs()
 	var u string
 	switch c {
 	case System:
-		return testexec.CommandContext(ctx, "dig", args...).Run()
+		return testexec.CommandContext(ctx, "dig", args...).Run(execOpts...)
 	case User:
 		u = "cups"
 	case Chrome:
 		u = "chronos"
 	case Crostini:
-		return cont.Command(ctx, append([]string{"dig"}, args...)...).Run()
+		return cont.Command(ctx, append([]string{"dig"}, args...)...).Run(execOpts...)
 	case ARC:
 		// ARC does not support querying a specific nameserver.
 		// Use dig binary to do so.
 		if opts.ARCDigPath != "" && opts.Nameserver != "" {
-			return a.Command(ctx, opts.ARCDigPath, args...).Run()
+			return a.Command(ctx, opts.ARCDigPath, args...).Run(execOpts...)
 		}
-		out, err := a.Command(ctx, "dumpsys", "wifi", "tools", "dns", "host_default", opts.Domain).Output()
+		out, err := a.Command(ctx, "dumpsys", "wifi", "tools", "dns", "host_default", opts.Domain).Output(execOpts...)
 		if err != nil {
 			return errors.Wrap(err, "failed to do ARC DNS query")
 		}
@@ -383,7 +388,7 @@ func QueryDNS(ctx context.Context, c Client, a *arc.ARC, cont *vm.Container, opt
 	default:
 		return errors.New("unknown client")
 	}
-	return testexec.CommandContext(ctx, "sudo", append([]string{"-u", u, "dig"}, args...)...).Run()
+	return testexec.CommandContext(ctx, "sudo", append([]string{"-u", u, "dig"}, args...)...).Run(execOpts...)
 }
 
 // ProxyTestCase contains test case for DNS proxy tests.
@@ -400,7 +405,7 @@ func TestQueryDNSProxy(ctx context.Context, tcs []ProxyTestCase, a *arc.ARC, con
 		testing.ContextLogf(ctx, "Resolving %s as %s, expect failure: %t, allow retry: %t", opts, tc.Client, tc.ExpectErr, tc.AllowRetry)
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
 			var err error
-			qErr := QueryDNS(ctx, tc.Client, a, cont, opts)
+			qErr := queryDNS(ctx, tc.Client, a, cont, opts, !tc.ExpectErr /*dumpLogOnError*/)
 			if qErr != nil && !tc.ExpectErr {
 				err = errors.Wrapf(qErr, "DNS query failed for %s", tc.Client)
 			}
@@ -489,8 +494,8 @@ func DigMatch(ctx context.Context, re *regexp.Regexp, match bool) error {
 	return nil
 }
 
-// queryDNS queries DNS to |addr| through UDP port 53 and returns the response.
-func queryDNS(ctx context.Context, msg []byte, addr string) ([]byte, error) {
+// resolveDomain queries DNS to |addr| through UDP port 53 and returns the response.
+func resolveDomain(ctx context.Context, msg []byte, addr string) ([]byte, error) {
 	var d net.Dialer
 	conn, err := d.DialContext(ctx, "udp", net.JoinHostPort(addr, "53"))
 	if err != nil {
@@ -519,7 +524,7 @@ func DoHResponder(ctx context.Context, addr string) func(http.ResponseWriter, *h
 			return
 		}
 
-		resp, err := queryDNS(ctx, msg, addr)
+		resp, err := resolveDomain(ctx, msg, addr)
 		if err != nil {
 			testing.ContextLog(ctx, "Failed to query DNS: ", err)
 			return
