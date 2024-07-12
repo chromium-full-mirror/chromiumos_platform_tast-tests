@@ -20,6 +20,7 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 // selectionTest describes the parameters of a single test case.
@@ -398,6 +399,7 @@ func init() {
 					},
 					expectedSSID: "passpoint-tls-blue",
 				},
+				ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
 			}, {
 				Name: "match_with_oui",
 				Val: selectionTest{
