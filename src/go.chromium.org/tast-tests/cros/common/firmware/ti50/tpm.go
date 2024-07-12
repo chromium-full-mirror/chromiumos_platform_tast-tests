@@ -238,15 +238,15 @@ func (t *TpmHandle) TpmvCommitNvmem() error {
 
 // TpmvReboot sends the reboot vendor command for the specified number of ms.
 func (t *TpmHandle) TpmvReboot(ms uint16) error {
+	msStr := fmt.Sprintf("%04x", ms)
 	tpmvReboot, err := hex.DecodeString("8001" + // tag: TPM_ST_NO_SESSIONS
 		"0000000e" + // size
 		"20000000" + // ordinal: vendor
-		"0013") // subcommand: ImmediateReset
+		"0013" + // subcommand: ImmediateReset
+		msStr)
 	if err != nil {
 		return err
 	}
-	// Add ms parameter
-	tpmvReboot = binary.BigEndian.AppendUint16(tpmvReboot, ms)
 
 	response, err := t.Send(tpmvReboot)
 	if err != nil {
