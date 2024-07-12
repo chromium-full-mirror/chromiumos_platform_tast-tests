@@ -32,13 +32,12 @@ func init() {
 			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
 			"andrzejo@google.com",             // Author
 		},
-		BugComponent:    "b:893827", // ChromeOS > Platform > Connectivity > WiFi
-		Attr:            []string{"group:wificell", "wificell_func", "wificell_unstable"},
-		TestBedDeps:     []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
-		ServiceDeps:     []string{wificell.ShillServiceName},
-		Fixture:         wificell.FixtureID(wificell.TFFeaturesCapture),
-		Requirements:    []string{tdreq.WiFiGenSupportWiFi},
-		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
+		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
+		Attr:         []string{"group:wificell", "wificell_func", "wificell_unstable"},
+		TestBedDeps:  []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
+		ServiceDeps:  []string{wificell.ShillServiceName},
+		Fixture:      wificell.FixtureID(wificell.TFFeaturesCapture),
+		Requirements: []string{tdreq.WiFiGenSupportWiFi},
 		Params: []testing.Param{
 			{
 				Val: transOweConnectTestcase{
@@ -46,6 +45,7 @@ func init() {
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiNotMarvell()),
 				ExtraRequirements: []string{tdreq.WiFiSecSupportOWE, tdreq.WiFiCertOWE},
+				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_Not_Marvell"}`,
 			}, {
 				// Marvell chips do not support OWE so they should fall back to the public endpoint.
 				Name: "expect_public",
@@ -53,6 +53,7 @@ func init() {
 					expectedEncryption: false,
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiMarvell()),
+				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_Marvell"}`,
 			},
 		},
 	})

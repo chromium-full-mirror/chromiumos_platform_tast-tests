@@ -62,7 +62,7 @@ func init() {
 					expectedRoamTime: 5 * time.Second,
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiNotMarvell()),
-				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel"}`,
+				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_Not_Marvell"}`,
 			}, {
 				// Verifies that DUT can roam between two WPA APs in full view of it.
 				Name: "wpa",
@@ -74,7 +74,7 @@ func init() {
 					expectedRoamTime: 5 * time.Second,
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiNotMarvell()),
-				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel"}`,
+				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_Not_Marvell"}`,
 			}, {
 				// Verifies that DUT can roam between two WEP APs in full view of it.
 				Name: "wep",
@@ -87,7 +87,7 @@ func init() {
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiWEP(), hwdep.WifiNotMarvell()),
 				ExtraRequirements: []string{tdreq.WiFiSecSupportWEP},
-				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel"}`,
+				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_Not_Marvell"}`,
 			}, {
 				// Verifies that DUT can roam between two WPA-EAP APs in full view of it.
 				Name: "8021xwpa",
@@ -100,7 +100,7 @@ func init() {
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiNotMarvell()),
 				ExtraRequirements: []string{tdreq.WiFiSecSupportWPA2Enterprise},
-				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel"}`,
+				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_Not_Marvell"}`,
 			}, {
 				Name: "flushbss",
 				// Verifies that DUT can roam between two APs with minimal idle time after bss flush.
@@ -112,7 +112,7 @@ func init() {
 					expectedRoamTime: 10 * time.Second,
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiNotMarvell()),
-				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel"}`,
+				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_Not_Marvell"}`,
 			}, {
 				Name: "marvell",
 				// Verifies that DUT can roam between two APs in full view of it.
@@ -124,7 +124,7 @@ func init() {
 					expectedRoamTime: 12 * time.Second,
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiMarvell()),
-				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel"}`,
+				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_Marvell"}`,
 			}, {
 				// Verifies that DUT can roam between two WPA APs in full view of it.
 				Name: "wpa_marvell",
@@ -136,7 +136,7 @@ func init() {
 					expectedRoamTime: 12 * time.Second,
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiMarvell()),
-				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel"}`,
+				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_Marvell"}`,
 			}, {
 				// Verifies that DUT can roam between two WEP APs in full view of it.
 				Name: "wep_marvell",
@@ -149,7 +149,7 @@ func init() {
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiWEP(), hwdep.WifiMarvell()),
 				ExtraRequirements: []string{tdreq.WiFiSecSupportWEP},
-				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel"}`,
+				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_Marvell"}`,
 			}, {
 				// Verifies that DUT can roam between two WPA-EAP APs in full view of it.
 				Name: "8021xwpa_marvell",
@@ -162,7 +162,7 @@ func init() {
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiMarvell()),
 				ExtraRequirements: []string{tdreq.WiFiSecSupportWPA2Enterprise},
-				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel"}`,
+				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_Marvell"}`,
 			}, {
 				Name: "flushbss_marvell",
 				// Verifies that DUT can roam between two APs with minimal idle time after bss flush.
@@ -174,7 +174,7 @@ func init() {
 					expectedRoamTime: 12 * time.Second,
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiMarvell()),
-				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel"}`,
+				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_Marvell"}`,
 			},
 		},
 	})

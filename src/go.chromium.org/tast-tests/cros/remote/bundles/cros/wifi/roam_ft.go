@@ -134,6 +134,7 @@ func init() {
 				expectedNonFtKeyMgmt: wpa.KeyMgmtSAEEXT,
 			},
 			ExtraTestBedDeps: []string{"wifi_router_features:WIFI_ROUTER_FEATURE_SAE_EXT_KEY"},
+			VariantCategory:  `{"name": "WifiBtChipset_Soc_Kernel_SAE_EXT_KEY"}`,
 		}, {
 			Name:              "sae_ext",
 			ExtraSoftwareDeps: []string{"wpa3_sae"},
@@ -149,6 +150,7 @@ func init() {
 				expectedNonFtKeyMgmt: wpa.KeyMgmtSAEEXT,
 			},
 			ExtraTestBedDeps: []string{"wifi_router_features:WIFI_ROUTER_FEATURE_SAE_EXT_KEY"},
+			VariantCategory:  `{"name": "WifiBtChipset_Soc_Kernel_SAE_EXT_KEY"}`,
 		},
 		},
 	})
