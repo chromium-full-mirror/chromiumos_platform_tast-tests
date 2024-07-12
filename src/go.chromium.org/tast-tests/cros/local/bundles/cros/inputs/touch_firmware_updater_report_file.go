@@ -5,9 +5,13 @@
 package inputs
 
 import (
+	"bufio"
 	"context"
+	"encoding/json"
 	"os"
+	"strings"
 
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -31,9 +35,15 @@ const (
 )
 
 func TouchFirmwareUpdaterReportFile(ctx context.Context, s *testing.State) {
-	fileStats, err := os.Stat(firmwareReportFilePath)
+	firmwareReportFile, err := os.Open(firmwareReportFilePath)
 	if err != nil {
-		s.Fatal("Failed to read touch firmware report file: ", err)
+		s.Fatal("Failed to open touch firmware report file: ", err)
+	}
+	defer firmwareReportFile.Close()
+
+	fileStats, err := firmwareReportFile.Stat()
+	if err != nil {
+		s.Fatal("Failed to read stats of touch firmware report file: ", err)
 	}
 
 	// Check if firmware file is empty.
@@ -41,6 +51,77 @@ func TouchFirmwareUpdaterReportFile(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed because touch firmware report file is empty")
 	}
 
-	// TODO(b/310056795): Validate File Entries.
+	if err := processEntries(firmwareReportFile); err != nil {
+		s.Fatal("Failed to process the device entries in the firmware report file: ", err)
+	}
+}
 
+// Struct to convert to JSON.
+type device struct {
+	Path           string
+	Updater        string `json:"updater"`
+	InitialVersion string `json:"initial_version"`
+	UpdateStatus   string `json:"update_status"`
+}
+
+func processEntries(file *os.File) error {
+	// Checks that each device entry in the file is valid, returns any errors.
+
+	deviceMap := make(map[string]device)
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		var lineText = scanner.Text()
+
+		// Get Device name and creating JSON values from line.
+		var splitLine = strings.SplitN(lineText, " ", 2)
+		var deviceName = splitLine[0]
+
+		// Convert JSON to struct so that fields can be accessed.
+		var deviceInfo device
+		deviceInfo.Path = deviceName
+		if err := json.Unmarshal([]byte(splitLine[1]), &deviceInfo); err != nil {
+			return err
+		}
+
+		if _, ok := deviceMap[deviceName]; !ok {
+			deviceMap[deviceName] = deviceInfo
+		}
+
+		// TODO:(b/310056795): Check if there was a previous entry for the device.
+	}
+
+	if err := scanner.Err(); err != nil {
+		return err
+	}
+
+	var errs error
+
+	// Check that each device struct is valid.
+	for deviceName := range deviceMap {
+		if err := validateDevice(deviceMap[deviceName]); err != nil {
+			errs = errors.Join(errs, err) // Accumulate errors from every detected device.
+		}
+	}
+
+	return errs
+}
+
+func validateDevice(deviceInfo device) error {
+	// deviceInfo should have initialized values for updater, initial_version.
+	var errs error
+
+	if len(deviceInfo.Updater) == 0 {
+		errs = errors.New("Missing updater field for device at " + deviceInfo.Path)
+	}
+
+	if len(deviceInfo.InitialVersion) == 0 {
+		errs = errors.Join(errs, errors.New("Missing initial_version field for device at "+deviceInfo.Path+" ; updater: "+deviceInfo.Updater))
+	}
+
+	if len(deviceInfo.UpdateStatus) > 0 && deviceInfo.UpdateStatus != "SUCCESS" {
+		errs = errors.Join(errs, errors.New("update_status field was \""+deviceInfo.UpdateStatus+"\",not \"SUCCESS\" for device at "+deviceInfo.Path+" ; updater: "+deviceInfo.Updater))
+	}
+
+	return errs
 }
