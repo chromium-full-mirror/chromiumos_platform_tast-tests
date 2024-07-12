@@ -15,7 +15,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/media/devtools"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 const (
@@ -78,32 +77,6 @@ func init() {
 				Timeout:           5 * time.Minute,
 			},
 			{
-				Name: "v4l2_flat_crosvideo_h264_720_1minute",
-				Val: playURLParams{
-					url:         crosAppspotH264VanillaURL,
-					duration:    1 * time.Minute,
-					browserType: browser.TypeAsh,
-				},
-				ExtraSoftwareDeps: []string{"proprietary_codecs", caps.HWDecodeH264},
-				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
-				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
-				Fixture:           "chromeVideoWithV4L2FlatDecoder",
-				Timeout:           5 * time.Minute,
-			},
-			{
-				Name: "v4l2_flat_crosvideo_vp9_720_1minute",
-				Val: playURLParams{
-					url:         crosAppspotVP9VanillaURL,
-					duration:    1 * time.Minute,
-					browserType: browser.TypeAsh,
-				},
-				ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
-				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
-				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
-				Fixture:           "chromeVideoWithV4L2FlatDecoder",
-				Timeout:           5 * time.Minute,
-			},
-			{
 				Name: "crosvideo_h264_cycle_1minute",
 				Val: playURLParams{
 					url:         crosAppspotH264ChangingResolutionURL,
@@ -137,32 +110,6 @@ func init() {
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 				Fixture:           "chromeVideo",
-				Timeout:           5 * time.Minute,
-			},
-			{
-				Name: "v4l2_flat_crosvideo_h264_cycle_1minute",
-				Val: playURLParams{
-					url:         crosAppspotH264ChangingResolutionURL,
-					duration:    1 * time.Minute,
-					browserType: browser.TypeAsh,
-				},
-				ExtraSoftwareDeps: []string{"proprietary_codecs", caps.HWDecodeH264},
-				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
-				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
-				Fixture:           "chromeVideoWithV4L2FlatDecoder",
-				Timeout:           5 * time.Minute,
-			},
-			{
-				Name: "v4l2_flat_crosvideo_vp9_cycle_1minute",
-				Val: playURLParams{
-					url:         crosAppspotVP9ChangingResolutionURL,
-					duration:    1 * time.Minute,
-					browserType: browser.TypeAsh,
-				},
-				ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
-				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
-				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
-				Fixture:           "chromeVideoWithV4L2FlatDecoder",
 				Timeout:           5 * time.Minute,
 			},
 			{

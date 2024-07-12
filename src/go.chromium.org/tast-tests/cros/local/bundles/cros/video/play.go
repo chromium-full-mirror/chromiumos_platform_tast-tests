@@ -515,45 +515,6 @@ func init() {
 			ExtraData: []string{"bear-320x240.vp9.webm"},
 			Fixture:   "chromeVideo",
 		}, {
-			Name: "h264_hw_v4l2_flat",
-			Val: playParams{
-				fileName:    "bear-320x240.h264.mp4",
-				videoType:   play.NormalVideo,
-				verifyMode:  play.VerifyHWAcceleratorUsed,
-				browserType: browser.TypeAsh,
-			},
-			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
-			ExtraData:         []string{"bear-320x240.h264.mp4"},
-			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs", "v4l2_codec"},
-			ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
-			Fixture:           "chromeVideoWithV4L2FlatDecoder",
-		}, {
-			Name: "vp8_hw_v4l2_flat",
-			Val: playParams{
-				fileName:    "bear-320x240.vp8.webm",
-				videoType:   play.NormalVideo,
-				verifyMode:  play.VerifyHWAcceleratorUsed,
-				browserType: browser.TypeAsh,
-			},
-			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
-			ExtraData:         []string{"bear-320x240.vp8.webm"},
-			ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "v4l2_codec"},
-			ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
-			Fixture:           "chromeVideoWithV4L2FlatDecoder",
-		}, {
-			Name: "vp9_hw_v4l2_flat",
-			Val: playParams{
-				fileName:    "bear-320x240.vp9.webm",
-				videoType:   play.NormalVideo,
-				verifyMode:  play.VerifyHWAcceleratorUsed,
-				browserType: browser.TypeAsh,
-			},
-			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
-			ExtraData:         []string{"bear-320x240.vp9.webm"},
-			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "v4l2_codec"},
-			ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
-			Fixture:           "chromeVideoWithV4L2FlatDecoder",
-		}, {
 			Name: "h264_hw_switch",
 			Val: playParams{
 				fileName:    "smpte_bars_resolution_ladder.h264.mp4",

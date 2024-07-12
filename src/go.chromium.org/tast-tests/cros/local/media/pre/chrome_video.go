@@ -355,23 +355,6 @@ func initChromeVideoBaseFixtures() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:         "chromeVideoWithV4L2FlatDecoder",
-		Desc:         "Similar to chromeVideo fixture but enabling V4L2 Flat stateful decoder",
-		Contacts:     []string{"chromeos-gfx-video@google.com"},
-		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return getChromeVideoOptions(
-				browser.TypeAsh,
-				chrome.EnableFeatures("V4L2FlatStatefulVideoDecoder"),
-				chrome.EnableFeatures("UseChromeOSDirectVideoDecoder"),
-			), nil
-		}),
-		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.FixtureSetUpTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
 		Name:         "chromeVideoWithBatchDecodingInRenderer",
 		Desc:         "Similar to chromeVideo fixture but enabling batch decoding for non-MF renderer path",
 		Contacts:     []string{"chromeos-gfx-video@google.com"},
