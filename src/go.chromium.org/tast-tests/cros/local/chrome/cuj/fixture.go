@@ -118,6 +118,10 @@ var disableChargeBatteryBeforeTest = testing.RegisterVarString(
 var minimumBatteryCapacity = 25.0
 var chargeBatteryTestPollOpt = &testing.PollOptions{Interval: 60 * time.Second, Timeout: 3 * time.Minute}
 
+// minimumBatteryRequirementForCUJs is the lowest value that CUJ tests can start
+// with for battery capcity - any lower and the test should fail.
+var minimumBatteryRequirementForCUJs = 50.0
+
 var extraArgsVar = testing.RegisterVarString(
 	"cuj.extraArgs",
 	"",
@@ -155,8 +159,10 @@ func init() {
 			"xiyuan@chromium.org",
 			"cros-sw-perf@google.com",
 		},
-		BugComponent:    "b:1045832", // ChromeOS > Software > Performance > TPS
-		Impl:            &prepareCUJFixture{},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
+		Impl: &prepareCUJFixture{
+			minBatteryRequirement: minimumBatteryRequirementForCUJs,
+		},
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
 		Parent:          "gpuWatchHangs",
@@ -168,8 +174,11 @@ func init() {
 			"vincentchiang@google.com",
 			"cros-sw-perf@google.com",
 		},
-		BugComponent:    "b:1045832", // ChromeOS > Software > Performance > TPS
-		Impl:            &prepareCUJFixture{skipCPUCooldown: true},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
+		Impl: &prepareCUJFixture{
+			minBatteryRequirement: minimumBatteryRequirementForCUJs,
+			skipCPUCooldown:       true,
+		},
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
 		Parent:          "gpuWatchHangs",
@@ -1190,13 +1199,13 @@ func chargeBatteryCapacity(ctx context.Context, minimumBatteryCapacity float64, 
 	return nil
 }
 
-// ChargeBatteryCapacityBeforePowerTest allows charging of the battery for 3 minutes if battery capacity
+// chargeBatteryCapacityBeforePowerTest allows charging of the battery for 3 minutes if battery capacity
 // is lower than a pre-defined level when the disableChargeBatteryBeforeTest variable is not true.
 // This is usually added before the case execution.
-func ChargeBatteryCapacityBeforePowerTest(ctx context.Context) error {
+func chargeBatteryCapacityBeforePowerTest(ctx context.Context, minBatteryCapacity float64) error {
 	if strings.ToLower(disableChargeBatteryBeforeTest.Value()) != "true" {
 		// Wait for battery to be charged.
-		err := chargeBatteryCapacity(ctx, minimumBatteryCapacity, chargeBatteryTestPollOpt)
+		err := chargeBatteryCapacity(ctx, minBatteryCapacity, chargeBatteryTestPollOpt)
 		if err != nil {
 			if errors.Is(err, pm.ErrNoBattery) {
 				return errors.Wrap(err, "battery not found")
@@ -1266,8 +1275,9 @@ func disableARCBatterySaver(ctx context.Context, arc *arc.ARC) error {
 }
 
 type prepareCUJFixture struct {
-	skipCPUCooldown bool
-	chargeBattery   bool
+	skipCPUCooldown       bool
+	chargeBattery         bool
+	minBatteryRequirement float64
 }
 
 func (f *prepareCUJFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
@@ -1292,8 +1302,12 @@ func (f *prepareCUJFixture) PreTest(ctx context.Context, s *testing.FixtTestStat
 		return
 	}
 
-	if f.chargeBattery {
-		if err := ChargeBatteryCapacityBeforePowerTest(ctx); err != nil {
+	if f.minBatteryRequirement > 0 {
+		if err := chargeBatteryCapacityBeforePowerTest(ctx, f.minBatteryRequirement); err != nil {
+			s.Fatal("Failed to meet minimum battery capacity before test: ", err)
+		}
+	} else if f.chargeBattery {
+		if err := chargeBatteryCapacityBeforePowerTest(ctx, minimumBatteryCapacity); err != nil {
 			testing.ContextLog(ctx, "Failed to charge battery capacity before power test: ", err)
 		}
 	}
