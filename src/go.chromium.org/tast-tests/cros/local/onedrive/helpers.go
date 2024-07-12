@@ -130,3 +130,19 @@ func MaybeUnmountOdfs(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Ch
 
 	return nil
 }
+
+// DeleteFilesInRootByPrefix deletes files in root OneDrive folder that starts with `prefix`.
+func DeleteFilesInRootByPrefix(ctx context.Context, prefix string) error {
+	files, err := filepath.Glob(filemanager.FuseboxDirPath + "/fsp.*/" + prefix + "*")
+	if err != nil {
+		return errors.Wrap(err, "failed to list files by prefix")
+	}
+
+	for _, f := range files {
+		testing.ContextLog(ctx, "Deleting file: ", f)
+		if err := os.Remove(f); err != nil {
+			return errors.Wrapf(err, "failed to remove file: %s", f)
+		}
+	}
+	return nil
+}

@@ -101,6 +101,25 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
+		Name:         "onedriveManagedWithSkyVault",
+		Desc:         "Enterprise variant of onedrive with the corresponding policies set to 'allowed' and enabled SkyVault",
+		Contacts:     []string{"poromov@google.com", "cros-commercial-clippy-eng@google.com"},
+		BugComponent: "b:1401215", // ChromeOS > Software > Commercial (Enterprise) > Identity > 3P IdP > Enterprise Clippy
+		Impl: &onedriveFixture{
+			bt:            browser.TypeAsh,
+			chromeOptions: append(opts, chrome.EnableFeatures("SkyVault")),
+			provider:      filesconsts.OneDrive,
+		},
+		Parent:          fixture.FakeDMS,
+		SetUpTimeout:    chrome.LoginTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: 30 * time.Second,
+		PreTestTimeout:  60 * time.Second,
+		PostTestTimeout: 30 * time.Second,
+		Data:            []string{"Sample_DOCX_file_20230704.docx", "Sample_PPTX_file_20230704.pptx", "Sample_XLSX_file_20230724.xlsx"},
+	})
+
+	testing.AddFixture(&testing.Fixture{
 		Name:         "onedriveAndGoogleDrive",
 		Desc:         "Sets up 3 office files docx, pptx and xlsx. At tear down tries to remove them from the remote service via ODFS",
 		Contacts:     []string{"lucmult@chromium.org", "chromeos-files-syd@google.com"},

@@ -325,6 +325,12 @@ func file(fileName string) *nodewith.Finder {
 	return nodewith.Name(fileName).Role(role.StaticText).Ancestor(filesBox)
 }
 
+// fileRegex returns a nodewith.Finder for a file that matches the provided pattern.
+func fileRegex(fileNamePattern *regexp.Regexp) *nodewith.Finder {
+	filesBox := nodewith.Role(role.ListBox)
+	return nodewith.NameRegex(fileNamePattern).Role(role.StaticText).Ancestor(filesBox).First()
+}
+
 // WaitForFile returns a function that waits for a file to exist.
 func (f *FilesApp) WaitForFile(fileName string) uiauto.Action {
 	return f.WaitUntilExists(file(fileName))
@@ -343,6 +349,18 @@ func (f *FilesApp) EnsureFileGone(fileName string, duration time.Duration) uiaut
 // FileExists calls ui.Exists to check whether a folder or a file exists in the Files App.
 func (f *FilesApp) FileExists(fileName string) uiauto.Action {
 	return f.Exists(file(fileName))
+}
+
+// FindFileByPattern finds any file matching the pattern and returns its name or an error.
+func (f *FilesApp) FindFileByPattern(ctx context.Context, fileNamePattern *regexp.Regexp) (string, error) {
+	if err := f.Exists(fileRegex(fileNamePattern))(ctx); err != nil {
+		return "", err
+	}
+	node, err := f.Info(ctx, fileRegex(fileNamePattern))
+	if err != nil {
+		return "", err
+	}
+	return node.Name, nil
 }
 
 // IsFileSelected returns an Action that returns `nil` when the file exists.
