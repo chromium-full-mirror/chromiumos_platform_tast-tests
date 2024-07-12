@@ -141,6 +141,19 @@ func getRboxConfig(gpio ti50.GpioName, sku ti50.ChipSKU) (rboxConfig, error) {
 	}
 }
 
+// waitForPulse returns the gpio events
+func waitForPulse(ctx context.Context, b utils.DevboardHelper, gpioMonitor utils.GpioMonitorSession) utils.GpioEvents {
+	// b/349810960 Log the context deadline to look into context deadline
+	// exceeded issue.
+	deadline, _ := ctx.Deadline()
+	remaining := time.Until(deadline)
+	testing.ContextLogf(ctx, "Waiting %ds for pulse", gpioTimeout/time.Second)
+	testing.ContextLogf(ctx, "Context deadline in %s", remaining)
+	events := b.GpioMonitorWait(ctx, gpioMonitor, gpioTimeout, gpioInterval)
+	testing.ContextLog(ctx, "gpio events:", events.Sorted)
+	return events
+}
+
 // Cr50RBOXBufferOutput verifies GSC RBOX buffers the outputs of the power
 // button, key0, and key1 signals correctly.
 func Cr50RBOXBufferOutput(ctx context.Context, s *testing.State) {
@@ -178,7 +191,7 @@ func Cr50RBOXBufferOutput(ctx context.Context, s *testing.State) {
 	b.GpioSet(ctx, config.input, !config.inputAssertedVal)
 
 	// Wait to see if the gpio value changes. It may not.
-	s.Log("gpio events:", b.GpioMonitorWait(ctx, gpioMonitor, gpioTimeout, gpioInterval))
+	waitForPulse(ctx, b, gpioMonitor)
 
 	inVal := b.GpioGet(ctx, config.input)
 	outVal := b.GpioGet(ctx, config.output)
@@ -192,17 +205,17 @@ func Cr50RBOXBufferOutput(ctx context.Context, s *testing.State) {
 	}
 
 	// Read from the gpio monitor to clear existing events.
-	b.GpioMonitorRead(ctx, gpioMonitor)
+	events := b.GpioMonitorRead(ctx, gpioMonitor)
+	s.Log("Cleared Events: ", events)
 	// Verify the RBOX output is asserted after the input is asserted.
 	s.Log("Asserting", config.input)
 	b.GpioSet(ctx, config.input, config.inputAssertedVal)
 
 	// Wait until the output is asserted
-	events := b.GpioMonitorWait(ctx, gpioMonitor, gpioTimeout, gpioInterval)
+	events = waitForPulse(ctx, b, gpioMonitor)
 	if len(events.Sorted) == 0 {
 		s.Errorf("Failed to detect %s change when %s was asserted", config.output, config.input)
 	}
-	s.Log("gpio events:", events.Sorted)
 
 	inVal = b.GpioGet(ctx, config.input)
 	outVal = b.GpioGet(ctx, config.output)
@@ -218,17 +231,17 @@ func Cr50RBOXBufferOutput(ctx context.Context, s *testing.State) {
 	}
 
 	// Read from the gpio monitor to clear existing events.
-	b.GpioMonitorRead(ctx, gpioMonitor)
+	events = b.GpioMonitorRead(ctx, gpioMonitor)
+	s.Log("Cleared Events: ", events)
 	// Verify the RBOX output can be deasserted again.
 	s.Log("Deasserting", config.input)
 	b.GpioSet(ctx, config.input, !config.inputAssertedVal)
 
 	// Wait until the output is asserted
-	events = b.GpioMonitorWait(ctx, gpioMonitor, gpioTimeout, gpioInterval)
+	events = waitForPulse(ctx, b, gpioMonitor)
 	if len(events.Sorted) == 0 {
 		s.Errorf("Failed to detect %s change", config.output)
 	}
-	s.Log("gpio events:", events.Sorted)
 
 	inVal = b.GpioGet(ctx, config.input)
 	outVal = b.GpioGet(ctx, config.output)
@@ -248,18 +261,18 @@ func Cr50RBOXBufferOutput(ctx context.Context, s *testing.State) {
 	}
 
 	// Read from the gpio monitor to clear existing events.
-	b.GpioMonitorRead(ctx, gpioMonitor)
+	events = b.GpioMonitorRead(ctx, gpioMonitor)
+	s.Log("Cleared Events: ", events)
 	// Verify the RBOX output is blocked.
 	s.Logf("Verifying %s output is blocked by %s", config.output, blockedBy.input)
 	b.GpioSet(ctx, blockedBy.input, blockedBy.inputAssertedVal)
 	b.GpioSet(ctx, config.input, config.inputAssertedVal)
 
 	// Wait to see if the signal gets asserted.
-	events = b.GpioMonitorWait(ctx, gpioMonitor, gpioTimeout, gpioInterval)
+	events = waitForPulse(ctx, b, gpioMonitor)
 	if len(events.Sorted) != 0 {
 		s.Errorf("detected %s change when %s was asserted: %v", config.output, blockedBy.input, events.Sorted)
 	}
-	s.Log("gpio events:", events.Sorted)
 
 	blockVal := b.GpioGet(ctx, blockedBy.input)
 	inVal = b.GpioGet(ctx, config.input)
@@ -278,16 +291,16 @@ func Cr50RBOXBufferOutput(ctx context.Context, s *testing.State) {
 	}
 
 	// Read from the gpio monitor to clear existing events.
-	b.GpioMonitorRead(ctx, gpioMonitor)
+	events = b.GpioMonitorRead(ctx, gpioMonitor)
+	s.Log("Cleared Events: ", events)
 	s.Log("Deasserting", blockedBy.input)
 	s.Logf("Verify %s becomes unblocked", config.output)
 	b.GpioSet(ctx, blockedBy.input, !blockedBy.inputAssertedVal)
 	// Wait to see if the signal gets deasserted.
-	events = b.GpioMonitorWait(ctx, gpioMonitor, gpioTimeout, gpioInterval)
+	events = waitForPulse(ctx, b, gpioMonitor)
 	if len(events.Sorted) == 0 {
 		s.Errorf("deaserring %s did not unblock %s: %v", blockedBy.input, config.output, events.Sorted)
 	}
-	s.Log("gpio events:", events.Sorted)
 
 	blockVal = b.GpioGet(ctx, blockedBy.input)
 	inVal = b.GpioGet(ctx, config.input)
