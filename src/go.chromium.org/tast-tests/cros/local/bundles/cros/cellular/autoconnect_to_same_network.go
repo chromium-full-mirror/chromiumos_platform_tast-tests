@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/cellular"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -42,31 +43,34 @@ func init() {
 			Name: "auto_connect_disabled",
 			Val:  autoconnectToSameNetworkTestParams{shouldEnableAutoconnect: false},
 		}},
+		Timeout: 2*time.Minute + cellular.ConnectTimeout,
 	})
 }
 
 func AutoconnectToSameNetwork(ctx context.Context, s *testing.State) {
 	shouldEnableAutoconnect := s.Param().(autoconnectToSameNetworkTestParams).shouldEnableAutoconnect
 
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 15*time.Second)
+	defer cancel()
+
 	cr, err := chrome.New(ctx)
 	if err != nil {
 		s.Fatal("Failed to create a new instance of Chrome: ", err)
 	}
+	defer cr.Close(cleanupCtx)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 15*time.Second)
-	defer cancel()
-
 	mdp, err := ossettings.OpenMobileDataSubpage(ctx, tconn, cr)
 	if err != nil {
 		s.Fatal("Failed to open mobile data subpage: ", err)
 	}
 	defer mdp.Close(cleanupCtx)
+	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnError(cleanupCtx, s.OutDir(), s.HasError, tconn, "mobile_data_subpage_ui_dump")
 
 	helper := s.FixtValue().(*cellular.FixtData).Helper
 	if _, err := helper.Connect(ctx); err != nil {

@@ -761,7 +761,7 @@ func VerifyNetworkIsActive(ctx context.Context, tconn *chrome.TestConn, activeIc
 	ui := uiauto.New(tconn).WithTimeout(90 * time.Second)
 	displayedIccid := nodewith.NameContaining(activeIccid).Role(role.StaticText)
 	if err := uiauto.Combine("Verify network connected",
-		ui.WithTimeout(30*time.Second).LeftClick(CellularAdvanced),
+		expandable.EnsureExpandableSectionOpened(tconn, CellularAdvanced),
 		ui.WithTimeout(30*time.Second).WaitUntilExists(displayedIccid),
 		ui.LeftClick(BackArrowBtn),
 		ui.WaitUntilExists(ActiveCellularBtn),
