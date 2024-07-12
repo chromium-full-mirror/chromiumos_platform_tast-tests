@@ -27,6 +27,7 @@ func (h *dumpARCOnFailureHook) name() string {
 func (h *dumpARCOnFailureHook) setUp(ctx context.Context) error {
 	if h.a == nil {
 		testing.ContextLogf(ctx, "Skip setup of %s due to empty arc.ARC", h.name())
+		return nil
 	}
 	h.errorHandler = arcutil.CreateNetworkDumpsysErrorHandler(ctx, h.a)
 	return nil
