@@ -251,6 +251,9 @@ func QosWebRTC(ctx context.Context, s *testing.State) {
 				}
 			}
 		case <-shortCtx.Done():
+			if err := webrtcEnv.ChromeResponded(ctx); err != nil {
+				s.Fatal("Unexpected Chrome state: ", err)
+			}
 			s.Fatalf("Failed to get enough number of packets with DSCP mark: got %v, want %v", webrtcPktCnt, expectedPktCnt)
 		}
 	}

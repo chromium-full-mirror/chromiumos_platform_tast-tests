@@ -103,6 +103,11 @@ func (e *env) StartConn(ctx context.Context, outDir, localIPAfterNAT, remoteIPAf
 	return nil
 }
 
+// ChromeResponded verifies that Chrome has not crashed.
+func (e *env) ChromeResponded(ctx context.Context) error {
+	return e.cr.Responded(ctx)
+}
+
 // TearDown cleans up the resources.
 func (e *env) TearDown(ctx context.Context) {
 	if e.conn != nil {
