@@ -39,8 +39,13 @@ import (
 	"go.chromium.org/tast/core/timing"
 )
 
-const defaultTimeout = 30 * time.Second
-const longTimeout = 120 * time.Second
+const (
+	defaultTimeout = 30 * time.Second
+	longTimeout    = 120 * time.Second
+
+	// ConnectTimeout is the timeout for connect to a cellular network.
+	ConnectTimeout = longTimeout
+)
 
 // Helper fetches Cellular Device and Service properties.
 type Helper struct {
@@ -662,7 +667,7 @@ func (h *Helper) ConnectWithTimeout(ctx context.Context, connectTimeout time.Dur
 
 // Connect to default service if the current cellular service is not connected, otherwise return an error
 func (h *Helper) Connect(ctx context.Context) (*shill.Service, error) {
-	return h.ConnectWithTimeout(ctx, longTimeout)
+	return h.ConnectWithTimeout(ctx, ConnectTimeout)
 }
 
 // Disconnect from the Cellular Service and ensure that the disconnect succeeded, otherwise return an error.
