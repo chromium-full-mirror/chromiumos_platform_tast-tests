@@ -29,6 +29,7 @@ import (
 	arcnet "go.chromium.org/tast-tests/cros/local/network/arc"
 	patchpanel "go.chromium.org/tast-tests/cros/local/network/patchpanel_client"
 	"go.chromium.org/tast-tests/cros/local/network/ping"
+	"go.chromium.org/tast-tests/cros/local/network/testhooks"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/env"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/httpserver"
@@ -76,7 +77,7 @@ func init() {
 		Desc:         "Verify patchpanel traffic counters",
 		Contacts:     []string{"cros-networking@google.com", "jiejiang@google.com"},
 		BugComponent: "b:1493959",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		Timeout:      5 * time.Minute,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{{
@@ -189,28 +190,27 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 
 	param := s.Param().(tcParams)
 
+	var a *arc.ARC
+	if param.source == tcSourceTypeARC {
+		a = s.FixtValue().(*arc.PreData).ARC
+	}
+	hookEnv, err := testhooks.RunNetworkTestHooks(ctx,
+		testhooks.NewSaveNetLogHook(),
+		testhooks.NewTcpdumpHook(),
+		testhooks.NewDumpHostOnFailureHook(),
+		testhooks.NewDumpARCOnFailureHook(a),
+		testhooks.NewResetVirtualnetHook(),
+		testhooks.NewDisablePortalDetectionHook(),
+	)
+	if err != nil {
+		s.Fatal("Failed to run network test hooks: ", err)
+	}
+	s.AttachErrorHandlers(hookEnv.OnErrorHandler, hookEnv.OnFatalHandler)
+	defer hookEnv.TearDownWithLogFailures(cleanupCtx, s.HasError)
+
 	mgr, err := shill.NewManager(ctx)
 	if err != nil {
 		s.Fatal("Failed to create manager proxy: ", err)
-	}
-	restorePortal, err := mgr.DisablePortalDetectionWithRestore(ctx)
-	if err != nil {
-		s.Fatal("Failed to disable portal detection: ", err)
-	}
-	defer restorePortal(cleanupCtx)
-
-	if param.source == tcSourceTypeARC {
-		restoreEthernet, err := arcnet.HideUnusedEthernet(ctx, mgr)
-		if err != nil {
-			s.Fatal("Failed to hide unused ethernet: ", err)
-		}
-		defer restoreEthernet(cleanupCtx)
-	}
-
-	// Make sure that the Ethernet services have the default values for the
-	// properties we care about.
-	if err := virtualnet.ResetEthernetProperties(ctx, mgr); err != nil {
-		s.Fatal("Failed to reset ethernet properties: ", err)
 	}
 
 	pc, err := patchpanel.New(ctx)
@@ -413,7 +413,7 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 
 		// Before we start the test, make sure the routing system is ready.
 		if err := guestos.PingWithRetryAndTimeout(ctx, cros, svr.addr.String(), 10*time.Second); err != nil {
-			s.Fatalf("Failed to wait for ping connectivity to %s in Crostini", svr.addr.String())
+			s.Fatalf("Failed to wait for ping connectivity to %s in Crostini: %v", svr.addr.String(), err)
 		}
 
 		vmTest(
@@ -438,7 +438,10 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 
 	// Test traffic originating from ARC++.
 	if param.source == tcSourceTypeARC {
-		a := s.FixtValue().(*arc.PreData).ARC
+		// Before we start the test, make sure that routing system is ready.
+		if err := arcnet.ExpectPingSuccess(ctx, a, "" /*network*/, svr.addr.String()); err != nil {
+			s.Fatalf("Failed to wait for ping connectivity to %s in ARC: %v", svr.addr.String(), err)
+		}
 
 		vmTest(
 			[]pp.TrafficCounter_Source{pp.TrafficCounter_ARC},
