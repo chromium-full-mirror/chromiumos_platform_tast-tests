@@ -295,6 +295,12 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 		SoftwareDeps:  "[]string{caps.HWDecodeHEVC}",
 		VideoFiles:    "hevcFiles[\"main_part_4\"]",
 		ValidatorType: "decoding.MD5",
+	}, {
+		Name:          "hevc_main_part_5_8k",
+		Attr:          perBuildAttrs,
+		SoftwareDeps:  "[]string{caps.HWDecodeHEVC8K}",
+		VideoFiles:    "hevcFiles[\"main_part_5_8K\"]",
+		ValidatorType: "decoding.MD5",
 	},
 	}...)
 

@@ -429,11 +429,12 @@ var hevcFiles = map[string][]string{
 		"test_vectors/hevc/main/OPFLAG_A_Qualcomm_1.hevc",
 		"test_vectors/hevc/main/OPFLAG_B_Qualcomm_1.hevc",
 		"test_vectors/hevc/main/OPFLAG_C_Qualcomm_1.hevc",
-		// PICSIZE_* fail to decode on Trogdor - b/229784864
-		"test_vectors/hevc/main/PICSIZE_A_Bossen_1.hevc",
-		"test_vectors/hevc/main/PICSIZE_B_Bossen_1.hevc",
-		"test_vectors/hevc/main/PICSIZE_C_Bossen_1.hevc",
-		"test_vectors/hevc/main/PICSIZE_D_Bossen_1.hevc",
+		// PICSIZE_* resolutions are very large, they need to be in another set
+		// to be gated by different Sw/HwDeps.
+		// "test_vectors/hevc/main/PICSIZE_A_Bossen_1.hevc",
+		// "test_vectors/hevc/main/PICSIZE_B_Bossen_1.hevc",
+		// "test_vectors/hevc/main/PICSIZE_C_Bossen_1.hevc",
+		// "test_vectors/hevc/main/PICSIZE_D_Bossen_1.hevc",
 		"test_vectors/hevc/main/PMERGE_A_TI_3.hevc",
 		"test_vectors/hevc/main/PMERGE_B_TI_3.hevc",
 		"test_vectors/hevc/main/PMERGE_C_TI_3.hevc",
@@ -488,6 +489,12 @@ var hevcFiles = map[string][]string{
 		"test_vectors/hevc/main/WPP_F_ericsson_MAIN_2.hevc",
 		// Disabled since Chrome doesn't support HEVCPROFILE_MAIN_STILL_PICTURE
 		// "test_vectors/hevc/main_still_picture/IPRED_B_Nokia_3.hevc",
+	},
+	"main_part_5_8K": {
+		"test_vectors/hevc/main/PICSIZE_A_Bossen_1.hevc", // Resolution 1056x8440
+		"test_vectors/hevc/main/PICSIZE_B_Bossen_1.hevc", // Resolution 8440x1056
+		"test_vectors/hevc/main/PICSIZE_C_Bossen_1.hevc", // Resolution 528x4216
+		"test_vectors/hevc/main/PICSIZE_D_Bossen_1.hevc", // Resolution 4216x528
 	},
 	"main_10": {
 		"test_vectors/hevc/main_10/DBLK_A_MAIN10_VIXS_4.hevc",

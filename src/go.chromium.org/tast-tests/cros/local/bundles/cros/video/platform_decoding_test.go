@@ -147,6 +147,17 @@ func TestPlatformDecodingParams(t *testing.T) {
 		})
 	}
 
+	params = append(params, paramData{
+		Name:               "hevc_main_part_5_8k",
+		Decoder:            filepath.Join(chrome.BinTestDir, "decode_test"),
+		DecoderArgsBuilder: "platform.HEVCDecodeVAAPIargs",
+		Files:              "hevcFiles[\"main_part_5_8K\"]",
+		Timeout:            defaultTimeout,
+		SoftwareDeps:       []string{"vaapi", caps.HWDecodeHEVC8K},
+		Metadata:           "hevcFiles[\"main_part_5_8K\"]",
+		Attr:               []string{"graphics_video_hevc", "graphics_perbuild"},
+	})
+
 	// Generate VAAPI VP8 tests.
 	for _, testGroup := range []string{"inter", "inter_multi_coeff", "inter_segment", "intra", "intra_multi_coeff", "intra_segment", "comprehensive"} {
 		files := fmt.Sprintf("vp8Files[\"%s\"]", testGroup)

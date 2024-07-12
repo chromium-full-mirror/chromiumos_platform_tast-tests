@@ -632,6 +632,18 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_hevc", "graphics_perbuild"},
 			},
 			{
+				Name: "hevc_main_part_5_8k",
+				Val: platformDecodingParams{
+					filenames:          hevcFiles["main_part_5_8K"],
+					decoder:            "/usr/local/libexec/chrome-binary-tests/decode_test",
+					decoderArgsBuilder: platform.HEVCDecodeVAAPIargs,
+				},
+				Timeout:           10 * time.Minute,
+				ExtraSoftwareDeps: []string{"vaapi", "autotest-capability:hw_dec_hevc_4320_30"},
+				ExtraData:         appendJSONFiles(hevcFiles["main_part_5_8K"]),
+				ExtraAttr:         []string{"graphics_video_hevc", "graphics_perbuild"},
+			},
+			{
 				Name: "vaapi_vp8_inter",
 				Val: platformDecodingParams{
 					filenames:          vp8Files["inter"],

@@ -559,6 +559,18 @@ func init() {
 				},
 			},
 			{
+				Name:              "hevc_main_part_5_8k",
+				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
+				ExtraSoftwareDeps: []string{caps.HWDecodeHEVC8K},
+				ExtraData:         appendJSONFiles(hevcFiles["main_part_5_8K"]),
+				Timeout:           calculateTestTimeout(hevcFiles["main_part_5_8K"], "hevc_main_part_5_8k"),
+				Val: chromeStackDecoderVerificationTestParam{
+					videoFiles:    hevcFiles["main_part_5_8K"],
+					validatorType: decoding.MD5,
+					mustFail:      false,
+				},
+			},
+			{
 				Name:              "h264_files_from_bugs_149068426",
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
 				ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
