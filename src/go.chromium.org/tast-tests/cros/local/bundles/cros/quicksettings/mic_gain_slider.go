@@ -22,8 +22,7 @@ func init() {
 		Desc:         "Checks that the Quick Settings mic gain slider can be adjusted",
 		Contacts: []string{
 			"cros-status-area-eng@google.com",
-			"chromeos-sw-engprod@google.com",
-			"amehfooz@chromium.org",
+			"chromeos-consumer-engprod@google.com",
 		},
 		BugComponent: "b:1246070", // ChromeOS > Software > System UI Surfaces > Status Area
 		Attr:         []string{"group:mainline", "informational"},

@@ -27,9 +27,7 @@ func init() {
 		Desc:         "Checks that the screen can be locked from Quick Settings",
 		Contacts: []string{
 			"cros-status-area-eng@google.com",
-			"chromeos-sw-engprod@google.com",
-			"amehfooz@chromium.org",
-			"cros-system-ui-eng@google.com",
+			"chromeos-consumer-engprod@google.com",
 		},
 		BugComponent: "b:1246070", // ChromeOS > Software > System UI Surfaces > Status Area
 		Attr:         []string{"group:mainline", "informational"},

@@ -28,8 +28,7 @@ func init() {
 		Desc:         "Checks that the Quick Settings volume slider can be adjusted by keyboard",
 		Contacts: []string{
 			"cros-status-area-eng@google.com",
-			"chromeos-sw-engprod@google.com",
-			"sylvieliu@chromium.org",
+			"chromeos-consumer-engprod@google.com",
 		},
 		BugComponent: "b:1246070", // ChromeOS > Software > System UI Surfaces > Status Area
 		Attr:         []string{"group:mainline", "informational"},

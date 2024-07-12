@@ -24,9 +24,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that the Quick Settings Night Light feature pod button is working correctly",
 		Contacts: []string{
-			"chromeos-sw-engprod@google.com",
-			"leandre@chromium.org",
 			"cros-status-area-eng@google.com",
+			"chromeos-consumer-engprod@google.com",
 		},
 		BugComponent: "b:1246070", // ChromeOS > Software > System UI Surfaces > Status Area
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},

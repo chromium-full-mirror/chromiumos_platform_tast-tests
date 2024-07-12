@@ -40,9 +40,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that settings can be found on Quick Settings",
 		Contacts: []string{
-			"chromeos-sw-engprod@google.com",
 			"cros-status-area-eng@google.com",
-			"awendy@google.com",
+			"chromeos-consumer-engprod@google.com",
 		},
 		BugComponent: "b:1246070", // ChromeOS > Software > System UI Surfaces > Status Area
 		Attr:         []string{"group:mainline", "informational"},
@@ -326,7 +325,7 @@ func enableAccessAndKeyboard(ctx context.Context, res *basicLayoutTestResources)
 		return errors.Wrap(err, "failed to toggle accessibility settings")
 	}
 
-	if err := setting.NavigateToPageURL(ctx, res.cr, "osLanguages", res.pc.Click(nodewith.NameStartingWith("Inputs"))); err != nil {
+	if err := setting.NavigateToPageURL(ctx, res.cr, "osLanguages/input", res.ui.WaitUntilExists(nodewith.Role(role.Button).Name("Add input methods"))); err != nil {
 		return errors.Wrap(err, "failed to enter inputs settings page")
 	}
 

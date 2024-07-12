@@ -24,8 +24,7 @@ func init() {
 		Desc:         "Checks that settings can be opened from Quick Settings",
 		Contacts: []string{
 			"cros-status-area-eng@google.com",
-			"chromeos-sw-engprod@google.com",
-			"amehfooz@chromium.org",
+			"chromeos-consumer-engprod@google.com",
 		},
 		BugComponent: "b:1246070", // ChromeOS > Software > System UI Surfaces > Status Area
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
