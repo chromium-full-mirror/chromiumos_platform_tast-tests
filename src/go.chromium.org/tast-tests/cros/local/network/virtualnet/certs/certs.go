@@ -77,15 +77,15 @@ func New(certDirectory string, certstore certificate.CertStore) *Certs {
 func (c *Certs) InstallTestCerts(ctx context.Context) (func(context.Context), error) {
 	success := false
 	cleanup := func(ctx context.Context) {
-		if err := testexec.CommandContext(ctx, "umount", c.certDirectory).Run(); err != nil {
+		if err := testexec.CommandContext(ctx, "umount", c.certDirectory).Run(testexec.DumpLogOnError); err != nil {
 			testing.ContextLog(ctx, "Failed to unmount bind: ", err)
 		}
 
-		if err := testexec.CommandContext(ctx, "rm", "-rf", tmpCertsPath).Run(); err != nil {
+		if err := testexec.CommandContext(ctx, "rm", "-rf", tmpCertsPath).Run(testexec.DumpLogOnError); err != nil {
 			testing.ContextLog(ctx, "Failed to delete tmp directory: ", err)
 		}
 
-		if err := testexec.CommandContext(ctx, "mount", "-o", "remount,nosymfollow", tmpPath).Run(); err != nil {
+		if err := testexec.CommandContext(ctx, "mount", "-o", "remount,nosymfollow", tmpPath).Run(testexec.DumpLogOnError); err != nil {
 			testing.ContextLogf(ctx, "Failed to change mount options on %s back to default: %s", tmpPath, err)
 		}
 	}
@@ -96,11 +96,17 @@ func (c *Certs) InstallTestCerts(ctx context.Context) (func(context.Context), er
 		}
 	}()
 
-	if err := testexec.CommandContext(ctx, "mount", "-o", "remount,symfollow", tmpPath).Run(); err != nil {
+	if err := testexec.CommandContext(ctx, "mount", "-o", "remount,symfollow", tmpPath).Run(testexec.DumpLogOnError); err != nil {
 		return nil, errors.Wrapf(err, "failed change mount options on: %s", tmpPath)
 	}
 
-	if err := testexec.CommandContext(ctx, "mkdir", tmpCertsPath).Run(); err != nil {
+	// Remove the folder at first, in case that the previous test does not clean
+	// up properly.
+	if err := testexec.CommandContext(ctx, "rm", "-rf", tmpCertsPath).Run(testexec.DumpLogOnError); err != nil {
+		testing.ContextLog(ctx, "Failed to delete tmp directory: ", err)
+	}
+
+	if err := testexec.CommandContext(ctx, "mkdir", tmpCertsPath).Run(testexec.DumpLogOnError); err != nil {
 		return nil, errors.Wrapf(err, "failed to make tmp directory: %s", tmpCertsPath)
 	}
 
@@ -119,7 +125,7 @@ func (c *Certs) InstallTestCerts(ctx context.Context) (func(context.Context), er
 
 // writeTestServerCertAndPrivateKey writes the server certificate and the server private key to a tmp directory for use in ServeTLS().
 func (c *Certs) writeTestServerCertAndPrivateKey(ctx context.Context) error {
-	if err := testexec.CommandContext(ctx, "mkdir", serverPath).Run(); err != nil {
+	if err := testexec.CommandContext(ctx, "mkdir", serverPath).Run(testexec.DumpLogOnError); err != nil {
 		return errors.Wrap(err, "failed to make server directory")
 	}
 
@@ -139,7 +145,7 @@ func (c *Certs) writeTestServerCertAndPrivateKey(ctx context.Context) error {
 // func from InstallTestCerts() will remove the mount and make the default certs
 // visible again.
 func (c *Certs) installTestCertificateAuthorityCert(ctx context.Context) error {
-	if err := testexec.CommandContext(ctx, "mkdir", caPath).Run(); err != nil {
+	if err := testexec.CommandContext(ctx, "mkdir", caPath).Run(testexec.DumpLogOnError); err != nil {
 		return errors.Wrap(err, "failed to make ca directory")
 	}
 
@@ -147,7 +153,7 @@ func (c *Certs) installTestCertificateAuthorityCert(ctx context.Context) error {
 		return errors.Wrap(err, "failed to write ca cert")
 	}
 
-	if err := testexec.CommandContext(ctx, "c_rehash", caPath).Run(); err != nil {
+	if err := testexec.CommandContext(ctx, "c_rehash", caPath).Run(testexec.DumpLogOnError); err != nil {
 		return errors.Wrap(err, "failed to rehash tmp cert directory")
 	}
 
@@ -156,7 +162,7 @@ func (c *Certs) installTestCertificateAuthorityCert(ctx context.Context) error {
 		return errors.Wrap(err, "failed to write ca cert")
 	}
 
-	if err := testexec.CommandContext(ctx, "mount", "-o", "bind", caPath, c.certDirectory).Run(); err != nil {
+	if err := testexec.CommandContext(ctx, "mount", "-o", "bind", caPath, c.certDirectory).Run(testexec.DumpLogOnError); err != nil {
 		return errors.Wrapf(err, "failed to bind mount, caPath: %s, target: %s", caPath, c.certDirectory)
 	}
 	return nil
