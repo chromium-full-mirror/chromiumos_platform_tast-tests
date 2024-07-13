@@ -448,7 +448,8 @@ func init() {
 		// ChromeOS > Software > Window Management > PostLoginRestoreAndGlanceables
 		BugComponent: "b:1488650",
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
-			return []Option{EnableFeatures("ForestFeature")}, nil
+			// TODO(b/351149361): Fix BirchWeather passing invalid gaia ids to the Weather API.
+			return []Option{EnableFeatures("ForestFeature"), DisableFeatures("BirchWeather")}, nil
 		}),
 		SetUpTimeout:    FixtureSetUpTimeout,
 		ResetTimeout:    ResetTimeout,
