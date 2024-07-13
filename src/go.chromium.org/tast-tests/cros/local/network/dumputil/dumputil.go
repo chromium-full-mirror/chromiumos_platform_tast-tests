@@ -93,6 +93,9 @@ func DumpNetworkInfo(ctx context.Context, filename string) error {
 	runCmdAndLog("/usr/local/lib/flimflam/test/list-devices")
 	runCmdAndLog("/usr/local/lib/flimflam/test/list-connected-services")
 
+	// Dump resolv.conf.
+	runCmdAndLog("cat", "/etc/resolv.conf")
+
 	for _, err := range errs {
 		testing.ContextLog(ctx, "Failed to run cmd: ", err)
 	}
