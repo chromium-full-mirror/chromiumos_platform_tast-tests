@@ -18,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/camera/cca"
 	"go.chromium.org/tast-tests/cros/local/camera/testutil"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -507,6 +508,19 @@ func checkInstancesCoexistence(ctx context.Context, cr *chrome.Chrome, a *arc.AR
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
 	defer cancel()
+
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to connect to test API")
+	}
+	// TODO(b/322276967): When testing Coexistence, the devtool page pops out unexpectedly. In
+	// tablet mode, the devtool page is focused so CCA suspends. It causes the test to fail.
+	// Remove the workaround when finding the root cause.
+	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, false)
+	if err != nil {
+		return errors.Wrap(err, "failed to disable tablet mode")
+	}
+	defer cleanup(cleanupCtx)
 
 	// Launch regular CCA.
 	regularApp, err := cca.New(ctx, cr, outDir, tb)
