@@ -136,8 +136,6 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 		chrome.EnableFeatures("LocalPasswordsForConsumers"),
 		// TODO(b/333444345): Remove this as a part of post-launch cleanup.
 		chrome.EnableFeatures("OobeAiIntro"),
-		// TODO(b/333444345): Remove this as a part of post-launch cleanup.
-		chrome.EnableFeatures("OobeTuna"),
 		chrome.DisableFeatures("OobePersonalizedOnboarding"),
 	}
 	// Keep the user that was previously added for the 'AddPerson' flow.
@@ -351,24 +349,24 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	shouldSkipTuna := false
-	if err := oobeConn.Eval(ctx, "OobeAPI.screens.TunaScreen.shouldSkip()", &shouldSkipTuna); err != nil {
-		s.Fatal("Failed to evaluate whether to skip Tuna screen: ", err)
+	shouldSkipGeminiIntro := false
+	if err := oobeConn.Eval(ctx, "OobeAPI.screens.GeminiIntroScreen.shouldSkip()", &shouldSkipGeminiIntro); err != nil {
+		s.Fatal("Failed to evaluate whether to skip GeminiIntro screen: ", err)
 	}
 
-	if shouldSkipTuna {
-		s.Log("Skipping the Tuna screen")
+	if shouldSkipGeminiIntro {
+		s.Log("Skipping the GeminiIntro screen")
 	} else {
-		s.Log("Waiting for the Tuna screen")
-		if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.TunaScreen.isVisible()"); err != nil {
-			s.Fatal("Failed to wait for the Tuna screen to be visible: ", err)
+		s.Log("Waiting for the GeminiIntro screen")
+		if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.GeminiIntroScreen.isVisible()"); err != nil {
+			s.Fatal("Failed to wait for the GeminiIntro screen to be visible: ", err)
 		}
 
-		if err := uiauto.Combine("click next on the Tuna screen",
+		if err := uiauto.Combine("click next on the GeminiIntro screen",
 			ui.WaitUntilExists(focusedButton),
 			ui.LeftClick(focusedButton),
 		)(ctx); err != nil {
-			s.Fatal("Failed to skip on the Tuna screen: ", err)
+			s.Fatal("Failed to skip on the GeminiIntro screen: ", err)
 		}
 	}
 
