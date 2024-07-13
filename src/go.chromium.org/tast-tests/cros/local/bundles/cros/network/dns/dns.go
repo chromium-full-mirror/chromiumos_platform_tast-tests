@@ -342,6 +342,9 @@ func (o QueryOptions) digArgs() []string {
 	if o.Nameserver != "" {
 		args = append(args, "@"+o.Nameserver)
 	}
+	// Default is timeout=5 and tries=3. With virtualnet all target servers should
+	// be on DUT. Let's use smaller values to speed up negative test and retry.
+	args = append(args, "+timeout=2", "+tries=2")
 	return args
 }
 
