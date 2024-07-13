@@ -7,6 +7,7 @@ package dns
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"html/template"
 	"io/ioutil"
 	"net"
@@ -479,7 +480,11 @@ func DigMatch(ctx context.Context, re *regexp.Regexp, match bool) error {
 		return errors.Wrap(err, "dig failed")
 	}
 	if re.MatchString(string(out)) != match {
-		return errors.New("dig used unexpected nameserver")
+		wantStr := fmt.Sprintf("match '%s'", re.String())
+		if !match {
+			wantStr = "not " + wantStr
+		}
+		return errors.Errorf("dig used unexpected nameserver: got %s, want %s", string(out), wantStr)
 	}
 	return nil
 }
