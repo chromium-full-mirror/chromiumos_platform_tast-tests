@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/network/hwsim"
 	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast-tests/cros/local/network/testhooks"
@@ -19,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/subnet"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -137,21 +137,35 @@ func DropInvalidPackets(ctx context.Context, s *testing.State) {
 	// Setup finished. Start verification.
 	const (
 		targetPort        = 12345
-		errConnRefused    = "Connection refused"
-		errOpNotPermitted = "Operation not permitted"
+		errConnRefused    = "connection refused"
+		errOpNotPermitted = "operation not permitted"
 	)
 
-	// Helper function to run cmd with `sh -c` and expect the stderr contains
-	// expectErr.
-	runCmdAndExpectErr := func(cmd, expectErr string) {
-		s.Log("Running `", cmd, "`")
-		// Do not use testexec.DumpLogOnError here since failure is expected.
-		_, stderr, err := testexec.CommandContext(ctx, "sh", "-c", cmd).SeparatedOutput()
+	// Helper function to connect to udp:remoteIP:remotePort with binding localIP
+	// and expect the error contains expectErr.
+	runUDPIOAndExpectErr := func(localIP, remoteIP net.IP, remotePort int, expectErr string) {
+		tag := fmt.Sprintf("UDP %s -> %s:%d", localIP, remoteIP, remotePort)
+		s.Log("Running `", tag, "`")
+		err := func() error {
+			udpConn, err := net.DialUDP("udp", &net.UDPAddr{IP: localIP, Port: 0}, &net.UDPAddr{IP: remoteIP, Port: remotePort})
+			if err != nil {
+				return errors.Wrap(err, "failed to connect")
+			}
+			bytes := []byte("hello")
+			udpConn.SetDeadline(time.Now().Add(1 * time.Second))
+			if _, err := udpConn.Write(bytes); err != nil {
+				return errors.Wrap(err, "failed to write")
+			}
+			if _, err := udpConn.Read(bytes); err != nil {
+				return errors.Wrap(err, "failed to read")
+			}
+			return nil
+		}()
 		if err == nil {
-			s.Fatalf("Command `%s` succeeded, want failure %s", cmd, expectErr)
+			s.Fatalf("`%s` succeeded, want failure %s", tag, expectErr)
 		}
-		if !strings.Contains(string(stderr), expectErr) {
-			s.Fatalf("Unexpected failure: got %s, want %s: %v", string(stderr), expectErr, err)
+		if !strings.Contains(err.Error(), expectErr) {
+			s.Fatalf("Unexpected failure: got %s, want %s", err.Error(), expectErr)
 		}
 	}
 	for _, env := range []*virtualnet.Env{ethEnv, wifiEnv.Router} {
@@ -159,28 +173,27 @@ func DropInvalidPackets(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatalf("Failed to get addrs inside %s: %v", env.NetNSName, err)
 		}
-		envIPv4Addr := envAddrs.IPv4Addr.String()
+		envIPv4Addr := envAddrs.IPv4Addr
 
 		s.Logf("Start to verify connection behavior to %s(%s) via %s", env.NetNSName, envIPv4Addr, env.VethOutName)
 
 		// Make sure the ping connectivity at first.
-		if err := ping.ExpectPingSuccessWithTimeout(ctx, envIPv4Addr, "root", 5*time.Second); err != nil {
+		if err := ping.ExpectPingSuccessWithTimeout(ctx, envIPv4Addr.String(), "root", 5*time.Second); err != nil {
 			s.Fatalf("Failed to ping %s in %s: %v", envIPv4Addr, env.NetNSName, err)
 		}
 
-		// Baseline test: not binding to any address, expect to get an "Connection
+		// Baseline test: not binding to any address, expect to get an "connection
 		// refused" error since there is nothing listening on that endpoint.
 		// TODO(jiejiang): Ideally we should start an l4server in the corresponding
 		// env and verify that the connection succeeds, but somehow doing that will
 		// turn down the connection to the tast test bundle. The reason is unclear.
-		baseCmd := fmt.Sprintf("echo 'test' | socat - udp:%s:%d", envIPv4Addr, targetPort)
-		runCmdAndExpectErr(baseCmd, errConnRefused)
+		runUDPIOAndExpectErr(net.IPv4zero, envIPv4Addr, targetPort, errConnRefused)
 
 		// For all internal IPs, the packets should be dropped by iptables, so
-		// expect to get an "Operation not permitted".
+		// expect to get an "operation not permitted" for UDP. (Note that TCP
+		// handshake will time out so we use UDP here.)
 		for _, internalIP := range internalIPs {
-			testCmd := baseCmd + ",bind=" + internalIP.String()
-			runCmdAndExpectErr(testCmd, errOpNotPermitted)
+			runUDPIOAndExpectErr(internalIP, envIPv4Addr, targetPort, errOpNotPermitted)
 		}
 	}
 }
