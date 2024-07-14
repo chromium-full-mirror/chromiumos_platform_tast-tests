@@ -271,7 +271,7 @@ func init() {
 			"shend@chromium.org",
 			"essential-inputs-team@google.com",
 		},
-		Impl:            inputsFixture(clamshellMode, false, false, browser.TypeAsh, picker),
+		Impl:            inputsFixture(clamshellMode, false, false, browser.TypeAsh, picker, gaiaLogin, orca),
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
