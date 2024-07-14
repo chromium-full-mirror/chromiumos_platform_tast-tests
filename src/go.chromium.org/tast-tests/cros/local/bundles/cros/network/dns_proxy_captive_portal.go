@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/dns"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/network"
+	"go.chromium.org/tast-tests/cros/local/network/testhooks"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/certs"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/subnet"
@@ -61,13 +62,21 @@ func DNSProxyCaptivePortal(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
 	defer cancel()
 
+	hookEnv, err := testhooks.RunNetworkTestHooks(ctx,
+		testhooks.NewSaveNetLogHook(),
+		testhooks.NewTcpdumpHook(),
+		testhooks.NewDumpHostOnFailureHook(),
+		testhooks.NewEnablePortalDetectionHook(),
+	)
+	if err != nil {
+		s.Fatal("Failed to run network test hooks: ", err)
+	}
+	s.AttachErrorHandlers(hookEnv.OnErrorHandler, hookEnv.OnFatalHandler)
+	defer hookEnv.TearDownWithLogFailures(cleanupCtx, s.HasError)
+
 	m, err := shill.NewManager(ctx)
 	if err != nil {
 		s.Fatal("Failed to create manager proxy: ", err)
-	}
-
-	if err := m.EnablePortalDetection(ctx); err != nil {
-		s.Fatal("Enable Portal Detection failed: ", err)
 	}
 
 	// Shill currently does not have a method to fully restart a portal
