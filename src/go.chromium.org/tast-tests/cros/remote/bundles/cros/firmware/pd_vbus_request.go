@@ -33,7 +33,6 @@ func init() {
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		// TODO: When stable, move to firmware_pd.
 		Data:         []string{firmware.ConfigFile},
-		Attr:         []string{"group:firmware", "firmware_pd_unstable"},
 		Vars:         []string{"servo"},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps: []string{
@@ -45,7 +44,7 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Battery()),
 		Timeout:      60 * time.Minute,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Params: []testing.Param{{
+		Params: firmware.AddPDPorts([]testing.Param{{
 			Name: "normal",
 			Val:  firmware.PDTestParams{},
 		}, {
@@ -69,7 +68,7 @@ func init() {
 			Val: firmware.PDTestParams{
 				Shutdown: true,
 			},
-		}},
+		}}, []string{"group:firmware", "firmware_pd"}),
 	})
 }
 
