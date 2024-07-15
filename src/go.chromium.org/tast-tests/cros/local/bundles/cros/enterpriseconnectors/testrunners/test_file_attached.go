@@ -1,8 +1,8 @@
-// Copyright 2022 The ChromiumOS Authors
+// Copyright 2024 The ChromiumOS Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package enterpriseconnectors
+package testrunners
 
 import (
 	"context"
@@ -34,129 +34,12 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-func init() {
-	testing.AddTest(&testing.Test{
-		Func:         TestFileAttached,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Enterprise connector test for uploading files",
-		Timeout:      30 * time.Minute,
-		Contacts: []string{
-			"cros-enterprise-connectors@google.com",
-			"sseckler@google.com",
-			"webprotect-eng@google.com",
-		},
-		BugComponent: "b:1240978",
-		SoftwareDeps: []string{
-			"chrome",
-			"chrome_internal",
-			"gaia",
-		},
-		Attr: []string{
-			"group:hw_agnostic",
-			"group:golden_tier",
-			"group:medium_low_tier",
-			"group:hardware",
-		},
-		Params: []testing.Param{
-			{
-				Name:    "scan_enabled_allows_immediate_and_unscannable_ash",
-				Fixture: "ashGaiaSignedInProdPolicyWPEnabledAllowExtra",
-				Val: helpers.TestParams{
-					AllowsImmediateDelivery: true,
-					AllowsUnscannableFiles:  true,
-					ScansEnabled:            true,
-					BrowserType:             browser.TypeAsh,
-				},
-			},
-			{
-				Name:    "scan_enabled_blocks_immediate_and_unscannable_ash",
-				Fixture: "ashGaiaSignedInProdPolicyWPEnabledBlockExtra",
-				Val: helpers.TestParams{
-					AllowsImmediateDelivery: false,
-					AllowsUnscannableFiles:  false,
-					ScansEnabled:            true,
-					BrowserType:             browser.TypeAsh,
-				},
-			},
-			{
-				Name:    "scan_disabled_ash",
-				Fixture: "ashGaiaSignedInProdPolicyWPDisabled",
-				Val: helpers.TestParams{
-					AllowsImmediateDelivery: true,
-					AllowsUnscannableFiles:  true,
-					ScansEnabled:            false,
-					BrowserType:             browser.TypeAsh,
-				},
-			},
-			{
-				Name:    "scan_enabled_allows_immediate_and_unscannable_lacros",
-				Fixture: "lacrosGaiaSignedInProdPolicyWPEnabledAllowExtra",
-				Val: helpers.TestParams{
-					AllowsImmediateDelivery: true,
-					AllowsUnscannableFiles:  true,
-					ScansEnabled:            true,
-					BrowserType:             browser.TypeLacros,
-				},
-				ExtraSoftwareDeps: []string{"lacros"},
-			},
-			{
-				Name:    "scan_enabled_blocks_immediate_and_unscannable_lacros",
-				Fixture: "lacrosGaiaSignedInProdPolicyWPEnabledBlockExtra",
-				Val: helpers.TestParams{
-					AllowsImmediateDelivery: false,
-					AllowsUnscannableFiles:  false,
-					ScansEnabled:            true,
-					BrowserType:             browser.TypeLacros,
-				},
-				ExtraSoftwareDeps: []string{"lacros"},
-			},
-			{
-				Name:    "scan_disabled_lacros",
-				Fixture: "lacrosGaiaSignedInProdPolicyWPDisabled",
-				Val: helpers.TestParams{
-					AllowsImmediateDelivery: true,
-					AllowsUnscannableFiles:  true,
-					ScansEnabled:            false,
-					BrowserType:             browser.TypeLacros,
-				},
-				ExtraSoftwareDeps: []string{"lacros"},
-			},
-		},
-		Data: []string{
-			"download.html", // download.html required for CheckFCMTokenRegistered.
-			"file_input.html",
-			"10ssns.txt",
-			"allowed.txt",
-			"content.exe",
-			"unknown_malware_encrypted.zip",
-			"unknown_malware.zip",
-		},
-	})
-}
-
 // TestFileAttached tests the correct behavior of the enterprise connectors when attaching a file to a webpage.
 // Hereby, it is checked:
 // 1. Whether a file is blocked or not
 // 2. Whether the correct UI is shown
 // 3. Whether the deep scan result is correct (especially relevant for AllowsImmediateDelivery==true)
-func TestFileAttached(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
-
-	// Clear Downloads directory.
-	downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
-	if err != nil {
-		s.Fatal("Failed to get user's Download path: ", err)
-	}
-	files, err := ioutil.ReadDir(downloadsPath)
-	if err != nil {
-		s.Fatal("Failed to get files from Downloads directory")
-	}
-	for _, file := range files {
-		if err := os.RemoveAll(filepath.Join(downloadsPath, file.Name())); err != nil {
-			s.Fatal("Failed to remove file: ", file.Name())
-		}
-	}
-
+func TestFileAttached(ctx context.Context, s *testing.State, cr *chrome.Chrome, cryptohomeUsername string) {
 	// Verify policy.
 	tconnAsh, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -175,13 +58,12 @@ func TestFileAttached(ctx context.Context, s *testing.State) {
 		s.Fatal("Policy is set, but shouldn't be")
 	}
 
-	testFileAttachedForBrowser(ctx, s, testParams.BrowserType)
+	testFileAttachedForBrowser(ctx, s, cr, testParams.BrowserType, cryptohomeUsername)
 }
 
-func testFileAttachedForBrowser(ctx context.Context, s *testing.State, browserType browser.Type) {
+func testFileAttachedForBrowser(ctx context.Context, s *testing.State, cr *chrome.Chrome, browserType browser.Type, cryptohomeUsername string) {
 	testParams := s.Param().(helpers.TestParams)
 
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	tconnAsh, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect to test API: ", err)
@@ -234,23 +116,35 @@ func testFileAttachedForBrowser(ctx context.Context, s *testing.State, browserTy
 	defer dconn.Close()
 	defer dconn.CloseTarget(cleanupCtx)
 
+	// Clear Downloads directory.
+	downloadsPath, err := cryptohome.DownloadsPath(ctx, cryptohomeUsername)
+	if err != nil {
+		s.Fatal("Failed to get user's Download path: ", err)
+	}
+	files, err := ioutil.ReadDir(downloadsPath)
+	if err != nil {
+		s.Fatal("Failed to get files from Downloads directory")
+	}
+	for _, file := range files {
+		if err := os.RemoveAll(filepath.Join(downloadsPath, file.Name())); err != nil {
+			s.Fatal("Failed to remove file: ", file.Name())
+		}
+	}
+
 	// Need to wait for a valid fcm token, i.e., the proper initialization of the enterprise connectors.
 	if testParams.ScansEnabled {
 		s.Log("Checking for fcm token")
-		downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
-		if err != nil {
-			s.Fatal("Failed to get user's Download path: ", err)
-		}
 		if err := helpers.WaitForFCMTokenRegistered(ctx, br, tconnAsh, server, downloadsPath); err != nil {
 			s.Fatal("Failed to wait for FCM token: ", err)
 		}
 	}
 
-	// Create test directory if it does not yet exist.
-	myFilesPath, err := cryptohome.MyFilesPath(ctx, cr.NormalizedUser())
+	myFilesPath, err := cryptohome.MyFilesPath(ctx, cryptohomeUsername)
 	if err != nil {
 		s.Fatal("Failed to get user's MyFiles path: ", err)
 	}
+
+	// Create test directory if it does not yet exist.
 	testDirPath := filepath.Join(myFilesPath, "test_dir")
 	if _, err := os.Stat(testDirPath); os.IsNotExist(err) {
 		if err := os.Mkdir(testDirPath, 0755); err != nil {
@@ -261,7 +155,7 @@ func testFileAttachedForBrowser(ctx context.Context, s *testing.State, browserTy
 
 	for _, params := range helpers.GetTestFileParams() {
 		if succeeded := s.Run(ctx, params.TestName, func(ctx context.Context, s *testing.State) {
-			testFileAttachedForBrowserAndFile(ctx, params, testParams, br, s, server, testDirPath, ui, tconnAsh)
+			testFileAttachedForBrowserAndFile(ctx, params, testParams, cr, br, s, server, testDirPath, ui, tconnAsh)
 		}); !succeeded {
 			// Stop, if the subtest fails as it might have left the state unusable.
 			// It also prevents showing wrong errors on tastboard.
@@ -274,6 +168,7 @@ func testFileAttachedForBrowserAndFile(
 	ctx context.Context,
 	params helpers.TestFileParams,
 	testParams helpers.TestParams,
+	cr *chrome.Chrome,
 	br *browser.Browser,
 	s *testing.State,
 	server *httptest.Server,
@@ -295,7 +190,6 @@ func testFileAttachedForBrowserAndFile(
 			shouldBlockUpload = params.IsBad
 		}
 	}
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "dump_on_error")
 
@@ -346,7 +240,6 @@ func testFileAttachedForBrowserAndFile(
 		s.Fatal("Failed to open file: ", err)
 	}
 	if err := ui.WithInterval(200 * time.Millisecond).WithTimeout(5 * time.Second).WaitUntilGone(nodewith.Name("Files").HasClass("WebContentsViewAura"))(ctx); err != nil {
-		cr := s.FixtValue().(chrome.HasChrome).Chrome()
 		path := filepath.Join(s.OutDir(), fmt.Sprintf("screenshot-failed-to-close-file-picker-%s.png", params.TestName))
 		if err := screenshot.CaptureChrome(ctx, cr, path); err != nil {
 			s.Log("Failed to capture screenshot: ", err)

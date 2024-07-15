@@ -1,0 +1,121 @@
+// Copyright 2024 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package enterpriseconnectors
+
+import (
+	"context"
+	"time"
+
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/enterpriseconnectors/helpers"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/enterpriseconnectors/testrunners"
+	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
+	"go.chromium.org/tast/core/testing"
+)
+
+func init() {
+	testing.AddTest(&testing.Test{
+		Func:         TestDownloadUserSession,
+		LacrosStatus: testing.LacrosVariantExists,
+		Desc:         "Enterprise connector test for downloading files in user sessions",
+		Timeout:      30 * time.Minute,
+		Contacts: []string{
+			"cros-enterprise-connectors@google.com",
+			"sseckler@google.com",
+			"webprotect-eng@google.com",
+		},
+		BugComponent: "b:1240978",
+		SoftwareDeps: []string{
+			"chrome",
+			"chrome_internal",
+			"gaia",
+		},
+		Attr: []string{
+			"group:hw_agnostic",
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+		},
+		Params: []testing.Param{
+			{
+				Name:    "scan_enabled_allows_immediate_and_unscannable_ash",
+				Fixture: "ashGaiaSignedInProdPolicyWPEnabledAllowExtra",
+				Val: helpers.TestParams{
+					AllowsImmediateDelivery: true,
+					AllowsUnscannableFiles:  true,
+					ScansEnabled:            true,
+					BrowserType:             browser.TypeAsh,
+				},
+			},
+			{
+				Name:    "scan_enabled_blocks_immediate_and_unscannable_ash",
+				Fixture: "ashGaiaSignedInProdPolicyWPEnabledBlockExtra",
+				Val: helpers.TestParams{
+					AllowsImmediateDelivery: false,
+					AllowsUnscannableFiles:  false,
+					ScansEnabled:            true,
+					BrowserType:             browser.TypeAsh,
+				},
+			},
+			{
+				Name:    "scan_disabled_ash",
+				Fixture: "ashGaiaSignedInProdPolicyWPDisabled",
+				Val: helpers.TestParams{
+					AllowsImmediateDelivery: true,
+					AllowsUnscannableFiles:  true,
+					ScansEnabled:            false,
+					BrowserType:             browser.TypeAsh,
+				},
+			},
+			{
+				Name:    "scan_enabled_allows_immediate_and_unscannable_lacros",
+				Fixture: "lacrosGaiaSignedInProdPolicyWPEnabledAllowExtra",
+				Val: helpers.TestParams{
+					AllowsImmediateDelivery: true,
+					AllowsUnscannableFiles:  true,
+					ScansEnabled:            true,
+					BrowserType:             browser.TypeLacros,
+				},
+				ExtraSoftwareDeps: []string{"lacros"},
+			},
+			{
+				Name:    "scan_enabled_blocks_immediate_and_unscannable_lacros",
+				Fixture: "lacrosGaiaSignedInProdPolicyWPEnabledBlockExtra",
+				Val: helpers.TestParams{
+					AllowsImmediateDelivery: false,
+					AllowsUnscannableFiles:  false,
+					ScansEnabled:            true,
+					BrowserType:             browser.TypeLacros,
+				},
+				ExtraSoftwareDeps: []string{"lacros"},
+			},
+			{
+				Name:    "scan_disabled_lacros",
+				Fixture: "lacrosGaiaSignedInProdPolicyWPDisabled",
+				Val: helpers.TestParams{
+					AllowsImmediateDelivery: true,
+					AllowsUnscannableFiles:  true,
+					ScansEnabled:            false,
+					BrowserType:             browser.TypeLacros,
+				},
+				ExtraSoftwareDeps: []string{"lacros"},
+			},
+		},
+		Data: []string{
+			"download.html",
+			"10ssns.txt",
+			"allowed.txt",
+			"content.exe",
+			"unknown_malware_encrypted.zip",
+			"unknown_malware.zip",
+		},
+	})
+}
+
+func TestDownloadUserSession(ctx context.Context, s *testing.State) {
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+
+	testrunners.TestDownload(ctx, s, cr, cr.NormalizedUser())
+}

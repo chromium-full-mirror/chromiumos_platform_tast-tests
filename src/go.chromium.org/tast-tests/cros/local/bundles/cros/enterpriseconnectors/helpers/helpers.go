@@ -64,6 +64,9 @@ const ScanningTimeOut = 6 * time.Minute
 // FcmTokenTimeOut describes how long we wait for a valid fcm token.
 const FcmTokenTimeOut = 10 * time.Minute
 
+// FakeMgsUsername is the fake email used by the cryptohome package for specifying the guest user.
+const FakeMgsUsername = "$guest@gmail.com"
+
 // GetTestFileParams returns the list of parameters for the files that should be tested.
 func GetTestFileParams() []TestFileParams {
 	return []TestFileParams{

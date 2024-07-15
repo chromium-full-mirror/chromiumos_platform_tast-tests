@@ -1,8 +1,8 @@
-// Copyright 2022 The ChromiumOS Authors
+// Copyright 2024 The ChromiumOS Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package enterpriseconnectors
+package testrunners
 
 import (
 	"context"
@@ -26,123 +26,12 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-func init() {
-	testing.AddTest(&testing.Test{
-		Func:         TestDownload,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Enterprise connector test for downloading files",
-		Timeout:      30 * time.Minute,
-		Contacts: []string{
-			"cros-enterprise-connectors@google.com",
-			"sseckler@google.com",
-			"webprotect-eng@google.com",
-		},
-		BugComponent: "b:1240978",
-		SoftwareDeps: []string{
-			"chrome",
-			"chrome_internal",
-			"gaia",
-		},
-		Attr: []string{
-			"group:hw_agnostic",
-			"group:golden_tier",
-			"group:medium_low_tier",
-			"group:hardware",
-		},
-		Params: []testing.Param{
-			{
-				Name:    "scan_enabled_allows_immediate_and_unscannable_ash",
-				Fixture: "ashGaiaSignedInProdPolicyWPEnabledAllowExtra",
-				Val: helpers.TestParams{
-					AllowsImmediateDelivery: true,
-					AllowsUnscannableFiles:  true,
-					ScansEnabled:            true,
-					BrowserType:             browser.TypeAsh,
-				},
-			},
-			{
-				Name:    "scan_enabled_blocks_immediate_and_unscannable_ash",
-				Fixture: "ashGaiaSignedInProdPolicyWPEnabledBlockExtra",
-				Val: helpers.TestParams{
-					AllowsImmediateDelivery: false,
-					AllowsUnscannableFiles:  false,
-					ScansEnabled:            true,
-					BrowserType:             browser.TypeAsh,
-				},
-			},
-			{
-				Name:    "scan_disabled_ash",
-				Fixture: "ashGaiaSignedInProdPolicyWPDisabled",
-				Val: helpers.TestParams{
-					AllowsImmediateDelivery: true,
-					AllowsUnscannableFiles:  true,
-					ScansEnabled:            false,
-					BrowserType:             browser.TypeAsh,
-				},
-			},
-			{
-				Name:    "scan_enabled_allows_immediate_and_unscannable_lacros",
-				Fixture: "lacrosGaiaSignedInProdPolicyWPEnabledAllowExtra",
-				Val: helpers.TestParams{
-					AllowsImmediateDelivery: true,
-					AllowsUnscannableFiles:  true,
-					ScansEnabled:            true,
-					BrowserType:             browser.TypeLacros,
-				},
-				ExtraSoftwareDeps: []string{"lacros"},
-			},
-			{
-				Name:    "scan_enabled_blocks_immediate_and_unscannable_lacros",
-				Fixture: "lacrosGaiaSignedInProdPolicyWPEnabledBlockExtra",
-				Val: helpers.TestParams{
-					AllowsImmediateDelivery: false,
-					AllowsUnscannableFiles:  false,
-					ScansEnabled:            true,
-					BrowserType:             browser.TypeLacros,
-				},
-				ExtraSoftwareDeps: []string{"lacros"},
-			},
-			{
-				Name:    "scan_disabled_lacros",
-				Fixture: "lacrosGaiaSignedInProdPolicyWPDisabled",
-				Val: helpers.TestParams{
-					AllowsImmediateDelivery: true,
-					AllowsUnscannableFiles:  true,
-					ScansEnabled:            false,
-					BrowserType:             browser.TypeLacros,
-				},
-				ExtraSoftwareDeps: []string{"lacros"},
-			},
-		},
-		Data: []string{
-			"download.html",
-			"10ssns.txt",
-			"allowed.txt",
-			"content.exe",
-			"unknown_malware_encrypted.zip",
-			"unknown_malware.zip",
-		},
-	})
-}
-
-func TestDownload(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
-
-	// Clear Downloads directory.
-	downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
-	if err != nil {
-		s.Fatal("Failed to get user's Download path: ", err)
-	}
-	files, err := ioutil.ReadDir(downloadsPath)
-	if err != nil {
-		s.Fatal("Failed to get files from Downloads directory")
-	}
-	for _, file := range files {
-		if err = os.RemoveAll(filepath.Join(downloadsPath, file.Name())); err != nil {
-			s.Fatal("Failed to remove file: ", file.Name())
-		}
-	}
-
+// TestDownload tests the behavior of enterprise connectors when downloading a file from a webpage.
+// It checks:
+// 1. Whether the file download is blocked or not
+// 2. Whether the blocks notification appears when it should and vice versa or not
+// 3. Whether the deep scan result is correct (especially relevant for AllowsImmediateDelivery==true)
+func TestDownload(ctx context.Context, s *testing.State, cr *chrome.Chrome, cryptohomeUsername string) {
 	// Verify policy.
 	tconnAsh, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -208,6 +97,21 @@ func TestDownload(ctx context.Context, s *testing.State) {
 
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "dump_on_error")
 
+	// Clear Downloads directory.
+	downloadsPath, err := cryptohome.DownloadsPath(ctx, cryptohomeUsername)
+	if err != nil {
+		s.Fatal("Failed to get user's Download path: ", err)
+	}
+	files, err := ioutil.ReadDir(downloadsPath)
+	if err != nil {
+		s.Fatal("Failed to get files from Downloads directory")
+	}
+	for _, file := range files {
+		if err = os.RemoveAll(filepath.Join(downloadsPath, file.Name())); err != nil {
+			s.Fatal("Failed to remove file: ", file.Name())
+		}
+	}
+
 	// Need to wait for a valid fcm token, i.e., the proper initialization of the enterprise connectors.
 	if testParams.ScansEnabled {
 		s.Log("Checking for fcm token")
@@ -222,7 +126,6 @@ func TestDownload(ctx context.Context, s *testing.State) {
 			ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 			defer cancel()
 
-			cr := s.FixtValue().(chrome.HasChrome).Chrome()
 			dconnSafebrowsing, err := helpers.GetCleanDconnSafebrowsing(ctx, cr, br)
 			if err != nil {
 				s.Fatal("Failed to get clean safe browsing page: ", err)
