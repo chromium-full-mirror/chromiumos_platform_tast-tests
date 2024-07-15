@@ -120,7 +120,6 @@ func init() {
 			},
 		}, {
 			Name:              "mixed_sae_ext",
-			ExtraAttr:         []string{"wificell_unstable"},
 			ExtraSoftwareDeps: []string{"wpa3_sae"},
 			Val: roamFTparam{
 				apOpts: []hostapd.Option{
@@ -137,7 +136,6 @@ func init() {
 			ExtraTestBedDeps: []string{"wifi_router_features:WIFI_ROUTER_FEATURE_SAE_EXT_KEY"},
 		}, {
 			Name:              "sae_ext",
-			ExtraAttr:         []string{"wificell_unstable"},
 			ExtraSoftwareDeps: []string{"wpa3_sae"},
 			Val: roamFTparam{
 				apOpts: []hostapd.Option{
