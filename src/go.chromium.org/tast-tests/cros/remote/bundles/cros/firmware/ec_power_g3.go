@@ -74,9 +74,9 @@ func init() {
 				},
 			},
 			{
-				Name: "power_state_usb_plugged_in",
-				// TODO: When stable, change firmware_unstable to a different attr.
-				ExtraAttr: []string{"firmware_unstable", "firmware_usb"},
+				Name:              "power_state_usb_plugged_in",
+				ExtraAttr:         []string{"firmware_bios", "firmware_usb", "firmware_level2", "group:labqual", "firmware_ro"},
+				ExtraRequirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01"},
 				Val: powerG3Params{
 					PowerOffMethod: powerStateOff,
 					CheckUSB:       true,
@@ -84,9 +84,9 @@ func init() {
 				Timeout: 120 * time.Minute,
 			},
 			{
-				Name: "power_state_snk",
-				// TODO: When stable, change firmware_unstable to a different attr.
-				ExtraAttr:         []string{"firmware_unstable", "firmware_bringup"},
+				Name:              "power_state_snk",
+				ExtraAttr:         []string{"firmware_ec", "firmware_bringup"},
+				ExtraRequirements: []string{"sys-fw-0022-v02"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Battery()),
 				Val: powerG3Params{
 					PowerOffMethod: powerStateOff,
@@ -94,8 +94,9 @@ func init() {
 				},
 			},
 			{
-				Name:      "power_state_rec_off",
-				ExtraAttr: []string{"firmware_unstable"},
+				Name:              "power_state_rec_off",
+				ExtraAttr:         []string{"firmware_bios", "firmware_usb", "firmware_level2", "group:labqual", "firmware_ro"},
+				ExtraRequirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01"},
 				Val: powerG3Params{
 					PowerOffMethod: powerStateOff,
 					SetRecMode:     true,
@@ -103,9 +104,9 @@ func init() {
 				Timeout: 120 * time.Minute,
 			},
 			{
-				Name: "power_button_from_ro",
-				// TODO: When stable, change firmware_unstable to a different attr.
-				ExtraAttr: []string{"firmware_unstable"},
+				Name:              "power_button_from_ro",
+				ExtraAttr:         []string{"firmware_bios", "firmware_level2", "group:labqual", "firmware_ro"},
+				ExtraRequirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01"},
 				Val: powerG3Params{
 					PowerOffMethod: longPowerButtonPress,
 					SetRecScreen:   true,
