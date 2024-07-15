@@ -52,6 +52,17 @@ func getChromeOptions(creds chrome.Creds, fdms *fakedms.FakeDMS) []chrome.Option
 	}
 }
 
+// isArcPackagesUpToDate returns the value of the kArcPackagesIsUpToDate flag from chrome
+func isArcPackagesUpToDate(ctx context.Context, tconn *chrome.TestConn) (bool, error) {
+	var value struct {
+		Value bool `json:"value"`
+	}
+	if err := tconn.Call(ctx, &value, "tast.promisify(chrome.settingsPrivate.getPref)", "arc.packages_is_up_to_date"); err != nil {
+		return false, err
+	}
+	return value.Value, nil
+}
+
 // performInitialBoot performs initial boot and waits for Play Store to get ready.
 func performInitialBoot(ctx context.Context, outDir string, creds chrome.Creds, fdms *fakedms.FakeDMS) error {
 	cr, err := chrome.New(ctx, getChromeOptions(creds, fdms)...)
@@ -75,6 +86,16 @@ func performInitialBoot(ctx context.Context, outDir string, creds chrome.Creds, 
 	// ARC on Demand depends on the ARC package list held by chrome being fresh.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		return tconn.Eval(ctx, `tast.promisify(chrome.autotestPrivate.getArcPackage.bind(this,"com.android.vending"))()`, nil)
+	}, &testing.PollOptions{}); err != nil {
+		return errors.Wrap(err, "failed to wait for Play Store to be updated")
+	}
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if isPackagesUpToDate, err := isArcPackagesUpToDate(ctx, tconn); err != nil {
+			return testing.PollBreak(err)
+		} else if !isPackagesUpToDate {
+			return errors.Wrap(err, "ARC Package list not refreshed yet")
+		}
+		return nil
 	}, &testing.PollOptions{}); err != nil {
 		return errors.Wrap(err, "failed to wait for ARC pacakge list refreshed")
 	}
