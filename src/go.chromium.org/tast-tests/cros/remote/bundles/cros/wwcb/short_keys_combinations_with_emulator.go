@@ -92,7 +92,23 @@ func ShortKeysCombinationsWithEmulator(ctx context.Context, s *testing.State) {
 			s.Log(uiTree.UiTree)
 		}
 	}()
-	keyPressDuration := 100 * time.Millisecond
+	keyPressDuration := 200 * time.Millisecond
+
+	s.Log("Press search + c")
+	// Open Calendar.
+	if err := utils.CombineKeyPressKeyboard(ctx, keyPressDuration, []int{utils.SpecialKeyCodes["LWin"].KeyCodeInt, utils.ChatKeyCodes["C"].KeyCodeInt}); err != nil {
+		s.Fatal("Failed to press search + c: ", err)
+	}
+	calendarFinder := &ui.Finder{
+		NodeWiths: []*ui.NodeWith{
+			{Value: &ui.NodeWith_HasClass{HasClass: "CalendarMonthView"}},
+			{Value: &ui.NodeWith_First{First: true}},
+		},
+	}
+	if _, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: calendarFinder}); err != nil {
+		s.Fatal("Failed to open calendar: ", err)
+	}
+
 	// Press ctrl + search + s.
 	s.Log("Press ctrl + search + s")
 	if err := utils.CombineKeyPressKeyboard(ctx, keyPressDuration, []int{utils.SpecialKeyCodes["LControlKey"].KeyCodeInt, utils.SpecialKeyCodes["LWin"].KeyCodeInt, utils.ChatKeyCodes["S"].KeyCodeInt}); err != nil {
@@ -108,13 +124,21 @@ func ShortKeysCombinationsWithEmulator(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to open key shortcuts page: ", err)
 	}
 
+	closeKeys := []int{utils.SpecialKeyCodes["LControlKey"].KeyCodeInt, utils.ChatKeyCodes["W"].KeyCodeInt}
+	s.Log("Press ctrl + w")
+	// Close key chortcuts.
+	if err := utils.CombineKeyPressKeyboard(ctx, keyPressDuration, closeKeys); err != nil {
+		s.Fatal("Failed to close key shortcuts page: ", err)
+	}
+
 	s.Log("Press ctrl + search + scale")
-	// Press ctrl + scale.
+	// Take screenshot.
 	if err := utils.CombineKeyPressKeyboard(ctx, keyPressDuration, []int{utils.SpecialKeyCodes["LControlKey"].KeyCodeInt, utils.SpecialKeyCodes["LWin"].KeyCodeInt, utils.TopRowKeyCodes["F5"].KeyCodeInt}); err != nil {
-		s.Fatal("Failed to press ctrl + scale: ", err)
+		s.Fatal("Failed to press ctrl + search + scale: ", err)
 	}
 	// GoBigSleepLint: wait for screenshot.
-	testing.Sleep(ctx, 5*time.Second)
+	testing.Sleep(ctx, 2*time.Second)
+
 	fs := dutfs.NewClient(cl.Conn)
 	defer fs.RemoveAll(cleanupCtx, utils.DownloadsPath)
 	files, err := fs.ReadDir(ctx, utils.DownloadsPath)
@@ -132,31 +156,5 @@ func ShortKeysCombinationsWithEmulator(ctx context.Context, s *testing.State) {
 	if !verifyScreenshot {
 		s.Fatal("Failed to screenshot")
 	}
-	s.Log("Press search + c")
-	// Press search + c.
-	if err := utils.CombineKeyPressKeyboard(ctx, keyPressDuration, []int{utils.SpecialKeyCodes["LWin"].KeyCodeInt, utils.ChatKeyCodes["C"].KeyCodeInt}); err != nil {
-		s.Fatal("Failed to press search + scale: ", err)
-	}
-	calendarFinder := &ui.Finder{
-		NodeWiths: []*ui.NodeWith{
-			{Value: &ui.NodeWith_Name{Name: "Calendar"}},
-		},
-	}
-	if _, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: calendarFinder}); err != nil {
-		s.Fatal("Failed to open calendar: ", err)
-	}
-	// Close all windows.
-	s.Log("Press esc")
-	if err := utils.SinglePressKeyboard(ctx, utils.SpecialKeyCodes["Esc"].KeyCodeBytes, keyPressDuration); err != nil {
-		s.Fatal("Failed to close key shortcuts page: ", err)
-	}
-	if err := utils.SinglePressKeyboard(ctx, utils.SpecialKeyCodes["Esc"].KeyCodeBytes, keyPressDuration); err != nil {
-		s.Fatal("Failed to close key shortcuts page: ", err)
-	}
-	closeKeys := []int{utils.SpecialKeyCodes["LControlKey"].KeyCodeInt, utils.ChatKeyCodes["W"].KeyCodeInt}
-	s.Log("Press ctrl + w")
-	// Close key chortcuts.
-	if err := utils.CombineKeyPressKeyboard(ctx, keyPressDuration, closeKeys); err != nil {
-		s.Fatal("Failed to close key shortcuts page: ", err)
-	}
+
 }
