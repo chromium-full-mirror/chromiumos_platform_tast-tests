@@ -36,7 +36,10 @@ func init() {
 			// 10 minutes.
 			"ui.DesksCUJ.duration",
 		},
-		Timeout: 30 * time.Minute,
+		// TODO(b/341597363): Extend the timeout for waiting for the page to load.
+		// If the page loading time becomes shorter in the future, the case timeout
+		// time can be shortened.
+		Timeout: 50 * time.Minute,
 		Params: []testing.Param{
 			{
 				Val: deskscuj.TestParam{
