@@ -111,8 +111,8 @@ func NewHelper(ctx context.Context) (*Helper, error) {
 // to clear any SIM lock.
 func (h *Helper) ClearSIMLockFromHostInfo(ctx context.Context) error {
 	// Ensure that the host info has been parsed.
-	if len(h.di.Labels) == 0 {
-		return errors.New("ClearSIMLockFromHostInfo called before GetHostInfoLabels")
+	if h.di == nil {
+		return errors.New("SIM info has not been populated")
 	}
 
 	// Get ICCID and PIN/PUK codes
