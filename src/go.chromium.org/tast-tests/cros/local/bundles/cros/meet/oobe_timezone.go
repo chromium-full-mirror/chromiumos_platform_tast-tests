@@ -11,7 +11,6 @@ import (
 	"time"
 
 	_ "time/tzdata"
-	_ "unsafe"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast/core/testing"
@@ -37,10 +36,6 @@ func init() {
 const secPerHour = 3600
 const minPerHour = 60
 const secPerMin = 60
-
-// loadFromEmbeddedTZData comes from time/tzdata
-//go:linkname loadFromEmbeddedTZData time/tzdata.loadFromEmbeddedTZData
-func loadFromEmbeddedTZData(name string) (string, error)
 
 func OobeTimezone(ctx context.Context, s *testing.State) {
 	tags := []string{
@@ -96,11 +91,7 @@ func OobeTimezone(ctx context.Context, s *testing.State) {
 		iOffset = strings.Split(strings.Split(iOffset, "UTC")[1], ")")[0]
 		tzMap[loc] = iOffset
 
-		zoneData, err := loadFromEmbeddedTZData(loc)
-		if err != nil {
-			s.Fatalf("Failed to get embedded data for location %s: %v", loc, err)
-		}
-		dbLoc, err := time.LoadLocationFromTZData(loc, []byte(zoneData))
+		dbLoc, err := time.LoadLocation(loc)
 		if err != nil {
 			s.Fatalf("Failed to get time zone data for location %s: %v", loc, err)
 		}
