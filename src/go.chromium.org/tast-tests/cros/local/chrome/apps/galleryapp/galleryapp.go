@@ -380,7 +380,8 @@ func (g *Gallery) WaitForGalleryQuiescence(cr *chrome.Chrome) uiauto.Action {
 // WaitNameChanged waits for file name changed and returns the file name of
 // the image or audio or video.
 func (g *Gallery) WaitNameChanged(ctx context.Context, currentName string) (fileName string, err error) {
-	nameFinder := nodewith.Role(role.StaticText).Ancestor(RootFinder)
+	main := nodewith.Role(role.Main).Ancestor(RootFinder)
+	nameFinder := nodewith.Role(role.StaticText).Ancestor(main)
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		if g.ui.Exists(imageFinder)(ctx) == nil {
 			nameFinder = imageFinder

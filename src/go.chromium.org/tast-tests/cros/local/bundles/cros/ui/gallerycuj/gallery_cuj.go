@@ -528,7 +528,7 @@ func testVideoPlayback(ctx context.Context, res *galleryCUJTestResource) (retErr
 				return err
 			}
 		}
-		currentVideoName, err := gallery.WaitNameChanged(ctx, currentVideoName)
+		currentVideoName, err = gallery.WaitNameChanged(ctx, currentVideoName)
 		if err != nil {
 			return err
 		}
