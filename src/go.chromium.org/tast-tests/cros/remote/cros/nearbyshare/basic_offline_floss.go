@@ -19,10 +19,6 @@ func addFlossBasicOfflineFixtures() {
 		Impl:     NewNearbyShareFixture(nearbycommon.DataUsageOffline, nearbycommon.VisibilityAllContacts /*skipReceiverOnboarding=*/, true /*enabledFeatures=*/, []string{floss} /*disabledFeatures=*/, []string{}),
 		Contacts: []string{"chromeos-sw-engprod@google.com"},
 		Vars: []string{
-			"nearbyshare.cros_username",
-			"nearbyshare.cros_password",
-			"nearbyshare.cros2_username",
-			"nearbyshare.cros2_password",
 			nearbycommon.KeepStateVar,
 		},
 		ServiceDeps:     []string{"tast.cros.nearbyservice.NearbyShareService"},
@@ -40,10 +36,6 @@ func addFlossBasicOfflineFixtures() {
 		Impl:     NewNearbyShareFixture(nearbycommon.DataUsageOffline, nearbycommon.VisibilitySelectedContacts /*skipReceiverOnboarding=*/, true /*enabledFeatures=*/, []string{floss} /*disabledFeatures=*/, []string{}),
 		Contacts: []string{"chromeos-sw-engprod@google.com"},
 		Vars: []string{
-			"nearbyshare.cros_username",
-			"nearbyshare.cros_password",
-			"nearbyshare.cros2_username",
-			"nearbyshare.cros2_password",
 			nearbycommon.KeepStateVar,
 		},
 		ServiceDeps:     []string{"tast.cros.nearbyservice.NearbyShareService"},
@@ -62,10 +54,6 @@ func addFlossBasicOfflineFixtures() {
 		Impl:     NewNearbyShareFixture(nearbycommon.DataUsageOffline, nearbycommon.VisibilityNoOne /*skipReceiverOnboarding=*/, true /*enabledFeatures=*/, []string{floss} /*disabledFeatures=*/, []string{}),
 		Contacts: []string{"chromeos-sw-engprod@google.com"},
 		Vars: []string{
-			"nearbyshare.cros_username",
-			"nearbyshare.cros_password",
-			"nearbyshare.cros2_username",
-			"nearbyshare.cros2_password",
 			nearbycommon.KeepStateVar,
 		},
 		ServiceDeps:     []string{"tast.cros.nearbyservice.NearbyShareService"},
@@ -84,8 +72,6 @@ func addFlossBasicOfflineFixtures() {
 		Impl:     NewNearbyShareSelfShareFixture(nearbycommon.DataUsageOffline, nearbycommon.VisibilityAllContacts /*skipReceiverOnboarding=*/, true /*enabledFeatures=*/, []string{floss} /*disabledFeatures=*/, []string{}),
 		Contacts: []string{"chromeos-sw-engprod@google.com"},
 		Vars: []string{
-			"nearbyshare.cros_username",
-			"nearbyshare.cros_password",
 			nearbycommon.KeepStateVar,
 		},
 		ServiceDeps:     []string{"tast.cros.nearbyservice.NearbyShareService"},

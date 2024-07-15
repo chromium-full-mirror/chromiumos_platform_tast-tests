@@ -45,7 +45,8 @@ func init() {
 					// Companion DUT 1 dependency.
 					"cd1": hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
 				},
-				Timeout: nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
+				ExtraSoftwareDeps: []string{"gaia"},
+				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
 			},
 			{
 				Name:              "dataoffline_allcontacts_jpg11kb",
@@ -69,7 +70,8 @@ func init() {
 					// Companion DUT 1 dependency.
 					"cd1": hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
 				},
-				Timeout: nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
+				ExtraSoftwareDeps: []string{"gaia"},
+				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
 			},
 			{
 				Name:    "dataonline_noone_txt30mb_webrtc_and_wlan",
@@ -81,7 +83,8 @@ func init() {
 					// Companion DUT 1 dependency.
 					"cd1": hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
 				},
-				Timeout: nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
+				ExtraSoftwareDeps: []string{"gaia"},
+				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
 			},
 			{
 				Name:    "dataonline_noone_txt30mb_webrtc",
@@ -93,7 +96,8 @@ func init() {
 					// Companion DUT 1 dependency.
 					"cd1": hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
 				},
-				Timeout: nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
+				ExtraSoftwareDeps: []string{"gaia"},
+				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
 			},
 			{
 				Name:    "dataonline_noone_txt30mb_wlan",
@@ -105,7 +109,8 @@ func init() {
 					// Companion DUT 1 dependency.
 					"cd1": hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
 				},
-				Timeout: nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
+				ExtraSoftwareDeps: []string{"gaia"},
+				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
 			},
 
 			// Unstable subset of boards (sender).

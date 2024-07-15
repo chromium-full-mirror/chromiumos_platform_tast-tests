@@ -50,6 +50,7 @@ func init() {
 				ExtraData:         []string{"small_jpg.zip"},
 				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(crossdevice.BGScanningStableSkipModels...)),
+				ExtraSoftwareDeps: []string{"gaia"},
 			},
 
 			// Subtests for unstable devices, so they can be omitted from reporting.

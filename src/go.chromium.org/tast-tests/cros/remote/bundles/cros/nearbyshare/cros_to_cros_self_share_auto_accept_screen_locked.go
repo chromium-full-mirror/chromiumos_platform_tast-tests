@@ -29,7 +29,7 @@ func init() {
 		},
 		BugComponent: "b:1131838",
 		Attr:         []string{"group:cross-device-remote", "cross-device-remote_nearbyshare"},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "gaia"},
 		ServiceDeps:  []string{"tast.cros.nearbyservice.NearbyShareService"},
 		Params: []testing.Param{
 			// Stable subset of boards.

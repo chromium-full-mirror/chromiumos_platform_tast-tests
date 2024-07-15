@@ -32,7 +32,7 @@ func init() {
 		// "ChromeOS > Software > System Services > Cross Device > Nearby Share"
 		BugComponent: "b:1131838",
 		Attr:         []string{"group:cross-device", "cross-device_nearbyshare"},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "gaia"},
 		Params: []testing.Param{
 			// Stable subset of boards.
 			{

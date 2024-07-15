@@ -96,7 +96,7 @@ func init() {
 			},
 			{
 				Name:              "dataoffline_noone_text_vm",
-				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraSoftwareDeps: []string{"android_vm", "gaia"},
 				Fixture:           "nearbyShareDataUsageOfflineNoOneARCEnabled",
 				Val: arcNearbyShareParams{
 					TestData: nearbycommon.TestData{
@@ -122,7 +122,7 @@ func init() {
 			},
 			{
 				Name:              "dataonline_noone_small_file_vm",
-				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraSoftwareDeps: []string{"android_vm", "gaia"},
 				Fixture:           "nearbyShareDataUsageOnlineNoOneARCEnabled",
 				Val: arcNearbyShareParams{
 					TestData: nearbycommon.TestData{
@@ -148,7 +148,7 @@ func init() {
 			},
 			{
 				Name:              "dataonline_noone_medium_file_vm",
-				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraSoftwareDeps: []string{"android_vm", "gaia"},
 				Fixture:           "nearbyShareDataUsageOnlineNoOneARCEnabled",
 				Val: arcNearbyShareParams{
 					TestData: nearbycommon.TestData{
@@ -174,7 +174,7 @@ func init() {
 			},
 			{
 				Name:              "dataonline_noone_large_file_vm",
-				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraSoftwareDeps: []string{"android_vm", "gaia"},
 				Fixture:           "nearbyShareDataUsageOnlineNoOneARCEnabled",
 				Val: arcNearbyShareParams{
 					TestData: nearbycommon.TestData{
@@ -200,7 +200,7 @@ func init() {
 			},
 			{
 				Name:              "dataonline_noone_xlarge_file_vm",
-				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraSoftwareDeps: []string{"android_vm", "gaia"},
 				Fixture:           "nearbyShareDataUsageOnlineNoOneARCEnabled",
 				Val: arcNearbyShareParams{
 					TestData: nearbycommon.TestData{
@@ -226,7 +226,7 @@ func init() {
 			},
 			{
 				Name:              "dataonline_noone_multiple_files_vm",
-				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraSoftwareDeps: []string{"android_vm", "gaia"},
 				Fixture:           "nearbyShareDataUsageOnlineNoOneARCEnabled",
 				Val: arcNearbyShareParams{
 					TestData: nearbycommon.TestData{
@@ -253,7 +253,7 @@ func init() {
 			},
 			{
 				Name:              "dataonline_noone_medium_file_cancel_vm",
-				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraSoftwareDeps: []string{"android_vm", "gaia"},
 				Fixture:           "nearbyShareDataUsageOnlineNoOneARCEnabled",
 				Val: arcNearbyShareParams{
 					Cancel: true,
@@ -281,7 +281,7 @@ func init() {
 			},
 			{
 				Name:              "dataonline_noone_medium_file_cancel_select_vm",
-				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraSoftwareDeps: []string{"android_vm", "gaia"},
 				Fixture:           "nearbyShareDataUsageOnlineNoOneARCEnabled",
 				Val: arcNearbyShareParams{
 					CancelSelect: true,

@@ -43,6 +43,7 @@ func init() {
 				},
 				ExtraData:         []string{"small_png.zip"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
+				ExtraSoftwareDeps: []string{"gaia"},
 				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
 			},
 			{
@@ -56,6 +57,7 @@ func init() {
 				ExtraAttr:         []string{"cross-device_cq"},
 				ExtraData:         []string{"small_jpg.zip"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
+				ExtraSoftwareDeps: []string{"gaia"},
 				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
 			},
 			{
@@ -68,6 +70,7 @@ func init() {
 				},
 				ExtraData:         []string{"big_txt.zip"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
+				ExtraSoftwareDeps: []string{"gaia"},
 				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
 			},
 			{
@@ -80,6 +83,7 @@ func init() {
 				},
 				ExtraData:         []string{"big_txt.zip"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
+				ExtraSoftwareDeps: []string{"gaia"},
 				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
 			},
 			{
@@ -93,6 +97,7 @@ func init() {
 				ExtraAttr:         []string{"cross-device_cq"},
 				ExtraData:         []string{"big_txt.zip"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
+				ExtraSoftwareDeps: []string{"gaia"},
 				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
 			},
 			{
@@ -106,6 +111,7 @@ func init() {
 				ExtraAttr:         []string{"cross-device_cq"},
 				ExtraData:         []string{"big_txt.zip"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
+				ExtraSoftwareDeps: []string{"gaia"},
 				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
 			},
 

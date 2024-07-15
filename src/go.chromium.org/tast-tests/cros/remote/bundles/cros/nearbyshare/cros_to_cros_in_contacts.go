@@ -40,7 +40,8 @@ func init() {
 					// Companion DUT 1 dependency.
 					"cd1": hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
 				},
-				Timeout: nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
+				ExtraSoftwareDeps: []string{"gaia"},
+				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
 			},
 			{
 				Name:              "dataoffline_allcontacts_jpg11kb",
@@ -51,8 +52,9 @@ func init() {
 					// Companion DUT 1 dependency.
 					"cd1": hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
 				},
-				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
-				ExtraAttr: []string{"cross-device-remote_cq"},
+				ExtraSoftwareDeps: []string{"gaia"},
+				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
+				ExtraAttr:         []string{"cross-device-remote_cq"},
 			},
 			{
 				Name:              "dataoffline_somecontacts_png5kb",
@@ -63,7 +65,8 @@ func init() {
 					// Companion DUT 1 dependency.
 					"cd1": hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
 				},
-				Timeout: nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
+				ExtraSoftwareDeps: []string{"gaia"},
+				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
 			},
 			{
 				Name:              "dataoffline_somecontacts_jpg11kb",
@@ -74,8 +77,9 @@ func init() {
 					// Companion DUT 1 dependency.
 					"cd1": hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
 				},
-				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
-				ExtraAttr: []string{"cross-device-remote_cq"},
+				ExtraSoftwareDeps: []string{"gaia"},
+				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
+				ExtraAttr:         []string{"cross-device-remote_cq"},
 			},
 			{
 				Name:    "dataonline_allcontacts_txt30mb",
@@ -87,8 +91,9 @@ func init() {
 					// Companion DUT 1 dependency.
 					"cd1": hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
 				},
-				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
-				ExtraAttr: []string{"cross-device-remote_cq"},
+				ExtraSoftwareDeps: []string{"gaia"},
+				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
+				ExtraAttr:         []string{"cross-device-remote_cq"},
 			},
 			{
 				Name:    "dataonline_somecontacts_txt30mb",
@@ -100,7 +105,8 @@ func init() {
 					// Companion DUT 1 dependency.
 					"cd1": hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
 				},
-				Timeout: nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
+				ExtraSoftwareDeps: []string{"gaia"},
+				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
 			},
 
 			// Untable subset of boards (sender).

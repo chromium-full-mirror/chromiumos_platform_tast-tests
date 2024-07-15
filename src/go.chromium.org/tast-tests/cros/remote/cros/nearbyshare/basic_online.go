@@ -19,10 +19,6 @@ func addBasicOnlineFixtures() {
 		Impl:     NewNearbyShareFixture(nearbycommon.DataUsageOnline, nearbycommon.VisibilityAllContacts /*skipReceiverOnboarding=*/, true /*enabledFeatures=*/, []string{} /*disabledFeatures=*/, []string{}),
 		Contacts: []string{"chromeos-sw-engprod@google.com"},
 		Vars: []string{
-			"nearbyshare.cros_username",
-			"nearbyshare.cros_password",
-			"nearbyshare.cros2_username",
-			"nearbyshare.cros2_password",
 			nearbycommon.KeepStateVar,
 		},
 		ServiceDeps:     []string{"tast.cros.nearbyservice.NearbyShareService"},
@@ -40,10 +36,6 @@ func addBasicOnlineFixtures() {
 		Impl:     NewNearbyShareFixture(nearbycommon.DataUsageOnline, nearbycommon.VisibilitySelectedContacts /*skipReceiverOnboarding=*/, true /*enabledFeatures=*/, []string{} /*disabledFeatures=*/, []string{}),
 		Contacts: []string{"chromeos-sw-engprod@google.com"},
 		Vars: []string{
-			"nearbyshare.cros_username",
-			"nearbyshare.cros_password",
-			"nearbyshare.cros2_username",
-			"nearbyshare.cros2_password",
 			nearbycommon.KeepStateVar,
 		},
 		ServiceDeps:     []string{"tast.cros.nearbyservice.NearbyShareService"},
@@ -61,10 +53,6 @@ func addBasicOnlineFixtures() {
 		Impl:     NewNearbyShareFixture(nearbycommon.DataUsageOnline, nearbycommon.VisibilityNoOne /*skipReceiverOnboarding=*/, true /*enabledFeatures=*/, []string{} /*disabledFeatures=*/, []string{}),
 		Contacts: []string{"chromeos-sw-engprod@google.com"},
 		Vars: []string{
-			"nearbyshare.cros_username",
-			"nearbyshare.cros_password",
-			"nearbyshare.cros2_username",
-			"nearbyshare.cros2_password",
 			nearbycommon.KeepStateVar,
 		},
 		ServiceDeps:     []string{"tast.cros.nearbyservice.NearbyShareService"},
@@ -82,8 +70,6 @@ func addBasicOnlineFixtures() {
 		Impl:     NewNearbyShareSelfShareFixture(nearbycommon.DataUsageOnline, nearbycommon.VisibilityAllContacts /*skipReceiverOnboarding=*/, true /*enabledFeatures=*/, []string{} /*disabledFeatures=*/, []string{}),
 		Contacts: []string{"chromeos-sw-engprod@google.com"},
 		Vars: []string{
-			"nearbyshare.cros_username",
-			"nearbyshare.cros_password",
 			nearbycommon.KeepStateVar,
 		},
 		ServiceDeps:     []string{"tast.cros.nearbyservice.NearbyShareService"},
@@ -104,10 +90,6 @@ func addBasicOnlineFixtures() {
 		Impl:     NewNearbyShareFixture(nearbycommon.DataUsageOnline, nearbycommon.VisibilityAllContacts /*skipReceiverOnboarding=*/, true /*enabledFeatures=*/, []string{"EnableNearbyBleV2"} /*disabledFeatures=*/, []string{}),
 		Contacts: []string{"chromeos-sw-engprod@google.com"},
 		Vars: []string{
-			"nearbyshare.cros_username",
-			"nearbyshare.cros_password",
-			"nearbyshare.cros2_username",
-			"nearbyshare.cros2_password",
 			nearbycommon.KeepStateVar,
 		},
 		ServiceDeps:     []string{"tast.cros.nearbyservice.NearbyShareService"},
@@ -125,10 +107,6 @@ func addBasicOnlineFixtures() {
 		Impl:     NewNearbyShareFixture(nearbycommon.DataUsageOnline, nearbycommon.VisibilityNoOne /*skipReceiverOnboarding=*/, true /*enabledFeatures=*/, []string{"EnableNearbyBleV2"} /*disabledFeatures=*/, []string{}),
 		Contacts: []string{"chromeos-sw-engprod@google.com"},
 		Vars: []string{
-			"nearbyshare.cros_username",
-			"nearbyshare.cros_password",
-			"nearbyshare.cros2_username",
-			"nearbyshare.cros2_password",
 			nearbycommon.KeepStateVar,
 		},
 		ServiceDeps:     []string{"tast.cros.nearbyservice.NearbyShareService"},

@@ -19,10 +19,6 @@ func addFlossWebRTCAndWLANFixtures() {
 		Impl:     NewNearbyShareFixture(nearbycommon.DataUsageOnline, nearbycommon.VisibilityNoOne /*skipReceiverOnboarding=*/, true /*enabledFeatures=*/, []string{webRTC, wlan, floss} /*disabledFeatures=*/, []string{}),
 		Contacts: []string{"chromeos-sw-engprod@google.com"},
 		Vars: []string{
-			"nearbyshare.cros_username",
-			"nearbyshare.cros_password",
-			"nearbyshare.cros2_username",
-			"nearbyshare.cros2_password",
 			nearbycommon.KeepStateVar,
 		},
 		ServiceDeps:     []string{"tast.cros.nearbyservice.NearbyShareService"},
@@ -40,10 +36,6 @@ func addFlossWebRTCAndWLANFixtures() {
 		Impl:     NewNearbyShareFixture(nearbycommon.DataUsageOnline, nearbycommon.VisibilityNoOne /*skipReceiverOnboarding=*/, true /*enabledFeatures=*/, []string{webRTC, floss} /*disabledFeatures=*/, []string{wlan}),
 		Contacts: []string{"chromeos-sw-engprod@google.com"},
 		Vars: []string{
-			"nearbyshare.cros_username",
-			"nearbyshare.cros_password",
-			"nearbyshare.cros2_username",
-			"nearbyshare.cros2_password",
 			nearbycommon.KeepStateVar,
 		},
 		ServiceDeps:     []string{"tast.cros.nearbyservice.NearbyShareService"},
@@ -61,10 +53,6 @@ func addFlossWebRTCAndWLANFixtures() {
 		Impl:     NewNearbyShareFixture(nearbycommon.DataUsageOnline, nearbycommon.VisibilityNoOne /*skipReceiverOnboarding=*/, true /*enabledFeatures=*/, []string{wlan, floss} /*disabledFeatures=*/, []string{webRTC}),
 		Contacts: []string{"chromeos-sw-engprod@google.com"},
 		Vars: []string{
-			"nearbyshare.cros_username",
-			"nearbyshare.cros_password",
-			"nearbyshare.cros2_username",
-			"nearbyshare.cros2_password",
 			nearbycommon.KeepStateVar,
 		},
 		ServiceDeps:     []string{"tast.cros.nearbyservice.NearbyShareService"},

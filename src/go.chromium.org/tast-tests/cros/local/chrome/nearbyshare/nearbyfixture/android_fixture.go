@@ -12,7 +12,9 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/android"
-	nearbycommon "go.chromium.org/tast-tests/cros/common/cros/nearbyshare"
+	"go.chromium.org/tast-tests/cros/common/cros/nearbyshare"
+	"go.chromium.org/tast-tests/cros/common/dma"
+	nearbyCommon "go.chromium.org/tast-tests/cros/common/nearbyshare"
 	"go.chromium.org/tast-tests/cros/local/chrome/crossdevice"
 	"go.chromium.org/tast-tests/cros/local/chrome/nearbyshare/nearbysnippet"
 	"go.chromium.org/tast/core/ctxutil"
@@ -29,20 +31,6 @@ const (
 )
 
 const (
-	// These are the default GAIA credentials that will be used to sign in on Android.
-	// This account is a member of the Nearby modulefood user group, which is our default
-	// choice for Android version for Nearby tests.
-	defaultAndroidUsername = "nearbyshare.android_username"
-	defaultAndroidPassword = "nearbyshare.android_password"
-
-	// These are GAIA credentials that will be used to sign in on Android to test the dev version of Android Nearby Share.
-	devAndroidUsername = "nearbyshare.dev_android_username"
-	devAndroidPassword = "nearbyshare.dev_android_password"
-
-	// These are GAIA credentials that will be used to sign in on Android to test the production version of Android Nearby Share.
-	prodAndroidUsername = "nearbyshare.prod_android_username"
-	prodAndroidPassword = "nearbyshare.prod_android_password"
-
 	// This is the username that we'll use for non-rooted devices in the lab.
 	unrootedAndroidUsername = "nearbyshare.unrooted_android_username"
 
@@ -73,8 +61,6 @@ func init() {
 		},
 		BugComponent: "b:1131838", // ChromeOS > Software > System Services > Cross Device > Nearby Share
 		Vars: []string{
-			defaultAndroidUsername,
-			defaultAndroidPassword,
 			unrootedAndroidUsername,
 			skipAndroidLogin,
 		},
@@ -97,8 +83,6 @@ func init() {
 		},
 		BugComponent: "b:1131838", // ChromeOS > Software > System Services > Cross Device > Nearby Share
 		Vars: []string{
-			devAndroidUsername,
-			devAndroidPassword,
 			unrootedAndroidUsername,
 			skipAndroidLogin,
 		},
@@ -121,8 +105,6 @@ func init() {
 		},
 		BugComponent: "b:1131838", // ChromeOS > Software > System Services > Cross Device > Nearby Share
 		Vars: []string{
-			prodAndroidUsername,
-			prodAndroidPassword,
 			unrootedAndroidUsername,
 			skipAndroidLogin,
 		},
@@ -144,7 +126,7 @@ type nearbyShareAndroidFixture struct {
 
 func (f *nearbyShareAndroidFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	const androidBaseName = "android_test"
-	androidDisplayName := nearbycommon.RandomDeviceName(androidBaseName)
+	androidDisplayName := nearbyshare.RandomDeviceName(androidBaseName)
 	snippetZip := s.DataPath(nearbysnippet.ZipName)
 	accountUtilZip := s.DataPath(crossdevice.AccountUtilZip)
 
@@ -189,14 +171,20 @@ func (f *nearbyShareAndroidFixture) SetUp(ctx context.Context, s *testing.FixtSt
 	var androidPassword string
 	switch f.androidNearbyChannel {
 	case modulefood:
-		androidUsername = s.RequiredVar(defaultAndroidUsername)
-		androidPassword = s.RequiredVar(defaultAndroidPassword)
+		androidUsername, androidPassword, err = dma.UserPassFromPool(nearbyCommon.AndroidAccountPoolVarName)
+		if err != nil {
+			s.Fatal("Failed to get user and password: ", err)
+		}
 	case prod:
-		androidUsername = s.RequiredVar(prodAndroidUsername)
-		androidPassword = s.RequiredVar(prodAndroidPassword)
+		androidUsername, androidPassword, err = dma.UserPassFromPool(nearbyCommon.ProdAndroidAccountPoolVarName)
+		if err != nil {
+			s.Fatal("Failed to get user and password: ", err)
+		}
 	case dev:
-		androidUsername = s.RequiredVar(devAndroidUsername)
-		androidPassword = s.RequiredVar(devAndroidPassword)
+		androidUsername, androidPassword, err = dma.UserPassFromPool(nearbyCommon.DevAndroidAccountPoolVarName)
+		if err != nil {
+			s.Fatal("Failed to get user and password: ", err)
+		}
 	}
 
 	// If the device is not rooted and skipAndroidLogin was not specified, we'll assume the test is running with an unrooted phone in the lab.

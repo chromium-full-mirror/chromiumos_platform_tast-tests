@@ -21,6 +21,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/family"
 	"go.chromium.org/tast-tests/cros/common/filemanager"
 	"go.chromium.org/tast-tests/cros/common/floatingworkspace"
+	"go.chromium.org/tast-tests/cros/common/nearbyshare"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/common/wallpaper"
@@ -64,6 +65,11 @@ func pools() (map[string]string, map[string]string) {
 		filemanager.OrgFullAccountPoolVarName:       filemanager.OrgFullDMAAccountPoolValue(),
 		filemanager.WarnAccountPoolVarName:          filemanager.WarnDMAAccountPoolValue(),
 		floatingworkspace.AccountVarName:            ui.GaiaDMAPoolDefaultValue(),
+		nearbyshare.CrosAccountPoolVarName:          nearbyshare.DmaCrosAccountPoolValue(),
+		nearbyshare.CrosAccount2PoolVarName:         nearbyshare.DmaCrosAccount2PoolValue(),
+		nearbyshare.AndroidAccountPoolVarName:       nearbyshare.DmaAndroidAccountPoolValue(),
+		nearbyshare.DevAndroidAccountPoolVarName:    nearbyshare.DmaDevAndroidAccountPoolValue(),
+		nearbyshare.ProdAndroidAccountPoolVarName:   nearbyshare.DmaProdAndroidAccountPoolValue(),
 		policy.ManagedUserAccountPoolVarName:        arc.ManagedDMAAccountPoolValue(),
 		ui.GaiaPoolDefaultVarName:                   ui.GaiaDMAPoolDefaultValue(),
 		ui.CUJAccountPoolVarName:                    ui.GaiaDMAPoolDefaultValue(),
@@ -100,6 +106,11 @@ func pools() (map[string]string, map[string]string) {
 		filemanager.OrgFullAccountPoolVarName:       filemanager.OrgFullAccountPoolValue(),
 		filemanager.WarnAccountPoolVarName:          filemanager.WarnAccountPoolValue(),
 		floatingworkspace.AccountVarName:            floatingworkspace.AccountValue(),
+		nearbyshare.CrosAccountPoolVarName:          nearbyshare.CrosAccountPoolValue(),
+		nearbyshare.CrosAccount2PoolVarName:         nearbyshare.CrosAccount2PoolValue(),
+		nearbyshare.AndroidAccountPoolVarName:       nearbyshare.AndroidAccountPoolValue(),
+		nearbyshare.DevAndroidAccountPoolVarName:    nearbyshare.DevAndroidAccountPoolValue(),
+		nearbyshare.ProdAndroidAccountPoolVarName:   nearbyshare.ProdAndroidAccountPoolValue(),
 		policy.ManagedUserAccountPoolVarName:        policy.ManagedUserAccountPoolValue(),
 		ui.GaiaPoolDefaultVarName:                   ui.GaiaPoolDefaultValue(),
 		ui.CUJAccountPoolVarName:                    ui.CUJAccountPoolValue(),

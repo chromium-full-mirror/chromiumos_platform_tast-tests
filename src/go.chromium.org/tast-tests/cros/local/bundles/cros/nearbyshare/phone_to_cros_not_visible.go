@@ -43,6 +43,7 @@ func init() {
 				},
 				ExtraData:         []string{"small_jpg.zip"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
+				ExtraSoftwareDeps: []string{"gaia"},
 				Timeout:           nearbycommon.DetectionTimeout,
 			},
 			{
@@ -55,6 +56,7 @@ func init() {
 				},
 				ExtraData:         []string{"small_jpg.zip"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
+				ExtraSoftwareDeps: []string{"gaia"},
 				Timeout:           nearbycommon.DetectionTimeout,
 			},
 

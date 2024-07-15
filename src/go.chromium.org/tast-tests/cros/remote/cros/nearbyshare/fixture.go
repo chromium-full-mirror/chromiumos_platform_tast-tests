@@ -17,7 +17,8 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 
 	"go.chromium.org/tast-tests/cros/common/cros/nearbyshare"
-	nearbycommon "go.chromium.org/tast-tests/cros/common/cros/nearbyshare"
+	"go.chromium.org/tast-tests/cros/common/dma"
+	nearbyCommon "go.chromium.org/tast-tests/cros/common/nearbyshare"
 	"go.chromium.org/tast-tests/cros/services/cros/nearbyservice"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/rpc"
@@ -38,7 +39,7 @@ const (
 )
 
 // NewNearbyShareFixture creates a fixture for Nearby Share tests in different configurations.
-func NewNearbyShareFixture(dataUsage nearbycommon.DataUsage, visibility nearbycommon.Visibility, skipReceiverOnboarding bool, enabledFeatures, disabledFeatures []string) testing.FixtureImpl {
+func NewNearbyShareFixture(dataUsage nearbyshare.DataUsage, visibility nearbyshare.Visibility, skipReceiverOnboarding bool, enabledFeatures, disabledFeatures []string) testing.FixtureImpl {
 	return &nearbyShareFixture{
 		dataUsage:              dataUsage,
 		visibility:             visibility,
@@ -52,7 +53,7 @@ func NewNearbyShareFixture(dataUsage nearbycommon.DataUsage, visibility nearbyco
 }
 
 // NewNearbyShareSelfShareFixture creates a fixture for Nearby Share Self Share tests in different configurations.
-func NewNearbyShareSelfShareFixture(dataUsage nearbycommon.DataUsage, visibility nearbycommon.Visibility, skipReceiverOnboarding bool, enabledFeatures, disabledFeatures []string) testing.FixtureImpl {
+func NewNearbyShareSelfShareFixture(dataUsage nearbyshare.DataUsage, visibility nearbyshare.Visibility, skipReceiverOnboarding bool, enabledFeatures, disabledFeatures []string) testing.FixtureImpl {
 	return &nearbyShareFixture{
 		dataUsage:              dataUsage,
 		visibility:             visibility,
@@ -81,8 +82,8 @@ func init() {
 }
 
 type nearbyShareFixture struct {
-	dataUsage              nearbycommon.DataUsage
-	visibility             nearbycommon.Visibility
+	dataUsage              nearbyshare.DataUsage
+	visibility             nearbyshare.Visibility
 	skipReceiverOnboarding bool
 	sameGaiaLogin          bool
 	enabledFeatures        []string
@@ -151,22 +152,22 @@ func (f *nearbyShareFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 	}
 
 	var keepState bool
-	if val, ok := s.Var(nearbycommon.KeepStateVar); ok {
+	if val, ok := s.Var(nearbyshare.KeepStateVar); ok {
 		b, err := strconv.ParseBool(val)
 		if err != nil {
-			s.Fatalf("Unable to convert %v var to bool: %v", nearbycommon.KeepStateVar, err)
+			s.Fatalf("Unable to convert %v var to bool: %v", nearbyshare.KeepStateVar, err)
 		}
 		keepState = b
 	}
 
 	// Get nearby static IDs for the two devices.
-	nearbyStaticIDSender, err := d1.Conn().CommandContext(ctx, "sh", "-c", nearbycommon.NearbyShareStaticIDCmd).Output()
+	nearbyStaticIDSender, err := d1.Conn().CommandContext(ctx, "sh", "-c", nearbyshare.NearbyShareStaticIDCmd).Output()
 	if err != nil {
 		s.Fatal("Failed to generate nearby static ID on sender: ", err)
 	}
 	nearbyStaticIDSenderStr := strings.TrimSpace(string(nearbyStaticIDSender))
 	s.Logf("Nearby Static ID of Sender: %s", nearbyStaticIDSenderStr)
-	nearbyStaticIDReceiver, err := d2.Conn().CommandContext(ctx, "sh", "-c", nearbycommon.NearbyShareStaticIDCmd).Output()
+	nearbyStaticIDReceiver, err := d2.Conn().CommandContext(ctx, "sh", "-c", nearbyshare.NearbyShareStaticIDCmd).Output()
 	if err != nil {
 		s.Fatal("Failed to generate nearby static ID on receiver: ", err)
 	}
@@ -180,10 +181,12 @@ func (f *nearbyShareFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 	}
 	f.senderRPCClient = cl1
 	const crosBaseName = "cros_test"
-	senderDisplayName := nearbycommon.RandomDeviceName(crosBaseName)
+	senderDisplayName := nearbyshare.RandomDeviceName(crosBaseName)
 	s.Log("Enabling Nearby Share on DUT1 (Sender). Name: ", senderDisplayName)
-	senderUsername := s.RequiredVar("nearbyshare.cros_username")
-	senderPassword := s.RequiredVar("nearbyshare.cros_password")
+	senderUsername, senderPassword, err := dma.UserPassFromPool(nearbyCommon.CrosAccountPoolVarName)
+	if err != nil {
+		s.Fatal("Failed to get sender user and password: ", err)
+	}
 	sender, err := f.enableNearbyShare(ctx, s, cl1, senderDisplayName, senderUsername, senderPassword, "", nearbyStaticIDSenderStr, keepState /*skipOnboarding=*/, true, f.enabledFeatures, f.disabledFeatures)
 	if err != nil {
 		s.Fatal("Failed to enable Nearby Share on DUT1 (Sender): ", err)
@@ -196,16 +199,20 @@ func (f *nearbyShareFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 		s.Fatal("Failed to dial rpc service on DUT2: ", err)
 	}
 	f.receiverRPCClient = cl2
-	receiverDisplayName := nearbycommon.RandomDeviceName(crosBaseName)
+	receiverDisplayName := nearbyshare.RandomDeviceName(crosBaseName)
 	s.Log("Enabling Nearby Share on DUT2 (Receiver). Name: ", receiverDisplayName)
 
 	// Features like Self Share require that both devices are logged into the same Gaia.
 	s.Log("Logging into both DUTs with the same GAIA login = ", f.sameGaiaLogin)
-	receiverUsername := s.RequiredVar("nearbyshare.cros_username")
-	receiverPassword := s.RequiredVar("nearbyshare.cros_password")
+	receiverUsername, receiverPassword, err := dma.UserPassFromPool(nearbyCommon.CrosAccountPoolVarName)
+	if err != nil {
+		s.Fatal("Failed to get receiver user and password: ", err)
+	}
 	if !f.sameGaiaLogin {
-		receiverUsername = s.RequiredVar("nearbyshare.cros2_username")
-		receiverPassword = s.RequiredVar("nearbyshare.cros2_password")
+		receiverUsername, receiverPassword, err = dma.UserPassFromPool(nearbyCommon.CrosAccount2PoolVarName)
+		if err != nil {
+			s.Fatal("Failed to get receiver user and password: ", err)
+		}
 	}
 
 	s.Log("skipReceiverOnboarding = ", f.skipReceiverOnboarding)
@@ -224,8 +231,8 @@ func (f *nearbyShareFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 	if err != nil {
 		s.Error("Failed to save device attributes about the receiver: ", err)
 	}
-	var senderAttributes *nearbycommon.CrosAttributes
-	var receiverAttributes *nearbycommon.CrosAttributes
+	var senderAttributes *nearbyshare.CrosAttributes
+	var receiverAttributes *nearbyshare.CrosAttributes
 	if err := json.Unmarshal([]byte(senderAttrsRes.Attributes), &senderAttributes); err != nil {
 		s.Error("Failed to unmarshal sender's attributes: ", err)
 	}
@@ -233,8 +240,8 @@ func (f *nearbyShareFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 		s.Error("Failed to unmarshal receiver's: ", err)
 	}
 	attributes := struct {
-		Sender   *nearbycommon.CrosAttributes
-		Receiver *nearbycommon.CrosAttributes
+		Sender   *nearbyshare.CrosAttributes
+		Receiver *nearbyshare.CrosAttributes
 	}{Sender: senderAttributes, Receiver: receiverAttributes}
 	crosLog, err := json.MarshalIndent(attributes, "", "\t")
 	if err != nil {
@@ -244,7 +251,7 @@ func (f *nearbyShareFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 	return &FixtData{
 		RemoteFilePath:        f.remoteFilePath,
 		Sender:                f.sender,
-		SenderSendPath:        filepath.Join(attributes.Sender.DownloadsPath, nearbycommon.SendFolderName),
+		SenderSendPath:        filepath.Join(attributes.Sender.DownloadsPath, nearbyshare.SendFolderName),
 		ReceiverDownloadsPath: attributes.Receiver.DownloadsPath,
 		Receiver:              f.receiver,
 		SenderDisplayName:     senderDisplayName,
