@@ -46,14 +46,15 @@ func loginUser(ctx context.Context, cfg *config.Config, sess *driver.Session) er
 	case config.GAIALogin, config.SAMLLogin:
 		// GAIA login requires Internet connectivity.
 		if err := shill.WaitForOnline(ctx); err != nil {
-			if !vm.IsRunningOnVM() {
-				if networkError := diag.DUTNetworkCheckAndResolve(ctx); err != nil {
-					return errors.Wrap(networkError, "pre login network connection tests failed")
-				}
+			// TODO(b/268671917): Remove check when the root cause is clear.
+			testing.ContextLog(ctx, "Calling shill.WaitForOnline failed")
+		}
+		// shill.WaitForOnline doesn't cover all network issues, i.e. invalid DNS will
+		// still be reported as online. This is why we still need the below check.
+		if !vm.IsRunningOnVM() {
+			if networkError := diag.DUTNetworkCheckAndResolve(ctx); err != nil {
+				return errors.Wrap(networkError, "pre login network connection tests failed")
 			}
-
-			// TODO(b/268671917): Remove double check when the root cause is clear.
-			testing.ContextLog(ctx, "Calling shill.WaitForOnline failed, but DUTNetworkCheckAndResolve passed")
 		}
 		if err := performGAIALogin(ctx, cfg, sess, conn); err != nil {
 			return err
