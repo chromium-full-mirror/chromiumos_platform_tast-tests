@@ -22,11 +22,10 @@ func init() {
 		Desc: "Verify cr50 can tell the state of the dev mode switch",
 		Contacts: []string{
 			"chromeos-faft@google.com",
-			"tj@semihalf.com",
+			"cros-hwsec@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		// TODO: When stable, change firmware_unstable to a different attr.
-		Attr:         []string{"group:firmware", "firmware_unstable"},
+		Attr:         []string{"group:firmware", "firmware_cr50"},
 		Fixture:      fixture.NormalMode,
 		Timeout:      10 * time.Minute,
 		HardwareDeps: hwdep.D(hwdep.GSCUART()),
