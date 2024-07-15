@@ -6,10 +6,12 @@ package network
 
 import (
 	"context"
+	"path/filepath"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/dns"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/network/testhooks"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/subnet"
@@ -60,6 +62,16 @@ func DNSProxyUISettings(ctx context.Context, s *testing.State) {
 
 	dumpUI := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "dnsui" /*prefix*/)
 	s.AttachErrorHandlers(dumpUI, dumpUI)
+
+	// Start screen recording, to help with debugging errors.
+	recorder, err := uiauto.NewScreenRecorder(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to create screen recorder: ", err)
+	}
+	if recorder.Start(ctx, tconn); err != nil {
+		s.Fatal("Failed to start screen recorder: ", err)
+	}
+	defer recorder.StopAndSaveOnError(cleanupCtx, filepath.Join(s.OutDir(), "record.webm"), s.HasError)
 
 	// Set up virtualnet environment. Always-on mode needs the DoH server to be responding.
 	env, err := dns.NewEnv(ctx, subnet.NewPool())
