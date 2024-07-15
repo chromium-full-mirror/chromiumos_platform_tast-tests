@@ -6,6 +6,7 @@ package saml
 
 import (
 	"context"
+	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -40,7 +41,7 @@ func HandleMicrosoftLogin(username, password string) LoginFunc {
 
 		root := nodewith.Role(role.RootWebArea).NameContaining("Sign in")
 
-		samlEmailField := nodewith.NameContaining("Enter your email, phone, or Skype").Role(role.TextField).Ancestor(root)
+		samlEmailField := nodewith.Ancestor(root).Role(role.TextField).NameRegex(regexp.MustCompile(".*(email|someone@example.com).*"))
 		passwordField := nodewith.NameContaining("Enter the password").Role(role.TextField).Ancestor(root)
 		noButton := nodewith.Name("No").Role(role.Button).Ancestor(root).Focusable()
 
