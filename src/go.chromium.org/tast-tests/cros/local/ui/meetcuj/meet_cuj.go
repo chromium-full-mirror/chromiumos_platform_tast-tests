@@ -1126,8 +1126,8 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 			if err := cuj.DismissCriticalSecurityAlert(ctx, tconn, collaborationConn); err != nil {
 				return errors.Wrap(err, "failed to dismiss critical security alert")
 			}
-
-			docsCanvas := nodewith.Role(role.Canvas).Ancestor(docsRootWebArea)
+			// There may be multiple canvases in the docs root area, so add First() here.
+			docsCanvas := nodewith.Role(role.Canvas).Ancestor(docsRootWebArea).First()
 			if err := action.Combine("select and zoom document",
 				pc.Click(docsCanvas),
 				kw.AccelAction("Ctrl+Alt+["),
