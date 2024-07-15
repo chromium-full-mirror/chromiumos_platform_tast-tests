@@ -87,7 +87,7 @@ func SelfSignedBoot(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to enable self signed boot: ", err)
 	}
 
-	if err := h.RebootWithVT2Command(ctx, pv.BootMode); err != nil {
+	if err := h.RebootWithSSHCommand(ctx, pv.BootMode); err != nil {
 		s.Fatal("Failed to reboot with VT2 command: ", err)
 	}
 	s.Log("Checking that DUT has booted from internal disk")
@@ -112,7 +112,7 @@ func SelfSignedBoot(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get expected recovery reason")
 	}
 
-	if err := h.RebootWithVT2Command(ctx, pv.BootMode); err != nil {
+	if err := h.RebootWithSSHCommand(ctx, pv.BootMode); err != nil {
 		s.Fatal("Failed to reboot with VT2 command: ", err)
 	}
 	s.Log("Checking that DUT has booted from internal disk")
@@ -148,7 +148,7 @@ func SelfSignedBoot(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to resign usb with ssd keys: ", err)
 	}
 	defer func(ctx context.Context) {
-		if err := h.RebootWithVT2Command(ctx, pv.BootMode); err != nil {
+		if err := h.RebootWithSSHCommand(ctx, pv.BootMode); err != nil {
 			s.Fatal("Failed to reboot with VT2 command: ", err)
 		}
 		s.Log("Checking that DUT has booted from internal disk")

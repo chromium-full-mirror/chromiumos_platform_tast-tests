@@ -337,7 +337,7 @@ func UpdateVersion(ctx context.Context, s *testing.State) {
 				}
 			}
 		} else if tc.keyVersion == kernelSubkeyVer {
-			if err := h.RebootWithVT2Command(ctx, pv.BootMode); err != nil {
+			if err := h.RebootWithSSHCommand(ctx, pv.BootMode); err != nil {
 				s.Fatal("Failed to reboot with VT2 command: ", err)
 			}
 		}
@@ -506,7 +506,7 @@ func resetTpmAndReboot(ctx context.Context, pv *fixture.Value, state *firmware.C
 	}
 	testing.ContextLog(ctx, "TPM recovery command output : ", string(out))
 
-	if err := h.RebootWithVT2Command(ctx, pv.BootMode); err != nil {
+	if err := h.RebootWithSSHCommand(ctx, pv.BootMode); err != nil {
 		return errors.Wrap(err, "failed to reboot with VT2 command")
 	}
 	return nil

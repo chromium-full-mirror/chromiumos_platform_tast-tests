@@ -306,7 +306,7 @@ func setWriteProtect(ctx context.Context, h *firmware.Helper, target wpTarget, e
 				testing.ContextLogf(ctx, "Failed to set AP wp to %s", enableStr)
 			}
 
-			if err := h.RebootWithVT2Command(ctx, fwCommon.BootModeRecovery); err != nil {
+			if err := h.RebootWithSSHCommand(ctx, fwCommon.BootModeRecovery); err != nil {
 				testing.ContextLog(ctx, "Failed to reboot back to original boot mode: ", err)
 			}
 

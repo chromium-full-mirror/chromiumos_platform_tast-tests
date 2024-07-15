@@ -2243,8 +2243,17 @@ func (h *Helper) BootToRecoveryMode(ctx context.Context, state *CheckAndSetServo
 	return nil
 }
 
-// RebootWithVT2Command sends a reboot command in VT2 to reboot the DUT.
-func (h *Helper) RebootWithVT2Command(ctx context.Context, fromMode fwCommon.BootMode) error {
+// RebootWithSSHCommand sends a reboot command via SSH to reboot the DUT.
+func (h *Helper) RebootWithSSHCommand(ctx context.Context, fromMode fwCommon.BootMode) (retErr error) {
+	defer func() {
+		if retErr != nil {
+			currPowerState, getPowerStateErr := h.Servo.GetECSystemPowerState(ctx)
+			if getPowerStateErr != nil {
+				retErr = errors.Join(retErr, errors.Wrap(getPowerStateErr, "failed to get EC power state"))
+			}
+			retErr = errors.Join(retErr, errors.Errorf("got %v power state", currPowerState))
+		}
+	}()
 	if err := h.CloseRPCConnection(ctx); err != nil {
 		return errors.Wrap(err, "failed to close rpc connection")
 	}
@@ -2259,16 +2268,12 @@ func (h *Helper) RebootWithVT2Command(ctx context.Context, fromMode fwCommon.Boo
 	}
 	reconnectTimeout := h.Config.DelayRebootToPing
 	if fromMode == fwCommon.BootModeDev {
-		reconnectTimeout = h.Config.DelayRebootToPing + DevScreenTimeout
+		reconnectTimeout = h.Config.FirmwareScreen + DevScreenTimeout + h.Config.DelayRebootToPing
 	}
 	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, reconnectTimeout)
 	defer cancelWaitConnect()
 	if err := h.WaitConnect(waitConnectCtx, ResetEthernetDongle); err != nil {
-		currPowerState, getPowerStateErr := h.Servo.GetECSystemPowerState(ctx)
-		if getPowerStateErr != nil {
-			return errors.Wrap(getPowerStateErr, "failed to get EC power state while reconnecting to the DUT")
-		}
-		return errors.Wrapf(err, "failed to reconnect to the DUT and got power state: %v", currPowerState)
+		return errors.Wrap(err, "failed to reconnect to the DUT")
 	}
 	return nil
 }

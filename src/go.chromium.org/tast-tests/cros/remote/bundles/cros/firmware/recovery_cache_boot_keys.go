@@ -168,7 +168,7 @@ func RecoveryCacheBootKeys(ctx context.Context, s *testing.State) {
 	}()
 
 	s.Log("Rebooting to test boot mode: ", bootMode)
-	if err := h.RebootWithVT2Command(ctx, bootMode); err != nil {
+	if err := h.RebootWithSSHCommand(ctx, bootMode); err != nil {
 		s.Fatal("Failed to reboot with VT2 command: ", err)
 	}
 	if !state.IsServoChargerConnected {
@@ -213,7 +213,7 @@ func RecoveryCacheBootKeys(ctx context.Context, s *testing.State) {
 
 		// Reset test to start from boot mode that is being tested.
 		s.Log("Rebooting to test boot mode: ", bootMode)
-		if err := h.RebootWithVT2Command(ctx, bootMode); err != nil {
+		if err := h.RebootWithSSHCommand(ctx, bootMode); err != nil {
 			s.Fatal("Failed to reboot with VT2 command: ", err)
 		}
 		if !state.IsServoChargerConnected {
@@ -239,7 +239,7 @@ func RecoveryCacheBootKeys(ctx context.Context, s *testing.State) {
 		s.Log("Found expected messages in cbmem log: ", match[0])
 
 		s.Log("Rebooting to test boot mode: ", bootMode)
-		if err := h.RebootWithVT2Command(ctx, bootMode); err != nil {
+		if err := h.RebootWithSSHCommand(ctx, bootMode); err != nil {
 			s.Fatal("Failed to reboot with VT2 command: ", err)
 		}
 		if !state.IsServoChargerConnected {

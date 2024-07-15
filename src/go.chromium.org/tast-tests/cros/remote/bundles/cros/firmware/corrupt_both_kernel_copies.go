@@ -331,7 +331,7 @@ func CorruptBothKernelCopies(ctx context.Context, s *testing.State) {
 		s.Error("Failed to restore KERN-B: ", err)
 	}
 
-	if err := h.RebootWithVT2Command(ctx, pv.BootMode); err != nil {
+	if err := h.RebootWithSSHCommand(ctx, pv.BootMode); err != nil {
 		s.Fatal("Failed to reboot back to original boot mode: ", err)
 	}
 

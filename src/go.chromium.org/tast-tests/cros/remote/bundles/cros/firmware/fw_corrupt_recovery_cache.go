@@ -167,7 +167,7 @@ func FWCorruptRecoveryCache(ctx context.Context, s *testing.State) {
 		if h.DUT.Connected(ctx) {
 			// The power_state:reset command might cause an error (ec/cr50/servo: no data was sent from pty or unresponsive).
 			// To prevent this issue, send the 'reboot' command in VT2.
-			if err := h.RebootWithVT2Command(ctx, bootMode); err != nil {
+			if err := h.RebootWithSSHCommand(ctx, bootMode); err != nil {
 				s.Fatal("Failed to reboot with VT2 command: ", err)
 			}
 		} else {
