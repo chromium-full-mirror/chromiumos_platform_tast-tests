@@ -126,7 +126,7 @@ func RecScreenMiniOS(ctx context.Context, s *testing.State) {
 		if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
 			s.Error("Failed to reconnect to dut: ", err)
 		}
-		if !state.IsServoChargerConnected {
+		if state.RemoveServoChargerRequired && !state.IsServoChargerConnected {
 			if err := h.SetDUTPower(ctx, true); err != nil {
 				s.Fatal("Failed to connect charger: ", err)
 			}

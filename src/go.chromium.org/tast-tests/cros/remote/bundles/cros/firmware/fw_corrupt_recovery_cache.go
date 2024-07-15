@@ -193,7 +193,7 @@ func FWCorruptRecoveryCache(ctx context.Context, s *testing.State) {
 			s.Fatalf("DUT did not boot from the internal device: got %v, want false", bootedFromRemovableDevice)
 		}
 
-		if !state.IsServoChargerConnected {
+		if state.RemoveServoChargerRequired && !state.IsServoChargerConnected {
 			if err := h.SetDUTPower(ctx, true); err != nil {
 				s.Fatal("Failed to connect charger: ", err)
 			}

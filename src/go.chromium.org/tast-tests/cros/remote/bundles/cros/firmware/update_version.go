@@ -325,7 +325,7 @@ func UpdateVersion(ctx context.Context, s *testing.State) {
 			if err := resetTpmAndReboot(ctx, pv, &state); err != nil {
 				s.Error("Failed to reset TPM and reboot DUT: ", err)
 			}
-			if !state.IsServoChargerConnected {
+			if state.RemoveServoChargerRequired && !state.IsServoChargerConnected {
 				if err := h.SetDUTPower(ctx, true); err != nil {
 					s.Fatal("Failed to connect charger: ", err)
 				}

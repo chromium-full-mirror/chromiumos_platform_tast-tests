@@ -255,7 +255,7 @@ func CorruptBothKernelCopies(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to reboot: ", err)
 			}
 
-			if !state.IsServoChargerConnected {
+			if state.RemoveServoChargerRequired && !state.IsServoChargerConnected {
 				if err := h.SetDUTPower(ctx, true); err != nil {
 					s.Fatal("Failed to connect charger: ", err)
 				}
@@ -344,7 +344,7 @@ func CorruptBothKernelCopies(ctx context.Context, s *testing.State) {
 	}
 	needsUSBRestore = false
 
-	if !state.IsServoChargerConnected {
+	if state.RemoveServoChargerRequired && !state.IsServoChargerConnected {
 		if err := h.SetDUTPower(ctx, true); err != nil {
 			s.Fatal("Failed to connect charger: ", err)
 		}

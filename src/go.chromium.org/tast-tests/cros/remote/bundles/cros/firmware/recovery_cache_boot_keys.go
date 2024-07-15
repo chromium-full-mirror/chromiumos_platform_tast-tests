@@ -160,7 +160,7 @@ func RecoveryCacheBootKeys(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to boot to recovery mode: ", err)
 	}
 	defer func() {
-		if !state.IsServoChargerConnected {
+		if state.RemoveServoChargerRequired && !state.IsServoChargerConnected {
 			if err := h.SetDUTPower(ctx, true); err != nil {
 				s.Fatal("Failed to connect charger: ", err)
 			}
@@ -171,7 +171,7 @@ func RecoveryCacheBootKeys(ctx context.Context, s *testing.State) {
 	if err := h.RebootWithSSHCommand(ctx, bootMode); err != nil {
 		s.Fatal("Failed to reboot with VT2 command: ", err)
 	}
-	if !state.IsServoChargerConnected {
+	if state.RemoveServoChargerRequired && !state.IsServoChargerConnected {
 		if err := h.SetDUTPower(ctx, true); err != nil {
 			s.Fatal("Failed to connect charger: ", err)
 		}
@@ -216,7 +216,7 @@ func RecoveryCacheBootKeys(ctx context.Context, s *testing.State) {
 		if err := h.RebootWithSSHCommand(ctx, bootMode); err != nil {
 			s.Fatal("Failed to reboot with VT2 command: ", err)
 		}
-		if !state.IsServoChargerConnected {
+		if state.RemoveServoChargerRequired && !state.IsServoChargerConnected {
 			if err := h.SetDUTPower(ctx, true); err != nil {
 				s.Fatal("Failed to connect charger: ", err)
 			}
@@ -242,7 +242,7 @@ func RecoveryCacheBootKeys(ctx context.Context, s *testing.State) {
 		if err := h.RebootWithSSHCommand(ctx, bootMode); err != nil {
 			s.Fatal("Failed to reboot with VT2 command: ", err)
 		}
-		if !state.IsServoChargerConnected {
+		if state.RemoveServoChargerRequired && !state.IsServoChargerConnected {
 			if err := h.SetDUTPower(ctx, true); err != nil {
 				s.Fatal("Failed to connect charger: ", err)
 			}
