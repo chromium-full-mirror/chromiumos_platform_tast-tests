@@ -25,7 +25,7 @@ func Remap(ctx context.Context, ui *uiauto.Context, from, to string) error {
 	keyRow := nodewith.Name(from).Role(role.GenericContainer)
 	key := nodewith.Name(from).Role(
 		role.ComboBoxSelect).Ancestor(keyRow)
-	option := nodewith.Name(to).Role(role.ListBoxOption)
+	option := nodewith.Name(to).Role(role.MenuListOption).Ancestor(keyRow)
 	if err := uiauto.Combine(fmt.Sprintf("choose %q option", to),
 		ui.LeftClickUntil(key, ui.WithTimeout(
 			2*time.Second).WaitUntilExists(option)),
@@ -51,12 +51,12 @@ func NavigateMouseCustomization(ctx context.Context, ui *uiauto.Context, mouseNa
 
 	// Verify if the customization link shows up in the mouse section.
 	customizeLink := nodewith.Name("Customize mouse buttons").Role(role.Link).First()
-	if err := ui.WithTimeout(2 * time.Minute).LeftClick(customizeLink)(ctx); err != nil {
+	if err := ui.WithTimeout(2 * time.Minute).DoDefault(customizeLink)(ctx); err != nil {
 		return errors.Wrap(err, "failed to Find or click customize mouse buttons link Customize mouse buttons")
 	}
 
 	// Verify if the virtual mouse connected shows up.
-	mouseText := nodewith.NameContaining("Click additional buttons on your " + mouseName).Role(role.StaticText)
+	mouseText := nodewith.NameContaining("Press a button that's not the left or right mouse button on your " + mouseName).Role(role.StaticText).First()
 	if err := ui.WaitUntilExists(mouseText)(ctx); err != nil {
 		return errors.Wrapf(err, "failed to find text Tast virtual mouse in customization page %s", mouseName)
 	}

@@ -14,7 +14,9 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/lockscreen"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/userutil"
 	"go.chromium.org/tast-tests/cros/local/devicesettings"
 	"go.chromium.org/tast-tests/cros/local/devicesettings/constants"
@@ -88,7 +90,7 @@ func DeviceLoginScreen(ctx context.Context, s *testing.State) {
 		defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui")
 
 		// Find Keyboard row and click it.
-		if err := ui.DoDefault(constants.KeyboardRow)(ctx); err != nil {
+		if err := ui.DoDefault(nodewith.Role(role.Link).NameStartingWith("Keyboard and inputs"))(ctx); err != nil {
 			s.Fatal("Failed to click keyboard row: ", err)
 		}
 

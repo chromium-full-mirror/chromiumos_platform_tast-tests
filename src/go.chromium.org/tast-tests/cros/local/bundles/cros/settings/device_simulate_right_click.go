@@ -87,10 +87,10 @@ func DeviceSimulateRightClick(ctx context.Context, s *testing.State) {
 	}
 	defer kb.Close(cleanupCtx)
 
-	rightClickDropdown := nodewith.Role(
-		role.ComboBoxSelect)
-	altClickOption := nodewith.Name("alt + click").Role(role.ListBoxOption)
+	rightClickDropdown := nodewith.Role(role.ComboBoxSelect)
+	altClickOption := nodewith.Name("alt + click").Role(role.MenuListOption)
 	if err := uiauto.Combine("Choose alt + click option",
+		ui.WaitUntilExists(altClickOption),
 		ui.LeftClickUntil(rightClickDropdown, ui.WithTimeout(
 			2*time.Second).WaitUntilExists(altClickOption)),
 		ui.LeftClick(altClickOption),
@@ -103,6 +103,7 @@ func DeviceSimulateRightClick(ctx context.Context, s *testing.State) {
 	action.Sleep(time.Second)(ctx)
 	if err := uiauto.Combine("Open right-click menu",
 		kb.AccelPressAction("Alt"),
+		// Sleep needed for keyboard and touchpad actions, exception to GoBigSleepLint
 		action.Sleep(50*time.Millisecond),
 		leftClickOnTouchpad(tp),
 		action.Sleep(50*time.Millisecond),

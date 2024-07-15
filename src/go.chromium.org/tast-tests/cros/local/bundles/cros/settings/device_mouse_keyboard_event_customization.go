@@ -10,7 +10,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/dropdown"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
@@ -98,15 +97,12 @@ func DeviceMouseKeyboardEventCustomization(ctx context.Context, s *testing.State
 		s.Fatal("Failed to find the button row in the page button customization subpage: ", err)
 	}
 
-	// Verify the dropdown also is displayed along with the button.
-	actionDropdown := nodewith.HasClass("md-select").First()
-	if err := ui.WaitUntilExists(actionDropdown)(ctx); err != nil {
-		s.Fatal("Failed to find the button customization dropdown: ", err)
-	}
-
-	// Remapping the button to show Overview.
+	mouseRow := nodewith.HasClass("md-select label-container").First()
+	// Remapping the button to Overview action.
 	if err := uiauto.Combine("Remapping action from drop down",
-		dropdown.SelectCustomizePeripheralButtonsDropdown(tconn, actionDropdown, "Overview"),
+		ui.LeftClick(mouseRow),
+		ui.LeftClick(nodewith.Name("Overview").Role("staticText")),
+		ui.WaitUntilExists(nodewith.Role(role.StaticText).Name("Overview").Ancestor(mouseRow)),
 	)(ctx); err != nil {
 		s.Fatal("Failed to remap action from drop down for the button: ", err)
 	}
@@ -123,8 +119,12 @@ func DeviceMouseKeyboardEventCustomization(ctx context.Context, s *testing.State
 
 	// Verifying the keyboard event is triggered by mouse click to open overview ui.
 	if err := ui.WaitUntilExists(constants.OverviewMode)(ctx); err != nil {
-		s.Log(uiauto.RootDebugInfo(ctx, tconn))
 		s.Fatal("Failed to trigger Overview by clicking: ", err)
+	}
+
+	// Exit Overview mode
+	if err := mouse.KeyboardActionClick(input.KEY_ESC); err != nil {
+		s.Fatal("Failed to click with the mouse button again to trigger mapped action: ", err)
 	}
 
 	// Disconnecting the mouse.
@@ -160,7 +160,6 @@ func DeviceMouseKeyboardEventCustomization(ctx context.Context, s *testing.State
 
 	// Verifying if Overview mode is on.
 	if err := ui.WaitUntilExists(constants.OverviewMode)(ctx); err != nil {
-		s.Log(uiauto.RootDebugInfo(ctx, tconn))
 		s.Fatal("Failed to trigger Overview by clicking: ", err)
 	}
 }

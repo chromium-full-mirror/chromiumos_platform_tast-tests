@@ -12,7 +12,7 @@ import (
 
 var (
 	// KeyboardRow is a finder for the Keyboard subpage in device settings.
-	KeyboardRow = nodewith.Name("Keyboard").Role(role.GenericContainer)
+	KeyboardRow = nodewith.NameContaining("Keyboard").Role(role.GenericContainer)
 	// MouseRow is a finder for the Mouse subpage in device settings.
 	MouseRow = nodewith.Name("Mouse").Role(role.GenericContainer)
 	// TouchpadRow is a finder for the Touchpad subpage in device settings.
@@ -24,7 +24,7 @@ var (
 	CustomizeKeyboardKeys = nodewith.ClassName(
 		"hr bottom-divider remap-keyboard-keys-row-internal").Role(role.GenericContainer)
 	// OverviewMode is the a finder for to confirm if the over view mode is enabled.
-	OverviewMode = nodewith.Name("Desk: Desk 1").Role(role.Button)
+	OverviewMode = nodewith.NameContaining("Desk 1").Role(role.Button)
 	// Dropdown is the finder for the action drop down list in the customize mouse button page.
 	Dropdown = nodewith.ClassName("md-select").Role(role.ComboBoxSelect)
 )
@@ -59,11 +59,11 @@ const (
 
 // Button or node names in Mouse device section ui.
 const (
-	MouseLabel  	= "Tast virtual mouse"
-	MiddleButton    = "Middle Button"
-	OtherButton     = "Other Button 1"
-	EditButton      = "edit-button"
-	SaveButton 	    = "Save"
-	RenamedButton1  = "RenamedButton 1"
-	RenamedButton2  = "RenamedButton 2"
+	MouseLabel     = "Tast virtual mouse"
+	MiddleButton   = "Middle Button"
+	OtherButton    = "Other Button 1"
+	EditButton     = "edit-button"
+	SaveButton     = "Save"
+	RenamedButton1 = "RenamedButton 1"
+	RenamedButton2 = "RenamedButton 2"
 )

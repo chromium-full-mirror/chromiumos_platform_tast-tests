@@ -29,7 +29,7 @@ func init() {
 		Desc:         "Check if it is able to add and remove language",
 		Contacts: []string{
 			"cros-settings@google.com",
-			"chromeos-sw-engprod@google.com",
+			"chromeos-consumer-engprod@google.com",
 		},
 		// OS > Systems > Settings
 		BugComponent: "b:1246072",

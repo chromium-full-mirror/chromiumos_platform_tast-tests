@@ -10,7 +10,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/dropdown"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
@@ -94,14 +93,14 @@ func DeviceMouseActionCustomization(ctx context.Context, s *testing.State) {
 	if err := mouse.MiddleClick(); err != nil {
 		s.Fatal("Failed to click with the middle button: ", err)
 	}
-
-	// Verify the dropdown also is displayed along with the button.
-	actionDropdown := nodewith.HasClass("md-select").First()
 	testing.ContextLog(ctx, "Combobox clicked")
 
+	mouseRow := nodewith.HasClass("md-select label-container").First()
 	// Remapping the button to Screenshot action.
 	if err := uiauto.Combine("Remapping action from drop down",
-		dropdown.SelectCustomizePeripheralButtonsDropdown(tconn, actionDropdown, "Screenshot"),
+		ui.LeftClick(mouseRow),
+		ui.LeftClick(nodewith.Name("Screenshot").Role("staticText")),
+		ui.WaitUntilExists(nodewith.Role(role.StaticText).Name("Screenshot").Ancestor(mouseRow)),
 	)(ctx); err != nil {
 		s.Fatal("Failed to remap action from drop down for the button: ", err)
 	}
@@ -117,12 +116,12 @@ func DeviceMouseActionCustomization(ctx context.Context, s *testing.State) {
 	}
 
 	// Verifying if Emoji picker is open.
-	if err := ui.WaitUntilExists(nodewith.Name("Drag to select an area to capture").Role(role.StaticText))(ctx); err != nil {
+	if err := ui.WithTimeout(30 * time.Second).WaitUntilExists(nodewith.Name("Drag to select an area to capture").Role(role.StaticText))(ctx); err != nil {
 		s.Fatal("Failed to open screenshot mode immediately after performing middle button click: ", err)
 	}
 
 	closeButton := nodewith.Name("Close").Role(role.Button)
-	if err := ui.WithTimeout(2 * time.Minute).LeftClick(closeButton)(ctx); err != nil {
+	if err := ui.WithTimeout(30 * time.Second).LeftClick(closeButton)(ctx); err != nil {
 		s.Fatal(err, "Failed to close the screen shot mode")
 	}
 
