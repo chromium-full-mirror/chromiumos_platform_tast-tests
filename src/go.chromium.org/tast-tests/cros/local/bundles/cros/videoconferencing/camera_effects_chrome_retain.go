@@ -25,7 +25,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CameraEffectsChromeRetain,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks Video Effects retains after re-launching vc apps",
 		Contacts: []string{
 			"cros-video-conference-tast-tests@google.com",
@@ -60,18 +60,8 @@ func init() {
 				Value: "screenplay-bff2442b-de76-422e-a45c-f077f0f6eca3",
 			},
 		},
-		Params: []testing.Param{
-			{
-				Name:    "ash",
-				Fixture: fixture.LoggedInWithFakeHALAndEffectsEnabled,
-			},
-			{
-				Name:              "lacros",
-				ExtraSoftwareDeps: []string{"lacros"},
-				Fixture:           fixture.LoggedInLacrosWithFakeHALAndEffectsEnabled,
-			},
-		},
-		Vars: screenshot.ScreenDiffVars,
+		Fixture: fixture.LoggedInWithFakeHALAndEffectsEnabled,
+		Vars:    screenshot.ScreenDiffVars,
 	})
 }
 

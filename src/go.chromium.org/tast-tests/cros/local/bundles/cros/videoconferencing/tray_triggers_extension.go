@@ -22,7 +22,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         TrayTriggersExtension,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks VC tray can be triggered by Chrome extension",
 		Contacts: []string{
 			"cros-video-conference-tast-tests@google.com",
@@ -36,17 +36,7 @@ func init() {
 		},
 		TestBedDeps:  []string{tbdep.Cbx(true)},
 		SoftwareDeps: []string{"chrome"},
-		Params: []testing.Param{
-			{
-				Name:    "ash",
-				Fixture: fixture.LoggedInWithFakeVCExtension,
-			},
-			{
-				Name:              "lacros",
-				ExtraSoftwareDeps: []string{"lacros"},
-				Fixture:           fixture.LoggedInLacrosWithFakeVCExtension,
-			},
-		},
+		Fixture:      fixture.LoggedInWithFakeVCExtension,
 		SearchFlags: []*testing.StringPair{
 			{
 				// Trigger VC tray with Camera on Chrome Extension.
@@ -67,26 +57,6 @@ func init() {
 				// Use VC tray to return to an Chrome extension app.
 				Key:   "feature_id",
 				Value: "screenplay-82edd651-0483-49c3-b6bb-58af7acb5a75",
-			},
-			{
-				// Trigger VC tray with Camera on Lacros Extension.
-				Key:   "feature_id",
-				Value: "screenplay-dc04650a-6dc8-42cf-a75c-f107a80b231c",
-			},
-			{
-				// Trigger VC tray with Mic on Lacros Extension.
-				Key:   "feature_id",
-				Value: "screenplay-8547de4e-4932-4ac7-9570-d0e73d0b1118",
-			},
-			{
-				// Trigger VC tray with sharing screen on Lacros Extension.
-				Key:   "feature_id",
-				Value: "screenplay-201cb73e-9071-44e0-a251-188c3937a841",
-			},
-			{
-				// Use VC tray to return to an Lacros extension app.
-				Key:   "feature_id",
-				Value: "screenplay-09f693df-f573-4880-a4cf-707b6f78aa03",
 			},
 		},
 	})

@@ -32,7 +32,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SpeakOnMuteTabPwa,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks Speak-On-Mute is functional in Google Meet",
 		Contacts: []string{
 			"cros-video-conference-tast-tests@google.com",
@@ -72,18 +72,8 @@ func init() {
 				Val:     common.LaunchAppInWeb,
 			},
 			{
-				Name:    "web_lacros",
-				Fixture: fixture.LoggedInLacrosWithFakeHALAndEffectsDisabled,
-				Val:     common.LaunchAppInWeb,
-			},
-			{
 				Name:    "pwa",
 				Fixture: fixture.LoggedInWithFakeHALAndEffectsDisabled,
-				Val:     common.LaunchAppInPWA,
-			},
-			{
-				Name:    "pwa_lacros",
-				Fixture: fixture.LoggedInLacrosWithFakeHALAndEffectsDisabled,
 				Val:     common.LaunchAppInPWA,
 			},
 		},

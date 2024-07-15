@@ -25,7 +25,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         LiveCaptionARC,
-		LacrosStatus: testing.LacrosVariantNeeded,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks on-device live caption works in ARC++",
 		Contacts: []string{
 			"cros-video-conference-tast-tests@google.com",

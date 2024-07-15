@@ -32,7 +32,7 @@ var (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         LiveCaptionTabPwa,
-		LacrosStatus: testing.LacrosVariantNeeded,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks on-device live caption works in tabs and pwas",
 		Contacts: []string{
 			"cros-video-conference-tast-tests@google.com",
@@ -79,16 +79,6 @@ func init() {
 			{
 				Name:    "web",
 				Fixture: fixture.LoggedInWithFakeHALAndEffectsDisabled,
-				Val:     common.LaunchAppInWeb,
-			},
-			{
-				Name:    "pwa_lacros",
-				Fixture: fixture.LoggedInLacrosWithFakeHALAndEffectsDisabled,
-				Val:     common.LaunchAppInPWA,
-			},
-			{
-				Name:    "web_lacros",
-				Fixture: fixture.LoggedInLacrosWithFakeHALAndEffectsDisabled,
 				Val:     common.LaunchAppInWeb,
 			},
 		},

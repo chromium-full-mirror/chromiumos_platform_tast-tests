@@ -15,8 +15,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/fsutil"
@@ -25,11 +23,8 @@ import (
 
 // List of fixture names for video conferencing testing.
 const (
-	loggedIn       = "loggedInForVideoConferencing"
-	loggedInLacros = "loggedInLacrosForVideoConferencing"
-
-	baseLoggedInWithFakeVCExtension       = "baseLoggedInWithFakeVCExtension"
-	baseLoggedInLacrosWithFakeVCExtension = "baseLoggedInLacrosWithFakeVCExtension"
+	loggedIn                        = "loggedInForVideoConferencing"
+	baseLoggedInWithFakeVCExtension = "baseLoggedInWithFakeVCExtension"
 )
 
 const (
@@ -52,9 +47,6 @@ var vcOpts = []chrome.Option{
 	chrome.ExtraArgs("--disable-virtual-keyboard"),
 	// Auto select screen for screen capturing.
 	chrome.ExtraArgs(`--auto-select-desktop-capture-source=display`),
-	chrome.LacrosExtraArgs("--auto-select-desktop-capture-source=Entire screen"),
-	// Disable MemoryUsageInHovercards for lacros tests.
-	chrome.LacrosDisableFeatures("MemoryUsageInHovercards"),
 }
 
 // Register variables for overriding a list of enabled features
@@ -88,23 +80,6 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name: loggedInLacros,
-		Desc: "A fixture with fake user logged in Lacros",
-		Contacts: []string{
-			"cros-video-conference-tast-tests@google.com",
-			"xiuwen@google.com",
-		},
-		BugComponent:    "b:187682",
-		Impl:            baseSetupFixture(browser.TypeLacros, nil),
-		Parent:          fixture.AloopLoaded{Channels: 2}.Instance(),
-		SetUpTimeout:    chrome.LoginTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
 		Name: baseLoggedInWithFakeVCExtension,
 		Desc: "A fixture with fake user logged in and fake VC extension installed",
 		Contacts: []string{
@@ -114,24 +89,6 @@ func init() {
 		BugComponent:    "b:187682",
 		Data:            fakeVCExtensionFiles,
 		Impl:            baseSetupFixtureWithFakeExtension(browser.TypeAsh, nil),
-		Parent:          fixture.AloopLoaded{Channels: 2}.Instance(),
-		SetUpTimeout:    chrome.LoginTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name: baseLoggedInLacrosWithFakeVCExtension,
-		Desc: "A fixture with fake user logged in Lacros and fake VC extension installed",
-		Contacts: []string{
-			"cros-video-conference-tast-tests@google.com",
-			"xiuwen@google.com",
-		},
-		BugComponent:    "b:187682",
-		Data:            fakeVCExtensionFiles,
-		Impl:            baseSetupFixtureWithFakeExtension(browser.TypeLacros, nil),
 		Parent:          fixture.AloopLoaded{Channels: 2}.Instance(),
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
@@ -196,11 +153,7 @@ func (f *baseSetupFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) 
 			}
 		}
 
-		if f.browserType == browser.TypeAsh {
-			opts = append(opts, chrome.UnpackedExtension(extPath))
-		} else {
-			opts = append(opts, chrome.LacrosUnpackedExtension(extPath))
-		}
+		opts = append(opts, chrome.UnpackedExtension(extPath))
 	}
 
 	if f.fOpts != nil {
@@ -223,10 +176,8 @@ func (f *baseSetupFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) 
 		opts = append(opts, chrome.DisableFeatures(strings.Split(disabledFeatures, ",")...))
 	}
 
-	// keep-alive for lacros extension apps. A no-op for ash extensions.
-	cr, err := browserfixt.NewChrome(ctx, f.browserType, lacrosfixt.NewConfig(
-		lacrosfixt.KeepAlive(true),
-	), opts...)
+	// cr, err := browserfixt.NewChrome(ctx, f.browserType, opts...)
+	cr, err := chrome.New(ctx, opts...)
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}

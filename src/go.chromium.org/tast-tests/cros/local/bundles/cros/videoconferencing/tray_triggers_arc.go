@@ -25,7 +25,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         TrayTriggersARC,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks VC tray returns to app is functional",
 		Contacts: []string{
 			"cros-video-conference-tast-tests@google.com",

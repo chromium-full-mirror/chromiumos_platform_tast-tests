@@ -25,7 +25,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CameraEffectsChrome,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify camera effects using screen test",
 		Contacts: []string{
 			"cros-video-conference-tast-tests@google.com",
@@ -62,17 +62,10 @@ func init() {
 				Value: "screenplay-1f125a69-4a47-4156-8cb5-97bc6244016b",
 			},
 		},
-		Params: []testing.Param{
-			{
-				Name:    "ash",
-				Fixture: fixture.LoggedInWithFakeHALAndEffectsEnabled,
-			},
-			{
-				Name:    "lacros",
-				Fixture: fixture.LoggedInLacrosWithFakeHALAndEffectsEnabled,
-			},
-		},
-	})
+
+		Fixture: fixture.LoggedInWithFakeHALAndEffectsEnabled,
+	},
+	)
 }
 
 func CameraEffectsChrome(cleanupCtx context.Context, s *testing.State) {

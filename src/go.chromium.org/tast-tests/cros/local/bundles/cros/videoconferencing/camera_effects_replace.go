@@ -35,7 +35,7 @@ const (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CameraEffectsReplace,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks camera effects background replace",
 		Contacts: []string{
 			"cros-video-conference-tast-tests@google.com",

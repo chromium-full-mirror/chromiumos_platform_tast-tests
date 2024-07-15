@@ -40,16 +40,12 @@ const (
 // List of fixture names for video conferencing testing.
 const (
 	// Fixtures with fake login.
-	LoggedInWithFakeHALAndEffectsEnabled        = "loggedInWithFakeHALAndEffectsEnabled"
-	LoggedInLacrosWithFakeHALAndEffectsEnabled  = "loggedInLacrosWithFakeHALAndEffectsEnabled"
-	LoggedInWithFakeHALAndEffectsDisabled       = "loggedInWithFakeHALAndEffectsDisabled"
-	LoggedInLacrosWithFakeHALAndEffectsDisabled = "loggedInLacrosWithFakeHALAndEffectsDisabled"
-
+	LoggedInWithFakeHALAndEffectsEnabled                 = "loggedInWithFakeHALAndEffectsEnabled"
+	LoggedInWithFakeHALAndEffectsDisabled                = "loggedInWithFakeHALAndEffectsDisabled"
 	LoggedInWithFakeHALAndEffectsEnabledNoScreenRecorder = "loggedInWithFakeHALAndEffectsEnabledNoScreenRecorder"
 
 	// List of fixture names for video conferencing testing with fake VC extension installed.
-	LoggedInWithFakeVCExtension       = "loggedInWithFakeVCExtension"
-	LoggedInLacrosWithFakeVCExtension = "loggedInLacrosWithFakeVCExtension"
+	LoggedInWithFakeVCExtension = "loggedInWithFakeVCExtension"
 
 	// PowerLoggedInWithFakeHALAndEffectsEnabledNoScreenRecorder is a fixture used for power measurements with standard power api.
 	PowerLoggedInWithFakeHALAndEffectsEnabledNoScreenRecorder = "powerLoggedInWithFakeHALAndEffectsEnabledNoScreenRecorder"
@@ -158,42 +154,6 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name: LoggedInLacrosWithFakeHALAndEffectsDisabled,
-		Desc: "A fixture with fake user logged in Lacros using fake HAL camera with platform effects disabled",
-		Contacts: []string{
-			"cros-video-conference-tast-tests@google.com",
-			"xiuwen@google.com",
-		},
-		BugComponent:    "b:187682",
-		Data:            []string{fakeHALImageInput},
-		Impl:            mediaSetupFixture(halCameraWithPlatformEffectsDisabled),
-		Parent:          loggedInLacros,
-		SetUpTimeout:    chrome.LoginTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name: LoggedInLacrosWithFakeHALAndEffectsEnabled,
-		Desc: "A fixture with fake user logged in Lacros using fake HAL camera with platform effects enabled",
-		Contacts: []string{
-			"cros-video-conference-tast-tests@google.com",
-			"xiuwen@google.com",
-		},
-		BugComponent:    "b:187682",
-		Data:            []string{fakeHALImageInput},
-		Impl:            mediaSetupFixture(halCameraWithPlatformEffectsEnabled),
-		Parent:          loggedInLacros,
-		SetUpTimeout:    chrome.LoginTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
 		Name: LoggedInARCWithInternalCameraAndEffectsDisabled,
 		Desc: "A fixture with test user logged in and ARC booted using internal camera with platform effects disabled",
 		Contacts: []string{
@@ -222,24 +182,6 @@ func init() {
 		Data:            []string{fakeHALImageInput},
 		Impl:            mediaSetupFixture(halCameraWithPlatformEffectsDisabled),
 		Parent:          baseLoggedInWithFakeVCExtension,
-		SetUpTimeout:    chrome.LoginTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name: LoggedInLacrosWithFakeVCExtension,
-		Desc: "A fixture with fake user logged in Lacros and fake VC extension installed",
-		Contacts: []string{
-			"cros-video-conference-tast-tests@google.com",
-			"xiuwen@google.com",
-		},
-		BugComponent:    "b:187682",
-		Data:            []string{fakeHALImageInput},
-		Impl:            mediaSetupFixture(halCameraWithPlatformEffectsDisabled),
-		Parent:          baseLoggedInLacrosWithFakeVCExtension,
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
