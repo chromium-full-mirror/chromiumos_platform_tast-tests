@@ -94,7 +94,6 @@ func init() {
 }
 
 const (
-	coldBootMax time.Duration = 1200 * time.Millisecond
 	maxWaitTime time.Duration = 60 * time.Second
 )
 
@@ -242,6 +241,8 @@ func BootTime(ctx context.Context, s *testing.State) {
 	}
 	s.Logf("EC cold boot time: %s", coldBootTime)
 	s.Logf("AP Boot time: %s", apBootTime)
+	var coldBootMax time.Duration
+	coldBootMax = h.Config.ECColdBootTime
 	if coldBootTime > coldBootMax {
 		s.Errorf("EC boot time = %s; want <=%s", coldBootTime, coldBootMax)
 	}
