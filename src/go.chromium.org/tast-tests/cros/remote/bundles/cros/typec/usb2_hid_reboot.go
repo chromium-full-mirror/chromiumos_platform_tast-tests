@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/remote/bundles/cros/typec/typecutils"
+	"go.chromium.org/tast-tests/cros/common/typecutils"
 	"go.chromium.org/tast-tests/cros/remote/typec/mcci"
 	"go.chromium.org/tast-tests/cros/services/cros/usb"
 	"go.chromium.org/tast/core/dut"

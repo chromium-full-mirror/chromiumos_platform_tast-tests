@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/servo"
-	"go.chromium.org/tast-tests/cros/remote/bundles/cros/typec/typecutils"
+	"go.chromium.org/tast-tests/cros/common/typecutils"
 	"go.chromium.org/tast/core/testing"
 )
 

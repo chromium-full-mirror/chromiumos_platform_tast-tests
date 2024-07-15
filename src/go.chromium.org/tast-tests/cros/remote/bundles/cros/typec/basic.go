@@ -12,8 +12,8 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
+	"go.chromium.org/tast-tests/cros/common/typecutils"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/typec/fixture"
-	"go.chromium.org/tast-tests/cros/remote/bundles/cros/typec/typecutils"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh/linuxssh"
@@ -118,7 +118,7 @@ func runDPTest(ctx context.Context, svo *servo.Servo, d *dut.DUT, s *testing.Sta
 	}
 
 	// Check that the partner DP alternate mode is found.
-	if err := typecutils.CheckForDPAltMode(ctx, d, s, pinAssign); err != nil {
+	if err := typecutils.CheckForDPAltMode(ctx, d, pinAssign); err != nil {
 		return errors.Wrap(err, "failed to find the expected partner")
 	}
 
