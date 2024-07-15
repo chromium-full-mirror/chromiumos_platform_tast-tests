@@ -31,7 +31,8 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		// TODO: b/317891316 When stable, change firmware_unstable to a different attr.
-		Attr:    []string{"group:firmware", "firmware_unstable"},
+		// TODO(b/285381057): This test always fails, so disable it until it is fixed.
+		Attr:    []string{"group:firmware"},
 		Fixture: fixture.NormalMode,
 		Timeout: 15 * time.Minute,
 		// Only run on platforms that include CL crrev/c/1234747 so that CBI can be reversibly written to.
