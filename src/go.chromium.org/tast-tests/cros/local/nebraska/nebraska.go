@@ -264,6 +264,11 @@ func (n *Nebraska) SetCriticalUpdate(ctx context.Context, value bool) error {
 	return configureNebraska(ctx, n.Port, "critical_update", fmt.Sprint(value))
 }
 
+// SetNoUpdateAvailable configures Nebraska to serve if update is available or not.
+func (n *Nebraska) SetNoUpdateAvailable(ctx context.Context, value bool) error {
+	return configureNebraska(ctx, n.Port, "no_update", fmt.Sprint(value))
+}
+
 // SetEolDate sets the end of life date Nebraska sends on update requests.
 func (n *Nebraska) SetEolDate(ctx context.Context, eolDate time.Time) error {
 	return configureNebraska(ctx, n.Port, "eol_date", fmt.Sprint(toDaysSinceUnixEpoch(eolDate)))
