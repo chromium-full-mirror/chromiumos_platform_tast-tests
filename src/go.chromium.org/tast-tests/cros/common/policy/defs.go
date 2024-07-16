@@ -22562,7 +22562,6 @@ func (p *DefaultHandlersForFileExtensions) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1022. IsolatedWebAppInstallForceList
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type IsolatedWebAppInstallForceList struct {
 	Stat Status
@@ -26391,7 +26390,6 @@ func (p *DeviceFlexHwDataForProductImprovementEnabled) Equal(iface interface{}) 
 // ****************************************************************************
 // 1176. SiteSearchSettings
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type SiteSearchSettings struct {
 	Stat Status
@@ -28882,6 +28880,163 @@ func (p *PromotionsEnabled) Equal(iface interface{}) bool {
 }
 
 // ****************************************************************************
+// 1281. QRCodeGeneratorEnabled
+// This policy can be modified without rebooting.
+// ****************************************************************************
+type QRCodeGeneratorEnabled struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *QRCodeGeneratorEnabled) Name() string          { return "QRCodeGeneratorEnabled" }
+func (p *QRCodeGeneratorEnabled) Scope() Scope          { return ScopeUser }
+func (p *QRCodeGeneratorEnabled) Status() Status        { return p.Stat }
+func (p *QRCodeGeneratorEnabled) UntypedV() interface{} { return p.Val }
+func (p *QRCodeGeneratorEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *QRCodeGeneratorEnabled) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *QRCodeGeneratorEnabled) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1282. DnsOverHttpsExcludedDomains
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type DnsOverHttpsExcludedDomains struct {
+	Stat Status
+	Val  []string
+}
+
+func (p *DnsOverHttpsExcludedDomains) Name() string          { return "DnsOverHttpsExcludedDomains" }
+func (p *DnsOverHttpsExcludedDomains) Scope() Scope          { return ScopeUser }
+func (p *DnsOverHttpsExcludedDomains) Status() Status        { return p.Stat }
+func (p *DnsOverHttpsExcludedDomains) UntypedV() interface{} { return p.Val }
+func (p *DnsOverHttpsExcludedDomains) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v []string
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as []string", m)
+	}
+	return v, nil
+}
+func (p *DnsOverHttpsExcludedDomains) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *DnsOverHttpsExcludedDomains) Equal(iface interface{}) bool {
+	v, ok := iface.([]string)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1283. DnsOverHttpsIncludedDomains
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type DnsOverHttpsIncludedDomains struct {
+	Stat Status
+	Val  []string
+}
+
+func (p *DnsOverHttpsIncludedDomains) Name() string          { return "DnsOverHttpsIncludedDomains" }
+func (p *DnsOverHttpsIncludedDomains) Scope() Scope          { return ScopeUser }
+func (p *DnsOverHttpsIncludedDomains) Status() Status        { return p.Stat }
+func (p *DnsOverHttpsIncludedDomains) UntypedV() interface{} { return p.Val }
+func (p *DnsOverHttpsIncludedDomains) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v []string
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as []string", m)
+	}
+	return v, nil
+}
+func (p *DnsOverHttpsIncludedDomains) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *DnsOverHttpsIncludedDomains) Equal(iface interface{}) bool {
+	v, ok := iface.([]string)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1284. SystemShortcutBehavior
+// This policy can be modified without rebooting.
+// ****************************************************************************
+type SystemShortcutBehavior struct {
+	Stat Status
+	Val  int
+}
+
+func (p *SystemShortcutBehavior) Name() string          { return "SystemShortcutBehavior" }
+func (p *SystemShortcutBehavior) Scope() Scope          { return ScopeUser }
+func (p *SystemShortcutBehavior) Status() Status        { return p.Stat }
+func (p *SystemShortcutBehavior) UntypedV() interface{} { return p.Val }
+func (p *SystemShortcutBehavior) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v int
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as int", m)
+	}
+	return v, nil
+}
+func (p *SystemShortcutBehavior) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *SystemShortcutBehavior) Equal(iface interface{}) bool {
+	v, ok := iface.(int)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1286. StandardizedBrowserZoomEnabled
+// This policy can be modified without rebooting.
+// ****************************************************************************
+type StandardizedBrowserZoomEnabled struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *StandardizedBrowserZoomEnabled) Name() string          { return "StandardizedBrowserZoomEnabled" }
+func (p *StandardizedBrowserZoomEnabled) Scope() Scope          { return ScopeUser }
+func (p *StandardizedBrowserZoomEnabled) Status() Status        { return p.Stat }
+func (p *StandardizedBrowserZoomEnabled) UntypedV() interface{} { return p.Val }
+func (p *StandardizedBrowserZoomEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *StandardizedBrowserZoomEnabled) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *StandardizedBrowserZoomEnabled) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
 // JSON deserialization logic (used by policy.Unmarshal).
 // ****************************************************************************
 
@@ -30658,6 +30813,16 @@ func newByName(name string) (Policy, error) {
 		return &JavaScriptOptimizerBlockedForSites{}, nil
 	case "PromotionsEnabled":
 		return &PromotionsEnabled{}, nil
+	case "QRCodeGeneratorEnabled":
+		return &QRCodeGeneratorEnabled{}, nil
+	case "DnsOverHttpsExcludedDomains":
+		return &DnsOverHttpsExcludedDomains{}, nil
+	case "DnsOverHttpsIncludedDomains":
+		return &DnsOverHttpsIncludedDomains{}, nil
+	case "SystemShortcutBehavior":
+		return &SystemShortcutBehavior{}, nil
+	case "StandardizedBrowserZoomEnabled":
+		return &StandardizedBrowserZoomEnabled{}, nil
 	default:
 		return nil, errors.New("Unknown policy " + name)
 	}
