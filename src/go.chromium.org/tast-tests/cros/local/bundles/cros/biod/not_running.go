@@ -31,6 +31,6 @@ func init() {
 // in the zombie state.
 func NotRunning(ctx context.Context, s *testing.State) {
 	if err := upstart.CheckJob(ctx, "biod"); err == nil {
-		s.Fatal("Test failed: ", err)
+		s.Fatal("Test failed: biod is running, but it shouldn't be")
 	}
 }
