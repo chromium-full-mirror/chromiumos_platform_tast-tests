@@ -10,7 +10,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
 	"go.chromium.org/tast-tests/cros/local/ui/deskscuj"
 	"go.chromium.org/tast/core/testing"
@@ -101,46 +100,6 @@ func init() {
 				Fixture:           "loggedInToCUJUserVulkan",
 				ExtraAttr:         []string{"group:cuj"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("redrix", "drobit", "frostflow")),
-			},
-			{
-				Name: "blt_50mb",
-				Val: deskscuj.TestParam{
-					BrowserType: browser.TypeAsh,
-				},
-				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
-				Fixture:           "loggedInToCUJUserWithBackgroundLoad50MB",
-			},
-			{
-				Name: "blt_1gb",
-				Val: deskscuj.TestParam{
-					BrowserType: browser.TypeAsh,
-				},
-				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
-				Fixture:           "loggedInToCUJUserWithBackgroundLoad1GB",
-			},
-			{
-				Name: "blt_2gb",
-				Val: deskscuj.TestParam{
-					BrowserType: browser.TypeAsh,
-				},
-				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
-				Fixture:           "loggedInToCUJUserWithBackgroundLoad2GB",
-			},
-			{
-				Name: "blt_3gb",
-				Val: deskscuj.TestParam{
-					BrowserType: browser.TypeAsh,
-				},
-				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
-				Fixture:           "loggedInToCUJUserWithBackgroundLoad3GB",
-			},
-			{
-				Name: "blt_4gb",
-				Val: deskscuj.TestParam{
-					BrowserType: browser.TypeAsh,
-				},
-				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
-				Fixture:           "loggedInToCUJUserWithBackgroundLoad4GB",
 			},
 		},
 	})

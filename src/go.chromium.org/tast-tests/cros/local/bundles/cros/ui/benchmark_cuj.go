@@ -10,11 +10,9 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/ui/benchmarkcuj"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 const defaultTimeout = 15*time.Minute + cujrecorder.CooldownTimeout
@@ -222,116 +220,6 @@ func init() {
 				},
 			},
 			// Experimental variants.
-			{
-				Name:    "speedometer_blt_50mb",
-				Timeout: defaultTimeout,
-				Val: benchmarkcuj.BenchmarkTest{
-					BrowserType:   browser.TypeAsh,
-					BenchmarkInfo: benchmarkcuj.SpeedometerInfo,
-					RecorderMode:  cujrecorder.Benchmark,
-				},
-				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
-				Fixture:           "loggedInToCUJUserWithBackgroundLoad50MBWithoutCooldown",
-			},
-			{
-				Name:    "speedometer_blt_1gb",
-				Timeout: defaultTimeout,
-				Val: benchmarkcuj.BenchmarkTest{
-					BrowserType:   browser.TypeAsh,
-					BenchmarkInfo: benchmarkcuj.SpeedometerInfo,
-					RecorderMode:  cujrecorder.Benchmark,
-				},
-				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
-				Fixture:           "loggedInToCUJUserWithBackgroundLoad1GBWithoutCooldown",
-			},
-			{
-				Name:    "speedometer_blt_2gb",
-				Timeout: defaultTimeout,
-				Val: benchmarkcuj.BenchmarkTest{
-					BrowserType:   browser.TypeAsh,
-					BenchmarkInfo: benchmarkcuj.SpeedometerInfo,
-					RecorderMode:  cujrecorder.Benchmark,
-				},
-				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
-				Fixture:           "loggedInToCUJUserWithBackgroundLoad2GBWithoutCooldown",
-			},
-			{
-				Name:    "speedometer_blt_3gb",
-				Timeout: defaultTimeout,
-				Val: benchmarkcuj.BenchmarkTest{
-					BrowserType:   browser.TypeAsh,
-					BenchmarkInfo: benchmarkcuj.SpeedometerInfo,
-					RecorderMode:  cujrecorder.Benchmark,
-				},
-				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
-				Fixture:           "loggedInToCUJUserWithBackgroundLoad3GBWithoutCooldown",
-			},
-			{
-				Name:    "speedometer_blt_4gb",
-				Timeout: defaultTimeout,
-				Val: benchmarkcuj.BenchmarkTest{
-					BrowserType:   browser.TypeAsh,
-					BenchmarkInfo: benchmarkcuj.SpeedometerInfo,
-					RecorderMode:  cujrecorder.Benchmark,
-				},
-				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
-				Fixture:           "loggedInToCUJUserWithBackgroundLoad4GBWithoutCooldown",
-			},
-			{
-				Name:    "motionmark_blt_50mb",
-				Timeout: defaultTimeout,
-				Val: benchmarkcuj.BenchmarkTest{
-					BrowserType:   browser.TypeAsh,
-					BenchmarkInfo: benchmarkcuj.MotionMarkInfo,
-					RecorderMode:  cujrecorder.Benchmark,
-				},
-				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
-				Fixture:           "loggedInToCUJUserWithBackgroundLoad50MBWithoutCooldown",
-			},
-			{
-				Name:    "motionmark_blt_1gb",
-				Timeout: defaultTimeout,
-				Val: benchmarkcuj.BenchmarkTest{
-					BrowserType:   browser.TypeAsh,
-					BenchmarkInfo: benchmarkcuj.MotionMarkInfo,
-					RecorderMode:  cujrecorder.Benchmark,
-				},
-				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
-				Fixture:           "loggedInToCUJUserWithBackgroundLoad1GBWithoutCooldown",
-			},
-			{
-				Name:    "motionmark_blt_2gb",
-				Timeout: defaultTimeout,
-				Val: benchmarkcuj.BenchmarkTest{
-					BrowserType:   browser.TypeAsh,
-					BenchmarkInfo: benchmarkcuj.MotionMarkInfo,
-					RecorderMode:  cujrecorder.Benchmark,
-				},
-				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
-				Fixture:           "loggedInToCUJUserWithBackgroundLoad2GBWithoutCooldown",
-			},
-			{
-				Name:    "motionmark_blt_3gb",
-				Timeout: defaultTimeout,
-				Val: benchmarkcuj.BenchmarkTest{
-					BrowserType:   browser.TypeAsh,
-					BenchmarkInfo: benchmarkcuj.MotionMarkInfo,
-					RecorderMode:  cujrecorder.Benchmark,
-				},
-				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
-				Fixture:           "loggedInToCUJUserWithBackgroundLoad3GBWithoutCooldown",
-			},
-			{
-				Name:    "motionmark_blt_4gb",
-				Timeout: defaultTimeout,
-				Val: benchmarkcuj.BenchmarkTest{
-					BrowserType:   browser.TypeAsh,
-					BenchmarkInfo: benchmarkcuj.MotionMarkInfo,
-					RecorderMode:  cujrecorder.Benchmark,
-				},
-				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
-				Fixture:           "loggedInToCUJUserWithBackgroundLoad4GBWithoutCooldown",
-			},
 			{
 				Name:    "bmark",
 				Timeout: defaultTimeout,
