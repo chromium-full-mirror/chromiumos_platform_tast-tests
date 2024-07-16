@@ -6,14 +6,19 @@ package cellular
 
 import (
 	"context"
+	"os"
+	"path/filepath"
 	"strings"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/common/networkui/netconfigtypes"
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/local/cellular"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
-
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -79,12 +84,16 @@ func PSimNetworkName(ctx context.Context, s *testing.State) {
 		s.Fatal("Error getting network name: ", err)
 	}
 
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
 	// Check if the PSim network appears disconnected in the network detail page
 	app, err := ossettings.OpenNetworkDetailPage(ctx, tconn, cr, networkName, netconfigtypes.Cellular)
 	if err != nil {
 		s.Fatal("Failed to open mobile network detail subpage: ", err)
 	}
-	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree")
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
 	expr := `var optionNode = shadowPiercingQuery(
                  'settings-internet-detail-subpage div#networkState');
@@ -117,6 +126,10 @@ func PSimNetworkName(ctx context.Context, s *testing.State) {
 
 	var title string
 	if err := app.EvalJSWithShadowPiercer(ctx, cr, expr, &title); err != nil {
+		// TODO(b/333458823): Remove this function once we no longer need it for debugging.
+		if err := dumpNetworkListHTMLTree(cleanupCtx, app, cr, s.OutDir(), "html_content.txt"); err != nil {
+			s.Logf("Failed to dump network list HTML: %q", err)
+		}
 		s.Fatal("Failed to fetch title: ", err)
 	}
 
@@ -125,4 +138,34 @@ func PSimNetworkName(ctx context.Context, s *testing.State) {
 	if networkName != title {
 		s.Fatalf("Network name is not the same as title. Got %q expected %q", title, networkName)
 	}
+}
+
+// dumpNetworkListHTMLTree dumps the HTML tree of the network list.
+// TODO(b/333458823): Remove this function once we no longer need it for debugging.
+func dumpNetworkListHTMLTree(ctx context.Context, app *ossettings.OSSettings, cr *chrome.Chrome, outDir, fileName string) (retErr error) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
+	defer func(ctx context.Context) {
+		if retErr != nil {
+			testing.ContextLog(ctx, "Failed to dump the HTML tree of the network list: ", retErr)
+		}
+	}(cleanupCtx)
+
+	expr := `var nodes = shadowPiercingQueryAll('network-list-item');
+	         var list = [].slice.call(nodes);
+	         var innertext = list.map(function(e) { return e.shadowRoot.innerHTML; }).join("\n");
+	         innertext;`
+
+	var out string
+	if err := app.EvalJSWithShadowPiercer(ctx, cr, expr, &out); err != nil {
+		return errors.Wrap(err, "failed to get network list items")
+	}
+
+	if err := os.WriteFile(filepath.Join(outDir, fileName), []byte(out), 0644); err != nil {
+		return errors.Wrap(err, "failed to write data")
+	}
+
+	return nil
 }
