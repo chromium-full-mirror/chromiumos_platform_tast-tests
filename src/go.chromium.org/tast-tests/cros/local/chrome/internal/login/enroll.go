@@ -379,7 +379,18 @@ func performGAIAEnrollmentSignIn(ctx context.Context, oobeConn *driver.Conn, cfg
 					return errors.Wrap(err, "unexpected step after enrollment signin failure, could not get current state")
 				}
 
-				return errors.Errorf("unexpected step after enrollment signin failure, currently on screen %q; step %q", screen, step)
+				// TODO(b/335385437): Remove these additional checks after resolving bug.
+				var successScreenShown bool
+				if err := oobeConn.Eval(ctx, successScreenShownJS, &successScreenShown); err != nil {
+					return errors.Wrap(err, "failed to check if success screen is shown")
+				}
+				var attributeScreenShown bool
+				if err := oobeConn.Eval(ctx, attributeScreenShownJS, &attributeScreenShown); err != nil {
+					return errors.Wrap(err, "failed to check if attribute screen is shown")
+				}
+
+				return errors.Errorf("unexpected step after enrollment signin failure, currently on screen %q; step %q; "+
+					"success screen shown: %t; attribute screen shown: %t", screen, step, successScreenShown, attributeScreenShown)
 			}
 
 			var canRetry bool
