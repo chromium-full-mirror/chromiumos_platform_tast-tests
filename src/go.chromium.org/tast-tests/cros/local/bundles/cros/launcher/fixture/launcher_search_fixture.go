@@ -35,7 +35,6 @@ const (
 	LauncherImageSearchOcr       = "launcherImageSearchOcr"
 	LauncherImageSearchOcrNonCBX = "launcherImageSearchOcrNonCBX"
 	LauncherImageSearchIca       = "launcherImageSearchIca"
-	LauncherImageSearch          = "launcherImageSearch"
 	NormalLauncherSearch         = "normalLauncherSearch"
 	NormalLauncherSearchWithArc  = "normalLauncherSearchWithArc"
 	NormalLauncherSearchWithOOBE = "normalLauncherSearchWithOOBE"
@@ -108,19 +107,6 @@ func init() {
 		},
 		BugComponent:    "b:1281467",
 		Impl:            &launcherSearchFixtureImpl{featureFlags: []string{"ProductivityLauncherImageSearch", "LauncherImageSearch", "LauncherImageSearchIca"}},
-		SetUpTimeout:    launcherSearchSetUpTestTimeout,
-		PreTestTimeout:  launcherSearchPreTestTimeout,
-		PostTestTimeout: launcherSearchPostTestTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: LauncherImageSearch,
-		Desc: "Turn on ProductivityLauncherImageSearch and LauncherImageSearch",
-		Contacts: []string{
-			"xiuwen@google.com",
-			"ml-service-team@google.com",
-		},
-		BugComponent:    "b:1281467",
-		Impl:            &launcherSearchFixtureImpl{featureFlags: []string{"ProductivityLauncherImageSearch", "LauncherImageSearch"}},
 		SetUpTimeout:    launcherSearchSetUpTestTimeout,
 		PreTestTimeout:  launcherSearchPreTestTimeout,
 		PostTestTimeout: launcherSearchPostTestTimeout,
