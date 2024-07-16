@@ -46,6 +46,8 @@ func init() {
 		ResetTimeout:    serviceTimeout,
 		TearDownTimeout: serviceTimeout,
 	})
+	// Fixtures that additionally ensures the state of connector; avoid using these when the above is sufficient.
+	// The connector relies on the state of Chrome and can be a source of flakiness.
 	testing.AddFixture(&testing.Fixture{
 		Name:            fixture.CameraConnectorReady,
 		Desc:            "The camera connector is ready, with all built-in cameras enumerated",
@@ -117,7 +119,9 @@ func (f *serviceFixture) SetUp(ctx context.Context, s *testing.FixtState) interf
 			s.Fatal("Failed to clean-up camera TestBridge: ", err)
 		}
 
-		if err := restartCameraService(ctx); err != nil {
+		// Don't wait for the connector to be ready, since we haven't ensured
+		// the state of the Ash.
+		if err := upstart.RestartJob(ctx, "cros-camera"); err != nil {
 			s.Fatal("Failed to restart camera service: ", err)
 		}
 	}
@@ -144,8 +148,8 @@ func (f *serviceFixture) SetUp(ctx context.Context, s *testing.FixtState) interf
 }
 
 func (f *serviceFixture) TearDown(ctx context.Context, s *testing.FixtState) {
-	if f.request == restartService {
-		if err := restartCameraService(ctx); err != nil {
+	if isRestartRequested(f.request) {
+		if err := upstart.RestartJob(ctx, "cros-camera"); err != nil {
 			s.Error("Failed to restart camera service: ", err)
 		}
 	}
@@ -175,13 +179,16 @@ func (f *serviceFixture) PostTest(ctx context.Context, s *testing.FixtTestState)
 // that is requested by serviceRequest.
 func ensureServiceState(ctx context.Context, request serviceRequest) error {
 	switch request {
-	case startService, startServiceWithConnector:
-		// WaitForCameraServiceBinding includes a call to EnsureJobRunning.
+	case startService:
+		return upstart.EnsureJobRunning(ctx, "cros-camera")
+	case startServiceWithConnector:
 		return testutil.WaitForCameraServiceBinding(ctx)
 	case stopService:
 		return upstart.StopJob(ctx, "cros-camera")
-	case restartService, restartServiceWithConnector:
-		return restartCameraService(ctx)
+	case restartService:
+		return upstart.RestartJob(ctx, "cros-camera")
+	case restartServiceWithConnector:
+		return restartCameraWithConnector(ctx)
 	}
 
 	return errors.New("invalid request")
@@ -191,10 +198,13 @@ func isConnectorRequested(request serviceRequest) bool {
 	return request == startServiceWithConnector || request == restartServiceWithConnector
 }
 
-func restartCameraService(ctx context.Context) error {
+func isRestartRequested(request serviceRequest) bool {
+	return request == restartService || request == restartServiceWithConnector
+}
+
+func restartCameraWithConnector(ctx context.Context) error {
 	if err := upstart.RestartJob(ctx, "cros-camera"); err != nil {
 		return err
 	}
-	// WaitForCameraServiceBinding includes a call to EnsureJobRunning.
 	return testutil.WaitForCameraServiceBinding(ctx)
 }
