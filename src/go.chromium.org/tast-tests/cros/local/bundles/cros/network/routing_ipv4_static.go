@@ -25,16 +25,15 @@ func init() {
 		Contacts: []string{"cros-networking@google.com", "jiejiang@google.com"},
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
-		Attr:         []string{"group:mainline", "group:network", "network_cq"},
+		Attr:         []string{"group:mainline"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{{
 			// Apply static IP when the network is idle.
 			Val: false,
 		}, {
 			// Apply static IP when the network is connecting.
-			Name:      "apply_when_connecting",
-			Val:       true,
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			Name: "apply_when_connecting",
+			Val:  true,
 		}},
 	})
 }
