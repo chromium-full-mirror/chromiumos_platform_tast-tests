@@ -2229,6 +2229,13 @@ func PlaybackPerf(ctx context.Context, s *testing.State) {
 		NightLight:         setup.DisableNightLight,
 		DarkTheme:          setup.EnableLightTheme,
 		KeyboardBrightness: setup.SetKbBrightnessToZero,
+		// Ideally we'd switch off bluetooth to avoid any power consumption beyond
+		// the test logic, but this seems to fail very often, see b/347000621:
+		// "Failed in power setup: ...  setup "disable bluetooth" had 1 items fail,
+		// first failure: failed to call SetFlossEnabled(false) with CRAS client:
+		// the maximum number of pending messages for service per connection has
+		// been reached.""
+		Bluetooth: setup.DoNotChangeBluetooth,
 	}, setup.NewBatteryDischarge(true /*discharge*/, true /*ignoreErr*/, setup.DefaultDischargeThreshold))
 	if err != nil {
 		s.Fatal("Failed in power setup: ", err)
