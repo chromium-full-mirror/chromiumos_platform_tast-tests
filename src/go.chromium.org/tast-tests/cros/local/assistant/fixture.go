@@ -478,6 +478,10 @@ func (f *enabledFixture) PreTest(ctx context.Context, s *testing.FixtTestState) 
 	}
 
 	s.Log("Confirmed Assistant availability")
+	// GoBigSleepLint: assistant.* tests fails with new DMA account.
+	// Sleep 1 second resolves the issue as a workaround.
+	// TODO(b/350449557): Figure out a proper long term solution after we figure out the root cause.
+	testing.Sleep(ctx, time.Second)
 }
 
 func (f *enabledFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
