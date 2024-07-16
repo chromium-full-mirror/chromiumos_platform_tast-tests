@@ -295,6 +295,10 @@ func New(ctx context.Context, opts ...Option) (c *Chrome, retErr error) {
 
 	opts = append(opts, ExtraArgs("--cryptohome-ignore-cleanup-ownership-for-testing"))
 
+	// Add a switch to disable birch weather API so that we don't use the API with
+	// invalid gaia IDs.
+	opts = append(opts, ExtraArgs("--disable-birch-weather-api-for-testing"))
+
 	cfg, err := config.NewConfig(opts)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to process options")

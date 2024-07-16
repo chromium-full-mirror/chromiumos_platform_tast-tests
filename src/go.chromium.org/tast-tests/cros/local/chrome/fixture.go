@@ -448,8 +448,14 @@ func init() {
 		// ChromeOS > Software > Window Management > PostLoginRestoreAndGlanceables
 		BugComponent: "b:1488650",
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
-			// TODO(b/351149361): Fix BirchWeather passing invalid gaia ids to the Weather API.
-			return []Option{EnableFeatures("ForestFeature"), DisableFeatures("BirchWeather")}, nil
+			// The Weather API used by Birch is disabled by default in tast tests.
+			// To use the weather API properly, use a real gaia account and enable the
+			// weather API by passing in a command line switch to override.
+			return []Option{
+				GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)),
+				EnableFeatures("ForestFeature"),
+				ExtraArgs("--enable-birch-weather-api-for-testing-override"),
+			}, nil
 		}),
 		SetUpTimeout:    FixtureSetUpTimeout,
 		ResetTimeout:    ResetTimeout,
