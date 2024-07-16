@@ -13,6 +13,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/genparams"
 	"go.chromium.org/tast-tests/cros/common/media/caps"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/video/test_vectors"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 )
 
@@ -52,7 +53,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 			for _, cat := range []string{
 				"buf", "frm_resize", "gf_dist", "odd_size", "sub8x8", "sub8x8_sf",
 			} {
-				files := fmt.Sprintf("vp9WebmFiles[\"%s\"][\"%s\"][\"%s\"]", profile, levelGroup, cat)
+				files := fmt.Sprintf("test_vectors.VP9WebmFiles[\"%s\"][\"%s\"][\"%s\"]", profile, levelGroup, cat)
 				param := paramData{
 					Name:               fmt.Sprintf("vaapi_vp9_%d_%s_%s", i, levelGroup, cat),
 					Decoder:            filepath.Join(chrome.BinTestDir, "decode_test"),
@@ -94,10 +95,10 @@ func TestPlatformDecodingParams(t *testing.T) {
 		Name:               fmt.Sprintf("vaapi_vp9_0_svc"),
 		Decoder:            filepath.Join(chrome.BinTestDir, "decode_test"),
 		DecoderArgsBuilder: "platform.VP9DecodeVAAPIargs",
-		Files:              "vp9SVCFiles",
+		Files:              "test_vectors.VP9SVCFiles",
 		Timeout:            defaultTimeout,
 		SoftwareDeps:       []string{"vaapi", caps.HWDecodeVP9},
-		Metadata:           "vp9SVCFiles",
+		Metadata:           "test_vectors.VP9SVCFiles",
 		Attr:               []string{"graphics_video_vp9", "graphics_perbuild"},
 	})
 
@@ -106,16 +107,16 @@ func TestPlatformDecodingParams(t *testing.T) {
 		Name:               "vaapi_av1",
 		Decoder:            filepath.Join(chrome.BinTestDir, "decode_test"),
 		DecoderArgsBuilder: "platform.AV1DecodeVAAPIargs",
-		Files:              "av1Files[\"8bit\"]",
+		Files:              "test_vectors.AV1Files[\"8bit\"]",
 		Timeout:            defaultTimeout,
 		// These SoftwareDeps do not include the 10 bit version of AV1.
 		SoftwareDeps: []string{"vaapi", caps.HWDecodeAV1},
-		Metadata:     "av1Files[\"8bit\"]",
+		Metadata:     "test_vectors.AV1Files[\"8bit\"]",
 		Attr:         []string{"graphics_video_av1", "graphics_perbuild"},
 	})
 
 	for _, cat := range []string{"quantizer", "size", "allintra", "cdfupdate", "motionvec"} {
-		files := fmt.Sprintf("av1Aom8bitFiles[\"%s\"]", cat)
+		files := fmt.Sprintf("test_vectors.AV1Aom8bitFiles[\"%s\"]", cat)
 		param := paramData{
 			Name:               fmt.Sprintf("vaapi_av1_8bit_%s", cat),
 			Decoder:            filepath.Join(chrome.BinTestDir, "decode_test"),
@@ -133,7 +134,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 
 	// Generate VAAPI HEVC tests.
 	for _, testGroup := range []string{"main_part_1", "main_part_2", "main_part_3", "main_part_4"} {
-		files := fmt.Sprintf("hevcFiles[\"%s\"]", testGroup)
+		files := fmt.Sprintf("test_vectors.HEVCFiles[\"%s\"]", testGroup)
 
 		params = append(params, paramData{
 			Name:               fmt.Sprintf("vaapi_hevc_%s", testGroup),
@@ -151,16 +152,16 @@ func TestPlatformDecodingParams(t *testing.T) {
 		Name:               "hevc_main_part_5_8k",
 		Decoder:            filepath.Join(chrome.BinTestDir, "decode_test"),
 		DecoderArgsBuilder: "platform.HEVCDecodeVAAPIargs",
-		Files:              "hevcFiles[\"main_part_5_8K\"]",
+		Files:              "test_vectors.HEVCFiles[\"main_part_5_8K\"]",
 		Timeout:            defaultTimeout,
 		SoftwareDeps:       []string{"vaapi", caps.HWDecodeHEVC8K},
-		Metadata:           "hevcFiles[\"main_part_5_8K\"]",
+		Metadata:           "test_vectors.HEVCFiles[\"main_part_5_8K\"]",
 		Attr:               []string{"graphics_video_hevc", "graphics_perbuild"},
 	})
 
 	// Generate VAAPI VP8 tests.
 	for _, testGroup := range []string{"inter", "inter_multi_coeff", "inter_segment", "intra", "intra_multi_coeff", "intra_segment", "comprehensive"} {
-		files := fmt.Sprintf("vp8Files[\"%s\"]", testGroup)
+		files := fmt.Sprintf("test_vectors.VP8Files[\"%s\"]", testGroup)
 
 		params = append(params, paramData{
 			Name:               fmt.Sprintf("vaapi_vp8_%s", testGroup),
@@ -176,7 +177,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 
 	// Generates VAAPI H264 tests.
 	for _, group := range []string{"baseline", "main", "first_mb_in_slice"} {
-		files := fmt.Sprintf("h264Files[\"%s\"]", group)
+		files := fmt.Sprintf("test_vectors.H264Files[\"%s\"]", group)
 
 		param := paramData{
 			Name:               fmt.Sprintf("vaapi_h264_%s", group),
@@ -192,8 +193,8 @@ func TestPlatformDecodingParams(t *testing.T) {
 	}
 
 	// Generates VAAPI tests from bugs files
-	for _, bugID := range sortedStringKeys(h264FilesFromBugs) {
-		files := fmt.Sprintf("[]string{\"%s\"}", h264FilesFromBugs[bugID])
+	for _, bugID := range test_vectors.SortedStringKeys(test_vectors.H264FilesFromBugs) {
+		files := fmt.Sprintf("[]string{\"%s\"}", test_vectors.H264FilesFromBugs[bugID])
 		param := paramData{
 			Name:               fmt.Sprintf("vaapi_h264_files_from_bugs_%s", bugID),
 			Decoder:            filepath.Join(chrome.BinTestDir, "decode_test"),
@@ -206,8 +207,8 @@ func TestPlatformDecodingParams(t *testing.T) {
 		}
 		params = append(params, param)
 	}
-	for _, bugID := range sortedStringKeys(h2644kFilesFromBugs) {
-		files := fmt.Sprintf("[]string{\"%s\"}", h2644kFilesFromBugs[bugID])
+	for _, bugID := range test_vectors.SortedStringKeys(test_vectors.H2644kFilesFromBugs) {
+		files := fmt.Sprintf("[]string{\"%s\"}", test_vectors.H2644kFilesFromBugs[bugID])
 		param := paramData{
 			Name:               fmt.Sprintf("vaapi_h264_4k_files_from_bugs_%s", bugID),
 			Decoder:            filepath.Join(chrome.BinTestDir, "decode_test"),
@@ -220,8 +221,8 @@ func TestPlatformDecodingParams(t *testing.T) {
 		}
 		params = append(params, param)
 	}
-	for _, bugID := range sortedStringKeys(vp9FilesFromBugs) {
-		files := fmt.Sprintf("[]string{\"%s\"}", vp9FilesFromBugs[bugID])
+	for _, bugID := range test_vectors.SortedStringKeys(test_vectors.VP9FilesFromBugs) {
+		files := fmt.Sprintf("[]string{\"%s\"}", test_vectors.VP9FilesFromBugs[bugID])
 		param := paramData{
 			Name:               fmt.Sprintf("vaapi_vp9_files_from_bugs_%s", bugID),
 			Decoder:            filepath.Join(chrome.BinTestDir, "decode_test"),
@@ -234,8 +235,8 @@ func TestPlatformDecodingParams(t *testing.T) {
 		}
 		params = append(params, param)
 	}
-	for _, bugID := range sortedStringKeys(av1FilesFromBugs) {
-		files := fmt.Sprintf("[]string{\"%s\"}", av1FilesFromBugs[bugID])
+	for _, bugID := range test_vectors.SortedStringKeys(test_vectors.AV1FilesFromBugs) {
+		files := fmt.Sprintf("[]string{\"%s\"}", test_vectors.AV1FilesFromBugs[bugID])
 		param := paramData{
 			Name:               fmt.Sprintf("vaapi_av1_files_from_bugs_%s", bugID),
 			Decoder:            filepath.Join(chrome.BinTestDir, "decode_test"),
@@ -248,8 +249,8 @@ func TestPlatformDecodingParams(t *testing.T) {
 		}
 		params = append(params, param)
 	}
-	for _, bugID := range sortedStringKeys(h265FilesFromBugs) {
-		files := fmt.Sprintf("[]string{\"%s\"}", h265FilesFromBugs[bugID])
+	for _, bugID := range test_vectors.SortedStringKeys(test_vectors.H265FilesFromBugs) {
+		files := fmt.Sprintf("[]string{\"%s\"}", test_vectors.H265FilesFromBugs[bugID])
 		param := paramData{
 			Name:               fmt.Sprintf("vaapi_hevc_files_from_bugs_%s", bugID),
 			Decoder:            filepath.Join(chrome.BinTestDir, "decode_test"),
@@ -262,8 +263,8 @@ func TestPlatformDecodingParams(t *testing.T) {
 		}
 		params = append(params, param)
 	}
-	for _, bugID := range sortedStringKeys(hevcFilesFromBugs) {
-		files := fmt.Sprintf("hevcFilesFromBugs[\"%s\"]", bugID)
+	for _, bugID := range test_vectors.SortedStringKeys(test_vectors.HEVCFilesFromBugs) {
+		files := fmt.Sprintf("test_vectors.HEVCFilesFromBugs[\"%s\"]", bugID)
 		params = append(params, paramData{
 			Name:               fmt.Sprintf("vaapi_hevc_files_from_bugs_%s", bugID),
 			Decoder:            filepath.Join(chrome.BinTestDir, "decode_test"),
@@ -298,7 +299,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 					}
 
 					profileNum := string(profile[len(profile)-1])
-					files := fmt.Sprintf("vp9WebmFiles[\"%s\"][\"%s\"][\"%s\"]", profile, levelGroup, cat)
+					files := fmt.Sprintf("test_vectors.VP9WebmFiles[\"%s\"][\"%s\"][\"%s\"]", profile, levelGroup, cat)
 					param := paramData{
 						Name:               fmt.Sprintf("v4l2_%s_vp9_%s_%s_%s", strings.ToLower(stateness), profileNum, levelGroup, cat),
 						Decoder:            decoderExecutable,
@@ -356,7 +357,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 
 		// Generate V4L2 VP8 tests.
 		for _, testGroup := range []string{"inter", "inter_multi_coeff", "inter_segment", "intra", "intra_multi_coeff", "intra_segment", "comprehensive"} {
-			files := fmt.Sprintf("vp8Files[\"%s\"]", testGroup)
+			files := fmt.Sprintf("test_vectors.VP8Files[\"%s\"]", testGroup)
 
 			hardwareDeps := commonHardwareDeps
 			if stateness == "Stateful" {
@@ -389,7 +390,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 
 		// Generates V4L2 H264 tests.
 		for _, group := range []string{"baseline", "main", "first_mb_in_slice"} {
-			files := fmt.Sprintf("h264Files[\"%s\"]", group)
+			files := fmt.Sprintf("test_vectors.H264Files[\"%s\"]", group)
 
 			hardwareDeps := commonHardwareDeps
 			if stateness == "Stateful" {
@@ -429,7 +430,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 			if stateness == "Stateful" && (testGroup == "main_10" || testGroup == "mv_hevc") {
 				continue
 			}
-			files := fmt.Sprintf("hevcFiles[\"%s\"]", testGroup)
+			files := fmt.Sprintf("test_vectors.HEVCFiles[\"%s\"]", testGroup)
 
 			hardwareDeps := commonHardwareDeps
 			if stateness == "Stateful" {
@@ -464,11 +465,11 @@ func TestPlatformDecodingParams(t *testing.T) {
 		Name:               "v4l2_q08c",
 		Decoder:            "v4l2_stateful_decoder",
 		DecoderArgsBuilder: "platform.V4L2StatefulDecodeArgsQ08C",
-		Files:              "q08cFiles",
+		Files:              "test_vectors.Q08cFiles",
 		Timeout:            defaultTimeout,
 		HardwareDeps:       "hwdep.SupportsV4L2StatefulVideoDecoding(), hwdep.GPUVendor(\"qualcomm\")",
 		SoftwareDeps:       []string{"v4l2_codec", caps.HWDecodeH264, caps.HWDecodeVP8, caps.HWDecodeVP9},
-		Metadata:           "q08cFiles",
+		Metadata:           "test_vectors.Q08cFiles",
 		Attr:               []string{"graphics_video_platformdecoding"},
 	})
 
@@ -478,12 +479,12 @@ func TestPlatformDecodingParams(t *testing.T) {
 		Name:               "v4l2_stateless_av1",
 		Decoder:            filepath.Join(chrome.BinTestDir, "v4l2_stateless_decoder"),
 		DecoderArgsBuilder: "platform.V4L2StatelessDecodeArgs",
-		Files:              "av1Files[\"8bit\"]",
+		Files:              "test_vectors.AV1Files[\"8bit\"]",
 		Timeout:            defaultTimeout,
 		SoftwareDeps:       []string{"v4l2_codec", caps.HWDecodeAV1},
 		// TODO(b/242075797): use HW capabilities.
 		HardwareDeps: "hwdep.SupportsV4L2StatelessVideoDecoding()",
-		Metadata:     "av1Files[\"8bit\"]",
+		Metadata:     "test_vectors.AV1Files[\"8bit\"]",
 		Attr:         []string{"graphics_video_av1", "graphics_perbuild"},
 	})
 
@@ -491,12 +492,12 @@ func TestPlatformDecodingParams(t *testing.T) {
 		Name:               "v4l2_stateless_av1_10bit",
 		Decoder:            filepath.Join(chrome.BinTestDir, "v4l2_stateless_decoder"),
 		DecoderArgsBuilder: "platform.V4L2StatelessDecodeArgs",
-		Files:              "av1Files[\"10bit\"]",
+		Files:              "test_vectors.AV1Files[\"10bit\"]",
 		Timeout:            defaultTimeout,
 		SoftwareDeps:       []string{"v4l2_codec", caps.HWDecodeAV1},
 		// TODO(b/242075797): use HW capabilities.
 		HardwareDeps: "hwdep.SupportsV4L2StatelessVideoDecoding()",
-		Metadata:     "av1Files[\"10bit\"]",
+		Metadata:     "test_vectors.AV1Files[\"10bit\"]",
 		Attr:         []string{"graphics_video_av1", "graphics_perbuild"},
 	})
 
@@ -504,17 +505,17 @@ func TestPlatformDecodingParams(t *testing.T) {
 		Name:               "v4l2_stateless_av1_10bit_quantizer",
 		Decoder:            filepath.Join(chrome.BinTestDir, "v4l2_stateless_decoder"),
 		DecoderArgsBuilder: "platform.V4L2StatelessDecodeArgs",
-		Files:              "av1Files[\"10bit_quantizer\"]",
+		Files:              "test_vectors.AV1Files[\"10bit_quantizer\"]",
 		Timeout:            defaultTimeout,
 		SoftwareDeps:       []string{"v4l2_codec", caps.HWDecodeAV1},
 		// TODO(b/242075797): use HW capabilities.
 		HardwareDeps: "hwdep.SupportsV4L2StatelessVideoDecoding()",
-		Metadata:     "av1Files[\"10bit_quantizer\"]",
+		Metadata:     "test_vectors.AV1Files[\"10bit_quantizer\"]",
 		Attr:         []string{"graphics_video_av1", "graphics_perbuild"},
 	})
 
 	for _, cat := range []string{"quantizer", "size", "allintra", "cdfupdate", "motionvec"} {
-		files := fmt.Sprintf("av1Aom8bitFiles[\"%s\"]", cat)
+		files := fmt.Sprintf("test_vectors.AV1Aom8bitFiles[\"%s\"]", cat)
 		param := paramData{
 			Name:               fmt.Sprintf("v4l2_stateless_av1_8bit_%s", cat),
 			Decoder:            filepath.Join(chrome.BinTestDir, "v4l2_stateless_decoder"),
@@ -539,7 +540,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 			for _, cat := range []string{
 				"buf", "frm_resize", "gf_dist", "odd_size", "sub8x8", "sub8x8_sf",
 			} {
-				files := fmt.Sprintf("vp9WebmFiles[\"%s\"][\"%s\"][\"%s\"]", profile, levelGroup, cat)
+				files := fmt.Sprintf("test_vectors.VP9WebmFiles[\"%s\"][\"%s\"][\"%s\"]", profile, levelGroup, cat)
 				param := paramData{
 					Name:               fmt.Sprintf("ffmpeg_vaapi_vp9_%d_%s_%s", i, levelGroup, cat),
 					Decoder:            ffmpegMD5Path,
@@ -577,16 +578,16 @@ func TestPlatformDecodingParams(t *testing.T) {
 		Name:               "ffmpeg_vaapi_av1",
 		Decoder:            ffmpegMD5Path,
 		DecoderArgsBuilder: "platform.FFMPEGMD5DecodeVAAPIArgs",
-		Files:              "av1Files[\"8bit\"]",
+		Files:              "test_vectors.AV1Files[\"8bit\"]",
 		Timeout:            defaultTimeout,
 		// These SoftwareDeps do not include the 10 bit version of AV1.
 		SoftwareDeps: []string{"vaapi", caps.HWDecodeAV1},
-		Metadata:     "av1Files[\"8bit\"]",
+		Metadata:     "test_vectors.AV1Files[\"8bit\"]",
 		Attr:         []string{"graphics_video_av1"},
 	})
 
 	for _, cat := range []string{"quantizer", "size", "allintra", "cdfupdate", "motionvec"} {
-		files := fmt.Sprintf("av1Aom8bitFiles[\"%s\"]", cat)
+		files := fmt.Sprintf("test_vectors.AV1Aom8bitFiles[\"%s\"]", cat)
 		param := paramData{
 			Name:               fmt.Sprintf("ffmpeg_vaapi_av1_8bit_%s", cat),
 			Decoder:            ffmpegMD5Path,
@@ -604,7 +605,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 
 	// Generate ffmpeg VP8 tests.
 	for _, testGroup := range []string{"inter", "inter_multi_coeff", "inter_segment", "intra", "intra_multi_coeff", "intra_segment", "comprehensive"} {
-		files := fmt.Sprintf("vp8Files[\"%s\"]", testGroup)
+		files := fmt.Sprintf("test_vectors.VP8Files[\"%s\"]", testGroup)
 
 		params = append(params, paramData{
 			Name:               fmt.Sprintf("ffmpeg_vaapi_vp8_%s", testGroup),
@@ -620,7 +621,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 
 	// Generate ffmpeg H264 tests.
 	for _, group := range []string{"baseline", "main", "first_mb_in_slice"} {
-		files := fmt.Sprintf("h264Files[\"%s\"]", group)
+		files := fmt.Sprintf("test_vectors.H264Files[\"%s\"]", group)
 
 		param := paramData{
 			Name:               fmt.Sprintf("ffmpeg_vaapi_h264_%s", group),
@@ -637,7 +638,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 
 	// Generate ffmpeg HEVC tests.
 	for _, group := range []string{"main_part_1", "main_part_2", "main_part_3", "main_part_4"} {
-		files := fmt.Sprintf("hevcFiles[\"%s\"]", group)
+		files := fmt.Sprintf("test_vectors.HEVCFiles[\"%s\"]", group)
 
 		param := paramData{
 			Name:               fmt.Sprintf("ffmpeg_vaapi_hevc_%s", group),
@@ -653,8 +654,8 @@ func TestPlatformDecodingParams(t *testing.T) {
 	}
 
 	// Generate ffmpeg VAAPI tests from bugs files
-	for _, bugID := range sortedStringKeys(h264FilesFromBugs) {
-		files := fmt.Sprintf("[]string{\"%s\"}", h264FilesFromBugs[bugID])
+	for _, bugID := range test_vectors.SortedStringKeys(test_vectors.H264FilesFromBugs) {
+		files := fmt.Sprintf("[]string{\"%s\"}", test_vectors.H264FilesFromBugs[bugID])
 		param := paramData{
 			Name:               fmt.Sprintf("ffmpeg_vaapi_h264_files_from_bugs_%s", bugID),
 			Decoder:            ffmpegMD5Path,
@@ -667,8 +668,8 @@ func TestPlatformDecodingParams(t *testing.T) {
 		}
 		params = append(params, param)
 	}
-	for _, bugID := range sortedStringKeys(h2644kFilesFromBugs) {
-		files := fmt.Sprintf("[]string{\"%s\"}", h2644kFilesFromBugs[bugID])
+	for _, bugID := range test_vectors.SortedStringKeys(test_vectors.H2644kFilesFromBugs) {
+		files := fmt.Sprintf("[]string{\"%s\"}", test_vectors.H2644kFilesFromBugs[bugID])
 		param := paramData{
 			Name:               fmt.Sprintf("ffmpeg_vaapi_h264_4k_files_from_bugs_%s", bugID),
 			Decoder:            ffmpegMD5Path,
@@ -681,8 +682,8 @@ func TestPlatformDecodingParams(t *testing.T) {
 		}
 		params = append(params, param)
 	}
-	for _, bugID := range sortedStringKeys(vp9FilesFromBugs) {
-		files := fmt.Sprintf("[]string{\"%s\"}", vp9FilesFromBugs[bugID])
+	for _, bugID := range test_vectors.SortedStringKeys(test_vectors.VP9FilesFromBugs) {
+		files := fmt.Sprintf("[]string{\"%s\"}", test_vectors.VP9FilesFromBugs[bugID])
 		param := paramData{
 			Name:               fmt.Sprintf("ffmpeg_vaapi_vp9_files_from_bugs_%s", bugID),
 			Decoder:            ffmpegMD5Path,
@@ -695,8 +696,8 @@ func TestPlatformDecodingParams(t *testing.T) {
 		}
 		params = append(params, param)
 	}
-	for _, bugID := range sortedStringKeys(av1FilesFromBugs) {
-		files := fmt.Sprintf("[]string{\"%s\"}", av1FilesFromBugs[bugID])
+	for _, bugID := range test_vectors.SortedStringKeys(test_vectors.AV1FilesFromBugs) {
+		files := fmt.Sprintf("[]string{\"%s\"}", test_vectors.AV1FilesFromBugs[bugID])
 		param := paramData{
 			Name:               fmt.Sprintf("ffmpeg_vaapi_av1_files_from_bugs_%s", bugID),
 			Decoder:            ffmpegMD5Path,
@@ -709,8 +710,8 @@ func TestPlatformDecodingParams(t *testing.T) {
 		}
 		params = append(params, param)
 	}
-	for _, bugID := range sortedStringKeys(h265FilesFromBugs) {
-		files := fmt.Sprintf("[]string{\"%s\"}", h265FilesFromBugs[bugID])
+	for _, bugID := range test_vectors.SortedStringKeys(test_vectors.H265FilesFromBugs) {
+		files := fmt.Sprintf("[]string{\"%s\"}", test_vectors.H265FilesFromBugs[bugID])
 		param := paramData{
 			Name:               fmt.Sprintf("ffmpeg_vaapi_hevc_files_from_bugs_%s", bugID),
 			Decoder:            ffmpegMD5Path,
@@ -723,8 +724,8 @@ func TestPlatformDecodingParams(t *testing.T) {
 		}
 		params = append(params, param)
 	}
-	for _, bugID := range sortedStringKeys(hevcFilesFromBugs) {
-		files := fmt.Sprintf("hevcFilesFromBugs[\"%s\"]", bugID)
+	for _, bugID := range test_vectors.SortedStringKeys(test_vectors.HEVCFilesFromBugs) {
+		files := fmt.Sprintf("test_vectors.HEVCFilesFromBugs[\"%s\"]", bugID)
 		params = append(params, paramData{
 			Name:               fmt.Sprintf("ffmpeg_vaapi_hevc_files_from_bugs_%s", bugID),
 			Decoder:            ffmpegMD5Path,
@@ -754,7 +755,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 		{{ if .SoftwareDeps }}
 		ExtraSoftwareDeps: {{ .SoftwareDeps | fmt }},
 		{{ end }}
-		ExtraData: appendJSONFiles({{ .Metadata }}),
+		ExtraData: test_vectors.AppendJSONFiles({{ .Metadata }}),
 		{{ if .Attr }}
 		ExtraAttr: {{ .Attr | fmt }},
 		{{ end }}

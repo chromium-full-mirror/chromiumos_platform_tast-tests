@@ -2,14 +2,17 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package video
+// Package test_vectors provides bitstreams to test correctness of video
+// decoder implementations; many are from specification bodies, e.g.
+// ITU-T, while others have been collected in the wild.
+package test_vectors
 
 import (
 	"reflect"
 	"sort"
 )
 
-func appendJSONFiles(videoFiles []string) []string {
+func AppendJSONFiles(videoFiles []string) []string {
 	var tf []string
 	for _, file := range videoFiles {
 		tf = append(tf, file)
@@ -20,7 +23,7 @@ func appendJSONFiles(videoFiles []string) []string {
 
 // Produces a sorted slice of dict keys. This is needed to iterate maps in order.
 // dict is expected to be a map[string]any (e.g. map[string]string]).
-func sortedStringKeys(dict any) []string {
+func SortedStringKeys(dict any) []string {
 	v := reflect.ValueOf(dict)
 	if !v.IsValid() {
 		return []string{}
@@ -43,7 +46,7 @@ func sortedStringKeys(dict any) []string {
 	return keys
 }
 
-var av1Files = map[string][]string{
+var AV1Files = map[string][]string{
 	"8bit": {
 		"test_vectors/av1/8-bit/00000527.ivf",
 		"test_vectors/av1/8-bit/00000535.ivf",
@@ -85,7 +88,7 @@ var av1Files = map[string][]string{
 	},
 }
 
-var av1Aom8bitFiles = map[string][]string{
+var AV1Aom8bitFiles = map[string][]string{
 	"quantizer": {
 		"test_vectors/av1/aom/av1-1-b8-00-quantizer-00.ivf",
 		"test_vectors/av1/aom/av1-1-b8-00-quantizer-01.ivf",
@@ -269,21 +272,21 @@ var av1Aom8bitFiles = map[string][]string{
 	},
 }
 
-var av1FilmGrainFiles = []string{
+var AV1FilmGrainFiles = []string{
 	"test_vectors/av1/8-bit/av1-1-b8-23-film_grain-50.ivf",
 	"test_vectors/av1/8-bit/ccvb_film_grain.ivf",
 }
 
-var av110BitFilmGrainFiles = []string{
+var AV110BitFilmGrainFiles = []string{
 	"test_vectors/av1/10-bit/av1-1-b10-23-film_grain-50.ivf",
 }
 
-var av1FilesFromBugs = map[string]string{
+var AV1FilesFromBugs = map[string]string{
 	"235138734": "test_vectors/av1/files_from_bugs/b_235138734_test-25fps-one-to-four-tiles.av1.ivf",
 	"346405213": "test_vectors/av1/files_from_bugs/b_346405213_reference-frame-scaling-test.ivf",
 }
 
-var vp8Files = map[string][]string{
+var VP8Files = map[string][]string{
 	"inter_multi_coeff": {
 		"test_vectors/vp8/inter_multi_coeff/vp80-03-segmentation-1408.ivf",
 		"test_vectors/vp8/inter_multi_coeff/vp80-03-segmentation-1409.ivf",
@@ -357,7 +360,7 @@ var vp8Files = map[string][]string{
 	},
 }
 
-var hevcFiles = map[string][]string{
+var HEVCFiles = map[string][]string{
 	// "Main" vectors are split into sub groups to be able to run with smaller timeouts.
 	"main_part_1": {
 		"test_vectors/hevc/main/AMP_A_Samsung_7.hevc",
@@ -388,7 +391,7 @@ var hevcFiles = map[string][]string{
 		"test_vectors/hevc/main/DBLK_G_VIXS_2.hevc",
 	},
 	"main_part_2": {
-		//"test_vectors/hevc/main/DELTAQP_A_BRCM_4.hevc",  // In |hevcFilesFromBugs|: b/251179086
+		//"test_vectors/hevc/main/DELTAQP_A_BRCM_4.hevc",  // In |HEVCFilesFromBugs|: b/251179086
 		"test_vectors/hevc/main/DELTAQP_B_SONY_3.hevc",
 		"test_vectors/hevc/main/DELTAQP_C_SONY_3.hevc",
 		"test_vectors/hevc/main/DSLICE_A_HHI_5.hevc",
@@ -472,7 +475,7 @@ var hevcFiles = map[string][]string{
 		"test_vectors/hevc/main/STRUCT_A_Samsung_7.hevc",
 		"test_vectors/hevc/main/STRUCT_B_Samsung_7.hevc",
 		"test_vectors/hevc/main/TILES_A_Cisco_2.hevc",
-		//"test_vectors/hevc/main/TILES_B_Cisco_1.hevc",  // In |hevcFilesFromBugs|: b/251179086
+		//"test_vectors/hevc/main/TILES_B_Cisco_1.hevc",  // In |HEVCFilesFromBugs|: b/251179086
 		"test_vectors/hevc/main/TMVP_A_MS_3.hevc",
 		"test_vectors/hevc/main/TSCL_A_VIDYO_5.hevc",
 		"test_vectors/hevc/main/TSCL_B_VIDYO_4.hevc",
@@ -655,7 +658,7 @@ var hevcFiles = map[string][]string{
 
 // b(242711007): These test vectors are failing for VAAPI, but since we have removed
 // them from the hevc Files map, they are no longer being used in V4l2 tests.
-var hevcFilesFromBugs = map[string][]string{
+var HEVCFilesFromBugs = map[string][]string{
 	"239819547": {
 		"test_vectors/hevc/main/BUMPING_A_ericsson_1.hevc",
 		"test_vectors/hevc/main/NoOutPrior_B_Qualcomm_1.hevc",
@@ -698,7 +701,7 @@ var hevcFilesFromBugs = map[string][]string{
 	},
 }
 
-var h265FilesFromBugs = map[string]string{
+var H265FilesFromBugs = map[string]string{
 	"321622872": "test_vectors/hevc/files_from_bugs/b_321622872__bands_across_screen_4k.hevc",
 }
 
@@ -706,7 +709,7 @@ var h265FilesFromBugs = map[string]string{
 // (rounded down) level, i.e. "group1" consists of level 1 and 1.1 streams,
 // "group2" of level 2 and 2.1, etc. This helps to keep together tests with
 // similar amounts of intended behavior/expected stress on devices.
-var vp9WebmFiles = map[string]map[string]map[string][]string{
+var VP9WebmFiles = map[string]map[string]map[string][]string{
 	"profile_0": {
 		"group1": {
 			"buf": {
@@ -1236,16 +1239,16 @@ var vp9WebmFiles = map[string]map[string]map[string][]string{
 	},
 }
 
-var vp9SVCFiles = []string{
+var VP9SVCFiles = []string{
 	"test_vectors/vp9/kSVC/ksvc_3sl_3tl_key100.ivf",
 }
 
-var vp9FilesFromBugs = map[string]string{
+var VP9FilesFromBugs = map[string]string{
 	"177839888": "test_vectors/vp9/files_from_bugs/b_177839888__rk3399_vp9_artifacts_with_video_decoder_japanews24.ivf",
 	"251040563": "test_vectors/vp9/files_from_bugs/b_251040563_webrtc_libvpx.vp9.ivf",
 }
 
-var h264Files = map[string][]string{
+var H264Files = map[string][]string{
 	"baseline": {
 		"test_vectors/h264/baseline/AUD_MW_E.h264",
 		"test_vectors/h264/baseline/BA1_Sony_D.h264",
@@ -1415,7 +1418,7 @@ var h264Files = map[string][]string{
 // (no artifacts) with a software decoder but not when using certain hardware
 // decoder implementations. These tests are expected to fail long-term, but it's
 // interesting to have them to verify that e.g. the driver doesn't crash.
-var h264InvalidBitstreams = []string{
+var H264InvalidBitstreams = []string{
 	"test_vectors/h264/files_from_bugs/b_234651916_big_buck_bunny_artifacts_rk3399.h264",
 	"test_vectors/h264/files_from_bugs/b_184041918_Webex_out_of_order_h264_frames.h264",
 	"test_vectors/h264/files_from_bugs/b_277849540__malformed_h264_vlct_16x16.h264",
@@ -1423,7 +1426,7 @@ var h264InvalidBitstreams = []string{
 	"test_vectors/h264/files_from_bugs/b_277849540__malformed_h264_vlct_8x8.h264",
 }
 
-var h264FilesFromBugs = map[string]string{
+var H264FilesFromBugs = map[string]string{
 	"149068426": "test_vectors/h264/files_from_bugs/b_149068426_invalid_video_layout_mtk_8183_with_direct_videodecoder.h264",
 	"172838252": "test_vectors/h264/files_from_bugs/b_172838252_pixelated_video_on_rk3399.h264",
 	"174733646": "test_vectors/h264/files_from_bugs/b_174733646_video_with_out_of_order_frames_mtk_8173.h264",
@@ -1432,12 +1435,12 @@ var h264FilesFromBugs = map[string]string{
 	"299320432": "test_vectors/h264/files_from_bugs/b_299320432__amd_skyrim_system_hang.h264",
 }
 
-var h2644kFilesFromBugs = map[string]string{
+var H2644kFilesFromBugs = map[string]string{
 	"22704778": "test_vectors/h264/files_from_bugs/b_227047778_mtk_8195_artifacts.h264",
 }
 
 // Software Q08C conversion is expensive, so we only run this on a representative sub-sample of our test vectors.
-var q08cFiles = []string{
+var Q08cFiles = []string{
 	"test_vectors/vp9/Profile_0_8bit/buf/crowd_run_1080X512_fr30_bd8_8buf_l3.ivf",
 	"test_vectors/vp8/vp80-00-comprehensive-001.ivf",
 	"test_vectors/h264/baseline/AUD_MW_E.h264",
