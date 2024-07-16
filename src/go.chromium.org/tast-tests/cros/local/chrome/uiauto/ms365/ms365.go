@@ -112,7 +112,7 @@ func (ms *Ms365) UsePasswordInsteadOfCode(msSignInWindow *nodewith.Finder) uiaut
 	useYourPasswordInsteadButton := nodewith.Ancestor(msSignInWindow).Role(role.Button).Name("Use your password instead")
 	return func(ctx context.Context) error {
 		if err := ms.ui.EnsureGoneFor(useYourPasswordInsteadButton, 5*time.Second)(ctx); err != nil {
-			return ms.ui.DoDefaultUntil(useYourPasswordInsteadButton, ms.ui.Gone(useYourPasswordInsteadButton))(ctx)
+			return ms.ui.LeftClickUntil(useYourPasswordInsteadButton, ms.ui.Gone(useYourPasswordInsteadButton))(ctx)
 		}
 		return nil
 	}
@@ -141,7 +141,7 @@ func (ms *Ms365) ConfirmSignIn() uiauto.Action {
 
 	return func(ctx context.Context) error {
 		if err := ms.ui.EnsureGoneFor(msConfirmSignInWindow, 5*time.Second)(ctx); err != nil {
-			return ms.ui.DoDefaultUntil(msConfirmSignInButton, ms.ui.Gone(msConfirmSignInButton))(ctx)
+			return ms.ui.LeftClickUntil(msConfirmSignInButton, ms.ui.Gone(msConfirmSignInButton))(ctx)
 		}
 		return nil
 	}
@@ -155,7 +155,7 @@ func (ms *Ms365) StaySignedIn() uiauto.Action {
 
 	return uiauto.Combine("MS Stay Signed In",
 		ms.ui.WaitUntilExists(msStaySignedInButton),
-		ms.ui.DoDefaultUntil(msStaySignedInButton, ms.ui.Gone(msStaySignedInButton)),
+		ms.ui.LeftClickUntil(msStaySignedInButton, ms.ui.Gone(msStaySignedInButton)),
 	)
 }
 
@@ -168,7 +168,7 @@ func (ms *Ms365) AcceptPermissionIfNeeded(setupCompleteDialogFinder *nodewith.Fi
 		runAcceptPermission := uiauto.Combine("MS permission screen",
 			ms.ui.WaitUntilExists(msAcceptPermissionButton),
 			ms.kb.TypeKeyAction(input.KEY_END),
-			ms.ui.DoDefaultUntil(msAcceptPermissionButton, ms.ui.Gone(msAcceptPermissionButton)),
+			ms.ui.LeftClickUntil(msAcceptPermissionButton, ms.ui.Gone(msAcceptPermissionButton)),
 		)
 
 		// When the permission dialog doesn't show it goes directly to Setup Complete dialog.
