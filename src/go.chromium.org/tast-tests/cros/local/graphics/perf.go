@@ -36,6 +36,10 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+const (
+	ErrBatteryNotDischarging = "the battery is not set to discharge"
+)
+
 // perfValueInterface allows perf collection functions to take either either a
 // graphics.ThreadSafeValues or a perf.Values.
 type perfValueInterface interface {
@@ -56,7 +60,7 @@ func errorOnNonDischarging(ctx context.Context, status *pb.Status) error {
 		return nil
 	}
 	testing.ContextLog(ctx, "Power status: ", status)
-	return errors.New("the battery is not set to discharge")
+	return errors.New(ErrBatteryNotDischarging)
 }
 
 // collectGPUPerformanceCounters gathers the use time for each of a given set of
