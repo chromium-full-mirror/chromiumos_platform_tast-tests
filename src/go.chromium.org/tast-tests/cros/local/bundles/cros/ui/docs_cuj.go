@@ -10,6 +10,8 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
+	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
 	"go.chromium.org/tast-tests/cros/local/ui/docscuj"
 	"go.chromium.org/tast/core/testing"
@@ -50,12 +52,19 @@ func init() {
 				Val:       browser.TypeAsh,
 				Fixture:   "loggedInToCUJUserWithChromeVox",
 			},
-			// TODO(b/292249282): Remove when Vulkan is launched on brya, volteer, and skyrim
+			// TODO(b/292249282): Remove when Vulkan is launched on brya, volteer, and skyrim.
 			{
 				Name:              "vulkan",
 				Val:               browser.TypeAsh,
 				Fixture:           "loggedInToCUJUserVulkan",
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("redrix", "drobit", "frostflow")),
+			},
+			// TODO(b/353385656): Remove after core device launches the feature.
+			{
+				Name:      "image_indexing",
+				Val:       browser.TypeAsh,
+				Fixture:   "loggedInToCUJUserWithImageOCR",
+				ExtraData: []string{launcher.ImageSearchPowerTestPictureName},
 			},
 		},
 	})
@@ -65,6 +74,17 @@ func DocsCUJ(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	bt := s.Param().(browser.Type)
 	traceConfigPath := s.DataPath(cujrecorder.SystemTraceConfigFile)
+
+	if s.TestName() == "image_indexing" {
+		user := cr.NormalizedUser()
+		testPicturePath := s.DataPath(launcher.ImageSearchPowerTestPictureName)
+		cleanup, err := cuj.PrepareImageSearchFiles(ctx, user, testPicturePath, 500)
+		if err != nil {
+			s.Fatal("Failed to prepare image search files: ", err)
+		}
+		defer cleanup()
+	}
+
 	if _, err := docscuj.Run(ctx, cr, bt, s.OutDir(), traceConfigPath, s.TestName()); err != nil {
 		s.Fatal("Failed to run DocsCUJ: ", err)
 	}

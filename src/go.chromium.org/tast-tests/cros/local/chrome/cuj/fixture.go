@@ -1044,6 +1044,28 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PostTestTimeout: postTestTimeout,
 	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithImageOCR",
+		Desc: "CUJ fixture that adds 50MB background memory load",
+		Contacts: []string{
+			"xiuwen@google.com",
+			"chromeos-launcher-search@google",
+		},
+		BugComponent: "b:1257106", // ChromeOS > Software > Consumer > Machine Intelligence > Search
+		Impl: &loggedInToCUJUserFixture{
+			chromeExtraOpts: []chrome.Option{
+				chrome.EnableFeatures("LocalImageSearchOnCore"),
+				chrome.ExtraArgs(webRTCEventLogCommandFlag),
+			},
+			bt: browser.TypeAsh,
+		},
+		Parent:          "prepareForCUJ",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
 }
 
 func prepareDocsBlockerExtension(s *testing.FixtState) (string, error) {
