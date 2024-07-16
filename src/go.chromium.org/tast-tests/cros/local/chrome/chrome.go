@@ -30,6 +30,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/jslog"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/logsaver"
+	"go.chromium.org/tast-tests/cros/local/media/vm"
 	"go.chromium.org/tast-tests/cros/local/minidump"
 	"go.chromium.org/tast-tests/cros/local/network/diag"
 	"go.chromium.org/tast-tests/cros/local/network/ping"
@@ -320,7 +321,8 @@ func New(ctx context.Context, opts ...Option) (c *Chrome, retErr error) {
 	ctx, cancel := context.WithTimeout(origCtx, timeout)
 	defer cancel()
 
-	if cfg.LoginMode() == config.GAIALogin {
+	// b/341803100: Profile and fix network issues that are reported as GAIA bugs.
+	if cfg.LoginMode() == config.GAIALogin && !vm.IsRunningOnVM() {
 		checkInternetConnectivityInBackground(ctx, 60*time.Second)
 
 		dutNetVerifyStart := time.Now()
