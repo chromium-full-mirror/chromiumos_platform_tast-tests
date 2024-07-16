@@ -255,6 +255,7 @@ func (vkbCtx *VirtualKeyboardContext) tapKeysFunc(keys []string, ignoreCase bool
 				if err := vkbCtx.tapKeyFunc(key, ignoreCase)(ctx); err != nil {
 					return err
 				}
+				//GoBigSleepLint: sleep 100 millisecond.
 				if err := testing.Sleep(ctx, 100*time.Millisecond); err != nil {
 					return errors.New("failed to sleep between taping keys")
 				}
@@ -305,6 +306,7 @@ func (vkbCtx *VirtualKeyboardContext) TapKeysJS(keys []string) uiauto.Action {
 				if err := vkbCtx.TapKeyJS(key)(ctx); err != nil {
 					return err
 				}
+				//GoBigSleepLint: sleep 100 millisecond.
 				testing.Sleep(ctx, 100*time.Millisecond)
 			}
 			return nil
@@ -440,6 +442,7 @@ func (vkbCtx *VirtualKeyboardContext) WaitForDecoderEnabled(enabled bool) uiauto
 	// Decoder works async in returning status to frontend IME and self loading.
 	// Using sleep temporarily before a reliable evaluation api provided in cl/339837443.
 	return func(ctx context.Context) error {
+		//GoBigSleepLint: wait 10 second to waiting for decoder.
 		return testing.Sleep(ctx, 10*time.Second)
 	}
 }
@@ -777,6 +780,7 @@ func (vkbCtx *VirtualKeyboardContext) TypeIgnoreCaseAction(pc pointer.Context, t
 				// sleeping. Otherwise, actually move the mouse to the
 				// correct button.
 				if touch {
+					//GoBigSleepLint: sleep 100 millisecond.
 					if err := testing.Sleep(ctx, 100*time.Millisecond); err != nil {
 						return errors.Wrap(err, "failed to sleep")
 					}
@@ -797,8 +801,8 @@ func (vkbCtx *VirtualKeyboardContext) TypeIgnoreCaseAction(pc pointer.Context, t
 	)
 }
 
-// TapHideVitrualKeyboardButton returns an action clicking hidden button to hide the virtual keyboard.
-func (vkbCtx *VirtualKeyboardContext) TapHideVitrualKeyboardButton() uiauto.Action {
+// TapHideVirtualKeyboardButton returns an action clicking hidden button to hide the virtual keyboard.
+func (vkbCtx *VirtualKeyboardContext) TapHideVirtualKeyboardButton() uiauto.Action {
 	return uiauto.RetrySilently(3,
 		uiauto.Combine("hide vk via tapping the hide virtual keyboard key",
 			vkbCtx.TapNode(KeyFinder.Name("hide keyboard")),

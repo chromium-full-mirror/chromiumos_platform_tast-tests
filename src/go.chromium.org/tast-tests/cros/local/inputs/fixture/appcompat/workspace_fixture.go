@@ -10,12 +10,12 @@ import (
 	"fmt"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/inputs/fixture"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/apps/thirdparty/googledocs"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/useractions"
 	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
+	"go.chromium.org/tast-tests/cros/local/inputs/fixture"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -72,6 +72,7 @@ func init() {
 			"essential-inputs-team@google.com",
 			"xiuwen@google.com",
 		},
+		BugComponent:    "b:95887",
 		Impl:            &workSpaceFixtureImpl{appName: googleDocs},
 		SetUpTimeout:    workspaceSetUpTestTimeout,
 		PreTestTimeout:  workspacePreTestTimeout,
@@ -85,6 +86,7 @@ func init() {
 			"essential-inputs-team@google.com",
 			"xiuwen@google.com",
 		},
+		BugComponent:    "b:95887",
 		Impl:            &workSpaceFixtureImpl{appName: googleDocs},
 		SetUpTimeout:    workspaceSetUpTestTimeout,
 		PreTestTimeout:  workspacePreTestTimeout,
@@ -98,6 +100,7 @@ func init() {
 			"essential-inputs-team@google.com",
 			"xiuwen@google.com",
 		},
+		BugComponent:    "b:95887",
 		Impl:            &workSpaceFixtureImpl{appName: googleSlides},
 		SetUpTimeout:    workspaceSetUpTestTimeout,
 		PreTestTimeout:  workspacePreTestTimeout,
@@ -111,6 +114,7 @@ func init() {
 			"essential-inputs-team@google.com",
 			"xiuwen@google.com",
 		},
+		BugComponent:    "b:95887",
 		Impl:            &workSpaceFixtureImpl{appName: googleSlides},
 		SetUpTimeout:    workspaceSetUpTestTimeout,
 		PreTestTimeout:  workspacePreTestTimeout,
@@ -124,6 +128,7 @@ func init() {
 			"essential-inputs-team@google.com",
 			"xiuwen@google.com",
 		},
+		BugComponent:    "b:95887",
 		Impl:            &workSpaceFixtureImpl{appName: googleSheets},
 		SetUpTimeout:    workspaceSetUpTestTimeout,
 		PreTestTimeout:  workspacePreTestTimeout,
@@ -137,6 +142,7 @@ func init() {
 			"essential-inputs-team@google.com",
 			"xiuwen@google.com",
 		},
+		BugComponent:    "b:95887",
 		Impl:            &workSpaceFixtureImpl{appName: googleSheets},
 		SetUpTimeout:    workspaceSetUpTestTimeout,
 		PreTestTimeout:  workspacePreTestTimeout,
@@ -152,6 +158,7 @@ func init() {
 			"essential-inputs-team@google.com",
 			"xiuwen@google.com",
 		},
+		BugComponent:    "b:95887",
 		Impl:            &workSpaceFixtureImpl{appName: googleDocs},
 		SetUpTimeout:    workspaceSetUpTestTimeout,
 		PreTestTimeout:  workspacePreTestTimeout,
@@ -165,6 +172,7 @@ func init() {
 			"essential-inputs-team@google.com",
 			"xiuwen@google.com",
 		},
+		BugComponent:    "b:95887",
 		Impl:            &workSpaceFixtureImpl{appName: googleDocs},
 		SetUpTimeout:    workspaceSetUpTestTimeout,
 		PreTestTimeout:  workspacePreTestTimeout,
@@ -178,6 +186,7 @@ func init() {
 			"essential-inputs-team@google.com",
 			"xiuwen@google.com",
 		},
+		BugComponent:    "b:95887",
 		Impl:            &workSpaceFixtureImpl{appName: googleSlides},
 		SetUpTimeout:    workspaceSetUpTestTimeout,
 		PreTestTimeout:  workspacePreTestTimeout,
@@ -191,6 +200,7 @@ func init() {
 			"essential-inputs-team@google.com",
 			"xiuwen@google.com",
 		},
+		BugComponent:    "b:95887",
 		Impl:            &workSpaceFixtureImpl{appName: googleSlides},
 		SetUpTimeout:    workspaceSetUpTestTimeout,
 		PreTestTimeout:  workspacePreTestTimeout,
@@ -204,6 +214,7 @@ func init() {
 			"essential-inputs-team@google.com",
 			"xiuwen@google.com",
 		},
+		BugComponent:    "b:95887",
 		Impl:            &workSpaceFixtureImpl{appName: googleSheets},
 		SetUpTimeout:    workspaceSetUpTestTimeout,
 		PreTestTimeout:  workspacePreTestTimeout,
@@ -217,6 +228,7 @@ func init() {
 			"essential-inputs-team@google.com",
 			"xiuwen@google.com",
 		},
+		BugComponent:    "b:95887",
 		Impl:            &workSpaceFixtureImpl{appName: googleSheets},
 		SetUpTimeout:    workspaceSetUpTestTimeout,
 		PreTestTimeout:  workspacePreTestTimeout,

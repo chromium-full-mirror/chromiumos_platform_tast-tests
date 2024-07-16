@@ -106,7 +106,7 @@ func LanguagepacksHandwritingDlcDownload(ctx context.Context, s *testing.State) 
 
 			if err := uiauto.Combine("switch back to keyboard mode and hide VK",
 				vkbCtx.SwitchToKeyboard(),
-				vkbCtx.TapHideVitrualKeyboardButton(),
+				vkbCtx.TapHideVirtualKeyboardButton(),
 			)(ctx); err != nil {
 				s.Log("Failed to switch back to keyboard mode and hide VK: ", err)
 			}
