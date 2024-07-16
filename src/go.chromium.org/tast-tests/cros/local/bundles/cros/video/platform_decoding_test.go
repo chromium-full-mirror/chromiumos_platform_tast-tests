@@ -23,6 +23,28 @@ const ffmpegMD5Path = "/usr/local/graphics/ffmpeg_md5sum"
 // regenerate the test parameters by running the following in a chroot:
 // TAST_GENERATE_UPDATE=1 ~/chromiumos/src/platform/tast/tools/go.sh test -count=1 go.chromium.org/tast-tests/cros/local/bundles/cros/video
 
+func genDecoderArgsBuilder(prefix, codec string) string {
+	if strings.Contains(prefix, "ffmpeg") {
+		return "platform.FFMPEGMD5DecodeVAAPIArgs"
+	}
+	if codec == "vp8" {
+		return "platform.VP8DecodeVAAPIargs"
+	}
+	if codec == "vp9" {
+		return "platform.VP9DecodeVAAPIargs"
+	}
+	if codec == "h264" {
+		return "platform.H264DecodeVAAPIargs"
+	}
+	if codec == "h265" || codec == "hevc" {
+		return "platform.HEVCDecodeVAAPIargs"
+	}
+	if codec == "av1" {
+		return "platform.AV1DecodeVAAPIargs"
+	}
+	return ""
+}
+
 func TestPlatformDecodingParams(t *testing.T) {
 	type paramData struct {
 		Name               string
@@ -47,52 +69,236 @@ func TestPlatformDecodingParams(t *testing.T) {
 		"level5_1": 24 * time.Hour,
 	}
 
-	// Generate VAAPI VP9 tests.
-	for i, profile := range []string{"profile_0"} {
-		for _, levelGroup := range []string{"group1", "group2", "group3", "group4", "level5_0", "level5_1"} {
-			for _, cat := range []string{
-				"buf", "frm_resize", "gf_dist", "odd_size", "sub8x8", "sub8x8_sf",
-			} {
-				files := fmt.Sprintf("test_vectors.VP9WebmFiles[\"%s\"][\"%s\"][\"%s\"]", profile, levelGroup, cat)
-				param := paramData{
-					Name:               fmt.Sprintf("vaapi_vp9_%d_%s_%s", i, levelGroup, cat),
-					Decoder:            filepath.Join(chrome.BinTestDir, "decode_test"),
-					DecoderArgsBuilder: "platform.VP9DecodeVAAPIargs",
-					Files:              files,
-					Timeout:            defaultTimeout,
-					SoftwareDeps:       []string{"vaapi"},
-					Metadata:           files,
-					Attr:               []string{"graphics_video_vp9", "graphics_perbuild"},
-				}
-				if extension, ok := vp9GroupExtensions[levelGroup]; ok {
-					param.Timeout = extension
-				}
+	vaapiTestParams := []struct {
+		binaryName     string
+		testNamePrefix string
+		frequency      string
+	}{
+		{filepath.Join(chrome.BinTestDir, "decode_test"), "", "graphics_perbuild"},
+		{ffmpegMD5Path, "ffmpeg_", "graphics_nightly"},
+	}
 
-				var hardwareDeps []string
+	for _, vaapiTestParam := range vaapiTestParams {
+		// Generate VAAPI VP9 tests.
+		for i, profile := range []string{"profile_0"} {
+			for _, levelGroup := range []string{"group1", "group2", "group3", "group4", "level5_0", "level5_1"} {
+				for _, cat := range []string{
+					"buf", "frm_resize", "gf_dist", "odd_size", "sub8x8", "sub8x8_sf",
+				} {
+					files := fmt.Sprintf("test_vectors.VP9WebmFiles[\"%s\"][\"%s\"][\"%s\"]", profile, levelGroup, cat)
+					param := paramData{
+						Name:               fmt.Sprintf("%svaapi_vp9_%d_%s_%s", vaapiTestParam.testNamePrefix, i, levelGroup, cat),
+						Decoder:            vaapiTestParam.binaryName,
+						DecoderArgsBuilder: genDecoderArgsBuilder(vaapiTestParam.testNamePrefix, "vp9"),
+						Files:              files,
+						Timeout:            defaultTimeout,
+						SoftwareDeps:       []string{"vaapi"},
+						Metadata:           files,
+						Attr:               []string{"graphics_video_vp9", vaapiTestParam.frequency},
+					}
+					if extension, ok := vp9GroupExtensions[levelGroup]; ok {
+						param.Timeout = extension
+					}
 
-				// TODO(b/184683272): Reenable everywhere.
-				if cat == "frm_resize" || cat == "sub8x8_sf" {
-					hardwareDeps = append(hardwareDeps, "hwdep.SkipGPUFamily(\"picasso\")")
+					var hardwareDeps []string
+
+					// TODO(b/184683272): Reenable everywhere.
+					if cat == "frm_resize" || cat == "sub8x8_sf" {
+						hardwareDeps = append(hardwareDeps, "hwdep.SkipGPUFamily(\"picasso\")")
+					}
+
+					switch levelGroup {
+					case "level5_0":
+						param.SoftwareDeps = append(param.SoftwareDeps, caps.HWDecodeVP9_4K)
+					case "level5_1":
+						param.SoftwareDeps = append(param.SoftwareDeps, caps.HWDecodeVP9_4K60)
+						hardwareDeps = append(hardwareDeps, "hwdep.MinMemory(7169)")
+					default:
+						param.SoftwareDeps = append(param.SoftwareDeps, caps.HWDecodeVP9)
+					}
+
+					param.HardwareDeps = strings.Join(hardwareDeps, ", ")
+					params = append(params, param)
 				}
-
-				switch levelGroup {
-				case "level5_0":
-					param.SoftwareDeps = append(param.SoftwareDeps, caps.HWDecodeVP9_4K)
-				case "level5_1":
-					param.SoftwareDeps = append(param.SoftwareDeps, caps.HWDecodeVP9_4K60)
-					hardwareDeps = append(hardwareDeps, "hwdep.MinMemory(7169)")
-				default:
-					param.SoftwareDeps = append(param.SoftwareDeps, caps.HWDecodeVP9)
-				}
-
-				param.HardwareDeps = strings.Join(hardwareDeps, ", ")
-				params = append(params, param)
 			}
+		}
+
+		// Generate VAAPI AV1 tests.
+		params = append(params, paramData{
+			Name:               fmt.Sprintf("%svaapi_av1", vaapiTestParam.testNamePrefix),
+			Decoder:            vaapiTestParam.binaryName,
+			DecoderArgsBuilder: genDecoderArgsBuilder(vaapiTestParam.testNamePrefix, "av1"),
+			Files:              "test_vectors.AV1Files[\"8bit\"]",
+			Timeout:            defaultTimeout,
+			// These SoftwareDeps do not include the 10 bit version of AV1.
+			SoftwareDeps: []string{"vaapi", caps.HWDecodeAV1},
+			Metadata:     "test_vectors.AV1Files[\"8bit\"]",
+			Attr:         []string{"graphics_video_av1", "graphics_perbuild"},
+		})
+		for _, cat := range []string{"quantizer", "size", "allintra", "cdfupdate", "motionvec"} {
+			files := fmt.Sprintf("test_vectors.AV1Aom8bitFiles[\"%s\"]", cat)
+			param := paramData{
+				Name:               fmt.Sprintf("%svaapi_av1_8bit_%s", vaapiTestParam.testNamePrefix, cat),
+				Decoder:            vaapiTestParam.binaryName,
+				DecoderArgsBuilder: genDecoderArgsBuilder(vaapiTestParam.testNamePrefix, "av1"),
+				Files:              files,
+				Timeout:            defaultTimeout,
+				// These SoftwareDeps do not include the 10 bit version of AV1.
+				SoftwareDeps: []string{"vaapi", caps.HWDecodeAV1},
+				Metadata:     files,
+				Attr:         []string{"graphics_video_av1", "graphics_perbuild"},
+			}
+
+			params = append(params, param)
+		}
+
+		// Generate VAAPI HEVC tests.
+		for _, testGroup := range []string{"main_part_1", "main_part_2", "main_part_3", "main_part_4"} {
+			files := fmt.Sprintf("test_vectors.HEVCFiles[\"%s\"]", testGroup)
+
+			params = append(params, paramData{
+				Name:               fmt.Sprintf("%svaapi_hevc_%s", vaapiTestParam.testNamePrefix, testGroup),
+				Decoder:            vaapiTestParam.binaryName,
+				DecoderArgsBuilder: genDecoderArgsBuilder(vaapiTestParam.testNamePrefix, "h265"),
+				Files:              files,
+				Timeout:            defaultTimeout,
+				SoftwareDeps:       []string{"vaapi", caps.HWDecodeHEVC},
+				Metadata:           files,
+				Attr:               []string{"graphics_video_hevc", vaapiTestParam.frequency},
+			})
+		}
+		params = append(params, paramData{
+			Name:               fmt.Sprintf("%shevc_main_part_5_8k", vaapiTestParam.testNamePrefix),
+			Decoder:            vaapiTestParam.binaryName,
+			DecoderArgsBuilder: genDecoderArgsBuilder(vaapiTestParam.testNamePrefix, "hevc"),
+			Files:              "test_vectors.HEVCFiles[\"main_part_5_8K\"]",
+			Timeout:            defaultTimeout,
+			SoftwareDeps:       []string{"vaapi", caps.HWDecodeHEVC8K},
+			Metadata:           "test_vectors.HEVCFiles[\"main_part_5_8K\"]",
+			Attr:               []string{"graphics_video_hevc", vaapiTestParam.frequency},
+		})
+
+		// Generate VAAPI VP8 tests.
+		for _, testGroup := range []string{"inter", "inter_multi_coeff", "inter_segment", "intra", "intra_multi_coeff", "intra_segment", "comprehensive"} {
+			files := fmt.Sprintf("test_vectors.VP8Files[\"%s\"]", testGroup)
+
+			params = append(params, paramData{
+				Name:               fmt.Sprintf("%svaapi_vp8_%s", vaapiTestParam.testNamePrefix, testGroup),
+				Decoder:            vaapiTestParam.binaryName,
+				DecoderArgsBuilder: genDecoderArgsBuilder(vaapiTestParam.testNamePrefix, "vp8"),
+				Files:              files,
+				Timeout:            defaultTimeout,
+				SoftwareDeps:       []string{"vaapi", caps.HWDecodeVP8},
+				Metadata:           files,
+				Attr:               []string{"graphics_video_vp8", vaapiTestParam.frequency},
+			})
+		}
+
+		// Generates VAAPI H264 tests.
+		for _, group := range []string{"baseline", "main", "first_mb_in_slice"} {
+			files := fmt.Sprintf("test_vectors.H264Files[\"%s\"]", group)
+
+			param := paramData{
+				Name:               fmt.Sprintf("%svaapi_h264_%s", vaapiTestParam.testNamePrefix, group),
+				Decoder:            vaapiTestParam.binaryName,
+				DecoderArgsBuilder: genDecoderArgsBuilder(vaapiTestParam.testNamePrefix, "h264"),
+				Files:              files,
+				Timeout:            defaultTimeout,
+				SoftwareDeps:       []string{"vaapi", caps.HWDecodeH264},
+				Metadata:           files,
+				Attr:               []string{"graphics_video_h264", vaapiTestParam.frequency},
+			}
+			params = append(params, param)
+		}
+
+		// Generates VAAPI tests from bugs files
+		for _, bugID := range test_vectors.SortedStringKeys(test_vectors.H264FilesFromBugs) {
+			files := fmt.Sprintf("[]string{\"%s\"}", test_vectors.H264FilesFromBugs[bugID])
+			param := paramData{
+				Name:               fmt.Sprintf("%svaapi_h264_files_from_bugs_%s", vaapiTestParam.testNamePrefix, bugID),
+				Decoder:            vaapiTestParam.binaryName,
+				DecoderArgsBuilder: genDecoderArgsBuilder(vaapiTestParam.testNamePrefix, "h264"),
+				Files:              files,
+				Timeout:            defaultTimeout,
+				SoftwareDeps:       []string{"vaapi", caps.HWDecodeH264},
+				Metadata:           files,
+				Attr:               []string{"graphics_video_h264", vaapiTestParam.frequency},
+			}
+			params = append(params, param)
+		}
+		for _, bugID := range test_vectors.SortedStringKeys(test_vectors.H2644kFilesFromBugs) {
+			files := fmt.Sprintf("[]string{\"%s\"}", test_vectors.H2644kFilesFromBugs[bugID])
+			param := paramData{
+				Name:               fmt.Sprintf("%svaapi_h264_4k_files_from_bugs_%s", vaapiTestParam.testNamePrefix, bugID),
+				Decoder:            vaapiTestParam.binaryName,
+				DecoderArgsBuilder: genDecoderArgsBuilder(vaapiTestParam.testNamePrefix, "h264"),
+				Files:              files,
+				Timeout:            defaultTimeout,
+				SoftwareDeps:       []string{"vaapi", caps.HWDecodeH264_4K},
+				Metadata:           files,
+				Attr:               []string{"graphics_video_h264", vaapiTestParam.frequency},
+			}
+			params = append(params, param)
+		}
+		for _, bugID := range test_vectors.SortedStringKeys(test_vectors.VP9FilesFromBugs) {
+			files := fmt.Sprintf("[]string{\"%s\"}", test_vectors.VP9FilesFromBugs[bugID])
+			param := paramData{
+				Name:               fmt.Sprintf("%svaapi_vp9_files_from_bugs_%s", vaapiTestParam.testNamePrefix, bugID),
+				Decoder:            vaapiTestParam.binaryName,
+				DecoderArgsBuilder: genDecoderArgsBuilder(vaapiTestParam.testNamePrefix, "vp9"),
+				Files:              files,
+				Timeout:            defaultTimeout,
+				SoftwareDeps:       []string{"vaapi", caps.HWDecodeVP9},
+				Metadata:           files,
+				Attr:               []string{"graphics_video_vp9", vaapiTestParam.frequency},
+			}
+			params = append(params, param)
+		}
+		for _, bugID := range test_vectors.SortedStringKeys(test_vectors.AV1FilesFromBugs) {
+			files := fmt.Sprintf("[]string{\"%s\"}", test_vectors.AV1FilesFromBugs[bugID])
+			param := paramData{
+				Name:               fmt.Sprintf("%svaapi_av1_files_from_bugs_%s", vaapiTestParam.testNamePrefix, bugID),
+				Decoder:            vaapiTestParam.binaryName,
+				DecoderArgsBuilder: genDecoderArgsBuilder(vaapiTestParam.testNamePrefix, "av1"),
+				Files:              files,
+				Timeout:            defaultTimeout,
+				SoftwareDeps:       []string{"vaapi", caps.HWDecodeAV1},
+				Metadata:           files,
+				Attr:               []string{"graphics_video_av1", vaapiTestParam.frequency},
+			}
+			params = append(params, param)
+		}
+		for _, bugID := range test_vectors.SortedStringKeys(test_vectors.H265FilesFromBugs) {
+			files := fmt.Sprintf("[]string{\"%s\"}", test_vectors.H265FilesFromBugs[bugID])
+			param := paramData{
+				Name:               fmt.Sprintf("%svaapi_hevc_files_from_bugs_%s", vaapiTestParam.testNamePrefix, bugID),
+				Decoder:            vaapiTestParam.binaryName,
+				DecoderArgsBuilder: genDecoderArgsBuilder(vaapiTestParam.testNamePrefix, "hevc"),
+				Files:              files,
+				Timeout:            defaultTimeout,
+				SoftwareDeps:       []string{"vaapi", caps.HWDecodeHEVC},
+				Metadata:           files,
+				Attr:               []string{"graphics_video_hevc", vaapiTestParam.frequency},
+			}
+			params = append(params, param)
+		}
+		for _, bugID := range test_vectors.SortedStringKeys(test_vectors.HEVCFilesFromBugs) {
+			files := fmt.Sprintf("test_vectors.HEVCFilesFromBugs[\"%s\"]", bugID)
+			params = append(params, paramData{
+				Name:               fmt.Sprintf("%svaapi_hevc_files_from_bugs_%s", vaapiTestParam.testNamePrefix, bugID),
+				Decoder:            vaapiTestParam.binaryName,
+				DecoderArgsBuilder: genDecoderArgsBuilder(vaapiTestParam.testNamePrefix, "hevc"),
+				Files:              files,
+				Timeout:            time.Minute,
+				SoftwareDeps:       []string{"vaapi", caps.HWDecodeHEVC},
+				Metadata:           files,
+				Attr:               []string{"graphics_video_hevc", vaapiTestParam.frequency},
+			})
 		}
 	}
 
 	params = append(params, paramData{
-		Name:               fmt.Sprintf("vaapi_vp9_0_svc"),
+		Name:               "vaapi_vp9_0_svc",
 		Decoder:            filepath.Join(chrome.BinTestDir, "decode_test"),
 		DecoderArgsBuilder: "platform.VP9DecodeVAAPIargs",
 		Files:              "test_vectors.VP9SVCFiles",
@@ -101,181 +307,6 @@ func TestPlatformDecodingParams(t *testing.T) {
 		Metadata:           "test_vectors.VP9SVCFiles",
 		Attr:               []string{"graphics_video_vp9", "graphics_perbuild"},
 	})
-
-	// Generate VAAPI AV1 tests.
-	params = append(params, paramData{
-		Name:               "vaapi_av1",
-		Decoder:            filepath.Join(chrome.BinTestDir, "decode_test"),
-		DecoderArgsBuilder: "platform.AV1DecodeVAAPIargs",
-		Files:              "test_vectors.AV1Files[\"8bit\"]",
-		Timeout:            defaultTimeout,
-		// These SoftwareDeps do not include the 10 bit version of AV1.
-		SoftwareDeps: []string{"vaapi", caps.HWDecodeAV1},
-		Metadata:     "test_vectors.AV1Files[\"8bit\"]",
-		Attr:         []string{"graphics_video_av1", "graphics_perbuild"},
-	})
-
-	for _, cat := range []string{"quantizer", "size", "allintra", "cdfupdate", "motionvec"} {
-		files := fmt.Sprintf("test_vectors.AV1Aom8bitFiles[\"%s\"]", cat)
-		param := paramData{
-			Name:               fmt.Sprintf("vaapi_av1_8bit_%s", cat),
-			Decoder:            filepath.Join(chrome.BinTestDir, "decode_test"),
-			DecoderArgsBuilder: "platform.AV1DecodeVAAPIargs",
-			Files:              files,
-			Timeout:            defaultTimeout,
-			// These SoftwareDeps do not include the 10 bit version of AV1.
-			SoftwareDeps: []string{"vaapi", caps.HWDecodeAV1},
-			Metadata:     files,
-			Attr:         []string{"graphics_video_av1", "graphics_perbuild"},
-		}
-
-		params = append(params, param)
-	}
-
-	// Generate VAAPI HEVC tests.
-	for _, testGroup := range []string{"main_part_1", "main_part_2", "main_part_3", "main_part_4"} {
-		files := fmt.Sprintf("test_vectors.HEVCFiles[\"%s\"]", testGroup)
-
-		params = append(params, paramData{
-			Name:               fmt.Sprintf("vaapi_hevc_%s", testGroup),
-			Decoder:            filepath.Join(chrome.BinTestDir, "decode_test"),
-			DecoderArgsBuilder: "platform.HEVCDecodeVAAPIargs",
-			Files:              files,
-			Timeout:            defaultTimeout,
-			SoftwareDeps:       []string{"vaapi", caps.HWDecodeHEVC},
-			Metadata:           files,
-			Attr:               []string{"graphics_video_hevc", "graphics_perbuild"},
-		})
-	}
-
-	params = append(params, paramData{
-		Name:               "hevc_main_part_5_8k",
-		Decoder:            filepath.Join(chrome.BinTestDir, "decode_test"),
-		DecoderArgsBuilder: "platform.HEVCDecodeVAAPIargs",
-		Files:              "test_vectors.HEVCFiles[\"main_part_5_8K\"]",
-		Timeout:            defaultTimeout,
-		SoftwareDeps:       []string{"vaapi", caps.HWDecodeHEVC8K},
-		Metadata:           "test_vectors.HEVCFiles[\"main_part_5_8K\"]",
-		Attr:               []string{"graphics_video_hevc", "graphics_perbuild"},
-	})
-
-	// Generate VAAPI VP8 tests.
-	for _, testGroup := range []string{"inter", "inter_multi_coeff", "inter_segment", "intra", "intra_multi_coeff", "intra_segment", "comprehensive"} {
-		files := fmt.Sprintf("test_vectors.VP8Files[\"%s\"]", testGroup)
-
-		params = append(params, paramData{
-			Name:               fmt.Sprintf("vaapi_vp8_%s", testGroup),
-			Decoder:            filepath.Join(chrome.BinTestDir, "decode_test"),
-			DecoderArgsBuilder: "platform.VP8DecodeVAAPIargs",
-			Files:              files,
-			Timeout:            defaultTimeout,
-			SoftwareDeps:       []string{"vaapi", caps.HWDecodeVP8},
-			Metadata:           files,
-			Attr:               []string{"graphics_video_vp8", "graphics_perbuild"},
-		})
-	}
-
-	// Generates VAAPI H264 tests.
-	for _, group := range []string{"baseline", "main", "first_mb_in_slice"} {
-		files := fmt.Sprintf("test_vectors.H264Files[\"%s\"]", group)
-
-		param := paramData{
-			Name:               fmt.Sprintf("vaapi_h264_%s", group),
-			Decoder:            filepath.Join(chrome.BinTestDir, "decode_test"),
-			DecoderArgsBuilder: "platform.H264DecodeVAAPIargs",
-			Files:              files,
-			Timeout:            defaultTimeout,
-			SoftwareDeps:       []string{"vaapi", caps.HWDecodeH264},
-			Metadata:           files,
-			Attr:               []string{"graphics_video_h264", "graphics_perbuild"},
-		}
-		params = append(params, param)
-	}
-
-	// Generates VAAPI tests from bugs files
-	for _, bugID := range test_vectors.SortedStringKeys(test_vectors.H264FilesFromBugs) {
-		files := fmt.Sprintf("[]string{\"%s\"}", test_vectors.H264FilesFromBugs[bugID])
-		param := paramData{
-			Name:               fmt.Sprintf("vaapi_h264_files_from_bugs_%s", bugID),
-			Decoder:            filepath.Join(chrome.BinTestDir, "decode_test"),
-			DecoderArgsBuilder: "platform.H264DecodeVAAPIargs",
-			Files:              files,
-			Timeout:            defaultTimeout,
-			SoftwareDeps:       []string{"vaapi", caps.HWDecodeH264},
-			Metadata:           files,
-			Attr:               []string{"graphics_video_h264", "graphics_perbuild"},
-		}
-		params = append(params, param)
-	}
-	for _, bugID := range test_vectors.SortedStringKeys(test_vectors.H2644kFilesFromBugs) {
-		files := fmt.Sprintf("[]string{\"%s\"}", test_vectors.H2644kFilesFromBugs[bugID])
-		param := paramData{
-			Name:               fmt.Sprintf("vaapi_h264_4k_files_from_bugs_%s", bugID),
-			Decoder:            filepath.Join(chrome.BinTestDir, "decode_test"),
-			DecoderArgsBuilder: "platform.H264DecodeVAAPIargs",
-			Files:              files,
-			Timeout:            defaultTimeout,
-			SoftwareDeps:       []string{"vaapi", caps.HWDecodeH264_4K},
-			Metadata:           files,
-			Attr:               []string{"graphics_video_h264", "graphics_perbuild"},
-		}
-		params = append(params, param)
-	}
-	for _, bugID := range test_vectors.SortedStringKeys(test_vectors.VP9FilesFromBugs) {
-		files := fmt.Sprintf("[]string{\"%s\"}", test_vectors.VP9FilesFromBugs[bugID])
-		param := paramData{
-			Name:               fmt.Sprintf("vaapi_vp9_files_from_bugs_%s", bugID),
-			Decoder:            filepath.Join(chrome.BinTestDir, "decode_test"),
-			DecoderArgsBuilder: "platform.VP9DecodeVAAPIargs",
-			Files:              files,
-			Timeout:            defaultTimeout,
-			SoftwareDeps:       []string{"vaapi", caps.HWDecodeVP9},
-			Metadata:           files,
-			Attr:               []string{"graphics_video_vp9", "graphics_perbuild"},
-		}
-		params = append(params, param)
-	}
-	for _, bugID := range test_vectors.SortedStringKeys(test_vectors.AV1FilesFromBugs) {
-		files := fmt.Sprintf("[]string{\"%s\"}", test_vectors.AV1FilesFromBugs[bugID])
-		param := paramData{
-			Name:               fmt.Sprintf("vaapi_av1_files_from_bugs_%s", bugID),
-			Decoder:            filepath.Join(chrome.BinTestDir, "decode_test"),
-			DecoderArgsBuilder: "platform.AV1DecodeVAAPIargs",
-			Files:              files,
-			Timeout:            defaultTimeout,
-			SoftwareDeps:       []string{"vaapi", caps.HWDecodeAV1},
-			Metadata:           files,
-			Attr:               []string{"graphics_video_av1", "graphics_perbuild"},
-		}
-		params = append(params, param)
-	}
-	for _, bugID := range test_vectors.SortedStringKeys(test_vectors.H265FilesFromBugs) {
-		files := fmt.Sprintf("[]string{\"%s\"}", test_vectors.H265FilesFromBugs[bugID])
-		param := paramData{
-			Name:               fmt.Sprintf("vaapi_hevc_files_from_bugs_%s", bugID),
-			Decoder:            filepath.Join(chrome.BinTestDir, "decode_test"),
-			DecoderArgsBuilder: "platform.HEVCDecodeVAAPIargs",
-			Files:              files,
-			Timeout:            defaultTimeout,
-			SoftwareDeps:       []string{"vaapi", caps.HWDecodeHEVC},
-			Metadata:           files,
-			Attr:               []string{"graphics_video_hevc", "graphics_perbuild"},
-		}
-		params = append(params, param)
-	}
-	for _, bugID := range test_vectors.SortedStringKeys(test_vectors.HEVCFilesFromBugs) {
-		files := fmt.Sprintf("test_vectors.HEVCFilesFromBugs[\"%s\"]", bugID)
-		params = append(params, paramData{
-			Name:               fmt.Sprintf("vaapi_hevc_files_from_bugs_%s", bugID),
-			Decoder:            filepath.Join(chrome.BinTestDir, "decode_test"),
-			DecoderArgsBuilder: "platform.HEVCDecodeVAAPIargs",
-			Files:              files,
-			Timeout:            time.Minute,
-			SoftwareDeps:       []string{"vaapi", caps.HWDecodeHEVC},
-			Metadata:           files,
-			Attr:               []string{"graphics_video_hevc", "graphics_perbuild"},
-		})
-	}
 
 	// Generate V4L2 tests.
 	for _, stateness := range []string{"Stateful", "Stateless"} {
@@ -532,210 +563,6 @@ func TestPlatformDecodingParams(t *testing.T) {
 		}
 
 		params = append(params, param)
-	}
-
-	// Generate ffmpeg VAAPI VP9 tests.
-	for i, profile := range []string{"profile_0"} {
-		for _, levelGroup := range []string{"group1", "group2", "group3", "group4", "level5_0", "level5_1"} {
-			for _, cat := range []string{
-				"buf", "frm_resize", "gf_dist", "odd_size", "sub8x8", "sub8x8_sf",
-			} {
-				files := fmt.Sprintf("test_vectors.VP9WebmFiles[\"%s\"][\"%s\"][\"%s\"]", profile, levelGroup, cat)
-				param := paramData{
-					Name:               fmt.Sprintf("ffmpeg_vaapi_vp9_%d_%s_%s", i, levelGroup, cat),
-					Decoder:            ffmpegMD5Path,
-					DecoderArgsBuilder: "platform.FFMPEGMD5DecodeVAAPIArgs",
-					Files:              files,
-					Timeout:            defaultTimeout,
-					SoftwareDeps:       []string{"vaapi"},
-					Metadata:           files,
-					Attr:               []string{"graphics_video_vp9", "graphics_nightly"},
-				}
-				if extension, ok := vp9GroupExtensions[levelGroup]; ok {
-					param.Timeout = extension
-				}
-
-				var hardwareDeps []string
-
-				switch levelGroup {
-				case "level5_0":
-					param.SoftwareDeps = append(param.SoftwareDeps, caps.HWDecodeVP9_4K)
-				case "level5_1":
-					param.SoftwareDeps = append(param.SoftwareDeps, caps.HWDecodeVP9_4K60)
-					hardwareDeps = append(hardwareDeps, "hwdep.MinMemory(7169)")
-				default:
-					param.SoftwareDeps = append(param.SoftwareDeps, caps.HWDecodeVP9)
-				}
-
-				param.HardwareDeps = strings.Join(hardwareDeps, ", ")
-				params = append(params, param)
-			}
-		}
-	}
-
-	// Generate ffmpeg VAAPI AV1 tests.
-	params = append(params, paramData{
-		Name:               "ffmpeg_vaapi_av1",
-		Decoder:            ffmpegMD5Path,
-		DecoderArgsBuilder: "platform.FFMPEGMD5DecodeVAAPIArgs",
-		Files:              "test_vectors.AV1Files[\"8bit\"]",
-		Timeout:            defaultTimeout,
-		// These SoftwareDeps do not include the 10 bit version of AV1.
-		SoftwareDeps: []string{"vaapi", caps.HWDecodeAV1},
-		Metadata:     "test_vectors.AV1Files[\"8bit\"]",
-		Attr:         []string{"graphics_video_av1"},
-	})
-
-	for _, cat := range []string{"quantizer", "size", "allintra", "cdfupdate", "motionvec"} {
-		files := fmt.Sprintf("test_vectors.AV1Aom8bitFiles[\"%s\"]", cat)
-		param := paramData{
-			Name:               fmt.Sprintf("ffmpeg_vaapi_av1_8bit_%s", cat),
-			Decoder:            ffmpegMD5Path,
-			DecoderArgsBuilder: "platform.FFMPEGMD5DecodeVAAPIArgs",
-			Files:              files,
-			Timeout:            defaultTimeout,
-			// These SoftwareDeps do not include the 10 bit version of AV1.
-			SoftwareDeps: []string{"vaapi", caps.HWDecodeAV1},
-			Metadata:     files,
-			Attr:         []string{"graphics_video_av1", "graphics_nightly"},
-		}
-
-		params = append(params, param)
-	}
-
-	// Generate ffmpeg VP8 tests.
-	for _, testGroup := range []string{"inter", "inter_multi_coeff", "inter_segment", "intra", "intra_multi_coeff", "intra_segment", "comprehensive"} {
-		files := fmt.Sprintf("test_vectors.VP8Files[\"%s\"]", testGroup)
-
-		params = append(params, paramData{
-			Name:               fmt.Sprintf("ffmpeg_vaapi_vp8_%s", testGroup),
-			Decoder:            ffmpegMD5Path,
-			DecoderArgsBuilder: "platform.FFMPEGMD5DecodeVAAPIArgs",
-			Files:              files,
-			Timeout:            defaultTimeout,
-			SoftwareDeps:       []string{"vaapi", caps.HWDecodeVP8},
-			Metadata:           files,
-			Attr:               []string{"graphics_video_vp8", "graphics_nightly"},
-		})
-	}
-
-	// Generate ffmpeg H264 tests.
-	for _, group := range []string{"baseline", "main", "first_mb_in_slice"} {
-		files := fmt.Sprintf("test_vectors.H264Files[\"%s\"]", group)
-
-		param := paramData{
-			Name:               fmt.Sprintf("ffmpeg_vaapi_h264_%s", group),
-			Decoder:            ffmpegMD5Path,
-			DecoderArgsBuilder: "platform.FFMPEGMD5DecodeVAAPIArgs",
-			Files:              files,
-			Timeout:            defaultTimeout,
-			SoftwareDeps:       []string{"vaapi", caps.HWDecodeVP8},
-			Metadata:           files,
-			Attr:               []string{"graphics_video_h264", "graphics_nightly"},
-		}
-		params = append(params, param)
-	}
-
-	// Generate ffmpeg HEVC tests.
-	for _, group := range []string{"main_part_1", "main_part_2", "main_part_3", "main_part_4"} {
-		files := fmt.Sprintf("test_vectors.HEVCFiles[\"%s\"]", group)
-
-		param := paramData{
-			Name:               fmt.Sprintf("ffmpeg_vaapi_hevc_%s", group),
-			Decoder:            ffmpegMD5Path,
-			DecoderArgsBuilder: "platform.FFMPEGMD5DecodeVAAPIArgs",
-			Files:              files,
-			Timeout:            defaultTimeout,
-			SoftwareDeps:       []string{"vaapi", caps.HWDecodeHEVC},
-			Metadata:           files,
-			Attr:               []string{"graphics_video_hevc", "graphics_nightly"},
-		}
-		params = append(params, param)
-	}
-
-	// Generate ffmpeg VAAPI tests from bugs files
-	for _, bugID := range test_vectors.SortedStringKeys(test_vectors.H264FilesFromBugs) {
-		files := fmt.Sprintf("[]string{\"%s\"}", test_vectors.H264FilesFromBugs[bugID])
-		param := paramData{
-			Name:               fmt.Sprintf("ffmpeg_vaapi_h264_files_from_bugs_%s", bugID),
-			Decoder:            ffmpegMD5Path,
-			DecoderArgsBuilder: "platform.FFMPEGMD5DecodeVAAPIArgs",
-			Files:              files,
-			Timeout:            defaultTimeout,
-			SoftwareDeps:       []string{"vaapi", caps.HWDecodeH264},
-			Metadata:           files,
-			Attr:               []string{"graphics_video_h264", "graphics_perbuild"},
-		}
-		params = append(params, param)
-	}
-	for _, bugID := range test_vectors.SortedStringKeys(test_vectors.H2644kFilesFromBugs) {
-		files := fmt.Sprintf("[]string{\"%s\"}", test_vectors.H2644kFilesFromBugs[bugID])
-		param := paramData{
-			Name:               fmt.Sprintf("ffmpeg_vaapi_h264_4k_files_from_bugs_%s", bugID),
-			Decoder:            ffmpegMD5Path,
-			DecoderArgsBuilder: "platform.FFMPEGMD5DecodeVAAPIArgs",
-			Files:              files,
-			Timeout:            defaultTimeout,
-			SoftwareDeps:       []string{"vaapi", caps.HWDecodeH264_4K},
-			Metadata:           files,
-			Attr:               []string{"graphics_video_h264", "graphics_perbuild"},
-		}
-		params = append(params, param)
-	}
-	for _, bugID := range test_vectors.SortedStringKeys(test_vectors.VP9FilesFromBugs) {
-		files := fmt.Sprintf("[]string{\"%s\"}", test_vectors.VP9FilesFromBugs[bugID])
-		param := paramData{
-			Name:               fmt.Sprintf("ffmpeg_vaapi_vp9_files_from_bugs_%s", bugID),
-			Decoder:            ffmpegMD5Path,
-			DecoderArgsBuilder: "platform.FFMPEGMD5DecodeVAAPIArgs",
-			Files:              files,
-			Timeout:            defaultTimeout,
-			SoftwareDeps:       []string{"vaapi", caps.HWDecodeVP9},
-			Metadata:           files,
-			Attr:               []string{"graphics_video_vp9", "graphics_perbuild"},
-		}
-		params = append(params, param)
-	}
-	for _, bugID := range test_vectors.SortedStringKeys(test_vectors.AV1FilesFromBugs) {
-		files := fmt.Sprintf("[]string{\"%s\"}", test_vectors.AV1FilesFromBugs[bugID])
-		param := paramData{
-			Name:               fmt.Sprintf("ffmpeg_vaapi_av1_files_from_bugs_%s", bugID),
-			Decoder:            ffmpegMD5Path,
-			DecoderArgsBuilder: "platform.FFMPEGMD5DecodeVAAPIArgs",
-			Files:              files,
-			Timeout:            defaultTimeout,
-			SoftwareDeps:       []string{"vaapi", caps.HWDecodeAV1},
-			Metadata:           files,
-			Attr:               []string{"graphics_video_av1", "graphics_perbuild"},
-		}
-		params = append(params, param)
-	}
-	for _, bugID := range test_vectors.SortedStringKeys(test_vectors.H265FilesFromBugs) {
-		files := fmt.Sprintf("[]string{\"%s\"}", test_vectors.H265FilesFromBugs[bugID])
-		param := paramData{
-			Name:               fmt.Sprintf("ffmpeg_vaapi_hevc_files_from_bugs_%s", bugID),
-			Decoder:            ffmpegMD5Path,
-			DecoderArgsBuilder: "platform.FFMPEGMD5DecodeVAAPIArgs",
-			Files:              files,
-			Timeout:            defaultTimeout,
-			SoftwareDeps:       []string{"vaapi", caps.HWDecodeHEVC},
-			Metadata:           files,
-			Attr:               []string{"graphics_video_hevc", "graphics_perbuild"},
-		}
-		params = append(params, param)
-	}
-	for _, bugID := range test_vectors.SortedStringKeys(test_vectors.HEVCFilesFromBugs) {
-		files := fmt.Sprintf("test_vectors.HEVCFilesFromBugs[\"%s\"]", bugID)
-		params = append(params, paramData{
-			Name:               fmt.Sprintf("ffmpeg_vaapi_hevc_files_from_bugs_%s", bugID),
-			Decoder:            ffmpegMD5Path,
-			DecoderArgsBuilder: "platform.FFMPEGMD5DecodeVAAPIArgs",
-			Files:              files,
-			Timeout:            time.Minute,
-			SoftwareDeps:       []string{"vaapi", caps.HWDecodeHEVC},
-			Metadata:           files,
-			Attr:               []string{"graphics_video_hevc", "graphics_perbuild"},
-		})
 	}
 
 	code := genparams.Template(t, `{{ range . }}{
