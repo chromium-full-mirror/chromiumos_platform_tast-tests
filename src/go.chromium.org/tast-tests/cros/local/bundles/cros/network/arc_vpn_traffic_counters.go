@@ -12,12 +12,12 @@ import (
 
 	pp "go.chromium.org/chromiumos/system_api/patchpanel_proto"
 
-	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/arcvpn"
-	"go.chromium.org/tast-tests/cros/local/network/hwsim"
+	arcnet "go.chromium.org/tast-tests/cros/local/network/arc"
 	patchpanel "go.chromium.org/tast-tests/cros/local/network/patchpanel_client"
 	"go.chromium.org/tast-tests/cros/local/network/ping"
+	"go.chromium.org/tast-tests/cros/local/network/testhooks"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/l4server"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/subnet"
@@ -44,7 +44,7 @@ func init() {
 		Contacts:     []string{"cros-networking@google.com", "chuweih@google.com"},
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "informational"},
-		Fixture:      "shillSimulatedWiFiWithArcBooted",
+		Fixture:      "arcBooted.ehide",
 		SoftwareDeps: []string{"arc", "no_android_p"},
 		Params: []testing.Param{
 			{
@@ -72,54 +72,39 @@ func ARCVPNTrafficCounters(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, 5*time.Second)
 	defer cancel()
 
+	a := s.FixtValue().(*arc.PreData).ARC
+
+	hookEnv, err := testhooks.RunNetworkTestHooks(ctx,
+		testhooks.NewSaveNetLogHook(),
+		testhooks.NewTcpdumpHook(),
+		testhooks.NewDumpHostOnFailureHook(),
+		testhooks.NewDumpARCOnFailureHook(a),
+		testhooks.NewDisablePortalDetectionHook(),
+	)
+	if err != nil {
+		s.Fatal("Failed to run network test hooks: ", err)
+	}
+	s.AttachErrorHandlers(hookEnv.OnErrorHandler, hookEnv.OnFatalHandler)
+	defer hookEnv.TearDownWithLogFailures(cleanupCtx, s.HasError)
+
 	manager, err := shill.NewManager(ctx)
 	if err != nil {
 		s.Fatal("Failed creating shill manager proxy: ", err)
 	}
-	// Disable captive portal check.
-	restoreCaptivePortal, err := manager.DisablePortalDetectionWithRestore(ctx)
-	if err != nil {
-		s.Fatal("Failed to disable portal detection: ", err)
-	}
-	defer restoreCaptivePortal(cleanupCtx)
 
-	restoreServiceOrder, err := manager.SetServiceOrderWithRestore(ctx, []string{"vpn", "wifi", "ethernet", "cellular"})
-	if err != nil {
-		s.Fatal("Failed to set service order to prioritize WiFi: ", err)
-	}
-	defer restoreServiceOrder(cleanupCtx)
-
-	a := s.FixtValue().(*hwsim.ShillSimulatedWiFi).ARC
-	if err := a.Command(ctx, "dumpsys", "wifi", "transports", "-eth").Run(testexec.DumpLogOnError); err != nil {
-		s.Fatal("Failed to disable ethernet in ARC: ", err)
-	}
-	defer func() {
-		if err := a.Command(cleanupCtx, "dumpsys", "wifi", "transports").Run(testexec.DumpLogOnError); err != nil {
-			s.Error(err, "failed to re-enable ethernet in ARC")
-		}
-	}()
-
-	// Set up a WiFi router environment.
+	// Set up a virtualnet router environment.
 	pool := subnet.NewPool()
-	simWiFi := s.FixtValue().(*hwsim.ShillSimulatedWiFi)
-	wifi, err := virtualnet.CreateWifiRouterEnv(ctx, simWiFi.AP[0], manager, pool, virtualnet.EnvOptions{EnableDHCP: true, RAServer: true})
+	_, env, err := virtualnet.CreateRouterEnv(ctx, manager, pool, virtualnet.EnvOptions{EnableDHCP: true, RAServer: true})
 	if err != nil {
-		s.Fatal("Failed to create WiFi router environment: ", err)
+		s.Fatal("Failed to create virtualnet router environment: ", err)
 	}
 	defer func() {
-		if err := wifi.Cleanup(cleanupCtx); err != nil {
-			s.Error("Failed to clean up virtual WiFi router: ", err)
+		if err := env.Cleanup(cleanupCtx); err != nil {
+			s.Error("Failed to clean up virtualnet router: ", err)
 		}
 	}()
 
-	if err := wifi.Service.Connect(ctx); err != nil {
-		s.Fatal("Failed to connect to WiFi: ", err)
-	}
-	if err := wifi.Service.WaitForConnectedOrError(ctx); err != nil {
-		s.Fatal("Failed to wait for to WiFi connected status: ", err)
-	}
-
-	routerAddrs, err := wifi.Router.WaitForVethInAddrs(ctx, true /*ipv4*/, true /*ipv6*/)
+	routerAddrs, err := env.WaitForVethInAddrs(ctx, true /*ipv4*/, true /*ipv6*/)
 	if err != nil {
 		s.Fatal("Failed to get inner addresses from router environment: ", err)
 	}
@@ -146,10 +131,9 @@ func ARCVPNTrafficCounters(ctx context.Context, s *testing.State) {
 		addr = routerAddrs.IPv4Addr
 	}
 
-	// Use a random port.
 	port := 65535
 	server := l4server.New(networkFam, port, l4server.WithAddr(addr.String()), l4server.WithMsgHandler(l4server.Reflector()))
-	if err := wifi.Router.StartServer(ctx, networkFam.String(), server); err != nil {
+	if err := env.StartServer(ctx, networkFam.String(), server); err != nil {
 		s.Fatalf("Failed to start %s server: %v", networkFam, err)
 	}
 
@@ -164,23 +148,15 @@ func ARCVPNTrafficCounters(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create patchpanel client: ", err)
 	}
 
-	ifname, err := wifi.Service.GetDeviceInterface(ctx)
+	ifname := env.VethOutName
+	guestIfname, err := arcnet.GetARCInterfaceName(ctx, env.VethOutName)
 	if err != nil {
-		s.Fatal("Failed to get device interface name: ", err)
+		s.Fatalf("Failed to get ARC interface name corresponding to %s: %v", ifname, err)
 	}
-	// Since we cannot get enough information to choose the right network in
-	// test app to setup socket, we get the ARC side interface name of
-	// simulated WiFi interface in tast test and pass the information to test
-	// app via intent extras.
-	response, err := pc.GetDevices(ctx)
-	if err != nil {
-		s.Fatal("Failed to get patchpanel devices: ", err)
-	}
-	var guestIfname string
-	for _, device := range response.Devices {
-		if device.PhysIfname == ifname {
-			guestIfname = device.GuestIfname
-		}
+
+	// Make sure the interface and routing is ready before setting up the socket.
+	if err := arcnet.ExpectPingSuccess(ctx, a, guestIfname, addr.String()); err != nil {
+		s.Fatalf("Failed to verify ARC connectivity to %s via %s", addr.String(), guestIfname)
 	}
 
 	testing.ContextLog(ctx, "Starting ArcVpnTest app and setting up the socket")
@@ -198,7 +174,7 @@ func ARCVPNTrafficCounters(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to start %s: %v", arcvpn.VPNTestAppSvc, err)
 	}
 
-	// Send message packets and check difference of outgoing bytes from simulated WiFi interface.
+	// Send message packets and check difference of outgoing bytes from veth interface.
 	testing.ContextLog(ctx, "Send message packet and wait until the packet is counted")
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		if err := sendMessageAndConfirmCounted(ctx, a, networkFam, ifname, pc); err != nil {
