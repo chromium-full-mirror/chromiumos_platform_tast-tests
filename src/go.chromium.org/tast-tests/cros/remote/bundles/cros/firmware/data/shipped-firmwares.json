@@ -504,6 +504,12 @@
     "model_name": "zavala"
   },
   {
+    "board_name": "brya",
+    "branch_name": "firmware-brya-14505.B",
+    "firmware_build_cros_version": "14505.755.0",
+    "model_name": "zavala"
+  },
+  {
     "board_name": "buddy",
     "branch_name": "firmware-buddy-6301.202.B",
     "firmware_build_cros_version": "6301.202.5",
@@ -950,7 +956,19 @@
   {
     "board_name": "corsola",
     "branch_name": "firmware-corsola-15194.B",
+    "firmware_build_cros_version": "15194.200.0",
+    "model_name": "chinchou"
+  },
+  {
+    "board_name": "corsola",
+    "branch_name": "firmware-corsola-15194.B",
     "firmware_build_cros_version": "15194.170.0",
+    "model_name": "chinchou360"
+  },
+  {
+    "board_name": "corsola",
+    "branch_name": "firmware-corsola-15194.B",
+    "firmware_build_cros_version": "15194.200.0",
     "model_name": "chinchou360"
   },
   {
@@ -992,8 +1010,20 @@
   {
     "board_name": "corsola",
     "branch_name": "firmware-corsola-15194.B",
+    "firmware_build_cros_version": "15194.200.0",
+    "model_name": "tentacool"
+  },
+  {
+    "board_name": "corsola",
+    "branch_name": "firmware-corsola-15194.B",
     "firmware_build_cros_version": "15194.42.0",
     "model_name": "tentacool"
+  },
+  {
+    "board_name": "corsola",
+    "branch_name": "firmware-corsola-15194.B",
+    "firmware_build_cros_version": "15194.200.0",
+    "model_name": "tentacruel"
   },
   {
     "board_name": "corsola",
@@ -1154,6 +1184,12 @@
   {
     "board_name": "dedede",
     "branch_name": "firmware-dedede-13606.B",
+    "firmware_build_cros_version": "13606.640.0",
+    "model_name": "cret"
+  },
+  {
+    "board_name": "dedede",
+    "branch_name": "firmware-dedede-13606.B",
     "firmware_build_cros_version": "13606.375.0",
     "model_name": "cret360"
   },
@@ -1173,6 +1209,12 @@
     "board_name": "dedede",
     "branch_name": "firmware-dedede-13606.B",
     "firmware_build_cros_version": "13606.601.0",
+    "model_name": "cret360"
+  },
+  {
+    "board_name": "dedede",
+    "branch_name": "firmware-dedede-13606.B",
+    "firmware_build_cros_version": "13606.640.0",
     "model_name": "cret360"
   },
   {
@@ -2948,6 +2990,12 @@
   {
     "board_name": "nissa",
     "branch_name": "firmware-nissa-15217.B",
+    "firmware_build_cros_version": "15217.544.0",
+    "model_name": "craaskana"
+  },
+  {
+    "board_name": "nissa",
+    "branch_name": "firmware-nissa-15217.B",
     "firmware_build_cros_version": "15217.319.0",
     "model_name": "craaskbowl"
   },
@@ -3022,6 +3070,12 @@
     "branch_name": "firmware-nissa-15217.B",
     "firmware_build_cros_version": "15217.502.0",
     "model_name": "craaswell"
+  },
+  {
+    "board_name": "nissa",
+    "branch_name": "firmware-nissa-15217.B",
+    "firmware_build_cros_version": "15217.581.0",
+    "model_name": "glassway"
   },
   {
     "board_name": "nissa",
@@ -4220,6 +4274,12 @@
   {
     "board_name": "skyrim",
     "branch_name": "firmware-skyrim-15390.B",
+    "firmware_build_cros_version": "15390.150.0",
+    "model_name": "crystaldrift"
+  },
+  {
+    "board_name": "skyrim",
+    "branch_name": "firmware-skyrim-15390.B",
     "firmware_build_cros_version": "15390.138.0",
     "model_name": "frostflow"
   },
@@ -4257,6 +4317,12 @@
     "board_name": "skyrim",
     "branch_name": "firmware-skyrim-15390.B",
     "firmware_build_cros_version": "15390.255.0",
+    "model_name": "markarth"
+  },
+  {
+    "board_name": "skyrim",
+    "branch_name": "firmware-skyrim-15390.B",
+    "firmware_build_cros_version": "15390.390.0",
     "model_name": "markarth"
   },
   {
@@ -4348,6 +4414,12 @@
     "branch_name": "firmware-poppy-10431.B",
     "firmware_build_cros_version": "10431.32.0",
     "model_name": null
+  },
+  {
+    "board_name": "staryu",
+    "branch_name": "firmware-corsola-15194.B",
+    "firmware_build_cros_version": "15194.119.0",
+    "model_name": "starmie"
   },
   {
     "board_name": "staryu",
@@ -4815,6 +4887,12 @@
     "board_name": "zork",
     "branch_name": "firmware-zork-13434.B",
     "firmware_build_cros_version": "13434.212.0",
+    "model_name": "ezkinil"
+  },
+  {
+    "board_name": "zork",
+    "branch_name": "firmware-zork-13434.B",
+    "firmware_build_cros_version": "13434.397.0",
     "model_name": "ezkinil"
   },
   {
