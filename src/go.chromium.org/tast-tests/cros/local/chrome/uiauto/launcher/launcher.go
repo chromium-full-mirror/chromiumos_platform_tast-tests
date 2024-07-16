@@ -594,9 +594,14 @@ func SearchWithTabletModeParameter(tconn *chrome.TestConn, kb *input.KeyboardEve
 
 // ClearSearchField function returns a function that clears the search field by pressing Ctrl+A and Backspace.
 // KEY_ESC is not a good option here because it will close the launcher window if the search field is empty.
-func ClearSearchField(tconn *chrome.TestConn, kb *input.KeyboardEventWriter) uiauto.Action {
+func ClearSearchField(tconn *chrome.TestConn, kb *input.KeyboardEventWriter, tabletMode bool) uiauto.Action {
 	ui := uiauto.New(tconn)
-	searchBoxView := nodewith.HasClass("SearchBoxView").Visible().First()
+	var searchBoxView *nodewith.Finder
+	if tabletMode {
+		searchBoxView = nodewith.HasClass(SearchBoxView).Visible().Ancestor(nodewith.HasClass("AppListView"))
+	} else {
+		searchBoxView = nodewith.HasClass(SearchBoxView).Visible().Ancestor(nodewith.HasClass("AppListBubbleView"))
+	}
 	searchField := nodewith.HasClass("Textfield").Role("textField").Ancestor(searchBoxView)
 
 	return uiauto.Combine("Clear the launcher search field",
@@ -1630,7 +1635,7 @@ func search(tconn *chrome.TestConn, kb *input.KeyboardEventWriter, searchBoxView
 // Launcher should be open already.
 func SearchWithCategory(tconn *chrome.TestConn, kb *input.KeyboardEventWriter, query string, searchCategoryInfo SearchCategoryInfo) uiauto.Action {
 	return uiauto.Combine("search in launcher",
-		ClearSearchField(tconn, kb),
+		ClearSearchField(tconn, kb, false /*tabletMode*/),
 		Search(tconn, kb, query),
 		WaitForResultWithCategory(tconn, searchCategoryInfo))
 }

@@ -283,7 +283,9 @@ func SearchQuality(ctx context.Context, s *testing.State) {
 
 	testCase := s.Param().(searchQualityTestCase)
 
-	cleanup, err := launcher.SetUpLauncherTest(ctx, tconn, false /*tabletMode*/, false /*stabilizeAppCount*/)
+	const tabletMode = false
+
+	cleanup, err := launcher.SetUpLauncherTest(ctx, tconn, tabletMode, false /*stabilizeAppCount*/)
 	if err != nil {
 		s.Fatal("Failed to set up launcher test case: ", err)
 	}
@@ -292,7 +294,7 @@ func SearchQuality(ctx context.Context, s *testing.State) {
 	query := testCase.query
 
 	if err := uiauto.Retry(2, uiauto.NamedCombine(query,
-		launcher.ClearSearchField(tconn, kb),
+		launcher.ClearSearchField(tconn, kb, tabletMode),
 		launcher.Search(tconn, kb, query),
 		launcher.WaitForResultWithCategory(tconn, launcher.SearchCategoryInfo{
 			Category:  testCase.category,

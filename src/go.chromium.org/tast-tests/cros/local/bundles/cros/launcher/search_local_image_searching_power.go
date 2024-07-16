@@ -62,8 +62,10 @@ func SearchLocalImageSearchingPower(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect Test API: ", err)
 	}
 
+	const tabletMode = false
+
 	// Preparation for launcher test.
-	cleanup, err := launcher.SetUpLauncherTest(ctx, tconn, false /*tabletMode*/, false /*stabilizeAppCount*/)
+	cleanup, err := launcher.SetUpLauncherTest(ctx, tconn, tabletMode, false /*stabilizeAppCount*/)
 	if err != nil {
 		s.Fatal("Failed to set up launcher test case: ", err)
 	}
@@ -115,7 +117,7 @@ func SearchLocalImageSearchingPower(ctx context.Context, s *testing.State) {
 	query := "Thoughts"
 	for i := 0; i < launcher.ImageSearchPowerTestRepeatTimes; i++ {
 		if err := uiauto.NamedCombine("Search for image",
-			launcher.ClearSearchField(tconn, kb),
+			launcher.ClearSearchField(tconn, kb, tabletMode),
 			launcher.Search(tconn, kb, query),
 		)(ctx); err != nil {
 			faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_dump")

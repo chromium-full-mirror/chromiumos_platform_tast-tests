@@ -127,9 +127,10 @@ func AnswerCards(ctx context.Context, s *testing.State) {
 	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree_"+string(testCase.SearchKeyword))
 
 	if err := uiauto.Retry(3, uiauto.Combine("search launcher",
-		launcher.Search(tconn, kb, testCase.SearchKeyword),
+		launcher.ClearSearchField(tconn, kb, tabletMode),
+		launcher.SearchWithTabletModeParameter(tconn, kb, tabletMode, testCase.SearchKeyword),
 		ui.WaitUntilExists(testCase.ExpectedResult),
-		kb.TypeKeyAction(input.KEY_ESC)))(ctx); err != nil {
+		launcher.ClearSearchField(tconn, kb, tabletMode)))(ctx); err != nil {
 		s.Fatal("Unable to show answer card for: ", testCase.SearchKeyword)
 	}
 }
