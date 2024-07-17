@@ -16,7 +16,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/sysutil"
 	"go.chromium.org/tast/core/shutil"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 const imageProcessorUnitTestBin = "image_processor_test"
@@ -79,40 +78,6 @@ func init() {
 					"images/puppets-640x360.yuyv.yuv",
 					"images/puppets-640x360.yuyv.yuv.json",
 				},
-				// Note: this regex tells gtest_filter to execute every test except for the Vulkan ones.
-				Val: "*-*Vulkan*",
-			},
-			{
-				Name:    "image_processor_unit_test_vulkan",
-				Timeout: 5 * time.Minute,
-				ExtraData: []string{
-					"images/bear_320x192.rgba",
-					"images/bear_320x192.rgba.json",
-					"images/puppets-480x270.mm21.yuv",
-					"images/puppets-480x270.mm21.yuv.json",
-					"images/crowd_run_1080x512.mt2t",
-					"images/crowd_run_1080x512.mt2t.json",
-					"images/crowd_run_1080x512.p010",
-					"images/crowd_run_1080x512.p010.json",
-				},
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
-				Val:               "*Vulkan*-*MT2T*",
-			},
-			{
-				Name:    "image_processor_unit_test_vulkan_mt2t",
-				Timeout: 5 * time.Minute,
-				ExtraData: []string{
-					"images/bear_320x192.rgba",
-					"images/bear_320x192.rgba.json",
-					"images/puppets-480x270.mm21.yuv",
-					"images/puppets-480x270.mm21.yuv.json",
-					"images/crowd_run_1080x512.mt2t",
-					"images/crowd_run_1080x512.mt2t.json",
-					"images/crowd_run_1080x512.p010",
-					"images/crowd_run_1080x512.p010.json",
-				},
-				ExtraHardwareDeps: hwdep.D(hwdep.Supports10BitOverlays(), hwdep.SkipGPUFamily("rogue")),
-				Val:               "*Vulkan*MT2T*",
 			},
 		},
 	})
@@ -130,14 +95,12 @@ func ImageProcessor(ctx context.Context, s *testing.State) {
 
 	dataDirectory := filepath.Dir(s.DataPath("images/bear_320x192.rgba"))
 
-	testName := s.Param().(string)
-
 	s.Logf("Running %s", imageProcessorUnitTestBin)
 
 	testArgs := []string{fmt.Sprintf("--source_directory=%s", dataDirectory),
 		logging.ChromeVmoduleFlag()}
 
-	gtestFilter := gtest.Filter(testName)
+	gtestFilter := gtest.Filter("*")
 
 	exec := filepath.Join(chrome.BinTestDir, imageProcessorUnitTestBin)
 	logfile := filepath.Join(s.OutDir(),

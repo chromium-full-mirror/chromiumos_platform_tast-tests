@@ -46,19 +46,7 @@ func init() {
 				Name:              "scaling",
 				Timeout:           5 * time.Minute,
 				ExtraHardwareDeps: hwdep.D(hwdep.CPUSocFamily("qualcomm")),
-				Val:               "*Scaling*:*scaling*-*MT2T*",
-			},
-			{
-				Name:              "mediatek",
-				Timeout:           5 * time.Minute,
-				ExtraHardwareDeps: hwdep.D(hwdep.CPUSocFamily("mediatek")),
-				Val:               "*-*scaling*:*Scaling*:*MT2T*",
-			},
-			{
-				Name:              "mediatek_mt2t",
-				Timeout:           5 * time.Minute,
-				ExtraHardwareDeps: hwdep.D(hwdep.Supports10BitOverlays(), hwdep.CPUSocFamily("mediatek")),
-				Val:               "*MT2T*-*scaling*:*Scaling*",
+				Val:               "*Scaling*:*scaling*",
 			},
 		},
 	})
@@ -127,12 +115,7 @@ func ImageProcessorPerf(ctx context.Context, s *testing.State) {
 		}, power)
 	}
 
-	logPath := s.OutDir()
-	if strings.Contains(logPath, "mediatek") {
-		logPath += "/VulkanImageProcessorPerfTest/Detile/"
-	} else {
-		logPath += "/ImageProcessorPerfTest/"
-	}
+	logPath := s.OutDir() + "/ImageProcessorPerfTest/"
 	files, err := ioutil.ReadDir(logPath)
 	if err != nil {
 		s.Error("Failed to read ImageProcessorPerf test result directory: ", err)
