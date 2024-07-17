@@ -33,6 +33,12 @@ type FWFilesToFlash struct {
 	MonitorFile    string
 }
 
+// FWTargets represents the firmware targets to flash
+type FWTargets struct {
+	APTarget string
+	ECTarget string
+}
+
 // configData is used to read the contents of config.yaml file from the firmware tarball
 type configData struct {
 	ChromeOS struct {
@@ -81,9 +87,11 @@ const (
 	APFirmwareFileToFlash string = "FirmwareForTest.bin"
 	// MonitorFileToFlash is the name of the Monitor bin to flash
 	MonitorFileToFlash string = "npcx_monitor.bin"
-	// Path of the config file from the DUT to find the downloaded firmware binary names that
+	// configPath is the path of the config file from the DUT to find the downloaded firmware binary names that
 	// should be used.
 	configPath = "/usr/share/chromeos-config/yaml/config.yaml"
+	// defaultTarSuffix is the default firmware tarball suffix
+	defaultTarSuffix = ".tar.bz2"
 )
 
 // VerifyFwIDs will show in logs the current firmware version and compare it to expected ones if they are provided.
@@ -124,12 +132,16 @@ func GetFwVersion(ctx context.Context, h *Helper, param reporters.CrossystemPara
 // TODO: Currently DownloadFirmwareFile and DownloadRequiredFirmwareFiles perform similar
 // actions. As soon as DownloadFirmwareFile is proven to work in the lab environment, these two
 // functions should be accommodated together so that we can remove one of them.
-func DownloadFirmwareFiles(ctx context.Context, cs *testing.CloudStorage, h *Helper, tmpDir, gcsFirmwareFilePath, fileName, fwidModel string) (*FWFilesToFlash, error) {
+func DownloadFirmwareFiles(ctx context.Context, cs *testing.CloudStorage, h *Helper, tmpDir, gcsFirmwareFilePath, fileName string, fwTargets *FWTargets) (*FWFilesToFlash, error) {
 	testing.ContextLogf(ctx, "Downloading firmware image from the path: %s", gcsFirmwareFilePath)
 	// In case a file name is not provided, the default const FiemwareFileName will be used.
+	// Also checks if the gcsFirmwareFilePath includes firmware file name and resets
+	// the firmware filename in that case.
 	// The downloaded file in tmpDir will always be named as the const FirmwareFileName.
-	if fileName == "" {
+	if fileName == "" && !strings.HasSuffix(gcsFirmwareFilePath, defaultTarSuffix) {
 		fileName = FirmwareFileName
+	} else if strings.HasSuffix(gcsFirmwareFilePath, defaultTarSuffix) {
+		fileName = ""
 	}
 	// Ensuring that the file path has a 'gs://' preFix.
 	if !strings.HasPrefix(gcsFirmwareFilePath, "gs://") {
@@ -150,8 +162,8 @@ func DownloadFirmwareFiles(ctx context.Context, cs *testing.CloudStorage, h *Hel
 			continue
 		}
 
-		ecFilenamePool, ecMonitorFileNamePool := getFileNamePools(ctx, fwidModel, ECFirmware)
-		apFileNamePool, _ := getFileNamePools(ctx, fwidModel, APFirmware)
+		ecFilenamePool, ecMonitorFileNamePool := getFileNamePools(ctx, fwTargets.ECTarget, ECFirmware)
+		apFileNamePool, _ := getFileNamePools(ctx, fwTargets.APTarget, APFirmware)
 		// No need of the Prefix 'gs://' for the extraction.
 		gcsFirmwareFilePath = strings.TrimPrefix(gcsFirmwareFilePath, "gs://")
 		// To do the extraction, gcsFirmwareFilePath should point to the tar file to be untared.
@@ -166,36 +178,6 @@ func DownloadFirmwareFiles(ctx context.Context, cs *testing.CloudStorage, h *Hel
 		return &FWFilesToFlash{ECFirmwareFile: ecBin, MonitorFile: monitorBin, APFirmwareFile: apBin}, nil
 	}
 	return nil, errors.New("unable to download file")
-}
-
-// DownloadRequiredFirmwareFiles will extract and download the specified AP and EC .bin files from the firmware tar in the cloud storage
-func DownloadRequiredFirmwareFiles(ctx context.Context, h *Helper, cs *testing.CloudStorage, gcsFirmwareFilePath, servoTmpDir, apTarget, ecTarget string) (*FWFilesToFlash, error) {
-	ecFilenamePool, ecMonitorFileNamePool := getFileNamePools(ctx, ecTarget, ECFirmware)
-	apFileNamePool, _ := getFileNamePools(ctx, apTarget, APFirmware)
-	var apBin, ecBin, monitorBin string
-
-	// Find a devserver that works from servo host, and download image from there.
-	for _, devserver := range cs.Devservers() {
-		testing.ContextLogf(ctx, "Trying devserver at %q", devserver)
-		if err := h.ServoProxy.RunCommand(ctx, false, "curl", "-f", "-s", "-S", "--connect-timeout", "3", fmt.Sprintf("%s/check_health", devserver)); err != nil {
-			testing.ContextLog(ctx, "Devserver not healthy: ", err)
-			continue
-		}
-		artifactsURL := strings.TrimSuffix(cs.BuildArtifactsURL(), "/")
-		stagingURL := fmt.Sprintf("%s/stage?archive_url=%s&files=%s", devserver, artifactsURL, gcsFirmwareFilePath)
-		testing.ContextLogf(ctx, "Staging image %q", stagingURL)
-		if err := h.ServoProxy.RunCommand(ctx, false, "curl", "-f", "-s", "-S", stagingURL); err != nil {
-			testing.ContextLogf(ctx, "Failed to stage file at %q: %v", stagingURL, err)
-			continue
-		}
-		testing.ContextLogf(ctx, "Successfully staged from %q", stagingURL)
-		monitorBin = extractFirmwareFile(ctx, h, devserver, gcsFirmwareFilePath, servoTmpDir, MonitorFileToFlash, ecMonitorFileNamePool)
-		apBin = extractFirmwareFile(ctx, h, devserver, gcsFirmwareFilePath, servoTmpDir, APFirmwareFileToFlash, apFileNamePool)
-		ecBin = extractFirmwareFile(ctx, h, devserver, gcsFirmwareFilePath, servoTmpDir, ECFirmwareFileToFlash, ecFilenamePool)
-		// Extracted all the required files from this devserver
-		return &FWFilesToFlash{ECFirmwareFile: ecBin, MonitorFile: monitorBin, APFirmwareFile: apBin}, nil
-	}
-	return nil, errors.New("no devservers able to stage firmware image")
 }
 
 // UntarUnknownFileName will try to untar the respective fw bin file from the downloaded tar file.
@@ -229,17 +211,17 @@ func UntarUnknownFileName(ctx context.Context, tmpDir, fwidModel string, fwType 
 }
 
 // ReadFirmwareTargets finds the firmware binary name that should be used from 'config.yaml' on the DUT.
-func ReadFirmwareTargets(ctx context.Context, conn *ssh.Conn, model, fwidModel string) (string, string, error) {
+func ReadFirmwareTargets(ctx context.Context, conn *ssh.Conn, model, fwidModel string) (*FWTargets, error) {
 	apTarget := fwidModel
 	ecTarget := fwidModel
 
 	out, err := conn.CommandContext(ctx, "crosid").Output(ssh.DumpLogOnError)
 	if err != nil {
-		return "", "", errors.Wrap(err, "failed to run crosid")
+		return nil, errors.Wrap(err, "failed to run crosid")
 	}
 	re, err := regexp.Compile(`^SKU='([^']*)'`)
 	if err != nil {
-		return "", "", errors.Wrap(err, "sku regex failed")
+		return nil, errors.Wrap(err, "sku regex failed")
 	}
 	m := re.FindStringSubmatch(string(out))
 	sku := -1
@@ -247,7 +229,7 @@ func ReadFirmwareTargets(ctx context.Context, conn *ssh.Conn, model, fwidModel s
 		if m[1] != "none" {
 			sku, err = strconv.Atoi(m[1])
 			if err != nil {
-				return "", "", errors.Wrapf(err, "parse of SKU %q failed", m[1])
+				return nil, errors.Wrapf(err, "parse of SKU %q failed", m[1])
 			}
 		}
 		testing.ContextLogf(ctx, "DUT sku = %d", sku)
@@ -255,13 +237,13 @@ func ReadFirmwareTargets(ctx context.Context, conn *ssh.Conn, model, fwidModel s
 
 	out, err = conn.CommandContext(ctx, "cat", configPath).Output(ssh.DumpLogOnError)
 	if err != nil {
-		return "", "", errors.Wrap(err, "failed to run 'cat' command")
+		return nil, errors.Wrap(err, "failed to run 'cat' command")
 	}
 	config := bytes.NewReader(out)
 	parser := yaml.NewDecoder(config)
 	configYaml := configData{}
 	if err := parser.Decode(&configYaml); err != nil {
-		return "", "", errors.Wrap(err, "failed to parse config.yaml")
+		return nil, errors.Wrap(err, "failed to parse config.yaml")
 	}
 	for _, config := range configYaml.ChromeOS.Configs {
 		if config.Name == model {
@@ -287,7 +269,7 @@ func ReadFirmwareTargets(ctx context.Context, conn *ssh.Conn, model, fwidModel s
 			}
 		}
 	}
-	return apTarget, ecTarget, nil
+	return &FWTargets{APTarget: apTarget, ECTarget: ecTarget}, nil
 }
 
 // getFileNamePools gets the possible file name pools based on the type of firmware

@@ -188,8 +188,8 @@ func UpdateDutFirmware(ctx context.Context, s *testing.State) {
 	fwidModel := strings.ToLower(match[1])
 	initialRwFwid = match[2]
 	s.Logf("FWID Model : %s", fwidModel)
-	apTarget, ecTarget, err := firmware.ReadFirmwareTargets(ctx, s.DUT().Conn(), h.Model, fwidModel)
-	s.Logf("Found AP Target: %s and EC Target: %s", apTarget, ecTarget)
+	fwTargets, err := firmware.ReadFirmwareTargets(ctx, s.DUT().Conn(), h.Model, fwidModel)
+	s.Logf("Found AP Target: %s and EC Target: %s", fwTargets.APTarget, fwTargets.ECTarget)
 
 	// Get the RO firmware version ID available on the DUT.
 	initialROFwid, err := firmware.GetFwVersion(ctx, h, reporters.CrossystemParamRoFwid)
@@ -201,7 +201,7 @@ func UpdateDutFirmware(ctx context.Context, s *testing.State) {
 	if firmwarePathVal != "" || localFirmwarePathVal != "" {
 		if firmwarePathVal != "" {
 			s.Log("Downloading Firmware to Flash")
-			firmwareFilesToFlash, err := firmware.DownloadRequiredFirmwareFiles(ctx, h, s.CloudStorage(), firmwarePathVal, servoTmpDir, apTarget, ecTarget)
+			firmwareFilesToFlash, err := firmware.DownloadFirmwareFiles(ctx, s.CloudStorage(), h, servoTmpDir, firmwarePathVal, "", fwTargets)
 			if err != nil {
 				s.Fatal("Error while downloading firmware files: ", err)
 			}

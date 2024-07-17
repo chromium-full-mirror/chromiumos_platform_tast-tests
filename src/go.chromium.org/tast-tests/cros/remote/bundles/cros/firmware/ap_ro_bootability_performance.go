@@ -436,14 +436,14 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 		s.Log("WARNING! Only one shipped firmware found. And it is the same as RO_new and RW_new. End test")
 	} else {
 		// Get the coreboot name from the 'config.yaml' file.
-		corebootName, _, err := firmware.ReadFirmwareTargets(ctx, s.DUT().Conn(), h.Model, fwidModel)
+		fwTargets, err := firmware.ReadFirmwareTargets(ctx, s.DUT().Conn(), h.Model, fwidModel)
 		if err != nil {
 			s.Fatal("Failed to read config.yaml file from the DUT: ", err)
 		}
-		s.Logf("Found the coreboot name: %s", corebootName)
+		s.Logf("Found the coreboot name: %s", fwTargets.APTarget)
 
 		// Download the latest shipped firmware.
-		firmwareFilesToFlash, err := downloadAndUntarFwFile(ctx, s, h, tmpDir, tmpDirServo, corebootName, shippedFwVersions[len(shippedFwVersions)-1])
+		firmwareFilesToFlash, err := downloadAndUntarFwFile(ctx, s, h, tmpDir, tmpDirServo, fwTargets, shippedFwVersions[len(shippedFwVersions)-1])
 		if err != nil {
 			s.Fatal("Failed while downloading file: ", err)
 		}
@@ -518,7 +518,7 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 		// Repeat steps for older RO firmware versions (i.e., RO_old-n + RW_new).
 		for i := len(shippedFwVersions) - 2; i >= 0; i-- {
 			s.Log("Downloading an older shipped firmware file")
-			firmwareFilesToFlash, err = downloadAndUntarFwFile(ctx, s, h, tmpDir, tmpDirServo, corebootName, shippedFwVersions[i])
+			firmwareFilesToFlash, err = downloadAndUntarFwFile(ctx, s, h, tmpDir, tmpDirServo, fwTargets, shippedFwVersions[i])
 			if err != nil {
 				s.Fatal("Failed while downloading file: ", err)
 			}
@@ -692,7 +692,7 @@ func verifyShippedFwIDsToBeTested(ctx context.Context, s *testing.State, h *firm
 // downloadAndUntarFwFile downloads and untars a firmware source file from the cloud,
 // using the given model name and shipped firmware version. It returns the path to the
 // untarred firmware binary on the host.
-func downloadAndUntarFwFile(ctx context.Context, s *testing.State, h *firmware.Helper, tmpDir, tmpDirServo, fwidModel string, fwToTest jsonFwInfo) (*firmware.FWFilesToFlash, error) {
+func downloadAndUntarFwFile(ctx context.Context, s *testing.State, h *firmware.Helper, tmpDir, tmpDirServo string, fwTargets *firmware.FWTargets, fwToTest jsonFwInfo) (*firmware.FWFilesToFlash, error) {
 	// getValidURL runs 'gsutil ls' and returns the valid url containing the firmware source.
 	getValidURL := func(path string) (string, string, error) {
 		out, stderr, err := testexec.CommandContext(ctx, "gsutil", "ls", path).SeparatedOutput(testexec.DumpLogOnError)
@@ -765,7 +765,7 @@ func downloadAndUntarFwFile(ctx context.Context, s *testing.State, h *firmware.H
 		}
 
 		if url != "" {
-			filesToFlash, err := firmware.DownloadFirmwareFiles(ctx, s.CloudStorage(), h, tmpDirServo, url, fileName, fwidModel)
+			filesToFlash, err := firmware.DownloadFirmwareFiles(ctx, s.CloudStorage(), h, tmpDirServo, url, fileName, fwTargets)
 			if err != nil {
 				testing.ContextLog(ctx, "Failed to download the file: ", err)
 				continue

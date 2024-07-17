@@ -17,6 +17,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/firmware/bios"
 	"go.chromium.org/tast-tests/cros/common/firmware/futility"
+	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
 	fwpb "go.chromium.org/tast-tests/cros/services/cros/firmware"
@@ -495,7 +496,7 @@ func flashLatestShippedFirmwareInRO(ctx context.Context, s *testing.State, tempD
 	}
 
 	// Download the latest shipped firmware.
-	firmwareFilesToFlash, err := downloadAndUntarFwFile(ctx, s, h, tmpDir, tmpDirServo, corebootName, shippedFwVersions[len(shippedFwVersions)-1])
+	firmwareFilesToFlash, err := downloadAndUntarFwFile(ctx, s, h, tmpDir, tmpDirServo, &firmware.FWTargets{APTarget: corebootName, ECTarget: corebootName}, shippedFwVersions[len(shippedFwVersions)-1])
 	if err != nil {
 		return "", errors.Wrapf(err, "failed while downloading the shipped fw versions;")
 	}
