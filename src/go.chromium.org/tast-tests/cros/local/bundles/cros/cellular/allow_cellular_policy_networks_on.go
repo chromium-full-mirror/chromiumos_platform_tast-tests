@@ -6,6 +6,7 @@ package cellular
 
 import (
 	"context"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
@@ -13,11 +14,13 @@ import (
 	"go.chromium.org/tast-tests/cros/local/cellular"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/restriction"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast-tests/cros/local/policyutil/fixtures"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -44,6 +47,10 @@ func init() {
 func AllowCellularPolicyNetworksOn(ctx context.Context, s *testing.State) {
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 15*time.Second)
+	defer cancel()
+
 	// Start a Chrome instance that will fetch policies from the FakeDMS.
 	cr, err := chrome.New(ctx,
 		chrome.FakeLogin(chrome.Creds{User: fixtures.Username, Pass: fixtures.Password}),
@@ -52,14 +59,12 @@ func AllowCellularPolicyNetworksOn(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Chrome login failed: ", err)
 	}
-	defer cr.Close(ctx)
+	defer cr.Close(cleanupCtx)
 
 	// Resets chrome and cleans up any pre-existing policies.
 	if err := policyutil.ResetChrome(ctx, fdms, cr); err != nil {
 		s.Fatal("Failed to reset chrome: ", err)
 	}
-
-	tconn, err := cr.TestAPIConn(ctx)
 
 	globalConfig := &policy.ONCGlobalNetworkConfiguration{
 		AllowOnlyPolicyCellularNetworks: true,
@@ -85,20 +90,19 @@ func AllowCellularPolicyNetworksOn(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to enable Cellular state: ", err)
 	}
 
-	app, err := ossettings.Launch(ctx, tconn)
+	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
-		s.Fatal("Failed to launch OS Settings: ", err)
+		s.Fatal("Failed to create connection to test API: ", err)
 	}
 
-	defer app.Close(ctx)
-
-	_, err = ossettings.OpenMobileDataSubpage(ctx, tconn, cr)
+	settings, err := ossettings.OpenMobileDataSubpage(ctx, tconn, cr)
 	if err != nil {
 		s.Fatal("Failed to open mobile data settings: ", err)
 	}
+	defer settings.Close(cleanupCtx)
+	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnError(cleanupCtx, s.OutDir(), s.HasError, tconn, "ui_dump")
 
 	ui := uiauto.New(tconn)
-
 	if err := ui.CheckRestriction(ossettings.AddCellularButton, restriction.Disabled)(ctx); err != nil {
 		s.Fatal("Add cellular button is not disabled: ", err)
 	}
