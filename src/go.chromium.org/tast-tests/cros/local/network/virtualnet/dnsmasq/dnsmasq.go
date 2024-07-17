@@ -51,6 +51,9 @@ dhcp-option=121,{{.classless_static_routes}}
 {{if .wpad}}
 dhcp-option=252,{{.wpad}}
 {{end}}
+{{if .ipv6_only_wait_seconds}}
+dhcp-option=108,{{.ipv6_only_wait_seconds}}
+{{end -}}
 {{if .mtu}}
 dhcp-option=option:mtu,{{.mtu}}
 {{end}}
@@ -94,6 +97,7 @@ type dnsmasq struct {
 	ifname                string
 	noIfname              bool
 	wpad                  string
+	v6OnlyWaitSeconds     int
 	mtu                   int
 	capportAPI            string
 
@@ -141,6 +145,14 @@ func WithDHCPClasslessStaticRoutes(routes []Route) Option {
 func WithDHCPWPAD(wpad string) Option {
 	return func(d *dnsmasq) {
 		d.wpad = wpad
+	}
+}
+
+// WithDHCPIPv6OnlyPreferred configures the DHCP server to return option 108
+// (IPv6-only preferred) with seconds as the value.
+func WithDHCPIPv6OnlyPreferred(seconds int) Option {
+	return func(d *dnsmasq) {
+		d.v6OnlyWaitSeconds = seconds
 	}
 }
 
@@ -256,6 +268,10 @@ func (d *dnsmasq) Start(ctx context.Context, env *env.Env) error {
 			return errors.New("WPAD option is set but DHCP is not enabled")
 		}
 		confVals["wpad"] = d.wpad
+	}
+
+	if d.v6OnlyWaitSeconds > 0 {
+		confVals["ipv6_only_wait_seconds"] = d.v6OnlyWaitSeconds
 	}
 
 	if d.mtu > 0 {

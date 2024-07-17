@@ -68,6 +68,9 @@ func parseNetworkConfigProperty(ctx context.Context, dict map[string]interface{}
 		return val
 	}
 	parseCIDR := func(val string) cidr {
+		if len(val) == 0 {
+			return cidr{}
+		}
 		ip, subnet, err := net.ParseCIDR(val)
 		if err != nil {
 			errs = append(errs, errors.Wrapf(err, "failed to parse %s as cidr", val))
