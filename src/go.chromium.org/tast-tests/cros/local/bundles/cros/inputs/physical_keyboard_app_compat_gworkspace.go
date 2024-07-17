@@ -49,21 +49,6 @@ func init() {
 				Name:    "slides",
 				Fixture: fixture.GoogleSlidesNonVK,
 			},
-			{
-				Name:              "docs_lacros",
-				Fixture:           fixture.LacrosGoogleDocsNonVK,
-				ExtraSoftwareDeps: []string{"lacros"},
-			},
-			{
-				Name:              "sheets_lacros",
-				Fixture:           fixture.LacrosGoogleSheetsNonVK,
-				ExtraSoftwareDeps: []string{"lacros"},
-			},
-			{
-				Name:              "slides_lacros",
-				Fixture:           fixture.LacrosGoogleSlidesNonVK,
-				ExtraSoftwareDeps: []string{"lacros"},
-			},
 		},
 	})
 }

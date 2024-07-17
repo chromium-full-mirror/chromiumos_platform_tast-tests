@@ -21,18 +21,12 @@ import (
 
 // fixture's name
 const (
-	GoogleDocsWithVK         = "googleDocsWithVK"
-	GoogleSheetsWithVK       = "googleSheetsWithVK"
-	GoogleSlidesWithVK       = "googleSlidesWithVK"
-	GoogleDocsNonVK          = "googleDocsNoVK"
-	GoogleSheetsNonVK        = "googleSheetsNoVK"
-	GoogleSlidesNonVK        = "googleSlidesNoVK"
-	LacrosGoogleDocsWithVK   = "lacrosGoogleDocsWithVK"
-	LacrosGoogleSheetsWithVK = "lacrosGoogleSheetsWithVK"
-	LacrosGoogleSlidesWithVK = "lacrosGoogleSlidesWithVK"
-	LacrosGoogleDocsNonVK    = "lacrosGoogleDocsNoVK"
-	LacrosGoogleSheetsNonVK  = "lacrosGoogleSheetsNoVK"
-	LacrosGoogleSlidesNonVK  = "lacrosGoogleSlidesNoVK"
+	GoogleDocsWithVK   = "googleDocsWithVK"
+	GoogleSheetsWithVK = "googleSheetsWithVK"
+	GoogleSlidesWithVK = "googleSlidesWithVK"
+	GoogleDocsNonVK    = "googleDocsNoVK"
+	GoogleSheetsNonVK  = "googleSheetsNoVK"
+	GoogleSlidesNonVK  = "googleSlidesNoVK"
 )
 
 // app's name
@@ -149,93 +143,6 @@ func init() {
 		PostTestTimeout: workspacePostTestTimeout,
 		Parent:          fixture.ClamshellNonVKInGAIA,
 	})
-
-	//--------------Lacros Fixtures--------------------------------------------
-	testing.AddFixture(&testing.Fixture{
-		Name: LacrosGoogleDocsWithVK,
-		Desc: "Lacros variant: Open google docs for testing in any mode with VK enabled",
-		Contacts: []string{
-			"essential-inputs-team@google.com",
-			"xiuwen@google.com",
-		},
-		BugComponent:    "b:95887",
-		Impl:            &workSpaceFixtureImpl{appName: googleDocs},
-		SetUpTimeout:    workspaceSetUpTestTimeout,
-		PreTestTimeout:  workspacePreTestTimeout,
-		PostTestTimeout: workspacePostTestTimeout,
-		Parent:          fixture.LacrosAnyVKInGAIA,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: LacrosGoogleDocsNonVK,
-		Desc: "Lacros variant: Open google docs for testing in Clamshell mode with VK disabled",
-		Contacts: []string{
-			"essential-inputs-team@google.com",
-			"xiuwen@google.com",
-		},
-		BugComponent:    "b:95887",
-		Impl:            &workSpaceFixtureImpl{appName: googleDocs},
-		SetUpTimeout:    workspaceSetUpTestTimeout,
-		PreTestTimeout:  workspacePreTestTimeout,
-		PostTestTimeout: workspacePostTestTimeout,
-		Parent:          fixture.LacrosClamshellNonVKInGAIA,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: LacrosGoogleSlidesWithVK,
-		Desc: "Lacros variant: Open google slides for testing in any mode with VK enabled",
-		Contacts: []string{
-			"essential-inputs-team@google.com",
-			"xiuwen@google.com",
-		},
-		BugComponent:    "b:95887",
-		Impl:            &workSpaceFixtureImpl{appName: googleSlides},
-		SetUpTimeout:    workspaceSetUpTestTimeout,
-		PreTestTimeout:  workspacePreTestTimeout,
-		PostTestTimeout: workspacePostTestTimeout,
-		Parent:          fixture.LacrosAnyVKInGAIA,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: LacrosGoogleSlidesNonVK,
-		Desc: "Lacros variant: Open google slides for testing in Clamshell mode with VK disabled",
-		Contacts: []string{
-			"essential-inputs-team@google.com",
-			"xiuwen@google.com",
-		},
-		BugComponent:    "b:95887",
-		Impl:            &workSpaceFixtureImpl{appName: googleSlides},
-		SetUpTimeout:    workspaceSetUpTestTimeout,
-		PreTestTimeout:  workspacePreTestTimeout,
-		PostTestTimeout: workspacePostTestTimeout,
-		Parent:          fixture.LacrosClamshellNonVKInGAIA,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: LacrosGoogleSheetsWithVK,
-		Desc: "Lacros variant: Open google sheet for testing in any mode with VK enabled",
-		Contacts: []string{
-			"essential-inputs-team@google.com",
-			"xiuwen@google.com",
-		},
-		BugComponent:    "b:95887",
-		Impl:            &workSpaceFixtureImpl{appName: googleSheets},
-		SetUpTimeout:    workspaceSetUpTestTimeout,
-		PreTestTimeout:  workspacePreTestTimeout,
-		PostTestTimeout: workspacePostTestTimeout,
-		Parent:          fixture.LacrosAnyVKInGAIA,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: LacrosGoogleSheetsNonVK,
-		Desc: "Lacros variant: Open google sheet for testing in Clamshell mode with VK disabled",
-		Contacts: []string{
-			"essential-inputs-team@google.com",
-			"xiuwen@google.com",
-		},
-		BugComponent:    "b:95887",
-		Impl:            &workSpaceFixtureImpl{appName: googleSheets},
-		SetUpTimeout:    workspaceSetUpTestTimeout,
-		PreTestTimeout:  workspacePreTestTimeout,
-		PostTestTimeout: workspacePostTestTimeout,
-		Parent:          fixture.LacrosClamshellNonVKInGAIA,
-	})
-
 }
 
 func (f *workSpaceFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
