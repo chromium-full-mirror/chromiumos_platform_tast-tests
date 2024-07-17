@@ -790,7 +790,7 @@ func NetworkWifiPerf(ctx context.Context, s *testing.State) {
 		doRun := func(ctx context.Context) error {
 			for _, testType := range perfTestTypes {
 				// TODO(b/331974589): Remove the condition when iperf bidirectional issue is fixed on devices with RTL8822CE.
-				if (testType == perfmanager.TestTypeTCPBidirectional || testType == perfmanager.TestTypeUDPBidirectional) && (boardName == "grunt" || boardName == "asurada") {
+				if (testType == perfmanager.TestTypeTCPBidirectional || testType == perfmanager.TestTypeUDPBidirectional) && (boardName == "grunt" || strings.HasPrefix(boardName, "asurada")) {
 					s.Logf("Skip Bidirectional tests on board: %s", boardName)
 					continue
 				}
