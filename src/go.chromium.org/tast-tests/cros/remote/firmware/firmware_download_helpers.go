@@ -5,10 +5,15 @@
 package firmware
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"path/filepath"
+	"regexp"
+	"strconv"
 	"strings"
+
+	"gopkg.in/yaml.v3"
 
 	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
 
@@ -26,6 +31,27 @@ type FWFilesToFlash struct {
 	ECFirmwareFile string
 	APFirmwareFile string
 	MonitorFile    string
+}
+
+// configData is used to read the contents of config.yaml file from the firmware tarball
+type configData struct {
+	ChromeOS struct {
+		Configs []struct {
+			Firmware struct {
+				BuildTargets struct {
+					// AP image name, if missing fallback to ImageName
+					Coreboot string `yaml:"coreboot"`
+					EC       string `yaml:"ec"`
+					ZephyrEC string `yaml:"zephyr-ec"`
+				} `yaml:"build-targets"`
+				ImageName string `yaml:"image-name"`
+			} `yaml:"firmware"`
+			Name     string `yaml:"name"`
+			Identity struct {
+				SKUID int `yaml:"sku-id"`
+			} `yaml:"identity"`
+		}
+	}
 }
 
 var (
@@ -55,6 +81,9 @@ const (
 	APFirmwareFileToFlash string = "FirmwareForTest.bin"
 	// MonitorFileToFlash is the name of the Monitor bin to flash
 	MonitorFileToFlash string = "npcx_monitor.bin"
+	// Path of the config file from the DUT to find the downloaded firmware binary names that
+	// should be used.
+	configPath = "/usr/share/chromeos-config/yaml/config.yaml"
 )
 
 // VerifyFwIDs will show in logs the current firmware version and compare it to expected ones if they are provided.
@@ -140,9 +169,9 @@ func DownloadFirmwareFiles(ctx context.Context, cs *testing.CloudStorage, h *Hel
 }
 
 // DownloadRequiredFirmwareFiles will extract and download the specified AP and EC .bin files from the firmware tar in the cloud storage
-func DownloadRequiredFirmwareFiles(ctx context.Context, h *Helper, cs *testing.CloudStorage, gcsFirmwareFilePath, servoTmpDir, fwidModel string) (*FWFilesToFlash, error) {
-	ecFilenamePool, ecMonitorFileNamePool := getFileNamePools(ctx, fwidModel, ECFirmware)
-	apFileNamePool, _ := getFileNamePools(ctx, fwidModel, APFirmware)
+func DownloadRequiredFirmwareFiles(ctx context.Context, h *Helper, cs *testing.CloudStorage, gcsFirmwareFilePath, servoTmpDir, apTarget, ecTarget string) (*FWFilesToFlash, error) {
+	ecFilenamePool, ecMonitorFileNamePool := getFileNamePools(ctx, ecTarget, ECFirmware)
+	apFileNamePool, _ := getFileNamePools(ctx, apTarget, APFirmware)
 	var apBin, ecBin, monitorBin string
 
 	// Find a devserver that works from servo host, and download image from there.
@@ -197,6 +226,68 @@ func UntarUnknownFileName(ctx context.Context, tmpDir, fwidModel string, fwType 
 		return filename, ecMonitorFile, nil
 	}
 	return "", "", errors.Wrap(err, "failed to untar fw bin file from the downloaded tar file")
+}
+
+// ReadFirmwareTargets finds the firmware binary name that should be used from 'config.yaml' on the DUT.
+func ReadFirmwareTargets(ctx context.Context, conn *ssh.Conn, model, fwidModel string) (string, string, error) {
+	apTarget := fwidModel
+	ecTarget := fwidModel
+
+	out, err := conn.CommandContext(ctx, "crosid").Output(ssh.DumpLogOnError)
+	if err != nil {
+		return "", "", errors.Wrap(err, "failed to run crosid")
+	}
+	re, err := regexp.Compile(`^SKU='([^']*)'`)
+	if err != nil {
+		return "", "", errors.Wrap(err, "sku regex failed")
+	}
+	m := re.FindStringSubmatch(string(out))
+	sku := -1
+	if m != nil {
+		if m[1] != "none" {
+			sku, err = strconv.Atoi(m[1])
+			if err != nil {
+				return "", "", errors.Wrapf(err, "parse of SKU %q failed", m[1])
+			}
+		}
+		testing.ContextLogf(ctx, "DUT sku = %d", sku)
+	}
+
+	out, err = conn.CommandContext(ctx, "cat", configPath).Output(ssh.DumpLogOnError)
+	if err != nil {
+		return "", "", errors.Wrap(err, "failed to run 'cat' command")
+	}
+	config := bytes.NewReader(out)
+	parser := yaml.NewDecoder(config)
+	configYaml := configData{}
+	if err := parser.Decode(&configYaml); err != nil {
+		return "", "", errors.Wrap(err, "failed to parse config.yaml")
+	}
+	for _, config := range configYaml.ChromeOS.Configs {
+		if config.Name == model {
+			if sku >= 0 && config.Identity.SKUID >= 0 && config.Identity.SKUID != sku {
+				continue
+			}
+			thisAPName := config.Firmware.BuildTargets.Coreboot
+			// AP image name, if missing fallback to ImageName
+			if thisAPName == "" {
+				thisAPName = config.Firmware.ImageName
+			}
+			thisAPName = strings.TrimSpace(thisAPName)
+			if thisAPName != "" {
+				apTarget = thisAPName
+			}
+			thisECName := config.Firmware.BuildTargets.ZephyrEC
+			if thisECName == "" {
+				thisECName = config.Firmware.BuildTargets.EC
+			}
+			thisECName = strings.TrimSpace(thisECName)
+			if thisECName != "" {
+				ecTarget = thisECName
+			}
+		}
+	}
+	return apTarget, ecTarget, nil
 }
 
 // getFileNamePools gets the possible file name pools based on the type of firmware
