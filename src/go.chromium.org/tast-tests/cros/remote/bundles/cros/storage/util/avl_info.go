@@ -78,6 +78,18 @@ func avlInfoFromStorageInfo(storageInfo []byte, diskType DiskType) (avl.Info, er
 				ComponentType: storageComponentType,
 			}
 		}
+	case SDCard:
+		return avl.Info{
+			PartModel:     "N/A",
+			PartFirmware:  "N/A",
+			ComponentType: storageComponentType,
+		}, nil
+	case UsbDisk:
+		return avl.Info{
+			PartModel:     "N/A",
+			PartFirmware:  "N/A",
+			ComponentType: storageComponentType,
+		}, nil
 	default:
 		return avl.Info{}, errors.Errorf("cannot generate AVL info for disks of type %q", DiskTypeToString(diskType))
 	}
