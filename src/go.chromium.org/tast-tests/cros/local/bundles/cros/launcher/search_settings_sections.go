@@ -163,6 +163,7 @@ func SearchSettingsSections(ctx context.Context, s *testing.State) {
 
 	for _, tc := range testParams.testCases {
 		s.Run(ctx, tc.searchTerm, func(ctx context.Context, s *testing.State) {
+			ui := uiauto.New(tconn)
 			defer func(ctx context.Context) {
 				// Cleanup: close the OS Settings window.
 				activeWindow, err := ash.GetActiveWindow(ctx, tconn)
@@ -172,16 +173,23 @@ func SearchSettingsSections(ctx context.Context, s *testing.State) {
 				if err := activeWindow.CloseWindow(ctx, tconn); err != nil {
 					s.Fatalf("Failed to close the window(%s): %v", activeWindow.Name, err)
 				}
+
+				// If the launcher is gone and we're in clamshell mode, reopen the launcher for the next test case.
+				bubbleLauncher := nodewith.HasClass("AppListBubbleView")
+				if err := ui.Gone(bubbleLauncher)(ctx); err == nil && !testParams.tabletMode {
+					if launcherErr := launcher.ShowLauncher(tconn, !testParams.tabletMode)(ctx); launcherErr != nil {
+						s.Fatal("Failed to reopen launcher in clamshell mode: ", launcherErr)
+					}
+				}
 			}(ctx)
 
 			defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree_"+tc.searchTerm)
 
-			ui := uiauto.New(tconn)
 			result := launcher.SearchResultListItemFinder.NameStartingWith(tc.searchResult).First()
 			if err := uiauto.Combine("search for result in launcher",
 				uiauto.Retry(5, uiauto.Combine("open launcher and type query",
 					launcher.HideLauncher(tconn, !testParams.tabletMode),
-					launcher.Open(tconn),
+					launcher.ShowLauncher(tconn, !testParams.tabletMode),
 					launcher.Search(tconn, kb, tc.searchTerm),
 					ui.WaitUntilExists(result))),
 				ui.LeftClick(result),
