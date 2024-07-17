@@ -361,8 +361,9 @@ func getBlockDevList(ctx context.Context, dut *dut.DUT) ([]string, error) {
 	return result, nil
 }
 
-// GetRemovableSD returns the disk structure representing a removable SD card.
-func GetRemovableSD(ctx context.Context, dut *dut.DUT) (*Disk, error) {
+// GetRemovable returns the disk structure representing a removable SD card
+// or UsbDisk.
+func GetRemovable(ctx context.Context, dut *dut.DUT) (*Disk, error) {
 	blockDevNames, err := getBlockDevList(ctx, dut)
 	if err != nil {
 		return nil, errors.Wrap(err, "can't list block devices")
@@ -374,12 +375,12 @@ func GetRemovableSD(ctx context.Context, dut *dut.DUT) (*Disk, error) {
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to process block device %q", devPath)
 		}
-		if disk.Type == SDCard {
+		if disk.Type == SDCard || disk.Type == UsbDisk {
 			return disk, nil
 		}
 	}
 
-	return nil, errors.New("can not detect SD card")
+	return nil, errors.New("can not detect removable device")
 }
 
 // GetStandbyRootfs returns disk structure representing the non-active rootfs

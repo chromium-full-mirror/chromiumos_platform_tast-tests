@@ -39,7 +39,7 @@ func Removable(ctx context.Context, s *testing.State) {
 	resultWriter := &util.FioResultWriter{}
 	defer resultWriter.Save(ctx, s.OutDir(), true)
 
-	disk, err := util.GetRemovableSD(ctx, s.DUT())
+	disk, err := util.GetRemovable(ctx, s.DUT())
 	if err != nil {
 		s.Fatal("Failed to get internal disk: ", err)
 	}
