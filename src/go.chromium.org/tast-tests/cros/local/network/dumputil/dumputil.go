@@ -39,7 +39,7 @@ func DumpNetworkInfo(ctx context.Context, filename string) error {
 	runCmdAndLog := func(cmd string, args ...string) {
 		fullCmd := cmd + " " + strings.Join(args, " ")
 		header := "$ " + fullCmd + "\n"
-		o, err := testexec.CommandContext(ctx, cmd, args...).Output()
+		o, err := testexec.CommandContext(ctx, cmd, args...).Output(testexec.DumpLogOnError)
 		if err != nil {
 			errs = append(errs, errors.Wrap(err, "failed to execute "+fullCmd))
 			return
@@ -76,9 +76,11 @@ func DumpNetworkInfo(ctx context.Context, filename string) error {
 	// Dumps conntrack. Filters out SSDP (dport=1900) and MDNS (dport=5353)
 	// connections since they are very noisy in the lab network and in general
 	// they are not very helpful here. Also dumps the counters in case we want to
-	// know how noisy it is.
-	runCmdAndLog("sh", "-c", "conntrack -L -f ipv4 | grep -v -e 'dport=1900' -e 'dport=5353'")
-	runCmdAndLog("sh", "-c", "conntrack -L -f ipv6 | grep -v -e 'dport=1900' -e 'dport=5353'")
+	// know how noisy it is. Since `grep` will exit with 1 if there is no match
+	// and this is actually expected, use a `cat` at the end to suppress this
+	// error. Caveat: errors returned by conntrack are also suppressed.
+	runCmdAndLog("sh", "-c", "conntrack -L -f ipv4 | grep -v -e 'dport=1900' -e 'dport=5353' | cat")
+	runCmdAndLog("sh", "-c", "conntrack -L -f ipv6 | grep -v -e 'dport=1900' -e 'dport=5353' | cat")
 	runCmdAndLog("conntrack", "-C", "conntrack")
 	runCmdAndLog("conntrack", "-C", "expect")
 
