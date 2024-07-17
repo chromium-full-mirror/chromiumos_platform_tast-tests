@@ -242,6 +242,7 @@ func loginPerfStartToLoginScreen(
 		chrome.HideCrashRestoreBubble(), // Ignore possible incomplete shutdown.
 		// Disable whats-new page. See crbug.com/1271436.
 		chrome.DisableFeatures("ChromeWhatsNewUI"),
+		chrome.ExtraArgs("--disable-sync"),
 		chrome.DisableFeatures(testConfig.param.disabledFeatures...),
 		chrome.EnableFeatures(testConfig.param.enabledFeatures...),
 	}
