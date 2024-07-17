@@ -22,7 +22,7 @@ func init() {
 		Desc:         "Tests the basic features of hotseat",
 		Contacts: []string{
 			"chromeos-launcher@google.com",
-			"chromeos-sw-engprod@google.com",
+			"chromeos-consumer-engprod@google.com",
 		},
 		// ChromeOS > Software > System UI Surfaces > Shelf
 		BugComponent: "b:1288352",

@@ -14,9 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
@@ -48,18 +45,17 @@ const (
 type rearrangmentTestType struct {
 	appType  rearrangmentTargetAppType
 	underRTL bool // If true, the system UI is adapted to right-to-left languages.
-	bt       browser.Type
 }
 
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         AppRearrangement,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests the rearrangement of shelf app icons",
 		Contacts: []string{
 			"cros-system-ui-eng@google.com",
+			"chromeos-consumer-engprod@google.com",
 			"tbarzic@chromium.org",
-			"chromeos-sw-engprod@google.com",
 		},
 		// ChromeOS > Software > System UI Surfaces > Shelf
 		BugComponent: "b:1288352",
@@ -72,7 +68,6 @@ func init() {
 			Val: rearrangmentTestType{
 				appType:  chromeAppTest,
 				underRTL: false,
-				bt:       browser.TypeAsh,
 			},
 			Fixture: "install2Apps",
 		}, {
@@ -80,7 +75,6 @@ func init() {
 			Val: rearrangmentTestType{
 				appType:  chromeAppTest,
 				underRTL: true,
-				bt:       browser.TypeAsh,
 			},
 			Fixture: "install2Apps",
 		}, {
@@ -88,7 +82,6 @@ func init() {
 			Val: rearrangmentTestType{
 				appType:  fileAppTest,
 				underRTL: false,
-				bt:       browser.TypeAsh,
 			},
 			Fixture: "install2Apps",
 		}, {
@@ -96,7 +89,6 @@ func init() {
 			Val: rearrangmentTestType{
 				appType:  fileAppTest,
 				underRTL: true,
-				bt:       browser.TypeAsh,
 			},
 			Fixture: "install2Apps",
 		}, {
@@ -104,7 +96,6 @@ func init() {
 			Val: rearrangmentTestType{
 				appType:  pwaAppTest,
 				underRTL: false,
-				bt:       browser.TypeAsh,
 			},
 			Fixture: fixture.ChromePolicyLoggedIn,
 		}, {
@@ -112,7 +103,6 @@ func init() {
 			Val: rearrangmentTestType{
 				appType:  androidAppTest,
 				underRTL: false,
-				bt:       browser.TypeAsh,
 			},
 			Fixture:           "arcBooted",
 			ExtraSoftwareDeps: []string{"android_p"},
@@ -121,73 +111,9 @@ func init() {
 			Val: rearrangmentTestType{
 				appType:  androidAppTest,
 				underRTL: false,
-				bt:       browser.TypeAsh,
 			},
 			Fixture:           "arcBooted",
 			ExtraSoftwareDeps: []string{"android_vm"},
-		}, {
-			Name: "rearrange_chrome_apps_lacros",
-			Val: rearrangmentTestType{
-				appType:  chromeAppTest,
-				underRTL: false,
-				bt:       browser.TypeLacros,
-			},
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           "install2LacrosApps",
-		}, {
-			Name: "rearrange_chrome_apps_rtl_lacros",
-			Val: rearrangmentTestType{
-				appType:  chromeAppTest,
-				underRTL: true,
-				bt:       browser.TypeLacros,
-			},
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           "install2LacrosApps",
-		}, {
-			Name: "rearrange_file_app_lacros",
-			Val: rearrangmentTestType{
-				appType:  fileAppTest,
-				underRTL: false,
-				bt:       browser.TypeLacros,
-			},
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           "install2LacrosApps",
-		}, {
-			Name: "rearrange_file_app_rtl_lacros",
-			Val: rearrangmentTestType{
-				appType:  fileAppTest,
-				underRTL: true,
-				bt:       browser.TypeLacros,
-			},
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           "install2LacrosApps",
-		}, {
-			Name: "rearrange_pwa_app_lacros",
-			Val: rearrangmentTestType{
-				appType:  pwaAppTest,
-				underRTL: false,
-				bt:       browser.TypeLacros,
-			},
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.LacrosPolicyLoggedIn,
-		}, {
-			Name: "rearrange_android_app_androidp_lacros",
-			Val: rearrangmentTestType{
-				appType:  androidAppTest,
-				underRTL: false,
-				bt:       browser.TypeLacros,
-			},
-			Fixture:           "lacrosWithArcBooted",
-			ExtraSoftwareDeps: []string{"android_p", "lacros"},
-		}, {
-			Name: "rearrange_android_app_androidvm_lacros",
-			Val: rearrangmentTestType{
-				appType:  androidAppTest,
-				underRTL: false,
-				bt:       browser.TypeLacros,
-			},
-			Fixture:           "lacrosWithArcBooted",
-			ExtraSoftwareDeps: []string{"android_vm", "lacros"},
 		}},
 	})
 }
@@ -200,33 +126,24 @@ func AppRearrangement(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	var cr *chrome.Chrome
-	var closeBrowser uiauto.Action
 	var err error
 
 	testType := s.Param().(rearrangmentTestType)
 	testAppType := testType.appType
 	isunderRTL := testType.underRTL
-	bt := testType.bt
 	switch testAppType {
 	case chromeAppTest, fileAppTest:
 		options := s.FixtValue().([]chrome.Option)
 		if isunderRTL {
 			options = append(options, chrome.ExtraArgs("--force-ui-direction=rtl"))
 		}
-		cr, _, closeBrowser, err = browserfixt.SetUpWithNewChrome(ctx, bt, lacrosfixt.NewConfig(), options...)
+		cr, err = chrome.New(ctx, options...)
 		if err != nil {
-			s.Fatalf("Failed to start %v browser: %v", bt, err)
+			s.Fatal("Failed to start browser: ", err)
 		}
 		defer cr.Close(cleanupCtx)
-		defer closeBrowser(cleanupCtx)
 	case pwaAppTest:
 		cr = s.FixtValue().(chrome.HasChrome).Chrome()
-		// Setup the browser based on the type. ash-chrome can load PWA immediately on startup, but lacros-chrome won't until lacros process starts first.
-		_, closeBrowser, err = browserfixt.SetUp(ctx, cr, bt)
-		if err != nil {
-			s.Fatalf("Failed to start %v browser: %v", bt, err)
-		}
-		defer closeBrowser(cleanupCtx)
 	case androidAppTest:
 		cr = s.FixtValue().(*arc.PreData).Chrome
 	}
@@ -266,9 +183,9 @@ func AppRearrangement(ctx context.Context, s *testing.State) {
 	}
 
 	// Get the expected browser.
-	browserApp, err := apps.PrimaryBrowser(ctx, tconn)
+	browserApp, err := apps.ChromeOrChromium(ctx, tconn)
 	if err != nil {
-		s.Fatal("Could not find the primary browser app info: ", err)
+		s.Fatal("Failed to find Chrome or Chromium app: ", err)
 	}
 
 	var itemsToUnpin []string
@@ -373,7 +290,7 @@ func AppRearrangement(ctx context.Context, s *testing.State) {
 	}
 
 	// Set the expected pinned app ids arrays.
-	if arraysOfPinnedApps, err = getExpectedPinnedAppIds(defaultAppIDsInPinOrder, browserApp, bt); err != nil {
+	if arraysOfPinnedApps, err = getExpectedPinnedAppIds(defaultAppIDsInPinOrder, browserApp); err != nil {
 		s.Fatal("Failed to get the array of expected pinned app ids: ", err)
 	}
 
@@ -628,7 +545,7 @@ func appNamesInVisualOrder(namesInPinOrder []string, isunderRTL bool) []string {
 }
 
 // getExpectedPinnedAppIds returns an array of 4 arrays of pinned app ids before/after the drag-to-pin and drag-to-unpin actions.
-func getExpectedPinnedAppIds(defaultAppIDsInPinOrder []string, browserApp apps.App, bt browser.Type) ([][]string, error) {
+func getExpectedPinnedAppIds(defaultAppIDsInPinOrder []string, browserApp apps.App) ([][]string, error) {
 	// Suppose the IDs in defaultAppIDsInPinOrder are order like below. Before testing drag-to-pin, target dragged app 3 will be unpinned
 	// [ 0 1 2 | 3 ], where | is the separator that separate the pinned and unpinned apps.
 	// After dragging target app 3, the order becomes
@@ -652,18 +569,10 @@ func getExpectedPinnedAppIds(defaultAppIDsInPinOrder []string, browserApp apps.A
 
 	var arraysOfPinnedApps [4][]string
 
-	// Lacros browser is not considered as a browser shortcut so it should be counted as a pinned app.
-	if bt == browser.TypeLacros {
-		arraysOfPinnedApps[appsBeforeDragToPin] = []string{defaultAppIDsInPinOrder[0], defaultAppIDsInPinOrder[1], defaultAppIDsInPinOrder[2]}
-		arraysOfPinnedApps[appsAfterDragToPin] = []string{defaultAppIDsInPinOrder[3], defaultAppIDsInPinOrder[0], defaultAppIDsInPinOrder[1], defaultAppIDsInPinOrder[2]}
-		arraysOfPinnedApps[appsBeforeDragToUnpin] = []string{defaultAppIDsInPinOrder[3], defaultAppIDsInPinOrder[0], defaultAppIDsInPinOrder[2]}
-		arraysOfPinnedApps[appsAfterDragToUnpin] = []string{defaultAppIDsInPinOrder[0], defaultAppIDsInPinOrder[2], defaultAppIDsInPinOrder[3]}
-	} else {
-		arraysOfPinnedApps[appsBeforeDragToPin] = []string{defaultAppIDsInPinOrder[1], defaultAppIDsInPinOrder[2]}
-		arraysOfPinnedApps[appsAfterDragToPin] = []string{defaultAppIDsInPinOrder[3], defaultAppIDsInPinOrder[1], defaultAppIDsInPinOrder[2]}
-		arraysOfPinnedApps[appsBeforeDragToUnpin] = []string{defaultAppIDsInPinOrder[3], defaultAppIDsInPinOrder[2]}
-		arraysOfPinnedApps[appsAfterDragToUnpin] = []string{defaultAppIDsInPinOrder[2], defaultAppIDsInPinOrder[3]}
-	}
+	arraysOfPinnedApps[appsBeforeDragToPin] = []string{defaultAppIDsInPinOrder[1], defaultAppIDsInPinOrder[2]}
+	arraysOfPinnedApps[appsAfterDragToPin] = []string{defaultAppIDsInPinOrder[3], defaultAppIDsInPinOrder[1], defaultAppIDsInPinOrder[2]}
+	arraysOfPinnedApps[appsBeforeDragToUnpin] = []string{defaultAppIDsInPinOrder[3], defaultAppIDsInPinOrder[2]}
+	arraysOfPinnedApps[appsAfterDragToUnpin] = []string{defaultAppIDsInPinOrder[2], defaultAppIDsInPinOrder[3]}
 
 	return arraysOfPinnedApps[:], nil
 }

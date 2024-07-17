@@ -14,9 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -26,29 +23,16 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-type activityIndicatorAppType string
-
-const (
-	chromeApp activityIndicatorAppType = "ChromeApp"
-	pwaApp    activityIndicatorAppType = "pwaApp"
-	arcApp    activityIndicatorAppType = "arcApp"
-)
-
-type activityIndicatorTestParam struct {
-	testAppType activityIndicatorAppType
-	bt          browser.Type
-}
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ActivityIndicators,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test that opens shelf apps and checks each app's activity indicators",
 		Contacts: []string{
 			"cros-system-ui-eng@google.com",
+			"chromeos-consumer-engprod@google.com",
 			"mmourgos@chromium.org",
 			"tbarzic@chromium.org",
-			"chromeos-sw-engprod@google.com",
 		},
 		// ChromeOS > Software > System UI Surfaces > Shelf
 		BugComponent: "b:1288352",
@@ -58,29 +42,15 @@ func init() {
 		Data:         []string{"web_app_install_force_list_index.html", "web_app_install_force_list_manifest.json", "web_app_install_force_list_service-worker.js", "web_app_install_force_list_icon-192x192.png", "web_app_install_force_list_icon-512x512.png"},
 		Params: []testing.Param{{
 			Name: "chrome_app",
-			Val:  activityIndicatorTestParam{chromeApp, browser.TypeAsh},
+			Val:  "ChromeApp",
 		}, {
 			Name:    "pwa_app",
-			Val:     activityIndicatorTestParam{pwaApp, browser.TypeAsh},
+			Val:     "pwaApp",
 			Fixture: fixture.ChromePolicyLoggedIn,
 		}, {
 			Name:    "arc_app",
-			Val:     activityIndicatorTestParam{arcApp, browser.TypeAsh},
+			Val:     "arcApp",
 			Fixture: "arcBooted",
-		}, {
-			Name:              "chrome_app_lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               activityIndicatorTestParam{chromeApp, browser.TypeLacros},
-		}, {
-			Name:              "pwa_app_lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               activityIndicatorTestParam{pwaApp, browser.TypeLacros},
-			Fixture:           fixture.LacrosPolicyLoggedInWithKeepAlive,
-		}, {
-			Name:              "arc_app_lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               activityIndicatorTestParam{arcApp, browser.TypeLacros},
-			Fixture:           "lacrosWithArcBooted",
 		}},
 	})
 }
@@ -88,8 +58,7 @@ func init() {
 // ActivityIndicators verifies that shelf apps which are active have an activity indicator shown.
 // Tests activity indicators for chrome browser, pwa, and arc apps.
 func ActivityIndicators(ctx context.Context, s *testing.State) {
-	testAppType := s.Param().(activityIndicatorTestParam).testAppType
-	bt := s.Param().(activityIndicatorTestParam).bt
+	testAppType := s.Param().(string)
 
 	// Use a shortened context for test operations to reserve time for cleanup.
 	cleanupCtx := ctx
@@ -97,18 +66,17 @@ func ActivityIndicators(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	var cr *chrome.Chrome
+	var err error
 	switch testAppType {
-	case chromeApp:
-		var err error
-		cr, err = browserfixt.NewChrome(ctx, bt, lacrosfixt.NewConfig())
+	case "ChromeApp":
+		cr, err = chrome.New(ctx)
 		if err != nil {
-			s.Fatalf("Failed to start %v browser: %v", bt, err)
+			s.Fatal("Failed to start browser: ", err)
 		}
-		defer cr.Close(cleanupCtx)
-	case pwaApp:
-		cr = s.FixtValue().(chrome.HasChrome).Chrome()
-	case arcApp:
+	case "arcApp":
 		cr = s.FixtValue().(*arc.PreData).Chrome
+	case "pwaApp":
+		cr = s.FixtValue().(chrome.HasChrome).Chrome()
 	}
 
 	tconn, err := cr.TestAPIConn(ctx)
@@ -120,14 +88,14 @@ func ActivityIndicators(ctx context.Context, s *testing.State) {
 
 	// Install the parameterized app type and get the appIDToLaunch
 	switch testAppType {
-	case chromeApp:
+	case "ChromeApp":
 		// Get the expected browser.
-		browserApp, err := apps.PrimaryBrowser(ctx, tconn)
+		chromeApp, err := apps.ChromeOrChromium(ctx, tconn)
 		if err != nil {
-			s.Fatal("Could not find the browser app info: ", err)
+			s.Fatal("Failed to find Chrome or Chromium app: ", err)
 		}
-		appIDToLaunch = browserApp.ID
-	case pwaApp:
+		appIDToLaunch = chromeApp.ID
+	case "pwaApp":
 		fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 		var cleanUp func(ctx context.Context) error
 		pwaAppID, _, cleanUp, err := policyutil.InstallPwaAppByPolicy(ctx, tconn, cr, fdms, s.DataFileSystem())
@@ -136,7 +104,7 @@ func ActivityIndicators(ctx context.Context, s *testing.State) {
 		}
 		appIDToLaunch = pwaAppID
 		defer cleanUp(cleanupCtx)
-	case arcApp:
+	case "arcApp":
 		const apk = "ArcInstallAppWithAppListSortedTest.apk"
 		a := s.FixtValue().(*arc.PreData).ARC
 		if err := a.Install(ctx, arc.APKPath(apk)); err != nil {

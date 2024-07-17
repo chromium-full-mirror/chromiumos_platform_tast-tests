@@ -21,12 +21,12 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         LaunchedApps,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that launched apps appear in the shelf",
 		Contacts: []string{
 			"cros-system-ui-eng@google.com",
+			"chromeos-consumer-engprod@google.com",
 			"tbarzic@chromium.org",
-			"chromeos-sw-engprod@google.com",
 		},
 		// ChromeOS > Software > System UI Surfaces > Shelf
 		BugComponent: "b:1288352",
@@ -43,24 +43,11 @@ func init() {
 				ExtraAttr:         []string{"informational"},
 			},
 			{
-				Name:              "lacros",
-				Fixture:           "lacrosDisableSync",
-				Val:               false,
-				ExtraSoftwareDeps: []string{"lacros", "no_tablet_form_factor"},
-				ExtraAttr:         []string{"informational"},
-			},
-			{
 				// Primary form factor is tablet.
 				Name:              "tablet_form_factor",
 				Fixture:           "chromeLoggedInDisableSync",
 				Val:               true,
 				ExtraSoftwareDeps: []string{"tablet_form_factor"},
-			},
-			{
-				Name:              "tablet_form_factor_lacros",
-				Fixture:           "lacrosDisableSync",
-				Val:               true,
-				ExtraSoftwareDeps: []string{"lacros", "tablet_form_factor"},
 			},
 		},
 	})
@@ -76,9 +63,9 @@ func LaunchedApps(ctx context.Context, s *testing.State) {
 	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
 
 	// Get the expected browser app info.
-	browserApp, err := apps.PrimaryBrowser(ctx, tconn)
+	browserApp, err := apps.ChromeOrChromium(ctx, tconn)
 	if err != nil {
-		s.Fatal("Could not find the browser app: ", err)
+		s.Fatal("Failed to find Chrome or Chromium app: ", err)
 	}
 
 	// Chrome app name doesn't exactly match the chrome shelf name so modify it here for simpler code later.

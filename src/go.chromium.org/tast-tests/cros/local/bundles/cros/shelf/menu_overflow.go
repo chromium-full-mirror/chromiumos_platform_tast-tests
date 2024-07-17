@@ -24,8 +24,8 @@ func init() {
 		Desc:         "Checks the behavior of shelf menu when it is overflowed",
 		Contacts: []string{
 			"cros-system-ui-eng@google.com",
+			"chromeos-consumer-engprod@google.com",
 			"tbarzic@chromium.org",
-			"chromeos-sw-engprod@google.com",
 		},
 		// ChromeOS > Software > System UI Surfaces > Shelf
 		BugComponent: "b:1288352",

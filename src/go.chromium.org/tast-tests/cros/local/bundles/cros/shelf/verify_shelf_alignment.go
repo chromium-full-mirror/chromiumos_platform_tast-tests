@@ -11,10 +11,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -23,20 +20,15 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-type testParam struct {
-	isUnderRTL bool
-	bt         browser.Type
-}
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VerifyShelfAlignment,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests the shelf alignment",
 		Contacts: []string{
 			"cros-system-ui-eng@google.com",
+			"chromeos-consumer-engprod@google.com",
 			"tbarzic@chromium.org",
-			"chromeos-sw-engprod@google.com",
 		},
 		// ChromeOS > Software > System UI Surfaces > Shelf
 		BugComponent: "b:1288352",
@@ -45,18 +37,10 @@ func init() {
 		Timeout:      3 * time.Minute,
 		Params: []testing.Param{{
 			Name: "normal",
-			Val:  testParam{false, browser.TypeAsh},
+			Val:  false,
 		}, {
 			Name: "rtl",
-			Val:  testParam{true, browser.TypeAsh},
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               testParam{false, browser.TypeLacros},
-		}, {
-			Name:              "rtl_lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               testParam{true, browser.TypeLacros},
+			Val:  true,
 		}},
 	})
 }
@@ -69,20 +53,18 @@ func VerifyShelfAlignment(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	// If true, the system UI is adapted to right-to-left languages.
-	isUnderRTL := s.Param().(testParam).isUnderRTL
-	bt := s.Param().(testParam).bt
+	isUnderRTL := s.Param().(bool)
 
 	// Set up the browser.
 	var opts []chrome.Option
 	if isUnderRTL {
 		opts = append(opts, chrome.ExtraArgs("--force-ui-direction=rtl"))
 	}
-	cr, _, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, bt, lacrosfixt.NewConfig(), opts...)
+	cr, err := chrome.New(ctx, opts...)
 	if err != nil {
 		s.Fatalf("Failed to start chrome (rtl? %v): %v", isUnderRTL, err)
 	}
 	defer cr.Close(cleanUpCtx)
-	defer closeBrowser(cleanUpCtx)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -108,9 +90,9 @@ func VerifyShelfAlignment(ctx context.Context, s *testing.State) {
 	}
 
 	// Get the expected browser.
-	browserApp, err := apps.PrimaryBrowser(ctx, tconn)
+	browserApp, err := apps.ChromeOrChromium(ctx, tconn)
 	if err != nil {
-		s.Fatal("Could not find the Chrome app: ", err)
+		s.Fatal("Failed to find Chrome or Chromium app: ", err)
 	}
 
 	var itemsToUnpin []string

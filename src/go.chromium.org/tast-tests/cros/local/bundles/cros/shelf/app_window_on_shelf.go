@@ -38,13 +38,13 @@ const (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         AppWindowOnShelf,
-		LacrosStatus: testing.LacrosVariantNeeded,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks the window instances when opening a chrome app in a new window / tab",
 		Contacts: []string{
 			"cros-system-ui-eng@google.com",
+			"chromeos-consumer-engprod@google.com",
 			"wcwang@chromium.org",
 			"tbarzic@chromium.org",
-			"cros-system-ui-eng@google.com",
 		},
 		// ChromeOS > Software > System UI Surfaces > Shelf
 		BugComponent: "b:1288352",

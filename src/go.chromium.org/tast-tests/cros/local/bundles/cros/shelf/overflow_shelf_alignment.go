@@ -11,10 +11,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast/core/ctxutil"
@@ -25,18 +22,17 @@ import (
 type overflowShelfSmokeTestType struct {
 	isRTL      bool // If true, the system UI is adapted to right-to-left languages.
 	tabletMode bool
-	bt         browser.Type
 }
 
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         OverflowShelfAlignment,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies the overflow shelf by changing the shelf alignment",
 		Contacts: []string{
 			"cros-system-ui-eng@google.com",
+			"chromeos-consumer-engprod@google.com",
 			"tbarzic@chromium.org",
-			"chromeos-sw-engprod@google.com",
 		},
 		// ChromeOS > Software > System UI Surfaces > Shelf
 		BugComponent: "b:1288352",
@@ -48,7 +44,6 @@ func init() {
 			Val: overflowShelfSmokeTestType{
 				isRTL:      false,
 				tabletMode: false,
-				bt:         browser.TypeAsh,
 			},
 			Fixture: "install100Apps",
 		}, {
@@ -56,7 +51,6 @@ func init() {
 			Val: overflowShelfSmokeTestType{
 				isRTL:      true,
 				tabletMode: false,
-				bt:         browser.TypeAsh,
 			},
 			Fixture: "install100Apps",
 		}, {
@@ -64,7 +58,6 @@ func init() {
 			Val: overflowShelfSmokeTestType{
 				isRTL:      false,
 				tabletMode: true,
-				bt:         browser.TypeAsh,
 			},
 			Fixture: "install100Apps",
 		}, {
@@ -72,45 +65,8 @@ func init() {
 			Val: overflowShelfSmokeTestType{
 				isRTL:      true,
 				tabletMode: true,
-				bt:         browser.TypeAsh,
 			},
 			Fixture: "install100Apps",
-		}, {
-			Name: "clamshell_mode_ltr_lacros",
-			Val: overflowShelfSmokeTestType{
-				isRTL:      false,
-				tabletMode: false,
-				bt:         browser.TypeLacros,
-			},
-			Fixture:           "install100LacrosApps",
-			ExtraSoftwareDeps: []string{"lacros"},
-		}, {
-			Name: "clamshell_mode_rtl_lacros",
-			Val: overflowShelfSmokeTestType{
-				isRTL:      true,
-				tabletMode: false,
-				bt:         browser.TypeLacros,
-			},
-			Fixture:           "install100LacrosApps",
-			ExtraSoftwareDeps: []string{"lacros"},
-		}, {
-			Name: "tablet_mode_ltr_lacros",
-			Val: overflowShelfSmokeTestType{
-				isRTL:      false,
-				tabletMode: true,
-				bt:         browser.TypeLacros,
-			},
-			Fixture:           "install100LacrosApps",
-			ExtraSoftwareDeps: []string{"lacros"},
-		}, {
-			Name: "tablet_mode_rtl_lacros",
-			Val: overflowShelfSmokeTestType{
-				isRTL:      true,
-				tabletMode: true,
-				bt:         browser.TypeLacros,
-			},
-			Fixture:           "install100LacrosApps",
-			ExtraSoftwareDeps: []string{"lacros"},
 		}},
 	})
 }
@@ -126,19 +82,17 @@ func OverflowShelfAlignment(ctx context.Context, s *testing.State) {
 
 	testType := s.Param().(overflowShelfSmokeTestType)
 	isRTL := testType.isRTL
-	bt := testType.bt
 
 	// Set up browser.
 	opts := s.FixtValue().([]chrome.Option)
 	if isRTL {
 		opts = append(opts, chrome.ExtraArgs("--force-ui-direction=rtl"))
 	}
-	cr, _, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, bt, lacrosfixt.NewConfig(), opts...)
+	cr, err := chrome.New(ctx, opts...)
 	if err != nil {
 		s.Fatalf("Failed to start chrome (rtl? %v): %v", isRTL, err)
 	}
 	defer cr.Close(cleanUpCtx)
-	defer closeBrowser(cleanUpCtx)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -186,9 +140,9 @@ func OverflowShelfAlignment(ctx context.Context, s *testing.State) {
 	}
 
 	// Get the expected browser.
-	browserApp, err := apps.PrimaryBrowser(ctx, tconn)
+	browserApp, err := apps.ChromeOrChromium(ctx, tconn)
 	if err != nil {
-		s.Fatal("Could not find the Chrome app: ", err)
+		s.Fatal("Failed to find Chrome or Chromium app: ", err)
 	}
 
 	var itemsToUnpin []string
