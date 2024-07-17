@@ -11,6 +11,8 @@ import (
 	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/camera/testutil"
+	"go.chromium.org/tast-tests/cros/local/power"
+	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -53,6 +55,13 @@ func KernelSmokeEnum(ctx context.Context, s *testing.State) {
 	config, ok := s.Param().(enumTestConfig)
 	if !ok {
 		s.Fatal("Failed to parse test param")
+	}
+
+	if err := upstart.EnsureJobRunning(ctx, "powerd"); err != nil {
+		s.Fatal("Failed to make powerd running: ", err)
+	}
+	if _, err := power.NewPowerManager(ctx); err != nil {
+		s.Fatal("Failed to connect to PowerManager DBus interface: ", err)
 	}
 
 	shortCtx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
