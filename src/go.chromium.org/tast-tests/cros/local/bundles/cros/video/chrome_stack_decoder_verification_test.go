@@ -196,10 +196,12 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 	}, {
 		Name:          "vp9_0_group1_frm_resize",
 		Attr:          perBuildAttrs,
-		HardwareDeps:  "hwdep.D(hwdep.SkipOnV4L2StatelessVideoDecoding())",
 		SoftwareDeps:  "[]string{caps.HWDecodeVP9}",
 		VideoFiles:    "vp9WebmFiles[\"profile_0\"][\"group1\"][\"frm_resize\"]",
 		ValidatorType: "decoding.MD5",
+		// TODO(b/238211555): Enable when DRC is supported in V4L2 stateless uAPI.
+		// TODO(b/351900658): Enable on Hana when fixed.
+		HardwareDeps: "hwdep.D(hwdep.SkipOnV4L2StatelessVideoDecoding(), hwdep.SkipGPUFamily(\"rogue\"))",
 	}, {
 		Name:          "vp9_0_group1_gf_dist",
 		Attr:          perBuildAttrs,
@@ -221,10 +223,12 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 	}, {
 		Name:          "vp9_0_group1_sub8x8_sf",
 		Attr:          perBuildAttrs,
-		HardwareDeps:  "hwdep.D(hwdep.SkipOnV4L2StatelessVideoDecoding())",
 		SoftwareDeps:  "[]string{caps.HWDecodeVP9}",
 		VideoFiles:    "vp9WebmFiles[\"profile_0\"][\"group1\"][\"sub8x8_sf\"]",
 		ValidatorType: "decoding.MD5",
+		// TODO(b/238211555): Enable when DRC is supported in V4L2 stateless uAPI.
+		// TODO(b/351900658): Enable on Hana when fixed.
+		HardwareDeps: "hwdep.D(hwdep.SkipOnV4L2StatelessVideoDecoding(), hwdep.SkipGPUFamily(\"rogue\"))",
 	}, {
 		Name:          "vp9_2_group1_buf",
 		Attr:          perBuildAttrs,
@@ -234,10 +238,11 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 	}, {
 		Name:          "vp9_2_group1_frm_resize",
 		Attr:          perBuildAttrs,
-		HardwareDeps:  "hwdep.D(hwdep.SkipOnV4L2StatelessVideoDecoding())",
 		SoftwareDeps:  "[]string{caps.HWDecodeVP9_2}",
 		VideoFiles:    "vp9WebmFiles[\"profile_2\"][\"group1\"][\"frm_resize\"]",
 		ValidatorType: "decoding.MD5",
+		// TODO(b/238211555): Enable when DRC is supported in V4L2 stateless uAPI.
+		HardwareDeps: "hwdep.D(hwdep.SkipOnV4L2StatelessVideoDecoding())",
 	}, {
 		Name:          "vp9_2_group1_gf_dist",
 		Attr:          perBuildAttrs,
@@ -259,10 +264,11 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 	}, {
 		Name:          "vp9_2_group1_sub8x8_sf",
 		Attr:          perBuildAttrs,
-		HardwareDeps:  "hwdep.D(hwdep.SkipOnV4L2StatelessVideoDecoding())",
 		SoftwareDeps:  "[]string{caps.HWDecodeVP9_2}",
 		VideoFiles:    "vp9WebmFiles[\"profile_2\"][\"group1\"][\"sub8x8_sf\"]",
 		ValidatorType: "decoding.MD5",
+		// TODO(b/238211555): Enable when DRC is supported in V4L2 stateless uAPI.
+		HardwareDeps: "hwdep.D(hwdep.SkipOnV4L2StatelessVideoDecoding())",
 	}, {
 		Name: "vp9_0_svc",
 		// TODO(b/210167476): Reenable when it's not failing everywhere.

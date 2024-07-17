@@ -365,7 +365,7 @@ func init() {
 			{
 				Name:              "vp9_0_group1_frm_resize",
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnV4L2StatelessVideoDecoding()),
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnV4L2StatelessVideoDecoding(), hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
 				ExtraData:         appendJSONFiles(vp9WebmFiles["profile_0"]["group1"]["frm_resize"]),
 				Timeout:           calculateTestTimeout(vp9WebmFiles["profile_0"]["group1"]["frm_resize"], "vp9_0_group1_frm_resize"),
@@ -414,7 +414,7 @@ func init() {
 			{
 				Name:              "vp9_0_group1_sub8x8_sf",
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnV4L2StatelessVideoDecoding()),
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnV4L2StatelessVideoDecoding(), hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
 				ExtraData:         appendJSONFiles(vp9WebmFiles["profile_0"]["group1"]["sub8x8_sf"]),
 				Timeout:           calculateTestTimeout(vp9WebmFiles["profile_0"]["group1"]["sub8x8_sf"], "vp9_0_group1_sub8x8_sf"),
