@@ -28,18 +28,9 @@ func init() {
 			"chadduffin@chromium.org",
 		},
 		BugComponent: "b:1131776", // ChromeOS > Software > System Services > Connectivity > Bluetooth
-		Attr:         []string{"group:bluetooth"},
-		SoftwareDeps: []string{"chrome"},
-		Params: []testing.Param{{
-			Name:      "floss_disabled",
-			Fixture:   "bluetoothEnabledWithBlueZ",
-			ExtraAttr: []string{"bluetooth_sa"},
-		}, {
-			Name:              "floss_enabled",
-			Fixture:           "bluetoothEnabledWithFloss",
-			ExtraAttr:         []string{"bluetooth_floss"},
-			ExtraSoftwareDeps: []string{"bluetooth_floss"},
-		}},
+		Attr:         []string{"group:bluetooth", "bluetooth_floss"},
+		SoftwareDeps: []string{"chrome", "bluetooth_floss"},
+		Fixture:      "bluetoothEnabledWithFloss",
 	})
 }
 

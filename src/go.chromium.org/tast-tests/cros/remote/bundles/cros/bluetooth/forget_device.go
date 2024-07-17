@@ -34,40 +34,22 @@ func init() {
 		},
 		BugComponent:   "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
 		LifeCycleStage: testing.LifeCycleInDevelopment,
-		Attr:           []string{"group:bluetooth"},
+		Attr:           []string{"group:bluetooth", "bluetooth_floss"},
+		SoftwareDeps:   []string{"chrome", "bluetooth_floss"},
+		Fixture:        "chromeLoggedInWith1BTPeerFlossEnabled",
 		TestBedDeps:    []string{tbdep.Wificell, tbdep.BluetoothStateNormal, tbdep.WorkingBluetoothPeers(1)},
-		SoftwareDeps:   []string{"chrome"},
 		ServiceDeps: []string{
 			"tast.cros.bluetooth.BluetoothUIService",
 			"tast.cros.ui.AutomationService",
 			"tast.cros.ui.ChromeUIService",
 		},
-		Params: []testing.Param{
-			{
-				Name:      "forget_connected_device__floss_disabled",
-				Fixture:   "chromeLoggedInWith1BTPeerFlossDisabled",
-				ExtraAttr: []string{"bluetooth_flaky"},
-				Val:       true, /* expectDeviceToBeConnected */
-			}, {
-				Name:              "forget_connected_device__floss_enabled",
-				Fixture:           "chromeLoggedInWith1BTPeerFlossEnabled",
-				ExtraAttr:         []string{"bluetooth_floss_flaky"},
-				ExtraSoftwareDeps: []string{"bluetooth_floss"},
-				Val:               true, /* expectDeviceToBeConnected */
-			}, {
-				Name:      "forget_disconnected_device__floss_disabled",
-				Fixture:   "chromeLoggedInWith1BTPeerFlossDisabled",
-				ExtraAttr: []string{"bluetooth_flaky"},
-				Val:       false, /* expectDeviceToBeConnected */
-
-			}, {
-				Name:              "forget_disconnected_device__floss_enabled",
-				Fixture:           "chromeLoggedInWith1BTPeerFlossEnabled",
-				ExtraAttr:         []string{"bluetooth_floss_flaky"},
-				ExtraSoftwareDeps: []string{"bluetooth_floss"},
-				Val:               false, /* expectDeviceToBeConnected */
-			},
-		},
+		Params: []testing.Param{{
+			Name: "forget_connected_device",
+			Val:  true, /* expectDeviceToBeConnected */
+		}, {
+			Name: "forget_disconnected_device",
+			Val:  false, /* expectDeviceToBeConnected */
+		}},
 	})
 }
 

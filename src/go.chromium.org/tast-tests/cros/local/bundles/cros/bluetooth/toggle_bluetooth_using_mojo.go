@@ -23,19 +23,10 @@ func init() {
 			"chromeos-connectivity-cienet-external@google.com",
 		},
 		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
-		Attr:         []string{"group:bluetooth"},
-		SoftwareDeps: []string{"chrome"},
+		Attr:         []string{"group:bluetooth", "bluetooth_sa", "bluetooth_floss"},
+		SoftwareDeps: []string{"chrome", "bluetooth_floss"},
+		Fixture:      "bluetoothMojoJSObjectWithFloss",
 		TestBedDeps:  []string{tbdep.BluetoothStateNormal},
-		Params: []testing.Param{{
-			Name:      "floss_disabled",
-			Fixture:   "bluetoothMojoJSObjectWithBlueZ",
-			ExtraAttr: []string{"bluetooth_sa"},
-		}, {
-			Name:              "floss_enabled",
-			Fixture:           "bluetoothMojoJSObjectWithFloss",
-			ExtraAttr:         []string{"bluetooth_floss"},
-			ExtraSoftwareDeps: []string{"bluetooth_floss"},
-		}},
 	})
 }
 

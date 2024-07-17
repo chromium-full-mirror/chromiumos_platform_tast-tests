@@ -31,38 +31,21 @@ func init() {
 			"chromeos-connectivity-cienet-external@google.com",
 		},
 		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
-		Attr:         []string{"group:bluetooth"},
+		Attr:         []string{"group:bluetooth", "bluetooth_floss"},
+		SoftwareDeps: []string{"chrome", "bluetooth_floss"},
+		Fixture:      "chromeLoggedInWith1BTPeerFlossEnabled",
 		TestBedDeps:  []string{tbdep.Wificell, tbdep.BluetoothStateNormal, tbdep.WorkingBluetoothPeers(1)},
-		SoftwareDeps: []string{"chrome"},
 		ServiceDeps: []string{
 			"tast.cros.bluetooth.BluetoothService",
 			"tast.cros.bluetooth.BluetoothUIService",
 		},
-		Params: []testing.Param{
-			{
-				Name:      "floss_disabled__le_keyboard",
-				Fixture:   "chromeLoggedInWith1BTPeerFlossDisabled",
-				ExtraAttr: []string{"bluetooth_flaky"},
-				Val:       cbt.DeviceTypeLEKeyboard,
-			}, {
-				Name:      "floss_disabled__le_mouse",
-				Fixture:   "chromeLoggedInWith1BTPeerFlossDisabled",
-				ExtraAttr: []string{"bluetooth_flaky"},
-				Val:       cbt.DeviceTypeLEMouse,
-			}, {
-				Name:              "floss_enabled__le_keyboard",
-				Fixture:           "chromeLoggedInWith1BTPeerFlossEnabled",
-				ExtraAttr:         []string{"bluetooth_floss_flaky"},
-				ExtraSoftwareDeps: []string{"bluetooth_floss"},
-				Val:               cbt.DeviceTypeLEKeyboard,
-			}, {
-				Name:              "floss_enabled__le_mouse",
-				Fixture:           "chromeLoggedInWith1BTPeerFlossEnabled",
-				ExtraAttr:         []string{"bluetooth_floss_flaky"},
-				ExtraSoftwareDeps: []string{"bluetooth_floss"},
-				Val:               cbt.DeviceTypeLEMouse,
-			},
-		},
+		Params: []testing.Param{{
+			Name: "le_keyboard",
+			Val:  cbt.DeviceTypeLEKeyboard,
+		}, {
+			Name: "le_mouse",
+			Val:  cbt.DeviceTypeLEMouse,
+		}},
 	})
 }
 

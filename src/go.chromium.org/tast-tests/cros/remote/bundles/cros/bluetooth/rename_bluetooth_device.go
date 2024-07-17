@@ -30,38 +30,21 @@ func init() {
 		},
 		BugComponent:   "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
 		LifeCycleStage: testing.LifeCycleInDevelopment,
-		Attr:           []string{"group:bluetooth"},
+		Attr:           []string{"group:bluetooth", "bluetooth_floss"},
+		SoftwareDeps:   []string{"chrome", "bluetooth_floss"},
+		Fixture:        "chromeLoggedInWith1BTPeerFlossEnabled",
 		TestBedDeps:    []string{tbdep.Wificell, tbdep.BluetoothStateNormal, tbdep.WorkingBluetoothPeers(1)},
-		SoftwareDeps:   []string{"chrome"},
 		ServiceDeps: []string{
 			"tast.cros.bluetooth.BluetoothUIService",
 			"tast.cros.browser.ChromeService",
 		},
-		Params: []testing.Param{
-			{
-				Name:      "floss_disabled__device_connected",
-				Fixture:   "chromeLoggedInWith1BTPeerFlossDisabled",
-				ExtraAttr: []string{"bluetooth_flaky"},
-				Val:       true, // expectDeviceIsConnected
-			}, {
-				Name:      "floss_disabled__device_disconnected",
-				Fixture:   "chromeLoggedInWith1BTPeerFlossDisabled",
-				ExtraAttr: []string{"bluetooth_flaky"},
-				Val:       false, // expectDeviceIsConnected
-			}, {
-				Name:              "floss_enabled__device_connected",
-				Fixture:           "chromeLoggedInWith1BTPeerFlossEnabled",
-				ExtraAttr:         []string{"bluetooth_floss_flaky"},
-				ExtraSoftwareDeps: []string{"bluetooth_floss"},
-				Val:               true, // expectDeviceIsConnected
-			}, {
-				Name:              "floss_enabled__device_disconnected",
-				Fixture:           "chromeLoggedInWith1BTPeerFlossEnabled",
-				ExtraAttr:         []string{"bluetooth_floss_flaky"},
-				ExtraSoftwareDeps: []string{"bluetooth_floss"},
-				Val:               false, // expectDeviceIsConnected
-			},
-		},
+		Params: []testing.Param{{
+			Name: "device_connected",
+			Val:  true, // expectDeviceIsConnected
+		}, {
+			Name: "device_disconnected",
+			Val:  false, // expectDeviceIsConnected
+		}},
 	})
 }
 
