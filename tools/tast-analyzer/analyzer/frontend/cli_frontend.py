@@ -93,8 +93,8 @@ def _compare_results(
 
     if _CliAnalysis.PRINT_MEDIAN_PCT_CHANGE in analyses:
         change_better = [r.mean_change_better() for r in results]
-        median = statistics.median(change_better)
-        print(f"Median improvement in mean: {100.0*median:.2}%")
+        median = statistics.median(change_better) if change_better else 0.0
+        print(f"Median improvement in mean: {100.0*median:.2f}%")
 
 
 @click.command()
