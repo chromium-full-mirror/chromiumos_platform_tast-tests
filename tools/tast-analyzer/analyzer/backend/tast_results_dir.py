@@ -4,68 +4,62 @@
 import json
 import pathlib
 
-from analyzer.backend.test_result import ImprovementDirection
-from analyzer.backend.test_result import TestResult
-from analyzer.backend.test_result import TestResultKey
+from analyzer.backend import test_result
 import click
 
 
 def _load_results_from_results_chart_json(
     path: pathlib.Path, json_str: str
-) -> dict[TestResultKey, TestResult]:
-    results_dict: dict[TestResultKey, TestResult] = {}
+) -> test_result.TestResults:
+    out_results = test_result.TestResults()
     # Tast results dir format is: <test run id>/tests/<test name>/
     test_run_id = path.parts[-4]
     test_name = path.parts[-2]
-    for metric_name, results in json.loads(json_str).items():
-        for variant, result in results.items():
-            key = TestResultKey(
+    for metric_name, in_results in json.loads(json_str).items():
+        for variant, in_result in in_results.items():
+            key = test_result.TestResultKey(
                 run_id=test_run_id,
                 test_name=test_name,
                 metric_name=metric_name,
                 variant=variant,
             )
-            assert key not in results_dict, f"duplicate key: {key}"
+            assert key not in out_results.results, f"duplicate key: {key}"
 
-            kind = result["type"]
+            kind = in_result["type"]
             value: int | float | list[float]
             if kind == "scalar":
                 assert isinstance(
-                    result["value"], float | int
-                ), f"expected int/float, got {result['value']}"
-                value = result["value"]
+                    in_result["value"], float | int
+                ), f"expected int/float, got {in_result['value']}"
+                value = in_result["value"]
             elif kind == "list_of_scalar_values":
                 assert isinstance(
-                    result["values"], list
-                ), f"expected list, got {result['values']}"
-                value = result["values"]
+                    in_result["values"], list
+                ), f"expected list, got {in_result['values']}"
+                value = in_result["values"]
             else:
                 assert False, f"unknown type: {kind}"
 
-            results_dict[key] = TestResult(
-                units=result["units"],
-                improvement_direction=ImprovementDirection(
-                    result["improvement_direction"]
+            out_results.results[key] = test_result.TestResult(
+                units=in_result["units"],
+                improvement_direction=test_result.ImprovementDirection(
+                    in_result["improvement_direction"]
                 ),
                 value=value,
             )
-    return results_dict
+    return out_results
 
 
 def _load_results_from_tast_dir(
     path: pathlib.Path,
-) -> dict[TestResultKey, TestResult]:
+) -> test_result.TestResults:
     """Extracts values from results-chart.json and returns them as a dictionary."""
 
     paths = path.glob("*/tests/*/results-chart.json")
-    all_results: dict[TestResultKey, TestResult] = {}
+    all_results = test_result.TestResults()
     for path in paths:
-        results_dict = _load_results_from_results_chart_json(
-            path, path.read_text()
-        )
-        for key in results_dict:
-            assert key not in all_results, f"duplicate key: {key}"
-        all_results.update(results_dict)
+        results = _load_results_from_results_chart_json(path, path.read_text())
+        all_results.merge(results)
 
     return all_results
 
@@ -98,5 +92,4 @@ def ingest_tast_results_directory(
         output_path: Path to the output JSON file to create.
     """
     results = _load_results_from_tast_dir(input_path)
-    json_results = {k.to_json(): v.to_json() for k, v in results.items()}
-    output_path.write_text(json.dumps(json_results, indent=2))
+    output_path.write_text(results.to_json())

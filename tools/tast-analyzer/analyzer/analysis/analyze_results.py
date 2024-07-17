@@ -15,13 +15,13 @@ from analyzer.backend import test_result
 from statsmodels.stats import multitest
 
 
-def _load_metrics_from_results_dict(
-    results_dict: dict[test_result.TestResultKey, test_result.TestResult],
+def _load_metrics_from_test_results(
+    results: test_result.TestResults,
 ) -> metric_sample.SampleDict:
     metrics: metric_sample.SampleDict = {}
 
-    logging.info(f"Examining {len(results_dict)} records")
-    for key, result in sorted(results_dict.items()):
+    logging.info(f"Examining {len(results.results)} records")
+    for key, result in sorted(results.results.items()):
         val: float
         if isinstance(result.value, float):
             val = result.value
@@ -124,14 +124,10 @@ def analyze_results(
     cfg: analysis_cfg.AnalysisCfg,
 ) -> list[analysis_results.AnalysisResult]:
     """Returns AnalysisResults for the given saved sample data paths."""
-    before_results = test_result.load_test_result_dict_from_json(
-        sample1_path.read_text()
-    )
-    after_results = test_result.load_test_result_dict_from_json(
-        sample2_path.read_text()
-    )
-    before_samples = _load_metrics_from_results_dict(before_results)
-    after_samples = _load_metrics_from_results_dict(after_results)
+    before_results = test_result.TestResults.from_json(sample1_path.read_text())
+    after_results = test_result.TestResults.from_json(sample2_path.read_text())
+    before_samples = _load_metrics_from_test_results(before_results)
+    after_samples = _load_metrics_from_test_results(after_results)
 
     if cfg.remove_outliers:
         before_samples = _prune_outliers(before_samples)

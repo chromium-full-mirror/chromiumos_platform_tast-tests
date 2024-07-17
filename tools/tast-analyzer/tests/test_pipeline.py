@@ -20,8 +20,8 @@ class PipelineTest(unittest.TestCase):
         self, cfg: analysis_cfg.AnalysisCfg
     ) -> None:
         results_unpruned = analyze_results.analyze_results(
-            FILES_DIR.joinpath("results-chart-complex1.json"),
-            FILES_DIR.joinpath("results-chart-complex2.json"),
+            FILES_DIR.joinpath("data-complex1.json"),
+            FILES_DIR.joinpath("data-complex2.json"),
             cfg,
         )
         cfg_pruned = dataclasses.replace(
@@ -31,8 +31,8 @@ class PipelineTest(unittest.TestCase):
             remove_outliers=True,
         )
         results_pruned = analyze_results.analyze_results(
-            FILES_DIR.joinpath("results-chart-complex1.json"),
-            FILES_DIR.joinpath("results-chart-complex2.json"),
+            FILES_DIR.joinpath("data-complex1.json"),
+            FILES_DIR.joinpath("data-complex2.json"),
             cfg_pruned,
         )
         self.assertLess(len(results_pruned), len(results_unpruned))
@@ -101,8 +101,8 @@ class PipelineTest(unittest.TestCase):
             multiple_test_cfg=analysis_cfg.MultipleTestCfg.FWER,
         )
         results = analyze_results.analyze_results(
-            FILES_DIR.joinpath("results-chart-complex1.json"),
-            FILES_DIR.joinpath("results-chart-complex2.json"),
+            FILES_DIR.joinpath("data-complex1.json"),
+            FILES_DIR.joinpath("data-complex2.json"),
             cfg,
         )
         results_by_path = {v.metric_path(): v for v in results}

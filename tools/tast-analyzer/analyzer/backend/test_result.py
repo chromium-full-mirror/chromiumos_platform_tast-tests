@@ -52,30 +52,71 @@ class TestResult:
     value: int | float | list[float]
     """The value of the test result."""
 
-    def to_json(self) -> str:
-        return json.dumps(dataclasses.asdict(self), sort_keys=True)
+    def to_dict(self) -> dict:
+        return dataclasses.asdict(self)
 
     @classmethod
-    def from_json(cls, s: str) -> "TestResult":
-        variables = json.loads(s)
-        variables["improvement_direction"] = ImprovementDirection(
-            variables["improvement_direction"]
+    def from_dict(cls, d: dict) -> "TestResult":
+        d["improvement_direction"] = ImprovementDirection(
+            d["improvement_direction"]
         )
-        return TestResult(**variables)
+        return TestResult(**d)
 
 
-def load_test_result_dict_from_json(
-    json_str: str,
-) -> dict[TestResultKey, TestResult]:
-    """Loads a previously ingested JSON performance results file.
+METADATA_VERSION_CURRENT = 1
+RESULTS_VERSION_CURRENT = 1
 
-    Args:
-        json_str: String containing the json.
 
-    Returns:
-        A dictionary of test results.
-    """
-    return {
-        TestResultKey.from_json(k): TestResult.from_json(v)
-        for k, v in json.loads(json_str).items()
-    }
+@dataclasses.dataclass(frozen=True, kw_only=True, order=True)
+class TestResultsMetadata:
+    results_version: int = RESULTS_VERSION_CURRENT
+    metadata_version: int = METADATA_VERSION_CURRENT
+
+    @classmethod
+    def from_dict(cls, d: dict) -> "TestResultsMetadata":
+        return TestResultsMetadata(**d)
+
+
+@dataclasses.dataclass(frozen=True, kw_only=True, order=True)
+class TestResults:
+    metadata: TestResultsMetadata = dataclasses.field(
+        default_factory=TestResultsMetadata
+    )
+    results: dict[TestResultKey, TestResult] = dataclasses.field(
+        default_factory=dict
+    )
+
+    def merge(self, results: "TestResults") -> None:
+        for key in results.results:
+            assert key not in self.results, f"duplicate key: {key}"
+        assert (
+            self.metadata == results.metadata
+        ), f"cannot merge test results with differing metadata: {self.metadata} != {results.metadata}"
+        self.results.update(results.results)
+
+    def to_json(self, indent: int = 2) -> str:
+        d = {
+            "metadata": dataclasses.asdict(self.metadata),
+            "results": {
+                k.to_json(): v.to_dict() for k, v in self.results.items()
+            },
+        }
+        return json.dumps(d, sort_keys=True, indent=indent)
+
+    @classmethod
+    def from_json(cls, s: str) -> "TestResults":
+        """Loads a previously ingested JSON performance results file.
+
+        Args:
+            s: String containing the json.
+
+        Returns:
+            A TestResults object.
+        """
+        d = json.loads(s)
+        d["results"] = {
+            TestResultKey.from_json(k): TestResult.from_dict(v)
+            for k, v in d["results"].items()
+        }
+        d["metadata"] = TestResultsMetadata.from_dict(d["metadata"])
+        return TestResults(**d)

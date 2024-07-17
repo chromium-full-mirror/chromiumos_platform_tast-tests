@@ -32,10 +32,10 @@ class AnalysisTest(unittest.TestCase):
             FILES_DIR.joinpath("results-chart-analysis2.json").read_text(),
         )
 
-        before_samples = analyze_results._load_metrics_from_results_dict(
+        before_samples = analyze_results._load_metrics_from_test_results(
             before_results
         )
-        after_samples = analyze_results._load_metrics_from_results_dict(
+        after_samples = analyze_results._load_metrics_from_test_results(
             after_results
         )
 
