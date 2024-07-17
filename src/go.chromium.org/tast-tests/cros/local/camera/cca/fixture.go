@@ -115,20 +115,6 @@ func init() {
 		TearDownTimeout: tearDownTimeout,
 	})
 
-	// TODO(http://b/275895388): Remove after feature launch.
-	testing.AddFixture(&testing.Fixture{
-		Name:            "ccaLaunchedWithHoldingSpaceIntegrationEnabled",
-		Desc:            "Launched CCA with holding space integration enabled",
-		Contacts:        []string{"chromeos-camera-eng@google.com", "cros-system-ui-eng@google.com", "dmblack@google.com"},
-		BugComponent:    "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
-		Impl:            &fixture{launchCCA: true, enableFeatures: []feature{"HoldingSpaceCameraAppIntegration"}},
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    testBridgeSetUpTimeout,
-		PreTestTimeout:  ccaSetUpTimeout,
-		PostTestTimeout: ccaTearDownTimeout,
-		TearDownTimeout: tearDownTimeout,
-	})
-
 	testing.AddFixture(&testing.Fixture{
 		Name:            "ccaTestBridgeReady",
 		Desc:            "Set up test bridge for CCA",
