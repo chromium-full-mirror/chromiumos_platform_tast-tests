@@ -96,7 +96,22 @@ func ModemFWManifestVerification(ctx context.Context, s *testing.State) {
 			}
 		}
 
-		for _, modemFirmwarePath := range modemFirmwarePaths {
+		for _, firmwarePath := range modemFirmwarePaths {
+			modemFirmwarePath := firmwarePath
+			tmpDecodePath := "/tmp/unpatched_modem_fw"
+			if fileExists(filepath.Join(modemFirmwarePath, "patch_manifest.textproto")) {
+
+				os.RemoveAll(tmpDecodePath)
+				os.Mkdir(tmpDecodePath, 0755)
+				defer os.RemoveAll(tmpDecodePath)
+
+				// Reconstruct this firmware payload to a temp directory
+				if _, err := testexec.CommandContext(ctx, "patchmaker", "--decode", "--src_path="+firmwarePath, "--dest_path="+tmpDecodePath).Output(testexec.DumpLogOnError); err != nil {
+					s.Fatalf("Failed to decode patched firmware directory: %s", err)
+				}
+				// The remainder of this test should use the reconstructed directory
+				modemFirmwarePath = tmpDecodePath
+			}
 			s.Logf("Firmware path location for variant %q: %q", device.Variant, modemFirmwarePath)
 			// Verify that we don't have repeated main FWs.
 			mainFirmwares = make(map[string]bool)
