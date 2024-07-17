@@ -109,6 +109,7 @@ func init() {
 				"uldren360",
 				"volmar",
 				"vell",
+				"xol",
 				"yavijo",
 				"yaviks",
 				"yavikso",
