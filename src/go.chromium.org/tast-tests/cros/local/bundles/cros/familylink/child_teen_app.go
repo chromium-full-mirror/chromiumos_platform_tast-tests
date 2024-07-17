@@ -108,7 +108,7 @@ func ChildTeenApp(ctx context.Context, s *testing.State) {
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_dump")
 
 	// Click the 'Parental controls' block in the Accounts page.
-	if err := uiauto.New(tconn).LeftClick(nodewith.NameContaining("Parental controls Open").Ancestor(ossettings.WindowFinder))(ctx); err != nil {
+	if err := uiauto.New(tconn).DoDefault(nodewith.NameContaining("Parental controls Open").Ancestor(ossettings.WindowFinder))(ctx); err != nil {
 		s.Fatal("Failed to click Parental controls: ", err)
 	}
 	// Defer close app window right after it's launched.

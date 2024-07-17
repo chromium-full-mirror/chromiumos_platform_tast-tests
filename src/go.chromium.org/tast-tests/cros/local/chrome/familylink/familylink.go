@@ -72,7 +72,7 @@ func AddEduSecondaryAccount(ctx context.Context, cr *chrome.Chrome, tconn *chrom
 		return nil
 	}
 
-	if err := ui.WithInterval(time.Second).LeftClickUntil(addSchoolAccountButton, condition)(ctx); err != nil {
+	if err := ui.DoDefaultUntil(addSchoolAccountButton, condition)(ctx); err != nil {
 		return errors.Wrap(err, "failed to open in-session EDU Coexistence flow")
 	}
 

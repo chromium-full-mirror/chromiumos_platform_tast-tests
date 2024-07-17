@@ -63,7 +63,7 @@ func ParentalControlsLink(ctx context.Context, s *testing.State) {
 	}(cleanupCtx)
 
 	if err := uiauto.Combine("open parental controls",
-		ui.LeftClick(nodewith.NameContaining("Parental controls Open").FinalAncestor(ossettings.WindowFinder)),
+		ui.DoDefault(nodewith.NameContaining("Parental controls Open").FinalAncestor(ossettings.WindowFinder)),
 		ui.WaitUntilExists(nodewith.NameContaining("family").HasClass("BrowserFrame")),
 	)(ctx); err != nil {
 		s.Fatal(`Failed to verify the functionality of "Parental controls" settings: `, err)
