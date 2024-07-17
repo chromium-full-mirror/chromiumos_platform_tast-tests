@@ -43,7 +43,7 @@ func init() {
 		Contacts:     []string{"launcher-search-notify@google.com", "xiuwen@google.com"},
 		BugComponent: "b:1257106",
 		Attr:         []string{"group:launcher_search_quality_daily"},
-		SoftwareDeps: []string{"chrome", "gaia"},
+		SoftwareDeps: []string{"chrome"},
 		Timeout:      10 * time.Minute,
 
 		Params: []testing.Param{
@@ -150,7 +150,8 @@ func init() {
 					expectedResult: "Manage Google Accounts on your Chromebook, Help",
 					category:       "Help",
 				},
-				ExtraAttr: []string{"group:hw_agnostic"},
+				ExtraAttr:         []string{"group:hw_agnostic"},
+				ExtraSoftwareDeps: []string{"gaia"},
 			},
 			{
 				Name:    "best_match_personalization_screen_saver",
@@ -242,7 +243,8 @@ func init() {
 					expectedResult: "Switch between stable, beta & dev software",
 					category:       "Help",
 				},
-				ExtraAttr: []string{"group:hw_agnostic"},
+				ExtraAttr:         []string{"group:hw_agnostic"},
+				ExtraSoftwareDeps: []string{"gaia"},
 			},
 			{
 				Name:    "help_screen_rotate",
@@ -265,7 +267,8 @@ func init() {
 					expectedResult: "Snapchat, Play Store",
 					category:       "Play Store",
 				},
-				ExtraAttr: []string{"group:hw_agnostic"},
+				ExtraAttr:         []string{"group:hw_agnostic"},
+				ExtraSoftwareDeps: []string{"gaia"},
 			},
 		},
 	})
