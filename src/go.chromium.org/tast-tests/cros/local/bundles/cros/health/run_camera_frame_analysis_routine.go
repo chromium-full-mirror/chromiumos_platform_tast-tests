@@ -37,7 +37,7 @@ func init() {
 		SoftwareDeps: []string{"diagnostics", "chrome"},
 		HardwareDeps: hwdep.D(hwdep.CameraEnumerated()),
 		Data:         []string{"camera_page.html", "camera_page.js"},
-		Attr:         []string{"group:mainline", "informational", "group:camera_dependent", "group:criticalstaging"},
+		Attr:         []string{"group:mainline", "group:camera_dependent"},
 		Fixture:      "crosHealthdRunning",
 	})
 }
