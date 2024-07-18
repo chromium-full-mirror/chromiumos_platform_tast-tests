@@ -53,6 +53,13 @@ func FWScreenPressTab(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create config: ", err)
 	}
 
+	if err := h.Servo.SetOnOff(ctx, servo.USBKeyboard, servo.Off); err != nil {
+		s.Fatal("Failed to turn off usb keyboard: ", err)
+	}
+	if err := h.Servo.SetOnOff(ctx, servo.InitKeyboard, servo.On); err != nil {
+		s.Fatal("Failed to turn on internal keyboard: ", err)
+	}
+
 	// Save the firmware log file for upload to Testhaus at the end of the test.
 	defer func() {
 		if err := h.EnsureDUTBooted(ctx); err != nil {
@@ -67,6 +74,11 @@ func FWScreenPressTab(ctx context.Context, s *testing.State) {
 	s.Log("Rebooting to the developer screen")
 	if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
 		s.Fatal("Failed to warm reset the DUT: ", err)
+	}
+	waitUnreachableCtx, cancelUnreachable := context.WithTimeout(ctx, 2*time.Minute)
+	defer cancelUnreachable()
+	if err := h.DUT.WaitUnreachable(waitUnreachableCtx); err != nil {
+		s.Fatal("Failed to wait DUT unreachable: ", err)
 	}
 
 	s.Logf("Sleeping for %s (FirmwareScreen) ", h.Config.FirmwareScreen)
