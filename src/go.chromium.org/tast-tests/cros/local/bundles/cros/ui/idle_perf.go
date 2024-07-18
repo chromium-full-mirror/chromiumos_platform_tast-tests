@@ -150,6 +150,16 @@ func IdlePerf(ctx context.Context, s *testing.State) {
 		}
 	}()
 
+	if idleTest.testType == testTypeFaceGaze {
+		metric := []cujrecorder.MetricConfig{
+			cujrecorder.NewCustomMetricConfig("Accessibility.FaceGaze.AverageFaceLandmarkerLatency", "ms", perf.SmallerIsBetter),
+		}
+
+		if err := recorder.AddCollectedMetrics(bTconn, browser.TypeAsh, metric...); err != nil {
+			s.Fatal("Failed to add FaceGaze metric to the recorder: ", err)
+		}
+	}
+
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
 		s.Log("Just wait for ", idleDuration, " to check the load of idle status")
 		// GoBigSleepLint sleep to check the load for the device's idle state.
