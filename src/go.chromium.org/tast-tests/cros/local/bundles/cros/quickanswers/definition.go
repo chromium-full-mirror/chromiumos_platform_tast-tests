@@ -27,6 +27,7 @@ func init() {
 		Attr: []string{
 			"group:hw_agnostic",
 			"group:mainline",
+			"hw_agnostic_vm_stable",
 			"informational",
 		},
 		SearchFlags: []*testing.StringPair{{
