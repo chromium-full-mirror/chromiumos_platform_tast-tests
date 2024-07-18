@@ -374,8 +374,7 @@ func (f *FilesApp) IsFileSelected(fileName string) uiauto.Action {
 			return err
 		}
 
-		_, exists := nodeInfo.HTMLAttributes["selected"]
-		if !exists {
+		if !nodeInfo.Selected {
 			return errors.New("file not selected yet")
 		}
 
