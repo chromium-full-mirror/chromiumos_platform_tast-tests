@@ -17,10 +17,10 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 
-	// 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 var tmpCbiFlashromDir = filepath.Join("/", "mnt", "stateful_partition", "cbi_flashrom.XXXXXX")
@@ -38,6 +38,15 @@ func init() {
 		Attr:    []string{"group:firmware", "firmware_unstable"},
 		Fixture: fixture.NormalMode,
 		Timeout: 15 * time.Minute,
+		// Only run on platforms that include CL crrev/c/1234747 so that CBI can be reversibly written to.
+		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.ECFeatureCBI(), hwdep.SkipOnModel(
+			"jax", // Fizz models
+			"kench",
+			"sion",
+			"bard", // Nami models
+			"ekko",
+			"syndra",
+		)),
 	})
 }
 
