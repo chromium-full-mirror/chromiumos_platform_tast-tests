@@ -24,17 +24,36 @@ import (
 const (
 	// Execution time ratio of browser, social app and video app is 2:3:5.
 	// browserWaitTime is set to 12 seconds for each page.
-	// The total execution time including swipe up and down is about 6 minutes.
-	// socialAppTime is set to 9 minutes.
-	// videoPlayTime is set to 15 minutes.
-	socialAppTime = 9 * time.Minute
-	videoPlayTime = 15 * time.Minute
-	browserTime   = 6 * time.Minute
+	// The total execution time including swipe up and down is about 2 minutes.
+	// socialAppTime is set to 3 minutes.
+	// videoPlayTime is set to 5 minutes.
+	socialAppTime = 3 * time.Minute
+	videoPlayTime = 5 * time.Minute
+	browserTime   = 2 * time.Minute
 
 	multiTaskingAppPrepareTimeout = 10 * time.Minute
-	multiTaskingAppExecutionTime  = (socialAppTime + videoPlayTime + browserTime) * 2
-	multiTaskingAppTimeout        = multiTaskingAppPrepareTimeout + multiTaskingAppExecutionTime + power.RecorderTimeout
+	multiTaskingAppExecutionTime  = socialAppTime + videoPlayTime + browserTime
+	multiTaskingAppShortTimeout   = multiTaskingAppPrepareTimeout + multiTaskingAppExecutionTime*2 + power.RecorderTimeout
+	multiTaskingAppTimeout        = multiTaskingAppPrepareTimeout + multiTaskingAppExecutionTime*3*2 + power.RecorderTimeout
 )
+
+type multiTaskingParam struct {
+	socialAppTime time.Duration
+	videoPlayTime time.Duration
+	browserTime   time.Duration
+}
+
+var multiTaskingAppShortParam = multiTaskingParam{
+	socialAppTime: socialAppTime,
+	videoPlayTime: videoPlayTime,
+	browserTime:   browserTime,
+}
+
+var multiTaskingAppParam = multiTaskingParam{
+	socialAppTime: socialAppTime * 3,
+	videoPlayTime: videoPlayTime * 3,
+	browserTime:   browserTime * 3,
+}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -47,16 +66,26 @@ func init() {
 		SoftwareDeps: []string{"chrome", "arc"},
 		Data:         []string{multitaskingapp.VideoSrc, arcvideoplayback.ExoPlayerAPKFileName},
 		Vars:         socialapp.ElementApkURLVars, // Optional. The URL of the APK file of Element app.
-		Timeout:      multiTaskingAppTimeout,
 		Params: []testing.Param{
 			{
 				Name:      "ash",
 				Fixture:   "powerAshARC",
+				Timeout:   multiTaskingAppTimeout,
 				ExtraAttr: []string{"group:power", "power_regression"},
+				Val:       multiTaskingAppParam,
+			},
+			{
+				Name:      "ash_short",
+				Fixture:   "powerAshARC",
+				Timeout:   multiTaskingAppShortTimeout,
+				ExtraAttr: []string{"group:power", "power_daily"},
+				Val:       multiTaskingAppShortParam,
 			},
 			{
 				Name:    "lacros",
 				Fixture: "powerLacrosARC",
+				Timeout: multiTaskingAppTimeout,
+				Val:     multiTaskingAppParam,
 			},
 		},
 	})
@@ -68,6 +97,7 @@ func MultiTaskingApp(ctx context.Context, s *testing.State) {
 	bt := s.FixtValue().(setup.PowerUIFixtureData).Bt
 	cr := s.FixtValue().(setup.PowerUIFixtureData).Cr
 	a := s.FixtValue().(setup.PowerUIFixtureData).ARC
+	param := s.Param().(multiTaskingParam)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -138,9 +168,9 @@ func MultiTaskingApp(ctx context.Context, s *testing.State) {
 		DataPath:      s.DataPath,
 		Discharge:     discharge,
 		TabletMode:    tabletMode,
-		BrowserTime:   browserTime,
-		SocialAppTime: socialAppTime,
-		VideoAppTime:  videoPlayTime,
+		BrowserTime:   param.browserTime,
+		SocialAppTime: param.socialAppTime,
+		VideoAppTime:  param.videoPlayTime,
 	}
 
 	if err := multitaskingapp.Run(ctx, testResources, params); err != nil {
