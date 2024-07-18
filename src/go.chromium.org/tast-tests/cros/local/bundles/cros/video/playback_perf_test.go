@@ -149,7 +149,7 @@ func TestPlaybackPerfConfig(t *testing.T) {
 		}
 	}
 
-	// Out-of-process video decoding (ash-chrome).
+	// In-process video decoding (ash-chrome).
 	for _, resolution := range []int{720, 1080, 2160} {
 		fpss := []int{30}
 		if resolution >= 1080 {
@@ -160,6 +160,7 @@ func TestPlaybackPerfConfig(t *testing.T) {
 				resolution, fps, "hw", "inpvd", "chromeVideoINPVD", nil)
 			if resolution == 1080 && fps == 30 {
 				param.MeasureSteadyStateMetrics = true
+				param.PerfTracing = true
 			}
 			params = append(params, param)
 		}
@@ -222,7 +223,6 @@ func TestPlaybackPerfConfig(t *testing.T) {
 				resolution, fps, dec, testNameSuffix, "", nil)
 			param.Grid.Width = gridW
 			param.Grid.Height = gridH
-			param.PerfTracing = true
 			if numVideos > 10 {
 				// More than 10 videos in parallel is too much for Grunt, see b/290637628.
 				param.HardwareDeps = append(param.HardwareDeps, "hwdep.SkipGPUFamily(\"stoney\")")
