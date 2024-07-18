@@ -48,8 +48,21 @@ type stableDelegateLoaderSettings struct {
 	DelegateName string `json:"delegate_name"`
 }
 
+type operationCheckMode int
+
+const (
+	noOperationCheck      operationCheckMode = 0
+	perNodeOperationCheck operationCheckMode = 1
+	preOperationCheck     operationCheckMode = 2
+)
+
+type mtkNeuronSettings struct {
+	OperationCheckMode operationCheckMode `json:"operation_check_mode"`
+}
+
 type stableDelegateSettings struct {
 	StableDelegateLoaderSettings stableDelegateLoaderSettings `json:"stable_delegate_loader_settings"`
+	MtkNeuronSettings            *mtkNeuronSettings           `json:"mtk_neuron_settings,omitempty"`
 }
 
 type testingParam struct {
@@ -109,6 +122,9 @@ var apuSettings = stableDelegateSettings{
 	StableDelegateLoaderSettings: stableDelegateLoaderSettings{
 		DelegatePath: "/usr/lib64/libtensorflowlite_mtk_neuron_delegate.so",
 		DelegateName: "mtk_neuron_delegate",
+	},
+	MtkNeuronSettings: &mtkNeuronSettings{
+		OperationCheckMode: preOperationCheck,
 	},
 }
 
