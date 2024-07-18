@@ -76,6 +76,9 @@ const (
 
 	// Alias for deferring ARC for readability.
 	deferARC = "DeferArcActivationUntilUserSessionStartUpTaskCompletion"
+
+	// Alias for deferring occluded active tab load during browser restore.
+	deferOccludedTabLoad = "AshSessionRestoreDeferOccludedActiveTabLoad"
 )
 
 var disableARCSyncOption = chrome.ExtraArgs(arc.DisableSyncFlags()...)
@@ -205,6 +208,22 @@ func init() {
 				false,              // preloadLacros
 				[]string{deferARC}, // disabledFeatures
 				[]string{},         // enabledFeatures
+			},
+		}, {
+			// To compare against baseline `ui.LoginPerf`.
+			// TODO(http://b/324490618): Remove after feature is default on.
+			Name:              "defer_tab_load",
+			ExtraAttr:         []string{"group:cuj", "cuj_loginperf"},
+			ExtraSoftwareDeps: []string{"arc"},
+			Val: loginPerfTestParam{
+				8,                              // windows
+				arcenabled,                     // arcMode
+				false,                          // tabletMode
+				browser.TypeAsh,                // browserType
+				lacros.NotSelected,             // lacrosSelection
+				false,                          // preloadLacros
+				[]string{deferARC},             // disabledFeatures
+				[]string{deferOccludedTabLoad}, // enabledFeatures
 			},
 		}},
 	})
