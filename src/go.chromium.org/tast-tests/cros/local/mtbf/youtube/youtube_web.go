@@ -367,6 +367,7 @@ func (y *YtWeb) PauseAndPlayVideo(ctx context.Context) error {
 // Play returns a function to play the video.
 func (y *YtWeb) Play() uiauto.Action {
 	return uiauto.NamedCombine("play video",
+		y.SkipAd(),
 		y.clearNotificationPrompts,
 		uiauto.IfSuccessThen(
 			y.IsPaused(),
