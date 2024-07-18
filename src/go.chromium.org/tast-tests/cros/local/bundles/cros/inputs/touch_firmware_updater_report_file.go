@@ -84,11 +84,22 @@ func processEntries(file *os.File) error {
 			return err
 		}
 
-		if _, ok := deviceMap[deviceName]; !ok {
+		// Check if there was a previous entry for the device.
+		existingInfo, ok := deviceMap[deviceName]
+		if ok { // If there is an existing entry for deviceName, replace values.
+			if deviceInfo.Updater != "" {
+				existingInfo.Updater = deviceInfo.Updater
+			}
+			if deviceInfo.InitialVersion != "" {
+				existingInfo.InitialVersion = deviceInfo.InitialVersion
+			}
+			if deviceInfo.UpdateStatus != "" {
+				existingInfo.UpdateStatus = deviceInfo.UpdateStatus
+			}
+			deviceMap[deviceName] = existingInfo
+		} else { // If there is no existing entry, create a new entry.
 			deviceMap[deviceName] = deviceInfo
 		}
-
-		// TODO:(b/310056795): Check if there was a previous entry for the device.
 	}
 
 	if err := scanner.Err(); err != nil {
@@ -120,7 +131,7 @@ func validateDevice(deviceInfo device) error {
 	}
 
 	if len(deviceInfo.UpdateStatus) > 0 && deviceInfo.UpdateStatus != "SUCCESS" {
-		errs = errors.Join(errs, errors.New("update_status field was \""+deviceInfo.UpdateStatus+"\",not \"SUCCESS\" for device at "+deviceInfo.Path+" ; updater: "+deviceInfo.Updater))
+		errs = errors.Join(errs, errors.New("update_status field was \""+deviceInfo.UpdateStatus+"\", not \"SUCCESS\" for device at "+deviceInfo.Path+" ; updater: "+deviceInfo.Updater))
 	}
 
 	return errs
