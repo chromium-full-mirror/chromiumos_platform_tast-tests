@@ -256,11 +256,35 @@ func init() {
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
+				Name: "4p_vsync_encoding",
+				Val: webrtc.VCTestParams{
+					NumPeople: 4,
+				},
+				Fixture:   pre.ChromeRTCFixture(pre.RTCFeatureVsyncEncoding),
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
+			},
+			{
+				Name: "4p_vsync_decoding_encoding",
+				Val: webrtc.VCTestParams{
+					NumPeople: 4,
+				},
+				Fixture:   pre.ChromeRTCFixture(pre.RTCFeatureVsyncDecoding, pre.RTCFeatureVsyncEncoding),
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
+			},
+			{
 				Name: "9p_vsync_decoding",
 				Val: webrtc.VCTestParams{
 					NumPeople: 9,
 				},
 				Fixture:   pre.ChromeRTCFixture(pre.RTCFeatureVsyncDecoding),
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
+			},
+			{
+				Name: "9p_vsync_decoding_encoding",
+				Val: webrtc.VCTestParams{
+					NumPeople: 9,
+				},
+				Fixture:   pre.ChromeRTCFixture(pre.RTCFeatureVsyncDecoding, pre.RTCFeatureVsyncEncoding),
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 		},
