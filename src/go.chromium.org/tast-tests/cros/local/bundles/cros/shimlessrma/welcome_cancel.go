@@ -40,7 +40,7 @@ func init() {
 		}, {
 			Name:              "staging",
 			ExtraHardwareDeps: hwdep.D(hwdep.Model(util.ShimlessRmaEnabledModelsStaging...)),
-			ExtraAttr:         []string{"informational", "group:criticalstaging"},
+			ExtraAttr:         []string{"informational"},
 		}},
 	})
 }
