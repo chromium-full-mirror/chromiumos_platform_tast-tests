@@ -18,7 +18,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/cpu"
@@ -63,8 +62,6 @@ type VCTestParams struct {
 	Blur bool
 	// If Relight is true, enable platform relighting.
 	Relight bool
-	// BrowserType represents chrome browser type that the test runs with.
-	BrowserType browser.Type
 }
 
 const (

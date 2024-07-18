@@ -13,8 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/rtc/webrtc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast-tests/cros/local/graphics"
 	"go.chromium.org/tast-tests/cros/local/media/pre"
 	"go.chromium.org/tast-tests/cros/local/power"
@@ -26,7 +24,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         WebRTCVideoConference,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measure audio, camera, graphics and video stack performance in a video conference using WebRTC",
 		Vars: []string{
 			"rtc.WebRTCVideoConference.Mouse",
@@ -51,34 +49,21 @@ func init() {
 			{
 				Name: "custom",
 				Val: webrtc.VCTestParams{
-					NumPeople:   2,
-					BrowserType: browser.TypeAsh,
+					NumPeople: 2,
 				},
 				Fixture: pre.ChromeRTCFixture(),
 			},
 			{
 				Name: "step",
 				Val: webrtc.VCTestParams{
-					Step:        true,
-					BrowserType: browser.TypeAsh,
+					Step: true,
 				},
 				Fixture: pre.ChromeRTCFixture(),
 			},
 			{
-				Name: "step_lacros",
-				Val: webrtc.VCTestParams{
-					Step:        true,
-					BrowserType: browser.TypeLacros,
-				},
-				Fixture:           pre.ChromeRTCLacrosFixture(),
-				ExtraSoftwareDeps: []string{"lacros"},
-				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
-			},
-			{
 				Name: "2p",
 				Val: webrtc.VCTestParams{
-					NumPeople:   2,
-					BrowserType: browser.TypeAsh,
+					NumPeople: 2,
 				},
 				Fixture:   pre.ChromeRTCFixture(),
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
@@ -86,8 +71,7 @@ func init() {
 			{
 				Name: "4p",
 				Val: webrtc.VCTestParams{
-					NumPeople:   4,
-					BrowserType: browser.TypeAsh,
+					NumPeople: 4,
 				},
 				Fixture:   pre.ChromeRTCFixture(),
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
@@ -95,8 +79,7 @@ func init() {
 			{
 				Name: "9p",
 				Val: webrtc.VCTestParams{
-					NumPeople:   9,
-					BrowserType: browser.TypeAsh,
+					NumPeople: 9,
 				},
 				Fixture:   pre.ChromeRTCFixture(),
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
@@ -104,8 +87,7 @@ func init() {
 			{
 				Name: "25p",
 				Val: webrtc.VCTestParams{
-					NumPeople:   25,
-					BrowserType: browser.TypeAsh,
+					NumPeople: 25,
 				},
 				Fixture:   pre.ChromeRTCFixture(),
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
@@ -113,8 +95,7 @@ func init() {
 			{
 				Name: "49p",
 				Val: webrtc.VCTestParams{
-					NumPeople:   49,
-					BrowserType: browser.TypeAsh,
+					NumPeople: 49,
 				},
 				Fixture:   pre.ChromeRTCFixture(),
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
@@ -122,9 +103,8 @@ func init() {
 			{
 				Name: "4p_blur",
 				Val: webrtc.VCTestParams{
-					NumPeople:   4,
-					Blur:        true,
-					BrowserType: browser.TypeAsh,
+					NumPeople: 4,
+					Blur:      true,
 				},
 				Fixture:           pre.ChromeRTCFixture(),
 				ExtraSoftwareDeps: []string{"camera_feature_effects"},
@@ -133,9 +113,8 @@ func init() {
 			{
 				Name: "4p_relight",
 				Val: webrtc.VCTestParams{
-					NumPeople:   4,
-					Relight:     true,
-					BrowserType: browser.TypeAsh,
+					NumPeople: 4,
+					Relight:   true,
 				},
 				Fixture:           pre.ChromeRTCFixture(),
 				ExtraSoftwareDeps: []string{"camera_feature_effects"},
@@ -144,10 +123,9 @@ func init() {
 			{
 				Name: "4p_blur_relight",
 				Val: webrtc.VCTestParams{
-					NumPeople:   4,
-					Blur:        true,
-					Relight:     true,
-					BrowserType: browser.TypeAsh,
+					NumPeople: 4,
+					Blur:      true,
+					Relight:   true,
 				},
 				Fixture:           pre.ChromeRTCFixture(),
 				ExtraSoftwareDeps: []string{"camera_feature_effects"},
@@ -156,9 +134,8 @@ func init() {
 			{
 				Name: "4p_present",
 				Val: webrtc.VCTestParams{
-					NumPeople:   4,
-					Present:     true,
-					BrowserType: browser.TypeAsh,
+					NumPeople: 4,
+					Present:   true,
 				},
 				Fixture:   pre.ChromeRTCFixture(),
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
@@ -169,7 +146,6 @@ func init() {
 					NumPeople:         4,
 					Present:           true,
 					NoiseCancellation: true,
-					BrowserType:       browser.TypeAsh,
 				},
 				Fixture:   pre.ChromeRTCFixture(),
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
@@ -181,7 +157,6 @@ func init() {
 					Present:           true,
 					NoiseCancellation: true,
 					StyleTransfer:     true,
-					BrowserType:       browser.TypeAsh,
 				},
 				Fixture:   pre.ChromeRTCFixture(),
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
@@ -189,9 +164,8 @@ func init() {
 			{
 				Name: "4p_text",
 				Val: webrtc.VCTestParams{
-					NumPeople:   4,
-					Text:        true,
-					BrowserType: browser.TypeAsh,
+					NumPeople: 4,
+					Text:      true,
 				},
 				Fixture:   pre.ChromeRTCFixture(),
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
@@ -199,10 +173,9 @@ func init() {
 			{
 				Name: "4p_present_text",
 				Val: webrtc.VCTestParams{
-					NumPeople:   4,
-					Present:     true,
-					Text:        true,
-					BrowserType: browser.TypeAsh,
+					NumPeople: 4,
+					Present:   true,
+					Text:      true,
 				},
 				Fixture:   pre.ChromeRTCFixture(),
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
@@ -214,7 +187,6 @@ func init() {
 					Text:              true,
 					Present:           true,
 					NoiseCancellation: true,
-					BrowserType:       browser.TypeAsh,
 				},
 				Fixture:   pre.ChromeRTCFixture(),
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
@@ -222,12 +194,11 @@ func init() {
 			{
 				Name: "4p_present_text_blur_relight",
 				Val: webrtc.VCTestParams{
-					NumPeople:   4,
-					Text:        true,
-					Present:     true,
-					Blur:        true,
-					Relight:     true,
-					BrowserType: browser.TypeAsh,
+					NumPeople: 4,
+					Text:      true,
+					Present:   true,
+					Blur:      true,
+					Relight:   true,
 				},
 				Fixture:           pre.ChromeRTCFixture(),
 				ExtraSoftwareDeps: []string{"camera_feature_effects"},
@@ -236,9 +207,8 @@ func init() {
 			{
 				Name: "4p_mouse",
 				Val: webrtc.VCTestParams{
-					NumPeople:   4,
-					Mouse:       true,
-					BrowserType: browser.TypeAsh,
+					NumPeople: 4,
+					Mouse:     true,
 				},
 				Fixture:   pre.ChromeRTCFixture(),
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
@@ -246,10 +216,9 @@ func init() {
 			{
 				Name: "4p_present_mouse",
 				Val: webrtc.VCTestParams{
-					NumPeople:   4,
-					Mouse:       true,
-					Present:     true,
-					BrowserType: browser.TypeAsh,
+					NumPeople: 4,
+					Mouse:     true,
+					Present:   true,
 				},
 				Fixture:   pre.ChromeRTCFixture(),
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
@@ -261,7 +230,6 @@ func init() {
 					Mouse:             true,
 					Present:           true,
 					NoiseCancellation: true,
-					BrowserType:       browser.TypeAsh,
 				},
 				Fixture:   pre.ChromeRTCFixture(),
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
@@ -269,66 +237,20 @@ func init() {
 			{
 				Name: "4p_present_mouse_blur_relight",
 				Val: webrtc.VCTestParams{
-					NumPeople:   4,
-					Mouse:       true,
-					Present:     true,
-					Blur:        true,
-					Relight:     true,
-					BrowserType: browser.TypeAsh,
+					NumPeople: 4,
+					Mouse:     true,
+					Present:   true,
+					Blur:      true,
+					Relight:   true,
 				},
 				Fixture:           pre.ChromeRTCFixture(),
 				ExtraSoftwareDeps: []string{"camera_feature_effects"},
 				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
-				Name: "4p_lacros",
-				Val: webrtc.VCTestParams{
-					NumPeople:   4,
-					BrowserType: browser.TypeLacros,
-				},
-				Fixture:           pre.ChromeRTCLacrosFixture(),
-				ExtraSoftwareDeps: []string{"lacros"},
-				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
-			},
-			{
-				Name: "4p_text_lacros",
-				Val: webrtc.VCTestParams{
-					NumPeople:   4,
-					Text:        true,
-					BrowserType: browser.TypeLacros,
-				},
-				Fixture:           pre.ChromeRTCLacrosFixture(),
-				ExtraSoftwareDeps: []string{"lacros"},
-				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
-			},
-			{
-				Name: "4p_mouse_lacros",
-				Val: webrtc.VCTestParams{
-					NumPeople:   4,
-					Mouse:       true,
-					BrowserType: browser.TypeLacros,
-				},
-				Fixture:           pre.ChromeRTCLacrosFixture(),
-				ExtraSoftwareDeps: []string{"lacros"},
-				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
-			},
-			{
-				Name: "4p_present_text_lacros",
-				Val: webrtc.VCTestParams{
-					NumPeople:   4,
-					Text:        true,
-					Present:     true,
-					BrowserType: browser.TypeLacros,
-				},
-				Fixture:           pre.ChromeRTCLacrosFixture(),
-				ExtraSoftwareDeps: []string{"lacros"},
-				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
-			},
-			{
 				Name: "4p_vsync_decoding",
 				Val: webrtc.VCTestParams{
-					NumPeople:   4,
-					BrowserType: browser.TypeAsh,
+					NumPeople: 4,
 				},
 				Fixture:   pre.ChromeRTCFixture(pre.RTCFeatureVsyncDecoding),
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
@@ -336,21 +258,10 @@ func init() {
 			{
 				Name: "9p_vsync_decoding",
 				Val: webrtc.VCTestParams{
-					NumPeople:   9,
-					BrowserType: browser.TypeAsh,
+					NumPeople: 9,
 				},
 				Fixture:   pre.ChromeRTCFixture(pre.RTCFeatureVsyncDecoding),
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
-			},
-			{
-				Name: "9p_vsync_decoding_lacros",
-				Val: webrtc.VCTestParams{
-					NumPeople:   9,
-					BrowserType: browser.TypeLacros,
-				},
-				Fixture:           pre.ChromeRTCLacrosFixture(pre.RTCFeatureVsyncDecoding),
-				ExtraSoftwareDeps: []string{"lacros"},
-				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 		},
 	})
@@ -397,9 +308,14 @@ func WebRTCVideoConference(ctx context.Context, s *testing.State) {
 		s.Fatal("Invalid parameters: Cannot run both Mouse and Text in a single run")
 	}
 
-	tconn, err := s.FixtValue().(chrome.HasChrome).Chrome().TestAPIConn(ctx)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
+	}
+	bTconn, err := cr.Browser().TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Failed to connect to browser test API: ", err)
 	}
 
 	// Setup the device for power testing. This includes setting the battery to discharge mode in
@@ -422,24 +338,6 @@ func WebRTCVideoConference(ctx context.Context, s *testing.State) {
 	}
 	defer cleanup(ctx)
 
-	cr, l, cs, err := lacros.Setup(ctx, s.FixtValue(), params.BrowserType)
-	if err != nil {
-		s.Fatal("Failed to initialize test: ", err)
-	}
-	defer lacros.CloseLacros(ctx, l)
-
-	var br *browser.Browser
-	switch params.BrowserType {
-	case browser.TypeAsh:
-		br = cr.Browser()
-	case browser.TypeLacros:
-		br = l.Browser()
-	}
-
-	bTconn, err := br.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to connect to browser test API: ", err)
-	}
 	graphics.DisableSysLogCheck(s.TestName(),
 		// Disable SysLogCheck for mediatek driver error because it is expected
 		// that the driver fails decoding VP9 k-SVC and falls back to the
@@ -450,7 +348,7 @@ func WebRTCVideoConference(ctx context.Context, s *testing.State) {
 		graphics.SysLogKernelSplats,
 	)
 
-	if err := webrtc.RunVideoConference(ctx, cs, tconn, bTconn, s, params); err != nil {
+	if err := webrtc.RunVideoConference(ctx, cr, tconn, bTconn, s, params); err != nil {
 		s.Fatal("RunVideoConference failed: ", err)
 	}
 }
