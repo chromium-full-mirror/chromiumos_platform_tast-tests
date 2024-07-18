@@ -331,9 +331,12 @@ func (ec *ECTool) CBI(ctx context.Context, cmd CBICmd, args ...string) (string, 
 	cmdAndArgs := []string{"cbi", string(cmd)}
 	cmdAndArgs = append(cmdAndArgs, args...)
 	testing.ContextLogf(ctx, "Running cmd: 'ectool %s'", strings.Join(cmdAndArgs, " "))
-	out, err := ec.Command(ctx, cmdAndArgs...).Output(ssh.DumpLogOnError)
+	out, err := ec.Command(ctx, cmdAndArgs...).CombinedOutput()
 	if err != nil {
-		return "", errors.Wrapf(err, "running 'ectool %s' on DUT with args %v, got: %v", string(cmd), args, string(out))
+		if strings.Contains(string(out), "EC result 3 (INVALID_PARAM)") {
+			return "", errors.Wrapf(err, "no value for 'ectool %s' on DUT", strings.Join(cmdAndArgs, " "))
+		}
+		return "", errors.Wrapf(err, "running 'ectool %s' on DUT, error:\n%s", strings.Join(cmdAndArgs, " "), string(out))
 	}
 	return string(out), nil
 }
@@ -375,9 +378,12 @@ func (ec *ECTool) BCFG(ctx context.Context, cmd BCFGCmd, args ...string) (string
 	cmdAndArgs := []string{"bcfg", string(cmd)}
 	cmdAndArgs = append(cmdAndArgs, args...)
 	testing.ContextLogf(ctx, "Running cmd: 'ectool %s'", strings.Join(cmdAndArgs, " "))
-	out, err := ec.Command(ctx, cmdAndArgs...).Output(ssh.DumpLogOnError)
+	out, err := ec.Command(ctx, cmdAndArgs...).CombinedOutput()
 	if err != nil {
-		return "", errors.Wrapf(err, "running 'ectool %s' on DUT with args %v, got: %v", strings.Join(cmdAndArgs, " "), args, string(out))
+		if strings.Contains(string(out), "EC result 3 (INVALID_PARAM)") {
+			return "", errors.Wrapf(err, "no value for 'ectool %s' on DUT", strings.Join(cmdAndArgs, " "))
+		}
+		return "", errors.Wrapf(err, "running 'ectool %s' on DUT, error:\n%s", strings.Join(cmdAndArgs, " "), string(out))
 	}
 	return string(out), nil
 }

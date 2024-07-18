@@ -31,8 +31,7 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		// TODO: b/317891316 When stable, change firmware_unstable to a different attr.
-		// TODO(b/285381057): This test always fails, so disable it until it is fixed.
-		Attr:    []string{"group:firmware"},
+		Attr:    []string{"group:firmware", "firmware_unstable"},
 		Fixture: fixture.NormalMode,
 		Timeout: 15 * time.Minute,
 		// Only run on platforms that include CL crrev/c/1234747 so that CBI can be reversibly written to.
@@ -255,7 +254,7 @@ func getBcfg(ctx context.Context, h *firmware.Helper) (string, error) {
 	testing.ContextLog(ctx, "Attempting to read Battery config")
 	out, err := firmware.NewECTool(h.DUT, firmware.ECToolNameMain).BCFG(ctx, firmware.BCFGGet, "-j")
 	if err != nil {
-		return "", errors.Wrapf(err, "failed to get Battery config, got output: %v", out)
+		return "", errors.Wrap(err, "failed to get Battery config")
 	}
 	return out, nil
 }
@@ -263,9 +262,9 @@ func getBcfg(ctx context.Context, h *firmware.Helper) (string, error) {
 func setBcfg(ctx context.Context, h *firmware.Helper, fileName, manufName, deviceName string) error {
 	testing.ContextLog(ctx, "Attempting to write Battery config")
 	args := []string{fileName, manufName, deviceName}
-	out, err := firmware.NewECTool(h.DUT, firmware.ECToolNameMain).BCFG(ctx, firmware.BCFGSet, args...)
+	_, err := firmware.NewECTool(h.DUT, firmware.ECToolNameMain).BCFG(ctx, firmware.BCFGSet, args...)
 	if err != nil {
-		return errors.Wrapf(err, "failed to set Battery config, got output: %v", out)
+		return errors.Wrap(err, "failed to set Battery config")
 	}
 	return nil
 }
@@ -297,7 +296,11 @@ func readBatteryConfigFromCbi(ctx context.Context, h *firmware.Helper, tag strin
 	testing.ContextLog(ctx, "Attempting to read data from tag ", tag)
 	out, err := firmware.NewECTool(h.DUT, firmware.ECToolNameMain).CBI(ctx, firmware.CBIGet, tag)
 	if err != nil {
-		return "", errors.Wrapf(err, "failed to read tag %q from cbi, got output: %v", tag, out)
+		if strings.Contains(err.Error(), "no value") {
+			testing.ContextLogf(ctx, "No value for tag %s from cbi", tag)
+			return "", nil
+		}
+		return "", errors.Wrapf(err, "failed to read tag %q from cbi", tag)
 	}
 	return out, nil
 }
@@ -312,7 +315,7 @@ func jsonBytesToMap(ctx context.Context, bytes []byte) (map[string]interface{}, 
 }
 
 func jsonMapToBytes(ctx context.Context, jsonMap map[string]interface{}) ([]byte, error) {
-	bytes, err := json.Marshal(jsonMap)
+	bytes, err := json.MarshalIndent(jsonMap, "", "\t")
 	if err != nil {
 		return nil, errors.Wrapf(err, "JSON map to bytes conversion failed: %q", jsonMap)
 	}
