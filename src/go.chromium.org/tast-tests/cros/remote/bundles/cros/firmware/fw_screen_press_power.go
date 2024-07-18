@@ -185,6 +185,12 @@ func fwScreenPressPowerOff(ctx context.Context, h *firmware.Helper, bootToScreen
 				return errors.Wrap(err, "failed to move to power off on to_norm screen")
 			}
 		}
+		// GoBigSleepLint: It may take some time for the DUT to be ready to
+		// accept power key press.
+		testing.ContextLog(ctx, "Sleeping for 2 seconds before powering up DUT")
+		if err := testing.Sleep(ctx, 2*time.Second); err != nil {
+			return errors.Wrap(err, "failed to sleep")
+		}
 		testing.ContextLog(ctx, "Pressing power key")
 		if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.DurPress); err != nil {
 			return errors.Wrap(err, "failed to press power key")
