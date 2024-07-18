@@ -144,22 +144,6 @@ var firmwareVersionMap = map[fp.BoardName]map[string]firmwareMetadata{
 			keyID:     "1c590ef36399f6a2b2ef87079c135b69ef89eb60",
 		},
 	},
-	fp.BoardNameNocturne: {
-		"nocturne_fp_v2.2.64-58cf5974e-RO_v2.0.24905-73bc70b5-RW.bin": {
-			sha256sum: "2d7263e80e3efef19c2792e735db3df781ea43cd10c12b0a32f7c1f550959c11",
-			roVersion: "nocturne_fp_v2.2.64-58cf5974e",
-			rwVersion: "nocturne_fp_v2.0.24905-73bc70b5",
-			keyID:     "6f38c866182bd9bf7a4462c06ac04fa6a0074351",
-		},
-	},
-	fp.BoardNameNami: {
-		"nami_fp_v2.2.144-7a08e07eb-RO_v2.0.24905-73bc70b511-RW.bin": {
-			sha256sum: "8792b0cdeaa888e1fbe66f6b0758054925fd31060dfdc6241c8bcecb1a585d36",
-			roVersion: "nami_fp_v2.2.144-7a08e07eb",
-			rwVersion: "nami_fp_v2.0.24905-73bc70b511",
-			keyID:     "35486c0090ca390408f1fbbf2a182966084fe2f8",
-		},
-	},
 	fp.BoardNameDartmonkey: {
 		"dartmonkey_v2.0.2887-311310808-RO_v2.0.24905-73bc70b51-RW.bin": {
 			sha256sum: "2b386815737d4ae90509a16f983ea2045b967102fa393e32b9c65ff6d004ae35",
@@ -174,6 +158,22 @@ var firmwareVersionMap = map[fp.BoardName]map[string]firmwareMetadata{
 			roVersion: "helipilot_v2.0.24337-2726e9f149",
 			rwVersion: "helipilot_v2.0.24901-b1c5caa35e",
 			keyID:     "3c0b147809e06f279ba0cf221c18995d7b4e3f1a",
+		},
+	},
+	fp.BoardNameNami: {
+		"nami_fp_v2.2.144-7a08e07eb-RO_v2.0.24905-73bc70b511-RW.bin": {
+			sha256sum: "8792b0cdeaa888e1fbe66f6b0758054925fd31060dfdc6241c8bcecb1a585d36",
+			roVersion: "nami_fp_v2.2.144-7a08e07eb",
+			rwVersion: "nami_fp_v2.0.24905-73bc70b511",
+			keyID:     "35486c0090ca390408f1fbbf2a182966084fe2f8",
+		},
+	},
+	fp.BoardNameNocturne: {
+		"nocturne_fp_v2.2.64-58cf5974e-RO_v2.0.24905-73bc70b5-RW.bin": {
+			sha256sum: "2d7263e80e3efef19c2792e735db3df781ea43cd10c12b0a32f7c1f550959c11",
+			roVersion: "nocturne_fp_v2.2.64-58cf5974e",
+			rwVersion: "nocturne_fp_v2.0.24905-73bc70b5",
+			keyID:     "6f38c866182bd9bf7a4462c06ac04fa6a0074351",
 		},
 	},
 }
