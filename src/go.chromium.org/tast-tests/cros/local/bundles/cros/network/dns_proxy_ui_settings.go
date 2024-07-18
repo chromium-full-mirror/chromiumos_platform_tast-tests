@@ -80,9 +80,12 @@ func DNSProxyUISettings(ctx context.Context, s *testing.State) {
 	}
 	defer env.Cleanup(cleanupCtx)
 
-	if err := dns.SetDoHModeViaUI(ctx, cr, tconn, dns.DoHAlwaysOn, dns.ExampleDoHProvider); err != nil {
-		s.Fatal("Failed to set DNS-over-HTTPS mode to always-on: ", err)
-	}
+	// Reset to off at the end of the test.
+	defer func() {
+		if _, err := dns.SetDoHModeViaShill(ctx, dns.DoHOff, "" /*dohProvider*/); err != nil {
+			s.Log("Failed to set DNS-over-HTTPS mode to off: ", err)
+		}
+	}()
 
 	if err := dns.SetDoHModeViaUI(ctx, cr, tconn, dns.DoHOff, "" /*dohProvider*/); err != nil {
 		s.Fatal("Failed to set DNS-over-HTTPS mode to off: ", err)
@@ -90,5 +93,9 @@ func DNSProxyUISettings(ctx context.Context, s *testing.State) {
 
 	if err := dns.SetDoHModeViaUI(ctx, cr, tconn, dns.DoHAutomatic, "" /*dohProvider*/); err != nil {
 		s.Fatal("Failed to set DNS-over-HTTPS mode to automatic: ", err)
+	}
+
+	if err := dns.SetDoHModeViaUI(ctx, cr, tconn, dns.DoHAlwaysOn, dns.ExampleDoHProvider); err != nil {
+		s.Fatal("Failed to set DNS-over-HTTPS mode to always-on: ", err)
 	}
 }
