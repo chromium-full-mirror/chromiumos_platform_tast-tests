@@ -28,6 +28,16 @@ import (
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
+const (
+	videoPlaybackShortTimeout = 10*time.Minute + power.RecorderTimeout
+	videoPlaybackTimeout      = 3*time.Hour + power.RecorderTimeout
+)
+
+var (
+	videoPlaybackShortTimeParam = power.TimeParams{Interval: 5 * time.Second, Total: 6 * time.Minute}
+	videoPlaybackTimeParam      = power.TimeParams{Interval: 5 * time.Second, Total: time.Hour}
+)
+
 type arcVideoTestParam struct {
 	App        func(cr *chrome.Chrome, tconn *chrome.TestConn, kb *input.KeyboardEventWriter, a *arc.ARC, d *androidui.Device, dataPath func(string) string) arcvpb.VideoApp
 	VideoName  string
@@ -44,98 +54,227 @@ func init() {
 		SoftwareDeps: []string{"chrome", "arc"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Fixture:      "powerAshARC",
-		Timeout:      3*time.Hour + power.RecorderTimeout, // 1 hour for video and 2 hour for charging
 		Params: []testing.Param{
 			{
-				Name:      "exoplayer_h264_720_30fps_ash",
-				Val:       arcVideoTestParam{App: arcvpb.NewExoPlayerApp, VideoName: "h264_720_30fps"},
+				Name: "exoplayer_h264_720_30fps_ash",
+				Val: arcVideoTestParam{
+					App:        arcvpb.NewExoPlayerApp,
+					VideoName:  "h264_720_30fps",
+					TimeParams: videoPlaybackTimeParam,
+				},
 				ExtraData: []string{"arc_video_playback/h264_720_30fps.mp4", arcvpb.ExoPlayerAPKFileName},
+				Timeout:   videoPlaybackTimeout,
 			}, {
-				Name:      "exoplayer_h264_720_60fps_ash",
-				Val:       arcVideoTestParam{App: arcvpb.NewExoPlayerApp, VideoName: "h264_720_60fps"},
+				Name: "exoplayer_h264_720_60fps_ash",
+				Val: arcVideoTestParam{
+					App:        arcvpb.NewExoPlayerApp,
+					VideoName:  "h264_720_60fps",
+					TimeParams: videoPlaybackTimeParam,
+				},
 				ExtraData: []string{"arc_video_playback/h264_720_60fps.mp4", arcvpb.ExoPlayerAPKFileName},
+				Timeout:   videoPlaybackTimeout,
 			}, {
-				Name:      "exoplayer_h264_1080_30fps_ash",
-				Val:       arcVideoTestParam{App: arcvpb.NewExoPlayerApp, VideoName: "h264_1080_30fps"},
+				Name: "exoplayer_h264_1080_30fps_ash",
+				Val: arcVideoTestParam{
+					App:        arcvpb.NewExoPlayerApp,
+					VideoName:  "h264_1080_30fps",
+					TimeParams: videoPlaybackTimeParam,
+				},
 				ExtraData: []string{"arc_video_playback/h264_1080_30fps.mp4", arcvpb.ExoPlayerAPKFileName},
 				ExtraAttr: []string{"group:power", "power_regression"},
+				Timeout:   videoPlaybackTimeout,
 			}, {
-				Name:      "exoplayer_h264_1080_60fps_ash",
-				Val:       arcVideoTestParam{App: arcvpb.NewExoPlayerApp, VideoName: "h264_1080_60fps"},
+				Name: "exoplayer_h264_1080_30fps_ash_short",
+				Val: arcVideoTestParam{
+					App:        arcvpb.NewExoPlayerApp,
+					VideoName:  "h264_1080_30fps",
+					TimeParams: videoPlaybackShortTimeParam,
+				},
+				ExtraData: []string{"arc_video_playback/h264_1080_30fps.mp4", arcvpb.ExoPlayerAPKFileName},
+				ExtraAttr: []string{"group:power", "power_daily"},
+				Timeout:   videoPlaybackShortTimeout,
+			}, {
+				Name: "exoplayer_h264_1080_60fps_ash",
+				Val: arcVideoTestParam{
+					App:        arcvpb.NewExoPlayerApp,
+					VideoName:  "h264_1080_60fps",
+					TimeParams: videoPlaybackTimeParam,
+				},
 				ExtraData: []string{"arc_video_playback/h264_1080_60fps.mp4", arcvpb.ExoPlayerAPKFileName},
+				Timeout:   videoPlaybackTimeout,
 			}, {
-				Name:      "exoplayer_h264_4k_30fps_ash",
-				Val:       arcVideoTestParam{App: arcvpb.NewExoPlayerApp, VideoName: "h264_4k_30fps"},
+				Name: "exoplayer_h264_4k_30fps_ash",
+				Val: arcVideoTestParam{
+					App:        arcvpb.NewExoPlayerApp,
+					VideoName:  "h264_4k_30fps",
+					TimeParams: videoPlaybackTimeParam,
+				},
 				ExtraData: []string{"arc_video_playback/h264_4k_30fps.mp4", arcvpb.ExoPlayerAPKFileName},
+				Timeout:   videoPlaybackTimeout,
 			}, {
-				Name:      "exoplayer_h264_4k_60fps_ash",
-				Val:       arcVideoTestParam{App: arcvpb.NewExoPlayerApp, VideoName: "h264_4k_60fps"},
+				Name: "exoplayer_h264_4k_60fps_ash",
+				Val: arcVideoTestParam{
+					App:        arcvpb.NewExoPlayerApp,
+					VideoName:  "h264_4k_60fps",
+					TimeParams: videoPlaybackTimeParam,
+				},
 				ExtraData: []string{"arc_video_playback/h264_4k_60fps.mp4", arcvpb.ExoPlayerAPKFileName},
+				Timeout:   videoPlaybackTimeout,
 			}, {
-				Name:      "exoplayer_vp8_720_30fps_ash",
-				Val:       arcVideoTestParam{App: arcvpb.NewExoPlayerApp, VideoName: "vp8_720_30fps"},
+				Name: "exoplayer_vp8_720_30fps_ash",
+				Val: arcVideoTestParam{
+					App:        arcvpb.NewExoPlayerApp,
+					VideoName:  "vp8_720_30fps",
+					TimeParams: videoPlaybackTimeParam,
+				},
 				ExtraData: []string{"arc_video_playback/vp8_720_30fps.webm", arcvpb.ExoPlayerAPKFileName},
+				Timeout:   videoPlaybackTimeout,
 			}, {
-				Name:      "exoplayer_vp8_720_60fps_ash",
-				Val:       arcVideoTestParam{App: arcvpb.NewExoPlayerApp, VideoName: "vp8_720_60fps"},
+				Name: "exoplayer_vp8_720_60fps_ash",
+				Val: arcVideoTestParam{
+					App:        arcvpb.NewExoPlayerApp,
+					VideoName:  "vp8_720_60fps",
+					TimeParams: videoPlaybackTimeParam,
+				},
 				ExtraData: []string{"arc_video_playback/vp8_720_60fps.webm", arcvpb.ExoPlayerAPKFileName},
+				Timeout:   videoPlaybackTimeout,
 			}, {
-				Name:      "exoplayer_vp8_1080_30fps_ash",
-				Val:       arcVideoTestParam{App: arcvpb.NewExoPlayerApp, VideoName: "vp8_1080_30fps"},
+				Name: "exoplayer_vp8_1080_30fps_ash",
+				Val: arcVideoTestParam{
+					App:        arcvpb.NewExoPlayerApp,
+					VideoName:  "vp8_1080_30fps",
+					TimeParams: videoPlaybackTimeParam,
+				},
 				ExtraData: []string{"arc_video_playback/vp8_1080_30fps.webm", arcvpb.ExoPlayerAPKFileName},
+				Timeout:   videoPlaybackTimeout,
 			}, {
-				Name:      "exoplayer_vp8_1080_60fps_ash",
-				Val:       arcVideoTestParam{App: arcvpb.NewExoPlayerApp, VideoName: "vp8_1080_60fps"},
+				Name: "exoplayer_vp8_1080_60fps_ash",
+				Val: arcVideoTestParam{
+					App:        arcvpb.NewExoPlayerApp,
+					VideoName:  "vp8_1080_60fps",
+					TimeParams: videoPlaybackTimeParam,
+				},
 				ExtraData: []string{"arc_video_playback/vp8_1080_60fps.webm", arcvpb.ExoPlayerAPKFileName},
+				Timeout:   videoPlaybackTimeout,
 			}, {
-				Name:      "exoplayer_vp8_4k_30fps_ash",
-				Val:       arcVideoTestParam{App: arcvpb.NewExoPlayerApp, VideoName: "vp8_4k_30fps"},
+				Name: "exoplayer_vp8_4k_30fps_ash",
+				Val: arcVideoTestParam{
+					App:        arcvpb.NewExoPlayerApp,
+					VideoName:  "vp8_4k_30fps",
+					TimeParams: videoPlaybackTimeParam,
+				},
 				ExtraData: []string{"arc_video_playback/vp8_4k_30fps.webm", arcvpb.ExoPlayerAPKFileName},
+				Timeout:   videoPlaybackTimeout,
 			}, {
-				Name:      "exoplayer_vp8_4k_60fps_ash",
-				Val:       arcVideoTestParam{App: arcvpb.NewExoPlayerApp, VideoName: "vp8_4k_60fps"},
+				Name: "exoplayer_vp8_4k_60fps_ash",
+				Val: arcVideoTestParam{
+					App:        arcvpb.NewExoPlayerApp,
+					VideoName:  "vp8_4k_60fps",
+					TimeParams: videoPlaybackTimeParam,
+				},
 				ExtraData: []string{"arc_video_playback/vp8_4k_60fps.webm", arcvpb.ExoPlayerAPKFileName},
+				Timeout:   videoPlaybackTimeout,
 			}, {
-				Name:      "exoplayer_vp9_720_30fps_ash",
-				Val:       arcVideoTestParam{App: arcvpb.NewExoPlayerApp, VideoName: "vp9_720_30fps"},
+				Name: "exoplayer_vp9_720_30fps_ash",
+				Val: arcVideoTestParam{
+					App:        arcvpb.NewExoPlayerApp,
+					VideoName:  "vp9_720_30fps",
+					TimeParams: videoPlaybackTimeParam,
+				},
 				ExtraData: []string{"arc_video_playback/vp9_720_30fps.webm", arcvpb.ExoPlayerAPKFileName},
+				Timeout:   videoPlaybackTimeout,
 			}, {
-				Name:      "exoplayer_vp9_720_60fps_ash",
-				Val:       arcVideoTestParam{App: arcvpb.NewExoPlayerApp, VideoName: "vp9_720_60fps"},
+				Name: "exoplayer_vp9_720_60fps_ash",
+				Val: arcVideoTestParam{
+					App:        arcvpb.NewExoPlayerApp,
+					VideoName:  "vp9_720_60fps",
+					TimeParams: videoPlaybackTimeParam,
+				},
 				ExtraData: []string{"arc_video_playback/vp9_720_60fps.webm", arcvpb.ExoPlayerAPKFileName},
+				Timeout:   videoPlaybackTimeout,
 			}, {
-				Name:      "exoplayer_vp9_1080_30fps_ash",
-				Val:       arcVideoTestParam{App: arcvpb.NewExoPlayerApp, VideoName: "vp9_1080_30fps"},
+				Name: "exoplayer_vp9_1080_30fps_ash",
+				Val: arcVideoTestParam{
+					App:        arcvpb.NewExoPlayerApp,
+					VideoName:  "vp9_1080_30fps",
+					TimeParams: videoPlaybackTimeParam,
+				},
 				ExtraData: []string{"arc_video_playback/vp9_1080_30fps.webm", arcvpb.ExoPlayerAPKFileName},
 				ExtraAttr: []string{"group:power", "power_regression"},
+				Timeout:   videoPlaybackTimeout,
 			}, {
-				Name:      "exoplayer_vp9_1080_60fps_ash",
-				Val:       arcVideoTestParam{App: arcvpb.NewExoPlayerApp, VideoName: "vp9_1080_60fps"},
+				Name: "exoplayer_vp9_1080_30fps_ash_short",
+				Val: arcVideoTestParam{
+					App:        arcvpb.NewExoPlayerApp,
+					VideoName:  "h264_1080_30fps",
+					TimeParams: videoPlaybackShortTimeParam,
+				},
+				ExtraData: []string{"arc_video_playback/h264_1080_30fps.mp4", arcvpb.ExoPlayerAPKFileName},
+				ExtraAttr: []string{"group:power", "power_daily"},
+				Timeout:   videoPlaybackShortTimeout,
+			}, {
+				Name: "exoplayer_vp9_1080_60fps_ash",
+				Val: arcVideoTestParam{
+					App:        arcvpb.NewExoPlayerApp,
+					VideoName:  "vp9_1080_60fps",
+					TimeParams: videoPlaybackTimeParam,
+				},
 				ExtraData: []string{"arc_video_playback/vp9_1080_60fps.webm", arcvpb.ExoPlayerAPKFileName},
+				Timeout:   videoPlaybackTimeout,
 			}, {
-				Name:      "exoplayer_vp9_4k_30fps_ash",
-				Val:       arcVideoTestParam{App: arcvpb.NewExoPlayerApp, VideoName: "vp9_4k_30fps"},
+				Name: "exoplayer_vp9_4k_30fps_ash",
+				Val: arcVideoTestParam{
+					App:        arcvpb.NewExoPlayerApp,
+					VideoName:  "vp9_4k_30fps",
+					TimeParams: videoPlaybackTimeParam,
+				},
 				ExtraData: []string{"arc_video_playback/vp9_4k_30fps.webm", arcvpb.ExoPlayerAPKFileName},
+				Timeout:   videoPlaybackTimeout,
 			}, {
-				Name:      "exoplayer_vp9_4k_60fps_ash",
-				Val:       arcVideoTestParam{App: arcvpb.NewExoPlayerApp, VideoName: "vp9_4k_60fps"},
+				Name: "exoplayer_vp9_4k_60fps_ash",
+				Val: arcVideoTestParam{
+					App:        arcvpb.NewExoPlayerApp,
+					VideoName:  "vp9_4k_60fps",
+					TimeParams: videoPlaybackTimeParam,
+				},
 				ExtraData: []string{"arc_video_playback/vp9_4k_60fps.webm", arcvpb.ExoPlayerAPKFileName},
+				Timeout:   videoPlaybackTimeout,
 			}, {
-				Name:      "exoplayer_av1_720_30fps_ash",
-				Val:       arcVideoTestParam{App: arcvpb.NewExoPlayerApp, VideoName: "av1_720_30fps"},
+				Name: "exoplayer_av1_720_30fps_ash",
+				Val: arcVideoTestParam{
+					App:        arcvpb.NewExoPlayerApp,
+					VideoName:  "av1_720_30fps",
+					TimeParams: videoPlaybackTimeParam,
+				},
 				ExtraData: []string{"arc_video_playback/av1_720_30fps.mp4", arcvpb.ExoPlayerAPKFileName},
+				Timeout:   videoPlaybackTimeout,
 			}, {
-				Name:      "exoplayer_av1_720_60fps_ash",
-				Val:       arcVideoTestParam{App: arcvpb.NewExoPlayerApp, VideoName: "av1_720_60fps"},
+				Name: "exoplayer_av1_720_60fps_ash",
+				Val: arcVideoTestParam{
+					App:        arcvpb.NewExoPlayerApp,
+					VideoName:  "av1_720_60fps",
+					TimeParams: videoPlaybackTimeParam,
+				},
 				ExtraData: []string{"arc_video_playback/av1_720_60fps.mp4", arcvpb.ExoPlayerAPKFileName},
+				Timeout:   videoPlaybackTimeout,
 			}, {
-				Name:      "exoplayer_av1_1080_30fps_ash",
-				Val:       arcVideoTestParam{App: arcvpb.NewExoPlayerApp, VideoName: "av1_1080_30fps"},
+				Name: "exoplayer_av1_1080_30fps_ash",
+				Val: arcVideoTestParam{
+					App:        arcvpb.NewExoPlayerApp,
+					VideoName:  "av1_1080_30fps",
+					TimeParams: videoPlaybackTimeParam,
+				},
 				ExtraData: []string{"arc_video_playback/av1_1080_30fps.mp4", arcvpb.ExoPlayerAPKFileName},
+				Timeout:   videoPlaybackTimeout,
 			}, {
-				Name:      "exoplayer_av1_1080_60fps_ash",
-				Val:       arcVideoTestParam{App: arcvpb.NewExoPlayerApp, VideoName: "av1_1080_60fps"},
+				Name: "exoplayer_av1_1080_60fps_ash",
+				Val: arcVideoTestParam{
+					App:        arcvpb.NewExoPlayerApp,
+					VideoName:  "av1_1080_60fps",
+					TimeParams: videoPlaybackTimeParam,
+				},
 				ExtraData: []string{"arc_video_playback/av1_1080_60fps.mp4", arcvpb.ExoPlayerAPKFileName},
+				Timeout:   videoPlaybackTimeout,
 			},
 		},
 	})
