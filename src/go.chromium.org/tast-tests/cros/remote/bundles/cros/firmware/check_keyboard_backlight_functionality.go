@@ -227,16 +227,17 @@ func checkKBLightWhenLidClosedOpen(ctx context.Context, h *firmware.Helper) erro
 		return errors.Wrap(err, "failed to wait for DUT to become unreachable")
 	}
 
-	// Ensure DUT reaches G3, S3 or S0ix before attempting to open the lid.
-	if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, 1*time.Minute, "G3", "S3", "S0ix"); err != nil {
-		return errors.Wrap(err, "failed to wait for DUT to reach G3, S3 or S0ix power state")
+	// Ensure DUT reaches S3, or S0ix before attempting to open the lid.
+	if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, 1*time.Minute, "S3", "S0ix"); err != nil {
+		powerState, getPowerStateErr := h.Servo.GetECSystemPowerState(ctx)
+		if getPowerStateErr != nil {
+			return errors.Wrap(getPowerStateErr, "failed to wait for DUT to reach S3 or S0ix power state and retrieve the power state of the DUT")
+		}
+		if powerState == "G3" {
+			return errors.New("chrome login has been performed, DUT should not reach G3 power state after closing lid")
+		}
+		return errors.Wrap(err, "failed to wait for DUT to reach S3 or S0ix power state")
 	}
-
-	powerState, err := h.Servo.GetECSystemPowerState(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to get the power state of the DUT")
-	}
-	testing.ContextLog(ctx, "DUT current power state is: ", powerState)
 
 	if err := h.Servo.OpenLid(ctx); err != nil {
 		return err
@@ -259,7 +260,7 @@ func checkKBLightWhenLidClosedOpen(ctx context.Context, h *firmware.Helper) erro
 		}
 		return nil
 	}, &testing.PollOptions{Timeout: 30 * time.Second, Interval: 1 * time.Second}); err != nil {
-		return errors.Wrapf(err, "did not find keyboard backlight values, got power state %v when lid close", powerState)
+		return err
 	}
 
 	kbLightClosedLid := kbLightValues[0]
