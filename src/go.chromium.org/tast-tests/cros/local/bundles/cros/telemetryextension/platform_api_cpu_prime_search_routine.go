@@ -30,7 +30,6 @@ func init() {
 			"group:mainline",
 			"informational",
 			"group:hw_agnostic",
-			"group:criticalstaging",
 		},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{

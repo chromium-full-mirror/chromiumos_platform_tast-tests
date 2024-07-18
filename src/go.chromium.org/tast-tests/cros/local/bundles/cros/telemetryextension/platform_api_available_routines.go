@@ -33,7 +33,7 @@ func init() {
 			{
 				Name:      "ash",
 				Fixture:   fixture.TelemetryExtensionSkipOEMNameCheck,
-				ExtraAttr: []string{"informational", "group:criticalstaging"},
+				ExtraAttr: []string{"informational"},
 			},
 			{
 				Name:              "lacros",
