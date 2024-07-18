@@ -422,13 +422,14 @@ func collectExtraDebugInfo(ctx context.Context, s *testing.State) (bool, error) 
 	return true, nil
 }
 
+var bootPerfMetricBounds = []bounds.MetricBounds{{
+	Test:   bounds.MatchRegexp(`_bounds$`),
+	Metric: bounds.MatchRegexp(`seconds_power_on_to_login$`),
+	Bounds: bounds.Max(8.0),
+}}
+
 // BootPerf is the function that reboots the client and collect boot perf data.
 func BootPerf(ctx context.Context, s *testing.State) {
-	metricBounds := []bounds.MetricBounds{{
-		Test:   bounds.MatchRegexp(`_bounds$`),
-		Metric: bounds.MatchRegexp(`\.seconds_power_on_to_login$`),
-		Bounds: bounds.Max(8.0),
-	}}
 
 	d := s.DUT()
 
@@ -558,7 +559,7 @@ func BootPerf(ctx context.Context, s *testing.State) {
 	if err := pv.Save(s.OutDir()); err != nil {
 		s.Error("Failed saving perf data: ", err)
 	}
-	if err := bounds.EvaluateResults(ctx, metricBounds, s.OutDir()); err != nil {
+	if err := bounds.EvaluateResults(ctx, bootPerfMetricBounds, s.OutDir()); err != nil {
 		s.Error("Failed bounds check: ", err)
 	}
 }

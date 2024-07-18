@@ -1,0 +1,762 @@
+{
+  "rdbytes_chrome_exec_to_login": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "list_of_scalar_values",
+      "units": "rdbytes",
+      "values": [
+        130330624,
+        103739392,
+        118804480,
+        138076160,
+        172470272,
+        161935360,
+        146436096,
+        118456320,
+        137490432,
+        117633024
+      ]
+    }
+  },
+  "rdbytes_kernel_to_chrome_exec": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "list_of_scalar_values",
+      "units": "rdbytes",
+      "values": [
+        326122496,
+        356669440,
+        340806656,
+        317884416,
+        285969408,
+        298043392,
+        310810624,
+        346621952,
+        323463168,
+        340301824
+      ]
+    }
+  },
+  "rdbytes_kernel_to_login": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "list_of_scalar_values",
+      "units": "rdbytes",
+      "values": [
+        456453120,
+        460408832,
+        459611136,
+        455960576,
+        458439680,
+        459978752,
+        457246720,
+        465078272,
+        460953600,
+        457934848
+      ]
+    }
+  },
+  "rdbytes_kernel_to_patchpanel_start": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "list_of_scalar_values",
+      "units": "rdbytes",
+      "values": [
+        492055552,
+        493545472,
+        479067136,
+        483432448,
+        484252672,
+        477808640,
+        488269824,
+        491673600,
+        491788288,
+        488515584
+      ]
+    }
+  },
+  "rdbytes_kernel_to_patchpanel_started": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "list_of_scalar_values",
+      "units": "rdbytes",
+      "values": [
+        541834240,
+        544032768,
+        515820544,
+        558772736,
+        542579712,
+        543578112,
+        517396480,
+        527104000,
+        544200704,
+        527960064
+      ]
+    }
+  },
+  "rdbytes_kernel_to_splash_screen_visible": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "list_of_scalar_values",
+      "units": "rdbytes",
+      "values": [
+        60061696,
+        60278784,
+        60274688,
+        60667904,
+        60274688,
+        60274688,
+        60274688,
+        60278784,
+        60274688,
+        60213248
+      ]
+    }
+  },
+  "rdbytes_kernel_to_startup": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "list_of_scalar_values",
+      "units": "rdbytes",
+      "values": [
+        51879936,
+        51879936,
+        51879936,
+        51879936,
+        51879936,
+        51879936,
+        51879936,
+        51879936,
+        51879936,
+        51879936
+      ]
+    }
+  },
+  "rdbytes_kernel_to_startup_done": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "list_of_scalar_values",
+      "units": "rdbytes",
+      "values": [
+        70048768,
+        70330368,
+        69950464,
+        70354944,
+        70102016,
+        70043648,
+        70379520,
+        70019072,
+        69998592,
+        69675008
+      ]
+    }
+  },
+  "rdbytes_kernel_to_wifi_registered": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "list_of_scalar_values",
+      "units": "rdbytes",
+      "values": [
+        347978752,
+        353142784,
+        367496192,
+        318699520,
+        319716352,
+        312829952,
+        337479680,
+        342648832,
+        339847168,
+        333240320
+      ]
+    }
+  },
+  "rdbytes_startup_to_chrome_exec": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "list_of_scalar_values",
+      "units": "rdbytes",
+      "values": [
+        274242560,
+        304789504,
+        288926720,
+        266004480,
+        234089472,
+        246163456,
+        258930688,
+        294742016,
+        271583232,
+        288421888
+      ]
+    }
+  },
+  "seconds_chrome_exec_to_login": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "list_of_scalar_values",
+      "units": "seconds",
+      "values": [
+        0.977,
+        0.892,
+        0.929,
+        1.069,
+        1.196,
+        1.094,
+        1.043,
+        0.924,
+        1.002,
+        0.911
+      ]
+    }
+  },
+  "seconds_kernel_to_chrome_exec": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "list_of_scalar_values",
+      "units": "seconds",
+      "values": [
+        2.719,
+        2.722,
+        2.741,
+        2.763,
+        2.73,
+        2.726,
+        2.722,
+        2.722,
+        2.742,
+        2.823
+      ]
+    }
+  },
+  "seconds_kernel_to_chrome_main": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "list_of_scalar_values",
+      "units": "seconds",
+      "values": [
+        3.14,
+        3.03,
+        3.11,
+        3.27,
+        3.39,
+        3.27,
+        3.22,
+        3.08,
+        3.18,
+        3.2
+      ]
+    }
+  },
+  "seconds_kernel_to_login": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "list_of_scalar_values",
+      "units": "seconds",
+      "values": [
+        3.697,
+        3.614,
+        3.67,
+        3.832,
+        3.926,
+        3.82,
+        3.765,
+        3.646,
+        3.744,
+        3.733
+      ]
+    }
+  },
+  "seconds_kernel_to_network": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "list_of_scalar_values",
+      "units": "seconds",
+      "values": [
+        5.43,
+        5.564,
+        4.844,
+        5.645,
+        4.897,
+        4.835,
+        5.236,
+        4.78,
+        4.979,
+        5.454
+      ]
+    }
+  },
+  "seconds_kernel_to_network_ethernet_ready": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "list_of_scalar_values",
+      "units": "seconds",
+      "values": [
+        5.43,
+        5.564,
+        4.844,
+        5.645,
+        4.897,
+        4.835,
+        5.236,
+        4.78,
+        4.979,
+        5.454
+      ]
+    }
+  },
+  "seconds_kernel_to_patchpanel_start": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "list_of_scalar_values",
+      "units": "seconds",
+      "values": [
+        4.072,
+        3.951,
+        3.861,
+        4.137,
+        4.206,
+        4.055,
+        4.05,
+        3.914,
+        4.005,
+        4.069
+      ]
+    }
+  },
+  "seconds_kernel_to_patchpanel_started": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "list_of_scalar_values",
+      "units": "seconds",
+      "values": [
+        4.579,
+        4.645,
+        4.416,
+        5.394,
+        4.69,
+        4.707,
+        4.591,
+        4.416,
+        4.733,
+        4.526
+      ]
+    }
+  },
+  "seconds_kernel_to_splash_screen_visible": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "list_of_scalar_values",
+      "units": "seconds",
+      "values": [
+        1.16,
+        1.161,
+        1.167,
+        1.148,
+        1.173,
+        1.222,
+        1.186,
+        1.174,
+        1.173,
+        1.201
+      ]
+    }
+  },
+  "seconds_kernel_to_startup": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "list_of_scalar_values",
+      "units": "seconds",
+      "values": [
+        0.923,
+        0.916,
+        0.928,
+        0.907,
+        0.93,
+        0.974,
+        0.944,
+        0.926,
+        0.933,
+        0.952
+      ]
+    }
+  },
+  "seconds_kernel_to_startup_done": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "list_of_scalar_values",
+      "units": "seconds",
+      "values": [
+        1.736,
+        1.656,
+        1.719,
+        1.702,
+        1.747,
+        1.746,
+        1.734,
+        1.631,
+        1.738,
+        1.784
+      ]
+    }
+  },
+  "seconds_kernel_to_wifi_registered": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "list_of_scalar_values",
+      "units": "seconds",
+      "values": [
+        2.8,
+        2.709,
+        2.838,
+        2.765,
+        2.857,
+        2.782,
+        2.824,
+        2.708,
+        2.798,
+        2.798
+      ]
+    }
+  },
+  "seconds_power_on_to_kernel": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "list_of_scalar_values",
+      "units": "seconds",
+      "values": [
+        1.192,
+        1.193,
+        1.189,
+        1.189,
+        1.191,
+        1.191,
+        1.191,
+        1.191,
+        1.193,
+        1.196
+      ]
+    }
+  },
+  "seconds_power_on_to_login": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "list_of_scalar_values",
+      "units": "seconds",
+      "values": [
+        4.889,
+        4.807,
+        4.859,
+        5.02,
+        5.117,
+        5.011,
+        4.956,
+        4.837,
+        4.936,
+        4.929
+      ]
+    }
+  },
+  "seconds_reboot_error": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "list_of_scalar_values",
+      "units": "seconds",
+      "values": [
+        0.009370803833007812,
+        0.0074918270111083984,
+        0.011128902435302734,
+        0.005411505699157715,
+        0.010612249374389648,
+        0.01079106330871582,
+        0.004321694374084473,
+        0.008230447769165039,
+        0.008482217788696289,
+        0.008304595947265625
+      ]
+    }
+  },
+  "seconds_reboot_error_rtc": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "list_of_scalar_values",
+      "units": "seconds",
+      "values": [
+        0.001081583000041686,
+        0.0010885479999998005,
+        0.0008628735000004717,
+        0.0011761779999992505,
+        0.0009712730000006609,
+        0.0010107450000012008,
+        0.0007496980000016862,
+        0.0009324360000007026,
+        0.0012328770000000766,
+        0.0009912425000004887
+      ]
+    }
+  },
+  "seconds_reboot_time": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "list_of_scalar_values",
+      "units": "seconds",
+      "values": [
+        3.4086453914642334,
+        2.7270381450653076,
+        3.931016683578491,
+        4.203958511352539,
+        3.0555026531219482,
+        3.67107892036438,
+        2.8076212406158447,
+        3.7748467922210693,
+        3.592165231704712,
+        3.190211534500122
+      ]
+    }
+  },
+  "seconds_reboot_time_rtc": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "list_of_scalar_values",
+      "units": "seconds",
+      "values": [
+        3.3785018920898438,
+        4.009917259216309,
+        3.9109299182891846,
+        3.9275753498077393,
+        3.9956653118133545,
+        3.7922756671905518,
+        3.827592611312866,
+        3.9019112586975098,
+        3.9757986068725586,
+        4.175982236862183
+      ]
+    }
+  },
+  "seconds_shutdown_time": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "list_of_scalar_values",
+      "units": "seconds",
+      "values": [
+        3.4086453914642334,
+        2.7270381450653076,
+        3.931016683578491,
+        4.203958511352539,
+        3.0555026531219482,
+        3.67107892036438,
+        2.8076212406158447,
+        3.7748467922210693,
+        3.592165231704712,
+        3.190211534500122
+      ]
+    }
+  },
+  "seconds_startup_to_chrome_exec": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "list_of_scalar_values",
+      "units": "seconds",
+      "values": [
+        1.797,
+        1.807,
+        1.813,
+        1.856,
+        1.8,
+        1.752,
+        1.778,
+        1.796,
+        1.808,
+        1.871
+      ]
+    }
+  },
+  "seconds_vboot_kernel_verification": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "list_of_scalar_values",
+      "units": "seconds",
+      "values": [
+        0.123,
+        0.123,
+        0.123,
+        0.123,
+        0.123,
+        0.123,
+        0.123,
+        0.123,
+        0.123,
+        0.123
+      ]
+    }
+  },
+  "seconds_vboot_read_kernel": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "list_of_scalar_values",
+      "units": "seconds",
+      "values": [
+        0.183,
+        0.182,
+        0.182,
+        0.18,
+        0.183,
+        0.182,
+        0.183,
+        0.18,
+        0.183,
+        0.182
+      ]
+    }
+  },
+  "wrbytes_kernel_to_chrome_exec": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "list_of_scalar_values",
+      "units": "wrbytes",
+      "values": [
+        720896,
+        847872,
+        663552,
+        811008,
+        675840,
+        966656,
+        675840,
+        860160,
+        942080,
+        974848
+      ]
+    }
+  },
+  "wrbytes_kernel_to_login": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "list_of_scalar_values",
+      "units": "wrbytes",
+      "values": [
+        3551232,
+        3756032,
+        3817472,
+        3543040,
+        3547136,
+        3878912,
+        3629056,
+        3670016,
+        3837952,
+        3747840
+      ]
+    }
+  },
+  "wrbytes_kernel_to_patchpanel_start": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "list_of_scalar_values",
+      "units": "wrbytes",
+      "values": [
+        4952064,
+        5742592,
+        3993600,
+        4497408,
+        4534272,
+        5017600,
+        4349952,
+        4644864,
+        4534272,
+        5005312
+      ]
+    }
+  },
+  "wrbytes_kernel_to_patchpanel_started": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "list_of_scalar_values",
+      "units": "wrbytes",
+      "values": [
+        6213632,
+        6144000,
+        5959680,
+        5840896,
+        6017024,
+        6373376,
+        5537792,
+        5668864,
+        6033408,
+        6180864
+      ]
+    }
+  },
+  "wrbytes_kernel_to_splash_screen_visible": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "list_of_scalar_values",
+      "units": "wrbytes",
+      "values": [
+        4096,
+        4096,
+        4096,
+        4096,
+        4096,
+        4096,
+        4096,
+        4096,
+        4096,
+        4096
+      ]
+    }
+  },
+  "wrbytes_kernel_to_startup": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "list_of_scalar_values",
+      "units": "wrbytes",
+      "values": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  "wrbytes_kernel_to_startup_done": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "list_of_scalar_values",
+      "units": "wrbytes",
+      "values": [
+        77824,
+        77824,
+        77824,
+        77824,
+        77824,
+        77824,
+        77824,
+        77824,
+        77824,
+        77824
+      ]
+    }
+  },
+  "wrbytes_kernel_to_wifi_registered": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "list_of_scalar_values",
+      "units": "wrbytes",
+      "values": [
+        937984,
+        843776,
+        884736,
+        811008,
+        917504,
+        966656,
+        909312,
+        860160,
+        942080,
+        811008
+      ]
+    }
+  }
+}
