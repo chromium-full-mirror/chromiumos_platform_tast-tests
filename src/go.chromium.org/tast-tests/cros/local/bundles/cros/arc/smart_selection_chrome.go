@@ -31,7 +31,10 @@ func init() {
 		Desc:         "Test ARC's smart selections show up in Chrome's right click menu",
 		Contacts:     []string{"chromeos-sw-engprod@google.com", "cros-arc-te@google.com", "djacobo@chromium.org", "jorgegil@google.com"},
 		BugComponent: "b:488493",
-		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
+		Attr:         []string{
+			// Disabled by TORA.  See:b/333409476
+			// "group:mainline", "informational", "group:hw_agnostic"
+		},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		VarDeps:      []string{"arc.SmartSelectionChrome.username", "arc.SmartSelectionChrome.password"},
