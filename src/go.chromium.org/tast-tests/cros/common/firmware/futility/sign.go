@@ -224,3 +224,132 @@ func (i *Instance) SignRWSig(ctx context.Context, opts *signRWSigOptions) ([]byt
 
 	return fullOut, nil
 }
+
+// signKernelOptions holds configuration for SignKernel().
+type signKernelOptions struct {
+	inFile      string
+	outFile     string
+	keyset      string
+	signPrivate string
+	keyBlock    string
+	pad         int
+	hasPad      bool
+	flags       int
+	hasFlags    bool
+	version     int
+	hasVersion  bool
+	VblockOnly  bool
+	config      string
+}
+
+// NewSignKernelOptions returns new signKernelOptions with input file path set.
+func NewSignKernelOptions(inFile string) *signKernelOptions {
+	return &signKernelOptions{
+		inFile: inFile,
+	}
+}
+
+// WithOutputFile configures output file path.
+func (o *signKernelOptions) WithOutputFile(outFile string) *signKernelOptions {
+	o.outFile = outFile
+	return o
+}
+
+// WithKeysetPath configures keyset directory path.
+func (o *signKernelOptions) WithKeysetPath(keyset string) *signKernelOptions {
+	o.keyset = keyset
+	return o
+}
+
+// WithSignPrivatePath configures private data key path.
+func (o *signKernelOptions) WithSignPrivatePath(signPrivate string) *signKernelOptions {
+	o.signPrivate = signPrivate
+	return o
+}
+
+// WithKeyBlockPath configures keyblock path.
+func (o *signKernelOptions) WithKeyBlockPath(keyBlock string) *signKernelOptions {
+	o.keyBlock = keyBlock
+	return o
+}
+
+// WithPad configures the vblock padding size (default 0x10000).
+func (o *signKernelOptions) WithPad(pad int) *signKernelOptions {
+	o.pad = pad
+	o.hasPad = true
+	return o
+}
+
+// WithFlags configures preamble flags to be set.
+func (o *signKernelOptions) WithFlags(flags int) *signKernelOptions {
+	o.flags = flags
+	o.hasFlags = true
+	return o
+}
+
+// WithVersion configures firmware version in preamble to be set.
+func (o *signKernelOptions) WithVersion(version int) *signKernelOptions {
+	o.version = version
+	o.hasVersion = true
+	return o
+}
+
+// WithVblockOnly emits just the vblock (requires a distinct OUTFILE).
+func (o *signKernelOptions) WithHasVblockOnly() *signKernelOptions {
+	o.VblockOnly = true
+	return o
+}
+
+// WithConfig configures kernel commandline file name.
+func (o *signKernelOptions) WithConfig(config string) *signKernelOptions {
+	o.config = config
+	return o
+}
+
+// SignKernel calls `futility sign --type kernel`
+//
+// Returns program output, and error on failure.
+func (i *Instance) SignKernel(ctx context.Context, opts *signKernelOptions) ([]byte, error) {
+	if opts.inFile == "" {
+		return nil, errors.New("no file to sign")
+	}
+
+	cmdArgs := append(i.futilityCmdArgs(), "sign", "--type", "kernel")
+	if opts.keyset != "" {
+		cmdArgs = append(cmdArgs, "--keyset", opts.keyset)
+	}
+	if opts.signPrivate != "" {
+		cmdArgs = append(cmdArgs, "--signprivate", opts.signPrivate)
+	}
+	if opts.keyBlock != "" {
+		cmdArgs = append(cmdArgs, "--keyblock", opts.keyBlock)
+	}
+	if opts.hasPad {
+		cmdArgs = append(cmdArgs, "--pad", fmt.Sprintf("%#x", opts.pad))
+	}
+	if opts.hasVersion {
+		cmdArgs = append(cmdArgs, "--version", fmt.Sprintf("%d", opts.version))
+	}
+	if opts.hasFlags {
+		cmdArgs = append(cmdArgs, "--flags", fmt.Sprintf("%#x", opts.flags))
+	}
+	if opts.VblockOnly {
+		cmdArgs = append(cmdArgs, "--vblockonly")
+	}
+	if opts.config != "" {
+		cmdArgs = append(cmdArgs, "--config", opts.config)
+	}
+
+	cmdArgs = append(cmdArgs, opts.inFile)
+	if opts.outFile != "" {
+		cmdArgs = append(cmdArgs, opts.outFile)
+	}
+
+	stdout, stderr, err := i.runCommandLine(ctx, cmdArgs)
+	fullOut := joinProgramOutputs(stdout, stderr)
+	if err != nil {
+		return fullOut, errors.Wrapf(err, "failed to sign kernel image with arguments %v", cmdArgs)
+	}
+
+	return fullOut, nil
+}
