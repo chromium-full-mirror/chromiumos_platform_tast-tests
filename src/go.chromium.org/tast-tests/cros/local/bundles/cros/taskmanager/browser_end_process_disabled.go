@@ -23,7 +23,7 @@ func init() {
 		Func: BrowserEndProcessDisabled,
 		Desc: "Verify that 'Browser' cannot be killed from Task Manager",
 		Contacts: []string{
-			"chromeos-sw-engprod@google.com",
+			"chromeos-consumer-engprod@google.com",
 			"afakhry@google.com",
 		},
 		BugComponent: "b:1457613",

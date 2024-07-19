@@ -10,8 +10,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -27,27 +25,18 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DefaultUIAndFunctionality,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify Task Manager default UI and functionality",
 		Contacts: []string{
-			"chromeos-sw-engprod@google.com",
+			"chromeos-wm@google.com",
+			"chromeos-consumer-engprod@google.com",
 			"afakhry@google.com",
 		},
 		BugComponent: "b:1457613",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
-		Params: []testing.Param{
-			{
-				Fixture: "chromeLoggedIn",
-				Val:     browser.TypeAsh,
-			}, {
-				Name:              "lacros",
-				ExtraSoftwareDeps: []string{"lacros"},
-				Fixture:           "lacros",
-				Val:               browser.TypeLacros,
-			},
-		},
-		Timeout: 5 * time.Minute,
+		Fixture:      "chromeLoggedIn",
+		Timeout:      5 * time.Minute,
 	})
 }
 
@@ -76,27 +65,20 @@ func DefaultUIAndFunctionality(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	browserType := s.Param().(browser.Type)
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browserType)
-	if err != nil {
-		s.Fatal("Failed to set up browser: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
-
 	resources := &taskManagerDefaultTestResources{
 		ui:          uiauto.New(tconn),
 		taskManager: taskmanager.New(tconn, kb),
 		processes: []taskmanager.Process{
-			taskmanager.NewChromeTabProcess("https://www.cbc.ca/lite/trending-news", browserType),
-			taskmanager.NewChromeTabProcess("https://translate.google.com/?hl=en", browserType),
-			taskmanager.NewChromeTabProcess("https://help.netflix.com/en", browserType),
-			taskmanager.NewChromeTabProcess("http://lite.cnn.com/en", browserType),
-			taskmanager.NewChromeTabProcess("https://news.ycombinator.com/news", browserType),
+			taskmanager.NewChromeTabProcess("https://www.cbc.ca/lite/trending-news"),
+			taskmanager.NewChromeTabProcess("https://translate.google.com/?hl=en"),
+			taskmanager.NewChromeTabProcess("https://help.netflix.com/en"),
+			taskmanager.NewChromeTabProcess("http://lite.cnn.com/en"),
+			taskmanager.NewChromeTabProcess("https://news.ycombinator.com/news"),
 		},
 	}
 
 	for _, process := range resources.processes {
-		if err := process.Open(ctx, br); err != nil {
+		if err := process.Open(ctx, cr); err != nil {
 			s.Fatal("Failed to open process: ", err)
 		}
 		defer process.Close(cleanupCtx)
@@ -163,7 +145,7 @@ func (f *processExistsVerifier) verify(ctx context.Context) error {
 		}
 	}
 
-	if topTaskInfo, err := f.ui.Info(ctx, nodewith.HasClass("AXVirtualView").Role(role.Cell).First()); err != nil {
+	if topTaskInfo, err := f.ui.Info(ctx, nodewith.HasClass("AXVirtualView").Role(role.GridCell).First()); err != nil {
 		return errors.Wrap(err, "failed to get the information of the top task")
 	} else if topTaskInfo.Name != "Browser" {
 		return errors.Errorf("expecting 'Browser' on top of the task manager, but got %s", topTaskInfo.Name)

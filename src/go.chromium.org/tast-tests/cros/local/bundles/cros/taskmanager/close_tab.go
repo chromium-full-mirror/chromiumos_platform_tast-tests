@@ -12,8 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -27,27 +25,18 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CloseTab,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test the entry should be removed in task manager automatically after closing tab",
 		Contacts: []string{
-			"chromeos-sw-engprod@google.com",
+			"chromeos-wm@google.com",
+			"chromeos-consumer-engprod@google.com",
 			"afakhry@google.com",
 		},
 		BugComponent: "b:1457613",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
-		Params: []testing.Param{
-			{
-				Fixture: "chromeLoggedIn",
-				Val:     browser.TypeAsh,
-			}, {
-				Name:              "lacros",
-				ExtraSoftwareDeps: []string{"lacros"},
-				Fixture:           "lacros",
-				Val:               browser.TypeLacros,
-			},
-		},
-		Timeout: 5 * time.Minute,
+		Fixture:      "chromeLoggedIn",
+		Timeout:      5 * time.Minute,
 	})
 }
 
@@ -79,13 +68,6 @@ func CloseTab(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	browserType := s.Param().(browser.Type)
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browserType)
-	if err != nil {
-		s.Fatal("Failed to set up browser: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
-
 	resources := &closeTabTestResources{
 		cr:          cr,
 		outDir:      s.OutDir(),
@@ -93,16 +75,16 @@ func CloseTab(ctx context.Context, s *testing.State) {
 		ui:          uiauto.New(tconn),
 		taskManager: taskmanager.New(tconn, kb),
 		processes: []taskmanager.Process{
-			newBrowserTabInCloseTabTest("https://www.facebook.com", browserType),
-			newBrowserTabInCloseTabTest("https://www.amazon.com", browserType),
-			newBrowserTabInCloseTabTest("https://www.apple.com", browserType),
-			newBrowserTabInCloseTabTest("https://en.wikipedia.org/wiki/Main_Page", browserType),
-			newBrowserTabInCloseTabTest("https://news.google.com", browserType),
-			newBrowserTabInCloseTabTest("https://www.youtube.com", browserType),
-			newBrowserTabInCloseTabTest("https://help.netflix.com/en", browserType),
-			newBrowserTabInCloseTabTest("https://news.ycombinator.com/news", browserType),
-			newBrowserTabInCloseTabTest("https://www.cbc.ca/lite/trending-news", browserType),
-			newBrowserTabInCloseTabTest("https://translate.google.com/?hl=en", browserType),
+			newBrowserTabInCloseTabTest("https://www.facebook.com"),
+			newBrowserTabInCloseTabTest("https://www.amazon.com"),
+			newBrowserTabInCloseTabTest("https://www.apple.com"),
+			newBrowserTabInCloseTabTest("https://en.wikipedia.org/wiki/Main_Page"),
+			newBrowserTabInCloseTabTest("https://news.google.com"),
+			newBrowserTabInCloseTabTest("https://www.youtube.com"),
+			newBrowserTabInCloseTabTest("https://help.netflix.com/en"),
+			newBrowserTabInCloseTabTest("https://news.ycombinator.com/news"),
+			newBrowserTabInCloseTabTest("https://www.cbc.ca/lite/trending-news"),
+			newBrowserTabInCloseTabTest("https://translate.google.com/?hl=en"),
 		},
 	}
 	numberOfTabs := len(resources.processes)
@@ -129,7 +111,7 @@ func CloseTab(ctx context.Context, s *testing.State) {
 	defer cleanup(cleanupCtx)
 
 	for _, process := range resources.processes {
-		if err := process.Open(ctx, br); err != nil {
+		if err := process.Open(ctx, cr); err != nil {
 			s.Fatal("Failed to open tab: ", err)
 		}
 		defer process.Close(cleanupCtx)
@@ -140,11 +122,6 @@ func CloseTab(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to check all tabs exist in task manager: ", err)
 	}
 
-	bTconn, err := br.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatalf("Failed to get Test API connection for %v browser: %v", browserType, err)
-	}
-
 	for _, process := range resources.processes {
 		if tab, ok := process.(*browserTabInCloseTabTest); ok && tab.needToClose {
 			name, err := process.NameInTaskManager(ctx)
@@ -152,9 +129,10 @@ func CloseTab(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to obtain the process name in task manager: ", err)
 			}
 			tab.name = name
-			targetTab := nodewith.Name(tab.Title).HasClass("Tab").Ancestor(nodewith.HasClass("BrowserView"))
+			targetTab := nodewith.NameStartingWith(tab.Title).HasClass("Tab").Ancestor(nodewith.HasClass("BrowserView"))
 			if err := uiauto.Combine("active the target tab and close it",
-				tab.active(bTconn),
+				resources.ui.LeftClick(targetTab),
+				resources.ui.WaitUntilExists(nodewith.Name("Close").HasClass("TabCloseButton").Ancestor(targetTab)),
 				resources.ui.LeftClick(nodewith.Name("Close").HasClass("TabCloseButton").Ancestor(targetTab)),
 				resources.ui.WaitUntilGone(targetTab),
 			)(ctx); err != nil {
@@ -221,16 +199,10 @@ type browserTabInCloseTabTest struct {
 	name string
 }
 
-func newBrowserTabInCloseTabTest(url string, browserType browser.Type) *browserTabInCloseTabTest {
+func newBrowserTabInCloseTabTest(url string) *browserTabInCloseTabTest {
 	return &browserTabInCloseTabTest{
-		ChromeTab:   taskmanager.NewChromeTabProcess(url, browserType),
+		ChromeTab:   taskmanager.NewChromeTabProcess(url),
 		closed:      false,
 		needToClose: false,
-	}
-}
-
-func (tab *browserTabInCloseTabTest) active(bTconn *chrome.TestConn) uiauto.Action {
-	return func(ctx context.Context) error {
-		return bTconn.Call(ctx, nil, "async (id) => tast.promisify(chrome.tabs.update)(id, {active: true})", tab.ID)
 	}
 }
