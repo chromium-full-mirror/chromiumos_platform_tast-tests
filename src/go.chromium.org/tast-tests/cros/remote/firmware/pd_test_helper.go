@@ -217,13 +217,20 @@ func SetupPDTester(ctx context.Context, h *Helper, testParams PDTestParams) erro
 
 	// Modifying CC and DTS settings causes the Servo DUT port to reset. Wait a bit until
 	// it reaches the source ready state.
+	prevIsSourceReady := false
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		pdState, err := h.Servo.GetServoPDState(ctx)
 		if err != nil {
 			return testing.PollBreak(err)
 		}
 		testing.ContextLogf(ctx, "Servo DUT port PE State: %s", pdState.PEStateName)
-		if !pdState.IsSourceReady() {
+
+		isSourceReady := pdState.IsSourceReady()
+		if !(isSourceReady && prevIsSourceReady) {
+			// Require two consecutive reads to be src-ready to make sure the
+			// connection has stabilized.
+			prevIsSourceReady = isSourceReady
+
 			return errors.New("Servo DUT port (C1) is not src-ready")
 		}
 
