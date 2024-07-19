@@ -27,9 +27,11 @@ type gamingAppParams struct {
 const (
 	gamingAppPrepareTimeout = 10 * time.Minute
 
+	shortPlayTime        = 6 * time.Minute
 	asphalt8PlayTime     = 60 * time.Minute
 	superTuxKartPlayTime = 30 * time.Minute
 
+	shortTimeout        = gamingAppPrepareTimeout + shortPlayTime + power.RecorderTimeout
 	asphalt8Timeout     = gamingAppPrepareTimeout + asphalt8PlayTime + power.RecorderTimeout
 	superTuxKartTimeout = gamingAppPrepareTimeout + superTuxKartPlayTime + power.RecorderTimeout
 
@@ -64,6 +66,16 @@ func init() {
 				ExtraAttr: []string{"group:power", "power_regression"},
 			},
 			{
+				Name: "asphalt8_short",
+				Val: gamingAppParams{
+					game:     gameapp.NewAsphalt8,
+					playTime: shortPlayTime,
+				},
+				Timeout:   shortTimeout,
+				ExtraData: []string{gameapp.Asphalt8IconGameScene},
+				ExtraAttr: []string{"group:power", "power_daily"},
+			},
+			{
 				Name: "super_tux_kart",
 				Val: gamingAppParams{
 					game:     gameapp.NewSuperTuxKart,
@@ -72,6 +84,16 @@ func init() {
 				Timeout:   superTuxKartTimeout,
 				ExtraData: []string{gameapp.SuperTuxKartIconGameScene},
 				ExtraAttr: []string{"group:power", "power_regression"},
+			},
+			{
+				Name: "super_tux_kart_short",
+				Val: gamingAppParams{
+					game:     gameapp.NewSuperTuxKart,
+					playTime: shortPlayTime,
+				},
+				Timeout:   shortTimeout,
+				ExtraData: []string{gameapp.SuperTuxKartIconGameScene},
+				ExtraAttr: []string{"group:power", "power_daily"},
 			},
 		},
 	})
