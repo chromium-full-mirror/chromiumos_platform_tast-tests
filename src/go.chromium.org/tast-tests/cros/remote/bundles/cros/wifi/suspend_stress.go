@@ -129,7 +129,7 @@ func init() {
 			{
 				Name:              "6ghz_psc",
 				ExtraSoftwareDeps: []string{"wpa3_sae"},
-				ExtraAttr:         []string{"wificell_func", "wificell_suspend", "wificell_unstable"},
+				ExtraAttr:         []string{"wificell_func", "wificell_suspend"},
 				Val: []suspendStressParam{
 					{ // 6GHz AP is on a PSC-channel without legacy AP advertisement.
 						suspendCount: 5,
@@ -150,7 +150,7 @@ func init() {
 			{
 				Name:              "6ghz_non_psc",
 				ExtraSoftwareDeps: []string{"wpa3_sae"},
-				ExtraAttr:         []string{"wificell_func", "wificell_suspend", "wificell_unstable"},
+				ExtraAttr:         []string{"wificell_func", "wificell_suspend"},
 				Val: []suspendStressParam{
 					{ // 6GHz AP is on a non-PSC channel with legacy AP advertisement on a different SSID.
 						suspendCount: 5,
@@ -173,7 +173,7 @@ func init() {
 			{
 				Name:              "6ghz_non_psc_same_ssid",
 				ExtraSoftwareDeps: []string{"wpa3_sae"},
-				ExtraAttr:         []string{"wificell_func", "wificell_suspend", "wificell_unstable"},
+				ExtraAttr:         []string{"wificell_func", "wificell_suspend"},
 				Val: []suspendStressParam{
 					{ // 6GHz AP is on a non-PSC channel with legacy AP advertisement on the same SSID. Expect that we connect directly to the 6GHz AP.
 						suspendCount: 5,
