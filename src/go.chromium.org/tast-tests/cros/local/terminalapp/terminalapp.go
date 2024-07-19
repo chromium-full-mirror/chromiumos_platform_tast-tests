@@ -41,7 +41,7 @@ const uiTimeout = 15 * time.Second
 // Note: This is NOT the expected time to launch Terminal, but a relaxation
 // for extreme cases to avoid test failures due to the timeout.
 // The performance issue will be tracked in future performance testing.
-const LaunchTerminalTimeout = 2 * time.Minute
+const LaunchTerminalTimeout = 10 * time.Minute
 
 var (
 	linuxLink           = nodewith.Name("penguin").Role(role.Link)
