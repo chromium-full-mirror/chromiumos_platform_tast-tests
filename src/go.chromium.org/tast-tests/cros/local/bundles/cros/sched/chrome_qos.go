@@ -82,7 +82,9 @@ func getCPUSetCgroup(pid, tid int32) (string, error) {
 
 func checkCPUCgroup(pid int32) error {
 	cgroup, err := getCPUCgroup(pid)
-	if err != nil {
+	if os.IsNotExist(err) {
+		return nil
+	} else if err != nil {
 		return errors.Wrapf(err, "failed to get cpu cgroup for process %d", pid)
 	}
 	if cgroup == "/resourced/normal" || cgroup == "/resourced/background" {
@@ -93,7 +95,9 @@ func checkCPUCgroup(pid int32) error {
 
 func checkCPUSetCgroup(pid, tid int32) error {
 	cgroup, err := getCPUSetCgroup(pid, tid)
-	if err != nil {
+	if os.IsNotExist(err) {
+		return nil
+	} else if err != nil {
 		return errors.Wrapf(err, "failed to get cpuset cgroup for process %d", pid)
 	}
 	if cgroup == "/resourced/all" || cgroup == "/resourced/efficient" {
@@ -104,7 +108,9 @@ func checkCPUSetCgroup(pid, tid int32) error {
 
 func isQoSEligibleProcess(ctx context.Context, s *testing.State, p *process.Process) bool {
 	cmdline, err := p.CmdlineWithContext(ctx)
-	if err != nil {
+	if os.IsNotExist(err) {
+		return false
+	} else if err != nil {
 		s.Fatal("Failed to get process name: ", err)
 	}
 	// Zygote and broker processes are out of schedqos control.
