@@ -158,7 +158,7 @@ func init() {
 					MeasureEcho: true,
 					BotsOptions: []bond.AddBotsOption{bond.WithAudio("sample_speech_10secs_32bit_48k_stereo.raw")},
 				},
-				Fixture: "loggedInToCUJUserWithWebRTCEventLogging",
+				Fixture: "loggedInToCUJUserWithWebRTCEventLoggingWithVCEffects",
 			},
 			{
 
