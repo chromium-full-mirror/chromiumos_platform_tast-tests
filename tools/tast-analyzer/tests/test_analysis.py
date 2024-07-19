@@ -49,6 +49,7 @@ class AnalysisTest(unittest.TestCase):
             {
                 "ui.OverviewPerf.Test.One.average": metric_sample.MetricSample(
                     test_name="ui.OverviewPerf",
+                    metric_name="Test.One",
                     metric_path="ui.OverviewPerf.Test.One.average",
                     units="percent",
                     improvement_direction=metric_sample.ImprovementDirection.UP,
@@ -56,6 +57,7 @@ class AnalysisTest(unittest.TestCase):
                 ),
                 "ui.OverviewPerf.Test.Three.average": metric_sample.MetricSample(
                     test_name="ui.OverviewPerf",
+                    metric_name="Test.Three",
                     metric_path="ui.OverviewPerf.Test.Three.average",
                     units="percent",
                     improvement_direction=metric_sample.ImprovementDirection.UP,
@@ -64,6 +66,7 @@ class AnalysisTest(unittest.TestCase):
                 ),
                 "ui.OverviewPerf.Test.Two.average": metric_sample.MetricSample(
                     test_name="ui.OverviewPerf",
+                    metric_name="Test.Two",
                     metric_path="ui.OverviewPerf.Test.Two.average",
                     units="percent",
                     improvement_direction=metric_sample.ImprovementDirection.UP,
@@ -77,6 +80,7 @@ class AnalysisTest(unittest.TestCase):
             {
                 "ui.OverviewPerf.Test.One.average": metric_sample.MetricSample(
                     test_name="ui.OverviewPerf",
+                    metric_name="Test.One",
                     metric_path="ui.OverviewPerf.Test.One.average",
                     units="percent",
                     improvement_direction=metric_sample.ImprovementDirection.UP,
@@ -84,6 +88,7 @@ class AnalysisTest(unittest.TestCase):
                 ),
                 "ui.OverviewPerf.Test.Three.average": metric_sample.MetricSample(
                     test_name="ui.OverviewPerf",
+                    metric_name="Test.Three",
                     metric_path="ui.OverviewPerf.Test.Three.average",
                     units="percent",
                     improvement_direction=metric_sample.ImprovementDirection.UP,
@@ -92,6 +97,7 @@ class AnalysisTest(unittest.TestCase):
                 ),
                 "ui.OverviewPerf.Test.Four.average": metric_sample.MetricSample(
                     test_name="ui.OverviewPerf",
+                    metric_name="Test.Four",
                     metric_path="ui.OverviewPerf.Test.Four.average",
                     units="percent",
                     improvement_direction=metric_sample.ImprovementDirection.UP,
@@ -208,6 +214,7 @@ class AnalysisTest(unittest.TestCase):
     ) -> analysis_results.AnalysisResult:
         placeholder = metric_sample.MetricSample(
             test_name="placeholder",
+            metric_name="placeholder",
             metric_path="placeholder",
             units="placeholder",
             improvement_direction=metric_sample.ImprovementDirection.UP,
@@ -244,6 +251,28 @@ class AnalysisTest(unittest.TestCase):
         # Check p-values were adjusted.
         self.assertEqual(pruned[0].hypothesis_result.p, 0.006)
         self.assertEqual(pruned[1].hypothesis_result.p, 0.01)
+
+    def test_prune_persistent_cfg(self) -> None:
+        before_samples, _ = self._load_samples()
+
+        cfg = analysis_cfg.PersistentCfg()
+        no_change = analyze_results._prune_persistent_cfg(before_samples, cfg)
+        self.assertEqual(no_change, before_samples)
+
+        cfg = analysis_cfg.PersistentCfg(
+            per_test_cfgs=[
+                analysis_cfg.PerTestCfg(
+                    test_name_regex="ui\\.OverviewPerf",
+                    metric_name_regex_allowlist=[r"Test\.One"],
+                )
+            ]
+        )
+        only_one = analyze_results._prune_persistent_cfg(before_samples, cfg)
+
+        test_one_path = "ui.OverviewPerf.Test.One.average"
+        self.assertEqual(
+            only_one, {test_one_path: before_samples[test_one_path]}
+        )
 
     def test_prune_regex_include(self) -> None:
         before_samples, after_samples = self._load_samples()
@@ -318,6 +347,7 @@ class AnalysisTest(unittest.TestCase):
         samples = {
             "test.name.metric.path": metric_sample.MetricSample(
                 test_name="ui.OverviewPerf",
+                metric_name="metric",
                 metric_path="test.name.metric.path",
                 units="percent",
                 improvement_direction=metric_sample.ImprovementDirection.UP,

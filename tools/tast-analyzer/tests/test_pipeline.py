@@ -114,3 +114,37 @@ class PipelineTest(unittest.TestCase):
         assert result.after_bootstrap
         self.assertAlmostEqual(result.before_bootstrap.bias_estimate, 0.0022606)
         self.assertAlmostEqual(result.after_bootstrap.bias_estimate, -0.0028447)
+
+    def test_analyze_results_persistent_cfg(self) -> None:
+        cfg = analysis_cfg.AnalysisCfg(
+            skip_all_zero_samples=False,
+            alpha=1.0,
+            persistent_cfg=analysis_cfg.PersistentCfg(per_test_cfgs=[]),
+            multiple_test_cfg=analysis_cfg.MultipleTestCfg.NONE,
+        )
+        results = analyze_results.analyze_results(
+            FILES_DIR.joinpath("data-complex1.json"),
+            FILES_DIR.joinpath("data-complex2.json"),
+            cfg,
+        )
+        self.assertEqual(len(results), 43)
+
+        cfg = dataclasses.replace(
+            cfg,
+            persistent_cfg=analysis_cfg.PersistentCfg(
+                per_test_cfgs=[
+                    analysis_cfg.PerTestCfg(
+                        test_name_regex="ui\\.Test",
+                        metric_name_regex_allowlist=[
+                            "^Ash\\.Overview\\.AnimationSmoothness\\.Enter\\..*$"
+                        ],
+                    )
+                ]
+            ),
+        )
+        results = analyze_results.analyze_results(
+            FILES_DIR.joinpath("data-complex1.json"),
+            FILES_DIR.joinpath("data-complex2.json"),
+            cfg,
+        )
+        self.assertEqual(len(results), 22)

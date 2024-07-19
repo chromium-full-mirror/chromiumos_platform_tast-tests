@@ -4,8 +4,116 @@
 
 import dataclasses
 import enum
+import json
+import re
 
 from analyzer.analysis import stats_util
+
+
+@dataclasses.dataclass(frozen=True, kw_only=True, order=True)
+class PerTestCfg:
+    """PerTestCfg holds configuration that may apply to a specific test.
+
+    For example, blocking or allowing certain metrics within a particular test.
+    Metrics are by default blocked from analysis if a PerTestCfg is specified.
+    PerTestCfgs are specified by giving a regex that matches the test name.
+    If multiple PerTestCfgs apply to a single test, then the PerTestCfgs are
+    merged. The blocklist takes precedence over the allowlist. This can be
+    used to block certain metrics in a subtest, for example."""
+
+    test_name_regex: str = ""
+    """Regex for identifying which tests this PerTestCfg applies to.
+
+    For a merged PerTestCfg, this will be empty.
+    """
+
+    metric_name_regex_blocklist: list[str] = dataclasses.field(
+        default_factory=list
+    )
+    """List of regex to block a metric name from analysis.
+
+    This overrides any setting in the allowlist."""
+
+    metric_name_regex_allowlist: list[str] = dataclasses.field(
+        default_factory=list
+    )
+    """List of regex to allow a metric name in the analysis."""
+
+    def metric_allowed(self, metric_name: str) -> bool:
+        """Returns true if the metric name is allowed to be in the analysis."""
+        for regex in self.metric_name_regex_blocklist:
+            if re.match(regex, metric_name):
+                return False
+        for regex in self.metric_name_regex_allowlist:
+            if re.match(regex, metric_name):
+                return True
+        return False
+
+    def merge(self, other: "PerTestCfg") -> "PerTestCfg":
+        """Returns a merged PerTestCfg.
+
+        Args:
+            other: PerTestCfg to merge with this PerTestCfg
+
+        Returns:
+            A merged PerTestCfg.
+        """
+        metric_name_regex_blocklist = list(
+            set(
+                self.metric_name_regex_blocklist
+                + other.metric_name_regex_blocklist
+            )
+        )
+        metric_name_regex_allowlist = list(
+            set(
+                self.metric_name_regex_allowlist
+                + other.metric_name_regex_allowlist
+            )
+        )
+        return PerTestCfg(
+            test_name_regex="",
+            metric_name_regex_blocklist=metric_name_regex_blocklist,
+            metric_name_regex_allowlist=metric_name_regex_allowlist,
+        )
+
+
+@dataclasses.dataclass(frozen=True, kw_only=True, order=True)
+class PersistentCfg:
+    per_test_cfgs: list[PerTestCfg] = dataclasses.field(default_factory=list)
+    """List of PerTestCfg."""
+
+    def compute_per_test_cfg(self, test_name: str) -> PerTestCfg:
+        """Computes the effective PerTestCfg for the given test.
+
+        Args:
+            test_name: Name of test.
+
+        Returns:
+            A (potentially merged) PerTestCfg for the given test.
+        """
+        per_test_cfg: PerTestCfg | None = None
+        for cfg in self.per_test_cfgs:
+            if re.match(cfg.test_name_regex, test_name):
+                per_test_cfg = per_test_cfg.merge(cfg) if per_test_cfg else cfg
+        return (
+            per_test_cfg
+            if per_test_cfg
+            else PerTestCfg(metric_name_regex_allowlist=["^.*$"])
+        )
+
+    @classmethod
+    def from_json(cls, s: str) -> "PersistentCfg":
+        """Loads a PersistentCfg from JSON.
+
+        Args:
+            s: String containing the JSON.
+
+        Returns:
+            A PersistentCfg object.
+        """
+        d = json.loads(s)
+        d["per_test_cfgs"] = [PerTestCfg(**v) for v in d["per_test_cfgs"]]
+        return PersistentCfg(**d)
 
 
 class MultipleTestCfg(enum.StrEnum):
@@ -41,6 +149,11 @@ class MultipleTestCfg(enum.StrEnum):
 
     Assumptions: None. """
 
+    NONE = "none"
+    """Perform no multiple test correction.
+
+    This is not recommended."""
+
     def scipy_name(self) -> str:
         """Gets the name used by SciPy for the multiple test procedure."""
         if self == self.FWER:
@@ -48,7 +161,7 @@ class MultipleTestCfg(enum.StrEnum):
         elif self == self.FDR:
             return "fdr_by"
         else:
-            raise ValueError(f"Unknown MultipleTestCfg: {self}")
+            raise ValueError(f"Unknown MultipleTestCfg for scipy: {self}")
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True, order=True)
@@ -87,3 +200,7 @@ class AnalysisCfg:
 
     This uses a simple strategy of removing one maximum and one minimum value
     from each sample."""
+
+    persistent_cfg: PersistentCfg = dataclasses.field(
+        default_factory=PersistentCfg
+    )

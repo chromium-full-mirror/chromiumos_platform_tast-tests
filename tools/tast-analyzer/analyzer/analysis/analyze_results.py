@@ -41,6 +41,7 @@ def _load_metrics_from_test_results(
             metric_path,
             metric_sample.MetricSample(
                 test_name=key.test_name,
+                metric_name=key.metric_name,
                 metric_path=metric_path,
                 units=result.units,
                 improvement_direction=result.improvement_direction,
@@ -70,6 +71,9 @@ def _prune_non_significant_results(
     cfg: analysis_cfg.AnalysisCfg,
 ) -> list[analysis_results.AnalysisResult]:
     """Prune results that are not significant."""
+    if cfg.multiple_test_cfg == analysis_cfg.MultipleTestCfg.NONE:
+        return results
+
     out_results = []
     p_values = [r.hypothesis_result.p for r in results]
     rejects, p_corrected, _, _ = multitest.multipletests(
@@ -104,6 +108,18 @@ def _prune_regex_exclude(
     }
 
 
+def _prune_persistent_cfg(
+    metrics: metric_sample.SampleDict, cfg: analysis_cfg.PersistentCfg
+) -> metric_sample.SampleDict:
+    out_metrics = {}
+    for key, metric in metrics.items():
+        test_cfg = cfg.compute_per_test_cfg(metric.test_name)
+
+        if test_cfg.metric_allowed(metric.metric_name):
+            out_metrics[key] = metric
+    return out_metrics
+
+
 def _prune_outliers(
     metrics: metric_sample.SampleDict,
 ) -> metric_sample.SampleDict:
@@ -132,6 +148,9 @@ def analyze_results(
     if cfg.remove_outliers:
         before_samples = _prune_outliers(before_samples)
         after_samples = _prune_outliers(after_samples)
+
+    before_samples = _prune_persistent_cfg(before_samples, cfg.persistent_cfg)
+    after_samples = _prune_persistent_cfg(after_samples, cfg.persistent_cfg)
 
     if cfg.metric_include_regex:
         before_samples = _prune_regex_include(
