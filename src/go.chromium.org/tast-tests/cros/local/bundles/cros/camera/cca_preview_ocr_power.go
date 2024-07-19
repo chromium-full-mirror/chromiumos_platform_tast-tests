@@ -60,7 +60,8 @@ func CCAPreviewOCRPower(ctx context.Context, s *testing.State) {
 		s.Fatal("Cannot start collecting power metrics: ", err)
 	}
 
-	if _, err := startApp(ctx); err != nil {
+	app, err := startApp(ctx)
+	if err != nil {
 		s.Fatal("Failed to open CCA: ", err)
 	}
 	defer func(cleanupCtx context.Context) {
@@ -68,6 +69,10 @@ func CCAPreviewOCRPower(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to close CCA: ", err)
 		}
 	}(cleanupCtx)
+
+	if err := app.SetPreviewOCROption(ctx, true); err != nil {
+		s.Fatal("Failed to enable preview OCR option: ", err)
+	}
 
 	// GoBigSleepLint: Keep the camera stream to measure the power usage.
 	if err := testing.Sleep(ctx, total); err != nil {

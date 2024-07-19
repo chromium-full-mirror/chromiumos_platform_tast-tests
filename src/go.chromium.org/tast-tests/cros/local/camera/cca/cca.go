@@ -1796,3 +1796,15 @@ func (a *App) EnterDocumentMode(ctx context.Context) error {
 
 	return nil
 }
+
+// SetPreviewOCROption enables/disables preview OCR option in photo mode's settings.
+func (a *App) SetPreviewOCROption(ctx context.Context, enable bool) error {
+	if err := a.OpenSettingMenu(ctx, MainMenu); err != nil {
+		return errors.Wrap(err, "failed to click settings button")
+	}
+	defer a.CloseSettingMenu(ctx, MainMenu)
+	if err := a.SetOptionChecked(ctx, PreviewOCROption, enable); err != nil {
+		return errors.Wrap(err, "failed to toggle preview OCR option")
+	}
+	return nil
+}

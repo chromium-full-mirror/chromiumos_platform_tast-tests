@@ -78,6 +78,9 @@ func CCAUIPreviewOCRPerf(ctx context.Context, s *testing.State) {
 }
 
 func testPreviewOCRPerf(ctx context.Context, app *cca.App, tst *previewOCRPerfSubTest, measureTime time.Duration, p *perf.Values) error {
+	if err := app.SetPreviewOCROption(ctx, true); err != nil {
+		return errors.Wrap(err, "failed to enable preview OCR option")
+	}
 	// GoBigSleepLint: Keep the camera stream to measure the average latency of OCR scanning on preview.
 	if err := testing.Sleep(ctx, measureTime); err != nil {
 		return errors.Wrap(err, "failed to sleep")
