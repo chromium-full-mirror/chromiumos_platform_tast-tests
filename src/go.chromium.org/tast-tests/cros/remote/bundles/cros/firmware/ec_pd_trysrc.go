@@ -71,7 +71,7 @@ func executeConnectSequence(ctx context.Context, s *testing.State, trySrcSupport
 	}
 
 	for i := 0; i < pdConnectIterations; i++ {
-		if _, err := h.Servo.SetPDTrySrc(ctx, trySrcInt); err != nil {
+		if _, err := h.Servo.SetPDTrySrc(ctx, servo.PDPortUnderTest, trySrcInt); err != nil {
 			testing.ContextLogf(ctx, "Failed Enabling TrySrc: %q", err)
 		}
 		// Disconnect time from 1 to 1.5 seconds
@@ -98,6 +98,28 @@ func executeConnectSequence(ctx context.Context, s *testing.State, trySrcSupport
 	return snkStats, srcStats
 }
 
+// waitForStableConnection polls until the Servo is in a connected PD state, for up to 10 sec.
+func waitForStableConnection(ctx context.Context, s *testing.State) error {
+	h := s.FixtValue().(*fixture.Value).Helper
+
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		pdState, err := h.Servo.GetServoPDState(ctx)
+		if err != nil {
+			return errors.Wrap(err, "cannot get Servo PD state")
+		}
+
+		if !pdState.IsPDReady() {
+			return errors.Errorf("Servo is not yet PD ready (%s)", pdState.PEStateName)
+		}
+
+		return nil
+	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 2 * time.Second}); err != nil {
+		return errors.Wrap(err, "poll timed out")
+	}
+
+	return nil
+}
+
 func ECPDTrysrc(ctx context.Context, s *testing.State) {
 	var trySrcSupported bool
 
@@ -118,17 +140,21 @@ func ECPDTrysrc(ctx context.Context, s *testing.State) {
 	}
 
 	if err := h.Servo.SetDualroleState(ctx, servo.DROn); err != nil {
-		s.Fatal("Could not enable DRP on EC")
+		s.Fatal("Could not enable DRP on EC: ", err)
 	}
 
 	if err := h.Servo.ServoSetDualRole(ctx, servo.USBPdDualRoleOn); err != nil {
-		s.Fatal("Could not enable DRP on Servo")
+		s.Fatal("Could not enable DRP on Servo: ", err)
+	}
+
+	if err := waitForStableConnection(ctx, s); err != nil {
+		s.Fatal("PD connection not established after configuring Servo: ", err)
 	}
 
 	// GoBigSleepLint: Setting DRP on ServoV4 ('usbc_action drp') triggers reconnect
 	// poll SetPDTrySrc to make sure servo finished connecting to DUT
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		trySrcTmp, err := h.Servo.SetPDTrySrc(ctx, 1)
+		trySrcTmp, err := h.Servo.SetPDTrySrc(ctx, servo.PDPortUnderTest, 1)
 		if err != nil {
 			return errors.Wrap(err, "failed to set up Try.SRC")
 		}
@@ -137,6 +163,11 @@ func ECPDTrysrc(ctx context.Context, s *testing.State) {
 		return nil
 	}, &testing.PollOptions{Timeout: pdSetupPollTimeout, Interval: pdSetupPollInterval}); err != nil {
 		s.Fatal("DUT does not support Try.SRC feature: ", err)
+	}
+
+	// Ensure we have a stable connection before starting the experiment
+	if err := waitForStableConnection(ctx, s); err != nil {
+		s.Fatal("PD connection not established after probing TrySRC: ", err)
 	}
 
 	if trySrcSupported {

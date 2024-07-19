@@ -546,8 +546,12 @@ func (s *Servo) GetDUTDualRoleState(ctx context.Context, port int) (USBPdDualRol
 // SetPDTrySrc attempts to set PD TrySrc enable or disabled.
 // returns True is setting was successful, False if feature not supported
 // by the device, or not set as desired.
-func (s *Servo) SetPDTrySrc(ctx context.Context, enable int) (bool, error) {
+func (s *Servo) SetPDTrySrc(ctx context.Context, port, enable int) (bool, error) {
 	var cmd string
+
+	if port == PDPortUnderTest {
+		port = s.dutPDInfo.activePort
+	}
 
 	// TCPMv1 indicates Try.SRC is on by returning 'on'
 	// TCPMv2 and PDC indicates Try.SRC is on by returning 'Forced ON'
@@ -565,9 +569,12 @@ func (s *Servo) SetPDTrySrc(ctx context.Context, enable int) (bool, error) {
 
 	switch s.dutPDInfo.version {
 	case TCPMv1, TCPMv2:
+		// TrySRC is a global option on TCPMv1/v2 DUTs and does not
+		// take a port parameter
 		cmd = fmt.Sprintf("pd trysrc %d", enable)
 	case PDC:
-		cmd = fmt.Sprintf("pdc trysrc %d", enable)
+		// PDC devices allow setting TrySRC state per-port
+		cmd = fmt.Sprintf("pdc trysrc %d %d", port, enable)
 	default:
 		panic("Unknown TCPM version")
 	}
