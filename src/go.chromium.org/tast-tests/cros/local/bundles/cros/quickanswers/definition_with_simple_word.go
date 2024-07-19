@@ -40,6 +40,7 @@ func init() {
 			quickanswers.EnabledWithBrowserFixture,
 			quickanswers.VariantSimpleWord,
 		),
+		SoftwareDeps: []string{"gaia"},
 	})
 }
 

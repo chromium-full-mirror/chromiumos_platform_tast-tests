@@ -29,7 +29,7 @@ func init() {
 		// Chrome OS Server Projects > Enterprise Management > Commercial Productivity
 		BugComponent: "b:1020793",
 		Attr:         []string{"group:floatingworkspace"},
-		SoftwareDeps: []string{"chrome", "android_vm", "no_kernel_upstream"},
+		SoftwareDeps: []string{"chrome", "android_vm", "no_kernel_upstream", "gaia"},
 		ServiceDeps:  []string{"tast.cros.floatingworkspace.TemplateSyncService"},
 		Timeout:      420 * time.Second,
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},

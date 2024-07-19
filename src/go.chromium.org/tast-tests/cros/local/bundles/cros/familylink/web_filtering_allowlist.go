@@ -31,7 +31,7 @@ func init() {
 		// ChromeOS > Software > Family > Parental controls
 		BugComponent: "b:1090157",
 		Attr:         []string{"group:mainline", "informational"},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "gaia"},
 		Timeout:      5 * time.Minute,
 		Vars:         []string{"unicorn.siteOnAllowlist", "unicorn.siteNotOnAllowlist", "unicorn.siteOnAllowlistNodeName"},
 		Fixture:      "familyLinkUnicornWebAllowlistLogin",

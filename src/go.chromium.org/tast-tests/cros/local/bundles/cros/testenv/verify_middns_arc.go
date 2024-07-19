@@ -30,7 +30,7 @@ func init() {
 		BugComponent: "b:1528139", // ChromeOS > EngProd > Software > Trust & Safety > UFO Testing
 		// TODO(b/342085937): Disable continuous testing for troubleshooting
 		// Attr:         []string{"group:mainline", "group:hw_agnostic", "informational"},
-		SoftwareDeps: []string{"chrome", "gaia", "arc"},
+		SoftwareDeps: []string{"chrome", "arc"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		VarDeps:      []string{ui.GaiaPoolDefaultVarName},
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 2*time.Minute,

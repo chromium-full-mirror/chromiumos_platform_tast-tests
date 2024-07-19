@@ -34,6 +34,7 @@ func init() {
 			quickanswers.NotEnabledWithBrowserFixture,
 			quickanswers.VariantSingleWord,
 		),
+		SoftwareDeps: []string{"gaia"},
 	})
 }
 
