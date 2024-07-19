@@ -2354,3 +2354,49 @@ func (h *Helper) GetCurrentKeyVersion(ctx context.Context, opts KeyVersOptions) 
 	}
 	return 0, errors.Errorf("failed to find the key version pattern %q. The output of 'futility show': %s", versionPattern, out)
 }
+
+// MakeKeysOption defines the options used for generating keys using a predefined shell script.
+type MakeKeysOption struct {
+	VersionToSign  string
+	KeysDir        string
+	MakeKeyFileDir string
+	CommonFileDir  string
+	ShellScript    map[string]string
+}
+
+// PrepareKeysWithScript uses the script to prepare the key files with the new key version.
+func (h *Helper) PrepareKeysWithScript(ctx context.Context, opts MakeKeysOption) error {
+	workDir, err := os.MkdirTemp("", "work-dir-*")
+	if err != nil {
+		return errors.Wrap(err, "failed to create temporary directory")
+	}
+	defer os.RemoveAll(workDir)
+
+	fs := dutfs.NewClient(h.RPCClient.Conn)
+	if err := fs.RemoveAll(ctx, opts.KeysDir); err != nil {
+		return errors.Wrapf(err, "failed to remove the dir %v", opts.KeysDir)
+	}
+	if err := fs.CopyDir(ctx, "/usr/share/vboot/devkeys", opts.KeysDir); err != nil {
+		return errors.Wrapf(err, "failed to copy the key files from %v to %v", "/usr/share/vboot/devkeys", opts.KeysDir)
+	}
+
+	if opts.MakeKeyFileDir != "" && opts.CommonFileDir != "" {
+		fileMap := map[string]string{
+			opts.ShellScript[opts.MakeKeyFileDir]: filepath.Join(workDir, opts.MakeKeyFileDir),
+			opts.ShellScript[opts.CommonFileDir]:  filepath.Join(workDir, opts.CommonFileDir),
+		}
+		for key := range fileMap {
+			if _, err := os.Stat(key); os.IsNotExist(err) {
+				delete(fileMap, key)
+			}
+		}
+		if _, err := linuxssh.PutFiles(ctx, h.DUT.Conn(), fileMap, linuxssh.DereferenceSymlinks); err != nil {
+			return errors.Wrap(err, "failed syncing Tast files from test server onto DUT")
+		}
+		testing.ContextLog(ctx, "Generating the keys by executing make_keys.sh")
+		if err := h.DUT.Conn().CommandContext(ctx, "/bin/bash", filepath.Join(workDir, opts.MakeKeyFileDir), fmt.Sprint(opts.VersionToSign)).Run(ssh.DumpLogOnError); err != nil {
+			return errors.Wrapf(err, "failed to execute %v on DUT", filepath.Join(workDir, opts.MakeKeyFileDir))
+		}
+	}
+	return nil
+}

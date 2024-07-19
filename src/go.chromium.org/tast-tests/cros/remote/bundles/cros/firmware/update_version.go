@@ -22,7 +22,6 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
-	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -238,31 +237,25 @@ func UpdateVersion(ctx context.Context, s *testing.State) {
 	s.Logf("Initial key version is %s", fmt.Sprint(initRWBKeyVer))
 
 	newKeyVer := initRWBKeyVer + 1
-	resignFWVersion := int(newKeyVer)
-	s.Logf("Firmware version will update to version %s", fmt.Sprint(newKeyVer))
 
+	s.Logf("Firmware version will update to version %s", fmt.Sprint(newKeyVer))
 	s.Log("Preparing the key files that are going to be resigned")
-	if err := prepareKeyfile(ctx, h, keysDir); err != nil {
+	if err := h.PrepareKeysWithScript(ctx, firmware.MakeKeysOption{
+		VersionToSign: fmt.Sprint(newKeyVer),
+		// Copies original key files from the DUT to the KeysDir
+		KeysDir:        keysDir,
+		MakeKeyFileDir: tc.makekeyFile,
+		CommonFileDir:  tc.commonFile,
+		//  Absolute paths for the shell scripts in firmware/data
+		ShellScript: s.DataPaths(),
+	}); err != nil {
 		s.Fatal("Failed to prepare the key files: ", err)
 	}
 
+	resignFWVersion := int(newKeyVer)
 	if tc.makekeyFile != "" && tc.commonFile != "" {
-		// Send the shell scripts used to resign the keys from the host to the DUT.
-		if _, err := linuxssh.PutFiles(ctx, h.DUT.Conn(), map[string]string{s.DataPath(tc.makekeyFile): filepath.Join(workDir, tc.makekeyFile)}, linuxssh.DereferenceSymlinks); err != nil {
-			s.Fatalf("Failed to send %v to DUT: %v", tc.makekeyFile, err)
-		}
-		if _, err := linuxssh.PutFiles(ctx, h.DUT.Conn(), map[string]string{s.DataPath(tc.commonFile): filepath.Join(workDir, tc.commonFile)}, linuxssh.DereferenceSymlinks); err != nil {
-			s.Fatalf("Failed to send %v to DUT: %v", tc.commonFile, err)
-		}
-
-		// Generate the files required for signing by executing the file make_keys.sh.
-		if err := h.DUT.Conn().CommandContext(ctx, "/bin/bash", filepath.Join(workDir, tc.makekeyFile), fmt.Sprint(newKeyVer)).Run(ssh.DumpLogOnError); err != nil {
-			s.Fatalf("Failed to execute %v on DUT: %v", filepath.Join(workDir, tc.makekeyFile), err)
-		}
-
 		resignFWVersion = 1
 	}
-
 	// Sign the BIOS binary file to generate a new binary file (output.bin) with an updated data key version.
 	futilityInstance, err := futility.NewLocalBuilder(h.DUT).Build()
 	if err != nil {
@@ -508,18 +501,6 @@ func resetTpmAndReboot(ctx context.Context, pv *fixture.Value, state *firmware.C
 
 	if err := h.RebootWithSSHCommand(ctx, pv.BootMode); err != nil {
 		return errors.Wrap(err, "failed to reboot with VT2 command")
-	}
-	return nil
-}
-
-// prepareKeyfile prepares the key files that are going to be resigned.
-func prepareKeyfile(ctx context.Context, h *firmware.Helper, keysDir string) error {
-	fs := dutfs.NewClient(h.RPCClient.Conn)
-	if err := fs.RemoveAll(ctx, keysDir); err != nil {
-		return errors.Wrapf(err, "failed to remove the dir %v", keysDir)
-	}
-	if err := fs.CopyDir(ctx, "/usr/share/vboot/devkeys", keysDir); err != nil {
-		return errors.Wrapf(err, "failed to copy the key files from %v to %v", "/usr/share/vboot/devkeys", keysDir)
 	}
 	return nil
 }
