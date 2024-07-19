@@ -38,6 +38,9 @@ service KernelService {
     // EnsureBothKernelCopiesBootable makes sure both kernel copies are identical and bootable.
     rpc EnsureBothKernelCopiesBootable (google.protobuf.Empty) returns (google.protobuf.Empty) {}
 
+    // SetBothKernelBootable reset kernel A and B to bootable.
+    rpc SetBothKernelBootable (google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
     // PrioritizeKernelCopy ensures DUT boots to expected kernel copy on next reboot (eg. KERN-A or KERN-B).
     rpc PrioritizeKernelCopy (Partition) returns (google.protobuf.Empty) {}
 
@@ -56,7 +59,7 @@ service KernelService {
     // CorruptRootfsVerityHash corrupts verity hash for given kernel copy.
     rpc CorruptRootfsVerityHash (RootfsVerityHashBackup) returns (google.protobuf.Empty) {}
 
-    // GetKernelVersion uses vbutil_kernel to get the kernel version for a given partition.
+    // GetKernelVersion uses futility show to get the kernel version for a given partition.
     rpc GetKernelVersion (Partition) returns (KernelVersion) {}
 
     // SetKernelVersion uses vbutil_kernel to set the kernel version for a given partition.
@@ -180,12 +183,13 @@ message RootfsVerityHashBackup {
     PartitionCopy Copy = 7;
 }
 
-// KernelVersion holds the kernel version retrieved from the vbutil_kernel cmd.
+// KernelVersion holds the kernel version and kernel data key version.
 message KernelVersion {
     string RootDev = 1;
     string Version = 2;
     reserved 3;
     PartitionCopy Copy = 4;
+    string DataKeyVersion = 5;
 }
 
 // KernelHeaderMagicInfo is used for setting the kernel header magic for a kernel section.

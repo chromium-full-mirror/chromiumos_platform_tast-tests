@@ -391,7 +391,7 @@ func (ks *KernelService) CorruptRootfsVerityHash(ctx context.Context, req *pb.Ro
 	return &empty.Empty{}, nil
 }
 
-// GetKernelVersion uses vbutil_kernel to get the kernel version for a given partition.
+// GetKernelVersion uses futility show to get the kernel version for a given partition.
 func (ks *KernelService) GetKernelVersion(ctx context.Context, req *pb.Partition) (*pb.KernelVersion, error) {
 	var rootDevWithPart string
 	if req.RootDev != "" {
@@ -405,15 +405,16 @@ func (ks *KernelService) GetKernelVersion(ctx context.Context, req *pb.Partition
 	}
 	rootDevWithoutPart, _ := kernel.SplitRootDevAndPart(ctx, rootDevWithPart)
 
-	version, err := kernel.GetKernelVersion(ctx, rootDevWithoutPart, req.Copy)
+	keyVersion, version, err := kernel.GetKernelVersion(ctx, rootDevWithoutPart, req.Copy)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get kernel version")
 	}
 
 	return &pb.KernelVersion{
-		RootDev: rootDevWithPart,
-		Version: version,
-		Copy:    req.Copy,
+		RootDev:        rootDevWithPart,
+		Version:        version,
+		DataKeyVersion: keyVersion,
+		Copy:           req.Copy,
 	}, nil
 }
 
@@ -436,6 +437,19 @@ func (ks *KernelService) SetKernelVersion(ctx context.Context, req *pb.KernelVer
 	if err := kernel.SetKernelVersion(ctx, rootDevWithoutPart, req.Copy, req.Version); err != nil {
 		return nil, errors.Wrapf(err, "failed to set kernel version to %q", req.Version)
 	}
+	return &empty.Empty{}, nil
+}
+
+// SetBothKernelBootable ensure both kernel are bootable.
+func (ks *KernelService) SetBothKernelBootable(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
+	rootDevWithPart, err := kernel.GetCurrentRootDevice(ctx, true)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get current root device")
+	}
+	if err := kernel.SetBothKernelBootable(ctx, rootDevWithPart); err != nil {
+		return nil, err
+	}
+
 	return &empty.Empty{}, nil
 }
 

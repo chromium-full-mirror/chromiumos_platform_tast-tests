@@ -641,29 +641,29 @@ func GetNameFromLabel(label string) (string, error) {
 	return match[1], nil
 }
 
-// GetKernelVersion uses vbutil_kernel to get the kernel version for a given partition.
-func GetKernelVersion(ctx context.Context, rootDevWithoutPart string, copy pb.PartitionCopy) (string, error) {
+// GetKernelVersion uses futility show to get the kernel version for a given partition.
+func GetKernelVersion(ctx context.Context, rootDevWithoutPart string, copy pb.PartitionCopy) (dataKeyVersion, kernelVersion string, err error) {
 	partitionTables, err := GetCgptTable(ctx, rootDevWithoutPart)
 	if err != nil {
-		return "", errors.Wrap(err, "failed to get cgpt table")
+		return "", "", errors.Wrap(err, "failed to get cgpt table")
 	}
 
 	label := PartitionNameCopyToLabel(pb.PartitionName_KERNEL, copy)
 	table := partitionTables[label]
 
 	testing.ContextLogf(ctx, "Getting kernel version for %s (label: %s)", table.PartitionPath, table.Label)
-	// TODO(tij@): Update this to use the futility vbutil_kernel library after it gets implemented.
-	out, err := testexec.CommandContext(ctx, "vbutil_kernel", "--verify", table.PartitionPath).Output(testexec.DumpLogOnError)
+
+	out, err := testexec.CommandContext(ctx, "futility", "show", table.PartitionPath).Output(testexec.DumpLogOnError)
 	if err != nil {
-		return "", errors.Wrap(err, "failed to get vbutil kernel")
+		return "", "", errors.Wrap(err, "failed to retrieve kernel information")
 	}
 
-	match := regexp.MustCompile(`Kernel version:\s*(\S+)`).FindStringSubmatch(string(out))
-	if match == nil || len(match) < 2 {
-		return "", errors.Errorf("failed to parse kernel version for label %q, got output: %v", table.Label, string(out))
+	match := regexp.MustCompile(`Data key version:\s+(\d+)[\s\S]*?Kernel version:\s+(\d+)`).FindStringSubmatch(string(out))
+	if match == nil || len(match) < 3 {
+		return "", "", errors.Errorf("failed to parse kernel version for label %q, got output: %v", table.Label, string(out))
 	}
 
-	return match[1], nil
+	return match[1], match[2], nil
 }
 
 // SetKernelVersion uses vbutil_kernel to set the kernel version for a given partition.
@@ -738,6 +738,27 @@ func SetKernelHeaderMagic(ctx context.Context, rootDevWithoutPart, label string,
 		if err := PrioritizeKernelCopy(ctx, rootDevWithoutPart, CopyToCopyEnum[GetCopyFromLabel(table.Label)]); err != nil {
 			testing.ContextLogf(ctx, "Failed to make %q bootable after restoring header magic, got error: %v", table.Label, err)
 		}
+	}
+	return nil
+}
+
+// SetBothKernelBootable ensure both kernel are bootable.
+func SetBothKernelBootable(ctx context.Context, rootDevWithPart string) error {
+	rootDevWithoutPart, _ := SplitRootDevAndPart(ctx, rootDevWithPart)
+	partitionTable, err := GetCgptTable(ctx, rootDevWithoutPart)
+	if err != nil {
+		return errors.Wrap(err, "failed to read cgpt table")
+	}
+
+	kernA := partitionTable["KERN-A"]
+	kernB := partitionTable["KERN-B"]
+
+	if err := forcePartitionBootable(ctx, kernA.PartitionPath, 1); err != nil {
+		return errors.Wrap(err, "failed to make KERN-A bootable")
+	}
+
+	if err := forcePartitionBootable(ctx, kernB.PartitionPath, 1); err != nil {
+		return errors.Wrap(err, "failed to make KERN-B bootable")
 	}
 	return nil
 }
