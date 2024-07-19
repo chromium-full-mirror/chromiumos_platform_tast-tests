@@ -29,23 +29,47 @@ func init() {
 	})
 }
 
+type previewOCRSubTest struct {
+	name string
+	run  func(ctx context.Context, app *cca.App) error
+}
+
 func CCAUIPreviewOCR(ctx context.Context, s *testing.State) {
 	runTestWithApp := s.FixtValue().(cca.FixtureData).RunTestWithApp
 	switchScene := s.FixtValue().(cca.FixtureData).SwitchScene
 	cr := s.FixtValue().(cca.FixtureData).Chrome
-	if err := switchScene(ctx, cca.SceneData{Path: s.DataPath("ocr_one_line_3264x2448.jpg"), ScaleMode: "contain"}); err != nil {
-		s.Fatal("Failed to setup scene: ", err)
-	}
-	if err := runTestWithApp(ctx, func(ctx context.Context, app *cca.App) error {
-		// TODO(b/335104005): Check more scenarios: no text, multiple-line text, and text plus barcode.
-		return testPreviewOCR(ctx, app, cr, "hello.")
-	}, cca.TestWithAppParams{}); err != nil {
-		s.Error("Failed to run test: ", err)
-	}
+	subTestTimeout := 30 * time.Second
 
+	for _, tst := range []previewOCRSubTest{{
+		// TODO(b/335104005): Check more scenarios: no text, multiple-line text, and text plus barcode.
+		name: "testDetectAndCopy",
+		run: func(ctx context.Context, app *cca.App) error {
+			return testPreviewOCR(ctx, app, cr, "hello.")
+		},
+	}, {
+		name: "testDisabled",
+		run:  testPreviewOCRDisabled,
+	}} {
+		s.Run(ctx, tst.name, func(ctx context.Context, s *testing.State) {
+			subTestCtx, cancel := context.WithTimeout(ctx, subTestTimeout)
+			defer cancel()
+			if err := switchScene(ctx, cca.SceneData{Path: s.DataPath("ocr_one_line_3264x2448.jpg"), ScaleMode: "contain"}); err != nil {
+				s.Fatal("Failed to setup scene: ", err)
+			}
+			if err := runTestWithApp(ctx, func(ctx context.Context, app *cca.App) error {
+				return tst.run(subTestCtx, app)
+			}, cca.TestWithAppParams{}); err != nil {
+				s.Errorf("Failed to pass %v subtest: %v", tst.name, err)
+			}
+		})
+	}
 }
 
+// testPreviewOCR verifies text in the preview can be detected and copied.
 func testPreviewOCR(ctx context.Context, app *cca.App, cr *chrome.Chrome, expectedText string) error {
+	if err := app.SetPreviewOCROption(ctx, true); err != nil {
+		return errors.Wrap(err, "failed to enable preview OCR option")
+	}
 	// Barcode and OCR use the same components to show and copy detected text.
 	if err := app.WaitForVisibleStateFor(ctx, cca.BarcodeChipText, true, 10*time.Second); err != nil {
 		return errors.Wrap(err, "failed to detect text")
@@ -64,6 +88,27 @@ func testPreviewOCR(ctx context.Context, app *cca.App, cr *chrome.Chrome, expect
 	}
 	if err := ash.WaitUntilClipboardText(ctx, tconn, expectedText); err != nil {
 		return errors.Wrap(err, "failed to copy detected text")
+	}
+
+	return nil
+}
+
+// testPreviewOCRDisabled verifies text detection preview is not visible when the feature is disabled (default setting).
+func testPreviewOCRDisabled(ctx context.Context, app *cca.App) error {
+	ErrDetectedTextInvisible := errors.New("detected text is invisible")
+
+	// Poll for 10 seconds to ensure the text detection preview doesn't show.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		visible, err := app.Visible(ctx, cca.BarcodeChipText)
+		if err != nil {
+			return testing.PollBreak(err)
+		}
+		if visible {
+			return testing.PollBreak(errors.New("detected text is visible"))
+		}
+		return ErrDetectedTextInvisible
+	}, &testing.PollOptions{Timeout: 10 * time.Second}); !errors.Is(err, ErrDetectedTextInvisible) {
+		return errors.Wrap(err, "failed to disable preview OCR feature")
 	}
 
 	return nil

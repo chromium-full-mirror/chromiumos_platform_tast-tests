@@ -210,6 +210,8 @@ const (
 	MultistreamRecordingOption Option = "multiStreamRecordingOption"
 	// MultistreamRecordingChromeOption is the option to enable multistream video recording (scale by Chrome version).
 	MultistreamRecordingChromeOption Option = "multiStreamRecordingChromeOption"
+	// PreviewOCROption is the option to enable OCR detection on preview in photo mode.
+	PreviewOCROption Option = "previewOcrOption"
 	// SaveMetadataOption is the option to save metadata of capture result.
 	SaveMetadataOption Option = "saveMetadataOption"
 	// ShowMetadataOption is the option to show preview metadata.
