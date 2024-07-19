@@ -98,6 +98,7 @@ func init() {
 				"riven",
 				"rudrik",
 				"rynax",
+				"sasukette",
 				"screebo",
 				"screebo4es",
 				"skyrim15w",
