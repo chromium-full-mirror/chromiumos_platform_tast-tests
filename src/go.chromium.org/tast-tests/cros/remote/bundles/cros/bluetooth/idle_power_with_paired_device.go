@@ -114,6 +114,9 @@ func IdlePowerWithPairedDevice(ctx context.Context, s *testing.State) {
 	}
 	testing.ContextLogf(ctx, "Successfully paired device %s", device.String())
 
+	if err := fv.PowerCooldown(ctx); err != nil {
+		s.Fatal("Failed to cooldown for power measurement: ", err)
+	}
 	fv.StartPowerRecording(ctx)
 
 	testing.ContextLog(ctx, "Keep BT on for ", interval)

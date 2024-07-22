@@ -8,9 +8,9 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"google.golang.org/protobuf/types/known/emptypb"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/bluetooth"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -61,6 +61,9 @@ func IdlePower(ctx context.Context, s *testing.State) {
 	// Disable Bluetooth
 	fv.BluetoothService.Disable(ctx, &emptypb.Empty{})
 
+	if err := fv.PowerCooldown(ctx); err != nil {
+		s.Fatal("Failed to cooldown for power measurement: ", err)
+	}
 	fv.StartPowerRecording(ctx)
 
 	testing.ContextLog(ctx, "Keep BT off for ", interval)
@@ -80,6 +83,9 @@ func IdlePower(ctx context.Context, s *testing.State) {
 	// Enable Bluetooth
 	fv.BluetoothService.Enable(ctx, &emptypb.Empty{})
 
+	if err := fv.PowerCooldown(ctx); err != nil {
+		s.Fatal("Failed to cooldown for power measurement: ", err)
+	}
 	fv.StartPowerRecording(ctx)
 
 	testing.ContextLog(ctx, "Keep BT on for ", interval, " min")

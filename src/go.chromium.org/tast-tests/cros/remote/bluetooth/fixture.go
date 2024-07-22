@@ -445,12 +445,17 @@ func (fv *FixtValue) CompanionDUTConfig(companionNum uint) *DUTConfig {
 	return fv.DUTConfigs[companionNum]
 }
 
-// StartPowerRecording to cooldown the device and start a recording for power metrics.
-func (fv *FixtValue) StartPowerRecording(ctx context.Context) error {
+// PowerCooldown to cooldown the device for power measurement.
+func (fv *FixtValue) PowerCooldown(ctx context.Context) error {
 	testing.ContextLog(ctx, "Cooling down device")
 	if _, err := fv.PowerRecorderService.Cooldown(ctx, &empty.Empty{}); err != nil {
 		return errors.Wrap(err, "failed to cooldown device")
 	}
+	return nil
+}
+
+// StartPowerRecording to cooldown the device and start a recording for power metrics.
+func (fv *FixtValue) StartPowerRecording(ctx context.Context) error {
 	testing.ContextLog(ctx, "Start recording power metrics")
 	if _, err := fv.PowerRecorderService.Start(ctx, &empty.Empty{}); err != nil {
 		return errors.Wrap(err, "failed to start recording power metrics")
@@ -636,11 +641,10 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 			companionDUTRoles = append(companionDUTRoles, role)
 		}
 		if len(companionDUTRoles) != 1 {
-			s.Fatalf(
-				"Failed to get companion DUT: expected 1 companion DUT, found %d: %s",
+			s.Fatalf("Failed to get companion DUT: expected 1 companion DUT, found %d: %s",
 				len(companionDUTRoles),
-				strings.Join(companionDUTRoles, ", "),
-			)
+				strings.Join(companionDUTRoles, ", "))
+
 		}
 		companionDUTRole := companionDUTRoles[0]
 		companionDUT := s.CompanionDUT(companionDUTRole)

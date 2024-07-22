@@ -160,6 +160,9 @@ func AudioPlayPower(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to convert raw to wav: ", err)
 	}
 
+	if err := fv.PowerCooldown(ctx); err != nil {
+		s.Fatal("Failed to cooldown for power measurement: ", err)
+	}
 	fv.StartPowerRecording(ctx)
 
 	s.Log("Keep idle for ", interval)
@@ -176,6 +179,9 @@ func AudioPlayPower(ctx context.Context, s *testing.State) {
 	}
 	s.Log("Measured idle power [W]: ", pIdle)
 
+	if err := fv.PowerCooldown(ctx); err != nil {
+		s.Fatal("Failed to cooldown for power measurement: ", err)
+	}
 	fv.StartPowerRecording(ctx)
 
 	dirAndFileName := &ui.AudioServiceRequest{DirectoryName: "Downloads", FileName: wavFileName}

@@ -76,6 +76,9 @@ func PassiveScanPower(ctx context.Context, s *testing.State) {
 	interval := 5 * time.Minute
 
 	// Step 1: Get idle power.
+	if err := fv.PowerCooldown(ctx); err != nil {
+		s.Fatal("Failed to cooldown for power measurement: ", err)
+	}
 	fv.StartPowerRecording(ctx)
 	s.Log("Measuring power for Bluetooth idle for ", interval)
 	// GoBigSleepLint: sleep to keep idle for measuring power consumption
@@ -138,6 +141,9 @@ func PassiveScanPower(ctx context.Context, s *testing.State) {
 		s.Fatal("Expected btpeer0 to be disconnected")
 	}
 
+	if err := fv.PowerCooldown(ctx); err != nil {
+		s.Fatal("Failed to cooldown for power measurement: ", err)
+	}
 	fv.StartPowerRecording(ctx)
 
 	s.Log("Measuring power for Bluetooth passive scan for ", interval)

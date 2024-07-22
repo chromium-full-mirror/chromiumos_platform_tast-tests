@@ -72,6 +72,9 @@ func BTActiveDiscoveryPower(ctx context.Context, s *testing.State) {
 	interval := 5 * time.Minute
 
 	// Baseline idle power
+	if err := fv.PowerCooldown(ctx); err != nil {
+		s.Fatal("Failed to cooldown for power measurement: ", err)
+	}
 	fv.StartPowerRecording(ctx)
 	s.Log("Keep idle for ", interval)
 	// GoBigSleepLint: sleep to keep discovery for measuring power consumption
@@ -92,6 +95,9 @@ func BTActiveDiscoveryPower(ctx context.Context, s *testing.State) {
 		DiscoveryTimeout: durationpb.New(interval),
 	}
 
+	if err := fv.PowerCooldown(ctx); err != nil {
+		s.Fatal("Failed to cooldown for power measurement: ", err)
+	}
 	fv.StartPowerRecording(ctx)
 
 	// Keep discovering for a non-existence target for interval seconds.
@@ -126,6 +132,9 @@ func BTActiveDiscoveryPower(ctx context.Context, s *testing.State) {
 	}
 	s.Logf("Device %s is ready to pair", device.String())
 
+	if err := fv.PowerCooldown(ctx); err != nil {
+		s.Fatal("Failed to cooldown for power measurement: ", err)
+	}
 	fv.StartPowerRecording(ctx)
 	s.Log("Keep discovering for ", interval)
 	if _, err = fv.BluetoothService.DiscoverDevice(ctx, &request); err != nil {

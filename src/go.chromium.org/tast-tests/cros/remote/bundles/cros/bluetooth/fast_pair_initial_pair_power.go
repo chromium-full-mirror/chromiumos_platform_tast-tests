@@ -69,6 +69,9 @@ func FastPairInitialPairPower(ctx context.Context, s *testing.State) {
 	}
 
 	// Record a baseline power
+	if err := fv.PowerCooldown(ctx); err != nil {
+		s.Fatal("Failed to cooldown for power measurement: ", err)
+	}
 	fv.StartPowerRecording(ctx)
 
 	s.Log("Measuring power with Fast Pair enabled, but no devices advertising for ", interval)
@@ -98,6 +101,9 @@ func FastPairInitialPairPower(ctx context.Context, s *testing.State) {
 		s.Error("Failed to set antispoofing key pem on Fast Pair btpeer: ", err)
 	}
 
+	if err := fv.PowerCooldown(ctx); err != nil {
+		s.Fatal("Failed to cooldown for power measurement: ", err)
+	}
 	fv.StartPowerRecording(ctx)
 	s.Log("Measuring DUT's power consumption when pairing a Bluetooth device via Fast Pair")
 	s.Log("Pairing device with Fast Pair notification")
