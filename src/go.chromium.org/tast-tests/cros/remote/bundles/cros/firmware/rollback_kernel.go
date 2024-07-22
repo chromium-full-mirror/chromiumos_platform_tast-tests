@@ -157,6 +157,14 @@ func RollbackKernel(ctx context.Context, s *testing.State) {
 		if _, err := h.DUT.Conn().CommandContext(ctx, "rm", rmargs...).Output(ssh.DumpLogOnError); err != nil {
 			s.Fatal("Failed to delete backup files: ", err)
 		}
+
+		// Save the firmware log file for upload to Testhaus at the end of the test.
+		if s.HasError() {
+			saveLogPath := filepath.Join(s.OutDir(), "firmware.log")
+			if err := h.SaveCBMEMLogs(ctx, saveLogPath); err != nil {
+				s.Fatal("Failed to save firmware log: ", err)
+			}
+		}
 	}(cleanupContext)
 
 	if err := h.RequireKernelServiceClient(ctx); err != nil {
