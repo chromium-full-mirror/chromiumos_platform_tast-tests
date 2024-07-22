@@ -482,7 +482,9 @@ func OpenDiscoverAPNDialogFromAPNSubpage(ctx context.Context, tconn *chrome.Test
 // SelectAPNFromDialog selects the provided |apnName| when the discover new APNs dialog is open.
 func SelectAPNFromDialog(ctx context.Context, tconn *chrome.TestConn, apnName string) error {
 	chooseApnDialog := nodewith.Name("Choose an APN").Role(role.Dialog)
-	apnSelection := nodewith.Name(apnName).Role(role.StaticText).Ancestor(chooseApnDialog)
+	// There might be a space before and after the APN name.
+	nameReg := regexp.MustCompile(regexp.QuoteMeta(strings.TrimSpace(apnName)))
+	apnSelection := nodewith.NameRegex(nameReg).Role(role.StaticText).Ancestor(chooseApnDialog)
 
 	ui := uiauto.New(tconn)
 	if err := ui.WithTimeout(3 * time.Second).WaitUntilExists(apnSelection)(ctx); err != nil {
