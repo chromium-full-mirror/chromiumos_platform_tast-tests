@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/ambient"
 	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/wallpaper"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -81,10 +82,7 @@ func init() {
 		BugComponent: "b:1006527",
 		Impl: baseFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
-				chrome.GAIALogin(chrome.Creds{
-					User: s.RequiredVar("ambient.username"),
-					Pass: s.RequiredVar("ambient.password"),
-				}),
+				chrome.GAIALoginPool(dma.CredsFromPool(ambient.AccountVarName)),
 			}, nil
 		}),
 		SetUpTimeout:    chrome.GAIALoginTimeout,
@@ -92,10 +90,6 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
-		Vars: []string{
-			"ambient.username",
-			"ambient.password",
-		},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: GooglePhotosFixture,

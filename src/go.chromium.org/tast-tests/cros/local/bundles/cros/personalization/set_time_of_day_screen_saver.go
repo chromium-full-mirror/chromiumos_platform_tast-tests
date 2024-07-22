@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	ambientCommon "go.chromium.org/tast-tests/cros/common/ambient"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/local/ambient"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -29,8 +30,8 @@ func init() {
 		BugComponent: "b:1006527",
 		Attr:         []string{"group:cbx", "cbx_feature_enabled", "cbx_stable"},
 		TestBedDeps:  []string{tbdep.Cbx(true)},
-		VarDeps:      []string{"ambient.username", "ambient.password"},
-		SoftwareDeps: []string{"chrome"},
+		VarDeps:      []string{ambientCommon.AccountVarName},
+		SoftwareDeps: []string{"chrome", "gaia"},
 		Timeout:      5 * time.Minute,
 		Fixture:      personalization.GooglePhotosClamshellFixture,
 		Params: []testing.Param{

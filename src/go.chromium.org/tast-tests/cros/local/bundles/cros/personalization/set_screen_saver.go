@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	ambientCommon "go.chromium.org/tast-tests/cros/common/ambient"
 	"go.chromium.org/tast-tests/cros/local/ambient"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/personalization"
@@ -31,7 +32,7 @@ func init() {
 			Key:   "feature_id",
 			Value: "screenplay-e92e2d70-5969-4405-9cdd-c3ecee573f81",
 		}},
-		VarDeps:      []string{"ambient.username", "ambient.password"},
+		VarDeps:      []string{ambientCommon.AccountVarName},
 		SoftwareDeps: []string{"chrome", "gaia"},
 		Timeout:      5 * time.Minute,
 		Fixture:      personalization.GooglePhotosClamshellFixture,

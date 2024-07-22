@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/ambient"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -40,7 +41,7 @@ func init() {
 		// ChromeOS > Software > Personalization
 		BugComponent: "b:1006527",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
-		VarDeps:      []string{"ambient.username", "ambient.password"},
+		VarDeps:      []string{ambient.AccountVarName},
 		SoftwareDeps: []string{"chrome", "gaia"},
 		Timeout:      3 * time.Minute,
 		Fixture:      personalization.GaiaFixture,

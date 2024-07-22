@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"go.chromium.org/tast-tests/cros/common/accountmanager"
+	"go.chromium.org/tast-tests/cros/common/ambient"
 	"go.chromium.org/tast-tests/cros/common/arc"
 	"go.chromium.org/tast-tests/cros/common/arcappcompat"
 	"go.chromium.org/tast-tests/cros/common/assistant"
@@ -37,6 +38,7 @@ var dmaEnableVar = testing.RegisterVarString(
 func pools() (map[string]string, map[string]string) {
 	var dmaPools = map[string]string{
 		accountmanager.AccountPoolVarName:           ui.GaiaDMAPoolDefaultValue(),
+		ambient.AccountVarName:                      assistant.DmaAccountPoolValue(),
 		arcappcompat.AccountVarName:                 arcappcompat.DmaAccountValue(),
 		arc.ChildAccountVarName:                     arc.ChildDMAAccountValue(),
 		arc.DrivefsPoolVarName:                      ui.GaiaDMAPoolDefaultValue(),
@@ -78,6 +80,7 @@ func pools() (map[string]string, map[string]string) {
 
 	var regularPools = map[string]string{
 		accountmanager.AccountPoolVarName:           accountmanager.AccountPoolValue(),
+		ambient.AccountVarName:                      ambient.AccountValue(),
 		arcappcompat.AccountVarName:                 arcappcompat.AccountValue(),
 		arc.ChildAccountVarName:                     arc.ChildAccountValue(),
 		arc.DrivefsPoolVarName:                      arc.DrivefsPoolValue(),
