@@ -31,7 +31,7 @@ func init() {
 			"rjodin@chromium.org",
 		},
 		Attr:         []string{},
-		SoftwareDeps: []string{"vulkan"},
+		SoftwareDeps: []string{"vulkan", "no_qemu"},
 		Fixture:      "graphicsNoChrome",
 		Params: []testing.Param{{
 			Name: "api_tests",
