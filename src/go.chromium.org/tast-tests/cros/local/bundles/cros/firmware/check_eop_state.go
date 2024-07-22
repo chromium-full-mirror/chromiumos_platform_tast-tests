@@ -113,26 +113,25 @@ func CheckEOPState(ctx context.Context, s *testing.State) {
 		s.Fatal("Unknown eop command")
 	}
 
-	s.Log("Getting EOP info from ME with GEN_GET_BOOT_STATE command")
+	s.Log("Getting EOP info from ME with command")
 	packResult := []byte{groupID, command, 0, 0}
 	if _, err := file.Write(packResult); err != nil {
 		s.Fatal("Failed to write: ", err)
 	}
 
-	const maxBufSize = 1<<31 - 1
-	var data [maxBufSize]byte
+	data := make([]byte, maxMsgLength)
 	inb, err := input.SysRead(ctx, file, &data)
 	if err != nil {
 		s.Fatal("Failed to read file: ", err)
 	}
 
 	if inb != uintptr(expectedIBNCnt) {
-		s.Fatal("Unknown response by ME")
+		s.Fatal("Unknown response by ME, got ", inb)
 	}
 
 	groupIDResp := data[0]
 	if groupIDResp != groupID {
-		s.Fatal("ME didn't respond to GEN_GET_BOOT_STATE")
+		s.Fatal("ME didn't respond")
 	}
 
 	commandPlus80 := data[1]
@@ -162,7 +161,7 @@ func CheckEOPState(ctx context.Context, s *testing.State) {
 	s.Log("EOP State: ", eopState == 0)
 }
 
-func heciMKHIToLe(b []byte) [16]byte {
+func heciMKHIToLe(b []byte) []byte {
 	/*
 		uuid is formed by:
 			time_low: 4 bytes
@@ -187,5 +186,5 @@ func heciMKHIToLe(b []byte) [16]byte {
 	binary.Write(&bs, binary.LittleEndian, timeHiAndVersion)
 	binary.Write(&bs, binary.BigEndian, others)
 
-	return [16]byte(bs.Bytes())
+	return bs.Bytes()
 }
