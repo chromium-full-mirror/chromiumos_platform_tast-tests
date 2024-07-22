@@ -25,8 +25,9 @@ import (
 
 // Node finders in the tray bar.
 var (
-	vcTraySection = nodewith.HasClass("VideoConferenceTray")
-	expandButton  = nodewith.Name("Camera and audio controls").Role(role.ToggleButton).Ancestor(vcTraySection)
+	vcTraySection   = nodewith.HasClass("VideoConferenceTray")
+	expandButton    = nodewith.Name("Camera and audio controls").Role(role.ToggleButton).Ancestor(vcTraySection)
+	studioMicButton = nodewith.NameStartingWith("Toggle Microphone").Role(role.ToggleButton).Ancestor(vcTraySection)
 )
 
 // Node finders in the expanded panel which is implemented in TrayBubbleView.
@@ -37,7 +38,6 @@ var (
 	liveCaptionButton       = nodewith.NameStartingWith("Toggle Live Caption").Role(role.ToggleButton).Ancestor(bubleView)
 	adjustCameraFraming     = nodewith.NameStartingWith("Toggle Camera framing").Role(role.ToggleButton).Ancestor(bubleView)
 	noiseCancellationButton = nodewith.NameStartingWith("Toggle Noise cancellation").Role(role.ToggleButton).Ancestor(bubleView)
-	studioMicButton         = nodewith.NameStartingWith("Toggle Studio mic").Role(role.ToggleButton).Ancestor(bubleView)
 
 	buttonNameRegexp           = regexp.MustCompile(`.*Button.*`)
 	bgBlurOffButton            = nodewith.NameContaining("Off").ClassNameRegex(buttonNameRegexp).Ancestor(bubleView)
@@ -174,8 +174,8 @@ func (vcTray VCTray) featureEnabled(ctx context.Context, finder *nodewith.Finder
 		return false, errors.Wrap(err, "failed to get node info")
 	}
 	// Current status can be identified by the node name.
-	// Off: "<Feature> is off"; On: "<Feature> is on".
-	return strings.HasSuffix(nodeInfo.Name, "on"), nil
+	// Off: "<Feature> is off"; On: "<Feature> is on and in use".
+	return strings.Contains(nodeInfo.Name, "on"), nil
 }
 
 // SetFeature toggles on/off the specified option.
