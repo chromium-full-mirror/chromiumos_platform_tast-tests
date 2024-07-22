@@ -35,7 +35,9 @@ type GBInfo struct {
 	// pughGBFIles pushes the necessary files specified in geekbenchFiles struct.
 	pushGBFiles func(context.Context, *vm.Container, geekbenchFiles) error
 	// pushGBLicense writes the license string to the destination.
-	pushGBLicense func(context.Context, *vm.Container, string /*licensePath*/, string /*licenseStr*/) error
+	pushGBLicense func(context.Context, *vm.Container, string /*licensePath*/, string /*licenseStr*/) (func(), error)
+	// getGBCommand returns the command to run the geekbench binary.
+	getGBCommand func(context.Context, *vm.Container, string /*binaryPath*/, string /*resultPath8*/) *testexec.Cmd
 	// retrieveGBFile retrieves the output result file from DUT.
 	retrieveGBFile func(context.Context, *vm.Container, string /*resultPath*/, string /*logPath*/) error
 }
@@ -71,14 +73,14 @@ func Run(ctx context.Context, gbInfo GBInfo, fixtValue interface{}, stateVars ma
 		geekbenchWorkload = "geekbench-workload.plar"
 	)
 	geekbenchPlarSource := fmt.Sprintf("geekbench%d.plar", gbInfo.Version)
-	geekbenchLicense := fmt.Sprintf("Geekbench %d.preferences", gbInfo.Version)
+	licenseName := fmt.Sprintf(".geekbench%d", gbInfo.Version)
 	folderName := fmt.Sprintf("geekbench%d_cuj", gbInfo.Version)
 
 	gbDir, err := gbInfo.createGBDir(ctx, cont, cr, folderName)
 	if err != nil {
 		return errors.Wrap(err, "failed to setup Geekbench directory")
 	}
-	defer gbDir.rmDir(ctx)
+	defer gbDir.rmDir()
 
 	var execName string
 	if strings.Contains(gbInfo.Name, "custom") {
@@ -92,7 +94,8 @@ func Run(ctx context.Context, gbInfo GBInfo, fixtValue interface{}, stateVars ma
 	}
 
 	execFilePath := filepath.Join(gbDir.path, execName)
-	resultPath := filepath.Join(gbDir.path, resultFileName)
+	resultPath := filepath.Join(gbDir.home, resultFileName)
+	licensePath := filepath.Join(gbDir.home, licenseName)
 	gbFiles := geekbenchFiles{
 		binarySrc:  stateVars[execName],
 		binaryDest: execFilePath,
@@ -112,16 +115,21 @@ func Run(ctx context.Context, gbInfo GBInfo, fixtValue interface{}, stateVars ma
 	}
 
 	// License is only needed for the public version of the test.
+	var rmLicense func()
 	if gbInfo.NeedLicense {
 		email := stateVars["email"]
 		key := stateVars["key"]
 
-		licensePath := filepath.Join(gbDir.path, geekbenchLicense)
 		license := fmt.Sprintf(`{"license_key": "%s", "license_user": "%s"}`, key, email)
-		if err := gbInfo.pushGBLicense(ctx, cont, licensePath, license); err != nil {
+		if rmLicense, err = gbInfo.pushGBLicense(ctx, cont, licensePath, license); err != nil {
 			return errors.Wrap(err, "failed to push license file; make sure inputs are correct")
 		}
 	}
+	defer func() {
+		if rmLicense != nil {
+			rmLicense()
+		}
+	}()
 
 	recorder, err := cujrecorder.NewRecorder(ctx, cr, tconn, nil, cujrecorder.RecorderOptions{
 		CooldownBeforeRun: true,
@@ -135,7 +143,7 @@ func Run(ctx context.Context, gbInfo GBInfo, fixtValue interface{}, stateVars ma
 
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
 		recorder.Annotate(ctx, "Run_Geekbench_Executable")
-		out, err := execCommand(ctx, cont, execFilePath, resultPath).Output(testexec.DumpLogOnError)
+		out, err := gbInfo.getGBCommand(ctx, cont, execFilePath, resultPath).Output(testexec.DumpLogOnError)
 		if err != nil {
 			if gbInfo.NeedLicense && strings.Contains(string(out), "Error: The `--no-upload` switch") {
 				return errors.Wrap(err, "failed to verify Geekbench license; make sure email and key are entered correctly in command line or Geekbench preferences file")

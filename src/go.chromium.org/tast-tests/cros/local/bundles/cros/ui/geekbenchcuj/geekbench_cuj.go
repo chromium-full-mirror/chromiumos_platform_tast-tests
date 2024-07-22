@@ -45,6 +45,20 @@ func Run(ctx context.Context, s *testing.State) {
 		stateVars["geekbench6-workload.plar"] = s.DataPath("geekbench6-workload.plar")
 	}
 
+	if gbInfo.NeedLicense {
+		email, ok := s.Var(geekbench.GeekbenchEmail)
+		if !ok {
+			s.Fatal("Failed to get license email")
+		}
+		stateVars["email"] = email
+
+		key, ok := s.Var(geekbench.GeekbenchKey)
+		if !ok {
+			s.Fatal("Failed to get license key")
+		}
+		stateVars["key"] = key
+	}
+
 	if err := geekbench.Run(ctx, gbInfo, fixtValue, stateVars); err != nil {
 		s.Fatal("Failed to run GeekbenchCUJL: ", err)
 	}

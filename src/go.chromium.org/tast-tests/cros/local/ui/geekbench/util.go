@@ -9,12 +9,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"regexp"
 	"strings"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
-	"go.chromium.org/tast-tests/cros/local/vm"
 	"go.chromium.org/tast/core/errors"
 )
 
@@ -24,14 +23,17 @@ const (
 	geekbenchAarch64 = "aarch64"
 	geekbenchX86_64  = "x86_64"
 	geekbenchPlar    = "geekbench.plar"
-	geekbenchEmail   = "geekbench.email"
-	geekbenchKey     = "geekbench.key"
+	// GeekbenchEmail is the cmd line variable for license email.
+	GeekbenchEmail = "geekbench.email"
+	// GeekbenchKey is the cmd line variable for license key.
+	GeekbenchKey = "geekbench.key"
 )
 
 // geekbenchDir will contain the path and method to remove directory.
 type geekbenchDir struct {
 	path  string
-	rmDir func(context.Context)
+	home  string
+	rmDir func()
 }
 
 // GeekbenchFiles will contain the files needed for running Geekbench.
@@ -65,17 +67,9 @@ type result struct {
 	Sections []section `json:"sections"`
 }
 
-// execCommand returns a testexec.Cmd object to execute the Geekbench binary.
-func execCommand(ctx context.Context, cont *vm.Container, execFilePath, resultPath string) *testexec.Cmd {
-	if cont != nil {
-		return cont.Command(ctx, execFilePath, "--no-upload", "--export-json", resultPath)
-	}
-	return testexec.CommandContext(ctx, execFilePath, "--no-upload", "--export-json", resultPath)
-}
-
 // RetrieveScore formats the metric values for Geekbench and inputs them in a map.
 func RetrieveScore(ctx context.Context, crosPath string, scores map[string]float64) error {
-	bytes, err := ioutil.ReadFile(crosPath)
+	bytes, err := os.ReadFile(crosPath)
 	if err != nil {
 		return errors.Wrap(err, "failed to read the results")
 	}

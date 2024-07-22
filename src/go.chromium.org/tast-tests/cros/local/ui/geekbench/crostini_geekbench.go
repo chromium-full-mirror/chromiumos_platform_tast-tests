@@ -6,7 +6,6 @@ package geekbench
 
 import (
 	"context"
-	"fmt"
 	"path/filepath"
 	"strings"
 
@@ -23,6 +22,7 @@ var crostiniGeekbenchInfo = GBInfo{
 	createGBDir:    createCrostiniGBDir,
 	pushGBFiles:    pushCrostiniGBFiles,
 	pushGBLicense:  pushCrostiniGBLicense,
+	getGBCommand:   getCrostiniGBCommand,
 	retrieveGBFile: retrieveCrostiniGBFile,
 }
 
@@ -32,7 +32,7 @@ func createCrostiniGBDir(ctx context.Context, cont *vm.Container, cr *chrome.Chr
 		return gbDir, errors.Wrap(err, "failed to create Geekbench folder")
 	}
 
-	remove := func(ctx context.Context) {
+	remove := func() {
 		// Remove the file from download folder.
 		if err := cont.Command(ctx, "rm", "-r", name).Run(testexec.DumpLogOnError); err != nil {
 			testing.ContextLog(ctx, "Failed to delete Geekbench folder: ", err)
@@ -40,8 +40,16 @@ func createCrostiniGBDir(ctx context.Context, cont *vm.Container, cr *chrome.Chr
 	}
 	userName := strings.Split(cr.NormalizedUser(), "@")[0]
 	gbFolderPath := filepath.Join("/home", userName, name)
+
+	userHome, err := cont.GetHomeDir(ctx)
+	if err != nil {
+		return gbDir, errors.Wrap(err, "failed to find user home directory")
+	}
+
 	gbDir.path = gbFolderPath
+	gbDir.home = userHome
 	gbDir.rmDir = remove
+
 	return gbDir, nil
 }
 
@@ -63,11 +71,21 @@ func pushCrostiniGBFiles(ctx context.Context, cont *vm.Container, gbFiles geekbe
 	return nil
 }
 
-func pushCrostiniGBLicense(ctx context.Context, cont *vm.Container, licensePath, licenseStr string) error {
-	if err := cont.WriteFile(ctx, fmt.Sprintf("'%s'", licensePath), licenseStr); err != nil {
-		return errors.Wrap(err, "failed to write Geekbench license file")
+func pushCrostiniGBLicense(ctx context.Context, cont *vm.Container, licensePath, licenseStr string) (func(), error) {
+	if err := cont.WriteFile(ctx, licensePath, licenseStr); err != nil {
+		return nil, errors.Wrap(err, "failed to write Geekbench license file")
 	}
-	return nil
+
+	rmLicense := func() {
+		if err := cont.Cleanup(ctx, licensePath); err != nil {
+			testing.ContextLog(ctx, "Failed to delete Geekbench license: ", err)
+		}
+	}
+	return rmLicense, nil
+}
+
+func getCrostiniGBCommand(ctx context.Context, cont *vm.Container, execFilePath, resultPath string) *testexec.Cmd {
+	return cont.Command(ctx, execFilePath, "--no-upload", "--export-json", resultPath)
 }
 
 func retrieveCrostiniGBFile(ctx context.Context, cont *vm.Container, resultPath, logFilePath string) error {

@@ -7,10 +7,11 @@ package geekbench
 import (
 	"context"
 	"fmt"
-	"io/fs"
 	"os"
 
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/vm"
 
 	"go.chromium.org/tast/core/errors"
@@ -24,6 +25,7 @@ var nativeGeekbenchInfo = GBInfo{
 	createGBDir:    createNativeGBDir,
 	pushGBFiles:    pushNativeGBFiles,
 	pushGBLicense:  pushNativeGBLicense,
+	getGBCommand:   getNativeGBCommand,
 	retrieveGBFile: retrieveNativeGBFile,
 }
 
@@ -39,11 +41,16 @@ func createNativeGBDir(ctx context.Context, cont *vm.Container, cr *chrome.Chrom
 		return geekbenchDir{}, errors.Wrap(err, "failed to create workspace directory")
 	}
 
-	remove := func(ctx context.Context) {
+	userHome, err := cryptohome.UserPath(ctx, cr.NormalizedUser())
+	if err != nil {
+		return geekbenchDir{}, errors.Wrap(err, "failed to find user home directory")
+	}
+
+	remove := func() {
 		os.RemoveAll(gbFolderPath)
 	}
 
-	return geekbenchDir{path: gbFolderPath, rmDir: remove}, nil
+	return geekbenchDir{path: gbFolderPath, home: userHome, rmDir: remove}, nil
 }
 
 func pushNativeGBFiles(ctx context.Context, cont *vm.Container, gbFiles geekbenchFiles) error {
@@ -65,11 +72,23 @@ func pushNativeGBFiles(ctx context.Context, cont *vm.Container, gbFiles geekbenc
 	return nil
 }
 
-func pushNativeGBLicense(ctx context.Context, cont *vm.Container, licensePath, licenseStr string) error {
-	if err := os.WriteFile(licensePath, []byte(licenseStr), fs.ModeAppend); err != nil {
-		return errors.Wrap(err, "failed to write Geekbench license file")
+func pushNativeGBLicense(ctx context.Context, cont *vm.Container, licensePath, licenseStr string) (func(), error) {
+	if err := os.WriteFile(licensePath, []byte(licenseStr), 0755); err != nil {
+		return nil, errors.Wrap(err, "failed to write Geekbench license file")
 	}
-	return nil
+
+	rmLicense := func() {
+		if err := os.Remove(licensePath); err != nil {
+			testing.ContextLog(ctx, "Failed to delete Geekbench license: ", err)
+		}
+	}
+
+	return rmLicense, nil
+}
+
+func getNativeGBCommand(ctx context.Context, cont *vm.Container, execFilePath, resultPath string) *testexec.Cmd {
+	cm, _ := testexec.CommandContextUser(ctx, "chronos", execFilePath, "--no-upload", "--export-json", resultPath)
+	return cm
 }
 
 func retrieveNativeGBFile(ctx context.Context, cont *vm.Container, resultPath, logFilePath string) error {
