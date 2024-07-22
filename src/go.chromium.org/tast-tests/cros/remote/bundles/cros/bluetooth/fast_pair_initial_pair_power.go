@@ -12,7 +12,6 @@ import (
 	cbt "go.chromium.org/tast-tests/cros/common/chameleon/devices/common/bluetooth"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/bluetooth"
-	bts "go.chromium.org/tast-tests/cros/services/cros/bluetooth"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -87,9 +86,12 @@ func FastPairInitialPairPower(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to read power: ", err)
 	}
 	// TODO: (b/301167351) Collect data to define baselines for test fail/pass.
-	s.Log("Power consumption for Fast Pair waiting to pair [W]: ", pWait)
+	s.Log("Power consumption for Fast Pair without a peer nearby [W]: ", pWait)
 
 	// Record FP power
+	if err := fv.PowerCooldown(ctx); err != nil {
+		s.Fatal("Failed to cooldown for power measurement: ", err)
+	}
 	// Configure btpeer as a Fast Pair device.
 	fastPairDevice, err := bluetooth.NewEmulatedBTPeerDevice(ctx, fv.BTPeers[0], &bluetooth.EmulatedBTPeerDeviceConfig{
 		DeviceType: cbt.DeviceTypeLEFastPair,
@@ -101,27 +103,10 @@ func FastPairInitialPairPower(ctx context.Context, s *testing.State) {
 		s.Error("Failed to set antispoofing key pem on Fast Pair btpeer: ", err)
 	}
 
-	if err := fv.PowerCooldown(ctx); err != nil {
-		s.Fatal("Failed to cooldown for power measurement: ", err)
-	}
 	fv.StartPowerRecording(ctx)
-	s.Log("Measuring DUT's power consumption when pairing a Bluetooth device via Fast Pair")
-	s.Log("Pairing device with Fast Pair notification")
-	if _, err := fv.BluetoothUIService.PairWithFastPairNotification(ctx, &bts.PairWithFastPairNotificationRequest{
-		Protocol: bts.FastPairProtocol_FAST_PAIR_PROTOCOL_INITIAL,
-	}); err != nil {
-		s.Error("Failed to pair with Fast Pair notification: ", err)
-	}
-
-	resp, err := fv.BluetoothService.DeviceIsPaired(ctx, &bts.DeviceIsPairedRequest{
-		DeviceAddress: fastPairDevice.LocalBluetoothAddress(),
-	})
-	if err != nil {
-		s.Error("Failed to check if target device is paired: ", err)
-	}
-	if !resp.DeviceIsPaired {
-		s.Error("Fast pair device not paired as expected")
-	}
+	s.Log("Measuring power with Fast Pair enabled, and one device advertising for ", interval)
+	// GoBigSleepLint: sleep to measure power consumption
+	testing.Sleep(ctx, interval)
 
 	pResults, err = fv.StopPowerRecording(ctx, s.TestName()+".FastPair")
 	if err != nil {
@@ -132,5 +117,5 @@ func FastPairInitialPairPower(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to read power: ", err)
 	}
 	// TODO: (b/301167351) Collect data to define baselines for test fail/pass.
-	s.Log("Power consumption with Fast Pair pairing [W]: ", pPair)
+	s.Log("Power consumption for Fast Pair with one peer nearby [W]: ", pPair)
 }
