@@ -14,6 +14,7 @@ type BoardName string
 // Possible names for FPMCUs.
 const (
 	BoardNameBloonchipper BoardName = "bloonchipper"
+	BoardNameBuccaneer    BoardName = "buccaneer"
 	BoardNameDartmonkey   BoardName = "dartmonkey"
 	BoardNameNocturne     BoardName = "nocturne_fp"
 	BoardNameNami         BoardName = "nami_fp"
@@ -24,6 +25,7 @@ const (
 func (b BoardName) IsValid() bool {
 	switch b {
 	case BoardNameBloonchipper,
+		BoardNameBuccaneer,
 		BoardNameDartmonkey,
 		BoardNameNocturne,
 		BoardNameNami,
