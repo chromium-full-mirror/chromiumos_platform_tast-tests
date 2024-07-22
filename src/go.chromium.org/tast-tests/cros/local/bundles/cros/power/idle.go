@@ -9,7 +9,8 @@ import (
 	"path/filepath"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/bluetooth/bluez"
+	facade "go.chromium.org/tast-tests/cros/local/bluetooth/facade"
+	facadecommon "go.chromium.org/tast-tests/cros/local/bluetooth/facade/common"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
@@ -17,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast-tests/cros/local/tracing"
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -177,18 +179,6 @@ func Idle(ctx context.Context, s *testing.State) {
 	bt := s.FixtValue().(setup.PowerUIFixtureData).Bt
 	cr := s.FixtValue().(setup.PowerUIFixtureData).Cr
 
-	bts, err := bluez.Adapters(ctx)
-	if err != nil {
-		s.Fatal("Bluetooth adapters fail to be created: ", err)
-	}
-	setBluetoothPower := func(enabled bool) {
-		for _, bt := range bts {
-			if err := bt.SetPowered(ctx, enabled); err != nil {
-				s.Fatalf("Failed to set powered to bluetooth %s to %v: %v", bt.DBusObject().ObjectPath(), enabled, err)
-			}
-		}
-	}
-
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to get ash tconn: ", err)
@@ -227,7 +217,9 @@ func Idle(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to turn off display: ", err)
 		}
 	}
-	setBluetoothPower(params.BluetoothPower)
+	if err := setBluetoothPower(ctx, params.BluetoothPower); err != nil {
+		s.Fatalf("Failed to set Bluetooth powerd to %t: %v", params.BluetoothPower, err)
+	}
 
 	if err := display.SetPSRState(params.PSRState); err != nil {
 		s.Error("Failed to set psr state: ", err)
@@ -265,4 +257,34 @@ func Idle(ctx context.Context, s *testing.State) {
 	if err := r.Finish(ctx); err != nil {
 		s.Error("Cannot finish collecting power metrics: ", err)
 	}
+}
+
+// setBluetoothPower aims to set the Bluetooth power state of a device, handling
+// potential errors and falling back to a default Bluetooth stack if necessary.
+func setBluetoothPower(ctx context.Context, bluetoothPower bool) error {
+	btStack, err := facade.GetBluetoothStackType(ctx)
+	if err != nil {
+		// Log the error but continue with Bluez as a fallback.
+		testing.ContextLog(ctx, "Failed to get Bluetooth stack type, using Bluez: ", err)
+		btStack = facadecommon.BluetoothStackTypeBluez
+	}
+
+	btf, err := facade.NewBluetoothFacade(ctx, btStack)
+	if err != nil {
+		return errors.Wrap(err, "failed to create Bluetooth facade")
+	}
+
+	poweredOn, err := btf.IsPoweredOn(ctx)
+	if err != nil { // Handle potential error from IsPoweredOn.
+		return errors.Wrap(err, "failed to check if Bluetooth is powered on")
+	}
+
+	// Only set power state if it needs to be changed.
+	if poweredOn != bluetoothPower {
+		if err := btf.SetPowered(ctx, bluetoothPower); err != nil {
+			return errors.Wrap(err, "failed to set the adapter enabled state")
+		}
+	}
+
+	return nil
 }

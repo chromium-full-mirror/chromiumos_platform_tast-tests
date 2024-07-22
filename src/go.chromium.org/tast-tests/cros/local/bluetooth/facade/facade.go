@@ -6,6 +6,7 @@ package facade
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bluetooth/facade/bluez"
@@ -88,4 +89,25 @@ func NewBluetoothFacade(ctx context.Context, stackType common.BluetoothStackType
 	bluetoothFacadeSingleton = facade
 	testing.ContextLogf(ctx, "Successfully initialized new %s bluetooth facade", bluetoothFacadeSingleton.StackType())
 	return bluetoothFacadeSingleton, nil
+}
+
+// GetBluetoothStackType determines the active Bluetooth stack on the DUT.
+// Returns BluetoothStackTypeBluez if there's an error determining the stack.
+func GetBluetoothStackType(ctx context.Context) (common.BluetoothStackType, error) {
+	isFlossEnabled, err := floss.GetFlossEnabled(ctx)
+	if err != nil {
+		// If the floss manager cannot be found, it's equivalent to floss being disabled.
+		if !strings.Contains(err.Error(), `failed to connect to service "org.chromium.bluetooth.Manager"`) {
+			return common.BluetoothStackTypeBluez, nil // Floss is implicitly disabled
+		}
+
+		// Handle other unexpected errors
+		return common.BluetoothStackTypeBluez, errors.Wrap(err, "failed to get Floss enabled state")
+	}
+
+	if isFlossEnabled {
+		return common.BluetoothStackTypeFloss, nil
+	}
+
+	return common.BluetoothStackTypeBluez, nil
 }
