@@ -36,7 +36,7 @@ func init() {
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
 		Attr:         []string{"group:mainline", "group:camera-stability", "group:camera-kernelnext"},
 		SoftwareDeps: []string{caps.BuiltinCamera},
-		HardwareDeps: hwdep.D(hwdep.CameraEnumerated()),
+		HardwareDeps: hwdep.D(hwdep.CameraEnumerated(), hwdep.SkipOnModel(testutil.FlakyModel...), hwdep.SkipOnCameraUSBModule(testutil.FlakyUSBCamera...)),
 		Params: []testing.Param{
 			{
 				Name:      "screen_dim",
