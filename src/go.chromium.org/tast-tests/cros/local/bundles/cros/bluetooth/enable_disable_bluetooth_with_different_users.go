@@ -32,21 +32,21 @@ type enableDisableBluetoothWithDifferentUsersParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:           EnableDisableBluetoothWithDifferentUsers,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
-		LifeCycleStage: testing.LifeCycleInDevelopment,
-		Desc:           "Checks that the Bluetooth adapter state preference is preserved for the device and users",
+		Func:         EnableDisableBluetoothWithDifferentUsers,
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Desc:         "Checks that the Bluetooth adapter state preference is preserved for the device and users",
 		Contacts: []string{
-			"alfredyu@cienet.com",
-			"chromeos-connectivity-cienet-external@google.com",
+			"cros-connectivity@google.com",
+			"chadduffin@google.com",
 		},
-		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
-		Attr:         []string{"group:bluetooth"},
-		SoftwareDeps: []string{"chrome"},
-		TestBedDeps:  []string{tbdep.BluetoothStateNormal},
-		HardwareDeps: hwdep.D(hwdep.Bluetooth()),
-		Fixture:      fixture.CleanOwnership,
-		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
+		BugComponent:   "b:1131776", // ChromeOS > Software > System Services > Connectivity > Bluetooth
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Attr:           []string{"group:bluetooth"},
+		SoftwareDeps:   []string{"chrome"},
+		TestBedDeps:    []string{tbdep.BluetoothStateNormal},
+		HardwareDeps:   hwdep.D(hwdep.Bluetooth()),
+		Fixture:        fixture.CleanOwnership,
+		VarDeps:        []string{"ui.signinProfileTestExtensionManifestKey"},
 		Params: []testing.Param{
 			{
 				Name: "floss_disabled",
