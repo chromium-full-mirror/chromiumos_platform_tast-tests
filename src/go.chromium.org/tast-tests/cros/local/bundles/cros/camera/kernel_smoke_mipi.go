@@ -38,6 +38,10 @@ func configFiles() []string {
 		"kernel_smoke_mipi/aviko-KC4eb5.yaml",
 		"kernel_smoke_mipi/brya.yaml",
 		"kernel_smoke_mipi/bugzzy-KCfa36.yaml",
+		"kernel_smoke_mipi/ciri-KC523c.yaml",
+		"kernel_smoke_mipi/ciri-KCc1c3.yaml",
+		"kernel_smoke_mipi/ciri-LT4067.yaml",
+		"kernel_smoke_mipi/ciri-LT7757.yaml",
 		"kernel_smoke_mipi/craask-TC0002.yaml",
 		"kernel_smoke_mipi/craaskbowl-TC0003.yaml",
 		"kernel_smoke_mipi/drawcia-LV0001.yaml",
@@ -66,12 +70,10 @@ func configFiles() []string {
 }
 
 // Skip on some models. Some models have no plan to add support for this test.
-// TODO(b/333009681): Once "ciri" supports it, remove it from below.
 var unsupportedModel = []string{
 	"krane", "kakadu", "kodama", "katsu", // kukui
 	"coachz", "homestar", "mrbland", "wormdingler", "quackingstick", // strongbad
 	"rex4es", "screebo4es", // rex es
-	"ciri", // geralt
 }
 
 func init() {

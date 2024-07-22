@@ -23,6 +23,22 @@
     "bus_info": "pci:pci0000:00",
     "out_entity": "Intel IPU6 BE SOC capture 0"
   },
+  "ciri-KC523c": {
+    "bus_info": "platform:16000000.camisp",
+    "out_entity": "mtk-cam raw-0 main-stream"
+  },
+  "ciri-KCc1c3": {
+    "bus_info": "platform:16000000.camisp",
+    "out_entity": "mtk-cam raw-1 main-stream"
+  },
+  "ciri-LT4067": {
+    "bus_info": "platform:16000000.camisp",
+    "out_entity": "mtk-cam raw-0 main-stream"
+  },
+  "ciri-LT7757": {
+    "bus_info": "platform:16000000.camisp",
+    "out_entity": "mtk-cam raw-1 main-stream"
+  },
   "craask-TC0002": {
     "bus_info": "pci:pci0000:00",
     "out_entity": "Intel IPU6 BE SOC capture 0"

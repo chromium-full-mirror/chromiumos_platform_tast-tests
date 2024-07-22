@@ -1,0 +1,6459 @@
+remap_entity_by_name:
+- id: 1
+  name: seninf-1
+- id: 19
+  name: gc05a2 5-0037
+- id: 27
+  name: seninf-0
+- id: 45
+  name: gc08a3 6-0031
+- id: 53
+  name: gt97xx 6-000c
+- id: 55
+  name: cam-raw-a@16030000
+- id: 56
+  name: cam-raw-b@16070000
+- id: 57
+  name: cam-yuv-a@16050000
+- id: 58
+  name: cam-yuv-b@16090000
+- id: 59
+  name: mtk-cam raw-0
+- id: 80
+  name: mtk-cam raw-0 meta-input
+- id: 86
+  name: mtk-cam raw-0 rawi-2
+- id: 92
+  name: mtk-cam raw-0 rawi-3
+- id: 98
+  name: mtk-cam raw-0 rawi-4
+- id: 104
+  name: mtk-cam raw-0 main-stream
+- id: 110
+  name: mtk-cam raw-0 yuvo-1
+- id: 116
+  name: mtk-cam raw-0 yuvo-2
+- id: 122
+  name: mtk-cam raw-0 yuvo-3
+- id: 128
+  name: mtk-cam raw-0 yuvo-4
+- id: 134
+  name: mtk-cam raw-0 yuvo-5
+- id: 140
+  name: mtk-cam raw-0 drzs4no-1
+- id: 146
+  name: mtk-cam raw-0 drzs4no-2
+- id: 152
+  name: mtk-cam raw-0 drzs4no-3
+- id: 158
+  name: mtk-cam raw-0 rzh1n2to-1
+- id: 164
+  name: mtk-cam raw-0 rzh1n2to-2
+- id: 170
+  name: mtk-cam raw-0 rzh1n2to-3
+- id: 176
+  name: mtk-cam raw-0 partial-meta-0
+- id: 182
+  name: mtk-cam raw-0 partial-meta-1
+- id: 188
+  name: mtk-cam raw-0 partial-meta-2
+- id: 194
+  name: mtk-cam raw-1
+- id: 215
+  name: mtk-cam raw-1 meta-input
+- id: 221
+  name: mtk-cam raw-1 rawi-2
+- id: 227
+  name: mtk-cam raw-1 rawi-3
+- id: 233
+  name: mtk-cam raw-1 rawi-4
+- id: 239
+  name: mtk-cam raw-1 main-stream
+- id: 245
+  name: mtk-cam raw-1 yuvo-1
+- id: 251
+  name: mtk-cam raw-1 yuvo-2
+- id: 257
+  name: mtk-cam raw-1 yuvo-3
+- id: 263
+  name: mtk-cam raw-1 yuvo-4
+- id: 269
+  name: mtk-cam raw-1 yuvo-5
+- id: 275
+  name: mtk-cam raw-1 drzs4no-1
+- id: 281
+  name: mtk-cam raw-1 drzs4no-2
+- id: 287
+  name: mtk-cam raw-1 drzs4no-3
+- id: 293
+  name: mtk-cam raw-1 rzh1n2to-1
+- id: 299
+  name: mtk-cam raw-1 rzh1n2to-2
+- id: 305
+  name: mtk-cam raw-1 rzh1n2to-3
+- id: 311
+  name: mtk-cam raw-1 partial-meta-0
+- id: 317
+  name: mtk-cam raw-1 partial-meta-1
+- id: 323
+  name: mtk-cam raw-1 partial-meta-2
+media_ctl:
+  info:
+    driver: mtk-cam
+    model: mtk-cam
+    serial:
+    bus_info: platform:16000000.camisp
+    media_version: 393570
+    hw_revision: 0
+    driver_version: 393570
+  entities:
+  - desc:
+      id: 1
+      name: seninf-1
+      type: 131072
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 17
+      links: 2
+    v4l_properties: {}
+    controls:
+    - desc:
+        id: 10422531
+        type: 3
+        name: Test Pattern
+        minimum: 0
+        maximum: 3
+        step: 1
+        default_value: 0
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 0
+    pads:
+    - desc:
+        entity: 1
+        index: 0
+        flags: 1
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 2592
+          height: 1944
+          code: 12298
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+    - desc:
+        entity: 1
+        index: 1
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 2592
+          height: 1944
+          code: 12298
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links:
+      - sink:
+          entity: 59
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 4
+        reserved: [0, 0]
+      - sink:
+          entity: 194
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 5
+        reserved: [0, 0]
+    - desc:
+        entity: 1
+        index: 2
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+    - desc:
+        entity: 1
+        index: 3
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+    - desc:
+        entity: 1
+        index: 4
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+    - desc:
+        entity: 1
+        index: 5
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+    - desc:
+        entity: 1
+        index: 6
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+    - desc:
+        entity: 1
+        index: 7
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+    - desc:
+        entity: 1
+        index: 8
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+    - desc:
+        entity: 1
+        index: 9
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+    - desc:
+        entity: 1
+        index: 10
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+    - desc:
+        entity: 1
+        index: 11
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+    - desc:
+        entity: 1
+        index: 12
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+    - desc:
+        entity: 1
+        index: 13
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+    - desc:
+        entity: 1
+        index: 14
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+    - desc:
+        entity: 1
+        index: 15
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+    - desc:
+        entity: 1
+        index: 16
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+  - desc:
+      id: 19
+      name: gc05a2 5-0037
+      type: 131073
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 1
+    v4l_properties: {}
+    controls:
+    - desc:
+        id: 9963793
+        type: 1
+        name: Exposure
+        minimum: 4
+        maximum: 2016
+        step: 1
+        default_value: 2016
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 2016
+    - desc:
+        id: 9963796
+        type: 2
+        name: Horizontal Flip
+        minimum: 0
+        maximum: 1
+        step: 1
+        default_value: 0
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 0
+    - desc:
+        id: 9963797
+        type: 2
+        name: Vertical Flip
+        minimum: 0
+        maximum: 1
+        step: 1
+        default_value: 0
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 0
+    - desc:
+        id: 10356993
+        type: 1
+        name: Vertical Blanking
+        minimum: 88
+        maximum: 63591
+        step: 1
+        default_value: 88
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 88
+    - desc:
+        id: 10356994
+        type: 1
+        name: Horizontal Blanking
+        minimum: 1072
+        maximum: 1072
+        step: 1
+        default_value: 1072
+        flags: 4
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 1072
+    - desc:
+        id: 10356995
+        type: 1
+        name: Analogue Gain
+        minimum: 1024
+        maximum: 16384
+        step: 1
+        default_value: 1024
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 1024
+    - desc:
+        id: 10422529
+        type: 9
+        name: Link Frequency
+        minimum: 0
+        maximum: 1
+        step: 1
+        default_value: 0
+        flags: 4
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 0
+    - desc:
+        id: 10422530
+        type: 5
+        name: Pixel Rate
+        minimum: 0
+        maximum: 179200000
+        step: 1
+        default_value: 179200000
+        flags: 4
+        elem_size: 8
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 179200000
+    - desc:
+        id: 10422531
+        type: 3
+        name: Test Pattern
+        minimum: 0
+        maximum: 9
+        step: 1
+        default_value: 0
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 0
+    pads:
+    - desc:
+        entity: 19
+        index: 0
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 2592
+          height: 1944
+        fmt:
+          width: 2592
+          height: 1944
+          code: 12298
+          field: 1
+          colorspace: 11
+          ycbcr_enc: 1
+          quantization: 1
+          xfer_func: 5
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 2592
+            height: 1944
+          crop_default:
+            left: 0
+            top: 0
+            width: 2592
+            height: 1944
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 2592
+            height: 1944
+      links:
+      - sink:
+          entity: 1
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 1
+        reserved: [0, 0]
+  - desc:
+      id: 27
+      name: seninf-0
+      type: 131072
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 17
+      links: 2
+    v4l_properties: {}
+    controls:
+    - desc:
+        id: 10422531
+        type: 3
+        name: Test Pattern
+        minimum: 0
+        maximum: 3
+        step: 1
+        default_value: 0
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 0
+    pads:
+    - desc:
+        entity: 27
+        index: 0
+        flags: 1
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 3264
+          height: 2448
+          code: 12303
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+    - desc:
+        entity: 27
+        index: 1
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 2592
+          height: 1944
+          code: 12298
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links:
+      - sink:
+          entity: 59
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 5
+        reserved: [0, 0]
+      - sink:
+          entity: 194
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 4
+        reserved: [0, 0]
+    - desc:
+        entity: 27
+        index: 2
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+    - desc:
+        entity: 27
+        index: 3
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+    - desc:
+        entity: 27
+        index: 4
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+    - desc:
+        entity: 27
+        index: 5
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+    - desc:
+        entity: 27
+        index: 6
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+    - desc:
+        entity: 27
+        index: 7
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+    - desc:
+        entity: 27
+        index: 8
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+    - desc:
+        entity: 27
+        index: 9
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+    - desc:
+        entity: 27
+        index: 10
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+    - desc:
+        entity: 27
+        index: 11
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+    - desc:
+        entity: 27
+        index: 12
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+    - desc:
+        entity: 27
+        index: 13
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+    - desc:
+        entity: 27
+        index: 14
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+    - desc:
+        entity: 27
+        index: 15
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+    - desc:
+        entity: 27
+        index: 16
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+  - desc:
+      id: 45
+      name: gc08a3 6-0031
+      type: 131073
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 1
+    v4l_properties: {}
+    controls:
+    - desc:
+        id: 9963793
+        type: 1
+        name: Exposure
+        minimum: 4
+        maximum: 2532
+        step: 1
+        default_value: 2532
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 2532
+    - desc:
+        id: 9963796
+        type: 2
+        name: Horizontal Flip
+        minimum: 0
+        maximum: 1
+        step: 1
+        default_value: 0
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 0
+    - desc:
+        id: 9963797
+        type: 2
+        name: Vertical Flip
+        minimum: 0
+        maximum: 1
+        step: 1
+        default_value: 0
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 0
+    - desc:
+        id: 10356993
+        type: 1
+        name: Vertical Blanking
+        minimum: 100
+        maximum: 63072
+        step: 1
+        default_value: 100
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 100
+    - desc:
+        id: 10356994
+        type: 1
+        name: Horizontal Blanking
+        minimum: 376
+        maximum: 376
+        step: 1
+        default_value: 376
+        flags: 4
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 376
+    - desc:
+        id: 10356995
+        type: 1
+        name: Analogue Gain
+        minimum: 1024
+        maximum: 16384
+        step: 1
+        default_value: 1024
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 1024
+    - desc:
+        id: 10422529
+        type: 9
+        name: Link Frequency
+        minimum: 0
+        maximum: 1
+        step: 1
+        default_value: 0
+        flags: 4
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 0
+    - desc:
+        id: 10422530
+        type: 5
+        name: Pixel Rate
+        minimum: 0
+        maximum: 268800000
+        step: 1
+        default_value: 268800000
+        flags: 4
+        elem_size: 8
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 268800000
+    - desc:
+        id: 10422531
+        type: 3
+        name: Test Pattern
+        minimum: 0
+        maximum: 7
+        step: 1
+        default_value: 0
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 0
+    pads:
+    - desc:
+        entity: 45
+        index: 0
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 3264
+          height: 2448
+        fmt:
+          width: 3264
+          height: 2448
+          code: 12303
+          field: 1
+          colorspace: 11
+          ycbcr_enc: 1
+          quantization: 1
+          xfer_func: 5
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 3264
+            height: 2448
+          crop_default:
+            left: 0
+            top: 0
+            width: 3264
+            height: 2448
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 3264
+            height: 2448
+      links:
+      - sink:
+          entity: 27
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 1
+        reserved: [0, 0]
+  - desc:
+      id: 53
+      name: gt97xx 6-000c
+      type: 131075
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 0
+      links: 0
+    v4l_properties: {}
+    controls:
+    - desc:
+        id: 10094858
+        type: 1
+        name: Focus, Absolute
+        minimum: 0
+        maximum: 1023
+        step: 1
+        default_value: 0
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 0
+    pads: []
+  - desc:
+      id: 55
+      name: cam-raw-a@16030000
+      type: 131072
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 0
+      links: 0
+    v4l_properties: {}
+    pads: []
+  - desc:
+      id: 56
+      name: cam-raw-b@16070000
+      type: 131072
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 0
+      links: 0
+    v4l_properties: {}
+    pads: []
+  - desc:
+      id: 57
+      name: cam-yuv-a@16050000
+      type: 131072
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 0
+      links: 0
+    v4l_properties: {}
+    pads: []
+  - desc:
+      id: 58
+      name: cam-yuv-b@16090000
+      type: 131072
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 0
+      links: 0
+    v4l_properties: {}
+    pads: []
+  - desc:
+      id: 59
+      name: mtk-cam raw-0
+      type: 131072
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 20
+      links: 15
+    v4l_properties: {}
+    controls:
+    - desc:
+        id: 9968081
+        type: 1
+        name: Engine resource limitation
+        minimum: 1
+        maximum: 2
+        step: 1
+        default_value: 2
+        flags: 640
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 2
+    - desc:
+        id: 9968082
+        type: 1
+        name: Binning limitation
+        minimum: 0
+        maximum: 4095
+        step: 1
+        default_value: 0
+        flags: 640
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 0
+    - desc:
+        id: 9968083
+        type: 1
+        name: Resizer limitation
+        minimum: 70
+        maximum: 100
+        step: 1
+        default_value: 100
+        flags: 640
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 100
+    - desc:
+        id: 9968084
+        type: 1
+        name: Resource planning policy
+        minimum: 0
+        maximum: 10
+        step: 1
+        default_value: 1
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 1
+    - desc:
+        id: 9968085
+        type: 1
+        name: Engine resource
+        minimum: 1
+        maximum: 2
+        step: 1
+        default_value: 2
+        flags: 128
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 1
+    - desc:
+        id: 9968086
+        type: 2
+        name: Binning
+        minimum: 0
+        maximum: 1
+        step: 1
+        default_value: 1
+        flags: 128
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 0
+    - desc:
+        id: 9968087
+        type: 1
+        name: Resizer
+        minimum: 70
+        maximum: 100
+        step: 1
+        default_value: 100
+        flags: 128
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 100
+    - desc:
+        id: 9968088
+        type: 1
+        name: Engine resource
+        minimum: 1
+        maximum: 2
+        step: 1
+        default_value: 2
+        flags: 128
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 0
+    - desc:
+        id: 9968089
+        type: 2
+        name: Binning
+        minimum: 0
+        maximum: 1
+        step: 1
+        default_value: 1
+        flags: 128
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 0
+    - desc:
+        id: 9968090
+        type: 1
+        name: Resizer
+        minimum: 70
+        maximum: 100
+        step: 1
+        default_value: 100
+        flags: 128
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 100
+    - desc:
+        id: 9968091
+        type: 5
+        name: Resource pixel rate
+        minimum: 0
+        maximum: 4294967295
+        step: 1
+        default_value: 0
+        flags: 128
+        elem_size: 8
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 0
+    - desc:
+        id: 9968092
+        type: 5
+        name: Mediatek camsys feature
+        minimum: 0
+        maximum: 4026531840
+        step: 1
+        default_value: 0
+        flags: 640
+        elem_size: 8
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 0
+    - desc:
+        id: 9968093
+        type: 5
+        name: Frame sync id
+        minimum: -1
+        maximum: 2147483647
+        step: 1
+        default_value: -1
+        flags: 640
+        elem_size: 8
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - -1
+    - desc:
+        id: 9968094
+        type: 1
+        name: Raw Path
+        minimum: 0
+        maximum: 1
+        step: 1
+        default_value: 1
+        flags: 640
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 1
+    - desc:
+        id: 9968096
+        type: 1
+        name: pde information
+        minimum: 0
+        maximum: 536870911
+        step: 1
+        default_value: 0
+        flags: 384
+        elem_size: 4
+        dims: [3]
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 0
+      - 0
+      - 0
+    - desc:
+        id: 9968098
+        type: 256
+        name: resource ctrl
+        minimum: 0
+        maximum: 4294967295
+        step: 1
+        default_value: 0
+        flags: 896
+        elem_size: 1
+        dims: [72]
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - desc:
+        id: 9968100
+        type: 1
+        name: resource update
+        minimum: 0
+        maximum: 15
+        step: 1
+        default_value: 0
+        flags: 640
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 0
+    - desc:
+        id: 9968101
+        type: 5
+        name: Mediatek camsys hardware mode
+        minimum: 0
+        maximum: 2147483647
+        step: 1
+        default_value: 0
+        flags: 512
+        elem_size: 8
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 0
+    - desc:
+        id: 10356993
+        type: 1
+        name: Vertical Blanking
+        minimum: 0
+        maximum: 65535
+        step: 1
+        default_value: 0
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 0
+    - desc:
+        id: 10356994
+        type: 1
+        name: Horizontal Blanking
+        minimum: 0
+        maximum: 65535
+        step: 1
+        default_value: 0
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 0
+    pads:
+    - desc:
+        entity: 59
+        index: 0
+        flags: 1
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 2592
+          height: 1944
+          code: 12298
+          field: 0
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        frame_interval:
+          numerator: 0
+          denominator: 0
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          native_size:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_padded:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+      links: []
+    - desc:
+        entity: 59
+        index: 1
+        flags: 1
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        frame_interval:
+          numerator: 0
+          denominator: 0
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          native_size:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_padded:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+      links: []
+    - desc:
+        entity: 59
+        index: 2
+        flags: 1
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        frame_interval:
+          numerator: 0
+          denominator: 0
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          native_size:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_padded:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+      links: []
+    - desc:
+        entity: 59
+        index: 3
+        flags: 1
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        frame_interval:
+          numerator: 0
+          denominator: 0
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          native_size:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_padded:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+      links: []
+    - desc:
+        entity: 59
+        index: 4
+        flags: 1
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        frame_interval:
+          numerator: 0
+          denominator: 0
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          native_size:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_padded:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+      links: []
+    - desc:
+        entity: 59
+        index: 5
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 2592
+          height: 1944
+          code: 12298
+          field: 0
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        frame_interval:
+          numerator: 0
+          denominator: 0
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          native_size:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_padded:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+      links:
+      - sink:
+          entity: 104
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 3
+        reserved: [0, 0]
+    - desc:
+        entity: 59
+        index: 6
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        frame_interval:
+          numerator: 0
+          denominator: 0
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          native_size:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_padded:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+      links:
+      - sink:
+          entity: 110
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 3
+        reserved: [0, 0]
+    - desc:
+        entity: 59
+        index: 7
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        frame_interval:
+          numerator: 0
+          denominator: 0
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          native_size:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_padded:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+      links:
+      - sink:
+          entity: 116
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 3
+        reserved: [0, 0]
+    - desc:
+        entity: 59
+        index: 8
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        frame_interval:
+          numerator: 0
+          denominator: 0
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          native_size:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_padded:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+      links:
+      - sink:
+          entity: 122
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 3
+        reserved: [0, 0]
+    - desc:
+        entity: 59
+        index: 9
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        frame_interval:
+          numerator: 0
+          denominator: 0
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          native_size:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_padded:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+      links:
+      - sink:
+          entity: 128
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 3
+        reserved: [0, 0]
+    - desc:
+        entity: 59
+        index: 10
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        frame_interval:
+          numerator: 0
+          denominator: 0
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          native_size:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_padded:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+      links:
+      - sink:
+          entity: 134
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 3
+        reserved: [0, 0]
+    - desc:
+        entity: 59
+        index: 11
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        frame_interval:
+          numerator: 0
+          denominator: 0
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          native_size:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_padded:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+      links:
+      - sink:
+          entity: 140
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 3
+        reserved: [0, 0]
+    - desc:
+        entity: 59
+        index: 12
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        frame_interval:
+          numerator: 0
+          denominator: 0
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          native_size:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_padded:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+      links:
+      - sink:
+          entity: 146
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 3
+        reserved: [0, 0]
+    - desc:
+        entity: 59
+        index: 13
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        frame_interval:
+          numerator: 0
+          denominator: 0
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          native_size:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_padded:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+      links:
+      - sink:
+          entity: 152
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 3
+        reserved: [0, 0]
+    - desc:
+        entity: 59
+        index: 14
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        frame_interval:
+          numerator: 0
+          denominator: 0
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          native_size:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_padded:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+      links:
+      - sink:
+          entity: 158
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 3
+        reserved: [0, 0]
+    - desc:
+        entity: 59
+        index: 15
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        frame_interval:
+          numerator: 0
+          denominator: 0
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          native_size:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_padded:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+      links:
+      - sink:
+          entity: 164
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 3
+        reserved: [0, 0]
+    - desc:
+        entity: 59
+        index: 16
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        frame_interval:
+          numerator: 0
+          denominator: 0
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          native_size:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_padded:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+      links:
+      - sink:
+          entity: 170
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 3
+        reserved: [0, 0]
+    - desc:
+        entity: 59
+        index: 17
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        frame_interval:
+          numerator: 0
+          denominator: 0
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          native_size:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_padded:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+      links:
+      - sink:
+          entity: 176
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 3
+        reserved: [0, 0]
+    - desc:
+        entity: 59
+        index: 18
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        frame_interval:
+          numerator: 0
+          denominator: 0
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          native_size:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_padded:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+      links:
+      - sink:
+          entity: 182
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 3
+        reserved: [0, 0]
+    - desc:
+        entity: 59
+        index: 19
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        frame_interval:
+          numerator: 0
+          denominator: 0
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          native_size:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_padded:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+      links:
+      - sink:
+          entity: 188
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 3
+        reserved: [0, 0]
+  - desc:
+      id: 80
+      name: mtk-cam raw-0 meta-input
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 1
+    v4l_properties:
+      fmt_meta_output:
+        dataformat: 1885754445
+        buffersize: 113664
+      priority: 2
+    pads:
+    - desc:
+        entity: 80
+        index: 0
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties: {}
+      links:
+      - sink:
+          entity: 59
+          index: 1
+          flags: 1
+          reserved: [0, 0]
+        flags: 3
+        reserved: [0, 0]
+  - desc:
+      id: 86
+      name: mtk-cam raw-0 rawi-2
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 1
+    v4l_properties:
+      fmt_video_output_mplane:
+        width: 12000
+        height: 9000
+        pixelformat: 825770306
+        field: 1
+        colorspace: 8
+        plane_fmt:
+        - sizeimage: 108000000
+          bytesperline: 12000
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        num_planes: 1
+        flags: 0
+        ycbcr_enc: 0
+        quantization: 0
+        xfer_func: 2
+        reserved: [0, 0, 0, 0, 0, 0, 0]
+      priority: 2
+    pads:
+    - desc:
+        entity: 86
+        index: 0
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties: {}
+      links:
+      - sink:
+          entity: 59
+          index: 2
+          flags: 1
+          reserved: [0, 0]
+        flags: 3
+        reserved: [0, 0]
+  - desc:
+      id: 92
+      name: mtk-cam raw-0 rawi-3
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 1
+    v4l_properties:
+      fmt_video_output_mplane:
+        width: 12000
+        height: 9000
+        pixelformat: 825770306
+        field: 1
+        colorspace: 8
+        plane_fmt:
+        - sizeimage: 108000000
+          bytesperline: 12000
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        num_planes: 1
+        flags: 0
+        ycbcr_enc: 0
+        quantization: 0
+        xfer_func: 2
+        reserved: [0, 0, 0, 0, 0, 0, 0]
+      priority: 2
+    pads:
+    - desc:
+        entity: 92
+        index: 0
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties: {}
+      links:
+      - sink:
+          entity: 59
+          index: 3
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+  - desc:
+      id: 98
+      name: mtk-cam raw-0 rawi-4
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 1
+    v4l_properties:
+      fmt_video_output_mplane:
+        width: 12000
+        height: 9000
+        pixelformat: 825770306
+        field: 1
+        colorspace: 8
+        plane_fmt:
+        - sizeimage: 108000000
+          bytesperline: 12000
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        num_planes: 1
+        flags: 0
+        ycbcr_enc: 0
+        quantization: 0
+        xfer_func: 2
+        reserved: [0, 0, 0, 0, 0, 0, 0]
+      priority: 2
+    pads:
+    - desc:
+        entity: 98
+        index: 0
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties: {}
+      links:
+      - sink:
+          entity: 59
+          index: 4
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+  - desc:
+      id: 104
+      name: mtk-cam raw-0 main-stream
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_video_capture_mplane:
+        width: 2592
+        height: 1944
+        pixelformat: 825770306
+        field: 1
+        colorspace: 8
+        plane_fmt:
+        - sizeimage: 5038848
+          bytesperline: 2592
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        num_planes: 1
+        flags: 0
+        ycbcr_enc: 0
+        quantization: 0
+        xfer_func: 2
+        reserved: [0, 0, 0, 0, 0, 0, 0]
+      priority: 2
+    pads:
+    - desc:
+        entity: 104
+        index: 0
+        flags: 1
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 110
+      name: mtk-cam raw-0 yuvo-1
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_video_capture_mplane:
+        width: 8160
+        height: 3896
+        pixelformat: 842094158
+        field: 1
+        colorspace: 8
+        plane_fmt:
+        - sizeimage: 47687040
+          bytesperline: 8160
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        num_planes: 1
+        flags: 0
+        ycbcr_enc: 0
+        quantization: 0
+        xfer_func: 2
+        reserved: [0, 0, 0, 0, 0, 0, 0]
+      priority: 2
+    pads:
+    - desc:
+        entity: 110
+        index: 0
+        flags: 1
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 116
+      name: mtk-cam raw-0 yuvo-2
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_video_capture_mplane:
+        width: 3060
+        height: 1145
+        pixelformat: 842094158
+        field: 1
+        colorspace: 8
+        plane_fmt:
+        - sizeimage: 5257080
+          bytesperline: 3060
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        num_planes: 1
+        flags: 0
+        ycbcr_enc: 0
+        quantization: 0
+        xfer_func: 2
+        reserved: [0, 0, 0, 0, 0, 0, 0]
+      priority: 2
+    pads:
+    - desc:
+        entity: 116
+        index: 0
+        flags: 1
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 122
+      name: mtk-cam raw-0 yuvo-3
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_video_capture_mplane:
+        width: 8160
+        height: 3896
+        pixelformat: 842094158
+        field: 1
+        colorspace: 8
+        plane_fmt:
+        - sizeimage: 47687040
+          bytesperline: 8160
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        num_planes: 1
+        flags: 0
+        ycbcr_enc: 0
+        quantization: 0
+        xfer_func: 2
+        reserved: [0, 0, 0, 0, 0, 0, 0]
+      priority: 2
+    pads:
+    - desc:
+        entity: 122
+        index: 0
+        flags: 1
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 128
+      name: mtk-cam raw-0 yuvo-4
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_video_capture_mplane:
+        width: 3060
+        height: 1145
+        pixelformat: 842094158
+        field: 1
+        colorspace: 8
+        plane_fmt:
+        - sizeimage: 5257080
+          bytesperline: 3060
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        num_planes: 1
+        flags: 0
+        ycbcr_enc: 0
+        quantization: 0
+        xfer_func: 2
+        reserved: [0, 0, 0, 0, 0, 0, 0]
+      priority: 2
+    pads:
+    - desc:
+        entity: 128
+        index: 0
+        flags: 1
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 134
+      name: mtk-cam raw-0 yuvo-5
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_video_capture_mplane:
+        width: 3060
+        height: 1145
+        pixelformat: 842094158
+        field: 1
+        colorspace: 8
+        plane_fmt:
+        - sizeimage: 5257080
+          bytesperline: 3060
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        num_planes: 1
+        flags: 0
+        ycbcr_enc: 0
+        quantization: 0
+        xfer_func: 2
+        reserved: [0, 0, 0, 0, 0, 0, 0]
+      priority: 2
+    pads:
+    - desc:
+        entity: 134
+        index: 0
+        flags: 1
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 140
+      name: mtk-cam raw-0 drzs4no-1
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_video_capture_mplane:
+        width: 2400
+        height: 1080
+        pixelformat: 1497715271
+        field: 1
+        colorspace: 8
+        plane_fmt:
+        - sizeimage: 2592000
+          bytesperline: 2400
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        num_planes: 1
+        flags: 0
+        ycbcr_enc: 0
+        quantization: 0
+        xfer_func: 2
+        reserved: [0, 0, 0, 0, 0, 0, 0]
+      priority: 2
+    pads:
+    - desc:
+        entity: 140
+        index: 0
+        flags: 1
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 146
+      name: mtk-cam raw-0 drzs4no-2
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_video_capture_mplane:
+        width: 2400
+        height: 1080
+        pixelformat: 1497715271
+        field: 1
+        colorspace: 8
+        plane_fmt:
+        - sizeimage: 2592000
+          bytesperline: 2400
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        num_planes: 1
+        flags: 0
+        ycbcr_enc: 0
+        quantization: 0
+        xfer_func: 2
+        reserved: [0, 0, 0, 0, 0, 0, 0]
+      priority: 2
+    pads:
+    - desc:
+        entity: 146
+        index: 0
+        flags: 1
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 152
+      name: mtk-cam raw-0 drzs4no-3
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_video_capture_mplane:
+        width: 576
+        height: 432
+        pixelformat: 1497715271
+        field: 1
+        colorspace: 8
+        plane_fmt:
+        - sizeimage: 248832
+          bytesperline: 576
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        num_planes: 1
+        flags: 0
+        ycbcr_enc: 0
+        quantization: 0
+        xfer_func: 2
+        reserved: [0, 0, 0, 0, 0, 0, 0]
+      priority: 2
+    pads:
+    - desc:
+        entity: 152
+        index: 0
+        flags: 1
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 158
+      name: mtk-cam raw-0 rzh1n2to-1
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_video_capture_mplane:
+        width: 1280
+        height: 600
+        pixelformat: 842094158
+        field: 1
+        colorspace: 8
+        plane_fmt:
+        - sizeimage: 1152000
+          bytesperline: 1280
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        num_planes: 1
+        flags: 0
+        ycbcr_enc: 0
+        quantization: 0
+        xfer_func: 2
+        reserved: [0, 0, 0, 0, 0, 0, 0]
+      priority: 2
+    pads:
+    - desc:
+        entity: 158
+        index: 0
+        flags: 1
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 164
+      name: mtk-cam raw-0 rzh1n2to-2
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_video_capture_mplane:
+        width: 512
+        height: 512
+        pixelformat: 1448695129
+        field: 1
+        colorspace: 8
+        plane_fmt:
+        - sizeimage: 524288
+          bytesperline: 1024
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        num_planes: 1
+        flags: 0
+        ycbcr_enc: 0
+        quantization: 0
+        xfer_func: 2
+        reserved: [0, 0, 0, 0, 0, 0, 0]
+      priority: 2
+    pads:
+    - desc:
+        entity: 164
+        index: 0
+        flags: 1
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 170
+      name: mtk-cam raw-0 rzh1n2to-3
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_video_capture_mplane:
+        width: 1280
+        height: 600
+        pixelformat: 842094158
+        field: 1
+        colorspace: 8
+        plane_fmt:
+        - sizeimage: 1152000
+          bytesperline: 1280
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        num_planes: 1
+        flags: 0
+        ycbcr_enc: 0
+        quantization: 0
+        xfer_func: 2
+        reserved: [0, 0, 0, 0, 0, 0, 0]
+      priority: 2
+    pads:
+    - desc:
+        entity: 170
+        index: 0
+        flags: 1
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 176
+      name: mtk-cam raw-0 partial-meta-0
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_meta_capture:
+        dataformat: 1634096205
+        buffersize: 1081344
+      priority: 2
+    pads:
+    - desc:
+        entity: 176
+        index: 0
+        flags: 1
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 182
+      name: mtk-cam raw-0 partial-meta-1
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_meta_capture:
+        dataformat: 1717982285
+        buffersize: 528384
+      priority: 2
+    pads:
+    - desc:
+        entity: 182
+        index: 0
+        flags: 1
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 188
+      name: mtk-cam raw-0 partial-meta-2
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_meta_capture:
+        dataformat: 1667650637
+        buffersize: 4096
+      priority: 2
+    pads:
+    - desc:
+        entity: 188
+        index: 0
+        flags: 1
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 194
+      name: mtk-cam raw-1
+      type: 131072
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 20
+      links: 15
+    v4l_properties: {}
+    controls:
+    - desc:
+        id: 9968081
+        type: 1
+        name: Engine resource limitation
+        minimum: 1
+        maximum: 2
+        step: 1
+        default_value: 2
+        flags: 640
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 2
+    - desc:
+        id: 9968082
+        type: 1
+        name: Binning limitation
+        minimum: 0
+        maximum: 4095
+        step: 1
+        default_value: 0
+        flags: 640
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 0
+    - desc:
+        id: 9968083
+        type: 1
+        name: Resizer limitation
+        minimum: 70
+        maximum: 100
+        step: 1
+        default_value: 100
+        flags: 640
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 100
+    - desc:
+        id: 9968084
+        type: 1
+        name: Resource planning policy
+        minimum: 0
+        maximum: 10
+        step: 1
+        default_value: 1
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 1
+    - desc:
+        id: 9968085
+        type: 1
+        name: Engine resource
+        minimum: 1
+        maximum: 2
+        step: 1
+        default_value: 2
+        flags: 128
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 1
+    - desc:
+        id: 9968086
+        type: 2
+        name: Binning
+        minimum: 0
+        maximum: 1
+        step: 1
+        default_value: 1
+        flags: 128
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 0
+    - desc:
+        id: 9968087
+        type: 1
+        name: Resizer
+        minimum: 70
+        maximum: 100
+        step: 1
+        default_value: 100
+        flags: 128
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 100
+    - desc:
+        id: 9968088
+        type: 1
+        name: Engine resource
+        minimum: 1
+        maximum: 2
+        step: 1
+        default_value: 2
+        flags: 128
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 0
+    - desc:
+        id: 9968089
+        type: 2
+        name: Binning
+        minimum: 0
+        maximum: 1
+        step: 1
+        default_value: 1
+        flags: 128
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 0
+    - desc:
+        id: 9968090
+        type: 1
+        name: Resizer
+        minimum: 70
+        maximum: 100
+        step: 1
+        default_value: 100
+        flags: 128
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 100
+    - desc:
+        id: 9968091
+        type: 5
+        name: Resource pixel rate
+        minimum: 0
+        maximum: 4294967295
+        step: 1
+        default_value: 0
+        flags: 128
+        elem_size: 8
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 0
+    - desc:
+        id: 9968092
+        type: 5
+        name: Mediatek camsys feature
+        minimum: 0
+        maximum: 4026531840
+        step: 1
+        default_value: 0
+        flags: 640
+        elem_size: 8
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 0
+    - desc:
+        id: 9968093
+        type: 5
+        name: Frame sync id
+        minimum: -1
+        maximum: 2147483647
+        step: 1
+        default_value: -1
+        flags: 640
+        elem_size: 8
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - -1
+    - desc:
+        id: 9968094
+        type: 1
+        name: Raw Path
+        minimum: 0
+        maximum: 1
+        step: 1
+        default_value: 1
+        flags: 640
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 1
+    - desc:
+        id: 9968096
+        type: 1
+        name: pde information
+        minimum: 0
+        maximum: 536870911
+        step: 1
+        default_value: 0
+        flags: 384
+        elem_size: 4
+        dims: [3]
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 0
+      - 0
+      - 0
+    - desc:
+        id: 9968098
+        type: 256
+        name: resource ctrl
+        minimum: 0
+        maximum: 4294967295
+        step: 1
+        default_value: 0
+        flags: 896
+        elem_size: 1
+        dims: [72]
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - desc:
+        id: 9968100
+        type: 1
+        name: resource update
+        minimum: 0
+        maximum: 15
+        step: 1
+        default_value: 0
+        flags: 640
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 0
+    - desc:
+        id: 9968101
+        type: 5
+        name: Mediatek camsys hardware mode
+        minimum: 0
+        maximum: 2147483647
+        step: 1
+        default_value: 0
+        flags: 512
+        elem_size: 8
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 0
+    - desc:
+        id: 10356993
+        type: 1
+        name: Vertical Blanking
+        minimum: 0
+        maximum: 65535
+        step: 1
+        default_value: 0
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 0
+    - desc:
+        id: 10356994
+        type: 1
+        name: Horizontal Blanking
+        minimum: 0
+        maximum: 65535
+        step: 1
+        default_value: 0
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 0
+    pads:
+    - desc:
+        entity: 194
+        index: 0
+        flags: 1
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 2592
+          height: 1944
+          code: 12298
+          field: 0
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        frame_interval:
+          numerator: 0
+          denominator: 0
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          native_size:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_padded:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+      links: []
+    - desc:
+        entity: 194
+        index: 1
+        flags: 1
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        frame_interval:
+          numerator: 0
+          denominator: 0
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          native_size:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_padded:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+      links: []
+    - desc:
+        entity: 194
+        index: 2
+        flags: 1
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        frame_interval:
+          numerator: 0
+          denominator: 0
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          native_size:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_padded:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+      links: []
+    - desc:
+        entity: 194
+        index: 3
+        flags: 1
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        frame_interval:
+          numerator: 0
+          denominator: 0
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          native_size:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_padded:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+      links: []
+    - desc:
+        entity: 194
+        index: 4
+        flags: 1
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        frame_interval:
+          numerator: 0
+          denominator: 0
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          native_size:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_padded:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+      links: []
+    - desc:
+        entity: 194
+        index: 5
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 2592
+          height: 1944
+          code: 12298
+          field: 0
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        frame_interval:
+          numerator: 0
+          denominator: 0
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          native_size:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_padded:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+      links:
+      - sink:
+          entity: 239
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 3
+        reserved: [0, 0]
+    - desc:
+        entity: 194
+        index: 6
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        frame_interval:
+          numerator: 0
+          denominator: 0
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          native_size:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_padded:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+      links:
+      - sink:
+          entity: 245
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 3
+        reserved: [0, 0]
+    - desc:
+        entity: 194
+        index: 7
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        frame_interval:
+          numerator: 0
+          denominator: 0
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          native_size:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_padded:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+      links:
+      - sink:
+          entity: 251
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 3
+        reserved: [0, 0]
+    - desc:
+        entity: 194
+        index: 8
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        frame_interval:
+          numerator: 0
+          denominator: 0
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          native_size:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_padded:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+      links:
+      - sink:
+          entity: 257
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 3
+        reserved: [0, 0]
+    - desc:
+        entity: 194
+        index: 9
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        frame_interval:
+          numerator: 0
+          denominator: 0
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          native_size:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_padded:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+      links:
+      - sink:
+          entity: 263
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 3
+        reserved: [0, 0]
+    - desc:
+        entity: 194
+        index: 10
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        frame_interval:
+          numerator: 0
+          denominator: 0
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          native_size:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_padded:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+      links:
+      - sink:
+          entity: 269
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 3
+        reserved: [0, 0]
+    - desc:
+        entity: 194
+        index: 11
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        frame_interval:
+          numerator: 0
+          denominator: 0
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          native_size:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_padded:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+      links:
+      - sink:
+          entity: 275
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 3
+        reserved: [0, 0]
+    - desc:
+        entity: 194
+        index: 12
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        frame_interval:
+          numerator: 0
+          denominator: 0
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          native_size:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_padded:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+      links:
+      - sink:
+          entity: 281
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 3
+        reserved: [0, 0]
+    - desc:
+        entity: 194
+        index: 13
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        frame_interval:
+          numerator: 0
+          denominator: 0
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          native_size:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_padded:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+      links:
+      - sink:
+          entity: 287
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 3
+        reserved: [0, 0]
+    - desc:
+        entity: 194
+        index: 14
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        frame_interval:
+          numerator: 0
+          denominator: 0
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          native_size:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_padded:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+      links:
+      - sink:
+          entity: 293
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 3
+        reserved: [0, 0]
+    - desc:
+        entity: 194
+        index: 15
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        frame_interval:
+          numerator: 0
+          denominator: 0
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          native_size:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_padded:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+      links:
+      - sink:
+          entity: 299
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 3
+        reserved: [0, 0]
+    - desc:
+        entity: 194
+        index: 16
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        frame_interval:
+          numerator: 0
+          denominator: 0
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          native_size:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_padded:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+      links:
+      - sink:
+          entity: 305
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 3
+        reserved: [0, 0]
+    - desc:
+        entity: 194
+        index: 17
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        frame_interval:
+          numerator: 0
+          denominator: 0
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          native_size:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_padded:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+      links:
+      - sink:
+          entity: 311
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 3
+        reserved: [0, 0]
+    - desc:
+        entity: 194
+        index: 18
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        frame_interval:
+          numerator: 0
+          denominator: 0
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          native_size:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_padded:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+      links:
+      - sink:
+          entity: 317
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 3
+        reserved: [0, 0]
+    - desc:
+        entity: 194
+        index: 19
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 1600
+          height: 1200
+          code: 12295
+          field: 1
+          colorspace: 8
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        frame_interval:
+          numerator: 0
+          denominator: 0
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          native_size:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_padded:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+      links:
+      - sink:
+          entity: 323
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 3
+        reserved: [0, 0]
+  - desc:
+      id: 215
+      name: mtk-cam raw-1 meta-input
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 1
+    v4l_properties:
+      fmt_meta_output:
+        dataformat: 1885754445
+        buffersize: 113664
+      priority: 2
+    pads:
+    - desc:
+        entity: 215
+        index: 0
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties: {}
+      links:
+      - sink:
+          entity: 194
+          index: 1
+          flags: 1
+          reserved: [0, 0]
+        flags: 3
+        reserved: [0, 0]
+  - desc:
+      id: 221
+      name: mtk-cam raw-1 rawi-2
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 1
+    v4l_properties:
+      fmt_video_output_mplane:
+        width: 12000
+        height: 9000
+        pixelformat: 825770306
+        field: 1
+        colorspace: 8
+        plane_fmt:
+        - sizeimage: 108000000
+          bytesperline: 12000
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        num_planes: 1
+        flags: 0
+        ycbcr_enc: 0
+        quantization: 0
+        xfer_func: 2
+        reserved: [0, 0, 0, 0, 0, 0, 0]
+      priority: 2
+    pads:
+    - desc:
+        entity: 221
+        index: 0
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties: {}
+      links:
+      - sink:
+          entity: 194
+          index: 2
+          flags: 1
+          reserved: [0, 0]
+        flags: 3
+        reserved: [0, 0]
+  - desc:
+      id: 227
+      name: mtk-cam raw-1 rawi-3
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 1
+    v4l_properties:
+      fmt_video_output_mplane:
+        width: 12000
+        height: 9000
+        pixelformat: 825770306
+        field: 1
+        colorspace: 8
+        plane_fmt:
+        - sizeimage: 108000000
+          bytesperline: 12000
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        num_planes: 1
+        flags: 0
+        ycbcr_enc: 0
+        quantization: 0
+        xfer_func: 2
+        reserved: [0, 0, 0, 0, 0, 0, 0]
+      priority: 2
+    pads:
+    - desc:
+        entity: 227
+        index: 0
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties: {}
+      links:
+      - sink:
+          entity: 194
+          index: 3
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+  - desc:
+      id: 233
+      name: mtk-cam raw-1 rawi-4
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 1
+    v4l_properties:
+      fmt_video_output_mplane:
+        width: 12000
+        height: 9000
+        pixelformat: 825770306
+        field: 1
+        colorspace: 8
+        plane_fmt:
+        - sizeimage: 108000000
+          bytesperline: 12000
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        num_planes: 1
+        flags: 0
+        ycbcr_enc: 0
+        quantization: 0
+        xfer_func: 2
+        reserved: [0, 0, 0, 0, 0, 0, 0]
+      priority: 2
+    pads:
+    - desc:
+        entity: 233
+        index: 0
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties: {}
+      links:
+      - sink:
+          entity: 194
+          index: 4
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+  - desc:
+      id: 239
+      name: mtk-cam raw-1 main-stream
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_video_capture_mplane:
+        width: 2592
+        height: 1944
+        pixelformat: 825770306
+        field: 1
+        colorspace: 8
+        plane_fmt:
+        - sizeimage: 5038848
+          bytesperline: 2592
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        num_planes: 1
+        flags: 0
+        ycbcr_enc: 0
+        quantization: 0
+        xfer_func: 2
+        reserved: [0, 0, 0, 0, 0, 0, 0]
+      priority: 2
+    pads:
+    - desc:
+        entity: 239
+        index: 0
+        flags: 1
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 245
+      name: mtk-cam raw-1 yuvo-1
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_video_capture_mplane:
+        width: 8160
+        height: 3896
+        pixelformat: 842094158
+        field: 1
+        colorspace: 8
+        plane_fmt:
+        - sizeimage: 47687040
+          bytesperline: 8160
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        num_planes: 1
+        flags: 0
+        ycbcr_enc: 0
+        quantization: 0
+        xfer_func: 2
+        reserved: [0, 0, 0, 0, 0, 0, 0]
+      priority: 2
+    pads:
+    - desc:
+        entity: 245
+        index: 0
+        flags: 1
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 251
+      name: mtk-cam raw-1 yuvo-2
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_video_capture_mplane:
+        width: 3060
+        height: 1145
+        pixelformat: 842094158
+        field: 1
+        colorspace: 8
+        plane_fmt:
+        - sizeimage: 5257080
+          bytesperline: 3060
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        num_planes: 1
+        flags: 0
+        ycbcr_enc: 0
+        quantization: 0
+        xfer_func: 2
+        reserved: [0, 0, 0, 0, 0, 0, 0]
+      priority: 2
+    pads:
+    - desc:
+        entity: 251
+        index: 0
+        flags: 1
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 257
+      name: mtk-cam raw-1 yuvo-3
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_video_capture_mplane:
+        width: 8160
+        height: 3896
+        pixelformat: 842094158
+        field: 1
+        colorspace: 8
+        plane_fmt:
+        - sizeimage: 47687040
+          bytesperline: 8160
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        num_planes: 1
+        flags: 0
+        ycbcr_enc: 0
+        quantization: 0
+        xfer_func: 2
+        reserved: [0, 0, 0, 0, 0, 0, 0]
+      priority: 2
+    pads:
+    - desc:
+        entity: 257
+        index: 0
+        flags: 1
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 263
+      name: mtk-cam raw-1 yuvo-4
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_video_capture_mplane:
+        width: 3060
+        height: 1145
+        pixelformat: 842094158
+        field: 1
+        colorspace: 8
+        plane_fmt:
+        - sizeimage: 5257080
+          bytesperline: 3060
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        num_planes: 1
+        flags: 0
+        ycbcr_enc: 0
+        quantization: 0
+        xfer_func: 2
+        reserved: [0, 0, 0, 0, 0, 0, 0]
+      priority: 2
+    pads:
+    - desc:
+        entity: 263
+        index: 0
+        flags: 1
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 269
+      name: mtk-cam raw-1 yuvo-5
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_video_capture_mplane:
+        width: 3060
+        height: 1145
+        pixelformat: 842094158
+        field: 1
+        colorspace: 8
+        plane_fmt:
+        - sizeimage: 5257080
+          bytesperline: 3060
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        num_planes: 1
+        flags: 0
+        ycbcr_enc: 0
+        quantization: 0
+        xfer_func: 2
+        reserved: [0, 0, 0, 0, 0, 0, 0]
+      priority: 2
+    pads:
+    - desc:
+        entity: 269
+        index: 0
+        flags: 1
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 275
+      name: mtk-cam raw-1 drzs4no-1
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_video_capture_mplane:
+        width: 2400
+        height: 1080
+        pixelformat: 1497715271
+        field: 1
+        colorspace: 8
+        plane_fmt:
+        - sizeimage: 2592000
+          bytesperline: 2400
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        num_planes: 1
+        flags: 0
+        ycbcr_enc: 0
+        quantization: 0
+        xfer_func: 2
+        reserved: [0, 0, 0, 0, 0, 0, 0]
+      priority: 2
+    pads:
+    - desc:
+        entity: 275
+        index: 0
+        flags: 1
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 281
+      name: mtk-cam raw-1 drzs4no-2
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_video_capture_mplane:
+        width: 2400
+        height: 1080
+        pixelformat: 1497715271
+        field: 1
+        colorspace: 8
+        plane_fmt:
+        - sizeimage: 2592000
+          bytesperline: 2400
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        num_planes: 1
+        flags: 0
+        ycbcr_enc: 0
+        quantization: 0
+        xfer_func: 2
+        reserved: [0, 0, 0, 0, 0, 0, 0]
+      priority: 2
+    pads:
+    - desc:
+        entity: 281
+        index: 0
+        flags: 1
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 287
+      name: mtk-cam raw-1 drzs4no-3
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_video_capture_mplane:
+        width: 576
+        height: 432
+        pixelformat: 1497715271
+        field: 1
+        colorspace: 8
+        plane_fmt:
+        - sizeimage: 248832
+          bytesperline: 576
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        num_planes: 1
+        flags: 0
+        ycbcr_enc: 0
+        quantization: 0
+        xfer_func: 2
+        reserved: [0, 0, 0, 0, 0, 0, 0]
+      priority: 2
+    pads:
+    - desc:
+        entity: 287
+        index: 0
+        flags: 1
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 293
+      name: mtk-cam raw-1 rzh1n2to-1
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_video_capture_mplane:
+        width: 1280
+        height: 600
+        pixelformat: 842094158
+        field: 1
+        colorspace: 8
+        plane_fmt:
+        - sizeimage: 1152000
+          bytesperline: 1280
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        num_planes: 1
+        flags: 0
+        ycbcr_enc: 0
+        quantization: 0
+        xfer_func: 2
+        reserved: [0, 0, 0, 0, 0, 0, 0]
+      priority: 2
+    pads:
+    - desc:
+        entity: 293
+        index: 0
+        flags: 1
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 299
+      name: mtk-cam raw-1 rzh1n2to-2
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_video_capture_mplane:
+        width: 512
+        height: 512
+        pixelformat: 1448695129
+        field: 1
+        colorspace: 8
+        plane_fmt:
+        - sizeimage: 524288
+          bytesperline: 1024
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        num_planes: 1
+        flags: 0
+        ycbcr_enc: 0
+        quantization: 0
+        xfer_func: 2
+        reserved: [0, 0, 0, 0, 0, 0, 0]
+      priority: 2
+    pads:
+    - desc:
+        entity: 299
+        index: 0
+        flags: 1
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 305
+      name: mtk-cam raw-1 rzh1n2to-3
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_video_capture_mplane:
+        width: 1280
+        height: 600
+        pixelformat: 842094158
+        field: 1
+        colorspace: 8
+        plane_fmt:
+        - sizeimage: 1152000
+          bytesperline: 1280
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        num_planes: 1
+        flags: 0
+        ycbcr_enc: 0
+        quantization: 0
+        xfer_func: 2
+        reserved: [0, 0, 0, 0, 0, 0, 0]
+      priority: 2
+    pads:
+    - desc:
+        entity: 305
+        index: 0
+        flags: 1
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 311
+      name: mtk-cam raw-1 partial-meta-0
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_meta_capture:
+        dataformat: 1634096205
+        buffersize: 1081344
+      priority: 2
+    pads:
+    - desc:
+        entity: 311
+        index: 0
+        flags: 1
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 317
+      name: mtk-cam raw-1 partial-meta-1
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_meta_capture:
+        dataformat: 1717982285
+        buffersize: 528384
+      priority: 2
+    pads:
+    - desc:
+        entity: 317
+        index: 0
+        flags: 1
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 323
+      name: mtk-cam raw-1 partial-meta-2
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_meta_capture:
+        dataformat: 1667650637
+        buffersize: 4096
+      priority: 2
+    pads:
+    - desc:
+        entity: 323
+        index: 0
+        flags: 1
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
