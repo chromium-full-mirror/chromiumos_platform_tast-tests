@@ -511,6 +511,11 @@ func (c *Cras) SetSidetoneEnabled(ctx context.Context, enabled bool) error {
 	return c.call(ctx, "SetSidetoneEnabled", enabled).Err
 }
 
+// SetEwmaPowerReportEnabled enables or disables ewma power report.
+func (c *Cras) SetEwmaPowerReportEnabled(ctx context.Context, enabled bool) error {
+	return c.call(ctx, "SetEwmaPowerReportEnabled", enabled).Err
+}
+
 // GetFeatureFlagForTest returns the enabled status of the given feature as seen by CRAS.
 func (c *Cras) GetFeatureFlagForTest(ctx context.Context, flagName string) (enabled bool, err error) {
 	err = c.call(ctx, "GetFeatureFlagForTest", flagName).Store(&enabled)
