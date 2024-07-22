@@ -36,11 +36,11 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		// TODO: When stable, change firmware_unstable to a different attr.
-		Attr:         []string{"group:firmware", "firmware_unstable"},
+		Attr:         []string{"group:firmware", "firmware_unstable", "firmware_usb"},
 		SoftwareDeps: []string{"crossystem", "flashrom"},
 		ServiceDeps:  []string{"tast.cros.firmware.BiosService"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
-		Timeout:      20 * time.Minute,
+		Timeout:      120 * time.Minute,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{
 			{
@@ -136,6 +136,8 @@ func WriteProtect(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to copy fw backup to the host")
 	}
 
+	cs := s.CloudStorage()
+
 	// Only restore firmware if it was unexpectedly corrupted.
 	needsRestore := false
 	defer func(ctx context.Context) {
@@ -146,12 +148,15 @@ func WriteProtect(ctx context.Context, s *testing.State) {
 
 		if out, err := h.Servo.GetString(ctx, servo.FWWPState); err != nil || out != string(servo.FWWPStateOff) {
 			testing.ContextLog(ctx, "Disable Write Protect")
-			if err := setWriteProtect(ctx, h, target, false); err != nil {
+			if err := setWriteProtect(ctx, h, target, false, cs); err != nil {
 				s.Error("Failed to disable FW write protect state: ", err)
 			}
 		}
 
 		if needsRestore {
+			if err := h.RequireBiosServiceClient(ctx); err != nil {
+				testing.ContextLog(ctx, "Failed to require BiosServiceClient: ", err)
+			}
 			testing.ContextLog(ctx, "Fw may have been modified, restore original fw from backup: ", roBefore.Path)
 			if _, err := h.BiosServiceClient.RestoreImageSection(ctx, roBefore); err != nil {
 				s.Fatal("Failed to restore fw image: ", err)
@@ -160,7 +165,7 @@ func WriteProtect(ctx context.Context, s *testing.State) {
 	}(cleanupContext)
 
 	testing.ContextLog(ctx, "Enable Write Protect")
-	if err := setWriteProtect(ctx, h, target, true); err != nil {
+	if err := setWriteProtect(ctx, h, target, true, cs); err != nil {
 		s.Fatal("Failed to set FW write protect state: ", err)
 	}
 
@@ -177,7 +182,7 @@ func WriteProtect(ctx context.Context, s *testing.State) {
 	}
 
 	testing.ContextLog(ctx, "Disable Write Protect")
-	if err := setWriteProtect(ctx, h, target, false); err != nil {
+	if err := setWriteProtect(ctx, h, target, false, cs); err != nil {
 		s.Fatal("Failed to disable FW write protect state: ", err)
 	}
 
@@ -216,7 +221,7 @@ func WriteProtect(ctx context.Context, s *testing.State) {
 }
 
 // setWriteProtect uses gsc_ecrst_pulse after setting hw wp, which deletes all temp data/files.
-func setWriteProtect(ctx context.Context, h *firmware.Helper, target wpTarget, enable bool) (retErr error) {
+func setWriteProtect(ctx context.Context, h *firmware.Helper, target wpTarget, enable bool, cs *testing.CloudStorage) (retErr error) {
 	ms, err := firmware.NewModeSwitcher(ctx, h)
 	if err != nil {
 		return errors.Wrap(err, "failed to create mode switcher")
@@ -288,6 +293,10 @@ func setWriteProtect(ctx context.Context, h *firmware.Helper, target wpTarget, e
 	state := h.CheckServoChargerBeforeBootingFromUSB(ctx)
 	defer func(ctx context.Context) {
 		if enable && retErr != nil && target == targetBIOS {
+			if err := h.SetupUSBKey(ctx, cs); err != nil {
+				testing.ContextLog(ctx, "USBKey not working: ", err)
+			}
+
 			if err := h.BootToRecoveryMode(ctx, &state, false); err != nil {
 				testing.ContextLog(ctx, "Failed to boot to recovery mode: ", err)
 			}
@@ -314,6 +323,9 @@ func setWriteProtect(ctx context.Context, h *firmware.Helper, target wpTarget, e
 				testing.ContextLog(ctx, "Failed to connect charger: ", err)
 			}
 		}
+		if err := h.RequireBiosServiceClient(ctx); err != nil {
+			testing.ContextLog(ctx, "Failed to require BiosServiceClient: ", err)
+		}
 	}(cleanupContext)
 
 	testing.ContextLog(ctx, "Performing mode aware reboot")
@@ -321,8 +333,5 @@ func setWriteProtect(ctx context.Context, h *firmware.Helper, target wpTarget, e
 		return errors.Wrap(err, "failed to perform mode aware reboot")
 	}
 
-	if err := h.RequireBiosServiceClient(ctx); err != nil {
-		testing.ContextLog(ctx, "Failed requiring BiosServiceClient: ", err)
-	}
 	return nil
 }
