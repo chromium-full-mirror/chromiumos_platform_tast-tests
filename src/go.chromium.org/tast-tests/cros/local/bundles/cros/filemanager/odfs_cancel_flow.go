@@ -124,7 +124,7 @@ func OdfsCancelFlow(ctx context.Context, s *testing.State) {
 		cloudUpload.WaitSetupCompleteDialogAndClickDone(),
 		// Move/copy confirmation dialog.
 		cloudUpload.WaitUploadConfirmationDialogAndClickToUpload(false /*=alwaysMove*/),
-		ms365App.WaitForMicrosoft365WindowAndCloseIgnoreError(tconn, fileName),
+		ms365App.WaitForMicrosoft365EditorWindowAndCloseIgnoreError(tconn, fileName),
 	)(ctx); err != nil {
 		s.Fatal("Failed to setup OneDrive with cancellation: ", fileName, err)
 	}

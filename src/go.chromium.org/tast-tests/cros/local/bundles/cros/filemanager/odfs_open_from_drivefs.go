@@ -132,7 +132,7 @@ func OdfsOpenFromDrivefs(ctx context.Context, s *testing.State) {
 			// don't need to wait for any confirmation dialogs in subsequent files
 			setupActions = append(setupActions, cloudUpload.WaitUploadConfirmationDialogAndClickToUpload(i == 1 /*alwaysMove*/))
 		}
-		setupActions = append(setupActions, ms365App.WaitForMicrosoft365WindowAndClose(tconn, testFile.FileName))
+		setupActions = append(setupActions, ms365App.WaitForMicrosoft365EditorWindowAndClose(tconn, testFile.FileName))
 
 		if err := uiauto.Combine("complete copy to One Drive flow", setupActions...)(ctx); err != nil {
 			s.Fatal("Failed to complete copy to One Drive flow: ", err)

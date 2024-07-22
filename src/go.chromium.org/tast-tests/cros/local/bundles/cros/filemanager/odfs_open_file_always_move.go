@@ -121,7 +121,7 @@ func OdfsOpenFileAlwaysMove(ctx context.Context, s *testing.State) {
 				}
 			}
 
-			if err := ms365App.WaitForMicrosoft365WindowAndClose(tconn, fileName)(ctx); err != nil {
+			if err := ms365App.WaitForMicrosoft365EditorWindowAndClose(tconn, fileName)(ctx); err != nil {
 				s.Fatal("Failed waiting file to open on MS365: ", fileName, err)
 			}
 			if err := onedrive.CheckODFSContent(ctx, subTest.SrcFile, fileName); err != nil {

@@ -299,7 +299,7 @@ func (cu *CloudUpload) MaybeConfirmUploadOr365Window(tconn *chrome.TestConn, ms3
 		if found == ConfirmUploadDialogForOneDrive {
 			return uiauto.Combine("Confirm upload and wait to open",
 				cu.WaitUploadConfirmationDialogAndClickToUpload(false),
-				ms365App.WaitForMicrosoft365WindowAndClose(tconn, fileName),
+				ms365App.WaitForMicrosoft365EditorWindowAndClose(tconn, fileName),
 			)(ctx)
 		}
 		return nil

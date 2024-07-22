@@ -105,7 +105,7 @@ func OdfsAskBeforeMoving(ctx context.Context, s *testing.State) {
 	if err := uiauto.Combine("Run OneDrive setup flow",
 		cloudUpload.RunOneDriveSetupFlow(options),
 		cloudUpload.WaitUploadConfirmationDialogAndClickToUpload(false /*=alwaysMove*/),
-		ms365App.WaitForMicrosoft365WindowAndCloseIgnoreError(tconn, fileName1),
+		ms365App.WaitForMicrosoft365EditorWindowAndCloseIgnoreError(tconn, fileName1),
 	)(ctx); err != nil {
 		s.Fatal("Failed to upload and open the first file on MS365: ", fileName1, err)
 	}
@@ -132,7 +132,7 @@ func OdfsAskBeforeMoving(ctx context.Context, s *testing.State) {
 	if _, err := files.OpenOfficeFile(ctx, "", fileName2, filesconsts.OneDrive); err != nil {
 		s.Fatal("Failed to open the second office file: ", err)
 	}
-	if err := ms365App.WaitForMicrosoft365WindowAndCloseIgnoreError(tconn, fileName2)(ctx); err != nil {
+	if err := ms365App.WaitForMicrosoft365EditorWindowAndCloseIgnoreError(tconn, fileName2)(ctx); err != nil {
 		s.Fatal("Failed to upload and open the second file on MS365: ", fileName2, err)
 	}
 	if err := onedrive.CheckODFSContent(ctx, srcFile2, fileName2); err != nil {

@@ -234,13 +234,18 @@ func CloseMicrosoftAuthWindowWithoutSignIn(tconn *chrome.TestConn) uiauto.Action
 	}
 }
 
-// waitForMicrosoft365WindowAndClose waits for the Microsoft 365 app window to open and close it.
+// waitForMicrosoft365EditorWindowAndClose waits for the Microsoft 365 app window to open and close it.
 // If "ignoreCloseError" is true, it will just ignore the error, otherwise it returns error if the closure fails,.
-func (ms *Ms365) waitForMicrosoft365WindowAndClose(tconn *chrome.TestConn, fileName string, ignoreCloseError bool) uiauto.Action {
+func (ms *Ms365) waitForMicrosoft365EditorWindowAndClose(tconn *chrome.TestConn, fileName string, ignoreCloseError bool) uiauto.Action {
 	return func(ctx context.Context) error {
 		ms365App := Microsoft365WindowFinder(fileName)
 		if err := ms.ui.WaitUntilExists(ms365App)(ctx); err != nil {
 			return errors.Wrap(err, "failed to wait for the MS365 window")
+		}
+
+		// Check that MS365 is showing the editor, which has a collapsible button to select how to view the file (Editing/Reviewing/Viewing).
+		if err := ms.ui.WaitUntilExists(nodewith.Role(role.PopUpButton).Name("Mode Menu;Editing Selected"))(ctx); err != nil {
+			return errors.Wrap(err, "failed to find 'Editing' mode button")
 		}
 		if err := closeMicrosoft365Window(ctx, tconn, fileName); err != nil {
 			if !ignoreCloseError {
@@ -251,17 +256,17 @@ func (ms *Ms365) waitForMicrosoft365WindowAndClose(tconn *chrome.TestConn, fileN
 	}
 }
 
-// WaitForMicrosoft365WindowAndClose closes the MS window and guarantees that
+// WaitForMicrosoft365EditorWindowAndClose closes the MS window and guarantees that
 // the window is closed successfully, it will return errors if the closure fails.
-func (ms *Ms365) WaitForMicrosoft365WindowAndClose(tconn *chrome.TestConn, fileName string) uiauto.Action {
-	return ms.waitForMicrosoft365WindowAndClose(tconn, fileName, false /*=ignoreCloseError*/)
+func (ms *Ms365) WaitForMicrosoft365EditorWindowAndClose(tconn *chrome.TestConn, fileName string) uiauto.Action {
+	return ms.waitForMicrosoft365EditorWindowAndClose(tconn, fileName, false /*=ignoreCloseError*/)
 }
 
-// WaitForMicrosoft365WindowAndCloseIgnoreError tries to close the MS window but won't
+// WaitForMicrosoft365EditorWindowAndCloseIgnoreError tries to close the MS window but won't
 // return error if it fails. This is used mostly when closing window is the last
 // step.
-func (ms *Ms365) WaitForMicrosoft365WindowAndCloseIgnoreError(tconn *chrome.TestConn, fileName string) uiauto.Action {
-	return ms.waitForMicrosoft365WindowAndClose(tconn, fileName, true /*=ignoreCloseError*/)
+func (ms *Ms365) WaitForMicrosoft365EditorWindowAndCloseIgnoreError(tconn *chrome.TestConn, fileName string) uiauto.Action {
+	return ms.waitForMicrosoft365EditorWindowAndClose(tconn, fileName, true /*=ignoreCloseError*/)
 }
 
 // InstallPWA installs Office PWA.

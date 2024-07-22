@@ -116,7 +116,7 @@ func OdfsWithOneDriveConnected(ctx context.Context, s *testing.State) {
 	// Move/copy confirmation dialog.
 	if err := uiauto.Combine("Confirm upload and wait to open",
 		cloudUpload.WaitUploadConfirmationDialogAndClickToUpload(false /*=alwaysMove*/),
-		ms365App.WaitForMicrosoft365WindowAndCloseIgnoreError(tconn, fileName),
+		ms365App.WaitForMicrosoft365EditorWindowAndCloseIgnoreError(tconn, fileName),
 	)(ctx); err != nil {
 		s.Fatal("Failed to upload and open on MS365: ", fileName, err)
 	}

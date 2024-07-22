@@ -107,7 +107,7 @@ func OdfsOpenFile(ctx context.Context, s *testing.State) {
 			// Move/copy confirmation dialog.
 			if err := uiauto.Combine("Confirm upload and wait to open",
 				cloudUpload.WaitUploadConfirmationDialogAndClickToUpload(false /*=alwaysMove*/),
-				ms365App.WaitForMicrosoft365WindowAndClose(tconn, fileName),
+				ms365App.WaitForMicrosoft365EditorWindowAndClose(tconn, fileName),
 			)(ctx); err != nil {
 				s.Fatalf("Failed to upload and open on MS365: %q: %v", fileName, err)
 			}
