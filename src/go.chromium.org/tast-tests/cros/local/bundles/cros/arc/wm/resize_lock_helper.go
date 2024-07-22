@@ -63,8 +63,8 @@ const (
 	ResizeLockNonO4CViaA2C2ApkName = "ArcResizeLockTestNonO4CViaA2C2.apk"
 
 	// Used to (i) find the resize lock mode buttons on the compat-mode menu and (ii) check the state of the compat-mode button
-	phoneButtonName     = "Phone"
-	tabletButtonName    = "Tablet"
+	phoneButtonName     = "Portrait"
+	tabletButtonName    = "Landscape"
 	resizableButtonName = "Resizable"
 
 	// CenterButtonClassName is the class name of the caption center button.
