@@ -148,7 +148,7 @@ func GSCUpdatePostReset(ctx context.Context, s *testing.State) {
 		s.Fatalf("TPM bus changed after deep sleep: expected %v got %v", testBus, bus)
 	}
 	tpm := b.Tpm(ctx, testBus)
-	b.WaitForTpm(ctx, tpm)
+	b.WaitForTpmStartup(ctx, tpm)
 	// The AP typically uses a 1000ms delay.
 	tpm.TpmvTurnUpdateOn(1000)
 	err = waitForUpdate(ctx, b, i, gpioMonitor)

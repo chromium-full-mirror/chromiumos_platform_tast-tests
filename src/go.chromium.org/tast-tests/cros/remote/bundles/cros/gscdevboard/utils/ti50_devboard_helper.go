@@ -496,7 +496,8 @@ func (h DevboardHelper) ResetAndTpmStartup(ctx context.Context, i *ti50.CrOSImag
 	return h.ResetAndTpmStartupForBus(ctx, i, h.GscProperties().PreferredTPMBus(), straps...)
 }
 
-// WaitForTpm wait until GSC responds with the correct DID VID.
+// WaitForTpm wait until GSC responds with the correct DID VID. Prefer the
+// WaitForTpmStartup version if you don't need to explicitly call Startup.
 func (h DevboardHelper) WaitForTpm(ctx context.Context, tpmHandle *TpmHelper) {
 	// Try reading DidVid a few times until Ti50 or Cr50 is ready.
 	const maxDidVidAttempts = 6
@@ -531,6 +532,18 @@ func (h DevboardHelper) WaitForTpm(ctx context.Context, tpmHandle *TpmHelper) {
 			continue
 		}
 		h.Fatalf("Unexpected TPM DID_VID: %v", didVid)
+	}
+}
+
+// WaitForTpmStartup wait until GSC responds with the correct DID VID and then send
+// startup command.
+func (h DevboardHelper) WaitForTpmStartup(ctx context.Context, tpmHandle *TpmHelper) {
+	h.WaitForTpm(ctx, tpmHandle)
+	startup := tpm2.Startup{
+		StartupType: tpm2.TPMSUClear,
+	}
+	if _, err := startup.Execute(tpmHandle); err != nil {
+		h.Fatalf("TPM startup error: %v", err)
 	}
 }
 
@@ -569,14 +582,7 @@ func (h DevboardHelper) ResetAndTpmStartupForBus(ctx context.Context, i *ti50.Cr
 	h.GpioApplyStrap(ctx, busConfig)
 
 	tpmHandle := h.Tpm(ctx, bus)
-	h.WaitForTpm(ctx, tpmHandle)
-
-	startup := tpm2.Startup{
-		StartupType: tpm2.TPMSUClear,
-	}
-	if _, err := startup.Execute(tpmHandle); err != nil {
-		h.Fatalf("TPM startup error: %v", err)
-	}
+	h.WaitForTpmStartup(ctx, tpmHandle)
 
 	return tpmHandle
 }

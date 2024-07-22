@@ -559,7 +559,7 @@ func verifyRMAKeySequence(ctx context.Context, s *testing.State, b utils.Devboar
 
 	// Turn AP back on
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
-	b.WaitForTpm(ctx, tpm)
+	b.WaitForTpmStartup(ctx, tpm)
 
 	// Turn AP back off. This should not reset the RMA request since we are not
 	// going to read the RMA request via TPMV command.
@@ -570,7 +570,7 @@ func verifyRMAKeySequence(ctx context.Context, s *testing.State, b utils.Devboar
 
 	// Turn AP back on. Should still have RMA request pending
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
-	b.WaitForTpm(ctx, tpm)
+	b.WaitForTpmStartup(ctx, tpm)
 
 	// Ensure that AP RO verification status is a V1 code. This indicates that
 	// RMA was requested.
@@ -597,7 +597,7 @@ func verifyRMAKeySequence(ctx context.Context, s *testing.State, b utils.Devboar
 
 	// Turn AP back on. Should still have RMA request pending
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
-	b.WaitForTpm(ctx, tpm)
+	b.WaitForTpmStartup(ctx, tpm)
 
 	// Ensure that AP RO verification status has returned to V2 code meaning there
 	// is not RMA request pending.
