@@ -41,9 +41,6 @@ type CPUUsageSource struct {
 	// and the maximum operating frequency the processor can run at(in kHz)
 	// are already recorded, keyed by cpu name.
 	maxFreqReported map[string]bool
-	// `cpuMaxFreqs` is the maximum operating frequency the processor
-	// can run at (in kHz), keyed by cpu name.
-	cpuMaxFreqs map[string]float64
 	// `cpuCapacities` is the capacity that provides the scheduler
 	// information about CPUs heterogeneity, keyed by cpu name.
 	cpuCapacities map[string]float64
@@ -187,7 +184,6 @@ func NewCPUUsageSource(name string, reportCPUUsage bool) *CPUUsageSource {
 		prevStats:        map[string]cpu.TimesStat{},
 		prevTimeInState:  map[string]map[int64]float64{},
 		maxFreqReported:  map[string]bool{},
-		cpuMaxFreqs:      map[string]float64{},
 		cpuCapacities:    map[string]float64{},
 		totalCPUCapacity: 0,
 		reportCPUUsage:   reportCPUUsage,
@@ -212,9 +208,6 @@ func (s *CPUUsageSource) Start(ctx context.Context) error {
 		if capacity, err := cpuCapacity(time.CPU); err == nil {
 			s.cpuCapacities[time.CPU] = capacity
 			s.totalCPUCapacity += capacity
-		}
-		if maxFreq, err := cpuFreq(time.CPU, "max"); err == nil {
-			s.cpuMaxFreqs[time.CPU] = maxFreq
 		}
 		if state, err := cpuTimeInState(time.CPU); err == nil {
 			s.prevTimeInState[time.CPU] = state
@@ -275,24 +268,31 @@ func (s *CPUUsageSource) Snapshot(ctx context.Context, values *perf.Values) erro
 			Direction: perf.BiggerIsBetter,
 			Interval:  s.intervalName,
 		}, freq/1000)
-		if !s.maxFreqReported[time.CPU] {
-			maxFreq := s.cpuMaxFreqs[time.CPU]
-			values.Set(perf.Metric{
-				Name:      s.name + "." + time.CPU + ".MaxFrequency",
-				Unit:      power.CPUFreqMetricTypeUnit,
-				Direction: perf.BiggerIsBetter,
-			}, maxFreq/1000)
-			maxScalingFreq, err := CPUScalingFreq(time.CPU, "max")
-			if err != nil {
-				return err
-			}
-			values.Set(perf.Metric{
-				Name:      s.name + "." + time.CPU + ".MaxScalingFrequency",
-				Unit:      power.CPUFreqMetricTypeUnit,
-				Direction: perf.BiggerIsBetter,
-			}, maxScalingFreq/1000)
-			s.maxFreqReported[time.CPU] = true
+
+		maxFreq, err := cpuFreq(time.CPU, "max")
+		if err != nil {
+			return errors.Wrap(err, "failed to get max freq")
 		}
+
+		values.Append(perf.Metric{
+			Name:      s.name + "." + time.CPU + ".MaxFrequency",
+			Multiple:  true,
+			Unit:      power.CPUFreqMetricTypeUnit,
+			Direction: perf.BiggerIsBetter,
+			Interval:  s.intervalName,
+		}, maxFreq/1000)
+
+		maxScalingFreq, err := CPUScalingFreq(time.CPU, "max")
+		if err != nil {
+			return errors.Wrap(err, "failed to get max scaling frequency")
+		}
+		values.Set(perf.Metric{
+			Name:      s.name + "." + time.CPU + ".MaxScalingFrequency",
+			Multiple:  true,
+			Unit:      power.CPUFreqMetricTypeUnit,
+			Direction: perf.BiggerIsBetter,
+			Interval:  s.intervalName,
+		}, maxScalingFreq/1000)
 
 		// For non-ARM devices, there might not be `cpu_capacity` files
 		// thus `totalCPUCapacity` would be 0 in that case.
@@ -321,7 +321,6 @@ func (s *CPUUsageSource) Snapshot(ctx context.Context, values *perf.Values) erro
 				}
 			}
 
-			maxFreq := s.cpuMaxFreqs[time.CPU]
 			// `maxFreq` is in kHz (from cpufreq/cpuinfo_max_freq) and `averageFreq`
 			// from `time_in_state` is also in kHz.
 			freqPct := averageFreq / maxFreq
