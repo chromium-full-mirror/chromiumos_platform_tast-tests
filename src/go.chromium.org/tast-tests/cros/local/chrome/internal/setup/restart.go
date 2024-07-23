@@ -111,11 +111,15 @@ func RestartChromeForTesting(ctx context.Context, cfg *config.Config, extArgs, l
 		"--no-first-run",                              // Prevent showing up offer pages, e.g. google.com/chromebooks.
 		"--cros-region=" + cfg.Region(),               // Force the region.
 		"--cros-regions-mode=hide",                    // Ignore default values in VPD.
-		"--enable-oobe-test-api",                      // Enable OOBE helper functions for authentication.
 		"--keep-login-events-for-testing",             // Keep LoginEventRecorder data for later retrieval by tests.
 		"--disable-input-event-activation-protection", // Don't try to detect and ignore unintended clicks.
 		"--propagate-iph-for-testing",                 // Disable In Product Help notifications and UI. Pass additional parameters to enable. See https://chromium.googlesource.com/chromium/src/+/main/components/feature_engagement/README.md#Automated-External-Testing-Tast and b/296141011 for details.
 	}
+
+	if cfg.EnableOOBETestAPI() {
+		args = append(args, "--enable-oobe-test-api") // Enable OOBE helper functions for authentication.
+	}
+
 	if !cfg.EnableHDR() {
 		args = append(args,
 			"--force-color-profile=srgb",        // Force chrome to treat the display as sRGB. See b/221643955 for details.

@@ -623,3 +623,11 @@ func FieldTrialConfig(opt FieldTrialConfigMode) Option {
 		return nil
 	}
 }
+
+// DisableOOBETestAPI returns an Option that can be passed to New to disable the OOBE helper APIs.
+func DisableOOBETestAPI() Option {
+	return func(cfg *config.MutableConfig) error {
+		cfg.EnableOOBETestAPI = false
+		return nil
+	}
+}

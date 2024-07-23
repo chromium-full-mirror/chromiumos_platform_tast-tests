@@ -251,6 +251,9 @@ func (c *Config) EnableHDR() bool { return c.m.EnableHDR }
 // ForceManualEnrollment returns true if automatic (cert based) enrollment is disabled.
 func (c *Config) ForceManualEnrollment() bool { return c.m.ForceManualEnrollment }
 
+// EnableOOBETestAPI returns true if OOBE helper functions for authentication are needed.
+func (c *Config) EnableOOBETestAPI() bool { return c.m.EnableOOBETestAPI }
+
 // MutableConfig is a mutable version of Config. MutableConfig is wrapped with
 // Config to prevent mutation after it is returned by NewConfig.
 //
@@ -313,6 +316,7 @@ type MutableConfig struct {
 	FieldTrialConfig                string           `reuse_match:"true"`
 	EnableHDR                       bool             `reuse_match:"false"`
 	ForceManualEnrollment           bool             `reuse_match:"true"`
+	EnableOOBETestAPI               bool             `reuse_match:"true"`
 }
 
 // Option is a self-referential function can be used to configure Chrome.
@@ -350,6 +354,7 @@ func NewConfig(opts []Option) (*Config, error) {
 			EnableHIDScreenOnOOBE:           false,
 			EnableStackSampledMetrics:       false,
 			EnableLacrosStackSampledMetrics: false,
+			EnableOOBETestAPI:               true,
 		},
 	}
 
