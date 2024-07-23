@@ -30,7 +30,13 @@ func init() {
 		},
 		// ChromeOS > Software > Family > Parental controls
 		BugComponent: "b:1090157",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
+			"group:hw_agnostic",
+		},
 		SoftwareDeps: []string{"chrome", "gaia"},
 		Timeout:      5 * time.Minute,
 		Vars:         []string{"unicorn.siteOnAllowlist", "unicorn.siteNotOnAllowlist", "unicorn.siteOnAllowlistNodeName"},

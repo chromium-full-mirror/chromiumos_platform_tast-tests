@@ -32,7 +32,12 @@ func init() {
 		},
 		// ChromeOS > Software > Family > Parental controls
 		BugComponent: "b:1090157",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
+		},
 		SoftwareDeps: []string{"chrome", "gaia"},
 		// This test has a long timeout because syncing settings can occasionally
 		// take a long time.
