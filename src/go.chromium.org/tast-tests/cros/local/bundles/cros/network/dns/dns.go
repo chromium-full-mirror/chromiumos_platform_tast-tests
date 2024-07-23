@@ -13,6 +13,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"os/exec"
 	"regexp"
 	"strconv"
 	"strings"
@@ -404,6 +405,13 @@ func TestQueryDNSProxy(ctx context.Context, tcs []ProxyTestCase, a *arc.ARC, con
 	for _, tc := range tcs {
 		testing.ContextLogf(ctx, "Resolving %s as %s, expect failure: %t, allow retry: %t", opts, tc.Client, tc.ExpectErr, tc.AllowRetry)
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			// Avoid the effect of connection pinning. We observed this issue in the
+			// crostini test since it seems that the dnsmasq in Termina will reuse the
+			// source port for DNS query. It's unlikely to be a problem in other cases
+			// but let's avoid it by any chance.
+			if err := deleteDo53EntriesInConntrack(ctx); err != nil {
+				testing.ContextLog(ctx, "Failed to clear conntrack entries for DNS: ", err)
+			}
 			var err error
 			qErr := queryDNS(ctx, tc.Client, a, cont, opts, !tc.ExpectErr /*dumpLogOnError*/)
 			if qErr != nil && !tc.ExpectErr {
@@ -874,5 +882,28 @@ func VerifyDNSResolve(ctx context.Context, user, domain string, expectResolvable
 		return errors.Errorf("As user %s, %s resolved into %s, want %s", user, domain, trimmedOut, expectedIP)
 	}
 	testing.ContextLogf(ctx, "As user %s, %s resolved into %s", user, domain, trimmedOut)
+	return nil
+}
+
+// deleteDo53EntriesInConntrack removes all the UDP connections to dst port 53
+// in the conntrack table. This will clear the effect of connection pinning for
+// UDP DNS queries.
+func deleteDo53EntriesInConntrack(ctx context.Context) error {
+	for _, family := range []string{"ipv4", "ipv6"} {
+		// `conntrack -D` will exit with 1 if no entry is deleted, so we ignore this
+		// case when checking err.
+		err := testexec.CommandContext(ctx, "conntrack", "-D", "-f", family, "-p", "udp", "--dport", "53").Run()
+		if err == nil {
+			continue
+		}
+		exitError, ok := err.(*exec.ExitError)
+		if !ok {
+			return err
+		}
+		if exitError.ExitCode() == 1 {
+			continue
+		}
+		return err
+	}
 	return nil
 }
