@@ -7,11 +7,11 @@ package fixture
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -114,11 +114,30 @@ type devboardFixture struct {
 	hostPort   string
 	v          *Value
 	preTest    extraPreTestMethod
-	resultTags map[string]string
+	resultInfo ResultInfoTags
+}
+
+// ResultInfoTags stores tags to be reported with the test result.
+type ResultInfoTags struct {
+	// TagROVersion is the RO version of the running image.
+	TagROVersion string `json:"gsc_ro_version"`
+	// TagRWVersion is the RW version of the running image.
+	TagRWVersion string `json:"gsc_rw_version"`
+	// TagRWBranch is the branch name of the running image.
+	TagRWBranch string `json:"gsc_rw_branch"`
+	// TagRWRev is the revision count of the running image.
+	TagRWRev string `json:"gsc_rw_rev"`
+	// TagRWSHA is the git commit hash of the running image.
+	TagRWSHA string `json:"gsc_rw_sha"`
+	// TagBuildURL is the build URL used to download the image file.
+	TagBuildURL string `json:"gsc_buildurl"`
+	// TagTestbedType is the type of HW being tested (eg gsc_dt_shield).
+	TagTestbedType string `json:"gsc_testbed_type"`
+	// TagCCDSerial is the serial number of the GSC chip (and CCD USB serial).
+	TagCCDSerial string `json:"gsc_ccd_serial"`
 }
 
 func (i *devboardFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
-	i.resultTags = make(map[string]string)
 	if hostPort, ok := s.Var(DevBoardService); ok {
 		i.hostPort = hostPort
 	} else {
@@ -138,10 +157,10 @@ func (i *devboardFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	} else {
 		i.v.TestbedProperties = p
 	}
-	i.resultTags[string(ti50.TagTestbedType)] = string(i.v.TestbedProperties.TestbedType)
-	i.resultTags[string(ti50.TagCCDSerial)] = i.v.TestbedProperties.UsbSerial
+	i.resultInfo.TagTestbedType = string(i.v.TestbedProperties.TestbedType)
+	i.resultInfo.TagCCDSerial = i.v.TestbedProperties.UsbSerial
 	burl, _ := s.Var(BuildURL)
-	i.resultTags[string(ti50.TagBuildURL)] = burl
+	i.resultInfo.TagBuildURL = burl
 
 	iv, err := downloadImage(ctx, i.v.TestbedProperties, i.image, s)
 	if err != nil {
@@ -165,11 +184,11 @@ func (i *devboardFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	if err != nil {
 		s.Log("Could not get version info: ", err)
 	}
-	i.resultTags[string(ti50.TagROVersion)] = ver.ROVersion
-	i.resultTags[string(ti50.TagRWVersion)] = ver.RWVersion
-	i.resultTags[string(ti50.TagRWBranch)] = ver.Branch
-	i.resultTags[string(ti50.TagRWRev)] = fmt.Sprint(ver.Rev)
-	i.resultTags[string(ti50.TagRWSHA)] = ver.SHA
+	i.resultInfo.TagROVersion = ver.ROVersion
+	i.resultInfo.TagRWVersion = ver.RWVersion
+	i.resultInfo.TagRWBranch = ver.Branch
+	i.resultInfo.TagRWRev = fmt.Sprint(ver.Rev)
+	i.resultInfo.TagRWSHA = ver.SHA
 
 	return i.v
 }
@@ -343,7 +362,7 @@ func (i *devboardFixture) Reset(ctx context.Context) error {
 }
 
 func (i *devboardFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
-	i.logResultTags(ctx, s)
+	i.logResultInfo(ctx, s)
 	testing.ContextLog(ctx, "Starting OTT session")
 	// At this point, start an opentitantool session, which could involve either
 	// starting a host emulation instance, or resetting a devboard and its debugger to a known
@@ -351,18 +370,11 @@ func (i *devboardFixture) PreTest(ctx context.Context, s *testing.FixtTestState)
 	mustSucceed(s, i.v.devboard.StartSession(ctx, ti50.StrapReset), "Start testing session")
 }
 
-func (i *devboardFixture) logResultTags(ctx context.Context, s *testing.FixtTestState) {
-	f, err := os.OpenFile(filepath.Join(s.OutDir(), "result_tags.txt"), os.O_CREATE|os.O_WRONLY, 0644)
-	mustSucceed(s, err, "Create result_tags.txt")
-	defer f.Close()
-	var tags []string
-	for tag := range i.resultTags {
-		tags = append(tags, tag)
-	}
-	sort.Strings(tags)
-	for _, tag := range tags {
-		f.WriteString(fmt.Sprintf("%s=%s\n", tag, i.resultTags[tag]))
-	}
+func (i *devboardFixture) logResultInfo(ctx context.Context, s *testing.FixtTestState) {
+	jsonData, err := json.Marshal(i.resultInfo)
+	mustSucceed(s, err, "Failed to marshal gsc_info.json")
+	err = os.WriteFile(filepath.Join(s.OutDir(), "gsc_info.json"), jsonData, 0666)
+	mustSucceed(s, err, "Failed to write gsc_info.json")
 }
 
 func (i *devboardFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
