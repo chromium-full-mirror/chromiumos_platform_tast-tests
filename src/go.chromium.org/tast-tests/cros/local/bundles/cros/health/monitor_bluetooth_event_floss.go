@@ -1,4 +1,4 @@
-// Copyright 2022 The ChromiumOS Authors
+// Copyright 2024 The ChromiumOS Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -11,43 +11,37 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/local/bluetooth/floss"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         MonitorBluetoothEvent,
+		Func:         MonitorBluetoothEventFloss,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Monitors whether Bluetooth events are detected properly when the system is using Bluez",
+		Desc:         "Monitors whether Bluetooth events are detected properly when the system is using Floss",
 		Contacts: []string{
 			"cros-tdm-tpe-eng@google.com",
 			"byronlee@google.com",
 		},
 		BugComponent: "b:982097", // ChromeOS > Platform > Enablement > Health
-		Attr:         []string{"group:mainline"},
-		SoftwareDeps: []string{"diagnostics"},
-		Fixture:      "crosHealthdRunning",
-		// Ensure that Bluetooth adapter is present when the system is using Bluez.
-		HardwareDeps: hwdep.D(hwdep.Bluetooth()),
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		SoftwareDeps: []string{"diagnostics", "bluetooth_floss"},
+		Fixture:      "crosHealthdRunningAndBluetoothEnabledWithFloss",
 	})
 }
 
-func initiateBluetoothStatus(ctx context.Context, s *testing.State) error {
-	// Set the power off first.
-	b, err := testexec.CommandContext(ctx, "bluetoothctl", "power", "off").Output(testexec.DumpLogOnError)
+func MonitorBluetoothEventFloss(ctx context.Context, s *testing.State) {
+	managerClient, err := floss.DefaultManagerClient(ctx)
 	if err != nil {
-		return errors.Wrapf(err, "failed to trigger Bluetooth power off: %s", string(b))
+		s.Fatal("Failed to access Bluetooth manager, err: ", err)
 	}
-	s.Log("bluetoothctl: ", strings.Trim(string(b), "\n"))
 
-	return nil
-}
-
-func MonitorBluetoothEvent(ctx context.Context, s *testing.State) {
-	if err := initiateBluetoothStatus(ctx, s); err != nil {
-		s.Fatal("Failed to initiate bluetooth status, err: ", err)
+	defaultHci := managerClient.DefaultAdapterHCI()
+	// Set the power off first.
+	if err := managerClient.Stop(ctx, defaultHci); err != nil {
+		s.Fatal("Failed to power off bluetooth, err: ", err)
 	}
 
 	// Run monitor command in background.
@@ -70,28 +64,26 @@ func MonitorBluetoothEvent(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to subscirbe event in healthd: ", err)
 	}
 
-	// Trigger Bluetooth event.
-	b, err := testexec.CommandContext(ctx, "bluetoothctl", "power", "on").Output(testexec.DumpLogOnError)
-	if err != nil {
-		if cmdErr := monitorCmd.Kill(); cmdErr != nil {
-			s.Log(ctx, "Error killing healthd monitor command: ", cmdErr)
+	// Trigger Bluetooth event by setting the power on.
+	if err := managerClient.Start(ctx, defaultHci); err != nil {
+		if killErr := monitorCmd.Kill(); killErr != nil {
+			s.Log(ctx, "Error killing healthd monitor command: ", killErr)
 		}
-		monitorCmd.Wait()
+		if waitErr := monitorCmd.Wait(); waitErr != nil {
+			s.Log(ctx, "Error waiting healthd monitor command: ", waitErr)
+		}
 		s.Fatal("Failed to trigger Bluetooth power on event: ", err)
 	}
-	s.Log("bluetoothctl: ", strings.Trim(string(b), "\n"))
 
 	if err := monitorCmd.Wait(); err != nil {
 		s.Fatal("Failed to wait healthd monitor command: ", err)
 	}
 
-	stderr := string(stderrBuf.Bytes())
-	if stderr != "" {
+	if stderr := string(stderrBuf.Bytes()); stderr != "" {
 		s.Fatal("Failed to detect Bluetooth on event, stderr: ", stderr)
 	}
 
-	stdout := string(stdoutBuf.Bytes())
-	if !strings.Contains(stdout, "Bluetooth event received") {
+	if stdout := string(stdoutBuf.Bytes()); !strings.Contains(stdout, "Bluetooth event received") {
 		s.Fatal("Failed to detect Bluetooth on event, event output: ", stdout)
 	}
 }
