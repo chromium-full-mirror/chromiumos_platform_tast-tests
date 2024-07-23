@@ -111,6 +111,11 @@ func VideoCall(ctx context.Context, s *testing.State) {
 		permBubbleName      = "storage.googleapis.com wants to"
 		cameraDataNameRegex = "id : camera_.* fps: .*"
 		titleDoc            = "power_VideoCall Doc"
+		jsVideoArray        = "Array.from(document.getElementsByTagName('video'))"
+		jsAllPlaying        = ".every(v => v.currentTime >= 0.001)"
+		jsPrintTime         = ".map(v => v.id + ': ' + v.currentTime).join(', ')"
+		jsAreVideosPlaying  = jsVideoArray + jsAllPlaying
+		jsPrintVideosTime   = jsVideoArray + jsPrintTime
 	)
 
 	// Open a VideoWindow and snap to the left
@@ -193,6 +198,13 @@ func VideoCall(ctx context.Context, s *testing.State) {
 		if err := ui.WaitUntilExists(cameraData)(ctx); err != nil {
 			s.Fatal("Failed to find the fps data note: ", err)
 		}
+	}
+
+	// Wait until all videos start playing
+	if err := videoConn.WaitForExprWithTimeout(ctx, jsAreVideosPlaying, 10*time.Second); err != nil {
+		videosTimeStr := ""
+		videoConn.Eval(ctx, jsPrintVideosTime, &videosTimeStr)
+		s.Fatalf("Failed to ensure that all videos are played: %v, videos currentTime are %s", err, videosTimeStr)
 	}
 
 	// GoBigSleepLint: Wait 5 seconds for WebRTC bandwidth to stabilize
