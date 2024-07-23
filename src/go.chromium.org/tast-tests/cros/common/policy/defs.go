@@ -25913,7 +25913,6 @@ func (p *DeviceDlcPredownloadList) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1161. DataControlsRules
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type DataControlsRules struct {
 	Stat Status
@@ -28013,37 +28012,6 @@ func (p *ShowAiIntroScreenEnabled) Equal(iface interface{}) bool {
 }
 
 // ****************************************************************************
-// 1249. ShowTunaScreenEnabled
-// This policy has a default value of False.
-// ****************************************************************************
-type ShowTunaScreenEnabled struct {
-	Stat Status
-	Val  bool
-}
-
-func (p *ShowTunaScreenEnabled) Name() string          { return "ShowTunaScreenEnabled" }
-func (p *ShowTunaScreenEnabled) Scope() Scope          { return ScopeUser }
-func (p *ShowTunaScreenEnabled) Status() Status        { return p.Stat }
-func (p *ShowTunaScreenEnabled) UntypedV() interface{} { return p.Val }
-func (p *ShowTunaScreenEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
-	var v bool
-	if err := json.Unmarshal(m, &v); err != nil {
-		return nil, errors.Wrapf(err, "could not read %s as bool", m)
-	}
-	return v, nil
-}
-func (p *ShowTunaScreenEnabled) SetProto(m *protoreflect.Message) {
-	SetUserProto(m, p.Name(), p.Val)
-}
-func (p *ShowTunaScreenEnabled) Equal(iface interface{}) bool {
-	v, ok := iface.(bool)
-	if !ok {
-		return ok
-	}
-	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
-}
-
-// ****************************************************************************
 // 1251. GenAILocalFoundationalModelSettings
 // This is a future policy, it is not present in stable builds.
 // ****************************************************************************
@@ -29030,6 +28998,84 @@ func (p *StandardizedBrowserZoomEnabled) SetProto(m *protoreflect.Message) {
 }
 func (p *StandardizedBrowserZoomEnabled) Equal(iface interface{}) bool {
 	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1289. ShowGeminiIntroScreenEnabled
+// This policy has a default value of False.
+// ****************************************************************************
+type ShowGeminiIntroScreenEnabled struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *ShowGeminiIntroScreenEnabled) Name() string          { return "ShowGeminiIntroScreenEnabled" }
+func (p *ShowGeminiIntroScreenEnabled) Scope() Scope          { return ScopeUser }
+func (p *ShowGeminiIntroScreenEnabled) Status() Status        { return p.Stat }
+func (p *ShowGeminiIntroScreenEnabled) UntypedV() interface{} { return p.Val }
+func (p *ShowGeminiIntroScreenEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *ShowGeminiIntroScreenEnabled) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *ShowGeminiIntroScreenEnabled) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1290. DeviceRestrictionSchedule
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type DeviceRestrictionSchedule struct {
+	Stat Status
+	Val  []*DeviceRestrictionScheduleValue
+}
+
+type DeviceRestrictionScheduleValue struct {
+	End   *DeviceRestrictionScheduleValueEnd   `json:"end"`
+	Start *DeviceRestrictionScheduleValueStart `json:"start"`
+}
+
+type DeviceRestrictionScheduleValueEnd struct {
+	DayOfWeek string `json:"day_of_week"`
+	Time      int    `json:"time"`
+}
+
+type DeviceRestrictionScheduleValueStart struct {
+	DayOfWeek string `json:"day_of_week"`
+	Time      int    `json:"time"`
+}
+
+func (p *DeviceRestrictionSchedule) Name() string          { return "DeviceRestrictionSchedule" }
+func (p *DeviceRestrictionSchedule) Scope() Scope          { return ScopeDevice }
+func (p *DeviceRestrictionSchedule) Status() Status        { return p.Stat }
+func (p *DeviceRestrictionSchedule) UntypedV() interface{} { return p.Val }
+func (p *DeviceRestrictionSchedule) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v []*DeviceRestrictionScheduleValue
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as []*DeviceRestrictionScheduleValue", m)
+	}
+	return v, nil
+}
+func (p *DeviceRestrictionSchedule) SetProto(m *protoreflect.Message) {
+	SetDeviceProto(m, "DeviceRestrictionSchedule", "value", p.Val)
+}
+func (p *DeviceRestrictionSchedule) Equal(iface interface{}) bool {
+	v, ok := iface.([]*DeviceRestrictionScheduleValue)
 	if !ok {
 		return ok
 	}
@@ -30759,8 +30805,6 @@ func newByName(name string) (Policy, error) {
 		return &DeviceAuthenticationFlowAutoReloadInterval{}, nil
 	case "ShowAiIntroScreenEnabled":
 		return &ShowAiIntroScreenEnabled{}, nil
-	case "ShowTunaScreenEnabled":
-		return &ShowTunaScreenEnabled{}, nil
 	case "GenAILocalFoundationalModelSettings":
 		return &GenAILocalFoundationalModelSettings{}, nil
 	case "DeviceExtensionsSystemLogEnabled":
@@ -30823,6 +30867,10 @@ func newByName(name string) (Policy, error) {
 		return &SystemShortcutBehavior{}, nil
 	case "StandardizedBrowserZoomEnabled":
 		return &StandardizedBrowserZoomEnabled{}, nil
+	case "ShowGeminiIntroScreenEnabled":
+		return &ShowGeminiIntroScreenEnabled{}, nil
+	case "DeviceRestrictionSchedule":
+		return &DeviceRestrictionSchedule{}, nil
 	default:
 		return nil, errors.New("Unknown policy " + name)
 	}
