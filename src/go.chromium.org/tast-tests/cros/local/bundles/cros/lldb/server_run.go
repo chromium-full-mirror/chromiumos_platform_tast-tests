@@ -18,7 +18,7 @@ func init() {
 		Desc:         "Runs lldb-server to verify it built and can open correctly",
 		Contacts:     []string{"c-compiler-chrome@google.com", "ajordanr@google.com"},
 		BugComponent: "b:1038090",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline"},
 		Timeout:      time.Minute,
 	})
 }
