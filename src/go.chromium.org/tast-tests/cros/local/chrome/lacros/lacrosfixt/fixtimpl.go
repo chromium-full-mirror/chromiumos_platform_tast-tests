@@ -116,6 +116,7 @@ func init() {
 				chrome.LacrosExtraArgs("--autoplay-policy=no-user-gesture-required"),
 				chrome.FieldTrialConfig(chrome.FieldTrialConfigDisable))).Opts()
 		}),
+		BugComponent:    "b:776546", // ChromeOS > Platform > Technologies > Audio > Test
 		SetUpTimeout:    chrome.FixtureSetUpTimeout + 7*time.Minute,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
@@ -135,6 +136,7 @@ func init() {
 				chrome.LacrosExtraArgs("--autoplay-policy=no-user-gesture-required"),
 				chrome.FieldTrialConfig(chrome.FieldTrialConfigEnable))).Opts()
 		}),
+		BugComponent:    "b:776546", // ChromeOS > Platform > Technologies > Audio > Test
 		SetUpTimeout:    chrome.FixtureSetUpTimeout + 7*time.Minute,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
