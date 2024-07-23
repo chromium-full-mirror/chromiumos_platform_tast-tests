@@ -16,13 +16,12 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		BugComponent: "b:1166446",
+		BugComponent: "b:1493959", // ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		Func:         TwoShills,
 		Desc:         "Verifies that an attempt to spawn a second instance of shill while an instance is already running will fail",
 		Contacts: []string{
-			"cros-network-health-team@google.com", // Network Health team
-			"deanliao@google.com",                 // Test author
-			"cros-networking@google.com",
+			"cros-networking@google.com", // Platform networking team: owner/maintainer
+			"deanliao@google.com",        // Test author
 		},
 		Attr: []string{"group:mainline", "group:network", "network_cq"},
 	})

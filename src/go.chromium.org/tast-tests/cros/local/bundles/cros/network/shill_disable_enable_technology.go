@@ -20,11 +20,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Ensures that the Ethernet technology can be disabled and enabled by Shill",
 		Contacts: []string{
-			"cros-network-health-team@google.com", // network-health team
-			"khegde@chromium.org",                 // test maintainer
-			"stevenjb@chromium.org",               // network-health tech lead
+			"cros-networking@google.com", // Platform networking team: owner/maintainer
+			"stevenjb@chromium.org",      // author
+			"khegde@chromium.org",        // author
 		},
-		BugComponent: "b:1166446",
+		BugComponent: "b:1493959", // ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		SoftwareDeps: []string{"no_qemu"},
 		Attr:         []string{"group:mainline", "informational"},
 		Fixture:      "shillReset",

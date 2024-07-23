@@ -16,12 +16,12 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		BugComponent: "b:1166446",
+		BugComponent: "b:1493959", // ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		Func:         ShillStability,
 		Desc:         "Checks that shill isn't respawning",
 		Contacts: []string{
-			"cros-network-health-team@google.com", // Network Health team
-			"stevenjb@google.com",                 // Test author
+			"cros-networking@google.com", // Platform networking team: owner/maintainer
+			"stevenjb@google.com",        // Test author
 		},
 		Attr: []string{"group:mainline"},
 	})

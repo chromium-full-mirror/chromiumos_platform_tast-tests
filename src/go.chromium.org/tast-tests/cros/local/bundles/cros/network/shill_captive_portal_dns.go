@@ -24,13 +24,12 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		BugComponent: "b:1166446",
+		BugComponent: "b:1493959", // ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		Func:         ShillCaptivePortalDNS,
 		Desc:         "Ensure that shill sends portal detection probes to the IP address given by dnsmasq",
 		Contacts: []string{
-			"cros-network-health-team@google.com", // Network Health team
-			"cros-networking@google.com",          // Platform networking team
-			"michaelrygiel@google.com",            // Test maintainer
+			"cros-networking@google.com", // Platform networking team: owner/maintainer
+			"michaelrygiel@google.com",   // Test author
 		},
 		Attr: []string{"group:mainline", "group:hw_agnostic"},
 	})

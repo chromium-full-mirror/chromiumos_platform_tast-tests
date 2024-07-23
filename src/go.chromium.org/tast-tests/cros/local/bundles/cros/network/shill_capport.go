@@ -22,7 +22,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ShillCAPPORT,
-		BugComponent: "b:1166446",
+		BugComponent: "b:1493959", // ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		Desc:         "Set up a virtual ethernet pair with a simulated CAPPORT server and DNS server, and check whether shill enters the portal redirected state",
 		Contacts: []string{
 			"cros-networking@google.com", // Platform networking team

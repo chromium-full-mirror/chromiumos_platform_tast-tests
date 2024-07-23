@@ -21,11 +21,11 @@ func init() {
 		Name: "shillReset",
 		Desc: "A fixture that ensures shill is in a default state with no user profiles when the test starts and will reset any shill modifications after the test",
 		Contacts: []string{
-			"khegde@chromium.org",                 // fixture maintainer
-			"stevenjb@chromium.org",               // fixture maintainer
-			"cros-network-health-team@google.com", // Network Health team
+			"cros-networking@google.com", // Platform networking team: owner/maintainer
+			"stevenjb@chromium.org",      // fixture author
+			"khegde@chromium.org",        // fixture author
 		},
-		BugComponent:    "b:1166446", // ChromeOS > Platform > Connectivity > NetworkHealth
+		BugComponent:    "b:1493959", // ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		PreTestTimeout:  shill.ResetShillTimeout + 5*time.Second,
 		PostTestTimeout: 5 * time.Second,
 		TearDownTimeout: shill.ResetShillTimeout + 5*time.Second,
