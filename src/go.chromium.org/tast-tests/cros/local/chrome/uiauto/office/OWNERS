@@ -1,0 +1,5 @@
+# Files & Storage team.
+include chromiumos/owners:v1:/filesandstorage/OWNERS.filesandstorage
+
+# Tast team for bulk/emergencies
+include /OWNERS.tast
