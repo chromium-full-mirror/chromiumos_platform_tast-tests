@@ -340,8 +340,9 @@ func performGAIAEnrollmentSignIn(ctx context.Context, oobeConn *driver.Conn, cfg
 		const attributeScreenShownJS = "OobeAPI.screens.EnterpriseEnrollmentScreen.attributeStep.isReadyForTesting()"
 		const attributeOrSuccessScreenShownJS = successScreenShownJS + "||" + attributeScreenShownJS
 
-		// In case we end up on the attribute screen, skip it.
-		if err := oobeConn.WaitForExprFailOnErrWithTimeout(ctx, attributeOrSuccessScreenShownJS, oobeScreenWaitingTime); err == nil {
+		// In case we end up on the attribute screen, skip it. We wait twice the usual amount since we have seen cases where
+		// attribute screen only appears after 30 seconds. See b/335385437 for more details.
+		if err := oobeConn.WaitForExprFailOnErrWithTimeout(ctx, attributeOrSuccessScreenShownJS, 2*oobeScreenWaitingTime); err == nil {
 			var onAttributeScreen bool
 			if err := oobeConn.Eval(ctx, attributeScreenShownJS, &onAttributeScreen); err != nil {
 				return testing.PollBreak(errors.Wrap(err, "failed to check if on success screen"))
@@ -379,18 +380,7 @@ func performGAIAEnrollmentSignIn(ctx context.Context, oobeConn *driver.Conn, cfg
 					return errors.Wrap(err, "unexpected step after enrollment signin failure, could not get current state")
 				}
 
-				// TODO(b/335385437): Remove these additional checks after resolving bug.
-				var successScreenShown bool
-				if err := oobeConn.Eval(ctx, successScreenShownJS, &successScreenShown); err != nil {
-					return errors.Wrap(err, "failed to check if success screen is shown")
-				}
-				var attributeScreenShown bool
-				if err := oobeConn.Eval(ctx, attributeScreenShownJS, &attributeScreenShown); err != nil {
-					return errors.Wrap(err, "failed to check if attribute screen is shown")
-				}
-
-				return errors.Errorf("unexpected step after enrollment signin failure, currently on screen %q; step %q; "+
-					"success screen shown: %t; attribute screen shown: %t", screen, step, successScreenShown, attributeScreenShown)
+				return errors.Errorf("unexpected step after enrollment signin failure, currently on screen %q; step %q", screen, step)
 			}
 
 			var canRetry bool
