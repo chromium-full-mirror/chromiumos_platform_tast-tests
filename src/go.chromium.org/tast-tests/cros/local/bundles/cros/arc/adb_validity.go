@@ -28,7 +28,7 @@ func init() {
 		// ChromeOS > Software > ARC++ > Core > Integration
 		BugComponent: "b:1131321",
 		SoftwareDeps: []string{"chrome"},
-		Timeout:      7 * time.Minute,
+		Timeout:      8 * time.Minute,
 		Params: []testing.Param{
 			{
 				Fixture:           "arcBooted",

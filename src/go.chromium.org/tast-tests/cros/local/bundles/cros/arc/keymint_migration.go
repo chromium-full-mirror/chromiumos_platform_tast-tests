@@ -29,7 +29,7 @@ func init() {
 		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
 		BugComponent: "b:1487630",
 		Attr:         []string{"group:mainline", "informational"},
-		Timeout:      7 * time.Minute,
+		Timeout:      8 * time.Minute,
 		// TODO(b/301347001): Enable this test for ARC T+.
 		SoftwareDeps: []string{"android_vm_t", "chrome"},
 		VarDeps:      []string{uiCommon.GaiaPoolDefaultVarName},

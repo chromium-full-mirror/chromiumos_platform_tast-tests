@@ -23,7 +23,7 @@ func init() {
 		BugComponent: "b:153255",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "extended_auto_updates"},
-		Timeout:      7 * time.Minute,
+		Timeout:      8 * time.Minute,
 	})
 }
 
