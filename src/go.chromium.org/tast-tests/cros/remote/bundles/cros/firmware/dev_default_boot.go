@@ -151,6 +151,11 @@ func DevDefaultBoot(ctx context.Context, s *testing.State) {
 	if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
 		s.Fatal("Failed to warm reset dut: ", err)
 	}
+	waitDisconnectCtx, cancelWaitDisconnect := context.WithTimeout(ctx, 2*time.Minute)
+	defer cancelWaitDisconnect()
+	if err := h.DUT.WaitUnreachable(waitDisconnectCtx); err != nil {
+		s.Fatal("Failed to wait for DUT to become unreachable after sending a warm reset: ", err)
+	}
 
 	switch testOpt.trigger {
 	case triggerByTimeout:

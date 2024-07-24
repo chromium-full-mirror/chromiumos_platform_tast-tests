@@ -74,6 +74,11 @@ func DevBootUSBDisallowed(ctx context.Context, s *testing.State) {
 	if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
 		s.Fatal("Failed to warm reset dut: ", err)
 	}
+	waitDisconnectCtx, cancelWaitDisconnect := context.WithTimeout(ctx, 2*time.Minute)
+	defer cancelWaitDisconnect()
+	if err := h.DUT.WaitUnreachable(waitDisconnectCtx); err != nil {
+		s.Fatal("Failed to wait for DUT to become unreachable after sending a warm reset: ", err)
+	}
 	s.Logf("Sleeping for %s (FirmwareScreen) ", h.Config.FirmwareScreen)
 	// GoBigSleepLint: Delay to wait for the firmware screen during boot-up.
 	if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {

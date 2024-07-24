@@ -52,6 +52,11 @@ func DevBootTimeout(ctx context.Context, s *testing.State) {
 	if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
 		s.Fatal("Failed to warm reset the DUT: ", err)
 	}
+	waitDisconnectCtx, cancelWaitDisconnect := context.WithTimeout(ctx, 2*time.Minute)
+	defer cancelWaitDisconnect()
+	if err := h.DUT.WaitUnreachable(waitDisconnectCtx); err != nil {
+		s.Fatal("Failed to wait for DUT to become unreachable after sending a warm reset: ", err)
+	}
 	testing.ContextLog(ctx, "Waiting for the DUT to reconnect")
 	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.DelayRebootToPing+firmware.DevScreenTimeout)
 	defer cancelWaitConnect()
