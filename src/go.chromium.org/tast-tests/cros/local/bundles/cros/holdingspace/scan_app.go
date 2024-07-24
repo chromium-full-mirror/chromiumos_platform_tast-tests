@@ -37,18 +37,22 @@ func init() {
 			Key:   "feature_id",
 			Value: "screenplay-0d908149-1273-41b3-8c06-cb4ebf70892b",
 		}},
-		Fixture: "virtualUsbPrinterModulesLoadedWithChromeLoggedIn",
+		Fixture: "virtualUsbPrinterModulesLoaded",
 	})
 }
 
 // ScanApp tests the functionality of files existing in Holding Space by
 // saving a scanned file from the Scan app.
 func ScanApp(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
-
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
+
+	cr, err := chrome.New(ctx)
+	if err != nil {
+		s.Fatal("Failed to connect to Chrome: ", err)
+	}
+	defer cr.Close(cleanupCtx)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {

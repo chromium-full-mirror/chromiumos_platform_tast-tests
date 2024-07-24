@@ -44,7 +44,6 @@ func init() {
 			Key:   "feature_id",
 			Value: "screenplay-0d908149-1273-41b3-8c06-cb4ebf70892b",
 		}},
-		Fixture: "chromeLoggedIn",
 		Params: []testing.Param{{
 			Name: "single_file",
 			Val:/*count=*/ 1,
@@ -62,11 +61,16 @@ func init() {
 // Files app.
 func FilesAppDragAndDrop(ctx context.Context, s *testing.State) {
 	fileNum := s.Param().(int)
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
+
+	cr, err := chrome.New(ctx)
+	if err != nil {
+		s.Fatal("Failed to connect to Chrome: ", err)
+	}
+	defer cr.Close(cleanupCtx)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
