@@ -91,6 +91,7 @@ func initChromeRTCFixtures() {
 		Name:            chromeRTCFixtureGenerator.name,
 		Desc:            "Logged into a user session with rtc performance settings",
 		Contacts:        []string{"chromeos-rtc@google.com"},
+		BugComponent:    "b:1401297", // ChromeOS > Platform > Technologies > RTC
 		Parent:          "gpuWatchDog",
 		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
