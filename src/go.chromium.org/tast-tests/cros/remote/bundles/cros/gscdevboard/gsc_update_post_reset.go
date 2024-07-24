@@ -77,27 +77,33 @@ func GSCUpdatePostReset(ctx context.Context, s *testing.State) {
 		s.Fatal("Supply buildurl")
 	}
 
+	currentImage := f.ImagePath
+	debugImage := f.DebugImagePath
+
+	_, currentVer, _, _, err := b.GSCToolBinVersion(ctx, currentImage)
+	th.MustSucceed(err, "Unable to get version from current image "+currentImage)
+
+	_, debugVer, _, _, err := b.GSCToolBinVersion(ctx, debugImage)
+	th.MustSucceed(err, "Unable to get version from "+debugImage)
+
+	if debugVer.Less(currentVer) || debugVer == currentVer {
+		s.Fatal("DBG version must be greater than current version")
+	}
+
 	// Ti50 devices turn the update on when PLT_RST_L is asserted. Cr50 waits
 	// until it sees the TurnUpdateOn vendor command
 	turnUpdateOnWithVC := f.TestbedProperties.TestbedType == ti50.GscH1Shield
 
-	imageUnderTest := f.ImagePath
-	_, releaseVer, _, _, err := b.GSCToolBinVersion(ctx, imageUnderTest)
-	th.MustSucceed(err, "failed to parse image under test version")
-
-	s.Logf("Image under test %s: %s", releaseVer, imageUnderTest)
+	s.Logf("Image under test %s: %s", currentVer, currentImage)
 
 	// Connect Suzyq, so the test can update over ccd.
 	s.Log("Simulating insertion of SuzyQ and resetting")
-	b.ResetAndTpmStartupForBus(ctx, i, testBus, ti50.CcdSuzyQ, ti50.FfClamshell)
+	tpm := b.ResetAndTpmStartupForBus(ctx, i, testBus, ti50.CcdSuzyQ, ti50.FfClamshell)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
-
-	b.WaitUntilCCDConnected(ctx)
 
 	gpioMonitor := b.GpioMonitorStart(ctx, ti50.GpioTi50EcRstL)
 
-	// TODO(mruthven): use GSCToolPostReset after CL:5655336 lands.
-	out, _ := b.GSCToolCommand(ctx, imageUnderTest, "--post_reset")
+	out, _ := b.GSCToolCommandViaTPM(ctx, testBus, debugImage, "--post_reset")
 	// GSCTool responds with exit status 1 if the update passed. The error
 	// isn't useful. Check for "image updated" in the output.
 	if !reImageUpdated.Match(out) {
@@ -147,7 +153,6 @@ func GSCUpdatePostReset(ctx context.Context, s *testing.State) {
 	if bus != testBus {
 		s.Fatalf("TPM bus changed after deep sleep: expected %v got %v", testBus, bus)
 	}
-	tpm := b.Tpm(ctx, testBus)
 	b.WaitForTpmStartup(ctx, tpm)
 	// The AP typically uses a 1000ms delay.
 	tpm.TpmvTurnUpdateOn(1000)
