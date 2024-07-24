@@ -827,7 +827,7 @@ func NewArcBootedFixture(arcBootedFixtureConfig BootedFixtureConfig) testing.Fix
 			} else {
 				opts = append(opts, chrome.ARCEnabled())
 			}
-			return append(opts, chrome.DisableFeatures("ArcResizeLock", "AutocorrectByDefault")), nil
+			return append(opts, chrome.DisableFeatures("ArcResizeLock")), nil
 		},
 	}
 }
