@@ -351,6 +351,11 @@ func (ms *ModeSwitcher) RebootToMode(ctx context.Context, toMode fwCommon.BootMo
 			if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
 				return err
 			}
+			waitDisconnectCtx, cancelWaitDisconnect := context.WithTimeout(ctx, 2*time.Minute)
+			defer cancelWaitDisconnect()
+			if err := h.DUT.WaitUnreachable(waitDisconnectCtx); err != nil {
+				return errors.Wrap(err, "failed to wait for DUT to become unreachable after sending a warm reset")
+			}
 			// Depending on how we got to to dev mode, we might end up in normal mode or the recovery
 			// menu, so navigate to dev mode, but it that fails, fall through to the next attempt below.
 			if err := ms.RunBypasserUntilDUTConnected(ctx, devModeBypasserParams); err == nil {
@@ -390,6 +395,11 @@ func (ms *ModeSwitcher) RebootToMode(ctx context.Context, toMode fwCommon.BootMo
 			testing.ContextLog(ctx, "Rebooting to leave recovery mode")
 			if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
 				return err
+			}
+			waitDisconnectCtx, cancelWaitDisconnect := context.WithTimeout(ctx, 2*time.Minute)
+			defer cancelWaitDisconnect()
+			if err := h.DUT.WaitUnreachable(waitDisconnectCtx); err != nil {
+				return errors.Wrap(err, "failed to wait for DUT to become unreachable after sending a warm reset")
 			}
 			// Depending on how we got to to rec mode, we might end up in normal mode or the recovery
 			// menu, so navigate to dev mode, but it that fails, fall through to the next attempt below.
@@ -1067,6 +1077,11 @@ func (ms *ModeSwitcher) RebootToFirmwareScreen(ctx context.Context, fwScreen fwC
 		if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
 			return errors.Wrap(err, "failed to warm reset the DUT")
 		}
+		waitDisconnectCtx, cancelWaitDisconnect := context.WithTimeout(ctx, 2*time.Minute)
+		defer cancelWaitDisconnect()
+		if err := h.DUT.WaitUnreachable(waitDisconnectCtx); err != nil {
+			return errors.Wrap(err, "failed to wait for DUT to become unreachable after sending a warm reset")
+		}
 		durToFwScreen = h.Config.FirmwareScreenRecMode
 	case fwCommon.FwDeveloperScreen:
 		if !h.DUT.Connected(ctx) {
@@ -1083,6 +1098,11 @@ func (ms *ModeSwitcher) RebootToFirmwareScreen(ctx context.Context, fwScreen fwC
 		}
 		if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
 			return errors.Wrap(err, "failed to warm reset the DUT")
+		}
+		waitDisconnectCtx, cancelWaitDisconnect := context.WithTimeout(ctx, 2*time.Minute)
+		defer cancelWaitDisconnect()
+		if err := h.DUT.WaitUnreachable(waitDisconnectCtx); err != nil {
+			return errors.Wrap(err, "failed to wait for DUT to become unreachable after sending a warm reset")
 		}
 	case fwCommon.FwRecoveryScreen:
 		if err := ms.EnableRecMode(ctx, servo.PowerStateRec, servo.USBMuxOff); err != nil {
