@@ -488,7 +488,7 @@ func waitForS0State(ctx context.Context, pxy *servo.Proxy) (retErr error) {
 			return errors.New("failed to hit s5 state")
 		}
 		return nil
-	}, &testing.PollOptions{Interval: time.Millisecond * 200, Timeout: time.Minute}); err != nil {
+	}, &testing.PollOptions{Interval: time.Millisecond * 200, Timeout: 2 * time.Minute}); err != nil {
 		return errors.Wrap(err, "EC output parsing failed")
 	}
 	return nil
