@@ -39,7 +39,7 @@ func init() {
 		},
 		BugComponent:   "b:1318544", // ChromeOS > Software > System Services > Connectivity > General
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		Attr:           []string{"group:network", "network_e2e_unstable"},
+		Attr:           []string{"group:network", "network_e2e"},
 		SoftwareDeps:   []string{"chrome"},
 		Fixture:        "vpnEnv",
 		// This test performs login 2 times.
