@@ -66,7 +66,7 @@ func FullscreenMagnifier(ctx context.Context, s *testing.State) {
 		s.Fatal("Error when pressing the fullscreen magnifier keys: ", err)
 	}
 
-	// Make sure the dialog is shown to enable the feature.
+	// Make sure the dialog is shown to confirm the feature.
 	ui := uiauto.New(tconn).WithTimeout(10 * time.Second)
 	dialogText := nodewith.NameContaining("You pressed the keyboard shortcut for the full-screen magnifier").Onscreen()
 	if err := ui.WaitUntilExists(dialogText)(ctx); err != nil {
@@ -74,9 +74,9 @@ func FullscreenMagnifier(ctx context.Context, s *testing.State) {
 	}
 
 	// Accept the dialog using the button.
-	continueButton := nodewith.Name("Continue").Role(role.Button).Onscreen()
+	keepItOnButton := nodewith.Name("Keep it on").Role(role.Button).Onscreen()
 	if err := uiauto.Combine("Accept magnifier dialog",
-		ui.LeftClick(continueButton), ui.WaitUntilGone(dialogText))(ctx); err != nil {
+		ui.LeftClick(keepItOnButton), ui.WaitUntilGone(dialogText))(ctx); err != nil {
 		s.Fatal("Failed to accept the Full-screen magnifier dialog: ", err)
 	}
 
