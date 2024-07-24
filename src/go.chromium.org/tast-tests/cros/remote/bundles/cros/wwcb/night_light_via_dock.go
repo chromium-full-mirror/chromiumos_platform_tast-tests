@@ -106,6 +106,7 @@ func init() {
 			"tast.cros.wwcb.DisplayService",
 			"tast.cros.inputs.KeyboardService",
 			"tast.cros.ui.ChromeUIService",
+			"tast.cros.ui.ScreenRecorderService",
 		},
 		Params: []testing.Param{
 			{
@@ -139,6 +140,11 @@ func NightLightViaDock(ctx context.Context, s *testing.State) {
 
 	// Dump the UI tree and screenshot on any failure
 	utils.AttachErrorHandlersForUITreeDump(cleanupCtx, s, cl.Conn)
+
+	// Start screen recording, defer the stop and saving of said recording.
+	screenRecorder := ui.NewScreenRecorderServiceClient(cl.Conn)
+	utils.StartRecording(ctx, s, screenRecorder)
+	defer utils.StopAndSaveScreenRecording(cleanupCtx, s, screenRecorder)
 
 	fs := dutfs.NewClient(cl.Conn)
 	displaySvc := wwcb.NewDisplayServiceClient(cl.Conn)

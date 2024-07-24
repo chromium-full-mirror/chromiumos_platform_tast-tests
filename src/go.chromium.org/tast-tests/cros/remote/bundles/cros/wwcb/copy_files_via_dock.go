@@ -44,7 +44,7 @@ func init() {
 		Attr:         []string{"group:wwcb", "group:pasit"},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"DockingID", "USBTypeAIDArray", "wwcbIPPowerIp", "newTestItem"},
-		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.ui.ChromeUIService"},
+		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.ui.ChromeUIService", "tast.cros.ui.ScreenRecorderService"},
 		Data:         []string{"Capabilities.json", sampleTXT},
 		Timeout:      utils.TestingTimeout,
 		Params: []testing.Param{
@@ -87,6 +87,11 @@ func CopyFilesViaDock(ctx context.Context, s *testing.State) {
 
 	// Dump the UI tree and screenshot on any failure
 	utils.AttachErrorHandlersForUITreeDump(cleanupCtx, s, cl.Conn)
+
+	// Start screen recording, defer the stop and saving of said recording.
+	screenRecorder := ui.NewScreenRecorderServiceClient(cl.Conn)
+	utils.StartRecording(ctx, s, screenRecorder)
+	defer utils.StopAndSaveScreenRecording(cleanupCtx, s, screenRecorder)
 
 	// Open IP power to supply docking power.
 	if err := utils.OpenIppower(ctx, []int{1}); err != nil {

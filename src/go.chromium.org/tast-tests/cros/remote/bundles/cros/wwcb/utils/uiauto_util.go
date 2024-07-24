@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/golang/protobuf/ptypes/empty"
 	pb "go.chromium.org/tast-tests/cros/services/cros/apps"
 	inputspb "go.chromium.org/tast-tests/cros/services/cros/inputs"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
@@ -357,4 +358,29 @@ func AttachErrorHandlersForUITreeDump(cleanupCtx context.Context, s *testing.Sta
 			DumpUITreeWithScreenshotToFile(cleanupCtx, conn, "ui_dump_fatal")
 		},
 	)
+}
+
+// StartRecording starts a screen recording.
+func StartRecording(ctx context.Context, s *testing.State, screenRecorder ui.ScreenRecorderServiceClient) {
+	filePath := filepath.Join(s.OutDir(), "screenrecording.webm")
+	startRequest := ui.StartRequest{
+		FileName: filePath,
+	}
+	if _, err := screenRecorder.Start(ctx, &startRequest); err != nil {
+		s.Fatal("Failed to start recording: ", err)
+	}
+}
+
+// StopAndSaveScreenRecording stops and saves the screen recording to a
+// location that can be retrieved in the executed tests' log page.
+func StopAndSaveScreenRecording(ctx context.Context, s *testing.State, screenRecorder ui.ScreenRecorderServiceClient) {
+	stopRes, err := screenRecorder.Stop(ctx, &empty.Empty{})
+	if err != nil {
+		s.Log("Could not stop recording: ", err)
+	}
+
+	destPath := filepath.Join(s.OutDir(), filepath.Base(stopRes.FileName))
+	if err := linuxssh.GetFile(ctx, s.DUT().Conn(), stopRes.FileName, destPath, linuxssh.DereferenceSymlinks); err != nil {
+		s.Fatal("Failed to copy screen recording to logs location: ", err)
+	}
 }

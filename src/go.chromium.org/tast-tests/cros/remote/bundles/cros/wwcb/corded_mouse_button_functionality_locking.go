@@ -54,7 +54,6 @@ func CordedMouseButtonFunctionalityLocking(ctx context.Context, s *testing.State
 	defer cl.Close(cleanupCtx)
 
 	// Start Chrome on the DUT.
-	// cs := ui.NewChromeServiceClient(cl.Conn)
 	ns := nearbyservice.NewNearbyShareServiceClient(cl.Conn)
 	if _, err := ns.NewChromeLogin(ctx, &nearbyservice.CrOSLoginRequest{}); err != nil {
 		s.Fatal("Failed to start chrome: ", err)

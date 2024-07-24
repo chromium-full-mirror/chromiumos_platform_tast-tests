@@ -35,7 +35,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"servo"},
 		Fixture:      "wwcbStorage",
-		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.apps.AppsService", "tast.cros.ui.ChromeUIService"},
+		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.apps.AppsService", "tast.cros.ui.ChromeUIService", "tast.cros.ui.ScreenRecorderService"},
 		Data:         []string{"sample.txt"},
 		Params: []testing.Param{{
 			Name: "clamshell_mode",
@@ -136,6 +136,11 @@ func ExternalStorageSuspendAndResume(ctx context.Context, s *testing.State) {
 	}
 	// GoBigSleepLint: Sleep a little bit to ensure logging in.
 	testing.Sleep(ctx, 5*time.Second)
+
+	// Start screen recording, defer the stop and saving of said recording.
+	screenRecorder := ui.NewScreenRecorderServiceClient(cl.Conn)
+	utils.StartRecording(ctx, s, screenRecorder)
+	defer utils.StopAndSaveScreenRecording(cleanupCtx, s, screenRecorder)
 
 	// Launch the Files app.
 	appsSvc := pb.NewAppsServiceClient(cl.Conn)

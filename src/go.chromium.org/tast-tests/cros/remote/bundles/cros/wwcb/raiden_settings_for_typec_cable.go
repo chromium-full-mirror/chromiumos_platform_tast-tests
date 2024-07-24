@@ -38,7 +38,7 @@ func init() {
 			Name: "tablet_mode",
 			Val:  true,
 		}},
-		ServiceDeps: []string{"tast.cros.browser.ChromeService", "tast.cros.apps.AppsService", "tast.cros.ui.AutomationService", "tast.cros.ui.ChromeUIService"},
+		ServiceDeps: []string{"tast.cros.browser.ChromeService", "tast.cros.apps.AppsService", "tast.cros.ui.AutomationService", "tast.cros.ui.ChromeUIService", "tast.cros.ui.ScreenRecorderService"},
 	})
 }
 func RaidenSettingsForTypecCable(ctx context.Context, s *testing.State) {
@@ -91,6 +91,11 @@ func RaidenSettingsForTypecCable(ctx context.Context, s *testing.State) {
 
 	// Dump the UI tree and screenshot on any failure
 	utils.AttachErrorHandlersForUITreeDump(cleanupCtx, s, cl.Conn)
+
+	// Start screen recording, defer the stop and saving of said recording.
+	screenRecorder := ui.NewScreenRecorderServiceClient(cl.Conn)
+	utils.StartRecording(ctx, s, screenRecorder)
+	defer utils.StopAndSaveScreenRecording(cleanupCtx, s, screenRecorder)
 
 	appsSvc := pb.NewAppsServiceClient(cl.Conn)
 	uiautoSvc := ui.NewAutomationServiceClient(cl.Conn)

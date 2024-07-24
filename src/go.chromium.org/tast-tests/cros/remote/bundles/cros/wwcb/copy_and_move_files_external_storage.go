@@ -40,6 +40,7 @@ func init() {
 		ServiceDeps: []string{
 			"tast.cros.browser.ChromeService",
 			"tast.cros.ui.ChromeUIService",
+			"tast.cros.ui.ScreenRecorderService",
 		},
 	})
 }
@@ -80,6 +81,11 @@ func CopyAndMoveFilesExternalStorage(ctx context.Context, s *testing.State) {
 
 	// Dump the UI tree and screenshot on any failure
 	utils.AttachErrorHandlersForUITreeDump(cleanupCtx, s, cl.Conn)
+
+	// Start screen recording, defer the stop and saving of said recording.
+	screenRecorder := ui.NewScreenRecorderServiceClient(cl.Conn)
+	utils.StartRecording(ctx, s, screenRecorder)
+	defer utils.StopAndSaveScreenRecording(cleanupCtx, s, screenRecorder)
 
 	defer func(ctx context.Context) {
 		if s.HasError() {

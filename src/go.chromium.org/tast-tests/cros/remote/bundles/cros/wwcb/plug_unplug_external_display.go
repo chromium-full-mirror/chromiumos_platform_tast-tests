@@ -73,14 +73,9 @@ func PlugUnplugExternalDisplay(ctx context.Context, s *testing.State) {
 	}
 	defer cs.Close(cleanupCtx, &empty.Empty{})
 
-	s.AttachErrorHandlers(
-		func(errMsg string) {
-			utils.DumpUITreeWithScreenshotToFile(cleanupCtx, cl.Conn, "ui_dump_error")
-		},
-		func(errMsg string) {
-			utils.DumpUITreeWithScreenshotToFile(cleanupCtx, cl.Conn, "ui_dump_fatal")
-		},
-	)
+	// Dump the UI tree and screenshot on any failure
+	utils.AttachErrorHandlersForUITreeDump(cleanupCtx, s, cl.Conn)
+
 	// Initialize fixtures to find the connected devices.
 	if err := utils.InitFixture(ctx); err != nil {
 		s.Fatal("Failed to initialize the fixture: ", err)

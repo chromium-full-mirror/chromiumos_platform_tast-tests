@@ -38,6 +38,7 @@ func init() {
 			"tast.cros.ui.AutomationService",
 			"tast.cros.wwcb.DisplayService",
 			"tast.cros.ui.ChromeUIService",
+			"tast.cros.ui.ScreenRecorderService",
 		},
 	})
 }
@@ -67,6 +68,11 @@ func CCALaunchWithExternalCamera(ctx context.Context, s *testing.State) {
 
 	// Dump the UI tree and screenshot on any failure
 	utils.AttachErrorHandlersForUITreeDump(cleanupCtx, s, cl.Conn)
+
+	// Start screen recording, defer the stop and saving of said recording.
+	screenRecorder := ui.NewScreenRecorderServiceClient(cl.Conn)
+	utils.StartRecording(ctx, s, screenRecorder)
+	defer utils.StopAndSaveScreenRecording(cleanupCtx, s, screenRecorder)
 
 	// Check USB webcam can be detect properly (lsusb, dmesg, etc...).
 	builtinDevices, err := utils.DevicesFromV4L2(ctx, dut)

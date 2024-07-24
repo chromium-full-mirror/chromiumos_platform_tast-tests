@@ -29,7 +29,11 @@ func init() {
 		Attr:         []string{"group:wwcb", "group:pasit", "pasit_hid"},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"USBID"},
-		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.ui.AutomationService", "tast.cros.ui.ChromeUIService"},
+		ServiceDeps: []string{"tast.cros.browser.ChromeService",
+			"tast.cros.ui.AutomationService",
+			"tast.cros.ui.ChromeUIService",
+			"tast.cros.ui.ScreenRecorderService",
+		},
 	})
 }
 func ShortKeysCombinationsWithEmulator(ctx context.Context, s *testing.State) {
@@ -67,6 +71,12 @@ func ShortKeysCombinationsWithEmulator(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start chrome after power the chrombook on: ", err)
 	}
 	defer cs.Close(cleanupCtx, &empty.Empty{})
+
+	// Start screen recording, defer the stop and saving of said recording.
+	screenRecorder := ui.NewScreenRecorderServiceClient(cl.Conn)
+	utils.StartRecording(ctx, s, screenRecorder)
+	defer utils.StopAndSaveScreenRecording(cleanupCtx, s, screenRecorder)
+
 	// Plug in the USB devices.
 	if err := utils.ControlFixture(ctx, USBID, "on"); err != nil {
 		s.Fatal("Failed to control fixture to connect the corded keyboard: ", err)

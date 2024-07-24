@@ -35,7 +35,7 @@ func init() {
 		Attr:         []string{"group:wwcb", "group:pasit", "pasit_storage"},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"servo"},
-		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.apps.AppsService", "tast.cros.wwcb.ExternalStorageService", "tast.cros.ui.ChromeUIService"},
+		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.apps.AppsService", "tast.cros.wwcb.ExternalStorageService", "tast.cros.ui.ChromeUIService", "tast.cros.ui.ScreenRecorderService"},
 		Data:         []string{"sample.txt"},
 		Params: []testing.Param{{
 			Name:    "clamshell_mode",
@@ -97,6 +97,11 @@ func ExternalStorageEject(ctx context.Context, s *testing.State) {
 
 	// Dump the UI tree and screenshot on any failure
 	utils.AttachErrorHandlersForUITreeDump(cleanupCtx, s, cl.Conn)
+
+	// Start screen recording, defer the stop and saving of said recording
+	screenRecorder := ui.NewScreenRecorderServiceClient(cl.Conn)
+	utils.StartRecording(ctx, s, screenRecorder)
+	defer utils.StopAndSaveScreenRecording(cleanupCtx, s, screenRecorder)
 
 	// Retrieve removable block devices' mount points.
 	mountPointsAfterPlugInUSB, err := utils.RemovableMountPoints(ctx, dut)
