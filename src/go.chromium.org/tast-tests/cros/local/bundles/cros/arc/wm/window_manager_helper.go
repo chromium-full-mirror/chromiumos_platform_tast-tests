@@ -614,7 +614,6 @@ func SetupAndRunTestCases(ctx context.Context, s *testing.State, isTabletMode bo
 
 	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, isTabletMode)
 	if err != nil {
-
 		s.Fatal("Failed to ensure if tablet mode is ",
 			func() string {
 				if isTabletMode {
@@ -624,6 +623,10 @@ func SetupAndRunTestCases(ctx context.Context, s *testing.State, isTabletMode bo
 			}(), err)
 	}
 	defer cleanup(ctx)
+
+	if err := WaitForDeviceModeChangeApplied(ctx); err != nil {
+		s.Fatal("Failed to wait for device mode change: ", err)
+	}
 
 	for _, test := range testCases {
 		s.Logf("Running test %q", test.Name)
