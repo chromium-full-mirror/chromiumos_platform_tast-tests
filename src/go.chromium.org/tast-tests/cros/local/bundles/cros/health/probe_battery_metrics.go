@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/jsontypes"
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/power/metrics"
+	"go.chromium.org/tast-tests/cros/local/upstart"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -160,6 +161,10 @@ func validateBatteryData(ctx context.Context, battery *batteryInfo) error {
 }
 
 func ProbeBatteryMetrics(ctx context.Context, s *testing.State) {
+	if err := upstart.EnsureJobRunning(ctx, "powerd"); err != nil {
+		s.Fatal("Failed to ensure the powerd service is running: ", err)
+	}
+
 	params := croshealthd.TelemParams{Category: croshealthd.TelemCategoryBattery}
 	var battery batteryInfo
 	if err := croshealthd.RunAndParseJSONTelem(ctx, params, s.OutDir(), &battery); err != nil {

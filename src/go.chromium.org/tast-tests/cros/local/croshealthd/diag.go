@@ -134,6 +134,15 @@ func NewRoutineParams(routine string) RoutineParams {
 // RoutineResult on success or an error.
 func RunDiagRoutine(ctx context.Context, params RoutineParams) (*RoutineResult, error) {
 	testing.ContextLogf(ctx, "Running routine: %s", params.Routine)
+
+	// Ensure required services are running.
+	if params.Routine == RoutineBatteryCapacity ||
+		params.Routine == RoutineBatteryHealth {
+		if err := upstart.EnsureJobRunning(ctx, "powerd"); err != nil {
+			return nil, errors.Wrap(err, "failed to ensure the powerd service is running")
+		}
+	}
+
 	diagParams := []string{params.Routine}
 	if params.Cancel {
 		diagParams = append(diagParams, "--force_cancel_at_percent=5")
