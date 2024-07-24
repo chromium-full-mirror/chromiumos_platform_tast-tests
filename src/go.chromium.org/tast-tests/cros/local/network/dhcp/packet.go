@@ -1072,7 +1072,10 @@ func (d *dhcpPacket) marshal() ([]byte, error) {
 		}
 	}
 	data = append(data, optionEnd)
-	return append(data, bytes.Repeat([]byte{optionPad}, minPacketSize-len(data))...), nil
+	if len(data) < minPacketSize {
+		data = append(data, bytes.Repeat([]byte{optionPad}, minPacketSize-len(data))...)
+	}
+	return data, nil
 }
 
 func (d *dhcpPacket) String() string {
