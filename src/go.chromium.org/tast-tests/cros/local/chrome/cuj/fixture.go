@@ -40,6 +40,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/power"
 	pm "go.chromium.org/tast-tests/cros/local/power/metrics"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
+	pUtil "go.chromium.org/tast-tests/cros/local/power/util"
 	"go.chromium.org/tast-tests/cros/local/pvsched"
 	"go.chromium.org/tast-tests/cros/local/sysutil"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
@@ -1244,12 +1245,17 @@ func chargeBatteryCapacity(ctx context.Context, minimumBatteryCapacity float64, 
 // is lower than a pre-defined level when the disableChargeBatteryBeforeTest variable is not true.
 // This is usually added before the case execution.
 func chargeBatteryCapacityBeforePowerTest(ctx context.Context, minBatteryCapacity float64) error {
+	if !pUtil.SupportChromeEC() {
+		return nil
+	}
+
 	if strings.ToLower(disableChargeBatteryBeforeTest.Value()) != "true" {
 		// Wait for battery to be charged.
 		err := chargeBatteryCapacity(ctx, minBatteryCapacity, chargeBatteryTestPollOpt)
 		if err != nil {
 			if errors.Is(err, pm.ErrNoBattery) {
-				return errors.Wrap(err, "battery not found")
+				testing.ContextLog(ctx, "Battery not found")
+				return nil
 			}
 			return errors.Wrap(err, "battery failed to be charged to minimum level")
 		}
