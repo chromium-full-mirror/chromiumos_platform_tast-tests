@@ -20,7 +20,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            fixture.ChameleonAudioTestbed,
 		Desc:            "Access Chameleond XMLRPC service",
-		Contacts:        []string{"yunjunlee@google.com"},
+		Contacts:        []string{"crosep-intertech@google.com"},
 		Impl:            ChameleonAudioTestbedFixture{},
 		SetUpTimeout:    20 * time.Second,
 		TearDownTimeout: 20 * time.Second,
