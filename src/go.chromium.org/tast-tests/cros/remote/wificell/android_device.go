@@ -41,6 +41,7 @@ type p2pAndroidDeviceData struct {
 	frequency  uint32
 	iPv4       string
 	mac        string
+	role       P2PDeviceRole
 }
 
 const (
@@ -215,12 +216,16 @@ func (ad *androidDeviceData) P2PGroupCreate(ctx context.Context, ops ...p2p.Grou
 		return err
 	}
 
+	ad.p2p.role = P2PDeviceRoleGO
 	ad.p2p.ifName = iface
 	ad.p2p.iPv4 = ipAddr
 	ad.p2p.mac = macAddr
 	ad.p2p.ssid = p2pAndroidDeviceNetworkSSID
 	ad.p2p.passphrase = p2pAndroidDevicePassphrase
 	ad.p2p.frequency = uint32(p2p.Freq(ops...))
+	if err = ad.P2PDeviceInfoUpdate(ctx); err != nil {
+		return err
+	}
 
 	testing.ContextLog(ctx, "P2P Group owner (GO): Configured")
 
@@ -260,12 +265,16 @@ func (ad *androidDeviceData) P2PGroupConnect(ctx context.Context, device P2PWiFi
 		return err
 	}
 
+	ad.p2p.role = P2PDeviceRoleClient
 	ad.p2p.ifName = iface
 	ad.p2p.iPv4 = ipAddr
 	ad.p2p.mac = macAddr
 	ad.p2p.ssid = device.P2PSSID()
 	ad.p2p.passphrase = device.P2PPassphrase()
 	ad.p2p.frequency = device.P2PFrequency()
+	if err = ad.P2PDeviceInfoUpdate(ctx); err != nil {
+		return err
+	}
 
 	testing.ContextLog(ctx, "The p2p client connected to the p2p group owner (GO) network")
 
@@ -287,5 +296,11 @@ func (ad *androidDeviceData) P2PGroupDisconnect(ctx context.Context) error {
 
 	testing.ContextLog(ctx, "The p2p client disconnected from the p2p group owner (GO) network")
 
+	return nil
+}
+
+// P2PDeviceInfoUpdate returns the p2p group information.
+func (ad *androidDeviceData) P2PDeviceInfoUpdate(ctx context.Context) error {
+	// TODO(b/334194299): Implement this function.
 	return nil
 }

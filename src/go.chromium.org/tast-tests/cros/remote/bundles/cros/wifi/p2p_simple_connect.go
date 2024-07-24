@@ -135,6 +135,10 @@ func P2PSimpleConnect(ctx context.Context, s *testing.State) {
 	ctx, cancel = tf.ReserveForDeconfigP2P(ctx)
 	defer cancel()
 
+	if err := tf.P2PDevicesInfoUpdate(ctx); err != nil {
+		s.Fatal("Failed to get the p2p device information: ", err)
+	}
+
 	if err := tf.P2PAssertPingFromGO(ctx); err != nil {
 		s.Fatal("Failed to ping the p2p client from the p2p group owner (GO): ", err)
 	}

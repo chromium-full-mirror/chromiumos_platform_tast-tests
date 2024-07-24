@@ -46,6 +46,15 @@ func (r *Runner) p2pFlush(ctx context.Context) error {
 	return r.run(ctx, "OK", "p2p_flush")
 }
 
+// p2pPassphrase returns the p2p passphrase.
+func (r *Runner) p2pPassphrase(ctx context.Context) (string, error) {
+	cmdOut, err := r.cmd.Output(ctx, "sudo", r.sudoWPACLI("p2p_get_passphrase")...)
+	if err != nil {
+		return "", errors.Wrap(err, "failed running wpa_cli add_network")
+	}
+	return string(cmdOut), nil
+}
+
 // p2pAddNetwork adds the GO network in the client device.
 func (r *Runner) p2pAddNetwork(ctx context.Context, ssid, passphrase string) (int, error) {
 	successfulRun := false
@@ -250,4 +259,25 @@ func (r *Runner) P2PGroupDisconnect(ctx context.Context, ipr *ip.Runner,
 		testing.ContextLog(ctx, "P2P Client: Deconfigured")
 	}
 	return
+}
+
+// P2PLinkInfo returns the p2p link information.
+func (r *Runner) P2PLinkInfo(ctx context.Context) (
+	string, string, string, uint32, error) {
+	passphrase, err := r.p2pPassphrase(ctx)
+	if err != nil {
+		return "", "", "", 0, err
+	}
+
+	ssid, mac, freq, err := r.Status(ctx)
+	if err != nil {
+		return "", passphrase, "", 0, err
+	}
+
+	retFreq, err := strconv.Atoi(freq)
+	if err != nil {
+		return "", passphrase, "", 0, err
+	}
+
+	return ssid, passphrase, mac, uint32(retFreq), nil
 }

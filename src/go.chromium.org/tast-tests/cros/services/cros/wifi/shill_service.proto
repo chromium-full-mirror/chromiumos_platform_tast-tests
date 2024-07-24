@@ -283,6 +283,9 @@ service ShillService {
   rpc P2PGroupDisconnect(P2PGroupDisconnectRequest)
       returns (P2PGroupDisconnectResponse) {}
 
+  // P2PDeviceInfo returns WiFi Direct Group/Client information.
+  rpc P2PDeviceInfo(P2PDeviceInfoRequest) returns (P2PDeviceInfoResponse) {}
+
   // StartTethering attempts to start a tethering session.
   rpc StartTethering(TetheringRequest) returns (TetheringResponse) {}
 
@@ -694,6 +697,24 @@ message P2PGroupDisconnectRequest {
 
 message P2PGroupDisconnectResponse {
   google.protobuf.Duration execution_time = 1;
+}
+
+// P2P-related definitions
+enum P2PDeviceRoleEnum {
+  GO = 0;
+  CLIENT = 1;
+}
+
+message P2PDeviceInfoRequest {
+  InvokeMethodEnum method = 1;
+  string id = 2;
+  P2PDeviceRoleEnum role = 3;
+}
+
+message P2PDeviceInfoResponse {
+  string if_name = 1;
+  P2PData data = 2;
+  string mac_address = 3;
 }
 
 message TetheringRequest {

@@ -37,6 +37,15 @@ const (
 	AndroidDevice
 )
 
+// P2PDeviceRole is the type of p2p role.
+type P2PDeviceRole string
+
+// P2P roles (possible roles of a p2p device).
+const (
+	P2PDeviceRoleGO     P2PDeviceRole = "GO"
+	P2PDeviceRoleClient P2PDeviceRole = "Client"
+)
+
 // WiFiDevice is any Device that can perform certain WiFi-related operations.
 // This can be Chromebook, Android, RPi, whatever.
 type WiFiDevice interface {
@@ -78,4 +87,6 @@ type P2PWiFiDevice interface {
 	P2PGroupConnect(ctx context.Context, device P2PWiFiDevice) error
 	// P2PGroupDisconnect handles disconnection from the existing WiFi Direct Group.
 	P2PGroupDisconnect(ctx context.Context) error
+	// P2PDeviceInfoUpdate updates the WiFi Direct Group/Client Information.
+	P2PDeviceInfoUpdate(ctx context.Context) error
 }

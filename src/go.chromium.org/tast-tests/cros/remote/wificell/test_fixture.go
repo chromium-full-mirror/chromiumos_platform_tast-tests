@@ -1929,6 +1929,17 @@ func (tf *TestFixture) P2PDisconnect(ctx context.Context) (err error) {
 	return tf.p2pClient.P2PGroupDisconnect(ctx)
 }
 
+// P2PDevicesInfoUpdate updates the P2P Group/Client information.
+func (tf *TestFixture) P2PDevicesInfoUpdate(ctx context.Context) (err error) {
+	if err := tf.p2pGO.P2PDeviceInfoUpdate(ctx); err != nil {
+		return err
+	}
+	if err := tf.p2pClient.P2PDeviceInfoUpdate(ctx); err != nil {
+		return err
+	}
+	return nil
+}
+
 // AssertConnectionBetweenP2PDevices check connectivity (ping) between tow devices using their P2P interfaces.
 func (tf *TestFixture) AssertConnectionBetweenP2PDevices(ctx context.Context, src, dest P2PWiFiDevice, srcIfType, dstIfType IfaceType, opts ...ping.Option) error {
 	res, err := src.PingDevice(ctx, dest, srcIfType, dstIfType, opts...)

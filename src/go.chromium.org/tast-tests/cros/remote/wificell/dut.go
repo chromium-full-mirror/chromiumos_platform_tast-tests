@@ -57,6 +57,7 @@ type p2pDutData struct {
 	passphrase string
 	frequency  uint32
 	mac        string
+	role       P2PDeviceRole
 }
 
 // The below is WiFiDevice interface's implementation:
@@ -182,6 +183,7 @@ func (dd *dutData) P2PGroupCreate(ctx context.Context, ops ...p2p.GroupOption) e
 		return err
 	}
 	dd.p2p.id = ret.Id
+	dd.p2p.role = P2PDeviceRoleGO
 	dd.p2p.ifName = ret.IfName
 	dd.p2p.ssid = ret.Data.Ssid
 	dd.p2p.passphrase = ret.Data.Key
@@ -227,10 +229,14 @@ func (dd *dutData) P2PGroupConnect(ctx context.Context, device P2PWiFiDevice) er
 		return err
 	}
 	dd.p2p.id = ret.Id
+	dd.p2p.role = P2PDeviceRoleClient
 	dd.p2p.ifName = ret.IfName
 	dd.p2p.netID = ret.NetworkId
-	dd.p2p.frequency = device.P2PFrequency()
 	dd.p2p.mac = ret.MacAddress
+	dd.p2p.frequency = device.P2PFrequency()
+	if err = dd.P2PDeviceInfoUpdate(ctx); err != nil {
+		return err
+	}
 	testing.ContextLogf(ctx, "The p2p client connected to the p2p group owner (GO) network in %vms",
 		ret.ExecutionTime.AsDuration().Milliseconds())
 	return err
@@ -253,5 +259,41 @@ func (dd *dutData) P2PGroupDisconnect(ctx context.Context) error {
 	dd.p2p.ifName = ""
 	dd.p2p.mac = ""
 	dd.p2p.netID = -1
+	return nil
+}
+
+// P2PDeviceInfoUpdate updates the p2p group/client information.
+func (dd *dutData) P2PDeviceInfoUpdate(ctx context.Context) error {
+	var role wifi.P2PDeviceRoleEnum
+	if dd.p2p.role == P2PDeviceRoleGO {
+		role = wifi.P2PDeviceRoleEnum_GO
+	} else {
+		role = wifi.P2PDeviceRoleEnum_CLIENT
+	}
+	request := &wifi.P2PDeviceInfoRequest{
+		Method: defaultRPCInvokeMethod,
+		Id:     dd.p2p.id,
+		Role:   role,
+	}
+
+	ret, err := dd.wifiClient.P2PDeviceInfo(ctx, request)
+	if err != nil {
+		return err
+	}
+
+	testing.ContextLogf(ctx, "The P2P %s information: Interface Name = %s, SSID = %s, Key = %s, Frequency = %d, MAC Address = %s",
+		dd.p2p.role,
+		ret.IfName,
+		ret.Data.Ssid,
+		ret.Data.Key,
+		ret.Data.Freq,
+		ret.MacAddress)
+
+	// Update the frequency.
+	if dd.p2p.frequency != ret.Data.Freq {
+		testing.ContextLogf(ctx, "The P2P frequency has changed: old freq = %d, new freq = %d", dd.p2p.frequency, ret.Data.Freq)
+		dd.p2p.frequency = ret.Data.Freq
+	}
+
 	return nil
 }

@@ -3328,21 +3328,21 @@ func (s *ShillService) p2pGroupCreateShillAPI(ctx context.Context, request *wifi
 	}(cleanupCtx)
 
 	// Check if the group is active.
-	params, err := waitForP2PGroupActive(ctx, manager, shillID)
+	params, err := waitForP2PDeviceActive(ctx, wifi.P2PDeviceRoleEnum_GO, manager, shillID)
 	if err != nil {
 		return nil, err
 	}
 
 	testing.ContextLogf(ctx, "P2P Group owner (GO) %s: Configured on %s",
-		params[shillconst.P2PGroupInfoSSIDProperty].(string), params[shillconst.P2PGroupInfoInterfaceProperty].(string))
+		params[shillconst.P2PClientInfoSSIDProperty].(string), params[shillconst.P2PClientInfoInterfaceProperty].(string))
 	ret = &wifi.P2PGroupCreateResponse{
 		Id:     strconv.Itoa(int(shillID)),
-		IfName: params[shillconst.P2PGroupInfoInterfaceProperty].(string),
+		IfName: params[shillconst.P2PClientInfoInterfaceProperty].(string),
 		Data: &wifi.P2PData{
-			Ssid: params[shillconst.P2PGroupInfoSSIDProperty].(string),
-			Key:  params[shillconst.P2PGroupInfoPassphraseProperty].(string),
-			Freq: uint32(params[shillconst.P2PGroupInfoFrequencyProperty].(int32))},
-		MacAddress: params[shillconst.P2PGroupInfoMACAddressProperty].(string),
+			Ssid: params[shillconst.P2PClientInfoSSIDProperty].(string),
+			Key:  params[shillconst.P2PClientInfoPassphraseProperty].(string),
+			Freq: uint32(params[shillconst.P2PClientInfoFrequencyProperty].(int32))},
+		MacAddress: params[shillconst.P2PClientInfoMACAddressProperty].(string),
 	}
 	return
 }
@@ -3496,23 +3496,57 @@ func (s *ShillService) p2pGroupDisconnectShillAPI(ctx context.Context, request *
 	return
 }
 
-// waitForP2PGroupActive polls P2PGroupInfos until the status is correct.
-func waitForP2PGroupActive(ctx context.Context, manager *shill.Manager, shillID int32) (
+// waitForP2PDeviceActive polls P2PDeviceInfos until the status is correct and returns it's information.
+func waitForP2PDeviceActive(ctx context.Context, role wifi.P2PDeviceRoleEnum, manager *shill.Manager, shillID int32) (
 	retParams map[string]interface{}, retErr error) {
 	const waitForP2PGroupStartedTimeout = 30 * time.Second
 	const waitForP2PGroupStartedInterval = 500 * time.Millisecond
-	var groupInfo *dbusutil.Properties
+	var err error
+	var deviceInfos []*dbusutil.Properties
+	var deviceInfo *dbusutil.Properties
+	var shillP2PDeviceInfoShillIDProperty, shillP2PDeviceInfoStateProperty,
+		shillP2PDeviceInfoStateActive, shillP2PDeviceInfoSSIDProperty,
+		shillP2PDeviceInfoPassphraseProperty, shillP2PDeviceInfoInterfaceProperty,
+		shillP2PDeviceInfoFrequencyProperty, shillP2PDeviceInfoMACAddressProperty string
+	ctx, cancel := reserveForReturn(ctx)
+	defer cancel()
+	defer logErrorStacks(ctx, &retErr)
+
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		groupInfos, err := manager.P2PGroupInfos(ctx)
-		if err != nil {
-			return testing.PollBreak(errors.Wrap(err, "failed to get P2P Group info"))
+		switch role {
+		case wifi.P2PDeviceRoleEnum_GO:
+			deviceInfos, err = manager.P2PGroupInfos(ctx)
+			if err != nil {
+				return testing.PollBreak(errors.Wrap(err, "failed to get P2P Group info"))
+			}
+			shillP2PDeviceInfoShillIDProperty = shillconst.P2PGroupInfoShillIDProperty
+			shillP2PDeviceInfoStateProperty = shillconst.P2PGroupInfoStateProperty
+			shillP2PDeviceInfoSSIDProperty = shillconst.P2PGroupInfoSSIDProperty
+			shillP2PDeviceInfoPassphraseProperty = shillconst.P2PGroupInfoPassphraseProperty
+			shillP2PDeviceInfoInterfaceProperty = shillconst.P2PGroupInfoInterfaceProperty
+			shillP2PDeviceInfoFrequencyProperty = shillconst.P2PGroupInfoFrequencyProperty
+			shillP2PDeviceInfoMACAddressProperty = shillconst.P2PGroupInfoMACAddressProperty
+		case wifi.P2PDeviceRoleEnum_CLIENT:
+			deviceInfos, err = manager.P2PClientInfos(ctx)
+			if err != nil {
+				return testing.PollBreak(errors.Wrap(err, "failed to get P2P Client info"))
+			}
+			shillP2PDeviceInfoShillIDProperty = shillconst.P2PClientInfoShillIDProperty
+			shillP2PDeviceInfoStateProperty = shillconst.P2PClientInfoStateProperty
+			shillP2PDeviceInfoSSIDProperty = shillconst.P2PClientInfoSSIDProperty
+			shillP2PDeviceInfoPassphraseProperty = shillconst.P2PClientInfoPassphraseProperty
+			shillP2PDeviceInfoInterfaceProperty = shillconst.P2PClientInfoInterfaceProperty
+			shillP2PDeviceInfoFrequencyProperty = shillconst.P2PClientInfoFrequencyProperty
+			shillP2PDeviceInfoMACAddressProperty = shillconst.P2PClientInfoMACAddressProperty
+		default:
+			return testing.PollBreak(errors.Errorf("Invoke role %q not implemented yet", role))
 		}
 
-		// Look for groupInfo entry with particular shillID.
-		for _, groupInfo = range groupInfos {
-			testing.ContextLog(ctx, "Received P2P group info: ", groupInfo)
+		// Look for deviceInfo entry with particular shillID.
+		for _, deviceInfo = range deviceInfos {
+			testing.ContextLog(ctx, "Received P2P group info: ", deviceInfo)
 
-			id, err := groupInfo.Get(shillconst.P2PGroupInfoShillIDProperty)
+			id, err := deviceInfo.Get(shillP2PDeviceInfoShillIDProperty)
 			if err != nil {
 				return errors.Wrap(err, "shill id not found in properties")
 			}
@@ -3524,17 +3558,17 @@ func waitForP2PGroupActive(ctx context.Context, manager *shill.Manager, shillID 
 				continue
 			}
 			// Now check if the status is correct.
-			state, err := groupInfo.Get(shillconst.P2PGroupInfoStateProperty)
+			state, err := deviceInfo.Get(shillP2PDeviceInfoStateProperty)
 			if err != nil {
 				return errors.Wrap(err, "state not found in properties")
 			}
-			if state.(string) != shillconst.P2PGroupInfoStateActive {
+			if state.(string) != shillconst.P2PGroupInfoStateActive && state.(string) != shillconst.P2PClientInfoStateConnected {
 				return errors.Errorf("bad P2P group state, got %s, want %s",
-					state.(string), shillconst.P2PGroupInfoStateActive)
+					state.(string), shillP2PDeviceInfoStateActive)
 			}
 			return nil // Success.
 		}
-		return errors.Errorf("Group with shillId=%v, not found in groupInfos", shillID)
+		return errors.Errorf("Group with shillId=%v, not found in deviceInfos", shillID)
 
 	}, &testing.PollOptions{
 		Timeout:  waitForP2PGroupStartedTimeout,
@@ -3543,33 +3577,107 @@ func waitForP2PGroupActive(ctx context.Context, manager *shill.Manager, shillID 
 		return nil, err
 	}
 
-	ssid, err := groupInfo.Get(shillconst.P2PGroupInfoSSIDProperty)
+	ssid, err := deviceInfo.Get(shillP2PDeviceInfoSSIDProperty)
 	if err != nil {
 		return nil, errors.Wrap(err, "ssid not found in properties")
 	}
-	key, err := groupInfo.Get(shillconst.P2PGroupInfoPassphraseProperty)
+	key, err := deviceInfo.Get(shillP2PDeviceInfoPassphraseProperty)
 	if err != nil {
 		return nil, errors.Wrap(err, "passphrase not found in properties")
 	}
-	ifName, err := groupInfo.Get(shillconst.P2PGroupInfoInterfaceProperty)
+	ifName, err := deviceInfo.Get(shillP2PDeviceInfoInterfaceProperty)
 	if err != nil {
 		return nil, errors.Wrap(err, "interface name not found in properties")
 	}
-	freq, err := groupInfo.Get(shillconst.P2PGroupInfoFrequencyProperty)
+	freq, err := deviceInfo.Get(shillP2PDeviceInfoFrequencyProperty)
 	if err != nil {
 		return nil, errors.Wrap(err, "frequency not found in properties")
 	}
-	mac, err := groupInfo.Get(shillconst.P2PGroupInfoMACAddressProperty)
+	mac, err := deviceInfo.Get(shillP2PDeviceInfoMACAddressProperty)
 	if err != nil {
 		return nil, errors.Wrap(err, "MAC Address not found in properties")
 	}
 
 	retParams = make(map[string]interface{})
-	retParams[shillconst.P2PGroupInfoSSIDProperty] = ssid
-	retParams[shillconst.P2PGroupInfoPassphraseProperty] = key
-	retParams[shillconst.P2PGroupInfoInterfaceProperty] = ifName
-	retParams[shillconst.P2PGroupInfoFrequencyProperty] = freq
-	retParams[shillconst.P2PGroupInfoMACAddressProperty] = mac
+	retParams[shillP2PDeviceInfoSSIDProperty] = ssid
+	retParams[shillP2PDeviceInfoPassphraseProperty] = key
+	retParams[shillP2PDeviceInfoInterfaceProperty] = ifName
+	retParams[shillP2PDeviceInfoFrequencyProperty] = freq
+	retParams[shillP2PDeviceInfoMACAddressProperty] = mac
+	return
+}
+
+// P2PDeviceInfo returns WiFi Direct Group/Client information.
+func (s *ShillService) P2PDeviceInfo(ctx context.Context, request *wifi.P2PDeviceInfoRequest) (
+	ret *wifi.P2PDeviceInfoResponse, retErr error) {
+	ctx, cancel := reserveForReturn(ctx)
+	defer cancel()
+	defer logErrorStacks(ctx, &retErr)
+
+	// Use invoke method given during P2PGroupCreate.
+	switch s.method {
+	case wifi.InvokeMethodEnum_WPA_CLI:
+		ret, retErr = s.p2pDeviceInfoWPACLI(ctx, request)
+	case wifi.InvokeMethodEnum_SHILL_API:
+		ret, retErr = s.p2pDeviceInfoShillAPI(ctx, request)
+	default:
+		retErr = errors.Errorf("Invoke method %q not implemented yet", s.method)
+	}
+
+	return
+}
+
+// p2pDeviceInfoWPACLI uses WPA CLI to return WiFi Direct Group/Client information.
+func (s *ShillService) p2pDeviceInfoWPACLI(ctx context.Context, request *wifi.P2PDeviceInfoRequest) (
+	ret *wifi.P2PDeviceInfoResponse, retErr error) {
+	wpar := localwpacli.NewLocalRunnerOnIface(request.Id)
+	ssid, key, mac, freq, err := wpar.P2PLinkInfo(ctx)
+	if err != nil {
+		return &wifi.P2PDeviceInfoResponse{}, err
+	}
+
+	ret = &wifi.P2PDeviceInfoResponse{
+		IfName: request.Id,
+		Data: &wifi.P2PData{
+			Ssid: ssid,
+			Key:  key,
+			Freq: uint32(freq)},
+		MacAddress: mac,
+	}
+	return
+}
+
+// p2pDeviceInfoShillAPI uses Shill API to return WiFi Direct Group/Client information.
+func (s *ShillService) p2pDeviceInfoShillAPI(ctx context.Context, request *wifi.P2PDeviceInfoRequest) (
+	ret *wifi.P2PDeviceInfoResponse, retErr error) {
+	ctx, cancel := reserveForReturn(ctx)
+	defer cancel()
+	defer logErrorStacks(ctx, &retErr)
+
+	manager, err := shill.NewManager(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create shill manager proxy")
+	}
+
+	shillID, err := strconv.Atoi(request.Id)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to convert shillID")
+	}
+
+	// Check if the group is active.
+	params, err := waitForP2PDeviceActive(ctx, request.Role, manager, int32(shillID))
+	if err != nil {
+		return nil, err
+	}
+
+	ret = &wifi.P2PDeviceInfoResponse{
+		IfName: params[shillconst.P2PClientInfoInterfaceProperty].(string),
+		Data: &wifi.P2PData{
+			Ssid: params[shillconst.P2PClientInfoSSIDProperty].(string),
+			Key:  params[shillconst.P2PClientInfoPassphraseProperty].(string),
+			Freq: uint32(params[shillconst.P2PClientInfoFrequencyProperty].(int32))},
+		MacAddress: params[shillconst.P2PClientInfoMACAddressProperty].(string),
+	}
 	return
 }
 
