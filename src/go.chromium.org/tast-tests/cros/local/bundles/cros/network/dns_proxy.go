@@ -187,12 +187,22 @@ func DNSProxy(ctx context.Context, s *testing.State) {
 	}
 	defer cleanup(cleanupCtx)
 
-	// Make sure that ARC gets the DNS proxy address before proceeding the tests.
 	if params.arc {
+		// Make sure that ARC gets the DNS proxy address before proceeding the tests.
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
 			return dns.VerifyARCNameservers(ctx, a)
 		}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
 			s.Fatal("Failed to wait for ARC to get the nameservers config: ", err)
+		}
+
+		// Verify DNS server can be pinged directly from ARC to make sure the
+		// routing setup is ready for ARC.
+		arcIfname, err := arcnet.GetARCInterfaceName(ctx, env.Router.VethOutName)
+		if err != nil {
+			s.Fatalf("Failed to get ARC interface name corresponding to %s: %v", env.Router.VethOutName, err)
+		}
+		if err := arcnet.ExpectPingSuccess(ctx, a, arcIfname, env.IPv4DNSAddr.String()); err != nil {
+			s.Fatalf("Failed to verify DNS server %s reachability in ARC: %v", env.IPv4DNSAddr.String(), err)
 		}
 	}
 

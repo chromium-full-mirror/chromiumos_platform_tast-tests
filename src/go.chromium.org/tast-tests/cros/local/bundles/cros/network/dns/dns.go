@@ -102,6 +102,9 @@ type Env struct {
 	manager      *shill.Manager
 	Certs        *certs.Certs
 	cleanupCerts func(context.Context)
+
+	// The IPv4 DNS address broadcasted by the DHCP server.
+	IPv4DNSAddr net.IP
 }
 
 // GoogleDoHProvider is the Google DNS-over-HTTPS provider.
@@ -615,13 +618,13 @@ func NewEnv(ctx context.Context, pool *subnet.Pool) (env *Env, err error) {
 		return nil, errors.Wrap(err, "failed to allocate v6 subnet")
 	}
 	// This assumes that the server will use the IPv4 address xx.xx.xx.2 from env's ConnectToRouter internal implementation.
-	serverAddr := serverIPv4Subnet.GetAddrEndWith(2)
+	e.IPv4DNSAddr = serverIPv4Subnet.GetAddrEndWith(2)
 
 	var svc *shill.Service
 	svc, e.Router, err = virtualnet.CreateRouterEnv(ctx, e.manager, pool, virtualnet.EnvOptions{
 		Priority:       5,
 		NameSuffix:     "",
-		IPv4DNSServers: []string{serverAddr.String()},
+		IPv4DNSServers: []string{e.IPv4DNSAddr.String()},
 		EnableDHCP:     true,
 		RAServer:       false,
 	})
