@@ -148,7 +148,7 @@ func LaunchAppFromSettings(ctx context.Context, s *testing.State) {
 	kb, err := input.Keyboard(ctx)
 	if err := uiauto.Combine("click entry",
 		// Scroll down once to make sure the entry is fully in view and clickable.
-		kb.AccelAction("Down"),
+		uiauto.Repeat(5, kb.AccelAction("Down")),
 		uiauto.Sleep(time.Second),
 		ui.LeftClick(entryFinder),
 	)(ctx); err != nil {
