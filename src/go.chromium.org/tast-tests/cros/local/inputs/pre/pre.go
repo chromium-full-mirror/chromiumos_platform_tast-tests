@@ -50,6 +50,8 @@ var StableModels = []string{
 	"aviko",
 	"rex",
 	"screebo",
+	"brox",
+	"lotso",
 }
 
 // UnstableModels is a list of newly proposed models that are expected to be
