@@ -88,6 +88,13 @@ func ARCMultiNetworking(ctx context.Context, s *testing.State) {
 		networkAdditionDelay = 400 * time.Millisecond
 	)
 
+	// Note that both a and cr will be changed during the test since the test
+	// restarts chrome.
+	var (
+		a  *arc.ARC
+		cr *chrome.Chrome
+	)
+
 	// Reserve some time for cleanup code.
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, 20*time.Second)
@@ -97,6 +104,7 @@ func ARCMultiNetworking(ctx context.Context, s *testing.State) {
 		testhooks.NewSaveNetLogHook(),
 		testhooks.NewTcpdumpHook(),
 		testhooks.NewDumpHostOnFailureHook(),
+		testhooks.NewDumpChromeOnFailureHookWithGetter(func() *chrome.Chrome { return cr }),
 	)
 	if err != nil {
 		s.Fatal("Failed to run network test hooks: ", err)
@@ -104,7 +112,7 @@ func ARCMultiNetworking(ctx context.Context, s *testing.State) {
 	s.AttachErrorHandlers(hookEnv.OnErrorHandler, hookEnv.OnFatalHandler)
 	defer hookEnv.TearDownWithLogFailures(cleanupCtx, s.HasError)
 
-	startARC := func(ctx context.Context) *arc.ARC {
+	startARC := func(ctx context.Context) (*chrome.Chrome, *arc.ARC) {
 		// We don't need a fresh Chrome login, so use KeepState() to make it faster.
 		cr, err := chrome.New(
 			ctx, chrome.ARCEnabled(),
@@ -114,20 +122,21 @@ func ARCMultiNetworking(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to connect to Chrome: ", err)
 		}
-		defer cr.Close(cleanupCtx)
 		a, err := arc.New(ctx, s.OutDir(), cr.NormalizedUser())
 		if err != nil {
 			s.Fatal("Failed to start ARC: ", err)
 		}
-		return a
+		return cr, a
 	}
 	closeARC := func(ctx context.Context, a *arc.ARC) {
 		if err := a.Close(ctx); err != nil {
 			s.Fatalf("Failed to close arc observer: %s", err)
 		}
 	}
-	a := startARC(ctx)
+	cr, a = startARC(ctx)
+	defer cr.Close(cleanupCtx)
 	defer closeARC(cleanupCtx, a)
+
 	shillManager, err := shill.NewManager(ctx)
 	if err != nil {
 		s.Fatal("Failed to create shill client: ", err)
@@ -266,9 +275,9 @@ func ARCMultiNetworking(ctx context.Context, s *testing.State) {
 	checkARCConnect(routerBNew, a)
 
 	s.Log("Rebooting ARC")
-	aNew := startARC(ctx)
-	defer closeARC(cleanupCtx, aNew)
-	checkARCConnect(routerANew, aNew)
-	checkARCConnect(routerBNew, aNew)
-
+	cr, a = startARC(ctx)
+	defer cr.Close(cleanupCtx)
+	defer closeARC(cleanupCtx, a)
+	checkARCConnect(routerANew, a)
+	checkARCConnect(routerBNew, a)
 }

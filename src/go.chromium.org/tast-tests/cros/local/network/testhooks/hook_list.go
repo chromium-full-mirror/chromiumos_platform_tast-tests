@@ -4,20 +4,45 @@
 
 package testhooks
 
-import "go.chromium.org/tast-tests/cros/local/arc"
+import (
+	"go.chromium.org/tast-tests/cros/local/arc"
+	"go.chromium.org/tast-tests/cros/local/chrome"
+)
 
 // This file contains the available hook list.
 
 // NewDumpARCOnFailureHook creates a hook which dumps network information inside
 // on ARC on failures. s.AttachErrorHandlers() should be called to make this
-// hook have effect. The passed in arc must be valid when the error happens. We
-// can change the parameter to a closure to get arc if it might be changed in
-// the test. The passed in arc can be nil, in which case the execution of this
-// hook will be skipped. This might be helpful if the test only holds this
-// object conditionally, so that it won't need to build the hook list
-// conditionally.
+// hook have effect. We can change the parameter to a closure to get arc if it
+// might be changed in the test. The passed in arc can be nil, in which case the
+// execution of this hook will be skipped. This might be helpful if the test
+// only holds this object conditionally, so that it won't need to build the hook
+// list conditionally.
 func NewDumpARCOnFailureHook(arc *arc.ARC) hook {
 	return &dumpARCOnFailureHook{a: arc}
+}
+
+// NewDumpChromeOnFailureHook creates a hook which dumps network information
+// inside Chrome on failures. s.AttachErrorHandlers() should be called to make
+// this hook have effect. Currently the network event logs will be dumped. The
+// passed in cr can be nil, in which case the execution of this hook will be
+// skipped. This might be helpful if the test only holds this object
+// conditionally, so that it won't need to build the hook list conditionally.
+func NewDumpChromeOnFailureHook(cr *chrome.Chrome) hook {
+	return &dumpChromeOnFailureHook{
+		getChrome: func() *chrome.Chrome {
+			return cr
+		},
+	}
+}
+
+// NewDumpChromeOnFailureHookWithGetter is same as NewDumpChromeOnFailureHook,
+// except for it takes a function which returns cr instead of a cr itself. This
+// could be helpful if the cr is not there when the hook is created, or cr can
+// be changed during the test in which case a getter function can always return
+// the latest one.
+func NewDumpChromeOnFailureHookWithGetter(getChrome func() *chrome.Chrome) hook {
+	return &dumpChromeOnFailureHook{getChrome: getChrome}
 }
 
 // NewDumpHostOnFailureHook creates a hook which dumps network information in
