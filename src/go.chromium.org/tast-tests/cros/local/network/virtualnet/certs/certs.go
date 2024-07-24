@@ -75,52 +75,58 @@ func New(certDirectory string, certstore certificate.CertStore) *Certs {
 // WARNING: After calling InstallTestCerts(), the default set of trusted CAs is not
 // active, so HTTPS communication to publicly-trusted web hosts will not be possible.
 func (c *Certs) InstallTestCerts(ctx context.Context) (func(context.Context), error) {
-	success := false
-	cleanup := func(ctx context.Context) {
-		if err := testexec.CommandContext(ctx, "umount", c.certDirectory).Run(testexec.DumpLogOnError); err != nil {
-			testing.ContextLog(ctx, "Failed to unmount bind: ", err)
-		}
-
-		if err := testexec.CommandContext(ctx, "rm", "-rf", tmpCertsPath).Run(testexec.DumpLogOnError); err != nil {
-			testing.ContextLog(ctx, "Failed to delete tmp directory: ", err)
-		}
-
-		if err := testexec.CommandContext(ctx, "mount", "-o", "remount,nosymfollow", tmpPath).Run(testexec.DumpLogOnError); err != nil {
-			testing.ContextLogf(ctx, "Failed to change mount options on %s back to default: %s", tmpPath, err)
-		}
+	err := c.setup(ctx)
+	if err == nil {
+		return c.cleanup, nil
 	}
 
-	defer func() {
-		if !success {
-			cleanup(ctx)
-		}
-	}()
+	// It's possible that the previous test didn't do proper cleanup for the certs
+	// and thus the setup failed, in which case an explicit cleanup can usually
+	// recover to a good state, so let's clean it up and allow one retry here.
+	testing.ContextLog(ctx, "Failed to install test certs: ", err)
+	testing.ContextLog(ctx, "Try to install test certs again")
+	c.cleanup(ctx)
+	if err := c.setup(ctx); err != nil {
+		c.cleanup(ctx)
+		return nil, errors.Wrap(err, "failed to install test certs with retry")
+	}
+	return c.cleanup, nil
+}
 
+func (c *Certs) setup(ctx context.Context) error {
 	if err := testexec.CommandContext(ctx, "mount", "-o", "remount,symfollow", tmpPath).Run(testexec.DumpLogOnError); err != nil {
-		return nil, errors.Wrapf(err, "failed change mount options on: %s", tmpPath)
-	}
-
-	// Remove the folder at first, in case that the previous test does not clean
-	// up properly.
-	if err := testexec.CommandContext(ctx, "rm", "-rf", tmpCertsPath).Run(testexec.DumpLogOnError); err != nil {
-		testing.ContextLog(ctx, "Failed to delete tmp directory: ", err)
+		return errors.Wrapf(err, "failed change mount options on: %s", tmpPath)
 	}
 
 	if err := testexec.CommandContext(ctx, "mkdir", tmpCertsPath).Run(testexec.DumpLogOnError); err != nil {
-		return nil, errors.Wrapf(err, "failed to make tmp directory: %s", tmpCertsPath)
+		return errors.Wrapf(err, "failed to make tmp directory: %s", tmpCertsPath)
 	}
 
 	testing.ContextLog(ctx, "Installing CA certs to tmp directory for TLS validation")
 	if err := c.installTestCertificateAuthorityCert(ctx); err != nil {
-		return nil, errors.Wrapf(err, "failed to set up temp CA certs in certDirectory: %s", c.certDirectory)
+		return errors.Wrapf(err, "failed to set up temp CA certs in certDirectory: %s", c.certDirectory)
 	}
 
 	testing.ContextLog(ctx, "Writing server certs to tmp directory")
 	if err := c.writeTestServerCertAndPrivateKey(ctx); err != nil {
-		return nil, errors.Wrap(err, "failed to write temp server certs")
+		return errors.Wrap(err, "failed to write temp server certs")
 	}
-	success = true
-	return cleanup, nil
+
+	return nil
+}
+
+func (c *Certs) cleanup(ctx context.Context) {
+	if err := testexec.CommandContext(ctx, "umount", c.certDirectory).Run(testexec.DumpLogOnError); err != nil {
+		testing.ContextLog(ctx, "Failed to unmount bind: ", err)
+	}
+
+	if err := testexec.CommandContext(ctx, "rm", "-rf", tmpCertsPath).Run(testexec.DumpLogOnError); err != nil {
+		testing.ContextLog(ctx, "Failed to delete tmp directory: ", err)
+	}
+
+	if err := testexec.CommandContext(ctx, "mount", "-o", "remount,nosymfollow", tmpPath).Run(testexec.DumpLogOnError); err != nil {
+		testing.ContextLogf(ctx, "Failed to change mount options on %s back to default: %s", tmpPath, err)
+	}
 }
 
 // writeTestServerCertAndPrivateKey writes the server certificate and the server private key to a tmp directory for use in ServeTLS().
