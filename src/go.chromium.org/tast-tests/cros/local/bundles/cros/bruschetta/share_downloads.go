@@ -25,7 +25,11 @@ func init() {
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		SoftwareDeps: []string{"chrome", "vm_host", "untrusted_vm", "dlc", "amd64"},
 		HardwareDeps: bruschetta.BruschettaHwDeps,
-		Attr:         []string{"group:mainline", "group:bruschetta_cq"},
+		Attr:         []string{
+			// Disabled due to b/354254085
+			// "group:mainline",
+			// "group:bruschetta_cq"
+		},
 		BugComponent: "b:658562", // ChromeOS > Software > GuestOS
 		Fixture:      bruschetta.BruschettaFixture,
 	})
