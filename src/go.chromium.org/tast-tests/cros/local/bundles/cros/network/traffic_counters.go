@@ -489,6 +489,19 @@ func setup(ctx context.Context, mgr *shill.Manager, pool *subnet.Pool, fam tcIPF
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to get %s server addrs: ", fam)
 	}
+
+	// Make sure that server is pingable via both IPv4 and IPv6. Since it's a dual
+	// stack network here, only waiting for Service to be online is not enough.
+	// Also since an address update event may cause patchpanel to reinstall the ip
+	// rules, which will transiently break the IP connectivity, so waiting for the
+	// IP configuration stable by checking the dual-stack connectivity here to
+	// reduce the chance of failures due to it.
+	for _, addr := range []net.IP{addrs.IPv4Addr, addrs.IPv6Addrs[0]} {
+		if err := ping.ExpectPingSuccessWithTimeout(ctx, addr.String(), "chronos", 10*time.Second); err != nil {
+			return nil, errors.Wrapf(err, "failed to verify connectivity to %s", addr.String())
+		}
+	}
+
 	var addr net.IP
 	var l4family l4server.Family
 	if fam == tcIPv6 {
@@ -497,12 +510,6 @@ func setup(ctx context.Context, mgr *shill.Manager, pool *subnet.Pool, fam tcIPF
 	} else {
 		addr = addrs.IPv4Addr
 		l4family = l4server.UDP4
-	}
-
-	// Make sure that the addr is reachable. Since it's a dual stack network here,
-	// only waiting for Service to be online is not enough.
-	if err := ping.ExpectPingSuccessWithTimeout(ctx, addr.String(), "chronos", 10*time.Second); err != nil {
-		return nil, errors.Wrapf(err, "failed to verify connectivity to %s", addr.String())
 	}
 
 	port := network.UnusedOrRandomPort(ctx, l4family)
