@@ -38,7 +38,7 @@ func init() {
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		Fixture:      "vpnEnvWithCerts",
 		Params: []testing.Param{{
 			Name: "ikev2_ipv4",
