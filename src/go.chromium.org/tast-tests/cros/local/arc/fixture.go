@@ -18,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc/swap"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
+	"go.chromium.org/tast-tests/cros/local/logsaver"
 	"go.chromium.org/tast-tests/cros/local/pvsched"
 
 	"go.chromium.org/tast/core/errors"
@@ -750,10 +751,11 @@ type arcBootedFixtureArgs struct {
 type bootedFixture struct {
 	parentStateProvider func(s *testing.FixtState) interface{}
 
-	cr   *chrome.Chrome
-	arc  *ARC
-	d    *ui.Device
-	init *Snapshot
+	cr        *chrome.Chrome
+	arc       *ARC
+	d         *ui.Device
+	init      *Snapshot
+	logMarker *logsaver.Marker // Marker for per-test log.
 
 	playStoreOptin    bool                                  // Opt into PlayStore.
 	enableUIAutomator bool                                  // Enable UI Automator
@@ -1030,11 +1032,28 @@ func (f *bootedFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
 	if err := f.arc.CloseSystemDialogs(ctx); err != nil {
 		s.Error("Failed to close ARC system dialogs: ", err)
 	}
+
+	if f.logMarker != nil {
+		s.Log("A log marker is already created but not cleaned up")
+	}
+	logMarker, err := logsaver.NewMarker(f.cr.LogFilename())
+	if err == nil {
+		f.logMarker = logMarker
+	} else {
+		s.Log("Failed to start the log saver: ", err)
+	}
 }
 
 func (f *bootedFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
 	if err := f.arc.SaveLogFiles(ctx); err != nil {
 		s.Error("Failed to to save ARC-related log files: ", err)
+	}
+
+	if f.logMarker != nil {
+		if err := f.logMarker.Save(filepath.Join(s.OutDir(), "chrome.log")); err != nil {
+			s.Log("Failed to store per-test log data: ", err)
+		}
+		f.logMarker = nil
 	}
 
 	if s.HasError() {
