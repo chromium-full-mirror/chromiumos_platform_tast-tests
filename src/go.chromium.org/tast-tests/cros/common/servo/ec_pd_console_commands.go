@@ -111,7 +111,7 @@ func (s *Servo) RequireDUTPDInfo(ctx context.Context) error {
 			}
 			numPorts++
 		} else {
-			testing.ContextLogf(ctx, "DUT Port %d not present (%q)", port, err)
+			testing.ContextLogf(ctx, "DUT Port %d not detected", port)
 		}
 	}
 
