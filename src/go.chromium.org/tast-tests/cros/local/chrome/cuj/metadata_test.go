@@ -69,10 +69,6 @@ func TestRegistryNoDuplicateMetricsOrCycles(t *testing.T) {
 
 			currentTest := Registry[currentTestName]
 
-			if len(currentTest.BaseTestNames) == 0 {
-				continue
-			}
-
 			for _, parentTestName := range currentTest.BaseTestNames {
 				stack = append(stack, parentTestName)
 			}

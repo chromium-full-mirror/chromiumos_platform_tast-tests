@@ -54,6 +54,8 @@ func init() {
 }
 
 func GoogleSlidesCUJ(ctx context.Context, s *testing.State) {
+	cuj.WriteMetadataFile(ctx, s.TestName())
+
 	const slidesScrollTimeout = 10 * time.Minute
 
 	slidesURL, err := cuj.GetTestSlidesURL(ctx)

@@ -10,6 +10,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
+	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
 	"go.chromium.org/tast-tests/cros/local/ui/googlesheetscuj"
 	"go.chromium.org/tast/core/testing"
@@ -64,6 +65,8 @@ func init() {
 
 // GoogleSheetsCUJ measures the total performance of critical user journey for Google Sheets.
 func GoogleSheetsCUJ(ctx context.Context, s *testing.State) {
+	cuj.WriteMetadataFile(ctx, s.TestName())
+
 	// Ensured the GoogleSheets test params are properly formed.
 	testParam := s.Param().(googlesheetscuj.TestParam)
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()

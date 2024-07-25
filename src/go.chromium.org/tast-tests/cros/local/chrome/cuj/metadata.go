@@ -23,6 +23,8 @@ const (
 	roundedWindows feature = "rounded_windows"
 	vulkan         feature = "vulkan"
 	wprFeature     feature = "wpr"
+	chromevox      feature = "chromevox"
+	imageIndexing  feature = "image_indexing"
 )
 
 // Metadata represents metadata for a performance CUJ or a performance test.
@@ -49,15 +51,21 @@ var defaultMetrics = []string{
 	"PageLoad.PaintTiming.NavigationToLargestContentfulPaint2",
 }
 
+// VideoCUJ metrics.
+var videoMetrics = append(defaultMetrics, []string{
+	"CrosVideo.DroppedFrames",
+	"CrosVideo.PercentDroppedFrames",
+}...)
+
 // Benchmark metrics.
 const (
-	speedometer  = "Benchmark.Speedometer.Score"
-	speedometer3 = "Benchmark.Speedometer3.Score"
-	motionmark   = "Benchmark.Motionmark.Score"
-	kraken       = "Benchmark.Kraken.Score"
-	octane       = "Benchmark.Octane.Score"
-	jetstream    = "Benchmark.Jetstream.Score"
-	webxprt4     = "Benchmark.WebXPRT4.Score"
+	speedometerMetric  = "Benchmark.Speedometer.Score"
+	speedometer3Metric = "Benchmark.Speedometer3.Score"
+	motionmarkMetric   = "Benchmark.Motionmark.Score"
+	krakenMetric       = "Benchmark.Kraken.Score"
+	octaneMetric       = "Benchmark.Octane.Score"
+	jetstreamMetric    = "Benchmark.Jetstream.Score"
+	webxprt4Metric     = "Benchmark.WebXPRT4.Score"
 )
 
 // Registry maps test name to its corresponding metadata.
@@ -90,13 +98,13 @@ var Registry = map[string]Metadata{
 		Features:      []feature{arcDisabled},
 	},
 	"ui.BenchmarkCUJ.speedometer": Metadata{
-		Metrics: []string{speedometer},
+		Metrics: []string{speedometerMetric},
 	},
 	"ui.BenchmarkCUJ.speedometer3": Metadata{
-		Metrics: []string{speedometer3},
+		Metrics: []string{speedometer3Metric},
 	},
 	"ui.BenchmarkCUJ.motionmark": Metadata{
-		Metrics: []string{motionmark},
+		Metrics: []string{motionmarkMetric},
 	},
 	"ui.BenchmarkCUJ.vulkan_motionmark": Metadata{
 		BaseTestNames: []string{"ui.BenchmarkCUJ.motionmark"},
@@ -112,16 +120,16 @@ var Registry = map[string]Metadata{
 		Features:      []feature{vulkan},
 	},
 	"ui.BenchmarkCUJ.jetstream": Metadata{
-		Metrics: []string{jetstream},
+		Metrics: []string{jetstreamMetric},
 	},
 	"ui.BenchmarkCUJ.kraken": Metadata{
-		Metrics: []string{kraken},
+		Metrics: []string{krakenMetric},
 	},
 	"ui.BenchmarkCUJ.octane": Metadata{
-		Metrics: []string{octane},
+		Metrics: []string{octaneMetric},
 	},
 	"ui.BenchmarkCUJ.webxprt4": Metadata{
-		Metrics: []string{webxprt4},
+		Metrics: []string{webxprt4Metric},
 	},
 	"ui.BenchmarkCUJ.vulkan_webxprt4": Metadata{
 		BaseTestNames: []string{"ui.BenchmarkCUJ.webxprt4"},
@@ -142,6 +150,65 @@ var Registry = map[string]Metadata{
 	"ui.BenchmarkCUJ.octane_wpr": Metadata{
 		BaseTestNames: []string{"ui.BenchmarkCUJ.octane"},
 		Features:      []feature{wprFeature},
+	},
+	"ui.GoogleSheetsCUJ": Metadata{
+		Metrics: defaultMetrics,
+	},
+	"ui.GoogleSheetsCUJ.field_trials": Metadata{
+		BaseTestNames: []string{"ui.GoogleSheetsCUJ"},
+		Features:      []feature{fieldTrials},
+	},
+	"ui.TabSwitchPerf": Metadata{
+		Metrics: []string{
+			"Chrome.Tabs.AnimationSmoothness.TabLoading",
+			"Browser.Tabs.TotalSwitchDuration3.WithSavedFrames",
+			"Browser.Tabs.TotalSwitchDuration",
+			"Graphics.Smoothness.PercentDroppedFrames3.AllSequences",
+		},
+	},
+	"ui.TaskSwitchCUJ": Metadata{
+		Metrics: defaultMetrics,
+	},
+	"ui.TaskSwitchCUJ.tablet": Metadata{
+		Metrics: defaultMetrics,
+	},
+	"ui.TaskSwitchCUJ.field_trials": Metadata{
+		BaseTestNames: []string{"ui.TaskSwitchCUJ"},
+		Features:      []feature{fieldTrials},
+	},
+	"ui.TaskSwitchCUJ.pvsched": Metadata{
+		BaseTestNames: []string{"ui.TaskSwitchCUJ"},
+		Features:      []feature{pvSched},
+	},
+	"ui.VideoCUJ.field_trials": Metadata{
+		BaseTestNames: []string{"ui.VideoCUJ"},
+		Features:      []feature{fieldTrials},
+	},
+	"ui.VideoCUJ": Metadata{
+		Metrics: videoMetrics,
+	},
+	"ui.VideoCUJ.vulkan": Metadata{
+		BaseTestNames: []string{"ui.VideoCUJ"},
+		Features:      []feature{vulkan},
+	},
+	"ui.DocsCUJ": Metadata{
+		Metrics: defaultMetrics,
+	},
+	"ui.DocsCUJ.field_trials": Metadata{
+		BaseTestNames: []string{"ui.DocsCUJ"},
+		Features:      []feature{fieldTrials},
+	},
+	"ui.DocsCUJ.chromevox": Metadata{
+		BaseTestNames: []string{"ui.DocsCUJ"},
+		Features:      []feature{chromevox},
+	},
+	"ui.DocsCUJ.vulkan": Metadata{
+		BaseTestNames: []string{"ui.DocsCUJ"},
+		Features:      []feature{vulkan},
+	},
+	"ui.DocsCUJ.image_indexing": Metadata{
+		BaseTestNames: []string{"ui.DocsCUJ"},
+		Features:      []feature{imageIndexing},
 	},
 	// The TPS Dashboard assumes that the metrics passed as part of the
 	// metadata for SlidesCUJ are the fallback metrics (default metrics) that
