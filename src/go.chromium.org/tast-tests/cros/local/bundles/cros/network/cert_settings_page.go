@@ -102,6 +102,8 @@ func init() {
 			"group:hardware",
 			"group:complementary",
 			"group:hw_agnostic",
+			"group:network",
+			"network_e2e",
 		},
 		SoftwareDeps: []string{"chrome", "lacros", "lacros_stable"},
 		Fixture:      "lacros",
