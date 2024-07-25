@@ -301,6 +301,37 @@ func (ad *androidDeviceData) P2PGroupDisconnect(ctx context.Context) error {
 
 // P2PDeviceInfoUpdate returns the p2p group information.
 func (ad *androidDeviceData) P2PDeviceInfoUpdate(ctx context.Context) error {
-	// TODO(b/334194299): Implement this function.
+	cmdOut, err := ad.labstation.host.CommandContext(ctx, "adb", "-s", ad.serialNumber, "shell", "cmd", "wifip2p", "get-group-info").Output(ssh.DumpLogOnError)
+	if err != nil {
+		return errors.Wrap(err, "failed to get the p2p group info")
+	}
+	strCmdOut := string(cmdOut)
+	if string(cmdOut) == "null\n" {
+		return errors.Errorf("p2p group info is empty: %s", strCmdOut)
+	}
+
+	retParams := make(map[string]string)
+	for _, line := range strings.Split(strCmdOut, "\n") {
+		if strings.Contains(line, ":") {
+			retParams[strings.TrimSpace(strings.Split(line, ":")[0])] = strings.TrimSpace(strings.Split(line, ":")[1])
+		}
+	}
+
+	testing.ContextLog(ctx, "Android P2P GO Information: ", retParams)
+
+	if _, ok := retParams["frequency"]; !ok {
+		return errors.Errorf("frequency parameter is missing: %v", retParams)
+	}
+
+	goP2PFreq, err := strconv.Atoi(retParams["frequency"])
+	if err != nil {
+		return err
+	}
+
+	if ad.p2p.frequency != uint32(goP2PFreq) {
+		testing.ContextLogf(ctx, "The P2P frequency has changed: old freq = %d, new freq = %d", ad.p2p.frequency, uint32(goP2PFreq))
+		ad.p2p.frequency = uint32(goP2PFreq)
+	}
+
 	return nil
 }
