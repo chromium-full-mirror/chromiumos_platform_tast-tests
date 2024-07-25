@@ -36,7 +36,7 @@ func init() {
 			"group:golden_tier",
 			"group:hw_agnostic",
 		},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "gaia"},
 		Fixture:      fixture.ChromePolicyRealUserLoggedIn,
 		Timeout:      3 * time.Minute,
 		SearchFlags: []*testing.StringPair{
