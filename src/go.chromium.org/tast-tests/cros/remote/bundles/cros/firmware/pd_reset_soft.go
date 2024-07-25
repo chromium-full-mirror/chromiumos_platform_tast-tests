@@ -94,9 +94,18 @@ func PDResetSoft(ctx context.Context, s *testing.State) {
 		s.Log("Skipping DUT-initiated soft reset as unsupported operation")
 	}
 
-	// Testing soft resets after a power role swap (DUT is SRC) is not currently
-	// supported.
+	// If shut down, the DUT will refuse a power role swap to be a source. End the
+	// test here.
 	if testParams.Shutdown {
+		s.Log("Skipping soft reset with DUT as source. Restoring DUT power")
+
+		if err := h.Servo.SetPowerState(ctx, servo.PowerStateOn); err != nil {
+			testing.ContextLog(ctx, "Failed to power on DUT: ", err)
+		}
+		if err := h.WaitConnect(ctx); err != nil {
+			s.Fatal("Failed to boot after test: ", err)
+		}
+
 		return
 	}
 
@@ -132,14 +141,5 @@ func PDResetSoft(ctx context.Context, s *testing.State) {
 		}
 	} else {
 		s.Log("Skipping DUT-initiated soft reset as unsupported operation")
-	}
-
-	if testParams.Shutdown {
-		if err := h.Servo.SetPowerState(ctx, servo.PowerStateOn); err != nil {
-			testing.ContextLog(ctx, "Failed to power on DUT: ", err)
-		}
-		if err := h.WaitConnect(ctx); err != nil {
-			s.Fatal("Failed to boot after test: ", err)
-		}
 	}
 }

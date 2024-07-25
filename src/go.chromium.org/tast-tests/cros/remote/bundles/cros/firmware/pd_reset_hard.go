@@ -105,6 +105,21 @@ func PDResetHard(ctx context.Context, s *testing.State) {
 		s.Fatal("DUT power role SNK hard reset test failed: ", err)
 	}
 
+	// If shut down, the DUT will refuse a power role swap to be a source. End the
+	// test here.
+	if testParams.Shutdown {
+		s.Log("Skipping hard reset with DUT as source. Restoring DUT power")
+
+		if err := h.Servo.SetPowerState(ctx, servo.PowerStateOn); err != nil {
+			testing.ContextLog(ctx, "Failed to power on DUT: ", err)
+		}
+		if err := h.WaitConnect(ctx); err != nil {
+			s.Fatal("Failed to boot after test: ", err)
+		}
+
+		return
+	}
+
 	// Attempt to do a power role swap by forcing the EC/DUT to be a source.
 	// The DUT may not support this, in which case the swap will fail and we
 	// will stop the test early.
@@ -125,14 +140,5 @@ func PDResetHard(ctx context.Context, s *testing.State) {
 	// Test Hard Reset with DUT as power role SRC
 	if err := executeHardReset(ctx, s, iterationCount); err != nil {
 		s.Fatal("DUT power role SNK hard reset test failed: ", err)
-	}
-
-	if testParams.Shutdown {
-		if err := h.Servo.SetPowerState(ctx, servo.PowerStateOn); err != nil {
-			testing.ContextLog(ctx, "Failed to power on DUT: ", err)
-		}
-		if err := h.WaitConnect(ctx); err != nil {
-			s.Fatal("Failed to boot after test: ", err)
-		}
 	}
 }
