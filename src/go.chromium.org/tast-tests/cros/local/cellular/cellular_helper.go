@@ -356,10 +356,10 @@ func (h *Helper) Enable(ctx context.Context) (time.Duration, error) {
 		return 0, err
 	}
 	if err := h.Device.WaitForProperty(ctx, shillconst.DevicePropertyPowered, true, defaultTimeout); err != nil {
-		return 0, errors.Wrap(err, "expected powered to become true, got false")
+		return 0, err
 	}
 	if err := h.Device.WaitForProperty(ctx, shillconst.DevicePropertyScanning, false, defaultTimeout); err != nil {
-		return 0, errors.Wrap(err, "expected scanning to become false, got true")
+		return 0, err
 	}
 	return time.Since(start), nil
 }
