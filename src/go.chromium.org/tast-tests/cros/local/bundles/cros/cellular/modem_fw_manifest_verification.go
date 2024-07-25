@@ -98,17 +98,18 @@ func ModemFWManifestVerification(ctx context.Context, s *testing.State) {
 
 		for _, firmwarePath := range modemFirmwarePaths {
 			modemFirmwarePath := firmwarePath
-			tmpDecodePath := "/tmp/unpatched_modem_fw"
+			tmpDecodePath := filepath.Join("/tmp", firmwarePath)
 			if fileExists(filepath.Join(modemFirmwarePath, "patch_manifest.textproto")) {
-
-				os.RemoveAll(tmpDecodePath)
-				os.Mkdir(tmpDecodePath, 0755)
 				defer os.RemoveAll(tmpDecodePath)
+				if !fileExists(tmpDecodePath) {
+					os.MkdirAll(tmpDecodePath, 0755)
 
-				// Reconstruct this firmware payload to a temp directory
-				if _, err := testexec.CommandContext(ctx, "patchmaker", "--decode", "--src_path="+firmwarePath, "--dest_path="+tmpDecodePath).Output(testexec.DumpLogOnError); err != nil {
-					s.Fatalf("Failed to decode patched firmware directory: %s", err)
+					// Reconstruct this firmware payload to a temp directory
+					if _, err := testexec.CommandContext(ctx, "patchmaker", "--decode", "--src_path="+firmwarePath, "--dest_path="+tmpDecodePath).Output(testexec.DumpLogOnError); err != nil {
+						s.Fatalf("Failed to decode patched firmware directory: %s", err)
+					}
 				}
+
 				// The remainder of this test should use the reconstructed directory
 				modemFirmwarePath = tmpDecodePath
 			}
@@ -174,6 +175,13 @@ func ModemFWManifestVerification(ctx context.Context, s *testing.State) {
 						missingFiles[fullPath] = true
 					}
 				}
+			}
+
+			// Remove any reconstructed DLCs from /tmp. Reconstructed rootfs
+			// packages are re-used across devices, so that one is left alone
+			// until all checks are complete.
+			if firmwarePath != cellular.GetModemFirmwarePath() {
+				os.RemoveAll(tmpDecodePath)
 			}
 		}
 		// Remove the DLC after each test, otherwise we might run out of disk
