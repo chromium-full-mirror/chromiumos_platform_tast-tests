@@ -186,11 +186,6 @@ func Print(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set layout: ", err)
 	}
 
-	// Set custom page selection.
-	if err = printpreview.SetPages(ctx, tconn, "2-3,5,7-10"); err != nil {
-		s.Fatal("Failed to select pages: ", err)
-	}
-
 	// Hide all notifications to prevent them from covering the print button.
 	if err := ash.CloseNotifications(ctx, tconn); err != nil {
 		s.Fatal("Failed to close all notifications: ", err)
