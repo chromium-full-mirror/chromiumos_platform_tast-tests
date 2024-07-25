@@ -28,6 +28,10 @@ const (
 
 // Metadata represents metadata for a performance CUJ or a performance test.
 type Metadata struct {
+	// Test name associated with the given metadata. This field will be set
+	// automatically when using WriteMetadataFile.
+	TestName string
+
 	DisplayName  string    // Optional display name to be shown on the dashboard.
 	BaseTestName string    // Optional base test that this should be compared to.
 	Metrics      []string  // Recommended metrics for this test.
@@ -153,34 +157,41 @@ var registry = map[string]Metadata{
 	},
 }
 
-// GenerateMetadataFile stores a metadata.json file in the testing out
-// directory representing |registry|.
-func GenerateMetadataFile(ctx context.Context) error {
-	// Perform a simple initial check that the base names for each test are
-	// valid, by ensuring that the referenced base name has its own metadata.
-	for _, test := range registry {
-		if test.BaseTestName == "" {
-			continue
-		}
+// WriteMetadataFile stores a metadata.json file in the testing out
+// directory representing the test |testName| found in |registry|.
+// We log failures if a test is unregistered or there is an issue saving the
+// metadata. If a test registration is found, but the registration is
+// malformed, the code will panic.
+func WriteMetadataFile(ctx context.Context, testName string) {
+	if _, ok := registry[testName]; !ok {
+		testing.ContextLogf(ctx, "Failed to find %s in the metadata registry", testName)
+		return
+	}
 
+	testing.ContextLogf(ctx, "Writing metadata file for %s", testName)
+
+	test := registry[testName]
+	test.TestName = testName
+
+	// Perform a simple initial check that the base name exists.
+	if test.BaseTestName != "" {
 		if _, ok := registry[test.BaseTestName]; !ok {
-			return errors.Errorf("found invalid test metadata, base test %s doesn't exist", test.BaseTestName)
+			panic(errors.Errorf("found invalid test metadata, base test %s doesn't exist", test.BaseTestName))
 		}
 	}
 
 	outDir, ok := testing.ContextOutDir(ctx)
 	if !ok || outDir == "" {
-		return errors.New("failed to get the out directory")
+		testing.ContextLog(ctx, "Failed to get the out directory")
+		return
 	}
 
-	json, err := json.MarshalIndent(&registry, "", "  ")
+	json, err := json.MarshalIndent(&test, "", "  ")
 	if err != nil {
-		return errors.Wrapf(err, "failed to marshal metadata %v", registry)
+		testing.ContextLog(ctx, "Failed to marshal metadata: ", err)
 	}
 
 	if err := os.WriteFile(filepath.Join(outDir, "metadata.json"), json, 0644); err != nil {
-		return errors.Wrap(err, "failed to write metadata")
+		testing.ContextLog(ctx, "Failed to write metadata: ", err)
 	}
-
-	return nil
 }

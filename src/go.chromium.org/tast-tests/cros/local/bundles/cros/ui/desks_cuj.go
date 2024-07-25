@@ -10,6 +10,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
+	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
 	"go.chromium.org/tast-tests/cros/local/ui/deskscuj"
 	"go.chromium.org/tast/core/testing"
@@ -106,6 +107,8 @@ func init() {
 }
 
 func DesksCUJ(ctx context.Context, s *testing.State) {
+	cuj.WriteMetadataFile(ctx, s.TestName())
+
 	// Ensured the DesksCUJ test params are properly formed.
 	testParam := s.Param().(deskscuj.TestParam)
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
