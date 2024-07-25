@@ -855,6 +855,10 @@ func (c *PolicyService) DeviceAndCustomerID(ctx context.Context, req *empty.Empt
 		return nil, errors.Wrap(err, "failed to retrieve settings")
 	} else if p == nil {
 		return nil, errors.New("client ID not found")
+	} else if p.DirectoryApiId == nil {
+		return nil, errors.New("directory API ID is not set")
+	} else if p.ObfuscatedCustomerId == nil {
+		return nil, errors.New("obfuscated customer ID is not set")
 	}
 
 	return &ppb.DeviceAndCustomerIDResponse{DeviceID: *p.DirectoryApiId, CustomerID: *p.ObfuscatedCustomerId}, nil
