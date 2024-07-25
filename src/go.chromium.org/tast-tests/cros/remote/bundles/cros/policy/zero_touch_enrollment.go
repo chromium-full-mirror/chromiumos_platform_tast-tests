@@ -95,6 +95,7 @@ func ZeroTouchEnrollment(ctx context.Context, s *testing.State) {
 	deviceProvisionToken := s.RequiredVar(param.DeviceProvisionToken)
 	customerID := s.RequiredVar(param.CustomerID)
 	batchKey := s.RequiredVar(param.BatchKey)
+	enrolled := false
 
 	// Shorten deadline to leave time separately for logging and cleanup.
 	cleanupCtx := ctx
@@ -106,8 +107,10 @@ func ZeroTouchEnrollment(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to pre-provision device: ", err)
 	}
 	defer func(ctx context.Context) {
-		if err := deletePreProvisioningRecord(ctx, name, batchKey); err != nil {
-			s.Log("Failed to delete pre-provisioning record: ", err)
+		if !enrolled {
+			if err := deletePreProvisioningRecord(ctx, name, batchKey); err != nil {
+				s.Log("Failed to delete pre-provisioning record: ", err)
+			}
 		}
 	}(cleanupCtx)
 
@@ -187,6 +190,7 @@ func ZeroTouchEnrollment(ctx context.Context, s *testing.State) {
 			return err
 		}
 
+		enrolled = true
 		return nil
 	}, &testing.PollOptions{Interval: 2 * time.Minute}); err != nil {
 		s.Fatal("Failed to ZTE enroll using chrome: ", err)
