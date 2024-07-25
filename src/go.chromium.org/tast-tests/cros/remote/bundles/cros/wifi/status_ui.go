@@ -35,8 +35,8 @@ func init() {
 			"alfredyu@cienet.com",
 			"chromeos-connectivity-cienet-external@google.com",
 		},
-		// ChromeOS > Software > System Services > Connectivity > WiFi
-		BugComponent: "b:1131912",
+		// ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
+		BugComponent: "b:1578688",
 		Attr:         []string{"group:wificell", "wificell_e2e"},
 		TestBedDeps:  []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
 		ServiceDeps: []string{
