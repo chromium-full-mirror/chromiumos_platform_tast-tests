@@ -79,7 +79,7 @@ func init() {
 			},
 			{
 				Name:              "kernel_subkey_version",
-				ExtraAttr:         []string{"group:firmware", "firmware_usb", "firmware_bios", "firmware_level2", "firmware_ro"},
+				ExtraAttr:         []string{"group:firmware", "firmware_bios", "firmware_level2", "firmware_ro"},
 				ExtraRequirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01"},
 				Fixture:           fixture.BootModeFixtureWithAPBackup(fixture.DevModeGBB),
 				ExtraData:         []string{kernelSubkeyVerMakekeyFile, kernelSubkeyVerCommonFile},
