@@ -198,10 +198,17 @@ func ZeroTouchEnrollment(ctx context.Context, s *testing.State) {
 }
 
 func setVpdValuesForInitialEnrollment(ctx context.Context, dutConn *ssh.Conn) error {
-	// Delete check_enrollment from vpd if it exists.
+	// Delete check_enrollment from RW_VPD if it exists.
 	if err := dutConn.CommandContext(ctx, "vpd", "-i", "RW_VPD", "-g", "check_enrollment").Run(); err == nil {
 		if err := dutConn.CommandContext(ctx, "vpd", "-i", "RW_VPD", "-d", "check_enrollment").Run(exec.DumpLogOnError); err != nil {
 			return errors.Wrap(err, "failed to delete check_enrollment")
+		}
+	}
+
+	// Delete ActivationDate from RW_VPD if it exists.
+	if err := dutConn.CommandContext(ctx, "vpd", "-i", "RW_VPD", "-g", "ActivateDate").Run(); err == nil {
+		if err := dutConn.CommandContext(ctx, "vpd", "-i", "RW_VPD", "-d", "ActivateDate").Run(exec.DumpLogOnError); err != nil {
+			return errors.Wrap(err, "failed to delete ActivateDate")
 		}
 	}
 
