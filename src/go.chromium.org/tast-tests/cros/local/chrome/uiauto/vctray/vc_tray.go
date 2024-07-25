@@ -175,7 +175,7 @@ func (vcTray VCTray) featureEnabled(ctx context.Context, finder *nodewith.Finder
 	}
 	// Current status can be identified by the node name.
 	// Off: "<Feature> is off"; On: "<Feature> is on and in use".
-	return strings.Contains(nodeInfo.Name, "on"), nil
+	return strings.Contains(nodeInfo.Name, "is on"), nil
 }
 
 // SetFeature toggles on/off the specified option.
