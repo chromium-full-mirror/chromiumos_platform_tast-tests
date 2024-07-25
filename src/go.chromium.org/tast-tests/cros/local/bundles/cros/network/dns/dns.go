@@ -863,6 +863,13 @@ func VerifyARCNameservers(ctx context.Context, a *arc.ARC) error {
 //	expectResolvable == true, len(expectedIP) != 0: wanted resolvable into expectedIP
 //	expectResolvable == true, len(expectedIP) == 0: wanted resolvable (into any IP)
 func VerifyDNSResolve(ctx context.Context, user, domain string, expectResolvable bool, expectedIP string) error {
+	// There is a very low chance that the same source port is reused in one test,
+	// which may cause undesired behavior that a system DNS query can be
+	// redirected to the default DNS proxy since a NAT rule will affect the whole
+	// connection.
+	if err := deleteDo53EntriesInConntrack(ctx); err != nil {
+		testing.ContextLog(ctx, "Failed to clear conntrack entries for DNS: ", err)
+	}
 	out, err := testexec.CommandContext(ctx, "sudo", "-u", user, "/usr/local/bin/dig", "+short", domain, "+tries=2", "+timeout=2").Output()
 	if err != nil {
 		return errors.Wrapf(err, "running dig %s as user %s failed:", domain, user)
@@ -891,8 +898,8 @@ func VerifyDNSResolve(ctx context.Context, user, domain string, expectResolvable
 }
 
 // deleteDo53EntriesInConntrack removes all the UDP connections to dst port 53
-// in the conntrack table. This will clear the effect of connection pinning for
-// UDP DNS queries.
+// in the conntrack table. This will clear the effect of connection pinning (by
+// either fwmark or NAT) for UDP DNS queries.
 func deleteDo53EntriesInConntrack(ctx context.Context) error {
 	for _, family := range []string{"ipv4", "ipv6"} {
 		// `conntrack -D` will exit with 1 if no entry is deleted, so we ignore this
