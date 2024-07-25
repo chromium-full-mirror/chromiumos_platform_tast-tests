@@ -96,9 +96,6 @@ func ExistingUser(ctx context.Context, s *testing.State) {
 		chrome.KeepState(),
 		chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")),
 	}
-	if password == localPassword {
-		opts = append(opts, chrome.EnableFeatures("LocalPasswordForConsumers"))
-	}
 
 	cr, err := chrome.New(ctx, opts...)
 	if err != nil {

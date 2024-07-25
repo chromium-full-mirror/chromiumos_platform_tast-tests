@@ -110,7 +110,6 @@ func ChangeLocalPassword(ctx context.Context, s *testing.State) {
 		chrome.NoLogin(),
 		chrome.KeepState(),
 		chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")),
-		chrome.EnableFeatures("LocalPasswordForConsumers"),
 		chrome.ExtraArgs("--skip-force-online-signin-for-testing"),
 	)
 	if err != nil {

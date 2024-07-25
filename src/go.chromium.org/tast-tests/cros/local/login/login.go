@@ -19,7 +19,6 @@ import (
 // The user should be provided in `opts` (e.g. using `chrome.FakeLogin`,
 // `chrome.GAIALogin`).
 func SetupUserWithLocalPassword(ctx context.Context, password string, opts ...chrome.Option) (c *chrome.Chrome, retErr error) {
-	opts = append(opts, chrome.EnableFeatures("LocalPasswordForConsumers"))
 	opts = append(opts, chrome.DisableFeatures("CryptohomeRecoveryBeforeFlowSplit"))
 	opts = append(opts, chrome.DontSkipOOBEAfterLogin())
 
