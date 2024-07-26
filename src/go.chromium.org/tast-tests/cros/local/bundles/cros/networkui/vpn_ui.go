@@ -175,17 +175,22 @@ func VPNUI(ctx context.Context, s *testing.State) {
 
 	// Prepares VPN server.
 	tc := s.Param().(vpnUITestCase)
+
+	// Enable dual-stack VPN so that 1) we can verify Chrome does not crash with
+	// a dual-stack VPN connection; 2) for WireGuard, both IPv4 and IPv6 config
+	// can be input properly. Note that L2TP/IPsec only supports IPv4-only.
+	ipType := vpn.WithIPType(vpn.IPTypeIPv4AndIPv6)
+	if tc.vpnType == vpn.TypeL2TPIPsec {
+		ipType = vpn.WithIPType(vpn.IPTypeIPv4)
+	}
+
 	config := vpn.NewConfig(
 		tc.vpnType,
 		vpn.WithIPsecAuthType(tc.ipsecAuthType),
 		vpn.WithOpenVPNUseUserPassword(),
 		vpn.WithWGUsePSK(true),
 		vpn.WithCertVals(certVals),
-		// Enable dual-stack VPN so that 1) we can verify Chrome does not crash with
-		// a dual-stack VPN connection; 2) for WireGuard, both IPv4 and IPv6 config
-		// can be input properly. Note that not all VPN supports IPv6, IPv4-only VPN
-		// will be set up when IPv6 is not supported.
-		vpn.WithIPType(vpn.IPTypeIPv4AndIPv6),
+		ipType,
 	)
 
 	svcName := "vpn-test-" + tc.vpnType.String()
