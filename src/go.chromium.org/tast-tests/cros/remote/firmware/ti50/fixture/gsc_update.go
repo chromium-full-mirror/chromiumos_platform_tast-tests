@@ -46,10 +46,14 @@ func (c *updateImpl) SetUp(ctx context.Context, s *testing.FixtState) interface{
 		s.Fatal("Update fixture must specify a image (i.e. through buildurl var)")
 	}
 	testing.ContextLog(ctx, "Saving images for GSC Update Fixture")
+	// EFI image is optional
 	efiImage, err := DownloadEfiImage(ctx, c.v.TestbedProperties)
 	if err != nil {
-		s.Fatal(err, "failed to download the efi image")
+		s.Log("Failed to download the efi image: ", err)
+		efiImage = ""
 	}
+	// Debug image is required for H1, but not strictly required for DT. Allow
+	// the test itself to require the debug image if needed for DT.
 	debugImage, err := DownloadDebugImage(ctx, c.v.TestbedProperties)
 	if err != nil {
 		if c.v.TestbedProperties.TestbedType == ti50.GscH1Shield {
