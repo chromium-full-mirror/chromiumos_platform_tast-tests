@@ -23,6 +23,15 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+// ApnType specifies the type of data connection for mobile networks.
+type ApnType int
+
+// ApnIsDefault and ApnIsAttach indicates the APN type is using.
+const (
+	ApnIsDefault ApnType = 1 << iota
+	ApnIsAttach
+)
+
 // ApnConfig is struct containing information about an APN.
 type ApnConfig struct {
 	Name               string
@@ -30,8 +39,7 @@ type ApnConfig struct {
 	Password           string
 	AuthenticationType string
 	IPType             string
-	IsAttach           bool
-	IsDefault          bool
+	ApnType            ApnType
 }
 
 // WaitUntilRefreshProfileCompletes will wait until the cellular refresh profile completes.
@@ -635,16 +643,38 @@ func (s *OSSettings) OpenNewAPNDialogAndPopulateFields(ctx context.Context, apn 
 		}
 	}
 
-	if !apn.IsDefault {
-		if err := s.ui.LeftClick(DefaultAPNCheckbox)(ctx); err != nil {
-			return errors.Wrap(err, "failed to uncheck default checkbox")
+	isDefault := apn.ApnType&ApnIsDefault == ApnIsDefault
+	isAttach := apn.ApnType&ApnIsAttach == ApnIsAttach
+
+	// ChromeOS does not accept an APN with type that is neither default nor attach.
+	if !isDefault && !isAttach {
+		return errors.New("the APN type can't be neither default nor attach")
+	}
+
+	selectCheckboxFunc := func(name string, node *nodewith.Finder, expected bool) uiauto.Action {
+		return func(ctx context.Context) error {
+			if err := s.ui.WaitUntilExists(node)(ctx); err != nil {
+				return errors.Wrapf(err, "failed to wait until checkbox %q exists", name)
+			}
+
+			info, err := s.ui.Info(ctx, node)
+			if err != nil {
+				return errors.Wrapf(err, "failed to check checkbox %q", name)
+			}
+			if expected != (info.Checked == checked.True) {
+				if err := s.ui.LeftClick(node)(ctx); err != nil {
+					return errors.Wrapf(err, "failed to click checkbox %q", name)
+				}
+			}
+			return nil
 		}
 	}
 
-	if apn.IsAttach {
-		if err := s.ui.LeftClick(AttachAPNCheckbox)(ctx); err != nil {
-			return errors.Wrap(err, "failed to check attach checkbox")
-		}
+	if err := uiauto.Combine("set APN type",
+		selectCheckboxFunc("isDefault", DefaultAPNCheckbox, isDefault),
+		selectCheckboxFunc("isAttach", AttachAPNCheckbox, isAttach),
+	)(ctx); err != nil {
+		return err
 	}
 
 	if len(apn.IPType) != 0 {

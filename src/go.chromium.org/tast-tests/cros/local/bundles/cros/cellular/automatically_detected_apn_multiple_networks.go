@@ -157,8 +157,7 @@ func AutomaticallyDetectedApnMultipleNetworks(ctx context.Context, s *testing.St
 		Password:           "",
 		AuthenticationType: "",
 		IPType:             "",
-		IsAttach:           false,
-		IsDefault:          true,
+		ApnType:            ossettings.ApnIsDefault,
 	}); err != nil {
 		s.Fatalf("Failed to add custom APN with name: %s, err: %v", "INVALID_APN", err)
 	}

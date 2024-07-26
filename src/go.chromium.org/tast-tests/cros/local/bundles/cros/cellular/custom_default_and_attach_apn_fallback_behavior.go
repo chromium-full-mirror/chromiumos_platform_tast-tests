@@ -98,8 +98,7 @@ func CustomDefaultAndAttachApnFallbackBehavior(ctx context.Context, s *testing.S
 		Password:           password,
 		AuthenticationType: authenticationType,
 		IPType:             ipType,
-		IsAttach:           true,
-		IsDefault:          false,
+		ApnType:            ossettings.ApnIsAttach,
 	}); err != nil {
 		s.Fatal("Failed to add attach custom APN: ", err)
 	}
@@ -156,8 +155,7 @@ func CustomDefaultAndAttachApnFallbackBehavior(ctx context.Context, s *testing.S
 		Password:           password,
 		AuthenticationType: authenticationType,
 		IPType:             ipType,
-		IsAttach:           false,
-		IsDefault:          true,
+		ApnType:            ossettings.ApnIsDefault,
 	}); err != nil {
 		s.Fatal("Failed to add invalid custom APN: ", err)
 	}

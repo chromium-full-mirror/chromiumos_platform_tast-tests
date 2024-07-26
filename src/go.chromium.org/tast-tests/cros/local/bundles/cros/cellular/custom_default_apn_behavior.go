@@ -98,8 +98,7 @@ func CustomDefaultApnBehavior(ctx context.Context, s *testing.State) {
 		Password:           password,
 		AuthenticationType: authenticationType,
 		IPType:             ipType,
-		IsAttach:           false,
-		IsDefault:          true,
+		ApnType:            ossettings.ApnIsDefault,
 	}); err != nil {
 		s.Fatal("Failed to add default custom APN: ", err)
 	}
