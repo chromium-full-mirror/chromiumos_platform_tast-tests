@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	simpleReferenceFileName = "human_motion_robot_full_image_simple"
+	simpleReferenceFileName = "human_motion_robot_stylus_drawing_simple"
 	calibrationFileName     = "calibration_file.json"
 )
 
@@ -35,7 +35,7 @@ type referenceFileData struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         HumanMotionRobotFullImage,
+		Func:         HumanMotionRobotStylusDrawing,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Run a full image HMR Test",
 		Contacts: []string{
@@ -55,7 +55,7 @@ func init() {
 	})
 }
 
-func HumanMotionRobotFullImage(ctx context.Context, s *testing.State) {
+func HumanMotionRobotStylusDrawing(ctx context.Context, s *testing.State) {
 	referenceFileData := s.Param().(referenceFileData)
 
 	touchhostHostname, touchhostPort, err := input.ParseHMRRuntimeVariables(s.DUT())
@@ -117,7 +117,7 @@ func HumanMotionRobotFullImage(ctx context.Context, s *testing.State) {
 	}
 
 	// Full image gcode file names are of the format {reference filename}-{diagonal screen size}-{screen aspect ratio}-{date input file was created}.
-	// Example: human_motion_robot_full_image_simple-13.3-16_9-20240523.nc
+	// Example: human_motion_robot_stylus_drawing_simple-13.3-16_9-20240523.nc
 	baseFileName := referenceFileData.filename + "-" + strconv.FormatFloat(screenSize, 'f', -1, 64) + "-" + aspectRatio + "-" + referenceFileData.date
 	gcodeFileName := baseFileName + ".nc"
 	hostTouchLogFileName := baseFileName + ".csv"
