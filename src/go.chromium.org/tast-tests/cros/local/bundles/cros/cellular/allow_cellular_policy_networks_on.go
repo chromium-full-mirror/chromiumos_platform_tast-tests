@@ -26,18 +26,18 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:           AllowCellularPolicyNetworksOn,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
-		LifeCycleStage: testing.LifeCycleInDevelopment,
-		Desc:           "Tests the policy that only allows managed cellular networks",
+		Func:         AllowCellularPolicyNetworksOn,
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Desc:         "Tests the policy that only allows managed cellular networks",
 		Contacts: []string{
-			"alfredyu@cienet.com",
-			"chromeos-connectivity-cienet-external@google.com",
+			"cros-connectivity@google.com",
+			"nikhilcn@google.com",
 		},
-		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
-		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:cellular", "cellular_sim_test_esim", "cellular_e2e"},
-		Fixture:      "cellularWithFakeDMSEnrolledAndTestSIM",
+		BugComponent:   "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		SoftwareDeps:   []string{"chrome"},
+		Attr:           []string{"group:cellular", "cellular_sim_test_esim", "cellular_e2e"},
+		Fixture:        "cellularWithFakeDMSEnrolledAndTestSIM",
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DeviceOpenNetworkConfiguration{}, pci.VerifiedFunctionalityOS),
 		},
