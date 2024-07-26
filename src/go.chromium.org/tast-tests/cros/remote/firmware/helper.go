@@ -933,7 +933,12 @@ func (h *Helper) SetDUTPower(ctx context.Context, powerOn bool) error {
 
 		// servo will fail to turn CC off if DUT is already unpowered (battery cutoff).
 		// Since any real errors with servo will show up again in `SetPDRole`, keep this as warning.
-		if err := h.Servo.ServoCcOff(ctx); err != nil {
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			if err := h.Servo.ServoCcOff(ctx); err != nil {
+				return err
+			}
+			return nil
+		}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 1 * time.Second}); err != nil {
 			testing.ContextLogf(ctx, "Cannot reset CC on Servo: %s", err)
 		}
 
