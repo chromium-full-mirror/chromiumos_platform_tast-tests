@@ -1,8 +1,8 @@
-// Copyright 2023 The ChromiumOS Authors
+// Copyright 2024 The ChromiumOS Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package enterpriseconnectors
+package testrunners
 
 import (
 	"context"
@@ -34,144 +34,13 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-type fileSystemType string
-
-const (
-	fileSystemTypeUSB    fileSystemType = "usb"
-	fileSystemTypeGDrive fileSystemType = "gdrive"
-)
-
-type fileTransferTestParams struct {
-	testParams helpers.TestParams
-	fileSystem fileSystemType
-}
-
-func init() {
-	testing.AddTest(&testing.Test{
-		Func:         TestFileTransfer,
-		LacrosStatus: testing.LacrosVariantUnneeded, // This test tests the files app, which is an ash app, so no lacros needed.
-		Desc:         "Enterprise connector test for transferring files between different file systems",
-		Timeout:      30 * time.Minute,
-		Contacts: []string{
-			"cros-enterprise-connectors@google.com",
-			"sseckler@google.com",
-			"webprotect-eng@google.com",
-		},
-		BugComponent: "b:1240978",
-		SoftwareDeps: []string{
-			"chrome",
-			"chrome_internal",
-			"gaia",
-		},
-		Attr: []string{
-			"group:hw_agnostic",
-			"group:golden_tier",
-			"group:medium_low_tier",
-			"group:hardware",
-		},
-		Params: []testing.Param{
-			{
-				Name:    "scan_enabled_allows_immediate_and_unscannable",
-				Fixture: "ashGaiaSignedInProdPolicyWPEnabledAllowExtra",
-				Val: fileTransferTestParams{
-					testParams: helpers.TestParams{
-						AllowsImmediateDelivery: true,
-						AllowsUnscannableFiles:  true,
-						ScansEnabled:            true,
-						BrowserType:             browser.TypeAsh,
-					},
-					fileSystem: fileSystemTypeUSB,
-				},
-			},
-			{
-				Name:    "scan_enabled_allows_immediate_and_unscannable_drive",
-				Fixture: "ashGaiaSignedInProdPolicyWPEnabledAllowExtra",
-				Val: fileTransferTestParams{
-					testParams: helpers.TestParams{
-						AllowsImmediateDelivery: true,
-						AllowsUnscannableFiles:  true,
-						ScansEnabled:            true,
-						BrowserType:             browser.TypeAsh,
-					},
-					fileSystem: fileSystemTypeGDrive,
-				},
-			},
-			{
-				Name:    "scan_enabled_blocks_immediate_and_unscannable",
-				Fixture: "ashGaiaSignedInProdPolicyWPEnabledBlockExtra",
-				Val: fileTransferTestParams{
-					testParams: helpers.TestParams{
-						AllowsImmediateDelivery: false,
-						AllowsUnscannableFiles:  false,
-						ScansEnabled:            true,
-						BrowserType:             browser.TypeAsh,
-					},
-					fileSystem: fileSystemTypeUSB,
-				},
-			},
-			{
-				Name:    "scan_enabled_blocks_immediate_and_unscannable_drive",
-				Fixture: "ashGaiaSignedInProdPolicyWPEnabledBlockExtra",
-				Val: fileTransferTestParams{
-					testParams: helpers.TestParams{
-						AllowsImmediateDelivery: false,
-						AllowsUnscannableFiles:  false,
-						ScansEnabled:            true,
-						BrowserType:             browser.TypeAsh,
-					},
-					fileSystem: fileSystemTypeGDrive,
-				},
-			},
-			{
-				Name:    "scan_disabled",
-				Fixture: "ashGaiaSignedInProdPolicyWPDisabled",
-				Val: fileTransferTestParams{
-					testParams: helpers.TestParams{
-						AllowsImmediateDelivery: true,
-						AllowsUnscannableFiles:  true,
-						ScansEnabled:            false,
-						BrowserType:             browser.TypeAsh,
-					},
-					fileSystem: fileSystemTypeUSB,
-				},
-			},
-		},
-		Data: []string{
-			"download.html", // download.html required for CheckFCMTokenRegistered.
-			"7ssns.txt",
-			"10ssns.txt",
-			"allowed.txt",
-			"content.exe",
-			"unknown_malware_encrypted.zip",
-			"unknown_malware.zip",
-		},
-	})
-}
-
 // TestFileTransfer tests the correct behavior of the enterprise connectors
 // when transferring a file across file systems within the files app.
 // Hereby, it is checked:
 // 1. Whether a file is blocked or not
 // 2. Whether the correct UI is shown
 // 3. Whether the deep scan result is correct (especially relevant for AllowsImmediateDelivery==true)
-func TestFileTransfer(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
-
-	// Clear Downloads directory.
-	downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
-	if err != nil {
-		s.Fatal("Failed to get user's Download path: ", err)
-	}
-	files, err := ioutil.ReadDir(downloadsPath)
-	if err != nil {
-		s.Fatal("Failed to get files from Downloads directory")
-	}
-	for _, file := range files {
-		if err := os.RemoveAll(filepath.Join(downloadsPath, file.Name())); err != nil {
-			s.Fatal("Failed to remove file: ", file.Name())
-		}
-	}
-
+func TestFileTransfer(ctx context.Context, s *testing.State, cr *chrome.Chrome, cryptohomeUsername string) {
 	// Verify policy.
 	tconnAsh, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -182,7 +51,7 @@ func TestFileTransfer(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get device policies: ", err)
 	}
 	_, ok := devicePolicies.Chrome["OnFileTransferEnterpriseConnector"]
-	testParams := s.Param().(fileTransferTestParams).testParams
+	testParams := s.Param().(helpers.FileTransferTestParams).TestParams
 	if !ok && testParams.ScansEnabled {
 		s.Fatal("Policy isn't set, but should be")
 	}
@@ -236,10 +105,25 @@ func TestFileTransfer(ctx context.Context, s *testing.State) {
 	defer dconn.Close()
 	defer dconn.CloseTarget(cleanupCtx)
 
+	// Clear Downloads directory.
+	downloadsPath, err := cryptohome.DownloadsPath(ctx, cryptohomeUsername)
+	if err != nil {
+		s.Fatal("Failed to get user's Download path: ", err)
+	}
+	files, err := ioutil.ReadDir(downloadsPath)
+	if err != nil {
+		s.Fatal("Failed to get files from Downloads directory")
+	}
+	for _, file := range files {
+		if err := os.RemoveAll(filepath.Join(downloadsPath, file.Name())); err != nil {
+			s.Fatal("Failed to remove file: ", file.Name())
+		}
+	}
+
 	// Need to wait for a valid fcm token, i.e., the proper initialization of the enterprise connectors.
 	if testParams.ScansEnabled {
 		s.Log("Checking for fcm token")
-		downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
+		downloadsPath, err := cryptohome.DownloadsPath(ctx, cryptohomeUsername)
 		if err != nil {
 			s.Fatal("Failed to get user's Download path: ", err)
 		}
@@ -249,7 +133,7 @@ func TestFileTransfer(ctx context.Context, s *testing.State) {
 	}
 
 	// Create test directory if it does not yet exist.
-	myFilesPath, err := cryptohome.MyFilesPath(ctx, cr.NormalizedUser())
+	myFilesPath, err := cryptohome.MyFilesPath(ctx, cryptohomeUsername)
 	if err != nil {
 		s.Fatal("Failed to get user's MyFiles path: ", err)
 	}
@@ -268,7 +152,7 @@ func TestFileTransfer(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to stat testDirPath(%s): %s", testDirPath, err)
 	}
 
-	fileSystem := s.Param().(fileTransferTestParams).fileSystem
+	fileSystem := s.Param().(helpers.FileTransferTestParams).FileSystem
 
 	filesApp, openTestedFileSystem, closeFilesApp, err := launchFilesAppWithFileSystem(ctx, tconnAsh, fileSystem)
 	if err != nil {
@@ -278,7 +162,7 @@ func TestFileTransfer(ctx context.Context, s *testing.State) {
 
 	myFilesIsSource := true
 	testFileParams := helpers.GetTestFileParamsWithWarn()
-	if fileSystem == fileSystemTypeGDrive {
+	if fileSystem == helpers.FileSystemTypeGDrive {
 		// Note: if myFilesIsSource == false, we expect files to already exist before the test.
 		// For gdrive, we use a shared drive that all test accounts can access.
 		myFilesIsSource = false
@@ -290,7 +174,7 @@ func TestFileTransfer(ctx context.Context, s *testing.State) {
 		if succeeded := s.Run(ctx, testFileParams.TestName, func(ctx context.Context, s *testing.State) {
 			subTestCtx, cancel := context.WithTimeout(ctx, 10*time.Minute)
 			defer cancel()
-			testFileTransferForFile(subTestCtx, testFileParams, testParams, br, s, testDirPath, tconnAsh, filesApp, openTestedFileSystem, myFilesIsSource)
+			testFileTransferForFile(subTestCtx, testFileParams, testParams, cr, br, s, testDirPath, tconnAsh, filesApp, openTestedFileSystem, myFilesIsSource)
 		}); !succeeded {
 			// Stop, if the subtest fails as it might have left the state unusable.
 			// It also prevents showing wrong errors on tastboard.
@@ -303,6 +187,7 @@ func testFileTransferForFile(
 	ctx context.Context,
 	testFileParams helpers.TestFileParams,
 	testParams helpers.TestParams,
+	cr *chrome.Chrome,
 	br *browser.Browser,
 	s *testing.State,
 	testDirPath string,
@@ -333,8 +218,6 @@ func testFileTransferForFile(
 	}
 
 	shouldWarnTransfer := testParams.ScansEnabled && !testParams.AllowsImmediateDelivery && !shouldBlockTransfer && testFileParams.IsWarn
-
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "dump_on_error")
 
@@ -520,11 +403,11 @@ func waitForFileTransferWarnedAndProceed(
 	return nil
 }
 
-func launchFilesAppWithFileSystem(ctx context.Context, tconnAsh *chrome.TestConn, fileSystem fileSystemType) (filesApp *filesapp.FilesApp, openTestedFileSystem, cancel func(ctx context.Context) error, err error) {
-	if fileSystem == fileSystemTypeUSB {
+func launchFilesAppWithFileSystem(ctx context.Context, tconnAsh *chrome.TestConn, fileSystem helpers.FileSystemType) (filesApp *filesapp.FilesApp, openTestedFileSystem, cancel func(ctx context.Context) error, err error) {
+	if fileSystem == helpers.FileSystemTypeUSB {
 		return launchFilesAppWithFormattedUsb(ctx, tconnAsh)
 	}
-	if fileSystem == fileSystemTypeGDrive {
+	if fileSystem == helpers.FileSystemTypeGDrive {
 		return launchFilesAppWithDrive(ctx, tconnAsh)
 	}
 	return nil, nil, nil, errors.Errorf("invalid fileSystemType: %s", fileSystem)

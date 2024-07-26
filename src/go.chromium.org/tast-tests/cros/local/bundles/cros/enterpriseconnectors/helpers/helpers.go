@@ -57,6 +57,22 @@ const (
 	DownloadBubbleStateBlocked DownloadBubbleState = "blocked"
 )
 
+// FileSystemType represents a file system used in File Transfer Enterprise Connectors tests.
+type FileSystemType string
+
+const (
+	// FileSystemTypeUSB represents a virtual USB flash drive.
+	FileSystemTypeUSB FileSystemType = "usb"
+	// FileSystemTypeGDrive represents a Google Drive file system.
+	FileSystemTypeGDrive FileSystemType = "gdrive"
+)
+
+// FileTransferTestParams are extended parameters used for File Transfer Enterprise Connectors tests.
+type FileTransferTestParams struct {
+	TestParams TestParams
+	FileSystem FileSystemType
+}
+
 // ScanningTimeOut describes the typical time out for a scan.
 // The scanning timeout of chrome is 5 minutes, so we wait a bit more to get a proper TIMEOUT notification.
 const ScanningTimeOut = 6 * time.Minute
