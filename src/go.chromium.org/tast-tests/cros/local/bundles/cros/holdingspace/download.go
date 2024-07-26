@@ -13,9 +13,7 @@ import (
 	"path/filepath"
 	"time"
 
-	commonash "go.chromium.org/tast-tests/cros/common/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/holdingspace"
@@ -301,9 +299,8 @@ func testDownloadLaunch(
 		// request. Until the download is unblocked, the local server will hang.
 		unblockDownload,
 
-		// Wait for and close the download complete notification as it may be atop
-		// holding space, blocking user interactions.
-		waitForAndCloseAllDownloadCompleteNotifications(arg),
+		// Wait for the download to complete.
+		waitUntilAllDownloadCompletedChipsExist(arg),
 
 		// Select all download chips.
 		selectAllDownloadChips(arg),
@@ -341,8 +338,7 @@ func testDownloadPauseAndResume(
 		unblockDownload,
 
 		// Wait for the download to complete.
-		waitForAndCloseAllDownloadCompleteNotifications(arg),
-		waitUntilAllDownloadChipsExist(arg),
+		waitUntilAllDownloadCompletedChipsExist(arg),
 	)
 }
 
@@ -361,9 +357,8 @@ func testDownloadPinAndUnpin(
 		// request. Until the download is unblocked, the local server will hang.
 		unblockDownload,
 
-		// Wait for and close the download complete notification as it may be atop
-		// holding space, blocking user interactions.
-		waitForAndCloseAllDownloadCompleteNotifications(arg),
+		// Wait for the download to complete.
+		waitUntilAllDownloadCompletedChipsExist(arg),
 
 		// Select all download chips.
 		selectAllDownloadChips(arg),
@@ -395,7 +390,7 @@ func testDownloadPinAndUnpin(
 
 		// Ensure that the download chip continues to exist despite the pinned
 		// holding space item associated with the same download being destroyed.
-		waitUntilAllDownloadChipsExist(arg),
+		waitUntilAllDownloadCompletedChipsExist(arg),
 	)
 }
 
@@ -406,9 +401,8 @@ func testDownloadRemove(
 		// request. Until the download is unblocked, the local server will hang.
 		unblockDownload,
 
-		// Wait for and close the download complete notification as it may be atop
-		// holding space, blocking user interactions.
-		waitForAndCloseAllDownloadCompleteNotifications(arg),
+		// Wait for the download to complete.
+		waitUntilAllDownloadCompletedChipsExist(arg),
 
 		// Select all download chips.
 		selectAllDownloadChips(arg),
@@ -448,34 +442,17 @@ func selectAllDownloadChips(arg *downloadArguments) uiauto.Action {
 	)
 }
 
-func waitForAndCloseAllDownloadCompleteNotifications(arg *downloadArguments) uiauto.Action {
-	return uiauto.Combine("wait for and close all download complete notifications",
-		forEachFile(arg, func(file string) uiauto.Action {
-			return func(ctx context.Context) error {
-				_, err := ash.WaitForNotification(
-					ctx, arg.tconn, 1*time.Second, ash.WaitTitleOrMessageContains(file),
-					func(notification *ash.Notification) bool {
-						// The `notification` will be of `Type` progress until completion.
-						return notification.Type != commonash.NotificationTypeProgress
-					})
-				return err
-			}
-		}),
-		func(ctx context.Context) error {
-			return ash.CloseNotifications(ctx, arg.tconn)
-		},
-	)
-}
-
-func waitUntilAllDownloadChipsExist(arg *downloadArguments) uiauto.Action {
-	return forEachFile(arg, func(file string) uiauto.Action {
-		return arg.ui.WaitUntilExists(holdingspace.FindDownloadChip().NameContaining(file))
-	})
-}
-
 func waitUntilAllDownloadChipsGone(arg *downloadArguments) uiauto.Action {
 	return forEachFile(arg, func(file string) uiauto.Action {
 		return arg.ui.WaitUntilGone(holdingspace.FindDownloadChip().NameContaining(file))
+	})
+}
+
+func waitUntilAllDownloadCompletedChipsExist(arg *downloadArguments) uiauto.Action {
+	return forEachFile(arg, func(file string) uiauto.Action {
+		// NOTE: Name is only an exact match if the download is completed. Otherwise
+		// it is prefaced to indicate in-progress state, e.g. "Downloading file...";
+		return arg.ui.WaitUntilExists(holdingspace.FindDownloadChip().Name(file))
 	})
 }
 
