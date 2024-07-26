@@ -33,7 +33,7 @@ func init() {
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		Contacts: []string{
 			"chromeos-gfx@google.com",
-			"mcasas@chromium.org",
+			"hiroh@chromium.org",
 		},
 		Attr:         []string{"group:graphics", "graphics_video", "graphics_nightly"},
 		SoftwareDeps: []string{"chrome", "no_qemu"},

@@ -33,7 +33,6 @@ func init() {
 		Contacts: []string{
 			"bchoobineh@google.com",
 			"chromeos-gfx-video@google.com",
-			"mcasas@chromium.org", // Test author.
 		},
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		SoftwareDeps: []string{"chrome"},

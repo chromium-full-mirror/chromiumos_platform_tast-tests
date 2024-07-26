@@ -28,7 +28,7 @@ func init() {
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		Contacts: []string{
 			"chromeos-gfx-video@google.com",
-			"mcasas@chromium.org",
+			"hiroh@chromium.org",
 		},
 		Attr:         []string{"group:graphics", "graphics_perbuild"},
 		SoftwareDeps: []string{"no_qemu"},

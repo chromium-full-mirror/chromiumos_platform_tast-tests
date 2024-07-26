@@ -25,7 +25,6 @@ func init() {
 		Contacts: []string{
 			"hiroh@chromium.org",
 			"chromeos-gfx-video@google.com",
-			"mcasas@chromium.org",
 		},
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		Vars:         []string{"webrtc.RTCPeerConnectionPerf.SaveTracing"},

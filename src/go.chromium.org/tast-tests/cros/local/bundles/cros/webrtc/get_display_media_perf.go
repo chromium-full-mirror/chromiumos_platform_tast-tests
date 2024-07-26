@@ -30,7 +30,6 @@ func init() {
 		Desc:         "Verifies that WebRTC getDisplayMedia() (screen, window, tab capture) works and collects performance data",
 		Contacts: []string{
 			"chromeos-gfx-video@google.com",
-			"mcasas@chromium.org", // Test author.
 			"hiroh@chromium.org",
 		},
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
