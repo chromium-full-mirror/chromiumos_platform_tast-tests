@@ -490,6 +490,38 @@ func TestPlatformDecodingParams(t *testing.T) {
 			param.IgnoredSysLogs = strings.Join(ignoredSysLogs, ", ")
 			params = append(params, param)
 		}
+
+		// Generates V4L2 HEVC tests from bugs files.
+		for _, bugID := range test_vectors.SortedStringKeys(test_vectors.HEVCFilesFromBugs) {
+			if stateness == "Stateful" {
+				continue
+			}
+			files := fmt.Sprintf("test_vectors.HEVCFilesFromBugs[\"%s\"]", bugID)
+
+			hardwareDeps := commonHardwareDeps
+
+			param := paramData{
+				Name:               fmt.Sprintf("v4l2_%s_hevc_files_from_bugs_%s", strings.ToLower(stateness), bugID),
+				Decoder:            decoderExecutable,
+				DecoderArgsBuilder: decoderArgsBuilder,
+				Files:              files,
+				Timeout:            defaultTimeout,
+				HardwareDeps:       strings.Join(hardwareDeps, ", "),
+				SoftwareDeps:       []string{"v4l2_codec", caps.HWDecodeHEVC},
+				Metadata:           files,
+				Attr:               []string{"graphics_video_hevc"},
+			}
+			var ignoredSysLogs = []string{}
+			if stateness == "Stateless" {
+				param.Attr = append(param.Attr, "graphics_perbuild")
+				// TODO(b/311261558) - when this resolves, we can remove the IgnoredSysLogs entry.
+				ignoredSysLogs = append(ignoredSysLogs, "graphics.SysLogKernelSplats")
+			} else {
+				param.Attr = append(param.Attr, "graphics_weekly")
+			}
+			param.IgnoredSysLogs = strings.Join(ignoredSysLogs, ", ")
+			params = append(params, param)
+		}
 	}
 
 	params = append(params, paramData{
