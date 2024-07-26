@@ -41,14 +41,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify that if a user forgets a network, the proxy settings are removed for that network as well",
 		Contacts: []string{
-			// "cros-connectivity@google.com",
-			// "chromeos-connectivity-engprod@google.com",
-			"chromeos-connectivity-cienet-external@google.com",
-			"cj.tsai@cienet.com",
+			"cros-connectivity@google.com",
+			"chromeos-connectivity-engprod@google.com",
 		},
 		BugComponent:   "b:1318544", // ChromeOS > Software > System Services > Connectivity > General
-		LifeCycleStage: testing.LifeCycleInDevelopment,
-		Attr:           []string{"group:wificell", "wificell_e2e_unstable"},
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Attr:           []string{"group:wificell", "wificell_e2e"},
 		TestBedDeps:    []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
 		ServiceDeps: []string{
 			wificell.ShillServiceName,
