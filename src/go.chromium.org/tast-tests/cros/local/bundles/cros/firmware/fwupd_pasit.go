@@ -23,15 +23,15 @@ func init() {
 			"cros-fwupd-eng@google.com", // Owning team mailing list
 			"rishabhagr@google.com",     // Test author
 		},
-		Attr:         []string{},
+		Attr:         []string{"group:pasit", "pasit_fwupd"},
 		SoftwareDeps: []string{"fwupd"},
 		VarDeps: []string{
-			"fwupd.deviceGuid",
-			"fwupd.baseFwVersion",
-			"fwupd.newFwVersion",
+			"DeviceGuid",
+			"BaseFwVersion",
+			"NewFwVersion",
 		},
 		Vars: []string{
-			"fwupd.activateRequired",
+			"ActivationRequired",
 		},
 		Fixture: "prepareFwupd",
 		Timeout: 30 * time.Minute,
@@ -42,16 +42,16 @@ func FwupdPasit(ctx context.Context, s *testing.State) {
 	fwd := s.FixtValue().(*fwupd.FixtData).Fwupd
 
 	var activateRequired = false
-	if activate, ok := s.Var("fwupd.activateRequired"); ok {
+	if activate, ok := s.Var("ActivationRequired"); ok {
 		if activate != "true" && activate != "false" {
-			s.Fatal("fwupd.activateRequired variable only accepts 'true' or 'false' values")
+			s.Fatal("ActivationRequired variable only accepts 'true' or 'false' values")
 		}
 		if activate == "true" {
 			activateRequired = true
 		}
 	}
 
-	var deviceGUID = s.RequiredVar("fwupd.deviceGuid")
+	var deviceGUID = s.RequiredVar("DeviceGuid")
 	device, err := fwd.DeviceByGUID(ctx, deviceGUID)
 	if err != nil {
 		s.Fatalf("Failed to detect device with GUID: %q Error: %s", deviceGUID, err)
@@ -68,12 +68,12 @@ func FwupdPasit(ctx context.Context, s *testing.State) {
 			"allow-older":     dbus.MakeVariant(true),
 		}
 	// Install base version on device
-	err = fwd.InstallDeviceByVersion(ctx, device, s.RequiredVar("fwupd.baseFwVersion"), installOptions, activateRequired)
+	err = fwd.InstallDeviceByVersion(ctx, device, s.RequiredVar("BaseFwVersion"), installOptions, activateRequired)
 	if err != nil {
 		s.Fatal("Failed to successfully install base version: ", err)
 	}
 
-	newFwVersion := s.RequiredVar("fwupd.newFwVersion")
+	newFwVersion := s.RequiredVar("NewFwVersion")
 
 	// Check if signed reports exist for the target firmware version
 	release, err := fwd.FindReleaseByVersion(ctx, device.DeviceId, newFwVersion)
