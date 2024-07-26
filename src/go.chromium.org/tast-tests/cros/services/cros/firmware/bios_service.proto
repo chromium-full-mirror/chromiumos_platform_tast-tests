@@ -13,29 +13,35 @@ option go_package = "go.chromium.org/tast-tests/cros/services/cros/firmware";
 // BiosService provides ability to manipulate bios settings on DUT
 service BiosService {
   // SetAPSoftwareWriteProtect sets the software AP write protect.
-  rpc SetAPSoftwareWriteProtect (WPRequest) returns (google.protobuf.Empty) {}
+  rpc SetAPSoftwareWriteProtect(WPRequest) returns (google.protobuf.Empty) {}
   // CorruptFWSection writes garbage bytes to the entire section specified.
-  rpc CorruptFWSection (FWSectionInfo) returns (FWSectionInfo) {}
-  // BackupImageSection backs up the current fw region locally and returns its path.
-  rpc BackupImageSection (FWSectionInfo) returns (FWSectionInfo) {}
+  rpc CorruptFWSection(FWSectionInfo) returns (FWSectionInfo) {}
+  // BackupImageSection backs up the current fw region locally and returns its
+  // path.
+  rpc BackupImageSection(FWSectionInfo) returns (FWSectionInfo) {}
   // RestoreImageSection restores the fw region from path.
-  rpc RestoreImageSection (FWSectionInfo) returns (google.protobuf.Empty) {}
-  // WriteImageFromMultiSectionFile writes the provided multi section file in the specified section.
-  rpc WriteImageFromMultiSectionFile (FWSectionInfo) returns (google.protobuf.Empty) {}
-  // ChromeosFirmwareUpdate will perform the firmware update in the desired mode.
-  rpc ChromeosFirmwareUpdate (FirmwareUpdateModeRequest) returns (google.protobuf.Empty) {}
+  rpc RestoreImageSection(FWSectionInfo) returns (google.protobuf.Empty) {}
+  // WriteImageFromMultiSectionFile writes the provided multi section file in
+  // the specified section.
+  rpc WriteImageFromMultiSectionFile(FWSectionInfo)
+      returns (google.protobuf.Empty) {}
+  // ChromeosFirmwareUpdate will perform the firmware update in the desired
+  // mode.
+  rpc ChromeosFirmwareUpdate(FirmwareUpdateModeRequest)
+      returns (google.protobuf.Empty) {}
   // ParseFMAP reads and parses FMAP section for given programmer.
-  rpc ParseFMAP (FMAP) returns (FMAP) {}
+  rpc ParseFMAP(FMAP) returns (FMAP) {}
   // CorruptCBFSFWSection corrupts CBFS file in specified section in chosen way.
-  rpc CorruptCBFSFWSection (CBFSCorruptInfo) returns (FWSectionInfo) {}
+  rpc CorruptCBFSFWSection(CBFSCorruptInfo) returns (FWSectionInfo) {}
 }
 
-// GBBFlag bit positions. These must match what is in src/platform/vboot_reference/firmware/2lib/include/2gbb_flags.h.
+// GBBFlag bit positions. These must match what is in
+// src/platform/vboot_reference/firmware/2lib/include/2gbb_flags.h.
 enum GBBFlag {
   // Reduce the dev screen delay to 2 sec from 30 sec to speed up factory.
   DEV_SCREEN_SHORT_DELAY = 0;
-  LOAD_OPTION_ROMS = 1 [deprecated = true];
-  ENABLE_ALTERNATE_OS = 2 [deprecated = true];
+  LOAD_OPTION_ROMS = 1 [ deprecated = true ];
+  ENABLE_ALTERNATE_OS = 2 [ deprecated = true ];
   // Force dev switch on, regardless of physical/keyboard dev switch position.
   FORCE_DEV_SWITCH_ON = 3;
   // Allow booting from external disk in dev mode even if dev_boot_usb=0.
@@ -46,8 +52,8 @@ enum GBBFlag {
   ENTER_TRIGGERS_TONORM = 6;
   // Allow booting Legacy OSes in dev mode even if dev_boot_altfw=0.
   FORCE_DEV_BOOT_LEGACY = 7;
-  // Currently running FAFT tests.
-  RUNNING_FAFT = 8;
+  // Currently running FAFT tests. Do not use.
+  DEPRECATED_RUNNING_FAFT = 8 [ deprecated = true ];
   // Disable EC software sync
   DISABLE_EC_SOFTWARE_SYNC = 9;
   // Default to booting legacy OS when dev screen times out
@@ -56,7 +62,7 @@ enum GBBFlag {
   DISABLE_AUXFW_SOFTWARE_SYNC = 11;
   // Disable shutdown on lid closed
   DISABLE_LID_SHUTDOWN = 12;
-  FORCE_DEV_BOOT_FASTBOOT_FULL_CAP = 13 [deprecated = true];
+  FORCE_DEV_BOOT_FASTBOOT_FULL_CAP = 13 [ deprecated = true ];
   // Recovery mode always assumes manual recovery, even if EC_IN_RW=1
   FORCE_MANUAL_RECOVERY = 14;
   // Disable FWMP
@@ -132,7 +138,8 @@ enum UpdateMode {
   RecoveryMode = 0;
 }
 
-// GBBFlagsState represents the a known state of GBB flags.  Set flags have precedence over cleared ones.
+// GBBFlagsState represents the a known state of GBB flags.  Set flags have
+// precedence over cleared ones.
 message GBBFlagsState {
   repeated GBBFlag Clear = 1;
   repeated GBBFlag Set = 2;
@@ -147,7 +154,8 @@ message FWSectionInfo {
   Programmer Programmer = 3;
 }
 
-// FirmwareUpdateModeRequest represents the string containing the mode and options to perform the update.
+// FirmwareUpdateModeRequest represents the string containing the mode and
+// options to perform the update.
 message FirmwareUpdateModeRequest {
   UpdateMode Mode = 1;
   string Options = 2;
@@ -160,9 +168,7 @@ message Range {
 }
 
 // WPRequest provides args for enabling/disabling software write protect.
-message WPRequest {
-  bool enable = 1;
-}
+message WPRequest { bool enable = 1; }
 
 // FMAP parses flash map to a map of image section to range (start, length).
 message FMAP {
@@ -184,7 +190,8 @@ enum CBFSCorruptType {
   DATA = 4;
 }
 
-// CBFSCorruptInfo provides args for selecting CBFS file and method for its corruption
+// CBFSCorruptInfo provides args for selecting CBFS file and method for its
+// corruption
 message CBFSCorruptInfo {
   FWSectionInfo section_info = 1;
   CBFSCorruptType type = 2;

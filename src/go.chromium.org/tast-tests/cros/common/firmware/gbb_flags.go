@@ -27,7 +27,7 @@ var nonpreciousGBBFlags []pb.GBBFlag
 func init() {
 	for _, v := range pb.GBBFlag_value {
 		allGBBFlags = append(allGBBFlags, pb.GBBFlag(v))
-		if pb.GBBFlag(v) != pb.GBBFlag_DISABLE_EC_SOFTWARE_SYNC && pb.GBBFlag(v) != pb.GBBFlag_RUNNING_FAFT {
+		if pb.GBBFlag(v) != pb.GBBFlag_DISABLE_EC_SOFTWARE_SYNC {
 			nonpreciousGBBFlags = append(nonpreciousGBBFlags, pb.GBBFlag(v))
 		}
 	}
