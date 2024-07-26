@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
@@ -39,7 +40,7 @@ func init() {
 		Fixture: fixture.NormalMode,
 		Timeout: 15 * time.Minute,
 		// Only run on platforms that include CL crrev/c/1234747 so that CBI can be reversibly written to.
-		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.ECFeatureCBI(), hwdep.SkipOnModel(
+		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.ECFeatureCBI(), hwdep.ECFeatureCbibin(), hwdep.SkipOnModel(
 			"jax", // Fizz models
 			"kench",
 			"sion",
@@ -66,35 +67,38 @@ func ECCbiFlashrom(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to disable write protect: ", err)
 	}
 
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Minute)
+	defer cancel()
+
 	s.Log("Create temp dir in DUT")
 	workPathByteArr, err := h.DUT.Conn().CommandContext(ctx, "mktemp", "-d", tmpCbiFlashromDir).Output(ssh.DumpLogOnError)
-
-	workPath := strings.TrimSpace(string(workPathByteArr))
 	if err != nil {
-		s.Fatal("Failed to create temp dirs: ", err)
+		s.Fatal("Failed to create tmpCbiFlashromDir: ", err)
 	}
+	workPath := strings.TrimSpace(string(workPathByteArr))
+
 	s.Log("Created temp directory at: ", workPath)
 	oldImagePath := filepath.Join(workPath, oldCbiImageName)
 	newImagePath := filepath.Join(workPath, newCbiImageName)
 
-	defer func() {
+	defer func(ctx context.Context) {
 		s.Log("Delete temp dir and contained files from DUT")
 		if _, err := h.DUT.Conn().CommandContext(ctx, "rm", "-r", workPath).Output(ssh.DumpLogOnError); err != nil {
 			s.Fatal("Failed to delete temp dir: ", err)
 		}
-	}()
+	}(cleanupCtx)
 
-	err = getCbiImg(ctx, h, oldImagePath, cbiImageSize)
-	if err != nil {
+	if err := getCbiImg(ctx, h, oldImagePath, cbiImageSize); err != nil {
 		s.Fatal("Failed to backup CBI image: ", err)
 	}
 
-	defer func() {
+	defer func(ctx context.Context) {
 		s.Log("Recovering CBI on EC flash")
 		if err := setCbiImg(ctx, h, oldImagePath, cbiImageSize); err != nil {
 			s.Fatal("Expected to recover CBI: ", err)
 		}
-	}()
+	}(cleanupCtx)
 
 	if err := verifySection(ctx, h, workPath, cbiSectionName); err != nil {
 		s.Fatal("Expected Verify to succeed: ", err)
@@ -105,8 +109,7 @@ func ECCbiFlashrom(ctx context.Context, s *testing.State) {
 		s.Fatal("Expected a successful attempt to corrupt CBI section: ", err)
 	}
 
-	err = getCbiImg(ctx, h, newImagePath, cbiImageSize)
-	if err != nil {
+	if err := getCbiImg(ctx, h, newImagePath, cbiImageSize); err != nil {
 		s.Fatal("Expected read to succeed: ", err)
 	}
 
@@ -121,25 +124,25 @@ func ECCbiFlashrom(ctx context.Context, s *testing.State) {
 }
 
 func getCbiImg(ctx context.Context, h *firmware.Helper, file string, size int) error {
-	out, err := firmware.NewECTool(h.DUT, firmware.ECToolNameMain).CBIBin(ctx, firmware.CBIBinRead, file, strconv.Itoa(size))
-	if err != nil {
+	if out, err := firmware.NewECTool(h.DUT, firmware.ECToolNameMain).CBIBin(ctx, firmware.CBIBinRead, file, strconv.Itoa(size)); err != nil {
 		return errors.Wrapf(err, "failed to read from cbi, got output: %v", out)
 	}
-
 	return nil
 }
 
 func setCbiImg(ctx context.Context, h *firmware.Helper, file string, size int) error {
-	out, err := firmware.NewECTool(h.DUT, firmware.ECToolNameMain).CBIBin(ctx, firmware.CBIBinWrite, file, strconv.Itoa(size))
-	if err != nil {
+	if out, err := firmware.NewECTool(h.DUT, firmware.ECToolNameMain).CBIBin(ctx, firmware.CBIBinWrite, file, strconv.Itoa(size)); err != nil {
 		return errors.Wrapf(err, "failed to read from cbi, got output: %v", out)
 	}
-
 	return nil
 }
 
 func verifySection(ctx context.Context, h *firmware.Helper, workPath, section string) (retErr error) {
 	sectionOffset, sectionSize, err := getSectionInfo(ctx, h, workPath, section)
+	if err != nil {
+		return errors.Wrap(err, "failed to get section info")
+	}
+
 	testing.ContextLog(ctx, "Read following section from Flashrom: ", section)
 
 	var flashromConfig flashrom.Config
@@ -158,18 +161,38 @@ func verifySection(ctx context.Context, h *firmware.Helper, workPath, section st
 		}
 	}()
 	if err != nil {
-		errors.Wrap(err, "flashrom probe failed, unable to build flashrom instance")
+		return errors.Wrap(err, "flashrom probe failed, unable to build flashrom instance")
 	}
 
 	// Temp file to hold image section.
 	tempSectionPath := filepath.Join(workPath, "img.XXXXXX")
 	sectionPathByteArr, err := h.DUT.Conn().CommandContext(ctx, "mktemp", tempSectionPath).Output(ssh.DumpLogOnError)
+	if err != nil {
+		return errors.Wrap(err, "failed to create tempSectionPath")
+	}
 	sectionPath := strings.TrimSpace(string(sectionPathByteArr))
 
 	// Temp file to hold reference image section.
 	tempRefSectionPath := filepath.Join(workPath, "img_ref.XXXXXX")
 	refSectionPathByteArr, err := h.DUT.Conn().CommandContext(ctx, "mktemp", tempRefSectionPath).Output(ssh.DumpLogOnError)
+	if err != nil {
+		return errors.Wrap(err, "failed to create tempRefSectionPath")
+	}
 	refSectionPath := strings.TrimSpace(string(refSectionPathByteArr))
+
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
+	defer func(ctx context.Context) {
+		testing.ContextLog(ctx, "Delete temp files at path ", workPath)
+		if _, err = h.DUT.Conn().CommandContext(ctx, "rm", sectionPath).Output(ssh.DumpLogOnError); err != nil {
+			retErr = errors.Join(retErr, errors.Wrap(err, "failed to delete sectionPath"))
+		}
+		if _, err = h.DUT.Conn().CommandContext(ctx, "rm", refSectionPath).Output(ssh.DumpLogOnError); err != nil {
+			retErr = errors.Join(retErr, errors.Wrap(err, "failed to delete refSectionPath"))
+		}
+	}(cleanupCtx)
 
 	// Create a reference mask of the section.
 	// The reference mask is first created as file of size sectionOffset+sectionSize, filled with 0xFF.
@@ -191,14 +214,6 @@ func verifySection(ctx context.Context, h *firmware.Helper, workPath, section st
 		return errors.Wrapf(err, "expected CBI section not visible to Flashrom: %s", string(out))
 	}
 
-	testing.ContextLog(ctx, "Delete temp files at path ", workPath)
-	if _, err = h.DUT.Conn().CommandContext(ctx, "rm", sectionPath).Output(ssh.DumpLogOnError); err != nil {
-		return errors.Wrap(err, "failed to delete temp file")
-	}
-	if _, err = h.DUT.Conn().CommandContext(ctx, "rm", refSectionPath).Output(ssh.DumpLogOnError); err != nil {
-		return errors.Wrap(err, "failed to delete temp file")
-	}
-
 	return nil
 }
 
@@ -214,6 +229,9 @@ func corruptSectionCbi(ctx context.Context, h *firmware.Helper, workPath, sectio
 	// Temp file to hold corrupted image section.
 	tempSectionPath := filepath.Join(workPath, "img.XXXXXX")
 	sectionPathByteArr, err := h.DUT.Conn().CommandContext(ctx, "mktemp", tempSectionPath).Output(ssh.DumpLogOnError)
+	if err != nil {
+		return errors.Wrap(err, "failed to create tempSectionPath")
+	}
 	sectionPath := strings.TrimSpace(string(sectionPathByteArr))
 
 	var flashromConfig flashrom.Config
@@ -232,7 +250,7 @@ func corruptSectionCbi(ctx context.Context, h *firmware.Helper, workPath, sectio
 		}
 	}()
 	if err != nil {
-		errors.Wrap(err, "flashrom probe failed, unable to build flashrom instance")
+		return errors.Wrap(err, "flashrom probe failed, unable to build flashrom instance")
 	}
 
 	ddArgs := []string{
@@ -261,7 +279,22 @@ func getSectionInfo(ctx context.Context, h *firmware.Helper, workPath, section s
 	// Temp file to hold current image WP_RO.
 	tempSectionPath := filepath.Join(workPath, "img.XXXXXX")
 	sectionPathByteArr, err := h.DUT.Conn().CommandContext(ctx, "mktemp", tempSectionPath).Output(ssh.DumpLogOnError)
+	if err != nil {
+		return 0, 0, errors.Wrap(err, "failed to create tempSectionPath")
+	}
 	sectionPath := strings.TrimSpace(string(sectionPathByteArr))
+
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
+	defer func(ctx context.Context) {
+		if _, err := h.DUT.Conn().CommandContext(ctx, "rm", sectionPath).Output(ssh.DumpLogOnError); err != nil {
+			sectionOffset, sectionSize = 0, 0
+			retErr = errors.Join(retErr, errors.Wrap(err, "failed to delete temp file"))
+		}
+	}(cleanupCtx)
+
 	testing.ContextLog(ctx, "Read WP_RO section to file ", sectionPath)
 
 	var flashromConfig flashrom.Config
@@ -280,7 +313,7 @@ func getSectionInfo(ctx context.Context, h *firmware.Helper, workPath, section s
 		}
 	}()
 	if err != nil {
-		errors.Wrap(err, "flashrom probe failed, unable to build flashrom instance")
+		return 0, 0, errors.Wrap(err, "flashrom probe failed, unable to build flashrom instance")
 	}
 
 	if out, err := flashromInstance.Read(ctx, "", []string{fmt.Sprintf("WP_RO:%s", sectionPath)}); err != nil {
@@ -296,15 +329,11 @@ func getSectionInfo(ctx context.Context, h *firmware.Helper, workPath, section s
 	// Format for the dumped fmap is "SectionName offset size".
 	sectionMatch := regexp.MustCompile(fmt.Sprintf(`%s\s+(\d+)\s+(\d+)`, section)).FindSubmatch(out)
 	if sectionMatch == nil {
-		return 0, 0, nil
+		return 0, 0, errors.Errorf("failed to find section %q", section)
 	}
 	sectionOffset, err = strconv.Atoi(string(sectionMatch[1]))
 	sectionSize, err = strconv.Atoi(string(sectionMatch[2]))
 	testing.ContextLogf(ctx, "Section %q offset: %d size: %d", section, sectionOffset, sectionSize)
-
-	if out, err = h.DUT.Conn().CommandContext(ctx, "rm", sectionPath).Output(ssh.DumpLogOnError); err != nil {
-		return 0, 0, errors.Wrap(err, "failed to delete temp file")
-	}
 
 	return sectionOffset, sectionSize, nil
 }
