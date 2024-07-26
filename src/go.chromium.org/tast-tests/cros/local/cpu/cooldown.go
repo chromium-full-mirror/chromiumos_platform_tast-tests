@@ -281,4 +281,6 @@ var modelTemperatureThresholds = map[string]int{
 	"galnat":     47000,
 	"vilboz360":  46800,
 	"vilboz14":   46800,
+	"lisbon":     53000, // based on b/340958936#comment5
+	"gladios":    53000, // based on b/340958936#comment5
 }
