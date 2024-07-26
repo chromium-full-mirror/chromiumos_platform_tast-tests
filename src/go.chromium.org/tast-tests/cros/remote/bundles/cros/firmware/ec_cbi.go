@@ -6,11 +6,9 @@ package firmware
 
 import (
 	"context"
-	"fmt"
 	"regexp"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast/core/errors"
@@ -58,7 +56,7 @@ func ECCbi(ctx context.Context, s *testing.State) {
 
 	defer func() {
 		s.Log("Cleaning up wp status")
-		if err := setECWriteProtect(ctx, h, false); err != nil {
+		if err := h.SetECWriteProtect(ctx, false); err != nil {
 			s.Fatal("Failed to disable firmware write protect: ", err)
 		}
 
@@ -77,7 +75,7 @@ func ECCbi(ctx context.Context, s *testing.State) {
 	// Test writing new tag/overwriting existing tag with WP disabled.
 
 	s.Log("Disabling write protect")
-	if err := setECWriteProtect(ctx, h, false); err != nil {
+	if err := h.SetECWriteProtect(ctx, false); err != nil {
 		s.Fatal("Failed to disable write protect: ", err)
 	}
 
@@ -106,7 +104,7 @@ func ECCbi(ctx context.Context, s *testing.State) {
 	// Test writing new tag/overwriting existing tag with WP enabled.
 
 	s.Log("Enabling write protect")
-	if err := setECWriteProtect(ctx, h, true); err != nil {
+	if err := h.SetECWriteProtect(ctx, true); err != nil {
 		s.Fatal("Failed to enable write protect: ", err)
 	}
 
@@ -132,41 +130,6 @@ func ECCbi(ctx context.Context, s *testing.State) {
 	} else if out == testData1 {
 		s.Fatalf("Write should have failed, expected %q, got %q: %v", testData2, out, err)
 	}
-}
-
-func setECWriteProtect(ctx context.Context, h *firmware.Helper, enable bool) error {
-	enableStr := "enable"
-	if !enable {
-		enableStr = "disable"
-
-		testing.ContextLog(ctx, "Setting fwwpstate to off")
-		if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateOff); err != nil {
-			return errors.Wrap(err, "failed to set fwwpstate to off")
-		}
-	}
-
-	testing.ContextLogf(ctx, "Setting ec write protect to %q with ec console", enableStr)
-	if err := h.Servo.RunECCommand(ctx, fmt.Sprintf("flashwp %t", enable)); err != nil {
-		return errors.Wrap(err, "failed to enable flashwp")
-	}
-
-	if enable {
-		testing.ContextLog(ctx, "Setting fwwpstate to on")
-		if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateOn); err != nil {
-			return errors.Wrap(err, "failed to set fwwpstate to on")
-		}
-	}
-
-	testing.ContextLog(ctx, "Rebooting the DUT with cold reset")
-	if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
-		return errors.Wrap(err, "failed to reboot the DUT with cold reset")
-	}
-
-	if err := h.WaitConnect(ctx); err != nil {
-		return errors.Wrap(err, "failed to wait for DUT to reconnect")
-	}
-
-	return nil
 }
 
 func writeTagToCbi(ctx context.Context, h *firmware.Helper, tag, data, size string) error {

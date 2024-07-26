@@ -56,7 +56,7 @@ func ECCbiEeprom(ctx context.Context, s *testing.State) {
 
 	defer func() {
 		s.Log("Cleaning up wp status")
-		if err := setECWriteProtect(ctx, h, false); err != nil {
+		if err := h.SetECWriteProtect(ctx, false); err != nil {
 			s.Fatal("Failed to disable firmware write protect: ", err)
 		}
 
@@ -75,7 +75,7 @@ func ECCbiEeprom(ctx context.Context, s *testing.State) {
 	// Test writing new tag/overwriting existing tag with WP disabled.
 
 	s.Log("Disabling write protect")
-	if err := setECWriteProtect(ctx, h, false); err != nil {
+	if err := h.SetECWriteProtect(ctx, false); err != nil {
 		s.Fatal("Failed to disable write protect: ", err)
 	}
 
@@ -104,7 +104,7 @@ func ECCbiEeprom(ctx context.Context, s *testing.State) {
 	// Test writing new tag/overwriting existing tag with WP enabled.
 
 	s.Log("Enabling write protect")
-	if err := setECWriteProtect(ctx, h, true); err != nil {
+	if err := h.SetECWriteProtect(ctx, true); err != nil {
 		s.Fatal("Failed to enable write protect: ", err)
 	}
 

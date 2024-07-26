@@ -62,7 +62,7 @@ func ECCbiFlashrom(ctx context.Context, s *testing.State) {
 	cbiImageSize := 256
 
 	s.Log("Disabling write protect")
-	if err := setECWriteProtect(ctx, h, false); err != nil {
+	if err := h.SetECWriteProtect(ctx, false); err != nil {
 		s.Fatal("Failed to disable write protect: ", err)
 	}
 

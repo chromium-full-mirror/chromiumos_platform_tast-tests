@@ -2402,3 +2402,39 @@ func (h *Helper) PrepareKeysWithScript(ctx context.Context, opts MakeKeysOption)
 	}
 	return nil
 }
+
+// SetECWriteProtect sets the EC's write protection and reboots the DUT with a cold reset.
+func (h *Helper) SetECWriteProtect(ctx context.Context, enable bool) error {
+	enableStr := "enable"
+	if !enable {
+		enableStr = "disable"
+
+		testing.ContextLog(ctx, "Setting fwwpstate to off")
+		if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateOff); err != nil {
+			return errors.Wrap(err, "failed to set fwwpstate to off")
+		}
+	}
+
+	testing.ContextLogf(ctx, "Setting ec write protect to %q with ec console", enableStr)
+	if err := h.Servo.RunECCommand(ctx, fmt.Sprintf("flashwp %t", enable)); err != nil {
+		return errors.Wrap(err, "failed to enable flashwp")
+	}
+
+	if enable {
+		testing.ContextLog(ctx, "Setting fwwpstate to on")
+		if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateOn); err != nil {
+			return errors.Wrap(err, "failed to set fwwpstate to on")
+		}
+	}
+
+	testing.ContextLog(ctx, "Rebooting the DUT with cold reset")
+	if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
+		return errors.Wrap(err, "failed to reboot the DUT with cold reset")
+	}
+
+	if err := h.WaitConnect(ctx, ResetEthernetDongle); err != nil {
+		return errors.Wrap(err, "failed to wait for DUT to reconnect")
+	}
+
+	return nil
+}

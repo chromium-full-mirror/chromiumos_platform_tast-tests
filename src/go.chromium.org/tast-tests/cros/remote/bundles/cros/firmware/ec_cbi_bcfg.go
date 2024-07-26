@@ -49,7 +49,7 @@ func ECCbiBcfg(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Disabling write protect")
-	if err := setECWriteProtect(ctx, h, false); err != nil {
+	if err := h.SetECWriteProtect(ctx, false); err != nil {
 		s.Fatal("Failed to disable write protect: ", err)
 	}
 
@@ -88,7 +88,7 @@ func ECCbiBcfg(ctx context.Context, s *testing.State) {
 
 	defer func() {
 		s.Log("Cleaning up wp status")
-		if err := setECWriteProtect(ctx, h, false); err != nil {
+		if err := h.SetECWriteProtect(ctx, false); err != nil {
 			s.Fatal("Failed to disable firmware write protect: ", err)
 		}
 
@@ -212,7 +212,7 @@ func getManufacturerAndDeviceName(ctx context.Context, h *firmware.Helper) (stri
 	return manufName, deviceName, nil
 }
 
-// Modifies the input bytes and return updated bytes as output
+// getUpdatedBcfgBytes modifies the input bytes and return updated bytes as output.
 func getUpdatedBcfgBytes(ctx context.Context, h *firmware.Helper, bcfgData []byte, battManufName, battDeviceName string) ([]byte, error) {
 	key0 := strings.Join([]string{battManufName, battDeviceName}, ",")
 	key1 := "batt_info"
