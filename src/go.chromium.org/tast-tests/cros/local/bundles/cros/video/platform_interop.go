@@ -46,7 +46,7 @@ func init() {
 		Desc:         "Verifies interoperability of sw/hw encoder/decoder combinations at the platform (i.e. ChromeOS drivers) level",
 		Contacts: []string{
 			"chromeos-gfx-video@google.com",
-			"mcasas@chromium.org",
+			"hiroh@chromium.org",
 		},
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		Fixture:      "graphicsNoChrome",

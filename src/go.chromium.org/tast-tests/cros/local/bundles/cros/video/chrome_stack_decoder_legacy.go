@@ -35,7 +35,8 @@ func init() {
 		Desc:         "Verifies hardware decode acceleration by running the video_decode_accelerator_tests binary with the legacy implementation",
 		Contacts: []string{
 			"chromeos-gfx-video@google.com",
-			"mcasas@chromium.org",
+			"frkoenig@chromium.org",
+			"hiroh@chromium.org",
 		},
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		SoftwareDeps: []string{"chrome"},

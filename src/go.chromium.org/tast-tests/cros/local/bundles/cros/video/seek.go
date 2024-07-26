@@ -31,7 +31,8 @@ func init() {
 		Desc:         "Verifies that seeking works in Chrome, either with or without resolution changes",
 		Contacts: []string{
 			"chromeos-gfx-video@google.com",
-			"mcasas@chromium.org",
+			"hiroh@chromium.org",
+			"nhebert@chromium.org",
 		},
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		SoftwareDeps: []string{"chrome"},

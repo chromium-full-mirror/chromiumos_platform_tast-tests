@@ -29,7 +29,7 @@ func init() {
 		Desc:         "Verifies hardware decode acceleration of media::VideoDecoders by running the video_decode_accelerator_tests binary (see go/vd-migration)",
 		Contacts: []string{
 			"chromeos-gfx-video@google.com",
-			"mcasas@chromium.org",
+			"hiroh@chromium.org",
 		},
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		SoftwareDeps: []string{"chrome"},

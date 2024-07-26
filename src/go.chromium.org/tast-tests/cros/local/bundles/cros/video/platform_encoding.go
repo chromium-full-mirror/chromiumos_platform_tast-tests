@@ -70,7 +70,7 @@ func init() {
 		Desc:         "Verifies platform encoding by using the libva-utils encoder binaries",
 		Contacts: []string{
 			"chromeos-gfx-video@google.com",
-			"mcasas@chromium.org",
+			"hiroh@chromium.org",
 		},
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		Fixture:      "graphicsNoChrome",

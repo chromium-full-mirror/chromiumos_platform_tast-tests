@@ -23,8 +23,9 @@ func init() {
 		Desc:         "Playback in Chrome browser with system goes to suspend/resume cycle",
 		Contacts: []string{
 			"chromeos-gfx-video@google.com",
+			"hiroh@chromium.org",
+			"nhebert@chromium.org",
 			"pwang@chromium.org",
-			"mcasas@chromium.org",
 		},
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		Attr:         []string{"group:graphics", "graphics_video", "graphics_stress", "graphics_cft"},

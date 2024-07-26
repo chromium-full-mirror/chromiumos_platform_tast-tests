@@ -32,7 +32,8 @@ func init() {
 		Desc:         "Checks video playback in Chrome has no leaks",
 		Contacts: []string{
 			"chromeos-gfx-video@google.com",
-			"mcasas@chromium.org",
+			"hiroh@chromium.org",
+			"nhebert@chromium.org",
 		},
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		HardwareDeps: hwdep.D(hwdep.SupportsNV12Overlays()),

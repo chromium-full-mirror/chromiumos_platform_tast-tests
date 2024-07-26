@@ -47,7 +47,8 @@ func init() {
 		Desc:         "Plays video in Chrome by navigating to a given URL, and verifies it plays",
 		Contacts: []string{
 			"chromeos-gfx-video@google.com",
-			"mcasas@chromium.org",
+			"hiroh@chromium.org",
+			"nhebert@chromium.org",
 		},
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		SoftwareDeps: []string{"chrome"},

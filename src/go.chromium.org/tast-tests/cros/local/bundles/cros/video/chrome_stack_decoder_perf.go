@@ -29,8 +29,7 @@ func init() {
 		Desc:         "Measures hardware video decode performance of media::VideoDecoders by running the video_decode_accelerator_perf_tests binary (see go/vd-migration)",
 		Contacts: []string{
 			"chromeos-gfx-video@google.com",
-			"mcasas@chromium.org",
-			"hiroh@chromium.org", // Underlying binary author.
+			"hiroh@chromium.org",
 		},
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		Attr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
