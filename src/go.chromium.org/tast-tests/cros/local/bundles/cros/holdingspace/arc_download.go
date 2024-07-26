@@ -73,14 +73,19 @@ func ArcDownload(ctx context.Context, s *testing.State) {
 
 	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_dump")
 
+	// Reset holding space to ensure initial state.
 	if err := holdingspace.ResetHoldingSpace(ctx, tconn, holdingspace.ResetHoldingSpaceOptions{}); err != nil {
 		s.Fatal("Failed to reset holding space: ", err)
 	}
 
 	uia := uiauto.New(tconn)
-	err = uia.EnsureGoneFor(holdingspace.FindTray(), 5*time.Second)(ctx)
-	if err != nil {
-		s.Fatal("Tray exists: ", err)
+	holdingSpaceTray := holdingspace.FindTray()
+
+	if err := uiauto.Combine("verify holding space tray does not exist after reset",
+		uia.WaitUntilGone(holdingSpaceTray),
+		uia.EnsureGoneFor(holdingSpaceTray, 5*time.Second),
+	)(ctx); err != nil {
+		s.Fatal("Holding space tray exists: ", err)
 	}
 
 	if err := arcdownload.DownloadTestFile(ctx, cr, a, d, sourcePath, targetPath); err != nil {
@@ -91,7 +96,7 @@ func ArcDownload(ctx context.Context, s *testing.State) {
 
 	if err := uiauto.Combine("check for download chip",
 		// Left click the tray to open the bubble.
-		uia.LeftClick(holdingspace.FindTray()),
+		uia.LeftClick(holdingSpaceTray),
 		// Verify that the ARC download exists in holding space.
 		uia.WaitUntilExists(holdingspace.FindDownloadChip().Name(filename)),
 	)(ctx); err != nil {
