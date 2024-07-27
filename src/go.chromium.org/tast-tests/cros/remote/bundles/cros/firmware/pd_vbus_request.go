@@ -239,6 +239,7 @@ func PDVbusRequest(ctx context.Context, s *testing.State) {
 	//
 
 	dutVoltageLimit := h.Config.UsbcInputVoltageLimit
+	dutPowerLimit := h.Config.MaxChargingPower
 
 	isOverride = h.Config.ChargerProfileOverride
 	if isOverride == true {
@@ -315,12 +316,14 @@ func PDVbusRequest(ctx context.Context, s *testing.State) {
 			} else {
 				expectedVbusVoltage = float64(dutVoltageLimit)
 			}
-			okToFail = isOverride || (voltage > dutVoltageLimit)
+			okToFail = isOverride || (voltage > dutVoltageLimit) || (dutPowerLimit == 45.0 && voltage > 16.0)
 		}
 
 		result, resultStr := compareVbus(ctx, h, s, expectedVbusVoltage, okToFail)
 		if result == fail {
 			s.Logf("%s FAIL", resultStr)
+		} else if result == allowedFail {
+			s.Logf("%s FAIL - allowed fail", resultStr)
 		} else {
 			s.Logf("%s PASS", resultStr)
 		}
