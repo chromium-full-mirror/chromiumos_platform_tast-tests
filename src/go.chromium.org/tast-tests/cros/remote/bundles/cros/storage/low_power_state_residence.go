@@ -74,6 +74,7 @@ func LowPowerStateResidence(ctx context.Context, s *testing.State) {
 		state, err := disk.CurrentPowerState(ctx)
 		if err != nil {
 			errCount++
+			testing.ContextLog(ctx, "Error probing power state: ", err)
 		} else if state == util.DiskHighPowerState {
 			highCount++
 		} else if state == util.DiskLowPowerState {
