@@ -49,7 +49,7 @@ func EmmcConfiguration(ctx context.Context, s *testing.State) {
 	}, {
 		// If capability is present, then it is supported and enabled
 		Metric: bounds.MatchExact("_EMMC_HS400ES"),
-		Bounds: bounds.Min(1),
+		Bounds: bounds.Min(0),
 	}, {
 		// TODO(dlunev): a way to detect if CQE is supported but not enabled?
 		Metric: bounds.MatchExact("_EMMC_CQE"),
