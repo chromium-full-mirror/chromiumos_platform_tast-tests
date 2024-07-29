@@ -129,8 +129,7 @@ type MetricConfig struct {
 	// The map between enum values and names.
 	enumValues map[int64]string
 
-	// Determines how samples from different sources (i.e. browsers) should be
-	// recorded.
+	// Determines how samples should be recorded.
 	recordMethod metricRecordMethod
 }
 
@@ -323,16 +322,12 @@ type Recorder struct {
 	arc   *arc.ARC
 
 	// Metrics names keyed by relevant browser type.
-	names map[browser.Type][]string
-
-	// Keep one TestConn instance for each browser type.
-	tconns map[browser.Type]*chrome.TestConn
+	names []string
 
 	options RecorderOptions
 
-	// Metric records keyed by relevant browser type.
-	// Its value is a map keyed by metric name.
-	records map[browser.Type]map[string]*record
+	// Metric name mapped to metric record.
+	records map[string]*record
 
 	traceDir        string
 	perfettoCfgPath string
@@ -354,9 +349,9 @@ type Recorder struct {
 	// Defined only for the running recorder.
 	startedAtTm time.Time
 
-	// Running recorder has these metrics recorders initialized for each metric
+	// Running recorder has this metric recorder initialized.
 	// Defined only for the running recorder.
-	mr map[browser.Type]*metrics.Recorder
+	mr *metrics.Recorder
 
 	// A function to clean up started recording.
 	// Defined only for the running recorder.
@@ -493,50 +488,24 @@ func (r *Recorder) AddCollectedMetrics(tconn *chrome.TestConn, bt browser.Type, 
 		return errors.New("canont modify list of collected metrics after recording was started")
 	}
 
-	// Keep the tconn so it can be used to collect metrics from the browser.
-	r.tconns[bt] = tconn
-
 	for _, config := range configs {
 		if config.histogramName == string(deprecatedGroupLatency) || config.histogramName == string(deprecatedGroupSmoothness) {
 			return errors.Errorf("invalid histogram name: %s", config.histogramName)
 		}
-		r.names[bt] = append(r.names[bt], config.histogramName)
-		if _, ok := r.records[bt]; !ok {
-			r.records[bt] = make(map[string]*record)
-		}
-		r.records[bt][config.histogramName] = &record{config: config}
+		r.names = append(r.names, config.histogramName)
+		r.records[config.histogramName] = &record{config: config}
 	}
 	return nil
 }
 
 // AddCommonMetrics adds MetricConfigs defined by CommonMetrics to the collected metrics.
-// tconn will be used as the test connection for Ash and AnyChrome common metrics. bTconn
-// will be used for the Browser common metrics. If bTconn is different than tconn, then
-// another set of AnyChrome common metrics will be collected with bTconn used as the test
-// connection.
+// TODO(b/356187424): Remove bTconn from anywhere that calls this function.
 func (r *Recorder) AddCommonMetrics(tconn, bTconn *chrome.TestConn) error {
-	var bt browser.Type
-	if *tconn == *bTconn {
-		bt = browser.TypeAsh
-	} else {
-		bt = browser.TypeLacros
-	}
-	if err := r.AddCollectedMetrics(tconn, browser.TypeAsh, CUJAshCommonMetricConfigs()...); err != nil {
-		return errors.Wrap(err, "failed to add Ash common metrics")
-	}
-	if err := r.AddCollectedMetrics(bTconn, bt, CUJBrowserCommonMetricConfigs()...); err != nil {
-		return errors.Wrapf(err, "failed to add Browser(%s) common metrics", bt)
-	}
-	if err := r.AddCollectedMetrics(tconn, browser.TypeAsh, CUJAnyChromeCommonMetricConfigs()...); err != nil {
-		return errors.Wrap(err, "failed to add Ash AnyChrome common metrics")
-	}
-	if bt == browser.TypeLacros {
-		if err := r.AddCollectedMetrics(bTconn, browser.TypeLacros, CUJLacrosCommonMetricConfigs()...); err != nil {
-			return errors.Wrap(err, "failed to add Lacros common metrics")
-		}
-		if err := r.AddCollectedMetrics(bTconn, browser.TypeLacros, CUJAnyChromeCommonMetricConfigs()...); err != nil {
-			return errors.Wrap(err, "failed to add Lacros AnyChrome common metrics")
-		}
+	allMetrics := CUJBrowserCommonMetricConfigs()
+	allMetrics = append(allMetrics, CUJAshCommonMetricConfigs()...)
+	allMetrics = append(allMetrics, CUJAnyChromeCommonMetricConfigs()...)
+	if err := r.AddCollectedMetrics(tconn, browser.TypeAsh, allMetrics...); err != nil {
+		return errors.Wrap(err, "failed to add common metrics")
 	}
 	return nil
 }
@@ -667,20 +636,15 @@ func (r *Recorder) AnnotateSection(ctx context.Context, annotation string) func(
 // NewRecorderWithTestConn creates a Recorder. It also aggregates the metrics of each
 // category (animation smoothness and input latency) and creates the aggregated
 // reports.
+// TODO(b/356187424): Remove bTconn from all calls to this function.
 func NewRecorderWithTestConn(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, bTconn *chrome.TestConn, a *arc.ARC, options RecorderOptions) (*Recorder, error) {
 	if tconn == nil {
 		return nil, errors.New("tconn must never be nil")
 	}
-	// Keep one TestConn for each browser.
-	tconns := make(map[browser.Type]*chrome.TestConn)
-	tconns[browser.TypeAsh] = tconn
-	if bTconn != nil && *tconn != *bTconn {
-		tconns[browser.TypeLacros] = bTconn
-	}
+
 	r := &Recorder{
 		cr:                  cr,
 		tconn:               tconn,
-		tconns:              tconns,
 		arc:                 a,
 		options:             options,
 		sessions:            make(map[string]*tracing.Session),
@@ -690,7 +654,7 @@ func NewRecorderWithTestConn(ctx context.Context, tconn *chrome.TestConn, cr *ch
 	// Perf and CUJ tests both include the TPS timeline, which requires the
 	// GPU data source.
 	if r.options.Mode == Perf || r.options.Mode == CUJ {
-		r.gpuDataSource = perfSrc.NewGPUDataSource(r.tconns)
+		r.gpuDataSource = perfSrc.NewGPUDataSource(map[browser.Type]*chrome.TestConn{browser.TypeAsh: tconn})
 	}
 
 	if err := r.Reset(ctx); err != nil {
@@ -778,8 +742,7 @@ func (r *Recorder) Reset(ctx context.Context) error {
 		}
 	}
 
-	r.names = make(map[browser.Type][]string)
-	r.records = make(map[browser.Type]map[string]*record)
+	r.records = make(map[string]*record)
 
 	r.pv = perf.NewValues()
 
@@ -938,13 +901,9 @@ func (r *Recorder) Close(ctx context.Context) error {
 
 // filterBootAndShutdownMetricNames returns metric names having |bootAndShutdown| metric
 // config flag value equal to |bootAndShutdownFlagValue|.
-func (r *Recorder) filterBootAndShutdownMetricNames(bootAndShutdownFlagValue bool, bt browser.Type) ([]string, error) {
-	metrics, ok := r.records[bt]
-	if !ok {
-		return nil, errors.Errorf("no expected metrics for the given browser %q", bt)
-	}
+func (r *Recorder) filterBootAndShutdownMetricNames(bootAndShutdownFlagValue bool) ([]string, error) {
 	var result []string
-	for name, record := range metrics {
+	for name, record := range r.records {
 		if record.config.bootAndShutdown == bootAndShutdownFlagValue {
 			result = append(result, name)
 		}
@@ -952,12 +911,12 @@ func (r *Recorder) filterBootAndShutdownMetricNames(bootAndShutdownFlagValue boo
 	return result, nil
 }
 
-func (r *Recorder) getInTestMetricNames(bt browser.Type) ([]string, error) {
-	return r.filterBootAndShutdownMetricNames(false, bt)
+func (r *Recorder) getInTestMetricNames() ([]string, error) {
+	return r.filterBootAndShutdownMetricNames(false)
 }
 
-func (r *Recorder) getBootAndShutdownMetricNames(bt browser.Type) ([]string, error) {
-	return r.filterBootAndShutdownMetricNames(true, bt)
+func (r *Recorder) getBootAndShutdownMetricNames() ([]string, error) {
+	return r.filterBootAndShutdownMetricNames(true)
 }
 
 // startRecording starts to record CUJ data.
@@ -1098,33 +1057,28 @@ func (r *Recorder) startRecording(ctx context.Context) (runCtx context.Context, 
 		}
 	}(ctx)
 
-	// Start metrics recording per browser.
-	r.mr = make(map[browser.Type]*metrics.Recorder)
-	for bt := range r.names {
-		// Watch in-test metrics only.
-		inTestMetrics, err := r.getInTestMetricNames(bt)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to get in-test metric names")
-		}
-		r.mr[bt], err = metrics.StartRecorder(ctx, r.tconns[bt], inTestMetrics...)
-		if err != nil {
-			return nil, errors.Wrapf(err, "failed to start metrics recorder for browser %v", bt)
-		}
-		bootMetrics, err := r.getBootAndShutdownMetricNames(bt)
-		if err != nil {
-			return nil, errors.Wrapf(err, "failed to query boot metrics for browser %v", bt)
-		}
-		if len(bootMetrics) > 0 {
-			// Some of BootTime.* metrics are reported only once after reboot.
-			// Force reporting them here in case they are already gone.
-			if err := testexec.CommandContext(
-				ctx,
-				"sh",
-				"-c",
-				"start send-boot-metrics || true",
-			).Run(testexec.DumpLogOnError); err != nil {
-				return nil, errors.Wrap(err, "failed to force send-boot-metrics to be reported again")
-			}
+	inTestMetrics, err := r.getInTestMetricNames()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get in-test metric names")
+	}
+	r.mr, err = metrics.StartRecorder(ctx, r.tconn, inTestMetrics...)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to start metrics recorder")
+	}
+	bootMetrics, err := r.getBootAndShutdownMetricNames()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to query boot metrics")
+	}
+	if len(bootMetrics) > 0 {
+		// Some of BootTime.* metrics are reported only once after reboot.
+		// Force reporting them here in case they are already gone.
+		if err := testexec.CommandContext(
+			ctx,
+			"sh",
+			"-c",
+			"start send-boot-metrics || true",
+		).Run(testexec.DumpLogOnError); err != nil {
+			return nil, errors.Wrap(err, "failed to force send-boot-metrics to be reported again")
 		}
 	}
 
@@ -1369,59 +1323,60 @@ func (r *Recorder) stopRecording(ctx, runCtx context.Context) (e error) {
 	}
 
 	// Collects metrics per browser type.
-	tHists := make(map[browser.Type][]*histogram.Histogram)
-	for bt, rr := range r.mr {
-		tconn := r.tconns[bt]
-		inTestHistograms, err := rr.Histogram(runCtx, tconn)
-		if err != nil {
-			return errors.Wrapf(err, "failed to collect metrics from browser %v", bt)
-		}
-		// Boot and shutdown metrics must be collected separately.
-		bootAndShutdownMetrics, err := r.getBootAndShutdownMetricNames(bt)
-		if err != nil {
-			return errors.Wrap(err, "failed to get boot and shutdown metric names")
-		}
+	var hists []*histogram.Histogram
 
-		if r.chromeosFlexTesting != true && len(bootAndShutdownMetrics) > 0 {
-			// Some BootTime.* metrics are only reported once after
-			// a reboot. We forced them to be reported again after
-			// the recorder started, but ChromeOS metrics are
-			// collected every 30 seconds, so we may need to wait a
-			// while for them to appear.
-			testing.ContextLog(ctx, "Waiting for BootTime.Total2 metrics to be reported")
-			if _, err := metrics.WaitForHistogram(
-				ctx,
-				tconn,
-				"BootTime.Total2",
-				time.Minute,
-			); err != nil {
-				return errors.Wrap(err, "failed to wait until BootTime.Total2 metrics is reported")
-			}
-		}
-
-		bootAndShutdownHistograms, err := metrics.GetHistograms(runCtx, tconn, bootAndShutdownMetrics)
-		if err != nil {
-			return errors.Wrap(err, "failed to fetch boot and shutdown metrics")
-		}
-
-		testing.ContextLogf(ctx, "The following in-test metrics are collected from %q: %v", bt+"-Chrome", histsWithSamples(inTestHistograms))
-		testing.ContextLogf(ctx, "The following boot and shutdown metrics are collected from %q: %v", bt+"-Chrome", histsWithSamples(bootAndShutdownHistograms))
-		tHists[bt] = append(tHists[bt], inTestHistograms...)
-		tHists[bt] = append(tHists[bt], bootAndShutdownHistograms...)
+	inTestHistograms, err := r.mr.Histogram(runCtx, r.tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to collect metrics")
 	}
+	// Boot and shutdown metrics must be collected separately.
+	bootAndShutdownMetrics, err := r.getBootAndShutdownMetricNames()
+	if err != nil {
+		return errors.Wrap(err, "failed to get boot and shutdown metric names")
+	}
+
+	if r.chromeosFlexTesting != true && len(bootAndShutdownMetrics) > 0 {
+		// Some BootTime.* metrics are only reported once after
+		// a reboot. We forced them to be reported again after
+		// the recorder started, but ChromeOS metrics are
+		// collected every 30 seconds, so we may need to wait a
+		// while for them to appear.
+		testing.ContextLog(ctx, "Waiting for BootTime.Total2 metrics to be reported")
+		if _, err := metrics.WaitForHistogram(
+			ctx,
+			r.tconn,
+			"BootTime.Total2",
+			time.Minute,
+		); err != nil {
+			return errors.Wrap(err, "failed to wait until BootTime.Total2 metrics is reported")
+		}
+	}
+
+	bootAndShutdownHistograms, err := metrics.GetHistograms(runCtx, r.tconn, bootAndShutdownMetrics)
+	if err != nil {
+		return errors.Wrap(err, "failed to fetch boot and shutdown metrics")
+	}
+
+	testing.ContextLog(ctx, "The following in-test metrics are collected: ", histsWithSamples(inTestHistograms))
+	testing.ContextLog(ctx, "The following boot and shutdown metrics are collected: ", histsWithSamples(bootAndShutdownHistograms))
+	hists = append(hists, inTestHistograms...)
+	hists = append(hists, bootAndShutdownHistograms...)
+
 	// Reset recorders and context.
 	r.mr = nil
 
-	for bt, hists := range tHists {
-		for _, hist := range hists {
-			if hist.TotalCount() == 0 {
-				continue
-			}
-			// Combine histogram result to the record.
-			if err := r.records[bt][hist.Name].combine(&record{config: r.records[bt][hist.Name].config,
-				totalCount: hist.TotalCount(), Sum: hist.Sum, Buckets: hist.Buckets}); err != nil {
-				return err
-			}
+	for _, hist := range hists {
+		if hist.TotalCount() == 0 {
+			continue
+		}
+		// Combine histogram result to the record.
+		if err := r.records[hist.Name].combine(&record{
+			config:     r.records[hist.Name].config,
+			totalCount: hist.TotalCount(),
+			Sum:        hist.Sum,
+			Buckets:    hist.Buckets,
+		}); err != nil {
+			return err
 		}
 	}
 	return nil
@@ -1573,15 +1528,9 @@ func (r *Recorder) stopMetrics(ctx context.Context) error {
 	}
 	displayInfo.Record(r.pv)
 
-	// Combined records from all browsers.
-	allRecords, err := processMetricRecords(r.records)
-	if err != nil {
-		return err
-	}
-
 	var crasUnderruns float64
 	// Record combined records from all tconns.
-	for name, rec := range allRecords {
+	for name, rec := range r.records {
 		if name == "Cras.UnderrunsPerDevice" {
 			crasUnderruns = float64(rec.Sum)
 			// We are not interested in reporting Cras.UnderrunsPerDevice but will use this value
@@ -1636,48 +1585,6 @@ func (r *Recorder) stopMetrics(ctx context.Context) error {
 	collectMSPH(ctx, r.pv)
 
 	return nil
-}
-
-// processMetricRecords iterates through `records` and generate a list of to be recorded.
-func processMetricRecords(perBrowserRecords map[browser.Type]map[string]*record) (map[string]*record, error) {
-	allRecords := make(map[string]*record)
-
-	accumulatedAverage := make(map[string]float64)
-	for bt, records := range perBrowserRecords {
-		for name, rec := range records {
-			if rec.totalCount == 0 {
-				continue
-			}
-
-			// Append metric name with browser type as the new metric name, for example:
-			// - EventLatency.TotalLatency_ash-Chrome,
-			// - PageLoad.InteractiveTiming.InputDelay3_lacros-Chrome
-			perBrowserName := fmt.Sprintf("%s_%s-Chrome", name, bt)
-			allRecords[perBrowserName] = rec
-
-			// Combine the record from different browsers.
-			if _, ok := allRecords[name]; !ok {
-				allRecords[name] = &record{config: rec.config}
-			}
-			switch rec.config.recordMethod {
-			case metricRecordMethodSumAverageBySource:
-				allRecords[name].totalCount = 1
-				accumulatedAverage[name] += float64(rec.Sum) / float64(rec.totalCount)
-			case metricRecordMethodNeutral:
-				fallthrough
-			default:
-				if err := allRecords[name].combine(rec); err != nil {
-					return nil, err
-				}
-			}
-		}
-	}
-
-	// Update `Sum` from `accumulatedAverage`.
-	for name, averageSum := range accumulatedAverage {
-		allRecords[name].Sum = int64(averageSum)
-	}
-	return allRecords, nil
 }
 
 // Run conducts the test scenario f, and collects the related metrics for the
@@ -1749,41 +1656,16 @@ func (r *Recorder) Record(ctx context.Context, pv *perf.Values) error {
 // SaveHistograms saves histogram raw data to a given directory in a
 // file named "recorder_histograms.json" by marshal the recorders.
 func (r *Recorder) SaveHistograms(outDir string) error {
-	saveJSONFile := func(fileName string, records map[string]*record) error {
-		filePath := path.Join(outDir, fileName+".json")
-		j, err := json.MarshalIndent(records, "", "  ")
-		if err != nil {
-			return errors.Wrapf(err, "failed to marshall data for %s json file: %v", fileName, records)
-		}
-		if err := ioutil.WriteFile(filePath, j, 0644); err != nil {
-			return errors.Wrapf(err, "failed to write %s json file", fileName)
-		}
-		return nil
+	const fileName = "recorder_histograms"
+	filePath := path.Join(outDir, fileName+".json")
+	j, err := json.MarshalIndent(r.records, "", "  ")
+	if err != nil {
+		return errors.Wrapf(err, "failed to marshall data for %s json file: %v", fileName, r.records)
 	}
-
-	const histogramFileName = "recorder_histograms"
-	allRecords := make(map[string]*record) // Combined records from all browsers.
-
-	for bt, records := range r.records {
-		// File for browser based histogram will be appended with the browser name.
-		// For example:
-		//   - recorder_histograms_ash-Chrome.json
-		//   - recorder_histograms_lacros-Chrome.json
-		fileName := fmt.Sprintf("%s_%s-Chrome", histogramFileName, bt)
-		if err := saveJSONFile(fileName, records); err != nil {
-			return err
-		}
-		for name, rec := range records {
-			if _, ok := allRecords[name]; !ok {
-				allRecords[name] = &record{config: rec.config}
-			}
-			// Combine the record.
-			if err := allRecords[name].combine(rec); err != nil {
-				return err
-			}
-		}
+	if err := ioutil.WriteFile(filePath, j, 0644); err != nil {
+		return errors.Wrapf(err, "failed to write %s json file", fileName)
 	}
-	return saveJSONFile(histogramFileName, allRecords)
+	return nil
 }
 
 // NewConn is a wrapper around browser.NewConn that opens a tab for |url|,
@@ -1836,6 +1718,9 @@ func (r *Recorder) StartSnapshot(ctx context.Context, prefix string, ashMetrics,
 	}
 	r.takingSnapshot = true
 
+	allMetrics := ashMetrics
+	allMetrics = append(allMetrics, browserMetrics...)
+
 	// Add in a period to separate the prefix and the rest of the metric.
 	prefixRe := regexp.MustCompile(`^.+\.$`)
 	if prefixRe.MatchString(prefix) {
@@ -1844,70 +1729,44 @@ func (r *Recorder) StartSnapshot(ctx context.Context, prefix string, ashMetrics,
 		prefix += "."
 	}
 
-	// If we have more than 1 tconn saved, then the browser metrics
-	// must be Lacros based.
-	bt := browser.TypeAsh
-	if len(r.tconns) > 1 {
-		bt = browser.TypeLacros
-	}
-
-	// Get the initial Ash/Browser histograms.
-	ashHists, err := metrics.GetHistograms(ctx, r.tconns[browser.TypeAsh], ashMetrics)
+	// Get the initial histograms.
+	hists, err := metrics.GetHistograms(ctx, r.tconn, allMetrics)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get initial Ash snapshot histograms")
-	}
-
-	browserHists, err := metrics.GetHistograms(ctx, r.tconns[bt], browserMetrics)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get initial browser snapshot histograms")
 	}
 
 	// Return the stop function that compares a new snapshot with the initial
 	// snapshot, and saves the new metrics in r.pv.
 	return func(ctx context.Context) error {
 		// Take new snapshots of the given metrics.
-		newAshHists, err := metrics.GetHistograms(ctx, r.tconns[browser.TypeAsh], ashMetrics)
+		newHists, err := metrics.GetHistograms(ctx, r.tconn, allMetrics)
 		if err != nil {
-			return errors.Wrap(err, "failed to get final Ash snapshot histograms")
-		}
-
-		newBrowserHists, err := metrics.GetHistograms(ctx, r.tconns[bt], browserMetrics)
-		if err != nil {
-			return errors.Wrap(err, "failed to get final Browser snapshot histograms")
+			return errors.Wrap(err, "failed to get final snapshot histograms")
 		}
 
 		// Get the histogram diffs from when StartSnapshot was called.
-		ashDiff, err := histogram.DiffHistograms(ashHists, newAshHists)
+		diff, err := histogram.DiffHistograms(hists, newHists)
 		if err != nil {
-			return errors.Wrapf(err, "failed to diff old and new Ash histograms for snapshot, old had length %d; new had length %d", len(ashHists), len(newAshHists))
+			return errors.Wrapf(err, "failed to diff histograms for snapshot, old had length %d; new had length %d", len(hists), len(newHists))
 		}
 
-		browserDiff, err := histogram.DiffHistograms(browserHists, newBrowserHists)
-		if err != nil {
-			return errors.Wrapf(err, "failed to diff old and new browser histograms for snapshot, old had length %d; new had length %d", len(browserHists), len(newBrowserHists))
-		}
-
-		// For each metric and its corresponding browser type, create
-		// a new record with the new histogram diff.
-		browserTypes := []browser.Type{browser.TypeAsh, bt}
-		for i, diffs := range [][]*histogram.Histogram{ashDiff, browserDiff} {
-			for _, hist := range diffs {
-				metric, ok := r.records[browserTypes[i]][hist.Name]
-				if !ok {
-					return errors.Wrapf(err, "metric %q is not being recorded by the recorder for %v", hist.Name, browserTypes[i])
-				}
-
-				newRecord := &record{
-					config:     metric.config,
-					totalCount: hist.TotalCount(),
-					Sum:        hist.Sum,
-					Buckets:    hist.Buckets,
-				}
-
-				// Save the new histogram with the existing histogram name
-				// prefixed with |prefix|.
-				newRecord.saveMetric(ctx, r.pv, prefix+hist.Name)
+		// For each metric, create a new record with the new histogram diff.
+		for _, hist := range diff {
+			metric, ok := r.records[hist.Name]
+			if !ok {
+				return errors.Wrapf(err, "metric %q is not being recorded by the recorder", hist.Name)
 			}
+
+			newRecord := &record{
+				config:     metric.config,
+				totalCount: hist.TotalCount(),
+				Sum:        hist.Sum,
+				Buckets:    hist.Buckets,
+			}
+
+			// Save the new histogram with the existing histogram name
+			// prefixed with |prefix|.
+			newRecord.saveMetric(ctx, r.pv, prefix+hist.Name)
 		}
 
 		r.takingSnapshot = false
