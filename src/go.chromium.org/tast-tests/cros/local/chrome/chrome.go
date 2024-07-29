@@ -300,6 +300,18 @@ func New(ctx context.Context, opts ...Option) (c *Chrome, retErr error) {
 		return nil, errors.Wrap(err, "failed to process options")
 	}
 
+	// b/341803100: Profile and fix network issues that are reported as GAIA bugs.
+	if cfg.LoginMode() == config.GAIALogin && !vm.IsRunningOnVM() {
+		checkInternetConnectivityInBackground(ctx, 60*time.Second)
+
+		dutNetVerifyStart := time.Now()
+		if err := dutNetworkCheckAndResolve(ctx, cfg); err != nil {
+			return nil, errors.Wrap(err, "DUT network verification failed")
+		}
+		dutNetVerifyElapsed := time.Since(dutNetVerifyStart)
+		testing.ContextLog(ctx, "DUT network verification finished in: ", dutNetVerifyElapsed)
+	}
+
 	// Cap the timeout to be certain length depending on the login mode. Sometimes
 	// chrome.New may fail and get stuck on an unexpected screen. Without timeout,
 	// it simply runs out the entire timeout. See https://crbug.com/1078873.
@@ -321,22 +333,13 @@ func New(ctx context.Context, opts ...Option) (c *Chrome, retErr error) {
 	ctx, cancel := context.WithTimeout(origCtx, timeout)
 	defer cancel()
 
-	// b/341803100: Profile and fix network issues that are reported as GAIA bugs.
-	if cfg.LoginMode() == config.GAIALogin && !vm.IsRunningOnVM() {
-		checkInternetConnectivityInBackground(ctx, 60*time.Second)
-
-		dutNetVerifyStart := time.Now()
-		if err := dutNetworkCheckAndResolve(ctx, cfg); err != nil {
-			return nil, errors.Wrap(err, "DUT network verification failed")
-		}
-		dutNetVerifyElapsed := time.Since(dutNetVerifyStart)
-		testing.ContextLog(ctx, "DUT network verification finished in: ", dutNetVerifyElapsed)
-	}
-
-	// Check whether ctx is long enough.
-	deadline, _ := ctx.Deadline()
-	remaining := time.Until(deadline)
-	cxtMayBeShort := remaining < timeout
+	// Check whether ctx is long enough. If the new deadline is the same as the
+	// original one, it means the original one is not long enough.
+	origDeadline, _ := origCtx.Deadline()
+	newDeadline, _ := ctx.Deadline()
+	ctxMayBeShort := origDeadline == newDeadline
+	// Record the remaining time for the logging purposes.
+	remaining := time.Until(newDeadline)
 
 	// In case chrome.New fails for a deadline error, which might be caused
 	// by a browser hang, take minidump snapshots for diagnosis.
@@ -354,7 +357,7 @@ func New(ctx context.Context, opts ...Option) (c *Chrome, retErr error) {
 		* waiting for cryptohome failed: failed to wait for user mount and validate type:
 		* failed to get user home path: failed to call cryptohome-path user: context deadline exceeded"
 		 */
-		if retErr != nil && strings.Contains(retErr.Error(), "context deadline exceeded") && cxtMayBeShort {
+		if retErr != nil && strings.Contains(retErr.Error(), "context deadline exceeded") && ctxMayBeShort {
 			retErr = errors.Wrapf(retErr, "context deadline duration %v exceed, it's better to have at least %v", remaining, timeout)
 		}
 		if retErr == nil || ctx.Err() == nil || origCtx.Err() != nil {
