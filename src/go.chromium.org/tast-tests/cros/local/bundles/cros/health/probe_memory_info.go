@@ -23,11 +23,22 @@ type memoryEncryptionInfo struct {
 }
 
 type memoryInfo struct {
-	AvailableMemoryKib      jsontypes.Uint32      `json:"available_memory_kib"`
-	FreeMemoryKib           jsontypes.Uint32      `json:"free_memory_kib"`
-	PageFaultsSinceLastBoot jsontypes.Uint64      `json:"page_faults_since_last_boot"`
-	TotalMemoryKib          jsontypes.Uint32      `json:"total_memory_kib"`
-	MemoryEncryptionInfo    *memoryEncryptionInfo `json:"memory_encryption_info"`
+	ActiveMemoryKib            *jsontypes.Uint64     `json:"active_memory_kib"`
+	AvailableMemoryKib         jsontypes.Uint32      `json:"available_memory_kib"`
+	BuffersKib                 *jsontypes.Uint64     `json:"buffers_kib"`
+	CachedSwapMemoryKib        *jsontypes.Uint64     `json:"cached_swap_memory_kib"`
+	FreeMemoryKib              jsontypes.Uint32      `json:"free_memory_kib"`
+	FreeSwapMemoryKib          *jsontypes.Uint64     `json:"free_swap_memory_kib"`
+	InactiveMemoryKib          *jsontypes.Uint64     `json:"inactive_memory_kib"`
+	MemoryEncryptionInfo       *memoryEncryptionInfo `json:"memory_encryption_info"`
+	PageCacheKib               *jsontypes.Uint64     `json:"page_cache_kib"`
+	PageFaultsSinceLastBoot    jsontypes.Uint64      `json:"page_faults_since_last_boot"`
+	ReclaimableSlabMemoryKib   *jsontypes.Uint64     `json:"reclaimable_slab_memory_kib"`
+	SharedMemoryKib            *jsontypes.Uint64     `json:"shared_memory_kib"`
+	TotalMemoryKib             jsontypes.Uint32      `json:"total_memory_kib"`
+	TotalSwapMemoryKib         *jsontypes.Uint64     `json:"total_swap_memory_kib"`
+	TotalSlabMemoryKib         *jsontypes.Uint64     `json:"total_slab_memory_kib"`
+	UnreclaimableSlabMemoryKib *jsontypes.Uint64     `json:"unreclaimable_slab_memory_kib"`
 }
 
 func init() {
