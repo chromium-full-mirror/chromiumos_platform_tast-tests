@@ -11,6 +11,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/dns"
 	"go.chromium.org/tast-tests/cros/local/crostini"
+	"go.chromium.org/tast-tests/cros/local/guestos"
 	"go.chromium.org/tast-tests/cros/local/network"
 	arcnet "go.chromium.org/tast-tests/cros/local/network/arc"
 	"go.chromium.org/tast-tests/cros/local/network/testhooks"
@@ -203,6 +204,13 @@ func DNSProxy(ctx context.Context, s *testing.State) {
 		}
 		if err := arcnet.ExpectPingSuccess(ctx, a, arcIfname, env.IPv4DNSAddr.String()); err != nil {
 			s.Fatalf("Failed to verify DNS server %s reachability in ARC: %v", env.IPv4DNSAddr.String(), err)
+		}
+	}
+
+	if params.crostini {
+		// Make sure that routing setup for crostini is ready.
+		if err := guestos.PingWithRetryAndTimeout(ctx, cont, env.IPv4DNSAddr.String(), 10*time.Second); err != nil {
+			s.Fatalf("Failed to verify DNS server %s reachability in Crostini: %v", env.IPv4DNSAddr.String(), err)
 		}
 	}
 
