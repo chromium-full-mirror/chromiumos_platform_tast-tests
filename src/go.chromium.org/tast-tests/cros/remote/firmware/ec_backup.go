@@ -31,7 +31,8 @@ ectool echash start rw
 until ectool echash | grep 'done' ; do : ; done
 echo -n "AFTER "
 ectool echash | grep "hash:"
-reboot
+sync
+ectool reboot_ec
 `
 
 var flashromExitCodeRe = regexp.MustCompile(`FLASHROM EXIT: (-?\d+)`)
@@ -65,7 +66,7 @@ func (bs *BackupState) RemoteTempDir() string {
 
 func waitForReboot(ctx context.Context, bootID string, h *Helper) error {
 	return testing.Poll(ctx, func(ctx context.Context) error {
-		if err := h.WaitConnect(ctx); err != nil {
+		if err := h.WaitConnect(ctx, ResetEthernetDongle); err != nil {
 			return errors.Wrap(err, "failed to connect")
 		}
 
@@ -75,7 +76,7 @@ func waitForReboot(ctx context.Context, bootID string, h *Helper) error {
 		}
 
 		if newBootID == bootID {
-			return errors.New("Boot id didn't change")
+			return errors.Errorf("Boot id didn't change, got %v", newBootID)
 		}
 
 		return nil
@@ -112,27 +113,27 @@ func (bs *BackupState) Flash(ctx context.Context, h *Helper, imagePath string) (
 
 	testing.ContextLog(ctx, "Wait for reboot")
 	if err := waitForReboot(ctx, bootID, h); err != nil {
-		return nil, nil, errors.Wrap(err, "DUT didn't reboot")
+		retErr = errors.Wrap(err, "DUT didn't reboot")
 	}
 	out, err := linuxssh.ReadFile(ctx, h.DUT.Conn(), fmt.Sprintf("%s/ecflash.log", bs.RemoteTempDir()))
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed to read ecflash.log")
+		return nil, nil, errors.Join(retErr, errors.Wrap(err, "failed to read ecflash.log"))
 	}
 	if m := flashromExitCodeRe.FindSubmatch(out); m == nil || string(m[1]) != "0" {
 		testing.ContextLogf(ctx, "ecflash.log:%s", out)
-		return nil, nil, errors.Wrap(err, "flashrom failed")
+		return nil, nil, errors.Join(retErr, errors.Wrap(err, "flashrom failed"))
 	}
 	m := hashBeforeRe.FindSubmatch(out)
 	if m == nil {
-		return nil, nil, errors.Errorf("failed to get hash before flash: %s", string(out))
+		return nil, nil, errors.Join(retErr, errors.Errorf("failed to get hash before flash: %s", string(out)))
 	}
 	hashBefore = m[1]
 	m = hashAfterRe.FindSubmatch(out)
 	if m == nil {
-		return nil, nil, errors.Errorf("failed to get hash after flash: %s", string(out))
+		return nil, nil, errors.Join(retErr, errors.Errorf("failed to get hash after flash: %s", string(out)))
 	}
 	hashAfter = m[1]
-	return hashBefore, hashAfter, nil
+	return hashBefore, hashAfter, retErr
 }
 
 // BackupECFirmware makes a backup of the EC. Returns a BackupState object which must be closed.
