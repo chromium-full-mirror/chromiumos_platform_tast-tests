@@ -16,6 +16,8 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/exp/slices"
+
 	"github.com/mafredri/cdp/rpcc"
 
 	"go.chromium.org/tast-tests/cros/common/chrome/histogram"
@@ -89,6 +91,11 @@ const (
 
 	// Alias for deferring ARC for readability.
 	deferARC = "DeferArcActivationUntilUserSessionStartUpTaskCompletion"
+	// Alias for deferring ARC with the parameters which force to defer ARC.
+	deferARCForceEnabled = "DeferArcActivationUntilUserSessionStartUpTaskCompletion:history_window/0/history_threshold/1"
+
+	// Alias for deferring concierge startup
+	deferConciergeStartup = "DeferConciergeStartup"
 
 	// Alias for deferring occluded active tab load during browser restore.
 	deferOccludedTabLoad = "AshSessionRestoreDeferOccludedActiveTabLoad"
@@ -214,6 +221,30 @@ func init() {
 				[]string{},                     // disabledFeatures
 				[]string{deferOccludedTabLoad}, // enabledFeatures
 			},
+		}, {
+			// TODO(b/353431869): Remove after the experiment is finished.
+			Name:              "2windows_defer_concierge",
+			ExtraAttr:         []string{"group:cuj", "cuj_loginperf"},
+			ExtraSoftwareDeps: []string{"arc"},
+			Val: loginPerfTestParam{
+				2,                               // windows
+				arcenabled,                      // arcMode
+				false,                           // tabletMode
+				[]string{deferARC},              // disabledFeatures
+				[]string{deferConciergeStartup}, // enabledFeatures
+			},
+		}, {
+			// TODO(b/353431869): Remove after the experiment is finished.
+			Name:              "2windows_defer_concierge_arc",
+			ExtraAttr:         []string{"group:cuj", "cuj_loginperf"},
+			ExtraSoftwareDeps: []string{"arc"},
+			Val: loginPerfTestParam{
+				2,          // windows
+				arcenabled, // arcMode
+				false,      // tabletMode
+				[]string{}, // disabledFeatures
+				[]string{deferConciergeStartup, deferARCForceEnabled}, // enabledFeatures
+			},
 		}},
 	})
 }
@@ -251,13 +282,17 @@ func loginPerfStartToLoginScreen(
 		chrome.HideCrashRestoreBubble(), // Ignore possible incomplete shutdown.
 		// Disable whats-new page. See crbug.com/1271436.
 		chrome.DisableFeatures("ChromeWhatsNewUI"),
-		// Disable the ARC deferring feature, which is enabled by default in production.
-		// Even though it can improve login performance, the behavior depends on ARC usage during sessions.
-		// To get consistent results, we intentionally disable the feature for measurement runs.
-		chrome.DisableFeatures(deferARC),
 		chrome.ExtraArgs("--disable-sync"),
 		chrome.DisableFeatures(testConfig.param.disabledFeatures...),
 		chrome.EnableFeatures(testConfig.param.enabledFeatures...),
+	}
+	// Disable the ARC deferring feature, which is enabled by default in production.
+	// Even though it can improve login performance, the behavior depends on ARC usage during sessions.
+	// To get consistent results, we intentionally disable the feature for measurement runs.
+	// But we skip disabling the feature if it's enabled explicitly because disabling a feature precedes enabling it.
+	shouldDeferARC := slices.Contains(testConfig.param.enabledFeatures, deferARC) || slices.Contains(testConfig.param.enabledFeatures, deferARCForceEnabled)
+	if !shouldDeferARC {
+		options = append(options, chrome.DisableFeatures(deferARC))
 	}
 
 	// Drop caches to simulate cold boot.
