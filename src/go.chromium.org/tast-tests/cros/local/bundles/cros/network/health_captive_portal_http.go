@@ -46,7 +46,9 @@ func init() {
 		BugComponent: "b:1166446",
 		SoftwareDeps: []string{"chrome", "no_qemu"},
 		Attr:         []string{"group:mainline", "informational"},
-		Fixture:      "shillReset",
+		// Disable the physical ethernet so that the only Ethernet service
+		// available is the veth service created inside the test.
+		Fixture: "shillReset.ehide",
 		Params: []testing.Param{{
 			Name: "redirectfound",
 			Val: &healthCaptivePortalHTTPParams{
@@ -187,23 +189,6 @@ func HealthCaptivePortalHTTP(ctx context.Context, s *testing.State) {
 	m, err := shill.NewManager(ctx)
 	if err != nil {
 		s.Fatal("Failed to create manager proxy: ", err)
-	}
-
-	// Disable the physical ethernet so that the only Ethernet service
-	// available is the veth service created below.
-	if enableFunc, err := m.DisableTechnologyForTesting(ctx, shill.TechnologyEthernet); err != nil {
-		s.Fatal("Unable to disable Ethernet: ", err)
-	} else if enableFunc != nil {
-		newCtx, cancel := ctxutil.Shorten(ctx, shill.EnableWaitTime)
-		defer cancel()
-		defer enableFunc(ctx)
-		ctx = newCtx
-	}
-
-	if enabled, err := m.IsEnabled(ctx, shill.TechnologyEthernet); err != nil {
-		s.Fatal("Error calling IsEnabled: ", err)
-	} else if enabled {
-		s.Fatal("Ethernet is still enabled")
 	}
 
 	testing.ContextLog(ctx, "Enabling portal detection on ethernet")
