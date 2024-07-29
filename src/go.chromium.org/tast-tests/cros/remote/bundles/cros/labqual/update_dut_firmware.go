@@ -15,6 +15,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"go.chromium.org/tast-tests/cros/common/firmware/futility"
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/dutfs"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
@@ -111,16 +112,12 @@ func UpdateDutFirmware(ctx context.Context, s *testing.State) {
 			}
 		}
 	}
-
-	s.Log("Disabling hardware write protect")
-	if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateOff); err != nil {
-		s.Fatal("Failed to disable hardware write protect: ", err)
-	}
 	s.Log("Disabling software write protect")
-	if err := h.ServoProxy.RunCommand(ctx, true, "futility", "flash", "--wp-disable", fmt.Sprintf("--servo_port=%d", h.ServoProxy.GetPort())); err != nil {
+	out, err := h.ServoProxy.OutputCommand(ctx, true, "futility", "flash", "--wp-disable", fmt.Sprintf("--servo_port=%d", h.ServoProxy.GetPort()))
+	if err != nil {
 		s.Fatalf("write protect disable failed at %q", err)
 	}
-	s.Log("Disabling software write protect completed")
+	s.Logf("Disabling software write protect completed, command output: %s", out)
 
 	// Check that the DUT is booted after disabling write protect
 	if err := h.EnsureDUTBooted(ctx); err != nil {
@@ -134,6 +131,7 @@ func UpdateDutFirmware(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create a new directory for the test: ", err)
 	}
 	defer os.RemoveAll(tmpDir)
+	h.CloseRPCConnection(ctx)
 	if err := h.RequireRPCClient(ctx); err != nil {
 		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
 	}
@@ -330,21 +328,33 @@ func flashECFirmware(ctx context.Context, s *testing.State, h *firmware.Helper, 
 
 // flashAPFirmware flashes the provided AP firmware on the DUT and restores the original AP firmware in the end.
 func flashAPFirmware(ctx context.Context, s *testing.State, h *firmware.Helper, servoTmpDir, firmwarePathVal, localFirmwarePathVal, ecChip, initialROFwid, initialRwFwid string) {
+	futilityInstance, err := futility.NewRemoteBuilder(h.ServoProxy).Build()
 	s.Log("Backing up AP firmware")
-	if err := h.ServoProxy.RunCommand(ctx, true, "futility", "read", fmt.Sprintf("--servo_port=%d", h.ServoProxy.GetPort()), fmt.Sprintf("%s/%s", servoTmpDir, backupFirmwareFile)); err != nil {
-		s.Fatal("Failed to read fw using futility: ", err)
+	backupFirmwareFile := fmt.Sprintf("%s/%s", servoTmpDir, backupFirmwareFile)
+	readOpts := futility.NewReadAPOptions(backupFirmwareFile)
+	log, err := futilityInstance.ReadAP(ctx, readOpts)
+	if err != nil {
+		s.Fatalf("Failed to read existing AP firmware: %v, got futility log: %s", err, string(log))
 	}
-	s.Log("Completed backup of existing AP fw")
+	s.Logf("Completed backup of existing AP fw, command output: %s", log)
+	if err := h.EnsureDUTBooted(ctx); err != nil {
+		s.Fatal("Failed to reconnect to DUT after unsuspending: ", err)
+	}
 	// Check that the DUT has initial fw in the end
 	defer func() {
 		s.Log("Flashing DUT with backup AP firmware file")
-		if err := h.ServoProxy.RunCommand(ctx, true, "futility", "update", "-i", fmt.Sprintf("%s/%s", servoTmpDir, backupFirmwareFile), fmt.Sprintf("--servo_port=%d", h.ServoProxy.GetPort()), "--gbb_flags=0x18"); err != nil {
-			s.Log("Failed to flash DUT backup FW bin file: ", err)
+		flashOpts := futility.NewUpdateOptions(backupFirmwareFile).
+			WithMode(futility.UpdateModeRecovery).
+			WithWriteProtection(futility.WriteProtectionDisable).
+			WithGBBFlags(24)
+		out, err := futilityInstance.Update(ctx, flashOpts)
+		if err != nil {
+			s.Logf("Failed to flash firmware bin file: %s, Output:%s", err, string(out))
 		} else {
-			s.Log("Completed flashing of backup AP fw")
+			s.Logf("Completed flashing of backup AP fw, command output: %s", string(out))
 		}
-		if err := h.EnsureDUTBooted(ctx); err != nil {
-			s.Fatal("Failed to reconnect to DUT after unsuspending: ", err)
+		if err := safeRebootDut(ctx, h); err != nil {
+			s.Fatal("Failed to reboot DUT after flashing: ", err)
 		}
 
 		// Verify RO/RW firmware versions are the prior ones after flashing.
@@ -358,12 +368,18 @@ func flashAPFirmware(ctx context.Context, s *testing.State, h *firmware.Helper, 
 	}
 
 	s.Log("Flashing DUT AP with downloaded firmware file")
-	if err := h.ServoProxy.RunCommand(ctx, true, "futility", "update", "-i", fmt.Sprintf("%s/%s", servoTmpDir, firmware.APFirmwareFileToFlash), fmt.Sprintf("--servo_port=%d", h.ServoProxy.GetPort()), "--gbb_flags=0x18"); err != nil {
-		s.Fatal("Failed to flash firmware bin file: ", err)
+	apFirmwareFile := fmt.Sprintf("%s/%s", servoTmpDir, firmware.APFirmwareFileToFlash)
+	flashOpts := futility.NewUpdateOptions(apFirmwareFile).
+		WithMode(futility.UpdateModeRecovery).
+		WithWriteProtection(futility.WriteProtectionDisable).
+		WithGBBFlags(24)
+	out, err := futilityInstance.Update(ctx, flashOpts)
+	if err != nil {
+		s.Fatal("Failed to flash firmware bin file: ", err, "\nOutput:\n", string(out))
 	}
-	s.Log("Completed flashing of downloaded fw")
-	if err := h.EnsureDUTBooted(ctx); err != nil {
-		s.Fatal("Failed to reconnect to DUT after unsuspending: ", err)
+	s.Logf("Completed flashing of downloaded fw, command output: %s", string(out))
+	if err := safeRebootDut(ctx, h); err != nil {
+		s.Fatal("Failed to reboot DUT after flashing: ", err)
 	}
 
 	// To verify firmware versions we need the filename to be in a certain format which
@@ -382,12 +398,19 @@ func flashAPFirmware(ctx context.Context, s *testing.State, h *firmware.Helper, 
 
 // flashAPFirmwareFromDut flashes the provided AP firmware on the DUT and restores the original AP firmware in the end.
 func flashAPFirmwareFromDut(ctx context.Context, s *testing.State, h *firmware.Helper, dutTmpDir, localTmpDir, firmwarePathVal, localFirmwarePathVal, initialROFwid, initialRwFwid string) {
+	futilityInstance, err := futility.NewLocalBuilder(h.DUT).Build()
 	s.Log("Backing up AP firmware")
-	if err := h.DUT.Conn().CommandContext(ctx, "futility", "read", fmt.Sprintf("%s/%s", dutTmpDir, backupFirmwareFile)).Run(); err != nil {
-		s.Fatal("Failed to read fw using futility: ", err)
+	readOpts := futility.NewReadAPOptions(fmt.Sprintf("%s/%s", dutTmpDir, backupFirmwareFile))
+	log, err := futilityInstance.ReadAP(ctx, readOpts)
+	if err != nil {
+		s.Fatalf("Failed to read existing AP firmware: %v, got futility log: %s", err, string(log))
+	}
+	s.Logf("Completed backup of existing AP fw, command output: %s", log)
+	if err := h.EnsureDUTBooted(ctx); err != nil {
+		s.Fatal("Failed to reconnect to DUT after unsuspending: ", err)
 	}
 	// Copy backup file from dut to host
-	err := linuxssh.GetFile(ctx, s.DUT().Conn(), fmt.Sprintf("%s/%s", dutTmpDir, backupFirmwareFile), fmt.Sprintf("%s/%s", localTmpDir, backupFirmwareFile), linuxssh.PreserveSymlinks)
+	err = linuxssh.GetFile(ctx, s.DUT().Conn(), fmt.Sprintf("%s/%s", dutTmpDir, backupFirmwareFile), fmt.Sprintf("%s/%s", localTmpDir, backupFirmwareFile), linuxssh.PreserveSymlinks)
 	if err != nil {
 		s.Fatal("Failed to copy file from DUT to Host: ", err)
 	}
@@ -428,9 +451,6 @@ func flashAPFirmwareFromDut(ctx context.Context, s *testing.State, h *firmware.H
 	s.Log("Completed flashing of downloaded fw")
 	if err := safeRebootDut(ctx, h); err != nil {
 		s.Fatal("Failed to reboot DUT after flashing: ", err)
-	}
-	if err := h.EnsureDUTBooted(ctx); err != nil {
-		s.Fatal("Failed to reconnect to DUT after unsuspending: ", err)
 	}
 
 	// To verify firmware versions we need the filename to be in a certain format which
@@ -504,6 +524,9 @@ func safeRebootDut(ctx context.Context, h *firmware.Helper) error {
 	if err := h.RequireRPCClient(ctx); err != nil {
 		return errors.Wrap(err, "failed to open RPC client after reboot")
 	}
+	if err := h.EnsureDUTBooted(ctx); err != nil {
+		return errors.Wrap(err, "failed to reconnect to DUT after reboot")
+	}
 	return nil
 }
 
@@ -519,9 +542,6 @@ func backupECFirmware(ctx context.Context, s *testing.State, h *firmware.Helper,
 	}
 	if err := safeRebootDut(ctx, h); err != nil {
 		s.Fatal("Failed to reboot DUT after backup EC: ", err)
-	}
-	if err := h.EnsureDUTBooted(ctx); err != nil {
-		s.Fatal("Can't restore firmware, DUT is off: ", err)
 	}
 }
 
