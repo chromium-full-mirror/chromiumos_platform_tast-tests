@@ -102,21 +102,8 @@ func (f *ehideFixture) SetUp(ctx context.Context, s *testing.FixtState) interfac
 		return nil
 	}
 
-	startErr := d.Conn().CommandContext(ctx, ehideconst.EhidePath, "start").Run(testexec.DumpLogOnError)
-	if startErr != nil && strings.Contains(startErr.Error(), "Process exited with status") {
-		// "Process exited with status" indicates that ehide has exited due to
-		// an unexpected error. Report it and return here.
-		s.Fatal("Failed to start ehide: ", startErr)
-	}
-	// Otherwise, either there is no error, or the error comes from the SSH
-	// connection closed by ehide. This often happens so don't log anything
-	// here. Only report the error if the ehide state verification fails later.
-
-	if err := waitForEhideState(ctx, d, ehideconst.EhideStateOn); err != nil {
-		if startErr != nil {
-			s.Error("Failed to start ehide: ", startErr)
-		}
-		s.Fatal("Failed to wait for ehide turning on: ", err)
+	if err := startEhide(ctx, d); err != nil {
+		s.Fatal("Failed to start ehide: ", err)
 	}
 	return nil
 }
@@ -156,21 +143,8 @@ func (f *ehideFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 		return
 	}
 
-	stopErr := d.Conn().CommandContext(ctx, ehideconst.EhidePath, "stop").Run(testexec.DumpLogOnError)
-	if stopErr != nil && strings.Contains(stopErr.Error(), "Process exited with status") {
-		// "Process exited with status" indicates that ehide has exited due to
-		// an unexpected error. Report it and return here.
-		s.Fatal("Failed to stop ehide: ", stopErr)
-	}
-	// Otherwise, either there is no error, or the error comes from the SSH
-	// connection closed by ehide. This often happens so don't log anything
-	// here. Only report the error if the ehide state verification fails later.
-
-	if err := waitForEhideState(ctx, d, ehideconst.EhideStateOff); err != nil {
-		if stopErr != nil {
-			s.Error("Failed to stop ehide: ", stopErr)
-		}
-		s.Fatal("Failed to wait for ehide turing off: ", err)
+	if err := stopEhide(ctx, d); err != nil {
+		s.Fatal("Failed to stop ehide: ", err)
 	}
 }
 
@@ -183,6 +157,21 @@ func (f *ehideFixture) waitForSSHRecoveryOnFailure(ctx context.Context, d *dut.D
 		// don't want to mess up the error message.
 		testing.ContextLog(ctx, "SSH connection did not come back: ", err)
 		return
+	}
+
+	// If ehide had not started initially but is running now, we should stop it
+	// to prevent it from affecting later tests. Same as above, only log the
+	// error here.
+	state, err := getState(ctx, d)
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to get ehide state: ", err)
+		return
+	}
+	if state == ehideconst.EhideStateOn && !f.alreadyStarted {
+		if err := stopEhide(ctx, d); err != nil {
+			testing.ContextLog(ctx, "Failed to stop ehide after SSH connection recovered: ", err)
+			return
+		}
 	}
 	testing.ContextLog(ctx, "SSH connection recovered")
 }
@@ -234,4 +223,42 @@ func pollToReconnect(ctx context.Context, d *dut.DUT) error {
 		Timeout:  waitConnectTimeout,
 		Interval: waitConnectInterval,
 	})
+}
+
+func startEhide(ctx context.Context, d *dut.DUT) error {
+	startErr := d.Conn().CommandContext(ctx, ehideconst.EhidePath, "start").Run(testexec.DumpLogOnError)
+	if startErr != nil && strings.Contains(startErr.Error(), "Process exited with status") {
+		// "Process exited with status" indicates that ehide has exited due to
+		// an unexpected error. Report it and return here.
+		return errors.Wrap(startErr, "failed to start ehide")
+	}
+	// Otherwise, either there is no error, or the error comes from the SSH
+	// connection closed by ehide. This often happens so don't log anything
+	// here. Only report the error if the ehide state verification fails later.
+	if err := waitForEhideState(ctx, d, ehideconst.EhideStateOn); err != nil {
+		if startErr != nil {
+			return errors.Wrapf(err, "failed to start ehide: %s; failed to wait for ehide turning on", startErr)
+		}
+		return errors.Wrap(err, "failed to wait for ehide turning on")
+	}
+	return nil
+}
+
+func stopEhide(ctx context.Context, d *dut.DUT) error {
+	stopErr := d.Conn().CommandContext(ctx, ehideconst.EhidePath, "stop").Run(testexec.DumpLogOnError)
+	if stopErr != nil && strings.Contains(stopErr.Error(), "Process exited with status") {
+		// "Process exited with status" indicates that ehide has exited due to
+		// an unexpected error. Report it and return here.
+		return errors.Wrap(stopErr, "failed to stop ehide")
+	}
+	// Otherwise, either there is no error, or the error comes from the SSH
+	// connection closed by ehide. This often happens so don't log anything
+	// here. Only report the error if the ehide state verification fails later.
+	if err := waitForEhideState(ctx, d, ehideconst.EhideStateOff); err != nil {
+		if stopErr != nil {
+			return errors.Wrapf(err, "failed to stop ehide: %s; failed to wait for ehide turing off", stopErr)
+		}
+		return errors.Wrap(err, "failed to wait for ehide turing off")
+	}
+	return nil
 }
