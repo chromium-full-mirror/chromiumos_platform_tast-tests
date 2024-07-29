@@ -243,7 +243,11 @@ func TestPlaybackPerfConfig(t *testing.T) {
 				param := genPlaybackPerfParam(codec, playback.GenDataPath(codec, resolution, fps), resolution, fps, dec,
 					"intel_mc", "chromeVideoWithIntelMediaCompression",
 					[]string{})
+				if len(param.ExtraAttr) != 0 {
+					panic("param.ExtraAttr is not empty")
+				}
 				param.HardwareDeps = append(param.HardwareDeps, "hwdep.GPUFamily(\"meteorlake\", \"alderlake\", \"raptorlake\")")
+				param.ExtraAttr = []string{"graphics_manual"}
 				params = append(params, param)
 			}
 
