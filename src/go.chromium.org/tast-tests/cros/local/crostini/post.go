@@ -118,11 +118,11 @@ func trySaveContainerLogs(ctx context.Context, dir string, cont *vm.Container) {
 }
 
 func writeLXCLogs(ctx context.Context, dir string, machine *vm.VM) {
-	testing.ContextLog(ctx, "Creating file")
 	path := filepath.Join(dir, "crostini_logs.txt")
+	testing.ContextLog(ctx, "Creating crostini log file at ", path)
 	f, err := os.Create(path)
 	if err != nil {
-		testing.ContextLog(ctx, "Error creating file: ", err)
+		testing.ContextLog(ctx, "Error creating crostini log file: ", err)
 		return
 	}
 	defer f.Close()
