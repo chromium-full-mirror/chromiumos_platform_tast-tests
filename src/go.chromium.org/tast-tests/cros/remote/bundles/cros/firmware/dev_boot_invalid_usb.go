@@ -297,6 +297,11 @@ func (servoCharger *servoChargerState) setPDDataRole(ctx context.Context, h *fir
 		if err := h.SetDUTPower(ctx, false); err != nil {
 			return errors.Wrap(err, "failed to remove charger")
 		}
+		// GoBigSleepLint: Wait for a while between removing the charger and
+		// pressing keys.
+		if err := testing.Sleep(ctx, 5*time.Second); err != nil {
+			return errors.Wrap(err, "failed to sleep")
+		}
 	}
 	testing.ContextLog(ctx, "Setting DFP mode")
 	if err := h.Servo.SetDUTPDDataRole(ctx, servo.DFP); err != nil {
@@ -438,6 +443,10 @@ func returnToDeveloperScreen(ctx context.Context, h *firmware.Helper) error {
 	testing.ContextLog(ctx, "Pressing esc to return to the developer screen")
 	if err := h.Servo.PressKey(ctx, "<esc>", servo.DurTab); err != nil {
 		return errors.Wrap(err, "failed to press esc key")
+	}
+	// GoBigSleepLint: Simulate a specific speed of key presses.
+	if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
+		return errors.Wrapf(err, "failed to sleep for %v second", h.Config.KeypressDelay)
 	}
 	return nil
 }

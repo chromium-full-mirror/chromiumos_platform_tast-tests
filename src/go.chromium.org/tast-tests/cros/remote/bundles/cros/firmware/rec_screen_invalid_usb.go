@@ -163,6 +163,11 @@ func bootToNoGoodScreen(ctx context.Context, h *firmware.Helper, removeServoChar
 		if err := h.SetDUTPower(ctx, false); err != nil {
 			return errors.Wrap(err, "failed to remove charger")
 		}
+		// GoBigSleepLint: Wait for a while between removing the charger and
+		// pressing keys.
+		if err := testing.Sleep(ctx, 5*time.Second); err != nil {
+			return errors.Wrap(err, "failed to sleep")
+		}
 	}
 	if h.Config.ModeSwitcherType == firmware.MenuSwitcher {
 		menuNavigator, err := firmware.NewMenuNavigator(ctx, h)

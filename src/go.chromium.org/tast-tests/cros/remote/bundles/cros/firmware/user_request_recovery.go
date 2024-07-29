@@ -282,6 +282,11 @@ func insertUSBInFirmwareScreen(ctx context.Context, h *firmware.Helper, removeSe
 		if err := h.SetDUTPower(ctx, false); err != nil {
 			return errors.Wrap(err, "failed to remove charger")
 		}
+		// GoBigSleepLint: Wait for a while between removing the charger and
+		// booting the DUT from USB to prevent USB disconnected issues.
+		if err := testing.Sleep(ctx, 5*time.Second); err != nil {
+			return errors.Wrap(err, "failed to sleep")
+		}
 	}
 	testing.ContextLog(ctx, "Set DFP mode")
 	if err := h.Servo.SetDUTPDDataRole(ctx, servo.DFP); err != nil {
