@@ -201,7 +201,7 @@ func DNSProxyOverVPN(ctx context.Context, s *testing.State) {
 	// Wait for routing setup ready for guests. Host is verified in
 	// connectToVPN().
 	if params.arc {
-		if err := arcnet.ExpectPingSuccess(ctx, a, "" /*network*/, conn.Server.OverlayIPv4); err != nil {
+		if err := arcnet.ExpectPingSuccess(ctx, a, "vpn", conn.Server.OverlayIPv4); err != nil {
 			s.Fatal("Failed to wait for ARC able to use VPN: ", err)
 		}
 	}
