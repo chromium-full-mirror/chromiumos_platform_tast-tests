@@ -29,7 +29,7 @@ func init() {
 		Desc:         "Calculator smoke test app launching and basic calculation",
 		Contacts: []string{
 			"apps-suite@google.com",
-			"zafzal@google.com",
+			"jopalmer@google.com",
 			"jinrongwu@google.com",
 		},
 		BugComponent: "b:961438",
