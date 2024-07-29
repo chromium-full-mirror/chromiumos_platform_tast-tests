@@ -143,6 +143,14 @@ var Registry = map[string]Metadata{
 		BaseTestNames: []string{"ui.BenchmarkCUJ.octane"},
 		Features:      []feature{wprFeature},
 	},
+	// The TPS Dashboard assumes that the metrics passed as part of the
+	// metadata for SlidesCUJ are the fallback metrics (default metrics) that
+	// should be recommended for tests that don't have corresponding metadata.
+	// Thus, any changes here would update default metrics for all tests
+	// that aren't defined in this map.
+	"ui.GoogleSlidesCUJ": Metadata{
+		Metrics: defaultMetrics,
+	},
 }
 
 // WriteMetadataFile stores a metadata.json file in the testing out
