@@ -47,7 +47,7 @@ func enableCameraEffects(ctx context.Context, blur, relight, retouch bool) (func
 	if blur {
 		blurLevel = effects.KBlurMedium
 	}
-	resetEffects, err := effects.ApplyPlatformEffects(ctx, relight, retouch, blurLevel, effects.KAuto)
+	resetEffects, err := effects.ApplyPlatformEffects(ctx, relight, retouch, blurLevel, effects.KAuto, effects.KInferenceDefault)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to enable platform blurring")
 	}

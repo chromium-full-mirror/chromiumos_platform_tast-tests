@@ -34,6 +34,9 @@ type effectsParams struct {
 
 	// Whether to enable face retouch or not.
 	retouchEnabled bool
+
+	// Select backend for ML inference.
+	inferenceBackend effects.InferenceBackend
 }
 
 func init() {
@@ -45,6 +48,7 @@ func init() {
 			"cros-video-conference-tast-tests@google.com",
 			"xiuwen@google.com",
 			"okuji@google.com",
+			"imranziad@google.com",
 		},
 		BugComponent: "b:187682",
 		Attr: []string{
@@ -67,49 +71,153 @@ func init() {
 			{
 				Name: "no_effects",
 				Val: effectsParams{
-					blurLevel:      effects.KBlurDisabled,
-					relightEnabled: false,
-					retouchEnabled: false,
+					blurLevel:        effects.KBlurDisabled,
+					relightEnabled:   false,
+					retouchEnabled:   false,
+					inferenceBackend: effects.KInferenceGpu,
 				},
 			},
 			{
 				Name: "blur_only",
 				Val: effectsParams{
-					blurLevel:      effects.KBlurMaximum,
-					relightEnabled: false,
-					retouchEnabled: false,
+					blurLevel:        effects.KBlurMaximum,
+					relightEnabled:   false,
+					retouchEnabled:   false,
+					inferenceBackend: effects.KInferenceGpu,
 				},
 			},
 			{
 				Name: "relight_only",
 				Val: effectsParams{
-					blurLevel:      effects.KBlurDisabled,
-					relightEnabled: true,
-					retouchEnabled: false,
+					blurLevel:        effects.KBlurDisabled,
+					relightEnabled:   true,
+					retouchEnabled:   false,
+					inferenceBackend: effects.KInferenceGpu,
 				},
 			},
 			{
 				Name: "replace_only",
 				Val: effectsParams{
-					blurLevel:      effects.KBlurImage,
-					relightEnabled: false,
-					retouchEnabled: false,
+					blurLevel:        effects.KBlurImage,
+					relightEnabled:   false,
+					retouchEnabled:   false,
+					inferenceBackend: effects.KInferenceGpu,
 				},
 			},
 			{
 				Name: "retouch_only",
 				Val: effectsParams{
-					blurLevel:      effects.KBlurDisabled,
-					relightEnabled: false,
-					retouchEnabled: true,
+					blurLevel:        effects.KBlurDisabled,
+					relightEnabled:   false,
+					retouchEnabled:   true,
+					inferenceBackend: effects.KInferenceGpu,
+				},
+			},
+			{
+				Name: "blur_and_relight",
+				Val: effectsParams{
+					blurLevel:        effects.KBlurMaximum,
+					relightEnabled:   true,
+					retouchEnabled:   false,
+					inferenceBackend: effects.KInferenceGpu,
 				},
 			},
 			{
 				Name: "relight_and_retouch",
 				Val: effectsParams{
-					blurLevel:      effects.KBlurDisabled,
-					relightEnabled: true,
-					retouchEnabled: true,
+					blurLevel:        effects.KBlurDisabled,
+					relightEnabled:   true,
+					retouchEnabled:   true,
+					inferenceBackend: effects.KInferenceGpu,
+				},
+			},
+			{
+				Name: "blur_relight_retouch",
+				Val: effectsParams{
+					blurLevel:        effects.KBlurMaximum,
+					relightEnabled:   true,
+					retouchEnabled:   true,
+					inferenceBackend: effects.KInferenceGpu,
+				},
+			},
+			{
+				Name:              "npu_no_effects",
+				ExtraSoftwareDeps: []string{"tflite_intel_openvino"},
+				Val: effectsParams{
+					blurLevel:        effects.KBlurDisabled,
+					relightEnabled:   false,
+					retouchEnabled:   false,
+					inferenceBackend: effects.KInferenceNpu,
+				},
+			},
+			{
+				Name:              "npu_blur_only",
+				ExtraSoftwareDeps: []string{"tflite_intel_openvino"},
+				Val: effectsParams{
+					blurLevel:        effects.KBlurMaximum,
+					relightEnabled:   false,
+					retouchEnabled:   false,
+					inferenceBackend: effects.KInferenceNpu,
+				},
+			},
+			{
+				Name:              "npu_relight_only",
+				ExtraSoftwareDeps: []string{"tflite_intel_openvino"},
+				Val: effectsParams{
+					blurLevel:        effects.KBlurDisabled,
+					relightEnabled:   true,
+					retouchEnabled:   false,
+					inferenceBackend: effects.KInferenceNpu,
+				},
+			},
+			{
+				Name:              "npu_replace_only",
+				ExtraSoftwareDeps: []string{"tflite_intel_openvino"},
+				Val: effectsParams{
+					blurLevel:        effects.KBlurImage,
+					relightEnabled:   false,
+					retouchEnabled:   false,
+					inferenceBackend: effects.KInferenceNpu,
+				},
+			},
+			{
+				Name:              "npu_retouch_only",
+				ExtraSoftwareDeps: []string{"tflite_intel_openvino"},
+				Val: effectsParams{
+					blurLevel:        effects.KBlurDisabled,
+					relightEnabled:   false,
+					retouchEnabled:   true,
+					inferenceBackend: effects.KInferenceNpu,
+				},
+			},
+			{
+				Name:              "npu_blur_and_relight",
+				ExtraSoftwareDeps: []string{"tflite_intel_openvino"},
+				Val: effectsParams{
+					blurLevel:        effects.KBlurMaximum,
+					relightEnabled:   true,
+					retouchEnabled:   false,
+					inferenceBackend: effects.KInferenceNpu,
+				},
+			},
+			{
+				Name:              "npu_relight_and_retouch",
+				ExtraSoftwareDeps: []string{"tflite_intel_openvino"},
+				Val: effectsParams{
+					blurLevel:        effects.KBlurDisabled,
+					relightEnabled:   true,
+					retouchEnabled:   true,
+					inferenceBackend: effects.KInferenceNpu,
+				},
+			},
+			{
+				Name:              "npu_blur_relight_retouch",
+				ExtraSoftwareDeps: []string{"tflite_intel_openvino"},
+				Val: effectsParams{
+					blurLevel:        effects.KBlurMaximum,
+					relightEnabled:   true,
+					retouchEnabled:   true,
+					inferenceBackend: effects.KInferenceNpu,
 				},
 			},
 		},
@@ -133,18 +241,18 @@ func CameraEffectsPower(cleanupCtx context.Context, s *testing.State) {
 		s.Fatal("Fail to wait for camera stream: ", err)
 	}
 
-	if _, err := effects.ApplyPlatformEffects(ctx, false, false, effects.KBlurDisabled, effects.KAuto); err != nil {
-		s.Fatalf("Failed to set camera effects to PortraitRelighting off; Retouch off; BackgroundBlur %v: %v",
-			effects.KBlurDisabled, err)
-	}
-
 	param, ok := s.Param().(effectsParams)
 	if !ok {
 		s.Fatal("Failed to convert test effectsParams")
 	}
 
+	if _, err := effects.ApplyPlatformEffects(ctx, false, false, effects.KBlurDisabled, effects.KAuto, param.inferenceBackend); err != nil {
+		s.Fatalf("Failed to set camera effects to PortraitRelighting off; Retouch off; BackgroundBlur %v: %v",
+			effects.KBlurDisabled, err)
+	}
+
 	// Set camera effects.
-	resetEffects, err := effects.ApplyPlatformEffects(ctx, param.relightEnabled, param.retouchEnabled, param.blurLevel, effects.KAuto)
+	resetEffects, err := effects.ApplyPlatformEffects(ctx, param.relightEnabled, param.retouchEnabled, param.blurLevel, effects.KAuto, param.inferenceBackend)
 	if err != nil {
 		s.Fatalf("Failed to set camera effects to PortraitRelighting %v; Retouch %v; BackgroundBlur %v: %v",
 			param.relightEnabled, param.retouchEnabled, param.blurLevel, err)

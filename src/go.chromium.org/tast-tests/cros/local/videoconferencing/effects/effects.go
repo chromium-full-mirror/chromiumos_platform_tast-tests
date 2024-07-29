@@ -26,6 +26,7 @@ const (
 	// File watched by EffectsStreamManipulator to configure platform effects.
 	platformEffectsOverridePath = "/run/camera/effects/effects_config_override.json"
 	platformEffectsOverrideDir  = "/run/camera/effects"
+	stableDelegateSettingsFile  = "/etc/tflite/settings.json"
 	// OpenCLCacheDir is the path to the opencl_cache directory.
 	OpenCLCacheDir = "/var/lib/ml_core/opencl_cache"
 )
@@ -69,8 +70,20 @@ const (
 	KEffnet384 ModelType = "effnet384"
 )
 
+// InferenceBackend is an enum to select GPU or NPU for ML inference backend.
+type InferenceBackend string
+
+const (
+	// KInferenceDefault to run inference on device default backend.
+	KInferenceDefault InferenceBackend = "default"
+	// KInferenceGpu to run inference on GPU.
+	KInferenceGpu InferenceBackend = "gpu"
+	// KInferenceNpu to run inference on NPU.
+	KInferenceNpu InferenceBackend = "npu"
+)
+
 // ApplyPlatformEffects applies the configured platform effects.
-func ApplyPlatformEffects(ctx context.Context, relight, retouch bool, blurLevel BlurLevel, modelType ModelType) (func(ctx context.Context) error, error) {
+func ApplyPlatformEffects(ctx context.Context, relight, retouch bool, blurLevel BlurLevel, modelType ModelType, inferenceBackend InferenceBackend) (func(ctx context.Context) error, error) {
 	testing.ContextLog(ctx, "Configuring platform effects")
 	if err := os.Mkdir(platformEffectsOverrideDir, 0755); err != nil && !os.IsExist(err) {
 		return nil, errors.Wrap(err, "failed to write platform override")
@@ -78,10 +91,12 @@ func ApplyPlatformEffects(ctx context.Context, relight, retouch bool, blurLevel 
 
 	// This configuration format may change, update as needed.
 	platformEffects := struct {
-		Effect                string `json:"effect"`
-		BlurLevel             string `json:"blur_level"`
-		SegmentationModelType string `json:"segmentation_model_type"`
-		GpuAPI                string `json:"gpu_api"`
+		Effect                     string `json:"effect"`
+		BlurLevel                  string `json:"blur_level"`
+		SegmentationModelType      string `json:"segmentation_model_type"`
+		GpuAPI                     string `json:"gpu_api"`
+		Delegate                   string `json:"delegate"`
+		StableDelegateSettingsFile string `json:"stable_delegate_settings_file"`
 	}{
 		Effect: "none",
 	}
@@ -119,7 +134,18 @@ func ApplyPlatformEffects(ctx context.Context, relight, retouch bool, blurLevel 
 	} else if modelType == KNone {
 		// Do nothing.
 	} else {
-		return nil, errors.Wrap(errors.New("invalid model config"), "invalid model config")
+		return nil, errors.New("invalid model config")
+	}
+
+	if inferenceBackend == KInferenceDefault || inferenceBackend == KInferenceGpu {
+		// GPU is the default backend.
+		platformEffects.Delegate = "gpu"
+	} else if inferenceBackend == KInferenceNpu {
+		// The delegate for NPU is "stable".
+		platformEffects.Delegate = "stable"
+		platformEffects.StableDelegateSettingsFile = stableDelegateSettingsFile
+	} else {
+		return nil, errors.New("invalid inference backend")
 	}
 
 	platformEffectsJSON, err := json.Marshal(platformEffects)

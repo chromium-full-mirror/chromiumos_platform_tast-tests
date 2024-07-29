@@ -97,6 +97,7 @@ type MeetTest struct {
 	BackgroundBlur    bool                    // Whether to turn on platform-level background blur.
 	AdjustLighting    bool                    // Whether to turn on the platform-level adjust lighting feature.
 	Retouch           bool                    // Whether to turn on the platform-level face retouch feature.
+	NpuInference      bool                    // Whether to use NPU as inference backend for platform-level effects.
 	LiveCaptions      bool                    // Whether to turn on live captioning.
 	NoiseCancellation bool                    // Whether to turn on noise cancellation.
 	StudioMic         bool                    // Whether to turn on studio mic.
@@ -713,7 +714,8 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 		meet.BackgroundBlur ||
 		meet.Retouch ||
 		meet.NoiseCancellation ||
-		meet.StudioMic {
+		meet.StudioMic ||
+		meet.NpuInference {
 		testing.ContextLog(ctx, "Toggling platform VC effects")
 		vct := vctray.New(ctx, tconn)
 		blur := vctray.BackgroundBlurOff
@@ -729,8 +731,12 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 		)(ctx); err != nil {
 			return pv, errors.Wrap(err, "failed to configure platform VC effects")
 		}
+		inference := effects.KInferenceDefault
+		if meet.NpuInference {
+			inference = effects.KInferenceNpu
+		}
 		// Retouch is not part of the VC panel yet. Use effects_config_override.json to turn it on.
-		effects.ApplyPlatformEffects(ctx, meet.AdjustLighting, meet.Retouch, blurLevel, effects.KAuto)
+		effects.ApplyPlatformEffects(ctx, meet.AdjustLighting, meet.Retouch, blurLevel, effects.KAuto, inference)
 		// Studio mic and noise cancellation don't appear at the same time.
 		if meet.StudioMic {
 			if err := vct.ChangeSettingsInPanel(vct.SetStudioMic(meet.StudioMic))(ctx); err != nil {
