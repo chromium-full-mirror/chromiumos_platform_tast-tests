@@ -27,7 +27,7 @@ func init() {
 		},
 		BugComponent: "b:1131838",
 		Attr:         []string{"group:cross-device-remote", "cross-device-remote_nearbyshare"},
-		SoftwareDeps: []string{"chrome", "gaia"},
+		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.nearbyservice.NearbyShareService"},
 		Params: []testing.Param{
 			// Stable subset of boards.
@@ -40,7 +40,8 @@ func init() {
 					// Companion DUT 1 dependency.
 					"cd1": hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
 				},
-				Timeout: nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
+				ExtraSoftwareDeps: []string{"gaia"},
+				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
 			},
 			{
 				Name:    "dataonline_allcontacts_txt30mb",
@@ -52,7 +53,8 @@ func init() {
 					// Companion DUT 1 dependency.
 					"cd1": hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
 				},
-				Timeout: nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
+				ExtraSoftwareDeps: []string{"gaia"},
+				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
 			},
 
 			// Floss duplicates

@@ -32,7 +32,7 @@ func init() {
 		// "ChromeOS > Software > System Services > Cross Device > Nearby Share"
 		BugComponent: "b:1131838",
 		Attr:         []string{"group:cross-device", "cross-device_nearbyshare"},
-		SoftwareDeps: []string{"chrome", "gaia"},
+		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{
 			// Stable subset of boards.
 			{
@@ -45,6 +45,7 @@ func init() {
 				},
 				ExtraData:         []string{"small_png.zip"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
+				ExtraSoftwareDeps: []string{"gaia"},
 				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
 			},
 			{
@@ -57,6 +58,7 @@ func init() {
 				},
 				ExtraData:         []string{"big_txt.zip"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
+				ExtraSoftwareDeps: []string{"gaia"},
 				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
 			},
 

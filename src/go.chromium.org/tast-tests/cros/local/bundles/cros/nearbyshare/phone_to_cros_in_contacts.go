@@ -222,10 +222,9 @@ func init() {
 					TestTimeout:     nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
 					MimeType:        nearbycommon.MimeTypeJpeg,
 				},
-				ExtraAttr:         []string{"group:cross-device", "cross-device_nearbyshare-prod"},
-				ExtraData:         []string{"small_jpg.zip"},
-				ExtraSoftwareDeps: []string{"gaia"},
-				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
+				ExtraAttr: []string{"group:cross-device", "cross-device_nearbyshare-prod"},
+				ExtraData: []string{"small_jpg.zip"},
+				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
 			},
 			// Android Nearby Dev tests
 			{

@@ -223,10 +223,9 @@ func init() {
 					TestTimeout:     nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
 					MimeType:        nearbycommon.MimeTypeJpeg,
 				},
-				ExtraAttr:         []string{"group:cross-device", "cross-device_nearbyshare-prod"},
-				ExtraData:         []string{"small_jpg.zip"},
-				ExtraSoftwareDeps: []string{"gaia"},
-				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
+				ExtraAttr: []string{"group:cross-device", "cross-device_nearbyshare-prod"},
+				ExtraData: []string{"small_jpg.zip"},
+				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
 			},
 			{
 				Name:    "dataonline_noone_txt30mb_prod",
@@ -237,10 +236,9 @@ func init() {
 					TestTimeout:     nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
 					MimeType:        nearbycommon.MimeTypeTextPlain,
 				},
-				ExtraAttr:         []string{"group:cross-device", "cross-device_nearbyshare-prod"},
-				ExtraData:         []string{"big_txt.zip"},
-				ExtraSoftwareDeps: []string{"gaia"},
-				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
+				ExtraAttr: []string{"group:cross-device", "cross-device_nearbyshare-prod"},
+				ExtraData: []string{"big_txt.zip"},
+				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
 			},
 			// Android Dev Nearby tests
 			{
