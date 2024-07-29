@@ -38,7 +38,7 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.ECBuildConfigOptions(
 			"BATTERY_CONFIG_IN_CBI",
 			"PLATFORM_EC_BATTERY_CONFIG_IN_CBI",
-		)),
+		), hwdep.ECFeatureBcfgValidJson()),
 	})
 }
 
