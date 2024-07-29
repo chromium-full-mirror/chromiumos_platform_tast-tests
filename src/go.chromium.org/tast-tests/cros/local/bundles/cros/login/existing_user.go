@@ -17,6 +17,8 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/userutil"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/login"
+	"go.chromium.org/tast-tests/cros/local/media/vm"
+	"go.chromium.org/tast-tests/cros/local/network/diag"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -88,6 +90,12 @@ func ExistingUser(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to restart ui: ", err)
 		}
 	}()
+
+	if !vm.IsRunningOnVM() {
+		if err := diag.DUTNetworkCheckAndResolve(ctx); err != nil {
+			s.Fatal("Pre login network connection tests failed: ", err)
+		}
+	}
 
 	// chrome.NoLogin() and chrome.KeepState() are needed to show the login
 	// screen with a user pod (instead of the OOBE login screen).

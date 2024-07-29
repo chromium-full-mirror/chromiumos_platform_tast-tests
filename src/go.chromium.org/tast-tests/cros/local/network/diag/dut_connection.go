@@ -44,6 +44,7 @@ func DUTConnectionCheck(ctx context.Context, timeout time.Duration) error {
 	}, &testing.PollOptions{Timeout: timeout}); err != nil {
 		return errors.Wrap(err, "DUT connections verification failed: Google CDN server is not reachable or DNS resolution failed")
 	}
+	testing.ContextLog(ctx, "DUT connection to Internet: OK")
 	return nil
 }
 

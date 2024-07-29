@@ -52,8 +52,8 @@ func loginUser(ctx context.Context, cfg *config.Config, sess *driver.Session) er
 		// shill.WaitForOnline doesn't cover all network issues, i.e. invalid DNS will
 		// still be reported as online. This is why we still need the below check.
 		if !vm.IsRunningOnVM() {
-			if networkError := diag.DUTNetworkCheckAndResolve(ctx); err != nil {
-				return errors.Wrap(networkError, "pre login network connection tests failed")
+			if err := diag.DUTNetworkCheckAndResolve(ctx); err != nil {
+				return errors.Wrap(err, "pre login network connection tests failed")
 			}
 		}
 		if err := performGAIALogin(ctx, cfg, sess, conn); err != nil {
