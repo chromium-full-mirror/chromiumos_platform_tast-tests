@@ -32,10 +32,10 @@ type Metadata struct {
 	// automatically when using WriteMetadataFile.
 	TestName string
 
-	DisplayName  string    // Optional display name to be shown on the dashboard.
-	BaseTestName string    // Optional base test that this should be compared to.
-	Metrics      []string  // Recommended metrics for this test.
-	Features     []feature // Features that this test is testing.
+	DisplayName   string    // Optional display name to be shown on the dashboard.
+	BaseTestNames []string  // Optional base tests that this test could be compared to.
+	Metrics       []string  // Recommended metrics for this test.
+	Features      []feature // Features that this test is testing.
 }
 
 var defaultMetrics = []string{
@@ -66,34 +66,28 @@ var registry = map[string]Metadata{
 		Metrics: defaultMetrics,
 	},
 	"ui.DesksCUJ.pvsched": Metadata{
-		BaseTestName: "ui.DesksCUJ",
-		Features:     []feature{pvSched},
-		Metrics:      defaultMetrics,
+		BaseTestNames: []string{"ui.DesksCUJ"},
+		Features:      []feature{pvSched},
 	},
 	"ui.DesksCUJ.field_trials": Metadata{
-		BaseTestName: "ui.DesksCUJ",
-		Features:     []feature{fieldTrials},
-		Metrics:      defaultMetrics,
+		BaseTestNames: []string{"ui.DesksCUJ"},
+		Features:      []feature{fieldTrials},
 	},
 	"ui.DesksCUJ.battery_saver": Metadata{
-		BaseTestName: "ui.DesksCUJ",
-		Features:     []feature{batterySaver},
-		Metrics:      defaultMetrics,
+		BaseTestNames: []string{"ui.DesksCUJ"},
+		Features:      []feature{batterySaver},
 	},
 	"ui.DesksCUJ.rounded_windows": Metadata{
-		BaseTestName: "ui.DesksCUJ",
-		Features:     []feature{roundedWindows},
-		Metrics:      defaultMetrics,
+		BaseTestNames: []string{"ui.DesksCUJ"},
+		Features:      []feature{roundedWindows},
 	},
 	"ui.DesksCUJ.vulkan": Metadata{
-		BaseTestName: "ui.DesksCUJ",
-		Features:     []feature{vulkan},
-		Metrics:      defaultMetrics,
+		BaseTestNames: []string{"ui.DesksCUJ"},
+		Features:      []feature{vulkan},
 	},
 	"ui.DesksCUJ.arc_disabled": Metadata{
-		BaseTestName: "ui.DesksCUJ",
-		Features:     []feature{arcDisabled},
-		Metrics:      defaultMetrics,
+		BaseTestNames: []string{"ui.DesksCUJ"},
+		Features:      []feature{arcDisabled},
 	},
 	"ui.BenchmarkCUJ.speedometer": Metadata{
 		Metrics: []string{speedometer},
@@ -105,19 +99,17 @@ var registry = map[string]Metadata{
 		Metrics: []string{motionmark},
 	},
 	"ui.BenchmarkCUJ.vulkan_motionmark": Metadata{
-		Features: []feature{vulkan},
-		Metrics:  []string{motionmark},
+		BaseTestNames: []string{"ui.BenchmarkCUJ.motionmark"},
+		Features:      []feature{vulkan},
 	},
 	"ui.BenchmarkCUJ.motionmark1_3": Metadata{
-		DisplayName:  "BenchmarkMotionmark 1.3",
-		BaseTestName: "ui.BenchmarkCUJ.motionmark",
-		Metrics:      []string{motionmark},
+		DisplayName:   "BenchmarkMotionmark 1.3",
+		BaseTestNames: []string{"ui.BenchmarkCUJ.motionmark"},
 	},
 	"ui.BenchmarkCUJ.vulkan_motionmark1_3": Metadata{
-		DisplayName:  "BenchmarkMotionmarkVulkan 1.3",
-		BaseTestName: "ui.BenchmarkCUJ.vulkan_motionmark",
-		Features:     []feature{vulkan},
-		Metrics:      []string{motionmark},
+		DisplayName:   "BenchmarkMotionmarkVulkan 1.3",
+		BaseTestNames: []string{"ui.BenchmarkCUJ.vulkan_motionmark"},
+		Features:      []feature{vulkan},
 	},
 	"ui.BenchmarkCUJ.jetstream": Metadata{
 		Metrics: []string{jetstream},
@@ -132,28 +124,24 @@ var registry = map[string]Metadata{
 		Metrics: []string{webxprt4},
 	},
 	"ui.BenchmarkCUJ.vulkan_webxprt4": Metadata{
-		Features: []feature{vulkan},
-		Metrics:  []string{webxprt4},
+		BaseTestNames: []string{"ui.BenchmarkCUJ.webxprt4"},
+		Features:      []feature{vulkan},
 	},
 	"ui.BenchmarkCUJ.speedometer_wpr": Metadata{
-		BaseTestName: "ui.BenchmarkCUJ.speedometer",
-		Features:     []feature{wprFeature},
-		Metrics:      []string{speedometer},
+		BaseTestNames: []string{"ui.BenchmarkCUJ.speedometer"},
+		Features:      []feature{wprFeature},
 	},
 	"ui.BenchmarkCUJ.motionmark_wpr": Metadata{
-		BaseTestName: "ui.BenchmarkCUJ.motionmark",
-		Features:     []feature{wprFeature},
-		Metrics:      []string{motionmark},
+		BaseTestNames: []string{"ui.BenchmarkCUJ.motionmark"},
+		Features:      []feature{wprFeature},
 	},
 	"ui.BenchmarkCUJ.kraken_wpr": Metadata{
-		BaseTestName: "ui.BenchmarkCUJ.kraken",
-		Features:     []feature{wprFeature},
-		Metrics:      []string{kraken},
+		BaseTestNames: []string{"ui.BenchmarkCUJ.kraken"},
+		Features:      []feature{wprFeature},
 	},
 	"ui.BenchmarkCUJ.octane_wpr": Metadata{
-		BaseTestName: "ui.BenchmarkCUJ.octane",
-		Features:     []feature{wprFeature},
-		Metrics:      []string{octane},
+		BaseTestNames: []string{"ui.BenchmarkCUJ.octane"},
+		Features:      []feature{wprFeature},
 	},
 }
 
@@ -174,12 +162,13 @@ func WriteMetadataFile(ctx context.Context, testName string) {
 	test.TestName = testName
 
 	// Perform a simple initial check that the base name exists.
-	if test.BaseTestName != "" {
-		if _, ok := registry[test.BaseTestName]; !ok {
-			panic(errors.Errorf("found invalid test metadata, base test %s doesn't exist", test.BaseTestName))
+	for _, bname := range test.BaseTestNames {
+		if bname != "" {
+			if _, ok := registry[bname]; !ok {
+				panic(errors.Errorf("found invalid test metadata, base test %s doesn't exist", bname))
+			}
 		}
 	}
-
 	outDir, ok := testing.ContextOutDir(ctx)
 	if !ok || outDir == "" {
 		testing.ContextLog(ctx, "Failed to get the out directory")
