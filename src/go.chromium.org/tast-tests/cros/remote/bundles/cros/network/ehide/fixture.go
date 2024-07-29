@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -19,7 +20,7 @@ import (
 )
 
 // A relatively large timeout for fixture stability.
-const ehideTimeout = 1 * time.Minute
+const ehideTimeout = 2 * time.Minute
 
 // The timeout to wait for connection at the beginning.
 const waitConnectTimeout = 45 * time.Second
@@ -35,7 +36,11 @@ const connTimeout = 15 * time.Second
 // startup or shutdown.
 const getStateTimeout = 15 * time.Second
 const waitForEhideStateInterval = 1 * time.Second
-const postTestTimeout = 15 * time.Second
+
+const postTestTimeout = getStateTimeout + waitRecoveryTimeout
+
+// The timeout to wait for SSH recovery if ehide fails.
+const waitRecoveryTimeout = 1 * time.Minute
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
@@ -60,6 +65,18 @@ type ehideFixture struct {
 
 func (f *ehideFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	d := s.DUT()
+	// Wait for SSH recovery if the ehide fixture fails.
+	defer func(ctx context.Context) {
+		// s.HasError() will become true only if some error occurs in SetUp()
+		// This indicates that the ehide fixture fails and we should wait for
+		// SSH recovery. Failures in the test content wrapped by the ehide
+		// fixture won't result in s.HasError() becoming true.
+		if s.HasError() {
+			f.waitForSSHRecoveryOnFailure(ctx, d)
+		}
+	}(ctx)
+	ctx, cancel := ctxutil.Shorten(ctx, waitRecoveryTimeout)
+	defer cancel()
 
 	// Since the SSH connection is not guaranteed at the remote fixture setup
 	// (b/239013478), make sure the DUT is connected at the beginning.
@@ -67,17 +84,7 @@ func (f *ehideFixture) SetUp(ctx context.Context, s *testing.FixtState) interfac
 		s.Log("Failed DUT connection check at the beginning: ", err)
 
 		// Try to reconnect to the DUT by polling.
-		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			connCtx, connCancel := context.WithTimeout(ctx, connTimeout)
-			defer connCancel()
-			if err := d.Connect(connCtx); err != nil {
-				return err
-			}
-			return nil
-		}, &testing.PollOptions{
-			Timeout:  waitConnectTimeout,
-			Interval: waitConnectInterval,
-		}); err != nil {
+		if err := pollToReconnect(ctx, d); err != nil {
 			s.Fatal("Failed to wait for DUT connection at the beginning: ", err)
 		}
 	}
@@ -130,6 +137,16 @@ func (f *ehideFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
 
 func (f *ehideFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 	d := s.DUT()
+	// Wait for SSH recovery if the ehide fixture fails.
+	defer func(ctx context.Context) {
+		// Same as in SetUp(), s.HasError() will become true only if some error
+		// occurs in TearDown().
+		if s.HasError() {
+			f.waitForSSHRecoveryOnFailure(ctx, d)
+		}
+	}(ctx)
+	ctx, cancel := ctxutil.Shorten(ctx, waitRecoveryTimeout)
+	defer cancel()
 
 	// If ehide has already started at the beginning, it could be either run
 	// intentionally, or left over from the previous session. Either way, don't
@@ -155,6 +172,19 @@ func (f *ehideFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 		}
 		s.Fatal("Failed to wait for ehide turing off: ", err)
 	}
+}
+
+// waitForSSHRecoveryOnFailure waits for SSH recovery when the ehide fixture
+// fails.
+func (f *ehideFixture) waitForSSHRecoveryOnFailure(ctx context.Context, d *dut.DUT) {
+	testing.ContextLog(ctx, "Ehide failed. Waiting for SSH recovery")
+	if err := pollToReconnect(ctx, d); err != nil {
+		// Only log the error because the ehide fixture has already failed. We
+		// don't want to mess up the error message.
+		testing.ContextLog(ctx, "SSH connection did not come back: ", err)
+		return
+	}
+	testing.ContextLog(ctx, "SSH connection recovered")
 }
 
 func getState(ctx context.Context, dut *dut.DUT) (string, error) {
@@ -189,4 +219,19 @@ func waitForEhideState(ctx context.Context, dut *dut.DUT, state string) error {
 		return errors.Errorf("failed to wait for ehide: %s", err)
 	}
 	return nil
+}
+
+// pollToReconnect tries to reconnect to DUT by polling.
+func pollToReconnect(ctx context.Context, d *dut.DUT) error {
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		connCtx, connCancel := context.WithTimeout(ctx, connTimeout)
+		defer connCancel()
+		if err := d.Connect(connCtx); err != nil {
+			return err
+		}
+		return nil
+	}, &testing.PollOptions{
+		Timeout:  waitConnectTimeout,
+		Interval: waitConnectInterval,
+	})
 }
