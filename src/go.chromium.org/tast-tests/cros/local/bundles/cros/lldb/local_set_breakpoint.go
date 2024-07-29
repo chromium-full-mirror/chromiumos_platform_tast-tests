@@ -20,6 +20,7 @@ func init() {
 		Contacts:     []string{"c-compiler-chrome@google.com", "ajordanr@google.com"},
 		BugComponent: "b:1038090",
 		Attr:         []string{"group:mainline", "informational"},
+		SoftwareDeps: []string{"lldb"},
 		Timeout:      time.Minute,
 		Data:         []string{"set_breakpoint_lldb_commands"},
 	})
