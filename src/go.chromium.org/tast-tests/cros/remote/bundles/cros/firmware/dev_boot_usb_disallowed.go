@@ -8,6 +8,7 @@ import (
 	"context"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
@@ -163,6 +164,14 @@ func DevBootUSBDisallowed(ctx context.Context, s *testing.State) {
 		saveLogPath := filepath.Join(s.OutDir(), "firmware.log")
 		if saveErr := h.SaveCBMEMLogs(ctx, saveLogPath); saveErr != nil {
 			err = errors.Wrap(saveErr, err.Error())
+		}
+		cbmemLog, getFwLogErr := h.Reporter.GetCBMEMLogs(ctx)
+		if getFwLogErr != nil {
+			s.Fatal("Failed to get cbmem logs: ", getFwLogErr)
+		}
+		invalidScreenTypeStr := `Not a valid screen type`
+		if strings.Contains(cbmemLog, invalidScreenTypeStr) {
+			s.Fatalf("Failed to verify disabled usb boot from CBMEM, got %v: %v", invalidScreenTypeStr, err)
 		}
 		s.Fatal("Failed to verify disabled usb boot from CBMEM: ", err)
 	}
