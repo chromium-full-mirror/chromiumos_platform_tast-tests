@@ -37,8 +37,13 @@ const (
 )
 
 const (
-	defaultCertFile = "mitmproxy-ca-cert.pem"
-	defaultConfDir  = "/usr/local/tmp/mitmproxy"
+	// It only contains public key.
+	// It will be installed in browser, arc, etc.
+	defaultPubCertFile = "mitmproxy-ca-cert.pem"
+	// It contains both public key and private key.
+	// It is required by mitmproxy itself.
+	defaultKeyPairCertFile = "mitmproxy-ca.pem"
+	defaultConfDir         = "/usr/local/tmp/mitmproxy"
 )
 
 // MitmProxy represents a structure of mitmproxy.
@@ -63,6 +68,7 @@ type MitmProxy struct {
 	dumpHTTPFlowAddonPath string
 	allowedHosts          []string
 	ignoredHosts          []string
+	customCA              bool
 }
 
 // NewMitmProxy creates a new MitmProxy instance with default configuration and option overrides.
@@ -74,6 +80,7 @@ func NewMitmProxy(ctx context.Context, opts ...Option) (Proxy, error) {
 		removeCert:          true,
 		healthCheck:         true,
 		dumpHTTPFlowEnabled: false,
+		customCA:            false,
 		scriptPaths:         []string{},
 		options:             []string{},
 	}
@@ -124,11 +131,19 @@ func (mp *MitmProxy) start(ctx context.Context) (retErr error) {
 		return errors.Wrap(err, "failed to kill running mitmproxy processes")
 	}
 
-	// If root certificate is not present,
-	// we should delete the folder and then mitmproxy will recreate them.
-	if _, err := mp.RootCertificate(ctx); err != nil {
-		if err = mp.removeCertDir(); err != nil {
+	if mp.customCA {
+		// If we decide to use custom CA,
+		// we should delete the existing certs to avoid using a wrong one.
+		if err := mp.removeCertDir(); err != nil {
 			return errors.Wrap(err, "root certificate not present, failed to delete conf dir")
+		}
+	} else {
+		// If root certificate is not present,
+		// we should delete the folder and then mitmproxy will recreate them.
+		if _, err := mp.RootCertificate(ctx); err != nil {
+			if err = mp.removeCertDir(); err != nil {
+				return errors.Wrap(err, "root certificate not present, failed to delete conf dir")
+			}
 		}
 	}
 
@@ -141,6 +156,17 @@ func (mp *MitmProxy) start(ctx context.Context) (retErr error) {
 			mp.Close(ctx)
 		}
 	}()
+
+	// If mitmproxy detects mitmproxy-ca-cert.pem, mitmproxy will not generate new CA during starting.
+	if mp.customCA {
+		if err := generateCustomCA(mp.confDir, defaultPubCertFile, false); err != nil {
+			return errors.Wrapf(err, "failed to generate %s", defaultPubCertFile)
+		}
+
+		if err := generateCustomCA(mp.confDir, defaultKeyPairCertFile, true); err != nil {
+			return errors.Wrapf(err, "failed to generate %s", defaultKeyPairCertFile)
+		}
+	}
 
 	// The pid of the proxy process is required to configure the isolated network namespace in which the process runs.
 	// The mitmdump process forks, resulting in two running processes. The pid addon will ensure the pid of the actual
@@ -384,7 +410,7 @@ func (mp *MitmProxy) verifyProxyStart(ctx context.Context) error {
 
 // RootCertificate returns the file path of the root certificate and ensures its existence.
 func (mp *MitmProxy) RootCertificate(ctx context.Context) (string, error) {
-	certFilePath := filepath.Join(mp.confDir, defaultCertFile)
+	certFilePath := filepath.Join(mp.confDir, defaultKeyPairCertFile)
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		if _, err := os.Stat(certFilePath); err != nil {
 			return errors.Wrapf(err, "%s is unavailable", certFilePath)

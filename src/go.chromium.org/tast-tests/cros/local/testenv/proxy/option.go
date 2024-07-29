@@ -171,3 +171,14 @@ func Ignorelist(hosts []string) Option {
 		return nil
 	}
 }
+
+// CustomCA is an option to use custom CA or not.
+// If enable, then mitmproxy will use a CA defined in private vars folder.
+// Otherwise, CA is generated during runtime.
+// The default value is false.
+func CustomCA(enable bool) Option {
+	return func(mp *MitmProxy) error {
+		mp.customCA = enable
+		return nil
+	}
+}

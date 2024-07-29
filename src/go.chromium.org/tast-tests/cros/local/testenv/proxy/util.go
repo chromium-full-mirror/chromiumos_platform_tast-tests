@@ -7,6 +7,8 @@ package proxy
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -18,6 +20,60 @@ import (
 )
 
 // util.go contains convenience the util funcs that manage interactions with proxy in the test environment.
+
+var caRootVar = testing.RegisterVarString(
+	"proxy.ca_certificate_credential",
+	"",
+	"CA used by mitmproxy",
+)
+
+var caPrivateVar = testing.RegisterVarString(
+	"proxy.ca_certificate_private_key",
+	"",
+	"Private CA used by mitmproxy",
+)
+
+// CaHashcodeVar returns the hashcode of public key.
+var CaHashcodeVar = testing.RegisterVarString(
+	"proxy.ca_certificate_hashcode",
+	"",
+	"Hashcode of CA",
+)
+
+func generateCustomCA(path, name string, privateKey bool) error {
+	filePath := filepath.Join(path, name)
+
+	// Create or overwrite the file
+	file, err := os.Create(filePath)
+	if err != nil {
+		return errors.Wrap(err, "failed to create file")
+	}
+	defer file.Close() // Ensure file is closed properly
+
+	var keys []string
+	// Private key should be the first part if we want to include it.
+	if privateKey {
+		if caPrivateVar.Value() == "" {
+			return errors.New("private key is empty")
+		}
+
+		keys = append(keys, caPrivateVar.Value())
+	}
+
+	if caRootVar.Value() == "" {
+		return errors.New("public key is empty")
+	}
+	// Always contains public key.
+	keys = append(keys, caRootVar.Value())
+
+	content := strings.Join(keys, "")
+	// Write content to the file.
+	if _, err = file.WriteString(content); err != nil {
+		return errors.Wrap(err, "failed to write to ca")
+	}
+
+	return nil
+}
 
 // ConfigureChrome sets up chrome for mitmproxy.
 // User should call this function to update the network after a mitmproxy server is started.
