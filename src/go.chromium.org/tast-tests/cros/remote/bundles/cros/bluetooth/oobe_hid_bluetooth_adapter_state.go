@@ -25,10 +25,10 @@ func init() {
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Checks bluetooth adapter states updates correctly in OOBE",
 		Contacts: []string{
-			"cros-connectivity@google.com",
-			"tjohnsonkanu@google.com",
+			"alfredyu@cienet.com",
+			"chromeos-connectivity-cienet-external@google.com",
 		},
-		BugComponent: "b:1131776", // ChromeOS > Software > System Services > Connectivity > Bluetooth
+		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps: []string{

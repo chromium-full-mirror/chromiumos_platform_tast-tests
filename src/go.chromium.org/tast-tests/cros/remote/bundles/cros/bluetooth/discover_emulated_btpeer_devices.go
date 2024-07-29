@@ -23,9 +23,10 @@ func init() {
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Tests that btpeers can be set to emulate a type device and that the DUT can discover them as those devices",
 		Contacts: []string{
-			"cros-connectivity@google.com",
+			"chromeos-connectivity-engprod@google.com",
+			"shijinabraham@google.com",
 		},
-		BugComponent: "b:1131776", // ChromeOS > Software > System Services > Connectivity > Bluetooth
+		BugComponent: "b:976419", // ChromeOS > EngProd > Platform > Connectivity
 		Attr:         []string{"group:bluetooth"},
 		TestBedDeps:  []string{tbdep.Wificell, tbdep.BluetoothStateNormal, tbdep.WorkingBluetoothPeers(2)},
 		SoftwareDeps: []string{"chrome"},

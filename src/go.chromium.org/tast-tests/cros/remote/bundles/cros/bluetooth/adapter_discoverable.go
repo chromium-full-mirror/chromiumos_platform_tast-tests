@@ -23,9 +23,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that the DUT can be discovered from a bluetooth device",
 		Contacts: []string{
-			"cros-connectivity@google.com",
+			"chromeos-connectivity-engprod@google.com",
+			"shijinabraham@google.com",
 		},
-		BugComponent: "b:167317", // ChromeOS > Platform > Connectivity > Bluetooth
+		BugComponent: "b:976419", // ChromeOS > EngProd > Platform > Connectivity
 		Attr:         []string{"group:bluetooth"},
 		TestBedDeps:  []string{tbdep.Wificell, tbdep.BluetoothStateNormal, tbdep.WorkingBluetoothPeers(1)},
 		ServiceDeps:  []string{"tast.cros.bluetooth.BluetoothService"},
