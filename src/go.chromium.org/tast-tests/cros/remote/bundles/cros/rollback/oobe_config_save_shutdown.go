@@ -35,7 +35,7 @@ func init() {
 			"group:complementary",
 			"group:hw_agnostic",
 		},
-		SoftwareDeps: []string{"reboot", "chrome"},
+		SoftwareDeps: []string{"reboot", "chrome", "non_flex_device"},
 		ServiceDeps: []string{
 			"tast.cros.autoupdate.UpdateUIService"},
 		Timeout: 7 * time.Minute,

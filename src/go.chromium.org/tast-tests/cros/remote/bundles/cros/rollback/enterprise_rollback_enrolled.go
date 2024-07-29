@@ -46,7 +46,7 @@ func init() {
 			"group:hardware",
 			"group:complementary",
 		},
-		SoftwareDeps: []string{"reboot", "chrome"},
+		SoftwareDeps: []string{"reboot", "chrome", "non_flex_device"},
 		ServiceDeps: []string{
 			"tast.cros.tape.Service",
 			"tast.cros.policy.PolicyService",
