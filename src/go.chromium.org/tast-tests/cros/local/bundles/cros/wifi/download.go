@@ -17,7 +17,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/shill"
-	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -35,7 +34,7 @@ func init() {
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "chromeLoggedIn",
+		Fixture:      "chromeLoggedIn.ehide",
 		Attr:         []string{"group:intel-wlan"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Vars:         []string{"wifissid", "wifipassword", "iterations"},
@@ -89,27 +88,6 @@ func Download(ctx context.Context, s *testing.State) {
 	}
 	ssid := s.RequiredVar("wifissid")
 	wifiPwd := s.RequiredVar("wifipassword")
-
-	manager, err := shill.NewManager(ctx)
-	if err != nil {
-		s.Fatal("Failed creating shill manager proxy: ", err)
-	}
-
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, shill.EnableWaitTime)
-	defer cancel()
-
-	ethEnabled, err := manager.IsEnabled(ctx, shill.TechnologyEthernet)
-	if err != nil {
-		s.Fatal("Failed to check if ethernet is enabled: ", err)
-	}
-	if ethEnabled {
-		enableFunc, err := manager.DisableTechnologyForTesting(ctx, shill.TechnologyEthernet)
-		if err != nil {
-			s.Fatal("Failed to disable ethernet: ", err)
-		}
-		defer enableFunc(cleanupCtx)
-	}
 
 	var wifi *shill.WifiManager
 	if wifi, err = shill.NewWifiManager(ctx, nil); err != nil {
