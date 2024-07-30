@@ -47,7 +47,7 @@ func init() {
 			hwdep.SkipOnModel("eve")),
 		Fixture:         "wiphyEnabled",
 		Requirements:    []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates, "sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
-		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
+		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel_Intel"}`,
 	})
 }
 

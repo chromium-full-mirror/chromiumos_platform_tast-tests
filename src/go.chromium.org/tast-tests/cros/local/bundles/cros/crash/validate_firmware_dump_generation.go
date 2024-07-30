@@ -83,7 +83,7 @@ func init() {
 		HardwareDeps:    hwdep.D(hwdep.WifiIntel()),
 		Requirements:    []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc},
 		VarDeps:         []string{connectivityfwdumps.GaiaLoginAccountVarName},
-		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
+		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel_Intel"}`,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.UserFeedbackWithLowLevelDebugDataAllowed{}, pci.VerifiedFunctionalityOS),
 		},
