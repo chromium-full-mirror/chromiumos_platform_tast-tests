@@ -127,6 +127,7 @@ Before running this script:
 # [VPYTHON:END]
 
 import argparse
+import base64
 import datetime
 import getpass
 import io
@@ -144,6 +145,7 @@ from typing import Optional
 
 import google.auth
 from google.cloud import storage
+import requests
 
 
 assert sys.version_info >= (3, 8), "Python 3.8+ required"
@@ -254,6 +256,100 @@ def upload_local_directory_to_gcs(
                 bucket,
                 remote_path,
             )
+
+
+def upload_artifacts_to_resultdb(
+    local_directory_path: Path, experiment_id: str, label: str = ""
+) -> None:
+    """Upload artifacts to ResultDB. Using user's credentials and
+    permissions when creating invocations, see go/luci-concepts.
+
+    Args:
+        local_directory_path: The path to the local directory that will be
+            uploaded.
+        experiment_id: The experiment ID.
+        label: The label of this run.
+    """
+
+    if not os.path.isfile(
+        local_directory_path / "results.json"
+    ) or not os.path.isfile(local_directory_path / "local_dut_info.txt"):
+        logging.info(
+            "[Cloud] No results.json or local_dut_info.txt found in"
+            f" {local_directory_path}"
+        )
+        return
+
+    with open(local_directory_path / "results.json") as data:
+        results = json.load(data)
+    with open(local_directory_path / "local_dut_info.txt") as data:
+        dut_info = json.load(data)
+    for result in results:
+        # Only upload if the test passed.
+        if not result["errors"]:
+            test_name = result["name"]
+            logging.info(f"[Cloud] Processing {test_name} artifacts")
+            start_time = result["start"]
+
+            build = dut_info["cros_version"]
+            image = dut_info["variant"]
+            board = dut_info["board"]
+            model = dut_info["product"]
+
+            test_id = f"{experiment_id}/{test_name}"
+            if label:
+                test_id += f"/{label}"
+
+            artifacts = {}
+            for path in Path(local_directory_path / "tests" / test_name).glob(
+                "**/*"
+            ):
+                if os.path.isdir(path):
+                    continue
+
+                filename = os.path.basename(path)
+                with open(
+                    path,
+                    "rb",
+                ) as file:
+                    bytes = file.read()
+                artifacts[filename] = {
+                    "contents": base64.b64encode(bytes).decode("utf-8"),
+                }
+
+            tr = {
+                "testId": test_id,
+                "status": "PASS",
+                "expected": True,
+                "summaryHtml": '<p><text-artifact artifact-id="log.txt"></p>',
+                "startTime": start_time,
+                "testMetadata": {
+                    "name": test_name,
+                },
+                "tags": [
+                    {"key": "board", "value": board},
+                    {"key": "model", "value": model},
+                    {"key": "build", "value": build},
+                    {"key": "image", "value": image},
+                ],
+                # Upload artifacts.
+                "artifacts": artifacts,
+            }
+
+            with open(os.environ["LUCI_CONTEXT"]) as f:
+                sink = json.load(f)["result_sink"]
+
+            res = requests.post(
+                url="http://%s/prpc/luci.resultsink.v1.Sink/ReportTestResults"
+                % sink["address"],
+                headers={
+                    "Content-Type": "application/json",
+                    "Accept": "application/json",
+                    "Authorization": "ResultSink %s" % sink["auth_token"],
+                },
+                data=json.dumps({"testResults": [tr]}),
+            )
+            res.raise_for_status()
 
 
 def crosfleet_dut_lease(hostname: str, dims: str, minutes: int) -> str:
@@ -776,6 +872,19 @@ def parse_arguments(argv) -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--upload-to-resultdb",
+        action="store_true",
+        help=(
+            "If set, artifacts will be uploaded to ResultDB. Use it with"
+            " `rdb stream` command, e.g.,"
+            " rdb stream -new -realm chromium:public --"
+            " vpython3 run_cuj_tests.py ... "
+            " Users need to have the appropriate permissions to create"
+            " an invocation to the realm. For more information, please"
+            " refer to go/result-sink."
+        ),
+    )
+    parser.add_argument(
         "pattern",
         nargs=argparse.REMAINDER,
         type=str,
@@ -895,11 +1004,9 @@ def main(argv) -> Optional[int]:
         )
 
         if opts.no_upload:
-            logging.info(
-                "[Cloud] Skip uploading to Google Cloud"
-                " because --no-upload is set"
-            )
+            logging.info("[Cloud] Skip uploading because --no-upload is set")
         else:
+            # Upload to GCS.
             upload = False
             if not opts.auto_upload:
                 while True:
@@ -926,6 +1033,14 @@ def main(argv) -> Optional[int]:
                         opts.experiment_id,
                         dut_model,
                         results_dir_path,
+                    )
+
+            # Upload to ResultDB.
+            if opts.upload_to_resultdb:
+                logging.info("[Cloud] Uploading to ResultDB...")
+                for results_dir_path in results_dir_paths:
+                    upload_artifacts_to_resultdb(
+                        results_dir_path, opts.experiment_id, opts.label
                     )
 
     finally:
