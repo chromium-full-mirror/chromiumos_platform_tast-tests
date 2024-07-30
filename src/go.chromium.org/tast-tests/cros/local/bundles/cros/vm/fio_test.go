@@ -23,7 +23,7 @@ func TestFio(t *testing.T) {
 		DepLvm string
 	}
 
-	jobs := []string{"randread", "randwrite", "randrw", "seqread", "seqwrite", "stress_rw"}
+	jobs := []string{"randread", "randwrite", "randrw", "seqread", "seqwrite", "stress_rw", "randwrite_verify", "seqwrite_verify"}
 	kinds := []string{"block", "block_tpq", "block_lvm", "virtiofs", "virtiofs_dax", "scsi", "pmem"}
 
 	var params []paramData

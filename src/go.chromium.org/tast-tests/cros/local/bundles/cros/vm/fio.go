@@ -408,6 +408,126 @@ func init() {
 					job:  "fio_stress_rw.job",
 				},
 			},
+			{
+				Name:      "block_randwrite_verify",
+				ExtraData: []string{"fio_randwrite_verify.job"},
+				Val: param{
+					kind: "block",
+					job:  "fio_randwrite_verify.job",
+				},
+			},
+			{
+				Name:      "block_tpq_randwrite_verify",
+				ExtraData: []string{"fio_randwrite_verify.job"},
+				Val: param{
+					kind: "block_tpq",
+					job:  "fio_randwrite_verify.job",
+				},
+			},
+			{
+				Name:      "block_lvm_randwrite_verify",
+				ExtraData: []string{"fio_randwrite_verify.job"},
+				Val: param{
+					kind: "block_lvm",
+					job:  "fio_randwrite_verify.job",
+				},
+				ExtraSoftwareDeps: []string{"lvm_stateful_partition"},
+			},
+			{
+				Name:      "virtiofs_randwrite_verify",
+				ExtraData: []string{"fio_randwrite_verify.job"},
+				Val: param{
+					kind: "virtiofs",
+					job:  "fio_randwrite_verify.job",
+				},
+			},
+			{
+				Name:      "virtiofs_dax_randwrite_verify",
+				ExtraData: []string{"fio_randwrite_verify.job"},
+				Val: param{
+					kind: "virtiofs_dax",
+					job:  "fio_randwrite_verify.job",
+				},
+				// TODO(b/176129399): Remove this line once virtiofs DAX is enabled
+				// on ARM.
+				ExtraSoftwareDeps: []string{"amd64"},
+			},
+			{
+				Name:      "scsi_randwrite_verify",
+				ExtraData: []string{"fio_randwrite_verify.job"},
+				Val: param{
+					kind: "scsi",
+					job:  "fio_randwrite_verify.job",
+				},
+			},
+			{
+				Name:      "pmem_randwrite_verify",
+				ExtraData: []string{"fio_randwrite_verify.job"},
+				Val: param{
+					kind: "pmem",
+					job:  "fio_randwrite_verify.job",
+				},
+			},
+			{
+				Name:      "block_seqwrite_verify",
+				ExtraData: []string{"fio_seqwrite_verify.job"},
+				Val: param{
+					kind: "block",
+					job:  "fio_seqwrite_verify.job",
+				},
+			},
+			{
+				Name:      "block_tpq_seqwrite_verify",
+				ExtraData: []string{"fio_seqwrite_verify.job"},
+				Val: param{
+					kind: "block_tpq",
+					job:  "fio_seqwrite_verify.job",
+				},
+			},
+			{
+				Name:      "block_lvm_seqwrite_verify",
+				ExtraData: []string{"fio_seqwrite_verify.job"},
+				Val: param{
+					kind: "block_lvm",
+					job:  "fio_seqwrite_verify.job",
+				},
+				ExtraSoftwareDeps: []string{"lvm_stateful_partition"},
+			},
+			{
+				Name:      "virtiofs_seqwrite_verify",
+				ExtraData: []string{"fio_seqwrite_verify.job"},
+				Val: param{
+					kind: "virtiofs",
+					job:  "fio_seqwrite_verify.job",
+				},
+			},
+			{
+				Name:      "virtiofs_dax_seqwrite_verify",
+				ExtraData: []string{"fio_seqwrite_verify.job"},
+				Val: param{
+					kind: "virtiofs_dax",
+					job:  "fio_seqwrite_verify.job",
+				},
+				// TODO(b/176129399): Remove this line once virtiofs DAX is enabled
+				// on ARM.
+				ExtraSoftwareDeps: []string{"amd64"},
+			},
+			{
+				Name:      "scsi_seqwrite_verify",
+				ExtraData: []string{"fio_seqwrite_verify.job"},
+				Val: param{
+					kind: "scsi",
+					job:  "fio_seqwrite_verify.job",
+				},
+			},
+			{
+				Name:      "pmem_seqwrite_verify",
+				ExtraData: []string{"fio_seqwrite_verify.job"},
+				Val: param{
+					kind: "pmem",
+					job:  "fio_seqwrite_verify.job",
+				},
+			},
 		},
 	})
 }
