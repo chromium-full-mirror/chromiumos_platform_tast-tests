@@ -46,15 +46,6 @@ func init() {
 				"VtsHalKeymasterV3_0TargetTest_arm",
 				"VtsHalKeymasterV3_0TargetTest_arm64",
 			},
-		}, {
-			Name:              "vm_r",
-			ExtraSoftwareDeps: []string{"android_vm_r"},
-			ExtraData: []string{
-				"VtsHalKeymasterV3_0TargetTest_rvc_arm64",
-				"VtsHalKeymasterV3_0TargetTest_rvc_bertha_x86_64",
-				"VtsHalKeymasterV3_0TargetTest_arm",
-				"VtsHalKeymasterV3_0TargetTest_arm64",
-			},
 		}},
 	})
 }

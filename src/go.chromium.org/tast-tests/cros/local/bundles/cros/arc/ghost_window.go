@@ -52,11 +52,6 @@ var fullrestoreGwTests = []gwTestParams{
 	{"fullrestorePlayStoreInTabletMode", testLaunchFromFullRestorePlayStoreInTabletMode},
 }
 
-var generalLaunchGwTests = []gwTestParams{
-	{"shelfLaunchPlayStore", testShelfLaunchPlayStore},
-	{"launcherLaunchPlayStore", testLauncherLaunchPlayStore},
-}
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         GhostWindow,
@@ -69,23 +64,10 @@ func init() {
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 1*time.Minute,
 		Params: []testing.Param{{
-			Name: "general_r",
-			Val:  generalLaunchGwTests,
-			// Temporarily restrict it only for ARC R, not T or above version.
-			ExtraSoftwareDeps: []string{"android_vm_r", "gaia"},
-			ExtraAttr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
-		}, {
 			// Not in mainline since optin is flaky. b/243451887
 			Name:              "fullrestore",
 			Val:               fullrestoreGwTests,
 			ExtraSoftwareDeps: []string{"android_container"},
-		}, {
-			// Not in mainline since optin is flaky. b/243451887
-			Name: "fullrestore_r",
-			Val:  fullrestoreGwTests,
-			// Temporarily restrict it only for ARC R, not T or above version.
-			ExtraSoftwareDeps: []string{"android_vm_r"},
-			ExtraAttr:         []string{"group:hw_agnostic"},
 		}},
 	})
 }

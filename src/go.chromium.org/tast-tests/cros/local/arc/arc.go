@@ -19,16 +19,14 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/android/adb"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	localadb "go.chromium.org/tast-tests/cros/local/android/adb"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash/ashproc"
 	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast-tests/cros/local/procutil"
 	"go.chromium.org/tast-tests/cros/local/syslog"
-
-	"go.chromium.org/tast-tests/cros/common/android/adb"
-	"go.chromium.org/tast-tests/cros/common/testexec"
-
 	"go.chromium.org/tast/core/caller"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/fsutil"
@@ -232,14 +230,14 @@ func (a *ARC) ResumeProvisioning(ctx context.Context) error {
 		return errors.Wrap(err, "failed to broadcast resume intent")
 	}
 	if res.Result != 0 {
-		return errors.Errorf("Failed to resume provisioning: %d", res.Result)
+		return errors.Errorf("failed to resume provisioning: %d", res.Result)
 	}
 
 	return nil
 }
 
 // AddCaCert adds a custom CA cert in /system/etc/security/cacerts.
-func (a *ARC) AddCaCert(ctx context.Context, certPath string, certHash string) error {
+func (a *ARC) AddCaCert(ctx context.Context, certPath, certHash string) error {
 	const (
 		tempCertsDir   = "/data/local/tmp/cacerts"
 		systemCertsDir = "/system/etc/security/cacerts"
@@ -528,7 +526,6 @@ func (a *ARC) WaitIntentHelper(ctx context.Context) error {
 // At least one of them must be declared to call New.
 var androidDeps = []string{
 	"android_vm",
-	"android_vm_r",
 	"android_vm_t",
 	"android_container",
 	"android_container_r",

@@ -48,8 +48,7 @@ func init() {
 		// ChromeOS > Software > ARC++ > Framework > Chrome Integration
 		BugComponent: "b:537221",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
-		// Per-App Language is currently only enabled on ARC-T.
-		SoftwareDeps: []string{"chrome", "android_vm", "no_android_vm_r"},
+		SoftwareDeps: []string{"chrome", "android_vm"},
 		Timeout:      10 * time.Minute,
 	})
 }

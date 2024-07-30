@@ -20,7 +20,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/printpreview"
 	"go.chromium.org/tast-tests/cros/local/printing/document"
 	"go.chromium.org/tast-tests/cros/local/printing/usbprinter"
-
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
@@ -61,12 +60,6 @@ func init() {
 			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("elm", "hana", "maple", "sycamore360")),
 			ExtraData:         []string{"arc_print_vm_ippusb_golden.pwg"},
 			ExtraAttr:         []string{"group:cq-medium"},
-		}, {
-			Name:              "vm_r",
-			Val:               "arc_print_vm_ippusb_golden.pwg",
-			ExtraAttr:         []string{"informational"},
-			ExtraSoftwareDeps: []string{"android_vm_r"},
-			ExtraData:         []string{"arc_print_vm_ippusb_golden.pwg"},
 		}, {
 			Name:              "vm_t",
 			Val:               "arc_print_vm_ippusb_golden.pwg",

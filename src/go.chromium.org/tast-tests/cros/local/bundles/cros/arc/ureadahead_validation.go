@@ -12,7 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/arc/ureadahead"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -36,9 +35,6 @@ func init() {
 		SoftwareDeps: []string{"chrome", "no_arc_userdebug"},
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_container"},
-		}, {
-			Name:              "vm_r",
-			ExtraSoftwareDeps: []string{"android_vm_r"},
 		}, {
 			Name:              "vm_t",
 			ExtraSoftwareDeps: []string{"android_vm_t"},
