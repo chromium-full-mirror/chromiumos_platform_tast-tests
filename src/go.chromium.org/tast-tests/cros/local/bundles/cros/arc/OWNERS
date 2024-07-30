@@ -19,10 +19,34 @@ per-file unicorn_*.go=file:/src/go.chromium.org/tast-tests/cros/local/arc/OWNERS
 
 # Play Store tests
 per-file optin*.go=mhasank@chromium.org
-per-file play_*.go=mhasank@chromium.org
+per-file play_store_*.go=mhasank@chromium.org
 
 # Notification experts own notification-related tests
 per-file notification*.go=file:/src/go.chromium.org/tast-tests/cros/local/arc/OWNERS.notif
+
+# Storage tests
+# TODO: b/358063879 - Introduce a common prefix for these tests to simplify the rules.
+per-file appfuse.go=file:/src/go.chromium.org/tast-tests/cros/local/arc/OWNERS.storage
+per-file container_mount.go=file:/src/go.chromium.org/tast-tests/cros/local/arc/OWNERS.storage
+per-file data_migration.go=file:/src/go.chromium.org/tast-tests/cros/local/arc/OWNERS.storage
+per-file download_manager.go=file:/src/go.chromium.org/tast-tests/cros/local/arc/OWNERS.storage
+per-file downloads.go=file:/src/go.chromium.org/tast-tests/cros/local/arc/OWNERS.storage
+per-file drivefs.go=file:/src/go.chromium.org/tast-tests/cros/local/arc/OWNERS.storage
+per-file enable_external_storage.go=file:/src/go.chromium.org/tast-tests/cros/local/arc/OWNERS.storage
+per-file files_app_cts.go=file:/src/go.chromium.org/tast-tests/cros/local/arc/OWNERS.storage
+per-file file_system_permissions.go=file:/src/go.chromium.org/tast-tests/cros/local/arc/OWNERS.storage
+per-file fio.go=file:/src/go.chromium.org/tast-tests/cros/local/arc/OWNERS.storage
+per-file fsp.go=file:/src/go.chromium.org/tast-tests/cros/local/arc/OWNERS.storage
+per-file many_files.go=file:/src/go.chromium.org/tast-tests/cros/local/arc/OWNERS.storage
+per-file media_scan_perf.go=file:/src/go.chromium.org/tast-tests/cros/local/arc/OWNERS.storage
+per-file mount_obb.go=file:/src/go.chromium.org/tast-tests/cros/local/arc/OWNERS.storage
+per-file mtp.go=file:/src/go.chromium.org/tast-tests/cros/local/arc/OWNERS.storage
+per-file my_files.go=file:/src/go.chromium.org/tast-tests/cros/local/arc/OWNERS.storage
+per-file play_files.go=file:/src/go.chromium.org/tast-tests/cros/local/arc/OWNERS.storage
+per-file quota_project_id.go=file:/src/go.chromium.org/tast-tests/cros/local/arc/OWNERS.storage
+per-file removable_media.go=file:/src/go.chromium.org/tast-tests/cros/local/arc/OWNERS.storage
+per-file selinux_host_side_restorecon.go=file:/src/go.chromium.org/tast-tests/cros/local/arc/OWNERS.storage
+per-file vm_data_migration.go=file:/src/go.chromium.org/tast-tests/cros/local/arc/OWNERS.storage
 
 # Tast team for bulk/emergencies
 include /OWNERS.tast
