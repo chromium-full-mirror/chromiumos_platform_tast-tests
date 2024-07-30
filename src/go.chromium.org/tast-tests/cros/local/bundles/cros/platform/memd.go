@@ -30,7 +30,7 @@ func init() {
 		Contacts:     []string{"chromeos-memory@google.com"},
 		BugComponent: "b:167286",
 		SoftwareDeps: []string{"memd"},
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "informational"},
 	})
 }
 
