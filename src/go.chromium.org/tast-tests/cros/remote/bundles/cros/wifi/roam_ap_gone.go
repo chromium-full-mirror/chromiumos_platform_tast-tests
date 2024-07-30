@@ -36,15 +36,52 @@ var (
 	roamCert = certificate.TestCert1()
 )
 
+func (tc roamTestcase) setEnableBSSFlush(enable bool) roamTestcase {
+	tc.enableBSSFlush = enable
+	return tc
+}
+
+func (tc roamTestcase) setRoamTime(d time.Duration) roamTestcase {
+	tc.expectedRoamTime = d
+	return tc
+}
+
+var (
+	roamTestcaseWithTwoOpenAP = roamTestcase{
+		apOpts1:    []hostapd.Option{hostapd.Mode(hostapd.Mode80211nPure), hostapd.Channel(1), hostapd.HTCaps(hostapd.HTCapHT20)},
+		apOpts2:    []hostapd.Option{hostapd.Mode(hostapd.Mode80211nPure), hostapd.Channel(48), hostapd.HTCaps(hostapd.HTCapHT20)},
+		secConfFac: nil,
+	}
+	roamTestcaseWithTwoWPAAP = roamTestcase{
+		apOpts1:    []hostapd.Option{hostapd.Mode(hostapd.Mode80211nPure), hostapd.Channel(1), hostapd.HTCaps(hostapd.HTCapHT20)},
+		apOpts2:    []hostapd.Option{hostapd.Mode(hostapd.Mode80211nPure), hostapd.Channel(48), hostapd.HTCaps(hostapd.HTCapHT20)},
+		secConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherCCMP)),
+	}
+	roamTestcaseWithTwoWEPAP = roamTestcase{
+		apOpts1:    []hostapd.Option{hostapd.Mode(hostapd.Mode80211nMixed), hostapd.Channel(1), hostapd.HTCaps(hostapd.HTCapHT20)},
+		apOpts2:    []hostapd.Option{hostapd.Mode(hostapd.Mode80211nMixed), hostapd.Channel(48), hostapd.HTCaps(hostapd.HTCapHT20)},
+		secConfFac: wep.NewConfigFactory([]string{"abcde", "fedcba9876", "ab\xe4\xb8\x89", "\xe4\xb8\x89\xc2\xa2"}, wep.DefaultKey(0), wep.AuthAlgs(wep.AuthAlgoOpen)),
+	}
+	roamTestcaseWithTwo8021xWPAAP = roamTestcase{
+		apOpts1:    []hostapd.Option{hostapd.Mode(hostapd.Mode80211nPure), hostapd.Channel(1), hostapd.HTCaps(hostapd.HTCapHT20)},
+		apOpts2:    []hostapd.Option{hostapd.Mode(hostapd.Mode80211nPure), hostapd.Channel(48), hostapd.HTCaps(hostapd.HTCapHT20)},
+		secConfFac: wpaeap.NewConfigFactory(roamCert.CACred.Cert, roamCert.ServerCred, wpaeap.ClientCACert(roamCert.CACred.Cert), wpaeap.ClientCred(roamCert.ClientCred)),
+	}
+)
+
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: RoamAPGone,
-		Desc: "Tests roaming to an AP that disappears while the client is awake",
+		Func:         RoamAPGone,
+		Desc:         "Tests roaming to an AP that disappears while the client is awake",
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Contacts: []string{
 			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
 			"rmekonnen@google.com",
+			"edgar.chang@cienet.com",
+			"chromeos-connectivity-cienet-external@google.com",
 		},
 		BugComponent:    "b:893827", // ChromeOS > Platform > Connectivity > WiFi
+		LifeCycleStage:  testing.LifeCycleInDevelopment,
 		Attr:            []string{"group:wificell", "wificell_func", "wificell_unstable"},
 		TestBedDeps:     []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
 		ServiceDeps:     []string{wificell.ShillServiceName},
@@ -54,125 +91,66 @@ func init() {
 		Params: []testing.Param{
 			{
 				// Verifies that DUT can roam between two APs in full view of it.
-				Val: roamTestcase{
-					apOpts1:          []hostapd.Option{hostapd.Mode(hostapd.Mode80211nPure), hostapd.Channel(1), hostapd.HTCaps(hostapd.HTCapHT20)},
-					apOpts2:          []hostapd.Option{hostapd.Mode(hostapd.Mode80211nPure), hostapd.Channel(48), hostapd.HTCaps(hostapd.HTCapHT20)},
-					secConfFac:       nil,
-					enableBSSFlush:   false,
-					expectedRoamTime: 5 * time.Second,
-				},
+				Name:              "open",
+				Val:               roamTestcaseWithTwoOpenAP.setRoamTime(5 * time.Second),
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiNotMarvell()),
 				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_Not_Marvell"}`,
 			}, {
 				// Verifies that DUT can roam between two WPA APs in full view of it.
-				Name: "wpa",
-				Val: roamTestcase{
-					apOpts1:          []hostapd.Option{hostapd.Mode(hostapd.Mode80211nPure), hostapd.Channel(1), hostapd.HTCaps(hostapd.HTCapHT20)},
-					apOpts2:          []hostapd.Option{hostapd.Mode(hostapd.Mode80211nPure), hostapd.Channel(48), hostapd.HTCaps(hostapd.HTCapHT20)},
-					secConfFac:       wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherCCMP)),
-					enableBSSFlush:   false,
-					expectedRoamTime: 5 * time.Second,
-				},
+				Name:              "wpa",
+				Val:               roamTestcaseWithTwoWPAAP.setRoamTime(5 * time.Second),
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiNotMarvell()),
 				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_Not_Marvell"}`,
 			}, {
 				// Verifies that DUT can roam between two WEP APs in full view of it.
-				Name: "wep",
-				Val: roamTestcase{
-					apOpts1:          []hostapd.Option{hostapd.Mode(hostapd.Mode80211nMixed), hostapd.Channel(1), hostapd.HTCaps(hostapd.HTCapHT20)},
-					apOpts2:          []hostapd.Option{hostapd.Mode(hostapd.Mode80211nMixed), hostapd.Channel(48), hostapd.HTCaps(hostapd.HTCapHT20)},
-					secConfFac:       wep.NewConfigFactory([]string{"abcde", "fedcba9876", "ab\xe4\xb8\x89", "\xe4\xb8\x89\xc2\xa2"}, wep.DefaultKey(0), wep.AuthAlgs(wep.AuthAlgoOpen)),
-					enableBSSFlush:   false,
-					expectedRoamTime: 5 * time.Second,
-				},
+				Name:              "wep",
+				Val:               roamTestcaseWithTwoWEPAP.setRoamTime(5 * time.Second),
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiWEP(), hwdep.WifiNotMarvell()),
 				ExtraRequirements: []string{tdreq.WiFiSecSupportWEP},
 				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_Not_Marvell"}`,
 			}, {
 				// Verifies that DUT can roam between two WPA-EAP APs in full view of it.
-				Name: "8021xwpa",
-				Val: roamTestcase{
-					apOpts1:          []hostapd.Option{hostapd.Mode(hostapd.Mode80211nPure), hostapd.Channel(1), hostapd.HTCaps(hostapd.HTCapHT20)},
-					apOpts2:          []hostapd.Option{hostapd.Mode(hostapd.Mode80211nPure), hostapd.Channel(48), hostapd.HTCaps(hostapd.HTCapHT20)},
-					secConfFac:       wpaeap.NewConfigFactory(roamCert.CACred.Cert, roamCert.ServerCred, wpaeap.ClientCACert(roamCert.CACred.Cert), wpaeap.ClientCred(roamCert.ClientCred)),
-					enableBSSFlush:   false,
-					expectedRoamTime: 5 * time.Second,
-				},
+				Name:              "8021xwpa",
+				Val:               roamTestcaseWithTwo8021xWPAAP.setRoamTime(5 * time.Second),
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiNotMarvell()),
 				ExtraRequirements: []string{tdreq.WiFiSecSupportWPA2Enterprise},
 				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_Not_Marvell"}`,
 			}, {
-				Name: "flushbss",
 				// Verifies that DUT can roam between two APs with minimal idle time after bss flush.
-				Val: roamTestcase{
-					apOpts1:          []hostapd.Option{hostapd.Mode(hostapd.Mode80211nPure), hostapd.Channel(1), hostapd.HTCaps(hostapd.HTCapHT20)},
-					apOpts2:          []hostapd.Option{hostapd.Mode(hostapd.Mode80211nPure), hostapd.Channel(48), hostapd.HTCaps(hostapd.HTCapHT20)},
-					secConfFac:       nil,
-					enableBSSFlush:   true,
-					expectedRoamTime: 10 * time.Second,
-				},
+				Name:              "flushbss",
+				Val:               roamTestcaseWithTwoOpenAP.setRoamTime(10 * time.Second).setEnableBSSFlush(true),
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiNotMarvell()),
 				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_Not_Marvell"}`,
 			}, {
-				Name: "marvell",
 				// Verifies that DUT can roam between two APs in full view of it.
-				Val: roamTestcase{
-					apOpts1:          []hostapd.Option{hostapd.Mode(hostapd.Mode80211nPure), hostapd.Channel(1), hostapd.HTCaps(hostapd.HTCapHT20)},
-					apOpts2:          []hostapd.Option{hostapd.Mode(hostapd.Mode80211nPure), hostapd.Channel(48), hostapd.HTCaps(hostapd.HTCapHT20)},
-					secConfFac:       nil,
-					enableBSSFlush:   false,
-					expectedRoamTime: 12 * time.Second,
-				},
+				Name:              "marvell",
+				Val:               roamTestcaseWithTwoOpenAP.setRoamTime(12 * time.Second),
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiMarvell()),
 				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_Marvell"}`,
 			}, {
 				// Verifies that DUT can roam between two WPA APs in full view of it.
-				Name: "wpa_marvell",
-				Val: roamTestcase{
-					apOpts1:          []hostapd.Option{hostapd.Mode(hostapd.Mode80211nPure), hostapd.Channel(1), hostapd.HTCaps(hostapd.HTCapHT20)},
-					apOpts2:          []hostapd.Option{hostapd.Mode(hostapd.Mode80211nPure), hostapd.Channel(48), hostapd.HTCaps(hostapd.HTCapHT20)},
-					secConfFac:       wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherCCMP)),
-					enableBSSFlush:   false,
-					expectedRoamTime: 12 * time.Second,
-				},
+				Name:              "wpa_marvell",
+				Val:               roamTestcaseWithTwoWPAAP.setRoamTime(12 * time.Second),
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiMarvell()),
 				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_Marvell"}`,
 			}, {
 				// Verifies that DUT can roam between two WEP APs in full view of it.
-				Name: "wep_marvell",
-				Val: roamTestcase{
-					apOpts1:          []hostapd.Option{hostapd.Mode(hostapd.Mode80211nMixed), hostapd.Channel(1), hostapd.HTCaps(hostapd.HTCapHT20)},
-					apOpts2:          []hostapd.Option{hostapd.Mode(hostapd.Mode80211nMixed), hostapd.Channel(48), hostapd.HTCaps(hostapd.HTCapHT20)},
-					secConfFac:       wep.NewConfigFactory([]string{"abcde", "fedcba9876", "ab\xe4\xb8\x89", "\xe4\xb8\x89\xc2\xa2"}, wep.DefaultKey(0), wep.AuthAlgs(wep.AuthAlgoOpen)),
-					enableBSSFlush:   false,
-					expectedRoamTime: 12 * time.Second,
-				},
+				Name:              "wep_marvell",
+				Val:               roamTestcaseWithTwoWEPAP.setRoamTime(12 * time.Second),
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiWEP(), hwdep.WifiMarvell()),
 				ExtraRequirements: []string{tdreq.WiFiSecSupportWEP},
 				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_Marvell"}`,
 			}, {
 				// Verifies that DUT can roam between two WPA-EAP APs in full view of it.
-				Name: "8021xwpa_marvell",
-				Val: roamTestcase{
-					apOpts1:          []hostapd.Option{hostapd.Mode(hostapd.Mode80211nPure), hostapd.Channel(1), hostapd.HTCaps(hostapd.HTCapHT20)},
-					apOpts2:          []hostapd.Option{hostapd.Mode(hostapd.Mode80211nPure), hostapd.Channel(48), hostapd.HTCaps(hostapd.HTCapHT20)},
-					secConfFac:       wpaeap.NewConfigFactory(roamCert.CACred.Cert, roamCert.ServerCred, wpaeap.ClientCACert(roamCert.CACred.Cert), wpaeap.ClientCred(roamCert.ClientCred)),
-					enableBSSFlush:   false,
-					expectedRoamTime: 12 * time.Second,
-				},
+				Name:              "8021xwpa_marvell",
+				Val:               roamTestcaseWithTwo8021xWPAAP.setRoamTime(12 * time.Second),
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiMarvell()),
 				ExtraRequirements: []string{tdreq.WiFiSecSupportWPA2Enterprise},
 				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_Marvell"}`,
 			}, {
-				Name: "flushbss_marvell",
 				// Verifies that DUT can roam between two APs with minimal idle time after bss flush.
-				Val: roamTestcase{
-					apOpts1:          []hostapd.Option{hostapd.Mode(hostapd.Mode80211nPure), hostapd.Channel(1), hostapd.HTCaps(hostapd.HTCapHT20)},
-					apOpts2:          []hostapd.Option{hostapd.Mode(hostapd.Mode80211nPure), hostapd.Channel(48), hostapd.HTCaps(hostapd.HTCapHT20)},
-					secConfFac:       nil,
-					enableBSSFlush:   true,
-					expectedRoamTime: 12 * time.Second,
-				},
+				Name:              "flushbss_marvell",
+				Val:               roamTestcaseWithTwoOpenAP.setRoamTime(12 * time.Second).setEnableBSSFlush(true),
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiMarvell()),
 				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_Marvell"}`,
 			},
