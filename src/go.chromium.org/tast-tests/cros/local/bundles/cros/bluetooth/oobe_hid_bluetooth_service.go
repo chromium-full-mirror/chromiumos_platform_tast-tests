@@ -6,6 +6,7 @@ package bluetooth
 
 import (
 	"context"
+	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
@@ -19,6 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/oobe"
 	oobeHelper "go.chromium.org/tast-tests/cros/local/oobe"
 	pb "go.chromium.org/tast-tests/cros/services/cros/bluetooth"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -36,7 +38,7 @@ type OobeHidBluetoothService struct {
 	chrome *chrome.Chrome
 }
 
-func (svc *OobeHidBluetoothService) NewChrome(ctx context.Context, req *pb.NewChromeRequest) (*empty.Empty, error) {
+func (svc *OobeHidBluetoothService) NewChrome(ctx context.Context, req *pb.NewChromeRequest) (_ *empty.Empty, retErr error) {
 	if svc.chrome != nil {
 		return nil, errors.New("Chrome has already been started")
 	}
@@ -64,14 +66,12 @@ func (svc *OobeHidBluetoothService) NewChrome(ctx context.Context, req *pb.NewCh
 		return nil, errors.Wrap(err, "failed to create the signin profile test API connection")
 	}
 
-	contextOutDir, ok := testing.ContextOutDir(ctx)
-	if !ok {
-		return nil, errors.New("failed to get the context output directory")
-	}
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(cleanupCtx, 10*time.Second)
+	defer cancel()
+	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnErrorToContextOutDir(cleanupCtx, func() bool { return retErr != nil }, tconn, "OobeHidBluetoothService_ui_dump")
 
-	defer faillog.DumpUITree(ctx, contextOutDir, tconn)
-
-	if err := oobe.IsHidDetectionScreenVisible(ctx, oobeConn); err != nil {
+	if err := oobe.WaitForHidDetectionScreenVisible(ctx, oobeConn); err != nil {
 		return nil, errors.Wrap(err, "failed to wait for the HID detection screen to be visible")
 	}
 
@@ -95,7 +95,7 @@ func (svc *OobeHidBluetoothService) CloseChrome(ctx context.Context, req *empty.
 	return &empty.Empty{}, err
 }
 
-func (svc *OobeHidBluetoothService) ProgressToWelcomeScreen(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
+func (svc *OobeHidBluetoothService) ProgressToWelcomeScreen(ctx context.Context, req *empty.Empty) (_ *empty.Empty, retErr error) {
 	if svc.chrome == nil {
 		return nil, errors.New("Chrome must be started before progressing to the welcome screen")
 	}
@@ -111,20 +111,25 @@ func (svc *OobeHidBluetoothService) ProgressToWelcomeScreen(ctx context.Context,
 		return nil, errors.Wrap(err, "failed to create the signin profile test API connection")
 	}
 
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(cleanupCtx, 10*time.Second)
+	defer cancel()
+
 	// Add a virtual USB keyboard to enable continue button.
 	keyboard, err := input.Keyboard(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create a virtual keyboard")
 	}
+	defer keyboard.Close(cleanupCtx)
 
-	defer keyboard.Close(ctx)
+	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnErrorToContextOutDir(cleanupCtx, func() bool { return retErr != nil }, tconn, "OobeHidBluetoothService_ui_dump")
 
 	// Check that a keyboard is detected.
 	if err := oobeHelper.IsHidDetectionSearchingForKeyboard(ctx, oobeConn, tconn); err == nil {
 		return nil, errors.Wrap(err, "expected keyboard device to be found")
 	}
 
-	if err := oobe.IsHidDetectionContinueButtonEnabled(ctx, oobeConn); err != nil {
+	if err := oobe.WaitForHidDetectionContinueButtonEnabled(ctx, oobeConn); err != nil {
 		return nil, errors.Wrap(err, "expected continue button to be enabled")
 	}
 
@@ -132,13 +137,13 @@ func (svc *OobeHidBluetoothService) ProgressToWelcomeScreen(ctx context.Context,
 		return nil, errors.Wrap(err, "failed to click on hid next button")
 	}
 
-	if err := oobe.IsWelcomeScreenVisible(ctx, oobeConn); err != nil {
+	if err := oobe.WaitForWelcomeScreenVisible(ctx, oobeConn); err != nil {
 		return nil, errors.Wrap(err, "failed to wait for the welcome screen to be visible")
 	}
 	return &empty.Empty{}, nil
 }
 
-func (svc *OobeHidBluetoothService) DisableBluetoothFromQuickSettings(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
+func (svc *OobeHidBluetoothService) DisableBluetoothFromQuickSettings(ctx context.Context, req *empty.Empty) (_ *empty.Empty, retErr error) {
 	if svc.chrome == nil {
 		return nil, errors.New("Chrome must be started before disabling bluetooth from quick settings")
 	}
@@ -148,10 +153,15 @@ func (svc *OobeHidBluetoothService) DisableBluetoothFromQuickSettings(ctx contex
 		return nil, errors.Wrap(err, "failed to create the signin profile test API connection")
 	}
 
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(cleanupCtx, 10*time.Second)
+	defer cancel()
+
 	if err := quicksettings.Show(ctx, tconn); err != nil {
 		return nil, errors.Wrap(err, "failed to show quick settings")
 	}
-	defer quicksettings.Hide(ctx, tconn)
+	defer quicksettings.Hide(cleanupCtx, tconn)
+	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnErrorToContextOutDir(cleanupCtx, func() bool { return retErr != nil }, tconn, "OobeHidBluetoothService_ui_dump")
 
 	ui := uiauto.New(tconn)
 	if err := ui.LeftClick(quicksettings.FeatureTileBluetoothToggle)(ctx); err != nil {

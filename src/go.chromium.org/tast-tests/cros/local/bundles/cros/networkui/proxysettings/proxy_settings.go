@@ -261,7 +261,7 @@ func (m *Manager) Launch(ctx context.Context, cr *chrome.Chrome, tconn *chrome.T
 		defer oobeConn.Close()
 
 		// Further wait for the welcome screen is visible to continue on launch the proxy-settings page.
-		if err := oobe.IsWelcomeScreenVisible(ctx, oobeConn); err != nil {
+		if err := oobe.WaitForWelcomeScreenVisible(ctx, oobeConn); err != nil {
 			return errors.Wrap(err, "failed to wait for welcome screen to be visible")
 		}
 

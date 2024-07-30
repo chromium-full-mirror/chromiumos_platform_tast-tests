@@ -44,7 +44,7 @@ func HidNonApplicableDevice(ctx context.Context, s *testing.State) {
 	}
 	defer oobeConn.Close()
 
-	if err := oobe.IsWelcomeScreenVisible(ctx, oobeConn); err != nil {
+	if err := oobe.WaitForWelcomeScreenVisible(ctx, oobeConn); err != nil {
 		s.Fatal("Failed to wait for the welcome screen to be visible: ", err)
 	}
 }

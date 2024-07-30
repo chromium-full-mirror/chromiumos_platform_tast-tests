@@ -44,11 +44,11 @@ func HidPreconnectedTouchscreenOnly(ctx context.Context, s *testing.State) {
 	}
 	defer oobeConn.Close()
 
-	if err := oobe.IsHidDetectionScreenVisible(ctx, oobeConn); err != nil {
+	if err := oobe.WaitForHidDetectionScreenVisible(ctx, oobeConn); err != nil {
 		s.Fatal("Failed to wait for the HID Detection screen to be visible: ", err)
 	}
 
-	if err := oobe.IsHidDetectionTouchscreenDetected(ctx, oobeConn); err != nil {
+	if err := oobe.WaitForHidDetectionTouchscreenDetected(ctx, oobeConn); err != nil {
 		s.Fatal("Failed to find the text indicating that a pointer is connected: ", err)
 	}
 
@@ -65,7 +65,7 @@ func HidPreconnectedTouchscreenOnly(ctx context.Context, s *testing.State) {
 		s.Fatal("Keyboard was detected when it should not have been: ", err)
 	}
 
-	if err := oobe.IsHidDetectionContinueButtonEnabled(ctx, oobeConn); err != nil {
+	if err := oobe.WaitForHidDetectionContinueButtonEnabled(ctx, oobeConn); err != nil {
 		s.Fatal("Failed to detect an enabled continue button: ", err)
 	}
 
@@ -73,7 +73,7 @@ func HidPreconnectedTouchscreenOnly(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to click next button: ", err)
 	}
 
-	if err := oobe.IsWelcomeScreenVisible(ctx, oobeConn); err != nil {
+	if err := oobe.WaitForWelcomeScreenVisible(ctx, oobeConn); err != nil {
 		s.Fatal("Failed to wait for the welcome screen to be visible: ", err)
 	}
 }

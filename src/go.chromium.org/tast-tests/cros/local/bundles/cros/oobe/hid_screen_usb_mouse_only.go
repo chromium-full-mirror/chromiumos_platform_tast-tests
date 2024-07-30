@@ -76,7 +76,7 @@ func HidScreenUsbMouseOnly(ctx context.Context, s *testing.State) {
 			s.Fatal("Expected mouse device to be found: ", err)
 		}
 
-		if err := oobeHelper.IsHidDetectionContinueButtonEnabled(ctx, oobeConn); err != nil {
+		if err := oobeHelper.WaitForHidDetectionContinueButtonEnabled(ctx, oobeConn); err != nil {
 			s.Fatal("Expected continue button to be enabled: ", err)
 		}
 	}()
@@ -86,7 +86,7 @@ func HidScreenUsbMouseOnly(ctx context.Context, s *testing.State) {
 		s.Fatal("Expected mouse device to be disconnected: ", err)
 	}
 
-	if err := oobeHelper.IsHidDetectionContinueButtonDisabled(ctx, oobeConn); err != nil {
+	if err := oobeHelper.WaitForHidDetectionContinueButtonDisabled(ctx, oobeConn); err != nil {
 		s.Fatal("Expected continue button to be disabled: ", err)
 	}
 
@@ -103,7 +103,7 @@ func HidScreenUsbMouseOnly(ctx context.Context, s *testing.State) {
 		s.Fatal("Expected mouse device to be found: ", err)
 	}
 
-	if err := oobeHelper.IsHidDetectionContinueButtonEnabled(ctx, oobeConn); err != nil {
+	if err := oobeHelper.WaitForHidDetectionContinueButtonEnabled(ctx, oobeConn); err != nil {
 		s.Fatal("Expected continue button to be enabled: ", err)
 	}
 
@@ -113,7 +113,7 @@ func HidScreenUsbMouseOnly(ctx context.Context, s *testing.State) {
 	}
 
 	// Check that the Welcome screen is visible.
-	if err := oobeHelper.IsWelcomeScreenVisible(ctx, oobeConn); err != nil {
+	if err := oobeHelper.WaitForWelcomeScreenVisible(ctx, oobeConn); err != nil {
 		s.Fatal("Failed to wait for the welcome screen to be visible: ", err)
 	}
 }

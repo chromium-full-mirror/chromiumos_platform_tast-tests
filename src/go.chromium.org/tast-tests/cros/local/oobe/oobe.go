@@ -20,34 +20,67 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-// IsWelcomeScreenVisible checks the current page in OOBE to see if it's
-// currently on the welcome page.
-func IsWelcomeScreenVisible(ctx context.Context, oobeConn *chrome.Conn) error {
-	return oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.WelcomeScreen.isVisible()")
+const oobeDefaultTimeout = 15 * time.Second
+
+// WaitForWelcomeScreenVisible checks the current page in OOBE and waits until
+// it's on the welcome page.
+func WaitForWelcomeScreenVisible(ctx context.Context, oobeConn *chrome.Conn) error {
+	return WaitForWelcomeScreenVisibleWithTimeout(ctx, oobeConn, oobeDefaultTimeout)
 }
 
-// IsHidDetectionScreenVisible checks if the current page in OOBE to see if it's
-// currently on the HID Detection page.
-func IsHidDetectionScreenVisible(ctx context.Context, oobeConn *chrome.Conn) error {
-	return oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.HIDDetectionScreen.isVisible()")
+// WaitForWelcomeScreenVisibleWithTimeout checks the current page in OOBE and
+// waits until it's on the welcome page but will fail if timeout is exceeded.
+func WaitForWelcomeScreenVisibleWithTimeout(ctx context.Context, oobeConn *chrome.Conn, timeout time.Duration) error {
+	return oobeConn.WaitForExprFailOnErrWithTimeout(ctx, "OobeAPI.screens.WelcomeScreen.isVisible()", timeout)
 }
 
-// IsHidDetectionTouchscreenDetected checks if a touchscreen is detected in the
-// OOBE HID Detection page.
-func IsHidDetectionTouchscreenDetected(ctx context.Context, oobeConn *chrome.Conn) error {
-	return oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.HIDDetectionScreen.touchscreenDetected()")
+// WaitForHidDetectionScreenVisible checks if the current page in OOBE and waits until
+// it's on the HID Detection page.
+func WaitForHidDetectionScreenVisible(ctx context.Context, oobeConn *chrome.Conn) error {
+	return WaitForHidDetectionScreenVisibleWithTimeout(ctx, oobeConn, oobeDefaultTimeout)
 }
 
-// IsHidDetectionContinueButtonEnabled checks if the continue button is enabled
-// in the OOBE HID Detection page.
-func IsHidDetectionContinueButtonEnabled(ctx context.Context, oobeConn *chrome.Conn) error {
-	return oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.HIDDetectionScreen.canClickNext()")
+// WaitForHidDetectionScreenVisibleWithTimeout checks if the current page in OOBE and
+// waits until it's on the HID Detection page but will fail if timeout is exceeded.
+func WaitForHidDetectionScreenVisibleWithTimeout(ctx context.Context, oobeConn *chrome.Conn, timeout time.Duration) error {
+	return oobeConn.WaitForExprFailOnErrWithTimeout(ctx, "OobeAPI.screens.HIDDetectionScreen.isVisible()", timeout)
 }
 
-// IsHidDetectionContinueButtonDisabled checks if the continue button is disabled
-// in the OOBE HID Detection page.
-func IsHidDetectionContinueButtonDisabled(ctx context.Context, oobeConn *chrome.Conn) error {
-	return oobeConn.WaitForExprFailOnErr(ctx, "!OobeAPI.screens.HIDDetectionScreen.canClickNext()")
+// WaitForHidDetectionTouchscreenDetected checks and waits until a touchscreen is
+// detected in the OOBE HID Detection page.
+func WaitForHidDetectionTouchscreenDetected(ctx context.Context, oobeConn *chrome.Conn) error {
+	return WaitForHidDetectionTouchscreenDetectedWithTimeout(ctx, oobeConn, oobeDefaultTimeout)
+}
+
+// WaitForHidDetectionTouchscreenDetectedWithTimeout checks and waits until a
+// touchscreen is detected in the OOBE HID Detection page but will fail if timeout
+// is exceeded.
+func WaitForHidDetectionTouchscreenDetectedWithTimeout(ctx context.Context, oobeConn *chrome.Conn, timeout time.Duration) error {
+	return oobeConn.WaitForExprFailOnErrWithTimeout(ctx, "OobeAPI.screens.HIDDetectionScreen.touchscreenDetected()", timeout)
+}
+
+// WaitForHidDetectionContinueButtonEnabled checks and waits for the continue button
+// is enabled in the OOBE HID Detection page.
+func WaitForHidDetectionContinueButtonEnabled(ctx context.Context, oobeConn *chrome.Conn) error {
+	return WaitForHidDetectionContinueButtonEnabledWithTimeout(ctx, oobeConn, oobeDefaultTimeout)
+}
+
+// WaitForHidDetectionContinueButtonEnabledWithTimeout checks and waits for the continue
+// button is enabled in the OOBE HID Detection page but will fail if timeout is exceeded.
+func WaitForHidDetectionContinueButtonEnabledWithTimeout(ctx context.Context, oobeConn *chrome.Conn, timeout time.Duration) error {
+	return oobeConn.WaitForExprFailOnErrWithTimeout(ctx, "OobeAPI.screens.HIDDetectionScreen.canClickNext()", timeout)
+}
+
+// WaitForHidDetectionContinueButtonDisabled checks and waits for the continue button
+// is disabled in the OOBE HID Detection page.
+func WaitForHidDetectionContinueButtonDisabled(ctx context.Context, oobeConn *chrome.Conn) error {
+	return WaitForHidDetectionContinueButtonDisabledWithTimeout(ctx, oobeConn, oobeDefaultTimeout)
+}
+
+// WaitForHidDetectionContinueButtonDisabledWithTimeout checks and waits for the continue
+// button is disabled in the OOBE HID Detection page but will fail if timeout is exceeded.
+func WaitForHidDetectionContinueButtonDisabledWithTimeout(ctx context.Context, oobeConn *chrome.Conn, timeout time.Duration) error {
+	return oobeConn.WaitForExprFailOnErrWithTimeout(ctx, "!OobeAPI.screens.HIDDetectionScreen.canClickNext()", timeout)
 }
 
 // IsHidDetectionSearchingForKeyboard checks if OOBE HID Detection page is searching for keyboard device.

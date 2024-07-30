@@ -8,11 +8,13 @@ import (
 	"context"
 	"time"
 
-	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	bts "go.chromium.org/tast-tests/cros/services/cros/bluetooth"
+	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/dut"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -33,6 +35,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps: []string{
 			"tast.cros.bluetooth.OobeHidBluetoothService",
+			"tast.cros.ui.ChromeUIService",
 		},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
 		Fixture:      "turnOffServoKeyboard",
@@ -44,50 +47,121 @@ func init() {
 // hid detection screen.
 func OobeHidBluetoothAdapterState(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(cleanupCtx, time.Second*10)
+	ctx, cancel := ctxutil.Shorten(cleanupCtx, 10*time.Second)
 	defer cancel()
 
-	var rpcClient *rpc.Client
-	var service bts.OobeHidBluetoothServiceClient
-	var err error
+	util := newOobeHidBluetoothAdapterStateTestUtil(s.DUT(), s.RPCHint())
+	defer util.cleanup(cleanupCtx)
 
-	createServiceAndStartChrome := func() {
-		rpcClient, err = rpc.Dial(ctx, s.DUT(), s.RPCHint())
-		if err != nil {
-			s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
-		}
-
-		service = bts.NewOobeHidBluetoothServiceClient(rpcClient.Conn)
-		if _, err := service.NewChrome(ctx, &bts.NewChromeRequest{
-			SigninProfileTestExtension: s.RequiredVar("ui.signinProfileTestExtensionManifestKey"),
-		}); err != nil {
-			s.Fatal("Failed to create new chrome instance: ", err)
-		}
+	if err := util.init(ctx); err != nil {
+		s.Fatal("Failed to initialize test utilities: ", err)
 	}
 
-	createServiceAndStartChrome()
-	func() {
-		defer rpcClient.Close(cleanupCtx)
+	newChromeRequest := &bts.NewChromeRequest{
+		SigninProfileTestExtension: s.RequiredVar("ui.signinProfileTestExtensionManifestKey"),
+	}
 
-		if _, err := service.ProgressToWelcomeScreen(ctx, &emptypb.Empty{}); err != nil {
+	// Isolate the step to leverage `defer` pattern.
+	func() {
+		if _, err := util.NewChrome(ctx, newChromeRequest); err != nil {
+			s.Fatal("Failed to create new chrome instance: ", err)
+		}
+		defer util.CloseChrome(cleanupCtx, &emptypb.Empty{})
+		defer util.dumpUITreeWithScreenshotToFile(cleanupCtx, s.HasError, "ui_dump")
+
+		if _, err := util.ProgressToWelcomeScreen(ctx, &emptypb.Empty{}); err != nil {
 			s.Fatal("Failed to progress to welcome screen: ", err)
 		}
 
-		if _, err := service.DisableBluetoothFromQuickSettings(ctx, &emptypb.Empty{}); err != nil {
+		if _, err := util.DisableBluetoothFromQuickSettings(ctx, &emptypb.Empty{}); err != nil {
 			s.Fatal("Failed to disabled bluetooth adapter from quick settings: ", err)
 		}
 	}()
 
-	if err := s.DUT().Reboot(ctx); err != nil {
+	if err := util.rebootDUT(ctx); err != nil {
 		s.Fatal("Failed to reboot DUT: ", err)
 	}
 
-	// Reconnect to the gRPC server after rebooting DUT.
-	createServiceAndStartChrome()
-	defer rpcClient.Close(cleanupCtx)
-	defer service.CloseChrome(cleanupCtx, &empty.Empty{})
+	if _, err := util.NewChrome(ctx, newChromeRequest); err != nil {
+		s.Fatal("Failed to create new chrome instance: ", err)
+	}
+	defer util.CloseChrome(cleanupCtx, &emptypb.Empty{})
+	defer util.dumpUITreeWithScreenshotToFile(cleanupCtx, s.HasError, "ui_dump")
 
-	if _, err := service.VerifyBluetoothIsEnabled(ctx, &emptypb.Empty{}); err != nil {
+	if _, err := util.VerifyBluetoothIsEnabled(ctx, &emptypb.Empty{}); err != nil {
 		s.Fatal("Failed to verify bluetooth is enabled: ", err)
 	}
+}
+
+type oobeHidBluetoothAdapterStateTestUtil struct {
+	bts.OobeHidBluetoothServiceClient
+	rpcClient *rpc.Client
+
+	dut     *dut.DUT
+	rpcHint *testing.RPCHint
+}
+
+func newOobeHidBluetoothAdapterStateTestUtil(dut *dut.DUT, rpcHint *testing.RPCHint) *oobeHidBluetoothAdapterStateTestUtil {
+	return &oobeHidBluetoothAdapterStateTestUtil{dut: dut, rpcHint: rpcHint}
+}
+
+func (util *oobeHidBluetoothAdapterStateTestUtil) cleanup(ctx context.Context) error {
+	if util.OobeHidBluetoothServiceClient != nil {
+		util.OobeHidBluetoothServiceClient = nil
+	}
+
+	if util.rpcClient != nil {
+		if err := util.rpcClient.Close(ctx); err != nil {
+			return err
+		}
+		util.rpcClient = nil
+	}
+
+	return nil
+}
+
+func (util *oobeHidBluetoothAdapterStateTestUtil) init(ctx context.Context) error {
+	// Skip if resources have been initialized.
+	if util.rpcClient != nil && util.OobeHidBluetoothServiceClient != nil {
+		return nil
+	}
+
+	if util.dut == nil || util.rpcHint == nil {
+		return errors.New("invalid DUT connection or RPC hint")
+	}
+
+	rpcClient, err := rpc.Dial(ctx, util.dut, util.rpcHint)
+	if err != nil {
+		return errors.Wrap(err, "failed to connect to the RPC service on the DUT")
+	}
+
+	util.rpcClient = rpcClient
+	util.OobeHidBluetoothServiceClient = bts.NewOobeHidBluetoothServiceClient(util.rpcClient.Conn)
+	return nil
+}
+
+func (util *oobeHidBluetoothAdapterStateTestUtil) rebootDUT(ctx context.Context) error {
+	if err := util.cleanup(ctx); err != nil {
+		// Only logs the error as it won't interfere the reboot and resources will be reinitialized afterward.
+		testing.ContextLog(ctx, "Failed to cleanup test util: ", err)
+	}
+
+	if err := util.dut.Reboot(ctx); err != nil {
+		return errors.Wrap(err, "failed to reboot DUT")
+	}
+
+	// Reconnect to the gRPC server after rebooting DUT.
+	return util.init(ctx)
+}
+
+func (util *oobeHidBluetoothAdapterStateTestUtil) dumpUITreeWithScreenshotToFile(ctx context.Context, hasError func() bool, filePrefix string) error {
+	if !hasError() {
+		return nil
+	}
+
+	svc := ui.NewChromeUIServiceClient(util.rpcClient.Conn)
+	if _, err := svc.DumpUITreeWithScreenshotToFile(ctx, &ui.DumpUITreeWithScreenshotToFileRequest{FilePrefix: filePrefix}); err != nil {
+		return err
+	}
+	return nil
 }
