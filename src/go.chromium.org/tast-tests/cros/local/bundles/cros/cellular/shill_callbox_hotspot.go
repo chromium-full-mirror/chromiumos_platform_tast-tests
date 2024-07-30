@@ -6,6 +6,7 @@ package cellular
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/mmconst"
@@ -152,6 +153,17 @@ func validateExpectedBearers(ctx context.Context, s *testing.State, modem *modem
 func ShillCallboxHotspot(ctx context.Context, s *testing.State) {
 	params := s.Param().(shillCallboxHotspotTestParam)
 	modbOverrideProto := params.ModbOverrideProto
+
+	if strings.HasSuffix(s.TestName(), ".dun_and_default_ipv4_default_ipv6_dun") ||
+		strings.HasSuffix(s.TestName(), ".dun_and_default_ipv6_default_ipv4_dun") ||
+		strings.HasSuffix(s.TestName(), ".dun_as_default_ipv4_default_ipv6_dun") ||
+		strings.HasSuffix(s.TestName(), ".dun_as_default_ipv6_default_ipv4_dun") {
+		err := cellular.TagKnownBugOnModem(ctx, nil, "b/306589321", cellular.ModemFwFilterNL668A01)
+		err = cellular.TagKnownBugOnModem(ctx, err, "b/306589321", cellular.ModemFwFilterNL668A04)
+		if err != nil {
+			s.Fatalf("Fail early to avoid wasting DUT time: %s", err)
+		}
+	}
 
 	serviceProps := map[string]interface{}{
 		shillconst.TetheringConfUpstreamTech: shillconst.TypeCellular,
