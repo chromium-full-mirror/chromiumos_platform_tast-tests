@@ -7,6 +7,7 @@ package camera
 
 import (
 	"context"
+	"os"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
@@ -107,6 +108,8 @@ type serviceFixture struct {
 }
 
 func (f *serviceFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	const platformEffectsOverridePath = "/run/camera/effects/effects_config_override.json"
+
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
@@ -117,6 +120,11 @@ func (f *serviceFixture) SetUp(ctx context.Context, s *testing.FixtState) interf
 	if f.request != stopService {
 		if err := testutil.RemoveTestBridgeConfigs(ctx); err != nil {
 			s.Fatal("Failed to clean-up camera TestBridge: ", err)
+		}
+
+		// Remove effects override config
+		if err := os.RemoveAll(platformEffectsOverridePath); err != nil {
+			s.Fatal("Failed to clean-up platform effects: ", err)
 		}
 
 		// Don't wait for the connector to be ready, since we haven't ensured
