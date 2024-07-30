@@ -138,53 +138,53 @@ func init() {
 			ExtraAttr:         []string{"group:cuj", "cuj_loginperf"},
 			ExtraSoftwareDeps: []string{"arc"},
 			Val: loginPerfTestParam{
-				8,                  // windows
-				arcenabled,         // arcMode
-				false,              // tabletMode
-				[]string{deferARC}, // disabledFeatures
-				[]string{},         // enabledFeatures
+				8,          // windows
+				arcenabled, // arcMode
+				false,      // tabletMode
+				[]string{}, // disabledFeatures
+				[]string{}, // enabledFeatures
 			},
 		}, {
 			Name:      "noarc_2windows",
 			ExtraAttr: []string{"group:cuj", "cuj_loginperf"},
 			Val: loginPerfTestParam{
-				2,                  // windows
-				noarc,              // arcMode
-				false,              // tabletMode
-				[]string{deferARC}, // disabledFeatures
-				[]string{},         // enabledFeatures
+				2,          // windows
+				noarc,      // arcMode
+				false,      // tabletMode
+				[]string{}, // disabledFeatures
+				[]string{}, // enabledFeatures
 			},
 		}, {
 			Name:      "noarc",
 			ExtraAttr: []string{"group:cuj", "cuj_loginperf"},
 			Val: loginPerfTestParam{
-				8,                  // windows
-				noarc,              // arcMode
-				false,              // tabletMode
-				[]string{deferARC}, // disabledFeatures
-				[]string{},         // enabledFeatures
+				8,          // windows
+				noarc,      // arcMode
+				false,      // tabletMode
+				[]string{}, // disabledFeatures
+				[]string{}, // enabledFeatures
 			},
 		}, {
 			Name:              "2windows",
 			ExtraAttr:         []string{"group:cuj", "cuj_loginperf"},
 			ExtraSoftwareDeps: []string{"arc"},
 			Val: loginPerfTestParam{
-				2,                  // windows
-				arcenabled,         // arcMode
-				false,              // tabletMode
-				[]string{deferARC}, // disabledFeatures
-				[]string{},         // enabledFeatures
+				2,          // windows
+				arcenabled, // arcMode
+				false,      // tabletMode
+				[]string{}, // disabledFeatures
+				[]string{}, // enabledFeatures
 			},
 		}, {
 			Name:              "tablet",
 			ExtraAttr:         []string{"group:cuj", "cuj_loginperf"},
 			ExtraSoftwareDeps: []string{"arc"},
 			Val: loginPerfTestParam{
-				8,                  // windows
-				arcenabled,         // arcMode
-				true,               // tabletMode
-				[]string{deferARC}, // disabledFeatures
-				[]string{},         // enabledFeatures
+				8,          // windows
+				arcenabled, // arcMode
+				true,       // tabletMode
+				[]string{}, // disabledFeatures
+				[]string{}, // enabledFeatures
 			},
 		}, {
 			// To compare against baseline `ui.LoginPerf`.
@@ -196,7 +196,7 @@ func init() {
 				8,                              // windows
 				arcenabled,                     // arcMode
 				false,                          // tabletMode
-				[]string{deferARC},             // disabledFeatures
+				[]string{},                     // disabledFeatures
 				[]string{deferOccludedTabLoad}, // enabledFeatures
 			},
 		}},
@@ -236,6 +236,10 @@ func loginPerfStartToLoginScreen(
 		chrome.HideCrashRestoreBubble(), // Ignore possible incomplete shutdown.
 		// Disable whats-new page. See crbug.com/1271436.
 		chrome.DisableFeatures("ChromeWhatsNewUI"),
+		// Disable the ARC deferring feature, which is enabled by default in production.
+		// Even though it can improve login performance, the behavior depends on ARC usage during sessions.
+		// To get consistent results, we intentionally disable the feature for measurement runs.
+		chrome.DisableFeatures(deferARC),
 		chrome.ExtraArgs("--disable-sync"),
 		chrome.DisableFeatures(testConfig.param.disabledFeatures...),
 		chrome.EnableFeatures(testConfig.param.enabledFeatures...),
@@ -550,8 +554,9 @@ func initializeLoginPerfTest(ctx context.Context,
 		chrome.SkipForceOnlineSignInForTesting(),
 		chrome.EnableWebAppInstall(),
 		// Disable whats-new page. See crbug.com/1271436.
+		chrome.DisableFeatures("ChromeWhatsNewUI"),
 		// Disable deferring ARC.
-		chrome.DisableFeatures("ChromeWhatsNewUI", deferARC),
+		chrome.DisableFeatures(deferARC),
 		// --disable-sync disables test account info sync, eg. Wi-Fi credentials,
 		// so that each test run does not remember info from last test run.
 		chrome.ExtraArgs("--disable-sync"),
