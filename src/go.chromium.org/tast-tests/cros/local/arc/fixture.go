@@ -253,64 +253,27 @@ func init() {
 		TearDownTimeout: ResetTimeout,
 	})
 
-	// arcBootedWithPlayStoreAndBluetoothBlueZ is a fixture similar to
-	// arcBootedWithPlayStore along with Bluetooth-BlueZ enabled.
+	// arcBootedWithBluetoothFloss is a fixture similar to
+	// arcBooted along with Bluetooth-Floss enabled.
 	fixtureConfig = DefaultBootedFixtureConfig()
-	fixtureConfig.PlayStoreOptin = true
-	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-		return []chrome.Option{
-			chrome.DisableFeatures("Floss"),
-			chrome.ExtraArgs(DisableSyncFlags()...),
-			chrome.UnRestrictARCCPU(),
-			chrome.GAIALoginPool(dma.CredsFromPool(uiCommon.GaiaPoolDefaultVarName)),
-		}, nil
-	}
-	testing.AddFixture(&testing.Fixture{
-		Name: "arcBootedWithPlayStoreAndBluetoothBlueZ",
-		Desc: "ARC is booted with disabling sync flags and Bluetooth-BlueZ is enabled",
-		Vars: []string{uiCommon.GaiaPoolDefaultVarName},
-		Contacts: []string{
-			"chadduffin@chromium.org",
-			"cros-connectivity@google.com",
-			"kinwang.lao@cienet.com",
-			"chromeos-connectivity-cienet-external@google.com",
-		},
-		BugComponent:    "b:1131776", // ChromeOS > Software > Fundamentals > Connectivity > Bluetooth
-		Impl:            NewArcBootedFixture(fixtureConfig),
-		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + BootTimeout + 2*time.Minute,
-		ResetTimeout:    ResetTimeout,
-		PreTestTimeout:  PreTestTimeout,
-		PostTestTimeout: PostTestTimeout,
-		TearDownTimeout: ResetTimeout,
-	})
-
-	// arcBootedWithPlayStoreAndBluetoothFloss is a fixture similar to
-	// arcBootedWithPlayStore along with Bluetooth-Floss enabled.
-	fixtureConfig = DefaultBootedFixtureConfig()
-	fixtureConfig.PlayStoreOptin = true
 	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 		return []chrome.Option{
 			chrome.EnableFeatures("Floss"),
-			// FlossIsAvailabilityCheckNeeded needs to be disabled when Floss is enabled (b/300999731).
 			chrome.DisableFeatures("FlossIsAvailabilityCheckNeeded"),
-			chrome.ExtraArgs(DisableSyncFlags()...),
-			chrome.UnRestrictARCCPU(),
-			chrome.GAIALoginPool(dma.CredsFromPool(uiCommon.GaiaPoolDefaultVarName)),
 		}, nil
 	}
 	testing.AddFixture(&testing.Fixture{
-		Name: "arcBootedWithPlayStoreAndBluetoothFloss",
-		Desc: "ARC is booted with disabling sync flags and Bluetooth-Floss is enabled",
-		Vars: []string{uiCommon.GaiaPoolDefaultVarName},
+		Name: "arcBootedWithBluetoothFloss",
+		Desc: "ARC is booted and Bluetooth-Floss is enabled",
 		Contacts: []string{
 			"chadduffin@chromium.org",
 			"cros-connectivity@google.com",
-			"kinwang.lao@cienet.com",
+			"vic.lee@cienet.com",
 			"chromeos-connectivity-cienet-external@google.com",
 		},
 		BugComponent:    "b:1131776", // ChromeOS > Software > Fundamentals > Connectivity > Bluetooth
 		Impl:            NewArcBootedFixture(fixtureConfig),
-		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + BootTimeout + 2*time.Minute,
+		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,
 		PreTestTimeout:  PreTestTimeout,
 		PostTestTimeout: PostTestTimeout,
