@@ -112,12 +112,18 @@ func UpdateDutFirmware(ctx context.Context, s *testing.State) {
 			}
 		}
 	}
+
+	s.Log("Disabling hardware write protect")
+	err = h.Servo.SetFWWPState(ctx, servo.FWWPStateOff)
+	if err != nil {
+		s.Fatal("Failed to disable hardware write protect: ", err)
+	}
 	s.Log("Disabling software write protect")
 	out, err := h.ServoProxy.OutputCommand(ctx, true, "futility", "flash", "--wp-disable", fmt.Sprintf("--servo_port=%d", h.ServoProxy.GetPort()))
 	if err != nil {
-		s.Fatalf("write protect disable failed at %q", err)
+		s.Fatalf("Software write protect disable failed: %q, Output: %s", err, string(out))
 	}
-	s.Logf("Disabling software write protect completed, command output: %s", out)
+	s.Logf("Disabling software write protect completed, command output: %s", string(out))
 
 	// Check that the DUT is booted after disabling write protect
 	if err := h.EnsureDUTBooted(ctx); err != nil {
@@ -345,7 +351,6 @@ func flashAPFirmware(ctx context.Context, s *testing.State, h *firmware.Helper, 
 		s.Log("Flashing DUT with backup AP firmware file")
 		flashOpts := futility.NewUpdateOptions(backupFirmwareFile).
 			WithMode(futility.UpdateModeRecovery).
-			WithWriteProtection(futility.WriteProtectionDisable).
 			WithGBBFlags(24)
 		out, err := futilityInstance.Update(ctx, flashOpts)
 		if err != nil {
@@ -371,7 +376,6 @@ func flashAPFirmware(ctx context.Context, s *testing.State, h *firmware.Helper, 
 	apFirmwareFile := fmt.Sprintf("%s/%s", servoTmpDir, firmware.APFirmwareFileToFlash)
 	flashOpts := futility.NewUpdateOptions(apFirmwareFile).
 		WithMode(futility.UpdateModeRecovery).
-		WithWriteProtection(futility.WriteProtectionDisable).
 		WithGBBFlags(24)
 	out, err := futilityInstance.Update(ctx, flashOpts)
 	if err != nil {
