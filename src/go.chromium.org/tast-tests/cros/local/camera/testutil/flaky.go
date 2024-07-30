@@ -9,51 +9,49 @@ package testutil
 // The list to be used in the hardware dependency field.
 
 // FlakyUSBCamera is a list of flaky USB cameras.
-var FlakyUSBCamera = append(append(append(flakyUSBCamera1, flakyUSBCamera2...), flakyUSBCamera3...), flakyUSBCamera4...)
+var FlakyUSBCamera = []string{
+	// TODO(b/243048705): skip the test on faulty flash. Remove when resolved.
+	"0408:3028", "0408:4021", "05c8:03f4",
+
+	// TODO(b/340123520): skip the test on flaky camera. Remove when resolved.
+	// We need to skip by VID:PID, because the camera often gets disconnected on use.
+	"13d3:56ec",
+
+	// TODO(b/351688757): skip the test on flaky camera. Remove when resolved.
+	// We need to skip by VID:PID, because the camera fails to set control/format.
+	"0408:302f",
+
+	// TODO(b/282919004): skip the test on flaky camera. Remove when resolved.
+	"04ca:7097",
+}
 
 // FlakyMIPIModel is a list of models with a flaky MIPI camera.
-var FlakyMIPIModel = flakyMIPIModel1
+var FlakyMIPIModel = []string{
+	// TODO(b/331445568): Skip until we solve the flakiness. Remove when resolved.
+	"homestar",
+}
 
 // FlakyUSBModel is a list of models with a flaky USB camera.
-var FlakyUSBModel = append(append(append(append(flakyUSBModel1, flakyUSBModel3...), flakyUSBModel4...), flakyUSBModel5...), flakyUSBModel6...)
+var FlakyUSBModel = []string{
+	// TODO(b/355089873): skip the test on flaky model. Remove when resolved or better workaround landed.
+	"pazquel",
+
+	// TODO(b/346900193): skip the test on flaky model. Remove when resolved.
+	// We need to skip by model, because the camera is often completed lost.
+	"jelboz360",
+
+	// TODO(b/340123520): skip the test on flaky model. Remove when resolved.
+	// We need to skip by model, because the camera is often completed lost.
+	"storo", "storo360",
+
+	// TODO(b/351688757): skip the test on flaky model. Remove when resolved.
+	// We need to skip by model, because the camera is often completed lost.
+	"kracko360", "quandiso360",
+
+	// TODO(b/282919004): skip the test on flaky model. Remove when resolved.
+	// We need to skip by model, because the camera is often completed lost.
+	"liara",
+}
 
 // FlakyModel is a list of models with a flaky camera.
 var FlakyModel = append(FlakyMIPIModel, FlakyUSBModel...)
-
-// Below is the list of known specific models. Normally we shouldn't need to use them directly.
-
-// TODO(b/331445568): Skip until we solve the flakiness. Remove when resolved.
-var flakyMIPIModel1 = []string{"homestar"}
-
-// TODO(b/243048705): skip the test on faulty flash. Remove when resolved.
-var flakyUSBCamera1 = []string{"0408:3028", "0408:4021", "05c8:03f4"}
-
-// TODO(b/340123520): skip the test on flaky camera. Remove when resolved. (See also flakyUSBModel4)
-// We need to skip by VID:PID, because the camera often gets disconnected on use.
-var flakyUSBCamera2 = []string{"13d3:56ec"}
-
-// TODO(b/351688757): skip the test on flaky camera. Remove when resolved.
-// We need to skip by VID:PID, because the camera fails to set control/format.
-var flakyUSBCamera3 = []string{"0408:302f"}
-
-// TODO(b/282919004): skip the test on flaky camera. Remove when resolved.
-var flakyUSBCamera4 = []string{"04ca:7097"}
-
-// TODO(b/348997906): skip the test on flaky model. Remove when resolved or better workaround landed.
-var flakyUSBModel1 = []string{"pazquel"}
-
-// TODO(b/346900193): skip the test on flaky model. Remove when resolved.
-// We need to skip by model, because the camera is often completed lost.
-var flakyUSBModel3 = []string{"jelboz360"}
-
-// TODO(b/340123520): skip the test on flaky model. Remove when resolved. (See also flakyUSBCamera2)
-// We need to skip by model, because the camera is often completed lost.
-var flakyUSBModel4 = []string{"storo", "storo360"}
-
-// TODO(b/351688757): skip the test on flaky model. Remove when resolved. (See also flakyUSBCamera3)
-// We need to skip by model, because the camera is often completed lost.
-var flakyUSBModel5 = []string{"kracko360", "quandiso360"}
-
-// TODO(b/282919004): skip the test on flaky model. Remove when resolved. (See also flakyUSBCamera4)
-// We need to skip by model, because the camera is often completed lost.
-var flakyUSBModel6 = []string{"liara"}
