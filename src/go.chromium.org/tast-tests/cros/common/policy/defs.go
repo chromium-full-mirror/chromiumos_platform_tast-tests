@@ -27949,7 +27949,6 @@ func (p *MultiScreenCaptureAllowedForUrls) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1247. DeviceAuthenticationFlowAutoReloadInterval
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type DeviceAuthenticationFlowAutoReloadInterval struct {
 	Stat Status
@@ -28492,7 +28491,6 @@ func (p *DeviceAllowEnterpriseRemoteAccessConnections) Equal(iface interface{}) 
 // 1270. FocusModeSoundsEnabled
 // This policy has a default value of disabled.
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type FocusModeSoundsEnabled struct {
 	Stat Status
@@ -29042,22 +29040,7 @@ func (p *ShowGeminiIntroScreenEnabled) Equal(iface interface{}) bool {
 // ****************************************************************************
 type DeviceRestrictionSchedule struct {
 	Stat Status
-	Val  []*DeviceRestrictionScheduleValue
-}
-
-type DeviceRestrictionScheduleValue struct {
-	End   *DeviceRestrictionScheduleValueEnd   `json:"end"`
-	Start *DeviceRestrictionScheduleValueStart `json:"start"`
-}
-
-type DeviceRestrictionScheduleValueEnd struct {
-	DayOfWeek string `json:"day_of_week"`
-	Time      int    `json:"time"`
-}
-
-type DeviceRestrictionScheduleValueStart struct {
-	DayOfWeek string `json:"day_of_week"`
-	Time      int    `json:"time"`
+	Val  []*RefWeeklyTimeIntervalChecked
 }
 
 func (p *DeviceRestrictionSchedule) Name() string          { return "DeviceRestrictionSchedule" }
@@ -29065,9 +29048,9 @@ func (p *DeviceRestrictionSchedule) Scope() Scope          { return ScopeDevice 
 func (p *DeviceRestrictionSchedule) Status() Status        { return p.Stat }
 func (p *DeviceRestrictionSchedule) UntypedV() interface{} { return p.Val }
 func (p *DeviceRestrictionSchedule) UnmarshalAs(m json.RawMessage) (interface{}, error) {
-	var v []*DeviceRestrictionScheduleValue
+	var v []*RefWeeklyTimeIntervalChecked
 	if err := json.Unmarshal(m, &v); err != nil {
-		return nil, errors.Wrapf(err, "could not read %s as []*DeviceRestrictionScheduleValue", m)
+		return nil, errors.Wrapf(err, "could not read %s as []*RefWeeklyTimeIntervalChecked", m)
 	}
 	return v, nil
 }
@@ -29075,7 +29058,7 @@ func (p *DeviceRestrictionSchedule) SetProto(m *protoreflect.Message) {
 	SetDeviceProto(m, "DeviceRestrictionSchedule", "value", p.Val)
 }
 func (p *DeviceRestrictionSchedule) Equal(iface interface{}) bool {
-	v, ok := iface.([]*DeviceRestrictionScheduleValue)
+	v, ok := iface.([]*RefWeeklyTimeIntervalChecked)
 	if !ok {
 		return ok
 	}
@@ -30926,6 +30909,21 @@ type RefWeeklyTimeIntervalsStart struct {
 type RefWeeklyTime struct {
 	DayOfWeek string `json:"day_of_week"`
 	Time      int    `json:"time"`
+}
+
+type RefWeeklyTimeIntervalChecked struct {
+	End   *RefWeeklyTimeChecked              `json:"end"`
+	Start *RefWeeklyTimeIntervalCheckedStart `json:"start"`
+}
+
+type RefWeeklyTimeIntervalCheckedStart struct {
+	DayOfWeek                 string `json:"day_of_week"`
+	MillisecondsSinceMidnight int    `json:"milliseconds_since_midnight"`
+}
+
+type RefWeeklyTimeChecked struct {
+	DayOfWeek                 string `json:"day_of_week"`
+	MillisecondsSinceMidnight int    `json:"milliseconds_since_midnight"`
 }
 
 type RefDomainFiletypePair struct {
