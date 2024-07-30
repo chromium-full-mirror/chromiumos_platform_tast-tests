@@ -24,7 +24,7 @@ func init() {
 		Contacts: []string{"cros-networking@google.com", "jiejiang@google.com"},
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
@@ -121,9 +121,10 @@ func RoutingDualStackWithStatic(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait for the StaticIPConfig to be applied: ", err)
 	}
 
-	// We want to verify that nothing will happen after that, so use a sleep here.
 	const timeout = 3 * time.Second
 	testing.ContextLog(ctx, "Waiting for routing setup stable for ", timeout)
+	// GoBigSleepLint: We want to verify that nothing will change in a given
+	// period, so use a sleep here.
 	testing.Sleep(ctx, timeout)
 
 	if errs := testEnv.VerifyTestNetwork(ctx, verifyOpts); len(errs) != 0 {
