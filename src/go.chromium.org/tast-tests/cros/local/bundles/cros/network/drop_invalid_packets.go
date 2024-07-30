@@ -33,7 +33,7 @@ func init() {
 		// We don't use ARC to do anything directly in this test, just to make sure
 		// that packets with ARC addresses also won't be sent out.
 		Fixture:      "shillSimulatedWiFiWithArcBooted",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		SoftwareDeps: []string{"wifi", "chrome", "arc"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
