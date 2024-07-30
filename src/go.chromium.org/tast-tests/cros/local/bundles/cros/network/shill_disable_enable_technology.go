@@ -8,6 +8,8 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/network/virtualnet"
+	"go.chromium.org/tast-tests/cros/local/network/virtualnet/subnet"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -27,7 +29,7 @@ func init() {
 		BugComponent: "b:1493959", // ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		SoftwareDeps: []string{"no_qemu"},
 		Attr:         []string{"group:mainline", "informational"},
-		Fixture:      "shillReset",
+		Fixture:      "shillReset.ehide",
 	})
 }
 
@@ -36,6 +38,22 @@ func ShillDisableEnableTechnology(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create manager proxy: ", err)
 	}
+
+	// Setup a virtual ethernet interface, because the physical ethernet
+	// interface is hidden by the ehide fixture.
+	pool := subnet.NewPool()
+	opt := virtualnet.EnvOptions{
+		EnableDHCP: true,
+	}
+	svc, router, err := virtualnet.CreateRouterEnv(ctx, m, pool, opt)
+	if err != nil {
+		s.Fatal("Failed to create router env: ", err)
+	}
+	defer router.Cleanup(ctx)
+	if err := svc.WaitForConnectedOrError(ctx); err != nil {
+		s.Fatal("Failed to wait router being connected: ", err)
+	}
+
 	if enabled, err := m.IsEnabled(ctx, shill.TechnologyEthernet); err != nil {
 		s.Fatal("Error calling IsEnabled: ", err)
 	} else if !enabled {
