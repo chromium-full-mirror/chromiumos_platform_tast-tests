@@ -55,6 +55,7 @@ func init() {
 }
 
 func reconnectPD(ctx context.Context, svo *servo.Servo) error {
+	testing.ContextLog(ctx, "Disable Servo PD communication (cc off)")
 	if err := svo.SetCC(ctx, servo.Off); err != nil {
 		return errors.Wrap(err, "failed to switch off CC")
 	}
@@ -65,11 +66,14 @@ func reconnectPD(ctx context.Context, svo *servo.Servo) error {
 	if err := testing.Sleep(ctx, 3*time.Second); err != nil {
 		return errors.Wrap(err, "failed to sleep after CC off")
 	}
+
+	testing.ContextLog(ctx, "Enable Servo PD communication (cc on)")
 	if err := svo.SetCC(ctx, servo.On); err != nil {
 		return errors.Wrap(err, "failed to set CC on")
 	}
 
 	// Wait for PD connection to be reestablished.
+	testing.ContextLog(ctx, "Waiting for PD communication to re-establish")
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		pdComm, err := svo.GetPDCommunication(ctx)
 		if err != nil {
@@ -82,16 +86,20 @@ func reconnectPD(ctx context.Context, svo *servo.Servo) error {
 	}, &testing.PollOptions{Timeout: 4 * time.Second, Interval: 1 * time.Second}); err != nil {
 		return errors.Wrap(err, "timed out waiting for PD connection")
 	}
+
+	testing.ContextLog(ctx, "PD communication re-established")
 	return nil
 }
 
 func setServoPowerRole(ctx context.Context, svo *servo.Servo, role servo.PDRoleValue) error {
+	testing.ContextLogf(ctx, "Set Servo PD role to %q", role)
 	if err := svo.SetPDRole(ctx, role); err != nil {
 		return err
 	}
 
 	// The above would be sufficient, except that servod does not enable PD with
 	// the Servo as Sink by default. Enable it directly if needed.
+	testing.ContextLog(ctx, "Set Servo PD communication on")
 	if err := svo.SetPDCommunication(ctx, servo.On); err != nil {
 		return err
 	}
@@ -124,6 +132,7 @@ func ECPDConnect(ctx context.Context, s *testing.State) {
 	}
 
 	// Check the PD connection with Servo as Sink.
+	testing.ContextLog(ctx, "Set Servo to be a sink and repeat test")
 	if err := setServoPowerRole(ctx, h.Servo, servo.PDRoleSnk); err != nil {
 		s.Fatal("Could not set servo power role to Sink: ", err)
 	}
@@ -134,6 +143,8 @@ func ECPDConnect(ctx context.Context, s *testing.State) {
 
 func cleanup(ctx context.Context, s *testing.State) {
 	h := s.FixtValue().(*fixture.Value).Helper
+
+	testing.ContextLog(ctx, "Cleaning up after test")
 
 	// Leave the Servo port as Source with DTS enabled. This is needed to make
 	// sure that the DUT can connect to Ethernet after the test.

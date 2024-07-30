@@ -287,6 +287,7 @@ func SetupPDTester(ctx context.Context, h *Helper, testParams PDTestParams) erro
 		}
 	}
 
+	testing.ContextLog(ctx, "SetupPDTester succeeded. Proceeding with test")
 	return nil
 }
 
