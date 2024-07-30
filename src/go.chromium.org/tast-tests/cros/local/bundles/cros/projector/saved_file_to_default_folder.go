@@ -30,7 +30,7 @@ func init() {
 		Func:         SavedFileToDefaultFolder,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Creates a screencast and verifies it is saved at the default screencast storage folder in DriveFS",
-		Contacts:     []string{"cros-projector+tast@google.com", "xiqiruan@chromium.org"},
+		Contacts:     []string{"cros-projector+tast@google.com", "anasr@google.com"},
 		// ChromeOS > Software > Family > Projector
 		BugComponent: "b:1080013",
 		Attr:         []string{"group:mainline", "informational"},

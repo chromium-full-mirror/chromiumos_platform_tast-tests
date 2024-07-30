@@ -33,7 +33,7 @@ func init() {
 		Func:         EnabledPolicy,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Projector app gets enabled/disabled when the policy changes",
-		Contacts:     []string{"cros-projector+tast@google.com", "xiqiruan@chromium.org"},
+		Contacts:     []string{"cros-projector+tast@google.com", "anasr@google.com"},
 		// ChromeOS > Software > Family > Projector
 		BugComponent: "b:1080013",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},

@@ -22,7 +22,7 @@ func init() {
 		Func:         CreationFlow,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Launches the Projector app and goes through the new screencast creation flow with annotator",
-		Contacts:     []string{"cros-projector+tast@google.com", "llin@chromium.org"},
+		Contacts:     []string{"cros-projector+tast@google.com", "dorianbrandon@google.com"},
 		// ChromeOS > Software > Family > Projector
 		BugComponent: "b:1080013",
 		Attr:         []string{"group:mainline", "informational"},
