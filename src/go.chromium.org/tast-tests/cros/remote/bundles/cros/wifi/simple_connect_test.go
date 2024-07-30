@@ -723,8 +723,8 @@ func simpleConnectHidden() []*simpleConnectParams {
 		Fixture: defaultFixture,
 		Doc:     simpleConnectDocPref("a hidden network on 5GHz channels."),
 		Val: []simpleConnectParamsVal{
-			{APConfigs: []apConfigVal{{APOpts: "ap.Mode(ap.Mode80211nPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT20), ap.Hidden()"}}},
-			{APConfigs: []apConfigVal{{APOpts: "ap.Mode(ap.Mode80211nPure), ap.Channel(48), ap.HTCaps(ap.HTCapHT20), ap.Hidden()"}}},
+			{APConfigs: []apConfigVal{{APOpts: "ap.Mode(ap.Mode80211nPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT20), ap.Hidden(), ap.SpectrumManagement()"}}},
+			{APConfigs: []apConfigVal{{APOpts: "ap.Mode(ap.Mode80211nPure), ap.Channel(48), ap.HTCaps(ap.HTCapHT20), ap.Hidden(), ap.SpectrumManagement()"}}},
 		},
 		ExtraHardwareDepsDoc: []string{"TODO(b/189972561) Enable this test on Trogdor once active scanning on 5 GHz channel is enabled."},
 		ExtraHardwareDeps:    `hwdep.D(hwdep.SkipOnPlatform("strongbad", "strongbad64", "strongbad-kernelnext", "trogdor", "trogdor64", "trogdor-kernelnext"))`,

@@ -747,11 +747,11 @@ func init() {
 				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
 					apConfigs: []ap.ApConfig{{
-						ApOpts: []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT20), ap.Hidden()},
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT20), ap.Hidden(), ap.SpectrumManagement()},
 					}},
 				}, {
 					apConfigs: []ap.ApConfig{{
-						ApOpts: []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(48), ap.HTCaps(ap.HTCapHT20), ap.Hidden()},
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(48), ap.HTCaps(ap.HTCapHT20), ap.Hidden(), ap.SpectrumManagement()},
 					}},
 				}},
 				// TODO(b/189972561) Enable this test on Trogdor once active scanning on 5 GHz channel is enabled.
