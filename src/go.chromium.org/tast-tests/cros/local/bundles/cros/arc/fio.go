@@ -95,6 +95,9 @@ var defaultFioWriteJobs = []string{
 	"rand_write_buffered",
 	"rand_write_direct",
 	"rand_write_fsync",
+	// Run verification tests separately.
+	"seq_write_direct_verify",
+	"rand_write_direct_verify",
 }
 
 type jobResult struct {
@@ -285,7 +288,8 @@ func Fio(ctx context.Context, s *testing.State) {
 
 		results, err := configureAndRunFioJob(ctx, a, params, job, jobFilePath, s.OutDir())
 		if err != nil {
-			s.Fatal("Failed to run fio job: ", err)
+			s.Error("Failed to run fio job: ", err)
+			continue
 		}
 
 		for _, result := range results {
