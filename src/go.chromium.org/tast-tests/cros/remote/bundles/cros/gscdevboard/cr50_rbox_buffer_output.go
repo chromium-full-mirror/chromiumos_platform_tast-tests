@@ -143,12 +143,6 @@ func getRboxConfig(gpio ti50.GpioName, sku ti50.ChipSKU) (rboxConfig, error) {
 
 // waitForPulse returns the gpio events
 func waitForPulse(ctx context.Context, b utils.DevboardHelper, gpioMonitor utils.GpioMonitorSession) utils.GpioEvents {
-	// b/349810960 Log the context deadline to look into context deadline
-	// exceeded issue.
-	deadline, _ := ctx.Deadline()
-	remaining := time.Until(deadline)
-	testing.ContextLogf(ctx, "Waiting %ds for pulse", gpioTimeout/time.Second)
-	testing.ContextLogf(ctx, "Context deadline in %s", remaining)
 	events := b.GpioMonitorWait(ctx, gpioMonitor, gpioTimeout, gpioInterval)
 	testing.ContextLog(ctx, "gpio events:", events.Sorted)
 	return events

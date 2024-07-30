@@ -31,6 +31,8 @@ var (
 	// after we started passing in --format=json flag. The ? for the quotes could be dropped once
 	// the newer docker images are used everywhere
 	gpioOutput = regexp.MustCompile("\"?value\"?: (true|false)")
+	// Max time allowed to get the response to the "gpio monitoring read" command.
+	gpioMonitorReadTimeout = 200 * time.Millisecond
 )
 
 // GpioMode represents a mode of a debugger pin.
@@ -437,9 +439,25 @@ func (h DevboardHelper) GpioMonitorRead(ctx context.Context, session GpioMonitor
 
 // GpioMonitorWait waits until a GPIO event happens.
 func (h DevboardHelper) GpioMonitorWait(ctx context.Context, session GpioMonitorSession, timeout, interval time.Duration) GpioEvents {
+	deadline, _ := ctx.Deadline()
+	remaining := time.Until(deadline)
+	// Must have enough time to call GpioMonitorRead at least once.
+	if remaining < gpioMonitorReadTimeout || timeout < gpioMonitorReadTimeout {
+		h.Fatalf("timeout too short, need at least %s, got %s, context remaining %s", gpioMonitorReadTimeout, timeout, remaining)
+	}
 	events := GpioEvents{}
 	pOpts := testing.PollOptions{Interval: interval, Timeout: timeout}
+	// Any error from the Poll func is ignored, we will just return no events.
 	testing.Poll(ctx, func(ctx context.Context) error {
+		deadline, _ := ctx.Deadline()
+		remaining := time.Until(deadline)
+		if remaining < gpioMonitorReadTimeout {
+			// Not enough time left to attempt another GpioMonitorRead.
+			return context.DeadlineExceeded
+		}
+		// Allow gpioMonitorReadTimeout for GpioMonitorRead. If it doesn't complete it will exit via h.Fatal.
+		ctx, cancel := context.WithTimeout(ctx, gpioMonitorReadTimeout)
+		defer cancel()
 		events = h.GpioMonitorRead(ctx, session)
 		if len(events.Sorted) != 0 {
 			return nil
