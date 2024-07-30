@@ -41,7 +41,6 @@ func (ds *thermalStateDataSource) Setup(ctx context.Context, prefix, intervalNam
 	}
 	if len(devices) == 0 {
 		testing.ContextLog(ctx, "No cooling devices found")
-		return nil
 	}
 
 	ds.coolingDevices = devices
