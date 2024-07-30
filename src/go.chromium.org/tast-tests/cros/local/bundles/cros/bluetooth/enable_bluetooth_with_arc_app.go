@@ -46,7 +46,7 @@ func init() {
 		SoftwareDeps:   []string{"chrome", "arc"},
 		TestBedDeps:    []string{tbdep.BluetoothStateNormal},
 		Data:           []string{apkName},
-		Fixture:        "arcBooted",
+		Fixture:        "arcBootedWithBluetoothFloss",
 		Params: []testing.Param{{
 			Name:              "android_p",
 			ExtraSoftwareDeps: []string{androidP},
@@ -150,7 +150,9 @@ func EnableBluetoothWithArcApp(ctx context.Context, s *testing.State) {
 	if err := uiauto.Combine("requesting Bluetooth permission",
 		// According to Android guidelines, Bluetooth permission is needed to ensure user awareness and consent.
 		apputil.FindAndClick(requestPermissionObj, defaultUITimeout),
-		apputil.FindAndClick(allowBluetoothObj, defaultUITimeout),
+		// User consent of Bluetooth feature is only required on Android 12 (API level 31) or higher.
+		// That means, android_vm_t (API level 32) will have this prompt, but not for android_p (API level 28) and android_r (API level 30).
+		apputil.ClickIfExist(allowBluetoothObj, defaultUITimeout),
 		apputil.WaitForExists(permissionStatusObj, defaultUITimeout),
 	)(ctx); err != nil {
 		s.Fatalf("Failed to request Bluetooth permission from ARC++ app %q: %v", app.AppName, err)
