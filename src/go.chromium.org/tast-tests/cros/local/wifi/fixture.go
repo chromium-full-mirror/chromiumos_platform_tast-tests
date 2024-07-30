@@ -84,7 +84,13 @@ func (f *wiphyEnabledFixture) Reset(ctx context.Context) error { return nil }
 
 func (f *wiphyEnabledFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
 	s.Log("Ensuring WiFi interface exists")
-	_, err := shill.WifiInterface(ctx, f.data.ShillManager, wifiDefaultTimeout)
+	wm, err := shill.NewWifiManager(ctx, f.data.ShillManager)
+	if err != nil {
+		s.Fatal("Could not create WiFi Manager: ", err)
+	}
+	wm.SetTimeout(wifiDefaultTimeout)
+
+	_, err = wm.Interface(ctx)
 	if err != nil {
 		for file, cmd := range debugDataType {
 			if e := SaveDebugData(ctx, s.OutDir(), file, cmd); e != nil {
@@ -110,6 +116,11 @@ func (f *wiphyEnabledFixture) PreTest(ctx context.Context, s *testing.FixtTestSt
 			}
 		}
 		s.Fatal("Failed to get the WiFi interface: ", err)
+	}
+	s.Log("Enabling WiFi")
+	err = wm.Enable(ctx, true)
+	if err != nil {
+		s.Fatal("Failed to enable the WiFi interface: ", err)
 	}
 }
 
