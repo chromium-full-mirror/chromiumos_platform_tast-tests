@@ -351,9 +351,9 @@ func (f *FilesApp) FileExists(fileName string) uiauto.Action {
 	return f.Exists(file(fileName))
 }
 
-// FindFileByPattern finds any file matching the pattern and returns its name or an error.
-func (f *FilesApp) FindFileByPattern(ctx context.Context, fileNamePattern *regexp.Regexp) (string, error) {
-	if err := f.Exists(fileRegex(fileNamePattern))(ctx); err != nil {
+// WaitForFileByPattern waits for any file matching the pattern and returns its name or an error.
+func (f *FilesApp) WaitForFileByPattern(ctx context.Context, fileNamePattern *regexp.Regexp) (string, error) {
+	if err := f.WaitUntilExists(fileRegex(fileNamePattern))(ctx); err != nil {
 		return "", err
 	}
 	node, err := f.Info(ctx, fileRegex(fileNamePattern))

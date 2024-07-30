@@ -140,7 +140,7 @@ func DownloadOnedrive(ctx context.Context, s *testing.State) {
 	}
 
 	// Verify that the downloaded file is saved to OneDrive.
-	filename, err := files.FindFileByPattern(ctx, regexp.MustCompile("^data.txt$"))
+	filename, err := files.WaitForFileByPattern(ctx, regexp.MustCompile("^data.txt$"))
 	if err != nil {
 		s.Fatal("Downloaded file not found on OneDrive: ", err)
 	}
