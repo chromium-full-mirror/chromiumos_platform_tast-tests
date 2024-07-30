@@ -132,6 +132,34 @@ func filterCrossystemParams(m map[string]string) map[CrossystemParam]string {
 	return filtered
 }
 
+// GetFWVersion accepts CrossystemParamFwid and CrossystemParamRoFwid as input, splits the outputs
+// from them and only returns the version numbers.
+func (r *Reporter) GetFWVersion(ctx context.Context, param CrossystemParam) (string, error) {
+	fwid, err := r.CrossystemParam(ctx, param)
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to get only the fw id from crossystem: %v", param)
+	}
+	splitout := strings.Split(fwid, ".")
+	if len(splitout) < 4 {
+		return "", errors.Wrapf(err, "got invalid fw id from crossystem: %v", fwid)
+	}
+	onlyID := splitout[1] + "." + splitout[2] + "." + splitout[3]
+	return onlyID, err
+}
+
+// GetFWRORWVersion returns the RO and RW firmware version.
+func (r *Reporter) GetFWRORWVersion(ctx context.Context) (string, string, error) {
+	roVersion, err := r.GetFWVersion(ctx, CrossystemParamRoFwid)
+	if err != nil {
+		return "", "", errors.Wrap(err, "failed to get RO firmware version")
+	}
+	rwVersion, err := r.GetFWVersion(ctx, CrossystemParamFwid)
+	if err != nil {
+		return "", "", errors.Wrap(err, "failed to get RW firmware version")
+	}
+	return roVersion, rwVersion, nil
+}
+
 // CheckFWVersion verifies that the DUT's active firmware version (A, B) matches an expected firmware version.
 func (r *Reporter) CheckFWVersion(ctx context.Context, expected string) (bool, error) {
 	curr, err := r.CrossystemParam(ctx, CrossystemParamMainfwAct)

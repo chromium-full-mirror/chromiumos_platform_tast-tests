@@ -15,8 +15,6 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
-
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
@@ -96,16 +94,12 @@ const (
 
 // VerifyFwIDs will show in logs the current firmware version and compare it to expected ones if they are provided.
 func VerifyFwIDs(ctx context.Context, h *Helper, exROVersion, exRWVersion string) error {
-	currentROID, err := GetFwVersion(ctx, h, reporters.CrossystemParamRoFwid)
+	currentROID, currentRWID, err := h.Reporter.GetFWRORWVersion(ctx)
 	if err != nil {
 		return err
 	}
 	if exROVersion != currentROID && !strings.Contains(exROVersion, currentROID) {
 		return errors.Errorf("got %s RO version, but expected %s", currentROID, exROVersion)
-	}
-	currentRWID, err := GetFwVersion(ctx, h, reporters.CrossystemParamFwid)
-	if err != nil {
-		return err
 	}
 	if exRWVersion != currentRWID && !strings.Contains(exRWVersion, currentRWID) {
 		return errors.Errorf("got %s RW version, but expected %s", currentRWID, exRWVersion)
@@ -113,19 +107,19 @@ func VerifyFwIDs(ctx context.Context, h *Helper, exROVersion, exRWVersion string
 	return nil
 }
 
-// GetFwVersion accepts 'crossystem' params (i.e., CrossystemParamFwid & CrossystemParamRoFwid),
-// splits the outputs from them and only returns the version numbers.
-func GetFwVersion(ctx context.Context, h *Helper, param reporters.CrossystemParam) (string, error) {
-	fwid, err := h.Reporter.CrossystemParam(ctx, param)
+// VerifyECFwIDs will compare the current EC firmware versions to expected ones.
+func VerifyECFwIDs(ctx context.Context, h *Helper, exROVersion, exRWVersion string) error {
+	currentROID, currentRWID, err := NewECTool(h.DUT, ECToolNameMain).RORWVersion(ctx)
 	if err != nil {
-		return "", errors.Wrapf(err, "failed to get only the fw id from crossystem: %v", param)
+		return err
 	}
-	splitout := strings.Split(fwid, ".")
-	if len(splitout) < 4 {
-		return "", errors.Wrapf(err, "got invalid fw id from crossystem: %v", fwid)
+	if exROVersion != currentROID && !strings.Contains(exROVersion, currentROID) {
+		return errors.Errorf("got %s RO version, but expected %s", currentROID, exROVersion)
 	}
-	onlyID := splitout[1] + "." + splitout[2] + "." + splitout[3]
-	return onlyID, err
+	if exRWVersion != currentRWID && !strings.Contains(exRWVersion, currentRWID) {
+		return errors.Errorf("got %s RW version, but expected %s", currentRWID, exRWVersion)
+	}
+	return nil
 }
 
 // DownloadFirmwareFiles will extract the AP and EC bin files from the cloud storage.

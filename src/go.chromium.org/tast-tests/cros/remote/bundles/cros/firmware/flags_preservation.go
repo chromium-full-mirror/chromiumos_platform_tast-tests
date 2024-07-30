@@ -586,11 +586,11 @@ func checkCurrentFirmware(ctx context.Context, h *firmware.Helper, programmer fi
 		data.ro = string(roVersion[1])
 		data.rw = string(rwVersion[1])
 	case firmware.APFirmware:
-		rofwid, err := firmware.GetFwVersion(ctx, h, reporters.CrossystemParamRoFwid)
+		rofwid, err := h.Reporter.GetFWVersion(ctx, reporters.CrossystemParamRoFwid)
 		if err != nil {
 			return data, errors.Wrap(err, "failed to get crosystem ro_fwid")
 		}
-		rwfwid, err := firmware.GetFwVersion(ctx, h, reporters.CrossystemParamFwid)
+		rwfwid, err := h.Reporter.GetFWVersion(ctx, reporters.CrossystemParamFwid)
 		if err != nil {
 			return data, errors.Wrap(err, "failed to get crossystem fwid")
 		}

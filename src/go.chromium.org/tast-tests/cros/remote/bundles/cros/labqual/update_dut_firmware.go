@@ -196,7 +196,7 @@ func UpdateDutFirmware(ctx context.Context, s *testing.State) {
 	s.Logf("Found AP Target: %s and EC Target: %s", fwTargets.APTarget, fwTargets.ECTarget)
 
 	// Get the RO firmware version ID available on the DUT.
-	initialROFwid, err := firmware.GetFwVersion(ctx, h, reporters.CrossystemParamRoFwid)
+	initialROFwid, err := h.Reporter.GetFWVersion(ctx, reporters.CrossystemParamRoFwid)
 	if err != nil {
 		s.Fatal("Failed to get AP RO ID: ", err)
 	}
