@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/hermesconst"
+	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -28,19 +29,22 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:           PolicyInstall,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
-		LifeCycleStage: testing.LifeCycleInDevelopment,
-		Desc:           "Test that managed eSIM profile can correctly be installed from device policy and the profile can not be removed or renamed",
+		Func:         PolicyInstall,
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Desc:         "Test that managed eSIM profile can correctly be installed from device policy and the profile can not be removed or renamed",
 		Contacts: []string{
-			"alfredyu@cienet.com",
-			"chromeos-connectivity-cienet-external@google.com",
+			"cros-connectivity@google.com",
+			"jiajunz@google.com",
 		},
-		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
-		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:cellular", "cellular_sim_test_esim", "cellular_e2e"},
-		Fixture:      "cellularWithFakeDMSEnrolledAndTestSIM",
-		Timeout:      9 * time.Minute,
+		BugComponent:   "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		SoftwareDeps:   []string{"chrome"},
+		Attr:           []string{"group:cellular", "cellular_sim_test_esim", "cellular_e2e"},
+		Fixture:        "cellularWithFakeDMSEnrolledAndTestSIM",
+		Timeout:        9 * time.Minute,
+		SearchFlags: []*testing.StringPair{
+			pci.SearchFlag(&policy.DeviceOpenNetworkConfiguration{}, pci.VerifiedFunctionalityOS),
+		},
 	})
 }
 
@@ -58,6 +62,7 @@ var renameMenu = nodewith.Name("Rename Profile").Role(role.MenuItem)
 
 func PolicyInstall(ctx context.Context, s *testing.State) {
 	s.Log("Wait for Chrome auto refresh profile list done")
+	// GoBigSleepLint: Wait for Chrome auto refresh profile list done.
 	if err := testing.Sleep(ctx, 30*time.Second); err != nil {
 		s.Fatal("Failed to wait for 30 seconds: ", err)
 	}

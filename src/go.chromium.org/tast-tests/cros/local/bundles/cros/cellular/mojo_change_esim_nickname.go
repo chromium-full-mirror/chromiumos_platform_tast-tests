@@ -15,19 +15,19 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:           MojoChangeESimNickname,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
-		LifeCycleStage: testing.LifeCycleInDevelopment,
-		Desc:           "Installs a new eSIM profile on the device and then changes its nickname",
+		Func:         MojoChangeESimNickname,
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Desc:         "Installs a new eSIM profile on the device and then changes its nickname",
 		Contacts: []string{
-			"alfredyu@cienet.com",
-			"chromeos-connectivity-cienet-external@google.com",
+			"cros-connectivity@google.com",
+			"jstanko@google.com",
 		},
-		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
-		Attr:         []string{"group:cellular", "cellular_sim_test_esim"},
-		SoftwareDeps: []string{"chrome"},
-		Fixture:      "chromeLoggedInWithMojoTestEuicc",
-		Timeout:      5 * time.Minute,
+		BugComponent:   "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Attr:           []string{"group:cellular", "cellular_sim_test_esim"},
+		SoftwareDeps:   []string{"chrome"},
+		Fixture:        "chromeLoggedInWithMojoTestEuicc",
+		Timeout:        5 * time.Minute,
 	})
 }
 
