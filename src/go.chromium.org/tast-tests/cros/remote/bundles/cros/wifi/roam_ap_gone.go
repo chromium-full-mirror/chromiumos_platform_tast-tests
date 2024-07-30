@@ -8,6 +8,8 @@ import (
 	"context"
 	"time"
 
+	"golang.org/x/sync/errgroup"
+
 	"go.chromium.org/tast-tests/cros/common/crypto/certificate"
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
@@ -19,6 +21,7 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/wificell"
 	"go.chromium.org/tast-tests/cros/remote/wificell/hostapd"
 	"go.chromium.org/tast-tests/cros/services/cros/wifi"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -28,6 +31,7 @@ type roamTestcase struct {
 	apOpts2          []hostapd.Option
 	secConfFac       security.ConfigFactory
 	enableBSSFlush   bool
+	performSuspend   bool
 	expectedRoamTime time.Duration
 }
 
@@ -43,6 +47,11 @@ func (tc roamTestcase) setEnableBSSFlush(enable bool) roamTestcase {
 
 func (tc roamTestcase) setRoamTime(d time.Duration) roamTestcase {
 	tc.expectedRoamTime = d
+	return tc
+}
+
+func (tc roamTestcase) setPerformSuspend(perform bool) roamTestcase {
+	tc.performSuspend = perform
 	return tc
 }
 
@@ -153,6 +162,22 @@ func init() {
 				Val:               roamTestcaseWithTwoOpenAP.setRoamTime(12 * time.Second).setEnableBSSFlush(true),
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiMarvell()),
 				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_Marvell"}`,
+			}, {
+				// Verifies that DUT can roam between two WPA APs in full view of it after suspend/resume.
+				Name:              "wpa_suspend",
+				Val:               roamTestcaseWithTwoWPAAP.setRoamTime(5 * time.Second).setPerformSuspend(true),
+				ExtraHardwareDeps: hwdep.D(hwdep.WifiNotMarvell()),
+				// TODO(b/362115332): Remove this attribute after the test is stable.
+				ExtraAttr:       []string{"wificell_unstable"},
+				VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel_Not_Marvell"}`,
+			}, {
+				// Verifies that DUT can roam between two WPA APs in full view of it after suspend/resume.
+				Name:              "wpa_suspend_marvell",
+				Val:               roamTestcaseWithTwoWPAAP.setRoamTime(12 * time.Second).setPerformSuspend(true),
+				ExtraHardwareDeps: hwdep.D(hwdep.WifiMarvell()),
+				// TODO(b/362115332): Remove this attribute after the test is stable.
+				ExtraAttr:       []string{"wificell_unstable"},
+				VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel_Marvell"}`,
 			},
 		},
 	})
@@ -168,10 +193,11 @@ func RoamAPGone(ctx context.Context, s *testing.State) {
 		4 - Either flush all BSSes to force the DUT to rescan after AP1
 		    disappears or trigger a new scan now, so that the DUT can
 		    autoconnect after AP1 disappears.
-		5 - Deconfigure AP1.
-		6 - Verify the DUT roams to AP2.
-		7 - Deconfigure the DUT.
-		8 - Deconfigure AP2.
+		5 - Suspend and resume the device on demand.
+		6 - Either deconfigure AP1 when DUT is asleep or awake.
+		7 - Verify the DUT roams to AP2.
+		8 - Deconfigure the DUT.
+		9 - Deconfigure AP2.
 	*/
 	tf := s.FixtValue().(*wificell.TestFixture)
 
@@ -179,7 +205,7 @@ func RoamAPGone(ctx context.Context, s *testing.State) {
 	param := s.Param().(roamTestcase)
 	ap1, err := tf.ConfigureAP(ctx, param.apOpts1, param.secConfFac)
 	if err != nil {
-		s.Fatal("Failed to configure ap, err: ", err)
+		s.Fatal("Failed to configure AP, err: ", err)
 	}
 	ssid := ap1.Config().SSID
 	defer func(ctx context.Context) {
@@ -188,7 +214,7 @@ func RoamAPGone(ctx context.Context, s *testing.State) {
 			return
 		}
 		if err := tf.DeconfigAP(ctx, ap1); err != nil {
-			s.Error("Failed to deconfig ap1, err: ", err)
+			s.Error("Failed to deconfig AP1, err: ", err)
 		}
 	}(ctx)
 	ctx, cancel := tf.ReserveForDeconfigAP(ctx, ap1)
@@ -205,7 +231,7 @@ func RoamAPGone(ctx context.Context, s *testing.State) {
 			return
 		}
 		if err := tf.DeconfigAP(ctx, ap2); err != nil {
-			s.Error("Failed to deconfig ap2, err: ", err)
+			s.Error("Failed to deconfig AP2, err: ", err)
 		}
 	}(ctx)
 	// We don't have ap2 yet, borrow the reserve of ap1.
@@ -239,14 +265,6 @@ func RoamAPGone(ctx context.Context, s *testing.State) {
 	}
 	ap2BSSID := mac.String()
 
-	props := []*wificell.ShillProperty{
-		{
-			Property:       shillconst.ServicePropertyWiFiBSSID,
-			ExpectedValues: []interface{}{ap2BSSID},
-			Method:         wifi.ExpectShillPropertyRequest_ON_CHANGE,
-		},
-	}
-
 	// Configure the second AP.
 	var ops []hostapd.Option
 	ops = append(ops, param.apOpts2...)
@@ -255,7 +273,7 @@ func RoamAPGone(ctx context.Context, s *testing.State) {
 	ops = append(ops, hostapd.SSID(ssid), hostapd.BSSID(ap2BSSID))
 	ap2, err = tf.ConfigureAP(ctx, ops, param.secConfFac)
 	if err != nil {
-		s.Fatal("Failed to configure ap, err: ", err)
+		s.Fatal("Failed to configure AP, err: ", err)
 	}
 	// defer deconfig already scheduled above.
 	s.Log("AP2 setup done")
@@ -280,28 +298,63 @@ func RoamAPGone(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	waitCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
-	defer cancel()
-	waitForProps, err := tf.WifiClient().ExpectShillProperty(waitCtx, servicePath, props, nil)
-	if err != nil {
-		s.Fatal("DUT: failed to create a property watcher, err: ", err)
+	suspendFor := 15 * time.Second
+
+	eg, suspendCtx := errgroup.WithContext(ctx)
+	if param.performSuspend {
+		eg.Go(func() error { return tf.DUTWifiClient(wificell.DefaultDUT).Suspend(suspendCtx, suspendFor) })
+
+		// Ensure deconfiguration of ap occurs after DUT suspension.
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			if s.DUT().Connected(ctx) {
+				return errors.New("DUT has not yet successfully suspended")
+			}
+			return nil
+		}, &testing.PollOptions{Timeout: suspendFor}); err != nil {
+			s.Fatal("Failed to suspend the DUT before deconfigure AP: ", err)
+		}
 	}
-	startTime := time.Now()
 
 	// Deconfigure the initial AP.
 	if err := tf.DeconfigAP(ctx, ap1); err != nil {
-		s.Error("Failed to deconfig ap, err: ", err)
+		s.Error("Failed to deconfig AP, err: ", err)
 	}
 	ap1 = nil
 	s.Log("Deconfigured AP1")
 
+	// Wait for device to resume if suspended.
+	if err := eg.Wait(); err != nil {
+		s.Fatal("Failed to suspend and resume dut: ", err)
+	}
+
+	props := []*wificell.ShillProperty{
+		{
+			Property:       shillconst.ServicePropertyWiFiBSSID,
+			ExpectedValues: []interface{}{ap2BSSID},
+			// May roam to the other Wi-Fi before checking connection status through Shill manager,
+			// which will prevent waiting for the property change signal, therefore,
+			// ExpectShillPropertyRequest_ON_CHANGE is not a preference.
+			Method: wifi.ExpectShillPropertyRequest_CHECK_WAIT,
+		},
+	}
+
+	waitCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+
+	waitForProps, err := tf.WifiClient().ExpectShillProperty(waitCtx, servicePath, props, nil)
+	if err != nil {
+		s.Fatal("DUT: failed to create a property watcher, err: ", err)
+	}
+
+	startTime := time.Now()
 	if _, err := waitForProps(); err != nil {
 		s.Fatal("DUT: failed to wait for the properties, err: ", err)
 	}
 	roamTime := time.Since(startTime)
+
 	s.Logf("DUT: roamed in %s", roamTime)
 	if roamTime > param.expectedRoamTime {
-		s.Fatalf("DUT: took to long to roam, expected to roam in %s", param.expectedRoamTime)
+		s.Fatalf("DUT: took to long to roam: %v, expected to roam in %s", roamTime, param.expectedRoamTime)
 	}
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
