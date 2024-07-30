@@ -10,7 +10,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -61,7 +60,8 @@ const (
 	webxprt4     = "Benchmark.WebXPRT4.Score"
 )
 
-var registry = map[string]Metadata{
+// Registry maps test name to its corresponding metadata.
+var Registry = map[string]Metadata{
 	"ui.DesksCUJ": Metadata{
 		Metrics: defaultMetrics,
 	},
@@ -151,24 +151,16 @@ var registry = map[string]Metadata{
 // metadata. If a test registration is found, but the registration is
 // malformed, the code will panic.
 func WriteMetadataFile(ctx context.Context, testName string) {
-	if _, ok := registry[testName]; !ok {
+	if _, ok := Registry[testName]; !ok {
 		testing.ContextLogf(ctx, "Failed to find %s in the metadata registry", testName)
 		return
 	}
 
 	testing.ContextLogf(ctx, "Writing metadata file for %s", testName)
 
-	test := registry[testName]
+	test := Registry[testName]
 	test.TestName = testName
 
-	// Perform a simple initial check that the base name exists.
-	for _, bname := range test.BaseTestNames {
-		if bname != "" {
-			if _, ok := registry[bname]; !ok {
-				panic(errors.Errorf("found invalid test metadata, base test %s doesn't exist", bname))
-			}
-		}
-	}
 	outDir, ok := testing.ContextOutDir(ctx)
 	if !ok || outDir == "" {
 		testing.ContextLog(ctx, "Failed to get the out directory")
