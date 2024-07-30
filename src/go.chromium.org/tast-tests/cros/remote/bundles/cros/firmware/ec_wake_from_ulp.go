@@ -44,6 +44,8 @@ func init() {
 			ExtraHardwareDeps: hwdep.D(hwdep.Lid(), hwdep.SkipOnModel(
 				// The lid_switch variant of this test requires servo_micro. Please skip on C2D2 devices.
 				"anahera",
+				"anraggar",
+				"anraggar360",
 				"banshee",
 				"calus",
 				"cherry",
