@@ -35,7 +35,7 @@ func init() {
 		SoftwareDeps: []string{"flashrom"},
 		Fixture:      fixture.BootModeFixtureWithAPBackup(fixture.NormalMode),
 		Timeout:      30 * time.Minute,
-		HardwareDeps: hwdep.D(hwdep.MainboardHasEarlyLibgfxinit()),
+		HardwareDeps: hwdep.D(hwdep.MainboardHasEarlySignOfLife()),
 	})
 }
 
