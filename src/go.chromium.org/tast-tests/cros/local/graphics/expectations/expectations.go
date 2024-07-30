@@ -329,6 +329,7 @@ type Expectation struct {
 	Comments       string          `yaml:"comments,omitempty"`
 	SinceBuild     string          `yaml:"since_build,omitempty"` // I.e. "R107" or "R107-15144.0.0"
 	FailurePattern string          `yaml:"failure_pattern,omitempty"`
+	FlakePattern   string          `yaml:"flake_pattern,omitempty"`
 	ctx            context.Context // Used internally for context logging
 	hasTastError   bool            // Used to track the test error state without expectations being applied
 }
@@ -359,7 +360,7 @@ func getExpectationYamlErrors(e Expectation) error {
 // expectPass creates a "passing" expectation for use when no expectation is
 // found for the test case.
 func expectPass(ctx context.Context) Expectation {
-	return Expectation{ExpectPass, make([]string, 0), "", "", "", ctx, false}
+	return Expectation{ExpectPass, make([]string, 0), "", "", "", "", ctx, false}
 }
 
 // GetTestExpectationFromDirectory opens an existing test expectations file
@@ -446,21 +447,7 @@ func GetTestExpectation(ctx context.Context, testName string) (Expectation, erro
 // If the test code must not continue after the error, it is up to the
 // caller to guarantee to stop the test.
 func (e *Expectation) ReportError(args ...interface{}) error {
-	e.hasTastError = true
-	switch e.Expectation {
-	case ExpectPass:
-		return errors.New(fmt.Sprint(args...))
-	case ExpectFailure:
-		testing.ContextLog(e.ctx, append([]interface{}{"Error:"}, args...))
-		if e.FailurePattern == "" {
-			return nil
-		}
-		if match, _ := regexp.MatchString(e.FailurePattern, fmt.Sprintf("%s", args...)); !match {
-			return errors.Errorf("Unexpected error: "+"%s", args...)
-		}
-		testing.ContextLogf(e.ctx, "Error: "+"%s", args...)
-	}
-	return nil
+	return e.ReportErrorf("%s", args...)
 }
 
 // ReportErrorf is used to get the preferred error handling within the
@@ -479,7 +466,16 @@ func (e *Expectation) ReportErrorf(format string, args ...interface{}) error {
 			return nil
 		}
 		if match, _ := regexp.MatchString(e.FailurePattern, fmt.Sprintf(format, args...)); !match {
-			return errors.Errorf("Unexpected error: "+format, args...)
+			if e.FlakePattern == "" {
+				return errors.Errorf("Unexpected error: "+format, args...)
+			}
+
+			testing.ContextLog(e.ctx, "Flake Pattern: "+e.FlakePattern)
+			if flakeMatch, _ := regexp.MatchString(e.FlakePattern, fmt.Sprintf(format, args...)); !flakeMatch {
+				return errors.Errorf("Unexpected error: "+format, args...)
+			}
+
+			return errors.Errorf("Encountered known Test Flake "+format, args...)
 		}
 		testing.ContextLogf(e.ctx, "Error: "+format, args...)
 	}
