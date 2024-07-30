@@ -183,13 +183,15 @@ func PowerMetrics(ctx context.Context, s *testing.State) {
 		s.Fatal("Cannot start collecting power metrics: ", err)
 	}
 
+	consentTryItButton := nodewith.Name("Try it").ClassName("MdTextButton")
+	consentGotItButton := nodewith.Name("Got it").ClassName("MdTextButton")
 	contextMenu := nodewith.ClassName("SubmenuView").Role("menu")
 	summarizeButton := nodewith.Name("Summarize").ClassName("LabelButton")
 	compactSummaryButton := nodewith.Name("Help me read this page").ClassName("MahiCondensedMenuButton")
 	summaryOutlinesSection := nodewith.ClassName("SummaryOutlinesSection")
 	summaryText := nodewith.NameRegex(regexp.MustCompile(`^.{20,}$`)).ClassName("Label").Role("staticText").Ancestor(summaryOutlinesSection)
 	mahiErrorStatus := nodewith.ClassName("MahiErrorStatusView")
-	mahiCloseButton := nodewith.Name("Close button").ClassName("IconButton")
+	mahiCloseButton := nodewith.Name("Close").ClassName("IconButton")
 
 	cleanUIElement := func() error {
 		return testing.Poll(ctx, func(ctx context.Context) error {
@@ -214,7 +216,59 @@ func PowerMetrics(ctx context.Context, s *testing.State) {
 		})
 	}
 
+	// Open a html file from local server
+	navigateToLocalHTML := func(fileName string) error {
+		url := localServer.URL + "/" + fileName
+		if err := conn.Navigate(ctx, url); err != nil {
+			s.Log("Failed to open url: ", err)
+			return errors.Wrap(err, "failed to open url")
+		}
+
+		if err := webutil.WaitForQuiescence(ctx, conn, longUITimeout); err != nil {
+			s.Logf("Failed to wait for %q to be loaded and achieve quiescence, err: %q", url, err)
+			return errors.Wrap(err, "failed to wait for quiescence")
+		}
+		return nil
+	}
+
+	// Passes the one-off consent flow
+	maybePassConsentFlow := func() error {
+		if err := navigateToLocalHTML(localHTMLFiles[0].Name()); err != nil {
+			return errors.Wrap(err, "failed to open a local html")
+		}
+		if err := mouse.Click(tconn, window.TargetBounds.CenterPoint(), mouse.RightButton)(ctx); err != nil {
+			return errors.Wrap(err, "failed to right click")
+		}
+
+		if err := ui.WaitUntilExists(consentTryItButton)(ctx); err != nil {
+			s.Log("Has no consent flow, wait for the summary button")
+			if err := ui.WaitUntilAnyExists(summarizeButton, compactSummaryButton)(ctx); err != nil {
+				return errors.Wrap(err, "no consent flow nor summary button")
+			}
+		} else {
+			s.Log("Has consent Try it button")
+			if err := uiauto.Combine("Do consent flow",
+				ui.Exists(consentTryItButton),
+				ui.LeftClick(consentTryItButton),
+				ui.WaitUntilExists(consentGotItButton),
+				ui.LeftClick(consentGotItButton),
+				ui.WaitUntilAnyExists(summaryText, mahiErrorStatus),
+			)(ctx); err != nil {
+				return errors.Wrap(err, "failed to pass the consent flow")
+			}
+		}
+
+		return cleanUIElement()
+	}
+
 	params := s.Param().(testParameters)
+
+	if params.expectMahiWidget {
+		if err := maybePassConsentFlow(); err != nil {
+			s.Fatal("Failed to pass the consent flow: ", err)
+		}
+	}
+
 	index := 0
 	succeedCount := 0
 	localHTMLCount := len(localHTMLFiles)
@@ -228,17 +282,7 @@ func PowerMetrics(ctx context.Context, s *testing.State) {
 		fileName := localHTMLFiles[index%localHTMLCount].Name()
 		index++
 
-		// Open a html file from local server
-		url := localServer.URL + "/" + fileName
-		if err := conn.Navigate(ctx, url); err != nil {
-			s.Log("Failed to open url: ", err)
-			return errors.Wrap(err, "failed to open url")
-		}
-
-		if err := webutil.WaitForQuiescence(ctx, conn, longUITimeout); err != nil {
-			s.Logf("Failed to wait for %q to be loaded and achieve quiescence, err: %q", url, err)
-			return errors.Wrap(err, "failed to wait for quiescence")
-		}
+		navigateToLocalHTML(fileName)
 
 		// Do a right click and wait for the context menu / mahi widget card.
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
@@ -259,7 +303,7 @@ func PowerMetrics(ctx context.Context, s *testing.State) {
 
 		if !params.doMahiSummary {
 			if err := cleanUIElement(); err != nil {
-				s.Fatal("Failed to clean UI element after right click")
+				s.Fatal("Failed to clean UI element after right click: ", err)
 			}
 			succeedCount++
 			return errors.New("Don't do mahi summary, go next URL")
@@ -275,7 +319,7 @@ func PowerMetrics(ctx context.Context, s *testing.State) {
 		}
 
 		if err := cleanUIElement(); err != nil {
-			s.Fatal("Failed to clean UI element after summary")
+			s.Fatal("Failed to clean UI element after summary: ", err)
 		}
 
 		succeedCount++
