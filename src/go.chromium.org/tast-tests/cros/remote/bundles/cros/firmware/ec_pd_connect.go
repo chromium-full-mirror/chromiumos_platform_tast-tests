@@ -167,7 +167,7 @@ func cleanup(ctx context.Context, s *testing.State) {
 			return errors.New("Servo DUT port is not ready")
 		}
 		return nil
-	}, &testing.PollOptions{Interval: time.Second, Timeout: 5 * time.Second}); err != nil {
+	}, &testing.PollOptions{Interval: time.Second, Timeout: 20 * time.Second}); err != nil {
 		s.Fatal("timed out waiting for Servo DUT port to be ready: ", err)
 	}
 
