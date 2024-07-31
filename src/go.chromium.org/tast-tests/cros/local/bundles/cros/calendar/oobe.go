@@ -76,26 +76,25 @@ func Oobe(ctx context.Context, s *testing.State) {
 	ui := uiauto.New(tconn)
 
 	s.Log("Start testing calendar view from date tray")
-	dateTray := nodewith.ClassName("DateTray")
 
 	// Comparing the time before and after opening the calendar view just in case this test is run at the very end of a year, e.g. Dec 31 23:59:59.
 	beforeOpeningCalendarYear := time.Now().Year()
 
-	if err := ui.WaitUntilExists(dateTray.Onscreen())(ctx); err != nil {
-		s.Fatal("Failed to find date tray: ", err)
+	// Click on System tray to reset calendar.
+	if err := ui.LeftClick(nodewith.ClassName("UnifiedSystemTray"))(ctx); err != nil {
+		s.Fatal("Failed to click the system tray: ", err)
 	}
 
-	// Open calendar view.
-	if err := ui.DoDefault(dateTray)(ctx); err != nil {
-		s.Fatal("Failed to click the date tray: ", err)
-	}
-
+	// Opens calendar view.
+	dateTray := nodewith.HasClass("DateTray")
 	calendarView := nodewith.ClassName("CalendarView")
-	mainHeaderTriView := nodewith.ClassName("TriView").Ancestor(calendarView).Nth(0)
-	mainHeaderContainer := nodewith.ClassName("View").Ancestor(mainHeaderTriView).Nth(1)
-	mainHeader := nodewith.Name("Calendar").ClassName("Label").Ancestor(mainHeaderContainer)
+	mainHeaderTriView := nodewith.ClassName("TriView").Ancestor(calendarView)
+	mainHeader := nodewith.ClassName("CalendarHeaderView").Ancestor(mainHeaderTriView)
 
-	if err := ui.WaitUntilExists(mainHeader)(ctx); err != nil {
+	if err := uiauto.Combine("Open calendar view",
+		ui.LeftClick(dateTray),
+		ui.WaitUntilExists(mainHeader),
+	)(ctx); err != nil {
 		s.Fatal("Failed to find calendar main label after opening calendar view: ", err)
 	}
 
@@ -119,15 +118,15 @@ func Oobe(ctx context.Context, s *testing.State) {
 	// Clicking on a date cell should not show the event list view.
 	scrollView := nodewith.ClassName("ScrollView").Ancestor(calendarView).Nth(0)
 	scrollViewport := nodewith.ClassName("ScrollView::Viewport").Ancestor(scrollView).Nth(0)
-	contentView := nodewith.ClassName("View").Ancestor(scrollViewport).Nth(0)
-	currentMonthView := nodewith.ClassName("View").Ancestor(contentView).Nth(3)
-	firstMondayDateCell := nodewith.ClassName("CalendarDateCellView").Ancestor(currentMonthView).Nth(1)
+	contentView := nodewith.ClassName("CalendarMonthView").Ancestor(scrollViewport).Nth(0)
+	firstMondayDateCell := nodewith.ClassName("CalendarDateCellView").Ancestor(contentView).Nth(1)
 	scrollViewBounds, err := ui.Location(ctx, scrollView)
 	if err != nil {
 		s.Fatal("Failed to find calendar scroll view bounds: ", err)
 	}
 	firstMondayDateCellBounds, err := ui.Location(ctx, firstMondayDateCell)
 	if err != nil {
+		s.Log(uiauto.RootDebugInfo(ctx, tconn))
 		s.Fatal("Failed to find calendar first Monday cell bounds: ", err)
 	}
 	// TODO(b/234673735): Should click on the finder directly after this bug is fixed.
@@ -153,15 +152,5 @@ func Oobe(ctx context.Context, s *testing.State) {
 			s.Fatal("Should not open event list after clicking on a Monday date cell: ", err)
 			break
 		}
-	}
-
-	// Close the calendar view.
-	calendarViewBounds, err := ui.Location(ctx, calendarView)
-	if err != nil {
-		s.Fatal("Failed to find calendar view bounds: ", err)
-	}
-	outsideCalendarPt := coords.NewPoint(calendarViewBounds.Right()+2, calendarViewBounds.Top-5)
-	if err := mouse.Click(tconn, outsideCalendarPt, mouse.LeftButton)(ctx); err != nil {
-		s.Fatal("Failed to click outside of the calendar view: ", err)
 	}
 }

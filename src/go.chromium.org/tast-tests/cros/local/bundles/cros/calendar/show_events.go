@@ -54,21 +54,25 @@ func ShowEvents(ctx context.Context, s *testing.State) {
 	ui := uiauto.New(tconn)
 
 	s.Log("Start testing calendar view from date tray")
-	dateTray := nodewith.HasClass("DateTray")
 
 	// Comparing the time before and after opening the calendar view just in case this test is run at the very end of a year, e.g. Dec 31 23:59:59.
 	beforeOpeningCalendarYear := time.Now().Year()
 
-	// Opens calendar view.
-	if err := ui.DoDefault(dateTray)(ctx); err != nil {
-		s.Fatal("Failed to click the date tray: ", err)
+	// Click on System tray to reset calendar.
+	if err := ui.LeftClick(nodewith.ClassName("UnifiedSystemTray"))(ctx); err != nil {
+		s.Fatal("Failed to click the system tray: ", err)
 	}
 
+	// Opens calendar view.
+	dateTray := nodewith.HasClass("DateTray")
 	calendarView := nodewith.ClassName("CalendarView")
-	mainHeaderTriView := nodewith.ClassName("TriView").Ancestor(calendarView).Nth(0)
-	mainHeader := nodewith.Name("Calendar").ClassName("Label").Ancestor(mainHeaderTriView)
+	mainHeaderTriView := nodewith.ClassName("TriView").Ancestor(calendarView)
+	mainHeader := nodewith.ClassName("CalendarHeaderView").Ancestor(mainHeaderTriView)
 
-	if err := ui.WaitUntilExists(mainHeader)(ctx); err != nil {
+	if err := uiauto.Combine("Open calendar view",
+		ui.LeftClick(dateTray),
+		ui.WaitUntilExists(mainHeader),
+	)(ctx); err != nil {
 		s.Fatal("Failed to find calendar main label after opening calendar view: ", err)
 	}
 
@@ -86,6 +90,7 @@ func ShowEvents(ctx context.Context, s *testing.State) {
 	year := strconv.Itoa(yearInt)
 	todayYearLabel := nodewith.Name(year).HasClass("Label").Onscreen()
 	if err := ui.WaitUntilExists(todayYearLabel)(ctx); err != nil {
+		s.Log(uiauto.RootDebugInfo(ctx, tconn))
 		s.Fatal("Failed to find year label after opening calendar view: ", err)
 	}
 
@@ -200,15 +205,5 @@ func ShowEvents(ctx context.Context, s *testing.State) {
 	// Closes event list view.
 	if err := mouse.Click(tconn, eventCloseButtonPt, mouse.LeftButton)(ctx); err != nil {
 		s.Fatal("Failed to click the close button in calendar event list view after opening Tuesday's event list: ", err)
-	}
-
-	// Closes the calendar view.
-	calendarViewBounds, err := ui.Location(ctx, calendarView)
-	if err != nil {
-		s.Fatal("Failed to find calendar view bounds: ", err)
-	}
-	outsideCalendarPt := coords.NewPoint(calendarViewBounds.Right()+2, calendarViewBounds.Top-5)
-	if err := mouse.Click(tconn, outsideCalendarPt, mouse.LeftButton)(ctx); err != nil {
-		s.Fatal("Failed to click outside of the calendar view: ", err)
 	}
 }

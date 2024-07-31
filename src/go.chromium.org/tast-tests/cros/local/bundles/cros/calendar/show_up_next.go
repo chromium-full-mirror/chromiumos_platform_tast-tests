@@ -9,10 +9,8 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
-	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -48,14 +46,22 @@ func ShowUpNext(ctx context.Context, s *testing.State) {
 
 	ui := uiauto.New(tconn)
 
+	// Click on System tray to reset calendar.
+	if err := ui.LeftClick(nodewith.ClassName("UnifiedSystemTray"))(ctx); err != nil {
+		s.Fatal("Failed to click the system tray: ", err)
+	}
+
 	// Opens calendar view.
 	dateTray := nodewith.HasClass("DateTray")
 	calendarView := nodewith.ClassName("CalendarView")
+	mainHeaderTriView := nodewith.ClassName("TriView").Ancestor(calendarView)
+	mainHeader := nodewith.ClassName("CalendarHeaderView").Ancestor(mainHeaderTriView)
+
 	if err := uiauto.Combine("Open calendar view",
-		ui.DoDefault(dateTray),
-		ui.WaitUntilExists(calendarView),
+		ui.LeftClick(dateTray),
+		ui.WaitUntilExists(mainHeader),
 	)(ctx); err != nil {
-		s.Fatal("Failed to open Calendar View: ", err)
+		s.Fatal("Failed to find calendar main label after opening calendar view: ", err)
 	}
 
 	// User should have an upcoming meeting.
@@ -70,15 +76,5 @@ func ShowUpNext(ctx context.Context, s *testing.State) {
 	)(ctx); err != nil {
 		s.Log(uiauto.RootDebugInfo(ctx, tconn))
 		s.Fatal("Testing up next view failed: ", err)
-	}
-
-	// Closes the calendar view.
-	calendarViewBounds, err := ui.Location(ctx, calendarView)
-	if err != nil {
-		s.Fatal("Failed to find calendar view bounds: ", err)
-	}
-	outsideCalendarPt := coords.NewPoint(calendarViewBounds.Right()+2, calendarViewBounds.Top-5)
-	if err := mouse.Click(tconn, outsideCalendarPt, mouse.LeftButton)(ctx); err != nil {
-		s.Fatal("Failed to click outside of the calendar view: ", err)
 	}
 }

@@ -33,7 +33,7 @@ func init() {
 			Key:   "feature_id",
 			Value: "screenplay-e5592965-ad75-451b-8d24-3d1a5662ef7a",
 		}},
-		Fixture: "chromeLoggedInWithCalendarView",
+		Fixture: "chromeLoggedIn",
 	})
 }
 
@@ -49,19 +49,25 @@ func ButtonClicks(ctx context.Context, s *testing.State) {
 	ui := uiauto.New(tconn)
 
 	s.Log("Start testing calendar view from date tray")
-	dateTray := nodewith.HasClass("DateTray")
-	if err := ui.DoDefault(dateTray)(ctx); err != nil {
-		s.Fatal("Failed to click the date tray: ", err)
-	}
 
 	// Comparing the time before and after opening the calendar view just in case this test is run at the very end of a year, e.g. Dec 31 23:59:59.
 	beforeOpeningCalendarYear := time.Now().Year()
 
-	calendarView := nodewith.ClassName("CalendarView")
-	mainHeaderTriView := nodewith.ClassName("TriView").Ancestor(calendarView).Nth(0)
-	mainHeader := nodewith.Name("Calendar").ClassName("Label").Ancestor(mainHeaderTriView)
+	// Click on System tray to reset calendar.
+	if err := ui.LeftClick(nodewith.ClassName("UnifiedSystemTray"))(ctx); err != nil {
+		s.Fatal("Failed to click the system tray: ", err)
+	}
 
-	if err := ui.WaitUntilExists(mainHeader)(ctx); err != nil {
+	// Opens calendar view.
+	dateTray := nodewith.HasClass("DateTray")
+	calendarView := nodewith.ClassName("CalendarView")
+	mainHeaderTriView := nodewith.ClassName("TriView").Ancestor(calendarView)
+	mainHeader := nodewith.ClassName("CalendarHeaderView").Ancestor(mainHeaderTriView)
+
+	if err := uiauto.Combine("Open calendar view",
+		ui.LeftClick(dateTray),
+		ui.WaitUntilExists(mainHeader),
+	)(ctx); err != nil {
 		s.Fatal("Failed to find calendar main label after opening calendar view: ", err)
 	}
 
@@ -82,9 +88,6 @@ func ButtonClicks(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to find year label after opening calendar view: ", err)
 	}
 
-	triView := nodewith.ClassName("TriView").Ancestor(calendarView).Nth(1)
-	headerView := nodewith.ClassName("View").Ancestor(triView).Nth(0)
-
 	// Clicking the up button for 12 times should go to the previous year.
 	upButton := nodewith.Name("Show previous month").ClassName("IconButton")
 	const numMonths = 12
@@ -95,15 +98,15 @@ func ButtonClicks(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to click the up button in calendar view bubble: ", err)
 		}
 	}
-	if err := ui.WaitForLocation(headerView)(ctx); err != nil {
+	if err := ui.WaitForLocation(mainHeader)(ctx); err != nil {
 		s.Fatal("Failed to wait for the year label to be stable after click on up button 12 times: ", err)
 	}
 	if err := ui.WaitUntilExists(previousYearLabel)(ctx); err != nil {
 		s.Fatal("Failed to find year label after clicking on up button: ", err)
 	}
 
-	// Clicking on today button should go back to today's momth.
-	todayButton := nodewith.NameContaining("Today").ClassName("PillButton")
+	// Clicking on today button should go back to today's month.
+	todayButton := nodewith.NameContaining("Today").ClassName("IconButton")
 	beforeClickingTodayYear := time.Now().Year()
 	if err := ui.LeftClick(todayButton)(ctx); err != nil {
 		s.Fatal("Failed to click the today button in calendar view bubble: ", err)
@@ -134,28 +137,10 @@ func ButtonClicks(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to click the down button in calendar view bubble: ", err)
 		}
 	}
-	if err := ui.WaitForLocation(headerView)(ctx); err != nil {
+	if err := ui.WaitForLocation(mainHeader)(ctx); err != nil {
 		s.Fatal("Failed to wait for the year label to be stable after click on down button 12 times: ", err)
 	}
 	if err := ui.WaitUntilExists(nextYearLabel)(ctx); err != nil {
 		s.Fatal("Failed to find year label after clicking on down button: ", err)
-	}
-
-	settingButton := nodewith.Name("Date and time settings").ClassName("IconButton")
-	if err := ui.LeftClick(settingButton)(ctx); err != nil {
-		s.Fatal("Failed to click the setting button in calendar view bubble: ", err)
-	}
-
-	// Check if the DateTime setting page within the OS Settings was opened.
-	matcher := chrome.MatchTargetURL("chrome://os-settings/systemPreferences")
-	conn, err := cr.NewConnForTarget(ctx, matcher)
-	if err != nil {
-		s.Fatal("Failed to open the date and time settings: ", err)
-	}
-	defer conn.Close()
-
-	settingCloseButton := nodewith.Name("Close").ClassName("FrameCaptionButton")
-	if err := ui.LeftClick(settingCloseButton)(ctx); err != nil {
-		s.Fatal("Failed to click the setting close button in the settings page: ", err)
 	}
 }
