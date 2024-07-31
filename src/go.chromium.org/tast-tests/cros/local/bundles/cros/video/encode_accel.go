@@ -11,6 +11,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/video/encode"
 	"go.chromium.org/tast-tests/cros/local/media/videotype"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -478,7 +479,8 @@ func init() {
 					SVCMode:       "L1T2",
 					BitrateMode:   "cbr",
 				},
-				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_h264_1080_30", "vaapi"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsSVCEncoding("h264baseline", "l1t2")),
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_h264_1080_30"},
 				ExtraData:         []string{"encode/desktop2-1280x720_850frames.vp9.webm", "encode/desktop2-1280x720_850frames.vp9.webm.json"},
 			},
 			{
@@ -490,7 +492,8 @@ func init() {
 					SVCMode:       "L1T3",
 					BitrateMode:   "cbr",
 				},
-				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_h264_1080_30", "vaapi"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsSVCEncoding("h264baseline", "l1t3")),
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_h264_1080_30"},
 				ExtraData:         []string{"encode/desktop2-1280x720_850frames.vp9.webm", "encode/desktop2-1280x720_850frames.vp9.webm.json"},
 			},
 			{
@@ -502,7 +505,8 @@ func init() {
 					SVCMode:       "L1T2",
 					BitrateMode:   "cbr",
 				},
-				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_h264_1080_30", "vaapi"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsSVCEncoding("h264main", "l1t2")),
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_h264_1080_30"},
 				ExtraData:         []string{"encode/desktop2-1280x720_850frames.vp9.webm", "encode/desktop2-1280x720_850frames.vp9.webm.json"},
 			},
 			{
@@ -514,7 +518,8 @@ func init() {
 					SVCMode:       "L1T3",
 					BitrateMode:   "cbr",
 				},
-				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_h264_1080_30", "vaapi"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsSVCEncoding("h264main", "l1t3")),
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_h264_1080_30"},
 				ExtraData:         []string{"encode/desktop2-1280x720_850frames.vp9.webm", "encode/desktop2-1280x720_850frames.vp9.webm.json"},
 			},
 			{
@@ -526,7 +531,8 @@ func init() {
 					SVCMode:       "L1T2",
 					BitrateMode:   "cbr",
 				},
-				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_h264_1080_30", "vaapi"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsSVCEncoding("h264high", "l1t2")),
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_h264_1080_30"},
 				ExtraData:         []string{"encode/desktop2-1280x720_850frames.vp9.webm", "encode/desktop2-1280x720_850frames.vp9.webm.json"},
 			},
 			{
@@ -538,7 +544,8 @@ func init() {
 					SVCMode:       "L1T3",
 					BitrateMode:   "cbr",
 				},
-				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_h264_1080_30", "vaapi"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsSVCEncoding("h264high", "l1t3")),
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_h264_1080_30"},
 				ExtraData:         []string{"encode/desktop2-1280x720_850frames.vp9.webm", "encode/desktop2-1280x720_850frames.vp9.webm.json"},
 			},
 			{
@@ -550,7 +557,8 @@ func init() {
 					SVCMode:       "L1T2",
 					BitrateMode:   "cbr",
 				},
-				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp8_1080_30", "vaapi"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsSVCEncoding("vp8", "l1t2")),
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp8_1080_30"},
 				ExtraData:         []string{"encode/desktop2-1280x720_850frames.vp9.webm", "encode/desktop2-1280x720_850frames.vp9.webm.json"},
 			},
 			{
@@ -562,7 +570,8 @@ func init() {
 					SVCMode:       "L1T3",
 					BitrateMode:   "cbr",
 				},
-				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp8_1080_30", "vaapi"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsSVCEncoding("vp8", "l1t3")),
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp8_1080_30"},
 				ExtraData:         []string{"encode/desktop2-1280x720_850frames.vp9.webm", "encode/desktop2-1280x720_850frames.vp9.webm.json"},
 			},
 			{
@@ -574,7 +583,8 @@ func init() {
 					SVCMode:       "L1T2",
 					BitrateMode:   "cbr",
 				},
-				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp8_1080_30", "vaapi"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsSVCEncoding("vp8", "l1t2")),
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp8_1080_30"},
 				ExtraData:         []string{"encode/desktop2-1920x1080_490frames.vp9.webm", "encode/desktop2-1920x1080_490frames.vp9.webm.json"},
 			},
 			{
@@ -586,7 +596,8 @@ func init() {
 					SVCMode:       "L1T3",
 					BitrateMode:   "cbr",
 				},
-				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp8_1080_30", "vaapi"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsSVCEncoding("vp8", "l1t3")),
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp8_1080_30"},
 				ExtraData:         []string{"encode/desktop2-1920x1080_490frames.vp9.webm", "encode/desktop2-1920x1080_490frames.vp9.webm.json"},
 			},
 			{
@@ -598,7 +609,8 @@ func init() {
 					SVCMode:       "L2T3_KEY",
 					BitrateMode:   "cbr",
 				},
-				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp9_1080_30", "vaapi"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsSVCEncoding("vp9", "l2t3_key")),
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp9_1080_30"},
 				ExtraData:         []string{"encode/desktop2-960x540_850frames.vp9.webm", "encode/desktop2-960x540_850frames.vp9.webm.json"},
 			},
 			{
@@ -610,7 +622,8 @@ func init() {
 					SVCMode:       "L3T3_KEY",
 					BitrateMode:   "cbr",
 				},
-				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp9_1080_30", "vaapi"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsSVCEncoding("vp9", "l3t3_key")),
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp9_1080_30"},
 				ExtraData:         []string{"encode/desktop2-960x540_850frames.vp9.webm", "encode/desktop2-960x540_850frames.vp9.webm.json"},
 			},
 			{
@@ -622,7 +635,8 @@ func init() {
 					SVCMode:       "S2T3",
 					BitrateMode:   "cbr",
 				},
-				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp9_1080_30", "vaapi"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsSVCEncoding("vp9", "s2t3")),
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp9_1080_30"},
 				ExtraData:         []string{"encode/desktop2-960x540_850frames.vp9.webm", "encode/desktop2-960x540_850frames.vp9.webm.json"},
 			},
 			{
@@ -634,7 +648,8 @@ func init() {
 					SVCMode:       "L1T2",
 					BitrateMode:   "cbr",
 				},
-				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp9_1080_30", "vaapi"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsSVCEncoding("vp9", "l1t2")),
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp9_1080_30"},
 				ExtraData:         []string{"encode/desktop2-1280x720_850frames.vp9.webm", "encode/desktop2-1280x720_850frames.vp9.webm.json"},
 			},
 			{
@@ -646,7 +661,8 @@ func init() {
 					SVCMode:       "L1T3",
 					BitrateMode:   "cbr",
 				},
-				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp9_1080_30", "vaapi"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsSVCEncoding("vp9", "l1t3")),
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp9_1080_30"},
 				ExtraData:         []string{"encode/desktop2-1280x720_850frames.vp9.webm", "encode/desktop2-1280x720_850frames.vp9.webm.json"},
 			},
 			{
@@ -658,7 +674,8 @@ func init() {
 					SVCMode:       "L2T3_KEY",
 					BitrateMode:   "cbr",
 				},
-				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp9_1080_30", "vaapi"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsSVCEncoding("vp9", "l2t3_key")),
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp9_1080_30"},
 				ExtraData:         []string{"encode/desktop2-1280x720_850frames.vp9.webm", "encode/desktop2-1280x720_850frames.vp9.webm.json"},
 			},
 			{
@@ -670,7 +687,8 @@ func init() {
 					SVCMode:       "L3T3_KEY",
 					BitrateMode:   "cbr",
 				},
-				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp9_1080_30", "vaapi"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsSVCEncoding("vp9", "l3t3_key")),
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp9_1080_30"},
 				ExtraData:         []string{"encode/desktop2-1280x720_850frames.vp9.webm", "encode/desktop2-1280x720_850frames.vp9.webm.json"},
 			},
 			{
@@ -682,7 +700,8 @@ func init() {
 					SVCMode:       "S2T3",
 					BitrateMode:   "cbr",
 				},
-				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp9_1080_30", "vaapi"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsSVCEncoding("vp9", "s2t3")),
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp9_1080_30"},
 				ExtraData:         []string{"encode/desktop2-1280x720_850frames.vp9.webm", "encode/desktop2-1280x720_850frames.vp9.webm.json"},
 			},
 			{
@@ -694,7 +713,8 @@ func init() {
 					SVCMode:       "S3T3",
 					BitrateMode:   "cbr",
 				},
-				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp9_1080_30", "vaapi"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsSVCEncoding("vp9", "s3t3")),
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp9_1080_30"},
 				ExtraData:         []string{"encode/desktop2-1280x720_850frames.vp9.webm", "encode/desktop2-1280x720_850frames.vp9.webm.json"},
 			},
 			{
@@ -739,7 +759,8 @@ func init() {
 					SVCMode:       "L1T2",
 					BitrateMode:   "vbr",
 				},
-				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_h264_1080_30", "autotest-capability:hw_enc_h264_vbr", "vaapi"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsSVCEncoding("h264baseline", "l1t2")),
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_h264_1080_30", "autotest-capability:hw_enc_h264_vbr"},
 				ExtraData:         []string{"encode/desktop2-1280x720_850frames.vp9.webm", "encode/desktop2-1280x720_850frames.vp9.webm.json"},
 			},
 			{
@@ -751,7 +772,8 @@ func init() {
 					SVCMode:       "L1T2",
 					BitrateMode:   "vbr",
 				},
-				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_h264_1080_30", "autotest-capability:hw_enc_h264_vbr", "vaapi"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsSVCEncoding("h264main", "l1t2")),
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_h264_1080_30", "autotest-capability:hw_enc_h264_vbr"},
 				ExtraData:         []string{"encode/desktop2-1280x720_850frames.vp9.webm", "encode/desktop2-1280x720_850frames.vp9.webm.json"},
 			},
 			{
@@ -763,7 +785,8 @@ func init() {
 					SVCMode:       "L1T2",
 					BitrateMode:   "vbr",
 				},
-				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_h264_1080_30", "autotest-capability:hw_enc_h264_vbr", "vaapi"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsSVCEncoding("h264high", "l1t2")),
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_h264_1080_30", "autotest-capability:hw_enc_h264_vbr"},
 				ExtraData:         []string{"encode/desktop2-1280x720_850frames.vp9.webm", "encode/desktop2-1280x720_850frames.vp9.webm.json"},
 			},
 			{
@@ -775,7 +798,8 @@ func init() {
 					SVCMode:       "L1T3",
 					BitrateMode:   "vbr",
 				},
-				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_h264_1080_30", "autotest-capability:hw_enc_h264_vbr", "vaapi"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsSVCEncoding("h264baseline", "l1t3")),
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_h264_1080_30", "autotest-capability:hw_enc_h264_vbr"},
 				ExtraData:         []string{"encode/desktop2-1280x720_850frames.vp9.webm", "encode/desktop2-1280x720_850frames.vp9.webm.json"},
 			},
 			{
@@ -787,7 +811,8 @@ func init() {
 					SVCMode:       "L1T3",
 					BitrateMode:   "vbr",
 				},
-				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_h264_1080_30", "autotest-capability:hw_enc_h264_vbr", "vaapi"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsSVCEncoding("h264main", "l1t3")),
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_h264_1080_30", "autotest-capability:hw_enc_h264_vbr"},
 				ExtraData:         []string{"encode/desktop2-1280x720_850frames.vp9.webm", "encode/desktop2-1280x720_850frames.vp9.webm.json"},
 			},
 			{
@@ -799,7 +824,8 @@ func init() {
 					SVCMode:       "L1T3",
 					BitrateMode:   "vbr",
 				},
-				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_h264_1080_30", "autotest-capability:hw_enc_h264_vbr", "vaapi"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsSVCEncoding("h264high", "l1t3")),
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_h264_1080_30", "autotest-capability:hw_enc_h264_vbr"},
 				ExtraData:         []string{"encode/desktop2-1280x720_850frames.vp9.webm", "encode/desktop2-1280x720_850frames.vp9.webm.json"},
 			},
 		},

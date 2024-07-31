@@ -224,6 +224,7 @@ func TestEncodeAccelParams(t *testing.T) {
 		PSNRThreshold     float32
 		SVCMode           string
 		BitrateMode       string
+		ExtraHardwareDep  string
 		ExtraSoftwareDeps []string
 		ExtraData         []string
 	}
@@ -313,7 +314,8 @@ func TestEncodeAccelParams(t *testing.T) {
 				PSNRThreshold:     psnrThresholdSVC(codec, height, svcMode),
 				SVCMode:           strings.ToUpper(svcMode),
 				BitrateMode:       "cbr",
-				ExtraSoftwareDeps: append(encodeSoftwareDeps(codec, height, false), "vaapi"),
+				ExtraSoftwareDeps: append(encodeSoftwareDeps(codec, height, false)),
+				ExtraHardwareDep:  "hwdep.D(hwdep.SupportsSVCEncoding(\"" + codec + "\", \"" + svcMode + "\"))",
 				ExtraData:         []string{webMFile, webMJSONFile},
 			}
 			params = append(params, param)
@@ -329,9 +331,10 @@ func TestEncodeAccelParams(t *testing.T) {
 			webMJSONFile := webMFile + ".json"
 			deps := encodeSoftwareDeps(codec, height, true)
 			var svcModeStr string
+			var HardwareDep string
 			if svcMode != "" {
 				svcModeStr = "_" + svcMode
-				deps = append(deps, "vaapi")
+				HardwareDep = "hwdep.D(hwdep.SupportsSVCEncoding(\"" + codec + "\", \"" + svcMode + "\"))"
 			}
 			param := encodeAccelParam{
 				Name:              fmt.Sprintf("%s_720p%s_vbr", codec, svcModeStr),
@@ -340,6 +343,7 @@ func TestEncodeAccelParams(t *testing.T) {
 				PSNRThreshold:     psnrThreshold(codec, height),
 				SVCMode:           strings.ToUpper(svcMode),
 				BitrateMode:       "vbr",
+				ExtraHardwareDep:  HardwareDep,
 				ExtraSoftwareDeps: deps,
 				ExtraData:         []string{webMFile, webMJSONFile},
 			}
@@ -357,6 +361,9 @@ func TestEncodeAccelParams(t *testing.T) {
 	        {{ end }}
 	        BitrateMode : {{ .BitrateMode | fmt}},
 	        },
+	        {{ if .ExtraHardwareDep }}
+	        ExtraHardwareDeps: {{ .ExtraHardwareDep}},
+	        {{ end }}
 	        ExtraSoftwareDeps: {{ .ExtraSoftwareDeps | fmt}},
 	        ExtraData: {{ .ExtraData | fmt}},
 		},
