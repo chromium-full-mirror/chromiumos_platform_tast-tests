@@ -109,6 +109,12 @@ func VPNDNS(ctx context.Context, s *testing.State) {
 	s.AttachErrorHandlers(hookEnv.OnErrorHandler, hookEnv.OnFatalHandler)
 	defer hookEnv.TearDownWithLogFailures(cleanupCtx, s.HasError)
 
+	// Reset DoH mode to off in case that it's modified by previous tests. If
+	// there is an unreachable DoH search the following DNS queries will fail.
+	if _, err := dns.SetDoHModeViaShill(ctx, dns.DoHOff, "" /*dohProvider*/); err != nil {
+		s.Fatal("Failed to set DoH mode to off: ", err)
+	}
+
 	// Set up test topology:
 	// DUT---router---server (w/DNS: v?.foo.bar)
 	//            |---vpn (w/DNS: domain.private)
