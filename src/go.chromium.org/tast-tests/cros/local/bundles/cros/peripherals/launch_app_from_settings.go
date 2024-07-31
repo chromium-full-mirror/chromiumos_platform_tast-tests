@@ -150,7 +150,7 @@ func LaunchAppFromSettings(ctx context.Context, s *testing.State) {
 		// Scroll down once to make sure the entry is fully in view and clickable.
 		uiauto.Repeat(5, kb.AccelAction("Down")),
 		uiauto.Sleep(time.Second),
-		ui.LeftClick(entryFinder),
+		ui.DoDefault(entryFinder),
 	)(ctx); err != nil {
 		s.Fatal("Failed to click entry: ", err)
 	}
