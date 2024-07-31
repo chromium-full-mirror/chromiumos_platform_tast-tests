@@ -189,7 +189,7 @@ func VPNDNS(ctx context.Context, s *testing.State) {
 	// Verify the VPN DNS config.
 	networkConfig, err := conn.Service().GetNetworkConfig(ctx)
 	if err != nil {
-		s.Fatal("Failed to get NetworkConfig on VPN service")
+		s.Fatal("Failed to get NetworkConfig on VPN service: ", err)
 	}
 	// Always log the name servers configured on the service.
 	s.Log("Got VPN DNS configuration: ", networkConfig.NameServers)
