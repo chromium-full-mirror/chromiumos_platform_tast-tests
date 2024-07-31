@@ -25,7 +25,7 @@ func init() {
 		Contacts: []string{"cros-networking@google.com", "jiejiang@google.com"},
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"wifi"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Fixture:      "shillSimulatedWiFi",
