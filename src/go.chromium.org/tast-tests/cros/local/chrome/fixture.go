@@ -469,6 +469,22 @@ func init() {
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: fixture.ChromeLoggedInDisableSearchEngineChoice,
+		Desc: "Logged into a user session, disable the search engine choice screen",
+		Contacts: []string{
+			"dgn@chromium.org",
+			"tast-core@google.com",
+		},
+		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
+			return []Option{ExtraArgs("--disable-search-engine-choice-screen")}, nil
+		}),
+		BugComponent:    "b:1364850",
+		SetUpTimeout:    FixtureSetUpTimeout,
+		ResetTimeout:    ResetTimeout,
+		TearDownTimeout: ResetTimeout,
+	})
 }
 
 // OptionsCallback is the function used to set up the fixture by returning Chrome options.

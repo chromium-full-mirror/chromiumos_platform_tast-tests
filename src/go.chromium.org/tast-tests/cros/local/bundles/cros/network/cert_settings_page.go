@@ -15,6 +15,7 @@ import (
 	"regexp"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/fixture"
 	utils "go.chromium.org/tast-tests/cros/local/certpageutils"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
@@ -89,7 +90,7 @@ type filesConfig struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CertSettingsPage,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test that chrome://settings/certificates page can import and use client and CA certificates",
 		Contacts: []string{
 			"chromeos-commercial-networking@google.com", // Team
@@ -105,8 +106,8 @@ func init() {
 			"group:network",
 			"network_e2e",
 		},
-		SoftwareDeps: []string{"chrome", "lacros", "lacros_stable"},
-		Fixture:      "lacros",
+		SoftwareDeps: []string{"chrome"},
+		Fixture:      fixture.ChromeLoggedInDisableSearchEngineChoice,
 		Timeout:      5 * time.Minute,
 		Data: []string{clientCertFileName, rootCertFileName,
 			websiteCertFileName, websiteKeyFileName, ecClientCertFileName,
@@ -363,7 +364,7 @@ func setCACertTrust(ctx context.Context, s *testing.State, ui *uiauto.Context, c
 // the CA certificate and it can be added back to it.
 func CertSettingsPage(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
-	browserType := browser.TypeLacros
+	browserType := browser.TypeAsh
 
 	// Reserve ten seconds for cleanup.
 	cleanupCtx := ctx

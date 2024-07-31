@@ -72,4 +72,6 @@ const (
 	ChromeLoggedInWithOak = "chromeLoggedInWithOak"
 	// Logged into a user session with FaceGaze enabled.
 	ChromeLoggedInDisableSyncWithFaceGaze = "chromeLoggedInDisableSyncWithFaceGaze"
+	// Logged into a user session, disable the search engine choice screen.
+	ChromeLoggedInDisableSearchEngineChoice = "chromeLoggedInDisableSearchEngineChoice"
 )
