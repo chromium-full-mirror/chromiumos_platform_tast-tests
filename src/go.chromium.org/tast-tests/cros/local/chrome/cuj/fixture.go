@@ -1192,14 +1192,14 @@ func prepareDocsBlockerExtension(s *testing.FixtState) (string, error) {
 // GetDocsBlockerConn returns a connection to the DocsBlocker background page
 // and waits for the background page to finish loading before it returns.
 func GetDocsBlockerConn(ctx context.Context, br *browser.Browser) (*browser.Conn, error) {
-	bgURL := "chrome-extension://" + docsBlockerExtensionID + "/_generated_background_page.html"
+	bgURL := "chrome-extension://" + docsBlockerExtensionID + "/background.js"
 
 	conn, err := br.NewConnForTarget(ctx, chrome.MatchTargetURL(bgURL))
 	if err != nil {
 		return nil, errors.Wrap(err, "DocsBlocker extension not found")
 	}
 
-	if err = conn.WaitForExpr(ctx, `document.readyState === "complete"`); err != nil {
+	if err = conn.WaitForExpr(ctx, `typeof keepAliveTimerId === "number" && keepAliveTimerId !== 0`); err != nil {
 		conn.Close()
 		return nil, errors.Wrap(err, "failed to wait for DocsBlocker extension")
 	}

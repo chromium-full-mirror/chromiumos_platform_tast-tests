@@ -28,6 +28,12 @@ import (
 // tastObjectGroup is the object group used for releasing remote objects owned by Tast.
 const tastObjectGroup = "TastObjectGroup"
 
+// Target types.
+const (
+	TargetTypePage          = "page"
+	TargetTypeServiceWorker = "service_worker"
+)
+
 // ErrUndefinedOut is the error returned when the result of some javascript is
 // undefined, but you attempt to store it in a value.
 var ErrUndefinedOut = errors.New("attempting to output undefined into out - out should be nil, or a value should be returned")
@@ -40,7 +46,7 @@ type Conn struct {
 }
 
 // NewConn creates a new connection to the given id.
-func (s *Session) NewConn(ctx context.Context, id target.ID) (conn *Conn, retErr error) {
+func (s *Session) NewConn(ctx context.Context, id target.ID, targetType string) (conn *Conn, retErr error) {
 	testing.ContextLog(ctx, "Connecting to Chrome target ", string(id))
 	co, err := s.manager.Dial(ctx, id)
 	if err != nil {
@@ -53,16 +59,15 @@ func (s *Session) NewConn(ctx context.Context, id target.ID) (conn *Conn, retErr
 	}()
 
 	cl := cdp.NewClient(co)
-	if _, err := cl.Target.AttachToTarget(ctx, &target.AttachToTargetArgs{TargetID: id}); err != nil {
-		return nil, err
-	}
 
 	if err := cl.Runtime.Enable(ctx); err != nil {
 		return nil, err
 	}
 
-	if err := cl.Page.Enable(ctx); err != nil {
-		return nil, err
+	if targetType == TargetTypePage {
+		if err := cl.Page.Enable(ctx); err != nil {
+			return nil, err
+		}
 	}
 
 	return &Conn{

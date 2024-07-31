@@ -95,7 +95,7 @@ func saveScreenshotCDP(ctx context.Context, dir string) error {
 		return errors.New("the background page of the test extension not found")
 	}
 
-	co, err := sm.NewConn(ctx, all[0].TargetID)
+	co, err := sm.NewConn(ctx, all[0].TargetID, all[0].Type)
 	if err != nil {
 		return errors.Wrap(err, "failed to make a new Conn")
 	}

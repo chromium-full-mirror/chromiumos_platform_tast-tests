@@ -1,16 +1,16 @@
 {
-  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoinxsAeZtUrpdz8qDItNAUE+hYnYxVF5zYM15JGIMyKPFf4vyDyo5NAjnsj6kkTTxGUMlLkAFZ29ikD276P4GC8/OyZCJ2qQrK3BQNvyF1gOjcF4FSeWUr5WhFXL50HE4MTc9mmigl4JIH+IkUqnneSUDEy/vgueNMgRyAKzRVFlMSx1Y2oMkYzj91XzxW/+JudpFZzLUcKo/uW21mCcxMVbsPZWZuK71OLV96Jy9yBkLAWJD832ojQgHocjcUCXKYRugikNoXDPjL5jp6HVRb17i4MUrRvXkC2Fj5gF8O/S2hguMmN/z6GzzfFgJTOEzFsZTHL5LOlL8w5VYMF1AQIDAQAB",
-  "manifest_version": 2,
-  "name": "Docs Blocker For Test",
-  "version": "0.1",
+  "background": {
+    "service_worker": "background.js"
+  },
   "description": "Blocks Docs network requests to force offline mode for test",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoinxsAeZtUrpdz8qDItNAUE+hYnYxVF5zYM15JGIMyKPFf4vyDyo5NAjnsj6kkTTxGUMlLkAFZ29ikD276P4GC8/OyZCJ2qQrK3BQNvyF1gOjcF4FSeWUr5WhFXL50HE4MTc9mmigl4JIH+IkUqnneSUDEy/vgueNMgRyAKzRVFlMSx1Y2oMkYzj91XzxW/+JudpFZzLUcKo/uW21mCcxMVbsPZWZuK71OLV96Jy9yBkLAWJD832ojQgHocjcUCXKYRugikNoXDPjL5jp6HVRb17i4MUrRvXkC2Fj5gF8O/S2hguMmN/z6GzzfFgJTOEzFsZTHL5LOlL8w5VYMF1AQIDAQAB",
+  "manifest_version": 3,
+  "name": "Docs Blocker For Test",
   "permissions": [
     "webRequest",
     "webRequestBlocking",
     "*://docs.google.com/",
     "*://*.gstatic.com/"
   ],
-  "background": {
-    "scripts": ["background.js"]
-  }
+  "version": "0.1"
 }

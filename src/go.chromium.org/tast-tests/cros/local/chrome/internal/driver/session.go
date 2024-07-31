@@ -115,7 +115,7 @@ func (s *Session) NewConn(ctx context.Context, url string, opts ...cdputil.Creat
 		return nil, err
 	}
 
-	conn, err := s.newConnInternal(ctx, targetID, url)
+	conn, err := s.newConnInternal(ctx, targetID, cdputil.TargetTypePage, url)
 	if err != nil {
 		return nil, err
 	}
@@ -134,8 +134,8 @@ func (s *Session) NewConn(ctx context.Context, url string, opts ...cdputil.Creat
 
 // newConnInternal is a convenience function that creates a new Conn connected to the specified target.
 // url is only used for logging JavaScript console messages.
-func (s *Session) newConnInternal(ctx context.Context, id TargetID, url string) (*Conn, error) {
-	return NewConn(ctx, s.devsess, id, s.agg, url, s.watcher.ReplaceErr)
+func (s *Session) newConnInternal(ctx context.Context, id TargetID, targetType, url string) (*Conn, error) {
+	return NewConn(ctx, s.devsess, id, targetType, s.agg, url, s.watcher.ReplaceErr)
 }
 
 // Target describes a DevTools target.
@@ -165,7 +165,7 @@ func MatchTargetURLPrefix(prefix string) TargetMatcher {
 
 // MatchAllPages returns a TargetMatcher that matches all targets that are pages.
 func MatchAllPages() TargetMatcher {
-	return func(t *Target) bool { return t.Type == "page" }
+	return func(t *Target) bool { return t.Type == cdputil.TargetTypePage }
 }
 
 // NewConnForTarget iterates through all available targets and returns a connection to the
@@ -180,7 +180,7 @@ func (s *Session) NewConnForTarget(ctx context.Context, tm TargetMatcher) (*Conn
 	if err != nil {
 		return nil, s.watcher.ReplaceErr(err)
 	}
-	return s.newConnInternal(ctx, t.TargetID, t.URL)
+	return s.newConnInternal(ctx, t.TargetID, t.Type, t.URL)
 }
 
 // TryNewConnForTarget tries to connect to the matched target without waiting. It iterates through all
@@ -196,7 +196,7 @@ func (s *Session) TryNewConnForTarget(ctx context.Context, tm TargetMatcher) (*C
 		return nil, errors.Errorf("unexpected numbers of targets: got %v, want 1", len(matched))
 	}
 
-	return s.newConnInternal(ctx, matched[0].TargetID, matched[0].URL)
+	return s.newConnInternal(ctx, matched[0].TargetID, matched[0].Type, matched[0].URL)
 }
 
 // FindTargets returns the info about Targets, which satisfies the given cond condition.

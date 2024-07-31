@@ -26,3 +26,13 @@ function ForceDocsOffline(offlineRequested) {
     chrome.webRequest.onBeforeRequest.removeListener(onBeforeRequestListener);
   }
 }
+
+// Keeps the script alive.
+let keepAliveTimerId;
+this.oninstall =  (e) => {
+  // Activate this worker now.
+  this.skipWaiting();
+
+  // Keep the worker alive.
+  keepAliveTimerId = setInterval(chrome.runtime.getPlatformInfo, 25 * 1000);
+};
