@@ -50,14 +50,14 @@ func init() {
 		},
 		SoftwareDeps: []string{"chrome"},
 		// Restrict tests to models that we have deployed intrusive measurements for.
-		HardwareDeps: hwdep.D(hwdep.Model("crota", "redrix")),
+		HardwareDeps: hwdep.D(hwdep.Model("crota", "redrix", "rusty")),
 		Fixture:      "callboxManagedFixture",
 		Timeout:      15 * time.Minute,
 		Vars:         []string{"servo"},
 		Params: []testing.Param{
 			{
 				Name:      "low_power",
-				ExtraData: []string{"cellular_power_crota_FM101.xml", "cellular_power_redrix_FM350.xml"},
+				ExtraData: []string{"cellular_power_crota_FM101.xml", "cellular_power_redrix_FM350.xml", "cellular_power_rusty_EM060.xml"},
 				Val: modulePowerTestCase{
 					connectionOptions: &manager.ConfigureCallboxRequestBody{
 						CellularType: manager.CellularTechnologyLTE,
