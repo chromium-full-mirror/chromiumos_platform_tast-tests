@@ -127,17 +127,6 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:            "ccaTestBridgeReadyLacros",
-		Desc:            "Set up test bridge for CCA",
-		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
-		BugComponent:    "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
-		Impl:            &fixture{lacros: true},
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    testBridgeSetUpTimeout,
-		TearDownTimeout: tearDownTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
 		Name: "ccaTestBridgeReadyWithFakeCamera",
 		Desc: `Set up test bridge for CCA with fake camera. Any tests using this
 		       fixture should switch the camera scene before opening camera`,
@@ -155,18 +144,6 @@ func init() {
 		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
 		BugComponent:    "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Impl:            &fixture{useCameraType: testutil.UseFakeVCDCamera},
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    testBridgeSetUpTimeout,
-		TearDownTimeout: tearDownTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name: "ccaTestBridgeReadyWithFakeCameraLacros",
-		Desc: `Set up test bridge for CCA with fake camera. Any tests using this
-		       fixture should switch the camera scene before opening camera`,
-		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
-		BugComponent:    "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
-		Impl:            &fixture{useCameraType: testutil.UseFakeVCDCamera, fakeScene: true, lacros: true},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
 		TearDownTimeout: tearDownTimeout,
@@ -327,17 +304,6 @@ func init() {
 		Contacts:        []string{"chromeos-camera-eng@google.com", "esker@chromium.org"},
 		BugComponent:    "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Impl:            &fixture{powerTest: true, useCameraType: testutil.UseFakeVCDCamera},
-		SetUpTimeout:    powerSetUpTimeout,
-		ResetTimeout:    testBridgeSetUpTimeout,
-		TearDownTimeout: powerTearDownTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:            "ccaPowerReview",
-		Desc:            "Set up test bridge for CCA for a power review Test",
-		Contacts:        []string{"chromeos-camera-eng@google.com", "esker@chromium.org"},
-		BugComponent:    "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
-		Impl:            &fixture{powerReview: true},
 		SetUpTimeout:    powerSetUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
 		TearDownTimeout: powerTearDownTimeout,
