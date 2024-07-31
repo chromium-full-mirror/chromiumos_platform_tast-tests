@@ -22,11 +22,7 @@ func init() {
 		BugComponent: "b:516669",
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBooted",
-		Attr:         []string{
-			// Disabled due to b/354254085
-			// "group:mainline",
-			// "group:hw_agnostic"
-		},
+		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_container"},
 		}, {
