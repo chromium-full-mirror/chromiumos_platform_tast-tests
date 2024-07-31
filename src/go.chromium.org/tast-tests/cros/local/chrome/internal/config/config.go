@@ -254,6 +254,13 @@ func (c *Config) ForceManualEnrollment() bool { return c.m.ForceManualEnrollment
 // EnableOOBETestAPI returns true if OOBE helper functions for authentication are needed.
 func (c *Config) EnableOOBETestAPI() bool { return c.m.EnableOOBETestAPI }
 
+// DisableExtensionManifestV2Disabled returns true if
+// `ExtensionManifestV2Deprecation` feature should be disabled.
+// TODO(b/354048099): Remove after test extension is migrated to manifest V3.
+func (c *Config) DisableExtensionManifestV2Disabled() bool {
+	return c.m.DisableExtensionManifestV2Disabled
+}
+
 // MutableConfig is a mutable version of Config. MutableConfig is wrapped with
 // Config to prevent mutation after it is returned by NewConfig.
 //
@@ -266,57 +273,58 @@ func (c *Config) EnableOOBETestAPI() bool { return c.m.EnableOOBETestAPI }
 // - "customized": Reuse checking logic is expected to be customized in customizedReuseCheck() function.
 // This tag must be set for every field with one of the above values. Otherwise, unit test will fail.
 type MutableConfig struct {
-	Creds                           credconfig.Creds `reuse_match:"true"`
-	NormalizedUser                  string           `reuse_match:"true"`
-	KeepState                       bool             `reuse_match:"false"`
-	KeepOwnership                   bool             `reuse_match:"true"`
-	DeferLogin                      bool             `reuse_match:"customized"`
-	ReauthMode                      bool             `reuse_match:"customized"`
-	EnableRestoreTabs               bool             `reuse_match:"false"`
-	LoginMode                       LoginMode        `reuse_match:"customized"`
-	TryReuseSession                 bool             `reuse_match:"false"`
-	ForceReuseSession               bool             `reuse_match:"false"`
-	EnableLoginVerboseLogs          bool             `reuse_match:"true"`
-	VKEnabled                       bool             `reuse_match:"true"`
-	SkipOOBEAfterLogin              bool             `reuse_match:"false"`
-	WaitForCryptohome               bool             `reuse_match:"false"`
-	CustomLoginTimeout              int64            `reuse_match:"false"` // time.Duration can not be serialized to JSON. Store duration in nanoseconds.
-	InstallWebApp                   bool             `reuse_match:"true"`
-	Region                          string           `reuse_match:"true"`
-	PolicyEnabled                   bool             `reuse_match:"true"`
-	DMSAddr                         string           `reuse_match:"true"`
-	RealtimeReportingAddr           string           `reuse_match:"true"`
-	EncryptedReportingAddr          string           `reuse_match:"true"`
-	EnrollMode                      EnrollMode       `reuse_match:"true"`
-	EnrollmentCreds                 credconfig.Creds `reuse_match:"true"`
-	DisablePolicyKeyVerification    bool             `reuse_match:"true"`
-	ARCMode                         ARCMode          `reuse_match:"true"`
-	ARCUseHugePages                 bool             `reuse_match:"true"`
-	UnRestrictARCCPU                bool             `reuse_match:"true"`
-	BreakpadTestMode                bool             `reuse_match:"true"`
-	ExtraArgs                       []string         `reuse_match:"true"`
-	LacrosExtraArgs                 []string         `reuse_match:"true"`
-	EnableFeatures                  []string         `reuse_match:"true"`
-	LacrosEnableFeatures            []string         `reuse_match:"true"`
-	DisableFeatures                 []string         `reuse_match:"true"`
-	LacrosDisableFeatures           []string         `reuse_match:"true"`
-	ExtraExtDirs                    []string         `reuse_match:"customized"`
-	LacrosExtraExtDirs              []string         `reuse_match:"customized"`
-	SigninExtKey                    string           `reuse_match:"customized"`
-	SkipForceOnlineSignInForTesting bool             `reuse_match:"true"`
-	RemoveNotification              bool             `reuse_match:"true"`
-	HideCrashRestoreBubble          bool             `reuse_match:"true"`
-	ForceLaunchBrowser              bool             `reuse_match:"true"`
-	EphemeralUser                   bool             `reuse_match:"true"`
-	UseSandboxGaia                  bool             `reuse_match:"true"`
-	TestExtOAuthClientID            string           `reuse_match:"true"`
-	EnableHIDScreenOnOOBE           bool             `reuse_match:"true"`
-	EnableStackSampledMetrics       bool             `reuse_match:"true"`
-	EnableLacrosStackSampledMetrics bool             `reuse_match:"true"`
-	FieldTrialConfig                string           `reuse_match:"true"`
-	EnableHDR                       bool             `reuse_match:"false"`
-	ForceManualEnrollment           bool             `reuse_match:"true"`
-	EnableOOBETestAPI               bool             `reuse_match:"true"`
+	Creds                              credconfig.Creds `reuse_match:"true"`
+	NormalizedUser                     string           `reuse_match:"true"`
+	KeepState                          bool             `reuse_match:"false"`
+	KeepOwnership                      bool             `reuse_match:"true"`
+	DeferLogin                         bool             `reuse_match:"customized"`
+	ReauthMode                         bool             `reuse_match:"customized"`
+	EnableRestoreTabs                  bool             `reuse_match:"false"`
+	LoginMode                          LoginMode        `reuse_match:"customized"`
+	TryReuseSession                    bool             `reuse_match:"false"`
+	ForceReuseSession                  bool             `reuse_match:"false"`
+	EnableLoginVerboseLogs             bool             `reuse_match:"true"`
+	VKEnabled                          bool             `reuse_match:"true"`
+	SkipOOBEAfterLogin                 bool             `reuse_match:"false"`
+	WaitForCryptohome                  bool             `reuse_match:"false"`
+	CustomLoginTimeout                 int64            `reuse_match:"false"` // time.Duration can not be serialized to JSON. Store duration in nanoseconds.
+	InstallWebApp                      bool             `reuse_match:"true"`
+	Region                             string           `reuse_match:"true"`
+	PolicyEnabled                      bool             `reuse_match:"true"`
+	DMSAddr                            string           `reuse_match:"true"`
+	RealtimeReportingAddr              string           `reuse_match:"true"`
+	EncryptedReportingAddr             string           `reuse_match:"true"`
+	EnrollMode                         EnrollMode       `reuse_match:"true"`
+	EnrollmentCreds                    credconfig.Creds `reuse_match:"true"`
+	DisablePolicyKeyVerification       bool             `reuse_match:"true"`
+	ARCMode                            ARCMode          `reuse_match:"true"`
+	ARCUseHugePages                    bool             `reuse_match:"true"`
+	UnRestrictARCCPU                   bool             `reuse_match:"true"`
+	BreakpadTestMode                   bool             `reuse_match:"true"`
+	ExtraArgs                          []string         `reuse_match:"true"`
+	LacrosExtraArgs                    []string         `reuse_match:"true"`
+	EnableFeatures                     []string         `reuse_match:"true"`
+	LacrosEnableFeatures               []string         `reuse_match:"true"`
+	DisableFeatures                    []string         `reuse_match:"true"`
+	LacrosDisableFeatures              []string         `reuse_match:"true"`
+	ExtraExtDirs                       []string         `reuse_match:"customized"`
+	LacrosExtraExtDirs                 []string         `reuse_match:"customized"`
+	SigninExtKey                       string           `reuse_match:"customized"`
+	SkipForceOnlineSignInForTesting    bool             `reuse_match:"true"`
+	RemoveNotification                 bool             `reuse_match:"true"`
+	HideCrashRestoreBubble             bool             `reuse_match:"true"`
+	ForceLaunchBrowser                 bool             `reuse_match:"true"`
+	EphemeralUser                      bool             `reuse_match:"true"`
+	UseSandboxGaia                     bool             `reuse_match:"true"`
+	TestExtOAuthClientID               string           `reuse_match:"true"`
+	EnableHIDScreenOnOOBE              bool             `reuse_match:"true"`
+	EnableStackSampledMetrics          bool             `reuse_match:"true"`
+	EnableLacrosStackSampledMetrics    bool             `reuse_match:"true"`
+	FieldTrialConfig                   string           `reuse_match:"true"`
+	EnableHDR                          bool             `reuse_match:"false"`
+	ForceManualEnrollment              bool             `reuse_match:"true"`
+	EnableOOBETestAPI                  bool             `reuse_match:"true"`
+	DisableExtensionManifestV2Disabled bool             `reuse_match:"true"`
 }
 
 // Option is a self-referential function can be used to configure Chrome.
@@ -328,33 +336,34 @@ type Option func(cfg *MutableConfig) error
 func NewConfig(opts []Option) (*Config, error) {
 	cfg := &Config{
 		m: MutableConfig{
-			Creds:                           defaultCreds,
-			KeepState:                       false,
-			KeepOwnership:                   false,
-			LoginMode:                       FakeLogin,
-			VKEnabled:                       false,
-			SkipOOBEAfterLogin:              true,
-			WaitForCryptohome:               true,
-			CustomLoginTimeout:              0,
-			EnableLoginVerboseLogs:          false,
-			InstallWebApp:                   false,
-			Region:                          "us",
-			PolicyEnabled:                   false,
-			EnrollMode:                      NoEnroll,
-			EnrollmentCreds:                 credconfig.Creds{},
-			DisablePolicyKeyVerification:    false,
-			BreakpadTestMode:                true,
-			EnableRestoreTabs:               false,
-			SkipForceOnlineSignInForTesting: false,
-			RemoveNotification:              true,
-			HideCrashRestoreBubble:          false,
-			ForceLaunchBrowser:              false,
-			EphemeralUser:                   false,
-			UseSandboxGaia:                  false,
-			EnableHIDScreenOnOOBE:           false,
-			EnableStackSampledMetrics:       false,
-			EnableLacrosStackSampledMetrics: false,
-			EnableOOBETestAPI:               true,
+			Creds:                              defaultCreds,
+			KeepState:                          false,
+			KeepOwnership:                      false,
+			LoginMode:                          FakeLogin,
+			VKEnabled:                          false,
+			SkipOOBEAfterLogin:                 true,
+			WaitForCryptohome:                  true,
+			CustomLoginTimeout:                 0,
+			EnableLoginVerboseLogs:             false,
+			InstallWebApp:                      false,
+			Region:                             "us",
+			PolicyEnabled:                      false,
+			EnrollMode:                         NoEnroll,
+			EnrollmentCreds:                    credconfig.Creds{},
+			DisablePolicyKeyVerification:       false,
+			BreakpadTestMode:                   true,
+			EnableRestoreTabs:                  false,
+			SkipForceOnlineSignInForTesting:    false,
+			RemoveNotification:                 true,
+			HideCrashRestoreBubble:             false,
+			ForceLaunchBrowser:                 false,
+			EphemeralUser:                      false,
+			UseSandboxGaia:                     false,
+			EnableHIDScreenOnOOBE:              false,
+			EnableStackSampledMetrics:          false,
+			EnableLacrosStackSampledMetrics:    false,
+			EnableOOBETestAPI:                  true,
+			DisableExtensionManifestV2Disabled: true,
 		},
 	}
 
