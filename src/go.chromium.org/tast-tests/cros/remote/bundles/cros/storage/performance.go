@@ -405,6 +405,7 @@ func Performance(ctx context.Context, s *testing.State) {
 	err = util.TestConfig{}.
 		WithResultWriter(resultWriter).
 		WithDisk(disk).
+		WithSize(1024*1024*1024).
 		WithRunTimeSec(300).
 		WithJobFromFile(s.DataPath(val.DataPath)).
 		Run(ctx, s.DUT())
