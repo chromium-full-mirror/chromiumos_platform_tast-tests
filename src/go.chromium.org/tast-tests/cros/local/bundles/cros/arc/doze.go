@@ -39,7 +39,7 @@ func init() {
 		BugComponent: "b:537221",
 		SoftwareDeps: []string{"chrome", "android_vm", "gaia"},
 		Attr:         []string{"group:mainline", "informational"},
-		Timeout:      8 * time.Minute,
+		Timeout:      7 * time.Minute,
 		VarDeps:      []string{ui.GaiaPoolDefaultVarName},
 		Params: []testing.Param{{
 			Val: idleTestEntry{

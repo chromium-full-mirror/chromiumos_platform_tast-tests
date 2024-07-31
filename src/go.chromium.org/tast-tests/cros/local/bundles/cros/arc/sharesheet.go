@@ -40,7 +40,7 @@ func init() {
 		},
 		BugComponent: "b:1203766",
 		SoftwareDeps: []string{"chrome", "gaia"},
-		Timeout:      8 * time.Minute,
+		Timeout:      7 * time.Minute,
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_container"},

@@ -67,7 +67,7 @@ func init() {
 					"--disable-features=ArcRtVcpuDualCore,ArcRtVcpuQuadCore"},
 			},
 		}},
-		Timeout: 8 * time.Minute,
+		Timeout: 7 * time.Minute,
 	})
 }
 

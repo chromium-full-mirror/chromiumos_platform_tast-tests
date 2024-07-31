@@ -92,7 +92,7 @@ func init() {
 			ExtraData:         []string{arm64Exec},
 			ExtraSoftwareDeps: []string{"ndk_translation64"},
 		}},
-		Timeout: 8 * time.Minute,
+		Timeout: 7 * time.Minute,
 	})
 }
 
