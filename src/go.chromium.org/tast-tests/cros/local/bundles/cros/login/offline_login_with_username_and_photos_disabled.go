@@ -53,6 +53,8 @@ func init() {
 			// and photos disabled by policy.
 			Value: "screenplay-ed77a405-6f9c-45f1-b1dc-5787f741e82a",
 		}},
+		// Hide the Ethernet to simulate the offline environment.
+		Fixture: "ehide",
 	})
 }
 
@@ -173,7 +175,6 @@ func clickSignInAsExistingUserLink(ctx context.Context, oobeConn *chrome.Conn) e
 
 type helper struct {
 	Manager            *shill.Manager
-	enableEthernetFunc func(ctx context.Context)
 	enableWifiFunc     func(ctx context.Context)
 	enableCellularFunc func(ctx context.Context)
 }
@@ -181,12 +182,6 @@ type helper struct {
 func (h *helper) disableAllNetworkInterfaces(ctx context.Context) error {
 	ctx, cancel := ctxutil.Shorten(ctx, shill.EnableWaitTime*2)
 	defer cancel()
-
-	// Disable Ethernet if present and maybe re-enabling.
-	ethernetFunc, err := h.Manager.DisableTechnologyForTesting(ctx, shill.TechnologyEthernet)
-	if err != nil {
-		return errors.Wrap(err, "unable to disable Ethernet")
-	}
 
 	// Disable  Cellular if present and maybe re-enabling.
 	cellularFunc, err := h.Manager.DisableTechnologyForTesting(ctx, shill.TechnologyCellular)
@@ -200,7 +195,6 @@ func (h *helper) disableAllNetworkInterfaces(ctx context.Context) error {
 		return errors.Wrap(err, "unable to disable Wifi")
 	}
 
-	h.enableEthernetFunc = ethernetFunc
 	h.enableWifiFunc = wifiFunc
 	h.enableCellularFunc = cellularFunc
 
@@ -209,10 +203,6 @@ func (h *helper) disableAllNetworkInterfaces(ctx context.Context) error {
 
 // restoreAllNetworkInterfaces enable previously disabled interfaces.
 func (h *helper) restoreAllNetworkInterfaces(ctx context.Context) {
-	if h.enableEthernetFunc != nil {
-		h.enableEthernetFunc(ctx)
-	}
-
 	if h.enableWifiFunc != nil {
 		h.enableWifiFunc(ctx)
 	}
@@ -221,7 +211,6 @@ func (h *helper) restoreAllNetworkInterfaces(ctx context.Context) {
 		h.enableWifiFunc(ctx)
 	}
 
-	h.enableEthernetFunc = nil
 	h.enableWifiFunc = nil
 	h.enableCellularFunc = nil
 }
