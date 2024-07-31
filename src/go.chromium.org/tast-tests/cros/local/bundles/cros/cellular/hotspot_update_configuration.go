@@ -45,9 +45,44 @@ func init() {
 				ExtraAttr: []string{"cellular_carrier_local"},
 			},
 			{
+				Name:      "att",
+				Val:       "att",
+				ExtraAttr: []string{"cellular_carrier_att"},
+			},
+			{
 				Name:      "tmobile",
 				Val:       "tmobile",
 				ExtraAttr: []string{"cellular_carrier_tmobile"},
+			},
+			{
+				Name:      "softbank",
+				Val:       "softbank",
+				ExtraAttr: []string{"cellular_carrier_softbank"},
+			},
+			{
+				Name:      "amarisoft",
+				Val:       "amarisoft",
+				ExtraAttr: []string{"cellular_carrier_amarisoft"},
+			},
+			{
+				Name:      "vodafone",
+				Val:       "vodafone",
+				ExtraAttr: []string{"cellular_carrier_vodafone"},
+			},
+			{
+				Name:      "rakuten",
+				Val:       "rakuten",
+				ExtraAttr: []string{"cellular_carrier_rakuten"},
+			},
+			{
+				Name:      "ee",
+				Val:       "ee",
+				ExtraAttr: []string{"cellular_carrier_ee"},
+			},
+			{
+				Name:      "kddi",
+				Val:       "kddi",
+				ExtraAttr: []string{"cellular_carrier_kddi"},
 			},
 			{
 				Name:      "docomo",
@@ -55,9 +90,34 @@ func init() {
 				ExtraAttr: []string{"cellular_carrier_docomo"},
 			},
 			{
-				Name:      "softbank",
-				Val:       "softbank",
-				ExtraAttr: []string{"cellular_carrier_softbank"},
+				Name:      "fi",
+				Val:       "fi",
+				ExtraAttr: []string{"cellular_carrier_fi"},
+			},
+			{
+				Name:      "verizon",
+				Val:       "verizon",
+				ExtraAttr: []string{"cellular_carrier_verizon"},
+			},
+			{
+				Name:      "bell",
+				Val:       "bell",
+				ExtraAttr: []string{"cellular_carrier_bell"},
+			},
+			{
+				Name:      "roger",
+				Val:       "roger",
+				ExtraAttr: []string{"cellular_carrier_roger"},
+			},
+			{
+				Name:      "telus",
+				Val:       "telus",
+				ExtraAttr: []string{"cellular_carrier_telus"},
+			},
+			{
+				Name:      "rak",
+				Val:       "rak",
+				ExtraAttr: []string{"cellular_carrier_rak"},
 			},
 		},
 	})
@@ -69,7 +129,7 @@ func HotspotUpdateConfiguration(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	cr, err := chrome.New(ctx, chrome.EnableFeatures("Hotspot", "TetheringExperimentalFunctionality"))
+	cr, err := chrome.New(ctx, chrome.EnableFeatures("TetheringExperimentalFunctionality"))
 	if err != nil {
 		s.Fatal("Failed to create a new instance of Chrome: ", err)
 	}

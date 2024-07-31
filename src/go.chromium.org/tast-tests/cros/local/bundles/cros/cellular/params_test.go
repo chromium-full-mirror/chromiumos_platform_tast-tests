@@ -17,9 +17,16 @@ import (
 
 // Map tests to whether or not they belong in AVL.
 var standardTests = map[string]bool{
-	"is_connected.go":          false,
-	"smoke.go":                 true,
-	"smoke_ip_connectivity.go": true,
+	"hotspot_abort_enable.go":                         false,
+	"hotspot_auto_disable.go":                         false,
+	"hotspot_disabled_when_no_upstream_network.go":    false,
+	"hotspot_enable_disable_in_lock_screen.go":        false,
+	"hotspot_policy.go":                               false,
+	"hotspot_update_configuration.go":                 false,
+	"hotspot_update_configuration_when_hotspot_on.go": false,
+	"is_connected.go":                                 false,
+	"smoke.go":                                        true,
+	"smoke_ip_connectivity.go":                        true,
 }
 
 func TestFixTestParams(t *testing.T) {
