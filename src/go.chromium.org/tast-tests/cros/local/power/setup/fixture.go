@@ -968,7 +968,10 @@ func init() {
 				chrome.EnableFeatures("Mahi"),
 			},
 			ExtraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-				return []chrome.Option{chrome.ExtraArgs("--mahi-feature-key=" + s.RequiredVar("mahi.featureTestKey"))}, nil
+				return []chrome.Option{
+					chrome.ExtraArgs("--mahi-feature-key=" + s.RequiredVar("mahi.featureTestKey")),
+					chrome.ExtraArgs("--mahi-restrictions-override"),
+				}, nil
 			},
 		}),
 		SetUpTimeout:    SetUpTimeout,
