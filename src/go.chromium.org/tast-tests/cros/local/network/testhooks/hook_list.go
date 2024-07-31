@@ -7,6 +7,7 @@ package testhooks
 import (
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/vm"
 )
 
 // This file contains the available hook list.
@@ -34,6 +35,16 @@ func NewDumpChromeOnFailureHook(cr *chrome.Chrome) hook {
 			return cr
 		},
 	}
+}
+
+// NewDumpCrostiniOnFailureHook creates a hook which dumps network information
+// inside both Crostini (the inner container) and Termina (the outer VM).
+// s.AttachErrorHandlers() should be called to make this hook have effect. The
+// passed in crostini can be nil, in which case the execution of this hook will
+// be skipped. This might be helpful if the test only holds this object
+// conditionally, so that it won't need to build the hook list conditionally.
+func NewDumpCrostiniOnFailureHook(crostini *vm.Container) hook {
+	return &dumpCrostiniOnFailureHook{crostini: crostini}
 }
 
 // NewDumpChromeOnFailureHookWithGetter is same as NewDumpChromeOnFailureHook,

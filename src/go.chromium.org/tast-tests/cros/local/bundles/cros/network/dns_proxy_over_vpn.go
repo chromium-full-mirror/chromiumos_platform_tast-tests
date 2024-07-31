@@ -150,6 +150,7 @@ func DNSProxyOverVPN(ctx context.Context, s *testing.State) {
 		testhooks.NewTcpdumpHook(),
 		testhooks.NewDumpHostOnFailureHook(),
 		testhooks.NewDumpARCOnFailureHook(a),
+		testhooks.NewDumpCrostiniOnFailureHook(cont),
 	)
 	if err != nil {
 		s.Fatal("Failed to run network test hooks: ", err)
