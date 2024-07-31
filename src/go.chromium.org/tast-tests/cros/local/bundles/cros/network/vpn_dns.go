@@ -11,9 +11,9 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/dns"
-	"go.chromium.org/tast-tests/cros/local/network/dumputil"
 	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast-tests/cros/local/network/routing"
+	"go.chromium.org/tast-tests/cros/local/network/testhooks"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/dnsmasq"
 	"go.chromium.org/tast-tests/cros/local/network/vpn"
@@ -98,9 +98,16 @@ func VPNDNS(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, 10*time.Second)
 	defer cancel()
 
-	// Dump network info on failure.
-	errorHandler := dumputil.CreateErrorHandler(cleanupCtx)
-	s.AttachErrorHandlers(errorHandler, errorHandler)
+	hookEnv, err := testhooks.RunNetworkTestHooks(ctx,
+		// net.log is saved by vpn fixture, skip the SaveNetLogHook here.
+		testhooks.NewTcpdumpHook(),
+		testhooks.NewDumpHostOnFailureHook(),
+	)
+	if err != nil {
+		s.Fatal("Failed to run network test hooks: ", err)
+	}
+	s.AttachErrorHandlers(hookEnv.OnErrorHandler, hookEnv.OnFatalHandler)
+	defer hookEnv.TearDownWithLogFailures(cleanupCtx, s.HasError)
 
 	// Set up test topology:
 	// DUT---router---server (w/DNS: v?.foo.bar)
