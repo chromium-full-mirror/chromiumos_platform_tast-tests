@@ -61,7 +61,7 @@ func init() {
 			Name:      "captive_portal",
 			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineCaptivePortal),
 			Fixture:   "crosHealthdRunning",
-			ExtraAttr: []string{"informational"},
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
 			// Contact: weiluanwang@google.com
 			// Cannot be added to DiagnosticsPass.* since the result would be

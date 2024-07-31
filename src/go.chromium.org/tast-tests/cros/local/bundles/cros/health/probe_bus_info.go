@@ -108,7 +108,7 @@ func init() {
 		}, {
 			// TODO(b/200837194): Remove this after the volteer2 issue fix.
 			Name:      "progif",
-			ExtraAttr: []string{"informational"},
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
 			Val: busInfoTestParams{
 				checkThunderbolt: false,
 				checkProgIf:      true,
