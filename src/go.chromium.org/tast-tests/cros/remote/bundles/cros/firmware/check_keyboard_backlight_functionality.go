@@ -106,6 +106,11 @@ func CheckKeyboardBacklightFunctionality(ctx context.Context, s *testing.State) 
 	}
 	defer chromeService.Close(ctx, &empty.Empty{})
 
+	// GoBigSleepLint: Wait a short amount to make sure the Chrome instance has initialized.
+	if err := testing.Sleep(ctx, 1*time.Second); err != nil {
+		s.Fatal("Failed to sleep: ", err)
+	}
+
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 15*time.Second)
 	defer cancel()
