@@ -39,7 +39,6 @@ func init() {
 			"xiuwen@google.com",
 		},
 		Attr: []string{
-			"group:external-dependency",
 			"group:cbx", "cbx_feature_enabled", "cbx_unstable",
 		},
 		TestBedDeps: []string{tbdep.Cbx(true)},

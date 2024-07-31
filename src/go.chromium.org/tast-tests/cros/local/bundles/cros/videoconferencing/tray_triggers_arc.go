@@ -35,7 +35,6 @@ func init() {
 		Timeout:      3 * time.Minute,
 		Attr: []string{
 			"group:camera_dependent",
-			"group:external-dependency",
 			"group:cbx", "cbx_feature_enabled", "cbx_unstable",
 		},
 		TestBedDeps:  []string{tbdep.Cbx(true)},
