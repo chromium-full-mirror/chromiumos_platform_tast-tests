@@ -13,7 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -58,11 +57,6 @@ func ConnectToRoamingSim(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to cellular service: ", err)
 	}
 
-	networkName, err := helper.GetCurrentNetworkName(ctx)
-	if err != nil || networkName == "" {
-		s.Fatal("Failed to fetch network name by iccid, err: ", err)
-	}
-
 	app, err := ossettings.OpenMobileDataSubpage(ctx, tconn, cr)
 	if err != nil {
 		s.Fatal("Failed to open mobile data sub page: ", err)
@@ -70,13 +64,11 @@ func ConnectToRoamingSim(ctx context.Context, s *testing.State) {
 	defer app.Close(cleanupCtx)
 	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnError(cleanupCtx, s.OutDir(), s.HasError, tconn, "ui_dump")
 
-	ui := uiauto.New(tconn).WithTimeout(60 * time.Second)
-
-	connectedCellularRow := nodewith.NameContaining(networkName + ", Connected").First()
-
-	if err = ui.LeftClick(connectedCellularRow)(ctx); err != nil {
-		s.Fatal("Failed to click on connected network row: ", err)
+	if err := ossettings.GoToActiveNetworkDetails(ctx, tconn); err != nil {
+		s.Fatal("Failed to go to active cellular network detail page view: ", err)
 	}
+
+	ui := uiauto.New(tconn).WithTimeout(60 * time.Second)
 
 	if err := uiauto.Combine("Disconnect from network",
 		ui.WaitUntilExists(ossettings.DisconnectButton),
