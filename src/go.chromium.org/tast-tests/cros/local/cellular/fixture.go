@@ -94,6 +94,17 @@ func init() {
 		Parent:          "cellularSuspendRemote",
 		Impl:            newCellularFixture(),
 		Vars:            []string{"autotest_host_info_labels"},
+		Params: []testing.FixtureParam{
+			// The default fixture using no param.
+			{},
+			// The fixture using Ethernet-hide (platform2/ethernet-hide).
+			// This will hide the Ethernet to simulate no Ethernet connection.
+			{
+				Name:          "ehide",
+				Parent:        "ehide",
+				ExtraContacts: []string{"chenzikai@google.com", "cros-networking@google.com"},
+			},
+		},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularStressLocal",
