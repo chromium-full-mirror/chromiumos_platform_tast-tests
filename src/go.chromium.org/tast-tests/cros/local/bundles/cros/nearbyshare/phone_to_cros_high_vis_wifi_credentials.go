@@ -41,6 +41,7 @@ func init() {
 					SecurityType:    nearbycommon.SecurityTypeWpaPsk,
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
+				ExtraSoftwareDeps: []string{"gaia"},
 				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
 			},
 
@@ -90,7 +91,7 @@ func PhoneToCrosHighVisWifiCredentials(ctx context.Context, s *testing.State) {
 	testWiFi := testData.WiFiName
 	testSecurityType := testData.SecurityType
 	testPassword := testData.WiFiPassword
-        isTestWiFiHidden := false
+	isTestWiFiHidden := false
 
 	s.Log("Starting receiving on the CrOS device")
 	receiver, err := nearbyshare.StartReceiving(ctx, tconn, cr)

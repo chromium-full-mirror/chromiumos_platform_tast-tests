@@ -46,7 +46,8 @@ func init() {
 					// Companion DUT 1 dependency.
 					"cd1": hwdep.D(hwdep.SkipOnModel(crossdevice.BGScanningStableSkipModels...)),
 				},
-				ExtraAttr: []string{"cross-device-remote_cq"},
+				ExtraSoftwareDeps: []string{"gaia"},
+				ExtraAttr:         []string{"cross-device-remote_cq"},
 			},
 
 			// Unstable subset of boards (sender).

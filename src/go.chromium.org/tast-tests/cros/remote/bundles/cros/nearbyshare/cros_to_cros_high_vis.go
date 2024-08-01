@@ -57,7 +57,8 @@ func init() {
 					// Companion DUT 1 dependency.
 					"cd1": hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
 				},
-				Timeout: nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
+				ExtraSoftwareDeps: []string{"gaia"},
+				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
 			},
 			{
 				Name:      "dataonline_noone_txt30mb",
