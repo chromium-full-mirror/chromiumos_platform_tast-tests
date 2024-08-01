@@ -249,7 +249,7 @@ func QosNetworkControl(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to restart DNS proxy: ", err)
 	}
 
-	dohServer := httpserver.New(httpserver.TCP4, "443", dns.DoHResponder(ctx, props.NameServers[0]), httpsCerts)
+	dohServer := httpserver.New(httpserver.TCP4, "443", dns.DoHResponder(ctx, props.NameServers[0], nil /*dohQueryLogs*/), httpsCerts)
 	if err := wifi.Router.StartServer(ctx, "doh_server", dohServer); err != nil {
 		s.Fatal("Failed to start DoH HTTPS server: ", err)
 	}

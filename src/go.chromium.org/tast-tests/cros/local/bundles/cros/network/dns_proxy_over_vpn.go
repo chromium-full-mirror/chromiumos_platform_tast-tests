@@ -194,9 +194,7 @@ func DNSProxyOverVPN(ctx context.Context, s *testing.State) {
 		if err := conn.Cleanup(cleanupCtx); err != nil {
 			s.Error("Failed to clean up VPN connection: ", err)
 		}
-		if err := vpnServer.Cleanup(cleanupCtx); err != nil {
-			s.Error("Failed to clean up VPN server: ", err)
-		}
+		vpnServer.Cleanup(cleanupCtx)
 	}()
 
 	// Wait for routing setup ready for guests. Host is verified in
@@ -252,7 +250,7 @@ func DNSProxyOverVPN(ctx context.Context, s *testing.State) {
 	}
 
 	// Block DNS queries over VPN through iptables.
-	if errs := dns.NewVPNBlock(vpnServer.NetNSName).Run(ctx, func(ctx context.Context) {
+	if errs := dns.NewVPNBlock(vpnServer.Env.NetNSName).Run(ctx, func(ctx context.Context) {
 		if errs := dns.TestQueryDNSProxy(ctx, vpnBlockedTC, a, cont, dns.NewQueryOptions()); len(errs) != 0 {
 			s.Error("Failed DNS query check: ", errs)
 		}
@@ -286,7 +284,7 @@ func waitUntilNATIptablesConfigured(ctx context.Context) error {
 
 // connectToVPN creates a VPN server and connects to it.
 // On success, the caller is responsible to cleanup the created server and VPN connection.
-func connectToVPN(ctx context.Context, pool *subnet.Pool, router *env.Env, httpsCerts *certs.Certs) (*env.Env, *vpn.Connection, error) {
+func connectToVPN(ctx context.Context, pool *subnet.Pool, router *env.Env, httpsCerts *certs.Certs) (*dns.Server, *vpn.Connection, error) {
 	serverIPv4Subnet, err := pool.AllocNextIPv4Subnet()
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed to allocate v4 subnet")
@@ -305,13 +303,11 @@ func connectToVPN(ctx context.Context, pool *subnet.Pool, router *env.Env, https
 		if success {
 			return
 		}
-		if err := server.Cleanup(ctx); err != nil {
-			testing.ContextLog(ctx, "Failed to cleanup server env: ", err)
-		}
+		server.Cleanup(ctx)
 	}()
 
 	// Connect to VPN.
-	conn, err := vpn.StartConnection(ctx, server, vpn.TypeIKEv2)
+	conn, err := vpn.StartConnection(ctx, server.Env, vpn.TypeIKEv2)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed to start VPN connection")
 	}

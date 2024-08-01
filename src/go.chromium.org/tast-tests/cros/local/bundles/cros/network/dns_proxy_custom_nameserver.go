@@ -111,7 +111,7 @@ func DNSProxyCustomNameserver(ctx context.Context, s *testing.State) {
 	}
 	defer server.Cleanup(cleanupCtx)
 
-	addrs, err := server.GetVethInAddrs(ctx)
+	addrs, err := server.Env.GetVethInAddrs(ctx)
 	if err != nil {
 		s.Fatal("Failed to get custom DNS nameserver's IP address: ", err)
 	}

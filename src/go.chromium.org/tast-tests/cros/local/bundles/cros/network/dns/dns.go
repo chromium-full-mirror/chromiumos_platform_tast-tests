@@ -17,9 +17,11 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"golang.org/x/net/dns/dnsmessage"
 
 	"go.chromium.org/tast-tests/cros/common/crypto/certificate"
 	"go.chromium.org/tast-tests/cros/common/shillconst"
@@ -98,13 +100,27 @@ const (
 // Env wraps the test environment created for DNS tests.
 type Env struct {
 	Router       *env.Env
-	server       *env.Env
+	Server       *Server
 	manager      *shill.Manager
 	Certs        *certs.Certs
 	cleanupCerts func(context.Context)
 
 	// The IPv4 DNS address broadcasted by the DHCP server.
 	IPv4DNSAddr net.IP
+}
+
+// Server wraps the DNS and DoH server created for DNS tests.
+type Server struct {
+	Env *env.Env
+
+	// List of target domains queried to the DoH provider used by the server.
+	DoHQueryLogs dohQueryLogs
+}
+
+// dohQueryLogs holds DoH queries target domains logs.
+type dohQueryLogs struct {
+	Domains []string
+	mutex   sync.Mutex
 }
 
 // GoogleDoHProvider is the Google DNS-over-HTTPS provider.
@@ -528,13 +544,44 @@ func resolveDomain(ctx context.Context, msg []byte, addr string) ([]byte, error)
 	return resp[:n], nil
 }
 
+// getQueryDomain gets the domain name from a DNS query.
+func getQueryDomain(query []byte) (string, error) {
+	var p dnsmessage.Parser
+	if _, err := p.Start(query); err != nil {
+		return "", err
+	}
+	q, err := p.Question()
+	if err != nil {
+		return "", err
+	}
+	return q.Name.String(), nil
+}
+
+// logQuery logs DNS query target domain.
+func (q *dohQueryLogs) logQuery(ctx context.Context, query []byte) {
+	d, err := getQueryDomain(query)
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to get DNS query domain: ", err)
+		return
+	}
+	q.mutex.Lock()
+	q.Domains = append(q.Domains, d)
+	q.mutex.Unlock()
+}
+
 // DoHResponder returns a function that responds to HTTPS queries by proxying the queries to DNS server on |addr|.
-func DoHResponder(ctx context.Context, addr string) func(http.ResponseWriter, *http.Request) {
+// Optionally, pass dohQueryLogs to log the queries target domains.
+func DoHResponder(ctx context.Context, addr string, q *dohQueryLogs) func(http.ResponseWriter, *http.Request) {
 	return func(rw http.ResponseWriter, req *http.Request) {
 		msg, err := ioutil.ReadAll(req.Body)
 		if err != nil {
 			testing.ContextLog(ctx, "Failed to read HTTPS request: ", err)
 			return
+		}
+
+		if q != nil {
+			q.logQuery(ctx, msg)
+
 		}
 
 		resp, err := resolveDomain(ctx, msg, addr)
@@ -552,10 +599,8 @@ func DoHResponder(ctx context.Context, addr string) func(http.ResponseWriter, *h
 
 // Cleanup cleans anything that is set up through NewEnv. This needs to be called whenever env is not needed anymore.
 func (e *Env) Cleanup(ctx context.Context) {
-	if e.server != nil {
-		if err := e.server.Cleanup(ctx); err != nil {
-			testing.ContextLog(ctx, "Failed to cleanup server env: ", err)
-		}
+	if e.Server != nil {
+		e.Server.Cleanup(ctx)
 	}
 	if e.Router != nil {
 		if err := e.Router.Cleanup(ctx); err != nil {
@@ -638,7 +683,7 @@ func NewEnv(ctx context.Context, pool *subnet.Pool) (env *Env, err error) {
 		return nil, errors.Wrap(err, "failed to wait for base service online")
 	}
 
-	e.server, err = NewServer(ctx, "server", serverIPv4Subnet, serverIPv6Subnet, e.Router, httpsCerts)
+	e.Server, err = NewServer(ctx, "server", serverIPv4Subnet, serverIPv6Subnet, e.Router, httpsCerts)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to set up server env")
 	}
@@ -649,10 +694,12 @@ func NewEnv(ctx context.Context, pool *subnet.Pool) (env *Env, err error) {
 }
 
 // NewServer creates a server that responds to DNS and DoH queries.
-func NewServer(ctx context.Context, envName string, ipv4Subnet *subnet.IPv4Subnet, ipv6Subnet *subnet.IPv6Subnet, routerEnv *env.Env, httpsCerts *certs.Certs) (*env.Env, error) {
+func NewServer(ctx context.Context, envName string, ipv4Subnet *subnet.IPv4Subnet, ipv6Subnet *subnet.IPv6Subnet, routerEnv *env.Env, httpsCerts *certs.Certs) (*Server, error) {
+	server := &Server{}
 	success := false
 
-	server, err := virtualnet.CreateEnv(ctx, envName)
+	var err error
+	server.Env, err = virtualnet.CreateEnv(ctx, envName)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to set up server env")
 	}
@@ -660,23 +707,23 @@ func NewServer(ctx context.Context, envName string, ipv4Subnet *subnet.IPv4Subne
 		if success {
 			return
 		}
-		if err := server.Cleanup(ctx); err != nil {
+		if err := server.Env.Cleanup(ctx); err != nil {
 			testing.ContextLog(ctx, "Failed to cleanup server env: ", err)
 		}
 	}()
 
-	if err := server.ConnectToRouter(ctx, routerEnv, ipv4Subnet, ipv6Subnet); err != nil {
+	if err := server.Env.ConnectToRouter(ctx, routerEnv, ipv4Subnet, ipv6Subnet); err != nil {
 		return nil, errors.Wrap(err, "failed to connect server to router")
 	}
 
 	// Get server IPv4 address.
-	addr, err := server.GetVethInAddrs(ctx)
+	addr, err := server.Env.GetVethInAddrs(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get env addresses")
 	}
 
 	// Start a DNS server.
-	if err := server.StartServer(ctx, "dnsmasq", dnsmasq.New(
+	if err := server.Env.StartServer(ctx, "dnsmasq", dnsmasq.New(
 		dnsmasq.WithResolveHost("", addr.IPv4Addr),
 		dnsmasq.WithAllInterfaces(),
 	)); err != nil {
@@ -684,13 +731,22 @@ func NewServer(ctx context.Context, envName string, ipv4Subnet *subnet.IPv4Subne
 	}
 
 	// Start a DoH server.
-	httpsserver := httpserver.New(httpserver.TCP4, "443", DoHResponder(ctx, addr.IPv4Addr.String()), httpsCerts)
-	if err := server.StartServer(ctx, "httpsserver", httpsserver); err != nil {
+	httpsserver := httpserver.New(httpserver.TCP4, "443", DoHResponder(ctx, addr.IPv4Addr.String(), &server.DoHQueryLogs), httpsCerts)
+	if err := server.Env.StartServer(ctx, "httpsserver", httpsserver); err != nil {
 		return nil, errors.Wrap(err, "failed to start DoH server")
 	}
 
 	success = true
 	return server, nil
+}
+
+// Cleanup cleans anything that is set up through NewServer. This needs to be called whenever env is not needed anymore.
+func (server *Server) Cleanup(ctx context.Context) {
+	if server.Env != nil {
+		if err := server.Env.Cleanup(ctx); err != nil {
+			testing.ContextLog(ctx, "Failed to cleanup server env: ", err)
+		}
+	}
 }
 
 // EnvOptionsFromConfig creates virtualnet.EnvOptions from DNS config, name suffix, and priority.
