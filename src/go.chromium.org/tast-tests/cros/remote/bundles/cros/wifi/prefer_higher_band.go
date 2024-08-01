@@ -69,7 +69,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"wpa3_sae"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
 				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E),
-				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_80211_AX_E"}`,
+				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_80211_AXE"}`,
 			},
 			{
 				Name: "2ghz_6ghz",
@@ -81,7 +81,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"wpa3_sae"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
 				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E),
-				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_80211_AX_E"}`,
+				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_80211_AXE"}`,
 			},
 		},
 	})

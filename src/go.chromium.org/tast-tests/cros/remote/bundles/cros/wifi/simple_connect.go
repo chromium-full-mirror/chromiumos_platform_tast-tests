@@ -321,7 +321,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
 				ExtraRequirements: []string{"wifi-gen-0003-v01", "wifi-rf-0006-v01", "wifi-sec-0008-v02", "wifi-cert-0004-v02"},
 				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E"},
-				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_80211_AX_E"}`,
+				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_80211_AXE"}`,
 			}, {
 				// Verifies that DUT can connect to a WPA3-SAE ("pure") 802.11ax network on 6GHz PSC channel 21 with a channel width of 20MHz.
 				Name:              "80211axe20",
@@ -339,7 +339,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
 				ExtraRequirements: []string{"wifi-gen-0003-v01", "wifi-rf-0006-v01"},
 				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E"},
-				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_80211_AX_E"}`,
+				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_80211_AXE"}`,
 			}, {
 				// Verifies that DUT can connect to a WPA3-SAE ("pure") 802.11ax network on 6GHz PSC channel 21 with a channel width of 40MHz.
 				Name:              "80211axe40",
@@ -357,7 +357,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
 				ExtraRequirements: []string{"wifi-gen-0003-v01", "wifi-rf-0006-v01"},
 				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E"},
-				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_80211_AX_E"}`,
+				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_80211_AXE"}`,
 			}, {
 				// Verifies that DUT can connect to a WPA3-SAE ("mixed") 802.11ax network on 6GHz PSC channel 5 with center channel of 7 and channel width of 80MHz.
 				Name:              "80211axe80mixed",
@@ -376,7 +376,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
 				ExtraRequirements: []string{"wifi-gen-0003-v01", "wifi-rf-0006-v01"},
 				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E"},
-				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_80211_AX_E"}`,
+				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_80211_AXE"}`,
 			}, {
 				// Verifies that DUT can connect to a WPA3-SAE ("pure") 802.11ax network on 6GHz PSC channel 5 with center channel of 7 and channel width of 80MHz.
 				// The router is forced to use HE WiFi standard.
@@ -396,7 +396,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
 				ExtraRequirements: []string{"wifi-gen-0003-v01", "wifi-rf-0006-v01"},
 				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E"},
-				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_80211_AX_E"}`,
+				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_80211_AXE"}`,
 			}, {
 				// Verifies that DUT can connect to a WPA3-SAE ("mixed") 802.11ax network on 6GHz PSC channel 5 with center channel of 15 and channel width of 160MHz.
 				Name:              "80211axe160mixed",
@@ -415,7 +415,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
 				ExtraRequirements: []string{"wifi-gen-0003-v01", "wifi-rf-0016-v01"},
 				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E"},
-				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_80211_AX_E"}`,
+				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_80211_AXE"}`,
 			}, {
 				// Verifies that DUT can connect to a WPA3-SAE ("pure") 802.11ax network on 6GHz PSC channel 5 with center channel of 15 and channel width of 160MHz.
 				// The router is forced to use HE WiFi standard.
@@ -435,7 +435,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
 				ExtraRequirements: []string{"wifi-gen-0003-v01", "wifi-rf-0016-v01"},
 				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E"},
-				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_80211_AX_E"}`,
+				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_80211_AXE"}`,
 			}, {
 				// Verifies that DUT can connect to an open 802.11be network on channel 40 with a channel width of 20MHz.
 				Name:      "80211beeht20",
