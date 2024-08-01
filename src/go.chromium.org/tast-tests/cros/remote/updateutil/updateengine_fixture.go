@@ -25,7 +25,7 @@ func init() {
 		},
 		BugComponent:    "b:908319",
 		Impl:            &updateEngineFixture{},
-		PreTestTimeout:  30 * time.Second,
+		PreTestTimeout:  2 * time.Minute, // See b/343529050, sometimes update engine is installing DLCs and we need to wait.
 		PostTestTimeout: 30 * time.Second,
 		SetUpTimeout:    30 * time.Second,
 		ServiceDeps: []string{
@@ -45,7 +45,7 @@ func init() {
 		BugComponent:    "b:1031231",      // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Version Control
 		Parent:          fixture.Enrolled, // Provides enrollment.
 		Impl:            &updateEngineFixture{},
-		PreTestTimeout:  30 * time.Second,
+		PreTestTimeout:  2 * time.Minute, // See b/343529050, sometimes update engine is installing DLCs and we need to wait.
 		PostTestTimeout: 30 * time.Second,
 		SetUpTimeout:    30 * time.Second,
 		ServiceDeps: []string{
@@ -65,7 +65,7 @@ func init() {
 		BugComponent:    "b:1031231",            // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Version Control
 		Parent:          fixture.CleanOwnership, // Clean device ownership.
 		Impl:            &updateEngineFixture{},
-		PreTestTimeout:  30 * time.Second,
+		PreTestTimeout:  2 * time.Minute, // See b/343529050, sometimes update engine is installing DLCs and we need to wait.
 		PostTestTimeout: 30 * time.Second,
 		SetUpTimeout:    30 * time.Second,
 		ServiceDeps: []string{

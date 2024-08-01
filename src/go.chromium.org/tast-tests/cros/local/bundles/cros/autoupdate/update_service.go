@@ -192,7 +192,7 @@ func (u *UpdateService) EnsureUpdateEngineReady(ctx context.Context, req *empty.
 		}
 
 		return nil
-	}, &testing.PollOptions{Timeout: 15 * time.Second}); err != nil {
+	}, &testing.PollOptions{Timeout: 2 * time.Minute}); err != nil { // See b/343529050, sometimes update engine is installing DLCs and we need to wait.
 		return &empty.Empty{}, err
 	}
 
