@@ -30,8 +30,8 @@ func init() {
 			"mhasank@chromium.org",
 			"yanghenry@google.com",
 		},
-		// ChromeOS > Software > ARC++ > Core > Play Store Setup
-		BugComponent: "b:1131344",
+		// ChromeOS > EngProd > Software > Trust & Safety > UFO Testing
+		BugComponent: "b:1034522",
 		VarDeps:      []string{ui.GaiaPoolDefaultVarName},
 		SoftwareDeps: []string{
 			"chrome",
