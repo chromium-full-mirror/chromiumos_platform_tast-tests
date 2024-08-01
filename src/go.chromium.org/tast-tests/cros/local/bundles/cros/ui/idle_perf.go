@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
 	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
@@ -30,6 +31,7 @@ const (
 	testTypeARC testType = iota
 	testTypeBrowser
 	testTypeFaceGaze
+	testTypeFocusMode
 )
 
 const (
@@ -76,6 +78,11 @@ func init() {
 			Name:    "facegaze",
 			Val:     idlePerfTest{testType: testTypeFaceGaze},
 			Fixture: fixture.ChromeLoggedInDisableSyncWithFaceGaze,
+		}, {
+			// TODO(b/356944093): Remove focusmode fixture from `idle_perf` once feature launches.
+			Name:    "focusmode",
+			Val:     idlePerfTest{testType: testTypeFocusMode},
+			Fixture: fixture.ChromeLoggedInWithFocusMode,
 		}},
 	})
 }
@@ -97,6 +104,8 @@ func IdlePerf(ctx context.Context, s *testing.State) {
 	case testTypeBrowser:
 		fallthrough
 	case testTypeFaceGaze:
+		fallthrough
+	case testTypeFocusMode:
 		cr = s.FixtValue().(chrome.HasChrome).Chrome()
 	}
 
@@ -134,6 +143,20 @@ func IdlePerf(ctx context.Context, s *testing.State) {
 		defer func() {
 			if err := facegazeDriver.TearDown(); err != nil {
 				s.Error("Failed to tear down FaceGaze: ", err)
+			}
+		}()
+	} else if idleTest.testType == testTypeFocusMode {
+		bTconn, err := cr.TestAPIConn(ctx)
+		if err != nil {
+			s.Fatal("Failed to get Test API connection: ", err)
+		}
+		if err := quicksettings.EnsureFocusModeHasStarted(ctx, bTconn); err != nil {
+			s.Fatal("Failed to start a Focus session: ", err)
+		}
+
+		defer func() {
+			if err := quicksettings.EnsureFocusModeEnds(ctx, bTconn); err != nil {
+				s.Error("Failed to end Focus Mode: ", err)
 			}
 		}()
 	}

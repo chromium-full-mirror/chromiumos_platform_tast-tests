@@ -41,6 +41,9 @@ var FeatureTileCameraFraming = nodewith.Role(role.ToggleButton).NameContaining("
 // FeatureTileCast is the finder for the "Cast screen" feature tile.
 var FeatureTileCast = nodewith.HasClass("FeatureTile").NameContaining("cast")
 
+// FeatureTileFocusMode is the finder for the "Focus" feature tile.
+var FeatureTileFocusMode = nodewith.HasClass("FeatureTile").NameContaining("Focus")
+
 // FeatureTileHotspot is the finder for the "Hotspot" feature tile.
 var FeatureTileHotspot = nodewith.HasClass("FeatureTile").NameContaining("Hotspot")
 

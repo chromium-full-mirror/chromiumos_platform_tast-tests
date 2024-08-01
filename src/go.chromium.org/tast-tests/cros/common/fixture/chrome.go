@@ -74,4 +74,6 @@ const (
 	ChromeLoggedInDisableSyncWithFaceGaze = "chromeLoggedInDisableSyncWithFaceGaze"
 	// Logged into a user session, disable the search engine choice screen.
 	ChromeLoggedInDisableSearchEngineChoice = "chromeLoggedInDisableSearchEngineChoice"
+	// Logged in to a user session with Focus Mode feature enabled.
+	ChromeLoggedInWithFocusMode = "chromeLoggedInWithFocusMode"
 )

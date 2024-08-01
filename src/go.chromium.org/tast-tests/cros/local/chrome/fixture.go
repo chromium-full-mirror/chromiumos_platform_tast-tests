@@ -485,6 +485,23 @@ func init() {
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: fixture.ChromeLoggedInWithFocusMode,
+		Desc: "Logged into a user session with Focus Mode feature enabled",
+		Contacts: []string{
+			"richui@google.com",
+			"chromeos-wms@google.com",
+		},
+		// ChromeOS > Software > Focus Mode
+		BugComponent: "b:1238195",
+		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
+			return []Option{EnableFeatures("FocusMode")}, nil
+		}),
+		SetUpTimeout:    FixtureSetUpTimeout,
+		ResetTimeout:    ResetTimeout,
+		TearDownTimeout: ResetTimeout,
+	})
 }
 
 // OptionsCallback is the function used to set up the fixture by returning Chrome options.
