@@ -28,7 +28,7 @@ func init() {
 		Contacts:     []string{"chromeos-cellular-team@google.com", "cros-network-health-team@google.com", "ejcaruso@google.com", "pholla@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:         []string{"group:cellular", "cellular_sim_dual_active", "cellular_ota_avl"},
-		Fixture:      "cellular",
+		Fixture:      "cellularWithChrome",
 	})
 }
 
