@@ -6,6 +6,7 @@ package ui
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -75,7 +76,7 @@ func DocsCUJ(ctx context.Context, s *testing.State) {
 	bt := s.Param().(browser.Type)
 	traceConfigPath := s.DataPath(cujrecorder.SystemTraceConfigFile)
 
-	if s.TestName() == "image_indexing" {
+	if strings.HasSuffix(s.TestName(), "image_indexing") {
 		user := cr.NormalizedUser()
 		testPicturePath := s.DataPath(launcher.ImageSearchPowerTestPictureName)
 		cleanup, err := cuj.PrepareImageSearchFiles(ctx, user, testPicturePath, 500)
