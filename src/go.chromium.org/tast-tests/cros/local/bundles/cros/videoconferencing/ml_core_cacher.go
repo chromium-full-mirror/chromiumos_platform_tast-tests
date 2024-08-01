@@ -23,13 +23,14 @@ const dlcCLCacheDir = "/run/imageloader/ml-core-internal/package/root/cl_cache"
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:    OpenCLCacher,
-		Desc:    "Validates that the OpenCL Cacher service runs without error",
+		Func:    MLCoreCacher,
+		Desc:    "Validates that the ml-core-cacher service runs without error",
 		Timeout: 5 * time.Minute,
 		Contacts: []string{
 			"chromeos-platform-ml-accelerators@google.com",
 			"cros-video-conference-tast-tests@google.com",
 			"xiuwen@google.com",
+			"imranziad@google.com",
 		},
 		BugComponent: "b:1212695",
 		Attr: []string{
@@ -43,7 +44,7 @@ func init() {
 	})
 }
 
-func OpenCLCacher(ctx context.Context, s *testing.State) {
+func MLCoreCacher(ctx context.Context, s *testing.State) {
 	if err := launcher.InstallDlc(ctx, []string{dlcID}); err != nil {
 		s.Fatal("Failed to install DLC: ", err)
 	}
@@ -54,19 +55,19 @@ func OpenCLCacher(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to clear opencl_cache: ", err)
 	}
 
-	if !(upstart.JobExists(ctx, "opencl-cacher")) {
-		s.Fatal("opencl-cacher job does not exist")
+	if !(upstart.JobExists(ctx, "ml-core-cacher")) {
+		s.Fatal("ml-core-cacher job does not exist")
 	}
 
-	s.Log("Starting opencl-cacher service")
-	if err := upstart.EnsureJobRunning(ctx, "opencl-cacher"); err != nil {
-		s.Fatal("Failed to start opencl-cacher: ", err)
+	s.Log("Starting ml-core-cacher service")
+	if err := upstart.EnsureJobRunning(ctx, "ml-core-cacher"); err != nil {
+		s.Fatal("Failed to start ml-core-cacher: ", err)
 	}
 
-	if err := upstart.WaitForJobStatus(ctx, "opencl-cacher", upstartcommon.StopGoal, upstartcommon.WaitingState, upstart.TolerateWrongGoal, 30*time.Second); err != nil {
-		s.Fatal("Failed: opencl-cacher did not exit cleanly: ", err)
+	if err := upstart.WaitForJobStatus(ctx, "ml-core-cacher", upstartcommon.StopGoal, upstartcommon.WaitingState, upstart.TolerateWrongGoal, 30*time.Second); err != nil {
+		s.Fatal("Failed: ml-core-cacher did not exit cleanly: ", err)
 	}
-	s.Log("Completed opencl-cacher service")
+	s.Log("Completed ml-core-cacher service")
 
 	// ReadDir sorts directory entries by filename.
 	libFiles, err := os.ReadDir(effects.OpenCLCacheDir)
