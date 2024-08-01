@@ -434,17 +434,17 @@ func (s *Servo) RemoveCCDWatchdogs(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		if strings.HasPrefix(stringType, "ccd") {
-			testing.ContextLog(ctx, "Removing watchdog: ", stringType)
-			if err := s.SetString(ctx, WatchdogRemove, stringType); err != nil {
-				return err
-			}
-			if err := s.SetOnOff(ctx, CCDKeepaliveEn, On); err != nil {
-				return err
-			}
-			didRemove = true
+		testing.ContextLog(ctx, "Removing watchdog: ", stringType)
+		if err := s.SetString(ctx, WatchdogRemove, stringType); err != nil {
+			return err
 		}
+		didRemove = true
 	}
+
+	if err := s.SetOnOff(ctx, CCDKeepaliveEn, On); err != nil {
+		return err
+	}
+
 	if didRemove {
 		// GoBigSleepLint: Removing the watchdog seems to take some time before it works.
 		if err := testing.Sleep(ctx, 4*time.Second); err != nil {
