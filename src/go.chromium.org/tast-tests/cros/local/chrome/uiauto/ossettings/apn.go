@@ -6,6 +6,8 @@ package ossettings
 
 import (
 	"context"
+	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -13,6 +15,8 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast-tests/cros/local/networkui/netconfig"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -44,14 +48,129 @@ const (
 	ApnIsAttach
 )
 
+// LaunchAtMobileData navigates Settings app to mobile data sub-page.
+func LaunchAtMobileData(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome) (*OSSettings, error) {
+	return LaunchAtPageURL(ctx, tconn, cr, "networks?type=Cellular", New(tconn).EnsureAtMobileDataPage())
+}
+
+// WaitForRefreshCellularProfile waits until the cellular is no longer inhibited and refresh profile completes.
+func (s *OSSettings) WaitForRefreshCellularProfile(cr *chrome.Chrome) uiauto.Action {
+	return func(ctx context.Context) error {
+		cleanupCtx := ctx
+		ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+		defer cancel()
+
+		netConn, err := netconfig.CreateLoggedInCrosNetworkConfig(ctx, cr)
+		if err != nil {
+			return errors.Wrap(err, "failed to get network Mojo Object")
+		}
+		defer netConn.Close(cleanupCtx)
+
+		if err := netConn.WaitForCellularDeviceUninhibited(ctx); err != nil {
+			return errors.Wrap(err, "failed to get uninhibited cellular device")
+		}
+
+		return WaitUntilRefreshCellularProfileCompletes(ctx, s.tconn)
+	}
+}
+
+// WaitUntilRefreshCellularProfileCompletes will wait until the cellular refresh profile completes
+// if there is a text indicating that the page is still loading.
+// Note: This function is usually called before interacting with a newly updated cellular network.
+func WaitUntilRefreshCellularProfileCompletes(ctx context.Context, tconn *chrome.TestConn) error {
+	ui := uiauto.New(tconn)
+	refreshProfileText := nodewith.NameContaining("This may take a few minutes").Role(role.StaticText)
+	// `IfSuccessThen` is required because refreshProfileText won't always show up:
+	// If refreshProfileText exists, it indicates that the cellular profile is still loading, so wait until the text is gone.
+	// On the other hand, the text doesn't exists indicating the profile is completely loaded, no needs to wait any longer.
+	return uiauto.IfSuccessThen(
+		ui.WaitUntilExists(refreshProfileText),
+		ui.WithTimeout(CellularProfileRefreshTimeout).WaitUntilGone(refreshProfileText),
+	)(ctx)
+}
+
+// EnsureAtMobileDataPage ensures the settings app stays on mobile data page.
+func (s *OSSettings) EnsureAtMobileDataPage() uiauto.Action {
+	return s.WaitUntilExists(MobileDataPageHeading)
+}
+
+// EnsureAtNetworkDetailsPage ensures the settings app stays on the network details page.
+func (s *OSSettings) EnsureAtNetworkDetailsPage(cr *chrome.Chrome) uiauto.Action {
+	// The title of network details page follows the name of the network, checking the url of the page instead.
+	return func(ctx context.Context) error {
+		conn, err := s.ChromeConn(ctx, cr)
+		if err != nil {
+			return errors.Wrap(err, "failed to get Chrome session")
+		}
+
+		if err := conn.Call(ctx, nil, `() => {
+			if (location.pathname != "/networkDetail") {
+				throw new Error("current page is not network detail page")
+			}
+		}`); err != nil {
+			return errors.Wrap(err, "failed to check the current page")
+		}
+		return nil
+	}
+}
+
+// EnsureAtApnPage ensures the settings app stays on the APN page.
+func (s *OSSettings) EnsureAtApnPage() uiauto.Action {
+	return s.WaitUntilExists(ApnPageRootWebArea)
+}
+
+// NavigateToMobileNetworkDetailsPage navigates the settings app to the details page of a mobile network.
+// Note that settings app must be on the "Mobile data" page or an error will be thrown.
+func (s *OSSettings) NavigateToMobileNetworkDetailsPage(cr *chrome.Chrome, NetworkButtonFinder *nodewith.Finder) uiauto.Action {
+	return uiauto.Combine("navigates to network details page",
+		// To navigate to the network details page, the settings app must be on the "Mobile data" page.
+		s.EnsureAtMobileDataPage(),
+		s.WaitForRefreshCellularProfile(cr),
+		// An active network could take a longer time to be active.
+		s.WithTimeout(WaitForConnectionTimeout).WaitUntilExists(NetworkButtonFinder),
+		s.DoDefault(NetworkButtonFinder),
+		s.EnsureAtNetworkDetailsPage(cr),
+	)
+}
+
+// NavigateToApnPage navigates the settings app to the APN page.
+// Note that settings app must be on the network details page or an error will be thrown.
+func (s *OSSettings) NavigateToApnPage(cr *chrome.Chrome) uiauto.Action {
+	return uiauto.Combine("navigates to APN page",
+		s.EnsureAtNetworkDetailsPage(cr),
+		s.ui.RetryUntil(
+			s.DoDefault(ApnSubpageButton),
+			s.WithTimeout(3*time.Second).WaitUntilExists(ApnPageRootWebArea),
+		),
+	)
+}
+
+// MaybeConnectToApn clicks the "Connect" button to connect to an APN.
+// Note that settings app must be on the network details page or an error will be thrown.
+func (s *OSSettings) MaybeConnectToApn(cr *chrome.Chrome) uiauto.Action {
+	return uiauto.Combine("clicks connect button if it exists",
+		s.EnsureAtNetworkDetailsPage(cr),
+		// The action will be skipped if the APN is not available to connect to,
+		// such as the APN is already connected, or still connecting.
+		uiauto.IfSuccessThen(
+			s.WaitUntilExists(ConnectButton),
+			s.DoDefault(ConnectButton),
+		),
+	)
+}
+
 // CreateCustomAPN creates new APN and verifies it is shown in the APN list after.
 func (s *OSSettings) CreateCustomAPN(ctx context.Context, apn *ApnConfig) error {
+	if err := s.EnsureAtApnPage()(ctx); err != nil {
+		return errors.Wrap(err, "failed to ensure the current page")
+	}
+
 	if err := s.OpenNewAPNDialogAndPopulateFields(ctx, apn); err != nil {
 		return errors.Wrap(err, "failed to open new APN dialog and populate fields")
 	}
 
 	if err := uiauto.Combine("Add and verify APN added",
-		s.ui.LeftClick(nodewith.Name("Add").Role(role.Button)),
+		s.DoDefault(nodewith.Name("Add").Role(role.Button)),
 		s.ui.WaitUntilExists(nodewith.NameContaining(apn.Name).First()),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to add custom APN and verify it shows in the APN list")
@@ -60,16 +179,116 @@ func (s *OSSettings) CreateCustomAPN(ctx context.Context, apn *ApnConfig) error 
 	return nil
 }
 
-// WaitUntilRefreshProfileCompletes will wait until the cellular refresh profile completes.
-func WaitUntilRefreshProfileCompletes(ctx context.Context, tconn *chrome.TestConn) error {
-	ui := uiauto.New(tconn)
-	refreshProfileText := nodewith.NameContaining("This may take a few minutes").Role(role.StaticText)
-	if err := ui.WithTimeout(5 * time.Second).WaitUntilExists(refreshProfileText)(ctx); err == nil {
-		if err := ui.WithTimeout(CellularProfileRefreshTimeout).WaitUntilGone(refreshProfileText)(ctx); err != nil {
-			return errors.Wrap(err, "failed to wait until refresh profile complete")
+// VerifyApnConnected verifies that APN is connected through the APN page.
+// Note that settings app must be on the APN page or an error will be thrown.
+// The source is usually retrieved from `(*cellular.Helper) GetCellularLastGoodAPN`.
+// Example: https://source.chromium.org/chromiumos/chromiumos/codesearch/+/32fc89be14d73a593e7be1cfdf79751913dcb631:src/platform/tast-tests/src/go.chromium.org/tast-tests/cros/local/bundles/cros/cellular/migrate_invalid_apn.go;l=116-127.
+func (s *OSSettings) VerifyApnConnected(cr *chrome.Chrome, apnName, source string) uiauto.Action {
+	return func(ctx context.Context) error {
+		if err := s.EnsureAtApnPage()(ctx); err != nil {
+			return errors.Wrap(err, "failed to ensure the page is at APN page")
 		}
+
+		const expr = `(()=> {
+			let nodes = shadowPiercingQueryAll('apn-list-item div#labelWrapper');
+			for (const node of nodes) {
+				if (node.innerText.includes("Connected")) {
+					return node.innerText;
+				}
+			}
+			throw new Error("No connected APN node found.");
+		})()`
+		var connectedNodeInnerText string
+		if err := s.EvalJSWithShadowPiercer(ctx, cr, expr, &connectedNodeInnerText); err != nil {
+			return errors.Wrap(err, "failed to find connected APN row text")
+		}
+
+		if !strings.Contains(strings.ToUpper(connectedNodeInnerText), strings.ToUpper(apnName)) {
+			return errors.Errorf("failed to show APN name %q in connected APN row text; shows %q instead", apnName, connectedNodeInnerText)
+		}
+
+		// The APN will display "Automatically detected" if it is provided by "modb" or "modem".
+		if (source == "modb" || source == "modem") && !strings.Contains(connectedNodeInnerText, "Automatically detected") {
+			return errors.New("failed to show Automatically detected for database provided APN in connected APN row text")
+		}
+
+		return nil
 	}
-	return nil
+}
+
+// VerifyApnNotConnected verifies the UI for APNs that are not in use in the revamped APN UI.
+// Note that settings app must be on the APN page or an error will be thrown.
+func (s *OSSettings) VerifyApnNotConnected(cr *chrome.Chrome, apnName string) uiauto.Action {
+	return func(ctx context.Context) error {
+		if err := s.EnsureAtApnPage()(ctx); err != nil {
+			return errors.Wrap(err, "failed to ensure the page is at APN page")
+		}
+
+		expr := fmt.Sprintf(`(() => {
+			let nodes = shadowPiercingQueryAll(
+			'apn-list-item div#labelWrapper');
+			for (const node of nodes) {
+				if (!node.innerText.includes("Connected")) {
+					if (node.querySelector('#apnName').innerText == %q) {
+						return
+					}
+				}
+			}
+			throw new Error("Not connected APN is not found");
+			})()`, apnName)
+		if err := s.EvalJSWithShadowPiercer(ctx, cr, expr, nil); err != nil {
+			return errors.Wrap(err, "failed to find not connected APN rows")
+		}
+		return nil
+	}
+}
+
+// VerifyApnStabilized verifies that the APN row reflects the |apnState| consistently.
+// Note that settings app must be on the APN page or an error will be thrown.
+func (s *OSSettings) VerifyApnStabilized(apn *ApnConfig, apnState ApnState) uiauto.Action {
+	return uiauto.Combine("verify APN is stabilized",
+		s.EnsureAtApnPage(),
+		s.ui.WithInterval(time.Second).Retry(5, s.ui.EnsureExistsFor(apnMoreActionButtonFinder(apn, apnState).FinalAncestor(WindowFinder), 2*time.Second)),
+	)
+}
+
+// ClickMoreActionButtonOfAnAPN clicks the more action button of an APN.
+func (s *OSSettings) ClickMoreActionButtonOfAnAPN(apn *ApnConfig, apnState ApnState) uiauto.Action {
+	moreActionBtn := apnMoreActionButtonFinder(apn, apnState)
+	menuItems := map[ApnState]*nodewith.Finder{
+		ApnEnabled:   DisableBtn,
+		ApnDisabled:  EnableBtn,
+		ApnConnected: DisableBtn,
+	}
+
+	return uiauto.Combine(fmt.Sprintf("click more action of %q", apn.Name),
+		s.EnsureAtApnPage(),
+		// More actions button may be temporarily disabled if cellular is connecting or disconnecting.
+		s.WithTimeout(WaitForConnectionTimeout).WaitUntilExists(moreActionBtn.Focusable()),
+		s.DoDefault(moreActionBtn),
+		s.WaitUntilExists(menuItems[apnState]),
+	)
+}
+
+func apnMoreActionButtonFinder(apn *ApnConfig, apnState ApnState) *nodewith.Finder {
+	stateName := fmt.Sprintf(`APN is %s`, regexp.QuoteMeta(strings.ToLower(string(apnState))))
+	if apnState == ApnEnabled {
+		stateName = fmt.Sprintf(`APN is (%s|%s)`, strings.ToLower(string(ApnEnabled)), strings.ToLower(string(ApnConnected)))
+	}
+
+	names := map[ApnType]string{
+		ApnIsDefault:               "default",
+		ApnIsAttach:                "attach",
+		ApnIsDefault | ApnIsAttach: "default and attach",
+	}
+	typeName := fmt.Sprintf(`APN is type %s`, regexp.QuoteMeta(names[apn.ApnType]))
+
+	// Looking for a button with name like:
+	//	1 of 1, internet. APN is automatically detected. APN is connected. APN is type default.
+	//
+	// In which, "internet" is the name of the APN; "APN is connected" is its state; "APN is type default" is its type; "APN is automatically detected" is displayed if the APN is automatically detected.
+	apnNameRegex := regexp.MustCompile(fmt.Sprintf(`^[0-9]+ of [0-9]+, %s\.( APN is automatically detected\.)? %s\. %s\.`, regexp.QuoteMeta(apn.Name), stateName, typeName))
+	return nodewith.NameRegex(apnNameRegex).Role(role.Button).HasClass("icon-more-vert")
 }
 
 // OpenMobileDataSubpage navigates Settings app to mobile data subpage.
@@ -84,6 +303,7 @@ func OpenMobileDataSubpage(ctx context.Context, tconn *chrome.TestConn, cr *chro
 
 	if err := uiauto.Combine("Go to mobile data page",
 		ui.LeftClick(Internet),
+		ui.WaitUntilExists(MobileButton),
 		ui.LeftClick(MobileButton),
 	)(ctx); err != nil {
 		mobileDataLinkNode := nodewith.Name("Mobile data").Role(role.Heading)
@@ -96,11 +316,11 @@ func OpenMobileDataSubpage(ctx context.Context, tconn *chrome.TestConn, cr *chro
 }
 
 // GoToActiveNetworkDetails will go to the network details page of the active cellular network.
-// Deprecated: Use `(s *OSSettings) ToMobileNetworkDetailsPage` with node `ActiveCellularBtn` instead.
+// Deprecated: Use `(s *OSSettings) NavigateToMobileNetworkDetailsPage` with node `ActiveCellularBtn` instead.
 func GoToActiveNetworkDetails(ctx context.Context, tconn *chrome.TestConn) error {
 	ui := uiauto.New(tconn).WithTimeout(30 * time.Second)
 
-	if err := WaitUntilRefreshProfileCompletes(ctx, tconn); err != nil {
+	if err := WaitUntilRefreshCellularProfileCompletes(ctx, tconn); err != nil {
 		return errors.Wrap(err, "failed to wait until refresh profile complete")
 	}
 
@@ -128,11 +348,11 @@ func GoToActiveNetworkDetails(ctx context.Context, tconn *chrome.TestConn) error
 }
 
 // GoToFirstInactiveNetworkDetails will go to the network details page of the first inactive cellular network.
-// Deprecated: Use `(s *OSSettings) ToMobileNetworkDetailsPage` with node `NotActiveCellularBtn.First()` instead.
+// Deprecated: Use `(s *OSSettings) NavigateToMobileNetworkDetailsPage` with node `NotActiveCellularBtn.First()` instead.
 func GoToFirstInactiveNetworkDetails(ctx context.Context, tconn *chrome.TestConn) error {
 	ui := uiauto.New(tconn).WithTimeout(30 * time.Second)
 
-	if err := WaitUntilRefreshProfileCompletes(ctx, tconn); err != nil {
+	if err := WaitUntilRefreshCellularProfileCompletes(ctx, tconn); err != nil {
 		return errors.Wrap(err, "failed to wait until refresh profile complete")
 	}
 
@@ -148,7 +368,7 @@ func GoToFirstInactiveNetworkDetails(ctx context.Context, tconn *chrome.TestConn
 }
 
 // GoToActiveNetworkApnSubpage will go to the APN subpage of the active cellular network.
-// Deprecated: Use `(s *OSSettings) ToApnPage` instead.
+// Deprecated: Use `(s *OSSettings) NavigateToApnPage` instead.
 func GoToActiveNetworkApnSubpage(ctx context.Context, tconn *chrome.TestConn, isFromMobileDataSubpage bool) error {
 	if isFromMobileDataSubpage {
 		if err := GoToActiveNetworkDetails(ctx, tconn); err != nil {
@@ -232,21 +452,15 @@ func GoConnectIfNotConnectedThenReturnApnSubpage(ctx context.Context, tconn *chr
 // VerifyAPNSubpageConnectedApnUI verifies that the UI of the connected APN's row in the APN subpage is correct.
 // Deprecated: Use `(s *OSSettings) VerifyApnConnected` instead.
 func (s *OSSettings) VerifyAPNSubpageConnectedApnUI(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, apn, source string) error {
-	expr := `var nodes = shadowPiercingQueryAll(
-		'apn-list-item div#labelWrapper');
-		var connectedNode = undefined;
-		nodes.forEach(node => {
-			if (node.innerText.includes("Connected")) {
-				if (connectedNode === undefined) {
-					connectedNode = node
+	const expr = `(()=> {
+			let nodes = shadowPiercingQueryAll('apn-list-item div#labelWrapper');
+			for (const node of nodes) {
+				if (node.innerText.includes("Connected")) {
+					return node.innerText;
 				}
 			}
-		})
-		if (connectedNode == undefined) {
 			throw new Error("No connected APN node found.");
-		}
-		connectedNode.innerText;
-		`
+		})()`
 	var connectedNodeInnterText string
 	if err := s.EvalJSWithShadowPiercer(ctx, cr, expr, &connectedNodeInnterText); err != nil {
 		return errors.Wrap(err, "failed to find connected APN row text")
@@ -256,7 +470,7 @@ func (s *OSSettings) VerifyAPNSubpageConnectedApnUI(ctx context.Context, tconn *
 		return errors.Errorf("failed to show APN name %q in connected APN row text; shows %q instead", apn, connectedNodeInnterText)
 	}
 
-	// If the APN is automatically detected, it is provided by the modb.
+	// The APN will display "Automatically detected" if it is provided by "modb" or "modem".
 	if (source == "modb" || source == "modem") && !strings.Contains(connectedNodeInnterText, "Automatically detected") {
 		return errors.New("failed to show Automatically detected for database provided APN in connected APN row text")
 	}
@@ -294,25 +508,20 @@ func ClickAPNMoreActionsButtonOfType(ctx context.Context, tconn *chrome.TestConn
 // VerifyAPNSubpageNotConnectedApnUI verifies the UI for APNs that are not in use in the revamped APN UI.
 // Deprecated: Use `(s *OSSettings) VerifyApnNotConnected` instead.
 func (s *OSSettings) VerifyAPNSubpageNotConnectedApnUI(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, apn string) error {
-	expr := `var nodes = shadowPiercingQueryAll(
+	expr := fmt.Sprintf(`(() => {
+		let nodes = shadowPiercingQueryAll(
 		'apn-list-item div#labelWrapper');
-		var notConnectedAPNs = [];
-		nodes.forEach(node => {
+		for (const node of nodes) {
 			if (!node.innerText.includes("Connected")) {
-				notConnectedAPNs.push(node.querySelector('#apnName').innerText)
+				if (node.querySelector('#apnName').innerText == %q) {
+					return
+				}
 			}
-		})
-		if (connectedNode == undefined) {
-			throw new Error("No connected APN node found.");
 		}
-		notConnectedAPNs.join(',');
-		`
-	var notConnectedAPNs string
-	if err := s.EvalJSWithShadowPiercer(ctx, cr, expr, &notConnectedAPNs); err != nil {
+		throw new Error("Not connected APN is not found");
+		})()`, apn)
+	if err := s.EvalJSWithShadowPiercer(ctx, cr, expr, nil); err != nil {
 		return errors.Wrap(err, "failed to find not connected APN rows")
-	}
-	if !strings.Contains(notConnectedAPNs, apn) {
-		return errors.New("failed to find not connected APN in list")
 	}
 	return nil
 }

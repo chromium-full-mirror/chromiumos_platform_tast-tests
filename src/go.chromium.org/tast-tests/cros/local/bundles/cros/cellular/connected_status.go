@@ -66,7 +66,7 @@ func ConnectedStatus(ctx context.Context, s *testing.State) {
 	if err := mdp.LeftClick(ossettings.NotActiveCellularRows.First())(ctx); err != nil {
 		s.Fatal("Failed to click into not active cellular row: ", err)
 	}
-	if err := ossettings.WaitUntilRefreshProfileCompletes(ctx, tconn); err != nil {
+	if err := ossettings.WaitUntilRefreshCellularProfileCompletes(ctx, tconn); err != nil {
 		s.Fatal("Failed to wait until refresh profile complete: ", err)
 	}
 

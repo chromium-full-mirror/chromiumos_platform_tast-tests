@@ -69,7 +69,7 @@ func RoamingPerProfileOrSim(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to open mobile data page")
 	}
 
-	if err := ossettings.WaitUntilRefreshProfileCompletes(ctx, tconn); err != nil {
+	if err := ossettings.WaitUntilRefreshCellularProfileCompletes(ctx, tconn); err != nil {
 		s.Fatal("Failed to wait until refresh profile complete: ", err)
 	}
 
@@ -94,7 +94,7 @@ func RoamingPerProfileOrSim(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to go back to mobile data page: ", err)
 	}
 
-	if err := ossettings.WaitUntilRefreshProfileCompletes(ctx, tconn); err != nil {
+	if err := ossettings.WaitUntilRefreshCellularProfileCompletes(ctx, tconn); err != nil {
 		s.Fatal("Failed to wait until refresh profile complete: ", err)
 	}
 
@@ -113,7 +113,7 @@ func RoamingPerProfileOrSim(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to go back to mobile data page: ", err)
 		}
 
-		if err := ossettings.WaitUntilRefreshProfileCompletes(ctx, tconn); err != nil {
+		if err := ossettings.WaitUntilRefreshCellularProfileCompletes(ctx, tconn); err != nil {
 			s.Fatal("Failed to wait until refresh profile complete: ", err)
 		}
 

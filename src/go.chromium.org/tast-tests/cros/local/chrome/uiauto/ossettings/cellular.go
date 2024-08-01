@@ -29,7 +29,7 @@ import (
 func GoToCellularNetworkDetailPageWithNickName(ctx context.Context, tconn *chrome.TestConn, name string) error {
 	ui := uiauto.New(tconn).WithTimeout(30 * time.Second)
 
-	if err := WaitUntilRefreshProfileCompletes(ctx, tconn); err != nil {
+	if err := WaitUntilRefreshCellularProfileCompletes(ctx, tconn); err != nil {
 		return errors.Wrap(err, "failed to wait until refresh profile complete")
 	}
 
@@ -597,7 +597,7 @@ func VerifyNetworkIsActive(ctx context.Context, tconn *chrome.TestConn, activeIc
 
 // AddESimWithActivationCode will input an eSIM activation code, assuming the eSIM setup dialog has been launched.
 func AddESimWithActivationCode(ctx context.Context, tconn *chrome.TestConn, activationCode string) error {
-	if err := WaitUntilRefreshProfileCompletes(ctx, tconn); err != nil {
+	if err := WaitUntilRefreshCellularProfileCompletes(ctx, tconn); err != nil {
 		return errors.Wrap(err, "failed to wait until refresh profile complete")
 	}
 
@@ -653,7 +653,7 @@ func AddESimWithActivationCode(ctx context.Context, tconn *chrome.TestConn, acti
 
 // VerifyTestESimProfile verifies that the test profile exists and navigates to the test profile.
 func VerifyTestESimProfile(ctx context.Context, tconn *chrome.TestConn) error {
-	if err := WaitUntilRefreshProfileCompletes(ctx, tconn); err != nil {
+	if err := WaitUntilRefreshCellularProfileCompletes(ctx, tconn); err != nil {
 		return errors.Wrap(err, "failed to wait until refresh profile complete")
 	}
 
@@ -675,7 +675,7 @@ func VerifyTestESimProfile(ctx context.Context, tconn *chrome.TestConn) error {
 // VerifyCelluarNetworkExistInList verifies thar the cellular network with |networkName| appears
 // in the mobile network list.
 func VerifyCelluarNetworkExistInList(ctx context.Context, tconn *chrome.TestConn, networkName string) error {
-	if err := WaitUntilRefreshProfileCompletes(ctx, tconn); err != nil {
+	if err := WaitUntilRefreshCellularProfileCompletes(ctx, tconn); err != nil {
 		return errors.Wrap(err, "failed to wait until refresh profile complete")
 	}
 

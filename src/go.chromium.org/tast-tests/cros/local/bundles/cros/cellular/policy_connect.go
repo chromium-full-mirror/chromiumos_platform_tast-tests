@@ -194,7 +194,7 @@ func PolicyConnect(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to open mobile data subpage: ", err)
 	}
 
-	if err := ossettings.WaitUntilRefreshProfileCompletes(ctx, tconn); err != nil {
+	if err := ossettings.WaitUntilRefreshCellularProfileCompletes(ctx, tconn); err != nil {
 		s.Fatal("Failed to wait until refresh profile complete: ", err)
 	}
 

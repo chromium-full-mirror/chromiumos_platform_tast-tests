@@ -136,7 +136,7 @@ func UnlockPinLockedSim(ctx context.Context, s *testing.State) {
 	}
 	defer kb.Close(cleanupCtx)
 
-	if err := ossettings.WaitUntilRefreshProfileCompletes(ctx, tconn); err != nil {
+	if err := ossettings.WaitUntilRefreshCellularProfileCompletes(ctx, tconn); err != nil {
 		s.Fatal("Failed to wait until refresh profile complete: ", err)
 	}
 
@@ -153,7 +153,7 @@ func UnlockPinLockedSim(ctx context.Context, s *testing.State) {
 		if err := ui.LeftClick(networkRow)(ctx); err != nil {
 			s.Fatal("Failed to click into network cellular row: ", err)
 		}
-		if err := ossettings.WaitUntilRefreshProfileCompletes(ctx, tconn); err != nil {
+		if err := ossettings.WaitUntilRefreshCellularProfileCompletes(ctx, tconn); err != nil {
 			s.Fatal("Failed to wait until refresh profile complete: ", err)
 		}
 	}

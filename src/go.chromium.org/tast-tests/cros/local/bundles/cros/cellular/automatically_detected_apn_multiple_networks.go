@@ -135,7 +135,7 @@ func AutomaticallyDetectedApnMultipleNetworks(ctx context.Context, s *testing.St
 		s.Fatal("Failed to go back to mobile data page: ", err)
 	}
 
-	if err := ossettings.WaitUntilRefreshProfileCompletes(ctx, tconn); err != nil {
+	if err := ossettings.WaitUntilRefreshCellularProfileCompletes(ctx, tconn); err != nil {
 		s.Fatal("Failed to wait until refresh profile complete: ", err)
 	}
 
