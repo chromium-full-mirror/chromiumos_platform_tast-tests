@@ -34,8 +34,9 @@ type crasSuspendStressParam struct {
 
 var suspendStressUnstableModels = []string{
 	// TODO(b/352295088): Undo after fix.
-	"apel", "bloog", "blooguard", "bobba", "bobba360", "casta", "foob", "garg", "garg360",
-	"meep", "orbatrix", "sparky", "sparky360", "vorticon", "vortininja",
+	"apel", "bloog", "blooglet", "blooguard", "bobba", "bobba360", "casta", "dood", "foob",
+	"garg", "garg360", "grabbiter", "meep", "orbatrix", "sparky", "sparky360", "vorticon",
+	"vortininja",
 }
 
 func init() {
