@@ -34,6 +34,9 @@ func init() {
 			"group:hardware",
 			"group:complementary",
 			"group:hw_agnostic",
+			"group:criticalstaging",
+			"group:mainline",
+			"informational",
 		},
 		SoftwareDeps: []string{"reboot", "chrome", "non_flex_device"},
 		ServiceDeps: []string{
