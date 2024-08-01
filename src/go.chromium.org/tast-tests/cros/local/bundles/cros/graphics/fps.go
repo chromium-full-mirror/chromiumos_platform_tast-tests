@@ -41,11 +41,6 @@ func init() {
 		Params: []testing.Param{{
 			Val:     browser.TypeAsh,
 			Fixture: "chromeGraphics",
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               browser.TypeLacros,
-			Fixture:           "chromeGraphicsLacros",
 		}},
 	})
 }

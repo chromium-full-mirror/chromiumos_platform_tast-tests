@@ -84,16 +84,6 @@ func init() {
 			Name:    "webgl",
 			Val:     paramsWebgl(browser.TypeAsh),
 			Fixture: "chromeGraphics",
-		}, {
-			Name:              "2d_lacros",
-			Val:               params2d(browser.TypeLacros),
-			Fixture:           "chromeGraphicsLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-		}, {
-			Name:              "webgl_lacros",
-			Val:               paramsWebgl(browser.TypeLacros),
-			Fixture:           "chromeGraphicsLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
 		}},
 	})
 }
@@ -145,8 +135,8 @@ func CompositorTransferFromImageBitmapOrientation(ctx context.Context, s *testin
 			return nil, errors.Wrap(err,
 				"failed to inject the 'Esc', 'F' key sequence")
 		}
-		// Wait for the fullscreen transition to complete and for the escape message to
-		// disappear before taking the screenshot.
+		// GoBigSleepLint: Wait for the fullscreen transition to complete and for the
+		// escape message to disappear before taking the screenshot.
 		if err := testing.Sleep(ctx, delayToScreenshot); err != nil {
 			return nil, errors.Wrap(err, "failed to sleep prior to taking screenshot")
 		}

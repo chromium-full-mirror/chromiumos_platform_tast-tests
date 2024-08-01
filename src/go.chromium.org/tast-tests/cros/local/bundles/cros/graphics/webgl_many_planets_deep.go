@@ -53,11 +53,6 @@ func init() {
 			Name:    "",
 			Fixture: "chromeGraphics",
 			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			Fixture:           "chromeGraphicsLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               browser.TypeLacros,
 		}},
 	})
 }

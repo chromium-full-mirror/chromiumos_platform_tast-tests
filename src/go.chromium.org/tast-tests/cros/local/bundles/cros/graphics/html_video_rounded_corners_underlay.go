@@ -39,30 +39,12 @@ func init() {
 			Fixture:           "chromeGraphics",
 			Val:               browser.TypeAsh,
 		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			// TODO(b/254290678): Remove bob, dru, dumo, and kevin when the test can pass on them.
-			// TODO(b/246573749): Remove cave and chell when the test can pass on them.
-			// TODO(b/255636769): Remove rusty and steelix when the test can pass on them.
-			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("bob", "cave", "chell", "dru", "dumo", "kevin", "rusty", "steelix")),
-			Fixture:           "chromeGraphicsLacros",
-			Val:               browser.TypeLacros,
-		}, {
 			Name: "failing",
 			// TODO(b/246573749): Remove cave and chell when the test can pass on them.
 			// TODO(b/255636769): Remove rusty, steelix, and tentacruel when the test can pass on them.
 			ExtraHardwareDeps: hwdep.D(hwdep.Model("cave", "chell", "rusty", "steelix", "tentacruel")),
 			Fixture:           "chromeGraphics",
 			Val:               browser.TypeAsh,
-		}, {
-			Name:              "failing_lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			// TODO(b/254290678): Remove bob, dru, dumo, and kevin when the test can pass on them.
-			// TODO(b/246573749): Remove cave and chell when the test can pass on them.
-			// TODO(b/255636769): Remove rusty and steelix when the test can pass on them.
-			ExtraHardwareDeps: hwdep.D(hwdep.Model("bob", "cave", "chell", "dru", "dumo", "kevin", "rusty", "steelix")),
-			Fixture:           "chromeGraphicsLacros",
-			Val:               browser.TypeLacros,
 		}},
 	})
 }
@@ -112,6 +94,7 @@ func HTMLVideoRoundedCornersUnderlay(ctx context.Context, s *testing.State) {
 	}
 
 	hists, err := metrics.Run(ctx, tconn, func(ctx context.Context) error {
+		// GoBigSleepLint: Waiting for the Run to finish.
 		if err := testing.Sleep(ctx, time.Second); err != nil {
 			return errors.Wrap(err, "failed to wait a second")
 		}

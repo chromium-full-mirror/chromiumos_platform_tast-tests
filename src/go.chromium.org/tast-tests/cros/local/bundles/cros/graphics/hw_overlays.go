@@ -98,39 +98,6 @@ func init() {
 				title:       "Video playback",
 			},
 		}, {
-			Name:              "canvas_2d_lacros",
-			Fixture:           "chromeGraphicsHwOverlaysLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			ExtraData:         []string{canvas2DFile},
-			Val: pageTestParams{
-				browserType: browser.TypeLacros,
-				file:        canvas2DFile,
-				title:       "Canvas 2D Low Latency",
-			},
-		}, {
-			Name:              "canvas_3d_lacros",
-			Fixture:           "chromeGraphicsHwOverlaysLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			ExtraData:         []string{canvas3DFile},
-			Val: pageTestParams{
-				browserType: browser.TypeLacros,
-				file:        canvas3DFile,
-				title:       "Canvas 3D",
-			},
-		}, {
-			Name:              "video_lacros",
-			Fixture:           "chromeGraphicsHwOverlaysLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			ExtraData:         []string{videoFile, videoMedia},
-			// Video test requires NV12 overlay support.
-			ExtraHardwareDeps: hwdep.D(hwdep.SupportsNV12Overlays()),
-			Val: pageTestParams{
-				browserType: browser.TypeLacros,
-				file:        videoFile,
-				media:       videoMedia,
-				title:       "Video playback",
-			},
-		}, {
 			Name:              "canvas_2d_vulkan",
 			Fixture:           "chromeGraphicsVulkan",
 			ExtraSoftwareDeps: []string{"vulkan_composite"},
