@@ -83,7 +83,7 @@ func init() {
 			{
 				Name:              "preprod",
 				ExtraAttr:         []string{"group:hw_agnostic", "informational"},
-				ExtraSoftwareDeps: []string{"android_vm", "qemu"},
+				ExtraSoftwareDeps: []string{"android_vm"},
 				Val:               optinTestArgs{preprod: true, fieldTrialConfig: chrome.FieldTrialConfigDefault},
 			}},
 		Timeout: chrome.LoginTimeout + arc.BootTimeout + 3*time.Minute,
