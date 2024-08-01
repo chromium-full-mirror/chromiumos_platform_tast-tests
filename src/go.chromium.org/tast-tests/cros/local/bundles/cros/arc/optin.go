@@ -82,9 +82,10 @@ func init() {
 			},
 			{
 				Name:              "preprod",
-				ExtraAttr:         []string{"group:hw_agnostic", "informational"},
+				ExtraAttr:         []string{"group:hw_agnostic", "informational", "group:external-dependency"},
 				ExtraSoftwareDeps: []string{"android_vm"},
 				Val:               optinTestArgs{preprod: true, fieldTrialConfig: chrome.FieldTrialConfigDefault},
+				ExtraSearchFlags:  []*testing.StringPair{testenv.SearchFlag(testenv.GFEPreprod)},
 			}},
 		Timeout: chrome.LoginTimeout + arc.BootTimeout + 3*time.Minute,
 	})
