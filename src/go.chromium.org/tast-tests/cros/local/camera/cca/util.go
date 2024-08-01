@@ -241,24 +241,33 @@ func CheckVideoMuted(ctx context.Context, path string) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to execute ffmpeg command")
 	}
-	lines := strings.Split(string(output), "\n")
-	// Example line: `[Parsed_volumedetect_0 @ 0x584d634e9920] max_volume: -91.0 dB`
-	re := regexp.MustCompile(`\[Parsed_volumedetect_[0-9]+ @ 0x[0-9a-f]+\] max_volume: (.*?) dB`)
-	for _, line := range lines {
-		submatch := re.FindStringSubmatch(line)
-		if len(submatch) > 0 {
-			// In case of a muted video, the max volume is -91.0 dB and if it isn't, the max volume is bigger than that.
-			vol, err := strconv.ParseFloat(submatch[1], 64)
-			if err != nil {
-				return errors.Wrap(err, "failed to convert float to string")
-			} else if vol > -91.0 {
-				return errors.Errorf("video is not muted. Expected max volume: -91.0 dB but got %v dB", vol)
+
+	// If there is an audio stream detected
+	re := regexp.MustCompile(`Stream #\d+:\d+.*Audio:`)
+	hasAudioStream := re.MatchString(string(output))
+
+	if hasAudioStream {
+		lines := strings.Split(string(output), "\n")
+		// Example line: `[Parsed_volumedetect_0 @ 0x584d634e9920] max_volume: -91.0 dB`
+		re := regexp.MustCompile(`\[Parsed_volumedetect_[0-9]+ @ 0x[0-9a-f]+\] max_volume: (.*?) dB`)
+		for _, line := range lines {
+			submatch := re.FindStringSubmatch(line)
+			if len(submatch) > 0 {
+				// In case of a muted video, the max volume is -91.0 dB and if it isn't, the max volume is bigger than that.
+				vol, err := strconv.ParseFloat(submatch[1], 64)
+				if err != nil {
+					return errors.Wrap(err, "failed to convert float to string")
+				} else if vol > -91.0 {
+					return errors.Errorf("video is not muted. Expected max volume: -91.0 dB but got %v dB", vol)
+				}
+				return nil
 			}
-			return nil
 		}
+		return errors.New("volume detection failed")
 	}
 
-	return errors.New("volume detection failed")
+	testing.ContextLog(ctx, "No audio stream detected")
+	return nil
 }
 
 func recordSound(ctx context.Context, recording audio.TestRawData, recordingErr chan error) {
