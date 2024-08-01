@@ -156,6 +156,8 @@ func (cfg *Config) Opts() ([]chrome.Option, error) {
 
 	// Enable Lacros.
 	opts = append(opts, chrome.EnableFeatures("LacrosSupport", "LacrosPrimary", "LacrosOnly"))
+	// LacrosOnly feature flag is being replaced by `--enable-lacros-for-testing` command line flag during the Lacros sunsetting process.
+	opts = append(opts, chrome.ExtraArgs("--enable-lacros-for-testing"))
 	switch cfg.selection {
 	case lacros.Rootfs:
 		opts = append(opts, chrome.ExtraArgs("--lacros-selection=rootfs"))
