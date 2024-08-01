@@ -23,38 +23,6 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-// ApnType specifies the type of data connection for mobile networks.
-type ApnType int
-
-// ApnIsDefault and ApnIsAttach indicates the APN type is using.
-const (
-	ApnIsDefault ApnType = 1 << iota
-	ApnIsAttach
-)
-
-// ApnConfig is struct containing information about an APN.
-type ApnConfig struct {
-	Name               string
-	Username           string
-	Password           string
-	AuthenticationType string
-	IPType             string
-	ApnType            ApnType
-}
-
-// WaitUntilRefreshProfileCompletes will wait until the cellular refresh profile completes.
-func WaitUntilRefreshProfileCompletes(ctx context.Context, tconn *chrome.TestConn) error {
-	ui := uiauto.New(tconn).WithTimeout(5 * time.Minute)
-	refreshProfileText := nodewith.NameContaining("This may take a few minutes").Role(role.StaticText)
-	if err := ui.WithTimeout(5 * time.Second).WaitUntilExists(refreshProfileText)(ctx); err == nil {
-		if err := ui.WithTimeout(5 * time.Minute).WaitUntilGone(refreshProfileText)(ctx); err != nil {
-			return errors.Wrap(err, "failed to wait until refresh profile complete")
-
-		}
-	}
-	return nil
-}
-
 // GoToCellularNetworkDetailPageWithNickName will go to the cellular details page with
 // network name of |name| by clicking its the subpage arrow.
 func GoToCellularNetworkDetailPageWithNickName(ctx context.Context, tconn *chrome.TestConn, name string) error {
@@ -74,113 +42,6 @@ func GoToCellularNetworkDetailPageWithNickName(ctx context.Context, tconn *chrom
 		return errors.Wrap(err, "failed to click into cellular networks detail view with name: "+name)
 	}
 
-	return nil
-}
-
-// GoToActiveNetworkDetails will go to the network details page of the active cellular network.
-func GoToActiveNetworkDetails(ctx context.Context, tconn *chrome.TestConn) error {
-	ui := uiauto.New(tconn).WithTimeout(30 * time.Second)
-
-	if err := WaitUntilRefreshProfileCompletes(ctx, tconn); err != nil {
-		return errors.Wrap(err, "failed to wait until refresh profile complete")
-	}
-
-	if err := ui.WithTimeout(90 * time.Second).WaitUntilExists(ActiveCellularBtn)(ctx); err != nil {
-		return errors.Wrap(err, "failed to find active cellular network")
-	}
-
-	activeCellularRowNodes, err := ui.NodesInfo(ctx, ActiveCellularRows)
-	if err != nil {
-		return errors.Wrap(err, "failed to find node info of active cellular network")
-	}
-	if len(activeCellularRowNodes) > 1 {
-		return errors.Wrap(err, "more than one active network displayed as active")
-	}
-
-	if err := ui.LeftClick(ActiveCellularBtn)(ctx); err != nil {
-		return errors.Wrap(err, "failed to click into active cellular networks detail view")
-	}
-
-	if err := uiauto.IfFailThen(ui.WithTimeout(10*time.Second).WaitUntilExists(ConnectedStatus), ui.WithTimeout(10*time.Second).WaitUntilExists(SignInToNetwork))(ctx); err != nil {
-		return errors.Wrap(err, "failed to verify active cellular network in details settings page")
-	}
-
-	return nil
-}
-
-// GoToFirstInactiveNetworkDetails will go to the network details page of the first inactive cellular network.
-func GoToFirstInactiveNetworkDetails(ctx context.Context, tconn *chrome.TestConn) error {
-	ui := uiauto.New(tconn).WithTimeout(30 * time.Second)
-
-	if err := WaitUntilRefreshProfileCompletes(ctx, tconn); err != nil {
-		return errors.Wrap(err, "failed to wait until refresh profile complete")
-	}
-
-	if err := ui.DoDefault(NotActiveCellularBtn.First())(ctx); err != nil {
-		return errors.Wrap(err, "failed to click into inactive cellular networks detail view")
-	}
-
-	if err := ui.WithTimeout(10 * time.Second).WaitUntilExists(DisconnectedStatus)(ctx); err != nil {
-		return errors.Wrap(err, "failed to verify inactive cellular network in details settings page")
-	}
-
-	return nil
-}
-
-// GoToActiveNetworkApnSubpage will go to the APN subpage of the active cellular network.
-func GoToActiveNetworkApnSubpage(ctx context.Context, tconn *chrome.TestConn, isFromMobileDataSubpage bool) error {
-	if isFromMobileDataSubpage {
-		if err := GoToActiveNetworkDetails(ctx, tconn); err != nil {
-			return errors.Wrap(err, "failed to go to active cellular network detail page view")
-		}
-	}
-
-	ui := uiauto.New(tconn).WithTimeout(30 * time.Second)
-	if err := uiauto.Combine("Go to APN subpage",
-		ui.WithTimeout(10*time.Second).WaitUntilExists(ApnSubpageButton.Focusable()),
-		ui.DoDefault(ApnSubpageButton.Focusable()),
-		ui.WaitUntilExists(nodewith.Name("Settings - Access point name (APN)").Role(role.RootWebArea)),
-	)(ctx); err != nil {
-		return errors.Wrap(err, "failed to go to APN subpage")
-	}
-	return nil
-}
-
-func getAPNTypeString(isAttach, isDefault bool) (string, error) {
-	if isAttach && isDefault {
-		return "APN is type default and attach.", nil
-	} else if isAttach {
-		return "APN is type attach.", nil
-	} else if isDefault {
-		return "APN is type default.", nil
-	}
-
-	return "", errors.New("Neither Attach nor Default APN")
-}
-
-// ClickAPNMoreActionsButtonOfType will click the 'More Actions' button associated to the APN with the current state |currentState|, and if it is an attach and/or default APN.
-func ClickAPNMoreActionsButtonOfType(ctx context.Context, tconn *chrome.TestConn, apnName string, currentState ApnState, isAttach, isDefault bool) error {
-	ui := uiauto.New(tconn)
-
-	apnTypeString, err := getAPNTypeString(isAttach, isDefault)
-	if err != nil {
-		return errors.Wrap(err, "failed to get APN type string")
-	}
-	apnMoreActionBtn := nodewith.NameContaining(apnName).NameContaining(currentState.String()).NameContaining(apnTypeString).Role(role.Button).HasClass("icon-more-vert").First()
-
-	// More actions button may be temporarily disabled if cellular is connecting or disconnecting.
-	if err := ui.WithTimeout(30 * time.Second).WaitUntilExists(apnMoreActionBtn.Focusable())(ctx); err != nil {
-		return errors.Wrap(err, "failed to show more actions button")
-	}
-
-	expectedMenuItemBtn := DisableBtn
-	if currentState == ApnDisabled {
-		expectedMenuItemBtn = EnableBtn
-	}
-
-	if err := ui.LeftClickUntil(apnMoreActionBtn, ui.Exists(expectedMenuItemBtn))(ctx); err != nil {
-		return errors.Wrap(err, "failed to click more actions button")
-	}
 	return nil
 }
 
@@ -389,65 +250,6 @@ func SelectPreRevampOtherAPN(ctx context.Context, tconn *chrome.TestConn, apn st
 		ui.LeftClick(apnMenuItem),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to select other menu item")
-	}
-
-	return nil
-}
-
-// VerifyAPNSubpageNotConnectedApnUI verifies the UI for APNs that are not in use in the revamped APN UI.
-func (s *OSSettings) VerifyAPNSubpageNotConnectedApnUI(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, apn string) error {
-	expr := `var nodes = shadowPiercingQueryAll(
-		'apn-list-item div#labelWrapper');
-		var notConnectedAPNs = [];
-		nodes.forEach(node => {
-			if (!node.innerText.includes("Connected")) {
-				notConnectedAPNs.push(node.querySelector('#apnName').innerText)
-			}
-		})
-		if (connectedNode == undefined) {
-			throw new Error("No connected APN node found.");
-		}
-		notConnectedAPNs.join(',');
-		`
-	var notConnectedAPNs string
-	if err := s.EvalJSWithShadowPiercer(ctx, cr, expr, &notConnectedAPNs); err != nil {
-		return errors.Wrap(err, "failed to find not connected APN rows")
-	}
-	if !strings.Contains(notConnectedAPNs, apn) {
-		return errors.New("failed to find not connected APN in list")
-	}
-	return nil
-}
-
-// VerifyAPNSubpageConnectedApnUI verifies that the UI of the connected APN's row in the APN subpage is correct.
-func (s *OSSettings) VerifyAPNSubpageConnectedApnUI(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, apn, source string) error {
-	expr := `var nodes = shadowPiercingQueryAll(
-		'apn-list-item div#labelWrapper');
-		var connectedNode = undefined;
-		nodes.forEach(node => {
-			if (node.innerText.includes("Connected")) {
-				if (connectedNode === undefined) {
-					connectedNode = node
-				}
-			}
-		})
-		if (connectedNode == undefined) {
-			throw new Error("No connected APN node found.");
-		}
-		connectedNode.innerText;
-		`
-	var connectedNodeInnterText string
-	if err := s.EvalJSWithShadowPiercer(ctx, cr, expr, &connectedNodeInnterText); err != nil {
-		return errors.Wrap(err, "failed to find connected APN row text")
-	}
-
-	if !strings.Contains(strings.ToUpper(connectedNodeInnterText), strings.ToUpper(apn)) {
-		return errors.Errorf("failed to show APN name %q in connected APN row text; shows %q instead", apn, connectedNodeInnterText)
-	}
-
-	// If the APN is automatically detected, it is provided by the modb.
-	if (source == "modb" || source == "modem") && !strings.Contains(connectedNodeInnterText, "Automatically detected") {
-		return errors.New("failed to show Automatically detected for database provided APN in connected APN row text")
 	}
 
 	return nil
@@ -692,22 +494,6 @@ func (s *OSSettings) OpenNewAPNDialogAndPopulateFields(ctx context.Context, apn 
 	return nil
 }
 
-// CreateCustomAPN creates new APN and verify it is shown in the APN list after.
-func (s *OSSettings) CreateCustomAPN(ctx context.Context, apn *ApnConfig) error {
-	if err := s.OpenNewAPNDialogAndPopulateFields(ctx, apn); err != nil {
-		return errors.Wrap(err, "failed to open new APN dialog and populate fields")
-	}
-
-	if err := uiauto.Combine("Add and verify APN added",
-		s.ui.LeftClick(nodewith.Name("Add").Role(role.Button)),
-		s.ui.WaitUntilExists(nodewith.NameContaining(apn.Name).First()),
-	)(ctx); err != nil {
-		return errors.Wrap(err, "failed to add custom APN and verify it shows in the APN list")
-	}
-
-	return nil
-}
-
 // GetUIStringForIPType returns the UI string that's displayed for the shill IP type
 func GetUIStringForIPType(devicePropertyCellularAPNType string) string {
 	if devicePropertyCellularAPNType == shillconst.DevicePropertyCellularAPNInfoApnIPTypeIPv4 {
@@ -904,64 +690,4 @@ func clearTextFieldViaClickingBackspace(kb *input.KeyboardEventWriter, times int
 		keySequence = append(keySequence, "Backspace")
 	}
 	kb.TypeSequenceAction(keySequence)
-}
-
-// VerifyAPNStabilized verifies that the APN row reflects the |state| consistently
-func VerifyAPNStabilized(ctx context.Context, tconn *chrome.TestConn, name string, state ApnState, isAttach, isDefault bool) error {
-	apnTypeString, err := getAPNTypeString(isAttach, isDefault)
-	if err != nil {
-		return errors.Wrap(err, "failed to get APN type string")
-	}
-	moreActionsButtonOfAPN := nodewith.NameContaining(name).NameContaining(state.String()).NameContaining(apnTypeString).Role(role.Button).HasClass("icon-more-vert").First()
-	ui := uiauto.New(tconn).WithTimeout(30 * time.Second)
-
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		if err := ui.EnsureExistsFor(moreActionsButtonOfAPN, 2*time.Second)(ctx); err != nil {
-			return errors.Wrapf(err, "failed to display APN consistently with name: %s, state: %s, attach: %v, default: %v", name, state, isAttach, isDefault)
-		}
-		return nil
-	}, &testing.PollOptions{
-		Timeout:  10 * time.Second,
-		Interval: time.Second,
-	}); err != nil {
-		return errors.Wrap(err, "failed polling for APN more actions button")
-	}
-	return nil
-}
-
-// GoConnectIfNotConnectedThenReturnApnSubpage navigates back from the APN subpage, connects if not connected, then returns to the APN subpage.
-func GoConnectIfNotConnectedThenReturnApnSubpage(ctx context.Context, tconn *chrome.TestConn) error {
-	ui := uiauto.New(tconn)
-
-	if err := ui.EnsureExistsFor(nodewith.NameContaining("Manage network APN settings").Role(role.Link), 5*time.Second)(ctx); err == nil {
-		if err := ui.LeftClick(BackArrowBtn)(ctx); err != nil {
-			return errors.Wrap(err, "failed to navigate back to mobile data subpage from APN subpage")
-		}
-	}
-
-	if err := ui.Exists(ConnectButton)(ctx); err == nil {
-		if err := uiauto.Combine("Connect to network",
-			ui.LeftClick(ConnectButton),
-			ui.WithTimeout(10*time.Second).WaitUntilExists(ConnectedStatus),
-		)(ctx); err != nil {
-			return errors.Wrap(err, "failed to connect")
-		}
-	}
-
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		if err := ui.EnsureExistsFor(ConnectedStatus, 2*time.Second)(ctx); err != nil {
-			return errors.Wrap(err, "failed to display connected status consistently")
-		}
-		return nil
-	}, &testing.PollOptions{
-		Timeout:  30 * time.Second,
-		Interval: time.Second,
-	}); err != nil {
-		return errors.Wrap(err, "failed to stay connected")
-	}
-
-	if err := GoToActiveNetworkApnSubpage(ctx, tconn, false /*isFromMobileDataSubpage*/); err != nil {
-		return errors.Wrap(err, "failed to go to apn subpage")
-	}
-	return nil
 }

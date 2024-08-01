@@ -188,18 +188,6 @@ var AddCellularButton = nodewith.NameStartingWith("Add Cellular").Role(role.Butt
 // UnlockButton is the finder for the Unlock button in cellular network list or settings home page.
 var UnlockButton = nodewith.NameContaining("Unlock").Role(role.Button)
 
-// NotActiveCellularRows is the finder for non-active cellular network rows in the Mobile data subpage.
-var NotActiveCellularRows = nodewith.NameRegex(regexp.MustCompile("^Network [0-9] of [0-9],.*Signal Strength 0%, .*Connect")).HasClass("horizontal")
-
-// NotActiveCellularBtn is the finder for the button to access the details view of the first non-active cellular network in the Mobile data subpage.
-var NotActiveCellularBtn = nodewith.HasClass("subpage-arrow").Role(role.Button).Ancestor(NotActiveCellularRows.First())
-
-// ActiveCellularRows is the finder for the active cellular network's row in the Mobile data subpage. There should only be one.
-var ActiveCellularRows = nodewith.NameRegex(regexp.MustCompile("^Network [0-9] of [0-9],.*Details")).HasClass("horizontal")
-
-// ActiveCellularBtn is the finder for the button to access the details view of the active cellular network in the Mobile data subpage.
-var ActiveCellularBtn = nodewith.HasClass("subpage-arrow").Role(role.Button).Ancestor(ActiveCellularRows.First()).Focusable()
-
 // APNSubpageButton is the finder for the button on the details view of a cellular network that navigates to the APN details view for the network.
 var APNSubpageButton = nodewith.NameContaining("Access point name").Role(role.Link).First()
 
@@ -300,6 +288,9 @@ var (
 
 // Elements in "Access Point Name subpage"
 var (
+	// ApnPageRootWebArea is the finder for the root web area of APN details page.
+	ApnPageRootWebArea = nodewith.Name("Settings - Access point name (APN)").Role(role.RootWebArea)
+
 	// DetailsBtn is the finder for the APN details menu item in more actions menu for an APN.
 	DetailsBtn = nodewith.Name("Details").Role(role.MenuItem)
 
@@ -459,4 +450,22 @@ var (
 
 	// HotspotNameTextField is the finder for the hotspot ssid text field in the hotspot configuration dialog
 	HotspotNameTextField = nodewith.Name("Hotspot name").Role(role.TextField).Ancestor(HotspotConfigurationDialog)
+)
+
+// Elements in the mobile data page of a cellular network.
+var (
+	// MobileDataPageHeading is the finder for the heading of the mobile data page.
+	MobileDataPageHeading = nodewith.Name("Mobile data").Role(role.Heading)
+
+	// NotActiveCellularRows is the finder for non-active cellular network rows in the Mobile data page.
+	NotActiveCellularRows = nodewith.NameRegex(regexp.MustCompile("^Network [0-9] of [0-9],.*Signal Strength 0%, .*Connect")).HasClass("horizontal")
+
+	// NotActiveCellularBtn is the finder for the button to access the details view of the first non-active cellular network in the Mobile data page.
+	NotActiveCellularBtn = nodewith.HasClass("subpage-arrow").Role(role.Button).Ancestor(NotActiveCellularRows.First())
+
+	// ActiveCellularRows is the finder for the active cellular network's row in the Mobile data page. There should only be one.
+	ActiveCellularRows = nodewith.NameRegex(regexp.MustCompile("^Network [0-9] of [0-9],.*Details")).HasClass("horizontal")
+
+	// ActiveCellularBtn is the finder for the button to access the details view of the active cellular network in the Mobile data page.
+	ActiveCellularBtn = nodewith.HasClass("subpage-arrow").Role(role.Button).Ancestor(ActiveCellularRows.First()).Focusable()
 )
