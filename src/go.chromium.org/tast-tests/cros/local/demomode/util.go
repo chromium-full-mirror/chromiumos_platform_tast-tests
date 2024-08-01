@@ -31,23 +31,21 @@ func BreakSWAAttractLoop(ctx context.Context, tconn *chrome.TestConn) error {
 
 	demoApp := nodewith.Name("ChromeOS Highlights").First()
 	if err := ui.WaitUntilExists(demoApp)(ctx); err != nil {
-		return errors.Wrap(err, "failed to wait until Demo App exists")
+		return errors.Wrap(err, "failed to wait until Demo Mode App exists")
 	}
 
 	pc := pointer.NewMouse(tconn)
 	defer pc.Close(ctx)
 
-	demoAppLocation, err := ui.Location(ctx, demoApp)
-	if err != nil {
-		return errors.Wrap(err, "failed to find location of Demo Mode App")
+	// Wait for Demo Mode app enters fullscreen after the attract loop starts to play.
+	if err := ash.WaitForFullScreen(ctx, tconn); err != nil {
+		return errors.Wrap(err, "failed to wait for Demo Mode app in fullscreen")
 	}
 
-	// Move mouse (arbitrarily) from center of demo app to screen corner to
-	// trigger interaction, breaking fullscreen Attract Loop.
-	if err := pc.Drag(
-		demoAppLocation.CenterPoint(),
-		pc.DragTo(coords.NewPoint(0, 0), 1*time.Second))(ctx); err != nil {
-		return errors.Wrap(err, "failed to drag mouse across screen")
+	// Click mouse somewhere on the attract loop to trigger interaction, breaking fullscreen attract loop.
+	if err := pc.ClickAt(
+		coords.NewPoint(100, 100))(ctx); err != nil {
+		return errors.Wrap(err, "failed to click mouse on the attract loop")
 	}
 	return nil
 }

@@ -66,7 +66,13 @@ func Freeplay(ctx context.Context, s *testing.State) {
 		chrome.KeepEnrollment(),
 		// --force-devtools-available forces devtools on regardless of policy (devtools is
 		// disabled in Demo Mode policy) to support connecting to the test API extension.
-		chrome.ExtraArgs("--force-devtools-available"),
+		//
+		// --component-updater=test-request adds a "test-request" parameter to Omaha
+		// update requests, causing the fetched Demo Mode App component to come from a
+		// test cohort.
+		//
+		// --log-level=0 increase Chrome's log level to INFO
+		chrome.ExtraArgs("--force-devtools-available", "--component-updater=test-request", "--log-level=0"),
 		chrome.DMSPolicy(dmServerURL),
 	)
 	if err != nil {
