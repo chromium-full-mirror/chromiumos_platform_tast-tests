@@ -32,7 +32,7 @@ func init() {
 			"alfredyu@cienet.com",
 			"chromeos-connectivity-cienet-external@google.com",
 		},
-		BugComponent: "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular
+		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:cellular", "cellular_sim_active"},
 		Fixture:      "cellularEnforceConnectionLocal",
