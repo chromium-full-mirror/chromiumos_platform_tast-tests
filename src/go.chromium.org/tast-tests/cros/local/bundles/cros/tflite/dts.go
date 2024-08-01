@@ -157,6 +157,9 @@ var apuParam = testingParam{
 		"*RsqrtNanInt8*",
 		"*RsqrtNanInt16*",
 		"*RsqrtInt16*",
+
+		// TODO(b/351308835): Neuron delegate failed with node_index out ouf range.
+		"StablehloScatterOpTest.PerformsUpdate",
 	},
 }
 
