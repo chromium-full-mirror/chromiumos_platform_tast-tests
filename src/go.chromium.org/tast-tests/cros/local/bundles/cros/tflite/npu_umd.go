@@ -27,7 +27,7 @@ func init() {
 		// hardware, but the AP firmware (Coreboot) currently pinned on these
 		// models is outdated. We will perform firmware qualification and
 		// incrementally uprev the firmware.
-		HardwareDeps: hwdep.D(hwdep.SkipOnModel("screebo", "karis", "ovis")),
+		HardwareDeps: hwdep.D(hwdep.SkipOnModel("screebo", "karis")),
 	})
 }
 
