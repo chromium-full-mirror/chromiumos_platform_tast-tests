@@ -11,7 +11,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/bounds"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/storage/util"
-	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -28,7 +27,6 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Data:         util.Configs,
 		SoftwareDeps: []string{"crossystem"},
-		Fixture:      fixture.USBDevModeWithReinstall,
 		Attr:         []string{"group:storage-qual", "storage-qual_pdp_kpi", "storage-qual_pdp_stress"},
 		Timeout:      10 * time.Minute,
 		Params: []testing.Param{{
@@ -76,7 +74,7 @@ func SocPerformance(ctx context.Context, s *testing.State) {
 	resultWriter := &util.FioResultWriter{}
 	defer resultWriter.Save(ctx, s.OutDir(), true)
 
-	disk, err := util.GetInternalStorage(ctx, s.DUT())
+	disk, err := util.GetStandbyRootfs(ctx, s.DUT())
 	if err != nil {
 		s.Fatal("Failed to get internal disk: ", err)
 	}
