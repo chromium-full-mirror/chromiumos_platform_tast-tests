@@ -342,7 +342,7 @@ func downloadFromLocalHTTPServer(ctx context.Context, cr *chrome.Chrome, bt brow
 	downloadLink := nodewith.Name(linkName).Role(role.Link)
 
 	regex := regexp.MustCompile(fmt.Sprintf(`^Download\scomplete\n%s$`, fileName))
-	downloadMessage := nodewith.NameRegex(regex).Role(role.AlertDialog)
+	downloadMessage := nodewith.NameRegex(regex).Role(role.GenericContainer)
 
 	ui := uiauto.New(tconn)
 	if err := uiauto.Combine(fmt.Sprintf("download %q from %s", fileName, server.URL),
