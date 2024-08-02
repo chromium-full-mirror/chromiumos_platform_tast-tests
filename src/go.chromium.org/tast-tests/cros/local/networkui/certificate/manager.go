@@ -13,12 +13,10 @@ import (
 	"net/http/httptest"
 	"os"
 	"path"
-	"path/filepath"
 	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/crypto/certificate"
-	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filepicker"
@@ -212,6 +210,107 @@ func CreateCertAndImport(ctx context.Context, cr *chrome.Chrome, tconn *chrome.T
 	return manager.CreateCertAndImport(ctx, cr, certs, importType, password, trustSettings)
 }
 
+// writeCertFiles writes certificates from the provided CertStore to the specified file paths,
+// and it returns destinations for both certificates and a cleanup action to remove the files.
+func writeCertFiles(ctx context.Context, filePath, clientCertFileName, serverCAFileName string, certs certificate.CertStore, password string) (clientCertDest, caCertDest *certificate.Destination, removeCertFiles uiauto.Action, retErr error) {
+	// Write client certificate file.
+	clientCertDest = certificate.NewLocalDestination(filePath, clientCertFileName)
+	cleanUpClientCert, err := certificate.WriteClientCertWithPassword(ctx, clientCertDest, certs, password)
+	if err != nil {
+		return nil, nil, nil, errors.Wrap(err, "failed to create the client certificate file")
+	}
+	defer func(ctx context.Context) {
+		if retErr != nil {
+			cleanUpClientCert(ctx)
+		}
+	}(ctx)
+
+	// Write CA certificate file.
+	caCertDest = certificate.NewLocalDestination(filePath, serverCAFileName)
+	cleanUpCaCert, err := certificate.WriteCACert(ctx, caCertDest, certs)
+	if err != nil {
+		return nil, nil, nil, errors.Wrap(err, "failed to create the CA certificate file")
+	}
+
+	return clientCertDest, caCertDest,
+		uiauto.Combine("clean up certificate",
+			cleanUpClientCert,
+			cleanUpCaCert), nil
+}
+
+type createCertsManager struct {
+	cr             *chrome.Chrome
+	certs          certificate.CertStore
+	clientCertFile string
+	serverCAFile   string
+	password       string
+}
+
+func (cm *createCertsManager) createCertsForGuest(ctx context.Context) (_ uiauto.Action, retErr error) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
+	filePath := os.TempDir()
+	clientCertDest, caCertDest, removeCertFiles, err := writeCertFiles(ctx, filePath, cm.clientCertFile, cm.serverCAFile, cm.certs, cm.password)
+	if err != nil {
+		return nil, err
+	}
+	defer removeCertFiles(ctx)
+
+	var cleanupCertFromFilesApp []uiauto.Action
+	for filename, certDest := range map[string]*certificate.Destination{
+		cm.serverCAFile:   caCertDest,
+		cm.clientCertFile: clientCertDest,
+	} {
+		// Leveraging the browser and file system accessing UI to store the certificate under guest user's encrypted
+		// home directory as the mounted path for a guest user session is not available (crrev.com/c/3412613).
+		removeCertFromFilesApp, err := downloadFromLocalHTTPServer(ctx, cm.cr, filename, certDest.FullPath())
+		if err != nil {
+			return nil, err
+		}
+		defer func(ctx context.Context) {
+			if retErr != nil {
+				defer removeCertFromFilesApp(cleanupCtx)
+			}
+		}(cleanupCtx)
+		cleanupCertFromFilesApp = append(cleanupCertFromFilesApp, removeCertFromFilesApp)
+	}
+
+	return uiauto.Combine("clean up certificate from files app", cleanupCertFromFilesApp...), nil
+}
+
+func (cm *createCertsManager) createCertsForUser(ctx context.Context) (cleanup uiauto.Action, retErr error) {
+	downloadsPath, err := cryptohome.DownloadsPath(ctx, cm.cr.NormalizedUser())
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to retrieve user's downloads path")
+	}
+
+	_, _, cleanup, err = writeCertFiles(ctx, downloadsPath, cm.clientCertFile, cm.serverCAFile, cm.certs, cm.password)
+	if err != nil {
+		return nil, err
+	}
+
+	return cleanup, nil
+}
+
+func (cm *createCertsManager) createCerts(ctx context.Context) (cleanupCerts uiauto.Action, retErr error) {
+	switch cm.cr.LoginMode() {
+	case "Guest":
+		cleanupCerts, retErr = cm.createCertsForGuest(ctx)
+		if retErr != nil {
+			return nil, errors.Wrap(retErr, "failed to create certs for guest")
+		}
+	default:
+		cleanupCerts, retErr = cm.createCertsForUser(ctx)
+		if retErr != nil {
+			return nil, errors.Wrap(retErr, "failed to create certs for user")
+		}
+	}
+
+	return cleanupCerts, nil
+}
+
 // CreateCertAndImport creates and imports the CA certificate and the client certificate contained in the CertStore.
 func (m *Manager) CreateCertAndImport(ctx context.Context, cr *chrome.Chrome, certs certificate.CertStore, importType ImportType, password string, trustSettings CATrustSettings) (retErr error) {
 	// Reserve a longer time in case the certificate needs to be deleted.
@@ -229,39 +328,20 @@ func (m *Manager) CreateCertAndImport(ctx context.Context, cr *chrome.Chrome, ce
 	defer cleanUpClientCert(cleanupCtx)
 
 	serverCAFileName := "test_server_CA.pem"
-	// Write CA certificate file to temp path.
-	caCertDest := certificate.NewLocalDestination(os.TempDir(), serverCAFileName)
-	cleanUpCaCert, err := certificate.WriteCACert(ctx, caCertDest, certs)
-	if err != nil {
-		return errors.Wrap(err, "failed to create the CA certificate file")
-	}
-	defer cleanUpCaCert(cleanupCtx)
 
-	downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
+	createCertsManager := &createCertsManager{
+		cr:             cr,
+		certs:          certs,
+		clientCertFile: clientCertFileName,
+		serverCAFile:   serverCAFileName,
+		password:       password,
+	}
+	cleanupCerts, err := createCertsManager.createCerts(ctx)
 	if err != nil {
-		return errors.Wrap(err, "failed to retrieve user's downloads path")
+		return errors.Wrap(err, "failed to create certs")
 	}
 
-	for filename, certDest := range map[string]*certificate.Destination{
-		serverCAFileName:   caCertDest,
-		clientCertFileName: clientCertDest,
-	} {
-		if cr.LoginMode() == "Guest" {
-			// Leveraging the browser and file system accessing UI to store the certificate under guest user's encrypted
-			// home directory as the mounted path for a guest user session is not available (crrev.com/c/3412613).
-			removeCertFromFilesApp, err := downloadFromLocalHTTPServer(ctx, cr, filename, certDest.FullPath())
-			if err != nil {
-				return err
-			}
-			defer removeCertFromFilesApp(cleanupCtx)
-		} else {
-			fileUnderDownloadsPath := filepath.Join(downloadsPath, filename)
-			if err := testexec.CommandContext(ctx, "mv", certDest.FullPath(), fileUnderDownloadsPath).Run(testexec.DumpLogOnError); err != nil {
-				return err
-			}
-			defer testexec.CommandContext(ctx, "rm", fileUnderDownloadsPath).Run(testexec.DumpLogOnError)
-		}
-	}
+	defer cleanupCerts(cleanupCtx)
 
 	// Import the CA certificate and the client certificate.
 	for _, cert := range []*CertData{
@@ -291,7 +371,7 @@ func (m *Manager) CreateCertAndImport(ctx context.Context, cr *chrome.Chrome, ce
 
 // downloadFromLocalHTTPServer starts a local HTTP server during the function call, then download the file from the browser.
 // TODO(crrev.com/c/3412613): Remove this workaround once the download folder of the guest user can be utilized.
-func downloadFromLocalHTTPServer(ctx context.Context, cr *chrome.Chrome, fileName, filePath string) (func(ctx context.Context) error, error) {
+func downloadFromLocalHTTPServer(ctx context.Context, cr *chrome.Chrome, fileName, filePath string) (uiauto.Action, error) {
 	fileContent, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read the file")
