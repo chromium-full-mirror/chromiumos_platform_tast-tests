@@ -290,7 +290,7 @@ func DevBootInvalidUSB(ctx context.Context, s *testing.State) {
 }
 
 func (servoCharger *servoChargerState) setPDDataRole(ctx context.Context, h *firmware.Helper) error {
-	if err := bypassDevBootTimeout(ctx, h); err != nil {
+	if err := h.ByPassDevBootTimeout(ctx); err != nil {
 		return errors.Wrap(err, "failed to bypass dev boot timeout")
 	}
 	if servoCharger.removeServoCharger {
@@ -307,7 +307,7 @@ func (servoCharger *servoChargerState) setPDDataRole(ctx context.Context, h *fir
 	if err := h.Servo.SetDUTPDDataRole(ctx, servo.DFP); err != nil {
 		testing.ContextLogf(ctx, "Failed to set pd data role to DFP: %.400s", err)
 	}
-	if err := returnToDeveloperScreen(ctx, h); err != nil {
+	if err := h.ReturnToDeveloperScreen(ctx); err != nil {
 		return errors.Wrap(err, "failed to return to developer screen")
 	}
 	return nil
@@ -346,7 +346,7 @@ func (usb *usbState) restoreUSB(ctx context.Context, h *firmware.Helper) error {
 	if !usb.isCorrupted {
 		return nil
 	}
-	if err := bypassDevBootTimeout(ctx, h); err != nil {
+	if err := h.ByPassDevBootTimeout(ctx); err != nil {
 		return errors.Wrap(err, "failed to bypass dev boot timeout")
 	}
 	testing.ContextLog(ctx, "Powering off the USB")
@@ -358,7 +358,7 @@ func (usb *usbState) restoreUSB(ctx context.Context, h *firmware.Helper) error {
 		return errors.Wrap(err, "failed to restore the USB")
 	}
 	usb.isCorrupted = false
-	if err := returnToDeveloperScreen(ctx, h); err != nil {
+	if err := h.ReturnToDeveloperScreen(ctx); err != nil {
 		return errors.Wrap(err, "failed to return to developer screen")
 	}
 	testing.ContextLog(ctx, "Enabling a valid USB to DUT")
@@ -417,36 +417,6 @@ func ctrlDBootFromInternal(ctx context.Context, h *firmware.Helper) error {
 	testing.ContextLog(ctx, "Pressing Ctrl-D")
 	if err := h.Servo.KeypressWithDuration(ctx, servo.CtrlD, servo.DurTab); err != nil {
 		return errors.Wrap(err, "failed to press Ctrl-D")
-	}
-	return nil
-}
-
-func bypassDevBootTimeout(ctx context.Context, h *firmware.Helper) error {
-	if h.Config.ModeSwitcherType == firmware.TabletDetachableSwitcher {
-		testing.ContextLog(ctx, "Pressing tab to restart fw screen timeout")
-		if err := h.Servo.PressKey(ctx, "<tab>", servo.DurTab); err != nil {
-			return errors.Wrap(err, "failed to press tab key")
-		}
-	} else {
-		testing.ContextLog(ctx, "Pressing space to restart fw screen timeout")
-		if err := h.Servo.PressKey(ctx, " ", servo.DurTab); err != nil {
-			return errors.Wrap(err, "failed to press space key")
-		}
-	}
-	return nil
-}
-
-func returnToDeveloperScreen(ctx context.Context, h *firmware.Helper) error {
-	if h.Config.ModeSwitcherType == firmware.MenuSwitcher {
-		return nil
-	}
-	testing.ContextLog(ctx, "Pressing esc to return to the developer screen")
-	if err := h.Servo.PressKey(ctx, "<esc>", servo.DurTab); err != nil {
-		return errors.Wrap(err, "failed to press esc key")
-	}
-	// GoBigSleepLint: Simulate a specific speed of key presses.
-	if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
-		return errors.Wrapf(err, "failed to sleep for %v second", h.Config.KeypressDelay)
 	}
 	return nil
 }

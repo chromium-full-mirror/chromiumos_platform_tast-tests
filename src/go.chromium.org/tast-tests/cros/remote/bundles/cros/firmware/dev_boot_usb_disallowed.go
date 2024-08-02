@@ -65,10 +65,22 @@ func DevBootUSBDisallowed(ctx context.Context, s *testing.State) {
 	if err := h.SetupUSBKey(ctx, cs); err != nil {
 		s.Fatal("USBKey not working: ", err)
 	}
+	if err := h.Servo.SetOnOff(ctx, servo.USBKeyboard, servo.Off); err != nil {
+		s.Fatal("Failed to turn off usb keyboard: ", err)
+	}
+	if err := h.Servo.SetOnOff(ctx, servo.InitKeyboard, servo.On); err != nil {
+		s.Fatal("Failed to turn on internal keyboard: ", err)
+	}
+	var state firmware.CheckAndSetServoCharger
+	state = h.CheckServoChargerBeforeBootingFromUSB(ctx)
 
-	s.Log("Disabling dev_boot_usb")
-	if err := h.DUT.Conn().CommandContext(ctx, "crossystem", "dev_boot_usb=0").Run(); err != nil {
-		s.Fatal("Failed to set crossystem: ", err)
+	s.Log("Removing USB")
+	if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxOff); err != nil {
+		s.Fatal("Failed to remove USB: ", err)
+	}
+
+	if err := h.DisableDevBootUSB(ctx); err != nil {
+		s.Fatal("Failed to disable usb boot: ", err)
 	}
 
 	s.Log("Rebooting DUT to developer screen")
@@ -86,14 +98,41 @@ func DevBootUSBDisallowed(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to sleep for %s: %v", h.Config.FirmwareScreen, err)
 	}
 
-	s.Log("Resetting firmware screen timeout")
-	if err := h.Servo.PressKey(ctx, " ", servo.DurTab); err != nil {
-		s.Fatal("Failed to press space key: ", err)
+	if err := h.ByPassDevBootTimeout(ctx); err != nil {
+		s.Fatal("Failed to bypass dev boot timeout: ", err)
 	}
-
+	if state.RemoveServoChargerRequired && state.IsServoChargerConnected {
+		s.Log("Removing servo charger")
+		if err := h.SetDUTPower(ctx, false); err != nil {
+			s.Fatal("Failed to remove charger: ", err)
+		}
+		state.IsServoChargerConnected = false
+		// GoBigSleepLint: Wait for a while between removing the charger and
+		// booting the DUT from USB to prevent USB disconnected issues.
+		if err := testing.Sleep(ctx, 5*time.Second); err != nil {
+			s.Fatal("Failed to sleep: ", err)
+		}
+	}
+	defer func() {
+		if state.RemoveServoChargerRequired && !state.IsServoChargerConnected {
+			s.Log("Connecting servo charger")
+			if err := h.SetDUTPower(ctx, true); err != nil {
+				s.Fatal("Failed to connect charger: ", err)
+			}
+			state.IsServoChargerConnected = true
+			waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 90*time.Second)
+			defer cancelWaitConnect()
+			if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
+				s.Fatal("Failed to reconnect to the DUT: ", err)
+			}
+		}
+	}()
 	s.Log("Setting DFP mode")
 	if err := h.Servo.SetDUTPDDataRole(ctx, servo.DFP); err != nil {
 		s.Logf("Failed to set pd data role to DFP: %.400s", err)
+	}
+	if err := h.ReturnToDeveloperScreen(ctx); err != nil {
+		s.Fatal("Failed to return to developer screen: ", err)
 	}
 	s.Log("Inserting a valid USB to DUT")
 	if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
@@ -105,19 +144,6 @@ func DevBootUSBDisallowed(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to sleep for %v s: %v", firmware.UsbDisableTime, err)
 	}
 
-	// On KeyboardDevSwitcher machines, pressing space triggers the
-	// to_norm screen. Revert to the developer screen with the
-	// esc key.
-	if h.Config.ModeSwitcherType == firmware.KeyboardDevSwitcher {
-		if err := h.Servo.PressKey(ctx, "<esc>", servo.DurTab); err != nil {
-			s.Fatal("Failed to press esc: ", err)
-		}
-		// GoBigSleepLint: Sleep for model specific time.
-		if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
-			s.Fatalf("Failed to sleep for %s (KeypressDelay): %v", h.Config.KeypressDelay, err)
-		}
-	}
-
 	s.Log("Pressing Ctrl-U")
 	if err := h.Servo.KeypressWithDuration(ctx, servo.CtrlU, servo.DurTab); err != nil {
 		s.Fatal("Failed to press Ctrl-U: ", err)
@@ -125,6 +151,10 @@ func DevBootUSBDisallowed(ctx context.Context, s *testing.State) {
 	// GoBigSleepLint: Simulate a specific speed of button presses.
 	if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
 		s.Fatalf("Failed to sleep for %v s, %v", h.Config.KeypressDelay, err)
+	}
+	s.Log("Removing USB")
+	if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxOff); err != nil {
+		s.Fatal("Failed to remove USB: ", err)
 	}
 	// On MenuSwitcher machines, a message box would appear, suggesting that
 	// external boot is disabled. Pressing the Enter key hits the back button,
@@ -139,12 +169,13 @@ func DevBootUSBDisallowed(ctx context.Context, s *testing.State) {
 			s.Fatalf("Failed to sleep for %v s, %v", h.Config.KeypressDelay, err)
 		}
 	}
+	s.Log("Pressing Ctrl-D")
 	if err := h.Servo.KeypressWithDuration(ctx, servo.CtrlD, servo.DurTab); err != nil {
 		s.Fatal("Failed to press Ctrl-D: ", err)
 	}
 
 	s.Log("Waiting for DUT to reconnect")
-	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.USBImageBootTimeout)
+	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
 	defer cancelWaitConnect()
 	if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
 		s.Fatal("Failed to reconnect to DUT: ", err)
@@ -156,7 +187,7 @@ func DevBootUSBDisallowed(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get dut boot mode: ", err)
 	}
 	if !isDevMode {
-		s.Fatal("Failed to boot from USB: ", err)
+		s.Fatal("Failed to boot to dev mode")
 	}
 
 	s.Log("Checking cbmem log for the displayed screens and usb boot disabled message")
@@ -169,9 +200,9 @@ func DevBootUSBDisallowed(ctx context.Context, s *testing.State) {
 		if getFwLogErr != nil {
 			s.Fatal("Failed to get cbmem logs: ", getFwLogErr)
 		}
-		invalidScreenTypeStr := `Not a valid screen type`
-		if strings.Contains(cbmemLog, invalidScreenTypeStr) {
-			s.Fatalf("Failed to verify disabled usb boot from CBMEM, got %v: %v", invalidScreenTypeStr, err)
+		drawingFailedStr := `Drawing failed`
+		if strings.Contains(cbmemLog, drawingFailedStr) {
+			s.Fatalf("Failed to verify disabled usb boot from CBMEM, got %v: %v", drawingFailedStr, err)
 		}
 		s.Fatal("Failed to verify disabled usb boot from CBMEM: ", err)
 	}
@@ -192,6 +223,9 @@ func identifyDisabledUSBBootFwLog(h *firmware.Helper) disabledUSBBootFwLog {
 		data.logs = []string{`(External boot is disabled|Dev mode external boot not allowed)`}
 	case firmware.TabletDetachableSwitcher:
 		data.screenIds = []fwCommon.FwScreenID{
+			fwCommon.LegacyDeveloperWarningMenu,
+			// Go to DebugInfo screen to bypass the timeout.
+			fwCommon.LegacyDebugInfo,
 			fwCommon.LegacyDeveloperWarningMenu,
 			fwCommon.LegacyBlank,
 			fwCommon.LegacyDeveloperWarningMenu,

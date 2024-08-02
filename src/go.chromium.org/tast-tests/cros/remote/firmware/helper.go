@@ -2438,3 +2438,39 @@ func (h *Helper) SetECWriteProtect(ctx context.Context, enable bool) error {
 
 	return nil
 }
+
+// ByPassDevBootTimeout resets the timeout on the developer screen.
+func (h *Helper) ByPassDevBootTimeout(ctx context.Context) error {
+	if h.Config.ModeSwitcherType == TabletDetachableSwitcher {
+		testing.ContextLog(ctx, "Pressing tab to restart fw screen timeout")
+		if err := h.Servo.PressKey(ctx, "<tab>", servo.DurTab); err != nil {
+			return errors.Wrap(err, "failed to press tab key")
+		}
+	} else {
+		testing.ContextLog(ctx, "Pressing space to restart fw screen timeout")
+		if err := h.Servo.PressKey(ctx, " ", servo.DurTab); err != nil {
+			return errors.Wrap(err, "failed to press space key")
+		}
+	}
+	// GoBigSleepLint: Simulate a specific speed of key presses.
+	if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
+		return errors.Wrapf(err, "failed to sleep for %v second", h.Config.KeypressDelay)
+	}
+	return nil
+}
+
+// ReturnToDeveloperScreen switch the DUT back to the developer screen.
+func (h *Helper) ReturnToDeveloperScreen(ctx context.Context) error {
+	if h.Config.ModeSwitcherType == MenuSwitcher {
+		return nil
+	}
+	testing.ContextLog(ctx, "Pressing esc to return to the developer screen")
+	if err := h.Servo.PressKey(ctx, "<esc>", servo.DurTab); err != nil {
+		return errors.Wrap(err, "failed to press esc key")
+	}
+	// GoBigSleepLint: Simulate a specific speed of key presses.
+	if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
+		return errors.Wrapf(err, "failed to sleep for %v second", h.Config.KeypressDelay)
+	}
+	return nil
+}
