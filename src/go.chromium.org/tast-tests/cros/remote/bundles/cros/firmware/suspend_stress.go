@@ -134,8 +134,11 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 		if err := cmd.Start(); err != nil {
 			logFailure("Failed to initiate suspend on DUT", err, i)
 		}
-
-		h.DisconnectDUT(ctx)
+		waitUnreachableCtx, cancelWaitUnreachable := context.WithTimeout(ctx, 30*time.Second)
+		defer cancelWaitUnreachable()
+		if err := h.DUT.WaitUnreachable(waitUnreachableCtx); err != nil {
+			s.Fatal("Failed to wait for DUT to be unreachable after sending powerd_dbus_suspend: ", err)
+		}
 
 		s.Log("Checking for S0ix or S3 powerstate")
 		// After suspendDuration+powerDelayDur the DUT will return to S0 so if S0ix/S3 not detected in that duration, it failed to suspend.
