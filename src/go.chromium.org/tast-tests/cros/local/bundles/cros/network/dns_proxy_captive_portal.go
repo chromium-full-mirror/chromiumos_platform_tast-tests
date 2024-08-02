@@ -139,8 +139,13 @@ func DNSProxyCaptivePortal(ctx context.Context, s *testing.State) {
 
 	var a *arc.ARC
 	if relog {
-		// Start Chrome.
-		cr, err := chrome.New(ctx, chrome.ARCEnabled(), chrome.UnRestrictARCCPU())
+		// Start Chrome. We don't need a fresh Chrome login, so use KeepState() to
+		// make it faster.
+		cr, err := chrome.New(ctx,
+			chrome.ARCEnabled(),
+			chrome.UnRestrictARCCPU(),
+			chrome.KeepState(),
+		)
 		if err != nil {
 			s.Fatal("Failed to start Chrome: ", err)
 		}
@@ -206,8 +211,13 @@ func DNSProxyCaptivePortal(ctx context.Context, s *testing.State) {
 	}
 
 	if relog {
-		// Re-start Chrome, emulate a logout and login.
-		cr, err := chrome.New(ctx, chrome.ARCEnabled(), chrome.UnRestrictARCCPU(), chrome.EnableFeatures("EnableDnsProxy", "DnsProxyEnableDOH"))
+		// Re-start Chrome, emulate a logout and login. We don't need a fresh Chrome
+		// login, so use KeepState() to make it faster.
+		cr, err := chrome.New(ctx,
+			chrome.ARCEnabled(),
+			chrome.UnRestrictARCCPU(),
+			chrome.KeepState(),
+		)
 		if err != nil {
 			s.Fatal("Failed to start Chrome: ", err)
 		}
