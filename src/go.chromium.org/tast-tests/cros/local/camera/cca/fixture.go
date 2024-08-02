@@ -15,7 +15,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/android/ui"
 	"go.chromium.org/tast-tests/cros/common/camera/chart"
 	"go.chromium.org/tast-tests/cros/local/arc"
-	"go.chromium.org/tast-tests/cros/local/assistant"
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
 	audioFixture "go.chromium.org/tast-tests/cros/local/audio/fixture"
@@ -554,10 +553,6 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 		// ChromeOS VCD runs in the browser process by default. Disable it to make VCD run in the utility process.
 		chromeOpts = append(chromeOpts, chrome.DisableFeatures("RunVideoCaptureServiceInBrowserProcess"))
 	}
-
-	// Enable assistant verbose logging for the CCAUIAssistant test. Since
-	// assistant is disabled by default, this should not affect other tests.
-	chromeOpts = append(chromeOpts, assistant.VerboseLogging())
 
 	browserType := browser.TypeAsh
 	if f.lacros {
