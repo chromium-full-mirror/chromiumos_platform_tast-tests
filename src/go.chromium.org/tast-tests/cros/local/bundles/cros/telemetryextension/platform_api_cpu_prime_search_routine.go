@@ -41,6 +41,7 @@ func init() {
 				Name:              "lacros",
 				ExtraSoftwareDeps: []string{"lacros"},
 				Fixture:           fixture.TelemetryExtensionSkipOEMNameCheckLacros,
+				ExtraAttr:         []string{"group:criticalstaging"},
 			},
 		},
 	})
