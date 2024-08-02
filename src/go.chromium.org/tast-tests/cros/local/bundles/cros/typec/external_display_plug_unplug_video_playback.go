@@ -174,4 +174,15 @@ func ExternalDisplayPlugUnplugVideoPlayback(ctx context.Context, s *testing.Stat
 	if err := cswitch.ToggleCSwitchPort(ctx, sessionID, cSwitchOFF, domainIP); err != nil {
 		s.Fatal("Failed to disable c-switch port: ", err)
 	}
+
+	// Get current audio output device info.
+	deviceName, deviceType, err = cras.SelectedOutputDevice(ctx)
+	if err != nil {
+		s.Fatal("Failed to get the selected audio device: ", err)
+	}
+
+	if deviceType != "INTERNAL_SPEAKER" {
+		s.Fatal("Failed to set the audio node to edp")
+	}
+
 }
