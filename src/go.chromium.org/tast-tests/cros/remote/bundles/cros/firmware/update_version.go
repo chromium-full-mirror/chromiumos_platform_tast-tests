@@ -162,6 +162,11 @@ func UpdateVersion(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to make the temp directory: ", err)
 	}
 	defer func(ctx context.Context) {
+		s.Log("Make sure DUT is connected before cleanup")
+		if err := h.EnsureDUTBooted(ctx); err != nil {
+			s.Fatal("Failed to connect to the DUT: ", err)
+		}
+
 		if err := h.RequireRPCClient(ctx); err != nil {
 			s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
 		}
@@ -294,7 +299,7 @@ func UpdateVersion(ctx context.Context, s *testing.State) {
 	fwidAfterAutoUpdate := new(string)
 
 	defer func(ctx context.Context, fwidAfterAutoUpdate *string) {
-		testing.ContextLog(ctx, "Make sure DUT is connected before cleanup")
+		s.Log("Make sure DUT is connected before cleanup")
 		if err := h.EnsureDUTBooted(ctx); err != nil {
 			s.Fatal("Failed to connect to the DUT: ", err)
 		}
