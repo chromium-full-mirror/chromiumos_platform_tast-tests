@@ -137,10 +137,8 @@ func DNSProxyCaptivePortal(ctx context.Context, s *testing.State) {
 	}
 	defer portalEnv.Cleanup(cleanupCtx)
 
-	var a *arc.ARC
-	if relog {
-		// Start Chrome. We don't need a fresh Chrome login, so use KeepState() to
-		// make it faster.
+	startChrome := func() *chrome.Chrome {
+		// We don't need a fresh Chrome login, so use KeepState() to make it faster.
 		cr, err := chrome.New(ctx,
 			chrome.ARCEnabled(),
 			chrome.UnRestrictARCCPU(),
@@ -149,13 +147,21 @@ func DNSProxyCaptivePortal(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to start Chrome: ", err)
 		}
-		defer cr.Close(cleanupCtx)
-
-		// Start ARC.
-		a, err = arc.New(ctx, s.OutDir(), cr.NormalizedUser())
+		return cr
+	}
+	startARC := func(cr *chrome.Chrome) *arc.ARC {
+		a, err := arc.New(ctx, s.OutDir(), cr.NormalizedUser())
 		if err != nil {
 			s.Fatal("Failed to start ARC: ", err)
 		}
+		return a
+	}
+
+	var a *arc.ARC
+	if relog {
+		cr := startChrome()
+		defer cr.Close(cleanupCtx)
+		a := startARC(cr)
 		defer a.Close(cleanupCtx)
 	}
 
@@ -211,23 +217,10 @@ func DNSProxyCaptivePortal(ctx context.Context, s *testing.State) {
 	}
 
 	if relog {
-		// Re-start Chrome, emulate a logout and login. We don't need a fresh Chrome
-		// login, so use KeepState() to make it faster.
-		cr, err := chrome.New(ctx,
-			chrome.ARCEnabled(),
-			chrome.UnRestrictARCCPU(),
-			chrome.KeepState(),
-		)
-		if err != nil {
-			s.Fatal("Failed to start Chrome: ", err)
-		}
+		// Re-start Chrome, emulate a logout and login.
+		cr := startChrome()
 		defer cr.Close(cleanupCtx)
-
-		// Start ARC.
-		a, err = arc.New(ctx, s.OutDir(), cr.NormalizedUser())
-		if err != nil {
-			s.Fatal("Failed to start ARC: ", err)
-		}
+		a := startARC(cr)
 		defer a.Close(cleanupCtx)
 
 		// Verify the system proxy is still not the current nameserver and name resolution works.
