@@ -92,12 +92,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests that WiFi can be connected to with different UI surfaces, and can transit from one network to another",
 		Contacts: []string{
-			"cros-connectivity@google.com",
-			"chadduffin@google.com",
 			"chromeos-connectivity-cienet-external@google.com",
 			"edgar.chang@cienet.com",
 		},
-		BugComponent:   "b:1131912", // ChromeOS > Software > System Services > Connectivity > WiFi
+		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
 		LifeCycleStage: testing.LifeCycleInDevelopment,
 		Attr:           []string{"group:wificell", "wificell_e2e"},
 		TestBedDeps:    []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
