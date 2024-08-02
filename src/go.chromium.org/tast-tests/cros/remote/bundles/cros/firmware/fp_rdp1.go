@@ -38,7 +38,7 @@ func init() {
 		Attr:         []string{"group:fingerprint-cq", "group:fingerprint-release"},
 		Timeout:      10 * time.Minute,
 		SoftwareDeps: []string{"biometrics_daemon"},
-		HardwareDeps: hwdep.D(hwdep.Fingerprint(), hwdep.SkipOnFPMCU(string(fp.BoardNameHelipilot))),
+		HardwareDeps: hwdep.D(hwdep.Fingerprint(), hwdep.SkipOnFPMCU(string(fp.BoardNameHelipilot), string(fp.BoardNameBuccaneer))),
 		ServiceDeps:  []string{"tast.cros.platform.UpstartService", dutfs.ServiceName},
 		TestBedDeps:  []string{tbdep.Fingerprint, tbdep.ServoStateWorking},
 		Vars:         []string{"servo"},

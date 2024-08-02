@@ -51,6 +51,7 @@ func init() {
 		ServiceDeps:  []string{"tast.cros.firmware.FpUpdaterService", "tast.cros.platform.UpstartService", dutfs.ServiceName},
 		TestBedDeps:  []string{tbdep.Fingerprint, tbdep.ServoStateWorking},
 		Vars:         []string{"servo"},
+		// TODO(b/355735358): Need to submit a sufficient previous buccaneer version.
 		Data: []string{"nocturne_fp_v2.0.3266-99b5e2c98_20201214.bin",
 			"nami_fp_v2.0.3266-99b5e2c98_20201214.bin",
 			"bloonchipper_v2.0.14206-ad46faf_20220718.bin",
@@ -69,6 +70,7 @@ func getOldFirmwarePath(s *testing.State, fpBoard fp.BoardName) (string, error) 
 		return s.DataPath("nami_fp_v2.0.3266-99b5e2c98_20201214.bin"), nil
 	case fp.BoardNameBloonchipper:
 		return s.DataPath("bloonchipper_v2.0.14206-ad46faf_20220718.bin"), nil
+	// TODO(b/355735358): Need to add an entry for buccaneer.
 	case fp.BoardNameDartmonkey:
 		return s.DataPath("dartmonkey_v2.0.2887-311310808_20201214.bin"), nil
 	case fp.BoardNameHelipilot:

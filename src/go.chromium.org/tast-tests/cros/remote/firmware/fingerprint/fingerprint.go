@@ -107,6 +107,8 @@ var keyIDMap = map[string]KeyType{
 	"07b1af57220c196e363e68d73a5966047c77011e": KeyTypePreMp,
 	"1c590ef36399f6a2b2ef87079c135b69ef89eb60": KeyTypeMp,
 
+	// buccaneer - uses helipilot's pre-mp signing key
+
 	// dartmonkey.
 	"257a0aa3ac9e81aa4bc3aabdb6d3d079117c5799": KeyTypeMp,
 

@@ -24,6 +24,8 @@ const (
 	Futility = "futility"
 	// BloonchipperDevKey is the path to the dev key.
 	BloonchipperDevKey = "fingerprint_dev_keys/bloonchipper/dev_key.pem"
+	// BuccaneerDevKey is the path to the dev key
+	BuccaneerDevKey = "fingerprint_dev_keys/buccaneer/dev_key.pem"
 	// DartmonkeyDevKey is the path to the dev key.
 	DartmonkeyDevKey = "fingerprint_dev_keys/dartmonkey/dev_key.pem"
 	// NamiFPDevKey is the path to the dev key.
@@ -36,6 +38,7 @@ const (
 
 var devKeyMap = map[fp.BoardName]string{
 	fp.BoardNameBloonchipper: BloonchipperDevKey,
+	fp.BoardNameBuccaneer:    BuccaneerDevKey,
 	fp.BoardNameDartmonkey:   DartmonkeyDevKey,
 	fp.BoardNameNami:         NamiFPDevKey,
 	fp.BoardNameNocturne:     NocturneFPDevKey,
@@ -71,6 +74,7 @@ func init() {
 		TearDownTimeout: 10 * time.Second,
 		Data: []string{
 			BloonchipperDevKey,
+			BuccaneerDevKey,
 			DartmonkeyDevKey,
 			NamiFPDevKey,
 			NocturneFPDevKey,

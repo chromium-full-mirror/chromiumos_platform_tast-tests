@@ -24,7 +24,7 @@ func rollbackFlashOffset(fpBoard fp.BoardName) (string, error) {
 		return rollbackFlashOffsetBloonchipper, nil
 	case fp.BoardNameDartmonkey, fp.BoardNameNocturne, fp.BoardNameNami:
 		return rollbackFlashOffsetDartmonkey, nil
-	case fp.BoardNameHelipilot:
+	case fp.BoardNameHelipilot, fp.BoardNameBuccaneer:
 		return rollbackFlashOffsetHelipilot, nil
 	default:
 		return "", errors.Errorf("Rollback flash offset is not defined for %q", fpBoard)
