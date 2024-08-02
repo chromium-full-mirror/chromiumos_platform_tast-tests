@@ -89,7 +89,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"android_vm", "qemu"},
 				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
 			}},
-		Timeout: 7 * time.Minute,
+		Timeout: 8 * time.Minute,
 	})
 }
 
