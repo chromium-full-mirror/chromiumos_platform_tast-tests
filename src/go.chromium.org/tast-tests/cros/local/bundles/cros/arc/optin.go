@@ -36,7 +36,6 @@ func init() {
 		},
 		// ChromeOS > Software > ARC++ > Core > Play Store Setup
 		BugComponent: "b:1131344",
-		Attr:         []string{"group:mainline", "group:arc-functional", "group:cq-medium"},
 		VarDeps:      []string{ui.GaiaPoolDefaultVarName},
 		SoftwareDeps: []string{
 			"chrome",
@@ -46,46 +45,46 @@ func init() {
 		},
 		Params: []testing.Param{
 			{
-				ExtraAttr:         []string{"group:cq-minimal"},
+				ExtraAttr:         []string{"group:arc-functional", "group:mainline", "group:cq-medium", "group:cq-minimal"},
 				ExtraSoftwareDeps: []string{"android_container"},
 				Val:               optinTestArgs{preprod: false, fieldTrialConfig: chrome.FieldTrialConfigDefault},
 			},
 			{
 				Name:              "fieldtrial_testing_config_off",
-				ExtraAttr:         []string{"informational"},
+				ExtraAttr:         []string{"group:arc-functional", "group:mainline", "group:cq-medium", "informational"},
 				ExtraSoftwareDeps: []string{"android_container"},
 				Val:               optinTestArgs{preprod: false, fieldTrialConfig: chrome.FieldTrialConfigDisable},
 			},
 			{
 				Name:              "fieldtrial_testing_config_on",
-				ExtraAttr:         []string{"informational", "group:chrome_uprev_cbx"},
+				ExtraAttr:         []string{"group:arc-functional", "group:mainline", "group:cq-medium", "informational", "group:chrome_uprev_cbx"},
 				ExtraSoftwareDeps: []string{"android_container"},
 				Val:               optinTestArgs{preprod: false, fieldTrialConfig: chrome.FieldTrialConfigEnable},
 			},
 			{
 				Name:              "vm",
-				ExtraAttr:         []string{"group:cq-minimal"},
+				ExtraAttr:         []string{"group:arc-functional", "group:mainline", "group:cq-medium", "group:cq-minimal"},
 				ExtraSoftwareDeps: []string{"android_vm"},
 				Val:               optinTestArgs{preprod: false, fieldTrialConfig: chrome.FieldTrialConfigDefault},
 			},
 			{
 				Name:              "fieldtrial_testing_config_off_vm",
-				ExtraAttr:         []string{"informational"},
+				ExtraAttr:         []string{"group:arc-functional", "group:mainline", "group:cq-medium", "informational"},
 				ExtraSoftwareDeps: []string{"android_vm"},
 				Val:               optinTestArgs{preprod: false, fieldTrialConfig: chrome.FieldTrialConfigDisable},
 			},
 			{
 				Name:              "fieldtrial_testing_config_on_vm",
-				ExtraAttr:         []string{"informational", "group:chrome_uprev_cbx"},
+				ExtraAttr:         []string{"group:arc-functional", "group:mainline", "group:cq-medium", "informational", "group:chrome_uprev_cbx"},
 				ExtraSoftwareDeps: []string{"android_vm"},
 				Val:               optinTestArgs{preprod: false, fieldTrialConfig: chrome.FieldTrialConfigEnable},
 			},
 			{
 				Name:              "preprod",
-				ExtraAttr:         []string{"group:hw_agnostic", "informational", "group:external-dependency"},
+				ExtraAttr:         []string{"group:external-dependency", "group:hw_agnostic"},
 				ExtraSoftwareDeps: []string{"android_vm"},
-				Val:               optinTestArgs{preprod: true, fieldTrialConfig: chrome.FieldTrialConfigDefault},
 				ExtraSearchFlags:  []*testing.StringPair{testenv.SearchFlag(testenv.GFEPreprod)},
+				Val:               optinTestArgs{preprod: true, fieldTrialConfig: chrome.FieldTrialConfigDefault},
 			}},
 		Timeout: chrome.LoginTimeout + arc.BootTimeout + 3*time.Minute,
 	})

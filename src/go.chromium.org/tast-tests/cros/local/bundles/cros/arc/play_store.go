@@ -40,52 +40,54 @@ func init() {
 		},
 		// ChromeOS > Software > ARC++ > Core > Play Store Setup
 		BugComponent: "b:1131344",
-		Attr:         []string{"group:arc-functional", "group:mainline"},
 		SoftwareDeps: []string{"play_store", "chrome", "gaia"},
 		Params: []testing.Param{
 			{
+				ExtraAttr:         []string{"group:arc-functional", "group:mainline"},
 				ExtraSoftwareDeps: []string{"android_container"},
 				Val:               playStoreTestArgs{preprod: false, fieldTrialConfig: chrome.FieldTrialConfigDefault},
 			},
 			{
 				Name:              "fieldtrial_testing_config_off",
-				ExtraAttr:         []string{"informational"},
+				ExtraAttr:         []string{"group:arc-functional", "group:mainline", "informational"},
 				ExtraSoftwareDeps: []string{"android_container"},
 				Val:               playStoreTestArgs{preprod: false, fieldTrialConfig: chrome.FieldTrialConfigDisable},
 			},
 			{
 				Name:              "fieldtrial_testing_config_on",
-				ExtraAttr:         []string{"informational", "group:chrome_uprev_cbx"},
+				ExtraAttr:         []string{"group:arc-functional", "group:mainline", "informational", "group:chrome_uprev_cbx"},
 				ExtraSoftwareDeps: []string{"android_container"},
 				Val:               playStoreTestArgs{preprod: false, fieldTrialConfig: chrome.FieldTrialConfigEnable},
 			},
 			{
 				Name:              "vm",
+				ExtraAttr:         []string{"group:arc-functional", "group:mainline"},
 				ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},
 				Val:               playStoreTestArgs{preprod: false, fieldTrialConfig: chrome.FieldTrialConfigDefault},
 			},
 			{
 				Name:              "fieldtrial_testing_config_off_vm",
-				ExtraAttr:         []string{"informational"},
+				ExtraAttr:         []string{"group:arc-functional", "group:mainline", "informational"},
 				ExtraSoftwareDeps: []string{"android_vm", "no_qemu", "android_vm"},
 				Val:               playStoreTestArgs{preprod: false, fieldTrialConfig: chrome.FieldTrialConfigDisable},
 			},
 			{
 				Name:              "fieldtrial_testing_config_on_vm",
-				ExtraAttr:         []string{"informational", "group:chrome_uprev_cbx"},
+				ExtraAttr:         []string{"group:arc-functional", "group:mainline", "informational", "group:chrome_uprev_cbx"},
 				ExtraSoftwareDeps: []string{"android_vm", "no_qemu", "android_vm"},
 				Val:               playStoreTestArgs{preprod: false, fieldTrialConfig: chrome.FieldTrialConfigEnable},
 			},
 			{
 				Name:              "betty_vm",
-				ExtraAttr:         []string{"informational"},
+				ExtraAttr:         []string{"group:arc-functional", "group:mainline", "informational"},
 				ExtraSoftwareDeps: []string{"android_vm", "qemu"},
 				Val:               playStoreTestArgs{preprod: false},
 			},
 			{
 				Name:              "preprod",
-				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
-				ExtraSoftwareDeps: []string{"android_vm", "qemu"}, // Use betty_vm configuration for googleapis
+				ExtraAttr:         []string{"group:external-dependency", "group:hw_agnostic"},
+				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraSearchFlags:  []*testing.StringPair{testenv.SearchFlag(testenv.GFEPreprod)},
 				Val:               playStoreTestArgs{preprod: true},
 			}},
 		Timeout: 15 * time.Minute,
