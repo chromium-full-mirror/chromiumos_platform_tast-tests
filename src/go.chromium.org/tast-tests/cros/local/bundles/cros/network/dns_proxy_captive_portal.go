@@ -157,6 +157,26 @@ func DNSProxyCaptivePortal(ctx context.Context, s *testing.State) {
 		return a
 	}
 
+	// Helper function to call RecheckPortal on shill and wait for service state
+	// to become svcState. Need a Poll here because it's possible that when the
+	// test changes the iptables rules, the portal detection is running.
+	// Requesting a portal recheck won't cancel the ongoing attempt, and thus the
+	// service won't go into the expected state.
+	recheckPortalAndWaitForSvcState := func(svcState string) error {
+		attempt := 0
+		return testing.Poll(ctx, func(ctx context.Context) error {
+			attempt++
+			s.Logf("Recheck portal and wait for service state to become %s: attemp #%d", svcState, attempt)
+			if err := m.RecheckPortal(ctx); err != nil {
+				return testing.PollBreak(err)
+			}
+			if err := veth.WaitForProperty(ctx, shillconst.ServicePropertyState, svcState, 3*time.Second); err != nil {
+				return err
+			}
+			return nil
+		}, &testing.PollOptions{Timeout: 30 * time.Second})
+	}
+
 	var a *arc.ARC
 	if relog {
 		cr := startChrome()
@@ -201,11 +221,8 @@ func DNSProxyCaptivePortal(ctx context.Context, s *testing.State) {
 	if err := network.BlockShillPortalDetector(ctx); err != nil {
 		s.Fatal("Failed to add rules to block portal detector: ", err)
 	}
-	if err := m.RecheckPortal(ctx); err != nil {
-		s.Fatal("Failed to invoke RecheckPortal on shill")
-	}
-	if err := veth.WaitForProperty(ctx, shillconst.ServicePropertyState, shillconst.ServiceStateNoConnectivity, 30*time.Second); err != nil {
-		s.Fatal("Service state is unexpected: ", err)
+	if err := recheckPortalAndWaitForSvcState(shillconst.ServiceStateNoConnectivity); err != nil {
+		s.Fatal("Failed to verify shill Service state after blocking portal detector: ", err)
 	}
 
 	// Verify the system proxy is not the current nameserver and name resolution works.
@@ -237,11 +254,8 @@ func DNSProxyCaptivePortal(ctx context.Context, s *testing.State) {
 	if err := network.UnblockShillPortalDetector(ctx); err != nil {
 		s.Fatal("Failed to remove rules to unblock portal detector: ", err)
 	}
-	if err := m.RecheckPortal(ctx); err != nil {
-		s.Fatal("Failed to invoke RecheckPortal on shill: ", err)
-	}
-	if err := veth.WaitForProperty(ctx, shillconst.ServicePropertyState, shillconst.ServiceStateOnline, 30*time.Second); err != nil {
-		s.Fatal("Service state is unexpected: ", err)
+	if err := recheckPortalAndWaitForSvcState(shillconst.ServiceStateOnline); err != nil {
+		s.Fatal("Failed to verify shill Service state after unblocking portal detector: ", err)
 	}
 
 	// Verify the system proxy is the current nameserver and name resolution works.
