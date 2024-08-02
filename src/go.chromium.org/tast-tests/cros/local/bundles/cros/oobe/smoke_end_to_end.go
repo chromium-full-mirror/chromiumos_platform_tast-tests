@@ -43,7 +43,6 @@ func init() {
 			"rrsilva@google.com",
 		},
 		BugComponent: "b:1263090", // ChromeOS > Software > OOBE
-		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "non_meet_device", "gaia"},
 		VarDeps: []string{
 			"ui.signinProfileTestExtensionManifestKey",
@@ -51,23 +50,25 @@ func init() {
 		},
 		Timeout: chrome.GAIALoginTimeout + 5*time.Minute,
 		Params: []testing.Param{{
-			ExtraAttr: []string{"group:criticalstaging"},
+			ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
 			Val:       oobeTestArgs{isAddPersonFlow: false, preprod: false, isMetricsClientIDTest: false},
 		}, {
 			Name:      "add_person_flow",
-			ExtraAttr: []string{},
+			ExtraAttr: []string{"group:mainline", "informational"},
 			Val:       oobeTestArgs{isAddPersonFlow: true, preprod: false, isMetricsClientIDTest: false},
 		}, {
-			ExtraAttr: []string{"group:testenv_preprod"},
-			Name:      "preprod",
-			Val:       oobeTestArgs{isAddPersonFlow: false, preprod: true, isMetricsClientIDTest: false},
+			Name:             "preprod",
+			ExtraAttr:        []string{"group:external-dependency", "group:hw_agnostic"},
+			ExtraSearchFlags: []*testing.StringPair{testenv.SearchFlag(testenv.GFEPreprod)},
+			Val:              oobeTestArgs{isAddPersonFlow: false, preprod: true, isMetricsClientIDTest: false},
 		}, {
-			ExtraAttr: []string{"group:testenv_preprod"},
-			Name:      "preprod_add_person_flow",
-			Val:       oobeTestArgs{isAddPersonFlow: true, preprod: true, isMetricsClientIDTest: false},
+			Name:             "preprod_add_person_flow",
+			ExtraAttr:        []string{"group:external-dependency", "group:hw_agnostic"},
+			ExtraSearchFlags: []*testing.StringPair{testenv.SearchFlag(testenv.GFEPreprod)},
+			Val:              oobeTestArgs{isAddPersonFlow: true, preprod: true, isMetricsClientIDTest: false},
 		}, {
-			ExtraAttr: []string{"group:mainline", "informational"},
 			Name:      "metrics_client_id",
+			ExtraAttr: []string{"group:mainline", "informational"},
 			Val:       oobeTestArgs{isAddPersonFlow: false, preprod: false, isMetricsClientIDTest: true},
 		}},
 	})
