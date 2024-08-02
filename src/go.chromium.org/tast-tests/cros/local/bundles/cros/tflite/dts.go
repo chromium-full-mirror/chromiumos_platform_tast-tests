@@ -33,8 +33,8 @@ func init() {
 			Name: "sample",
 			Val:  sampleParam,
 		}, {
-			Name:              "apu",
-			Val:               apuParam,
+			Name:              "neuron",
+			Val:               neuronParam,
 			Timeout:           5 * time.Minute,
 			ExtraSoftwareDeps: []string{"tflite_mtk_neuron"},
 		}},
@@ -118,7 +118,7 @@ var sampleParam = testingParam{
 	SkipTestPatterns: []string{"*MultiDimBroadcastSubshard*"},
 }
 
-var apuSettings = stableDelegateSettings{
+var neuronSettings = stableDelegateSettings{
 	StableDelegateLoaderSettings: stableDelegateLoaderSettings{
 		DelegatePath: "/usr/lib64/libtensorflowlite_mtk_neuron_delegate.so",
 		DelegateName: "mtk_neuron_delegate",
@@ -129,14 +129,14 @@ var apuSettings = stableDelegateSettings{
 }
 
 // TODO(b/338910179): MediaTek to provide the proper config.
-const apuAccelConfig = `
+const neuronAccelConfig = `
 # Disable acceleration validation temporarily.
 -.*
 `
 
-var apuParam = testingParam{
-	Settings:    apuSettings,
-	AccelConfig: apuAccelConfig,
+var neuronParam = testingParam{
+	Settings:    neuronSettings,
+	AccelConfig: neuronAccelConfig,
 	SkipTestPatterns: []string{
 		// TODO(b/338938802): Neuron delegate is ~30x slower than CPU on these test
 		// cases and need ~1hr to finish them. This is a superset of the
