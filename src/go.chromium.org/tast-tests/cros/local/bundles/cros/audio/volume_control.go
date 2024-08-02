@@ -6,12 +6,15 @@ package audio
 
 import (
 	"context"
+	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/common/utils"
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/audionode"
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
@@ -37,6 +40,7 @@ const (
 type volumeControlParam struct {
 	tier              volumeControlTier
 	expectedAudioNode string
+	verifySdcard      bool
 }
 
 func init() {
@@ -47,6 +51,8 @@ func init() {
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:776546",
 		SoftwareDeps: []string{"chrome"},
+		Data:         []string{"audio.mp3"},
+		Vars:         []string{"audio.sdCardName"},
 		Pre:          chrome.LoggedIn(),
 		Params: []testing.Param{{
 			Name:              "volume_only",
@@ -63,6 +69,14 @@ func init() {
 			Val: volumeControlParam{
 				tier:              withAudio,
 				expectedAudioNode: "INTERNAL_SPEAKER",
+			},
+		}, {
+			Name:              "sd_card",
+			ExtraHardwareDeps: hwdep.D(hwdep.Speaker()),
+			Val: volumeControlParam{
+				tier:              withAudio,
+				expectedAudioNode: "INTERNAL_SPEAKER",
+				verifySdcard:      true,
 			},
 		}, {
 			Name: "with_audio_headphone",
@@ -98,50 +112,86 @@ func VolumeControl(ctx context.Context, s *testing.State) {
 	defer kb.Close(ctx)
 
 	if param.tier == withAudio {
-		s.Log("Generate sine raw input file that lasts 30 seconds")
-		rawFileName := "30SEC.raw"
-		downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
-		if err != nil {
-			s.Fatal("Failed to get user's Download path: ", err)
-		}
-		rawFilePath := filepath.Join(downloadsPath, rawFileName)
-		rawFile := audio.TestRawData{
-			Path:          rawFilePath,
-			BitsPerSample: 16,
-			Channels:      audioChannel,
-			Rate:          audioRate,
-			Frequencies:   []int{440, 440},
-			Volume:        100,
-			Duration:      duration,
-		}
-		if err := audio.GenerateTestRawData(ctx, rawFile); err != nil {
-			s.Fatal("Failed to generate audio test data: ", err)
-		}
-		defer os.Remove(rawFile.Path)
+		if param.verifySdcard {
+			sdCardName := s.RequiredVar("audio.sdCardName")
+			if err := utils.WaitForSDCardDetection(ctx, nil, sdCardName); err != nil {
+				s.Fatal("Failed to wait for microSD card detection: ", err)
+			}
+			// Open the test API.
+			tconn, err := cr.TestAPIConn(ctx)
+			if err != nil {
+				s.Fatal("Failed to create test API connection: ", err)
+			}
+			const (
+				mediaRemovable = "/media/removable/"
+				audioFileName  = "audio.mp3"
+			)
+			destinationFilePath := path.Join(mediaRemovable, sdCardName, audioFileName)
 
-		wavFileName := "30SEC.wav"
-		wavFile := filepath.Join(downloadsPath, wavFileName)
-		if err := audio.ConvertRawToWav(ctx, rawFile, wavFile); err != nil {
-			s.Fatal("Failed to convert raw to wav: ", err)
-		}
-		defer os.Remove(wavFile)
+			if copyErr := testexec.CommandContext(ctx, "sh", "-c", fmt.Sprintf("cp -rf %s %s", s.DataPath(audioFileName), destinationFilePath)).Run(); copyErr != nil {
+				s.Fatalf("Failed to copy file to %s path: %v", destinationFilePath, copyErr)
+			}
+			defer os.Remove(destinationFilePath)
 
-		// Open the test API.
-		tconn, err := cr.TestAPIConn(ctx)
-		if err != nil {
-			s.Fatal("Failed to create test API connection: ", err)
-		}
-		defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
-		files, err := filesapp.Launch(ctx, tconn)
-		if err != nil {
-			s.Fatal("Failed to launch the Files App: ", err)
-		}
-		defer files.Close(cleanupCtx)
-		if err := files.OpenDownloads()(ctx); err != nil {
-			s.Fatal("Failed to open Downloads folder in files app: ", err)
-		}
-		if err := files.OpenFile(wavFileName)(ctx); err != nil {
-			s.Fatalf("Failed to open the audio file %q: %v", wavFileName, err)
+			files, err := filesapp.Launch(ctx, tconn)
+			if err != nil {
+				s.Fatal("Failed to launch the Files App: ", err)
+			}
+			defer files.Close(cleanupCtx)
+
+			if err := files.OpenDir(sdCardName, filesapp.FilesTitlePrefix+sdCardName)(ctx); err != nil {
+				s.Fatal("Failed to open USB directory: ", err)
+			}
+
+			if err := files.OpenFile(audioFileName)(ctx); err != nil {
+				s.Fatalf("Failed to open the audio file %q: %v", audioFileName, err)
+			}
+		} else {
+			s.Log("Generate sine raw input file that lasts 30 seconds")
+			rawFileName := "30SEC.raw"
+			downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
+			if err != nil {
+				s.Fatal("Failed to get user's Download path: ", err)
+			}
+			rawFilePath := filepath.Join(downloadsPath, rawFileName)
+			rawFile := audio.TestRawData{
+				Path:          rawFilePath,
+				BitsPerSample: 16,
+				Channels:      audioChannel,
+				Rate:          audioRate,
+				Frequencies:   []int{440, 440},
+				Volume:        100,
+				Duration:      duration,
+			}
+			if err := audio.GenerateTestRawData(ctx, rawFile); err != nil {
+				s.Fatal("Failed to generate audio test data: ", err)
+			}
+			defer os.Remove(rawFile.Path)
+
+			wavFileName := "30SEC.wav"
+			wavFile := filepath.Join(downloadsPath, wavFileName)
+			if err := audio.ConvertRawToWav(ctx, rawFile, wavFile); err != nil {
+				s.Fatal("Failed to convert raw to wav: ", err)
+			}
+			defer os.Remove(wavFile)
+
+			// Open the test API.
+			tconn, err := cr.TestAPIConn(ctx)
+			if err != nil {
+				s.Fatal("Failed to create test API connection: ", err)
+			}
+			defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
+			files, err := filesapp.Launch(ctx, tconn)
+			if err != nil {
+				s.Fatal("Failed to launch the Files App: ", err)
+			}
+			defer files.Close(cleanupCtx)
+			if err := files.OpenDownloads()(ctx); err != nil {
+				s.Fatal("Failed to open Downloads folder in files app: ", err)
+			}
+			if err := files.OpenFile(wavFileName)(ctx); err != nil {
+				s.Fatalf("Failed to open the audio file %q: %v", wavFileName, err)
+			}
 		}
 		// Closing the audio player.
 		defer func() {

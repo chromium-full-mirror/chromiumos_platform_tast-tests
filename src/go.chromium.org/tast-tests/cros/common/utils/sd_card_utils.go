@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -44,13 +45,23 @@ func UnplugSDCardViaServo(ctx context.Context, pxy *servo.Proxy) error {
 func WaitForSDCardDetection(ctx context.Context, dut *dut.DUT, sdCardName string) error {
 	const mediaRemovablePath = "/media/removable"
 	return testing.Poll(ctx, func(ctx context.Context) error {
-		out, err := dut.Conn().CommandContext(ctx, "ls", mediaRemovablePath).Output()
-		if err != nil {
-			return errors.Wrap(err, "failed to find connect microSD card in ls command")
+		var out []byte
+		var err error
+		if dut == nil {
+			out, err = testexec.CommandContext(ctx, "ls", mediaRemovablePath).Output()
+			if err != nil {
+				return errors.Wrap(err, "failed to find connect microSD card in ls command")
+			}
+		} else {
+			out, err = dut.Conn().CommandContext(ctx, "ls", mediaRemovablePath).Output()
+			if err != nil {
+				return errors.Wrap(err, "failed to find connect microSD card in ls command")
+			}
 		}
 		if !strings.Contains(string(out), sdCardName) {
 			return errors.New("failed to find connected microSD card in ls command")
 		}
+
 		return nil
 	}, &testing.PollOptions{Timeout: 20 * time.Second})
 }
