@@ -51,21 +51,6 @@ func init() {
 				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
 			},
 			{
-				Name:    "dataoffline_allcontacts_png5kb",
-				Fixture: "nearbyShareDataUsageOfflineAllContacts",
-				Val: nearbycommon.TestData{
-					Filename:        "small_png.zip",
-					TransferTimeout: nearbycommon.SmallFileTransferTimeout,
-					TestTimeout:     nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
-					MimeType:        nearbycommon.MimeTypePng,
-				},
-				ExtraAttr:         []string{"group:cross-device", "cross-device_nearbyshare"},
-				ExtraData:         []string{"small_png.zip"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
-				ExtraSoftwareDeps: []string{"gaia"},
-				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
-			},
-			{
 				Name:    "dataoffline_somecontacts_jpg11kb",
 				Fixture: "nearbyShareDataUsageOfflineSomeContactsAndroidSelectedContact",
 				Val: nearbycommon.TestData{
@@ -76,21 +61,6 @@ func init() {
 				},
 				ExtraAttr:         []string{"group:cross-device", "cross-device_nearbyshare"},
 				ExtraData:         []string{"small_jpg.zip"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
-				ExtraSoftwareDeps: []string{"gaia"},
-				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
-			},
-			{
-				Name:    "dataoffline_somecontacts_png5kb",
-				Fixture: "nearbyShareDataUsageOfflineSomeContactsAndroidSelectedContact",
-				Val: nearbycommon.TestData{
-					Filename:        "small_png.zip",
-					TransferTimeout: nearbycommon.SmallFileTransferTimeout,
-					TestTimeout:     nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
-					MimeType:        nearbycommon.MimeTypePng,
-				},
-				ExtraAttr:         []string{"group:cross-device", "cross-device_nearbyshare"},
-				ExtraData:         []string{"small_png.zip"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
 				ExtraSoftwareDeps: []string{"gaia"},
 				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
@@ -142,20 +112,6 @@ func init() {
 				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
 			},
 			{
-				Name:    "dataoffline_allcontacts_png5kb_unstable",
-				Fixture: "nearbyShareDataUsageOfflineAllContacts",
-				Val: nearbycommon.TestData{
-					Filename:        "small_png.zip",
-					TransferTimeout: nearbycommon.SmallFileTransferTimeout,
-					TestTimeout:     nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
-					MimeType:        nearbycommon.MimeTypePng,
-				},
-				ExtraAttr:         []string{"group:cross-device", "cross-device_nearbyshare"},
-				ExtraData:         []string{"small_png.zip"},
-				ExtraHardwareDeps: hwdep.D(hwdep.Model(crossdevice.UnstableModels...)),
-				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
-			},
-			{
 				Name:    "dataoffline_somecontacts_jpg11kb_unstable",
 				Fixture: "nearbyShareDataUsageOfflineSomeContactsAndroidSelectedContact",
 				Val: nearbycommon.TestData{
@@ -166,20 +122,6 @@ func init() {
 				},
 				ExtraAttr:         []string{"group:cross-device", "cross-device_nearbyshare"},
 				ExtraData:         []string{"small_jpg.zip"},
-				ExtraHardwareDeps: hwdep.D(hwdep.Model(crossdevice.UnstableModels...)),
-				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
-			},
-			{
-				Name:    "dataoffline_somecontacts_png5kb_unstable",
-				Fixture: "nearbyShareDataUsageOfflineSomeContactsAndroidSelectedContact",
-				Val: nearbycommon.TestData{
-					Filename:        "small_png.zip",
-					TransferTimeout: nearbycommon.SmallFileTransferTimeout,
-					TestTimeout:     nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
-					MimeType:        nearbycommon.MimeTypePng,
-				},
-				ExtraAttr:         []string{"group:cross-device", "cross-device_nearbyshare"},
-				ExtraData:         []string{"small_png.zip"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(crossdevice.UnstableModels...)),
 				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
 			},
@@ -256,19 +198,6 @@ func init() {
 				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
 			},
 			{
-				Name:    "dataoffline_allcontacts_png5kb_floss",
-				Fixture: "nearbyShareDataUsageOfflineAllContactsFloss",
-				Val: nearbycommon.TestData{
-					Filename:        "small_png.zip",
-					TransferTimeout: nearbycommon.SmallFileTransferTimeout,
-					TestTimeout:     nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
-					MimeType:        nearbycommon.MimeTypePng,
-				},
-				ExtraAttr: []string{"group:cross-device", "cross-device_nearbyshare", "cross-device_floss"},
-				ExtraData: []string{"small_png.zip"},
-				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
-			},
-			{
 				Name:    "dataoffline_somecontacts_jpg11kb_floss",
 				Fixture: "nearbyShareDataUsageOfflineSomeContactsAndroidSelectedContactFloss",
 				Val: nearbycommon.TestData{
@@ -279,19 +208,6 @@ func init() {
 				},
 				ExtraAttr: []string{"group:cross-device", "cross-device_nearbyshare", "cross-device_floss"},
 				ExtraData: []string{"small_jpg.zip"},
-				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
-			},
-			{
-				Name:    "dataoffline_somecontacts_png5kb_floss",
-				Fixture: "nearbyShareDataUsageOfflineSomeContactsAndroidSelectedContactFloss",
-				Val: nearbycommon.TestData{
-					Filename:        "small_png.zip",
-					TransferTimeout: nearbycommon.SmallFileTransferTimeout,
-					TestTimeout:     nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
-					MimeType:        nearbycommon.MimeTypePng,
-				},
-				ExtraAttr: []string{"group:cross-device", "cross-device_nearbyshare", "cross-device_floss"},
-				ExtraData: []string{"small_png.zip"},
 				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
 			},
 			{

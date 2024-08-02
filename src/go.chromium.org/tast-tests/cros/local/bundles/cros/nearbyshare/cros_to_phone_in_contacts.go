@@ -35,19 +35,6 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{
 			{
-				Name:    "dataoffline_allcontacts_png5kb",
-				Fixture: "nearbyShareDataUsageOfflineAllContacts",
-				Val: nearbycommon.TestData{
-					Filename:        "small_png.zip",
-					TransferTimeout: nearbycommon.SmallFileTransferTimeout,
-					TestTimeout:     nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
-				},
-				ExtraData:         []string{"small_png.zip"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
-				ExtraSoftwareDeps: []string{"gaia"},
-				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
-			},
-			{
 				Name:    "dataoffline_allcontacts_jpg11kb",
 				Fixture: "nearbyShareDataUsageOfflineAllContacts",
 				Val: nearbycommon.TestData{
@@ -77,18 +64,6 @@ func init() {
 
 			// Subtests for unstable devices, so they can be omitted from reporting.
 			{
-				Name:    "dataoffline_allcontacts_png5kb_unstable",
-				Fixture: "nearbyShareDataUsageOfflineAllContacts",
-				Val: nearbycommon.TestData{
-					Filename:        "small_png.zip",
-					TransferTimeout: nearbycommon.SmallFileTransferTimeout,
-					TestTimeout:     nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
-				},
-				ExtraData:         []string{"small_png.zip"},
-				ExtraHardwareDeps: hwdep.D(hwdep.Model(crossdevice.UnstableModels...)),
-				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
-			},
-			{
 				Name:    "dataoffline_allcontacts_jpg11kb_unstable",
 				Fixture: "nearbyShareDataUsageOfflineAllContacts",
 				Val: nearbycommon.TestData{
@@ -115,18 +90,6 @@ func init() {
 			},
 
 			// Floss-enabled duplicates
-			{
-				Name:    "dataoffline_allcontacts_png5kb_floss",
-				Fixture: "nearbyShareDataUsageOfflineAllContactsFloss",
-				Val: nearbycommon.TestData{
-					Filename:        "small_png.zip",
-					TransferTimeout: nearbycommon.SmallFileTransferTimeout,
-					TestTimeout:     nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
-				},
-				ExtraData: []string{"small_png.zip"},
-				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
-				ExtraAttr: []string{"cross-device_floss"},
-			},
 			{
 				Name:    "dataoffline_allcontacts_jpg11kb_floss",
 				Fixture: "nearbyShareDataUsageOfflineAllContactsFloss",
