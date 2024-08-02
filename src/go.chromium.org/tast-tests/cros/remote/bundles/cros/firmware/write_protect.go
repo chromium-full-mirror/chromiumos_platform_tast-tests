@@ -8,15 +8,14 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 
-	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
 	"go.chromium.org/tast-tests/cros/common/flashrom"
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
-	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
 	pb "go.chromium.org/tast-tests/cros/services/cros/firmware"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -36,11 +35,11 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		// TODO: When stable, change firmware_unstable to a different attr.
-		Attr:         []string{"group:firmware", "firmware_unstable", "firmware_usb"},
+		Attr:         []string{"group:firmware", "firmware_unstable"},
 		SoftwareDeps: []string{"crossystem", "flashrom"},
 		ServiceDeps:  []string{"tast.cros.firmware.BiosService"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
-		Timeout:      120 * time.Minute,
+		Timeout:      30 * time.Minute,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{
 			{
@@ -98,7 +97,9 @@ func WriteProtect(ctx context.Context, s *testing.State) {
 	if err := h.RequireConfig(ctx); err != nil {
 		s.Fatal("Failed to require configs: ", err)
 	}
-
+	if err := h.Reporter.ClearEventlog(ctx); err != nil {
+		s.Fatal("Failed to clear event log: ", err)
+	}
 	if err := h.RequireBiosServiceClient(ctx); err != nil {
 		s.Fatal("Failed requiring BiosServiceClient: ", err)
 	}
@@ -111,7 +112,7 @@ func WriteProtect(ctx context.Context, s *testing.State) {
 		os.Remove(hostBackup.Name())
 	}()
 
-	testing.ContextLog(ctx, "Read current fw image")
+	s.Log("Reading current fw image")
 	roBefore, err := h.BiosServiceClient.BackupImageSection(ctx, &pb.FWSectionInfo{
 		Section:    wpTargetToRegion[target],
 		Programmer: wpTargetToProg[target],
@@ -127,7 +128,7 @@ func WriteProtect(ctx context.Context, s *testing.State) {
 		s.Log("Deleting saved fw")
 		if _, err := h.DUT.Conn().CommandContext(ctx, "rm", roBefore.Path).Output(ssh.DumpLogOnError); err != nil {
 			// Might be deleted already so don't fail for this.
-			testing.ContextLog(ctx, "Failed to delete backup files: ", err)
+			s.Log("Failed to delete backup files: ", err)
 		}
 	}(cleanupContext)
 
@@ -136,41 +137,66 @@ func WriteProtect(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to copy fw backup to the host")
 	}
 
-	cs := s.CloudStorage()
-
 	// Only restore firmware if it was unexpectedly corrupted.
 	needsRestore := false
+	// Only disable write protect if it has not been disabled successfully.
+	needsDisableWP := false
 	defer func(ctx context.Context) {
-		testing.ContextLog(ctx, "Make sure DUT is connected before cleanup")
+		// Some models will have booting issues when enabling the Software Write Protect then rebooting.
+		// There might be two results:
+		// 1. The DUT goes to the "Something went wrong" screen (puff) or the rainbow screen (coral).
+		// 2. The DUT takes longer to reboot than expected.
+		s.Log("Waiting longer to see if the DUT can reconnect")
+		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 5*time.Minute)
+		defer cancelWaitConnect()
+		if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
+			s.Error("Failed to reconnect to the DUT: ", err)
+		}
+
+		if needsDisableWP {
+			if out, err := h.Servo.GetString(ctx, servo.FWWPState); err != nil || out != string(servo.FWWPStateOff) {
+				if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateOff); err != nil {
+					s.Fatal("Failed to disable firmware write protect: ", err)
+				}
+			}
+
+			s.Log("Disabling Software Write Protect")
+			if err := h.ServoProxy.RunCommand(ctx, true, "flashrom", "-p", "raiden_debug_spi:target=AP", "--wp-disable", "--wp-range=0,0"); err != nil {
+				s.Error("Failed to disable software write protect with flashrom: ", err)
+			}
+		}
+
+		s.Log("Make sure DUT is connected before cleanup")
 		if err := h.EnsureDUTBooted(ctx); err != nil {
 			s.Fatal("Failed to connect to the DUT: ", err)
 		}
 
-		if out, err := h.Servo.GetString(ctx, servo.FWWPState); err != nil || out != string(servo.FWWPStateOff) {
-			testing.ContextLog(ctx, "Disable Write Protect")
-			if err := setWriteProtect(ctx, h, target, false, cs); err != nil {
-				s.Error("Failed to disable FW write protect state: ", err)
+		if s.HasError() {
+			saveEventLogPath := filepath.Join(s.OutDir(), "eventlog.txt")
+			if err := h.SaveEventLog(ctx, saveEventLogPath); err != nil {
+				s.Error("Failed to save event log: ", err)
 			}
 		}
 
 		if needsRestore {
 			if err := h.RequireBiosServiceClient(ctx); err != nil {
-				testing.ContextLog(ctx, "Failed to require BiosServiceClient: ", err)
+				s.Fatal("Failed to require BiosServiceClient: ", err)
 			}
-			testing.ContextLog(ctx, "Fw may have been modified, restore original fw from backup: ", roBefore.Path)
+			s.Log("Fw may have been modified, restore original fw from backup: ", roBefore.Path)
 			if _, err := h.BiosServiceClient.RestoreImageSection(ctx, roBefore); err != nil {
 				s.Fatal("Failed to restore fw image: ", err)
 			}
 		}
 	}(cleanupContext)
 
-	testing.ContextLog(ctx, "Enable Write Protect")
-	if err := setWriteProtect(ctx, h, target, true, cs); err != nil {
+	needsDisableWP = true
+	s.Log("Enabling Write Protect")
+	if err := setWriteProtect(ctx, h, target, true); err != nil {
 		s.Fatal("Failed to set FW write protect state: ", err)
 	}
 
 	needsRestore = true // In case flashrom completes a partial write but still has errors.
-	testing.ContextLog(ctx, "Attempt to overwrite fw with write protect enabled")
+	s.Log("Attempting to overwrite fw with write protect enabled")
 	if _, err := h.BiosServiceClient.CorruptFWSection(ctx, &pb.FWSectionInfo{
 		Section:    wpTargetToRegion[target],
 		Programmer: wpTargetToProg[target],
@@ -178,15 +204,17 @@ func WriteProtect(ctx context.Context, s *testing.State) {
 	}); err == nil {
 		// Flashrom command sometimes prints "SUCCESS" (the criteria for a successful write) even if the write didn't succeed.
 		// Which means we cannot rely on the error/lack of error from the CorruptFWSection to determine if the write was successful.
-		testing.ContextLog(ctx, "Expected flashrom write to fail since wp is enabled")
+		s.Log("Expected flashrom write to fail since wp is enabled")
 	}
 
-	testing.ContextLog(ctx, "Disable Write Protect")
-	if err := setWriteProtect(ctx, h, target, false, cs); err != nil {
+	s.Log("Disabling Write Protect")
+	if err := setWriteProtect(ctx, h, target, false); err != nil {
 		s.Fatal("Failed to disable FW write protect state: ", err)
 	}
+	// Write Protect has been disabled successfully.
+	needsDisableWP = false
 
-	testing.ContextLog(ctx, "Read fw, make sure write didn't succeed with wp enabled")
+	s.Log("Reading fw, make sure write didn't succeed with wp enabled")
 	roAfter, err := h.BiosServiceClient.BackupImageSection(ctx, &pb.FWSectionInfo{
 		Section:    wpTargetToRegion[target],
 		Programmer: wpTargetToProg[target],
@@ -221,7 +249,7 @@ func WriteProtect(ctx context.Context, s *testing.State) {
 }
 
 // setWriteProtect uses gsc_ecrst_pulse after setting hw wp, which deletes all temp data/files.
-func setWriteProtect(ctx context.Context, h *firmware.Helper, target wpTarget, enable bool, cs *testing.CloudStorage) (retErr error) {
+func setWriteProtect(ctx context.Context, h *firmware.Helper, target wpTarget, enable bool) (retErr error) {
 	ms, err := firmware.NewModeSwitcher(ctx, h)
 	if err != nil {
 		return errors.Wrap(err, "failed to create mode switcher")
@@ -245,26 +273,26 @@ func setWriteProtect(ctx context.Context, h *firmware.Helper, target wpTarget, e
 		enableStr = "disable"
 	}
 
-	var flashromConfig flashrom.Config
-	flash, ctx, shutdown, _, err := flashromConfig.
-		FlashromInit(flashrom.VerbosityDebug).
-		ProgrammerInit(flashrom.ProgrammerHost, "").
-		SetDut(h.DUT).
-		Probe(ctx)
-	defer func() {
-		if err := shutdown(); err != nil {
-			if retErr == nil {
-				retErr = errors.Wrap(err, "failed to shutdown flashromInstance")
-			} else {
-				testing.ContextLog(ctx, "Failed to shutdown flashromInstance: ", err)
-			}
-		}
-	}()
-	if err != nil {
-		return errors.Wrap(err, "flashrom probe failed, unable to build flashrom instance")
-	}
-
 	if target == targetBIOS {
+		var flashromConfig flashrom.Config
+		flash, ctx, shutdown, _, err := flashromConfig.
+			FlashromInit(flashrom.VerbosityDebug).
+			ProgrammerInit(flashrom.ProgrammerHost, "").
+			SetDut(h.DUT).
+			Probe(ctx)
+		defer func() {
+			if err := shutdown(); err != nil {
+				if retErr == nil {
+					retErr = errors.Wrap(err, "failed to shutdown flashromInstance")
+				} else {
+					testing.ContextLog(ctx, "Failed to shutdown flashromInstance: ", err)
+				}
+			}
+		}()
+		if err != nil {
+			return errors.Wrap(err, "flashrom probe failed, unable to build flashrom instance")
+		}
+
 		apWPFunc := flash.SoftwareWriteProtectEnable
 		if !enable {
 			apWPFunc = flash.SoftwareWriteProtectDisable
@@ -285,48 +313,6 @@ func setWriteProtect(ctx context.Context, h *firmware.Helper, target wpTarget, e
 			return errors.Wrapf(err, "failed to %s firmware write protect", enableStr)
 		}
 	}
-
-	cleanupContext := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Minute)
-	defer cancel()
-
-	state := h.CheckServoChargerBeforeBootingFromUSB(ctx)
-	defer func(ctx context.Context) {
-		if enable && retErr != nil && target == targetBIOS {
-			if err := h.SetupUSBKey(ctx, cs); err != nil {
-				testing.ContextLog(ctx, "USBKey not working: ", err)
-			}
-
-			if err := h.BootToRecoveryMode(ctx, &state, false); err != nil {
-				testing.ContextLog(ctx, "Failed to boot to recovery mode: ", err)
-			}
-
-			recReason, err := h.Reporter.CrossystemParam(ctx, reporters.CrossystemParamRecoveryReason)
-			if err != nil {
-				testing.ContextLog(ctx, "Failed to get crossystem recovery_reason value: ", err)
-			}
-			testing.ContextLog(ctx, "Recovery reason is: ", recReason)
-
-			if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateOff); err != nil {
-				testing.ContextLog(ctx, "Failed to disable firmware write protect: ", err)
-			}
-
-			if _, err := flash.SoftwareWriteProtectDisable(ctx); err != nil {
-				testing.ContextLogf(ctx, "Failed to set AP wp to %s", enableStr)
-			}
-
-			if err := h.RebootWithSSHCommand(ctx, fwCommon.BootModeRecovery); err != nil {
-				testing.ContextLog(ctx, "Failed to reboot back to original boot mode: ", err)
-			}
-
-			if err := h.SetDUTPower(ctx, true); err != nil {
-				testing.ContextLog(ctx, "Failed to connect charger: ", err)
-			}
-		}
-		if err := h.RequireBiosServiceClient(ctx); err != nil {
-			testing.ContextLog(ctx, "Failed to require BiosServiceClient: ", err)
-		}
-	}(cleanupContext)
 
 	testing.ContextLog(ctx, "Performing mode aware reboot")
 	if err := ms.ModeAwareReboot(ctx, firmware.ColdReset, firmware.AllowGBBForce); err != nil {
