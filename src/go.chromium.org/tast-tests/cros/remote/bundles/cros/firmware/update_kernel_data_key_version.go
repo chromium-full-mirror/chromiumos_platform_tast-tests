@@ -17,7 +17,6 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/dutfs"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
-	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
 	pb "go.chromium.org/tast-tests/cros/services/cros/firmware"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -248,9 +247,12 @@ func UpdateKernelDataKeyVersion(ctx context.Context, s *testing.State) {
 
 // warmResetToKernelPartition checks active kernel vs target, warm reboots DUT to target on mismatch.
 func warmResetToKernelPartition(ctx context.Context, h *firmware.Helper, ms *firmware.ModeSwitcher, target *pb.Partition) error {
-	if currentActRW, err := h.Reporter.CrossystemParam(ctx, reporters.CrossystemParamMainfwAct); err != nil {
-		return errors.Wrap(err, "failed to get crossystem mainfw_act")
-	} else if currentActRW != target.Copy.String() {
+	currCopy, err := h.KernelServiceClient.GetCurrentCopy(ctx, &pb.Partition{})
+	if err != nil {
+		return errors.Wrap(err, "failed to get label of current kernel")
+	}
+	if currCopy.Copy != target.Copy {
+		testing.ContextLog(ctx, "Rebooting DUT to KERN-", target.Copy.String())
 		if _, err := h.KernelServiceClient.PrioritizeKernelCopy(ctx, target); err != nil {
 			return errors.Wrapf(err, "failed to prioritize KERN-%s", target.Copy.String())
 		}
@@ -263,6 +265,8 @@ func warmResetToKernelPartition(ctx context.Context, h *firmware.Helper, ms *fir
 		if _, err := h.KernelServiceClient.VerifyKernelCopy(ctx, target); err != nil {
 			return errors.Wrapf(err, "failed to boot to KERN-%s", target.Copy.String())
 		}
+	} else {
+		testing.ContextLog(ctx, "DUT has already booted to the expected kernel copy")
 	}
 	return nil
 }
