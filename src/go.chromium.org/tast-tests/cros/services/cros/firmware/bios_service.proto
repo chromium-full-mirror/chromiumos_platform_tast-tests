@@ -69,6 +69,8 @@ enum GBBFlag {
   DISABLE_FWMP = 15;
   // Enable USB Device Controller
   ENABLE_UDC = 16;
+  // Enforce CSE SYNC, even if current CSE is same as CBFS CSE
+  FORCE_CSE_SYNC = 17;
 }
 
 // Programmers enum for flashrom programmers
