@@ -413,3 +413,25 @@ func (r *Reporter) CheckDiagnosticsLogs(ctx context.Context, newEvents []Event, 
 	}
 	return nil
 }
+
+// Check if CSE sync is performed.
+func (r *Reporter) GetCseSyncStage(ctx context.Context) (string, error) {
+
+	events, err := r.EventlogList(ctx)
+	if err != nil {
+		return "", err
+	}
+	var (
+		reCseSync *regexp.Regexp = regexp.MustCompile(`(Early|Late) Sign of Life\s*\| CSE Sync (Early|Late) SOL Screen Shown`)
+	)
+
+	for _, event := range events {
+		sol_String := reCseSync.FindStringSubmatch(event.Message)
+		if sol_String != nil {
+			// Extract the cseSyncStage ("Early" or "Late")
+			cseSyncStage := sol_String[1]
+			return cseSyncStage, nil
+		}
+	}
+	return "", errors.Wrap(err, "cse sync is not performed")
+}
