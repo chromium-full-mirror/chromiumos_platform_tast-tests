@@ -42,7 +42,7 @@ func init() {
 		Desc:         "Verifies that CSME RW firmware can be upgraded or downgraded using chromeos-firmwareupdate --mode=recovery",
 		Contacts:     []string{"digehlot@google.com", "chromeos-firmware@google.com"},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		HardwareDeps: hwdep.D(hwdep.CPUSocFamily("intel"), hwdep.NoVbootCbfsIntegration()),
+		HardwareDeps: hwdep.D(hwdep.CPUSocFamily("intel")),
 		SoftwareDeps: []string{"csme_update"},
 		ServiceDeps:  []string{"tast.cros.firmware.BiosService"},
 		Attr:         []string{"group:firmware", "firmware_unstable"},
@@ -68,6 +68,19 @@ func init() {
 // CsmeFwUpdate tests csme rw firmware update feature by changing the me_rw
 // image in firmware main regions with a different version
 func CsmeFwUpdate(ctx context.Context, s *testing.State) {
+	/*
+	 * Leverage the firmware feature "CSE force sync" to test the CSE sync operation,
+	 * if vboot CBFS integration is enabled.
+	 */
+	vbootCbfs := s.Features("").Hardware.HardwareFeatures.FwConfig.VbootCbfsIntegration == api.HardwareFeatures_PRESENT
+	if vbootCbfs {
+		s.Log("Voot CBFS sync is enabled, performing forced cse sync")
+		if err := performForcedCseSync(ctx, s); err != nil {
+			s.Fatal("Forced CSE sync failed: ", err)
+		}
+		return
+	}
+
 	isDowngradePossible, err := performCseSync(ctx, s)
 	if err != nil {
 		s.Fatal("CSE sync failed: ", err)
