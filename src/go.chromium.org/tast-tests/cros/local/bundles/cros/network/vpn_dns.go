@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/network/vpn"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type vpnDNSTestCase struct {
@@ -37,15 +38,14 @@ func init() {
 		},
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
-		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
-		Fixture:      "vpnEnvWithCerts",
 		Params: []testing.Param{{
 			Name: "ikev2_ipv4",
 			Val: vpnDNSTestCase{
 				vpnType: vpn.TypeIKEv2,
 				isIPv6:  false,
 			},
+			Fixture:           "vpnEnv",
 			ExtraSoftwareDeps: []string{"ikev2"},
 		}, {
 			Name: "ikev2_ipv6",
@@ -53,6 +53,7 @@ func init() {
 				vpnType: vpn.TypeIKEv2,
 				isIPv6:  true,
 			},
+			Fixture:           "vpnEnv",
 			ExtraSoftwareDeps: []string{"ikev2"},
 		}, {
 			Name: "l2tp_ipsec",
@@ -60,24 +61,30 @@ func init() {
 				vpnType: vpn.TypeL2TPIPsec,
 				isIPv6:  false,
 			},
+			Fixture: "vpnEnv",
 		}, {
 			Name: "openvpn_ipv4",
 			Val: vpnDNSTestCase{
 				vpnType: vpn.TypeOpenVPN,
 				isIPv6:  false,
 			},
+			Fixture:           "vpnEnvWithCerts",
+			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
 		}, {
 			Name: "openvpn_ipv6",
 			Val: vpnDNSTestCase{
 				vpnType: vpn.TypeOpenVPN,
 				isIPv6:  true,
 			},
+			Fixture:           "vpnEnvWithCerts",
+			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
 		}, {
 			Name: "wireguard_ipv4",
 			Val: vpnDNSTestCase{
 				vpnType: vpn.TypeWireGuard,
 				isIPv6:  false,
 			},
+			Fixture:           "vpnEnv",
 			ExtraSoftwareDeps: []string{"wireguard"},
 		}, {
 			Name: "wireguard_ipv6",
@@ -85,6 +92,7 @@ func init() {
 				vpnType: vpn.TypeWireGuard,
 				isIPv6:  true,
 			},
+			Fixture:           "vpnEnv",
 			ExtraSoftwareDeps: []string{"wireguard"},
 		},
 		},
