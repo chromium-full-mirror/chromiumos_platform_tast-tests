@@ -92,7 +92,7 @@ func getNvmeFeatureCurrentValue(ctx context.Context, disk *Disk, featureHex stri
 	re := regexp.MustCompile(valuePattern)
 	match := re.FindStringSubmatch(out)
 	if len(match) <= 1 {
-		return -1, errors.New("can't parse feature value")
+		return -1, errors.Errorf("can't parse feature value: %q", out)
 	}
 
 	valueHex := match[1]
