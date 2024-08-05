@@ -140,7 +140,7 @@ func ConfirmPassword(ctx context.Context, cr *chrome.Chrome, password string) er
 	}
 
 	uia := uiauto.New(tconn)
-	if err := uia.WaitUntilAnyExists(AuthPanelDialogViewNode.First(), PasswordDialogNode.First())(ctx); err != nil {
+	if err := uia.WaitUntilAnyExists(ActiveSessionWidget, PasswordDialogNode)(ctx); err != nil {
 		return errors.Wrap(err, "failed to find password dialog")
 	}
 
@@ -154,8 +154,8 @@ func ConfirmPassword(ctx context.Context, cr *chrome.Chrome, password string) er
 		return errors.Wrap(err, "failed to type password")
 	}
 
-	if err := uia.WaitUntilGone(AuthPanelDialogViewNode)(ctx); err != nil {
-		return errors.Wrap(err, "AuthPanel is still present after entering password")
+	if err := uia.WaitUntilGone(ActiveSessionWidget)(ctx); err != nil {
+		return errors.Wrap(err, "ActiveSessionWidget is still present after entering password")
 	}
 	if err := uia.WaitUntilGone(PasswordDialogNode)(ctx); err != nil {
 		return errors.Wrap(err, "password dialog is still present after entering password")
@@ -172,7 +172,7 @@ func CancelPassword(ctx context.Context, cr *chrome.Chrome) error {
 	}
 
 	uia := uiauto.New(tconn)
-	if err := uia.WaitUntilAnyExists(AuthPanelDialogViewNode.First(), PasswordDialogNode.First())(ctx); err != nil {
+	if err := uia.WaitUntilAnyExists(ActiveSessionWidget, PasswordDialogNode)(ctx); err != nil {
 		return errors.Wrap(err, "failed to find password dialog")
 	}
 
@@ -187,8 +187,8 @@ func CancelPassword(ctx context.Context, cr *chrome.Chrome) error {
 		return errors.Wrap(err, "failed to hit ESC")
 	}
 
-	if err := uia.WaitUntilGone(AuthPanelDialogViewNode)(ctx); err != nil {
-		return errors.Wrap(err, "AuthPanel is still present after cancelling")
+	if err := uia.WaitUntilGone(ActiveSessionWidget)(ctx); err != nil {
+		return errors.Wrap(err, "ActiveSessionWidget is still present after cancelling")
 	}
 	if err := uia.WaitUntilGone(PasswordDialogNode)(ctx); err != nil {
 		return errors.Wrap(err, "password dialog is still present after cancelling")

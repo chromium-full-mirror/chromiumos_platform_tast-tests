@@ -448,6 +448,9 @@ var (
 	// The view node for the newer AuthPanel-based dialog.
 	AuthPanelDialogViewNode = nodewith.ClassName("InSessionAuthDialogContentsView")
 
+	// The Active Session Auth approach widget name.
+	ActiveSessionWidget = nodewith.ClassName("AuthDialogWidget")
+
 	// The dialog node for the older password dialog.
 	PasswordDialogNode = nodewith.Name("Confirm your password").Role(role.Dialog)
 )
