@@ -47,6 +47,8 @@ func init() {
 				"anraggar",
 				"anraggar360",
 				"banshee",
+				"beetley",
+				"blipper",
 				"calus",
 				"cherry",
 				"craask",
