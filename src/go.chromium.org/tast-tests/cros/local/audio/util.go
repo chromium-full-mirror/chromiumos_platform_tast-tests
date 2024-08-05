@@ -29,6 +29,8 @@ const (
 	wav
 )
 
+const samplesPerSlice = 1000 // Number of samples per slice. 1000 on 48kHz = 21ms
+
 // TestRawData is used to specify parameters of the audio test data, which should be raw, signed, and little-endian.
 type TestRawData struct {
 	// Path specifies the file path of audio data.
@@ -268,8 +270,6 @@ func CalculateFrequency(data []float64, sampleRate float64) float64 {
 // It ignores slices in the beginning that contain only zeros and the first slice with non-zero data..
 // The difference from CheckFrequency is this function returns the number of incorrect slices, instead of returning error
 func CountFrequencyErrors(ctx context.Context, data []int16, sampleRate, expectedFreq, freqTolerance float64) (incorrectSlices, startingSlices int, err error) {
-	const samplesPerSlice = 1000 // Number of samples per slice. 1000 on 48kHz = 21ms
-
 	hasNonZeroData := func(data []int16) bool {
 		for _, d := range data {
 			if d != 0 {
@@ -318,13 +318,14 @@ func CountFrequencyErrors(ctx context.Context, data []int16, sampleRate, expecte
 // It slices the input and calculates the frequency for each slices.
 // If the number of slices with unexpected frequency exceeds incorrectLimit, returns error.
 // It ignores slices in the beginning that contain only zeros and the first slice with non-zero data.
-// The number of all-zero slices must be less than `startingSlicesLimit`, or it returns error.
-func CheckFrequency(ctx context.Context, data []int16, sampleRate, expectedFreq, freqTolerance float64, incorrectLimit int) error {
-	const startingSlicesLimit = 24 // Max starting slices allowed. 24 on 48kHz = 500ms
+// `startingLatencyAllowed` represents how long of zero data it can endure.
+// If the length of all-zero data is less than `startingLatencyAllowed`, returns error.
+func CheckFrequency(ctx context.Context, data []int16, sampleRate, expectedFreq, freqTolerance float64, incorrectLimit int, startingLatencyAllowed time.Duration) error {
+	startingSlicesLimit := int(sampleRate * startingLatencyAllowed.Seconds() / samplesPerSlice)
 	if incorrectSlices, startingSlices, err := CountFrequencyErrors(ctx, data, sampleRate, expectedFreq, freqTolerance); err != nil {
 		return err
 	} else if startingSlices > startingSlicesLimit {
-		return errors.New("reached starting slices limit")
+		return errors.Errorf("startingSlices %v reached starting slices limit %v", startingSlices, startingSlicesLimit)
 	} else if incorrectSlices > incorrectLimit {
 		return errors.Errorf("incorrect slices count over limit, incorrect slices: %v, limit: %v", incorrectSlices, incorrectLimit)
 	}

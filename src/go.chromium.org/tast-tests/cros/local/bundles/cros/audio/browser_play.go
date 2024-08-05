@@ -17,7 +17,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
 	audiofixture "go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -44,12 +43,13 @@ func init() {
 
 func BrowserPlay(ctx context.Context, s *testing.State) {
 	const (
-		cleanupTime          = 45 * time.Second
-		captureDuration      = 2 * time.Second
-		goldenFrequency      = 440 // Hz
-		incorrectLimit       = 3
-		rate                 = 48000
-		playbackFileChannels = 2
+		cleanupTime            = 45 * time.Second
+		captureDuration        = 2 * time.Second
+		goldenFrequency        = 440 // Hz
+		incorrectLimit         = 3
+		rate                   = 48000
+		playbackFileChannels   = 2
+		startingLatencyAllowed = 500 * time.Millisecond
 	)
 	// Reserve time to remove input file and unload ALSA loopback at the end of the test.
 	cleanupCtx := ctx
@@ -126,7 +126,7 @@ func BrowserPlay(ctx context.Context, s *testing.State) {
 	}
 
 	for channel := 0; channel < playbackFileChannels; channel++ {
-		if err := audio.CheckFrequency(ctx, tone[channel], float64(rate), float64(goldenFrequency), 10, incorrectLimit); err != nil {
+		if err := audio.CheckFrequency(ctx, tone[channel], float64(rate), float64(goldenFrequency), 10 /*freqTolerance*/, incorrectLimit, startingLatencyAllowed); err != nil {
 			s.Errorf("Channel %d frequency check failed: %v", channel+1, err)
 		}
 	}

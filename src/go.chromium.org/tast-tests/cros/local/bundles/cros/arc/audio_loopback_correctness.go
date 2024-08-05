@@ -13,11 +13,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
-
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/audio"
@@ -26,6 +21,10 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 var stableModel = []string{
@@ -758,9 +757,10 @@ func AudioLoopbackCorrectness(ctx context.Context, s *testing.State) {
 		captureDuration = 3 // second(s)
 		captureRate     = 48000
 
-		keySampleRate      = "sample_rate"
-		keyChannelConfig   = "channel_config"
-		keyPerformanceMode = "perf_mode"
+		keySampleRate          = "sample_rate"
+		keyChannelConfig       = "channel_config"
+		keyPerformanceMode     = "perf_mode"
+		startingLatencyAllowed = 500 * time.Millisecond
 	)
 
 	a := s.FixtValue().(*arc.PreData).ARC
@@ -892,7 +892,7 @@ func AudioLoopbackCorrectness(ctx context.Context, s *testing.State) {
 
 	for channel := 0; channel < len(expectedFreqs); channel++ {
 		expectedFreq := expectedFreqs[channel]
-		if err := audio.CheckFrequency(ctx, capturedData[channel], float64(captureRate), float64(expectedFreq), 10, param.incorrectSlicesLimit); err != nil {
+		if err := audio.CheckFrequency(ctx, capturedData[channel], float64(captureRate), float64(expectedFreq), 10 /*freqTolerance*/, param.incorrectSlicesLimit, startingLatencyAllowed); err != nil {
 			s.Errorf("channel %d failed: %v", channel+1, err)
 		}
 	}

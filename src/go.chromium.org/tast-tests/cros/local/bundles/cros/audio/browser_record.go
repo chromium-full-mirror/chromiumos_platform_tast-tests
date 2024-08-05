@@ -21,7 +21,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
-
 	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -47,15 +46,16 @@ func init() {
 
 func BrowserRecord(ctx context.Context, s *testing.State) {
 	const (
-		cleanupTime      = 45 * time.Second
-		playbackDuration = 10 * time.Second
-		goldenFrequency  = 440 // Hz
-		incorrectLimit   = 3
-		rate             = 48000
-		channels         = 2
-		downloadsURL     = "chrome://downloads"
-		recordedFileName = "test.webm"
-		playbackFileName = "noise.wav"
+		cleanupTime            = 45 * time.Second
+		playbackDuration       = 10 * time.Second
+		goldenFrequency        = 440 // Hz
+		incorrectLimit         = 3
+		rate                   = 48000
+		channels               = 2
+		downloadsURL           = "chrome://downloads"
+		recordedFileName       = "test.webm"
+		playbackFileName       = "noise.wav"
+		startingLatencyAllowed = 500 * time.Millisecond
 	)
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
@@ -178,7 +178,7 @@ func BrowserRecord(ctx context.Context, s *testing.State) {
 	}
 
 	for channel := 0; channel < 2; channel++ {
-		if err := audio.CheckFrequency(ctx, tone[channel], float64(rate), float64(goldenFrequency), 10, incorrectLimit); err != nil {
+		if err := audio.CheckFrequency(ctx, tone[channel], float64(rate), float64(goldenFrequency), 10 /*freqTolerance*/, incorrectLimit, startingLatencyAllowed); err != nil {
 			s.Errorf("Channel %d frequency check failed: %v", channel+1, err)
 		}
 	}

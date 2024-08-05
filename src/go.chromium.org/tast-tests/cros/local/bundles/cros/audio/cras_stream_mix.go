@@ -97,13 +97,14 @@ func init() {
 
 func CrasStreamMix(ctx context.Context, s *testing.State) {
 	const (
-		cleanupTime          = 45 * time.Second
-		captureDuration      = 2 // second(s)
-		playbackDuration     = 6 // second(s)
-		waitForStreamTimeout = 2 * time.Second
-		goldenFrequency      = 440 // Hz
-		incorrectLimit       = 3
-		rate                 = 48000
+		cleanupTime            = 45 * time.Second
+		captureDuration        = 2 // second(s)
+		playbackDuration       = 6 // second(s)
+		waitForStreamTimeout   = 2 * time.Second
+		goldenFrequency        = 440 // Hz
+		incorrectLimit         = 3
+		rate                   = 48000
+		startingLatencyAllowed = 500 * time.Millisecond
 	)
 
 	// Reserve time to remove input file and unload ALSA loopback at the end of the test.
@@ -204,7 +205,7 @@ func CrasStreamMix(ctx context.Context, s *testing.State) {
 	}
 
 	for channel := 0; channel < 2; channel++ {
-		if err := audio.CheckFrequency(ctx, tone[channel], float64(recording.Rate), float64(goldenFrequency), 10, incorrectLimit); err != nil {
+		if err := audio.CheckFrequency(ctx, tone[channel], float64(recording.Rate), float64(goldenFrequency), 10 /*freqTolerance*/, incorrectLimit, startingLatencyAllowed); err != nil {
 			s.Errorf("channel %d failed: %v", channel+1, err)
 		}
 	}
