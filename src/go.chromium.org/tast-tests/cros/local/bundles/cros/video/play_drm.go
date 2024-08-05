@@ -11,6 +11,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/video/play"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
+	"go.chromium.org/tast-tests/cros/local/graphics/expectations"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -320,6 +321,11 @@ func init() {
 // another indicator of HW DRM). This will use the Shaka player to playback a
 // Widevine DRM protected MPD video via MSE/EME.
 func PlayDRM(ctx context.Context, s *testing.State) {
+	expectation, err := expectations.GetTestExpectation(ctx, s.TestName())
+	if err != nil {
+		s.Fatal("Failed to load test expectation: ", err)
+	}
+
 	testOpt := s.Param().(playDrmParams)
 
 	cr, l, cs, err := lacros.Setup(ctx, s.FixtValue(), testOpt.browserType)
@@ -331,6 +337,8 @@ func PlayDRM(ctx context.Context, s *testing.State) {
 	const unmutePlayer = false
 
 	if err := play.TestPlay(ctx, s, cs, cr, testOpt.fileName, play.DRMVideo, play.VerifyHWDRMUsed, unmutePlayer); err != nil {
-		s.Fatal("TestPlay failed: ", err)
+		if expErr := expectation.ReportError("TestPlay failed: ", err); expErr != nil {
+			s.Fatal("TestPlay failed: ", err)
+		}
 	}
 }
