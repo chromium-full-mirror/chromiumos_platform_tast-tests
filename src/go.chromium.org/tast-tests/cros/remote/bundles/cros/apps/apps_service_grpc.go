@@ -45,14 +45,6 @@ func init() {
 					browserID:     "mgndgikekgjfcpckkfioiadnlibdjbkf", // See Chrome.ID in local/apps/apps.go.
 				},
 			},
-			{
-				Name:              "lacros",
-				ExtraSoftwareDeps: []string{"lacros"},
-				Val: testParams{
-					chromeRequest: &ui.NewRequest{DisableFeatures: disableFeatures, EnableFeatures: []string{"LacrosOnly"}, LacrosExtraArgs: []string{"--no-first-run"}},
-					browserID:     "jaimifaeiicidiikhmjedcgdimealfbh", // See Lacros.ID in local/apps/apps.go.
-				},
-			},
 		},
 	})
 }
