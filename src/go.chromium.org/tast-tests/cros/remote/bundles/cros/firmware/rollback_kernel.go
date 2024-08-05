@@ -383,6 +383,15 @@ func bootToBothCopies(ctx context.Context, h *firmware.Helper, ms *firmware.Mode
 	if _, err := h.KernelServiceClient.EnsureBothKernelCopiesBootable(ctx, &empty.Empty{}); err != nil {
 		return errors.Wrap(err, "failed to ensure both kernel copies are bootable")
 	}
+
+	testing.ContextLog(ctx, "Sleeping for 10s")
+	// GoBigSleepLint: There is a risk that the priority value may revert to its
+	// original setting if the priority is set immediately after
+	// EnsureBothKernelCopiesBootable(). Add a 10-second delay before setting the priority.
+	if err := testing.Sleep(ctx, 10*time.Second); err != nil {
+		return errors.Wrap(err, "failed to sleep for 10 seconds")
+	}
+
 	if _, err := h.KernelServiceClient.PrioritizeKernelCopy(ctx, &pb.Partition{
 		Name: pb.PartitionName_KERNEL,
 		Copy: pb.PartitionCopy_B,
