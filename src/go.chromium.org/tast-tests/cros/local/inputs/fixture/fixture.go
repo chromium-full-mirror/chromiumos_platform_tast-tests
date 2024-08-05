@@ -700,6 +700,7 @@ func (f *inputsFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) int
 		case picker:
 			opts = append(opts, chrome.ExtraArgs("--enable-features=Picker"))
 			opts = append(opts, chrome.ExtraArgs("--picker-feature-key="+s.RequiredVar("inputs.Picker.pickerFeatureTestKey")))
+			opts = append(opts, chrome.ExtraArgs("--disable-sync"))
 		}
 	}
 
