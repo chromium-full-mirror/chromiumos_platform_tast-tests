@@ -48,8 +48,8 @@ func init() {
 		Contacts:     []string{"cros-networking@google.com", "ningyuan@google.com"},
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
-		// TODO(b/331845752): Disable the test in CQ temporarily.
-		Attr:         []string{"group:mainline", "group:criticalstaging", "informational", "group:hw_agnostic"},
+		// TODO(b/331845752): Promote to criticalstaging and CQ after $BUG is fixed.
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      10 * time.Minute,
 		Params: []testing.Param{{
