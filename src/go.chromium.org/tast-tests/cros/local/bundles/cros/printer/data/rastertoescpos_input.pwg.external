@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/printer/rastertoescpos_input_20240911.pwg",
+  "size": 54840,
+  "sha256sum": "7ceefa2b731291e2e8ad40827a94347a573f8869a580a1b4df57b493b20772c8"
+}

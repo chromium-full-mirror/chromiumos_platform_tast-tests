@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/printer/rastertoescpos_golden_20240911.bin",
+  "size": 53271,
+  "sha256sum": "3bb33c72d0211f3be2269e223554f163e5b52f9e795f931b901b0d3dd44fce17"
+}
