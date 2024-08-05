@@ -59,20 +59,9 @@ func HealthCheck(allow bool) Option {
 
 // DumpHTTPFlow is an option to switch dumpHttpFlow when proxy starts.
 // Default value of allow is false.
-// When allow is true, user should pass dumpHTTPFlowAddonPath as well.
-// TODO(b/319732303): remove dumpHTTPFlowAddonPath later.
-func DumpHTTPFlow(allow bool, dumpHTTPFlowAddonPath string) Option {
+func DumpHTTPFlow(enable bool) Option {
 	return func(mp *MitmProxy) error {
-		if allow && len(dumpHTTPFlowAddonPath) == 0 {
-			return errors.New("Please pass dumpHTTPFlowAddonPath to enable dumpHTTPFlow")
-		}
-
-		if !allow && len(dumpHTTPFlowAddonPath) != 0 {
-			return errors.New("You cannot pass dumpHTTPFlowAddonPath when disable dumpHTTPFlow")
-		}
-
-		mp.dumpHTTPFlowEnabled = allow
-		mp.dumpHTTPFlowAddonPath = dumpHTTPFlowAddonPath
+		mp.dumpHTTPFlowEnabled = enable
 		return nil
 	}
 }
@@ -118,16 +107,9 @@ func DumpFull(enable bool) Option {
 // Sample for hosts:
 //
 //	"www.example.com", "api.google.com"
-//
-// TODO(b/319732303): remove trafficFilterAddonPath later.
-func Allowlist(hosts []string, trafficFilterAddonPath string) Option {
+func Allowlist(hosts []string) Option {
 	return func(mp *MitmProxy) error {
-		if len(trafficFilterAddonPath) == 0 {
-			return errors.New("failed to filter HTTP flow since trafficFilterAddonPath is empty")
-		}
-
 		mp.allowedHosts = append(mp.allowedHosts, hosts...)
-		mp.scriptPaths = append(mp.scriptPaths, trafficFilterAddonPath)
 
 		config := map[string][]string{
 			"allowedHosts": hosts,

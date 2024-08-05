@@ -48,27 +48,26 @@ const (
 
 // MitmProxy represents a structure of mitmproxy.
 type MitmProxy struct {
-	binaryPath            string
-	port                  int
-	host                  string
-	outDir                string
-	dumpFull              bool // True only if a tcpdump-like full dump is needed, default: False
-	dumpFileName          string
-	dumpFilePath          string
-	confDir               string
-	pid                   int // pid of the proxy server process
-	cmd                   *testexec.Cmd
-	isRunning             bool // Is the proxy running? It is set to true on starting proxy.
-	removeCert            bool // Should remove cert after test is completed?
-	healthCheck           bool
-	scriptPaths           []string // Addon scripts used by mitmproxy.
-	options               []string // Other options provided by users. We will add --set option to command.
-	lifelineFD            *os.File // Used by pathcpanel to track the lifetime of the proxy server.
-	dumpHTTPFlowEnabled   bool
-	dumpHTTPFlowAddonPath string
-	allowedHosts          []string
-	ignoredHosts          []string
-	customCA              bool
+	binaryPath          string
+	port                int
+	host                string
+	outDir              string
+	dumpFull            bool // True only if a tcpdump-like full dump is needed, default: False
+	dumpFileName        string
+	dumpFilePath        string
+	confDir             string
+	pid                 int // pid of the proxy server process
+	cmd                 *testexec.Cmd
+	isRunning           bool // Is the proxy running? It is set to true on starting proxy.
+	removeCert          bool // Should remove cert after test is completed?
+	healthCheck         bool
+	scriptPaths         []string // Addon scripts used by mitmproxy.
+	options             []string // Other options provided by users. We will add --set option to command.
+	lifelineFD          *os.File // Used by pathcpanel to track the lifetime of the proxy server.
+	dumpHTTPFlowEnabled bool
+	allowedHosts        []string
+	ignoredHosts        []string
+	customCA            bool
 }
 
 // NewMitmProxy creates a new MitmProxy instance with default configuration and option overrides.
@@ -90,12 +89,6 @@ func NewMitmProxy(ctx context.Context, opts ...Option) (Proxy, error) {
 		if err := opt(mp); err != nil {
 			return nil, err
 		}
-	}
-
-	// It's crucial to add the dump HTTP flow addon as the first script.
-	// MitmProxy executes addon scripts sequentially, so order directly impacts functionality.
-	if mp.dumpHTTPFlowEnabled {
-		mp.scriptPaths = append([]string{mp.dumpHTTPFlowAddonPath}, mp.scriptPaths...)
 	}
 
 	// Set OutDir for saving per-test logs and dump files.
@@ -156,6 +149,24 @@ func (mp *MitmProxy) start(ctx context.Context) (retErr error) {
 			mp.Close(ctx)
 		}
 	}()
+
+	// It's crucial to add the dump HTTP flow addon as the first script.
+	// MitmProxy executes addon scripts sequentially, so order directly impacts functionality.
+	if mp.dumpHTTPFlowEnabled {
+		path, err := mp.generateAddon("dump_http_flow", dumpHTTPFlowAddon)
+		if err != nil {
+			return err
+		}
+		mp.scriptPaths = append([]string{path}, mp.scriptPaths...)
+	}
+
+	if len(mp.allowedHosts) != 0 {
+		path, err := mp.generateAddon("http_flow_filter", httpFlowFilterAddon)
+		if err != nil {
+			return err
+		}
+		mp.scriptPaths = append(mp.scriptPaths, path)
+	}
 
 	// If mitmproxy detects mitmproxy-ca-cert.pem, mitmproxy will not generate new CA during starting.
 	if mp.customCA {
@@ -326,24 +337,34 @@ func (mp *MitmProxy) configurePidAddon() (string, error) {
 		return "", errors.Wrap(err, "failed to create PID file")
 	}
 
-	pidScript, err := mp.createTempFile("mitma_add_on*.py")
-	if err != nil {
-		return "", errors.Wrap(err, "failed to create add on file")
-	}
-
 	script := fmt.Sprintf(`import os
 
 def running():
 	with open("%s","w+") as f:
 		f.write(str(os.getpid()))
 `, pidFile)
-	err = os.WriteFile(pidScript, []byte(script), 775)
 
+	pidScript, err := mp.generateAddon("mitma_add_on", script)
 	if err != nil {
-		return "", errors.Wrap(err, "failed to write add on file")
+		return "", errors.Wrap(err, "failed to create add on file")
 	}
+
 	mp.scriptPaths = append(mp.scriptPaths, pidScript)
 	return pidFile, nil
+}
+
+// generateAddon creates addon file based on name and script.
+func (mp *MitmProxy) generateAddon(name, script string) (string, error) {
+	file, err := mp.createTempFile(fmt.Sprintf("%s*.py", name))
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to create %s Addon", name)
+	}
+
+	err = os.WriteFile(file, []byte(script), 755)
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to write %s Addon", name)
+	}
+	return file, nil
 }
 
 // createTempFile creates a temporary file in proxy server's config directory and returns the

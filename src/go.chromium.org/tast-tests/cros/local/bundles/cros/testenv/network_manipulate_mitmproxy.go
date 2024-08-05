@@ -22,8 +22,6 @@ import (
 const (
 	hostRedirectPy    = "mitmproxy_redirect_requests.py"
 	httpErrorInjectPy = "mitmproxy_inject_500_requests.py"
-	dumpHTTPFlowPy    = "dump_http_flow.py"
-	httpFlowFilterPy  = "http_flow_filter.py"
 )
 
 func init() {
@@ -54,13 +52,11 @@ func init() {
 			Val:       "error",
 			ExtraData: []string{httpErrorInjectPy},
 		}, {
-			Name:      "dumphttpflow",
-			Val:       "dumphttpflow",
-			ExtraData: []string{dumpHTTPFlowPy},
+			Name: "dumphttpflow",
+			Val:  "dumphttpflow",
 		}, {
-			Name:      "httpflowfilter",
-			Val:       "httpflowfilter",
-			ExtraData: []string{httpFlowFilterPy},
+			Name: "httpflowfilter",
+			Val:  "httpflowfilter",
 		}},
 	})
 }
@@ -163,12 +159,12 @@ func proxyOpts(s *testing.State) []proxy.Option {
 		opts = append(opts, proxy.ScriptPath(s.DataPath(httpErrorInjectPy)))
 	case "httpflowfilter":
 		opts = append(opts,
-			proxy.Allowlist([]string{"www.example.com", "www.example.org"}, s.DataPath(httpFlowFilterPy)),
+			proxy.Allowlist([]string{"www.example.com", "www.example.org"}),
 			proxy.HealthCheck(false), // Disable health check as it uses the local domain that won't work with the allowlist set for this test.
 		)
 	case "dumphttpflow":
 		opts = append(opts,
-			proxy.DumpHTTPFlow(true, s.DataPath(dumpHTTPFlowPy)),
+			proxy.DumpHTTPFlow(true),
 		)
 	}
 	return opts

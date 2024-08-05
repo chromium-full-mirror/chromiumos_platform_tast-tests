@@ -24,8 +24,6 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-const dumpScript = "dump_http_flow.py"
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VerifyProxyOobe,
@@ -42,8 +40,6 @@ func init() {
 			"ui.signinProfileTestExtensionManifestKey",
 			ui.GaiaPoolDefaultVarName,
 		},
-		// TODO(b:346461975): Remove it.
-		Data: []string{dumpScript},
 	})
 }
 
@@ -54,7 +50,7 @@ func VerifyProxyOobe(ctx context.Context, s *testing.State) {
 
 	mp, err := proxy.NewMitmProxy(ctx,
 		proxy.CustomCA(true),
-		proxy.DumpHTTPFlow(true, s.DataPath(dumpScript)),
+		proxy.DumpHTTPFlow(true),
 	)
 	if err != nil {
 		s.Fatal("Failed to create new proxy: ", err)
