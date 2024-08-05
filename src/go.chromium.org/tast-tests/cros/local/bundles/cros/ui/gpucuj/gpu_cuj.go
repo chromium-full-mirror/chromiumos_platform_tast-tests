@@ -184,7 +184,37 @@ type testInvocation struct {
 }
 
 // runTest runs the common part of the GpuCUJ performance test.
-func runTest(ctx context.Context, ctconn *chrome.TestConn, tracer traceable, invoc *testInvocation) error {
+func runTest(ctx context.Context, cr *chrome.Chrome, invoc *testInvocation) error {
+	cooldownConfig := cpu.DefaultCoolDownConfig(cpu.CoolDownPreserveUI)
+	// Reduce the timeout to avoid test timeouts.
+	cooldownConfig.PollTimeout = 2 * time.Minute
+	if _, err := cpu.WaitUntilStabilized(ctx, cooldownConfig); err != nil {
+		testing.ContextLog(ctx, "Failed to wait for CPU to stabilize: ", err)
+	}
+
+	conn, err := cr.NewConn(ctx, invoc.page.url)
+	if err != nil {
+		return errors.Wrapf(err, "failed to open %s", invoc.page)
+	}
+	defer conn.Close()
+	defer conn.CloseTarget(ctx)
+
+	scenario := invoc.scenario
+	// Setup extra window for multi-window tests.
+	if scenario == TestTypeMoveOcclusion || scenario == TestTypeMoveOcclusionWithCrosWindow {
+		connBlank, err := cr.NewConn(ctx, chrome.BlankURL, browser.WithNewWindow())
+		if err != nil {
+			return errors.Wrap(err, "failed to open new tab")
+		}
+		defer connBlank.Close()
+		defer connBlank.CloseTarget(ctx)
+	}
+
+	ctconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to connect to test API")
+	}
+
 	w, err := ash.WaitForAnyWindowWithoutTitle(ctx, ctconn, "about:blank")
 	if err != nil {
 		return err
@@ -291,7 +321,7 @@ func runTest(ctx context.Context, ctconn *chrome.TestConn, tracer traceable, inv
 	// manual inspection).
 	testing.Sleep(ctx, 3*time.Second)
 
-	return runHistogram(ctx, ctconn, tracer, invoc, perfFn)
+	return runHistogram(ctx, ctconn, cr, invoc, perfFn)
 }
 
 // CleanupCallback is a callback that should be deferred to clean up test resources.
@@ -414,34 +444,9 @@ func RunGpuCUJ(ctx context.Context, cr *chrome.Chrome, params TestParams, server
 			page.url = serverURL + page.url
 		}
 
-		cooldownConfig := cpu.DefaultCoolDownConfig(cpu.CoolDownPreserveUI)
-		// Reduce the timeout to avoid test timeouts.
-		cooldownConfig.PollTimeout = 2 * time.Minute
-		if _, err := cpu.WaitUntilStabilized(ctx, cooldownConfig); err != nil {
-			testing.ContextLog(ctx, "Failed to wait for CPU to stabilize: ", err)
-		}
-
-		conn, err := cr.NewConn(ctx, page.url)
-		if err != nil {
-			return nil, nil, errors.Wrapf(err, "failed to open %s", page.url)
-		}
-		defer conn.Close()
-		defer conn.CloseTarget(ctx)
-
-		scenario := params.TestType
-		// Setup extra window for multi-window tests.
-		if scenario == TestTypeMoveOcclusion || scenario == TestTypeMoveOcclusionWithCrosWindow {
-			connBlank, err := cr.NewConn(ctx, chrome.BlankURL, browser.WithNewWindow())
-			if err != nil {
-				return nil, nil, errors.Wrap(err, "failed to open new tab")
-			}
-			defer connBlank.Close()
-			defer connBlank.CloseTarget(ctx)
-		}
-
-		if err := runTest(ctx, ctconn, cr, &testInvocation{
+		if err := runTest(ctx, cr, &testInvocation{
 			pv:       pv,
-			scenario: scenario,
+			scenario: params.TestType,
 			page:     page,
 			metrics:  &m,
 			traceDir: traceDir,
