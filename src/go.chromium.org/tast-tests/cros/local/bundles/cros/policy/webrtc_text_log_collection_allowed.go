@@ -31,7 +31,7 @@ func init() {
 		},
 		BugComponent: "b:1129862",
 		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "gaia"},
 		VarDeps:      []string{"ui.bond_credentials"},
 		Timeout:      8 * time.Minute,
 		SearchFlags: []*testing.StringPair{

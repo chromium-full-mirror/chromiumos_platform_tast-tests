@@ -44,7 +44,7 @@ func init() {
 			"group:hw_agnostic",
 		},
 		Data:         passwordleakdetection.DataFiles(),
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "gaia"},
 		Timeout:      3 * time.Minute,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.PasswordLeakDetectionEnabled{}, pci.VerifiedFunctionalityUI),
