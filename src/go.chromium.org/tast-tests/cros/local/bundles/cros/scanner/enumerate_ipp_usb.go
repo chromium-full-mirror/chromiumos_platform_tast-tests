@@ -114,6 +114,10 @@ func runEnumerationTest(ctx context.Context, s *testing.State, info scannerInfo)
 
 	testOpt := s.Param().(*enumParams)
 
+	if err := lorgnette.ClearCache(ctx); err != nil {
+		s.Fatal("Failed to clear lorgnette cache: ", err)
+	}
+
 	printer, err := usbprinter.Start(ctx, info.options...)
 	if err != nil {
 		s.Fatal("Failed to attach virtual printer: ", err)
@@ -188,5 +192,9 @@ func EnumerateIPPUSB(ctx context.Context, s *testing.State) {
 		shouldEnumerate: true,
 	}} {
 		runEnumerationTest(ctx, s, info)
+	}
+
+	if err := lorgnette.ClearCache(ctx); err != nil {
+		s.Fatal("Failed to clear lorgnette cache at end: ", err)
 	}
 }

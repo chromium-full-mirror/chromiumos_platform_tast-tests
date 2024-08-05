@@ -7,6 +7,7 @@ package lorgnette
 
 import (
 	"context"
+	"os"
 
 	"github.com/godbus/dbus/v5"
 	"github.com/golang/protobuf/proto"
@@ -22,6 +23,7 @@ const (
 	dbusName      = "org.chromium.lorgnette"
 	dbusPath      = "/org/chromium/lorgnette/Manager"
 	dbusInterface = "org.chromium.lorgnette.Manager"
+	cachePath     = "/run/lorgnette/cache/known_devices"
 )
 
 // Lorgnette is used to interact with the lorgnette process over D-Bus.
@@ -223,6 +225,21 @@ func (l *Lorgnette) WaitForScanCompletion(ctx context.Context, uuid string) erro
 // StopService finds the running lorgnette process and kills it.
 func StopService(ctx context.Context) error {
 	return upstart.StopJob(ctx, "lorgnette")
+}
+
+// ClearCache stops lorgnette and clears its cache file.
+func ClearCache(ctx context.Context) error {
+	if err := StopService(ctx); err != nil {
+		return errors.Wrap(err, "failed to stop lorgnette")
+	}
+	if err := os.Remove(cachePath); err != nil {
+		if os.IsNotExist(err) {
+			// Missing cache produces the desired end result, so don't return an error.
+			return nil
+		}
+		return errors.Wrap(err, "failed to delete lorgnette cache")
+	}
+	return nil
 }
 
 // ListScanners calls lorgnette's ListScanners() method and returns the
