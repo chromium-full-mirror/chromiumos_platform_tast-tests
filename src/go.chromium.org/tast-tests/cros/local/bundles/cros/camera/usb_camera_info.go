@@ -24,7 +24,7 @@ func init() {
 		Desc:         "Collect camera modules info",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "esker@chromium.org"},
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
-		Attr:         []string{"group:mainline", "informational", "group:camera-stability"},
+		Attr:         []string{"group:mainline", "informational", "group:camera-stability", "group:camera", "camera_kernel"},
 		SoftwareDeps: []string{caps.BuiltinUSBCamera},
 		Fixture:      fixture.CameraServiceStopped,
 	})

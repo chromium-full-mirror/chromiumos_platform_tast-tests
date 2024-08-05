@@ -30,7 +30,7 @@ func init() {
 			"hidenorik@chromium.org",
 		},
 		BugComponent: "b:1481072", // ChromeOS > Platform > Technologies > Camera > Kernel
-		Attr:         []string{"group:mainline", "group:camera-stability", "group:camera-kernelnext"},
+		Attr:         []string{"group:mainline", "group:camera-stability", "group:camera-kernelnext", "group:camera", "camera_kernel", "camera_functional"},
 		SoftwareDeps: []string{caps.BuiltinUSBCamera},
 		Fixture:      fixture.CameraServiceStopped,
 		Params: []testing.Param{
