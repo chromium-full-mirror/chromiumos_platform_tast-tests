@@ -37,6 +37,10 @@ func init() {
 			Val:               neuronParam,
 			Timeout:           5 * time.Minute,
 			ExtraSoftwareDeps: []string{"tflite_mtk_neuron"},
+		}, {
+			Name:              "openvino",
+			Val:               openvinoParam,
+			ExtraSoftwareDeps: []string{"tflite_intel_openvino"},
 		}},
 	})
 }
@@ -160,6 +164,82 @@ var neuronParam = testingParam{
 
 		// TODO(b/351308835): Neuron delegate failed with node_index out ouf range.
 		"StablehloScatterOpTest.PerformsUpdate",
+	},
+}
+
+// TODO(b/332423167): Intel to provide the proper config.
+const openvinoAccelConfig = `
+# Disable acceleration validation temporarily.
+-.*
+`
+
+var openvinoSettings = stableDelegateSettings{
+	StableDelegateLoaderSettings: stableDelegateLoaderSettings{
+		DelegatePath: "/usr/lib64/libtensorflowlite_intel_openvino_delegate.so",
+		DelegateName: "intel_openvino_delegate",
+	},
+}
+
+var openvinoParam = testingParam{
+	Settings:    openvinoSettings,
+	AccelConfig: openvinoAccelConfig,
+	SkipTestPatterns: []string{
+		// TODO(b/357734672): Openvino delegate is not fully delegated on
+		// MultiDimBroadcast tests and is ~2000x slower than CPU on some of them.
+		// It would need >5hr to finish them and some tests fails because of FP16
+		// precision loss.
+		"*MultiDimBroadcastSubshard*",
+
+		// TODO(b/345675044): This test crashes because of forbidden function calls
+		// outside of delegate.
+		"ConcatenationOpPersistentModelTest/0.PersistentScalarTest",
+
+		// TODO(b/357500388): Openvino delegate dequantizes TensorType_FLOAT16 to
+		// TensorType_FLOAT32 wrongly.
+		"DequantizeOpTest.Float16",
+
+		// TODO(b/357498049): Openvino delegate didn't properly handle resize
+		// bilinear operators, which results in weird result.
+		"ResizeBilinearOpTest/ResizeBilinearOpTest.VerticalResize/0",
+		"ResizeBilinearOpTest/ResizeBilinearOpTest.TwoDimensionalResizeWithTwoBatches/0",
+		"ResizeBilinearOpTest/ResizeBilinearOpTest.TwoDimensionalResizeWithTwoBatches_HalfPixelCenters/0",
+		"ResizeBilinearOpTest/ResizeBilinearOpTest.ThreeDimensionalResize/0",
+
+		// TODO(b/343621510): There are failures due to FP16 precision loss in the
+		// following tests.
+		"FloatActivationsOpTest.HardSwish",
+		"FloatAddOpModel.NoActivationInplaceInput0",
+		"FloatAddOpModel.NoActivationInplaceInput1",
+		"FloatAddOpModel.NoActivation",
+		"FloatAddOpModel.ActivationRELU_N1_TO_1",
+		"FloatAddOpModel.VariousInputShapes",
+		"FloatAddOpModel.WithBroadcastGeneric",
+		"FloatAddOpModel.MixedBroadcast",
+		"ConcatenationOpTest.FourInputs",
+		"MulOpTest.NoActivationFloatInplaceInput0",
+		"MulOpTest.NoActivationFloatInplaceInput1",
+		"FloatPoolingOpTest.MaxPoolActivationRelu1",
+		"FloatPoolingOpTest.MaxPoolActivationRelu6",
+		"SoftmaxOpTest.SimpleTest",
+		"SoftmaxOpTest.CompareWithTFminiBetaEq1",
+		"TanhOpTest/TanhOpTest.Tanh/0",
+		"TanhOpTest/TanhOpTest.Tanh/1",
+		"TanhOpTest/TanhOpTest.Tanh/2",
+		"LogisticOpTest/LogisticOpTest.Sigmoid/0",
+		"LogisticOpTest/LogisticOpTest.Sigmoid/1",
+		"LogisticOpTest/LogisticOpTest.Sigmoid/2",
+		"ConstantInputs/MulOpTest.NoActivationFloat/0",
+		"ConstantInputs/MulOpTest.FloatActivationRELU_N1_TO_1/0",
+		"ConstantInputs/MulOpTest.FloatVariousInputShapes/0",
+		"ConstantInputs/MulOpTest.FloatWithBroadcast/0",
+		"ConstantInputs/MulOpTest.FloatMixedBroadcast/0",
+		"ConstantInputs/MulOpTest.FloatWithBroadcast2Elements/0",
+		"TransposeConvOpTest/TransposeConvOpTest.TwoFiltersTest/0",
+		"TransposeConvOpTest/TransposeConvOpTest.TwoFiltersTest/2",
+		"TransposeConvOpTest/TransposeConvOpTest.PaddingValidTest/0",
+		"TransposeConvOpTest/TransposeConvOpTest.PaddingValidTest/2",
+		"TransposeConvOpTest/TransposeConvOpTest.AccuracyTest/0",
+		"TransposeConvOpTest/TransposeConvOpTest.AccuracyTest/2",
 	},
 }
 
