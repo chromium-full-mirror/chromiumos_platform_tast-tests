@@ -40,14 +40,9 @@ func init() {
 		Fixture: fixture.NormalMode,
 		Timeout: 15 * time.Minute,
 		// Only run on platforms that include CL crrev/c/1234747 so that CBI can be reversibly written to.
-		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.ECFeatureCBI(), hwdep.ECFeatureCbibin(), hwdep.SkipOnModel(
-			"jax", // Fizz models
-			"kench",
-			"sion",
-			"bard", // Nami models
-			"ekko",
-			"syndra",
-		)),
+		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.ECFeatureCbibin(),
+			// Only run on the DUTs that support the CBI section when reading the EC image via flashrom.
+			hwdep.ECBuildConfigOptions("PLATFORM_EC_CBI_FLASH")),
 	})
 }
 
