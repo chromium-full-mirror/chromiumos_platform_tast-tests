@@ -81,8 +81,9 @@ func PlatformAPIMemoryInfo(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get response from Telemetry extension service worker: ", err)
 	}
 
-	if resp.TotalMemoryKiB != wantTotalMemory {
-		s.Errorf("Unexpecteed total memory: got %d; want %d", resp.TotalMemoryKiB, wantTotalMemory)
+	// resp.TotalMemoryKiB is rounded up the to next GiB.
+	if resp.TotalMemoryKiB < wantTotalMemory {
+		s.Errorf("Unexpecteed total memory: got %d; want >=%d", resp.TotalMemoryKiB, wantTotalMemory)
 	}
 
 	if resp.FreeMemoryKiB <= 0 {
