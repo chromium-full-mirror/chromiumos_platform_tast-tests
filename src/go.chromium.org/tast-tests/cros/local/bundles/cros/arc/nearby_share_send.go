@@ -71,8 +71,6 @@ func init() {
 		Desc:         "Installs ARC share test app and share text/file to Quick Share (previously known as Nearby Share) via Sharesheet",
 		Contacts: []string{
 			"arc-app-dev@google.com",
-			"alanding@chromium.org",
-			"kyleshima@chromium.org",
 			"phshah@chromium.org",
 		},
 		// ChromeOS > Software > ARC++ > Framework > Chrome Integration
