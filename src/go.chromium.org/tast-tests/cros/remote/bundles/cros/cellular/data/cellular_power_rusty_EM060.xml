@@ -11,15 +11,15 @@
     </params>
   </control>
   <control>
-    <name>ppvar_wwan_x_mw</name>
+    <name>ppvar_wwan_x_mw_mw</name>
     <doc>Power of 'ppvar_wwan_x' rail in milliwatts</doc>
     <params cmd="get" interface="servo" drv="ina231" channel="0" subtype="milliwatts" tags="power_rail" nom="5.0" base_name="ppvar_wwan_x" rsense="0.02">
     </params>
   </control>
   <control>
-    <name>ppvar_wwan_x_ma</name>
+    <name>ppvar_wwan_x_ma_ma</name>
     <doc>Current of 'ppvar_wwan_x' rail in milliamps</doc>
-    <params cmd="get" interface="servo" drv="ina231" channel="0" subtype="milliamps" tags="current_rail" nom="5.0" base_name="ppvar_wwan_x" rsense="0.02">
+    <params cmd="get" interface="servo" drv="ina231" channel="0" subtype="milliamps" tags="power_rail" nom="5.0" base_name="ppvar_wwan_x" rsense="0.02">
     </params>
   </control>
   <control>
