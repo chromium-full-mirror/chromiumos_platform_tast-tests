@@ -21,7 +21,7 @@ func init() {
 		Desc:         "Verifies the format of camera characteristics file",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "kamesan@chromium.org"},
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
-		Attr:         []string{"group:mainline", "group:camera-libcamera", "group:cq-medium"},
+		Attr:         []string{"group:mainline", "group:camera-libcamera", "group:cq-medium", "group:camera", "camera_config"},
 	})
 }
 
