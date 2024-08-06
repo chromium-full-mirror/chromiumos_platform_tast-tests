@@ -174,6 +174,7 @@ func (e *Env) Cleanup(ctx context.Context) error {
 		// We observed that in some cases this cmd may eat up all the remaining
 		// time, and thus the following cleanup won't be executed. Set a deadline
 		// explicitly here to avoid it.
+		// TODO(jiejiang): It seems that cmdCtx is not respected in some cases.
 		cmdCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 		defer cancel()
 		if err := testexec.CommandContext(cmdCtx, "ip", "netns", "del", e.NetNSName).Run(testexec.DumpLogOnError); err != nil {
@@ -187,27 +188,29 @@ func (e *Env) Cleanup(ctx context.Context) error {
 	}
 
 	// Try to remove veth if it still exists.
-	if err := removeInterfaceIfExist(ctx, e.VethOutName); err != nil {
+	if _, err := removeInterfaceIfExist(ctx, e.VethOutName); err != nil {
 		updateLastErrAndLog(errors.Wrapf(err, "failed to remove veth %s", e.VethOutName))
 	}
 
 	return lastErr
 }
 
-// removeInterfaceIfExist remove the interface with name if it exists, in the
-// best-effort way. This function is used to remove the veth interface created
-// by this package. Since the one side of the veth pair is in the netns, when we
-// remove the netns, the veth pair should be removed automatically, but we found
-// that this may take some time on some kernels (see b/260907775), so we do
-// remove it explicitly instead of waiting for it to be removed.
-func removeInterfaceIfExist(ctx context.Context, name string) error {
+// removeInterfaceIfExist removes the interface with name if it exists, in the
+// best-effort way. Returns true if the interface was removed in this call. This
+// function is used to remove the veth interface created by this package. Since
+// the one side of the veth pair is in the netns, when we remove the netns, the
+// veth pair should be removed automatically, but we found that this may take
+// some time on some kernels (see b/260907775), so we do remove it explicitly
+// instead of waiting for it to be removed.
+func removeInterfaceIfExist(ctx context.Context, name string) (bool, error) {
 	if err := testexec.CommandContext(ctx, "ip", "link", "del", name).Run(); err != nil {
 		// Exit error is expected in case the eth has already been removed.
 		if _, ok := err.(*exec.ExitError); !ok {
-			return errors.Wrapf(err, "failed to remove %s", name)
+			return false, errors.Wrapf(err, "failed to remove %s", name)
 		}
+		return true, nil
 	}
-	return nil
+	return false, nil
 }
 
 // StartServer starts a server inside this Env. This Env object will take care
@@ -472,17 +475,35 @@ func (e *Env) makeChroot(ctx context.Context) error {
 
 // makeNetNS prepares the veth pair and netns.
 func (e *Env) makeNetNS(ctx context.Context) error {
+	needCoolDown := false
+
 	// Try to remove the leftover netns from the last test run if there is any.
 	// This command will fail if the netns does not exist, which is also expected.
 	if err := testexec.CommandContext(ctx, "ip", "netns", "del", e.NetNSName).Run(); err != nil {
 		if _, ok := err.(*exec.ExitError); !ok {
 			return errors.Wrapf(err, "failed to delete leftover namespace %s", e.NetNSName)
 		}
+		testing.ContextLog(ctx, "Removed left-over netns ", e.NetNSName)
+		needCoolDown = true
 	}
 
 	// Try to remove the leftover veth from the last test run if there is any.
-	if err := removeInterfaceIfExist(ctx, e.VethOutName); err != nil {
+	if removed, err := removeInterfaceIfExist(ctx, e.VethOutName); err != nil {
 		return errors.Wrapf(err, "failed to remove veth %s", e.VethOutName)
+	} else if removed {
+		testing.ContextLog(ctx, "Removed left-over interface ", e.VethOutName)
+		needCoolDown = true
+	}
+
+	if needCoolDown {
+		// GoBigSleepLint: if we just removed the interface, wait for a while to
+		// setup the new interface. Currently some system daemons may not handle the
+		// quick interface recreation very well (e.g., patchpanel / dnsproxy). This
+		// is a scenario which should not happen in the real world (unless the
+		// interface itself is not stable, but it may indicate some other issues).
+		// If we want to test such scenarios, it's better to add a dedicated stress
+		// test to verify that, instead of make other functional tests flaky.
+		testing.Sleep(ctx, 1*time.Second)
 	}
 
 	// Create new namespace.
