@@ -186,6 +186,7 @@ func ConsecutiveBoot(ctx context.Context, s *testing.State) {
 	shutdownFuncFailed := 0
 	failToGetG3S5 := 0
 	failToPressPowerKey := 0
+	failToGetS0 := 0
 	failToConnectToDUT := 0
 	incorrectBootMode := 0
 	badBootID := 0
@@ -201,7 +202,7 @@ func ConsecutiveBoot(ctx context.Context, s *testing.State) {
 		s.Logf("Iter %d -- %v", iter+1, err)
 		failures[iter] = append(failures[iter], err)
 		if errCount != nil {
-			*errCount = *errCount + 1
+			*errCount += 1
 		}
 	}
 
@@ -223,7 +224,7 @@ func ConsecutiveBoot(ctx context.Context, s *testing.State) {
 
 		s.Log("Check for S0 powerstate")
 		if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "S0"); err != nil {
-			logFailure(errors.Wrap(err, "failed to get S0 powerstate"), i, nil)
+			logFailure(errors.Wrap(err, "failed to get S0 powerstate"), i, &failToGetS0)
 		}
 
 		// Wrap in func so ctx cancel defer executes immediately after this block.
@@ -252,16 +253,16 @@ func ConsecutiveBoot(ctx context.Context, s *testing.State) {
 		}
 
 		if !expectECReboot {
-			if ecTime, err := getTime(ctx); err != nil {
+			ecTime, err := getTime(ctx)
+			if err != nil {
 				logFailure(errors.Wrap(err, "failed to read EC clock"), i, &unexpectedECReboot)
 			} else if ecTime < priorECTime {
 				logFailure(
 					errors.Wrapf(err, "EC reboot detected. Clock was %v but now is %v", priorECTime, ecTime),
 					i, &unexpectedECReboot,
 				)
-			} else {
-				priorECTime = ecTime
 			}
+			priorECTime = ecTime
 		}
 
 		if hasCustomCmd {
@@ -303,6 +304,7 @@ func ConsecutiveBoot(ctx context.Context, s *testing.State) {
 		s.Logf("\tFailed to shutdown:........%d", shutdownFuncFailed)
 		s.Logf("\tFailed to reach G3/S5:.....%d", failToGetG3S5)
 		s.Logf("\tPower key failed:..........%d", failToPressPowerKey)
+		s.Logf("\tFailed to reach S0:........%d", failToGetS0)
 		s.Logf("\tFailed to connect to DUT:..%d", failToConnectToDUT)
 		s.Logf("\tGot incorrect bootmode:....%d", incorrectBootMode)
 		s.Logf("\tBootID did not change:.....%d", badBootID)
