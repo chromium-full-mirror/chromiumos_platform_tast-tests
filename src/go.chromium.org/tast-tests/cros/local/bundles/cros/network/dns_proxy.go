@@ -209,8 +209,10 @@ func DNSProxy(ctx context.Context, s *testing.State) {
 	}
 
 	if params.crostini {
-		// Make sure that routing setup for crostini is ready.
-		if err := guestos.PingWithRetryAndTimeout(ctx, cont, env.IPv4DNSAddr.String(), 10*time.Second); err != nil {
+		// Make sure that routing setup for crostini is ready. Use a relatively
+		// longer timeout here to make sure crostini have long enough time to finish
+		// the network setup.
+		if err := guestos.PingWithRetryAndTimeout(ctx, cont, env.IPv4DNSAddr.String(), 30*time.Second); err != nil {
 			s.Fatalf("Failed to verify DNS server %s reachability in Crostini: %v", env.IPv4DNSAddr.String(), err)
 		}
 	}
