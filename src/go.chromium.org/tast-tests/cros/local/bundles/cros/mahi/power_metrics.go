@@ -10,19 +10,12 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"path"
-	"regexp"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/testexec"
-	"go.chromium.org/tast-tests/cros/local/a11y"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/mahi/mahiutil"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
-	"go.chromium.org/tast-tests/cros/local/dlc"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
@@ -33,9 +26,7 @@ import (
 )
 
 const (
-	longUITimeout       = 10 * time.Second
 	powerMetricInterval = 10 * time.Second
-	localHTMLZip        = "mahi_html.zip"
 )
 
 type testParameters struct {
@@ -104,7 +95,7 @@ func init() {
 			},
 		},
 		Data: []string{
-			localHTMLZip,
+			mahiutil.LocalHTMLZip,
 		},
 	})
 }
@@ -129,17 +120,8 @@ func PowerMetrics(ctx context.Context, s *testing.State) {
 	}
 	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
 
-	// Force install screen-ai dlc.
-	if err := dlc.Install(ctx, "screen-ai", ""); err != nil {
+	if err := mahiutil.InstallScreenAIDLC(ctx); err != nil {
 		s.Fatal("Install DLC failed: ", err)
-	}
-
-	// Ensure screen2x is installed.
-	if err := testing.Poll(ctx, a11y.VerifyScreenAIInstalled, &testing.PollOptions{
-		Timeout:  2 * time.Minute,
-		Interval: 10 * time.Second,
-	}); err != nil {
-		s.Fatal("Failed to wait for screen-ai dlc to be installed: ", err)
 	}
 
 	ui := uiauto.New(tconn)
@@ -152,20 +134,13 @@ func PowerMetrics(ctx context.Context, s *testing.State) {
 	defer kb.Close(ctx)
 
 	// Unzip the local html files.
-	localHTMLPath := path.Join(os.TempDir(), "mahi.power_metrics")
-	if err := os.MkdirAll(localHTMLPath, 0755); err != nil {
-		s.Fatal("Failed to create local html directory: ", err)
+	localHTMLPath, localHTMLFiles, err := mahiutil.PrepareLocalHTML(ctx, s)
+	if err != nil {
+		s.Fatal("Failed to prepare local html files: ", err)
 	}
 	defer os.RemoveAll(localHTMLPath)
 
-	if err := testexec.CommandContext(ctx, "unzip", "-o", s.DataPath(localHTMLZip), "-d", localHTMLPath).Run(testexec.DumpLogOnError); err != nil {
-		s.Fatal("Failed to unzip ", localHTMLZip, " to local html directory: ", err)
-	}
-
-	localHTMLFiles, err := os.ReadDir(localHTMLPath)
-	if err != nil {
-		s.Fatal("Failed to read HTML file list from local html directory: ", err)
-	}
+	s.Logf("local html path %s, local files %s", localHTMLPath, localHTMLFiles)
 
 	// Setup test HTTP server.
 	localServer := httptest.NewServer(http.FileServer(http.Dir(localHTMLPath)))
@@ -183,88 +158,15 @@ func PowerMetrics(ctx context.Context, s *testing.State) {
 		s.Fatal("Cannot start collecting power metrics: ", err)
 	}
 
-	consentTryItButton := nodewith.Name("Try it").ClassName("MdTextButton")
-	consentGotItButton := nodewith.Name("Got it").ClassName("MdTextButton")
-	contextMenu := nodewith.ClassName("SubmenuView").Role("menu")
-	summarizeButton := nodewith.Name("Summarize").ClassName("LabelButton")
-	compactSummaryButton := nodewith.Name("Help me read this page").ClassName("MahiCondensedMenuButton")
-	summaryOutlinesSection := nodewith.ClassName("SummaryOutlinesSection")
-	summaryText := nodewith.NameRegex(regexp.MustCompile(`^.{20,}$`)).ClassName("Label").Role("staticText").Ancestor(summaryOutlinesSection)
-	mahiErrorStatus := nodewith.ClassName("MahiErrorStatusView")
-	mahiCloseButton := nodewith.Name("Close").ClassName("IconButton")
-
-	cleanUIElement := func() error {
-		return testing.Poll(ctx, func(ctx context.Context) error {
-			if err := uiauto.Combine("Hide context menu",
-				uiauto.IfSuccessThen(ui.Exists(contextMenu), kb.AccelAction("Esc")),
-				ui.WaitUntilGone(contextMenu),
-			)(ctx); err != nil {
-				return errors.Wrap(err, "fail to hide the context menu")
-			}
-
-			if err := uiauto.Combine("Hide mahi panel",
-				uiauto.IfSuccessThen(ui.Exists(mahiCloseButton), ui.LeftClick(mahiCloseButton)),
-				ui.WaitUntilGone(mahiCloseButton),
-			)(ctx); err != nil {
-				return errors.Wrap(err, "fail to hide the mahi panel")
-			}
-
-			return nil
-		}, &testing.PollOptions{
-			Timeout:  5 * time.Second,
-			Interval: time.Second,
-		})
-	}
-
-	// Open a html file from local server
-	navigateToLocalHTML := func(fileName string) error {
-		url := localServer.URL + "/" + fileName
-		if err := conn.Navigate(ctx, url); err != nil {
-			s.Log("Failed to open url: ", err)
-			return errors.Wrap(err, "failed to open url")
-		}
-
-		if err := webutil.WaitForQuiescence(ctx, conn, longUITimeout); err != nil {
-			s.Logf("Failed to wait for %q to be loaded and achieve quiescence, err: %q", url, err)
-			return errors.Wrap(err, "failed to wait for quiescence")
-		}
-		return nil
-	}
-
-	// Passes the one-off consent flow
-	maybePassConsentFlow := func() error {
-		if err := navigateToLocalHTML(localHTMLFiles[0].Name()); err != nil {
-			return errors.Wrap(err, "failed to open a local html")
-		}
-		if err := mouse.Click(tconn, window.TargetBounds.CenterPoint(), mouse.RightButton)(ctx); err != nil {
-			return errors.Wrap(err, "failed to right click")
-		}
-
-		if err := ui.WaitUntilExists(consentTryItButton)(ctx); err != nil {
-			s.Log("Has no consent flow, wait for the summary button")
-			if err := ui.WaitUntilAnyExists(summarizeButton, compactSummaryButton)(ctx); err != nil {
-				return errors.Wrap(err, "no consent flow nor summary button")
-			}
-		} else {
-			s.Log("Has consent Try it button")
-			if err := uiauto.Combine("Do consent flow",
-				ui.Exists(consentTryItButton),
-				ui.LeftClick(consentTryItButton),
-				ui.WaitUntilExists(consentGotItButton),
-				ui.LeftClick(consentGotItButton),
-				ui.WaitUntilAnyExists(summaryText, mahiErrorStatus),
-			)(ctx); err != nil {
-				return errors.Wrap(err, "failed to pass the consent flow")
-			}
-		}
-
-		return cleanUIElement()
+	if err := mahiutil.CleanUIElement(ctx, ui, kb); err != nil {
+		s.Fatal("Failed to clean UI element after summary: ", err)
 	}
 
 	params := s.Param().(testParameters)
 
 	if params.expectMahiWidget {
-		if err := maybePassConsentFlow(); err != nil {
+		if err := mahiutil.MaybePassConsentFlow(
+			ctx, conn, tconn, window, ui, kb, localServer.URL+"/"+localHTMLFiles[0].Name()); err != nil {
 			s.Fatal("Failed to pass the consent flow: ", err)
 		}
 	}
@@ -282,27 +184,19 @@ func PowerMetrics(ctx context.Context, s *testing.State) {
 		fileName := localHTMLFiles[index%localHTMLCount].Name()
 		index++
 
-		navigateToLocalHTML(fileName)
+		if err := mahiutil.NavigateToURL(ctx, conn, localServer.URL+"/"+fileName); err != nil {
+			return errors.Wrapf(err, "failed to open local html %s", fileName)
+		}
 
 		// Do a right click and wait for the context menu / mahi widget card.
-		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			if err := mouse.Click(tconn, window.TargetBounds.CenterPoint(), mouse.RightButton)(ctx); err != nil {
-				return errors.Wrap(err, "failed to right click")
-			}
-			if !params.expectMahiWidget {
-				return ui.WaitUntilExists(contextMenu)(ctx)
-			}
-			return ui.WaitUntilAnyExists(summarizeButton, compactSummaryButton)(ctx)
-		}, &testing.PollOptions{
-			Timeout:  5 * time.Second,
-			Interval: time.Second,
-		}); err != nil {
+		if err := mahiutil.RightClickAndMaybeShowMahiWidget(
+			ctx, tconn, window, ui, params.expectMahiWidget); err != nil {
 			s.Log("Failed to do a right click: ", err)
 			return errors.Wrap(err, "failed to do a right click")
 		}
 
 		if !params.doMahiSummary {
-			if err := cleanUIElement(); err != nil {
+			if err := mahiutil.CleanUIElement(ctx, ui, kb); err != nil {
 				s.Fatal("Failed to clean UI element after right click: ", err)
 			}
 			succeedCount++
@@ -310,15 +204,15 @@ func PowerMetrics(ctx context.Context, s *testing.State) {
 		}
 
 		if err := uiauto.Combine("Do summary and check the panel exists",
-			uiauto.IfSucceedThenElse(ui.Exists(summarizeButton), ui.LeftClick(summarizeButton), ui.LeftClick(compactSummaryButton)),
-			ui.WaitUntilExists(mahiCloseButton),
-			ui.WaitUntilAnyExists(summaryText, mahiErrorStatus),
+			uiauto.IfSucceedThenElse(ui.Exists(mahiutil.SummarizeButton), ui.LeftClick(mahiutil.SummarizeButton), ui.LeftClick(mahiutil.CompactSummaryButton)),
+			ui.WaitUntilExists(mahiutil.MahiCloseButton),
+			ui.WaitUntilAnyExists(mahiutil.SummaryText, mahiutil.MahiErrorStatus),
 		)(ctx); err != nil {
 			s.Log("Failed to do a mahi summary: ", err)
 			return errors.Wrap(err, "failed to do a mahi summary")
 		}
 
-		if err := cleanUIElement(); err != nil {
+		if err := mahiutil.CleanUIElement(ctx, ui, kb); err != nil {
 			s.Fatal("Failed to clean UI element after summary: ", err)
 		}
 
