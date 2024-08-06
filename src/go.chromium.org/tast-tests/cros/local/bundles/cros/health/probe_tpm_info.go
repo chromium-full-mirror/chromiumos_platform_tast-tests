@@ -10,6 +10,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/croshealthd"
 	"go.chromium.org/tast-tests/cros/local/jsontypes"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type tpmVersion struct {
@@ -69,6 +70,13 @@ func init() {
 		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		SoftwareDeps: []string{"diagnostics"},
 		Fixture:      "crosHealthdRunning",
+		Params: []testing.Param{{
+			Name:              "",
+			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
+		}, {
+			Name:              "no_tpm",
+			ExtraHardwareDeps: hwdep.D(hwdep.HasNoTpm()),
+		}},
 	})
 }
 
