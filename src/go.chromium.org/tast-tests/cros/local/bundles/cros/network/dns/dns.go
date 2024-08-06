@@ -291,20 +291,22 @@ func SetDoHModeViaShill(ctx context.Context, mode DoHMode, dohProvider string) (
 		return nil, errors.Wrap(err, "failed to create shill client")
 	}
 
-	// Get the name servers on the current default service. It will be used in the automatic mode.
-	svc, err := m.FindMatchingService(ctx, map[string]interface{}{
-		shillconst.ServicePropertyState: shillconst.ServiceStateOnline,
-	})
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to obtain online service")
-	}
-	networkConfig, err := svc.GetNetworkConfig(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get NetworkConfig on the default service")
-	}
 	var nameServers []string
-	for _, ns := range networkConfig.NameServers {
-		nameServers = append(nameServers, ns.String())
+	if mode == DoHAutomatic {
+		// Get the name servers on the current default service. It will be used in the automatic mode.
+		svc, err := m.FindMatchingService(ctx, map[string]interface{}{
+			shillconst.ServicePropertyState: shillconst.ServiceStateOnline,
+		})
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to obtain online service")
+		}
+		networkConfig, err := svc.GetNetworkConfig(ctx)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get NetworkConfig on the default service")
+		}
+		for _, ns := range networkConfig.NameServers {
+			nameServers = append(nameServers, ns.String())
+		}
 	}
 
 	var newProps map[string]interface{}
