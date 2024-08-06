@@ -39,7 +39,7 @@ func init() {
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		SoftwareDeps: []string{"chrome", "no_kernel_upstream"},
-		Timeout:      7 * time.Minute,
+		Timeout:      2 * time.Minute,
 		Params: []testing.Param{{
 			Name: "chrome_doh_off",
 			Val: dnsProxyTestParams{
