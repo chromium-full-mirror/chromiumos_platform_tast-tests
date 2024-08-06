@@ -23,7 +23,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/chrome/histogram"
 	"go.chromium.org/tast-tests/cros/common/perf"
-	pb "go.chromium.org/tast-tests/cros/common/power/powerpb"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/chromeproc"
@@ -36,10 +35,6 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-const (
-	ErrBatteryNotDischarging = "the battery is not set to discharge"
-)
-
 // perfValueInterface allows perf collection functions to take either either a
 // graphics.ThreadSafeValues or a perf.Values.
 type perfValueInterface interface {
@@ -47,20 +42,64 @@ type perfValueInterface interface {
 	Set(s perf.Metric, vs ...float64)
 }
 
-// errorOnNonDischarging returns a proper error when the battery is not discharging.
-// If no discharging is expected, then returns nil.
-func errorOnNonDischarging(ctx context.Context, status *pb.Status) error {
+// ensureBatteryIsDischarging ensures the battery status is discharged so that
+// the power consumption can be measured correctly.
+// The function returns whether power collection should continue and fatal error.
+// The failure of setting discharge is expected to fail in some cases. Then it
+// returns true with error=nil. Otherwise, the patterns of return values are
+// (true, nil) and (false, non nill).
+func ensureBatteryIsDischarging(ctx context.Context) (bool, error) {
+	status, err := power.GetStatus(ctx)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to get the battery status")
+	}
+	if !power.IsLinePowerConnected(status) {
+		return true, nil
+	}
 	if _, err := pm.SysfsBatteryPath(ctx); err != nil {
 		testing.ContextLog(ctx, "This device doesn't have a battery, skip collecting power consumption")
-		return nil
+		return false, nil
 	}
 
 	if !util.SupportChromeEC() {
 		testing.ContextLog(ctx, "This device doesn't support chrome EC, skip collecting power consumption")
-		return nil
+		return false, nil
 	}
-	testing.ContextLog(ctx, "Power status: ", status)
-	return errors.New(ErrBatteryNotDischarging)
+
+	const tryInterval = 10 * time.Second
+	// GoBigSleepLint: Sleep before executing the first GetStatus() in the poll.
+	if err := testing.Sleep(ctx, tryInterval); err != nil {
+		return false, err
+	}
+
+	const maxTry = 3
+	tryCnt := 0
+	if err := testing.Poll(ctx, func(context.Context) error {
+		var err error
+		status, err = power.GetStatus(ctx)
+		if err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to obtain DUT power status"))
+		}
+		if !power.IsLinePowerConnected(status) {
+			return nil
+		}
+
+		tryCnt++
+		if tryCnt >= maxTry {
+			return testing.PollBreak(errors.New("maximum number of force discharge errors reached"))
+		}
+		err = util.SimpleForceDischarge(ctx)
+		if err != nil {
+			testing.ContextLogf(ctx, "SimpleForceDischarge() fails: %s", err)
+		}
+
+		return errors.Errorf("waiting for power being discharged: %d seconds", time.Duration(tryCnt-1)*tryInterval)
+	}, &testing.PollOptions{
+		Interval: tryInterval,
+	}); err != nil {
+		return false, errors.Wrapf(err, "failed to make power discharged: last status = %v", status)
+	}
+	return true, nil
 }
 
 // collectGPUPerformanceCounters gathers the use time for each of a given set of
@@ -684,12 +723,8 @@ func MeasurePackageCStateCounters(ctx context.Context, t time.Duration, p perfVa
 // to discharge (callers need to ensure this).
 // [1] https://www.kernel.org/doc/Documentation/ABI/testing/sysfs-class-power
 func MeasureSystemPowerConsumption(ctx context.Context, c *chrome.TestConn, t time.Duration, p perfValueInterface) error {
-	status, err := power.GetStatus(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to get the battery status")
-	}
-	if power.IsLinePowerConnected(status) {
-		return errorOnNonDischarging(ctx, status)
+	if proceed, err := ensureBatteryIsDischarging(ctx); !proceed {
+		return err
 	}
 
 	// We don't use pm.SysfsBatteryMetrics because we want to reject zero
@@ -759,12 +794,8 @@ func MeasureSystemPowerConsumption(ctx context.Context, c *chrome.TestConn, t ti
 //     discharge (callers need to ensure this).
 func MeasureSteadyStateSystemPowerConsumption(ctx context.Context, c *chrome.TestConn, numSamples int,
 	samplePeriod time.Duration, tolerance float64, minDuration time.Duration, p perfValueInterface) error {
-	status, err := power.GetStatus(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to get the battery status")
-	}
-	if !status.BatteryDischarging {
-		return errorOnNonDischarging(ctx, status)
+	if proceed, err := ensureBatteryIsDischarging(ctx); !proceed {
+		return err
 	}
 
 	// We don't use pm.SysfsBatteryMetrics because we want to reject zero
@@ -874,8 +905,10 @@ func MeasureSteadyStateSystemPowerConsumption(ctx context.Context, c *chrome.Tes
 type ProcessType int
 
 const (
-	GPUProcess   ProcessType = iota // GPU process (lacros- or ash-)
-	VideoProcess                    // Utility Video process.
+	// GPUProcess is GPU process (lacros- or ash-)
+	GPUProcess ProcessType = iota
+	// VideoProcess is Utility Video process.
+	VideoProcess
 )
 
 // MeasureFdCount counts the average and peak number of open FDs by the

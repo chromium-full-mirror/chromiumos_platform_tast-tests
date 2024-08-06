@@ -383,11 +383,7 @@ func measurePerformance(ctx context.Context, params measureParams) error {
 		return errors.Wrap(dramErr, "failed to measure DRAM bandwidth consumption")
 	}
 	if batErr != nil {
-		// TODO(b/311061743): Handle this error when it doesn't happen often.
-		if !errors.Is(batErr, errors.New(graphics.ErrBatteryNotDischarging)) {
-			return errors.Wrap(batErr, "failed to measure system power consumption")
-		}
-		testing.ContextLog(ctx, "Failed to measure system power consumption - not erroring out")
+		return errors.Wrap(batErr, "failed to measure system power consumption")
 	}
 	if roughnessErr != nil {
 		return errors.Wrap(roughnessErr, "failed to measure playback roughness")
