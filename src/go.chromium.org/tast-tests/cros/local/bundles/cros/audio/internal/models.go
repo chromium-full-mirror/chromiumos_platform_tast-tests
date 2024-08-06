@@ -15,7 +15,8 @@ var (
 	// Models that support DSP DRC and EQ.
 	DSPOffloadDRCEQModels = []string{
 		// Upon "brya" board
-		"aviko", "banshee", "dochi", "marasov", "omnigul", "omniknight", "osiris",
+		// TODO(b/340951837): Add back models upon "brya" after fix.
+		//"aviko", "banshee", "dochi", "marasov", "omnigul", "omniknight", "osiris",
 		// Upon "nissa" board
 		"anraggar", "craask", "craaskana", "craaskbowl", "craaskino", "craaskov",
 		"craaskvin", "gothrax", "hideo", "joxer", "pirrha", "quandiso", "uldren", "xivu",
