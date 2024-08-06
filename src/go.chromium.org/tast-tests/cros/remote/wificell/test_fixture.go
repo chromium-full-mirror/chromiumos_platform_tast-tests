@@ -1357,7 +1357,7 @@ func (tf *TestFixture) ReserveForDisconnect(ctx context.Context) (context.Contex
 
 // ReserveForReboot returns a shorter ctx and cancel function for DUT().Reboot().
 func (tf *TestFixture) ReserveForReboot(ctx context.Context) (context.Context, context.CancelFunc) {
-	return ctxutil.Shorten(ctx, 10*time.Second)
+	return ctxutil.Shorten(ctx, 30*time.Second)
 }
 
 // PingFromDUT is backwards-compatible version of PingFromSpecificDUT. Deprecated.

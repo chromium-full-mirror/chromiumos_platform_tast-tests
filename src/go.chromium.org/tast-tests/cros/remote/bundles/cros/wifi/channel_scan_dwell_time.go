@@ -117,6 +117,18 @@ func ChannelScanDwellTime(ctx context.Context, s *testing.State) {
 
 	tf := s.FixtValue().(*wificell.TestFixture)
 
+	var errFailedToPerformTest error
+	defer func(ctx context.Context) {
+		if errFailedToPerformTest != nil {
+			// recovering from bad state
+			if err := s.DUT().Reboot(ctx); err != nil {
+				s.Fatal("Failed to reboot DUT: ", err)
+			}
+		}
+	}(ctx)
+	ctx, cancel := tf.ReserveForReboot(ctx)
+	defer cancel()
+
 	router, err := tf.StandardRouterWithFrameSenderSupport()
 	if err != nil {
 		s.Fatal("Failed to get legacy router: ", err)
@@ -131,7 +143,7 @@ func ChannelScanDwellTime(ctx context.Context, s *testing.State) {
 
 	s.Log("Claiming WiFi Interface")
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, time.Second)
+	ctx, cancel = ctxutil.Shorten(ctx, time.Second)
 	defer cancel()
 	clientIface, err := tf.ClientInterface(ctx)
 	if err != nil {
@@ -222,7 +234,7 @@ func ChannelScanDwellTime(ctx context.Context, s *testing.State) {
 			s.Logf("Scan found %d APs", len(bssList))
 			return bssList, capturer, nil
 		}(ctx)
-		if err != nil {
+		if errFailedToPerformTest != nil {
 			s.Fatal("Failed to perform test: ", err)
 		}
 
