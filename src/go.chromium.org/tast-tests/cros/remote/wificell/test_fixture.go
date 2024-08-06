@@ -1929,6 +1929,27 @@ func (tf *TestFixture) P2PDisconnect(ctx context.Context) (err error) {
 	return tf.p2pClient.P2PGroupDisconnect(ctx)
 }
 
+// P2PLinkFrequency returns the frequency of the P2P link.
+func (tf *TestFixture) P2PLinkFrequency(ctx context.Context) (uint32, error) {
+	p2pGOFreq, err := tf.p2pGO.P2PFrequency(ctx)
+	if err != nil {
+		return 0, err
+	}
+
+	p2pClientFreq, err := tf.p2pClient.P2PFrequency(ctx)
+	if err != nil {
+		return 0, err
+	}
+
+	if p2pGOFreq != p2pClientFreq {
+		return 0, errors.Errorf("unexpected P2P client frequency : got %d, want %d", p2pClientFreq, p2pGOFreq)
+	}
+
+	testing.ContextLogf(ctx, "The P2P link frequency = %d", p2pGOFreq)
+
+	return p2pGOFreq, nil
+}
+
 // P2PDevicesInfoUpdate updates the P2P Group/Client information.
 func (tf *TestFixture) P2PDevicesInfoUpdate(ctx context.Context) (err error) {
 	if err := tf.p2pGO.P2PDeviceInfoUpdate(ctx); err != nil {

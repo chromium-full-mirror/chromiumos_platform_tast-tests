@@ -76,7 +76,7 @@ type P2PWiFiDevice interface {
 	// P2PPassphrase returns passphrase for P2P group handled by the device.
 	P2PPassphrase() string
 	// P2PFrequency returns frequency for P2P group handled by the device.
-	P2PFrequency() uint32
+	P2PFrequency(ctx context.Context) (uint32, error)
 	// P2PMACAddress returns MAC Address for P2P group handled by the device.
 	P2PMACAddress() string
 	// P2PGroupCreate creates WiFi Direct Group and takes its ownership.

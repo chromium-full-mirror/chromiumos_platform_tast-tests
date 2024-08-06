@@ -139,9 +139,11 @@ func (ad *androidDeviceData) P2PPassphrase() string {
 	return ad.p2p.passphrase
 }
 
-func (ad *androidDeviceData) P2PFrequency() uint32 {
-	// TODO(b/333957851): Check frequency actively each time when called to cover the case of a channel switch.
-	return ad.p2p.frequency
+func (ad *androidDeviceData) P2PFrequency(ctx context.Context) (uint32, error) {
+	if err := ad.P2PDeviceInfoUpdate(ctx); err != nil {
+		return 0, err
+	}
+	return ad.p2p.frequency, nil
 }
 
 func (ad *androidDeviceData) P2PMACAddress() string {
@@ -256,11 +258,22 @@ func (ad *androidDeviceData) P2PGroupConnect(ctx context.Context, device P2PWiFi
 		return errors.Wrap(err, "failed to initialize wifip2p")
 	}
 
-	if err := ad.labstation.host.CommandContext(ctx, "adb", "-s", ad.serialNumber, "shell", "cmd", "wifip2p", "connect-with-config", device.P2PSSID(), device.P2PPassphrase(), strconv.Itoa(int(device.P2PFrequency())), P2PAndroidDevicePersistent).Run(ssh.DumpLogOnError); err != nil {
-		return errors.Wrapf(err, "failed to connect to p2p network with parameters: Network name = %s, Passpharase = %s, Band of Frequency = %d, Persistent = %s", device.P2PSSID(), device.P2PPassphrase(), device.P2PFrequency(), P2PAndroidDevicePersistent)
+	p2pFreq, err := device.P2PFrequency(ctx)
+	if err != nil {
+		return err
+	}
+
+	if err := ad.labstation.host.CommandContext(ctx, "adb", "-s", ad.serialNumber, "shell", "cmd", "wifip2p", "connect-with-config", device.P2PSSID(), device.P2PPassphrase(), strconv.Itoa(int(p2pFreq)), P2PAndroidDevicePersistent).Run(ssh.DumpLogOnError); err != nil {
+		return errors.Wrapf(err, "failed to connect to p2p network with parameters: Network name = %s, Passpharase = %s, Band of Frequency = %d, Persistent = %s", device.P2PSSID(), device.P2PPassphrase(), p2pFreq, P2PAndroidDevicePersistent)
 	}
 
 	iface, ipAddr, macAddr, err := ad.waitForP2PNetworkInfo(ctx)
+	if err != nil {
+		return err
+	}
+
+	// The p2p frequency can change after connection.
+	p2pFreqAfterConncted, err := device.P2PFrequency(ctx)
 	if err != nil {
 		return err
 	}
@@ -271,10 +284,7 @@ func (ad *androidDeviceData) P2PGroupConnect(ctx context.Context, device P2PWiFi
 	ad.p2p.mac = macAddr
 	ad.p2p.ssid = device.P2PSSID()
 	ad.p2p.passphrase = device.P2PPassphrase()
-	ad.p2p.frequency = device.P2PFrequency()
-	if err = ad.P2PDeviceInfoUpdate(ctx); err != nil {
-		return err
-	}
+	ad.p2p.frequency = p2pFreqAfterConncted
 
 	testing.ContextLog(ctx, "The p2p client connected to the p2p group owner (GO) network")
 

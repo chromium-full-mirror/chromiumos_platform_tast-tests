@@ -159,9 +159,12 @@ func (dd *dutData) P2PPassphrase() string {
 	return dd.p2p.passphrase
 }
 
-// P2PIfName returns P2P group frequency of a particular DUT.
-func (dd *dutData) P2PFrequency() uint32 {
-	return dd.p2p.frequency
+// P2PFrequency returns P2P group frequency of a particular DUT.
+func (dd *dutData) P2PFrequency(ctx context.Context) (uint32, error) {
+	if err := dd.P2PDeviceInfoUpdate(ctx); err != nil {
+		return 0, err
+	}
+	return dd.p2p.frequency, nil
 }
 
 // P2PIfName returns P2P MAC address of a particular DUT.
@@ -214,10 +217,14 @@ func (dd *dutData) P2PGroupDelete(ctx context.Context) error {
 
 // P2PGroupConnect handles connection to the existing WiFi Direct Group.
 func (dd *dutData) P2PGroupConnect(ctx context.Context, device P2PWiFiDevice) error {
+	p2pFreq, err := device.P2PFrequency(ctx)
+	if err != nil {
+		return err
+	}
 	request := &wifi.P2PGroupConnectRequest{
 		Method: defaultRPCInvokeMethod,
 		Data: &wifi.P2PData{
-			Freq:     device.P2PFrequency(),
+			Freq:     p2pFreq,
 			Ssid:     device.P2PSSID(),
 			Key:      device.P2PPassphrase(),
 			Priority: defaultP2PInterfacePriority,
@@ -228,12 +235,18 @@ func (dd *dutData) P2PGroupConnect(ctx context.Context, device P2PWiFiDevice) er
 	if err != nil {
 		return err
 	}
+
+	// The device frequency can change after connection.
+	p2pFreqAfterConncted, err := device.P2PFrequency(ctx)
+	if err != nil {
+		return err
+	}
 	dd.p2p.id = ret.Id
 	dd.p2p.role = P2PDeviceRoleClient
 	dd.p2p.ifName = ret.IfName
 	dd.p2p.netID = ret.NetworkId
 	dd.p2p.mac = ret.MacAddress
-	dd.p2p.frequency = device.P2PFrequency()
+	dd.p2p.frequency = p2pFreqAfterConncted
 	if err = dd.P2PDeviceInfoUpdate(ctx); err != nil {
 		return err
 	}

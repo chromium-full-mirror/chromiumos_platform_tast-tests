@@ -139,6 +139,10 @@ func P2PSimpleConnect(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get the p2p device information: ", err)
 	}
 
+	if _, err := tf.P2PLinkFrequency(ctx); err != nil {
+		s.Fatal("Failed to get the p2p link frequency: ", err)
+	}
+
 	if err := tf.P2PAssertPingFromGO(ctx); err != nil {
 		s.Fatal("Failed to ping the p2p client from the p2p group owner (GO): ", err)
 	}
