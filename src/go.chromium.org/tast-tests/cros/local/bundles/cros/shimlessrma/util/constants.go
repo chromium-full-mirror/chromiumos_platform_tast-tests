@@ -73,27 +73,16 @@ var ShimlessRmaEnabledModelsCritical = []string{
 	"magneton",
 	"rusty",
 	"steelix",
+	"tentacool",
+	"tentacruel",
+	"chinchou",
+	"chinchou360",
 	// dedede
 	"bookem",
 	"boten",
 	"maglia",
 	"maglith",
 	"magolor",
-	// nissa
-	"craask",
-	"craaskbowl",
-	"craaskvin",
-	"pujjo",
-	"pujjoteen"}
-
-// ShimlessRmaEnabledModelsStaging are models with Shimless RMA support and pending to be enlisted to critical model list.
-var ShimlessRmaEnabledModelsStaging = []string{
-	// corsola
-	"tentacool",
-	"tentacruel",
-	"chinchou",
-	"chinchou360",
-	// dedede
 	"magma",
 	"magneto",
 	"magister",
@@ -114,6 +103,11 @@ var ShimlessRmaEnabledModelsStaging = []string{
 	"drawper",
 	"drawcia",
 	// nissa
+	"craask",
+	"craaskbowl",
+	"craaskvin",
+	"pujjo",
+	"pujjoteen",
 	"pujjo1e",
 	"yaviks",
 	"yavijo",
@@ -128,4 +122,30 @@ var ShimlessRmaEnabledModelsStaging = []string{
 	"kano",
 	// strongbad
 	"homestar",
+}
+
+// ShimlessRmaEnabledModelsStaging are models with Shimless RMA support and pending to be enlisted to critical model list.
+var ShimlessRmaEnabledModelsStaging = []string{
+	// corsola
+	"kyogre",
+	// dedede
+	"kracko",
+	"kracko360",
+	// nissa
+	"anraggar",
+	"anraggar360",
+	// brya
+	"omnigul",
+	// nami
+	"bard",
+	"ekko",
+	"akali",
+	"akali360",
+	// volteer
+	"volta",
+	"volet",
+	"voxel",
+	"voema",
+	// geralt
+	"ciri",
 }
