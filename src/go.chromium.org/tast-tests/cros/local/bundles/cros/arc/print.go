@@ -57,7 +57,9 @@ func init() {
 			Name:              "container_r",
 			Val:               "arc_print_vm_ippusb_golden.pwg",
 			ExtraSoftwareDeps: []string{"android_container_r"},
-			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("elm", "hana", "maple", "sycamore360")),
+			// TODO(b:5766953): Re-enable this on grunt models after flakiness has
+			// been resolved (barla, careena, kasumi, liara).
+			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("elm", "hana", "maple", "sycamore360", "barla", "careena", "kasumi", "kasumi360", "liara")),
 			ExtraData:         []string{"arc_print_vm_ippusb_golden.pwg"},
 			ExtraAttr:         []string{"group:cq-medium"},
 		}, {
