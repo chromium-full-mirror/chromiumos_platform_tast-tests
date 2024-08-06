@@ -78,7 +78,8 @@ func init() {
 }
 
 func DevBootUSB(ctx context.Context, s *testing.State) {
-	h := s.FixtValue().(*fixture.Value).Helper
+	pv := s.FixtValue().(*fixture.Value)
+	h := pv.Helper
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to init servo: ", err)
 	}
@@ -86,6 +87,9 @@ func DevBootUSB(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create config: ", err)
 	}
 	testOpt := s.Param().(*devBootUSBParam)
+
+	var state firmware.CheckAndSetServoCharger
+	state = h.CheckServoChargerBeforeBootingFromUSB(ctx)
 
 	// Set up USB when there is one present, and
 	// for cases that depend on it.
@@ -114,25 +118,30 @@ func DevBootUSB(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 4*time.Minute)
 	defer cancel()
-
 	// Set dev_boot_usb back to 0 at the end of the test.
 	defer func(ctx context.Context) {
-		if err := h.EnsureDUTBooted(ctx); err != nil {
-			s.Fatal("Failed to reconnect to dut: ", err)
+		if h.DUT.Connected(ctx) {
+			if err := h.RebootWithSSHCommand(ctx, pv.BootMode); err != nil {
+				s.Fatal("Failed to reconnect to dut: ", err)
+			}
+		} else {
+			if err := h.EnsureDUTBooted(ctx); err != nil {
+				s.Fatal("Failed to reconnect to dut: ", err)
+			}
 		}
 		if err := h.DUT.Conn().CommandContext(ctx, "crossystem", "dev_boot_usb=0").Run(ssh.DumpLogOnError); err != nil {
 			s.Fatal("Failed to set crossystem dev_boot_usb to 0: ", err)
 		}
 	}(cleanupCtx)
 
-	s.Log("Removing USB from DUT")
-	if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxHost); err != nil {
-		s.Fatal("Failed to insert USB to DUT: ", err)
+	s.Log("Removing USB")
+	if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxOff); err != nil {
+		s.Fatal("Failed to remove the USB: ", err)
 	}
 
 	s.Log("Rebooting DUT to developer screen")
 	if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
-		s.Fatal("Failed to cold reset dut: ", err)
+		s.Fatal("Failed to warm reset dut: ", err)
 	}
 	waitDisconnectCtx, cancelWaitDisconnect := context.WithTimeout(ctx, 2*time.Minute)
 	defer cancelWaitDisconnect()
@@ -158,6 +167,32 @@ func DevBootUSB(ctx context.Context, s *testing.State) {
 	if err := h.Servo.PressKey(ctx, " ", servo.DurTab); err != nil {
 		s.Fatal("Failed to press space key: ", err)
 	}
+
+	if state.RemoveServoChargerRequired && state.IsServoChargerConnected {
+		if err := h.SetDUTPower(ctx, false); err != nil {
+			s.Fatal("Failed to remove charger: ", err)
+		}
+		state.IsServoChargerConnected = false
+		// GoBigSleepLint: Wait for a while between removing the charger and
+		// booting the DUT from USB to prevent USB disconnected issues.
+		if err := testing.Sleep(ctx, 5*time.Second); err != nil {
+			s.Fatal("Failed to sleep: ", err)
+		}
+	}
+
+	defer func(ctx context.Context) {
+		if state.RemoveServoChargerRequired && !state.IsServoChargerConnected {
+			if err := h.SetDUTPower(ctx, true); err != nil {
+				s.Fatal("Failed to connect charger: ", err)
+			}
+			state.IsServoChargerConnected = true
+			waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 2*time.Minute)
+			defer cancelWaitConnect()
+			if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
+				s.Fatal("Failed to reconnect to the DUT: ", err)
+			}
+		}
+	}(cleanupCtx)
 
 	s.Log("Inserting a valid USB to DUT")
 	if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
