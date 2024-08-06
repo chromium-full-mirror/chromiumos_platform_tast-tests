@@ -20,7 +20,7 @@ func init() {
 		Desc:         "Verifies camera module function with HAL3 interface",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "beckerh@chromium.org", "shik@chromium.org", "xinggu@chromium.org"},
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
-		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera", "group:camera-postsubmit"},
+		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera", "group:camera-postsubmit", "group:camera", "camera_hal", "camera_functional"},
 		// TODO(shik): Once cros_camera_test supports an external camera,
 		// replace caps.BuiltinCamera with caps.BuiltinOrVividCamera.
 		// Same for other HAL3* tests.

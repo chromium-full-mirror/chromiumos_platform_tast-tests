@@ -20,7 +20,7 @@ func init() {
 		Desc:         "Verifies Rotate and Crop stream manipulator with HAL3 interface",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "yerlandinata@chromium.org", "kamesan@chromium.org"},
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
-		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
+		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera", "group:camera", "camera_hal", "camera_functional"},
 		SoftwareDeps: []string{"arc", "arc_camera3", "chrome", "no_android_p", "no_android_r", caps.BuiltinCamera},
 		Fixture:      "chromeLoggedIn",
 		// Some devices support very long list of resolutions.
