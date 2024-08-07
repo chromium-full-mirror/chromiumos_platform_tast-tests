@@ -31,7 +31,7 @@ const (
 	runFishesFor = 30 * time.Second
 	// The time to wait just after stating to play the aquarium so that CPU usage gets stable.
 	stabilizationDuration = 5 * time.Second
-	webGlAquarium         = "webgl_aquarium_static_20221212.tar.zst"
+	webGlAquarium         = "webgl_aquarium_static_20240807.tar.zst"
 )
 
 var (
@@ -40,10 +40,6 @@ var (
 		"avg_interframe_time": "g_crosFpsCounter.getAvgInterFrameTime()",
 		"avg_render_time_":    "g_crosFpsCounter.getAvgRenderTime()",
 		"std_interframe_time": "g_crosFpsCounter.getStdInterFrameTime()",
-	}
-	fishSettings = map[int][]string{
-		50:   {"'setSetting2'", "2"},
-		1000: {"'setSetting6'", "6"},
 	}
 )
 
@@ -119,7 +115,7 @@ func WebGLAquarium(ctx context.Context, s *testing.State) {
 	defer server.Close()
 	s.Logf("Extracted %s", webGlAquarium)
 
-	url := path.Join(server.URL, "aquarium.html")
+	url := path.Join(server.URL, "aquarium/aquarium.html"+fmt.Sprintf("?numFish=%d", numFish))
 	browserType := s.Param().(aquariumParamData).browserType
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browserType, url)
@@ -144,10 +140,6 @@ func WebGLAquarium(ctx context.Context, s *testing.State) {
 	}
 	if err = conn.WaitForExpr(ctx, "gl !== null"); err != nil {
 		s.Fatal("Failed to create gl context: ", err)
-	}
-	setSettingfmt := fmt.Sprintf("setSetting(document.getElementById(%s), %s)", fishSettings[numFish][0], fishSettings[numFish][1])
-	if err = conn.Eval(ctx, setSettingfmt, nil); err != nil {
-		s.Fatal("Could not get the intrinsic fish set id: ", err)
 	}
 	if err = conn.Call(ctx, nil, "g_crosFpsCounter.reset"); err != nil {
 		s.Fatal("Could not reset the FPS counter: ", err)

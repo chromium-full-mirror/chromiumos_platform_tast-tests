@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/graphics/WebGL/webgl_aquarium_static_20240807.tar.zst",
+  "size": 12107534,
+  "sha256sum": "bb5e3a83b39e5d9bee028cb12e2f6efb0fd4ba64480bd6ac9455cff62879aaac"
+}
