@@ -43,6 +43,14 @@ var (
 			chrome.ExtraArgs("--use-fake-cras-audio-client-for-dbus"),
 		),
 	}.Instance()
+	crasEffectsHasAST = fixture.AloopLoaded{
+		Channels: 2,
+		Parent: fixture.Chrome(
+			chrome.GuestLogin(),
+			chrome.EnableFeatures("CrOSLateBootAudioAPNoiseCancellation", "CrOSLateBootAudioStyleTransfer"),
+			chrome.ExtraArgs("--use-fake-cras-audio-client-for-dbus"),
+		),
+	}.Instance()
 )
 
 // AP effect names.
@@ -50,6 +58,7 @@ const (
 	apAEC = "echo_cancellation"
 	apNC  = "noise_cancellation"
 	apBF  = "beamforming"
+	apAST = "style_transfer"
 )
 
 func init() {
@@ -341,6 +350,70 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
 				ExtraAttr:         []string{"group:mainline"},
 			},
+			// NC provider tests with both DSP, AP NC, and AST.
+			{
+				Name: "nc_both_prefer_ast",
+				Val: crasEffectsParam{
+					styleTransferEnabled: true,
+					inputDevice:          "INTERNAL_MIC",
+					outputDevice:         "INTERNAL_SPEAKER",
+					captureClients: []captureConfig{
+						{
+							effects:         0x11,
+							expectAPEffects: []string{apNC, apAST},
+						},
+					},
+					expectDSPEffects: dspEffects{
+						AEC: sof.DSPEffectOn,
+						NC:  sof.DSPEffectOff,
+					},
+				},
+				Fixture:           crasEffectsHasAST,
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
+				ExtraAttr:         []string{"group:criticalstaging", "group:mainline", "informational"},
+			},
+			{
+				Name: "nc_both_ast_disabled",
+				Val: crasEffectsParam{
+					styleTransferEnabled: false,
+					inputDevice:          "INTERNAL_MIC",
+					outputDevice:         "INTERNAL_SPEAKER",
+					captureClients: []captureConfig{
+						{
+							effects:         0x11, // Set AEC on to avoid blocking DSP NC.
+							expectAPEffects: nil,
+						},
+					},
+					expectDSPEffects: dspEffects{
+						AEC: sof.DSPEffectOn,
+						NC:  sof.DSPEffectOff,
+					},
+				},
+				Fixture:           crasEffectsHasAST,
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
+				ExtraAttr:         []string{"group:criticalstaging", "group:mainline", "informational"},
+			},
+			{
+				Name: "nc_both_ast",
+				Val: crasEffectsParam{
+					styleTransferEnabled: true,
+					inputDevice:          "INTERNAL_MIC",
+					outputDevice:         "ALSA_LOOPBACK", // Using non-internal speaker should block DSP AEC.
+					captureClients: []captureConfig{
+						{
+							effects:         0x11, // Set AEC on to avoid blocking DSP NC.
+							expectAPEffects: []string{apAEC, apNC, apAST},
+						},
+					},
+					expectDSPEffects: dspEffects{
+						AEC: sof.DSPEffectOff,
+						NC:  sof.DSPEffectOff,
+					},
+				},
+				Fixture:           crasEffectsHasAST,
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
+				ExtraAttr:         []string{"group:criticalstaging", "group:mainline", "informational"},
+			},
 			// NC provider tests with only DSP NC.
 			{
 				Name: "nc_only_dsp_enabled",
@@ -452,6 +525,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPNCOnlyModels...)),
 				ExtraAttr:         []string{"group:mainline"},
 			},
+			// Interactions with forced voice isolation and AP NC.
 			{
 				Name: "forced_voice_isolation_with_nc_button_disabled",
 				Val: crasEffectsParam{
@@ -524,6 +598,80 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
 				ExtraAttr:         []string{"group:mainline"},
 			},
+			// Interactions with forced voice isolation and AST.
+			{
+				Name: "forced_voice_isolation_with_ast_button_disabled",
+				Val: crasEffectsParam{
+					styleTransferEnabled: false,
+					inputDevice:          "INTERNAL_MIC",
+					outputDevice:         "INTERNAL_SPEAKER",
+					captureClients: []captureConfig{
+						{effects: 0x310, expectAPEffects: []string{apNC, apAST}},
+					},
+					expectDSPEffects: dspEffects{
+						AEC: sof.DSPEffectOff,
+						NC:  sof.DSPEffectOff,
+					},
+				},
+				Fixture:           crasEffectsHasAST,
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
+				ExtraAttr:         []string{"group:criticalstaging", "group:mainline", "informational"},
+			},
+			{
+				Name: "forced_voice_isolation_with_ast_button_enabled",
+				Val: crasEffectsParam{
+					styleTransferEnabled: true,
+					inputDevice:          "INTERNAL_MIC",
+					outputDevice:         "INTERNAL_SPEAKER",
+					captureClients: []captureConfig{
+						{effects: 0x310, expectAPEffects: []string{apNC, apAST}},
+					},
+					expectDSPEffects: dspEffects{
+						AEC: sof.DSPEffectOff,
+						NC:  sof.DSPEffectOff,
+					},
+				},
+				Fixture:           crasEffectsHasAST,
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
+				ExtraAttr:         []string{"group:criticalstaging", "group:mainline", "informational"},
+			},
+			{
+				Name: "forced_disabled_voice_isolation_with_ast_button_disabled",
+				Val: crasEffectsParam{
+					styleTransferEnabled: false,
+					inputDevice:          "INTERNAL_MIC",
+					outputDevice:         "INTERNAL_SPEAKER",
+					captureClients: []captureConfig{
+						{effects: 0x100, expectAPEffects: nil}, // Force disable NC.
+					},
+					expectDSPEffects: dspEffects{
+						AEC: sof.DSPEffectOff,
+						NC:  sof.DSPEffectOff,
+					},
+				},
+				Fixture:           crasEffectsHasAST,
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
+				ExtraAttr:         []string{"group:criticalstaging", "group:mainline", "informational"},
+			},
+			{
+				Name: "forced_disabled_voice_isolation_with_ast_button_enabled",
+				Val: crasEffectsParam{
+					styleTransferEnabled: true,
+					inputDevice:          "INTERNAL_MIC",
+					outputDevice:         "INTERNAL_SPEAKER",
+					captureClients: []captureConfig{
+						{effects: 0x100, expectAPEffects: nil}, // Force disable NC.
+					},
+					expectDSPEffects: dspEffects{
+						AEC: sof.DSPEffectOff,
+						NC:  sof.DSPEffectOff,
+					},
+				},
+				Fixture:           crasEffectsHasAST,
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
+				ExtraAttr:         []string{"group:criticalstaging", "group:mainline", "informational"},
+			},
+			// Others.
 			{
 				Name: "nc_then_unprocessed_stream",
 				Val: crasEffectsParam{
@@ -581,12 +729,32 @@ func init() {
 				// TODO: Schedule this on omniknight.3mic.
 				ExtraAttr: []string{},
 			},
+			{
+				Name: "style_transfer",
+				Val: crasEffectsParam{
+					styleTransferEnabled: true,
+					inputDevice:          "INTERNAL_MIC",
+					outputDevice:         "INTERNAL_SPEAKER",
+					captureClients: []captureConfig{
+						{effects: 0x300, expectAPEffects: []string{apNC, apAST}},
+						{effects: 0x100, expectAPEffects: nil}, // unprocessed.
+					},
+					expectDSPEffects: dspEffects{
+						AEC: sof.DSPEffectOff,
+						NC:  sof.DSPEffectOff,
+					},
+				},
+				Fixture:           crasEffectsHasAST,
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
+				ExtraAttr:         []string{"group:criticalstaging", "group:mainline", "informational"},
+			},
 		},
 	})
 }
 
 type crasEffectsParam struct {
 	noiseCancellationEnabled bool
+	styleTransferEnabled     bool
 	inputDevice              string
 	outputDevice             string
 	addPlaybackPinDevice     string
@@ -705,6 +873,12 @@ func CrasEffects(ctx context.Context, s *testing.State) {
 		s.Fatal("Cannot install nc-ap-dlc: ", err)
 	}
 
+	if param.styleTransferEnabled {
+		if err := dlc.Install(ctx, "nuance-dlc", ""); err != nil {
+			s.Fatal("Cannot install nuance-dlc: ", err)
+		}
+	}
+
 	cras, err := audio.RestartCras(ctx)
 	if err != nil {
 		s.Fatal("Cannot restart CRAS: ", err)
@@ -723,6 +897,9 @@ func CrasEffects(ctx context.Context, s *testing.State) {
 	}
 	if err := cras.SetNoiseCancellationEnabled(ctx, param.noiseCancellationEnabled); err != nil {
 		s.Fatal("Failed to set noise cancellation: ", err)
+	}
+	if err := cras.SetStyleTransferEnabled(ctx, param.styleTransferEnabled); err != nil {
+		s.Fatal("Failed to set style transfer: ", err)
 	}
 
 	// Start capture clients.
