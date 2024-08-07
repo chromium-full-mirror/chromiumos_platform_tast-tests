@@ -77,7 +77,7 @@ func VctrayLabelCheck(cleanupCtx context.Context, s *testing.State) {
 	}
 
 	for label, finder := range featureLabels {
-		if err := ui.WaitUntilExists(finder)(ctx); err == nil {
+		if err := ui.WaitUntilExists(finder)(ctx); err != nil {
 			s.Fatalf("Fail to find feaure label %s: %v", label, err)
 		}
 	}
