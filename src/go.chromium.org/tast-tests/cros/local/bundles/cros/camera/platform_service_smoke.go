@@ -28,7 +28,7 @@ func init() {
 		Desc:         "Smoke test for the Platform Camera Service",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "hidenorik@chromium.org"},
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
-		Attr:         []string{"group:mainline", "group:camera-libcamera", "group:cq-medium", "group:camera-stability", "group:camera-kernelnext"},
+		Attr:         []string{"group:mainline", "group:camera-libcamera", "group:cq-medium", "group:camera-stability", "group:camera-kernelnext", "group:camera", "camera_service", "camera_functional"},
 		SoftwareDeps: []string{"arc_camera3", "chrome", caps.BuiltinCamera},
 		Fixture:      fixture.CameraConnectorReady,
 		Params: []testing.Param{

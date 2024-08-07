@@ -33,7 +33,7 @@ func init() {
 			"ribalda@chromium.org",
 		},
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
-		Attr:         []string{"group:mainline", "group:camera-libcamera", "group:cq-medium", "group:camera-stability"},
+		Attr:         []string{"group:mainline", "group:camera-libcamera", "group:cq-medium", "group:camera-stability", "group:camera", "camera_service", "camera_functional"},
 		Timeout:      4 * time.Minute,
 		SoftwareDeps: []string{"arc_camera3", "chrome", caps.BuiltinCamera},
 		Fixture:      fixture.CameraConnectorRestarted,

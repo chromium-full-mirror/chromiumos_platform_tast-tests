@@ -24,7 +24,7 @@ func init() {
 		Desc:         "Verifies the camera service connector library works",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "shik@chromium.org"},
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
-		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
+		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera", "group:camera", "camera_service", "camera_functional"},
 		SoftwareDeps: []string{"arc_camera3", "chrome", caps.BuiltinOrVividCamera},
 	})
 }
