@@ -1477,6 +1477,11 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 		opts := []chrome.Option{
 			chrome.ExtraArgs("--disable-sync", "--disable-drive-fs-for-testing"),
 			chrome.DisableFeatures("PeripheralNotification"),
+
+			// To use AutoTestPrivateApis that leverage test-only APIs exposed
+			// by Viz, this feature must be explicitly enabled. Currently,
+			// FrameSink and overdraw metric collection rely on such APIs.
+			chrome.EnableFeatures("EnableVizTestApis"),
 		}
 		// Enable WPR mode. Do not use GAIA login as replay won't connect to real servers.
 		if f.wprArchive != "" {
