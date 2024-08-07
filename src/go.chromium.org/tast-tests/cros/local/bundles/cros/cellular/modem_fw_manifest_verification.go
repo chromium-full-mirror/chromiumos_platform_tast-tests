@@ -176,6 +176,13 @@ func ModemFWManifestVerification(ctx context.Context, s *testing.State) {
 					}
 				}
 			}
+			// Verify optional recovery_directory entry for this device is valid
+			if device.GetRecoveryDirectory() != nil {
+				recoveryPath := filepath.Join(modemFirmwarePath, device.GetRecoveryDirectory().GetFilename())
+				if !fileExists(recoveryPath) {
+					missingFiles[recoveryPath] = true
+				}
+			}
 
 			// Remove any reconstructed DLCs from /tmp. Reconstructed rootfs
 			// packages are re-used across devices, so that one is left alone
