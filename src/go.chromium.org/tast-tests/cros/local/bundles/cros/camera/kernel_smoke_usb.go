@@ -36,7 +36,6 @@ func init() {
 		Params: []testing.Param{
 			{
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(testutil.FlakyUSBModel...), hwdep.SkipOnCameraUSBModule(testutil.FlakyUSBCamera...)),
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			}, {
 				Name:              "flaky_camera",
 				ExtraHardwareDeps: hwdep.D(hwdep.CameraUSBModule(testutil.FlakyUSBCamera...)),
