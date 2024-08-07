@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/dlc"
 	"go.chromium.org/tast-tests/cros/local/upstart"
@@ -33,9 +34,28 @@ func init() {
 	})
 }
 
+func getDlcsToCheck(ctx context.Context, s *testing.State) []string {
+	cras, err := audio.RestartCras(ctx)
+	if err != nil {
+		s.Fatal("Failed to restart CRAS: ", err)
+	}
+
+	dlcIDs := []string{"nc-ap-dlc"} // nc-ap-dlc is always installed.
+
+	srBtSupported, err := cras.IsHfpMicSrSupported(ctx)
+	if err != nil {
+		s.Fatal("Failed when calling IsHfpMicSrSupported: ", err)
+	}
+	if srBtSupported {
+		dlcIDs = append(dlcIDs, "sr-bt-dlc")
+	}
+	return dlcIDs
+}
+
 // CrasDLCManager checks if CRAS can successfully install DLC packages
 func CrasDLCManager(ctx context.Context, s *testing.State) {
-	dlcIDs := []string{"nc-ap-dlc", "sr-bt-dlc"}
+	dlcIDs := getDlcsToCheck(ctx, s)
+	s.Logf("DLCs to check: %q", dlcIDs)
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, chrome.ResetTimeout)
