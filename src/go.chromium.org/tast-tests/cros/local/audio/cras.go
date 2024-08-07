@@ -551,3 +551,9 @@ func (c *Cras) GetDSPOffloadSupported(ctx context.Context, node CrasNode) (suppo
 	err = c.call(ctx, "GetDSPOffloadSupported", node.ID).Store(&supported)
 	return supported, err
 }
+
+// IsHfpMicSrSupported returns whether the given node supports hfp mic sr feature.
+func (c *Cras) IsHfpMicSrSupported(ctx context.Context) (supported bool, err error) {
+	err = c.call(ctx, "IsHfpMicSrSupported").Store(&supported)
+	return supported, err
+}
