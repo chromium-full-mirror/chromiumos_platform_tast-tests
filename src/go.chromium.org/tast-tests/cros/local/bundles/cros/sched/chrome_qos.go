@@ -43,7 +43,7 @@ func init() {
 		Desc:         "Checks that Chrome processes works with resourced schedqos",
 		Contacts:     []string{"cros-core-systems-perf@google.com", "kawasin@google.com"},
 		BugComponent: "b:167279", // ChromeOS > Platform > baseOS > Performance
-		Attr:         []string{"group:mainline", "group:criticalstaging", "informational"},
+		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "pidfd_open"},
 		Fixture:      fixture.ChromeLoggedInWithSchedQoS,
 		Timeout:      30 * time.Second,
