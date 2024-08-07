@@ -41,8 +41,8 @@ const (
 	//   # --extra-clfags is only needed for x86_64 boards.
 	// $ ./configure --extra-cflags="-march=goldmont -mno-xsaves"
 	// $ make -j16 fio
-	fioX86BinaryData = "fio-arc-x86_64"
-	fioARMBinaryData = "fio-arc-arm64"
+	fioX86BinaryData = "fio/fio-arc-x86_64"
+	fioARMBinaryData = "fio/fio-arc-arm64"
 	// fioGuestPath is the guest-side path to place the fio binary.
 	fioGuestPath = "/data/local/tmp/fio-arc"
 	// fioOutputGuest is the guest-side path to output the fio results.
@@ -110,8 +110,8 @@ type jobResult struct {
 func fioJobFileNames() []string {
 	var fioJobFiles = []string{}
 	for _, job := range append(defaultFioReadJobs, defaultFioWriteJobs...) {
-		// Job files should be of the form |fio_<jobname>.job|.
-		fioJobFiles = append(fioJobFiles, fmt.Sprintf("fio_%s.job", job))
+		// Job files should be of the form |fio/<jobname>.job|.
+		fioJobFiles = append(fioJobFiles, filepath.Join("fio", job+".job"))
 	}
 	return fioJobFiles
 }
@@ -279,10 +279,9 @@ func Fio(ctx context.Context, s *testing.State) {
 	}
 
 	for _, job := range jobs {
-		jobFileName := fmt.Sprintf("fio_%s.job", job.name)
-		jobFilePath := filepath.Join("/data/local/tmp", jobFileName)
+		jobFilePath := filepath.Join("/data/local/tmp", job.name+".job")
 
-		if err := a.PushFile(ctx, s.DataPath(jobFileName), jobFilePath); err != nil {
+		if err := a.PushFile(ctx, s.DataPath(filepath.Join("fio", job.name+".job")), jobFilePath); err != nil {
 			s.Fatal("Failed to prepare fio job file: ", err)
 		}
 
