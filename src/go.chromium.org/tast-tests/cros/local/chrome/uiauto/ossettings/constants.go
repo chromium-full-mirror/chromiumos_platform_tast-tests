@@ -445,9 +445,6 @@ const MoreActionsButtonNamePrefix = "More actions for "
 
 // Elements of the settings authentication dialog.
 var (
-	// The view node for the newer AuthPanel-based dialog.
-	AuthPanelDialogViewNode = nodewith.ClassName("InSessionAuthDialogContentsView")
-
 	// The Active Session Auth approach widget name.
 	ActiveSessionWidget = nodewith.ClassName("AuthDialogWidget")
 

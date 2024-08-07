@@ -7,6 +7,7 @@ package login
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -38,7 +39,47 @@ func SetupUserWithLocalPassword(ctx context.Context, password string, opts ...ch
 	}
 
 	if err := oobeConn.Eval(ctx, "OobeAPI.skipPostLoginScreens()", nil); err != nil {
-		// This is not fatal because sometimes it fails because Oobe shutdowns too fast after the call - which produces error.
+		// This is not fatal because sometimes it fails because Oobe shutdowns too
+		// fast after the call - which produces error.
+		testing.ContextLog(ctx, "Failed to call skip post login screens: ", err)
+	}
+	if err := cr.WaitForOOBEConnectionToBeDismissed(ctx); err != nil {
+		return cr, errors.Wrap(err, "failed to wait for OOBE to be dismissed")
+	}
+
+	return cr, nil
+}
+
+// SetupUserWithLocalPasswordAndPin starts chrome, navigates to local password
+// setup screen in OOBE and sets the password. After that navigates to the pin
+// setup screen and sets the PIN. The user should be provided in `opts`
+// (e.g. using `chrome.FakeLogin`, `chrome.GAIALogin`).
+func SetupUserWithLocalPasswordAndPin(ctx context.Context, password, pin string, opts ...chrome.Option) (c *chrome.Chrome, retErr error) {
+	opts = append(opts, chrome.DisableFeatures("CryptohomeRecoveryBeforeFlowSplit"))
+	opts = append(opts, chrome.DontSkipOOBEAfterLogin())
+
+	cr, err := chrome.New(ctx, opts...)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to start Chrome")
+	}
+
+	oobeConn, err := cr.WaitForOOBEConnection(ctx)
+	if err != nil {
+		return cr, errors.Wrap(err, "failed to wait for OOBE connection")
+	}
+	defer oobeConn.Close()
+
+	if err := SetupLocalPassword(ctx, oobeConn, password); err != nil {
+		return cr, errors.Wrap(err, "failed to setup local password")
+	}
+
+	if err := SetupPin(ctx, oobeConn, pin); err != nil {
+		return cr, errors.Wrap(err, "failed to setup pin")
+	}
+
+	if err := oobeConn.Eval(ctx, "OobeAPI.skipPostLoginScreens()", nil); err != nil {
+		// This is not fatal because sometimes it fails because Oobe shutdowns
+		// too fast after the call - which produces error.
 		testing.ContextLog(ctx, "Failed to call skip post login screens: ", err)
 	}
 	if err := cr.WaitForOOBEConnectionToBeDismissed(ctx); err != nil {
@@ -78,6 +119,37 @@ func SetupLocalPassword(ctx context.Context, oobeConn *chrome.Conn, password str
 	}
 	if err := oobeConn.Eval(ctx, "OobeAPI.screens.PasswordFactorSuccessScreen.clickDone()", nil); err != nil {
 		return errors.Wrap(err, "failed to click on done button")
+	}
+
+	return nil
+}
+
+// SetupPin function navigates to the pin setup screen in OOBE and
+// submits provided PIN.
+func SetupPin(ctx context.Context, oobeConn *chrome.Conn, pin string) error {
+	if err := oobeConn.Eval(ctx, "OobeAPI.advanceToScreen('pin-setup')", nil); err != nil {
+		return errors.Wrap(err, "failed to advance to the pin screen")
+	}
+
+	if err := oobeConn.WaitForExprFailOnErr(ctx, "!document.querySelector('#pin-setup').hidden"); err != nil {
+		return errors.Wrap(err, "failed to wait for the pin screen")
+	}
+
+	for _, step := range []string{"start", "confirm"} {
+		if err := oobeConn.WaitForExprFailOnErr(ctx, fmt.Sprintf("document.querySelector('#pin-setup').uiStep === '%s'", step)); err != nil {
+			return errors.Wrap(err, "failed to wait pin setup step")
+		}
+		if err := oobeConn.Eval(ctx, fmt.Sprintf("document.querySelector('#pin-setup').$.pinKeyboard.$.pinKeyboard.$.pinInput.value = '%s'", pin), nil); err != nil {
+			return errors.Wrap(err, "failed to enter pin")
+		}
+
+		if err := oobeConn.Eval(ctx, "document.querySelector('#pin-setup').$.nextButton.click()", nil); err != nil {
+			return errors.Wrap(err, "failed to click on the next button")
+		}
+	}
+
+	if err := oobeConn.WaitForExprFailOnErr(ctx, "document.querySelector('#pin-setup').uiStep === 'done'"); err != nil {
+		return errors.Wrap(err, "failed to wait for the done step")
 	}
 
 	return nil

@@ -14,12 +14,31 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/userutil"
 	"go.chromium.org/tast-tests/cros/local/login"
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
+// configuredAuthType represents the configured authentication factor(s) during OOBE.
+type configuredAuthType int
+
+const (
+	setupWithPassword configuredAuthType = iota
+	setupWithPasswordAndPin
+)
+
+// settingsAuthType represents the used authentication factor to enter the authentication requested page.
+type settingsAuthType int
+
+const (
+	authWithPassword settingsAuthType = iota
+	authWithPin
+	authCancel // this option is closing the authentication widget.
+)
+
 type openSettingsParam struct {
-	// Set to true to have the test type in the password, false to cancel instead.
-	usePassword bool
+	configuredAuth configuredAuthType
+	settingsAuth   settingsAuthType
+	useAuthPanel   bool
 }
 
 func init() {
@@ -45,12 +64,37 @@ func init() {
 		Params: []testing.Param{{
 			Name: "with_password",
 			Val: openSettingsParam{
-				usePassword: true,
+				configuredAuth: setupWithPassword,
+				settingsAuth:   authWithPassword,
+				useAuthPanel:   false,
+			},
+		}, {
+			Name: "auth_panel_with_password",
+			Val: openSettingsParam{
+				configuredAuth: setupWithPassword,
+				settingsAuth:   authWithPassword,
+				useAuthPanel:   true,
+			},
+		}, {
+			Name: "auth_panel_with_pin",
+			Val: openSettingsParam{
+				configuredAuth: setupWithPasswordAndPin,
+				settingsAuth:   authWithPin,
+				useAuthPanel:   true,
 			},
 		}, {
 			Name: "cancel",
 			Val: openSettingsParam{
-				usePassword: false,
+				configuredAuth: setupWithPassword,
+				settingsAuth:   authCancel,
+				useAuthPanel:   false,
+			},
+		}, {
+			Name: "auth_panel_cancel",
+			Val: openSettingsParam{
+				configuredAuth: setupWithPassword,
+				settingsAuth:   authCancel,
+				useAuthPanel:   true,
 			},
 		}},
 	})
@@ -60,6 +104,7 @@ func OpenSettings(ctx context.Context, s *testing.State) {
 	const (
 		username = "testuser@gmail.com"
 		password = "testpassword"
+		pin      = "15050410"
 	)
 
 	cleanupContext := ctx
@@ -68,12 +113,7 @@ func OpenSettings(ctx context.Context, s *testing.State) {
 	defer userutil.ResetUsers(cleanupContext)
 	params := s.Param().(openSettingsParam)
 
-	cr, err := login.SetupUserWithLocalPassword(ctx,
-		password,
-		// Use a local password so that we don't need Gaia.
-		chrome.FakeLogin(chrome.Creds{User: username, Pass: ""}),
-		chrome.ExtraArgs("--disable-first-run-ui"),
-	)
+	cr, err := setupUser(ctx, params, username, password, pin)
 	if err != nil {
 		s.Fatal("Failed to setup user: ", err)
 	}
@@ -93,14 +133,21 @@ func OpenSettings(ctx context.Context, s *testing.State) {
 	defer faillog.DumpUITreeOnError(cleanupContext, s.OutDir(), s.HasError, tconn)
 
 	var expectedPath string
-	if params.usePassword {
-		// The page is password protected, confirm that we can access it with a password.
+	switch params.settingsAuth {
+	case authWithPassword:
+		// The page is authentication protected, confirm that we can access it with a password.
 		if err := ossettings.ConfirmPassword(ctx, cr, password); err != nil {
 			s.Fatal("Failed to confirm password: ", err)
 		}
 		expectedPath = "/osPrivacy/lockScreen"
-	} else {
-		// The page is password protected, cancelling should kick us out.
+	case authWithPin:
+		// The page is authentication protected, confirm that we can access it with a PIN.
+		if err := ossettings.ConfirmPin(ctx, cr, pin); err != nil {
+			s.Fatal("Failed to confirm pin: ", err)
+		}
+		expectedPath = "/osPrivacy/lockScreen"
+	case authCancel:
+		// The page is authentication protected, cancelling should kick us out.
 		if err := ossettings.CancelPassword(ctx, cr); err != nil {
 			s.Fatal("Failed to cancel: ", err)
 		}
@@ -115,6 +162,33 @@ func OpenSettings(ctx context.Context, s *testing.State) {
 	if settingsPath != expectedPath {
 		s.Fatalf("Did not land on the correct settings path, expected %q, got %q", expectedPath, settingsPath)
 	}
+}
+
+// setupUser configures a new chrome with the provided user credentials
+func setupUser(ctx context.Context, params openSettingsParam, username, password, pin string) (*chrome.Chrome, error) {
+	var authPanelState chrome.Option
+
+	if params.useAuthPanel {
+		authPanelState = chrome.EnableFeatures("UseAuthPanelInSession")
+	} else {
+		authPanelState = chrome.DisableFeatures("UseAuthPanelInSession")
+	}
+	loginOption := chrome.FakeLogin(chrome.Creds{User: username, Pass: ""})
+	chromeArgs := chrome.ExtraArgs("--disable-first-run-ui")
+
+	switch params.configuredAuth {
+	case setupWithPassword:
+		return login.SetupUserWithLocalPassword(ctx, password,
+			authPanelState,
+			loginOption,
+			chromeArgs)
+	case setupWithPasswordAndPin:
+		return login.SetupUserWithLocalPasswordAndPin(ctx, password, pin,
+			authPanelState,
+			loginOption,
+			chromeArgs)
+	}
+	return nil, errors.New("invalid setup type")
 }
 
 // getSettingsPath returns the current path of the OS Settings screen
