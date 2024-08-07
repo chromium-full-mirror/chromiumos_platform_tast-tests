@@ -11,10 +11,12 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/crd"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -29,7 +31,7 @@ func init() {
 		BugComponent: "b:47377", // Chrome > Chromoting
 		SoftwareDeps: []string{"chrome"},
 		Vars: []string{
-			"user", "pass", "contact", "extra_args",
+			"user", "pass", "contact", "mode", "extra_args",
 		},
 		Params: []testing.Param{{
 			Name: "",
@@ -63,6 +65,11 @@ func RemoteDesktopManual(ctx context.Context, s *testing.State) {
 	contact, hasContact := s.Var("contact")
 	if !hasPass && !hasContact {
 		s.Fatal("You must ether provide password or contact for the user to login")
+	}
+
+	mode, hasMode := s.Var("mode")
+	if !hasMode {
+		mode = "clamshell"
 	}
 
 	extraArgsStr, ok := s.Var("extra_args")
@@ -105,6 +112,11 @@ func RemoteDesktopManual(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect Test API: ", err)
 	}
 
+	// Change the mode to clamshell / tablet accordingly.
+	if _, err := ash.EnsureTabletModeEnabled(ctx, tconn, mode == "tablet"); err != nil {
+		s.Fatalf("Failed to set the DUT into %s mode: %s", mode, err)
+	}
+
 	if err := crd.Launch(ctx, br, tconn); err != nil {
 		s.Fatal("Failed to Launch: ", err)
 	}
@@ -112,5 +124,10 @@ func RemoteDesktopManual(ctx context.Context, s *testing.State) {
 	s.Log("Waiting connection")
 	if err := crd.WaitConnection(ctx, tconn); err != nil {
 		s.Fatal("No client connected: ", err)
+	}
+
+	// Open the launcher after connecting.
+	if err := launcher.OpenExpandedView(tconn)(ctx); err != nil {
+		s.Fatal("Failed to show launcher: ", err)
 	}
 }
