@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
@@ -35,6 +36,7 @@ func init() {
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"chrome"},
+		TestBedDeps:  []string{tbdep.WifiStateNormal},
 		Fixture:      "chromeLoggedIn",
 		Attr:         []string{"group:intel-wlan"},
 		LacrosStatus: testing.LacrosVariantUnneeded,

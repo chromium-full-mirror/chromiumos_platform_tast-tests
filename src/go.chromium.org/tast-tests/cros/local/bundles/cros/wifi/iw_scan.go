@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/local/network/ip"
 	"go.chromium.org/tast-tests/cros/local/shill"
@@ -28,6 +29,7 @@ func init() {
 		Attr:            []string{"group:mainline", "group:wificell", "wificell_func"},
 		SoftwareDeps:    []string{"wifi"},
 		HardwareDeps:    hwdep.D(hwdep.WifiNotMarvell()),
+		TestBedDeps:     []string{tbdep.WifiStateNormal},
 		Fixture:         "wiphyEnabled",
 		Requirements:    []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
 		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,

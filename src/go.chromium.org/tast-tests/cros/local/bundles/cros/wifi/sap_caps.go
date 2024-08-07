@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"reflect"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/common/wifi/iw"
 	localiw "go.chromium.org/tast-tests/cros/local/wifi/iw"
@@ -29,6 +30,7 @@ func init() {
 		Attr:            []string{"group:wificell", "wificell_func"},
 		SoftwareDeps:    []string{"wifi"},
 		HardwareDeps:    hwdep.D(hwdep.WifiSAP()),
+		TestBedDeps:     []string{tbdep.WifiStateNormal},
 		Requirements:    []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
 		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 	})

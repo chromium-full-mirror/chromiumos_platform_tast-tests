@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/shillconst"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast-tests/cros/local/upstart"
@@ -30,6 +31,7 @@ func init() {
 		},
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		SoftwareDeps: []string{"hostap_hwsim"},
+		TestBedDeps:  []string{tbdep.WifiStateNormal},
 		// For running manually, with specific 'run-all.sh' arguments (e.g., specific tests or
 		// modules).
 		Vars: []string{"wifi.HostapHwsim.runArgs"},

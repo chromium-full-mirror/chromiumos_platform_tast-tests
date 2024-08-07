@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast-tests/cros/local/sysutil"
@@ -32,6 +33,7 @@ func init() {
 		// Run on both Tast CQ and suite:wifi_matfunc.
 		Attr:         []string{"group:mainline", "group:wificell", "wificell_func"},
 		SoftwareDeps: []string{"wifi", "no_kernel_upstream"},
+		TestBedDeps:  []string{tbdep.WifiStateNormal},
 		Fixture:      "wiphyEnabled",
 		// List of requirements this test satisfies.
 		Requirements:    []string{tdreq.WiFiDrvSupportCrOS, tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},

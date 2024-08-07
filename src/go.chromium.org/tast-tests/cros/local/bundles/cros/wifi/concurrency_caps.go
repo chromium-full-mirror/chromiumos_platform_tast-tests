@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/common/wifi/iw"
 	localIw "go.chromium.org/tast-tests/cros/local/wifi/iw"
 	"go.chromium.org/tast/core/testing"
@@ -24,6 +25,7 @@ func init() {
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		Attr:         []string{"group:mainline", "group:wificell", "wificell_unstable", "informational"},
 		SoftwareDeps: []string{"wifi"},
+		TestBedDeps:  []string{tbdep.WifiStateNormal},
 		Fixture:      "wiphyEnabled",
 	})
 }
