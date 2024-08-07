@@ -815,6 +815,7 @@ var maxThputExpectationForBoard = map[string]map[TestType]float64{
 	},
 	// kukui throughput results tracked in b:201807413.
 	"kukui": {
+		TestTypeUDPTx: 300,
 		TestTypeUDPRx: 300,
 	},
 	// nami throughput results tracked in b:188454947.
