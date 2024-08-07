@@ -22,14 +22,14 @@ type timeParams struct {
 }
 
 const (
-	fullFioTimeSec         = 19800
-	quickFioTimeSec        = 1800
+	fullFioTimeSec         = 7500
+	quickFioTimeSec        = 375
 	fullSuspendIterations  = 1000
 	quickSuspendIterations = 50
 	fullPollTimeoutMin     = 420
-	quickPollTimeoutMin    = 90
+	quickPollTimeoutMin    = 30
 	fullTimeoutMin         = 450
-	quickTimeoutMin        = 120
+	quickTimeoutMin        = 60
 )
 
 func init() {

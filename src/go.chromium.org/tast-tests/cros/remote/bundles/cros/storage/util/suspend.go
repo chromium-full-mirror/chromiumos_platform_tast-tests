@@ -21,8 +21,8 @@ func SuspendStressTest(ctx context.Context, dut *dut.DUT, count int) (string, er
 	const (
 		defaultWakeMin    = " --wake_min=5 "
 		defaultWakeMax    = " --wake_max=10 "
-		defaultSuspendMin = " --suspend_min=5 "
-		defaultSuspendMax = " --suspend_max=10 "
+		defaultSuspendMin = " --suspend_min=15 "
+		defaultSuspendMax = " --suspend_max=20 "
 	)
 
 	testing.ContextLogf(ctx, "Run: suspend_stress_test -c %d", count)
