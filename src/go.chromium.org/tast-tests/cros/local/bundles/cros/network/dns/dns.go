@@ -59,7 +59,7 @@ const (
 )
 
 func (m DoHMode) String() string {
-	return []string{"off", "automatic", "always-on"}[m]
+	return []string{"off", "automatic", "secure"}[m]
 }
 
 // Client defines the client resolving DNS.
@@ -597,6 +597,13 @@ func (q *dohQueryLogs) logQuery(ctx context.Context, query []byte) {
 	}
 	q.mutex.Lock()
 	q.Domains = append(q.Domains, d)
+	q.mutex.Unlock()
+}
+
+// Clear clears DNS query logs from dohQueryLogs.
+func (q *dohQueryLogs) Clear() {
+	q.mutex.Lock()
+	q.Domains = []string{}
 	q.mutex.Unlock()
 }
 
