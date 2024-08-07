@@ -81,6 +81,7 @@ func init() {
 				"landrid",
 				"lantis",
 				"lisbon",
+				"madoo",
 				"magister",
 				"maglet",
 				"maglia",
