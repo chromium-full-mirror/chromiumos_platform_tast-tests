@@ -14,6 +14,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/diagnosticsapp"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -90,12 +91,6 @@ func MonitorKeyboardDiagnosticEvent(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	kb, err := input.Keyboard(ctx)
-	if err != nil {
-		s.Fatal("Failed to open the keyboard device: ", err)
-	}
-	defer kb.Close(cleanupCtx)
-
 	cr, err := chrome.New(ctx, chrome.GuestLogin())
 	if err != nil {
 		s.Fatal("Failed to create Chrome instance: ", err)
@@ -107,6 +102,12 @@ func MonitorKeyboardDiagnosticEvent(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect Test API: ", err)
 	}
 
+	cleanup, err := ash.EnsureTabletModeDisabledWithKeyboardEnabled(ctx)
+	if err != nil {
+		s.Fatal("Failed to ensure in laptop mode: ", err)
+	}
+	defer cleanup(cleanupCtx)
+
 	// Prepare the keyboard tester page before start listening to events
 	// because the UI may take a long time to display.
 	if _, err := diagnosticsapp.Launch(ctx, tconn); err != nil {
@@ -115,6 +116,12 @@ func MonitorKeyboardDiagnosticEvent(ctx context.Context, s *testing.State) {
 	if err := diagnosticsapp.OpenKeyboardTester(ctx, tconn); err != nil {
 		s.Fatal("Failed to open keyboard tester: ", err)
 	}
+
+	kb, err := input.Keyboard(ctx)
+	if err != nil {
+		s.Fatal("Failed to open the keyboard device: ", err)
+	}
+	defer kb.Close(cleanupCtx)
 
 	// Run monitor command in background.
 	monitorCmd := testexec.CommandContext(

@@ -100,13 +100,39 @@ func EnsureTabletModeEnabledWithKeyboardDisabled(ctx context.Context) (func(ctx 
 		return nil, errors.Wrap(err, "failed to get initial tablet_mode_angle values")
 	}
 
-	// 'ectool motionsense tablet_mode_angle' commmand returns two values,
+	// 'ectool motionsense tablet_mode_angle' command returns two values,
 	// tablet_mode_angle=0 hys=0 for TabletMode.
 	tabletModeAngle, tabletHysAngle := 0, 0
 
 	if initLidAngle != tabletModeAngle || initHys != tabletHysAngle {
 		if err = SetTabletModeUsingEC(ctx, tabletModeAngle, tabletHysAngle); err != nil {
 			return nil, errors.Wrap(err, "failed to set DUT to tablet mode")
+		}
+	}
+	// Always revert to the original state; so it can always be back to the original
+	// state even when the state changes in another part of the test script.
+	return func(ctx context.Context) error {
+		return SetTabletModeUsingEC(ctx, initLidAngle, initHys)
+	}, nil
+}
+
+// EnsureTabletModeDisabledWithKeyboardEnabled makes sure that the tablet mode state
+// is disabled using EC tool, which takes care of enabling the Keyboard and Trackpad.
+// It returns a function which reverts back to the original state.
+func EnsureTabletModeDisabledWithKeyboardEnabled(ctx context.Context) (func(ctx context.Context) error, error) {
+	// Get the initial tablet_mode_angle settings to restore at the end of test.
+	initLidAngle, initHys, err := ModeValues(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get initial tablet_mode_angle values")
+	}
+
+	// 'ectool motionsense tablet_mode_angle' command returns two values,
+	// tablet_mode_angle=359 hys=0 for LaptopMode.
+	tabletModeAngle, tabletHysAngle := 359, 0
+
+	if initLidAngle != tabletModeAngle || initHys != tabletHysAngle {
+		if err = SetTabletModeUsingEC(ctx, tabletModeAngle, tabletHysAngle); err != nil {
+			return nil, errors.Wrap(err, "failed to set DUT to laptop mode")
 		}
 	}
 	// Always revert to the original state; so it can always be back to the original
