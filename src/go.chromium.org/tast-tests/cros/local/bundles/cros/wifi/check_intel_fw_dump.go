@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/local/crash"
 	"go.chromium.org/tast-tests/cros/local/network/iface"
@@ -43,6 +44,7 @@ func init() {
 		// Flex does not update the driver and does not need to recheck the functionality
 		// of the firmware dump, so skip this test on reven.
 		HardwareDeps:    hwdep.D(hwdep.WifiIntel(), hwdep.SkipOnModel("reven")),
+		TestBedDeps:     []string{tbdep.WifiStateNormal},
 		Fixture:         "wiphyEnabled",
 		Requirements:    []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
 		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel_Intel"}`,

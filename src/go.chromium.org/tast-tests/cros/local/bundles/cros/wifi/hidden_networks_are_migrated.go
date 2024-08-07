@@ -9,6 +9,7 @@ import (
 	"time"
 
 	types "go.chromium.org/tast-tests/cros/common/networkui/netconfigtypes"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/local/networkui/netconfig"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	f "go.chromium.org/tast-tests/cros/local/wifi"
@@ -39,6 +40,7 @@ func init() {
 		BugComponent:   "b:1131912", // ChromeOS > Software > System Services > Connectivity > WiFi
 		Attr:           []string{"group:mainline", "informational", "group:wificell", "wificell_e2e"},
 		SoftwareDeps:   []string{"chrome"},
+		TestBedDeps:    []string{tbdep.WifiStateNormal},
 		Fixture:        "hiddenNetworkMigration",
 		Params: []testing.Param{{
 			Name: "not_shared_and_not_hidden",

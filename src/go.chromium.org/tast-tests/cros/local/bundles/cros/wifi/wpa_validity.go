@@ -11,6 +11,7 @@ import (
 	"path"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/common/wifi/wpacli"
 	"go.chromium.org/tast-tests/cros/local/network/cmd"
@@ -29,6 +30,7 @@ func init() {
 		BugComponent:    "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		Attr:            []string{"group:mainline", "group:wificell", "wificell_func", "group:cq-medium"},
 		SoftwareDeps:    []string{"wifi"},
+		TestBedDeps:     []string{tbdep.WifiStateNormal},
 		Fixture:         "wiphyEnabled",
 		Requirements:    []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
 		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,

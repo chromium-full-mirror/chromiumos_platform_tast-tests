@@ -14,6 +14,7 @@ import (
 	"strconv"
 	"strings"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/crosconfig"
@@ -38,6 +39,7 @@ func init() {
 		},
 		// NB: This test is currently only valid on the MT7922 chipset. See http://go/cros-wifi-mtk-disable-6g for implementation details of the feature being tested.
 		HardwareDeps:    hwdep.D(hwdep.WifiDevice(hwdep.MediaTekMT7922PCIE)),
+		TestBedDeps:     []string{tbdep.WifiStateNormal},
 		Fixture:         "wiphyEnabled",
 		Requirements:    []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates, "sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
 		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,

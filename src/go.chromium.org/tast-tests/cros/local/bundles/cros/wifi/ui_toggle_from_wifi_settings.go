@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -28,6 +29,7 @@ func init() {
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		Attr:         []string{"group:mainline", "informational", "group:intel-gating", "group:intel-nda"},
 		SoftwareDeps: []string{"chrome"},
+		TestBedDeps:  []string{tbdep.WifiStateNormal},
 		Fixture:      "chromeLoggedIn",
 	})
 }

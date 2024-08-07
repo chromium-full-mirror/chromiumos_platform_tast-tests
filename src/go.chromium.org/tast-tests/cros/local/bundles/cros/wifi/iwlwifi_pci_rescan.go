@@ -7,6 +7,7 @@ package wifi
 import (
 	"context"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/wifi/iwlwifirescan"
 	"go.chromium.org/tast/core/testing"
 )
@@ -20,6 +21,7 @@ func init() {
 		},
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		SoftwareDeps: []string{"iwlwifi_rescan"},
+		TestBedDeps:  []string{tbdep.WifiStateNormal},
 		// For now, we prefer the remote version. Disable and keep the test to reproduce issue locally.
 	})
 }
