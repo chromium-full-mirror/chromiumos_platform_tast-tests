@@ -6,12 +6,12 @@ package graphics
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path"
 	"path/filepath"
-	"strings"
 	"sync"
 	"time"
 
@@ -145,8 +145,8 @@ func WebGLAquarium(ctx context.Context, s *testing.State) {
 	if err = conn.WaitForExpr(ctx, "gl !== null"); err != nil {
 		s.Fatal("Failed to create gl context: ", err)
 	}
-	elemID := strings.Replace("document.getElementsById(*)", "*", fishSettings[numFish][0], 1)
-	if err = conn.Call(ctx, nil, "setSetting", elemID, fishSettings[numFish][1]); err != nil {
+	setSettingfmt := fmt.Sprintf("setSetting(document.getElementById(%s), %s)", fishSettings[numFish][0], fishSettings[numFish][1])
+	if err = conn.Eval(ctx, setSettingfmt, nil); err != nil {
 		s.Fatal("Could not get the intrinsic fish set id: ", err)
 	}
 	if err = conn.Call(ctx, nil, "g_crosFpsCounter.reset"); err != nil {
