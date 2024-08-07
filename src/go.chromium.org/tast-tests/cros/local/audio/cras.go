@@ -506,6 +506,12 @@ func (c *Cras) SetStyleTransferEnabled(ctx context.Context, enabled bool) error 
 	return c.call(ctx, "SetStyleTransferEnabled", enabled).Err
 }
 
+// IsStyleTransferSupported returns support status of the queried device.
+func (c *Cras) IsStyleTransferSupported(ctx context.Context) (supported bool, err error) {
+	err = c.call(ctx, "IsStyleTransferSupported").Store(&supported)
+	return supported, err
+}
+
 // SetSidetoneEnabled enables or disables sidetone.
 func (c *Cras) SetSidetoneEnabled(ctx context.Context, enabled bool) error {
 	return c.call(ctx, "SetSidetoneEnabled", enabled).Err

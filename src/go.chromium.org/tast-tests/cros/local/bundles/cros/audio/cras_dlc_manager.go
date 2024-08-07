@@ -49,6 +49,14 @@ func getDlcsToCheck(ctx context.Context, s *testing.State) []string {
 	if srBtSupported {
 		dlcIDs = append(dlcIDs, "sr-bt-dlc")
 	}
+
+	styleTransferSupported, err := cras.IsStyleTransferSupported(ctx)
+	if err != nil {
+		s.Fatal("Failed when calling IsStyleTransferSupported: ", err)
+	}
+	if styleTransferSupported {
+		dlcIDs = append(dlcIDs, "nuance-dlc")
+	}
 	return dlcIDs
 }
 
