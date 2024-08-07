@@ -65,6 +65,7 @@ func Removable(ctx context.Context, s *testing.State) {
 
 	err = configBase.
 		WithJobFromFile(s.DataPath("8k_async_randwrite")).
+		WithSize(4*1024*1024*1024).
 		Run(ctx, s.DUT())
 	if err != nil {
 		s.Fatal("Failed to run fio: ", err)
@@ -91,6 +92,7 @@ func Removable(ctx context.Context, s *testing.State) {
 
 	err = configBase.
 		WithJobFromFile(s.DataPath("8k_async_randwrite")).
+		WithSize(4*1024*1024*1024).
 		WithVerifyOnly(true).
 		Run(ctx, s.DUT())
 	if err != nil {

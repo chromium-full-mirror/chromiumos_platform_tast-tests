@@ -48,7 +48,7 @@ type TestConfig struct {
 	Path string
 
 	// Size of the data write
-	Size int
+	Size int64
 
 	// RunTimeSec represents the run time of the test
 	RunTimeSec int
@@ -82,7 +82,7 @@ func (t TestConfig) fioArgList() []string {
 	}
 
 	if t.Size != 0 {
-		result = append(result, "--size="+strconv.Itoa(t.Size))
+		result = append(result, "--size="+strconv.FormatInt(t.Size, 10))
 	}
 
 	if t.RunTimeSec != 0 {
@@ -120,7 +120,7 @@ func (t TestConfig) WithPath(path string) TestConfig {
 }
 
 // WithSize sets Size in TestConfig.
-func (t TestConfig) WithSize(size int) TestConfig {
+func (t TestConfig) WithSize(size int64) TestConfig {
 	t.Size = size
 	return t
 }
@@ -145,7 +145,7 @@ func (t TestConfig) WithResultWriter(resultWriter *FioResultWriter) TestConfig {
 
 // WithDisk sets Path and Size from Disk
 func (t TestConfig) WithDisk(disk *Disk) TestConfig {
-	return t.WithPath(disk.Path).WithSize(disk.Size)
+	return t.WithPath(disk.Path).WithSize(int64(disk.Size))
 }
 
 // Run executes the test config on the specified DUT. It copies the job file,
