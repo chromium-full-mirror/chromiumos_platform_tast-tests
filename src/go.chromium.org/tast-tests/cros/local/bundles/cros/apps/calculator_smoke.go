@@ -30,7 +30,6 @@ func init() {
 		Contacts: []string{
 			"apps-suite@google.com",
 			"jopalmer@google.com",
-			"jinrongwu@google.com",
 		},
 		BugComponent: "b:961438",
 		VarDeps:      []string{ui.GaiaPoolDefaultVarName},
