@@ -704,7 +704,7 @@ func (f *tastFixtureImpl) PreTest(ctx context.Context, s *testing.FixtTestState)
 	const maxLogSize = 20 * 1024 * 1024 //20mb
 
 	//Create rtd for Main DUT
-	if file, err := linuxssh.NewRemoteFileDelta(ctx, s.DUT().Conn(), "/var/log/net.log", filepath.Join(s.OutDir(), fmt.Sprintf("net_%s.log", s.TestName())), maxLogSize); err != nil {
+	if file, err := linuxssh.NewRemoteFileDelta(ctx, s.DUT(), "/var/log/net.log", filepath.Join(s.OutDir(), fmt.Sprintf("net_%s.log", s.TestName())), maxLogSize); err != nil {
 		s.Fatal("File transfer failed: ", err)
 	} else {
 		f.rtd = append(f.rtd, file)
@@ -712,7 +712,7 @@ func (f *tastFixtureImpl) PreTest(ctx context.Context, s *testing.FixtTestState)
 
 	//Create rtd for CompanionDUTs
 	for role, cd := range s.CompanionDUTs() {
-		if file, err := linuxssh.NewRemoteFileDelta(ctx, cd.Conn(), "/var/log/net.log", filepath.Join(s.OutDir(), fmt.Sprintf("net_%s_%s.log", s.TestName(), role)), maxLogSize); err != nil {
+		if file, err := linuxssh.NewRemoteFileDelta(ctx, cd, "/var/log/net.log", filepath.Join(s.OutDir(), fmt.Sprintf("net_%s_%s.log", s.TestName(), role)), maxLogSize); err != nil {
 			s.Fatal("File transfer failed: ", err)
 		} else {
 			f.rtd = append(f.rtd, file)
