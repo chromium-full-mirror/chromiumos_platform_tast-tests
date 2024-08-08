@@ -27,7 +27,7 @@ func init() {
 		Contacts:     []string{"cros-networking@google.com", "jasongustaman@google.com"},
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "no_kernel_upstream"},
 		Timeout:      2 * time.Minute,
 		Fixture:      "chromeLoggedIn",

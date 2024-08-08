@@ -37,19 +37,20 @@ func init() {
 		Contacts:     []string{"cros-networking@google.com", "jasongustaman@google.com", "garrick@google.com"},
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		SoftwareDeps: []string{"chrome", "no_kernel_upstream"},
 		Params: []testing.Param{{
 			Val: dnsProxyCaptivePortalTestParams{
 				relog: false,
 			},
-			Fixture: "chromeLoggedIn.ehide",
-			Timeout: 3 * time.Minute,
+			ExtraAttr: []string{"group:mainline"},
+			Fixture:   "chromeLoggedIn.ehide",
+			Timeout:   3 * time.Minute,
 		}, {
 			Name: "relog",
 			Val: dnsProxyCaptivePortalTestParams{
 				relog: true,
 			},
+			ExtraAttr:         []string{"group:network", "network_platform"},
 			ExtraSoftwareDeps: []string{"arc"},
 			Fixture:           "ehide",
 			Timeout:           10 * time.Minute,
