@@ -6,9 +6,11 @@ package printer
 
 import (
 	"context"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/printer/pre"
 	"go.chromium.org/tast-tests/cros/local/printing/usbprinter"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -33,6 +35,10 @@ func init() {
 }
 
 func AddUSBPrinter(ctx context.Context, s *testing.State) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
 	pr, err := usbprinter.Start(ctx,
 		usbprinter.WithDescriptors("usb_printer.json"))
 	if err != nil {
@@ -42,5 +48,5 @@ func AddUSBPrinter(ctx context.Context, s *testing.State) {
 		if err := pr.Stop(ctx); err != nil {
 			s.Error("Failed to stop virtual printer: ", err)
 		}
-	}(ctx)
+	}(cleanupCtx)
 }

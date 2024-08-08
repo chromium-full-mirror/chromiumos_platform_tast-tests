@@ -99,7 +99,7 @@ func BorderlessPrint(ctx context.Context, s *testing.State) {
 		if err := printer.Stop(ctx); err != nil {
 			s.Error("Failed to stop printer: ", err)
 		}
-	}(ctx)
+	}(cleanupCtx)
 
 	kb, err := input.Keyboard(ctx)
 	if err != nil {
@@ -250,7 +250,7 @@ func verifyBorderlessDisabledState(ctx context.Context, tconn *chrome.TestConn, 
 
 		return nil
 	}, &testing.PollOptions{
-		Timeout: 5 * time.Second,
+		Timeout:  5 * time.Second,
 		Interval: 250 * time.Millisecond,
 	}); err != nil {
 		return err

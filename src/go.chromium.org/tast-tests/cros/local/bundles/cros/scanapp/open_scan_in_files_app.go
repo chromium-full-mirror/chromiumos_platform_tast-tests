@@ -80,7 +80,7 @@ func OpenScanInFilesApp(ctx context.Context, s *testing.State) {
 		if err := printer.Stop(ctx); err != nil {
 			s.Error("Failed to stop printer: ", err)
 		}
-	}(ctx)
+	}(cleanupCtx)
 
 	settings.Scanner = printer.VisibleName
 
@@ -88,11 +88,11 @@ func OpenScanInFilesApp(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to Launch scan app and start scan: ", err)
 	}
-	defer func() {
+	defer func(ctx context.Context) {
 		if err := app.Close(ctx); err != nil {
 			s.Error("Failed to close app: ", err)
 		}
-	}()
+	}(cleanupCtx)
 
 	if err := uiauto.Combine("Launch Files App by clicking My Files link",
 		app.ClickMyFilesLink(),

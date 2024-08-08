@@ -7,11 +7,13 @@ package scanner
 import (
 	"context"
 	"regexp"
+	"time"
 
 	lpb "go.chromium.org/chromiumos/system_api/lorgnette_proto"
 
 	"go.chromium.org/tast-tests/cros/local/printing/usbprinter"
 	"go.chromium.org/tast-tests/cros/local/scanner/lorgnette"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -110,6 +112,10 @@ func getScannersAsync(ctx context.Context, l *lorgnette.Lorgnette) ([]*lpb.Scann
 // runEnumerationTest sets up virtual-usb-printer to emulate the device specified in info,
 // calls lorgnette's ListScanners, and checks to see if the device was listed in the response.
 func runEnumerationTest(ctx context.Context, s *testing.State, info scannerInfo) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
 	s.Logf("Checking if %s is listed", info.name)
 
 	testOpt := s.Param().(*enumParams)
@@ -126,18 +132,18 @@ func runEnumerationTest(ctx context.Context, s *testing.State, info scannerInfo)
 		if err := printer.Stop(ctx); err != nil {
 			s.Error("Failed to stop printer: ", err)
 		}
-	}(ctx)
+	}(cleanupCtx)
 
 	s.Log("Connecting to lorgnette")
 	l, err := lorgnette.New(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect to lorgnette: ", err)
 	}
-	defer func() {
+	defer func(ctx context.Context) {
 		// Lorgnette was auto started during testing.  Kill it to avoid
 		// affecting subsequent tests.
 		lorgnette.StopService(ctx)
-	}()
+	}(cleanupCtx)
 
 	var scanners []*lpb.ScannerInfo
 	if testOpt.AsyncDiscovery {

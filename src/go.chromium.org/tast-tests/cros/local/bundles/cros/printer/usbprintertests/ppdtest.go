@@ -10,8 +10,10 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/local/printing/usbprinter"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -52,6 +54,10 @@ func getPPDMap(ctx context.Context, printerName string) (map[string]string, erro
 // ppdAttributes map. If there are any differences in values between the
 // generated PPD and ppdAttributes for the same key, then the test will fail.
 func RunIPPUSBPPDTest(ctx context.Context, s *testing.State, attributes string, ppdAttributes map[string]string) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
 	printer, err := usbprinter.Start(ctx,
 		usbprinter.WithIPPUSBDescriptors(),
 		usbprinter.WithAttributes(attributes),
@@ -63,7 +69,7 @@ func RunIPPUSBPPDTest(ctx context.Context, s *testing.State, attributes string, 
 		if err := printer.Stop(ctx); err != nil {
 			s.Error("Failed to stop printer: ", err)
 		}
-	}(ctx)
+	}(cleanupCtx)
 
 	ppdMap, err := getPPDMap(ctx, printer.ConfiguredName)
 	if err != nil {

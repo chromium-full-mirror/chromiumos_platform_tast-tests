@@ -73,6 +73,10 @@ func RunFeatureRestrictionTest(
 
 	s.Log("Installing printer")
 
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
 	printer, err := usbprinter.Start(ctx,
 		usbprinter.WithIPPUSBDescriptors(),
 		printerAttributesOption,
@@ -80,11 +84,11 @@ func RunFeatureRestrictionTest(
 	if err != nil {
 		s.Fatal("Failed to start IPP-over-USB printer: ", err)
 	}
-	defer func() {
+	defer func(ctx context.Context) {
 		if err := printer.Stop(ctx); err != nil {
 			s.Error("Failed to stop printer: ", err)
 		}
-	}()
+	}(cleanupCtx)
 
 	// Find a keyboard input source.
 	kb, err := input.Keyboard(ctx)

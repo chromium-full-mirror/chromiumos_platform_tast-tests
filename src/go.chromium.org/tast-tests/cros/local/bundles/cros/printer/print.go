@@ -88,7 +88,7 @@ func Print(ctx context.Context, s *testing.State) {
 		if err := printer.Stop(ctx); err != nil {
 			s.Error("Failed to stop printer: ", err)
 		}
-	}(ctx)
+	}(cleanupCtx)
 
 	// Open OS Settings and navigate to the Printing page.
 	ui := uiauto.New(tconn)
@@ -101,7 +101,7 @@ func Print(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get the keyboard: ", err)
 	}
-	defer kb.Close(ctx)
+	defer kb.Close(cleanupCtx)
 
 	// Hide all notifications to prevent them from covering the printer entry.
 	if err := ash.CloseNotifications(ctx, tconn); err != nil {

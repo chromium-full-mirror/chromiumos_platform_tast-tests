@@ -12,10 +12,12 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/local/printing/document"
 	"go.chromium.org/tast-tests/cros/local/printing/lp"
 	"go.chromium.org/tast-tests/cros/local/printing/usbprinter"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -39,6 +41,9 @@ type PrintJobSetup struct {
 // expected printer output.
 func RunPrintTest(ctx context.Context, s *testing.State,
 	opts []usbprinter.Option, ppd string, job PrintJobSetup) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
 
 	pr, err := usbprinter.Start(ctx, opts...)
 	if err != nil {
@@ -52,7 +57,7 @@ func RunPrintTest(ctx context.Context, s *testing.State,
 		if err := os.Remove(job.PrintedFile); err != nil && !os.IsNotExist(err) {
 			s.Error("Failed to remove file: ", err)
 		}
-	}(ctx)
+	}(cleanupCtx)
 
 	// If no PPD was provided, then the printer is an IPP-over-USB device
 	// for which we waited on autoconf; the name will have been stored in

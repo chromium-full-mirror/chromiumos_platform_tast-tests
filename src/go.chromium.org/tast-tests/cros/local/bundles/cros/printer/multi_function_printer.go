@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"time"
 
 	lpb "go.chromium.org/chromiumos/system_api/lorgnette_proto"
 
@@ -19,6 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/printing/usbprinter"
 	"go.chromium.org/tast-tests/cros/local/scanner/lorgnette"
 	"go.chromium.org/tast-tests/cros/local/usbutil"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -107,6 +109,10 @@ func verifyPrinterInterfaces(ctx context.Context, dev usbprinter.DevInfo) error 
 // don't interfere with each other, and confirms that the non-printing storage interfaces are
 // left alone during printing/scanning.
 func MultiFunctionPrinter(ctx context.Context, s *testing.State) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
 	tmpDir, err := ioutil.TempDir("", "tast.printer.MultiFunctionPrinter.")
 	if err != nil {
 		s.Fatal("Failed to create temporary directory: ", err)
@@ -132,7 +138,7 @@ func MultiFunctionPrinter(ctx context.Context, s *testing.State) {
 		if err := os.Remove(recordPath); err != nil && !os.IsNotExist(err) {
 			s.Error("Failed to remove file: ", err)
 		}
-	}(ctx)
+	}(cleanupCtx)
 
 	foundPrinterName := pr.ConfiguredName
 	s.Log("Printer configured with name: ", foundPrinterName)

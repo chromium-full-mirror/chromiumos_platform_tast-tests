@@ -20,6 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/printpreview"
 	"go.chromium.org/tast-tests/cros/local/printing/document"
 	"go.chromium.org/tast-tests/cros/local/printing/usbprinter"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
@@ -81,6 +82,10 @@ func Print(ctx context.Context, s *testing.State) {
 		printButtonID = "org.chromium.arc.testapp.print:id/button_print"
 	)
 
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
 	cr := s.FixtValue().(*arc.PreData).Chrome
 	a := s.FixtValue().(*arc.PreData).ARC
 	d := s.FixtValue().(*arc.PreData).UIDevice
@@ -115,7 +120,7 @@ func Print(ctx context.Context, s *testing.State) {
 		if err := os.Remove(recordPath); err != nil && !os.IsNotExist(err) {
 			s.Error("Failed to remove file: ", err)
 		}
-	}(ctx)
+	}(cleanupCtx)
 	if _, err := ash.WaitForNotification(ctx, tconn, 30*time.Second, ash.WaitMessageContains(printerName)); err != nil {
 		s.Fatal("Failed to wait for printer notification: ", err)
 	}

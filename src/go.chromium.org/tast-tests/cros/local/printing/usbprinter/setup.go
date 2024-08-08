@@ -240,6 +240,8 @@ func terminatePrinterProcess(ctx context.Context, cmd *testexec.Cmd) error {
 		// We're expecting the exit status to be non-zero if the process was killed by SIGTERM.
 		// Anything else indicates a problem.
 		if ws, ok := testexec.GetWaitStatus(err); !ok || !ws.Signaled() || ws.Signal() != unix.SIGTERM {
+			testing.ContextLog(ctx, "Execution status from virtual-usb-printer:")
+			cmd.DumpLog(ctx)
 			return errors.Wrap(err, "failed to wait for virtual-usb-printer termination")
 		}
 	}

@@ -125,13 +125,13 @@ func LongScan(ctx context.Context, s *testing.State) {
 	if err := suspendCmd.Run(); err != nil {
 		s.Fatal("Failed to run powerd timeout command: ", err)
 	}
-	defer func() {
+	defer func(ctx context.Context) {
 		// Reset OS suspend timeouts to be default.
 		suspendCmd := testexec.CommandContext(ctx, "set_short_powerd_timeouts", "--reset")
 		if err := suspendCmd.Run(); err != nil {
 			s.Fatal("Failed to run powerd timeout reset: ", err)
 		}
-	}()
+	}(cleanupCtx)
 
 	s.Log("Starting Scan")
 	if err := app.Scan()(ctx); err != nil {

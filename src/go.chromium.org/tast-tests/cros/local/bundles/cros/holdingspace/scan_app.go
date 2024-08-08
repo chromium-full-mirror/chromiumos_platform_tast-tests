@@ -75,7 +75,7 @@ func ScanApp(ctx context.Context, s *testing.State) {
 		if err := printer.Stop(ctx); err != nil {
 			s.Error("Failed to stop printer: ", err)
 		}
-	}(ctx)
+	}(cleanupCtx)
 
 	var settings = scanapp.ScanSettings{
 		ColorMode:  scanapp.ColorModeColor,

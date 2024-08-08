@@ -10,11 +10,13 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"time"
 
 	lpb "go.chromium.org/chromiumos/system_api/lorgnette_proto"
 
 	"go.chromium.org/tast-tests/cros/local/printing/usbprinter"
 	"go.chromium.org/tast-tests/cros/local/scanner/lorgnette"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -98,6 +100,10 @@ func ADFJustification(ctx context.Context, s *testing.State) {
 // runJustificationTest sets up the virtual usb printer and scan request according to specified params,
 // performs a scan, and compares the XOffset of the scan versus the expected calculated value.
 func runJustificationTest(ctx context.Context, s *testing.State, params scannerParams) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
 	s.Log("Performing scan on ", params.name)
 
 	tmpDir, err := ioutil.TempDir("", "tast.scanner.ADFJustification.")
@@ -120,7 +126,7 @@ func runJustificationTest(ctx context.Context, s *testing.State, params scannerP
 		if err := printer.Stop(ctx); err != nil {
 			s.Error("Failed to stop printer: ", err)
 		}
-	}(ctx)
+	}(cleanupCtx)
 
 	// Requesting total width is 100 mm
 	region := &lpb.ScanRegion{
