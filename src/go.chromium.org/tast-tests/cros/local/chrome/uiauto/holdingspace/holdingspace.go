@@ -54,18 +54,11 @@ func FindPinnedFilesBubble() *nodewith.Finder {
 	return nodewith.HasClass(pinnedFilesBubbleClassName)
 }
 
-// FindPinnedFilesSectionFilesAppChip returns a finder which locates the holding
-// space pinned files section Files app chip node.
-func FindPinnedFilesSectionFilesAppChip() *nodewith.Finder {
-	return nodewith.Ancestor(nodewith.HasClass(filesAppChipClassName).Ancestor(
-		nodewith.HasClass(pinnedFilesSectionClassName))).Name("Open Files")
-}
-
-// FindPinnedFilesSectionFilesAppPrompt returns a finder which locates the
-// holding space pinned files section Files app prompt node.
-func FindPinnedFilesSectionFilesAppPrompt() *nodewith.Finder {
+// FindPinnedFilesSectionPlaceholder returns a finder which locates the
+// holding space pinned files section placeholder node.
+func FindPinnedFilesSectionPlaceholder() *nodewith.Finder {
 	return nodewith.Ancestor(nodewith.HasClass(pinnedFilesSectionClassName)).
-		Name("You can pin your important files here. Open Files app to get started.")
+		Name("You can pin important files, including Google Drive files. To pin, hover over an item or open Files and right-click an item.")
 }
 
 // FindRecentFilesBubble returns a finder which locates the recent files bubble

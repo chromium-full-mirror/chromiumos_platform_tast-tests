@@ -127,10 +127,8 @@ func Screenshot(ctx context.Context, s *testing.State) {
 		// Left click the tray to open the bubble.
 		ui.LeftClick(holdingspace.FindTray()),
 
-		// The pinned files section should contain an educational prompt and chip
-		// informing the user that they can pin a file from the Files app.
-		ui.WaitUntilExists(holdingspace.FindPinnedFilesSectionFilesAppPrompt()),
-		ui.WaitUntilExists(holdingspace.FindPinnedFilesSectionFilesAppChip()),
+		// The pinned files section should contain a placeholder when empty.
+		ui.WaitUntilExists(holdingspace.FindPinnedFilesSectionPlaceholder()),
 	)(ctx); err != nil {
 		s.Fatal("Failed to open bubble and confirm initial state: ", err)
 	}
