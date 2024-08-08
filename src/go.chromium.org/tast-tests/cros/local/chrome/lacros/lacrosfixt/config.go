@@ -146,6 +146,10 @@ func (cfg *Config) Opts() ([]chrome.Option, error) {
 	// expectations more predirectable, and thus make the tests more stable.
 	opts = append(opts, chrome.LacrosDisableFeatures("ChromeWhatsNewUI"))
 
+	// Ensure the test extension stays on V2, since it is unsupported in
+	// Manifest V3.
+	opts = append(opts, chrome.LacrosDisableFeatures("ExtensionManifestV2Disabled"))
+
 	if !cfg.enableFRE {
 		// Prevent showing up offer pages, e.g. google.com/chromebooks.
 		opts = append(opts, chrome.LacrosExtraArgs("--no-first-run"))
