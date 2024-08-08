@@ -645,9 +645,9 @@ var ThaiTis = InputMethod{
 	VoiceLanguage:       LanguageTh,
 }
 
-// Turkish represents the input method of Turkish.
-var Turkish = InputMethod{
-	Name:                "Turkish",
+// TurkishWithFKeyboard represents the input method of Turkish with F-keyboard.
+var TurkishWithFKeyboard = InputMethod{
+	Name:                "Turkish with F-keyboard",
 	ID:                  "xkb:tr:f:tur",
 	HandwritingLanguage: LanguageTr,
 	VoiceLanguage:       LanguageTr,
@@ -675,6 +675,332 @@ var VietnameseVNI = InputMethod{
 	ID:                  "vkd_vi_vni",
 	HandwritingLanguage: LanguageVi,
 	VoiceLanguage:       LanguageVi,
+}
+
+// EnglishUSWithProgrammerDvorakKeyboard represents the input method of English (US) with Programmer Dvorak keyboard.
+var EnglishUSWithProgrammerDvorakKeyboard = InputMethod{
+	Name:                "English (US) with Programmer Dvorak keyboard",
+	ID:                  "xkb:us:dvp:eng",
+	HandwritingLanguage: LanguageVi,
+	VoiceLanguage:       LanguageVi,
+}
+
+// EnglishUSWithInternationalPCKeyboard represents the input method of English (US) with International PC keyboard.
+var EnglishUSWithInternationalPCKeyboard = InputMethod{
+	Name:                "English (US) with International PC keyboard",
+	ID:                  "xkb:us:intl_pc:eng",
+	HandwritingLanguage: LanguageVi,
+	VoiceLanguage:       LanguageVi,
+}
+
+// EnglishUSWithWorkmanInternationalKeyboard represents the input method of English (US) with Workman International keyboard.
+var EnglishUSWithWorkmanInternationalKeyboard = InputMethod{
+	Name:                "English (US) with Workman International keyboard",
+	ID:                  "xkb:us:workman-intl:eng",
+	HandwritingLanguage: LanguageEn,
+	VoiceLanguage:       LanguageEn,
+}
+
+// DutchBelgium represents the input method of Dutch (Belgium).
+var DutchBelgium = InputMethod{
+	Name:                "Dutch (Belgium)",
+	ID:                  "xkb:be::nld",
+	HandwritingLanguage: LanguageNl,
+	VoiceLanguage:       LanguageNl,
+}
+
+// DutchNetherlandsWithUSInternationalPCKeyboard represents the input method of Dutch (Netherlands) with US International PC keyboard.
+var DutchNetherlandsWithUSInternationalPCKeyboard = InputMethod{
+	Name:                "Dutch (Netherlands) with US International PC keyboard",
+	ID:                  "xkb:us:intl_pc:nld",
+	HandwritingLanguage: LanguageNl,
+	VoiceLanguage:       LanguageNl,
+}
+
+// EnglishUKWithDvorakKeyboard represents the input method of English (UK) with Dvorak keyboard.
+var EnglishUKWithDvorakKeyboard = InputMethod{
+	Name:                "English (UK) with Dvorak keyboard",
+	ID:                  "xkb:us:dvorak:eng",
+	HandwritingLanguage: LanguageEn,
+	VoiceLanguage:       LanguageEn,
+}
+
+// FrenchBelgium represents the input method of French (Belgium).
+var FrenchBelgium = InputMethod{
+	Name:                "French (Belgium)",
+	ID:                  "xkb:be::fra",
+	HandwritingLanguage: LanguageFr,
+	VoiceLanguage:       LanguageFr,
+}
+
+// FrenchCanada represents the input method of French (Canada).
+var FrenchCanada = InputMethod{
+	Name:                "French (Canada)",
+	ID:                  "xkb:ca::fra",
+	HandwritingLanguage: LanguageFr,
+	VoiceLanguage:       LanguageFr,
+}
+
+// FrenchCanadaWithMultilingualKeyboard represents the input method of French (Canada) with Multilingual keyboard.
+var FrenchCanadaWithMultilingualKeyboard = InputMethod{
+	Name:                "French (Canada) with Multilingual keyboard",
+	ID:                  "xkb:ca:multix:fra",
+	HandwritingLanguage: LanguageFr,
+	VoiceLanguage:       LanguageFr,
+}
+
+// FrenchFrenceWithBepoKeyboard represents the input method of French (France) with Bépo keyboard.
+var FrenchFrenceWithBepoKeyboard = InputMethod{
+	Name:                "French (France) with Bépo keyboard",
+	ID:                  "xkb:fr:bepo:fra",
+	HandwritingLanguage: LanguageFr,
+	VoiceLanguage:       LanguageFr,
+}
+
+// FrenchSwitzerland represents the input method of French (Switzerland).
+var FrenchSwitzerland = InputMethod{
+	Name:                "French (Switzerland)",
+	ID:                  "xkb:ch:fr:fra",
+	HandwritingLanguage: LanguageFr,
+	VoiceLanguage:       LanguageFr,
+}
+
+// GermanBelgium represents the input method of German (Belgium).
+var GermanBelgium = InputMethod{
+	Name:                "German (Belgium)",
+	ID:                  "xkb:be::ger",
+	HandwritingLanguage: LanguageDe,
+	VoiceLanguage:       LanguageDe,
+}
+
+// GermanGermanyWithNeo2Keyboard represents the input method of German (Germany) with Neo 2 keyboard.
+var GermanGermanyWithNeo2Keyboard = InputMethod{
+	Name:                "German (Germany) with Neo 2 keyboard",
+	ID:                  "xkb:de:neo:ger",
+	HandwritingLanguage: LanguageDe,
+	VoiceLanguage:       LanguageDe,
+}
+
+// GermanSwitzerland represents the input method of German (Switzerland).
+var GermanSwitzerland = InputMethod{
+	Name:                "German (Switzerland)",
+	ID:                  "xkb:ch::ger",
+	HandwritingLanguage: LanguageDe,
+	VoiceLanguage:       LanguageDe,
+}
+
+// PortugueseBrazil represents the input method of Portuguese (Brazil).
+var PortugueseBrazil = InputMethod{
+	Name:                "Portuguese (Brazil)",
+	ID:                  "xkb:br::por",
+	HandwritingLanguage: LanguagePt,
+	VoiceLanguage:       LanguagePt,
+}
+
+// PortugueseWithUSInternationalPCKeyboard represents the input method of Portuguese with US International PC keyboard.
+var PortugueseWithUSInternationalPCKeyboard = InputMethod{
+	Name:                "Portuguese with US International PC keyboard",
+	ID:                  "xkb:us:intl_pc:por",
+	HandwritingLanguage: LanguagePt,
+	VoiceLanguage:       LanguagePt,
+}
+
+// PortugueseWithUSInternationalKeyboard represents the input method of Portuguese with US International keyboard.
+var PortugueseWithUSInternationalKeyboard = InputMethod{
+	Name:                "Portuguese with US International keyboard",
+	ID:                  "xkb:us:intl:por",
+	HandwritingLanguage: LanguagePt,
+	VoiceLanguage:       LanguagePt,
+}
+
+// SpanishLatinAmerica represents the input method of Spanish (Latin America).
+var SpanishLatinAmerica = InputMethod{
+	Name:                "Spanish (Latin America)",
+	ID:                  "xkb:latam::spa",
+	ShortLabel:          "ES",
+	HandwritingLanguage: LanguageEs,
+	VoiceLanguage:       LanguageEs,
+}
+
+// Turkish represents the input method of Turkish.
+var Turkish = InputMethod{
+	Name:                "Turkish",
+	ID:                  "xkb:tr::tur",
+	HandwritingLanguage: LanguageTr,
+	VoiceLanguage:       LanguageTr,
+}
+
+// Armenian represents the input method of Armenian.
+var Armenian = InputMethod{
+	Name: "Armenian",
+	ID:   "xkb:am:phonetic:arm",
+}
+
+// BulgarianWithPhoneticKeyboard represents the input method of Bulgarian with Phonetic keyboard.
+var BulgarianWithPhoneticKeyboard = InputMethod{
+	Name:                "Bulgarian with Phonetic keyboard",
+	ID:                  "xkb:bg:phonetic:bul",
+	HandwritingLanguage: LanguageBg,
+	VoiceLanguage:       LanguageBg,
+}
+
+// Belarusian represents the input method of Belarusian.
+var Belarusian = InputMethod{
+	Name:                "Belarusian",
+	ID:                  "xkb:by::bel",
+	ShortLabel:          "BG",
+	HandwritingLanguage: LanguageBg,
+	VoiceLanguage:       LanguageBg,
+}
+
+// SoraniKurdishWithArabicKeyboard represents the input method of Sorani Kurdish with Arabic-based keyboard.
+var SoraniKurdishWithArabicKeyboard = InputMethod{
+	Name: "Sorani Kurdish with Arabic-based keyboard",
+	ID:   "vkd_ckb_ar",
+}
+
+// SoraniKurdishWithEnglishKeyboard represents the input method of Sorani Kurdish with English-based keyboard.
+var SoraniKurdishWithEnglishKeyboard = InputMethod{
+	Name: "Sorani Kurdish with English-based keyboard",
+	ID:   "vkd_ckb_en",
+}
+
+// CzechWithQWERTYKeyboard represents the input method of Czech with QWERTY keyboard.
+var CzechWithQWERTYKeyboard = InputMethod{
+	Name: "Czech with QWERTY keyboard",
+	ID:   "xkb:cz:qwerty:cze",
+}
+
+// Estonian represents the input method of Estonian.
+var Estonian = InputMethod{
+	Name: "Estonian",
+	ID:   "xkb:ee::est",
+}
+
+// Persian represents the input method of Persian.
+var Persian = InputMethod{
+	Name: "Persian",
+	ID:   "vkd_fa",
+}
+
+// Filipino represents the input method of Filipino.
+var Filipino = InputMethod{
+	Name: "Filipino",
+	ID:   "xkb:us::fil",
+}
+
+// Faroese represents the input method of Faroese.
+var Faroese = InputMethod{
+	Name: "Faroese",
+	ID:   "xkb:fo::fao",
+}
+
+// Greek represents the input method of Greek.
+var Greek = InputMethod{
+	Name: "Greek",
+	ID:   "xkb:gr::gre",
+}
+
+// HungarianWithQWERTYKeyboard represents the input method of Hungarian with QWERTY keyboard.
+var HungarianWithQWERTYKeyboard = InputMethod{
+	Name: "Hungarian with QWERTY keyboard",
+	ID:   "xkb:hu:qwerty:hun",
+}
+
+// Indonesian represents the input method of Indonesian.
+var Indonesian = InputMethod{
+	Name: "Indonesian",
+	ID:   "xkb:us::ind",
+}
+
+// Lao represents the input method of Lao.
+var Lao = InputMethod{
+	Name: "Lao",
+	ID:   "vkd_lo",
+}
+
+// Lithuanian represents the input method of Lithuanian.
+var Lithuanian = InputMethod{
+	Name: "Lithuanian",
+	ID:   "xkb:lt::lit",
+}
+
+// TamilWithInScriptKeyboard represents the input method of Tamil with InScript keyboard.
+var TamilWithInScriptKeyboard = InputMethod{
+	Name: "Tamil with InScript keyboard",
+	ID:   "vkd_ta_inscript",
+}
+
+// TamilWithTypewriterKeyboard represents the input method of Tamil with Typewriter keyboard.
+var TamilWithTypewriterKeyboard = InputMethod{
+	Name: "Tamil with Typewriter keyboard",
+	ID:   "vkd_ta_typewriter",
+}
+
+// TamilWithKedmaneeKeyboard represents the input method of Tamil with Kedmanee keyboard.
+var TamilWithKedmaneeKeyboard = InputMethod{
+	Name: "Thai with Kedmanee keyboard",
+	ID:   "vkd_th",
+}
+
+// TamilWithPattachoteKeyboard represents the input method of Tamil with Pattachote keyboard.
+var TamilWithPattachoteKeyboard = InputMethod{
+	Name: "Thai with Pattachote keyboard",
+	ID:   "vkd_th_pattajoti",
+}
+
+// RussianWithPhoneticAATSEELKeyboard represents the input method of Russian with Phonetic AATSEEL keyboard.
+var RussianWithPhoneticAATSEELKeyboard = InputMethod{
+	Name:                "Russian with Phonetic AATSEEL keyboard",
+	ID:                  "vkd_ru_phone_aatseel",
+	HandwritingLanguage: LanguageRu,
+	VoiceLanguage:       LanguageRu,
+}
+
+// RussianWithPhoneticKeyboard represents the input method of Russian with Phonetic keyboard.
+var RussianWithPhoneticKeyboard = InputMethod{
+	Name:                "Russian with Phonetic keyboard",
+	ID:                  "xkb:ru:phonetic:rus",
+	HandwritingLanguage: LanguageRu,
+	VoiceLanguage:       LanguageRu,
+}
+
+// RussianWithPhoneticYaZHertKeyboard represents the input method of Russian with Phonetic YaZHert keyboard.
+var RussianWithPhoneticYaZHertKeyboard = InputMethod{
+	Name:                "Russian with Phonetic YaZHert keyboard",
+	ID:                  "vkd_ru_phone_yazhert",
+	HandwritingLanguage: LanguageRu,
+	VoiceLanguage:       LanguageRu,
+}
+
+// Malay represents the input method of Malay.
+var Malay = InputMethod{
+	Name: "Malay",
+	ID:   "xkb:us::msa",
+}
+
+// NepaliWithInScriptKeyboard represents the input method of Nepali with InScript keyboard.
+var NepaliWithInScriptKeyboard = InputMethod{
+	Name: "Nepali with InScript keyboard",
+	ID:   "vkd_ne_inscript",
+}
+
+// NepaliWithPhoneticKeyboard represents the input method of Nepali with Phonetic keyboard.
+var NepaliWithPhoneticKeyboard = InputMethod{
+	Name: "Nepali with Phonetic keyboard",
+	ID:   "vkd_ne_phone",
+}
+
+// RomanianWithStandardKeyboard represents the input method of Romanian with Standard keyboard.
+var RomanianWithStandardKeyboard = InputMethod{
+	Name: "Romanian with Standard keyboard",
+	ID:   "xkb:ro:std:rum",
+}
+
+// Ukrainian represents the input method of Ukrainian.
+var Ukrainian = InputMethod{
+	Name: "Ukrainian",
+	ID:   "xkb:ua::ukr",
 }
 
 // inputMethods represents in-use (available) IMEs in ChromeOS.
@@ -755,6 +1081,52 @@ var inputMethods = []InputMethod{
 	Urdu,
 	VietnameseTelex,
 	VietnameseVNI,
+	EnglishUSWithProgrammerDvorakKeyboard,
+	EnglishUSWithInternationalPCKeyboard,
+	EnglishUSWithWorkmanInternationalKeyboard,
+	DutchBelgium,
+	DutchNetherlandsWithUSInternationalPCKeyboard,
+	EnglishUKWithDvorakKeyboard,
+	FrenchBelgium,
+	FrenchCanada,
+	FrenchCanadaWithMultilingualKeyboard,
+	FrenchFrenceWithBepoKeyboard,
+	FrenchSwitzerland,
+	GermanBelgium,
+	GermanGermanyWithNeo2Keyboard,
+	GermanSwitzerland,
+	PortugueseBrazil,
+	PortugueseWithUSInternationalPCKeyboard,
+	PortugueseWithUSInternationalKeyboard,
+	SpanishLatinAmerica,
+	Turkish,
+	Armenian,
+	BulgarianWithPhoneticKeyboard,
+	Belarusian,
+	SoraniKurdishWithArabicKeyboard,
+	SoraniKurdishWithEnglishKeyboard,
+	CzechWithQWERTYKeyboard,
+	Estonian,
+	Persian,
+	Filipino,
+	Faroese,
+	Greek,
+	HungarianWithQWERTYKeyboard,
+	Indonesian,
+	Lao,
+	Lithuanian,
+	TamilWithInScriptKeyboard,
+	TamilWithTypewriterKeyboard,
+	TamilWithKedmaneeKeyboard,
+	TamilWithPattachoteKeyboard,
+	RussianWithPhoneticAATSEELKeyboard,
+	RussianWithPhoneticKeyboard,
+	RussianWithPhoneticYaZHertKeyboard,
+	Malay,
+	NepaliWithInScriptKeyboard,
+	NepaliWithPhoneticKeyboard,
+	RomanianWithStandardKeyboard,
+	Ukrainian,
 }
 
 // ErrInputNotDefined indicates that the input method has not been defined.
@@ -895,7 +1267,6 @@ func (im InputMethod) setInputMethod(tconn *chrome.TestConn, waitForWarmUp bool)
 		if im == DefaultInputMethod || !waitForWarmUp {
 			return nil
 		}
-
 		return im.WaitUntilActivated(tconn)(ctx)
 	}
 	return im.actionWithFullyQualifiedID(tconn, f)
