@@ -40,10 +40,10 @@ func init() {
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Test that managed eSIM profile can be connected and disconnected and restrict managed only cellular network works properly",
 		Contacts: []string{
-			"cros-connectivity@google.com",
-			"jiajunz@google.com",
+			"alfredyu@cienet.com",
+			"chromeos-connectivity-cienet-external@google.com",
 		},
-		BugComponent: "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular
+		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:cellular", "cellular_sim_prod_esim", "cellular_e2e"},
 		Fixture:      "cellularWithFakeDMSEnrolled",
