@@ -7,12 +7,14 @@ package ehide
 
 import (
 	"context"
+	"path/filepath"
 	"strings"
 	"time"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
 
 	"go.chromium.org/tast-tests/cros/common/network/ehideconst"
@@ -37,10 +39,13 @@ const connTimeout = 15 * time.Second
 const getStateTimeout = 15 * time.Second
 const waitForEhideStateInterval = 1 * time.Second
 
+const preTestTimeout = connTimeout
 const postTestTimeout = getStateTimeout + waitRecoveryTimeout
 
 // The timeout to wait for SSH recovery if ehide fails.
 const waitRecoveryTimeout = 1 * time.Minute
+
+const saveLogMaxSize = 20 * 1024 * 1024 // 20MB
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
@@ -53,6 +58,7 @@ func init() {
 		BugComponent:    "b:1493959", // ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		SetUpTimeout:    ehideTimeout,
 		TearDownTimeout: ehideTimeout,
+		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
 		Impl:            &ehideFixture{alreadyStarted: false},
 	})
@@ -60,23 +66,13 @@ func init() {
 
 // ehideFixture implements testing.FixtureImpl.
 type ehideFixture struct {
-	alreadyStarted bool // whether ehide has already started before the fixture setup
+	alreadyStarted  bool                      // whether ehide has already started before the fixture setup
+	logFileDelta    *linuxssh.RemoteFileDelta // information of net.log file
+	logFileSavePath string                    // local path to save net.log to
 }
 
 func (f *ehideFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	d := s.DUT()
-	// Wait for SSH recovery if the ehide fixture fails.
-	defer func(ctx context.Context) {
-		// s.HasError() will become true only if some error occurs in SetUp()
-		// This indicates that the ehide fixture fails and we should wait for
-		// SSH recovery. Failures in the test content wrapped by the ehide
-		// fixture won't result in s.HasError() becoming true.
-		if s.HasError() {
-			f.waitForSSHRecoveryOnFailure(ctx, d)
-		}
-	}(ctx)
-	ctx, cancel := ctxutil.Shorten(ctx, waitRecoveryTimeout)
-	defer cancel()
 
 	// Since the SSH connection is not guaranteed at the remote fixture setup
 	// (b/239013478), make sure the DUT is connected at the beginning.
@@ -89,6 +85,23 @@ func (f *ehideFixture) SetUp(ctx context.Context, s *testing.FixtState) interfac
 		}
 	}
 
+	// The net.log will be saved into the dir of the ehide fixture. Give it a
+	// prefix to prevent the saved log to be overwritten.
+	if err := f.setUpNetLogSaver(ctx, d, "setup_"); err != nil {
+		s.Fatal("Failed to set up net.log saver: ", err)
+	}
+
+	success := false
+	defer func(ctx context.Context) {
+		// Wait for SSH recovery if the ehide fixture fails.
+		if !success {
+			f.waitForSSHRecoveryOnFailure(ctx, d)
+		}
+		f.saveNetLog(ctx, d)
+	}(ctx)
+	ctx, cancel := ctxutil.Shorten(ctx, waitRecoveryTimeout)
+	defer cancel()
+
 	// Check whether ehide has already started.
 	if ehideState, err := getState(ctx, d); err != nil {
 		s.Fatal("Failed to get ehide state: ", err)
@@ -99,12 +112,14 @@ func (f *ehideFixture) SetUp(ctx context.Context, s *testing.FixtState) interfac
 	// If ehide has already started, don't start it again.
 	if f.alreadyStarted {
 		s.Log("Ehide has already started")
+		success = true
 		return nil
 	}
 
 	if err := startEhide(ctx, d); err != nil {
 		s.Fatal("Failed to start ehide: ", err)
 	}
+	success = true
 	return nil
 }
 
@@ -112,25 +127,51 @@ func (f *ehideFixture) Reset(ctx context.Context) error {
 	return nil
 }
 
-func (f *ehideFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {}
+func (f *ehideFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
+	// The net.log will be saved into the dir of the test. Give it a
+	// prefix to prevent the saved log to be overwritten.
+	if err := f.setUpNetLogSaver(ctx, s.DUT(), "ehide_"); err != nil {
+		s.Fatal("Failed to set up net.log saver: ", err)
+	}
+}
 
 func (f *ehideFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
-	if ehideState, err := getState(ctx, s.DUT()); err != nil {
+	d := s.DUT()
+	success := false
+	defer func(ctx context.Context) {
+		// Wait for SSH recovery if the ehide fixture fails.
+		if !success {
+			f.waitForSSHRecoveryOnFailure(ctx, d)
+		}
+		f.saveNetLog(ctx, d)
+	}(ctx)
+	ctx, cancel := ctxutil.Shorten(ctx, waitRecoveryTimeout)
+	defer cancel()
+
+	if ehideState, err := getState(ctx, d); err != nil {
 		s.Fatal("Failed to get ehide state: ", err)
 	} else if ehideState != ehideconst.EhideStateOn {
 		s.Fatalf("Got current state %s, want %s", ehideState, ehideconst.EhideStateOn)
 	}
+	success = true
 }
 
 func (f *ehideFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 	d := s.DUT()
-	// Wait for SSH recovery if the ehide fixture fails.
+
+	// The net.log will be saved into the dir of the ehide fixture. Give it a
+	// prefix to prevent the saved log to be overwritten.
+	if err := f.setUpNetLogSaver(ctx, d, "teardown_"); err != nil {
+		s.Fatal("Failed to set up net.log saver: ", err)
+	}
+
+	success := false
 	defer func(ctx context.Context) {
-		// Same as in SetUp(), s.HasError() will become true only if some error
-		// occurs in TearDown().
-		if s.HasError() {
+		// Wait for SSH recovery if the ehide fixture fails.
+		if !success {
 			f.waitForSSHRecoveryOnFailure(ctx, d)
 		}
+		f.saveNetLog(ctx, d)
 	}(ctx)
 	ctx, cancel := ctxutil.Shorten(ctx, waitRecoveryTimeout)
 	defer cancel()
@@ -140,12 +181,31 @@ func (f *ehideFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 	// stop it.
 	if f.alreadyStarted {
 		s.Log("Won't stop ehide since it was running at the beginning")
-		return
+	} else {
+		if err := stopEhide(ctx, d); err != nil {
+			s.Fatal("Failed to stop ehide: ", err)
+		}
 	}
+	success = true
+}
 
-	if err := stopEhide(ctx, d); err != nil {
-		s.Fatal("Failed to stop ehide: ", err)
+func (f *ehideFixture) setUpNetLogSaver(ctx context.Context, d *dut.DUT, saveFilePrefix string) error {
+	f.logFileDelta = nil
+	f.logFileSavePath = ""
+	outDir, ok := testing.ContextOutDir(ctx)
+	if !ok {
+		return errors.New("failed to get out dir to save net.log")
 	}
+	// The destination to save net.log to.
+	logFileSavePath := filepath.Join(outDir, saveFilePrefix+"net.log")
+	// Get the information of net.log.
+	logFileDelta, err := linuxssh.NewRemoteFileDelta(ctx, d.Conn(), "/var/log/net.log", logFileSavePath, saveLogMaxSize)
+	if err != nil {
+		return errors.Wrap(err, "failed to get the information of net.log")
+	}
+	f.logFileDelta = logFileDelta
+	f.logFileSavePath = logFileSavePath
+	return nil
 }
 
 // waitForSSHRecoveryOnFailure waits for SSH recovery when the ehide fixture
@@ -174,6 +234,17 @@ func (f *ehideFixture) waitForSSHRecoveryOnFailure(ctx context.Context, d *dut.D
 		}
 	}
 	testing.ContextLog(ctx, "SSH connection recovered")
+}
+
+// saveNetLog saves net.log from DUT.
+func (f *ehideFixture) saveNetLog(ctx context.Context, d *dut.DUT) {
+	if f.logFileDelta == nil {
+		return
+	}
+	testing.ContextLog(ctx, "Saving net.log to ", f.logFileSavePath)
+	if err := f.logFileDelta.Save(ctx, d.Conn()); err != nil {
+		testing.ContextLog(ctx, "Failed to save net.log: ", err)
+	}
 }
 
 func getState(ctx context.Context, dut *dut.DUT) (string, error) {
