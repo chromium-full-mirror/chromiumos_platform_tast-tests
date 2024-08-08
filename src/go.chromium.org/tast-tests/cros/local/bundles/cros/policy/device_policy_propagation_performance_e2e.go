@@ -22,9 +22,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DevicePolicyPropagationE2E,
+		Func:         DevicePolicyPropagationPerformanceE2E,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "E2E test for device policy propagation",
+		Desc:         "E2E test for device policy propagation performance",
 		Contacts: []string{
 			"chromeos-commercial-remote-management@google.com",
 			"vsavu@google.com",      // Test author
@@ -57,7 +57,11 @@ func init() {
 	})
 }
 
-func DevicePolicyPropagationE2E(ctx context.Context, s *testing.State) {
+// DevicePolicyPropagationPerformanceE2E note: because of the serverside 24h SLO,
+// to avoid flakiness, the test still passes even if policy update times out.
+// This test is used to only measure performance of the device policy stack.
+// The test uses Crosbolt to report the measured latency.
+func DevicePolicyPropagationPerformanceE2E(ctx context.Context, s *testing.State) {
 	fixtData := fixture.TAPEAccountData{}
 	if err := s.FixtFillValue(&fixtData); err != nil {
 		s.Fatal("Failed to deserialize remote fixture data: ", err)

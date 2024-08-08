@@ -22,9 +22,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         UserPolicyPropagationE2E,
+		Func:         UserPolicyPropagationPerformanceE2E,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "E2E test for user policy propagation",
+		Desc:         "E2E test for user policy propagation performance",
 		Contacts: []string{
 			"chromeos-commercial-remote-management@google.com",
 			"vsavu@google.com",      // Test author
@@ -64,7 +64,11 @@ func init() {
 	})
 }
 
-func UserPolicyPropagationE2E(ctx context.Context, s *testing.State) {
+// UserPolicyPropagationPerformanceE2E note: because of the serverside 24h SLO,
+// to avoid flakiness, the test still passes even if policy update times out.
+// This test is used to only measure performance of the user policy stack.
+// The test uses Crosbolt to report the measured latency.
+func UserPolicyPropagationPerformanceE2E(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	fixtData := s.FixtValue().(*fixtures.TAPEChromeFixtData)
 
