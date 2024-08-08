@@ -44,7 +44,7 @@ func ParseUncappedPerfMetrics(metricsPath string, p *perf.Values, metricPrefix s
 	p.Set(perf.Metric{
 		Name:      metricPrefix + ".frames_per_second",
 		Unit:      "fps",
-		Direction: perf.SmallerIsBetter,
+		Direction: perf.BiggerIsBetter,
 	}, metrics.FPS)
 	return nil
 }
