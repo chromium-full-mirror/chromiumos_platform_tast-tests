@@ -98,14 +98,14 @@ func init() {
 				source:   tcSourceTypeVPN,
 				ipFamily: tcIPv4,
 			},
-			ExtraSoftwareDeps: []string{"wireguard"},
+			ExtraSoftwareDeps: []string{"ikev2"},
 		}, {
 			Name: "vpn_ipv6",
 			Val: tcParams{
 				source:   tcSourceTypeVPN,
 				ipFamily: tcIPv6,
 			},
-			ExtraSoftwareDeps: []string{"wireguard"},
+			ExtraSoftwareDeps: []string{"ikev2"},
 		}, {
 			Name: "crostini_ipv4",
 			Val: tcParams{
@@ -352,7 +352,7 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 	if param.source == tcSourceTypeVPN {
 		// Connect the VPN.
 		conn, err := vpn.StartConnection(
-			ctx, svr.svrEnv, vpn.TypeWireGuard,
+			ctx, svr.svrEnv, vpn.TypeIKEv2,
 			vpn.WithIPType(vpn.IPTypeIPv4AndIPv6),
 			// l4server is only listening on underlay address now.
 			vpn.WithAllowingReachUnderlayIP(),
