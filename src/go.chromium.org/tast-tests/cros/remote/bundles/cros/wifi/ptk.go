@@ -10,15 +10,13 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/network/ping"
 	"go.chromium.org/tast-tests/cros/common/perf"
-	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/common/wifi/security/wpa"
-	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wifi/wifiutil"
+	"go.chromium.org/tast-tests/cros/common/wifi/wpacli"
 	remoteping "go.chromium.org/tast-tests/cros/remote/network/ping"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
 	"go.chromium.org/tast-tests/cros/remote/wificell/hostapd"
-	"go.chromium.org/tast-tests/cros/services/cros/wifi"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -51,6 +49,13 @@ func PTK(ctx context.Context, s *testing.State) {
 		allowedLossCount = 30
 	)
 
+	// Total rekey count less 1, there is a possibility that the last rekey
+	// could be missed, if the wpa_monitor stops right before the last rekey.
+	expectedRekeyCount := int(float64(pingCount)*pingInterval/float64(rekeyPeriod)) - 1
+	if expectedRekeyCount <= 0 {
+		s.Fatal("Ping duration is too short")
+	}
+
 	tf := s.FixtValue().(*wificell.TestFixture)
 
 	apOps := []hostapd.Option{
@@ -77,11 +82,10 @@ func PTK(ctx context.Context, s *testing.State) {
 
 	s.Log("AP setup done; connecting")
 
-	connectResp, err := tf.ConnectWifiAP(ctx, ap)
-	if err != nil {
+	if _, err = tf.ConnectWifiAP(ctx, ap); err != nil {
 		s.Fatal("Failed to connect to WiFi: ", err)
 	}
-	servicePath := connectResp.ServicePath
+	// servicePath := connectResp.ServicePath
 	defer func(ctx context.Context) {
 		if err := tf.CleanDisconnectWifi(ctx); err != nil {
 			s.Error("Failed to disconnect WiFi: ", err)
@@ -90,25 +94,15 @@ func PTK(ctx context.Context, s *testing.State) {
 	ctx, cancel = tf.ReserveForDisconnect(ctx)
 	defer cancel()
 
-	// Total rekey count less 2 for a buffer. We expect 2 transitions (false -> true, true -> false) for each rekey
-	rekeyCount := int(float64(pingCount)*pingInterval/float64(rekeyPeriod)) - 2
-	if rekeyCount <= 0 {
-		s.Fatal("Ping duration is too short")
-	}
-	props := make([]*wificell.ShillProperty, rekeyCount*2)
-	for i := range props {
-		props[i] = &wificell.ShillProperty{
-			Property:       shillconst.ServicePropertyWiFiRekeyInProgress,
-			Method:         wifi.ExpectShillPropertyRequest_ON_CHANGE,
-			ExpectedValues: []interface{}{i%2 == 0},
-		}
-	}
-	monitorProps := []string{shillconst.ServicePropertyIsConnected}
 	pingBuffer := 20 * time.Second
 	waitBuffer := 5 * time.Second
 	waitCtx, cancel := context.WithTimeout(ctx, time.Duration(float64(pingCount)*pingInterval)*time.Second+pingBuffer+waitBuffer)
 	defer cancel()
-	waitForProps, err := tf.WifiClient().ExpectShillProperty(waitCtx, servicePath, props, monitorProps)
+
+	wpaMonitor, _, ctx, err := tf.StartWPAMonitor(ctx, wificell.DefaultDUT)
+	if err != nil {
+		s.Fatal("Faled to start wpa monitor")
+	}
 
 	iface, err := tf.ClientInterface(ctx)
 	if err != nil {
@@ -136,14 +130,22 @@ func PTK(ctx context.Context, s *testing.State) {
 		s.Errorf("Unexpected packet loss: got %d, want <= %d", lossCount, allowedLossCount)
 	}
 
-	monitorResult, err := waitForProps()
+	var keyNegotiationCompletedEvent int
+	events, err := wpaMonitor.QuitAndCollectEvents(ctx)
 	if err != nil {
-		s.Error("Failed to wait for rekey events: ", err)
+		s.Error("Failed to get the wpa monitor events: ", err)
+	}
+	for _, event := range events {
+		if evt, ok := event.(*wpacli.DisconnectedEvent); ok {
+			s.Fatalf("DUT: failed to stay connected during rekey process: %s", evt.ToLogString())
+		}
+		if _, ok := event.(*wpacli.KeyNegotiationCompletedEvent); ok {
+			keyNegotiationCompletedEvent++
+		}
 	}
 
-	// Assert there was no disconnection during rekey process.
-	if err := wifiutil.VerifyNoDisconnections(monitorResult); err != nil {
-		s.Fatal("DUT: failed to stay connected during rekey process: ", err)
+	if keyNegotiationCompletedEvent < expectedRekeyCount {
+		s.Errorf("Unexpected rekey count: got %d, want >= %d", keyNegotiationCompletedEvent, expectedRekeyCount)
 	}
 
 	pv := perf.NewValues()

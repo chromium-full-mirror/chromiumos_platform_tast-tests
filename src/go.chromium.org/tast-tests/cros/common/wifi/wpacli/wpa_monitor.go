@@ -75,6 +75,13 @@ type P2PGroupStartedEvent struct {
 	IsPersistent bool
 }
 
+// KeyNegotiationCompletedEvent defines data of "Key negotiation completed" event.
+type KeyNegotiationCompletedEvent struct {
+	BSSID string
+	PTK   string
+	GTK   string
+}
+
 // ScanStartedEvent defines data of CTRL-EVENT-SCAN-STARTED event.
 type ScanStartedEvent struct {
 }
@@ -170,6 +177,18 @@ var eventDefs = []eventDef{
 			return event, firstError
 		},
 	},
+	// Example of "Key negotiation completed" output:
+	// WPA: Key negotiation completed with 0e:1b:69:81:da:fe [PTK=CCMP GTK=TKIP]
+	{
+		regexp.MustCompile(`WPA: Key negotiation completed with ([\da-fA-F:]+) \[PTK=(.*) GTK=(.*)\]`),
+		func(matches []string) (_ SupplicantEvent, firstError error) {
+			event := new(KeyNegotiationCompletedEvent)
+			event.BSSID = matches[1]
+			event.PTK = matches[2]
+			event.GTK = matches[3]
+			return event, firstError
+		},
+	},
 	{
 		regexp.MustCompile(
 			`CTRL-EVENT-DO-ROAM cur_bssid=([\da-fA-F:]+) cur_freq=(\d+) ` +
@@ -262,6 +281,11 @@ func (e *ConnectedEvent) ToLogString() string {
 
 // ToLogString formats the event data to string suitable for logging.
 func (e *P2PGroupStartedEvent) ToLogString() string {
+	return fmt.Sprintf("%+v\n", e)
+}
+
+// ToLogString formats the event data to string suitable for logging.
+func (e *KeyNegotiationCompletedEvent) ToLogString() string {
 	return fmt.Sprintf("%+v\n", e)
 }
 
