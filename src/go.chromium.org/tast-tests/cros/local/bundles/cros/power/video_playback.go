@@ -66,7 +66,7 @@ func init() {
 			Fixture:   "powerAshRamfs",
 			ExtraData: []string{"video_playback/h264_1080_30fps.mp4"},
 			ExtraAttr: []string{"group:power", "power_regression"},
-			Timeout:   3*time.Hour + power.RecorderTimeout, // 1 hour for video and 2 hour for charging
+			Timeout:   time.Hour + power.RecorderTimeout + setup.BatteryPreparationTimeout, // 1 hour for video
 			Val: videoPlaybackTestParam{
 				VideoName:  "h264_1080_30fps",
 				TimeParams: power.TimeParams{Total: time.Hour, Interval: 5 * time.Second}},
@@ -74,7 +74,7 @@ func init() {
 			Name:      "h264_1080_30fps_1hr_ash_arc",
 			Fixture:   "powerAshARCRamfs",
 			ExtraData: []string{"video_playback/h264_1080_30fps.mp4"},
-			Timeout:   3*time.Hour + power.RecorderTimeout, // 1 hour for video and 2 hour for charging
+			Timeout:   time.Hour + power.RecorderTimeout + setup.BatteryPreparationTimeout, // 1 hour for video
 			Val: videoPlaybackTestParam{
 				VideoName:  "h264_1080_30fps",
 				TimeParams: power.TimeParams{Total: time.Hour, Interval: 5 * time.Second}},
@@ -164,7 +164,7 @@ func init() {
 			Fixture:   "powerAshRamfs",
 			ExtraData: []string{"video_playback/vp9_1080_30fps.webm"},
 			ExtraAttr: []string{"group:power", "power_regression"},
-			Timeout:   3*time.Hour + power.RecorderTimeout, // 1 hour for video and 2 hour for charging
+			Timeout:   time.Hour + power.RecorderTimeout + setup.BatteryPreparationTimeout, // 1 hour for video
 			Val: videoPlaybackTestParam{
 				VideoName:  "vp9_1080_30fps",
 				TimeParams: power.TimeParams{Total: time.Hour, Interval: 5 * time.Second}},
@@ -172,7 +172,7 @@ func init() {
 			Name:      "vp9_1080_30fps_1hr_ash_arc",
 			Fixture:   "powerAshARCRamfs",
 			ExtraData: []string{"video_playback/vp9_1080_30fps.webm"},
-			Timeout:   3*time.Hour + power.RecorderTimeout, // 1 hour for video and 2 hour for charging
+			Timeout:   time.Hour + power.RecorderTimeout + setup.BatteryPreparationTimeout, // 1 hour for video
 			Val: videoPlaybackTestParam{
 				VideoName:  "vp9_1080_30fps",
 				TimeParams: power.TimeParams{Total: time.Hour, Interval: 5 * time.Second}},
@@ -260,7 +260,7 @@ func init() {
 			Fixture:           "powerLacrosRamfs",
 			ExtraData:         []string{"video_playback/h264_1080_30fps.mp4"},
 			ExtraSoftwareDeps: []string{"lacros"},
-			Timeout:           3*time.Hour + power.RecorderTimeout, // 1 hour for video and 2 hour for charging
+			Timeout:           time.Hour + power.RecorderTimeout + setup.BatteryPreparationTimeout, // 1 hour for video
 			Val: videoPlaybackTestParam{
 				VideoName:  "h264_1080_30fps",
 				TimeParams: power.TimeParams{Total: time.Hour, Interval: 5 * time.Second}},
@@ -362,7 +362,7 @@ func init() {
 			Fixture:           "powerLacrosRamfs",
 			ExtraData:         []string{"video_playback/vp9_1080_30fps.webm"},
 			ExtraSoftwareDeps: []string{"lacros"},
-			Timeout:           3*time.Hour + power.RecorderTimeout, // 1 hour for video and 2 hour for charging
+			Timeout:           time.Hour + power.RecorderTimeout + setup.BatteryPreparationTimeout, // 1 hour for video
 			Val: videoPlaybackTestParam{
 				VideoName:  "vp9_1080_30fps",
 				TimeParams: power.TimeParams{Total: time.Hour, Interval: 5 * time.Second}},

@@ -20,8 +20,9 @@ import (
 )
 
 type gamingAppParams struct {
-	game     func(ctx context.Context, kb *input.KeyboardEventWriter, tconn *chrome.TestConn, a *arc.ARC, d *androidui.Device, dataPath func(string) string) gameapp.GameApp
-	playTime time.Duration
+	game       func(ctx context.Context, kb *input.KeyboardEventWriter, tconn *chrome.TestConn, a *arc.ARC, d *androidui.Device, dataPath func(string) string) gameapp.GameApp
+	playTime   time.Duration
+	timeParams power.TimeParams
 }
 
 const (
@@ -58,40 +59,48 @@ func init() {
 			{
 				Name: "asphalt8",
 				Val: gamingAppParams{
-					game:     gameapp.NewAsphalt8,
-					playTime: asphalt8PlayTime,
+					game: gameapp.NewAsphalt8,
+					timeParams: power.TimeParams{
+						Total: asphalt8PlayTime,
+					},
 				},
-				Timeout:   asphalt8Timeout,
+				Timeout:   asphalt8Timeout + setup.BatteryPreparationTimeout,
 				ExtraData: []string{gameapp.Asphalt8IconGameScene},
 				ExtraAttr: []string{"group:power", "power_regression"},
 			},
 			{
 				Name: "asphalt8_short",
 				Val: gamingAppParams{
-					game:     gameapp.NewAsphalt8,
-					playTime: shortPlayTime,
+					game: gameapp.NewAsphalt8,
+					timeParams: power.TimeParams{
+						Total: shortPlayTime,
+					},
 				},
-				Timeout:   shortTimeout,
+				Timeout:   shortTimeout + setup.BatteryPreparationTimeout,
 				ExtraData: []string{gameapp.Asphalt8IconGameScene},
 				ExtraAttr: []string{"group:power", "power_daily"},
 			},
 			{
 				Name: "super_tux_kart",
 				Val: gamingAppParams{
-					game:     gameapp.NewSuperTuxKart,
-					playTime: superTuxKartPlayTime,
+					game: gameapp.NewSuperTuxKart,
+					timeParams: power.TimeParams{
+						Total: superTuxKartPlayTime,
+					},
 				},
-				Timeout:   superTuxKartTimeout,
+				Timeout:   superTuxKartTimeout + setup.BatteryPreparationTimeout,
 				ExtraData: []string{gameapp.SuperTuxKartIconGameScene},
 				ExtraAttr: []string{"group:power", "power_regression"},
 			},
 			{
 				Name: "super_tux_kart_short",
 				Val: gamingAppParams{
-					game:     gameapp.NewSuperTuxKart,
-					playTime: shortPlayTime,
+					game: gameapp.NewSuperTuxKart,
+					timeParams: power.TimeParams{
+						Total: shortPlayTime,
+					},
 				},
-				Timeout:   shortTimeout,
+				Timeout:   shortTimeout + setup.BatteryPreparationTimeout,
 				ExtraData: []string{gameapp.SuperTuxKartIconGameScene},
 				ExtraAttr: []string{"group:power", "power_daily"},
 			},
@@ -125,15 +134,19 @@ func GamingApp(ctx context.Context, s *testing.State) {
 	}
 	defer kb.Close(cleanupCtx)
 
+	totalTime := s.Param().(gamingAppParams).timeParams.Total
+	if err := setup.Battery(ctx, totalTime, discharge); err != nil {
+		s.Fatal("Setup battery failed: ", err)
+	}
+
 	game := s.Param().(gamingAppParams).game(ctx, kb, tconn, a, d, s.DataPath)
-	playTime := s.Param().(gamingAppParams).playTime
 	if superTuxKart, isSuperTuxKart := game.(*gameapp.SuperTuxKart); isSuperTuxKart {
 		if url, ok := s.Var(superTuxKartAPKURLVar); ok {
 			superTuxKart.SetAPKURL(url)
 		}
 	}
 	// Run the app and collect the power data in the meantime.
-	if err := gameapp.Run(ctx, cr, a, d, game, s.OutDir(), s.TestName(), playTime, discharge); err != nil {
+	if err := gameapp.Run(ctx, cr, a, d, game, s.OutDir(), s.TestName(), totalTime, discharge); err != nil {
 		s.Fatal("Failed to run game app: ", err)
 	}
 }

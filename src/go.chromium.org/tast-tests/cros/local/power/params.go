@@ -19,6 +19,9 @@ type TimeParams struct {
 
 // ChargeParams defines parameters used for a charge test.
 type ChargeParams struct {
+	// Max battery battery preparation time.
+	MaxBatteryPreparationTime time.Duration
+
 	// Min battery percent used in a charge test.
 	MinChargePercentage float64
 
@@ -44,11 +47,12 @@ type ChargeParams struct {
 // take >= 1hr. They need to be charged to 50% of battery to prevent force
 // discharge failure from low battery threshold.
 var RegressionTestChargeParam = ChargeParams{
-	MinChargePercentage:   50.0,
-	MaxChargePercentage:   100.0,
-	DischargeOnCompletion: true,
-	IsCustomized:          false,
-	IsPowerQual:           false,
+	MaxBatteryPreparationTime: 2 * time.Hour,
+	MinChargePercentage:       50.0,
+	MaxChargePercentage:       100.0,
+	DischargeOnCompletion:     true,
+	IsCustomized:              false,
+	IsPowerQual:               false,
 }
 
 // IdleParams defines the screen & bluetooth on/off behavior and the time params

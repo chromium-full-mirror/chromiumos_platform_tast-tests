@@ -34,9 +34,8 @@ var (
 )
 
 // BatteryPreparationTimeout is the time required to charge and drain battery
-// to specified range. Use in conjunction with ReachBatteryRange function. This
-// timeout is an estimate for a fully charged device to drain to 97%
-const BatteryPreparationTimeout = 30 * time.Minute
+// to specified range.
+const BatteryPreparationTimeout = 2 * time.Hour
 
 func setChargeState(ctx context.Context, s chargeState) error {
 	stdout, stderr, err := testexec.CommandContext(ctx, "ectool", s.command, s.state).SeparatedOutput(testexec.DumpLogOnError)
@@ -134,6 +133,22 @@ func DisableBatteryCharging(ctx context.Context) error {
 	return setChargeState(ctx, chargeState)
 }
 
+// Battery prepares battery to make sure the device has at least 50% of battery.
+func Battery(ctx context.Context, total time.Duration, discharge bool) error {
+	if !discharge {
+		return nil
+	}
+	// For tests that take more than 20 minutes, make sure the device has at least
+	// 50% of battery.
+	if total >= 20*time.Minute {
+		testing.ContextLogf(ctx, "Prepare the device to have at least %.2f%% battery", power.RegressionTestChargeParam.MinChargePercentage)
+		if err := PrepareBattery(ctx, power.RegressionTestChargeParam); err != nil {
+			return errors.Wrap(err, "failed to prepare battery")
+		}
+	}
+	return nil
+}
+
 // PrepareBattery charges or drains the battery to reach the specified
 // range. Upon completion, the DUT would be allowed to resume charging or
 // being forced to discharge as specified.
@@ -157,15 +172,20 @@ func PrepareBattery(ctx context.Context, cp power.ChargeParams) error {
 	testing.ContextLogf(ctx, "Current battery charge is %.2f%%", currentPercentage)
 	testing.ContextLogf(ctx, "Acceptable battery range is [%.2f%%, %.2f%%]", cp.MinChargePercentage, cp.MaxChargePercentage)
 
+	batteryPreparationTimeout := BatteryPreparationTimeout
+	if cp.MaxBatteryPreparationTime != time.Duration(0) {
+		batteryPreparationTimeout = cp.MaxBatteryPreparationTime
+	}
+
 	if currentPercentage > cp.MinChargePercentage && currentPercentage < cp.MaxChargePercentage {
 		testing.ContextLog(ctx, "Current battery charge is within the acceptable range")
 		err = nil
 	} else if currentPercentage < cp.MinChargePercentage {
 		testing.ContextLog(ctx, "Current battery charge is below the acceptable range")
-		err = chargeBattery(ctx, cp.MinChargePercentage, cp.IsPowerQual)
+		err = chargeBattery(ctx, batteryPreparationTimeout, cp.MinChargePercentage, cp.IsPowerQual)
 	} else {
 		testing.ContextLog(ctx, "Current battery charge is above the acceptable range")
-		err = drainBattery(ctx, cp.MaxChargePercentage)
+		err = drainBattery(ctx, batteryPreparationTimeout, cp.MaxChargePercentage)
 	}
 
 	if err != nil {
@@ -179,7 +199,7 @@ func PrepareBattery(ctx context.Context, cp power.ChargeParams) error {
 	return AllowBatteryCharging(ctx)
 }
 
-func chargeBattery(ctx context.Context, targetPercentage float64, isPowerQual bool) error {
+func chargeBattery(ctx context.Context, batteryPreparationTimeout time.Duration, targetPercentage float64, isPowerQual bool) error {
 	testing.ContextLog(ctx, "Start charging battery")
 
 	cleanupCtx := ctx
@@ -232,10 +252,11 @@ func chargeBattery(ctx context.Context, targetPercentage float64, isPowerQual bo
 		return nil
 	}, &testing.PollOptions{
 		Interval: time.Minute,
+		Timeout:  batteryPreparationTimeout,
 	})
 }
 
-func drainBattery(ctx context.Context, targetPercentage float64) error {
+func drainBattery(ctx context.Context, batteryPreparationTimeout time.Duration, targetPercentage float64) error {
 	testing.ContextLog(ctx, "Start draining battery")
 
 	cleanupCtx := ctx
@@ -287,6 +308,7 @@ func drainBattery(ctx context.Context, targetPercentage float64) error {
 		return nil
 	}, &testing.PollOptions{
 		Interval: time.Second,
+		Timeout:  batteryPreparationTimeout,
 	})
 }
 

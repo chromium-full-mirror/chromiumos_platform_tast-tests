@@ -244,8 +244,8 @@ func Browsing(ctx context.Context, s *testing.State) {
 
 	// Fetch config from url and parse
 	configName := s.Param().(browsingTestParam).ConfigName
-	interval := s.Param().(browsingTestParam).TimeParams.Interval
 	totalTime := s.Param().(browsingTestParam).TimeParams.Total
+	interval := s.Param().(browsingTestParam).TimeParams.Interval
 	collectTrace := s.Param().(browsingTestParam).CollectTrace
 	multiTab := s.Param().(browsingTestParam).MultiTab
 
@@ -324,6 +324,10 @@ func Browsing(ctx context.Context, s *testing.State) {
 		tab5 := tabData{Conn: conn5, TabIndex: 2, WinIndex: 1}
 
 		tabDataList = []tabData{tab1, tab2, tab3, tab4, tab5}
+	}
+
+	if err := setup.Battery(ctx, totalTime, discharge); err != nil {
+		s.Fatal("Setup battery failed: ", err)
 	}
 
 	r := power.NewRecorder(ctx, interval, s.OutDir(), s.TestName(), power.DischargeWatchdogOption(discharge))

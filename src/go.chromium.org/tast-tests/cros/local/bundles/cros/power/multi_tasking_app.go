@@ -70,21 +70,21 @@ func init() {
 			{
 				Name:      "ash",
 				Fixture:   "powerAshARC",
-				Timeout:   multiTaskingAppTimeout,
+				Timeout:   multiTaskingAppTimeout + setup.BatteryPreparationTimeout,
 				ExtraAttr: []string{"group:power", "power_regression"},
 				Val:       multiTaskingAppParam,
 			},
 			{
 				Name:      "ash_short",
 				Fixture:   "powerAshARC",
-				Timeout:   multiTaskingAppShortTimeout,
+				Timeout:   multiTaskingAppShortTimeout + setup.BatteryPreparationTimeout,
 				ExtraAttr: []string{"group:power", "power_daily"},
 				Val:       multiTaskingAppShortParam,
 			},
 			{
 				Name:    "lacros",
 				Fixture: "powerLacrosARC",
-				Timeout: multiTaskingAppTimeout,
+				Timeout: multiTaskingAppTimeout + setup.BatteryPreparationTimeout,
 				Val:     multiTaskingAppParam,
 			},
 		},
@@ -139,6 +139,14 @@ func MultiTaskingApp(ctx context.Context, s *testing.State) {
 		if uiHandler, err = cuj.NewClamshellActionHandler(ctx, tconn); err != nil {
 			s.Fatal("Failed to create clamshell action handler: ", err)
 		}
+	}
+
+	socialAppTime := s.Param().(multiTaskingParam).socialAppTime
+	videoPlayTime := s.Param().(multiTaskingParam).videoPlayTime
+	browserTime := s.Param().(multiTaskingParam).browserTime
+	total := socialAppTime + videoPlayTime + browserTime
+	if err := setup.Battery(ctx, total, discharge); err != nil {
+		s.Fatal("Setup battery failed: ", err)
 	}
 
 	testResources := &multitaskingapp.TestResources{

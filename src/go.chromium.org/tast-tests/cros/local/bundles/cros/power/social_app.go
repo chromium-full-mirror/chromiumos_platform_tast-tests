@@ -44,7 +44,7 @@ func init() {
 		BugComponent: "b:1361410", // ChromeOS > Platform > System > Core Power
 		SoftwareDeps: []string{"chrome", "arc"},
 		Vars:         socialapp.ElementApkURLVars, // Optional. The URL of the APK file of Element app.
-		Timeout:      socialAppTimeout,
+		Timeout:      socialAppTimeout + setup.BatteryPreparationTimeout,
 		Params: []testing.Param{{
 			Name:      "element_ash",
 			Fixture:   "powerAshARC",
@@ -113,6 +113,10 @@ func SocialApp(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to launch lacros: ", err)
 		}
 		defer l.Close(closeCtx)
+	}
+
+	if err := setup.Battery(ctx, socialAppOperatingTimeout, discharge); err != nil {
+		s.Fatal("Setup battery failed: ", err)
 	}
 
 	if err := app.Install(ctx); err != nil {

@@ -160,6 +160,10 @@ func VideoCall(ctx context.Context, s *testing.State) {
 	}
 	defer kb.Close(cleanupCtx)
 
+	if err := setup.Battery(ctx, total, discharge); err != nil {
+		s.Fatal("Setup battery failed: ", err)
+	}
+
 	r := power.NewRecorder(ctx, interval, s.OutDir(), s.TestName(), power.DischargeWatchdogOption(discharge))
 	defer r.Close(cleanupCtx)
 	// Register test specific metrics.
