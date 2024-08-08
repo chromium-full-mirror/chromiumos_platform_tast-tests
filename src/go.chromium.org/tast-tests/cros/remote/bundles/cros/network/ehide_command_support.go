@@ -30,6 +30,7 @@ func init() {
 		Contacts:     []string{"cros-networking@google.com", "chenzikai@google.com"},
 		BugComponent: "b:1493959", // ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		Fixture:      "ehide",
+		Data:         []string{"testing_rsa"},
 		Params: []testing.Param{{
 			Name: "rsync",
 			Val:  "rsync",
@@ -84,6 +85,31 @@ func EhideCommandSupport(ctx context.Context, s *testing.State) {
 	port := hostnameSplit[1]
 	remotePath := fmt.Sprintf("root@%s:%s", hostname, dutDir)
 
+	// Create a temp dir so that we can copy the keyfile here later.
+	tmpDir, err := os.MkdirTemp("", "tast-tmp")
+	if err != nil {
+		s.Fatal("Failed to create temp dir: ", err)
+	}
+	// Defer the temp dir removal function.
+	defer func() {
+		if err := os.RemoveAll(tmpDir); err != nil {
+			if s.HasError() {
+				s.Log("Failed to remove temp dir: ", err)
+			} else {
+				s.Error("Failed to remove temp dir: ", err)
+			}
+		}
+	}()
+	if err := testexec.CommandContext(ctx, "cp", s.DataPath("testing_rsa"), tmpDir).Run(testexec.DumpLogOnError); err != nil {
+		s.Fatal("Failed to copy testing_rsa to tast temp dir: ", err)
+	}
+	// Chmod the keyfile so that ssh connections do not fail due to
+	// open permissions.
+	sshKey := filepath.Join(tmpDir, "testing_rsa")
+	if err := os.Chmod(sshKey, 0600); err != nil {
+		s.Fatal("Unable to chmod sshkey to 0600: ", err)
+	}
+
 	// Defer the file removal function.
 	defer func() {
 		if err := removeDUTFile(ctx, d, dutPath); err != nil {
@@ -95,20 +121,26 @@ func EhideCommandSupport(ctx context.Context, s *testing.State) {
 		}
 	}()
 
+	// SSH options.
+	options := []string{"-i", sshKey,
+		"-o", "StrictHostKeyChecking=no",
+		"-o", "UserKnownHostsFile=/dev/null"}
+
 	// Start testing!
 	testingCmd := s.Param().(string)
 	s.Logf("Testing %s", testingCmd)
 	switch testingCmd {
 	case "rsync":
-		if err := testexec.CommandContext(ctx, "rsync", "-e", fmt.Sprintf("ssh -p %s", port), localPath, remotePath).Run(testexec.DumpLogOnError); err != nil {
+		if err := testexec.CommandContext(ctx, "rsync", "-e", fmt.Sprintf("ssh -p %s %s", port, strings.Join(options, " ")), localPath, remotePath).Run(testexec.DumpLogOnError); err != nil {
 			s.Fatal("Failed to run rsync: ", err)
 		}
 	case "scp":
-		if err := testexec.CommandContext(ctx, "scp", "-P", port, localPath, remotePath).Run(testexec.DumpLogOnError); err != nil {
+		args := append(options, "-P", port, localPath, remotePath)
+		if err := testexec.CommandContext(ctx, "scp", args...).Run(testexec.DumpLogOnError); err != nil {
 			s.Fatal("Failed to run scp: ", err)
 		}
 	case "sftp":
-		if err := runSFTP(ctx, localPath, remotePath); err != nil {
+		if err := runSFTP(ctx, localPath, remotePath, options); err != nil {
 			s.Fatal("Failed to run sftp: ", err)
 		}
 	}
@@ -140,12 +172,13 @@ func removeDUTFile(ctx context.Context, d *dut.DUT, dutPath string) error {
 	return nil
 }
 
-func runSFTP(ctx context.Context, localPath, remotePath string) error {
+func runSFTP(ctx context.Context, localPath, remotePath string, options []string) error {
 	// Set a short timeout for sftp to avoid sftp blocking the test.
 	sftpCtx, sftpCtxCancel := context.WithTimeout(ctx, 15*time.Second)
 	defer sftpCtxCancel()
 
-	cmd := testexec.CommandContext(sftpCtx, "sftp", remotePath)
+	args := append(options, remotePath)
+	cmd := testexec.CommandContext(sftpCtx, "sftp", args...)
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		return errors.Wrap(err, "failed to get stdin pipe")
