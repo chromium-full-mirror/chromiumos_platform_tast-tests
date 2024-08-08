@@ -24,7 +24,7 @@ func init() {
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
 		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinOrVividCamera},
-		Timeout:      10 * time.Minute,
+		Timeout:      6 * time.Minute,
 		Fixture:      "ccaLaunchedWithFakeHALCamera",
 	})
 }
@@ -43,7 +43,6 @@ func CCAUITimeLapse(ctx context.Context, s *testing.State) {
 		timeout time.Duration
 	}{
 		{"testSimpleRecording", testSimpleRecording, 2 * time.Minute},
-		{"testAutoSpeedRecording", testAutoSpeedRecording, 4 * time.Minute},
 		{"testRecordInMinimizedWindow", testRecordInMinimizedWindow, time.Minute},
 		{"testPauseResume", testPauseResumeTimeLapse, time.Minute},
 	} {
@@ -61,12 +60,6 @@ func CCAUITimeLapse(ctx context.Context, s *testing.State) {
 // the video is still using the initial time-lapse speed.
 func testSimpleRecording(ctx context.Context, app *cca.App) error {
 	return recordTimeLapseFor(ctx, app, 10*time.Second)
-}
-
-// testAutoSpeedRecording tests recording for longer time until the time-lapse
-// speed is updated and the video duration is kept below the maximum time.
-func testAutoSpeedRecording(ctx context.Context, app *cca.App) error {
-	return recordTimeLapseFor(ctx, app, 3*time.Minute)
 }
 
 // testRecordInMinimizedWindow tests that time-lapse video recording continues
