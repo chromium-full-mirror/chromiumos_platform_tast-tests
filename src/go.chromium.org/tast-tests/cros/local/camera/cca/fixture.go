@@ -46,7 +46,6 @@ const (
 type feature string
 
 const (
-	autoQR      feature = "CameraAppAutoQRDetection"
 	digitalZoom feature = "CameraAppDigitalZoom"
 	pdfOCR      feature = "CameraAppPdfOcr"
 	previewOCR  feature = "CameraAppPreviewOcr"
@@ -229,30 +228,6 @@ func init() {
 		TearDownTimeout: tearDownTimeout,
 	})
 
-	// TODO(b/298581154): Remove this fixture once the feature flag is enabled by default.
-	testing.AddFixture(&testing.Fixture{
-		Name:            "ccaTestBridgeReadyWithAutoQROnFakeHALCamera",
-		Desc:            "Set up test bridge for CCA with fake camera HAL input with auto-qr flag enabled",
-		Contacts:        []string{"chromeos-camera-eng@google.com", "dorahkim@chromium.org", "chromeos-camera-eng@google.com"},
-		BugComponent:    "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
-		Impl:            &fixture{useCameraType: testutil.UseFakeHALCamera, enableFeatures: []feature{autoQR}},
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    testBridgeSetUpTimeout,
-		TearDownTimeout: tearDownTimeout,
-	})
-
-	// TODO(b/298581154): Remove this fixture once the feature flag is enabled by default.
-	testing.AddFixture(&testing.Fixture{
-		Name:            "ccaTestBridgeReadyWithAutoQROnFakeHALCameraLacros",
-		Desc:            "Set up test bridge for CCA with fake camera HAL input and lacros with auto-qr flag enabled",
-		Contacts:        []string{"chromeos-camera-eng@google.com", "dorahkim@chromium.org", "chromeos-camera-eng@google.com"},
-		BugComponent:    "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
-		Impl:            &fixture{useCameraType: testutil.UseFakeHALCamera, lacros: true, enableFeatures: []feature{autoQR}},
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    testBridgeSetUpTimeout,
-		TearDownTimeout: tearDownTimeout,
-	})
-
 	testing.AddFixture(&testing.Fixture{
 		Name:            "ccaTestBridgeReadyWithFakeHALCameraWithPreviewOCR",
 		Desc:            "Set up test bridge for CCA with fake camera HAL input with preview OCR flag enabled",
@@ -314,17 +289,6 @@ func init() {
 		Contacts:        []string{"chromeos-camera-eng@google.com", "esker@chromium.org"},
 		BugComponent:    "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Impl:            &fixture{powerReview: true, useCameraType: testutil.UseFakeHALCamera},
-		SetUpTimeout:    powerSetUpTimeout,
-		ResetTimeout:    testBridgeSetUpTimeout,
-		TearDownTimeout: powerTearDownTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:            "ccaPowerReviewWithFakeHALCameraAutoQREnabled",
-		Desc:            "Set up test bridge for CCA with Auto QR Code detection for a power review Test",
-		Contacts:        []string{"chromeos-camera-eng@google.com", "dorahkim@chromium.org"},
-		BugComponent:    "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
-		Impl:            &fixture{powerReview: true, useCameraType: testutil.UseFakeHALCamera, enableFeatures: []feature{"CameraAppAutoQRDetection"}},
 		SetUpTimeout:    powerSetUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
 		TearDownTimeout: powerTearDownTimeout,
