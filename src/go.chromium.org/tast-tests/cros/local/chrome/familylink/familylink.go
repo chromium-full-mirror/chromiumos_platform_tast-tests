@@ -306,45 +306,45 @@ func VerifyUserSignedIntoBrowserAsChild(ctx context.Context, cr *chrome.Chrome, 
 		return errors.Wrap(err, "failed to retrieve nodes info for table sections")
 	}
 
-	// Find profile section in the table. Profile section contains information to verify further.
-	testing.ContextLog(ctx, "Looking for profile section")
+	// Find User Information section in the table to verify further.
+	testing.ContextLog(ctx, "Looking for User Information section")
 	index := -1
 	for i := range sectionsNodes {
 		container := sectionsContainers.Nth(i)
-		profileSection := nodewith.Role(role.Heading).Name("Profile").Ancestor(container)
-		if err := ui.Exists(profileSection)(ctx); err != nil {
+		userInformationSection := nodewith.Role(role.Heading).NameStartingWith("User Information for ").Ancestor(container)
+		if err := ui.Exists(userInformationSection)(ctx); err != nil {
 			continue
 		}
-		testing.ContextLog(ctx, "Found profile section at index:", i)
+		testing.ContextLog(ctx, "Found User Information section at index:", i)
 		index = i
 		break
 	}
 
 	if index == -1 {
-		return errors.Wrap(err, "profile section not found")
+		return errors.Wrap(err, "user information section not found")
 	}
 
-	// Parse table rows in the profile section.
-	testing.ContextLog(ctx, "Parsing profile section rows")
-	profileRows := nodewith.Role(role.LayoutTableRow).Ancestor(sectionsContainers.Nth(index))
-	if err := ui.WaitUntilExists(profileRows.First())(ctx); err != nil {
-		return errors.Wrap(err, "failed to parse profile rows")
+	// Parse table rows in the user information section.
+	testing.ContextLog(ctx, "Parsing user information section rows")
+	userInformationRows := nodewith.Role(role.Row).Ancestor(sectionsContainers.Nth(index))
+	if err := ui.WaitUntilExists(userInformationRows.First())(ctx); err != nil {
+		return errors.Wrap(err, "failed to parse user information rows")
 	}
-	profileNodes, err := ui.NodesInfo(ctx, profileRows)
+	userInformationNodes, err := ui.NodesInfo(ctx, userInformationRows)
 	if err != nil {
-		return errors.Wrap(err, "failed to retrieve nodes info for profile rows")
+		return errors.Wrap(err, "failed to retrieve nodes for user information rows")
 	}
 
 	// Find account email row and verify that the email value.
 	testing.ContextLog(ctx, "Verifying account email row")
 	emailVerified := false
-	for i := range profileNodes {
-		row := profileRows.Nth(i)
-		accountCell := nodewith.Role(role.LayoutTableCell).Name("Account").Ancestor(row)
-		if err := ui.Exists(accountCell)(ctx); err != nil {
+	for i := range userInformationNodes {
+		row := userInformationRows.Nth(i)
+		emailLabelCell := nodewith.Role(role.Cell).Name("Email").Ancestor(row)
+		if err := ui.Exists(emailLabelCell)(ctx); err != nil {
 			continue
 		}
-		emailCell := nodewith.Role(role.LayoutTableCell).Name(strings.ToLower(email)).Ancestor(row)
+		emailCell := nodewith.Role(role.Cell).Name(strings.ToLower(email)).Ancestor(row)
 		if err := ui.Exists(emailCell)(ctx); err != nil {
 			return errors.Wrapf(err, "user with email %s is not logged into browser", email)
 		}
@@ -354,19 +354,19 @@ func VerifyUserSignedIntoBrowserAsChild(ctx context.Context, cr *chrome.Chrome, 
 	}
 
 	if !emailVerified {
-		return errors.Wrap(err, "account email row not found")
+		return errors.Wrap(err, "email row not found")
 	}
 
 	// Find child status row and verify that user is recognized as child.
 	testing.ContextLog(ctx, "Verifying child status row")
 	childStatusVerified := false
-	for i := range profileNodes {
-		row := profileRows.Nth(i)
-		childCell := nodewith.Role(role.LayoutTableCell).Name("Child").Ancestor(row)
+	for i := range userInformationNodes {
+		row := userInformationRows.Nth(i)
+		childCell := nodewith.Role(role.Cell).Name("Is subject to parental controls").Ancestor(row)
 		if err := ui.Exists(childCell)(ctx); err != nil {
 			continue
 		}
-		boolCell := nodewith.Role(role.LayoutTableCell).Name("true").Ancestor(row)
+		boolCell := nodewith.Role(role.Cell).Name("True").Ancestor(row)
 		if err := ui.Exists(boolCell)(ctx); err != nil {
 			return errors.Wrap(err, "user not recognized as child")
 		}
