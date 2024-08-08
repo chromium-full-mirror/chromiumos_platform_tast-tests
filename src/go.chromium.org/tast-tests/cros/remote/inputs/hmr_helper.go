@@ -125,6 +125,47 @@ func NewHMRInterface(ctx context.Context, host string, port int) (*xmlrpc.Common
 	return hmrInterface, err
 }
 
+// RunHMRJob starts a job on the HMR and blocks until the job is completed.
+func RunHMRJob(ctx context.Context, hmrInterface *xmlrpc.CommonRPCInterface, gcodeFileName string) error {
+	// Checks that the GCode file is already loaded on HMR.
+	fileExists, err := hmrInterface.RPC("FileExists").Args(gcodeFileName).CallForBool(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to call FileExists")
+	}
+	if !fileExists {
+		return errors.Errorf("Gcode file (%s) not found on HMR", gcodeFileName)
+	}
+
+	// Begins executing HMR motions on DUT.
+	err = hmrInterface.RPC("StartJob").Args(gcodeFileName).Call(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to start job")
+	}
+
+	// Polls TouchHost for progress of HMR job. Blocks until the HMR job is complete.
+	// TODO(b/358209996): Allow RunHMRJob to not block while waiting for the job to complete.
+	prevProgress := -1.0
+	err = action.Retry(100, func(ctx context.Context) error {
+		progress, err := hmrInterface.RPC("GetProgress").Args().CallForFloat64(ctx)
+		if err != nil {
+			return err
+		}
+		// Progress resets to 0 when job is complete.
+		if prevProgress <= progress {
+			prevProgress = progress
+			return errors.Errorf("HMR job is still in progress (%f%%)", progress*100)
+		}
+		return nil
+	}, 3*time.Second)(ctx)
+
+	if err != nil {
+		hmrInterface.RPC("StopJob").Call(ctx)
+		return errors.Wrap(err, "HMR job did not complete in time")
+	}
+
+	return nil
+}
+
 // RemoveCommonDataErrorsFromStylusLogFile checks for common touch log data errors and generates a cleaned touch log file with these errors removed.
 func RemoveCommonDataErrorsFromStylusLogFile(rawFilePath, cleanedFilePath string) error {
 	readFile, err := os.Open(rawFilePath)

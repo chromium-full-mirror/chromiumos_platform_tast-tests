@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
-	"go.chromium.org/tast-tests/cros/common/action"
+
 	input "go.chromium.org/tast-tests/cros/remote/inputs"
 	inputspb "go.chromium.org/tast-tests/cros/services/cros/inputs"
 	"go.chromium.org/tast/core/errors"
@@ -76,15 +76,6 @@ func HumanMotionRobotLinearity(ctx context.Context, s *testing.State) {
 	}
 	defer client.Close(ctx)
 
-	// Checks that the GCode file is already loaded on HMR).
-	fileExists, err := hmrInterface.RPC("FileExists").Args(gcodeFileName).CallForBool(ctx)
-	if err != nil {
-		s.Fatal("Failed to call FileExists: ", err)
-	}
-	if !fileExists {
-		s.Fatalf("Gcode file (%s) not found on HMR", gcodeFileName)
-	}
-
 	serviceChannel := make(chan serviceResponse)
 	DutEvtestService := inputspb.NewStylusEvtestCaptureServiceClient(client.Conn)
 
@@ -105,31 +96,9 @@ func HumanMotionRobotLinearity(ctx context.Context, s *testing.State) {
 		serviceChannel <- serviceResponse{widthResolution: dutResponse.GetWidthResolution(), heightResolution: dutResponse.GetHeightResolution(), err: nil}
 	}()
 
-	// Begins executing HMR motions on DUT.
-	err = hmrInterface.RPC("StartJob").Args(gcodeFileName).Call(ctx)
+	err = input.RunHMRJob(ctx, hmrInterface, gcodeFileName)
 	if err != nil {
-		s.Fatal("Failed to start job: ", err)
-	}
-
-	// Polls TouchHost for progress of HMR job. Blocks until the HMR job is complete.
-	prevProgress := -1.0
-	err = action.Retry(100, func(ctx context.Context) error {
-		progress, err := hmrInterface.RPC("GetProgress").Args().CallForFloat64(ctx)
-		if err != nil {
-			s.Fatal("Failed to poll progress: ", err)
-			return err
-		}
-		// progress resets to 0 when job is complete.
-		if prevProgress <= progress {
-			prevProgress = progress
-			return errors.Errorf("HMR job is still in progress (%f%%)", progress*100)
-		}
-		return nil
-	}, 3*time.Second)(ctx)
-
-	if err != nil {
-		s.Fatal("HMR Job did not complete in time")
-		hmrInterface.RPC("StopJob").Call(ctx)
+		s.Fatal("Failed to run HMR job: ", err)
 	}
 
 	touchhostConnectionManager.TouchhostPortForwarder.Close()

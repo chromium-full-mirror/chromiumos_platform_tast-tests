@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
-	"go.chromium.org/tast-tests/cros/common/action"
+
 	reporters "go.chromium.org/tast-tests/cros/remote/firmware/reporters"
 	input "go.chromium.org/tast-tests/cros/remote/inputs"
 	inputspb "go.chromium.org/tast-tests/cros/services/cros/inputs"
@@ -125,15 +125,6 @@ func HumanMotionRobotStylusDrawing(ctx context.Context, s *testing.State) {
 	hostTouchLogFilePath := filepath.Join(s.OutDir(), hostTouchLogFileName)
 	hostRawTouchLogFilePath := filepath.Join(s.OutDir(), "raw_"+hostTouchLogFileName)
 
-	// Checks that the GCode file is already loaded on HMR.
-	fileExists, err := hmrInterface.RPC("FileExists").Args(gcodeFileName).CallForBool(ctx)
-	if err != nil {
-		s.Fatal("Failed to call FileExists: ", err)
-	}
-	if !fileExists {
-		s.Fatalf("Gcode file (%s) not found on HMR", gcodeFileName)
-	}
-
 	serviceErrorChannel := make(chan error)
 	dutEvtestService := inputspb.NewStylusEvtestCaptureServiceClient(client.Conn)
 
@@ -153,28 +144,9 @@ func HumanMotionRobotStylusDrawing(ctx context.Context, s *testing.State) {
 		serviceErrorChannel <- nil
 	}()
 
-	// Begins executing HMR motions on DUT.
-	if err := hmrInterface.RPC("StartJob").Args(gcodeFileName).Call(ctx); err != nil {
-		s.Fatal("Failed to start job: ", err)
-	}
-
-	// Polls TouchHost for progress of HMR job. Blocks until the HMR job is complete.
-	prevProgress := -1.0
-	if err := action.Retry(100, func(ctx context.Context) error {
-		progress, err := hmrInterface.RPC("GetProgress").Args().CallForFloat64(ctx)
-		if err != nil {
-			s.Fatal("Failed to poll progress: ", err)
-			return err
-		}
-		// progress resets to 0 when job is complete.
-		if prevProgress <= progress {
-			prevProgress = progress
-			return errors.Errorf("HMR job is still in progress (%f%%)", progress*100)
-		}
-		return nil
-	}, 3*time.Second)(ctx); err != nil {
-		s.Fatal("HMR Job did not complete in time")
-		hmrInterface.RPC("StopJob").Call(ctx)
+	err = input.RunHMRJob(ctx, hmrInterface, gcodeFileName)
+	if err != nil {
+		s.Fatal("Failed to run HMR job: ", err)
 	}
 
 	// Stop DUT evtest stylus touch data capture.
