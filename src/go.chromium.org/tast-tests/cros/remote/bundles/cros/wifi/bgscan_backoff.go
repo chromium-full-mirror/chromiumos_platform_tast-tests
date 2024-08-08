@@ -22,7 +22,6 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type paramBgscanBackoff struct {
@@ -37,15 +36,12 @@ func init() {
 		Contacts: []string{
 			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
 		},
-		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
-		Attr:         []string{"group:wificell", "wificell_func"},
-		TestBedDeps:  []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
-		ServiceDeps:  []string{wificell.ShillServiceName},
-		Fixture:      wificell.FixtureID(wificell.TFFeaturesCapture),
-		Timeout:      6 * time.Minute, // This test has long ping time, assign a longer timeout.
-		// Skip on Marvell on 8997 platforms because of test failure post security fixes b/187853331
-		// Test failure is due to increased RTT time during Background scan backoff transition.
-		HardwareDeps:    hwdep.D(hwdep.WifiNotMarvell8997()),
+		BugComponent:    "b:893827", // ChromeOS > Platform > Connectivity > WiFi
+		Attr:            []string{"group:wificell", "wificell_func"},
+		TestBedDeps:     []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
+		ServiceDeps:     []string{wificell.ShillServiceName},
+		Fixture:         wificell.FixtureID(wificell.TFFeaturesCapture),
+		Timeout:         6 * time.Minute, // This test has long ping time, assign a longer timeout.
 		Requirements:    []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
 		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 		Params: []testing.Param{
