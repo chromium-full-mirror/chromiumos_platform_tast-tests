@@ -15,6 +15,11 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+type testTPMCmd struct {
+	bus ti50.TpmBus
+	cmd string
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:    GSCTPM,
@@ -31,39 +36,136 @@ func init() {
 			"gsc_nightly"},
 		Fixture: fixture.GSCOpenCCD,
 		Params: []testing.Param{{
-			Name: "spi",
-			Val:  ti50.TpmBusSpi,
+			Name: "spi_apro_boot",
+			Val: testTPMCmd{
+				bus: ti50.TpmBusSpi,
+				cmd: "-B",
+			},
 		}, {
-			Name:      "i2c",
-			Val:       ti50.TpmBusI2c,
+			Name: "i2c_apro_boot",
+			Val: testTPMCmd{
+				bus: ti50.TpmBusI2c,
+				cmd: "-B",
+			},
+			ExtraAttr: []string{"gsc_ot_fpga_cw310", "gsc_ot_shield"},
+		}, {
+			Name: "spi_get_time",
+			Val: testTPMCmd{
+				bus: ti50.TpmBusSpi,
+				cmd: "--get_time",
+			},
+		}, {
+			Name: "i2c_get_time",
+			Val: testTPMCmd{
+				bus: ti50.TpmBusI2c,
+				cmd: "--get_time",
+			},
+			ExtraAttr: []string{"gsc_ot_fpga_cw310", "gsc_ot_shield"},
+		}, {
+			Name: "spi_ccd_info",
+			Val: testTPMCmd{
+				bus: ti50.TpmBusSpi,
+				cmd: "--ccd_info",
+			},
+		}, {
+			Name: "i2c_ccd_info",
+			Val: testTPMCmd{
+				bus: ti50.TpmBusI2c,
+				cmd: "--ccd_info",
+			},
+			ExtraAttr: []string{"gsc_ot_fpga_cw310", "gsc_ot_shield"},
+		}, {
+			Name: "spi_board_id",
+			Val: testTPMCmd{
+				bus: ti50.TpmBusSpi,
+				cmd: "--board_id",
+			},
+		}, {
+			Name: "i2c_board_id",
+			Val: testTPMCmd{
+				bus: ti50.TpmBusI2c,
+				cmd: "--board_id",
+			},
+			ExtraAttr: []string{"gsc_ot_fpga_cw310", "gsc_ot_shield"},
+		}, {
+			Name: "spi_fwver",
+			Val: testTPMCmd{
+				bus: ti50.TpmBusSpi,
+				cmd: "--fwver",
+			},
+		}, {
+			Name: "i2c_fwver",
+			Val: testTPMCmd{
+				bus: ti50.TpmBusI2c,
+				cmd: "--fwver",
+			},
+			ExtraAttr: []string{"gsc_ot_fpga_cw310", "gsc_ot_shield"},
+		}, {
+			Name: "spi_metrics",
+			Val: testTPMCmd{
+				bus: ti50.TpmBusSpi,
+				cmd: "--metrics",
+			},
+		}, {
+			Name: "i2c_metrics",
+			Val: testTPMCmd{
+				bus: ti50.TpmBusI2c,
+				cmd: "--metrics",
+			},
+			ExtraAttr: []string{"gsc_ot_fpga_cw310", "gsc_ot_shield"},
+		}, {
+			Name: "spi_wp",
+			Val: testTPMCmd{
+				bus: ti50.TpmBusSpi,
+				cmd: "--wp",
+			},
+		}, {
+			Name: "i2c_wp",
+			Val: testTPMCmd{
+				bus: ti50.TpmBusI2c,
+				cmd: "--wp",
+			},
 			ExtraAttr: []string{"gsc_ot_fpga_cw310", "gsc_ot_shield"},
 		}},
 	})
 }
 
 func GSCTPM(ctx context.Context, s *testing.State) {
-	bus := s.Param().(ti50.TpmBus)
+	config := s.Param().(testTPMCmd)
+	bus := config.bus
+	cmd := config.cmd
+	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
 	b := utils.NewDevboardHelper(s)
 	i := ti50.MustOpenCrOSImage(ctx, b, s)
 	defer i.Close(ctx)
 
-	// Record everything that is transmitted by SPI bus lines CLK/CS/MISO/MOSI, for manual inspection later.
-	gpioMonitor := b.GpioMonitorStart(
-		ctx,
-		ti50.Ti50SpiTpmCs,
-		ti50.Ti50SpiTpmSck,
-		ti50.Ti50SpiTpmMosi,
-		ti50.Ti50SpiTpmMiso)
-	// Store transcript of CLK/CS/MISO/MOSI events in .vcd format, to be reviewed in e.g. Pulseview.
+	var gpioMonitor utils.GpioMonitorSession
+	if bus == ti50.TpmBusSpi {
+		// Record everything that is transmitted by SPI bus lines CLK/CS/MISO/MOSI, for manual inspection later.
+		gpioMonitor = b.GpioMonitorStart(
+			ctx,
+			ti50.Ti50SpiTpmCs,
+			ti50.Ti50SpiTpmSck,
+			ti50.Ti50SpiTpmMosi,
+			ti50.Ti50SpiTpmMiso)
+	} else {
+		// Record everything that is transmitted by I2C bus lines SDA/SCL, for manual inspection later.
+		gpioMonitor = b.GpioMonitorStart(
+			ctx,
+			ti50.GpioTi50DeviceI2cSda,
+			ti50.GpioTi50DeviceI2cScl)
+	}
+	// Store transcript of TPM signal events events in .vcd format, to be reviewed in e.g. Pulseview.
 	defer func(ctx context.Context) {
 		events := b.GpioMonitorFinish(ctx, gpioMonitor)
-		gpioMonitor.Save(ctx, events, "spi.vcd")
+		gpioMonitor.Save(ctx, events, "tpm.vcd")
 	}(ctx)
 
 	nctx, cancel := ctxutil.Shorten(ctx, 20*time.Second)
 	defer cancel()
-	tpmHandle := b.ResetAndTpmStartupForBus(nctx, i, bus, ti50.CcdSuzyQ, ti50.FfClamshell)
 
+	tpmHandle := b.ResetAndTpmStartupForBus(nctx, i, bus, ti50.CcdSuzyQ, ti50.FfClamshell)
+	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
 	// Read boot mode as a simple check of vendor command.
 	bm, err := tpmHandle.TpmvGetBootMode()
 	if err != nil {
@@ -71,9 +173,21 @@ func GSCTPM(ctx context.Context, s *testing.State) {
 	}
 	s.Logf("Read boot mode %d", bm)
 
-	out, err := b.GSCToolCommandViaTPM(ctx, bus, "", "--fwver")
+	events := b.GpioMonitorRead(ctx, gpioMonitor)
+	gpioMonitor.Save(ctx, events, "setup.vcd")
+
+	var out []byte
+	// TODO(b/361334946): add "-D" to gsctool commands in the devboard service.
+	if b.TestbedType == ti50.GscH1Shield {
+		out, err = b.GSCToolCommandViaTPM(ctx, bus, "", cmd)
+	} else {
+		out, err = b.GSCToolCommandViaTPM(ctx, bus, "", "-D", cmd)
+	}
+
 	if err != nil {
 		s.Error("Could not get version via TPM: ", err)
 	}
-	s.Logf("GSC version: %s", out)
+	events = b.GpioMonitorRead(ctx, gpioMonitor)
+	gpioMonitor.Save(ctx, events, "cmd.vcd")
+	s.Logf("GSCTool %s output: %s", cmd, out)
 }
