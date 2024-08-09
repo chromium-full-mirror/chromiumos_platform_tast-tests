@@ -619,7 +619,7 @@ func DEQP(ctx context.Context, s *testing.State) {
 	s.Log("Supported APIs: ", deqpApis)
 
 	// Step 2: get the environment for the DEQP binaries.
-	deqpEnv = graphics.DEQPEnvironment(os.Environ())
+	deqpEnv = graphics.DEQPEnvironment(ctx, os.Environ())
 
 	// Step 3: create a location for storing detailed logs.
 	deqpLogDir = filepath.Join(s.OutDir(), "dEQP-results")

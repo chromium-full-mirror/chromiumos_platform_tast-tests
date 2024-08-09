@@ -192,7 +192,7 @@ func TestDEQPEnvironment(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			aenv := DEQPEnvironment(tc.oenv)
+			aenv := DEQPEnvironment(context.Background(), tc.oenv)
 			if !reflect.DeepEqual(tc.eenv, aenv) {
 				t.Errorf("DEQPEnvironment(%q) = %q; want %q", tc.oenv, aenv, tc.eenv)
 			}

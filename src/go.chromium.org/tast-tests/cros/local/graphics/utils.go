@@ -396,7 +396,7 @@ func DEQPExecutable(api APIType) (string, error) {
 // folders are already in the value. This is a port of part of the functionality
 // of the initialization defined in
 // autotest/files/client/site_tests/graphics_dEQP/graphics_dEQP.py.
-func DEQPEnvironment(env []string) []string {
+func DEQPEnvironment(ctx context.Context, env []string) []string {
 	// Start from a copy of the passed environment.
 	nenv := make([]string, len(env))
 	copy(nenv, env)
@@ -425,6 +425,14 @@ func DEQPEnvironment(env []string) []string {
 	} else {
 		// Did not find the LD_LIBRARY_PATH variable in the environment.
 		nenv = append(nenv, "LD_LIBRARY_PATH="+paths)
+	}
+
+	// (b/337928444) os.Environ() can't get full env var list like `env`.
+	// Append `MALI_PLATFORM_CONFIG` for config file path for Mali GPUs.
+	// Remove this when the mentioned issue is resolved.
+	const maliConfPath = "/etc/mali_platform.conf"
+	if gpu, err := hardwareprobe.GPUFamilies(ctx); err == nil && strings.HasPrefix(gpu[0], "mali") {
+		nenv = append(nenv, "MALI_PLATFORM_CONFIG="+maliConfPath)
 	}
 
 	return nenv
