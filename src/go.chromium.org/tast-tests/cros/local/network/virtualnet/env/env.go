@@ -483,6 +483,7 @@ func (e *Env) makeNetNS(ctx context.Context) error {
 		if _, ok := err.(*exec.ExitError); !ok {
 			return errors.Wrapf(err, "failed to delete leftover namespace %s", e.NetNSName)
 		}
+	} else {
 		testing.ContextLog(ctx, "Removed left-over netns ", e.NetNSName)
 		needCoolDown = true
 	}
