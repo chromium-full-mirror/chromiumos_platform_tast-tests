@@ -6,7 +6,6 @@ package arc
 
 import (
 	"context"
-	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
@@ -16,7 +15,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
-	"go.chromium.org/tast-tests/cros/local/sysutil"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -131,13 +129,11 @@ func init() {
 func AppLoadingPerf(ctx context.Context, s *testing.State) {
 	const (
 		// tbfRateMbit* specifies how fast the data will leave the primary bucket (float).
-		tbfRateMbitX86 = 10
-		tbfRateMbitArm = 1.6
+		tbfRateMbit = 20
 		// tbfLatency is amount of time a packet can be delayed by token rate before drop (int).
 		tbfLatencyMs = 18
 		// tbfBurst is the size of the bucket used by rate option (int).
-		tbfBurstKbX86 = 10
-		tbfBurstKbArm = 8
+		tbfBurstKb = 10
 
 		fileTestName   = "FileTest"
 		memoryTestName = "MemoryTest"
@@ -162,25 +158,9 @@ func AppLoadingPerf(ctx context.Context, s *testing.State) {
 
 	// Add initial traffic control queuing discipline settings (b/169947243) for
 	// traffic shaping based on experiments with netem, RTT latency, and iperf3
-	// bandwidth measurements. Only kernel version 4.4+ supports tc-tbf.
-	if ver, arch, err := sysutil.KernelVersionAndArch(); err != nil {
-		s.Fatal("Failed to get kernel version: ", err)
-	} else if ver.IsOrLater(4, 4) {
-		// TODO(b/215621884): Based on ARCVM network team's manual iperf3 bandwidth and Play
-		// Store game download tests on kukui vs. kukui-arc-r. Targeting simulated performance
-		// where VM is at ~50% of Container. Need to verify on more ARM boards with Crosbolt data.
-		var tbfRateMbit float64
-		var tbfBurstKb int
-		if strings.HasPrefix(arch, "x86") {
-			tbfRateMbit = tbfRateMbitX86
-			tbfBurstKb = tbfBurstKbX86
-		} else {
-			tbfRateMbit = tbfRateMbitArm
-			tbfBurstKb = tbfBurstKbArm
-		}
-		if err := conn.AddTcTbf(ctx, tbfRateMbit, tbfLatencyMs, tbfBurstKb); err != nil {
-			s.Fatal("Failed to add tc-tbf: ", err)
-		}
+	// bandwidth measurements.
+	if err := conn.AddTcTbf(ctx, tbfRateMbit, tbfLatencyMs, tbfBurstKb); err != nil {
+		s.Fatal("Failed to add tc-tbf: ", err)
 	}
 
 	finalPerfValues := perf.NewValues()

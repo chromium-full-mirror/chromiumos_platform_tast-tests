@@ -7,7 +7,7 @@
 // arc_eth0 on port 1235 is used as communication point. This helper currently
 // supports the following commands:
 //   - drop_caches - drops system caches, returns OK/FAILED.
-//   - receive_payload - receives payload from client, returns OK, ACK and payload.
+//   - receive_payload - receives payload from client, returns OK for command received and data sent.
 //   - get_total_memory_kb - gets total memory in KB from DUT, returns OK/FAILED and value.
 //
 // Usage pattern is following:
@@ -26,7 +26,6 @@ import (
 	"io"
 	"io/ioutil"
 	"net"
-	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -191,7 +190,8 @@ func (c *Connection) AddTcTbf(ctx context.Context, rate float64, latency, burst 
 		rule := "dev " + i.Name + " root tbf rate " + strconv.FormatFloat(rate, 'f', -1, 32) + "mbit latency " + strconv.Itoa(latency) + "ms burst " + strconv.Itoa(burst) + "kb"
 		c.tcrules = append(c.tcrules, rule)
 		args := append([]string{"qdisc", "add"}, strings.Fields(rule)...)
-		testing.ContextLogf(ctx, "Adding tc-tbf configuration: %s", strings.Join(args[:], " "))
+		testing.ContextLogf(ctx, "Adding tc-tbf configuration: %s %s", tcCmd, strings.Join(args[:], " "))
+
 		if err := testexec.CommandContext(ctx, tcCmd, args...).Run(testexec.DumpLogOnError); err != nil {
 			return errors.Wrapf(err, "failed to add tc-tbf rule: %s", rule)
 		}
@@ -272,8 +272,7 @@ func handleClient(ctx context.Context, conn net.Conn) {
 				}
 			}
 		case cmdReceivePayload:
-			ack := fmt.Sprintf("Ack from nethelper connection %s pid=%s", conn.LocalAddr().String(), strconv.Itoa(os.Getpid()))
-			if result, err := handleReceivePayload(conn, r, ack); err != nil {
+			if result, err := handleReceivePayload(conn, r); err != nil {
 				testing.ContextLogf(ctx, "Failed to receive payload from %s: %s", conn.RemoteAddr().String(), err)
 				return
 			} else if result > 0 {
@@ -305,7 +304,7 @@ func handleDropCaches(ctx context.Context) string {
 	return okResponse
 }
 
-func handleReceivePayload(w io.Writer, r *bufio.Reader, resp string) (int64, error) {
+func handleReceivePayload(w io.Writer, r *bufio.Reader) (int64, error) {
 	message, err := r.ReadString('\n')
 	if err != nil {
 		if err == io.EOF {
@@ -313,8 +312,8 @@ func handleReceivePayload(w io.Writer, r *bufio.Reader, resp string) (int64, err
 		}
 		return 0, errors.Wrap(err, "failed to read header, connection is broken")
 	}
-	if _, err := w.Write([]byte(okResponse + "\n" + resp)); err != nil {
-		return 0, errors.Wrap(err, "failed to send response")
+	if _, err := w.Write([]byte(okResponse + "\n")); err != nil {
+		return 0, errors.Wrap(err, "failed to send command ack")
 	}
 
 	// Read header containing size of the payload.
@@ -328,6 +327,9 @@ func handleReceivePayload(w io.Writer, r *bufio.Reader, resp string) (int64, err
 		return 0, errors.Wrap(err, "failed to read payload")
 	} else if bytesRead != payloadSize {
 		return 0, errors.Errorf("failed to read with %d bytes of payload processed", bytesRead)
+	}
+	if _, err := w.Write([]byte(okResponse + "\n")); err != nil {
+		return 0, errors.Wrap(err, "failed to send data ack")
 	}
 	return payloadSize, nil
 }
