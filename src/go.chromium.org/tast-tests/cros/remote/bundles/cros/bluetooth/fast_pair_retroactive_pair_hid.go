@@ -30,7 +30,7 @@ func init() {
 		BugComponent: "b:1133283",
 		Attr:         []string{"group:bluetooth", "bluetooth_cross_device_fastpair", "bluetooth_floss_flaky"},
 		TestBedDeps:  []string{tbdep.Wificell, tbdep.BluetoothStateNormal, tbdep.WorkingBluetoothPeers(1)},
-		SoftwareDeps: []string{"chrome", "bluetooth_floss"},
+		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(bluetooth.FastPairHardwareDep),
 		ServiceDeps: []string{
 			"tast.cros.bluetooth.BluetoothService",

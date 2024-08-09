@@ -27,7 +27,7 @@ func init() {
 		},
 		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
 		Attr:         []string{"group:bluetooth", "bluetooth_sa", "bluetooth_floss"},
-		SoftwareDeps: []string{"chrome", "bluetooth_floss"},
+		SoftwareDeps: []string{"chrome"},
 		Fixture:      "bluetoothEnabledWithFloss",
 		TestBedDeps:  []string{tbdep.BluetoothStateNormal},
 		// Skip on form factors where a warning dialog may be shown when disabling Bluetooth due to all known HID devices being connected via Bluetooth.

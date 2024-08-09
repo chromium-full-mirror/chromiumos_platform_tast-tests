@@ -41,7 +41,7 @@ func init() {
 		},
 		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
 		Attr:         []string{"group:bluetooth", "bluetooth_floss"},
-		SoftwareDeps: []string{"chrome", "bluetooth_floss"},
+		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedInWith1BTPeerFlossEnabled",
 		TestBedDeps:  []string{tbdep.Wificell, tbdep.BluetoothStateNormal, tbdep.WorkingBluetoothPeers(1)},
 		ServiceDeps:  []string{"tast.cros.bluetooth.BluetoothService", "tast.cros.bluetooth.BluetoothUIService"},

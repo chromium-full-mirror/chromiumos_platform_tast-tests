@@ -46,9 +46,8 @@ func init() {
 				Fixture: "twoChromebooksLoggedInWithFastPairAnd1BTPeerFlossDisabled",
 			},
 			{
-				Name:              "floss_enabled",
-				Fixture:           "twoChromebooksLoggedInWithFastPairAnd1BTPeerFlossEnabled",
-				ExtraSoftwareDeps: []string{"bluetooth_floss"},
+				Name:    "floss_enabled",
+				Fixture: "twoChromebooksLoggedInWithFastPairAnd1BTPeerFlossEnabled",
 			},
 		},
 	})

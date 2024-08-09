@@ -51,11 +51,10 @@ func init() {
 			ExtraAttr: []string{"bluetooth_flaky"},
 			Val:       cbt.DeviceTypeLEMouse,
 		}, {
-			Name:              "floss_enabled",
-			Fixture:           "chromeLoggedInWith2BTPeersBluetoothWarningEnabledFlossEnabled",
-			ExtraAttr:         []string{"bluetooth_floss_flaky"},
-			ExtraSoftwareDeps: []string{"bluetooth_floss"},
-			Val:               cbt.DeviceTypeLEMouse,
+			Name:      "floss_enabled",
+			Fixture:   "chromeLoggedInWith2BTPeersBluetoothWarningEnabledFlossEnabled",
+			ExtraAttr: []string{"bluetooth_floss_flaky"},
+			Val:       cbt.DeviceTypeLEMouse,
 		}},
 		Timeout: time.Minute * 3,
 	})

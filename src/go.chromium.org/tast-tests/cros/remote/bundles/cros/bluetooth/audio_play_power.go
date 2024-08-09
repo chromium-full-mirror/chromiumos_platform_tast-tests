@@ -49,10 +49,9 @@ func init() {
 				ExtraAttr: []string{"bluetooth_flaky"},
 			},
 			{
-				Name:              "floss_enabled",
-				Fixture:           "audioUIEnabledWith1BTPeerPowerFlossEnabled",
-				ExtraAttr:         []string{"bluetooth_floss_flaky"},
-				ExtraSoftwareDeps: []string{"bluetooth_floss"},
+				Name:      "floss_enabled",
+				Fixture:   "audioUIEnabledWith1BTPeerPowerFlossEnabled",
+				ExtraAttr: []string{"bluetooth_floss_flaky"},
 			},
 		},
 	})

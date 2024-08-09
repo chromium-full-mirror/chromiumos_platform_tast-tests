@@ -53,10 +53,9 @@ func init() {
 				},
 			},
 			{
-				Name:              "floss_enabled_le_keyboard",
-				Fixture:           "chromeUIDisabledWith1BTPeerPowerFlossEnabled",
-				ExtraAttr:         []string{"bluetooth_floss_flaky"},
-				ExtraSoftwareDeps: []string{"bluetooth_floss"},
+				Name:      "floss_enabled_le_keyboard",
+				Fixture:   "chromeUIDisabledWith1BTPeerPowerFlossEnabled",
+				ExtraAttr: []string{"bluetooth_floss_flaky"},
 				Val: &btActiveDiscoveryPowerTestCase{
 					DeviceType: cbt.DeviceTypeLEKeyboard,
 				},

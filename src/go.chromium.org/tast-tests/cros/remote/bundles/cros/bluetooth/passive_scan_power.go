@@ -53,10 +53,9 @@ func init() {
 				},
 			},
 			{
-				Name:              "floss_enabled_le_keyboard_le_mouse",
-				Fixture:           "chromeUIDisabledWith2BTPeersPowerFlossEnabled",
-				ExtraAttr:         []string{"bluetooth_floss_flaky"},
-				ExtraSoftwareDeps: []string{"bluetooth_floss"},
+				Name:      "floss_enabled_le_keyboard_le_mouse",
+				Fixture:   "chromeUIDisabledWith2BTPeersPowerFlossEnabled",
+				ExtraAttr: []string{"bluetooth_floss_flaky"},
 				Val: &btPassiveScanPowerTestCase{
 					DeviceType0: cbt.DeviceTypeLEKeyboard,
 					DeviceType1: cbt.DeviceTypeLEMouse,

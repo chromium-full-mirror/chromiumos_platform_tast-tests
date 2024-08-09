@@ -49,15 +49,15 @@ func init() {
 		Fixture:        "arcBooted",
 		Params: []testing.Param{{
 			Name:              "android_p",
-			ExtraSoftwareDeps: []string{"bluetooth_floss", androidP},
+			ExtraSoftwareDeps: []string{androidP},
 			Val:               androidP,
 		}, {
 			Name:              "android_r",
-			ExtraSoftwareDeps: []string{"bluetooth_floss", androidR},
+			ExtraSoftwareDeps: []string{androidR},
 			Val:               androidR,
 		}, {
 			Name:              "android_vm_t",
-			ExtraSoftwareDeps: []string{"bluetooth_floss", androidVMT},
+			ExtraSoftwareDeps: []string{androidVMT},
 			Val:               androidVMT,
 		}},
 		Timeout: 3*time.Minute + apputil.InstallationTimeout,
