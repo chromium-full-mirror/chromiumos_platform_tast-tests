@@ -40,8 +40,7 @@ const (
 )
 
 type idlePerfTest struct {
-	testType    testType
-	browserType browser.Type
+	testType testType
 }
 
 func init() {
@@ -70,18 +69,21 @@ func init() {
 		}, {
 			Name: "arc_disabled",
 			Val: idlePerfTest{
-				testType:    testTypeBrowser,
-				browserType: browser.TypeAsh,
+				testType: testTypeBrowser,
 			},
 			Fixture: "chromeLoggedInDisableSync",
 		}, {
-			Name:    "facegaze",
-			Val:     idlePerfTest{testType: testTypeFaceGaze},
+			Name: "facegaze",
+			Val: idlePerfTest{
+				testType: testTypeFaceGaze,
+			},
 			Fixture: fixture.ChromeLoggedInDisableSyncWithFaceGaze,
 		}, {
 			// TODO(b/356944093): Remove focusmode fixture from `idle_perf` once feature launches.
-			Name:    "focusmode",
-			Val:     idlePerfTest{testType: testTypeFocusMode},
+			Name: "focusmode",
+			Val: idlePerfTest{
+				testType: testTypeFocusMode,
+			},
 			Fixture: fixture.ChromeLoggedInWithFocusMode,
 		}},
 	})
@@ -109,61 +111,26 @@ func IdlePerf(ctx context.Context, s *testing.State) {
 		cr = s.FixtValue().(chrome.HasChrome).Chrome()
 	}
 
-	// Wait for cpu to stabilize before test.
+	// Wait for cpu to stabilize before test. This should be done here
+	// instead of as a recorder option, since the FaceGaze experiment will not
+	// cooldown once the setup has completed.
 	if _, err := cpu.WaitUntilStabilized(ctx, cujrecorder.CPUCoolDownConfig()); err != nil {
-		// Log the cpu stabilizing wait failure instead of make it fatal.
-		// TODO(b/213238698): Include the error as part of test data.
 		s.Log("Failed to wait for CPU to become idle: ", err)
+	}
+
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Failed to get Test API connection: ", err)
 	}
 
 	// Shorten context a bit to allow for cleanup.
 	closeCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 2*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
-
-	var bTconn *chrome.TestConn
-	if idleTest.testType == testTypeBrowser {
-		conn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, idleTest.browserType, emptyWindowURL)
-		if err != nil {
-			s.Fatalf("Failed to open %s: %v", emptyWindowURL, err)
-		}
-		bTconn, err = br.TestAPIConn(ctx)
-		if err != nil {
-			s.Fatal("Failed to get browser test API connection: ", err)
-		}
-		defer closeBrowser(closeCtx)
-		defer conn.Close()
-	} else if idleTest.testType == testTypeFaceGaze {
-		facegazeDriver, err := facegaze.SetUp(ctx, cr, s.DataPath)
-		if err != nil {
-			s.Fatal("Failed to set up FaceGaze: ", err)
-		}
-
-		bTconn = facegazeDriver.Tconn
-		defer func() {
-			if err := facegazeDriver.TearDown(); err != nil {
-				s.Error("Failed to tear down FaceGaze: ", err)
-			}
-		}()
-	} else if idleTest.testType == testTypeFocusMode {
-		bTconn, err := cr.TestAPIConn(ctx)
-		if err != nil {
-			s.Fatal("Failed to get Test API connection: ", err)
-		}
-		if err := quicksettings.EnsureFocusModeHasStarted(ctx, bTconn); err != nil {
-			s.Fatal("Failed to start a Focus session: ", err)
-		}
-
-		defer func() {
-			if err := quicksettings.EnsureFocusModeEnds(ctx, bTconn); err != nil {
-				s.Error("Failed to end Focus Mode: ", err)
-			}
-		}()
-	}
 
 	// Recorder with no additional config; it records and reports memory usage and
 	// CPU percents of browser/GPU processes.
-	recorder, err := cujrecorder.NewRecorder(ctx, cr, bTconn, a, cujrecorder.RecorderOptions{})
+	recorder, err := cujrecorder.NewRecorder(ctx, cr, tconn, a, cujrecorder.RecorderOptions{})
 	if err != nil {
 		s.Fatal("Failed to create a recorder: ", err)
 	}
@@ -173,14 +140,43 @@ func IdlePerf(ctx context.Context, s *testing.State) {
 		}
 	}()
 
-	if idleTest.testType == testTypeFaceGaze {
+	switch idleTest.testType {
+	case testTypeBrowser:
+		conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, emptyWindowURL)
+		if err != nil {
+			s.Fatalf("Failed to open %s: %v", emptyWindowURL, err)
+		}
+		defer closeBrowser(closeCtx)
+		defer conn.Close()
+	case testTypeFaceGaze:
 		metric := []cujrecorder.MetricConfig{
 			cujrecorder.NewCustomMetricConfig("Accessibility.FaceGaze.AverageFaceLandmarkerLatency", "ms", perf.SmallerIsBetter),
 		}
 
-		if err := recorder.AddCollectedMetrics(bTconn, browser.TypeAsh, metric...); err != nil {
+		if err := recorder.AddCollectedMetrics(tconn, browser.TypeAsh, metric...); err != nil {
 			s.Fatal("Failed to add FaceGaze metric to the recorder: ", err)
 		}
+
+		facegazeDriver, err := facegaze.SetUp(ctx, cr, s.DataPath)
+		if err != nil {
+			s.Fatal("Failed to set up FaceGaze: ", err)
+		}
+
+		defer func() {
+			if err := facegazeDriver.TearDown(); err != nil {
+				s.Error("Failed to tear down FaceGaze: ", err)
+			}
+		}()
+	case testTypeFocusMode:
+		if err := quicksettings.EnsureFocusModeHasStarted(ctx, tconn); err != nil {
+			s.Fatal("Failed to start a Focus session: ", err)
+		}
+
+		defer func() {
+			if err := quicksettings.EnsureFocusModeEnds(closeCtx, tconn); err != nil {
+				s.Error("Failed to end Focus Mode: ", err)
+			}
+		}()
 	}
 
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
