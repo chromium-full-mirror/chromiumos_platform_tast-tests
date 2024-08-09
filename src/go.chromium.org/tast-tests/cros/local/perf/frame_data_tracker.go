@@ -32,7 +32,8 @@ type FrameDataTracker struct {
 	dsData         *DisplayFrameData
 	frameCountData []FrameCountingPerSinkData
 	dsTracker      *DisplaySmoothnessTracker
-	timeOffset     time.Duration
+	fcTimeOffset   time.Duration
+	dsTimeOffset   time.Duration
 	collecting     chan bool
 	collectingErr  chan error
 }
@@ -72,11 +73,12 @@ func (t *FrameDataTracker) Start(ctx context.Context, tconn *chrome.TestConn, ti
 	// Start frame counting with a bucket size of 1, to capture frames
 	// per second. Assume the start time of the timeline is right before
 	// autotestPrivate.startFrameCounting is called.
-	t.timeOffset = time.Since(timeZero)
+	t.fcTimeOffset = time.Since(timeZero)
 	if err := tconn.Call(ctx, nil, `tast.promisify(chrome.autotestPrivate.startFrameCounting)`, frameSinkBucketSize); err != nil {
 		return errors.Wrap(err, "failed to start frame counting per sink")
 	}
 
+	t.dsTimeOffset = time.Since(timeZero)
 	if err := t.dsTracker.Start(ctx, tconn, "", throughputInterval); err != nil {
 		return errors.Wrap(err, "failed to start display smoothness tracking")
 	}
@@ -266,7 +268,7 @@ func (t *FrameDataTracker) Record(pv *perf.Values) {
 		Unit:     "s",
 		Multiple: true,
 	}
-	secondsOffset := t.timeOffset.Seconds()
+	secondsOffset := t.fcTimeOffset.Seconds()
 	for i := 0; i < numBuckets; i++ {
 		pv.Append(frameSinkTime, float64(i*frameSinkBucketSize)+secondsOffset)
 	}
@@ -310,14 +312,26 @@ func (t *FrameDataTracker) Record(pv *perf.Values) {
 		pv.Append(smMetric, float64(data))
 	}
 
+	jankTime := perf.Metric{
+		Name:     t.prefix + "Display.Jank.t",
+		Multiple: true,
+		Unit:     "s",
+	}
+
+	offset := t.dsTimeOffset.Seconds()
+	for _, data := range t.dsData.JankTimestamps {
+		pv.Append(jankTime, offset+(float64(data)/1000))
+	}
+
 	jdMetric := perf.Metric{
 		Name:      t.prefix + "Display.JankDurations",
 		Multiple:  true,
 		Unit:      "ms",
 		Direction: perf.SmallerIsBetter,
+		Interval:  jankTime.Name,
 	}
 	for _, data := range t.dsData.JankDurations {
-		pv.Append(jdMetric, data)
+		pv.Append(jdMetric, float64(data))
 	}
 }
 

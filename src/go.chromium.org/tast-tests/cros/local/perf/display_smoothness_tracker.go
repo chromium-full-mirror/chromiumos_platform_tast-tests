@@ -20,13 +20,14 @@ type DisplaySmoothnessTracker struct {
 
 // DisplayFrameData holds the collected display frame data.
 type DisplayFrameData struct {
-	StartOffsetMs  int       `json:"startOffsetMs"`
-	StopOffsetMs   int       `json:"stopOffsetMs"`
-	FramesExpected int       `json:"framesExpected"`
-	FramesProduced int       `json:"framesProduced"`
-	JankCount      int       `json:"jankCount"`
-	Throughput     []int     `json:"throughput"`
-	JankDurations  []float64 `json:"jankDurations"`
+	StartOffsetMs  int   `json:"startOffsetMs"`
+	StopOffsetMs   int   `json:"stopOffsetMs"`
+	FramesExpected int   `json:"framesExpected"`
+	FramesProduced int   `json:"framesProduced"`
+	JankCount      int   `json:"jankCount"`
+	Throughput     []int `json:"throughput"`
+	JankTimestamps []int `json:"jankTimestamps"`
+	JankDurations  []int `json:"jankDurations"`
 }
 
 // displayIDString returns a string representing the given display id.
