@@ -96,6 +96,17 @@ func NewFirmwareTest(ctx context.Context, dut *rpcdut.RPCDUT, servoSpec, outDir 
 		testing.ContextLog(ctx, "WARNING: The rootfs is writable")
 	}
 
+	// If FP updater disabled, enable it.
+	fpUpdaterEnabled, err := IsFPUpdaterEnabled(ctx, dut)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to check FP updater state")
+	}
+	if !fpUpdaterEnabled {
+		if err := EnableFPUpdater(ctx, dut); err != nil {
+			return nil, errors.Wrap(err, "failed to enable FP updater")
+		}
+	}
+
 	// Get upstart service client instance.
 	upstartService, err := t.UpstartService(ctx)
 	if err != nil {
