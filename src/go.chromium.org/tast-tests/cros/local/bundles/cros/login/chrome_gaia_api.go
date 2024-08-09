@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/syslog"
+	"go.chromium.org/tast-tests/cros/local/testenv"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -46,14 +47,17 @@ func init() {
 		},
 		Timeout: chrome.GAIALoginTimeout + time.Minute,
 		Params: []testing.Param{{
-			Val: false,
+			Val:              false,
+			ExtraSearchFlags: []*testing.StringPair{testenv.SearchFlag(testenv.GAIAProd)},
 		}, {
-			Name:    "enrolled",
-			Val:     false,
-			Fixture: fixture.FakeDMSEnrolled,
+			Name:             "enrolled",
+			Val:              false,
+			Fixture:          fixture.FakeDMSEnrolled,
+			ExtraSearchFlags: []*testing.StringPair{testenv.SearchFlag(testenv.GAIAProd)},
 		}, {
-			Name: "sandbox",
-			Val:  true,
+			Name:             "sandbox",
+			Val:              true,
+			ExtraSearchFlags: []*testing.StringPair{testenv.SearchFlag(testenv.GAIASandbox)},
 		}},
 	})
 }
