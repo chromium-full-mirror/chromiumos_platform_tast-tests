@@ -1139,6 +1139,28 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PostTestTimeout: postTestTimeout,
 	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithMahiEnabled",
+		Desc: "CUJ fixture with Mahi enabled",
+		Contacts: []string{
+			"alanlxl@chromium.org",
+			"thanhdng@chromium.org",
+		},
+		BugComponent: "b:1551116", // ChromeOS > Software > Consumer > Machine Intelligence > GenAI > Mahi
+		Impl: &loggedInToCUJUserFixture{
+			bt: browser.TypeAsh,
+			chromeExtraOpts: []chrome.Option{
+				chrome.ExtraArgs("--mahi-restrictions-override"),
+				chrome.EnableFeatures("Mahi"),
+			},
+		},
+		Parent:          "prepareForCUJ",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
 }
 
 func prepareDocsBlockerExtension(s *testing.FixtState) (string, error) {

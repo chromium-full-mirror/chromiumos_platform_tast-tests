@@ -7,18 +7,16 @@ package mahi
 
 import (
 	"context"
-	"net/http"
-	"net/http/httptest"
 	"os"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/mahi/mahiutil"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
+	"go.chromium.org/tast-tests/cros/local/ui/mahicuj/mahiutil"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -27,6 +25,7 @@ import (
 
 const (
 	powerMetricInterval = 10 * time.Second
+	localHTMLZip        = "mahi_html.zip"
 )
 
 type testParameters struct {
@@ -95,7 +94,7 @@ func init() {
 			},
 		},
 		Data: []string{
-			mahiutil.LocalHTMLZip,
+			localHTMLZip,
 		},
 	})
 }
@@ -133,17 +132,12 @@ func PowerMetrics(ctx context.Context, s *testing.State) {
 	}
 	defer kb.Close(ctx)
 
-	// Unzip the local html files.
-	localHTMLPath, localHTMLFiles, err := mahiutil.PrepareLocalHTML(ctx, s)
+	// Unzip the data file and setup test HTTP server
+	localHTMLPath, localHTMLFiles, localServer, err := mahiutil.PrepareLocalServer(ctx, s.DataPath(localHTMLZip))
 	if err != nil {
 		s.Fatal("Failed to prepare local html files: ", err)
 	}
 	defer os.RemoveAll(localHTMLPath)
-
-	s.Logf("local html path %s, local files %s", localHTMLPath, localHTMLFiles)
-
-	// Setup test HTTP server.
-	localServer := httptest.NewServer(http.FileServer(http.Dir(localHTMLPath)))
 	defer localServer.Close()
 
 	r := power.NewRecorder(ctx, powerMetricInterval, s.OutDir(), s.TestName())
@@ -203,11 +197,7 @@ func PowerMetrics(ctx context.Context, s *testing.State) {
 			return errors.New("Don't do mahi summary, go next URL")
 		}
 
-		if err := uiauto.Combine("Do summary and check the panel exists",
-			uiauto.IfSucceedThenElse(ui.Exists(mahiutil.SummarizeButton), ui.LeftClick(mahiutil.SummarizeButton), ui.LeftClick(mahiutil.CompactSummaryButton)),
-			ui.WaitUntilExists(mahiutil.MahiCloseButton),
-			ui.WaitUntilAnyExists(mahiutil.SummaryText, mahiutil.MahiErrorStatus),
-		)(ctx); err != nil {
+		if err := mahiutil.DoSummary(ctx, ui, false /*expectMockResponse*/); err != nil {
 			s.Log("Failed to do a mahi summary: ", err)
 			return errors.Wrap(err, "failed to do a mahi summary")
 		}

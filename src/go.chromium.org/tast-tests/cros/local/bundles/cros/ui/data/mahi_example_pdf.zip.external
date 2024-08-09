@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/mahi/mahi_example_pdf_20240812.zip",
+  "size": 802031,
+  "sha256sum": "ccc193e81455040ae233cc2d5bf6055a143303d3028dfd6409b659ec0cbe55be"
+}
