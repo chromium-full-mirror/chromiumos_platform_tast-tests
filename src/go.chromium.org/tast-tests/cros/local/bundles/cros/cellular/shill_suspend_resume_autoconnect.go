@@ -32,7 +32,7 @@ func init() {
 		Contacts:       []string{"chromeos-cellular-team@google.com", "danielwinkler@google.com"},
 		BugComponent:   "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:           []string{"group:cellular", "cellular_sim_active"},
-		Fixture:        "cellularSuspendLocal.ehide",
+		Fixture:        "cellularSuspendLocal",
 		Timeout:        4 * time.Minute,
 		// TODO(b/217106877): Skip on herobrine as S/R is unstable
 		HardwareDeps: hwdep.D(hwdep.SkipOnPlatform("herobrine")),
@@ -78,12 +78,18 @@ func ShillSuspendResumeAutoconnect(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	// Disable WiFi if present and defer re-enabling.
+	// Disable Ethernet and/or WiFi if present and defer re-enabling.
 	// Shill documentation shows that autoconnect will only be used if there
 	// is no other service available, so it is necessary to only have
 	// cellular available.
-	// Note: Ethernet is disabled by the ehide fixture, so we don't need to
-	// disable it manually.
+	if enableFunc, err := helper.Manager.DisableTechnologyForTesting(ctx, shill.TechnologyEthernet); err != nil {
+		s.Fatal("Unable to disable Ethernet (precondition): ", err)
+	} else if enableFunc != nil {
+		newCtx, cancel := ctxutil.Shorten(ctx, shill.EnableWaitTime)
+		defer cancel()
+		defer enableFunc(ctx)
+		ctx = newCtx
+	}
 	if enableFunc, err := helper.Manager.DisableTechnologyForTesting(ctx, shill.TechnologyWifi); err != nil {
 		s.Fatal("Unable to disable Wifi (precondition): ", err)
 	} else if enableFunc != nil {
