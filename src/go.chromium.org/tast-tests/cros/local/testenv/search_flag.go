@@ -6,8 +6,6 @@
 package testenv
 
 import (
-	"strings"
-
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -20,24 +18,29 @@ type ServiceDepName string
 // Valid ServiceDepName.
 // Note that the dependency target name is composed of:
 //
-//	"<service>.<environment>" in lower case, where
+//	"<service>.<environment>", where
 //
 // <service> is any target service name,
 // <environment> could be 'preprod' or any specific env name of their services.
 const (
 	// DMServer
-	DMServerProd    ServiceDepName = "dmserver.prod"
-	DMServerAlpha   ServiceDepName = "dmserver.alpha"
-	DMServerStaging ServiceDepName = "dmserver.staging"
+	DMServerProd     ServiceDepName = "DMServer.prod"
+	DMServerAlpha    ServiceDepName = "DMServer.alpha"
+	DMServerAutoPush ServiceDepName = "DMServer.autopush"
+	DMServerStaging  ServiceDepName = "DMServer.staging"
+
+	// GAIA
+	GAIAProd    ServiceDepName = "GAIA.prod"
+	GAIASandbox ServiceDepName = "GAIA.sandbox"
 
 	// GFE
-	GFEPreprod ServiceDepName = "gfe.preprod"
+	GFEPreprod ServiceDepName = "GFE.preprod"
 )
 
-// SearchFlag generates a StringPair based on the given policy and ServiceDepName.
+// SearchFlag generates a StringPair based on the given ServiceDepName.
 func SearchFlag(n ServiceDepName) *testing.StringPair {
 	return &testing.StringPair{
 		Key:   SearchFlagKey,
-		Value: strings.ToLower(string(n)),
+		Value: string(n),
 	}
 }
