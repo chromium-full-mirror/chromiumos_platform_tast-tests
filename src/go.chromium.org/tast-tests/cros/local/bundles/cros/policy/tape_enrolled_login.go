@@ -28,7 +28,7 @@ func init() {
 			"vsavu@google.com", // Test author
 		},
 		BugComponent: "b:1111617", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Policy Stack
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "gaia"},
 		Attr:         []string{"group:golden_tier"},
 		Fixture:      fixture.TAPEEnrolled,
 		VarDeps:      []string{tape.ServiceAccountVar},

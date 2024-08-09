@@ -10,6 +10,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/reportingutil"
 	"go.chromium.org/tast-tests/cros/common/tape"
@@ -41,7 +42,7 @@ func init() {
 		},
 		BugComponent: "b:817866", // Chrome OS Server Projects > Enterprise Management > Reporting
 		Attr:         []string{"group:golden_tier", "group:medium_low_tier", "group:hardware", "group:complementary", "group:enterprise-reporting", "group:hw_agnostic"},
-		SoftwareDeps: []string{"reboot", "chrome"},
+		SoftwareDeps: []string{"reboot", "chrome", "gaia"},
 		ServiceDeps:  []string{"tast.cros.policy.PolicyService", "tast.cros.hwsec.OwnershipService", "tast.cros.tape.Service", "tast.cros.graphics.ScreenshotService"},
 		Timeout:      heartbeatReportingTimeout,
 		VarDeps: []string{
@@ -154,8 +155,11 @@ func HeartbeatReporting(ctx context.Context, s *testing.State) {
 	}
 
 	timeout := int32(heartbeatReportingTimeout.Seconds())
+
+	poolID := dma.TapePool(tape.DefaultManaged)
+
 	// Create an account manager and lease a test account for the duration of the test.
-	accManager, acc, err := tape.NewOwnedTestAccountManagerFromClient(ctx, tapeClient, true /*lock*/, tape.WithTimeout(timeout), tape.WithPoolID(tape.DefaultManaged))
+	accManager, acc, err := tape.NewOwnedTestAccountManagerFromClient(ctx, tapeClient, true /*lock*/, tape.WithTimeout(timeout), tape.WithPoolID(poolID))
 	if err != nil {
 		s.Fatal("Failed to create an account manager and lease an account: ", err)
 	}

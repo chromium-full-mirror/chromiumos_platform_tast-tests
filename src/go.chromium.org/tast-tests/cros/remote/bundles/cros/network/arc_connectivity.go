@@ -12,6 +12,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/tape"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/network/allowlist"
 	"go.chromium.org/tast-tests/cros/remote/policyutil"
@@ -124,7 +125,7 @@ func ArcConnectivity(ctx context.Context, s *testing.State) {
 	}
 
 	timeout := int32(arcConnectivityTestTimeout.Seconds())
-	poolID := tape.DefaultManaged
+	poolID := dma.TapePool(tape.DefaultManaged)
 
 	// Create an account manager and lease a test account for the duration of the test.
 	accManager, acc, err := tape.NewOwnedTestAccountManagerFromClient(ctx, tapeClient, true, /*lock*/

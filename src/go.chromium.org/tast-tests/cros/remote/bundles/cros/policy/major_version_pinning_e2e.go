@@ -10,6 +10,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
@@ -48,7 +49,7 @@ func init() {
 		},
 		BugComponent: "b:1031231",
 		Attr:         []string{"group:golden_tier"},
-		SoftwareDeps: []string{"reboot", "chrome"},
+		SoftwareDeps: []string{"reboot", "chrome", "gaia"},
 		ServiceDeps: []string{
 			"tast.cros.hwsec.OwnershipService",
 			"tast.cros.policy.PolicyService",
@@ -184,7 +185,8 @@ func MajorVersionPinningE2E(ctx context.Context, s *testing.State) {
 	}
 
 	timeout := int32(majorVersionPinningE2ETimeout.Seconds())
-	poolID := tape.DefaultManaged
+	poolID := dma.TapePool(tape.DefaultManaged)
+
 	// Create an account manager and lease a test account for the duration of the test.
 	accManager, acc, err := tape.NewOwnedTestAccountManagerFromClient(ctx, tapeClient, true /*lock*/, tape.WithTimeout(timeout), tape.WithPoolID(poolID))
 	if err != nil {

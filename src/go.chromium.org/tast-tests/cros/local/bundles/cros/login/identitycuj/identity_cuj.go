@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/tape"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
@@ -32,8 +33,10 @@ func CreateManagedDeviceAccount(ctx context.Context, credsJSON []byte) (*tape.Ow
 	defer cancel()
 
 	timeout := int32(testAccountManagerTimeout.Seconds())
+	poolID := dma.TapePool(tape.DefaultManaged)
+
 	// Create an account manager and lease a test account for the duration of the test.
-	accManager, acc, err := tape.NewOwnedTestAccountManager(ctx, credsJSON, true /*lock*/, tape.WithTimeout(timeout), tape.WithPoolID(tape.DefaultManaged))
+	accManager, acc, err := tape.NewOwnedTestAccountManager(ctx, credsJSON, true /*lock*/, tape.WithTimeout(timeout), tape.WithPoolID(poolID))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create an account manager and lease an account")
 	}

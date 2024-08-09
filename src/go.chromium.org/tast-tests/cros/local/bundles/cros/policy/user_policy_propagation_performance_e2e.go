@@ -32,7 +32,7 @@ func init() {
 
 		},
 		BugComponent: "b:1111617", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Policy Stack
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "gaia"},
 		Attr: []string{
 			"group:golden_tier",
 			"group:medium_low_tier",

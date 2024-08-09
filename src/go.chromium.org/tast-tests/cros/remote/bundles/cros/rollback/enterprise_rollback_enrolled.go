@@ -11,6 +11,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	types "go.chromium.org/tast-tests/cros/common/networkui/netconfigtypes"
 	"go.chromium.org/tast-tests/cros/common/policy"
@@ -46,7 +47,7 @@ func init() {
 			"group:hardware",
 			"group:complementary",
 		},
-		SoftwareDeps: []string{"reboot", "chrome", "non_flex_device"},
+		SoftwareDeps: []string{"reboot", "chrome", "non_flex_device", "gaia"},
 		ServiceDeps: []string{
 			"tast.cros.tape.Service",
 			"tast.cros.policy.PolicyService",
@@ -91,7 +92,7 @@ func EnterpriseRollbackEnrolled(ctx context.Context, s *testing.State) {
 	}
 
 	timeout := int32(enterpriseRollbackEnrolledTimeout.Seconds())
-	poolID := tape.DefaultManaged
+	poolID := dma.TapePool(tape.DefaultManaged)
 	// Create an account manager and lease a test account for the duration of the test.
 	accManager, acc, err := tape.NewOwnedTestAccountManagerFromClient(ctx, tapeClient, true /*lock*/, tape.WithTimeout(timeout), tape.WithPoolID(poolID))
 	if err != nil {

@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/tape"
 	"go.chromium.org/tast/core/errors"
@@ -142,8 +143,9 @@ func (e *tapeAccountFixt) SetUp(ctx context.Context, s *testing.FixtState) inter
 	}
 
 	timeout := int32(e.accountLeasingTimeout.Seconds())
+	poolID := dma.TapePool(e.poolID)
 	// Create an account manager and lease a test account for the duration of all the tests using this fixture.
-	accountManager, account, err := tape.NewOwnedTestAccountManagerFromClient(ctx, tapeClient, true /*lock*/, tape.WithTimeout(timeout), tape.WithPoolID(e.poolID))
+	accountManager, account, err := tape.NewOwnedTestAccountManagerFromClient(ctx, tapeClient, true /*lock*/, tape.WithTimeout(timeout), tape.WithPoolID(poolID))
 	if err != nil {
 		s.Fatal("Failed to create an account manager and lease an account: ", err)
 	}
