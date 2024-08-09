@@ -8,6 +8,8 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -124,6 +126,12 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to sleep for 2s")
 	}
 
+	const powerdLogPath = "/var/log/power_manager/powerd.LATEST"
+	s.Logf("Clearing %s", powerdLogPath)
+	if err := h.DUT.Conn().CommandContext(ctx, "truncate", "--size=0", powerdLogPath).Run(); err != nil {
+		s.Fatal("Failed to clear powerd log file: ", err)
+	}
+
 	for i := 0; i < numIters; i++ {
 		s.Logf("------ Running iteration %d out of %d ------", i+1, numIters)
 
@@ -137,7 +145,7 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 		waitUnreachableCtx, cancelWaitUnreachable := context.WithTimeout(ctx, 30*time.Second)
 		defer cancelWaitUnreachable()
 		if err := h.DUT.WaitUnreachable(waitUnreachableCtx); err != nil {
-			s.Fatal("Failed to wait for DUT to be unreachable after sending powerd_dbus_suspend: ", err)
+			logFailure("Failed to wait for DUT to be unreachable after sending powerd_dbus_suspend", err, i)
 		}
 
 		s.Log("Checking for S0ix or S3 powerstate")
@@ -207,6 +215,15 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 		}
 	}
 	if numFails > 0 {
+		// Save the powerd log for debugging purposes.
+		output, err := h.Reporter.CatFile(ctx, powerdLogPath)
+		if err != nil {
+			s.Error("Failed to read powerd log: ", err)
+		}
+		destPath := filepath.Join(s.OutDir(), "powerd.log")
+		if err := os.WriteFile(destPath, []byte(output), 0666); err != nil {
+			s.Error("Failed to write powerd log: ", err)
+		}
 		s.Fatalf("Encountered %d errors during execution of stress test, check execution log for details", numFails)
 	} else {
 		s.Log("\tNo errors encountered")
