@@ -195,6 +195,9 @@ func WriteProtect(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set FW write protect state: ", err)
 	}
 
+	if err := h.RequireBiosServiceClient(ctx); err != nil {
+		s.Fatal("Failed to require BiosServiceClient: ", err)
+	}
 	needsRestore = true // In case flashrom completes a partial write but still has errors.
 	s.Log("Attempting to overwrite fw with write protect enabled")
 	if _, err := h.BiosServiceClient.CorruptFWSection(ctx, &pb.FWSectionInfo{
@@ -214,6 +217,9 @@ func WriteProtect(ctx context.Context, s *testing.State) {
 	// Write Protect has been disabled successfully.
 	needsDisableWP = false
 
+	if err := h.RequireBiosServiceClient(ctx); err != nil {
+		s.Fatal("Failed to require BiosServiceClient: ", err)
+	}
 	s.Log("Reading fw, make sure write didn't succeed with wp enabled")
 	roAfter, err := h.BiosServiceClient.BackupImageSection(ctx, &pb.FWSectionInfo{
 		Section:    wpTargetToRegion[target],
