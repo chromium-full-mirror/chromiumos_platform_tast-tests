@@ -59,11 +59,6 @@ func CordedKeyboardKeyFunctions(ctx context.Context, s *testing.State) {
 	// Dump the UI tree and screenshot on any failure
 	utils.AttachErrorHandlersForUITreeDump(cleanupCtx, s, cl.Conn)
 
-	// Start screen recording, defer the stop and saving of said recording.
-	screenRecorder := ui.NewScreenRecorderServiceClient(cl.Conn)
-	utils.StartRecording(ctx, s, screenRecorder)
-	defer utils.StopAndSaveScreenRecording(cleanupCtx, s, screenRecorder)
-
 	// Start Chrome on the DUT.
 	cs := ui.NewChromeServiceClient(cl.Conn)
 	loginReq := &ui.NewRequest{}
@@ -71,6 +66,11 @@ func CordedKeyboardKeyFunctions(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start chrome: ", err)
 	}
 	defer cs.Close(cleanupCtx, &empty.Empty{})
+
+	// Start screen recording, defer the stop and saving of said recording.
+	screenRecorder := ui.NewScreenRecorderServiceClient(cl.Conn)
+	utils.StartRecording(ctx, s, screenRecorder)
+	defer utils.StopAndSaveScreenRecording(cleanupCtx, s, screenRecorder)
 
 	// Initialize fixtures to find the connected devices.
 	if err := utils.InitFixture(ctx); err != nil {
