@@ -103,6 +103,24 @@ func init() {
 			Val:     croshealthd.NewRoutineParams(croshealthd.RoutineHTTPSLatency),
 			Fixture: "crosHealthdRunning",
 		}, {
+			// Contact: weiluanwang@google.com
+			Name:      "arc_http",
+			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineArcHTTP),
+			Fixture:   "crosHealthdRunning",
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
+		}, {
+			// Contact: weiluanwang@google.com
+			Name:      "arc_ping",
+			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineArcPing),
+			Fixture:   "crosHealthdRunning",
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
+		}, {
+			// Contact: weiluanwang@google.com
+			Name:      "arc_dns_resolution",
+			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineArcDNSResolution),
+			Fixture:   "crosHealthdRunning",
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
+		}, {
 			// Contact: dennyh@google.com
 			Name:              "emmc_lifetime",
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineEMMCLifetime),
