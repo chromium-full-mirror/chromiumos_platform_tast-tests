@@ -37,7 +37,7 @@ func init() {
 			"effects_video_script.html",
 		},
 		Attr: []string{
-			"group:cbx", "cbx_feature_enabled", "cbx_unstable",
+			"group:cbx", "cbx_feature_enabled", "cbx_unstable", "group:video_conference_face_framing_per_build",
 		},
 		TestBedDeps:  []string{tbdep.Cbx(true)},
 		SoftwareDeps: []string{"chrome", "camera_feature_effects"},
