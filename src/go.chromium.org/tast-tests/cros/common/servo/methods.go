@@ -438,11 +438,12 @@ func (s *Servo) RemoveCCDWatchdogs(ctx context.Context) error {
 		if err := s.SetString(ctx, WatchdogRemove, stringType); err != nil {
 			return err
 		}
+		if strings.HasPrefix(stringType, "ccd") {
+			if err := s.SetOnOff(ctx, CCDKeepaliveEn, On); err != nil {
+				return err
+			}
+		}
 		didRemove = true
-	}
-
-	if err := s.SetOnOff(ctx, CCDKeepaliveEn, On); err != nil {
-		return err
 	}
 
 	if didRemove {
