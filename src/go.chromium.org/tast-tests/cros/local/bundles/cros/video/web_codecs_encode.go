@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast-tests/cros/local/media/videotype"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -62,8 +63,9 @@ func init() {
 		}, {
 			Name:              "h264_hw_l1t2",
 			Val:               webcodecs.TestEncodeArgs{Codec: videotype.H264, Acceleration: webcodecs.PreferHardware, ScalabilityMode: "L1T2", BitrateMode: "constant", BrowserType: browser.TypeAsh, NumOfEncoders: 1},
-			ExtraSoftwareDeps: []string{"proprietary_codecs", caps.HWEncodeH264, "vaapi"},
-			Fixture:           "chromeVideo",
+			ExtraHardwareDeps: hwdep.D(hwdep.SupportsSVCEncoding("h264main", "l1t2")),
+			ExtraSoftwareDeps: []string{"proprietary_codecs", caps.HWEncodeH264},
+			Fixture:           "chromeVideoHardwareTemporalEncoding",
 		}, {
 			Name:              "h264_sw_l1t3",
 			Val:               webcodecs.TestEncodeArgs{Codec: videotype.H264, Acceleration: webcodecs.PreferSoftware, ScalabilityMode: "L1T3", BitrateMode: "constant", BrowserType: browser.TypeAsh, NumOfEncoders: 1},
@@ -72,7 +74,8 @@ func init() {
 		}, {
 			Name:              "h264_hw_l1t3",
 			Val:               webcodecs.TestEncodeArgs{Codec: videotype.H264, Acceleration: webcodecs.PreferHardware, ScalabilityMode: "L1T3", BitrateMode: "constant", BrowserType: browser.TypeAsh, NumOfEncoders: 1},
-			ExtraSoftwareDeps: []string{"proprietary_codecs", caps.HWEncodeH264, "vaapi"},
+			ExtraHardwareDeps: hwdep.D(hwdep.SupportsSVCEncoding("h264main", "l1t3")),
+			ExtraSoftwareDeps: []string{"proprietary_codecs", caps.HWEncodeH264},
 			Fixture:           "chromeVideo",
 		}, {
 			Name:              "h264_sw_vbr",
@@ -115,8 +118,9 @@ func init() {
 		}, {
 			Name:              "vp8_hw_l1t3",
 			Val:               webcodecs.TestEncodeArgs{Codec: videotype.VP8, Acceleration: webcodecs.PreferHardware, ScalabilityMode: "L1T3", BitrateMode: "constant", BrowserType: browser.TypeAsh, NumOfEncoders: 1},
-			ExtraSoftwareDeps: []string{caps.HWEncodeVP8, "vaapi"},
-			Fixture:           "chromeVideo",
+			ExtraHardwareDeps: hwdep.D(hwdep.SupportsSVCEncoding("vp8", "l1t3")),
+			ExtraSoftwareDeps: []string{caps.HWEncodeVP8},
+			Fixture:           "chromeVideoHardwareTemporalEncoding",
 		}, {
 			Name:    "vp8_sw_vbr",
 			Val:     webcodecs.TestEncodeArgs{Codec: videotype.VP8, Acceleration: webcodecs.PreferSoftware, BitrateMode: "variable", BrowserType: browser.TypeAsh, NumOfEncoders: 1},
@@ -152,8 +156,9 @@ func init() {
 		}, {
 			Name:              "vp9_hw_l1t2",
 			Val:               webcodecs.TestEncodeArgs{Codec: videotype.VP9, Acceleration: webcodecs.PreferHardware, ScalabilityMode: "L1T2", BitrateMode: "constant", BrowserType: browser.TypeAsh, NumOfEncoders: 1},
-			ExtraSoftwareDeps: []string{caps.HWEncodeVP9, "vaapi"},
-			Fixture:           "chromeVideo",
+			ExtraHardwareDeps: hwdep.D(hwdep.SupportsSVCEncoding("vp9", "l1t2")),
+			ExtraSoftwareDeps: []string{caps.HWEncodeVP9},
+			Fixture:           "chromeVideoHardwareTemporalEncoding",
 		}, {
 			Name:    "vp9_sw_l1t3",
 			Val:     webcodecs.TestEncodeArgs{Codec: videotype.VP9, Acceleration: webcodecs.PreferSoftware, ScalabilityMode: "L1T3", BitrateMode: "constant", BrowserType: browser.TypeAsh, NumOfEncoders: 1},
@@ -161,8 +166,9 @@ func init() {
 		}, {
 			Name:              "vp9_hw_l1t3",
 			Val:               webcodecs.TestEncodeArgs{Codec: videotype.VP9, Acceleration: webcodecs.PreferHardware, ScalabilityMode: "L1T3", BitrateMode: "constant", BrowserType: browser.TypeAsh, NumOfEncoders: 1},
-			ExtraSoftwareDeps: []string{caps.HWEncodeVP9, "vaapi"},
-			Fixture:           "chromeVideo",
+			ExtraHardwareDeps: hwdep.D(hwdep.SupportsSVCEncoding("vp9", "l1t3")),
+			ExtraSoftwareDeps: []string{caps.HWEncodeVP9},
+			Fixture:           "chromeVideoHardwareTemporalEncoding",
 		}, {
 			Name:    "vp9_sw_vbr",
 			Val:     webcodecs.TestEncodeArgs{Codec: videotype.VP9, Acceleration: webcodecs.PreferSoftware, BitrateMode: "variable", BrowserType: browser.TypeAsh, NumOfEncoders: 1},

@@ -405,6 +405,25 @@ func initChromeVideoBaseFixtures() {
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
+	testing.AddFixture(&testing.Fixture{
+		Name:         "chromeVideoHardwareTemporalEncoding",
+		Desc:         "Pre release testing of temporal hardware encoding functionality",
+		Contacts:     []string{"chromeos-gfx-video@google.com"},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return getChromeVideoOptions(
+				browser.TypeAsh,
+				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
+				chrome.EnableFeatures("V4L2H264TemporalLayerHWEncoding"),
+				chrome.EnableFeatures("VaapiH264TemporalLayerHWEncoding"),
+				chrome.EnableFeatures("VaapiVp8TemporalLayerHWEncoding"),
+			), nil
+		}),
+		Parent:          "gpuWatchDog",
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
 }
 
 var chromeVideoLacrosFixtureGenerator = fixtureGenerator{
