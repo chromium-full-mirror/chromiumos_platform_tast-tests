@@ -95,7 +95,7 @@ func init() {
 			"chromeos-connectivity-cienet-external@google.com",
 			"edgar.chang@cienet.com",
 		},
-		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
+		BugComponent:   "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
 		LifeCycleStage: testing.LifeCycleInDevelopment,
 		Attr:           []string{"group:wificell", "wificell_e2e"},
 		TestBedDeps:    []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
@@ -392,9 +392,26 @@ func (impl *wifiPageImpl) connect(passphrase string) func(testData *connectToWif
 				return errors.Wrap(err, "failed to navigate to WiFI page within OS Settings")
 			}
 
-			if _, err := testData.uiautomation.DoDefault(ctx, &ui.DoDefaultRequest{
-				Finder: impl.networkItemFinder(testData),
-			}); err != nil {
+			req := &ossettings.EvalJSWithShadowPiercerRequest{
+				Expression: fmt.Sprintf(`var items = shadowPiercingQueryAll("div#itemTitle");
+				var targetWifi = undefined;
+				for (let i = 0; i < items.length; i++) {
+					if (items[i].textContent.trim() === %q) {
+						targetWifi = items[i];
+						items[i].click();
+						break;
+					}
+				}
+				targetWifi != undefined;`, testData.ssid),
+			}
+
+			// Attempting to click an entry using JavaScript instead of other approaches due to:
+			// 1. The page contains multiple entries whose order can change based on the scanning
+			// 	status, making a regular UI left-click to be flaky.
+			// 2. Each entry is wrapped in a Role_ROLE_GENERIC_CONTAINER, which is a <div> that
+			// 	may not have an action listener registered, causing the regular DoDefault RPC call
+			// 	does not achieve the goal.
+			if _, err := testData.os.EvalJSWithShadowPiercer(ctx, req); err != nil {
 				return errors.Wrap(err, "failed to select the network from the network list")
 			}
 
