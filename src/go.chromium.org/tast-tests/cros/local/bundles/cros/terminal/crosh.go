@@ -93,7 +93,7 @@ func Crosh(ctx context.Context, s *testing.State) {
 		ui.WaitUntilExists(croshPrompt),
 		kb.TypeAction("shell"),
 		kb.AccelAction("Enter"),
-		ui.WaitUntilExists(nodewith.NameRegex(regexp.MustCompile(`^chronos@localhost / \$ ?$`)).Role(role.StaticText).First()),
+		ui.WaitUntilExists(nodewith.NameRegex(regexp.MustCompile(`^chronos@\S+ / \$ ?$`)).Role(role.StaticText).First()),
 		kb.TypeAction("exit"),
 		kb.AccelAction("Enter"),
 		kb.TypeAction("exit"),
