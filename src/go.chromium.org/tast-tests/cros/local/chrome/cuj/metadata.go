@@ -13,18 +13,20 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+// feature is the display name of the feature that will be used on the
+// TPS Dashboard.
 type feature string
 
 const (
-	batterySaver   feature = "battery_saver"
-	arcDisabled    feature = "arc_disabled"
-	pvSched        feature = "pvsched"
-	fieldTrials    feature = "field_trials"
-	roundedWindows feature = "rounded_windows"
-	vulkan         feature = "vulkan"
-	wprFeature     feature = "wpr"
-	chromevox      feature = "chromevox"
-	imageIndexing  feature = "image_indexing"
+	batterySaver   feature = "BatterySaver"
+	arcDisabled    feature = "ArcDisabled"
+	pvSched        feature = "Pvsched"
+	fieldTrials    feature = "FieldTrials"
+	roundedWindows feature = "RoundedWindows"
+	vulkan         feature = "Vulkan"
+	wprFeature     feature = "WPR"
+	chromevox      feature = "ChromeVox"
+	imageIndexing  feature = "ImageIndexing"
 )
 
 // Metadata represents metadata for a performance CUJ or a performance test.
