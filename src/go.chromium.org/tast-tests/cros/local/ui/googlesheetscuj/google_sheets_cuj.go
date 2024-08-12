@@ -26,6 +26,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/pointer"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast-tests/cros/local/input"
@@ -39,7 +40,8 @@ import (
 
 // TestParam is the test parameters for GoogleSheetsCUJ.
 type TestParam struct {
-	BrowserType browser.Type
+	BrowserType      browser.Type
+	FocusModeEnabled bool
 }
 
 // Run opens up a Google Sheets file, and use mousewheel/trackpad/keypress to
@@ -86,6 +88,18 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, outDir, sy
 	bTconn, err := br.TestAPIConn(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to connect to browser test API connection")
+	}
+
+	if testParam.FocusModeEnabled {
+		if err := quicksettings.EnsureFocusModeHasStarted(ctx, tconn); err != nil {
+			return nil, errors.Wrap(err, "failed to start a Focus session")
+		}
+
+		defer func() {
+			if err := quicksettings.EnsureFocusModeEnds(ctx, tconn); err != nil {
+				testing.ContextLog(ctx, "Failed to end Focus Mode: ", err)
+			}
+		}()
 	}
 
 	windows, err := ash.GetAllWindows(ctx, tconn)

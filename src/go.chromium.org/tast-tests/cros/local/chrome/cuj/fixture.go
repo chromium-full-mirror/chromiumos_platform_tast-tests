@@ -1119,6 +1119,26 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PostTestTimeout: postTestTimeout,
 	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithFocusMode",
+		Desc: "Chrome from a pre-built image with FocusMode feature enabled",
+		Contacts: []string{
+			"richui@google.com",
+			"chromeos-wms@google.com",
+		},
+		BugComponent: "b:1238195", // ChromeOS > Software > Focus Mode
+		Impl: &loggedInToCUJUserFixture{
+			chromeExtraOpts: []chrome.Option{
+				chrome.EnableFeatures("FocusMode"),
+			},
+			bt: browser.TypeAsh,
+		},
+		Parent:          "prepareForCUJ",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
 }
 
 func prepareDocsBlockerExtension(s *testing.FixtState) (string, error) {

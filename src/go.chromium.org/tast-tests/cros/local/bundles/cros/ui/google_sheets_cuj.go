@@ -59,6 +59,14 @@ func init() {
 				},
 				Fixture: "loggedInToCUJUserWithBatterySaverWithoutCooldown",
 			},
+			{
+				Name: "focusmode",
+				Val: googlesheetscuj.TestParam{
+					BrowserType:      browser.TypeAsh,
+					FocusModeEnabled: true,
+				},
+				Fixture: "loggedInToCUJUserWithFocusMode",
+			},
 		},
 	})
 }
