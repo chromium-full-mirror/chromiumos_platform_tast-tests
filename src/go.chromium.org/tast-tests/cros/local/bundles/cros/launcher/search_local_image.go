@@ -98,7 +98,10 @@ func init() {
 				},
 				Fixture:           fixture.LauncherImageSearchIcaAndOcr,
 				ExtraSoftwareDeps: []string{"ondevice_image_content_annotation"},
-				ExtraAttr:         []string{"group:mainline", "informational"},
+				ExtraAttr: []string{"group:cbx",
+					"cbx_feature_enabled",
+					"cbx_unstable"},
+				ExtraTestBedDeps: []string{tbdep.Cbx(true)},
 			},
 		},
 	})
