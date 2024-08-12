@@ -273,6 +273,15 @@ func performTokenBasedEnrollment(ctx context.Context, cfg *config.Config, sess *
 	return proceedThroughOOBEAndExpectAutomaticEnrollment(ctx, cfg, sess)
 }
 
+// performAutoReEnrollment enrolls the test device by proceeding through OOBE,
+// expecting the device to automatically enroll (using automatic forced re-enrollment).
+func performAutoReEnrollment(ctx context.Context, cfg *config.Config, sess *driver.Session) error {
+	ctx, st := timing.Start(ctx, "autoreenroll")
+	defer st.End()
+
+	return proceedThroughOOBEAndExpectAutomaticEnrollment(ctx, cfg, sess)
+}
+
 // proceedThroughOOBEAndExpectAutomaticEnrollment clicks through the OOBE welcome
 // and network screens, expecting afterwards that the device will go through
 // automatic enrollment and end on the enrollment success screen.

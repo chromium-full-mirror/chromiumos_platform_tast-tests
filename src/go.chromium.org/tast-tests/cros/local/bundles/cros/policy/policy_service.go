@@ -240,6 +240,27 @@ func (c *PolicyService) ZeroTouchEnrollUsingChrome(ctx context.Context, req *ppb
 	return &empty.Empty{}, nil
 }
 
+// AutoReEnrollUsingChrome enrolls the device using dmserver.
+func (c *PolicyService) AutoReEnrollUsingChrome(ctx context.Context, req *ppb.AutoReEnrollUsingChromeRequest) (*empty.Empty, error) {
+	testing.ContextLogf(ctx, "Automatic Re-Enrollment using Chrome with dmserver: %s", string(req.DmserverURL))
+
+	// Store the IDs we need for deprovisioning, as enrollment can fail after provisioning we need to defer this function before enrolling.
+	defer c.StoreIDsForDeprovisioningAndLogErrors(ctx)
+
+	if err := c.newChrome(
+		ctx,
+		chrome.AutoReEnroll(),
+		chrome.KeepState(),
+		chrome.NoLogin(),
+		chrome.DMSPolicy(req.DmserverURL),
+		chrome.LoadSigninProfileExtension(req.ManifestKey),
+	); err != nil {
+		return nil, errors.Wrap(err, "failed to start chrome")
+	}
+
+	return &empty.Empty{}, nil
+}
+
 func (c *PolicyService) TokenBasedEnrollUsingChrome(ctx context.Context, req *ppb.TokenBasedEnrollUsingChromeRequest) (*empty.Empty, error) {
 	testing.ContextLogf(ctx, "Token-based enrolling using Chrome with DMServer: %s", req.DmserverURL)
 

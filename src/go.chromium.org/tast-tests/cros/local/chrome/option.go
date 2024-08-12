@@ -318,6 +318,15 @@ func ZeroTouchEnroll() Option {
 	}
 }
 
+// AutoReEnroll returns an Option that can be passed to New to enable
+// Automatic Enterprise Re-Enrollment before login.
+func AutoReEnroll() Option {
+	return func(cfg *config.MutableConfig) error {
+		cfg.EnrollMode = config.AutoReEnroll
+		return nil
+	}
+}
+
 // TokenBasedEnroll returns an Option that can be passed to New to enable/expect
 // automatic Enterprise Enrollment before login, using an enrollment token.
 func TokenBasedEnroll() Option {
