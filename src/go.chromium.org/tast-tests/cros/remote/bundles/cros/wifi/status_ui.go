@@ -7,12 +7,12 @@ package wifi
 import (
 	"context"
 	"fmt"
+	"path/filepath"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/emptypb"
-	"google.golang.org/protobuf/types/known/structpb"
 
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wifi/wifiutil"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
@@ -22,6 +22,7 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -46,6 +47,7 @@ func init() {
 			"tast.cros.chrome.uiauto.ossettings.OsSettingsService",
 			"tast.cros.chrome.uiauto.quicksettings.QuickSettingsService",
 			wifiutil.FaillogServiceName,
+			"tast.cros.ui.ScreenRecorderService",
 		},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      wificell.FixtureID(wificell.TFFeaturesNone),
@@ -68,7 +70,7 @@ func StatusUI(ctx context.Context, s *testing.State) {
 
 	// cleanupCtx is the context with time reserved, used for cleaning up resources other than the AP.
 	cleanupCtx := ctx
-	ctx, cancel = ctxutil.Shorten(ctx, 10*time.Second)
+	ctx, cancel = ctxutil.Shorten(ctx, 15*time.Second)
 	defer cancel()
 
 	rpcClient := tf.DUTRPC(wificell.DefaultDUT)
@@ -78,6 +80,27 @@ func StatusUI(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
 	defer cr.Close(cleanupCtx, &emptypb.Empty{})
+
+	screenRecordSvc := ui.NewScreenRecorderServiceClient(rpcClient.Conn)
+	if _, err := screenRecordSvc.Start(ctx, &ui.StartRequest{}); err != nil {
+		s.Fatal("Failed to start screen recording: ", err)
+	}
+	defer func(ctx context.Context) {
+		res, err := screenRecordSvc.Stop(ctx, &emptypb.Empty{})
+		if err != nil {
+			s.Log("Failed to stop the screen recording: ", err)
+			return
+		}
+
+		if !s.HasError() {
+			return
+		}
+		destPath := filepath.Join(s.OutDir(), "record.webm")
+		if err := linuxssh.GetFile(ctx, s.DUT().Conn(), res.FileName, destPath, linuxssh.DereferenceSymlinks); err != nil {
+			s.Log("Failed to fetch the screen recording from dut: ", err)
+
+		}
+	}(cleanupCtx)
 
 	wifiClient := tf.DUTWifiClient(wificell.DefaultDUT)
 	// Toggling the WiFi is one of the criteria of this test,
@@ -318,22 +341,10 @@ func (s *osSettingsWifiPageTest) checkTextAndScanningIndicator(ctx context.Conte
 
 	// Checking the scanning indicator exists.
 	queryScanningSpinner := queryElementJSExpr(fmt.Sprintf("paper-spinner-lite[title=%q]", searchingForNetworks), "")
-	expr := fmt.Sprintf(`
-		%s;
-		window.getComputedStyle(element).display !== "none";
-	`, queryScanningSpinner)
-
-	res, err := s.settingsSvc.EvalJSWithShadowPiercer(ctx, &ossettings.EvalJSWithShadowPiercerRequest{Expression: expr})
-	if err != nil {
+	if _, err := s.settingsSvc.EvalJSWithShadowPiercer(ctx, &ossettings.EvalJSWithShadowPiercerRequest{Expression: checkDisplayStyleIsNotNoneJSExpr(queryScanningSpinner)}); err != nil {
 		return errors.Wrap(err, "failed to check if the scanning spinner exists")
 	}
-	rendered, ok := res.Kind.(*structpb.Value_BoolValue)
-	if !ok {
-		return errors.New("the response type is not as expected")
-	}
-	if !rendered.BoolValue {
-		return errors.New("the scanning spinner didn't render as expected")
-	}
+
 	return nil
 }
 
@@ -426,7 +437,7 @@ func waitUntilWifiEnabled(ctx context.Context, wifiClient *wificell.WifiClient, 
 			return errors.Errorf("unexpected Wi-Fi enabled state, got %t, expect: %t", enabled, expectEnabled)
 		}
 		return nil
-	}, &testing.PollOptions{Timeout: 15 * time.Second, Interval: time.Second})
+	}, &testing.PollOptions{Timeout: 15 * time.Second})
 }
 
 // queryElementJSExpr returns a javascript expression to query the target element.
@@ -474,7 +485,8 @@ func checkTextJSExpr(queryElementExpr string, expectedText ...string) string {
 		awaitTextsExpr += fmt.Sprintf(`
 			await waitTextExpected(%[1]q)
 			.catch((reject) => {
-				throw new Error("failed to check if %[1]s exists: " + reject);
+				const currentText = getStatusText();
+				throw new Error("failed to check if %[1]s exists, current text is " + currentText + ": " + reject);
 			});
 		`, t)
 	}
@@ -487,4 +499,42 @@ func checkTextJSExpr(queryElementExpr string, expectedText ...string) string {
 			return true;
 		})()
 	`, getStatusTextFunc, waitTextExpectedFunc, awaitTextsExpr)
+}
+
+// checkDisplayStyleIsNotNoneJSExpr generates a javascript expression to fetch the display style
+// of the queried target element and check if the display is not "none".
+func checkDisplayStyleIsNotNoneJSExpr(queryElementExpr string) string {
+	getDisplayStyleFunc := fmt.Sprintf(`
+		function getDisplayStyle() {
+			%s
+			return window.getComputedStyle(element).display;
+		}
+	`, queryElementExpr)
+
+	timeout := 15 * time.Second
+	interval := time.Second
+	waitDisplayVisibleFunc := fmt.Sprintf(`
+		function waitDisplayVisible() {
+			return new Promise((resolve, reject) => {
+				(function f(t = 0) {
+					if (t > %[1]d) { reject(new Error("timeout")); }
+					if (getDisplayStyle() !== "none") { resolve(); }
+					setTimeout(() => { f(t + %[2]d) }, %[2]d);
+				})();
+			});
+		}
+	`, timeout.Milliseconds(), interval.Milliseconds())
+
+	return fmt.Sprintf(`
+		%[1]s
+		%[2]s
+		(async () => {
+			await waitDisplayVisible()
+			.catch((reject) => {
+				const displayStyle = getDisplayStyle();
+				throw new Error("failed to check if element is visible, current display style is " + displayStyle + ": " + reject);
+			});
+			return true;
+		})()
+	`, getDisplayStyleFunc, waitDisplayVisibleFunc)
 }
