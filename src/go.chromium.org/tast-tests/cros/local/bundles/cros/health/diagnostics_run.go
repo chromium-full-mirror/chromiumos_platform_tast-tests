@@ -58,10 +58,9 @@ func init() {
 			ExtraHardwareDeps: hwdep.D(hwdep.Nvme(), hwdep.NvmeSelfTest()),
 		}, {
 			// Contact: weiluanwang@google.com
-			Name:      "captive_portal",
-			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineCaptivePortal),
-			Fixture:   "crosHealthdRunning",
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			Name:    "captive_portal",
+			Val:     croshealthd.NewRoutineParams(croshealthd.RoutineCaptivePortal),
+			Fixture: "crosHealthdRunning",
 		}, {
 			// Contact: weiluanwang@google.com
 			// Cannot be added to DiagnosticsPass.* since the result would be
