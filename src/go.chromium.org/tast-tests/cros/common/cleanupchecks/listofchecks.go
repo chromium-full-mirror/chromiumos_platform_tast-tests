@@ -68,13 +68,17 @@ func checkIfRootfsVerificationIsTurnedOn(ctx context.Context, data *cs.PreTestDa
 
 // recordStateDeviceEnrolled records the enrolled state of the device before running the test.
 func recordStateDeviceEnrolled(ctx context.Context) (*cs.PreTestData, error) {
-	cmdline, err := exec.Command("device_management_client", "--action=install_attributes_get", "--name=enterprise.owned").Output()
-	if err != nil {
-		return nil, errors.New("recordStateDeviceEnrolled: failed to read kernel cmdline")
+	_, err := os.Stat("/usr/sbin/device_management_client")
+	if errors.Is(err, os.ErrNotExist) {
+		return nil, errors.New("recordStateDeviceEnrolled: /usr/sbin/device_management_client does not exist")
 	}
 
-	// Check if the attribute exists and is set to "true".
-	isEnrolled := strings.Contains(string(cmdline), "true")
+	isEnrolled := false
+	// Check if the install attribute exists and is set to "true".
+	if cmdline, err := exec.Command("device_management_client", "--action=install_attributes_get", "--name=enterprise.owned").Output(); err != nil {
+		isEnrolled = strings.Contains(string(cmdline), "true")
+	}
+
 	data := &cs.PreTestData{
 		Data: &cs.PreTestData_BoolData{
 			BoolData: isEnrolled,
@@ -85,13 +89,18 @@ func recordStateDeviceEnrolled(ctx context.Context) (*cs.PreTestData, error) {
 
 // checkIfDeviceIsEnrolled checks the device enrolled state after the test and compare it with the state before the test.
 func checkIfDeviceIsEnrolled(ctx context.Context, data *cs.PreTestData) error {
-	cmdline, err := exec.Command("device_management_client", "--action=install_attributes_get", "--name=enterprise.owned").Output()
-	if err != nil {
-		return errors.New("checkIfDeviceIsEnrolled: failed to read kernel cmdline")
+	_, err := os.Stat("/usr/sbin/device_management_client")
+	if errors.Is(err, os.ErrNotExist) {
+		return errors.New("checkIfDeviceIsEnrolled: /usr/sbin/device_management_client does not exist")
 	}
 
-	// Check if the attribute exists and is set to "true".
-	isEnrolled := strings.Contains(string(cmdline), "true")
+	isEnrolled := false
+	// Check if the install attribute exists and is set to "true".
+	if cmdline, err := exec.Command("device_management_client", "--action=install_attributes_get", "--name=enterprise.owned").Output(); err != nil {
+		isEnrolled = strings.Contains(string(cmdline), "true")
+	}
+
+	// Check if the enrolled state changed.
 	if data.GetBoolData() != isEnrolled {
 		return errors.Errorf("checkIfDeviceIsEnrolled: device enrolled state has changed; before: %v after: %v", data.GetBoolData(), isEnrolled)
 	}
