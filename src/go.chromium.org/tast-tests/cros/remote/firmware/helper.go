@@ -220,6 +220,7 @@ func (h *Helper) EnsureDUTBooted(ctx context.Context) error {
 	if h.DUT != nil {
 		testing.ContextLog(ctx, "Connecting to DUT")
 		if err := h.DUT.Connect(ctx); err == nil {
+			h.CloseRPCConnection(ctx)
 			return nil
 		}
 	}
