@@ -25,6 +25,12 @@ func init() {
 		SoftwareDeps: []string{"diagnostics"},
 		Attr:         []string{"group:mainline"},
 		Params: []testing.Param{{
+			// Contact: weiluanwang@google.com
+			Name:      "ac_power",
+			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineACPower),
+			Fixture:   "crosHealthdRunning",
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
+		}, {
 			// Contact: byronlee@google.com
 			Name:              "battery_capacity",
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineBatteryCapacity),

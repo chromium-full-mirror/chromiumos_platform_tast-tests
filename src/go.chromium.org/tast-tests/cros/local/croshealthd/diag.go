@@ -7,6 +7,7 @@ package croshealthd
 import (
 	"bytes"
 	"context"
+	"io"
 	"regexp"
 	"strconv"
 	"strings"
@@ -16,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/upstart"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/shutil"
 	"go.chromium.org/tast/core/testing"
@@ -164,12 +166,16 @@ func RunDiagRoutine(ctx context.Context, params RoutineParams) (*RoutineResult, 
 		diagParams = append(diagParams, "--file_size_mb=64")
 	} else if params.Routine == RoutinePowerButton {
 		diagParams = append(diagParams, "--length_seconds=5")
+	} else if params.Routine == RoutineACPower {
+		diagParams = append(diagParams, "--ac_power_is_connected=true")
 	}
 
 	var output string
 	var err error
 	if params.Routine == RoutinePowerButton {
 		output, err = runPowerButtonDiag(ctx, diagParams)
+	} else if params.Routine == RoutineACPower {
+		output, err = runACPowerDiag(ctx, diagParams)
 	} else {
 		output, err = runDiag(ctx, diagParams)
 	}
@@ -207,6 +213,37 @@ func runDiag(ctx context.Context, args []string) (string, error) {
 	stdout, stderr, err := cmd.SeparatedOutput()
 	if err != nil {
 		cmd.DumpLog(ctx)
+		return "", errors.Wrapf(err, "command failed with stdout: %q, stderr: %q", string(stdout), string(stderr))
+	}
+	return string(stdout), nil
+}
+
+// runACPowerDiag is a helper function similar to `runDiag` while simulating the
+// user input for the AC power routine.
+func runACPowerDiag(ctx context.Context, args []string) (string, error) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
+	args = append([]string{"diag"}, args...)
+	cmd := testexec.CommandContext(ctx, "cros-health-tool", args...)
+	testing.ContextLogf(ctx, "Running %q", shutil.EscapeSlice(cmd.Args))
+
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		cmd.DumpLog(ctx)
+		return "", errors.Wrap(err, "failed to get cmd.StdinPipe()")
+	}
+
+	go func() {
+		defer stdin.Close()
+		// Enter a new line to proceed.
+		io.WriteString(stdin, "\n")
+	}()
+
+	stdout, stderr, err := cmd.SeparatedOutput()
+	if err != nil {
+		cmd.DumpLog(cleanupCtx)
 		return "", errors.Wrapf(err, "command failed with stdout: %q, stderr: %q", string(stdout), string(stderr))
 	}
 	return string(stdout), nil
