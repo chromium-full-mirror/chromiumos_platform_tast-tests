@@ -28,7 +28,6 @@ func init() {
 		Desc:         "Collect power metrics of using noise cancellation in CRAS",
 		BugComponent: "b:776546",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
-		Fixture:      "powerAshPlatformAudio",
 		SoftwareDeps: []string{"chrome"},
 		// TODO(b/312097873): remove "brya" when b/309904720 is fixed.
 		HardwareDeps: hwdep.D(hwdep.Microphone(), hwdep.Speaker(), hwdep.SkipOnModel("brya")),
@@ -52,6 +51,7 @@ func init() {
 					},
 					extraCrasClientArgs: nil,
 				},
+				Fixture: "powerAshPlatformAudio",
 			},
 			{
 				Name: "aec",
@@ -73,6 +73,7 @@ func init() {
 					},
 					extraCrasClientArgs: []string{"--effects=aec"},
 				},
+				Fixture: "powerAshPlatformAudio",
 			},
 			{
 				Name: "aec_nc",
@@ -100,6 +101,7 @@ func init() {
 					},
 					extraCrasClientArgs: []string{"--effects=aec"},
 				},
+				Fixture: "powerAshPlatformAudio",
 			},
 			{
 				Name: "aec_nc_ast",
@@ -121,18 +123,19 @@ func init() {
 						if err := cras.SetActiveNodeByType(ctx, "INTERNAL_SPEAKER"); err != nil {
 							s.Fatal("Failed to set internal speaker active: ", err)
 						}
-						if err := cras.SetNoiseCancellationEnabled(ctx, true); err != nil {
-							s.Fatal("Failed to SetNoiseCancellationEnabled: ", err)
-						}
 						if err := cras.SetStyleTransferEnabled(ctx, true); err != nil {
 							s.Fatal("Failed to SetStyleTransferEnabled: ", err)
 						}
 						if err := cras.WaitUntilFeatureFlagHasValue(ctx, "CrOSLateBootAudioAPNoiseCancellation", true); err != nil {
 							s.Fatal("Faild to WaitUntilFeatureFlagHasValue: ", err)
 						}
+						if err := cras.WaitUntilFeatureFlagHasValue(ctx, "CrOSLateBootAudioStyleTransfer", true); err != nil {
+							s.Fatal("Faild to WaitUntilFeatureFlagHasValue: ", err)
+						}
 					},
 					extraCrasClientArgs: []string{"--effects=aec"},
 				},
+				Fixture: "powerAshPlatformAudioStyleTransfer",
 			},
 			{
 				Name: "dsp_aec",
@@ -152,6 +155,7 @@ func init() {
 					extraCrasClientArgs: []string{"--effects=0x11"},
 				},
 				ExtraHardwareDeps: hwdep.D(hwdepDSPModels),
+				Fixture:           "powerAshPlatformAudio",
 			},
 			{
 				Name: "dsp_aec_nc",
@@ -174,6 +178,7 @@ func init() {
 					extraCrasClientArgs: []string{"--effects=0x11"},
 				},
 				ExtraHardwareDeps: hwdep.D(hwdepDSPModels),
+				Fixture:           "powerAshPlatformAudio",
 			},
 		},
 	})
