@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/pci"
@@ -18,16 +19,17 @@ import (
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast-tests/cros/local/policyutil/fixtures"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         KeyRotation,
+		Func:         UserPolicyKeyRotation,
 		BugComponent: "b:1111617",
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Fixture:      fixture.ChromePolicyLoggedIn,
-		Desc:         "Verifies that when the private policy key is rotated on the server, the public half is correctly stored on the device",
+		Fixture:      fixture.FakeDMSEnrolled,
+		Desc:         "Verifies that when the user private policy key is rotated on the server, the public half is correctly stored on the device",
 		Contacts: []string{
 			"chromeos-commercial-remote-management@google.com", // Team
 			"artyomchen@google.com",                            // Test author
@@ -41,14 +43,43 @@ func init() {
 			"group:hw_agnostic",
 		},
 		SearchFlags: []*testing.StringPair{
-			pci.SearchFlag(&policy.ChromeOsLockOnIdleSuspend{}, pci.Served),
+			pci.SearchFlag(&policy.AllowDinosaurEasterEgg{}, pci.Served),
 		},
+		Params: []testing.Param{{
+			Name: "sha256_enabled",
+			Val:  true,
+		}, {
+			Name: "sha256_disabled",
+			Val:  false,
+		}},
 	})
 }
 
-func KeyRotation(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+func UserPolicyKeyRotation(ctx context.Context, s *testing.State) {
+	sha256Enabled := s.Param().(bool)
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
+
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
+	// Start a Chrome instance that will fetch policies from the FakeDMS.
+	opts := []chrome.Option{
+		chrome.FakeLogin(chrome.Creds{User: fixtures.Username, Pass: fixtures.Password}),
+		chrome.DMSPolicy(fdms.URL),
+		chrome.KeepEnrollment(),
+	}
+	if sha256Enabled {
+		opts = append(opts, chrome.EnableFeatures("PolicyFetchWithSha256"))
+	} else {
+		opts = append(opts, chrome.DisableFeatures("PolicyFetchWithSha256"))
+	}
+	cr, err := chrome.New(ctx, opts...)
+	if err != nil {
+		s.Fatal("Chrome login failed: ", err)
+	}
+	defer cr.Close(cleanupCtx)
+
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
@@ -69,6 +100,12 @@ func KeyRotation(ctx context.Context, s *testing.State) {
 	if err := policyutil.ServeBlobAndRefresh(ctx, fdms, cr, pb); err != nil {
 		s.Fatal("Failed to set initial key: ", err)
 	}
+	defer func() {
+		// Reset the key on the server to the default value.
+		if err := fdms.WritePolicyBlob(policy.NewBlob()); err != nil {
+			s.Fatal("Failed to reset FakeDMS' key: ", err)
+		}
+	}()
 
 	// Read the first version of the public half of the key.
 	var prevKey []byte
@@ -98,7 +135,7 @@ func KeyRotation(ctx context.Context, s *testing.State) {
 	// decoded properly and keyFile stays the same.
 	// TODO(b/262529043): For a stronger guarantee compare the key contents
 	// with the actual key on the server.
-	ps := []policy.Policy{&policy.ChromeOsLockOnIdleSuspend{Val: false}}
+	ps := []policy.Policy{&policy.AllowDinosaurEasterEgg{Val: false}}
 	pb.AddPolicies(ps)
 	if err := policyutil.ServeBlobAndRefresh(ctx, fdms, cr, pb); err != nil {
 		s.Fatal("Failed to fetch policies with new public key: ", err)

@@ -8,6 +8,7 @@ import (
 	"context"
 	"os"
 	"reflect"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/pci"
@@ -15,6 +16,8 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
+	"go.chromium.org/tast-tests/cros/local/policyutil/fixtures"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -23,8 +26,8 @@ func init() {
 		Func:         DevicePolicyKeyRotation,
 		BugComponent: "b:1111617",
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Fixture:      fixture.ChromeEnrolledLoggedIn,
-		Desc:         "Verifies that when the private policy key is rotated on the server, the public half is correctly stored on the device",
+		Fixture:      fixture.FakeDMSEnrolled,
+		Desc:         "Verifies that when the device private policy key is rotated on the server, the public half is correctly stored on the device",
 		Contacts: []string{
 			"chromeos-commercial-remote-management@google.com", // Team
 			"artyomchen@google.com",                            // Test author
@@ -40,12 +43,41 @@ func init() {
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DeviceAutoUpdateDisabled{}, pci.Served),
 		},
+		Params: []testing.Param{{
+			Name: "sha256_enabled",
+			Val:  true,
+		}, {
+			Name: "sha256_disabled",
+			Val:  false,
+		}},
 	})
 }
 
 func DevicePolicyKeyRotation(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	sha256Enabled := s.Param().(bool)
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
+
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
+	// Start a Chrome instance that will fetch policies from the FakeDMS.
+	opts := []chrome.Option{
+		chrome.FakeLogin(chrome.Creds{User: fixtures.Username, Pass: fixtures.Password}),
+		chrome.DMSPolicy(fdms.URL),
+		chrome.KeepEnrollment(),
+	}
+	if sha256Enabled {
+		opts = append(opts, chrome.EnableFeatures("PolicyFetchWithSha256"))
+	} else {
+		opts = append(opts, chrome.DisableFeatures("PolicyFetchWithSha256"))
+	}
+	cr, err := chrome.New(ctx, opts...)
+	if err != nil {
+		s.Fatal("Chrome login failed: ", err)
+	}
+	defer cr.Close(cleanupCtx)
+
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
