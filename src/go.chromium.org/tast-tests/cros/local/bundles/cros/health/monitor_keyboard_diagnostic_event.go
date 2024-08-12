@@ -26,6 +26,11 @@ import (
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
+type keyboardEventTestParams struct {
+	// Whether to force laptop mode during the setup.
+	forceLaptopMode bool
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         MonitorKeyboardDiagnosticEvent,
@@ -38,8 +43,25 @@ func init() {
 		BugComponent: "b:982097", // ChromeOS > Platform > Enablement > Health
 		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		SoftwareDeps: []string{"diagnostics", "chrome"},
+		// Form factors with internal keyboards:
+		//  - Clamshell
+		//  - Convertible
+		//  - Detachable
 		HardwareDeps: hwdep.D(hwdep.InternalKeyboard()),
 		Fixture:      "crosHealthdRunning",
+		Params: []testing.Param{{
+			Name: "non_tablet_mode_form_factors",
+			Val: keyboardEventTestParams{
+				forceLaptopMode: false,
+			},
+			ExtraHardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Clamshell)),
+		}, {
+			Name: "tablet_mode_form_factors",
+			Val: keyboardEventTestParams{
+				forceLaptopMode: true,
+			},
+			ExtraHardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Convertible, hwdep.Detachable)),
+		}},
 	})
 }
 
@@ -87,6 +109,8 @@ func verifyKeyboardDiagnosticEvent(eventLine string) error {
 }
 
 func MonitorKeyboardDiagnosticEvent(ctx context.Context, s *testing.State) {
+	testParam := s.Param().(keyboardEventTestParams)
+
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
@@ -102,11 +126,13 @@ func MonitorKeyboardDiagnosticEvent(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect Test API: ", err)
 	}
 
-	cleanup, err := ash.EnsureTabletModeDisabledWithKeyboardEnabled(ctx)
-	if err != nil {
-		s.Fatal("Failed to ensure in laptop mode: ", err)
+	if testParam.forceLaptopMode {
+		cleanup, err := ash.EnsureTabletModeDisabledWithKeyboardEnabled(ctx)
+		if err != nil {
+			s.Fatal("Failed to ensure in laptop mode: ", err)
+		}
+		defer cleanup(cleanupCtx)
 	}
-	defer cleanup(cleanupCtx)
 
 	// Prepare the keyboard tester page before start listening to events
 	// because the UI may take a long time to display.
