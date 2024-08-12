@@ -11,14 +11,15 @@ import (
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
-	"go.chromium.org/tast-tests/cros/common/testexec"
 	dututil "go.chromium.org/tast-tests/cros/remote/dut"
+	networkSvc "go.chromium.org/tast-tests/cros/services/cros/network"
 	"go.chromium.org/tast-tests/cros/services/cros/wifi"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 const ethernetDisconnectRebootTimeout = 5 * time.Minute
@@ -37,11 +38,14 @@ func init() {
 		BugComponent:   "b:1318544", // ChromeOS > Software > System Services > Connectivity > General
 		LifeCycleStage: testing.LifeCycleInDevelopment,
 		Attr:           []string{"group:network", "network_e2e_unstable"},
-		TestBedDeps:    []string{tbdep.ServoStateWorking},
-		VarDeps:        []string{"servo"},
-		SoftwareDeps:   []string{"reboot"},
+		// The servo_v4p1 is required to use the servo.OnOff() API with servo.DutEthPwrEn.
+		// See b/359743894 for more details.
+		TestBedDeps:  []string{tbdep.ServoStateWorking, tbdep.ServoComponent("servo_v4p1")},
+		VarDeps:      []string{"servo"},
+		SoftwareDeps: []string{"reboot"},
 		ServiceDeps: []string{
 			"tast.cros.wifi.ShillService",
+			"tast.cros.network.EthernetService",
 		},
 		Timeout: 3*time.Minute + 2*ethernetDisconnectRebootTimeout,
 	})
@@ -91,13 +95,13 @@ func EthernetDisconnect(ctx context.Context, s *testing.State) {
 			name:         "network connectivity test under Ethernet is plugged in",
 			setup:        ethernetControl(pxy.Servo(), servo.On),
 			numTrials:    1,
-			verification: networkAvailable(helper.dut, true /* expectedAvailable */),
+			verification: helper.networkAvailable(true /* expectedAvailable */),
 		}, {
 			name:      "network connectivity test under Ethernet is unplugged",
 			setup:     ethernetControl(pxy.Servo(), servo.Off),
 			numTrials: 1,
 			verification: action.Combine("verify network is not available",
-				networkAvailable(helper.dut, false /* expectedAvailable */),
+				helper.networkAvailable(false /* expectedAvailable */),
 				dutAvailable(pxy.Servo()),
 			),
 		}, {
@@ -107,7 +111,7 @@ func EthernetDisconnect(ctx context.Context, s *testing.State) {
 				ethernetControl(pxy.Servo(), servo.On),
 			),
 			numTrials:    1,
-			verification: networkAvailable(helper.dut, true /* expectedAvailable */),
+			verification: helper.networkAvailable(true /* expectedAvailable */),
 		}, {
 			name: "network connectivity test under Ethernet is plugged and reboot",
 			setup: func(ctx context.Context) error {
@@ -124,7 +128,7 @@ func EthernetDisconnect(ctx context.Context, s *testing.State) {
 			},
 			// Reboot the device several times to verify the Ethernet still can browse the internet.
 			numTrials:    2,
-			verification: networkAvailable(helper.dut, true /* expectedAvailable */),
+			verification: helper.networkAvailable(true /* expectedAvailable */),
 		}, {
 			name: "network connectivity test under Ethernet is plugged and suspend/resume",
 			setup: func(ctx context.Context) error {
@@ -141,7 +145,7 @@ func EthernetDisconnect(ctx context.Context, s *testing.State) {
 			},
 			// Suspend and resume the device several times to verify the Ethernet still can browse the internet.
 			numTrials:    2,
-			verification: networkAvailable(helper.dut, true /* expectedAvailable */),
+			verification: helper.networkAvailable(true /* expectedAvailable */),
 		},
 	} {
 		s.Run(ctx, test.name, func(ctx context.Context, s *testing.State) {
@@ -210,22 +214,25 @@ func ethernetControl(srv *servo.Servo, enabled servo.OnOffValue) action.Action {
 	}
 }
 
-// networkAvailable pings the network to check if the network is available as expected.
-func networkAvailable(dut *dut.DUT, expectedAvailable bool) action.Action {
+// networkAvailable checks if the network is available as expected.
+func (r *disconnectEthernetRPCHelper) networkAvailable(expectedAvailable bool) action.Action {
 	return func(ctx context.Context) error {
-		pingCtx, cancel := context.WithTimeout(ctx, 20*time.Second)
-		defer cancel()
-		// Verify whether the network connection is available.
-		if err := dut.Conn().CommandContext(pingCtx, "ping", "-c", "3", "www.google.com").Run(testexec.DumpLogOnError); err != nil {
-			if expectedAvailable {
-				return errors.Wrap(err, "failed to ping network")
+		ethernetSvc := networkSvc.NewEthernetServiceClient(r.client.Conn)
+		// The Ethernet might not be connected immediately causing the session creation to fail.
+		return testing.Poll(ctx, func(ctx context.Context) error {
+			// Verify whether the network connection is available.
+			// This RPC times out after 10 seconds, making the entire polling to have a 10-second interval.
+			if _, err := ethernetSvc.WaitForEthernet(ctx, &emptypb.Empty{}); err != nil {
+				if expectedAvailable {
+					return err
+				}
+				// No error if the network expected to be not available.
+				return nil
+			} else if !expectedAvailable {
+				return errors.New("expect the Ethernet interface is disabled; however it is still available")
 			}
-			// No error if the network expected to be not available.
 			return nil
-		} else if !expectedAvailable {
-			return errors.New("expect the Ethernet interface is disabled; however it is still available")
-		}
-		return nil
+		}, &testing.PollOptions{Timeout: 1 * time.Minute})
 	}
 }
 
