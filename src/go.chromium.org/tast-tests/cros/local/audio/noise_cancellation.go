@@ -21,6 +21,15 @@ type NoiseCancellationConfig struct {
 	ChromeOpts []chrome.Option
 }
 
+func installDlcs(ctx context.Context, dlcIDs []string) error {
+	for _, dlcID := range dlcIDs {
+		if err := dlc.Install(ctx, dlcID, ""); err != nil {
+			return errors.Wrapf(err, "cannot install %s", dlcID)
+		}
+	}
+	return nil
+}
+
 // WithNoiseCancellation setups noise cancellation
 func WithNoiseCancellation(
 	ctx context.Context, config NoiseCancellationConfig,
@@ -46,13 +55,13 @@ func WithNoiseCancellation(
 
 	// Install DLC.
 	if config.NoiseCancellationEnabled {
-		if err := dlc.Install(ctx, "nc-ap-dlc", ""); err != nil {
-			return errors.Wrap(err, "cannot install nc-ap-dlc")
+		if err := installDlcs(ctx, []string{"nc-ap-dlc"}); err != nil {
+			return errors.Wrap(err, "failed at installing noise cancellation dlc")
 		}
 	}
 	if config.StyleTransferEnabled {
-		if err := dlc.Install(ctx, "nuance-dlc", ""); err != nil {
-			return errors.Wrap(err, "cannot install nuance-dlc")
+		if err := installDlcs(ctx, []string{"nc-ap-dlc", "nuance-dlc"}); err != nil {
+			return errors.Wrap(err, "failed at installing style transfer dlcs")
 		}
 	}
 
