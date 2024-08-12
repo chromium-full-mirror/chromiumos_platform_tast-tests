@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os/exec"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -506,11 +507,12 @@ func setAlwaysRestoreSettings(ctx context.Context, tconn *chrome.TestConn) error
 		return errors.Wrap(err, "failed to launch system preferences page")
 	}
 
-	restoreButtonNode := nodewith.Name("Restore session on startup").Role(role.ComboBoxSelect)
-	alwaysRestoreOptionNode := nodewith.Name("Always restore").Role(role.MenuListOption)
+	restoreButtonReg := regexp.MustCompile("(Restore session on startup|Welcome Recap)")
+	restoreButtonNode := nodewith.NameRegex(restoreButtonReg).Role(role.ComboBoxSelect)
+	alwaysRestoreOptionNode := nodewith.NameRegex(regexp.MustCompile("Always (restore|open)")).Role(role.MenuListOption)
 
 	ui := uiauto.New(tconn)
-	if err := uiauto.Combine("set \"Always restore\" setting in the settings app",
+	if err := uiauto.Combine("set \"Always open\" setting in the settings app",
 		ui.WaitUntilExists(restoreButtonNode),
 		ui.DoDefault(restoreButtonNode),
 		ui.WaitUntilExists(alwaysRestoreOptionNode),
