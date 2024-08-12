@@ -23,6 +23,8 @@ import (
 // spellcheck_lookup.
 const AnnotationHashCode = "132553989"
 
+const spellCheckURL = "https://www.googleapis.com/spelling/v2/spelling/check.*"
+
 // TestCase defines test expectations based on the policy value.
 type TestCase struct {
 	// Name is the testcase name.
@@ -35,8 +37,12 @@ type TestCase struct {
 	WantSettingsCheck checked.Checked
 	// WantContextCheck states whether the context menu checkmark should be there.
 	WantContextCheck checked.Checked
-	// ShouldFindAnnotation states wherher spellcheck_lookup annotation should be found in the net-export log.
+	// ShouldFindAnnotation states whether spellcheck_lookup annotation should be found in the net-export log.
 	ShouldFindAnnotation bool
+	// TrafficShouldFind states the traffic should be found during tests.
+	TrafficShouldFind []string
+	// TrafficShouldNotFind states the traffic should NOT be found during tests.
+	TrafficShouldNotFind []string
 }
 
 // TestCases returns the map of policy setting enum to TestCase object
@@ -51,6 +57,8 @@ func TestCases() map[networkrequestmonitor.PolicySetting]TestCase {
 			// "" means that there is no checkmark.
 			WantContextCheck:     "",
 			ShouldFindAnnotation: false,
+			TrafficShouldFind:    []string{},
+			TrafficShouldNotFind: []string{spellCheckURL},
 		},
 		networkrequestmonitor.PolicyEnabled: {
 			Name:                 "allow",
@@ -59,6 +67,8 @@ func TestCases() map[networkrequestmonitor.PolicySetting]TestCase {
 			WantSettingsCheck:    checked.True,
 			WantContextCheck:     checked.True,
 			ShouldFindAnnotation: true,
+			TrafficShouldFind:    []string{spellCheckURL},
+			TrafficShouldNotFind: []string{},
 		},
 		networkrequestmonitor.PolicyUnset: {
 			Name:              "unset",
@@ -68,6 +78,8 @@ func TestCases() map[networkrequestmonitor.PolicySetting]TestCase {
 			// "" means that there is no checkmark.
 			WantContextCheck:     "",
 			ShouldFindAnnotation: false,
+			TrafficShouldFind:    []string{},
+			TrafficShouldNotFind: []string{spellCheckURL},
 		},
 	}
 }
@@ -82,6 +94,7 @@ func DataFiles() []string {
 func TriggerSpellCheck(ctx context.Context, params networkrequestmonitor.OptionalServiceParams) (err error) {
 	br := params.Browser
 	cr := params.Chrome
+
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		errors.Wrap(err, "failed to create Test API connection")
@@ -143,5 +156,6 @@ func TriggerSpellCheck(ctx context.Context, params networkrequestmonitor.Optiona
 	if policyParam.WantContextCheck != menuItem.Checked {
 		return errors.Errorf("Menu item in wrong checking state: want=%s, actual=%s", policyParam.WantContextCheck, menuItem.Checked)
 	}
+
 	return nil
 }

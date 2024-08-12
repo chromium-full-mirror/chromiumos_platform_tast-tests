@@ -66,6 +66,19 @@ func SpellCheckServiceEnabled(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
+	mp, err := proxy.NewMitmProxy(ctx,
+		proxy.DumpHTTPFlow(true),
+	)
+	if err != nil {
+		s.Fatal("Failed to start mitmproxy: ", err)
+	}
+	defer mp.Close(cleanupCtx)
+	reset, err := proxy.ConfigureChrome(ctx, mp, cr)
+	if err != nil {
+		s.Fatal("Failed to configure chrome for proxy: ", err)
+	}
+	defer reset(cleanupCtx, cr)
+
 	// Setup and start webserver (implicitly provides data form above).
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer server.Close()
@@ -98,17 +111,6 @@ func SpellCheckServiceEnabled(ctx context.Context, s *testing.State) {
 			}
 			defer netExport.Cleanup(cleanupCtx)
 
-			mp, err := proxy.NewMitmProxy(ctx)
-			if err != nil {
-				s.Fatal("Failed to start mitmproxy: ", err)
-			}
-			defer mp.Close(cleanupCtx)
-			reset, err := proxy.ConfigureChrome(ctx, mp, cr)
-			if err != nil {
-				s.Fatal("Failed to configure chrome for proxy: ", err)
-			}
-			defer reset(cleanupCtx, cr)
-
 			if err := spellcheck.TriggerSpellCheck(ctx, networkrequestmonitor.OptionalServiceParams{
 				Server:        server,
 				Chrome:        cr,
@@ -126,6 +128,19 @@ func SpellCheckServiceEnabled(ctx context.Context, s *testing.State) {
 				s.Fatalf("Annotation mismatch = got %t, want %t", foundAnnotation, param.ShouldFindAnnotation)
 			}
 
+			resp, err := mp.DumpHTTPFlow(ctx, true, false)
+			if err != nil {
+				s.Fatal("Failed to get dump httpflow from mitmproxy: ", err)
+			}
+
+			v := proxy.NewNetworkVerifier(resp)
+			allow := param.TrafficShouldFind
+			disallow := param.TrafficShouldNotFind
+			// allow/disallow traffic are passed by test case param.
+			// We will ignore traffic other than the allow and disallow list for verifying diff.
+			if err := v.Verify(allow, disallow, []string{".*"}); err != nil {
+				s.Fatal("Diff test result: ", err)
+			}
 		})
 	}
 }
