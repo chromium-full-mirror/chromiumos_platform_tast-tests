@@ -169,7 +169,7 @@ func UnplugExternalStorageMessageDisplay(ctx context.Context, s *testing.State) 
 	// Waiting for the system to display the "Whoa, there. Be careful." message.
 	notificationMessage := &ui.Finder{
 		NodeWiths: []*ui.NodeWith{
-			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_ALERT_DIALOG}},
+			{Value: &ui.NodeWith_First{First: true}},
 			{Value: &ui.NodeWith_NameRegex{NameRegex: "Whoa, there. Be careful."}},
 		},
 	}
