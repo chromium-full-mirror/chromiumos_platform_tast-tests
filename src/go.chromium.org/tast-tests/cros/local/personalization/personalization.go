@@ -138,12 +138,15 @@ func BreadcrumbNodeFinder(breadcrumb string) *nodewith.Finder {
 // SearchForAppInLauncher returns an action to search and select result in launcher.
 func SearchForAppInLauncher(query, result string, kb *input.KeyboardEventWriter, ui *uiauto.Context) uiauto.Action {
 	searchResult := launcher.SearchResultListItemFinder.NameContaining(result).First()
-	return ui.RetrySilently(2, uiauto.Combine("search and select result in launcher",
-		kb.AccelAction("Search"),
-		ui.WaitUntilExists(nodewith.Role(role.TextField).HasClass("Textfield")),
-		kb.TypeAction(query),
-		ui.LeftClick(searchResult),
-	))
+	return uiauto.Combine("search and click result in launcher",
+		ui.RetrySilently(3, uiauto.Combine("search for result in launcher",
+			kb.AccelAction("Search"),
+			ui.WaitUntilExists(nodewith.Role(role.TextField).HasClass("Textfield")),
+			kb.TypeAction(query),
+			ui.WaitUntilExists(searchResult),
+		)),
+		ui.LeftClickUntil(searchResult, ui.Gone(searchResult)),
+	)
 }
 
 // SetBacklightColor selects a color based on its index in the color options of keyboard backlight and verifies the correct color is selected.
