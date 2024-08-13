@@ -39,14 +39,13 @@ const (
 // CleanUpCheck is a struct that defines a single clean up check.
 type CleanUpCheck struct {
 	Check       func(context.Context, *cs.PreTestData) error
-	RecordState func(context.Context) (*cs.PreTestData, error)
+	RecordState func(context.Context) *cs.PreTestData
 	Level       LevelEnum
 	Enabled     bool
 }
 
 // RecordStateBeforeTest collects data of the DUT state before the test is run.
 func RecordStateBeforeTest(ctx context.Context, req *cs.RecordStateBeforeTestFromDUTRequest) (*cs.RecordStateBeforeTestFromDUTResponse, error) {
-	var allErrors error = nil
 	stateDataMap := map[string]*cs.PreTestData{}
 	level, err := strconv.Atoi(CleanUpChecksLevel.Value())
 	if err != nil {
@@ -57,15 +56,12 @@ func RecordStateBeforeTest(ctx context.Context, req *cs.RecordStateBeforeTestFro
 			continue
 		}
 		if check.RecordState != nil {
-			stateData, err := check.RecordState(ctx)
-			if err != nil {
-				allErrors = errors.Join(allErrors, errors.Wrapf(err, "%s: ", checkName))
-			}
+			stateData := check.RecordState(ctx)
 			stateDataMap[checkName] = stateData
 		}
 	}
 
-	return &cs.RecordStateBeforeTestFromDUTResponse{PreTestDataMap: stateDataMap}, allErrors
+	return &cs.RecordStateBeforeTestFromDUTResponse{PreTestDataMap: stateDataMap}, nil
 }
 
 // ExecuteCleanUpChecks executes all enabled clean up checks.
@@ -80,7 +76,11 @@ func ExecuteCleanUpChecks(ctx context.Context, data *cs.ExecuteCleanUpChecksOnDU
 		if !check.Enabled || int(check.Level) > level {
 			continue
 		}
-		err = check.Check(ctx, data.PreTestDataMap[checkName])
+		if data.PreTestDataMap[checkName] != nil && data.PreTestDataMap[checkName].Error != "" {
+			err = errors.New(data.PreTestDataMap[checkName].Error)
+		} else {
+			err = check.Check(ctx, data.PreTestDataMap[checkName])
+		}
 		if err != nil {
 			allErrors = errors.Join(allErrors, errors.Wrapf(err, "%s: ", checkName))
 		}

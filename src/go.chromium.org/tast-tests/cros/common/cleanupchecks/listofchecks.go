@@ -67,10 +67,10 @@ func checkIfRootfsVerificationIsTurnedOn(ctx context.Context, data *cs.PreTestDa
 }
 
 // recordStateDeviceEnrolled records the enrolled state of the device before running the test.
-func recordStateDeviceEnrolled(ctx context.Context) (*cs.PreTestData, error) {
+func recordStateDeviceEnrolled(ctx context.Context) *cs.PreTestData {
 	_, err := os.Stat("/usr/sbin/device_management_client")
 	if errors.Is(err, os.ErrNotExist) {
-		return nil, errors.New("recordStateDeviceEnrolled: /usr/sbin/device_management_client does not exist")
+		return &cs.PreTestData{Error: "recordStateDeviceEnrolled: /usr/sbin/device_management_client does not exist"}
 	}
 
 	isEnrolled := false
@@ -84,7 +84,7 @@ func recordStateDeviceEnrolled(ctx context.Context) (*cs.PreTestData, error) {
 			BoolData: isEnrolled,
 		},
 	}
-	return data, nil
+	return data
 }
 
 // checkIfDeviceIsEnrolled checks the device enrolled state after the test and compare it with the state before the test.
@@ -108,10 +108,10 @@ func checkIfDeviceIsEnrolled(ctx context.Context, data *cs.PreTestData) error {
 }
 
 // recordDNSStatus records the DNS settings before running the test.
-func recordDNSStatus(ctx context.Context) (*cs.PreTestData, error) {
+func recordDNSStatus(ctx context.Context) *cs.PreTestData {
 	currentDNSServers, err := extractDNSServers()
 	if err != nil {
-		return nil, errors.New("recordDNSStatus: failed to get DNS status")
+		return &cs.PreTestData{Error: "recordDNSStatus: failed to get DNS status"}
 	}
 
 	data := &cs.PreTestData{
@@ -119,7 +119,7 @@ func recordDNSStatus(ctx context.Context) (*cs.PreTestData, error) {
 			ByteData: currentDNSServers,
 		},
 	}
-	return data, nil
+	return data
 }
 
 // checkIfDNSChanged checks the device DNS settings after the test and compare it with the settings before the test.

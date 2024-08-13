@@ -43,6 +43,7 @@ message PreTestData {
     StringMap stringMapData = 7;
     bytes byteData = 8;
   }
+  string error = 9;
 }
 
 message IntMap { map<string, int32> map = 1; }
