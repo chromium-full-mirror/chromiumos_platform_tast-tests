@@ -760,6 +760,15 @@ func (f *tastFixtureImpl) PostTest(ctx context.Context, s *testing.FixtTestState
 		}
 	}
 
+	if f.features&TFFeaturesCompanionAndroid != 0 {
+		for _, dev := range f.tf.androidDevices {
+			fileName := "android-device-" + dev.serialNumber + "-logcat.txt"
+			if err := dev.P2PDeviceLogcat(ctx, filepath.Join(s.OutDir(), fileName)); err != nil {
+				s.Error("Failed to save the Android Device Logs: ", err)
+			}
+		}
+	}
+
 	if err := f.tf.CollectLogs(ctx); err != nil {
 		s.Log("Error collecting logs, err: ", err)
 	}

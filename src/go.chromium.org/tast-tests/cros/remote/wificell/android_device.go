@@ -7,11 +7,13 @@ package wificell
 import (
 	"context"
 	"net"
+	"os"
 	"strconv"
 	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/network/ping"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/common/wifi/p2p"
 	"go.chromium.org/tast-tests/cros/remote/wificell/hostapd"
 	"go.chromium.org/tast/core/errors"
@@ -343,5 +345,24 @@ func (ad *androidDeviceData) P2PDeviceInfoUpdate(ctx context.Context) error {
 		ad.p2p.frequency = uint32(goP2PFreq)
 	}
 
+	return nil
+}
+
+// P2PDeviceLogcat dumps logcat's output to the specified file.
+func (ad *androidDeviceData) P2PDeviceLogcat(ctx context.Context, filePath string, opts ...string) error {
+	out, err := os.Create(filePath)
+	if err != nil {
+		return errors.Wrap(err, "failed to create logcat output file")
+	}
+	defer out.Close()
+
+	params := append([]string{"-s", ad.serialNumber, "shell", "logcat", "-d"}, opts...)
+	cmd := ad.labstation.host.CommandContext(ctx, "adb", params...)
+	cmd.Stdout = out
+	cmd.Stderr = out
+
+	if err := cmd.Run(testexec.DumpLogOnError); err != nil {
+		return errors.Wrap(err, "failed to dump logcat")
+	}
 	return nil
 }

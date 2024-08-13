@@ -89,4 +89,6 @@ type P2PWiFiDevice interface {
 	P2PGroupDisconnect(ctx context.Context) error
 	// P2PDeviceInfoUpdate updates the WiFi Direct Group/Client Information.
 	P2PDeviceInfoUpdate(ctx context.Context) error
+	// P2PDeviceLogcat dumps logcat's output to the specified file.
+	P2PDeviceLogcat(ctx context.Context, filePath string, opts ...string) error
 }

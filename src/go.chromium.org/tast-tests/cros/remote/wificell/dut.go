@@ -310,3 +310,8 @@ func (dd *dutData) P2PDeviceInfoUpdate(ctx context.Context) error {
 
 	return nil
 }
+
+// P2PDeviceLogcat dumps logcat's output to the specified file.
+func (dd *dutData) P2PDeviceLogcat(ctx context.Context, filePath string, opts ...string) error {
+	return nil
+}
