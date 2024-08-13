@@ -29,6 +29,8 @@ const (
 	Enrollment                                          = "enrollment"
 	EnrollmentKiosk                                     = "enrollment_kiosk"
 	EnrollmentSAML                                      = "enrollment_saml"
+	FREManual                                           = "fre_manual"
+	FREAutomated                                        = "fre_automated"
 	ImprivataSharedKiosk                                = "imprivata_shared_kiosk"
 	ImprivataSingleUser                                 = "imprivata_single_user"
 	LogUploadEnabled                                    = "log_upload_enabled"
