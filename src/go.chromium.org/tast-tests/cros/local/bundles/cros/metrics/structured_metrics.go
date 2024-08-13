@@ -6,6 +6,7 @@ package metrics
 
 import (
 	"context"
+	"os"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/metrics"
@@ -65,6 +66,12 @@ func StructuredMetrics(ctx context.Context, s *testing.State) {
 		}
 		if err := metrics.CleanStructuredEvents(ctx); err != nil {
 			s.Error("Failed to clean structured events directory")
+			break
+		}
+
+		// Skip test if the policy file cannot be read since it likely does not exist.
+		if _, err := os.ReadFile(tc.path); err != nil {
+			s.Logf("Configuration cannot be read at %v. Skipping test %v", tc.path, tc.name)
 			break
 		}
 
