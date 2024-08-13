@@ -156,7 +156,7 @@ func ARCVPNTrafficCounters(ctx context.Context, s *testing.State) {
 
 	// Make sure the interface and routing is ready before setting up the socket.
 	if err := arcnet.ExpectPingSuccess(ctx, a, guestIfname, addr.String()); err != nil {
-		s.Fatalf("Failed to verify ARC connectivity to %s via %s", addr.String(), guestIfname)
+		s.Fatalf("Failed to verify ARC connectivity to %s via %s: %v", addr.String(), guestIfname, err)
 	}
 
 	testing.ContextLog(ctx, "Starting ArcVpnTest app and setting up the socket")

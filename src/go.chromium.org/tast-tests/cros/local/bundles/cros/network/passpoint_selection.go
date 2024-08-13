@@ -555,11 +555,11 @@ func PasspointSelection(ctx context.Context, s *testing.State) {
 	// exist anymore.
 	wpas, err := wpasupplicant.NewSupplicant(ctx)
 	if err != nil {
-		s.Fatal("Failed to create wpa_supplicant proxy")
+		s.Fatal("Failed to create wpa_supplicant proxy: ", err)
 	}
 	iface, err := wpas.GetInterface(ctx, tc.clientIface)
 	if err != nil {
-		s.Fatalf("Failed to obtain %s interface from wpa_supplicant", tc.clientIface)
+		s.Fatalf("Failed to obtain %s interface from wpa_supplicant: %v", tc.clientIface, err)
 	}
 	// Set the expiration time of the cache entries to 0 (i.e. immediate flush).
 	defer iface.FlushBSS(cleanupCtx, 0)

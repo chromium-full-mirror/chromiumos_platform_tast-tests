@@ -76,7 +76,7 @@ func EnableRFC8925OnWifi(ctx context.Context, s *testing.State) {
 	// Avoid the created service being persisted into the profile.
 	removeProfile, err := shill.LogOutUserAndPushTestProfile(ctx)
 	if err != nil {
-		s.Fatal("Failed to prepare test profile")
+		s.Fatal("Failed to prepare test profile: ", err)
 	}
 	defer removeProfile(cleanupCtx)
 

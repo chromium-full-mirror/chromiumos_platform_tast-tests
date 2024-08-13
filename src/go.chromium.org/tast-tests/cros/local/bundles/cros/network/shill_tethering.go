@@ -237,7 +237,7 @@ func ShillTethering(ctx context.Context, s *testing.State) {
 		}
 		return nil
 	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 100 * time.Millisecond}); err != nil {
-		s.Fatal("Timeout waiting for downstream device getting HTTP response from upstream via IPv6")
+		s.Fatal("Timeout waiting for downstream device getting HTTP response from upstream via IPv6: ", err)
 	}
 	s.Log("Got the correct HTTP response via IPv6")
 

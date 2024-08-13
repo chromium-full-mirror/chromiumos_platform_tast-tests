@@ -152,15 +152,15 @@ func QosWebRTC(ctx context.Context, s *testing.State) {
 		if err := testexec.CommandContext(ctx,
 			"ip", "link", "add", rtcRemoteIfname, "type", "veth",
 			"peer", rtcRemoteIfnameInNetns, "netns", ns).Run(testexec.DumpLogOnError); err != nil {
-			s.Fatal("Failed to create the veth pair for WebRTC peer")
+			s.Fatal("Failed to create the veth pair for WebRTC peer: ", err)
 		}
 
 		// Bring both peers up.
 		if err := testexec.CommandContext(ctx, "ip", "link", "set", rtcRemoteIfname, "up").Run(testexec.DumpLogOnError); err != nil {
-			s.Fatal("Failed to bring veth up")
+			s.Fatal("Failed to bring veth up: ", err)
 		}
 		if err := wifi.Router.RunWithoutChroot(ctx, "ip", "link", "set", rtcRemoteIfnameInNetns, "up"); err != nil {
-			s.Fatal("Failed to bring veth up in netns")
+			s.Fatal("Failed to bring veth up in netns: ", err)
 		}
 
 		// Allocate static IPs.

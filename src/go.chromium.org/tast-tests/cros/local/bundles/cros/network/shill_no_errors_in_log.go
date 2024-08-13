@@ -81,7 +81,7 @@ func ShillNoErrorsInLog(ctx context.Context, s *testing.State) {
 	// before shill restarted.
 	unlock, err := network.LockCheckNetworkHook(ctx)
 	if err != nil {
-		s.Fatal("Failed to lock check network hook")
+		s.Fatal("Failed to lock check network hook: ", err)
 	}
 	defer unlock()
 

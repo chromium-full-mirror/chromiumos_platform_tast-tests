@@ -231,11 +231,11 @@ func PasspointRoaming(ctx context.Context, s *testing.State) {
 	// Obtain a proxy to wpa_supplicant to flush BSS cache during the test.
 	wpas, err := wpasupplicant.NewSupplicant(ctx)
 	if err != nil {
-		s.Fatal("Failed to create wpa_supplicant proxy")
+		s.Fatal("Failed to create wpa_supplicant proxy: ", err)
 	}
 	iface, err := wpas.GetInterface(ctx, tc.clientIface)
 	if err != nil {
-		s.Fatalf("Failed to obtain %s interface from wpa_supplicant", tc.clientIface)
+		s.Fatalf("Failed to obtain %s interface from wpa_supplicant: %v", tc.clientIface, err)
 	}
 
 	// Add the set of credentials to Shill.

@@ -129,7 +129,7 @@ func ARCVPNDatapath(ctx context.Context, s *testing.State) {
 	// Install and start the test app.
 	cleanupFunc, err := arcvpn.InstallAndPreAuthorizeARCVPN(ctx, a)
 	if err != nil {
-		s.Fatal("Failed to set up ARC VPN test app")
+		s.Fatal("Failed to set up ARC VPN test app: ", err)
 	}
 	defer cleanupFunc(cleanupCtx)
 
@@ -167,7 +167,7 @@ func ARCVPNDatapath(ctx context.Context, s *testing.State) {
 
 		return nil
 	}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
-		s.Fatal("Failed to wait for VPN service connected in shill")
+		s.Fatal("Failed to wait for VPN service connected in shill: ", err)
 	}
 
 	s.Log("VPN connected in shill. Verifying routing")

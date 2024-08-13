@@ -63,7 +63,7 @@ func ARCToHostVPN(ctx context.Context, s *testing.State) {
 	// Install and start the test app.
 	cleanupFunc, err := arcvpn.InstallAndPreAuthorizeARCVPN(ctx, a)
 	if err != nil {
-		s.Fatal("Failed to set up ARC VPN test app")
+		s.Fatal("Failed to set up ARC VPN test app: ", err)
 	}
 	defer cleanupFunc(cleanupCtx)
 

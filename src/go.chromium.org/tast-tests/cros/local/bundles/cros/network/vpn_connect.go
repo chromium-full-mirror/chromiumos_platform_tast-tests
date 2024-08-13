@@ -352,7 +352,7 @@ func VPNConnect(ctx context.Context, s *testing.State) {
 
 	connected, err := service.IsConnected(ctx)
 	if err != nil {
-		s.Fatal("Failed to get connected state of the service")
+		s.Fatal("Failed to get connected state of the service: ", err)
 	}
 
 	if tc.shouldFail {

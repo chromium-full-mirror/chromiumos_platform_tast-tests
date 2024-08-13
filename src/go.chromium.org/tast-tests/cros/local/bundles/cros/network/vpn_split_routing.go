@@ -62,7 +62,7 @@ func VPNSplitRouting(ctx context.Context, s *testing.State) {
 
 	vpnSubnet, err := subnet.FromIPv4CIDR("10.11.12.0/24")
 	if err != nil {
-		s.Fatal("Failed to get subnet from CIDR string")
+		s.Fatal("Failed to get subnet from CIDR string: ", err)
 	}
 	includedRoute := &net.IPNet{
 		IP:   net.ParseIP("10.11.12.0"),

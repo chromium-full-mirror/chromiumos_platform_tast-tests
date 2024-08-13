@@ -184,7 +184,7 @@ func QosNetworkControl(ctx context.Context, s *testing.State) {
 	// send through this interface to the test gateway will have the QoS marks.
 	itf, err := net.InterfaceByName(ifaces.Client[0])
 	if err != nil {
-		s.Fatalf("Failed to obtain %s interface", ifaces.Client[0])
+		s.Fatalf("Failed to obtain %s interface: %v", ifaces.Client[0], err)
 	}
 	clientMac := itf.HardwareAddr
 

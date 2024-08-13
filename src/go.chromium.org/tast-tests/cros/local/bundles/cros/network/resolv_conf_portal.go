@@ -72,7 +72,7 @@ func ResolvConfPortal(ctx context.Context, s *testing.State) {
 	}
 	defer network.UnblockShillPortalDetector(cleanupCtx)
 	if err := m.RecheckPortal(ctx); err != nil {
-		s.Fatal("Failed to invoke RecheckPortal on shill")
+		s.Fatal("Failed to invoke RecheckPortal on shill: ", err)
 	}
 
 	pool := subnet.NewPool()

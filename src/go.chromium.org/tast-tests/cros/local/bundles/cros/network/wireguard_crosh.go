@@ -214,7 +214,7 @@ func WireguardCrosh(ctx context.Context, s *testing.State) {
 	func() {
 		execWGCmd("disconnect", wgSvcName)
 		if err := svc.WaitForProperty(ctx, shillconst.ServicePropertyState, shillconst.ServiceStateIdle, 5*time.Second); err != nil {
-			s.Fatal("Failed to wait for WireGuard service disconnected")
+			s.Fatal("Failed to wait for WireGuard service disconnected: ", err)
 		}
 	}()
 
