@@ -98,5 +98,3 @@ func parseMinimizationLine(line string) (float64, float64, float64, error) {
 	}
 	return latency, minimizationMax, minimizationMin, err
 }
-
-// TODO(b/322199943): Add Tast service to start the WALT command and return WALT output.

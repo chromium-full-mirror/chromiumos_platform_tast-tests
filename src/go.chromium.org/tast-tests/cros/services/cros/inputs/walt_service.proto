@@ -1,0 +1,31 @@
+// Copyright 2024 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+syntax = "proto3";
+
+package tast.cros.inputs;
+
+import "google/protobuf/empty.proto";
+
+option go_package = "go.chromium.org/tast-tests/cros/services/cros/inputs";
+
+// WaltService provides an interface to measure latency from the DUT
+// while a HMR Job is running.
+service WaltService {
+  // StartWaltService runs the WALT command and returns its output.
+  rpc StartWaltService(WaltRequest) returns (WaltResponse) {}
+
+  // StopWaltService informs StartWaltService to stop the WALT command.
+  rpc StopWaltService(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+}
+
+// WaltRequest contains the arguments for creating a WALT command.
+message WaltRequest {
+  string TestType = 1;
+  string InputDevicePath = 2;
+  repeated string ExtraArgs = 3;
+}
+
+// WaltResponse contains the WALT output from the WALT command.
+message WaltResponse { string Output = 1; }
