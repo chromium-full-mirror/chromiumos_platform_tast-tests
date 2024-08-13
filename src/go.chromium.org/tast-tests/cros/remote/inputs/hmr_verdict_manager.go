@@ -17,6 +17,10 @@ const (
 	defaultReferenceScreenWidth  = 294.4
 	// FullImageMSEThreshold is mean squared error threshold for passing full image test.
 	FullImageMSEThreshold = 5000
+
+	// StylusLatencyThreshold is the stylus latency threshold in ms for passing a
+	// latency regression test.
+	StylusLatencyThreshold = 10
 )
 
 // DetermineSingleLineVerdict runs analysis over a HMR CSV output file and returns the result of all validations run.
@@ -125,4 +129,17 @@ func DetermineFullImageVerdict(referenceFileName, resultFileName string, calibra
 	}
 
 	return &FullImageResult{Passed: passed, TotalMSE: totalMSE, Epsilon: epsilon, PathResults: pathResults}, err
+}
+
+// DetermineStylusLatencyVerdict determines the stylus latency values from WALT output
+// and compares the results to the TouchLatencyThreshold.
+func DetermineStylusLatencyVerdict(waltOutput string) (*StylusLatencyResult, error) {
+	// Parse WALT output for latency metrics.
+	avgLatency, maxLatency, minLatency, err := ParseWaltLatency(waltOutput)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to parse WALT output for latency values")
+	}
+	passed := avgLatency <= StylusLatencyThreshold
+
+	return &StylusLatencyResult{Passed: passed, AvgLatency: avgLatency, MaxLatency: maxLatency, MinLatency: minLatency}, nil
 }
