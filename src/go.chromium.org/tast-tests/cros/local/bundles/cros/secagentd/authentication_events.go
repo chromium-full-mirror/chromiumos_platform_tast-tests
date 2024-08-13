@@ -49,7 +49,7 @@ func init() {
 		BugComponent: "b:1208373",
 		Attr:         []string{"group:mainline", "group:enterprise-reporting"},
 		Timeout:      3 * time.Minute,
-		SoftwareDeps: []string{"bpf", "chrome"},
+		SoftwareDeps: []string{"bpf", "chrome", "shipping_kernel"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
