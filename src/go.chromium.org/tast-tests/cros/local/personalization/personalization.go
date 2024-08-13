@@ -70,7 +70,7 @@ func openSubpage(subpageButton string, ui *uiauto.Context) uiauto.Action {
 	changeSubpageButton := nodewith.Name(subpageButton).HasClass("tast-open-subpage")
 	return uiauto.Combine(fmt.Sprintf("click subpage button - %s", subpageButton),
 		ui.WaitUntilExists(changeSubpageButton),
-		ui.LeftClick(changeSubpageButton))
+		ui.LeftClickUntil(changeSubpageButton, ui.Gone(changeSubpageButton)))
 }
 
 // ClosePersonalizationHub returns an action to close the personalization hub by clicking on Close button.
