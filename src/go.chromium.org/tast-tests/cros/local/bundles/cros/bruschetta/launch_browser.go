@@ -17,7 +17,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         LaunchBrowser,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Opens a browser window on the host from the guest, using several common approaches (/etc/alternatives, $BROWSER, and xdg-open)",
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		Attr:         []string{"group:mainline", "group:bruschetta_cq"},
@@ -25,37 +24,25 @@ func init() {
 		HardwareDeps: bruschetta.BruschettaHwDeps,
 		BugComponent: "b:658562", // ChromeOS > Software > GuestOS
 		Timeout:      3 * time.Minute,
-		Params: []testing.Param{
-			{
-				Name:    "ash",
-				Fixture: bruschetta.BruschettaFixture,
-				Val:     browser.TypeAsh,
-			},
-			{
-				Name:    "lacros",
-				Val:     browser.TypeLacros,
-				Fixture: bruschetta.BruschettaFixtureWithLacros,
-			},
-		},
+		Fixture:      bruschetta.BruschettaFixture,
 	})
 }
 func LaunchBrowser(ctx context.Context, s *testing.State) {
 	bru := s.FixtValue().(bruschetta.FixtureData).BruschettaVM
 	tconn := s.FixtValue().(bruschetta.FixtureData).Tconn
-	bt := s.Param().(browser.Type)
 
 	s.Run(ctx, "testing_sh_c ", func(ctx context.Context, s *testing.State) {
-		if err := guestos.LaunchBrowser(ctx, tconn, bt, bru, "browser-env", []string{"sh", "-c", "${BROWSER} http://browser-env.test/"}); err != nil {
+		if err := guestos.LaunchBrowser(ctx, tconn, browser.TypeAsh, bru, "browser-env", []string{"sh", "-c", "${BROWSER} http://browser-env.test/"}); err != nil {
 			s.Fatal("Launching browser failed: ", err)
 		}
 	})
 	s.Run(ctx, "testing_x_www_browser", func(ctx context.Context, s *testing.State) {
-		if err := guestos.LaunchBrowser(ctx, tconn, bt, bru, "x-www-browser", []string{"/etc/alternatives/x-www-browser", "http://x-www-browser.test/"}); err != nil {
+		if err := guestos.LaunchBrowser(ctx, tconn, browser.TypeAsh, bru, "x-www-browser", []string{"/etc/alternatives/x-www-browser", "http://x-www-browser.test/"}); err != nil {
 			s.Fatal("Launching browser failed: ", err)
 		}
 	})
 	s.Run(ctx, "testing_xdg_open", func(ctx context.Context, s *testing.State) {
-		if err := guestos.LaunchBrowser(ctx, tconn, bt, bru, "xdg-open", []string{"xdg-open", "http://xdg-open.test/"}); err != nil {
+		if err := guestos.LaunchBrowser(ctx, tconn, browser.TypeAsh, bru, "xdg-open", []string{"xdg-open", "http://xdg-open.test/"}); err != nil {
 			s.Fatal("Launching browser failed: ", err)
 		}
 	})
