@@ -44,6 +44,10 @@ func IsModemFirmwareKnown(ctx context.Context, s *testing.State) {
 		if cellular.ModemFwFilterEM060V01.IsMatch(modemType, fwVersion) {
 			return
 		}
+	case cellularconst.ModemTypeLCUK54:
+		if cellular.ModemFwFilterLCUK54V01.IsMatch(modemType, fwVersion) {
+			return
+		}
 	case cellularconst.ModemTypeFM101:
 		if cellular.ModemFwFilterFM101MR1.IsMatch(modemType, fwVersion) || cellular.ModemFwFilterFM101MR2.IsMatch(modemType, fwVersion) {
 			return
