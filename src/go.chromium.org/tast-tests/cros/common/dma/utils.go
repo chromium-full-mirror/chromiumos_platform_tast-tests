@@ -22,6 +22,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/family"
 	"go.chromium.org/tast-tests/cros/common/filemanager"
 	"go.chromium.org/tast-tests/cros/common/floatingworkspace"
+	"go.chromium.org/tast-tests/cros/common/glanceables"
 	"go.chromium.org/tast-tests/cros/common/nearbyshare"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/tape"
@@ -68,6 +69,9 @@ func pools() (map[string]string, map[string]string) {
 		filemanager.OrgFullAccountPoolVarName:       filemanager.OrgFullDMAAccountPoolValue(),
 		filemanager.WarnAccountPoolVarName:          filemanager.WarnDMAAccountPoolValue(),
 		floatingworkspace.AccountVarName:            ui.GaiaDMAPoolDefaultValue(),
+		glanceables.RegularAccountVarName:           glanceables.RegularDMAAccountValue(),
+		glanceables.StudentAccountVarName:           glanceables.StudentDMAAccountValue(),
+		glanceables.TeacherAccountVarName:           glanceables.TeacherDMAAccountValue(),
 		nearbyshare.CrosAccountPoolVarName:          nearbyshare.DmaCrosAccountPoolValue(),
 		nearbyshare.CrosAccount2PoolVarName:         nearbyshare.DmaCrosAccount2PoolValue(),
 		nearbyshare.AndroidAccountPoolVarName:       nearbyshare.DmaAndroidAccountPoolValue(),
@@ -110,6 +114,9 @@ func pools() (map[string]string, map[string]string) {
 		filemanager.OrgFullAccountPoolVarName:       filemanager.OrgFullAccountPoolValue(),
 		filemanager.WarnAccountPoolVarName:          filemanager.WarnAccountPoolValue(),
 		floatingworkspace.AccountVarName:            floatingworkspace.AccountValue(),
+		glanceables.RegularAccountVarName:           glanceables.RegularAccountValue(),
+		glanceables.StudentAccountVarName:           glanceables.StudentAccountValue(),
+		glanceables.TeacherAccountVarName:           glanceables.TeacherAccountValue(),
 		nearbyshare.CrosAccountPoolVarName:          nearbyshare.CrosAccountPoolValue(),
 		nearbyshare.CrosAccount2PoolVarName:         nearbyshare.CrosAccount2PoolValue(),
 		nearbyshare.AndroidAccountPoolVarName:       nearbyshare.AndroidAccountPoolValue(),

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/dma"
+	"go.chromium.org/tast-tests/cros/common/glanceables"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
@@ -25,11 +26,9 @@ import (
 )
 
 type testCase struct {
-	// user is the username to log in.
-	user      string
-	isManaged bool
-	// pass is the password used to log in - only used if isManaged is set.
-	pass            string
+	// accountVarName is the account var name to log in.
+	accountVarName  string
+	isManaged       bool
 	enabledFeatures []string
 	// whether glanceables are hidden if the policy value is not set
 	showStudentBubble bool
@@ -57,19 +56,12 @@ func init() {
 				Value: "screenplay-ace3b729-5402-40cd-b2bf-d488bc95b7e2",
 			},
 		},
-		Vars: []string{
-			"glanceables.Smoke.studentUsername",
-			"glanceables.Smoke.studentPassword",
-			"glanceables.Smoke.regularUsername",
-			"glanceables.Smoke.regularPassword",
-		},
 		VarDeps: []string{ui.GaiaPoolDefaultVarName},
 		Params: []testing.Param{{
 			Name: "student",
 			Val: testCase{
+				accountVarName:    glanceables.StudentAccountVarName,
 				isManaged:         true,
-				user:              "glanceables.Smoke.studentUsername",
-				pass:              "glanceables.Smoke.studentPassword",
 				enabledFeatures:   []string{"GlanceablesTimeManagementClassroomStudentView", "GlanceablesTimeManagementTasksView"},
 				showStudentBubble: true,
 				showTaskBubble:    true,
@@ -77,9 +69,8 @@ func init() {
 		}, {
 			Name: "managed",
 			Val: testCase{
+				accountVarName:    glanceables.RegularAccountVarName,
 				isManaged:         true,
-				user:              "glanceables.Smoke.regularUsername",
-				pass:              "glanceables.Smoke.regularPassword",
 				enabledFeatures:   []string{"GlanceablesTimeManagementTasksView"},
 				showStudentBubble: false,
 				showTaskBubble:    true,
@@ -87,9 +78,8 @@ func init() {
 		}, {
 			Name: "regular",
 			Val: testCase{
+				accountVarName:    "",
 				isManaged:         false,
-				user:              "",
-				pass:              "",
 				enabledFeatures:   []string{"GlanceablesTimeManagementTasksView"},
 				showStudentBubble: false,
 				showTaskBubble:    true,
@@ -98,9 +88,8 @@ func init() {
 		}, {
 			Name: "managed_tasks",
 			Val: testCase{
+				accountVarName:    glanceables.RegularAccountVarName,
 				isManaged:         true,
-				user:              "glanceables.Smoke.regularUsername",
-				pass:              "glanceables.Smoke.regularPassword",
 				enabledFeatures:   []string{"GlanceablesTimeManagementTasksView"},
 				showStudentBubble: false,
 				showTaskBubble:    true,
@@ -108,9 +97,8 @@ func init() {
 		}, {
 			Name: "regular_tasks",
 			Val: testCase{
+				accountVarName:    "",
 				isManaged:         false,
-				user:              "",
-				pass:              "",
 				enabledFeatures:   []string{"GlanceablesTimeManagementTasksView"},
 				showStudentBubble: false,
 				showTaskBubble:    true,
@@ -135,8 +123,12 @@ func Smoke(ctx context.Context, s *testing.State) {
 	var fdms *fakedms.FakeDMS
 	if param.isManaged {
 		policies = []policy.Policy{&policy.ContextualGoogleIntegrationsEnabled{Val: true}}
+		user, pass, err := dma.UserPassFromPool(param.accountVarName)
+		if err != nil {
+			s.Fatal("Failed to get user/pass: ", err)
+		}
 
-		fdmsLocal, err := policyutil.SetUpFakePolicyServer(ctx, s.OutDir(), s.RequiredVar(param.user), policies)
+		fdmsLocal, err := policyutil.SetUpFakePolicyServer(ctx, s.OutDir(), user, policies)
 		if err != nil {
 			s.Fatal("Failed to setup fake policy server: ", err)
 		}
@@ -145,7 +137,7 @@ func Smoke(ctx context.Context, s *testing.State) {
 
 		opts = []chrome.Option{
 			chrome.EnableFeatures(param.enabledFeatures...),
-			chrome.GAIALogin(chrome.Creds{User: s.RequiredVar(param.user), Pass: s.RequiredVar(param.pass)}),
+			chrome.GAIALogin(chrome.Creds{User: user, Pass: pass}),
 			chrome.DMSPolicy(fdms.URL),
 		}
 	} else {
