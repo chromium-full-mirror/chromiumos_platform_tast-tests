@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -24,14 +25,6 @@ const (
 	fromUSB = iota
 	fromInternal
 )
-
-type usbState struct {
-	isCorrupted bool
-}
-
-type servoChargerState struct {
-	removeServoCharger bool
-}
 
 type devBootInvalidUSBParams struct {
 	validBootAfterInvalidUSB int
@@ -130,20 +123,9 @@ func DevBootInvalidUSB(ctx context.Context, s *testing.State) {
 	if err := h.Servo.SetOnOff(ctx, servo.InitKeyboard, servo.On); err != nil {
 		s.Fatal("Failed to turn on internal keyboard: ", err)
 	}
-	setServoChargerState := servoChargerState{removeServoCharger: false}
-	batteryExists, err := h.CheckBatteryAvailable(ctx)
-	if err != nil {
-		s.Fatal("Failed to check if battery is available: ", err)
-	}
-	supportPDRole, err := h.Servo.IsServoTypeC(ctx)
-	if err != nil {
-		s.Fatal("Failed to check the connection type: ", err)
-	}
-	// We saw that setting servo_pd_role:snk helps some machines
-	// to boot from the USB.
-	if batteryExists && supportPDRole {
-		setServoChargerState.removeServoCharger = true
-	}
+
+	var state firmware.CheckAndSetServoCharger
+	state = h.CheckServoChargerBeforeBootingFromUSB(ctx)
 
 	testOpt := s.Param().(*devBootInvalidUSBParams)
 	s.Log("Setting up the USB key")
@@ -162,7 +144,6 @@ func DevBootInvalidUSB(ctx context.Context, s *testing.State) {
 	if err := h.SetupUSBKey(ctx, cs); err != nil {
 		s.Fatal("USBKey not working: ", err)
 	}
-	curUSBState := usbState{isCorrupted: false}
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 4*time.Minute)
@@ -175,20 +156,21 @@ func DevBootInvalidUSB(ctx context.Context, s *testing.State) {
 				s.Error("Failed to save firmware log: ", err)
 			}
 		}
-		if err := devModeResetDUT(ctx, h, setServoChargerState.removeServoCharger); err != nil {
-			s.Fatal("Failed to reboot the DUT: ", err)
+		if err := devModeResetDUT(ctx, h, &state); err != nil {
+			s.Error("Failed to reboot the DUT: ", err)
 		}
 		if err := h.DisableDevBootUSB(ctx); err != nil {
 			s.Error("Failed to disable dev boot from USB: ", err)
 		}
 		s.Log("Restoring USB")
-		if err := curUSBState.restoreUSB(ctx, h); err != nil {
+		if err := h.RestoreUSBKey(ctx); err != nil {
 			s.Error("Failed to restore USB: ", err)
 		}
-		if setServoChargerState.removeServoCharger {
+		if !state.IsServoChargerConnected && state.RemoveServoChargerRequired {
 			if err := h.SetDUTPower(ctx, true); err != nil {
 				s.Fatal("Failed to connect charger: ", err)
 			}
+			state.IsServoChargerConnected = true
 			waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 2*time.Minute)
 			defer cancelWaitConnect()
 			if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
@@ -201,7 +183,7 @@ func DevBootInvalidUSB(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to enable usb boot: ", err)
 	}
 
-	if err := curUSBState.setupInvalidUSB(ctx, h); err != nil {
+	if err := createInvalidUSB(ctx, h); err != nil {
 		s.Fatal("Failed to setup an invalid USB: ", err)
 	}
 
@@ -210,11 +192,11 @@ func DevBootInvalidUSB(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to remove the USB: ", err)
 	}
 
-	s.Log("Rebooting the DUT with warm reset")
-	if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
-		s.Fatal("Failed to reboot the DUT with warm reset: ", err)
+	s.Log("Rebooting the DUT with reset")
+	if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
+		s.Fatal("Failed to reboot the DUT with reset: ", err)
 	}
-	waitUnreachableCtx, cancelWaitUnreachable := context.WithTimeout(ctx, 1*time.Minute)
+	waitUnreachableCtx, cancelWaitUnreachable := context.WithTimeout(ctx, 2*time.Minute)
 	defer cancelWaitUnreachable()
 	if err := h.DUT.WaitUnreachable(waitUnreachableCtx); err != nil {
 		s.Fatal("Failed to wait for DUT to be unreachable: ", err)
@@ -226,7 +208,7 @@ func DevBootInvalidUSB(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to sleep for %s (FirmwareScreen): %v", h.Config.FirmwareScreen, err)
 	}
 
-	if err := setServoChargerState.setPDDataRole(ctx, h); err != nil {
+	if err := setPDDataRole(ctx, h, &state); err != nil {
 		s.Fatal("Failed to set PD data role: ", err)
 	}
 	if err := insertInvalidUSB(ctx, h); err != nil {
@@ -240,7 +222,7 @@ func DevBootInvalidUSB(ctx context.Context, s *testing.State) {
 		devScreenBootSteps = []func(ctx context.Context, h *firmware.Helper) error{
 			ctrlUBootFromUSB,
 			enterKeyBackToDevScreen,
-			curUSBState.restoreUSB,
+			restoreAndInsertUSB,
 			ctrlUBootFromUSB,
 		}
 		connectionTimeout = h.Config.USBImageBootTimeout
@@ -252,7 +234,7 @@ func DevBootInvalidUSB(ctx context.Context, s *testing.State) {
 		}
 		connectionTimeout = h.Config.DelayRebootToPing
 	default:
-		s.Fatal("Unrecongized boot steps")
+		s.Fatal("Unrecognized boot steps")
 	}
 
 	for _, step := range devScreenBootSteps {
@@ -269,7 +251,11 @@ func DevBootInvalidUSB(ctx context.Context, s *testing.State) {
 	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, connectionTimeout)
 	defer cancelWaitConnect()
 	if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
-		s.Fatal("Failed to reconnect to DUT: ", err)
+		currPowerState, stateErr := h.Servo.GetECSystemPowerState(ctx)
+		if stateErr != nil {
+			s.Fatalf("Failed to reconnect to DUT: %v, failed to check powerstate: %v", err, stateErr)
+		}
+		s.Fatalf("Failed to reconnect to DUT and got %v power state: %v", currPowerState, err)
 	}
 
 	expectedBootMode, err := h.Reporter.CheckBootMode(ctx, testOpt.expectedBootMode)
@@ -289,14 +275,15 @@ func DevBootInvalidUSB(ctx context.Context, s *testing.State) {
 	}
 }
 
-func (servoCharger *servoChargerState) setPDDataRole(ctx context.Context, h *firmware.Helper) error {
+func setPDDataRole(ctx context.Context, h *firmware.Helper, removeServoCharger *firmware.CheckAndSetServoCharger) error {
 	if err := h.ByPassDevBootTimeout(ctx); err != nil {
 		return errors.Wrap(err, "failed to bypass dev boot timeout")
 	}
-	if servoCharger.removeServoCharger {
+	if removeServoCharger.IsServoChargerConnected && removeServoCharger.RemoveServoChargerRequired {
 		if err := h.SetDUTPower(ctx, false); err != nil {
 			return errors.Wrap(err, "failed to remove charger")
 		}
+		removeServoCharger.IsServoChargerConnected = false
 		// GoBigSleepLint: Wait for a while between removing the charger and
 		// pressing keys.
 		if err := testing.Sleep(ctx, 5*time.Second); err != nil {
@@ -313,7 +300,7 @@ func (servoCharger *servoChargerState) setPDDataRole(ctx context.Context, h *fir
 	return nil
 }
 
-func (usb *usbState) setupInvalidUSB(ctx context.Context, h *firmware.Helper) error {
+func createInvalidUSB(ctx context.Context, h *firmware.Helper) error {
 	testing.ContextLog(ctx, "Setting up an invalid USB")
 	usbdev, err := h.Servo.GetStringTimeout(ctx, servo.ImageUSBKeyDev, time.Second*90)
 	if err != nil {
@@ -325,7 +312,6 @@ func (usb *usbState) setupInvalidUSB(ctx context.Context, h *firmware.Helper) er
 	if err := h.CorruptUSBKey(ctx, usbdev); err != nil {
 		return errors.Wrap(err, "failed to corrupt the USB")
 	}
-	usb.isCorrupted = true
 	return nil
 }
 
@@ -342,10 +328,7 @@ func insertInvalidUSB(ctx context.Context, h *firmware.Helper) error {
 	return nil
 }
 
-func (usb *usbState) restoreUSB(ctx context.Context, h *firmware.Helper) error {
-	if !usb.isCorrupted {
-		return nil
-	}
+func restoreAndInsertUSB(ctx context.Context, h *firmware.Helper) error {
 	if err := h.ByPassDevBootTimeout(ctx); err != nil {
 		return errors.Wrap(err, "failed to bypass dev boot timeout")
 	}
@@ -357,7 +340,6 @@ func (usb *usbState) restoreUSB(ctx context.Context, h *firmware.Helper) error {
 	if err := h.RestoreUSBKey(ctx); err != nil {
 		return errors.Wrap(err, "failed to restore the USB")
 	}
-	usb.isCorrupted = false
 	if err := h.ReturnToDeveloperScreen(ctx); err != nil {
 		return errors.Wrap(err, "failed to return to developer screen")
 	}
@@ -421,15 +403,15 @@ func ctrlDBootFromInternal(ctx context.Context, h *firmware.Helper) error {
 	return nil
 }
 
-func devModeResetDUT(ctx context.Context, h *firmware.Helper, servoChargerRemoved bool) error {
-	if h.DUT.Connected(ctx) && servoChargerRemoved {
+func devModeResetDUT(ctx context.Context, h *firmware.Helper, removeServoCharger *firmware.CheckAndSetServoCharger) error {
+	if h.DUT.Connected(ctx) && !removeServoCharger.IsServoChargerConnected && removeServoCharger.RemoveServoChargerRequired {
 		// Applying cold reset with the function h.Servo.SetPowerState could lead to the
 		// 'EC: No data was sent from the pty' error. Call a reboot command instead.
 		testing.ContextLog(ctx, "Rebooting the DUT")
-		if err := h.DUT.Conn().CommandContext(ctx, "reboot").Run(); err != nil && !errors.As(err, &context.DeadlineExceeded) {
+		if err := h.DUT.Conn().CommandContext(ctx, "reboot").Run(ssh.DumpLogOnError); err != nil && !errors.As(err, &context.DeadlineExceeded) {
 			return errors.Wrap(err, "failed to run reboot command")
 		}
-		waitUnreachableCtx, cancelWaitUnreachable := context.WithTimeout(ctx, 1*time.Minute)
+		waitUnreachableCtx, cancelWaitUnreachable := context.WithTimeout(ctx, 2*time.Minute)
 		defer cancelWaitUnreachable()
 		if err := h.DUT.WaitUnreachable(waitUnreachableCtx); err != nil {
 			return errors.Wrap(err, "failed to wait for DUT to be unreachable after reboot")
@@ -445,7 +427,11 @@ func devModeResetDUT(ctx context.Context, h *firmware.Helper, servoChargerRemove
 	defer cancelWaitConnect()
 
 	if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
-		return errors.Wrap(err, "failed to reconnect to the DUT")
+		currPowerState, stateErr := h.Servo.GetECSystemPowerState(ctx)
+		if stateErr != nil {
+			return errors.Join(errors.Wrap(stateErr, "failed to get power state"), err)
+		}
+		return errors.Wrapf(err, "failed to reconnect to the DUT, got %v power state", currPowerState)
 	}
 	return nil
 }
