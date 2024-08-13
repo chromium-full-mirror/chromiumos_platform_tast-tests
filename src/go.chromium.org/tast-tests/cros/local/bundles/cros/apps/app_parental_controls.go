@@ -50,7 +50,7 @@ func AppParentalControls(ctx context.Context, s *testing.State) {
 		confirmPinDialogText        = "Confirm your PIN"
 		confirmButtonText           = "Confirm"
 		continueButtonText          = "Continue"
-		googleTVAppBlockedText      = "Google TV is blocked on your Chrome device"
+		playStoreAppBlockedText     = "Play Store is blocked on your"
 		okButtonLabel               = "OK"
 		parentalControlsButtonLabel = "Parental controls for apps"
 		parentalControlsSubpage     = "Parental controls for apps subpage back button"
@@ -66,7 +66,7 @@ func AppParentalControls(ctx context.Context, s *testing.State) {
 	parentalControlsSetupButton := nodewith.Name(parentalControlsButtonLabel).Role(role.Button)
 	parentalControlsSetupDialogHeader := nodewith.Name(setupPinDialogText).Role(role.StaticText)
 
-	if err := uiauto.Combine("Failed to launch setup pin dialog for parental controls for apps",
+	if err := uiauto.Combine("launch setup pin dialog for parental controls for apps",
 		ui.DoDefault(parentalControlsSetupButton),
 		ui.WaitUntilExists(parentalControlsSetupDialogHeader),
 	)(ctx); err != nil {
@@ -77,7 +77,7 @@ func AppParentalControls(ctx context.Context, s *testing.State) {
 	confirmButton := nodewith.Name(confirmButtonText).Role(role.Button)
 	confirmDialogHeader := nodewith.Name(confirmPinDialogText).Role(role.StaticText)
 
-	if err := uiauto.Combine("Failed to setup the pin for parental controls for apps",
+	if err := uiauto.Combine("setup the pin for parental controls for apps",
 		kb.TypeAction(pin),
 		ui.WaitUntilExists(continueButton),
 		ui.LeftClick(continueButton),
@@ -89,41 +89,41 @@ func AppParentalControls(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to setup the pin for parental controls for apps: ", err)
 	}
 
-	googleTVAppToggle := nodewith.Name("Google TV").Role(role.ToggleButton)
+	playStoreAppToggle := nodewith.Name("Play Store").Role(role.ToggleButton)
 
-	if err := ui.LeftClick(googleTVAppToggle)(ctx); err != nil {
-		s.Fatal("Failed to left click googleTVAppToggle: ", err)
+	if err := ui.LeftClick(playStoreAppToggle)(ctx); err != nil {
+		s.Fatal("Failed to left click Play Store app toggle: ", err)
 	}
 
 	if err := launcher.Open(tconn)(ctx); err != nil {
 		s.Fatal("Failed to open the launcher: ", err)
 	}
 
-	googleTVApp := launcher.AppItemViewFinder(apps.GoogleTV.ShortName()).First()
-	if err := ui.LeftClick(googleTVApp)(ctx); err != nil {
-		s.Fatal("Failed to click on the google tv app: ", err)
+	playStoreApp := launcher.AppItemViewFinder(apps.PlayStore.ShortName()).First()
+	if err := ui.LeftClick(playStoreApp)(ctx); err != nil {
+		s.Fatal("Failed to click on the Play Store app: ", err)
 	}
 
 	okButton := nodewith.Name(okButtonLabel).Role(role.Button)
-	googleTVAppBlockedHeading := nodewith.Name(googleTVAppBlockedText).Role(role.Heading)
+	playStoreAppBlockedHeading := nodewith.NameContaining(playStoreAppBlockedText).Role(role.Heading)
 
-	if err := uiauto.Combine("Failed to show Google TV blocked dialog",
-		ui.WaitUntilExists(googleTVAppBlockedHeading),
+	if err := uiauto.Combine("show Play Store blocked dialog",
+		ui.WaitUntilExists(playStoreAppBlockedHeading),
 		ui.LeftClick(okButton),
-		ui.WaitUntilGone(googleTVAppBlockedHeading),
+		ui.WaitUntilGone(playStoreAppBlockedHeading),
 	)(ctx); err != nil {
 		s.Fatal("Failed to see and close blocked app dialog: ", err)
 	}
 
-	if err := ui.LeftClick(googleTVAppToggle)(ctx); err != nil {
-		s.Fatal("Failed to left click googleTVAppToggle: ", err)
+	if err := ui.LeftClick(playStoreAppToggle)(ctx); err != nil {
+		s.Fatal("Failed to left click Play Store app toggle: ", err)
 	}
 
 	parentalControlsSubpageButton := nodewith.Name(parentalControlsSubpage).Role(role.Button)
 	parentalControlsToggle := nodewith.Name(parentalControlsButtonLabel).Role(role.ToggleButton)
 	verifyPinDialogHeading := nodewith.Name(verifyPinDialogText).Role(role.StaticText)
 
-	if err := uiauto.Combine("Failed to reset parental controls for apps PIN",
+	if err := uiauto.Combine("reset parental controls for apps PIN",
 		ui.LeftClick(parentalControlsSubpageButton),
 		ui.DoDefault(parentalControlsToggle),
 		ui.WaitUntilExists(confirmButton),
