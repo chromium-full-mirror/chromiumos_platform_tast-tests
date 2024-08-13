@@ -21,6 +21,7 @@ var (
 	// Configs lists all supported fio configurations.
 	Configs = []string{
 		"seq_read",
+		"seq_read_soc",
 		"seq_write",
 		"tbw_probe",
 		"16k_read",

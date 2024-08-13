@@ -32,7 +32,7 @@ func init() {
 		Params: []testing.Param{{
 			Name: "nvme_link_bw",
 			Val: []bounds.MetricBounds{{
-				Metric: bounds.MatchRegexp(`_seq_read_read_bw`),
+				Metric: bounds.MatchRegexp(`_seq_read_soc_read_bw`),
 				Bounds: bounds.Min(2_048_000), // KiB/sec, 2000 MiB/sec
 			}},
 			ExtraHardwareDeps: hwdep.D(hwdep.Nvme()),
@@ -40,7 +40,7 @@ func init() {
 		}, {
 			Name: "emmc_link_bw",
 			Val: []bounds.MetricBounds{{
-				Metric: bounds.MatchRegexp(`_seq_read_read_bw`),
+				Metric: bounds.MatchRegexp(`_seq_read_soc_read_bw`),
 				Bounds: bounds.Max(256_000), // KiB/sec, 250 MiB/sec
 			}},
 			ExtraHardwareDeps: hwdep.D(hwdep.EmmcOrBridge()),
@@ -48,7 +48,7 @@ func init() {
 		}, {
 			Name: "ufs_g3_link_bw",
 			Val: []bounds.MetricBounds{{
-				Metric: bounds.MatchRegexp(`_seq_read_read_bw`),
+				Metric: bounds.MatchRegexp(`_seq_read_soc_read_bw`),
 				Bounds: bounds.Min(512_000), // KiB/sec, 500 MiB/sec
 			}},
 			ExtraHardwareDeps: hwdep.D(hwdep.Ufs()),
@@ -56,7 +56,7 @@ func init() {
 		}, {
 			Name: "ufs_g4_link_bw",
 			Val: []bounds.MetricBounds{{
-				Metric: bounds.MatchRegexp(`_seq_read_read_bw`),
+				Metric: bounds.MatchRegexp(`_seq_read_soc_read_bw`),
 				Bounds: bounds.Min(1_024_000), // KiB/sec, 1000 MiB/sec
 			}},
 			ExtraHardwareDeps: hwdep.D(hwdep.Ufs()),
@@ -88,7 +88,7 @@ func SocPerformance(ctx context.Context, s *testing.State) {
 		WithResultWriter(resultWriter).
 		WithDisk(disk).
 		WithRunTimeSec(300).
-		WithJobFromFile(s.DataPath("seq_read")).
+		WithJobFromFile(s.DataPath("seq_read_soc")).
 		Run(ctx, s.DUT())
 
 	if err != nil {

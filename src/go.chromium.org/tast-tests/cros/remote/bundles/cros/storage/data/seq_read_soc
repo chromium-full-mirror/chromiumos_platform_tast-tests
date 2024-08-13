@@ -1,0 +1,17 @@
+; Copyright 2024 The ChromiumOS Authors
+; Use of this source code is governed by a BSD-style license that can be
+; found in the LICENSE file.
+;
+; Sequential read performance for link speed measurement
+;
+
+[seq_read_soc]
+
+time_based
+
+ioengine=libaio
+iodepth=128
+direct=1
+
+readwrite=read
+bs=512k
