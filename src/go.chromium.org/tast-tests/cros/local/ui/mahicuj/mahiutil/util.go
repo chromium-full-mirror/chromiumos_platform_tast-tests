@@ -209,6 +209,33 @@ func DoSummary(
 	)(ctx)
 }
 
+// DoSummaryForGalleryPDFWithConsentUI is similar to DoSummary, but in Gallery
+// app it differs in the following aspects:
+// a) it guarantees a non compact SummarizeButton,
+// b) it needs to pass the consent UI because of the first call to HelpMeRead.
+func DoSummaryForGalleryPDFWithConsentUI(
+	ctx context.Context,
+	ui *uiauto.Context,
+	expectMockResponse bool,
+) error {
+	expectAction := func() uiauto.Action {
+		if expectMockResponse {
+			return ui.WaitUntilExists(mockSummaryText)
+		}
+		return ui.WaitUntilAnyExists(anySummaryText, mahiErrorStatus)
+	}
+
+	// This could happen on the Gallery PDF surface.
+	return uiauto.Combine("Do summary and check the panel exists",
+		ui.WaitUntilExists(SummarizeButton),
+		ui.LeftClick(SummarizeButton),
+		ui.WaitUntilExists(consentGotItButton),
+		ui.LeftClick(consentGotItButton),
+		ui.WaitUntilExists(mahiCloseButton),
+		expectAction(),
+	)(ctx)
+}
+
 // AskQuestionOnMahiPanel sends a question on the result panel
 func AskQuestionOnMahiPanel(
 	ctx context.Context,

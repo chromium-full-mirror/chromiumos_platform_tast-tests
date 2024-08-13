@@ -1152,6 +1152,8 @@ func init() {
 			chromeExtraOpts: []chrome.Option{
 				chrome.ExtraArgs("--mahi-restrictions-override"),
 				chrome.EnableFeatures("Mahi"),
+				// TODO(b:356518781): this flag might be renamed.
+				chrome.EnableFeatures("MediaAppPdfMahi"),
 			},
 		},
 		Parent:          "prepareForCUJ",
