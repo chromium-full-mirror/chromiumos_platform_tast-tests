@@ -36,7 +36,7 @@ func EnsureTPMAndSystemStateAreResetLocal(ctx context.Context, dut *dut.DUT, hin
 
 // EnsureTPMAndSystemStateAreResetRemote initialises the required helpers and calls EnsureTPMAndSystemStateAreReset remotely.
 func EnsureTPMAndSystemStateAreResetRemote(ctx context.Context, d *dut.DUT) error {
-	r := hwsec.NewCmdRunner(d)
+	r := hwsec.NewLoglessCmdRunner(d)
 
 	helper, err := hwsec.NewHelper(r, d)
 	if err != nil {

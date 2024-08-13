@@ -51,7 +51,7 @@ func (*OwnershipService) EnsureTPMIsReset(ctx context.Context, req *empty.Empty)
 func (*OwnershipService) EnsureTPMAndSystemStateAreReset(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
 	testing.ContextLog(ctx, "Requesting a local TPM and state reset")
 
-	cmdRunner := NewCmdRunner()
+	cmdRunner := NewLoglessCmdRunner()
 	helper, err := NewHelper(cmdRunner)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create local helper")
