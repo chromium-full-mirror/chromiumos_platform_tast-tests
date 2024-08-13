@@ -53,17 +53,45 @@ func checkIfTastBundlesLocalFileExists(ctx context.Context, data *cs.PreTestData
 
 // CheckIfRootfsVerificationIsTurnedOn.
 
+// recordIfRootfsVerificationIsTurnedOn checks whether rootfs verification is turned
+// on after a test.
+func recordIfRootfsVerificationIsTurnedOn(ctx context.Context) *cs.PreTestData {
+	rootfsVerificationEnabled, err := getRootfsVerificationState()
+	if err != nil {
+		return &cs.PreTestData{Error: err.Error()}
+	}
+	data := &cs.PreTestData{
+		Data: &cs.PreTestData_BoolData{
+			BoolData: rootfsVerificationEnabled,
+		},
+	}
+	return data
+}
+
 // checkIfRootfsVerificationIsTurnedOn checks whether rootfs verification is turned
 // on after a test.
 func checkIfRootfsVerificationIsTurnedOn(ctx context.Context, data *cs.PreTestData) error {
-	cmdline, err := exec.Command("cat", "/proc/mounts").Output()
+	rootfsVerificationEnabled, err := getRootfsVerificationState()
 	if err != nil {
-		return errors.New("checkIfRootfsVerificationIsTurnedOn: failed to read kernel cmdline")
+		return err
 	}
-	if !strings.Contains(string(cmdline), "dm_verity.dev_wait=1") {
-		return errors.New("checkIfRootfsVerificationIsTurnedOn: Rootfs verificaiton has been turned off")
+
+	// Check if rootfs verification has changed.
+	if data.GetBoolData() != rootfsVerificationEnabled {
+		return errors.Errorf("checkIfRootfsVerificationIsTurnedOn: rootfs verification has changed; before: %v after: %v", data.GetBoolData(), rootfsVerificationEnabled)
 	}
 	return nil
+}
+
+func getRootfsVerificationState() (bool, error) {
+	cmdline, err := exec.Command("cat", "/proc/mounts").Output()
+	if err != nil {
+		return false, errors.New("checkIfRootfsVerificationIsTurnedOn: failed to read kernel cmdline")
+	}
+	if !strings.Contains(string(cmdline), "dm_verity.dev_wait=1") {
+		return false, nil
+	}
+	return true, nil
 }
 
 // recordStateDeviceEnrolled records the enrolled state of the device before running the test.
