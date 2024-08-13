@@ -77,7 +77,7 @@ func openSubpage(subpageButton string, ui *uiauto.Context) uiauto.Action {
 func ClosePersonalizationHub(ui *uiauto.Context) uiauto.Action {
 	hotseat := nodewith.Role(role.Window).HasClass("HotseatWidget")
 	topContainer := nodewith.HasClass("TopContainerView").Ancestor(PersonalizationHubWindow)
-	closeButton := nodewith.Role(role.Button).Name("Close")
+	closeButton := nodewith.Role(role.Button).NameContaining("Close").HasClass("FrameCaptionButton").Ancestor(PersonalizationHubWindow)
 	return uiauto.Combine("close Personalization Hub",
 		// Click the top container to show the close button on tablet.
 		uiauto.IfSuccessThen(ui.Exists(hotseat),

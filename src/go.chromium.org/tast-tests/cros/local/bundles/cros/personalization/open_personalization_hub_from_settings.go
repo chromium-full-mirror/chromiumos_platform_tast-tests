@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -64,7 +65,7 @@ func OpenPersonalizationHubFromSettings(ctx context.Context, s *testing.State) {
 
 	if err := uiauto.Combine("open personalization hub from settings",
 		personalization.SearchForAppInLauncher(personalization.SettingsSearchTerm, personalization.SettingsAppName, kb, ui),
-		ui.LeftClick(nodewith.Role(role.Link).NameContaining(personalization.Personalization).HasClass("item")),
+		ui.LeftClick(nodewith.Role(role.Link).NameContaining(personalization.WallpaperAndStyle)),
 		ui.LeftClick(nodewith.Role(role.Link).NameContaining(personalization.SettingsSetWallpaper).First()),
 		ui.WaitUntilExists(personalization.PersonalizationHubWindow),
 	)(ctx); err != nil {
@@ -79,5 +80,9 @@ func OpenPersonalizationHubFromSettings(ctx context.Context, s *testing.State) {
 		ui.WaitUntilExists(personalization.PersonalizationHubWindow),
 	)(ctx); err != nil {
 		s.Fatal("Failed to open personalization hub by searching in settings: ", err)
+	}
+
+	if err := ash.CloseAllWindows(ctx, tconn); err != nil {
+		s.Fatal("Failed to close all windows: ", err)
 	}
 }

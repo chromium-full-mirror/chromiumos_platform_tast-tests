@@ -25,6 +25,9 @@ const (
 	// Personalization Hub Name
 	Personalization = "Personalization"
 
+	// WallpaperAndStyle is the Personalization entry point in Settings App
+	WallpaperAndStyle = "Wallpaper and style"
+
 	// SettingsAppName is the name of settings app.
 	SettingsAppName = "Settings, Installed App"
 	// SettingsSetWallpaper is an option title in Settings app to open Personalization hub.
