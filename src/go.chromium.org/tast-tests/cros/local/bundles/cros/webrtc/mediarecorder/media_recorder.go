@@ -131,7 +131,13 @@ func MeasurePerf(ctx context.Context, cs ash.ConnSource, tconn, bTconn *chrome.T
 	ctx, cancel := ctxutil.Shorten(ctx, cleanupTime)
 	defer cancel()
 
-	if err := cpu.WaitUntilIdle(ctx); err != nil {
+	// Low powered devices like dedede or octopus have a harder time reducing
+	// the workload due to stubborn network processes, see e.g. b/343251417.
+	idleConfig := cpu.DefaultIdleConfig()
+	idleConfig.Timeout = 3 * time.Minute
+	idleConfig.CPUUsagePercentMax = 40
+	idleConfig.Steps = 8
+	if err := cpu.WaitUntilIdleWithConfig(ctx, idleConfig); err != nil {
 		return errors.Wrap(err, "failed waiting for CPU to become idle")
 	}
 

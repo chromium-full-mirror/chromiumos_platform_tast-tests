@@ -38,7 +38,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{"loopback_media_recorder.html"},
 		Attr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
-		Timeout:      5 * time.Minute,
+		Timeout:      8 * time.Minute,
 		Params: []testing.Param{{
 			Name:              "h264_sw",
 			Val:               mediaRecorderPerfTest{enableHWAccel: false, profile: videotype.H264BaselineProf, browserType: browser.TypeAsh},
