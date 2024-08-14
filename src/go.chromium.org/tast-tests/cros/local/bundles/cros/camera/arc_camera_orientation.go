@@ -25,16 +25,10 @@ func init() {
 		Contacts:     []string{"chromeos-camera-eng@google.com", "shik@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
-		SoftwareDeps: []string{"chrome", caps.BuiltinOrVividCamera},
+		SoftwareDeps: []string{"arc", "chrome", caps.BuiltinOrVividCamera},
 		Fixture:      "arcWithWorkingCamera",
 		Data:         []string{arcapp.CameraAppApk},
 		Timeout:      4 * time.Minute,
-		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_p"},
-		}, {
-			Name:              "vm",
-			ExtraSoftwareDeps: []string{"android_vm"},
-		}},
 	})
 }
 
