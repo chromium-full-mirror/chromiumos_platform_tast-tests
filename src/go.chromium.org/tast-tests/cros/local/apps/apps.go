@@ -614,7 +614,7 @@ func InstallPWAForURL(ctx context.Context, tconn *chrome.TestConn, br *browser.B
 	ui := uiauto.New(tconn).WithInterval(2 * time.Second)
 	statusBubble := nodewith.Role(role.Window).ClassName("StatusBubble").First()
 	installIcon := nodewith.ClassName("PwaInstallView").Role(role.Button)
-	installAppDialog := nodewith.NameStartingWith("Install app").Role(role.AlertDialog).HasClass("Widget")
+	installAppDialog := nodewith.NameStartingWith("Install app").Role(role.Dialog).HasClass("Widget")
 	installButton := nodewith.Name("Install").Role(role.Button).Ancestor(installAppDialog)
 
 	installPWA := uiauto.NamedCombine("install PWA through omnibox",
