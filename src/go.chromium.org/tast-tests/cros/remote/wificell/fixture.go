@@ -277,7 +277,11 @@ func FixtureID(enum TFFeatures) string {
 type tastFixtureImpl struct {
 	features TFFeatures
 	tf       *TestFixture
-	rtd      []*linuxssh.RemoteFileDelta
+	rtdInfo  []*rtdInfo
+}
+type rtdInfo struct {
+	dut *dut.DUT
+	rtd *linuxssh.RemoteFileDelta
 }
 
 // newTastFixture creates a Tast fixture with given features.
@@ -704,18 +708,18 @@ func (f *tastFixtureImpl) PreTest(ctx context.Context, s *testing.FixtTestState)
 	const maxLogSize = 20 * 1024 * 1024 //20mb
 
 	//Create rtd for Main DUT
-	if file, err := linuxssh.NewRemoteFileDelta(ctx, s.DUT(), "/var/log/net.log", filepath.Join(s.OutDir(), fmt.Sprintf("net_%s.log", s.TestName())), maxLogSize); err != nil {
+	if file, err := linuxssh.NewRemoteFileDelta(ctx, s.DUT().Conn(), "/var/log/net.log", filepath.Join(s.OutDir(), fmt.Sprintf("net_%s.log", s.TestName())), maxLogSize); err != nil {
 		s.Fatal("File transfer failed: ", err)
 	} else {
-		f.rtd = append(f.rtd, file)
+		f.rtdInfo = append(f.rtdInfo, &rtdInfo{dut: s.DUT(), rtd: file})
 	}
 
 	//Create rtd for CompanionDUTs
 	for role, cd := range s.CompanionDUTs() {
-		if file, err := linuxssh.NewRemoteFileDelta(ctx, cd, "/var/log/net.log", filepath.Join(s.OutDir(), fmt.Sprintf("net_%s_%s.log", s.TestName(), role)), maxLogSize); err != nil {
+		if file, err := linuxssh.NewRemoteFileDelta(ctx, cd.Conn(), "/var/log/net.log", filepath.Join(s.OutDir(), fmt.Sprintf("net_%s_%s.log", s.TestName(), role)), maxLogSize); err != nil {
 			s.Fatal("File transfer failed: ", err)
 		} else {
-			f.rtd = append(f.rtd, file)
+			f.rtdInfo = append(f.rtdInfo, &rtdInfo{dut: cd, rtd: file})
 		}
 	}
 
@@ -737,9 +741,9 @@ func (f *tastFixtureImpl) PreTest(ctx context.Context, s *testing.FixtTestState)
 
 func (f *tastFixtureImpl) PostTest(ctx context.Context, s *testing.FixtTestState) {
 	//Save all rtds
-	if f.rtd != nil {
-		for _, rtd := range f.rtd {
-			defer rtd.Save(ctx)
+	if f.rtdInfo != nil {
+		for _, rtdInfo := range f.rtdInfo {
+			defer rtdInfo.rtd.Save(ctx, rtdInfo.dut.Conn())
 		}
 	}
 

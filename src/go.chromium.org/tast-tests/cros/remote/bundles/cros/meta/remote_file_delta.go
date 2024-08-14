@@ -66,7 +66,7 @@ func saveDelta(ctx context.Context, s *testing.State, dst, msg string) {
 	const maxLogSize = 20 * 1024 * 1024 // default max system message log size 20MB
 
 	d := s.DUT()
-	rtd, err := linuxssh.NewRemoteFileDelta(ctx, d, "/var/log/messages", dst, maxLogSize)
+	rtd, err := linuxssh.NewRemoteFileDelta(ctx, d.Conn(), "/var/log/messages", dst, maxLogSize)
 	if err != nil {
 		s.Fatal("Failed to create object for saving message_delta_1.txt: ", err)
 	}
@@ -76,6 +76,6 @@ func saveDelta(ctx context.Context, s *testing.State, dst, msg string) {
 	}
 	// GoBigSleepLint: waiting 5 second for additional /var/log/messages to be populated.
 	testing.Sleep(ctx, time.Second*5)
-	rtd.Save(ctx)
+	rtd.Save(ctx, d.Conn())
 
 }
