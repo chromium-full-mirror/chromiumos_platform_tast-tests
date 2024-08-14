@@ -22,6 +22,8 @@ import (
 // safe_browsing_binary_upload_app.
 const UploadAnnotationHashCode = "4306022"
 
+const googleSafeBrowsingURL = "https://safebrowsing.google.com/.*"
+
 // suspiciousFile is a test suspicious file which should trigger safe browsing
 // warnings on download. This file was copied from:
 // https://testsafebrowsing.appspot.com/s/bad_app_file_on_scan.exe
@@ -38,6 +40,10 @@ type testCase struct {
 	Name                 string
 	ShouldFindAnnotation bool
 	Policy               *policy.AdvancedProtectionAllowed
+	// TrafficShouldFind states the traffic should be found during tests.
+	TrafficShouldFind []string
+	// TrafficShouldNotFind states the traffic should NOT be found during tests.
+	TrafficShouldNotFind []string
 }
 
 // TestCases returns the map of policy setting enum to testCase object
@@ -49,16 +55,22 @@ func TestCases() map[networkrequestmonitor.PolicySetting]testCase {
 			Name:                 "disabled",
 			ShouldFindAnnotation: false,
 			Policy:               &policy.AdvancedProtectionAllowed{Val: false},
+			TrafficShouldFind:    []string{},
+			TrafficShouldNotFind: []string{googleSafeBrowsingURL},
 		},
 		networkrequestmonitor.PolicyEnabled: {
 			Name:                 "enabled",
 			ShouldFindAnnotation: true,
 			Policy:               &policy.AdvancedProtectionAllowed{Val: true},
+			TrafficShouldFind:    []string{googleSafeBrowsingURL},
+			TrafficShouldNotFind: []string{},
 		},
 		networkrequestmonitor.PolicyUnset: {
 			Name:                 "unset",
 			ShouldFindAnnotation: true,
 			Policy:               &policy.AdvancedProtectionAllowed{Stat: policy.StatusUnset},
+			TrafficShouldFind:    []string{googleSafeBrowsingURL},
+			TrafficShouldNotFind: []string{},
 		},
 	}
 }

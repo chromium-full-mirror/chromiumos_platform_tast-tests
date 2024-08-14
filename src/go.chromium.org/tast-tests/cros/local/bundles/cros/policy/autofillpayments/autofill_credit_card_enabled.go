@@ -38,6 +38,7 @@ const (
 	// AutofillCreditCardAnnotationHash is the hashcode of network annotation
 	// autofill_credit_card_enabled.
 	AutofillCreditCardAnnotationHash = "88863520"
+	autofillURL                      = "https://content-autofill.googleapis.com/v1/.*"
 )
 
 // DataFiles returns the list of data files needed to be copied to the dut
@@ -53,6 +54,10 @@ type testCase struct {
 	wantRestriction      restriction.Restriction
 	wantChecked          checked.Checked
 	Policy               *policy.AutofillCreditCardEnabled
+	// TrafficShouldFind states the traffic should be found during tests.
+	TrafficShouldFind []string
+	// TrafficShouldNotFind states the traffic should NOT be found during tests.
+	TrafficShouldNotFind []string
 }
 
 // GetTestCases returns the list of TestCase objects for each policy value.
@@ -64,6 +69,8 @@ func GetTestCases() map[networkrequestmonitor.PolicySetting]testCase {
 			wantChecked:          checked.False,
 			ShouldFindAnnotation: false,
 			Policy:               &policy.AutofillCreditCardEnabled{Val: false},
+			TrafficShouldFind:    []string{},
+			TrafficShouldNotFind: []string{autofillURL},
 		},
 		networkrequestmonitor.PolicyUnset: {
 			Name:                 "unset",
@@ -71,6 +78,8 @@ func GetTestCases() map[networkrequestmonitor.PolicySetting]testCase {
 			wantChecked:          checked.True,
 			ShouldFindAnnotation: true,
 			Policy:               &policy.AutofillCreditCardEnabled{Stat: policy.StatusUnset},
+			TrafficShouldFind:    []string{},
+			TrafficShouldNotFind: []string{},
 		},
 		networkrequestmonitor.PolicyEnabled: {
 			Name:                 "allow",
@@ -78,6 +87,8 @@ func GetTestCases() map[networkrequestmonitor.PolicySetting]testCase {
 			wantChecked:          checked.True,
 			ShouldFindAnnotation: true,
 			Policy:               &policy.AutofillCreditCardEnabled{Val: true},
+			TrafficShouldFind:    []string{autofillURL},
+			TrafficShouldNotFind: []string{},
 		},
 	}
 }

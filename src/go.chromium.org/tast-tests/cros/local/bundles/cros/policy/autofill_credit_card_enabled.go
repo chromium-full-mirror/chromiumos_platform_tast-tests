@@ -28,6 +28,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/netexport"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
+	"go.chromium.org/tast-tests/cros/local/testenv/proxy"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -97,13 +98,36 @@ func AutofillCreditCardEnabled(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
+	mp, err := proxy.NewMitmProxy(ctx,
+		proxy.DumpHTTPFlow(true),
+	)
+	if err != nil {
+		s.Fatal("Failed to start mitmproxy: ", err)
+	}
+	defer mp.Close(cleanupCtx)
+	reset, err := proxy.ConfigureChrome(ctx, mp, cr)
+	if err != nil {
+		s.Fatal("Failed to configure chrome for proxy: ", err)
+	}
+	defer reset(cleanupCtx, cr)
+
 	server, err := newLocalHTTPSTestServer(s.DataPath(autofillCreditCardHTMLFile), s.DataPath(autofillCreditCardCertFile), s.DataPath(autofillCreditCardKeyFile))
 	if err != nil {
 		s.Fatal("Failed to start the server: ", err)
 	}
 	defer server.Close()
 
-	for key, param := range autofillpayments.GetTestCases() {
+	// Both PolicyEnabled and PolicyUnset allow autofill and trigger content-autofill.googleapis.com.
+	// However, if we trigger PolicyUnset and then trigger PolicyEnabled later, we cannot find traffic in PolicyEnabled.
+	settings := []networkrequestmonitor.PolicySetting{
+		networkrequestmonitor.PolicyEnabled,
+		networkrequestmonitor.PolicyUnset,
+		networkrequestmonitor.PolicyDisabled,
+	}
+
+	for _, v := range settings {
+
+		param := autofillpayments.GetTestCases()[v]
 
 		s.Run(ctx, param.Name, func(ctx context.Context, s *testing.State) {
 			// Perform cleanup.
@@ -139,7 +163,7 @@ func AutofillCreditCardEnabled(ctx context.Context, s *testing.State) {
 					Browser:       br,
 					Server:        server,
 					BaseDirectory: baseDirectory,
-					PolicySetting: key}); err != nil {
+					PolicySetting: v}); err != nil {
 				s.Fatal("Failed to trigger autofill for payments: ", err)
 			}
 
@@ -149,6 +173,20 @@ func AutofillCreditCardEnabled(ctx context.Context, s *testing.State) {
 			}
 			if foundAnnotation != param.ShouldFindAnnotation {
 				s.Fatalf("Annotation mismatch = got %t, want %t", foundAnnotation, param.ShouldFindAnnotation)
+			}
+
+			resp, err := mp.DumpHTTPFlow(ctx, true, true)
+			if err != nil {
+				s.Fatal("Failed to get dump httpflow from mitmproxy: ", err)
+			}
+
+			v := proxy.NewNetworkVerifier(resp)
+			allow := param.TrafficShouldFind
+			disallow := param.TrafficShouldNotFind
+			// allow/disallow traffic are passed by test case param.
+			// We will ignore traffic other than the allow and disallow list for verifying diff.
+			if err := v.Verify(allow, disallow, []string{".*"}); err != nil {
+				s.Fatal("Diff test result: ", err)
 			}
 		})
 	}
