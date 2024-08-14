@@ -16,9 +16,15 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/oobe"
+	"go.chromium.org/tast-tests/cros/local/testenv"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
+
+type oobeArcArgs struct {
+	preprod bool // whether to run against preprod versions of dependencies (default: false)
+}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -28,15 +34,22 @@ func init() {
 		Contacts:     []string{"cros-arc-te@google.com", "cros-oac@google.com", "jinrongwu@google.com"},
 		// ChromeOS > Software > ARC++ > EngProd
 		BugComponent: "b:1052117",
-		Attr:         []string{"group:arc", "arc_core", "group:arc-functional"},
 		SoftwareDeps: []string{"chrome", "gaia"},
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_container"},
-			ExtraAttr:         []string{"group:mainline", "informational"},
+			ExtraAttr:         []string{"group:arc", "arc_core", "group:arc-functional", "group:mainline", "informational"},
+			Val:               oobeArcArgs{preprod: false},
 		}, {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
-			ExtraAttr:         []string{"group:hw_agnostic"},
+			ExtraAttr:         []string{"group:arc", "arc_core", "group:arc-functional", "group:hw_agnostic"},
+			Val:               oobeArcArgs{preprod: false},
+		}, {
+			Name:              "preprod",
+			ExtraSoftwareDeps: []string{"android_vm"},
+			ExtraAttr:         []string{"group:external-dependency", "group:hw_agnostic"},
+			ExtraSearchFlags:  []*testing.StringPair{testenv.SearchFlag(testenv.GFEPreprod)},
+			Val:               oobeArcArgs{preprod: true},
 		}},
 		Timeout: chrome.GAIALoginTimeout + arc.BootTimeout + 10*time.Minute,
 		VarDeps: []string{ui.GaiaPoolDefaultVarName},
@@ -44,6 +57,24 @@ func init() {
 }
 
 func OobeArc(ctx context.Context, s *testing.State) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(cleanupCtx, time.Second*10)
+	defer cancel()
+
+	// Set up the test environment to run tests against the preprod of GAIA.
+	if s.Param().(oobeArcArgs).preprod {
+		env, err := testenv.NewPreprodEnv(ctx,
+			testenv.RedirectMap(map[string]string{
+				"google-prod":     "gfe-preprod", // GFE
+				"googleapis-prod": "gfe-preprod", // GFE
+			}),
+		)
+		if err != nil {
+			s.Fatal("Failed to init the preprod env: ", err)
+		}
+		defer env.Close(cleanupCtx)
+	}
+
 	cr, err := chrome.New(ctx,
 		chrome.DontSkipOOBEAfterLogin(),
 		chrome.ARCSupported(),
@@ -54,13 +85,13 @@ func OobeArc(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
-	defer cr.Close(ctx)
+	defer cr.Close(cleanupCtx)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect Test API: ", err)
 	}
-	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
+	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 	ui := uiauto.New(tconn)
 
 	if err := oobe.CompleteOnboardingFlow(ctx, ui); err != nil {
