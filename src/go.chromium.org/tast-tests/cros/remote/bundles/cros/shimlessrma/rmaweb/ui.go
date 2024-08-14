@@ -34,6 +34,9 @@ type DestinationOption string
 // WriteProtectDisableOption indicates write protection disabling approach.
 type WriteProtectDisableOption string
 
+// FirmwareUpdateOption indicates the option to flash AP RO firmware.
+type FirmwareUpdateOption string
+
 // StoreLogFlag indicates whether to store log to USB during test.
 type StoreLogFlag bool
 
@@ -49,6 +52,15 @@ const (
 
 	// Rsu indicates using rsu to disable write protect.
 	Rsu WriteProtectDisableOption = "RSU"
+
+	// FirmwareUpdateOptionRootfs indicates flashing AP RO firmware from RootFS.
+	FirmwareUpdateOptionRootfs FirmwareUpdateOption = "FIRMWARE_UPDATE_SOURCE_ROOTFS"
+
+	// FirmwareUpdateOptionUsb indicates flashing AP RO firmware from USB drive.
+	FirmwareUpdateOptionUsb FirmwareUpdateOption = "FIRMWARE_UPDATE_SOURCE_USB"
+
+	// FirmwareUpdateOptionSkip indicates skipping flashing AP RO firmwarm.
+	FirmwareUpdateOptionSkip FirmwareUpdateOption = "FIRMWARE_UPDATE_SOURCE_SKIP"
 
 	// WaitForRebootStart indicates the time to wait before reboot starting.
 	WaitForRebootStart = 10 * time.Second

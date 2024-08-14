@@ -97,6 +97,7 @@ func DisableHWWP(ctx context.Context, s *testing.State) {
 	wpOption := p.wp
 	enroll := p.enroll
 	destination := p.destination
+	firmwareUpdateOption := rmaweb.FirmwareUpdateOptionSkip
 
 	defer rmaweb.CleanupShimlessFiles(cleanupCtx, dut)
 
@@ -115,9 +116,12 @@ func DisableHWWP(ctx context.Context, s *testing.State) {
 	}
 	s.Logf("skipFlashUSB is %t", skipFlashUSB)
 
-	// USB install only occurs in Manual option.
-	// So always skip it for RSU testing.
-	if !skipFlashUSB && wpOption == rmaweb.Manual {
+	// faft-cr50-pool cannot update firmware from USB.
+	// Since we already run Manual test case (removal battery) in skylab and install firmware from USB,
+	// we skip firmware installation in other (e.g. RSU) test cases.
+	// TODO(b/349959175): Test firmware update from rootfs.
+	if wpOption == rmaweb.Manual && !skipFlashUSB {
+		firmwareUpdateOption = rmaweb.FirmwareUpdateOptionUsb
 		s.Log("Flash USB starts")
 		cs := s.CloudStorage()
 		if err := firmwareHelper.SetupUSBKey(ctx, cs); err != nil {
@@ -135,6 +139,18 @@ func DisableHWWP(ctx context.Context, s *testing.State) {
 
 	if err := uiHelper.SetupInitStatus(ctx, enroll); err != nil {
 		s.Fatal("Fail to setup init status: ", err)
+	}
+
+	uiHelper, err = rmaweb.NewUIHelper(ctx, dut, firmwareHelper, s.RPCHint(), key, true)
+	if err != nil {
+		s.Fatal("Fail to initialize RMA Helper: ", err)
+	}
+	// Restart will dispose resources, so don't dispose resources explicitly.
+
+	if firmwareUpdateOption == rmaweb.FirmwareUpdateOptionSkip {
+		if err := uiHelper.BypassFirmwareInstallation(ctx); err != nil {
+			s.Fatal("Fail to update state file to bypass firmware install: ", err)
+		}
 	}
 
 	uiHelper, err = rmaweb.NewUIHelper(ctx, dut, firmwareHelper, s.RPCHint(), key, true)
@@ -187,16 +203,9 @@ func DisableHWWP(ctx context.Context, s *testing.State) {
 		s.Fatal("Fail to bypass calibration after firmware installation: ", err)
 	}
 
-	// faft-cr50-pool cannot update firmware from USB.
-	// Since we already run Manual test case (removal battery) in skylab and install firmware from USB,
-	// we skip firmware installation in all RSU test cases.
-	if wpOption == rmaweb.Manual && !skipFlashUSB {
+	if firmwareUpdateOption != rmaweb.FirmwareUpdateOptionSkip {
 		if err := uiHelper.WaitForFirmwareInstallation(ctx); err != nil {
 			s.Fatal("Fail to navigate to firmware installation page and install firmware: ", err)
-		}
-	} else {
-		if err := uiHelper.BypassFirmwareInstallation(ctx); err != nil {
-			s.Fatal("Fail to navigate to firmware installation page and bypass firmware install: ", err)
 		}
 	}
 
