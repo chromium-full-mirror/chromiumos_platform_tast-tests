@@ -23,9 +23,9 @@ import (
 )
 
 const (
-	androidP   string = "android_p"
-	androidR   string = "android_r"
-	androidVMT string = "android_vm_t"
+	androidP          string = "android_p"
+	androidContainerR string = "android_container_r"
+	androidVMT        string = "android_vm_t"
 )
 
 const apkName = "customized_arc_app_release_20240704.apk"
@@ -52,9 +52,9 @@ func init() {
 			ExtraSoftwareDeps: []string{androidP},
 			Val:               androidP,
 		}, {
-			Name:              "android_r",
-			ExtraSoftwareDeps: []string{androidR},
-			Val:               androidR,
+			Name:              "android_container_r",
+			ExtraSoftwareDeps: []string{androidContainerR},
+			Val:               androidContainerR,
 		}, {
 			Name:              "android_vm_t",
 			ExtraSoftwareDeps: []string{androidVMT},
@@ -134,7 +134,7 @@ func EnableBluetoothWithArcApp(ctx context.Context, s *testing.State) {
 	switch androidDep {
 	case androidP:
 		allowBluetoothObj = d.Object(ui.Text("ALLOW"))
-	case androidR, androidVMT:
+	case androidContainerR, androidVMT:
 		allowBluetoothObj = d.Object(ui.Text("Allow"))
 	default:
 		s.Fatal("Unsupported ARC type: ", androidDep)
