@@ -214,19 +214,24 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 			}
 		}
 	}
+
+	// Save the powerd log for debugging purposes.
+	output, err := h.Reporter.CatFile(ctx, powerdLogPath)
+	if err != nil {
+		s.Error("Failed to read powerd log: ", err)
+	}
+
+	matchCount := strings.Count(output, "powerd_suspend returned 0")
+
+	destPath := filepath.Join(s.OutDir(), "powerd.log")
+	if err := os.WriteFile(destPath, []byte(output), 0666); err != nil {
+		s.Error("Failed to write powerd log: ", err)
+	}
+
 	if numFails > 0 {
-		// Save the powerd log for debugging purposes.
-		output, err := h.Reporter.CatFile(ctx, powerdLogPath)
-		if err != nil {
-			s.Error("Failed to read powerd log: ", err)
-		}
-		destPath := filepath.Join(s.OutDir(), "powerd.log")
-		if err := os.WriteFile(destPath, []byte(output), 0666); err != nil {
-			s.Error("Failed to write powerd log: ", err)
-		}
-		s.Fatalf("Encountered %d errors during execution of stress test, check execution log for details", numFails)
+		s.Fatalf("Encountered %d errors during execution of stress test and got %d powerd_suspend returned 0 in powerd log, check execution log for details", numFails, matchCount)
 	} else {
-		s.Log("\tNo errors encountered")
+		s.Logf("\tNo errors encountered and got %d powerd_suspend returned 0 in powerd log", matchCount)
 	}
 
 }
