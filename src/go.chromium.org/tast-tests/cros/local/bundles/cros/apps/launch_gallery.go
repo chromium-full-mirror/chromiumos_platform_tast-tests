@@ -41,16 +41,20 @@ func init() {
 		Data:         []string{testFile},
 		Params: []testing.Param{
 			{
-				Name:              "stable",
-				Fixture:           fixture.LoggedIn,
-				ExtraHardwareDeps: hwdep.D(pre.AppsStableModels),
-				ExtraAttr:         []string{"group:mainline"},
-			}, {
 				Name:    "unstable",
 				Fixture: fixture.LoggedIn,
 				// b:238260020 - disable aged (>1y) unpromoted informational tests
 				// ExtraAttr:         []string{"group:mainline", "informational"},
 				ExtraHardwareDeps: hwdep.D(pre.AppsUnstableModels),
+			}, {
+				Name:              "stable_fieldtrial_testing_config_off",
+				Fixture:           fixture.LoggedInFieldTrialConfigDisable,
+				ExtraHardwareDeps: hwdep.D(pre.AppsStableModels),
+			}, {
+				Name:              "stable_fieldtrial_testing_config_on",
+				Fixture:           fixture.LoggedInFieldTrialConfigEnable,
+				ExtraAttr:         []string{"group:criticalstaging", "group:mainline", "informational"},
+				ExtraHardwareDeps: hwdep.D(pre.AppsStableModels),
 			},
 		},
 	})

@@ -41,11 +41,21 @@ func init() {
 		}, {
 			Name:              "unstable",
 			Fixture:           fixture.LoggedIn,
-			ExtraHardwareDeps: hwdep.D(pre.AppsUnstableModels),
+			ExtraHardwareDeps: hwdep.D(pre.AppsStableModels),
 			ExtraAttr:         []string{"group:hw_agnostic"},
 			// b:238260020 - disable aged (>1y) unpromoted informational tests
 			// ExtraAttr:         []string{"group:mainline", "informational"},
-		}},
+		}, {
+			Name:              "stable_fieldtrial_testing_config_off",
+			Fixture:           fixture.LoggedInFieldTrialConfigDisable,
+			ExtraHardwareDeps: hwdep.D(pre.AppsStableModels),
+		}, {
+			Name:              "stable_fieldtrial_testing_config_on",
+			Fixture:           fixture.LoggedInFieldTrialConfigEnable,
+			ExtraHardwareDeps: hwdep.D(pre.AppsStableModels),
+			ExtraAttr:         []string{"group:criticalstaging", "group:mainline", "informational"},
+		},
+		},
 	})
 }
 

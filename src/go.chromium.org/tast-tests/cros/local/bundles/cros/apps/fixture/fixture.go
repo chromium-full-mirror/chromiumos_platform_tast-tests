@@ -84,11 +84,12 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:            LoggedInFieldTrialConfigEnable,
-		Desc:            "Logged into a user session for essential apps. And field trial test config enabled",
-		Contacts:        []string{"cros-ca-eng@google.com"},
-		BugComponent:    "b:385700", // ChromeOS > Software > Consumer > Apps Suite
-		Impl:            eaFixture(true, chrome.FieldTrialConfig(chrome.FieldTrialConfigEnable)),
+		Name:         LoggedInFieldTrialConfigEnable,
+		Desc:         "Logged into a user session for essential apps. And field trial test config enabled",
+		Contacts:     []string{"cros-ca-eng@google.com"},
+		BugComponent: "b:385700", // ChromeOS > Software > Consumer > Apps Suite
+		// TODO b/370867669 - Remove the disableFeatures flags here.
+		Impl:            eaFixture(true, chrome.FieldTrialConfig(chrome.FieldTrialConfigEnable), chrome.DisableFeatures("PreinstalledWebAppsCoreOnly")),
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
 		SetUpTimeout:    chrome.LoginTimeout,
