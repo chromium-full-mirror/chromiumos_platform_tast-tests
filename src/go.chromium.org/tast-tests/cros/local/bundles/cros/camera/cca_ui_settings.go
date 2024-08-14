@@ -29,13 +29,7 @@ func init() {
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
 		SoftwareDeps: []string{"camera_app", "chrome"},
-		Params: []testing.Param{{
-			Fixture: "ccaTestBridgeReadyWithFakeHALCamera",
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           "ccaTestBridgeReadyWithFakeHALCameraLacros",
-		}},
+		Fixture:      "ccaTestBridgeReadyWithFakeHALCamera",
 	})
 }
 
