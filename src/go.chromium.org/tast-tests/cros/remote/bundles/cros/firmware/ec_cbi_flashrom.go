@@ -35,10 +35,10 @@ func init() {
 			"jasonyuan@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		// TODO: When stable, change firmware_unstable to a different attr.
-		Attr:    []string{"group:firmware", "firmware_unstable"},
-		Fixture: fixture.NormalMode,
-		Timeout: 15 * time.Minute,
+		Attr:         []string{"group:firmware", "firmware_ec"},
+		Requirements: []string{"sys-fw-0022-v02"},
+		Fixture:      fixture.NormalMode,
+		Timeout:      15 * time.Minute,
 		// Only run on platforms that include CL crrev/c/1234747 so that CBI can be reversibly written to.
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.ECFeatureCbibin(),
 			// Only run on the DUTs that support the CBI section when reading the EC image via flashrom.
