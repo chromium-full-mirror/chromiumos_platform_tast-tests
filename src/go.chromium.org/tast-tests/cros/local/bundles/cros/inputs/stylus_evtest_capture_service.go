@@ -42,6 +42,8 @@ type StylusEvtestCaptureService struct {
 // StartStylusDataCapture captures stylus evtest data and writes it to a file. It waits for a call to StopStylusDataCapture before exiting.
 func (svc *StylusEvtestCaptureService) StartStylusDataCapture(ctx context.Context, req *empty.Empty) (*pb.StylusEvtestCaptureResponse, error) {
 	svc.wg.Add(1)
+
+	// TODO(b/359355203): Refactor to use StylusService for finding physical stylus and checking battery level.
 	stylusFound, stylusPath, err := input.FindPhysicalStylus(ctx)
 	if err != nil {
 		return nil, err

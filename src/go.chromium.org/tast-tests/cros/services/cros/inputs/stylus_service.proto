@@ -1,0 +1,39 @@
+// Copyright 2024 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+syntax = "proto3";
+
+package tast.cros.inputs;
+
+import "google/protobuf/empty.proto";
+
+option go_package = "go.chromium.org/tast-tests/cros/services/cros/inputs";
+
+// StylusService provides functionality to query the stylus.
+service StylusService {
+  // FindPhysicalStylus finds the /dev/input/event* file for a physical stylus.
+  rpc FindPhysicalStylus(google.protobuf.Empty)
+      returns (FindPhysicalStylusResponse) {}
+
+  // CheckPhysicalStylusBatteryLevel checks that the stylus battery level is
+  // above a specific threshold.
+  rpc CheckPhysicalStylusBatteryLevel(google.protobuf.Empty)
+      returns (google.protobuf.Empty) {}
+
+  // FindPhysicalStylusBatteryLevel returns the battery level of
+  // a physical stylus if one is present.
+  rpc FindPhysicalStylusBatteryLevel(google.protobuf.Empty)
+      returns (FindPhysicalStylusBatteryLevelResponse) {}
+}
+
+// FindPhysicalStylusResponse provides the path to /dev/input/event* for a
+// physical stylus.
+message FindPhysicalStylusResponse { string StylusPath = 1; }
+
+// FindPhysicalStylusBatteryLevelResponse returns the battery level for a
+// physical stylus if one is present.
+message FindPhysicalStylusBatteryLevelResponse {
+  bool HasBattery = 1;
+  int32 BatteryLevel = 2;
+}
