@@ -32,13 +32,13 @@ func init() {
 }
 
 func checkContent(s *testing.State, got []byte, expect byte) {
-	if !bytes.Equal(got, genContent(expect)) {
+	if !bytes.Equal(got, genContent(expect, len(got))) {
 		s.Fatal("flash contents")
 	}
 }
 
-func genContent(fill byte) []byte {
-	return bytes.Repeat([]byte{fill}, 32*1024*1024)
+func genContent(fill byte, length int) []byte {
+	return bytes.Repeat([]byte{fill}, length)
 }
 
 // Ti50CCDFlashrom measures flashrom speed over CCD.
@@ -78,7 +78,7 @@ func Ti50CCDFlashrom(ctx context.Context, s *testing.State) {
 
 	// Measure write time from erased (all 0xff) to all zero.
 	s.Log("Writing")
-	w, err := b.CCDFlashromWrite(ctx, genContent(0))
+	w, err := b.CCDFlashromWrite(ctx, genContent(0, len(content)))
 	th.MustSucceed(err, "write")
 	// Flashrom does an internal read before writing.
 	logDuration("write_with_read", w)
