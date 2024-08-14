@@ -39,6 +39,7 @@ func init() {
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.SystemFeaturesDisableList{Val: []string{"camera"}}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.VideoCaptureAllowed{Val: false}, pci.VerifiedFunctionalityJS),
+			pci.SearchFlag(&policy.VideoCaptureAllowedUrls{Val: []string{"chrome://camera-app/*"}}, pci.VerifiedFunctionalityJS),
 		},
 	})
 }
@@ -67,6 +68,10 @@ func CCAUIPolicy(ctx context.Context, s *testing.State) {
 		"testBlockVideoCapture",
 		testBlockVideoCapture,
 		[]policy.Policy{&policy.VideoCaptureAllowed{Val: false}},
+	}, {
+		"testAllowCCA",
+		testNoPolicy,
+		[]policy.Policy{&policy.VideoCaptureAllowed{Val: false}, &policy.VideoCaptureAllowedUrls{Val: []string{"chrome://camera-app/*"}}},
 	}} {
 		subTestCtx, cancel := context.WithTimeout(ctx, subTestTimeout)
 		s.Run(subTestCtx, tst.name, func(ctx context.Context, s *testing.State) {
