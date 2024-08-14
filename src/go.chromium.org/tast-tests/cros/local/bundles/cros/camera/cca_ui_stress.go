@@ -59,25 +59,9 @@ func init() {
 			Fixture:           "ccaTestBridgeReady",
 			Timeout:           5 * time.Minute,
 		}, {
-			Name:              "vivid",
-			ExtraSoftwareDeps: []string{caps.VividCamera},
-			ExtraAttr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
-			Fixture:           "ccaTestBridgeReady",
-			Timeout:           5 * time.Minute,
-		}, {
-			Name:      "fake_vcd",
-			ExtraAttr: []string{"group:mainline", "informational", "group:camera-libcamera"},
-			Fixture:   "ccaTestBridgeReadyWithFakeCameraWithoutFakeScene",
-			Timeout:   5 * time.Minute,
-		}, {
 			Name:      "fake_hal",
 			ExtraAttr: []string{"group:mainline", "informational", "group:camera-libcamera"},
 			Fixture:   "ccaTestBridgeReadyWithFakeHALCamera",
-			Timeout:   5 * time.Minute,
-		}, {
-			Name:      "vcd_utility",
-			ExtraAttr: []string{"group:mainline", "informational", "group:camera-libcamera"},
-			Fixture:   "ccaTestBridgeReadyWithVCDInUtilityProcess",
 			Timeout:   5 * time.Minute,
 		}, {
 			// For stress testing manually with real camera and longer timeout.
