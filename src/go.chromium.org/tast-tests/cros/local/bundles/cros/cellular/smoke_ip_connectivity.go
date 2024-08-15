@@ -104,9 +104,9 @@ func init() {
 				ExtraAttr: []string{"cellular_carrier_telus"},
 			},
 			{
-				Name:      "rak",
-				Val:       "rak",
-				ExtraAttr: []string{"cellular_carrier_rak"},
+				Name:      "cbrs",
+				Val:       "cbrs",
+				ExtraAttr: []string{"cellular_carrier_cbrs"},
 			},
 		},
 	})
