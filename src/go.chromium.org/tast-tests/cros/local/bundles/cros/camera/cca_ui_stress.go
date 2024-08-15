@@ -122,7 +122,7 @@ func clickPhotoShutterContinuously(ctx context.Context, s *testing.State, app *c
 	const timerState = cca.TimerOff
 	iterations := intVar(s, "iterations", defaultIterations)
 	seed := intVar(s, "seed", defaultSeed)
-	rand.Seed(int64(seed))
+	rng := rand.New(rand.NewSource(int64(seed)))
 
 	if err := app.SwitchMode(ctx, cca.Photo); err != nil {
 		return err
@@ -134,7 +134,7 @@ func clickPhotoShutterContinuously(ctx context.Context, s *testing.State, app *c
 
 	testing.ContextLog(ctx, "Start to take photos")
 	var startTime = time.Now()
-	if err := clickShutterContinuously(ctx, app, iterations); err != nil {
+	if err := clickShutterContinuously(ctx, app, iterations, rng); err != nil {
 		return err
 	}
 
@@ -161,13 +161,13 @@ func clickPhotoShutterContinuously(ctx context.Context, s *testing.State, app *c
 func clickVideoShutterContinuously(ctx context.Context, s *testing.State, app *cca.App) error {
 	iterations := intVar(s, "iterations", defaultIterations)
 	seed := intVar(s, "seed", defaultSeed)
-	rand.Seed(int64(seed))
+	rng := rand.New(rand.NewSource(int64(seed)))
 
 	if err := app.SwitchMode(ctx, cca.Video); err != nil {
 		return err
 	}
 	var startTime = time.Now()
-	if err := clickShutterContinuously(ctx, app, iterations); err != nil {
+	if err := clickShutterContinuously(ctx, app, iterations, rng); err != nil {
 		return err
 	}
 	if err := app.Close(ctx); err != nil {
@@ -186,7 +186,7 @@ func clickVideoShutterContinuously(ctx context.Context, s *testing.State, app *c
 	return nil
 }
 
-func clickShutterContinuously(ctx context.Context, app *cca.App, iterations int) error {
+func clickShutterContinuously(ctx context.Context, app *cca.App, iterations int, rng *rand.Rand) error {
 	for i := 0; i < iterations; i++ {
 		if err := app.ClickShutter(ctx); err != nil {
 			return err
@@ -194,7 +194,7 @@ func clickShutterContinuously(ctx context.Context, app *cca.App, iterations int)
 		if i == iterations-1 {
 			break
 		}
-		var interval = time.Duration(rand.Intn(500)) * time.Millisecond
+		var interval = time.Duration(rng.Intn(500)) * time.Millisecond
 		// GoBigSleepLint: Wait for a random time interval (0-500ms) before clicking shutter button again.
 		if err := testing.Sleep(ctx, interval); err != nil {
 			return err
@@ -220,7 +220,7 @@ func takeActionsRandomly(ctx context.Context, s *testing.State, app *cca.App) er
 	actionSequences := strings.Split(stringVar(s, "action_sequence", ""), ",")
 
 	seed := intVar(s, "seed", defaultSeed)
-	rand.Seed(int64(seed))
+	rng := rand.New(rand.NewSource(int64(seed)))
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -372,9 +372,9 @@ func takeActionsRandomly(ctx context.Context, s *testing.State, app *cca.App) er
 				}
 			}
 		} else {
-			action := actions[rand.Intn(len(actions))]
+			action := actions[rng.Intn(len(actions))]
 			if i <= skipIterations {
-				// We still need to call rand.Intn() to advance the internal state of PRNG.
+				// We still need to call rng.Intn() to advance the internal state of PRNG.
 				continue
 			}
 			s.Logf("Iteration %d/%d: Performing action %s", i, iterations, action.name)
