@@ -71,10 +71,11 @@ func RoamingStatusLabel(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
-	err = cellular.SetRoamingPolicy(ctx, true, false)
+	cleanup, err := cellular.SetRoamingPolicy(ctx, true, false)
 	if err != nil {
 		s.Fatal("Failed to set roaming property: ", err)
 	}
+	defer cleanup(cleanupCtx)
 
 	helper := s.FixtValue().(*cellular.FixtData).Helper
 	if _, err := helper.Connect(ctx); err != nil {

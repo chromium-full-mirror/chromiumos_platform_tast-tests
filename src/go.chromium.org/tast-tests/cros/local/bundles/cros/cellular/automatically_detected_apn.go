@@ -37,10 +37,16 @@ func init() {
 }
 
 func AutomaticallyDetectedApn(ctx context.Context, s *testing.State) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
+	defer cancel()
+
 	// In case roaming is required for the SIM on the device.
-	if err := cellular.SetRoamingPolicy(ctx, true, true); err != nil {
+	cleanup, err := cellular.SetRoamingPolicy(ctx, true, true)
+	if err != nil {
 		s.Fatal("Failed to set roaming property: ", err)
 	}
+	defer cleanup(cleanupCtx)
 
 	cr, err := chrome.New(ctx, chrome.EnableFeatures("ApnRevamp"))
 	if err != nil {
@@ -53,9 +59,6 @@ func AutomaticallyDetectedApn(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to cellular service: ", err)
 	}
 
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
-	defer cancel()
 	defer func(ctx context.Context) {
 		if errs := helper.ResetShill(ctx); errs != nil {
 			s.Fatal("Failed to reset shill: ", errs)

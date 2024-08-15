@@ -97,10 +97,11 @@ func ConnectToRoamingSim(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect and verify connected: ", err)
 	}
 
-	err = cellular.SetRoamingPolicy(ctx, false, false)
+	cleanup, err := cellular.SetRoamingPolicy(ctx, false, false)
 	if err != nil {
 		s.Fatal("Failed to set roaming property: ", err)
 	}
+	defer cleanup(cleanupCtx)
 
 	if err := ui.WaitUntilExists(ossettings.DisconnectedStatus)(ctx); err != nil {
 		s.Fatal("Automatic disconnection failed: ", err)

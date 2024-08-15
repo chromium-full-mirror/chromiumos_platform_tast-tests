@@ -37,14 +37,16 @@ func init() {
 }
 
 func CustomDefaultAttachApnDisableEnableBehavior(ctx context.Context, s *testing.State) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
+	defer cancel()
+
 	// In case roaming is required for the SIM on the device.
-	if err := cellular.SetRoamingPolicy(ctx, true, true); err != nil {
+	cleanup, err := cellular.SetRoamingPolicy(ctx, true, true)
+	if err != nil {
 		s.Fatal("Failed to set roaming property: ", err)
 	}
-
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
-	defer cancel()
+	defer cleanup(cleanupCtx)
 
 	cr, err := chrome.New(ctx, chrome.EnableFeatures("ApnRevamp"))
 	if err != nil {
