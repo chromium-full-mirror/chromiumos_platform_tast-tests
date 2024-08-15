@@ -135,7 +135,7 @@ func ECCbiBcfg(ctx context.Context, s *testing.State) {
 	}
 	s.Logf("Battery manufacturer name: %q, Battery device name: %q", battManufName, battDeviceName)
 
-	modifiedBcfgBytes, err := getUpdatedBcfgBytes(ctx, h, originalBcfgBytes, battManufName, battDeviceName)
+	modifiedBcfgBytes, err := getUpdatedBcfgBytes(ctx, h, originalBcfgBytes, &battManufName, &battDeviceName)
 	if err != nil {
 		s.Fatal("Data modification failed: ", err)
 	}
@@ -213,8 +213,8 @@ func getManufacturerAndDeviceName(ctx context.Context, h *firmware.Helper) (stri
 }
 
 // getUpdatedBcfgBytes modifies the input bytes and return updated bytes as output.
-func getUpdatedBcfgBytes(ctx context.Context, h *firmware.Helper, bcfgData []byte, battManufName, battDeviceName string) ([]byte, error) {
-	key0 := strings.Join([]string{battManufName, battDeviceName}, ",")
+func getUpdatedBcfgBytes(ctx context.Context, h *firmware.Helper, bcfgData []byte, battManufName, battDeviceName *string) ([]byte, error) {
+	key0 := strings.Join([]string{*battManufName, *battDeviceName}, ",")
 	key1 := "batt_info"
 	key2 := "start_charging_max_c"
 	var val float64
@@ -224,30 +224,42 @@ func getUpdatedBcfgBytes(ctx context.Context, h *firmware.Helper, bcfgData []byt
 		return nil, errors.Wrap(err, "Updating BCFG bytes failed")
 	}
 
-	val0, exist := bcfgMap[key0]
-	if exist {
-		val1, exist := val0.(map[string]interface{})[key1]
-		if exist {
-			val2, exist := val1.(map[string]interface{})[key2]
-			if exist {
-				val = val2.(float64)
-				if val == 100 {
-					val--
-				} else {
-					val++
-				}
-				(val1.(map[string]interface{}))[key2] = val
-			} else {
-				return nil, errors.Wrapf(err, "Key not found: %q in map: %q", key2, val1)
+	var isFound bool
+	var keys = []string{}
+	for key, val0 := range bcfgMap {
+		testing.ContextLogf(ctx, "Found key %q in bcfg map", key)
+		keys = append(keys, key)
+		if key == key0 {
+			val1, exists := val0.(map[string]interface{})[key1]
+			if !exists {
+				return nil, errors.Wrapf(err, "key not found: %q in map: %q", key1, val0)
 			}
+			val2, exists := val1.(map[string]interface{})[key2]
+			if !exists {
+				return nil, errors.Wrapf(err, "key not found: %q in map: %q", key2, val1)
+			}
+			val = val2.(float64)
+			if val == 100 {
+				val--
+			} else {
+				val++
+			}
+			val1.(map[string]interface{})[key2] = val
+			isFound = true
+			break
 		} else {
-			return nil, errors.Wrapf(err, "Key not found: %q in map: %q", key1, val0)
+			if strings.Split(key, ",")[0] != *battManufName {
+				testing.ContextLogf(ctx, "Skipping key because manufacturer name mismatches batt manu Name key: %q", strings.Split(key, ",")[0])
+			}
+			if strings.Split(key, ",")[1] != *battDeviceName {
+				testing.ContextLogf(ctx, "Skipping key because device name mismatches batt device Name key: %q", strings.Split(key, ",")[1])
+			}
 		}
-	} else {
-		return nil, errors.Wrapf(err, "Key not found: %q in map: %q", key0, bcfgMap)
 	}
-
-	return jsonMapToBytes(ctx, bcfgMap)
+	if isFound {
+		return jsonMapToBytes(ctx, bcfgMap)
+	}
+	return nil, errors.Wrapf(err, "Key not found: %q in the keys of bcfg map: %q", key0, keys)
 }
 
 func getBcfg(ctx context.Context, h *firmware.Helper) (string, error) {
