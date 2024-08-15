@@ -340,6 +340,12 @@ func newCommonKernelConfigCheck(ver *sysutil.KernelVersion, arch string) *kernel
 		missing = append(missing, "EXFAT_FS")
 	}
 
+	if ver.IsOrLater(6, 6) {
+		module = append(module, "NTFS3_FS")
+	} else {
+		missing = append(missing, "NTFS3_FS")
+	}
+
 	if ver.IsOrLater(5, 15) {
 		builtin = append(builtin, "RANDOMIZE_KSTACK_OFFSET_DEFAULT")
 	}
