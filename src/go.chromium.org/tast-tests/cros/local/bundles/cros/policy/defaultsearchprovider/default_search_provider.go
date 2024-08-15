@@ -8,6 +8,7 @@ package defaultsearchprovider
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"go.chromium.org/tast-tests/cros/common/policy"
@@ -17,6 +18,9 @@ import (
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/errors"
 )
+
+const contentToSearch = "vy6ys"
+var searchURL = fmt.Sprintf("https://www.google.com/search\\?q=%s.*", contentToSearch)
 
 // TestCase defines test expectations based on the policy value.
 type TestCase struct {
@@ -29,6 +33,10 @@ type TestCase struct {
 	// ShouldFindAnnotation states whether navigation_url_loader annotation
 	// should be found in the net-export log.
 	ShouldFindAnnotation bool
+	// TrafficShouldFind states the traffic should be found during tests.
+	TrafficShouldFind []string
+	// TrafficShouldNotFind states the traffic should NOT be found during tests.
+	TrafficShouldNotFind []string
 }
 
 // TestCases returns the map of PolicySetting to TestCase parameter
@@ -43,18 +51,24 @@ func TestCases() map[networkrequestmonitor.PolicySetting]TestCase {
 			// to false, because a Url is loaded with http://abc vs when policy is set
 			// to true/unset, URL loaded is http://google.com/q=abc.
 			ShouldFindAnnotation: true,
+			TrafficShouldFind:    []string{},
+			TrafficShouldNotFind: []string{searchURL},
 		},
 		networkrequestmonitor.PolicyEnabled: {
 			Name:                 "enabled",
 			Enabled:              true,
 			Policy:               &policy.DefaultSearchProviderEnabled{Val: true},
 			ShouldFindAnnotation: true,
+			TrafficShouldFind:    []string{searchURL},
+			TrafficShouldNotFind: []string{},
 		},
 		networkrequestmonitor.PolicyUnset: {
 			Name:                 "unset",
 			Enabled:              true,
 			Policy:               &policy.DefaultSearchProviderEnabled{Stat: policy.StatusUnset},
 			ShouldFindAnnotation: true,
+			TrafficShouldFind:    []string{searchURL},
+			TrafficShouldNotFind: []string{},
 		},
 	}
 }
@@ -116,7 +130,7 @@ func TriggerDefaultSearchProvider(ctx context.Context, params networkrequestmoni
 	}
 
 	// Type something.
-	if err := kb.Type(ctx, "vy6ys\n"); err != nil {
+	if err := kb.Type(ctx, fmt.Sprintf("%s\n", contentToSearch)); err != nil {
 		return errors.Wrap(err, "failed to write events")
 	}
 
