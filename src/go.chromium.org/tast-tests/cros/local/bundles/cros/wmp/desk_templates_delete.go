@@ -58,6 +58,7 @@ func DeskTemplatesDelete(ctx context.Context, s *testing.State) {
 	cr, err := chrome.New(ctx,
 		chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)),
 		chrome.EnableFeatures("DesksTemplates", "EnableSavedDesks"),
+		chrome.DisableFeatures("SavedDeskUiRevamp"),
 		chrome.ARCSupported(),
 		chrome.ExtraArgs(arc.DisableSyncFlags()...))
 	if err != nil {

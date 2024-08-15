@@ -47,7 +47,7 @@ func init() {
 			return []chrome.Option{
 				chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)),
 				chrome.EnableFeatures("DesksTemplates", "EnableSavedDesks"),
-				chrome.DisableFeatures("DeskTemplateSync"),
+				chrome.DisableFeatures("DeskTemplateSync", "SavedDeskUiRevamp"),
 			}, nil
 		}),
 		SetUpTimeout:    chrome.GAIALoginTimeout + 2*time.Minute,
