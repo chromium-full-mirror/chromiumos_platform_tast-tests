@@ -15,6 +15,7 @@ import (
 	cbt "go.chromium.org/tast-tests/cros/common/chameleon/devices/common/bluetooth"
 	"go.chromium.org/tast-tests/cros/remote/bluetooth"
 	util "go.chromium.org/tast-tests/cros/remote/bundles/cros/bluetooth/bluetoothutil"
+	"go.chromium.org/tast-tests/cros/remote/inputs"
 	bts "go.chromium.org/tast-tests/cros/services/cros/bluetooth"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast/core/ctxutil"
@@ -93,14 +94,22 @@ func WarningDialogFromQuickSettings(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to configure btpeer as a %q device: %v", mouseDevice.DeviceType(), err)
 	}
 
+	// Enable Bluetooth
+	if _, err := fv.BluetoothService.Enable(ctx, &emptypb.Empty{}); err != nil {
+		s.Fatal("Failed to enable Bluetooth: ", err)
+	}
+
 	if _, err := fv.BluetoothUIService.PairDeviceWithQuickSettings(ctx, &bts.PairDeviceWithQuickSettingsRequest{
 		AdvertisedName: mouseDevice.AdvertisedName(),
 	}); err != nil {
 		s.Fatalf("Failed to pair the Bluetooth device %q with quick settings: %v", mouseDevice.String(), err)
 	}
 
-	// Enable Bluetooth
-	fv.BluetoothService.Enable(ctx, &emptypb.Empty{})
+	// Wait for the Bluetooth device to be registered as a HID to avoid race condition
+	// that may occur if Bluetooth is turned off too quickly after the device is connected.
+	if _, err := inputs.FindRegisteredDevice(ctx, s.DUT(), mouseDevice.AdvertisedName(), s.OutDir()); err != nil {
+		s.Fatalf("Failed to wait for the Bluetooth device %q device to be registered as a HID: %v", mouseDevice.AdvertisedName(), err)
+	}
 
 	checkBluetoothState := func(expectedState bool) {
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
