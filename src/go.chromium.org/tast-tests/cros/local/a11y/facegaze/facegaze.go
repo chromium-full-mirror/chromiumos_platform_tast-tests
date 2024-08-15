@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/camera/testutil"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -138,6 +139,29 @@ func setUpFakeCamera(ctx context.Context, dataPath func(string) string, tdh *a11
 	return nil
 }
 
+// maybeCloseConfirmationDialog closes the dialog that is shown when FaceGaze is first
+// enabled, if it appears on the screen. The dialog informs the user about how
+// to use the FaceGaze feature. This function accepts the dialog so we can use the feature.
+func maybeCloseConfirmationDialog(ctx context.Context, ui *uiauto.Context) error {
+	text := nodewith.NameContaining("Face control").Onscreen()
+	continueButton := nodewith.Name("Continue").ClassName("MdTextButton").Onscreen()
+
+	// Check if the dialog pops up.
+	if err := ui.WaitUntilExists(text)(ctx); err != nil {
+		// If the dialog can't be found, then we don't need to do anything.
+		return nil
+	}
+
+	if err := uiauto.Combine("Close FaceGaze confirmation dialog",
+		ui.LeftClick(continueButton),
+		ui.WaitUntilGone(text),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to close the FaceGaze confirmation dialog")
+	}
+
+	return nil
+}
+
 // SetUp executes common FaceGaze setup code and returns a driver that can be
 // used to easily drive FaceGaze tests.
 func SetUp(ctx context.Context, cr *chrome.Chrome, dataPath func(string) string) (d driver, e error) {
@@ -188,12 +212,17 @@ func SetUp(ctx context.Context, cr *chrome.Chrome, dataPath func(string) string)
 		return newNoOpDriver(tdh), errors.Wrap(err, "failed to setup the fake camera")
 	}
 
+	ui := uiauto.New(tconn).WithTimeout(10 * time.Second)
+
+	if err := maybeCloseConfirmationDialog(ctx, ui); err != nil {
+		return newNoOpDriver(tdh), errors.Wrap(err, "failed to close the FaceGaze confirmation dialog")
+	}
+
 	// When FaceGaze is enabled, it will automatically trigger an install of the
 	// facegaze-assets DLC, so wait for it to be installed before continuing.
 	if err := testing.Poll(ctx, a11y.VerifyFaceGazeAssetsInstalled, &testing.PollOptions{Timeout: 2 * time.Minute, Interval: 10 * time.Second}); err != nil {
 		return newNoOpDriver(tdh), errors.Wrap(err, "failed to wait for the facegaze-assets dlc to be installed")
 	}
 
-	ui := uiauto.New(tconn).WithTimeout(10 * time.Second)
 	return driver{ctx, conn, tconn, ui, tdh}, nil
 }
