@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -212,8 +213,8 @@ func CorruptBothKernelCopies(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get rootdev path from /dev/disk/by-id: ", err)
 	}
 
-	if err := h.DUT.Conn().CommandContext(ctx, "elogtool", "clear").Run(ssh.DumpLogOnError); err != nil {
-		s.Fatal("Failed to clear eventlog: ", err)
+	if err := h.Reporter.ClearEventlog(ctx); err != nil {
+		s.Fatal("Failed to clear event log: ", err)
 	}
 
 	s.Log("Corrupt KERN-A")
@@ -318,6 +319,10 @@ func CorruptBothKernelCopies(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Error("Failed to find recovery reason in crossystem params: ", err)
 	} else if !hasRecRes {
+		saveEventLogPath := filepath.Join(s.OutDir(), "eventlog.txt")
+		if err := h.SaveEventLog(ctx, saveEventLogPath); err != nil {
+			s.Error("Failed to save event log: ", err)
+		}
 		s.Error("Didn't find expected recovery reason in crossystem params")
 	}
 
