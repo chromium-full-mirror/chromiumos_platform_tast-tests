@@ -220,7 +220,7 @@ func getHostSwapInfo(ctx context.Context) (*swapInfo, error) {
 
 // parseSwapInfo parses swap info from the content of /proc/swaps
 func parseSwapInfo(procSwapsContent []byte) (*swapInfo, error) {
-	lines := strings.Split(string(procSwapsContent), "\n")
+	lines := strings.Split(strings.TrimSpace(string(procSwapsContent)), "\n")
 	if len(lines) < 2 {
 		return nil, nil
 	}
