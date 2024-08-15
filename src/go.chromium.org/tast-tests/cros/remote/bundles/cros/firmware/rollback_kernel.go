@@ -131,6 +131,9 @@ func RollbackKernel(ctx context.Context, s *testing.State) {
 			rolledBackKernB = false
 		}
 		if bootMode == common.BootModeNormal {
+			if err := h.EnsureDUTBooted(ctx); err != nil {
+				s.Fatal("Failed to ensure DUT booted: ", err)
+			}
 			s.Log("Sync KERN-A/B backups from host to DUT")
 			if _, err := linuxssh.PutFiles(ctx, h.DUT.Conn(), map[string]string{
 				kernAHostBackup.Name(): kernelBackup.KernA.BackupPath,
