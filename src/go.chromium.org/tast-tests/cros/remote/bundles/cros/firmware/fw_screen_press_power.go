@@ -33,7 +33,7 @@ func init() {
 			"cienet-firmware@cienet.corp-partner.google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level2", "firmware_usb"},
+		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level2"},
 		Requirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01"},
 		Vars:         []string{"firmware.skipFlashUSB"},
 		Timeout:      2 * time.Hour,
@@ -76,6 +76,7 @@ func init() {
 				bootMode:     fwCommon.BootModeNormal,
 				bootToScreen: fwCommon.FwInvalidScreen,
 			},
+			ExtraAttr:         []string{"firmware_usb"},
 			ExtraRequirements: []string{"sys-fw-0025-v01"},
 		}},
 	})
@@ -158,7 +159,11 @@ func FwScreenPressPower(ctx context.Context, s *testing.State) {
 		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
 		defer cancelWaitConnect()
 		if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
-			s.Fatal("Failed to reconnect to the DUT: ", err)
+			currPowerState, stateErr := h.Servo.GetECSystemPowerState(ctx)
+			if stateErr != nil {
+				s.Fatalf("Failed to reconnect to DUT: %v, failed to check powerstate: %v", err, stateErr)
+			}
+			s.Fatalf("Failed to reconnect to the DUT and got %v power state: %v", currPowerState, err)
 		}
 	}
 
@@ -178,6 +183,14 @@ func fwScreenPressPowerOff(ctx context.Context, h *firmware.Helper, bootToScreen
 			return errors.Wrap(err, "failed to power off")
 		}
 	} else {
+		if bootToScreen == fwCommon.FwDeveloperScreen {
+			if err := h.ByPassDevBootTimeout(ctx); err != nil {
+				return errors.Wrap(err, "failed to bypass dev boot timeout")
+			}
+			if err := h.ReturnToDeveloperScreen(ctx); err != nil {
+				return errors.Wrap(err, "failed to return to developer screen")
+			}
+		}
 		// For TabletDetachableSwitcher, move to the "Poweroff" option and
 		// press power key.
 		if h.Config.ModeSwitcherType == firmware.TabletDetachableSwitcher && bootToScreen == fwCommon.FwToNormScreen {
@@ -185,9 +198,9 @@ func fwScreenPressPowerOff(ctx context.Context, h *firmware.Helper, bootToScreen
 				return errors.Wrap(err, "failed to move to power off on to_norm screen")
 			}
 		}
+		testing.ContextLog(ctx, "Sleeping for 2 seconds before pressing power key")
 		// GoBigSleepLint: It may take some time for the DUT to be ready to
 		// accept power key press.
-		testing.ContextLog(ctx, "Sleeping for 2 seconds before powering up DUT")
 		if err := testing.Sleep(ctx, 2*time.Second); err != nil {
 			return errors.Wrap(err, "failed to sleep")
 		}
