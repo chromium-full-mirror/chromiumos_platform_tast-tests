@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/cellular"
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
+	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -411,7 +412,8 @@ type cellularFixture struct {
 	netUnlock           func()
 	uiStopped           bool
 	// Per-test logging marker
-	logMarker *logsaver.Marker
+	logMarker       *logsaver.Marker
+	cleanupPolicies func(ctx context.Context) error
 }
 
 func newCellularFixture() *cellularFixture {
@@ -646,6 +648,16 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 		} else {
 			testing.ContextLog(ctx, "Cellular has default Service: ", name)
 		}
+
+		// Auto-connect should be enabled by default (b/352817928).
+		// Setting that property requires a connectable cellular profile, but since the cellular profile
+		// for test eSIM hasn't been installed yet, it can only be done when we're not using the test eSIM.
+		cleanup, err := helper.InitServiceProperty(ctx, shillconst.ServicePropertyAutoConnect, true)
+		if err != nil {
+			s.Fatal("Failed to initialize auto-connect to true: ", err)
+		}
+		// Cleanup auto-connect property.
+		f.cleanupPolicies = cleanup
 	}
 	if f.stopUI {
 		if f.uiStopped, err = stopJob(ctx, uiJobName); err != nil {
@@ -717,10 +729,12 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 		}
 	}
 	if f.useRoaming {
-		err := SetRoamingPolicy(ctx, true, false)
+		cleanup, err := SetRoamingPolicy(ctx, true, false)
 		if err != nil {
 			s.Fatal("Failed to set roaming property: ", err)
 		}
+		// Cleanup roaming policies and auto-connect property.
+		f.cleanupPolicies = cleanup
 	}
 
 	if f.checkSIM {
@@ -926,6 +940,10 @@ func (f *cellularFixture) PostTest(ctx context.Context, s *testing.FixtTestState
 }
 
 func (f *cellularFixture) TearDown(ctx context.Context, s *testing.FixtState) {
+	if f.cleanupPolicies != nil {
+		f.cleanupPolicies(ctx)
+	}
+
 	if f.modemLoggingStarted {
 		if err := stopModemLogging(ctx); err != nil {
 			if f.useFakeDMS {

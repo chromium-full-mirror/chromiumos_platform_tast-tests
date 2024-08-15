@@ -36,19 +36,22 @@ func init() {
 }
 
 func MigrateInvalidApn(ctx context.Context, s *testing.State) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
+	defer cancel()
+
 	// In case roaming is required for the SIM on the device.
-	if err := cellular.SetRoamingPolicy(ctx, true, true); err != nil {
+	cleanup, err := cellular.SetRoamingPolicy(ctx, true, true)
+	if err != nil {
 		s.Fatal("Failed to set roaming policy: ", err)
 	}
+	defer cleanup(cleanupCtx)
 
 	helper := s.FixtValue().(*cellular.FixtData).Helper
 	if _, err := helper.Connect(ctx); err != nil {
 		s.Fatal("Failed to connect to cellular service: ", err)
 	}
 
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
-	defer cancel()
 	defer func(ctx context.Context) {
 		if err := helper.ClearCustomAPNList(ctx); err != nil {
 			testing.ContextLog(ctx, "Failed to clear cellular.CustomAPNList: ", err)

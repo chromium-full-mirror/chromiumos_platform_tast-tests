@@ -729,7 +729,7 @@ func (h *Helper) SetDeviceProperty(ctx context.Context, prop string, value inter
 }
 
 // InitDeviceProperty sets a device property and returns a function to restore the initial value.
-func (h *Helper) InitDeviceProperty(ctx context.Context, prop string, value interface{}) (func(ctx context.Context), error) {
+func (h *Helper) InitDeviceProperty(ctx context.Context, prop string, value interface{}) (func(ctx context.Context) error, error) {
 	ctx, st := timing.Start(ctx, "Helper.InitDeviceProperty")
 	defer st.End()
 
@@ -737,7 +737,7 @@ func (h *Helper) InitDeviceProperty(ctx context.Context, prop string, value inte
 }
 
 // InitServiceProperty sets a service property and returns a function to restore the initial value.
-func (h *Helper) InitServiceProperty(ctx context.Context, prop string, value interface{}) (func(ctx context.Context), error) {
+func (h *Helper) InitServiceProperty(ctx context.Context, prop string, value interface{}) (func(ctx context.Context) error, error) {
 	ctx, st := timing.Start(ctx, "Helper.InitServiceProperty")
 	defer st.End()
 
@@ -752,7 +752,7 @@ func (h *Helper) InitServiceProperty(ctx context.Context, prop string, value int
 const PropertyCleanupTime = 1 * time.Second
 
 // initProperty sets a property and returns a function to restore the initial value.
-func initProperty(ctx context.Context, properties *shill.PropertyHolder, prop string, value interface{}) (func(ctx context.Context), error) {
+func initProperty(ctx context.Context, properties *shill.PropertyHolder, prop string, value interface{}) (func(ctx context.Context) error, error) {
 	ctx, st := timing.Start(ctx, "Helper.initProperty")
 	defer st.End()
 
@@ -761,10 +761,11 @@ func initProperty(ctx context.Context, properties *shill.PropertyHolder, prop st
 		return nil, errors.Wrap(err, "failed to read and initialize property")
 	}
 
-	return func(ctx context.Context) {
+	return func(ctx context.Context) error {
 		if err := properties.SetProperty(ctx, prop, prevValue); err != nil {
-			testing.ContextLogf(ctx, "Failed to restore %s: %s", prop, err)
+			return errors.Wrapf(err, "failed to restore %s", prop)
 		}
+		return nil
 	}, nil
 
 }
