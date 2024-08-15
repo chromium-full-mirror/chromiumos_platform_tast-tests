@@ -8,8 +8,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"os"
-	"path/filepath"
 	"regexp"
 	"time"
 
@@ -20,12 +18,12 @@ import (
 	cbt "go.chromium.org/tast-tests/cros/common/chameleon/devices/common/bluetooth"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/bluetooth"
+	"go.chromium.org/tast-tests/cros/remote/inputs"
 	bts "go.chromium.org/tast-tests/cros/services/cros/bluetooth"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
-	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -171,12 +169,12 @@ func HIDDeviceFunctionalityCheck(ctx context.Context, s *testing.State) {
 // sendHIDReportAndVerify sends the HID report by triggering the Bluetooth HID event and
 // verifies its functionality on the chromeOS by the evtest command-line tool.
 func sendHIDReportAndVerify(ctx context.Context, dut *dut.DUT, sendReport action.Action, deviceName, expectedEvent, outDir string) error {
-	devicePath, err := fetchDevicePath(ctx, dut, deviceName, outDir)
+	deviceID, err := inputs.FindRegisteredDevice(ctx, dut, deviceName, outDir)
 	if err != nil {
 		return errors.Wrapf(err, "failed to fetch the Bluetooth device %q device event path", deviceName)
 	}
 
-	cmd := dut.Conn().CommandContext(ctx, "evtest", devicePath)
+	cmd := dut.Conn().CommandContext(ctx, "evtest", fmt.Sprintf("/dev/input/event%v", deviceID))
 
 	var outBuffer bytes.Buffer
 	cmd.Stdout = &outBuffer
@@ -221,70 +219,4 @@ func sendHIDReportAndVerify(ctx context.Context, dut *dut.DUT, sendReport action
 		}
 		return errors.New("failed to find the expected HID event log in the output of the evtest command-line tool")
 	}, &testing.PollOptions{Timeout: waitForReportTimeout, Interval: time.Second})
-}
-
-// fetchDevicePath returns device path that can be used by evtest command-line tool.
-func fetchDevicePath(ctx context.Context, dut *dut.DUT, deviceName, outDir string) (_ string, retErr error) {
-	// Variables for finding the device ID by match information of registered input devices.
-	//
-	// This is an example of the information of a input device:
-	// 	N: Name="KEYBD_REF Keyboard"<line-break>
-	// 	P: Phys=3c:9c:0f:2d:7d:86<line-break>
-	// 	S: Sysfs=/devices/virtual/misc/uhid/0005:1D6B:0246.001F/input/input54<line-break>
-	// 	U: Uniq=e4:5f:01:ee:4d:ef<line-break>
-	// 	H: Handlers=sysrq leds event19 <line-break>
-	// 	B: PROP=0 <line-break>
-	// 	B: EV=13 <line-break>
-	// 	B: KEY=80002000000 387ad8011001 e000000000000 0 <line-break>
-	// 	B: MSC=10 <line-break>
-	var (
-		lineBreak = `(\r\n|\r|\n)`
-
-		name     = fmt.Sprintf(`N: Name="%s.*"`, deviceName) + lineBreak
-		phys     = `P: Phys=.*` + lineBreak
-		sysfs    = `S: Sysfs=.*` + lineBreak
-		uniq     = `U: Uniq=.*` + lineBreak
-		handlers = `H: Handlers=.*event(\d+).*` + lineBreak
-
-		reg = regexp.MustCompile(name + phys + sysfs + uniq + handlers)
-	)
-
-	var deviceID string
-
-	var inputDevices []byte
-
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
-	defer cancel()
-
-	defer func(ctx context.Context) {
-		if retErr != nil {
-			path := filepath.Join(outDir, fmt.Sprintf("input_devices_%v", time.Now().Unix()))
-			if err := os.WriteFile(path, inputDevices, 0644); err != nil {
-				testing.ContextLog(ctx, "Failed to dump the device file content: ", err)
-			}
-		}
-	}(cleanupCtx)
-
-	// A Bluetooth device could take a while to be completely registered as an input device, especially for the low end devices.
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		data, err := linuxssh.ReadFile(ctx, dut.Conn(), "/proc/bus/input/devices")
-		if err != nil {
-			return errors.Wrap(err, "failed to acquire the full info of all input devices")
-		}
-		inputDevices = data
-
-		ss := reg.FindStringSubmatch(string(data))
-		// Expecting 7 sub-matches which are the entire match, 5 line-breaks and the device-ID.
-		if ss == nil || len(ss) != 7 {
-			return errors.New("failed to find the input device id")
-		}
-		deviceID = ss[5]
-
-		return nil
-	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: time.Second}); err != nil {
-		return "", errors.Wrap(err, "failed to parse the file describing input devices")
-	}
-
-	return fmt.Sprintf("/dev/input/event%s", deviceID), nil
 }
