@@ -940,6 +940,9 @@ func (c *Config) Format(iface, ctrlPath string) (string, error) {
 		// Set country code to US to enable the DUT to actively scan for the
 		// AP on 6GHz.
 		configure("country_code", "US")
+		// Set default 6 GHz Access Point type to indoor AP
+		configure("he_6ghz_reg_pwr_type", "0")
+
 	}
 
 	// If HostapdConfig has provided "ieee80211w" then do not overwrite it.
