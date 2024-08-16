@@ -27,10 +27,14 @@ func init() {
 func GatherPortsData(ctx context.Context, s *testing.State) {
 	gatherInfo(ctx, s, "lspci", "output_lspci")
 	gatherInfo(ctx, s, "status typecd", "output_status_typecd")
-	gatherInfo(ctx, s, "modetest -c", "output_modetest")
+	gatherInfo(ctx, s, "modetest -c", "output_modetest_c")
+	gatherInfo(ctx, s, "modetest", "output_modetest_f")
 	gatherInfo(ctx, s, "cros_config / name", "output_cros_config")
 	gatherInfo(ctx, s, "ectool pdchipinfo 0", "output_ectool_pdchip")
-	gatherInfo(ctx, s, "lsusb -v", "output_lsusb")
+	gatherInfo(ctx, s, "lsusb -v", "output_lsusb_v")
+	gatherInfo(ctx, s, "lsusb -t", "output_lsusb_t")
+	gatherInfo(ctx, s, "usb-devices", "output_usb_devices")
+	gatherInfo(ctx, s, "cat /proc/cpuinfo", "output_cpu_info")
 }
 
 func gatherInfo(ctx context.Context, s *testing.State, command, filenName string) {
