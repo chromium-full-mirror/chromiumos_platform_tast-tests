@@ -19,7 +19,7 @@ func init() {
 		Func:         CCAUIExternal,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test external camera connect / disconnect for Chrome Camera App",
-		Contacts:     []string{"chromeos-camera-eng@google.com", "pihsun@chromium.org"},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "pihsun@chromium.org", "seannli@google.com"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"camera_app", "chrome"},
@@ -113,8 +113,7 @@ func takePhotoWithExternalCamera(ctx context.Context, app *cca.App) error {
 func recordVideoWithExternalCamera(ctx context.Context, app *cca.App) error {
 	// Reset FakeHAL config.
 	if err := testutil.WriteFakeHALConfig(ctx, testutil.FakeHALConfig{
-		Cameras: []testutil.FakeCameraConfig{
-		},
+		Cameras: []testutil.FakeCameraConfig{},
 	}); err != nil {
 		return errors.Wrap(err, "failed to write fake HAL config")
 	}
