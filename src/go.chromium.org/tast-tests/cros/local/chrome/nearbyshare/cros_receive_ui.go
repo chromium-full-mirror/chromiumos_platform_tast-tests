@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // StartHighVisibilityMode enables Nearby Share's high visibility mode via Quick Settings.
@@ -124,12 +125,15 @@ func IncomingShareNotificationExists(ctx context.Context, tconn *chrome.TestConn
 
 // WaitForReceivingCompleteNotification waits for the notification indicating that the incoming share has completed.
 func WaitForReceivingCompleteNotification(ctx context.Context, tconn *chrome.TestConn, senderName string, timeout time.Duration) error {
-	if _, err := ash.WaitForNotification(ctx, tconn, timeout,
+	notification, err := ash.WaitForNotification(ctx, tconn, timeout,
 		ash.WaitTitleContains("received"),
 		ash.WaitTitleContains(senderName),
-	); err != nil {
+	)
+	if err != nil {
 		return errors.Wrap(err, "failed to wait for receiving complete notification")
 	}
+	testing.ContextLog(ctx, "Found receiving complete notification with title: ", notification.Title)
+	testing.ContextLog(ctx, "Found receiving complete notification with message: ", notification.Message)
 	return nil
 }
 
