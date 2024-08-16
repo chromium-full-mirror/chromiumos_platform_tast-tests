@@ -25,7 +25,7 @@ func init() {
 		Contacts:     []string{"cros-demo-mode-eng@google.com", "xiqiruan@google.com"},
 		// Chrome OS Server Projects > Enterprise Management > Demo Mode
 		BugComponent: "b:812312",
-		Fixture:      fixture.PostDemoModeOOBEProd,
+		Fixture:      fixture.PostDemoModeOOBESkipResourcesComponentProd,
 		Attr:         []string{"group:cbx", "cbx_feature_enabled", "cbx_unstable"},
 		// Demo Mode uses Zero Touch Enrollment for enterprise enrollment, which
 		// requires a real TPM.

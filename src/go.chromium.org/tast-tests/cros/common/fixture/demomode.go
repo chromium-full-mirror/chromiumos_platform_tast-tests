@@ -23,4 +23,9 @@ const (
 	// PostDemoModeOOBESkipComponentProd is similar to PostDemoModeOOBEProd except it
 	// skips the demo mode app component download and install process in OOBE.
 	PostDemoModeOOBESkipAppComponentsProd = "postDemoModeOOBESkipAppComponentsProd"
+
+	// PostDemoModeOOBESkipResourcesComponentProd is similar to PostDemoModeOOBEProd
+	// except it skips the demo mode resources component download and install process
+	// in OOBE.
+	PostDemoModeOOBESkipResourcesComponentProd = "postDemoModeOOBESkipResourcesComponentProd"
 )

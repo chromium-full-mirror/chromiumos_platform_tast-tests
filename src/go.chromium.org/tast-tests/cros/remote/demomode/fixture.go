@@ -148,6 +148,29 @@ func init() {
 			tape.ServiceAccountVar},
 		ServiceDeps: serviceDeps,
 	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: fixture.PostDemoModeOOBESkipResourcesComponentProd,
+		Desc: "Has skipped the demo mode resources component download and install process, and proceeded through Demo Mode setup flow from OOBE",
+		Contacts: []string{
+			"cros-demo-mode-eng@google.com",
+			"llin@chromium.org",
+		},
+		BugComponent: "b:812312", // ChromeOS > Software > Consumer > Demo Mode
+		Impl: &fixtureImpl{
+			// This user has infinite idle time-out value for demo mode, thus will not end demo mode session in middle of test.
+			enrollmentUser: "admin-tast",
+			dmServerURL:    policy.DMServerProdURL,
+			// --demo-mode-resource-directory is used to skip the demo mode resources
+			// component download and install process.
+			extraArgs: []string{"--demo-mode-resource-directory"},
+		},
+		SetUpTimeout:    setUpTimeout,
+		TearDownTimeout: tearDownTimeout,
+		Vars: []string{"ui.signinProfileTestExtensionManifestKey",
+			tape.ServiceAccountVar},
+		ServiceDeps: serviceDeps,
+	})
 }
 
 // fixtureImpl implements testing.FixtureImpl.
