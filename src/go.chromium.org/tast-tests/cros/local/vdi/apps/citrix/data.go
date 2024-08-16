@@ -4,6 +4,9 @@
 
 package citrix
 
+// AppName is the name of the Citrix application.
+type AppName string
+
 // CitrixData holds the UI fragments that are used by Citrix connector. Use
 // this as a data dependency when connecting to Citrix.
 var CitrixData = []string{
