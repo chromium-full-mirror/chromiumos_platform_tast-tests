@@ -12,7 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/camera/cca"
-	"go.chromium.org/tast-tests/cros/local/camera/testutil"
 	"go.chromium.org/tast-tests/cros/local/cpu"
 	mediacpu "go.chromium.org/tast-tests/cros/local/media/cpu"
 	"go.chromium.org/tast/core/ctxutil"
@@ -28,18 +27,9 @@ func init() {
 		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
-		SoftwareDeps: []string{"camera_app", "chrome"},
+		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinOrVividCamera},
 		Timeout:      20 * time.Minute,
-		Params: []testing.Param{{
-			Name:              "real",
-			ExtraSoftwareDeps: []string{caps.BuiltinOrVividCamera},
-			Fixture:           "ccaTestBridgeReady",
-			Val:               false,
-		}, {
-			Name:    "fake_hal",
-			Fixture: "ccaTestBridgeReadyWithFakeHALCamera",
-			Val:     true,
-		}},
+		Fixture:      "ccaTestBridgeReady",
 	})
 }
 
@@ -48,7 +38,6 @@ func CCAUIRecordVideoPerf(ctx context.Context, s *testing.State) {
 	startApp := s.FixtValue().(cca.FixtureData).StartApp
 	stopApp := s.FixtValue().(cca.FixtureData).StopApp
 	perfValues := perf.NewValues()
-	isFakeHal := s.Param().(bool)
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
@@ -74,75 +63,12 @@ func CCAUIRecordVideoPerf(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	if isFakeHal {
-		if err := app.DisableVideoResolutionFilter(ctx); err != nil {
-			s.Fatal("Failed to disable video resolution filter: ", err)
-		}
-
-		// Writes fake HAL config after disabling video resolution filter, so a
-		// reconfigure will be triggered which guarantees the filter will be
-		// applied.
-		if err := app.TriggerConfiguration(ctx, func() error {
-			// Simulates a 4K camera. Need to add other resolutions to satisfy the minimal requirement for camera3 API.
-			return testutil.WriteFakeHALConfig(ctx, testutil.FakeHALConfig{
-				Cameras: []testutil.FakeCameraConfig{
-					{ID: 1, Connected: true, SupportedFormats: []*testutil.FakeCameraFormatsConfig{
-						{
-							Width:      3840,
-							Height:     2160,
-							FrameRates: []int{60, 30},
-						},
-						{
-							Width:      1920,
-							Height:     1080,
-							FrameRates: []int{30},
-						},
-						{
-							Width:      1280,
-							Height:     960,
-							FrameRates: []int{30},
-						},
-						{
-							Width:      1280,
-							Height:     720,
-							FrameRates: []int{30},
-						},
-						{
-							Width:      640,
-							Height:     480,
-							FrameRates: []int{30},
-						},
-						{
-							Width:      640,
-							Height:     360,
-							FrameRates: []int{30},
-						},
-						{
-							Width:      320,
-							Height:     240,
-							FrameRates: []int{30},
-						},
-					}},
-				},
-			})
-		}); err != nil {
-			s.Fatal("Failed to write fake HAL config: ", err)
-		}
-	}
-
 	if err := app.SwitchMode(ctx, cca.Video); err != nil {
 		s.Fatal("Failed to switch to video mode: ", err)
 	}
 
 	if err := app.RunThroughCameras(ctx, func(facing cca.Facing) error {
 		targetFps := 30
-		if isFakeHal {
-			// Switch to the 60 FPS button for 4K resolution.
-			targetFps = 60
-			if err := app.SwitchTo60FPS(ctx); err != nil {
-				s.Fatal("Failed to switch to 60 fps: ", err)
-			}
-		}
 
 		// Record video and measure CPU usage.
 		start, err := app.StartRecording(ctx, cca.TimerOff)
