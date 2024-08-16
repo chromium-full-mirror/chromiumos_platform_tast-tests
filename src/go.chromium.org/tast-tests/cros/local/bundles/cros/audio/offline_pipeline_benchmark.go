@@ -36,8 +36,8 @@ func init() {
 				Name: "nc",
 				Val: offlinePipelineBenchmarkParam{
 					dlcID:             "nc-ap-dlc",
-					dlcSharedObject:   "libdenoiser.so",
-					pluginName:        "plugin_processor_create",
+					dlcSharedObject:   "libeffects.so",
+					pluginName:        "plugin_processor_create_nc",
 					blockSizeFrames:   480,
 					inputWavFrameRate: 48000,
 				},
@@ -45,22 +45,19 @@ func init() {
 			{
 				Name: "ast",
 				Val: offlinePipelineBenchmarkParam{
-					dlcID:             "nuance-dlc",
-					dlcSharedObject:   "libstyle.so",
+					dlcID:             "nc-ap-dlc",
+					dlcSharedObject:   "libeffects.so",
 					pluginName:        "plugin_processor_create_ast",
 					blockSizeFrames:   480,
 					inputWavFrameRate: 24000,
-				},
-				ExtraSoftwareDeps: []string{
-					"amd64", // libstyle.so is amd64 only.
 				},
 			},
 			{
 				Name: "nc_sleep_10ms",
 				Val: offlinePipelineBenchmarkParam{
 					dlcID:             "nc-ap-dlc",
-					dlcSharedObject:   "libdenoiser.so",
-					pluginName:        "plugin_processor_create",
+					dlcSharedObject:   "libeffects.so",
+					pluginName:        "plugin_processor_create_nc",
 					blockSizeFrames:   480,
 					inputWavFrameRate: 48000,
 					sleepTime:         10 * time.Millisecond,
@@ -69,15 +66,12 @@ func init() {
 			{
 				Name: "ast_sleep_20ms",
 				Val: offlinePipelineBenchmarkParam{
-					dlcID:             "nuance-dlc",
-					dlcSharedObject:   "libstyle.so",
+					dlcID:             "nc-ap-dlc",
+					dlcSharedObject:   "libeffects.so",
 					pluginName:        "plugin_processor_create_ast",
 					blockSizeFrames:   480,
 					inputWavFrameRate: 24000,
 					sleepTime:         20 * time.Millisecond,
-				},
-				ExtraSoftwareDeps: []string{
-					"amd64", // libstyle.so is amd64 only.
 				},
 			},
 		},
