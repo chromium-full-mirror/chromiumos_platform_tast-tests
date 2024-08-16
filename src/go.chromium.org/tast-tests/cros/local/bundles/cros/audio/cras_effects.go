@@ -873,12 +873,6 @@ func CrasEffects(ctx context.Context, s *testing.State) {
 		s.Fatal("Cannot install nc-ap-dlc: ", err)
 	}
 
-	if param.styleTransferEnabled {
-		if err := dlc.Install(ctx, "nuance-dlc", ""); err != nil {
-			s.Fatal("Cannot install nuance-dlc: ", err)
-		}
-	}
-
 	cras, err := audio.RestartCras(ctx)
 	if err != nil {
 		s.Fatal("Cannot restart CRAS: ", err)

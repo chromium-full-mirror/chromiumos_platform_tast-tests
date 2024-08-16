@@ -114,9 +114,6 @@ func init() {
 						if err := dlc.Install(ctx, "nc-ap-dlc", ""); err != nil {
 							s.Fatal("Cannot install nc-ap-dlc: ", err)
 						}
-						if err := dlc.Install(ctx, "nuance-dlc", ""); err != nil {
-							s.Fatal("Cannot install nuance-dlc: ", err)
-						}
 						if err := cras.SetActiveNodeByType(ctx, "INTERNAL_MIC"); err != nil {
 							s.Fatal("Failed to set internal mic active: ", err)
 						}

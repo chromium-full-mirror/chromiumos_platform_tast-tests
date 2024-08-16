@@ -54,14 +54,9 @@ func WithNoiseCancellation(
 	defer cr.Close(cleanupCtx)
 
 	// Install DLC.
-	if config.NoiseCancellationEnabled {
+	if config.NoiseCancellationEnabled || config.StyleTransferEnabled {
 		if err := installDlcs(ctx, []string{"nc-ap-dlc"}); err != nil {
-			return errors.Wrap(err, "failed at installing noise cancellation dlc")
-		}
-	}
-	if config.StyleTransferEnabled {
-		if err := installDlcs(ctx, []string{"nc-ap-dlc", "nuance-dlc"}); err != nil {
-			return errors.Wrap(err, "failed at installing style transfer dlcs")
+			return errors.Wrap(err, "failed at installing nc-ap-dlc")
 		}
 	}
 

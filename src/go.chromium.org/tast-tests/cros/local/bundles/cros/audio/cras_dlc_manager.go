@@ -55,7 +55,7 @@ func getDlcsToCheck(ctx context.Context, s *testing.State) []string {
 		s.Fatal("Failed when calling IsStyleTransferSupported: ", err)
 	}
 	if styleTransferSupported {
-		dlcIDs = append(dlcIDs, "nuance-dlc")
+		dlcIDs = append(dlcIDs, "nc-ap-dlc")
 	}
 	return dlcIDs
 }
