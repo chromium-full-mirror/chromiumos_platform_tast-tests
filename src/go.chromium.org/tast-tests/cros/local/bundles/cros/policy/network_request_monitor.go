@@ -46,7 +46,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/netexport"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast-tests/cros/local/quickanswers"
-	"go.chromium.org/tast-tests/cros/local/testenv/proxy"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -485,12 +484,6 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 				Browser:       br,
 				Server:        server,
 				PolicySetting: tcs.PolicyStatus}
-
-			if service.name == "domain_reliability" {
-				params.ProxyOpts = []proxy.Option{
-					proxy.ScriptPath(s.DataPath("domain_reliability_500_requests.py")),
-				}
-			}
 
 			if err := service.trigger(ctx, params); err != nil {
 				s.Fatalf("Failed to trigger %v: %v", service.name, err)

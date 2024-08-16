@@ -15,7 +15,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
-	"go.chromium.org/tast-tests/cros/local/testenv/proxy"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 )
@@ -28,6 +27,8 @@ const (
 	// DomainReliabilityTestURL is the URL the test will attempt to connect
 	// to. The URL must be a Google domain to trigger domain reliability.
 	DomainReliabilityTestURL = "images.google.com"
+
+	googleDomainReliabilityURL = "https://google.com/domainreliability/upload.*"
 )
 
 // TestCase defines test expectations based on the value of the policy
@@ -36,6 +37,10 @@ type TestCase struct {
 	Name                 string
 	ShouldFindAnnotation bool
 	Policy               *policy.DomainReliabilityAllowed
+	// TrafficShouldFind states the traffic should be found during tests.
+	TrafficShouldFind []string
+	// TrafficShouldNotFind states the traffic should NOT be found during tests.
+	TrafficShouldNotFind []string
 }
 
 // TestCases returns the map of policy settings enum to TestCase object for each
@@ -46,11 +51,15 @@ func TestCases() map[networkrequestmonitor.PolicySetting]TestCase {
 			Name:                 "disabled",
 			ShouldFindAnnotation: false,
 			Policy:               &policy.DomainReliabilityAllowed{Val: false},
+			TrafficShouldFind:    []string{},
+			TrafficShouldNotFind: []string{googleDomainReliabilityURL},
 		},
 		networkrequestmonitor.PolicyEnabled: {
 			Name:                 "enabled",
 			ShouldFindAnnotation: true,
 			Policy:               &policy.DomainReliabilityAllowed{Val: true},
+			TrafficShouldFind:    []string{googleDomainReliabilityURL},
+			TrafficShouldNotFind: []string{},
 		},
 	}
 }
@@ -65,17 +74,6 @@ func TriggerDomainReliabilityAllowed(ctx context.Context, params networkrequestm
 	defer cancel()
 
 	cr := params.Chrome
-	proxyOpts := params.ProxyOpts
-
-	mp, err := proxy.NewMitmProxy(ctx, proxyOpts...)
-	if err != nil {
-		return errors.Wrap(err, "failed to launch and apply proxy")
-	}
-	reset, err := proxy.ConfigureChrome(ctx, mp, cr)
-	if err != nil {
-		return errors.Wrap(err, "failed to configure a proxy")
-	}
-	defer reset(cleanupCtx, cr)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {

@@ -118,14 +118,24 @@ func DomainReliabilityAllowed(ctx context.Context, s *testing.State) {
 			}
 			defer netExport.Cleanup(cleanupCtx)
 
-			proxyOpts := []proxy.Option{
+			mp, err := proxy.NewMitmProxy(ctx,
+				proxy.DumpHTTPFlow(true),
 				proxy.ScriptPath(s.DataPath("domain_reliability_500_requests.py")),
+			)
+			if err != nil {
+				s.Fatal("Failed to start mitmproxy: ", err)
 			}
+			defer mp.Close(cleanupCtx)
+			reset, err := proxy.ConfigureChrome(ctx, mp, cr)
+			if err != nil {
+				s.Fatal("Failed to configure chrome for proxy: ", err)
+			}
+			defer reset(cleanupCtx, cr)
+
 			if err := domainreliability.TriggerDomainReliabilityAllowed(ctx,
 				networkrequestmonitor.OptionalServiceParams{
 					Chrome:        cr,
-					PolicySetting: key,
-					ProxyOpts:     proxyOpts}); err != nil {
+					PolicySetting: key}); err != nil {
 				s.Fatal("Failed to trigger and verify domain reliability: ", err)
 			}
 
@@ -142,6 +152,20 @@ func DomainReliabilityAllowed(ctx context.Context, s *testing.State) {
 
 			if param.ShouldFindAnnotation != foundAnnotation {
 				s.Fatalf("Annotation mismatch. Got: %t. Want: %t", foundAnnotation, param.ShouldFindAnnotation)
+			}
+
+			resp, err := mp.DumpHTTPFlow(ctx, true, true)
+			if err != nil {
+				s.Fatal("Failed to get dump httpflow from mitmproxy: ", err)
+			}
+
+			v := proxy.NewNetworkVerifier(resp)
+			allow := param.TrafficShouldFind
+			disallow := param.TrafficShouldNotFind
+			// allow/disallow traffic are passed by test case param.
+			// We will ignore traffic other than the allow and disallow list for verifying diff.
+			if err := v.Verify(allow, disallow, []string{".*"}); err != nil {
+				s.Fatal("Diff test result: ", err)
 			}
 		})
 	}

@@ -10,7 +10,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/testenv/proxy"
 )
 
 // PolicySetting is the key for a test case of a service, indicating the policy
@@ -35,7 +34,6 @@ type OptionalServiceParams struct {
 	Server        *httptest.Server
 	BaseDirectory string
 	PolicySetting PolicySetting
-	ProxyOpts     []proxy.Option
 }
 
 // VariantName is type for the variants of the NetworkRequestMonitor test.
