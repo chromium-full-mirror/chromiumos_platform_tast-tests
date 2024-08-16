@@ -26,27 +26,15 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         GetUserMediaPolicy,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that admin policy can successfully ban getUserMedia",
-		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org", "seannli@google.com"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Attr:         []string{"group:mainline", "group:camera-libcamera", "informational"},
 		SoftwareDeps: []string{caps.BuiltinOrVividCamera, "chrome"},
+		Fixture:      fixture.ChromePolicyLoggedIn,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.VideoCaptureAllowed{}, pci.VerifiedFunctionalityJS),
-		},
-		Params: []testing.Param{
-			{
-				Name:    "ash",
-				Fixture: fixture.ChromePolicyLoggedIn,
-				Val:     browser.TypeAsh,
-			},
-			{
-				Name:              "lacros",
-				Fixture:           fixture.LacrosPolicyLoggedIn,
-				ExtraSoftwareDeps: []string{"lacros"},
-				Val:               browser.TypeLacros,
-			},
 		},
 	})
 }
@@ -70,7 +58,7 @@ func GetUserMediaPolicy(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to serve policy to ban video capture: ", err)
 	}
 
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
+	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 	if err != nil {
 		s.Fatal("Failed to open the browser: ", err)
 	}
