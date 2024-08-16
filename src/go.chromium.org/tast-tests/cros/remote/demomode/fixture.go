@@ -96,6 +96,58 @@ func init() {
 		Vars:            []string{"ui.signinProfileTestExtensionManifestKey", tape.ServiceAccountVar},
 		ServiceDeps:     serviceDeps,
 	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: fixture.PostDemoModeOOBESkipBothComponentsProd,
+		Desc: "Has skipped the both components download and install process, and proceeded through Demo Mode setup flow from OOBE",
+		Contacts: []string{
+			"cros-demo-mode-eng@google.com",
+			"llin@chromium.org",
+		},
+		BugComponent: "b:812312", // ChromeOS > Software > Consumer > Demo Mode
+		Impl: &fixtureImpl{
+			// This user has infinite idle time-out value for demo mode, thus will
+			// not end demo mode session in middle of test.
+			enrollmentUser: "admin-tast",
+			dmServerURL:    policy.DMServerProdURL,
+			// --demo-mode-swa-content-directory and --demo-mode-resource-directory
+			// are used to skip the demo mode app and resources component download
+			// and install process.
+			extraArgs: []string{"--demo-mode-swa-content-directory",
+				"--demo-mode-resource-directory",
+			},
+		},
+		SetUpTimeout:    setUpTimeout,
+		TearDownTimeout: tearDownTimeout,
+		Vars: []string{"ui.signinProfileTestExtensionManifestKey",
+			tape.ServiceAccountVar},
+		ServiceDeps: serviceDeps,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: fixture.PostDemoModeOOBESkipAppComponentsProd,
+		Desc: "Has skipped the demo mode app component download and install process, and proceeded through Demo Mode setup flow from OOBE",
+		Contacts: []string{
+			"cros-demo-mode-eng@google.com",
+			"llin@chromium.org",
+		},
+		BugComponent: "b:812312", // ChromeOS > Software > Consumer > Demo Mode
+		Impl: &fixtureImpl{
+			// This user has infinite idle time-out value for demo mode, thus will
+			// not end demo mode session in middle of test.
+			enrollmentUser: "admin-tast",
+			dmServerURL:    policy.DMServerProdURL,
+			// --demo-mode-swa-content-directory and --demo-mode-resource-directory
+			// are used to skip the demo mode app and resources component download
+			// and install process.
+			extraArgs: []string{"--demo-mode-swa-content-directory"},
+		},
+		SetUpTimeout:    setUpTimeout,
+		TearDownTimeout: tearDownTimeout,
+		Vars: []string{"ui.signinProfileTestExtensionManifestKey",
+			tape.ServiceAccountVar},
+		ServiceDeps: serviceDeps,
+	})
 }
 
 // fixtureImpl implements testing.FixtureImpl.
@@ -107,6 +159,8 @@ type fixtureImpl struct {
 	enabledFeatures []string
 	// URL defining which DMServer environment to talk to during Demo Mode enrollment.
 	dmServerURL string
+	// Extra arguments passed to chrome
+	extraArgs []string
 }
 
 var _ testing.FixtureImpl = &fixtureImpl{}
@@ -134,6 +188,12 @@ func (f *fixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) interface
 		// TODO(b/263269444): Consider running a version of these tests against the prod components as well
 		"--component-updater=test-request",
 		"--device-management-url=" + f.dmServerURL}
+
+	// log all the extraArgs
+	for _, arg := range f.extraArgs {
+		s.Log("passing extra arg to chrome: ", arg)
+	}
+	chromeExtraArgs = append(chromeExtraArgs, f.extraArgs...)
 
 	defer func(ctx context.Context) {
 		if err := uploadTapeDeprovisioningIDs(ctx, cl, s.DUT(), []byte(s.RequiredVar(tape.ServiceAccountVar))); err != nil {

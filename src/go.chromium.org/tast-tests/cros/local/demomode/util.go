@@ -18,9 +18,9 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-// BreakSWAAttractLoop waits until the Demo Session has started, and then exits
-// out of the auto-launched Attract Loop screensaver by moving the mouse.
-func BreakSWAAttractLoop(ctx context.Context, tconn *chrome.TestConn) error {
+// WaitForDemoModeApp waits for the Demo Session to start, splash screen to be
+// removed, and demo mode app to appear.
+func WaitForDemoModeApp(ctx context.Context, tconn *chrome.TestConn) error {
 	ui := uiauto.New(tconn).WithTimeout(50 * time.Second)
 
 	// Verify that splash screen has disappeared before moving mouse.
@@ -33,7 +33,12 @@ func BreakSWAAttractLoop(ctx context.Context, tconn *chrome.TestConn) error {
 	if err := ui.WaitUntilExists(demoApp)(ctx); err != nil {
 		return errors.Wrap(err, "failed to wait until Demo Mode App exists")
 	}
+	return nil
+}
 
+// BreakSWAAttractLoop waits for the attract loop to appear in fullscreen, and
+// then breaks it by clicking on the screen.
+func BreakSWAAttractLoop(ctx context.Context, tconn *chrome.TestConn) error {
 	pc := pointer.NewMouse(tconn)
 	defer pc.Close(ctx)
 
@@ -42,7 +47,8 @@ func BreakSWAAttractLoop(ctx context.Context, tconn *chrome.TestConn) error {
 		return errors.Wrap(err, "failed to wait for Demo Mode app in fullscreen")
 	}
 
-	// Click mouse somewhere on the attract loop to trigger interaction, breaking fullscreen attract loop.
+	// Click mouse somewhere on the attract loop to trigger interaction, breaking
+	// the fullscreen attract loop.
 	if err := pc.ClickAt(
 		coords.NewPoint(100, 100))(ctx); err != nil {
 		return errors.Wrap(err, "failed to click mouse on the attract loop")

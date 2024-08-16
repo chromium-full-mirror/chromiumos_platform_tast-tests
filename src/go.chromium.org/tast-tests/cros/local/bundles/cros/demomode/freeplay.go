@@ -19,7 +19,15 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
+
+type freeplayTestParams struct {
+	dmServerURL                        string
+	downloadDemoModeAppComponent       bool
+	downloadDemoModeResourcesComponent bool
+	verifyWebApps                      bool
+}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -38,17 +46,71 @@ func init() {
 		SoftwareDeps: []string{"chrome", "chrome_internal", "arc", "tpm2", "crossystem"},
 		Timeout:      5 * time.Minute,
 		Params: []testing.Param{{
-			Name:    "alpha",
-			Val:     policy.DMServerAlphaURL, // DMServerURL
-			Fixture: fixture.PostDemoModeOOBEAlpha,
+			Name: "alpha",
+			Val: freeplayTestParams{
+				dmServerURL:                        policy.DMServerAlphaURL,
+				downloadDemoModeAppComponent:       true,
+				downloadDemoModeResourcesComponent: true,
+				verifyWebApps:                      true,
+			},
+			// Exclude the bronze tier (RAM memory <= 3GB) devices from the android
+			// apps tast test because their demo mode resources component does not
+			// contain android app APKs.
+			ExtraHardwareDeps: hwdep.D(hwdep.MinMemory(3073)),
+			Fixture:           fixture.PostDemoModeOOBEAlpha,
 			// TODO (b/346725308): Refactor to use utility and known dependency list.
 			ExtraSearchFlags: []*testing.StringPair{{
 				Key: "external_dependency", Value: "DMServerAlpha",
 			}},
 		}, {
-			Name:    "prod",
-			Val:     policy.DMServerProdURL, // DMServerURL
-			Fixture: fixture.PostDemoModeOOBEProd,
+			Name: "prod",
+			Val: freeplayTestParams{
+				dmServerURL:                        policy.DMServerProdURL,
+				downloadDemoModeAppComponent:       true,
+				downloadDemoModeResourcesComponent: true,
+				verifyWebApps:                      true,
+			},
+			// Exclude the bronze tier (RAM memory <= 3GB) devices from the android
+			// apps tast test because their demo mode resources component does not
+			// contain android app APKs.
+			ExtraHardwareDeps: hwdep.D(hwdep.MinMemory(3073)),
+			Fixture:           fixture.PostDemoModeOOBEProd,
+			// TODO (b/346725308): Refactor to use utility and known dependency list.
+			ExtraSearchFlags: []*testing.StringPair{{
+				Key: "external_dependency", Value: "DMServerProd",
+			}},
+		}, {
+			Name: "web_apps_prod",
+			Val: freeplayTestParams{
+				dmServerURL: policy.DMServerProdURL,
+				// --demo-mode-swa-content-directory and --demo-mode-resource-directory
+				// were used to skip the demo mode app and resources component download
+				// and install process.
+				downloadDemoModeAppComponent:       false,
+				downloadDemoModeResourcesComponent: false,
+				verifyWebApps:                      true,
+			},
+			Fixture: fixture.PostDemoModeOOBESkipBothComponentsProd,
+			// TODO (b/346725308): Refactor to use utility and known dependency list.
+			ExtraSearchFlags: []*testing.StringPair{{
+				Key: "external_dependency", Value: "DMServerProd",
+			}},
+		}, {
+			Name: "android_apps_prod",
+			Val: freeplayTestParams{
+				dmServerURL: policy.DMServerProdURL,
+				// --demo-mode-swa-content-directory and --demo-mode-resource-directory
+				// were used to skip the demo mode app and resources component download
+				// and install process.
+				downloadDemoModeAppComponent:       false,
+				downloadDemoModeResourcesComponent: true,
+				verifyWebApps:                      false,
+			},
+			// Exclude the bronze tier (RAM memory <= 3GB) devices from the android
+			// apps tast test because their demo mode resources component does not
+			// contain android app APKs.
+			ExtraHardwareDeps: hwdep.D(hwdep.MinMemory(3073)),
+			Fixture:           fixture.PostDemoModeOOBESkipAppComponentsProd,
 			// TODO (b/346725308): Refactor to use utility and known dependency list.
 			ExtraSearchFlags: []*testing.StringPair{{
 				Key: "external_dependency", Value: "DMServerProd",
@@ -58,21 +120,36 @@ func init() {
 }
 
 func Freeplay(ctx context.Context, s *testing.State) {
-	dmServerURL := s.Param().(string)
+	params := s.Param().(freeplayTestParams)
+	dmServerURL := params.dmServerURL
+
+	// --force-devtools-available forces devtools on regardless of the policy
+	// (devtools is disabled in Demo Mode policy) to support connecting to the test
+	// API extension.
+	//
+	// --component-updater=test-request adds a "test-request" parameter to Omaha
+	// update requests, causing the fetched Demo Mode App component to come from a
+	// test cohort.
+	//
+	// --log-level=0 increase Chrome's log level to INFO
+	chromeExtraArgs := []string{"--force-devtools-available",
+		"--component-updater=test-request",
+		"--log-level=0",
+	}
+	if !params.downloadDemoModeAppComponent {
+		s.Log("Skipping demo mode app component download")
+		chromeExtraArgs = append(chromeExtraArgs, "--demo-mode-swa-content-directory")
+	}
+	if !params.downloadDemoModeResourcesComponent {
+		s.Log("Skipping demo mode resources component download")
+		chromeExtraArgs = append(chromeExtraArgs, "--demo-mode-resource-directory")
+	}
 
 	cr, err := chrome.New(ctx,
 		chrome.NoLogin(),
 		chrome.ARCSupported(),
 		chrome.KeepEnrollment(),
-		// --force-devtools-available forces devtools on regardless of policy (devtools is
-		// disabled in Demo Mode policy) to support connecting to the test API extension.
-		//
-		// --component-updater=test-request adds a "test-request" parameter to Omaha
-		// update requests, causing the fetched Demo Mode App component to come from a
-		// test cohort.
-		//
-		// --log-level=0 increase Chrome's log level to INFO
-		chrome.ExtraArgs("--force-devtools-available", "--component-updater=test-request", "--log-level=0"),
+		chrome.ExtraArgs(chromeExtraArgs...),
 		chrome.DMSPolicy(dmServerURL),
 	)
 	if err != nil {
@@ -90,49 +167,70 @@ func Freeplay(ctx context.Context, s *testing.State) {
 	}
 	defer faillog.DumpUITreeOnError(clearUpCtx, s.OutDir(), s.HasError, tconn)
 
-	if err := demomode.BreakSWAAttractLoop(ctx, tconn); err != nil {
-		s.Fatal("Failed to break Attract Loop: ", err)
+	// If we did not download the demo mode app component, the app will still exist,
+	// but just with a blank content.
+	s.Log("Waiting for Demo Mode app to appear")
+	if err := demomode.WaitForDemoModeApp(ctx, tconn); err != nil {
+		s.Fatal("Failed to wait for Demo Mode app: ", err)
 	}
 
+	s.Log("Breaking the Attract Loop")
+	if params.downloadDemoModeAppComponent {
+		if err := demomode.BreakSWAAttractLoop(ctx, tconn); err != nil {
+			s.Fatal("Failed to break Attract Loop: ", err)
+		}
+	}
+
+	if params.verifyWebApps {
+		s.Log("Verifying web apps are present")
+		if err := verifyWebApps(ctx, tconn); err != nil {
+			s.Fatal("Failed to verify web apps: ", err)
+		}
+	}
+
+	// If we did not download the demo mode resources component, we will not have any
+	// Android apps.
+	if params.downloadDemoModeResourcesComponent {
+		s.Log("Verifying Android apps are present")
+		if err := verifyAndroidApps(ctx, tconn); err != nil {
+			s.Fatal("Failed to verify Android apps: ", err)
+		}
+	}
+
+	// TODO(b/263520014): Add individual testing for additional freeplay apps
+}
+
+func verifyAndroidApps(ctx context.Context, tconn *chrome.TestConn) error {
 	// Maps app names to Shelf Item IDs. These "names" are arbitrary, only having
-	// relevance for the context of this test; they are not the actual Shelf Item titles,
-	// as the app publisher could change the title at will. So one should only rely on the
-	// ID, as this is unchanging (derived from the URL for PWAs or the package name for
-	// Android Apps).
-	var freeplayAppsToIDs = map[string]string{
-		"Zoom":         "jldpdkiafafcejhceeincjmlkmibemgj",
-		"Youtube":      "agimnkijcaahngcdmfeangaknmldooml",
-		"GoogleDocs":   "cepkndkdlbllfhpfhledabdcdbidehkd",
-		"BeFunky":      "fjoomcalbeohjbnlcneddljemclcekeg",
-		"SumoPaint":    "genadphlobhbpdnafiphnppelkagmghm",
-		"Spotify":      "pjibgclleladliembfgfagdaldikeohf",
+	// relevance for the context of this test; they are not the actual Shelf Item
+	// titles, as the app publisher could change the title at will. So one should only
+	// rely on the ID, as this is unchanging (derived from the package name for Android
+	// Apps).
+	var AndroidAppsToIDs = map[string]string{
 		"GooglePhotos": "fdbkkojdbojonckghlanfaopfakedeca",
 		// Temporarily unpin Stardew Valley (b/343228202) but still have it installed.
 		// Pin it back once Stardew Valley issue (b/328569631) is fixed.
 		// "StardewValley": "ljibeljdcmpldadfgijmbaocjibloonn",
 	}
 
-	for appName, appID := range freeplayAppsToIDs {
-		s.Log("Verifying that " + appName + " is pinned")
-		if err := waitForAppPinned(ctx, tconn, appID); err != nil {
-			s.Fatal("Timed out waiting for "+appName+" app to appear in the shelf: ", err)
-		}
+	if err := verifyAppsPinned(ctx, tconn, AndroidAppsToIDs); err != nil {
+		errors.Wrap(err, "failed to verify Android apps")
 	}
 
 	// GoBigSleepLint: Sleep for 15 seconds to give ARC a bit of extra time to boot up
 	// before trying to launch Google Photos (b/263517131).
 	if err := testing.Sleep(ctx, 15*time.Second); err != nil {
-		s.Fatal("Failed to sleep: ", err)
+		errors.Wrap(err, "failed to sleep")
 	}
 
-	googlePhotosID := freeplayAppsToIDs["GooglePhotos"]
+	googlePhotosID := AndroidAppsToIDs["GooglePhotos"]
 
 	title, err := ash.ShelfItemTitleFromID(ctx, tconn, []string{googlePhotosID})
 	if err != nil {
-		s.Fatal("Failed to get app title for Google Photos app: ", err)
+		errors.Wrap(err, "failed to get app title for Google Photos app")
 	}
 	if err := ash.LaunchAppFromShelf(ctx, tconn, title[0], googlePhotosID); err != nil {
-		s.Fatal("Failed to launch Google Photos app from shelf: ", err)
+		errors.Wrap(err, "failed to launch Google Photos app from shelf")
 	}
 
 	// Use uidetection library as Google Photos is an Android App (so no accessibility tree).
@@ -140,7 +238,7 @@ func Freeplay(ctx context.Context, s *testing.State) {
 	// Verify app has started by ensuring "Google Photos" text is present on screen.
 	appHeaderText := uidetection.TextBlock([]string{"Google", "Photos"})
 	if err := ud.WaitUntilExists(appHeaderText)(ctx); err != nil {
-		s.Fatal("Failed to wait for Google Photos to launch: ", err)
+		errors.Wrap(err, "failed to wait for Google Photos to launch")
 	}
 	// Verify sample photos have loaded by lack of "No Photos" error message.
 	errorText := uidetection.TextBlock([]string{"No", "Photos"})
@@ -150,9 +248,40 @@ func Freeplay(ctx context.Context, s *testing.State) {
 		ud.WaitUntilExists(errorText),
 		ud.WaitUntilGone(errorText),
 	)(ctx); err != nil {
-		s.Fatal("Failed to wait for \"No Photos\" text to not be present: ", err)
+		errors.Wrap(err, "failed to wait for \"No Photos\" text to not be present")
 	}
-	// TODO(b/263520014): Add individual testing for additional freeplay apps
+	return nil
+}
+
+func verifyWebApps(ctx context.Context, tconn *chrome.TestConn) error {
+	// Maps app names to Shelf Item IDs. These "names" are arbitrary, only having
+	// relevance for the context of this test; they are not the actual Shelf Item titles,
+	// as the app publisher could change the title at will. So one should only rely on the
+	// ID, as this is unchanging (derived from the URL for PWAs or the package name for
+	// Android Apps).
+	var webAppsToIDs = map[string]string{
+		"Zoom":       "jldpdkiafafcejhceeincjmlkmibemgj",
+		"Youtube":    "agimnkijcaahngcdmfeangaknmldooml",
+		"GoogleDocs": "cepkndkdlbllfhpfhledabdcdbidehkd",
+		"BeFunky":    "fjoomcalbeohjbnlcneddljemclcekeg",
+		"SumoPaint":  "genadphlobhbpdnafiphnppelkagmghm",
+		"Spotify":    "pjibgclleladliembfgfagdaldikeohf",
+	}
+	if err := verifyAppsPinned(ctx, tconn, webAppsToIDs); err != nil {
+		errors.Wrap(err, "failed to verify web apps")
+	}
+	return nil
+}
+
+func verifyAppsPinned(ctx context.Context, tconn *chrome.TestConn,
+	freeplayAppsToIDs map[string]string) error {
+	for appName, appID := range freeplayAppsToIDs {
+		if err := waitForAppPinned(ctx, tconn, appID); err != nil {
+			return errors.Wrap(err, "Timed out waiting for "+appName+
+				" app to appear in the shelf")
+		}
+	}
+	return nil
 }
 
 func waitForAppPinned(ctx context.Context, tconn *chrome.TestConn, targetAppID string) error {

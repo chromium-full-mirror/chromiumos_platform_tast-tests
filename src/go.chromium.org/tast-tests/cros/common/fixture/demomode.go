@@ -15,4 +15,12 @@ const (
 	// PostDemoModeOOBECloudGaming is similar to PostDemoModeOOBE, except Cloud Gaming
 	// customizations are enabled (i.e. the CloudGamingDevice feature is enabled).
 	PostDemoModeOOBECloudGaming = "postDemoModeOOBECloudGaming"
+
+	// PostDemoModeOOBESkipComponentProd is similar to PostDemoModeOOBEProd except it
+	// skips both components download and install process in OOBE.
+	PostDemoModeOOBESkipBothComponentsProd = "postDemoModeOOBESkipBothComponentsProd"
+
+	// PostDemoModeOOBESkipComponentProd is similar to PostDemoModeOOBEProd except it
+	// skips the demo mode app component download and install process in OOBE.
+	PostDemoModeOOBESkipAppComponentsProd = "postDemoModeOOBESkipAppComponentsProd"
 )
