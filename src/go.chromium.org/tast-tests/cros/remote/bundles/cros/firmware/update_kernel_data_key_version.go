@@ -252,6 +252,14 @@ func warmResetToKernelPartition(ctx context.Context, h *firmware.Helper, ms *fir
 		return errors.Wrap(err, "failed to get label of current kernel")
 	}
 	if currCopy.Copy != target.Copy {
+		testing.ContextLog(ctx, "Sleeping for 10s")
+		// GoBigSleepLint: There is a risk that the priority value may revert to its
+		// original setting if the priority is set immediately after
+		// EnsureBothKernelCopiesBootable() and SetBothKernelBootable().
+		// Add a 10-second delay before setting the priority.
+		if err := testing.Sleep(ctx, 10*time.Second); err != nil {
+			return errors.Wrap(err, "failed to sleep for 10 seconds")
+		}
 		testing.ContextLog(ctx, "Rebooting DUT to KERN-", target.Copy.String())
 		if _, err := h.KernelServiceClient.PrioritizeKernelCopy(ctx, target); err != nil {
 			return errors.Wrapf(err, "failed to prioritize KERN-%s", target.Copy.String())
