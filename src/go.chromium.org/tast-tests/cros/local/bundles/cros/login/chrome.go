@@ -31,9 +31,8 @@ type chromeTestParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Chrome,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Checks that Chrome supports login",
+		Func: Chrome,
+		Desc: "Checks that Chrome supports login",
 		Contacts: []string{
 			"cros-lurs@google.com",
 			"antrim@chromium.org",
@@ -46,14 +45,6 @@ func init() {
 			Val: chromeTestParams{
 				numTrial: 1,
 				bt:       browser.TypeAsh},
-			ExtraAttr: []string{"group:mainline"},
-			Timeout:   chrome.LoginTimeout + 45*time.Second,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val: chromeTestParams{
-				numTrial: 1,
-				bt:       browser.TypeLacros},
 			ExtraAttr: []string{"group:mainline"},
 			Timeout:   chrome.LoginTimeout + 45*time.Second,
 		}, {
@@ -72,25 +63,10 @@ func init() {
 			ExtraAttr: []string{"group:stress"},
 			Timeout:   50*chrome.LoginTimeout + 45*time.Second,
 		}, {
-			Name:              "stress_lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val: chromeTestParams{
-				numTrial: 50,
-				bt:       browser.TypeLacros},
-			ExtraAttr: []string{"group:stress"},
-			Timeout:   50*chrome.LoginTimeout + 45*time.Second,
-		}, {
 			Name: "forever",
 			Val: chromeTestParams{
 				numTrial: 1000000,
 				bt:       browser.TypeAsh},
-			Timeout: 365 * 24 * time.Hour,
-		}, {
-			Name:              "forever_lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val: chromeTestParams{
-				numTrial: 1000000,
-				bt:       browser.TypeLacros},
 			Timeout: 365 * 24 * time.Hour,
 		}},
 	})
