@@ -134,16 +134,16 @@ var keyIDMap = map[string]KeyType{
 //     what we release) is exactly what we expect.
 var firmwareVersionMap = map[fp.BoardName]map[string]firmwareMetadata{
 	fp.BoardNameBloonchipper: {
-		"bloonchipper_v2.0.4277-9f652bb3-RO_v2.0.25729-0f6159b-RW.bin": {
-			sha256sum: "bb0e305612b624740c3069ab0486ba005d7ad1f35eba6ec4aa119887242cd072",
+		"bloonchipper_v2.0.4277-9f652bb3-RO_v2.0.25973-4e2e543-RW.bin": {
+			sha256sum: "90f7b57cf38bdda0ee41d82eec7c7ae8ad034e43342b381b07dcc0390c8e7b62",
 			roVersion: "bloonchipper_v2.0.4277-9f652bb3",
-			rwVersion: "bloonchipper_v2.0.25729-0f6159b",
+			rwVersion: "bloonchipper-v2.0.25973-4e2e543",
 			keyID:     "1c590ef36399f6a2b2ef87079c135b69ef89eb60",
 		},
-		"bloonchipper_v2.0.5938-197506c1-RO_v2.0.25729-0f6159b-RW.bin": {
-			sha256sum: "fe1b8184cfc7a3b3e34c1293d6be82ab89a4d2bbbb3ac41e85d664cc283c5ed6",
+		"bloonchipper_v2.0.5938-197506c1-RO_v2.0.25973-4e2e543-RW.bin": {
+			sha256sum: "be0c31f66242bb82366250606da5cbe9da332728515b13d43ad4b58c188f3bcb",
 			roVersion: "bloonchipper_v2.0.5938-197506c1",
-			rwVersion: "bloonchipper_v2.0.25729-0f6159b",
+			rwVersion: "bloonchipper-v2.0.25973-4e2e543",
 			keyID:     "1c590ef36399f6a2b2ef87079c135b69ef89eb60",
 		},
 	},
