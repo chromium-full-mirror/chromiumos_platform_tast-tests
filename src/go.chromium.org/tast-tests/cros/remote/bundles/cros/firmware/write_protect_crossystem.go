@@ -59,8 +59,12 @@ func WriteProtectCrossystem(ctx context.Context, s *testing.State) {
 		if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateOff); err != nil {
 			s.Fatal("Failed to disable hardware WP: ", err)
 		}
-		if err := performModeAwareReboot(ctx, h); err != nil {
-			s.Fatal("Failed to reboot: ", err)
+		s.Log("Rebooting DUT to ensure hardware WP disabled")
+		if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
+			s.Fatal("Faild to reset DUT: ", err)
+		}
+		if err := h.WaitConnect(ctx, firmware.ResetEthernetDongle); err != nil {
+			s.Fatal("Failed to reconnect to DUT: ", err)
 		}
 	}()
 
