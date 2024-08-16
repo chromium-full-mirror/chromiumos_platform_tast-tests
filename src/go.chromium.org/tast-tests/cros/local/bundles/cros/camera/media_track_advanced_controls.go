@@ -11,14 +11,9 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
-	"time"
 
 	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/media/pre"
-	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -614,26 +609,13 @@ func applyMediaTrackConstraints(ctx context.Context, conn *chrome.Conn, constrai
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         MediaTrackAdvancedControls,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Verifies the MediaTrack advanced controls",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", caps.BuiltinOrVividCamera},
 		Data:         []string{"media_track_advanced_controls.html", "media_track_advanced_controls.js"},
-		Params: []testing.Param{
-			{
-				Fixture: "chromeVideo",
-				Val:     browser.TypeAsh,
-			},
-			{
-				Name:              "lacros",
-				Fixture:           pre.ChromeVideoLacrosFixture(pre.VideoFeatureFakeMediaStreamUI),
-				ExtraSoftwareDeps: []string{caps.BuiltinOrVividCamera, "lacros"},
-				Timeout:           7 * time.Minute, // A lenient limit for launching Lacros Chrome.
-				Val:               browser.TypeLacros,
-			},
-		},
+		Fixture:      "chromeVideo",
 	})
 }
 
@@ -641,18 +623,8 @@ func MediaTrackAdvancedControls(ctx context.Context, s *testing.State) {
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer server.Close()
 
-	// Reserve ten seconds for cleanup.
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
-	defer cancel()
-
-	br, closeBrowser, err := browserfixt.SetUp(ctx, s.FixtValue().(chrome.HasChrome).Chrome(), s.Param().(browser.Type))
-	if err != nil {
-		s.Fatal("Failed to initialize test: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
-
-	conn, err := br.NewConn(ctx, server.URL+"/media_track_advanced_controls.html")
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	conn, err := cr.NewConn(ctx, server.URL+"/media_track_advanced_controls.html")
 	if err != nil {
 		s.Fatal("Failed to open testing page: ", err)
 	}
