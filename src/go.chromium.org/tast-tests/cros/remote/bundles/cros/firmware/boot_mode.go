@@ -101,7 +101,7 @@ func init() {
 			},
 			// TODO: When stable, change firmware_unstable to a different attr.
 			ExtraAttr: []string{"firmware_usb", "firmware_unstable"},
-			Timeout:   60 * time.Minute,
+			Timeout:   2 * time.Hour,
 		}, {
 			Name:    "dev_warm",
 			Fixture: fixture.DevMode,
@@ -178,6 +178,7 @@ func init() {
 }
 
 func BootMode(ctx context.Context, s *testing.State) {
+	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
 	defer cancel()
 
@@ -203,6 +204,23 @@ func BootMode(ctx context.Context, s *testing.State) {
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Error opening servo: ", err)
 	}
+
+	if err := h.Reporter.ClearEventlog(ctx); err != nil {
+		s.Fatal("Failed to clear event log: ", err)
+	}
+
+	defer func(ctx context.Context) {
+		if err := h.EnsureDUTBooted(ctx); err != nil {
+			s.Fatal("Failed to connect to the DUT: ", err)
+		}
+		if s.HasError() {
+			saveEventLogPath := filepath.Join(s.OutDir(), "eventlog.txt")
+			if err := h.SaveEventLog(ctx, saveEventLogPath); err != nil {
+				s.Error("Failed to save event log: ", err)
+			}
+		}
+	}(cleanupCtx)
+
 	if tc.bootToMode == fwCommon.BootModeRecovery || tc.checkBootFromMain {
 		skipFlashUSB := false
 		if skipFlashUSBStr, ok := s.Var("firmware.skipFlashUSB"); ok {

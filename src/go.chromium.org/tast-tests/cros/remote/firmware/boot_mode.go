@@ -744,6 +744,16 @@ func (ms *ModeSwitcher) RecScreenToDevMode(ctx context.Context, opts ...ModeSwit
 // The actual behavior depends on the ModeSwitcherType.
 func (ms *ModeSwitcher) fwScreenToUSBDevMode(ctx context.Context, opts ...ModeSwitchOption) error {
 	h := ms.Helper
+	testing.ContextLogf(ctx, "Sleeping for %s (FirmwareScreen) ", h.Config.FirmwareScreen)
+	// GoBigSleepLint: Delay to wait for the firmware screen during boot-up.
+	if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
+		return errors.Wrapf(err, "failed to sleep for %s", h.Config.FirmwareScreen)
+	}
+	testing.ContextLog(ctx, "Resetting firmware screen timeout")
+	if err := h.Servo.PressKey(ctx, " ", servo.DurTab); err != nil {
+		errors.Wrap(err, "failed to press space key")
+	}
+
 	testing.ContextLog(ctx, "Set DFP mode")
 	if err := h.Servo.SetDUTPDDataRole(ctx, servo.DFP); err != nil {
 		testing.ContextLogf(ctx, "Failed to set pd data role to DFP: %.400s", err)
@@ -757,6 +767,19 @@ func (ms *ModeSwitcher) fwScreenToUSBDevMode(ctx context.Context, opts ...ModeSw
 	// take effect.
 	if err := testing.Sleep(ctx, UsbVisibleTime); err != nil {
 		return errors.Wrapf(err, "failed to sleep for %v", UsbDisableTime)
+	}
+
+	// On KeyboardDevSwitcher machines, pressing space triggers the
+	// to_norm screen. Revert to the developer screen with the
+	// esc key.
+	if h.Config.ModeSwitcherType == KeyboardDevSwitcher {
+		if err := h.Servo.PressKey(ctx, "<esc>", servo.DurTab); err != nil {
+			return errors.Wrap(err, "failed to press esc")
+		}
+		// GoBigSleepLint: Sleep for model specific time.
+		if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
+			errors.Wrapf(err, "failed to sleep for %s (KeypressDelay)", h.Config.KeypressDelay)
+		}
 	}
 
 	totalTimeout := h.Config.USBImageBootTimeout + h.Config.FirmwareScreen
