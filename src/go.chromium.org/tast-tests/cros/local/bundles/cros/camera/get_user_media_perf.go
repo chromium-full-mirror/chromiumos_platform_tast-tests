@@ -14,8 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/camera/getusermedia"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast-tests/cros/local/tracing"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/ctxutil"
@@ -32,43 +30,18 @@ type metricsPath struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         GetUserMediaPerf,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Captures performance data about getUserMedia video capture",
-		Contacts:     []string{"chromeos-camera-eng@google.com", "shik@chromium.org"},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "shik@chromium.org", "seannli@google.com"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{caps.BuiltinOrVividCamera, "chrome"},
+		Fixture:      "chromeCameraPerf",
 		Data: append(
 			getusermedia.DataFiles(),
 			"web_api.html",
 			"perfetto/camera_config.pbtxt",
 			"perfetto/camera_query.sql"),
-		Params: []testing.Param{
-			{
-				Name:    "ash",
-				Fixture: "chromeCameraPerf",
-				Val:     browser.TypeAsh,
-			},
-			{
-				Name:              "lacros",
-				Fixture:           "chromeCameraPerfLacros",
-				ExtraSoftwareDeps: []string{"lacros"},
-				Timeout:           7 * time.Minute, // A lenient limit for launching Lacros Chrome.
-				Val:               browser.TypeLacros,
-			},
-			{
-				Name:    "ash_vcd_utility",
-				Fixture: "chromeCameraPerfWithVCDInUtilityProcess",
-				Val:     browser.TypeAsh,
-			},
-			{
-				Name:              "lacros_vcd_utility",
-				Fixture:           "chromeCameraPerfLacrosWithVCDInUtilityProcess",
-				ExtraSoftwareDeps: []string{"lacros"},
-				Timeout:           7 * time.Minute, // A lenient limit for launching Lacros Chrome.
-				Val:               browser.TypeLacros,
-			},
-		},
 	})
 }
 
@@ -150,22 +123,7 @@ func GetUserMediaPerf(ctx context.Context, s *testing.State) {
 
 	s.Log("Collecting Perfetto trace File at: ", traceDataPath)
 
-	var ci getusermedia.ChromeInterface
-	runLacros := s.Param().(browser.Type) == browser.TypeLacros
-	if runLacros {
-		tconn, err := s.FixtValue().(chrome.HasChrome).Chrome().TestAPIConn(ctx)
-		if err != nil {
-			s.Fatal("Failed to connect to test API: ", err)
-		}
-
-		ci, err = lacros.Launch(ctx, tconn)
-		if err != nil {
-			s.Fatal("Failed to launch lacros-chrome: ", err)
-		}
-		defer ci.Close(ctx)
-	} else {
-		ci = s.FixtValue().(chrome.HasChrome).Chrome()
-	}
+	ci := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	// Run tests for 20 seconds per resolution.
 	results, err := getusermedia.RunGetUserMedia(ctx, s.DataFileSystem(), ci, 20*time.Second, nil, getusermedia.NoVerboseLogging)
@@ -174,5 +132,4 @@ func GetUserMediaPerf(ctx context.Context, s *testing.State) {
 	}
 	// Set and upload frame statistics below.
 	results.SetPerf(p)
-
 }
