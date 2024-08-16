@@ -13,9 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/camera/getusermedia"
 	"go.chromium.org/tast-tests/cros/local/camera/testutil"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
-	"go.chromium.org/tast-tests/cros/local/media/pre"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/testing"
 )
@@ -23,30 +20,14 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         GetUserMediaPostVCSCrash,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that getUserMedia works after the video capture service crashed",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "seannli@google.com"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
-		Attr:         []string{"group:mainline", "group:camera-libcamera"},
-		SoftwareDeps: []string{"chrome"},
+		Attr:         []string{"group:mainline", "group:camera-libcamera", "informational"},
+		SoftwareDeps: []string{"chrome", caps.BuiltinCamera},
 		Data:         append(getusermedia.DataFiles(), "web_api.html"),
-		Params: []testing.Param{
-			{
-				Name:              "ash",
-				Fixture:           "chromeVideoWithVCDInUtilityProcess",
-				ExtraAttr:         []string{"informational"},
-				ExtraSoftwareDeps: []string{caps.BuiltinCamera},
-				Val:               browser.TypeAsh,
-			},
-			{
-				Name:              "lacros",
-				Fixture:           pre.ChromeVideoLacrosFixture(pre.VideoFeatureFakeMediaStreamUI, pre.VideoFeatureVCDInUtilityProcess),
-				ExtraAttr:         []string{"informational"},
-				ExtraSoftwareDeps: []string{caps.BuiltinCamera, "lacros"},
-				Timeout:           7 * time.Minute, // A lenient limit for launching Lacros Chrome.
-				Val:               browser.TypeLacros,
-			},
-		},
+		Fixture:      "chromeVideoWithVCDInUtilityProcess",
 	})
 }
 
@@ -68,21 +49,7 @@ func GetUserMediaPostVCSCrash(ctx context.Context, s *testing.State) {
 
 	duration := 1 * time.Second
 
-	var ci getusermedia.ChromeInterface
-	if s.Param().(browser.Type) == browser.TypeLacros {
-		tconn, err := s.FixtValue().(chrome.HasChrome).Chrome().TestAPIConn(ctx)
-		if err != nil {
-			s.Fatal("Failed to connect to test API: ", err)
-		}
-
-		ci, err = lacros.Launch(ctx, tconn)
-		if err != nil {
-			s.Fatal("Failed to launch lacros-chrome: ", err)
-		}
-		defer ci.Close(ctx)
-	} else {
-		ci = s.FixtValue().(chrome.HasChrome).Chrome()
-	}
+	ci := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	_, err := os.ReadFile(s.DataPath("third_party/ssim.js"))
 	if err != nil {
@@ -111,5 +78,4 @@ func GetUserMediaPostVCSCrash(ctx context.Context, s *testing.State) {
 	if _, err := getusermedia.RunGetUserMedia(ctx, s.DataFileSystem(), ci, duration, nil, getusermedia.VerboseLogging); err != nil {
 		s.Fatal("Failed to call getUserMedia() after killing video capture service process: ", err)
 	}
-
 }
