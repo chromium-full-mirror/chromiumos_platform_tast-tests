@@ -56,7 +56,16 @@ func init() {
 		PostTestTimeout: charonExitTimeout + 5*time.Second,
 		ResetTimeout:    5 * time.Second,
 		TearDownTimeout: certOpTimeout + 5*time.Second,
-		Impl:            &vpnFixture{useCert: true, crMode: notUsed},
+		Params: []testing.FixtureParam{
+			// The default fixture using no param.
+			{},
+			// The fixture using Ethernet-hide.
+			{
+				Name:   "ehide",
+				Parent: "ehide",
+			},
+		},
+		Impl: &vpnFixture{useCert: true, crMode: notUsed},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "vpnEnvWithCertsAndChromeLoggedIn",

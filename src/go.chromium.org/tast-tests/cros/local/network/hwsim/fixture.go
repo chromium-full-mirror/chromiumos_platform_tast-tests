@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/android/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/network/vpn"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/errors"
@@ -42,6 +43,8 @@ type ShillSimulatedWiFi struct {
 	// ARC's UI Automator. This is only added when using the fixture "arcBooted".
 	UIDevice *ui.Device
 	Chrome   *chrome.Chrome
+	// Certificates. Only used when using the variant "WithCert".
+	CertVals *vpn.CertVals
 }
 
 type parentFixtDataCallback func(s *testing.FixtState) ShillSimulatedWiFi
@@ -75,6 +78,15 @@ func init() {
 		SetUpTimeout:    hwsimTimeout,
 		TearDownTimeout: hwsimTimeout,
 		ResetTimeout:    hwsimTimeout,
+		Params: []testing.FixtureParam{
+			// The default fixture using no param.
+			{},
+			// The fixture using Ethernet-hide.
+			{
+				Name:   "ehide",
+				Parent: "ehide",
+			},
+		},
 		Impl: NewShillSimulatedWiFiFixture(func(s *testing.FixtState) ShillSimulatedWiFi {
 			return ShillSimulatedWiFi{}
 		}),
@@ -117,6 +129,35 @@ func init() {
 		Impl: NewShillSimulatedWiFiFixture(func(s *testing.FixtState) ShillSimulatedWiFi {
 			return ShillSimulatedWiFi{
 				Chrome: s.ParentValue().(chrome.HasChrome).Chrome(),
+			}
+		}),
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "shillSimulatedWiFiWithCerts",
+		Desc: "A fixture that loads the Wi-Fi hardware simulator and certificate",
+		Contacts: []string{
+			"damiendejean@google.com", // fixture maintainer
+			"cros-networking@google.com",
+		},
+		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		BugComponent:    "b:1493959",
+		SetUpTimeout:    hwsimTimeout,
+		TearDownTimeout: hwsimTimeout,
+		ResetTimeout:    hwsimTimeout,
+		Params: []testing.FixtureParam{
+			// The default fixture with default parent.
+			{
+				Parent: "vpnEnvWithCerts",
+			},
+			// The fixture using Ethernet-hide variant.
+			{
+				Name:   "ehide",
+				Parent: "vpnEnvWithCerts.ehide",
+			},
+		},
+		Impl: NewShillSimulatedWiFiFixture(func(s *testing.FixtState) ShillSimulatedWiFi {
+			return ShillSimulatedWiFi{
+				CertVals: s.ParentValue().(vpn.FixtureEnv).CertVals,
 			}
 		}),
 	})
@@ -227,6 +268,7 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	fixt := f.cb(s)
 	fixt.Client = []string{clientIface}
 	fixt.AP = apIfaces
+
 	return &fixt
 }
 
