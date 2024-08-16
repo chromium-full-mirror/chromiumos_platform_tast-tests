@@ -10,6 +10,8 @@ import (
 	"strconv"
 
 	"go.chromium.org/tast-tests/cros/common/media/caps"
+	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/local/camera/testutil"
 	"go.chromium.org/tast-tests/cros/local/crosconfig"
 	"go.chromium.org/tast/core/autocaps"
 	"go.chromium.org/tast/core/errors"
@@ -99,10 +101,29 @@ func verifyContent(ctx context.Context) error {
 
 // CrosConfig checks if camera config available and verify it's content
 func CrosConfig(ctx context.Context, s *testing.State) {
+	dumpCameraInformation(ctx)
+
 	if err := hasCameraConfig(ctx); err != nil {
 		s.Fatal("Failed to get camera config: ", err)
 	}
 	if err := verifyContent(ctx); err != nil {
 		s.Fatalf("Content of the config file could not be verified :%v", err)
+	}
+}
+
+func dumpCameraInformation(ctx context.Context) {
+	hwid, _ := testexec.CommandContext(ctx, "crossystem", "hwid").Output()
+	testing.ContextLog(ctx, "HWID: ", string(hwid))
+
+	captureDevices, err := testutil.BuiltinUsbCamerasFromV4L2Test(ctx)
+	if err != nil {
+		testing.ContextLog(ctx, "Skipping dump: couldn't find a capture device: ", err)
+		return
+	}
+
+	testing.ContextLog(ctx, "Dumping USB camera information")
+	for _, videodev := range captureDevices {
+		yavta, _ := testexec.CommandContext(ctx, "yavta", "-l", "--enum-formats", videodev).Output()
+		testing.ContextLog(ctx, string(yavta))
 	}
 }
