@@ -31,7 +31,7 @@ class AnalysisResult:
     """The result of running a bootstrap to compute confidence intervals
     on the experiment group."""
 
-    def __post__init__(self) -> None:
+    def __post_init__(self) -> None:
         assert self.before_sample.test_name == self.after_sample.test_name
         assert self.before_sample.metric_path == self.after_sample.metric_path
         assert self.before_sample.units == self.after_sample.units
