@@ -797,16 +797,12 @@ func flashDUTAndVerifyFirmwareVersions(ctx context.Context, h *firmware.Helper, 
 
 	// Verify that the EC firmware versions are the right ones after the flashing process.
 	testing.ContextLog(ctx, "Verifying the EC firmware versions after flash")
-	var exECRWVersion string
-	if fwInfo.roTag == "old" && fwInfo.rwTag == "old" {
-		exECRWVersion = fwInfo.ec.rwID
-	} else {
-		exECRWVersion = ecRWNewID
+	if !(fwInfo.roTag == "old" && fwInfo.rwTag == "old") {
+		fwInfo.ec.rwID = ecRWNewID
 	}
-	if err := firmware.VerifyECFwIDs(ctx, h, fwInfo.ec.roID, exECRWVersion); err != nil {
-		return errors.Wrapf(err, "failed to verify EC firmware versions after flashing EC RO_%s + RW_%s ( %s + %s )", fwInfo.roTag, fwInfo.rwTag, fwInfo.ec.roID, exECRWVersion)
+	if err := firmware.VerifyECFwIDs(ctx, h, fwInfo.ec.roID, fwInfo.ec.rwID); err != nil {
+		return errors.Wrapf(err, "failed to verify EC firmware versions after flashing EC RO_%s + RW_%s ( %s + %s )", fwInfo.roTag, fwInfo.rwTag, fwInfo.ec.roID, fwInfo.ec.rwID)
 	}
-
 	return nil
 }
 
