@@ -12,9 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/camera/getusermedia"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
-	"go.chromium.org/tast-tests/cros/local/media/pre"
 	"go.chromium.org/tast-tests/cros/local/media/vm"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/testing"
@@ -23,9 +20,9 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         GetUserMedia,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that getUserMedia captures video",
-		Contacts:     []string{"chromeos-camera-eng@google.com", "shik@chromium.org"},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "shik@chromium.org", "seannli@google.com"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Attr:         []string{"group:mainline", "group:camera-libcamera"},
 		SoftwareDeps: []string{"chrome"},
@@ -36,52 +33,17 @@ func init() {
 				Fixture:           "chromeVideo",
 				ExtraAttr:         []string{"informational"},
 				ExtraSoftwareDeps: []string{caps.BuiltinCamera},
-				Val:               browser.TypeAsh,
 			},
 			{
 				Name:              "vivid",
 				Fixture:           "chromeVideo",
 				ExtraAttr:         []string{"informational"},
 				ExtraSoftwareDeps: []string{caps.VividCamera},
-				Val:               browser.TypeAsh,
 			},
 			{
-				Name:      "fake",
+				Name:      "fake_vcd",
 				Fixture:   "chromeVideoWithFakeWebcam",
 				ExtraAttr: []string{"informational"},
-				Val:       browser.TypeAsh,
-			},
-			{
-				Name:              "lacros",
-				Fixture:           pre.ChromeVideoLacrosFixture(pre.VideoFeatureFakeMediaStreamUI),
-				ExtraAttr:         []string{"informational"},
-				ExtraSoftwareDeps: []string{caps.BuiltinOrVividCamera, "lacros"},
-				Timeout:           7 * time.Minute, // A lenient limit for launching Lacros Chrome.
-				Val:               browser.TypeLacros,
-			},
-			{
-				Name:    "lacros_fake_vcd",
-				Fixture: "chromeVideoLacrosWithFakeWebcam",
-				// TODO(b/283215565): Promote to critical.
-				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
-				ExtraSoftwareDeps: []string{"lacros"},
-				Timeout:           7 * time.Minute, // A lenient limit for launching Lacros Chrome.
-				Val:               browser.TypeLacros,
-			},
-			{
-				Name:              "vcd_utility",
-				Fixture:           "chromeVideoWithVCDInUtilityProcess",
-				ExtraAttr:         []string{"informational"},
-				ExtraSoftwareDeps: []string{caps.BuiltinCamera},
-				Val:               browser.TypeAsh,
-			},
-			{
-				Name:              "lacros_vcd_utility",
-				Fixture:           pre.ChromeVideoLacrosFixture(pre.VideoFeatureFakeMediaStreamUI, pre.VideoFeatureVCDInUtilityProcess),
-				ExtraAttr:         []string{"informational"},
-				ExtraSoftwareDeps: []string{caps.BuiltinCamera, "lacros"},
-				Timeout:           7 * time.Minute, // A lenient limit for launching Lacros Chrome.
-				Val:               browser.TypeLacros,
 			},
 		},
 	})
@@ -107,21 +69,7 @@ func GetUserMedia(ctx context.Context, s *testing.State) {
 		duration = 10 * time.Second
 	}
 
-	var ci getusermedia.ChromeInterface
-	if s.Param().(browser.Type) == browser.TypeLacros {
-		tconn, err := s.FixtValue().(chrome.HasChrome).Chrome().TestAPIConn(ctx)
-		if err != nil {
-			s.Fatal("Failed to connect to test API: ", err)
-		}
-
-		ci, err = lacros.Launch(ctx, tconn)
-		if err != nil {
-			s.Fatal("Failed to launch lacros-chrome: ", err)
-		}
-		defer ci.Close(ctx)
-	} else {
-		ci = s.FixtValue().(chrome.HasChrome).Chrome()
-	}
+	ci := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	_, err := os.ReadFile(s.DataPath("third_party/ssim.js"))
 	if err != nil {

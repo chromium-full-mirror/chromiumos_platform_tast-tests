@@ -38,9 +38,6 @@ const (
 	// VideoFeatureDistinctiveIdentifier allows for a distinctive identifier with DRM playback.
 	VideoFeatureDistinctiveIdentifier
 
-	// VideoFeatureVCDInUtilityProcess makes the video capture service run in a utility process.
-	VideoFeatureVCDInUtilityProcess
-
 	// VideoFeatureGTFO avoids using the Chrome GPU process as a proxy in between renderers and video decoder utility processes (go/oopvd-gtfo-dd).
 	VideoFeatureGTFO
 
@@ -433,7 +430,6 @@ var chromeVideoLacrosFixtureGenerator = fixtureGenerator{
 func initChromeVideoLacrosFixtures() {
 	combos := []featureComboType{
 		comb(chromeVideo, VideoFeatureFakeMediaStreamUI),
-		comb(chromeVideo, VideoFeatureFakeMediaStreamUI, VideoFeatureVCDInUtilityProcess),
 	}
 
 	featureMap := map[featureType]featureInfo{
@@ -446,12 +442,6 @@ func initChromeVideoLacrosFixtures() {
 			[]chrome.Option{
 				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
 				chrome.LacrosExtraArgs(chromeBypassPermissionsArgs...),
-			},
-		},
-		VideoFeatureVCDInUtilityProcess: {
-			"VCDInUtilityProcess",
-			[]chrome.Option{
-				chrome.DisableFeatures("RunVideoCaptureServiceInBrowserProcess"),
 			},
 		},
 	}
