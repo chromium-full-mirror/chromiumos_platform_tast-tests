@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
+	"go.chromium.org/tast-tests/cros/local/chrome/settings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/ctxutil"
@@ -200,7 +201,7 @@ func PhysicalKeyboard(ctx context.Context, s *testing.State) {
 		pkg = "org.chromium.arc.testapp.keyboard"
 	)
 
-	cleanupKeyRepeat, err := input.EnsureKeyRepeatEnabled(ctx, tconn, false)
+	cleanupKeyRepeat, err := settings.EnsureKeyRepeatEnabled(ctx, tconn, false)
 	if err != nil {
 		s.Fatal("Failed to ensure keyRepeatSettings: ", err)
 	}

@@ -11,6 +11,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/a11y"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
+	"go.chromium.org/tast-tests/cros/local/chrome/settings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -55,7 +56,7 @@ func PhysicalKeyboardWithoutUiautomator(ctx context.Context, s *testing.State) {
 		activity = ".MainActivity"
 	)
 
-	cleanupKeyRepeat, err := input.EnsureKeyRepeatEnabled(ctx, tconn, false)
+	cleanupKeyRepeat, err := settings.EnsureKeyRepeatEnabled(ctx, tconn, false)
 	if err != nil {
 		s.Fatal("Failed to ensure keyRepeatSettings: ", err)
 	}

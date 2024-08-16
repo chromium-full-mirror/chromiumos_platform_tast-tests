@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/arc"
-	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast-tests/cros/local/chrome/settings"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -51,19 +51,19 @@ func KeyRepeatSettings(ctx context.Context, s *testing.State) {
 		s.Fatal("Creating test API connection failed: ", err)
 	}
 	// Defer cleanup
-	currentSettings, err := input.CurrentKeyRepeatSettings(ctx, tconn)
+	currentSettings, err := settings.CurrentKeyRepeatSettings(ctx, tconn)
 	if err != nil {
 		s.Fatal("Failed to get current keyRepeatSettings: ", err)
 	}
 	defer func(ctx context.Context) {
-		if err := input.SetKeyRepeatSettings(ctx, tconn, currentSettings); err != nil {
+		if err := settings.SetKeyRepeatSettings(ctx, tconn, currentSettings); err != nil {
 			s.Fatal("Failed to set keyRepeatSettings: ", err)
 		}
 	}(cleanupCtx)
 
 	// Set expected settings values.
-	expected := input.KeyRepeatSettings{Enabled: true, Delay: 123, Interval: 1000}
-	if err := input.SetKeyRepeatSettings(ctx, tconn, expected); err != nil {
+	expected := settings.KeyRepeatSettings{Enabled: true, Delay: 123, Interval: 1000}
+	if err := settings.SetKeyRepeatSettings(ctx, tconn, expected); err != nil {
 		s.Fatal("Failed to set keyRepeatSettings: ", err)
 	}
 
@@ -85,7 +85,7 @@ func arcSecureSettingsValue(ctx context.Context, a *arc.ARC, name string) (int, 
 	return value, nil
 }
 
-func validateKeyRepeatSettings(ctx context.Context, a *arc.ARC, expected input.KeyRepeatSettings) error {
+func validateKeyRepeatSettings(ctx context.Context, a *arc.ARC, expected settings.KeyRepeatSettings) error {
 	return testing.Poll(ctx, func(ctx context.Context) error {
 		delay, err := arcSecureSettingsValue(ctx, a, keyRepeatDelaySettingsName)
 		if delay != expected.Delay {
