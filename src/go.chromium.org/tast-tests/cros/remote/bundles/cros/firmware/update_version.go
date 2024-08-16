@@ -57,14 +57,16 @@ func init() {
 			"cienet-firmware@cienet.corp-partner.google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
+		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level2"},
+		Requirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01"},
 		Vars:         []string{"firmware.skipFlashUSB"},
-		Attr:         []string{"group:firmware"},
 		Timeout:      120 * time.Minute,
 		ServiceDeps:  []string{"tast.cros.firmware.UtilsService", "tast.cros.firmware.BiosService", "tast.cros.firmware.TPMService"},
 		SoftwareDeps: []string{"flashrom"},
 		Params: []testing.Param{
 			{
 				Name:      "firmware_data_key_version",
+				ExtraAttr: []string{"firmware_usb", "firmware_ro"},
 				Fixture:   fixture.BootModeFixtureWithAPBackup(fixture.NormalMode),
 				ExtraData: []string{fwDataKeyVerMakekeyFile, fwDataKeyVerCommonFile},
 				Val: &updateVersionTc{
@@ -74,13 +76,10 @@ func init() {
 					tpmNvRAMHighByteIdx: 5,
 					tpmNvRAMLowByteIdx:  4,
 				},
-				// TODO: When stable, change firmware_unstable to a different attr.
-				ExtraAttr: []string{"firmware_usb", "firmware_unstable"},
 			},
 			{
 				Name:              "kernel_subkey_version",
-				ExtraAttr:         []string{"group:firmware", "firmware_bios", "firmware_level2", "firmware_ro"},
-				ExtraRequirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01"},
+				ExtraRequirements: []string{"sys-fw-0025-v01"},
 				Fixture:           fixture.BootModeFixtureWithAPBackup(fixture.DevModeGBB),
 				ExtraData:         []string{kernelSubkeyVerMakekeyFile, kernelSubkeyVerCommonFile},
 				Val: &updateVersionTc{
@@ -90,15 +89,14 @@ func init() {
 				},
 			},
 			{
-				Name:    "firmware_version",
-				Fixture: fixture.BootModeFixtureWithAPBackup(fixture.NormalMode),
+				Name:      "firmware_version",
+				ExtraAttr: []string{"firmware_usb", "firmware_smoke", "firmware_ro"},
+				Fixture:   fixture.BootModeFixtureWithAPBackup(fixture.NormalMode),
 				Val: &updateVersionTc{
 					keyVersion:          fwVer,
 					tpmNvRAMHighByteIdx: 3,
 					tpmNvRAMLowByteIdx:  2,
 				},
-				// TODO: When stable, change firmware_unstable to a different attr.
-				ExtraAttr: []string{"firmware_usb", "firmware_unstable"},
 			},
 		},
 	})
