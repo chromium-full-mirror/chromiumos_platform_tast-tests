@@ -34,7 +34,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ExternalPrintServers,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify behavior of external print server configuration user policies",
 		Contacts: []string{
 			"chromeos-commercial-printing@google.com",
@@ -53,12 +53,6 @@ func init() {
 			{
 				Val:     browser.TypeAsh,
 				Fixture: fixture.ChromePolicyLoggedIn,
-			},
-			{
-				Name:              "lacros",
-				Val:               browser.TypeLacros,
-				ExtraSoftwareDeps: []string{"lacros"},
-				Fixture:           fixture.LacrosPolicyLoggedIn,
 			},
 		},
 		SearchFlags: []*testing.StringPair{
@@ -197,7 +191,7 @@ func ExternalPrintServers(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to update policies: ", err)
 	}
 
-	// Create a browser (either ash or lacros, based on browser type).
+	// Create a browser
 	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, bt)
 	if err != nil {
 		s.Fatal("Failed to launch browser: ", err)
