@@ -191,7 +191,7 @@ func ExternalPrintServers(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to update policies: ", err)
 	}
 
-	// Create a browser
+	// Create a browser.
 	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, bt)
 	if err != nil {
 		s.Fatal("Failed to launch browser: ", err)
