@@ -44,7 +44,7 @@ func init() {
 		},
 		// ChromeOS > Software > ARC++ > Printing
 		BugComponent: "b:613731",
-		SoftwareDeps: []string{"chrome", "cups"},
+		SoftwareDeps: []string{"chrome", "cups", "arc_print_stable"},
 		Fixture:      "virtualUsbPrinterModulesLoadedWithArcBooted",
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		Params: []testing.Param{{
