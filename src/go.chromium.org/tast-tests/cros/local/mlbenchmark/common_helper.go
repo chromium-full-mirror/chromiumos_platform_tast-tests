@@ -134,10 +134,10 @@ func (r *PeakMemoryWatcher) Start(ctx context.Context) error {
 				total, shared := 0.0, 0.0
 				scanner := bufio.NewScanner(strings.NewReader(string(fdinfoContents[:])))
 				for scanner.Scan() {
-					re := regexp.MustCompile(`\bdrm-(total|shared)-memory:\s*(\d+)`)
+					re := regexp.MustCompile(`\bdrm-(total|shared)-(system|system0|memory):\s*(\d+)`)
 					matches := re.FindStringSubmatch(scanner.Text())
-					if len(matches) == 3 {
-						memory, err := ParseNumeric(matches[2])
+					if len(matches) == 4 {
+						memory, err := ParseNumeric(matches[3])
 						if err != nil {
 							r.runnerStatus <- errors.Wrap(err, "couldn't parse drm memory")
 							return
