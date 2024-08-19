@@ -15,8 +15,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/android/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -29,10 +27,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AndroidIMEInBrowser,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Checks Android IME in a browser window",
-		Contacts:     []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
+		Func:     AndroidIMEInBrowser,
+		Desc:     "Checks Android IME in a browser window",
+		Contacts: []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
 		// ChromeOS > Software > ARC++ > Framework > IME VK
 		BugComponent: "b:537350",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
@@ -41,22 +38,10 @@ func init() {
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_container"},
 			Fixture:           "arcBootedInTabletMode",
-			Val:               browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"android_container", "lacros"},
-			Fixture:           "lacrosWithArcBootedInTabletMode",
-			Val:               browser.TypeLacros,
 		}, {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Fixture:           "arcBootedInTabletMode",
-			Val:               browser.TypeAsh,
-		}, {
-			Name:              "lacros_vm",
-			ExtraSoftwareDeps: []string{"android_vm", "lacros"},
-			Fixture:           "lacrosWithArcBootedInTabletMode",
-			Val:               browser.TypeLacros,
 		}},
 	})
 }
@@ -81,7 +66,6 @@ func AndroidIMEInBrowser(ctx context.Context, s *testing.State) {
 		settingsPkg = "com.android.settings"
 	)
 
-	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
@@ -157,13 +141,7 @@ func AndroidIMEInBrowser(ctx context.Context, s *testing.State) {
 	}))
 	defer server.Close()
 
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
-	if err != nil {
-		s.Fatal("Failed to open the browser: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
-
-	conn, err := br.NewConn(ctx, server.URL)
+	conn, err := cr.Browser().NewConn(ctx, server.URL)
 	if err != nil {
 		s.Fatal("Creating renderer for test page failed: ", err)
 	}

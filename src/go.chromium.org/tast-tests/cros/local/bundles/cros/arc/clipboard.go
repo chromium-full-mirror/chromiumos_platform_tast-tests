@@ -15,8 +15,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
@@ -31,10 +29,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Clipboard,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Tests copying and pasting from Chrome to Android and vice versa",
-		Contacts:     []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
+		Func:     Clipboard,
+		Desc:     "Tests copying and pasting from Chrome to Android and vice versa",
+		Contacts: []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
 		// ChromeOS > Software > ARC++ > Framework > Chrome Integration
 		BugComponent: "b:537221",
 		SoftwareDeps: []string{"chrome"},
@@ -44,19 +41,11 @@ func init() {
 		Params: []testing.Param{{
 			Fixture:           "arcBooted",
 			ExtraSoftwareDeps: []string{"android_container"},
-			Val:               browser.TypeAsh,
 		}, {
 			Name:              "vm",
 			Fixture:           "arcBooted",
 			ExtraSoftwareDeps: []string{"android_vm"},
 			ExtraAttr:         []string{"informational", "group:hw_agnostic"},
-			Val:               browser.TypeAsh,
-		}, {
-			Name:              "lacros_vm",
-			Fixture:           "lacrosWithArcBooted",
-			ExtraSoftwareDeps: []string{"android_vm", "lacros"},
-			ExtraAttr:         []string{"informational", "group:hw_agnostic"},
-			Val:               browser.TypeLacros,
 		}},
 	})
 }
@@ -108,7 +97,7 @@ func bringAndroidCopyPasteWindowToFront(ctx context.Context, tconn *chrome.TestC
 // Due to the security reason (crbug.com/1334203), writing to the clipboard
 // works only with a user gesture. That's why this function uses clicking and
 // typing instead of running js on the page.
-func prepareCopyInChrome(browser *browser.Browser, tconn *chrome.TestConn, uia *uiauto.Context, keyboard *input.KeyboardEventWriter, format, data, baseURL string) copyFunc {
+func prepareCopyInChrome(tconn *chrome.TestConn, uia *uiauto.Context, keyboard *input.KeyboardEventWriter, format, data, baseURL string) copyFunc {
 	return func(ctx context.Context) error {
 		if err := bringChromeCopyPasteWindowToFront(ctx, tconn); err != nil {
 			return errors.Wrap(err, "failed to bring the Chrome window foreground")
@@ -157,7 +146,7 @@ func prepareCopyInChrome(browser *browser.Browser, tconn *chrome.TestConn, uia *
 // For the security reason (crbug.com/1334203), reading from the clipboard
 // works only after granting the permission. That's why this function uses clicking and
 // typing instead of running js on the page.
-func preparePasteInChrome(browser *browser.Browser, conn *browser.Conn, tconn *chrome.TestConn, uia *uiauto.Context, keyboard *input.KeyboardEventWriter, format, baseURL string) pasteFunc {
+func preparePasteInChrome(conn *chrome.Conn, tconn *chrome.TestConn, uia *uiauto.Context, keyboard *input.KeyboardEventWriter, format, baseURL string) pasteFunc {
 	return func(ctx context.Context) (string, error) {
 		if err := bringChromeCopyPasteWindowToFront(ctx, tconn); err != nil {
 			return "", errors.Wrap(err, "failed to bring the Chrome window foreground")
@@ -369,12 +358,6 @@ func Clipboard(ctx context.Context, s *testing.State) {
 	}
 	defer keyboard.Close(ctx)
 
-	browser, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
-	if err != nil {
-		s.Fatal("Failed to create the browser: ", err)
-	}
-	defer closeBrowser(ctx)
-
 	uia := uiauto.New(tconn)
 
 	if err := a.Install(ctx, arc.APKPath(apk)); err != nil {
@@ -420,7 +403,7 @@ func Clipboard(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to click the center of the app: ", err)
 	}
 
-	conn, err := browser.NewConn(ctx, server.URL+"/clipboard.html")
+	conn, err := cr.Browser().NewConn(ctx, server.URL+"/clipboard.html")
 	if err != nil {
 		s.Fatal("Failed to open the clipboard.html: ", err)
 	}
@@ -471,7 +454,7 @@ func Clipboard(ctx context.Context, s *testing.State) {
 		// Copy in Chrome, so the registered observer should paste the clipboard content in Android.
 		const content = "<b>observer</b> should paste this"
 		const newContent = "<html><head></head><body><b>observer</b> should paste this</body></html>"
-		chromeCopy := prepareCopyInChrome(browser, tconn, uia, keyboard, "text/html", content, server.URL)
+		chromeCopy := prepareCopyInChrome(tconn, uia, keyboard, "text/html", content, server.URL)
 		if err := chromeCopy(ctx); err != nil {
 			s.Fatal("Failed to copy in Chrome: ", err)
 		}
@@ -520,23 +503,23 @@ func Clipboard(ctx context.Context, s *testing.State) {
 		wantPastedData string
 	}{{
 		"CopyTextFromChromeToAndroid",
-		prepareCopyInChrome(browser, tconn, uia, keyboard, "text/plain", testTextFromChrome, server.URL),
+		prepareCopyInChrome(tconn, uia, keyboard, "text/plain", testTextFromChrome, server.URL),
 		preparePasteInAndroid(d, tconn, editTextID),
 		testTextFromChrome,
 	}, {
 		"CopyTextFromAndroidToChrome",
 		prepareCopyInAndroid(d, tconn, writeTextBtnID, editTextID, expectedTextFromAndroid),
-		preparePasteInChrome(browser, conn, tconn, uia, keyboard, "text/plain", server.URL),
+		preparePasteInChrome(conn, tconn, uia, keyboard, "text/plain", server.URL),
 		expectedTextFromAndroid,
 	}, {
 		"CopyHTMLFromChromeToAndroid",
-		prepareCopyInChrome(browser, tconn, uia, keyboard, "text/plain", testHTMLFromChrome, server.URL),
+		prepareCopyInChrome(tconn, uia, keyboard, "text/plain", testHTMLFromChrome, server.URL),
 		preparePasteInAndroid(d, tconn, textViewID),
 		testHTMLFromChrome,
 	}, {
 		"CopyHTMLFromAndroidToChrome",
 		prepareCopyInAndroid(d, tconn, writeHTMLBtnID, textViewID, expectedHTMLFromAndroid),
-		preparePasteInChrome(browser, conn, tconn, uia, keyboard, "text/html", server.URL),
+		preparePasteInChrome(conn, tconn, uia, keyboard, "text/html", server.URL),
 		expectedHTMLFromAndroid,
 	}} {
 		s.Run(ctx, row.name, func(ctx context.Context, s *testing.State) {

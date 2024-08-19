@@ -13,8 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/android/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -27,10 +25,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ImagePaste,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Checks image copy paste app compat CUJ",
-		Contacts:     []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
+		Func:     ImagePaste,
+		Desc:     "Checks image copy paste app compat CUJ",
+		Contacts: []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
 		// ChromeOS > Software > ARC++ > Framework > Chrome Integration
 		BugComponent: "b:537221",
 		SoftwareDeps: []string{"chrome"},
@@ -41,12 +38,6 @@ func init() {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Fixture:           "arcBooted",
-			Val:               browser.TypeAsh,
-		}, {
-			Name:              "lacros_vm",
-			ExtraSoftwareDeps: []string{"android_vm", "lacros"},
-			Fixture:           "lacrosWithArcBooted",
-			Val:               browser.TypeLacros,
 		}},
 	})
 }
@@ -78,14 +69,8 @@ func ImagePaste(ctx context.Context, s *testing.State) {
 		counterID    = pkg + ":id/counter"
 	)
 
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
-	if err != nil {
-		s.Fatal("Failed to open the browser: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
-
 	pageURL := server.URL + "/image_paste.html"
-	conn, err := br.NewConn(ctx, pageURL)
+	conn, err := cr.Browser().NewConn(ctx, pageURL)
 	if err != nil {
 		s.Fatalf("Could not connect to page at %v: %v", pageURL, err)
 	}

@@ -16,10 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
 	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast/core/ctxutil"
@@ -32,7 +29,6 @@ type dragDropTestArgs struct {
 	extensionPrefix string
 	androidSource   bool
 	androidTarget   bool
-	bt              browser.Type
 }
 
 func init() {
@@ -56,17 +52,6 @@ func init() {
 				extensionPrefix: "drag_source_",
 				androidSource:   false,
 				androidTarget:   true,
-				bt:              browser.TypeAsh,
-			},
-		}, {
-			Name:              "chrome_to_android_lacros",
-			ExtraAttr:         []string{"informational"},
-			ExtraSoftwareDeps: []string{"android_container", "lacros"},
-			Val: &dragDropTestArgs{
-				extensionPrefix: "drag_source_",
-				androidSource:   false,
-				androidTarget:   true,
-				bt:              browser.TypeLacros,
 			},
 		}, {
 			Name:              "chrome_to_android_vm",
@@ -76,17 +61,6 @@ func init() {
 				extensionPrefix: "drag_source_",
 				androidSource:   false,
 				androidTarget:   true,
-				bt:              browser.TypeAsh,
-			},
-		}, {
-			Name:              "chrome_to_android_vm_lacros",
-			ExtraAttr:         []string{"informational", "group:hw_agnostic"},
-			ExtraSoftwareDeps: []string{"android_vm", "lacros"},
-			Val: &dragDropTestArgs{
-				extensionPrefix: "drag_source_",
-				androidSource:   false,
-				androidTarget:   true,
-				bt:              browser.TypeLacros,
 			},
 		}, {
 			Name:              "android_to_android",
@@ -95,7 +69,6 @@ func init() {
 			Val: &dragDropTestArgs{
 				androidSource: true,
 				androidTarget: true,
-				bt:            browser.TypeAsh,
 			},
 		}, {
 			Name:              "android_to_android_vm",
@@ -104,7 +77,6 @@ func init() {
 			Val: &dragDropTestArgs{
 				androidSource: true,
 				androidTarget: true,
-				bt:            browser.TypeAsh,
 			},
 		}, {
 			Name:              "android_to_chrome",
@@ -114,17 +86,6 @@ func init() {
 				extensionPrefix: "drag_target_",
 				androidSource:   true,
 				androidTarget:   false,
-				bt:              browser.TypeAsh,
-			},
-		}, {
-			Name:              "android_to_chrome_lacros",
-			ExtraAttr:         []string{"informational"},
-			ExtraSoftwareDeps: []string{"android_container", "lacros"},
-			Val: &dragDropTestArgs{
-				extensionPrefix: "drag_target_",
-				androidSource:   true,
-				androidTarget:   false,
-				bt:              browser.TypeLacros,
 			},
 		}, {
 			Name:              "android_to_chrome_vm",
@@ -134,17 +95,6 @@ func init() {
 				extensionPrefix: "drag_target_",
 				androidSource:   true,
 				androidTarget:   false,
-				bt:              browser.TypeAsh,
-			},
-		}, {
-			Name:              "android_to_chrome_vm_lacros",
-			ExtraAttr:         []string{"informational", "group:hw_agnostic"},
-			ExtraSoftwareDeps: []string{"android_vm", "lacros"},
-			Val: &dragDropTestArgs{
-				extensionPrefix: "drag_target_",
-				androidSource:   true,
-				androidTarget:   false,
-				bt:              browser.TypeLacros,
 			},
 		}},
 	})
@@ -200,23 +150,16 @@ func DragDrop(ctx context.Context, s *testing.State) {
 			s.Fatalf("Failed to compute extension ID for %v: %v", extDir, err)
 		}
 
-		bt := s.Param().(*dragDropTestArgs).bt
-		switch bt {
-		case browser.TypeLacros:
-			chromeOpts = append(chromeOpts, chrome.LacrosUnpackedExtension(extDir))
-		case browser.TypeAsh:
-			chromeOpts = append(chromeOpts, chrome.UnpackedExtension(extDir))
-		}
+		chromeOpts = append(chromeOpts, chrome.UnpackedExtension(extDir))
 	}
 
 	s.Log("Starting browser instance")
 
-	cr, br, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, args.bt, lacrosfixt.NewConfig(), chromeOpts...)
+	cr, err := chrome.New(ctx, chromeOpts...)
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
 	defer cr.Close(cleanupCtx)
-	defer closeBrowser(cleanupCtx)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -300,26 +243,6 @@ func DragDrop(ctx context.Context, s *testing.State) {
 	targetBounds := coords.Rect{Left: 0, Top: 0, Width: w, Height: w}
 
 	if args.androidSource {
-		// Move the browser window to the left in case of lacros as it
-		// opens in the middle of the screen unlike Ash Chrome.
-		if args.bt != browser.TypeAsh {
-			ws, err := ash.GetAllWindows(ctx, tconn)
-			if err != nil {
-				s.Fatal("Failed to get windows: ", err)
-			}
-			// Verify that there are 2 windows in case lacros.
-			if wsCount := len(ws); wsCount != 2 {
-				s.Fatalf("Failed to ensure the correct number of windows, got: %d, want: 2", wsCount)
-			}
-			displayInfo, err := display.GetPrimaryInfo(ctx, tconn)
-			if err != nil {
-				s.Fatal("Failed to get the internal display info: ", err)
-			}
-			if _, _, err := ash.SetWindowBounds(ctx, tconn, ws[0].ID, targetBounds, displayInfo.ID); err != nil {
-				s.Fatal("Failed to set the window bounds: ", err)
-			}
-		}
-
 		sourceAct, err := startActivityWithBounds(ctx, sourceApk, sourcePkg, sourceActName, sourceBounds)
 		if err != nil {
 			s.Fatal("Failed to start an activity with bounds: ", err)
@@ -379,7 +302,7 @@ func DragDrop(ctx context.Context, s *testing.State) {
 	} else {
 		s.Log("Connecting to the extension page")
 		bgURL := "chrome-extension://" + extID + "/window.html"
-		conn, err := br.NewConnForTarget(ctx, chrome.MatchTargetURL(bgURL))
+		conn, err := cr.NewConnForTarget(ctx, chrome.MatchTargetURL(bgURL))
 		if err != nil {
 			s.Fatalf("Could not connect to extension at %v: %v", bgURL, err)
 		}
