@@ -49,9 +49,10 @@ func PTK(ctx context.Context, s *testing.State) {
 		allowedLossCount = 30
 	)
 
-	// Total rekey count less 1, there is a possibility that the last rekey
+	// Total rekey count less 2, there is a possibility that the last rekey
 	// could be missed, if the wpa_monitor stops right before the last rekey.
-	expectedRekeyCount := int(float64(pingCount)*pingInterval/float64(rekeyPeriod)) - 1
+	// Also, Background Scan can delay rekeying for over 8 seconds.
+	expectedRekeyCount := int(float64(pingCount)*pingInterval/float64(rekeyPeriod)) - 2
 	if expectedRekeyCount <= 0 {
 		s.Fatal("Ping duration is too short")
 	}
