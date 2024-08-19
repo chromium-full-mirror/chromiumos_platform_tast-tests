@@ -12,15 +12,7 @@ chromeos {
       test_plan_starlark_files {
         host: "chrome-internal.googlesource.com"
         project: "chromeos/config-internal"
-        path: "test/plans/v2/ctpv1_compatible/templated/tast_categories.star"
-        template_parameters {
-          suite_name: "bvt-tast-cq-cft-biod"
-          tag_criteria {
-            tags: "group:mainline"
-            tag_excludes: "informational"
-            test_names: "tast.biod.*"
-          }
-        }
+        path: "test/plans/v2/ctpv1_compatible/fingerprint_cq.star"
       }
     }
   }
