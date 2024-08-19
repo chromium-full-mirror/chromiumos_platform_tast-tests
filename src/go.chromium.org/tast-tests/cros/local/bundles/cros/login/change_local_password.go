@@ -11,6 +11,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/auth"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/lockscreen"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -93,7 +94,7 @@ func ChangeLocalPassword(ctx context.Context, s *testing.State) {
 		defer faillog.DumpUITreeOnError(cleanupContext, s.OutDir(), s.HasError, tconn)
 
 		// The page is password protected, confirm the old local password.
-		if err := ossettings.ConfirmPassword(ctx, cr, oldPassword); err != nil {
+		if err := auth.ConfirmPassword(ctx, cr, oldPassword); err != nil {
 			s.Fatal("Failed to confirm password: ", err)
 		}
 

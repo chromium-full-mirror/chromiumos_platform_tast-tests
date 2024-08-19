@@ -11,9 +11,9 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/auth"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/checked"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/restriction"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
@@ -82,7 +82,7 @@ func OSSettingsPageWithPassword(ctx context.Context, cr *chrome.Chrome, shortLin
 	}
 	defer conn.Close()
 
-	if err := ossettings.ConfirmPassword(ctx, cr, password); err != nil {
+	if err := auth.ConfirmPassword(ctx, cr, password); err != nil {
 		page.err = errors.Wrap(err, "failed to confirm password")
 		return page
 	}

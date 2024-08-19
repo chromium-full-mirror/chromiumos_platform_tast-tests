@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/login/signinutil"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/auth"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/lockscreen"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
@@ -101,7 +102,7 @@ func CryptohomeRecoveryFromSettings(ctx context.Context, s *testing.State) {
 		}
 		defer settings.Close(ctx)
 
-		if err := ossettings.ConfirmPassword(ctx, cr, creds.Pass); err != nil {
+		if err := auth.ConfirmPassword(ctx, cr, creds.Pass); err != nil {
 			s.Fatal("Failed to confirm password: ", err)
 		}
 

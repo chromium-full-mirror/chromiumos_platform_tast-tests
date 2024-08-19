@@ -9,12 +9,11 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/auth"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/userutil"
-	"go.chromium.org/tast-tests/cros/local/login"
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -63,38 +62,38 @@ func init() {
 		Timeout: 2*chrome.LoginTimeout + userutil.TakingOwnershipTimeout + 2*time.Minute,
 		Params: []testing.Param{{
 			Name: "with_password",
-			Val: openSettingsParam{
-				configuredAuth: setupWithPassword,
-				settingsAuth:   authWithPassword,
-				useAuthPanel:   false,
+			Val: auth.InSessionParam{
+				ConfiguredAuth: auth.SetupWithPassword,
+				InSessionAuth:  auth.AuthWithPassword,
+				UseAuthPanel:   false,
 			},
 		}, {
 			Name: "auth_panel_with_password",
-			Val: openSettingsParam{
-				configuredAuth: setupWithPassword,
-				settingsAuth:   authWithPassword,
-				useAuthPanel:   true,
+			Val: auth.InSessionParam{
+				ConfiguredAuth: auth.SetupWithPassword,
+				InSessionAuth:  auth.AuthWithPassword,
+				UseAuthPanel:   true,
 			},
 		}, {
 			Name: "auth_panel_with_pin",
-			Val: openSettingsParam{
-				configuredAuth: setupWithPasswordAndPin,
-				settingsAuth:   authWithPin,
-				useAuthPanel:   true,
+			Val: auth.InSessionParam{
+				ConfiguredAuth: auth.SetupWithPasswordAndPin,
+				InSessionAuth:  auth.AuthWithPin,
+				UseAuthPanel:   true,
 			},
 		}, {
 			Name: "cancel",
-			Val: openSettingsParam{
-				configuredAuth: setupWithPassword,
-				settingsAuth:   authCancel,
-				useAuthPanel:   false,
+			Val: auth.InSessionParam{
+				ConfiguredAuth: auth.SetupWithPassword,
+				InSessionAuth:  auth.AuthCancel,
+				UseAuthPanel:   false,
 			},
 		}, {
 			Name: "auth_panel_cancel",
-			Val: openSettingsParam{
-				configuredAuth: setupWithPassword,
-				settingsAuth:   authCancel,
-				useAuthPanel:   true,
+			Val: auth.InSessionParam{
+				ConfiguredAuth: auth.SetupWithPassword,
+				InSessionAuth:  auth.AuthCancel,
+				UseAuthPanel:   true,
 			},
 		}},
 	})
@@ -111,9 +110,9 @@ func OpenSettings(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
 	defer cancel()
 	defer userutil.ResetUsers(cleanupContext)
-	params := s.Param().(openSettingsParam)
+	params := s.Param().(auth.InSessionParam)
 
-	cr, err := setupUser(ctx, params, username, password, pin)
+	cr, err := auth.SetupUser(ctx, params, username, password, pin)
 	if err != nil {
 		s.Fatal("Failed to setup user: ", err)
 	}
@@ -133,22 +132,22 @@ func OpenSettings(ctx context.Context, s *testing.State) {
 	defer faillog.DumpUITreeOnError(cleanupContext, s.OutDir(), s.HasError, tconn)
 
 	var expectedPath string
-	switch params.settingsAuth {
-	case authWithPassword:
+	switch params.InSessionAuth {
+	case auth.AuthWithPassword:
 		// The page is authentication protected, confirm that we can access it with a password.
-		if err := ossettings.ConfirmPassword(ctx, cr, password); err != nil {
+		if err := auth.ConfirmPassword(ctx, cr, password); err != nil {
 			s.Fatal("Failed to confirm password: ", err)
 		}
 		expectedPath = "/osPrivacy/lockScreen"
-	case authWithPin:
+	case auth.AuthWithPin:
 		// The page is authentication protected, confirm that we can access it with a PIN.
-		if err := ossettings.ConfirmPin(ctx, cr, pin); err != nil {
+		if err := auth.ConfirmPin(ctx, cr, pin); err != nil {
 			s.Fatal("Failed to confirm pin: ", err)
 		}
 		expectedPath = "/osPrivacy/lockScreen"
-	case authCancel:
+	case auth.AuthCancel:
 		// The page is authentication protected, cancelling should kick us out.
-		if err := ossettings.CancelPassword(ctx, cr); err != nil {
+		if err := auth.CancelPassword(ctx, cr); err != nil {
 			s.Fatal("Failed to cancel: ", err)
 		}
 		expectedPath = "/osPrivacy"
@@ -162,33 +161,6 @@ func OpenSettings(ctx context.Context, s *testing.State) {
 	if settingsPath != expectedPath {
 		s.Fatalf("Did not land on the correct settings path, expected %q, got %q", expectedPath, settingsPath)
 	}
-}
-
-// setupUser configures a new chrome with the provided user credentials
-func setupUser(ctx context.Context, params openSettingsParam, username, password, pin string) (*chrome.Chrome, error) {
-	var authPanelState chrome.Option
-
-	if params.useAuthPanel {
-		authPanelState = chrome.EnableFeatures("UseAuthPanelInSession")
-	} else {
-		authPanelState = chrome.DisableFeatures("UseAuthPanelInSession")
-	}
-	loginOption := chrome.FakeLogin(chrome.Creds{User: username, Pass: ""})
-	chromeArgs := chrome.ExtraArgs("--disable-first-run-ui")
-
-	switch params.configuredAuth {
-	case setupWithPassword:
-		return login.SetupUserWithLocalPassword(ctx, password,
-			authPanelState,
-			loginOption,
-			chromeArgs)
-	case setupWithPasswordAndPin:
-		return login.SetupUserWithLocalPasswordAndPin(ctx, password, pin,
-			authPanelState,
-			loginOption,
-			chromeArgs)
-	}
-	return nil, errors.New("invalid setup type")
 }
 
 // getSettingsPath returns the current path of the OS Settings screen

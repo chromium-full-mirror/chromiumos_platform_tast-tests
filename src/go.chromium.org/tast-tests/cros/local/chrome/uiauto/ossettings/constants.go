@@ -443,15 +443,6 @@ var (
 // MoreActionsButtonNamePrefix is the name prefix of MoreActionsButton.
 const MoreActionsButtonNamePrefix = "More actions for "
 
-// Elements of the settings authentication dialog.
-var (
-	// The Active Session Auth approach widget name.
-	ActiveSessionWidget = nodewith.ClassName("AuthDialogWidget")
-
-	// The dialog node for the older password dialog.
-	PasswordDialogNode = nodewith.Name("Confirm your password").Role(role.Dialog)
-)
-
 // Elements in "Hotspot" subpage.
 var (
 	// HotspotHeading is the finder for the heading of the Hotspot page.

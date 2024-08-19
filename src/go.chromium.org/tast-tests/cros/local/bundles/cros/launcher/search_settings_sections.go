@@ -11,10 +11,10 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/auth"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/ctxutil"
@@ -206,7 +206,7 @@ func SearchSettingsSections(ctx context.Context, s *testing.State) {
 			}
 
 			if tc.passwordProtected {
-				if err := ossettings.ConfirmPassword(ctx, cr, deviceUserPassword); err != nil {
+				if err := auth.ConfirmPassword(ctx, cr, deviceUserPassword); err != nil {
 					s.Fatal("Failed to enter password: ", err)
 				}
 			}
