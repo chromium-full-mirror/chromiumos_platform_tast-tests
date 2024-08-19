@@ -48,19 +48,21 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{
 			{
-				Name:      "normal",
-				Fixture:   fixture.NormalMode,
-				ExtraAttr: []string{"firmware_unstable"},
-				Timeout:   2 * time.Hour,
+				Name:              "normal",
+				Fixture:           fixture.NormalMode,
+				ExtraAttr:         []string{"firmware_bios", "firmware_level2", "firmware_ro"},
+				ExtraRequirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01"},
+				Timeout:           2 * time.Hour,
 				Val: recCacheBootKeysParam{
 					bootMode: common.BootModeNormal,
 					numIters: 1,
 				},
 			}, {
-				Name:      "dev",
-				Fixture:   fixture.DevModeGBB,
-				ExtraAttr: []string{"firmware_unstable"},
-				Timeout:   2 * time.Hour,
+				Name:              "dev",
+				Fixture:           fixture.DevModeGBB,
+				ExtraAttr:         []string{"firmware_bios", "firmware_level2", "firmware_ro"},
+				ExtraRequirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01"},
+				Timeout:           2 * time.Hour,
 				Val: recCacheBootKeysParam{
 					bootMode: common.BootModeDev,
 					numIters: 1,
