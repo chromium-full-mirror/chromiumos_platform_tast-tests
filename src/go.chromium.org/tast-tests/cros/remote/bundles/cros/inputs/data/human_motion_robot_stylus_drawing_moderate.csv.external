@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/human-motion-robot/reference_images/human_motion_robot_stylus_drawing_moderate_20240822.csv",
+  "size": 58468,
+  "sha256sum": "3a4553d49266aaaea57876d317ab8b201c01cd56ea8c051b5b4b3084b22968f9"
+}

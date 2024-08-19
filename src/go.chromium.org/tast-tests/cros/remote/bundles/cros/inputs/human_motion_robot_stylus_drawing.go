@@ -23,8 +23,9 @@ import (
 )
 
 const (
-	simpleReferenceFileName = "human_motion_robot_stylus_drawing_simple"
-	calibrationFileName     = "calibration_file.json"
+	simpleReferenceFileName   = "human_motion_robot_stylus_drawing_simple"
+	moderateReferenceFileName = "human_motion_robot_stylus_drawing_moderate"
+	calibrationFileName       = "calibration_file.json"
 )
 
 // referenceFileData contains data associated with the input csv file used to generate the motions for a particular test.
@@ -51,6 +52,10 @@ func init() {
 			Name:      "simple",
 			Val:       referenceFileData{filename: simpleReferenceFileName, date: "20240620"},
 			ExtraData: []string{simpleReferenceFileName + ".csv"},
+		}, {
+			Name:      "moderate",
+			Val:       referenceFileData{filename: moderateReferenceFileName, date: "20240822"},
+			ExtraData: []string{moderateReferenceFileName + ".csv"},
 		}},
 	})
 }
