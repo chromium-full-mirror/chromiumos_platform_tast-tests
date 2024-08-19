@@ -56,8 +56,6 @@ func init() {
 				CheckRoutinePassed: false,
 				CheckRoutineV2:     true,
 			},
-			// TODO(b/280388091): Promote tast to critical
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
 			Name: "v2_passed",
 			Val: sensitiveSensorRoutineTestParams{
