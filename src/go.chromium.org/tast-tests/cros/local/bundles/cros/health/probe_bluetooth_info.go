@@ -11,6 +11,7 @@ import (
 	"github.com/godbus/dbus/v5"
 	"github.com/google/go-cmp/cmp"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/bluetooth/bluez"
 	"go.chromium.org/tast-tests/cros/local/croshealthd"
@@ -83,7 +84,8 @@ func init() {
 			},
 			Fixture: "crosHealthdRunningAndBluetoothEnabledWithBlueZ",
 			// TODO(b/303370425): Promote tast to critical
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			ExtraAttr:        []string{"informational", "group:criticalstaging"},
+			ExtraTestBedDeps: []string{tbdep.BluetoothStateNormal},
 		}, {
 			Name: "floss",
 			Val: bluetoothInfoTestParams{
@@ -91,7 +93,8 @@ func init() {
 			},
 			Fixture: "crosHealthdRunningAndBluetoothEnabledWithFloss",
 			// TODO(b/303370425): Promote tast to critical
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			ExtraAttr:        []string{"informational", "group:criticalstaging"},
+			ExtraTestBedDeps: []string{tbdep.BluetoothStateNormal},
 		}},
 	})
 }

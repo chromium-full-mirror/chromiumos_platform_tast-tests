@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/bluetooth/floss"
 	"go.chromium.org/tast/core/errors"
@@ -29,6 +30,7 @@ func init() {
 		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		SoftwareDeps: []string{"diagnostics"},
 		Fixture:      "crosHealthdRunningAndBluetoothEnabledWithFloss",
+		TestBedDeps:  []string{tbdep.BluetoothStateNormal},
 	})
 }
 

@@ -9,6 +9,7 @@ package health
 import (
 	"context"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/local/croshealthd"
 	"go.chromium.org/tast/core/testing"
 )
@@ -59,7 +60,8 @@ func init() {
 			// Bluetooth v2 routines are only supported when Floss is enabled.
 			Fixture: "crosHealthdRunningAndBluetoothEnabledWithFloss",
 			// TODO(b/303370425): Promote tast to critical
-			ExtraAttr: []string{"informational"},
+			ExtraAttr:        []string{"informational", "group:criticalstaging"},
+			ExtraTestBedDeps: []string{tbdep.BluetoothStateNormal},
 		}, {
 			// Contact: byronlee@google.com
 			Name: "bluetooth_discovery",
@@ -67,7 +69,8 @@ func init() {
 			// Bluetooth v2 routines are only supported when Floss is enabled.
 			Fixture: "crosHealthdRunningAndBluetoothEnabledWithFloss",
 			// TODO(b/303370425): Promote tast to critical
-			ExtraAttr: []string{"informational"},
+			ExtraAttr:        []string{"informational", "group:criticalstaging"},
+			ExtraTestBedDeps: []string{tbdep.BluetoothStateNormal},
 		}, {
 			// Contact: byronlee@google.com
 			Name: "bluetooth_scanning",
@@ -75,7 +78,8 @@ func init() {
 			// Bluetooth v2 routines are only supported when Floss is enabled.
 			Fixture: "crosHealthdRunningAndBluetoothEnabledWithFloss",
 			// TODO(b/303370425): Promote tast to critical
-			ExtraAttr: []string{"informational"},
+			ExtraAttr:        []string{"informational", "group:criticalstaging"},
+			ExtraTestBedDeps: []string{tbdep.BluetoothStateNormal},
 		}}})
 }
 
