@@ -299,6 +299,11 @@ func New(ctx context.Context, opts ...Option) (c *Chrome, retErr error) {
 	// invalid gaia IDs.
 	opts = append(opts, ExtraArgs("--disable-birch-weather-api-for-testing"))
 
+	// To use AutoTestPrivateApis that leverage test-only APIs exposed
+	// by Viz, this feature must be explicitly enabled. Currently,
+	// FrameSink and overdraw metric collection rely on such APIs.
+	opts = append(opts, EnableFeatures("EnableVizTestApis"))
+
 	cfg, err := config.NewConfig(opts)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to process options")
