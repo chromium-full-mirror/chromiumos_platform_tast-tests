@@ -147,18 +147,6 @@ func DisableHWWP(ctx context.Context, s *testing.State) {
 	}
 	// Restart will dispose resources, so don't dispose resources explicitly.
 
-	if firmwareUpdateOption == rmaweb.FirmwareUpdateOptionSkip {
-		if err := uiHelper.BypassFirmwareInstallation(ctx); err != nil {
-			s.Fatal("Fail to update state file to bypass firmware install: ", err)
-		}
-	}
-
-	uiHelper, err = rmaweb.NewUIHelper(ctx, dut, firmwareHelper, s.RPCHint(), key, true)
-	if err != nil {
-		s.Fatal("Fail to initialize RMA Helper: ", err)
-	}
-	// Restart will dispose resources, so don't dispose resources explicitly.
-
 	if actions := generateActionCombinedToDisableWP(wpOption, enroll, destination, uiHelper); actions == nil {
 		// We don't support this test case yet.
 		s.Fatalf("The test case is not support yet. Enroll: %t, WP: %s, destination: %s ", enroll, wpOption, destination)
@@ -172,6 +160,18 @@ func DisableHWWP(ctx context.Context, s *testing.State) {
 	// TODO(chenghan): Replace testing.Sleep with testing.Poll.
 	if err := testing.Sleep(ctx, rmaweb.WaitForRebootStart); err != nil {
 		s.Error("Fail to sleep: ", err)
+	}
+
+	uiHelper, err = rmaweb.NewUIHelper(ctx, dut, firmwareHelper, s.RPCHint(), key, true)
+	if err != nil {
+		s.Fatal("Fail to initialize RMA Helper: ", err)
+	}
+	// Restart will dispose resources, so don't dispose resources explicitly.
+
+	if firmwareUpdateOption == rmaweb.FirmwareUpdateOptionSkip {
+		if err := uiHelper.BypassFirmwareInstallation(ctx); err != nil {
+			s.Fatal("Fail to update state file to bypass firmware install: ", err)
+		}
 	}
 
 	uiHelper, err = rmaweb.NewUIHelper(ctx, dut, firmwareHelper, s.RPCHint(), key, true)
