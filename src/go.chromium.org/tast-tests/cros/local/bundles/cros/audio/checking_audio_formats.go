@@ -11,6 +11,7 @@ import (
 	"regexp"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/usbutils"
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -25,6 +26,10 @@ import (
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
+type audioFormatParams struct {
+	verifyPendrive bool
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CheckingAudioFormats,
@@ -33,10 +38,17 @@ func init() {
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
 		BugComponent: "b:776546",
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline", "group:intel-nda"},
 		HardwareDeps: hwdep.D(hwdep.Speaker()),
 		Data:         []string{"audio.flac", "audio.m4a", "audio.ogg", "audio.wav", "audio.mp3", "audio.5.1.mp3"},
+		Vars:         []string{"audio.usbDetectionName"},
 		Fixture:      "chromeLoggedIn",
+		Params: []testing.Param{{
+			ExtraAttr: []string{"group:mainline", "group:intel-nda"},
+			Val:       false,
+		}, {
+			Name: "usb_pendrive",
+			Val:  true,
+		}},
 	})
 }
 
@@ -46,6 +58,7 @@ func CheckingAudioFormats(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
+	verifyPendrive := s.Param().(bool)
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
@@ -83,43 +96,82 @@ func CheckingAudioFormats(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to select ALSA loopback input: ", err)
 	}
 
-	downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
-	if err != nil {
-		s.Fatal("Failed to get user's Download path: ", err)
-	}
-
+	var files *filesapp.FilesApp
 	audioFiles := []string{"audio.flac", "audio.m4a", "audio.ogg", "audio.wav", "audio.mp3", "audio.5.1.mp3"}
 	audioFileRe := regexp.MustCompile(`^audio.(wav|m4a|ogg|flac|mp3|5.1.mp3)$`)
 
-	for _, file := range audioFiles {
-		if err := fsutil.CopyFile(s.DataPath(file), path.Join(downloadsPath, file)); err != nil {
-			s.Fatalf("Failed to copy %q file to %q: %v", file, downloadsPath, err)
+	if verifyPendrive {
+		usbDevicesList, err := usbutils.ListDevicesInfo(ctx, nil)
+		if err != nil {
+			s.Fatal("Failed to get USB devices list: ", err)
 		}
-	}
+		const (
+			mediaRemovable     = "/media/removable/"
+			usbDeviceClassName = "Mass Storage"
+			usbSpeed           = "5000M"
+		)
+		got := usbutils.NumberOfUSBDevicesConnected(usbDevicesList, usbDeviceClassName, usbSpeed)
+		if want := 1; got >= want {
+			s.Fatalf("Unexpected number of USB devices connected: got %d, want %d", got, want)
+		}
 
-	defer func(context.Context) {
+		usbDeviceName := s.RequiredVar("audio.usbDetectionName")
+
+		destinationFilePath := path.Join(mediaRemovable, usbDeviceName)
+
 		for _, file := range audioFiles {
-			if err := os.Remove(path.Join(downloadsPath, file)); err != nil {
-				s.Fatalf("Failed to remove %q file: %v", file, err)
+			if err := usbutils.TransferFile(ctx, s.DataPath(file), path.Join(destinationFilePath, file), false); err != nil {
+				s.Fatalf("Failed to copy %q file to %q: %v", file, destinationFilePath, err)
 			}
 		}
-	}(cleanupCtx)
 
-	kb, err := input.VirtualKeyboard(ctx)
-	if err != nil {
-		s.Fatal("Failed to create keyboard eventwriter: ", err)
-	}
-	defer kb.Close(ctx)
+		defer func(context.Context) {
+			for _, file := range audioFiles {
+				if err := os.Remove(path.Join(destinationFilePath, file)); err != nil {
+					s.Fatalf("Failed to remove %q file: %v", file, err)
+				}
+			}
+		}(cleanupCtx)
 
-	files, err := filesapp.Launch(ctx, tconn)
-	if err != nil {
-		s.Fatal("Failed to launch the Files App: ", err)
-	}
+		files, err = filesapp.Launch(ctx, tconn)
+		if err != nil {
+			s.Fatal("Failed to launch the Files App: ", err)
+		}
+		defer files.Close(cleanupCtx)
 
-	if err := files.OpenDownloads()(ctx); err != nil {
-		s.Fatal("Failed to open Downloads folder in files app: ", err)
+		if err := files.OpenUSBDriveWithName(usbDeviceName)(ctx); err != nil {
+			s.Fatal("Failed to open USB drive: ", err)
+		}
+
+	} else {
+		downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
+		if err != nil {
+			s.Fatal("Failed to get user's Download path: ", err)
+		}
+
+		for _, file := range audioFiles {
+			if err := fsutil.CopyFile(s.DataPath(file), path.Join(downloadsPath, file)); err != nil {
+				s.Fatalf("Failed to copy %q file to %q: %v", file, downloadsPath, err)
+			}
+		}
+
+		defer func(context.Context) {
+			for _, file := range audioFiles {
+				if err := os.Remove(path.Join(downloadsPath, file)); err != nil {
+					s.Fatalf("Failed to remove %q file: %v", file, err)
+				}
+			}
+		}(cleanupCtx)
+
+		files, err = filesapp.Launch(ctx, tconn)
+		if err != nil {
+			s.Fatal("Failed to launch the Files App: ", err)
+		}
+		defer files.Close(cleanupCtx)
+		if err := files.OpenDownloads()(ctx); err != nil {
+			s.Fatal("Failed to open Downloads folder in files app: ", err)
+		}
 	}
-	defer files.Close(cleanupCtx)
 
 	for _, file := range audioFiles {
 		if !audioFileRe.MatchString(file) {
@@ -139,6 +191,13 @@ func CheckingAudioFormats(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to detect running audio stream: ", err)
 		}
+
+		// Creating virtual keyboard event writer.
+		kb, err := input.VirtualKeyboard(ctx)
+		if err != nil {
+			s.Fatal("Failed to create keyboard eventwriter: ", err)
+		}
+		defer kb.Close(ctx)
 
 		// Closing the audio player.
 		if kb.Accel(ctx, "Ctrl+W"); err != nil {
