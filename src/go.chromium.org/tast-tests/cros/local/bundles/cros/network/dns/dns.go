@@ -637,9 +637,9 @@ func NewEnv(ctx context.Context, pool *subnet.Pool) (env *Env, err error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create manager proxy")
 	}
-	testing.ContextLog(ctx, "Disabling portal detection on ethernet")
-	if err := e.manager.SetProperty(ctx, shillconst.ProfilePropertyCheckPortalList, "wifi,cellular"); err != nil {
-		return nil, errors.Wrap(err, "failed to disable portal detection on ethernet")
+	testing.ContextLog(ctx, "Disabling portal detection")
+	if err := e.manager.SetProperty(ctx, shillconst.ProfilePropertyCheckPortalList, ""); err != nil {
+		return nil, errors.Wrap(err, "failed to disable portal detection")
 	}
 	testing.ContextLog(ctx, "Resetting ethernet properties")
 	if err := virtualnet.ResetEthernetProperties(ctx, e.manager); err != nil {
