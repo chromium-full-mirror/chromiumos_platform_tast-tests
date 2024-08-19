@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/local/bluetooth"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -31,6 +32,7 @@ func init() {
 		Attr:         []string{"group:bluetooth", "bluetooth_floss"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "bluetoothEnabledWithFloss",
+		TestBedDeps:  []string{tbdep.BluetoothStateNormal},
 	})
 }
 

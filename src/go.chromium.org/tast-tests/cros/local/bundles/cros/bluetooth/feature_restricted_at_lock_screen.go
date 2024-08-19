@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/lockscreen"
@@ -33,6 +34,7 @@ func init() {
 		BugComponent: "b:1131776",
 		Attr:         []string{"group:bluetooth"},
 		SoftwareDeps: []string{"chrome"},
+		TestBedDeps:  []string{tbdep.BluetoothStateNormal},
 		Params: []testing.Param{{
 			Name:      "floss_disabled",
 			Fixture:   "bluetoothEnabledWithBlueZ",

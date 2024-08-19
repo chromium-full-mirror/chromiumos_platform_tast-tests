@@ -7,6 +7,7 @@ package bluetooth
 import (
 	"context"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/local/bluetooth"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -31,6 +32,7 @@ func init() {
 		BugComponent: "b:1131776", // ChromeOS > Software > System Services > Connectivity > Bluetooth
 		Attr:         []string{"group:bluetooth"},
 		SoftwareDeps: []string{"chrome"},
+		TestBedDeps:  []string{tbdep.BluetoothStateNormal},
 		Params: []testing.Param{{
 			Name:      "floss_disabled",
 			Fixture:   "bluetoothEnabledWithBlueZ",
