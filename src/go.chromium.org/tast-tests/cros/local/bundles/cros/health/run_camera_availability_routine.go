@@ -27,9 +27,8 @@ func init() {
 		BugComponent: "b:982097", // ChromeOS > Platform > Enablement > Health
 		SoftwareDeps: []string{"diagnostics"},
 		HardwareDeps: hwdep.D(hwdep.CameraEnumerated()),
-		// TODO(b/315739688): Promote to critical.
-		Attr:    []string{"group:mainline", "informational", "group:criticalstaging"},
-		Fixture: "crosHealthdRunning",
+		Attr:         []string{"group:mainline"},
+		Fixture:      "crosHealthdRunning",
 	})
 }
 
