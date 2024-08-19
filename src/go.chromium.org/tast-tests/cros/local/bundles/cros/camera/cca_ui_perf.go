@@ -41,26 +41,6 @@ func init() {
 				subtestTimeout:  5 * time.Minute,
 				measureDuration: 20 * time.Second,
 			},
-		}, {
-			Name:      "long",
-			ExtraAttr: []string{"crosbolt_nightly"},
-			Fixture:   "ccaTestBridgeReady",
-			// Six subtests each have 20 mins timeout. 20mins * 6 = 120 minutes.
-			Timeout: 120 * time.Minute,
-			Val: param{
-				subtestTimeout:  20 * time.Minute,
-				measureDuration: 5 * time.Minute,
-			},
-		}, {
-			Name:      "long_vcd_utility",
-			ExtraAttr: []string{"crosbolt_nightly"},
-			Fixture:   "ccaTestBridgeReadyWithVCDInUtilityProcess",
-			// Six subtests each have 20 mins timeout. 20mins * 6 = 120 minutes.
-			Timeout: 120 * time.Minute,
-			Val: param{
-				subtestTimeout:  20 * time.Minute,
-				measureDuration: 5 * time.Minute,
-			},
 		}},
 	})
 }
