@@ -349,9 +349,8 @@ func performGAIAEnrollmentSignIn(ctx context.Context, oobeConn *driver.Conn, cfg
 		const attributeScreenShownJS = "OobeAPI.screens.EnterpriseEnrollmentScreen.attributeStep.isReadyForTesting()"
 		const attributeOrSuccessScreenShownJS = successScreenShownJS + "||" + attributeScreenShownJS
 
-		// In case we end up on the attribute screen, skip it. We wait thrice the usual amount since we have seen cases
-		// where attribute screen only appears after 60 seconds. See b/335385437 for more details.
-		if err := oobeConn.WaitForExprFailOnErrWithTimeout(ctx, attributeOrSuccessScreenShownJS, 3*oobeScreenWaitingTime); err == nil {
+		// In case we end up on the attribute screen, skip it.
+		if err := oobeConn.WaitForExprFailOnErrWithTimeout(ctx, attributeOrSuccessScreenShownJS, oobeScreenWaitingTime); err == nil {
 			var onAttributeScreen bool
 			if err := oobeConn.Eval(ctx, attributeScreenShownJS, &onAttributeScreen); err != nil {
 				return testing.PollBreak(errors.Wrap(err, "failed to check if on success screen"))
