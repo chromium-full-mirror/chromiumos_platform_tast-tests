@@ -35,7 +35,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test setting Google Photos wallpapers in the wallpaper app",
 		Contacts: []string{
-			"cros-personalization@google.com",
+			"cros-p13n-eng@google.com",
 			"chromeos-consumer-engprod@google.com",
 		},
 		// ChromeOS > Software > Personalization

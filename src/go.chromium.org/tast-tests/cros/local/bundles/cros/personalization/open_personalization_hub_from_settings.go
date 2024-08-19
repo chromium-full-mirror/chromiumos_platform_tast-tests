@@ -26,7 +26,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test opening personalization hub app from Settings app",
 		Contacts: []string{
-			"cros-personalization@google.com",
+			"cros-p13n-eng@google.com",
 			"chromeos-consumer-engprod@google.com",
 		},
 		// ChromeOS > Software > Personalization
