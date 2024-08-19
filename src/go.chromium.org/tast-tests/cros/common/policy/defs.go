@@ -21841,6 +21841,7 @@ type OnFileTransferEnterpriseConnectorValue struct {
 	BlockPasswordProtected   bool                                                    `json:"block_password_protected"`
 	BlockUntilVerdict        int                                                     `json:"block_until_verdict"`
 	CustomMessages           []*OnFileTransferEnterpriseConnectorValueCustomMessages `json:"custom_messages,omitempty"`
+	DefaultAction            string                                                  `json:"default_action"`
 	Disable                  []*Reffile_transfer_enable_disable_schema               `json:"disable,omitempty"`
 	Enable                   []*OnFileTransferEnterpriseConnectorValueEnable         `json:"enable,omitempty"`
 	RequireJustificationTags []string                                                `json:"require_justification_tags,omitempty"`
@@ -28364,6 +28365,7 @@ func (p *KioskVisionTelemetryEnabled) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1263. GenAIWallpaperSettings
 // This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type GenAIWallpaperSettings struct {
 	Stat Status
@@ -28395,6 +28397,7 @@ func (p *GenAIWallpaperSettings) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1264. GenAIVcBackgroundSettings
 // This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type GenAIVcBackgroundSettings struct {
 	Stat Status
@@ -29003,6 +29006,38 @@ func (p *StandardizedBrowserZoomEnabled) Equal(iface interface{}) bool {
 }
 
 // ****************************************************************************
+// 1287. ReportingEndpoints
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type ReportingEndpoints struct {
+	Stat Status
+	Val  map[string]string
+}
+
+func (p *ReportingEndpoints) Name() string          { return "ReportingEndpoints" }
+func (p *ReportingEndpoints) Scope() Scope          { return ScopeUser }
+func (p *ReportingEndpoints) Status() Status        { return p.Stat }
+func (p *ReportingEndpoints) UntypedV() interface{} { return p.Val }
+func (p *ReportingEndpoints) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v map[string]string
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as map[string]string", m)
+	}
+	return v, nil
+}
+func (p *ReportingEndpoints) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *ReportingEndpoints) Equal(iface interface{}) bool {
+	v, ok := iface.(map[string]string)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
 // 1289. ShowGeminiIntroScreenEnabled
 // This policy has a default value of False.
 // ****************************************************************************
@@ -29059,6 +29094,120 @@ func (p *DeviceRestrictionSchedule) SetProto(m *protoreflect.Message) {
 }
 func (p *DeviceRestrictionSchedule) Equal(iface interface{}) bool {
 	v, ok := iface.([]*RefWeeklyTimeIntervalChecked)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1291. TabCompareSettings
+// This policy has a default value of 2.
+// This policy can be modified without rebooting.
+// ****************************************************************************
+type TabCompareSettings struct {
+	Stat Status
+	Val  int
+}
+
+func (p *TabCompareSettings) Name() string          { return "TabCompareSettings" }
+func (p *TabCompareSettings) Scope() Scope          { return ScopeUser }
+func (p *TabCompareSettings) Status() Status        { return p.Stat }
+func (p *TabCompareSettings) UntypedV() interface{} { return p.Val }
+func (p *TabCompareSettings) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v int
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as int", m)
+	}
+	return v, nil
+}
+func (p *TabCompareSettings) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *TabCompareSettings) Equal(iface interface{}) bool {
+	v, ok := iface.(int)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1293. KioskWebAppOfflineEnabled
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type KioskWebAppOfflineEnabled struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *KioskWebAppOfflineEnabled) Name() string          { return "KioskWebAppOfflineEnabled" }
+func (p *KioskWebAppOfflineEnabled) Scope() Scope          { return ScopeUser }
+func (p *KioskWebAppOfflineEnabled) Status() Status        { return p.Stat }
+func (p *KioskWebAppOfflineEnabled) UntypedV() interface{} { return p.Val }
+func (p *KioskWebAppOfflineEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *KioskWebAppOfflineEnabled) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *KioskWebAppOfflineEnabled) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1294. GraduationEnablementStatus
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type GraduationEnablementStatus struct {
+	Stat Status
+	Val  *GraduationEnablementStatusValue
+}
+
+type GraduationEnablementStatusValue struct {
+	EndDate   *GraduationEnablementStatusValueEndDate   `json:"end_date"`
+	IsEnabled bool                                      `json:"is_enabled"`
+	StartDate *GraduationEnablementStatusValueStartDate `json:"start_date"`
+}
+
+type GraduationEnablementStatusValueEndDate struct {
+	Day   int `json:"day"`
+	Month int `json:"month"`
+	Year  int `json:"year"`
+}
+
+type GraduationEnablementStatusValueStartDate struct {
+	Day   int `json:"day"`
+	Month int `json:"month"`
+	Year  int `json:"year"`
+}
+
+func (p *GraduationEnablementStatus) Name() string          { return "GraduationEnablementStatus" }
+func (p *GraduationEnablementStatus) Scope() Scope          { return ScopeUser }
+func (p *GraduationEnablementStatus) Status() Status        { return p.Stat }
+func (p *GraduationEnablementStatus) UntypedV() interface{} { return p.Val }
+func (p *GraduationEnablementStatus) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v *GraduationEnablementStatusValue
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as *GraduationEnablementStatusValue", m)
+	}
+	return v, nil
+}
+func (p *GraduationEnablementStatus) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *GraduationEnablementStatus) Equal(iface interface{}) bool {
+	v, ok := iface.(*GraduationEnablementStatusValue)
 	if !ok {
 		return ok
 	}
@@ -30850,10 +30999,18 @@ func newByName(name string) (Policy, error) {
 		return &SystemShortcutBehavior{}, nil
 	case "StandardizedBrowserZoomEnabled":
 		return &StandardizedBrowserZoomEnabled{}, nil
+	case "ReportingEndpoints":
+		return &ReportingEndpoints{}, nil
 	case "ShowGeminiIntroScreenEnabled":
 		return &ShowGeminiIntroScreenEnabled{}, nil
 	case "DeviceRestrictionSchedule":
 		return &DeviceRestrictionSchedule{}, nil
+	case "TabCompareSettings":
+		return &TabCompareSettings{}, nil
+	case "KioskWebAppOfflineEnabled":
+		return &KioskWebAppOfflineEnabled{}, nil
+	case "GraduationEnablementStatus":
+		return &GraduationEnablementStatus{}, nil
 	default:
 		return nil, errors.New("Unknown policy " + name)
 	}
