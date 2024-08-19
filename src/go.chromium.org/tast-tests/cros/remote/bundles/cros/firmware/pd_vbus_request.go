@@ -277,6 +277,19 @@ func PDVbusRequest(ctx context.Context, s *testing.State) {
 		s.Error("Charger doesn't support 3 different voltages. Please try a different (i.e. 65w or greater) charger")
 	}
 
+	// Set dps disable
+	if err := h.Servo.RunECCommand(ctx, "dps dis"); err != nil {
+		s.Log("Servo console command dps disable failed: ", err)
+	}
+
+	defer func() {
+		//Set dps enable
+		err := h.Servo.RunECCommand(ctx, "dps en")
+		if err != nil {
+			s.Log("Servo console command dps enable failed: ", err)
+		}
+	}()
+
 	s.Log("Start of PDTester initiated tests")
 
 	for voltage := range chargingVoltages {
