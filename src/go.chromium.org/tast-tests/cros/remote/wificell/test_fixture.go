@@ -840,20 +840,13 @@ func (tf *TestFixture) rebootRouter(ctx context.Context, rd *routerData) error {
 
 	// Reconnect to router and create a new router controller.
 	testing.ContextLogf(ctx, "Reconnecting to %s", routerMsgName)
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		routerHost, err := tf.connectCompanion(ctx, rd.target, true)
-		if err != nil {
-			return errors.Wrapf(err, "failed to reconnect to %s after reboot", routerMsgName)
-		}
-		rd.host = routerHost
-		return nil
-	}, &testing.PollOptions{
-		Interval: 1 * time.Second,
-		Timeout:  90 * time.Second,
-	}); err != nil {
-		return err
+	start := time.Now()
+	routerHost, err := tf.connectCompanion(ctx, rd.target, true)
+	if err != nil {
+		return errors.Wrapf(err, "failed to reconnect to %s after reboot", routerMsgName)
 	}
-	testing.ContextLogf(ctx, "Reconnected to %s", routerMsgName)
+	rd.host = routerHost
+	testing.ContextLogf(ctx, "Reconnected to %s after %s", routerMsgName, time.Since(start))
 
 	testing.ContextLogf(ctx, "Reinitializing %s", routerMsgName)
 	routerObject, err := tf.newRouter(ctx, ctx, rd.host, routerName)
