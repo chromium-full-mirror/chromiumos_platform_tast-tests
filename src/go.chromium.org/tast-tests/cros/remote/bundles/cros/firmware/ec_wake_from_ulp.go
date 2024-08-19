@@ -68,6 +68,7 @@ func init() {
 				"dojo",
 				"tomato",
 				// Dedede
+				"awasuki",
 				"beetley",
 				"blipper",
 				"drawcia",
