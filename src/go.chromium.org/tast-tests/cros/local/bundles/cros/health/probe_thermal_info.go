@@ -48,12 +48,18 @@ func init() {
 			"yycheng@google.com",
 		},
 		BugComponent: "b:982097", // ChromeOS > Platform > Enablement > Health
-		// TODO(b/317147710): Promote to critical.
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"diagnostics"},
 		Fixture:      "crosHealthdRunning",
-		// TODO(b/336951497): Resume testing on primus if the bug is solved and FW uprevved.
-		HardwareDeps: hwdep.D(hwdep.SkipOnModel("primus")),
+		Params: []testing.Param{{
+			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("primus", "boten", "robo", "lava", "xivu")),
+		}, {
+			Name: "unstable",
+			// TODO(b/336951497): Fix and uprev EC on primus.
+			// TODO(b/360771683): Track flakiness of remaining models.
+			ExtraHardwareDeps: hwdep.D(hwdep.Model("primus", "boten", "robo", "lava", "xivu")),
+			ExtraAttr:         []string{"informational"},
+		}},
 	})
 }
 
