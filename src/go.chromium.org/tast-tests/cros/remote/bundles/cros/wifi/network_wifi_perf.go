@@ -323,7 +323,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
 			},
 			{
-				// Network: open EHT20 802.11be.
+				// Network: WPA3-SAE ("pure") EHT20 802.11be on legacy band.
 				Name: "eht20",
 				Val: []networkWifiPerfTestCase{{
 					apOpts: []ap.Option{
@@ -350,7 +350,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211be()),
 			},
 			{
-				// Network: open EHT40 802.11be.
+				// Network: WPA3-SAE ("pure") EHT40 802.11be on legacy band.
 				Name: "eht40",
 				Val: []networkWifiPerfTestCase{{
 					apOpts: []ap.Option{
@@ -377,7 +377,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211be()),
 			},
 			{
-				// Network: open "pure" EHT80 802.11be.
+				// Network: WPA3-SAE ("pure") EHT80 802.11be on legacy band.
 				Name: "eht80_pure",
 				Val: []networkWifiPerfTestCase{{
 					apOpts: []ap.Option{
@@ -406,7 +406,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211be()),
 			},
 			{
-				// Network: open "mixed" EHT80 802.11be.
+				// Network: WPA3-SAE ("mixed") EHT80 802.11be on legacy band.
 				Name: "eht80_mixed",
 				Val: []networkWifiPerfTestCase{{
 					apOpts: []ap.Option{
@@ -423,6 +423,96 @@ func init() {
 						ap.VHTCaps(ap.VHTCapSGI80), ap.VHTCenterChannel(155), ap.VHTChWidth(ap.VHTChWidth80),
 						ap.EHTCenterChannel(155), ap.EHTChWidth(ap.EHTChWidth80), ap.PMF(ap.PMFRequired),
 					},
+					secConfFac: wpa.NewConfigFactory("chromeos",
+						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+					powerSave: true, shouldTputRequired: false,
+				}},
+				// TODO(b/323903848): Promote test to stable by removing wificell_unstable attribute.
+				ExtraAttr:         []string{"wificell_unstable"},
+				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_BE),
+				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211be()),
+			},
+			{
+				// Network: WPA3-SAE ("pure") EHT160 802.11be on 6GHz band.
+				Name: "eht160_pure_6ghz",
+				Val: []networkWifiPerfTestCase{{
+					apOpts: []ap.Option{ap.Mode(ap.Mode80211bePure), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
+						ap.VHTCaps(ap.VHTCapSGI160), ap.EHTCenterChannel(15), ap.EHTChWidth(ap.EHTChWidth160),
+						ap.Is6GHz(), ap.PMF(ap.PMFRequired)},
+					secConfFac: wpa.NewConfigFactory("chromeos",
+						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+					powerSave: false, shouldTputRequired: false,
+				}, {
+					apOpts: []ap.Option{ap.Mode(ap.Mode80211bePure), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
+						ap.VHTCaps(ap.VHTCapSGI160), ap.EHTCenterChannel(15), ap.EHTChWidth(ap.EHTChWidth160),
+						ap.Is6GHz(), ap.PMF(ap.PMFRequired)},
+					secConfFac: wpa.NewConfigFactory("chromeos",
+						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+					powerSave: true, shouldTputRequired: false,
+				}},
+				// TODO(b/323903848): Promote test to stable by removing wificell_unstable attribute.
+				ExtraAttr:         []string{"wificell_unstable"},
+				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_BE),
+				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211be()),
+			},
+			{
+				// Network: WPA3-SAE ("mixed") EHT160 802.11be on 6GHz band.
+				Name: "eht160_mixed_6ghz",
+				Val: []networkWifiPerfTestCase{{
+					apOpts: []ap.Option{ap.Mode(ap.Mode80211beMixed), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
+						ap.VHTCaps(ap.VHTCapSGI160), ap.EHTCenterChannel(15), ap.EHTChWidth(ap.EHTChWidth160),
+						ap.Is6GHz(), ap.PMF(ap.PMFRequired)},
+					secConfFac: wpa.NewConfigFactory("chromeos",
+						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+					powerSave: false, shouldTputRequired: false,
+				}, {
+					apOpts: []ap.Option{ap.Mode(ap.Mode80211beMixed), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
+						ap.VHTCaps(ap.VHTCapSGI160), ap.EHTCenterChannel(15), ap.EHTChWidth(ap.EHTChWidth160),
+						ap.Is6GHz(), ap.PMF(ap.PMFRequired)},
+					secConfFac: wpa.NewConfigFactory("chromeos",
+						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+					powerSave: true, shouldTputRequired: false,
+				}},
+				// TODO(b/323903848): Promote test to stable by removing wificell_unstable attribute.
+				ExtraAttr:         []string{"wificell_unstable"},
+				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_BE),
+				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211be()),
+			},
+			{
+				// Network: WPA3-SAE ("pure") EHT320 802.11be on 6GHz band.
+				Name: "eht320_pure_6ghz",
+				Val: []networkWifiPerfTestCase{{
+					apOpts: []ap.Option{ap.Mode(ap.Mode80211bePure), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
+						ap.EHTCenterChannel(31), ap.EHTChWidth(ap.EHTChWidth320),
+						ap.Is6GHz(), ap.PMF(ap.PMFRequired)},
+					secConfFac: wpa.NewConfigFactory("chromeos",
+						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+					powerSave: false, shouldTputRequired: false,
+				}, {
+					apOpts: []ap.Option{ap.Mode(ap.Mode80211bePure), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
+						ap.EHTCenterChannel(31), ap.EHTChWidth(ap.EHTChWidth320),
+						ap.Is6GHz(), ap.PMF(ap.PMFRequired)},
+					secConfFac: wpa.NewConfigFactory("chromeos",
+						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+					powerSave: true, shouldTputRequired: false,
+				}},
+				// TODO(b/323903848): Promote test to stable by removing wificell_unstable attribute.
+				ExtraAttr:         []string{"wificell_unstable"},
+				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_BE),
+				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211be()),
+			},
+			{
+				// Network: WPA3-SAE ("mixed") EHT320 802.11be on 6GHZ band.
+				Name: "eht320_mixed_6ghz",
+				Val: []networkWifiPerfTestCase{{
+					apOpts: []ap.Option{ap.Mode(ap.Mode80211beMixed), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
+						ap.EHTCenterChannel(31), ap.EHTChWidth(ap.EHTChWidth320), ap.Is6GHz(), ap.PMF(ap.PMFRequired)},
+					secConfFac: wpa.NewConfigFactory("chromeos",
+						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+					powerSave: false, shouldTputRequired: false,
+				}, {
+					apOpts: []ap.Option{ap.Mode(ap.Mode80211beMixed), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
+						ap.EHTCenterChannel(31), ap.EHTChWidth(ap.EHTChWidth320), ap.Is6GHz(), ap.PMF(ap.PMFRequired)},
 					secConfFac: wpa.NewConfigFactory("chromeos",
 						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					powerSave: true, shouldTputRequired: false,
