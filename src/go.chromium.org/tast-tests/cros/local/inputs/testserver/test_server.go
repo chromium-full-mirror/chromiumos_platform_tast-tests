@@ -369,6 +369,11 @@ func (its *InputsTestServer) Close() {
 
 // Clear returns an action clearing given input field by setting value to empty string via javascript.
 func (its *InputsTestServer) Clear(inputField InputField) uiauto.Action {
+	if inputField == ContentEditableInputField {
+		return func(ctx context.Context) error {
+			return its.pc.Eval(ctx, fmt.Sprintf(`document.querySelector("*[aria-label='%s']").innerHTML=''`, inputField), nil)
+		}
+	}
 	return func(ctx context.Context) error {
 		return its.pc.Eval(ctx, fmt.Sprintf(`document.querySelector("*[aria-label='%s']").value=''`, inputField), nil)
 	}
