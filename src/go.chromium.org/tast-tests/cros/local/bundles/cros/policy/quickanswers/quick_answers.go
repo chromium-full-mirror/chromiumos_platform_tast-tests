@@ -140,7 +140,7 @@ func TriggerQuickAnswersDefinition(ctx context.Context, params networkrequestmon
 	}
 
 	quickAnswers := nodewith.ClassName("QuickAnswersView")
-	definitionResult := nodewith.NameContaining(expectedDefinitionText).ClassName("QuickAnswersTextLabel")
+	definitionResult := nodewith.NameContaining(expectedDefinitionText).ClassName("Label")
 
 	// Right click the selected word and ensure the Quick Answers UI shows the definition.
 	if err := uiauto.Combine("Show context menu",
@@ -204,7 +204,7 @@ func TriggerQuickAnswersUnitConversion(ctx context.Context, params networkreques
 	}
 
 	quickAnswers := nodewith.ClassName("QuickAnswersView")
-	unitConversionResult := nodewith.NameContaining(expectedConversionResult).ClassName("QuickAnswersTextLabel")
+	unitConversionResult := nodewith.NameContaining(expectedConversionResult).ClassName("Label")
 
 	// Right click the selected units and ensure the Quick Answers UI shows the conversion result in pounds.
 	if err := uiauto.Combine("Show context menu",
