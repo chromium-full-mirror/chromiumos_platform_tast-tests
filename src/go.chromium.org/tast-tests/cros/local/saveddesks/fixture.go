@@ -12,6 +12,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/ui"
+	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -47,7 +48,7 @@ func init() {
 			return []chrome.Option{
 				chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)),
 				chrome.EnableFeatures("DesksTemplates", "EnableSavedDesks"),
-				chrome.DisableFeatures("DeskTemplateSync", "SavedDeskUiRevamp"),
+				chrome.DisableFeatures("DeskTemplateSync"),
 			}, nil
 		}),
 		SetUpTimeout:    chrome.GAIALoginTimeout + 2*time.Minute,
@@ -158,6 +159,12 @@ type SavedDeskFixtData struct {
 	// Chrome is a connection to an already-started Chrome instance.
 	// It cannot be closed by tests.
 	Chrome *chrome.Chrome
+}
+
+// DtTestParams is returned by the fixtures and used in tests.
+type DtTestParams struct {
+	AppsList       []apps.App // List of apps that the saved desks will launch.
+	ClosePlayStore bool       // Flag to close play store if play store is a part of the app list.
 }
 
 // bootedWithFixture returns a FixtureImpl with a OptionsCallback function provided.

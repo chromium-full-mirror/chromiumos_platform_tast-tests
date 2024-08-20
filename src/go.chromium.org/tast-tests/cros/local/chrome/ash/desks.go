@@ -7,6 +7,7 @@ package ash
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -47,6 +48,15 @@ type DesksInfo struct {
 	NumDesks        int      `json:"numDesks"`
 	IsAnimating     bool     `json:"isAnimating"`
 	DeskContainers  []string `json:"deskContainers"`
+}
+
+func isSavedDeskUIRevampEnabled(ctx context.Context, ac *uiauto.Context) bool {
+	uiRevampEnabled, err := ac.IsFeatureEnabled(ctx, "SavedDeskUiRevamp")
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to check if SavedDeskUiRevamp is enabled, assuming true")
+		return true
+	}
+	return uiRevampEnabled
 }
 
 func deskButton(ctx context.Context, ac *uiauto.Context) *nodewith.Finder {
@@ -239,12 +249,42 @@ func MoveActiveWindowToAdjacentDesk(ctx context.Context, tconn *chrome.TestConn,
 func SaveCurrentDesk(ctx context.Context, ac *uiauto.Context, savedDeskType SavedDeskType, savedDeskName string) error {
 	var saveDeskButton *nodewith.Finder
 	var savedDeskGridView *nodewith.Finder
+	defaultDeskButton := nodewith.ClassName("DefaultDeskButton")
+	savedDeskUIRevampEnabled := isSavedDeskUIRevampEnabled(ctx, ac)
+	if savedDeskUIRevampEnabled {
+		deskMiniView := nodewith.ClassName("DeskMiniView")
+		deskPreviewView := nodewith.ClassName("DeskPreviewView").NameRegex(regexp.MustCompile(("(?i).* Active desk\\.")))
+		deskActionButton := nodewith.ClassName("DeskActionButton").Name("Open context menu")
+
+		// Navigate to the save desk buttons.
+		if err := uiauto.Combine(
+			"navigate to the save desk buttons",
+			ac.DoDefault(defaultDeskButton),
+			ac.WaitUntilExists(deskMiniView),
+			ac.MouseMoveTo(deskPreviewView, 0),
+			ac.WaitUntilExists(deskActionButton),
+			ac.DoDefault(deskActionButton),
+		)(ctx); err != nil {
+			return errors.Wrap(err, "failed to navigate to save desk buttons")
+		}
+	}
+
 	if savedDeskType == Template {
-		saveDeskButton = nodewith.ClassName("SavedDeskSaveDeskButton").Nth(0)
+		if savedDeskUIRevampEnabled {
+			saveDeskButton = nodewith.ClassName("MenuItemView").Name("Save desk as a template")
+		} else {
+			saveDeskButton = nodewith.ClassName("SavedDeskSaveDeskButton").Nth(0)
+		}
 		savedDeskGridView = nodewith.ClassName("SavedDeskGridView").Nth(0)
+
 	} else if savedDeskType == SaveAndRecall {
-		saveDeskButton = nodewith.ClassName("SavedDeskSaveDeskButton").Nth(1)
+		if savedDeskUIRevampEnabled {
+			saveDeskButton = nodewith.ClassName("MenuItemView").Name("Save desk for later")
+		} else {
+			saveDeskButton = nodewith.ClassName("SavedDeskSaveDeskButton").Nth(1)
+		}
 		savedDeskGridView = nodewith.ClassName("SavedDeskGridView").Nth(1)
+
 	} else {
 		return errors.New("unknown savedDeskType, must be `kTemplate' or 'kSaveAndRecall'")
 	}

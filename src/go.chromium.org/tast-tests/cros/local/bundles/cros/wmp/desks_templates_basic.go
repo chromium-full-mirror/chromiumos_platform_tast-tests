@@ -45,11 +45,15 @@ func init() {
 		VarDeps: []string{ui.GaiaPoolDefaultVarName},
 		Params: []testing.Param{{
 			Fixture: "savedDesksEnableWithoutArc",
-			Val:     []apps.App{apps.FilesSWA},
+			Val: saveddesks.DtTestParams{
+				AppsList:       []apps.App{apps.FilesSWA},
+				ClosePlayStore: false},
 		}, {
-			Name:              "arc_enabled",
-			Fixture:           "savedDesksEnableWithArc",
-			Val:               []apps.App{apps.FilesSWA, apps.PlayStore},
+			Name:    "arc_enabled",
+			Fixture: "savedDesksEnableWithArc",
+			Val: saveddesks.DtTestParams{
+				AppsList:       []apps.App{apps.FilesSWA, apps.PlayStore},
+				ClosePlayStore: true},
 			ExtraSoftwareDeps: []string{"android_vm"},
 			ExtraAttr:         []string{"informational"},
 		}},
@@ -66,7 +70,7 @@ func DesksTemplatesBasic(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(*saveddesks.SavedDeskFixtData).Chrome
 
 	// Set up the apps to launch list.
-	appsList := s.Param().([]apps.App)
+	appsList := s.Param().(saveddesks.DtTestParams).AppsList
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {

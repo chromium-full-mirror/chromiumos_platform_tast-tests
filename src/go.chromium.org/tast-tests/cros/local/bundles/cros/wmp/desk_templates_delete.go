@@ -8,10 +8,10 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/arc"
+	"go.chromium.org/tast-tests/cros/local/arc/optin"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -45,6 +45,20 @@ func init() {
 			Value: "screenplay-02ff6408-5cb0-481c-bd6b-c170831d45ca",
 		}},
 		VarDeps: []string{ui.GaiaPoolDefaultVarName},
+		Params: []testing.Param{{
+			Fixture: "savedDesksEnableWithoutArc",
+			Val: saveddesks.DtTestParams{
+				AppsList:       []apps.App{apps.FilesSWA},
+				ClosePlayStore: false},
+		}, {
+			Name:    "arc_enabled",
+			Fixture: "savedDesksEnableWithArc",
+			Val: saveddesks.DtTestParams{
+				AppsList:       []apps.App{apps.FilesSWA, apps.PlayStore},
+				ClosePlayStore: true},
+			ExtraSoftwareDeps: []string{"android_vm"},
+			ExtraAttr:         []string{"informational"},
+		}},
 	})
 }
 
@@ -55,16 +69,11 @@ func DeskTemplatesDelete(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	cr, err := chrome.New(ctx,
-		chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)),
-		chrome.EnableFeatures("DesksTemplates", "EnableSavedDesks"),
-		chrome.DisableFeatures("SavedDeskUiRevamp"),
-		chrome.ARCSupported(),
-		chrome.ExtraArgs(arc.DisableSyncFlags()...))
-	if err != nil {
-		s.Fatal("Failed to start Chrome: ", err)
-	}
-	defer cr.Close(cleanupCtx)
+	cr := s.FixtValue().(*saveddesks.SavedDeskFixtData).Chrome
+
+	// Set up the apps to launch list and close play store flag.
+	appsList := s.Param().(saveddesks.DtTestParams).AppsList
+	closePlayStore := s.Param().(saveddesks.DtTestParams).ClosePlayStore
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -91,6 +100,14 @@ func DeskTemplatesDelete(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to close all windows: ", err)
 	}
 	ac := uiauto.New(tconn)
+
+	// Opens PlayStore, Browser and Files.
+	browserApp, err := apps.ChromeOrChromium(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to find Chrome or Chromium app: ", err)
+	}
+	appsList = append(appsList, browserApp)
+
 	// Enter overview mode.
 	if err := ash.SetOverviewModeAndWait(ctx, tconn, true); err != nil {
 		s.Fatal("Failed to set overview mode: ", err)
@@ -107,7 +124,6 @@ func DeskTemplatesDelete(ctx context.Context, s *testing.State) {
 	}
 
 	// Open Chrome and Files.
-	appsList := []apps.App{apps.Chrome, apps.FilesSWA}
 	if err := saveddesks.OpenApps(ctx, tconn, ac, appsList); err != nil {
 		s.Fatal("Failed to open apps: ", err)
 	}
@@ -130,6 +146,13 @@ func DeskTemplatesDelete(ctx context.Context, s *testing.State) {
 	// Verify window count.
 	if err := saveddesks.VerifyWindowCount(ctx, tconn, len(appsList)); err != nil {
 		s.Fatal("Failed to verify window count: ", err)
+	}
+
+	// If Play Store is an included in the app launch list then close Play Store.
+	if closePlayStore {
+		if err := optin.ClosePlayStore(ctx, tconn); err != nil {
+			s.Fatal("Failed to close Play Store: ", err)
+		}
 	}
 
 	// Close all existing windows.
