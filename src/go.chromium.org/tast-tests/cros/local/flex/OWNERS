@@ -1,0 +1,7 @@
+set noparent
+
+# ChromeOS Flex team
+include chromiumos/owners:v1:/device/OWNERS.reven
+
+# Tast team for bulk/emergencies
+include /OWNERS.tast

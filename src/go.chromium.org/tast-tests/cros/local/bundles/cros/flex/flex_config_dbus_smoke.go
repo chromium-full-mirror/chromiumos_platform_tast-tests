@@ -14,6 +14,7 @@ import (
 	"github.com/godbus/dbus/v5"
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
+	"go.chromium.org/tast-tests/cros/local/flex"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -26,17 +27,7 @@ const (
 	dbusPath      = "/org/chromium/OobeConfigRestore"
 	dbusInterface = "org.chromium.OobeConfigRestore"
 
-	flexConfigInitialDirPath  = "/mnt/stateful_partition/unencrypted/flex_config"
-	flexConfigInitialFilePath = "/mnt/stateful_partition/unencrypted/flex_config/config.json"
-	// Path that flex_config will be in after moved to encrypted stateful partition (ESP)
-	// on oobe_config_restore startup.
-	flexConfigESPDirPath  = "/var/lib/oobe_config_restore/flex_config"
-	flexConfigESPFilePath = "/var/lib/oobe_config_restore/flex_config/config.json"
-
-	flexConfigJSONData = "{ \"enrollmentToken\" : \"test-enrollment-token\" }"
-
-	oobeConfigRestoreUID = 20121
-	oobeConfigRestoreGID = 20121
+	flexConfigJSONData = "{ \"enrollmentToken\": \"test-enrollment-token\" }"
 )
 
 func init() {
@@ -67,23 +58,13 @@ func FlexConfigDbusSmoke(ctx context.Context, s *testing.State) {
 
 	defer func() {
 		s.Log("Cleaning up Flex config dirs")
-		if err := cleanUpFlexConfigDirs(cleanUpCtx); err != nil {
+		if err := flex.CleanUpFlexConfigDirs(cleanUpCtx); err != nil {
 			s.Error("Failed to clean up Flex config dirs: ", err)
 		}
 	}()
 
-	s.Log("Seeding flex config JSON")
-	if err := os.Mkdir(flexConfigInitialDirPath, 0740); err != nil {
-		s.Fatalf("Failed to create %s directory: %v", flexConfigInitialDirPath, err)
-	}
-	if err := os.WriteFile(flexConfigInitialFilePath, []byte(flexConfigJSONData), 0640); err != nil {
-		s.Fatalf("Failed to create %s: %v", flexConfigInitialFilePath, err)
-	}
-	if err := os.Chown(flexConfigInitialFilePath, oobeConfigRestoreUID, oobeConfigRestoreGID); err != nil {
-		s.Fatalf("Failed to chown %s: %v", flexConfigInitialFilePath, err)
-	}
-	if err := os.Chown(flexConfigInitialDirPath, oobeConfigRestoreUID, oobeConfigRestoreGID); err != nil {
-		s.Fatalf("Failed to chown %s: %v", flexConfigInitialDirPath, err)
+	if err := flex.WriteFlexOobeConfigToDisk(flexConfigJSONData); err != nil {
+		s.Fatal("Failed to seed Flex OOBE config data: ", err)
 	}
 
 	// Have to restart job after creating flex_config files as upstart config
@@ -94,14 +75,14 @@ func FlexConfigDbusSmoke(ctx context.Context, s *testing.State) {
 
 	// Verify flex_config has been migrated to encrypted stateful partition after
 	// oobe_config_restore restart.
-	exists, err := pathExists(flexConfigInitialFilePath)
+	exists, err := pathExists(flex.FlexConfigInitialFilePath)
 	if err != nil {
 		s.Fatal("Failed to check existence of Flex config file in unencrypted stateful partition: ", err)
 	}
 	if exists {
 		s.Fatal("Flex config has not been deleted from unencrypted stateful partition")
 	}
-	exists, err = pathExists(flexConfigESPFilePath)
+	exists, err = pathExists(flex.FlexConfigESPFilePath)
 	if err != nil {
 		s.Fatal("Failed to check existence of Flex config file in encrypted stateful partition: ", err)
 	}
@@ -138,7 +119,7 @@ func FlexConfigDbusSmoke(ctx context.Context, s *testing.State) {
 	}
 
 	// Verify directly via file system that the config file is deleted.
-	exists, err = pathExists(flexConfigESPFilePath)
+	exists, err = pathExists(flex.FlexConfigESPFilePath)
 	if err != nil {
 		s.Fatal("Failed to check existence of Flex config file in encrypted stateful partition: ", err)
 	}
@@ -180,15 +161,4 @@ func pathExists(path string) (bool, error) {
 		return false, errors.Wrapf(err, "unexpected error when trying to stat %s", path)
 	}
 	return err == nil, nil
-}
-
-// cleanUpFlexConfigDirs ensures the flex config files are deleted during cleanup.
-func cleanUpFlexConfigDirs(ctx context.Context) error {
-	if err := os.RemoveAll(flexConfigInitialDirPath); err != nil {
-		return errors.Wrapf(err, "failed to delete Flex config dir %s", flexConfigInitialDirPath)
-	}
-	if err := os.RemoveAll(flexConfigESPDirPath); err != nil {
-		return errors.Wrapf(err, "failed to delete Flex config dir %s", flexConfigESPDirPath)
-	}
-	return nil
 }
