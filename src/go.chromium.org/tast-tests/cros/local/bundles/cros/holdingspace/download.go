@@ -11,17 +11,19 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
+
+	"github.com/mafredri/cdp/protocol/target"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/holdingspace"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -35,6 +37,7 @@ type downloadParams struct {
 
 // downloadArguments holds resources to perform the holdingspace.Download tests.
 type downloadArguments struct {
+	cr     *chrome.Chrome
 	tconn  *chrome.TestConn
 	kb     *input.KeyboardEventWriter
 	ui     *uiauto.Context
@@ -167,6 +170,7 @@ func Download(ctx context.Context, s *testing.State) {
 	defer kb.Close(ctx)
 
 	arg := &downloadArguments{
+		cr:     cr,
 		tconn:  tconn,
 		kb:     kb,
 		ui:     uiauto.New(tconn),
@@ -467,9 +471,19 @@ func waitUntilAllPinnedFileChipsGone(arg *downloadArguments) uiauto.Action {
 }
 
 func waitUntilAllFilesLaunched(arg *downloadArguments) uiauto.Action {
-	browserNodeFinder := nodewith.Role(role.Window).HasClass("BrowserFrame")
-	tabNodeFinder := nodewith.Role(role.Tab).HasClass("Tab").Ancestor(browserNodeFinder)
 	return forEachFile(arg, func(file string) uiauto.Action {
-		return arg.ui.WaitUntilExists(tabNodeFinder.NameStartingWith(file))
+		return func(ctx context.Context) error {
+			relativePath := filepath.Join("Downloads/", file)
+			relativePathMatcher := func(t *target.Info) bool {
+				return strings.HasSuffix(t.URL, relativePath)
+			}
+			return testing.Poll(ctx, func(ctx context.Context) error {
+				success, err := arg.cr.IsTargetAvailable(ctx, relativePathMatcher)
+				if !success || err != nil {
+					return errors.Wrapf(err, "failed to find target %q", relativePath)
+				}
+				return nil
+			}, &testing.PollOptions{Interval: 10 * time.Millisecond})
+		}
 	})
 }
