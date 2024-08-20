@@ -37,7 +37,11 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 		},
 		BugComponent: "b:1288350",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{
+			// Disabled by TORA. See: b/337891873
+			// "group:mainline",
+			// "informational",
+		},
 		SoftwareDeps: []string{"chrome", "gaia"},
 		SearchFlags: []*testing.StringPair{{
 			Key:   "feature_id",
