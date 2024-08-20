@@ -34,7 +34,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PrintFinishingFeatures,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests that finishing features are available in the UI and are correctly reeceived by a printer",
 		Contacts:     []string{"chromeos-commercial-printing@google.com", "project-bolton@google.com", "nedol@google.com"},
 		Attr: []string{
@@ -55,13 +55,6 @@ func init() {
 			{
 				Val:     browser.TypeAsh,
 				Fixture: "chromeLoggedIn",
-			},
-			{
-				Name:              "lacros",
-				Val:               browser.TypeLacros,
-				ExtraSoftwareDeps: []string{"lacros"},
-				Fixture:           "lacros",
-				Timeout:           4 * time.Minute,
 			},
 		},
 		SearchFlags: []*testing.StringPair{
@@ -127,7 +120,7 @@ func PrintFinishingFeatures(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to close all notifications: ", err)
 	}
 
-	// Create a browser (either ash or lacros, based on browser type).
+	// Create a browser.
 	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, bt)
 	if err != nil {
 		s.Fatal("Failed to launch browser: ", err)
