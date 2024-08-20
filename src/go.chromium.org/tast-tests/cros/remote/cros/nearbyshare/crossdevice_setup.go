@@ -13,7 +13,10 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/android"
+	"go.chromium.org/tast-tests/cros/common/wifi/security/wpa"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
+	"go.chromium.org/tast-tests/cros/remote/wificell/dhcp"
+	"go.chromium.org/tast-tests/cros/remote/wificell/hostapd"
 	"go.chromium.org/tast-tests/cros/services/cros/wifi"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
@@ -28,13 +31,14 @@ func init() {
 		Contacts: []string{"chromeos-cross-device-eng@google.com",
 			"chromeos-sw-engprod@google.com"},
 		BugComponent: "b:1108889", // ChromeOS > Software > System Services > Cross Device
-		Impl: &nearbyRemoteFixture{},
+		Impl:         &nearbyRemoteFixture{},
 		ServiceDeps: []string{
 			wificell.ShillServiceName,
 		},
+		Parent:          wificell.FixtureID(wificell.TFFeaturesCapture),
 		SetUpTimeout:    3 * time.Minute,
 		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
+		TearDownTimeout: 4 * time.Minute,
 		PreTestTimeout:  resetTimeout,
 		PostTestTimeout: resetTimeout,
 	})
@@ -43,20 +47,12 @@ func init() {
 type nearbyRemoteFixture struct {
 	labstationConn *ssh.Conn
 	serialNumber   string
+	wf             *wificell.TestFixture
+	apIface        *wificell.APIface
+	ssid           string
 }
 
 func (f *nearbyRemoteFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
-	// Get Android companion DUT info
-	companions, err := android.Companions()
-	if err != nil {
-		s.Log("Failed to find Android companion devices, falling back to local USB run: ", err)
-		return ""
-	}
-	for i, c := range companions {
-		testing.ContextLogf(ctx, "Android companion %d: associate %q serial %q model %q",
-			i, c.AssociatedHostname, c.SerialNumber, c.ModelName)
-	}
-
 	// Enable wifi on CrOS.
 	dut1 := s.DUT()
 	r, err := rpc.Dial(ctx, dut1, s.RPCHint())
@@ -68,6 +64,63 @@ func (f *nearbyRemoteFixture) SetUp(ctx context.Context, s *testing.FixtState) i
 	wifiClient := wifi.NewShillServiceClient(r.Conn)
 	if _, err := wifiClient.SetWifiEnabled(ctx, &wifi.SetWifiEnabledRequest{Enabled: true}); err != nil {
 		s.Error("Could not enable Wifi through shill: ", err)
+	}
+
+	// Set up WiFi AP.
+	wf := s.ParentValue().(*wificell.TestFixture)
+	f.wf = wf
+	apOpts := []hostapd.Option{hostapd.Mode(hostapd.Mode80211a), hostapd.Channel(48)}
+	passphrase := "password"
+	fac := wpa.NewConfigFactory(
+		passphrase,
+		wpa.Mode(wpa.ModePureWPA2),
+		wpa.Ciphers2(wpa.CipherCCMP),
+	)
+	dnsOpt := new(dhcp.DNSOption)
+	dnsOpt.Port = 53
+	dnsOpt.NameServers = []string{"8.8.8.8", "8.8.4.4"}
+	// Setting no-op value value, because if left empty,
+	// all domains are resolved to a specific IP
+	dnsOpt.ResolvedHost = "nohost"
+	apIface, err := wf.ConfigureAPOnRouterIDWithConfsDNSOpts(ctx, 0, []hostapd.ApConfig{{ApOpts: apOpts, SecConfFac: fac}}, "", true, true, false, dnsOpt)
+	// apIface, err := wf.ConfigureAPOnRouterID(ctx, 0, apOpts, fac, true, false)
+	if err != nil {
+		s.Fatal("Failed to configure ap, err: ", err)
+	}
+	f.apIface = apIface
+	f.ssid = apIface.Config().SSID
+	s.Log("Wificell AP SSID: ", f.ssid)
+
+	// Run script to allow internet connection on the AP.
+	enableInternetScript := "iptables -I FORWARD 1 -i managed1 -o eth0 -j ACCEPT;" +
+		"iptables -I FORWARD 2 -i eth0 -o managed1 -m state --state ESTABLISHED,RELATED -j ACCEPT;" +
+		"iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE;" +
+		"iptables -A INPUT -i managed1 -j ACCEPT;" +
+		"iptables -A INPUT -i eth0 -m state --state ESTABLISHED,RELATED -j ACCEPT;" +
+		"iptables -A OUTPUT -j ACCEPT;" +
+		"echo 1 > /proc/sys/net/ipv4/ip_forward"
+	apConn := wf.APConn()
+	if err := apConn.CommandContext(ctx, "sh", "-c", enableInternetScript).Run(ssh.DumpLogOnError); err != nil {
+		s.Fatal("Failed to run iptables commands to enable Internet access: ", err)
+	}
+	s.Log("Internet access enabled on AP")
+	s.Log("AP setup done")
+
+	_, err = wf.ConnectWifiAP(ctx, apIface)
+	if err != nil {
+		s.Fatal("Failed to connect to WiFi, err: ", err)
+	}
+	s.Log("Connected")
+
+	// Get Android companion DUT info
+	companions, err := android.Companions()
+	if err != nil {
+		s.Log("Failed to find Android companion devices, falling back to local USB run: ", err)
+		return ""
+	}
+	for i, c := range companions {
+		testing.ContextLogf(ctx, "Android companion %d: associate %q serial %q model %q",
+			i, c.AssociatedHostname, c.SerialNumber, c.ModelName)
 	}
 
 	// Connect to the labstation. Use ProxyCommand so you don't have to port forward.
@@ -110,12 +163,59 @@ func (f *nearbyRemoteFixture) SetUp(ctx context.Context, s *testing.FixtState) i
 	}
 	s.Log(string(out))
 
-	// Get the IP Address of the Android phone we want to setup adb-over-tcp with.
-	// Filter out the cellular IP address.
-	out, err = d2.CommandContext(ctx, "adb", "-s", companions[0].SerialNumber, "shell", "ip", "route", "|", "grep", "-v", "rmnet", "|", "awk", "'{print $9}'").Output(ssh.DumpLogOnError)
-	if err != nil {
-		s.Fatal("Failed to get Android phones IP Address")
+	// Restart adb as root
+	if err := d2.CommandContext(ctx, "adb", "-s", companions[0].SerialNumber, "root").Run(ssh.DumpLogOnError); err != nil {
+		s.Fatal("Failed to restart adb as root: ", err)
 	}
+
+	// Connect the Android device to the WiFi AP.
+	if err := d2.CommandContext(ctx, "adb", "-s", companions[0].SerialNumber, "shell", "svc", "wifi", "enable").Run(ssh.DumpLogOnError); err != nil {
+		s.Fatal("Failed to enable WiFi on the Android: ", err)
+	}
+	if err := d2.CommandContext(ctx, "adb", "-s", companions[0].SerialNumber, "shell", "cmd", "wifi", "connect-network", f.ssid, "wpa2", passphrase).Run(ssh.DumpLogOnError); err != nil {
+		s.Fatalf("Failed to connect to SSID %s on Android: %s", f.ssid, err)
+	}
+
+	// Make sure Android phone is connected to the WiFi AP
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		out, err := d2.CommandContext(ctx, "adb", "-s", companions[0].SerialNumber, "shell", "cmd", "wifi", "status", "|", "grep", "'Wifi is connected to'").Output(ssh.DumpLogOnError)
+		if err != nil {
+			return errors.Wrap(err, "failed to check for wifi status")
+		}
+
+		if out != nil {
+			// Print current SSID
+			if strings.Contains(string(out), f.ssid) {
+				s.Logf("Android phone wifi status: %s", string(out))
+				return nil
+			}
+		}
+
+		return errors.New("Android phone is not yet connected to WiFi AP")
+	}, &testing.PollOptions{Timeout: 30 * time.Second, Interval: time.Second}); err != nil {
+		s.Fatal("Android phone is not connected to WiFi AP: ", err)
+	}
+
+	// Get the IP Address of the Android phone we want to setup adb-over-tcp with.
+	// Filter out the cellular IP address, and poll for it to appear since it can take
+	// a while after connecting to the wificell network.
+	ipRegex := regexp.MustCompile(`([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})`)
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		out, err = d2.CommandContext(ctx, "adb", "-s", companions[0].SerialNumber, "shell", "ip", "route", "|", "grep", "-v", "rmnet", "|", "awk", "'{print $9}'").Output(ssh.DumpLogOnError)
+		if err != nil {
+			return errors.Wrap(err, "failed to get Android phones IP Address")
+		}
+		if out != nil {
+			if ipRegex.Match(out) {
+				s.Log("IP Address result from ADB is: ", string(out))
+				return nil
+			}
+		}
+		return errors.New("Android phone is not yet connected to WiFi AP")
+	}, &testing.PollOptions{Timeout: 30 * time.Second, Interval: time.Second}); err != nil {
+		s.Fatal("Failed to get Android's IP address on the wificell network: ", err)
+	}
+
 	phoneIPAddress := fmt.Sprintf("%s:%d", strings.TrimSpace(string(out)), 5555)
 	s.Logf("Android IP Address is: %s", phoneIPAddress)
 
@@ -141,10 +241,27 @@ func (f *nearbyRemoteFixture) SetUp(ctx context.Context, s *testing.FixtState) i
 	}
 
 	// Return phone IP Address to the local fixture.
-	return phoneIPAddress
+	return []string{phoneIPAddress, f.ssid, passphrase}
 }
 
-func (*nearbyRemoteFixture) TearDown(ctx context.Context, s *testing.FixtState)     {}
+func (f *nearbyRemoteFixture) TearDown(ctx context.Context, s *testing.FixtState) {
+	if err := f.wf.CleanDisconnectWifi(ctx); err != nil {
+		s.Error("Failed to disconnect WiFi, err: ", err)
+	}
+	disableInternetScript := "iptables -D FORWARD -i managed1 -o eth0 -j ACCEPT;" +
+		"iptables -D FORWARD -i eth0 -o managed1 -m state --state ESTABLISHED,RELATED -j ACCEPT;" +
+		"iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE;" +
+		"iptables -D INPUT -i managed1 -j ACCEPT;" +
+		"iptables -D INPUT -i eth0 -m state --state ESTABLISHED,RELATED -j ACCEPT;" +
+		"iptables -D OUTPUT -j ACCEPT;" +
+		"echo 1 > /proc/sys/net/ipv4/ip_forward"
+	if err := f.wf.APConn().CommandContext(ctx, "sh", "-c", disableInternetScript).Run(ssh.DumpLogOnError); err != nil {
+		s.Error("Fail to run iptables commands to disable Internet access: ", err)
+	}
+	if err := f.wf.DeconfigAP(ctx, f.apIface); err != nil {
+		s.Error("Failed to deconfig ap, err: ", err)
+	}
+}
 func (*nearbyRemoteFixture) Reset(ctx context.Context) error                        { return nil }
 func (*nearbyRemoteFixture) PreTest(ctx context.Context, s *testing.FixtTestState)  {}
 func (*nearbyRemoteFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {}

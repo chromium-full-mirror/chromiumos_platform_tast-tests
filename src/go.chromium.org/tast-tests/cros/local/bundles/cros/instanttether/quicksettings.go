@@ -51,6 +51,8 @@ func Quicksettings(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(*crossdevice.FixtData).Chrome
 	ui := uiauto.New(tconn)
 	androidDevice := s.FixtValue().(*crossdevice.FixtData).AndroidDevice
+	ssid := s.FixtValue().(*crossdevice.FixtData).SSID
+	passphrase := s.FixtValue().(*crossdevice.FixtData).Passphrase
 
 	cleanupCtx := ctx
 
@@ -146,10 +148,10 @@ func Quicksettings(ctx context.Context, s *testing.State) {
 
 	// Just disconnect from the WiFi network instead of disabling it via shill (like we did for ethernet),
 	// since the wifi adapter still needs to be on to use tethering.
-	if err := crossdevice.DisconnectFromWifi(ctx); err != nil {
+	if err := crossdevice.DisconnectFromWifi(ctx, ssid); err != nil {
 		s.Fatal("Failed to disconnect wifi: ", err)
 	}
-	defer crossdevice.ConnectToWifi(cleanupCtx)
+	defer crossdevice.ConnectToWifi(cleanupCtx, ssid, passphrase)
 
 	// See if we have internet access over the tethered connection.
 	if err := testing.Poll(ctx, func(context.Context) error {

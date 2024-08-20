@@ -215,6 +215,8 @@ type crossdeviceFixture struct {
 	logcatStartTime                   adb.LogcatTimestamp
 	downloadsPath                     string
 	phoneIP                           string
+	ssid                              string
+	passphrase                        string
 }
 
 // FixtData holds information made available to tests that specify this Fixture.
@@ -240,6 +242,12 @@ type FixtData struct {
 
 	// IP Address of the phone if using adb-over-wifi else empty string for USB runs
 	PhoneIP string
+
+	// SSID of the network configured on the wificell's AP.
+	SSID string
+
+	// Passphrase of the network configured on the wificell's AP.
+	Passphrase string
 }
 
 func (f *crossdeviceFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
@@ -249,6 +257,10 @@ func (f *crossdeviceFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 
 	phoneIP := s.ParentValue().(*FixtData).PhoneIP
 	f.phoneIP = phoneIP
+	ssid := s.ParentValue().(*FixtData).SSID
+	f.ssid = ssid
+	passphrase := s.ParentValue().(*FixtData).Passphrase
+	f.passphrase = passphrase
 
 	// Credentials to use (same as Android).
 	crosUsername := s.ParentValue().(*FixtData).Username
@@ -421,7 +433,7 @@ func (f *crossdeviceFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 	// Attempt to reconnect to the Android device if needed.
 	if err := androidDevice.Device.IsConnected(ctx); err != nil {
 		s.Log("Android device is no longer reachable via adb. Reconnecting")
-		adbDevice, _, err := AdbSetup(ctx, phoneIP)
+		adbDevice, _, err := AdbSetup(ctx, phoneIP, ssid, passphrase)
 		if err != nil {
 			s.Fatal("Failed to reconnect to adb device: ", err)
 		}
@@ -431,6 +443,17 @@ func (f *crossdeviceFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 	// Phone and Chromebook will not be paired if we are not signed in to the Chromebook yet.
 	if !f.noSignIn {
 		s.Log("Pairing with Android phone")
+		// Sometimes during login the tcp connection to the snippet server and/or adb is lost.
+		// Check we can still connect to the adb device.
+		if err := androidDevice.Device.IsConnected(ctx); err != nil {
+			s.Log("Android device is no longer reachable via adb. Reconnecting")
+			adbDevice, _, err := AdbSetup(ctx, phoneIP, ssid, passphrase)
+			if err != nil {
+				s.Fatal("Failed to reconnect to adb device: ", err)
+			}
+			androidDevice.Device = adbDevice
+		}
+		// If the Pair RPC fails, reconnect to the snippet server and try again.
 		if err := f.PairWithAndroid(ctx, tconn, cr); err != nil {
 			s.Fatal("Pairing with Android failed: ", err)
 		}
@@ -491,7 +514,7 @@ func (f *crossdeviceFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 	// Disconnect from Wi-Fi for a completely fresh start in OOBE
 	if f.noSignIn {
 		s.Log("Disconnecting ChromeOS device from Wi-Fi")
-		if err := DisconnectFromWifi(ctx); err != nil {
+		if err := DisconnectFromWifi(ctx, ssid); err != nil {
 			s.Log("Failed to disconnect from Wi-Fi. Proceeding anyway. Error: ", err)
 		}
 	}
@@ -605,7 +628,7 @@ func (f *crossdeviceFixture) PostTest(ctx context.Context, s *testing.FixtTestSt
 	// This is needed for Instant Tether tests that disable WiFi on the Chromebook which interrupts the ADB connection.
 	if f.phoneIP != "" && f.androidDevice.Device.IsConnected(ctx) != nil {
 		s.Log("Connection to ADB device lost, restarting")
-		device, _, err := AdbSetup(ctx, f.phoneIP)
+		device, _, err := AdbSetup(ctx, f.phoneIP, f.ssid, f.passphrase)
 		if err != nil {
 			s.Fatal("Failed to re-initialize adb-over-wifi: ", err)
 		}
@@ -687,9 +710,18 @@ func saveDeviceAttributes(crosAttrs *crossdevicecommon.CrosAttributes, androidAt
 }
 
 // ConnectToWifi connects the chromebook to the Wifi network in its RF box.
-func ConnectToWifi(ctx context.Context) error {
+func ConnectToWifi(ctx context.Context, ssid, passphrase string) error {
+	// Get SSID of currently connected network
+	if out, err := testexec.CommandContext(ctx, "iwgetid").Output(testexec.DumpLogOnError); err != nil {
+		return errors.Wrap(err, "failed to check for existing wifi connection")
+	} else if strings.Contains(string(out), ssid) {
+		// If already connected to the desired ssid avoid trying to reconnect
+		testing.ContextLogf(ctx, "Already connected to %s wifi network", ssid)
+		return nil
+	}
+
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		out, err := testexec.CommandContext(ctx, "/usr/local/autotest/cros/scripts/wifi", "connect", "nearbysharing_1", "password").CombinedOutput(testexec.DumpLogOnError)
+		out, err := testexec.CommandContext(ctx, "/usr/local/autotest/cros/scripts/wifi", "connect", ssid, passphrase).CombinedOutput(testexec.DumpLogOnError)
 		if err != nil {
 			if strings.Contains(string(out), "already connected") {
 				testing.ContextLog(ctx, "Already connected to wifi network")
@@ -705,9 +737,9 @@ func ConnectToWifi(ctx context.Context) error {
 }
 
 // DisconnectFromWifi disconnects the chromebook from the Wifi network in its RF box.
-func DisconnectFromWifi(ctx context.Context) error {
+func DisconnectFromWifi(ctx context.Context, ssid string) error {
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		out, err := testexec.CommandContext(ctx, "/usr/local/autotest/cros/scripts/wifi", "disconnect", "nearbysharing_1").CombinedOutput(testexec.DumpLogOnError)
+		out, err := testexec.CommandContext(ctx, "/usr/local/autotest/cros/scripts/wifi", "disconnect", ssid).CombinedOutput(testexec.DumpLogOnError)
 		if err != nil {
 			if strings.Contains(string(out), "Service is not active") {
 				testing.ContextLog(ctx, "Already disconnected from wifi network")

@@ -23,7 +23,7 @@ import (
 )
 
 // AdbSetup configures adb and connects to the Android device with adb root if available.
-func AdbSetup(ctx context.Context, phoneIP string) (*adb.Device, bool, error) {
+func AdbSetup(ctx context.Context, phoneIP, ssid, passphrase string) (*adb.Device, bool, error) {
 	// TODO(b/207520262): Remove when we have Android support in skylab for configuring phone.
 	setupadb := false
 	var err error
@@ -44,7 +44,7 @@ func AdbSetup(ctx context.Context, phoneIP string) (*adb.Device, bool, error) {
 	var adbDevice *adb.Device
 
 	if phoneIP != "" {
-		if err := ConnectToWifi(ctx); err != nil {
+		if err := ConnectToWifi(ctx, ssid, passphrase); err != nil {
 			return nil, false, errors.Wrap(err, "failed to connect CrOS device to Wifi")
 		}
 		adbDevice, err = AdbOverWifi(ctx, phoneIP)

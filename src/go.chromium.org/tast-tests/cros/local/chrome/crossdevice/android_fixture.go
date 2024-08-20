@@ -191,21 +191,27 @@ type crossdeviceAndroidFixture struct {
 	adbDevice     *adb.Device
 	androidDevice *AndroidDevice
 	feature       Feature
+	phoneIP       string
+	ssid          string
+	passphrase    string
 }
 
 func (f *crossdeviceAndroidFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	accountUtilZip := s.DataPath(AccountUtilZip)
 	snippetZip := s.DataPath(MultideviceSnippetZipName)
 
-	var phoneIP string
+	var networkDetails []string
 	// Get the phone IP address from the remote fixture.
-	if err := s.ParentFillValue(&phoneIP); err != nil {
+	if err := s.ParentFillValue(&networkDetails); err != nil {
 		s.Fatal("Failed to deserialize fixture data with FixtFillValue: ", err)
 	}
-	s.Logf("Parent fixture value is %s", phoneIP)
+	s.Log("Parent fixture value is ", networkDetails)
+	phoneIP := networkDetails[0]
+	ssid := networkDetails[1]
+	passphrase := networkDetails[2]
 
 	// Set up adb, connect to the Android phone, and check if ADB root access is available.
-	adbDevice, rooted, err := AdbSetup(ctx, phoneIP)
+	adbDevice, rooted, err := AdbSetup(ctx, phoneIP, ssid, passphrase)
 	if err != nil {
 		s.Fatal("Failed to set up an adb device: ", err)
 	}
@@ -273,6 +279,8 @@ func (f *crossdeviceAndroidFixture) SetUp(ctx context.Context, s *testing.FixtSt
 		Username:      androidUsername,
 		Password:      androidPassword,
 		PhoneIP:       phoneIP,
+		SSID:          ssid,
+		Passphrase:    passphrase,
 	}
 }
 func (f *crossdeviceAndroidFixture) TearDown(ctx context.Context, s *testing.FixtState) {

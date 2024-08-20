@@ -131,6 +131,12 @@ type FixtData struct {
 
 	// IP Address of the phone if using adb-over-wifi else empty string for USB runs
 	PhoneIP string
+
+	// SSID of the network configured on the wificell's AP.
+	SSID string
+
+	// Passphrase of the network configured on the wificell's AP.
+	Passphrase string
 }
 
 func (f *nearbyShareFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {

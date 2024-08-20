@@ -32,13 +32,16 @@ func init() {
 
 // SmokeSnippetLibrary tests that we can successfully start and interact with the Nearby Snippet on the Android device.
 func SmokeSnippetLibrary(ctx context.Context, s *testing.State) {
-	var phoneIP string
-	if err := s.FixtFillValue(&phoneIP); err != nil {
+	var networkDetails []string
+	if err := s.FixtFillValue(&networkDetails); err != nil {
 		s.Fatal("Failed to deserialize value from parent fixture with FixtFillValue")
 	}
+	phoneIP := networkDetails[0]
+	ssid := networkDetails[1]
+	passphrase := networkDetails[2]
 
 	// Set up adb, connect to the Android phone, and check if ADB root access is available.
-	adbDevice, rooted, err := crossdevice.AdbSetup(ctx, phoneIP)
+	adbDevice, rooted, err := crossdevice.AdbSetup(ctx, phoneIP, ssid, passphrase)
 	if err != nil {
 		s.Fatal("Failed to set up an adb device: ", err)
 	}
