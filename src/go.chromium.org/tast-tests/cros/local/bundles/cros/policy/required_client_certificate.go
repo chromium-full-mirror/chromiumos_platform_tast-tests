@@ -14,8 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
@@ -27,7 +25,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         RequiredClientCertificate,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Behavior of RequiredClientCertificateForDevice/User policies, check if a certificate is issued when the respective policy is set",
 		Contacts: []string{
 			"chromeos-commercial-networking@google.com", // Team
@@ -45,13 +43,6 @@ func init() {
 		SoftwareDeps: []string{"reboot", "chrome"},
 		Fixture:      fixture.FakeDMSEnrolled,
 		Timeout:      3 * time.Minute,
-		Params: []testing.Param{{
-			Val: browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               browser.TypeLacros,
-		}},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.RequiredClientCertificateForUser{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.RequiredClientCertificateForDevice{}, pci.VerifiedFunctionalityUI),
@@ -68,24 +59,13 @@ func init() {
 const certificateName = "TastTest"
 
 func RequiredClientCertificate(ctx context.Context, s *testing.State) {
-	browserType := s.Param().(browser.Type)
 	fdms := s.FixtValue().(*fakedms.FakeDMS)
 
 	var extraPolicies []policy.Policy
-	if browserType == browser.TypeLacros {
-		extraPolicies = append(extraPolicies, &policy.LacrosAvailability{Val: "lacros_only"})
-	}
 
 	chromeOpts := []chrome.Option{
 		chrome.DMSPolicy(fdms.URL), chrome.KeepEnrollment(),
 		chrome.FakeLogin(chrome.Creds{User: fixtures.Username, Pass: fixtures.Password}),
-	}
-	if browserType == browser.TypeLacros {
-		var err error
-		chromeOpts, err = lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(chromeOpts...)).Opts()
-		if err != nil {
-			s.Fatal("Failed to compute Chrome options: ", err)
-		}
 	}
 
 	for _, param := range []struct {
@@ -154,24 +134,9 @@ func RequiredClientCertificate(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to create Test API connection: ", err)
 			}
 
-			if browserType == browser.TypeLacros {
-				s.Log("Starting to check that certificate is visible in Lacros")
-				func() {
-					l, err := lacros.Launch(ctx, tconn)
-					if err != nil {
-						s.Fatal("Failed to launch Lacros: ", err)
-					}
-					defer l.Close(ctx)
-					if err := checkCertificateVisibleInBrowserSettings(ctx, tconn, l.Browser()); err != nil {
-						s.Fatal("Failed to find certificate: ", err)
-					}
-				}()
-			} else {
-				s.Log("Starting to check that certificate is visible in Ash")
-				// TODO(neis): Remove this once Lacros is the only browser.
-				if err := checkCertificateVisibleInBrowserSettings(ctx, tconn, cr.Browser()); err != nil {
-					s.Fatal("Failed to find certificate: ", err)
-				}
+			s.Log("Starting to check that certificate is visible in Ash")
+			if err := checkCertificateVisibleInBrowserSettings(ctx, tconn, cr.Browser()); err != nil {
+				s.Fatal("Failed to find certificate: ", err)
 			}
 
 			s.Log("Starting to check that certificate is visible in system settings")
