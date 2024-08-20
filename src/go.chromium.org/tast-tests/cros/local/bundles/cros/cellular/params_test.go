@@ -15,29 +15,34 @@ import (
 	"go.chromium.org/tast-tests/cros/local/crostini"
 )
 
-// Map tests to whether or not they belong in AVL.
-var standardTests = map[string]bool{
-	"hotspot_abort_enable.go":                         false,
-	"hotspot_auto_disable.go":                         false,
-	"hotspot_disabled_when_no_upstream_network.go":    false,
-	"hotspot_enable_disable_in_lock_screen.go":        false,
-	"hotspot_policy.go":                               false,
-	"hotspot_update_configuration.go":                 false,
-	"hotspot_update_configuration_when_hotspot_on.go": false,
-	"is_connected.go":                                 false,
-	"smoke.go":                                        true,
-	"smoke_ip_connectivity.go":                        true,
+type testParam struct {
+	isAVL        bool
+	runOnVerizon bool
+}
+
+// Map tests to whether or not they belong in AVL and need to be run on Verizon.
+var standardTests = map[string]testParam{
+	"hotspot_abort_enable.go":                         testParam{isAVL: false, runOnVerizon: false},
+	"hotspot_auto_disable.go":                         testParam{isAVL: false, runOnVerizon: false},
+	"hotspot_disabled_when_no_upstream_network.go":    testParam{isAVL: false, runOnVerizon: false},
+	"hotspot_enable_disable_in_lock_screen.go":        testParam{isAVL: false, runOnVerizon: false},
+	"hotspot_policy.go":                               testParam{isAVL: false, runOnVerizon: false},
+	"hotspot_update_configuration.go":                 testParam{isAVL: false, runOnVerizon: false},
+	"hotspot_update_configuration_when_hotspot_on.go": testParam{isAVL: false, runOnVerizon: false},
+	"is_connected.go":                                 testParam{isAVL: false, runOnVerizon: true},
+	"smoke.go":                                        testParam{isAVL: true, runOnVerizon: true},
+	"smoke_ip_connectivity.go":                        testParam{isAVL: true, runOnVerizon: true},
 }
 
 func TestFixTestParams(t *testing.T) {
-	getParams := func(isAVL bool) string {
+	getParams := func(param testParam) string {
 		localParams := `
 		{
 			Name:      "",
 			Val:       "",
 			ExtraAttr: []string{"cellular_carrier_local"},
 		},`
-		if isAVL {
+		if param.isAVL {
 			localParams = `
 		{
 			Name:      "",
@@ -45,7 +50,7 @@ func TestFixTestParams(t *testing.T) {
 			ExtraAttr: []string{"cellular_carrier_local", "cellular_ota_avl"},
 		},`
 		}
-		return localParams + `
+		localParams += `
 		{
 			Name:      "att",
 			Val:       "att",
@@ -95,12 +100,16 @@ func TestFixTestParams(t *testing.T) {
 			Name:      "fi",
 			Val:       "fi",
 			ExtraAttr: []string{"cellular_carrier_fi"},
-		},
+		},`
+		if param.runOnVerizon {
+			localParams += `
 		{
 			Name:      "verizon",
 			Val:       "verizon",
 			ExtraAttr: []string{"cellular_carrier_verizon"},
-		},
+		},`
+		}
+		return localParams + `
 		{
 			Name:      "bell",
 			Val:       "bell",
@@ -123,8 +132,8 @@ func TestFixTestParams(t *testing.T) {
 		},`
 	}
 
-	for filename, isAVL := range standardTests {
-		genparams.Ensure(t, filename, getParams(isAVL))
+	for filename, param := range standardTests {
+		genparams.Ensure(t, filename, getParams(param))
 	}
 }
 
