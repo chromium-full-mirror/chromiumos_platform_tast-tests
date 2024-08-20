@@ -34,6 +34,11 @@ func InitResource(ctx context.Context, manifestKey, state string) (*RMAResources
 		}
 	}
 
+	// Run Shimless RMA in testing mode.
+	if err := shimlessrmaapp.CreateTestFile(); err != nil {
+		return nil, nil, err
+	}
+
 	// Open Chrome with Shimless RMA enabled.
 	cr, err := chrome.New(ctx, chrome.EnableFeatures("ShimlessRMAFlow"),
 		chrome.NoLogin(),
@@ -60,6 +65,7 @@ func InitResource(ctx context.Context, manifestKey, state string) (*RMAResources
 
 // DisposeResource dispose RMA resources.
 func (r *RMAResources) DisposeResource(ctx context.Context) {
+	shimlessrmaapp.RemoveTestFile()
 	shimlessrmaapp.RemoveStateFile()
 	testexec.CommandContext(ctx, "stop", "rmad").Run()
 	r.app.Close(ctx)

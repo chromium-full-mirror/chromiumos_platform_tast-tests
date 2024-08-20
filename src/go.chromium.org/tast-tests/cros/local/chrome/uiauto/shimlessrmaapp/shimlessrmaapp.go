@@ -43,6 +43,7 @@ const (
 
 const (
 	stateFile = "/mnt/stateful_partition/unencrypted/rma-data/state"
+	testFile  = "/var/lib/rmad/.test"
 )
 
 // RMAApp represents an instance of the Shimless RMA App.
@@ -87,6 +88,21 @@ func CreateStateFile(state string) error {
 // RemoveStateFile deletes the state file, if it exists.
 func RemoveStateFile() error {
 	return os.Remove(stateFile)
+}
+
+// CreateTestFile creates an empty test file telling Shimless RMA to run in testing mode.
+func CreateTestFile() error {
+	f, err := os.Create(testFile)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	return nil
+}
+
+// RemoveTestFile deletes the test file, if it exists.
+func RemoveTestFile() error {
+	return os.Remove(testFile)
 }
 
 // Launch launches the Shimless RMA App and returns it.
