@@ -30,7 +30,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PrintingBackgroundGraphicsDefault,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checking if the 'Background graphics' option is set by default depending on the value of this policy",
 		Contacts: []string{
 			"chromeos-commercial-printing@google.com",
@@ -45,15 +45,12 @@ func init() {
 			"group:complementary",
 			"group:hw_agnostic",
 		},
-		Params: []testing.Param{{
-			Fixture: fixture.ChromePolicyLoggedIn,
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.LacrosPolicyLoggedIn,
-			Val:               browser.TypeLacros,
-		}},
+		Params: []testing.Param{
+			{
+				Fixture: fixture.ChromePolicyLoggedIn,
+				Val:     browser.TypeAsh,
+			},
+		},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.PrintingBackgroundGraphicsDefault{}, pci.VerifiedFunctionalityUI),
 		},
