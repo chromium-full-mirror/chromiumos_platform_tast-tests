@@ -28,7 +28,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PrintingDuplexModes,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify behaviour of PrintingAllowedDuplexModes and PrintingDuplexDefault Policies",
 		Contacts: []string{
 			"chromeos-commercial-printing@google.com",
@@ -44,15 +44,12 @@ func init() {
 			"group:complementary",
 			"group:hw_agnostic",
 		},
-		Params: []testing.Param{{
-			Fixture: "virtualUsbPrinterModulesLoadedWithChromePolicyLoggedIn",
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           "virtualUsbPrinterModulesLoadedWithLacrosPolicyLoggedIn",
-			Val:               browser.TypeLacros,
-		}},
+		Params: []testing.Param{
+			{
+				Fixture: "virtualUsbPrinterModulesLoadedWithChromePolicyLoggedIn",
+				Val:     browser.TypeAsh,
+			},
+		},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.PrintingAllowedDuplexModes{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.PrintingDuplexDefault{}, pci.VerifiedFunctionalityUI),
