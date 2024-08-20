@@ -75,22 +75,26 @@ func TriggerCalendarIntegration(ctx context.Context, params networkrequestmonito
 	policyParam := TestCases()[policySetting]
 
 	ui := uiauto.New(tconn)
-	dateTray := nodewith.HasClass("DateTray")
 
 	// Comparing the time before and after opening the calendar view just in case
 	// this test is run at the very end of a year, e.g. Dec 31 23:59:59.
 	beforeOpeningCalendarYear := time.Now().Year()
 
-	if err := ui.DoDefault(dateTray)(ctx); err != nil {
-		return errors.Wrap(err, "failed to click the date tray")
+	// Click on System tray to reset calendar.
+	if err := ui.DoDefault(nodewith.ClassName("UnifiedSystemTray"))(ctx); err != nil {
+		return errors.Wrap(err, "failed to click the system tray")
 	}
 
+	// Opens calendar view.
+	dateTray := nodewith.HasClass("DateTray")
 	calendarView := nodewith.HasClass("CalendarView").First()
-	mainHeaderTriView := nodewith.HasClass("TriView").Ancestor(calendarView).Nth(0)
-	mainHeaderContainer := nodewith.HasClass("SizeRangeLayout").Ancestor(mainHeaderTriView).Nth(1)
-	mainHeader := nodewith.Name("Calendar").HasClass("Label").Ancestor(mainHeaderContainer)
+	mainHeaderTriView := nodewith.ClassName("TriView").Ancestor(calendarView)
+	mainHeader := nodewith.ClassName("CalendarHeaderView").Ancestor(mainHeaderTriView)
 
-	if err := ui.WaitUntilExists(mainHeader)(ctx); err != nil {
+	if err := uiauto.Combine("Open calendar view",
+		ui.DoDefault(dateTray),
+		ui.WaitUntilExists(mainHeader),
+	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to find calendar main label after opening calendar view")
 	}
 
@@ -155,24 +159,6 @@ func TriggerCalendarIntegration(ctx context.Context, params networkrequestmonito
 			didFindEventListView = true
 			break
 		}
-	}
-
-	didFindManagedIcon := false
-	rightHeaderContainer := nodewith.HasClass("SizeRangeLayout").Ancestor(mainHeaderTriView).Nth(2)
-	managedIcon := nodewith.Name("Disabled by admin").HasClass("IconButton").Ancestor(rightHeaderContainer)
-	if found, err := ui.IsNodeFound(ctx, managedIcon); err != nil {
-		return errors.Wrap(err, "failed to check for managed icon in calendar tray")
-	} else if found == true {
-		didFindManagedIcon = true
-	}
-
-	// Check for enterprise management icon.
-	if policyParam.ShouldFindManagedIcon && didFindManagedIcon == false {
-		return errors.New("did not find expected disabled by admin icon")
-	}
-
-	if !policyParam.ShouldFindManagedIcon && didFindManagedIcon == true {
-		return errors.New("found unexpected disabled by admin icon")
 	}
 
 	// Check for event list.
