@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/apps/helpapp"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -134,11 +135,28 @@ func checkHelpApp(resource *chromeOSPageInfo) uiauto.Action {
 	)
 }
 
+func isFeedbackAppWindow(w *ash.Window) bool {
+	return w.IsVisible && w.IsActive && regexp.MustCompile(apps.Feedback.Name).MatchString(w.Title)
+}
+
+func closeFeedbackApp(resource *chromeOSPageInfo) uiauto.Action {
+	return func(ctx context.Context) error {
+		// Find and close the feedback app window
+		feedbackApp, err := ash.FindOnlyWindow(ctx, resource.tconn, isFeedbackAppWindow)
+		if err != nil {
+			return errors.Wrap(err, "failed to find feedback app window")
+		}
+
+		err = feedbackApp.CloseWindow(ctx, resource.tconn)
+		return err
+	}
+}
+
 func checkSendFeedback(resource *chromeOSPageInfo) uiauto.Action {
 	return uiauto.Combine("Open and close feedback app",
 		resource.settings.LeftClick(ossettings.ReportIssue),
 		resource.ui.WaitUntilExists(ossettings.FeedbackWindowFinder),
-		resource.ui.LeftClick(nodewith.Name("Close").Ancestor(ossettings.FeedbackWindowFinder)),
+		closeFeedbackApp(resource),
 		resource.ui.WaitUntilGone(ossettings.FeedbackWindowFinder),
 	)
 }
