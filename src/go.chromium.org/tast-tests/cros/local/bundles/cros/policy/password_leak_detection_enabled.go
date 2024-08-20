@@ -22,6 +22,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/netexport"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
+	"go.chromium.org/tast-tests/cros/local/testenv/proxy"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -77,6 +78,19 @@ func PasswordLeakDetectionEnabled(ctx context.Context, s *testing.State) {
 
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
+	mp, err := proxy.NewMitmProxy(ctx,
+		proxy.DumpHTTPFlow(true),
+	)
+	if err != nil {
+		s.Fatal("Failed to start mitmproxy: ", err)
+	}
+	defer mp.Close(cleanupCtx)
+	reset, err := proxy.ConfigureChrome(ctx, mp, cr)
+	if err != nil {
+		s.Fatal("Failed to configure chrome for proxy: ", err)
+	}
+	defer reset(cleanupCtx, cr)
+
 	for _, param := range passwordleakdetection.TestCases() {
 		s.Run(ctx, param.Name, func(ctx context.Context, s *testing.State) {
 			// Perform cleanup.
@@ -129,6 +143,20 @@ func PasswordLeakDetectionEnabled(ctx context.Context, s *testing.State) {
 			// Verify network annotation is present when expected.
 			if param.ShouldFindAnnotation != foundAnnotation {
 				s.Fatalf("Annotation mismatch. Expected: %t. Actual: %t", param.ShouldFindAnnotation, foundAnnotation)
+			}
+
+			resp, err := mp.DumpHTTPFlow(ctx, true, false)
+			if err != nil {
+				s.Fatal("Failed to get dump httpflow from mitmproxy: ", err)
+			}
+
+			v := proxy.NewNetworkVerifier(resp)
+			allow := param.TrafficShouldFind
+			disallow := param.TrafficShouldNotFind
+			// allow/disallow traffic are passed by test case param.
+			// We will ignore traffic other than the allow and disallow list for verifying diff.
+			if err := v.Verify(allow, disallow, []string{".*"}); err != nil {
+				s.Fatal("Diff test result: ", err)
 			}
 		})
 	}

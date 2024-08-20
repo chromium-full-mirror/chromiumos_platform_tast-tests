@@ -14,11 +14,17 @@ import (
 	"go.chromium.org/tast/core/errors"
 )
 
+const regexPasswordLeakDetectionURL = "https://passwordsleakcheck-pa.googleapis.com/.*"
+
 // TestCase defines test expectations based on the policy value.
 type TestCase struct {
 	Name                 string
 	ShouldFindAnnotation bool
 	Policy               *policy.PasswordLeakDetectionEnabled
+	// TrafficShouldFind states the traffic should be found during tests.
+	TrafficShouldFind []string
+	// TrafficShouldNotFind states the traffic should NOT be found during tests.
+	TrafficShouldNotFind []string
 }
 
 const (
@@ -39,16 +45,22 @@ func TestCases() map[networkrequestmonitor.PolicySetting]TestCase {
 			Name:                 "disabled",
 			ShouldFindAnnotation: false,
 			Policy:               &policy.PasswordLeakDetectionEnabled{Val: false},
+			TrafficShouldFind:    []string{},
+			TrafficShouldNotFind: []string{regexPasswordLeakDetectionURL},
 		},
 		networkrequestmonitor.PolicyEnabled: {
 			Name:                 "enabled",
 			ShouldFindAnnotation: true,
 			Policy:               &policy.PasswordLeakDetectionEnabled{Val: true},
+			TrafficShouldFind:    []string{regexPasswordLeakDetectionURL},
+			TrafficShouldNotFind: []string{},
 		},
 		networkrequestmonitor.PolicyUnset: {
 			Name:                 "unset",
 			ShouldFindAnnotation: true,
 			Policy:               &policy.PasswordLeakDetectionEnabled{Stat: policy.StatusUnset},
+			TrafficShouldFind:    []string{regexPasswordLeakDetectionURL},
+			TrafficShouldNotFind: []string{},
 		},
 	}
 }

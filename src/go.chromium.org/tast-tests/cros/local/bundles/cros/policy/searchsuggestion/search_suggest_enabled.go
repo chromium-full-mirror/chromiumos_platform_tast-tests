@@ -27,10 +27,16 @@ type TestCase struct {
 	ShouldFindAnnotation bool
 	Policy               *policy.SearchSuggestEnabled
 	Enabled              bool
+	// TrafficShouldFind states the traffic should be found during tests.
+	TrafficShouldFind []string
+	// TrafficShouldNotFind states the traffic should NOT be found during tests.
+	TrafficShouldNotFind []string
 }
 
 // AnnotationHashCode is the hashcode for annotation omnibox_suggest.
 const AnnotationHashCode = "47815025"
+
+const regexSearchSuggestURL = "https://www.google.com/complete/search\\?client=chrome-omni.*"
 
 // TestCases returns the map of policy setting enum to TestCase objects
 // on which the SearchSuggestEnabled policy is tested.
@@ -41,18 +47,24 @@ func TestCases() map[networkrequestmonitor.PolicySetting]TestCase {
 			ShouldFindAnnotation: false,
 			Policy:               &policy.SearchSuggestEnabled{Val: false},
 			Enabled:              false,
+			TrafficShouldFind:    []string{},
+			TrafficShouldNotFind: []string{regexSearchSuggestURL},
 		},
 		networkrequestmonitor.PolicyEnabled: {
 			Name:                 "enabled",
 			ShouldFindAnnotation: true,
 			Policy:               &policy.SearchSuggestEnabled{Val: true},
 			Enabled:              true,
+			TrafficShouldFind:    []string{regexSearchSuggestURL},
+			TrafficShouldNotFind: []string{},
 		},
 		networkrequestmonitor.PolicyUnset: {
 			Name:                 "unset",
 			ShouldFindAnnotation: true,
 			Policy:               &policy.SearchSuggestEnabled{Stat: policy.StatusUnset},
 			Enabled:              true,
+			TrafficShouldFind:    []string{regexSearchSuggestURL},
+			TrafficShouldNotFind: []string{},
 		},
 	}
 }
