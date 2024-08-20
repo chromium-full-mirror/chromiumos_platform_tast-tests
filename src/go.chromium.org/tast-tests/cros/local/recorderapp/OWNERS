@@ -1,0 +1,10 @@
+set noparent
+
+# ChromeOS Recorder App team
+kamchonlathorn@chromium.org
+shik@chromium.org
+pihsun@chromium.org
+aaronyu@google.com
+
+# Tast team for bulk/emergencies
+include /OWNERS.tast
