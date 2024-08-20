@@ -120,6 +120,8 @@ func init() {
 				"riven",
 				"rudriks",
 				"rynax",
+				"teliks",
+				"teliks360",
 				"uldren",
 				"uldren360",
 				"xivu",
