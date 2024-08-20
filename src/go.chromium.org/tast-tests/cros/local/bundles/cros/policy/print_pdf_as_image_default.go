@@ -32,7 +32,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PrintPdfAsImageDefault,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checking if the 'Print as image' option is set by default depending on the value of this policy",
 		Contacts: []string{
 			"chromeos-commercial-printing@google.com",
@@ -47,15 +47,12 @@ func init() {
 			"group:complementary",
 			"group:hw_agnostic",
 		},
-		Params: []testing.Param{{
-			Fixture: fixture.ChromePolicyLoggedIn,
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.LacrosPolicyLoggedIn,
-			Val:               browser.TypeLacros,
-		}},
+		Params: []testing.Param{
+			{
+				Fixture: fixture.ChromePolicyLoggedIn,
+				Val:     browser.TypeAsh,
+			},
+		},
 		Data: []string{"print_pdf_as_image_default.pdf"},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.PrintPdfAsImageDefault{}, pci.VerifiedFunctionalityUI),
