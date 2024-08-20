@@ -66,6 +66,20 @@ const (
 	uptimeLoginPromptSetupTimeAfterLogout                 = "Uptime.LoginPromptSetupTimeAfterLogout"
 	uptimeLogoutToLoginPromptVisible                      = "Uptime.LogoutToLoginPromptVisible"
 	loginPerfTraceConfigFileName                          = "login_perf_trace_config.pbtxt"
+
+	// TODO(b/343001594): Remove the "new" prefix once we have removed old metrics.
+	newMetricAllBrowserWindowsCreated           = "Ash.LoginPerf.AutoRestore.AllBrowserWindowsCreated"
+	newMetricAllBrowserWindowsShown             = "Ash.LoginPerf.AutoRestore.AllBrowserWindowsShown"
+	newMetricAllBrowserWindowsPresented         = "Ash.LoginPerf.AutoRestore.AllBrowserWindowsPresented"
+	newMetricAllShelfIconsLoaded                = "Ash.LoginPerf.AutoRestore.AllShelfIconsLoaded"
+	newMetricShelfLoginAnimationEnd             = "Ash.LoginPerf.AutoRestore.ShelfLoginAnimationEnd"
+	newMetricTotalDuration                      = "Ash.LoginPerf.AutoRestore.TotalDuration"
+	newMetricPostLoginAnimationDurationPrefix   = "Ash.LoginPerf.AutoRestore.PostLoginAnimation.Duration"
+	newMetricPostLoginAnimationSmoothnessPrefix = "Ash.LoginPerf.AutoRestore.PostLoginAnimation.Smoothness"
+	newMetricPostLoginAnimationJankPrefix       = "Ash.LoginPerf.AutoRestore.PostLoginAnimation.Jank"
+
+	suffixClamshellMode = ".ClamshellMode"
+	suffixTabletMode    = ".TabletMode"
 )
 
 const (
@@ -925,10 +939,51 @@ func storeHistograms(
 			uptimeLogoutToLoginPromptVisible:
 
 			reportMaxHistogramValue(ctx, pv, hist, "millisecond", valueName)
+
+		case
+			newMetricAllBrowserWindowsCreated,
+			newMetricAllBrowserWindowsShown,
+			newMetricAllBrowserWindowsPresented,
+			newMetricAllShelfIconsLoaded,
+			newMetricShelfLoginAnimationEnd,
+			newMetricTotalDuration,
+			newMetricPostLoginAnimationDurationPrefix + suffixClamshellMode,
+			newMetricPostLoginAnimationDurationPrefix + suffixTabletMode:
+			storeHistogramMeanValue(ctx, pv, hist, "ms", perf.SmallerIsBetter)
+
+		case
+			newMetricPostLoginAnimationSmoothnessPrefix + suffixClamshellMode,
+			newMetricPostLoginAnimationSmoothnessPrefix + suffixTabletMode:
+			storeHistogramMeanValue(ctx, pv, hist, "percent", perf.BiggerIsBetter)
+
+		case
+			newMetricPostLoginAnimationJankPrefix + suffixClamshellMode,
+			newMetricPostLoginAnimationJankPrefix + suffixTabletMode:
+			storeHistogramMeanValue(ctx, pv, hist, "percent", perf.SmallerIsBetter)
+
 		default:
 			return errors.Errorf("unknown histogram %q", hist.Name)
 		}
 	}
+	return nil
+}
+
+func storeHistogramMeanValue(
+	ctx context.Context,
+	pv *perfutil.Values,
+	hist *histogram.Histogram,
+	unit string,
+	direction perf.Direction,
+) error {
+	value, err := hist.Mean()
+	if err != nil {
+		return errors.Wrapf(err, "failed to get the mean of %s", hist.Name)
+	}
+	pv.Append(perf.Metric{
+		Name:      hist.Name,
+		Unit:      unit,
+		Direction: direction,
+	}, value)
 	return nil
 }
 
@@ -995,9 +1050,9 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 	s.Logf("Starting test: %s for  %d windows", arcMode, windows)
 
 	inTabletMode := param.tabletMode
-	suffix := ".ClamshellMode"
+	suffix := suffixClamshellMode
 	if inTabletMode {
-		suffix = ".TabletMode"
+		suffix = suffixTabletMode
 	}
 
 	heuristicsHistograms := []string{
@@ -1020,12 +1075,23 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 		uptimeLogout,
 		uptimeLoginPromptSetupTimeAfterLogout,
 		uptimeLogoutToLoginPromptVisible,
+
+		newMetricAllBrowserWindowsCreated,
+		newMetricAllBrowserWindowsShown,
+		newMetricAllShelfIconsLoaded,
 	}
 	// Histogram is only collected when the DUT is connected to the display.
 	if displCount > 0 {
 		allHistograms = append(allHistograms, allBrowserWindowsPresented)
 		allHistograms = append(allHistograms, shelfLoginAnimationEnd)
 		allHistograms = append(allHistograms, heuristicsHistograms...)
+
+		allHistograms = append(allHistograms, newMetricAllBrowserWindowsPresented)
+		allHistograms = append(allHistograms, newMetricShelfLoginAnimationEnd)
+		allHistograms = append(allHistograms, newMetricTotalDuration)
+		allHistograms = append(allHistograms, newMetricPostLoginAnimationDurationPrefix+suffix)
+		allHistograms = append(allHistograms, newMetricPostLoginAnimationSmoothnessPrefix+suffix)
+		allHistograms = append(allHistograms, newMetricPostLoginAnimationJankPrefix+suffix)
 	}
 	if arcMode != noarc {
 		allHistograms = append(allHistograms,
