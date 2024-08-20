@@ -150,7 +150,7 @@ func UpdateKernelDataKeyVersion(ctx context.Context, s *testing.State) {
 		if _, err := h.KernelServiceClient.SetBothKernelBootable(ctx, &empty.Empty{}); err != nil {
 			s.Fatal("Failed to set both kernel copies to bootable: ", err)
 		}
-		if err := warmResetToKernelPartition(ctx, h, ms, &pb.Partition{
+		if err := coldResetToKernelPartition(ctx, h, ms, &pb.Partition{
 			Name: pb.PartitionName_KERNEL,
 			Copy: pb.PartitionCopy_B,
 		}); err != nil {
@@ -159,7 +159,7 @@ func UpdateKernelDataKeyVersion(ctx context.Context, s *testing.State) {
 		if _, err := h.KernelServiceClient.SetBothKernelBootable(ctx, &empty.Empty{}); err != nil {
 			s.Fatal("Failed to set both kernel copies to bootable: ", err)
 		}
-		if err := warmResetToKernelPartition(ctx, h, ms, &pb.Partition{
+		if err := coldResetToKernelPartition(ctx, h, ms, &pb.Partition{
 			Name: pb.PartitionName_KERNEL,
 			Copy: pb.PartitionCopy_A,
 		}); err != nil {
@@ -178,7 +178,7 @@ func UpdateKernelDataKeyVersion(ctx context.Context, s *testing.State) {
 		s.Logf("Rollback successful: current data key version of KERN-B is %s", currVersion.DataKeyVersion)
 	}(cleanupContext)
 
-	if err := warmResetToKernelPartition(ctx, h, ms, &pb.Partition{
+	if err := coldResetToKernelPartition(ctx, h, ms, &pb.Partition{
 		Name: pb.PartitionName_KERNEL,
 		Copy: pb.PartitionCopy_A,
 	}); err != nil {
@@ -225,7 +225,7 @@ func UpdateKernelDataKeyVersion(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set both kernel copies to bootable: ", err)
 	}
 
-	if err := warmResetToKernelPartition(ctx, h, ms, &pb.Partition{
+	if err := coldResetToKernelPartition(ctx, h, ms, &pb.Partition{
 		Name: pb.PartitionName_KERNEL,
 		Copy: pb.PartitionCopy_B,
 	}); err != nil {
@@ -245,8 +245,8 @@ func UpdateKernelDataKeyVersion(ctx context.Context, s *testing.State) {
 	s.Logf("Successfully updated: current data key version of KERN-B is %s", currVersion.DataKeyVersion)
 }
 
-// warmResetToKernelPartition checks active kernel vs target, warm reboots DUT to target on mismatch.
-func warmResetToKernelPartition(ctx context.Context, h *firmware.Helper, ms *firmware.ModeSwitcher, target *pb.Partition) error {
+// coldResetToKernelPartition checks active kernel vs target, reboots DUT to target on mismatch.
+func coldResetToKernelPartition(ctx context.Context, h *firmware.Helper, ms *firmware.ModeSwitcher, target *pb.Partition) error {
 	currCopy, err := h.KernelServiceClient.GetCurrentCopy(ctx, &pb.Partition{})
 	if err != nil {
 		return errors.Wrap(err, "failed to get label of current kernel")
@@ -264,7 +264,7 @@ func warmResetToKernelPartition(ctx context.Context, h *firmware.Helper, ms *fir
 		if _, err := h.KernelServiceClient.PrioritizeKernelCopy(ctx, target); err != nil {
 			return errors.Wrapf(err, "failed to prioritize KERN-%s", target.Copy.String())
 		}
-		if err := ms.ModeAwareReboot(ctx, firmware.WarmReset); err != nil {
+		if err := ms.ModeAwareReboot(ctx, firmware.ColdReset); err != nil {
 			return errors.Wrap(err, "failed to reboot")
 		}
 		if err := h.RequireKernelServiceClient(ctx); err != nil {
