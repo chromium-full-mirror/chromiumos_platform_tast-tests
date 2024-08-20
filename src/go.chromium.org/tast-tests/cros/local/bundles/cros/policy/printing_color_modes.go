@@ -6,13 +6,11 @@ package policy
 
 import (
 	"context"
-	"time"
 
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/printingtest"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/dropdown"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -24,7 +22,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PrintingColorModes,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify behaviour of PrintingAllowedColorModes and PrintingColorDefault Policies",
 		Data:         []string{"printing_color_modes_printer_attributes.json"},
 		Contacts: []string{
@@ -41,16 +39,7 @@ func init() {
 			"group:complementary",
 			"group:hw_agnostic",
 		},
-		Params: []testing.Param{{
-			Fixture: "virtualUsbPrinterModulesLoadedWithChromePolicyLoggedIn",
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           "virtualUsbPrinterModulesLoadedWithLacrosPolicyLoggedIn",
-			Val:               browser.TypeLacros,
-			Timeout:           4 * time.Minute,
-		}},
+		Fixture: "virtualUsbPrinterModulesLoadedWithChromePolicyLoggedIn",
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.PrintingColorDefault{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.PrintingAllowedColorModes{}, pci.VerifiedFunctionalityUI),
