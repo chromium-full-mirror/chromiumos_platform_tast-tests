@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/camera/arcapp"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 
 	"go.chromium.org/tast/core/ctxutil"
@@ -30,6 +31,7 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", caps.BuiltinOrVividCamera},
 		Fixture:      "arcWithWorkingCamera",
+		Timeout:      3 * time.Minute,
 	})
 }
 
@@ -104,6 +106,12 @@ func ARCCameraApp(ctx context.Context, s *testing.State) {
 		})
 		cancel()
 	}
+
+	// Orientation test uses a different activity and does not need to run
+	// through every camera.
+	if err := testOrientation(ctx, a, tconn); err != nil {
+		s.Error("Failed in orientation test: ", err)
+	}
 }
 
 // recordVideo test if the video recording works via ARC camera test app.
@@ -118,4 +126,37 @@ func recordVideo(ctx context.Context, cr *chrome.Chrome, a *arc.ARC) error {
 	}
 
 	return arcapp.StopRecording(ctx, cr, a)
+}
+
+func testOrientation(ctx context.Context, a *arc.ARC, tconn *chrome.TestConn) error {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
+	defer cancel()
+
+	// The app expects to be launched in the clamshell mode.
+	cleanupAsh, err := ash.EnsureTabletModeEnabled(ctx, tconn, false)
+	if err != nil {
+		return errors.Wrap(err, "failed to ensure in clamshell mode")
+	}
+	defer cleanupAsh(cleanupCtx)
+
+	testing.ContextLog(ctx, "Starting orientation test app")
+	cleanupApp, err := arcapp.LaunchOrientationTestApp(ctx, a, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to launch ARC camera orientation test app")
+	}
+	defer cleanupApp(cleanupCtx, tconn)
+
+	if err := arcapp.StartOrientationTest(ctx, a); err != nil {
+		return errors.Wrap(err, "failed to start orientation test")
+	}
+
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		if passed, err := arcapp.OrientationTestPassed(ctx, a); err != nil {
+			return errors.Wrap(err, "failed to wait for the orientation test finished")
+		} else if !passed {
+			return testing.PollBreak(errors.New("failed to pass orientation test"))
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 5 * time.Second})
 }
