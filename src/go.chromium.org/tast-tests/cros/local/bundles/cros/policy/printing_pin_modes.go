@@ -25,7 +25,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PrintingPINModes,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify behaviour of PrintingAllowedPinModes and PrintingPinDefault Policies",
 		Data:         []string{"printing_pin_modes_printer_attributes.json"},
 		Contacts: []string{
@@ -44,15 +44,12 @@ func init() {
 		},
 		Timeout: 4 * time.Minute,
 		// PIN printing is enabled only on enrolled devices, thus we use fixtures with enrollment.
-		Params: []testing.Param{{
-			Fixture: "virtualUSBPrinterModulesLoadedWithChromeEnrolledLoggedIn",
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           "virtualUSBPrinterModulesLoadedWithLacrosEnrolledLoggedIn",
-			Val:               browser.TypeLacros,
-		}},
+		Params: []testing.Param{
+			{
+				Fixture: "virtualUSBPrinterModulesLoadedWithChromeEnrolledLoggedIn",
+				Val:     browser.TypeAsh,
+			},
+		},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.PrintingPinDefault{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.PrintingAllowedPinModes{}, pci.VerifiedFunctionalityUI),
