@@ -35,22 +35,29 @@ func init() {
 		Contacts:     []string{"arc-commercial@google.com", "cros-arc-te@google.com", "jinrongwu@google.com"},
 		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
 		BugComponent: "b:1487630",
-		Attr:         []string{"group:mainline", "group:arc-functional"},
+		Attr:         []string{
+			// Disabled by TORA. See: b/331078204
+			// "group:mainline",
+			// "group:arc-functional",
+		},
 		SoftwareDeps: []string{"chrome", "gaia"},
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		Params: []testing.Param{
 			{
-				ExtraAttr:         []string{"informational"},
+				// Disabled by TORA. See: b/331078204
+				// ExtraAttr:         []string{"informational"},
 				ExtraSoftwareDeps: []string{"android_container"},
 			},
 			{
-				Name:              "vm",
-				ExtraAttr:         []string{"informational"},
+				Name: "vm",
+				// Disabled by TORA. See: b/331078204
+				// ExtraAttr:         []string{"informational"},
 				ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},
 			},
 			{
-				Name:              "betty_vm",
-				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
+				Name: "betty_vm",
+				// Disabled by TORA. See: b/331078204
+				// ExtraAttr:         []string{"informational", "group:hw_agnostic"},
 				ExtraSoftwareDeps: []string{"android_vm", "qemu"},
 			}},
 		VarDeps: []string{arcCommon.ParentAccountVarName},
