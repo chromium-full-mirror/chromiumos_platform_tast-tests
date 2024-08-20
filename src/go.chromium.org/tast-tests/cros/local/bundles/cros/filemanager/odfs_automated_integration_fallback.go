@@ -125,7 +125,7 @@ func OdfsAutomatedIntegrationFallback(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get instance of Ms365: ", err)
 	}
 
-	notificationRoot := nodewith.NameContaining("OneDrive setup failed").Role(role.AlertDialog)
+	notificationRoot := nodewith.NameContaining("OneDrive setup failed").ClassName("AshNotificationView")
 	manuallyConnectButton := nodewith.Role(role.Button).Ancestor(notificationRoot).Focusable().Name("Manually connect to OneDrive")
 	cloudUpload := cloudupload.App(tconn, filesconsts.OneDrive)
 	ui := uiauto.New(tconn)
