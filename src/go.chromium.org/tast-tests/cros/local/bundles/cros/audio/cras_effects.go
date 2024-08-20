@@ -391,7 +391,7 @@ func init() {
 				},
 				Fixture:           crasEffectsHasAST,
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
-				ExtraAttr:         []string{"group:criticalstaging", "group:mainline", "informational"},
+				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
 				Name: "nc_both_ast",
@@ -615,7 +615,7 @@ func init() {
 				},
 				Fixture:           crasEffectsHasAST,
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
-				ExtraAttr:         []string{"group:criticalstaging", "group:mainline", "informational"},
+				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
 				Name: "forced_voice_isolation_with_ast_button_enabled",
@@ -651,7 +651,7 @@ func init() {
 				},
 				Fixture:           crasEffectsHasAST,
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
-				ExtraAttr:         []string{"group:criticalstaging", "group:mainline", "informational"},
+				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
 				Name: "forced_disabled_voice_isolation_with_ast_button_enabled",
@@ -669,7 +669,7 @@ func init() {
 				},
 				Fixture:           crasEffectsHasAST,
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
-				ExtraAttr:         []string{"group:criticalstaging", "group:mainline", "informational"},
+				ExtraAttr:         []string{"group:mainline"},
 			},
 			// Others.
 			{
