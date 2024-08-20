@@ -119,6 +119,7 @@ func init() {
 				"riven",
 				"rudriks",
 				"rynax",
+				"sundance",
 				"teliks",
 				"teliks360",
 				"uldren",
