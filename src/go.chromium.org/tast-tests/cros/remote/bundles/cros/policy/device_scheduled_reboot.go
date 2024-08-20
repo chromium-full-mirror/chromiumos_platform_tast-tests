@@ -34,7 +34,10 @@ func init() {
 			"chromeos-commercial-remote-management@google.com",
 			"artyomchen@google.com", // Test author
 		},
-		Attr:         []string{"group:enrollment"},
+		Attr: []string{
+			// Disabled by TORA. See: b/318082620
+			// "group:enrollment",
+		},
 		SoftwareDeps: []string{"chrome", "reboot"},
 		ServiceDeps: []string{
 			"tast.cros.kiosk.KioskService", "tast.cros.hwsec.OwnershipService",
