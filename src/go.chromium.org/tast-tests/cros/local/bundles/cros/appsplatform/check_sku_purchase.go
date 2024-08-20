@@ -23,7 +23,12 @@ func init() {
 			"chromeos-apps-foundation-team@google.com",
 		},
 		BugComponent: "b:1203766",
-		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
+		Attr:         []string{
+			// Disabled by TORA. See: b/336143181
+			// "group:mainline",
+			// "informational",
+			// "group:hw_agnostic",
+		},
 		SoftwareDeps: []string{"chrome", "gaia"},
 		Fixture:      "playBillingFixture",
 		Params: []testing.Param{{
