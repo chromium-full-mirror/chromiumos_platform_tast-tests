@@ -28,7 +28,6 @@ func init() {
 		},
 		// ChromeOS > Platform > Enablement > Serviceability > Shimless RMA
 		BugComponent: "b:1002147",
-		Attr:         []string{"group:mainline"},
 		VarDeps: []string{
 			"ui.signinProfileTestExtensionManifestKey",
 		},
@@ -37,10 +36,11 @@ func init() {
 		Params: []testing.Param{{
 			Name:              "critical",
 			ExtraHardwareDeps: hwdep.D(hwdep.Model(util.ShimlessRmaEnabledModelsCritical...)),
+			ExtraAttr:         []string{"group:mainline"},
 		}, {
 			Name:              "staging",
 			ExtraHardwareDeps: hwdep.D(hwdep.Model(util.ShimlessRmaEnabledModelsStaging...)),
-			ExtraAttr:         []string{"informational"},
+			ExtraAttr:         []string{"group:shimless_rma", "shimless_rma_normal"},
 		}},
 	})
 }
