@@ -175,7 +175,7 @@ func downloadImage(ctx context.Context, testbedProperties remoteTi50.TestbedProp
 		case ToTBranch:
 			// Special value "latests-tot" finds the most recent complete set of artifacts,
 			// and then goes into the case below.
-			latestURL, err = findLatestCompletedTi50PostsubmitBuildURL(ctx)
+			latestURL, err = findLatestCompletedTi50PostsubmitBuildURL(ctx, testbedProperties.TestbedType)
 			if err != nil {
 				return nil, err
 			}
@@ -310,7 +310,7 @@ func downloadImage(ctx context.Context, testbedProperties remoteTi50.TestbedProp
 }
 
 // findLatestCompletedTi50PostsubmitBuildURL finds the most recent build with the full set of image artifacts.
-func findLatestCompletedTi50PostsubmitBuildURL(ctx context.Context) (string, error) {
+func findLatestCompletedTi50PostsubmitBuildURL(ctx context.Context, t ti50.TestbedType) (string, error) {
 	builds, err := gsLs(ctx, "builds for tot", gsPrefix+postSubmitArtifactsBuilder)
 	if err != nil {
 		return "", err
@@ -340,6 +340,9 @@ Loop:
 		build := builds[i]
 		scannedDirs := make(map[string]bool)
 		for _, boardType := range AllTi50TestbedTypes() {
+			if len(t) > 0 && boardType != t {
+				continue
+			}
 			for _, imageType := range AllTi50ImageTypes() {
 				dir, err := ti50ImageDirectory(boardType, imageType)
 				if err != nil {
@@ -542,7 +545,7 @@ func ExtractGSCQualImageFromTarball(ctx context.Context, tarball string) (string
 func cmd(ctx context.Context, desc, cmd string, args ...string) (string, error) {
 	testing.ContextLogf(ctx, "%s: %s %s", desc, cmd, strings.Join(args, " "))
 	c := exec.CommandContext(ctx, cmd, args...)
-	output, err := c.Output()
+	output, err := c.CombinedOutput()
 	if err != nil {
 		err = errors.Wrap(err, desc)
 	}
@@ -551,7 +554,10 @@ func cmd(ctx context.Context, desc, cmd string, args ...string) (string, error) 
 
 // gsURLExists retruns whether a gs URL is valid.
 func gsURLExists(ctx context.Context, url string) bool {
-	_, err := cmd(ctx, url+" exists?", "gsutil", "ls", url)
+	output, err := cmd(ctx, url+" exists?", "gsutil", "ls", url)
+	if err != nil {
+		testing.ContextLogf(ctx, "gsURLExists err (%v): %v", err, output)
+	}
 	return err == nil
 }
 
