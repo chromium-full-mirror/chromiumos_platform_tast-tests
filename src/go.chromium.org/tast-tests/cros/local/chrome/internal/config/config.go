@@ -224,8 +224,8 @@ func (c *Config) ForceLaunchBrowser() bool { return c.m.ForceLaunchBrowser }
 // EphemeralUser returns true if user mount should be validated to be ephemeral, e.g. for guest user.
 func (c *Config) EphemeralUser() bool { return c.m.EphemeralUser }
 
-// UseSandboxGaia returns true if the sandbox instance of Gaia should be used.
-func (c *Config) UseSandboxGaia() bool { return c.m.UseSandboxGaia }
+// UseGaiaConfig returns a path to config file that should be used to point to the non-prod instance of Gaia (eg, sandbox or gaiastaging)
+func (c *Config) UseGaiaConfig() string { return c.m.UseGaiaConfig }
 
 // TestExtOAuthClientID returns the OAuth Client ID to use in the test extension
 // if one was provided.
@@ -316,7 +316,7 @@ type MutableConfig struct {
 	HideCrashRestoreBubble             bool             `reuse_match:"true"`
 	ForceLaunchBrowser                 bool             `reuse_match:"true"`
 	EphemeralUser                      bool             `reuse_match:"true"`
-	UseSandboxGaia                     bool             `reuse_match:"true"`
+	UseGaiaConfig                      string           `reuse_match:"true"`
 	TestExtOAuthClientID               string           `reuse_match:"true"`
 	EnableHIDScreenOnOOBE              bool             `reuse_match:"true"`
 	EnableStackSampledMetrics          bool             `reuse_match:"true"`
@@ -359,7 +359,7 @@ func NewConfig(opts []Option) (*Config, error) {
 			HideCrashRestoreBubble:             false,
 			ForceLaunchBrowser:                 false,
 			EphemeralUser:                      false,
-			UseSandboxGaia:                     false,
+			UseGaiaConfig:                      "",
 			EnableHIDScreenOnOOBE:              false,
 			EnableStackSampledMetrics:          false,
 			EnableLacrosStackSampledMetrics:    false,

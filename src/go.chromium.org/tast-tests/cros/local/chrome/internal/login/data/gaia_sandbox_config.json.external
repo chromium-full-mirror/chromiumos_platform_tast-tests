@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromeos-test-assets-private/tast/cros/chrome/gaia_sandbox_config_20240820.json",
+  "size": 1163,
+  "sha256sum": "9a8452fe0c0d88059298e485789a9aa8d018c375df4f83ca411c5660b184093f"
+}

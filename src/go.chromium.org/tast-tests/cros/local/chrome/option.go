@@ -129,12 +129,13 @@ func SAMLLogin(creds Creds) Option {
 	}
 }
 
-// UseSandboxGaia returns an Option that can be passed to New to instruct use
-// the sandbox instance of Gaia.
+// UseGaiaConfig returns an Option that can be passed to New to instruct use
+// the non-prod instance (eg, sandbox or gaiastaging) of Gaia with the
+// "--gaia-config" chrome flag.
 // NOTE: Only works with the Gaia-based login options.
-func UseSandboxGaia() Option {
+func UseGaiaConfig(path string) Option {
 	return func(cfg *config.MutableConfig) error {
-		cfg.UseSandboxGaia = true
+		cfg.UseGaiaConfig = path
 		return nil
 	}
 }

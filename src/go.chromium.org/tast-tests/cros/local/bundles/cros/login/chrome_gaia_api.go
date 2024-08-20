@@ -58,6 +58,7 @@ func init() {
 			Name:             "sandbox",
 			Val:              true,
 			ExtraSearchFlags: []*testing.StringPair{testenv.SearchFlag(testenv.GAIASandbox)},
+			ExtraData:        []string{"gaia_sandbox_config.json"}, // symlinked to the external data file in chrome internal, then to the sandbox config in the private gs bucket
 		}},
 	})
 }
@@ -71,7 +72,7 @@ func ChromeGaiaAPI(ctx context.Context, s *testing.State) {
 
 	options := []chrome.Option{chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)), chrome.DeferLogin()}
 	if useSandboxGaia {
-		options = append(options, chrome.UseSandboxGaia())
+		options = append(options, chrome.UseGaiaConfig(s.DataPath("gaia_sandbox_config.json")))
 	}
 	if ok {
 		options = append(options, chrome.KeepEnrollment())
