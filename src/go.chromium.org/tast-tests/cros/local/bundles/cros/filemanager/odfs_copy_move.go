@@ -31,7 +31,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           OdfsCopyMove,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantExists,
 		Desc:           "Verifies file/folder copy/move operations work in ODFS",
 		BugComponent:   "b:1199143",
 		Timeout:        5 * time.Minute,
@@ -56,13 +55,7 @@ func init() {
 		Data: []string{
 			"test_1KB.txt",
 		},
-		Params: []testing.Param{{
-			Fixture: "onedrive",
-		}, {
-			Name:              "lacros",
-			Fixture:           "onedriveLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-		}},
+		Fixture: "onedrive",
 		SearchFlags: []*testing.StringPair{{
 			Key:   "feature_id",
 			Value: "screenplay-1e395c10-2842-4aed-ab39-a94ce51eadf1",

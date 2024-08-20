@@ -26,7 +26,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           OdfsManageInSettings,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantExists,
 		Desc:           "Verifies that the user can connect and disconnect from OneDrive from Settings",
 		BugComponent:   "b:1199143",
 		Timeout:        5 * time.Minute,
@@ -46,13 +45,7 @@ func init() {
 		VarDeps: []string{
 			"onedrive.accountPool",
 		},
-		Params: []testing.Param{{
-			Fixture: "onedrive",
-		}, {
-			Name:              "lacros",
-			Fixture:           "onedriveLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-		}},
+		Fixture: "onedrive",
 		SearchFlags: []*testing.StringPair{{
 			Key:   "feature_id",
 			Value: "screenplay-fdef04ea-ea16-4b5b-ac5a-d8c7b46a58a7",

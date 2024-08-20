@@ -275,11 +275,10 @@ func (ms *Ms365) InstallPWA(ctx context.Context, cr *chrome.Chrome, bt browser.T
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	br, closeResource, _, err := browserfixt.SetUpBrowserOrUseCurrent(ctx, cr, bt)
+	br, _, err := browserfixt.SetUp(ctx, cr, bt)
 	if err != nil {
 		return errors.Wrap(err, "failed to get a browser to install PWA")
 	}
-	defer closeResource(cleanupCtx)
 
 	// Use NewConn instead of NewTab to prevent Lacros from reusing the existing
 	// chrome://newtab, the reuse will cause chrome://newtab to be closed below.
@@ -341,15 +340,13 @@ func MaybeUninstallPwa(ctx context.Context, cr *chrome.Chrome, tconn *chrome.Tes
 func ClearBrowserCookiesForOffice(ctx context.Context, cr *chrome.Chrome, bt browser.Type) error {
 	testing.ContextLog(ctx, "Clearing cookies for Office website")
 
-	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	br, closeResource, _, err := browserfixt.SetUpBrowserOrUseCurrent(ctx, cr, bt)
+	br, _, err := browserfixt.SetUp(ctx, cr, bt)
 	if err != nil {
 		return errors.Wrap(err, "failed to get a browser to clear cookies")
 	}
-	defer closeResource(cleanupCtx)
 
 	interval := 200 * time.Millisecond
 

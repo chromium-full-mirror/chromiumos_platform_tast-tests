@@ -29,7 +29,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           OdfsOpenFromDrivefs,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantExists,
 		Desc:           "Verifies docx, xlsx and pptx files can be opened from DriveFS with Microsoft 365",
 		BugComponent:   "b:1199143",
 		Timeout:        5 * time.Minute,
@@ -51,13 +50,7 @@ func init() {
 		VarDeps: []string{
 			"onedrive.accountPool",
 		},
-		Params: []testing.Param{{
-			Fixture: "onedriveAndGoogleDrive",
-		}, {
-			Name:              "lacros",
-			Fixture:           "onedriveAndGoogleDriveLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-		}},
+		Fixture: "onedriveAndGoogleDrive",
 		SearchFlags: []*testing.StringPair{{
 			Key:   "feature_id",
 			Value: "screenplay-ce5327b0-86d6-41e7-8b1a-77920ae8b261",

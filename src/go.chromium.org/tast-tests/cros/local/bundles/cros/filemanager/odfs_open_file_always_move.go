@@ -23,7 +23,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           OdfsOpenFileAlwaysMove,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantExists,
 		Desc:           "Verifies that docx, xlsx and pptx open in OneDrive and we can see 'always move' checkbox for 2nd time",
 		BugComponent:   "b:1199143",
 		Timeout:        5 * time.Minute,
@@ -45,13 +44,7 @@ func init() {
 		VarDeps: []string{
 			"onedrive.accountPool",
 		},
-		Params: []testing.Param{{
-			Fixture: "onedrive",
-		}, {
-			Name:              "lacros",
-			Fixture:           "onedriveLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-		}},
+		Fixture: "onedrive",
 		SearchFlags: []*testing.StringPair{{
 			Key:   "feature_id",
 			Value: "screenplay-68baf61c-8fdf-497d-8192-4da1e0ec0432",

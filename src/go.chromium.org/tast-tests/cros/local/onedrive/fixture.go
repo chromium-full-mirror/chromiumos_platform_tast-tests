@@ -19,7 +19,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesinternals"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ms365"
@@ -52,24 +51,6 @@ func init() {
 		BugComponent: "b:167289",
 		Impl: &onedriveFixture{
 			bt:            browser.TypeAsh,
-			chromeOptions: opts,
-			provider:      filesconsts.OneDrive,
-		},
-		SetUpTimeout:    chrome.LoginTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: 30 * time.Second,
-		PreTestTimeout:  60 * time.Second,
-		PostTestTimeout: 30 * time.Second,
-		Data:            []string{"Sample_DOCX_file_20230704.docx", "Sample_PPTX_file_20230704.pptx", "Sample_XLSX_file_20230724.xlsx"},
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:         "onedriveLacros",
-		Desc:         "Lacros variant of onedrive",
-		Contacts:     []string{"lucmult@chromium.org", "chromeos-files-syd@google.com"},
-		BugComponent: "b:167289",
-		Impl: &onedriveFixture{
-			bt:            browser.TypeLacros,
 			chromeOptions: opts,
 			provider:      filesconsts.OneDrive,
 		},
@@ -134,24 +115,6 @@ func init() {
 		PreTestTimeout:  60 * time.Second,
 		PostTestTimeout: 30 * time.Second,
 		Parent:          "driveFsStartedWithOfficeEnabled", // TODO(b/291524698): Create more DriveFS accounts.
-		Data:            []string{"Sample_DOCX_file_20230704.docx", "Sample_PPTX_file_20230704.pptx", "Sample_XLSX_file_20230724.xlsx"},
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:         "onedriveAndGoogleDriveLacros",
-		Desc:         "Lacros variant of onedriveAndGoogleDrive",
-		Contacts:     []string{"lucmult@chromium.org", "chromeos-files-syd@google.com"},
-		BugComponent: "b:167289",
-		Impl: &onedriveFixture{
-			bt:       browser.TypeLacros,
-			provider: filesconsts.DriveFs,
-		},
-		SetUpTimeout:    chrome.LoginTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: 30 * time.Second,
-		PreTestTimeout:  60 * time.Second,
-		PostTestTimeout: 30 * time.Second,
-		Parent:          "driveFsStartedWithOfficeEnabledLacros", // TODO(b/291524698): Create more DriveFS accounts.
 		Data:            []string{"Sample_DOCX_file_20230704.docx", "Sample_PPTX_file_20230704.pptx", "Sample_XLSX_file_20230724.xlsx"},
 	})
 }
@@ -238,7 +201,6 @@ func (f *onedriveFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	var driveAPIClient *drivefs.APIClient
 
 	if f.provider == filesconsts.DriveFs {
-		// Lacros is handled by the its parent fixture.
 		cr = s.ParentValue().(*drivefs.FixtureData).Chrome
 		f.tconn = s.ParentValue().(*drivefs.FixtureData).TestAPIConn
 		driveFsClient = s.ParentValue().(*drivefs.FixtureData).DriveFs
@@ -273,19 +235,8 @@ func (f *onedriveFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 			opts = append(opts, chrome.FakeLogin(chrome.Creds{User: fixtures.Username, Pass: fixtures.Password}))
 		}
 
-		if f.bt == browser.TypeLacros {
-			if isOdfsDev {
-				opts = append(opts, chrome.LacrosUnpackedExtension(odfsDevPath))
-			}
-			var err error
-			opts, err = lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(opts...)).Opts()
-			if err != nil {
-				s.Fatal("Failed to get lacros options: ", err)
-			}
-		} else {
-			if isOdfsDev {
-				opts = append(opts, chrome.UnpackedExtension(odfsDevPath))
-			}
+		if isOdfsDev {
+			opts = append(opts, chrome.UnpackedExtension(odfsDevPath))
 		}
 
 		ctx, cancel := context.WithTimeout(ctx, chrome.LoginTimeout)
@@ -384,13 +335,7 @@ func (f *onedriveFixture) PreTest(ctx context.Context, s *testing.FixtTestState)
 	}
 	f.data.GeneratedFiles = generatedFiles
 
-	// Open a new tab for Lacros to make sure Lacros process is alive during the entire test.
-	// Note:
-	//  * The Lacros process is required for both cleanup and the actual test,
-	// both PWA installation/uninstalling and ODFS mounting/unmounting need this.
-	//  * We also call this in Ash, it will open chrome://newtab in Lacros
-	// but not in Ash, which is exactly what we need.
-	if _, _, _, err = browserfixt.SetUpBrowserOrUseCurrent(ctx, f.cr, f.bt); err != nil {
+	if _, _, err = browserfixt.SetUp(ctx, f.cr, f.bt); err != nil {
 		s.Fatal("Failed to get a browser to open new tab: ", err)
 	}
 
@@ -474,7 +419,10 @@ func (f *onedriveFixture) PostTest(ctx context.Context, s *testing.FixtTestState
 	}
 
 	// Close the active browser if there's any.
-	browserfixt.MaybeConnectBrowserAndClose(ctx, f.cr, f.bt)
+	_, closeBrowser, _ := browserfixt.ConnectAndOwn(ctx, f.cr, f.bt)
+	if closeBrowser != nil {
+		closeBrowser(ctx)
+	}
 }
 
 func deleteFileRetrying(ctx context.Context, file string) error {

@@ -29,7 +29,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           OdfsAccountRestrictions,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantNeeded,
 		Desc:           "Verifies that the Enterprise Clippy account restrictions are working",
 		BugComponent:   "b:1199143",
 		Timeout:        5 * time.Minute,

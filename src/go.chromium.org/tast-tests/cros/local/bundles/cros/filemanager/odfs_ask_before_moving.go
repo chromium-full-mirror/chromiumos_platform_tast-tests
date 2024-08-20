@@ -26,7 +26,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           OdfsAskBeforeMoving,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantExists,
 		Desc:           "Verifies that toggling the 'Ask Before Moving to OneDrive' option makes the move interstitial disappear for Setup flow",
 		BugComponent:   "b:1199143",
 		Timeout:        5 * time.Minute,
@@ -48,13 +47,7 @@ func init() {
 		VarDeps: []string{
 			"onedrive.accountPool",
 		},
-		Params: []testing.Param{{
-			Fixture: "onedrive",
-		}, {
-			Name:              "lacros",
-			Fixture:           "onedriveLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-		}},
+		Fixture: "onedrive",
 		SearchFlags: []*testing.StringPair{{
 			Key:   "feature_id",
 			Value: "screenplay-f9144b75-aada-4249-8c8b-f3637693a7ea",

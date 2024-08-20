@@ -23,7 +23,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           DrivefsOfficeReopenFile,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantExists,
 		Desc:           "Verifies that office file can be open directly in Google Drive",
 		BugComponent:   "b:1199143",
 		Timeout:        5 * time.Minute,
@@ -43,13 +42,7 @@ func init() {
 			"group:hw_agnostic",
 			"informational",
 		},
-		Params: []testing.Param{{
-			Fixture: "onedriveAndGoogleDrive",
-		}, {
-			Name:              "lacros",
-			Fixture:           "onedriveAndGoogleDriveLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-		}},
+		Fixture: "onedriveAndGoogleDrive",
 		SearchFlags: []*testing.StringPair{{
 			Key:   "feature_id",
 			Value: "screenplay-a71f5740-a8f7-455b-89b6-4359a98a96cf",

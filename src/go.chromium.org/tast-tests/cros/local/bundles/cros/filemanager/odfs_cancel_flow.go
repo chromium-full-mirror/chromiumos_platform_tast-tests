@@ -24,7 +24,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           OdfsCancelFlow,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantExists,
 		Desc:           "Verifies that exiting Setup at various points restarts in the correct place",
 		BugComponent:   "b:1199143",
 		Timeout:        5 * time.Minute,
@@ -46,13 +45,7 @@ func init() {
 		VarDeps: []string{
 			"onedrive.accountPool",
 		},
-		Params: []testing.Param{{
-			Fixture: "onedrive",
-		}, {
-			Name:              "lacros",
-			Fixture:           "onedriveLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-		}},
+		Fixture: "onedrive",
 		SearchFlags: []*testing.StringPair{{
 			Key:   "feature_id",
 			Value: "screenplay-52a1eb24-7c9a-43a2-9aa4-121f49b68c7c",

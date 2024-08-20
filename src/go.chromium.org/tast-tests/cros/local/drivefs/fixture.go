@@ -206,23 +206,6 @@ func init() {
 			"drivefs.extensionClientID",
 		},
 	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:         "driveFsStartedWithOfficeEnabledLacros",
-		Desc:         "Lacros variant of driveFsStartedWithOfficeEnabled",
-		Contacts:     []string{"lucmult@chromium.org", "chromeos-files-syd@google.com"},
-		BugComponent: "b:167289",
-		Impl: &fixture{
-			chromeOptions: []chrome.Option{chrome.EnableFeatures("UploadOfficeToCloud")},
-			bt:            browser.TypeLacros,
-		},
-		SetUpTimeout:    chrome.GAIALoginTimeout + DriveFsSetupAndTearDownTimeout,
-		ResetTimeout:    DriveFsSetupAndTearDownTimeout,
-		TearDownTimeout: chrome.ResetTimeout + DriveFsSetupAndTearDownTimeout,
-		Vars: []string{
-			"drivefs.extensionClientID",
-		},
-	})
 }
 
 // FixtureData is the struct available for tests.

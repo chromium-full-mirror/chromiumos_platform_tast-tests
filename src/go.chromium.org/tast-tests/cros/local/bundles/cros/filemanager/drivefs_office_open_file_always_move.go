@@ -22,7 +22,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           DrivefsOfficeOpenFileAlwaysMove,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantExists,
 		Desc:           "Verifies that docx, xlsx and pptx open in Google Drive and we can see 'always move' checkbox for 2nd time",
 		BugComponent:   "b:1199143",
 		Timeout:        5 * time.Minute,
@@ -42,13 +41,7 @@ func init() {
 			"group:hw_agnostic",
 			"informational",
 		},
-		Params: []testing.Param{{
-			Fixture: "onedriveAndGoogleDrive",
-		}, {
-			Name:              "lacros",
-			Fixture:           "onedriveAndGoogleDriveLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-		}},
+		Fixture: "onedriveAndGoogleDrive",
 		SearchFlags: []*testing.StringPair{{
 			Key:   "feature_id",
 			Value: "screenplay-7f884cb5-976c-4e75-b2de-ea1306e4f3ee",

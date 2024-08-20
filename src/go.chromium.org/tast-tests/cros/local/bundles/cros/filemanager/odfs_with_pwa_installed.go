@@ -25,7 +25,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           OdfsWithPWAInstalled,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantExists,
 		Desc:           "Verifies office PWA can be installed separately before opening office files",
 		BugComponent:   "b:1199143",
 		Timeout:        5 * time.Minute,
@@ -47,15 +46,7 @@ func init() {
 		VarDeps: []string{
 			"onedrive.accountPool",
 		},
-		Params: []testing.Param{{
-			Fixture: "onedrive",
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			Fixture:           "onedriveLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               browser.TypeLacros,
-		}},
+		Fixture: "onedrive",
 		SearchFlags: []*testing.StringPair{{
 			Key:   "feature_id",
 			Value: "screenplay-7d517dd5-a921-44b4-88b7-20a51a22a1ef",

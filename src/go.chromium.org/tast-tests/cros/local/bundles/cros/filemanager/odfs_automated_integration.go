@@ -31,7 +31,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           OdfsAutomatedIntegration,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantNeeded,
 		Desc:           "Verifies that the automated Microsoft OneDrive integration works",
 		BugComponent:   "b:1401215", // ChromeOS > Software > Commercial (Enterprise) > Identity > 3P IdP > Enterprise Clippy
 		Timeout:        5 * time.Minute,

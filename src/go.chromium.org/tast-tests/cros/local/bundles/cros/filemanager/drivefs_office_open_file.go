@@ -23,7 +23,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           DrivefsOfficeOpenFile,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantExists,
 		Desc:           "Verifies docx, xlsx and pptx files can be open by Google Drive",
 		BugComponent:   "b:1199143",
 		Timeout:        5 * time.Minute,
@@ -43,13 +42,7 @@ func init() {
 			"group:hw_agnostic",
 			"informational",
 		},
-		Params: []testing.Param{{
-			Fixture: "onedriveAndGoogleDrive",
-		}, {
-			Name:              "lacros",
-			Fixture:           "onedriveAndGoogleDriveLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-		}},
+		Fixture: "onedriveAndGoogleDrive",
 		SearchFlags: []*testing.StringPair{{
 			Key:   "feature_id",
 			Value: "screenplay-315ec7b9-6ab0-4f20-a67b-2950271625d0",

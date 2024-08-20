@@ -24,7 +24,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           OdfsWithOneDriveConnected,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantExists,
 		Desc:           "Verifies OneDrive can be connected separately before opening office files",
 		BugComponent:   "b:1199143",
 		Timeout:        5 * time.Minute,
@@ -46,13 +45,7 @@ func init() {
 		VarDeps: []string{
 			"onedrive.accountPool",
 		},
-		Params: []testing.Param{{
-			Fixture: "onedrive",
-		}, {
-			Name:              "lacros",
-			Fixture:           "onedriveLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-		}},
+		Fixture: "onedrive",
 		SearchFlags: []*testing.StringPair{{
 			Key:   "feature_id",
 			Value: "screenplay-8a866cab-b82a-47d0-be74-b68f8ca9956f",

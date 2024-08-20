@@ -24,7 +24,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           OdfsOpenFile,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantExists,
 		Desc:           "Verifies that docx, xlsx and pptx open in OneDrive",
 		BugComponent:   "b:1199143",
 		Timeout:        5 * time.Minute,
@@ -46,13 +45,7 @@ func init() {
 		VarDeps: []string{
 			"onedrive.accountPool",
 		},
-		Params: []testing.Param{{
-			Fixture: "onedrive",
-		}, {
-			Name:              "lacros",
-			Fixture:           "onedriveLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-		}},
+		Fixture: "onedrive",
 		SearchFlags: []*testing.StringPair{{
 			Key:   "feature_id",
 			Value: "screenplay-9dc29d03-fea0-498d-b1b3-e32f72d6cb73",

@@ -27,7 +27,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           OdfsFileCrud,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantExists,
 		Desc:           "Verifies basic file operations (create/rename/delete) work in ODFS",
 		BugComponent:   "b:1199143",
 		Timeout:        5 * time.Minute,
@@ -49,13 +48,7 @@ func init() {
 		VarDeps: []string{
 			"onedrive.accountPool",
 		},
-		Params: []testing.Param{{
-			Fixture: "onedrive",
-		}, {
-			Name:              "lacros",
-			Fixture:           "onedriveLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-		}},
+		Fixture: "onedrive",
 		SearchFlags: []*testing.StringPair{{
 			Key:   "feature_id",
 			Value: "screenplay-2890a8ff-7ee5-457e-9b85-a88dcdec15c8",
