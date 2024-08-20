@@ -46,7 +46,12 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 		},
 		BugComponent: "b:1027806", // ChromeOS > Software > Commercial (Enterprise) > Identity
-		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
+		Attr:         []string{
+			// Disabled by TORA. See: b/337499797
+			// "group:mainline",
+			// "informational",
+			// "group:hw_agnostic",
+		},
 		SoftwareDeps: []string{"chrome"},
 		VarDeps: []string{
 			"ui.signinProfileTestExtensionManifestKey",
