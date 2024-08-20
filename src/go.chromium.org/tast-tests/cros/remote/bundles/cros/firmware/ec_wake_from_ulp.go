@@ -91,6 +91,11 @@ func init() {
 				"magolor",
 				"magpie",
 				"metaknight",
+				"palutena",
+				"pasara",
+				"peezer",
+				"pirette",
+				"pirika",
 				"sasukette",
 				"storo",
 				// Guybrush
