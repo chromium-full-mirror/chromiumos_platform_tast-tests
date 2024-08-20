@@ -51,12 +51,7 @@ func init() {
 		SoftwareDeps: []string{"chrome", "cups"},
 		HardwareDeps: hwdep.D(pre.PrinterSkipUnstableModels),
 		Data:         []string{"ipp_conf_finishings.txt", "get-jobs-finishings-info.test"},
-		Params: []testing.Param{
-			{
-				Val:     browser.TypeAsh,
-				Fixture: "chromeLoggedIn",
-			},
-		},
+		Fixture:      "chromeLoggedIn",
 		SearchFlags: []*testing.StringPair{
 			{
 				Key: "feature_id",
@@ -77,7 +72,7 @@ func PrintFinishingFeatures(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	bt := s.Param().(browser.Type)
+	bt := browser.TypeAsh
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	tconn, err := cr.TestAPIConn(ctx)
