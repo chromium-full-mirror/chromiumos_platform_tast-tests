@@ -25,12 +25,17 @@ type TestCase struct {
 	ShouldFindAnnotation bool
 	Policy               *policy.UserFeedbackAllowed
 	WantReportOption     bool
+	// TrafficShouldFind states the traffic should be found during tests.
+	TrafficShouldFind []string
+	// TrafficShouldNotFind states the traffic should NOT be found during tests.
+	TrafficShouldNotFind []string
 }
 
 // Hash code for NetworkTrafficAnnotationTag with id.
 const (
 	HelpContentProviderHashCode     = "92685132"  // help_content_provider
 	ChromeFeedbackReportAppHashCode = "134729048" // chrome_feedback_report_app
+	regexFeedbackURL                = "https://www.google.com/tools/feedback/chrome/.*"
 )
 
 // TestCases returns the map of policy setting enum to TestCase objects
@@ -42,18 +47,24 @@ func TestCases() map[networkrequestmonitor.PolicySetting]TestCase {
 			Policy:               &policy.UserFeedbackAllowed{Val: false},
 			WantReportOption:     false,
 			ShouldFindAnnotation: false,
+			TrafficShouldFind:    []string{},
+			TrafficShouldNotFind: []string{regexFeedbackURL},
 		},
 		networkrequestmonitor.PolicyEnabled: {
 			Name:                 "allow",
 			Policy:               &policy.UserFeedbackAllowed{Val: true},
 			WantReportOption:     true,
 			ShouldFindAnnotation: true,
+			TrafficShouldFind:    []string{regexFeedbackURL},
+			TrafficShouldNotFind: []string{},
 		},
 		networkrequestmonitor.PolicyUnset: {
 			Name:                 "unset",
 			Policy:               &policy.UserFeedbackAllowed{Stat: policy.StatusUnset},
 			WantReportOption:     true,
 			ShouldFindAnnotation: true,
+			TrafficShouldFind:    []string{regexFeedbackURL},
+			TrafficShouldNotFind: []string{},
 		},
 	}
 }

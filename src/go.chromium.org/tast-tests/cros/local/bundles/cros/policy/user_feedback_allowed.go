@@ -21,6 +21,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/netexport"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
+	"go.chromium.org/tast-tests/cros/local/testenv/proxy"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -61,6 +62,19 @@ func UserFeedbackAllowed(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
+
+	mp, err := proxy.NewMitmProxy(ctx,
+		proxy.DumpHTTPFlow(true),
+	)
+	if err != nil {
+		s.Fatal("Failed to start mitmproxy: ", err)
+	}
+	defer mp.Close(cleanupCtx)
+	reset, err := proxy.ConfigureChrome(ctx, mp, cr)
+	if err != nil {
+		s.Fatal("Failed to configure chrome for proxy: ", err)
+	}
+	defer reset(cleanupCtx, cr)
 
 	// Get virtual keyboard to test key combination behavior.
 	keyboard, err := input.VirtualKeyboard(ctx)
@@ -128,6 +142,20 @@ func UserFeedbackAllowed(ctx context.Context, s *testing.State) {
 
 			if foundAnnotationChromeFeedbackReportApp != param.ShouldFindAnnotation {
 				s.Fatalf("chrome_feedback_report_app annotation mismatch. Expected: %t. Actual: %t", param.ShouldFindAnnotation, foundAnnotationChromeFeedbackReportApp)
+			}
+
+			resp, err := mp.DumpHTTPFlow(ctx, true, false)
+			if err != nil {
+				s.Fatal("Failed to get dump httpflow from mitmproxy: ", err)
+			}
+
+			v := proxy.NewNetworkVerifier(resp)
+			allow := param.TrafficShouldFind
+			disallow := param.TrafficShouldNotFind
+			// allow/disallow traffic are passed by test case param.
+			// We will ignore traffic other than the allow and disallow list for verifying diff.
+			if err := v.Verify(allow, disallow, []string{".*"}); err != nil {
+				s.Fatal("Diff test result: ", err)
 			}
 		})
 	}
