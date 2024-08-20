@@ -1,0 +1,7 @@
+per-file policyutil/check_enrollment.go = vsavu@google.com
+per-file policyutil/clean_ownership.go = yich@google.com
+per-file policyutil/deskapi_fixture.go = aprilzhou@google.com
+per-file policyutil/enrolled_fixture.go = vsavu@google.com
+per-file policyutil/powerwash.go = mohamedaomar@google.com, sergiyb@chromium.org
+per-file policyutil/tape_account.go = mohamedaomar@google.com, vsavu@google.com
+per-file policyutil/tape_enrolled.go = mohamedaomar@google.com, vsavu@google.com
