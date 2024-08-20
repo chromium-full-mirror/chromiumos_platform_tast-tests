@@ -300,7 +300,7 @@ var (
 			"cert /{{.server_cert}}\n" +
 			"dev tun\n" +
 			"dh /{{.diffie_hellman_params_file}}\n" +
-			"keepalive 10 120\n" +
+			"keepalive 5 30\n" +
 			"log /{{.log_file}}\n" +
 			"ifconfig-pool-persist /tmp/ipp.txt\n" +
 			"key /{{.server_key}}\n" +
