@@ -6,8 +6,11 @@
 package ehide
 
 import (
+	"bufio"
 	"context"
+	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -46,6 +49,9 @@ const postTestTimeout = getStateTimeout + waitRecoveryTimeout
 const waitRecoveryTimeout = 1 * time.Minute
 
 const saveLogMaxSize = 20 * 1024 * 1024 // 20MB
+
+// Ehide error message pattern: "<timestamp> ERR ehide[<pid>]: <timestamp> ERROR <error_message>"
+var ehideErrorMsgPattern = regexp.MustCompile(`^\S* ERR ehide\[\d+\]: \S* ERROR (.*)$`)
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
@@ -98,6 +104,15 @@ func (f *ehideFixture) SetUp(ctx context.Context, s *testing.FixtState) interfac
 			f.waitForSSHRecoveryOnFailure(ctx, d)
 		}
 		f.saveNetLog(ctx, d)
+		if !success {
+			if msgs, err := f.collectEhideErrorMsgFromNetLog(ctx); err != nil {
+				s.Error("Failed to collect ehide error messages from net.log: ", err)
+			} else {
+				for _, msg := range msgs {
+					s.Error("Ehide error: ", msg)
+				}
+			}
+		}
 	}(ctx)
 	ctx, cancel := ctxutil.Shorten(ctx, waitRecoveryTimeout)
 	defer cancel()
@@ -144,6 +159,15 @@ func (f *ehideFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
 			f.waitForSSHRecoveryOnFailure(ctx, d)
 		}
 		f.saveNetLog(ctx, d)
+		if !success {
+			if msgs, err := f.collectEhideErrorMsgFromNetLog(ctx); err != nil {
+				s.Error("Failed to collect ehide error messages from net.log: ", err)
+			} else {
+				for _, msg := range msgs {
+					s.Error("Ehide error: ", msg)
+				}
+			}
+		}
 	}(ctx)
 	ctx, cancel := ctxutil.Shorten(ctx, waitRecoveryTimeout)
 	defer cancel()
@@ -172,6 +196,15 @@ func (f *ehideFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 			f.waitForSSHRecoveryOnFailure(ctx, d)
 		}
 		f.saveNetLog(ctx, d)
+		if !success {
+			if msgs, err := f.collectEhideErrorMsgFromNetLog(ctx); err != nil {
+				s.Error("Failed to collect ehide error messages from net.log: ", err)
+			} else {
+				for _, msg := range msgs {
+					s.Error("Ehide error: ", msg)
+				}
+			}
+		}
 	}(ctx)
 	ctx, cancel := ctxutil.Shorten(ctx, waitRecoveryTimeout)
 	defer cancel()
@@ -245,6 +278,29 @@ func (f *ehideFixture) saveNetLog(ctx context.Context, d *dut.DUT) {
 	if err := f.logFileDelta.Save(ctx, d.Conn()); err != nil {
 		testing.ContextLog(ctx, "Failed to save net.log: ", err)
 	}
+}
+
+// collectEhideErrorMsgFromNetLog collects all the ehide error messages from
+// net.log and returns them as []string.
+func (f *ehideFixture) collectEhideErrorMsgFromNetLog(ctx context.Context) ([]string, error) {
+	file, err := os.Open(f.logFileSavePath)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to open saved net.log")
+	}
+	defer file.Close()
+
+	var ret []string
+	sc := bufio.NewScanner(file)
+	for sc.Scan() {
+		line := sc.Text()
+		if matches := ehideErrorMsgPattern.FindStringSubmatch(line); matches != nil {
+			ret = append(ret, matches[1])
+		}
+	}
+	if err := sc.Err(); err != nil {
+		return nil, errors.Wrap(err, "failed to scan saved net.log")
+	}
+	return ret, nil
 }
 
 func getState(ctx context.Context, dut *dut.DUT) (string, error) {
