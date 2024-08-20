@@ -128,8 +128,8 @@ func CorruptBothKernelCopies(ctx context.Context, s *testing.State) {
 
 	defer func(ctx context.Context) {
 		if needsRestore {
-			if err := h.WaitConnect(ctx); err != nil {
-				s.Fatal("Failed to reconnect to DUT: ", err)
+			if err := h.EnsureDUTBooted(ctx); err != nil {
+				s.Fatal("Failed to ensure DUT booted: ", err)
 			}
 
 			// If stuck on USB boot, syncing tast files to usb image will allow kernel service to restore kernel on disk.
@@ -174,6 +174,16 @@ func CorruptBothKernelCopies(ctx context.Context, s *testing.State) {
 	if _, err := h.KernelServiceClient.EnsureBothKernelCopiesBootable(ctx, &empty.Empty{}); err != nil {
 		s.Fatal("Failed to ensure both kernel copies are bootable: ", err)
 	}
+
+	testing.ContextLog(ctx, "Sleeping for 10s")
+	// GoBigSleepLint: There is a risk that the priority value may revert to its
+	// original setting if the priority is set immediately after
+	// EnsureBothKernelCopiesBootable() and SetBothKernelBootable().
+	// Add a 10-second delay before setting the priority.
+	if err := testing.Sleep(ctx, 10*time.Second); err != nil {
+		s.Fatal("Failed to sleep for 10 seconds")
+	}
+
 	if _, err := h.KernelServiceClient.PrioritizeKernelCopy(ctx, &pb.Partition{
 		Name: pb.PartitionName_KERNEL,
 		Copy: pb.PartitionCopy_A,
