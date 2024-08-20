@@ -40,6 +40,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{"drag_source_window.html", "drag_target_window.html"},
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
+		Fixture:      "arcBooted",
 		Params: []testing.Param{{
 			Name:              "chrome_to_android",
 			ExtraSoftwareDeps: []string{"android_container"},
@@ -118,32 +119,14 @@ func DragDrop(ctx context.Context, s *testing.State) {
 
 	args := s.Param().(*dragDropTestArgs)
 
-	// TODO(b/360556511): Use the existing fixture
-	chromeOpts := []chrome.Option{chrome.ARCEnabled(), chrome.UnRestrictARCCPU(),
-		chrome.ExtraArgs("--force-tablet-mode=clamshell"), chrome.ExtraArgs("--disable-features=ArcResizeLock")}
-
-	cr, err := chrome.New(ctx, chromeOpts...)
-	if err != nil {
-		s.Fatal("Failed to start Chrome: ", err)
-	}
-	defer cr.Close(cleanupCtx)
+	a := s.FixtValue().(*arc.PreData).ARC
+	cr := s.FixtValue().(*arc.PreData).Chrome
+	d := s.FixtValue().(*arc.PreData).UIDevice
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
-
-	a, err := arc.New(ctx, s.OutDir(), cr.NormalizedUser())
-	if err != nil {
-		s.Fatal("Could not start ARC: ", err)
-	}
-	defer a.Close(cleanupCtx)
-
-	d, err := a.NewUIDevice(ctx)
-	if err != nil {
-		s.Fatal("Failed initializing UI Automator: ", err)
-	}
-	defer d.Close(cleanupCtx)
 
 	s.Log("Start the Web server")
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
