@@ -11,7 +11,9 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vkb"
 	"go.chromium.org/tast-tests/cros/local/inputs/fixture"
 	"go.chromium.org/tast-tests/cros/local/inputs/pre"
@@ -70,6 +72,8 @@ func VirtualKeyboardSuggestionPasswordField(ctx context.Context, s *testing.Stat
 	}
 	defer its.CloseAll(cleanupCtx)
 
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
+
 	vkbCtx := vkb.NewContext(cr, tconn)
 	ui := uiauto.New(tconn)
 
@@ -84,11 +88,12 @@ func VirtualKeyboardSuggestionPasswordField(ctx context.Context, s *testing.Stat
 				vkbCtx.TapKeysIgnoringCase(strings.Split(password, "")),
 				its.ClickButton(testserver.MakeTextButton),
 				its.ClickFieldUntilVKShown(testserver.PasswordInputField),
+				ui.WaitUntilExists(nodewith.Role(role.RootWebArea).Name("Chrome OS Virtual Keyboard")),
 			)(ctx); err != nil {
 				s.Fatal("Failed to trigger vk after click makeText button: ", err)
 			}
 
-			if err := ui.WaitUntilExists(nodewith.Name("word suggestion 1"))(ctx); err != nil {
+			if err := ui.WaitUntilExists(nodewith.NameContaining("word suggestion").First())(ctx); err != nil {
 				s.Fatal("Failed to confirm digits bar shown: ", err)
 			}
 		})
