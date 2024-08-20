@@ -45,7 +45,6 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_ec"},
-		Requirements: []string{"sys-fw-0022-v02"},
 		Fixture:      fixture.NormalMode,
 		ServiceDeps:  []string{"tast.cros.firmware.BiosService"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Battery()),

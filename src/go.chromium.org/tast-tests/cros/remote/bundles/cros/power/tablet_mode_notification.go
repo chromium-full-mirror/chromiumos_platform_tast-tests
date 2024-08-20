@@ -31,7 +31,6 @@ func init() {
 		ServiceDeps:  []string{"tast.cros.security.BootLockboxService"},
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational", "group:firmware", "firmware_ec"},
-		Requirements: []string{"sys-fw-0022-v02"},
 		Timeout:      5 * time.Minute,
 		// Restrict boards that don't support any method in the tabletmode package for forcing tabletmode.
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(),

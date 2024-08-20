@@ -26,7 +26,6 @@ func init() {
 			"pf@semihalf.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		Requirements: []string{"sys-fw-0022-v02"},
 		Attr:         []string{"group:firmware", "firmware_ec", "firmware_bringup"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Fixture:      fixture.NormalMode,

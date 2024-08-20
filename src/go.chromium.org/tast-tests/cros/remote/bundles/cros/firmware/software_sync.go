@@ -36,7 +36,6 @@ func init() {
 		Attr:         []string{"group:firmware", "firmware_ec", "firmware_cr50"},
 		// Don't run on EFS1 devices (fizz & kalista), there is a test firmware.ECUpdateID that tests those.
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.SkipOnPlatform("fizz", "kalista")),
-		Requirements: []string{"sys-fw-0022-v02"},
 		Timeout:      15 * time.Minute,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{

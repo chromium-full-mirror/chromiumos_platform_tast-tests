@@ -10,13 +10,9 @@ import (
 	"context"
 	"time"
 
-	"fmt"
-
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
-
-	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 // DTSMode is a type for DTS Mode control in SetupPDTester
@@ -57,34 +53,6 @@ type PDTestParams struct {
 	Suspend      bool
 	RequiredPort *int
 	PowerRole    ServoPowerRole
-}
-
-// AddPDPorts takes a list of testing.Params that use PDTestParams as their value and populates the PVS requirements and creates parameterized tests for each PD port.
-// This is a somewhat hacky workaround for the PD port not being a first class dimension in PVS. See b/291571959 for more info.
-func AddPDPorts(params []testing.Param, attrs []string) []testing.Param {
-	var result []testing.Param
-	for _, test := range params {
-		test.ExtraAttr = attrs
-		result = append(result, test)
-	}
-	for port := 0; port < servo.MaxPorts; port++ {
-		for _, test := range params {
-			if test.Name == "" {
-				test.Name = fmt.Sprintf("port%d", port)
-			} else {
-				test.Name = fmt.Sprintf("%s_port%d", test.Name, port)
-			}
-			test.ExtraAttr = nil
-			test.ExtraRequirements = []string{"sys-fw-0023-v01"}
-			test.ExtraHardwareDeps = hwdep.D(hwdep.HasPDPort(uint32(port)))
-			val := test.Val.(PDTestParams)
-			val.RequiredPort = new(int)
-			*val.RequiredPort = port
-			test.Val = val
-			result = append(result, test)
-		}
-	}
-	return result
 }
 
 // SetupPDTester handles some boilerplate tasks to prepare the Servo for PD testing:

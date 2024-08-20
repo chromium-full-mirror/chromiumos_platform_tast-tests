@@ -41,7 +41,7 @@ func init() {
 		HardwareDeps:    hwdep.D(hwdep.WifiDevice(hwdep.MediaTekMT7922PCIE)),
 		TestBedDeps:     []string{tbdep.WifiStateNormal},
 		Fixture:         "wiphyEnabled",
-		Requirements:    []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates, "sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
+		Requirements:    []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
 		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 	})
 }

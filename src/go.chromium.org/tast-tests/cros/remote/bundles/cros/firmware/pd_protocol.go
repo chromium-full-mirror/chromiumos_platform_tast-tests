@@ -28,9 +28,10 @@ func init() {
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.SkipOnFormFactor(hwdep.Chromebox)),
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Params: firmware.AddPDPorts([]testing.Param{{
+		Attr:         []string{"group:firmware", "firmware_pd"},
+		Params: []testing.Param{{
 			Val: firmware.PDTestParams{},
-		}}, []string{"group:firmware", "firmware_pd"}),
+		}},
 	})
 }
 

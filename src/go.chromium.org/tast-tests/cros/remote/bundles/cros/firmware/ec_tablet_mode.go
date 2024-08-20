@@ -50,7 +50,6 @@ func init() {
 		ServiceDeps:  []string{"tast.cros.ui.ScreenLockService", "tast.cros.ui.PowerMenuService", "tast.cros.graphics.ScreenshotService"},
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
-		Requirements: []string{"sys-fw-0022-v02"},
 		Params: []testing.Param{{
 			ExtraHardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Convertible), hwdep.SkipOnModel("nautilus", "nautiluslte")),
 			Val: tabletModeTestParams{

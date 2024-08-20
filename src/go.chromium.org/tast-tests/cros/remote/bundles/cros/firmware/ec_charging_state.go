@@ -37,7 +37,6 @@ func init() {
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		// TODO: When stable, change firmware_unstable to a different attr.
 		Attr:         []string{"group:firmware", "firmware_ccd", "firmware_ec"},
-		Requirements: []string{"sys-fw-0022-v02"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Battery()),
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps: []string{

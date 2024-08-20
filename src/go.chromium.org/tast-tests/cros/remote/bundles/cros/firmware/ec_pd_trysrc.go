@@ -31,7 +31,8 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Timeout:      20 * time.Minute,
-		Params: firmware.AddPDPorts([]testing.Param{{
+		Attr:         []string{"group:firmware", "firmware_pd"},
+		Params: []testing.Param{{
 			Name: "normal",
 			Val: firmware.PDTestParams{
 				DTS: firmware.DTSModeOff,
@@ -42,7 +43,7 @@ func init() {
 				CC:  firmware.CCPolarityFlipped,
 				DTS: firmware.DTSModeOff,
 			},
-		}}, []string{"group:firmware", "firmware_pd"}),
+		}},
 	})
 }
 

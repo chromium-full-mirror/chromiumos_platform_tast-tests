@@ -30,7 +30,6 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level2"},
-		Requirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
 		// Based on known un-annotated platforms that might not be updated.
 		HardwareDeps: hwdep.D(hwdep.SkipOnPlatform(unannotatedPlatforms...), hwdep.X86()),
 	})

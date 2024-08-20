@@ -30,7 +30,8 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Timeout:      20 * time.Minute,
-		Params: firmware.AddPDPorts([]testing.Param{{
+		Attr:         []string{"group:firmware", "firmware_pd_unstable"},
+		Params: []testing.Param{{
 			Name: "normal",
 			Val:  firmware.PDTestParams{},
 		}, {
@@ -59,7 +60,7 @@ func init() {
 			Val: firmware.PDTestParams{
 				Suspend: true,
 			},
-		}}, []string{"group:firmware", "firmware_pd_unstable"}),
+		}},
 	})
 }
 

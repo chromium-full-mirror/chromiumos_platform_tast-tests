@@ -19,7 +19,6 @@ func init() {
 		BugComponent: "b:970794", // ChromeOS > Platform > Enablement > Firmware > unibuild
 		SoftwareDeps: []string{"unibuild"},
 		Attr:         []string{"group:mainline", "group:firmware", "firmware_ec"},
-		Requirements: []string{"sys-fw-0022-v02"},
 	})
 }
 

@@ -31,7 +31,8 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Timeout:      6 * time.Minute,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Params: firmware.AddPDPorts([]testing.Param{{
+		Attr:         []string{"group:firmware", "firmware_pd"},
+		Params: []testing.Param{{
 			Name: "normal",
 			Val:  firmware.PDTestParams{},
 		}, {
@@ -50,7 +51,7 @@ func init() {
 				CC:  firmware.CCPolarityFlipped,
 				DTS: firmware.DTSModeOff,
 			},
-		}}, []string{"group:firmware", "firmware_pd"}),
+		}},
 	})
 }
 

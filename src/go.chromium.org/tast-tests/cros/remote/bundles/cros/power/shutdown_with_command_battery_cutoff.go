@@ -39,7 +39,6 @@ func init() {
 		Vars:         []string{"servo"},
 		Timeout:      10 * time.Minute,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.NoBatteryBootSupported()),
-		Requirements: []string{"sys-fw-0022-v02"},
 	})
 }
 

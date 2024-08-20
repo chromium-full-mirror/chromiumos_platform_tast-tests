@@ -37,7 +37,6 @@ func init() {
 			"ekko",
 			"syndra",
 		)),
-		Requirements: []string{"sys-fw-0022-v02"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }

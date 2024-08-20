@@ -44,7 +44,6 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Lid()),
 		SoftwareDeps: []string{"chrome"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Requirements: []string{"sys-fw-0022-v02"},
 		ServiceDeps:  []string{"tast.cros.firmware.UtilsService"},
 		Timeout:      10 * time.Minute,
 		Params: []testing.Param{

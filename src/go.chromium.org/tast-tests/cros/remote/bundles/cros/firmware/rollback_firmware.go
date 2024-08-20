@@ -40,7 +40,6 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_bios", "firmware_ro", "firmware_level3"},
-		Requirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01"},
 		SoftwareDeps: []string{"flashrom"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Timeout:      25 * time.Minute,

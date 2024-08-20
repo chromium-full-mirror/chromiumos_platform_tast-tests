@@ -39,7 +39,6 @@ func init() {
 		SoftwareDeps: []string{"wilco"},
 		Fixture:      fixture.NormalMode,
 		Timeout:      15 * time.Minute,
-		Requirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
 		Params: []testing.Param{{
 			// Verify that Wilco doesn't turn on from S5 (off) by opening the lid.
 			Name: "lid_close_open",

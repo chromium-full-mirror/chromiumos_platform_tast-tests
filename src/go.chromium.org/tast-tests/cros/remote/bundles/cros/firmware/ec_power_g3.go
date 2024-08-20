@@ -50,33 +50,29 @@ func init() {
 		Fixture:      fixture.NormalMode,
 		Params: []testing.Param{
 			{
-				Name:              "shutdown",
-				ExtraAttr:         []string{"firmware_ec"},
-				ExtraRequirements: []string{"sys-fw-0022-v02"},
+				Name:      "shutdown",
+				ExtraAttr: []string{"firmware_ec"},
 				Val: powerG3Params{
 					PowerOffMethod: shutdownCommand,
 				},
 			},
 			{
-				Name:              "power_button",
-				ExtraAttr:         []string{"firmware_ec", "firmware_bringup"},
-				ExtraRequirements: []string{"sys-fw-0022-v02"},
+				Name:      "power_button",
+				ExtraAttr: []string{"firmware_ec", "firmware_bringup"},
 				Val: powerG3Params{
 					PowerOffMethod: longPowerButtonPress,
 				},
 			},
 			{
-				Name:              "power_state",
-				ExtraAttr:         []string{"firmware_bios", "firmware_level2", "firmware_bringup", "group:labqual"},
-				ExtraRequirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
+				Name:      "power_state",
+				ExtraAttr: []string{"firmware_bios", "firmware_level2", "firmware_bringup", "group:labqual"},
 				Val: powerG3Params{
 					PowerOffMethod: powerStateOff,
 				},
 			},
 			{
-				Name:              "power_state_usb_plugged_in",
-				ExtraAttr:         []string{"firmware_bios", "firmware_usb", "firmware_level2", "group:labqual", "firmware_ro"},
-				ExtraRequirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01"},
+				Name:      "power_state_usb_plugged_in",
+				ExtraAttr: []string{"firmware_bios", "firmware_usb", "firmware_level2", "group:labqual", "firmware_ro"},
 				Val: powerG3Params{
 					PowerOffMethod: powerStateOff,
 					CheckUSB:       true,
@@ -86,7 +82,6 @@ func init() {
 			{
 				Name:              "power_state_snk",
 				ExtraAttr:         []string{"firmware_ec", "firmware_bringup"},
-				ExtraRequirements: []string{"sys-fw-0022-v02"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Battery()),
 				Val: powerG3Params{
 					PowerOffMethod: powerStateOff,
@@ -94,9 +89,8 @@ func init() {
 				},
 			},
 			{
-				Name:              "power_state_rec_off",
-				ExtraAttr:         []string{"firmware_bios", "firmware_usb", "firmware_level2", "group:labqual", "firmware_ro"},
-				ExtraRequirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01"},
+				Name:      "power_state_rec_off",
+				ExtraAttr: []string{"firmware_bios", "firmware_usb", "firmware_level2", "group:labqual", "firmware_ro"},
 				Val: powerG3Params{
 					PowerOffMethod: powerStateOff,
 					SetRecMode:     true,
@@ -104,9 +98,8 @@ func init() {
 				Timeout: 120 * time.Minute,
 			},
 			{
-				Name:              "power_button_from_ro",
-				ExtraAttr:         []string{"firmware_bios", "firmware_level2", "group:labqual", "firmware_ro"},
-				ExtraRequirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01"},
+				Name:      "power_button_from_ro",
+				ExtraAttr: []string{"firmware_bios", "firmware_level2", "group:labqual", "firmware_ro"},
 				Val: powerG3Params{
 					PowerOffMethod: longPowerButtonPress,
 					SetRecScreen:   true,
