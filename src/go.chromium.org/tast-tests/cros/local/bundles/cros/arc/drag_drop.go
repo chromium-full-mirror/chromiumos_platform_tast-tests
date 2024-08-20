@@ -7,9 +7,8 @@ package arc
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
-	"os"
-	"path/filepath"
+	"net/http"
+	"net/http/httptest"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/android/ui"
@@ -18,49 +17,43 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
+	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
 	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
 )
 
 type dragDropTestArgs struct {
-	extensionPrefix string
-	androidSource   bool
-	androidTarget   bool
+	androidSource bool
+	androidTarget bool
 }
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DragDrop,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Checks drag and drop support from Chrome to ARC",
-		Contacts:     []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
+		Func:     DragDrop,
+		Desc:     "Checks drag and drop support from Chrome to ARC",
+		Contacts: []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
 		// ChromeOS > Software > ARC++ > Framework > Chrome Integration
 		BugComponent: "b:537221",
 		Attr:         []string{"group:mainline", "group:arc-functional"},
 		SoftwareDeps: []string{"chrome"},
-		Data: []string{
-			"drag_drop_manifest.json", "drag_source_background.js", "drag_source_window.js", "drag_source_window.html",
-			"drag_target_background.js", "drag_target_window.js", "drag_target_window.html"},
-		Timeout: chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
+		Data:         []string{"drag_source_window.html", "drag_target_window.html"},
+		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		Params: []testing.Param{{
 			Name:              "chrome_to_android",
 			ExtraSoftwareDeps: []string{"android_container"},
 			Val: &dragDropTestArgs{
-				extensionPrefix: "drag_source_",
-				androidSource:   false,
-				androidTarget:   true,
+				androidSource: false,
+				androidTarget: true,
 			},
 		}, {
 			Name:              "chrome_to_android_vm",
 			ExtraAttr:         []string{"informational", "group:hw_agnostic"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Val: &dragDropTestArgs{
-				extensionPrefix: "drag_source_",
-				androidSource:   false,
-				androidTarget:   true,
+				androidSource: false,
+				androidTarget: true,
 			},
 		}, {
 			Name:              "android_to_android",
@@ -83,18 +76,16 @@ func init() {
 			ExtraAttr:         []string{"informational"},
 			ExtraSoftwareDeps: []string{"android_container"},
 			Val: &dragDropTestArgs{
-				extensionPrefix: "drag_target_",
-				androidSource:   true,
-				androidTarget:   false,
+				androidSource: true,
+				androidTarget: false,
 			},
 		}, {
 			Name:              "android_to_chrome_vm",
 			ExtraAttr:         []string{"informational", "group:hw_agnostic"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Val: &dragDropTestArgs{
-				extensionPrefix: "drag_target_",
-				androidSource:   true,
-				androidTarget:   false,
+				androidSource: true,
+				androidTarget: false,
 			},
 		}},
 	})
@@ -111,8 +102,8 @@ func DragDrop(ctx context.Context, s *testing.State) {
 
 		dragAreaViewID = sourcePkg + ":id/drag_area"
 
-		// Title of Chrome extension, defined in the manifest.
-		extensionTitle = "DragDrop Controller"
+		// Title of the test HTML
+		pageTitle = "Chrome - DragDrop Controller"
 
 		// Packagename of placeholder activity.
 		placeholderPkg = "org.chromium.arc.applauncher"
@@ -127,33 +118,9 @@ func DragDrop(ctx context.Context, s *testing.State) {
 
 	args := s.Param().(*dragDropTestArgs)
 
-	var extID string
+	// TODO(b/360556511): Use the existing fixture
 	chromeOpts := []chrome.Option{chrome.ARCEnabled(), chrome.UnRestrictARCCPU(),
 		chrome.ExtraArgs("--force-tablet-mode=clamshell"), chrome.ExtraArgs("--disable-features=ArcResizeLock")}
-	if args.extensionPrefix != "" {
-		s.Log("Copying extension to temp directory")
-		extDir, err := ioutil.TempDir("", "tast.arc.DragDropExtension")
-		if err != nil {
-			s.Fatal("Failed to create temp dir: ", err)
-		}
-		defer os.RemoveAll(extDir)
-		if err := fsutil.CopyFile(s.DataPath("drag_drop_manifest.json"), filepath.Join(extDir, "manifest.json")); err != nil {
-			s.Fatal("Failed to copy extension manifest.json: ", err)
-		}
-		for _, name := range []string{"background.js", "window.js", "window.html"} {
-			if err := fsutil.CopyFile(s.DataPath(args.extensionPrefix+name), filepath.Join(extDir, name)); err != nil {
-				s.Fatalf("Failed to copy extension %s: %v", name, err)
-			}
-		}
-		extID, err = chrome.ComputeExtensionID(extDir)
-		if err != nil {
-			s.Fatalf("Failed to compute extension ID for %v: %v", extDir, err)
-		}
-
-		chromeOpts = append(chromeOpts, chrome.UnpackedExtension(extDir))
-	}
-
-	s.Log("Starting browser instance")
 
 	cr, err := chrome.New(ctx, chromeOpts...)
 	if err != nil {
@@ -177,6 +144,10 @@ func DragDrop(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed initializing UI Automator: ", err)
 	}
 	defer d.Close(cleanupCtx)
+
+	s.Log("Start the Web server")
+	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
+	defer server.Close()
 
 	startActivityWithBounds := func(ctx context.Context, apk, pkg, activityName string, wantBounds coords.Rect) (act *arc.Activity, err error) {
 		cleanupCtx := ctx
@@ -242,6 +213,24 @@ func DragDrop(ctx context.Context, s *testing.State) {
 	sourceBounds := coords.Rect{Left: w, Top: 0, Width: w, Height: w}
 	targetBounds := coords.Rect{Left: 0, Top: 0, Width: w, Height: w}
 
+	if !args.androidSource {
+		pageURL := server.URL + "/drag_source_window.html"
+		sourceConn, err := openWebpageWithBounds(ctx, cr, tconn, pageURL, sourceBounds)
+		if err != nil {
+			s.Fatalf("Could not connect to page at %v: %v", pageURL, err)
+		}
+		defer sourceConn.Close()
+	}
+	var targetConn *chrome.Conn
+	if !args.androidTarget {
+		pageURL := server.URL + "/drag_target_window.html"
+		targetConn, err = openWebpageWithBounds(ctx, cr, tconn, pageURL, targetBounds)
+		if err != nil {
+			s.Fatalf("Could not connect to page at %v: %v", pageURL, err)
+		}
+		defer targetConn.Close()
+	}
+
 	if args.androidSource {
 		sourceAct, err := startActivityWithBounds(ctx, sourceApk, sourcePkg, sourceActName, sourceBounds)
 		if err != nil {
@@ -273,7 +262,7 @@ func DragDrop(ctx context.Context, s *testing.State) {
 			// Thus, if we just inject drag event after starting the activity, there's a race
 			// between launching the placeholder activity and starting a drag operation.
 			// TODO(b/337997097): We should remove dependency on placeholder.
-			if _, err := ash.BringWindowToForeground(ctx, tconn, extensionTitle); err != nil {
+			if _, err := ash.BringWindowToForeground(ctx, tconn, pageTitle); err != nil {
 				s.Fatal("Failed to activate the source app: ", err)
 			}
 
@@ -300,16 +289,9 @@ func DragDrop(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to wait for the drag and drop result: ", err)
 		}
 	} else {
-		s.Log("Connecting to the extension page")
-		bgURL := "chrome-extension://" + extID + "/window.html"
-		conn, err := cr.NewConnForTarget(ctx, chrome.MatchTargetURL(bgURL))
-		if err != nil {
-			s.Fatalf("Could not connect to extension at %v: %v", bgURL, err)
-		}
-
 		const expected = "Data text"
 		script := fmt.Sprintf(`document.getElementById('dropped-data').innerHTML === %q`, expected)
-		if err := conn.WaitForExprWithTimeout(ctx, script, 30*time.Second); err != nil {
+		if err := targetConn.WaitForExprWithTimeout(ctx, script, 30*time.Second); err != nil {
 			s.Fatal("Failed to wait for the dropped data: ", err)
 		}
 	}
@@ -339,4 +321,29 @@ func waitForViewInsideBounds(ctx context.Context, tconn *chrome.TestConn, uiObj 
 		}
 		return nil
 	}, &testing.PollOptions{Timeout: 15 * time.Second})
+}
+
+func openWebpageWithBounds(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, url string, bounds coords.Rect) (*chrome.Conn, error) {
+	conn, err := cr.NewConn(ctx, url)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to open the page")
+	}
+	if err := webutil.WaitForQuiescence(ctx, conn, 10*time.Second); err != nil {
+		conn.Close()
+		return nil, errors.Wrap(err, "failed to wait for the page loaded")
+	}
+	window, err := ash.GetActiveWindow(ctx, tconn)
+	if err != nil {
+		conn.Close()
+		return nil, errors.Wrap(err, "failed to get the active window")
+	}
+	if err := ash.SetWindowStateAndWait(ctx, tconn, window.ID, ash.WindowStateNormal); err != nil {
+		conn.Close()
+		return nil, errors.Wrap(err, "failed to set the window state to Normal")
+	}
+	if _, _, err := ash.SetWindowBounds(ctx, tconn, window.ID, bounds, window.DisplayID); err != nil {
+		conn.Close()
+		return nil, errors.Wrap(err, "failed to set the window bounds")
+	}
+	return conn, nil
 }

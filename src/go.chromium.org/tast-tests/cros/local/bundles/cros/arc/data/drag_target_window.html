@@ -5,8 +5,8 @@
 -->
 <html>
 <head lang="en">
-    <meta charset="UTF-8">
-    <script src="window.js"></script>
+  <meta charset="UTF-8">
+  <title>DragDrop Controller</title>
   <style>
   html, body {
     width: 100%;
@@ -24,7 +24,22 @@
   </style>
 </head>
 <body>
-    <div id="dropped-data"></div>
-    <div id="drop-area">Drop here</div>
+  <script>
+    window.addEventListener('load', () => {
+        let dropArea = document.getElementById('drop-area');
+        dropArea.addEventListener('dragover', (event) => {
+            event.preventDefault();
+            event.dataTransfer.dropEffect = "copy";
+        });
+        dropArea.addEventListener('drop', (event) => {
+            event.preventDefault();
+            document.getElementById('dropped-data').innerHTML =
+                event.dataTransfer.getData('text/plain');
+        });
+    }, {once: true});
+  </script>
+
+  <div id="dropped-data"></div>
+  <div id="drop-area">Drop here</div>
 </body>
 </html>
