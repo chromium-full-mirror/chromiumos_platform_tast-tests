@@ -223,16 +223,26 @@ func (h *UIHelper) ValidateMessage(ctx context.Context, messageSent string) erro
 		}
 
 		alertDialog := nodewith.Role(role.AlertDialog).ClassName("MessagePopupView").Onscreen().First()
+		ashView := nodewith.Role(role.GenericContainer).ClassName("AshNotificationView").Onscreen().First()
+		ashViewData, err := h.UI.Info(ctx, ashView)
+		if err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to see sms notification dialog view content"))
+		}
+		testing.ContextLog(ctx, "alert dialog generic container data: ", ashViewData)
 
 		// Read number and sms message to compare.
-		smsDetails, err := h.UI.Info(ctx, alertDialog)
-		if err != nil {
-			return testing.PollBreak(errors.Wrap(err, "failed to see sms notification dialog content"))
+		smsText := ashViewData.Name
+		if len(ashViewData.Name) <= 0 {
+			smsDetails, err := h.UI.Info(ctx, alertDialog)
+			if err != nil {
+				return testing.PollBreak(errors.Wrap(err, "failed to see sms notification dialog content"))
+			}
+			smsText = smsDetails.Name
+			testing.ContextLog(ctx, "alert dialog data: ", smsDetails)
 		}
 
-		testing.ContextLog(ctx, "alert dialog data: ", smsDetails)
 		strPattern := regexp.MustCompile(`\s+`)
-		smsReceived := strPattern.ReplaceAllString(smsDetails.Name, " ")
+		smsReceived := strPattern.ReplaceAllString(smsText, " ")
 		smsSent := strPattern.ReplaceAllString(messageSent, " ")
 
 		testing.ContextLog(ctx, "smsReceived: ", smsReceived)
