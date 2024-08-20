@@ -412,8 +412,6 @@ func initChromeVideoBaseFixtures() {
 				browser.TypeAsh,
 				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
 				chrome.EnableFeatures("V4L2H264TemporalLayerHWEncoding"),
-				chrome.EnableFeatures("VaapiH264TemporalLayerHWEncoding"),
-				chrome.EnableFeatures("VaapiVp8TemporalLayerHWEncoding"),
 			), nil
 		}),
 		Parent:          "gpuWatchDog",
