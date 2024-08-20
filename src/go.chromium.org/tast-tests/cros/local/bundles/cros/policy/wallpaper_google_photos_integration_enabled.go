@@ -25,6 +25,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/netexport"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
+	"go.chromium.org/tast-tests/cros/local/testenv/proxy"
 )
 
 func init() {
@@ -99,6 +100,19 @@ func WallpaperGooglePhotosIntegrationEnabled(ctx context.Context, s *testing.Sta
 	}
 	defer kb.Close(ctx)
 
+	mp, err := proxy.NewMitmProxy(ctx,
+		proxy.DumpHTTPFlow(true),
+	)
+	if err != nil {
+		s.Fatal("Failed to start mitmproxy: ", err)
+	}
+	defer mp.Close(cleanupCtx)
+	reset, err := proxy.ConfigureChrome(ctx, mp, cr)
+	if err != nil {
+		s.Fatal("Failed to configure chrome for proxy: ", err)
+	}
+	defer reset(cleanupCtx, cr)
+
 	for index, param := range wallpapergooglephotos.TestCases() {
 		s.Run(ctx, param.Name, func(ctx context.Context, s *testing.State) {
 			if err := policyutil.ResetChrome(ctx, fdms, cr); err != nil {
@@ -152,6 +166,20 @@ func WallpaperGooglePhotosIntegrationEnabled(ctx context.Context, s *testing.Sta
 				if _, exists := foundAnnotations[annotationID]; exists != param.ShouldFindAnnotations {
 					s.Errorf("Unexpected status of annotation = %s, got %t, want %t", annotationID, exists, param.ShouldFindAnnotations)
 				}
+			}
+
+			resp, err := mp.DumpHTTPFlow(ctx, true, false)
+			if err != nil {
+				s.Fatal("Failed to get dump httpflow from mitmproxy: ", err)
+			}
+
+			v := proxy.NewNetworkVerifier(resp)
+			allow := param.TrafficShouldFind
+			disallow := param.TrafficShouldNotFind
+			// allow/disallow traffic are passed by test case param.
+			// We will ignore traffic other than the allow and disallow list for verifying diff.
+			if err := v.Verify(allow, disallow, []string{".*"}); err != nil {
+				s.Fatal("Diff test result: ", err)
 			}
 		})
 	}

@@ -32,6 +32,8 @@ const (
 	// PhotosHashCode is the hashcode of the network annotation tag with
 	// id: wallpaper_google_photos_photos.
 	PhotosHashCode = "93311068"
+
+	regexPhotoURL = "https://photosfirstparty-pa.googleapis.com/v1/chromeos/.*"
 )
 
 // testCase defines test expectations based on the policy value.
@@ -40,6 +42,10 @@ type testCase struct {
 	ShouldGooglePhotosCollectionBeEnabled bool
 	ShouldFindAnnotations                 bool
 	Policy                                *policy.WallpaperGooglePhotosIntegrationEnabled
+	// TrafficShouldFind states the traffic should be found during tests.
+	TrafficShouldFind []string
+	// TrafficShouldNotFind states the traffic should NOT be found during tests.
+	TrafficShouldNotFind []string
 }
 
 // TestCases returns the list of testCase objects on which
@@ -51,18 +57,24 @@ func TestCases() map[networkrequestmonitor.PolicySetting]testCase {
 			ShouldGooglePhotosCollectionBeEnabled: false,
 			ShouldFindAnnotations:                 false,
 			Policy:                                &policy.WallpaperGooglePhotosIntegrationEnabled{Val: false},
+			TrafficShouldFind:                     []string{},
+			TrafficShouldNotFind:                  []string{regexPhotoURL},
 		},
 		networkrequestmonitor.PolicyUnset: {
 			Name:                                  "unset",
 			ShouldGooglePhotosCollectionBeEnabled: true,
 			ShouldFindAnnotations:                 true,
 			Policy:                                &policy.WallpaperGooglePhotosIntegrationEnabled{Stat: policy.StatusUnset},
+			TrafficShouldFind:                     []string{regexPhotoURL},
+			TrafficShouldNotFind:                  []string{},
 		},
 		networkrequestmonitor.PolicyEnabled: {
 			Name:                                  "enabled",
 			ShouldGooglePhotosCollectionBeEnabled: true,
 			ShouldFindAnnotations:                 true,
 			Policy:                                &policy.WallpaperGooglePhotosIntegrationEnabled{Val: true},
+			TrafficShouldFind:                     []string{regexPhotoURL},
+			TrafficShouldNotFind:                  []string{},
 		},
 	}
 }
