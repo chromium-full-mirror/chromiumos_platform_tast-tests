@@ -60,6 +60,9 @@ func StartAppWithSetup(ctx context.Context, cr *chrome.Chrome, setup Setup) (app
 	if app.conn.Eval(ctx, "TestHelper.goToMainPage()", nil); err != nil {
 		return nil, errors.Wrap(err, "failed to go to main page")
 	}
+	if app.WaitUntilExists(MainPage)(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to wait for the UI to be ready")
+	}
 
 	testing.ContextLog(ctx, "Recorder App launched")
 	return app, nil
