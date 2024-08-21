@@ -877,7 +877,7 @@ func (c *PolicyService) DeviceAndCustomerID(ctx context.Context, req *empty.Empt
 	} else if p == nil {
 		return nil, errors.New("client ID not found")
 	} else if p.DirectoryApiId == nil {
-		return nil, errors.New("directory API ID is not set")
+		return nil, errors.New("directory API ID is not set; did device enrollment fail?")
 	} else if p.ObfuscatedCustomerId == nil {
 		return nil, errors.New("obfuscated customer ID is not set")
 	}
