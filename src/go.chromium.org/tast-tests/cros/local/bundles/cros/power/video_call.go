@@ -36,7 +36,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Collect power metrics when mutitasking typing and video call",
 		BugComponent: "b:1361410", // ChromeOS > Platform > System > Core Power
-		Contacts:     []string{"chromeos-platform-power@google.com"},
+		Contacts:     []string{"chromeos-power-team@google.com"},
 		SoftwareDeps: []string{"chrome", caps.BuiltinOrVividCamera},
 		Params: []testing.Param{{
 			Name:      "3m_ash",

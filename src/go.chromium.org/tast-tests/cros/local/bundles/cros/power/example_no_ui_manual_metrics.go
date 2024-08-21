@@ -21,7 +21,7 @@ func init() {
 		Desc:         "Collect power metrics when device is in idle with no UI",
 		BugComponent: "b:1361410",
 		Contacts: []string{
-			"chromeos-platform-power@google.com",
+			"chromeos-power-team@google.com",
 			"mqg@chromium.org",
 		},
 		Timeout: 1*time.Minute + power.RecorderTimeout,

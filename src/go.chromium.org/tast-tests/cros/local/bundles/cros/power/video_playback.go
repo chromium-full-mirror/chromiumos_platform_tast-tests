@@ -33,7 +33,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Collect power metrics playing offline video",
 		BugComponent: "b:1361410",
-		Contacts:     []string{"chromeos-platform-power@google.com"},
+		Contacts:     []string{"chromeos-power-team@google.com"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
 			Name:      "h264_720_30fps_ash",

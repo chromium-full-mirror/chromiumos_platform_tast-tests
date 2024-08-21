@@ -28,7 +28,7 @@ func init() {
 		Func:         CooldownExperiment,
 		Desc:         "Examine the effectiveness of different cooldown methods",
 		BugComponent: "b:1361410",
-		Contacts:     []string{"chromeos-platform-power@google.com", "zactu@google.com"},
+		Contacts:     []string{"chromeos-power-team@google.com", "zactu@google.com"},
 		Fixture:      setup.PowerNoUINoWiFi,
 		Timeout:      testTimeout,
 		Attr:         []string{"group:power", "power_daily_misc"},

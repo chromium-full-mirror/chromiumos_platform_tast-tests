@@ -60,7 +60,7 @@ func init() {
 		Func:         MultiTaskingApp,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Collect power related data when device do multi tasking with several apps",
-		Contacts:     []string{"chromeos-platform-power@google.com"},
+		Contacts:     []string{"chromeos-power-team@google.com"},
 		BugComponent: "b:1361410", // ChromeOS > Platform > System > Core Power
 		// Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome", "arc"},

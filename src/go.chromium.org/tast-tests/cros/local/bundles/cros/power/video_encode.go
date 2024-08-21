@@ -39,7 +39,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Collects power metrics while encoding video files",
 		BugComponent: "b:1361410",
-		Contacts:     []string{"chromeos-platform-power@google.com", "jingmuli@google.com"},
+		Contacts:     []string{"chromeos-power-team@google.com", "jingmuli@google.com"},
 		SoftwareDeps: []string{"chrome", caps.BuiltinOrVividCamera},
 		Timeout:      30*time.Minute + power.RecorderTimeout,
 		Params: []testing.Param{{

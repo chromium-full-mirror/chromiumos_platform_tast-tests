@@ -32,7 +32,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measure battery charging speed in Active S0 idle state with default screen brightness",
 		BugComponent: "b:1361410", // ChromeOS > Platform > System > Core Power
-		Contacts:     []string{"chromeos-platform-power@google.com", "jingmuli@google.com"},
+		Contacts:     []string{"chromeos-power-team@google.com"},
 		HardwareDeps: hwdep.D(
 			hwdep.Battery(), // Test doesn't run on ChromeOS devices without a battery.
 		),

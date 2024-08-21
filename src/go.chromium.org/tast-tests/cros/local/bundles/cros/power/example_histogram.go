@@ -30,7 +30,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Collect browser histogram metrics",
 		BugComponent: "b:1361410",
-		Contacts:     []string{"chromeos-platform-power@google.com", "mqg@google.com"},
+		Contacts:     []string{"chromeos-power-team@google.com", "mqg@google.com"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
 			Name:    "ash",

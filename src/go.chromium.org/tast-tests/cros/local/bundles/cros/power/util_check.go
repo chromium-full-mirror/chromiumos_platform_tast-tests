@@ -19,7 +19,7 @@ func init() {
 		Desc:         "Check the health of power utils for reading device information",
 		BugComponent: "b:1361410",
 		Contacts: []string{
-			"chromeos-platform-power@google.com",
+			"chromeos-power-team@google.com",
 			"yanyeli@google.com",
 		},
 		// This test collects hardware info that does not apply to virtual

@@ -26,7 +26,7 @@ func init() {
 		Desc:         "Check the health of power test library setup",
 		BugComponent: "b:1361410",
 		Contacts: []string{
-			"chromeos-platform-power@google.com",
+			"chromeos-power-team@google.com",
 			"yanyeli@google.com",
 		},
 		SoftwareDeps: []string{"chrome"},

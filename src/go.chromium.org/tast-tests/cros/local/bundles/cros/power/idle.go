@@ -77,7 +77,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Collects data on idle with Chrome logged in",
 		BugComponent: "b:1361410",
-		Contacts:     []string{"chromeos-platform-power@google.com", "jingmuli@google.com"},
+		Contacts:     []string{"chromeos-power-team@google.com", "jingmuli@google.com"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      10*time.Minute + power.RecorderTimeout,
 		Params: []testing.Param{{

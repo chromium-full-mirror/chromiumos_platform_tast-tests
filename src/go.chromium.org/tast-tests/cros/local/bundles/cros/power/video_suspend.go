@@ -33,7 +33,7 @@ func init() {
 		Desc:         "Suspend while video is playing",
 		BugComponent: "b:1361410",
 		Contacts: []string{
-			"chromeos-platform-power@google.com",
+			"chromeos-power-team@google.com",
 		},
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},

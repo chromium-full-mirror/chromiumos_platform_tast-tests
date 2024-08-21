@@ -37,7 +37,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Collect the power-related data for social app operations",
 		Contacts: []string{
-			"chromeos-platform-power@google.com",
+			"chromeos-power-team@google.com",
 			"cienet-development@googlegroups.com",
 			"jason.hsiao@cienet.com",
 		},

@@ -66,7 +66,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Simple, single-cycle Suspend and Resume",
 		Contacts: []string{
-			"chromeos-platform-power@google.com",
+			"chromeos-power-team@google.com",
 		},
 		BugComponent: "b:1361410",
 		Attr:         []string{"group:mainline"},

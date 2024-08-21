@@ -142,7 +142,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Collect power metrics displaying different static pages with different screen brightness level",
 		BugComponent: "b:1361410",
-		Contacts:     []string{"chromeos-platform-power@google.com", "jingmuli@google.com"},
+		Contacts:     []string{"chromeos-power-team@google.com", "jingmuli@google.com"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
 			Name:      "default_ash",

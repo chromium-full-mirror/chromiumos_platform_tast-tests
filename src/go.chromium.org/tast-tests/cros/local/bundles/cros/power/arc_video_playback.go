@@ -49,7 +49,7 @@ func init() {
 		Func:         ARCVideoPlayback,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Collect power metrics of playing video of different video formats in video app in full screen",
-		Contacts:     []string{"chromeos-platform-power@google.com", "cienet-development@googlegroups.com", "vivian.chen@cienet.com"},
+		Contacts:     []string{"chromeos-power-team@google.com", "cienet-development@googlegroups.com", "vivian.chen@cienet.com"},
 		BugComponent: "b:1361410", // ChromeOS > Platform > System > Core Power
 		SoftwareDeps: []string{"chrome", "arc"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),

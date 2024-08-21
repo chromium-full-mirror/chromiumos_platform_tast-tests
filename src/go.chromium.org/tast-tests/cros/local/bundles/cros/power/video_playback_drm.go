@@ -42,7 +42,7 @@ func init() {
 		Desc:         "Collect power metrics playing protected offline video",
 		BugComponent: "b:1361410",
 		Contacts: []string{
-			"chromeos-platform-power@google.com",
+			"chromeos-power-team@google.com",
 			"jkardatzke@google.com"},
 		SoftwareDeps: []string{"chrome", "protected_content"},
 		Params: []testing.Param{{

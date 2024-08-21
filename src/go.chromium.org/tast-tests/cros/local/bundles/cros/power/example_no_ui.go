@@ -17,7 +17,7 @@ func init() {
 		Func:         ExampleNoUI,
 		Desc:         "Collect power metrics when device is in idle with no UI",
 		BugComponent: "b:1361410",
-		Contacts:     []string{"chromeos-platform-power@google.com"},
+		Contacts:     []string{"chromeos-power-team@google.com"},
 		// Disabled because this is an example test for other tests to follow.
 		// Attr:      []string{"group:mainline", "informational"},
 		Timeout: 1 * time.Minute,

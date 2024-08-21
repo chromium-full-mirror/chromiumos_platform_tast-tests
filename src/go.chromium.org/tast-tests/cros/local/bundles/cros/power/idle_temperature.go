@@ -20,7 +20,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Collects data on the idle temperature of devices",
 		BugComponent: "b:1361410",
-		Contacts:     []string{"chromeos-platform-power@google.com", "edcourtney@chromium.org"},
+		Contacts:     []string{"chromeos-power-team@google.com", "edcourtney@chromium.org"},
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedIn",

@@ -19,12 +19,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: CpufreqConf,
-		Desc: "Check that we respect the /etc/cpufreq.conf file",
-		Contacts: []string{
-			"chromeos-platform-power@google.com",
-			"briannorris@chromium.org",
-		},
+		Func:         CpufreqConf,
+		Desc:         "Check that we respect the /etc/cpufreq.conf file",
+		Contacts:     []string{"chromeos-power-team@google.com"},
 		BugComponent: "b:1361410",
 		Attr:         []string{"group:mainline"},
 	})

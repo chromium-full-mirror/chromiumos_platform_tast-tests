@@ -44,7 +44,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Collect power metrics of gaming app",
 		Contacts: []string{
-			"chromeos-platform-power@google.com",
+			"chromeos-power-team@google.com",
 			"cienet-development@googlegroups.com",
 			"chicheny@google.com",
 		},

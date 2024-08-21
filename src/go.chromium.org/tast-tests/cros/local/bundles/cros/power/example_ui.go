@@ -26,7 +26,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Collect power metrics when device is in idle with UI",
 		BugComponent: "b:1361410",
-		Contacts:     []string{"chromeos-platform-power@google.com"},
+		Contacts:     []string{"chromeos-power-team@google.com"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
 			Name:      "ash_kbbl",
