@@ -31,8 +31,8 @@ func init() {
 		Desc:         "Setting up a DUT remotely for power test with UI",
 		BugComponent: "b:1361410",
 		Contacts: []string{
-			"chromeos-platform-power@google.com", // CrOS platform power developers
-			"zactu@google.com",                   // test author
+			"chromeos-power-team@google.com", // CrOS power team
+			"zactu@google.com",               // test author
 		},
 		ServiceDeps: []string{
 			"tast.cros.power.DeviceSetupService",
