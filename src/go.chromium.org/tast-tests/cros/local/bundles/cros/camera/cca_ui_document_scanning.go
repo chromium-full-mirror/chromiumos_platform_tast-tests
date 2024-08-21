@@ -34,7 +34,7 @@ func init() {
 		Desc:         "Verifies that CCA can take a photo for document and generate the document file with fake HAL",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
-		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
+		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"camera_app", "chrome", "ondevice_document_scanner_rootfs_or_dlc", caps.BuiltinOrVividCamera},
 		Data:         []string{"document_3264x2448.mjpeg", "ocr_one_line_3264x2448.jpg"},
 		Fixture:      "ccaTestBridgeReadyWithFakeHALCameraWithPDFOCR",

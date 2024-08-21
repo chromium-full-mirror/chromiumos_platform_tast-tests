@@ -25,7 +25,7 @@ func init() {
 		Desc:         "Takes pictures in every screen orientation and checks the picture resolutions",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel
-		Attr:         []string{"group:mainline", "group:camera-libcamera", "informational", "group:intel-nda"},
+		Attr:         []string{"group:mainline", "informational", "group:intel-nda"},
 		SoftwareDeps: []string{"camera_app", "chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Params: []testing.Param{{
@@ -34,6 +34,7 @@ func init() {
 		}, {
 			Name:              "real",
 			Fixture:           "ccaLaunched",
+			ExtraAttr:         []string{"group:camera-libcamera"},
 			ExtraSoftwareDeps: []string{caps.BuiltinOrVividCamera},
 		}},
 	})

@@ -22,7 +22,7 @@ func init() {
 		Desc:         "Opens CCA and verifies time-lapse video recording",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "kamchonlathorn@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
-		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
+		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinOrVividCamera},
 		Timeout:      6 * time.Minute,
 		Fixture:      "ccaLaunchedWithFakeHALCamera",

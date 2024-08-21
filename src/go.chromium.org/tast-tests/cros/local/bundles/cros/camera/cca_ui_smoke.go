@@ -24,13 +24,13 @@ func init() {
 			"shik@chromium.org",
 		},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
-		Attr:         []string{"group:mainline", "group:camera-libcamera"},
+		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"camera_app", "chrome", "proprietary_codecs"},
 		Params: []testing.Param{{
 			Name:              "real",
 			ExtraSoftwareDeps: []string{caps.BuiltinCamera},
 			Fixture:           "ccaLaunched",
-			ExtraAttr:         []string{"informational", "group:criticalstaging"},
+			ExtraAttr:         []string{"informational", "group:criticalstaging", "group:camera-libcamera"},
 		}, {
 			Name:              "vivid",
 			ExtraSoftwareDeps: []string{caps.VividCamera},

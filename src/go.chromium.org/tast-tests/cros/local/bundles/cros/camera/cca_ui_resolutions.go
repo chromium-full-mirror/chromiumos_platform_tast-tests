@@ -25,7 +25,7 @@ func init() {
 		Desc:         "Opens CCA and verifies resolution settings are applied correctly",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "kamchonlathorn@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
-		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
+		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"camera_app", "chrome", "arc_camera3"},
 		// Default timeout (i.e. 2 minutes) is not enough for some devices to
 		// exercise all resolutions on all cameras.
@@ -34,7 +34,7 @@ func init() {
 			Name:              "real",
 			ExtraSoftwareDeps: []string{caps.BuiltinOrVividCamera},
 			Fixture:           "ccaTestBridgeReady",
-			ExtraAttr:         []string{"group:intel-nda"},
+			ExtraAttr:         []string{"group:intel-nda", "group:camera-libcamera"},
 		}, {
 			Name:      "fake_hal",
 			Fixture:   "ccaTestBridgeReadyWithFakeHALCamera",

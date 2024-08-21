@@ -33,7 +33,7 @@ func init() {
 		Desc:         "Verifies if CCA is unusable when the camera app is disabled by the Adenterprise policy",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
-		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
+		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"camera_app", "chrome"},
 		Fixture:      "chromePolicyLoggedIn",
 		SearchFlags: []*testing.StringPair{
