@@ -19,7 +19,7 @@ func init() {
 		Contacts:     []string{"chromeos-camera-eng@google.com", "seannli@google.com"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Attr:         []string{"group:mainline", "informational"},
-		SoftwareDeps: []string{"chrome", caps.BuiltinOrVividCamera},
+		SoftwareDeps: []string{"arc", "chrome", caps.BuiltinOrVividCamera},
 		Fixture:      "arcWithWorkingCamera",
 	})
 }
