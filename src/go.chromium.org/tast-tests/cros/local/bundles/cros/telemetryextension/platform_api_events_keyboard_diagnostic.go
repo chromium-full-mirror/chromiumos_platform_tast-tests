@@ -45,7 +45,6 @@ func init() {
 				Fixture:           fixture.TelemetryExtensionSkipOEMNameCheck,
 				ExtraHardwareDeps: hwdep.D(hwdep.NoInternalKeyboard()),
 				Val:               false, // has keyboard
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			},
 			{
 				Name:              "lacros_keyboard",
