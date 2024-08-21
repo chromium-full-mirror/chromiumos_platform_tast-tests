@@ -38,7 +38,7 @@ const (
 	// AutofillCreditCardAnnotationHash is the hashcode of network annotation
 	// autofill_credit_card_enabled.
 	AutofillCreditCardAnnotationHash = "88863520"
-	autofillURL                      = "https://content-autofill.googleapis.com/v1/.*"
+	regexAutofillURL                 = "https://content-autofill.googleapis.com/v1/.*"
 )
 
 // DataFiles returns the list of data files needed to be copied to the dut
@@ -70,7 +70,7 @@ func GetTestCases() map[networkrequestmonitor.PolicySetting]testCase {
 			ShouldFindAnnotation: false,
 			Policy:               &policy.AutofillCreditCardEnabled{Val: false},
 			TrafficShouldFind:    []string{},
-			TrafficShouldNotFind: []string{autofillURL},
+			TrafficShouldNotFind: []string{regexAutofillURL},
 		},
 		networkrequestmonitor.PolicyUnset: {
 			Name:                 "unset",
@@ -87,7 +87,7 @@ func GetTestCases() map[networkrequestmonitor.PolicySetting]testCase {
 			wantChecked:          checked.True,
 			ShouldFindAnnotation: true,
 			Policy:               &policy.AutofillCreditCardEnabled{Val: true},
-			TrafficShouldFind:    []string{autofillURL},
+			TrafficShouldFind:    []string{regexAutofillURL},
 			TrafficShouldNotFind: []string{},
 		},
 	}

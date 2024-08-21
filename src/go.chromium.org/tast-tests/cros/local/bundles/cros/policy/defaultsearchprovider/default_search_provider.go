@@ -20,7 +20,8 @@ import (
 )
 
 const contentToSearch = "vy6ys"
-var searchURL = fmt.Sprintf("https://www.google.com/search\\?q=%s.*", contentToSearch)
+
+var regexSearchURL = fmt.Sprintf("https://www.google.com/search\\?q=%s.*", contentToSearch)
 
 // TestCase defines test expectations based on the policy value.
 type TestCase struct {
@@ -52,14 +53,14 @@ func TestCases() map[networkrequestmonitor.PolicySetting]TestCase {
 			// to true/unset, URL loaded is http://google.com/q=abc.
 			ShouldFindAnnotation: true,
 			TrafficShouldFind:    []string{},
-			TrafficShouldNotFind: []string{searchURL},
+			TrafficShouldNotFind: []string{regexSearchURL},
 		},
 		networkrequestmonitor.PolicyEnabled: {
 			Name:                 "enabled",
 			Enabled:              true,
 			Policy:               &policy.DefaultSearchProviderEnabled{Val: true},
 			ShouldFindAnnotation: true,
-			TrafficShouldFind:    []string{searchURL},
+			TrafficShouldFind:    []string{regexSearchURL},
 			TrafficShouldNotFind: []string{},
 		},
 		networkrequestmonitor.PolicyUnset: {
@@ -67,7 +68,7 @@ func TestCases() map[networkrequestmonitor.PolicySetting]TestCase {
 			Enabled:              true,
 			Policy:               &policy.DefaultSearchProviderEnabled{Stat: policy.StatusUnset},
 			ShouldFindAnnotation: true,
-			TrafficShouldFind:    []string{searchURL},
+			TrafficShouldFind:    []string{regexSearchURL},
 			TrafficShouldNotFind: []string{},
 		},
 	}

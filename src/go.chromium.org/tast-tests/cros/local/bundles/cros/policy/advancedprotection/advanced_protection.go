@@ -22,7 +22,7 @@ import (
 // safe_browsing_binary_upload_app.
 const UploadAnnotationHashCode = "4306022"
 
-const googleSafeBrowsingURL = "https://safebrowsing.google.com/.*"
+const regexGoogleSafeBrowsingURL = "https://safebrowsing.google.com/.*"
 
 // suspiciousFile is a test suspicious file which should trigger safe browsing
 // warnings on download. This file was copied from:
@@ -56,20 +56,20 @@ func TestCases() map[networkrequestmonitor.PolicySetting]testCase {
 			ShouldFindAnnotation: false,
 			Policy:               &policy.AdvancedProtectionAllowed{Val: false},
 			TrafficShouldFind:    []string{},
-			TrafficShouldNotFind: []string{googleSafeBrowsingURL},
+			TrafficShouldNotFind: []string{regexGoogleSafeBrowsingURL},
 		},
 		networkrequestmonitor.PolicyEnabled: {
 			Name:                 "enabled",
 			ShouldFindAnnotation: true,
 			Policy:               &policy.AdvancedProtectionAllowed{Val: true},
-			TrafficShouldFind:    []string{googleSafeBrowsingURL},
+			TrafficShouldFind:    []string{regexGoogleSafeBrowsingURL},
 			TrafficShouldNotFind: []string{},
 		},
 		networkrequestmonitor.PolicyUnset: {
 			Name:                 "unset",
 			ShouldFindAnnotation: true,
 			Policy:               &policy.AdvancedProtectionAllowed{Stat: policy.StatusUnset},
-			TrafficShouldFind:    []string{googleSafeBrowsingURL},
+			TrafficShouldFind:    []string{regexGoogleSafeBrowsingURL},
 			TrafficShouldNotFind: []string{},
 		},
 	}

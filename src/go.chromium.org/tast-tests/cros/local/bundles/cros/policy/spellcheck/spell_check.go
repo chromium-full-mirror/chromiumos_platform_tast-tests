@@ -23,7 +23,7 @@ import (
 // spellcheck_lookup.
 const AnnotationHashCode = "132553989"
 
-const spellCheckURL = "https://www.googleapis.com/spelling/v2/spelling/check.*"
+const regexSpellCheckURL = "https://www.googleapis.com/spelling/v2/spelling/check.*"
 
 // TestCase defines test expectations based on the policy value.
 type TestCase struct {
@@ -58,7 +58,7 @@ func TestCases() map[networkrequestmonitor.PolicySetting]TestCase {
 			WantContextCheck:     "",
 			ShouldFindAnnotation: false,
 			TrafficShouldFind:    []string{},
-			TrafficShouldNotFind: []string{spellCheckURL},
+			TrafficShouldNotFind: []string{regexSpellCheckURL},
 		},
 		networkrequestmonitor.PolicyEnabled: {
 			Name:                 "allow",
@@ -67,7 +67,7 @@ func TestCases() map[networkrequestmonitor.PolicySetting]TestCase {
 			WantSettingsCheck:    checked.True,
 			WantContextCheck:     checked.True,
 			ShouldFindAnnotation: true,
-			TrafficShouldFind:    []string{spellCheckURL},
+			TrafficShouldFind:    []string{regexSpellCheckURL},
 			TrafficShouldNotFind: []string{},
 		},
 		networkrequestmonitor.PolicyUnset: {
@@ -79,7 +79,7 @@ func TestCases() map[networkrequestmonitor.PolicySetting]TestCase {
 			WantContextCheck:     "",
 			ShouldFindAnnotation: false,
 			TrafficShouldFind:    []string{},
-			TrafficShouldNotFind: []string{spellCheckURL},
+			TrafficShouldNotFind: []string{regexSpellCheckURL},
 		},
 	}
 }

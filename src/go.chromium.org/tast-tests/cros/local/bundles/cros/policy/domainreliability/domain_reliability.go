@@ -28,7 +28,7 @@ const (
 	// to. The URL must be a Google domain to trigger domain reliability.
 	DomainReliabilityTestURL = "images.google.com"
 
-	googleDomainReliabilityURL = "https://google.com/domainreliability/upload.*"
+	regexGoogleDomainReliabilityURL = "https://google.com/domainreliability/upload.*"
 )
 
 // TestCase defines test expectations based on the value of the policy
@@ -52,13 +52,13 @@ func TestCases() map[networkrequestmonitor.PolicySetting]TestCase {
 			ShouldFindAnnotation: false,
 			Policy:               &policy.DomainReliabilityAllowed{Val: false},
 			TrafficShouldFind:    []string{},
-			TrafficShouldNotFind: []string{googleDomainReliabilityURL},
+			TrafficShouldNotFind: []string{regexGoogleDomainReliabilityURL},
 		},
 		networkrequestmonitor.PolicyEnabled: {
 			Name:                 "enabled",
 			ShouldFindAnnotation: true,
 			Policy:               &policy.DomainReliabilityAllowed{Val: true},
-			TrafficShouldFind:    []string{googleDomainReliabilityURL},
+			TrafficShouldFind:    []string{regexGoogleDomainReliabilityURL},
 			TrafficShouldNotFind: []string{},
 		},
 	}
