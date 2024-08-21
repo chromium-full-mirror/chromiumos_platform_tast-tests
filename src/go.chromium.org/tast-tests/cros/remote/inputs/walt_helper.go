@@ -75,20 +75,21 @@ func ParseWaltLatency(output string) (float64, float64, float64, error) {
 }
 
 // parseMetricLine parses the metric line from the default latency calculations
-// and returns the latency values.
+// and returns the latency values (in milliseconds).
 func parseMetricLine(line string) (float64, float64, float64, error) {
-	var average, max, min float64
+	var averageSec, maxSec, minSec float64
 
-	_, err := fmt.Sscanf(line, "%f %f %f", &average, &max, &min)
+	_, err := fmt.Sscanf(line, "%f %f %f", &averageSec, &maxSec, &minSec)
 	if err != nil {
 		return 0, 0, 0, errors.Wrap(err, "failed to parse metrics")
 	}
 
-	return average, max, min, nil
+	// Convert latency values to milliseconds.
+	return averageSec * 1000, maxSec * 1000, minSec * 1000, nil
 }
 
 // parseMinimizationLine parses the metric line from the minimization latency
-// calculations and returns the latency values.
+// calculations and returns the latency values (in milliseconds).
 func parseMinimizationLine(line string) (float64, float64, float64, error) {
 	var latency float64
 

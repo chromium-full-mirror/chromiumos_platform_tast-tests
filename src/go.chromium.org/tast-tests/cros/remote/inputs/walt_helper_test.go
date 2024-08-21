@@ -42,7 +42,8 @@ Latency (average): ... ms
 // TestParseMetricLine tests an expected successful outcome for parseMetricLine.
 func TestParseMetricLine(t *testing.T) {
 	var trueAvg, trueMax, trueMin = 9.045, 10.001, 8.032
-	var line = fmt.Sprintf("%f %f %f", trueAvg, trueMax, trueMin)
+	// The metric line is reported in seconds, so convert the true latencies to seconds.
+	var line = fmt.Sprintf("%f %f %f", trueAvg/1000, trueMax/1000, trueMin/1000)
 
 	testAvg, testMax, testMin, err := parseMetricLine(line)
 	if err != nil {
@@ -101,7 +102,8 @@ func TestMinimizationParseLatency(t *testing.T) {
 }
 
 func TestParseLatency(t *testing.T) {
-	var trueAvg, trueMax, trueMin = 0.0237723313845, 0.0333168506622, 0.0167829990387
+	// Latencies are in milliseconds, but in the defaultWaltOutput they are in seconds.
+	var trueAvg, trueMax, trueMin = 23.7723313845, 33.3168506622, 16.7829990387
 
 	testAvg, testMax, testMin, err := ParseWaltLatency(defaultWaltOutput)
 	if err != nil {
