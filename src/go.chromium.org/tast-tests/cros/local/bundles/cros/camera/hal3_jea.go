@@ -19,7 +19,7 @@ func init() {
 		Func:         HAL3JEA,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies JPEG encode accelerator works in USB HALv3",
-		Contacts:     []string{"chromeos-camera-eng@google.com", "beckerh@chromium.org", "shik@chromium.org", "xinggu@chromium.org"},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "beckerh@chromium.org", "xinggu@chromium.org"},
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
 		SoftwareDeps: []string{"arc", "arc_camera3", "chrome", caps.HWEncodeJPEG},
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera", "group:camera", "camera_hal", "camera_functional"},

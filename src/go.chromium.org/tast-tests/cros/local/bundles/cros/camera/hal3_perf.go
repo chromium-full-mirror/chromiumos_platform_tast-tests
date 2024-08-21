@@ -18,7 +18,7 @@ func init() {
 		Func:         HAL3Perf,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures camera HAL3 performance",
-		Contacts:     []string{"chromeos-camera-eng@google.com", "beckerh@chromium.org", "shik@chromium.org", "xinggu@chromium.org"},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "beckerh@chromium.org", "xinggu@chromium.org"},
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild", "group:camera", "camera_hal", "camera_pnp"},
 		SoftwareDeps: []string{"arc", "arc_camera3", "chrome", caps.BuiltinCamera},

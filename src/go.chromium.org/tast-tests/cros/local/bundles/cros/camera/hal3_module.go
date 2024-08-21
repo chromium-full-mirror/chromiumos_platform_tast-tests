@@ -18,7 +18,7 @@ func init() {
 		Func:         HAL3Module,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies camera module function with HAL3 interface",
-		Contacts:     []string{"chromeos-camera-eng@google.com", "beckerh@chromium.org", "shik@chromium.org", "xinggu@chromium.org"},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "beckerh@chromium.org", "xinggu@chromium.org"},
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera", "group:camera-postsubmit", "group:camera", "camera_hal", "camera_functional"},
 		// TODO(shik): Once cros_camera_test supports an external camera,
