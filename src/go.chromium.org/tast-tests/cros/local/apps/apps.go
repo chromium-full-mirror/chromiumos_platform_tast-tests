@@ -429,6 +429,12 @@ var ExoPlayer = App{
 	Name: "ExoPlayer",
 }
 
+// Recorder has details about the Recorder app.
+var Recorder = App{
+	ID:   "aegafoechlhchmknlbhmofidaodfkhhk",
+	Name: "Recorder",
+}
+
 // Launch launches an app specified by appID.
 func Launch(ctx context.Context, tconn *chrome.TestConn, appID string) error {
 	_, err := InstalledAppID(ctx, tconn, func(app *ash.ChromeApp) bool { return app.AppID == appID }, nil)

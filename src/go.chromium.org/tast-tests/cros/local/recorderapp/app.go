@@ -1,0 +1,118 @@
+// Copyright 2024 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package recorderapp
+
+import (
+	"context"
+	"time"
+
+	"go.chromium.org/tast-tests/cros/local/apps"
+	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
+)
+
+const (
+	recorderTestPageURL = "chrome://recorder-app/#/test"
+)
+
+// App represents a ChromeOS Recorder App instance.
+type App struct {
+	conn  *chrome.Conn
+	cr    *chrome.Chrome
+	tconn *chrome.TestConn
+}
+
+// StartApp starts the Recorder App with default setup.
+func StartApp(ctx context.Context, cr *chrome.Chrome) (app *App, retErr error) {
+	return StartAppWithSetup(ctx, cr, Setup{})
+}
+
+// StartAppWithSetup starts the Recorder App with the specified setup.
+func StartAppWithSetup(ctx context.Context, cr *chrome.Chrome, setup Setup) (app *App, retErr error) {
+	// Reserve time to close the app in case there is an error.
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
+	defer cancel()
+
+	if err := ensureModelInstalled(ctx, setup); err != nil {
+		return nil, errors.Wrap(err, "failed to ensure the necessary DLCs are installed")
+	}
+
+	app, err := openAppToTestPage(ctx, cr)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to launch Recorder app")
+	}
+	defer func() {
+		if retErr != nil {
+			app.Close(cleanupCtx)
+		}
+	}()
+
+	if err := app.performSetup(ctx, setup); err != nil {
+		return nil, errors.Wrap(err, "failed to perform setup")
+	}
+
+	// Go to main page, from the test page, to make the app ready for the test.
+	if app.conn.Eval(ctx, "TestHelper.goToMainPage()", nil); err != nil {
+		return nil, errors.Wrap(err, "failed to go to main page")
+	}
+
+	testing.ContextLog(ctx, "Recorder App launched")
+	return app, nil
+}
+
+// openAppToTestPage launches the Recorder App to its test page and connects to
+// the test helper in the app side.
+func openAppToTestPage(ctx context.Context, cr *chrome.Chrome) (app *App, retErr error) {
+	// Reserve time to close the app in case there is an error.
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
+	defer cancel()
+
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to connect to Test API")
+	}
+
+	if err := apps.LaunchSystemWebApp(ctx, tconn, apps.Recorder.Name, recorderTestPageURL); err != nil {
+		return nil, errors.Wrap(err, "failed to launch Recorder app")
+	}
+	defer func() {
+		if retErr != nil {
+			apps.Close(cleanupCtx, tconn, apps.Recorder.ID)
+		}
+	}()
+
+	conn, err := cr.NewConnForTarget(ctx, chrome.MatchTargetURL(recorderTestPageURL))
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to connect to the app")
+	}
+
+	// Wait for the app to initialize by observing the app UI element.
+	if err := conn.WaitForExprWithTimeout(ctx, "document.querySelector('recorder-app') !== null", 10*time.Second); err != nil {
+		return nil, errors.Wrap(err, "failed to wait for the app to initialize")
+	}
+
+	// Connect to the test helper to use util functions from the JS side.
+	code := `(async function() {
+		const {TestHelper} = await import('/core/test_helper.js');
+		window.TestHelper = TestHelper;
+	})()`
+	if err := conn.Eval(ctx, code, nil); err != nil {
+		return nil, errors.Wrap(err, "failed to connect to the test helper")
+	}
+
+	return &App{conn, cr, tconn}, nil
+}
+
+// Close cleans up the local cached data and closes the app.
+func (a *App) Close(ctx context.Context) error {
+	if err := a.conn.Eval(ctx, "TestHelper.removeCacheData()", nil); err != nil {
+		return errors.Wrap(err, "failed to clear cached data in the app")
+	}
+	return apps.Close(ctx, a.tconn, apps.Recorder.ID)
+}
