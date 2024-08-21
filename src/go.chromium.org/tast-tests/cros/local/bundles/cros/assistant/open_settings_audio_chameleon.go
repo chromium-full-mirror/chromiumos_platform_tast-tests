@@ -35,8 +35,9 @@ func init() {
 		},
 		BugComponent: "b:905229", // ChromeOS > Software > Assistive
 		Attr: []string{
-			"group:assistant_audiobox",
-			"group:hw_agnostic",
+			// Disabled by TORA.  See:b/340272937
+			// "group:assistant_audiobox",
+			// "group:hw_agnostic",
 		},
 		Data:         []string{soundFile},
 		SoftwareDeps: []string{"chrome", "chrome_internal", "gaia"},
