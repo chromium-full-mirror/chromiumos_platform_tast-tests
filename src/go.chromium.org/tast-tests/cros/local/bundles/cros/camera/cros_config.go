@@ -64,6 +64,20 @@ func verifyContent(ctx context.Context) error {
 		} else {
 			return errors.Errorf("invalid camera type found : %s", cameraType)
 		}
+
+		// Only verify that they exist
+		if _, err := crosconfig.Get(ctx, devicePath, "facing"); err != nil {
+			return errors.Wrapf(err, "missing facing for %s", devicePath)
+		}
+		if _, err := crosconfig.Get(ctx, devicePath, "orientation"); err != nil {
+			return errors.Wrapf(err, "missing orientation for %s", devicePath)
+		}
+		if _, err := crosconfig.Get(ctx, devicePath+"/flags", "support-autofocus"); err != nil {
+			return errors.Wrapf(err, "missing support-autofocus for %s", devicePath)
+		}
+		if _, err := crosconfig.Get(ctx, devicePath+"/flags", "support-1080p"); err != nil {
+			return errors.Wrapf(err, "missing support-1080p for %s", devicePath)
+		}
 	}
 	// verify /camera/count equals to the number of /camera/devices/*
 	configCount, err := crosconfig.Get(ctx, "/camera/", "count")
