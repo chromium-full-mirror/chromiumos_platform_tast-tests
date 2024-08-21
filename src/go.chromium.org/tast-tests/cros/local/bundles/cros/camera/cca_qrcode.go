@@ -21,7 +21,7 @@ func init() {
 		Desc:         "Verifies the BarcodeDetector API used in CCA",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "shik@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
-		Attr:         []string{"group:mainline", "group:camera-libcamera"},
+		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Data:         []string{"cca_qrcode.html", "cca_qrcode.js", "qrcode_3024x3024.jpg"},
 		Pre:          chrome.LoggedIn(),
