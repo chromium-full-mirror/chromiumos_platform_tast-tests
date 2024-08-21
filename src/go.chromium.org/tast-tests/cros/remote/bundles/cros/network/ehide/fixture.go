@@ -183,12 +183,6 @@ func (f *ehideFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
 func (f *ehideFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 	d := s.DUT()
 
-	// The net.log will be saved into the dir of the ehide fixture. Give it a
-	// prefix to prevent the saved log to be overwritten.
-	if err := f.setUpNetLogSaver(ctx, d, "teardown_"); err != nil {
-		s.Fatal("Failed to set up net.log saver: ", err)
-	}
-
 	success := false
 	defer func(ctx context.Context) {
 		// Wait for SSH recovery if the ehide fixture fails.
@@ -208,6 +202,22 @@ func (f *ehideFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 	}(ctx)
 	ctx, cancel := ctxutil.Shorten(ctx, waitRecoveryTimeout)
 	defer cancel()
+
+	if !d.Connected(ctx) {
+		// DUT is not connected. If we proceed to set up net.log saver, that
+		// setup is destined to fail. From another prospective, the SSH
+		// disconnection is likely due to some ehide failure during tests.
+		// If this is the case, hopefully we have already set up the log saver
+		// in PreTest(), so we just report a failure here and collect ehide
+		// error from that PreTest() to now.
+		s.Fatal("DUT is not connected")
+	}
+
+	// The net.log will be saved into the dir of the ehide fixture. Give it a
+	// prefix to prevent the saved log to be overwritten.
+	if err := f.setUpNetLogSaver(ctx, d, "teardown_"); err != nil {
+		s.Fatal("Failed to set up net.log saver: ", err)
+	}
 
 	// If ehide has already started at the beginning, it could be either run
 	// intentionally, or left over from the previous session. Either way, don't
