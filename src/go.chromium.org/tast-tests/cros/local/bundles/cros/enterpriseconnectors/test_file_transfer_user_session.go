@@ -17,10 +17,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         TestFileTransferUserSession,
-		LacrosStatus: testing.LacrosVariantUnneeded, // This test tests the files app, which is an ash app, so no lacros needed.
-		Desc:         "Enterprise connector test for transferring files between different file systems",
-		Timeout:      30 * time.Minute,
+		Func:    TestFileTransferUserSession,
+		Desc:    "Enterprise connector test for transferring files between different file systems",
+		Timeout: 30 * time.Minute,
 		Contacts: []string{
 			"cros-enterprise-connectors@google.com",
 			"sseckler@google.com",

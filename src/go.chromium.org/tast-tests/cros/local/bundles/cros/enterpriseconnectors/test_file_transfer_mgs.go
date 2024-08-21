@@ -18,10 +18,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         TestFileTransferMGS,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Enterprise connector test for transferring files between different file systems on Managed Guest Sessions",
-		Timeout:      30 * time.Minute,
+		Func:    TestFileTransferMGS,
+		Desc:    "Enterprise connector test for transferring files between different file systems on Managed Guest Sessions",
+		Timeout: 30 * time.Minute,
 		Contacts: []string{
 			"cros-enterprise-connectors@google.com",
 			"muhamedp@google.com",

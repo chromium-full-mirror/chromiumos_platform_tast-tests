@@ -3,5 +3,5 @@
 // found in the LICENSE file.
 
 // Package testrunners contains functions for running Enterprise Connectors Tast tests
-// in either regular user sessions (using either Ash Chrome or Lacros Chrome) or MGS.
+// in either regular user sessions or MGS.
 package testrunners

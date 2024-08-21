@@ -18,10 +18,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         TestDownloadMGS,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Enterprise connector test for downloading files in MGS",
-		Timeout:      30 * time.Minute,
+		Func:    TestDownloadMGS,
+		Desc:    "Enterprise connector test for downloading files in MGS",
+		Timeout: 30 * time.Minute,
 		Contacts: []string{
 			"cros-enterprise-connectors@google.com",
 			"muhamedp@google.com",

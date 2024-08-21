@@ -17,10 +17,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         TestFileAttachedUserSession,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Enterprise connector test for uploading files in user sessions",
-		Timeout:      30 * time.Minute,
+		Func:    TestFileAttachedUserSession,
+		Desc:    "Enterprise connector test for uploading files in user sessions",
+		Timeout: 30 * time.Minute,
 		Contacts: []string{
 			"cros-enterprise-connectors@google.com",
 			"sseckler@google.com",
@@ -68,39 +67,6 @@ func init() {
 					ScansEnabled:            false,
 					BrowserType:             browser.TypeAsh,
 				},
-			},
-			{
-				Name:    "scan_enabled_allows_immediate_and_unscannable_lacros",
-				Fixture: "lacrosGaiaSignedInProdPolicyWPEnabledAllowExtra",
-				Val: helpers.TestParams{
-					AllowsImmediateDelivery: true,
-					AllowsUnscannableFiles:  true,
-					ScansEnabled:            true,
-					BrowserType:             browser.TypeLacros,
-				},
-				ExtraSoftwareDeps: []string{"lacros"},
-			},
-			{
-				Name:    "scan_enabled_blocks_immediate_and_unscannable_lacros",
-				Fixture: "lacrosGaiaSignedInProdPolicyWPEnabledBlockExtra",
-				Val: helpers.TestParams{
-					AllowsImmediateDelivery: false,
-					AllowsUnscannableFiles:  false,
-					ScansEnabled:            true,
-					BrowserType:             browser.TypeLacros,
-				},
-				ExtraSoftwareDeps: []string{"lacros"},
-			},
-			{
-				Name:    "scan_disabled_lacros",
-				Fixture: "lacrosGaiaSignedInProdPolicyWPDisabled",
-				Val: helpers.TestParams{
-					AllowsImmediateDelivery: true,
-					AllowsUnscannableFiles:  true,
-					ScansEnabled:            false,
-					BrowserType:             browser.TypeLacros,
-				},
-				ExtraSoftwareDeps: []string{"lacros"},
 			},
 		},
 		Data: []string{

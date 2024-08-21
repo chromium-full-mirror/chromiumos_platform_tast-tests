@@ -99,15 +99,10 @@ func testFileAttachedForBrowser(ctx context.Context, s *testing.State, cr *chrom
 	}
 
 	// The browsers sometimes restore some tabs, so we manually close all unneeded tabs.
-	closeTabsFunc := browser.CloseAllTabs
-	if testParams.BrowserType == browser.TypeLacros {
-		// For lacros-Chrome, it should leave a new tab to keep the Chrome process alive.
-		closeTabsFunc = browser.ReplaceAllTabsWithSingleNewTab
-	}
-	if err := closeTabsFunc(ctx, tconnBrowser); err != nil {
+	if err := browser.CloseAllTabs(ctx, tconnBrowser); err != nil {
 		s.Fatal("Failed to close all unneeded tabs: ", err)
 	}
-	defer closeTabsFunc(cleanupCtx, tconnBrowser)
+	defer browser.CloseAllTabs(cleanupCtx, tconnBrowser)
 
 	dconn, err := br.NewConn(ctx, "chrome://policy")
 	if err != nil {
