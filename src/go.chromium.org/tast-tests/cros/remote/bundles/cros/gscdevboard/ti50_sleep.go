@@ -17,10 +17,17 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+type sleepMode int
+
+const (
+	deepSleep sleepMode = iota
+	normalSleep
+)
+
 type ti50SleepParam struct {
-	tpmCommunication    ti50.TpmBus
-	tpmStrapping        ti50.GpioStrap
-	servoMicroStrapping ti50.GpioStrap
+	sleepMode       sleepMode
+	tpmBus          ti50.TpmBus
+	servoMicroStrap ti50.GpioStrap
 }
 
 func init() {
@@ -33,36 +40,68 @@ func init() {
 			"jbk@chromium.org",      // Test Author
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
-		Attr:         []string{"group:gsc", "gsc_dt_ab", "gsc_dt_shield", "gsc_ot_shield", "gsc_image_ti50", "gsc_nightly"},
+		Attr:         []string{"group:gsc", "gsc_dt_ab", "gsc_dt_shield", "gsc_image_ti50", "gsc_nightly"},
 		Fixture:      fixture.GSCOpenCCD,
 		Vars:         []string{"bypass_sleep_check"},
 		Params: []testing.Param{{
-			Name: "spi_no_uservo",
+			Name: "deep_spi_no_uservo",
 			Val: ti50SleepParam{
-				tpmCommunication:    ti50.TpmBusSpi,
-				tpmStrapping:        ti50.TpmSpi,
-				servoMicroStrapping: ti50.ServoMicroDisconnected,
+				sleepMode:       deepSleep,
+				tpmBus:          ti50.TpmBusSpi,
+				servoMicroStrap: ti50.ServoMicroDisconnected,
+			},
+			ExtraAttr: []string{"gsc_ot_shield"},
+		}, {
+			Name: "deep_spi_uservo",
+			Val: ti50SleepParam{
+				sleepMode:       deepSleep,
+				tpmBus:          ti50.TpmBusSpi,
+				servoMicroStrap: ti50.ServoMicroConnected,
+			},
+			ExtraAttr: []string{"gsc_ot_shield"},
+		}, {
+			Name: "deep_i2c_no_uservo",
+			Val: ti50SleepParam{
+				sleepMode:       deepSleep,
+				tpmBus:          ti50.TpmBusI2c,
+				servoMicroStrap: ti50.ServoMicroDisconnected,
+			},
+			ExtraAttr: []string{"gsc_ot_shield"},
+		}, {
+			Name: "deep_i2c_uservo",
+			Val: ti50SleepParam{
+				sleepMode:       deepSleep,
+				tpmBus:          ti50.TpmBusI2c,
+				servoMicroStrap: ti50.ServoMicroConnected,
+			},
+			ExtraAttr: []string{"gsc_ot_shield"},
+		}, {
+			Name: "normal_spi_no_uservo",
+			Val: ti50SleepParam{
+				sleepMode:       normalSleep,
+				tpmBus:          ti50.TpmBusSpi,
+				servoMicroStrap: ti50.ServoMicroDisconnected,
 			},
 		}, {
-			Name: "spi_uservo",
+			Name: "normal_spi_uservo",
 			Val: ti50SleepParam{
-				tpmCommunication:    ti50.TpmBusSpi,
-				tpmStrapping:        ti50.TpmSpi,
-				servoMicroStrapping: ti50.ServoMicroConnected,
+				sleepMode:       normalSleep,
+				tpmBus:          ti50.TpmBusSpi,
+				servoMicroStrap: ti50.ServoMicroConnected,
 			},
 		}, {
-			Name: "i2c_no_uservo",
+			Name: "normal_i2c_no_uservo",
 			Val: ti50SleepParam{
-				tpmCommunication:    ti50.TpmBusI2c,
-				tpmStrapping:        ti50.TpmI2c,
-				servoMicroStrapping: ti50.ServoMicroDisconnected,
+				sleepMode:       normalSleep,
+				tpmBus:          ti50.TpmBusI2c,
+				servoMicroStrap: ti50.ServoMicroDisconnected,
 			},
 		}, {
-			Name: "i2c_uservo",
+			Name: "normal_i2c_uservo",
 			Val: ti50SleepParam{
-				tpmCommunication:    ti50.TpmBusI2c,
-				tpmStrapping:        ti50.TpmI2c,
-				servoMicroStrapping: ti50.ServoMicroConnected,
+				sleepMode:       normalSleep,
+				tpmBus:          ti50.TpmBusI2c,
+				servoMicroStrap: ti50.ServoMicroConnected,
 			},
 		}},
 	})
@@ -221,6 +260,23 @@ func verifyDeepWakeup(ctx context.Context, s *testing.State, i *ti50.CrOSImage, 
 	return true
 }
 
+// Wake source and pin values for DT chip.
+var (
+	wakeSourceGpio wakeSource = "00000001"
+	wakeSourceRbox wakeSource = "00000004"
+	wakeSourceAdc  wakeSource = "00000008"
+
+	whichPinWPSense      whichPin = "0000000000000004"
+	whichPinPltRstL      whichPin = "0000000000000800"
+	whichPinEcPacketMode whichPin = "0000000001000000"
+	whichPinLidOpen      whichPin = "0000000002000000"
+	whichPinGscUart      whichPin = "0000010000000000"
+	whichPinCcdMode      whichPin = "0000080000000000"
+
+	whichPinTpmSpi whichPin = "0200000000000000"
+	whichPinTpmI2C whichPin = "0000000000000003"
+)
+
 func Ti50Sleep(ctx context.Context, s *testing.State) {
 	// Check if runtime bypass_sleep_check var is present, if so (even if value is
 	// "false") set the 70 seconds wait to 1 second the rest of the test
@@ -235,23 +291,6 @@ func Ti50Sleep(ctx context.Context, s *testing.State) {
 	i := ti50.MustOpenCrOSImage(ctx, b, s)
 	defer i.Close(ctx)
 	pv := perf.NewValues()
-
-	// Wake source and pin values for DT chip.
-	var (
-		wakeSourceGpio wakeSource = "00000001"
-		wakeSourceRbox wakeSource = "00000004"
-		wakeSourceAdc  wakeSource = "00000008"
-
-		whichPinWPSense      whichPin = "0000000000000004"
-		whichPinPltRstL      whichPin = "0000000000000800"
-		whichPinEcPacketMode whichPin = "0000000001000000"
-		whichPinLidOpen      whichPin = "0000000002000000"
-		whichPinGscUart      whichPin = "0000010000000000"
-		whichPinCcdMode      whichPin = "0000080000000000"
-
-		whichPinTpmSpi whichPin = "0200000000000000"
-		whichPinTpmI2C whichPin = "0000000000000003"
-	)
 
 	// Wake source and pin values for OT chip.
 	if b.TestbedType == ti50.GscOTShield || b.TestbedType == ti50.GscOpentitanCw310Fpga {
@@ -270,12 +309,11 @@ func Ti50Sleep(ctx context.Context, s *testing.State) {
 		whichPinTpmI2C = "00000000000000c0"
 	}
 
-	// Set the correct TPM wake up pins based on test parameters
-	var whichPinTpmBus whichPin
-	if testParams.tpmStrapping == ti50.TpmI2c {
-		whichPinTpmBus = whichPinTpmI2C
-	} else if testParams.tpmStrapping == ti50.TpmSpi {
-		whichPinTpmBus = whichPinTpmSpi
+	var tpmStrap ti50.GpioStrap
+	if testParams.tpmBus == ti50.TpmBusI2c {
+		tpmStrap = ti50.TpmI2c
+	} else if testParams.tpmBus == ti50.TpmBusSpi {
+		tpmStrap = ti50.TpmSpi
 	}
 
 	s.Log("Restarting ti50 with appropriate straps")
@@ -286,7 +324,7 @@ func Ti50Sleep(ctx context.Context, s *testing.State) {
 	b.GpioSet(ctx, ti50.GpioTi50CcdModeL, true)
 	b.GpioSet(ctx, ti50.GpioTi50WriteProtectSenseL, false)
 	b.GpioSet(ctx, ti50.GpioTi50ACPresent, false)
-	b.ResetWithStraps(ctx, testParams.servoMicroStrapping, ti50.CcdDisconnected, testParams.tpmStrapping)
+	b.ResetWithStraps(ctx, testParams.servoMicroStrap, ti50.CcdDisconnected, tpmStrap)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
 	var gpioMonitor utils.GpioMonitorSession
 	if b.GscProperties().HasEcRstFet() {
@@ -295,8 +333,22 @@ func Ti50Sleep(ctx context.Context, s *testing.State) {
 		gpioMonitor = b.GpioMonitorStart(ctx, ti50.GpioTi50EcRstL)
 	}
 
-	logCurrent(ctx, s, b, pv, "Awake")
+	if testParams.sleepMode == deepSleep {
+		ti50DeepSleep(ctx, s, b, i, th, gpioMonitor, pv)
+	} else {
+		ti50NormalSleep(ctx, s, b, i, th, gpioMonitor, pv, testParams.tpmBus)
+	}
 
+	b.GpioMonitorFinish(ctx, gpioMonitor)
+
+	if err := pv.Save(s.OutDir()); err != nil {
+		s.Error("Failed to save perf data: ", err)
+	}
+}
+
+func ti50DeepSleep(ctx context.Context, s *testing.State, b utils.DevboardHelper, i *ti50.CrOSImage, th utils.FirmwareTestingHelper, gpioMonitor utils.GpioMonitorSession, pv *perf.Values) {
+
+	logCurrent(ctx, s, b, pv, "Awake")
 	verifyDeepSleep(ctx, s, i, th)
 	logCurrent(ctx, s, b, pv, "DeepSleep")
 
@@ -391,6 +443,11 @@ func Ti50Sleep(ctx context.Context, s *testing.State) {
 	if !verifyDeepWakeup(ctx, s, i, b, gpioMonitor, wakeSourceGpio, &whichPinPltRstL, "PltRstL") {
 		s.Fatal("Could not get Ti50 into 'AP on' mode, preventing further testing")
 	}
+}
+
+func ti50NormalSleep(ctx context.Context, s *testing.State, b utils.DevboardHelper, i *ti50.CrOSImage, th utils.FirmwareTestingHelper, gpioMonitor utils.GpioMonitorSession, pv *perf.Values, tpmBus ti50.TpmBus) {
+
+	b.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
 	logCurrent(ctx, s, b, pv, "Awake_AP")
 
 	s.Log("Waiting for sleep after boot")
@@ -403,11 +460,17 @@ func Ti50Sleep(ctx context.Context, s *testing.State) {
 	logCurrent(ctx, s, b, pv, "NormalSleep")
 
 	s.Log("Simulating AP TPM request")
-	tpmHandle := b.Tpm(ctx, testParams.tpmCommunication)
+	tpmHandle := b.Tpm(ctx, tpmBus)
 	didVid := tpmHandle.ReadRegister(ti50.TpmRegDidVid)
 	expectedDidVidValue := b.GscProperties().ExpectedDidVidValue()
 	if !bytes.Equal(didVid, expectedDidVidValue) {
 		s.Error("Unexpected TPM DID_VID immediately after wakeup: ", didVid)
+	}
+	var whichPinTpmBus whichPin
+	if tpmBus == ti50.TpmBusI2c {
+		whichPinTpmBus = whichPinTpmI2C
+	} else if tpmBus == ti50.TpmBusSpi {
+		whichPinTpmBus = whichPinTpmSpi
 	}
 	if verifyNormalWakeup(ctx, s, i, b, gpioMonitor, wakeSourceGpio, &whichPinTpmBus, "AP TPM request") {
 		verifyNormalSleep(ctx, s, i, th)
@@ -486,10 +549,4 @@ func Ti50Sleep(ctx context.Context, s *testing.State) {
 		s.Fatal("Could not get Ti50 out of 'AP on' mode, preventing further testing")
 	}
 	verifyDeepSleep(ctx, s, i, th)
-
-	b.GpioMonitorFinish(ctx, gpioMonitor)
-
-	if err := pv.Save(s.OutDir()); err != nil {
-		s.Error("Failed to save perf data: ", err)
-	}
 }
