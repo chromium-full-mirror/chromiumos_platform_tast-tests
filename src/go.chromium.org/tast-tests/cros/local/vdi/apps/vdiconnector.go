@@ -12,7 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/uidetection"
-	"go.chromium.org/tast/core/testing"
 )
 
 // VDILoginTimeout is the timeout for login to VDI applications.
@@ -28,7 +27,7 @@ type VDILoginConfig struct {
 // VDIInt is an interface for VDI application providing common way to connect
 // to VDI application and other shared functionality.
 type VDIInt interface {
-	Init(s *testing.FixtState, tconn *chrome.TestConn, d *uidetection.Context, k *input.KeyboardEventWriter)
+	Init(dataPath func(string) string, tconn *chrome.TestConn, d *uidetection.Context, k *input.KeyboardEventWriter)
 	Login(ctx context.Context, cfg *VDILoginConfig) error
 	EnterServerURL(ctx context.Context, cfg *VDILoginConfig) error
 	EnterCredentialsAndLogin(ctx context.Context, cfg *VDILoginConfig) error

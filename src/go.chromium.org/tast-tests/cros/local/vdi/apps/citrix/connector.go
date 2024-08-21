@@ -32,8 +32,8 @@ type Connector struct {
 }
 
 // Init initializes state of the connector.
-func (c *Connector) Init(s *testing.FixtState, tconn *chrome.TestConn, d *uidetection.Context, k *input.KeyboardEventWriter) {
-	c.dataPath = s.DataPath
+func (c *Connector) Init(dataPath func(string) string, tconn *chrome.TestConn, d *uidetection.Context, k *input.KeyboardEventWriter) {
+	c.dataPath = dataPath
 	c.detector = d
 	c.tconn = tconn
 	c.keyboard = k

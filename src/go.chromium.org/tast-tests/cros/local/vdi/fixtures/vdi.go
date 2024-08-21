@@ -251,7 +251,7 @@ func (v *fixtureState) SetUp(ctx context.Context, s *testing.FixtState) interfac
 		s.RequiredVar("uidetection.key"),
 		s.RequiredVar("uidetection.server"),
 	).WithScreenshotStrategy(uidetection.ImmediateScreenshot)
-	v.vdiConnector.Init(s, tconn, detector, kb)
+	v.vdiConnector.Init(s.DataPath, tconn, detector, kb)
 
 	if err := v.vdiConnector.Login(
 		ctx,

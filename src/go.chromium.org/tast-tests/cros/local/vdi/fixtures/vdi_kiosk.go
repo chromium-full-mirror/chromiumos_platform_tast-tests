@@ -216,7 +216,7 @@ func (v *kioskFixtureState) SetUp(ctx context.Context, s *testing.FixtState) int
 		s.RequiredVar("uidetection.key_type"),
 		s.RequiredVar("uidetection.key"),
 		s.RequiredVar("uidetection.server"))
-	v.vdiConnector.Init(s, tconn, detector, kb)
+	v.vdiConnector.Init(s.DataPath, tconn, detector, kb)
 
 	var vdiUsername, vdiPassword string
 	vdiServer := s.RequiredVar(v.vdiServerKey)
