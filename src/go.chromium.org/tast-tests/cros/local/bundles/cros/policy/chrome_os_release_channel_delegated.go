@@ -44,7 +44,14 @@ func init() {
 			"group:golden_tier",
 			"group:medium_low_tier",
 			"group:hardware",
-			"group:complementary",
+		},
+		Params: []testing.Param{
+			{
+				LifeCycleStage: testing.LifeCycleOwnerMonitored,
+				ExtraAttr: []string{
+					"group:complementary",
+				},
+			},
 		},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
 		SoftwareDeps: []string{"reboot", "chrome"},
