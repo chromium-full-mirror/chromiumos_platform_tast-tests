@@ -73,6 +73,10 @@ func init() {
 
 // PowerModes verifies that system comes back after shutdown and coldreset.
 func PowerModes(ctx context.Context, s *testing.State) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
 	h := s.FixtValue().(*fixture.Value).Helper
 	dut := s.DUT()
 	testOpt := s.Param().(powerModeTestParams)
@@ -82,15 +86,21 @@ func PowerModes(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed opening servo: ", err)
 	}
 
-	tmc := &tabletmode.ConvertibleModeControl{}
-	if err := tmc.InitControl(ctx, dut); err != nil {
-		s.Fatal("Failed to init TabletModeControl: ", err)
-	}
 	if testOpt.tabletmode {
+		tmc := &tabletmode.ConvertibleModeControl{}
+		if err := tmc.InitControl(ctx, dut); err != nil {
+			s.Fatal("Failed to init TabletModeControl: ", err)
+		}
 		testing.ContextLog(ctx, "Put DUT into tablet mode")
 		if err := tmc.ForceTabletMode(ctx); err != nil {
 			s.Fatal("Failed to set DUT into tablet mode: ", err)
 		}
+		defer func(ctx context.Context) {
+			testing.ContextLog(ctx, "Resetting tabletmode")
+			if err := tmc.Reset(ctx); err != nil {
+				s.Fatal("Failed to restore tabletmode to the original settings: ", err)
+			}
+		}(cleanupCtx)
 	}
 
 	defer func(ctx context.Context) {

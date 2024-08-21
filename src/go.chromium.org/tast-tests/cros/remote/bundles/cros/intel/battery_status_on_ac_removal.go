@@ -78,14 +78,15 @@ func BatteryStatusOnACRemoval(ctx context.Context, s *testing.State) {
 		Timeout:  10 * time.Second,
 		Interval: 250 * time.Millisecond,
 	}
-	tmc := &tabletmode.ConvertibleModeControl{}
-	if err := tmc.InitControl(ctx, dut); err != nil {
-		s.Fatal("Failed to init TabletModeControl: ", err)
-	}
 
 	testOpts := s.Param().(batteryStatusTestParam)
 	if testOpts.tabletMode {
 		testing.ContextLog(ctx, "Put DUT into tablet mode")
+		tmc := &tabletmode.ConvertibleModeControl{}
+		if err := tmc.InitControl(ctx, dut); err != nil {
+			s.Fatal("Failed to init TabletModeControl: ", err)
+		}
+
 		if err := tmc.ForceTabletMode(ctx); err != nil {
 			s.Fatal("Failed to set DUT into tablet mode: ", err)
 		}

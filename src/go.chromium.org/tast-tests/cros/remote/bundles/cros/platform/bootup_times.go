@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/services/cros/inputs"
 	"go.chromium.org/tast-tests/cros/services/cros/platform"
 	"go.chromium.org/tast-tests/cros/services/cros/security"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
@@ -103,6 +104,10 @@ func init() {
 }
 
 func BootupTimes(ctx context.Context, s *testing.State) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
 	var (
 		bootTime     = 8.4  // default bootup time in seconds
 		cbmemTimeout = 1.35 // default cbmem timeout in seconds
@@ -152,17 +157,23 @@ func BootupTimes(ctx context.Context, s *testing.State) {
 	}
 	defer pxy.Close(ctx)
 
-	tmc := &tabletmode.ConvertibleModeControl{}
-	if err := tmc.InitControl(ctx, dut); err != nil {
-		s.Fatal("Failed to init TabletModeControl: ", err)
-	}
-
 	if btType.tabletMode {
 		// Force DUT into tablet mode.
 		testing.ContextLog(ctx, "Put DUT into tablet mode")
+		tmc := &tabletmode.ConvertibleModeControl{}
+		if err := tmc.InitControl(ctx, dut); err != nil {
+			s.Fatal("Failed to init TabletModeControl: ", err)
+		}
+
 		if err := tmc.ForceTabletMode(ctx); err != nil {
 			s.Fatal("Failed to set DUT into tablet mode: ", err)
 		}
+		defer func(ctx context.Context) {
+			testing.ContextLog(ctx, "Resetting tabletmode")
+			if err := tmc.Reset(ctx); err != nil {
+				s.Fatal("Failed to restore tabletmode to the original settings: ", err)
+			}
+		}(cleanupCtx)
 	}
 
 	cl, err := rpc.Dial(ctx, dut, s.RPCHint())
@@ -209,12 +220,6 @@ func BootupTimes(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Log("Error in disabling bootchart: ", err)
 		}
-
-		testing.ContextLog(ctx, "Resetting tabletmode")
-		if err := tmc.Reset(ctx); err != nil {
-			s.Fatal("Failed to restore tabletmode to the original settings: ", err)
-		}
-
 	}()
 
 	// Cleanup.
