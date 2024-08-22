@@ -12,11 +12,16 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
+	cryptochrome "go.chromium.org/tast-tests/cros/local/cryptohome/chrome"
 	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
+
+type ussMigrationPinPasswordParam struct {
+	modernPin bool
+}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -30,6 +35,17 @@ func init() {
 		BugComponent: "b:1088399", // ChromeOS > Security > Cryptohome
 		SoftwareDeps: []string{"chrome", "pinweaver"},
 		Attr:         []string{"group:mainline", "group:cryptohome"},
+		Params: []testing.Param{{
+			Name: "legacy_pin",
+			Val: ussMigrationPinPasswordParam{
+				modernPin: false,
+			},
+		}, {
+			Name: "modern_pin",
+			Val: ussMigrationPinPasswordParam{
+				modernPin: true,
+			},
+		}},
 	})
 }
 
@@ -57,6 +73,8 @@ func UssMigrationPinPassword(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
+	userParam := s.Param().(ussMigrationPinPasswordParam)
+
 	cmdRunner := hwseclocal.NewCmdRunner()
 	client := hwsec.NewCryptohomeClient(cmdRunner)
 
@@ -71,6 +89,13 @@ func UssMigrationPinPassword(ctx context.Context, s *testing.State) {
 	}
 	if _, err := client.RemoveVault(ctx, userName); err != nil {
 		s.Fatal("Failed to remove old vault for preparation: ", err)
+	}
+
+	// Set up the appropriate feature flags depending on the test parameters.
+	if userParam.modernPin {
+		cryptochrome.WithModernPin(ctx, func() error { return nil })
+	} else {
+		cryptochrome.WithModernPinDisabled(ctx, func() error { return nil })
 	}
 
 	// 1. Create a new user with VaultKeysets. Disable USS and migration for initial setup.

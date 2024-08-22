@@ -14,6 +14,7 @@ import (
 	cryptohomecommon "go.chromium.org/tast-tests/cros/common/cryptohome"
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
+	cryptochrome "go.chromium.org/tast-tests/cros/local/cryptohome/chrome"
 	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
 
 	"go.chromium.org/tast/core/ctxutil"
@@ -21,9 +22,13 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+type recoveryWithUssMigrationParam struct {
+	modernPin bool
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         RecoveryWithUSSMigration,
+		Func:         RecoveryWithUssMigration,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test addition and authentication of recovery auth factor with only password migration to USS",
 		Contacts: []string{
@@ -34,10 +39,21 @@ func init() {
 		Attr:         []string{"group:mainline", "group:cryptohome"},
 		// For "no_tpm_dynamic" - see http://b/251789202.
 		SoftwareDeps: []string{"pinweaver", "tpm", "no_tpm_dynamic", "chrome"},
+		Params: []testing.Param{{
+			Name: "legacy_pin",
+			Val: recoveryWithUssMigrationParam{
+				modernPin: false,
+			},
+		}, {
+			Name: "modern_pin",
+			Val: recoveryWithUssMigrationParam{
+				modernPin: true,
+			},
+		}},
 	})
 }
 
-func RecoveryWithUSSMigration(ctx context.Context, s *testing.State) {
+func RecoveryWithUssMigration(ctx context.Context, s *testing.State) {
 	const (
 		userName             = "foo@bar.baz"
 		userPassword         = "secret"
@@ -57,6 +73,8 @@ func RecoveryWithUSSMigration(ctx context.Context, s *testing.State) {
 	ctxForCleanUp := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
+
+	userParam := s.Param().(recoveryWithUssMigrationParam)
 
 	cmdRunner := hwseclocal.NewCmdRunner()
 	client := hwsec.NewCryptohomeClient(cmdRunner)
@@ -83,6 +101,13 @@ func RecoveryWithUSSMigration(ctx context.Context, s *testing.State) {
 	mediatorPubKey, err := testTool.FetchFakeMediatorPubKeyHex(ctx)
 	if err != nil {
 		s.Fatal("Failed to get mediator pub key: ", err)
+	}
+
+	// Set up the appropriate feature flags depending on the test parameters.
+	if userParam.modernPin {
+		cryptochrome.WithModernPin(ctx, func() error { return nil })
+	} else {
+		cryptochrome.WithModernPinDisabled(ctx, func() error { return nil })
 	}
 
 	// Set up an auth factor with USS migration disabled.

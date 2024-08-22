@@ -12,15 +12,22 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
+	cryptochrome "go.chromium.org/tast-tests/cros/local/cryptohome/chrome"
 	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
+type ussMigrationPinAfterPasswordMigrationParam struct {
+	modernPin bool
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: USSMigrationPinAfterPasswordMigration, LacrosStatus: testing.LacrosVariantUnneeded, Desc: "Checks that adding a pin works correctly when password is migrate",
+		Func:         UssMigrationPinAfterPasswordMigration,
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Desc:         "Checks that adding a pin works correctly when password is migrate",
 		Contacts: []string{
 			"cryptohome-core@google.com",
 			"hardikgoyal@chromium.org",
@@ -28,10 +35,21 @@ func init() {
 		BugComponent: "b:1088399", // ChromeOS > Security > Cryptohome
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"pinweaver", "tpm", "chrome"},
+		Params: []testing.Param{{
+			Name: "legacy_pin",
+			Val: ussMigrationPinAfterPasswordMigrationParam{
+				modernPin: false,
+			},
+		}, {
+			Name: "modern_pin",
+			Val: ussMigrationPinAfterPasswordMigrationParam{
+				modernPin: true,
+			},
+		}},
 	})
 }
 
-func USSMigrationPinAfterPasswordMigration(ctx context.Context, s *testing.State) {
+func UssMigrationPinAfterPasswordMigration(ctx context.Context, s *testing.State) {
 	const (
 		userName           = "foo@bar.baz"
 		userPassword       = "secret"
@@ -49,6 +67,8 @@ func USSMigrationPinAfterPasswordMigration(ctx context.Context, s *testing.State
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
+	userParam := s.Param().(ussMigrationPinAfterPasswordMigrationParam)
+
 	cmdRunner := hwseclocal.NewCmdRunner()
 	client := hwsec.NewCryptohomeClient(cmdRunner)
 
@@ -58,6 +78,13 @@ func USSMigrationPinAfterPasswordMigration(ctx context.Context, s *testing.State
 	}
 	if err := cryptohome.RemoveVault(ctx, userName); err != nil {
 		s.Fatal("Failed to remove old vault for preparation: ", err)
+	}
+
+	// Set up the appropriate feature flags depending on the test parameters.
+	if userParam.modernPin {
+		cryptochrome.WithModernPin(ctx, func() error { return nil })
+	} else {
+		cryptochrome.WithModernPinDisabled(ctx, func() error { return nil })
 	}
 
 	// Set up an auth factor with Vault Keyset backing.

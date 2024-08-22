@@ -444,6 +444,17 @@ func CheckKeyBackingStoreExists(ctx context.Context, keysetPath, userName string
 func TestPinCounterMechanism(ctx context.Context, userName, passwordLabel, userPassword, pinLabel, userPin, wrongPin string, client *hwsec.CryptohomeClient) error {
 	const numberOfWrongAttemptToNotLock = 4
 	const numberOfWrongAttemptToLock = 5
+
+	if err := client.WithAuthSession(ctx, userName, false, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
+		// Do a "warm-up" authentication to make sure the counter is reset to a known good state.
+		if _, err := client.AuthenticatePinAuthFactor(ctx, authSessionID, pinLabel, userPin); err != nil {
+			return errors.Wrap(err, "authenticating with correct PIN failed during warmup")
+		}
+		return nil
+	}); err != nil {
+		return err
+	}
+
 	if err := client.WithAuthSession(ctx, userName, false, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
 		// Try authenticate with wrong PIN to increase the PIN counter, but don't lock out.
 		for i := 0; i < numberOfWrongAttemptToNotLock; i++ {
@@ -465,7 +476,7 @@ func TestPinCounterMechanism(ctx context.Context, userName, passwordLabel, userP
 	for _, intent := range []uda.AuthIntent{uda.AuthIntent_AUTH_INTENT_DECRYPT, uda.AuthIntent_AUTH_INTENT_VERIFY_ONLY} {
 		if err := client.WithAuthSession(ctx, userName, false, intent, func(authSessionID string) error {
 			// Test lockout reset behavior in both verify and decrypt intent.
-			// Try authenticate with wrong PIN 5 times to lock out the PIN.
+			// Try authenticate with wrong PIN multiple times to lock out the PIN.
 			replyError := &uda.AuthenticateAuthFactorReply{}
 			var err error
 			for i := 0; i < numberOfWrongAttemptToLock; i++ {
