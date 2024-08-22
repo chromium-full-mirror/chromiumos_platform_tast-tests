@@ -10,10 +10,12 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/common"
+	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/uidetection"
 	vdiApps "go.chromium.org/tast-tests/cros/local/vdi/apps"
@@ -22,6 +24,17 @@ import (
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"google.golang.org/grpc"
+)
+
+var citrixUsername = testing.RegisterVarString(
+	"vdi.citrix_username",
+	"",
+	"The username of Citrix app",
+)
+var citrixPassword = testing.RegisterVarString(
+	"vdi.citrix_password",
+	"",
+	"The password of Citrix app",
 )
 
 func init() {
@@ -42,6 +55,8 @@ type CitrixService struct {
 	ud           *uidetection.Context
 	vdiConnector vdiApps.VDIInt
 	dataPath     func(string) string
+	signaturePad citrix.SignaturePad
+	bounds       coords.Rect
 }
 
 // NewCitrix creates a new instance of Citrix and launches the Citrix app.
@@ -88,12 +103,21 @@ func (c *CitrixService) NewCitrix(ctx context.Context, req *vdi.NewCitrixRequest
 }
 
 // LoginCitrix logins the Citrix app and connects to the desktop.
-func (c *CitrixService) LoginCitrix(ctx context.Context, req *vdi.LoginCitrixRequest) (*empty.Empty, error) {
+func (c *CitrixService) LoginCitrix(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
+	username := citrixUsername.Value()
+	if username == "" {
+		return nil, errors.Errorf("required variable %q not supplied via -var or -varsfile", citrixUsername.Name())
+	}
+	password := citrixPassword.Value()
+	if password == "" {
+		return nil, errors.Errorf("required variable %q not supplied via -var or -varsfile", citrixPassword.Name())
+	}
+
 	if err := c.vdiConnector.Login(
 		ctx,
 		&vdiApps.VDILoginConfig{
-			Username: req.Username,
-			Password: req.Password,
+			Username: username,
+			Password: password,
 		}); err != nil {
 		return nil, errors.Wrap(err, "failed to login to the Citrix application")
 	}
@@ -157,8 +181,17 @@ func (c *CitrixService) ConnectUSBDevice(ctx context.Context, req *vdi.ConnectUS
 // OpenCitrixApp opens app in Citrix.
 func (c *CitrixService) OpenCitrixApp(ctx context.Context, req *vdi.OpenCitrixAppRequest) (*empty.Empty, error) {
 	appName := req.AppName
-	if err := citrix.OpenApp(c.ud, c.dataPath, appName, req.AppTitle)(ctx); err != nil {
-		return nil, errors.Wrapf(err, "failed to open %s app", appName)
+	appIcon := req.AppIcon
+	appTitle := req.AppTitle
+	if appIcon != "" {
+		if err := citrix.OpenAppByIcon(c.ud, c.dataPath, appIcon, appTitle)(ctx); err != nil {
+			return nil, errors.Wrapf(err, "failed to open %s app", appName)
+		}
+
+	} else {
+		if err := citrix.OpenApp(c.ud, c.dataPath, appName, appTitle)(ctx); err != nil {
+			return nil, errors.Wrapf(err, "failed to open %s app", appName)
+		}
 	}
 	return &empty.Empty{}, nil
 }
@@ -169,6 +202,59 @@ func (c *CitrixService) CloseCitrixApp(ctx context.Context, req *vdi.CloseCitrix
 		return nil, err
 	}
 
+	return &empty.Empty{}, nil
+}
+
+// DeleteFile deletes file in Citrix.
+func (c *CitrixService) DeleteFile(ctx context.Context, req *vdi.DeleteFileRequest) (*empty.Empty, error) {
+	if err := citrix.DeleteFile(c.ud, req.FileName)(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to delete file")
+	}
+
+	return &empty.Empty{}, nil
+}
+
+// DeleteFileIfExists deletes file in Citrix if it exists.
+func (c *CitrixService) DeleteFileIfExists(ctx context.Context, req *vdi.DeleteFileRequest) (*empty.Empty, error) {
+	if err := citrix.DeleteFileIfExists(c.ud, req.FileName)(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to delete file")
+	}
+
+	return &empty.Empty{}, nil
+}
+
+// SaveCropScreenshot saves the crop screenshot.
+func (c *CitrixService) SaveCropScreenshot(ctx context.Context, req *vdi.SaveCropScreenshotRequest) (*empty.Empty, error) {
+	path := c.dataPath("")
+	filePath := c.dataPath(req.FileName)
+	if err := citrix.SaveCropScreenshot(c.sharedObject.Chrome, c.bounds, path, req.FileName)(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to save crop screenshot")
+	}
+
+	outDir, ok := testing.ContextOutDir(ctx)
+	if !ok {
+		return nil, errors.New("failed to get output dir")
+	}
+	if err := testexec.CommandContext(ctx, "cp", filePath, outDir).Run(testexec.DumpLogOnError); err != nil {
+		return nil, errors.Wrap(err, "failed to copy file to tast out dir")
+	}
+
+	return &empty.Empty{}, nil
+}
+
+// VerifyTwoImagesSimilarity verifies two images are the same or not.
+func (c *CitrixService) VerifyTwoImagesSimilarity(ctx context.Context, req *vdi.VerifyTwoImagesSimilarityRequest) (*empty.Empty, error) {
+	if err := citrix.VerifyTwoImagesSimilarity(c.dataPath(""), req.FileName1, req.FileName2, req.ExpectedSame)(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to verify two images are same or not")
+	}
+	return &empty.Empty{}, nil
+}
+
+// WaitUntilIconExists waits for the icon to exist.
+func (c *CitrixService) WaitUntilIconExists(ctx context.Context, req *vdi.WaitUntilIconExistsRequest) (*empty.Empty, error) {
+	if err := citrix.WaitUntilIconExists(c.ud, c.dataPath(""), req.IconName)(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to wait for icon")
+	}
 	return &empty.Empty{}, nil
 }
 
@@ -199,5 +285,53 @@ func (c *CitrixService) VerifyFootPedalButtonPressed(ctx context.Context, req *v
 		return &empty.Empty{}, errors.Wrap(err, "failed to verify foot pedal button pressed")
 	}
 
+	return &empty.Empty{}, nil
+}
+
+// StartSignature starts signature.
+func (c *CitrixService) StartSignature(ctx context.Context, req *vdi.StartSignatureRequest) (*empty.Empty, error) {
+	var err error
+	switch citrix.AppName(req.AppName) {
+	case citrix.ScriptelAppName:
+		// Create a new ScriptelSignaturePad instance.
+		c.signaturePad = citrix.NewScriptelSignaturePad(c.ud, c.kb, c.tconn, c.dataPath)
+	case citrix.TopazAppName:
+		// Create a new TopazSignaturePad instance.
+		c.signaturePad = citrix.NewTopazSignaturePad(c.ud, c.kb, c.tconn, c.dataPath)
+	}
+
+	if err := c.signaturePad.StartSignature()(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to start signature")
+	}
+
+	c.bounds, err = c.signaturePad.GetCanvasBounds(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get the canvas bounds")
+	}
+
+	return &empty.Empty{}, nil
+}
+
+// SaveSignature saves the signature.
+func (c *CitrixService) SaveSignature(ctx context.Context, req *vdi.SignatureRequest) (*empty.Empty, error) {
+	if err := c.signaturePad.SaveSignature(req.FileName)(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to save signature")
+	}
+	return &empty.Empty{}, nil
+}
+
+// LoadSignature loads the signature.
+func (c *CitrixService) LoadSignature(ctx context.Context, req *vdi.SignatureRequest) (*empty.Empty, error) {
+	if err := c.signaturePad.LoadSignature(req.FileName)(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to load signature")
+	}
+	return &empty.Empty{}, nil
+}
+
+// ClearSignature clears the signature.
+func (c *CitrixService) ClearSignature(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
+	if err := c.signaturePad.ClearSignature()(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to clear signature")
+	}
 	return &empty.Empty{}, nil
 }

@@ -16,7 +16,7 @@ service CitrixService {
   rpc NewCitrix(NewCitrixRequest) returns (google.protobuf.Empty) {}
 
   // LoginCitrix logins the Citrix app and connects to desktop.
-  rpc LoginCitrix(LoginCitrixRequest) returns (google.protobuf.Empty) {}
+  rpc LoginCitrix(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 
   // OpenCitrix launches the Citrix app.
   rpc OpenCitrix(google.protobuf.Empty) returns (google.protobuf.Empty) {}
@@ -34,6 +34,24 @@ service CitrixService {
   // CloseCitrixApp closes app in Citrix.
   rpc CloseCitrixApp(CloseCitrixAppRequest) returns (google.protobuf.Empty) {}
 
+  // DeleteFile deletes the signature.
+  rpc DeleteFile(DeleteFileRequest) returns (google.protobuf.Empty) {}
+
+  // DeleteFileIfExists deletes the file if it exists.
+  rpc DeleteFileIfExists(DeleteFileRequest) returns (google.protobuf.Empty) {}
+
+  // SaveCropScreenshot saves the crop screenshot.
+  rpc SaveCropScreenshot(SaveCropScreenshotRequest)
+      returns (google.protobuf.Empty) {}
+
+  // VerifyTwoImagesSimilarity verifies two images are same or not.
+  rpc VerifyTwoImagesSimilarity(VerifyTwoImagesSimilarityRequest)
+      returns (google.protobuf.Empty) {}
+
+  // WaitUntilIconExists waits for the icon to exist.
+  rpc WaitUntilIconExists(WaitUntilIconExistsRequest)
+      returns (google.protobuf.Empty) {}
+
   // SetupFootPedalTest sets up the foot pedal test.
   rpc SetupFootPedalTest(google.protobuf.Empty)
       returns (google.protobuf.Empty) {}
@@ -41,6 +59,18 @@ service CitrixService {
   // VerifyFootPedalButtonPressed verifies the foot pedal button is pressed.
   rpc VerifyFootPedalButtonPressed(VerifyFootPedalButtonPressedRequest)
       returns (google.protobuf.Empty) {}
+
+  // StartSignature starts the sign process.
+  rpc StartSignature(StartSignatureRequest) returns (google.protobuf.Empty) {}
+
+  // SaveSignature saves the signature.
+  rpc SaveSignature(SignatureRequest) returns (google.protobuf.Empty) {}
+
+  // LoadSignature loads the signature.
+  rpc LoadSignature(SignatureRequest) returns (google.protobuf.Empty) {}
+
+  // ClearSignature clears the signature.
+  rpc ClearSignature(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 }
 
 // NewCitrixRequest contains the information needed to create a new Citrix
@@ -51,12 +81,6 @@ message NewCitrixRequest {
   string data_path = 3;
 }
 
-// LoginCitrixRequest contains the information needed to login to Citrix.
-message LoginCitrixRequest {
-  string username = 1;
-  string password = 2;
-}
-
 // ConnectUSBDeviceRequest contains the information needed to connect USB
 // device.
 message ConnectUSBDeviceRequest { string device_name = 1; }
@@ -65,10 +89,30 @@ message ConnectUSBDeviceRequest { string device_name = 1; }
 message OpenCitrixAppRequest {
   string app_name = 1;
   string app_title = 2;
+  string app_icon = 3;
 }
 
 // CloseCitrixAppRequest contains the information needed to close app in Citrix.
 message CloseCitrixAppRequest { string app_title = 1; }
+
+// DeleteFileRequest contains the information needed to delete the file.
+message DeleteFileRequest { string file_name = 1; }
+
+// SaveCropScreenshotRequest contains the information needed to save the crop
+// screenshot.
+message SaveCropScreenshotRequest { string file_name = 1; }
+
+// VerifyTwoImagesSimilarityRequest contains the information needed to verify
+// two images are same or not.
+message VerifyTwoImagesSimilarityRequest {
+  string file_name1 = 1;
+  string file_name2 = 2;
+  bool expected_same = 3;
+}
+
+// WaitUntilIconExistsRequest contains the information needed to wait for the
+// icon to exist.
+message WaitUntilIconExistsRequest { string icon_name = 1; }
 
 // FootPedalButton is the type of foot pedal button.
 enum FootPedalButton {
@@ -81,3 +125,10 @@ enum FootPedalButton {
 // VerifyFootPedalButtonPressedRequest contains the information needed to verify
 // the foot pedal button is pressed.
 message VerifyFootPedalButtonPressedRequest { FootPedalButton button = 1; }
+
+// StartSignature starts the sign process.
+message StartSignatureRequest { string app_name = 1; }
+
+// SignatureRequest contains the information needed to save/load/clear the
+// signature.
+message SignatureRequest { string file_name = 1; }

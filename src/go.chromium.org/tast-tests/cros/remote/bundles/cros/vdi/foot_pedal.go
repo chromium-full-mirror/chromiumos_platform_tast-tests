@@ -55,8 +55,6 @@ func init() {
 		Vars: []string{
 			"vdi.ota_citrix_username",
 			"vdi.ota_citrix_password",
-			"vdi.citrix_username",
-			"vdi.citrix_password",
 			"vdi.record_screen",
 			"vdi.manual_test",
 		},
@@ -128,14 +126,15 @@ func FootPedal(ctx context.Context, s *testing.State) {
 		defer func(ctx context.Context) {
 			res, err := screenRecorder.Stop(ctx, &empty.Empty{})
 			if err != nil {
-				s.Fatal("Failed to stop recording: ", err)
+				s.Log("Failed to stop recording: ", err)
 			} else {
 				s.Logf("Screen recording saved to %s", res.FileName)
-			}
-			s.Log("Copying screen recording from DUT to local machine")
-			destPath := filepath.Join(s.OutDir(), filepath.Base(res.FileName))
-			if err := linuxssh.GetFile(ctx, s.DUT().Conn(), res.FileName, destPath, linuxssh.DereferenceSymlinks); err != nil {
-				s.Fatal("Failed to copy screen recording to local machine: ", err)
+
+				s.Log("Copying screen recording from DUT to local machine")
+				destPath := filepath.Join(s.OutDir(), filepath.Base(res.FileName))
+				if err := linuxssh.GetFile(ctx, s.DUT().Conn(), res.FileName, destPath, linuxssh.DereferenceSymlinks); err != nil {
+					s.Log("Failed to copy screen recording to local machine: ", err)
+				}
 			}
 		}(cleanupCtx)
 	}
@@ -154,10 +153,7 @@ func FootPedal(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	if _, err := citrixSvc.LoginCitrix(ctx, &vdi.LoginCitrixRequest{
-		Username: s.RequiredVar("vdi.citrix_username"),
-		Password: s.RequiredVar("vdi.citrix_password"),
-	}); err != nil {
+	if _, err := citrixSvc.LoginCitrix(ctx, &empty.Empty{}); err != nil {
 		s.Fatal("Failed to login Citrix: ", err)
 	}
 

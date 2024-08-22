@@ -29,11 +29,26 @@ func WaitForDesktop(ud *uidetection.Context, dataPath func(string) string) uiaut
 
 // OpenApp opens the application with given name in Citrix.
 func OpenApp(ud *uidetection.Context, dataPath func(string) string, appName, appTitle string) uiauto.Action {
+	appText := uidetection.Word(appName).First()
+	return uiauto.NamedAction("open app: "+appName,
+		openApp(ud, dataPath, appText, appTitle),
+	)
+}
+
+// OpenAppByIcon opens the application with given icon in Citrix.
+func OpenAppByIcon(ud *uidetection.Context, dataPath func(string) string, appIcon, appTitle string) uiauto.Action {
+	icon := uidetection.CustomIcon(dataPath(appIcon))
+	return uiauto.NamedAction("open app by icon: "+appIcon,
+		openApp(ud, dataPath, icon, appTitle),
+	)
+}
+
+// openApp opens the application with given finder in Citrix.
+func openApp(ud *uidetection.Context, dataPath func(string) string, finder *uidetection.Finder, appTitle string) uiauto.Action {
 	topBtn := uidetection.CustomIcon(dataPath(topBtnIcon))
-	appText := uidetection.Word(appName).Below(topBtn).First()
 	appTitleText := uidetection.TextBlockFromSentence(appTitle).Below(topBtn).First()
-	return uiauto.Retry(3, uiauto.NamedCombine("open app: "+appName,
-		ud.DoubleClick(appText),
+	return uiauto.Retry(3, uiauto.Combine("open app",
+		ud.WithTimeout(15*time.Second).DoubleClick(finder),
 		ud.WaitUntilExists(appTitleText),
 	))
 }
