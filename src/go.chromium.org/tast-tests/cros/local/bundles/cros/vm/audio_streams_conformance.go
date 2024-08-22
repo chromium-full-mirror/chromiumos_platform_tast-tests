@@ -60,6 +60,9 @@ var relaxedCriteriaModels = []string{
 
 	// b/269065601#comment8: Devices with RT1015p amp have an additional 300ms delay on the power on sequence, so we relax the criteria for them.
 	"beetley", "blipper", "galith360", "galnat", "galnat360", "galtic", "galtic360", "sasukette", "storo", "storo360",
+
+	// b/361285995
+	"kano", "volmar",
 }
 var skippedModels = []string{
 	// TODO(b/312097873): remove "brya" when b/309904720 is fixed.
