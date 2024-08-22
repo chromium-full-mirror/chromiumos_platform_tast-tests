@@ -12,6 +12,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -35,7 +36,12 @@ func init() {
 		BugComponent: "b:167279", // ChromeOS > Platform > baseOS > Performance
 		Contacts:     []string{"baseos-perf@google.com", "hikalium@google.com"},
 		Attr:         []string{"group:mainline", "informational"},
-		Data:         []string{"manifest.json", "bench.js", "background.js", "bench.html"},
+		Data: []string{
+			"tab_open_latency_perf/manifest.json",
+			"tab_open_latency_perf/bench.js",
+			"tab_open_latency_perf/background.js",
+			"tab_open_latency_perf/bench.html",
+		},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps: []string{
 			"tast.cros.browser.ChromeService",
@@ -69,8 +75,13 @@ func TabOpenLatencyPerf(ctx context.Context, s *testing.State) {
 	}
 	dataPaths := s.DataPaths()
 	dataMap := make(map[string]string, len(dataPaths))
+
+	const dataDir = "tab_open_latency_perf/"
 	for name, path := range dataPaths {
-		dataMap[path] = filepath.Join(benchDir, name)
+		if !strings.HasPrefix(name, dataDir) {
+			s.Fatalf("The data path should start with %s but got %s", dataDir, name)
+		}
+		dataMap[path] = filepath.Join(benchDir, strings.TrimPrefix(name, dataDir))
 	}
 	if bytes, err := linuxssh.PutFiles(ctx, d.Conn(), dataMap, linuxssh.PreserveSymlinks); err != nil {
 		s.Fatal("Failed to copy bluebench files via ssh")
@@ -78,7 +89,7 @@ func TabOpenLatencyPerf(ctx context.Context, s *testing.State) {
 		s.Fatal("zero bytes transferred while copying the bluebench files")
 	}
 
-	cr := runBluebench(ctx, s, cl, benchDir, filepath.Dir(dataPaths["manifest.json"]))
+	cr := runBluebench(ctx, s, cl, benchDir, filepath.Dir(dataPaths[dataDir+"manifest.json"]))
 	defer cr.Close(ctx, &emptypb.Empty{})
 }
 
