@@ -11,16 +11,14 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/a11y/dictation"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Dictation,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Tests that the Dictation feature can be used to input text using voice",
+		Func: Dictation,
+		Desc: "Tests that the Dictation feature can be used to input text using voice",
 		Contacts: []string{
 			"chromeos-a11y-eng@google.com", // Mailing list
 			"akihiroota@chromium.org",      // Test author
@@ -35,51 +33,27 @@ func init() {
 		Params: []testing.Param{{
 			Name: "ash_textarea",
 			Val: dictation.TestParam{
-				BrowserType: browser.TypeAsh,
-				HTML:        "<textarea class='myEditable'></textarea>",
-			},
-		}, {
-			Name:              "lacros_textarea",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val: dictation.TestParam{
-				BrowserType: browser.TypeLacros,
-				HTML:        "<textarea class='myEditable'></textarea>",
+				HTML: "<textarea class='myEditable'></textarea>",
 			},
 		}, {
 			Name: "ash_input",
 			Val: dictation.TestParam{
-				BrowserType: browser.TypeAsh,
-				HTML:        "<input class='myEditable'></input>",
-			},
-		}, {
-			Name:              "lacros_input",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val: dictation.TestParam{
-				BrowserType: browser.TypeLacros,
-				HTML:        "<input class='myEditable'></input>",
+				HTML: "<input class='myEditable'></input>",
 			},
 		}, {
 			Name: "ash_contenteditable",
 			Val: dictation.TestParam{
-				BrowserType: browser.TypeAsh,
-				HTML:        "<div class='myEditable' contenteditable></div>",
+				HTML: "<div class='myEditable' contenteditable></div>",
 			},
-		}, {
-			Name:              "lacros_contenteditable",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val: dictation.TestParam{
-				BrowserType: browser.TypeLacros,
-				HTML:        "<div class='myEditable' contenteditable></div>",
-			},
-		}},
+		},
+		},
 	})
 }
 
 func Dictation(ctx context.Context, s *testing.State) {
-	bt := s.Param().(dictation.TestParam).BrowserType
 	html := s.Param().(dictation.TestParam).HTML
 	const className = "myEditable"
-	driver, err := dictation.SetUp(ctx, html, className, bt)
+	driver, err := dictation.SetUp(ctx, html, className)
 	if err != nil {
 		s.Fatal("Failed to set up Dictation: ", err)
 	}

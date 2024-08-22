@@ -28,8 +28,7 @@ import (
 
 // TestParam represents data that can be used to configure a test.
 type TestParam struct {
-	BrowserType browser.Type
-	HTML        string
+	HTML string
 }
 
 // conn represents a connection to the Dictation background page.
@@ -125,7 +124,7 @@ func (d driver) waitForEditableValue(expectedValue string) error {
 
 // SetUp executes common Dictation setup code and returns a driver that can be
 // used to easily drive Dictation tests.
-func SetUp(ctx context.Context, html, className string, bt browser.Type) (d driver, e error) {
+func SetUp(ctx context.Context, html, className string) (d driver, e error) {
 	// Tears down Dictation if SetUp encountered an error.
 	defer func() {
 		if e != nil {
@@ -143,7 +142,7 @@ func SetUp(ctx context.Context, html, className string, bt browser.Type) (d driv
 		return nil
 	})
 
-	cr, err := browserfixt.NewChrome(ctx, bt, lacrosfixt.NewConfig(),
+	cr, err := browserfixt.NewChrome(ctx, browser.TypeAsh, lacrosfixt.NewConfig(),
 		// Enforce on-device speech recognition.
 		chrome.EnableFeatures("OnDeviceSpeechRecognition"),
 	)
@@ -189,7 +188,7 @@ func SetUp(ctx context.Context, html, className string, bt browser.Type) (d driv
 	}
 
 	// Setup a browser.
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, bt)
+	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 	if err != nil {
 		return newNoOpDriver(tdh), errors.Wrap(err, "failed to setup browser")
 	}

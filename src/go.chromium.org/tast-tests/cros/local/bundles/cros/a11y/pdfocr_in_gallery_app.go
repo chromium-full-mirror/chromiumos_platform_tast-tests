@@ -32,9 +32,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PDFOCRInGalleryApp,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Test the PDF OCR feature in the Gallery app",
+		Func: PDFOCRInGalleryApp,
+		Desc: "Test the PDF OCR feature in the Gallery app",
 		Contacts: []string{
 			"chrome-screen-ai@google.com", // Mailing list
 			"nektar@chromium.org",         // Test author
@@ -44,26 +43,15 @@ func init() {
 		Data:         []string{pdfocr.TestPDFName}, // Testing PDF containing inaccessible text
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Timeout:      8 * time.Minute,
-		Params: []testing.Param{
-			{
-				Name: "ash",
-				Val:  browser.TypeAsh,
-			}, {
-				Name:              "lacros",
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				Val:               browser.TypeLacros,
-			}},
 	})
 }
 
 func PDFOCRInGalleryApp(ctx context.Context, s *testing.State) {
-	bt := s.Param().(browser.Type)
-
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	data, err := pdfocr.SetUpHTTPServer(ctx, cleanupCtx, s.DataFileSystem(), bt)
+	data, err := pdfocr.SetUpHTTPServer(ctx, cleanupCtx, s.DataFileSystem(), browser.TypeAsh)
 	if err != nil {
 		s.Fatal("Failed to setup PDF OCR test: ", err)
 	}
@@ -89,7 +77,7 @@ func PDFOCRInGalleryApp(ctx context.Context, s *testing.State) {
 	}
 
 	// Enable ChromeVox and open the test PDF.
-	cvData, err := chromevox.SetUpWithURLWithoutFocusWaiter(ctx, cr, tts.GoogleTTSEnUsVoice(), tts.GoogleTTSEngine(), bt, server.URL)
+	cvData, err := chromevox.SetUpWithURLWithoutFocusWaiter(ctx, cr, tts.GoogleTTSEnUsVoice(), tts.GoogleTTSEngine(), server.URL)
 	if err != nil {
 		s.Fatal("Failed to set up ChromeVox: ", err)
 	}

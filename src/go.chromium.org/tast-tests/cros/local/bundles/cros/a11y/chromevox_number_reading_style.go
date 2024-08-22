@@ -12,30 +12,20 @@ import (
 	"go.chromium.org/tast-tests/cros/local/a11y/chromevox"
 	"go.chromium.org/tast-tests/cros/local/a11y/tts"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ChromevoxNumberReadingStyle,
-		LacrosStatus: testing.LacrosVariantExists, // TODO(b:268196299): The ChromeVox options page will migrate to ChromeOS settings, so this test will need to be updated and re-enabled when the above bug is closed.
-		Desc:         "Verifies ChromeVox honors its setting to read numbers as words or as digits",
+		Func: ChromevoxNumberReadingStyle,
+		Desc: "Verifies ChromeVox honors its setting to read numbers as words or as digits",
 		Contacts: []string{
 			"chromeos-a11y-eng@google.com", // Mailing list
 			"akihiroota@chromium.org",
 		},
 		BugComponent: "b:1272895",
 		SoftwareDeps: []string{"chrome"},
-		Params: []testing.Param{{
-			Fixture: "chromeLoggedIn",
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           "lacros",
-			Val:               browser.TypeLacros,
-		}},
+		Fixture:      "chromeLoggedIn",
 	})
 }
 
@@ -44,9 +34,8 @@ func ChromevoxNumberReadingStyle(ctx context.Context, s *testing.State) {
 
 	vd := tts.GoogleTTSEnUsVoice()
 	ed := tts.GoogleTTSEngine()
-	bt := s.Param().(browser.Type)
 	html := "<p>123</p>"
-	cvData, err := chromevox.SetUp(ctx, cr, vd, ed, bt, html)
+	cvData, err := chromevox.SetUp(ctx, cr, vd, ed, html)
 	if err != nil {
 		s.Fatal("Failed to set up ChromeVox: ", err)
 	}

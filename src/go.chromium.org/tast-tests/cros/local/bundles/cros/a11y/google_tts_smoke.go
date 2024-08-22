@@ -23,9 +23,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         GoogleTtsSmoke,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "A test that verifies that Google TTS can speak content through the device's internal speakers",
+		Func: GoogleTtsSmoke,
+		Desc: "A test that verifies that Google TTS can speak content through the device's internal speakers",
 		Contacts: []string{
 			"chromeos-a11y-eng@google.com", // Mailing list
 			"akihiroota@chromium.org",      // Test author

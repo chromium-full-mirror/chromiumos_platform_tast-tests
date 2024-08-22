@@ -10,15 +10,13 @@ import (
 	"go.chromium.org/tast-tests/cros/local/a11y/chromevox"
 	"go.chromium.org/tast-tests/cros/local/a11y/tts"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ChromevoxRichTextEditing,
-		LacrosStatus: testing.LacrosVariantUnneeded, // TODO(crbug.com/1159107): Test is disabled in continuous testing. Migrate when enabled.
-		Desc:         "A test that verifies the way ChromeVox can be used to edit text in a contenteditable",
+		Func: ChromevoxRichTextEditing,
+		Desc: "A test that verifies the way ChromeVox can be used to edit text in a contenteditable",
 		Contacts: []string{
 			"chromeos-a11y-eng@google.com", // Mailing list
 			"katie@chromium.org",           // Test author
@@ -33,7 +31,6 @@ func init() {
 func ChromevoxRichTextEditing(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
-	bt := browser.TypeAsh
 	html := `<div role="textbox" contenteditable>
 <h2>hello</h2>
 <div><br></div>
@@ -52,7 +49,7 @@ func ChromevoxRichTextEditing(ctx context.Context, s *testing.State) {
 <p>End</p></div>`
 	vd := tts.GoogleTTSEnUsVoice()
 	ed := tts.GoogleTTSEngine()
-	cvData, err := chromevox.SetUp(ctx, cr, vd, ed, bt, html)
+	cvData, err := chromevox.SetUp(ctx, cr, vd, ed, html)
 	if err != nil {
 		s.Fatal("Failed to set up ChromeVox: ", err)
 	}

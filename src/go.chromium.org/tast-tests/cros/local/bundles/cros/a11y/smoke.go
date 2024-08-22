@@ -25,40 +25,24 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Smoke,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Tests that a11y nodes on various browsers are accessible in Tast using the test extension from Ash",
 		Contacts:     []string{"chromeos-a11y-eng@google.com", "chromeos-sw-engprod@google.com", "xiuwen@google.com"},
 		BugComponent: "b:1272672",
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
-		Params: []testing.Param{{
-			Fixture: "chromeLoggedIn",
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			Fixture:           "lacros",
-			ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-			Val:               browser.TypeLacros,
-		}, {
-			Name:              "lacros_unstable",
-			Fixture:           "lacros",
-			ExtraSoftwareDeps: []string{"lacros", "lacros_unstable"},
-			ExtraAttr:         []string{"informational"},
-			Val:               browser.TypeLacros,
-		}},
+		Fixture:      "chromeLoggedIn",
 	})
 }
 
 func Smoke(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
-	bt := s.Param().(browser.Type)
 
 	// Reserve ten seconds for cleanup.
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
+	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 	if err != nil {
 		s.Fatal("Failed to set up browser: ", err)
 	}
@@ -82,28 +66,20 @@ func Smoke(ctx context.Context, s *testing.State) {
 		s.Fatal("Could not determine the correct browser app to use: ", err)
 	}
 
-	var topWindowName string
-	switch bt {
-	case browser.TypeAsh:
-		topWindowName = "BrowserFrame"
-	case browser.TypeLacros:
-		topWindowName = "ExoShellSurface"
-	default:
-		s.Fatal("Unrecognized browser type: ", bt)
-	}
+	topWindowName := "BrowserFrame"
 	topLevelWindow := nodewith.Role(role.Window).HasClass(topWindowName)
 
-	s.Logf("Opening a new tab in %v browser", bt)
+	s.Log("Opening a new tab in the browser")
 	conn, err := br.NewConn(ctx, "chrome://newtab")
 	if err != nil {
-		s.Fatalf("Failed to open a new tab in %v browser: %v", bt, err)
+		s.Fatal("Failed to open a new tab in the browser: ", err)
 	}
 	defer conn.Close()
 
 	ui := uiauto.New(tconn)
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
-	s.Logf("Asserting that UI elements on browser window frame are accessible in %v browser", bt)
+	s.Log("Asserting that UI elements on browser window frame are accessible in the browser")
 	for _, e := range []struct {
 		name   string
 		finder *nodewith.Finder
@@ -114,24 +90,24 @@ func Smoke(ctx context.Context, s *testing.State) {
 		{"Browser: Close", nodewith.HasClass("FrameCaptionButton").Name("Close").Role(role.Button).Ancestor(topLevelWindow)},
 	} {
 		if err = ui.WaitUntilExists(e.finder)(ctx); err != nil {
-			s.Fatalf("Failed to find the UI element (%v) in %v: %v", e.name, bt, err)
+			s.Fatalf("Failed to find the UI element (%v) in the browser: %v", e.name, err)
 		}
 	}
 
-	s.Logf("Asserting that the a11y node (rootWebArea) on the webview are accessible inside %v browser", bt)
+	s.Log("Asserting that the a11y node (rootWebArea) on the webview are accessible inside the browser")
 	rootWebArea := nodewith.Role("rootWebArea").Ancestor(topLevelWindow).First()
 	if err := ui.WaitUntilExists(rootWebArea)(ctx); err != nil {
-		s.Fatalf("Failed to find the rootWebArea inside %v browser: %v", bt, err)
+		s.Fatal("Failed to find the rootWebArea inside the browser: ", err)
 	}
 
-	s.Logf("Asserting that mouse click works on the close button in %v browser", bt)
+	s.Log("Asserting that mouse click works on the close button in browser")
 	closeButton := nodewith.HasClass("FrameCaptionButton").Name("Close").Role(role.Button).Ancestor(topLevelWindow)
 	if err := uiauto.Combine(
-		fmt.Sprintf("Click the close button in %v browser", bt),
+		fmt.Sprint("Click the close button in the browser"),
 		ui.WaitUntilExists(closeButton),
 		ui.LeftClick(closeButton),
 	)(ctx); err != nil {
-		s.Fatalf("Failed to find and click the close button in %v: %v", bt, err)
+		s.Fatal("Failed to find and click the close button in the browser: ", err)
 	}
 
 	if err = ash.WaitForAppClosed(ctx, tconn, app.ID); err != nil {

@@ -12,7 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/a11y/chromevox"
 	"go.chromium.org/tast-tests/cros/local/a11y/tts"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -24,9 +23,8 @@ type builtInVoicesTestParam struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ChromevoxBuiltInVoices,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests that ChromeVox works with all built-in Google TTS voices",
+		Func: ChromevoxBuiltInVoices,
+		Desc: "Tests that ChromeVox works with all built-in Google TTS voices",
 		Contacts: []string{
 			"chromeos-a11y-eng@google.com", // Mailing list
 			"akihiroota@chromium.org",      // Test author
@@ -108,11 +106,10 @@ func ChromevoxBuiltInVoices(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	td := s.Param().(builtInVoicesTestParam).testData
-	bt := browser.TypeAsh
 	locale := s.Param().(builtInVoicesTestParam).expectedLocale
 	voiceName := s.Param().(builtInVoicesTestParam).expectedVoiceName
 	const html = "<p>Test</p>"
-	cvData, err := chromevox.SetUp(ctx, cr, td.VoiceData, td.EngineData, bt, html)
+	cvData, err := chromevox.SetUp(ctx, cr, td.VoiceData, td.EngineData, html)
 	if err != nil {
 		s.Fatal("Failed to set up ChromeVox: ", err)
 	}

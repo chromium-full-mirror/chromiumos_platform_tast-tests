@@ -10,15 +10,13 @@ import (
 	"go.chromium.org/tast-tests/cros/local/a11y/chromevox"
 	"go.chromium.org/tast-tests/cros/local/a11y/tts"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ChromevoxPlainTextEditing,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "A test that verifies the way ChromeVox can be used to edit text in plain text fields",
+		Func: ChromevoxPlainTextEditing,
+		Desc: "A test that verifies the way ChromeVox can be used to edit text in plain text fields",
 		Contacts: []string{
 			"chromeos-a11y-eng@google.com", // Mailing list
 			"katie@chromium.org",           // Test author
@@ -26,15 +24,7 @@ func init() {
 		BugComponent: "b:1272895", // ChromeOS Public Tracker > Experiences > Accessibility > Features > ChromeVox
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
-		Params: []testing.Param{{
-			Fixture: "chromeLoggedIn",
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			Fixture:           "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               browser.TypeLacros,
-		}},
+		Fixture:      "chromeLoggedIn",
 	})
 }
 
@@ -43,14 +33,13 @@ func ChromevoxPlainTextEditing(ctx context.Context, s *testing.State) {
 
 	vd := tts.GoogleTTSEnUsVoice()
 	ed := tts.GoogleTTSEngine()
-	bt := s.Param().(browser.Type)
 	const html = `<label for='singleLine'>singleLine</label>
 <input type='text' id='singleLine' value='Single line field'><br>
 <label for='textarea'>textArea</label>
 <textarea id='textarea'>Line 1
 line 2
 line 3</textarea>`
-	cvData, err := chromevox.SetUp(ctx, cr, vd, ed, bt, html)
+	cvData, err := chromevox.SetUp(ctx, cr, vd, ed, html)
 	if err != nil {
 		s.Fatal("Failed to set up ChromeVox: ", err)
 	}

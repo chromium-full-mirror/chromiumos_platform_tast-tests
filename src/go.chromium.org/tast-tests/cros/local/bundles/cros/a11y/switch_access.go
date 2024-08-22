@@ -21,9 +21,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SwitchAccess,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Toggles the Switch Access accessibility feature and ensures the setup guide is shown",
+		Func: SwitchAccess,
+		Desc: "Toggles the Switch Access accessibility feature and ensures the setup guide is shown",
 		Contacts: []string{
 			"chromeos-a11y-eng@google.com", // Mailing list
 			"akihiroota@chromium.org",      // Test author

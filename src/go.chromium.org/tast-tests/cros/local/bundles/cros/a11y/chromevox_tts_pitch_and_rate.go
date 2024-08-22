@@ -10,15 +10,13 @@ import (
 	"go.chromium.org/tast-tests/cros/local/a11y/chromevox"
 	"go.chromium.org/tast-tests/cros/local/a11y/tts"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ChromevoxTTSPitchAndRate,
-		LacrosStatus: testing.LacrosVariantUnneeded, // TODO(crbug.com/1159107): Test is disabled in continuous testing. Migrate when enabled.
-		Desc:         "A test that verifies the way ChromeVox sets Text-to-Speech pitch and rate",
+		Func: ChromevoxTTSPitchAndRate,
+		Desc: "A test that verifies the way ChromeVox sets Text-to-Speech pitch and rate",
 		Contacts: []string{
 			"chromeos-a11y-eng@google.com", // Mailing list
 			"katie@chromium.org",           // Test author
@@ -33,7 +31,6 @@ func init() {
 func ChromevoxTTSPitchAndRate(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
-	bt := browser.TypeAsh
 	html := `<p>hi</p>
 		<p>high</p>
 		<p>normal</p>
@@ -46,7 +43,7 @@ func ChromevoxTTSPitchAndRate(ctx context.Context, s *testing.State) {
 
 	vd := tts.GoogleTTSEnUsVoice()
 	ed := tts.GoogleTTSEngine()
-	cvData, err := chromevox.SetUp(ctx, cr, vd, ed, bt, html)
+	cvData, err := chromevox.SetUp(ctx, cr, vd, ed, html)
 	if err != nil {
 		s.Fatal("Failed to set up ChromeVox: ", err)
 	}

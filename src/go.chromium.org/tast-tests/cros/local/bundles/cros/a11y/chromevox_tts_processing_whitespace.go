@@ -10,15 +10,13 @@ import (
 	"go.chromium.org/tast-tests/cros/local/a11y/chromevox"
 	"go.chromium.org/tast-tests/cros/local/a11y/tts"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ChromevoxTTSProcessingWhitespace,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "A test that verifies the way ChromeVox processes whitespace for speech in text areas",
+		Func: ChromevoxTTSProcessingWhitespace,
+		Desc: "A test that verifies the way ChromeVox processes whitespace for speech in text areas",
 		Contacts: []string{
 			"chromeos-a11y-eng@google.com", // Mailing list
 			"katie@chromium.org",           // Test author
@@ -26,26 +24,17 @@ func init() {
 		BugComponent: "b:1272895",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
-		Params: []testing.Param{{
-			Fixture: "chromeLoggedIn",
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			Fixture:           "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               browser.TypeLacros,
-		}},
+		Fixture:      "chromeLoggedIn",
 	})
 }
 
 func ChromevoxTTSProcessingWhitespace(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
-	bt := s.Param().(browser.Type)
 	html := "<textarea></textarea>"
 	vd := tts.GoogleTTSEnUsVoice()
 	ed := tts.GoogleTTSEngine()
-	cvData, err := chromevox.SetUp(ctx, cr, vd, ed, bt, html)
+	cvData, err := chromevox.SetUp(ctx, cr, vd, ed, html)
 	if err != nil {
 		s.Fatal("Failed to set up ChromeVox: ", err)
 	}

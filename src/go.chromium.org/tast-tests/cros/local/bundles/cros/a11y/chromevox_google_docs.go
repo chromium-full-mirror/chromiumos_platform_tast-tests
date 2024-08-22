@@ -14,7 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/a11y/chromevox"
 	"go.chromium.org/tast-tests/cros/local/a11y/tts"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
@@ -23,9 +22,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ChromevoxGoogleDocs,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Verifies turning on ChromeVox enables screen reader support in Google Docs and ChromeVox can read contents of a Google Doc",
+		Func: ChromevoxGoogleDocs,
+		Desc: "Verifies turning on ChromeVox enables screen reader support in Google Docs and ChromeVox can read contents of a Google Doc",
 		Contacts: []string{
 			"chromeos-a11y-eng@google.com", // Mailing list
 			"katie@chromium.org",           // Test author
@@ -33,15 +31,7 @@ func init() {
 		BugComponent: "b:1272895", // ChromeOS Public Tracker > Experiences > Accessibility > Features > ChromeVox
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
-		Params: []testing.Param{{
-			Fixture: "chromeLoggedIn",
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           "lacros",
-			Val:               browser.TypeLacros,
-		}},
+		Fixture:      "chromeLoggedIn",
 	})
 }
 
@@ -50,9 +40,8 @@ func ChromevoxGoogleDocs(ctx context.Context, s *testing.State) {
 
 	vd := tts.GoogleTTSEnUsVoice()
 	ed := tts.GoogleTTSEngine()
-	bt := s.Param().(browser.Type)
 	url := a11y.ReadOnlyGoogleDocURL
-	cvData, err := chromevox.SetUpWithURLWithoutFocusWaiter(ctx, cr, vd, ed, bt, url)
+	cvData, err := chromevox.SetUpWithURLWithoutFocusWaiter(ctx, cr, vd, ed, url)
 	if err != nil {
 		s.Fatal("Failed to set up ChromeVox: ", err)
 	}

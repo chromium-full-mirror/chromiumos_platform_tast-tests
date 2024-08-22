@@ -41,14 +41,6 @@ func init() {
 		},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,
-		Params: []testing.Param{{
-			Name: "ash",
-			Val:  browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               browser.TypeLacros,
-		}},
 	})
 }
 
@@ -57,10 +49,9 @@ func PDFOCRMultiPage(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	bt := s.Param().(browser.Type)
 	// TODO(b/289009784): Create a new helper function that sets up a test environment
 	// for PDF OCR using `chromevox.SetUpWithURLWithoutFocusWaiter()`.
-	data, err := pdfocr.SetUpHTTPServer(ctx, cleanupCtx, s.DataFileSystem(), bt)
+	data, err := pdfocr.SetUpHTTPServer(ctx, cleanupCtx, s.DataFileSystem(), browser.TypeAsh)
 	if err != nil {
 		s.Fatal("Failed to setup PDF OCR test: ", err)
 	}
@@ -74,7 +65,7 @@ func PDFOCRMultiPage(ctx context.Context, s *testing.State) {
 	server := data.Server
 
 	// Enable ChromeVox and open the test PDF.
-	cvData, err := chromevox.SetUpWithURLWithoutFocusWaiter(ctx, cr, tts.GoogleTTSEnUsVoice(), tts.GoogleTTSEngine(), bt, server.URL+"/"+pdfocr.MultiPagePDFName)
+	cvData, err := chromevox.SetUpWithURLWithoutFocusWaiter(ctx, cr, tts.GoogleTTSEnUsVoice(), tts.GoogleTTSEngine(), server.URL+"/"+pdfocr.MultiPagePDFName)
 	if err != nil {
 		s.Fatal("Failed to set up ChromeVox: ", err)
 	}

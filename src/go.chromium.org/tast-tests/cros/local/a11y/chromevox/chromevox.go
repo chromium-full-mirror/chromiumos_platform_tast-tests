@@ -13,7 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/a11y"
 	"go.chromium.org/tast-tests/cros/local/a11y/tts"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
@@ -122,7 +121,7 @@ func (data SetUpData) TearDown() error {
 
 // SetUp executes common ChromeVox setup code. Returns a SetUpData - see the
 // documentation for SetUpData for information on proper cleanup.
-func SetUp(ctx context.Context, cr *chrome.Chrome, vd tts.VoiceData, ed tts.EngineData, bt browser.Type, html string) (setUpData SetUpData, e error) {
+func SetUp(ctx context.Context, cr *chrome.Chrome, vd tts.VoiceData, ed tts.EngineData, html string) (setUpData SetUpData, e error) {
 	// Tears down ChromeVox if SetUp encountered an error.
 	defer func() {
 		if e != nil {
@@ -130,7 +129,7 @@ func SetUp(ctx context.Context, cr *chrome.Chrome, vd tts.VoiceData, ed tts.Engi
 		}
 	}()
 
-	inputs := a11y.TTSFeatureInputs{CTX: ctx, CR: cr, ED: ed, BT: bt, URL: a11y.URLFromHTML(html), Feature: a11y.SpokenFeedback}
+	inputs := a11y.TTSFeatureInputs{CTX: ctx, CR: cr, ED: ed, URL: a11y.URLFromHTML(html), Feature: a11y.SpokenFeedback}
 	sud, err := setUpHelper(inputs, vd)
 
 	// Wait for ChromeVox to focus the root web area.
@@ -146,8 +145,8 @@ func SetUp(ctx context.Context, cr *chrome.Chrome, vd tts.VoiceData, ed tts.Engi
 // does not wait for initial focus as that depends on the URL (focus might not always be
 // the root web area if something within the loaded HTML requests focus). Returns a
 // SetUpData - see the documentation for SetUpData for information on proper cleanup.
-func SetUpWithURLWithoutFocusWaiter(ctx context.Context, cr *chrome.Chrome, vd tts.VoiceData, ed tts.EngineData, bt browser.Type, url string) (setUpData SetUpData, e error) {
-	inputs := a11y.TTSFeatureInputs{CTX: ctx, CR: cr, ED: ed, BT: bt, URL: url, Feature: a11y.SpokenFeedback}
+func SetUpWithURLWithoutFocusWaiter(ctx context.Context, cr *chrome.Chrome, vd tts.VoiceData, ed tts.EngineData, url string) (setUpData SetUpData, e error) {
+	inputs := a11y.TTSFeatureInputs{CTX: ctx, CR: cr, ED: ed, URL: url, Feature: a11y.SpokenFeedback}
 	return setUpHelper(inputs, vd)
 }
 

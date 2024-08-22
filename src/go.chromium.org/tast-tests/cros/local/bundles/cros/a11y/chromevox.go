@@ -12,20 +12,17 @@ import (
 	"go.chromium.org/tast-tests/cros/local/a11y/chromevox"
 	"go.chromium.org/tast-tests/cros/local/a11y/tts"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast/core/testing"
 )
 
 type testParam struct {
-	testData    chromevox.VoiceData
-	browserType browser.Type
+	testData chromevox.VoiceData
 }
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Chromevox,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "A spoken feedback test that executes ChromeVox commands and keyboard shortcuts, and verifies that correct speech is given by the Google and eSpeak TTS engines",
+		Func: Chromevox,
+		Desc: "A spoken feedback test that executes ChromeVox commands and keyboard shortcuts, and verifies that correct speech is given by the Google and eSpeak TTS engines",
 		Contacts: []string{
 			"chromeos-a11y-eng@google.com", // Mailing list
 			"akihiroota@chromium.org",      // Test author
@@ -41,7 +38,6 @@ func init() {
 					VoiceData:  tts.GoogleTTSEnUsVoice(),
 					EngineData: tts.GoogleTTSEngine(),
 				},
-				browserType: browser.TypeAsh,
 			},
 		}, {
 			Name:    "espeak",
@@ -51,29 +47,6 @@ func init() {
 					VoiceData:  tts.EspeakElVoice(),
 					EngineData: tts.EspeakEngine(),
 				},
-				browserType: browser.TypeAsh,
-			},
-		}, {
-			Name:              "lacros_google_tts",
-			Fixture:           "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val: testParam{
-				testData: chromevox.VoiceData{
-					VoiceData:  tts.GoogleTTSEnUsVoice(),
-					EngineData: tts.GoogleTTSEngine(),
-				},
-				browserType: browser.TypeLacros,
-			},
-		}, {
-			Name:              "lacros_espeak",
-			Fixture:           "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val: testParam{
-				testData: chromevox.VoiceData{
-					VoiceData:  tts.EspeakElVoice(),
-					EngineData: tts.EspeakEngine(),
-				},
-				browserType: browser.TypeLacros,
 			},
 		}},
 	})
@@ -83,9 +56,8 @@ func Chromevox(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	td := s.Param().(testParam).testData
-	bt := s.Param().(testParam).browserType
 	const html = "<p>Start</p><p>This is a ChromeVox test</p><p>End</p>"
-	cvData, err := chromevox.SetUp(ctx, cr, td.VoiceData, td.EngineData, bt, html)
+	cvData, err := chromevox.SetUp(ctx, cr, td.VoiceData, td.EngineData, html)
 	if err != nil {
 		s.Fatal("Failed to set up ChromeVox: ", err)
 	}

@@ -12,7 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/a11y"
 	"go.chromium.org/tast-tests/cros/local/a11y/tts"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/event"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
@@ -80,7 +79,7 @@ func NewConn(ctx context.Context, c *chrome.Chrome) (_ *Conn, e error) {
 
 // SetUp executes common Select to Speak setup code. Returns a TTSFeatureData -
 // see the documentation for TTSFeatureData for information on proper cleanup.
-func SetUp(ctx context.Context, cr *chrome.Chrome, ed tts.EngineData, bt browser.Type, html string) (tfd a11y.TTSFeatureData, e error) {
+func SetUp(ctx context.Context, cr *chrome.Chrome, ed tts.EngineData, html string) (tfd a11y.TTSFeatureData, e error) {
 	// Tears down Select to Speak if SetUp encountered an error.
 	defer func() {
 		if e != nil {
@@ -88,7 +87,7 @@ func SetUp(ctx context.Context, cr *chrome.Chrome, ed tts.EngineData, bt browser
 		}
 	}()
 
-	inputs := a11y.TTSFeatureInputs{CTX: ctx, CR: cr, ED: ed, BT: bt, URL: a11y.URLFromHTML(html), Feature: a11y.SelectToSpeak}
+	inputs := a11y.TTSFeatureInputs{CTX: ctx, CR: cr, ED: ed, URL: a11y.URLFromHTML(html), Feature: a11y.SelectToSpeak}
 	ttsData, err := a11y.SetUpTTSFeature(inputs)
 	if err != nil {
 		return ttsData, errors.Wrap(err, "failed to setup common TTS feature state")

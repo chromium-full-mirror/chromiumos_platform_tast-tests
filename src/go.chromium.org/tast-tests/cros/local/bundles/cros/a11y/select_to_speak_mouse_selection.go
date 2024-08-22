@@ -13,7 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/a11y/sts"
 	"go.chromium.org/tast-tests/cros/local/a11y/tts"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast/core/testing"
@@ -31,15 +30,7 @@ func init() {
 		BugComponent: "b:1272897", // ChromeOS Public Tracker > Experiences > Accessibility > Features > Select To Speak
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
-		Params: []testing.Param{{
-			Fixture: "chromeLoggedIn",
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           "lacros",
-			Val:               browser.TypeLacros,
-		}},
+		Fixture:      "chromeLoggedIn",
 	})
 }
 
@@ -49,8 +40,7 @@ func SelectToSpeakMouseSelection(ctx context.Context, s *testing.State) {
 	ed := tts.GoogleTTSEngine()
 	text := "One does not simply walk into Mordor"
 	html := fmt.Sprintf("<p>%s</p>", text)
-	bt := s.Param().(browser.Type)
-	stsData, err := sts.SetUp(ctx, cr, ed, bt, html)
+	stsData, err := sts.SetUp(ctx, cr, ed, html)
 	if err != nil {
 		s.Fatal("Failed to set up Select to Speak: ", err)
 	}

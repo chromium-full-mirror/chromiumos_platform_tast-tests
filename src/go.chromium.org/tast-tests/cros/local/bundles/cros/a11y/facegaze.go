@@ -18,9 +18,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Facegaze,
-		LacrosStatus: testing.LacrosVariantNeeded,
-		Desc:         "Tests that the FaceGaze feature can be turned on and used",
+		Func: Facegaze,
+		Desc: "Tests that the FaceGaze feature can be turned on and used",
 		Contacts: []string{
 			"chromeos-a11y-eng@google.com", // Mailing list
 			"akihiroota@chromium.org",      // Test author

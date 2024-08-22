@@ -157,7 +157,6 @@ type TTSFeatureInputs struct {
 	CTX     context.Context
 	CR      *chrome.Chrome
 	ED      tts.EngineData
-	BT      browser.Type
 	URL     string
 	Feature Feature
 }
@@ -226,7 +225,6 @@ func SetUpTTSFeature(tfi TTSFeatureInputs) (tfd TTSFeatureData, e error) {
 	ctx := tfi.CTX
 	cr := tfi.CR
 	ed := tfi.ED
-	bt := tfi.BT
 	url := tfi.URL
 	feature := tfi.Feature
 
@@ -277,7 +275,7 @@ func SetUpTTSFeature(tfi TTSFeatureInputs) (tfd TTSFeatureData, e error) {
 	}
 
 	// Setup a browser.
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, bt)
+	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 	if err != nil {
 		return newNoOpTTSFeatureData(tdown), errors.Wrap(err, "failed to setup browser")
 	}

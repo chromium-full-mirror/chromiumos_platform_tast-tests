@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/a11y/dictation"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -32,28 +31,13 @@ func init() {
 		Data:         []string{"voice_en_dictate_hello.wav"},
 		HardwareDeps: hwdep.D(hwdep.Speaker(), hwdep.Microphone(), hwdep.Keyboard()),
 		SoftwareDeps: []string{"chrome", "ondevice_speech"},
-		Params: []testing.Param{{
-			Name: "ash_textarea",
-			Val: dictation.TestParam{
-				BrowserType: browser.TypeAsh,
-				HTML:        "<textarea class='myEditable'></textarea>",
-			},
-		}, {
-			Name:              "lacros_textarea",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val: dictation.TestParam{
-				BrowserType: browser.TypeLacros,
-				HTML:        "<textarea class='myEditable'></textarea>",
-			},
-		}},
 	})
 }
 
 func DictationWithPumpkin(ctx context.Context, s *testing.State) {
-	bt := s.Param().(dictation.TestParam).BrowserType
-	html := s.Param().(dictation.TestParam).HTML
+	html := "<textarea class='myEditable'></textarea>"
 	const className = "myEditable"
-	driver, err := dictation.SetUp(ctx, html, className, bt)
+	driver, err := dictation.SetUp(ctx, html, className)
 	if err != nil {
 		s.Fatal("Failed to set up Dictation: ", err)
 	}
