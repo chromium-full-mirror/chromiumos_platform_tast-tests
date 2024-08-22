@@ -297,6 +297,11 @@ func (h *APIface) ChangeSubnetIdx(ctx context.Context) (retErr error) {
 	return nil
 }
 
+// SendChannelSwitchAnnouncement sends channel switch announcement frames
+func (h *APIface) SendChannelSwitchAnnouncement(ctx context.Context, count, channel int, opts ...hostapd.CSOption) error {
+	return h.hostapd.SendChannelSwitchAnnouncement(ctx, count, channel, opts...)
+}
+
 // StartChannelSwitch initiates a channel switch in the AP.
 func (h *APIface) StartChannelSwitch(ctx context.Context, count, channel int, opts ...hostapd.CSOption) error {
 	return h.hostapd.StartChannelSwitch(ctx, count, channel, opts...)

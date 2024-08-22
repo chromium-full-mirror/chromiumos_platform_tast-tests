@@ -589,8 +589,8 @@ type csaConfig struct {
 	mode string
 }
 
-// StartChannelSwitch initiates a channel switch in the AP.
-func (s *Server) StartChannelSwitch(ctx context.Context, csCount, csChannel int, options ...CSOption) error {
+// SendChannelSwitchAnnouncement sends channel switch announcement frames
+func (s *Server) SendChannelSwitchAnnouncement(ctx context.Context, csCount, csChannel int, options ...CSOption) error {
 	csFreq, err := ChannelToFrequency(csChannel)
 	if err != nil {
 		return errors.Wrap(err, "failed to convert channel to frequency")
@@ -610,6 +610,14 @@ func (s *Server) StartChannelSwitch(ctx context.Context, csCount, csChannel int,
 
 	if _, err := s.hostapdCLI(ctx, args...); err != nil {
 		return errors.Wrapf(err, "failed to send CSA with freq %d", csFreq)
+	}
+	return nil
+}
+
+// StartChannelSwitch initiates a channel switch in the AP.
+func (s *Server) StartChannelSwitch(ctx context.Context, csCount, csChannel int, options ...CSOption) error {
+	if err := s.SendChannelSwitchAnnouncement(ctx, csCount, csChannel, options...); err != nil {
+		return errors.Wrap(err, "failed to send CSA frame")
 	}
 
 	// Wait for the AP to change channel.

@@ -11,14 +11,10 @@ import (
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
-	remoteiw "go.chromium.org/tast-tests/cros/remote/wifi/iw"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
 	"go.chromium.org/tast-tests/cros/remote/wificell/dutcfg"
-	"go.chromium.org/tast-tests/cros/remote/wificell/framesender"
 	"go.chromium.org/tast-tests/cros/remote/wificell/hostapd"
-	"go.chromium.org/tast-tests/cros/remote/wificell/router/common"
 	"go.chromium.org/tast-tests/cros/services/cros/wifi"
-	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -52,51 +48,29 @@ func init() {
 }
 
 func FunctionalAfterCSA(ctx context.Context, s *testing.State) {
-	tf := s.FixtValue().(*wificell.TestFixture)
-
-	router, err := tf.StandardRouterWithFrameSenderSupport()
-	if err != nil {
-		s.Fatal("Failed to get legacy router: ", err)
-	}
-
-	const numRounds = 5
-
+	/*
+		FunctionalAfterCSA tests the functionality after receiving a channel switch announcement (CSA) message
+		It runs the following test |numRounds| times
+			1. Configure AP on |primaryChannel|
+			2. Connect the DUT to the AP
+			3. The AP starts channel switch to |alternateChannel| by sending CSA messages
+			If the DUT initiates the disconnection
+			4. Disconnect WiFi on the DUT
+			If the AP initiates the disconnection
+			4. The AP sends deauthentication to the DUT
+			5. Verify that the DUT is disconnected
+			6. Swap |primaryChannel| and |alternateChannel|
+	*/
+	const (
+		numRounds = 5
+		csCount   = 10
+	)
 	var (
 		primaryChannel   = 48
 		alternateChannel = 36
 	)
 
-	// TODO(b/154879577): Currently the action frames sent by FrameSender
-	// are not buffered for DTIM so if the DUT is in power saving mode, it
-	// cannot receive the action frame and the test will fail.
-	// Turn off power saving mode to replicate the behavior of Autotest in
-	// this test for now.
-	iwr := remoteiw.NewRemoteRunner(s.DUT().Conn())
-	iface, err := tf.ClientInterface(ctx)
-	if err != nil {
-		s.Fatal("Failed to get the client interface: ", err)
-	}
-	psMode, err := iwr.PowersaveMode(ctx, iface)
-	if err != nil {
-		s.Fatal("Failed to get the powersave mode: ", err)
-	}
-	if psMode {
-		defer func(ctx context.Context) {
-			s.Logf("Restoring power save mode to %t", psMode)
-			if err := iwr.SetPowersaveMode(ctx, iface, psMode); err != nil {
-				s.Errorf("Failed to restore powersave mode to %t: %v", psMode, err)
-			}
-		}(ctx)
-		var cancel context.CancelFunc
-		ctx, cancel = ctxutil.Shorten(ctx, time.Second)
-		defer cancel()
-
-		s.Log("Disabling power save in the test")
-		if err := iwr.SetPowersaveMode(ctx, iface, false); err != nil {
-			s.Fatal("Failed to turn off powersave: ", err)
-		}
-	}
-
+	tf := s.FixtValue().(*wificell.TestFixture)
 	clientInitDisconnect := s.Param().(bool)
 	csaDisconnectCore := func(ctx context.Context, primaryChannel, alternateChannel int) {
 		s.Logf("Setting up the AP on channel %d", primaryChannel)
@@ -138,19 +112,14 @@ func FunctionalAfterCSA(ctx context.Context, s *testing.State) {
 		defer cancel()
 
 		s.Logf("Connected. Sending channel switch frame (channel switch to %d)", alternateChannel)
-		sender, err := router.NewFrameSender(ctx, ap.Interface())
-		if err != nil {
-			s.Fatal("Failed to create frame sender: ", err)
-		}
-		defer func(ctx context.Context) {
-			if err := router.CloseFrameSender(ctx, sender); err != nil {
-				s.Fatal("Failed to close frame sender: ", err)
-			}
-		}(ctx)
-		ctx, cancel = ctxutil.Shorten(ctx, common.RouterCloseFrameSenderDuration)
-		defer cancel()
-		if err := sender.Send(ctx, framesender.TypeChannelSwitch, alternateChannel); err != nil {
+
+		if err := ap.SendChannelSwitchAnnouncement(ctx, csCount, alternateChannel); err != nil {
 			s.Fatal("Failed to send channel switch frame: ", err)
+		}
+
+		// GoBigSleepLint. Wait a little while for CSA frames to start actually being transmitted
+		if err := testing.Sleep(ctx, 100*time.Millisecond); err != nil {
+			s.Fatal("Interrupted while sleeping for CSA frames transmission: ", err)
 		}
 
 		if clientInitDisconnect {
