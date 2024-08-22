@@ -25,12 +25,7 @@ import (
 
 // List of strings that are used in the UI.
 const (
-	AddPrinterManuallyName = "Add a printer manually"
-	// TODO(b/297499031): This UI string is deprecated and AddPrinterName is
-	// used instead. Delete this string when the current UI is stabilised. Also
-	// simplify the OpenAddPrinterDialog as the other available printers button
-	// will always exist.
-	AddPrinterNameDeprecated   = "Add printer"
+	AddPrinterManuallyName     = "Add a printer manually"
 	AddPrinterName             = "Add printer manually"
 	AddName                    = "Add"
 	AddressName                = "Address"
@@ -55,7 +50,7 @@ const (
 // nodewith.Finder objects for items in the UI.
 var (
 	AddPrinterManuallyFinder     *nodewith.Finder = nodewith.Role(role.Dialog).Name(AddPrinterManuallyName)
-	AddPrinterFinder             *nodewith.Finder = nodewith.Role(role.Button).NameRegex(regexp.MustCompile(AddPrinterName + `|` + AddPrinterNameDeprecated))
+	AddPrinterFinder             *nodewith.Finder = nodewith.Role(role.Button).Name(AddPrinterName)
 	AddFinder                    *nodewith.Finder = nodewith.Role(role.Button).Name(AddName)
 	AddressFinder                *nodewith.Finder = nodewith.Role(role.TextField).Name(AddressName)
 	AdvancedConfigFinder         *nodewith.Finder = nodewith.Role(role.Dialog).Name(AdvancedConfigName)

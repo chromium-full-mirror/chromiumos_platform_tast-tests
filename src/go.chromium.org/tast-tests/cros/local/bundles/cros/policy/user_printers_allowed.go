@@ -6,7 +6,6 @@ package policy
 
 import (
 	"context"
-	"regexp"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/pci"
@@ -91,11 +90,9 @@ func UserPrintersAllowed(ctx context.Context, s *testing.State) {
 			}
 
 			// Check if the Add printer button is restricted.
-			// TODO(b/297499031): Delete "Add printer" string option when the
-			// current UI is stabilised.
 			if err := policyutil.OSSettingsPage(ctx, cr, "cupsPrinters").
 				SelectNode(ctx, nodewith.
-					NameRegex(regexp.MustCompile("Add printer|Add printer manually")).
+					Name("Add printer manually").
 					Role(role.Button)).
 				Restriction(param.wantRestriction).
 				Verify(); err != nil {
