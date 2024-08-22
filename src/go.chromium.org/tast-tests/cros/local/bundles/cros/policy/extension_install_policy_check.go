@@ -35,10 +35,11 @@ func init() {
 		BugComponent: "b:1253865",
 		SoftwareDeps: []string{"chrome"},
 		Attr: []string{
-			"group:golden_tier",
-			"group:mainline",
-			"informational",
-			"group:hw_agnostic",
+			//Disabled by TORA.  See:b/328649670
+			//"group:golden_tier",
+			//"group:mainline",
+			//"informational",
+			//"group:hw_agnostic",
 		},
 		Fixture: fixture.ChromePolicyLoggedInDevToolsAvailable,
 		Timeout: 4 * time.Minute, // There is a longer wait when installing the extension.
