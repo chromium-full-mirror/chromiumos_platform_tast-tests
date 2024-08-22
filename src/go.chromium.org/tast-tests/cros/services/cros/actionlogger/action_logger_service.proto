@@ -1,0 +1,20 @@
+// Copyright 2024 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+syntax = "proto3";
+
+package tast.cros.actionlogger;
+
+import "google/protobuf/empty.proto";
+
+option go_package = "go.chromium.org/tast-tests/cros/services/cros/actionlogger";
+
+// ActionLoggerService provides functions for UI action logger.
+service ActionLoggerService {
+  // Reset requests the logger to reset or initialized if not.
+  rpc Reset(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
+  // Save requests to save logs.
+  rpc Save(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+}

@@ -33,6 +33,7 @@ func init() {
 		TearDownTimeout: 5 * time.Minute,
 		ServiceDeps: []string{
 			"tast.cros.cleanupchecks.CleanUpChecksService",
+			"tast.cros.actionlogger.ActionLoggerService",
 		},
 		Vars: []string{
 			"servo", // Need by servo hook. TODO: remove after replacing it with servers.servo.
@@ -83,6 +84,7 @@ var orderedHooks []string = []string{
 	"servoHook",
 	"diskThrottler",
 	"cleanupChecksHook",
+	"actionLoggerHook",
 	"debugInfoHook", // Prefer to run this hook at the end if possible.
 }
 
