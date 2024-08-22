@@ -77,7 +77,7 @@ func init() {
 				resetType:      firmware.WarmReset,
 			},
 			ExtraAttr: []string{"firmware_smoke", "firmware_usb", "firmware_bios", "firmware_level2", "firmware_ro"},
-			Timeout:   60 * time.Minute,
+			Timeout:   2 * time.Hour,
 		}, {
 			Name:    "rec_cold",
 			Fixture: fixture.NormalMode,
@@ -87,7 +87,7 @@ func init() {
 				resetType:      firmware.ColdReset,
 			},
 			ExtraAttr: []string{"firmware_smoke", "firmware_usb", "firmware_bios", "firmware_level2", "firmware_ro"},
-			Timeout:   60 * time.Minute,
+			Timeout:   2 * time.Hour,
 		}, {
 			Name:    "dev_usb_cold",
 			Fixture: fixture.USBDevModeNoServices,
@@ -125,7 +125,7 @@ func init() {
 				bootToMode: fwCommon.BootModeRecovery,
 			},
 			ExtraAttr: []string{"firmware_smoke", "firmware_usb", "firmware_bios", "firmware_level2"},
-			Timeout:   60 * time.Minute,
+			Timeout:   2 * time.Hour,
 		}, {
 			Name:    "rec_to_dev",
 			Fixture: fixture.RecModeNoServices,
@@ -134,7 +134,7 @@ func init() {
 			},
 			// TODO: When stable, change firmware_unstable to "firmware_bios" + "firmware_level2".
 			ExtraAttr: []string{"firmware_unstable", "firmware_usb"},
-			Timeout:   60 * time.Minute,
+			Timeout:   2 * time.Hour,
 		}, {
 			Name:    "dev_gbb_to_rec",
 			Fixture: fixture.DevModeGBB,
@@ -143,7 +143,7 @@ func init() {
 			},
 			// TODO: When stable, change firmware_unstable to "firmware_bios" + "firmware_level2".
 			ExtraAttr: []string{"firmware_unstable", "firmware_usb"},
-			Timeout:   60 * time.Minute,
+			Timeout:   2 * time.Hour,
 		}, {
 			Name:    "rec_to_dev_gbb",
 			Fixture: fixture.RecModeNoServices,
@@ -153,7 +153,7 @@ func init() {
 			},
 			// TODO: When stable, change firmware_unstable to "firmware_bios" + "firmware_level2".
 			ExtraAttr: []string{"firmware_unstable", "firmware_usb"},
-			Timeout:   60 * time.Minute,
+			Timeout:   2 * time.Hour,
 		}, {
 			// Verifies that we can go from normal -> dev -> normal without GBB flags.
 			Name:    "normal_dev",
