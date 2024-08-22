@@ -341,7 +341,9 @@ func expectIncorrectPassphraseNotification(ctx context.Context, conn *grpc.Clien
 	if _, err := uiSvc.WaitUntilGone(ctx, &ui.WaitUntilGoneRequest{Finder: wifiutil.JoinWiFiNetworkDialogFinder}); err != nil {
 		return errors.Wrap(err, "failed to wait until node gone")
 	}
-	badPassword := ui.Node().NameRegex(`Failed to connect to network(.*)Bad password`).Role(ui.Role_ROLE_ALERT_DIALOG).HasClass("MessagePopupView").Finder()
+
+	alertDialog := ui.Node().Role(ui.Role_ROLE_ALERT_DIALOG).HasClass("MessagePopupView").Finder()
+	badPassword := ui.Node().NameRegex(`Failed to connect to network(.*)Bad password`).Ancestor(alertDialog).Nth(0).Finder()
 
 	if _, err := uiSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{
 		Finder:  badPassword,
