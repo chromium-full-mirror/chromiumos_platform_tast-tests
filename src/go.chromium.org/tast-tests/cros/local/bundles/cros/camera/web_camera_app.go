@@ -23,7 +23,7 @@ func init() {
 		Func:         WebCameraApp,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Test for the functionality (such as taking photos, recording videos, and switching between cameras) of this camera app",
-		Contacts:     []string{"chromeos-camera-eng@google.com", "chuhsuan@chromium.org"},
+		Contacts:     []string{"chromeos-camera-app-eng@google.com", "chuhsuan@chromium.org"},
 		Attr:         []string{"group:mainline", "group:camera-libcamera"},
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{"web_camera_app.html", "web_camera_app.js", "web_camera_app_test.js"},

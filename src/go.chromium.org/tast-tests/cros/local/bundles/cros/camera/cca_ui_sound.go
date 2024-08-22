@@ -21,7 +21,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Ensure the sound playing functionality works in CCA",
 		Contacts: []string{
-			"chromeos-camera-eng@google.com",
+			"chromeos-camera-app-eng@google.com",
 			"wtlee@chromium.org",
 		},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework

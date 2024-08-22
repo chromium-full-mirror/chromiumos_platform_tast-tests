@@ -19,7 +19,7 @@ func init() {
 		Func:         CCAQRCode,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies the BarcodeDetector API used in CCA",
-		Contacts:     []string{"chromeos-camera-eng@google.com", "shik@chromium.org"},
+		Contacts:     []string{"chromeos-camera-app-eng@google.com", "shik@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},

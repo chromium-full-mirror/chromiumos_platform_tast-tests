@@ -25,7 +25,7 @@ func init() {
 		Func:         CCAUISettings,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Opens CCA and verifies the settings menu behavior",
-		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
+		Contacts:     []string{"chromeos-camera-app-eng@google.com", "wtlee@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"camera_app", "chrome"},

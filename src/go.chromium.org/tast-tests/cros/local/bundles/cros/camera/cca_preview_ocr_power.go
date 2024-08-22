@@ -20,7 +20,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Collect power metrics about preview OCR feature",
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
-		Contacts:     []string{"chromeos-camera-eng@google.com", "chuhsuan@chromium.org"},
+		Contacts:     []string{"chromeos-camera-app-eng@google.com", "chuhsuan@chromium.org"},
 		SoftwareDeps: []string{"chrome", "camera_app"},
 		Timeout:      6*time.Minute + power.RecorderTimeout,
 		Params: []testing.Param{{

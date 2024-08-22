@@ -610,7 +610,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         MediaTrackAdvancedControls,
 		Desc:         "Verifies the MediaTrack advanced controls",
-		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
+		Contacts:     []string{"chromeos-camera-app-eng@google.com", "wtlee@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", caps.BuiltinOrVividCamera},

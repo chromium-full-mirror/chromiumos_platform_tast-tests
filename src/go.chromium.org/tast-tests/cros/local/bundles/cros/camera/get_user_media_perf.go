@@ -32,7 +32,7 @@ func init() {
 		Func:         GetUserMediaPerf,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Captures performance data about getUserMedia video capture",
-		Contacts:     []string{"chromeos-camera-eng@google.com", "shik@chromium.org", "seannli@google.com"},
+		Contacts:     []string{"chromeos-camera-app-eng@google.com", "shik@chromium.org", "seannli@google.com"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{caps.BuiltinOrVividCamera, "chrome"},

@@ -19,7 +19,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Smoke test for ChromeOS Camera App",
 		Contacts: []string{
-			"chromeos-camera-eng@google.com",
+			"chromeos-camera-app-eng@google.com",
 			"pihsun@chromium.org",
 			"shik@chromium.org",
 		},

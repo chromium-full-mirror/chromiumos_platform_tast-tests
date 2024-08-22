@@ -28,7 +28,7 @@ func init() {
 		Func:         GetUserMediaPolicy,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that admin policy can successfully ban getUserMedia",
-		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org", "seannli@google.com"},
+		Contacts:     []string{"chromeos-camera-app-eng@google.com", "wtlee@chromium.org", "seannli@google.com"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Attr:         []string{"group:mainline", "group:camera-libcamera", "informational"},
 		SoftwareDeps: []string{caps.BuiltinOrVividCamera, "chrome"},

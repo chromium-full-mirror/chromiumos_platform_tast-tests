@@ -19,7 +19,7 @@ func init() {
 		Func:         CCAUIDocumentScanningCornerIndicator,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies the corner indicator for document scanning",
-		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org", "chuhsuan@chromium.org"},
+		Contacts:     []string{"chromeos-camera-app-eng@google.com", "wtlee@chromium.org", "chuhsuan@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"camera_app", "chrome", "ondevice_document_scanner_rootfs_or_dlc", "camera_doc_corner_indicator"},

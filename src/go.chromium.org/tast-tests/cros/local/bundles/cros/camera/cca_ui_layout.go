@@ -24,7 +24,7 @@ func init() {
 		Func:         CCAUILayout,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test to verify the layout of Chrome Camera App",
-		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
+		Contacts:     []string{"chromeos-camera-app-eng@google.com", "wtlee@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Attr:         []string{"informational", "group:mainline"},
 		SoftwareDeps: []string{"camera_app", "chrome"},

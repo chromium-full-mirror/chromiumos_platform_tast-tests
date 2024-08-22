@@ -23,7 +23,7 @@ func init() {
 		Func:         CCACLI,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies CCA command line tool works",
-		Contacts:     []string{"chromeos-camera-eng@google.com", "shik@chromium.org"},
+		Contacts:     []string{"chromeos-camera-app-eng@google.com", "shik@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},

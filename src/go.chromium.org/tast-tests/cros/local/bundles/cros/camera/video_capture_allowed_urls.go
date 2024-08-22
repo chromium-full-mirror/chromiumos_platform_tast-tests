@@ -32,7 +32,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Behavior of VideoCaptureAllowedUrls policy, checking that allow URLs don't request for video capture access",
 		Contacts: []string{
-			"chromeos-camera-eng@google.com",
+			"chromeos-camera-app-eng@google.com",
 			"wtlee@google.com",
 			"eariassoto@google.com", // Test author
 		},

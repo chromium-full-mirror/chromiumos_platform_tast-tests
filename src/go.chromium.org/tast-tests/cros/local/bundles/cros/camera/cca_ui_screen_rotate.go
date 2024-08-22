@@ -23,7 +23,7 @@ func init() {
 		Func:         CCAUIScreenRotate,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Takes pictures in every screen orientation and checks the picture resolutions",
-		Contacts:     []string{"chromeos-camera-eng@google.com", "intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
+		Contacts:     []string{"chromeos-camera-app-eng@google.com", "intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		Attr:         []string{"group:mainline", "informational", "group:intel-nda"},
 		SoftwareDeps: []string{"camera_app", "chrome"},

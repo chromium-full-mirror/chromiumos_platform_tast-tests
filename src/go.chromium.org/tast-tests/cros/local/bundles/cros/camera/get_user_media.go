@@ -22,7 +22,7 @@ func init() {
 		Func:         GetUserMedia,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that getUserMedia captures video",
-		Contacts:     []string{"chromeos-camera-eng@google.com", "shik@chromium.org", "seannli@google.com"},
+		Contacts:     []string{"chromeos-camera-app-eng@google.com", "shik@chromium.org", "seannli@google.com"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Attr:         []string{"group:mainline", "group:camera-libcamera"},
 		SoftwareDeps: []string{"chrome"},

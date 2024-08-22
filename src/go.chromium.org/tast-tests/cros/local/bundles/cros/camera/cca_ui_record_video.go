@@ -21,7 +21,7 @@ func init() {
 		Func:         CCAUIRecordVideo,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Opens CCA and verifies video recording related use cases",
-		Contacts:     []string{"chromeos-camera-eng@google.com", "kamchonlathorn@chromium.org"},
+		Contacts:     []string{"chromeos-camera-app-eng@google.com", "kamchonlathorn@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Attr:         []string{"group:mainline", "informational", "group:intel-gating", "group:intel-nda"},
 		SoftwareDeps: []string{"camera_app", "chrome"},

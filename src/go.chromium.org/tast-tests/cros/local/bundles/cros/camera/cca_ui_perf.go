@@ -28,7 +28,7 @@ func init() {
 		Func:         CCAUIPerf,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Opens CCA and measures the UI performance including CPU and power usage",
-		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
+		Contacts:     []string{"chromeos-camera-app-eng@google.com", "wtlee@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Attr:         []string{"group:crosbolt"},
 		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinOrVividCamera},

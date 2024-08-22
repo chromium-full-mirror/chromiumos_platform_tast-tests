@@ -20,7 +20,7 @@ func init() {
 		Func:         CCAUIDigitalZoom,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies photo taking and video recording when digital zoom is active in CCA",
-		Contacts:     []string{"chromeos-camera-eng@google.com", "kamchonlathorn@chromium.org", "julianachang@chromium.org"},
+		Contacts:     []string{"chromeos-camera-app-eng@google.com", "kamchonlathorn@chromium.org", "julianachang@chromium.org"},
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
 		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinCamera},

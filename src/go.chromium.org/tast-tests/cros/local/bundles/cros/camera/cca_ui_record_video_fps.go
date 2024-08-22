@@ -20,7 +20,7 @@ func init() {
 		Func:         CCAUIRecordVideoFPS,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Record video and check the FPS of the video",
-		Contacts:     []string{"chromeos-camera-eng@google.com", "chuhsuan@chromium.org"},
+		Contacts:     []string{"chromeos-camera-app-eng@google.com", "chuhsuan@chromium.org"},
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"camera_app", "chrome"},
 		Timeout:      5 * time.Minute,
