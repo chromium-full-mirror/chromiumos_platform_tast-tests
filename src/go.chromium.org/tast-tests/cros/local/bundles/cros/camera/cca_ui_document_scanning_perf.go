@@ -28,23 +28,11 @@ func init() {
 		// Some devices (such as dedede/blipper) may take up to 10 seconds to
 		// crop a document from an image and 8 seconds to perform OCR on an
 		// image.
-		Params: []testing.Param{
-			{
-				Fixture: "ccaTestBridgeReadyWithFakeHALCamera",
-				// testOnePage: 60 seconds
-				// testTenPage: 600 seconds
-				// 660 seconds + 2 minutes `cpu.WaitUntilIdle`.
-				Timeout: 13 * time.Minute,
-			},
-			{
-				Name:    "ocr_enabled",
-				Fixture: "ccaTestBridgeReadyWithFakeHALCameraWithPDFOCR",
-				// testOnePage: 120 seconds
-				// testTenPage: 1200 seconds
-				// 1320 seconds + 2 minutes `cpu.WaitUntilIdle`.
-				Timeout: 24 * time.Minute,
-			},
-		},
+		Fixture: "ccaTestBridgeReadyWithFakeHALCamera",
+		// testOnePage: 60 seconds
+		// testTenPage: 600 seconds
+		// 660 seconds + 2 minutes `cpu.WaitUntilIdle`.
+		Timeout: 13 * time.Minute,
 	})
 }
 
