@@ -7,7 +7,6 @@ package support
 import (
 	"context"
 	"net"
-	"strings"
 
 	"go.chromium.org/tast-tests/cros/common/wifi/iw"
 	"go.chromium.org/tast-tests/cros/remote/wificell/dhcp"
@@ -15,7 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/wificell/hostapd"
 	"go.chromium.org/tast-tests/cros/remote/wificell/http"
 	"go.chromium.org/tast-tests/cros/remote/wificell/pcap"
-	"go.chromium.org/tast/core/errors"
 )
 
 // RouterType is an enum indicating what type of router style a router is.
@@ -34,31 +32,11 @@ const (
 	UbuntuT
 	// SoftAPT is the Soft AP router type.
 	SoftAPT
+	// ChromeOST is the router type for any ChromeOS device.
+	ChromeOST
 	// UnknownT is an unknown router type.
 	UnknownT
 )
-
-// ParseRouterType parses a RouterType from a string.
-func ParseRouterType(rTypeStr string) (RouterType, error) {
-	var rType RouterType
-	switch strings.ToLower(rTypeStr) {
-	case "legacy":
-		rType = LegacyT
-	case "ax", "gtax11000", "ax6100", "gtaxe11000":
-		rType = AxT
-	case "mtk":
-		rType = MtkOpenWrtT
-	case "openwrt":
-		rType = OpenWrtT
-	case "ubuntu":
-		rType = UbuntuT
-	case "unknown", "auto":
-		rType = UnknownT
-	default:
-		return -1, errors.Errorf("invalid RouterType %q", rTypeStr)
-	}
-	return rType, nil
-}
 
 // String returns RouterType as a string.
 func (rt RouterType) String() string {
@@ -74,6 +52,10 @@ func (rt RouterType) String() string {
 		typeStr = "OpenWrt"
 	case UbuntuT:
 		typeStr = "UbuntuT"
+	case SoftAPT:
+		typeStr = "SoftAPT"
+	case ChromeOST:
+		typeStr = "ChromeOST"
 	case UnknownT:
 		typeStr = "Unknown"
 	default:

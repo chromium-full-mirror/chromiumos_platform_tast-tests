@@ -199,15 +199,6 @@ type bridgeVethData struct {
 	veth []string
 }
 
-// TODO(b/234845693): make that an independent structure.
-type routerData struct {
-	target string
-	host   *ssh.Conn
-	object router.Base
-	br     *bridgeData
-	brveth *bridgeVethData
-}
-
 // TestFixture sets up the context for a basic WiFi test.
 type TestFixture struct {
 	options *TFOptions
@@ -216,8 +207,8 @@ type TestFixture struct {
 	// Duts and the pcap must always be initialized, but routers may be empty if
 	// TFOptions.RequirePrimaryRouter is false in options.
 	duts           []*dutData
-	routers        []*routerData
-	pcap           *routerData
+	routers        []*RouterData
+	pcap           *RouterData
 	pcapIsRouter   bool
 	androidDevices []*androidDeviceData
 	labstation     *labstationData
@@ -390,7 +381,7 @@ func (tf *TestFixture) initializePrimaryRouters(ctx, daemonCtx context.Context) 
 
 	// Connect to and initialize primary routers.
 	for i, target := range routerTargets {
-		rd := &routerData{target: target}
+		rd := &RouterData{target: target}
 		tf.routers = append(tf.routers, rd)
 		testing.ContextLogf(ctx, "Adding router %q as router[%d]", rd.target, i)
 		routerHost, err := tf.connectCompanion(ctx, rd.target, true /* allow retry */)
@@ -477,7 +468,7 @@ func (tf *TestFixture) initializePcapRouter(ctx, daemonCtx context.Context) erro
 			tf.pcap = tf.routers[DefaultRouter]
 			tf.pcapIsRouter = true
 		} else {
-			rd := &routerData{
+			rd := &RouterData{
 				host:   pcapRouterHost,
 				target: pcapTarget,
 			}
@@ -762,7 +753,7 @@ func (tf *TestFixture) ReinitRouters(ctx context.Context, doPcapReboot bool) err
 	}
 
 	// Reboot routers.
-	var routersToReboot []*routerData
+	var routersToReboot []*RouterData
 	if doPcapReboot && !tf.pcapIsRouter {
 		routersToReboot = append(routersToReboot, tf.pcap)
 	}
@@ -796,7 +787,7 @@ func (tf *TestFixture) ReinitRouters(ctx context.Context, doPcapReboot bool) err
 	return nil
 }
 
-func (tf *TestFixture) rebootRouter(ctx context.Context, rd *routerData) error {
+func (tf *TestFixture) rebootRouter(ctx context.Context, rd *RouterData) error {
 	ctx, t := timing.Start(ctx, "rebootRouter_"+rd.object.RouterType().String())
 	defer t.End()
 	routerName := rd.object.RouterName()
@@ -2073,7 +2064,7 @@ func (tf *TestFixture) UseWpaCliAPI(enable bool) {
 // It sets up 2 APs on routers[0] and 1 AP on pcap, routers[0] cannot be reused as
 // the pcap, otherwise the AP on pcap reuses the one of the other 2 interfaces and fail.
 func (tf *TestFixture) SeedRegdomain(ctx context.Context) error {
-	startSeedingAP := func(ctx context.Context, r *routerData, channel int) error {
+	startSeedingAP := func(ctx context.Context, r *RouterData, channel int) error {
 		// AP instance name for logging.
 		name := tf.UniqueAPName()
 		// Store the most recent seeder SSID.
@@ -2405,9 +2396,29 @@ func (tf *TestFixture) DUT(dutIdx DutIdx) *dut.DUT {
 	return tf.duts[dutIdx].dut
 }
 
+// DUTDevice returns particular DUT via its WiFiDevice interface.
+func (tf *TestFixture) DUTDevice(dutIdx DutIdx) WiFiDevice {
+	return tf.duts[dutIdx]
+}
+
+// PcapDevice returns pcap device via its WiFiDevice interface.
+func (tf *TestFixture) PcapDevice() WiFiDevice {
+	return tf.pcap
+}
+
+// RouterDevice returns particular router via its WiFiDevice interface.
+func (tf *TestFixture) RouterDevice(idx RouterIdx) WiFiDevice {
+	return tf.routers[idx]
+}
+
+// ConfiguredRouterCount returns number of routers configured.
+func (tf *TestFixture) ConfiguredRouterCount() int {
+	return len(tf.routers)
+}
+
 // DUTConn returns connection object to particular DUT.
 func (tf *TestFixture) DUTConn(dutIdx DutIdx) *ssh.Conn {
-	return tf.duts[dutIdx].dut.Conn()
+	return tf.DUTDevice(dutIdx).Conn()
 }
 
 // APConn returns connection object to the first AP.
@@ -2761,7 +2772,7 @@ func (tf *TestFixture) CheckFullAuthFlow(ctx context.Context, capturer *pcap.Cap
 */
 
 // initializeBridgeAndVethOnRouter sets up bridges and veths on router.
-func (tf *TestFixture) initializeBridgeAndVethOnRouter(ctx context.Context, rd *routerData) error {
+func (tf *TestFixture) initializeBridgeAndVethOnRouter(ctx context.Context, rd *RouterData) error {
 	var err error
 	router, ok := rd.object.(router.StandardWithBridgeAndVeth)
 	if !ok {

@@ -35,6 +35,8 @@ const (
 	CrOSDevice WiFiDeviceType = iota
 	// AndroidDevice.
 	AndroidDevice
+	// RouterDevice.
+	RouterDevice
 )
 
 // P2PDeviceRole is the type of p2p role.
