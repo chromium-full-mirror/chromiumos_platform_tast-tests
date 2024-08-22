@@ -9,9 +9,11 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/actionlogger"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast-tests/cros/local/input"
@@ -21,9 +23,10 @@ import (
 
 // Context provides the interface to the touchscreen.
 type Context struct {
-	ac  *uiauto.Context
-	tsw *input.TouchscreenEventWriter
-	tcc *input.TouchCoordConverter
+	ac    *uiauto.Context
+	tsw   *input.TouchscreenEventWriter
+	tcc   *input.TouchCoordConverter
+	tconn *chrome.TestConn
 }
 
 // NewTouchscreen is a utility to create a new touchscreen event writer.
@@ -90,7 +93,7 @@ func New(ctx context.Context, tconn *chrome.TestConn) (*Context, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Context{tsw: tsw, tcc: tcc, ac: uiauto.New(tconn)}, nil
+	return &Context{tsw: tsw, tcc: tcc, ac: uiauto.New(tconn), tconn: tconn}, nil
 }
 
 // Close closes the access to the touch screen.
@@ -147,6 +150,7 @@ func (tc *Context) Tap(finder *nodewith.Finder) uiauto.Action {
 		if err != nil {
 			return errors.Wrap(err, "failed to get the location of the node")
 		}
+		actionlogger.RecordClickAction(ctx, tc.tconn, actionlogger.TouchscreenTap, finder.Pretty(), *loc, loc.BottomCenter(), mouse.LeftButton)
 		return tc.tapAt(ctx, loc.CenterPoint())
 	}
 }
@@ -172,6 +176,15 @@ func (tc *Context) LongPress(finder *nodewith.Finder) uiauto.Action {
 		if err != nil {
 			return errors.Wrap(err, "failed to get the location of the node")
 		}
+		actionlogger.RecordClickAction(
+			ctx,
+			tc.tconn,
+			actionlogger.TouchscreenLongPress,
+			finder.Pretty(),
+			*loc,
+			loc.BottomCenter(),
+			mouse.LeftButton,
+		)
 		x, y := tc.tcc.ConvertLocation(loc.CenterPoint())
 		if err := stw.LongPressAt(ctx, x, y); err != nil {
 			return errors.Wrap(err, "failed to move the single touch")
@@ -231,6 +244,7 @@ func (tc *Context) Hold(duration time.Duration) uiauto.Action {
 		if !ok || swipe == nil {
 			return errors.New("not in swipe context")
 		}
+		// GoBigSleepLint: Intended sleep.
 		return testing.Sleep(ctx, duration)
 	}
 }

@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/action"
+	"go.chromium.org/tast-tests/cros/local/actionlogger"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -243,6 +244,7 @@ func (kw *KeyboardEventWriter) sendKey(ec EventCode, val int32, firstErr *error)
 // pressed and released for uppercase letters or other characters that can be typed
 // using Shift.
 func (kw *KeyboardEventWriter) Type(ctx context.Context, s string) error {
+	actionlogger.RecordKeyboardAction(ctx, nil, actionlogger.TextEntry, s)
 	// Look up runes first so we can report an error before we start injecting events.
 	type key struct {
 		code    EventCode
@@ -335,16 +337,19 @@ func (kw *KeyboardEventWriter) accel(ctx context.Context, s string, eventType ke
 //
 // "Shift" must be included for keys that are typed using Shift; for example, use "Ctrl+Shift+/" rather than "Ctrl+?".
 func (kw *KeyboardEventWriter) Accel(ctx context.Context, s string) error {
+	actionlogger.RecordKeyboardAction(ctx, nil, actionlogger.KeyAccel, s)
 	return kw.accel(ctx, s, keyPress|keyRelease)
 }
 
 // AccelPress injects a sequence of key events simulating pressing the accelerator (a.k.a. hotkey) described by s.
 func (kw *KeyboardEventWriter) AccelPress(ctx context.Context, s string) error {
+	actionlogger.RecordKeyboardAction(ctx, nil, actionlogger.KeyPress, s)
 	return kw.accel(ctx, s, keyPress)
 }
 
 // AccelRelease injects a sequence of key events simulating release the accelerator (a.k.a. hotkey) described by s.
 func (kw *KeyboardEventWriter) AccelRelease(ctx context.Context, s string) error {
+	actionlogger.RecordKeyboardAction(ctx, nil, actionlogger.KeyRelease, s)
 	return kw.accel(ctx, s, keyRelease)
 }
 
@@ -368,6 +373,7 @@ func (kw *KeyboardEventWriter) sleepAfterType(ctx context.Context, firstErr *err
 // TypeKey injects a pair of a keypress event and a keyrelease keyevent.
 // It can be used to inject non-character key events.
 func (kw *KeyboardEventWriter) TypeKey(ctx context.Context, ec EventCode) error {
+	actionlogger.RecordKeyboardAction(ctx, nil, actionlogger.KeyCodeType, EventName(ec))
 	firstErr := ctx.Err()
 	kw.sendKey(ec, 1, &firstErr)
 	kw.sleepAfterType(ctx, &firstErr)

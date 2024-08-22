@@ -30,7 +30,7 @@ type Service struct {
 // Reset clears the action item list.
 // This is expected to be called from the remote fixture hook.
 func (*Service) Reset(ctx context.Context, request *emptypb.Empty) (*empty.Empty, error) {
-	Reset()
+	Reset(ctx)
 	return &empty.Empty{}, nil
 }
 

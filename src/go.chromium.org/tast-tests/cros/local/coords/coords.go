@@ -272,6 +272,26 @@ func ConvertBoundsFromPXToDP(bounds Rect, dsf float64) Rect {
 	return convertBounds(bounds, 1.0/dsf)
 }
 
+// convertPoint is used by convertPointFromDPToPX and convertPointFromPXToDP.
+func convertPoint(point Point, factor float64) Point {
+	return Point{
+		X: int(math.Round(float64(point.X) * factor)),
+		Y: int(math.Round(float64(point.Y) * factor)),
+	}
+}
+
+// ConvertPointFromDPToPX converts the given point in dips to pixels based on the given device
+// scale factor. The converted values of X, Y are rounded.
+func ConvertPointFromDPToPX(point Point, dsf float64) Point {
+	return convertPoint(point, dsf)
+}
+
+// ConvertPointFromPXToDP converts the given point in pixels to dips based on the given device
+// scale factor. The converted values of X, Y are rounded.
+func ConvertPointFromPXToDP(point Point, dsf float64) Point {
+	return convertPoint(point, 1.0/dsf)
+}
+
 // CompareBoundsWithMargin returns true if the given two bounds have the same value allowing the same margin
 // in all directions.
 func CompareBoundsWithMargin(a, b Rect, margin int) bool {

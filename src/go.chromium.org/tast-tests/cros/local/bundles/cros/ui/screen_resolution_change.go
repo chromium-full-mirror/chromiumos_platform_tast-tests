@@ -11,6 +11,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -68,14 +69,14 @@ func ScreenResolutionChange(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	defer func() {
-		if err := display.SetDisplayMode(cleanUpCtx, tconn, dispInfo.ID, selectedMode); err != nil {
+		if err := uiauto.SetDisplayMode(cleanUpCtx, tconn, dispInfo.ID, selectedMode); err != nil {
 			s.Log("Failed to restore display mode: ", err)
 		}
 	}()
 
 	for _, mode := range dispInfo.Modes {
 		s.Log("Set mode: ", mode.Width, " x ", mode.Height, " ", mode)
-		if err := display.SetDisplayMode(ctx, tconn, dispInfo.ID, mode); err != nil {
+		if err := uiauto.SetDisplayMode(ctx, tconn, dispInfo.ID, mode); err != nil {
 			s.Fatal("Failed to set display mode: ", err)
 		}
 	}

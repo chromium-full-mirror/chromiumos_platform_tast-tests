@@ -12,6 +12,7 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"go.chromium.org/tast-tests/cros/common/action"
+	"go.chromium.org/tast-tests/cros/local/actionlogger"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -201,7 +202,7 @@ func (uda *Context) click(s *Finder, button mouse.Button) uiauto.Action {
 		if err != nil {
 			return errors.Wrapf(err, "failed to find the location of %q", s.desc)
 		}
-
+		actionlogger.RecordClickAction(ctx, uda.tconn, actionlogger.MouseClick, s.desc, loc.Rect, loc.CenterPoint(), button)
 		// Move the mouse over a short duration of time. This fixes the issue where
 		// the implementation of `mouse.Click` moves the mouse to the desired location immediately,
 		// which prevents applications from registering the move properly. This is especially
@@ -283,7 +284,7 @@ func (uda *Context) DoubleClick(s *Finder) uiauto.Action {
 			if err != nil {
 				return errors.Wrapf(err, "failed to find the location of %q", s.desc)
 			}
-
+			actionlogger.RecordClickAction(ctx, uda.tconn, actionlogger.MouseDoubleClick, s.desc, loc.Rect, loc.CenterPoint(), mouse.LeftButton)
 			if err := mouse.Move(uda.tconn, loc.CenterPoint(), 250*time.Millisecond)(ctx); err != nil {
 				return errors.Wrap(err, "failed to move the mouse into position")
 			}
@@ -298,6 +299,7 @@ func (uda *Context) Tap(s *Finder) uiauto.Action {
 	return action.Retry(uda.options.Retries, func(ctx context.Context) error {
 		return testing.Poll(ctx, func(ctx context.Context) error {
 			loc, err := uda.Location(ctx, s)
+			actionlogger.RecordClickAction(ctx, uda.tconn, actionlogger.TouchscreenTap, s.desc, loc.Rect, loc.CenterPoint(), mouse.LeftButton)
 			if err != nil {
 				return errors.Wrapf(err, "failed to find the location of %q", s.desc)
 			}
@@ -381,6 +383,7 @@ func (uda *Context) Exists(s *Finder) uiauto.Action {
 // WaitUntilExists returns an action that waits until the specified element exists.
 func (uda *Context) WaitUntilExists(s *Finder) uiauto.Action {
 	return func(ctx context.Context) error {
+		actionlogger.RecordWaitUIAction(ctx, uda.tconn, actionlogger.WaitUIExist, s.desc)
 		return testing.Poll(ctx, uda.Exists(s), &uda.pollOpts)
 	}
 }
@@ -401,6 +404,7 @@ func (uda *Context) Gone(s *Finder) uiauto.Action {
 // WaitUntilGone returns an action that waits until the specified element doesnt exist.
 func (uda *Context) WaitUntilGone(s *Finder) uiauto.Action {
 	return func(ctx context.Context) error {
+		actionlogger.RecordWaitUIAction(ctx, uda.tconn, actionlogger.WaitUIGone, s.desc)
 		return testing.Poll(ctx, uda.Gone(s), &uda.pollOpts)
 	}
 }

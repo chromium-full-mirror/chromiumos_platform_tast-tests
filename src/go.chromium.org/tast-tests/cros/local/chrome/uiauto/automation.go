@@ -13,8 +13,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"go.chromium.org/tast-tests/cros/common/action"
+	"go.chromium.org/tast-tests/cros/local/actionlogger"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/checked"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/event"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
@@ -785,6 +789,7 @@ func (ac *Context) RetrieveTextSelectionInfo(ctx context.Context, conn *chrome.C
 // WaitUntilExists returns a function that waits until the node found by the input finder exists.
 func (ac *Context) WaitUntilExists(finder *nodewith.Finder) Action {
 	return func(ctx context.Context) error {
+		actionlogger.RecordWaitUIAction(ctx, ac.tconn, actionlogger.WaitUIExist, finder.Pretty())
 		q, err := finder.GenerateQuery()
 		if err != nil {
 			return err
@@ -944,6 +949,7 @@ func (ac *Context) WaitForRestriction(finder *nodewith.Finder, restriction restr
 // )
 func (ac *Context) WaitUntilEnabled(finder *nodewith.Finder) Action {
 	return func(ctx context.Context) error {
+		actionlogger.RecordWaitUIAction(ctx, ac.tconn, actionlogger.WaitUIEnabled, finder.Pretty())
 		return testing.Poll(ctx, func(ctx context.Context) error {
 			nodeInfo, err := ac.Info(ctx, finder)
 			if err != nil {
@@ -1050,6 +1056,7 @@ func (ac *Context) Gone(finder *nodewith.Finder) Action {
 // WaitUntilGone returns a function that waits until the node found by the input finder is gone.
 func (ac *Context) WaitUntilGone(finder *nodewith.Finder) Action {
 	return func(ctx context.Context) error {
+		actionlogger.RecordWaitUIAction(ctx, ac.tconn, actionlogger.WaitUIGone, finder.Pretty())
 		return testing.Poll(ctx, ac.Gone(finder), &ac.pollOpts)
 	}
 }
@@ -1071,6 +1078,17 @@ const (
 	doubleClick
 )
 
+func (ct clickType) mouseButton() mouse.Button {
+	switch ct {
+	case leftClick:
+		return mouse.LeftButton
+	case rightClick:
+		return mouse.RightButton
+	default:
+		return mouse.LeftButton
+	}
+}
+
 // mouseClick returns a function that clicks on the location of the node found by the input finder.
 // It will wait until the location is stable before clicking.
 // This returns a function to make it chainable in ui.Run.
@@ -1082,10 +1100,13 @@ func (ac *Context) mouseClick(ct clickType, finder *nodewith.Finder) Action {
 		}
 		switch ct {
 		case leftClick:
+			actionlogger.RecordClickAction(ctx, ac.tconn, actionlogger.MouseClick, finder.Pretty(), *loc, loc.CenterPoint(), ct.mouseButton())
 			return mouse.Click(ac.tconn, loc.CenterPoint(), mouse.LeftButton)(ctx)
 		case rightClick:
+			actionlogger.RecordClickAction(ctx, ac.tconn, actionlogger.MouseClick, finder.Pretty(), *loc, loc.CenterPoint(), ct.mouseButton())
 			return mouse.Click(ac.tconn, loc.CenterPoint(), mouse.RightButton)(ctx)
 		case doubleClick:
+			actionlogger.RecordClickAction(ctx, ac.tconn, actionlogger.MouseDoubleClick, finder.Pretty(), *loc, loc.CenterPoint(), ct.mouseButton())
 			return mouse.DoubleClick(ac.tconn, loc.CenterPoint(), 100*time.Millisecond)(ctx)
 		default:
 			return errors.New("invalid click type")
@@ -1100,7 +1121,6 @@ func (ac *Context) MousePress(button mouse.Button, finder *nodewith.Finder) Acti
 		if err != nil {
 			return err
 		}
-
 		return NamedCombine("Move mouse to node and press",
 			mouse.Move(ac.tconn, loc.CenterPoint(), 0),
 			mouse.Press(ac.tconn, button),
@@ -1118,11 +1138,20 @@ func (ac *Context) MouseRelease(button mouse.Button) Action {
 func (ac *Context) MouseClickAtLocation(ct clickType, loc coords.Point) Action {
 	switch ct {
 	case leftClick:
-		return mouse.Click(ac.tconn, loc, mouse.LeftButton)
+		return func(ctx context.Context) error {
+			actionlogger.RecordClickAtLocationAction(ctx, ac.tconn, actionlogger.MouseClick, "", loc, mouse.LeftButton)
+			return mouse.Click(ac.tconn, loc, mouse.LeftButton)(ctx)
+		}
 	case rightClick:
-		return mouse.Click(ac.tconn, loc, mouse.RightButton)
+		return func(ctx context.Context) error {
+			actionlogger.RecordClickAtLocationAction(ctx, ac.tconn, actionlogger.MouseClick, "", loc, mouse.RightButton)
+			return mouse.Click(ac.tconn, loc, mouse.RightButton)(ctx)
+		}
 	case doubleClick:
-		return mouse.DoubleClick(ac.tconn, loc, 100*time.Millisecond)
+		return func(ctx context.Context) error {
+			actionlogger.RecordClickAtLocationAction(ctx, ac.tconn, actionlogger.MouseDoubleClick, "", loc, mouse.LeftButton)
+			return mouse.DoubleClick(ac.tconn, loc, 100*time.Millisecond)(ctx)
+		}
 	default:
 		return func(ctx context.Context) error {
 			return errors.New("invalid click type")
@@ -1141,10 +1170,13 @@ func (ac *Context) immediateMouseClick(ct clickType, finder *nodewith.Finder) Ac
 		}
 		switch ct {
 		case leftClick:
+			actionlogger.RecordClickAction(ctx, ac.tconn, actionlogger.MouseClick, finder.Pretty(), *loc, loc.CenterPoint(), ct.mouseButton())
 			return mouse.Click(ac.tconn, loc.CenterPoint(), mouse.LeftButton)(ctx)
 		case rightClick:
+			actionlogger.RecordClickAction(ctx, ac.tconn, actionlogger.MouseClick, finder.Pretty(), *loc, loc.CenterPoint(), ct.mouseButton())
 			return mouse.Click(ac.tconn, loc.CenterPoint(), mouse.RightButton)(ctx)
 		case doubleClick:
+			actionlogger.RecordClickAction(ctx, ac.tconn, actionlogger.MouseDoubleClick, finder.Pretty(), *loc, loc.CenterPoint(), ct.mouseButton())
 			return mouse.DoubleClick(ac.tconn, loc.CenterPoint(), 100*time.Millisecond)(ctx)
 		default:
 			return errors.New("invalid click type")
@@ -1299,6 +1331,7 @@ func (ac *Context) DoDefaultUntil(finder *nodewith.Finder, condition func(contex
 // The EventWatcher waits the duration of timeout for the event to occur.
 func (ac *Context) FocusAndWait(finder *nodewith.Finder) Action {
 	return ac.WaitForEvent(nodewith.Root(), event.Focus, func(ctx context.Context) error {
+		actionlogger.RecordWaitUIAction(ctx, ac.tconn, actionlogger.WaitUIFocused, finder.Pretty())
 		cleanupCtx := ctx
 		deadline, ok := ctx.Deadline()
 		var cancel context.CancelFunc
@@ -1478,6 +1511,11 @@ func (ac *Context) CheckRestriction(finder *nodewith.Finder, restriction restric
 // of a node thus mouse.LeftClick() fails consequently.
 func (ac *Context) DoDefault(finder *nodewith.Finder) Action {
 	return func(ctx context.Context) error {
+		loc, err := ac.Location(ctx, finder)
+		if err != nil {
+			return err
+		}
+		actionlogger.RecordClickAction(ctx, ac.tconn, actionlogger.MouseClick, finder.Pretty(), *loc, loc.CenterPoint(), mouse.LeftButton)
 		cleanupCtx := ctx
 		deadline, ok := ctx.Deadline()
 		var cancel context.CancelFunc
@@ -1595,4 +1633,39 @@ func (ac *Context) IsFeatureEnabled(ctx context.Context, featureName string) (bo
 		return false, errors.Wrapf(err, "failed to get feature state for %q", featureName)
 	}
 	return featureEnabled, nil
+}
+
+// SetDisplayMode sets the display to a specific mode. The mode must be a
+// supported one from GetModes(). Only works on external displays or VM with
+// vkms enabled.
+func SetDisplayMode(ctx context.Context, tconn *chrome.TestConn, id string, mode *display.DisplayMode) error {
+	ui := New(tconn)
+
+	if err := display.SetDisplayProperties(ctx, tconn, id, display.DisplayProperties{DisplayMode: mode}); err != nil {
+		return errors.Wrap(err, "failed to set display properties")
+	}
+
+	// Dismiss confirm dialog
+	confirmButton := nodewith.Name("Confirm").Role(role.Button)
+	if err := Combine("Click confirm button",
+		ui.DoDefault(confirmButton),
+		ui.WaitUntilGone(confirmButton))(ctx); err != nil {
+		return errors.Wrap(err, "failed to click 'Confirm' button")
+	}
+
+	newDispInfo, err := display.GetInfoForID(ctx, tconn, id)
+	if err != nil {
+		return errors.Wrap(err, "failed to get updated display info")
+	}
+
+	newMode, err := newDispInfo.GetSelectedMode()
+	if err != nil {
+		return errors.Wrap(err, "failed to get updated mode")
+	}
+
+	if diff := cmp.Diff(mode, newMode, cmpopts.IgnoreFields(display.DisplayMode{}, "IsSelected")); diff != "" {
+		return errors.Wrapf(err, "new mode does not match requested (-want +got): %s", diff)
+	}
+
+	return nil
 }
