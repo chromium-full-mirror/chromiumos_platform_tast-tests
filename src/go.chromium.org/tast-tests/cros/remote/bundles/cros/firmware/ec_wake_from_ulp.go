@@ -33,14 +33,13 @@ func init() {
 			"cienet-firmware@cienet.corp-partner.google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		Attr:         []string{"group:firmware"},
+		Attr:         []string{"group:firmware", "firmware_pd"},
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Battery()),
 		SoftwareDeps: []string{"ec_hibernate"},
 		Timeout:      15 * time.Minute,
 		Params: []testing.Param{{
-			Name:      "lid_switch",
-			ExtraAttr: []string{"firmware_pd", "firmware_servo_micro"},
+			Name: "lid_switch",
 			ExtraHardwareDeps: hwdep.D(hwdep.Lid(), hwdep.SkipOnModel(
 				// The lid_switch variant of this test requires servo_micro. Please skip on C2D2 devices.
 				// If the board is not one of Brask, Brya, Cherry, Dedede, Guybrush, Nissa, Rex, or Skyrim, it's probably not a C2D2 device.
@@ -142,11 +141,11 @@ func init() {
 				"skyrim15w",
 				"whiterun",
 			)),
-			Val: wakeDUTWithLidSwitch,
+			ExtraAttr: []string{"firmware_servo_micro"},
+			Val:       wakeDUTWithLidSwitch,
 		}, {
-			Name:      "power_button",
-			ExtraAttr: []string{"firmware_ec"},
-			Val:       wakeDUTWithPwrBtn,
+			Name: "power_button",
+			Val:  wakeDUTWithPwrBtn,
 		}},
 	})
 }
