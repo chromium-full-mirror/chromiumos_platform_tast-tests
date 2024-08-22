@@ -24,8 +24,6 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
-
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 )
 
 func init() {
@@ -115,18 +113,18 @@ func RemoteDesktopManual(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to set the DUT into %s mode: %s", mode, err)
 	}
 
-	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 	if _, err := shortcutcustomization.Launch(ctx, tconn); err != nil {
 		s.Log("Failed to open Settings page for shortcut: ", err)
 	}
 
-	ui := uiauto.New(tconn).WithTimeout(20 * time.Second)
+	ui := uiauto.New(tconn).WithTimeout(10 * time.Minute).WithInterval(5 * time.Second)
 	kb, err := input.VirtualKeyboard(ctx)
 	if err != nil {
 		s.Log("Failed to get keyboard: ", ctx)
 	}
 	defer kb.Close(cleanupCtx)
 
+	// Add shortcut for open launcher.
 	launcherContainer := nodewith.NameContaining("close Launcher").ClassName("edit-icon-container")
 	launcherEditButton := nodewith.Role(role.Button).Ancestor(launcherContainer)
 	addButton := nodewith.Name("Add shortcut").Role(role.Button)
@@ -141,7 +139,23 @@ func RemoteDesktopManual(ctx context.Context, s *testing.State) {
 		kb.AccelAction(shortCut),
 		ui.LeftClick(doneButton),
 	)(ctx); err != nil {
-		s.Log("Failed to add custom shortcut: ", err)
+		s.Log("Failed to add shortcut Ctrl+Shift+s to open launcher: ", err)
+	}
+
+	// Add shortcut for taking screenshots.
+	screenshotContainer := nodewith.NameContaining("Edit button for Take partial screenshot or screen recording").ClassName("edit-icon-container")
+	screenshotEditButton := nodewith.Role(role.Button).Ancestor(screenshotContainer)
+	shortCut = "Ctrl+Shift+s"
+	if err := uiauto.Combine("Add custom shortcut",
+		ui.FocusAndWait(screenshotEditButton),
+		ui.LeftClickUntil(screenshotEditButton, ui.WaitUntilExists(addButton)),
+		ui.LeftClick(addButton),
+		kb.AccelAction(shortCut),
+		ui.WaitUntilExists(warnMsg),
+		kb.AccelAction(shortCut),
+		ui.LeftClick(doneButton),
+	)(ctx); err != nil {
+		s.Log("Failed to add shortcut Ctrl+Shift+s: ", err)
 	}
 
 	if err := crd.Launch(ctx, br, tconn); err != nil {
