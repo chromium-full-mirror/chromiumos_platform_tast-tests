@@ -13,6 +13,7 @@ import (
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/common/wifi/p2p"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wifi/wifiutil"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wifi/wifiutil/perfmanager"
 	"go.chromium.org/tast-tests/cros/remote/network/iperf"
 	"go.chromium.org/tast-tests/cros/remote/wifi/iw"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
@@ -98,7 +99,7 @@ func P2PPerf(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to run performance test: ", err)
 	}
-	finalResult, err := wifiutil.P2PPerf(ctx, p2pGO, p2pClient)
+	finalResult, err := wifiutil.P2PPerf(ctx, ctx, tf, p2pGO, p2pClient, s.OutDir(), "p2p", perfmanager.TestTypeTCPBidirectional, iperf.Version2)
 	if err != nil {
 		s.Fatal("Failed to run performance test: ", err)
 	}
