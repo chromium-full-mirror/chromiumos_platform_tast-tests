@@ -14,8 +14,6 @@ import (
 	"github.com/golang/protobuf/proto"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast-tests/cros/local/tracing"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -34,23 +32,8 @@ func init() {
 		BugComponent: "b:1069482", // ChromeOS > Platform > System > Performance > CrOSetto (Tracing)
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{tracing.TraceConfigFile},
-		Attr:         []string{"group:mainline"},
-		Params: []testing.Param{{
-			Val:       browser.TypeAsh,
-			Fixture:   "chromeLoggedIn",
-			ExtraAttr: []string{"informational"}, // TODO(crbug/1194540) remove "informational" after the test is stable.
-		}, {
-			Name:              "lacros",
-			Val:               browser.TypeLacros,
-			Fixture:           "lacros",
-			ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-		}, {
-			Name:              "lacros_unstable",
-			Val:               browser.TypeLacros,
-			Fixture:           "lacros",
-			ExtraSoftwareDeps: []string{"lacros", "lacros_unstable"},
-			ExtraAttr:         []string{"informational"}, // TODO(crbug/1194540) remove "informational" after the test is stable.
-		}},
+		Attr:         []string{"group:mainline", "informational"}, // TODO(crbug/1194540) remove "informational" after the test is stable.
+		Fixture:      "chromeLoggedIn",
 	})
 }
 
@@ -73,26 +56,9 @@ func PerfettoChromeConsumer(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	var tracer systemTracer
-
-	lacrosBrowserType := s.Param().(browser.Type)
-	if lacrosBrowserType == browser.TypeLacros {
-		_, l, _, err := lacros.Setup(ctx, s.FixtValue(), lacrosBrowserType)
-		if err != nil {
-			s.Fatal("Failed to initialize test: ", err)
-		}
-		defer lacros.CloseLacros(ctx, l)
-
-		// Trace using lacros-chrome.
-		tracer = l
-	} else {
-		cr := s.FixtValue().(chrome.HasChrome).Chrome()
-		if _, err := cr.TestAPIConn(ctx); err != nil {
-			s.Fatal("Failed to connect Test API: ", err)
-		}
-
-		// Trace using ash-chrome.
-		tracer = cr
+	tracer := s.FixtValue().(chrome.HasChrome).Chrome()
+	if _, err := tracer.TestAPIConn(ctx); err != nil {
+		s.Fatal("Failed to connect Test API: ", err)
 	}
 
 	// Create the binary protobuf TraceConfig: unmarshal from pbtxt and then marshal to binary protobuf.
@@ -126,7 +92,7 @@ func PerfettoChromeConsumer(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start tracing: ", err)
 	}
 
-	// The trace config contains a longer trace collection duration, but we explicitly stop tracing before the trace duration elapses.
+	// GoBigSleepLint: The trace config contains a longer trace collection duration, but we explicitly stop tracing before the trace duration elapses.
 	if err := testing.Sleep(ctx, traceCollectionDuration); err != nil {
 		s.Fatalf("Failed to wait %v: %v", traceCollectionDuration, err)
 	}
