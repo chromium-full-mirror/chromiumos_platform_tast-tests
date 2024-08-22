@@ -6,6 +6,7 @@ package personalization
 
 import (
 	"context"
+	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -72,12 +73,18 @@ func OpenPersonalizationHubFromSettings(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to open personalization hub from settings: ", err)
 	}
 
+	if err := ash.CloseAllWindows(ctx, tconn); err != nil {
+		s.Fatal("Failed to close all windows: ", err)
+	}
+
+	targetSearchResult := nodewith.NameRegex(regexp.MustCompile(`Search result \d+ of \d+: Personalization.*`)).Focusable().First()
 	if err := uiauto.Combine("open personalization hub by searching in settings",
 		personalization.SearchForAppInLauncher(personalization.SettingsSearchTerm, personalization.SettingsAppName, kb, ui),
-		ui.WaitUntilExists(nodewith.Role(role.TextField).HasClass("Textfield")),
+		ui.WaitUntilExists(nodewith.Role(role.SearchBox).NameContaining("Search")),
 		kb.TypeAction(personalization.PersonalizationSearchTerm),
 		kb.AccelAction("Enter"),
-		ui.WaitUntilExists(personalization.PersonalizationHubWindow),
+		ui.WaitUntilExists(targetSearchResult),
+		ui.LeftClickUntil(targetSearchResult, ui.Exists(personalization.PersonalizationHubWindow)),
 	)(ctx); err != nil {
 		s.Fatal("Failed to open personalization hub by searching in settings: ", err)
 	}
