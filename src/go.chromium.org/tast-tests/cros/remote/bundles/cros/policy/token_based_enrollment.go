@@ -31,7 +31,8 @@ const (
 	flexConfigESPDirPath  = "/var/lib/oobe_config_restore/flex_config"
 	flexConfigESPFilePath = "/var/lib/oobe_config_restore/flex_config/config.json"
 
-	enrollmentTokenVarCEU = "policy.TokenBasedEnrollment.enrollment_token"
+	enrollmentTokenVarCEU   = "policy.TokenBasedEnrollment.enrollment_token"
+	enrollmentTokenVarKiosk = "policy.TokenBasedEnrollment.enrollment_token_kiosk"
 
 	oobeConfigRestoreUID = "20121"
 	oobeConfigRestoreGID = "20121"
@@ -67,13 +68,28 @@ func init() {
 			"tast.cros.tape.Service",
 			"tast.cros.platform.UpstartService",
 		},
-		VarDeps: []string{enrollmentTokenVarCEU, tape.ServiceAccountVar, "ui.signinProfileTestExtensionManifestKey"},
+		Timeout: enrollmentTimeout,
+		VarDeps: []string{
+			enrollmentTokenVarCEU,
+			enrollmentTokenVarKiosk,
+			tape.ServiceAccountVar,
+			"ui.signinProfileTestExtensionManifestKey"},
 		Params: []testing.Param{
 			{
 				Name: "autopush",
 				Val: tokenEnrollmentParams{
 					dmServerURL:        policy.DMServerAlphaURL,
 					enrollmentTokenVar: enrollmentTokenVarCEU,
+				},
+				// TODO b/346725308 Refactor to use utility and known dependency list.
+				ExtraSearchFlags: []*testing.StringPair{{
+					Key: "external_dependency", Value: "DMServerAlpha",
+				}},
+			}, {
+				Name: "autopush_kiosk",
+				Val: tokenEnrollmentParams{
+					dmServerURL:        policy.DMServerAlphaURL,
+					enrollmentTokenVar: enrollmentTokenVarKiosk,
 				},
 				// TODO b/346725308 Refactor to use utility and known dependency list.
 				ExtraSearchFlags: []*testing.StringPair{{

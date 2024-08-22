@@ -307,6 +307,9 @@ func proceedThroughOOBEAndExpectAutomaticEnrollment(ctx context.Context, cfg *co
 	if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.EnterpriseEnrollmentScreen.successStep.isReadyForTesting()"); err != nil {
 		return errors.Wrap(err, "failed to wait for the OOBE enterprise enrollment signin screen to be ready")
 	}
+	if err := oobeConn.Eval(ctx, "OobeAPI.screens.EnterpriseEnrollmentScreen.successStep.clickNext()", nil); err != nil {
+		return errors.Wrap(err, "failed to click the enrollment done button")
+	}
 	return nil
 }
 
