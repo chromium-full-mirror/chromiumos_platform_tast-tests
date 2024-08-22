@@ -45,7 +45,15 @@ func init() {
 			"group:golden_tier",
 			"group:medium_low_tier",
 			"group:hardware",
-			"group:complementary",
+		},
+		Params: []testing.Param{
+			{
+				// Exclude complementary suite from TORA alerting.
+				LifeCycleStage: testing.LifeCycleOwnerMonitored,
+				ExtraAttr: []string{
+					"group:complementary",
+				},
+			},
 		},
 		SoftwareDeps: []string{"reboot", "chrome", "non_flex_device", "gaia"},
 		ServiceDeps: []string{
