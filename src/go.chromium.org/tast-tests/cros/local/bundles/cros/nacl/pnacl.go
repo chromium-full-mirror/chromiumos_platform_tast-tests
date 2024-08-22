@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 var extensionFiles = []string{
@@ -35,7 +36,9 @@ func init() {
 		Data:         extensionFiles,
 		SoftwareDeps: []string{"chrome", "nacl"},
 		BugComponent: "b:1258585", // ChromeOS Public Tracker > Enterprise & Edu > NaCl
-		Attr:         []string{"group:mainline", "group:hw_agnostic"},
+		Attr:         []string{"group:mainline"},
+		// TODO(https://issuetracker.google.com/352753237): Flaky on some devices.
+		HardwareDeps: hwdep.D(hwdep.SkipOnModel("brya"), hwdep.SkipOnModel("jacuzzi"), hwdep.SkipOnModel("rex")),
 		Params: []testing.Param{{
 			Val: browser.TypeAsh,
 		},
