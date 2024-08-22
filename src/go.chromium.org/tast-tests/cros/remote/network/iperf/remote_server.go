@@ -37,15 +37,11 @@ type RemoteServer struct {
 	minijailPath string
 	fw           *firewallHelper
 	stdout       *bytes.Buffer
+	config       *Config
 }
 
 // NewRemoteServer creates an SSHServerHost from an existing ssh connection.
 func NewRemoteServer(ctx context.Context, conn *ssh.Conn) (*RemoteServer, error) {
-	iperfPath, err := cmd.FindCmdPath(ctx, conn, "iperf")
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to find iperf on host")
-	}
-
 	// minijail isn't available on openwrt, but is required on gale
 	// If minijail0 is on ${PATH} on any host, use it. If not,
 	// use the original invocation.
@@ -61,7 +57,6 @@ func NewRemoteServer(ctx context.Context, conn *ssh.Conn) (*RemoteServer, error)
 	return &RemoteServer{
 		useMiniJail:  useMiniJail,
 		conn:         conn,
-		iperfPath:    iperfPath,
 		minijailPath: minijailPath,
 		fw:           newFirewallHelper(conn),
 	}, nil
@@ -70,7 +65,15 @@ func NewRemoteServer(ctx context.Context, conn *ssh.Conn) (*RemoteServer, error)
 // Start launches a new Iperf server instance on the remote machine.
 func (c *RemoteServer) Start(ctx context.Context, config *Config) error {
 	args := getServerArguments(config)
-	iperfCommand := fmt.Sprintf("%s %s %s", c.minijailPath, c.iperfPath, strings.Join(args, " "))
+	c.config = config
+
+	iperfPath, err := cmd.FindCmdPath(ctx, c.conn, string(config.Version))
+	if err != nil {
+		return errors.Wrap(err, "failed to find iperf on host")
+	}
+	c.iperfPath = iperfPath
+
+	iperfCommand := fmt.Sprintf("%s %s %s", c.minijailPath, iperfPath, strings.Join(args, " "))
 	testing.ContextLog(ctx, "Starting iperf server")
 	testing.ContextLogf(ctx, "iperf server invocation: %s", iperfCommand)
 
@@ -80,10 +83,10 @@ func (c *RemoteServer) Start(ctx context.Context, config *Config) error {
 
 	var cmd *ssh.Cmd
 	if c.useMiniJail {
-		args = append([]string{c.iperfPath}, args...)
+		args = append([]string{iperfPath}, args...)
 		cmd = c.conn.CommandContext(ctx, c.minijailPath, args...)
 	} else {
-		cmd = c.conn.CommandContext(ctx, c.iperfPath, args...)
+		cmd = c.conn.CommandContext(ctx, iperfPath, args...)
 	}
 
 	c.stdout = new(bytes.Buffer)
@@ -99,7 +102,7 @@ func (c *RemoteServer) Start(ctx context.Context, config *Config) error {
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		cmd := fmt.Sprintf("netstat -l | grep :%d", config.Port)
 		if out, err := c.conn.CommandContext(ctx, "sh", "-c", cmd).Output(); err != nil {
-			return errors.Wrap(err, "failed to find port")
+			return errors.Wrapf(err, "failed to find port %v", config.Port)
 		} else if string(out) == "" {
 			return errors.Errorf("port %d is not in use", config.Port)
 		}
@@ -132,9 +135,11 @@ func (c *RemoteServer) Stop(ctx context.Context) error {
 	defer cancel()
 
 	var allErrors error
-	if err := c.conn.CommandContext(ctx, "killall", "-q", "-9", c.iperfPath).Run(); err != nil && err.Error() != "Process exited with status 1" {
-		allErrors = errors.Wrapf(allErrors, "failed to stop iperf on server host: %v", err) // NOLINT
-	}
+	if c.config == nil || c.config.Version == Version2 {
+		if err := c.conn.CommandContext(ctx, "killall", "-q", "-9", c.iperfPath).Run(); err != nil && err.Error() != "Process exited with status 1" {
+			allErrors = errors.Wrapf(allErrors, "failed to stop iperf on server host: %v", err) // NOLINT
+		}
+	} // Version3 cleans server by itself.
 
 	if err := c.fw.close(ctx); err != nil {
 		allErrors = errors.Wrapf(allErrors, "failed to close firewall on server host: %v", err) //NOLINT
@@ -163,17 +168,23 @@ func (c *RemoteServer) FetchResult(ctx context.Context, config *Config) (*Result
 func getServerArguments(config *Config) []string {
 	res := []string{
 		"-s",
-		"-y", "c",
 		"-B", config.ServerIP,
 		"-p", strconv.Itoa(config.Port),
 	}
 
-	if config.ServerWindowSize > 0 {
-		res = append(res, "-w", strconv.Itoa(int(config.ServerWindowSize)))
-	}
+	switch config.Version {
+	case Version2:
+		if config.ServerWindowSize > 0 {
+			res = append(res, "-w", strconv.Itoa(int(config.ServerWindowSize)))
+		}
 
-	if config.Protocol == ProtocolUDP {
-		res = append(res, "-u")
+		if config.Protocol == ProtocolUDP {
+			res = append(res, "-u")
+		}
+
+		res = append(res, "-y", "c")
+	case Version3:
+		res = append(res, "-1")
 	}
 
 	return res

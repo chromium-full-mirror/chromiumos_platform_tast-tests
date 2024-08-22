@@ -48,6 +48,16 @@ const (
 	B = 1
 )
 
+// Version define iperf version. Matches binary's name.
+type Version string
+
+const (
+	// Version2 is iperf2.
+	Version2 = "iperf"
+	// Version3 is iperf3.
+	Version3 = "iperf3"
+)
+
 const (
 	defaultTestTime         = 10 * time.Second
 	defaultMaxBandwidth     = 1 * Gbps
@@ -56,6 +66,7 @@ const (
 	defaultClientWindowSize = 0
 	defaultServerWindowSize = 0
 	defaultBidirectional    = false
+	defaultVersion          = Version2
 )
 
 // Config represents the configuration options for an iperf run.
@@ -72,6 +83,7 @@ type Config struct {
 	ClientIP           string
 	ServerIP           string
 	FetchServerResults bool
+	Version            Version
 }
 
 // ConfigOption represents a configuration option to be used in an Iperf run.
@@ -90,6 +102,7 @@ func NewConfig(protocol Protocol, clientIP, serverIP string, opts ...ConfigOptio
 		ServerWindowSize: defaultServerWindowSize,
 		Port:             defaultPort,
 		PortCount:        defaultPortCount,
+		Version:          defaultVersion,
 	}
 
 	for _, opt := range opts {
@@ -170,6 +183,17 @@ func PortCountOption(portCount int) ConfigOption {
 func DatagramLengthOption(len ByteSize) ConfigOption {
 	return func(config *Config) error {
 		config.DatagramLength = len
+		return nil
+	}
+}
+
+// VersionOption is used for setting iperf version (iperf2, iperf3)
+func VersionOption(v Version) ConfigOption {
+	return func(config *Config) error {
+		if v != Version2 && v != Version3 {
+			return errors.Errorf("invalid iperf version: %s", v)
+		}
+		config.Version = v
 		return nil
 	}
 }

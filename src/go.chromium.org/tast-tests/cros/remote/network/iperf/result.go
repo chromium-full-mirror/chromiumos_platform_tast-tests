@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -56,6 +57,38 @@ func (r Result) String() string {
 		r.Duration, r.Throughput/Mbps, r.StdDeviation/Mbps, r.ServerToClient/Mbps, r.ClientToServer/Mbps, r.PercentLoss*100.0)
 }
 
+// Equals facilitates comparisons as DeepEqual doesn't care about proper floats comparison.
+func (r *Result) Equals(p *Result) (bool, error) {
+	const delta = 0.0000001
+	if r == nil && p == nil {
+
+		return true, nil
+	}
+	if r == nil || p == nil {
+		return false, errors.New("one of the pointers is nil")
+	}
+	if r.Duration.Nanoseconds()-p.Duration.Nanoseconds() > 1 {
+		return false, errors.Errorf("Duration differs too much: %v vs %v", r.Duration.Nanoseconds(), p.Duration.Nanoseconds())
+	}
+	if math.Abs(float64(r.Throughput-p.Throughput)) > delta {
+		return false, errors.Errorf("Throughput differs too much: %v vs %v", r.Throughput, p.Throughput)
+	}
+	if math.Abs(float64(r.ClientToServer-p.ClientToServer)) > delta {
+		return false, errors.Errorf("C->S Throughput differs too much: %v vs %v", r.ClientToServer, p.ClientToServer)
+	}
+	if math.Abs(float64(r.ServerToClient-p.ServerToClient)) > delta {
+		return false, errors.Errorf("S->C Throughput differs too much: %v vs %v", r.ServerToClient, p.ServerToClient)
+	}
+	if math.Abs(float64(r.PercentLoss-p.PercentLoss)) > delta {
+		return false, errors.Errorf("Loss differs too much: %v vs %v", r.PercentLoss, p.PercentLoss)
+	}
+	if math.Abs(float64(r.StdDeviation-p.StdDeviation)) > delta {
+		return false, errors.Errorf("St. dev differs too much: %v vs %v", r.StdDeviation, p.StdDeviation)
+	}
+	// Ignore jitter results for now they are incomparable.
+	return true, nil
+}
+
 func isClientToServer(localAddr, localPort string, config *Config) bool {
 	// If local address and port match then this data is traveling from client to server.
 	// E.g. if port and address both correspond to the server.
@@ -70,6 +103,17 @@ func isClientToServer(localAddr, localPort string, config *Config) bool {
 }
 
 func newResultFromOutput(ctx context.Context, output string, config *Config) (*Result, error) {
+	switch config.Version {
+	case Version2:
+		return newResultFromV2Output(ctx, output, config)
+	case Version3:
+		return newResultFromV3Output(ctx, output, config)
+	default:
+		return nil, errors.Errorf("unknown iperf version: %v", config.Version)
+	}
+}
+
+func newResultFromV2Output(ctx context.Context, output string, config *Config) (*Result, error) {
 	var totalThroughput float64
 	var totalClientToServer float64
 	var totalServerToClient float64
@@ -204,6 +248,134 @@ func newResultFromOutput(ctx context.Context, output string, config *Config) (*R
 		ClientToServer: 8 * BitRate(totalClientToServer),
 		ServerToClient: 8 * BitRate(totalServerToClient),
 		Jitter:         totalJitter,
+	}, nil
+}
+
+func newResultFromV3Output(ctx context.Context, output string, config *Config) (*Result, error) {
+	switch config.Protocol {
+	case ProtocolUDP:
+		return newResultFromV3UDPOutput(ctx, output, config)
+	case ProtocolTCP:
+		return newResultFromV3TCPOutput(ctx, output, config)
+	default:
+		return nil, errors.Errorf("unable to parse protocol %v", config.Protocol)
+	}
+}
+
+func newResultFromV3TCPOutput(ctx context.Context, output string, config *Config) (*Result, error) {
+	totalResult := Result{}
+	// [SUM]   0.00-10.02  sec  77.4 MBytes  64.8 Mbits/sec                  receiver
+	summaryRE := regexp.MustCompile(`\[SUM]\s*([\d\.]*-[\d\.]*)\s*sec\s*([\d\.]*)\s*(\w)Bytes\s*[\d\.]*\s*\wbits/sec\s*[\d\.]*\s*receiver`)
+
+	lines := strings.Split(output, "\n")
+	for _, line := range lines {
+		if summaryRE.MatchString(line) {
+			matches := summaryRE.FindStringSubmatch(line)
+			if len(matches) < 4 {
+				return nil, errors.Errorf("not enough matches :%+v", matches)
+			}
+			duration, _ := parseInterval(matches[1])
+			bytes, _ := strconv.ParseFloat(matches[2], 64)
+			switch matches[3] {
+			case "G":
+				bytes *= 1024 * 1024 * 1024
+			case "M":
+				bytes *= 1024 * 1024
+			case "K":
+				bytes *= 1024
+			}
+			tput := math.Round(bytes / duration)
+			totalResult.Duration += time.Duration(duration * float64(time.Second))
+			totalResult.Throughput += BitRate(tput)
+		}
+	}
+	return &Result{
+		Duration:       totalResult.Duration,
+		Throughput:     8 * totalResult.Throughput,
+		ClientToServer: 8 * totalResult.ClientToServer,
+		ServerToClient: 8 * totalResult.ServerToClient,
+	}, nil
+
+}
+
+func newResultFromV3UDPOutput(ctx context.Context, output string, config *Config) (*Result, error) {
+	// [  5][TX-C]   0.00-10.04  sec  47.3 MBytes  39.5 kbits/sec  0.386 ms  30528/64799 (47%)  receiver
+	summaryRE := regexp.MustCompile(`\[\s*\d*]\[([\w-]*)]\s*([\d\.]*-[\d\.]*)\s*sec\s*([\d\.]*)\s*(\w)Bytes\s*([\d\.]*)\s*\wbits/sec\s*([\d\.]*)\s*(\w*)\s*(\d*)/(\d*)\s*\([\de+\.]*%\)\s*(\w+)`)
+	partialRE := regexp.MustCompile(`\[\s*\d*]\[[\w-]*]\s*[\d\.]*-[\d\.]*\s*sec\s*[\d\.]*\s*\w*\s*[\d\.]*\s*\wbits/sec\s*([\de+\.]*)\s*(\w*)`)
+	totalResult := Result{}
+	var totalDgrams, totalLoss uint64
+	var allErrors error
+	count := 0
+
+	lines := strings.Split(output, "\n")
+	for _, line := range lines {
+		if summaryRE.MatchString(line) {
+			matches := summaryRE.FindStringSubmatch(line)
+			if len(matches) < 11 {
+				return nil, errors.Errorf("not enough matches :%+v", matches)
+			}
+			if matches[10] == "sender" {
+				continue
+			}
+			duration, _ := parseInterval(matches[2])
+			bytes, _ := strconv.ParseFloat(matches[3], 64)
+			switch matches[4] {
+			case "G":
+				bytes *= 1024 * 1024 * 1024
+			case "M":
+				bytes *= 1024 * 1024
+			case "k":
+				bytes *= 1024
+			}
+			loss, _ := strconv.ParseUint(matches[8], 10, 64)
+			dgrams, _ := strconv.ParseUint(matches[9], 10, 64)
+			tput := math.Round(bytes / duration)
+			totalResult.Duration += time.Duration(duration * float64(time.Second))
+			totalResult.Throughput += BitRate(tput)
+			switch matches[1] {
+			case "TX-C":
+				totalResult.ClientToServer += BitRate(tput)
+			case "RX-C":
+				totalResult.ServerToClient += BitRate(tput)
+			}
+			totalDgrams += dgrams
+			totalLoss += loss
+
+			count++
+		} else if partialRE.MatchString(line) {
+			matches := partialRE.FindStringSubmatch(line)
+			jitter, _ := strconv.ParseFloat(matches[1], 64)
+			switch matches[2] {
+			case "ms":
+				totalResult.Jitter = append(totalResult.Jitter, time.Duration(jitter*float64(time.Millisecond)))
+			case "us":
+				totalResult.Jitter = append(totalResult.Jitter, time.Duration(jitter*float64(time.Microsecond)))
+			}
+		}
+	}
+	expectedCount := config.PortCount
+	if config.Bidirectional {
+		expectedCount *= 2
+		totalResult.Duration /= 2
+	}
+
+	if count != expectedCount {
+		return nil, errors.Join(allErrors, errors.Errorf("missing data: got %v lines, want %v; iperf client command output: %s", count, expectedCount, output))
+	}
+
+	if totalResult.Duration == 0.0 {
+		return nil, errors.Wrapf(allErrors, "invalid total duration: got %v, want > 0.0", totalResult.Duration)
+	}
+
+	// Get the total duration for each port.
+	totalResult.Duration = totalResult.Duration / time.Duration(config.PortCount)
+	return &Result{
+		Duration:       totalResult.Duration,
+		PercentLoss:    float64(totalLoss) / float64(totalDgrams),
+		Throughput:     8 * totalResult.Throughput,
+		ClientToServer: 8 * totalResult.ClientToServer,
+		ServerToClient: 8 * totalResult.ServerToClient,
+		Jitter:         totalResult.Jitter,
 	}, nil
 }
 
