@@ -14,10 +14,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PlatformAPIRoutinesMemory,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Tests flow of the diagnostics Chrome Extension API exposed to Telemetry Extension",
-		Contacts:     []string{"chromeos-oem-services@google.com"},
+		Func:     PlatformAPIRoutinesMemory,
+		Desc:     "Tests flow of the diagnostics Chrome Extension API exposed to Telemetry Extension",
+		Contacts: []string{"chromeos-oem-services@google.com"},
 		// ChromeOS > Software > Commercial (Enterprise) > OEM Services.
 		BugComponent: "b:1256717",
 		Attr: []string{
@@ -29,18 +28,7 @@ func init() {
 			"group:hw_agnostic",
 		},
 		SoftwareDeps: []string{"chrome"},
-		Params: []testing.Param{
-			{
-				Name:    "ash",
-				Fixture: fixture.TelemetryExtensionSkipOEMNameCheck,
-			},
-			{
-				Name:              "lacros",
-				ExtraSoftwareDeps: []string{"lacros"},
-				Fixture:           fixture.TelemetryExtensionSkipOEMNameCheckLacros,
-				ExtraAttr:         []string{"group:criticalstaging"},
-			},
-		},
+		Fixture:      fixture.TelemetryExtensionSkipOEMNameCheck,
 	})
 }
 

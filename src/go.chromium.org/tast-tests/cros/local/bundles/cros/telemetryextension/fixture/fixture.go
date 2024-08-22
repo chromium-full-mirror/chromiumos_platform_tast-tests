@@ -32,9 +32,8 @@ import (
 
 // Fixture names.
 const (
-	TelemetryExtension                       = "telemetryExtension"
-	TelemetryExtensionSkipOEMNameCheck       = "telemetryExtensionSkipOEMNameCheck"
-	TelemetryExtensionSkipOEMNameCheckLacros = "telemetryExtensionSkipOEMNameCheckLacros"
+	TelemetryExtension                 = "telemetryExtension"
+	TelemetryExtensionSkipOEMNameCheck = "telemetryExtensionSkipOEMNameCheck"
 )
 
 const (
@@ -65,18 +64,6 @@ func init() {
 		Contacts:        []string{"chromeos-oem-services@google.com"},
 		BugComponent:    "b:982097",
 		Impl:            newTelemetryExtensionFixture(skipOEMNameCheck()),
-		SetUpTimeout:    setUpTimeout,
-		TearDownTimeout: cleanupTimeout,
-		PreTestTimeout:  10 * time.Second,
-		PostTestTimeout: 10 * time.Second,
-		Data:            extFiles(),
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name:            TelemetryExtensionSkipOEMNameCheckLacros,
-		Desc:            "Telemetry Extension fixture with running PWA and companion Telemetry Extension in Lacros browser on devices that are not officially supported yet",
-		Contacts:        []string{"chromeos-oem-services@google.com"},
-		BugComponent:    "b:982097",
-		Impl:            newTelemetryExtensionFixture(lacros(), skipOEMNameCheck()),
 		SetUpTimeout:    setUpTimeout,
 		TearDownTimeout: cleanupTimeout,
 		PreTestTimeout:  10 * time.Second,

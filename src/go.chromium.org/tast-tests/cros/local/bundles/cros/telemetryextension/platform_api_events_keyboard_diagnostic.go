@@ -18,10 +18,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PlatformAPIEventsKeyboardDiagnostic,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Tests keyboard diagnostics part of the chrome.os.events Chrome Extension API exposed to Telemetry Extension",
-		Contacts:     []string{"chromeos-oem-services@google.com"},
+		Func:     PlatformAPIEventsKeyboardDiagnostic,
+		Desc:     "Tests keyboard diagnostics part of the chrome.os.events Chrome Extension API exposed to Telemetry Extension",
+		Contacts: []string{"chromeos-oem-services@google.com"},
 		// ChromeOS > Software > Commercial (Enterprise) > OEM Services.
 		BugComponent: "b:1256717",
 		Attr: []string{
@@ -43,21 +42,6 @@ func init() {
 			{
 				Name:              "ash_no_keyboard",
 				Fixture:           fixture.TelemetryExtensionSkipOEMNameCheck,
-				ExtraHardwareDeps: hwdep.D(hwdep.NoInternalKeyboard()),
-				Val:               false, // has keyboard
-			},
-			{
-				Name:              "lacros_keyboard",
-				ExtraSoftwareDeps: []string{"lacros"},
-				Fixture:           fixture.TelemetryExtensionSkipOEMNameCheckLacros,
-				ExtraHardwareDeps: hwdep.D(hwdep.InternalKeyboard()),
-				Val:               true, // has keyboard
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
-			},
-			{
-				Name:              "lacros_no_keyboard",
-				ExtraSoftwareDeps: []string{"lacros"},
-				Fixture:           fixture.TelemetryExtensionSkipOEMNameCheckLacros,
 				ExtraHardwareDeps: hwdep.D(hwdep.NoInternalKeyboard()),
 				Val:               false, // has keyboard
 			},

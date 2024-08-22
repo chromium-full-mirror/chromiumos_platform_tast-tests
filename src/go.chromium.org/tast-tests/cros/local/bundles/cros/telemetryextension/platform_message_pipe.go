@@ -16,10 +16,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PlatformMessagePipe,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Tests message pipe functionality between PWA and Chrome extension",
-		Contacts:     []string{"chromeos-oem-services@google.com"},
+		Func:     PlatformMessagePipe,
+		Desc:     "Tests message pipe functionality between PWA and Chrome extension",
+		Contacts: []string{"chromeos-oem-services@google.com"},
 		// ChromeOS > Software > Commercial (Enterprise) > OEM Services.
 		BugComponent: "b:1256717",
 		Attr: []string{
@@ -29,20 +28,11 @@ func init() {
 			"group:complementary",
 			"group:mainline",
 			"group:hw_agnostic",
+			"informational",
+			"group:criticalstaging",
 		},
 		SoftwareDeps: []string{"chrome"},
-		Params: []testing.Param{
-			{
-				Name:      "ash",
-				Fixture:   fixture.TelemetryExtensionSkipOEMNameCheck,
-				ExtraAttr: []string{"informational", "group:criticalstaging"},
-			},
-			{
-				Name:              "lacros",
-				ExtraSoftwareDeps: []string{"lacros"},
-				Fixture:           fixture.TelemetryExtensionSkipOEMNameCheckLacros,
-			},
-		},
+		Fixture:      fixture.TelemetryExtensionSkipOEMNameCheck,
 	})
 }
 
