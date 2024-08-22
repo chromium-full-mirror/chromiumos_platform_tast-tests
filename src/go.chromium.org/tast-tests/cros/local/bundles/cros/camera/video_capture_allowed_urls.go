@@ -15,14 +15,11 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
-	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -39,16 +36,8 @@ func init() {
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
-		Params: []testing.Param{{
-			Fixture: fixture.ChromePolicyLoggedIn,
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.LacrosPolicyLoggedIn,
-			Val:               browser.TypeLacros,
-		}},
-		Data: []string{"video_capture_allowed.html"},
+		Fixture:      fixture.ChromePolicyLoggedIn,
+		Data:         []string{"video_capture_allowed.html"},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.VideoCaptureAllowedUrls{}, pci.VerifiedFunctionalityUI),
 		},
@@ -59,11 +48,6 @@ func init() {
 func VideoCaptureAllowedUrls(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
-
-	// Reserve ten seconds for cleanup.
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
-	defer cancel()
 
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer server.Close()
@@ -108,17 +92,10 @@ func VideoCaptureAllowedUrls(ctx context.Context, s *testing.State) {
 				s.Error("Failed to update policies: ", err)
 			}
 
-			// Setup browser based on the chrome type.
-			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
-			if err != nil {
-				s.Error("Failed to open the browser: ", err)
-			}
-			defer closeBrowser(cleanupCtx)
-
 			defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree_"+param.name)
 
 			// Open the test website.
-			conn, err := br.NewConn(ctx, server.URL+"/video_capture_allowed.html")
+			conn, err := cr.NewConn(ctx, server.URL+"/video_capture_allowed.html")
 			if err != nil {
 				s.Error("Failed to open website: ", err)
 			}
