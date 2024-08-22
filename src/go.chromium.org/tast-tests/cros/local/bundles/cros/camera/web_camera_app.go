@@ -11,9 +11,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/camera/getusermedia"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
-	"go.chromium.org/tast-tests/cros/local/media/pre"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/testing"
 )
@@ -21,30 +18,14 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         WebCameraApp,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test for the functionality (such as taking photos, recording videos, and switching between cameras) of this camera app",
 		Contacts:     []string{"chromeos-camera-app-eng@google.com", "chuhsuan@chromium.org"},
-		Attr:         []string{"group:mainline", "group:camera-libcamera"},
-		SoftwareDeps: []string{"chrome"},
+		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
+		Attr:         []string{"group:mainline", "group:camera-libcamera", "informational"},
+		SoftwareDeps: []string{"chrome", caps.BuiltinCamera},
 		Data:         []string{"web_camera_app.html", "web_camera_app.js", "web_camera_app_test.js"},
-		Params: []testing.Param{
-			{
-				Name:              "real",
-				Fixture:           "chromeVideo",
-				ExtraAttr:         []string{"informational"},
-				ExtraSoftwareDeps: []string{caps.BuiltinCamera},
-				Val:               browser.TypeAsh,
-			},
-			{
-				Name:              "lacros",
-				Fixture:           pre.ChromeVideoLacrosFixture(pre.VideoFeatureFakeMediaStreamUI),
-				ExtraAttr:         []string{"informational"},
-				ExtraSoftwareDeps: []string{caps.BuiltinCamera, "lacros"},
-				Timeout:           7 * time.Minute, // A lenient limit for launching Lacros Chrome.
-				Val:               browser.TypeLacros,
-			},
-		},
-		BugComponent: "b:978428",
+		Fixture:      "chromeVideo",
 	})
 }
 
@@ -58,23 +39,8 @@ func WebCameraApp(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start cros-camera: ", err)
 	}
 
+	ci := s.FixtValue().(chrome.HasChrome).Chrome()
 	duration := 3 * time.Second
-
-	var ci getusermedia.ChromeInterface
-	if s.Param().(browser.Type) == browser.TypeLacros {
-		tconn, err := s.FixtValue().(chrome.HasChrome).Chrome().TestAPIConn(ctx)
-		if err != nil {
-			s.Fatal("Failed to connect to test API: ", err)
-		}
-
-		ci, err = lacros.Launch(ctx, tconn)
-		if err != nil {
-			s.Fatal("Failed to launch lacros-chrome: ", err)
-		}
-		defer ci.Close(ctx)
-	} else {
-		ci = s.FixtValue().(chrome.HasChrome).Chrome()
-	}
 
 	if err := getusermedia.RunWebCameraApp(ctx, s.DataFileSystem(), ci, duration, getusermedia.VerboseLogging); err != nil {
 		s.Fatal("Failed to call WebCameraApp(): ", err)
