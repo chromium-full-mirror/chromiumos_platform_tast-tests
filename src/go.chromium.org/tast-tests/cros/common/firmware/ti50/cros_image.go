@@ -211,6 +211,22 @@ type VersionCommandInfo struct {
 	Build BuildInfo
 }
 
+// ActiveRw returns a reference to the active RW slot.
+func (v VersionCommandInfo) ActiveRw() RwInfo {
+	if v.RwA.Active {
+		return v.RwA
+	}
+	return v.RwB
+}
+
+// InactiveRw returns a reference to the inactive RW slot.
+func (v VersionCommandInfo) InactiveRw() RwInfo {
+	if !v.RwA.Active {
+		return v.RwA
+	}
+	return v.RwB
+}
+
 // RoInfo contains information about a loaded ro image slot.
 type RoInfo struct {
 	Active     bool
@@ -398,6 +414,13 @@ func (i *CrOSImage) SendConsoleRebootCmd(ctx context.Context) error {
 		return err
 	}
 	return nil
+}
+
+// SendDBGConsoleCrashCmd issues the crashme command but does not listen for a
+// response since the GSC is expected to reboot/crash. Note that this does not
+// detect if crash didn't happen due not using a DBG image.
+func (i *CrOSImage) SendDBGConsoleCrashCmd(ctx context.Context) error {
+	return i.WriteSerial(ctx, []byte("crash watchdog\r"))
 }
 
 // Reboot issues the reboot command and waits until GSC stops printing output.
