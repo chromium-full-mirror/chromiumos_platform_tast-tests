@@ -1,0 +1,83 @@
+// Copyright 2024 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+syntax = "proto3";
+
+package tast.cros.vdi;
+
+import "google/protobuf/empty.proto";
+
+option go_package = "go.chromium.org/tast-tests/cros/services/cros/vdi";
+
+// CitrixService provides RPC methods to be used by Citrix remote test.
+service CitrixService {
+  // NewCitrix creates a new instance of Citrix and launches the Citrix app.
+  rpc NewCitrix(NewCitrixRequest) returns (google.protobuf.Empty) {}
+
+  // LoginCitrix logins the Citrix app and connects to desktop.
+  rpc LoginCitrix(LoginCitrixRequest) returns (google.protobuf.Empty) {}
+
+  // OpenCitrix launches the Citrix app.
+  rpc OpenCitrix(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
+  // CloseCitrix closes the Citrix app.
+  rpc CloseCitrix(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
+  // ConnectUSBDevice connects USB device.
+  rpc ConnectUSBDevice(ConnectUSBDeviceRequest)
+      returns (google.protobuf.Empty) {}
+
+  // OpenCitrixApp opens app in Citrix.
+  rpc OpenCitrixApp(OpenCitrixAppRequest) returns (google.protobuf.Empty) {}
+
+  // CloseCitrixApp closes app in Citrix.
+  rpc CloseCitrixApp(CloseCitrixAppRequest) returns (google.protobuf.Empty) {}
+
+  // SetupFootPedalTest sets up the foot pedal test.
+  rpc SetupFootPedalTest(google.protobuf.Empty)
+      returns (google.protobuf.Empty) {}
+
+  // VerifyFootPedalButtonPressed verifies the foot pedal button is pressed.
+  rpc VerifyFootPedalButtonPressed(VerifyFootPedalButtonPressedRequest)
+      returns (google.protobuf.Empty) {}
+}
+
+// NewCitrixRequest contains the information needed to create a new Citrix
+// instance.
+message NewCitrixRequest {
+  string ota_username = 1;
+  string ota_password = 2;
+  string data_path = 3;
+}
+
+// LoginCitrixRequest contains the information needed to login to Citrix.
+message LoginCitrixRequest {
+  string username = 1;
+  string password = 2;
+}
+
+// ConnectUSBDeviceRequest contains the information needed to connect USB
+// device.
+message ConnectUSBDeviceRequest { string device_name = 1; }
+
+// OpenCitrixAppRequest contains the information needed to open app in Citrix.
+message OpenCitrixAppRequest {
+  string app_name = 1;
+  string app_title = 2;
+}
+
+// CloseCitrixAppRequest contains the information needed to close app in Citrix.
+message CloseCitrixAppRequest { string app_title = 1; }
+
+// FootPedalButton is the type of foot pedal button.
+enum FootPedalButton {
+  CENTER = 0;
+  LEFT = 1;
+  RIGHT = 2;
+  TOP = 3;
+}
+
+// VerifyFootPedalButtonPressedRequest contains the information needed to verify
+// the foot pedal button is pressed.
+message VerifyFootPedalButtonPressedRequest { FootPedalButton button = 1; }

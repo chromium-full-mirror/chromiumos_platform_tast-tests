@@ -80,8 +80,10 @@ func (c *Connector) EnterCredentialsAndLogin(ctx context.Context, cfg *apps.VDIL
 func (c *Connector) Login(ctx context.Context, cfg *apps.VDILoginConfig) error {
 	testing.ContextLog(ctx, "Citrix: logging in")
 
-	if err := c.EnterServerURL(ctx, cfg); err != nil {
-		return errors.Wrap(err, "failed to enter server url")
+	if cfg.Server != "" {
+		if err := c.EnterServerURL(ctx, cfg); err != nil {
+			return errors.Wrap(err, "failed to enter server url")
+		}
 	}
 
 	if err := c.EnterCredentialsAndLogin(ctx, cfg); err != nil {
