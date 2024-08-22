@@ -21,6 +21,9 @@ const (
 	// Minimization output does not contain max and min values; set defaults here.
 	minimizationMax = 0.0
 	minimizationMin = 0.0
+
+	// DefaultWaltSerialPort is the default serial port file used by WALT.
+	DefaultWaltSerialPort = "/dev/ttyACM0"
 )
 
 // StylusLatencyResult is the result of a stylus latency regression test.

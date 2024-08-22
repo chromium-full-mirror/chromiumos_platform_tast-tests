@@ -10,10 +10,12 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
+	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/inputs"
 	inputspb "go.chromium.org/tast-tests/cros/services/cros/inputs"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -36,6 +38,7 @@ func init() {
 		Attr:         []string{"group:human_motion_robot", "human_motion_robot_latency"},
 		ServiceDeps:  []string{"tast.cros.inputs.StylusService", "tast.cros.inputs.WaltService"},
 		Timeout:      15 * time.Minute,
+		Vars:         []string{"servo"},
 	})
 }
 
@@ -45,8 +48,18 @@ func HumanMotionRobotStylusLatencyRegression(ctx context.Context, s *testing.Sta
 		s.Fatal("Failed to parse runtime variables: ", err)
 	}
 
+	servoSpec := s.RequiredVar("servo")
+	dut := s.DUT()
+
+	// Connect to the servo.
+	pxy, err := servo.NewProxy(ctx, servoSpec, dut.KeyFile(), dut.KeyDir())
+	if err != nil {
+		s.Fatal("Failed to connect to servo: ", err)
+	}
+	defer pxy.Close(ctx)
+
 	// Create a SSH Tunnel to connect to the TouchHost device from the remote drone.
-	touchhostConnectionManager, err := inputs.CreateSSHTunnelToTouchhost(ctx, touchhostHostname, touchhostPort, s.DUT())
+	touchhostConnectionManager, err := inputs.CreateSSHTunnelToTouchhost(ctx, touchhostHostname, touchhostPort, dut)
 	if err != nil {
 		s.Fatal("Error setting up SSH tunnel to touchhost: ", err)
 	}
@@ -57,11 +70,25 @@ func HumanMotionRobotStylusLatencyRegression(ctx context.Context, s *testing.Sta
 		s.Fatal("Error generating new HMR interface: ", err)
 	}
 
-	client, err := rpc.Dial(ctx, s.DUT(), s.RPCHint())
+	client, err := rpc.Dial(ctx, dut, s.RPCHint())
 	if err != nil {
 		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
 	}
 	defer client.Close(ctx)
+
+	// Switch the USB port on the servo to pass through to the DUT so the
+	// DUT can see the WALT device.
+	s.Log("Switching USB to DUT")
+	if err := pxy.Servo().SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
+		s.Fatal("Failed to switch USB to DUT: ", err)
+	}
+
+	// After switching the USB to the DUT, the serial port takes a second to
+	// appear. Wait until it exists before starting the WALT command.
+	s.Log("Waiting for WALT serial port to be visible on the DUT")
+	if err := linuxssh.WaitUntilFileExists(ctx, dut.Conn(), inputs.DefaultWaltSerialPort, time.Second*15, time.Second); err != nil {
+		s.Fatalf("Failed to wait for file %q to exist: %v", inputs.DefaultWaltSerialPort, err)
+	}
 
 	dutStylusService := inputspb.NewStylusServiceClient(client.Conn)
 	stylusResponse, err := dutStylusService.FindPhysicalStylus(ctx, &empty.Empty{})
