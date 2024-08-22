@@ -28,7 +28,10 @@ func init() {
 		Desc:         "Checks that virtual keyboard can perform typing in playstore search field",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
-		Attr:         []string{"group:inputs_appcompat_arc_perbuild"},
+		Attr:         []string{
+			// Disabled by TORA.  See:b/339972061
+			// "group:inputs_appcompat_arc_perbuild"
+			},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		SoftwareDeps: []string{"inputs_deps", "chrome", "chrome_internal", "gaia"},
 		Timeout:      5 * time.Minute,
