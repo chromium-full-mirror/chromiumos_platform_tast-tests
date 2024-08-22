@@ -370,6 +370,7 @@ func TestRTCPeerConnectionPerfParams(t *testing.T) {
 			for _, resolution := range []graphics.Size{
 				graphics.Size{Width: 240, Height: 135},
 				graphics.Size{Width: 320, Height: 180},
+				graphics.Size{Width: 480, Height: 270},
 			} {
 				dec := hwDec
 				paramData := rtcTestParamsData{

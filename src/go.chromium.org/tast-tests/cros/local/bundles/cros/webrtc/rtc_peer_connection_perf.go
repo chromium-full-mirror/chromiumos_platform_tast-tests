@@ -1245,6 +1245,20 @@ func init() {
 				Fixture:           "chromeVideoWithFakeWebcamAndSWEncoding",
 			},
 			{
+				Name: "vp9_270p_sw_enc_hw_dec",
+				Val: peerconnection.RTCTestParams{
+					VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
+					VerifyEncoderMode: peerconnection.VerifySWEncoderUsed,
+					Profile:           "VP9",
+					StreamWidth:       480,
+					StreamHeight:      270,
+					BrowserType:       browser.TypeAsh,
+					TraceChromeEvents: true,
+				},
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_1080_30"},
+				Fixture:           "chromeVideoWithFakeWebcamAndSWEncoding",
+			},
+			{
 				Name: "av1_135p_sw_enc_hw_dec",
 				Val: peerconnection.RTCTestParams{
 					VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
@@ -1266,6 +1280,20 @@ func init() {
 					Profile:           "AV1",
 					StreamWidth:       320,
 					StreamHeight:      180,
+					BrowserType:       browser.TypeAsh,
+					TraceChromeEvents: true,
+				},
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_av1_1080_30"},
+				Fixture:           "chromeVideoWithFakeWebcamAndSWEncoding",
+			},
+			{
+				Name: "av1_270p_sw_enc_hw_dec",
+				Val: peerconnection.RTCTestParams{
+					VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
+					VerifyEncoderMode: peerconnection.VerifySWEncoderUsed,
+					Profile:           "AV1",
+					StreamWidth:       480,
+					StreamHeight:      270,
 					BrowserType:       browser.TypeAsh,
 					TraceChromeEvents: true,
 				},
@@ -1301,6 +1329,20 @@ func init() {
 				Fixture:           "chromeVideoWithFakeWebcamAndAllowHwEncoderForLowResolutions",
 			},
 			{
+				Name: "vp9_270p_hw_enc_hw_dec",
+				Val: peerconnection.RTCTestParams{
+					VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
+					VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
+					Profile:           "VP9",
+					StreamWidth:       480,
+					StreamHeight:      270,
+					BrowserType:       browser.TypeAsh,
+					TraceChromeEvents: true,
+				},
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp9_1080_30", "autotest-capability:hw_dec_vp9_1080_30"},
+				Fixture:           "chromeVideoWithFakeWebcamAndAllowHwEncoderForLowResolutions",
+			},
+			{
 				Name: "av1_135p_hw_enc_hw_dec",
 				Val: peerconnection.RTCTestParams{
 					VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
@@ -1322,6 +1364,20 @@ func init() {
 					Profile:           "AV1",
 					StreamWidth:       320,
 					StreamHeight:      180,
+					BrowserType:       browser.TypeAsh,
+					TraceChromeEvents: true,
+				},
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_av1_1080_30", "autotest-capability:hw_dec_av1_1080_30"},
+				Fixture:           "chromeVideoWithFakeWebcamAndAllowHwEncoderForLowResolutions",
+			},
+			{
+				Name: "av1_270p_hw_enc_hw_dec",
+				Val: peerconnection.RTCTestParams{
+					VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
+					VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
+					Profile:           "AV1",
+					StreamWidth:       480,
+					StreamHeight:      270,
 					BrowserType:       browser.TypeAsh,
 					TraceChromeEvents: true,
 				},
