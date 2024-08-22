@@ -7,6 +7,7 @@ package firmware
 import (
 	"context"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strconv"
 	"time"
@@ -49,15 +50,20 @@ func init() {
 }
 
 func UpdateKernelDataKeyVersion(ctx context.Context, s *testing.State) {
-	h := s.FixtValue().(*fixture.Value).Helper
-
+	const (
+		tempDir    = "/usr/local/tmp/faft"
+		devKeysDir = "/usr/share/vboot/devkeys"
+	)
+	var (
+		keysDir = filepath.Join(tempDir, "autest/keys")
+		h       = s.FixtValue().(*fixture.Value).Helper
+	)
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to init servo: ", err)
 	}
 	if err := h.RequireConfig(ctx); err != nil {
 		s.Fatal("Failed to get config: ", err)
 	}
-
 	if err := h.RequireKernelServiceClient(ctx); err != nil {
 		s.Fatal("Requiring KernelServiceClient: ", err)
 	}
@@ -65,24 +71,6 @@ func UpdateKernelDataKeyVersion(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Creating mode switcher: ", err)
 	}
-
-	const (
-		tempDir = "/usr/local/tmp/faft"
-	)
-	var (
-		workDir = filepath.Join(tempDir, "autest")
-		keysDir = filepath.Join(workDir, "keys")
-	)
-
-	s.Log("Backing up current Kernel")
-	kernelBackup, err := h.KernelServiceClient.BackupKernel(ctx, &pb.KernelBackup{})
-	if err != nil {
-		s.Fatal("Failed to back up KERN-A and KERN-B: ", err)
-	}
-
-	cleanupContext := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
-	defer cancel()
 
 	fs := dutfs.NewClient(h.RPCClient.Conn)
 	if exist, err := fs.Exists(ctx, tempDir); err != nil {
@@ -92,11 +80,13 @@ func UpdateKernelDataKeyVersion(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to remove temp dir: ", err)
 		}
 	}
-
 	s.Log("Creating temp directories")
 	if err := fs.MkDir(ctx, tempDir, 0777); err != nil {
 		s.Fatal("Failed to make the temp directory: ", err)
 	}
+	cleanupContext := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Minute)
+	defer cancel()
 	defer func(ctx context.Context) {
 		if err := h.RequireRPCClient(ctx); err != nil {
 			s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
@@ -105,6 +95,35 @@ func UpdateKernelDataKeyVersion(ctx context.Context, s *testing.State) {
 		fs := dutfs.NewClient(h.RPCClient.Conn)
 		if err := fs.RemoveAll(ctx, tempDir); err != nil {
 			s.Fatal("Failed to remove temp dir: ", err)
+		}
+	}(cleanupContext)
+
+	kernelBackup, err := h.KernelServiceClient.BackupKernel(ctx, &pb.KernelBackup{})
+	if err != nil {
+		s.Fatal("Failed to back up KERN-A and KERN-B: ", err)
+	}
+	kernelNeedsRestore := true
+	defer func(ctx context.Context) {
+		if kernelNeedsRestore {
+			if err := h.RequireKernelServiceClient(ctx); err != nil {
+				s.Fatal("Failed to connect to kernel service: ", err)
+			}
+			s.Log("Restoring kernel from backup")
+			if _, err := h.KernelServiceClient.RestoreKernel(ctx, kernelBackup); err != nil {
+				s.Fatal("Failed to restore kernel from backup: ", err)
+			}
+			s.Log("Performing mode aware reboot to ensure restored kernel takes effect")
+			if err := ms.ModeAwareReboot(ctx, firmware.ColdReset); err != nil {
+				s.Fatal("Failed to reboot: ", err)
+			}
+		}
+		s.Log("Delete backup files from DUT")
+		rmargs := []string{
+			kernelBackup.KernA.BackupPath,
+			kernelBackup.KernB.BackupPath,
+		}
+		if _, err := h.DUT.Conn().CommandContext(ctx, "rm", rmargs...).Output(ssh.DumpLogOnError); err != nil {
+			s.Fatal("Failed to delete backup files: ", err)
 		}
 	}(cleanupContext)
 
@@ -127,57 +146,9 @@ func UpdateKernelDataKeyVersion(ctx context.Context, s *testing.State) {
 	}
 	s.Log("Setting data key version of KERN-B to ", newVersion.DataKeyVersion)
 
-	// Make sure we start with a deterministic state so we don't have a
-	// situation where for example KERN-B is many version ahead of KERN-A.
 	if _, err := h.KernelServiceClient.EnsureBothKernelCopiesBootable(ctx, &empty.Empty{}); err != nil {
 		s.Fatal("Failed to ensure both kernel copies are bootable: ", err)
 	}
-
-	defer func(ctx context.Context) {
-		s.Log("Restoring kernel from backup")
-		if _, err := h.KernelServiceClient.RestoreKernel(ctx, kernelBackup); err != nil {
-			s.Fatal("Failed to restore kernel from backup: ", err)
-		}
-		s.Log("Deleting backup files from DUT")
-		rmargs := []string{
-			kernelBackup.KernA.BackupPath,
-			kernelBackup.KernB.BackupPath,
-		}
-		if _, err := h.DUT.Conn().CommandContext(ctx, "rm", rmargs...).Output(ssh.DumpLogOnError); err != nil {
-			s.Fatal("Failed to delete backup files: ", err)
-		}
-		s.Log("Ensuring both kernels are bootable after backup is completed")
-		if _, err := h.KernelServiceClient.SetBothKernelBootable(ctx, &empty.Empty{}); err != nil {
-			s.Fatal("Failed to set both kernel copies to bootable: ", err)
-		}
-		if err := coldResetToKernelPartition(ctx, h, ms, &pb.Partition{
-			Name: pb.PartitionName_KERNEL,
-			Copy: pb.PartitionCopy_B,
-		}); err != nil {
-			s.Fatal("Failed to prioritize KERN-B: ", err)
-		}
-		if _, err := h.KernelServiceClient.SetBothKernelBootable(ctx, &empty.Empty{}); err != nil {
-			s.Fatal("Failed to set both kernel copies to bootable: ", err)
-		}
-		if err := coldResetToKernelPartition(ctx, h, ms, &pb.Partition{
-			Name: pb.PartitionName_KERNEL,
-			Copy: pb.PartitionCopy_A,
-		}); err != nil {
-			s.Fatal("Failed to prioritize KERN-A: ", err)
-		}
-
-		currVersion, err := h.KernelServiceClient.GetKernelVersion(ctx, &pb.Partition{
-			Copy: pb.PartitionCopy_B,
-		})
-		if err != nil {
-			s.Fatal("Failed to get data key version of KERN-B: ", err)
-		}
-		if currVersion.DataKeyVersion != initVersion.DataKeyVersion {
-			s.Fatalf("Expected kernel version to be %s but was %s", initVersion.DataKeyVersion, currVersion.DataKeyVersion)
-		}
-		s.Logf("Rollback successful: current data key version of KERN-B is %s", currVersion.DataKeyVersion)
-	}(cleanupContext)
-
 	if err := coldResetToKernelPartition(ctx, h, ms, &pb.Partition{
 		Name: pb.PartitionName_KERNEL,
 		Copy: pb.PartitionCopy_A,
@@ -197,34 +168,15 @@ func UpdateKernelDataKeyVersion(ctx context.Context, s *testing.State) {
 	}); err != nil {
 		s.Fatal("Failed to prepare the key files: ", err)
 	}
-	s.Log("Resigning the kernel to new version")
-	futilityInstance, err := futility.NewLocalBuilder(h.DUT).Build()
-	if err != nil {
-		s.Fatal("Failed to create futility instance: ", err)
-	}
-	signOptions := futility.
-		NewSignKernelOptions(kernelBackup.KernB.Table.GetPartitionPath()).
-		WithSignPrivatePath(filepath.Join(keysDir, "kernel_data_key.vbprivk")).
-		WithKeyBlockPath(filepath.Join(keysDir, "kernel.keyblock")).
-		WithOutputFile(filepath.Join(workDir, "output.bin"))
-	if _, err = futilityInstance.SignKernel(ctx, signOptions); err != nil {
-		s.Fatal("Failed to re-sign kernel: ", err)
-	}
-
-	args := []string{
-		fmt.Sprintf("if=%s", filepath.Join(workDir, "output.bin")),
-		fmt.Sprintf("of=%s", kernelBackup.KernB.Table.GetPartitionPath()),
-		"conv=sync",
-	}
-	if err := h.DUT.Conn().CommandContext(ctx, "dd", args...).Run(ssh.DumpLogOnError); err != nil {
-		s.Fatal("Failed to write new kernel: ", err)
+	s.Log("Resigning KERN-B with new keys")
+	if err := resignKernelBWithKeys(ctx, h, keysDir); err != nil {
+		s.Fatal("Fail to resign KERN-B to new version: ", err)
 	}
 
 	s.Log("Prioritizing KERN-B to verify the update was successful")
 	if _, err := h.KernelServiceClient.SetBothKernelBootable(ctx, &empty.Empty{}); err != nil {
 		s.Fatal("Failed to set both kernel copies to bootable: ", err)
 	}
-
 	if err := coldResetToKernelPartition(ctx, h, ms, &pb.Partition{
 		Name: pb.PartitionName_KERNEL,
 		Copy: pb.PartitionCopy_B,
@@ -240,41 +192,117 @@ func UpdateKernelDataKeyVersion(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get data key version of KERN-B: ", err)
 	}
 	if currVersion.DataKeyVersion != newVersion.DataKeyVersion {
-		s.Fatalf("Expected kernel version to be %s but was %s", newVersion.DataKeyVersion, currVersion.DataKeyVersion)
+		s.Fatalf("Expected kernel version to be %s but got %s", newVersion.DataKeyVersion, currVersion.DataKeyVersion)
 	}
 	s.Logf("Successfully updated: current data key version of KERN-B is %s", currVersion.DataKeyVersion)
+
+	s.Log("Resigning KERN-B with orignal keys")
+	if err := resignKernelBWithKeys(ctx, h, devKeysDir); err != nil {
+		s.Fatal("Fail to resign KERN-B to orignal version: ", err)
+	}
+	if _, err := h.KernelServiceClient.SetBothKernelBootable(ctx, &empty.Empty{}); err != nil {
+		s.Fatal("Failed to set both kernel copies to bootable: ", err)
+	}
+	if err := coldResetToKernelPartition(ctx, h, ms, &pb.Partition{
+		Name: pb.PartitionName_KERNEL,
+		Copy: pb.PartitionCopy_B,
+	}); err != nil {
+		s.Fatal("Failed to prioritize KERN-B: ", err)
+	}
+	if _, err := h.KernelServiceClient.SetBothKernelBootable(ctx, &empty.Empty{}); err != nil {
+		s.Fatal("Failed to set both kernel copies to bootable: ", err)
+	}
+	if err := coldResetToKernelPartition(ctx, h, ms, &pb.Partition{
+		Name: pb.PartitionName_KERNEL,
+		Copy: pb.PartitionCopy_A,
+	}); err != nil {
+		s.Fatal("Failed to prioritize KERN-A: ", err)
+	}
+	rollbackVersion, err := h.KernelServiceClient.GetKernelVersion(ctx, &pb.Partition{
+		Copy: pb.PartitionCopy_B,
+	})
+	if err != nil {
+		s.Fatal("Failed to get data key version of KERN-B: ", err)
+	}
+	if rollbackVersion.DataKeyVersion != initVersion.DataKeyVersion {
+		s.Fatalf("Expected kernel version to be %s but was %s", initVersion.DataKeyVersion, rollbackVersion.DataKeyVersion)
+	}
+	s.Logf("Rollback successful: current data key version of KERN-B is %s", rollbackVersion.DataKeyVersion)
+	kernelNeedsRestore = false
 }
 
 // coldResetToKernelPartition checks active kernel vs target, reboots DUT to target on mismatch.
 func coldResetToKernelPartition(ctx context.Context, h *firmware.Helper, ms *firmware.ModeSwitcher, target *pb.Partition) error {
-	currCopy, err := h.KernelServiceClient.GetCurrentCopy(ctx, &pb.Partition{})
-	if err != nil {
-		return errors.Wrap(err, "failed to get label of current kernel")
+	testing.ContextLog(ctx, "Sleeping for 10s")
+	// GoBigSleepLint: There is a risk that the priority value may revert to its
+	// original setting if the priority is set immediately after
+	// EnsureBothKernelCopiesBootable() and SetBothKernelBootable().
+	// Add a 10-second delay before setting the priority.
+	if err := testing.Sleep(ctx, 10*time.Second); err != nil {
+		return errors.Wrap(err, "failed to sleep for 10 seconds")
 	}
-	if currCopy.Copy != target.Copy {
-		testing.ContextLog(ctx, "Sleeping for 10s")
-		// GoBigSleepLint: There is a risk that the priority value may revert to its
-		// original setting if the priority is set immediately after
-		// EnsureBothKernelCopiesBootable() and SetBothKernelBootable().
-		// Add a 10-second delay before setting the priority.
-		if err := testing.Sleep(ctx, 10*time.Second); err != nil {
-			return errors.Wrap(err, "failed to sleep for 10 seconds")
-		}
-		testing.ContextLog(ctx, "Rebooting DUT to KERN-", target.Copy.String())
-		if _, err := h.KernelServiceClient.PrioritizeKernelCopy(ctx, target); err != nil {
-			return errors.Wrapf(err, "failed to prioritize KERN-%s", target.Copy.String())
-		}
-		if err := ms.ModeAwareReboot(ctx, firmware.ColdReset); err != nil {
-			return errors.Wrap(err, "failed to reboot")
-		}
-		if err := h.RequireKernelServiceClient(ctx); err != nil {
-			return errors.Wrap(err, "failed to connect to kernel service")
-		}
-		if _, err := h.KernelServiceClient.VerifyKernelCopy(ctx, target); err != nil {
-			return errors.Wrapf(err, "failed to boot to KERN-%s", target.Copy.String())
-		}
-	} else {
-		testing.ContextLog(ctx, "DUT has already booted to the expected kernel copy")
+	testing.ContextLog(ctx, "Rebooting DUT to KERN-", target.Copy.String())
+	if _, err := h.KernelServiceClient.PrioritizeKernelCopy(ctx, target); err != nil {
+		return errors.Wrapf(err, "failed to prioritize KERN-%s", target.Copy.String())
+	}
+	if err := ms.ModeAwareReboot(ctx, firmware.ColdReset); err != nil {
+		return errors.Wrap(err, "failed to reboot")
+	}
+	if err := h.RequireKernelServiceClient(ctx); err != nil {
+		return errors.Wrap(err, "failed to connect to kernel service")
+	}
+	if _, err := h.KernelServiceClient.VerifyKernelCopy(ctx, target); err != nil {
+		return errors.Wrapf(err, "failed to boot to KERN-%s", target.Copy.String())
+	}
+	return nil
+}
+
+// resignKernelBWithKeys resign kernel B with keys in keysDir.
+func resignKernelBWithKeys(ctx context.Context, h *firmware.Helper, keysDir string) error {
+	label := "KERN-B"
+	tmpFile, err := os.CreateTemp("/var/tmp", fmt.Sprintf("%s-repack_*.bin", label))
+	if err != nil {
+		os.Remove(tmpFile.Name())
+		return errors.Wrap(err, "failed to create tmpfile for storing modified kernel")
+	}
+	defer os.Remove(tmpFile.Name())
+	futilityInstance, err := futility.NewLocalBuilder(h.DUT).Build()
+	if err != nil {
+		return errors.Wrap(err, "failed to create futility instance")
+	}
+	blockDevice, err := h.KernelServiceClient.GetCurrentRootDevice(ctx, &empty.Empty{})
+	if err != nil {
+		return errors.Wrap(err, "failed to get root device")
+	}
+	GetCgptTable, err := h.KernelServiceClient.GetCgptTable(ctx, &pb.GetCgptTableRequest{
+		BlockDevice: blockDevice.RootDev,
+	})
+	if err != nil {
+		return errors.Wrap(err, "failed to read cgpt table")
+	}
+	partitionInfo, ok := GetCgptTable.CgptTable[label]
+	if !ok {
+		return errors.Errorf("no partition info found for label %s", label)
+	}
+	partitionPath := partitionInfo.GetPartitionPath()
+	if partitionPath == "" {
+		return errors.Errorf("partition path for label %s is empty", label)
+	}
+	signOptions := futility.
+		NewSignKernelOptions(partitionPath).
+		WithSignPrivatePath(filepath.Join(keysDir, "kernel_data_key.vbprivk")).
+		WithKeyBlockPath(filepath.Join(keysDir, "kernel.keyblock")).
+		WithOutputFile(tmpFile.Name())
+	if _, err = futilityInstance.SignKernel(ctx, signOptions); err != nil {
+		return errors.Wrap(err, "failed to re-sign kernel using futility instance")
+	}
+	args := []string{
+		fmt.Sprintf("if=%s", tmpFile.Name()),
+		fmt.Sprintf("of=%s", partitionPath),
+		"conv=noerror,sync",
+	}
+	if err := h.DUT.Conn().CommandContext(ctx, "dd", args...).Run(ssh.DumpLogOnError); err != nil {
+		return errors.Wrap(err, "failed to write new kernel")
 	}
 	return nil
 }
