@@ -155,14 +155,10 @@ func (c *PolicyService) StoreIDsForDeprovisioning(ctx context.Context) error {
 	deviceID := deviceAndCustomerIDResponse.DeviceID
 	customerID := deviceAndCustomerIDResponse.CustomerID
 
-	// Get the stable_device_secret as the key under which we store the deviceID and customerID
-	// as that won't change.
-	const stableDeviceSecretFileName = "/sys/firmware/vpd/ro/stable_device_secret_DO_NOT_SHARE"
-	data, err := ioutil.ReadFile(stableDeviceSecretFileName)
+	stableDeviceSecretResponse, err := c.StableDeviceSecret(ctx, &empty.Empty{})
 	if err != nil {
-		return errors.Wrapf(err, "failed to read %s", stableDeviceSecretFileName)
+		return errors.Wrap(err, "failed to retrieve stable device secret")
 	}
-	stableDeviceSecret := string(data)
 
 	tapeServiceAccount, ok := c.s.Var(tape.ServiceAccountVar)
 	if !ok {
@@ -174,7 +170,7 @@ func (c *PolicyService) StoreIDsForDeprovisioning(ctx context.Context) error {
 		return errors.Wrap(err, "failed to create TAPE client")
 	}
 
-	if err := tapeClient.StoreDeprovisioningIDs(ctx, deviceID, customerID, stableDeviceSecret); err != nil {
+	if err := tapeClient.StoreDeprovisioningIDs(ctx, deviceID, customerID, stableDeviceSecretResponse.StableDeviceSecret); err != nil {
 		return errors.Wrap(err, "failed to store the ids needed to deprovision in TAPE")
 	}
 
@@ -883,6 +879,17 @@ func (c *PolicyService) DeviceAndCustomerID(ctx context.Context, req *empty.Empt
 	}
 
 	return &ppb.DeviceAndCustomerIDResponse{DeviceID: *p.DirectoryApiId, CustomerID: *p.ObfuscatedCustomerId}, nil
+}
+
+func (c *PolicyService) StableDeviceSecret(ctx context.Context, req *empty.Empty) (*ppb.StableDeviceSecretResponse, error) {
+	// Get the stable_device_secret as the key under which we store the deviceID and customerID
+	// as that won't change.
+	const stableDeviceSecretFileName = "/sys/firmware/vpd/ro/stable_device_secret_DO_NOT_SHARE"
+	data, err := ioutil.ReadFile(stableDeviceSecretFileName)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to read %s", stableDeviceSecretFileName)
+	}
+	return &ppb.StableDeviceSecretResponse{StableDeviceSecret: string(data)}, nil
 }
 
 // LockDevice locks the device's screen.

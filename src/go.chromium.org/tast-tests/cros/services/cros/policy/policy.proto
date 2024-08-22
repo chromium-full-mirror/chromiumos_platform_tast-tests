@@ -81,6 +81,8 @@ service PolicyService {
   // Grabs DirectoryAPIID and ObfuscatedCustomerID of the managed session.
   rpc DeviceAndCustomerID(google.protobuf.Empty)
       returns (DeviceAndCustomerIDResponse) {}
+  rpc StableDeviceSecret(google.protobuf.Empty)
+      returns (StableDeviceSecretResponse) {}
 
   // Locks the device.
   rpc LockDevice(google.protobuf.Empty) returns (google.protobuf.Empty) {}
@@ -223,6 +225,8 @@ message DeviceAndCustomerIDResponse {
   string deviceID = 1;
   string customerID = 2;
 }
+
+message StableDeviceSecretResponse { string stable_device_secret = 1; }
 
 message UnlockDeviceWithPasswordRequest {
   string username = 1;

@@ -184,17 +184,33 @@ func (ah *OwnedTestAccountManager) CleanUp(ctx context.Context) error {
 	return nil
 }
 
-// DeprovisionHelper is a helper function to deprovision a device in a managed domain.
-func (c *client) DeprovisionHelper(ctx context.Context, rpcClient *rpc.Client, orgUnitPath string) error {
-	policyClient := pspb.NewPolicyServiceClient(rpcClient.Conn)
+func (c *client) deprovisionUsingDeviceAndCustomerID(ctx context.Context, policyClient pspb.PolicyServiceClient) error {
 	deviceAndCustomerIDResponse, err := policyClient.DeviceAndCustomerID(ctx, &empty.Empty{})
 	if err != nil {
 		return errors.Wrap(err, "failed to get device and customer id")
 	}
-	deviceID := deviceAndCustomerIDResponse.DeviceID
-	customerID := deviceAndCustomerIDResponse.CustomerID
+	return c.DeprovisionAndVerify(ctx, WithDeviceAndCustomerID(deviceAndCustomerIDResponse.DeviceID, deviceAndCustomerIDResponse.CustomerID))
+}
 
-	return c.DeprovisionAndVerify(ctx, WithDeviceAndCustomerID(deviceID, customerID))
+func (c *client) deprovisionUsingStableDeviceSecret(ctx context.Context, policyClient pspb.PolicyServiceClient) error {
+	stableDeviceSecretResponse, err := policyClient.StableDeviceSecret(ctx, &empty.Empty{})
+	if err != nil {
+		return errors.Wrap(err, "failed to get stable device secret")
+	}
+	return c.DeprovisionAndVerify(ctx, WithStableDeviceSecret(stableDeviceSecretResponse.StableDeviceSecret))
+}
+
+// DeprovisionHelper is a helper function to deprovision a device in a managed domain.
+func (c *client) DeprovisionHelper(ctx context.Context, rpcClient *rpc.Client, orgUnitPath string) error {
+	policyClient := pspb.NewPolicyServiceClient(rpcClient.Conn)
+
+	if errDci := c.deprovisionUsingDeviceAndCustomerID(ctx, policyClient); errDci != nil {
+		if errSds := c.deprovisionUsingStableDeviceSecret(ctx, policyClient); errSds != nil {
+			return errors.Wrap(errors.Join(errDci, errSds), "failed to deprovision using device/customer ids OR stable device secret")
+		}
+	}
+
+	return nil
 }
 
 // DeprovisionAndVerify is a helper function to deprovision a device in a managed domain.
