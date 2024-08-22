@@ -17,7 +17,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/checked"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
@@ -289,42 +288,6 @@ func AddAccountSAML(ctx context.Context, tconn *chrome.TestConn, email, password
 	}
 
 	return nil
-}
-
-// CheckARCToggleStatus compares the state of the "ARC toggle" in the account
-// addition flow with the expected value.
-func CheckARCToggleStatus(ctx context.Context, tconn *chrome.TestConn, brType browser.Type, expectedVal bool) error {
-	if brType != browser.TypeLacros {
-		// The feature is applied only if Lacros is enabled.
-		return nil
-	}
-	ui := uiauto.New(tconn).WithTimeout(DefaultUITimeout)
-	root := AddAccountDialog()
-	toggle := nodewith.NameStartingWith("Use this account with Android apps").Role(role.ToggleButton).Ancestor(root)
-	if err := ui.WaitUntilExists(toggle)(ctx); err != nil {
-		return errors.Wrap(err, "failed to find ARC toggle")
-	}
-
-	toggleInfo, err := ui.Info(ctx, toggle)
-	if err != nil {
-		return errors.Wrap(err, "failed to get ARC toggle info")
-	}
-	isToggleChecked := (toggleInfo.Checked == checked.True)
-	if isToggleChecked != expectedVal {
-		return errors.Errorf("expected toggle checked state to be %t but got %t", expectedVal, isToggleChecked)
-	}
-
-	return nil
-}
-
-// CheckARCToggleStatusAction returns an action that runs accountmanager.CheckARCToggleStatus.
-func CheckARCToggleStatusAction(tconn *chrome.TestConn, brType browser.Type, expectedVal bool) action.Action {
-	return func(ctx context.Context) error {
-		if err := CheckARCToggleStatus(ctx, tconn, brType, expectedVal); err != nil {
-			return errors.Wrap(err, "failed to check ARC toggle status")
-		}
-		return nil
-	}
 }
 
 // CheckOneGoogleBar opens OGB and checks that provided condition is true.

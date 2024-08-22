@@ -22,9 +22,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AddAccountFromOGB,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Verify that a secondary account can be added from One Google Bar",
+		Func: AddAccountFromOGB,
+		Desc: "Verify that a secondary account can be added from One Google Bar",
 		Contacts: []string{
 			"team-dent@google.com",
 			"emaamari@google.com",
@@ -42,22 +41,10 @@ func init() {
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_container"},
 			Fixture:           "loggedInToChromeAndArc",
-			Val:               browser.TypeAsh,
 		}, {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Fixture:           "loggedInToChromeAndArc",
-			Val:               browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"android_container", "lacros"},
-			Fixture:           "loggedInToChromeAndArcWithLacros",
-			Val:               browser.TypeLacros,
-		}, {
-			Name:              "vm_lacros",
-			ExtraSoftwareDeps: []string{"android_vm", "lacros"},
-			Fixture:           "loggedInToChromeAndArcWithLacros",
-			Val:               browser.TypeLacros,
 		}},
 		VarDeps: []string{"accountmanager.username1", "accountmanager.password1"},
 		Timeout: 7 * time.Minute,
@@ -76,7 +63,7 @@ func AddAccountFromOGB(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(accountmanager.FixtureData).Chrome()
 
 	// Setup the browser.
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
+	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 	if err != nil {
 		s.Fatal("Failed to setup chrome: ", err)
 	}
@@ -115,11 +102,6 @@ func AddAccountFromOGB(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to find add account link: ", err)
 	}
 
-	// ARC toggle should NOT be checked.
-	if err := accountmanager.CheckARCToggleStatus(ctx, tconn, s.Param().(browser.Type), false); err != nil {
-		s.Fatal("Failed to check ARC toggle status: ", err)
-	}
-
 	s.Log("Adding a secondary Account")
 	if err := accountmanager.AddAccount(ctx, tconn, username, password); err != nil {
 		s.Fatal("Failed to add a secondary Account: ", err)
@@ -140,13 +122,6 @@ func AddAccountFromOGB(ctx context.Context, s *testing.State) {
 	secondaryAccountListItem := nodewith.NameContaining(username).Role(role.Link)
 	if err := accountmanager.CheckOneGoogleBar(ctx, tconn, br, ui.WaitUntilExists(secondaryAccountListItem)); err != nil {
 		s.Fatal("Failed to check that account is present in OGB: ", err)
-	}
-
-	// Account is expected to be not present in ARC only if browser type is Lacros. The feature is being applied only if Lacros is enabled.
-	expectedPresentInArc := s.Param().(browser.Type) != browser.TypeLacros
-	if err := accountmanager.CheckIsAccountPresentInARCAction(tconn, arcDevice,
-		accountmanager.NewARCAccountOptions(username).ExpectedPresentInARC(expectedPresentInArc))(ctx); err != nil {
-		s.Fatalf("Failed to check if account is present in ARC, expected '%t', err: %v", expectedPresentInArc, err)
 	}
 }
 

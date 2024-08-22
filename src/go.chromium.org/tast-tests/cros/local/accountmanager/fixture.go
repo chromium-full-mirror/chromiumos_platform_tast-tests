@@ -37,37 +37,6 @@ func init() {
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
 	})
-	testing.AddFixture(&testing.Fixture{
-		Name: "loggedInToLacros",
-		Desc: "Logged in using real Gaia account + with Lacros enabled. ARC is booted with disabling sync flags. ArcAccountRestrictions feature is enabled",
-		Contacts: []string{
-			"emaamari@google.com", "team-dent@google.com",
-		},
-		BugComponent: "b:1279804", // ChromeOS > Software > Commercial (Enterprise) > Identity > Account Manager
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(
-				chrome.GAIALoginPool(dma.CredsFromPool(accountmanager.AccountPoolVarName)),
-				chrome.EnableFeatures("ArcAccountRestrictions"),
-				chrome.ARCSupported(),
-				chrome.UnRestrictARCCPU(),
-				chrome.ExtraArgs(arc.DisableSyncFlags()...))).Opts()
-		}),
-		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: "loggedInToChromeAndArcWithLacros",
-		Desc: "Logged in using real Gaia account + with Lacros enabled. ARC is booted with disabling sync flags. ArcAccountRestrictions feature is enabled",
-		Contacts: []string{
-			"emaamari@google.com", "team-dent@google.com",
-		},
-		BugComponent:    "b:1279804", // ChromeOS > Software > Commercial (Enterprise) > Identity > Account Manager
-		Impl:            &accountManagerTestFixture{isLacros: true},
-		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-	})
 }
 
 // FixtureData is the struct returned by the preconditions.

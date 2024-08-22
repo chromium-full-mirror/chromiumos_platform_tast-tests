@@ -28,9 +28,8 @@ const addAccountOSSettingsTimeout = 7 * time.Minute
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AddAccountOSSettings,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Verify that a secondary account can be added and removed from OS Settings",
+		Func: AddAccountOSSettings,
+		Desc: "Verify that a secondary account can be added and removed from OS Settings",
 		Contacts: []string{
 			"team-dent@google.com",
 			"emaamari@google.com",
@@ -46,25 +45,12 @@ func init() {
 			"group:hw_agnostic",
 		},
 		SoftwareDeps: []string{"chrome", "gaia"},
+		Fixture:      "loggedInToChromeAndArc",
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_container"},
-			Fixture:           "loggedInToChromeAndArc",
-			Val:               browser.TypeAsh,
 		}, {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
-			Fixture:           "loggedInToChromeAndArc",
-			Val:               browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"android_container", "lacros"},
-			Fixture:           "loggedInToChromeAndArcWithLacros",
-			Val:               browser.TypeLacros,
-		}, {
-			Name:              "vm_lacros",
-			ExtraSoftwareDeps: []string{"android_vm", "lacros"},
-			Fixture:           "loggedInToChromeAndArcWithLacros",
-			Val:               browser.TypeLacros,
 		}},
 		VarDeps: []string{tape.ServiceAccountVar},
 		Timeout: addAccountOSSettingsTimeout,
@@ -80,7 +66,7 @@ func AddAccountOSSettings(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(accountmanager.FixtureData).Chrome()
 
 	// Setup the browser.
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
+	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 	if err != nil {
 		s.Fatal("Failed to setup chrome: ", err)
 	}
@@ -126,11 +112,6 @@ func AddAccountOSSettings(ctx context.Context, s *testing.State) {
 		ui.WaitUntilExists(accountmanager.AddAccountDialog()),
 	)(ctx); err != nil {
 		s.Fatal("Failed to click Add Google Account button: ", err)
-	}
-
-	// ARC toggle should be checked.
-	if err := accountmanager.CheckARCToggleStatus(ctx, tconn, s.Param().(browser.Type), true); err != nil {
-		s.Fatal("Failed to check ARC toggle status: ", err)
 	}
 
 	s.Log("Adding a secondary Account")
