@@ -6,14 +6,10 @@ package camera
 
 import (
 	"context"
-	"time"
 
 	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/camera/getusermedia"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
-	"go.chromium.org/tast-tests/cros/local/media/pre"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/testing"
 )
@@ -25,26 +21,10 @@ func init() {
 		Desc:         "Verifies availability of ImageCapture API outside CCA",
 		Contacts:     []string{"chromeos-camera-app-eng@google.com", "dorahkim@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
-		Attr:         []string{"group:mainline", "group:camera-libcamera"},
-		SoftwareDeps: []string{"chrome"},
+		Attr:         []string{"group:mainline", "group:camera-libcamera", "informational"},
+		SoftwareDeps: []string{"chrome", caps.BuiltinCamera},
 		Data:         append(getusermedia.DataFiles(), "web_api.html"),
-		Params: []testing.Param{
-			{
-				Name:              "real",
-				Pre:               pre.ChromeVideo(),
-				ExtraAttr:         []string{"informational"},
-				ExtraSoftwareDeps: []string{caps.BuiltinCamera},
-				Val:               browser.TypeAsh,
-			},
-			{
-				Name:              "lacros",
-				Fixture:           pre.ChromeVideoLacrosFixture(pre.VideoFeatureFakeMediaStreamUI),
-				ExtraAttr:         []string{"informational"},
-				ExtraSoftwareDeps: []string{caps.BuiltinCamera, "lacros"},
-				Timeout:           7 * time.Minute, // A lenient limit for launching Lacros Chrome.
-				Val:               browser.TypeLacros,
-			},
-		},
+		Fixture:      "chromeVideo",
 	})
 }
 
@@ -58,21 +38,7 @@ func ImageCapture(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start cros-camera: ", err)
 	}
 
-	var ci getusermedia.ChromeInterface
-	if s.Param().(browser.Type) == browser.TypeLacros {
-		tconn, err := s.FixtValue().(chrome.HasChrome).Chrome().TestAPIConn(ctx)
-		if err != nil {
-			s.Fatal("Failed to connect to test API: ", err)
-		}
-
-		ci, err = lacros.Launch(ctx, tconn)
-		if err != nil {
-			s.Fatal("Failed to launch lacros-chrome: ", err)
-		}
-		defer ci.Close(ctx)
-	} else {
-		ci = s.PreValue().(*chrome.Chrome)
-	}
+	ci := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	if err := getusermedia.RunImageCaptureAPI(ctx, s.DataFileSystem(), ci, getusermedia.VerboseLogging); err != nil {
 		s.Fatal("Failed to run ImageCapture API: ", err)
