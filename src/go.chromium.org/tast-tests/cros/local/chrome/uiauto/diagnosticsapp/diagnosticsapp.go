@@ -73,6 +73,9 @@ var (
 	// DxCancelledBadge export is used to find cancelled badge.
 	DxCancelledBadge = nodewith.Name("STOPPED").Role(role.StaticText)
 
+	// DxRunningMemoryTestMsg export is used to find successful launch of the memory routine.
+	DxRunningMemoryTestMsg = nodewith.NameContaining("Running memory test").Role(role.StaticText)
+
 	// DxConnectivity export is used to find the Connectivity navigation item.
 	DxConnectivity = nodewith.Name("Connectivity").Role(role.Button)
 
