@@ -18,8 +18,8 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/chrome/extension"
 	"go.chromium.org/tast-tests/cros/common/perf"
-	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/remote/dutfs"
+	"go.chromium.org/tast-tests/cros/remote/osperf"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
@@ -122,16 +122,6 @@ type tabOpenLatencyTestResult struct {
 	ResultLog          string    `json:"result_log"`
 }
 
-func openBenchPage(ctx context.Context, s *testing.State, benchURL string, conn ui.ConnServiceClient) *ui.NewConnResponse {
-	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
-	defer cancel()
-	resTab, err := conn.NewConn(ctx, &ui.NewConnRequest{Url: benchURL})
-	if err != nil {
-		s.Fatal("Failed to open new Tab: ", err)
-	}
-	return resTab
-}
-
 func runBluebench(ctx context.Context, s *testing.State, cl *rpc.Client, extDir, hostExtDir string) ui.ChromeServiceClient {
 
 	s.Log("Setting up bluebench extension")
@@ -152,7 +142,10 @@ func runBluebench(ctx context.Context, s *testing.State, cl *rpc.Client, extDir,
 	conn := ui.NewConnServiceClient(cl.Conn)
 
 	benchURL := "chrome-extension://" + extID + "/bench.html"
-	resTab := openBenchPage(ctx, s, benchURL, conn)
+	resTab, err := osperf.OpenBenchPage(ctx, benchURL, conn)
+	if err != nil {
+		s.Fatal("Failed to open new Tab: ", err)
+	}
 
 	s.Log("Running the benchmark")
 	resRun, err := conn.Call(ctx, &ui.ConnCallRequest{
@@ -219,32 +212,29 @@ func runBluebench(ctx context.Context, s *testing.State, cl *rpc.Client, extDir,
 	return cr
 }
 
-func dumpCommandOutput(ctx context.Context, s *testing.State, name, cmd string) {
-	output, err := s.DUT().Conn().CommandContext(ctx, "sh", "-c", cmd).Output(testexec.DumpLogOnError)
-	if err != nil {
-		s.Fatal("Failed to run command to dump info: ", cmd, err)
-	}
-	if err := ioutil.WriteFile(filepath.Join(s.OutDir(), name),
-		[]byte(output), 0644); err != nil {
-		s.Errorf("Failed to write %v: %v", name, err)
-	}
-}
-
 func dumpHardwareInformation(ctx context.Context, s *testing.State) {
-	dumpCommandOutput(ctx, s, "crossystem.txt", "crossystem")
-	dumpCommandOutput(ctx, s, "vpd.txt", "vpd -l")
-	dumpCommandOutput(ctx, s, "uname.txt", "uname -a")
-	dumpCommandOutput(ctx, s, "meminfo.txt", "cat /proc/meminfo")
-	dumpCommandOutput(ctx, s, "lscpu.txt", "lscpu")
-	dumpCommandOutput(ctx, s, "cmdline.txt", "cat /proc/cmdline")
-	dumpCommandOutput(ctx, s, "kernel_version.txt", "cat /proc/version")
-	dumpCommandOutput(ctx, s, "cpuinfo.txt", "cat /proc/cpuinfo")
-	dumpCommandOutput(ctx, s, "ifconfig.txt", "ifconfig")
-	dumpCommandOutput(ctx, s, "mount.txt", "mount")
-	dumpCommandOutput(ctx, s, "current_kernel_part_hash.txt", "md5sum $(rootdev -s | sed -e 's/5$/4/' -e 's/3$/2/')")
-	dumpCommandOutput(ctx, s, "current_kernel_verification.txt", "vbutil_kernel --verify $(rootdev -s | sed -e 's/5$/4/' -e 's/3$/2/')")
-	dumpCommandOutput(ctx, s, "rootdev.txt", "rootdev -s")
-	dumpCommandOutput(ctx, s, "bootid.txt", "cat /proc/sys/kernel/random/boot_id")
-	dumpCommandOutput(ctx, s, "lsb_release.txt", "cat /etc/lsb-release")
-	dumpCommandOutput(ctx, s, "messages.txt", "cat /var/log/messages")
+	dumpCommandMap := map[string]string{
+		"crossystem.txt":                  "crossystem",
+		"vpd.txt":                         "vpd -l",
+		"uname.txt":                       "uname -a",
+		"meminfo.txt":                     "cat /proc/meminfo",
+		"lscpu.txt":                       "lscpu",
+		"cmdline.txt":                     "cat /proc/cmdline",
+		"kernel_version.txt":              "cat /proc/version",
+		"cpuinfo.txt":                     "cat /proc/cpuinfo",
+		"ifconfig.txt":                    "ifconfig",
+		"mount.txt":                       "mount",
+		"current_kernel_part_hash.txt":    "md5sum $(rootdev -s | sed -e 's/5$/4/' -e 's/3$/2/')",
+		"current_kernel_verification.txt": "vbutil_kernel --verify $(rootdev -s | sed -e 's/5$/4/' -e 's/3$/2/')",
+		"rootdev.txt":                     "rootdev -s",
+		"bootid.txt":                      "cat /proc/sys/kernel/random/boot_id",
+		"lsb_release.txt":                 "cat /etc/lsb-release",
+		"messages.txt":                    "cat /var/log/messages",
+	}
+	dut := s.DUT()
+	for name, command := range dumpCommandMap {
+		if err := osperf.DumpCommandOutput(ctx, dut, filepath.Join(s.OutDir(), name), command); err != nil {
+			s.Fatal("Failed to dump info: ", err)
+		}
+	}
 }
