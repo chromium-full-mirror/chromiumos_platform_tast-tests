@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/flashrom"
+	"go.chromium.org/tast-tests/cros/common/firmware/futility"
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
@@ -36,7 +36,7 @@ func init() {
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		// TODO: When stable, change firmware_unstable to a different attr.
 		Attr:         []string{"group:firmware", "firmware_unstable"},
-		SoftwareDeps: []string{"crossystem", "flashrom"},
+		SoftwareDeps: []string{"crossystem", "futility"},
 		ServiceDeps:  []string{"tast.cros.firmware.BiosService"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Timeout:      30 * time.Minute,
@@ -79,7 +79,7 @@ var wpTargetToProg = map[wpTarget]pb.Programmer{
 }
 
 var wpTargetToRegion = map[wpTarget]pb.ImageSection{
-	targetBIOS: pb.ImageSection_FWSignBImageSection,
+	targetBIOS: pb.ImageSection_APWPROImageSection,
 	// In EC, WP only protects RO sections (with flashwp enable).
 	// In devices with CBI in flash (eg rex, brox), CBI is part of RO.
 	// Corrupting entire RO might messup CBI and pstate flags which may cause prevent booting,
@@ -144,7 +144,7 @@ func WriteProtect(ctx context.Context, s *testing.State) {
 	defer func(ctx context.Context) {
 		// Some models will have booting issues when enabling the Software Write Protect then rebooting.
 		// There might be two results:
-		// 1. The DUT goes to the "Something went wrong" screen (puff) or the rainbow screen (coral).
+		// 1. The DUT goes to the "Something went wrong" screen (puff) or the rainbow screen (coral, octopus).
 		// 2. The DUT takes longer to reboot than expected.
 		s.Log("Waiting longer to see if the DUT can reconnect")
 		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 5*time.Minute)
@@ -161,8 +161,13 @@ func WriteProtect(ctx context.Context, s *testing.State) {
 			}
 
 			s.Log("Disabling Software Write Protect")
-			if err := h.ServoProxy.RunCommand(ctx, true, "flashrom", "-p", "raiden_debug_spi:target=AP", "--wp-disable", "--wp-range=0,0"); err != nil {
-				s.Error("Failed to disable software write protect with flashrom: ", err)
+			futilityInstance, err := futility.NewRemoteBuilder(h.ServoProxy).Build()
+			if err != nil {
+				s.Fatal("Failed to create futility instance: ", err)
+			}
+
+			if _, err := futilityInstance.SetWP(ctx, false); err != nil {
+				s.Fatal("Failed to use futility to disable write protect: ", err)
 			}
 		}
 
@@ -261,7 +266,7 @@ func setWriteProtect(ctx context.Context, h *firmware.Helper, target wpTarget, e
 		return errors.Wrap(err, "failed to create mode switcher")
 	}
 
-	// Make sure hardware wp is disabled for now so flashrom cmd can run.
+	// Make sure hardware wp is disabled for now so software wp can be disabled.
 	if out, err := h.Servo.GetString(ctx, servo.FWWPState); err != nil || out != string(servo.FWWPStateOff) {
 		// If fw wp is enabled or unknown, disable and reboot so ap wp can be changed.
 		if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateOff); err != nil {
@@ -280,32 +285,13 @@ func setWriteProtect(ctx context.Context, h *firmware.Helper, target wpTarget, e
 	}
 
 	if target == targetBIOS {
-		var flashromConfig flashrom.Config
-		flash, ctx, shutdown, _, err := flashromConfig.
-			FlashromInit(flashrom.VerbosityDebug).
-			ProgrammerInit(flashrom.ProgrammerHost, "").
-			SetDut(h.DUT).
-			Probe(ctx)
-		defer func() {
-			if err := shutdown(); err != nil {
-				if retErr == nil {
-					retErr = errors.Wrap(err, "failed to shutdown flashromInstance")
-				} else {
-					testing.ContextLog(ctx, "Failed to shutdown flashromInstance: ", err)
-				}
-			}
-		}()
+		futilityInstance, err := futility.NewLocalBuilder(h.DUT).Build()
 		if err != nil {
-			return errors.Wrap(err, "flashrom probe failed, unable to build flashrom instance")
-		}
-
-		apWPFunc := flash.SoftwareWriteProtectEnable
-		if !enable {
-			apWPFunc = flash.SoftwareWriteProtectDisable
+			return errors.Wrap(err, "failed to create futility instance")
 		}
 
 		testing.ContextLogf(ctx, "Set AP wp to %s", enableStr)
-		if _, err := apWPFunc(ctx); err != nil {
+		if _, err := futilityInstance.SetWP(ctx, enable); err != nil {
 			return errors.Wrapf(err, "failed to set AP wp to %s", enableStr)
 		}
 	} else {
