@@ -6,6 +6,7 @@ package cellular
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -15,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/local/cellular"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast/core/ctxutil"
@@ -111,6 +113,10 @@ func PSimNetworkName(ctx context.Context, s *testing.State) {
 		s.Fatal("PSim network UI does not match connection state: ", networkStatusMessage)
 	}
 
+	// TODO(b/333458823): Remove this function once we no longer need it for debugging.
+	recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn)
+	defer uiauto.StopAndSaveOnError(cleanupCtx, recorder, filepath.Join(s.OutDir(), "recording.webm"), s.HasError)
+
 	// Check if the network name is displayed correctly in the Mobile data subpage.
 	app, err = ossettings.OpenMobileDataSubpage(ctx, tconn, cr)
 	if err != nil {
@@ -127,7 +133,7 @@ func PSimNetworkName(ctx context.Context, s *testing.State) {
 	var title string
 	if err := app.EvalJSWithShadowPiercer(ctx, cr, expr, &title); err != nil {
 		// TODO(b/333458823): Remove this function once we no longer need it for debugging.
-		if err := dumpNetworkListHTMLTree(cleanupCtx, app, cr, s.OutDir(), "html_content.txt"); err != nil {
+		if err := dumpNetworkListHTMLTree(cleanupCtx, app, cr, s.OutDir()); err != nil {
 			s.Logf("Failed to dump network list HTML: %q", err)
 		}
 		s.Fatal("Failed to fetch title: ", err)
@@ -142,7 +148,7 @@ func PSimNetworkName(ctx context.Context, s *testing.State) {
 
 // dumpNetworkListHTMLTree dumps the HTML tree of the network list.
 // TODO(b/333458823): Remove this function once we no longer need it for debugging.
-func dumpNetworkListHTMLTree(ctx context.Context, app *ossettings.OSSettings, cr *chrome.Chrome, outDir, fileName string) (retErr error) {
+func dumpNetworkListHTMLTree(ctx context.Context, app *ossettings.OSSettings, cr *chrome.Chrome, outDir string) (retErr error) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
@@ -153,18 +159,43 @@ func dumpNetworkListHTMLTree(ctx context.Context, app *ossettings.OSSettings, cr
 		}
 	}(cleanupCtx)
 
-	expr := `var nodes = shadowPiercingQueryAll('network-list-item');
-	         var list = [].slice.call(nodes);
-	         var innertext = list.map(function(e) { return e.shadowRoot.innerHTML; }).join("\n");
-	         innertext;`
+	const (
+		// Dump all network-list-items, expect to see all title for all eSIM/pSIM profile
+		exprAllItems = `var nodes = shadowPiercingQueryAll('network-list-item');
+				var list = [].slice.call(nodes);
+				var innertext = list.map(function(e) { return e.shadowRoot.innerHTML; }).join("\n");
+				innertext;`
 
-	var out string
-	if err := app.EvalJSWithShadowPiercer(ctx, cr, expr, &out); err != nil {
-		return errors.Wrap(err, "failed to get network list items")
-	}
+		// Dump the HTML element under psimNetworkList, expect to see at least one networkList which should include a network-list-item.
+		exprPSimNetworkList = `var nodes = shadowPiercingQueryAll('network-list#psimNetworkList');
+				var list = [].slice.call(nodes);
+				var innertext = list.map(function(e) { return e.shadowRoot.innerHTML; }).join("\n");
+				innertext;`
 
-	if err := os.WriteFile(filepath.Join(outDir, fileName), []byte(out), 0644); err != nil {
-		return errors.Wrap(err, "failed to write data")
+		// Dump the HTML element under network-list-items that are under psimNetworkList, expect to see the network title.
+		exprPSimItems = `var nodes = shadowPiercingQueryAll('network-list#psimNetworkList network-list-item');
+				var list = [].slice.call(nodes);
+				var innertext = list.map(function(e) { return e.shadowRoot.innerHTML; }).join("\n");
+				innertext;`
+	)
+
+	for _, s := range []struct {
+		title    string
+		expr     string
+		filename string
+	}{
+		{"all network list items", exprAllItems, "network_list_items_html_content.txt"},
+		{"psim network list", exprPSimNetworkList, "psim_network_list_html_content.txt"},
+		{"network list item under psim network list", exprPSimItems, "psim_items_html_content.txt"},
+	} {
+		var result string
+		if err := app.EvalJSWithShadowPiercer(ctx, cr, s.expr, &result); err != nil {
+			testing.ContextLogf(ctx, "Failed to get %s: %v", s.title, err)
+		}
+		out := fmt.Sprintf("Dump %s: \n%s\n", s.title, result)
+		if err := os.WriteFile(filepath.Join(outDir, s.filename), []byte(out), 0644); err != nil {
+			return errors.Wrapf(err, "failed to write data to %s.txt", s.filename)
+		}
 	}
 
 	return nil
