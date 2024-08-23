@@ -6,9 +6,12 @@ package camera
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptest"
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
@@ -29,17 +32,18 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CCAUIPolicy,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies if CCA is unusable when the camera app is disabled by the Adenterprise policy",
 		Contacts:     []string{"chromeos-camera-app-eng@google.com", "wtlee@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:hw_agnostic", "group:mainline", "informational"},
 		SoftwareDeps: []string{"camera_app", "chrome"},
-		Fixture:      "chromePolicyLoggedIn",
+		Fixture:      fixture.ChromePolicyLoggedIn,
+		Data:         []string{"video_capture_allowed.html"},
+		Timeout:      4 * time.Minute,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.SystemFeaturesDisableList{Val: []string{"camera"}}, pci.VerifiedFunctionalityUI),
-			pci.SearchFlag(&policy.VideoCaptureAllowed{Val: false}, pci.VerifiedFunctionalityJS),
-			pci.SearchFlag(&policy.VideoCaptureAllowedUrls{Val: []string{"chrome://camera-app/*"}}, pci.VerifiedFunctionalityJS),
+			pci.SearchFlag(&policy.VideoCaptureAllowed{}, pci.VerifiedFunctionalityJS),
+			pci.SearchFlag(&policy.VideoCaptureAllowedUrls{}, pci.VerifiedFunctionalityJS),
 		},
 	})
 }
@@ -51,6 +55,11 @@ func CCAUIPolicy(ctx context.Context, s *testing.State) {
 
 	outDir := s.OutDir()
 
+	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
+	defer server.Close()
+
+	testVideoCaptureURL := server.URL + "/video_capture_allowed.html"
+
 	subTestTimeout := 30 * time.Second
 	for _, tst := range []struct {
 		name     string
@@ -58,19 +67,39 @@ func CCAUIPolicy(ctx context.Context, s *testing.State) {
 		policy   []policy.Policy
 	}{{
 		"testNoPolicy",
-		testNoPolicy,
+		testCameraAppWork,
 		[]policy.Policy{},
 	}, {
-		"testBlockCameraFeature",
-		testBlockCameraFeature,
+		"testBlockCameraApp",
+		testCameraAppBlocked,
 		[]policy.Policy{&policy.SystemFeaturesDisableList{Val: []string{"camera"}}},
 	}, {
-		"testBlockVideoCapture",
-		testBlockVideoCapture,
+		"testVideoCaptureAllowedUnset",
+		testCameraAppWork,
+		[]policy.Policy{&policy.VideoCaptureAllowed{Stat: policy.StatusUnset}},
+	}, {
+		"testVideoCaptureAllowedWithAllowedURL",
+		func(ctx context.Context, cr *chrome.Chrome, outDir string) error {
+			return testVideoCaptureShowPrompt(ctx, cr, outDir, testVideoCaptureURL, false)
+		},
+		[]policy.Policy{&policy.VideoCaptureAllowedUrls{Val: []string{testVideoCaptureURL}}},
+	}, {
+		"testVideoCaptureAllowedWithUnallowedURL",
+		func(ctx context.Context, cr *chrome.Chrome, outDir string) error {
+			return testVideoCaptureShowPrompt(ctx, cr, outDir, testVideoCaptureURL, true)
+		},
+		[]policy.Policy{&policy.VideoCaptureAllowedUrls{Val: []string{"https://my_corp_site.com/conference.html"}}},
+	}, {
+		"testVideoCaptureAllowed",
+		testCameraAppWork,
+		[]policy.Policy{&policy.VideoCaptureAllowed{Val: true}},
+	}, {
+		"testVideoCaptureBlocked",
+		testPreviewNotActive,
 		[]policy.Policy{&policy.VideoCaptureAllowed{Val: false}},
 	}, {
-		"testAllowCCA",
-		testNoPolicy,
+		"testVideoCaptureBlockedButAllowCCA",
+		testCameraAppWork,
 		[]policy.Policy{&policy.VideoCaptureAllowed{Val: false}, &policy.VideoCaptureAllowedUrls{Val: []string{"chrome://camera-app/*"}}},
 	}} {
 		subTestCtx, cancel := context.WithTimeout(ctx, subTestTimeout)
@@ -102,8 +131,8 @@ func servePolicy(ctx context.Context, fdms *fakedms.FakeDMS, cr *chrome.Chrome, 
 	return nil
 }
 
-// testNoPolicy tests without any policy and expects CCA works fine.
-func testNoPolicy(ctx context.Context, cr *chrome.Chrome, outDir string) error {
+// testCameraAppWork tests whether CCA works normally.
+func testCameraAppWork(ctx context.Context, cr *chrome.Chrome, outDir string) error {
 	tb, err := testutil.NewTestBridge(ctx, cr, testutil.UseFakeHALCamera)
 	if err != nil {
 		return errors.Wrap(err, "failed to construct test bridge")
@@ -117,9 +146,9 @@ func testNoPolicy(ctx context.Context, cr *chrome.Chrome, outDir string) error {
 	return app.Close(ctx)
 }
 
-// testBlockCameraFeature tries to block camera feature and expects a message
+// testCameraAppBlocked tests whether the camera app is blocked and a message
 // box "Camera is blocked" will show when launching CCA through the launcher.
-func testBlockCameraFeature(ctx context.Context, cr *chrome.Chrome, outDir string) error {
+func testCameraAppBlocked(ctx context.Context, cr *chrome.Chrome, outDir string) error {
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to get test extension connection")
@@ -151,9 +180,8 @@ func testBlockCameraFeature(ctx context.Context, cr *chrome.Chrome, outDir strin
 	return nil
 }
 
-// testBlockVideoCapture tries to block video capture and expects CCA fails to
-// initialize since the preview won't show.
-func testBlockVideoCapture(ctx context.Context, cr *chrome.Chrome, outDir string) error {
+// testPreviewNotActive tests whether the preview will never become active.
+func testPreviewNotActive(ctx context.Context, cr *chrome.Chrome, outDir string) error {
 	tb, err := testutil.NewTestBridge(ctx, cr, testutil.UseFakeHALCamera)
 	if err != nil {
 		return errors.Wrap(err, "failed to construct test bridge")
@@ -175,6 +203,36 @@ func testBlockVideoCapture(ctx context.Context, cr *chrome.Chrome, outDir string
 		return errors.New("failed to block video capture by policy")
 	} else if !strings.Contains(err.Error(), cca.ErrVideoNotActive) {
 		return errors.Wrap(err, "unexpected error when blocking video capture")
+	}
+	return nil
+}
+
+// testVideoCaptureShowPrompt tests whether a prompt will show up to request for
+// user's permission before the video capture starts.
+func testVideoCaptureShowPrompt(ctx context.Context, cr *chrome.Chrome, outDir, testURL string, shouldShowPrompt bool) error {
+	// Open the test website.
+	conn, err := cr.NewConn(ctx, testURL)
+	if err != nil {
+		return errors.Wrap(err, "failed to open website")
+	}
+	defer conn.Close()
+
+	// Connect to Test API to use it with the UI library.
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to create Test API connection")
+	}
+	ui := uiauto.New(tconn)
+
+	allowButton := nodewith.Name("Allow").Role(role.Button)
+	if shouldShowPrompt {
+		if err := ui.WithTimeout(10 * time.Second).WaitUntilExists(allowButton)(ctx); err != nil {
+			return errors.Wrap(err, "failed to find the video capture prompt dialog")
+		}
+	} else {
+		if err := ui.EnsureGoneFor(allowButton, 10*time.Second)(ctx); err != nil {
+			return errors.Wrap(err, "failed to make sure no video capture prompt dialog shows")
+		}
 	}
 	return nil
 }
