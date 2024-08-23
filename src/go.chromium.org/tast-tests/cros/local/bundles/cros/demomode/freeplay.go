@@ -46,40 +46,42 @@ func init() {
 		SoftwareDeps: []string{"chrome", "chrome_internal", "arc", "tpm2", "crossystem"},
 		Timeout:      5 * time.Minute,
 		Params: []testing.Param{{
-			Name: "alpha",
-			Val: freeplayTestParams{
-				dmServerURL:                        policy.DMServerAlphaURL,
-				downloadDemoModeAppComponent:       true,
-				downloadDemoModeResourcesComponent: true,
-				verifyWebApps:                      true,
-			},
-			// Exclude the bronze tier (RAM memory <= 3GB) devices from the android
-			// apps tast test because their demo mode resources component does not
-			// contain android app APKs.
-			ExtraHardwareDeps: hwdep.D(hwdep.MinMemory(3073)),
-			Fixture:           fixture.PostDemoModeOOBEAlpha,
-			// TODO (b/346725308): Refactor to use utility and known dependency list.
-			ExtraSearchFlags: []*testing.StringPair{{
-				Key: "external_dependency", Value: "DMServerAlpha",
-			}},
-		}, {
-			Name: "prod",
-			Val: freeplayTestParams{
-				dmServerURL:                        policy.DMServerProdURL,
-				downloadDemoModeAppComponent:       true,
-				downloadDemoModeResourcesComponent: true,
-				verifyWebApps:                      true,
-			},
-			// Exclude the bronze tier (RAM memory <= 3GB) devices from the android
-			// apps tast test because their demo mode resources component does not
-			// contain android app APKs.
-			ExtraHardwareDeps: hwdep.D(hwdep.MinMemory(3073)),
-			Fixture:           fixture.PostDemoModeOOBEProd,
-			// TODO (b/346725308): Refactor to use utility and known dependency list.
-			ExtraSearchFlags: []*testing.StringPair{{
-				Key: "external_dependency", Value: "DMServerProd",
-			}},
-		}, {
+			/* TODO(b/348069332): Re-enable "alpha" nd "prod" once the Oamaha component
+								  error is fixed.
+				Name: "alpha",
+				Val: freeplayTestParams{
+					dmServerURL:                        policy.DMServerAlphaURL,
+					downloadDemoModeAppComponent:       true,
+					downloadDemoModeResourcesComponent: true,
+					verifyWebApps:                      true,
+				},
+				// Exclude the bronze tier (RAM memory <= 3GB) devices from the android
+				// apps tast test because their demo mode resources component does not
+				// contain android app APKs.
+				ExtraHardwareDeps: hwdep.D(hwdep.MinMemory(3073)),
+				Fixture:           fixture.PostDemoModeOOBEAlpha,
+				// TODO (b/346725308): Refactor to use utility and known dependency list.
+				ExtraSearchFlags: []*testing.StringPair{{
+					Key: "external_dependency", Value: "DMServerAlpha",
+				}},
+			}, {
+				Name: "prod",
+				Val: freeplayTestParams{
+					dmServerURL:                        policy.DMServerProdURL,
+					downloadDemoModeAppComponent:       true,
+					downloadDemoModeResourcesComponent: true,
+					verifyWebApps:                      true,
+				},
+				// Exclude the bronze tier (RAM memory <= 3GB) devices from the android
+				// apps tast test because their demo mode resources component does not
+				// contain android app APKs.
+				ExtraHardwareDeps: hwdep.D(hwdep.MinMemory(3073)),
+				Fixture:           fixture.PostDemoModeOOBEProd,
+				// TODO (b/346725308): Refactor to use utility and known dependency list.
+				ExtraSearchFlags: []*testing.StringPair{{
+					Key: "external_dependency", Value: "DMServerProd",
+				}},
+			}, {*/
 			Name: "web_apps_prod",
 			Val: freeplayTestParams{
 				dmServerURL: policy.DMServerProdURL,
