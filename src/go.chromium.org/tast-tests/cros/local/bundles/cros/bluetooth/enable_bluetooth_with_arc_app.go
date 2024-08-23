@@ -40,13 +40,14 @@ func init() {
 			"chromeos-connectivity-cienet-external@google.com",
 		},
 		// ChromeOS > Software > System Services > Connectivity > Bluetooth
-		BugComponent:   "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
-		LifeCycleStage: testing.LifeCycleInDevelopment,
-		Attr:           []string{"group:bluetooth", "bluetooth_floss_flaky"},
-		SoftwareDeps:   []string{"chrome", "arc"},
-		TestBedDeps:    []string{tbdep.BluetoothStateNormal},
-		Data:           []string{apkName},
-		Fixture:        "arcBootedWithBluetoothFloss",
+		BugComponent:    "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
+		LifeCycleStage:  testing.LifeCycleInDevelopment,
+		Attr:            []string{"group:bluetooth", "bluetooth_floss_flaky"},
+		SoftwareDeps:    []string{"chrome", "arc"},
+		TestBedDeps:     []string{tbdep.BluetoothStateNormal},
+		Data:            []string{apkName},
+		Fixture:         "arcBootedWithBluetoothFloss",
+		VariantCategory: `{"name": "BT_Chipset_Kernel"}`,
 		Params: []testing.Param{{
 			Name:              "android_p",
 			ExtraSoftwareDeps: []string{androidP},

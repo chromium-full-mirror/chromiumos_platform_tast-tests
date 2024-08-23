@@ -43,6 +43,7 @@ func init() {
 			"tast.cros.ui.AutomationService",
 			"tast.cros.ui.ChromeUIService",
 		},
+		VariantCategory: `{"name": "BT_Chipset_Kernel"}`,
 		Params: []testing.Param{{
 			Name: "forget_connected_device",
 			Val:  true, /* expectDeviceToBeConnected */

@@ -28,11 +28,12 @@ func init() {
 			"cros-connectivity@google.com",
 			"chadduffin@chromium.org",
 		},
-		BugComponent: "b:1131776", // ChromeOS > Software > System Services > Connectivity > Bluetooth
-		Attr:         []string{"group:bluetooth", "bluetooth_floss"},
-		SoftwareDeps: []string{"chrome"},
-		Fixture:      "bluetoothEnabledWithFloss",
-		TestBedDeps:  []string{tbdep.BluetoothStateNormal},
+		BugComponent:    "b:1131776", // ChromeOS > Software > System Services > Connectivity > Bluetooth
+		Attr:            []string{"group:bluetooth", "bluetooth_floss"},
+		SoftwareDeps:    []string{"chrome"},
+		Fixture:         "bluetoothEnabledWithFloss",
+		TestBedDeps:     []string{tbdep.BluetoothStateNormal},
+		VariantCategory: `{"name": "BT_Chipset_Kernel"}`,
 	})
 }
 

@@ -45,7 +45,8 @@ func init() {
 			"tast.cros.bluetooth.BluetoothUIService",
 			"tast.cros.chrome.uiauto.quicksettings.QuickSettingsService",
 		},
-		HardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Chromebase, hwdep.Chromebox, hwdep.Chromebit)),
+		HardwareDeps:    hwdep.D(hwdep.FormFactor(hwdep.Chromebase, hwdep.Chromebox, hwdep.Chromebit)),
+		VariantCategory: `{"name": "BT_Chipset_Kernel"}`,
 		Params: []testing.Param{{
 			Name:      "floss_disabled",
 			Fixture:   "chromeLoggedInWith2BTPeersBluetoothWarningEnabledFlossDisabled",

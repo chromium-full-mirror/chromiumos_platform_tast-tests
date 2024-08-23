@@ -32,7 +32,8 @@ func init() {
 		TestBedDeps:  []string{tbdep.BluetoothStateNormal},
 		// Skip on form factors where a warning dialog may be shown when disabling Bluetooth due to all known HID devices being connected via Bluetooth.
 		// These form factors are covered by another test see b/319492526
-		HardwareDeps: hwdep.D(hwdep.SkipOnFormFactor(hwdep.Chromebase, hwdep.Chromebox, hwdep.Chromebit)),
+		HardwareDeps:    hwdep.D(hwdep.SkipOnFormFactor(hwdep.Chromebase, hwdep.Chromebox, hwdep.Chromebit)),
+		VariantCategory: `{"name": "BT_Chipset_Kernel"}`,
 	})
 }
 

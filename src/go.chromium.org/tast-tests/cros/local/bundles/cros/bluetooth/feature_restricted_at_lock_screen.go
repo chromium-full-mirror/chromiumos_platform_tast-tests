@@ -31,10 +31,11 @@ func init() {
 			"chadduffin@chromium.org",
 		},
 		// ChromeOS > Software > System Services > Connectivity > Bluetooth
-		BugComponent: "b:1131776",
-		Attr:         []string{"group:bluetooth"},
-		SoftwareDeps: []string{"chrome"},
-		TestBedDeps:  []string{tbdep.BluetoothStateNormal},
+		BugComponent:    "b:1131776",
+		Attr:            []string{"group:bluetooth"},
+		SoftwareDeps:    []string{"chrome"},
+		TestBedDeps:     []string{tbdep.BluetoothStateNormal},
+		VariantCategory: `{"name": "BT_Chipset_Kernel"}`,
 		Params: []testing.Param{{
 			Name:      "floss_disabled",
 			Fixture:   "bluetoothEnabledWithBlueZ",

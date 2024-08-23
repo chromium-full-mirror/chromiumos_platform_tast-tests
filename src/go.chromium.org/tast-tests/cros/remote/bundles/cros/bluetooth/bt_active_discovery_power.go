@@ -41,8 +41,9 @@ func init() {
 			"tast.cros.power.DeviceSetupService",
 			"tast.cros.power.RecorderService",
 		},
-		HardwareDeps: hwdep.D(hwdep.Battery()),
-		Timeout:      20 * time.Minute,
+		HardwareDeps:    hwdep.D(hwdep.Battery()),
+		Timeout:         20 * time.Minute,
+		VariantCategory: `{"name": "BT_Chipset_Kernel"}`,
 		Params: []testing.Param{
 			{
 				Name:      "floss_disabled_le_keyboard",

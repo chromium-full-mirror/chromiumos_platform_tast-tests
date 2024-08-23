@@ -29,12 +29,13 @@ func init() {
 		Contacts: []string{
 			"cros-connectivity@google.com",
 		},
-		BugComponent: "b:1131776", // ChromeOS > Software > System Services > Connectivity > Bluetooth
-		Attr:         []string{"group:bluetooth"},
-		TestBedDeps:  []string{tbdep.Wificell, tbdep.BluetoothStateNormal, tbdep.WorkingBluetoothPeers(1)},
-		SoftwareDeps: []string{"chrome"},
-		ServiceDeps:  []string{"tast.cros.bluetooth.BluetoothService"},
-		Timeout:      1 * time.Minute,
+		BugComponent:    "b:1131776", // ChromeOS > Software > System Services > Connectivity > Bluetooth
+		Attr:            []string{"group:bluetooth"},
+		TestBedDeps:     []string{tbdep.Wificell, tbdep.BluetoothStateNormal, tbdep.WorkingBluetoothPeers(1)},
+		SoftwareDeps:    []string{"chrome"},
+		ServiceDeps:     []string{"tast.cros.bluetooth.BluetoothService"},
+		Timeout:         1 * time.Minute,
+		VariantCategory: `{"name": "BT_Chipset_Kernel"}`,
 		Params: []testing.Param{
 			{
 				Name:      "floss_disabled__le_keyboard",

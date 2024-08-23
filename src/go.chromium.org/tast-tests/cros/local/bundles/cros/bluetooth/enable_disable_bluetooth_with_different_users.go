@@ -39,14 +39,15 @@ func init() {
 			"cros-connectivity@google.com",
 			"chadduffin@google.com",
 		},
-		BugComponent:   "b:1131776", // ChromeOS > Software > System Services > Connectivity > Bluetooth
-		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		Attr:           []string{"group:bluetooth"},
-		SoftwareDeps:   []string{"chrome"},
-		TestBedDeps:    []string{tbdep.BluetoothStateNormal},
-		HardwareDeps:   hwdep.D(hwdep.Bluetooth()),
-		Fixture:        fixture.CleanOwnership,
-		VarDeps:        []string{"ui.signinProfileTestExtensionManifestKey"},
+		BugComponent:    "b:1131776", // ChromeOS > Software > System Services > Connectivity > Bluetooth
+		LifeCycleStage:  testing.LifeCycleOwnerMonitored,
+		Attr:            []string{"group:bluetooth"},
+		SoftwareDeps:    []string{"chrome"},
+		TestBedDeps:     []string{tbdep.BluetoothStateNormal},
+		HardwareDeps:    hwdep.D(hwdep.Bluetooth()),
+		Fixture:         fixture.CleanOwnership,
+		VarDeps:         []string{"ui.signinProfileTestExtensionManifestKey"},
+		VariantCategory: `{"name": "BT_Chipset_Kernel"}`,
 		Params: []testing.Param{
 			{
 				Name: "floss_disabled",

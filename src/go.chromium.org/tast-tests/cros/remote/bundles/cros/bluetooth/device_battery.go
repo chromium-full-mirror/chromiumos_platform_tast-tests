@@ -39,6 +39,7 @@ func init() {
 			"tast.cros.bluetooth.BluetoothService",
 			"tast.cros.bluetooth.BluetoothUIService",
 		},
+		VariantCategory: `{"name": "BT_Chipset_Kernel"}`,
 		Params: []testing.Param{{
 			Name: "le_keyboard",
 			Val:  cbt.DeviceTypeLEKeyboard,

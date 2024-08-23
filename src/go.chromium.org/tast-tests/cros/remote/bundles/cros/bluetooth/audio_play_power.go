@@ -40,8 +40,9 @@ func init() {
 			"tast.cros.power.RecorderService",
 			"tast.cros.ui.AudioService",
 		},
-		HardwareDeps: hwdep.D(hwdep.Battery()),
-		Timeout:      20 * time.Minute,
+		HardwareDeps:    hwdep.D(hwdep.Battery()),
+		Timeout:         20 * time.Minute,
+		VariantCategory: `{"name": "BT_Chipset_Kernel"}`,
 		Params: []testing.Param{
 			{
 				Name:      "floss_disabled",

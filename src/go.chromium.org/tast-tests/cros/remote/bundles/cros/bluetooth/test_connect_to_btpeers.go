@@ -23,11 +23,12 @@ func init() {
 			"chromeos-connectivity-engprod@google.com",
 			"shijinabraham@google.com",
 		},
-		BugComponent: "b:976419", // ChromeOS > EngProd > Platform > Connectivity
-		Attr:         []string{"group:bluetooth"},
-		TestBedDeps:  []string{tbdep.Wificell, tbdep.BluetoothStateNormal, tbdep.WorkingBluetoothPeers(2)},
-		SoftwareDeps: []string{"chrome"},
-		Timeout:      time.Second * 15,
+		BugComponent:    "b:976419", // ChromeOS > EngProd > Platform > Connectivity
+		Attr:            []string{"group:bluetooth"},
+		TestBedDeps:     []string{tbdep.Wificell, tbdep.BluetoothStateNormal, tbdep.WorkingBluetoothPeers(2)},
+		SoftwareDeps:    []string{"chrome"},
+		Timeout:         time.Second * 15,
+		VariantCategory: `{"name": "BT_Chipset_Kernel"}`,
 		Params: []testing.Param{
 			{
 				Name:      "floss_disabled",

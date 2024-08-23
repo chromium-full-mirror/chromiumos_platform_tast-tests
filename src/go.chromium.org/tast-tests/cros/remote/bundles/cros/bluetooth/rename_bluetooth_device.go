@@ -38,6 +38,7 @@ func init() {
 			"tast.cros.bluetooth.BluetoothUIService",
 			"tast.cros.browser.ChromeService",
 		},
+		VariantCategory: `{"name": "BT_Chipset_Kernel"}`,
 		Params: []testing.Param{{
 			Name: "device_connected",
 			Val:  true, // expectDeviceIsConnected

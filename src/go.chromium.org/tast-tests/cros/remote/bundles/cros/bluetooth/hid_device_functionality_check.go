@@ -37,12 +37,13 @@ func init() {
 			"edgar.change@cienet.com",
 			"chromeos-connectivity-cienet-external@google.com",
 		},
-		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
-		Attr:         []string{"group:bluetooth", "bluetooth_floss"},
-		SoftwareDeps: []string{"chrome"},
-		Fixture:      "chromeLoggedInWith1BTPeerFlossEnabled",
-		TestBedDeps:  []string{tbdep.Wificell, tbdep.BluetoothStateNormal, tbdep.WorkingBluetoothPeers(1)},
-		ServiceDeps:  []string{"tast.cros.bluetooth.BluetoothService", "tast.cros.bluetooth.BluetoothUIService"},
+		BugComponent:    "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
+		Attr:            []string{"group:bluetooth", "bluetooth_floss"},
+		SoftwareDeps:    []string{"chrome"},
+		Fixture:         "chromeLoggedInWith1BTPeerFlossEnabled",
+		TestBedDeps:     []string{tbdep.Wificell, tbdep.BluetoothStateNormal, tbdep.WorkingBluetoothPeers(1)},
+		ServiceDeps:     []string{"tast.cros.bluetooth.BluetoothService", "tast.cros.bluetooth.BluetoothUIService"},
+		VariantCategory: `{"name": "BT_Chipset_Kernel"}`,
 		Params: []testing.Param{{
 			Name: "keyboard",
 			Val:  cbt.DeviceTypeKeyboard,

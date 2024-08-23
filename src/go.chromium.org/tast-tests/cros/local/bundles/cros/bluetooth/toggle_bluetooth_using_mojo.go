@@ -22,11 +22,12 @@ func init() {
 			"alfredyu@cienet.com",
 			"chromeos-connectivity-cienet-external@google.com",
 		},
-		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
-		Attr:         []string{"group:bluetooth", "bluetooth_sa", "bluetooth_floss"},
-		SoftwareDeps: []string{"chrome"},
-		Fixture:      "bluetoothMojoJSObjectWithFloss",
-		TestBedDeps:  []string{tbdep.BluetoothStateNormal},
+		BugComponent:    "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
+		Attr:            []string{"group:bluetooth", "bluetooth_sa", "bluetooth_floss"},
+		SoftwareDeps:    []string{"chrome"},
+		Fixture:         "bluetoothMojoJSObjectWithFloss",
+		TestBedDeps:     []string{tbdep.BluetoothStateNormal},
+		VariantCategory: `{"name": "BT_Chipset_Kernel"}`,
 	})
 }
 

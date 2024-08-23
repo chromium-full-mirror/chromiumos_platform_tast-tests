@@ -36,7 +36,8 @@ func init() {
 			"tast.cros.ui.AudioService",
 			"tast.cros.chrome.uiauto.quicksettings.QuickSettingsService",
 		},
-		Timeout: 5 * time.Minute,
+		Timeout:         5 * time.Minute,
+		VariantCategory: `{"name": "BT_Chipset_Kernel"}`,
 		Params: []testing.Param{
 			{
 				Name:      "floss_disabled",
