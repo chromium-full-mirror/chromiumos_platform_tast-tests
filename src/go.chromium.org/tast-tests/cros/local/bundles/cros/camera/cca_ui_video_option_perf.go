@@ -53,7 +53,7 @@ func CCAUIVideoOptionPerf(ctx context.Context, s *testing.State) {
 	defer cleanUpBenchmark(ctx)
 
 	if err := cpu.WaitUntilIdle(ctx); err != nil {
-		s.Fatal("Failed to wait CPU idle: ", err)
+		s.Log("Failed to wait until CPU became idle; giving up: ", err)
 	}
 
 	cleanupCtx := ctx

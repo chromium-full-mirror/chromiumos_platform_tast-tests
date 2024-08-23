@@ -46,7 +46,7 @@ func CCAUIDocumentScanningPerf(ctx context.Context, s *testing.State) {
 	switchScene := s.FixtValue().(cca.FixtureData).SwitchScene
 
 	if err := cpu.WaitUntilIdle(ctx); err != nil {
-		s.Log("Failed to wait until CPU became idle; giving up")
+		s.Log("Failed to wait until CPU became idle; giving up: ", err)
 	}
 
 	p := perf.NewValues()

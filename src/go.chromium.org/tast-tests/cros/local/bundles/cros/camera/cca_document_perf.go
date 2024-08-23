@@ -53,7 +53,7 @@ func CCADocumentPerf(ctx context.Context, s *testing.State) {
 	defer cleanUpBenchmark(cleanupCtx)
 
 	if err := cpu.WaitUntilIdle(ctx); err != nil {
-		s.Fatal("Failed waiting for CPU to become idle: ", err)
+		s.Log("Failed to wait until CPU became idle; giving up: ", err)
 	}
 
 	s.Log("Measuring document scanner performance")

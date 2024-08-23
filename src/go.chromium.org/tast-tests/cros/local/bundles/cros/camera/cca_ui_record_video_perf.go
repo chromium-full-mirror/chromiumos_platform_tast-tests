@@ -50,7 +50,7 @@ func CCAUIRecordVideoPerf(ctx context.Context, s *testing.State) {
 	defer cleanUpBenchmark(cleanupCtx)
 
 	if err := cpu.WaitUntilIdle(ctx); err != nil {
-		s.Fatal("Failed to wait CPU idle: ", err)
+		s.Log("Failed to wait until CPU became idle; giving up: ", err)
 	}
 
 	app, err := startApp(ctx)

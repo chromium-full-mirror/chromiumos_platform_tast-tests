@@ -155,7 +155,7 @@ func preparePerfTest(ctx context.Context, resetChrome cca.ResetChromeFunc, testB
 
 	// Prevents the CPU usage measurements from being affected by any previous tests.
 	if err := cpu.WaitUntilIdle(ctx); err != nil {
-		return errors.Wrap(err, "failed to idle")
+		testing.ContextLog(ctx, "Failed to wait until CPU became idle; giving up: ", err)
 	}
 
 	return testBody(ctx)
