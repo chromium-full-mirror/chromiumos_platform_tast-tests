@@ -132,8 +132,7 @@ func init() {
 			Val: bootModeTestParams{
 				bootToMode: fwCommon.BootModeDev,
 			},
-			// TODO: When stable, change firmware_unstable to "firmware_bios" + "firmware_level2".
-			ExtraAttr: []string{"firmware_unstable", "firmware_usb"},
+			ExtraAttr: []string{"firmware_bios", "firmware_usb", "firmware_level2"},
 			Timeout:   2 * time.Hour,
 		}, {
 			Name:    "dev_gbb_to_rec",
@@ -151,8 +150,7 @@ func init() {
 				bootToMode:    fwCommon.BootModeDev,
 				allowGBBForce: true,
 			},
-			// TODO: When stable, change firmware_unstable to "firmware_bios" + "firmware_level2".
-			ExtraAttr: []string{"firmware_unstable", "firmware_usb"},
+			ExtraAttr: []string{"firmware_bios", "firmware_usb", "firmware_level2"},
 			Timeout:   2 * time.Hour,
 		}, {
 			// Verifies that we can go from normal -> dev -> normal without GBB flags.
