@@ -28,6 +28,7 @@ func init() {
 			"group:mainline",
 			"group:hw_agnostic",
 			"informational",
+			"group:criticalstaging",
 		},
 		SoftwareDeps: []string{"chrome"},
 	})
