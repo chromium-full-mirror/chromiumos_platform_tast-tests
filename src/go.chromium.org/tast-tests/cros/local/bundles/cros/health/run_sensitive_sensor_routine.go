@@ -8,15 +8,14 @@ package health
 
 import (
 	"context"
+	"encoding/json"
 
 	"go.chromium.org/tast-tests/cros/local/croshealthd"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
 type sensitiveSensorRoutineTestParams struct {
-	// If true, check if the routine is passed. Otherwise, check if the routine is
-	// finished.
-	CheckRoutinePassed bool
 	// If true, check the v2 routine. Otherwise, check the v1 routine.
 	CheckRoutineV2 bool
 }
@@ -35,41 +34,86 @@ func init() {
 		Attr:         []string{"group:mainline"},
 		Fixture:      "crosHealthdRunning",
 		Params: []testing.Param{{
-			Name: "v1_finished",
+			Name: "v1",
 			Val: sensitiveSensorRoutineTestParams{
-				CheckRoutinePassed: false,
-				CheckRoutineV2:     false,
+				CheckRoutineV2: false,
 			},
 			// TODO(b/280388091): Promote tast to critical
 			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
-			Name: "v1_passed",
+			Name: "v2",
 			Val: sensitiveSensorRoutineTestParams{
-				CheckRoutinePassed: true,
-				CheckRoutineV2:     false,
+				CheckRoutineV2: true,
 			},
 			// TODO(b/280388091): Promote tast to critical
-			ExtraAttr: []string{"informational"},
-		}, {
-			Name: "v2_finished",
-			Val: sensitiveSensorRoutineTestParams{
-				CheckRoutinePassed: false,
-				CheckRoutineV2:     true,
-			},
-		}, {
-			Name: "v2_passed",
-			Val: sensitiveSensorRoutineTestParams{
-				CheckRoutinePassed: true,
-				CheckRoutineV2:     true,
-			},
-			// TODO(b/280388091): Promote tast to critical
-			ExtraAttr: []string{"informational"},
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}},
 	})
 }
 
+type sensitiveSensorInfo struct {
+	ID       int32    `json:"id"`
+	Types    []string `json:"types"`
+	Channels []string `json:"channels"`
+}
+
+type sensitiveSensorReport struct {
+	PassedSensors        []sensitiveSensorInfo `json:"passed_sensors"`
+	FailedSensors        []sensitiveSensorInfo `json:"failed_sensors"`
+	SensorPresenceStatus string                `json:"sensor_presence_status"`
+}
+
+type sensitiveSensorRoutineOutput struct {
+	BaseAccelerometer sensitiveSensorReport `json:"base_accelerometer"`
+	LidAccelerometer  sensitiveSensorReport `json:"lid_accelerometer"`
+	BaseGyroscope     sensitiveSensorReport `json:"base_gyroscope"`
+	LidGyroscope      sensitiveSensorReport `json:"lid_gyroscope"`
+	BaseMagnetometer  sensitiveSensorReport `json:"base_magnetometer"`
+	LidMagnetometer   sensitiveSensorReport `json:"lid_magnetometer"`
+	BaseGravitySensor sensitiveSensorReport `json:"base_gravity_sensor"`
+	LidGravitySensor  sensitiveSensorReport `json:"lid_gravity_sensor"`
+}
+
 func buildSensitiveSensorRoutineArgs(ctx context.Context) ([]string, error) {
 	return []string{"sensitive_sensor_v2"}, nil
+}
+
+func isExpectedSensorStatus(report sensitiveSensorReport) bool {
+	// TODO(b/361720963): Check `report.FailedSensors` if we can stability monitor
+	// changes of sensor value in the lab.
+	// We don't check `report.FailedSensors` since some sensros will always report
+	// the same value without user actions. That will make the routine failed with
+	// non-empty `report.FailedSensors` on some devices in lab.
+	return report.SensorPresenceStatus == "Matched" || report.SensorPresenceStatus == "Not Configured"
+}
+
+func verifySensitiveSensorRoutineResult(result croshealthd.RoutineResultV2) error {
+	if result.Progress != 100 {
+		return errors.Errorf("unexpected progress: got %d, want 100; output = %q", result.Progress, result.Output)
+	}
+
+	if result.Status == croshealthd.StatusFailed {
+		var routineOutput sensitiveSensorRoutineOutput
+		if err := json.Unmarshal([]byte(result.Output), &routineOutput); err != nil {
+			return errors.Errorf("failed to unmarshal the routine output: %q", result.Output)
+		}
+
+		for _, report := range []sensitiveSensorReport{
+			routineOutput.BaseAccelerometer, routineOutput.LidAccelerometer,
+			routineOutput.BaseGyroscope, routineOutput.LidGyroscope,
+			routineOutput.BaseMagnetometer, routineOutput.LidMagnetometer,
+			routineOutput.BaseGravitySensor, routineOutput.LidGravitySensor} {
+			if !isExpectedSensorStatus(report) {
+				return errors.Errorf("unexpected routine output: %q", result.Output)
+			}
+		}
+		return nil
+	}
+
+	if result.Status != croshealthd.StatusPassed {
+		return errors.Errorf("unexpected status: got %q, want %q; output = %q", result.Status, croshealthd.StatusPassed, result.Output)
+	}
+	return nil
 }
 
 // RunSensitiveSensorRoutine runs the sensitive sensor routine.
@@ -77,15 +121,10 @@ func RunSensitiveSensorRoutine(ctx context.Context, s *testing.State) {
 	param := s.Param().(sensitiveSensorRoutineTestParams)
 
 	if param.CheckRoutineV2 {
-		verifier := croshealthd.VerifyRoutineFinishedV2
-		if param.CheckRoutinePassed {
-			verifier = croshealthd.VerifyRoutinePassedV2
-		}
-
 		config := croshealthd.RoutineTestingConfigV2{
 			ArgsBuilder:    buildSensitiveSensorRoutineArgs,
 			RoutineRunner:  croshealthd.RunDiagV2,
-			ResultVerifier: verifier,
+			ResultVerifier: verifySensitiveSensorRoutineResult,
 		}
 		if err := croshealthd.TestDiagRoutineV2(ctx, config); err != nil {
 			s.Fatal("Routine verification failed: ", err)
@@ -94,17 +133,13 @@ func RunSensitiveSensorRoutine(ctx context.Context, s *testing.State) {
 		result, err := croshealthd.RunDiagRoutine(ctx,
 			croshealthd.NewRoutineParams(croshealthd.RoutineSensitiveSensor))
 		if err != nil {
-			s.Fatalf("Unable to run routine: %s", err)
+			s.Fatal("Unable to run routine: ", err)
 		}
 
-		if param.CheckRoutinePassed {
-			if err := result.VerifyPassed(); err != nil {
-				s.Fatalf("Routine is not passed: %s", err)
-			}
-		} else {
-			if err := result.VerifyFinished(); err != nil {
-				s.Fatalf("Routine is not finished: %s", err)
-			}
+		// Only check if the v1 routine can be finished since we just run v2 routine
+		// via v1 interface.
+		if err := result.VerifyFinished(); err != nil {
+			s.Fatal("Routine is not finished: ", err)
 		}
 	}
 }
