@@ -6,19 +6,20 @@ package arc
 
 import (
 	"context"
+	"fmt"
+	"os"
+	"path"
 	"regexp"
 	"strconv"
-	"strings"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/android/ui"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/audio"
 	arcaudio "go.chromium.org/tast-tests/cros/local/bundles/cros/arc/audio"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
+	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -82,12 +83,13 @@ func AudioOboetesterLatency(ctx context.Context, s *testing.State) {
 		apkName      = "oboetester_debug.apk"
 		pkg          = "com.mobileer.oboetester"
 		activityName = ".MainActivity"
+		// Android download directory points to the same directory as ChromeOS' downloads directory.
+		androidDownloadPath = "/storage/emulated/0/Download"
 	)
 
 	param := s.Param().([]arc.ActivityStartOption)
 	a := s.FixtValue().(*arc.PreData).ARC
 	cr := s.FixtValue().(*arc.PreData).Chrome
-	d := s.FixtValue().(*arc.PreData).UIDevice
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -129,8 +131,22 @@ func AudioOboetesterLatency(ctx context.Context, s *testing.State) {
 	}
 	defer activity.Close(ctx)
 
+	// Generate an output file name and path.
+	// If a static file name is used, the second test and subsequent tests will fail
+	// because Oboetester will be unable to write to the file for some reason, even
+	// after the file is removed.
+	// Work around this by using a dynamic file name.
+	outFileName := fmt.Sprintf("latency-result-%v.txt", time.Now().Format("20060102_150405"))
+	hostDownloadPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
+	if err != nil {
+		s.Fatal("Failed to get user's downloads path: ", err)
+	}
+	hostFilePath := path.Join(hostDownloadPath, outFileName)
+	androidFilePath := path.Join(androidDownloadPath, outFileName)
+
 	// Launch app
 	param = append(param, arc.WithExtraString("test", "latency"))
+	param = append(param, arc.WithExtraString("file", androidFilePath))
 	if err := activity.Start(ctx, tconn, param...); err != nil {
 		s.Fatalf("Failed to start activity %q in package %q: %v", activityName, pkg, err)
 	}
@@ -144,22 +160,28 @@ func AudioOboetesterLatency(ctx context.Context, s *testing.State) {
 	}(cleanupCtx)
 
 	testing.ContextLog(ctx, "Waiting for the test to finish")
-	var resultText string
 	if err := testing.Poll(ctx, func(ctx context.Context) (err error) {
-		resultText, err = d.Object(ui.ID("com.mobileer.oboetester:id/text_status")).GetText(ctx)
-		if err != nil {
+		if _, err := os.Stat(hostFilePath); err != nil {
 			return err
 		}
-		if !strings.Contains(resultText, "result.text = OK") {
-			return errors.New("result text not OK")
-		}
-		return nil
+		return nil // File exists so stop polling
 	}, &testing.PollOptions{
 		Timeout:  10 * time.Minute,
-		Interval: 5 * time.Second,
+		Interval: 1 * time.Second,
 	}); err != nil {
-		s.Fatal("Failed to wait for result OK text: ", err)
+		s.Fatal("Failed to wait for result output file: ", err)
 	}
+	defer func() {
+		if err := os.Remove(hostFilePath); err != nil {
+			s.Error("Remove output file error: ", err)
+		}
+	}()
+
+	resultBytes, err := os.ReadFile(hostFilePath)
+	if err != nil {
+		s.Fatalf("Failed to read result output file from %q: %v", hostFilePath, err)
+	}
+	resultText := string(resultBytes)
 
 	// Parse `latency.msec = xx.xx`
 	latencyRegex := regexp.MustCompile(`latency.msec = (\d+\.\d+)`)

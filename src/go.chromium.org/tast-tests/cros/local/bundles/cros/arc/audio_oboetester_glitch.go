@@ -7,6 +7,7 @@ package arc
 import (
 	"compress/gzip"
 	"context"
+	"fmt"
 	"io"
 	"os"
 	"path"
@@ -14,7 +15,6 @@ import (
 	"strconv"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/android/ui"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
@@ -25,6 +25,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -232,12 +233,13 @@ func AudioOboetesterGlitch(ctx context.Context, s *testing.State) {
 		apkName      = "oboetester_debug.apk"
 		pkg          = "com.mobileer.oboetester"
 		activityName = ".MainActivity"
+		// Android download directory writes to the same directory as ChromeOS' downloads directory.
+		androidDownloadPath = "/storage/emulated/0/Download"
 	)
 
 	param := s.Param().(audioOboetesterGlitchParam)
 	a := s.FixtValue().(*arc.PreData).ARC
 	cr := s.FixtValue().(*arc.PreData).Chrome
-	d := s.FixtValue().(*arc.PreData).UIDevice
 
 	// Restart CRAS to reset state that might affect this test (e.g. system mute)
 	if _, err := audio.RestartCras(ctx); err != nil {
@@ -332,10 +334,24 @@ func AudioOboetesterGlitch(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
+	// Generate an output file name and path.
+	// If a static file name is used, the second test and subsequent tests will fail
+	// because Oboetester will be unable to write to the file for some reason, even
+	// after the file is removed.
+	// Work around this by using a dynamic file name.
+	outFileName := fmt.Sprintf("glitch-result-%v.txt", time.Now().Format("20060102_150405"))
+	hostDownloadPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
+	if err != nil {
+		s.Fatal("Failed to get user's downloads path: ", err)
+	}
+	hostFilePath := path.Join(hostDownloadPath, outFileName)
+	androidFilePath := path.Join(androidDownloadPath, outFileName)
+
 	// Launch app
 	launchParams := param.options
 	launchParams = append(launchParams, arc.WithExtraString("test", "glitch"))
 	launchParams = append(launchParams, arc.WithExtraInt("duration", testDuration))
+	launchParams = append(launchParams, arc.WithExtraString("file", androidFilePath))
 	if err := activity.Start(ctx, tconn, launchParams...); err != nil {
 		s.Fatalf("Failed to start activity %q in package %q: %v", activityName, pkg, err)
 	}
@@ -352,79 +368,64 @@ func AudioOboetesterGlitch(ctx context.Context, s *testing.State) {
 	// GoBigSleepLint: Run the test for testDuration seconds as a part of measurement.
 	testing.Sleep(ctx, testDuration*time.Second)
 
-	// Polling until the time total in `time.total = xx.xx seconds` is more than testDuration.
+	// Polling until the output file exists
 	testing.ContextLog(ctx, "Polling for the test to finish")
-	var resultText string
-	timeTotalRegex := regexp.MustCompile(`time.total = (\d+\.\d+) seconds`)
 	if err := testing.Poll(ctx, func(ctx context.Context) (err error) {
-		resultText, err = d.Object(ui.ID("com.mobileer.oboetester:id/text_status")).GetText(ctx)
-		if err != nil {
+		if _, err := os.Stat(hostFilePath); err != nil {
 			return err
 		}
-		match := timeTotalRegex.FindStringSubmatch(resultText)
-		if match == nil {
-			s.Fatalf("Failed to find time total in result text. Result text = %q", resultText)
-		}
-		timeTotal, err := strconv.ParseFloat(match[1], 64)
-		if err != nil {
-			s.Fatalf("Failed to parse time total %q to float: %v", match[1], err)
-		}
-		if timeTotal < testDuration {
-			return errors.Errorf("time total %.2f is less than test duration", timeTotal)
-		}
-		return nil
+		return nil // File exists so stop polling
 	}, &testing.PollOptions{
-		Timeout:  1 * time.Minute,
+		Timeout:  10 * time.Minute,
 		Interval: 1 * time.Second,
 	}); err != nil {
-		s.Fatal("Failed to wait for result OK text: ", err)
+		s.Fatal("Failed to wait for result output file: ", err)
 	}
+	defer func() {
+		if err := os.Remove(hostFilePath); err != nil {
+			s.Error("Remove output file error: ", err)
+		}
+	}()
 
-	// Parse `glitch.count = <number>`
-	glitchCountRegex := regexp.MustCompile(`glitch.count = (\d+)`)
-	match := glitchCountRegex.FindStringSubmatch(resultText)
-	if match == nil {
-		s.Fatalf("Failed to find glitch count in result text. Result text = %q", resultText)
-	}
-	glitchCount, err := strconv.Atoi(match[1])
+	resultBytes, err := os.ReadFile(hostFilePath)
 	if err != nil {
-		s.Fatalf("Failed to parse glitch count %q to int: %v", match[1], err)
+		s.Fatalf("Failed to read result output file from %q: %v", hostFilePath, err)
+	}
+	resultText := string(resultBytes)
+
+	// Parse number from result text. Pattern should be in this format: `xxx.xxx = (\d+)`
+	getNumberFromResultText := func(pattern string) (int, error) {
+		regex := regexp.MustCompile(pattern)
+		match := regex.FindStringSubmatch(resultText)
+		if match == nil || len(match) < 2 {
+			return 0, errors.Errorf("failed to find pattern %q in result text %q", pattern, resultText)
+		}
+		num, err := strconv.Atoi(match[1])
+		if err != nil {
+			return 0, errors.Wrapf(err, "failed to parse string %q to int", match[1])
+		}
+		return num, nil
 	}
 
-	// Parse `glitch.frames = <number>`
-	glitchFramesRegex := regexp.MustCompile(`glitch.frames = (\d+)`)
-	match = glitchFramesRegex.FindStringSubmatch(resultText)
-	if match == nil {
-		s.Fatalf("Failed to find glitch frames in result text. Result text = %q", resultText)
-	}
-	glitchFrames, err := strconv.Atoi(match[1])
+	glitchCount, err := getNumberFromResultText(`glitch.count = (\d+)`)
 	if err != nil {
-		s.Fatalf("Failed to parse glitch frames %q to int: %v", match[1], err)
+		s.Fatal("Failed to get glitch.count from result text: ", err)
 	}
 
-	// Parse xrun# from the input and output stream configuration.
-	xrunRegex := regexp.MustCompile(`xRun# = (\d+)`)
-	getXrunOfStreamConfig := func(streamConfigID string) int {
-		statusView := d.Object(ui.TextContains("xRun# = "))
-		if err := d.Object(ui.ID(streamConfigID)).GetChild(ctx, statusView); err != nil {
-			s.Fatal("Failed to get statusView: ", err)
-		}
-		statusText, err := statusView.GetText(ctx)
-		if err != nil {
-			s.Fatal("Failed to get statusText: ", err)
-		}
-		match = xrunRegex.FindStringSubmatch(statusText)
-		if match == nil {
-			s.Fatalf("Failed to find xRun in text. statusText = %q", statusText)
-		}
-		xrun, err := strconv.Atoi(match[1])
-		if err != nil {
-			s.Fatalf("Failed to parse xrun %q to int: %v", match[1], err)
-		}
-		return xrun
+	glitchFrames, err := getNumberFromResultText(`glitch.frames = (\d+)`)
+	if err != nil {
+		s.Fatal("Failed to get glitch.frames from result text: ", err)
 	}
-	inputXrun := getXrunOfStreamConfig("com.mobileer.oboetester:id/inputStreamConfiguration")
-	outputXrun := getXrunOfStreamConfig("com.mobileer.oboetester:id/outputStreamConfiguration")
+
+	inputXrun, err := getNumberFromResultText(`in.xruns = (\d+)`)
+	if err != nil {
+		s.Fatal("Failed to get in.xruns from result text: ", err)
+	}
+
+	outputXrun, err := getNumberFromResultText(`out.xruns = (\d+)`)
+	if err != nil {
+		s.Fatal("Failed to get out.xruns from result text: ", err)
+	}
 
 	// Stores test result
 	perfValues := perf.NewValues()
