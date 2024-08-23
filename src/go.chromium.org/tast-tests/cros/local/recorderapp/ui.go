@@ -63,8 +63,15 @@ var (
 	ToggleSummaryButton = Component("toggleSummaryButton")
 )
 
-// Click returns an action to click on the element resolved from the query.
-func (a *App) Click(query ComponentQuery) uiauto.Action {
+// PlaybackPlayButton is the button used to play the audio playback.
+// TODO(b/355374546): Update to use `Component()` once the change from the app side is upreved.
+var PlaybackPlayButton = ComponentQuery{
+	Name:  "playbackPlayButton",
+	Query: `document.querySelector('recorder-app').shadowRoot.querySelector('playback-page').shadowRoot.querySelector('cra-icon-button[id="play-button"]')`,
+}
+
+// ClickImmediately returns an action to click on the element resolved from the query.
+func (a *App) ClickImmediately(query ComponentQuery) uiauto.Action {
 	return func(ctx context.Context) error {
 		code := fmt.Sprintf(`%s.click()`, query.Query)
 		if err := a.conn.Eval(ctx, code, nil); err != nil {
@@ -85,6 +92,39 @@ func (a *App) WaitUntilExistsFor(query ComponentQuery, duration time.Duration) u
 		code := fmt.Sprintf(`%s instanceof Element`, query.Query)
 		if err := a.conn.WaitForExprWithTimeout(ctx, code, duration); err != nil {
 			return errors.Wrapf(err, "failed to wait until %s exists", query.Name)
+		}
+		return nil
+	}
+}
+
+// ClickWhenExists waits until the queried component exists and then click the
+// component. This is a recommended way to perform click since it is common that
+// the component is lazy loaded and not exists immediately.
+func (a *App) ClickWhenExists(query ComponentQuery) uiauto.Action {
+	return uiauto.Combine(fmt.Sprintf("Wait until %s exists and click", query.Name),
+		a.WaitUntilExists(query),
+		a.ClickImmediately(query),
+	)
+}
+
+// WaitUntilGone waits until the queried component exists for the default duration (5 seconds).
+func (a *App) WaitUntilGone(query ComponentQuery) uiauto.Action {
+	return a.WaitUntilGoneFor(query, 5*time.Second)
+}
+
+// WaitUntilGoneFor waits until the queried component not exists for the specified duration.
+func (a *App) WaitUntilGoneFor(query ComponentQuery, duration time.Duration) uiauto.Action {
+	return func(ctx context.Context) error {
+		code := fmt.Sprintf(`(function() {
+			try {
+				return !(%s instanceof Element);
+			} catch(e) {
+				// UI query may throw the error when the element is not exists.
+				return true;
+			}
+		})()`, query.Query)
+		if err := a.conn.WaitForExprWithTimeout(ctx, code, duration); err != nil {
+			return errors.Wrapf(err, "failed to wait until %s gone", query.Name)
 		}
 		return nil
 	}

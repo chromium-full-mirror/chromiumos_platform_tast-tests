@@ -10,6 +10,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -118,4 +119,60 @@ func (a *App) Close(ctx context.Context) error {
 		return errors.Wrap(err, "failed to clear cached data in the app")
 	}
 	return apps.Close(ctx, a.tconn, apps.Recorder.ID)
+}
+
+// PlayFirstRecording returns a function to click on the first recording on the
+// main page and wait until the playback page is ready.
+func (a *App) PlayFirstRecording() uiauto.Action {
+	return uiauto.Combine("Clicking on the first recording",
+		a.ClickWhenExists(FirstRecordingCard),
+		a.ClickWhenExists(PlaybackPlayButton),
+		a.WaitUntilExists(PlaybackPauseButton),
+	)
+}
+
+// RequestRecordingSummary returns a function to toggle the summary button in
+// the playback page.
+func (a *App) RequestRecordingSummary() uiauto.Action {
+	return a.RequestRecordingSummaryWithTimeout(30 * time.Second)
+}
+
+// RequestRecordingSummaryWithTimeout returns a function to toggle the summary
+// and wait for the summary result with the specified duration.
+func (a *App) RequestRecordingSummaryWithTimeout(timeout time.Duration) uiauto.Action {
+	return uiauto.Combine("Requesting the recording summary",
+		a.ClickWhenExists(ToggleSummaryButton),
+		a.WaitUntilExistsFor(SummaryContainer, timeout),
+	)
+}
+
+// RequestTitleSuggestions returns a function to request and wait for the title
+// suggestions.
+func (a *App) RequestTitleSuggestions() uiauto.Action {
+	return a.RequestTitleSuggestionsWithTimeout(30 * time.Second)
+}
+
+// RequestTitleSuggestionsWithTimeout returns a function to request and wait for
+// the title suggestions for the specified duration.
+func (a *App) RequestTitleSuggestionsWithTimeout(timeout time.Duration) uiauto.Action {
+	return uiauto.Combine("Requesting title suggestions",
+		a.ClickWhenExists(RenameTitleText),
+		a.ClickWhenExists(SuggestTitleButton),
+		a.WaitUntilExistsFor(FirstSuggestedTitle, timeout),
+	)
+}
+
+// GoBackToMainPage returns a function to click on back button in the playback
+// page to go back to main page.
+func (a *App) GoBackToMainPage() uiauto.Action {
+	return uiauto.Combine("Clicking on back button",
+		a.ClickWhenExists(PlaybackBackButton),
+		a.WaitUntilExists(MainPage),
+	)
+}
+
+// WaitUntilPlaybackFinished waits until the playback finishes. The specified
+// timeout should be greater than the audio duration.
+func (a *App) WaitUntilPlaybackFinished(timeout time.Duration) uiauto.Action {
+	return a.WaitUntilGoneFor(PlaybackPauseButton, timeout)
 }

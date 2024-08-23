@@ -19,6 +19,7 @@ import (
 const (
 	summaryModelDLC         = "ml-dlc-73caa678-45cb-4007-abb9-f04e431376da"
 	titleSuggestionModelDLC = "ml-dlc-ee7c31c2-18e5-405a-b54e-f2607130a15d"
+	titleSuggestionLoRADLC  = "ml-dlc-1bdd5282-2d14-413c-bf43-9ea6d55c38a6"
 )
 
 // LaunchConfig is the configuration sent to the app to modify the local
@@ -76,7 +77,7 @@ func ensureModelInstalled(ctx context.Context, setup Setup) error {
 	}
 
 	if setup.Config.SummaryForceEnabled {
-		if err := launcher.InstallDlc(ctx, []string{summaryModelDLC, titleSuggestionModelDLC}); err != nil {
+		if err := launcher.InstallDlc(ctx, []string{summaryModelDLC, titleSuggestionModelDLC, titleSuggestionLoRADLC}); err != nil {
 			return errors.Wrap(err, "failed to ensure summary models installed")
 		}
 	}

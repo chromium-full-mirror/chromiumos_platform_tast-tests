@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/recorderapp/short_news_recording_20240823.json",
+  "size": 667820,
+  "sha256sum": "0568aefba8cd06c4a44309581c6b359746c522942d04d0b05dd0800c0b955d4d"
+}
