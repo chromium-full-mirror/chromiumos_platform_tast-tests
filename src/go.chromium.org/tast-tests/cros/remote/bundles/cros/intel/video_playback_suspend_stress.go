@@ -32,7 +32,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.typec.Service"},
 		Attr:         []string{"group:intel-sleep"},
-		Data:         []string{"1080p_60fps_600frames.vp8.webm", "video.html", "playback.js"},
+		Data:         []string{"1080p_60fps_600frames.hevc.mp4", "video.html", "playback.js"},
 		VarDeps:      []string{"servo"},
 		Timeout:      8 * time.Minute,
 	})
@@ -70,10 +70,10 @@ func VideoPlaybackSuspendStress(ctx context.Context, s *testing.State) {
 	downloadsPath := downloads.DownloadsPath
 
 	htmlPath := filepath.Join(downloadsPath, "video.html")
-	videoPath := filepath.Join(downloadsPath, "1080p_60fps_600frames.vp8.webm")
+	videoPath := filepath.Join(downloadsPath, "1080p_60fps_600frames.hevc.mp4")
 	jsPath := filepath.Join(downloadsPath, "playback.js")
 	dataMap := map[string]string{s.DataPath("video.html"): htmlPath,
-		s.DataPath("1080p_60fps_600frames.vp8.webm"): videoPath,
+		s.DataPath("1080p_60fps_600frames.hevc.mp4"): videoPath,
 		s.DataPath("playback.js"):                    jsPath,
 	}
 
@@ -91,7 +91,7 @@ func VideoPlaybackSuspendStress(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	videoFile := "1080p_60fps_600frames.vp8.webm"
+	videoFile := "1080p_60fps_600frames.hevc.mp4"
 	if _, err = client.PlayLocalVideo(ctx, &typec.KeyPath{Path: videoFile}); err != nil {
 		s.Fatal(s, "Failed to play local video: ", err)
 	}
