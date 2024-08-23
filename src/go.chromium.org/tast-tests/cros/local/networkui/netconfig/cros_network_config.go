@@ -11,6 +11,7 @@ import (
 
 	types "go.chromium.org/tast-tests/cros/common/networkui/netconfigtypes"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -25,6 +26,8 @@ type CrosNetworkConfig struct {
 	conn       *chrome.Conn
 	mojoRemote *chrome.JSObject
 	isLoggedIn bool
+
+	restoreActiveWindow func(context.Context) error
 }
 
 // CreateOobeCrosNetworkConfig creates a connection to cros_network_config
@@ -40,13 +43,47 @@ func CreateOobeCrosNetworkConfig(ctx context.Context, cr *chrome.Chrome) (*CrosN
 
 // CreateLoggedInCrosNetworkConfig creates a connection to cros_network_config
 // when the device is logged in so chrome://network may be opened.
-func CreateLoggedInCrosNetworkConfig(ctx context.Context, cr *chrome.Chrome) (*CrosNetworkConfig, error) {
+func CreateLoggedInCrosNetworkConfig(ctx context.Context, cr *chrome.Chrome) (cfg *CrosNetworkConfig, _ error) {
+	// Cache the the active window before creates a new Chrome renderer (`cr.NewConn`).
+	window, tconn, err := findActiveWindow(ctx, cr)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to find active window")
+	}
+	defer func() {
+		// Cache the action to restore the active window if one exists.
+		if window != nil {
+			// `cr.NewConn` brings the browser to the front, which can break the test.
+			// For instance if a test does:
+			// 	Open browser -> open another app window -> calling CreateLoggedInCrosNetworkConfig -> close CrosNetworkConfig.
+			// then it might not expect the browser is remain active after closing the CrosNetworkConfig.
+			cfg.restoreActiveWindow = func(ctx context.Context) error { return window.ActivateWindow(ctx, tconn) }
+		}
+	}()
+
 	conn, err := cr.NewConn(ctx, "chrome://network")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to open network tab")
 	}
 
 	return NewCrosNetworkConfig(ctx, conn, true /* isLoggedIn */)
+}
+
+func findActiveWindow(ctx context.Context, cr *chrome.Chrome) (*ash.Window, *chrome.TestConn, error) {
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "failed to open test API connection")
+	}
+
+	// Not using ash.GetActiveWindow or ash.FindOnlyWindow as they
+	// expect exactly 1 result, which we don't see 0 result as an error.
+	windows, err := ash.FindAllWindows(ctx, tconn, func(w *ash.Window) bool { return w.IsActive })
+	if err != nil {
+		return nil, nil, err
+	}
+	if len(windows) < 1 {
+		return nil, nil, nil
+	}
+	return windows[0], tconn, nil
 }
 
 // NewCrosNetworkConfig creates a connection to cros_network_config that allows
@@ -74,6 +111,12 @@ func (c *CrosNetworkConfig) Close(ctx context.Context) error {
 		if err := c.conn.CloseTarget(ctx); err != nil {
 			return err
 		}
+	}
+	if c.restoreActiveWindow != nil {
+		if err := c.restoreActiveWindow(ctx); err != nil {
+			return err
+		}
+		c.restoreActiveWindow = nil
 	}
 	return c.conn.Close()
 }
