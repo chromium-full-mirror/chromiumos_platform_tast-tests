@@ -48,9 +48,8 @@ var cursiveAutoInstallModels = []string{
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CursiveSmoke,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Cursive smoke test app launching and basic function",
+		Func: CursiveSmoke,
+		Desc: "Cursive smoke test app launching and basic function",
 		Contacts: []string{
 			"a4@google.com",
 			"gabpalado@google.com",
@@ -74,21 +73,6 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(cursiveAutoInstallModels...)),
 				Val:               true,
 			},
-			{
-				Name:              "manual_install_lacros",
-				Fixture:           fixture.LacrosLoggedInDisableInstall,
-				ExtraSoftwareDeps: []string{"lacros"},
-				ExtraHardwareDeps: hwdep.D(hwdep.Model(cursiveManualInstallModels...)),
-				Val:               false,
-			},
-			// TODO(b/245224264): Re-enable auto install testing on lacros.
-			// {
-			// 	Name:              "auto_install_lacros",
-			// 	Fixture:           fixture.LacrosLoggedIn,
-			// 	ExtraSoftwareDeps: []string{"lacros"},
-			// 	ExtraHardwareDeps: hwdep.D(hwdep.Model(cursiveAutoInstallModels...)),
-			// 	Val:               true,
-			// },
 		},
 	})
 }
@@ -96,7 +80,7 @@ func init() {
 func CursiveSmoke(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(fixture.FixtData).Chrome
 	tconn := s.FixtValue().(fixture.FixtData).TestAPIConn
-	browserType := s.FixtValue().(fixture.FixtData).BrowserType
+	browserType := browser.TypeAsh
 
 	isAutoInstall := s.Param().(bool)
 

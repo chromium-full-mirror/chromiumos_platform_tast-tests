@@ -29,9 +29,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         LaunchGalleryFromNotifications,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Verify Gallery launches correctly when opening image from notifications",
+		Func: LaunchGalleryFromNotifications,
+		Desc: "Verify Gallery launches correctly when opening image from notifications",
 		Contacts: []string{
 			"backlight-swe@google.com",
 		},
@@ -51,12 +50,6 @@ func init() {
 				// b:238260020 - disable aged (>1y) unpromoted informational tests
 				// ExtraAttr:         []string{"group:mainline", "informational"},
 				ExtraHardwareDeps: hwdep.D(pre.AppsUnstableModels),
-			}, {
-				Name:              "lacros",
-				Fixture:           fixture.LacrosLoggedIn,
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				ExtraAttr:         []string{"group:mainline"},
-				ExtraHardwareDeps: hwdep.D(pre.AppsStableModels),
 			},
 		},
 	})

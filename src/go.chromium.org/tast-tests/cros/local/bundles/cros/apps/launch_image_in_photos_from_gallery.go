@@ -34,9 +34,8 @@ const testImageFileWithText = "happy_halloween.png"
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         LaunchImageInPhotosFromGallery,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "From the Gallery app, launch an opened image in the Android Photos app",
+		Func: LaunchImageInPhotosFromGallery,
+		Desc: "From the Gallery app, launch an opened image in the Android Photos app",
 		Contacts: []string{
 			"backlight-swe@google.com",
 			"josephkimsh@google.com",

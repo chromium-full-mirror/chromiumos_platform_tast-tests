@@ -22,9 +22,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         LaunchGalleryLanguage,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Launch Gallery APP in different system languages",
+		Func: LaunchGalleryLanguage,
+		Desc: "Launch Gallery APP in different system languages",
 		Contacts: []string{
 			"backlight-swe@google.com",
 		},
@@ -32,16 +31,7 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		HardwareDeps: hwdep.D(pre.AppsStableModels),
-		Params: []testing.Param{
-			{
-				Fixture: fixture.LoggedInJP,
-			},
-			{
-				Name:              "lacros",
-				Fixture:           fixture.LacrosLoggedInJP,
-				ExtraSoftwareDeps: []string{"lacros_stable"},
-			},
-		},
+		Fixture:      fixture.LoggedInJP,
 	})
 }
 

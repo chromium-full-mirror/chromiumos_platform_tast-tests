@@ -24,10 +24,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         LaunchCanvas,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Launches Chrome Canvas APP through the launcher after user login",
-		Attr:         []string{"group:mainline" /* TODO(b/266507106): fix the test for L1 betty. "group:hw_agnostic" */},
+		Func: LaunchCanvas,
+		Desc: "Launches Chrome Canvas APP through the launcher after user login",
+		Attr: []string{"group:mainline" /* TODO(b/266507106): fix the test for L1 betty. "group:hw_agnostic" */},
 		Contacts: []string{
 			"blick-swe@google.com",
 			"xiuwen@google.com",
@@ -46,12 +45,6 @@ func init() {
 			ExtraAttr:         []string{"group:hw_agnostic"},
 			// b:238260020 - disable aged (>1y) unpromoted informational tests
 			// ExtraAttr:         []string{"group:mainline", "informational"},
-		}, {
-			Name:              "lacros",
-			Fixture:           fixture.LacrosLoggedIn,
-			ExtraSoftwareDeps: []string{"lacros"},
-			ExtraAttr:         []string{"informational"},
-			ExtraHardwareDeps: hwdep.D(pre.AppsStableModels),
 		}},
 	})
 }

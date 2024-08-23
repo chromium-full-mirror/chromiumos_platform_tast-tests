@@ -12,7 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -25,9 +24,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         FullRestoreAlwaysRestore,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Test full restore always restore setting",
+		Func: FullRestoreAlwaysRestore,
+		Desc: "Test full restore always restore setting",
 		Contacts: []string{
 			"chromeos-apps-foundation-team@google.com",
 			"nancylingwang@google.com",
@@ -35,15 +33,7 @@ func init() {
 		BugComponent: "b:1203766",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
-		Params: []testing.Param{{
-			Val: browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			ExtraAttr:         []string{"informational"},
-			Val:               browser.TypeLacros,
-		}},
-		Timeout: 6 * time.Minute,
+		Timeout:      6 * time.Minute,
 	})
 }
 
@@ -52,17 +42,17 @@ func FullRestoreAlwaysRestore(ctx context.Context, s *testing.State) {
 	for i := 0; i < iterationCount; i++ {
 		testing.ContextLogf(ctx, "Running: iteration %d/%d", i+1, iterationCount)
 
-		if err := openBrowser(ctx, s.Param().(browser.Type)); err != nil {
+		if err := openBrowser(ctx); err != nil {
 			s.Fatal("Failed to open browser: ", err)
 		}
 
-		if err := restoreBrowser(ctx, s.Param().(browser.Type), s.OutDir(), s.HasError); err != nil {
+		if err := restoreBrowser(ctx, s.OutDir(), s.HasError); err != nil {
 			s.Fatal("Failed to do full restore: ", err)
 		}
 	}
 }
 
-func openBrowser(ctx context.Context, bt browser.Type) error {
+func openBrowser(ctx context.Context) error {
 	// TODO(crbug.com/1318180): at the moment for Lacros, we're not getting SetUpWithNewChrome
 	// close closure because when used it'd close all resources, including targets and wouldn't let
 	// the session to proper restore later. As a short term workaround we're closing Lacros
@@ -76,7 +66,7 @@ func openBrowser(ctx context.Context, bt browser.Type) error {
 	// Give it a retry.
 	const retry = 2
 	for i := 0; i < retry; i++ {
-		cr, br, _, err = browserfixt.SetUpWithNewChrome(ctx, bt, lacrosfixt.NewConfig())
+		cr, br, _, err = browserfixt.SetUpWithNewChrome(ctx, browser.TypeAsh, lacrosfixt.NewConfig())
 		if err == nil {
 			break
 		}
@@ -113,23 +103,15 @@ func openBrowser(ctx context.Context, bt browser.Type) error {
 		return errors.Wrap(err, "failed to set 'Always restore' Settings")
 	}
 
-	// According to the PRD of Full Restore go/chrome-os-full-restore-dd,
+	// GoBigSleepLint: According to the PRD of Full Restore go/chrome-os-full-restore-dd,
 	// it uses a throttle of 2.5s to save the app launching and window statue information to the backend.
 	// Therefore, sleep 5 seconds here.
 	testing.Sleep(ctx, 5*time.Second)
 
-	if bt == browser.TypeLacros {
-		l, err := lacros.Connect(ctx, tconn)
-		if err != nil {
-			return errors.Wrap(err, "failed to connect to lacros-chrome")
-		}
-		defer l.CloseResources(ctx)
-	}
-
 	return nil
 }
 
-func restoreBrowser(ctx context.Context, bt browser.Type, outDir string, hasError func() bool) error {
+func restoreBrowser(ctx context.Context, outDir string, hasError func() bool) error {
 	opts := []chrome.Option{
 		// Set not to clear the notification after restore.
 		// By default, On startup is set to ask every time after reboot
@@ -139,7 +121,7 @@ func restoreBrowser(ctx context.Context, bt browser.Type, outDir string, hasErro
 		chrome.EnableRestoreTabs(),
 		chrome.KeepState()}
 
-	cr, err := browserfixt.NewChrome(ctx, bt, lacrosfixt.NewConfig(), opts...)
+	cr, err := browserfixt.NewChrome(ctx, browser.TypeAsh, lacrosfixt.NewConfig(), opts...)
 	if err != nil {
 		return errors.Wrap(err, "failed to start Chrome")
 	}
@@ -153,9 +135,9 @@ func restoreBrowser(ctx context.Context, bt browser.Type, outDir string, hasErro
 	defer faillog.DumpUITreeOnError(ctx, outDir, hasError, tconn)
 
 	// Confirm that the browser is restored.
-	if err := ash.WaitForCondition(ctx, tconn, ash.BrowserTitleMatch(bt, "Alphabet"),
+	if err := ash.WaitForCondition(ctx, tconn, ash.BrowserTitleMatch(browser.TypeAsh, "Alphabet"),
 		&testing.PollOptions{Timeout: time.Minute, Interval: time.Second}); err != nil {
-		return errors.Wrapf(err, "failed to wait for the window to be open, browser: %v", bt)
+		return errors.Wrap(err, "failed to wait for the browser window to be open")
 	}
 
 	// Confirm that the Settings app is restored.

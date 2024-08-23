@@ -29,9 +29,8 @@ type testParameters struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         LaunchHelpApp,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Help app should be launched after OOBE",
+		Func: LaunchHelpApp,
+		Desc: "Help app should be launched after OOBE",
 		Contacts: []string{
 			"showoff-eng@google.com",
 		},
@@ -134,36 +133,6 @@ func init() {
 				Fixture:           fixture.LoggedIn,
 				// b:238260020 - disable aged (>1y) unpromoted informational tests
 				// ExtraAttr:         []string{"group:mainline", "informational"},
-				Val: testParameters{
-					tabletMode: true,
-					oobe:       false,
-				},
-			}, {
-				Name:              "clamshell_logged_in_stable_lacros_fieldtrial_testing_config_off",
-				ExtraHardwareDeps: hwdep.D(pre.AppsStableModels),
-				Fixture:           fixture.LacrosLoggedInFieldTrialConfigDisable,
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				ExtraAttr:         []string{"group:mainline"},
-				Val: testParameters{
-					tabletMode: false,
-					oobe:       false,
-				},
-			}, {
-				Name:              "clamshell_logged_in_stable_lacros_fieldtrial_testing_config_on",
-				ExtraHardwareDeps: hwdep.D(pre.AppsStableModels),
-				Fixture:           fixture.LacrosLoggedInFieldTrialConfigEnable,
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				ExtraAttr:         []string{"group:mainline", "group:chrome_uprev_cbx"},
-				Val: testParameters{
-					tabletMode: false,
-					oobe:       false,
-				},
-			}, {
-				Name:              "tablet_logged_in_stable_lacros",
-				Fixture:           fixture.LacrosLoggedIn,
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				ExtraAttr:         []string{"group:mainline"},
-				ExtraHardwareDeps: hwdep.D(pre.AppsStableModels, hwdep.TouchScreen()),
 				Val: testParameters{
 					tabletMode: true,
 					oobe:       false,

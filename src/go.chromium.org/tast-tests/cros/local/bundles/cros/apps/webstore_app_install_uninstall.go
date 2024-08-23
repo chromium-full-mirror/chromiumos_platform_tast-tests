@@ -23,7 +23,6 @@ type appsParams struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         WebstoreAppInstallUninstall,
-		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Chrome webstore app install uninstall",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel

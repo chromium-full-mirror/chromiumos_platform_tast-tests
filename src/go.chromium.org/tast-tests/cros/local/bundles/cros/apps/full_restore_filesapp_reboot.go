@@ -20,9 +20,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         FullRestoreFilesappReboot,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test full restore files app",
+		Func: FullRestoreFilesappReboot,
+		Desc: "Test full restore files app",
 		Contacts: []string{
 			"chromeos-apps-foundation-team@google.com",
 			"nancylingwang@google.com",
@@ -53,7 +52,7 @@ func FullRestoreFilesappReboot(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to launch Files app: ", err)
 		}
 
-		// According to the PRD of Full Restore go/chrome-os-full-restore-dd,
+		// GoBigSleepLint: According to the PRD of Full Restore go/chrome-os-full-restore-dd,
 		// it uses a throttle of 2.5s to save the app launching and window statue information to the backend.
 		// Therefore, sleep 5 seconds here.
 		testing.Sleep(ctx, 5*time.Second)
