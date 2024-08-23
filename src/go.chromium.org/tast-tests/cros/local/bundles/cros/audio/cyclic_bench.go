@@ -85,26 +85,8 @@ const (
 var cyclicBenchUnstableModels = []string{
 	// asurada
 	"hayato", "spherion",
-	// volteer
-	"chronicler", "collis", "copano", "delbin", "drobit", "elemi", "lillipup", "lindar", "volet", "volta",
-	// strongbad
-	"coachz", "homestar", "quackingstick", "wormdingler",
-	// trogdor
-	"kingoftown", "lazor", "limozeen", "pazquel", "pazquel360", "pompom",
-	// staryu
-	"starmie",
-	// elm
-	"elm",
-	// jacuzzi
-	"burnet", "willow",
-	// hana
-	"hana", "hana64",
 	// scarlet
 	"dru",
-	// nissa
-	"anraggar", "anraggar360", "gothrax", "joxer", "xivu", "yaviks", "yavilly",
-	// kukui
-	"kodama",
 }
 
 func init() {
