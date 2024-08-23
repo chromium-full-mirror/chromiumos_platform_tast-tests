@@ -9,7 +9,7 @@ import (
 	"context"
 	"path/filepath"
 
-	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/common/chrome/extension"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
@@ -26,7 +26,7 @@ func CreateExtension(ctx context.Context, s *testing.State, extDir string) (stri
 		}
 	}
 
-	extID, err := chrome.ComputeExtensionID(extDir)
+	extID, err := extension.ComputeExtensionID(extDir)
 	if err != nil {
 		s.Fatalf("Failed to compute extension ID for %q: %v", extDir, err)
 	}

@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"go.chromium.org/tast-tests/cros/common/chrome/extension"
 	"go.chromium.org/tast/core/errors"
 )
 
@@ -165,7 +166,7 @@ func writeTestExtension(dir, key, extraBgJs, clientID string) (id string, err er
 			return "", err
 		}
 	}
-	id, err = ComputeExtensionID(dir)
+	id, err = extension.ComputeExtensionID(dir)
 	if err != nil {
 		return "", err
 	}

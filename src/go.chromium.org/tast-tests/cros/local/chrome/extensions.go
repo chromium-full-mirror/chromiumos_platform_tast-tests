@@ -11,15 +11,6 @@ import (
 	"go.chromium.org/tast/core/errors"
 )
 
-// ComputeExtensionID computes the 32-character ID that Chrome will use for an unpacked
-// extension in dir. The extension's manifest file must contain the "key" field.
-// Use the following command to generate a new key:
-//
-//	openssl genrsa 2048 | openssl rsa -pubout -outform der | openssl base64 -A
-func ComputeExtensionID(dir string) (string, error) {
-	return extension.ComputeExtensionID(dir)
-}
-
 // AddTastLibrary introduces tast library into the page for the given conn.
 // This introduces a variable named "tast" to its scope, and it is the
 // caller's responsibility to avoid the conflict.

@@ -21,6 +21,7 @@ import (
 
 	empb "go.chromium.org/chromiumos/policy/chromium/policy/enterprise_management_proto"
 
+	commonExtension "go.chromium.org/tast-tests/cros/common/chrome/extension"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/common/tape"
@@ -373,7 +374,7 @@ func (c *PolicyService) EnrollUsingChrome(ctx context.Context, req *ppb.EnrollUs
 			}
 		}
 
-		if extID, err := chrome.ComputeExtensionID(extDir); err != nil {
+		if extID, err := commonExtension.ComputeExtensionID(extDir); err != nil {
 			return nil, errors.Wrap(err, "failed to compute extension id")
 		} else if extID != extension.Id {
 			return nil, errors.Errorf("unexpected extension id: got %s; want %s", extID, extension.Id)

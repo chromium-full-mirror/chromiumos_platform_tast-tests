@@ -12,6 +12,8 @@ import (
 	"path/filepath"
 	"time"
 
+	commonExtension "go.chromium.org/tast-tests/cros/common/chrome/extension"
+
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
@@ -95,7 +97,7 @@ func ExtensionPolicy(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	extID, err := chrome.ComputeExtensionID(extDir)
+	extID, err := commonExtension.ComputeExtensionID(extDir)
 	if err != nil {
 		s.Fatalf("Failed to compute extension ID for %v: %v", extDir, err)
 	}

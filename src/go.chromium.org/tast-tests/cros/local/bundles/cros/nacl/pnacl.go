@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"go.chromium.org/tast-tests/cros/common/chrome/extension"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
@@ -62,7 +63,7 @@ func Pnacl(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	extID, err := chrome.ComputeExtensionID(extDir)
+	extID, err := extension.ComputeExtensionID(extDir)
 	if err != nil {
 		s.Fatalf("Failed to compute extension ID for %v: %v", extDir, err)
 	}
