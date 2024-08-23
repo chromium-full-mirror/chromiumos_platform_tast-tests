@@ -12,6 +12,7 @@ import (
 	"testing"
 
 	"go.chromium.org/tast-tests/cros/common/bounds"
+	"go.chromium.org/tast/core/framework/protocol"
 )
 
 // A results-chart.json from a run of power.LowPowerConsumption.shutdown
@@ -28,6 +29,7 @@ func TestPowerQualBounds(t *testing.T) {
 	if err := os.WriteFile(path.Join(outDir, "results-chart.json"), []byte(resultsChart), 0666); err != nil {
 		t.Fatalf("failed to write results-chart.json to temp dir: %s", err)
 	}
+	var bootPerfMetricBounds = bootPerfMetricBounds(&protocol.DUTFeatures{})
 	if err := bounds.EvaluateResults(context.Background(), bootPerfMetricBounds, outDir); err != nil {
 		t.Fatalf("EvaluateResults() returned error: %s", err)
 	}

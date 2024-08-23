@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -28,6 +29,7 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/framework/protocol"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
@@ -113,16 +115,24 @@ func init() {
 				Val:  bootPerfWarmReboot,
 			},
 			{
+				Name:      "warm_reboot_bounds",
+				Fixture:   fixture.NormalMode,
+				Val:       bootPerfWarmReboot,
+				ExtraAttr: []string{"group:firmware", "firmware_unstable"},
+			},
+			{
 				Name:              "ec_reboot_bounds",
 				ExtraHardwareDeps: hwdep.D(hwdep.ChromeEC()),
 				Fixture:           fixture.NormalMode,
 				Val:               bootPerfEcReboot,
+				ExtraAttr:         []string{"group:firmware", "firmware_unstable"},
 			},
 			{
 				Name:              "from_g3_bounds",
 				ExtraHardwareDeps: hwdep.D(hwdep.ChromeEC()),
 				Fixture:           fixture.NormalMode,
 				Val:               bootPerfFromG3,
+				ExtraAttr:         []string{"group:firmware", "firmware_unstable"},
 			},
 			{
 				Name:              "from_s5_bounds",
@@ -130,6 +140,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"s5_inactivity_timeout"},
 				Fixture:           fixture.NormalMode,
 				Val:               bootPerfFromS5,
+				ExtraAttr:         []string{"group:firmware", "firmware_unstable"},
 			},
 		},
 
@@ -246,7 +257,14 @@ func rebootFromG3(ctx context.Context, s *testing.State) {
 	s.Log("Wait for G3 power state")
 	if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout,
 		"G3"); err != nil {
-		s.Fatal("Failed to reach G3 power state: ", err)
+		s.Error("Failed to reach G3 power state: ", err)
+		state, err := h.Servo.GetECSystemPowerState(ctx)
+		if err != nil {
+			s.Log("Error getting power state: ", err)
+		}
+		if state == "S0" {
+			return
+		} // else fall through and press the power button
 	}
 
 	s.Log("Press power button to power DUT back on")
@@ -266,7 +284,14 @@ func rebootFromS5(ctx context.Context, s *testing.State) {
 	s.Log("Wait for S5 power state")
 	if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout,
 		"S5"); err != nil {
-		s.Fatal("Failed to reach S5 power state: ", err)
+		s.Error("Failed to reach S5 power state: ", err)
+		state, err := h.Servo.GetECSystemPowerState(ctx)
+		if err != nil {
+			s.Log("Error getting power state: ", err)
+		}
+		if state == "S0" {
+			return
+		} // else fall through and press the power button
 	}
 
 	s.Log("Press power button to power DUT back on")
@@ -422,16 +447,44 @@ func collectExtraDebugInfo(ctx context.Context, s *testing.State) (bool, error) 
 	return true, nil
 }
 
-var bootPerfMetricBounds = []bounds.MetricBounds{{
-	Test:   bounds.MatchRegexp(`_bounds$`),
-	Metric: bounds.MatchRegexp(`seconds_power_on_to_login$`),
-	Bounds: bounds.Max(8.0),
-}}
+func bootPerfMetricBounds(features *protocol.DUTFeatures) []bounds.MetricBounds {
+	cpu := features.GetHardware().GetDeprecatedDeviceConfig().GetCpu()
+	maxSecondsPowerOnToKernel := 1.0
+	// The firmware qual manual test said to give extra time to Intel Big Core ADL/RPL only, but it appears we give a waiver for every X86 platform.
+	// https://testtracker.googleplex.com/tc/fe77643b-9b26-4e48-9d82-922a385845a2?tp_id=382
+	if cpu == protocol.DeprecatedDeviceConfig_X86 || cpu == protocol.DeprecatedDeviceConfig_X86_64 {
+		maxSecondsPowerOnToKernel += 0.3
+	}
+	return []bounds.MetricBounds{
+		{
+			Test:   bounds.MatchRegexp(`(from_.._bounds|warm_reboot_bounds|default_bounds)$`),
+			Metric: bounds.MatchRegexp(`seconds_power_on_to_login$`),
+			Bounds: bounds.Max(8.0),
+		},
+		{
+			Test:   bounds.MatchRegexp(`(from_.._bounds|warm_reboot_bounds|default_bounds)$`),
+			Metric: bounds.MatchRegexp(`seconds_power_on_to_kernel$`),
+			Bounds: bounds.Max(maxSecondsPowerOnToKernel),
+		},
+		{
+			Test:   bounds.MatchRegexp(`ec_reboot_bounds$`),
+			Metric: bounds.MatchRegexp(`seconds_power_on_to_kernel$`),
+			Bounds: bounds.Max(maxSecondsPowerOnToKernel + 0.5),
+		},
+		{
+			Test:   bounds.MatchRegexp(`ec_reboot_bounds$`),
+			Metric: bounds.MatchRegexp(`seconds_power_on_to_login$`),
+			Bounds: bounds.Max(8.0 + 0.5),
+		},
+	}
+}
 
 // BootPerf is the function that reboots the client and collect boot perf data.
 func BootPerf(ctx context.Context, s *testing.State) {
 
 	d := s.DUT()
+
+	var bootPerfMetricBounds = bootPerfMetricBounds(s.Features(""))
 
 	// Parse test options.
 	skipRootfsCheck := defaultSkipRootfsCheck
@@ -562,4 +615,5 @@ func BootPerf(ctx context.Context, s *testing.State) {
 	if err := bounds.EvaluateResults(ctx, bootPerfMetricBounds, s.OutDir()); err != nil {
 		s.Error("Failed bounds check: ", err)
 	}
+	s.Logf("Bounds check report written to %s/bounds-check.json", path.Base(s.OutDir()))
 }
