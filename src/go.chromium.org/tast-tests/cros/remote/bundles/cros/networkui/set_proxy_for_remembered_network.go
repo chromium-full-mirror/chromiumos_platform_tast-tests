@@ -56,7 +56,7 @@ func init() {
 			"tast.cros.ui.ChromeUIService",
 		},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      wificell.FixtureID(wificell.TFFeaturesNone),
+		Fixture:      wificell.FixtureID(wificell.TFFeaturesRouters),
 		// This test contains 3 sub-tests, all of them having 2 steps that consume the
 		// majority of the time: configuring proxies and connecting to the network.
 		// Each sub-test configures proxy for up to 2 times and connects to up to 1 other network.
@@ -81,13 +81,45 @@ func SetProxyForRememberedNetwork(ctx context.Context, s *testing.State) {
 	defer crSvc.Close(cleanupCtx, &emptypb.Empty{})
 
 	defer tf.DeconfigAllAPs(cleanupCtx)
-	for prefix, shared := range map[ssidPrefix]bool{
-		sharedAndActive: true,
-		shared:          true,
-		nonShared:       false,
+	for _, cfg := range []struct {
+		prefix ssidPrefix
+		// options is the configuration to start hostapd on a router.
+		// Note that `hostapd.Channel` is essential and it is suggested to have only one network on a channel (b/320811867#comment3).
+		options []hostapd.Option
+		shared  bool
+		// routerID is the index of the router to set up the network for.
+		// Note that it is suggested to configure a maximum of two networks on a router (b/320811867#comment3).
+		routerID wificell.RouterIdx
+	}{
+		{
+			prefix: sharedAndActive,
+			options: []hostapd.Option{
+				hostapd.Mode(hostapd.Mode80211g),
+				hostapd.Channel(1),
+			},
+			shared:   true,
+			routerID: 0,
+		}, {
+			prefix: shared,
+			options: []hostapd.Option{
+				hostapd.Mode(hostapd.Mode80211nPure),
+				hostapd.HTCaps(hostapd.HTCapHT20),
+				hostapd.Channel(48),
+			},
+			shared:   true,
+			routerID: 0,
+		}, {
+			prefix: nonShared,
+			options: []hostapd.Option{
+				hostapd.Mode(hostapd.Mode80211g),
+				hostapd.Channel(1),
+			},
+			shared:   false,
+			routerID: 1,
+		},
 	} {
-		if err := helper.configureNetwork(ctx, tf, rpcClient, prefix, shared); err != nil {
-			s.Fatalf("Failed to configure the %q network: %v", prefix, err)
+		if err := helper.configureNetwork(ctx, tf, rpcClient, cfg.prefix, cfg.options, cfg.shared, cfg.routerID); err != nil {
+			s.Fatalf("Failed to configure the %q network: %v", cfg.prefix, err)
 		}
 	}
 
@@ -274,17 +306,16 @@ func (helper *networksHelper) allNetworkSSID() []string {
 	return []string{helper.aps[sharedAndActive].Config().SSID, helper.aps[shared].Config().SSID, helper.aps[nonShared].Config().SSID}
 }
 
-func (helper *networksHelper) configureNetwork(ctx context.Context, tf *wificell.TestFixture, rpcClient *rpc.Client, prefix ssidPrefix, shared bool) error {
+func (helper *networksHelper) configureNetwork(ctx context.Context, tf *wificell.TestFixture, rpcClient *rpc.Client, prefix ssidPrefix, apOpts []hostapd.Option, shared bool, routerID wificell.RouterIdx) error {
 	const testPass string = "chromeos"
 
 	securityConfig := wpa.NewConfigFactory(testPass, wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherCCMP, wpa.CipherTKIP))
-	apOpts := []hostapd.Option{hostapd.Channel(1), hostapd.Mode(hostapd.Mode80211g)}
 
 	netConfigSvc := networkui.NewCrosNetworkConfigServiceClient(rpcClient.Conn)
 
 	apOpts = append(apOpts, hostapd.SSID(hostapd.RandomSSID(string(prefix))))
 
-	ap, err := tf.ConfigureAP(ctx, apOpts, securityConfig)
+	ap, err := tf.ConfigureAPOnRouterID(ctx, routerID, apOpts, securityConfig, false /* enableDNS */, false /* enableHTTP */)
 	if err != nil {
 		return errors.Wrap(err, "failed to configure AP")
 	}
