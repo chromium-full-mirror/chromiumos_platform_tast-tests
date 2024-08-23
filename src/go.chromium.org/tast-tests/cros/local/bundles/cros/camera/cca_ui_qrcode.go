@@ -174,32 +174,21 @@ func runQRCodeTest(ctx context.Context, cr *chrome.Chrome, app *cca.App, testPar
 				return errors.Wrap(err, "failed to connect to Chrome")
 			}
 
-			ui := uiauto.New(tconn).WithTimeout(10 * time.Second)
-
 			ssidFinder := nodewith.Role(role.StaticText).Name(testParams.wifiConfig.ssid)
-			if err := ui.WithTimeout(10 * time.Second).WaitUntilExists(ssidFinder)(ctx); err != nil {
-				return errors.Wrap(err, "failed to find SSID in a dialog")
-			}
-
 			visibleButton := nodewith.Role(role.Button).ClassName("icon-visibility")
-			if err := ui.WithTimeout(10 * time.Second).WaitUntilExists(visibleButton)(ctx); err != nil {
-				return errors.Wrap(err, "failed to find the password visibility button")
-			}
-			if err := ui.DoDefault(visibleButton)(ctx); err != nil {
-				return errors.Wrap(err, "failed to left click of the password visibility button")
-			}
-
 			passwordFinder := nodewith.Role(role.StaticText).Name(testParams.wifiConfig.password)
-			if err := ui.WithTimeout(10 * time.Second).WaitUntilExists(passwordFinder)(ctx); err != nil {
-				return errors.Wrap(err, "failed to find password in a dialog")
-			}
-
 			connectButton := nodewith.Role(role.Button).Name("Connect")
-			if err := ui.WithTimeout(10 * time.Second).WaitUntilExists(connectButton)(ctx); err != nil {
-				return errors.Wrap(err, "failed to find the network connection button")
-			}
-			if err := ui.CheckRestriction(connectButton, restriction.None)(ctx); err != nil {
-				return errors.Wrap(err, "failed to check if the network connection button is enabled")
+
+			ui := uiauto.New(tconn).WithTimeout(10 * time.Second)
+			if err := uiauto.Combine("check Wi-Fi dialog",
+				ui.WaitUntilExists(ssidFinder),
+				ui.WaitUntilExists(visibleButton),
+				ui.DoDefault(visibleButton),
+				ui.WaitUntilExists(passwordFinder),
+				ui.WaitUntilExists(connectButton),
+				ui.CheckRestriction(connectButton, restriction.None),
+			)(ctx); err != nil {
+				return err
 			}
 		}
 	}
