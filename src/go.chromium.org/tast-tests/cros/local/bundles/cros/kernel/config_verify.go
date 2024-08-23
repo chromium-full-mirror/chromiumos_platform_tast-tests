@@ -336,11 +336,10 @@ func newCommonKernelConfigCheck(ver *sysutil.KernelVersion, arch string) *kernel
 	if ver.IsOrLater(5, 10) {
 		module = append(module, "EXFAT_FS")
 	} else {
-		// EXFAT is still experimental in 5.4.
 		missing = append(missing, "EXFAT_FS")
 	}
 
-	if ver.IsOrLater(6, 6) {
+	if ver.IsOrLater(5, 15) {
 		module = append(module, "NTFS3_FS")
 	} else {
 		missing = append(missing, "NTFS3_FS")
