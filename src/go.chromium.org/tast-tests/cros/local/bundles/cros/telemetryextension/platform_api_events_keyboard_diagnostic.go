@@ -33,14 +33,14 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{
 			{
-				Name:              "ash_keyboard",
+				Name:              "keyboard",
 				Fixture:           fixture.TelemetryExtensionSkipOEMNameCheck,
 				ExtraHardwareDeps: hwdep.D(hwdep.InternalKeyboard()),
 				Val:               true, // has keyboard
 				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			},
 			{
-				Name:              "ash_no_keyboard",
+				Name:              "no_keyboard",
 				Fixture:           fixture.TelemetryExtensionSkipOEMNameCheck,
 				ExtraHardwareDeps: hwdep.D(hwdep.NoInternalKeyboard()),
 				Val:               false, // has keyboard

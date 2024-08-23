@@ -16,7 +16,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
@@ -78,12 +77,6 @@ func extFiles() []string {
 
 type option func(*telemetryExtensionFixture)
 
-func lacros() func(*telemetryExtensionFixture) {
-	return func(f *telemetryExtensionFixture) {
-		f.bt = browser.TypeLacros
-	}
-}
-
 func skipOEMNameCheck() func(*telemetryExtensionFixture) {
 	return func(f *telemetryExtensionFixture) {
 		f.skipOEMNameCheck = true
@@ -92,7 +85,6 @@ func skipOEMNameCheck() func(*telemetryExtensionFixture) {
 
 func newTelemetryExtensionFixture(opts ...option) *telemetryExtensionFixture {
 	f := &telemetryExtensionFixture{}
-	f.bt = browser.TypeAsh
 	f.v.ExtID = "gogonhoemckpdpadfnjnpgbjpbjnodgc"
 
 	for _, opt := range opts {
@@ -103,7 +95,6 @@ func newTelemetryExtensionFixture(opts ...option) *telemetryExtensionFixture {
 
 // telemetryExtensionFixture implements testing.FixtureImpl.
 type telemetryExtensionFixture struct {
-	bt               browser.Type
 	skipOEMNameCheck bool
 
 	dir     string
@@ -148,7 +139,7 @@ func (f *telemetryExtensionFixture) SetUp(ctx context.Context, s *testing.FixtSt
 		s.Fatal("Unable to pause after Ash launch")
 	}
 
-	br, closeBr, err := browserfixt.SetUp(ctx, f.cr, f.bt)
+	br, closeBr, err := browserfixt.SetUp(ctx, f.cr, browser.TypeAsh)
 	if err != nil {
 		s.Fatal("Failed to open the browser: ", err)
 	}
@@ -261,20 +252,10 @@ func (f *telemetryExtensionFixture) setupChromeForConsumers(ctx context.Context,
 	opts := []chrome.Option{
 		chrome.EnableFeatures("TelemetryExtensionPendingApprovalApi"),
 		chrome.CustomLoginTimeout(chromeLoginTimeout),
+		chrome.UnpackedExtension(dir),
 	}
-	f.addSkipOEMNameCheckChromeArg(ctx, &opts)
-
-	if f.bt == browser.TypeAsh {
-		opts = append(opts, chrome.UnpackedExtension(dir))
-	}
-	if f.bt == browser.TypeLacros {
-		extraOpts, err := lacrosfixt.NewConfig().Opts()
-		if err != nil {
-			return errors.Wrap(err, "failed to get lacros options")
-		}
-		opts = append(opts, extraOpts...)
-		opts = append(opts, chrome.LacrosUnpackedExtension(dir))
-		opts = append(opts, chrome.LacrosEnableFeatures("TelemetryExtensionPendingApprovalApi"))
+	if f.skipOEMNameCheck {
+		opts = append(opts, chrome.ExtraArgs("--telemetry-extension-skip-manufacturer-check-for-testing"))
 	}
 
 	cr, err := chrome.New(ctx, opts...)
@@ -336,15 +317,4 @@ func (f *telemetryExtensionFixture) setupConnectionToExtension(ctx context.Conte
 	}
 
 	return nil
-}
-
-func (f *telemetryExtensionFixture) addSkipOEMNameCheckChromeArg(ctx context.Context, opts *[]chrome.Option) {
-	if !f.skipOEMNameCheck {
-		return
-	}
-	if f.bt == browser.TypeLacros {
-		*opts = append(*opts, chrome.LacrosExtraArgs("--telemetry-extension-skip-manufacturer-check-for-testing"))
-	} else {
-		*opts = append(*opts, chrome.ExtraArgs("--telemetry-extension-skip-manufacturer-check-for-testing"))
-	}
 }
