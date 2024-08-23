@@ -9,8 +9,14 @@ package citrix
 // AppName is the name of the Citrix application.
 type AppName string
 
-// FootPedalAppName is the name of the Foot Pedal application.
-const FootPedalAppName AppName = "Philips"
+const (
+	// FootPedalAppName is the name of the Foot Pedal application.
+	FootPedalAppName AppName = "Philips"
+	// ScriptelAppName is the name of the Scriptel application.
+	ScriptelAppName AppName = "Scrip"
+	// TopazAppName is the name of the Topaz application.
+	TopazAppName AppName = "DemoOCX32"
+)
 
 const (
 	topBtnIcon           = "citrix/top_btn.png"
@@ -40,4 +46,36 @@ var FootPedalData = []string{
 const (
 	footPedalMarkIcon     = "foot_pedal_mark.png"
 	footPedalMaximizeIcon = "foot_pedal_maximize.png"
+)
+
+// SignaturePadData holds the UI fragments that are used by Topaz/Scriptel signature. Use
+// this as a data dependency when connecting to Topaz/Scriptel.
+var SignaturePadData = []string{
+	ScriptelAppIcon,
+	scriptelTransparentIcon,
+	scriptelClearIcon,
+	topazClearIcon,
+}
+
+const (
+	// ScriptelMotionData is the motion data that controls the robotic arm to
+	// operate the Scriptel signature pad.
+	ScriptelMotionData = "scriptel_motion_data.csv"
+	// ScriptelAppTitle is the app title of the Scriptel app.
+	ScriptelAppTitle = "ScripTouch Sign and Save"
+	// ScriptelAppIcon is the file name of the Scriptel app icon.
+	ScriptelAppIcon         = "scriptel_icon.png"
+	scriptelTransparentIcon = "scriptel_transparent.png"
+	scriptelClearIcon       = "scriptel_clear.png"
+)
+
+const (
+	// TopazMotionData is the motion data that controls the robotic arm to
+	// operate the Topaz signature pad.
+	TopazMotionData = "topaz_motion_data.csv"
+	// TopazAppTitle is the app title of the Topaz app.
+	TopazAppTitle = "Topaz SigPlus Demonstration"
+	// TopazDeviceName is the device name of the Topaz signature pad.
+	TopazDeviceName = "Topaz HID Tablet"
+	topazClearIcon  = "topaz_clear.png"
 )

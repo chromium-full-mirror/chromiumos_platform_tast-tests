@@ -39,6 +39,7 @@ func SaveCropScreenshot(cr *chrome.Chrome, bounds coords.Rect, dir, fileName str
 // VerifyTwoImagesSimilarity verifies two images are the same or not.
 // If expectedSame is true, it will return error if the images are not the same.
 // If expectedSame is false, it will return error if the images are the same.
+// TODO(b/366075152): Return diff from VerifyTwoImagesSimilarity.
 func VerifyTwoImagesSimilarity(dir, fileNameA, fileNameB string, expectedSame bool) action.Action {
 	return func(ctx context.Context) error {
 		if expectedSame {
@@ -68,7 +69,7 @@ func VerifyTwoImagesSimilarity(dir, fileNameA, fileNameB string, expectedSame bo
 
 		const similarityThreshold = 30
 		// Expect the images are the same.
-		if expectedSame && similarityThreshold > 30 {
+		if expectedSame && diff > similarityThreshold {
 			return errors.Wrap(err, "the images are not the same")
 		}
 		// Expect the images are not the same.
