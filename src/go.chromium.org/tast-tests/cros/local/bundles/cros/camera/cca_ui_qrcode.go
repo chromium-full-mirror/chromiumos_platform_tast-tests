@@ -11,8 +11,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/camera/cca"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/restriction"
@@ -61,7 +59,6 @@ func init() {
 // CCAUIQRCode verifies that QR code scanning feature in CCA works.
 func CCAUIQRCode(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(cca.FixtureData).Chrome
-	bt := s.FixtValue().(cca.FixtureData).BrowserType
 	runTestWithApp := s.FixtValue().(cca.FixtureData).RunTestWithApp
 	switchScene := s.FixtValue().(cca.FixtureData).SwitchScene
 
@@ -114,7 +111,7 @@ func CCAUIQRCode(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to setup QRCode scene: ", err)
 			}
 			if err := runTestWithApp(ctx, func(ctx context.Context, app *cca.App) error {
-				return runQRCodeTest(ctx, cr, bt, app, tst.testParams)
+				return runQRCodeTest(ctx, cr, app, tst.testParams)
 			}, cca.TestWithAppParams{}); err != nil {
 				s.Errorf("Failed to pass %v subtest: %v", tst.name, err)
 			}
@@ -123,7 +120,7 @@ func CCAUIQRCode(ctx context.Context, s *testing.State) {
 	}
 }
 
-func runQRCodeTest(ctx context.Context, cr *chrome.Chrome, bt browser.Type, app *cca.App, testParams qrcodeTestParams) error {
+func runQRCodeTest(ctx context.Context, cr *chrome.Chrome, app *cca.App, testParams qrcodeTestParams) error {
 	if err := app.OpenQRCodeScanMode(ctx); err != nil {
 		return errors.Wrap(err, "failed to open QR code scan mode")
 	}
@@ -158,14 +155,8 @@ func runQRCodeTest(ctx context.Context, cr *chrome.Chrome, bt browser.Type, app 
 		}
 
 		if testParams.format == "url" {
-			br, brCleanUp, err := browserfixt.Connect(ctx, cr, bt)
-			if err != nil {
-				return errors.Wrap(err, "failed to connect to browser")
-			}
-			defer brCleanUp(ctx)
-
 			if err := testing.Poll(ctx, func(ctx context.Context) error {
-				ok, err := br.IsTargetAvailable(ctx, chrome.MatchTargetURL(testParams.copyButton.expected))
+				ok, err := cr.IsTargetAvailable(ctx, chrome.MatchTargetURL(testParams.copyButton.expected))
 				if err != nil {
 					return testing.PollBreak(err)
 				}
