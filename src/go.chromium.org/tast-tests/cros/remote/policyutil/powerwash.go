@@ -8,6 +8,7 @@ import (
 	"context"
 	"io"
 
+	"go.chromium.org/tast-tests/cros/remote/log"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
@@ -101,6 +102,10 @@ func Powerwash(ctx context.Context, cloudStorage *testing.CloudStorage, dut *dut
 		return errors.Wrap(err, "failed to prepare to powerwash")
 	}
 	defer cleanup()
+
+	// Store logs before powerwash.
+	log.Collect(ctx, dut)
+
 	defer func() {
 		if err := restoreAfterPowerwash(ctx, statefulReader, dut, pushedFiles); err != nil {
 			retErr = errors.Join(retErr, errors.Wrap(err, "failed to restore after powerwash"))

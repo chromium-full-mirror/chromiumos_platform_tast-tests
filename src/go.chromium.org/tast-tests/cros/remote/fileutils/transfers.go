@@ -9,9 +9,11 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 	"time"
 
+	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/ssh/linuxssh"
@@ -93,4 +95,47 @@ func CopyFilesFromHostToHost(ctx context.Context, srcHost, dstHost *ssh.Conn, fi
 		return errors.Wrapf(err, "copy file from host to host: failed to upload files from tast runner host at %q to dst host", tmpTastRunnerFileDir)
 	}
 	return nil
+}
+
+// CopyFromDUTToHost copies a list of files or directories from the DUT to the host.
+// It creates a directory in the test output directory at "<context_out_dir>/copied_files_<start_unix_time>".
+// Then copies the specified files or directories from the DUT to that directory as a base path (i.e "/var/log/chrome" will be copied to "chrome" dir).
+// All paths must be absolute paths without trailing slashes (i.e. "/var/log/chrome").
+//
+// Example:
+//
+//	fileutils.CopyFromDUTToHost(ctx, s.DUT(), []string{"/var/log/chrome", "/var/log/messages"})
+func CopyFromDUTToHost(ctx context.Context, dut *dut.DUT, sources []string) {
+	// Prepare temporary dir on test drone host.
+	ctxOutDir, ok := testing.ContextOutDir(ctx)
+	if !ok {
+		testing.ContextLog(ctx, "Failed to get the output directory in context")
+		return
+	}
+
+	// Use a timestamp to avoid overwriting any existing directories.
+	timeStr := time.Now().UTC().Format(time.RFC3339Nano)
+	outDir := filepath.Join(ctxOutDir, "copied_files_"+timeStr)
+
+	if !dut.Connected(ctx) {
+		if err := dut.WaitConnect(ctx); err != nil {
+			testing.ContextLogf(ctx, "Failed to connect to the DUT (%s): %v", dut.HostName(), err)
+			return
+		}
+	}
+
+	if err := os.MkdirAll(outDir, 0777); err != nil {
+		testing.ContextLogf(ctx, "Failed to create directory to store files for DUT (%s): %v", dut.HostName(), err)
+	}
+
+	for _, src := range sources {
+		if _, err := dut.Conn().CommandContext(ctx, "test", "-e", src).Output(); err != nil {
+			testing.ContextLogf(ctx, "Path %q doesn't exist on the DUT, skipping: %v", src, err)
+			continue
+		}
+		dst := filepath.Join(outDir, filepath.Base(src))
+		if err := linuxssh.GetFile(ctx, dut.Conn(), src, dst, linuxssh.DereferenceSymlinks); err != nil {
+			testing.ContextLogf(ctx, "Failed to copy %s from the DUT to the host: %v", src, err)
+		}
+	}
 }

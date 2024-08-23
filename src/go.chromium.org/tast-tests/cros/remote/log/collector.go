@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/remote/fileutils"
+	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 )
 
@@ -103,4 +104,16 @@ func BuildLogFilename(nameParts ...string) string {
 		name = "_" + name
 	}
 	return fmt.Sprintf("%s%s.log", timestamp, name)
+}
+
+// Collect copies the logs from the DUT to the host in context_out_dir.
+// It copies chrome, messages, fakedms and ui logs by default.
+func Collect(ctx context.Context, dut *dut.DUT) {
+	logsToCopy := []string{
+		"/var/log/chrome",
+		"/var/log/messages",
+		"/var/enrolling-fdms",
+		"/var/log/ui",
+	}
+	fileutils.CopyFromDUTToHost(ctx, dut, logsToCopy)
 }
