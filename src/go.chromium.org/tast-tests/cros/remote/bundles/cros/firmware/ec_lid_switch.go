@@ -107,7 +107,7 @@ func ECLidSwitch(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to close lid and wake immediately: ", err)
 		}
 
-		s.Log("Close DUT lid and wake immediately")
+		s.Log("Close DUT lid and wake with delay")
 		if err := shutdownWithLidClose(ctx, h, wakeDelay); err != nil {
 			s.Fatal("Failed to close lid and wake immediately: ", err)
 		}
