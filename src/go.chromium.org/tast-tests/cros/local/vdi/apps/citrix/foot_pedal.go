@@ -14,8 +14,8 @@ import (
 )
 
 const (
-	// AppNameFootPedal is the name of the Foot Pedal application.
-	AppNameFootPedal AppName = "Philips"
+	// FootPedalAppName is the name of the Foot Pedal application.
+	FootPedalAppName AppName = "Philips"
 
 	footPedalMarkIcon     = "foot_pedal_mark.png"
 	footPedalMaximizeIcon = "foot_pedal_maximize.png"
