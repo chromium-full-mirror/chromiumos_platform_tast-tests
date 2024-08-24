@@ -20,7 +20,12 @@ func init() {
 		Func:         CCAUIRecordVideoFPS,
 		Desc:         "Record video and check the FPS of the video",
 		Contacts:     []string{"chromeos-camera-app-eng@google.com", "chuhsuan@chromium.org"},
-		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
+		Attr:         []string{
+			"group:crosbolt",
+			"crosbolt_perbuild",
+			"group:release-health",
+			"release-health_camera",
+		},
 		SoftwareDeps: []string{"camera_app", "chrome"},
 		Timeout:      5 * time.Minute,
 		Fixture:      "ccaTestBridgeReadyWithFakeHALCamera",

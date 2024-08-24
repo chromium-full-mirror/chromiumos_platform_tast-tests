@@ -90,7 +90,12 @@ func init() {
 		Desc:         "Verifies if the camera intents fired from Android apps could be delivered and handled by CCA",
 		Contacts:     []string{"chromeos-camera-app-eng@google.com", "seannli@google.com"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{
+			"group:mainline",
+			"informational",
+			"group:release-health",
+			"release-health_camera",
+		},
 		SoftwareDeps: []string{"arc", "camera_app", "chrome", "proprietary_codecs"},
 		Timeout:      7 * time.Minute,
 		Fixture:      "ccaTestBridgeReadyWithArcFakeHALCamera",

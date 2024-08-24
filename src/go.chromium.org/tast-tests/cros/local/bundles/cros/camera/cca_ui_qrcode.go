@@ -48,7 +48,12 @@ func init() {
 		Desc:         "Checks QR code detection in CCA",
 		Contacts:     []string{"chromeos-camera-app-eng@google.com", "shik@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{
+			"group:mainline",
+			"informational",
+			"group:release-health",
+			"release-health_camera",
+		},
 		SoftwareDeps: []string{"camera_app", "chrome", "chrome_internal"},
 		Data:         []string{"qrcode_1280x960.mjpeg", "qrcode_text_1280x960.mjpeg", "qrcode_wifi_1280x960_20231225.jpg"},
 		Fixture:      "ccaTestBridgeReadyWithFakeHALCamera",

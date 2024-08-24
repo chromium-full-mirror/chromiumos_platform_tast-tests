@@ -19,7 +19,12 @@ func init() {
 		Desc:         "Checks camera app can be launched in guest mode",
 		Contacts:     []string{"chromeos-camera-app-eng@google.com", "pihsun@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{
+			"group:mainline",
+			"informational",
+			"group:release-health",
+			"release-health_camera",
+		},
 		SoftwareDeps: []string{"camera_app", "chrome"},
 		Fixture:      "ccaLaunchedGuestWithFakeHALCamera",
 	})

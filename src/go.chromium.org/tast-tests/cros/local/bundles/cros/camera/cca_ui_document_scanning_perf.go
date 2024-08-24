@@ -21,7 +21,12 @@ func init() {
 		Desc:         "Measure the average latency of saving images as a searchable PDF using OCR in document scanning mode",
 		Contacts:     []string{"chromeos-camera-app-eng@google.com", "chuhsuan@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
-		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
+		Attr:         []string{
+			"group:crosbolt",
+			"crosbolt_perbuild",
+			"group:release-health",
+			"release-health_camera",
+		},
 		SoftwareDeps: []string{"camera_app", "chrome", "ondevice_document_scanner_rootfs_or_dlc"},
 		Data:         []string{"ocr_full_of_text_3264x2448.jpg"},
 		Fixture:      "ccaTestBridgeReadyWithFakeHALCamera",

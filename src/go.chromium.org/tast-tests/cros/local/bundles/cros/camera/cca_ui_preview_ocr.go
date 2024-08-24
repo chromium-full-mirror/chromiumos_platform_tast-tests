@@ -21,7 +21,12 @@ func init() {
 		Desc:         "Verifies OCR scanning on preview",
 		Contacts:     []string{"chromeos-camera-app-eng@google.com", "chuhsuan@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{
+			"group:mainline",
+			"informational",
+			"group:release-health",
+			"release-health_camera",
+		},
 		SoftwareDeps: []string{"camera_app", "chrome"},
 		Data:         []string{"ocr_one_line_3264x2448.jpg"},
 		Fixture:      "ccaTestBridgeReadyWithFakeHALCameraWithPreviewOCR",

@@ -25,7 +25,14 @@ func init() {
 		Desc:         "Verifies captured imaging metadata information on EXIF, using userfacing camera",
 		Contacts:     []string{"chromeos-camera-app-eng@google.com", "intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
-		Attr:         []string{"group:mainline", "group:camera-libcamera", "informational", "group:intel-nda"},
+		Attr:         []string{
+			"group:mainline",
+			"group:camera-libcamera",
+			"informational",
+			"group:intel-nda",
+			"group:release-health",
+			"release-health_camera",
+		},
 		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinOrVividCamera},
 		Fixture:      "ccaLaunched",
 	})

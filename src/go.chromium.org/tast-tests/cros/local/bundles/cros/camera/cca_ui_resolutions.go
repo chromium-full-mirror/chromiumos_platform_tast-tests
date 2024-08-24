@@ -33,7 +33,12 @@ func init() {
 			Name:              "real",
 			ExtraSoftwareDeps: []string{caps.BuiltinOrVividCamera},
 			Fixture:           "ccaTestBridgeReady",
-			ExtraAttr:         []string{"group:intel-nda", "group:camera-libcamera"},
+			ExtraAttr:         []string{
+				"group:intel-nda",
+				"group:camera-libcamera",
+				"group:release-health",
+				"release-health_camera",
+			},
 		}, {
 			Name:      "fake_hal",
 			Fixture:   "ccaTestBridgeReadyWithFakeHALCamera",

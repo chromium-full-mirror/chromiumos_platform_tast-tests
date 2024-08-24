@@ -25,7 +25,12 @@ func init() {
 		Desc:         "Record video and measure the performance including CPU, power and preview FPS",
 		Contacts:     []string{"chromeos-camera-app-eng@google.com", "wtlee@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
-		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
+		Attr:         []string{
+			"group:crosbolt",
+			"crosbolt_perbuild",
+			"group:release-health",
+			"release-health_camera",
+		},
 		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinOrVividCamera},
 		Timeout:      20 * time.Minute,
 		Fixture:      "ccaTestBridgeReady",
