@@ -155,4 +155,8 @@ func HumanMotionRobotStylusLatencyRegression(ctx context.Context, s *testing.Sta
 	s.Logf("Average latency: %f", latencyResult.AvgLatency)
 	s.Logf("Maximum latency: %f", latencyResult.MaxLatency)
 	s.Logf("Minimum latency: %f", latencyResult.MinLatency)
+
+	if err := inputs.SaveLatencyMetrics(latencyResult, s.OutDir()); err != nil {
+		s.Error("Failed to save latency metrics: ", err)
+	}
 }

@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"strings"
 
+	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast/core/errors"
 )
 
@@ -101,4 +102,31 @@ func parseMinimizationLine(line string) (float64, float64, float64, error) {
 		return 0, 0, 0, errors.Wrap(err, "failed to parse minimization metrics")
 	}
 	return latency, minimizationMax, minimizationMin, err
+}
+
+// SaveLatencyMetrics saves the latency metrics measured by WALT for Crosbolt.
+func SaveLatencyMetrics(latencyResult *StylusLatencyResult, savePath string) error {
+	pv := perf.NewValues()
+
+	pv.Set(perf.Metric{
+		Name:      "avg_latency",
+		Unit:      "ms",
+		Direction: perf.SmallerIsBetter,
+	}, latencyResult.AvgLatency)
+	pv.Set(perf.Metric{
+		Name:      "max_latency",
+		Unit:      "ms",
+		Direction: perf.SmallerIsBetter,
+	}, latencyResult.MaxLatency)
+	pv.Set(perf.Metric{
+		Name:      "min_latency",
+		Unit:      "ms",
+		Direction: perf.SmallerIsBetter,
+	}, latencyResult.MinLatency)
+
+	if err := pv.Save(savePath); err != nil {
+		return errors.Wrap(err, "failed to save latency metrics for crosbolt")
+	}
+
+	return nil
 }
