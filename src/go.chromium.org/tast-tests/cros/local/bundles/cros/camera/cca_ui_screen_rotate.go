@@ -23,8 +23,8 @@ func init() {
 		Func:         CCAUIScreenRotate,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Takes pictures in every screen orientation and checks the picture resolutions",
-		Contacts:     []string{"chromeos-camera-app-eng@google.com", "intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
-		BugComponent: "b:157291", // ChromeOS > External > Intel
+		Contacts:     []string{"chromeos-camera-app-eng@google.com", "shik@chromium.org", "intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
+		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Attr:         []string{"group:mainline", "informational", "group:intel-nda"},
 		SoftwareDeps: []string{"camera_app", "chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
@@ -47,7 +47,7 @@ func checkOrientation(facing cca.Facing, screen cca.Orientation, resolution *cca
 	if facing == cca.FacingExternal {
 		// For external cameras, the taken picture should not be rotated with screen.
 		if !landscapePic {
-			return errors.New("external camera should have portrait picture")
+			return errors.New("external camera should have landscape picture")
 		}
 		return nil
 	}
