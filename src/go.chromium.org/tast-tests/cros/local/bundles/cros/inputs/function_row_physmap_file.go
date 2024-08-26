@@ -63,9 +63,10 @@ func init() {
 		},
 		BugComponent: "b:167212", // ChromeOS > Platform > baseOS > Input
 		Attr:         []string{"group:mainline", "informational"},
-		HardwareDeps: hwdep.D(hwdep.Keyboard()),
+		HardwareDeps: hwdep.D(hwdep.CustomTopRowKeyboard()),
 		SoftwareDeps: []string{
 			"amd64", // TODO(b/351726739): Test ARM64 keyboards as well
+			"custom_top_row_keyboard",
 		},
 	})
 }
