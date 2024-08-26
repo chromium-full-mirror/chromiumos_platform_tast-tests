@@ -16,7 +16,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CCAUIPortraitMode,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that CCA can take portrait mode photo",
 		Contacts:     []string{"chromeos-camera-app-eng@google.com", "wtlee@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework

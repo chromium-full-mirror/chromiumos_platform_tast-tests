@@ -20,7 +20,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         GetUserMediaPostVCSCrash,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that getUserMedia works after the video capture service crashed",
 		Contacts:     []string{"chromeos-camera-app-eng@google.com", "seannli@google.com"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework

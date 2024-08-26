@@ -17,7 +17,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CCAUITakePicture,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Opens CCA and verifies photo taking related use cases",
 		Contacts:     []string{"chromeos-camera-app-eng@google.com", "wtlee@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework

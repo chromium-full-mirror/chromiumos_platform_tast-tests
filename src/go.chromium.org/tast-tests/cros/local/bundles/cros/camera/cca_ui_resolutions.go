@@ -21,7 +21,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CCAUIResolutions,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Opens CCA and verifies resolution settings are applied correctly",
 		Contacts:     []string{"chromeos-camera-app-eng@google.com", "kamchonlathorn@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework

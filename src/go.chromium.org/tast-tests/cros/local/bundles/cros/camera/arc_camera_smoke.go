@@ -14,7 +14,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ARCCameraSmoke,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks if camera can be probed in ARC",
 		Contacts:     []string{"chromeos-camera-app-eng@google.com", "seannli@google.com"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework

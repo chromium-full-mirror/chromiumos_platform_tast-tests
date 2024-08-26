@@ -30,7 +30,6 @@ const (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CCAUIStress,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Opens CCA and stress testing common functions randomly",
 		Contacts:     []string{"chromeos-camera-app-eng@google.com", "shik@chromium.org", "pihsun@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework

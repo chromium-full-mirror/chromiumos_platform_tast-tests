@@ -17,7 +17,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ImageCapture,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Verifies availability of ImageCapture API outside CCA",
 		Contacts:     []string{"chromeos-camera-app-eng@google.com", "dorahkim@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework

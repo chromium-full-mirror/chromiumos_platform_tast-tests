@@ -22,7 +22,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CCAUIRecordVideoPerf,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Record video and measure the performance including CPU, power and preview FPS",
 		Contacts:     []string{"chromeos-camera-app-eng@google.com", "wtlee@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework

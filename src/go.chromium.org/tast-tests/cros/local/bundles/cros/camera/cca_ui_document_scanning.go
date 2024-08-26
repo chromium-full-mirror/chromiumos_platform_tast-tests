@@ -30,7 +30,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CCAUIDocumentScanning,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that CCA can take a photo for document and generate the document file with fake HAL",
 		Contacts:     []string{"chromeos-camera-app-eng@google.com", "wtlee@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework

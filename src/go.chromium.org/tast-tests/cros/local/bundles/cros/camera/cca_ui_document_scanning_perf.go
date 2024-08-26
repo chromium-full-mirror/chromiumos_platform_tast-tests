@@ -18,7 +18,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CCAUIDocumentScanningPerf,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measure the average latency of saving images as a searchable PDF using OCR in document scanning mode",
 		Contacts:     []string{"chromeos-camera-app-eng@google.com", "chuhsuan@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework

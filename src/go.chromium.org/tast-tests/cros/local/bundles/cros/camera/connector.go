@@ -20,7 +20,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Connector,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies the camera service connector library works",
 		Contacts:     []string{"chromeos-camera-app-eng@google.com", "shik@chromium.org"},
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera

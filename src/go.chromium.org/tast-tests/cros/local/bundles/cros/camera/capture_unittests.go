@@ -28,7 +28,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CaptureUnittests,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Runs Chrome capture_unittests to exercise Chrome's video capture stack",
 		Contacts:     []string{"chromeos-camera-app-eng@google.com", "shik@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework

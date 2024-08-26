@@ -45,7 +45,6 @@ type wifiConfig struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CCAUIQRCode,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks QR code detection in CCA",
 		Contacts:     []string{"chromeos-camera-app-eng@google.com", "shik@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework

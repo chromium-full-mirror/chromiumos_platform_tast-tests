@@ -18,7 +18,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CCAUIRecordVideoFPS,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Record video and check the FPS of the video",
 		Contacts:     []string{"chromeos-camera-app-eng@google.com", "chuhsuan@chromium.org"},
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},

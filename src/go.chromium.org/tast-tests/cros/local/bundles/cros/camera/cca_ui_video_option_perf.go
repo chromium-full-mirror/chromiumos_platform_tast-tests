@@ -23,7 +23,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CCAUIVideoOptionPerf,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Record video with different video option on CCA, measure UI performance including CPU usage",
 		Contacts:     []string{"chromeos-camera-app-eng@google.com", "chuhsuan@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework

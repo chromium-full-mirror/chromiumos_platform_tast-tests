@@ -17,9 +17,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CCAUISound,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Ensure the sound playing functionality works in CCA",
+		Func: CCAUISound,
+		Desc: "Ensure the sound playing functionality works in CCA",
 		Contacts: []string{
 			"chromeos-camera-app-eng@google.com",
 			"wtlee@chromium.org",

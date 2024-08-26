@@ -18,7 +18,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         WebCameraApp,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test for the functionality (such as taking photos, recording videos, and switching between cameras) of this camera app",
 		Contacts:     []string{"chromeos-camera-app-eng@google.com", "chuhsuan@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework

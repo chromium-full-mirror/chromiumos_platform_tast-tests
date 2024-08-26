@@ -22,7 +22,6 @@ type walker struct{}
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CCAUIImageExif,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies captured imaging metadata information on EXIF, using userfacing camera",
 		Contacts:     []string{"chromeos-camera-app-eng@google.com", "intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework

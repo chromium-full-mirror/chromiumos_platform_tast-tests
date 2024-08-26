@@ -15,9 +15,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CCAUISmoke,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Smoke test for ChromeOS Camera App",
+		Func: CCAUISmoke,
+		Desc: "Smoke test for ChromeOS Camera App",
 		Contacts: []string{
 			"chromeos-camera-app-eng@google.com",
 			"pihsun@chromium.org",

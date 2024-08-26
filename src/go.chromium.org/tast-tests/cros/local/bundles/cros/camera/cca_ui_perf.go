@@ -26,7 +26,6 @@ type param struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CCAUIPerf,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Opens CCA and measures the UI performance including CPU and power usage",
 		Contacts:     []string{"chromeos-camera-app-eng@google.com", "wtlee@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework

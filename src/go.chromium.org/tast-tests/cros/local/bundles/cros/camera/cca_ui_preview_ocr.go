@@ -18,7 +18,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CCAUIPreviewOCR,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies OCR scanning on preview",
 		Contacts:     []string{"chromeos-camera-app-eng@google.com", "chuhsuan@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework

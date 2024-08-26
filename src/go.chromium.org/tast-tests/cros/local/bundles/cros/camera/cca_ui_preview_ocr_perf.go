@@ -18,7 +18,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CCAUIPreviewOCRPerf,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measure the average OCR scanning latency on preview in photo mode",
 		Contacts:     []string{"chromeos-camera-app-eng@google.com", "chuhsuan@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework

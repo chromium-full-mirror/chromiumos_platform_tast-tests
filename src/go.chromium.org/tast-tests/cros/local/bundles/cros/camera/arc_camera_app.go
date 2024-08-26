@@ -23,7 +23,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ARCCameraApp,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Data:         []string{arcapp.CameraAppApk},
 		Desc:         "Checks basic Android camera functionalities work under ARC",
 		Contacts:     []string{"chromeos-camera-app-eng@google.com", "seannli@google.com"},
