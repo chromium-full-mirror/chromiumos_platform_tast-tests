@@ -8,15 +8,14 @@ import (
 	"context"
 	"encoding/json"
 	"os"
-	"time"
 
-	"go.chromium.org/tast-tests/cros/local/a11y"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
 	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/testing"
 )
 
 const (
+	libsoda                 = "libsoda"
+	libsodaEnUS             = "libsoda-model-en-us"
 	summaryModelDLC         = "ml-dlc-73caa678-45cb-4007-abb9-f04e431376da"
 	titleSuggestionModelDLC = "ml-dlc-ee7c31c2-18e5-405a-b54e-f2607130a15d"
 	titleSuggestionLoRADLC  = "ml-dlc-1bdd5282-2d14-413c-bf43-9ea6d55c38a6"
@@ -70,9 +69,8 @@ type RecordingData struct {
 
 func ensureModelInstalled(ctx context.Context, setup Setup) error {
 	if setup.Config.TranscriptionForceEnabled || setup.Config.SpeakerLabelForceEnabled {
-		// Wait until dlc libsoda and libsoda-model-en-us are installed.
-		if err := testing.Poll(ctx, a11y.VerifySodaInstalled, &testing.PollOptions{Timeout: 2 * time.Minute, Interval: 10 * time.Second}); err != nil {
-			return errors.Wrap(err, "failed to wait for libsoda dlc to be installed")
+		if err := launcher.InstallDlc(ctx, []string{libsoda, libsodaEnUS}); err != nil {
+			return errors.Wrap(err, "failed to ensure transcription models installed")
 		}
 	}
 

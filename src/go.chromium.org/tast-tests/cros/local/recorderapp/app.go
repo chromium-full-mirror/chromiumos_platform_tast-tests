@@ -10,6 +10,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -119,6 +120,35 @@ func (a *App) Close(ctx context.Context) error {
 		return errors.Wrap(err, "failed to clear cached data in the app")
 	}
 	return apps.Close(ctx, a.tconn, apps.Recorder.ID)
+}
+
+// SetWindowStateAndWait sets the state of the Recorder App window and wait
+// until the window is already updated to the target state.
+func (a *App) SetWindowStateAndWait(ctx context.Context, targetState ash.WindowStateType) error {
+	window, err := ash.FindWindow(ctx, a.tconn, func(w *ash.Window) bool {
+		return w.Title == apps.Recorder.Name
+	})
+	if err != nil {
+		return errors.Wrap(err, "failed to find the Recorder App window")
+	}
+	return ash.SetWindowStateAndWait(ctx, a.tconn, window.ID, targetState)
+}
+
+// StartRecording returns a function to start recording audio.
+func (a *App) StartRecording() uiauto.Action {
+	return uiauto.Combine("Start recording",
+		a.ClickWhenExists(StartRecordingButton),
+		a.WaitUntilExists(StopRecordingButton),
+	)
+}
+
+// StopRecording returns a function to stop recording audio.
+func (a *App) StopRecording() uiauto.Action {
+	return uiauto.Combine("Stop recording",
+		a.ClickWhenExists(StopRecordingButton),
+		// Long audio may take long time to save.
+		a.WaitUntilExistsFor(PlaybackPage, 10*time.Second),
+	)
 }
 
 // PlayFirstRecording returns a function to click on the first recording on the

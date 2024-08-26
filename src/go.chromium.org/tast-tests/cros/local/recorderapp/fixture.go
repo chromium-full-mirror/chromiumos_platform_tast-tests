@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"time"
 
+	audiofixture "go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/power"
@@ -31,6 +32,11 @@ func resolveConchKey(ctx context.Context, s *testing.FixtState) ([]chrome.Option
 
 // PowerTimeParams are time parameters used in power recording in Recorder App.
 var PowerTimeParams = power.TimeParams{Interval: 5 * time.Second, Total: 5 * time.Minute}
+
+// CUJRecordTime is the time used for recording power and latency in CUJ tests.
+var CUJRecordTime = 10 * time.Minute
+
+const aloopTimeout = 20 * time.Second
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
@@ -61,6 +67,26 @@ func init() {
 		ResetTimeout:    powersetup.ResetTimeout,
 		TearDownTimeout: powersetup.TearDownTimeout,
 		PreTestTimeout:  powersetup.PreTestTimeout,
+		PostTestTimeout: powersetup.PostTestTimeout,
+		Vars:            []string{"recorderapp.conchKey"},
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:         "powerAshGAIAWithRecorderAppAndAloopLoaded",
+		Desc:         "PowerAshGAIA fixture with Recorder App enabled and ALSA loopback device configured",
+		Contacts:     []string{"chromeos-recorder-app@google.com", "kamchonlathorn@chromium.org"},
+		BugComponent: "b:1522466", // ChromeOS > Platform > Technologies > Audio > Recorder App
+		Impl: powersetup.NewPowerUIFixture(recorderAppPowerTestOptions, powersetup.PowerFixtureOptions{
+			BrowserType:      browser.TypeAsh,
+			BrowserExtraOpts: []chrome.Option{chrome.EnableFeatures("Conch")},
+			EnableGAIALogin:  true,
+			ExtraOptsFunc:    resolveConchKey,
+		}),
+		Parent:          audiofixture.AloopLoaded{Channels: 2}.Instance(),
+		SetUpTimeout:    chrome.GAIALoginTimeout + powersetup.SetUpTimeout + aloopTimeout,
+		ResetTimeout:    powersetup.ResetTimeout,
+		TearDownTimeout: powersetup.TearDownTimeout + aloopTimeout,
+		PreTestTimeout:  powersetup.PreTestTimeout + aloopTimeout,
 		PostTestTimeout: powersetup.PostTestTimeout,
 		Vars:            []string{"recorderapp.conchKey"},
 	})
