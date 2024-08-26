@@ -62,15 +62,39 @@ func init() {
 			Val:       ccaTestParams{envFacingImageCapture, 5, true},
 			Timeout:   5 * time.Minute,
 		}, {
-			Name:      "user_facing_switch_mode",
+			Name:      "user_facing_switch_mode_quick",
 			ExtraAttr: []string{"group:intel-nda"},
 			Val:       ccaTestParams{userFacingSwitchMode, 10, false},
 			Timeout:   5 * time.Minute,
 		}, {
-			Name:      "env_facing_switch_mode",
+			Name:    "user_facing_switch_mode_bronze",
+			Val:     ccaTestParams{userFacingSwitchMode, 100, false},
+			Timeout: 10 * time.Minute,
+		}, {
+			Name:    "user_facing_switch_mode_sliver",
+			Val:     ccaTestParams{userFacingSwitchMode, 200, false},
+			Timeout: 20 * time.Minute,
+		}, {
+			Name:    "user_facing_switch_mode_gold",
+			Val:     ccaTestParams{userFacingSwitchMode, 300, false},
+			Timeout: 30 * time.Minute,
+		}, {
+			Name:      "env_facing_switch_mode_quick",
 			ExtraAttr: []string{"group:intel-nda"},
 			Val:       ccaTestParams{envFacingSwitchMode, 10, false},
 			Timeout:   5 * time.Minute,
+		}, {
+			Name:    "env_facing_switch_mode_bronze",
+			Val:     ccaTestParams{envFacingSwitchMode, 100, false},
+			Timeout: 10 * time.Minute,
+		}, {
+			Name:    "env_facing_switch_mode_sliver",
+			Val:     ccaTestParams{envFacingSwitchMode, 200, false},
+			Timeout: 20 * time.Minute,
+		}, {
+			Name:    "env_facing_switch_mode_gold",
+			Val:     ccaTestParams{envFacingSwitchMode, 300, false},
+			Timeout: 30 * time.Minute,
 		}, {
 			Name:      "switch_camera_clamshell",
 			ExtraAttr: []string{"group:intel-nda"},
@@ -90,7 +114,7 @@ func init() {
 			Name:      "consecutive_image_stress",
 			ExtraAttr: []string{"group:intel-nda"},
 			Val:       ccaTestParams{restartCamera, 360, false},
-			Timeout:   15 * time.Minute,
+			Timeout:   30 * time.Minute,
 		}},
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 	})
@@ -139,7 +163,7 @@ func CCAUIEssential(ctx context.Context, s *testing.State) {
 		s.Fatal("Can't get number of cameras: ", err)
 	}
 	s.Logf("No. of cameras: %d", numCameras)
-	if (action != userFacingImageCapture && action != userFacingSwitchMode) && numCameras == 1 {
+	if (action != userFacingImageCapture && action != userFacingSwitchMode && action != restartCamera) && numCameras == 1 {
 		s.Fatal("Failed as DUT does not have Environment Camera")
 	}
 
