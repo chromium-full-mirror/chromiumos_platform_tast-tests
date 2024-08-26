@@ -35,6 +35,9 @@ const (
 
 	// GFE
 	GFEPreprod ServiceDepName = "GFE.preprod"
+
+	// ARC++ Authentication
+	ARCAuthPreprod ServiceDepName = "ARCAuth.preprod"
 )
 
 // SearchFlag generates a StringPair based on the given ServiceDepName.
