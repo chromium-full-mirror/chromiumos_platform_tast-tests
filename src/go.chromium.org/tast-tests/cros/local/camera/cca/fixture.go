@@ -137,17 +137,6 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:            "ccaTestBridgeReadyWithFakeCameraWithoutFakeScene",
-		Desc:            `Set up test bridge for CCA with fake camera without fake scene`,
-		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
-		BugComponent:    "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
-		Impl:            &fixture{useCameraType: testutil.UseFakeVCDCamera},
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    testBridgeSetUpTimeout,
-		TearDownTimeout: tearDownTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
 		Name:            "ccaTestBridgeReadyWithFakeHALCamera",
 		Desc:            "Set up test bridge for CCA with fake camera HAL input",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "pihsun@chromium.org"},
@@ -171,17 +160,6 @@ func init() {
 		TearDownTimeout: tearDownTimeout,
 		// Add AloopLoaded as parent since we need to verify the sound using audio loopback.
 		Parent: audioFixture.AloopLoaded{Channels: 2}.Instance(),
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:            "ccaTestBridgeReadyWithFakeHALCameraLacros",
-		Desc:            "Set up test bridge for CCA with fake camera HAL input and lacros",
-		Contacts:        []string{"chromeos-camera-eng@google.com", "pihsun@chromium.org"},
-		BugComponent:    "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
-		Impl:            &fixture{useCameraType: testutil.UseFakeHALCamera, lacros: true},
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    testBridgeSetUpTimeout,
-		TearDownTimeout: tearDownTimeout,
 	})
 
 	testing.AddFixture(&testing.Fixture{
@@ -283,39 +261,6 @@ func init() {
 		TearDownTimeout: powerTearDownTimeout,
 	})
 
-	testing.AddFixture(&testing.Fixture{
-		Name:            "ccaPowerReviewWithFakeHALCamera",
-		Desc:            "Set up test bridge for CCA with fake camera HAL for a power review Test",
-		Contacts:        []string{"chromeos-camera-eng@google.com", "esker@chromium.org"},
-		BugComponent:    "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
-		Impl:            &fixture{powerReview: true, useCameraType: testutil.UseFakeHALCamera},
-		SetUpTimeout:    powerSetUpTimeout,
-		ResetTimeout:    testBridgeSetUpTimeout,
-		TearDownTimeout: powerTearDownTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:            "ccaPowerReviewWithFakeHALCameraPreviewOCREnabled",
-		Desc:            "Set up test bridge for CCA with preview OCR flag enabled for a power review Test",
-		Contacts:        []string{"chromeos-camera-eng@google.com", "chuhsuan@chromium.org"},
-		BugComponent:    "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
-		Impl:            &fixture{powerReview: true, useCameraType: testutil.UseFakeHALCamera, enableFeatures: []feature{previewOCR}},
-		SetUpTimeout:    powerSetUpTimeout,
-		ResetTimeout:    testBridgeSetUpTimeout,
-		TearDownTimeout: powerTearDownTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:            "ccaPowerReviewWithFakeHALCameraPreviewOCRDisabled",
-		Desc:            "Set up test bridge for CCA with preview OCR flag disabled for a power review Test",
-		Contacts:        []string{"chromeos-camera-eng@google.com", "chuhsuan@chromium.org"},
-		BugComponent:    "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
-		Impl:            &fixture{powerReview: true, useCameraType: testutil.UseFakeHALCamera, disableFeatures: []feature{previewOCR}},
-		SetUpTimeout:    powerSetUpTimeout,
-		ResetTimeout:    testBridgeSetUpTimeout,
-		TearDownTimeout: powerTearDownTimeout,
-	})
-
 	// TODO(b/225112054): Remove the fixture once digital zoom and super resolution are enabled by default.
 	testing.AddFixture(&testing.Fixture{
 		Name:            "ccaLaunchedWithDigitalZoomAndSuperRes",
@@ -328,28 +273,6 @@ func init() {
 		PreTestTimeout:  ccaSetUpTimeout,
 		PostTestTimeout: ccaTearDownTimeout,
 		TearDownTimeout: tearDownTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:            "ccaPowerReviewWithDigitalZoomSuperDisabled",
-		Desc:            "Set up test bridge for CCA with digital zoom disabled for a power review Test",
-		Contacts:        []string{"chromeos-camera-eng@google.com", "kamchonlathorn@chromium.org"},
-		BugComponent:    "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
-		Impl:            &fixture{powerReview: true, disableFeatures: []feature{digitalZoom}},
-		SetUpTimeout:    powerSetUpTimeout,
-		ResetTimeout:    testBridgeSetUpTimeout,
-		TearDownTimeout: powerTearDownTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:            "ccaPowerReviewWithDigitalZoomSuperResEnabled",
-		Desc:            "Set up test bridge for CCA with digital zoom and super resolution enabled for a power review Test",
-		Contacts:        []string{"chromeos-camera-eng@google.com", "kamchonlathorn@chromium.org"},
-		BugComponent:    "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
-		Impl:            &fixture{powerReview: true, forceEnableSuperRes: true, enableFeatures: []feature{digitalZoom}},
-		SetUpTimeout:    powerSetUpTimeout,
-		ResetTimeout:    testBridgeSetUpTimeout,
-		TearDownTimeout: powerTearDownTimeout,
 	})
 
 	testing.AddFixture(&testing.Fixture{
