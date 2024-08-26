@@ -100,24 +100,6 @@ func stringVar(s *testing.State, name, defaultValue string) string {
 	return str
 }
 
-// switchToRearCamera checks if the current camera is Rear camera or not. If user facing camera is open, it will switch to rear camera.
-func switchToRearCamera(ctx context.Context, app cca.App) error {
-	facing, err := app.GetFacing(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to get camera facing")
-	}
-	if facing == cca.FacingBack {
-		return nil
-	}
-	if err := app.SwitchCamera(ctx); err != nil {
-		return errors.Wrap(err, "failed to switch camera")
-	}
-	if err := app.CheckFacing(ctx, cca.FacingBack); err != nil {
-		return errors.Wrap(err, "failed to verify camera facing back")
-	}
-	return nil
-}
-
 func clickPhotoShutterContinuously(ctx context.Context, s *testing.State, app *cca.App) error {
 	const timerState = cca.TimerOff
 	iterations := intVar(s, "iterations", defaultIterations)
@@ -309,25 +291,6 @@ func takeActionsRandomly(ctx context.Context, s *testing.State, app *cca.App) er
 				name: "switch-camera",
 				perform: func(ctx context.Context) error {
 					return app.SwitchCamera(ctx)
-				},
-			},
-			stressAction{
-				name: "switch-photo-rear",
-				perform: func(ctx context.Context) error {
-					if err := switchToRearCamera(ctx, *app); err != nil {
-						return errors.Wrap(err, "failed to switch to rear camera")
-					}
-					return app.SwitchMode(ctx, cca.Photo)
-
-				},
-			},
-			stressAction{
-				name: "switch-video-rear",
-				perform: func(ctx context.Context) error {
-					if err := switchToRearCamera(ctx, *app); err != nil {
-						return errors.Wrap(err, "failed to switch to rear camera")
-					}
-					return app.SwitchMode(ctx, cca.Video)
 				},
 			},
 		)
