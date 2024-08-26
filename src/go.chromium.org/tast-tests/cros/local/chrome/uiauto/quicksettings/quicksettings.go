@@ -560,10 +560,14 @@ func SliderValue(ctx context.Context, tconn *chrome.TestConn, slider SliderType)
 	if err != nil {
 		return 0, errors.Wrap(err, "failed to get the slider info")
 	}
-	percent := strings.Replace(info.Value, "%", "", 1)
-	level, err := strconv.Atoi(percent)
+	re := regexp.MustCompile(`(\d+)%?`)
+	match := re.FindStringSubmatch(info.Value)
+	if match == nil {
+		return 0, errors.New("failed to get value from " + info.Value)
+	}
+	level, err := strconv.Atoi(match[1])
 	if err != nil {
-		return 0, errors.Wrapf(err, "failed to convert %v to int", percent)
+		return 0, errors.Wrapf(err, "failed to convert %v to int", match[1])
 	}
 	return level, nil
 }
