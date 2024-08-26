@@ -8,12 +8,10 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -27,15 +25,19 @@ import (
 const uiDetectionTimeout = 45 * time.Second
 const defaultUser = "testuser@gmail.com"
 
+// A pattern to match detected PII UI fields. We use Regex pattern because
+// each data collector set and device may different PII data on the logs.
+// See chrome://support-tool UI for reference.
+const piiItemRegexPattern = `(.+) (\d+)`
+
 type dataCollectionParam struct {
-	browserType browser.Type
 	// Cusomized Support Tool url which will contain optional case ID and
 	// requested data collectors.
 	url string
 	// Support case ID.
 	caseID string
 	// List of requested data collector names.
-	dataCollectors []string
+	dataCollectorNamePatterns []string
 }
 
 func init() {
@@ -58,31 +60,19 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Params: []testing.Param{
 			{
-				Name: "all_data_collectors_lacros",
+				Name: "all_data_collectors",
 				Val: dataCollectionParam{
-					browserType: browser.TypeLacros,
-					url:         "chrome://support-tool/?case_id=test-case-id&module=CgUBAgMGDw",
-					caseID:      "test-case-id",
-					dataCollectors: []string{"Chrome System Information", "Crash IDs",
-						"Memory Details", "Policies",
-						"Device Event"},
-				},
-				ExtraSoftwareDeps: []string{"lacros"},
-			},
-			{
-				Name: "all_data_collectors_ash",
-				Val: dataCollectionParam{
-					browserType: browser.TypeAsh,
-					url:         "chrome://support-tool/?case_id=test-case-id&module=Cg8BAgMEBQYHCAkKCwwNDg8",
-					caseID:      "test-case-id",
-					dataCollectors: []string{"Chrome System Information", "Crash IDs",
-						"Memory Details", "Policies",
-						"Device Event", "UI Hierarchy",
-						"Additional ChromeOS Platform Logs",
-						"Intel WiFi NICs Debug Dump",
-						"Touch Events", "DBus Details",
-						"ChromeOS Network Routes",
-						"ChromeOS Shill (Connection Manager) Logs"},
+					url:    "chrome://support-tool/?case_id=test-case-id&module=Cg8BAgMEBQYHCAkKCwwNDg8",
+					caseID: "test-case-id",
+					dataCollectorNamePatterns: []string{`Chrome System Information`, `Crash IDs`,
+						`Memory Details`, `Policies`,
+						`Device Event`, `UI Hierarchy`,
+						// We use regex pattern to match both ChromeOS and Chrome OS since they tend to differ according to version.
+						`Additional Chrome(?:\s|)OS Platform Logs`,
+						`Intel WiFi NICs Debug Dump`,
+						`Touch Events`, `DBus Details`,
+						`Chrome(?:\s|)OS Network Routes`,
+						`Chrome(?:\s|)OS Shill \(Connection Manager\) Logs`},
 				},
 			},
 		},
@@ -95,16 +85,11 @@ func DataCollection(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	// Enable the support tool feature flag for both Lacros and Ash Chrome.
-	opts := []chrome.Option{chrome.EnableFeatures("SupportTool")}
-	lacrosConfig := lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(chrome.LacrosEnableFeatures("SupportTool")))
-	// Start Chrome with SupportTool flag.
-	cr, br, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, param.browserType, lacrosConfig, opts...)
+	cr, err := chrome.New(ctx, chrome.EnableFeatures("SupportTool"))
 	if err != nil {
 		s.Fatal("Cannot start Chrome: ", err)
 	}
 	defer cr.Close(cleanupCtx)
-	defer closeBrowser(cleanupCtx)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -122,7 +107,7 @@ func DataCollection(ctx context.Context, s *testing.State) {
 
 	ui := uiauto.New(tconn)
 
-	conn, err := br.NewConn(ctx, param.url)
+	conn, err := cr.NewConn(ctx, param.url)
 	if err != nil {
 		s.Fatal("Failed to open Support Tool page: ", err)
 	}
@@ -135,7 +120,7 @@ func DataCollection(ctx context.Context, s *testing.State) {
 	}
 
 	// Check the user's email field in UI.
-	if err := ui.WaitUntilExists(nodewith.Attribute("value", defaultUser).NameContaining("Email Address").First())(ctx); err != nil {
+	if err := ui.WaitUntilExists(nodewith.Attribute("value", defaultUser).NameContaining("Email").First())(ctx); err != nil {
 		s.Fatal("Failed to verify email: ", err)
 	}
 
@@ -144,10 +129,11 @@ func DataCollection(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Checking the checkboxes for requested data collectors")
-	for _, dataCollector := range param.dataCollectors {
-		checkbox := nodewith.NameContaining(dataCollector).Role(role.CheckBox)
+	for _, dataCollectorNamePattern := range param.dataCollectorNamePatterns {
+		r, _ := regexp.Compile(dataCollectorNamePattern)
+		checkbox := nodewith.NameRegex(r).Role(role.CheckBox).First()
 		if err := ui.WaitUntilExists(checkbox.Attribute("checked", "true"))(ctx); err != nil {
-			s.Fatalf("Failed to find checked checkbox for the data collector %s: %v", dataCollector, err)
+			s.Fatalf("Failed to find checked checkbox for the data collector %s: %v", dataCollectorNamePattern, err)
 		}
 	}
 
@@ -164,7 +150,8 @@ func DataCollection(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to click manual PII removal option button: ", err)
 	}
 
-	if err := ui.WaitUntilExists(nodewith.Role(role.CheckBox).First())(ctx); err != nil {
+	detectedPiiRegex, _ := regexp.Compile(piiItemRegexPattern)
+	if err := ui.WaitUntilExists(nodewith.NameRegex(detectedPiiRegex).First())(ctx); err != nil {
 		s.Fatal("Failed to find any checkbox for detected PII category: ", err)
 	}
 
