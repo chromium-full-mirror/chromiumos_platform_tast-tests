@@ -145,6 +145,8 @@ func newDisk(ctx context.Context, dut *dut.DUT, path string, isPartition bool) (
 
 const bh799Ven = 0x1217
 const bh799Dev = 0x0002
+const rtk1200Ven = 0x10ec
+const rtk1200Dev = 0x1200
 
 func (d *Disk) detectType(ctx context.Context) error {
 	if strings.HasPrefix(d.PhysicalDeviceName, "mmcblk") {
@@ -167,10 +169,13 @@ func (d *Disk) detectType(ctx context.Context) error {
 			return errors.Wrap(err, "can't read `subsystem_device` value")
 		}
 
+		d.Type = NvmeDisk
+
 		if subsysVen == bh799Ven && subsysDev == bh799Dev {
 			d.Type = EmmcOverNvmeDisk
-		} else {
-			d.Type = NvmeDisk
+		}
+		if subsysVen == rtk1200Ven && subsysDev == rtk1200Dev {
+			d.Type = EmmcOverNvmeDisk
 		}
 	} else if strings.HasPrefix(d.PhysicalDeviceName, "sd") {
 		removable, err := d.ReadSysfsInt64(ctx, "removable")
