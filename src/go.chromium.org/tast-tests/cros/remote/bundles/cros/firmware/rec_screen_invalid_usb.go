@@ -7,6 +7,7 @@ package firmware
 import (
 	"context"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
@@ -29,6 +30,7 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level4", "firmware_usb", "firmware_ro"},
+		Vars:         []string{"firmware.skipFlashUSB"},
 		Fixture:      fixture.NormalMode,
 		Timeout:      120 * time.Minute,
 	})
@@ -36,7 +38,6 @@ func init() {
 
 func RecScreenInvalidUSB(ctx context.Context, s *testing.State) {
 	h := s.FixtValue().(*fixture.Value).Helper
-	var removeServoCharger bool
 	type bootUSBTimeout struct {
 		err error
 	}
@@ -48,25 +49,41 @@ func RecScreenInvalidUSB(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create config: ", err)
 	}
 	// Set up a valid usb for dut to recover later from NoGoodScreen.
+	skipFlashUSB := false
+	if skipFlashUSBStr, ok := s.Var("firmware.skipFlashUSB"); ok {
+		var err error
+		skipFlashUSB, err = strconv.ParseBool(skipFlashUSBStr)
+		if err != nil {
+			s.Fatalf("Invalid value for var firmware.skipFlashUSB: got %q, want true/false", skipFlashUSBStr)
+		}
+	}
 	cs := s.CloudStorage()
+	if skipFlashUSB {
+		cs = nil
+	}
 	if err := h.SetupUSBKey(ctx, cs); err != nil {
 		s.Fatal("USBKey not working: ", err)
 	}
+
 	if err := h.Reporter.ClearEventlog(ctx); err != nil {
 		s.Fatal("Failed to clear event log: ", err)
 	}
+
+	var state firmware.CheckAndSetServoCharger
+	state = h.CheckServoChargerBeforeBootingFromUSB(ctx)
+
 	defer func() {
 		// The dut might have booted from the usb.
 		// Reboot the machine from main disk before
 		// restoring the usb device.
-		if err := resetDUT(ctx, h, removeServoCharger); err != nil {
+		if err := resetDUT(ctx, h, &state); err != nil {
 			s.Fatal("Failed to cold reset the DUT: ", err)
 		}
 		if bootUSBTimeoutErr.err != nil {
 			s.Log("Verifying the expected recovery reasons from event log")
 			newEvents, err := h.Reporter.EventlogList(ctx)
 			if err != nil {
-				s.Fatal(err, "failed to find events")
+				s.Error("Failed to find events: ", err)
 			}
 			checkRecoveryReasons := []reporters.RecoveryReason{reporters.RecoveryReasonROManual, reporters.RecoveryReasonLegacy, reporters.RecoveryReasonNotRequested}
 			if err := h.Reporter.CheckRecoveryEventsInEventLog(ctx, newEvents, checkRecoveryReasons); err != nil {
@@ -82,10 +99,11 @@ func RecScreenInvalidUSB(ctx context.Context, s *testing.State) {
 		if err := h.RestoreUSBKey(ctx); err != nil {
 			s.Error("Failed to restore the USB: ", err)
 		}
-		if removeServoCharger {
+		if !state.IsServoChargerConnected && state.RemoveServoChargerRequired {
 			if err := h.SetDUTPower(ctx, true); err != nil {
 				s.Fatal("Failed to connect charger: ", err)
 			}
+			state.IsServoChargerConnected = true
 			waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 90*time.Second)
 			defer cancelWaitConnect()
 			if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
@@ -93,20 +111,8 @@ func RecScreenInvalidUSB(ctx context.Context, s *testing.State) {
 			}
 		}
 	}()
-	batteryExists, err := h.CheckBatteryAvailable(ctx)
-	if err != nil {
-		s.Fatal("Failed to check if battery is available: ", err)
-	}
-	supportPDRole, err := h.Servo.IsServoTypeC(ctx)
-	if err != nil {
-		s.Fatal("Failed to check the connection type: ", err)
-	}
-	// We saw that setting servo_pd_role:snk helps some machines
-	// to boot the USB in recovery mode.
-	if batteryExists && supportPDRole {
-		removeServoCharger = true
-	}
-	if err := bootToNoGoodScreen(ctx, h, removeServoCharger); err != nil {
+
+	if err := bootToNoGoodScreen(ctx, h, &state); err != nil {
 		s.Fatal("Failed to traverse NoGood screen: ", err)
 	}
 	s.Log("Powering off the USB")
@@ -142,7 +148,7 @@ func RecScreenInvalidUSB(ctx context.Context, s *testing.State) {
 	}
 }
 
-func bootToNoGoodScreen(ctx context.Context, h *firmware.Helper, removeServoCharger bool) error {
+func bootToNoGoodScreen(ctx context.Context, h *firmware.Helper, state *firmware.CheckAndSetServoCharger) error {
 	ms, err := firmware.NewModeSwitcher(ctx, h)
 	if err != nil {
 		return errors.Wrap(err, "failed to create mode switcher")
@@ -150,23 +156,24 @@ func bootToNoGoodScreen(ctx context.Context, h *firmware.Helper, removeServoChar
 	if err := ms.EnableRecMode(ctx, servo.PowerStateRec, servo.USBMuxOff); err != nil {
 		return err
 	}
-	testing.ContextLog(ctx, "Setting DFP mode")
-	if err := h.Servo.SetDUTPDDataRole(ctx, servo.DFP); err != nil {
-		testing.ContextLogf(ctx, "Failed to set pd data role to DFP: %.400s", err)
-	}
 	testing.ContextLog(ctx, "Waiting for DUT to reach the firmware screen")
 	if err := h.WaitFirmwareScreen(ctx, h.Config.FirmwareScreenRecMode); err != nil {
 		return errors.Wrap(err, "failed to get to firmware screen")
 	}
-	if removeServoCharger {
+	if state.IsServoChargerConnected && state.RemoveServoChargerRequired {
 		if err := h.SetDUTPower(ctx, false); err != nil {
 			return errors.Wrap(err, "failed to remove charger")
 		}
+		state.IsServoChargerConnected = false
 		// GoBigSleepLint: Wait for a while between removing the charger and
 		// pressing keys.
 		if err := testing.Sleep(ctx, 5*time.Second); err != nil {
 			return errors.Wrap(err, "failed to sleep")
 		}
+	}
+	testing.ContextLog(ctx, "Setting DFP mode")
+	if err := h.Servo.SetDUTPDDataRole(ctx, servo.DFP); err != nil {
+		testing.ContextLogf(ctx, "Failed to set pd data role to DFP: %.400s", err)
 	}
 	if h.Config.ModeSwitcherType == firmware.MenuSwitcher {
 		menuNavigator, err := firmware.NewMenuNavigator(ctx, h)
@@ -222,15 +229,15 @@ func bootToNoGoodScreen(ctx context.Context, h *firmware.Helper, removeServoChar
 	return nil
 }
 
-func resetDUT(ctx context.Context, h *firmware.Helper, removeServoCharger bool) error {
-	if h.DUT.Connected(ctx) && removeServoCharger {
+func resetDUT(ctx context.Context, h *firmware.Helper, state *firmware.CheckAndSetServoCharger) error {
+	if h.DUT.Connected(ctx) && !state.IsServoChargerConnected && state.RemoveServoChargerRequired {
 		// Applying cold reset with the function h.Servo.SetPowerState could lead to the
 		// 'EC: No data was sent from the pty' error. Call a reboot command instead.
 		testing.ContextLog(ctx, "Rebooting the DUT")
 		if err := h.DUT.Conn().CommandContext(ctx, "reboot").Run(); err != nil && !errors.As(err, &context.DeadlineExceeded) {
 			return errors.Wrap(err, "failed to run reboot command")
 		}
-		waitUnreachableCtx, cancelWaitUnreachable := context.WithTimeout(ctx, 10*time.Second)
+		waitUnreachableCtx, cancelWaitUnreachable := context.WithTimeout(ctx, 2*time.Minute)
 		defer cancelWaitUnreachable()
 		if err := h.DUT.WaitUnreachable(waitUnreachableCtx); err != nil {
 			return errors.Wrap(err, "failed to wait for DUT to be unreachable after reboot")
@@ -244,7 +251,11 @@ func resetDUT(ctx context.Context, h *firmware.Helper, removeServoCharger bool) 
 	defer cancelWaitConnect()
 
 	if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
-		return errors.Wrap(err, "failed to reconnect to the DUT")
+		currPowerState, stateErr := h.Servo.GetECSystemPowerState(ctx)
+		if stateErr != nil {
+			return errors.Wrap(stateErr, "failed to reconnect to DUT, failed to check powerstate")
+		}
+		return errors.Wrapf(err, "failed to reconnect to DUT, got power state: %v", currPowerState)
 	}
 	return nil
 }
