@@ -711,14 +711,33 @@ func init() {
 				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
-				Name: "beamforming",
+				Name: "beamforming_enabled_by_client",
 				Val: crasEffectsParam{
-					noiseCancellationEnabled: true,
+					noiseCancellationEnabled: false,
 					inputDevice:              "INTERNAL_MIC",
 					outputDevice:             "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
 						{effects: 0x300, expectAPEffects: []string{apNC, apBF}}, // Force enable NC.
 						{effects: 0x100, expectAPEffects: nil},                  // unprocessed.
+					},
+					expectDSPEffects: dspEffects{
+						AEC: sof.DSPEffectUnavailable,
+						NC:  sof.DSPEffectUnavailable,
+					},
+				},
+				Fixture: crasEffectsHasAPNC,
+				// TODO: Schedule this on omniknight.3mic.
+				ExtraAttr: []string{},
+			},
+			{
+				Name: "beamforming_enabled_by_ui",
+				Val: crasEffectsParam{
+					noiseCancellationEnabled: true,
+					inputDevice:              "INTERNAL_MIC",
+					outputDevice:             "INTERNAL_SPEAKER",
+					captureClients: []captureConfig{
+						{effects: 0x0, expectAPEffects: []string{apNC, apBF}}, // NC enabled with UI.
+						{effects: 0x100, expectAPEffects: nil},                // unprocessed.
 					},
 					expectDSPEffects: dspEffects{
 						AEC: sof.DSPEffectUnavailable,
