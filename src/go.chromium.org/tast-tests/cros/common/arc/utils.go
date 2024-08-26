@@ -38,6 +38,9 @@ const managedDMAAccountPoolVarName = "arc.managedDMAAccountPool"
 
 const playAutoInstallDMAAccountVarName = "arc.PlayAutoInstall.dmaAccount"
 
+// ManagedDMSAccountPoolVarName is the arc managed account pool for DMS test.
+const ManagedDMSAccountPoolVarName = "arc.managedDMSAccountPool"
+
 var managedAccountPoolVar = testing.RegisterVarString(
 	ManagedAccountPoolVarName,
 	"",
@@ -110,6 +113,12 @@ var mtpAccountVar = testing.RegisterVarString(
 	"It contains creds in arc.MTP.account",
 )
 
+var managedDMSAccountPoolVar = testing.RegisterVarString(
+	ManagedDMSAccountPoolVarName,
+	"",
+	"It contains creds in arc.managedDMSAccountPool",
+)
+
 // ManagedAccountPoolValue returns credentials from arc.managedAccountPool.
 func ManagedAccountPoolValue() string {
 	return managedAccountPoolVar.Value()
@@ -168,4 +177,9 @@ func PlayAutoInstallDMAAccountValue() string {
 // MtpAccountValue returns credentials from arc.MTP.account
 func MtpAccountValue() string {
 	return mtpAccountVar.Value()
+}
+
+// ManagedDMSAccountPoolValue returns credentials from arc.managedDMSAccountPool.
+func ManagedDMSAccountPoolValue() string {
+	return managedDMSAccountPoolVar.Value()
 }

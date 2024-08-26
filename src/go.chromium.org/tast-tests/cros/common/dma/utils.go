@@ -81,6 +81,7 @@ func pools() (map[string]string, map[string]string) {
 		ui.GaiaPoolDefaultVarName:                   ui.GaiaDMAPoolDefaultValue(),
 		ui.CUJAccountPoolVarName:                    ui.GaiaDMAPoolDefaultValue(),
 		wallpaper.GooglePhotosAccountPoolVarName:    wallpaper.GooglePhotosDMAAccountPoolValue(),
+		arc.ManagedDMSAccountPoolVarName:            arc.ManagedDMSAccountPoolValue(),
 	}
 
 	var regularPools = map[string]string{
@@ -126,6 +127,7 @@ func pools() (map[string]string, map[string]string) {
 		ui.GaiaPoolDefaultVarName:                   ui.GaiaPoolDefaultValue(),
 		ui.CUJAccountPoolVarName:                    ui.CUJAccountPoolValue(),
 		wallpaper.GooglePhotosAccountPoolVarName:    wallpaper.GooglePhotosAccountPoolValue(),
+		arc.ManagedDMSAccountPoolVarName:            arc.ManagedDMSAccountPoolValue(),
 	}
 
 	return dmaPools, regularPools
