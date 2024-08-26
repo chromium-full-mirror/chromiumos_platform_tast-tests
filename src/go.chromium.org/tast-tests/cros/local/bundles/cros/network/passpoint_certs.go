@@ -13,6 +13,8 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/passpoint"
+	"go.chromium.org/tast-tests/cros/local/networkui/certificate"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -54,14 +56,37 @@ func PasspointCerts(ctx context.Context, s *testing.State) {
 		Auth:    passpoint.AuthTLS,
 	}
 
+	// Reserve a little time for cleanup.
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(cleanupCtx, 15*time.Second)
+	defer cancel()
+
 	// Get ARC handle to provision credentials.
 	a := s.FixtValue().(*arc.PreData).ARC
+	cr := s.FixtValue().(*arc.PreData).Chrome
 
 	// Get the current PKCS#11 objects.
 	objs, err := getPKCS11Objects(ctx)
 	if err != nil {
 		s.Fatal("Failed to get PKCS#11 objects: ", err)
 	}
+
+	// Removing the Passpoint config does not update Chrome's certs state.
+	// Manually clean up the certs through the UI to avoid leaking them to the next tests.
+	// It is expected for the clean up to fail because the certificate is already removed.
+	// The steps, however, are still necessary to sync Chrome's state.
+	defer func(ctx context.Context) {
+		tconn, err := cr.TestAPIConn(ctx)
+		if err != nil {
+			s.Error("Failed to create Test API connection: ", err)
+			return
+		}
+		certificate.DeleteCert(
+			tconn,
+			cr.Browser(),
+			certificate.NewCertData(passpoint.TestCerts, certificate.TypeClient),
+		)(ctx)
+	}(cleanupCtx)
 
 	// Run the test twice to ensure that adding the same certificates and
 	// private keys work after Passpoint credentials removal.
