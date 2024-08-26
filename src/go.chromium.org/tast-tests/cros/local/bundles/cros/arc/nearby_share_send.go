@@ -58,10 +58,9 @@ const (
 )
 
 type arcNearbyShareParams struct {
-	Cancel         bool // Cancel the Share before Selecting Target (Discovery Page).
-	CancelSelect   bool // Cancel the Share after Selecting Target (Confirmation Page).
-	FuseBoxEnabled bool // Special handling for ARC Nearby Share through FuseBox experiment.
-	TestData       nearbycommon.TestData
+	Cancel       bool // Cancel the Share before Selecting Target (Discovery Page).
+	CancelSelect bool // Cancel the Share after Selecting Target (Confirmation Page).
+	TestData     nearbycommon.TestData
 }
 
 func init() {
@@ -291,250 +290,6 @@ func init() {
 				},
 				Timeout: baseArcTestTime + nearbycommon.LargeFileOnlineTransferTimeout,
 			},
-			{
-				Name:              "dataoffline_noone_text_fusebox",
-				ExtraAttr:         []string{"nearby-share-arc_fusebox"},
-				ExtraSoftwareDeps: []string{"android_p"},
-				Fixture:           "nearbyShareDataUsageOfflineNoOneARCEnabled",
-				Val: arcNearbyShareParams{
-					FuseBoxEnabled: true,
-					TestData: nearbycommon.TestData{
-						Filename:        checkBoxTextID,
-						TransferTimeout: nearbycommon.SmallFileTransferTimeout,
-						TestTimeout:     baseArcTestTime + nearbycommon.SmallFileTransferTimeout,
-					},
-				},
-				Timeout: baseArcTestTime + nearbycommon.SmallFileTransferTimeout,
-			},
-			{
-				Name:              "dataoffline_noone_text_fusebox_vm",
-				ExtraAttr:         []string{"nearby-share-arc_fusebox"},
-				ExtraSoftwareDeps: []string{"android_vm"},
-				Fixture:           "nearbyShareDataUsageOfflineNoOneARCEnabled",
-				Val: arcNearbyShareParams{
-					FuseBoxEnabled: true,
-					TestData: nearbycommon.TestData{
-						Filename:        checkBoxTextID,
-						TransferTimeout: nearbycommon.SmallFileTransferTimeout,
-						TestTimeout:     baseArcTestTime + nearbycommon.SmallFileTransferTimeout,
-					},
-				},
-				Timeout: baseArcTestTime + nearbycommon.SmallFileTransferTimeout,
-			},
-			{
-				Name:              "dataonline_noone_small_file_fusebox",
-				ExtraAttr:         []string{"nearby-share-arc_fusebox"},
-				ExtraSoftwareDeps: []string{"android_p"},
-				Fixture:           "nearbyShareDataUsageOnlineNoOneARCEnabled",
-				Val: arcNearbyShareParams{
-					FuseBoxEnabled: true,
-					TestData: nearbycommon.TestData{
-						Filename:        checkBoxSmallFileID,
-						TransferTimeout: nearbycommon.MediumFileOnlineTransferTimeout,
-						TestTimeout:     baseArcTestTime + nearbycommon.MediumFileOnlineTransferTimeout,
-					},
-				},
-				Timeout: baseArcTestTime + nearbycommon.MediumFileOnlineTransferTimeout,
-			},
-			{
-				Name:              "dataonline_noone_small_file_fusebox_vm",
-				ExtraAttr:         []string{"nearby-share-arc_fusebox"},
-				ExtraSoftwareDeps: []string{"android_vm"},
-				Fixture:           "nearbyShareDataUsageOnlineNoOneARCEnabled",
-				Val: arcNearbyShareParams{
-					FuseBoxEnabled: true,
-					TestData: nearbycommon.TestData{
-						Filename:        checkBoxSmallFileID,
-						TransferTimeout: nearbycommon.MediumFileOnlineTransferTimeout,
-						TestTimeout:     baseArcTestTime + nearbycommon.MediumFileOnlineTransferTimeout,
-					},
-				},
-				Timeout: baseArcTestTime + nearbycommon.MediumFileOnlineTransferTimeout,
-			},
-			{
-				Name:              "dataonline_noone_medium_file_fusebox",
-				ExtraAttr:         []string{"nearby-share-arc_fusebox"},
-				ExtraSoftwareDeps: []string{"android_p"},
-				Fixture:           "nearbyShareDataUsageOnlineNoOneARCEnabled",
-				Val: arcNearbyShareParams{
-					FuseBoxEnabled: true,
-					TestData: nearbycommon.TestData{
-						Filename:        checkBoxMediumFileID,
-						TransferTimeout: nearbycommon.LargeFileOnlineTransferTimeout,
-						TestTimeout:     baseArcTestTime + nearbycommon.LargeFileOnlineTransferTimeout,
-					},
-				},
-				Timeout: baseArcTestTime + nearbycommon.LargeFileOnlineTransferTimeout,
-			},
-			{
-				Name:              "dataonline_noone_medium_file_fusebox_vm",
-				ExtraAttr:         []string{"nearby-share-arc_fusebox"},
-				ExtraSoftwareDeps: []string{"android_vm"},
-				Fixture:           "nearbyShareDataUsageOnlineNoOneARCEnabled",
-				Val: arcNearbyShareParams{
-					FuseBoxEnabled: true,
-					TestData: nearbycommon.TestData{
-						Filename:        checkBoxMediumFileID,
-						TransferTimeout: nearbycommon.LargeFileOnlineTransferTimeout,
-						TestTimeout:     baseArcTestTime + nearbycommon.LargeFileOnlineTransferTimeout,
-					},
-				},
-				Timeout: baseArcTestTime + nearbycommon.LargeFileOnlineTransferTimeout,
-			},
-			{
-				Name:              "dataonline_noone_large_file_fusebox",
-				ExtraAttr:         []string{"nearby-share-arc_fusebox"},
-				ExtraSoftwareDeps: []string{"android_p"},
-				Fixture:           "nearbyShareDataUsageOnlineNoOneARCEnabled",
-				Val: arcNearbyShareParams{
-					FuseBoxEnabled: true,
-					TestData: nearbycommon.TestData{
-						Filename:        checkBoxLargeFileID,
-						TransferTimeout: nearbycommon.ExtraLargeFileOnlineTransferTimeout + largeFileExtraBufferTime,
-						TestTimeout:     baseArcTestTime + nearbycommon.ExtraLargeFileOnlineTransferTimeout + largeFileExtraBufferTime,
-					},
-				},
-				Timeout: baseArcTestTime + nearbycommon.ExtraLargeFileOnlineTransferTimeout + largeFileTimeout + largeFileExtraBufferTime,
-			},
-			{
-				Name:              "dataonline_noone_large_file_fusebox_vm",
-				ExtraAttr:         []string{"nearby-share-arc_fusebox"},
-				ExtraSoftwareDeps: []string{"android_vm"},
-				Fixture:           "nearbyShareDataUsageOnlineNoOneARCEnabled",
-				Val: arcNearbyShareParams{
-					FuseBoxEnabled: true,
-					TestData: nearbycommon.TestData{
-						Filename:        checkBoxLargeFileID,
-						TransferTimeout: nearbycommon.ExtraLargeFileOnlineTransferTimeout + largeFileExtraBufferTime,
-						TestTimeout:     baseArcTestTime + nearbycommon.ExtraLargeFileOnlineTransferTimeout + largeFileExtraBufferTime,
-					},
-				},
-				Timeout: baseArcTestTime + nearbycommon.ExtraLargeFileOnlineTransferTimeout + largeFileTimeout + largeFileExtraBufferTime,
-			},
-			{
-				Name:              "dataonline_noone_xlarge_file_fusebox",
-				ExtraAttr:         []string{"nearby-share-arc_fusebox"},
-				ExtraSoftwareDeps: []string{"android_p"},
-				Fixture:           "nearbyShareDataUsageOnlineNoOneARCEnabled",
-				Val: arcNearbyShareParams{
-					FuseBoxEnabled: true,
-					TestData: nearbycommon.TestData{
-						Filename:        checkBoxXLargeFileID,
-						TransferTimeout: nearbycommon.ExtraLargeFileOnlineTransferTimeout + xlargeFileExtraBufferTime,
-						TestTimeout:     baseArcTestTime + nearbycommon.ExtraLargeFileOnlineTransferTimeout + xlargeFileExtraBufferTime,
-					},
-				},
-				Timeout: baseArcTestTime + nearbycommon.ExtraLargeFileOnlineTransferTimeout + xlargeFileTimeout + xlargeFileExtraBufferTime,
-			},
-			{
-				Name:              "dataonline_noone_xlarge_file_fusebox_vm",
-				ExtraAttr:         []string{"nearby-share-arc_fusebox"},
-				ExtraSoftwareDeps: []string{"android_vm"},
-				Fixture:           "nearbyShareDataUsageOnlineNoOneARCEnabled",
-				Val: arcNearbyShareParams{
-					FuseBoxEnabled: true,
-					TestData: nearbycommon.TestData{
-						Filename:        checkBoxXLargeFileID,
-						TransferTimeout: nearbycommon.ExtraLargeFileOnlineTransferTimeout + xlargeFileExtraBufferTime,
-						TestTimeout:     baseArcTestTime + nearbycommon.ExtraLargeFileOnlineTransferTimeout + xlargeFileExtraBufferTime,
-					},
-				},
-				Timeout: baseArcTestTime + nearbycommon.ExtraLargeFileOnlineTransferTimeout + xlargeFileTimeout + xlargeFileExtraBufferTime,
-			},
-			{
-				Name:              "dataonline_noone_multiple_files_fusebox",
-				ExtraAttr:         []string{"nearby-share-arc_fusebox"},
-				ExtraSoftwareDeps: []string{"android_p"},
-				Fixture:           "nearbyShareDataUsageOnlineNoOneARCEnabled",
-				Val: arcNearbyShareParams{
-					FuseBoxEnabled: true,
-					TestData: nearbycommon.TestData{
-						Filename:        checkBoxSmallFileID + "," + checkBoxMediumFileID,
-						TransferTimeout: nearbycommon.LargeFileOnlineTransferTimeout,
-						TestTimeout:     baseArcTestTime + nearbycommon.LargeFileOnlineTransferTimeout,
-					},
-				},
-				Timeout: baseArcTestTime + nearbycommon.LargeFileOnlineTransferTimeout,
-			},
-			{
-				Name:              "dataonline_noone_multiple_files_fusebox_vm",
-				ExtraAttr:         []string{"nearby-share-arc_fusebox"},
-				ExtraSoftwareDeps: []string{"android_vm"},
-				Fixture:           "nearbyShareDataUsageOnlineNoOneARCEnabled",
-				Val: arcNearbyShareParams{
-					FuseBoxEnabled: true,
-					TestData: nearbycommon.TestData{
-						Filename:        checkBoxSmallFileID + "," + checkBoxMediumFileID,
-						TransferTimeout: nearbycommon.LargeFileOnlineTransferTimeout,
-						TestTimeout:     baseArcTestTime + nearbycommon.LargeFileOnlineTransferTimeout,
-					},
-				},
-				Timeout: baseArcTestTime + nearbycommon.LargeFileOnlineTransferTimeout,
-			},
-			{
-				Name:              "dataonline_noone_medium_file_cancel_fusebox",
-				ExtraAttr:         []string{"nearby-share-arc_fusebox"},
-				ExtraSoftwareDeps: []string{"android_p"},
-				Fixture:           "nearbyShareDataUsageOnlineNoOneARCEnabled",
-				Val: arcNearbyShareParams{
-					Cancel:         true,
-					FuseBoxEnabled: true,
-					TestData: nearbycommon.TestData{
-						Filename:        checkBoxMediumFileID,
-						TransferTimeout: nearbycommon.LargeFileOnlineTransferTimeout,
-						TestTimeout:     baseArcTestTime + nearbycommon.LargeFileOnlineTransferTimeout,
-					},
-				},
-				Timeout: baseArcTestTime + nearbycommon.LargeFileOnlineTransferTimeout,
-			},
-			{
-				Name:              "dataonline_noone_medium_file_cancel_fusebox_vm",
-				ExtraAttr:         []string{"nearby-share-arc_fusebox"},
-				ExtraSoftwareDeps: []string{"android_vm"},
-				Fixture:           "nearbyShareDataUsageOnlineNoOneARCEnabled",
-				Val: arcNearbyShareParams{
-					Cancel:         true,
-					FuseBoxEnabled: true,
-					TestData: nearbycommon.TestData{
-						Filename:        checkBoxMediumFileID,
-						TransferTimeout: nearbycommon.LargeFileOnlineTransferTimeout,
-						TestTimeout:     baseArcTestTime + nearbycommon.LargeFileOnlineTransferTimeout,
-					},
-				},
-				Timeout: baseArcTestTime + nearbycommon.LargeFileOnlineTransferTimeout,
-			},
-			{
-				Name:              "dataonline_noone_medium_file_cancel_select_fusebox",
-				ExtraAttr:         []string{"nearby-share-arc_fusebox"},
-				ExtraSoftwareDeps: []string{"android_p"},
-				Fixture:           "nearbyShareDataUsageOnlineNoOneARCEnabled",
-				Val: arcNearbyShareParams{
-					CancelSelect:   true,
-					FuseBoxEnabled: true,
-					TestData: nearbycommon.TestData{
-						Filename:        checkBoxMediumFileID,
-						TransferTimeout: nearbycommon.LargeFileOnlineTransferTimeout,
-						TestTimeout:     baseArcTestTime + nearbycommon.LargeFileOnlineTransferTimeout,
-					},
-				},
-				Timeout: baseArcTestTime + nearbycommon.LargeFileOnlineTransferTimeout,
-			},
-			{
-				Name:              "dataonline_noone_medium_file_cancel_select_fusebox_vm",
-				ExtraAttr:         []string{"nearby-share-arc_fusebox"},
-				ExtraSoftwareDeps: []string{"android_vm"},
-				Fixture:           "nearbyShareDataUsageOnlineNoOneARCEnabled",
-				Val: arcNearbyShareParams{
-					CancelSelect:   true,
-					FuseBoxEnabled: true,
-					TestData: nearbycommon.TestData{
-						Filename:        checkBoxMediumFileID,
-						TransferTimeout: nearbycommon.LargeFileOnlineTransferTimeout,
-						TestTimeout:     baseArcTestTime + nearbycommon.LargeFileOnlineTransferTimeout,
-					},
-				},
-				Timeout: baseArcTestTime + nearbycommon.LargeFileOnlineTransferTimeout,
-			},
 		},
 	})
 }
@@ -607,13 +362,12 @@ func NearbyShareSend(ctx context.Context, s *testing.State) {
 	defer d.Close(ctx)
 
 	testData := s.Param().(arcNearbyShareParams).TestData
-	fuseboxEnabled := s.Param().(arcNearbyShareParams).FuseBoxEnabled
 
 	usingCacheFiles := false
 	sharingLargeFile := false
 	sharingXLargeFile := false
 	for _, uiID := range strings.Split(string(testData.Filename), ",") {
-		if !usingCacheFiles && uiID != checkBoxTextID && !fuseboxEnabled {
+		if !usingCacheFiles && uiID != checkBoxTextID {
 			// Mark sharing at least one file that will use cache directory.
 			usingCacheFiles = true
 		}
