@@ -9,6 +9,8 @@ import (
 	"encoding/json"
 	"strings"
 
+	"go.chromium.org/tast-tests/cros/local/media/vm"
+	"go.chromium.org/tast-tests/cros/local/network/diag"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast-tests/cros/local/testenv/middns"
 	"go.chromium.org/tast/core/errors"
@@ -97,9 +99,7 @@ func NewBase(ctx context.Context, name string, opts ...Option) (*BaseEnv, error)
 
 	// Configure redirection for the given hosts using either a DNS server or /etc/hosts updater.
 	if b.shouldRedirect {
-		midDNS := middns.NewDNSServer()
-		b.cleanups = append(b.cleanups, midDNS.Close)
-		b.midDNS = midDNS
+		b.midDNS = middns.NewDNSServer()
 	}
 
 	// Start a new environment.
@@ -113,6 +113,19 @@ func NewBase(ctx context.Context, name string, opts ...Option) (*BaseEnv, error)
 // start starts the necessary servers with the configurations to set up the test environment.
 func (b *BaseEnv) start(ctx context.Context) error {
 	if b.shouldRedirect {
+		testing.ContextLog(ctx, "testenv: checking network connectivity before test env starts. If the issue persists, perform a manual network recovery")
+		checkNetwork := func(ctx context.Context) error {
+			if !vm.IsRunningOnVM() {
+				return diag.DUTNetworkCheckAndResolve(ctx)
+			}
+			return nil
+		}
+		if err := checkNetwork(ctx); err != nil {
+			return errors.Wrap(err, "DUT network verification failed")
+		}
+		// Check network once again on cleanup to ensure the network is established for next runs.
+		b.cleanups = append(b.cleanups, checkNetwork)
+
 		// Start host redirection.
 		if !b.portalDetectionEnabled {
 			// Disable portal detection while the DNS server runs to avoid conflicts on DNS queries, resulting in lost connection.
@@ -131,6 +144,7 @@ func (b *BaseEnv) start(ctx context.Context) error {
 		if err := b.midDNS.Start(ctx, b.redirectMap); err != nil {
 			return errors.Wrap(err, "failed to redirect hosts using mid DNS server")
 		}
+		b.cleanups = append(b.cleanups, b.midDNS.Close)
 	}
 	testing.ContextLog(ctx, "testenv: started for external dependencies")
 	return nil
