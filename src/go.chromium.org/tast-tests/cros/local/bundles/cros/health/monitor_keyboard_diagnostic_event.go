@@ -127,7 +127,7 @@ func MonitorKeyboardDiagnosticEvent(ctx context.Context, s *testing.State) {
 	}
 
 	if testParam.forceLaptopMode {
-		cleanup, err := ash.EnsureTabletModeDisabledWithKeyboardEnabled(ctx)
+		cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, false)
 		if err != nil {
 			s.Fatal("Failed to ensure in laptop mode: ", err)
 		}
