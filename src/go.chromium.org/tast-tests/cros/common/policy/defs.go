@@ -26586,7 +26586,7 @@ func (p *DeviceHardwareVideoDecodingEnabled) Equal(iface interface{}) bool {
 
 // ****************************************************************************
 // 1186. TabOrganizerSettings
-// This policy has a default value of 2.
+// This policy has a default value of 1.
 // This policy can be modified without rebooting.
 // ****************************************************************************
 type TabOrganizerSettings struct {
@@ -26618,7 +26618,7 @@ func (p *TabOrganizerSettings) Equal(iface interface{}) bool {
 
 // ****************************************************************************
 // 1187. HelpMeWriteSettings
-// This policy has a default value of 2.
+// This policy has a default value of 1.
 // This policy can be modified without rebooting.
 // ****************************************************************************
 type HelpMeWriteSettings struct {
@@ -26650,7 +26650,7 @@ func (p *HelpMeWriteSettings) Equal(iface interface{}) bool {
 
 // ****************************************************************************
 // 1188. CreateThemesSettings
-// This policy has a default value of 2.
+// This policy has a default value of 1.
 // This policy can be modified without rebooting.
 // ****************************************************************************
 type CreateThemesSettings struct {
@@ -27617,7 +27617,7 @@ func (p *MutationEventsEnabled) Equal(iface interface{}) bool {
 
 // ****************************************************************************
 // 1228. DevToolsGenAiSettings
-// This policy has a default value of 2.
+// This policy has a default value of 1.
 // This policy can be modified without rebooting.
 // ****************************************************************************
 type DevToolsGenAiSettings struct {
@@ -28364,6 +28364,7 @@ func (p *KioskVisionTelemetryEnabled) Equal(iface interface{}) bool {
 
 // ****************************************************************************
 // 1263. GenAIWallpaperSettings
+// This policy has a default value of 1.
 // This policy can be modified without rebooting.
 // This is a future policy, it is not present in stable builds.
 // ****************************************************************************
@@ -28396,6 +28397,7 @@ func (p *GenAIWallpaperSettings) Equal(iface interface{}) bool {
 
 // ****************************************************************************
 // 1264. GenAIVcBackgroundSettings
+// This policy has a default value of 1.
 // This policy can be modified without rebooting.
 // This is a future policy, it is not present in stable builds.
 // ****************************************************************************
@@ -28654,7 +28656,7 @@ func (p *LensOnGalleryEnabled) Equal(iface interface{}) bool {
 
 // ****************************************************************************
 // 1275. HistorySearchSettings
-// This policy has a default value of 2.
+// This policy has a default value of 1.
 // This policy can be modified without rebooting.
 // ****************************************************************************
 type HistorySearchSettings struct {
@@ -29208,6 +29210,71 @@ func (p *GraduationEnablementStatus) SetProto(m *protoreflect.Message) {
 }
 func (p *GraduationEnablementStatus) Equal(iface interface{}) bool {
 	v, ok := iface.(*GraduationEnablementStatusValue)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1295. HelpMeReadSettings
+// This policy has a default value of 1.
+// This policy can be modified without rebooting.
+// ****************************************************************************
+type HelpMeReadSettings struct {
+	Stat Status
+	Val  int
+}
+
+func (p *HelpMeReadSettings) Name() string          { return "HelpMeReadSettings" }
+func (p *HelpMeReadSettings) Scope() Scope          { return ScopeUser }
+func (p *HelpMeReadSettings) Status() Status        { return p.Stat }
+func (p *HelpMeReadSettings) UntypedV() interface{} { return p.Val }
+func (p *HelpMeReadSettings) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v int
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as int", m)
+	}
+	return v, nil
+}
+func (p *HelpMeReadSettings) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *HelpMeReadSettings) Equal(iface interface{}) bool {
+	v, ok := iface.(int)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1296. GenAiDefaultSettings
+// This policy has a default value of 1.
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type GenAiDefaultSettings struct {
+	Stat Status
+	Val  int
+}
+
+func (p *GenAiDefaultSettings) Name() string          { return "GenAiDefaultSettings" }
+func (p *GenAiDefaultSettings) Scope() Scope          { return ScopeUser }
+func (p *GenAiDefaultSettings) Status() Status        { return p.Stat }
+func (p *GenAiDefaultSettings) UntypedV() interface{} { return p.Val }
+func (p *GenAiDefaultSettings) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v int
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as int", m)
+	}
+	return v, nil
+}
+func (p *GenAiDefaultSettings) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *GenAiDefaultSettings) Equal(iface interface{}) bool {
+	v, ok := iface.(int)
 	if !ok {
 		return ok
 	}
@@ -31011,6 +31078,10 @@ func newByName(name string) (Policy, error) {
 		return &KioskWebAppOfflineEnabled{}, nil
 	case "GraduationEnablementStatus":
 		return &GraduationEnablementStatus{}, nil
+	case "HelpMeReadSettings":
+		return &HelpMeReadSettings{}, nil
+	case "GenAiDefaultSettings":
+		return &GenAiDefaultSettings{}, nil
 	default:
 		return nil, errors.New("Unknown policy " + name)
 	}
