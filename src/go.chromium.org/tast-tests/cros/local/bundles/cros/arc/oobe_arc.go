@@ -68,6 +68,7 @@ func OobeArc(ctx context.Context, s *testing.State) {
 				"google-prod":     "gfe-preprod", // GFE
 				"googleapis-prod": "gfe-preprod", // GFE
 			}),
+			testenv.PortalDetection(false), // Disable portal detection that may conflict with a mid DNS server during network validation.
 		)
 		if err != nil {
 			s.Fatal("Failed to init the preprod env: ", err)
