@@ -125,6 +125,25 @@ var (
 	// ex Cr50 output: fc = 0x0000000000001234
 	// ex Ti50 output: Factory config: 0x0000000000001234
 	factoryConfigRE = regexp.MustCompile(`(fc =|Factory config:)\s*0x(` + hexRE + `)`)
+	// Example ap_ro_info output.
+	// hash saved
+	//      result    : 0
+	//      supported : no (14)
+	//      gbbd      : na (10)
+	//      sha256 hash b0863a864df1a0f2d4df2393ae4390fed6e1f01ccbdd562969da9b530e8ece2e
+	//      Covered ranges:
+	//      00c10000...00c107ff
+	//      00c11000...00cfffff
+	// no hash
+	//      result    : 0
+	//      supported : no (10)
+	// match 1 is the integer result
+	cr50APROResultRE = regexp.MustCompile(`result\s*:\s*(\d*)`)
+	// match 1 is yes or no
+	// match 2 is the integer reason for why AP RO verification is supported/unsupported
+	cr50APROSupportedRE = regexp.MustCompile(`supported\s*:\s*(yes|no)\s*\((\d*)\)`)
+	// match 1 is the value of the saved digest
+	cr50APROHashRE = regexp.MustCompile(`sha256 hash ([a-f0-9]*)`)
 )
 
 // TestlabState contains possible CCD testlab states.
@@ -1401,4 +1420,57 @@ func (i *CrOSImage) FactoryConfig(ctx context.Context) (uint64, error) {
 		return 0, errors.Wrap(err, "failed to run GSC brdprop command")
 	}
 	return parseFactoryConfig(output)
+}
+
+// Cr50APROInfo contains the AP RO verification information
+type Cr50APROInfo struct {
+	Result          uint64
+	Supported       bool
+	SupportedReason uint64
+	Hash            string
+}
+
+// parseCr50APROInfo converts brdprop factory config output into the uint64 value
+func parseCr50APROInfo(output string) (Cr50APROInfo, error) {
+	match := cr50APROResultRE.FindStringSubmatch(output)
+	if match == nil {
+		return Cr50APROInfo{}, errors.Errorf("could not find %s in %s", cr50APROResultRE, output)
+	}
+	result, err := strconv.ParseUint(match[1], 10, 64)
+	if err != nil {
+		return Cr50APROInfo{}, errors.Wrapf(err, "failed to parse ap_ro_info result from %s", match[2])
+	}
+	match = cr50APROSupportedRE.FindStringSubmatch(output)
+	if match == nil {
+		return Cr50APROInfo{}, errors.Errorf("could not find %s in %s", cr50APROSupportedRE, output)
+	}
+	supported := match[1] == "yes"
+	supportedReason, err := strconv.ParseUint(match[2], 10, 64)
+	if err != nil {
+		return Cr50APROInfo{}, errors.Wrapf(err, "failed to parse ap_ro_info supported from %s", match[2])
+	}
+	match = cr50APROHashRE.FindStringSubmatch(output)
+	var hash string
+	if match == nil {
+		if supported {
+			return Cr50APROInfo{}, errors.Wrap(err, "failed to parse hash when verification is supported")
+		}
+	} else {
+		hash = match[1]
+	}
+	expected := Cr50APROInfo{}
+	expected.Result = result
+	expected.Supported = supported
+	expected.SupportedReason = supportedReason
+	expected.Hash = hash
+	return expected, nil
+}
+
+// Cr50APROInfo gets the cr50 AP RO hash information
+func (i *CrOSImage) Cr50APROInfo(ctx context.Context) (Cr50APROInfo, error) {
+	output, err := i.safeCommand(ctx, "ap_ro_info")
+	if err != nil {
+		return Cr50APROInfo{}, errors.Wrap(err, "failed to parse ap_ro_info output")
+	}
+	return parseCr50APROInfo(output)
 }

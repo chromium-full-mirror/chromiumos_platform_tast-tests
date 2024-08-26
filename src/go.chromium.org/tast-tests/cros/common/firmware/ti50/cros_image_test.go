@@ -7,6 +7,8 @@ package ti50
 import (
 	"reflect"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestVersionCommandTi50Processor1(t *testing.T) {
@@ -1518,5 +1520,64 @@ func testParseFactoryConfig(t *testing.T, input string, expected uint64, expectE
 	}
 	if expected != config {
 		t.Fatalf("factory config mismatch:\ngot      %v\nexpected %v", config, expected)
+	}
+}
+
+func TestParseCr50APROInfo1(t *testing.T) {
+	input := `
+result    : 0
+supported : yes (0)
+gbbd      : na (10)
+sha256 hash b0863a864df1a0f2d4df2393ae4390fed6e1f01ccbdd562969da9b530e8ece2e
+Covered ranges:
+00c10000...00c107ff
+00c11000...00cfffff
+`
+	expected := Cr50APROInfo{}
+	expected.Result = 0
+	expected.Supported = true
+	expected.SupportedReason = 0
+	expected.Hash = "b0863a864df1a0f2d4df2393ae4390fed6e1f01ccbdd562969da9b530e8ece2e"
+	testParseCr50APROInfo(t, input, expected, false)
+}
+
+func TestParseCr50APROInfo2(t *testing.T) {
+	input := `
+result    : 4
+supported : no (10)
+`
+	expected := Cr50APROInfo{}
+	expected.Result = 4
+	expected.Supported = false
+	expected.SupportedReason = 10
+	expected.Hash = ""
+	testParseCr50APROInfo(t, input, expected, false)
+}
+
+func TestParseCr50APROInfo3(t *testing.T) {
+	input := `
+result    : 4
+supported : yes (0)
+`
+	expected := Cr50APROInfo{}
+	testParseCr50APROInfo(t, input, expected, true)
+}
+
+func testParseCr50APROInfo(t *testing.T, input string, expected Cr50APROInfo, expectError bool) {
+	apROInfo, err := parseCr50APROInfo(input)
+	if expectError {
+		if err == nil {
+			t.Fatalf("%s did not trigger an error", input)
+		}
+		return
+	}
+	if err != nil {
+		t.Fatal("error processing brdprop ap_ro_info input:", err)
+	}
+	if expected != apROInfo {
+		t.Fatalf("ap ro info mismatch:\ngot      %v\nexpected %v", apROInfo, expected)
+	}
+	if !cmp.Equal(expected, apROInfo) {
+		t.Fatalf("chip mismatch:\ngot      %+v\nexpected %+v", apROInfo, expected)
 	}
 }
