@@ -44,7 +44,7 @@ func NavigateMouseCustomization(ctx context.Context, ui *uiauto.Context, mouseNa
 		return errors.Wrap(err, "failed to click mouse row")
 	}
 
-	mouseHeading := nodewith.NameContaining(mouseName).Role(role.Heading)
+	mouseHeading := nodewith.NameContaining(mouseName).Role(role.Region)
 	if err := ui.WaitUntilExists(mouseHeading)(ctx); err != nil {
 		return errors.Wrapf(err, "failed to find the connected mouse %s ", mouseName)
 	}
