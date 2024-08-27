@@ -169,7 +169,7 @@ func prepareFakeApp(baseDir, appName, iconDir string, iconFileMap map[int]string
 	const manifestTmpl = `{
 		"description": "fake",
 		"name": "%s",
-		"manifest_version": 2,
+		"manifest_version": 3,
 		"version": "0",
 		%s
 		"app": {
