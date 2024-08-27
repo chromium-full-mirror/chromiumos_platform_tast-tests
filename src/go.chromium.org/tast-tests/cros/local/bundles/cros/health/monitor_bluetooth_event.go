@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -28,9 +29,21 @@ func init() {
 		BugComponent: "b:982097", // ChromeOS > Platform > Enablement > Health
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"diagnostics"},
-		Fixture:      "crosHealthdRunning",
 		// Ensure that Bluetooth adapter is present when the system is using Bluez.
-		HardwareDeps: hwdep.D(hwdep.Bluetooth()),
+		Params: []testing.Param{{
+			Name:              "bluez_only",
+			ExtraHardwareDeps: hwdep.D(hwdep.Bluetooth()),
+			Fixture:           "crosHealthdRunning",
+		}, {
+			Name:    "bluez_enabled",
+			Fixture: "crosHealthdRunningAndBluetoothEnabledWithBlueZ",
+			// TODO(b/362427717): Promote tast to critical.
+			// Currently `health.MonitorBluetoothEvent` will only be run on bluez
+			// enabled devices due to `hwdep.Bluetooth()`. It will be replaced by the
+			// new test after the new test is stable.
+			ExtraAttr:        []string{"informational", "group:criticalstaging"},
+			ExtraTestBedDeps: []string{tbdep.BluetoothStateNormal},
+		}},
 	})
 }
 
