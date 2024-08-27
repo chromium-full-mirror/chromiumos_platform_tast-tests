@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      pre {
+        font-size: 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <h3>bluebench</h3>
+    <div>
+      <div class="input-label">numTabs</div>
+      <input type="number" id="numTabsInput" value="10"></input>
+    </div>
+    <div>
+      <div class="input-label">numCycles</div>
+      <input type="number" id="numCyclesInput" value="5"></input>
+    </div>
+    <div>
+      <div class="input-label">numIterations</div>
+      <input type="number" id="numIterations" value="10"></input>
+    </div>
+    <div>
+      <button id="benchButton">Run</button>
+      <button id="takeLogButton">Capture ChromeOS-specific info</button>
+    </div>
+    <div>
+      <h2>summary</h2>
+      <button id="copyResultButton">Copy result</button>
+      <pre id="shortResultPre"></pre>
+    </div>
+    <div>
+      <h2>log</h2>
+      <button id="copyResultButton">Copy result</button>
+      <pre id="benchResultPre"></pre>
+    </div>
+  </body>
+  <script src="bench.js"></script>
+</html>
