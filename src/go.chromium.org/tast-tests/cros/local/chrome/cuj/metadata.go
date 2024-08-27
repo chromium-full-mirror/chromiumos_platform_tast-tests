@@ -113,8 +113,8 @@ var Registry = map[string]Metadata{
 		Features:      []feature{vulkan},
 	},
 	"ui.BenchmarkCUJ.motionmark1_3": Metadata{
-		DisplayName:   "BenchmarkMotionmark 1.3",
-		BaseTestNames: []string{"ui.BenchmarkCUJ.motionmark"},
+		DisplayName: "BenchmarkMotionmark 1.3",
+		Metrics:     []string{motionmarkMetric},
 	},
 	"ui.BenchmarkCUJ.vulkan_motionmark1_3": Metadata{
 		DisplayName:   "BenchmarkMotionmarkVulkan 1.3",

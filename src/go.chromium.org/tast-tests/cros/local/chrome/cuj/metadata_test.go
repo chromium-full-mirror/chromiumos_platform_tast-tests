@@ -89,3 +89,11 @@ func TestRegistryNoDuplicateMetricsOrCycles(t *testing.T) {
 		}
 	}
 }
+
+func TestFeatureListSize(t *testing.T) {
+	for testName, test := range Registry {
+		if len(test.Features) != len(test.BaseTestNames) {
+			t.Fatalf("Found test with mismatched number of features and base tests (%s)", testName)
+		}
+	}
+}
