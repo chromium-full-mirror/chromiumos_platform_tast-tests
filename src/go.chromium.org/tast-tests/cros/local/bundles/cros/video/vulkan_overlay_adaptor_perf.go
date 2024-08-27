@@ -39,7 +39,7 @@ func init() {
 		Attr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 		Fixture:      "graphicsNoChrome",
 		Timeout:      5 * time.Minute,
-		HardwareDeps: hwdep.D(hwdep.CPUSocFamily("mediatek"), hwdep.SkipGPUFamily("rogue")),
+		HardwareDeps: hwdep.D(hwdep.CPUSocFamily("mediatek"), hwdep.SkipGPUFamily("rogue"), hwdep.Supports10BitOverlays()),
 	})
 }
 

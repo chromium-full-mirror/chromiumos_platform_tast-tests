@@ -39,7 +39,7 @@ func init() {
 			"images/crowd_run_1080x512.mt2t",
 			"images/crowd_run_1080x512.mt2t.json",
 		},
-		HardwareDeps: hwdep.D(hwdep.CPUSocFamily("mediatek"), hwdep.SkipGPUFamily("rogue")),
+		HardwareDeps: hwdep.D(hwdep.CPUSocFamily("mediatek"), hwdep.SkipGPUFamily("rogue"), hwdep.Supports10BitOverlays()),
 	})
 }
 
