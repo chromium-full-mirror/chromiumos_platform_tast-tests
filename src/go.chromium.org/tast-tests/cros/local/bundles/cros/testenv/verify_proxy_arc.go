@@ -86,7 +86,9 @@ func VerifyProxyArc(ctx context.Context, s *testing.State) {
 		s.Fatal("Creating test API connection failed: ", err)
 	}
 
-	mp, err := proxy.NewMitmProxy(ctx, proxy.CustomCA(true))
+	mp, err := proxy.NewMitmProxy(ctx,
+		proxy.CustomCA(true), // Use the test system CA cert trusted by Chrome.
+	)
 	if err != nil {
 		s.Fatal("Failed to start proxy: ", err)
 	}
@@ -110,7 +112,7 @@ func VerifyProxyArc(ctx context.Context, s *testing.State) {
 	defer a.Close(cleanupCtx)
 
 	s.Log("Inserting test certificate")
-	path, err := mp.RootCertificate(ctx)
+	path, _, err := mp.RootCertificate(ctx)
 	if err != nil {
 		s.Fatal("Failed to find root certificate: ", err)
 	}

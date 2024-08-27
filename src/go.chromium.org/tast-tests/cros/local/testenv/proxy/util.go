@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/mafredri/cdp/protocol/target"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
@@ -75,18 +76,37 @@ func generateCustomCA(path, name string, privateKey bool) error {
 	return nil
 }
 
-// ConfigureChrome sets up chrome for mitmproxy.
-// User should call this function to update the network after a mitmproxy server is started.
-// User should also call a returned reset closure to clean up the configuration when the proxy is no longer in use.
+// ConfigureChrome sets up mitmproxy for Chrome in-session.
+// Call this function to enable Chrome in-session to use the proxy.
+// Call the returned `reset` closure to clean up the proxy configuration.
+// Note: For Chrome in OOBE, pass --proxy-server to chrome.New instead because the extension `chrome.proxy.settings` is not functional in OOBE.
 func ConfigureChrome(ctx context.Context, p Proxy, cr *chrome.Chrome) (func(context.Context, *chrome.Chrome) error, error) {
-	testing.ContextLog(ctx, "proxyutil: setting up chrome")
+	// Log an error if this function is called unexpectedly (eg, from OOBE)
+	hasOobePage := func() (bool, error) {
+		return cr.IsTargetAvailable(ctx, func(t *target.Info) bool {
+			return strings.HasPrefix(t.URL, "chrome://oobe") && t.Type == "page"
+		})
+	}
+	if has, _ := hasOobePage(); has {
+		return nil, errors.New("ConfigureChrome should not be used for proxy in OOBE. Pass --proxy-server to chrome.New instead")
+	}
+
+	testing.ContextLog(ctx, "proxyutil: configuring chrome in-session")
+	certPath, certType, err := p.RootCertificate(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to locate CA certificate")
+	}
+
 	reset := func(ctx context.Context, cr *chrome.Chrome) error {
 		var err error
 		if err := clearChromeProxy(ctx, cr); err != nil {
 			err = errors.Wrap(err, "failed to reset proxy in chrome")
 		}
-		if err := removeRootCertFromNSS(ctx, cr); err != nil {
-			err = errors.Wrap(err, "failed to remove root certificate in user home")
+		// Clean up the user cert if it has been imported to user home.
+		if certType == "user" {
+			if err := removeRootCertFromNSS(ctx, cr); err != nil {
+				err = errors.Wrap(err, "failed to remove root certificate in user home")
+			}
 		}
 		if err != nil {
 			testing.ContextLog(ctx, "proxyutil: cleaned up chrome, err: ", err)
@@ -96,10 +116,12 @@ func ConfigureChrome(ctx context.Context, p Proxy, cr *chrome.Chrome) (func(cont
 		return err
 	}
 
-	// Copy a root CA certificate to user home
-	if err := importRootCertToNSS(ctx, p, cr); err != nil {
-		reset(ctx, cr)
-		return nil, errors.Wrap(err, "failed to import root certificate from proxy to chrome")
+	// Copy a root CA certificate to user home if it is the user cert.
+	if certType == "user" {
+		if err := importRootCertToNSS(ctx, certPath, cr); err != nil {
+			reset(ctx, cr)
+			return nil, errors.Wrap(err, "failed to import root certificate from proxy to chrome")
+		}
 	}
 	// Configure an IP of the mitmproxy server in chrome
 	if err := setChromeProxy(ctx, cr, p.ProxyAddress()); err != nil {
@@ -177,21 +199,19 @@ func parseProxyAddress(proxyAddress string) (host string, port int, err error) {
 }
 
 // importRootCertToNSS adds the proxy root certificate to nssdb for the current Chrome user.
-func importRootCertToNSS(ctx context.Context, p Proxy, cr *chrome.Chrome) error {
+func importRootCertToNSS(ctx context.Context, certPath string, cr *chrome.Chrome) error {
+	if certPath == "" {
+		return errors.New("cert path can't be empty")
+	}
+
 	userHome, err := cryptohome.UserPath(ctx, cr.NormalizedUser())
 	if err != nil {
 		return errors.Wrap(err, "failed to get user path")
 	}
 
-	// Find the root certificate that the mitmproxy uses.
-	certFile, err := p.RootCertificate(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to download root certificate")
-	}
-
 	// Save it to nssdb to let Chrome trust.
 	cmd := testexec.CommandContext(ctx, "certutil", "-d", fmt.Sprintf("sql:%s/.pki/nssdb", userHome),
-		"-A", "-t", "C,C,C", "-n", "test.proxy", "-i", certFile)
+		"-A", "-t", "C,C,C", "-n", "test.proxy", "-i", certPath)
 	testing.ContextLog(ctx, "proxyutil: import root cert, cmd: ", cmd)
 	if err := cmd.Run(); err != nil {
 		cmd.DumpLog(ctx)

@@ -16,8 +16,8 @@ type Proxy interface {
 	// IsRunning returns whether the proxy is running.
 	IsRunning() bool
 
-	// RootCertificate returns the file path of the root certificate and ensures its existence.
-	RootCertificate(ctx context.Context) (string, error)
+	// RootCertificate returns the file path and the type of the root certificate then ensures its existence.
+	RootCertificate(ctx context.Context) (string, string, error)
 
 	// ProxyAddress returns the proxy address to be set in browser.
 	ProxyAddress() string

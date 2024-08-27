@@ -37,13 +37,18 @@ const (
 )
 
 const (
-	// It only contains public key.
+	// It only contains the certificate.
 	// It will be installed in browser, arc, etc.
 	defaultPubCertFile = "mitmproxy-ca-cert.pem"
-	// It contains both public key and private key.
+	// It contains both the certificate and private key.
 	// It is required by mitmproxy itself.
 	defaultKeyPairCertFile = "mitmproxy-ca.pem"
 	defaultConfDir         = "/usr/local/tmp/mitmproxy"
+
+	// SystemCert refers to the system CA cert trusted by Chrome by default.
+	SystemCert = "system"
+	// UserCert refers to the user CA cert, that can be used only in user session post login.
+	UserCert = "user"
 )
 
 // MitmProxy represents a structure of mitmproxy.
@@ -59,15 +64,15 @@ type MitmProxy struct {
 	pid                 int // pid of the proxy server process
 	cmd                 *testexec.Cmd
 	isRunning           bool // Is the proxy running? It is set to true on starting proxy.
-	removeCert          bool // Should remove cert after test is completed?
+	removeCert          bool // Should remove cert after test is completed.
 	healthCheck         bool
 	scriptPaths         []string // Addon scripts used by mitmproxy.
 	options             []string // Other options provided by users. We will add --set option to command.
-	lifelineFD          *os.File // Used by pathcpanel to track the lifetime of the proxy server.
+	lifelineFD          *os.File // Used by pathcpanel to track the lifetime of the proxy server
 	dumpHTTPFlowEnabled bool
 	allowedHosts        []string
 	ignoredHosts        []string
-	customCA            bool
+	customCA            bool // true if the system CA cert is used
 }
 
 // NewMitmProxy creates a new MitmProxy instance with default configuration and option overrides.
@@ -124,22 +129,11 @@ func (mp *MitmProxy) start(ctx context.Context) (retErr error) {
 		return errors.Wrap(err, "failed to kill running mitmproxy processes")
 	}
 
-	if mp.customCA {
-		// If we decide to use custom CA,
-		// we should delete the existing certs to avoid using a wrong one.
-		if err := mp.removeCertDir(); err != nil {
-			return errors.Wrap(err, "root certificate not present, failed to delete conf dir")
-		}
-	} else {
-		// If root certificate is not present,
-		// we should delete the folder and then mitmproxy will recreate them.
-		if _, err := mp.RootCertificate(ctx); err != nil {
-			if err = mp.removeCertDir(); err != nil {
-				return errors.Wrap(err, "root certificate not present, failed to delete conf dir")
-			}
-		}
+	// Clean up any existing CA certificates and create an empty conf dir before starting a proxy.
+	// This makes sure that the certificate is uniquely used during this proxy session.
+	if err := mp.removeCertDir(); err != nil {
+		return errors.Wrap(err, "failed to delete proxy conf dir")
 	}
-
 	if err := os.MkdirAll(mp.confDir, 0700); err != nil {
 		return errors.Wrapf(err, "failed to create %q for mitmdump config", mp.confDir)
 	}
@@ -168,12 +162,11 @@ func (mp *MitmProxy) start(ctx context.Context) (retErr error) {
 		mp.scriptPaths = append(mp.scriptPaths, path)
 	}
 
-	// If mitmproxy detects mitmproxy-ca-cert.pem, mitmproxy will not generate new CA during starting.
+	// Copy the system CA certs trusted by Chrome from the private vars if the CustomCA is set. If unset, mitmproxy creates the ones on the fly.
 	if mp.customCA {
 		if err := generateCustomCA(mp.confDir, defaultPubCertFile, false); err != nil {
 			return errors.Wrapf(err, "failed to generate %s", defaultPubCertFile)
 		}
-
 		if err := generateCustomCA(mp.confDir, defaultKeyPairCertFile, true); err != nil {
 			return errors.Wrapf(err, "failed to generate %s", defaultKeyPairCertFile)
 		}
@@ -386,7 +379,7 @@ func (mp *MitmProxy) createTempFile(name string) (string, error) {
 // However, this check can be bypassed via `HealthCheck` option in case the domain won't work with a user's allowlist or blocklist.
 func (mp *MitmProxy) verifyProxyStart(ctx context.Context) error {
 	// Get cert.
-	certFilePath, err := mp.RootCertificate(ctx)
+	certFilePath, _, err := mp.RootCertificate(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to find cert file path")
 	}
@@ -429,8 +422,13 @@ func (mp *MitmProxy) verifyProxyStart(ctx context.Context) error {
 	return nil
 }
 
-// RootCertificate returns the file path of the root certificate and ensures its existence.
-func (mp *MitmProxy) RootCertificate(ctx context.Context) (string, error) {
+// RootCertificate returns the file path and the type (system or user) of the root certificate then ensures its existence.
+func (mp *MitmProxy) RootCertificate(ctx context.Context) (string, string, error) {
+	certType := UserCert
+	if mp.customCA {
+		certType = SystemCert
+	}
+
 	certFilePath := filepath.Join(mp.confDir, defaultKeyPairCertFile)
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		if _, err := os.Stat(certFilePath); err != nil {
@@ -438,10 +436,10 @@ func (mp *MitmProxy) RootCertificate(ctx context.Context) (string, error) {
 		}
 		return nil
 	}, &testing.PollOptions{Timeout: 20 * time.Second}); err != nil {
-		return "", errors.Wrapf(err, "failed to locate cert file at %q, maybe the proxy server is not launched successfully", certFilePath)
+		return "", certType, errors.Wrapf(err, "failed to locate cert file at %q, maybe the proxy server is not launched successfully", certFilePath)
 	}
 
-	return certFilePath, nil
+	return certFilePath, certType, nil
 }
 
 // ProxyAddress returns the proxy address to be set in browser.

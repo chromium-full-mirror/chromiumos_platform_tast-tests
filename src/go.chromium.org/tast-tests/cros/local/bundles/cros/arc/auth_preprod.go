@@ -109,7 +109,7 @@ func AuthPreprod(ctx context.Context, s *testing.State) {
 	defer a.Close(cleanupCtx)
 
 	s.Log("Inserting test certificate")
-	path, err := mp.RootCertificate(ctx)
+	path, _, err := mp.RootCertificate(ctx)
 	if err != nil {
 		s.Fatal("Failed to find root certificate: ", err)
 	}

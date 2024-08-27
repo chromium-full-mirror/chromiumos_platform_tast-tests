@@ -71,6 +71,12 @@ func VerifyProxyOobe(ctx context.Context, s *testing.State) {
 	}
 	defer cr.Close(cleanupCtx)
 
+	// Assert that proxy.ConfigureChrome should NOT be used in OOBE as it is only functional for Chrome in-session.
+	if reset, err := proxy.ConfigureChrome(ctx, mp, cr); err == nil {
+		reset(ctx, cr)
+		s.Fatal("Unexpected proxy configuration: ", err)
+	}
+
 	oobeConn, err := cr.WaitForOOBEConnection(ctx)
 	if err != nil {
 		s.Fatal("Failed to create OOBE connection: ", err)

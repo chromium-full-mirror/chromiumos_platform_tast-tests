@@ -8,8 +8,9 @@ import (
 	"fmt"
 	"strings"
 
-	"go.chromium.org/tast/core/errors"
 	"gopkg.in/yaml.v2"
+
+	"go.chromium.org/tast/core/errors"
 )
 
 // Option is a function that can be used to config MitmProxy.
@@ -155,12 +156,12 @@ func Ignorelist(hosts []string) Option {
 }
 
 // CustomCA is an option to use custom CA or not.
-// If enable, then mitmproxy will use a CA defined in private vars folder.
-// Otherwise, CA is generated during runtime.
+// If `system` is set to true, then mitmproxy will use the system CA cert in private vars folder that is trusted by Chrome by default.
+// Otherwise, mitmproxy generates a user CA cert in runtime.
 // The default value is false.
-func CustomCA(enable bool) Option {
+func CustomCA(system bool) Option {
 	return func(mp *MitmProxy) error {
-		mp.customCA = enable
+		mp.customCA = system
 		return nil
 	}
 }
