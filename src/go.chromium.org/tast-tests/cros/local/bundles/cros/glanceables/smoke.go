@@ -66,6 +66,7 @@ func init() {
 				showStudentBubble: true,
 				showTaskBubble:    true,
 			},
+			ExtraSoftwareDeps: []string{"gaia"},
 		}, {
 			Name: "managed",
 			Val: testCase{
@@ -75,6 +76,7 @@ func init() {
 				showStudentBubble: false,
 				showTaskBubble:    true,
 			},
+			ExtraSoftwareDeps: []string{"gaia"},
 		}, {
 			Name: "regular",
 			Val: testCase{
@@ -94,6 +96,7 @@ func init() {
 				showStudentBubble: false,
 				showTaskBubble:    true,
 			},
+			ExtraSoftwareDeps: []string{"gaia"},
 		}, {
 			Name: "regular_tasks",
 			Val: testCase{
