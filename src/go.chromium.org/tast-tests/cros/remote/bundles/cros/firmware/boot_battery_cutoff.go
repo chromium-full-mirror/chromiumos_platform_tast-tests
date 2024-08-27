@@ -114,6 +114,10 @@ func BootBatteryCutoff(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to remove CCD watchdog: ", err)
 		}
 
+		// Make sure DUT is connected before sending command over ssh.
+		if err := h.WaitConnect(ctx); err != nil {
+			return errors.Wrap(err, "failed to connect to DUT")
+		}
 		// Send batterycutoff command.
 		s.Log("Sending batterycutoff command")
 		if err := s.DUT().Conn().CommandContext(ctx, "ectool", "batterycutoff").Start(); err != nil {
@@ -191,7 +195,7 @@ func BootBatteryCutoff(ctx context.Context, s *testing.State) {
 			if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
 				s.Fatal("Faild to reset DUT: ", err)
 			}
-			h.CloseRPCConnection(ctx)
+			h.DisconnectDUT(ctx)
 			if err := h.WaitConnect(ctx); err != nil {
 				s.Fatal("Failed to reconnect to DUT: ", err)
 			}
