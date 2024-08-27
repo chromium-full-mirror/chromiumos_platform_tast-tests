@@ -28,14 +28,11 @@ func init() {
 		Desc:         "Checks that virtual keyboard can perform typing in playstore search field",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
-		Attr:         []string{
-			// Disabled by TORA.  See:b/339972061
-			// "group:inputs_appcompat_arc_perbuild"
-			},
+		Attr:         []string{"group:inputs_appcompat_arc_perbuild"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		SoftwareDeps: []string{"inputs_deps", "chrome", "chrome_internal", "gaia"},
+		SoftwareDeps: []string{"inputs_deps", "chrome", "chrome_internal", "android_vm"},
 		Timeout:      5 * time.Minute,
-		Fixture:      fixture.PlayStoreWithVK,
+		Fixture:      fixture.InputsAppWithVK,
 	})
 }
 
@@ -45,7 +42,6 @@ func VirtualKeyboardAppCompatArc(ctx context.Context, s *testing.State) {
 	tconn := s.FixtValue().(fixture.ArcFixtData).TestAPIConn
 	ud := s.FixtValue().(fixture.ArcFixtData).UIDetector
 	kb := s.FixtValue().(fixture.ArcFixtData).Keyboard
-
 	vkbCtx := vkb.NewContext(cr, tconn)
 
 	cleanupCtx := ctx
@@ -61,7 +57,7 @@ func VirtualKeyboardAppCompatArc(ctx context.Context, s *testing.State) {
 				TestName:    "glide typing",
 				Description: "glide typing word bonjour",
 				Steps: uiauto.Combine("user glide typing bonjour",
-					ud.Tap(uidetection.Word("Search")),
+					ud.Tap(uidetection.Word("Single")),
 					vkbCtx.GlideTyping(strings.Split("bonjour", ""),
 						ud.WaitUntilExists(uidetection.Word("bonjour").First())),
 					util.ClearTextFieldViaClickingBackspace(kb, len("bonjour")),
@@ -71,7 +67,7 @@ func VirtualKeyboardAppCompatArc(ctx context.Context, s *testing.State) {
 				TestName:    "accent key",
 				Description: "user type héllo",
 				Steps: uiauto.Combine("user type text Héllo",
-					ud.Tap(uidetection.Word("Search")),
+					ud.Tap(uidetection.Word("Single")),
 					vkbCtx.TapKeyIgnoringCase("h"),
 					vkbCtx.TapAccentKey("e", "é"),
 					vkbCtx.TapKeys(strings.Split("llo", "")),
@@ -86,7 +82,7 @@ func VirtualKeyboardAppCompatArc(ctx context.Context, s *testing.State) {
 				TestName:    "normal typing",
 				Description: "user typing word English",
 				Steps: uiauto.Combine("user type text English",
-					ud.Tap(uidetection.Word("Search")),
+					ud.Tap(uidetection.Word("Single")),
 					vkbCtx.TapKeyIgnoringCase("e"),
 					vkbCtx.TapKeys(strings.Split("nglish", "")),
 					vkbCtx.TapHideVirtualKeyboardButton(),
@@ -95,10 +91,6 @@ func VirtualKeyboardAppCompatArc(ctx context.Context, s *testing.State) {
 				),
 			},
 		},
-	}
-
-	if err := ud.Tap(uidetection.Word("Search"))(ctx); err != nil {
-		s.Fatal("Failed to trigger vk in playstore: ", err)
 	}
 
 	for inputMethod, subtests := range languageTests {

@@ -11,7 +11,7 @@ import (
 )
 
 // LongestInputLength is used to clean the env between sub tests.
-const LongestInputLength = 10
+const LongestInputLength = 12
 
 // AppCompatPhysicalKeyboardTestCases is common test cases for appcompat inputs testing.
 // Adding more test cases here if we need to cover more latin languages.

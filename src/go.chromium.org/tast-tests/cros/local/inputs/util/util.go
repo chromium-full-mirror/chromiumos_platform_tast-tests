@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/action"
-	"go.chromium.org/tast-tests/cros/local/inputs/data"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
@@ -19,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast-tests/cros/local/inputs/data"
 	"go.chromium.org/tast-tests/cros/local/uidetection"
 	"go.chromium.org/tast-tests/cros/local/vdi/apps"
 
@@ -189,7 +189,6 @@ func ExtractExternalFilesFromMap(messages map[InputModality]data.Message, inputM
 	return data.ExtractExternalFiles(messageList, inputMethods)
 }
 
-
 // GetNthCandidateTextAndThen returns an action that performs two steps in sequence:
 // 1) Get the specified candidate.
 // 2) Pass the specified candidate into provided function and runs the returned action.
@@ -283,8 +282,12 @@ func SearchFlagsWithIMEAndScreenPlay(imes []ime.InputMethod, screenPlayIDs []str
 
 // ClearTextFieldViaClickingBackspace returns an action to clear text field by clicking backspace.
 // This function is for the scenario that need to clean up the text field and hot-key may not working because the current IME is not english.
+// The cursor may be not at the tail of the current string in the text field, so click the right button first.
 func ClearTextFieldViaClickingBackspace(kb *input.KeyboardEventWriter, times int) action.Action {
 	var keySequence = []string{}
+	for i := 1; i <= times; i++ {
+		keySequence = append(keySequence, "Right")
+	}
 	for i := 1; i <= times; i++ {
 		keySequence = append(keySequence, "Backspace")
 	}

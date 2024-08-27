@@ -9,23 +9,27 @@ import (
 	"path/filepath"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/dma"
-	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
-	"go.chromium.org/tast-tests/cros/local/arc/optin"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/useractions"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast-tests/cros/local/inputs/data"
 	"go.chromium.org/tast-tests/cros/local/inputs/inputactions"
+	"go.chromium.org/tast-tests/cros/local/inputs/util"
 	"go.chromium.org/tast-tests/cros/local/uidetection"
 	"go.chromium.org/tast/core/testing"
 )
 
-// Fixture for optin playstore.
+// Fixture for open the fake e14s app.
 const (
-	PlayStore       = "playStore"
-	PlayStoreWithVK = "playStoreWithVK"
+	InputsApp       = "inputsApp"
+	InputsAppWithVK = "inputsAppWithVK"
+	AppName         = "HelloGoogle3 Main"
+	ApkName         = "e14stestapp.apk"
+	ArcPackageName  = "google3.chrome.inputs.testing.e14stestapp"
 )
 
 // arcFixtureImpl implements testing.FixtureImpl.
@@ -51,37 +55,44 @@ type ArcFixtData struct {
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
-		Name: PlayStore,
-		Desc: "Optin playstore",
+		Name: InputsApp,
+		Desc: "Open fake arc app",
 		Contacts: []string{
 			"xiuwen@google.com",
 			"essential-inputs-team@google.com",
 		},
+		BugComponent:    "b:95887",
 		Impl:            &arcFixtureImpl{},
-		SetUpTimeout:    2 * time.Minute,
-		PreTestTimeout:  4 * time.Minute,
+		SetUpTimeout:    3 * time.Minute,
+		PreTestTimeout:  1 * time.Minute,
 		PostTestTimeout: 2 * time.Minute,
+		Data: []string{
+			ApkName,
+		},
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name: PlayStoreWithVK,
-		Desc: "Optin playstore with vk on",
+		Name: InputsAppWithVK,
+		Desc: "Open fake arc app with vk on",
 		Contacts: []string{
 			"essential-inputs-team@google.com",
 			"xiuwen@google.com",
 		},
+		BugComponent:    "b:95887",
 		Impl:            &arcFixtureImpl{vkEnabled: true},
-		SetUpTimeout:    2 * time.Minute,
-		PreTestTimeout:  4 * time.Minute,
+		SetUpTimeout:    3 * time.Minute,
+		PreTestTimeout:  1 * time.Minute,
 		PostTestTimeout: 2 * time.Minute,
+		Data: []string{
+			ApkName,
+		},
 	})
 }
 
 func (f *arcFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	var chromeOpts []chrome.Option
-
-	chromeOpts = append(chromeOpts, chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)))
 	chromeOpts = append(chromeOpts, chrome.ARCSupported())
 	chromeOpts = append(chromeOpts, chrome.ExtraArgs(arc.DisableSyncFlags()...))
+	chromeOpts = append(chromeOpts, chrome.ARCEnabled())
 
 	if f.vkEnabled {
 		chromeOpts = append(chromeOpts, chrome.VKEnabled())
@@ -95,11 +106,6 @@ func (f *arcFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) interf
 	f.tconn, err = cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to get test API connection: ", err)
-	}
-
-	// Opt in to Play Store.
-	if err = optin.PerformAndClose(ctx, cr, f.tconn); err != nil {
-		s.Fatal("Failed to optin to Play Store and Close: ", err)
 	}
 
 	f.cr = cr
@@ -119,22 +125,42 @@ func (f *arcFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) interf
 
 	f.uidetector = uidetection.NewDefault(f.tconn).WithScreenshotStrategy(uidetection.ImmediateScreenshot)
 
+	a, err := arc.New(ctx, s.OutDir(), cr.NormalizedUser())
+	if err != nil {
+		s.Fatal("Failed to start ARC: ", err)
+	}
+	defer a.Close(ctx)
+
+	// Install fake app and launch it.
+	a.Install(ctx, s.DataPath(ApkName))
+
+	ui := uiauto.New(f.tconn)
+	homeButtonFinder := nodewith.Name("Launcher").Role(role.Button).Ancestor(nodewith.HasClass("ShelfContainer"))
+
+	if err := uiauto.Combine("Search app and launch it",
+		ui.DoDefault(homeButtonFinder),
+		f.uidetector.LeftClick(uidetection.Word("HelloGoo")),
+		ui.WaitUntilExists(nodewith.ClassName("Widget").Name(AppName)),
+	)(ctx); err != nil {
+		s.Fatal("Failed to start app: ", err)
+	}
+
 	return ArcFixtData{f.cr, f.tconn, f.uc, f.kb, f.uidetector}
 }
 
 func (f *arcFixtureImpl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 	f.recorder = uiauto.CreateAndStartScreenRecorder(ctx, f.tconn)
 
-	if err := optin.LaunchAndWaitForPlayStore(ctx, f.tconn, f.cr, 2*time.Minute); err != nil {
-		s.Fatal("Failed to launch Play Store: ", err)
+	// clear the single line input field
+	if err := f.uidetector.Tap(uidetection.Word("Single"))(ctx); err != nil {
+		s.Fatal("Failed to trigger vk in playstore: ", err)
 	}
+
+	util.ClearTextFieldViaClickingBackspace(f.kb, data.LongestInputLength)(ctx)
+
 }
 
 func (f *arcFixtureImpl) PostTest(ctx context.Context, s *testing.FixtTestState) {
-	if err := optin.ClosePlayStore(ctx, f.tconn); err != nil {
-		s.Fatal("Failed to close Play Store: ", err)
-	}
-
 	// Do nothing if the recorder is not initialized.
 	if f.recorder != nil {
 		f.recorder.StopAndSaveOnError(ctx, filepath.Join(s.OutDir(), "record.webm"), s.HasError)

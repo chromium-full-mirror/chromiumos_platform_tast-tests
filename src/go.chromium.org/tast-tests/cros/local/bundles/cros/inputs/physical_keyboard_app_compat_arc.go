@@ -27,9 +27,9 @@ func init() {
 		BugComponent: "b:95887",
 		Attr:         []string{"group:inputs_appcompat_arc_perbuild"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		SoftwareDeps: []string{"inputs_deps", "chrome", "chrome_internal", "gaia"},
+		SoftwareDeps: []string{"inputs_deps", "chrome", "chrome_internal", "android_vm"},
 		Timeout:      5 * time.Minute,
-		Fixture:      fixture.PlayStore,
+		Fixture:      fixture.InputsApp,
 		Params: []testing.Param{
 			{
 				Name:             "french",
@@ -50,10 +50,6 @@ func PhysicalKeyboardAppCompatArc(ctx context.Context, s *testing.State) {
 	kb := s.FixtValue().(fixture.ArcFixtData).Keyboard
 	ud := s.FixtValue().(fixture.ArcFixtData).UIDetector
 
-	if err := ud.LeftClick(uidetection.Word("Search"))(ctx); err != nil {
-		s.Fatal("Failed to click on launched window: ", err)
-	}
-
 	inputMethod := s.Param().(ime.InputMethod)
 
 	if err := inputMethod.InstallAndActivateUserAction(uc)(ctx); err != nil {
@@ -66,6 +62,7 @@ func PhysicalKeyboardAppCompatArc(ctx context.Context, s *testing.State) {
 			util.ClearTextFieldViaClickingBackspace(kb, data.LongestInputLength),
 			kb.TypeSequenceAction(subtest.LocationKeySeq),
 			ud.WaitUntilExists(uidetection.TextBlock(strings.Split(subtest.ExpectedText, " ")).First()),
+			util.ClearTextFieldViaClickingBackspace(kb, len(subtest.ExpectedText)),
 		)
 
 		s.Run(ctx, subtest.Description, func(ctx context.Context, s *testing.State) {
