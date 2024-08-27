@@ -46,8 +46,6 @@ const (
 	ChromeLoggedInWithOobeAndAccessibilityButtonEnabled = "chromeLoggedInWithOobeAndAccessibilityButtonEnabled"
 	// Logged into a user session; stack-sampled metrics on turned on.
 	ChromeLoggedInWithStackSampledMetrics = "chromeLoggedInWithStackSampledMetrics"
-	// Logged into a user session with FirmwareUpdaterApp disabled.
-	ChromeLoggedInExtendedAutocomplete = "chromeLoggedInExtendedAutocomplete"
 	// Logged into a user session with searchFeedbackEnabled flag enabled.
 	ChromeLoggedInWithOsSettingsSearchFeedback = "chromeLoggedInWithOsSettingsSearchFeedback"
 	// Logged into a guest user session with searchFeedbackEnabled flag enabled.

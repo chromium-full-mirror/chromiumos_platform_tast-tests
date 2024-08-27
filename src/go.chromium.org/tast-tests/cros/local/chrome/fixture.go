@@ -278,18 +278,6 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     fixture.ChromeLoggedInExtendedAutocomplete,
-		Desc:     "Logged into a user session with FirmwareUpdaterApp disabled",
-		Contacts: []string{"yulunwu@chromium.org", "tbarzic@chromium.org"},
-		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
-			return []Option{EnableFeatures("AutocompleteExtendedSuggestions")}, nil
-		}),
-		SetUpTimeout:    FixtureSetUpTimeout,
-		ResetTimeout:    ResetTimeout,
-		TearDownTimeout: ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
 		Name:     fixture.ChromeLoggedInWithOsSettingsSearchFeedback,
 		Desc:     "Logged into a user session with searchFeedbackEnabled flag enabled",
 		Contacts: []string{"cros-settings@google.com", "moteva@google.com"},

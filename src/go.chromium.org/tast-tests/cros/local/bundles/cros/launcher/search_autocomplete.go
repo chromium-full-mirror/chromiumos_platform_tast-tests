@@ -50,7 +50,7 @@ func init() {
 		}},
 		Params: []testing.Param{{
 			Name:    "clamshell_mode_isaac_newto",
-			Fixture: "chromeLoggedInExtendedAutocomplete",
+			Fixture: "chromeLoggedIn",
 			Val: searchAutocompleteTestCase{TabletMode: false,
 				searchKeyword:          "Isaac Newto",
 				result:                 "Isaac Newton, Google Search",
@@ -59,7 +59,7 @@ func init() {
 			},
 		}, {
 			Name:    "tablet_mode_isaac_newto",
-			Fixture: "chromeLoggedInExtendedAutocomplete",
+			Fixture: "chromeLoggedIn",
 			Val: searchAutocompleteTestCase{TabletMode: true,
 				searchKeyword:          "Isaac Newto",
 				result:                 "Isaac Newton, Google Search",
@@ -68,7 +68,7 @@ func init() {
 			ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		}, {
 			Name:    "clamshell_mode_saac_newton",
-			Fixture: "chromeLoggedInExtendedAutocomplete",
+			Fixture: "chromeLoggedIn",
 			Val: searchAutocompleteTestCase{TabletMode: false,
 				searchKeyword:          "saac Newton",
 				result:                 "Isaac Newton, Google Search",
@@ -77,7 +77,7 @@ func init() {
 			},
 		}, {
 			Name:    "tablet_mode_saac_newton",
-			Fixture: "chromeLoggedInExtendedAutocomplete",
+			Fixture: "chromeLoggedIn",
 			Val: searchAutocompleteTestCase{TabletMode: true,
 				searchKeyword:          "saac Newton",
 				result:                 "Isaac Newton, Google Search",
@@ -109,8 +109,9 @@ func SearchAutocomplete(ctx context.Context, s *testing.State) {
 	defer kb.Close(ctx)
 
 	testCase := s.Param().(searchAutocompleteTestCase)
+	tabletMode := testCase.TabletMode
 
-	cleanup, err := launcher.SetUpLauncherTest(ctx, tconn, testCase.TabletMode, false /*stabilizeAppCount*/)
+	cleanup, err := launcher.SetUpLauncherTest(ctx, tconn, tabletMode, false /*stabilizeAppCount*/)
 	if err != nil {
 		s.Fatal("Failed to set up launcher test case: ", err)
 	}
