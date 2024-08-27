@@ -6,6 +6,7 @@ package ossettings
 
 import (
 	"context"
+	"fmt"
 	"regexp"
 	"strings"
 	"time"
@@ -292,8 +293,12 @@ func OpenDiscoverAPNDialogFromAPNSubpage(ctx context.Context, tconn *chrome.Test
 // SelectAPNFromDialog selects the provided |apnName| when the discover new APNs dialog is open.
 func SelectAPNFromDialog(ctx context.Context, tconn *chrome.TestConn, apnName string) error {
 	chooseApnDialog := nodewith.Name("Choose an APN").Role(role.Dialog)
-	// There might be a space before and after the APN name.
-	nameReg := regexp.MustCompile(regexp.QuoteMeta(strings.TrimSpace(apnName)))
+	// The operator may provide multiple similar APNs, so the finder needs to be specific to the name.
+	// There might be a space before and after the node's name of the APN.
+	// Example of a the flaky circumstance where the failure occurs due to multiple nodes being matched:
+	// - Existing APN nodes: ` internet`, ` internet ipv4`, ` internet ipv6`.
+	// - The target APN name: `internet`.
+	nameReg := regexp.MustCompile(fmt.Sprintf(`^[\s]?%s[\s]?$`, apnName))
 	apnSelection := nodewith.NameRegex(nameReg).Role(role.StaticText).Ancestor(chooseApnDialog)
 
 	ui := uiauto.New(tconn)
