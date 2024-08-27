@@ -32,10 +32,9 @@ func CCAUIGuest(ctx context.Context, s *testing.State) {
 
 	// Enter user session mount namespace so the captured video and photo can
 	// be checked by the test.
-	// TODO(b/229131841): Move this to the fixture when tast supports forcing
-	// the SetUp / TearDown function running in the same thread as the test,
-	// since entering user session mount namespace is only effective on the
-	// same thread.
+	// We have to do it in the test body instead of fixture since entering user
+	// session mount namespace is only effective on the same thread, see
+	// http://b/229131841 for more details.
 	if err := mountns.WithUserSessionMountNS(ctx, func(ctx context.Context) error {
 		if err := app.SwitchMode(ctx, cca.Photo); err != nil {
 			s.Error("Failed to switch to photo mode: ", err)
