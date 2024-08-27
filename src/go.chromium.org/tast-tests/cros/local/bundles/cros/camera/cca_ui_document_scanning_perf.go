@@ -24,14 +24,11 @@ func init() {
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"camera_app", "chrome", "ondevice_document_scanner_rootfs_or_dlc"},
 		Data:         []string{"ocr_full_of_text_3264x2448.jpg"},
-		// Some devices (such as dedede/blipper) may take up to 10 seconds to
-		// crop a document from an image and 8 seconds to perform OCR on an
-		// image.
-		Fixture: "ccaTestBridgeReadyWithFakeHALCamera",
-		// testOnePage: 60 seconds
-		// testTenPage: 600 seconds
-		// 660 seconds + 2 minutes `cpu.WaitUntilIdle`.
-		Timeout: 13 * time.Minute,
+		Fixture:      "ccaTestBridgeReadyWithFakeHALCamera",
+		// testOnePage: 120 seconds
+		// testTenPage: 1200 seconds
+		// 1320 seconds + 2 minutes `cpu.WaitUntilIdle`.
+		Timeout: 24 * time.Minute,
 	})
 }
 
