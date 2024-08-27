@@ -12,6 +12,7 @@ import (
 	fwUtils "go.chromium.org/tast-tests/cros/remote/bundles/cros/firmware/utils"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -30,7 +31,7 @@ func init() {
 		Attr:         []string{"group:mainline", "informational", "group:firmware", "firmware_unstable"},
 		SoftwareDeps: []string{"crossystem", "flashrom"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
-		Timeout:      20 * time.Minute,
+		Timeout:      25 * time.Minute,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{
 			{
@@ -53,8 +54,17 @@ func WriteProtectCrossystem(ctx context.Context, s *testing.State) {
 	if err := h.RequireConfig(ctx); err != nil {
 		s.Fatal("Failed to require configs: ", err)
 	}
-
-	defer func() {
+	cleanupContext := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Minute)
+	defer cancel()
+	defer func(ctx context.Context) {
+		// Add another h.WaitConnect() to check if the DUT takes longer to reboot than expected.
+		testing.ContextLog(ctx, "Waiting longer to see if the DUT can reconnect")
+		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 5*time.Minute)
+		defer cancelWaitConnect()
+		if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
+			s.Error("DUT failed to reconnect even after waiting externally: ", err)
+		}
 		s.Log("Disabling write protection")
 		if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateOff); err != nil {
 			s.Fatal("Failed to disable hardware WP: ", err)
@@ -66,7 +76,7 @@ func WriteProtectCrossystem(ctx context.Context, s *testing.State) {
 		if err := h.WaitConnect(ctx, firmware.ResetEthernetDongle); err != nil {
 			s.Fatal("Failed to reconnect to DUT: ", err)
 		}
-	}()
+	}(cleanupContext)
 
 	rebootFuncs := map[string]func(context.Context, *firmware.Helper) error{
 		"mode aware reboot":        performModeAwareReboot,
