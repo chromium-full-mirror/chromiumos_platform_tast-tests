@@ -370,7 +370,10 @@ func init() {
 				},
 				Fixture:           crasEffectsHasAST,
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
-				ExtraAttr:         []string{"group:criticalstaging", "group:mainline", "informational"},
+				ExtraAttr: []string{
+					"group:criticalstaging", "group:mainline", "informational",
+					"group:cbx", "cbx_feature_enabled", "cbx_unstable",
+				},
 			},
 			{
 				Name: "nc_both_ast_disabled",
@@ -412,7 +415,10 @@ func init() {
 				},
 				Fixture:           crasEffectsHasAST,
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
-				ExtraAttr:         []string{"group:criticalstaging", "group:mainline", "informational"},
+				ExtraAttr: []string{
+					"group:criticalstaging", "group:mainline", "informational",
+					"group:cbx", "cbx_feature_enabled", "cbx_unstable",
+				},
 			},
 			// NC provider tests with only DSP NC.
 			{
@@ -633,7 +639,10 @@ func init() {
 				},
 				Fixture:           crasEffectsHasAST,
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
-				ExtraAttr:         []string{"group:criticalstaging", "group:mainline", "informational"},
+				ExtraAttr: []string{
+					"group:criticalstaging", "group:mainline", "informational",
+					"group:cbx", "cbx_feature_enabled", "cbx_unstable",
+				},
 			},
 			{
 				Name: "forced_disabled_voice_isolation_with_ast_button_disabled",
@@ -765,7 +774,10 @@ func init() {
 				},
 				Fixture:           crasEffectsHasAST,
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
-				ExtraAttr:         []string{"group:criticalstaging", "group:mainline", "informational"},
+				ExtraAttr: []string{
+					"group:criticalstaging", "group:mainline", "informational",
+					"group:cbx", "cbx_feature_enabled", "cbx_unstable",
+				},
 			},
 		},
 	})
