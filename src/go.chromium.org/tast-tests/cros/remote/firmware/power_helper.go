@@ -40,9 +40,8 @@ func BootDutViaPowerPress(ctx context.Context, h *Helper, dut *dut.DUT) error {
 	}, &testing.PollOptions{Timeout: 2 * time.Minute})
 }
 
-// TestChargingVoltagesAfterDischarge verifies charging voltages are in expected ranges after discharging to a certain level.
-func TestChargingVoltagesAfterDischarge(ctx context.Context, h *Helper, percentBattDischargeLevel float64) error {
-
+// DischargeBattery loads the CPU until the battery is at the specified level.
+func DischargeBattery(ctx context.Context, h *Helper, percentBattDischargeLevel float64) error {
 	var battery *ECBatteryState
 	var err error
 
@@ -102,7 +101,14 @@ func TestChargingVoltagesAfterDischarge(ctx context.Context, h *Helper, percentB
 	if err := PollToSetChargerStatus(ctx, h, true); err != nil {
 		return errors.Wrap(err, "failed to connect charger")
 	}
+	return nil
+}
 
+// TestChargingVoltagesAfterDischarge verifies charging voltages are in expected ranges after discharging to a certain level.
+func TestChargingVoltagesAfterDischarge(ctx context.Context, h *Helper, percentBattDischargeLevel float64) error {
+	if err := DischargeBattery(ctx, h, percentBattDischargeLevel); err != nil {
+		return err
+	}
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		if err := CheckChargingState(ctx, h); err != nil {
 			return errors.Wrap(err, "failed to verify expected charging voltages")

@@ -225,8 +225,8 @@ func PDVbusRequest(ctx context.Context, s *testing.State) {
 	}
 
 	// If battery is full, discharge it some before starting the test
-	if err := firmware.TestChargingVoltagesAfterDischarge(ctx, h, 93.0); err != nil {
-		s.Fatal("Failed checking voltages after discharge test: ", err)
+	if err := firmware.DischargeBattery(ctx, h, 93.0); err != nil {
+		s.Fatal("Failed discharge battery: ", err)
 	}
 
 	testParams := s.Param().(firmware.PDTestParams)
