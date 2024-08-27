@@ -176,6 +176,8 @@ func (f *baseSetupFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) 
 		opts = append(opts, chrome.DisableFeatures(strings.Split(disabledFeatures, ",")...))
 	}
 
+	opts = append(opts, chrome.DisableFeatures("CrosSodaConchLanguages"))
+
 	// cr, err := browserfixt.NewChrome(ctx, f.browserType, opts...)
 	cr, err := chrome.New(ctx, opts...)
 	if err != nil {

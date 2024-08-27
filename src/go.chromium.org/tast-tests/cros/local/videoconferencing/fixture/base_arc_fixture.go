@@ -24,7 +24,8 @@ func init() {
 	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 		opts := []chrome.Option{
 			chrome.EnableFeatures("SpeakOnMuteEnabled"),
-			chrome.ExtraArgs(arc.DisableSyncFlags()...)}
+			chrome.ExtraArgs(arc.DisableSyncFlags()...),
+			chrome.DisableFeatures("CrosSodaConchLanguages")}
 
 		opts = append(opts, vcOpts...)
 		return opts, nil
