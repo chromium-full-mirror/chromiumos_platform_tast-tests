@@ -47,7 +47,7 @@ func init() {
 			Value: "screenplay-90e4fecc-d2ea-40dc-b9db-eb9d61089e22",
 		}},
 		Timeout: 3*time.Minute + cws.InstallationTimeout,
-		Fixture: "chromeLoggedInWithLauncherContinueSection",
+		Fixture: "chromeLoggedIn",
 		Params: []testing.Param{{
 			Name: "clamshell_mode",
 			Val:  launcher.TestCase{TabletMode: false},

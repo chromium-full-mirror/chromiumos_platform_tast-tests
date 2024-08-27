@@ -40,8 +40,6 @@ const (
 	ChromeLoggedInWithOsFeedback = "chromeLoggedInWithOsFeedback"
 	// Logged into a user session with ShortcutCustomizationApp enabled.
 	chromeLoggedInWithShortcutCustomizationApp = "chromeLoggedInWithShortcutCustomizationApp"
-	// Logged into a user session that has continue section in the launcher enabled.
-	ChromeLoggedInWithLauncherContinueSection = "chromeLoggedInWithLauncherContinueSection"
 	// Log in and proceed with the post-login OOBE flow.
 	ChromeLoggedInWithOobe = "chromeLoggedInWithOobe"
 	// Log in and proceed with the post-login OOBE flow with the accessibility button enabled on the marketing opt-in screen.

@@ -236,18 +236,6 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     fixture.ChromeLoggedInWithLauncherContinueSection,
-		Desc:     "Logged into a user session that has continue section in the launcher enabled",
-		Contacts: []string{"tbarzic@chromium.org"},
-		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
-			return []Option{EnableFeatures("ProductivityLauncher:enable_continue/true")}, nil
-		}),
-		SetUpTimeout:    FixtureSetUpTimeout,
-		ResetTimeout:    ResetTimeout,
-		TearDownTimeout: ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
 		Name:         fixture.ChromeLoggedInWithOobe,
 		Desc:         "Log in and proceed with the post-login OOBE flow",
 		Contacts:     []string{"cros-oobe@google.com", "bohdanty@google.com"},
