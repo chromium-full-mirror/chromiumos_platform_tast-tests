@@ -41,7 +41,7 @@ var (
 	// There are multiple buttons that contain the "Allow" string.
 	// To distinguish multiple buttons, the regular expression must contain
 	// all possible strings and NameContaining("Allow") can't be used.
-	AllowAVButtonRe     = regexp.MustCompile("^(Allow|Allow this time|Allow microphone and camera|Allow microphone|Allow camera|Use microphone and camera)$")
+	AllowAVButtonRe     = regexp.MustCompile("^(Allow|Allow this time|(Allow|Use) microphone and camera|Allow microphone|(Allow|Use) camera)$")
 	AllowAVButtonFinder = nodewith.NameRegex(AllowAVButtonRe).Role(role.Button)
 	AllowButtonFinder   = nodewith.Name("Allow").Role(role.Button)
 	DismissButtonFinder = nodewith.Name("Dismiss").Role(role.Button)
