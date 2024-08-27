@@ -28,7 +28,7 @@ func init() {
 		SoftwareDeps: []string{"camera_app", "chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Params: []testing.Param{{
-			Name:    "fake",
+			Name:    "fake_hal",
 			Fixture: "ccaLaunchedWithFakeHALCamera",
 		}, {
 			Name:              "real",
