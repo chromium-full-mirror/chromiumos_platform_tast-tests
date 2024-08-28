@@ -16,7 +16,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/checked"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/lockscreen"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -489,17 +488,10 @@ func DeselectAlbum(ctx context.Context, ui *uiauto.Context, albumInfo *uiauto.No
 
 // SetScreenSaverHelper runs the entire core screen saver test sequence. It's
 // here as a helper function so that multiple test bundles can reuse it.
-func SetScreenSaverHelper(ctx context.Context, cr *chrome.Chrome, testParams TestParams, errorOutputDir string, hasError func() bool) error {
+func SetScreenSaverHelper(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, testParams TestParams) error {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
-
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to create Test API connection")
-	}
-
-	defer faillog.DumpUITreeOnError(cleanupCtx, errorOutputDir, hasError, tconn)
 
 	// The test has a dependency of network speed, so we give uiauto.Context ample
 	// time to wait for nodes to load.
@@ -559,7 +551,7 @@ func prepareScreenSaver(tconn *chrome.TestConn, ui *uiauto.Context, testParams T
 	return func(ctx context.Context) error {
 		themeContainer := nodewith.Role(role.RadioButton).Name(testParams.Theme)
 		if err := uiauto.Combine("Choose animation theme",
-			ui.FocusAndWait(themeContainer),
+			ui.EnsureFocused(themeContainer),
 			ui.LeftClick(themeContainer))(ctx); err != nil {
 			return errors.Wrapf(err, "failed to select %v", testParams.Theme)
 		}

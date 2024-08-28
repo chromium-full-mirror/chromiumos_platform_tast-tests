@@ -11,6 +11,7 @@ import (
 	ambientCommon "go.chromium.org/tast-tests/cros/common/ambient"
 	"go.chromium.org/tast-tests/cros/local/ambient"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/personalization"
 
 	"go.chromium.org/tast/core/testing"
@@ -86,8 +87,15 @@ func init() {
 
 func SetScreenSaver(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Fail to get test api conn: ", err)
+	}
+	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
+
 	testParams := s.Param().(ambient.TestParams)
-	if err := ambient.SetScreenSaverHelper(ctx, cr, testParams, s.OutDir(), s.HasError); err != nil {
+	if err := ambient.SetScreenSaverHelper(ctx, cr, tconn, testParams); err != nil {
 		s.Fatal("Fail to set screen saver: ", err)
 	}
 }
