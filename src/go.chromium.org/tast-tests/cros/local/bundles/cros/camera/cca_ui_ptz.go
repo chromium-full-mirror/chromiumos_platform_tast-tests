@@ -20,10 +20,9 @@ func init() {
 		Desc:         "Opens CCA and verifies the PTZ functionality",
 		Contacts:     []string{"chromeos-camera-app-eng@google.com", "kamchonlathorn@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
-		Attr:         []string{
+		Attr: []string{
 			"group:mainline",
 			"informational",
-			"group:camera-libcamera",
 			"group:release-health",
 			"release-health_camera",
 		},

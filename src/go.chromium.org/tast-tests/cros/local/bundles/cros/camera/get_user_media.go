@@ -23,14 +23,14 @@ func init() {
 		Desc:         "Verifies that getUserMedia captures video",
 		Contacts:     []string{"chromeos-camera-app-eng@google.com", "shik@chromium.org", "seannli@google.com"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
-		Attr:         []string{"group:mainline", "group:camera-libcamera"},
+		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome"},
 		Data:         append(getusermedia.DataFiles(), "web_api.html"),
 		Params: []testing.Param{
 			{
 				Name:              "real",
 				Fixture:           "chromeVideo",
-				ExtraAttr:         []string{"informational"},
+				ExtraAttr:         []string{"informational", "group:camera-libcamera"},
 				ExtraSoftwareDeps: []string{caps.BuiltinCamera},
 			},
 			{
