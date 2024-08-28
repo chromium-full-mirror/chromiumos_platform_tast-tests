@@ -238,6 +238,8 @@ const (
 	ModemFwFilterFM101MR2
 	ModemFwFilterEM060V01
 	ModemFwFilterLCUK54V01
+	ModemFwFilterRW101MR1
+	ModemFwFilterRW135MR1
 	ModemFwFilterSC7180All
 )
 
@@ -317,6 +319,19 @@ func (filter ModemFwFilter) IsMatch(modemType cellularconst.ModemType, fwVersion
 			return false
 		}
 		r := regexp.MustCompile("^LCUK54WWDBL0102")
+		return r.MatchString(fwVersion)
+	case ModemFwFilterRW101MR1:
+		if modemType != cellularconst.ModemTypeRW101 {
+			return false
+		}
+
+		r := regexp.MustCompile("^19512.0000.00.11.02.[0-9]{2}.*")
+		return r.MatchString(fwVersion)
+	case ModemFwFilterRW135MR1:
+		if modemType != cellularconst.ModemTypeRW135 {
+			return false
+		}
+		r := regexp.MustCompile("^89600.0000.00.01.[0-9]{2}.[0-9]{2}.*")
 		return r.MatchString(fwVersion)
 	case ModemFwFilterSC7180All:
 		if modemType != cellularconst.ModemTypeSC7180 {

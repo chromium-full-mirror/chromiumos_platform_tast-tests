@@ -64,6 +64,14 @@ func IsModemFirmwareKnown(ctx context.Context, s *testing.State) {
 		if cellular.ModemFwFilterNL668A01.IsMatch(modemType, fwVersion) || cellular.ModemFwFilterNL668A04.IsMatch(modemType, fwVersion) {
 			return
 		}
+	case cellularconst.ModemTypeRW101:
+		if cellular.ModemFwFilterRW101MR1.IsMatch(modemType, fwVersion) {
+			return
+		}
+	case cellularconst.ModemTypeRW135:
+		if cellular.ModemFwFilterRW135MR1.IsMatch(modemType, fwVersion) {
+			return
+		}
 	case cellularconst.ModemTypeSC7180:
 		if cellular.ModemFwFilterSC7180All.IsMatch(modemType, fwVersion) {
 			return
