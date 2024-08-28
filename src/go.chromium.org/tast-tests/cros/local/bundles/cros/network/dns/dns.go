@@ -246,8 +246,13 @@ func SetDoHModeViaUI(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestC
 			// Click add custom DNS service provider option.
 			ac.WithTimeout(10*time.Second).WaitUntilExists(selectNode),
 			ac.MakeVisible(selectNode),
-			ac.WithInterval(3*time.Second).LeftClickUntil(selectNode, ac.Exists(selectNode.Expanded())),
-			ac.WithInterval(3*time.Second).LeftClickUntil(optionNode, ac.Exists(textNode)),
+			// The above keyboard operation may make DUT popping up a notification, so
+			// use DoDefault to make sure the node can be clicked even if it's hidden
+			// by the popup. Do not use DoDefault elsewhere since it looks like
+			// sometimes the node cannot be clicked with it. The reason is unclear
+			// now.
+			ac.WithInterval(3*time.Second).DoDefaultUntil(selectNode, ac.Exists(selectNode.Expanded())),
+			ac.WithInterval(3*time.Second).DoDefaultUntil(optionNode, ac.Exists(textNode)),
 			// Input a custom DoH provider.
 			ac.EnsureFocused(textNode),
 			kb.AccelAction("Ctrl+A"),
