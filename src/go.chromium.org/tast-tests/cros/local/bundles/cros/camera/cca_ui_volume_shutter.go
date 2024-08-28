@@ -33,7 +33,7 @@ func init() {
 			"release-health_camera",
 		},
 		SoftwareDeps: []string{"camera_app", "chrome", "proprietary_codecs"},
-		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
+		HardwareDeps: hwdep.D(hwdep.InternalDisplay(), hwdep.SkipOnFormFactor(hwdep.Chromebase)),
 		Fixture:      "ccaLaunchedWithFakeHALCamera",
 	})
 }
