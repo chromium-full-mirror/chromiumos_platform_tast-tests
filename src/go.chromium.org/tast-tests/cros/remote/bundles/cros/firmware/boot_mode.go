@@ -140,8 +140,7 @@ func init() {
 			Val: bootModeTestParams{
 				bootToMode: fwCommon.BootModeRecovery,
 			},
-			// TODO: When stable, change firmware_unstable to "firmware_bios" + "firmware_level2".
-			ExtraAttr: []string{"firmware_unstable", "firmware_usb"},
+			ExtraAttr: []string{"firmware_bios", "firmware_level2", "firmware_usb"},
 			Timeout:   2 * time.Hour,
 		}, {
 			Name:    "rec_to_dev_gbb",
