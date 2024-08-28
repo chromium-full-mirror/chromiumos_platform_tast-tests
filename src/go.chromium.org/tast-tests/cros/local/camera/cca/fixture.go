@@ -261,20 +261,6 @@ func init() {
 		TearDownTimeout: powerTearDownTimeout,
 	})
 
-	// TODO(b/225112054): Remove the fixture once digital zoom and super resolution are enabled by default.
-	testing.AddFixture(&testing.Fixture{
-		Name:            "ccaLaunchedWithDigitalZoomAndSuperRes",
-		Desc:            "Launched CCA with digital zoom and super resolution enabled",
-		Contacts:        []string{"chromeos-camera-eng@google.com", "kamchonlathorn@chromium.org"},
-		BugComponent:    "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
-		Impl:            &fixture{launchCCA: true, forceEnableSuperRes: true, enableFeatures: []feature{digitalZoom}},
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    testBridgeSetUpTimeout,
-		PreTestTimeout:  ccaSetUpTimeout,
-		PostTestTimeout: ccaTearDownTimeout,
-		TearDownTimeout: tearDownTimeout,
-	})
-
 	testing.AddFixture(&testing.Fixture{
 		Name:            "ccaTestBridgeReadyWithVCDInUtilityProcess",
 		Desc:            "Set up test bridge for CCA with VCD running in the utility process",
