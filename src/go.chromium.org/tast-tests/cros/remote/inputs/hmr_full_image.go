@@ -91,6 +91,17 @@ func leastSquaredFit(x, y []float64, degree int) ([]float64, error) {
 	resultMatrix := mat.NewDense(numberOfCoefficients, 1, nil)
 	err := resultMatrix.Solve(xMatrix, yMatrix)
 	if err != nil {
+		// If all y values are too close to horizontal, an error is generated.
+		// This workaround manually generates a set of coefficients corresponding
+		// to a horizontal straight line with the y value of the line, as the
+		// mean of all y values in the input array.
+		var conditionErr mat.Condition
+		if errors.As(err, &conditionErr) {
+			coefs := make([]float64, numberOfCoefficients)
+			coefs[0] = stat.Mean(y, nil)
+			return coefs, nil
+		}
+
 		return nil, err
 	}
 
