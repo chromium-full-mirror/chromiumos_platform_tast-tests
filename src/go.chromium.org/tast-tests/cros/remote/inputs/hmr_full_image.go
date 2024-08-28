@@ -363,10 +363,22 @@ func runSlidingWindowAnalysis(referencePaths, resultPaths [][]*hmrNode, diagonal
 				pathErr = errors.Wrapf(err, "failed to walk path due to error (bubble radius %vmm)", mid)
 			} else if !reachedEndOfPath {
 				pathErr = errors.Errorf("failed to walk to end of path (bubble radius %vmm)", mid)
-			} else if pathResult.SuccessfulFitRate < fitR2Threshold {
-				pathErr = errors.Errorf("successful fit rate of path curve fitting (%v) was below threshold (%v) (bubble radius %vmm)", pathResult.SuccessfulFitRate, fitR2Threshold, mid)
 			} else {
-				successfulPathResult = pathResult
+				// If a path traversal has a poor fit rate, it is considered a failure,
+				// however, it is still possible for path traversals with smaller bubble
+				// radiuses to succeed.
+				// Therefore when this occurs we:
+				// - log an error message for debuggability.
+				// - do not cache the path result as a successful result.
+				// - continue searching for smaller bubble radiuses (in the same way as
+				//   we would if the path traversal was a success).
+				if pathResult.SuccessfulFitRate < fitR2Threshold {
+					pathErr = errors.Errorf("successful fit rate of path curve fitting (%v) was below threshold (%v) (bubble radius %vmm)", pathResult.SuccessfulFitRate, fitR2Threshold, mid)
+					pathErrorChain = errors.Join(pathErrorChain, pathErr)
+				} else {
+					successfulPathResult = pathResult
+				}
+
 				right = mid - 1
 				continue
 			}
