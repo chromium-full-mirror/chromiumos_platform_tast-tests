@@ -12,36 +12,58 @@ import (
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
+
+type takePictureSubtest struct {
+	name     string
+	testFunc func(context.Context, *cca.App) error
+}
 
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CCAUITakePicture,
 		Desc:         "Opens CCA and verifies photo taking related use cases",
-		Contacts:     []string{"chromeos-camera-app-eng@google.com", "wtlee@chromium.org"},
+		Contacts:     []string{"chromeos-camera-app-eng@google.com", "wtlee@chromium.org", "kamchonlathorn@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Attr:         []string{"group:mainline", "informational", "group:intel-gating", "group:intel-nda"},
 		SoftwareDeps: []string{"camera_app", "chrome"},
-		Fixture:      "ccaTestBridgeReadyWithFakeHALCamera",
+		Params: []testing.Param{
+			{
+				Name:    "fake_hal",
+				Fixture: "ccaLaunchedWithFakeHALCamera",
+				Val: []takePictureSubtest{
+					{"testTakeSinglePhoto", testTakeSinglePhoto},
+					{"testTakeSinglePhotoWithTimer", testTakeSinglePhotoWithTimer},
+					{"testCancelTimer", testCancelTimer},
+				},
+			},
+			{
+				Name:              "real",
+				Fixture:           "ccaLaunched",
+				ExtraAttr:         []string{"group:camera-libcamera"},
+				ExtraHardwareDeps: hwdep.D(hwdep.CameraEnumerated()),
+				Val: []takePictureSubtest{
+					{"testTakeSinglePhoto", testTakeSinglePhoto},
+					{"testTakeZoomedPhoto", testTakeZoomedPhoto},
+				},
+			},
+		},
 	})
 }
 
 // CCAUITakePicture verifies photo taking related functionalities works.
 func CCAUITakePicture(ctx context.Context, s *testing.State) {
-	runTestWithApp := s.FixtValue().(cca.FixtureData).RunTestWithApp
+	app := s.FixtValue().(cca.FixtureData).App()
 
 	subTestTimeout := 30 * time.Second
-	for _, tst := range []struct {
-		name     string
-		testFunc func(context.Context, *cca.App) error
-	}{
-		{"testTakeSinglePhoto", testTakeSinglePhoto},
-		{"testTakeSinglePhotoWithTimer", testTakeSinglePhotoWithTimer},
-		{"testCancelTimer", testCancelTimer},
-	} {
+	subtests := s.Param().([]takePictureSubtest)
+	for _, tst := range subtests {
 		subTestCtx, cancel := context.WithTimeout(ctx, subTestTimeout)
 		s.Run(subTestCtx, tst.name, func(ctx context.Context, s *testing.State) {
-			if err := runTestWithApp(ctx, tst.testFunc, cca.TestWithAppParams{}); err != nil {
+			if err := app.RunThroughCameras(ctx, func(_ cca.Facing) error {
+				return tst.testFunc(ctx, app)
+			}); err != nil {
 				s.Errorf("Failed to pass %v subtest: %v", tst.name, err)
 			}
 		})
@@ -50,6 +72,14 @@ func CCAUITakePicture(ctx context.Context, s *testing.State) {
 }
 
 func testTakeSinglePhoto(ctx context.Context, app *cca.App) error {
+	_, err := app.TakeSinglePhoto(ctx, cca.TimerOff)
+	return err
+}
+
+func testTakeZoomedPhoto(ctx context.Context, app *cca.App) error {
+	if err := app.ZoomInFromPTZPanel(ctx); err != nil {
+		return err
+	}
 	_, err := app.TakeSinglePhoto(ctx, cca.TimerOff)
 	return err
 }
