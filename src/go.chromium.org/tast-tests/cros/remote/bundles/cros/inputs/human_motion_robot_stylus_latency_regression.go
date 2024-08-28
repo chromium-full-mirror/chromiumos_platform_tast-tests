@@ -35,7 +35,7 @@ func init() {
 			"maek@google.com",         // Test author
 		},
 		BugComponent: "b:189315", // ChromeOS > Platform > System > Input > Stylus
-		Attr:         []string{"group:human_motion_robot", "human_motion_robot_latency"},
+		Attr:         []string{"group:crosbolt", "crosbolt_perbuild", "group:human_motion_robot", "human_motion_robot_latency"},
 		ServiceDeps:  []string{"tast.cros.inputs.StylusService", "tast.cros.inputs.WaltService"},
 		Timeout:      15 * time.Minute,
 		Vars:         []string{"servo"},
