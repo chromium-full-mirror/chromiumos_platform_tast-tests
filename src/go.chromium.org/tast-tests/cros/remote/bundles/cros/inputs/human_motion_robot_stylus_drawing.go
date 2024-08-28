@@ -146,6 +146,11 @@ func HumanMotionRobotStylusDrawing(ctx context.Context, s *testing.State) {
 
 	err = input.RunHMRJob(ctx, hmrInterface, gcodeFileName)
 	if err != nil {
+		// Ensure that the evtest service is stopped.
+		if _, stopErr := dutEvtestService.StopStylusDataCapture(ctx, &empty.Empty{}); stopErr == nil {
+			// Only wait if the evtest service is successfully stopped.
+			<-serviceErrorChannel
+		}
 		s.Fatal("Failed to run HMR job: ", err)
 	}
 

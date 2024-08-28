@@ -64,6 +64,7 @@ func HumanMotionRobotLinearity(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Error setting up SSH tunnel to touchhost: ", err)
 	}
+	defer touchhostConnectionManager.TouchhostPortForwarder.Close()
 
 	hmrInterface, err := input.NewHMRInterface(ctx, "127.0.0.1", touchhostConnectionManager.DronePort)
 	if err != nil {
@@ -98,10 +99,13 @@ func HumanMotionRobotLinearity(ctx context.Context, s *testing.State) {
 
 	err = input.RunHMRJob(ctx, hmrInterface, gcodeFileName)
 	if err != nil {
+		// Ensure that the evtest service is stopped.
+		if _, stopErr := DutEvtestService.StopStylusDataCapture(ctx, &empty.Empty{}); stopErr == nil {
+			// Only wait if the evtest service is successfully stopped.
+			<-serviceChannel
+		}
 		s.Fatal("Failed to run HMR job: ", err)
 	}
-
-	touchhostConnectionManager.TouchhostPortForwarder.Close()
 
 	// Stop DUT evtest stylus touch data capture.
 	if _, err = DutEvtestService.StopStylusDataCapture(ctx, &empty.Empty{}); err != nil {
