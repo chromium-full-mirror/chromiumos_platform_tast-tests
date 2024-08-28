@@ -26,7 +26,7 @@ func init() {
 		Contacts:     []string{"arc-commercial@google.com", "yaohuali@google.com"},
 		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
 		BugComponent: "b:1487630",
-		Fixture:      fixture.PostDemoModeOOBEProd,
+		Fixture:      fixture.PostDemoModeOOBESkipBothComponentsProd,
 		Attr:         []string{
 			// Disabled by TORA. See: b/337500189
 			// "group:mainline",
@@ -72,7 +72,14 @@ func DemoModeOfflineProvision(ctx context.Context, s *testing.State) {
 		chrome.ExtraArgs("--demo-mode-force-arc-offline-provision"),
 		// Force devtools on regardless of policy (devtools is disabled in
 		// Demo Mode policy) to support connecting to the test API extension.
-		chrome.ExtraArgs("--force-devtools-available"))
+		chrome.ExtraArgs("--force-devtools-available"),
+		// --demo-mode-swa-content-directory is used to skip the demo mode app component
+		// loading process.
+		chrome.ExtraArgs("--demo-mode-swa-content-directory"),
+		// --demo-mode-resource-directory is used to skip the demo mode resources
+		// component loading process.
+		chrome.ExtraArgs("--demo-mode-resource-directory"),
+	)
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}

@@ -31,7 +31,7 @@ func init() {
 		Contacts:     []string{"arc-commercial@google.com", "yaohuali@google.com"},
 		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
 		BugComponent: "b:1487630",
-		Fixture:      fixture.PostDemoModeOOBEProd,
+		Fixture:      fixture.PostDemoModeOOBESkipBothComponentsProd,
 		Attr:         []string{"group:mainline"},
 		// Demo Mode uses Zero Touch Enrollment for enterprise enrollment, which
 		// requires a real TPM.
@@ -69,7 +69,14 @@ func DemoMode(ctx context.Context, s *testing.State) {
 		chrome.ExtraArgs(arc.DisableSyncFlags()...),
 		// Force devtools on regardless of policy (devtools is disabled in
 		// Demo Mode policy) to support connecting to the test API extension.
-		chrome.ExtraArgs("--force-devtools-available"))
+		chrome.ExtraArgs("--force-devtools-available"),
+		// --demo-mode-swa-content-directory is used to skip the demo mode app component
+		// loading process.
+		chrome.ExtraArgs("--demo-mode-swa-content-directory"),
+		// --demo-mode-resource-directory is used to skip the demo mode resources
+		// component loading process.
+		chrome.ExtraArgs("--demo-mode-resource-directory"),
+	)
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
