@@ -82,7 +82,6 @@ const (
 	stateFileUpdateTime            = 3 * time.Second
 	usbTempMountDir                = "/media/usb-drive"
 	stateFile                      = "/mnt/stateful_partition/unencrypted/rma-data/state"
-	preservationRequestFile        = "/mnt/stateful_partition/preservation_request"
 )
 
 // UIHelper holds the resources required to communicate with Shimless RMA App.
@@ -101,14 +100,6 @@ func NewUIHelper(ctx context.Context, dut *dut.DUT, firmwareHelper *firmware.Hel
 		return nil, err
 	}
 	uiHelper := &UIHelper{client, dut, firmwareHelper, cl}
-
-	// Create the preservation file when we initiate Shimless RMA process.
-	if !reconnect {
-		err := uiHelper.Dut.Conn().CommandContext(ctx, "touch", preservationRequestFile).Run()
-		if err != nil {
-			return nil, err
-		}
-	}
 
 	return uiHelper, nil
 }
@@ -462,10 +453,6 @@ func (uiHelper *UIHelper) OverrideStateFile(ctx context.Context, content string)
 func CleanupShimlessFiles(cleanupCtx context.Context, dut *dut.DUT) error {
 	if err := dut.Conn().CommandContext(cleanupCtx, "sh", "-c", fmt.Sprintf("rm %s", stateFile)).Run(); err != nil {
 		testing.ContextLogf(cleanupCtx, "Failed to delete state file because %s", err)
-	}
-
-	if err := dut.Conn().CommandContext(cleanupCtx, "sh", "-c", fmt.Sprintf("rm %s", preservationRequestFile)).Run(); err != nil {
-		testing.ContextLogf(cleanupCtx, "Failed to delete preservation file because %s", err)
 	}
 
 	return dut.Reboot(cleanupCtx)

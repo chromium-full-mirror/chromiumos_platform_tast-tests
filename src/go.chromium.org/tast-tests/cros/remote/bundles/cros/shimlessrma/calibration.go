@@ -82,7 +82,7 @@ func Calibration(ctx context.Context, s *testing.State) {
 		s.Fatal("Fail to init servo: ", err)
 	}
 
-	uiHelper, err := rmaweb.NewUIHelper(ctx, dut, firmwareHelper, s.RPCHint(), key, false)
+	uiHelper, err := rmaweb.NewUIHelper(ctx, dut, firmwareHelper, s.RPCHint(), key, true)
 	if err != nil {
 		s.Fatal("Fail to initialize RMA Helper: ", err)
 	}
@@ -93,7 +93,7 @@ func Calibration(ctx context.Context, s *testing.State) {
 		s.Fatal("Fail to setup init status: ", err)
 	}
 
-	uiHelper, err = rmaweb.NewUIHelper(ctx, dut, firmwareHelper, s.RPCHint(), key, true)
+	uiHelper, err = rmaweb.NewUIHelper(ctx, dut, firmwareHelper, s.RPCHint(), key, false)
 	if err != nil {
 		s.Fatal("Fail to initialize RMA Helper: ", err)
 	}
