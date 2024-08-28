@@ -158,8 +158,9 @@ func ChangeAppLanguage(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to verify default state: ", err)
 		}
 		// Change (Spanish)
-		openDialogAction := osSettings.LeftClick(nodewith.NameContaining("App language"))
-		if err := changeLanguageFromAppLanguageDialog(ctx, osSettings, spanishUSLanguage, openDialogAction); err != nil {
+		openDialogAction := ui.DoDefaultUntil(nodewith.NameContaining("App language"),
+			ui.Exists(nodewith.NameContaining(spanishUSLanguage).First()))
+		if err := changeLanguageFromAppLanguageDialog(ctx, osSettings, spanishUSLanguage, openDialogAction, ui); err != nil {
 			s.Fatal("Failed to change app language from AppDetail page: ", err)
 		}
 		// Assert
@@ -190,8 +191,8 @@ func ChangeAppLanguage(ctx context.Context, s *testing.State) {
 		}()
 		appLanguagesButton := nodewith.NameContaining("App languages")
 		if err := uiauto.Combine("open AppLanguages page",
-			osSettings.WaitUntilExists(appLanguagesButton),
-			osSettings.LeftClick(appLanguagesButton),
+			ui.WaitUntilExists(appLanguagesButton),
+			ui.DoDefault(appLanguagesButton),
 		)(ctx); err != nil {
 			s.Fatal("Failed to open AppLanguages page: ", err)
 		}
@@ -204,9 +205,10 @@ func ChangeAppLanguage(ctx context.Context, s *testing.State) {
 		threeDotsButton := nodewith.NameContaining(perAppLangTestAppName).HasClass("icon-more-vert").Role(role.Button)
 		ediLanguageSelection := nodewith.NameContaining("Edit language selection").First()
 		openDialogAction := uiauto.Combine("open app dialog",
-			osSettings.LeftClick(threeDotsButton),
-			osSettings.LeftClick(ediLanguageSelection))
-		if err := changeLanguageFromAppLanguageDialog(ctx, osSettings, frenchFRLanguage, openDialogAction); err != nil {
+			ui.DoDefault(threeDotsButton),
+			ui.DoDefaultUntil(ediLanguageSelection,
+				ui.Exists(nodewith.NameContaining(frenchFRLanguage).First())))
+		if err := changeLanguageFromAppLanguageDialog(ctx, osSettings, frenchFRLanguage, openDialogAction, ui); err != nil {
 			s.Fatal("Failed to change app language from AppLanguages page: ", err)
 		}
 		// Assert
@@ -300,13 +302,14 @@ func appLanguagesPageVerifyAction(appLanguagesPage *ossettings.OSSettings, appLa
 func changeLanguageFromAppLanguageDialog(ctx context.Context,
 	osSettings *ossettings.OSSettings,
 	appLanguageName string,
-	openDialogAction action.Action) error {
+	openDialogAction action.Action,
+	ui *uiauto.Context) error {
 	selectLanguage := nodewith.NameContaining(appLanguageName).First()
 	confirmButton := nodewith.Name("Update").Role(role.Button)
 	return uiauto.Combine("change app language",
 		openDialogAction,
-		osSettings.LeftClick(selectLanguage),
-		osSettings.LeftClick(confirmButton),
+		ui.DoDefault(selectLanguage),
+		ui.DoDefault(confirmButton),
 	)(ctx)
 }
 
