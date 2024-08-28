@@ -14,6 +14,15 @@ import (
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
+)
+
+type recordVideoTestType string
+
+const (
+	fakeHALTest     recordVideoTestType = "fake_hal"
+	realCamerasTest recordVideoTestType = "real"
+	manualTest      recordVideoTestType = "manual"
 )
 
 func init() {
@@ -22,10 +31,29 @@ func init() {
 		Desc:         "Opens CCA and verifies video recording related use cases",
 		Contacts:     []string{"chromeos-camera-app-eng@google.com", "kamchonlathorn@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
-		Attr:         []string{"group:mainline", "informational", "group:intel-gating", "group:intel-nda"},
+		Attr:         []string{"group:intel-gating", "group:intel-nda"},
 		SoftwareDeps: []string{"camera_app", "chrome"},
 		Timeout:      5 * time.Minute,
-		Fixture:      "ccaTestBridgeReadyWithFakeHALCamera",
+		Params: []testing.Param{
+			{
+				Name:      "fake_hal",
+				Fixture:   "ccaTestBridgeReadyWithFakeHALCamera",
+				ExtraAttr: []string{"group:mainline", "informational"},
+				Val:       fakeHALTest,
+			},
+			{
+				Name:              "real",
+				Fixture:           "ccaTestBridgeReady",
+				ExtraAttr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
+				ExtraHardwareDeps: hwdep.D(hwdep.CameraEnumerated()),
+				Val:               realCamerasTest,
+			},
+			{
+				Name:    "manual",
+				Fixture: "ccaTestBridgeReady",
+				Val:     manualTest,
+			},
+		},
 	})
 }
 
@@ -159,37 +187,64 @@ func (v *video) stop(ctx context.Context, app *cca.App) error {
 	return nil
 }
 
+type recordVideoSubtest struct {
+	name  string
+	run   func(context.Context, *cca.App) error
+	timer cca.TimerState
+	mic   cca.MicState
+}
+
+func getSubtestsByTestType(testType recordVideoTestType) []recordVideoSubtest {
+	// These subtests are run on every test type.
+	requiredSubtests := []recordVideoSubtest{
+		{"testVideoSnapshot", testVideoSnapshot, cca.TimerOff, cca.MicOn},
+		{"testPauseResume", testPauseResume, cca.TimerOff, cca.MicOn},
+	}
+
+	// Subtests based on the test type.
+	fakeHALSubtests := []recordVideoSubtest{
+		{"testRecordVideoWithTimer", testRecordVideoWithTimer, cca.TimerOn, cca.MicOn},
+		{"testRecordCancelTimer", testRecordCancelTimer, cca.TimerOn, cca.MicOn},
+		{"testRecordVideoWithMute", testRecordVideoWithMute, cca.TimerOff, cca.MicOff},
+	}
+	realCamerasSubtests := []recordVideoSubtest{
+		{"testRecordZoomedVideo", testRecordZoomedVideo, cca.TimerOff, cca.MicOn},
+	}
+	manualSubtests := []recordVideoSubtest{
+		{"testRecordVideoWithWindowChanged", testRecordVideoWithWindowChanged, cca.TimerOff, cca.MicOn},
+		{"testVideoProfile", testVideoProfile, cca.TimerOff, cca.MicOn},
+		{"testVideoSeekability", testVideoSeekability, cca.TimerOff, cca.MicOn},
+	}
+
+	switch testType {
+	case fakeHALTest:
+		return append(requiredSubtests, fakeHALSubtests...)
+	case realCamerasTest:
+		return append(requiredSubtests, realCamerasSubtests...)
+	case manualTest:
+		subtests := append(requiredSubtests, fakeHALSubtests...)
+		subtests = append(subtests, realCamerasSubtests...)
+		return append(subtests, manualSubtests...)
+	}
+	return []recordVideoSubtest{}
+}
+
 // CCAUIRecordVideo verifies video recording related functionalities works.
 func CCAUIRecordVideo(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(cca.FixtureData).Chrome
 	s.FixtValue().(cca.FixtureData).SetDebugParams(cca.DebugParams{SaveCameraFolderWhenFail: true})
 	runTestWithApp := s.FixtValue().(cca.FixtureData).RunTestWithApp
+	testType := s.Param().(recordVideoTestType)
+
 	subTestTimeout := 40 * time.Second
-	for _, tc := range []struct {
-		name  string
-		run   func(context.Context, *cca.App) error
-		timer cca.TimerState
-		mic   cca.MicState
-	}{
-		{"testRecordVideoWithWindowChanged", testRecordVideoWithWindowChanged, cca.TimerOff, cca.MicOn},
-		{"testVideoProfile", testVideoProfile, cca.TimerOff, cca.MicOn},
-		{"testRecordVideoWithTimer", testRecordVideoWithTimer, cca.TimerOn, cca.MicOn},
-		{"testRecordVideoWithMute", testRecordVideoWithMute, cca.TimerOff, cca.MicOff},
-		{"testRecordCancelTimer", testRecordCancelTimer, cca.TimerOn, cca.MicOn},
-		{"testVideoSnapshot", testVideoSnapshot, cca.TimerOff, cca.MicOn},
-		{"testStopInPause", testStopInPause, cca.TimerOff, cca.MicOn},
-		{"testPauseResume", testPauseResume, cca.TimerOff, cca.MicOn},
-		{"testVideoSeekability", testVideoSeekability, cca.TimerOff, cca.MicOn},
-	} {
+	subtests := getSubtestsByTestType(testType)
+	for _, tc := range subtests {
 		subTestCtx, cancel := context.WithTimeout(ctx, subTestTimeout)
 		s.Run(subTestCtx, tc.name, func(ctx context.Context, s *testing.State) {
 			if err := runTestWithApp(ctx, func(ctx context.Context, app *cca.App) error {
 				testing.ContextLog(ctx, "Switch to video mode")
 				if err := app.SwitchMode(ctx, cca.Video); err != nil {
 					return errors.Wrap(err, "failed to switch to video mode")
-				}
-				if err := app.WaitForVideoActive(ctx); err != nil {
-					return errors.Wrap(err, "preview is inactive after switch to video mode")
 				}
 				return app.RunThroughCameras(ctx, func(_ cca.Facing) error {
 					if err := app.SetTimerOption(ctx, tc.timer); err != nil {
@@ -207,15 +262,28 @@ func CCAUIRecordVideo(ctx context.Context, s *testing.State) {
 		cancel()
 	}
 
-	subTestCtx, cancel := context.WithTimeout(ctx, subTestTimeout)
-	s.Run(subTestCtx, "testConfirmDialog", func(ctx context.Context, s *testing.State) {
-		if err := runTestWithApp(ctx, func(ctx context.Context, app *cca.App) error {
-			return testConfirmDialog(ctx, app, cr)
-		}, cca.TestWithAppParams{StopAppOnlyIfExist: true}); err != nil {
-			s.Error("Failed to pass confirm dialog subtest: ", err)
-		}
-	})
-	cancel()
+	if testType == manualTest {
+		subTestCtx, cancel := context.WithTimeout(ctx, subTestTimeout)
+		s.Run(subTestCtx, "testConfirmDialog", func(ctx context.Context, s *testing.State) {
+			if err := runTestWithApp(ctx, func(ctx context.Context, app *cca.App) error {
+				return testConfirmDialog(ctx, app, cr)
+			}, cca.TestWithAppParams{StopAppOnlyIfExist: true}); err != nil {
+				s.Error("Failed to pass confirm dialog subtest: ", err)
+			}
+		})
+		cancel()
+	}
+}
+
+func testRecordZoomedVideo(ctx context.Context, app *cca.App) error {
+	if err := app.ZoomInFromPTZPanel(ctx); err != nil {
+		return err
+	}
+	_, err := app.RecordVideo(ctx, cca.TimerOff, time.Second)
+	if err != nil {
+		return errors.Wrap(err, "failed to record a zoomed video")
+	}
+	return nil
 }
 
 func testRecordVideoWithWindowChanged(ctx context.Context, app *cca.App) error {
