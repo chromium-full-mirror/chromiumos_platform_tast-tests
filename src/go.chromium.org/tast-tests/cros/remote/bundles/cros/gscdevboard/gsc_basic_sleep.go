@@ -34,7 +34,8 @@ func init() {
 		Attr:         []string{"group:gsc", "gsc_dt_ab", "gsc_dt_shield", "gsc_h1_shield", "gsc_image_ti50", "gsc_nightly"},
 		Fixture:      fixture.GSCOpenCCD,
 		Params: []testing.Param{{
-			Name: "deep_sleep",
+			Name:      "deep_sleep",
+			ExtraAttr: []string{"gsc_ot_shield"},
 			Val: testBasicSleepConfig{
 				DeepSleep:     true,
 				Bus:           ti50.TpmBusSpi, // The TPM type doesn't matter for deep sleep.
@@ -78,7 +79,7 @@ func GSCBasicSleep(ctx context.Context, s *testing.State) {
 	case ti50.GscH1Shield:
 		// H1 takes 20s to enter sleep. Add 5s to be safe.
 		sleepDelay = 25 * time.Second
-	case ti50.GscDTAndreiboard, ti50.GscDTShield:
+	case ti50.GscDTAndreiboard, ti50.GscDTShield, ti50.GscOTShield:
 		// DT takes 60s to enter sleep. Add 5s to be safe.
 		sleepDelay = 65 * time.Second
 	default:
