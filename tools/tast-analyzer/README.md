@@ -132,7 +132,7 @@ Tast-analyzer can also generate graphs. For example, it can generate CDF graphs:
 To generate graphs, provide the `--plots` and `--plot-dir` option.
 
 `python3 -m analyzer.run print-results -c before_change.json after_change.json
---plots plot_cdf --plot-dir plots`
+--plots plot-cdf --plot-dir plots`
 
 ## Statistical methodology
 
