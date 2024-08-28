@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -18,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/fileutils"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // Buffer is a buffer for storing logs that supports dumping its contents.
@@ -116,4 +118,109 @@ func Collect(ctx context.Context, dut *dut.DUT) {
 		"/var/log/ui",
 	}
 	fileutils.CopyFromDUTToHost(ctx, dut, logsToCopy)
+}
+
+// logMergeConfig defines the configuration for merging a specific type of log.
+type logMergeConfig struct {
+	pattern         string
+	combinedDirName string
+	// copyUnique specifies whether to copy unique files names
+	// in the combined directory. If false, a counter is appended to
+	// file names to avoid overwriting.
+	copyUnique bool
+}
+
+// MergeLogs merges all logs under output dir from different timestamps
+// into a single dir, based on the logMergeConfig configs.
+// For example, it merges all "chrome_*" files in different directories
+// into "combined_chrome_logs" directory.
+func MergeLogs(ctx context.Context) {
+	// Configuration for log merging.
+	logConfigs := []logMergeConfig{
+		{
+			pattern:         `chrome_\d{6}-\d{6}`,
+			combinedDirName: "combined_chrome_logs",
+			copyUnique:      true,
+		},
+		{
+			pattern:         `ui\.\d{8}-\d{6}`,
+			combinedDirName: "combined_ui_logs",
+			copyUnique:      true,
+		},
+		{
+			pattern:         `messages`,
+			combinedDirName: "combined_messages",
+			copyUnique:      false, // will copy all files with name "messages".
+		},
+		{
+			pattern:         `fakedms.log`,
+			combinedDirName: "combined_fakedms_logs",
+			copyUnique:      false, // will copy all files with name "fakedms.log".
+		},
+	}
+
+	ctxOutDir, ok := testing.ContextOutDir(ctx)
+	if !ok {
+		testing.ContextLog(ctx, "Failed to get the output directory in context")
+		return
+	}
+
+	for _, config := range logConfigs {
+		if err := mergeLogsByPattern(ctx, ctxOutDir, config.pattern, config.combinedDirName, config.copyUnique); err != nil {
+			testing.ContextLogf(ctx, "Failed to merge logs into %s: %v", config.combinedDirName, err)
+		}
+	}
+}
+
+// mergeLogsByPattern merges log files matching the given pattern into a combined directory.
+func mergeLogsByPattern(ctx context.Context, outDir, pattern, combinedDirName string, copyUnique bool) error {
+	regex, err := regexp.Compile(pattern)
+	if err != nil {
+		return errors.Wrapf(err, "failed to compile pattern %q", pattern)
+	}
+
+	combinedLogsDir := filepath.Join(outDir, combinedDirName)
+	if err := os.MkdirAll(combinedLogsDir, 0777); err != nil {
+		return errors.Wrapf(err, "failed to create combined logs directory %q", combinedLogsDir)
+	}
+
+	if err := filepath.Walk(outDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		// Skip the combined logs directory itself.
+		if info.IsDir() && info.Name() == combinedDirName {
+			return filepath.SkipDir
+		}
+
+		if !info.IsDir() && regex.MatchString(info.Name()) {
+			var destFilePath string
+			if copyUnique {
+				// If copyUnique is true, only copy if the file doesn't exist.
+				destFilePath = filepath.Join(combinedLogsDir, info.Name())
+				if _, err := os.Stat(destFilePath); err == nil {
+					// File already exists, skip copying.
+					testing.ContextLogf(ctx, "File %s already exists in %s, skipping", info.Name(), combinedDirName)
+					return nil
+				} else if !os.IsNotExist(err) {
+					// Some other error occurred.
+					return errors.Wrapf(err, "failed to stat file %q", destFilePath)
+				}
+			} else {
+				// If copyUnique is false, append the current timestamp to make it unique.
+				destFilePath = filepath.Join(combinedLogsDir, info.Name()+"_"+time.Now().UTC().Format(time.RFC3339Nano))
+			}
+
+			// Move the log file to the combined directory.
+			if err := os.Rename(path, destFilePath); err != nil {
+				return errors.Wrapf(err, "failed to move log file from %s to %s", path, destFilePath)
+			}
+		}
+		return nil
+	}); err != nil {
+		return errors.Wrapf(err, "failed to walk through output directory %q", outDir)
+	}
+
+	return nil
 }

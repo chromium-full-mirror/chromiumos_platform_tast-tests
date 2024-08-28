@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/tape"
+	"go.chromium.org/tast-tests/cros/remote/log"
 	"go.chromium.org/tast-tests/cros/remote/policyutil"
 	"go.chromium.org/tast-tests/cros/services/cros/graphics"
 	ps "go.chromium.org/tast-tests/cros/services/cros/policy"
@@ -82,6 +83,7 @@ func ForcedReEnrollment(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, 20*time.Second)
 	defer cancel()
+	defer log.MergeLogs(cleanupCtx)
 
 	// Capture screenshot if test unexpectedly fails.
 	captureScreenshotOnError := func(ctx context.Context, filename string) {

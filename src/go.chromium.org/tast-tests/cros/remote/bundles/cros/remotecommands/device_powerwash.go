@@ -15,6 +15,7 @@ import (
 	empb "go.chromium.org/chromiumos/policy/chromium/policy/enterprise_management_proto"
 
 	"go.chromium.org/tast-tests/cros/common/policy"
+	"go.chromium.org/tast-tests/cros/remote/log"
 	"go.chromium.org/tast-tests/cros/remote/policyutil"
 	pspb "go.chromium.org/tast-tests/cros/services/cros/policy"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
@@ -52,6 +53,7 @@ func DevicePowerwash(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, 20*time.Second)
 	defer cancel()
+	defer log.MergeLogs(cleanupCtx)
 
 	cl, err := rpc.Dial(ctx, s.DUT(), s.RPCHint())
 	if err != nil {
