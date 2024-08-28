@@ -34,7 +34,27 @@ func init() {
 		}.Instance(),
 		Timeout:      3 * time.Minute,
 		LacrosStatus: testing.LacrosVariantUnneeded,
+		Params: []testing.Param{
+			{
+				Val: crasSidetoneParam{
+					backgroundCapture:  false,
+					backgroundPlayback: false,
+				},
+			},
+			{
+				Name: "with_background_capture_and_playback",
+				Val: crasSidetoneParam{
+					backgroundCapture:  true,
+					backgroundPlayback: true,
+				},
+			},
+		},
 	})
+}
+
+type crasSidetoneParam struct {
+	backgroundCapture  bool
+	backgroundPlayback bool
 }
 
 // CrasSidetone checks sidetone functionality. The audio path is as follows
@@ -46,6 +66,7 @@ func CrasSidetone(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, chrome.ResetTimeout)
 	defer cancel()
+	param := s.Param().(crasSidetoneParam)
 
 	cras, err := audio.NewCras(ctx)
 	if err != nil {
@@ -63,13 +84,6 @@ func CrasSidetone(ctx context.Context, s *testing.State) {
 	}); err != nil {
 		s.Fatal("Failed to SetActiveNodeByMatcher: ", err)
 	}
-
-	if err := cras.SetSidetoneEnabled(ctx, true); err != nil {
-		s.Fatal("Failed to SetSidetoneEnabled: ", err)
-	}
-	defer func() {
-		cras.SetSidetoneEnabled(ctx, false)
-	}()
 
 	const (
 		wavDuration            = 10 * time.Second
@@ -92,6 +106,37 @@ func CrasSidetone(ctx context.Context, s *testing.State) {
 
 	playbackCaptureCtx, cancel := context.WithTimeout(ctx, 2*wavDuration)
 	defer cancel()
+
+	backgroundPlaybackDone := make(chan struct{})
+	if param.backgroundPlayback {
+		go func() {
+			defer close(backgroundPlaybackDone)
+			if err := audio.PlayWavToDefault(playbackCaptureCtx, playbackWavPath); err != nil {
+				s.Fatal("Cannot run background playback: ", err)
+			}
+		}()
+	} else {
+		close(backgroundPlaybackDone)
+	}
+
+	backgroundCaptureDone := make(chan struct{})
+	if param.backgroundCapture {
+		backgroundCaptureWavData := wavData
+		backgroundCaptureWavData.Path = filepath.Join(s.OutDir(), "background_capture.wav")
+		go func() {
+			defer close(backgroundCaptureDone)
+			if err := audio.CaptureWavFromDefault(playbackCaptureCtx, backgroundCaptureWavData); err != nil {
+				s.Fatal("Cannot run background capture: ", err)
+			}
+		}()
+	} else {
+		close(backgroundCaptureDone)
+	}
+
+	if err := cras.SetSidetoneEnabled(ctx, true); err != nil {
+		s.Fatal("Failed to SetSidetoneEnabled: ", err)
+	}
+	defer cras.SetSidetoneEnabled(ctx, false)
 
 	playbackDone := make(chan struct{})
 	go func() {
@@ -119,6 +164,8 @@ func CrasSidetone(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	s.Log("Waiting for playback to complete")
+	s.Log("Waiting for playback and capture to complete")
 	<-playbackDone
+	<-backgroundPlaybackDone
+	<-backgroundCaptureDone
 }
