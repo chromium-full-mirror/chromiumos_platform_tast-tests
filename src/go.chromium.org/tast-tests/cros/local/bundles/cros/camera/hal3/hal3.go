@@ -307,17 +307,37 @@ func runCrosCameraTest(ctx context.Context, cfg crosCameraTestConfig) error {
 	return nil
 }
 
+func hasMIPICamera(ctx context.Context) bool {
+	for i := 0; ; i++ {
+		devicePath := fmt.Sprintf("/camera/devices/%v", i)
+		cameraType, err := crosconfig.Get(ctx, devicePath, "interface")
+		if crosconfig.IsNotFound(err) {
+			break
+		}
+		if cameraType == "mipi" {
+			return true
+		}
+	}
+	return false
+}
+
 // getAvailableCameraHALsForTest returns a map from name to path for all camera
 // HALs that are available for test.
-func getAvailableCameraHALsForTest() (map[string]string, error) {
+// TODO(esker): Add cros-camera-tool utility utilizing GetCameraHalPaths and use
+// it here.
+func getAvailableCameraHALsForTest(ctx context.Context) (map[string]string, error) {
 	cameraHALPaths, err := filepath.Glob(cameraHALGlobPattern)
 	if err != nil {
 		return nil, err
 	}
 
 	availableHALs := make(map[string]string)
+	noMIPICamera := !hasMIPICamera(ctx)
 	for _, path := range cameraHALPaths {
 		name := strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))
+		if noMIPICamera && (name != "ip" && name != "usb" && name != "fake") {
+			continue
+		}
 		if name == "usb" {
 			if _, err := os.Stat(builtInUSBCameraConfigPath); os.IsNotExist(err) {
 				// Ignore it in test because there is no built-in USB camera,
@@ -335,7 +355,7 @@ func getAvailableCameraHALsForTest() (map[string]string, error) {
 // getCameraHALPathsForTest returns the paths for camera HALs specified.  If an
 // empty slice is given, all available camera HALs are returned.
 func getCameraHALPathsForTest(ctx context.Context, cameraHALs []string) ([]string, error) {
-	availableHALs, err := getAvailableCameraHALsForTest()
+	availableHALs, err := getAvailableCameraHALsForTest(ctx)
 	if err != nil {
 		return nil, err
 	}
