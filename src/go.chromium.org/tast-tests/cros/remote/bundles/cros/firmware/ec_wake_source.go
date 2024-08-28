@@ -257,6 +257,9 @@ func closeAndOpenLid(ctx context.Context, h *firmware.Helper, delay time.Duratio
 	}
 
 	testing.ContextLog(ctx, "Reached S0 powerstate")
+	if err := h.WaitConnect(ctx); err != nil {
+		return errors.Wrap(err, "failed to reconnect to DUT after waking from suspend")
+	}
 
 	return nil
 }
