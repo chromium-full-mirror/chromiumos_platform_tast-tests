@@ -103,6 +103,9 @@ func DetermineFullImageVerdict(referenceFileName, resultFileName string, calibra
 	// Scales result image from pixels to mm.
 	resultScaled := applyScale(resultPoints, calibrationData.ScaleFactorX, calibrationData.ScaleFactorY)
 	resultScaledOffset := applyOffset(resultScaled, calibrationData.OffsetX, calibrationData.OffsetY)
+	// 1mm is chosen as the initial touch removal radius as it is roughly the smallest value
+	// that will still contain all initial touch points.
+	resultScaledOffsetTouchRemoved := removeInitialTouch(resultScaledOffset, 1)
 
 	referencePaths := extractReferencePaths(referenceDerotatedDeskewedScaledOffset)
 	if len(referencePaths) == 0 {
@@ -110,7 +113,7 @@ func DetermineFullImageVerdict(referenceFileName, resultFileName string, calibra
 	}
 
 	screenDiagonalDistance := math.Sqrt(math.Pow(resultScreenWidth, 2) + math.Pow(resultScreenHeight, 2))
-	resultPaths, epsilon, err := extractResultsPaths(resultScaledOffset, referencePaths, screenDiagonalDistance)
+	resultPaths, epsilon, err := extractResultsPaths(resultScaledOffsetTouchRemoved, referencePaths, screenDiagonalDistance)
 	if err != nil {
 		return nil, err
 	}
