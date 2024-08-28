@@ -46,6 +46,10 @@ class HostConnection:
         """
         self.output.write("COMPLETE\n")
 
+    def signal_host_message(self, msg: str):
+        """Sends a string 'MESSAGE' to the host with the give string"""
+        self.output.write(f"MESSAGE:{msg}\n")
+
     def wait_for_host_signal(self):
         """Receives a string 'RUN' from the host"""
         line = self.input.readline()

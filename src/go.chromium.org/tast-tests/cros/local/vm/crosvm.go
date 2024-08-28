@@ -44,6 +44,18 @@ func (p *SharedDirParam) toArg() string {
 	return fmt.Sprintf("%s:%s:type=%s:cache=%s:timeout=%d:writeback=%t:dax=%t:ascii_casefold=%t:negative_timeout=%d", p.Src, p.Tag, p.FsType, p.Cache, p.Timeout, p.Writeback, p.DAX, p.CaseFold, p.NegativeTimeout)
 }
 
+// PmemExt2Param holds parameters for a pmem-ext2 device.
+type PmemExt2Param struct {
+	Path           string
+	BlocksPerGroup uint
+	InodesPerGroup uint
+	Size           uint
+}
+
+func (p *PmemExt2Param) toArg() string {
+	return fmt.Sprintf("%s:blocks_per_group=%d:inodes_per_group=%d:size=%d", p.Path, p.BlocksPerGroup, p.InodesPerGroup, p.Size)
+}
+
 // SerialType is a type of a serial device.
 type SerialType int
 
@@ -81,6 +93,7 @@ type CrosvmParams struct {
 	socketPath     string           // path to the VM control socket
 	kernelArgs     []string         // string arguments to be passed to the VM kernel
 	sharedDirs     []SharedDirParam // array of configuration of a directory to be shared with the VM
+	pmemExt2       []PmemExt2Param  // array of configuration of a directory to be shared via pmem-ext2
 	serialIO       []SerialIOParam  // paths to files used for serial input and output
 	vhostUserNet   []string         // paths to sockets that vhost-user-net devices will use
 	disableSandbox bool             // whether or not the sandbox is disabled
@@ -122,6 +135,13 @@ func ScsiPaths(paths ...string) Option {
 func PmemPaths(paths ...string) Option {
 	return func(p *CrosvmParams) {
 		p.pmemPaths = append(p.pmemPaths, paths...)
+	}
+}
+
+// PmemExt2 sets a config for directory to be shared with the VM via pmem-ext2.
+func PmemExt2(param PmemExt2Param) Option {
+	return func(p *CrosvmParams) {
+		p.pmemExt2 = append(p.pmemExt2, param)
 	}
 }
 
@@ -255,6 +275,10 @@ func (p *CrosvmParams) ToArgs() []string {
 
 	for _, path := range p.pmemPaths {
 		args = append(args, "--rw-pmem-device", path)
+	}
+
+	for _, param := range p.pmemExt2 {
+		args = append(args, "--pmem-ext2", param.toArg())
 	}
 
 	for _, path := range p.diskPaths {

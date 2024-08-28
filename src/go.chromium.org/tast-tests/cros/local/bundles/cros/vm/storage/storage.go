@@ -62,7 +62,7 @@ func NewOption(kind, cache string, caseFold bool, negativeTimeout int) (Option, 
 		opt.negativeTimeout = time.Duration(negativeTimeout) * time.Second
 	} else if kind == "scsi" {
 		opt.Tag = "/dev/sda"
-	} else if kind == "pmem" {
+	} else if kind == "pmem" || kind == "pmem-ext2" {
 		opt.Tag = "/dev/pmem0"
 	} else {
 		return opt, errors.Errorf("invalid storage kind: %v", kind)
@@ -150,19 +150,51 @@ func SetUpBlockFile(ctx context.Context, userDir string, bytes uint64) (blockPat
 	return blockPath, cleanUp, nil
 }
 
-// GenCrosvmCmd constructs a new crosvm command using the given parameters.
-func GenCrosvmCmd(socketDir, userDir, outDir, kernel, block, script string, opt Option, scriptArgs []string) (crosvmParams *vm.CrosvmParams, err error) {
-	shared := filepath.Join(userDir, "shared")
-	if err := os.Mkdir(shared, 0755); err != nil {
-		return nil, errors.Wrap(err, "failed to create shared directory")
-	}
-
+// GenCrosvmCmdFromStorageOpt constructs a new crosvm command using the given parameters with the given storagetOpt.
+func GenCrosvmCmdFromStorageOpt(socketDir, outDir, kernel, script string, scriptArgs []string, storageOpt vm.Option) (crosvmParams *vm.CrosvmParams, err error) {
 	// Some boards (puff, fizz, hatch, soraka, octopus, and nocturne) disabled serial console on arcvm guest kernel.
 	// To have valid serial.log in these boards, build arcvm guest kernel by:
 	// USE=pcserial emerge-$BOARD sys-kernel/arcvm-kernel-ack-5_10
 	logFilePath := filepath.Join(outDir, "serial.log")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create a input file")
+	}
+
+	kernelArgs := []string{
+		"root=root",
+		"rootfstype=virtiofs",
+		"rw",
+		fmt.Sprintf("init=%s", script),
+		"--",
+	}
+	kernelArgs = append(kernelArgs, scriptArgs...)
+
+	return vm.NewCrosvmParams(
+		kernel,
+		vm.NumCpus(uint(runtime.NumCPU())),
+		vm.MemSize(1024),
+		vm.Socket(socketDir),
+		vm.SharedDir(
+			vm.SharedDirParam{
+				Src:       "/",
+				Tag:       "/dev/root",
+				FsType:    "fs",
+				Cache:     "always",
+				Timeout:   5,
+				Writeback: false,
+				DAX:       false,
+			}),
+		vm.KernelArgs(kernelArgs...),
+		vm.SerialOutput(logFilePath),
+		storageOpt,
+	), nil
+}
+
+// GenCrosvmCmd constructs a new crosvm command using the given parameters.
+func GenCrosvmCmd(socketDir, userDir, outDir, kernel, block, script string, opt Option, scriptArgs []string) (crosvmParams *vm.CrosvmParams, err error) {
+	shared := filepath.Join(userDir, "shared")
+	if err := os.Mkdir(shared, 0755); err != nil {
+		return nil, errors.Wrap(err, "failed to create shared directory")
 	}
 
 	var storageOpt vm.Option
@@ -200,32 +232,5 @@ func GenCrosvmCmd(socketDir, userDir, outDir, kernel, block, script string, opt 
 		return nil, errors.Wrap(err, "unknown storage device type")
 	}
 
-	kernelArgs := []string{
-		"root=root",
-		"rootfstype=virtiofs",
-		"rw",
-		fmt.Sprintf("init=%s", script),
-		"--",
-	}
-	kernelArgs = append(kernelArgs, scriptArgs...)
-
-	return vm.NewCrosvmParams(
-		kernel,
-		vm.NumCpus(uint(runtime.NumCPU())),
-		vm.MemSize(1024),
-		vm.Socket(socketDir),
-		vm.SharedDir(
-			vm.SharedDirParam{
-				Src:       "/",
-				Tag:       "/dev/root",
-				FsType:    "fs",
-				Cache:     "always",
-				Timeout:   5,
-				Writeback: false,
-				DAX:       false,
-			}),
-		vm.KernelArgs(kernelArgs...),
-		vm.SerialOutput(logFilePath),
-		storageOpt,
-	), nil
+	return GenCrosvmCmdFromStorageOpt(socketDir, outDir, kernel, script, scriptArgs, storageOpt)
 }

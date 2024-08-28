@@ -27,6 +27,9 @@ const (
 	// PrefixReadyNoDrop should be received from guest when guest is set up but not dropping cache:
 	PrefixReadyNoDrop = "READY_NO_DROP:"
 
+	// PrefixMessage should be received from guest when guest wants sent any string
+	PrefixMessage = "MESSAGE:"
+
 	// Run should be sent to guest when guest should run a task
 	Run = "RUN\n"
 
