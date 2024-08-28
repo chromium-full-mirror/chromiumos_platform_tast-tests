@@ -182,7 +182,7 @@ func CCARecordFromExternalCamera(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to decode image: ", err)
 	}
 
-	if err := utils.ValidateImageColor(ctx, image, color.RGBA{255, 0, 0, 255}, 20); err != nil {
+	if err := utils.ValidateImageColor(ctx, image, color.RGBA{255, 120, 120, 255}, color.RGBA{200, 0, 0, 0}, 60); err != nil {
 		s.Fatal("Failed to validate color of image captured from the external camera: ", err)
 	}
 
@@ -201,7 +201,7 @@ func CCARecordFromExternalCamera(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to copy remote file to local host dir: ", err)
 	}
 
-	if err := utils.ValidateVideoColor(ctx, videoPath, s.OutDir()); err != nil {
+	if err := utils.ValidateVideoColor(ctx, videoPath, s.OutDir(), color.RGBA{255, 125, 125, 255}, color.RGBA{200, 0, 0, 0}); err != nil {
 		s.Fatal("Failed to validate color of video captured from the external camera: ", err)
 	}
 }

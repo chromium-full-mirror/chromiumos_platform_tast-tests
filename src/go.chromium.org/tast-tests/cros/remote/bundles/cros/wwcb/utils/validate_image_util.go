@@ -16,7 +16,6 @@ import (
 	"path/filepath"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
-	"go.chromium.org/tast-tests/cros/local/media/imgcmp"
 	"go.chromium.org/tast-tests/cros/remote/dutfs"
 	"go.chromium.org/tast/core/errors"
 )
@@ -37,7 +36,7 @@ func CopyRemoteFile(ctx context.Context, fs *dutfs.Client, remoteFilePath, local
 }
 
 // ValidateVideoColor divide the local host video into individual frames per second and verify if they match the specified color.
-func ValidateVideoColor(ctx context.Context, localVideoPath, localDir string) error {
+func ValidateVideoColor(ctx context.Context, localVideoPath, localDir string, upperBound, lowerBound color.Color) error {
 	if err := testexec.CommandContext(ctx, "sudo", "apt-get", "-y", "install", "ffmpeg").Run(testexec.DumpLogOnError); err != nil {
 		return errors.Wrap(err, "failed to install ffmpeg")
 	}
@@ -71,8 +70,7 @@ func ValidateVideoColor(ctx context.Context, localVideoPath, localDir string) er
 			return errors.Wrap(err, "failed to decode image")
 		}
 
-		// TODO: Need to put color and exepct percent as parameter for this function.
-		if err := ValidateImageColor(ctx, image, color.RGBA{255, 0, 0, 255}, 60); err != nil {
+		if err := ValidateImageColor(ctx, image, upperBound, lowerBound, 60); err != nil {
 			return errors.Wrap(err, "failed to validate image color is close to red color")
 		}
 	}
@@ -113,14 +111,39 @@ func WriteImageOnDUT(ctx context.Context, fs *dutfs.Client, img image.Image, img
 }
 
 // ValidateImageColor checks the percentage of the color in the image and returns error if it's less than expected percent.
-func ValidateImageColor(ctx context.Context, img image.Image, clr color.Color, expectedPercent int) error {
-	maxDiff := 80
+func ValidateImageColor(ctx context.Context, img image.Image, upperBound, lowerBound color.Color, expectedPercent int) error {
 	rect := img.Bounds()
-	correctPixels := imgcmp.CountPixelsWithDiff(img, clr, uint8(maxDiff))
+	correctPixels := countPixelsInRange(img, upperBound, lowerBound)
 	totalPixels := rect.Dx() * rect.Dy()
 	percent := correctPixels * 100 / totalPixels
 	if percent < expectedPercent {
 		return errors.Errorf("unexpected pixels percentage: got %d / %d = %d%%; want at least %d%%", correctPixels, totalPixels, percent, expectedPercent)
 	}
 	return nil
+}
+
+func countPixelsInRange(image image.Image, upperBound, lowerBound color.Color) int {
+	rect := image.Bounds()
+	numPixels := 0
+	for y := rect.Min.Y; y < rect.Max.Y; y++ {
+		for x := rect.Min.X; x < rect.Max.X; x++ {
+			if pixelInRange(image.At(x, y), upperBound, lowerBound) {
+				numPixels++
+			}
+		}
+	}
+	return numPixels
+}
+
+func pixelInRange(pixel, upperBound, lowerBound color.Color) bool {
+	pixelRGBA := toNRGBA(pixel)
+	upperRGBA := toNRGBA(upperBound)
+	lowerRGBA := toNRGBA(lowerBound)
+
+	return (pixelRGBA.R >= lowerRGBA.R && pixelRGBA.R <= upperRGBA.R) && (pixelRGBA.G >= lowerRGBA.G && pixelRGBA.G <= upperRGBA.G) && (pixelRGBA.B >= lowerRGBA.B && pixelRGBA.B <= upperRGBA.B)
+}
+
+// toNRGBA converts clr to a color.NRGBA.
+func toNRGBA(clr color.Color) color.NRGBA {
+	return color.NRGBAModel.Convert(clr).(color.NRGBA)
 }

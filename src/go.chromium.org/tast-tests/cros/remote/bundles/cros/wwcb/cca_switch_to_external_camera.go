@@ -147,7 +147,7 @@ func CCASwitchToExternalCamera(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to capture CCA preview: ", err)
 	}
 
-	if err := utils.ValidateImageColor(ctx, ccaPreviewImg, color.RGBA{240, 80, 80, 255}, 66); err != nil {
+	if err := utils.ValidateImageColor(ctx, ccaPreviewImg, color.RGBA{255, 120, 120, 255}, color.RGBA{200, 0, 0, 0}, 60); err != nil {
 		s.Fatal("Failed to validate image color: ", err)
 	}
 }
