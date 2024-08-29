@@ -23,19 +23,23 @@ const (
 	frameDataFetchInterval = time.Minute
 	throughputInterval     = 5 * time.Second
 	frameSinkBucketSize    = 1
+	overdrawBucketSize     = 1
 )
 
 // FrameDataTracker is helper to get animation frame data from Chrome.
 type FrameDataTracker struct {
-	prefix         string
-	animationData  []DisplayFrameData
-	dsData         *DisplayFrameData
-	frameCountData []FrameCountingPerSinkData
-	dsTracker      *DisplaySmoothnessTracker
-	fcTimeOffset   time.Duration
-	dsTimeOffset   time.Duration
-	collecting     chan bool
-	collectingErr  chan error
+	prefix             string
+	animationData      []DisplayFrameData
+	dsData             *DisplayFrameData
+	overdrawData       *OverdrawData
+	frameCountData     []FrameCountingPerSinkData
+	dsTracker          *DisplaySmoothnessTracker
+	overdrawTracker    *OverdrawTracker
+	fcTimeOffset       time.Duration
+	dsTimeOffset       time.Duration
+	overdrawTimeOffset time.Duration
+	collecting         chan bool
+	collectingErr      chan error
 }
 
 // FrameCountingPerSinkData holds collected frame counts for a sink type.
@@ -83,6 +87,11 @@ func (t *FrameDataTracker) Start(ctx context.Context, tconn *chrome.TestConn, ti
 		return errors.Wrap(err, "failed to start display smoothness tracking")
 	}
 
+	t.overdrawTimeOffset = time.Since(timeZero)
+	if err := t.overdrawTracker.Start(ctx, tconn, overdrawBucketSize); err != nil {
+		return errors.Wrap(err, "failed to start overdraw tracking")
+	}
+
 	t.collectingErr = make(chan error, 1)
 
 	async.Run(ctx, func(ctx context.Context) {
@@ -120,6 +129,10 @@ func (t *FrameDataTracker) forceStop(ctx context.Context, tconn *chrome.TestConn
 		testing.ContextLog(ctx, errors.Wrap(err, "failed to stop display smoothness tracking"))
 	}
 
+	if _, err := t.overdrawTracker.Stop(ctx, tconn); err != nil {
+		testing.ContextLog(ctx, errors.Wrap(err, "failed to stop overdraw tracking"))
+	}
+
 	var data []DisplayFrameData
 	if err := tconn.Call(ctx, &data, `tast.promisify(chrome.autotestPrivate.stopThroughputTrackerDataCollection)`); err != nil {
 		testing.ContextLog(ctx, errors.Wrap(err, "failed to stop data collection"))
@@ -147,11 +160,17 @@ func (t *FrameDataTracker) Stop(ctx context.Context, tconn *chrome.TestConn) err
 		return ctx.Err()
 	}
 
-	var dsData *DisplayFrameData
-	var err error
-	if dsData, err = t.dsTracker.Stop(ctx, tconn, ""); err != nil {
+	dsData, err := t.dsTracker.Stop(ctx, tconn, "")
+	if err != nil {
 		if firstErr == nil {
 			firstErr = errors.Wrap(err, "failed to stop display smoothness tracking")
+		}
+	}
+
+	overdrawData, err := t.overdrawTracker.Stop(ctx, tconn)
+	if err != nil {
+		if firstErr == nil {
+			firstErr = errors.Wrap(err, "failed to stop overdraw tracker")
 		}
 	}
 
@@ -174,6 +193,7 @@ func (t *FrameDataTracker) Stop(ctx context.Context, tconn *chrome.TestConn) err
 	}
 
 	t.dsData = dsData
+	t.overdrawData = overdrawData
 	t.animationData = append(t.animationData, data...)
 	t.frameCountData = frameCountData
 	return nil
@@ -333,12 +353,34 @@ func (t *FrameDataTracker) Record(pv *perf.Values) {
 	for _, data := range t.dsData.JankDurations {
 		pv.Append(jdMetric, float64(data))
 	}
+
+	overdrawTimelineName := t.prefix + "AverageOverdraw.t"
+
+	pv.Set(perf.Metric{
+		Name:      t.prefix + "AverageOverdraw",
+		Unit:      "overdraw",
+		Direction: perf.SmallerIsBetter,
+		Multiple:  true,
+		Interval:  overdrawTimelineName,
+	}, t.overdrawData.AverageOverdraws...)
+
+	overdrawTime := perf.Metric{
+		Name:     overdrawTimelineName,
+		Unit:     "s",
+		Multiple: true,
+	}
+
+	overdrawOffsetSeconds := t.overdrawTimeOffset.Seconds()
+	for i := 0; i < len(t.overdrawData.AverageOverdraws); i++ {
+		pv.Append(overdrawTime, (float64(i)*overdrawBucketSize)+overdrawOffsetSeconds)
+	}
 }
 
 // NewFrameDataTracker creates a new instance for FrameDataTracker.
 func NewFrameDataTracker(metricPrefix string) (*FrameDataTracker, error) {
 	return &FrameDataTracker{
-		prefix:    metricPrefix,
-		dsTracker: NewDisplaySmoothnessTracker(),
+		prefix:          metricPrefix,
+		dsTracker:       NewDisplaySmoothnessTracker(),
+		overdrawTracker: NewOverdrawTracker(),
 	}, nil
 }
