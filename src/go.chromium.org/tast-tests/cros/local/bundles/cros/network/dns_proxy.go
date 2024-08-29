@@ -190,10 +190,9 @@ func DNSProxy(ctx context.Context, s *testing.State) {
 	defer cleanup(cleanupCtx)
 
 	if params.arc {
-		// Make sure that ARC gets the DNS proxy address before proceeding the tests.
-		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			return dns.VerifyARCNameservers(ctx, a)
-		}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
+		// Make sure that ARC gets the DNS proxy address before proceeding the
+		// tests. Note the network created by dns.NewEnv() is IPv4-only.
+		if err := arcnet.WaitForARCGetDNSProxyConfig(ctx, a, env.Router.VethOutName, true /*ipv4*/, false /*ipv6*/, 10*time.Second); err != nil {
 			s.Fatal("Failed to wait for ARC to get the nameservers config: ", err)
 		}
 

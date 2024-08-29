@@ -7,6 +7,7 @@ package arc
 
 import (
 	"context"
+	"net"
 	"os"
 	"path/filepath"
 	"strings"
@@ -163,20 +164,88 @@ func CreateNetworkDumpsysErrorHandler(ctx context.Context, a *arc.ARC) func(stri
 	}
 }
 
-// GetARCInterfaceName finds the interface name inside ARC given the host physical interface name.
-func GetARCInterfaceName(ctx context.Context, hostIfname string) (string, error) {
+func getPPNetworkDevice(ctx context.Context, hostIfname string) (*pp.NetworkDevice, error) {
 	pc, err := patchpanel.New(ctx)
 	if err != nil {
-		return "", errors.Wrap(err, "failed to create patchpanel client")
+		return nil, errors.Wrap(err, "failed to create patchpanel client")
 	}
 	response, err := pc.GetDevices(ctx)
 	if err != nil {
-		return "", errors.Wrap(err, "failed to get patchpanel devices")
+		return nil, errors.Wrap(err, "failed to get patchpanel devices")
 	}
 	for _, device := range response.Devices {
 		if (device.GuestType == pp.NetworkDevice_ARCVM || device.GuestType == pp.NetworkDevice_ARC) && device.PhysIfname == hostIfname {
-			return device.GuestIfname, nil
+			return device, nil
 		}
 	}
-	return "", errors.Errorf("no ARC device matching %s is found", hostIfname)
+	return nil, errors.Errorf("no ARC device matching %s is found", hostIfname)
+}
+
+// GetARCInterfaceName finds the interface name inside ARC given the host physical interface name.
+func GetARCInterfaceName(ctx context.Context, hostIfname string) (string, error) {
+	device, err := getPPNetworkDevice(ctx, hostIfname)
+	if err != nil {
+		return "", err
+	}
+	return device.GuestIfname, nil
+}
+
+// WaitForARCGetDNSProxyConfig waits for the connectivity manager in ARC gets
+// the ipv4 and/or ipv6 dnsproxy address for the corresponding interface of
+// hostIfname on the host side.
+func WaitForARCGetDNSProxyConfig(ctx context.Context, a *arc.ARC, hostIfname string, ipv4, ipv6 bool, timeout time.Duration) error {
+	// Get the interface and dnsproxy addrs from patchpanel.
+	device, err := getPPNetworkDevice(ctx, hostIfname)
+	if err != nil {
+		return err
+	}
+
+	guestIfname := device.GuestIfname
+	ipv4DNS := net.IP(device.DnsProxyIpv4Addr)
+	ipv6DNS := net.IP(device.DnsProxyIpv6Addr)
+
+	// dnsproxy addresses should always be set (no matter the actual IP
+	// connectivity on the physical interface).
+	if len(ipv4DNS) == 0 {
+		return errors.New("got empty IPv4 DNS address")
+	}
+	if len(ipv6DNS) == 0 {
+		return errors.New("got empty IPv6 DNS address")
+	}
+
+	var addrsForLog []string
+	if ipv4 {
+		addrsForLog = append(addrsForLog, ipv4DNS.String())
+	}
+	if ipv6 {
+		addrsForLog = append(addrsForLog, ipv6DNS.String())
+	}
+	testing.ContextLogf(ctx, "Waiting for DNS %v to appear for interface %s in ARC", addrsForLog, guestIfname)
+
+	// Poll the output of `dumpsys connectivity networks` to see if addrs are
+	// applied.
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		output, err := a.Command(ctx, "dumpsys", "connectivity", "networks").Output(testexec.DumpLogOnError)
+		if err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to run `dumpsys connectivity networks`"))
+		}
+
+		// Checks that the DNS addresses are on the same line with the interface.
+		// This is a very loose check, but since the addr for dnsproxy should not be
+		// used elsewhere, this should be good enough. Assumption: "InterfaceName: "
+		// won't appear on other lines than the one we want to check.
+		for _, line := range strings.Split(string(output), "\n") {
+			if !strings.Contains(line, "InterfaceName: "+guestIfname) {
+				continue
+			}
+			if ipv4 && !strings.Contains(line, ipv4DNS.String()) {
+				return errors.Errorf("IPv4 DNS `%s` is not in line `%s`", ipv4DNS, line)
+			}
+			if ipv6 && !strings.Contains(line, ipv6DNS.String()) {
+				return errors.Errorf("IPv6 DNS `%s` is not in line `%s`", ipv6DNS, line)
+			}
+			return nil
+		}
+		return errors.Errorf("failed to find interface `%s` in output `%s`", guestIfname, string(output))
+	}, &testing.PollOptions{Timeout: timeout})
 }
