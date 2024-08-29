@@ -29282,6 +29282,40 @@ func (p *GenAiDefaultSettings) Equal(iface interface{}) bool {
 }
 
 // ****************************************************************************
+// 1297. KioskActiveWiFiCredentialsScopeChangeEnabled
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type KioskActiveWiFiCredentialsScopeChangeEnabled struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *KioskActiveWiFiCredentialsScopeChangeEnabled) Name() string {
+	return "KioskActiveWiFiCredentialsScopeChangeEnabled"
+}
+func (p *KioskActiveWiFiCredentialsScopeChangeEnabled) Scope() Scope          { return ScopeUser }
+func (p *KioskActiveWiFiCredentialsScopeChangeEnabled) Status() Status        { return p.Stat }
+func (p *KioskActiveWiFiCredentialsScopeChangeEnabled) UntypedV() interface{} { return p.Val }
+func (p *KioskActiveWiFiCredentialsScopeChangeEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *KioskActiveWiFiCredentialsScopeChangeEnabled) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *KioskActiveWiFiCredentialsScopeChangeEnabled) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
 // JSON deserialization logic (used by policy.Unmarshal).
 // ****************************************************************************
 
@@ -31082,6 +31116,8 @@ func newByName(name string) (Policy, error) {
 		return &HelpMeReadSettings{}, nil
 	case "GenAiDefaultSettings":
 		return &GenAiDefaultSettings{}, nil
+	case "KioskActiveWiFiCredentialsScopeChangeEnabled":
+		return &KioskActiveWiFiCredentialsScopeChangeEnabled{}, nil
 	default:
 		return nil, errors.New("Unknown policy " + name)
 	}
