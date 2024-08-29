@@ -59,7 +59,8 @@ func AuthPreprod(ctx context.Context, s *testing.State) {
 	defer arc.RestoreArcvmDevConf(cleanupCtx)
 
 	urlMap := map[string]string{
-		`https://android.googleapis.com/auth`: `https://jmt17.google.com/canary/auth`,
+		`https://android.googleapis.com/auth`:    `https://jmt17.google.com/canary/auth`,
+		`https://android.googleapis.com/checkin`: `https://jmt17.google.com/canary/checkin`,
 	}
 	opts := []proxy.Option{
 		proxy.URLRedirect(urlMap),
