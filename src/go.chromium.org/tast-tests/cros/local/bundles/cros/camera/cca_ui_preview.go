@@ -10,6 +10,8 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/camera/cca"
 	"go.chromium.org/tast-tests/cros/local/camera/testutil"
+	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -20,7 +22,7 @@ func init() {
 		Desc:         "Opens CCA and verifies the preview functions",
 		Contacts:     []string{"chromeos-camera-app-eng@google.com", "chuhsuan@chromium.org", "shik@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
-		Attr:         []string{
+		Attr: []string{
 			"group:mainline",
 			"informational",
 			"group:intel-nda",
@@ -28,31 +30,48 @@ func init() {
 			"release-health_camera",
 		},
 		SoftwareDeps: []string{"camera_app", "chrome"},
+		Data:         []string{"ocr_one_line_3264x2448.jpg"},
 		Fixture:      "ccaTestBridgeReadyWithFakeHALCamera",
 	})
+}
+
+type previewSubTest struct {
+	name     string
+	testFunc func(context.Context, *testutil.TestBridge, *cca.App) error
+	scene    string
 }
 
 // CCAUIPreview verifies preview related functionalities of CCA.
 func CCAUIPreview(ctx context.Context, s *testing.State) {
 	testBridge := s.FixtValue().(cca.FixtureData).TestBridge
 	runTestWithApp := s.FixtValue().(cca.FixtureData).RunTestWithApp
+	switchScene := s.FixtValue().(cca.FixtureData).SwitchScene
+	cr := s.FixtValue().(cca.FixtureData).Chrome
 
 	subTestTimeout := 30 * time.Second
-	for _, tst := range []struct {
-		name     string
-		testFunc func(context.Context, *testutil.TestBridge, *cca.App) error
-	}{{
-		"testWindowResize",
-		testResize,
+	for _, tst := range []previewSubTest{{
+		name:     "testWindowResize",
+		testFunc: testResize,
 	}, {
-		"testRefresh",
-		testRefresh,
+		name:     "testRefresh",
+		testFunc: testRefresh,
 	}, {
-		"testPreviewOptions",
-		testPreviewOptions,
+		name:     "testPreviewOptions",
+		testFunc: testPreviewOptions,
+	}, {
+		name: "testOCR",
+		testFunc: func(ctx context.Context, testBridge *testutil.TestBridge, app *cca.App) error {
+			return testOCR(ctx, app, cr)
+		},
+		scene: "ocr_one_line_3264x2448.jpg",
 	}} {
 		subTestCtx, cancel := context.WithTimeout(ctx, subTestTimeout)
 		s.Run(subTestCtx, tst.name, func(ctx context.Context, s *testing.State) {
+			if tst.scene != "" {
+				if err := switchScene(ctx, cca.SceneData{Path: s.DataPath(tst.scene)}); err != nil {
+					s.Fatal("Failed to prepare scene: ", err)
+				}
+			}
 			if err := runTestWithApp(ctx, func(ctx context.Context, app *cca.App) error {
 				return tst.testFunc(ctx, testBridge(), app)
 			}, cca.TestWithAppParams{}); err != nil {
@@ -285,5 +304,63 @@ func toggleMirrorState(ctx context.Context, app *cca.App) error {
 	if err := app.Click(ctx, targetOption); err != nil {
 		return errors.Wrap(err, "failed to toggle mirror state")
 	}
+	return nil
+}
+
+// testOCR checks OCR scanning on preview in photo mode.
+func testOCR(ctx context.Context, app *cca.App, cr *chrome.Chrome) error {
+	if err := testOCRDisabled(ctx, app); err != nil {
+		return errors.Wrap(err, "failed when verifying OCR disabling")
+	}
+	if err := testOCRDetectAndCopy(ctx, app, cr, "hello."); err != nil {
+		return errors.Wrap(err, "failed when verifying OCR detecting and copying")
+	}
+	return nil
+}
+
+func testOCRDisabled(ctx context.Context, app *cca.App) error {
+	ErrDetectedTextInvisible := errors.New("detected text is invisible")
+
+	// Poll for 10 seconds to ensure the text detection preview doesn't show.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		visible, err := app.Visible(ctx, cca.BarcodeChipText)
+		if err != nil {
+			return testing.PollBreak(err)
+		}
+		if visible {
+			return testing.PollBreak(errors.New("detected text is visible"))
+		}
+		return ErrDetectedTextInvisible
+	}, &testing.PollOptions{Timeout: 10 * time.Second}); !errors.Is(err, ErrDetectedTextInvisible) {
+		return errors.Wrap(err, "failed to disable preview OCR feature")
+	}
+
+	return nil
+}
+
+func testOCRDetectAndCopy(ctx context.Context, app *cca.App, cr *chrome.Chrome, expectedText string) error {
+	if err := app.SetPreviewOCROption(ctx, true); err != nil {
+		return errors.Wrap(err, "failed to enable preview OCR option")
+	}
+	// Barcode and OCR use the same components to show and copy detected text.
+	if err := app.WaitForVisibleStateFor(ctx, cca.BarcodeChipText, true, 10*time.Second); err != nil {
+		return errors.Wrap(err, "failed to detect text")
+	}
+	if err := app.Click(ctx, cca.BarcodeCopyTextButton); err != nil {
+		return errors.Wrap(err, "failed to click copy button")
+	}
+	// Check for the snack bar to indicate the text has been copied.
+	if err := app.WaitForVisibleState(ctx, cca.Snackbar, true); err != nil {
+		return errors.Wrap(err, "failed to show snack bar")
+	}
+
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get test connection")
+	}
+	if err := ash.WaitUntilClipboardText(ctx, tconn, expectedText); err != nil {
+		return errors.Wrap(err, "failed to copy detected text")
+	}
+
 	return nil
 }
