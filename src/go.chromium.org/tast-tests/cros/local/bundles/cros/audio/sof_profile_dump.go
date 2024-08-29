@@ -46,7 +46,7 @@ func init() {
 		BugComponent: "b:776546",
 		Attr: []string{
 			"group:mainline",
-			"informational", "group:criticalstaging",
+			"informational",
 		},
 		HardwareDeps: hwdep.D(hwdep.SOFAudioDSP()),
 		LacrosStatus: testing.LacrosVariantUnneeded,
