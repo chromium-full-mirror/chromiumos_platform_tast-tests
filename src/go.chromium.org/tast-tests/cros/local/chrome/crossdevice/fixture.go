@@ -428,12 +428,23 @@ func (f *crossdeviceFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 	defer cancel()
 
 	// Save logcat so we have Android logs even if fixture setup fails.
+	s.Log("Saving phone starting timestamp")
 	startTime, err := androidDevice.Device.LatestLogcatTimestamp(ctx)
 	if err != nil {
 		s.Fatal("Failed to get latest logcat timestamp: ", err)
 	}
-	defer androidDevice.Device.DumpLogcatFromTimestamp(cleanupCtx, filepath.Join(s.OutDir(), "fixture_setup_logcat.txt"), startTime)
-	defer androidDevice.DumpLogs(cleanupCtx, s.OutDir(), "fixture_setup_persistent_logcat.txt")
+	defer func() {
+		s.Log("Dumping phone logs for fixture")
+		if err := androidDevice.Device.DumpLogcatFromTimestamp(cleanupCtx, filepath.Join(s.OutDir(), "fixture_setup_logcat.txt"), startTime); err != nil {
+			s.Fatal("Failed to dump phone logs for fixture: ", err)
+		}
+	}()
+	defer func() {
+		s.Log("Dumping full phone logs")
+		if err := androidDevice.DumpLogs(cleanupCtx, s.OutDir(), "fixture_setup_persistent_logcat.txt"); err != nil {
+			s.Fatal("Failed to dump full phone logs: ", err)
+		}
+	}()
 
 	// Set default chrome options.
 	opts, err := f.fOpt(ctx, s)
@@ -480,6 +491,7 @@ func (f *crossdeviceFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 		}
 	}
 
+	s.Log("Starting Chrome")
 	cr, err := chrome.New(
 		ctx,
 		opts...,
@@ -499,6 +511,7 @@ func (f *crossdeviceFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 	}
 	defer func() {
 		if f.logMarker != nil {
+			s.Log("Saving fixture Chrome logs")
 			if err := f.logMarker.Save(filepath.Join(s.OutDir(), "crossdevice-fixture-chrome.log")); err != nil {
 				s.Log("Failed to store per-fixture log data: ", err)
 			}
@@ -506,6 +519,8 @@ func (f *crossdeviceFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 		}
 	}()
 
+	// Set up to dump UI tree on error
+	s.Log("Creating test API connection")
 	var tconn *chrome.TestConn
 	if f.noSignIn {
 		tconn, err = cr.SigninProfileTestAPIConn(ctx)
@@ -525,6 +540,7 @@ func (f *crossdeviceFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 	// Capture a bug report on the Android phone if any onboarding/setup fails.
 	defer func() {
 		if s.HasError() {
+			s.Log("Saving Android bug report")
 			if err := BugReport(ctx, androidDevice.Device, s.OutDir()); err != nil {
 				s.Log("Failed to save Android bug report: ", err)
 			}
@@ -560,6 +576,7 @@ func (f *crossdeviceFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 
 	// Phone and Chromebook will not be paired if we are not signed in to the Chromebook yet.
 	if !f.noSignIn {
+		s.Log("Pairing with Android phone")
 		if err := f.PairWithAndroid(ctx, tconn, cr); err != nil {
 			s.Fatal("Pairing with Android failed: ", err)
 		}
@@ -594,6 +611,7 @@ func (f *crossdeviceFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 		if _, err := ash.WaitForNotification(ctx, tconn, 90*time.Second, ash.WaitTitleContains("Connected to")); err != nil {
 			s.Fatal("Did not receive notification that Chromebook and Phone are paired")
 		}
+		s.Log("Pairing with Android phone successful")
 	}
 
 	// Store Android attributes for reporting.
@@ -618,6 +636,7 @@ func (f *crossdeviceFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 
 	// Disconnect from Wi-Fi for a completely fresh start in OOBE
 	if f.noSignIn {
+		s.Log("Disconnecting ChromeOS device from Wi-Fi")
 		if err := DisconnectFromWifi(ctx); err != nil {
 			s.Log("Failed to disconnect from Wi-Fi. Proceeding anyway. Error: ", err)
 		}
@@ -627,6 +646,8 @@ func (f *crossdeviceFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 	if f.lockFixture {
 		chrome.Lock()
 	}
+
+	s.Log("Cross-device fixture setup complete")
 
 	return &FixtData{
 		Chrome:        cr,
