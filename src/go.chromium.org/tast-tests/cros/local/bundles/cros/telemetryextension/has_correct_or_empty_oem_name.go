@@ -39,7 +39,7 @@ func init() {
 				Name:              "lenovo",
 				Val:               "Lenovo",
 				ExtraHardwareDeps: dep.LenovoModels(),
-				ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+				ExtraAttr:         []string{"group:mainline", "informational"},
 			},
 		},
 	})
