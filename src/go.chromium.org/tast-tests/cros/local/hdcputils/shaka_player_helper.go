@@ -65,22 +65,20 @@ func LaunchShakaPlayer(ctx context.Context, cr *chrome.Chrome, contentURL, proxy
 // SelectVideoRobustness selects specified video robustness name in the drop down list.
 func (s *ShakaPlayer) SelectVideoRobustness(ctx context.Context, name string) error {
 	ui := uiauto.New(s.Tconn).WithPollOpts(*rdpPollOpts)
-	if err := ui.LeftClick(nodewith.Name("Settings").Role(role.Button))(ctx); err != nil {
+	section := nodewith.Role(role.ComboBoxSelect).First()
+
+	if err := ui.DoDefaultUntil(nodewith.Name("Settings").Role(role.Button), ui.WithTimeout(30*time.Second).WaitUntilExists(nodewith.Name("Video Robustness").Role(role.StaticText)))(ctx); err != nil {
 		return errors.Wrap(err, "failed to click on settings button")
 	}
-	section := nodewith.Role(role.PopUpButton).Ancestor(nodewith.Role(role.Section).First()).First()
 	option := nodewith.Name(name).Role(role.MenuListOption).First()
-	if err := ui.LeftClickUntil(section, ui.WithTimeout(5*time.Second).WaitUntilExists(option))(ctx); err != nil {
-		section = nodewith.Role(role.ComboBoxSelect).First()
-		if err := ui.LeftClickUntil(section, ui.WithTimeout(5*time.Second).WaitUntilExists(option))(ctx); err != nil {
-			return errors.Wrap(err, "failed to click on videoRobustness section")
-		}
+	if err := ui.DoDefaultUntil(section, ui.WithTimeout(5*time.Second).WaitUntilExists(option))(ctx); err != nil {
+		return errors.Wrap(err, "failed to click on videoRobustness section")
 	}
-	if err := ui.LeftClick(option)(ctx); err != nil {
+	if err := ui.DoDefault(option)(ctx); err != nil {
 		return errors.Wrapf(err, "failed to select option: %s", name)
 	}
 	// Close the settings popup window.
-	if err := ui.LeftClick(nodewith.Name("CLOSE").Role(role.Button))(ctx); err != nil {
+	if err := ui.DoDefault(nodewith.Name("CLOSE").Role(role.Button))(ctx); err != nil {
 		return errors.Wrap(err, "failed to close settings popup window")
 	}
 	return nil
@@ -90,10 +88,7 @@ func (s *ShakaPlayer) SelectVideoRobustness(ctx context.Context, name string) er
 func (s *ShakaPlayer) PlayVideo(ctx context.Context) error {
 	ui := uiauto.New(s.Tconn).WithPollOpts(*rdpPollOpts)
 	play := nodewith.Name("Play").Role(role.Button).First()
-	if err := ui.WaitForLocation(play)(ctx); err != nil {
-		return errors.Wrap(err, "failed to wait for play button location")
-	}
-	if err := ui.LeftClick(play)(ctx); err != nil {
+	if err := ui.DoDefault(play)(ctx); err != nil {
 		return errors.Wrap(err, "failed to click on play button")
 	}
 	// Check if any video player error.
@@ -160,16 +155,16 @@ func (s *ShakaPlayer) FullScreenEntryExit(ctx context.Context, iteration int) er
 	exitFullScreen := nodewith.Name("Exit full screen").Role(role.Button)
 	for i := 1; i <= iteration; i++ {
 		testing.ContextLogf(ctx, "Switching video between fullscreen and default screen iteration: %d/%d", i, iteration)
-		if err := ui.MouseMoveTo(nodewith.ClassName("shaka-current-time"), 500*time.Millisecond)(ctx); err != nil {
-			testing.ContextLog(ctx, "Failed to move mouse to video seekbar")
+		if err := ui.MouseMoveTo(nodewith.ClassName("shaka-video-container"), 500*time.Millisecond)(ctx); err != nil {
+			return errors.Wrap(err, "failed to move mouse to video seekbar")
 		}
 		// Enter video in fullscreen.
-		if err := ui.LeftClick(fullScreen)(ctx); err != nil {
+		if err := ui.DoDefault(fullScreen)(ctx); err != nil {
 			return errors.Wrap(err, "failed to enter video in fullscreen")
 		}
 		// Exit video from fullscreen.
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			if err := ui.LeftClick(exitFullScreen)(ctx); err != nil {
+			if err := ui.DoDefault(exitFullScreen)(ctx); err != nil {
 				return errors.Wrap(err, "failed to exit video from fullscreen")
 			}
 			return nil
@@ -254,7 +249,7 @@ func (s *ShakaPlayer) GetVideoCurrentTime(ctx context.Context) (string, error) {
 // ShowVideoSeekbar hovers mouse on video seek bar to get updated current time.
 func (s *ShakaPlayer) ShowVideoSeekbar(ctx context.Context) error {
 	ui := uiauto.New(s.Tconn).WithPollOpts(*rdpPollOpts)
-	for _, class := range []string{"shaka-current-time", "shaka-ad-markers"} {
+	for _, class := range []string{"shaka-video", "shaka-ad-markers"} {
 		if err := ui.MouseMoveTo(nodewith.ClassName(class), 500*time.Millisecond)(ctx); err != nil {
 			return errors.Wrap(err, "failed to move mouse to video seekbar")
 		}
