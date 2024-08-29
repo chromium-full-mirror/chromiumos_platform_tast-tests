@@ -310,6 +310,40 @@ func (s *Servo) RestorePDPort(ctx context.Context) error {
 	return nil
 }
 
+// RestorePDDataRole restores DUT PD port state to the DFP role.
+func (s *Servo) RestorePDDataRole(ctx context.Context) error {
+	pdState, err := s.GetDUTPDState(ctx)
+
+	if err != nil {
+		return errors.Wrap(err, "failed to get PD State")
+	}
+
+	if err := s.SendDataSwapRequest(ctx); err != nil {
+		// PDC does not send receive message over console, so the err msg is always fail.
+		if s.dutPDInfo.version != PDC {
+			return errors.Wrap(err, "send power swap failed")
+		}
+	}
+
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		testing.ContextLog(ctx, "check restoration")
+		if pdState, err = s.GetServoPDState(ctx); err == nil {
+			if pdState.DataRole == DataRoleDFP {
+				return errors.Wrap(err, "failed to restore servo data role to UFP")
+			}
+		} else {
+			return errors.Wrap(err, "failed to get servo PD state after data swap")
+		}
+
+		testing.ContextLog(ctx, "Servo data role after: ", pdState.DataRole)
+		return nil
+	}, &testing.PollOptions{Timeout: pdStatePollTimeout, Interval: pdStatePollInterval}); err != nil {
+		return errors.Wrap(err, "expected servo restored to UFP")
+	}
+
+	return nil
+}
+
 // IsDUTPDSoftResetSupported determines wither the attached DUT supports initiating PD soft resets
 func (s *Servo) IsDUTPDSoftResetSupported() bool {
 	switch s.dutPDInfo.version {

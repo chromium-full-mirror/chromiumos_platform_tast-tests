@@ -181,5 +181,9 @@ func dataRoleSwap(ctx context.Context, h *firmware.Helper) error {
 		return errors.Wrap(err, "expected data role swap")
 	}
 
+	if err := h.Servo.RestorePDDataRole(ctx); err != nil {
+		return errors.Wrap(err, "failed to restore DUT to DFP")
+	}
+
 	return nil
 }
