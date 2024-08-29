@@ -9,11 +9,11 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/firmware/futility"
 	"go.chromium.org/tast-tests/cros/common/flashrom"
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
-	pb "go.chromium.org/tast-tests/cros/services/cros/firmware"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -46,7 +46,6 @@ func init() {
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_ec"},
 		Fixture:      fixture.NormalMode,
-		ServiceDeps:  []string{"tast.cros.firmware.BiosService"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Battery()),
 		Params: []testing.Param{{
 			Name:              "chromeslate",
@@ -87,10 +86,6 @@ func BootBatteryCutoff(ctx context.Context, s *testing.State) {
 	}
 	s.Logf("DUT connection type: %s", dutConnType)
 
-	if err := h.RequireBiosServiceClient(ctx); err != nil {
-		s.Fatal("Failed to get bios service: ", err)
-	}
-
 	hasMicroOrC2D2, err := h.Servo.PreferDebugHeader(ctx)
 	if err != nil {
 		s.Fatal("PreferDebugHeader: ", err)
@@ -115,7 +110,7 @@ func BootBatteryCutoff(ctx context.Context, s *testing.State) {
 		}
 
 		// Make sure DUT is connected before sending command over ssh.
-		if err := h.WaitConnect(ctx); err != nil {
+		if err := h.WaitConnect(ctx, firmware.ResetEthernetDongle); err != nil {
 			return errors.Wrap(err, "failed to connect to DUT")
 		}
 		// Send batterycutoff command.
@@ -196,19 +191,19 @@ func BootBatteryCutoff(ctx context.Context, s *testing.State) {
 				s.Fatal("Faild to reset DUT: ", err)
 			}
 			h.DisconnectDUT(ctx)
-			if err := h.WaitConnect(ctx); err != nil {
+			if err := h.WaitConnect(ctx, firmware.ResetEthernetDongle); err != nil {
 				s.Fatal("Failed to reconnect to DUT: ", err)
 			}
 		}
 		if *apSoftwareWPEnabled {
 			s.Log("Disabling ap software write protect")
-			if err := h.RequireBiosServiceClient(ctx); err != nil {
-				s.Fatal("Failed to connect to the bios service on the DUT: ", err)
+			futilityInstance, err := futility.NewLocalBuilder(h.DUT).Build()
+			if err != nil {
+				s.Fatal("Failed to create futility instance: ", err)
 			}
-			if _, err := h.BiosServiceClient.SetAPSoftwareWriteProtect(ctx, &pb.WPRequest{
-				Enable: false,
-			}); err != nil {
-				s.Fatal("Failed to disable AP write protection: ", err)
+
+			if _, err := futilityInstance.SetWP(ctx, false); err != nil {
+				s.Fatal("Failed to set AP wp to disable: ", err)
 			}
 		}
 		if *ecSoftwareWPEnabled {
@@ -256,11 +251,13 @@ func BootBatteryCutoff(ctx context.Context, s *testing.State) {
 				}
 				ecSoftwareWPEnabled = true
 			case "host":
-				bs := pb.NewBiosServiceClient(h.RPCClient.Conn)
-				if _, err := bs.SetAPSoftwareWriteProtect(ctx, &pb.WPRequest{
-					Enable: true,
-				}); err != nil {
-					s.Fatal("Failed to enable AP write protection: ", err)
+				futilityInstance, err := futility.NewLocalBuilder(h.DUT).Build()
+				if err != nil {
+					s.Fatal("Failed to create futility instance: ", err)
+				}
+
+				if _, err := futilityInstance.SetWP(ctx, true); err != nil {
+					s.Fatal("Failed to set AP wp to enable: ", err)
 				}
 				apSoftwareWPEnabled = true
 			}
