@@ -110,7 +110,7 @@ func runDPTest(ctx context.Context, svo *servo.Servo, d *dut.DUT, s *testing.Sta
 		return errors.Wrap(err, "failed to connect to DUT")
 	}
 
-	// Wait for PD negotiation to stabilize.
+	// GoBigSleepLint: Wait for PD negotiation to stabilize.
 	if err := testing.Sleep(ctx, 2500*time.Millisecond); err != nil {
 		return errors.Wrap(err, "failed to sleep for PD negotiation")
 	}

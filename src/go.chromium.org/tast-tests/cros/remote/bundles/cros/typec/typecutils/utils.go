@@ -70,6 +70,7 @@ func CcOffAndWait(ctx context.Context, svo *servo.Servo) error {
 		return errors.Wrap(err, "failed to switch off CC")
 	}
 
+	// GoBigSleepLint: Enusure that VBus discharges safely
 	if err := testing.Sleep(ctx, tVBusDischargeCcOff); err != nil {
 		return errors.Wrap(err, "failed to sleep after CC off")
 	}

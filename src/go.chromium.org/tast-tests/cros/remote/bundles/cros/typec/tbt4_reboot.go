@@ -39,12 +39,12 @@ func init() {
 //
 // This test expects the following hardware topology:
 //
-//       - network -
-//      /           \
-//     /             \
-//     Host -------- DUT ----- MCCI (`portUsed`) ---- Thunderbolt 4 dock.
-//     |                              |
-//     |______________________________|
+//	 ____network___
+//	|              |
+//	|              |
+//	Host -------- DUT ----- MCCI (`portUsed`) ---- Thunderbolt 4 dock.
+//	|                              |
+//	|______________________________|
 func Tbt4Reboot(ctx context.Context, s *testing.State) {
 	numIterations := 5
 

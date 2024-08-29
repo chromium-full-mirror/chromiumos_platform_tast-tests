@@ -42,12 +42,12 @@ func init() {
 //
 // This test expects the following hardware topology:
 //
-//         - network -
-//        /           \
-//       /             \
+//	 ____network___
+//	|              |
+//	|              |
 //	Host -------- DUT ----- MCCI (`portUsed`) ---- Thunderbolt3 or Thunderbolt4 dock.
-//	 |                              |
-//	 |______________________________|
+//	|                              |
+//	|______________________________|
 func TbtHotplug(ctx context.Context, s *testing.State) {
 	numIterations := 10
 
@@ -89,7 +89,7 @@ func performHotplugIteration(ctx context.Context, d *dut.DUT, sw *mcci.Switch, m
 	// Verify that there is no TBT device.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		return typecutils.CheckTBTDevice(ctx, d, false, typecutils.TbtGenAny)
-	}, &testing.PollOptions{Interval: time.Second, Timeout: 20*time.Second}); err != nil {
+	}, &testing.PollOptions{Interval: time.Second, Timeout: 20 * time.Second}); err != nil {
 		return errors.Wrap(err, "failed TBT absence check")
 	}
 
@@ -104,7 +104,7 @@ func performHotplugIteration(ctx context.Context, d *dut.DUT, sw *mcci.Switch, m
 	// Verify that there is a TBT device present.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		return typecutils.CheckTBTDevice(ctx, d, true, typecutils.TbtGenAny)
-	}, &testing.PollOptions{Interval: time.Second, Timeout: 20*time.Second}); err != nil {
+	}, &testing.PollOptions{Interval: time.Second, Timeout: 20 * time.Second}); err != nil {
 		return errors.Wrap(err, "failed TBT presence check")
 	}
 

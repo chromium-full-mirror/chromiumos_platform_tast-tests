@@ -42,12 +42,12 @@ func init() {
 //
 // This test expects the following hardware topology:
 //
-//        - network -
-//       /           \
-//      /             \
-//     Host -------- DUT ----- MCCI (`portUsed`) ---- USB mass storage (can be connected via dock or adapter).
-//     |                              |
-//     |______________________________|
+//	 ____network___
+//	|              |
+//	|              |
+//	Host -------- DUT ----- MCCI (`portUsed`) ---- USB mass storage (can be connected via dock or adapter).
+//	|                              |
+//	|______________________________|
 func Usb3StorageHotplug(ctx context.Context, s *testing.State) {
 	numIterations := 10
 
@@ -109,7 +109,7 @@ func performUsb3StorageHotplugIteration(ctx context.Context, d *dut.DUT, cl usb.
 	externalStorageAfter, err := typecutils.Usb3GetExternalStorageList(ctx, cl)
 	if err != nil {
 		return errors.Wrap(err, "could not get external storage list after hotplug")
-	} else 	if len(externalStorageBefore) >= len(externalStorageAfter) {
+	} else if len(externalStorageBefore) >= len(externalStorageAfter) {
 		return errors.New("failed to enumerate new USB storage device")
 	}
 

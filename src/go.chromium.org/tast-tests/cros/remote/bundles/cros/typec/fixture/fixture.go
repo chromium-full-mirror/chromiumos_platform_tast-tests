@@ -16,9 +16,9 @@ import (
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
-		Name:            "typeCServo",
-		Desc:            "Set up Servo for Type C tests",
-		Contacts:        []string{"pmalani@chromium.org", "chromeos-usb-champs@google.com"},
+		Name:     "typeCServo",
+		Desc:     "Set up Servo for Type C tests",
+		Contacts: []string{"pmalani@chromium.org", "chromeos-usb-champs@google.com"},
 		// ChromeOS > Platform > Connectivity > USB
 		BugComponent:    "b:958036",
 		Impl:            &impl{},
@@ -95,7 +95,7 @@ func (i *impl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 		}
 	}
 
-	// Wait for servo control to take effect.
+	// GoBigSleepLint: Wait for servo control to take effect.
 	if err := testing.Sleep(ctx, time.Second); err != nil {
 		s.Fatal("Failed to sleep after CCD keepalive disable: ", err)
 	}
@@ -104,7 +104,7 @@ func (i *impl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 		s.Fatal("Failed to switch CCD watchdog off: ", err)
 	}
 
-	// Wait for servo control to take effect.
+	// GoBigSleepLint: Wait for servo control to take effect.
 	if err := testing.Sleep(ctx, time.Second); err != nil {
 		s.Fatal("Failed to sleep after CCD watchdog off: ", err)
 	}
@@ -119,7 +119,7 @@ func (i *impl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 		s.Fatal("Failed to disable Servo DTS mode: ", err)
 	}
 
-	// Wait for DTS-off PD negotiation to complete.
+	// GoBigSleepLint: Wait for DTS-off PD negotiation to complete.
 	if err := testing.Sleep(ctx, 2500*time.Millisecond); err != nil {
 		s.Fatal("Failed to sleep for DTS-off power negotiation: ", err)
 	}
@@ -137,7 +137,7 @@ func (i *impl) PostTest(ctx context.Context, s *testing.FixtTestState) {
 		s.Error("Failed to enable Servo DTS mode: ", err)
 	}
 
-	// Wait for DTS-on PD negotiation to complete.
+	// GoBigSleepLint: Wait for DTS-on PD negotiation to complete.
 	if err := testing.Sleep(ctx, 2500*time.Millisecond); err != nil {
 		s.Fatal("Failed to sleep for DTS-on power negotiation: ", err)
 	}

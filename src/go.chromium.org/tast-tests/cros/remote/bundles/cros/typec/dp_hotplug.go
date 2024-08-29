@@ -39,12 +39,12 @@ func init() {
 //
 // This test expects the following hardware topology:
 //
-//        - network -
-//       /           \
-//      /             \
-//     Host -------- DUT ----- MCCI (`portUsed`) ---- DP display (can be connected via DP Type-C dock).
-//      |                              |
-//      |______________________________|
+//	 ____network___
+//	|              |
+//	|              |
+//	Host -------- DUT ----- MCCI (`portUsed`) ---- DP display (can be connected via DP Type-C dock).
+//	|                              |
+//	|______________________________|
 func DpHotplug(ctx context.Context, s *testing.State) {
 	numIterations := 10
 

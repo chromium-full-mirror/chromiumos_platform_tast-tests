@@ -42,12 +42,12 @@ func init() {
 //
 // This test expects the following hardware topology:
 //
-//        - network -
-//       /           \
-//      /             \
-//     Host -------- DUT ----- MCCI (`portUsed`) ---- USB mass storage (can be connected via dock or adapter).
-//     |                              |
-//     |______________________________|
+//	 ____network___
+//	|              |
+//	|              |
+//	Host -------- DUT ----- MCCI (`portUsed`) ---- USB mass storage (can be connected via dock or adapter).
+//	|                              |
+//	|______________________________|
 func Usb3StorageReboot(ctx context.Context, s *testing.State) {
 	numIterations := 5
 

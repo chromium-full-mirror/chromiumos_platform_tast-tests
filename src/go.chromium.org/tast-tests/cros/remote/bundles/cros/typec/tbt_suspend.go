@@ -19,10 +19,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     TbtSuspend,
+		Func:         TbtSuspend,
 		LacrosStatus: testing.LacrosVariantNeeded,
-		Desc:     "Check that a Thunderbolt (3 or 4) device enumerates before and after suspend",
-		Contacts: []string{"chromeos-usb-champs@google.com", "pmalani@chromium.org"},
+		Desc:         "Check that a Thunderbolt (3 or 4) device enumerates before and after suspend",
+		Contacts:     []string{"chromeos-usb-champs@google.com", "pmalani@chromium.org"},
 		// ChromeOS > Platform > Technologies > USB
 		BugComponent: "b:958036",
 		Attr:         []string{"group:typec", "typec_tbt4_bringup", "typec_tbt3_bringup"},
@@ -45,12 +45,12 @@ func init() {
 //
 // This test expects the following hardware topology:
 //
-//        - network -
-//       /           \
-//      /             \
-//     Host -------- DUT ----- MCCI (`portUsed`) ---- Thunderbolt (3 or 4) dock.
-//     |                              |
-//     |______________________________|
+//	 ____network___
+//	|              |
+//	|              |
+//	Host -------- DUT ----- MCCI (`portUsed`) ---- Thunderbolt (3 or 4) dock.
+//	|                              |
+//	|______________________________|
 func TbtSuspend(ctx context.Context, s *testing.State) {
 	numIterations := 10
 

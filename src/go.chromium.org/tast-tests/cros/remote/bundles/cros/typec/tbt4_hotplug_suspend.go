@@ -40,12 +40,12 @@ func init() {
 //
 // This test expects the following hardware topology:
 //
-//       - network -
-//      /           \
-//     /             \
-//     Host -------- DUT ----- MCCI (`portUsed`) ---- Thunderbolt 4 dock.
-//     |                              |
-//     |______________________________|
+//	 ____network___
+//	|              |
+//	|              |
+//	Host -------- DUT ----- MCCI (`portUsed`) ---- Thunderbolt 4 dock.
+//	|                              |
+//	|______________________________|
 func Tbt4HotplugSuspend(ctx context.Context, s *testing.State) {
 	numIterations := 10
 
