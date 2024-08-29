@@ -74,7 +74,7 @@ func UpdateDutFirmware(ctx context.Context, s *testing.State) {
 	if firmwarePathVal != "" {
 		// Adding default suffix and prefix to GCS firmware file path if needed.
 		downloadFilename := firmwarePathVal
-		if !strings.HasPrefix(firmwarePathVal, imageGCSBucket) {
+		if !strings.HasPrefix(firmwarePathVal, "gs://") && !strings.HasPrefix(firmwarePathVal, imageGCSBucket) {
 			downloadFilename = fmt.Sprintf("%s/%s", imageGCSBucket, firmwarePathVal)
 		}
 		if !strings.HasSuffix(firmwarePathVal, defaultTarSuffix) {
