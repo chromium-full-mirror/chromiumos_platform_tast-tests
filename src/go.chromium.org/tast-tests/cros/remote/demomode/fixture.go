@@ -90,6 +90,9 @@ func init() {
 			enrollmentUser:  "admin-tast",
 			enabledFeatures: []string{"CloudGamingDevice"},
 			dmServerURL:     policy.DMServerAlphaURL,
+			// --demo-mode-resource-directory is used to skip the demo mode resources
+			// component loading process in OOBE.
+			extraArgs: []string{"--demo-mode-resource-directory"},
 		},
 		SetUpTimeout:    setUpTimeout,
 		TearDownTimeout: tearDownTimeout,

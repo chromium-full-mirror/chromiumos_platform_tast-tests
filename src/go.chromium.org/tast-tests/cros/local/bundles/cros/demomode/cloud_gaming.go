@@ -66,7 +66,11 @@ func CloudGaming(ctx context.Context, s *testing.State) {
 		// --component-updater=test-request adds a "test-request" parameter to Omaha
 		// update requests, causing the fetched Demo Mode App component to come from a
 		// test cohort.
-		chrome.ExtraArgs("--force-devtools-available", "--component-updater=test-request"),
+		//
+		// --demo-mode-resource-directory is used to skip the demo mode resources component
+		// loading process.
+		chrome.ExtraArgs("--force-devtools-available", "--component-updater=test-request",
+			"--demo-mode-resource-directory"),
 		chrome.DMSPolicy(policy.DMServerAlphaURL))
 	if err != nil {
 		s.Fatal("Failed to restart Chrome: ", err)
