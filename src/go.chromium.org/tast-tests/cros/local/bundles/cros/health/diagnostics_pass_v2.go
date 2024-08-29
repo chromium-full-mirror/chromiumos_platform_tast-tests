@@ -8,6 +8,7 @@ package health
 
 import (
 	"context"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/local/croshealthd"
@@ -95,6 +96,11 @@ func DiagnosticsPassV2(ctx context.Context, s *testing.State) {
 		ResultVerifier: croshealthd.VerifyRoutinePassedV2,
 	}
 	if err := croshealthd.TestDiagRoutineV2(ctx, config); err != nil {
+		// TODO(b/362645235): Remove the sleep used for debugging b/362645235.
+		if params.Routine == croshealthd.RoutineBluetoothPowerV2 {
+			// GoBigSleepLint: Ensure that adapter added event is missing at the end of Bluetooth power routine.
+			testing.Sleep(ctx, time.Second*5)
+		}
 		s.Fatal("Routine verification failed: ", err)
 	}
 }
