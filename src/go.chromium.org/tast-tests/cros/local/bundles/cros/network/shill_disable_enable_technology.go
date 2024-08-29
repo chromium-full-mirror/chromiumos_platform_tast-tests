@@ -28,7 +28,7 @@ func init() {
 		},
 		BugComponent: "b:1493959", // ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		SoftwareDeps: []string{"no_qemu"},
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline", "informational"},
 		Fixture:      "shillReset.ehide",
 	})
 }
