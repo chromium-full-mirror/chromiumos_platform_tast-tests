@@ -200,7 +200,7 @@ func init() {
 					fieldTrialConfig: chrome.FieldTrialConfigDefault,
 					checkVMMMS:       true,
 				},
-				ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging", "group:hw_agnostic"},
+				ExtraAttr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 				ExtraSoftwareDeps: []string{"android_vm"},
 				Timeout:           chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 			}},
