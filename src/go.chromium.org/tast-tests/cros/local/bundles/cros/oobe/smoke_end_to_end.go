@@ -50,7 +50,7 @@ func init() {
 		},
 		Timeout: chrome.GAIALoginTimeout + 5*time.Minute,
 		Params: []testing.Param{{
-			ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
+			ExtraAttr: []string{"group:mainline", "informational"},
 			Val:       oobeTestArgs{isAddPersonFlow: false, preprod: false, isMetricsClientIDTest: false},
 		}, {
 			Name:      "add_person_flow",
