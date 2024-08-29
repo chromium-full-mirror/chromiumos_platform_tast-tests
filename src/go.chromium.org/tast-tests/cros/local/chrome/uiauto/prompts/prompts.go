@@ -70,8 +70,7 @@ var AllowMicrophoneAndCameraPermissionPrompt = Prompt{
 	PromptFinder: avMeetPermPromptFinder,
 	// There are two types of dialogs that should be closed.
 	// Possible ancestors are |avPermPromptFinder| and |avMeetPermPromptFinder|.
-	// So use First() instead of Ancestor().
-	ClearButtonFinder: AllowAVButtonFinder.First(),
+	ClearButtonFinder: AllowAVButtonFinder,
 }
 
 // AllowCaptionPrompt represents the browser prompt to notify caption & translation.
@@ -144,8 +143,19 @@ func ClearPotentialPrompts(tconn *chrome.TestConn, idleDuration time.Duration, p
 
 // DismissPrompt waits for a prompt shown up and dismiss it.
 func DismissPrompt(ui *uiauto.Context, prompt Prompt) action.Action {
-	return ui.DoDefaultUntil(
-		prompt.ClearButtonFinder,
+	clickClearButtons := func(ctx context.Context) error {
+		infos, err := ui.NodesInfo(ctx, prompt.ClearButtonFinder)
+		if err != nil {
+			return err
+		}
+		for i := range infos {
+			if err := ui.DoDefault(prompt.ClearButtonFinder.Nth(i))(ctx); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+	return ui.WithTimeout(30*time.Second).RetryUntil(clickClearButtons,
 		ui.WithTimeout(3*time.Second).WaitUntilGone(prompt.PromptFinder))
 }
 
