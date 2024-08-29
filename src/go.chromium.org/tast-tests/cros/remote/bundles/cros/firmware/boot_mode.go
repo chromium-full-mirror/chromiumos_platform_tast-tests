@@ -95,8 +95,7 @@ func init() {
 				resetAfterBoot: true,
 				resetType:      firmware.ColdReset,
 			},
-			// TODO: When stable, change firmware_unstable to a different attr.
-			ExtraAttr: []string{"firmware_usb", "firmware_unstable"},
+			ExtraAttr: []string{"firmware_bios", "firmware_level2", "firmware_usb"},
 			Timeout:   2 * time.Hour,
 		}, {
 			Name:    "dev_warm",
