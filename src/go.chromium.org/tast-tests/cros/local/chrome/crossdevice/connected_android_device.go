@@ -732,6 +732,27 @@ func (c *AndroidDevice) TapNext(ctx context.Context) error {
 	return nil
 }
 
+// ConfirmGoogleAccount waits for a "Continue as..." button to appear and taps it.
+func (c *AndroidDevice) ConfirmGoogleAccount(ctx context.Context) error {
+	d, err := ui.NewDeviceWithRetry(ctx, c.Device)
+	if err != nil {
+		return errors.Wrap(err, "failed initializing UI automator")
+	}
+	defer d.Close(ctx)
+
+	buttonText := "Continue as"
+	continueAsBtn := d.Object(ui.TextStartsWith(buttonText))
+	if err := continueAsBtn.WaitForExists(ctx, 15*time.Second); err != nil {
+		return errors.Wrap(err, "failed to find the '"+buttonText+"' button")
+	}
+
+	if err := continueAsBtn.Click(ctx); err != nil {
+		return errors.Wrap(err, "failed to click on the '"+buttonText+"' button")
+	}
+
+	return nil
+}
+
 // WaitForUpdateScreen waits for a heading to appear which indicates the phone
 // is ready for the Chromebook to reboot.
 func (c *AndroidDevice) WaitForUpdateScreen(ctx context.Context) error {

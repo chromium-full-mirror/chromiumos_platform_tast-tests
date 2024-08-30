@@ -158,7 +158,7 @@ func GaiaScreenPIN(ctx context.Context, s *testing.State) {
 
 	// Confirm the Gaia account on the phone
 	s.Log("Waiting for account confirmation screen")
-	if err := androidDevice.TapNext(ctx); err != nil {
+	if err := androidDevice.ConfirmGoogleAccount(ctx); err != nil {
 		s.Fatal("Failed to confirm Google Account: ", err)
 	}
 
