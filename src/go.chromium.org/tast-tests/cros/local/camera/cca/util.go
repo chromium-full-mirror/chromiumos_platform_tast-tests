@@ -31,9 +31,8 @@ type actionFunc func(ctx context.Context) error
 var DeviceWithLayoutMonitored = hwdep.D(hwdep.Model(
 	"atlas",
 	"betty",
-	"eve",
 	"nocturne",
-	"soraka",
+	"redrix",
 ))
 
 // CheckVideoProfile checks profile of video file recorded by CCA.
