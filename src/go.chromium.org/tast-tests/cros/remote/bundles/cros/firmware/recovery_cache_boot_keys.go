@@ -43,26 +43,23 @@ func init() {
 		// There are RECOVERY MRC CACHE and APOB CACHE on board skyrim, but it
 		// seems to prioritize the use of APOB CACHE. Skip the models of board
 		// skyrim in this test.
-		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.SkipOnModel("markarth", "frostflow", "crystaldrift", "skyrim15w", "whiterun")),
-		SoftwareDeps: []string{"has_recovery_mrc_cache"},
+		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.HasRecoveryMRCCacheSection(), hwdep.SkipOnModel("markarth", "frostflow", "crystaldrift", "skyrim15w", "whiterun")),
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{
 			{
-				Name:              "normal",
-				Fixture:           fixture.NormalMode,
-				ExtraAttr:         []string{"firmware_bios", "firmware_level2", "firmware_ro"},
-				ExtraRequirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01"},
-				Timeout:           2 * time.Hour,
+				Name:      "normal",
+				Fixture:   fixture.NormalMode,
+				ExtraAttr: []string{"firmware_bios", "firmware_level2", "firmware_ro"},
+				Timeout:   2 * time.Hour,
 				Val: recCacheBootKeysParam{
 					bootMode: common.BootModeNormal,
 					numIters: 1,
 				},
 			}, {
-				Name:              "dev",
-				Fixture:           fixture.DevModeGBB,
-				ExtraAttr:         []string{"firmware_bios", "firmware_level2", "firmware_ro"},
-				ExtraRequirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01"},
-				Timeout:           2 * time.Hour,
+				Name:      "dev",
+				Fixture:   fixture.DevModeGBB,
+				ExtraAttr: []string{"firmware_bios", "firmware_level2", "firmware_ro"},
+				Timeout:   2 * time.Hour,
 				Val: recCacheBootKeysParam{
 					bootMode: common.BootModeDev,
 					numIters: 1,
