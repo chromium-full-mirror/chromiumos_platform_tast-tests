@@ -139,6 +139,11 @@ func DetermineStylusLatencyVerdict(waltOutput string) (*StylusLatencyResult, err
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse WALT output for latency values")
 	}
+	if avgLatency < 0 {
+		// A miscalculation by the WALT program occurred as latency should never be negative.
+		return nil, errors.Errorf("invalid latency value: %f. Average latency should not be negative", avgLatency)
+	}
+
 	passed := avgLatency <= StylusLatencyThreshold
 
 	return &StylusLatencyResult{Passed: passed, AvgLatency: avgLatency, MaxLatency: maxLatency, MinLatency: minLatency}, nil
