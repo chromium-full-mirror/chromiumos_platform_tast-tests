@@ -51,21 +51,12 @@ type flashAPECInfo struct {
 	path string
 }
 
-type flashAPInfo struct {
-	flashAPECInfo
-	section fwpb.ImageSection
-}
-
-type flashECInfo struct {
-	flashAPECInfo
-	monitorPath string
-}
-
 type flashFwInfo struct {
 	roTag string
 	rwTag string
-	ap    flashAPInfo
-	ec    flashECInfo
+	wp    futility.WriteProtection
+	ap    flashAPECInfo
+	ec    flashAPECInfo
 }
 
 type apROBootabilityPerformanceArgs struct {
@@ -132,14 +123,17 @@ func init() {
 
 func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 	/* The overall logic carried out by the test is:
-	RO_old   + RW_old (EC RO_old   + RW_old) - this will be the baseline
-	RO_old   + RW_new (EC RO_old   + RW_new) - compare it to baseline
-	RO_old-1 + RW_new (EC RO_old_1 + RW_new) - compare it to baseline
-	RO_old-2 + RW_new (EC RO_old_2 + RW_new) - compare it to baseline
+	RO_old   + RW_old   (EC RO_old   + RW_old)   - this will be the baseline
+	RO_old   + RW_new   (EC RO_old   + RW_new)   - compare it to baseline
+	RO_old-1 + RW_old-1 (EC RO_old_1 + RW_old-1)
+	RO_old-1 + RW_new   (EC RO_old_1 + RW_new)   - compare it to baseline
+	RO_old-2 + RW_old-2 (EC RO_old_2 + RW_old-2)
+	RO_old-2 + RW_new   (EC RO_old_2 + RW_new)   - compare it to baseline
 	.
 	.
-	RO_old-n + RW_new (EC RO_old_n + RW_new) - compare it to baseline
-	RO_new   + RW_new (EC RO_new   + RW_new) - compare it to baseline
+	RO_old-n + RW_old-n (EC RO_old_n + RW_old-n)
+	RO_old-n + RW_new   (EC RO_old_n + RW_new)   - compare it to baseline
+	RO_new   + RW_new   (EC RO_new   + RW_new)   - compare it to baseline
 	*/
 	testArgs := s.Param().(*apROBootabilityPerformanceArgs)
 
@@ -184,7 +178,9 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Disabling AP software write protect")
-	if _, err := h.BiosServiceClient.SetAPSoftwareWriteProtect(ctx, &fwpb.WPRequest{Enable: false}); err != nil {
+	if futilityInstance, err := futility.NewLocalBuilder(h.DUT).Build(); err != nil {
+		s.Fatal("Failed to setup futility instance: ", err)
+	} else if _, err := futilityInstance.SetWP(ctx, false); err != nil {
 		s.Fatal("Failed to disable AP software write protection: ", err)
 	}
 
@@ -263,7 +259,7 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 	defer func() {
 		h.DUT.Conn().CommandContext(cleanupCtx, "rm", "-r", dutTempDir)
 	}()
-	apBackupOnDut := fmt.Sprintf("%s/bios_backup.bin", dutTempDir)
+	apBackupOnDut := filepath.Join(dutTempDir, "bios_backup.bin")
 	if err := backupManager.CopyBackupToDut(ctx, h.DUT, fixture.FirmwareAP, apBackupOnDut); err != nil {
 		s.Fatal("Failed to copy firmware image to DUT: ", err)
 	}
@@ -279,6 +275,13 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to save EC backup file on host: ", err)
 	}
 
+	// Get the AP RO firmware version ID available on the DUT.
+	apRONewID, err = h.Reporter.GetFWVersion(ctx, reporters.CrossystemParamRoFwid)
+	if err != nil {
+		s.Fatal("Failed to get AP RO ID: ", err)
+	}
+	s.Logf("Setting AP RO ID = %s, as the to-be-qualified RO_new firmware", apRONewID)
+
 	// Get the newest AP RW firmware version ID available on the DUT.
 	// This version would be the to-be-qualified RW_new firmware.
 	apRWNewID, testArgs.imageSectionRW, err = getNewestRWIDAvailable(ctx, h, apBackupOnDut, bios.RWFWIDAImageSection, bios.RWFWIDBImageSection)
@@ -286,13 +289,6 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed while dissecting the bin file: ", err)
 	}
 	s.Logf("Setting AP RW ID = %s, from section = %s as the to-be-qualified RW_new firmware", apRWNewID, sectionNames[testArgs.imageSectionRW])
-
-	// Get the AP RO firmware version ID available on the DUT.
-	apRONewID, err = h.Reporter.GetFWVersion(ctx, reporters.CrossystemParamRoFwid)
-	if err != nil {
-		s.Fatal("Failed to get AP RO ID: ", err)
-	}
-	s.Logf("Setting AP RO ID = %s, as the to-be-qualified RO_new firmware", apRONewID)
 
 	// Get the EC RO and RW firmware version IDs available on the DUT.
 	ecRONewID, ecRWNewID, err = firmware.NewECTool(h.DUT, firmware.ECToolNameMain).RORWVersion(ctx)
@@ -308,11 +304,11 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 			// the EC firmware through servo.
 			// To-Do: Add restoration of AP when a DUT can't boot.
 			s.Log("Restoring EC firmware through servo at the end of the test")
-			fileMap := map[string]string{fmt.Sprintf("%s/%s", tmpDir, ecFwBackup): fmt.Sprintf("%s/%s", tmpDirServo, ecFwBackup)}
+			fileMap := map[string]string{ecBackupOnHost: filepath.Join(tmpDirServo, ecFwBackup)}
 			if err := h.ServoProxy.PutFiles(ctx, false, fileMap); err != nil {
 				s.Fatal("Failed to copy EC firmware file to servo host: ", err)
 			}
-			flashEcArgs := []string{fmt.Sprintf("--chip=%s", ecChip), fmt.Sprintf("--image=%s/%s", tmpDirServo, ecFwBackup), fmt.Sprintf("--port=%d", h.ServoProxy.GetPort()), "--verify", "--verbose"}
+			flashEcArgs := []string{fmt.Sprintf("--chip=%s", ecChip), fmt.Sprintf("--image=%s", filepath.Join(tmpDirServo, ecFwBackup)), fmt.Sprintf("--port=%d", h.ServoProxy.GetPort()), "--verify", "--verbose"}
 			if ecChip == "stm32" {
 				flashEcArgs = append(flashEcArgs, "--bitbang_rate=57600")
 			}
@@ -337,35 +333,27 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 		s.Log("Restoring firmware at the end of the test")
 		fwInfoToFlash := &flashFwInfo{
 			roTag: "ori", rwTag: "ori",
-			ap: flashAPInfo{
-				flashAPECInfo: flashAPECInfo{
-					roID: apRONewID,
-					rwID: initialAPRWNewID,
-					path: apBackupOnHost,
-				},
-				section: fwpb.ImageSection_EmptyImageSection,
+			wp: futility.WriteProtectionDisable,
+			ap: flashAPECInfo{
+				roID: apRONewID,
+				rwID: initialAPRWNewID,
+				path: apBackupOnHost,
 			},
-			ec: flashECInfo{
-				flashAPECInfo: flashAPECInfo{
-					path: ecBackupOnHost,
-				},
-				monitorPath: "",
+			ec: flashAPECInfo{
+				path: ecBackupOnHost,
 			},
 		}
 
-		if err = testWithDifferentScenario(ctx, h, fwInfoToFlash, dutTempDir, ecRWNewID, baseline); err != nil {
+		if err = testWithDifferentScenario(ctx, h, fwInfoToFlash, dutTempDir, baseline); err != nil {
 			s.Fatal("Failed while flashing DUT to restore firmware at the end of test: ", err)
 		}
 
-		bootingSection, err := h.Reporter.CrossystemParam(ctx, reporters.CrossystemParamMainfwAct)
-		if err != nil {
-			s.Fatal("Failed to get the active firmware section: ", err)
-		}
-
 		// Ensuring that DUT ends up running the initial RW active section.
-		if bootingSection != initialActSection {
-			if err := h.DUT.Conn().CommandContext(ctx, "crossystem", "fw_try_next="+initialActSection).Run(ssh.DumpLogOnError); err != nil {
-				s.Fatal("Failed to set crossystem fw_try_next: ", err)
+		if bootingSection, err := h.Reporter.CrossystemParam(ctx, reporters.CrossystemParamMainfwAct); err != nil {
+			s.Fatal("Failed to get the active firmware section: ", err)
+		} else if bootingSection != initialActSection {
+			if err := h.Reporter.CrossystemSetParam(ctx, reporters.CrossystemParamFWTryNext, initialActSection); err != nil {
+				s.Fatalf("Failed to set crossystem fw_try_next to %v: %v", initialActSection, err)
 			}
 
 			if err := safeReboot(ctx, h); err != nil {
@@ -410,27 +398,23 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed while downloading file: ", err)
 		}
 
-		// Configure the firmware infomation to flash the latest shipped RO and RW firmware.
-		fwInfoToFlash := &flashFwInfo{
+		// Configure the firmware information to flash the latest shipped RO and RW firmware.
+		var fwInfoToFlash *flashFwInfo
+		fwInfoToFlash = &flashFwInfo{
 			roTag: "old", rwTag: "old",
-			ap: flashAPInfo{
-				flashAPECInfo: flashAPECInfo{
-					roID: shippedFwVersions[len(shippedFwVersions)-1].FwID,
-					rwID: shippedFwVersions[len(shippedFwVersions)-1].FwID,
-					path: filepath.Join(tmpDir, firmwareFilesToFlash.APFirmwareFile),
-				},
-				section: fwpb.ImageSection_EmptyImageSection,
+			wp: futility.WriteProtectionDisable,
+			ap: flashAPECInfo{
+				roID: shippedFwVersions[len(shippedFwVersions)-1].FwID,
+				rwID: shippedFwVersions[len(shippedFwVersions)-1].FwID,
+				path: filepath.Join(tmpDir, firmwareFilesToFlash.APFirmwareFile),
 			},
-			ec: flashECInfo{
-				flashAPECInfo: flashAPECInfo{
-					path: filepath.Join(tmpDir, firmwareFilesToFlash.ECFirmwareFile),
-				},
-				monitorPath: filepath.Join(tmpDir, firmwareFilesToFlash.MonitorFile),
+			ec: flashAPECInfo{
+				path: filepath.Join(tmpDir, firmwareFilesToFlash.ECFirmwareFile),
 			},
 		}
 
 		// Test with the latest shipped RO and RW firmware and set it to be the baseline.
-		if err = testWithDifferentScenario(ctx, h, fwInfoToFlash, dutTempDir, ecRWNewID, baseline); err != nil {
+		if err = testWithDifferentScenario(ctx, h, fwInfoToFlash, dutTempDir, baseline); err != nil {
 			s.Fatalf("Failed while testing RO_%s + RW_%s (EC RO_%s + RW_%s): %v", fwInfoToFlash.roTag, fwInfoToFlash.rwTag, fwInfoToFlash.roTag, fwInfoToFlash.rwTag, err)
 		}
 
@@ -441,29 +425,25 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 		} else {
 			// Setting DUT to boot from the RW section that contains the newest firmware ID.
 			// This will assure that the DUT will try to boot from the flashed section.
-			if err := h.DUT.Conn().CommandContext(ctx, "crossystem", "fw_try_next="+sectionNames[testArgs.imageSectionRW]).Run(ssh.DumpLogOnError); err != nil {
-				s.Fatal("Failed to set crossystem fw_try_next: ", err)
+			if err := h.Reporter.CrossystemSetParam(ctx, reporters.CrossystemParamFWTryNext, sectionNames[testArgs.imageSectionRW]); err != nil {
+				s.Fatalf("Failed to set crossystem fw_try_next to %v: %v", sectionNames[testArgs.imageSectionRW], err)
 			}
 
 			// Configure the AP firmware information and remain the EC one to flash RW_new firmware
 			// obtained from the DUT at the beginning of the test into RW section A.
 			// This will leave the DUT with the latest RO shipped fw and
 			// the to-be-qualified new RW firmware (i.e., RO_old + RW_new).
-			fwInfoToFlash.roTag = "old"
 			fwInfoToFlash.rwTag = "new"
-			fwInfoToFlash.ap = flashAPInfo{
-				flashAPECInfo: flashAPECInfo{
-					roID: shippedFwVersions[len(shippedFwVersions)-1].FwID,
-					rwID: apRWNewID,
-					path: apBackupOnHost,
-				},
-				section: testArgs.imageSectionRW,
+			fwInfoToFlash.wp = futility.WriteProtectionEnable
+			fwInfoToFlash.ap = flashAPECInfo{
+				roID: shippedFwVersions[len(shippedFwVersions)-1].FwID,
+				rwID: apRWNewID,
+				path: apBackupOnHost,
 			}
-			fwInfoToFlash.ec.path = ""
-			fwInfoToFlash.ec.monitorPath = ""
+			fwInfoToFlash.ec.path = ecBackupOnHost
 
 			// Test with the latest RO shipped fw and the to-be-qualified new RW firmware.
-			if err = testWithDifferentScenario(ctx, h, fwInfoToFlash, dutTempDir, ecRWNewID, baseline); err != nil {
+			if err = testWithDifferentScenario(ctx, h, fwInfoToFlash, dutTempDir, baseline); err != nil {
 				s.Fatalf("Failed while testing RO_%s + RW_%s (EC RO_%s + RW_%s): %v", fwInfoToFlash.roTag, fwInfoToFlash.rwTag, fwInfoToFlash.roTag, fwInfoToFlash.rwTag, err)
 			}
 		}
@@ -477,20 +457,33 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 			}
 
 			n := len(shippedFwVersions) - i - 1
-			fwInfoToFlash.roTag = fmt.Sprintf("old-%d", n)
-			fwInfoToFlash.rwTag = "new"
-			fwInfoToFlash.ap = flashAPInfo{
-				flashAPECInfo: flashAPECInfo{
+			fwInfoToFlash = &flashFwInfo{
+				roTag: fmt.Sprintf("old-%d", n), rwTag: fmt.Sprintf("old-%d", n),
+				wp: futility.WriteProtectionDisable,
+				ap: flashAPECInfo{
 					roID: shippedFwVersions[i].FwID,
-					rwID: apRWNewID,
+					rwID: shippedFwVersions[i].FwID,
 					path: filepath.Join(tmpDir, firmwareFilesToFlash.APFirmwareFile),
 				},
-				section: testArgs.imageSectionRO,
+				ec: flashAPECInfo{
+					path: filepath.Join(tmpDir, firmwareFilesToFlash.ECFirmwareFile),
+				},
 			}
-			fwInfoToFlash.ec.path = filepath.Join(tmpDir, firmwareFilesToFlash.ECFirmwareFile)
-			fwInfoToFlash.ec.monitorPath = filepath.Join(tmpDir, firmwareFilesToFlash.MonitorFile)
 
-			if err = testWithDifferentScenario(ctx, h, fwInfoToFlash, dutTempDir, ecRWNewID, baseline); err != nil {
+			if err = testWithDifferentScenario(ctx, h, fwInfoToFlash, dutTempDir, baseline); err != nil {
+				s.Fatalf("Failed while testing RO_%s + RW_%s (EC RO_%s + RW_%s): %v", fwInfoToFlash.roTag, fwInfoToFlash.rwTag, fwInfoToFlash.roTag, fwInfoToFlash.rwTag, err)
+			}
+
+			fwInfoToFlash.rwTag = "new"
+			fwInfoToFlash.wp = futility.WriteProtectionEnable
+			fwInfoToFlash.ap = flashAPECInfo{
+				roID: shippedFwVersions[i].FwID,
+				rwID: apRWNewID,
+				path: apBackupOnHost,
+			}
+			fwInfoToFlash.ec.path = ecBackupOnHost
+
+			if err = testWithDifferentScenario(ctx, h, fwInfoToFlash, dutTempDir, baseline); err != nil {
 				s.Fatalf("Failed while testing RO_%s + RW_%s (EC RO_%s + RW_%s): %v", fwInfoToFlash.roTag, fwInfoToFlash.rwTag, fwInfoToFlash.roTag, fwInfoToFlash.rwTag, err)
 			}
 		}
@@ -499,20 +492,20 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 			s.Log("WARNING! Speed test skipped because RO_new is the same as RO_old. Already verified")
 		} else {
 			// Testing scenario RO/RW with the to-be-qualified firmware (i.e., RO_new + RW_new).
-			fwInfoToFlash.roTag = "new"
-			fwInfoToFlash.rwTag = "new"
-			fwInfoToFlash.ap = flashAPInfo{
-				flashAPECInfo: flashAPECInfo{
+			fwInfoToFlash = &flashFwInfo{
+				roTag: "new", rwTag: "new",
+				wp: futility.WriteProtectionDisable,
+				ap: flashAPECInfo{
 					roID: apRONewID,
 					rwID: apRWNewID,
 					path: apBackupOnHost,
 				},
-				section: testArgs.imageSectionRO,
+				ec: flashAPECInfo{
+					path: ecBackupOnHost,
+				},
 			}
-			fwInfoToFlash.ec.path = ecBackupOnHost
-			fwInfoToFlash.ec.monitorPath = ""
 
-			if err = testWithDifferentScenario(ctx, h, fwInfoToFlash, dutTempDir, ecRWNewID, baseline); err != nil {
+			if err = testWithDifferentScenario(ctx, h, fwInfoToFlash, dutTempDir, baseline); err != nil {
 				s.Fatalf("Failed while testing RO_%s + RW_%s (EC RO_%s + RW_%s): %v", fwInfoToFlash.roTag, fwInfoToFlash.rwTag, fwInfoToFlash.roTag, fwInfoToFlash.rwTag, err)
 			}
 		}
@@ -705,16 +698,11 @@ func downloadAndUntarFwFile(ctx context.Context, s *testing.State, h *firmware.H
 			}
 
 			// Copy firmware files to the local host.
-			if err := h.ServoProxy.GetFile(ctx, false, fmt.Sprintf("%s/%s", tmpDirServo, filesToFlash.APFirmwareFile), fmt.Sprintf("%s/%s", tmpDir, filesToFlash.APFirmwareFile)); err != nil {
+			if err := h.ServoProxy.GetFile(ctx, false, filepath.Join(tmpDirServo, filesToFlash.APFirmwareFile), filepath.Join(tmpDir, filesToFlash.APFirmwareFile)); err != nil {
 				return nil, errors.Wrap(err, "failed to copy AP firmware file from servo host")
 			}
-			if err := h.ServoProxy.GetFile(ctx, false, fmt.Sprintf("%s/%s", tmpDirServo, filesToFlash.ECFirmwareFile), fmt.Sprintf("%s/%s", tmpDir, filesToFlash.ECFirmwareFile)); err != nil {
+			if err := h.ServoProxy.GetFile(ctx, false, filepath.Join(tmpDirServo, filesToFlash.ECFirmwareFile), filepath.Join(tmpDir, filesToFlash.ECFirmwareFile)); err != nil {
 				return nil, errors.Wrap(err, "failed to copy EC firmware file from servo host")
-			}
-			if filesToFlash.MonitorFile != "" {
-				if err := h.ServoProxy.GetFile(ctx, false, fmt.Sprintf("%s/%s", tmpDirServo, filesToFlash.MonitorFile), fmt.Sprintf("%s/%s", tmpDir, filesToFlash.MonitorFile)); err != nil {
-					return nil, errors.Wrap(err, "failed to copy Monitor firmware file from servo host")
-				}
 			}
 			return filesToFlash, nil
 		}
@@ -726,62 +714,78 @@ func downloadAndUntarFwFile(ctx context.Context, s *testing.State, h *firmware.H
 // flashDUTAndVerifyFirmwareVersions will send the bin files to a directory in the DUT,
 // flash the files into the DUT with the bios service 'WriteImageFromMultiSectionFile',
 // reboot the DUT so that the flash takes effect, and then verify the firmware versions.
-func flashDUTAndVerifyFirmwareVersions(ctx context.Context, h *firmware.Helper, fwInfo *flashFwInfo, dutTempDir, ecRWNewID string) error {
+func flashDUTAndVerifyFirmwareVersions(ctx context.Context, h *firmware.Helper, fwInfo *flashFwInfo, dutTempDir string) error {
 	flashingCtx, cancelflashingCtx := context.WithTimeout(ctx, flashingTime)
 	defer cancelflashingCtx()
 
-	if fwInfo.ap.path != "" {
-		filePathOnDut := filepath.Join(dutTempDir, filepath.Base(fwInfo.ap.path))
-		testing.ContextLogf(flashingCtx, "Sending AP image %q to DUT to %q", fwInfo.ap.path, filePathOnDut)
-		if _, err := linuxssh.PutFiles(flashingCtx, h.DUT.Conn(), map[string]string{fwInfo.ap.path: filePathOnDut}, linuxssh.DereferenceSymlinks); err != nil {
-			return errors.Wrap(err, "failed to send bin file to DUT")
-		}
-
-		if originAPRO, originAPRW, err := h.Reporter.GetFWRORWVersion(ctx); err != nil {
-			return errors.Wrap(err, "failed to get AP RO and RW firmware version")
-		} else if originAPRO == fwInfo.ap.roID && originAPRW == fwInfo.ap.rwID {
-			testing.ContextLog(flashingCtx, "The versions of AP RO and RW are same as original ones. Flashing skipped")
-		} else {
-			testing.ContextLogf(flashingCtx, "Flashing DUT with AP file: %s using section: %v", fwInfo.ap.path, fwInfo.ap.section)
-			if _, err := h.BiosServiceClient.WriteImageFromMultiSectionFile(flashingCtx, &fwpb.FWSectionInfo{Programmer: fwpb.Programmer_BIOSProgrammer, Path: filePathOnDut, Section: fwInfo.ap.section}); err != nil {
-				return errors.Wrap(err, "failed to flash DUT with the AP multi-section bin file")
-			}
-		}
+	futilityInstance, err := futility.NewLocalBuilder(h.DUT).Build()
+	if err != nil {
+		return errors.Wrap(err, "failed to setup futility instance")
+	}
+	if fwInfo.ap.path == "" {
+		return errors.New("AP firmware path is empty")
 	}
 
+	apPathOnDut := filepath.Join(dutTempDir, filepath.Base(fwInfo.ap.path))
+	testing.ContextLogf(flashingCtx, "Sending AP image %q to DUT to %q", fwInfo.ap.path, apPathOnDut)
+	if _, err := linuxssh.PutFiles(flashingCtx, h.DUT.Conn(), map[string]string{fwInfo.ap.path: apPathOnDut}, linuxssh.DereferenceSymlinks); err != nil {
+		return errors.Wrap(err, "failed to send bin file to DUT")
+	}
+
+	skipAPFlashing := false
+	if originAPRO, originAPRW, err := h.Reporter.GetFWRORWVersion(ctx); err != nil {
+		return errors.Wrap(err, "failed to get AP RO and RW firmware version")
+	} else if originAPRO == fwInfo.ap.roID && originAPRW == fwInfo.ap.rwID {
+		testing.ContextLog(flashingCtx, "The versions of AP RO and RW are same as original ones. Flashing skipped")
+		skipAPFlashing = true
+	} else {
+		testing.ContextLogf(flashingCtx, "Flashing DUT with AP file: %s", fwInfo.ap.path)
+	}
+
+	skipECFlashing := false
+	var ecPathOnDut string
 	if fwInfo.ec.path != "" {
-		filePathOnDut := filepath.Join(dutTempDir, filepath.Base(fwInfo.ec.path))
-		testing.ContextLogf(flashingCtx, "Sending EC image %q to DUT %q", fwInfo.ec.path, filePathOnDut)
+		ecPathOnDut = filepath.Join(dutTempDir, filepath.Base(fwInfo.ec.path))
+		testing.ContextLogf(flashingCtx, "Sending EC image %q to DUT %q", fwInfo.ec.path, ecPathOnDut)
 
-		if _, err := linuxssh.PutFiles(flashingCtx, h.DUT.Conn(), map[string]string{fwInfo.ec.path: filePathOnDut}, linuxssh.DereferenceSymlinks); err != nil {
+		if _, err := linuxssh.PutFiles(flashingCtx, h.DUT.Conn(), map[string]string{fwInfo.ec.path: ecPathOnDut}, linuxssh.DereferenceSymlinks); err != nil {
 			return errors.Wrap(err, "failed to send bin file to DUT")
-		}
-
-		if fwInfo.ec.monitorPath != "" {
-			monitorOnDut := filepath.Join(dutTempDir, filepath.Base(fwInfo.ec.monitorPath))
-			testing.ContextLogf(flashingCtx, "Sending EC Monitor image %q to DUT to %q", fwInfo.ec.monitorPath, monitorOnDut)
-			if _, err := linuxssh.PutFiles(flashingCtx, h.DUT.Conn(), map[string]string{fwInfo.ec.monitorPath: monitorOnDut}, linuxssh.DereferenceSymlinks); err != nil {
-				return errors.Wrap(err, "failed to send bin file to DUT")
-			}
 		}
 
 		// Get the EC RO and RW versions from the binary file which is specified,
 		// or use the old ones.
-		var err error
-		if fwInfo.ec.roID, fwInfo.ec.rwID, err = getFWIDFromBinFile(ctx, h, filePathOnDut, bios.ROFRIDImageSection, bios.RWFWIDImageSection); err != nil {
+		ecROID, ecRWID, err := getFWIDFromBinFile(ctx, h, ecPathOnDut, bios.ROFRIDImageSection, bios.RWFWIDImageSection)
+		if err != nil {
 			return errors.Wrap(err, "failed to get EC IDs")
+		}
+		if fwInfo.wp == futility.WriteProtectionDisable {
+			fwInfo.ec.roID = ecROID
+			fwInfo.ec.rwID = ecRWID
+		} else if fwInfo.wp == futility.WriteProtectionEnable {
+			fwInfo.ec.rwID = ecRWID
+		} else {
+			return errors.Errorf("invalid write protection value: %v", fwInfo.wp)
 		}
 
 		if originECRO, originECRW, err := firmware.NewECTool(h.DUT, firmware.ECToolNameMain).RORWVersion(ctx); err != nil {
 			return errors.Wrap(err, "failed to get EC RO and RW firmware version")
 		} else if originECRO == fwInfo.ec.roID && originECRW == fwInfo.ec.rwID {
 			testing.ContextLog(flashingCtx, "The versions of EC RO and RW are same as original ones. Flashing skipped")
+			skipECFlashing = true
 		} else {
-			testing.ContextLogf(flashingCtx, "Flashing DUT with EC file: %s using section: %v", fwInfo.ec.path, fwpb.ImageSection_EmptyImageSection)
-			if _, err := h.BiosServiceClient.WriteImageFromMultiSectionFile(flashingCtx, &fwpb.FWSectionInfo{Programmer: fwpb.Programmer_ECProgrammer, Path: filePathOnDut, Section: fwpb.ImageSection_EmptyImageSection}); err != nil {
-				return errors.Wrap(err, "failed to flash DUT with the EC multi-section bin file")
-			}
+			testing.ContextLogf(flashingCtx, "Flashing DUT with EC file: %s", fwInfo.ec.path)
 		}
+	}
+
+	// Skip flashing if the versions are the same as the original ones.
+	if !skipAPFlashing {
+		updateOptions := futility.NewUpdateOptions(apPathOnDut).
+			WithMode(futility.UpdateModeRecovery).
+			WithWriteProtection(fwInfo.wp)
+		if fwInfo.ec.path != "" && !skipECFlashing {
+			updateOptions.WithECImage(ecPathOnDut)
+		}
+		futilityInstance.Update(ctx, updateOptions)
 	}
 
 	// Reboot DUT for flash to take effect.
@@ -797,9 +801,6 @@ func flashDUTAndVerifyFirmwareVersions(ctx context.Context, h *firmware.Helper, 
 
 	// Verify that the EC firmware versions are the right ones after the flashing process.
 	testing.ContextLog(ctx, "Verifying the EC firmware versions after flash")
-	if !(fwInfo.roTag == "old" && fwInfo.rwTag == "old") {
-		fwInfo.ec.rwID = ecRWNewID
-	}
 	if err := firmware.VerifyECFwIDs(ctx, h, fwInfo.ec.roID, fwInfo.ec.rwID); err != nil {
 		return errors.Wrapf(err, "failed to verify EC firmware versions after flashing EC RO_%s + RW_%s ( %s + %s )", fwInfo.roTag, fwInfo.rwTag, fwInfo.ec.roID, fwInfo.ec.rwID)
 	}
@@ -809,16 +810,16 @@ func flashDUTAndVerifyFirmwareVersions(ctx context.Context, h *firmware.Helper, 
 // testWithDifferentScenario will test with the scenario defined in flashFwInfo, including
 // flashing the files into the DUT, rebooting it, verifying the firmware versions, and
 // performing the speed test.
-func testWithDifferentScenario(ctx context.Context, h *firmware.Helper, fwInfo *flashFwInfo, dutTempDir, ecRWNewID string, baseline float64) error {
+func testWithDifferentScenario(ctx context.Context, h *firmware.Helper, fwInfo *flashFwInfo, dutTempDir string, baseline float64) error {
 	// Flash the RO or RW firmware with the specified files and AP section.
 	var err error
 	testing.ContextLogf(ctx, "Setting RO_%s + RW_%s (EC RO_%s + RW_%s)", fwInfo.roTag, fwInfo.rwTag, fwInfo.roTag, fwInfo.rwTag)
-	if err = flashDUTAndVerifyFirmwareVersions(ctx, h, fwInfo, dutTempDir, ecRWNewID); err != nil {
+	if err = flashDUTAndVerifyFirmwareVersions(ctx, h, fwInfo, dutTempDir); err != nil {
 		return errors.Wrapf(err, "failed to flash RO_%s + RW_%s ( %s + %s ) [EC RO_%s + RW_%s]( %s + %s )", fwInfo.roTag, fwInfo.rwTag, fwInfo.ap.roID, fwInfo.ap.rwID, fwInfo.roTag, fwInfo.rwTag, fwInfo.ec.roID, fwInfo.ec.rwID)
 	}
 
 	// Perform the speed test.
-	if fwInfo.roTag != "ori" {
+	if fwInfo.roTag != "ori" && (fwInfo.roTag == "old" || fwInfo.rwTag == "new") {
 		testing.ContextLog(ctx, "Performing the speed test")
 		var speedResult float64
 		if err := func() error {
@@ -863,7 +864,7 @@ func safeReboot(ctx context.Context, h *firmware.Helper) error {
 	connectCtx, cancelconnectCtx := context.WithTimeout(ctx, reconnectTime)
 	defer cancelconnectCtx()
 
-	if err := h.WaitConnect(connectCtx); err != nil {
+	if err := h.WaitConnect(connectCtx, firmware.ResetEthernetDongle); err != nil {
 		return errors.Wrap(err, "failed to reconnect to DUT")
 	}
 
