@@ -148,7 +148,16 @@ const (
 
 // SendRequestSourceVoltage sends a voltage request to the source that's initiated by the DUT.
 func (s *Servo) SendRequestSourceVoltage(ctx context.Context, voltage int) error {
-	cmd := fmt.Sprintf("pd %d dev %d", s.dutPDInfo.activePort, voltage)
+	var cmd string
+
+	switch s.dutPDInfo.version {
+	case TCPMv1, TCPMv2:
+		cmd = fmt.Sprintf("pd %d dev %d", s.dutPDInfo.activePort, voltage)
+	case PDC:
+		cmd = fmt.Sprintf("pdc src_voltage %d %d", s.dutPDInfo.activePort, voltage)
+	default:
+		panic("Unknown TCPM version")
+	}
 
 	testing.ContextLog(ctx, "Sending request source voltage: ", cmd)
 	if err := s.RunECCommand(ctx, cmd); err != nil {
