@@ -8,7 +8,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -38,7 +38,7 @@ func FirmwareUpdate(ctx context.Context, s *testing.State) {
 		jsonPath = path
 	}
 
-	bytes, err := ioutil.ReadFile(jsonPath)
+	bytes, err := os.ReadFile(jsonPath)
 	if err != nil {
 		s.Fatalf("Failed to read %v: %v", jsonPath, err)
 	}

@@ -5,11 +5,10 @@
 package camera
 
 import (
-	"io/ioutil"
+	"context"
 	"os"
 
 	"github.com/golang/protobuf/ptypes/empty"
-	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 
 	"go.chromium.org/tast-tests/cros/local/arc"
@@ -54,7 +53,7 @@ func (its *ITSService) SetUp(ctx context.Context, req *empty.Empty) (_ *empty.Em
 	}()
 
 	// Set up ARC++.
-	outDir, err := ioutil.TempDir("", "")
+	outDir, err := os.MkdirTemp("", "")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create a temp dir")
 	}

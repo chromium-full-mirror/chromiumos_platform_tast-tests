@@ -6,7 +6,7 @@ package camera
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
@@ -48,7 +48,7 @@ var cameraFacingMap = map[camera.Facing]cca.Facing{
 
 // tempFilePathForScript creates a temp file and writes the camera JS script in that file.
 func tempFilePathForScript(ctx context.Context, script []byte) (string, error) {
-	tempFile, err := ioutil.TempFile("", "Script_*")
+	tempFile, err := os.CreateTemp("", "Script_*")
 	if err != nil {
 		return "", errors.Wrap(err, "failed to create temp file for script")
 	}

@@ -9,7 +9,6 @@ package features
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
 	"os"
 
 	"go.chromium.org/tast-tests/cros/local/crosconfig"
@@ -55,7 +54,7 @@ type FeatureConfig map[string]interface{}
 // on-device feature profile config.
 func NewModelConfig(model string) (*ModelConfig, error) {
 	const featureProfilePath = "/etc/camera/feature_profile.json"
-	jsonInput, err := ioutil.ReadFile(featureProfilePath)
+	jsonInput, err := os.ReadFile(featureProfilePath)
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot load feature profile config")
 	}
@@ -126,7 +125,7 @@ func (c *ModelConfig) FeatureConfig(ftype string, conf FeatureConfig) error {
 		if m.Type != ftype {
 			continue
 		}
-		jsonInput, err := ioutil.ReadFile(m.ConfigFilePath)
+		jsonInput, err := os.ReadFile(m.ConfigFilePath)
 		if err != nil {
 			return errors.Wrapf(err, "cannot load feature config file %s", m.ConfigFilePath)
 		}
@@ -165,7 +164,7 @@ var loadExistingConfig = func(file string) (FeatureConfig, error) {
 		return nil, nil
 	}
 	// Load the existing settings in the file.
-	data, err := ioutil.ReadFile(file)
+	data, err := os.ReadFile(file)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to read existing feature config from file %q", file)
 	}

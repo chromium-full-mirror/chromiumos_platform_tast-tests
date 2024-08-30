@@ -7,7 +7,6 @@ package camera
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -140,13 +139,13 @@ func pathExist(path string) (bool, error) {
 }
 
 func setHWTimestamps(newValue string) (oldValue string, err error) {
-	b, err := ioutil.ReadFile(hwTimestampsPath)
+	b, err := os.ReadFile(hwTimestampsPath)
 	if err != nil {
 		return "", err
 	}
 	oldValue = string(b)
 
-	if err := ioutil.WriteFile(hwTimestampsPath, []byte(newValue), 0644); err != nil {
+	if err := os.WriteFile(hwTimestampsPath, []byte(newValue), 0644); err != nil {
 		return "", err
 	}
 	return oldValue, err

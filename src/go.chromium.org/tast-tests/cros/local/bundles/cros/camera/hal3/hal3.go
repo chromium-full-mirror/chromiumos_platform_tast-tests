@@ -10,7 +10,6 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -98,7 +97,7 @@ func IsV1Legacy(ctx context.Context) (bool, error) {
 
 	// For non-unibuild, we can check if 'v1device' presents in the config file
 	// '/etc/camera/camera_chracteristics.conf'.
-	config, err := ioutil.ReadFile("/etc/camera/camera_characteristics.conf")
+	config, err := os.ReadFile("/etc/camera/camera_characteristics.conf")
 	if os.IsNotExist(err) {
 		// The device does not have camera_characteristics.conf, which might
 		// because:
@@ -135,7 +134,7 @@ func getRecordingParams(ctx context.Context) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	out, err := ioutil.ReadFile(mediaProfilePath)
+	out, err := os.ReadFile(mediaProfilePath)
 	if err != nil {
 		return "", err
 	}
@@ -491,7 +490,7 @@ func RunTest(ctx context.Context, cfg TestConfig) (retErr error) {
 	if err != nil {
 		return errors.Wrap(err, "failed to encode test config as json")
 	}
-	if err := ioutil.WriteFile(jsonConfigPath, jsonCfg, 0644); err != nil {
+	if err := os.WriteFile(jsonConfigPath, jsonCfg, 0644); err != nil {
 		return errors.Wrap(err, "failed to write json config file")
 	}
 	defer os.Remove(jsonConfigPath)

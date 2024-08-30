@@ -6,7 +6,6 @@ package cca
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -286,7 +285,7 @@ func recordSound(ctx context.Context, recording audio.TestRawData, recordingErr 
 // and return true if any sound is played.
 func VerifySound(ctx context.Context, action actionFunc) (bool, error) {
 	duration := 5 * time.Second
-	captureFile, err := ioutil.TempFile("", "")
+	captureFile, err := os.CreateTemp("", "")
 	if err != nil {
 		return false, err
 	}

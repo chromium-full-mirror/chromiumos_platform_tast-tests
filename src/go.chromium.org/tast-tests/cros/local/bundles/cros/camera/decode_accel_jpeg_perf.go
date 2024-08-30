@@ -8,7 +8,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strconv"
 	"time"
@@ -189,7 +189,7 @@ func runJPEGPerfBenchmark(ctx context.Context, s *testing.State, testDir string,
 	}
 
 	// Parse the log file for the decode latency measured by the unittest.
-	out, err := ioutil.ReadFile(outPath)
+	out, err := os.ReadFile(outPath)
 	if err != nil {
 		s.Fatal("Failed to read output file: ", err)
 	}

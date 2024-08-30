@@ -7,7 +7,7 @@ package camera
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"time"
 
@@ -85,7 +85,7 @@ func CCADocumentPerf(ctx context.Context, s *testing.State) {
 func parseReportAndRecordMetrics(ctx context.Context, outputPath, outputDir string) error {
 	pv := perf.NewValues()
 
-	b, err := ioutil.ReadFile(outputPath)
+	b, err := os.ReadFile(outputPath)
 	if err != nil {
 		return errors.Wrap(err, "cannot read log file")
 	}

@@ -9,7 +9,6 @@ package testutil
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -69,7 +68,7 @@ func SetupTestConfig(ctx context.Context, cameraType UseCameraType) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to encode test config as json")
 	}
-	if err := ioutil.WriteFile(jsonConfigPath, jsonCfg, 0644); err != nil {
+	if err := os.WriteFile(jsonConfigPath, jsonCfg, 0644); err != nil {
 		return errors.Wrap(err, "failed to write json config file")
 	}
 	return nil
@@ -109,7 +108,7 @@ func WriteFakeHALConfig(ctx context.Context, config FakeHALConfig) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to encode fake hal config as json")
 	}
-	if err := ioutil.WriteFile(fakeHALConfigPath, jsonCfg, 0644); err != nil {
+	if err := os.WriteFile(fakeHALConfigPath, jsonCfg, 0644); err != nil {
 		return errors.Wrap(err, "failed to write json config file")
 	}
 	return nil
