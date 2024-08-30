@@ -6,6 +6,7 @@ package cellular
 
 import (
 	"context"
+	"path/filepath"
 	"regexp"
 	"time"
 
@@ -79,6 +80,12 @@ func AutomaticallyDetectedApnMultipleNetworks(ctx context.Context, s *testing.St
 	}
 
 	ui := uiauto.New(tconn).WithTimeout(120 * time.Second)
+
+	// TODO(b/343143720): Remove the recorder once the issue is resolved.
+	// The settings page should go into the network details page after clicking the sub-page arrow button of the network,
+	// but sometimes the button is not working.
+	recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn)
+	defer uiauto.StopAndSaveOnError(cleanupCtx, recorder, filepath.Join(s.OutDir(), "screen_recording.webm"), s.HasError)
 
 	mdp, err := ossettings.OpenMobileDataSubpage(ctx, tconn, cr)
 	if err != nil {

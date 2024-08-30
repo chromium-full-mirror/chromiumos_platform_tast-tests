@@ -356,6 +356,13 @@ func GoToFirstInactiveNetworkDetails(ctx context.Context, tconn *chrome.TestConn
 		return errors.Wrap(err, "failed to wait until refresh profile complete")
 	}
 
+	// TODO(b/343143720): Remove the this action once the issue is resolved.
+	// The settings page should go into the network details page after clicking the sub-page arrow button of the network,
+	// but sometimes the button is not working. Adding this action to observe where the node is.
+	if err := ui.MouseMoveTo(NotActiveCellularBtn.First(), time.Second)(ctx); err != nil {
+		return errors.Wrap(err, "failed to move the mouse to the node")
+	}
+
 	if err := ui.DoDefault(NotActiveCellularBtn.First())(ctx); err != nil {
 		return errors.Wrap(err, "failed to click into inactive cellular networks detail view")
 	}
