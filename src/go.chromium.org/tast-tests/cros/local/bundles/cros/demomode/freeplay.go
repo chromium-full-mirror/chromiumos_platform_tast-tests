@@ -216,23 +216,23 @@ func verifyAndroidApps(ctx context.Context, tconn *chrome.TestConn) error {
 	}
 
 	if err := verifyAppsPinned(ctx, tconn, AndroidAppsToIDs); err != nil {
-		errors.Wrap(err, "failed to verify Android apps")
+		return errors.Wrap(err, "failed to verify Android apps")
 	}
 
 	// GoBigSleepLint: Sleep for 15 seconds to give ARC a bit of extra time to boot up
 	// before trying to launch Google Photos (b/263517131).
 	if err := testing.Sleep(ctx, 15*time.Second); err != nil {
-		errors.Wrap(err, "failed to sleep")
+		return errors.Wrap(err, "failed to sleep")
 	}
 
 	googlePhotosID := AndroidAppsToIDs["GooglePhotos"]
 
 	title, err := ash.ShelfItemTitleFromID(ctx, tconn, []string{googlePhotosID})
 	if err != nil {
-		errors.Wrap(err, "failed to get app title for Google Photos app")
+		return errors.Wrap(err, "failed to get app title for Google Photos app")
 	}
 	if err := ash.LaunchAppFromShelf(ctx, tconn, title[0], googlePhotosID); err != nil {
-		errors.Wrap(err, "failed to launch Google Photos app from shelf")
+		return errors.Wrap(err, "failed to launch Google Photos app from shelf")
 	}
 
 	// Use uidetection library as Google Photos is an Android App (so no accessibility tree).
@@ -240,7 +240,7 @@ func verifyAndroidApps(ctx context.Context, tconn *chrome.TestConn) error {
 	// Verify app has started by ensuring "Google Photos" text is present on screen.
 	appHeaderText := uidetection.TextBlock([]string{"Google", "Photos"})
 	if err := ud.WaitUntilExists(appHeaderText)(ctx); err != nil {
-		errors.Wrap(err, "failed to wait for Google Photos to launch")
+		return errors.Wrap(err, "failed to wait for Google Photos to launch")
 	}
 	// Verify sample photos have loaded by lack of "No Photos" error message.
 	errorText := uidetection.TextBlock([]string{"No", "Photos"})
@@ -250,7 +250,7 @@ func verifyAndroidApps(ctx context.Context, tconn *chrome.TestConn) error {
 		ud.WaitUntilExists(errorText),
 		ud.WaitUntilGone(errorText),
 	)(ctx); err != nil {
-		errors.Wrap(err, "failed to wait for \"No Photos\" text to not be present")
+		return errors.Wrap(err, "failed to wait for \"No Photos\" text to not be present")
 	}
 	return nil
 }
@@ -270,7 +270,7 @@ func verifyWebApps(ctx context.Context, tconn *chrome.TestConn) error {
 		"Spotify":    "pjibgclleladliembfgfagdaldikeohf",
 	}
 	if err := verifyAppsPinned(ctx, tconn, webAppsToIDs); err != nil {
-		errors.Wrap(err, "failed to verify web apps")
+		return errors.Wrap(err, "failed to verify web apps")
 	}
 	return nil
 }
