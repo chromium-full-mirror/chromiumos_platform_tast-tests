@@ -21,8 +21,8 @@ func init() {
 		Desc:         "Record video and check the FPS of the video",
 		Contacts:     []string{"chromeos-camera-app-eng@google.com", "chuhsuan@chromium.org"},
 		Attr:         []string{
-			"group:crosbolt",
-			"crosbolt_perbuild",
+			"group:mainline",
+			"informational",
 			"group:release-health",
 			"release-health_camera",
 		},
