@@ -10,10 +10,10 @@ import (
 	"strings"
 	"time"
 
+	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
-	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
@@ -54,7 +54,6 @@ func init() {
 				Fixture: fixture.NormalMode,
 				Val: argsForConsecutiveBoot{
 					bootMethod: consecutiveBootWithPowerBtn,
-					bootMode:   "normal",
 				},
 			},
 			{
@@ -62,7 +61,6 @@ func init() {
 				Fixture: fixture.DevModeGBB,
 				Val: argsForConsecutiveBoot{
 					bootMethod: consecutiveBootWithPowerBtn,
-					bootMode:   "developer",
 				},
 			},
 			{
@@ -70,7 +68,6 @@ func init() {
 				Fixture: fixture.NormalMode,
 				Val: argsForConsecutiveBoot{
 					bootMethod: consecutiveBootWithShutdownCmd,
-					bootMode:   "normal",
 				},
 			},
 			{
@@ -78,7 +75,6 @@ func init() {
 				Fixture: fixture.DevModeGBB,
 				Val: argsForConsecutiveBoot{
 					bootMethod: consecutiveBootWithShutdownCmd,
-					bootMode:   "developer",
 				},
 			},
 		},
@@ -86,8 +82,10 @@ func init() {
 }
 
 func ConsecutiveBoot(ctx context.Context, s *testing.State) {
-	h := s.FixtValue().(*fixture.Value).Helper
+	pv := s.FixtValue().(*fixture.Value)
+	h := pv.Helper
 	testArgs := s.Param().(argsForConsecutiveBoot)
+
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to connect to servo: ", err)
 	}
@@ -105,11 +103,11 @@ func ConsecutiveBoot(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	verifyBootMode := func(mode string) error {
-		if mainfwType, err := h.Reporter.CrossystemParam(ctx, reporters.CrossystemParamMainfwType); err != nil {
-			return errors.Wrap(err, "failed to get crossystem mainfw_type")
-		} else if mainfwType != mode {
-			return errors.Errorf("expected mainfw_type to be %s, got %q", mode, mainfwType)
+	verifyBootMode := func(mode fwCommon.BootMode) error {
+		if curr, err := h.Reporter.CurrentBootMode(ctx); err != nil {
+			return errors.Wrap(err, "failed to get current boot mode")
+		} else if curr != mode {
+			return errors.Errorf("expected mainfw_type to be %s, got %q", mode, curr)
 		}
 		return nil
 	}
@@ -172,8 +170,8 @@ func ConsecutiveBoot(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to read EC clock: ", err)
 	}
 
-	s.Log("Verifying boot mode is ", testArgs.bootMode)
-	if err := verifyBootMode(testArgs.bootMode); err != nil {
+	s.Log("Verifying boot mode is ", pv.BootMode)
+	if err := verifyBootMode(pv.BootMode); err != nil {
 		s.Fatal("Failed boot mode check: ", err)
 	}
 
@@ -202,12 +200,13 @@ func ConsecutiveBoot(ctx context.Context, s *testing.State) {
 		s.Logf("Iter %d -- %v", iter+1, err)
 		failures[iter] = append(failures[iter], err)
 		if errCount != nil {
-			*errCount += 1
+			*errCount++
 		}
 	}
 
 	for i := 0; i < numIters; i++ {
 		s.Logf("Running iteration %d out of %d ", i+1, numIters)
+
 		if err := shutdownFunc(); err != nil {
 			logFailure(errors.Wrap(err, "error in shutdown func"), i, &shutdownFuncFailed)
 		}
@@ -229,17 +228,21 @@ func ConsecutiveBoot(ctx context.Context, s *testing.State) {
 
 		// Wrap in func so ctx cancel defer executes immediately after this block.
 		func() {
+			reconnectTimeout := h.Config.DelayRebootToPing
+			if pv.BootMode == fwCommon.BootModeDev {
+				reconnectTimeout = reconnectTimeout + h.Config.FirmwareScreen + firmware.DevScreenShortDelay
+			}
 			s.Log("Wait for DUT to connect")
-			waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
+			waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, reconnectTimeout)
 			defer cancelWaitConnect()
-			if err := h.WaitConnect(waitConnectCtx); err != nil {
+			if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
 				logFailure(errors.Wrap(err, "failed to wait for device to connect"), i, &failToConnectToDUT)
 			}
 		}()
 
 		// Make sure boot mode is preserved over reboot.
-		s.Log("Verifying boot mode is ", testArgs.bootMode)
-		if err := verifyBootMode(testArgs.bootMode); err != nil {
+		s.Log("Verifying boot mode is ", pv.BootMode)
+		if err := verifyBootMode(pv.BootMode); err != nil {
 			logFailure(errors.Wrap(err, "failed boot mode check"), i, &incorrectBootMode)
 		}
 
