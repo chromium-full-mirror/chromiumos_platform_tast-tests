@@ -18,9 +18,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Dgapi2GetDetails,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify DGAPI2 test app returns expected details",
+		Func: Dgapi2GetDetails,
+		Desc: "Verify DGAPI2 test app returns expected details",
 		Contacts: []string{
 			"chromeos-apps-foundation-team@google.com",
 		},

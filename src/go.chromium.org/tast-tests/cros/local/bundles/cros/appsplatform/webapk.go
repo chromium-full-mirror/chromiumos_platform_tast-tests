@@ -19,7 +19,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/webapk"
 	"go.chromium.org/tast/core/ctxutil"
@@ -43,9 +42,8 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         WebAPK,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Checks that a WebAPK can be used to share data to a web app",
+		Func: WebAPK,
+		Desc: "Checks that a WebAPK can be used to share data to a web app",
 		Contacts: []string{
 			"chromeos-apps-foundation-team@google.com",
 			"tsergeant@chromium.org",
@@ -61,20 +59,10 @@ func init() {
 			webapks.WebShareTargetWebApk.IndexPageDataPath,
 		},
 		Params: []testing.Param{{
-			Val:               browser.TypeAsh,
 			ExtraSoftwareDeps: []string{"android_container"},
 		}, {
 			Name:              "vm",
-			Val:               browser.TypeAsh,
 			ExtraSoftwareDeps: []string{"android_vm"},
-		}, {
-			Name:              "lacros",
-			Val:               browser.TypeLacros,
-			ExtraSoftwareDeps: []string{"android_container", "lacros"},
-		}, {
-			Name:              "lacros_vm",
-			Val:               browser.TypeLacros,
-			ExtraSoftwareDeps: []string{"android_vm", "lacros"},
 		}},
 		Timeout: chrome.GAIALoginTimeout + arc.BootTimeout + 3*time.Minute,
 		VarDeps: []string{uiCommon.GaiaPoolDefaultVarName},
@@ -93,13 +81,6 @@ func WebAPK(ctx context.Context, s *testing.State) {
 	var opts []chrome.Option
 	opts = append(opts, chrome.GAIALoginPool(dma.CredsFromPool(uiCommon.GaiaPoolDefaultVarName)),
 		chrome.ARCEnabled())
-	if s.Param().(browser.Type) == browser.TypeLacros {
-		lacrosOpts, err := lacrosfixt.NewConfig().Opts()
-		if err != nil {
-			s.Fatal("Failed to get Lacros options: ", err)
-		}
-		opts = append(opts, lacrosOpts...)
-	}
 
 	cr, err := chrome.New(ctx, opts...)
 	if err != nil {
@@ -107,7 +88,7 @@ func WebAPK(ctx context.Context, s *testing.State) {
 	}
 	defer cr.Close(cleanupCtx)
 
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
+	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 	if err != nil {
 		s.Fatal("Failed to open the browser: ", err)
 	}

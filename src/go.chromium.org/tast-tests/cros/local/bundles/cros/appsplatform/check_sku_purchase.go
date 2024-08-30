@@ -16,9 +16,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CheckSkuPurchase,
-		LacrosStatus: testing.LacrosVariantNeeded,
-		Desc:         "Verify the ARC Payments overlay appears and can be navigated",
+		Func: CheckSkuPurchase,
+		Desc: "Verify the ARC Payments overlay appears and can be navigated",
 		Contacts: []string{
 			"chromeos-apps-foundation-team@google.com",
 		},
