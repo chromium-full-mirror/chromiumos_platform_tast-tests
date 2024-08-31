@@ -128,8 +128,10 @@ func HumanMotionRobotStylusLatencyRegression(ctx context.Context, s *testing.Sta
 		serviceErrorChannel <- nil
 	}()
 
-	err = inputs.RunHMRJob(ctx, hmrInterface, gcodeLatencyFileName)
-	if err != nil {
+	runJobChannel := inputs.RunAsync(ctx, func(ctx context.Context) error {
+		return inputs.RunHMRJob(ctx, hmrInterface, gcodeLatencyFileName)
+	})
+	if err := <-runJobChannel; err != nil {
 		// Ensure that the WaltService is stopped.
 		if _, stopErr := dutWaltService.StopWaltService(ctx, &empty.Empty{}); stopErr == nil {
 			// Only wait if the WALT service is successfully stopped.
