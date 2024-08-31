@@ -178,7 +178,7 @@ func TriggerQuickAnswersUnitConversion(ctx context.Context, params networkreques
 	if err != nil {
 		errors.Wrap(err, "failed to create Test API connection")
 	}
-	param := DefinitionTestCases()[params.PolicySetting]
+	param := UnitConversionTestCases()[params.PolicySetting]
 
 	// Open page with source units on it.
 	conn, err := br.NewConn(ctx, server.URL+"/"+testFileName, browser.WithNewWindow())
