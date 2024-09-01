@@ -10,7 +10,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/gtest"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -22,12 +21,6 @@ func init() {
 		BugComponent: "b:1140119", // ChromeOS > Platform > Technologies > Machine Learning > ML Accelerators > Intel
 		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		SoftwareDeps: []string{"tflite_intel_openvino"},
-
-		// TODO(b/345085042): The feature is supported by both software and
-		// hardware, but the AP firmware (Coreboot) currently pinned on these
-		// models is outdated. We will perform firmware qualification and
-		// incrementally uprev the firmware.
-		HardwareDeps: hwdep.D(hwdep.SkipOnModel("screebo", "karis")),
 	})
 }
 

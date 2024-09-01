@@ -17,7 +17,6 @@ import (
 	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/shutil"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -42,11 +41,6 @@ func init() {
 			Name:              "openvino",
 			Val:               openvinoParam,
 			ExtraSoftwareDeps: []string{"tflite_intel_openvino"},
-			// TODO(b/345085042): The feature is supported by both software and
-			// hardware, but the AP firmware (Coreboot) currently pinned on these
-			// models is outdated. We will perform firmware qualification and
-			// incrementally uprev the firmware.
-			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("screebo", "karis")),
 		}},
 	})
 }
