@@ -91,9 +91,7 @@ func init() {
 			Val: bluetoothInfoTestParams{
 				BluezValidation: false,
 			},
-			Fixture: "crosHealthdRunningAndBluetoothEnabledWithFloss",
-			// TODO(b/303370425): Promote tast to critical
-			ExtraAttr:        []string{"informational", "group:criticalstaging"},
+			Fixture:          "crosHealthdRunningAndBluetoothEnabledWithFloss",
 			ExtraTestBedDeps: []string{tbdep.BluetoothStateNormal},
 		}},
 	})

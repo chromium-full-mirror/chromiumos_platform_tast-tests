@@ -27,7 +27,7 @@ func init() {
 			"byronlee@google.com",
 		},
 		BugComponent: "b:982097", // ChromeOS > Platform > Enablement > Health
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"diagnostics"},
 		Fixture:      "crosHealthdRunningAndBluetoothEnabledWithFloss",
 		TestBedDeps:  []string{tbdep.BluetoothStateNormal},
