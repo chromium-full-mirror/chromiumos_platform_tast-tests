@@ -194,24 +194,36 @@ func GetARCInterfaceName(ctx context.Context, hostIfname string) (string, error)
 // the ipv4 and/or ipv6 dnsproxy address for the corresponding interface of
 // hostIfname on the host side.
 func WaitForARCGetDNSProxyConfig(ctx context.Context, a *arc.ARC, hostIfname string, ipv4, ipv6 bool, timeout time.Duration) error {
-	// Get the interface and dnsproxy addrs from patchpanel.
-	device, err := getPPNetworkDevice(ctx, hostIfname)
-	if err != nil {
-		return err
+	// We have two Poll() in this function. Create a deadline ctx to make it
+	// easier.
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	// Poll to get the patchpanel Device for hostIfname which contains both IPv4
+	// and IPv6 dnsproxy address. dnsproxy addresses should always be set (no
+	// matter the actual IP connectivity on the physical interface), but they may
+	// not be set at the same time so we need a Poll() here.
+	var device *pp.NetworkDevice
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		var err error
+		device, err = getPPNetworkDevice(ctx, hostIfname)
+		if err != nil {
+			return err
+		}
+		if len(device.DnsProxyIpv4Addr) == 0 {
+			return errors.New("got empty IPv4 DNS address")
+		}
+		if len(device.DnsProxyIpv6Addr) == 0 {
+			return errors.New("got empty IPv6 DNS address")
+		}
+		return nil
+	}, &testing.PollOptions{}); err != nil {
+		return errors.Wrapf(err, "failed to get patchpanel Device for %s", hostIfname)
 	}
 
 	guestIfname := device.GuestIfname
 	ipv4DNS := net.IP(device.DnsProxyIpv4Addr)
 	ipv6DNS := net.IP(device.DnsProxyIpv6Addr)
-
-	// dnsproxy addresses should always be set (no matter the actual IP
-	// connectivity on the physical interface).
-	if len(ipv4DNS) == 0 {
-		return errors.New("got empty IPv4 DNS address")
-	}
-	if len(ipv6DNS) == 0 {
-		return errors.New("got empty IPv6 DNS address")
-	}
 
 	var addrsForLog []string
 	if ipv4 {
@@ -247,5 +259,5 @@ func WaitForARCGetDNSProxyConfig(ctx context.Context, a *arc.ARC, hostIfname str
 			return nil
 		}
 		return errors.Errorf("failed to find interface `%s` in output `%s`", guestIfname, string(output))
-	}, &testing.PollOptions{Timeout: timeout})
+	}, &testing.PollOptions{})
 }
