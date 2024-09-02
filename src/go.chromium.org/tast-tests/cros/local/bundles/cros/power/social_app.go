@@ -25,7 +25,7 @@ import (
 
 // Experiment data from b/308846863#comment5
 const (
-	elementPrepareTimeout        = 10 * time.Minute
+	elementPrepareTimeout        = 15 * time.Minute
 	socialAppMeasurementInterval = 20 * time.Second
 	socialAppOperatingTimeout    = 30 * time.Minute
 	socialAppTimeout             = elementPrepareTimeout + socialAppOperatingTimeout + power.RecorderTimeout

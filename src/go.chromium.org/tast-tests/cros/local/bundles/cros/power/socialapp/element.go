@@ -145,13 +145,18 @@ func (e *Element) SetUp(ctx context.Context) error {
 	return nil
 }
 
-// CleanUp leaves the current room and signs out.
+// CleanUp leaves the created room and signs out.
 func (e *Element) CleanUp(ctx context.Context) error {
 	return uiauto.NamedCombine("leave room and sign out",
 		// Leaving the room as the last member would trigger an automatic room deletion.
-		e.ele.LeaveCurrentRoom(),
+		e.ele.LeaveRoom(e.roomName),
 		e.ele.SignOut(),
 	)(ctx)
+}
+
+// SetUIDevice associates the given the UI device to the Element object.
+func (e *Element) SetUIDevice(d *ui.Device) {
+	e.ele.SetUIDevice(d)
 }
 
 // SendMessages sends the text and emoji messages to the room.

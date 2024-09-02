@@ -44,6 +44,7 @@ const (
 	actionTitleID      = elementIDPrefix + "actionTitle"
 	roomNameFieldID    = elementIDPrefix + "formTextInputTextInputEditText"
 	searchFieldID      = elementIDPrefix + "search_src_text"
+	roomNameID         = elementIDPrefix + "roomNameView"
 
 	buttonClass      = "android.widget.Button"
 	textClass        = "android.widget.TextView"
@@ -51,7 +52,7 @@ const (
 
 	retryTimes = 3
 	// If the network is unstable, account synchronization may take a long time.
-	syncTimeout      = time.Minute
+	syncTimeout      = 5 * time.Minute
 	longUITimeout    = 30 * time.Second
 	defaultUITimeout = 15 * time.Second
 	shortUITimeout   = 5 * time.Second
@@ -351,22 +352,27 @@ func (e *Element) CreateRoom(roomName string) uiauto.Action {
 	)
 }
 
-// LeaveCurrentRoom leaves the current room.
+// LeaveRoom leaves the current room.
 // The room will be deleted after seven days after the last member leaves.
-func (e *Element) LeaveCurrentRoom() uiauto.Action {
-	toolBar := e.d.Object(ui.ResourceID(elementIDPrefix + "includeRoomToolbar"))
-	navigateUpButton := e.d.Object(ui.PackageName(elementPackage), ui.Description("Navigate up"), ui.ClassName(imageButtonClass))
-	moreText := e.d.Object(ui.Text("More"), ui.ResourceID(elementIDPrefix+"itemProfileSectionView"))
-	leaveRoomButton := e.d.Object(ui.Text("Leave Room"), ui.ResourceID(actionTitleID))
+func (e *Element) LeaveRoom(roomName string) uiauto.Action {
+	createRoomButton := e.d.Object(ui.Description("Create a new conversation or room"), ui.ResourceID(createChatButtonID))
+	roomNameText := e.d.Object(ui.ResourceID(roomNameID), ui.Text(roomName))
+	leaveRoomButton := e.d.Object(ui.ResourceID(actionTitleID), ui.Text("Leave the room"))
 	leaveButton := e.d.Object(ui.Text("LEAVE"), ui.ClassName(buttonClass))
-	return uiauto.NamedCombine("leave room",
-		e.navigateUpToObject(toolBar),
-		apputil.FindAndClick(toolBar, defaultUITimeout),
-		e.swipeFromObjectToObject(moreText, navigateUpButton, swipeDuration),
-		apputil.FindAndClick(leaveRoomButton, shortUITimeout),
+	return uiauto.NamedCombine("leave room "+roomName,
+		// Navigate up to the home page of the app.
+		e.navigateUpToObject(createRoomButton),
+		apputil.LongClickUntilExists(e.tconn, roomNameText, leaveRoomButton, defaultUITimeout),
+		apputil.FindAndClick(leaveRoomButton, defaultUITimeout),
 		apputil.FindAndClick(leaveButton, defaultUITimeout),
-		apputil.WaitUntilGone(toolBar, defaultUITimeout),
+		apputil.WaitUntilGone(leaveButton, defaultUITimeout),
+		apputil.WaitUntilGone(roomNameText, defaultUITimeout),
 	)
+}
+
+// SetUIDevice associates the given the UI device to the Element object.
+func (e *Element) SetUIDevice(d *ui.Device) {
+	e.d = d
 }
 
 // SendTextMessage sends a text message to the current room.
@@ -511,7 +517,7 @@ func (e *Element) SearchPublicRoom(roomID, roomName string) uiauto.Action {
 // JoinRoom uses |roomFilter| to find the given room from the room list and joins the room.
 func (e *Element) JoinRoom(roomName string) uiauto.Action {
 	roomFilter := e.d.Object(ui.Description("Filter room names"), ui.ResourceID(elementIDPrefix+"menu_home_filter"))
-	room := e.d.Object(ui.Text(roomName), ui.ResourceID(elementIDPrefix+"roomNameView"))
+	room := e.d.Object(ui.Text(roomName), ui.ResourceID(roomNameID))
 	roomTitle := e.d.Object(ui.Text(roomName), ui.ClassName(textClass))
 	return uiauto.NamedCombine(fmt.Sprintf("join %q room from home page", roomName),
 		e.navigateUpToObject(roomFilter),

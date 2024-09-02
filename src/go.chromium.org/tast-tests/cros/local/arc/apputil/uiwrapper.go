@@ -7,6 +7,7 @@ package apputil
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -14,6 +15,10 @@ import (
 	"go.chromium.org/tast-tests/cros/common/android/ui"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
+	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/display"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
 	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -116,5 +121,38 @@ func DragAndDrop(a *arc.ARC, start, end coords.Point, duration time.Duration) ac
 	return func(ctx context.Context) error {
 		speed := int(duration.Milliseconds())
 		return a.Command(ctx, "input", "draganddrop", strconv.Itoa(start.X), strconv.Itoa(start.Y), strconv.Itoa(end.X), strconv.Itoa(end.Y), strconv.Itoa(speed)).Run(testexec.DumpLogOnError)
+	}
+}
+
+// LongClickUntilExists long clicks the |clickObject| until the |expectedObject| exists in the given timeout.
+func LongClickUntilExists(tconn *chrome.TestConn, clickObject, expectedObject *ui.Object, timeout time.Duration) uiauto.Action {
+	return func(ctx context.Context) error {
+		info, err := display.GetPrimaryInfo(ctx, tconn)
+		if err != nil {
+			return errors.Wrap(err, "failed to get the primary display info")
+		}
+
+		dispMode, err := info.GetSelectedMode()
+		if err != nil {
+			return errors.Wrap(err, "failed to get the selected display mode")
+		}
+
+		bounds, err := clickObject.GetBounds(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to get the bounds of target object")
+		}
+
+		// Convert the coordinate of |clickObject| to device independent pixels to click.
+		dpBounds := coords.ConvertBoundsFromPXToDP(bounds, dispMode.DeviceScaleFactor)
+		center := dpBounds.CenterPoint()
+
+		// Deferly call the release function to ensure the mouse is released even if the expected object does not appear.
+		defer mouse.Release(tconn, mouse.LeftButton)(ctx)
+		longClickDescription := fmt.Sprintf("long click %v until %v exists", clickObject, expectedObject)
+		return uiauto.Combine(longClickDescription,
+			mouse.Move(tconn, center, 0),
+			mouse.Press(tconn, mouse.LeftButton),
+			WaitForExists(expectedObject, timeout),
+		)(ctx)
 	}
 }
