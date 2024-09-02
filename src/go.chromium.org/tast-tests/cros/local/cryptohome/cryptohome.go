@@ -440,11 +440,16 @@ func CheckKeyBackingStoreExists(ctx context.Context, keysetPath, userName string
 	return nil
 }
 
-// TestPinCounterMechanism tests that PIN is locked out after too many wrong trials and can be reset by the correct password
-func TestPinCounterMechanism(ctx context.Context, userName, passwordLabel, userPassword, pinLabel, userPin, wrongPin string, client *hwsec.CryptohomeClient) error {
-	const numberOfWrongAttemptToNotLock = 4
-	const numberOfWrongAttemptToLock = 5
-
+// TestPinCounterMechanism tests that PIN is locked out after too many wrong trials
+// and can be reset by the correct password
+func TestPinCounterMechanism(ctx context.Context, userName, passwordLabel, userPassword, pinLabel, userPin, wrongPin string, client *hwsec.CryptohomeClient, isModernPin bool) error {
+	var numberOfWrongAttemptToNotLock = 4
+	var numberOfWrongAttemptToLock = 5
+	if isModernPin {
+		// We only check the first four attempts that lock the pin for the first time.
+		numberOfWrongAttemptToNotLock = 3
+		numberOfWrongAttemptToLock = 4
+	}
 	if err := client.WithAuthSession(ctx, userName, false, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
 		// Do a "warm-up" authentication to make sure the counter is reset to a known good state.
 		if _, err := client.AuthenticatePinAuthFactor(ctx, authSessionID, pinLabel, userPin); err != nil {

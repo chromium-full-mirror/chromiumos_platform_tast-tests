@@ -80,15 +80,8 @@ func UssMigrationPinAfterPasswordMigration(ctx context.Context, s *testing.State
 		s.Fatal("Failed to remove old vault for preparation: ", err)
 	}
 
-	// Set up the appropriate feature flags depending on the test parameters.
-	if userParam.modernPin {
-		cryptochrome.WithModernPin(ctx, func() error { return nil })
-	} else {
-		cryptochrome.WithModernPinDisabled(ctx, func() error { return nil })
-	}
-
 	// Set up an auth factor with Vault Keyset backing.
-	if err := func() error {
+	if err := cryptochrome.WithModernPinDisabled(ctx, func() error {
 		// Create and mount the persistent user.
 		if err := client.WithAuthSession(ctx, userName, false /*ephemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
 			// Set up the user with a password auth factor.
@@ -122,10 +115,17 @@ func UssMigrationPinAfterPasswordMigration(ctx context.Context, s *testing.State
 			return errors.Wrap(err, "failed to unmount vault after pre-migration mount")
 		}
 		return nil
-	}(); err != nil {
+	}); err != nil {
 		s.Fatal("Setup while USS migration was disabled failed: ", err)
 	}
 	defer cryptohome.RemoveVault(ctxForCleanUp, userName)
+
+	// Set up the appropriate feature flags depending on the test parameters.
+	if userParam.modernPin {
+		cryptochrome.WithModernPin(ctx, func() error { return nil })
+	} else {
+		cryptochrome.WithModernPinDisabled(ctx, func() error { return nil })
+	}
 
 	// Enable migration to verify the migration process.
 	if err := func() error {
@@ -163,8 +163,15 @@ func UssMigrationPinAfterPasswordMigration(ctx context.Context, s *testing.State
 				return errors.Wrap(err, "failed to authenticate password auth factor")
 			}
 
-			if err := client.AddPinAuthFactor(ctx, authSessionID, pinLabel, userPin); err != nil {
-				return errors.Wrap(err, "failed to add a pin authfactor")
+			// Add PIN AuthFactor.
+			if userParam.modernPin {
+				if err := client.AddModernPinAuthFactor(ctx, authSessionID, pinLabel, userPin); err != nil {
+					return errors.Wrap(err, "failed to add PIN AuthFactor")
+				}
+			} else {
+				if err := client.AddPinAuthFactor(ctx, authSessionID, pinLabel, userPin); err != nil {
+					return errors.Wrap(err, "failed to add PIN AuthFactor")
+				}
 			}
 
 			if err := cryptohome.CheckKeyBackingStoreExists(ctx, pinFactorFile, userName); err != nil {
@@ -182,6 +189,14 @@ func UssMigrationPinAfterPasswordMigration(ctx context.Context, s *testing.State
 		return nil
 	}(); err != nil {
 		s.Fatal("Validation during USS migration failed: ", err)
+	}
+
+	// This is needed because in the previous block we call unmount,
+	// which also calls a chrome restart script.
+	if userParam.modernPin {
+		cryptochrome.WithModernPin(ctx, func() error { return nil })
+	} else {
+		cryptochrome.WithModernPinDisabled(ctx, func() error { return nil })
 	}
 
 	if err := func() error {
@@ -210,6 +225,14 @@ func UssMigrationPinAfterPasswordMigration(ctx context.Context, s *testing.State
 		return nil
 	}(); err != nil {
 		s.Fatal("Validation during USS migration failed: ", err)
+	}
+
+	// This is needed because in the previous block we call unmount,
+	// which also calls a chrome restart script.
+	if userParam.modernPin {
+		cryptochrome.WithModernPin(ctx, func() error { return nil })
+	} else {
+		cryptochrome.WithModernPinDisabled(ctx, func() error { return nil })
 	}
 
 	// Authenticate a new auth session via the wrong Pin five times - lock out, authenticate with correct password then.
@@ -253,6 +276,14 @@ func UssMigrationPinAfterPasswordMigration(ctx context.Context, s *testing.State
 		return nil
 	}); err != nil {
 		s.Fatal("Failed to lock pin and then unlock with it new password: ", err)
+	}
+
+	// This is needed because in the previous block we call unmount,
+	// which also calls a chrome restart script.
+	if userParam.modernPin {
+		cryptochrome.WithModernPin(ctx, func() error { return nil })
+	} else {
+		cryptochrome.WithModernPinDisabled(ctx, func() error { return nil })
 	}
 
 	// Enable migration to verify the migration process.

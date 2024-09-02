@@ -36,7 +36,7 @@ func init() {
 			"hardikgoyal@chromium.org",
 		},
 		BugComponent: "b:1148604", // ChromeOS > Security > Cryptohome > Cryptohome Recovery
-		Attr:         []string{"group:mainline", "group:cryptohome", "informational"},
+		Attr:         []string{"group:mainline", "group:cryptohome"},
 		// For "no_tpm_dynamic" - see http://b/251789202.
 		SoftwareDeps: []string{"pinweaver", "tpm", "no_tpm_dynamic", "chrome"},
 		Params: []testing.Param{{
@@ -103,15 +103,8 @@ func RecoveryWithUssMigration(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get mediator pub key: ", err)
 	}
 
-	// Set up the appropriate feature flags depending on the test parameters.
-	if userParam.modernPin {
-		cryptochrome.WithModernPin(ctx, func() error { return nil })
-	} else {
-		cryptochrome.WithModernPinDisabled(ctx, func() error { return nil })
-	}
-
 	// Set up an auth factor with USS migration disabled.
-	if err := func() error {
+	if err := cryptochrome.WithModernPinDisabled(ctx, func() error {
 		// Set up a VaultKeyset, auth factor is created.
 		setupUser := func(authSessionID string) error {
 			// Set up the user with a password and PIN VaultKeyset.
@@ -157,10 +150,16 @@ func RecoveryWithUssMigration(ctx context.Context, s *testing.State) {
 		}
 
 		return nil
-	}(); err != nil {
+	}); err != nil {
 		s.Fatal("Setup while USS migration was disabled failed: ", err)
 	}
 	defer cryptohome.RemoveVault(ctxForCleanUp, userName)
+
+	if userParam.modernPin {
+		cryptochrome.WithModernPin(ctx, func() error { return nil })
+	} else {
+		cryptochrome.WithModernPinDisabled(ctx, func() error { return nil })
+	}
 
 	// Enable migration to verify the migration process.
 	if err := func() error {
@@ -218,6 +217,14 @@ func RecoveryWithUssMigration(ctx context.Context, s *testing.State) {
 		s.Fatal("Validation during USS migration failed: ", err)
 	}
 
+	// This is needed because in the previous block we call unmount,
+	// which also calls a chrome restart script.
+	if userParam.modernPin {
+		cryptochrome.WithModernPin(ctx, func() error { return nil })
+	} else {
+		cryptochrome.WithModernPinDisabled(ctx, func() error { return nil })
+	}
+
 	// Use Recovery and update password.
 	if err := func() error {
 		performRecoveryAndUpdatePassword := func(authSessionID string) error {
@@ -272,13 +279,21 @@ func RecoveryWithUssMigration(ctx context.Context, s *testing.State) {
 		s.Fatal("Validation during USS migration failed: ", err)
 	}
 
+	// This is needed because in the previous block we call unmount,
+	// which also calls a chrome restart script.
+	if userParam.modernPin {
+		cryptochrome.WithModernPin(ctx, func() error { return nil })
+	} else {
+		cryptochrome.WithModernPinDisabled(ctx, func() error { return nil })
+	}
+
 	if err := func() error {
 		// Check that pin factor has not been migrated.
 		if err := cryptohome.CheckKeyBackingStoreExists(ctx, pinFactorFile, userName); err == nil {
 			return errors.New("Pin auth factor file was created before migration should have happened")
 		}
 		// Test that PIN reset with correct password works.
-		if err := cryptohome.TestPinCounterMechanism(ctx, userName, passwordLabel, userNewPassword, pinLabel, userPin, notUserPin, client); err != nil {
+		if err := cryptohome.TestPinCounterMechanism(ctx, userName, passwordLabel, userNewPassword, pinLabel, userPin, notUserPin, client, userParam.modernPin); err != nil {
 			return errors.Wrap(err, "failed in testing PIN lockout and reset mechanism after recovery")
 		}
 
@@ -297,7 +312,7 @@ func RecoveryWithUssMigration(ctx context.Context, s *testing.State) {
 	}
 
 	// Test that PIN reset with correct password works after the migration.
-	if err := cryptohome.TestPinCounterMechanism(ctx, userName, passwordLabel, userNewPassword, pinLabel, userPin, notUserPin, client); err != nil {
+	if err := cryptohome.TestPinCounterMechanism(ctx, userName, passwordLabel, userNewPassword, pinLabel, userPin, notUserPin, client, userParam.modernPin); err != nil {
 		s.Fatal("Failed in testing PIN lockout and reset mechanism after migration: ", err)
 	}
 }

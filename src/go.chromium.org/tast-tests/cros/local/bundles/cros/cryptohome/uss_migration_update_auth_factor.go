@@ -12,12 +12,17 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
+	cryptochrome "go.chromium.org/tast-tests/cros/local/cryptohome/chrome"
 	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
+
+type ussMigrationUpdateAuthFactorParam struct {
+	modernPin bool
+}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -30,7 +35,18 @@ func init() {
 		},
 		BugComponent: "b:1088399", // ChromeOS > Security > Cryptohome
 		SoftwareDeps: []string{"chrome", "pinweaver"},
-		Attr:         []string{"group:mainline", "informational", "group:cryptohome"},
+		Attr:         []string{"group:mainline", "group:cryptohome"},
+		Params: []testing.Param{{
+			Name: "legacy_pin",
+			Val: ussMigrationUpdateAuthFactorParam{
+				modernPin: false,
+			},
+		}, {
+			Name: "modern_pin",
+			Val: ussMigrationUpdateAuthFactorParam{
+				modernPin: true,
+			},
+		}},
 	})
 }
 
@@ -57,6 +73,8 @@ func UssMigrationUpdateAuthFactor(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
+	userParam := s.Param().(ussMigrationUpdateAuthFactorParam)
+
 	cmdRunner := hwseclocal.NewCmdRunner()
 	client := hwsec.NewCryptohomeClient(cmdRunner)
 
@@ -74,7 +92,7 @@ func UssMigrationUpdateAuthFactor(ctx context.Context, s *testing.State) {
 	}
 
 	// 1. Create a new user with VaultKeysets.
-	if err := func() error {
+	if err := cryptochrome.WithModernPinDisabled(ctx, func() error {
 		// 1. Create a new user with VaultKeysets.
 		if err := client.WithAuthSession(ctx, userName, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
 
@@ -113,11 +131,17 @@ func UssMigrationUpdateAuthFactor(ctx context.Context, s *testing.State) {
 			return errors.Wrap(err, "failed to create and set up the user password and PIN with uss and migration disabled")
 		}
 		return nil
-	}(); err != nil {
+	}); err != nil {
 		s.Fatal("Setup while USS migration was disabled failed: ", err)
 	}
 	// Cleanup user vault before UssMigrationUpdateAuthFactor exits.
 	defer client.RemoveVault(ctxForCleanup, userName)
+
+	if userParam.modernPin {
+		cryptochrome.WithModernPin(ctx, func() error { return nil })
+	} else {
+		cryptochrome.WithModernPinDisabled(ctx, func() error { return nil })
+	}
 
 	// 2. Test that updating a PIN migrates the PIN factor to USS.
 
@@ -165,7 +189,7 @@ func UssMigrationUpdateAuthFactor(ctx context.Context, s *testing.State) {
 		}
 
 		// Test that PIN reset with correct password works after the update.
-		if err := cryptohome.TestPinCounterMechanism(ctx, userName, passwordLabel, userPassword, pinLabel, userPinNew, wrongPin, client); err != nil {
+		if err := cryptohome.TestPinCounterMechanism(ctx, userName, passwordLabel, userPassword, pinLabel, userPinNew, wrongPin, client, userParam.modernPin); err != nil {
 			return errors.Wrap(err, "failed in testing PIN lockout and reset mechanism after PIN update")
 		}
 		return nil

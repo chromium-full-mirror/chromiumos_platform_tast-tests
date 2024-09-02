@@ -91,15 +91,8 @@ func UssMigrationPinPassword(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to remove old vault for preparation: ", err)
 	}
 
-	// Set up the appropriate feature flags depending on the test parameters.
-	if userParam.modernPin {
-		cryptochrome.WithModernPin(ctx, func() error { return nil })
-	} else {
-		cryptochrome.WithModernPinDisabled(ctx, func() error { return nil })
-	}
-
 	// 1. Create a new user with VaultKeysets. Disable USS and migration for initial setup.
-	if err := func() error {
+	if err := cryptochrome.WithModernPinDisabled(ctx, func() error {
 		if err := client.WithAuthSession(ctx, userName, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
 			// Create user vault.
 			if err := client.CreatePersistentUser(ctx, authSessionID); err != nil {
@@ -134,10 +127,17 @@ func UssMigrationPinPassword(ctx context.Context, s *testing.State) {
 			return errors.Wrap(err, "failed to create and set up the user password and PIN with uss and migration disabled")
 		}
 		return nil
-	}(); err != nil {
+	}); err != nil {
 		s.Fatal("Setup while USS migration was disabled failed: ", err)
 	}
 	defer client.RemoveVault(ctxForCleanup, userName)
+
+	// Set up the appropriate feature flags depending on the test parameters.
+	if userParam.modernPin {
+		cryptochrome.WithModernPin(ctx, func() error { return nil })
+	} else {
+		cryptochrome.WithModernPinDisabled(ctx, func() error { return nil })
+	}
 
 	// 2. Test the migration of the two created factors. Test that only
 	// successful authentication migrates the password and PIN factors, and
@@ -178,7 +178,7 @@ func UssMigrationPinPassword(ctx context.Context, s *testing.State) {
 			return errors.Wrap(err, "USS migration test failed at authentication step after the migration of PIN keyset")
 		}
 		// Test that PIN reset with correct password works after the migration.
-		if err := cryptohome.TestPinCounterMechanism(ctx, userName, passwordLabel, userPassword, pinLabel, userPin, wrongPin, client); err != nil {
+		if err := cryptohome.TestPinCounterMechanism(ctx, userName, passwordLabel, userPassword, pinLabel, userPin, wrongPin, client, userParam.modernPin); err != nil {
 			return errors.Wrap(err, "failed in testing PIN lockout and reset mechanism after PIN migration")
 		}
 		return nil
@@ -186,10 +186,19 @@ func UssMigrationPinPassword(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to test PIN migration: ", err)
 	}
 
+	// This is needed because in the previous block we call unmount,
+	// which also calls a chrome restart script.
+	if userParam.modernPin {
+		cryptochrome.WithModernPin(ctx, func() error { return nil })
+	} else {
+		cryptochrome.WithModernPinDisabled(ctx, func() error { return nil })
+	}
+
 	// 2.2. Test password migration.
 	if err := client.WithAuthSession(ctx, userName, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
 
-		// Authenticate with correct password. Note that the password should already be migrated during the test counter test in test step 2.1
+		// Authenticate with correct password. Note that the password should already
+		// be migrated during the test counter test in test step 2.1
 		if _, err := client.AuthenticateAuthFactor(ctx, authSessionID, passwordLabel, userPassword); err != nil {
 			return errors.Wrap(err, "USS migration test failed at authentication step with password keyset")
 		}
@@ -213,6 +222,14 @@ func UssMigrationPinPassword(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to test password migration: ", err)
 	}
 
+	// This is needed because in the previous block we call unmount,
+	// which also calls a chrome restart script.
+	if userParam.modernPin {
+		cryptochrome.WithModernPin(ctx, func() error { return nil })
+	} else {
+		cryptochrome.WithModernPinDisabled(ctx, func() error { return nil })
+	}
+
 	// 2.3 Test update PIN AuthFactor after migration.
 	if err := client.WithAuthSession(ctx, userName, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
 
@@ -233,7 +250,7 @@ func UssMigrationPinPassword(ctx context.Context, s *testing.State) {
 		}
 
 		// Test that PIN reset with correct password works after the update.
-		if err := cryptohome.TestPinCounterMechanism(ctx, userName, passwordLabel, userPassword, pinLabel, userPinNew, wrongPin, client); err != nil {
+		if err := cryptohome.TestPinCounterMechanism(ctx, userName, passwordLabel, userPassword, pinLabel, userPinNew, wrongPin, client, userParam.modernPin); err != nil {
 			return errors.Wrap(err, "failed in testing PIN lockout and reset mechanism after PIN update")
 		}
 		return nil

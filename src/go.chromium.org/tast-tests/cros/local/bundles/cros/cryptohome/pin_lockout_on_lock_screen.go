@@ -12,11 +12,16 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
+	cryptochrome "go.chromium.org/tast-tests/cros/local/cryptohome/chrome"
 	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
+
+type pinLockoutOnLockScreenParam struct {
+	modernPin bool
+}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -29,7 +34,18 @@ func init() {
 		},
 		BugComponent: "b:1088399", // ChromeOS > Security > Cryptohome
 		SoftwareDeps: []string{"chrome", "pinweaver"},
-		Attr:         []string{"group:mainline", "informational", "group:cryptohome"},
+		Attr:         []string{"group:mainline", "group:cryptohome"},
+		Params: []testing.Param{{
+			Name: "legacy_pin",
+			Val: pinLockoutOnLockScreenParam{
+				modernPin: false,
+			},
+		}, {
+			Name: "modern_pin",
+			Val: pinLockoutOnLockScreenParam{
+				modernPin: true,
+			},
+		}},
 	})
 }
 
@@ -48,6 +64,7 @@ func PinLockoutOnLockScreen(ctx context.Context, s *testing.State) {
 	ctxForCleanup := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
+	userParam := s.Param().(pinLockoutOnLockScreenParam)
 
 	cmdRunner := hwseclocal.NewCmdRunner()
 	client := hwsec.NewCryptohomeClient(cmdRunner)
@@ -65,6 +82,11 @@ func PinLockoutOnLockScreen(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to remove old vault for preparation: ", err)
 	}
 
+	if userParam.modernPin {
+		cryptochrome.WithModernPin(ctx, func() error { return nil })
+	} else {
+		cryptochrome.WithModernPinDisabled(ctx, func() error { return nil })
+	}
 	// Setup user with password and pin.
 	if err := client.WithAuthSession(ctx, userName, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
 		// Create user vault.
@@ -81,9 +103,16 @@ func PinLockoutOnLockScreen(ctx context.Context, s *testing.State) {
 			return errors.Wrap(err, "failed to add password AuthFactor")
 		}
 		// Add PIN AuthFactor.
-		if err := client.AddPinAuthFactor(ctx, authSessionID, pinLabel, userPin); err != nil {
-			return errors.Wrap(err, "failed to add PIN AuthFactor")
+		if userParam.modernPin {
+			if err := client.AddModernPinAuthFactor(ctx, authSessionID, pinLabel, userPin); err != nil {
+				return errors.Wrap(err, "failed to add PIN AuthFactor")
+			}
+		} else {
+			if err := client.AddPinAuthFactor(ctx, authSessionID, pinLabel, userPin); err != nil {
+				return errors.Wrap(err, "failed to add PIN AuthFactor")
+			}
 		}
+
 		return nil
 	}); err != nil {
 		s.Fatal("Failed to create and set up the user password and PIN: ", err)
@@ -105,7 +134,7 @@ func PinLockoutOnLockScreen(ctx context.Context, s *testing.State) {
 		defer client.Unmount(ctxForCleanup, userName)
 
 		// Test that PIN reset with password.
-		if err := cryptohome.TestPinCounterMechanism(ctx, userName, passwordLabel, userPassword, pinLabel, userPin, wrongPin, client); err != nil {
+		if err := cryptohome.TestPinCounterMechanism(ctx, userName, passwordLabel, userPassword, pinLabel, userPin, wrongPin, client, userParam.modernPin); err != nil {
 			return errors.Wrap(err, "failed in testing PIN lockout and reset mechanism with decrypt intent")
 		}
 		return nil
