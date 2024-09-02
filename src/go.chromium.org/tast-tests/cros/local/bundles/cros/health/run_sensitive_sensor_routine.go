@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/croshealthd"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type sensitiveSensorRoutineTestParams struct {
@@ -38,15 +39,29 @@ func init() {
 			Val: sensitiveSensorRoutineTestParams{
 				CheckRoutineV2: false,
 			},
+			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("kyogre")),
+		}, {
+			Name: "v1_unstable",
+			Val: sensitiveSensorRoutineTestParams{
+				CheckRoutineV2: false,
+			},
 			// TODO(b/280388091): Promote tast to critical
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			ExtraAttr:         []string{"informational", "group:criticalstaging"},
+			ExtraHardwareDeps: hwdep.D(hwdep.Model("kyogre")),
 		}, {
 			Name: "v2",
 			Val: sensitiveSensorRoutineTestParams{
 				CheckRoutineV2: true,
 			},
+			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("kyogre")),
+		}, {
+			Name: "v2_unstable",
+			Val: sensitiveSensorRoutineTestParams{
+				CheckRoutineV2: true,
+			},
 			// TODO(b/280388091): Promote tast to critical
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			ExtraAttr:         []string{"informational", "group:criticalstaging"},
+			ExtraHardwareDeps: hwdep.D(hwdep.Model("kyogre")),
 		}},
 	})
 }
