@@ -8,6 +8,7 @@ import (
 	"context"
 	"encoding/json"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
@@ -121,6 +122,16 @@ func captureFrames(ctx context.Context, bus, entity string) error {
 	return cmd.Run(testexec.DumpLogOnError)
 }
 
+func dumpMediaGraph(ctx context.Context, bus, dir string) error {
+	cmd := testexec.CommandContext(ctx, "media-ctl", "-d", bus, "-p")
+	out, err := cmd.Output(testexec.DumpLogOnError)
+	if err != nil {
+		return err
+	}
+	dumpfile := filepath.Join(dir, "media-ctl.txt")
+	return os.WriteFile(dumpfile, out, 0644)
+}
+
 type testInfo struct {
 	BusInfo   string `json:"bus_info"`
 	OutEntity string `json:"out_entity"`
@@ -167,6 +178,9 @@ func KernelSmokeMIPI(ctx context.Context, s *testing.State) {
 
 		yamlFile := "kernel_smoke_mipi/" + name + ".yaml"
 		if err := configureMedia(ctx, info.BusInfo, s.DataPath(yamlFile)); err != nil {
+			if err := dumpMediaGraph(ctx, info.BusInfo, s.OutDir()); err != nil {
+				s.Log("Failed to dump: ", err)
+			}
 			s.Fatal("Failed to configure: ", err)
 		}
 
