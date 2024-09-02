@@ -32,6 +32,7 @@ class CameraApp {
       frameRate: 30,
     };
   }
+
   async connectCamera() {
     this.webLoader.style.display = 'flex';
     if (this.stream) {
@@ -46,19 +47,19 @@ class CameraApp {
     const track = this.stream.getVideoTracks()[0];
     await track.applyConstraints(this.constraints);
     this.webLoader.style.display = 'none';
-  };
+  }
 
   setCameraCapture() {
     const track = this.stream.getVideoTracks()[0];
     this.cameraCapture = new ImageCapture(track);
-  };
+  }
 
   setMediaRecorder() {
     const options = { mimeType: 'video/mp4; codecs=avc1' };
     this.mediaRecorder = new MediaRecorder(this.stream, options);
     this.mediaRecorder.addEventListener(
-      'dataavailable', (e) => this.dataAvailableHandler(e));
-  };
+        'dataavailable', (e) => this.dataAvailableHandler(e));
+  }
 
   getCurrentTimeStamp() {
     const timeStamp = new Date();
@@ -70,50 +71,57 @@ class CameraApp {
     const minutes = padLeft(timeStamp.getMinutes());
     const seconds = padLeft(timeStamp.getSeconds());
     return `${year}${month}${date}_${hours}${minutes}${seconds}`;
-  };
+  }
 
   // Show the picture image on the webpage
   drawCanvas(canvas, img) {
     const ratio =
-      Math.min(canvas.width / img.width, canvas.height / img.height);
+        Math.min(canvas.width / img.width, canvas.height / img.height);
     const x = (canvas.width - img.width * ratio) / 2;
     const y = (canvas.height - img.height * ratio) / 2;
     this.canvasContext = canvas.getContext('2d');
     this.canvasContext.fillStyle = 'black';
     this.canvasContext.fillRect(
-      0, 0, canvas.width, canvas.height);
+        0, 0, canvas.width, canvas.height);
     this.canvasContext.drawImage(
-      img, 0, 0, img.width, img.height, x, y, img.width * ratio,
-      img.height * ratio);
-  };
-  async takePictureButtonEventHandler(e) {
+        img, 0, 0, img.width, img.height, x, y, img.width * ratio,
+        img.height * ratio);
+  }
+
+  async takePictureButtonEventHandler() {
     const img = await this.cameraCapture.grabFrame();
     this.drawCanvas(this.photoOutput, img);
     const dataUrl = this.photoOutput.toDataURL('image/jpeg', 1.0);
     this.downloadBlob(dataUrl, 'IMG_');
-  };
+  }
+
   startButtonEventHandler() {
     this.videoOutput.style.display = 'none';
     URL.revokeObjectURL(this.videoOutput.src);
     this.mediaRecorder.start();
-  };
+  }
+
   stopButtonEventHandler() {
     this.mediaRecorder.stop();
-  };
+  }
+
   async changeCameraEventHandler(e) {
     this.constraints.video.deviceId = e.target.value;
     await this.connectCamera();
-  };
+  }
+
   async changeFrameRateEventHandler() {
     this.constraints.frameRate = this.frameRateInput.value;
     await this.connectCamera();
-  };
+  }
+
   async changeResolutionEventHandler(e) {
     const [width, height] = e.target.value.split(' ').map((x) => Number(x));
-    this.constraints.video.height = { exact: height };
-    this.constraints.video.width = { exact: width };
+    this.constraints.video.height = {exact: height};
+    this.constraints.video.width = {exact: width};
     await this.connectCamera();
-  };
+  }
+
   // Show the video on the webpage
   dataAvailableHandler(e) {
     const blob = e.data;
@@ -123,15 +131,15 @@ class CameraApp {
     recordingObj.src = dataUrl;
     recordingObj.load();
     recordingObj.style.display = 'inline';
-  };
+  }
 
   // Automatically download taken blob
   downloadBlob(url, prefix) {
     const fileName = prefix.concat(this.getCurrentTimeStamp());
-    let request = new XMLHttpRequest();
+    const request = new XMLHttpRequest();
     request.responseType = 'blob';
     request.onload = function () {
-      let downloadEvent = document.createElement('a');
+      const downloadEvent = document.createElement('a');
       downloadEvent.href = window.URL.createObjectURL(request.response);
       downloadEvent.download = fileName;
       downloadEvent.style.display = 'none';
@@ -141,11 +149,12 @@ class CameraApp {
     };
     request.open('GET', url);
     request.send();
-  };
+  }
 
   inputFrameRateInputEventHandler() {
     this.frameRateOutout.value = this.frameRateInput.value;
-  };
+  }
+
   async init() {
     await this.connectCamera();
     // List cameras and microphones.
@@ -155,31 +164,31 @@ class CameraApp {
       const option = document.createElement('option');
       if (device.kind === 'videoinput') {
         option.text =
-          device.label || `camera ${this.cameraSelector.length + 1}`;
+            device.label || `camera ${this.cameraSelector.length + 1}`;
         option.value = device.deviceId;
         this.cameraSelector.appendChild(option);
       }
     }
-  };
+  }
 
   async start() {
     this.takePictureButton.addEventListener(
-      'click', () => this.takePictureButtonEventHandler());
+        'click', () => this.takePictureButtonEventHandler());
     this.startButton.addEventListener(
-      'click', () => this.startButtonEventHandler());
+        'click', () => this.startButtonEventHandler());
     this.stopButton.addEventListener(
-      'click', () => this.stopButtonEventHandler());
+        'click', () => this.stopButtonEventHandler());
     this.cameraSelector.addEventListener(
-      'change', (e) => this.changeCameraEventHandler(e));
+        'change', (e) => this.changeCameraEventHandler(e));
     this.frameRateInput.addEventListener(
-      'input', () => this.inputFrameRateInputEventHandler());
+        'input', () => this.inputFrameRateInputEventHandler());
     this.frameRateInput.addEventListener(
-      'change', () => this.changeFrameRateEventHandler());
+        'change', () => this.changeFrameRateEventHandler());
     this.cameraResolution.addEventListener(
-      'change', (e) => this.changeResolutionEventHandler(e));
+        'change', (e) => this.changeResolutionEventHandler(e));
     await this.init()
     this.initDone = true;
-  };
+  }
 }
 
 window.app = new CameraApp();

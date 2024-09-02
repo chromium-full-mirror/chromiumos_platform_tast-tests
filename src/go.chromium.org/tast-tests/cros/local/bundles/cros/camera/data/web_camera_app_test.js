@@ -17,6 +17,7 @@ function addLog(msg) {
   const currentTime = new Date().toISOString();
   logs.push(`[${currentTime}] ${msg}`);
 }
+
 /**
  * Wait for id to display or not display.
  * @param {string} id tracked element.
@@ -30,6 +31,7 @@ async function waitForElementDisplay(id, display) {
     return (display === displayPropertyNotNone);
   });
 }
+
 /**
  * Wait for init to complete.
  * @return {!Promise<void>} a Promise.
@@ -37,6 +39,7 @@ async function waitForElementDisplay(id, display) {
 async function waitForInit() {
   await waitFor(() => window.app.initDone);
 }
+
 async function waitFor(condition, interval = 20) {
   return new Promise((resolve) => {
     (function poll() {
@@ -47,6 +50,7 @@ async function waitFor(condition, interval = 20) {
     })();
   });
 }
+
 /**
  * Throws an error if `globalErrors` is not empty.
  */
@@ -55,6 +59,7 @@ function throwIfError(msg) {
     throw new Error(msg + String(globalErrors[0]));
   }
 }
+
 /**
  * Testing code.
  * @param {number} durationSec Time for waiting.
@@ -69,7 +74,7 @@ async function testWebCameraApp(durationSec) {
     const changeCameraSelection =
       document.getElementById('change-camera-selection');
     const frameRateInput = document.getElementById('frame-rate-input');
-    const cameraResolution = document.getElementById('camera-resoluiton');
+    const cameraResolution = document.getElementById('camera-resolution');
     const cameraOptions = changeCameraSelection.children;
     for (const cameraOption of cameraOptions) {
       changeCameraSelection.value = cameraOption.value;
@@ -104,12 +109,14 @@ async function testWebCameraApp(durationSec) {
     reportTestDone();
   }
 }
+
 /**
  * Mark as done when the test is complete.
  */
 function reportTestDone() {
   isTestDone = true;
 }
+
 /**
  * Get the results.
  * @return {string} result.
@@ -117,6 +124,7 @@ function reportTestDone() {
 function getResults() {
   return results;
 }
+
 /**
  * Get the logs.
  * @return {string} log.
@@ -124,6 +132,7 @@ function getResults() {
 function getLogs() {
   return logs;
 }
+
 /**
  * check if a video input exists.
  * @return {boolean} the video input is found or not.
@@ -139,6 +148,7 @@ async function checkVideoInput() {
   }
   return isVideoInputFound;
 }
+
 /**
  * check if getting enumerate devices error.
  * @param {!Error} error message.
