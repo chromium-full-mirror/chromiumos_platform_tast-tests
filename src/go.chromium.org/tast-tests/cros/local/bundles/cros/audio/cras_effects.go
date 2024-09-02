@@ -371,8 +371,7 @@ func init() {
 				Fixture:           crasEffectsHasAST,
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...), hwdep.FeatureLevel(1)),
 				ExtraAttr: []string{
-					"group:criticalstaging", "group:mainline", "informational",
-					"group:cbx", "cbx_feature_enabled", "cbx_unstable",
+					"group:mainline", "group:cbx", "cbx_feature_enabled", "cbx_stable",
 				},
 			},
 			{
@@ -416,8 +415,7 @@ func init() {
 				Fixture:           crasEffectsHasAST,
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...), hwdep.FeatureLevel(1)),
 				ExtraAttr: []string{
-					"group:criticalstaging", "group:mainline", "informational",
-					"group:cbx", "cbx_feature_enabled", "cbx_unstable",
+					"group:mainline", "group:cbx", "cbx_feature_enabled", "cbx_stable",
 				},
 			},
 			// NC provider tests with only DSP NC.
@@ -640,8 +638,7 @@ func init() {
 				Fixture:           crasEffectsHasAST,
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...), hwdep.FeatureLevel(1)),
 				ExtraAttr: []string{
-					"group:criticalstaging", "group:mainline", "informational",
-					"group:cbx", "cbx_feature_enabled", "cbx_unstable",
+					"group:mainline", "group:cbx", "cbx_feature_enabled", "cbx_stable",
 				},
 			},
 			{
@@ -775,8 +772,7 @@ func init() {
 				Fixture:           crasEffectsHasAST,
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...), hwdep.FeatureLevel(1)),
 				ExtraAttr: []string{
-					"group:criticalstaging", "group:mainline", "informational",
-					"group:cbx", "cbx_feature_enabled", "cbx_unstable",
+					"group:mainline", "group:cbx", "cbx_feature_enabled", "cbx_stable",
 				},
 			},
 		},
