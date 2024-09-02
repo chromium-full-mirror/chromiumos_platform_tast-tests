@@ -20,7 +20,8 @@ import (
 )
 
 type playbackPowerTestParam struct {
-	action func(ctx context.Context, app *recorderapp.App) error
+	action       func(ctx context.Context, app *recorderapp.App) error
+	launchConfig recorderapp.LaunchConfig
 }
 
 func init() {
@@ -38,20 +39,23 @@ func init() {
 			{
 				Name: "idle",
 				Val: playbackPowerTestParam{
-					action: testIdle,
+					action:       testIdle,
+					launchConfig: recorderapp.LaunchConfig{},
 				},
 			},
 			{
 				Name: "title_suggestion",
 				Val: playbackPowerTestParam{
-					action: testSuggestTitle,
+					action:       testSuggestTitle,
+					launchConfig: recorderapp.LaunchConfig{SummaryForceEnabled: true},
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)), // Only enable on CBX devices.
 			},
 			{
 				Name: "summarization",
 				Val: playbackPowerTestParam{
-					action: testSummarize,
+					action:       testSummarize,
+					launchConfig: recorderapp.LaunchConfig{SummaryForceEnabled: true},
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)), // Only enable on CBX devices.
 			},
@@ -82,7 +86,7 @@ func PlaybackPower(ctx context.Context, s *testing.State) {
 
 	// Start the Recorder App.
 	setup := recorderapp.Setup{
-		Config:          recorderapp.LaunchConfig{SummaryForceEnabled: true},
+		Config:          s.Param().(playbackPowerTestParam).launchConfig,
 		PreloadDataPath: s.DataPath(data.ShortNewsRecording),
 	}
 	app, err := recorderapp.StartAppWithSetup(ctx, cr, setup)

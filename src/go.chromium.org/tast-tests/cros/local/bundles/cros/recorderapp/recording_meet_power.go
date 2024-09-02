@@ -161,7 +161,11 @@ func RecordingMeetPower(ctx context.Context, s *testing.State) {
 		if err := app.StartRecording()(ctx); err != nil {
 			s.Fatal("Failed to start recording audio: ", err)
 		}
-		defer app.StopRecording()(cleanupCtx)
+		defer func() {
+			if err := app.StopRecording()(cleanupCtx); err != nil {
+				s.Error("Failed to stop record: ", err)
+			}
+		}()
 	}
 
 	// Speak in the background.

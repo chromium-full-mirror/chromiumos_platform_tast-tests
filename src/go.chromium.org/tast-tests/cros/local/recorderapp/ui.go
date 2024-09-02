@@ -59,8 +59,6 @@ var (
 	StartRecordingButton = Component("startRecordingButton")
 	// StopRecordingButton is the button used to stop the recording.
 	StopRecordingButton = Component("stopRecordingButton")
-	// ToggleSummaryButton is the toggle button to show/hide recording summary.
-	ToggleSummaryButton = Component("toggleSummaryButton")
 )
 
 // PlaybackPlayButton is the button used to play the audio playback.
@@ -68,6 +66,20 @@ var (
 var PlaybackPlayButton = ComponentQuery{
 	Name:  "playbackPlayButton",
 	Query: `document.querySelector('recorder-app').shadowRoot.querySelector('playback-page').shadowRoot.querySelector('cra-icon-button[id="play-button"]')`,
+}
+
+// ToggleSummaryButton is the toggle button to show/hide recording summary.
+// TODO(b/355374546): Update to use `Component()` once the change from the app side is upreved.
+var ToggleSummaryButton = ComponentQuery{
+	Name:  "toggleSummaryButton",
+	Query: `TestHelper.resolveComponent('playbackPage').shadowRoot.querySelector('summarization-view').shadowRoot.querySelector('cros-accordion-item').shadowRoot.querySelector('cros-icon-button')`,
+}
+
+// RecordAudioWaveform is the audio waveform displayed while recording.
+// TODO(b/355374546): Update to use `Component()` once the change from the app side is upreved.
+var RecordAudioWaveform = ComponentQuery{
+	Name:  "recordAudioWaveform",
+	Query: `TestHelper.resolveComponent('recordPage').shadowRoot.querySelector('audio-waveform')`,
 }
 
 // ClickImmediately returns an action to click on the element resolved from the query.

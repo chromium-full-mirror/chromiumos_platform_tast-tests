@@ -138,7 +138,7 @@ func (a *App) SetWindowStateAndWait(ctx context.Context, targetState ash.WindowS
 func (a *App) StartRecording() uiauto.Action {
 	return uiauto.Combine("Start recording",
 		a.ClickWhenExists(StartRecordingButton),
-		a.WaitUntilExists(StopRecordingButton),
+		a.WaitUntilExistsFor(RecordAudioWaveform, 10*time.Second),
 	)
 }
 
