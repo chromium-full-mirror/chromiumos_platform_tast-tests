@@ -27,6 +27,17 @@ import (
 
 const runTraverseDirs string = "run-traverse-dirs.py"
 
+type deviceType int
+
+const (
+	pmemExt2 deviceType = iota
+	virtioFs
+)
+
+type testParam struct {
+	device deviceType
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         TraverseDirs,
@@ -42,6 +53,15 @@ func init() {
 		Params: []testing.Param{
 			{
 				Name: "pmem_ext2",
+				Val: testParam{
+					device: pmemExt2,
+				},
+			},
+			{
+				Name: "virtiofs",
+				Val: testParam{
+					device: virtioFs,
+				},
 			},
 		},
 	})
@@ -80,25 +100,53 @@ func TraverseDirs(ctx context.Context, s *testing.State) {
 	// Directory path shared with the guest
 	sharedDir := "/usr/lib64"
 
-	// Constructs a crosvm command
-	storageOpt := vm.PmemExt2(vm.PmemExt2Param{
-		Path:           sharedDir,
-		BlocksPerGroup: 32768,
-		InodesPerGroup: 2048,
-		// page size * blocks_per_group * number of block groups
-		Size: 4096 * 32768 * 10,
-	})
-	ps, err := storage.GenCrosvmCmdFromStorageOpt(
-		td, s.OutDir(), kernelPath,
-		s.DataPath(runTraverseDirs),
-		[]string{
+	devType := s.Param().(testParam).device
+
+	var storageOpt vm.Option
+	var scriptArgs []string
+	switch devType {
+	case pmemExt2:
+		storageOpt = vm.PmemExt2(vm.PmemExt2Param{
+			Path:           sharedDir,
+			BlocksPerGroup: 32768,
+			InodesPerGroup: 2048,
+			// page size * blocks_per_group * number of block groups
+			Size: 4096 * 32768 * 10,
+		})
+		scriptArgs = []string{
 			"--kind",
 			"pmem-ext2",
 			"--mount-src",
 			"/dev/pmem0",
 			"--working-dir",
 			td,
-		},
+		}
+	case virtioFs:
+		tag := "shared"
+		// Use the similar configuration with crostini's font sharing.
+		storageOpt = vm.SharedDir(vm.SharedDirParam{
+			Src:       sharedDir,
+			Tag:       tag,
+			FsType:    "fs",
+			Cache:     "always",
+			Timeout:   uint(600),
+			Writeback: true,
+		})
+		scriptArgs = []string{
+			"--kind",
+			"virtiofs",
+			"--mount-src",
+			tag,
+			"--working-dir",
+			td,
+		}
+	default:
+		s.Fatal("Unexpected test name: ", devType)
+	}
+	params, err := storage.GenCrosvmCmdFromStorageOpt(
+		td, s.OutDir(), kernelPath,
+		s.DataPath(runTraverseDirs),
+		scriptArgs,
 		storageOpt,
 	)
 	if err != nil {
@@ -106,13 +154,13 @@ func TraverseDirs(ctx context.Context, s *testing.State) {
 	}
 
 	// Use FIFO files as the guest's serial device.
-	toGuestFIFO, fromGuestFIFO, err := guestconn.CreateGuestConn(td, ps)
+	toGuestFIFO, fromGuestFIFO, err := guestconn.CreateGuestConn(td, params)
 	if err != nil {
 		s.Fatal("Failed to create guest connection: ", err)
 	}
 
 	// Increase the max open file limit as the benchmark creates a lot of files.
-	args := append([]string{"--nofile=262144", "crosvm"}, ps.ToArgs()...)
+	args := append([]string{"--nofile=262144", "crosvm"}, params.ToArgs()...)
 
 	cmd := testexec.CommandContext(ctx, "prlimit", args...)
 

@@ -51,6 +51,19 @@ def main():
                 mount_dir,
             ]
         )
+    elif args.kind == "virtiofs":
+        # Use the same mount options as `/device/google/bertha/fstab.bertha`
+        command(
+            [
+                "mount",
+                "-t",
+                "virtiofs",
+                "-o",
+                "rw,noatime,nosuid,nodev",
+                args.mount_src,
+                mount_dir,
+            ]
+        )
     else:
         assert False
 
