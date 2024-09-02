@@ -118,6 +118,7 @@ type Config struct {
 	RawECWatchdogLeadingTime         float64 `json:"ec_watchdog_warning_leading_time"`
 	RawWhiteScreenPowerPressTime     float64 `json:"white_screen_power_press_time"`
 	RawECColdBootTime                float64 `json:"ec_cold_boot_time"`
+	RawMemoryRetrainTimeout          float64 `json:"memory_retrain_timeout"`
 
 	// Actual duration fields are populated during NewConfig based on raw JSON duration values, defined above.
 	DelayRebootToPing             time.Duration
@@ -150,6 +151,9 @@ type Config struct {
 
 	// Holds a list of objects under the "custom_usb_enable_pins" key in the configs.
 	USBEnablePins []USBEnablePin
+
+	// MemoryRetrainTimeout is the max time it takes to retrain memory cache
+	MemoryRetrainTimeout          time.Duration
 }
 
 // CfgPlatformFromLSBBoard interprets a board name that would come from /etc/lsb-release, and returns the name of the platform whose config should be loaded.
@@ -249,6 +253,7 @@ func NewConfig(cfgFilepath, board, model string) (*Config, error) {
 	cfg.ECWatchdogLeadingTime = toSeconds(cfg.RawECWatchdogLeadingTime)
 	cfg.WhiteScreenPowerPressTime = toSeconds(cfg.RawWhiteScreenPowerPressTime)
 	cfg.ECColdBootTime = toSeconds(cfg.RawECColdBootTime)
+	cfg.MemoryRetrainTimeout = toSeconds(cfg.RawMemoryRetrainTimeout)
 	// Parse list of raw json objects into go structs
 	cfg.USBEnablePins = parseRawUSBEnablePins(cfg.RawUSBEnablePins)
 

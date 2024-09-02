@@ -69,7 +69,7 @@ func MemoryTrainingUI(ctx context.Context, s *testing.State) {
 		s.Fatal("Creating mode switcher: ", err)
 	}
 
-	if err := ms.ModeAwareReboot(ctx, firmware.WarmReset); err != nil {
+	if err := ms.ModeAwareReboot(ctx, firmware.WarmReset, firmware.WaitMemoryRetrain); err != nil {
 		s.Fatal("Failed to reboot: ", err)
 	}
 

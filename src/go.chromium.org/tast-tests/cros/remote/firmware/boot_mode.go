@@ -54,6 +54,10 @@ const (
 
 	// DevScreenTimeout is the default timeout for the dev screen.
 	DevScreenTimeout = 30 * time.Second
+
+	// MemoryRetrainTimeout is the default timeout for retraining memory.
+	MemoryRetrainTimeout = 120 * time.Second
+
 )
 
 // ModeSwitcher enables booting the DUT into different firmware boot modes (normal, dev, rec).
@@ -126,6 +130,9 @@ const (
 
 	// RecoveryForceMRCBoot specifies rec_force_mrc instead of rec for booting to recovery mode.
 	RecoveryForceMRCBoot ModeSwitchOption = iota
+
+	// WaitMemoryRetrain causes the mode switcher to sleep the `MemoryRetrainTimeout` time before finishing the boot.
+	WaitMemoryRetrain ModeSwitchOption = iota
 )
 
 // msOptsContain determines whether a slice of ModeSwitchOptions contains a specific Option.
@@ -672,6 +679,9 @@ func (ms *ModeSwitcher) ModeAwareReboot(ctx context.Context, resetType ResetType
 		connectTime := h.Config.DelayRebootToPing
 		if msOptsContain(opts, WaitSoftwareSync) {
 			connectTime += h.Config.SoftwareSyncUpdate
+		}
+		if (msOptsContain(opts, WaitMemoryRetrain)) {
+			connectTime += h.Config.MemoryRetrainTimeout
 		}
 		connectCtx, cancel := context.WithTimeout(ctx, connectTime)
 		defer cancel()
