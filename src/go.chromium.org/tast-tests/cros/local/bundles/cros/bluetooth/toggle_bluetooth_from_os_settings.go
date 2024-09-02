@@ -17,19 +17,18 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:           ToggleBluetoothFromOSSettings,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
-		LifeCycleStage: testing.LifeCycleInDevelopment,
-		Desc:           "Checks that Bluetooth can be enabled and disabled from the OS Settings",
+		Func: ToggleBluetoothFromOSSettings,
+		Desc: "Checks that Bluetooth can be enabled and disabled from the OS Settings",
 		Contacts: []string{
-			"alfredyu@cienet.com",
-			"chromeos-connectivity-cienet-external@google.com",
+			"cros-connectivity@google.com",
+			"chadduffin@chromium.org",
 		},
-		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
-		Attr:         []string{"group:bluetooth", "bluetooth_sa", "bluetooth_floss"},
-		SoftwareDeps: []string{"chrome"},
-		Fixture:      "bluetoothEnabledWithFloss",
-		TestBedDeps:  []string{tbdep.BluetoothStateNormal},
+		BugComponent:   "b:1131776", // ChromeOS > Software > System Services > Connectivity > Bluetooth
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Attr:           []string{"group:bluetooth", "bluetooth_sa", "bluetooth_floss"},
+		SoftwareDeps:   []string{"chrome"},
+		Fixture:        "bluetoothEnabledWithFloss",
+		TestBedDeps:    []string{tbdep.BluetoothStateNormal},
 		// Skip on form factors where a warning dialog may be shown when disabling Bluetooth due to all known HID devices being connected via Bluetooth.
 		// These form factors are covered by another test see b/319492526
 		HardwareDeps:    hwdep.D(hwdep.SkipOnFormFactor(hwdep.Chromebase, hwdep.Chromebox, hwdep.Chromebit)),

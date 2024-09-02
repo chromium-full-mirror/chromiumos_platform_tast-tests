@@ -14,15 +14,14 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:           ToggleBluetoothUsingMojo,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
-		LifeCycleStage: testing.LifeCycleInDevelopment,
-		Desc:           "Checks that Bluetooth can be enabled and disabled using Mojo API",
+		Func: ToggleBluetoothUsingMojo,
+		Desc: "Checks that Bluetooth can be enabled and disabled using Mojo API",
 		Contacts: []string{
-			"alfredyu@cienet.com",
-			"chromeos-connectivity-cienet-external@google.com",
+			"cros-connectivity@google.com",
+			"chromeos-connectivity-engprod@google.com",
 		},
-		BugComponent:    "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
+		BugComponent:    "b:1131776", // ChromeOS > Software > System Services > Connectivity > Bluetooth
+		LifeCycleStage:  testing.LifeCycleOwnerMonitored,
 		Attr:            []string{"group:bluetooth", "bluetooth_sa", "bluetooth_floss"},
 		SoftwareDeps:    []string{"chrome"},
 		Fixture:         "bluetoothMojoJSObjectWithFloss",
