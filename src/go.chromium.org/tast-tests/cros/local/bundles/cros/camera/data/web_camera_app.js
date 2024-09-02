@@ -25,8 +25,8 @@ class CameraApp {
     this.constraints = {
       audio: false,
       video: {
-        width: {exact: 360},
-        height: {exact: 640},
+        width: {exact: 640},
+        height: {exact: 360},
         deviceId: null,
       },
       frameRate: 30,
