@@ -24,11 +24,6 @@ import (
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
-type recCacheBootKeysParam struct {
-	bootMode common.BootMode
-	numIters int
-}
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: RecoveryCacheBootKeys,
@@ -51,19 +46,13 @@ func init() {
 				Fixture:   fixture.NormalMode,
 				ExtraAttr: []string{"firmware_bios", "firmware_level2", "firmware_ro"},
 				Timeout:   2 * time.Hour,
-				Val: recCacheBootKeysParam{
-					bootMode: common.BootModeNormal,
-					numIters: 1,
-				},
+				Val:       1,
 			}, {
 				Name:      "dev",
 				Fixture:   fixture.DevModeGBB,
 				ExtraAttr: []string{"firmware_bios", "firmware_level2", "firmware_ro"},
 				Timeout:   2 * time.Hour,
-				Val: recCacheBootKeysParam{
-					bootMode: common.BootModeDev,
-					numIters: 1,
-				},
+				Val:       1,
 			},
 			{
 				Name:      "normal_stress",
@@ -71,30 +60,23 @@ func init() {
 				ExtraAttr: []string{"firmware_stress"},
 				// 10 iterations takes between 50-70 minutes depending on model and number of errors encountered.
 				Timeout: 3 * time.Hour,
-				Val: recCacheBootKeysParam{
-					bootMode: common.BootModeNormal,
-					numIters: 10,
-				},
+				Val:     10,
 			}, {
 				Name:      "dev_stress",
 				Fixture:   fixture.DevModeGBB,
 				ExtraAttr: []string{"firmware_stress"},
 				// 10 iterations takes between 60-85 minutes depending on model and number of errors encountered.
 				Timeout: 3 * time.Hour,
-				Val: recCacheBootKeysParam{
-					bootMode: common.BootModeDev,
-					numIters: 10,
-				},
+				Val:     10,
 			},
 		},
 	})
 }
 
 func RecoveryCacheBootKeys(ctx context.Context, s *testing.State) {
-	h := s.FixtValue().(*fixture.Value).Helper
-	params := s.Param().(recCacheBootKeysParam)
-	bootMode := params.bootMode
-	numIters := params.numIters
+	pv := s.FixtValue().(*fixture.Value)
+	h := pv.Helper
+	numIters := s.Param().(int)
 
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to connect to servo: ", err)
@@ -159,20 +141,32 @@ func RecoveryCacheBootKeys(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to boot to recovery mode: ", err)
 	}
 	defer func() {
-		if state.RemoveServoChargerRequired && !state.IsServoChargerConnected {
+		if s.HasError() && state.RemoveServoChargerRequired && !state.IsServoChargerConnected {
 			if err := h.SetDUTPower(ctx, true); err != nil {
 				s.Fatal("Failed to connect charger: ", err)
+			}
+			state.IsServoChargerConnected = true
+			waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 2*time.Minute)
+			defer cancelWaitConnect()
+			if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
+				s.Fatal("Failed to reconnect to the DUT: ", err)
 			}
 		}
 	}()
 
-	s.Log("Rebooting to test boot mode: ", bootMode)
-	if err := h.RebootWithSSHCommand(ctx, bootMode); err != nil {
+	s.Log("Rebooting to test boot mode: ", pv.BootMode)
+	if err := h.RebootWithSSHCommand(ctx, pv.BootMode); err != nil {
 		s.Fatal("Failed to reboot with VT2 command: ", err)
 	}
 	if state.RemoveServoChargerRequired && !state.IsServoChargerConnected {
 		if err := h.SetDUTPower(ctx, true); err != nil {
 			s.Fatal("Failed to connect charger: ", err)
+		}
+		state.IsServoChargerConnected = true
+		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 2*time.Minute)
+		defer cancelWaitConnect()
+		if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
+			s.Fatal("Failed to reconnect to the DUT: ", err)
 		}
 	}
 
@@ -187,7 +181,7 @@ func RecoveryCacheBootKeys(ctx context.Context, s *testing.State) {
 		// this test.  The solution is to make sure that the EC is in
 		// RW before doing a recovery boot to ensure that the double
 		// reboot does not occur and information/requests are not lost.
-		if err := moveECToRW(ctx, h, ms, bootMode); err != nil {
+		if err := moveECToRW(ctx, h, ms, pv.BootMode); err != nil {
 			s.Fatal("EC not in RW: ", err)
 		}
 
@@ -211,13 +205,19 @@ func RecoveryCacheBootKeys(ctx context.Context, s *testing.State) {
 		s.Log("Found expected messages in cbmem log: ", match[0])
 
 		// Reset test to start from boot mode that is being tested.
-		s.Log("Rebooting to test boot mode: ", bootMode)
-		if err := h.RebootWithSSHCommand(ctx, bootMode); err != nil {
+		s.Log("Rebooting to test boot mode: ", pv.BootMode)
+		if err := h.RebootWithSSHCommand(ctx, pv.BootMode); err != nil {
 			s.Fatal("Failed to reboot with VT2 command: ", err)
 		}
 		if state.RemoveServoChargerRequired && !state.IsServoChargerConnected {
 			if err := h.SetDUTPower(ctx, true); err != nil {
 				s.Fatal("Failed to connect charger: ", err)
+			}
+			state.IsServoChargerConnected = true
+			waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 2*time.Minute)
+			defer cancelWaitConnect()
+			if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
+				s.Fatal("Failed to reconnect to the DUT: ", err)
 			}
 		}
 
@@ -237,15 +237,22 @@ func RecoveryCacheBootKeys(ctx context.Context, s *testing.State) {
 		}
 		s.Log("Found expected messages in cbmem log: ", match[0])
 
-		s.Log("Rebooting to test boot mode: ", bootMode)
-		if err := h.RebootWithSSHCommand(ctx, bootMode); err != nil {
+		s.Log("Rebooting to test boot mode: ", pv.BootMode)
+		if err := h.RebootWithSSHCommand(ctx, pv.BootMode); err != nil {
 			s.Fatal("Failed to reboot with VT2 command: ", err)
 		}
 		if state.RemoveServoChargerRequired && !state.IsServoChargerConnected {
 			if err := h.SetDUTPower(ctx, true); err != nil {
 				s.Fatal("Failed to connect charger: ", err)
 			}
+			state.IsServoChargerConnected = true
+			waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 2*time.Minute)
+			defer cancelWaitConnect()
+			if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
+				s.Fatal("Failed to reconnect to the DUT: ", err)
+			}
 		}
+
 	}
 
 }
