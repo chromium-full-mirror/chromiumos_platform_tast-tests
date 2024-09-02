@@ -17,6 +17,8 @@ class CameraApp {
     this.frameRateInput = document.getElementById('frame-rate-input');
     this.frameRateOutout = document.getElementById('frame-rate-value');
     this.takePictureButton = document.getElementById('take-picture-button');
+    this.recordingTimer = document.getElementById("recording-timer");
+    this.recordingTimerIntervalId = null;
     this.startButton = document.getElementById('start-button');
     this.stopButton = document.getElementById('stop-button');
     this.cameraResolution = document.getElementById('camera-resolution');
@@ -59,6 +61,10 @@ class CameraApp {
     this.mediaRecorder = new MediaRecorder(this.stream, options);
     this.mediaRecorder.addEventListener(
         'dataavailable', (e) => this.dataAvailableHandler(e));
+    this.mediaRecorder.addEventListener(
+        'start', () => this.startRecordingTimer());
+    this.mediaRecorder.addEventListener(
+        'stop', () => this.stopRecordingTimer());
   }
 
   getCurrentTimeStamp() {
@@ -103,6 +109,26 @@ class CameraApp {
 
   stopButtonEventHandler() {
     this.mediaRecorder.stop();
+  }
+
+  startRecordingTimer() {
+    this.setRecordingTimerDisplay(0);
+    const startTimestamp = performance.now();
+    this.recordingTimerIntervalId = setInterval(() => {
+      this.setRecordingTimerDisplay(performance.now() - startTimestamp);
+    }, 100);
+  }
+
+  stopRecordingTimer() {
+    clearInterval(this.recordingTimerIntervalId);
+  }
+
+  setRecordingTimerDisplay(milliseconds) {
+    const seconds = Math.floor(milliseconds/1000);
+    const formattedMinutes = Math.floor(seconds/60).toString().padStart(2, '0');
+    const formattedSeconds = (seconds%60).toString().padStart(2, '0');
+    const formattedTime = `${formattedMinutes}:${formattedSeconds}`;
+    this.recordingTimer.textContent = formattedTime;
   }
 
   async changeCameraEventHandler(e) {
