@@ -13,7 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/ui"
-	"go.chromium.org/tast-tests/cros/local/chrome/internal/lacros"
 	"go.chromium.org/tast-tests/cros/local/logsaver"
 	"go.chromium.org/tast-tests/cros/local/screenshot/cliscreenshot"
 	"go.chromium.org/tast/core/ctxutil"
@@ -497,11 +496,6 @@ type loggedInFixture struct {
 	cr          *Chrome
 	fOpt        OptionsCallback  // Function to generate Chrome Options
 	logMarker   *logsaver.Marker // Marker for per-test log.
-
-	// The last time PreTest was called. This is used by PostTest to collect per-test Lacros logs.
-	// Note that cr contains its own logsStartTime, which remains untouched and will be used for
-	// per-fixture collection of Lacros logs.
-	logsStartTime time.Time
 }
 
 type loggedInFixtureState struct {
@@ -598,7 +592,6 @@ func (f *loggedInFixture) Reset(ctx context.Context) error {
 }
 
 func (f *loggedInFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
-	f.logsStartTime = time.Now().UTC()
 	if f.logMarker != nil {
 		s.Log("A log marker is already created but not cleaned up")
 	}
@@ -616,10 +609,6 @@ func (f *loggedInFixture) PostTest(ctx context.Context, s *testing.FixtTestState
 			s.Log("Failed to store per-test log data: ", err)
 		}
 		f.logMarker = nil
-	}
-
-	if err := lacros.SaveLogsAfter(ctx, s.OutDir(), f.logsStartTime); err != nil {
-		s.Log("Failed to store per-test Lacros log data: ", err)
 	}
 }
 

@@ -19,7 +19,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome/internal/config"
 	"go.chromium.org/tast-tests/cros/local/chrome/internal/driver"
-	"go.chromium.org/tast-tests/cros/local/media/vm"
 	"go.chromium.org/tast-tests/cros/local/session"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/errors"
@@ -71,7 +70,7 @@ func stackProfilerArg(enable bool) string {
 
 // RestartChromeForTesting restarts the ui job, asks session_manager to enable Chrome testing,
 // and waits for Chrome to listen on its debugging port.
-func RestartChromeForTesting(ctx context.Context, cfg *config.Config, extArgs, lacrosExtArgs []string) error {
+func RestartChromeForTesting(ctx context.Context, cfg *config.Config, extArgs []string) error {
 	ctx, st := timing.Start(ctx, "restart")
 	defer st.End()
 
@@ -306,44 +305,6 @@ func RestartChromeForTesting(ctx context.Context, cfg *config.Config, extArgs, l
 	if cfg.ProxyServer() != "" {
 		args = append(args, "--proxy-server="+cfg.ProxyServer())
 	}
-
-	// Lacros features and additional args used to launch lacros-chrome should be delimited by
-	// '####' and passed in from ash-chrome as a single argument with --lacros-chrome-additional-args.
-	// See browser_manager.cc in Chrome source.
-	// Example:
-	//   --lacros-chrome-additional-args=--enable-features=Feature1,Feature2####--disable-features=Feature3####--foo=bar
-	// will result in multiple arguments passed to lacros-chrome:
-	//   --enable-features=Feature1,Feature2
-	//   --disable-features=Feature3
-	//   --foo=bar
-	lacrosEnabledFeatures := cfg.LacrosEnableFeatures()
-
-	// Native occlusion is enabled in prod, but disabled by CHROME_HEADLESS in tast tests.
-	// This should be enabled for end to end tests, so enable it in tast tests.
-	lacrosEnabledFeatures = append(lacrosEnabledFeatures, "AlwaysTrackNativeWindowOcclusionForTest")
-
-	var largs []string
-	if len(lacrosEnabledFeatures) != 0 {
-		largs = append(largs, "--enable-features="+strings.Join(lacrosEnabledFeatures, ","))
-	}
-	if fs := cfg.LacrosDisableFeatures(); len(fs) != 0 {
-		largs = append(largs, "--disable-features="+strings.Join(fs, ","))
-	}
-	if as := cfg.LacrosExtraArgs(); len(as) != 0 {
-		largs = append(largs, as...)
-	}
-	if len(lacrosExtArgs) != 0 {
-		largs = append(largs, lacrosExtArgs...)
-	}
-	largs = append(largs, stackProfilerArg(cfg.EnableLacrosStackSampledMetrics()))
-
-	// Disable GPU sandbox for lacros on VMs because it crashes on entering.
-	// GPU crashes cause strange test timeouts. See b/40280541 and b/341794182.
-	if vm.IsRunningOnVM() {
-		largs = append(largs, "--disable-gpu-sandbox")
-	}
-
-	args = append(args, "--lacros-chrome-additional-args="+strings.Join(largs, "####"))
 
 	args = append(args, cfg.ExtraArgs()...)
 	var envVars []string

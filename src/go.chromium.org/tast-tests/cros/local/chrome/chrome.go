@@ -24,7 +24,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/internal/config"
 	"go.chromium.org/tast-tests/cros/local/chrome/internal/driver"
 	"go.chromium.org/tast-tests/cros/local/chrome/internal/extension"
-	"go.chromium.org/tast-tests/cros/local/chrome/internal/lacros"
 	"go.chromium.org/tast-tests/cros/local/chrome/internal/login"
 	"go.chromium.org/tast-tests/cros/local/chrome/internal/setup"
 	"go.chromium.org/tast-tests/cros/local/chrome/jslog"
@@ -122,8 +121,6 @@ const (
 	persistentDir = "/usr/local/tmp/tast/chrome_session"
 	// extensionsDir is the directory for all chrome session extensions.
 	extensionsDir = persistentDir + "/extensions"
-	// lacrosExtensionsDir is the directory for browser extensions.
-	lacrosExtensionsDir = persistentDir + "/lacros_extensions"
 )
 
 // locked is set to true while a precondition is active to prevent tests from calling New or Chrome.Close.
@@ -153,7 +150,6 @@ var prePackages = []string{
 	"go.chromium.org/tast-tests/cros/local/drivefs",
 	"go.chromium.org/tast-tests/cros/local/graphics",
 	"go.chromium.org/tast-tests/cros/local/kioskmode/fixtures",
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt",
 	"go.chromium.org/tast-tests/cros/local/media/pre",
 	"go.chromium.org/tast-tests/cros/local/multivm",
 	"go.chromium.org/tast-tests/cros/local/policyutil/fixtures",
@@ -194,11 +190,6 @@ type Chrome struct {
 
 	logFilename string
 	logMarker   *logsaver.Marker
-
-	// The time just before ash-chrome is (re)started. This timestamp marks the
-	// earliest time for considering Lacros logs as part of the current test.
-	// TODO(andreaorru): support the reuse case.
-	logsStartTime time.Time
 
 	loginPending bool // true if login is pending until ContinueLogin is called
 }
@@ -244,9 +235,6 @@ func (c *Chrome) User() string { return c.cfg.Creds().User }
 
 // NormalizedUser returns the normalized (lowercase and striping '.' characters) username that was used to log in to Chrome.
 func (c *Chrome) NormalizedUser() string { return c.cfg.NormalizedUser() }
-
-// LacrosExtraArgs returns the extra arguments that should be added to the Lacros command line.
-func (c *Chrome) LacrosExtraArgs() []string { return c.cfg.LacrosExtraArgs() }
 
 // DeprecatedExtDirs returns the directories holding the test extensions.
 // For reused Chrome session, deprecatedExtDirs is not set and this method will return nil.
@@ -415,13 +403,8 @@ func New(ctx context.Context, opts ...Option) (c *Chrome, retErr error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to prepare extensions for ash-chrome")
 	}
-	lacrosExts, err := extension.PrepareExtensions(lacrosExtensionsDir, cfg, guestModeLogin)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to prepare extensions for lacros-chrome")
-	}
 
-	logsStartTime := time.Now().UTC()
-	if err := setup.RestartChromeForTesting(ctx, cfg, exts.AshArgs(), lacrosExts.LacrosArgs()); err != nil {
+	if err := setup.RestartChromeForTesting(ctx, cfg, exts.AshArgs()); err != nil {
 		return nil, errors.Wrap(err, "failed to restart chrome for testing")
 	}
 
@@ -490,7 +473,6 @@ func New(ctx context.Context, opts ...Option) (c *Chrome, retErr error) {
 		sess:              sess,
 		logFilename:       logFilename,
 		logMarker:         logsaver.NewMarkerNoOffset(logFilename),
-		logsStartTime:     logsStartTime,
 		loginPending:      loginPending,
 	}, nil
 }
@@ -522,10 +504,6 @@ func (c *Chrome) Close(ctx context.Context) error {
 func (c *Chrome) saveLogs(ctx context.Context, outDir string) error {
 	c.agg.Save(filepath.Join(outDir, "jslog.txt"))
 
-	if err := lacros.SaveLogsAfter(ctx, outDir, c.logsStartTime); err != nil {
-		testing.ContextLog(ctx, "Failed to store per-test Lacros log data: ", err)
-	}
-
 	if err := c.logMarker.Save(filepath.Join(outDir, filepath.Base(c.logFilename))); err != nil {
 		testing.ContextLog(ctx, "Failed to save the entire log: ", err)
 		return err
@@ -533,7 +511,7 @@ func (c *Chrome) saveLogs(ctx context.Context, outDir string) error {
 	return nil
 }
 
-// SaveLogsOnError saves jsLog.txt, chrome_$date-$time and lacros_$date-$time.log in the outDir when hasError returns true.
+// SaveLogsOnError saves jsLog.txt and chrome_$date-$time in the outDir when hasError returns true.
 func (c *Chrome) SaveLogsOnError(ctx context.Context, outDir string, hasError func() bool) error {
 	if hasError() {
 		return c.saveLogs(ctx, outDir)
@@ -611,12 +589,6 @@ func (c *Chrome) ResetState(ctx context.Context) error {
 		return errors.Wrap(err, "failed to get test API connection")
 	}
 
-	// First deal with Lacros, which may or may not be enabled.
-	if err := lacros.ResetState(ctx, tconn); err != nil {
-		return errors.Wrap(err, "failed to reset Lacros's state")
-	}
-
-	// Now deal with Ash.
 	if err := c.CloseTargets(ctx, shouldCloseOnReset); err != nil {
 		return errors.Wrap(err, "not all targets finished closing")
 	}
