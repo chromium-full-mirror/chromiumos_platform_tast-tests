@@ -103,20 +103,11 @@ func PlaybackAudioControls(ctx context.Context, s *testing.State) {
 
 	// Ensure landscape orientation. Gallery app has different UI if its size is
 	// in portrait, and the play queue buttons don't exist.
-	orientation, err := display.GetOrientation(ctx, tconn)
+	restore, err := display.RotateToLandscape(ctx, tconn)
 	if err != nil {
-		s.Fatal("Failed to obtain the orientation info: ", err)
+		s.Fatal("Failed to rotate display to landscape: ", err)
 	}
-	displayInfo, err := display.GetPrimaryInfo(ctx, tconn)
-	if err != nil {
-		s.Fatal("Failed to obtain primary display info: ", err)
-	}
-	if orientation.Type == display.OrientationPortraitPrimary {
-		if err = display.SetDisplayRotationSync(ctx, tconn, displayInfo.ID, display.Rotate90); err != nil {
-			s.Fatal("Failed to rotate display: ", err)
-		}
-		defer display.SetDisplayRotationSync(cleanupCtx, tconn, displayInfo.ID, display.Rotate0)
-	}
+	defer restore(cleanupCtx)
 
 	// First audio file name and path variables.
 	rawFileName1 := "audioFile1.raw"
