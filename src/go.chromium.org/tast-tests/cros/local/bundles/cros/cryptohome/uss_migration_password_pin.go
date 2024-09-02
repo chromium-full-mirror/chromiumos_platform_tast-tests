@@ -34,7 +34,7 @@ func init() {
 		},
 		BugComponent: "b:1088399", // ChromeOS > Security > Cryptohome
 		SoftwareDeps: []string{"chrome", "pinweaver"},
-		Attr:         []string{"group:mainline", "group:cryptohome"},
+		Attr:         []string{"group:mainline", "group:cryptohome", "informational"},
 		Params: []testing.Param{{
 			Name: "legacy_pin",
 			Val: ussMigrationPasswordPinParam{

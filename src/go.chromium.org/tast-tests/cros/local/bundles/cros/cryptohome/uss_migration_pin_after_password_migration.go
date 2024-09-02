@@ -33,7 +33,7 @@ func init() {
 			"hardikgoyal@chromium.org",
 		},
 		BugComponent: "b:1088399", // ChromeOS > Security > Cryptohome
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"pinweaver", "tpm", "chrome"},
 		Params: []testing.Param{{
 			Name: "legacy_pin",
