@@ -87,6 +87,8 @@ var cyclicBenchUnstableModels = []string{
 	"hayato", "spherion",
 	// scarlet
 	"dru",
+	// hana(b/363946752)
+	"hana",
 }
 
 func init() {
