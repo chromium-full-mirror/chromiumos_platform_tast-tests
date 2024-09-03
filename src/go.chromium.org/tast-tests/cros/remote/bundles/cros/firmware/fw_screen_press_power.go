@@ -19,7 +19,6 @@ import (
 )
 
 type fwScreenPressPwrParams struct {
-	bootMode     fwCommon.BootMode
 	bootToScreen fwCommon.FwScreenType
 }
 
@@ -40,28 +39,24 @@ func init() {
 			Name:    "dev_screen",
 			Fixture: fixture.DevMode,
 			Val: &fwScreenPressPwrParams{
-				bootMode:     fwCommon.BootModeDev,
 				bootToScreen: fwCommon.FwDeveloperScreen,
 			},
 		}, {
 			Name:    "to_norm_screen",
 			Fixture: fixture.DevMode,
 			Val: &fwScreenPressPwrParams{
-				bootMode:     fwCommon.BootModeDev,
 				bootToScreen: fwCommon.FwToNormScreen,
 			},
 		}, {
 			Name:    "broken_screen",
 			Fixture: fixture.NormalMode,
 			Val: &fwScreenPressPwrParams{
-				bootMode:     fwCommon.BootModeNormal,
 				bootToScreen: fwCommon.FwBrokenScreen,
 			},
 		}, {
 			Name:    "rec_screen",
 			Fixture: fixture.NormalMode,
 			Val: &fwScreenPressPwrParams{
-				bootMode:     fwCommon.BootModeNormal,
 				bootToScreen: fwCommon.FwRecoveryScreen,
 			},
 			ExtraAttr: []string{"firmware_ro"},
@@ -69,7 +64,6 @@ func init() {
 			Name:    "invalid_screen",
 			Fixture: fixture.NormalMode,
 			Val: &fwScreenPressPwrParams{
-				bootMode:     fwCommon.BootModeNormal,
 				bootToScreen: fwCommon.FwInvalidScreen,
 			},
 			ExtraAttr: []string{"firmware_usb"},
@@ -78,7 +72,8 @@ func init() {
 }
 
 func FwScreenPressPower(ctx context.Context, s *testing.State) {
-	h := s.FixtValue().(*fixture.Value).Helper
+	pv := s.FixtValue().(*fixture.Value)
+	h := pv.Helper
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to init servo: ", err)
 	}
@@ -118,7 +113,7 @@ func FwScreenPressPower(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to ensure dut has booted: ", err)
 		}
 		if param.bootToScreen == fwCommon.FwInvalidScreen {
-			if err := restoreUSB(ctx, h); err != nil {
+			if err := h.RestoreUSBKey(ctx); err != nil {
 				s.Fatal("Failed to restore USB: ", err)
 			}
 		}
@@ -136,12 +131,18 @@ func FwScreenPressPower(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to power off: ", err)
 	}
 
-	testing.ContextLog(ctx, "Pressing power key")
-	if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.DurPress); err != nil {
+	s.Log("Sleeping for 2 seconds before pressing power key")
+	// GoBigSleepLint: Wait a little while before waking up the DUT again.
+	if err := testing.Sleep(ctx, 2*time.Second); err != nil {
+		s.Fatal("Failed to sleep: ", err)
+	}
+
+	s.Log("Pressing power key")
+	if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.Dur(h.Config.HoldPwrButtonPowerOn)); err != nil {
 		s.Fatal("Failed to press power key: ", err)
 	}
 
-	if param.bootMode == fwCommon.BootModeDev {
+	if pv.BootMode == fwCommon.BootModeDev {
 		devModeBypasserParams := firmware.RunBypasser{
 			BypasserMethod:        ms.BypassDevMode,
 			RepeatBypasser:        true,
@@ -162,7 +163,7 @@ func FwScreenPressPower(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	if isExpMode, err := h.Reporter.CheckBootMode(ctx, param.bootMode); err != nil {
+	if isExpMode, err := h.Reporter.CheckBootMode(ctx, pv.BootMode); err != nil {
 		s.Fatal("Failed to check boot mode: ", err)
 	} else if !isExpMode {
 		s.Fatal("Found unexpected boot mode")
@@ -204,7 +205,7 @@ func fwScreenPressPowerOff(ctx context.Context, h *firmware.Helper, bootToScreen
 			return errors.Wrap(err, "failed to press power key")
 		}
 		if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "G3"); err != nil {
-			return errors.Wrap(err, "failed to get G3 power state")
+			return errors.Wrap(err, "failed to get G3 power state after pressing the power key on the firmware screen")
 		}
 	}
 	return nil
@@ -231,28 +232,6 @@ func setupInvalidUSB(ctx context.Context, h *firmware.Helper) error {
 	}
 	if err := h.CorruptUSBKey(ctx, usbDev); err != nil {
 		return errors.Wrap(err, "failed to corrupt the USB")
-	}
-	return nil
-}
-
-func restoreUSB(ctx context.Context, h *firmware.Helper) error {
-	testing.ContextLog(ctx, "Powering off the USB")
-	if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxOff); err != nil {
-		return errors.Wrap(err, "failed to power off the USB")
-	}
-	testing.ContextLog(ctx, "Restoring the USB")
-	if err := h.RestoreUSBKey(ctx); err != nil {
-		return errors.Wrap(err, "failed to restore the USB")
-	}
-	testing.ContextLog(ctx, "Enabling a valid USB to DUT")
-	if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
-		return errors.Wrap(err, "failed to enable the USB to DUT")
-	}
-	testing.ContextLogf(ctx, "Sleeping %v to let USB become visible to dut", firmware.UsbVisibleTime)
-	// GoBigSleepLint: It may take some time for usb mux state to
-	// take effect.
-	if err := testing.Sleep(ctx, firmware.UsbVisibleTime); err != nil {
-		return errors.Wrapf(err, "failed to sleep for %v s", firmware.UsbDisableTime)
 	}
 	return nil
 }
