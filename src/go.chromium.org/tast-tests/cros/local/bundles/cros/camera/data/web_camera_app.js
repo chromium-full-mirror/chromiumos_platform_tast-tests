@@ -94,11 +94,31 @@ class CameraApp {
         img.height * ratio);
   }
 
+  async bitmapToBlob(img) {
+    const canvas = document.createElement('canvas');
+    canvas.width = img.width;
+    canvas.height = img.height;
+    const canvasContext = canvas.getContext('2d');
+    canvasContext.fillStyle = 'black';
+    canvasContext.fillRect(0, 0, canvas.width, canvas.height);
+    canvasContext.drawImage(img, 0, 0, img.width, img.height);
+    const blob = await new Promise((resolve, reject) => {
+      canvas.toBlob(function(blob) {
+        if (blob) {
+          resolve(blob);
+        } else {
+          reject(new Error('Blob creation failed'));
+        }
+      }, 'image/jpeg', 1.0);
+    });
+    return blob;
+  }
+
   async takePictureButtonEventHandler() {
     const img = await this.cameraCapture.grabFrame();
     this.drawCanvas(this.photoOutput, img);
-    const dataUrl = this.photoOutput.toDataURL('image/jpeg', 1.0);
-    this.downloadBlob(dataUrl, 'IMG_');
+    const blob = await this.bitmapToBlob(img);
+    this.downloadBlob(blob, 'IMG_');
   }
 
   startButtonEventHandler() {
@@ -153,28 +173,24 @@ class CameraApp {
     const blob = e.data;
     const dataUrl = URL.createObjectURL(blob);
     const recordingObj = this.videoOutput;
-    this.downloadBlob(dataUrl, 'VID_');
+    this.downloadBlob(blob, 'VID_');
     recordingObj.src = dataUrl;
     recordingObj.load();
     recordingObj.style.display = 'inline';
   }
 
   // Automatically download taken blob
-  downloadBlob(url, prefix) {
+  downloadBlob(blob, prefix) {
+    const blobUrl = window.URL.createObjectURL(blob);
     const fileName = prefix.concat(this.getCurrentTimeStamp());
-    const request = new XMLHttpRequest();
-    request.responseType = 'blob';
-    request.onload = function () {
-      const downloadEvent = document.createElement('a');
-      downloadEvent.href = window.URL.createObjectURL(request.response);
-      downloadEvent.download = fileName;
-      downloadEvent.style.display = 'none';
-      document.body.appendChild(downloadEvent);
-      downloadEvent.click();
-      downloadEvent.remove();
-    };
-    request.open('GET', url);
-    request.send();
+    const downloadEvent = document.createElement('a');
+    downloadEvent.href = blobUrl;
+    downloadEvent.download = fileName;
+    downloadEvent.style.display = 'none';
+    document.body.appendChild(downloadEvent);
+    downloadEvent.click();
+    document.body.removeChild(downloadEvent);
+    URL.revokeObjectURL(blobUrl);
   }
 
   inputFrameRateInputEventHandler() {
