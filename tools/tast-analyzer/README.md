@@ -31,7 +31,7 @@ First direct the tool to a tast results directory (/tmp/tast/results) from
 before your change and have it extract the metrics. The below example generates
 a file `before_change.json` from the results directory.
 
-`python3 -m analyzer.run ingest-tast --output_path before_change.json <results dir>`
+`python3 -m analyzer.run ingest-tast --output-path before_change.json <results dir>`
 
 Then run again on the tast results directory after your change to generate
 `after_change.json`. Make sure to clear the tast results directory in between.

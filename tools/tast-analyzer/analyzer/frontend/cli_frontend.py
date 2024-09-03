@@ -104,9 +104,9 @@ def _compare_results(
     type=click.Path(
         exists=True, dir_okay=False, resolve_path=True, path_type=pathlib.Path
     ),
-    help="stats tests",
-    nargs=2,
+    help="two JSON files to compare the samples from",
     required=True,
+    nargs=2,
 )
 @click.option(
     "-a",

@@ -66,7 +66,7 @@ def _load_results_from_tast_dir(
 
 @click.command()
 @click.option(
-    "--output_path",
+    "--output-path",
     type=click.Path(
         exists=False, dir_okay=False, resolve_path=True, path_type=pathlib.Path
     ),
@@ -74,7 +74,7 @@ def _load_results_from_tast_dir(
     help="path to output summary JSON file",
 )
 @click.argument(
-    "input_path",
+    "input-path",
     type=click.Path(
         exists=True, file_okay=False, resolve_path=True, path_type=pathlib.Path
     ),
