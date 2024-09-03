@@ -39,8 +39,11 @@ func init() {
 			"mruthven@chromium.org",
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
-		Attr:         []string{"group:gsc", "gsc_dt_shield", "gsc_h1_shield", "gsc_image_ti50", "gsc_nightly"},
-		Fixture:      fixture.GSCUpdate,
+		Attr: []string{"group:gsc",
+			"gsc_dt_shield", "gsc_h1_shield", "gsc_ot_shield",
+			"gsc_image_ti50",
+			"gsc_nightly"},
+		Fixture: fixture.GSCUpdate,
 		Params: []testing.Param{{
 			Name: "reboot",
 			Val: updateConfig{

@@ -28,17 +28,19 @@ func init() {
 			"ecgh@chromium.org",
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
-		Attr:         []string{"group:gsc", "gsc_dt_ab", "gsc_dt_shield", "gsc_nightly"},
+		Attr: []string{"group:gsc",
+			"gsc_dt_ab", "gsc_dt_shield", "gsc_ot_shield", "gsc_he",
+			"gsc_nightly"},
 		Params: []testing.Param{{
 			Name:      "sta",
 			Val:       true, // hasKernelTests
 			Fixture:   fixture.SystemTestAutoDevboard,
-			ExtraAttr: []string{"gsc_image_sta", "gsc_he"},
+			ExtraAttr: []string{"gsc_image_sta"},
 		}, {
 			Name:      "sta2",
 			Val:       false, // hasKernelTests
 			Fixture:   fixture.SystemTestAuto2Devboard,
-			ExtraAttr: []string{"gsc_image_sta2", "gsc_he"},
+			ExtraAttr: []string{"gsc_image_sta2"},
 		}},
 	})
 }
