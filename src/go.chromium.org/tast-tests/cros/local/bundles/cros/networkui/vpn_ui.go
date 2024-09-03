@@ -6,6 +6,7 @@ package networkui
 
 import (
 	"context"
+	"path/filepath"
 	"reflect"
 	"time"
 
@@ -14,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/input"
@@ -199,6 +201,10 @@ func VPNUI(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start VPN server: ", err)
 	}
 	defer cleanup(cleanupCtx)
+
+	// TODO(b/358402911): Remove this function once we no longer need it for debugging.
+	recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn)
+	defer uiauto.StopAndSaveOnError(cleanupCtx, recorder, filepath.Join(s.OutDir(), "recording.webm"), s.HasError)
 
 	settings, err := ossettings.OpenJoinVPNDialog(ctx, tconn, cr)
 	if err != nil {
