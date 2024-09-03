@@ -196,15 +196,19 @@ func (i *devboardFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 // setupImage flashes the image under test on the devboard using the image and
 // json files provided in the `Value` parameter.
 func setupImage(ctx context.Context, v *Value, s TestingState) {
-	// Setup the board with the correct jsons. Use an empty string for the image
-	// path so setup doesn't try to flash the image.
-	if err := v.devboard.Setup(ctx, "", v.FwConfigJsons); err != nil {
-		s.Fatal("Setup: ", err)
-	}
+	// Host emulation does not support `Setup()` without specifying image, and it does not
+	// make sense to attempt to skip flashing the image.
+	if v.TestbedProperties.TestbedType != ti50.GscHostEmulation {
+		// Setup the board with the correct jsons. Use an empty string for the image
+		// path so setup doesn't try to flash the image.
+		if err := v.devboard.Setup(ctx, "", v.FwConfigJsons); err != nil {
+			s.Fatal("Setup: ", err)
+		}
 
-	if needsUpdate(ctx, s, v.devboard, v.ImagePath, false) {
-		testing.ContextLog(ctx, "Image is already running")
-		return
+		if needsUpdate(ctx, s, v.devboard, v.ImagePath, false) {
+			testing.ContextLog(ctx, "Image is already running")
+			return
+		}
 	}
 	testing.ContextLog(ctx, "Setting up image: ", v.ImagePath)
 	if v.TestbedProperties.TestbedType == ti50.GscH1Shield {
