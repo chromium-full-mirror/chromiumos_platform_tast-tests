@@ -172,7 +172,7 @@ func CreateLegacyRoutineV2ArgsBuilder(params RoutineParamsV2) func(context.Conte
 		case RoutineCPUStressV2, RoutineCPUCacheV2, RoutinePrimeSearchV2, RoutineFloatingPointV2:
 			// Runs the CPU routine for 1 second.
 			return []string{params.Routine, "--length_seconds=1"}, nil
-		case RoutineAudioDriver, RoutineUFSLifetime, RoutineBluetoothPowerV2, RoutineBluetoothDiscoveryV2, RoutineBluetoothScanningV2:
+		case RoutineAudioDriver, RoutineUFSLifetime:
 			// No extra parameters required for these routines.
 			return []string{params.Routine}, nil
 		default:

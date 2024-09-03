@@ -8,9 +8,7 @@ package health
 
 import (
 	"context"
-	"time"
 
-	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/local/croshealthd"
 	"go.chromium.org/tast/core/testing"
 )
@@ -54,29 +52,6 @@ func init() {
 			Name:    "floating_point_v2",
 			Val:     croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineFloatingPointV2},
 			Fixture: "crosHealthdRunning",
-		}, {
-			// Contact: byronlee@google.com
-			Name: "bluetooth_power",
-			Val:  croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineBluetoothPowerV2},
-			// Bluetooth v2 routines are only supported when Floss is enabled.
-			Fixture: "crosHealthdRunningAndBluetoothEnabledWithFloss",
-			// TODO(b/363888266): Promote tast to critical
-			ExtraAttr:        []string{"informational", "group:criticalstaging"},
-			ExtraTestBedDeps: []string{tbdep.BluetoothStateNormal},
-		}, {
-			// Contact: byronlee@google.com
-			Name: "bluetooth_discovery",
-			Val:  croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineBluetoothDiscoveryV2},
-			// Bluetooth v2 routines are only supported when Floss is enabled.
-			Fixture:          "crosHealthdRunningAndBluetoothEnabledWithFloss",
-			ExtraTestBedDeps: []string{tbdep.BluetoothStateNormal},
-		}, {
-			// Contact: byronlee@google.com
-			Name: "bluetooth_scanning",
-			Val:  croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineBluetoothScanningV2},
-			// Bluetooth v2 routines are only supported when Floss is enabled.
-			Fixture:          "crosHealthdRunningAndBluetoothEnabledWithFloss",
-			ExtraTestBedDeps: []string{tbdep.BluetoothStateNormal},
 		}}})
 }
 
@@ -92,11 +67,6 @@ func DiagnosticsPassV2(ctx context.Context, s *testing.State) {
 		ResultVerifier: croshealthd.VerifyRoutinePassedV2,
 	}
 	if err := croshealthd.TestDiagRoutineV2(ctx, config); err != nil {
-		// TODO(b/362645235): Remove the sleep used for debugging b/362645235.
-		if params.Routine == croshealthd.RoutineBluetoothPowerV2 {
-			// GoBigSleepLint: Ensure that adapter added event is missing at the end of Bluetooth power routine.
-			testing.Sleep(ctx, time.Second*5)
-		}
 		s.Fatal("Routine verification failed: ", err)
 	}
 }
