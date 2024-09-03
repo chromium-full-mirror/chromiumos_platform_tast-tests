@@ -71,9 +71,9 @@ func (p *Pool) AllocNextIPv4Subnet() (*IPv4Subnet, error) {
 	}, nil
 }
 
-// AllocNextIPv6Subnet allocates the next IPv6 subnet.
+// AllocNextIPv6Subnet allocates the next IPv6 /64 subnet.
 func (p *Pool) AllocNextIPv6Subnet() (*IPv6Subnet, error) {
-	if p.ipv4Next > subnetEnd {
+	if p.ipv6Next > subnetEnd {
 		return nil, errors.New("no available subnet")
 	}
 	id := p.ipv6Next
@@ -84,6 +84,29 @@ func (p *Pool) AllocNextIPv6Subnet() (*IPv6Subnet, error) {
 			Mask: []byte{0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0, 0, 0, 0, 0, 0, 0, 0},
 		},
 	}, nil
+}
+
+// AllocNextIPv6NestingSubnet allocates the next IPv6 /63 subnet, returns the
+// subnet itself and its second /64 half.
+func (p *Pool) AllocNextIPv6NestingSubnet() (*IPv6Subnet, *IPv6Subnet, error) {
+	if p.ipv6Next+p.ipv6Next%2+1 > subnetEnd {
+		return nil, nil, errors.New("no available subnet")
+	}
+	p.ipv6Next += p.ipv6Next % 2
+	id := p.ipv6Next
+	p.ipv6Next += 2
+	return &IPv6Subnet{
+			IPNet: net.IPNet{
+				IP:   []byte{0xfd, 0, 0, 0, 0, 0, 0, byte(id), 0, 0, 0, 0, 0, 0, 0, 0},
+				Mask: []byte{0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe, 0, 0, 0, 0, 0, 0, 0, 0},
+			},
+		},
+		&IPv6Subnet{
+			IPNet: net.IPNet{
+				IP:   []byte{0xfd, 0, 0, 0, 0, 0, 0, byte(id + 1), 0, 0, 0, 0, 0, 0, 0, 0},
+				Mask: []byte{0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0, 0, 0, 0, 0, 0, 0, 0},
+			},
+		}, nil
 }
 
 // GetAddrEndWith returns a net.IP object which is in this subnet and with idx as its
