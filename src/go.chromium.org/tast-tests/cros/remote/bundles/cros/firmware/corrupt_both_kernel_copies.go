@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
+
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
@@ -123,7 +124,7 @@ func CorruptBothKernelCopies(ctx context.Context, s *testing.State) {
 	needsRestore := true
 
 	cleanupContext := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Minute)
+	ctx, cancel := ctxutil.Shorten(ctx, 15*time.Minute)
 	defer cancel()
 
 	defer func(ctx context.Context) {
@@ -193,6 +194,21 @@ func CorruptBothKernelCopies(ctx context.Context, s *testing.State) {
 
 	var state firmware.CheckAndSetServoCharger
 	state = h.CheckServoChargerBeforeBootingFromUSB(ctx)
+	defer func(ctx context.Context) {
+		if s.HasError() {
+			if state.RemoveServoChargerRequired && !state.IsServoChargerConnected {
+				if err := h.SetDUTPower(ctx, true); err != nil {
+					s.Fatal("Failed to connect charger: ", err)
+				}
+				state.IsServoChargerConnected = true
+				waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 2*time.Minute)
+				defer cancelWaitConnect()
+				if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
+					s.Fatal("Failed to reconnect to the DUT: ", err)
+				}
+			}
+		}
+	}(cleanupContext)
 
 	s.Log("Performing mode aware reboot to ensure boot to copy A")
 	if err := ms.ModeAwareReboot(ctx, firmware.ColdReset); err != nil {
@@ -250,20 +266,20 @@ func CorruptBothKernelCopies(ctx context.Context, s *testing.State) {
 		if needsUSBRestore {
 			s.Log("Booting to recovery mode to restore kernel from USB")
 			if err := h.BootToRecoveryMode(ctx, &state, false); err != nil {
-				s.Fatal("Failed to boot to recovery mode: ", err)
+				s.Error("Failed to boot to recovery mode: ", err)
 			}
 			s.Log("Restore KERN-A")
-			if err := restoreKernelHeaderFromUSB(ctx, h, diskPath, "2"); err != nil {
-				s.Fatal("Failed to restore KERN-A: ", err)
+			if err := pollForRestoringKernelHeaderFromUSB(ctx, h, diskPath, "2"); err != nil {
+				s.Error("Failed to restore KERN-A: ", err)
 			}
 			s.Log("Restore KERN-B")
-			if err := restoreKernelHeaderFromUSB(ctx, h, diskPath, "4"); err != nil {
-				s.Fatal("Failed to restore KERN-B: ", err)
+			if err := pollForRestoringKernelHeaderFromUSB(ctx, h, diskPath, "4"); err != nil {
+				s.Error("Failed to restore KERN-B: ", err)
 			}
 
 			s.Log("Performing mode aware reboot to boot to original bootmode")
 			if err := ms.RebootToMode(ctx, pv.BootMode, firmware.AllowGBBForce); err != nil {
-				s.Fatal("Failed to reboot: ", err)
+				s.Error("Failed to reboot: ", err)
 			}
 
 			if state.RemoveServoChargerRequired && !state.IsServoChargerConnected {
@@ -337,12 +353,12 @@ func CorruptBothKernelCopies(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Restore KERN-A")
-	if err := restoreKernelHeaderFromUSB(ctx, h, diskPath, "2"); err != nil {
+	if err := pollForRestoringKernelHeaderFromUSB(ctx, h, diskPath, "2"); err != nil {
 		s.Error("Failed to restore KERN-A: ", err)
 	}
 
 	s.Log("Restore KERN-B")
-	if err := restoreKernelHeaderFromUSB(ctx, h, diskPath, "4"); err != nil {
+	if err := pollForRestoringKernelHeaderFromUSB(ctx, h, diskPath, "4"); err != nil {
 		s.Error("Failed to restore KERN-B: ", err)
 	}
 
@@ -412,31 +428,34 @@ func getRootdevNameByID(ctx context.Context, h *firmware.Helper) (string, error)
 	return pathByID, nil
 }
 
-func restoreKernelHeaderFromUSB(ctx context.Context, h *firmware.Helper, diskPath, part string) error {
-	usbdevRaw, err := h.DUT.Conn().CommandContext(ctx, "rootdev", "-s", "-d").Output(ssh.DumpLogOnError)
-	if err != nil {
-		return errors.Wrap(err, "failed to get rootdev")
-	}
-	usbdev := strings.TrimSpace(string(usbdevRaw))
+func pollForRestoringKernelHeaderFromUSB(ctx context.Context, h *firmware.Helper, diskPath, part string) error {
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		usbdevRaw, err := h.DUT.Conn().CommandContext(ctx, "rootdev", "-s", "-d").Output(ssh.DumpLogOnError)
+		if err != nil {
+			return errors.Wrap(err, "failed to get rootdev")
+		}
+		usbdev := strings.TrimSpace(string(usbdevRaw))
 
-	// Example: (/dev/disk/by-id/mmc-CUTB42_0x0f9f49c9, 2) -> /dev/disk/by-id/mmc-CUTB42_0x0f9f49c9-part2.
-	diskdevWithPart := fmt.Sprintf("%s-part%s", diskPath, part)
+		// Example: (/dev/disk/by-id/mmc-CUTB42_0x0f9f49c9, 2) -> /dev/disk/by-id/mmc-CUTB42_0x0f9f49c9-part2.
+		diskdevWithPart := fmt.Sprintf("%s-part%s", diskPath, part)
 
-	// Add part to usb dev, eg. /dev/sda -> /dev/sda2.
-	usbdevWithPart := fmt.Sprintf("%s%s", usbdev, part)
+		// Add part to usb dev, eg. /dev/sda -> /dev/sda2.
+		usbdevWithPart := fmt.Sprintf("%s%s", usbdev, part)
 
-	testing.ContextLogf(ctx, "Resetting disk kernel %q from %q", diskdevWithPart, usbdevWithPart)
-	args := []string{
-		fmt.Sprintf("if=%s", usbdevWithPart),
-		fmt.Sprintf("of=%s", diskdevWithPart),
-		"conv=notrunc,nocreat",
-		"oflag=sync",
-		"bs=8", "count=1", // Just write the first 8 bytes of the header magic.
-	}
-	cmd := h.DUT.Conn().CommandContext(ctx, "dd", args...)
-
-	if err := cmd.Run(testexec.DumpLogOnError); err != nil {
-		return errors.Wrap(err, "failed resetting kernel")
+		testing.ContextLogf(ctx, "Resetting disk kernel %q from %q", diskdevWithPart, usbdevWithPart)
+		args := []string{
+			fmt.Sprintf("if=%s", usbdevWithPart),
+			fmt.Sprintf("of=%s", diskdevWithPart),
+			"conv=notrunc,nocreat",
+			"oflag=sync",
+			"bs=8", "count=1", // Just write the first 8 bytes of the header magic.
+		}
+		if err := h.DUT.Conn().CommandContext(ctx, "dd", args...).Run(testexec.DumpLogOnError); err != nil {
+			return errors.Wrap(err, "failed resetting kernel")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 1 * time.Minute}); err != nil {
+		return err
 	}
 
 	return nil
