@@ -175,6 +175,22 @@ func (s *Servo) ServoSetDualRole(ctx context.Context, val USBPdDualRoleValue) er
 	return nil
 }
 
+// ServoSetUSBVersion3 sets the DUT USB connection as version 2.0 or 3.0
+func (s *Servo) ServoSetUSBVersion3(ctx context.Context, USBVersion3 bool) error {
+	enableVersion3 := "disable"
+
+	if USBVersion3 == true {
+		enableVersion3 = "enable"
+	}
+
+	cmd := fmt.Sprintf("dut_usb3 %s", enableVersion3)
+	if err := s.RunServoCommand(ctx, cmd); err != nil {
+		return errors.Wrap(err, "unable to set usb version")
+	}
+
+	return nil
+}
+
 // RequireChargerAttached verifies that the Servo charger port (#0) is an active sink
 func (s *Servo) RequireChargerAttached(ctx context.Context) error {
 

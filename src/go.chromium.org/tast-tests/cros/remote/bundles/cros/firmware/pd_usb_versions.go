@@ -1,0 +1,160 @@
+// Copyright 2024 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package firmware
+
+import (
+	"context"
+	"regexp"
+	"time"
+
+	"go.chromium.org/tast-tests/cros/remote/firmware"
+	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/ssh"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
+)
+
+func init() {
+	testing.AddTest(&testing.Test{
+		Func:         PDUsbVersions,
+		Desc:         "Verify USB-C/PD USB 2.0 and 3.0 support",
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"jasonyuan@google.com",
+		},
+		BugComponent: "b:362991308", // ChromeOS > Platform > Enablement > Firmware > FAFT
+		Fixture:      fixture.NormalMode,
+		SoftwareDeps: []string{"chrome"},
+		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
+		Timeout:      20 * time.Minute,
+		Attr:         []string{"group:firmware", "firmware_pd_unstable"},
+		Params: []testing.Param{{
+			Name: "normal",
+			Val:  firmware.PDTestParams{},
+		}, {
+			Name: "normal_snk",
+			Val: firmware.PDTestParams{
+				PowerRole: firmware.RoleSink,
+			},
+		}, {
+			Name: "flipcc",
+			Val: firmware.PDTestParams{
+				CC: firmware.CCPolarityFlipped,
+			},
+		}, {
+			Name: "flipcc_snk",
+			Val: firmware.PDTestParams{
+				CC:        firmware.CCPolarityFlipped,
+				PowerRole: firmware.RoleSink,
+			},
+		}, {
+			Name: "dtsoff",
+			Val: firmware.PDTestParams{
+				DTS: firmware.DTSModeOff,
+			},
+		}, {
+			Name: "dtsoff_snk",
+			Val: firmware.PDTestParams{
+				DTS:       firmware.DTSModeOff,
+				PowerRole: firmware.RoleSink,
+			},
+		}, {
+			Name: "flipcc_dtsoff",
+			Val: firmware.PDTestParams{
+				CC:  firmware.CCPolarityFlipped,
+				DTS: firmware.DTSModeOff,
+			},
+		}, {
+			Name: "flipcc_dtsoff_snk",
+			Val: firmware.PDTestParams{
+				CC:        firmware.CCPolarityFlipped,
+				DTS:       firmware.DTSModeOff,
+				PowerRole: firmware.RoleSink,
+			},
+		}},
+	})
+}
+
+const (
+	// vendor id of the servo_v4.1 hub as seen by the DUT
+	servoHubVendorID string = "04b4:"
+	reUsbVersion     string = `bcdUSB[\s]+([\d]+).([\d]+)`
+
+	// usbVersionPollTimeout is the timeout for a usb connection
+	usbVersionPollTimeout time.Duration = 30 * time.Second
+	// usbVersionPollInterval is the time before testing for a usb connection
+	usbVersionPollInterval time.Duration = 5 * time.Second
+)
+
+func PDUsbVersions(ctx context.Context, s *testing.State) {
+	h := s.FixtValue().(*fixture.Value).Helper
+
+	if err := h.RequireConfig(ctx); err != nil {
+		s.Fatal("Failed to create config: ", err)
+	}
+
+	testParams := s.Param().(firmware.PDTestParams)
+
+	if err := firmware.SetupPDTester(ctx, h, testParams); err != nil {
+		s.Fatal("Failed to configure Servo for PD testing: ", err)
+	}
+
+	testing.ContextLog(ctx, "turning USB 3 off")
+	h.Servo.ServoSetUSBVersion3(ctx, false)
+
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		testing.ContextLog(ctx, "retrieving USB information")
+		usbInfoByteArr, err := h.DUT.Conn().CommandContext(ctx, "lsusb", "-d", servoHubVendorID, "-v").Output(ssh.DumpLogOnError)
+		if err != nil {
+			return errors.Wrap(err, "failed to retrieve USB information")
+		}
+
+		usbVersionRe := regexp.MustCompile(reUsbVersion)
+		matches := usbVersionRe.FindAllStringSubmatch(string(usbInfoByteArr), -1)
+
+		for _, usbVersion := range matches {
+			testing.ContextLogf(ctx, "Found usb version: %s", usbVersion[0])
+			if usbVersion[1] == "3" {
+				return errors.Wrap(err, "found usb 3 connection when it should be disabled")
+			}
+		}
+
+		return nil
+	}, &testing.PollOptions{Timeout: usbVersionPollTimeout, Interval: usbVersionPollInterval}); err != nil {
+		s.Fatal("Expected only usb 2 connection: ", err)
+	}
+
+	testing.ContextLog(ctx, "turning USB 3 on")
+	h.Servo.ServoSetUSBVersion3(ctx, true)
+
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		testing.ContextLog(ctx, "retrieving USB information")
+		usbInfoByteArr, err := h.DUT.Conn().CommandContext(ctx, "lsusb", "-d", servoHubVendorID, "-v").Output(ssh.DumpLogOnError)
+		if err != nil {
+			return errors.Wrap(err, "failed to retrieve USB information")
+		}
+
+		usbVersionRe := regexp.MustCompile(reUsbVersion)
+		matches := usbVersionRe.FindAllStringSubmatch(string(usbInfoByteArr), -1)
+
+		foundUsb3 := false
+		for _, usbVersion := range matches {
+			testing.ContextLogf(ctx, "Found usb version: %s", usbVersion[0])
+			if usbVersion[1] == "3" {
+				foundUsb3 = true
+			}
+		}
+
+		if foundUsb3 == false {
+			return errors.Wrap(err, "could not find usb 3 connection when it should be enabled")
+		}
+
+		return nil
+	}, &testing.PollOptions{Timeout: usbVersionPollTimeout, Interval: usbVersionPollInterval}); err != nil {
+		s.Fatal("Expected usb 3 connection: ", err)
+	}
+}
