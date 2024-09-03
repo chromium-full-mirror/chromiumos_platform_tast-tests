@@ -6,17 +6,20 @@ package cellular
 
 import (
 	"context"
+	"path/filepath"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/hermesconst"
 	"go.chromium.org/tast-tests/cros/local/cellular"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast-tests/cros/local/hermes"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/modemmanager"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -63,10 +66,15 @@ func RenameESimProfileNickname(ctx context.Context, s *testing.State) {
 		s.Fatal("Could not find MM dbus object with a valid sim: ", err)
 	}
 
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
 	cr, err := chrome.New(ctx)
 	if err != nil {
 		s.Fatal("Failed to create a new instance of Chrome: ", err)
 	}
+	defer cr.Close(cleanupCtx)
 
 	helper, err := cellular.NewHelper(ctx)
 	if err != nil {
@@ -83,11 +91,16 @@ func RenameESimProfileNickname(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
+	// TODO(b/358402911): Remove this function once we no longer need it for debugging.
+	recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn)
+	defer uiauto.StopAndSaveOnError(cleanupCtx, recorder, filepath.Join(s.OutDir(), "recording.webm"), s.HasError)
+
 	mdp, err := ossettings.OpenMobileDataSubpage(ctx, tconn, cr)
 	if err != nil {
 		s.Fatal("Failed to open mobile data subpage: ", err)
 	}
-	defer mdp.Close(ctx)
+	defer mdp.Close(cleanupCtx)
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ossettings")
 
 	hasConnectedProfile := false
 	hasDisconnectedProfile := false
@@ -145,11 +158,15 @@ func RenameESimProfileNickname(ctx context.Context, s *testing.State) {
 }
 
 func testRenameProfile(ctx context.Context, tconn *chrome.TestConn) error {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
 	kb, err := input.Keyboard(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to open the keyboard")
 	}
-	defer kb.Close(ctx)
+	defer kb.Close(cleanupCtx)
 
 	ui := uiauto.New(tconn).WithTimeout(5 * time.Minute)
 
