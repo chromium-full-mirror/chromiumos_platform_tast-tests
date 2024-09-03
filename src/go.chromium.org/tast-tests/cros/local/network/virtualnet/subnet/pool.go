@@ -86,27 +86,20 @@ func (p *Pool) AllocNextIPv6Subnet() (*IPv6Subnet, error) {
 	}, nil
 }
 
-// AllocNextIPv6NestingSubnet allocates the next IPv6 /63 subnet, returns the
-// subnet itself and its second /64 half.
-func (p *Pool) AllocNextIPv6NestingSubnet() (*IPv6Subnet, *IPv6Subnet, error) {
+// AllocNextSlash63IPv6Subnet allocates the next IPv6 /63 subnet.
+func (p *Pool) AllocNextSlash63IPv6Subnet() (*IPv6Subnet, error) {
 	if p.ipv6Next+p.ipv6Next%2+1 > subnetEnd {
-		return nil, nil, errors.New("no available subnet")
+		return nil, errors.New("no available subnet")
 	}
 	p.ipv6Next += p.ipv6Next % 2
 	id := p.ipv6Next
 	p.ipv6Next += 2
 	return &IPv6Subnet{
-			IPNet: net.IPNet{
-				IP:   []byte{0xfd, 0, 0, 0, 0, 0, 0, byte(id), 0, 0, 0, 0, 0, 0, 0, 0},
-				Mask: []byte{0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe, 0, 0, 0, 0, 0, 0, 0, 0},
-			},
+		IPNet: net.IPNet{
+			IP:   []byte{0xfd, 0, 0, 0, 0, 0, 0, byte(id), 0, 0, 0, 0, 0, 0, 0, 0},
+			Mask: []byte{0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe, 0, 0, 0, 0, 0, 0, 0, 0},
 		},
-		&IPv6Subnet{
-			IPNet: net.IPNet{
-				IP:   []byte{0xfd, 0, 0, 0, 0, 0, 0, byte(id + 1), 0, 0, 0, 0, 0, 0, 0, 0},
-				Mask: []byte{0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0, 0, 0, 0, 0, 0, 0, 0},
-			},
-		}, nil
+	}, nil
 }
 
 // GetAddrEndWith returns a net.IP object which is in this subnet and with idx as its
@@ -158,6 +151,28 @@ func (n *IPv6Subnet) GetAddrEndWith(idx uint8) net.IP {
 func (n *IPv6Subnet) PrefixLen() int {
 	l, _ := n.Mask.Size()
 	return l
+}
+
+// GetSecondSlash64 takes a subnet of at least /63 and returns the second /64
+// subnet in the inputted range.
+func (n *IPv6Subnet) GetSecondSlash64() *IPv6Subnet {
+	if addr := n.IP.To16(); addr != nil {
+		prefixLen := n.PrefixLen()
+		if prefixLen == 0 || prefixLen > 63 {
+			// This won't happen for a subnet created by this package using
+			// AllocNextSlash63IPv6Subnet.
+			panic(fmt.Sprintf("Invalid prefix length %d", prefixLen))
+		}
+		ip := append([]byte{}, n.IP.To16()...)
+		ip[7]++
+		return &IPv6Subnet{
+			IPNet: net.IPNet{
+				IP:   ip,
+				Mask: []byte{0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0, 0, 0, 0, 0, 0, 0, 0},
+			},
+		}
+	}
+	panic("Invalid subnet")
 }
 
 // FromIPv4CIDR parses cidr and returns the IPv4 subnet represented by cidr.

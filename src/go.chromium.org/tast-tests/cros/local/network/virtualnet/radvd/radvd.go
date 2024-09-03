@@ -26,7 +26,9 @@ interface {{.ifname}} {
 	UnicastOnly on;
 	AdvSendAdvert on;
 	AdvManagedFlag on;
+	{{if .prefix}}
 	prefix {{.prefix}} {};
+	{{end}}
 	{{if .dns}}
 	RDNSS {{.dns}} {};
 	{{end}}
@@ -48,7 +50,8 @@ type radvd struct {
 }
 
 // New creates a new radvd object. The returned object can be passed to
-// Env.StartServer(), its lifetime will be managed by the Env object.
+// Env.StartServer(), its lifetime will be managed by the Env object. If prefix
+// is nil, radvd will not announce any PIO in the RA.
 func New(prefix *subnet.IPv6Subnet, dns []string) *radvd {
 	return &radvd{prefix: prefix, dns: dns}
 }
@@ -60,7 +63,9 @@ func (r *radvd) Start(ctx context.Context, env *env.Env) error {
 	// Prepare config file.
 	confVals := map[string]string{
 		"ifname": r.env.VethInName,
-		"prefix": r.prefix.String(),
+	}
+	if r.prefix != nil {
+		confVals["prefix"] = r.prefix.String()
 	}
 	if len(r.dns) > 0 {
 		confVals["dns"] = strings.Join(r.dns, " ")
