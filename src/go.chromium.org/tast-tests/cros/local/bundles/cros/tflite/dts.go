@@ -190,10 +190,6 @@ var openvinoParam = testingParam{
 		// precision loss.
 		"*MultiDimBroadcastSubshard*",
 
-		// TODO(b/345675044): This test crashes because of forbidden function calls
-		// outside of delegate.
-		"ConcatenationOpPersistentModelTest/0.PersistentScalarTest",
-
 		// TODO(b/357500388): Openvino delegate dequantizes TensorType_FLOAT16 to
 		// TensorType_FLOAT32 wrongly.
 		"DequantizeOpTest.Float16",
