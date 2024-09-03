@@ -24,9 +24,8 @@ type ephemeralModeTestData struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         LaunchWithDeviceEphemeralUsersEnabled,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that Kiosk configuration starts correctly with DeviceEphemeralUsersEnabled policy set to true",
+		Func: LaunchWithDeviceEphemeralUsersEnabled,
+		Desc: "Checks that Kiosk configuration starts correctly with DeviceEphemeralUsersEnabled policy set to true",
 		Contacts: []string{
 			"chromeos-kiosk-eng+TAST@google.com",
 			"kamilszarek@google.com", // Test author

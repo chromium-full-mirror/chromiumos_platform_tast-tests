@@ -12,7 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosproc"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -23,9 +22,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         FloatingAccessibilityMenuEnabled,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Start Kiosk application with FloatingAccessibilityMenuEnabled applied to the account",
+		Func: FloatingAccessibilityMenuEnabled,
+		Desc: "Start Kiosk application with FloatingAccessibilityMenuEnabled applied to the account",
 		Contacts: []string{
 			"chromeos-kiosk-eng+TAST@google.com",
 			"kamilszarek@google.com", // Test author - Ash.
@@ -43,24 +41,7 @@ func init() {
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
 		Fixture:      fixture.FakeDMSEnrolled,
 		Timeout:      kioskmode.SetupDuration + kioskmode.LaunchDuration + kioskmode.CleanupDuration + 30*time.Second,
-		Params: []testing.Param{
-			{
-				Name: "ash",
-				Val:  kioskmode.TestData{IsLacros: false},
-			},
-			{
-				Name:              "lacros",
-				ExtraSoftwareDeps: []string{"lacros"},
-				Val: kioskmode.TestData{
-					IsLacros: true,
-					Policies: []policy.Policy{
-						&policy.LacrosAvailability{Val: "lacros_only"},
-					},
-				},
-			},
-		},
 		SearchFlags: []*testing.StringPair{
-			pci.SearchFlag(&policy.LacrosAvailability{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.FloatingAccessibilityMenuEnabled{}, pci.VerifiedFunctionalityUI),
 			{
 				Key: "feature_id",
@@ -73,7 +54,6 @@ func init() {
 
 func FloatingAccessibilityMenuEnabled(ctx context.Context, s *testing.State) {
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
-	param := s.Param().(kioskmode.TestData)
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, kioskmode.CleanupDuration)
@@ -85,7 +65,7 @@ func FloatingAccessibilityMenuEnabled(ctx context.Context, s *testing.State) {
 		s.RequiredVar("ui.signinProfileTestExtensionManifestKey"),
 		kioskmode.PublicAccountPolicies(
 			kioskmode.WebKioskAccountID,
-			append(param.Policies, &policy.FloatingAccessibilityMenuEnabled{Val: true})...,
+			&policy.FloatingAccessibilityMenuEnabled{Val: true},
 		),
 		kioskmode.AutoLaunch(kioskmode.WebKioskAccountID),
 	)
@@ -107,13 +87,6 @@ func FloatingAccessibilityMenuEnabled(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "kiosk_with_FloatingAccessibilityMenuEnabled")
-
-	if param.IsLacros {
-		testing.ContextLog(ctx, "Checking if Kiosk started in Lacros mode")
-		if _, err = lacrosproc.Root(ctx, testConn); err != nil {
-			s.Fatal("Failed to get lacros proc: ", err)
-		}
-	}
 
 	ui := uiauto.New(testConn)
 	if err := ui.WaitUntilExists(nodewith.Name("Floating accessibility menu").HasClass("Widget"))(ctx); err != nil {

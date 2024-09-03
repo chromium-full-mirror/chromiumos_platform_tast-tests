@@ -8,6 +8,4 @@ package fixture
 const (
 	// KioskLoggedInAsh
 	KioskLoggedInAsh = "kioskLoggedInAsh"
-	// KioskLoggedInLacros
-	KioskLoggedInLacros = "kioskLoggedInLacros"
 )

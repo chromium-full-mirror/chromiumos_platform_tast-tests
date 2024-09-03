@@ -13,8 +13,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
-	"go.chromium.org/tast-tests/cros/common/pci"
-	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfaillog"
@@ -31,19 +29,12 @@ import (
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
-// noUnexpectedUITestParam contains the options that configure NoUnexpectedUI tests.
-type noUnexpectedUITestParam struct {
-	// Whether this test uses lacros or ash.
-	isLacros bool
-}
-
 const verifyPixelsTimeout = 5 * time.Second
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         NoUnexpectedUI,
-		Desc:         "Verifies there are no artifacts in the screen other than the Kiosk app",
-		LacrosStatus: testing.LacrosVariantExists,
+		Func: NoUnexpectedUI,
+		Desc: "Verifies there are no artifacts in the screen other than the Kiosk app",
 		Contacts: []string{
 			"chromeos-kiosk-eng+TAST@google.com",
 			"edmanp@google.com", // Test author
@@ -57,22 +48,11 @@ func init() {
 			"group:hw_agnostic",
 		},
 		Timeout:      kioskmode.SetupDuration + kioskmode.LaunchDuration + kioskmode.CleanupDuration + verifyPixelsTimeout,
-		SoftwareDeps: []string{"reboot", "chrome", "lacros"},
+		SoftwareDeps: []string{"reboot", "chrome"},
 		HardwareDeps: hwdep.D(hwdep.Display()),
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
 		Fixture:      fixture.FakeDMSEnrolled,
-		Params: []testing.Param{
-			{
-				Name: "ash",
-				Val:  noUnexpectedUITestParam{isLacros: false},
-			},
-			{
-				Name: "lacros",
-				Val:  noUnexpectedUITestParam{isLacros: true},
-			},
-		},
 		SearchFlags: []*testing.StringPair{
-			pci.SearchFlag(&policy.LacrosAvailability{}, pci.VerifiedFunctionalityOS),
 			{
 				Key: "feature_id",
 				// Test auto-launched kiosk.
@@ -92,28 +72,6 @@ var greenApp = kioskmode.SimpleWebApp{
 	Description: "A Web app that is entirely green",
 	IconColor:   color.RGBA{G: 255, A: 255},
 	HTMLBody:    `<body style="background-color:#00ff00"></body>`,
-}
-
-// kioskModeOptions returns the option slice for this test parameter along a cleanup function.
-func (param noUnexpectedUITestParam) kioskModeOptions(ctx context.Context) ([]kioskmode.Option, func()) {
-	_, accounts, cleanup := greenApp.NewServerAndAccount(ctx)
-	accountID := *accounts.Val[0].AccountID
-
-	options := []kioskmode.Option{
-		kioskmode.AutoLaunch(accountID),
-		kioskmode.CustomLocalAccounts(&accounts),
-		// Disables tablet mode by forcing clamshell.
-		kioskmode.ExtraChromeOptions(chrome.ExtraArgs("--force-tablet-mode=clamshell")),
-	}
-
-	if param.isLacros {
-		options = append(options, kioskmode.PublicAccountPolicies(
-			accountID,
-			&policy.LacrosAvailability{Val: "lacros_only"},
-		))
-	}
-
-	return options, cleanup
 }
 
 func waitUntilGreenAppStarted(ctx context.Context, cr *chrome.Chrome, outDir string) error {
@@ -190,22 +148,30 @@ func saveTestArtifacts(ctx context.Context, cr *chrome.Chrome, hasError bool, ou
 
 func NoUnexpectedUI(ctx context.Context, s *testing.State) {
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
-	param := s.Param().(noUnexpectedUITestParam)
 	signinTestExtensionManifestKey := s.RequiredVar("ui.signinProfileTestExtensionManifestKey")
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, kioskmode.CleanupDuration)
 	defer cancel()
 
-	options, cleanupOptions := param.kioskModeOptions(ctx)
-	defer cleanupOptions()
+	_, accounts, cleanup := greenApp.NewServerAndAccount(ctx)
+	accountID := *accounts.Val[0].AccountID
+
+	options := []kioskmode.Option{
+		kioskmode.AutoLaunch(accountID),
+		kioskmode.CustomLocalAccounts(&accounts),
+		// Disables tablet mode by forcing clamshell.
+		kioskmode.ExtraChromeOptions(chrome.ExtraArgs("--force-tablet-mode=clamshell")),
+	}
+
+	defer cleanup()
 
 	kiosk, cr, err := kioskmode.New(ctx, fdms, signinTestExtensionManifestKey, options...)
 	if err != nil {
 		s.Fatal("Failed to create Chrome in Kiosk mode: ", err)
 	}
 	defer func(ctx context.Context) {
-		if err := saveTestArtifacts(ctx, cr, s.HasError(), s.OutDir(), param.isLacros); err != nil {
+		if err := saveTestArtifacts(ctx, cr, s.HasError(), s.OutDir(), false /* is Lacros*/); err != nil {
 			s.Error("Failed to save test artifacts: ", err)
 		}
 		if err := kiosk.Close(ctx); err != nil {
@@ -225,7 +191,7 @@ func NoUnexpectedUI(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to verify Kiosk is all green: ", err)
 	}
 
-	if err := verifyExpectedBrowser(ctx, cr, param.isLacros); err != nil {
+	if err := verifyExpectedBrowser(ctx, cr, false /* is Lacros*/); err != nil {
 		s.Fatal("Failed to verify expected browser: ", err)
 	}
 }

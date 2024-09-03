@@ -20,9 +20,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         NoSystemUI,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Checks that no system UI is shown in PWA Kiosk",
+		Func: NoSystemUI,
+		Desc: "Checks that no system UI is shown in PWA Kiosk",
 		Contacts: []string{
 			"chromeos-kiosk-eng+TAST@google.com",
 			"irfedorova@google.com", // Test author
@@ -37,16 +36,7 @@ func init() {
 		},
 		SoftwareDeps: []string{"reboot", "chrome"},
 		Timeout:      1 * time.Minute,
-		Params: []testing.Param{
-			{
-				Name:    "ash",
-				Fixture: fixture.KioskLoggedInAsh,
-			}, {
-				Name:              "lacros",
-				ExtraSoftwareDeps: []string{"lacros"},
-				Fixture:           fixture.KioskLoggedInLacros,
-			},
-		},
+		Fixture:      fixture.KioskLoggedInAsh,
 		SearchFlags: []*testing.StringPair{
 			{
 				Key: "feature_id",

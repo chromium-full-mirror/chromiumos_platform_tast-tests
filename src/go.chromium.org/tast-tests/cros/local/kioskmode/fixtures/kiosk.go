@@ -47,26 +47,6 @@ func init() {
 		Parent:          fixture.FakeDMSEnrolled,
 		Vars:            []string{"ui.signinProfileTestExtensionManifestKey"},
 	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:         fixture.KioskLoggedInLacros,
-		Desc:         "Kiosk mode started with default app setup, DUT is enrolled and Lacros enabled",
-		Contacts:     []string{"irfedorova@google.com", "chromeos-kiosk-eng@google.com"},
-		BugComponent: "b:892153", // ChromeOS > Software > Commercial (Enterprise) > Kiosk
-		Impl: &kioskFixture{
-			autoLaunchKioskAppID: kioskmode.WebKioskAccountID,
-			extraPublicAccountPolicies: []policy.Policy{
-				&policy.LacrosAvailability{Val: "lacros_only"},
-			},
-			lacros: true,
-		},
-		SetUpTimeout:    setupTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: tearDownTimeout,
-		PostTestTimeout: postTestTimeout,
-		Parent:          fixture.FakeDMSEnrolled,
-		Vars:            []string{"ui.signinProfileTestExtensionManifestKey"},
-	})
 }
 
 type kioskFixture struct {
