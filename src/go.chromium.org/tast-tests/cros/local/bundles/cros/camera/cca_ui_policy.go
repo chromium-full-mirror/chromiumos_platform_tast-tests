@@ -20,11 +20,13 @@ import (
 	"go.chromium.org/tast-tests/cros/local/camera/testutil"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -148,22 +150,31 @@ func testCameraAppWork(ctx context.Context, cr *chrome.Chrome, outDir string) er
 
 // testCameraAppBlocked tests whether the camera app is blocked and a message
 // box "Camera is blocked" will show when launching CCA through the launcher.
-func testCameraAppBlocked(ctx context.Context, cr *chrome.Chrome, outDir string) error {
+func testCameraAppBlocked(ctx context.Context, cr *chrome.Chrome, outDir string) (retErr error) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to get test extension connection")
 	}
+	defer faillog.DumpUITreeOnError(cleanupCtx, outDir, func() bool {
+		return retErr != nil
+	}, tconn)
+
 	kb, err := input.Keyboard(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to find keyboard")
 	}
-	defer kb.Close(ctx)
+	defer kb.Close(cleanupCtx)
+
 	if err := launcher.SearchAndLaunch(tconn, kb, apps.Camera.Name)(ctx); err != nil {
 		return errors.Wrap(err, "failed to find camera app in the launcher")
 	}
 
 	ui := uiauto.New(tconn).WithTimeout(10 * time.Second)
-	blockedWindowFinder := nodewith.Role(role.Window).Name("Camera is blocked")
+	blockedWindowFinder := nodewith.Name("Camera is blocked").First()
 
 	if err = ui.WaitUntilExists(blockedWindowFinder)(ctx); err != nil {
 		return errors.Wrap(err, "failed to check and close blocked window")
