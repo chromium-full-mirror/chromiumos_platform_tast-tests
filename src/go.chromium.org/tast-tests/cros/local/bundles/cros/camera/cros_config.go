@@ -129,6 +129,9 @@ func dumpCameraInformation(ctx context.Context) {
 	hwid, _ := testexec.CommandContext(ctx, "crossystem", "hwid").Output()
 	testing.ContextLog(ctx, "HWID: ", string(hwid))
 
+	crosid, _ := testexec.CommandContext(ctx, "crosid").Output()
+	testing.ContextLog(ctx, "CROSID: ", string(crosid))
+
 	captureDevices, err := testutil.BuiltinUsbCamerasFromV4L2Test(ctx)
 	if err != nil {
 		testing.ContextLog(ctx, "Skipping dump: couldn't find a capture device: ", err)
