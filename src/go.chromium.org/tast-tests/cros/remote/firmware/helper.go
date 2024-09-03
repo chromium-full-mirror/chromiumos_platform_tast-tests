@@ -645,11 +645,6 @@ func (h *Helper) SetupUSBKey(ctx context.Context, cloudStorage *testing.CloudSto
 	// If it did have tast files, it won't shortly.
 	h.dutUsbHasTastFiles = false
 
-	testing.ContextLog(ctx, "Cleaning usb before flashing a new test OS image")
-	if err := h.FormatUSB(ctx, usbdev); err != nil {
-		return errors.Wrap(err, "failed to format the usb device")
-	}
-
 	// Find a devserver that works from servo host, and flash image from there.
 	for _, devserver := range cloudStorage.Devservers() {
 		testing.ContextLogf(ctx, "Trying devserver at %q", devserver)
@@ -1472,34 +1467,6 @@ func (h *Helper) getUSBModelAndSerial(ctx context.Context, usbdev string) (strin
 		serial = foundSerial[1]
 	}
 	return model, serial, nil
-}
-
-// FormatUSB will format the usb device to create an invalid usb device.
-// WARNING: Do not use this for tests that verify non-boot on USB, use CorruptUSBKey instead.
-func (h *Helper) FormatUSB(ctx context.Context, usbdev string) error {
-	if usbdev == "" {
-		return errors.New("no USB key detected. Please run CheckUSBOnServoHost")
-	}
-	// Document usb model and serial numbers for debugging purposes,
-	// before formatting the usb.
-	modelName, serialNumber, err := h.getUSBModelAndSerial(ctx, usbdev)
-	if err != nil {
-		testing.ContextLog(ctx, "Failed to get info about usb: ", err)
-	}
-	testing.ContextLog(ctx, "Formatting the USB device")
-	if _, stderr, err := h.ServoProxy.SeparatedOutputCommand(ctx, true, "dd", "if=/dev/zero", fmt.Sprintf("of=%s", usbdev), "bs=1M", "count=16", "conv=fdatasync"); err != nil {
-		if strings.Contains(string(stderr), "Read-only file system") {
-			return errors.Errorf("found usb device as read-only file system, got usb model: %s, serial number: %s", modelName, serialNumber)
-		}
-		if err := h.validateUSBConn(ctx); err != nil {
-			return errors.Wrap(err, "failed while verifying usb connection to DUT")
-		}
-		if stderr != nil {
-			return errors.Errorf("found stderr %s", stderr)
-		}
-		return errors.Wrap(err, "failed to format the usb device, but usb connection verified")
-	}
-	return nil
 }
 
 // validateUSBConn checks for usb connection stability by comparing
