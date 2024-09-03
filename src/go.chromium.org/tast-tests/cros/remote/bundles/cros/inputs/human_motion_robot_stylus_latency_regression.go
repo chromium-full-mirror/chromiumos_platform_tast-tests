@@ -76,17 +76,30 @@ func HumanMotionRobotStylusLatencyRegression(ctx context.Context, s *testing.Sta
 	}
 	defer client.Close(ctx)
 
-	// Switch the USB port on the servo to pass through to the DUT so the
+	s.Log("Turning on bottom USB on Servo")
+	if err := pxy.Servo().SetOnOff(ctx, servo.BottomUSBKeyPwr, "on"); err != nil {
+		s.Fatal("Failed to turn USB on: ", err)
+	}
+
+	// Turn off the WALT and laser once the test is done.
+	defer func() {
+		s.Log("Turning off bottom USB on Servo")
+		if err := pxy.Servo().SetOnOff(ctx, servo.BottomUSBKeyPwr, "off"); err != nil {
+			s.Fatal("Failed to turn USB off: ", err)
+		}
+	}()
+
+	// Switch the bottom USB port on the Servo to pass through to the DUT so the
 	// DUT can see the WALT device.
 	s.Log("Switching USB to DUT")
-	if err := pxy.Servo().SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
+	if err := pxy.Servo().SetString(ctx, servo.BottomUSBKeyMux, string(servo.USBMuxDUT)); err != nil {
 		s.Fatal("Failed to switch USB to DUT: ", err)
 	}
 
-	// After switching the USB to the DUT, the serial port takes a second to
+	// After switching the USB to the DUT, the serial port takes some time to
 	// appear. Wait until it exists before starting the WALT command.
 	s.Log("Waiting for WALT serial port to be visible on the DUT")
-	if err := linuxssh.WaitUntilFileExists(ctx, dut.Conn(), inputs.DefaultWaltSerialPort, time.Second*15, time.Second); err != nil {
+	if err := linuxssh.WaitUntilFileExists(ctx, dut.Conn(), inputs.DefaultWaltSerialPort, time.Second*30, time.Second); err != nil {
 		s.Fatalf("Failed to wait for file %q to exist: %v", inputs.DefaultWaltSerialPort, err)
 	}
 
