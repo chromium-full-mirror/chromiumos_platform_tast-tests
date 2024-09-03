@@ -6,6 +6,7 @@ import pathlib
 import unittest
 
 from analyzer.analysis import analysis_cfg
+from analyzer.analysis import analysis_results
 from analyzer.analysis import analyze_results
 from analyzer.analysis import stats_util
 
@@ -16,12 +17,22 @@ FILES_DIR: pathlib.Path = (
 
 
 class PipelineTest(unittest.TestCase):
+    def _result_contains(
+        self, result: analysis_results.AnalysisResult, string: str
+    ) -> bool:
+        for group in result.groups:
+            if string in group.sample.metric_path:
+                return True
+        return False
+
     def _test_analyze_results_pruning_with_cfg(
         self, cfg: analysis_cfg.AnalysisCfg
     ) -> None:
         results_unpruned = analyze_results.analyze_results(
-            FILES_DIR.joinpath("data-complex1.json"),
-            FILES_DIR.joinpath("data-complex2.json"),
+            [
+                FILES_DIR.joinpath("data-complex1.json"),
+                FILES_DIR.joinpath("data-complex2.json"),
+            ],
             cfg,
         )
         cfg_pruned = dataclasses.replace(
@@ -31,33 +42,18 @@ class PipelineTest(unittest.TestCase):
             remove_outliers=True,
         )
         results_pruned = analyze_results.analyze_results(
-            FILES_DIR.joinpath("data-complex1.json"),
-            FILES_DIR.joinpath("data-complex2.json"),
+            [
+                FILES_DIR.joinpath("data-complex1.json"),
+                FILES_DIR.joinpath("data-complex2.json"),
+            ],
             cfg_pruned,
         )
         self.assertLess(len(results_pruned), len(results_unpruned))
 
-        for unpruned in results_unpruned:
+        for result in results_pruned:
             # If excluded or not included, it should not be in the pruned results.
-            if (
-                "2windows" in unpruned.metric_path()
-                or "TabletMode" not in unpruned.metric_path()
-            ):
-                self.assertTrue(
-                    all(
-                        unpruned.metric_path() != v.metric_path()
-                        for v in results_pruned
-                    ),
-                    f"Expected {unpruned.metric_path()} to not be in the pruned results.",
-                )
-            else:
-                self.assertTrue(
-                    any(
-                        unpruned.metric_path() == v.metric_path()
-                        for v in results_pruned
-                    ),
-                    f"Expected {unpruned.metric_path()} to be in the pruned results.",
-                )
+            assert not self._result_contains(result, "2windows")
+            assert self._result_contains(result, "TabletMode")
 
     def test_analyze_results_pruning(self) -> None:
         rank_sum_cfg = analysis_cfg.AnalysisCfg(
@@ -101,19 +97,28 @@ class PipelineTest(unittest.TestCase):
             multiple_test_cfg=analysis_cfg.MultipleTestCfg.FWER,
         )
         results = analyze_results.analyze_results(
-            FILES_DIR.joinpath("data-complex1.json"),
-            FILES_DIR.joinpath("data-complex2.json"),
+            [
+                FILES_DIR.joinpath("data-complex1.json"),
+                FILES_DIR.joinpath("data-complex2.json"),
+            ],
             cfg,
         )
-        results_by_path = {v.metric_path(): v for v in results}
-        result = results_by_path[
+
+        # This additionally checks that identifiers should be unique for each
+        # PairwiseResult.
+        pairs_by_id = {}
+        for result in results:
+            for pair in result.pairs:
+                assert pair.identifier() not in pairs_by_id
+                pairs_by_id[pair.identifier()] = pair
+        pair = pairs_by_id[
             "ui.Test.Ash.Overview.AnimationSmoothness.Enter"
-            ".ClamshellMode.2windows.average"
+            ".ClamshellMode.2windows.average:complex1->complex2"
         ]
-        assert result.before_bootstrap
-        assert result.after_bootstrap
-        self.assertAlmostEqual(result.before_bootstrap.bias_estimate, 0.0022606)
-        self.assertAlmostEqual(result.after_bootstrap.bias_estimate, -0.0028447)
+        assert pair.before.bootstrap
+        assert pair.after.bootstrap
+        self.assertAlmostEqual(pair.before.bootstrap.bias_estimate, 0.0022606)
+        self.assertAlmostEqual(pair.after.bootstrap.bias_estimate, -0.0028447)
 
     def test_analyze_results_persistent_cfg(self) -> None:
         cfg = analysis_cfg.AnalysisCfg(
@@ -123,8 +128,10 @@ class PipelineTest(unittest.TestCase):
             multiple_test_cfg=analysis_cfg.MultipleTestCfg.NONE,
         )
         results = analyze_results.analyze_results(
-            FILES_DIR.joinpath("data-complex1.json"),
-            FILES_DIR.joinpath("data-complex2.json"),
+            [
+                FILES_DIR.joinpath("data-complex1.json"),
+                FILES_DIR.joinpath("data-complex2.json"),
+            ],
             cfg,
         )
         self.assertEqual(len(results), 43)
@@ -143,8 +150,10 @@ class PipelineTest(unittest.TestCase):
             ),
         )
         results = analyze_results.analyze_results(
-            FILES_DIR.joinpath("data-complex1.json"),
-            FILES_DIR.joinpath("data-complex2.json"),
+            [
+                FILES_DIR.joinpath("data-complex1.json"),
+                FILES_DIR.joinpath("data-complex2.json"),
+            ],
             cfg,
         )
         self.assertEqual(len(results), 22)

@@ -28,38 +28,36 @@ def init_plotting() -> None:
     sns.set(font_scale=1)
 
 
-def _save_figure_for_result(
-    s1_name: str,
-    s2_name: str,
-    result: analysis_results.AnalysisResult,
+def _save_figure_for_pair(
+    pair: analysis_results.PairwiseResult,
     path: pathlib.Path,
     fig: figure.Figure,
     kind: PlotKind,
 ) -> None:
-    direction = "higher" if result.is_up_better() else "lower"
-    which_better = "after" if result.mean_change_better() > 0 else "before"
+    direction = "higher" if pair.is_up_better() else "lower"
+    which_better = "after" if pair.mean_change_better() > 0 else "before"
     fig.suptitle(
-        f"{result.metric_path()}\n{direction} is better - {which_better} is better",
+        f"{pair.identifier()}\n{direction} is better - {which_better} is better",
         wrap=True,
     )
     fig.tight_layout()
-    name = f"{s1_name}_{s2_name}_{result.metric_path()}_{kind.value}"
+    name = f"{pair.identifier()}_{kind.value}"
     fig.savefig(f"{path}/{name}.png", bbox_inches="tight")
 
 
-def _plot_cdfs(result: analysis_results.AnalysisResult) -> figure.Figure:
+def _plot_cdfs(pair: analysis_results.PairwiseResult) -> figure.Figure:
     fig, ax = plt.subplots()
-    before_values = result.before_sample.value_map.values()
-    after_values = result.after_sample.value_map.values()
+    before_values = pair.before.sample.value_map.values()
+    after_values = pair.after.sample.value_map.values()
     sns.ecdfplot(data={"before": before_values, "after": after_values}, ax=ax)
-    ax.set_xlabel(result.units())
+    ax.set_xlabel(pair.units())
     return fig
 
 
-def _plot_box(result: analysis_results.AnalysisResult) -> figure.Figure:
+def _plot_box(pair: analysis_results.PairwiseResult) -> figure.Figure:
     fig, ax = plt.subplots()
-    before_values = result.before_sample.value_map.values()
-    after_values = result.after_sample.value_map.values()
+    before_values = pair.before.sample.value_map.values()
+    after_values = pair.after.sample.value_map.values()
     sns.boxplot(
         data={"before": before_values, "after": after_values},
         color=(0.9, 0.9, 0.9, 0.9),
@@ -69,15 +67,12 @@ def _plot_box(result: analysis_results.AnalysisResult) -> figure.Figure:
         data={"before": before_values, "after": after_values},
         ax=ax,
     )
-
-    ax.set_ylabel(result.units())
+    ax.set_ylabel(pair.units())
     return fig
 
 
 def create_plots(
     *,
-    s1_name: str,
-    s2_name: str,
     results: list[analysis_results.AnalysisResult],
     plots: list[PlotKind],
     plot_dir: pathlib.Path,
@@ -85,24 +80,20 @@ def create_plots(
     """Creates and saves plots for the given results and plot kinds.
 
     Args:
-        s1_name: The name of the first sample.
-        s2_name: The name of the second sample.
         results: The results to plot.
         plots: The kinds of plots to create.
         plot_dir: The directory to save the plots to.
     """
-    logging.info(f"Creating plots for {s1_name} and {s2_name}")
+    logging.info("Creating plots...")
     plot_dir.mkdir(parents=True, exist_ok=True)
     for result in results:
-        logging.info(f"Creating plots for {result.metric_path()}")
-        for plot_kind in plots:
-            if plot_kind == PlotKind.PLOT_CDF:
-                fig = _plot_cdfs(result)
-            elif plot_kind == PlotKind.PLOT_BOX:
-                fig = _plot_box(result)
-            else:
-                raise ValueError(f"Unknown plot kind: {plot_kind}")
-
-            _save_figure_for_result(
-                s1_name, s2_name, result, plot_dir, fig, plot_kind
-            )
+        for pair in result.pairs:
+            logging.info(f"Creating plots for {pair.identifier()}")
+            for plot_kind in plots:
+                if plot_kind == PlotKind.PLOT_CDF:
+                    fig = _plot_cdfs(pair)
+                elif plot_kind == PlotKind.PLOT_BOX:
+                    fig = _plot_box(pair)
+                else:
+                    raise ValueError(f"Unknown plot kind: {plot_kind}")
+                _save_figure_for_pair(pair, plot_dir, fig, plot_kind)

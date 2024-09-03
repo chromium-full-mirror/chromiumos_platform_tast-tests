@@ -115,18 +115,30 @@ def _prune_non_significant_results(
     if cfg.multiple_test_cfg == analysis_cfg.MultipleTestCfg.NONE:
         return results
 
-    out_results = []
-    p_values = [r.hypothesis_result.p for r in results]
+    p_values = []
+    for result in results:
+        for pair in result.pairs:
+            p_values.append(pair.hypothesis_result.p)
+
     rejects, p_corrected, _, _ = multitest.multipletests(
         p_values, alpha=cfg.alpha, method=cfg.multiple_test_cfg.scipy_name()
     )
-    for r, reject, p in zip(results, rejects, p_corrected):
-        # Reject the null hypothesis (that they are the same).
-        if reject:
-            r = copy.deepcopy(r)
-            r.hypothesis_result.p = p
-            out_results.append(r)
-    return out_results
+
+    idx = 0
+    out_samples = []
+    for result in results:
+        out_pairs = []
+        for pair in result.pairs:
+            # Reject the null hypothesis (that they are the same).
+            if rejects[idx]:
+                out_pair = copy.deepcopy(pair)
+                out_pair.hypothesis_result.p = p_corrected[idx]
+                out_pairs.append(out_pair)
+            idx += 1
+        if out_pairs:
+            out_samples.append(dataclasses.replace(result, pairs=out_pairs))
+
+    return out_samples
 
 
 def _prune_regex_include(
@@ -185,56 +197,32 @@ def _prune_minimum_sample_size(
 
 
 def analyze_results(
-    sample1_path: pathlib.Path,
-    sample2_path: pathlib.Path,
+    sample_paths: list[pathlib.Path],
     cfg: analysis_cfg.AnalysisCfg,
 ) -> list[analysis_results.AnalysisResult]:
     """Returns AnalysisResults for the given saved sample data paths."""
-    before_samples = _load_samples_from_paths([sample1_path])
-    after_samples = _load_samples_from_paths([sample2_path])
+    samples = _load_samples_from_paths(sample_paths)
 
     if cfg.remove_outliers:
-        before_samples = _prune_outliers(before_samples)
-        after_samples = _prune_outliers(after_samples)
+        samples = _prune_outliers(samples)
 
-    before_samples = _prune_persistent_cfg(before_samples, cfg.persistent_cfg)
-    after_samples = _prune_persistent_cfg(after_samples, cfg.persistent_cfg)
+    samples = _prune_persistent_cfg(samples, cfg.persistent_cfg)
 
     if cfg.metric_include_regex:
-        before_samples = _prune_regex_include(
-            before_samples, cfg.metric_include_regex
-        )
-        after_samples = _prune_regex_include(
-            after_samples, cfg.metric_include_regex
-        )
+        samples = _prune_regex_include(samples, cfg.metric_include_regex)
 
     if cfg.metric_exclude_regex:
-        before_samples = _prune_regex_exclude(
-            before_samples, cfg.metric_exclude_regex
-        )
-        after_samples = _prune_regex_exclude(
-            after_samples, cfg.metric_exclude_regex
-        )
+        samples = _prune_regex_exclude(samples, cfg.metric_exclude_regex)
 
     # Skip any things with just zeros - seems to happen for broken tests.
     if cfg.skip_all_zero_samples:
-        before_samples = _prune_all_zero_samples(before_samples)
-        after_samples = _prune_all_zero_samples(after_samples)
+        samples = _prune_all_zero_samples(samples)
 
-    before_samples = _prune_minimum_sample_size(
-        before_samples, cfg.minimum_sample_size
-    )
-    after_samples = _prune_minimum_sample_size(
-        after_samples, cfg.minimum_sample_size
-    )
+    samples = _prune_minimum_sample_size(samples, cfg.minimum_sample_size)
 
-    metric_paths = analysis_results.compute_metric_paths_for_comparison(
-        s1=before_samples, s2=after_samples
-    )
+    groups_list = analysis_results.construct_experiment_groups_list(samples)
     results = analysis_results.generate_analysis_results(
-        before_samples=before_samples,
-        after_samples=after_samples,
-        metric_paths=metric_paths,
+        groups_list=groups_list,
         hypothesis_params=cfg.hypothesis_test_params,
         bootstrap_params=cfg.bootstrap_params,
     )

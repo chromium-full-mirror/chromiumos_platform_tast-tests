@@ -130,19 +130,39 @@ class AnalysisTest(unittest.TestCase):
             ],
         )
 
-    def test_compute_metric_paths_for_comparison(self) -> None:
-        before_samples = self._load_before_samples()
-        after_samples = self._load_after_samples()
+    def test_construct_experiment_groups_list(self) -> None:
+        samples = self._load_before_samples() + self._load_after_samples()
+        samples_by_id = self._samples_by_id(samples)
 
-        metric_paths = analysis_results.compute_metric_paths_for_comparison(
-            before_samples, after_samples
-        )
+        groups_list = analysis_results.construct_experiment_groups_list(samples)
         # We should only look at the common metric paths.
         self.assertEqual(
-            metric_paths,
+            groups_list,
             [
-                "ui.OverviewPerf.Test.One.average",
-                "ui.OverviewPerf.Test.Three.average",
+                [
+                    analysis_results.ExperimentGroup(
+                        sample=samples_by_id[
+                            "before.ui.OverviewPerf.Test.One.average"
+                        ]
+                    ),
+                    analysis_results.ExperimentGroup(
+                        sample=samples_by_id[
+                            "after.ui.OverviewPerf.Test.One.average"
+                        ]
+                    ),
+                ],
+                [
+                    analysis_results.ExperimentGroup(
+                        sample=samples_by_id[
+                            "before.ui.OverviewPerf.Test.Three.average"
+                        ]
+                    ),
+                    analysis_results.ExperimentGroup(
+                        sample=samples_by_id[
+                            "after.ui.OverviewPerf.Test.Three.average"
+                        ]
+                    ),
+                ],
             ],
         )
 
@@ -168,26 +188,42 @@ class AnalysisTest(unittest.TestCase):
         )
 
     def test_split_better_and_worse_by_mean(self) -> None:
-        before_samples = self._load_before_samples()
-        before_samples_by_id = self._samples_by_id(before_samples)
-        after_samples = self._load_after_samples()
-        after_samples_by_id = self._samples_by_id(after_samples)
+        samples = self._load_before_samples() + self._load_after_samples()
+        samples_by_id = self._samples_by_id(samples)
 
-        metric_paths = analysis_results.compute_metric_paths_for_comparison(
-            before_samples, after_samples
-        )
+        groups_list = analysis_results.construct_experiment_groups_list(samples)
         self.assertEqual(
-            metric_paths,
+            groups_list,
             [
-                "ui.OverviewPerf.Test.One.average",
-                "ui.OverviewPerf.Test.Three.average",
+                [
+                    analysis_results.ExperimentGroup(
+                        sample=samples_by_id[
+                            "before.ui.OverviewPerf.Test.One.average"
+                        ]
+                    ),
+                    analysis_results.ExperimentGroup(
+                        sample=samples_by_id[
+                            "after.ui.OverviewPerf.Test.One.average"
+                        ]
+                    ),
+                ],
+                [
+                    analysis_results.ExperimentGroup(
+                        sample=samples_by_id[
+                            "before.ui.OverviewPerf.Test.Three.average"
+                        ]
+                    ),
+                    analysis_results.ExperimentGroup(
+                        sample=samples_by_id[
+                            "after.ui.OverviewPerf.Test.Three.average"
+                        ]
+                    ),
+                ],
             ],
         )
 
         results = analysis_results.generate_analysis_results(
-            before_samples=before_samples,
-            after_samples=after_samples,
-            metric_paths=metric_paths,
+            groups_list=groups_list,
             hypothesis_params=stats_util.HypothesisTestParameters(
                 statistic_kind=stats_util.TestStatisticKind.RANK_SUM
             ),
@@ -196,26 +232,48 @@ class AnalysisTest(unittest.TestCase):
             ),
         )
         better_result = analysis_results.AnalysisResult(
-            before_sample=before_samples_by_id["before." + metric_paths[0]],
-            after_sample=after_samples_by_id["after." + metric_paths[0]],
-            hypothesis_result=stats_util.HypothesisTestResult(
-                statistic_kind=stats_util.TestStatisticKind.RANK_SUM,
-                u=0.0,
-                p=1.0,
-            ),
-            before_bootstrap=None,
-            after_bootstrap=None,
+            groups=groups_list[0],
+            pairs=[
+                analysis_results.PairwiseResult(
+                    before=analysis_results.ExperimentGroup(
+                        sample=samples_by_id[
+                            "before.ui.OverviewPerf.Test.One.average"
+                        ]
+                    ),
+                    after=analysis_results.ExperimentGroup(
+                        sample=samples_by_id[
+                            "after.ui.OverviewPerf.Test.One.average"
+                        ]
+                    ),
+                    hypothesis_result=stats_util.HypothesisTestResult(
+                        statistic_kind=stats_util.TestStatisticKind.RANK_SUM,
+                        u=0.0,
+                        p=1.0,
+                    ),
+                )
+            ],
         )
         worse_result = analysis_results.AnalysisResult(
-            before_sample=before_samples_by_id["before." + metric_paths[1]],
-            after_sample=after_samples_by_id["after." + metric_paths[1]],
-            hypothesis_result=stats_util.HypothesisTestResult(
-                statistic_kind=stats_util.TestStatisticKind.RANK_SUM,
-                u=1.0,
-                p=1.0,
-            ),
-            before_bootstrap=None,
-            after_bootstrap=None,
+            groups=groups_list[1],
+            pairs=[
+                analysis_results.PairwiseResult(
+                    before=analysis_results.ExperimentGroup(
+                        sample=samples_by_id[
+                            "before.ui.OverviewPerf.Test.Three.average"
+                        ]
+                    ),
+                    after=analysis_results.ExperimentGroup(
+                        sample=samples_by_id[
+                            "after.ui.OverviewPerf.Test.Three.average"
+                        ]
+                    ),
+                    hypothesis_result=stats_util.HypothesisTestResult(
+                        statistic_kind=stats_util.TestStatisticKind.RANK_SUM,
+                        u=1.0,
+                        p=1.0,
+                    ),
+                )
+            ],
         )
         self.assertEqual(
             results,
@@ -225,9 +283,13 @@ class AnalysisTest(unittest.TestCase):
             ],
         )
 
-        better, worse = analysis_results.split_better_and_worse_by_mean(results)
-        self.assertEqual(better, [better_result])
-        self.assertEqual(worse, [worse_result])
+        all_pairs = [p for result in results for p in result.pairs]
+        (
+            better_pairs,
+            worse_pairs,
+        ) = analysis_results.split_better_and_worse_by_mean(all_pairs)
+        self.assertEqual(better_pairs, better_result.pairs)
+        self.assertEqual(worse_pairs, worse_result.pairs)
 
     def _make_analysis_result(
         self, u: float, p: float
@@ -242,19 +304,24 @@ class AnalysisTest(unittest.TestCase):
             improvement_direction=metric_sample.ImprovementDirection.UP,
             value_map={},
         )
-        return analysis_results.AnalysisResult(
-            before_sample=placeholder,
-            after_sample=placeholder,
+        group = analysis_results.ExperimentGroup(sample=placeholder)
+        pair = analysis_results.PairwiseResult(
+            before=group,
+            after=group,
             hypothesis_result=stats_util.HypothesisTestResult(
-                statistic_kind=stats_util.TestStatisticKind.RANK_SUM, u=u, p=p
+                statistic_kind=stats_util.TestStatisticKind.RANK_SUM,
+                u=u,
+                p=p,
             ),
-            before_bootstrap=None,
-            after_bootstrap=None,
+        )
+        return analysis_results.AnalysisResult(
+            groups=[group, group, group],
+            pairs=[pair, pair, pair],
         )
 
     def test_prune_non_significant_results(self) -> None:
         cfg = analysis_cfg.AnalysisCfg(
-            alpha=0.01,
+            alpha=0.03,
             multiple_test_cfg=analysis_cfg.MultipleTestCfg.FWER,
             hypothesis_test_params=stats_util.HypothesisTestParameters(
                 statistic_kind=stats_util.TestStatisticKind.RANK_SUM
@@ -270,9 +337,15 @@ class AnalysisTest(unittest.TestCase):
         ]
         pruned = analyze_results._prune_non_significant_results(results, cfg)
         self.assertEqual(len(pruned), 2)
+        self.assertEqual(len(pruned[0].pairs), 3)
+        self.assertEqual(len(pruned[1].pairs), 3)
         # Check p-values were adjusted.
-        self.assertEqual(pruned[0].hypothesis_result.p, 0.006)
-        self.assertEqual(pruned[1].hypothesis_result.p, 0.01)
+        self.assertAlmostEqual(pruned[0].pairs[0].hypothesis_result.p, 0.018)
+        self.assertAlmostEqual(pruned[0].pairs[1].hypothesis_result.p, 0.018)
+        self.assertAlmostEqual(pruned[0].pairs[2].hypothesis_result.p, 0.018)
+        self.assertAlmostEqual(pruned[1].pairs[0].hypothesis_result.p, 0.03)
+        self.assertAlmostEqual(pruned[1].pairs[1].hypothesis_result.p, 0.03)
+        self.assertAlmostEqual(pruned[1].pairs[2].hypothesis_result.p, 0.03)
 
     def test_prune_persistent_cfg(self) -> None:
         samples = self._load_before_samples()

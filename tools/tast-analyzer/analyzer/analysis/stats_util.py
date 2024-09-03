@@ -104,7 +104,7 @@ class HypothesisTestParameters:
         res = _permutation_test(s1, s2, self)
         if res is None:
             logging.warning(
-                f"Failed to run permutation test for {s1.metric_path}, falling "
+                f"Failed to run permutation test for {s1.sample_id}, falling "
                 "back to Mann-Whitney U test. This can happen if the sample "
                 "size is not large enough."
             )
@@ -240,7 +240,7 @@ def _one_sample_bootstrap(
     BOOTSTRAP_MIN_SAMPLE_SIZE = 5
     if len(x) < BOOTSTRAP_MIN_SAMPLE_SIZE:
         logging.warning(
-            f"{s.metric_path} has sample size {len(x)}, which is less than "
+            f"{s.sample_id} has sample size {len(x)}, which is less than "
             f"{BOOTSTRAP_MIN_SAMPLE_SIZE}. Your confidence intervals may be "
             "invalid for this test metric."
         )

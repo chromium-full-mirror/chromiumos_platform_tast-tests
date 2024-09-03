@@ -36,46 +36,48 @@ class _CliFrontendCfg:
     """The CLI analyses to run."""
 
 
-def _print_results(results: list[analysis_results.AnalysisResult]) -> None:
-    """Prints a human readable summary of the analysis results."""
-    for r in results:
-        print(r.summary())
+def _print_pairs(pairs: list[analysis_results.PairwiseResult]) -> None:
+    """Prints a human readable summary of the pairwise results."""
+    for pair in pairs:
+        print(pair.summary())
 
 
 def _compare_results(
     *,
-    s1_name: str,
-    s2_name: str,
     results: list[analysis_results.AnalysisResult],
     analyses: list[_CliAnalysis],
 ) -> None:
-    better, worse = analysis_results.split_better_and_worse_by_mean(results)
+    pairs = [p for result in results for p in result.pairs]
+    better, worse = analysis_results.split_better_and_worse_by_mean(pairs)
 
-    print(f"Comparison from {s1_name} to {s2_name}:")
-    print(f"{len(results)} metrics, {len(better)} better, {len(worse)} worse")
+    print(f"{len(better)} comparisons better, {len(worse)} comparisons worse")
 
-    def mean_change_key(r: analysis_results.AnalysisResult) -> float:
-        return r.mean_change_better()
+    def mean_change_key(pair: analysis_results.PairwiseResult) -> float:
+        return pair.mean_change_better()
 
     if _CliAnalysis.PRINT_BY_PCT_CHANGE in analyses:
         better_by_pct_change = sorted(better, key=mean_change_key, reverse=True)
         worse_by_pct_change = sorted(worse, key=mean_change_key)
         print(f"{len(better_by_pct_change)} better by %change of mean")
-        _print_results(better_by_pct_change)
+        _print_pairs(better_by_pct_change)
         print()
         print(f"{len(worse_by_pct_change)} worse by %change of mean")
-        _print_results(worse_by_pct_change)
+        _print_pairs(worse_by_pct_change)
         print()
 
     if _CliAnalysis.PRINT_TEST_BREAKDOWN in analyses:
-        test_names = sorted(set(r.test_name() for r in results))
+
+        def test_names_str(p: analysis_results.PairwiseResult) -> str:
+            return ",".join(p.test_names())
+
+        test_names = sorted(set(test_names_str(p) for p in pairs))
         better_by_test = {
-            name: [r for r in better if r.test_name() == name]
-            for name in test_names
+            names: [p for p in better if test_names_str(p) == names]
+            for names in test_names
         }
         worse_by_test = {
-            name: [r for r in worse if r.test_name() == name]
-            for name in test_names
+            names: [p for p in worse if test_names_str(p) == names]
+            for names in test_names
         }
 
         for test_name in test_names:
@@ -83,16 +85,16 @@ def _compare_results(
             better = sorted(
                 better_by_test[test_name], key=mean_change_key, reverse=True
             )
-            _print_results(better)
+            _print_pairs(better)
             print()
             print("Worse for", test_name)
             worse = sorted(worse_by_test[test_name], key=mean_change_key)
-            _print_results(worse)
+            _print_pairs(worse)
             print()
             print()
 
     if _CliAnalysis.PRINT_MEDIAN_PCT_CHANGE in analyses:
-        change_better = [r.mean_change_better() for r in results]
+        change_better = [p.mean_change_better() for p in pairs]
         median = statistics.median(change_better) if change_better else 0.0
         print(f"Median improvement in mean: {100.0*median:.2f}%")
 
@@ -242,12 +244,8 @@ def print_results(
     )
 
     clicfg = _CliFrontendCfg(cfg=cfg, analyses=analyses)
-    results = analyze_results.analyze_results(
-        compare[0], compare[1], clicfg.cfg
-    )
+    results = analyze_results.analyze_results(compare, clicfg.cfg)
     _compare_results(
-        s1_name=compare[0].name,
-        s2_name=compare[1].name,
         results=results,
         analyses=clicfg.analyses,
     )
@@ -256,8 +254,6 @@ def print_results(
         logging.info("Creating plots (this may take a long time)...")
         plot_util.init_plotting()
         plot_util.create_plots(
-            s1_name=compare[0].name,
-            s2_name=compare[1].name,
             results=results,
             plots=plots,
             plot_dir=plot_dir,
