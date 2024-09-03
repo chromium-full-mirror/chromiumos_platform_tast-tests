@@ -60,7 +60,7 @@ func init() {
 			Val:  croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineBluetoothPowerV2},
 			// Bluetooth v2 routines are only supported when Floss is enabled.
 			Fixture: "crosHealthdRunningAndBluetoothEnabledWithFloss",
-			// TODO(b/303370425): Promote tast to critical
+			// TODO(b/363888266): Promote tast to critical
 			ExtraAttr:        []string{"informational", "group:criticalstaging"},
 			ExtraTestBedDeps: []string{tbdep.BluetoothStateNormal},
 		}, {
@@ -68,18 +68,14 @@ func init() {
 			Name: "bluetooth_discovery",
 			Val:  croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineBluetoothDiscoveryV2},
 			// Bluetooth v2 routines are only supported when Floss is enabled.
-			Fixture: "crosHealthdRunningAndBluetoothEnabledWithFloss",
-			// TODO(b/303370425): Promote tast to critical
-			ExtraAttr:        []string{"informational", "group:criticalstaging"},
+			Fixture:          "crosHealthdRunningAndBluetoothEnabledWithFloss",
 			ExtraTestBedDeps: []string{tbdep.BluetoothStateNormal},
 		}, {
 			// Contact: byronlee@google.com
 			Name: "bluetooth_scanning",
 			Val:  croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineBluetoothScanningV2},
 			// Bluetooth v2 routines are only supported when Floss is enabled.
-			Fixture: "crosHealthdRunningAndBluetoothEnabledWithFloss",
-			// TODO(b/303370425): Promote tast to critical
-			ExtraAttr:        []string{"informational", "group:criticalstaging"},
+			Fixture:          "crosHealthdRunningAndBluetoothEnabledWithFloss",
 			ExtraTestBedDeps: []string{tbdep.BluetoothStateNormal},
 		}}})
 }
