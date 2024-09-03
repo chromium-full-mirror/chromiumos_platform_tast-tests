@@ -1,0 +1,13 @@
+{
+  "metadata": {
+    "metadata_version": 1,
+    "results_version": 1
+  },
+  "results": {
+    "{\"metric_name\": \"Migration.Results.V1\", \"run_id\": \"1\", \"test_name\": \"ui.Test\", \"variant\": \"average\"}": {
+      "improvement_direction": "up",
+      "units": "percent",
+      "value": 1.0
+    }
+  }
+}

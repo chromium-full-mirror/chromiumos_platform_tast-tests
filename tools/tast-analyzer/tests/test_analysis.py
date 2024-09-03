@@ -2,7 +2,6 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 import copy
-import dataclasses
 import pathlib
 import unittest
 
@@ -20,34 +19,48 @@ FILES_DIR: pathlib.Path = (
 
 
 class AnalysisTest(unittest.TestCase):
-    def _load_samples(
-        self,
-    ) -> tuple[metric_sample.SampleDict, metric_sample.SampleDict]:
-        before_results = tast_results_dir._load_results_from_results_chart_json(
-            pathlib.Path("/before/tests/ui.OverviewPerf/results-chart.json"),
-            FILES_DIR.joinpath("results-chart-analysis1.json").read_text(),
+    def _load_before_samples(self) -> list[metric_sample.MetricSample]:
+        results = tast_results_dir._load_results_from_results_chart_json(
+            path=pathlib.Path(
+                "/before/tests/ui.OverviewPerf/results-chart.json"
+            ),
+            json_str=FILES_DIR.joinpath(
+                "results-chart-analysis1.json"
+            ).read_text(),
+            label="before",
         )
-        after_results = tast_results_dir._load_results_from_results_chart_json(
-            pathlib.Path("/after/tests/ui.OverviewPerf/results-chart.json"),
-            FILES_DIR.joinpath("results-chart-analysis2.json").read_text(),
-        )
+        return analyze_results._load_samples_from_test_results(results)
 
-        before_samples = analyze_results._load_metrics_from_test_results(
-            before_results
+    def _load_after_samples(self) -> list[metric_sample.MetricSample]:
+        results = tast_results_dir._load_results_from_results_chart_json(
+            path=pathlib.Path(
+                "/after/tests/ui.OverviewPerf/results-chart.json"
+            ),
+            json_str=FILES_DIR.joinpath(
+                "results-chart-analysis2.json"
+            ).read_text(),
+            label="after",
         )
-        after_samples = analyze_results._load_metrics_from_test_results(
-            after_results
-        )
+        return analyze_results._load_samples_from_test_results(results)
 
-        return before_samples, after_samples
+    def _samples_by_id(
+        self, samples: list[metric_sample.MetricSample]
+    ) -> dict[str, metric_sample.MetricSample]:
+        samples_by_id = {}
+        for s in samples:
+            assert s.sample_id not in samples_by_id
+            samples_by_id[s.sample_id] = s
+        return samples_by_id
 
     def test_load_samples(self) -> None:
-        before_samples, after_samples = self._load_samples()
+        before_samples = self._load_before_samples()
 
         self.assertEqual(
             before_samples,
-            {
-                "ui.OverviewPerf.Test.One.average": metric_sample.MetricSample(
+            [
+                metric_sample.MetricSample(
+                    label="before",
+                    sample_id="before.ui.OverviewPerf.Test.One.average",
                     test_name="ui.OverviewPerf",
                     metric_name="Test.One",
                     metric_path="ui.OverviewPerf.Test.One.average",
@@ -55,7 +68,9 @@ class AnalysisTest(unittest.TestCase):
                     improvement_direction=metric_sample.ImprovementDirection.UP,
                     value_map={"before": 0},
                 ),
-                "ui.OverviewPerf.Test.Three.average": metric_sample.MetricSample(
+                metric_sample.MetricSample(
+                    label="before",
+                    sample_id="before.ui.OverviewPerf.Test.Three.average",
                     test_name="ui.OverviewPerf",
                     metric_name="Test.Three",
                     metric_path="ui.OverviewPerf.Test.Three.average",
@@ -64,7 +79,9 @@ class AnalysisTest(unittest.TestCase):
                     # Currently we take the arithmetic mean of lists of values.
                     value_map={"before": 2},
                 ),
-                "ui.OverviewPerf.Test.Two.average": metric_sample.MetricSample(
+                metric_sample.MetricSample(
+                    label="before",
+                    sample_id="before.ui.OverviewPerf.Test.Two.average",
                     test_name="ui.OverviewPerf",
                     metric_name="Test.Two",
                     metric_path="ui.OverviewPerf.Test.Two.average",
@@ -72,13 +89,26 @@ class AnalysisTest(unittest.TestCase):
                     improvement_direction=metric_sample.ImprovementDirection.UP,
                     value_map={"before": 2},
                 ),
-            },
+            ],
         )
 
+        after_samples = self._load_after_samples()
         self.assertEqual(
             after_samples,
-            {
-                "ui.OverviewPerf.Test.One.average": metric_sample.MetricSample(
+            [
+                metric_sample.MetricSample(
+                    label="after",
+                    sample_id="after.ui.OverviewPerf.Test.Four.average",
+                    test_name="ui.OverviewPerf",
+                    metric_name="Test.Four",
+                    metric_path="ui.OverviewPerf.Test.Four.average",
+                    units="percent",
+                    improvement_direction=metric_sample.ImprovementDirection.UP,
+                    value_map={"after": 2},
+                ),
+                metric_sample.MetricSample(
+                    label="after",
+                    sample_id="after.ui.OverviewPerf.Test.One.average",
                     test_name="ui.OverviewPerf",
                     metric_name="Test.One",
                     metric_path="ui.OverviewPerf.Test.One.average",
@@ -86,7 +116,9 @@ class AnalysisTest(unittest.TestCase):
                     improvement_direction=metric_sample.ImprovementDirection.UP,
                     value_map={"after": 1},
                 ),
-                "ui.OverviewPerf.Test.Three.average": metric_sample.MetricSample(
+                metric_sample.MetricSample(
+                    label="after",
+                    sample_id="after.ui.OverviewPerf.Test.Three.average",
                     test_name="ui.OverviewPerf",
                     metric_name="Test.Three",
                     metric_path="ui.OverviewPerf.Test.Three.average",
@@ -95,29 +127,15 @@ class AnalysisTest(unittest.TestCase):
                     # Currently we take the arithmetic mean of lists of values.
                     value_map={"after": 1},
                 ),
-                "ui.OverviewPerf.Test.Four.average": metric_sample.MetricSample(
-                    test_name="ui.OverviewPerf",
-                    metric_name="Test.Four",
-                    metric_path="ui.OverviewPerf.Test.Four.average",
-                    units="percent",
-                    improvement_direction=metric_sample.ImprovementDirection.UP,
-                    value_map={"after": 2},
-                ),
-            },
+            ],
         )
 
     def test_compute_metric_paths_for_comparison(self) -> None:
-        before_samples, after_samples = self._load_samples()
+        before_samples = self._load_before_samples()
+        after_samples = self._load_after_samples()
 
-        cfg = analysis_cfg.AnalysisCfg(
-            skip_all_zero_samples=False,
-            minimum_sample_size=1,
-            hypothesis_test_params=stats_util.HypothesisTestParameters(
-                statistic_kind=stats_util.TestStatisticKind.RANK_SUM
-            ),
-        )
         metric_paths = analysis_results.compute_metric_paths_for_comparison(
-            before_samples, after_samples, cfg
+            before_samples, after_samples
         )
         # We should only look at the common metric paths.
         self.assertEqual(
@@ -128,33 +146,35 @@ class AnalysisTest(unittest.TestCase):
             ],
         )
 
-        # ui.OverviewPerf.Test.One.average has only zeros, so we should skip it.
-        cfg = dataclasses.replace(cfg, skip_all_zero_samples=True)
-        metric_paths = analysis_results.compute_metric_paths_for_comparison(
-            before_samples, after_samples, cfg
+    def test_prune_samples(self) -> None:
+        samples = self._load_before_samples() + self._load_after_samples()
+        samples_by_id = self._samples_by_id(samples)
+
+        # before.ui.OverviewPerf.Test.One.average has only zeros, so we should skip it.
+        self.assertEqual(
+            analyze_results._prune_all_zero_samples(samples),
+            [
+                samples_by_id["before.ui.OverviewPerf.Test.Three.average"],
+                samples_by_id["before.ui.OverviewPerf.Test.Two.average"],
+                samples_by_id["after.ui.OverviewPerf.Test.Four.average"],
+                samples_by_id["after.ui.OverviewPerf.Test.One.average"],
+                samples_by_id["after.ui.OverviewPerf.Test.Three.average"],
+            ],
         )
-        self.assertEqual(metric_paths, ["ui.OverviewPerf.Test.Three.average"])
 
         # Sample size is one for all metrics, so this should produce nothing.
-        cfg = dataclasses.replace(
-            cfg, skip_all_zero_samples=False, minimum_sample_size=2
+        self.assertEqual(
+            analyze_results._prune_minimum_sample_size(samples, 2), []
         )
-        metric_paths = analysis_results.compute_metric_paths_for_comparison(
-            before_samples, after_samples, cfg
-        )
-        self.assertEqual(metric_paths, [])
 
     def test_split_better_and_worse_by_mean(self) -> None:
-        before_samples, after_samples = self._load_samples()
-        cfg = analysis_cfg.AnalysisCfg(
-            skip_all_zero_samples=False,
-            minimum_sample_size=1,
-            hypothesis_test_params=stats_util.HypothesisTestParameters(
-                statistic_kind=stats_util.TestStatisticKind.RANK_SUM
-            ),
-        )
+        before_samples = self._load_before_samples()
+        before_samples_by_id = self._samples_by_id(before_samples)
+        after_samples = self._load_after_samples()
+        after_samples_by_id = self._samples_by_id(after_samples)
+
         metric_paths = analysis_results.compute_metric_paths_for_comparison(
-            before_samples, after_samples, cfg
+            before_samples, after_samples
         )
         self.assertEqual(
             metric_paths,
@@ -176,8 +196,8 @@ class AnalysisTest(unittest.TestCase):
             ),
         )
         better_result = analysis_results.AnalysisResult(
-            before_sample=before_samples[metric_paths[0]],
-            after_sample=after_samples[metric_paths[0]],
+            before_sample=before_samples_by_id["before." + metric_paths[0]],
+            after_sample=after_samples_by_id["after." + metric_paths[0]],
             hypothesis_result=stats_util.HypothesisTestResult(
                 statistic_kind=stats_util.TestStatisticKind.RANK_SUM,
                 u=0.0,
@@ -187,8 +207,8 @@ class AnalysisTest(unittest.TestCase):
             after_bootstrap=None,
         )
         worse_result = analysis_results.AnalysisResult(
-            before_sample=before_samples[metric_paths[1]],
-            after_sample=after_samples[metric_paths[1]],
+            before_sample=before_samples_by_id["before." + metric_paths[1]],
+            after_sample=after_samples_by_id["after." + metric_paths[1]],
             hypothesis_result=stats_util.HypothesisTestResult(
                 statistic_kind=stats_util.TestStatisticKind.RANK_SUM,
                 u=1.0,
@@ -213,6 +233,8 @@ class AnalysisTest(unittest.TestCase):
         self, u: float, p: float
     ) -> analysis_results.AnalysisResult:
         placeholder = metric_sample.MetricSample(
+            label="placeholder",
+            sample_id="placeholder",
             test_name="placeholder",
             metric_name="placeholder",
             metric_path="placeholder",
@@ -253,11 +275,12 @@ class AnalysisTest(unittest.TestCase):
         self.assertEqual(pruned[1].hypothesis_result.p, 0.01)
 
     def test_prune_persistent_cfg(self) -> None:
-        before_samples, _ = self._load_samples()
+        samples = self._load_before_samples()
+        samples_by_id = self._samples_by_id(samples)
 
         cfg = analysis_cfg.PersistentCfg()
-        no_change = analyze_results._prune_persistent_cfg(before_samples, cfg)
-        self.assertEqual(no_change, before_samples)
+        no_change = analyze_results._prune_persistent_cfg(samples, cfg)
+        self.assertEqual(no_change, samples)
 
         cfg = analysis_cfg.PersistentCfg(
             per_test_cfgs=[
@@ -267,55 +290,53 @@ class AnalysisTest(unittest.TestCase):
                 )
             ]
         )
-        only_one = analyze_results._prune_persistent_cfg(before_samples, cfg)
+        only_one = analyze_results._prune_persistent_cfg(samples, cfg)
 
-        test_one_path = "ui.OverviewPerf.Test.One.average"
         self.assertEqual(
-            only_one, {test_one_path: before_samples[test_one_path]}
+            only_one, [samples_by_id["before.ui.OverviewPerf.Test.One.average"]]
         )
 
     def test_prune_regex_include(self) -> None:
-        before_samples, after_samples = self._load_samples()
-
-        test_two_path = "ui.OverviewPerf.Test.Two.average"
-        test_three_path = "ui.OverviewPerf.Test.Three.average"
+        before_samples = self._load_before_samples()
+        before_samples_by_id = self._samples_by_id(before_samples)
 
         self.assertEqual(
             before_samples,
             analyze_results._prune_regex_include(before_samples, "Test.*"),
         )
         self.assertEqual(
-            {}, analyze_results._prune_regex_include(before_samples, "^Test$")
+            [], analyze_results._prune_regex_include(before_samples, "^Test$")
         )
         self.assertEqual(
-            {test_three_path: before_samples[test_three_path]},
+            [before_samples_by_id["before.ui.OverviewPerf.Test.Three.average"]],
             analyze_results._prune_regex_include(
                 before_samples, r"Test\.Three"
             ),
         )
         self.assertEqual(
-            {test_three_path: before_samples[test_three_path]},
+            [before_samples_by_id["before.ui.OverviewPerf.Test.Three.average"]],
             analyze_results._prune_regex_include(before_samples, "Test.*ee"),
         )
         self.assertEqual(
-            {test_two_path: before_samples[test_two_path]},
+            [before_samples_by_id["before.ui.OverviewPerf.Test.Two.average"]],
             analyze_results._prune_regex_include(before_samples, "Test.*o"),
         )
+
+        after_samples = self._load_after_samples()
+        after_samples_by_id = self._samples_by_id(after_samples)
         self.assertEqual(
-            {test_three_path: after_samples[test_three_path]},
+            [after_samples_by_id["after.ui.OverviewPerf.Test.Three.average"]],
             analyze_results._prune_regex_include(
                 after_samples, r"^ui\.OverviewPerf\.Test\.Three\.average$"
             ),
         )
 
     def test_prune_regex_exclude(self) -> None:
-        before_samples, after_samples = self._load_samples()
-
-        test_two_path = "ui.OverviewPerf.Test.Two.average"
-        test_three_path = "ui.OverviewPerf.Test.Three.average"
+        before_samples = self._load_before_samples()
+        before_samples_by_id = self._samples_by_id(before_samples)
 
         self.assertEqual(
-            {},
+            [],
             analyze_results._prune_regex_exclude(before_samples, "Test.*"),
         )
         self.assertEqual(
@@ -323,29 +344,48 @@ class AnalysisTest(unittest.TestCase):
             analyze_results._prune_regex_exclude(before_samples, "^Test$"),
         )
         self.assertEqual(
-            {k: v for k, v in before_samples.items() if k != test_three_path},
+            [
+                before_samples_by_id["before.ui.OverviewPerf.Test.One.average"],
+                before_samples_by_id["before.ui.OverviewPerf.Test.Two.average"],
+            ],
             analyze_results._prune_regex_exclude(
                 before_samples, r"Test\.Three"
             ),
         )
         self.assertEqual(
-            {k: v for k, v in before_samples.items() if k != test_three_path},
+            [
+                before_samples_by_id["before.ui.OverviewPerf.Test.One.average"],
+                before_samples_by_id["before.ui.OverviewPerf.Test.Two.average"],
+            ],
             analyze_results._prune_regex_exclude(before_samples, "Test.*ee"),
         )
         self.assertEqual(
-            {k: v for k, v in before_samples.items() if k != test_two_path},
+            [
+                before_samples_by_id["before.ui.OverviewPerf.Test.One.average"],
+                before_samples_by_id[
+                    "before.ui.OverviewPerf.Test.Three.average"
+                ],
+            ],
             analyze_results._prune_regex_exclude(before_samples, "Test.*o"),
         )
+
+        after_samples = self._load_after_samples()
+        after_samples_by_id = self._samples_by_id(after_samples)
         self.assertEqual(
-            {k: v for k, v in after_samples.items() if k != test_three_path},
+            [
+                after_samples_by_id["after.ui.OverviewPerf.Test.Four.average"],
+                after_samples_by_id["after.ui.OverviewPerf.Test.One.average"],
+            ],
             analyze_results._prune_regex_exclude(
                 after_samples, r"^ui\.OverviewPerf\.Test\.Three\.average$"
             ),
         )
 
     def test_prune_outliers(self) -> None:
-        samples = {
-            "test.name.metric.path": metric_sample.MetricSample(
+        samples = [
+            metric_sample.MetricSample(
+                label="placeholder",
+                sample_id="placeholder",
                 test_name="ui.OverviewPerf",
                 metric_name="metric",
                 metric_path="test.name.metric.path",
@@ -353,28 +393,28 @@ class AnalysisTest(unittest.TestCase):
                 improvement_direction=metric_sample.ImprovementDirection.UP,
                 value_map={},
             )
-        }
+        ]
         samples_pruned = copy.deepcopy(samples)
         self.assertEqual(
             samples_pruned,
             analyze_results._prune_outliers(samples),
         )
 
-        samples["test.name.metric.path"].value_map["test1"] = 1
+        samples[0].value_map["test1"] = 1
         self.assertEqual(
             samples_pruned,
             analyze_results._prune_outliers(samples),
         )
 
-        samples["test.name.metric.path"].value_map["test2"] = 2
+        samples[0].value_map["test2"] = 2
         self.assertEqual(
             samples_pruned,
             analyze_results._prune_outliers(samples),
         )
 
         # Remove highest and lowest.
-        samples["test.name.metric.path"].value_map["test3"] = 3
-        samples_pruned["test.name.metric.path"].value_map["test2"] = 2
+        samples[0].value_map["test3"] = 3
+        samples_pruned[0].value_map["test2"] = 2
         self.assertEqual(
             samples_pruned,
             analyze_results._prune_outliers(samples),

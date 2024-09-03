@@ -6,7 +6,6 @@
 import dataclasses
 import logging
 
-from analyzer.analysis import analysis_cfg
 from analyzer.analysis import metric_sample
 from analyzer.analysis import stats_util
 from analyzer.analysis.metric_sample import MetricSample
@@ -105,39 +104,21 @@ class AnalysisResult:
 
 
 def compute_metric_paths_for_comparison(
-    s1: metric_sample.SampleDict,
-    s2: metric_sample.SampleDict,
-    cfg: analysis_cfg.AnalysisCfg,
+    s1: list[metric_sample.MetricSample],
+    s2: list[metric_sample.MetricSample],
 ) -> list[str]:
     """Computes a set of metric paths to compare between s1 and s2.
 
     Args:
         s1: The first sample.
         s2: The second sample.
-        cfg: The analysis configuration.
 
     Returns:
         A sorted list of metric paths to compare.
     """
-    paths1 = set(s1.keys())
-    paths2 = set(s2.keys())
-    paths = set()
-
-    for k in paths1.intersection(paths2):
-        values1 = s1[k].value_map.values()
-        values2 = s2[k].value_map.values()
-        # Skip any things with just zeros - seems to happen for broken tests.
-        if cfg.skip_all_zero_samples and (
-            all(i == 0.0 for i in values1) or all(i == 0.0 for i in values2)
-        ):
-            continue
-        if (
-            len(values1) < cfg.minimum_sample_size
-            or len(values2) < cfg.minimum_sample_size
-        ):
-            continue
-        paths.add(k)
-
+    paths1 = set(s.metric_path for s in s1)
+    paths2 = set(s.metric_path for s in s2)
+    paths = paths1.intersection(paths2)
     ignored_count = len(paths1.union(paths2)) - len(paths)
     logging.info(
         f"Ignoring {ignored_count} metrics, looking at {len(paths)} metrics"
@@ -147,8 +128,8 @@ def compute_metric_paths_for_comparison(
 
 def generate_analysis_results(
     *,
-    before_samples: metric_sample.SampleDict,
-    after_samples: metric_sample.SampleDict,
+    before_samples: list[metric_sample.MetricSample],
+    after_samples: list[metric_sample.MetricSample],
     metric_paths: list[str],
     hypothesis_params: stats_util.HypothesisTestParameters,
     bootstrap_params: stats_util.BootstrapParameters,
@@ -158,15 +139,17 @@ def generate_analysis_results(
     Args:
         before_samples: SampleDict corresponding to the control group.
         after_samples: SampleDict corresponding to the experiment group.
-        metric_paths: A set of metric paths to compare.
+        metric_paths: A list of metric paths to compare.
 
     Returns:
         A list of analysis results.
     """
     out = []
+    before_samples_by_path = {s.metric_path: s for s in before_samples}
+    after_samples_by_path = {s.metric_path: s for s in after_samples}
     for metric_path in metric_paths:
-        before_sample = before_samples[metric_path]
-        after_sample = after_samples[metric_path]
+        before_sample = before_samples_by_path[metric_path]
+        after_sample = after_samples_by_path[metric_path]
 
         hypothesis_result = hypothesis_params.run_hypothesis_test(
             before_sample, after_sample

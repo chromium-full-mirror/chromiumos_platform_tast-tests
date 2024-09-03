@@ -20,7 +20,9 @@ class IngestResultsChartTest(unittest.TestCase):
             "/20231007-090228/tests/ui.OverviewPerf/results-chart.json"
         )
         results = tast_results_dir._load_results_from_results_chart_json(
-            path, FILES_DIR.joinpath("results-chart-basic.json").read_text()
+            path=path,
+            json_str=FILES_DIR.joinpath("results-chart-basic.json").read_text(),
+            label="control",
         )
         expected = test_result.TestResults(
             results={
@@ -29,6 +31,7 @@ class IngestResultsChartTest(unittest.TestCase):
                     test_name="ui.OverviewPerf",
                     metric_name="Test.One",
                     variant="average",
+                    label="control",
                 ): test_result.TestResult(
                     units="percent",
                     improvement_direction=test_result.ImprovementDirection.UP,
@@ -39,6 +42,7 @@ class IngestResultsChartTest(unittest.TestCase):
                     test_name="ui.OverviewPerf",
                     metric_name="Test.Two",
                     variant="average",
+                    label="control",
                 ): test_result.TestResult(
                     units="percent",
                     improvement_direction=test_result.ImprovementDirection.UP,
@@ -49,6 +53,7 @@ class IngestResultsChartTest(unittest.TestCase):
                     test_name="ui.OverviewPerf",
                     metric_name="Test.Three",
                     variant="average",
+                    label="control",
                 ): test_result.TestResult(
                     units="percent",
                     improvement_direction=test_result.ImprovementDirection.UP,

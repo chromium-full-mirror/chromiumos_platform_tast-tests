@@ -9,7 +9,7 @@ import click
 
 
 def _load_results_from_results_chart_json(
-    path: pathlib.Path, json_str: str
+    *, path: pathlib.Path, json_str: str, label: str
 ) -> test_result.TestResults:
     out_results = test_result.TestResults()
     # Tast results dir format is: <test run id>/tests/<test name>/
@@ -22,6 +22,7 @@ def _load_results_from_results_chart_json(
                 test_name=test_name,
                 metric_name=metric_name,
                 variant=variant,
+                label=label,
             )
             assert key not in out_results.results, f"duplicate key: {key}"
 
@@ -51,14 +52,16 @@ def _load_results_from_results_chart_json(
 
 
 def _load_results_from_tast_dir(
-    path: pathlib.Path,
+    path: pathlib.Path, label: str
 ) -> test_result.TestResults:
     """Extracts values from results-chart.json and returns them as a dictionary."""
 
     paths = path.glob("*/tests/*/results-chart.json")
     all_results = test_result.TestResults()
     for path in paths:
-        results = _load_results_from_results_chart_json(path, path.read_text())
+        results = _load_results_from_results_chart_json(
+            path=path, json_str=path.read_text(), label=label
+        )
         all_results.merge(results)
 
     return all_results
@@ -73,6 +76,12 @@ def _load_results_from_tast_dir(
     default=pathlib.Path("data.json"),
     help="path to output summary JSON file",
 )
+@click.option(
+    "--label",
+    type=str,
+    required=False,
+    help="label for this experiment group - defaults to the file name of the output path",
+)
 @click.argument(
     "input-path",
     type=click.Path(
@@ -80,7 +89,7 @@ def _load_results_from_tast_dir(
     ),
 )
 def ingest_tast_results_directory(
-    input_path: pathlib.Path, output_path: pathlib.Path
+    input_path: pathlib.Path, output_path: pathlib.Path, label: str | None
 ) -> None:
     """Ingest the Tast results directory, like: /tmp/tast/results/.
 
@@ -91,5 +100,7 @@ def ingest_tast_results_directory(
         input_path: Path to the Tast results directory.
         output_path: Path to the output JSON file to create.
     """
-    results = _load_results_from_tast_dir(input_path)
+    if label is None:
+        label = output_path.name
+    results = _load_results_from_tast_dir(input_path, label)
     output_path.write_text(results.to_json())

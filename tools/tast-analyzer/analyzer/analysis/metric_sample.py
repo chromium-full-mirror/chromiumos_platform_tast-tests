@@ -14,6 +14,14 @@ class MetricSample:
     """Represents an aggregation of a particular metric from a particular test
     run over a set of test runs."""
 
+    label: str
+    """A label describing the experiment this came from."""
+
+    sample_id: str
+    """A unique identifier for this sample.
+
+    For example, control_group.ui.OverviewPerf.Memory.Total.TileMemory.summary"""
+
     test_name: str
     """The name of a test this metric is from, e.g. ui.OverviewPerf."""
 
@@ -56,7 +64,3 @@ class MetricSample:
         s += f"  mean={d.mean:.2f} {self.units}, std={math.sqrt(d.variance):.2f}, "
         s += f"min={d.minmax[0]:.2f}, max={d.minmax[1]:.2f}, skew={d.skewness:.2f}"
         return s
-
-
-SampleDict = dict[str, MetricSample]
-"""Map from metric path to MetricSample"""

@@ -28,8 +28,19 @@ class TestResultKey:
     variant: str
     """Variant name from Tast - usually 'summary'."""
 
+    label: str = ""
+    """Label describing the experiment this came from.
+
+    From results version: 2
+    Compatibility: Set to the filename if not specified."""
+
+    def sample_id(self) -> str:
+        """Returns a unique identifier for which sample this test result should
+        belong to."""
+        return self.label + "." + self.metric_path()
+
     def metric_path(self) -> str:
-        """Returns a unique identifier for the metric in the context of a set
+        """Returns an identifier for the metric in the context of a set
         of test runs."""
         return self.test_name + "." + self.metric_name + "." + self.variant
 
@@ -64,7 +75,7 @@ class TestResult:
 
 
 METADATA_VERSION_CURRENT = 1
-RESULTS_VERSION_CURRENT = 1
+RESULTS_VERSION_CURRENT = 2
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True, order=True)
