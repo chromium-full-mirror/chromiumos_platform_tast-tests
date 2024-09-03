@@ -1608,18 +1608,6 @@ func (a *App) EnableBypassCSP(ctx context.Context, tb *testutil.TestBridge) erro
 	return nil
 }
 
-// EnableGa4Metrics enables CCA to send GA4 metrics during Tast tests. A mock url is
-// required as we don't want to actually send metrics to GA4 backend.
-func (a *App) EnableGa4Metrics(ctx context.Context, url string) error {
-	if err := a.conn.Call(ctx, nil, "CCATest.setMeasurementProtocolUrl", url); err != nil {
-		return errors.Wrap(err, "failed to set replace measurement protocol's URL")
-	}
-	if err := a.conn.Call(ctx, nil, "CCATest.enableGa4Metrics"); err != nil {
-		return errors.Wrap(err, "failed to enable GA4 metrics")
-	}
-	return nil
-}
-
 // SwitchTo60FPS switch current camera's FPS setting to 60.
 func (a *App) SwitchTo60FPS(ctx context.Context) error {
 	if err := a.OpenSettingMenu(ctx, MainMenu); err != nil {
