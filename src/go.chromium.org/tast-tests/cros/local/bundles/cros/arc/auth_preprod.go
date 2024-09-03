@@ -31,8 +31,8 @@ func init() {
 		Contacts:     []string{"arc-core@google.com", "jinrongwu@google.com"},
 		// ChromeOS > Software > ARC++ > Core
 		BugComponent: "b:488493",
-		SoftwareDeps: []string{"chrome", "gaia", "android_vm"},
-		Attr:         []string{"group:external-dependency", "group:hw_agnostic"},
+		SoftwareDeps: []string{"chrome", "play_store", "gaia", "android_vm"},
+		Attr:         []string{"group:external-dependency"},
 		Data:         []string{"gaia_sandbox_config.json"},
 		SearchFlags: []*testing.StringPair{
 			testenv.SearchFlag(testenv.ARCAuthPreprod),
