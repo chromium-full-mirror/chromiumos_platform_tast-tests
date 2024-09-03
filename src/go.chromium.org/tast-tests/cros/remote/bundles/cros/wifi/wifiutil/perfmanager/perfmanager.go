@@ -115,16 +115,16 @@ func setup3WayIPConfig(ctx context.Context, dutConn, routerConn, pcapConn *ssh.C
 	if err := iprPcap.SetLinkUp(ctx, defaultPcapLANIfaceName); err != nil {
 		return err
 	}
-	if err := iprRouter.FlushIP(ctx, defaultRouterLANIfaceName); err != nil {
+	if err := iprRouter.FlushIPAddr(ctx, defaultRouterLANIfaceName); err != nil {
 		return err
 	}
-	if err := iprRouter.AddIP(ctx, defaultRouterLANIfaceName, net.ParseIP(defaultRouterLANIPAddress), 24); err != nil {
+	if err := iprRouter.AddIPAddr(ctx, defaultRouterLANIfaceName, net.ParseIP(defaultRouterLANIPAddress), 24); err != nil {
 		return err
 	}
-	if err := iprPcap.FlushIP(ctx, defaultPcapLANIfaceName); err != nil {
+	if err := iprPcap.FlushIPAddr(ctx, defaultPcapLANIfaceName); err != nil {
 		return err
 	}
-	if err := iprPcap.AddIP(ctx, defaultPcapLANIfaceName, net.ParseIP(defaultPcapLANIPAddress), 24); err != nil {
+	if err := iprPcap.AddIPAddr(ctx, defaultPcapLANIfaceName, net.ParseIP(defaultPcapLANIPAddress), 24); err != nil {
 		return err
 	}
 	if err := iprDut.RouteIPVia(ctx, dutIface, net.ParseIP(defaultPcapLANIPAddress), net.ParseIP(routerIP)); err != nil {
@@ -259,10 +259,10 @@ func (p *TestManager) delete3WayIPConfig(ctx context.Context) error {
 	if err := iprPcap.DeleteIPViaRoute(ctx, defaultRouterLANIfaceName, net.ParseIP(p.testDevIPAdd), net.ParseIP(defaultRouterLANIPAddress)); err != nil {
 		utils.CollectFirstErr(ctx, &firstErr, err)
 	}
-	if err := iprRouter.DeleteIP(ctx, defaultRouterLANIfaceName, net.ParseIP(defaultRouterLANIPAddress), 24); err != nil {
+	if err := iprRouter.DeleteIPAddr(ctx, defaultRouterLANIfaceName, net.ParseIP(defaultRouterLANIPAddress), 24); err != nil {
 		utils.CollectFirstErr(ctx, &firstErr, err)
 	}
-	if err := iprPcap.DeleteIP(ctx, defaultPcapLANIfaceName, net.ParseIP(defaultPcapLANIPAddress), 24); err != nil {
+	if err := iprPcap.DeleteIPAddr(ctx, defaultPcapLANIfaceName, net.ParseIP(defaultPcapLANIPAddress), 24); err != nil {
 		utils.CollectFirstErr(ctx, &firstErr, err)
 	}
 	return firstErr

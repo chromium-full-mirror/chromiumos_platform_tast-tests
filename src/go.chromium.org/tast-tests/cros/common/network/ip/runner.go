@@ -186,7 +186,7 @@ func (r *Runner) SetMAC(ctx context.Context, iface string, mac net.HardwareAddr)
 	return nil
 }
 
-// AddIPOption is the option type for Runner.AddIP call.
+// AddIPOption is the option type for Runner.AddIPAddr call.
 type AddIPOption func(*addIPConfig)
 
 type addIPConfig struct {
@@ -201,15 +201,15 @@ func (c *addIPConfig) toArgs() []string {
 	return args
 }
 
-// AddIPBroadcast returns an AddIPOption setting broadcast IP.
-func AddIPBroadcast(broadcastIP net.IP) AddIPOption {
+// AddBroadcastIPAddr returns an AddIPOption setting broadcast IP Address.
+func AddBroadcastIPAddr(broadcastIP net.IP) AddIPOption {
 	return func(c *addIPConfig) {
 		c.broadcastIP = broadcastIP
 	}
 }
 
-// AddIP adds IPv4/IPv6 settings to iface.
-func (r *Runner) AddIP(ctx context.Context, iface string, ip net.IP, maskLen int, ops ...AddIPOption) error {
+// AddIPAddr adds IPv4/IPv6 settings to iface.
+func (r *Runner) AddIPAddr(ctx context.Context, iface string, ip net.IP, maskLen int, ops ...AddIPOption) error {
 	c := &addIPConfig{}
 	for _, op := range ops {
 		op(c)
@@ -262,8 +262,8 @@ func (r *Runner) IsIPv6Configured(ctx context.Context, iface string) (bool, erro
 	return false, nil
 }
 
-// DeleteIP deletes IPv4/IPv6 settings from the interface (iface).
-func (r *Runner) DeleteIP(ctx context.Context, iface string, ip net.IP, maskLen int) error {
+// DeleteIPAddr deletes IPv4/IPv6 settings from the interface (iface).
+func (r *Runner) DeleteIPAddr(ctx context.Context, iface string, ip net.IP, maskLen int) error {
 	args := []string{"addr", "del", fmt.Sprintf("%s/%d", ip.String(), maskLen), "dev", iface}
 	if err := r.cmd.Run(ctx, "ip", args...); err != nil {
 		return errors.Wrapf(err, "failed to delete IP address on %s", iface)
@@ -307,8 +307,8 @@ func (r *Runner) DeleteIPViaRoute(ctx context.Context, iface string, ip, viaIP n
 	return nil
 }
 
-// FlushIP flushes IP setting on iface.
-func (r *Runner) FlushIP(ctx context.Context, iface string) error {
+// FlushIPAddr flushes IP setting on iface.
+func (r *Runner) FlushIPAddr(ctx context.Context, iface string) error {
 	if err := r.cmd.Run(ctx, "ip", "addr", "flush", iface); err != nil {
 		return errors.Wrapf(err, "failed to flush address of %s", iface)
 	}

@@ -342,7 +342,7 @@ func TestIpAddrSh(t *testing.T) {
 	}
 
 	for i, tc := range testcases {
-		got, err := parseIPOutput(tc.out)
+		got, err := parseIPAddrOutput(tc.out)
 		if err != nil && !tc.shouldFail {
 			t.Errorf("case#%d failed with err=%v", i, err)
 			continue

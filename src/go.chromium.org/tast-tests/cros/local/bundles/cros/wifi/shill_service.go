@@ -4050,12 +4050,12 @@ func (s *ShillService) startDHCPServer(ctx context.Context) (ret error) {
 	_ = r.Run(ctx, "killall", "-q", "dnsmasq")
 
 	ipr := ip.NewLocalRunner()
-	if err := ipr.AddIP(ctx, apIfName, net.ParseIP(softAPIPAddress), 24); err != nil {
+	if err := ipr.AddIPAddr(ctx, apIfName, net.ParseIP(softAPIPAddress), 24); err != nil {
 		return errors.Wrap(err, "failed to assign IPv4 address on WiFi interface")
 	}
 	defer func() {
 		if ret != nil {
-			ipr.DeleteIP(ctx, apIfName, net.ParseIP(softAPIPAddress), 24)
+			ipr.DeleteIPAddr(ctx, apIfName, net.ParseIP(softAPIPAddress), 24)
 		}
 	}()
 
@@ -4120,7 +4120,7 @@ func (s *ShillService) stopDHCPServer(ctx context.Context) error {
 	}
 
 	ipr := ip.NewLocalRunner()
-	if err := ipr.DeleteIP(ctx, apIfName, net.ParseIP(softAPIPAddress), 24); err != nil {
+	if err := ipr.DeleteIPAddr(ctx, apIfName, net.ParseIP(softAPIPAddress), 24); err != nil {
 		utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to delete IPv4 address on WiFi interface"))
 	}
 

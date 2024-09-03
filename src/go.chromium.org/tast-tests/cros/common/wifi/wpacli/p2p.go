@@ -156,7 +156,7 @@ func (r *Runner) P2PGroupCreate(ctx context.Context, ipr *ip.Runner, ops ...p2p.
 		}
 	}(cleanupCtx)
 
-	if err := ipr.AddIP(ctx, p2pGOIface, net.ParseIP(utils.P2PGOIPAddress), 24); err != nil {
+	if err := ipr.AddIPAddr(ctx, p2pGOIface, net.ParseIP(utils.P2PGOIPAddress), 24); err != nil {
 		return "", "", "", 0, err
 	}
 
@@ -224,7 +224,7 @@ func (r *Runner) P2PGroupConnect(ctx context.Context, ipr *ip.Runner,
 		}
 	}(cleanupCtx)
 
-	if err := ipr.AddIP(timeoutCtx, p2pClientIface, net.ParseIP(utils.P2PClientIPAddress), 24); err != nil {
+	if err := ipr.AddIPAddr(timeoutCtx, p2pClientIface, net.ParseIP(utils.P2PClientIPAddress), 24); err != nil {
 		return "", -1, err
 	}
 
@@ -236,7 +236,7 @@ func (r *Runner) P2PGroupConnect(ctx context.Context, ipr *ip.Runner,
 // P2PGroupDelete lets GO tear down the WiFi Direct group.
 func (r *Runner) P2PGroupDelete(ctx context.Context, ipr *ip.Runner,
 	iface string) (retErr error) {
-	retErr = errors.Join(retErr, ipr.DeleteIP(ctx, iface, net.ParseIP(utils.P2PGOIPAddress), 24))
+	retErr = errors.Join(retErr, ipr.DeleteIPAddr(ctx, iface, net.ParseIP(utils.P2PGOIPAddress), 24))
 	retErr = errors.Join(retErr, r.p2pGroupRemove(ctx, iface))
 	retErr = errors.Join(retErr, r.p2pFlush(ctx))
 
@@ -249,7 +249,7 @@ func (r *Runner) P2PGroupDelete(ctx context.Context, ipr *ip.Runner,
 // P2PGroupDisconnect Disconnects client from the WiFi Direct group.
 func (r *Runner) P2PGroupDisconnect(ctx context.Context, ipr *ip.Runner,
 	iface string, netID int) (retErr error) {
-	retErr = errors.Join(retErr, ipr.DeleteIP(ctx, iface, net.ParseIP(utils.P2PClientIPAddress), 24))
+	retErr = errors.Join(retErr, ipr.DeleteIPAddr(ctx, iface, net.ParseIP(utils.P2PClientIPAddress), 24))
 	retErr = errors.Join(retErr, ipr.SetLinkDown(ctx, iface))
 	retErr = errors.Join(retErr, r.p2pGroupRemove(ctx, iface))
 	retErr = errors.Join(retErr, r.p2pFlush(ctx))

@@ -85,9 +85,9 @@ func ReleaseVethPair(ctx context.Context, ipr *ip.Runner, vethEnd string, resolv
 	}
 
 	var firstErr error
-	utils.CollectFirstErr(ctx, &firstErr, ipr.FlushIP(ctx, veth))
+	utils.CollectFirstErr(ctx, &firstErr, ipr.FlushIPAddr(ctx, veth))
 	utils.CollectFirstErr(ctx, &firstErr, ipr.SetLinkDown(ctx, veth))
-	utils.CollectFirstErr(ctx, &firstErr, ipr.FlushIP(ctx, vethPeer))
+	utils.CollectFirstErr(ctx, &firstErr, ipr.FlushIPAddr(ctx, vethPeer))
 	utils.CollectFirstErr(ctx, &firstErr, ipr.SetLinkDown(ctx, vethPeer))
 	// Note that we only need to delete one side.
 	utils.CollectFirstErr(ctx, &firstErr, ipr.DeleteLink(ctx, veth))

@@ -25,16 +25,16 @@ func StartDHCP(ctx context.Context, name, iface, workDir string, host *ssh.Conn,
 	ctx, st := timing.Start(ctx, "router.StartDHCP")
 	defer st.End()
 
-	if err := ipr.FlushIP(ctx, iface); err != nil {
+	if err := ipr.FlushIPAddr(ctx, iface); err != nil {
 		return nil, err
 	}
 	maskLen, _ := mask.Size()
-	if err := ipr.AddIP(ctx, iface, serverIP, maskLen, ip.AddIPBroadcast(broadcastIP)); err != nil {
+	if err := ipr.AddIPAddr(ctx, iface, serverIP, maskLen, ip.AddBroadcastIPAddr(broadcastIP)); err != nil {
 		return nil, err
 	}
 	defer func(ctx context.Context) {
 		if retErr != nil {
-			if err := ipr.FlushIP(ctx, iface); err != nil {
+			if err := ipr.FlushIPAddr(ctx, iface); err != nil {
 				testing.ContextLogf(ctx, "Failed to flush the interface %s while StartDHCP has failed: %v", iface, err)
 			}
 		}
@@ -55,6 +55,6 @@ func StopDHCP(ctx context.Context, ds *dhcp.Server, ipr *ip.Runner) error {
 	if err := ds.Close(ctx); err != nil {
 		utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to stop dhcpd"))
 	}
-	utils.CollectFirstErr(ctx, &firstErr, ipr.FlushIP(ctx, iface))
+	utils.CollectFirstErr(ctx, &firstErr, ipr.FlushIPAddr(ctx, iface))
 	return firstErr
 }
