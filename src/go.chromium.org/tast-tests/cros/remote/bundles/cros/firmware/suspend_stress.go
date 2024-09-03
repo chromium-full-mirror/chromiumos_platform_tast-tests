@@ -67,12 +67,18 @@ func init() {
 }
 
 const (
-	minSuspendResumeTime = 5
-	maxSuspendResumeTime = 10 // Sets time range between [minSuspendResumeTime, minSuspendResumeTime + maxSuspendResumeTime).
-	minResumeTime        = 3
-	maxResumeTime        = 5
-	powerdDelayDur       = 3
-	checkFrequency       = 100 // Sets how often (in iterations) login, tpm, and ectool are checked. Always checked on last iteration.
+	// minSuspendResumeSeconds and maxSuspendResumeSeconds are the range of seconds passed to powerd_dbus_suspend --suspend_for_sec.
+	minSuspendResumeSeconds = 5
+	maxSuspendResumeSeconds = 15
+	// minPostResumeSleepSeconds and maxPostResumeSleepSeconds are the range of seconds to sleep after resuming from suspend and starting the next iteration.
+	minPostResumeSleepSeconds = 3
+	maxPostResumeSleepSeconds = 8
+	// powerdDelaySeconds is the time powerd waits before suspending, i.e. passed to powerd_dbus_suspend --delay.
+	powerdDelaySeconds = 3
+	// checkFrequency sets how often (in iterations) login, tpm, and ectool are checked. Always checked on last iteration.
+	checkFrequency = 100
+	// powerStatePadding is extra time to wait for the S3/S0ix power state, won't take any extra time except in failure cases.
+	powerStatePadding = 5 * time.Second
 )
 
 func SuspendStress(ctx context.Context, s *testing.State) {
@@ -105,6 +111,7 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 	}
 
 	failures := make(map[int][]error, numIters)
+	failureCount := 0
 	if !failFast {
 		for i := 0; i < numIters; i++ {
 			failures[i] = []error{}
@@ -112,10 +119,11 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 	}
 
 	logFailure := func(msg string, err error, iter int) {
+		failureCount++
 		if failFast {
 			s.Fatalf("%s: %v", msg, err)
 		} else {
-			s.Log(msg)
+			s.Logf("%s: %v", msg, err)
 			failures[iter] = append(failures[iter], errors.Wrap(err, msg))
 		}
 	}
@@ -132,25 +140,33 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to clear powerd log file: ", err)
 	}
 
-	for i := 0; i < numIters; i++ {
-		s.Logf("------ Running iteration %d out of %d ------", i+1, numIters)
+	startTime := time.Now()
 
-		suspendDuration := time.Duration(minSuspendResumeTime+rand.Intn(maxSuspendResumeTime)) * time.Second
-		s.Logf("Suspending dut for %s", suspendDuration)
+	for i := 0; i < numIters; i++ {
+		if i > 0 {
+			estimatedTimeRemaining := time.Now().Sub(startTime) / time.Duration(i) * time.Duration(numIters-i)
+			s.Logf("------ Running iteration %d out of %d (%d failures) Time remaining: %s ------", i+1, numIters, failureCount, estimatedTimeRemaining.Round(time.Minute))
+		} else {
+			s.Logf("------ Running iteration %d out of %d ------", i+1, numIters)
+		}
+		h.Servo.Echo(ctx, fmt.Sprintf("firmware.SuspendStress iteration %d out of %d", i+1, numIters))
+
+		if err := h.CloseRPCConnection(ctx); err != nil {
+			logFailure("Failed to close rpc connection", err, i)
+		}
+
+		suspendSeconds := minSuspendResumeSeconds + rand.Intn(maxSuspendResumeSeconds-minSuspendResumeSeconds)
+		s.Logf("Suspending dut for %ds", suspendSeconds)
 		// The --wakup_timeout automatically unsuspends after given time.
-		cmd := h.DUT.Conn().CommandContext(ctx, "powerd_dbus_suspend", fmt.Sprintf("--delay=%d", powerdDelayDur), fmt.Sprintf("--suspend_for_sec=%d", int(suspendDuration.Seconds())))
+		cmd := h.DUT.Conn().CommandContext(ctx, "powerd_dbus_suspend", fmt.Sprintf("--delay=%d", powerdDelaySeconds), fmt.Sprintf("--suspend_for_sec=%d", suspendSeconds))
 		if err := cmd.Start(); err != nil {
 			logFailure("Failed to initiate suspend on DUT", err, i)
 		}
-		waitUnreachableCtx, cancelWaitUnreachable := context.WithTimeout(ctx, 30*time.Second)
-		defer cancelWaitUnreachable()
-		if err := h.DUT.WaitUnreachable(waitUnreachableCtx); err != nil {
-			logFailure("Failed to wait for DUT to be unreachable after sending powerd_dbus_suspend", err, i)
-		}
 
 		s.Log("Checking for S0ix or S3 powerstate")
-		// After suspendDuration+powerDelayDur the DUT will return to S0 so if S0ix/S3 not detected in that duration, it failed to suspend.
-		if err := h.WaitForPowerStates(ctx, 250*time.Millisecond, suspendDuration+powerdDelayDur*time.Second, "S0ix", "S3"); err != nil {
+		// After suspendSeconds+powerdDelaySeconds the DUT will return to S0 so if S0ix/S3 not detected in that duration, it failed to suspend.
+		// An alternative would be to capture the EC UART and watch for the power state transitions directly.
+		if err := h.WaitForPowerStates(ctx, 250*time.Millisecond, time.Duration(suspendSeconds+powerdDelaySeconds)*time.Second+powerStatePadding, "S0ix", "S3"); err != nil {
 			logFailure("Failed to get S0ix or S3 powerstate after suspend", err, i)
 		}
 
@@ -160,9 +176,13 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 			logFailure("Failed to get S0 powerstate after waking from suspend", err, i)
 		}
 
-		if err := h.WaitConnect(ctx); err != nil {
-			logFailure("Failed to reconnnect to DUT after waking from suspend", err, i)
-		}
+		func() {
+			waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 30*time.Second)
+			defer cancelWaitConnect()
+			if err := h.WaitConnect(waitConnectCtx); err != nil {
+				logFailure("Failed to reconnnect to DUT after waking from suspend", err, i)
+			}
+		}()
 
 		if (i+1)%checkFrequency == 0 || i == numIters-1 {
 			s.Log("Checking login, TPM, and ECTool on iteration ", i+1)
@@ -189,14 +209,18 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 				s.Fatalf("Failed to reset DUT after failures in suspend at iteration %d: %v", i+1, err)
 			}
 			s.Log("Reconnecting to DUT")
-			if err := h.WaitConnect(ctx); err != nil {
-				s.Fatalf("Failed to reconnect to DUT after reset at iteration %d: %v", i+1, err)
-			}
+			func() {
+				waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, time.Minute)
+				defer cancelWaitConnect()
+				if err := h.WaitConnect(waitConnectCtx); err != nil {
+					s.Fatalf("Failed to reconnect to DUT after reset at iteration %d: %v", i+1, err)
+				}
+			}()
 		}
 
-		resuspendDelay := time.Duration(minResumeTime+rand.Intn(maxResumeTime)) * time.Second
+		resuspendDelay := time.Duration(minPostResumeSleepSeconds+rand.Intn(maxPostResumeSleepSeconds-minPostResumeSleepSeconds)) * time.Second
 		s.Logf("Sleeping for %s before next iteration", resuspendDelay)
-		// GoBigSleepLint: random duration in range [minResumeTime, minResumeTime + maxResumeTime) to wait between suspend iterations.
+		// GoBigSleepLint: random duration in range [minPostResumeSleepSeconds, maxPostResumeSleepSeconds) to wait between suspend iterations.
 		if err := testing.Sleep(ctx, resuspendDelay); err != nil {
 			// Don't ignore this error even without fail fast set as it means context timed out.
 			s.Fatalf("Test timed out between suspends on iteration %d: %v", i+1, err)
@@ -204,9 +228,7 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Errors encountered:")
-	numFails := 0
 	for iter, errors := range failures {
-		numFails += len(errors)
 		if len(errors) > 0 {
 			s.Logf("Iter %d: Had the following failures:", iter+1)
 			for _, errMsg := range errors {
@@ -228,8 +250,8 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 		s.Error("Failed to write powerd log: ", err)
 	}
 
-	if numFails > 0 {
-		s.Fatalf("Encountered %d errors during execution of stress test and got %d powerd_suspend returned 0 in powerd log, check execution log for details", numFails, matchCount)
+	if failureCount > 0 {
+		s.Fatalf("Encountered %d errors during execution of stress test and got %d powerd_suspend returned 0 in powerd log, check execution log for details", failureCount, matchCount)
 	} else {
 		s.Logf("\tNo errors encountered and got %d powerd_suspend returned 0 in powerd log", matchCount)
 	}
