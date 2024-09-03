@@ -120,15 +120,14 @@ func UssMigrationPinAfterPasswordMigration(ctx context.Context, s *testing.State
 	}
 	defer cryptohome.RemoveVault(ctxForCleanUp, userName)
 
-	// Set up the appropriate feature flags depending on the test parameters.
+	// Select the appropriate PIN wrapper function based on test parameters.
+	withPinFlags := cryptochrome.WithModernPinDisabled
 	if userParam.modernPin {
-		cryptochrome.WithModernPin(ctx, func() error { return nil })
-	} else {
-		cryptochrome.WithModernPinDisabled(ctx, func() error { return nil })
+		withPinFlags = cryptochrome.WithModernPin
 	}
 
 	// Enable migration to verify the migration process.
-	if err := func() error {
+	if err := withPinFlags(ctx, func() error {
 		// Check that password factor has not been migrated.
 		if err := cryptohome.CheckKeyBackingStoreExists(ctx, passwordFactorFile, userName); err == nil {
 			return errors.New("Password auth factor file was created before migration should have happened")
@@ -187,19 +186,11 @@ func UssMigrationPinAfterPasswordMigration(ctx context.Context, s *testing.State
 			return errors.Wrap(err, "failed to unmount vault after migration mount")
 		}
 		return nil
-	}(); err != nil {
+	}); err != nil {
 		s.Fatal("Validation during USS migration failed: ", err)
 	}
 
-	// This is needed because in the previous block we call unmount,
-	// which also calls a chrome restart script.
-	if userParam.modernPin {
-		cryptochrome.WithModernPin(ctx, func() error { return nil })
-	} else {
-		cryptochrome.WithModernPinDisabled(ctx, func() error { return nil })
-	}
-
-	if err := func() error {
+	if err := withPinFlags(ctx, func() error {
 		// Start a new auth session and mount the persistent vault and update auth factor.
 		if err := client.WithAuthSession(ctx, userName, false /*ephemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
 			if _, err := client.AuthenticateAuthFactor(ctx, authSessionID, passwordLabel, userPassword); err != nil {
@@ -223,73 +214,59 @@ func UssMigrationPinAfterPasswordMigration(ctx context.Context, s *testing.State
 			return errors.Wrap(err, "failed to unmount vault after migration mount")
 		}
 		return nil
-	}(); err != nil {
+	}); err != nil {
 		s.Fatal("Validation during USS migration failed: ", err)
 	}
 
-	// This is needed because in the previous block we call unmount,
-	// which also calls a chrome restart script.
-	if userParam.modernPin {
-		cryptochrome.WithModernPin(ctx, func() error { return nil })
-	} else {
-		cryptochrome.WithModernPinDisabled(ctx, func() error { return nil })
-	}
-
 	// Authenticate a new auth session via the wrong Pin five times - lock out, authenticate with correct password then.
-	if err := client.WithAuthSession(ctx, userName, false /*ephemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
+	if err := withPinFlags(ctx, func() error {
+		return client.WithAuthSession(ctx, userName, false /*ephemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
 
-		for i := 0; i < 5; /*no of wrong attempts allowed*/ i++ {
-			// Authenticating with the wrong PIN should fail.
-			if _, err := client.AuthenticatePinAuthFactor(ctx, authSessionID, pinLabel, notUserPin); err == nil {
-				return errors.New("was incorrectly able to authenticate with the wrong PIN")
+			for i := 0; i < 5; /*no of wrong attempts allowed*/ i++ {
+				// Authenticating with the wrong PIN should fail.
+				if _, err := client.AuthenticatePinAuthFactor(ctx, authSessionID, pinLabel, notUserPin); err == nil {
+					return errors.New("was incorrectly able to authenticate with the wrong PIN")
+				}
 			}
-		}
-		// Authenticating with the old password should fail.
-		if _, err := client.AuthenticateAuthFactor(ctx, authSessionID, passwordLabel, userPassword); err == nil {
-			return errors.New("was incorrectly able to authenticate with the old password")
-		}
+			// Authenticating with the old password should fail.
+			if _, err := client.AuthenticateAuthFactor(ctx, authSessionID, passwordLabel, userPassword); err == nil {
+				return errors.New("was incorrectly able to authenticate with the old password")
+			}
 
-		// Authenticating with the correct Pin should also fail as it is locked out.
-		if _, err := client.AuthenticatePinAuthFactor(ctx, authSessionID, pinLabel, userPin); err == nil {
-			return errors.New("was incorrectly able to authenticate with the correct PIN when it is locked out")
-		}
+			// Authenticating with the correct Pin should also fail as it is locked out.
+			if _, err := client.AuthenticatePinAuthFactor(ctx, authSessionID, pinLabel, userPin); err == nil {
+				return errors.New("was incorrectly able to authenticate with the correct PIN when it is locked out")
+			}
 
-		// Authenticate using the changed password.
-		if _, err := client.AuthenticateAuthFactor(ctx, authSessionID, passwordLabel, userNewPassword); err != nil {
-			return errors.Wrap(err, "failed to authenticate password auth factor")
-		}
+			// Authenticate using the changed password.
+			if _, err := client.AuthenticateAuthFactor(ctx, authSessionID, passwordLabel, userNewPassword); err != nil {
+				return errors.Wrap(err, "failed to authenticate password auth factor")
+			}
 
-		if _, err := client.PreparePersistentVault(ctx, authSessionID, false /*ecryptfs*/); err != nil {
-			return errors.Wrap(err, "failed to prepare persistent vault")
-		}
+			if _, err := client.PreparePersistentVault(ctx, authSessionID, false /*ecryptfs*/); err != nil {
+				return errors.Wrap(err, "failed to prepare persistent vault")
+			}
 
-		// Verify that the test file is still there.
-		if err := cryptohome.VerifyFileForPersistence(ctx, userName); err != nil {
-			return errors.Wrap(err, "failed to verify file persistence")
-		}
+			// Verify that the test file is still there.
+			if err := cryptohome.VerifyFileForPersistence(ctx, userName); err != nil {
+				return errors.Wrap(err, "failed to verify file persistence")
+			}
 
-		// Unmount the user.
-		if err := client.UnmountAll(ctx); err != nil {
-			return errors.Wrap(err, "failed to unmount vaults for re-mounting")
-		}
+			// Unmount the user.
+			if err := client.UnmountAll(ctx); err != nil {
+				return errors.Wrap(err, "failed to unmount vaults for re-mounting")
+			}
 
-		return nil
+			return nil
+		})
 	}); err != nil {
 		s.Fatal("Failed to lock pin and then unlock with it new password: ", err)
 	}
 
-	// This is needed because in the previous block we call unmount,
-	// which also calls a chrome restart script.
-	if userParam.modernPin {
-		cryptochrome.WithModernPin(ctx, func() error { return nil })
-	} else {
-		cryptochrome.WithModernPinDisabled(ctx, func() error { return nil })
-	}
-
 	// Enable migration to verify the migration process.
-	if err := func() error {
+	if err := withPinFlags(ctx, func() error {
 		// Authenticate a new auth session via their old PIN and verify migration.
-		if err := client.WithAuthSession(ctx, userName, false /*ephemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
+		return client.WithAuthSession(ctx, userName, false /*ephemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
 			// Authenticating with the old PIN should pass.
 			if _, err := client.AuthenticatePinAuthFactor(ctx, authSessionID, pinLabel, userPin); err != nil {
 				return errors.New("was not able to authenticate with the old PIN")
@@ -309,11 +286,8 @@ func UssMigrationPinAfterPasswordMigration(ctx context.Context, s *testing.State
 			}
 
 			return nil
-		}); err != nil {
-			return errors.Wrap(err, "failed to authenticate user with old pin after lockout")
-		}
-		return nil
-	}(); err != nil {
+		})
+	}); err != nil {
 		s.Fatal("Validation of pin lockout failed during migration: ", err)
 	}
 }

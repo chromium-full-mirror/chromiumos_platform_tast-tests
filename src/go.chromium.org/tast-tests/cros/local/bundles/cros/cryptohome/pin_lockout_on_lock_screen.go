@@ -82,38 +82,41 @@ func PinLockoutOnLockScreen(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to remove old vault for preparation: ", err)
 	}
 
+	// Select the appropriate PIN wrapper function based on test parameters.
+	withPinFlags := cryptochrome.WithModernPinDisabled
 	if userParam.modernPin {
-		cryptochrome.WithModernPin(ctx, func() error { return nil })
-	} else {
-		cryptochrome.WithModernPinDisabled(ctx, func() error { return nil })
+		withPinFlags = cryptochrome.WithModernPin
 	}
-	// Setup user with password and pin.
-	if err := client.WithAuthSession(ctx, userName, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
-		// Create user vault.
-		if err := client.CreatePersistentUser(ctx, authSessionID); err != nil {
-			return errors.Wrap(err, "failed to create user")
-		}
-		// Mount user home directories and daemon-store directories.
-		if _, err := client.PreparePersistentVault(ctx, authSessionID, false /*ecryptfs*/); err != nil {
-			return errors.Wrap(err, "failed to mount user profile after creation")
-		}
-		defer client.Unmount(ctxForCleanup, userName)
-		// Add password AuthFactor.
-		if err := client.AddAuthFactor(ctx, authSessionID, passwordLabel, userPassword); err != nil {
-			return errors.Wrap(err, "failed to add password AuthFactor")
-		}
-		// Add PIN AuthFactor.
-		if userParam.modernPin {
-			if err := client.AddModernPinAuthFactor(ctx, authSessionID, pinLabel, userPin); err != nil {
-				return errors.Wrap(err, "failed to add PIN AuthFactor")
-			}
-		} else {
-			if err := client.AddPinAuthFactor(ctx, authSessionID, pinLabel, userPin); err != nil {
-				return errors.Wrap(err, "failed to add PIN AuthFactor")
-			}
-		}
 
-		return nil
+	// Setup user with password and pin.
+	if err := withPinFlags(ctx, func() error {
+		return client.WithAuthSession(ctx, userName, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
+			// Create user vault.
+			if err := client.CreatePersistentUser(ctx, authSessionID); err != nil {
+				return errors.Wrap(err, "failed to create user")
+			}
+			// Mount user home directories and daemon-store directories.
+			if _, err := client.PreparePersistentVault(ctx, authSessionID, false /*ecryptfs*/); err != nil {
+				return errors.Wrap(err, "failed to mount user profile after creation")
+			}
+			defer client.Unmount(ctxForCleanup, userName)
+			// Add password AuthFactor.
+			if err := client.AddAuthFactor(ctx, authSessionID, passwordLabel, userPassword); err != nil {
+				return errors.Wrap(err, "failed to add password AuthFactor")
+			}
+			// Add PIN AuthFactor.
+			if userParam.modernPin {
+				if err := client.AddModernPinAuthFactor(ctx, authSessionID, pinLabel, userPin); err != nil {
+					return errors.Wrap(err, "failed to add PIN AuthFactor")
+				}
+			} else {
+				if err := client.AddPinAuthFactor(ctx, authSessionID, pinLabel, userPin); err != nil {
+					return errors.Wrap(err, "failed to add PIN AuthFactor")
+				}
+			}
+
+			return nil
+		})
 	}); err != nil {
 		s.Fatal("Failed to create and set up the user password and PIN: ", err)
 	}
