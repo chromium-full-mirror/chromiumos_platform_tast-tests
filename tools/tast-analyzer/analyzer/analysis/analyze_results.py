@@ -220,7 +220,9 @@ def analyze_results(
 
     samples = _prune_minimum_sample_size(samples, cfg.minimum_sample_size)
 
-    groups_list = analysis_results.construct_experiment_groups_list(samples)
+    groups_list = analysis_results.construct_experiment_groups_list(
+        samples, cfg
+    )
     results = analysis_results.generate_analysis_results(
         groups_list=groups_list,
         hypothesis_params=cfg.hypothesis_test_params,

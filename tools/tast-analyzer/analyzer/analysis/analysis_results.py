@@ -7,7 +7,9 @@ from collections import defaultdict
 import dataclasses
 import itertools
 import logging
+import re
 
+from analyzer.analysis import analysis_cfg
 from analyzer.analysis import metric_sample
 from analyzer.analysis import stats_util
 from analyzer.analysis.metric_sample import MetricSample
@@ -180,8 +182,41 @@ def _construct_implicit_experiment_groups_list(
     return groups_list
 
 
+def _construct_explicit_experiment_groups_list(
+    samples: list[metric_sample.MetricSample],
+    cfgs: list[analysis_cfg.ExperimentGroupsCfg],
+) -> list[list[ExperimentGroup]]:
+    """Constructs a list of list of ExperimentGroups based on explicit config.
+
+    This function creates ExperimentGroups based on explicitly specified
+    configuration. For example, this could create lists of ExperimentGroups
+    based on two differently named metrics that should be compared to each
+    other.
+
+    Args:
+        samples: List of samples.
+        cfgs: List of ExperimentGroupsCfg.
+
+    Returns:
+        A list of lists of ExperimentGroups.
+    """
+    groups_list = []
+    for cfg in cfgs:
+        groups = []
+        for s in samples:
+            if any(
+                re.match(regex, s.metric_path)
+                for regex in cfg.metric_path_regex_list
+            ):
+                groups.append(ExperimentGroup(sample=s))
+        if len(groups) > 1:
+            groups_list.append(groups)
+    return groups_list
+
+
 def construct_experiment_groups_list(
     samples: list[metric_sample.MetricSample],
+    cfg: analysis_cfg.AnalysisCfg,
 ) -> list[list[ExperimentGroup]]:
     """Computes a list of lists of experiment groups to be compared.
 
@@ -191,11 +226,24 @@ def construct_experiment_groups_list(
 
     Args:
         samples: List of samples.
+        cfg: The analysis configuration.
 
     Returns:
         A list of lists of ExperimentGroups.
     """
+
+    # First construct a list groups for each same metric path.
     groups_list = _construct_implicit_experiment_groups_list(samples)
+
+    # Now construct groups based on ExperimentGroupsCfg, if it exists. Note that
+    # this could create identical groups lists to the implicit groups lists
+    # depending on the configuration. In this case they are processed twice.
+    # TODO(b/365684928): Consider how to handle the case if there are duplicated
+    # groups lists.
+    if cfg.persistent_cfg.experiment_groups_cfgs is not None:
+        groups_list += _construct_explicit_experiment_groups_list(
+            samples, cfg.persistent_cfg.experiment_groups_cfgs
+        )
 
     logging.info(
         f"Looking at {len(groups_list)} collections of samples for comparison"

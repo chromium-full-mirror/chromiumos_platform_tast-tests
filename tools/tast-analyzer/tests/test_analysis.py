@@ -134,7 +134,9 @@ class AnalysisTest(unittest.TestCase):
         samples = self._load_before_samples() + self._load_after_samples()
         samples_by_id = self._samples_by_id(samples)
 
-        groups_list = analysis_results.construct_experiment_groups_list(samples)
+        groups_list = analysis_results.construct_experiment_groups_list(
+            samples, analysis_cfg.AnalysisCfg()
+        )
         # We should only look at the common metric paths.
         self.assertEqual(
             groups_list,
@@ -148,6 +150,104 @@ class AnalysisTest(unittest.TestCase):
                     analysis_results.ExperimentGroup(
                         sample=samples_by_id[
                             "after.ui.OverviewPerf.Test.One.average"
+                        ]
+                    ),
+                ],
+                [
+                    analysis_results.ExperimentGroup(
+                        sample=samples_by_id[
+                            "before.ui.OverviewPerf.Test.Three.average"
+                        ]
+                    ),
+                    analysis_results.ExperimentGroup(
+                        sample=samples_by_id[
+                            "after.ui.OverviewPerf.Test.Three.average"
+                        ]
+                    ),
+                ],
+            ],
+        )
+
+    def test_explicit_experiment_group_configuration(self) -> None:
+        # With explicit experiment group configuration, we should look at
+        # only the explicitly set groups if there is only one label.
+        before_samples = self._load_before_samples()
+        before_samples_by_id = self._samples_by_id(before_samples)
+        cfg = analysis_cfg.AnalysisCfg(
+            persistent_cfg=analysis_cfg.PersistentCfg(
+                experiment_groups_cfgs=[
+                    analysis_cfg.ExperimentGroupsCfg(
+                        metric_path_regex_list=[
+                            r"^ui\.OverviewPerf\.Test\.Three\.average$",
+                            r"^ui\.OverviewPerf\.Test\.One\.average$",
+                        ]
+                    )
+                ]
+            )
+        )
+        groups_list = analysis_results.construct_experiment_groups_list(
+            before_samples, cfg
+        )
+        self.assertEqual(
+            groups_list,
+            [
+                [
+                    analysis_results.ExperimentGroup(
+                        sample=before_samples_by_id[
+                            "before.ui.OverviewPerf.Test.One.average"
+                        ]
+                    ),
+                    analysis_results.ExperimentGroup(
+                        sample=before_samples_by_id[
+                            "before.ui.OverviewPerf.Test.Three.average"
+                        ]
+                    ),
+                ],
+            ],
+        )
+
+        # If there are two labels, look at the explicit experiment groups and
+        # the implicit ones between two samples with different labels but the
+        # same metric path.
+        samples = before_samples + self._load_after_samples()
+        samples_by_id = self._samples_by_id(samples)
+        groups_list = analysis_results.construct_experiment_groups_list(
+            samples, cfg
+        )
+        self.assertEqual(
+            groups_list,
+            [
+                [
+                    analysis_results.ExperimentGroup(
+                        sample=samples_by_id[
+                            "before.ui.OverviewPerf.Test.One.average"
+                        ]
+                    ),
+                    analysis_results.ExperimentGroup(
+                        sample=samples_by_id[
+                            "after.ui.OverviewPerf.Test.One.average"
+                        ]
+                    ),
+                ],
+                [
+                    analysis_results.ExperimentGroup(
+                        sample=samples_by_id[
+                            "before.ui.OverviewPerf.Test.One.average"
+                        ]
+                    ),
+                    analysis_results.ExperimentGroup(
+                        sample=samples_by_id[
+                            "before.ui.OverviewPerf.Test.Three.average"
+                        ]
+                    ),
+                    analysis_results.ExperimentGroup(
+                        sample=samples_by_id[
+                            "after.ui.OverviewPerf.Test.One.average"
+                        ]
+                    ),
+                    analysis_results.ExperimentGroup(
+                        sample=samples_by_id[
+                            "after.ui.OverviewPerf.Test.Three.average"
                         ]
                     ),
                 ],
@@ -191,7 +291,9 @@ class AnalysisTest(unittest.TestCase):
         samples = self._load_before_samples() + self._load_after_samples()
         samples_by_id = self._samples_by_id(samples)
 
-        groups_list = analysis_results.construct_experiment_groups_list(samples)
+        groups_list = analysis_results.construct_experiment_groups_list(
+            samples, analysis_cfg.AnalysisCfg()
+        )
         self.assertEqual(
             groups_list,
             [

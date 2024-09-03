@@ -78,9 +78,25 @@ class PerTestCfg:
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True, order=True)
+class ExperimentGroupsCfg:
+    metric_path_regex_list: list[str] = dataclasses.field(default_factory=list)
+    """List of regexes to match metric paths.
+
+    All metric paths matching any of the regexes will be considered in the same
+    analysis as different experiment groups and compared to each other."""
+
+
+@dataclasses.dataclass(frozen=True, kw_only=True, order=True)
 class PersistentCfg:
     per_test_cfgs: list[PerTestCfg] = dataclasses.field(default_factory=list)
     """List of PerTestCfg."""
+
+    experiment_groups_cfgs: list[ExperimentGroupsCfg] | None = None
+    """List of ExperimentGroupsCfg, defining experiment groups.
+
+    If this is None, experiment groups will be defined for each metric path
+    across MetricSamples identified by their label, i.e. a comparison between
+    the same metric and test between differently labeled sets of results."""
 
     def compute_per_test_cfg(self, test_name: str) -> PerTestCfg:
         """Computes the effective PerTestCfg for the given test.
