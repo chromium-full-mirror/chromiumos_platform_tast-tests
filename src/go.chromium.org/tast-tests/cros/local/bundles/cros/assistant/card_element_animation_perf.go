@@ -27,9 +27,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CardElementAnimationPerf,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Measures animation smoothness of card elements and transition from peeking to half height",
+		Func: CardElementAnimationPerf,
+		Desc: "Measures animation smoothness of card elements and transition from peeking to half height",
 		Contacts: []string{
 			"cros-assistive@google.com",
 			"chromeos-consumer-engprod@google.com",
@@ -41,15 +40,7 @@ func init() {
 			"group:hw_agnostic",
 		},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
-		Params: []testing.Param{{
-			Val:     browser.TypeAsh,
-			Fixture: "assistantPerf",
-		}, {
-			Name:              "lacros",
-			Val:               browser.TypeLacros,
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           "assistantLacrosPerf",
-		}},
+		Fixture:      "assistantPerf",
 	})
 }
 
@@ -62,8 +53,6 @@ func CardElementAnimationPerf(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, 10*time.Second)
 	defer cancel()
-
-	bt := s.Param().(browser.Type)
 
 	fixtData := s.FixtValue().(*assistant.FixtData)
 	cr := fixtData.Chrome
@@ -90,7 +79,7 @@ func CardElementAnimationPerf(ctx context.Context, s *testing.State) {
 			var conn *chrome.Conn
 			var closeBrowser uiauto.Action
 			var err error
-			conn, br, closeBrowser, err = browserfixt.SetUpWithURL(ctx, cr, bt, uiconsts.PerftestURL)
+			conn, br, closeBrowser, err = browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, uiconsts.PerftestURL)
 			if err != nil {
 				s.Fatal("Failed to create new browser window: ", err)
 			}
