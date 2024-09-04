@@ -1777,12 +1777,11 @@ func reportWebRTCInternals(ctx context.Context, dump []byte, meetingCode string,
 			expectedInTotalCount = numBots
 
 			testing.ContextLogf(ctx, "Found %v inbound-rtp video streams", inTotalCount)
-			// If an enterprise account turns on effects, it will generate 1~2 inbound-rtp video
-			// streams for the self view of sending client.
+			// If an enterprise account turns on effects, it may generate 1~2 inbound-rtp video
+			// streams for the self view of sending client, in particular on lower-end devices.
 			if enterpriseEffects {
-				expectedInTotalCount++
-				if inTotalCount != expectedInTotalCount && inTotalCount != expectedInTotalCount+1 {
-					inCountError = errors.Errorf("unexpected number of inbound-rtp video streams in peer connection %v; got %d, expected %d or %d", connID, inTotalCount, expectedInTotalCount, expectedInTotalCount+1)
+				if inTotalCount < expectedInTotalCount || inTotalCount > expectedInTotalCount+2 {
+					inCountError = errors.Errorf("unexpected number of inbound-rtp video streams in peer connection %v; got %d, expected to be in range [%d, %d]", connID, inTotalCount, expectedInTotalCount, expectedInTotalCount+2)
 				} else {
 					inCountError = nil
 				}
