@@ -108,10 +108,9 @@ func init() {
 			Fixture: "crosHealthdRunning",
 		}, {
 			// Contact: weiluanwang@google.com
-			Name:      "arc_ping",
-			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineArcPing),
-			Fixture:   "crosHealthdRunning",
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			Name:    "arc_ping",
+			Val:     croshealthd.NewRoutineParams(croshealthd.RoutineArcPing),
+			Fixture: "crosHealthdRunning",
 		}, {
 			// Contact: weiluanwang@google.com
 			Name:    "arc_dns_resolution",
