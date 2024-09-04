@@ -52,11 +52,11 @@ func init() {
 		Params: []testing.Param{{
 			Name:      "baseline",
 			Val:       enableXDR{enable: false},
-			ExtraAttr: []string{"group:mainline", "informational"},
+			ExtraAttr: []string{"group:crosbolt", "crosbolt_nightly"},
 		}, {
 			Name:      "xdr_enabled",
 			Val:       enableXDR{enable: true},
-			ExtraAttr: []string{"group:mainline", "informational"},
+			ExtraAttr: []string{"group:crosbolt", "crosbolt_nightly"},
 		}},
 	},
 	)
