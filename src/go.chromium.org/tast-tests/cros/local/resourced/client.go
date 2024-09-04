@@ -10,6 +10,7 @@ import (
 
 	"github.com/godbus/dbus/v5"
 
+	rmp "go.chromium.org/chromiumos/system_api/resource_manager_proto"
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -132,7 +133,7 @@ func (c *Client) MemoryMarginsKB(ctx context.Context) (Margins, error) {
 
 // ComponentMemoryMargins holds the component margins returned from Resource Manager.
 type ComponentMemoryMargins struct {
-	ChromeCriticalKB, ChromeModerateKB, ArcVMForegroundKB, ArcVMPerceptibleKB, ArcVMCachedKB uint64
+	ChromeModerateKB, ChromeCriticalKB, ChromeCriticalProtectedKB, ArcVMForegroundKB, ArcVMPerceptibleKB, ArcVMCachedKB uint64
 }
 
 // ComponentMemoryMarginsKB returns the result of the GetComponentMemoryMarginsKB D-Bus method.
@@ -143,8 +144,9 @@ func (c *Client) ComponentMemoryMarginsKB(ctx context.Context) (ComponentMemoryM
 		return m, errors.Wrap(err, "failed to call method GetComponentMemoryMarginsKB")
 	}
 
-	m.ChromeCriticalKB = mapResult["ChromeCritical"]
 	m.ChromeModerateKB = mapResult["ChromeModerate"]
+	m.ChromeCriticalKB = mapResult["ChromeCritical"]
+	m.ChromeCriticalProtectedKB = mapResult["ChromeCriticalProtected"]
 	m.ArcVMForegroundKB = mapResult["ArcvmForeground"]
 	m.ArcVMPerceptibleKB = mapResult["ArcvmPerceptible"]
 	m.ArcVMCachedKB = mapResult["ArcvmCached"]
@@ -269,6 +271,20 @@ func (c *Client) SetFullscreenVideoWithTimeout(ctx context.Context, fullscreenVi
 func (c *Client) PowerSupplyChange(ctx context.Context) error {
 	if err := c.obj.Call(ctx, "PowerSupplyChange").Err; err != nil {
 		return errors.Wrap(err, "failed to call method PowerSupplyChange")
+	}
+	return nil
+}
+
+// MarginsBps holds the memory margins in basis points for method SetMemoryMargins.
+type MarginsBps struct {
+	Moderate, Critical, CriticalProtected uint32
+}
+
+// SetMemoryMargins sets the memory margins.
+func (c *Client) SetMemoryMargins(ctx context.Context, margins MarginsBps) error {
+	request := &rmp.MemoryMargins{ModerateBps: margins.Moderate, CriticalBps: margins.Critical, CriticalProtectedBps: margins.CriticalProtected}
+	if err := dbusutil.CallProtoMethod(ctx, c.obj.Obj(), dbusInterface+".SetMemoryMargins", request, nil); err != nil {
+		return errors.Wrap(err, "failed to call method SetMemoryMargins")
 	}
 	return nil
 }

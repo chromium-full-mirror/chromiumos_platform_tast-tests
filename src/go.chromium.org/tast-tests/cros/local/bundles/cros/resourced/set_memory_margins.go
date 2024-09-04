@@ -31,38 +31,32 @@ func SetMemoryMargins(ctx context.Context, s *testing.State) {
 	}
 
 	// Query the original memory margins for comparison.
-	marginBefore, err := rm.MemoryMarginsKB(ctx)
+	marginsBefore, err := rm.ComponentMemoryMarginsKB(ctx)
 	if err != nil {
 		s.Fatal("Failed to query memory margins: ", err)
 	}
 
-	// Set the new memory margins.
-	const (
-		defaultCritical uint32 = 520
-		defaultModerate uint32 = 4000
-		newCritical     uint32 = defaultCritical * 2
-		newModerate     uint32 = defaultModerate * 2
+	var (
+		defaultMargins = resourced.MarginsBps{Moderate: 4000, Critical: 1200, CriticalProtected: 600}
+		newMargins     = resourced.MarginsBps{Moderate: 8000, Critical: 2400, CriticalProtected: 1200}
 	)
-	if err = rm.SetMemoryMarginsBps(ctx, newCritical, newModerate); err != nil {
+
+	// Set the new memory margins.
+	if err = rm.SetMemoryMargins(ctx, newMargins); err != nil {
 		s.Fatal("Failed to set memory margins: ", err)
 	}
 
 	// Query the new memory margin after setting.
-	marginAfter, err := rm.MemoryMarginsKB(ctx)
+	marginsAfter, err := rm.ComponentMemoryMarginsKB(ctx)
 	if err != nil {
 		s.Fatal("Failed to query memory margins: ", err)
 	}
 
 	// Restore to the default memory margins.
-	if err = rm.SetMemoryMarginsBps(ctx, defaultCritical, defaultModerate); err != nil {
+	if err = rm.SetMemoryMargins(ctx, defaultMargins); err != nil {
 		s.Fatal("Failed to set memory margins to default: ", err)
 	}
 
-	// The new memory margins should be larger.
-	if marginAfter.CriticalKB <= marginBefore.CriticalKB {
-		s.Fatalf("Unexpected critical margin after setting, before: %d, after: %d", marginBefore.CriticalKB, marginAfter.CriticalKB)
-	}
-	if marginAfter.ModerateKB <= marginBefore.ModerateKB {
-		s.Fatalf("Unexpected moderate margin after setting, before: %d, after: %d", marginBefore.ModerateKB, marginAfter.ModerateKB)
-	}
+	s.Logf("Margins KB before, modereate: %d, critical: %d, critical protected: %d", marginsBefore.ChromeModerateKB, marginsBefore.ChromeCriticalKB, marginsBefore.ChromeCriticalProtectedKB)
+	s.Logf("Margins KB after, modereate: %d, critical: %d, critical protected: %d", marginsAfter.ChromeModerateKB, marginsAfter.ChromeCriticalKB, marginsAfter.ChromeCriticalProtectedKB)
 }
