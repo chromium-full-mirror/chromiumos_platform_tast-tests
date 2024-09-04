@@ -79,6 +79,14 @@ func init() {
 				enroll:      true,
 				destination: rmaweb.DifferentUser,
 			},
+		}, {
+			ExtraAttr: []string{"shimless_rma_pretest"},
+			Name:      "unenroll_sameuser_manual_pretest",
+			Val: param{
+				wp:          rmaweb.Manual,
+				enroll:      false,
+				destination: rmaweb.SameUser,
+			},
 		}},
 	})
 }
