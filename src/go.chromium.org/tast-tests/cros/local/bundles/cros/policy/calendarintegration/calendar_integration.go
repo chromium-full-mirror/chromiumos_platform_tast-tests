@@ -25,6 +25,8 @@ import (
 // tag calendar_get_events.
 const AnnotationHashCode = "86429515"
 
+const regexCalendarURL = "https://www.googleapis.com/calendar/v3/calendars.*"
+
 // TestCase defines test expectations based on the policy value.
 type TestCase struct {
 	Name                    string
@@ -32,6 +34,10 @@ type TestCase struct {
 	ShouldFindManagedIcon   bool
 	ShouldFindAnnotation    bool
 	Policy                  *policy.CalendarIntegrationEnabled
+	// TrafficShouldFind states the traffic should be found during tests.
+	TrafficShouldFind []string
+	// TrafficShouldNotFind states the traffic should NOT be found during tests.
+	TrafficShouldNotFind []string
 }
 
 // TestCases returns the map of policy setting enum to TestCase
@@ -44,6 +50,8 @@ func TestCases() map[networkrequestmonitor.PolicySetting]TestCase {
 			ShouldFindManagedIcon:   true,
 			ShouldFindAnnotation:    false,
 			Policy:                  &policy.CalendarIntegrationEnabled{Val: false},
+			TrafficShouldFind:       []string{},
+			TrafficShouldNotFind:    []string{regexCalendarURL},
 		},
 		networkrequestmonitor.PolicyEnabled: {
 			Name:                    "enabled",
@@ -51,6 +59,8 @@ func TestCases() map[networkrequestmonitor.PolicySetting]TestCase {
 			ShouldFindManagedIcon:   false,
 			ShouldFindAnnotation:    true,
 			Policy:                  &policy.CalendarIntegrationEnabled{Val: true},
+			TrafficShouldFind:       []string{regexCalendarURL},
+			TrafficShouldNotFind:    []string{},
 		},
 		networkrequestmonitor.PolicyUnset: {
 			Name:                    "unset",
@@ -58,6 +68,8 @@ func TestCases() map[networkrequestmonitor.PolicySetting]TestCase {
 			ShouldFindManagedIcon:   false,
 			ShouldFindAnnotation:    true,
 			Policy:                  &policy.CalendarIntegrationEnabled{Stat: policy.StatusUnset},
+			TrafficShouldFind:       []string{regexCalendarURL},
+			TrafficShouldNotFind:    []string{},
 		},
 	}
 }
