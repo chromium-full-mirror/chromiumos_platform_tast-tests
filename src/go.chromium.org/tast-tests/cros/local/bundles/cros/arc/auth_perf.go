@@ -60,7 +60,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           AuthPerf,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantExists,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
 		Desc:           "Measure auth times in ARC",
 		Contacts: []string{
 			"arc-performance@google.com",
@@ -108,13 +108,6 @@ func init() {
 				chromeArgs:        []string{"--arcvm-ureadahead-mode=disabled"},
 			},
 		}, {
-			Name:              "unmanaged_lacros",
-			ExtraSoftwareDeps: []string{"android_container", "lacros"},
-			Val: testParam{
-				browserType:       browser.TypeLacros,
-				maxErrorBootCount: 1,
-			},
-		}, {
 			Name:              "unmanaged_virtio_blk_vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Val: testParam{
@@ -128,13 +121,6 @@ func init() {
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Val: testParam{
 				browserType:       browser.TypeAsh,
-				maxErrorBootCount: 3,
-			},
-		}, {
-			Name:              "unmanaged_vm_lacros",
-			ExtraSoftwareDeps: []string{"android_vm", "lacros"},
-			Val: testParam{
-				browserType:       browser.TypeLacros,
 				maxErrorBootCount: 3,
 			},
 		}, {

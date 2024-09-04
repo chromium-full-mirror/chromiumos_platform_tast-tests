@@ -36,7 +36,7 @@ const (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         LinkCapturing,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies link capturing integration between ARC and the browser",
 		Contacts: []string{
 			"chromeos-apps-foundation-team@google.com",
@@ -54,16 +54,6 @@ func init() {
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Fixture:           "arcBooted",
 			Val:               browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"android_container", "lacros"},
-			Fixture:           "lacrosWithArcBooted",
-			Val:               browser.TypeLacros,
-		}, {
-			Name:              "lacros_vm",
-			ExtraSoftwareDeps: []string{"android_vm", "lacros"},
-			Fixture:           "lacrosWithArcBooted",
-			Val:               browser.TypeLacros,
 		}},
 		Timeout: chrome.LoginTimeout + arc.BootTimeout + 1*time.Minute,
 		Data: []string{

@@ -25,7 +25,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         IntentForward,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks Android intents are forwarded to Chrome",
 		Contacts:     []string{"arc-core@google.com", "djacobo@google.com"},
 		// ChromeOS > Software > ARC++ > Core
@@ -38,22 +38,11 @@ func init() {
 			Val:               browser.TypeAsh,
 			Fixture:           "arcBooted",
 		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"android_container", "lacros"},
-			Val:               browser.TypeLacros,
-			Fixture:           "lacrosWithArcBooted",
-		}, {
 			Name:              "vm",
 			ExtraAttr:         []string{"group:hw_agnostic"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Val:               browser.TypeAsh,
 			Fixture:           "arcBooted",
-		}, {
-			Name:              "lacros_vm",
-			ExtraAttr:         []string{"group:hw_agnostic"},
-			ExtraSoftwareDeps: []string{"android_vm", "lacros"},
-			Val:               browser.TypeLacros,
-			Fixture:           "lacrosWithArcBooted",
 		}},
 	})
 }

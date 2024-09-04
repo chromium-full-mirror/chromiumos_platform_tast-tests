@@ -24,7 +24,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         AppMemoryLimit,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Captures set of apploading stress metrics",
 		Data:         []string{"ArcAppMemoryLimit.apk"},
 		Contacts: []string{

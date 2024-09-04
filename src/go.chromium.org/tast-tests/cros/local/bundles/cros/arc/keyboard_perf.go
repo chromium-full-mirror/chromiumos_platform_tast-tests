@@ -20,7 +20,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         KeyboardPerf,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test ARC keyboard system performance",
 		Contacts: []string{
 			"arc-performance@google.com",
@@ -37,10 +37,6 @@ func init() {
 			ExtraSoftwareDeps: []string{"android_container"},
 			Fixture:           "arcBootedWithDisableExternalStorage",
 		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"android_container", "lacros"},
-			Fixture:           "lacrosWithArcBootedAndDisableExternalStorage",
-		}, {
 			Name:              "vm",
 			ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
 			ExtraSoftwareDeps: []string{"android_vm"},
@@ -52,10 +48,6 @@ func init() {
 			ExtraSoftwareDeps: []string{"android_vm"},
 			ExtraHardwareDeps: hwdep.D(hwdep.HasParavirtSchedControl()),
 			Fixture:           "arcBootedWithDisableExternalStoragePvSchedEnabled",
-		}, {
-			Name:              "vm_lacros",
-			ExtraSoftwareDeps: []string{"android_vm", "lacros"},
-			Fixture:           "lacrosWithArcBootedAndDisableExternalStorage",
 		}},
 		Timeout: 10 * time.Minute,
 	})

@@ -32,7 +32,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           MediaPerf,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantExists,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
 		Desc:           "Captures set of media performance metrics and uploads them as perf metrics",
 		Contacts: []string{
 			"arc-performance@google.com",
@@ -52,22 +52,8 @@ func init() {
 			},
 			Pre: mediaPerfBooted,
 		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"android_container", "lacros"},
-			Val: mediaPerfTestParameters{
-				binaryTranslation: true,
-			},
-			Pre: mediaPerfBooted,
-		}, {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
-			Val: mediaPerfTestParameters{
-				binaryTranslation: true,
-			},
-			Pre: mediaPerfBooted,
-		}, {
-			Name:              "vm_lacros",
-			ExtraSoftwareDeps: []string{"android_vm", "lacros"},
 			Val: mediaPerfTestParameters{
 				binaryTranslation: true,
 			},

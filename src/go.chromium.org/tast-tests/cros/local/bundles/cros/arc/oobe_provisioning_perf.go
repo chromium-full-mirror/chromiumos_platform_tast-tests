@@ -35,7 +35,7 @@ type oobeMetrics struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         OobeProvisioningPerf,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Navigate through Play Store Out-Of-Box Experience (OOBE) and perform ARC provisioning. Report provisioning time similar to UMA case Arc.UiAvailable.OobeProvisioning.TimeDelta.Unmanaged",
 		Contacts: []string{
 			"arc-performance@google.com",
@@ -74,24 +74,10 @@ func init() {
 				metric:      "Unmanaged",
 			},
 		}, {
-			Name:              "unmanaged_lacros",
-			ExtraSoftwareDeps: []string{"android_container", "lacros"},
-			Val: testParamOobeProvisioningPerf{
-				browserType: browser.TypeLacros,
-				metric:      "Unmanaged",
-			},
-		}, {
 			Name:              "unmanaged_vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Val: testParamOobeProvisioningPerf{
 				browserType: browser.TypeAsh,
-				metric:      "Unmanaged",
-			},
-		}, {
-			Name:              "unmanaged_vm_lacros",
-			ExtraSoftwareDeps: []string{"android_vm", "lacros"},
-			Val: testParamOobeProvisioningPerf{
-				browserType: browser.TypeLacros,
 				metric:      "Unmanaged",
 			},
 		}},

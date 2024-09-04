@@ -39,7 +39,7 @@ type managedSecondaryAccountBlockArgs struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ManagedSecondaryAccountBlock,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that enterprise secondary account is not available in ARC",
 		Contacts:     []string{"arc-commercial@google.com", "mhasank@chromium.org"},
 		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
@@ -55,22 +55,6 @@ func init() {
 			pci.SearchFlag(&policy.ArcEnabled{}, pci.VerifiedFunctionalityOS),
 		},
 		Params: []testing.Param{
-			{
-				Name: "managed_lacros",
-				Val: managedSecondaryAccountBlockArgs{
-					managed:     true,
-					browserType: browser.TypeLacros,
-				},
-				ExtraAttr: []string{"informational"},
-			},
-			{
-				Name: "unmanaged_lacros",
-				Val: managedSecondaryAccountBlockArgs{
-					managed:     false,
-					browserType: browser.TypeLacros,
-				},
-				ExtraAttr: []string{"informational"},
-			},
 			{
 				Name: "managed_ash",
 				Val: managedSecondaryAccountBlockArgs{

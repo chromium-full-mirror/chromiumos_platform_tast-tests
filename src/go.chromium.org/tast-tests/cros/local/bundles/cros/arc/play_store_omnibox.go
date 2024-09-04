@@ -27,7 +27,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PlayStoreOmnibox,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Installs a TWA and WebAPK app via Omnibox in Play Store",
 		Contacts:     []string{"chromeos-apps-foundation-core@google.com", "tsergeant@chromium.org"},
 		BugComponent: "b:1203766",
@@ -42,17 +42,6 @@ func init() {
 			ExtraSoftwareDeps: []string{"android_vm", "chrome"},
 			Fixture:           "arcBootedWithPlayStore",
 			Val:               browser.TypeAsh,
-			ExtraAttr:         []string{"group:hw_agnostic"},
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"android_container", "chrome", "lacros"},
-			Fixture:           "lacrosWithArcBootedAndPlayStore",
-			Val:               browser.TypeLacros,
-		}, {
-			Name:              "lacros_vm",
-			ExtraSoftwareDeps: []string{"android_vm", "chrome", "lacros"},
-			Fixture:           "lacrosWithArcBootedAndPlayStore",
-			Val:               browser.TypeLacros,
 			ExtraAttr:         []string{"group:hw_agnostic"},
 		}},
 		Timeout: chrome.LoginTimeout + arc.BootTimeout + 2*time.Minute,

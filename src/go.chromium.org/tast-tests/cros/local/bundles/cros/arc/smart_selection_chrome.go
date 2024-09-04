@@ -13,7 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/event"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -27,7 +26,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SmartSelectionChrome,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test ARC's smart selections show up in Chrome's right click menu",
 		Contacts:     []string{"chromeos-sw-engprod@google.com", "cros-arc-te@google.com", "djacobo@chromium.org", "jorgegil@google.com"},
 		BugComponent: "b:488493",
@@ -45,14 +44,6 @@ func init() {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Val:               browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"android_container", "lacros"},
-			Val:               browser.TypeLacros,
-		}, {
-			Name:              "lacros_vm",
-			ExtraSoftwareDeps: []string{"android_vm", "lacros"},
-			Val:               browser.TypeLacros,
 		}},
 	})
 }
@@ -66,13 +57,6 @@ func SmartSelectionChrome(ctx context.Context, s *testing.State) {
 	password := s.RequiredVar("arc.SmartSelectionChrome.password")
 
 	opts := []chrome.Option{chrome.GAIALogin(chrome.Creds{User: username, Pass: password}), chrome.ARCSupported()}
-	if s.Param().(browser.Type) == browser.TypeLacros {
-		var err error
-		opts, err = lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(opts...)).Opts()
-		if err != nil {
-			s.Fatal("Failed to compute chrome options: ", err)
-		}
-	}
 	cr, err := chrome.New(ctx, opts...)
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)

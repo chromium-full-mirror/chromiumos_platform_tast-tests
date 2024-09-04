@@ -27,7 +27,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         OpenWithMenuChrome,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test ARC's open with menu show up in Chrome's right click menu",
 		Contacts:     []string{"cros-arc-te@google.com", "lacros-fundamentals@google.com", "elkurin@chromium.org"},
 		// ChromeOS > Software > ARC++ > Core
@@ -45,16 +45,6 @@ func init() {
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Fixture:           "arcBooted",
 			Val:               browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"android_p", "lacros"},
-			Fixture:           "lacrosWithArcBooted",
-			Val:               browser.TypeLacros,
-		}, {
-			Name:              "lacros_vm",
-			ExtraSoftwareDeps: []string{"android_vm", "lacros"},
-			Fixture:           "lacrosWithArcBooted",
-			Val:               browser.TypeLacros,
 		}},
 	})
 }
@@ -119,7 +109,7 @@ func OpenWithMenuChrome(ctx context.Context, s *testing.State) {
 	defer closeBrowser(cleanupCtx)
 
 	// Open a test page with a link.
-	conn, err := br.NewConn(ctx, server.URL + "/open_with_menu_test.html")
+	conn, err := br.NewConn(ctx, server.URL+"/open_with_menu_test.html")
 	if err != nil {
 		s.Fatal("Failed to create new Chrome connection: ", err)
 	}

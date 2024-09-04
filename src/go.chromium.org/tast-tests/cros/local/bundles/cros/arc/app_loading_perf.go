@@ -13,7 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/arc/apploading"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/arc/nethelper"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -43,15 +42,13 @@ var (
 	arcAppLoadingBooted = arc.NewPrecondition("arcapploading_booted", nil /* GAIAVARS */, nil /* GAIALOGINPOOLVARS */, false /* O_DIRECT */, append(arc.DisableSyncFlags(), extraArgs...)...)
 
 	arcAppLoadingBootedWithPvSchedEnabled = arc.NewPreconditionWithPvSchedEnabled("arcapploading_booted_with_pvsched", nil /* GAIAVARS */, nil /* GAIALOGINPOOLVARS */, false /* O_DIRECT */, append(arc.DisableSyncFlags(), extraArgs...)...)
-	// arcAppLoadingBootedLacros is a precondition similar arcAppLoadingBooted but with Lacros enabled.
-	arcAppLoadingBootedLacros = arc.NewPreconditionWithBrowserType("arcapploading_booted_lacros", browser.TypeLacros, nil /* GAIAVARS */, nil /* GAIALOGINPOOLVARS */, false /* O_DIRECT */, append(arc.DisableSyncFlags(), extraArgs...)...)
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:           AppLoadingPerf,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantExists,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
 		Desc:           "Captures set of apploading performance metrics and uploads them as perf metrics",
 		Contacts: []string{
 			"arc-performance@google.com",
@@ -71,13 +68,6 @@ func init() {
 			},
 			Pre: arcAppLoadingBooted,
 		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"android_container", "lacros"},
-			Val: testParameters{
-				binaryTranslation: true,
-			},
-			Pre: arcAppLoadingBootedLacros,
-		}, {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Val: testParameters{
@@ -93,13 +83,6 @@ func init() {
 			},
 			Pre:               arcAppLoadingBootedWithPvSchedEnabled,
 			ExtraHardwareDeps: hwdep.D(hwdep.HasParavirtSchedControl()),
-		}, {
-			Name:              "vm_lacros",
-			ExtraSoftwareDeps: []string{"android_vm", "lacros"},
-			Val: testParameters{
-				binaryTranslation: true,
-			},
-			Pre: arcAppLoadingBootedLacros,
 		}, {
 			Name:              "x86",
 			ExtraSoftwareDeps: []string{"android_container"},

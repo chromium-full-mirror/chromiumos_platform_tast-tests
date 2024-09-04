@@ -29,7 +29,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PlayStorePersistent,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Makes sure that Play Store remains open after it is fully initialized",
 		Contacts:     []string{"arc-core@google.com"},
 		// ChromeOS > Software > ARC++ > Core > Play Store Setup
@@ -41,19 +41,10 @@ func init() {
 			ExtraSoftwareDeps: []string{"android_container"},
 			Val:               browser.TypeAsh,
 		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"android_container", "lacros"},
-			Val:               browser.TypeLacros,
-		}, {
 			Name:              "vm",
 			ExtraAttr:         []string{"group:hw_agnostic"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Val:               browser.TypeAsh,
-		}, {
-			Name:              "lacros_vm",
-			ExtraAttr:         []string{"group:hw_agnostic"},
-			ExtraSoftwareDeps: []string{"android_vm", "lacros"},
-			Val:               browser.TypeLacros,
 		}},
 		VarDeps: []string{ui.GaiaPoolDefaultVarName},
 	})

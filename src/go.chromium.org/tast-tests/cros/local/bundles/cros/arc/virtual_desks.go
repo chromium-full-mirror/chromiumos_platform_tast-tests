@@ -25,7 +25,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VirtualDesks,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests the placement of an ARC app in a virtual desk",
 		Contacts: []string{
 			"chromeos-wm@google.com",
@@ -43,20 +43,10 @@ func init() {
 			Fixture:           "arcBooted",
 			Val:               browser.TypeAsh,
 		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"android_container", "lacros"},
-			Fixture:           "lacrosWithArcBooted",
-			Val:               browser.TypeLacros,
-		}, {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Fixture:           "arcBooted",
 			Val:               browser.TypeAsh,
-		}, {
-			Name:              "lacros_vm",
-			ExtraSoftwareDeps: []string{"android_vm", "lacros"},
-			Fixture:           "lacrosWithArcBooted",
-			Val:               browser.TypeLacros,
 		}},
 	})
 }

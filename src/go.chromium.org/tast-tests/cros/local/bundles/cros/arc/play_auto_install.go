@@ -28,7 +28,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PlayAutoInstall,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "A functional test that verifies PlayAutoInstall(PAI) flow, It waits PAI is triggered and verifies the minimal set of apps is schedulled for installation",
 		Contacts:     []string{"arc-core@google.com"},
 		// ChromeOS > Software > ARC++ > Core > Play Store Setup
@@ -39,17 +39,9 @@ func init() {
 			ExtraSoftwareDeps: []string{"android_container", "chrome"},
 			Val:               browser.TypeAsh,
 		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"android_container", "lacros"},
-			Val:               browser.TypeLacros,
-		}, {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Val:               browser.TypeAsh,
-		}, {
-			Name:              "lacros_vm",
-			ExtraSoftwareDeps: []string{"android_vm", "lacros"},
-			Val:               browser.TypeLacros,
 		}},
 		Timeout: chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		VarDeps: []string{arcCommon.PlayAutoInstallAccountVarName},

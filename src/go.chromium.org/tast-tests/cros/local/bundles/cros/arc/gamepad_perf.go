@@ -19,7 +19,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         GamepadPerf,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test ARC gamepad system performance",
 		Contacts: []string{
 			"arc-performance@google.com",
@@ -36,18 +36,10 @@ func init() {
 			ExtraSoftwareDeps: []string{"android_container"},
 			Fixture:           "arcBootedWithDisableExternalStorage",
 		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"android_container", "lacros"},
-			Fixture:           "lacrosWithArcBootedAndDisableExternalStorage",
-		}, {
 			Name:              "vm",
 			ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Fixture:           "arcBootedWithDisableExternalStorage",
-		}, {
-			Name:              "vm_lacros",
-			ExtraSoftwareDeps: []string{"android_vm", "lacros"},
-			Fixture:           "lacrosWithArcBootedAndDisableExternalStorage",
 		}},
 		Timeout: 10 * time.Minute,
 	})
