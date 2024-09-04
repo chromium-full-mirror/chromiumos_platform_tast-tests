@@ -262,6 +262,9 @@ func (c *Config) DisableExtensionManifestV2Disabled() bool {
 	return c.m.DisableExtensionManifestV2Disabled
 }
 
+// ProxyServer returns the proxy address if it is set.
+func (c *Config) ProxyServer() string { return c.m.ProxyServer }
+
 // MutableConfig is a mutable version of Config. MutableConfig is wrapped with
 // Config to prevent mutation after it is returned by NewConfig.
 //
@@ -326,6 +329,7 @@ type MutableConfig struct {
 	ForceManualEnrollment              bool             `reuse_match:"true"`
 	EnableOOBETestAPI                  bool             `reuse_match:"true"`
 	DisableExtensionManifestV2Disabled bool             `reuse_match:"true"`
+	ProxyServer                        string           `reuse_match:"true"`
 }
 
 // Option is a self-referential function can be used to configure Chrome.

@@ -6,7 +6,6 @@ package testenv
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/dma"
@@ -62,7 +61,7 @@ func VerifyProxyOobe(ctx context.Context, s *testing.State) {
 		chrome.DeferLogin(),
 		chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)),
 		chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")),
-		chrome.ExtraArgs(fmt.Sprintf("--proxy-server=%s", mp.ProxyAddress())),
+		chrome.ProxyServer(mp.ProxyAddress()),
 	}
 
 	cr, err := chrome.New(ctx, options...)

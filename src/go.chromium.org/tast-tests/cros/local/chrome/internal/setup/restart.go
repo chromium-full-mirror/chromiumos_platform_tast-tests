@@ -303,6 +303,10 @@ func RestartChromeForTesting(ctx context.Context, cfg *config.Config, extArgs, l
 		return errors.Errorf("unexpected value for `%v`: %v", FieldTrialConfig.Name(), fieldTrialConfigValue)
 	}
 
+	if cfg.ProxyServer() != "" {
+		args = append(args, "--proxy-server="+cfg.ProxyServer())
+	}
+
 	// Lacros features and additional args used to launch lacros-chrome should be delimited by
 	// '####' and passed in from ash-chrome as a single argument with --lacros-chrome-additional-args.
 	// See browser_manager.cc in Chrome source.

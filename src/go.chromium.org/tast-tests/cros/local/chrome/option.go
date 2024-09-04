@@ -651,3 +651,11 @@ func EnableExtensionManifestV2Disabled() Option {
 		return nil
 	}
 }
+
+// ProxyServer returns an Option that can be passed to New to specify the proxy server.
+func ProxyServer(addr string) Option {
+	return func(cfg *config.MutableConfig) error {
+		cfg.ProxyServer = addr
+		return nil
+	}
+}

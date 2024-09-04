@@ -40,7 +40,7 @@ mp, err := proxy.NewMitmProxy(ctx,
 defer mp.Close(cleanupCtx)
 
 crOpts := []chrome.Option{
-    chrome.ExtraArgs(fmt.Sprintf("--proxy-server=%s", mp.ProxyAddress())),
+    chrome.ProxyServer(mp.ProxyAddress()),
 }
 chrome.New(ctx, crOpts...)
 ```
