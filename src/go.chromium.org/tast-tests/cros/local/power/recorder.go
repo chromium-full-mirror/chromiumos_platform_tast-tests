@@ -13,7 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/perf"
 	cp "go.chromium.org/tast-tests/cros/common/power"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast-tests/cros/local/power/metrics"
 	"go.chromium.org/tast-tests/cros/local/power/util"
 	"go.chromium.org/tast-tests/cros/local/screenshot"
@@ -77,34 +76,11 @@ func DischargeWatchdogOption(discharge bool) OptionalRecorderArg {
 // ctx: context for the test.
 // Out:
 // error: propagate back to the test.
-func Cooldown(ctx context.Context) error {
-	if err := cpu.Cooldown(ctx); err != nil {
-		return err
-	}
-
-	if err := util.WaitForIOCooldown(ctx); err != nil {
-		return err
-	}
-	return nil
-}
-
-// Cooldown device before running test load.
-// In:
-// ctx: context for the test.
-// Out:
-// error: propagate back to the test.
 // TODO(b/321173687):Since Cooldown does not interact with Recorder, it should
 // be able to run without a Recorder. Recommend using Cooldown() without a
 // struct. Recorder.Cooldown() should be removed gradually.
 func (r *Recorder) Cooldown(ctx context.Context) error {
-	if err := cpu.Cooldown(ctx); err != nil {
-		return err
-	}
-
-	if err := util.WaitForIOCooldown(ctx); err != nil {
-		return err
-	}
-	return nil
+	return Cooldown(ctx)
 }
 
 // Start collecting power metrics.

@@ -176,8 +176,8 @@ func afterIdleTemperature(ctx context.Context, cfg CooldownConfig) <-chan error 
 	})
 }
 
-// NewCooldown cools down device as specified by the CooldownConfig.
-func NewCooldown(ctx context.Context, cfg CooldownConfig) (err error) {
+// ConfigurableCooldown cools down device as specified by the CooldownConfig.
+func ConfigurableCooldown(ctx context.Context, cfg CooldownConfig) (err error) {
 	// Keep fans running at max RPM throughout cooldown.
 	fanStatus, resetFan := KeepFanMax(ctx, cfg.UseFan)
 
@@ -215,16 +215,13 @@ func NewCooldown(ctx context.Context, cfg CooldownConfig) (err error) {
 	return nil
 }
 
-// StrictCooldownTimeout is the maximum time allowed for strict cooldown.
-const StrictCooldownTimeout = 15 * time.Minute
-
-// StrictCooldown ensures the device is cooled down as much as possible,
+// Cooldown ensures the device is cooled down as much as possible,
 // including temperature, CPU usage and package state, and IO. It does not
 // guarantee the device reaches a specific temperature on completion but does
 // ensures the device cannot be cooled down further. It should be used before
 // any test setup but not after it, otherwise cooldown may fail due to system is
 // not fully idling.
-func StrictCooldown(ctx context.Context) error {
+func Cooldown(ctx context.Context) error {
 	cfg := CooldownConfig{
 		// Accelerate cooldown when possible.
 		UseFan: true,
@@ -244,5 +241,10 @@ func StrictCooldown(ctx context.Context) error {
 		PackageStateIdle: true,
 		IOIdle:           true,
 	}
-	return NewCooldown(ctx, cfg)
+
+	if err := ConfigurableCooldown(ctx, cfg); err != nil {
+		return errors.Wrap(err, "failed to power cooldown")
+	}
+
+	return nil
 }

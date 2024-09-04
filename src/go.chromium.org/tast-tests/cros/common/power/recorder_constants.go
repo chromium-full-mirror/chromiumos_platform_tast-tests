@@ -7,20 +7,9 @@ package power
 import "time"
 
 const (
-	// RecorderTempCooldownTimeout is the max amount of time allowed for device
-	// temperature to cooldown.
-	RecorderTempCooldownTimeout = 5 * time.Minute
-	// RecorderIdleStateCooldownTimeout is the max amount of time allowed for cpu
-	// idle state activity to drop.
-	RecorderIdleStateCooldownTimeout = 2 * time.Minute
-	// RecorderPkgStateCooldownTimeout is the max amount of time allowed for cpu
-	// pkg state activity to drop.
-	RecorderPkgStateCooldownTimeout = 3 * time.Minute
-
-	// RecorderCooldownTimeout is the max amount of time that Recorder allows
-	// for all combined cooldown items.
-	RecorderCooldownTimeout = RecorderTempCooldownTimeout + RecorderIdleStateCooldownTimeout +
-		RecorderPkgStateCooldownTimeout
+	// RecorderCooldownTimeout is the max amount of time allowed for device to
+	// cooldown.
+	RecorderCooldownTimeout = CooldownTimeout
 
 	// RecorderOverheadTimeout is the max amount of time needed for recorder &
 	// metrics construction, recorder destruction and data post-processing.
