@@ -34,14 +34,21 @@ func init() {
 			"chromeos-consumer-engprod@google.com",
 		},
 		BugComponent: "b:905229", // ChromeOS > Software > Assistive
-		Attr: []string{
+		Attr:         []string{
 			// Disabled by TORA.  See:b/340272937
 			// "group:assistant_audiobox",
 			// "group:hw_agnostic",
 		},
-		Data:         []string{soundFile},
-		SoftwareDeps: []string{"chrome", "chrome_internal", "gaia"},
-		Fixture:      "assistantWithAudioBox",
+		Data: []string{soundFile},
+		SoftwareDeps: []string{
+			"chrome",
+			"chrome_internal",
+			// Disabled by TORA.  See:b/340272937
+			// This 'gaia' dependency is specifically for DMA testing.
+			// The DMA scheduler will run any test with this dependency, overriding the original scheduler's decisions.
+			// "gaia",
+		},
+		Fixture: "assistantWithAudioBox",
 	})
 }
 
