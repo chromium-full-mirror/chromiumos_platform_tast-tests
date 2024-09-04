@@ -81,8 +81,8 @@ func CameraEffectsChrome(cleanupCtx context.Context, s *testing.State) {
 		s.Fatal("Fail to wait for camera stream: ", err)
 	}
 
-	if err := vcTray.SetCameraEffects(vctray.BackgroundBlurOff, false)(ctx); err != nil {
-		s.Fatalf("Failed to set camera effects to BackgroundBlur %v; PortraitRelighting off: %v",
+	if err := vcTray.SetCameraEffects(vctray.BackgroundBlurOff, false /* adjustLighting */, false /* faceRetouch */)(ctx); err != nil {
+		s.Fatalf("Failed to set camera effects to BackgroundBlur %v; PortraitRelighting off; FaceRetouch off: %v",
 			vctray.BackgroundBlurOff, err)
 	}
 
@@ -98,59 +98,85 @@ func CameraEffectsChrome(cleanupCtx context.Context, s *testing.State) {
 		name                string
 		backgroundBlur      vctray.BackgroundBlurLevel
 		portraitRelighting  bool
+		faceRetouch         bool
 		notChangedThreshold float64
 		changedThreshold    float64
 	}{
 		{
-			name:                "backgroundblur_off_portraitrelighting_off",
+			name:                "backgroundblur_off_portraitrelighting_off_retouch_off",
 			backgroundBlur:      vctray.BackgroundBlurOff,
 			portraitRelighting:  false,
+			faceRetouch:         false,
 			notChangedThreshold: 0.95,
 			changedThreshold:    0.0,
 		},
 		{
-			name:                "backgroundblur_light_portraitrelighting_off",
+			name:                "backgroundblur_light_portraitrelighting_off_retouch_off",
 			backgroundBlur:      vctray.BackgroundBlurLight,
 			portraitRelighting:  false,
-			notChangedThreshold: 0.2,
-			changedThreshold:    0.4,
+			faceRetouch:         false,
+			notChangedThreshold: 0.55,
+			changedThreshold:    0.35,
 		},
 		{
-			name:                "backgroundblur_full_portraitrelighting_off",
+			name:                "backgroundblur_full_portraitrelighting_off_retouch_off",
 			backgroundBlur:      vctray.BackgroundBlurFull,
 			portraitRelighting:  false,
-			notChangedThreshold: 0.2,
+			faceRetouch:         false,
+			notChangedThreshold: 0.5,
 			changedThreshold:    0.4,
 		},
 		{
-			name:                "backgroundblur_off_portraitrelighting_on",
+			name:                "backgroundblur_off_portraitrelighting_on_retouch_off",
 			backgroundBlur:      vctray.BackgroundBlurOff,
 			portraitRelighting:  true,
-			notChangedThreshold: 0.6,
+			faceRetouch:         false,
+			notChangedThreshold: 0.75,
 			changedThreshold:    0.15,
 		},
 		{
-			name:                "backgroundblur_light_portraitrelighting_on",
+			name:                "backgroundblur_light_portraitrelighting_on_retouch_off",
 			backgroundBlur:      vctray.BackgroundBlurLight,
 			portraitRelighting:  true,
-			notChangedThreshold: 0.10,
-			changedThreshold:    0.60,
+			faceRetouch:         false,
+			notChangedThreshold: 0.35,
+			changedThreshold:    0.55,
 		},
 		{
-			name:                "backgroundblur_full_portraitrelighting_on",
+			name:                "backgroundblur_full_portraitrelighting_on_retouch_off",
 			backgroundBlur:      vctray.BackgroundBlurFull,
 			portraitRelighting:  true,
-			notChangedThreshold: 0.10,
-			changedThreshold:    0.60,
+			faceRetouch:         false,
+			notChangedThreshold: 0.35,
+			changedThreshold:    0.55,
+		},
+		{
+			name:                "backgroundblur_off_portraitrelighting_off_retouch_on",
+			backgroundBlur:      vctray.BackgroundBlurOff,
+			portraitRelighting:  false,
+			faceRetouch:         true,
+			notChangedThreshold: 0.95,
+			changedThreshold:    0.02,
+		},
+		{
+			name:                "backgroundblur_off_portraitrelighting_on_retouch_on",
+			backgroundBlur:      vctray.BackgroundBlurOff,
+			portraitRelighting:  true,
+			faceRetouch:         true,
+			notChangedThreshold: 0.75,
+			changedThreshold:    0.15,
 		},
 	}
 
 	for _, subTest := range subTests {
 		s.Run(ctx, subTest.name, func(ctx context.Context, s *testing.State) {
-			if err := vcTray.SetCameraEffects(subTest.backgroundBlur, subTest.portraitRelighting)(ctx); err != nil {
-				s.Fatalf("Failed to set camera effects to BackgroundBlur %v; PortraitRelighting %v: %v",
-					subTest.backgroundBlur, subTest.portraitRelighting, err)
+			if err := vcTray.SetCameraEffects(subTest.backgroundBlur, subTest.portraitRelighting, subTest.faceRetouch)(ctx); err != nil {
+				s.Fatalf("Failed to set camera effects to BackgroundBlur %v; PortraitRelighting %v; FaceRetouch %v: %v",
+					subTest.backgroundBlur, subTest.portraitRelighting, subTest.faceRetouch, err)
 			}
+
+			// GoBigSleepLint: sleep to wait for the effects to be applied.
+			testing.Sleep(ctx, time.Second)
 
 			var imageAfter image.Image
 			if err := testing.Poll(ctx, func(ctx context.Context) error {

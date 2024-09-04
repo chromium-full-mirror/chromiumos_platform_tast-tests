@@ -93,8 +93,8 @@ func CameraEffectsReplace(cleanupCtx context.Context, s *testing.State) {
 		s.Fatal("Fail to wait for camera stream: ", err)
 	}
 
-	if err := vcTray.SetCameraEffects(vctray.BackgroundBlurOff, false)(ctx); err != nil {
-		s.Fatalf("Failed to set camera effects to BackgroundBlur %v; PortraitRelighting off: %v",
+	if err := vcTray.SetCameraEffects(vctray.BackgroundBlurOff, false /* adjustLighting */, false /* faceRetouch */)(ctx); err != nil {
+		s.Fatalf("Failed to set camera effects to BackgroundBlur %v; PortraitRelighting off; FaceRetouch off: %v",
 			vctray.BackgroundBlurOff, err)
 	}
 

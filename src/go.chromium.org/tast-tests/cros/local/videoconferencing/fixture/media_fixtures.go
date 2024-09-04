@@ -137,7 +137,7 @@ func init() {
 
 	testing.AddFixture(&testing.Fixture{
 		Name: LoggedInWithFakeHALAndEffectsDisabled,
-		Desc: "A fixture with fake user logged in using fake HAL camera with platform effects enabled",
+		Desc: "A fixture with fake user logged in using fake HAL camera with platform effects disabled",
 		Contacts: []string{
 			"cros-video-conference-tast-tests@google.com",
 			"xiuwen@google.com",

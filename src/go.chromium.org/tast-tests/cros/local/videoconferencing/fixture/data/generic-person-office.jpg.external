@@ -1,5 +1,5 @@
 {
-  "url": "gs://chromiumos-test-assets-public/tast/cros/videoconferencing/generic-person-office_20230220.jpg",
-  "size": 166037,
-  "sha256sum": "43602174bda113ee6ec779d70729ff37577d03e62cff4c6ccbc4efc2ea2d336b"
+  "url": "gs://chromiumos-test-assets-public/tast/cros/videoconferencing/generic-person-office_20240904.jpg",
+  "size": 95121,
+  "sha256sum": "846d8d401a5405615466c8b73a8514fed7618446cafa069ebd6556aa9fbdf6c1"
 }

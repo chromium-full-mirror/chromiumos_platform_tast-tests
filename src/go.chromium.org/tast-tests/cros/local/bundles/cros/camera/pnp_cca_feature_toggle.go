@@ -232,8 +232,8 @@ func PNPCCAFeatureToggle(ctx context.Context, s *testing.State) {
 		vcTray := vctray.New(ctx, tconn)
 
 		// Set camera effects.
-		if err := vcTray.SetCameraEffects(effectsConf.BlurLevel, effectsConf.RelightEnabled)(ctx); err != nil {
-			s.Fatalf("Failed to set camera effects to BackgroundBlur %v; PortraitRelighting %v: %v",
+		if err := vcTray.SetCameraEffects(effectsConf.BlurLevel, effectsConf.RelightEnabled, false /* faceRetouch */)(ctx); err != nil {
+			s.Fatalf("Failed to set camera effects to BackgroundBlur %v; PortraitRelighting %v; FaceRetouch off: %v",
 				effectsConf.BlurLevel, effectsConf.RelightEnabled, err)
 		}
 	}

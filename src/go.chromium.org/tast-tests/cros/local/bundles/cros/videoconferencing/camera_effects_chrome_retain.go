@@ -79,8 +79,8 @@ func CameraEffectsChromeRetain(cleanupCtx context.Context, s *testing.State) {
 	}
 
 	// Only test camera effects in different resolution with BackgroundBlurFull and RelightingOn.
-	if err := vcTray.SetCameraEffects(vctray.BackgroundBlurFull, true)(ctx); err != nil {
-		s.Fatalf("Failed to set camera effects to BackgroundBlur %v; PortraitRelighting on: %v",
+	if err := vcTray.SetCameraEffects(vctray.BackgroundBlurFull, true /* adjustLighting */, false /* faceRetouch */)(ctx); err != nil {
+		s.Fatalf("Failed to set camera effects to BackgroundBlur %v; PortraitRelighting on; FaceRetouch off: %v",
 			vctray.BackgroundBlurFull, err)
 	}
 

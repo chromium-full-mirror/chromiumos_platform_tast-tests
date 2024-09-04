@@ -42,6 +42,8 @@ var vcOpts = []chrome.Option{
 	chrome.EnableFeatures("SystemLiveCaption"),
 	chrome.EnableFeatures("FeatureManagementVideoConference"),
 	chrome.EnableFeatures("ShowLiveCaptionInVideoConferenceTray"),
+	chrome.EnableFeatures("VCTrayTitleHeader"),
+	chrome.EnableFeatures("VcStudioLook"),
 	chrome.ExtraArgs("--disable-sync"),
 	// Disable VK should avoid VK randomly shows up.
 	chrome.ExtraArgs("--disable-virtual-keyboard"),

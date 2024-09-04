@@ -34,10 +34,13 @@ var (
 var (
 	bubleView = nodewith.NameContaining("Video Call Controls").HasClass("BubbleView").Role(role.Window)
 
-	adjustLightingButton    = nodewith.NameStartingWith("Toggle Improve lighting").Role(role.ToggleButton).Ancestor(bubleView)
+	studioLookButton        = nodewith.NameStartingWith("Toggle Appearance effects").Role(role.ToggleButton).Ancestor(bubleView)
 	liveCaptionButton       = nodewith.NameStartingWith("Toggle Live Caption").Role(role.ToggleButton).Ancestor(bubleView)
 	adjustCameraFraming     = nodewith.NameStartingWith("Toggle Camera framing").Role(role.ToggleButton).Ancestor(bubleView)
 	noiseCancellationButton = nodewith.NameStartingWith("Toggle Noise cancellation").Role(role.ToggleButton).Ancestor(bubleView)
+	settingsButton          = nodewith.Name("Settings").Role(role.Button).Ancestor(bubleView)
+	adjustLightingPref      = nodewith.NameStartingWith("Appearance effects preferences, Improve lighting").Role(role.MenuItem)
+	faceRetouchPref         = nodewith.NameStartingWith("Appearance effects preferences, Portrait touch-up").Role(role.MenuItem)
 
 	buttonNameRegexp           = regexp.MustCompile(`.*Button.*`)
 	bgBlurOffButton            = nodewith.NameContaining("Off").ClassNameRegex(buttonNameRegexp).Ancestor(bubleView)
@@ -175,7 +178,7 @@ func (vcTray VCTray) featureEnabled(ctx context.Context, finder *nodewith.Finder
 	}
 	// Current status can be identified by the node name.
 	// Off: "<Feature> is off"; On: "<Feature> is on and in use".
-	return strings.Contains(nodeInfo.Name, "is on"), nil
+	return strings.Contains(nodeInfo.Name, " on"), nil
 }
 
 // SetFeature toggles on/off the specified option.
@@ -207,9 +210,26 @@ func (vcTray VCTray) SetFeature(finder *nodewith.Finder, expectedOn bool) action
 	}
 }
 
-// SetAdjustLighting toggles on/off the "Adjust Lighting" option.
-func (vcTray VCTray) SetAdjustLighting(expectedOn bool) action.Action {
-	return vcTray.SetFeature(adjustLightingButton, expectedOn)
+// OpenVcSettings opens the VC settings menu assuming BubbleView is open.
+func (vcTray VCTray) OpenVcSettings() action.Action {
+	return func(ctx context.Context) error {
+		return vcTray.ui.DoDefault(settingsButton)(ctx)
+	}
+}
+
+// SetAdjustLightingPreference toggles on/off the "Adjust lighting" option of the Studio Look preference.
+func (vcTray VCTray) SetAdjustLightingPreference(adjustLightingOn bool) action.Action {
+	return vcTray.SetFeature(adjustLightingPref, adjustLightingOn)
+}
+
+// SetFaceRetouchPreference toggles on/off the "Face retouch" option of the Studio Look preference.
+func (vcTray VCTray) SetFaceRetouchPreference(expectedOn bool) action.Action {
+	return vcTray.SetFeature(faceRetouchPref, expectedOn)
+}
+
+// SetStudioLook toggles on/off the "Studio Look" option.
+func (vcTray VCTray) SetStudioLook(expectedOn bool) action.Action {
+	return vcTray.SetFeature(studioLookButton, expectedOn)
 }
 
 // SetNoiseCancellation toggles on/off the "Noise cancellation" option.
@@ -308,12 +328,29 @@ func (vcTray VCTray) OpenVcBackgroundApp() action.Action {
 	)
 }
 
-// SetCameraEffects is a high level wrapper to setup camera effects from main screen.
-// It expands vcTray and set both background blur and relighting then collapse the vcTray.
-func (vcTray VCTray) SetCameraEffects(backgroundBlur BackgroundBlurLevel, adjustRelighting bool) action.Action {
+// SetStudioLookEffects is a high level wrapper to set Studio Look effects with
+// adjust lighting and face retouch preferences.
+func (vcTray VCTray) SetStudioLookEffects(adjustLightingOn, faceRetouchOn bool) action.Action {
+	if !adjustLightingOn && !faceRetouchOn {
+		return vcTray.ChangeSettingsInPanel(
+			vcTray.SetStudioLook(false),
+		)
+	}
+	return vcTray.ChangeSettingsInPanel(
+		vcTray.SetStudioLook(true),
+		vcTray.OpenVcSettings(),
+		vcTray.SetAdjustLightingPreference(adjustLightingOn),
+		vcTray.SetFaceRetouchPreference(faceRetouchOn),
+	)
+}
+
+// SetCameraEffects is a high level wrapper to set up camera effects from the main screen.
+// It expands vcTray, sets both background blur and Studio Look effects (adjust lighting, face retouch),
+// and then collapses the vcTray.
+func (vcTray VCTray) SetCameraEffects(backgroundBlur BackgroundBlurLevel, adjustLighting, faceRetouch bool) action.Action {
 	return vcTray.ChangeSettingsInPanel(
 		vcTray.SetBackgroundBlur(backgroundBlur),
-		vcTray.SetAdjustLighting(adjustRelighting),
+		vcTray.SetStudioLookEffects(adjustLighting, faceRetouch),
 	)
 }
 

@@ -726,7 +726,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 		}
 		if err := vct.ChangeSettingsInPanel(
 			vct.SetLiveCaption(meet.LiveCaptions),
-			vct.SetAdjustLighting(meet.AdjustLighting),
+			vct.SetStudioLookEffects(meet.AdjustLighting, meet.Retouch),
 			vct.SetBackgroundBlur(blur),
 		)(ctx); err != nil {
 			return pv, errors.Wrap(err, "failed to configure platform VC effects")
@@ -735,7 +735,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 		if meet.NpuInference {
 			inference = effects.KInferenceNpu
 		}
-		// Retouch is not part of the VC panel yet. Use effects_config_override.json to turn it on.
+		// Passes inference backend.
 		effects.ApplyPlatformEffects(ctx, meet.AdjustLighting, meet.Retouch, blurLevel, effects.KAuto, inference)
 		// Studio mic and noise cancellation don't appear at the same time.
 		if meet.StudioMic {
