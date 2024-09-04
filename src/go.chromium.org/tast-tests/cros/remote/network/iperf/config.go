@@ -67,6 +67,7 @@ const (
 	defaultServerWindowSize = 0
 	defaultBidirectional    = false
 	defaultVersion          = Version2
+	defaultAutoClean        = true
 )
 
 // Config represents the configuration options for an iperf run.
@@ -84,6 +85,7 @@ type Config struct {
 	ServerIP           string
 	FetchServerResults bool
 	Version            Version
+	AutoClean          bool
 }
 
 // ConfigOption represents a configuration option to be used in an Iperf run.
@@ -103,6 +105,7 @@ func NewConfig(protocol Protocol, clientIP, serverIP string, opts ...ConfigOptio
 		Port:             defaultPort,
 		PortCount:        defaultPortCount,
 		Version:          defaultVersion,
+		AutoClean:        defaultAutoClean,
 	}
 
 	for _, opt := range opts {
@@ -194,6 +197,14 @@ func VersionOption(v Version) ConfigOption {
 			return errors.Errorf("invalid iperf version: %s", v)
 		}
 		config.Version = v
+		return nil
+	}
+}
+
+// AutoCleanOption is used for setting if iperf should automatically clean (kill) itself.
+func AutoCleanOption(ac bool) ConfigOption {
+	return func(config *Config) error {
+		config.AutoClean = ac
 		return nil
 	}
 }

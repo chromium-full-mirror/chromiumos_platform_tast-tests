@@ -38,6 +38,7 @@ type RemoteServer struct {
 	fw           *firewallHelper
 	stdout       *bytes.Buffer
 	config       *Config
+	pid          string
 }
 
 // NewRemoteServer creates an SSHServerHost from an existing ssh connection.
@@ -113,6 +114,12 @@ func (c *RemoteServer) Start(ctx context.Context, config *Config) error {
 		return errors.Wrap(err, "failed to verify that iperf server is started")
 	}
 
+	// An iperf command comprised of mode, IP address and port is pretty unique, if we grep for it, we should get PID rather reliably.
+	psCmd := fmt.Sprintf("ps -e -o pid,cmd |grep \"%s\" |grep -v grep", iperfCommand)
+	if out, err := c.conn.CommandContext(ctx, "sh", "-c", psCmd).Output(); err == nil && out != nil {
+		c.pid = strings.Fields(string(out))[0]
+	}
+
 	go func() {
 		if err := cmd.Wait(testexec.DumpLogOnError); err != nil {
 			testing.ContextLogf(ctx, "Iperf server stopped unexpectedly %v: %q", err, stderr.String())
@@ -136,8 +143,13 @@ func (c *RemoteServer) Stop(ctx context.Context) error {
 
 	var allErrors error
 	if c.config == nil || c.config.Version == Version2 {
-		if err := c.conn.CommandContext(ctx, "killall", "-q", "-9", c.iperfPath).Run(); err != nil && err.Error() != "Process exited with status 1" {
-			allErrors = errors.Wrapf(allErrors, "failed to stop iperf on server host: %v", err) // NOLINT
+		if c.config == nil || c.config.AutoClean {
+			if err := c.conn.CommandContext(ctx, "killall", "-q", "-9", c.iperfPath).Run(); err != nil && err.Error() != "Process exited with status 1" {
+				allErrors = errors.Wrapf(allErrors, "failed to stop iperf on server host: %v", err) // NOLINT
+			}
+		} else if c.pid != "" {
+			// Best effort stop.
+			c.conn.CommandContext(ctx, "kill", c.pid).Run()
 		}
 	} // Version3 cleans server by itself.
 
