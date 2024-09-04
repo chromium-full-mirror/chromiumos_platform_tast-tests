@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	patchpanel "go.chromium.org/tast-tests/cros/local/network/patchpanel_client"
 	"go.chromium.org/tast-tests/cros/local/testenv"
 	"go.chromium.org/tast/core/errors"
@@ -120,6 +121,11 @@ func NewMitmProxy(ctx context.Context, opts ...Option) (Proxy, error) {
 // IsRunning returns whether the proxy is running.
 func (mp *MitmProxy) IsRunning() bool {
 	return mp.isRunning
+}
+
+// IsConnected returns whether proxy is connected to the system (ash-chrome).
+func (mp *MitmProxy) IsConnected(ctx context.Context) (bool, error) {
+	return isConnectedForURL(ctx, mp.ProxyAddress(), "https://google.com")
 }
 
 // start launches the mitmproxy.
@@ -486,6 +492,15 @@ func (mp *MitmProxy) Close(ctx context.Context) error {
 		if err := mp.removeCertDir(); err != nil {
 			cleanupErrs = append(cleanupErrs, errors.Wrap(err, "failed to clean mitmproxy config"))
 		}
+	}
+
+	// If the system sees stale proxy connection that has already been terminated, it can lead to network issues for next tests.
+	// Restart Chrome without proxy to prevent network issues caused by stale proxy connections.
+	if ok, err := mp.IsConnected(ctx); err != nil {
+		cleanupErrs = append(cleanupErrs, errors.Wrap(err, "failed to get proxy connection from the system"))
+	} else if ok {
+		testing.ContextLog(ctx, "mitmproxy: restarting chrome to clear stale proxy connection")
+		chrome.New(ctx)
 	}
 
 	mp.isRunning = false

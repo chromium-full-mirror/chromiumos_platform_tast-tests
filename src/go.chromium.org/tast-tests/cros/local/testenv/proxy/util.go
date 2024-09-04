@@ -9,13 +9,17 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 
+	"github.com/godbus/dbus/v5"
 	"github.com/mafredri/cdp/protocol/target"
+
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
+	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -159,21 +163,6 @@ func setChromeProxy(ctx context.Context, cr *chrome.Chrome, proxyAddress string)
 	return tconn.Eval(ctx, settingsAPICall, nil)
 }
 
-// getChromeProxy gets proxy in Chrome by calling tconn API.
-func getChromeProxy(ctx context.Context, cr *chrome.Chrome) error {
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to get test API connection")
-	}
-	var data interface{}
-	err = tconn.Eval(ctx,
-		`chrome.proxy.settings.get(
-	                       {'incognito': false},
-	                       function(config) { console.log(config) })`, &data)
-	testing.ContextLogf(ctx, "proxyutil: jsProxy: %v, err: %v", data, err)
-	return err
-}
-
 // clearChromeProxy unsets network proxy by calling tconn API.
 func clearChromeProxy(ctx context.Context, cr *chrome.Chrome) error {
 	tconn, err := cr.TestAPIConn(ctx)
@@ -235,4 +224,37 @@ func removeRootCertFromNSS(ctx context.Context, cr *chrome.Chrome) error {
 		return errors.Wrap(err, "failed to remove certificate")
 	}
 	return nil
+}
+
+func isConnectedForURL(ctx context.Context, proxyAddr, url string) (bool, error) {
+	state, err := lookupProxyForURL(ctx, url)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to look up proxy info")
+	}
+	lookupRE := regexp.MustCompile("PROXY " + proxyAddr) // "PROXY x.x.x.x(:<port>)?"
+	return lookupRE.Match([]byte(state)), nil
+}
+
+// lookupProxyForURL returns a string of proxy server info in the PAC format from the system for the given URL.
+// Example:
+//
+//	"PROXY 100.115.92.xxx:xxxx"
+//	"DIRECT" (when no proxy is set by default)
+func lookupProxyForURL(ctx context.Context, url string) (string, error) {
+	const (
+		dbusName   = "org.chromium.NetworkProxyService"
+		dbusPath   = "/org/chromium/NetworkProxyService"
+		dbusMethod = "org.chromium.NetworkProxyServiceInterface.ResolveProxy"
+	)
+	_, obj, err := dbusutil.Connect(ctx, dbusName, dbus.ObjectPath(dbusPath))
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to connect to %s for proxy info", dbusName)
+	}
+	var state string
+	var errorMsg string
+	if err := obj.CallWithContext(ctx, dbusMethod, 0, url).Store(&state, &errorMsg); err != nil {
+		return "", errors.Wrapf(err, "failed to get the proxy, msg: %v", errorMsg)
+	}
+	testing.ContextLogf(ctx, "proxy: lookup: %+v", state)
+	return state, nil
 }
