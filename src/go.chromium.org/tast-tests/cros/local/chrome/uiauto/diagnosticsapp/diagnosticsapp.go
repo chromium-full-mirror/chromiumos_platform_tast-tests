@@ -143,7 +143,7 @@ func Close(ctx context.Context, tconn *chrome.TestConn) error {
 
 // KeyNodeFinder creates a Finder with a name containing the key name and key state.
 func KeyNodeFinder(key string, state KeyState) *nodewith.Finder {
-	return nodewith.Name(fmt.Sprintf("%s %s", key, state)).Role(role.GenericContainer)
+	return nodewith.Name(fmt.Sprintf("%s %s", key, state))
 }
 
 // CheckGlyphsbyRegion verifies several regional keys for a certain region.
