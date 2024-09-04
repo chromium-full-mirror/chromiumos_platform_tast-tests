@@ -6,12 +6,17 @@ package proxy
 
 import (
 	"context"
+
+	"go.chromium.org/tast-tests/cros/local/chrome"
 )
 
 // Proxy defines all interfaces to abstract a proxy running in the test environment.
 type Proxy interface {
 	// Close closes proxy.
 	Close(ctx context.Context) error
+
+	// Connect connects proxy to ash-chrome.
+	Connect(ctx context.Context, cr *chrome.Chrome) error
 
 	// IsRunning returns whether the proxy is running.
 	IsRunning() bool

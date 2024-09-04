@@ -22,6 +22,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mafredri/cdp/protocol/target"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	patchpanel "go.chromium.org/tast-tests/cros/local/network/patchpanel_client"
@@ -73,7 +74,8 @@ type MitmProxy struct {
 	dumpHTTPFlowEnabled bool
 	allowedHosts        []string
 	ignoredHosts        []string
-	customCA            bool // true if the system CA cert is used
+	customCA            bool                        // true if the system CA cert is used
+	disconnect          func(context.Context) error // Called in Close to disconnect from chrome if connected
 }
 
 // NewMitmProxy creates a new MitmProxy instance with default configuration and option overrides.
@@ -462,6 +464,14 @@ func (mp *MitmProxy) Close(ctx context.Context) error {
 
 	var cleanupErrs []error
 
+	// Disconnect from ash-chrome if it has been connected.
+	if mp.disconnect != nil {
+		if err := mp.disconnect(ctx); err != nil {
+			cleanupErrs = append(cleanupErrs, errors.Wrap(err, "failed to disconnect proxy from chrome"))
+		}
+		mp.disconnect = nil
+	}
+
 	// Terminate the proxy processes.
 	if mp.cmd != nil {
 		if err := killCmd(ctx, mp.cmd, mp.pid); err != nil {
@@ -590,6 +600,61 @@ func (mp *MitmProxy) httpClient(pool *x509.CertPool) (*http.Client, error) {
 func (mp *MitmProxy) removeCertDir() error {
 	if _, err := os.Stat(mp.confDir); err == nil {
 		return os.RemoveAll(mp.confDir)
+	}
+	return nil
+}
+
+// Connect makes a new proxy connection to Chrome in-session.
+// Once the proxy process is started, call this function to configure proxy for Chrome.
+// Note that it would not work for Chrome in OOBE where `chrome.proxy.settings` is not functional. Pass chrome.ProxyServer to chrome.New instead.
+func (mp *MitmProxy) Connect(ctx context.Context, cr *chrome.Chrome) error {
+	// Log an error if this function is called unexpectedly (eg, from OOBE)
+	hasOobePage := func() (bool, error) {
+		return cr.IsTargetAvailable(ctx, func(t *target.Info) bool {
+			return strings.HasPrefix(t.URL, "chrome://oobe") && t.Type == "page"
+		})
+	}
+	if has, _ := hasOobePage(); has {
+		return errors.New("ConnectTo should not be used for proxy in OOBE. Pass chrome.ProxyServer to chrome.New instead")
+	}
+
+	testing.ContextLog(ctx, "mitmproxy: connecting to chrome in-session")
+	certPath, certType, err := mp.RootCertificate(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to locate CA certificate")
+	}
+
+	disconnect := func(ctx context.Context, cr *chrome.Chrome) error {
+		var err error
+		if err := clearChromeProxy(ctx, cr); err != nil {
+			err = errors.Wrap(err, "failed to reset proxy in chrome")
+		}
+		// Clean up the user cert if it has been imported to user home.
+		if certType == "user" {
+			if err := removeRootCertFromNSS(ctx, cr); err != nil {
+				err = errors.Wrap(err, "failed to remove root certificate in user home")
+			}
+		}
+		if err != nil {
+			testing.ContextLog(ctx, "mitmproxy: cleaned up chrome, err: ", err)
+		} else {
+			testing.ContextLog(ctx, "mitmproxy: cleaned up chrome successfully")
+		}
+		return err
+	}
+	mp.disconnect = func(ctx context.Context) error { return disconnect(ctx, cr) }
+
+	// Copy a root CA certificate to user home if it is the user cert.
+	if certType == "user" {
+		if err := importRootCertToNSS(ctx, certPath, cr); err != nil {
+			disconnect(ctx, cr)
+			return errors.Wrap(err, "failed to import root certificate from proxy to chrome")
+		}
+	}
+	// Configure an IP of the mitmproxy server in chrome
+	if err := setChromeProxy(ctx, cr, mp.ProxyAddress()); err != nil {
+		disconnect(ctx, cr)
+		return errors.Wrap(err, "failed to configure proxy in chrome")
 	}
 	return nil
 }

@@ -8,8 +8,7 @@ var opts []proxy.Option
 mp, err := proxy.NewMitmProxy(ctx, opts...)
 defer mp.Close(cleanupCtx)
 
-reset, err := proxy.ConfigureChrome(ctx, mp, cr)
-defer reset(cleanupCtx, cr)
+mp.Connect(ctx, cr)
 ```
 
 Usage (for ARC++ in-session):
@@ -21,8 +20,7 @@ mp, err := proxy.NewMitmProxy(ctx,
 )
 defer mp.Close(cleanupCtx)
 
-reset, err := proxy.ConfigureChrome(ctx, mp, cr)
-defer reset(cleanupCtx, cr)
+mp.Connect(ctx, cr)
 
 // Insert the CA cert to ARC++ system.
 a, err := arc.New(ctx, ...)
