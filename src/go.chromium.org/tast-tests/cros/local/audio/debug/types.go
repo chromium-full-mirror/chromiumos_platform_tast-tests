@@ -29,6 +29,7 @@ type Device struct{}
 
 // Stream corresponds to audio_stream_debug_info in cras_types.h
 type Stream struct {
-	Effects         uint     `json:"effects"`
-	ActiveAPEffects []string `json:"active_ap_effects"`
+	Effects             uint     `json:"effects"`
+	ActiveAPEffects     []string `json:"active_ap_effects"`
+	UnderrunDurationSec float64  `json:"underrun_duration_sec"`
 }
