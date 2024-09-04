@@ -37,7 +37,7 @@ var relexedCriteriaModels = []string{"aleena", "barla", "careena", "kasumi", "ka
 // TODO(b/244418775): remove this when b/244418775 is fixed
 var fixFormatS16CaptureModels = []string{"redrix", "gimble", "anahera", "yaviks", "yavikso"}
 
-var mergeThresholdSize480Boards = []string{"volteer", "brya", "nissa"}
+var mergeThresholdSize480Boards = []string{"volteer", "brya", "nissa", "nirul"}
 
 func init() {
 	testing.AddTest(&testing.Test{
