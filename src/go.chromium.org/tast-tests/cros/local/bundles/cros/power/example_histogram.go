@@ -127,7 +127,7 @@ func ExampleHistogram(ctx context.Context, s *testing.State) {
 		pm.NewHistogramMetrics(bTconn, []string{"EventLatency.KeyPressed.TotalLatency"}),
 		pm.NewHistogramAverageMetrics(bTconn, []string{"EventLatency.MousePressed.TotalLatency"}),
 	)
-	if err := r.Cooldown(ctx); err != nil {
+	if err := power.Cooldown(ctx); err != nil {
 		s.Error("Cooldown failed: ", err)
 	}
 	if err := r.Start(ctx); err != nil {

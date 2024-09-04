@@ -173,7 +173,7 @@ func VideoCall(ctx context.Context, s *testing.State) {
 		pm.NewHistogramMetrics(bTconn, []string{"EventLatency.KeyPressed.TotalLatency"}),
 	)
 
-	if err := r.Cooldown(ctx); err != nil {
+	if err := power.Cooldown(ctx); err != nil {
 		s.Error("Cooldown failed: ", err)
 	}
 

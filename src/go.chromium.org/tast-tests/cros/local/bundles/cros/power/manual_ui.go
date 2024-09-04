@@ -111,7 +111,7 @@ func ManualUI(ctx context.Context, s *testing.State) {
 	testing.ContextLog(ctx, "Start setting up the power recorder")
 	r := power.NewRecorder(ctx, time.Second, s.OutDir(), s.TestName(), power.DischargeWatchdogOption(discharge))
 	defer r.Close(cleanupCtx)
-	if err := r.Cooldown(ctx); err != nil {
+	if err := power.Cooldown(ctx); err != nil {
 		s.Error("Failed to cooldown before the manual setup: ", err)
 	}
 

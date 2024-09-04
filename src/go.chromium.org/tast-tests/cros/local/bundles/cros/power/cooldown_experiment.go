@@ -9,6 +9,7 @@ import (
 	"runtime"
 	"time"
 
+	cp "go.chromium.org/tast-tests/cros/common/power"
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast-tests/cros/local/tracing"
@@ -20,7 +21,7 @@ const (
 	stressTestDuration = 15 * time.Minute
 	idleDuration       = 5 * time.Minute
 	recordingInterval  = 5 * time.Second
-	testTimeout        = stressTestDuration + idleDuration + power.StrictCooldownTimeout + time.Minute
+	testTimeout        = stressTestDuration + idleDuration + cp.RecorderTimeout + time.Minute
 )
 
 func init() {
@@ -31,7 +32,6 @@ func init() {
 		Contacts:     []string{"chromeos-power-team@google.com", "zactu@google.com"},
 		Fixture:      setup.PowerNoUINoWiFi,
 		Timeout:      testTimeout,
-		Attr:         []string{"group:power", "power_daily_misc"},
 		Data:         []string{tracing.TBMTracedProbesConfigFile},
 	})
 }
@@ -76,7 +76,7 @@ func CooldownExperiment(ctx context.Context, s *testing.State) {
 
 	// We want to upload metrics even if cooldown failed for debugging purposes,
 	// thus the cooldown error needs to be delayed to the end of the test.
-	cooldownErr := power.StrictCooldown(ctx)
+	cooldownErr := power.Cooldown(ctx)
 
 	if cooldownErr != nil {
 		testing.ContextLog(ctx, "Continue testing after failing to cooldown CPU with error: ", cooldownErr)

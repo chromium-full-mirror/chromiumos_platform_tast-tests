@@ -29,7 +29,9 @@ func init() {
 			"tast.cros.power.DeviceSetupService",
 			"tast.cros.power.RecorderService",
 		},
-		Timeout: 2 * time.Minute,
+		// We need 15 seconds for setting up the DUT and 30 seconds for measuring
+		// idle power consumption.
+		Timeout: cp.RecorderTimeout + 15*time.Second + 30*time.Second,
 		Params: []testing.Param{{
 			Name: "default",
 			Val: &ps.DeviceSetupRequest{
