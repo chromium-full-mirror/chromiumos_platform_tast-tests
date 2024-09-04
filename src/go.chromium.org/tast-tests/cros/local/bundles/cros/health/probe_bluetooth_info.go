@@ -20,7 +20,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/set"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type deviceInfo struct {
@@ -70,29 +69,19 @@ func init() {
 		BugComponent: "b:982097", // ChromeOS > Platform > Enablement > Health
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"diagnostics"},
+		TestBedDeps:  []string{tbdep.BluetoothStateNormal},
 		Params: []testing.Param{{
-			Name: "",
-			Val: bluetoothInfoTestParams{
-				BluezValidation: true,
-			},
-			Fixture:           "crosHealthdRunning",
-			ExtraHardwareDeps: hwdep.D(hwdep.Bluetooth()),
-		}, {
 			Name: "bluez",
 			Val: bluetoothInfoTestParams{
 				BluezValidation: true,
 			},
 			Fixture: "crosHealthdRunningAndBluetoothEnabledWithBlueZ",
-			// TODO(b/303370425): Promote tast to critical
-			ExtraAttr:        []string{"informational", "group:criticalstaging"},
-			ExtraTestBedDeps: []string{tbdep.BluetoothStateNormal},
 		}, {
 			Name: "floss",
 			Val: bluetoothInfoTestParams{
 				BluezValidation: false,
 			},
-			Fixture:          "crosHealthdRunningAndBluetoothEnabledWithFloss",
-			ExtraTestBedDeps: []string{tbdep.BluetoothStateNormal},
+			Fixture: "crosHealthdRunningAndBluetoothEnabledWithFloss",
 		}},
 	})
 }
