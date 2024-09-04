@@ -562,6 +562,11 @@ func (i *bootModeImpl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 		if err := firmware.PollToSetChargerStatus(ctx, i.value.Helper, true); err != nil {
 			s.Log("Failed to attach charger: ", err)
 		}
+		connectTimeout, cancel := context.WithTimeout(ctx, 30*time.Second)
+		defer cancel()
+		if err := i.value.Helper.WaitConnect(connectTimeout); err != nil {
+			s.Log("Failed to reconnect to dut after changing charger status: ", err)
+		}
 	}
 
 	// If this is the first PreTest invocation, save the starting boot mode.

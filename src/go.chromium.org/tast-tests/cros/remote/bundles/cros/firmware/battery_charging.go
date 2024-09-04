@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast-tests/cros/services/cros/power"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
@@ -61,16 +62,20 @@ func BatteryCharging(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
 	}
 
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Minute)
+	defer cancel()
+
 	// Increase timeout in getting response from ec uart.
 	if err := h.Servo.SetString(ctx, "ec_uart_timeout", "10"); err != nil {
 		s.Fatal("Failed to extend ec uart timeout: ", err)
 	}
-	defer func() {
+	defer func(ctx context.Context) {
 		testing.ContextLog(ctx, "Restoring ec uart timeout to the default value of 3 seconds")
 		if err := h.Servo.SetString(ctx, "ec_uart_timeout", "3"); err != nil {
 			s.Fatal("Failed to restore default ec uart timeout: ", err)
 		}
-	}()
+	}(cleanupCtx)
 
 	// For debugging purposes, log servo and dut connection type.
 	servoType, err := h.Servo.GetServoType(ctx)
@@ -110,7 +115,7 @@ func BatteryCharging(ctx context.Context, s *testing.State) {
 	}
 	checkAPErr := connectTimeoutCheckAP{}
 
-	defer func() {
+	defer func(ctx context.Context) {
 		if checkAPErr.err != nil {
 			apPower, screenState, err := h.Servo.GetAPState(ctx)
 			if err != nil {
@@ -119,7 +124,15 @@ func BatteryCharging(ctx context.Context, s *testing.State) {
 				s.Errorf("Found ap power state %s and screen state %s", apPower, screenState)
 			}
 		}
-	}()
+
+		if err := firmware.PollToSetChargerStatus(ctx, h, true); err != nil {
+			s.Error("Failed to reattach charger at test end: ", err)
+		}
+		s.Log("Charger is attached")
+		if err := h.WaitConnect(ctx); err != nil {
+			s.Error("Failed to reconnect to DUT after setting charger status: ", err)
+		}
+	}(cleanupCtx)
 
 	for _, tc := range []struct {
 		plugAC     bool
