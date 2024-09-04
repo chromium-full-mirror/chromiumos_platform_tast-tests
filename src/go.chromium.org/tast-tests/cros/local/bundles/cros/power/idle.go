@@ -74,7 +74,7 @@ var displayOnPSROff = power.IdleParams{
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Idle,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Collects data on idle with Chrome logged in",
 		BugComponent: "b:1361410",
 		Contacts:     []string{"chromeos-power-team@google.com", "jingmuli@google.com"},
@@ -133,38 +133,6 @@ func init() {
 			Name:    "refresh_vrr",
 			Fixture: "powerAshVRR",
 			Val:     displayOnPSROff,
-		}, {
-			Name:              "display_off_bt_off_lacros",
-			Fixture:           "powerLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               displayOffBTOff,
-		}, {
-			Name:              "display_on_bt_off_lacros",
-			Fixture:           "powerLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               displayOnBTOff,
-		}, {
-			Name:              "display_on_bt_on_lacros",
-			Fixture:           "powerLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               displayOnBTOn,
-		}, {
-			Name:              "display_off_bt_on_lacros",
-			Fixture:           "powerLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               displayOffBTOn,
-		}, {
-			Name:              "default_fast_lacros",
-			Fixture:           "powerLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               defaultFast,
-			ExtraAttr:         []string{"group:power", "power_daily", "power_weekly"},
-		}, {
-			Name:              "tracing_display_on_bt_on_lacros",
-			Fixture:           "powerLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               tracingIdle,
-			ExtraData:         []string{tracing.TBMTracedProbesConfigFile},
 		}},
 	})
 }
