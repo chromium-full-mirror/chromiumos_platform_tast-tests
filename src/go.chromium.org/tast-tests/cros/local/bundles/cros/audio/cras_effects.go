@@ -369,7 +369,7 @@ func init() {
 					},
 				},
 				Fixture:           crasEffectsHasAST,
-				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...), hwdep.FeatureLevel(1)),
 				ExtraAttr: []string{
 					"group:criticalstaging", "group:mainline", "informational",
 					"group:cbx", "cbx_feature_enabled", "cbx_unstable",
@@ -414,7 +414,7 @@ func init() {
 					},
 				},
 				Fixture:           crasEffectsHasAST,
-				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...), hwdep.FeatureLevel(1)),
 				ExtraAttr: []string{
 					"group:criticalstaging", "group:mainline", "informational",
 					"group:cbx", "cbx_feature_enabled", "cbx_unstable",
@@ -638,7 +638,7 @@ func init() {
 					},
 				},
 				Fixture:           crasEffectsHasAST,
-				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...), hwdep.FeatureLevel(1)),
 				ExtraAttr: []string{
 					"group:criticalstaging", "group:mainline", "informational",
 					"group:cbx", "cbx_feature_enabled", "cbx_unstable",
@@ -773,7 +773,7 @@ func init() {
 					},
 				},
 				Fixture:           crasEffectsHasAST,
-				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...), hwdep.FeatureLevel(1)),
 				ExtraAttr: []string{
 					"group:criticalstaging", "group:mainline", "informational",
 					"group:cbx", "cbx_feature_enabled", "cbx_unstable",
