@@ -108,7 +108,15 @@ func init() {
 				testType: rootfs,
 			},
 			ExtraAttr: []string{"group:mainline", "informational"},
-		}},
+		},
+			{
+				Name: "user_credential",
+				Val: fileTypeParams{
+					testType: userCredential,
+				},
+				ExtraAttr: []string{"group:mainline", "informational"},
+			},
+		},
 	})
 }
 
@@ -158,12 +166,14 @@ func FileEvents(ctx context.Context, s *testing.State) {
 	systemPath, err := cryptohome.SystemPath(ctx, normalizedUser)
 	userPath, err := cryptohome.UserPath(ctx, normalizedUser)
 	mountedVaultPath, err := cryptohome.MountedVaultPath(ctx, normalizedUser)
+	hashedUser, _ := cryptohome.UserHash(ctx, normalizedUser)
 
 	s.Log("chrome normalized user:", normalizedUser)
 	s.Log("cryptohome systemspath:", systemPath)
 	s.Log("cryptohome downloadspath:", downloadsPath)
 	s.Log("cryptohome userpath:", userPath)
 	s.Log("cryptohome mountedVaultPath:", mountedVaultPath)
+	s.Log("cryptohome hashed user:", hashedUser)
 
 	stopDbusMonitoring, err := secagentddbusmonitor.SetupDbusMonitor(ctx, agentPid)
 	if err != nil {
@@ -195,32 +205,34 @@ func FileEvents(ctx context.Context, s *testing.State) {
 			s.Errorf("Error starting %q: %v ", detail.cmd.String(), err)
 		}
 
-		detail.expected.command = detail.cmd.String()
-		detail.expected.filePath = detail.filePath
-
-		pid := uint64(detail.cmd.Process.Pid)
-		expectedResults[pid] = detail.expected
-
 		if detail.cleanup != nil {
 			defer detail.cleanup(ctx)
 		}
 
 		if err = detail.cmd.Wait(); err != nil {
 			s.Logf("Waiting failed, killing %q:%v", detail.cmd, err)
+			detail.cmd.DumpLog(ctx)
 			if err := detail.cmd.Kill(); err != nil {
 				s.Errorf("Failed to kill %q: %v", detail.cmd, err)
 			}
 			detail.cmd.Wait() // wait again for the killing.
 		}
-		fileInfo, err := os.Stat(detail.filePath)
-		if err != nil {
-			s.Errorf("Failed to stat %q:%v", detail.filePath, err)
+		if detail.expected != nil {
+			detail.expected.command = detail.cmd.String()
+			detail.expected.filePath = detail.filePath
+
+			pid := uint64(detail.cmd.Process.Pid)
+			expectedResults[pid] = detail.expected
+			fileInfo, err := os.Stat(detail.filePath)
+			if err != nil {
+				s.Errorf("Failed to stat %q:%v", detail.filePath, err)
+			}
+			detail.expected.afterStat = fileInfo.Sys().(*syscall.Stat_t)
+			s.Logf("gid=%d uid=%d dev=%d inode=%d mode=%d",
+				detail.expected.afterStat.Gid, detail.expected.afterStat.Uid,
+				detail.expected.afterStat.Dev, detail.expected.afterStat.Ino,
+				detail.expected.afterStat.Mode)
 		}
-		detail.expected.afterStat = fileInfo.Sys().(*syscall.Stat_t)
-		s.Logf("gid=%d uid=%d dev=%d inode=%d mode=%d",
-			detail.expected.afterStat.Gid, detail.expected.afterStat.Uid,
-			detail.expected.afterStat.Dev, detail.expected.afterStat.Ino,
-			detail.expected.afterStat.Mode)
 	}
 
 	// Wait for the current batch to be flushed.
@@ -343,6 +355,8 @@ func getFileEventDetails(ctx context.Context, testCase testCase, cr *chrome.Chro
 		"hexdump": "bad",
 		"chmod":   "bad",
 		"rm":      "bad",
+		"mount":   "bad",
+		"cp":      "bad",
 	}
 	var err error
 	var cmds []*commandDetails
@@ -356,6 +370,49 @@ func getFileEventDetails(ctx context.Context, testCase testCase, cr *chrome.Chro
 	normalizedUser := cr.NormalizedUser()
 
 	switch testCase {
+	case userCredential:
+		hashedUser, _ := cryptohome.UserHash(ctx, cr.NormalizedUser())
+		outputFile := "/home/.shadow/" + hashedUser + "/user_secret_stash"
+		cmds = append(cmds, &commandDetails{
+			cmd: testexec.CommandContext(ctx, sysCmds["touch"], outputFile),
+		})
+		return cmds, nil
+	case rootfs:
+		outputFile := "/bin/testcase"
+		// Test setup, remount rootfs as rw then on exit remount it when test is
+		// done.
+		cmds = append(cmds, &commandDetails{
+			cmd: testexec.CommandContext(ctx, sysCmds["mount"], "-o", "rw,remount", "/"),
+			cleanup: func(ctx context.Context) {
+				c := testexec.CommandContext(ctx, sysCmds["mount"], "-o", "ro,remount", "/")
+				c.Start()
+				if err = c.Wait(); err != nil {
+					c.Kill()
+					c.Wait() // wait again for the killing.
+				}
+			},
+		})
+		cmds = append(cmds, &commandDetails{
+			cmd: testexec.CommandContext(ctx, sysCmds["touch"], outputFile),
+			expected: &expectedResult{
+				eventType:    modifyEvent,
+				fileType:     xdr.SensitiveFileType_ROOT_FS,
+				filePath:     outputFile,
+				eventSubType: xdr.FileModify_WRITE.Enum()},
+			filePath: outputFile,
+			cleanup:  func(ctx context.Context) { os.Remove(outputFile) },
+		})
+		cmds = append(cmds, &commandDetails{
+			cmd: testexec.CommandContext(ctx, sysCmds["chmod"], "777", outputFile),
+			expected: &expectedResult{
+				eventType:    modifyEvent,
+				fileType:     xdr.SensitiveFileType_ROOT_FS,
+				filePath:     outputFile,
+				eventSubType: xdr.FileModify_MODIFY_ATTRIBUTE.Enum()},
+			filePath: outputFile,
+		})
+		return cmds, nil
+
 	case userFiles:
 		downloadsPath, err := cryptohome.DownloadsPath(ctx, normalizedUser)
 		if err != nil {
