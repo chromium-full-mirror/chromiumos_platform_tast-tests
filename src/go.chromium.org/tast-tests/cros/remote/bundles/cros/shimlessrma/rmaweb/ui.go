@@ -282,26 +282,7 @@ func (uiHelper *UIHelper) FinalizingRepairPageOperation(ctx context.Context) err
 }
 
 // RepairCompletedPageOperation handles all operations on repair completed Page.
-func (uiHelper *UIHelper) RepairCompletedPageOperation(ctx context.Context, storeLog StoreLogFlag) error {
-	if storeLog {
-		if err := uiHelper.FirmwareHelper.Servo.SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
-			return err
-		}
-		// GoBigSleepLint: Wait for USB connection.
-		testing.Sleep(ctx, 5*time.Second)
-		if err := uiHelper.deleteLogsIfExisting(ctx); err != nil {
-			return err
-		}
-
-		return action.Combine("repair Completed page operation",
-			uiHelper.waitForPageToLoad("Almost done!", longTimeInSecondToEnableButton),
-			uiHelper.clickButton("See RMA logs"),
-			uiHelper.clickButton("Save to USB"),
-			uiHelper.clickButton("Done"),
-			uiHelper.clickButton("Reboot"),
-		)(ctx)
-	}
-
+func (uiHelper *UIHelper) RepairCompletedPageOperation(ctx context.Context) error {
 	return action.Combine("repair Completed page operation",
 		uiHelper.waitForPageToLoad("Almost done!", longTimeInSecondToEnableButton),
 		uiHelper.clickButton("Reboot"),

@@ -7,7 +7,6 @@ package shimlessrma
 
 import (
 	"context"
-	"strconv"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/action"
@@ -39,7 +38,6 @@ func init() {
 		VarDeps: []string{
 			"ui.signinProfileTestExtensionManifestKey",
 		},
-		Vars:         []string{"firmware.skipFlashUSB"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		ServiceDeps: []string{
@@ -97,36 +95,14 @@ func DisableHWWP(ctx context.Context, s *testing.State) {
 	wpOption := p.wp
 	enroll := p.enroll
 	destination := p.destination
+
+	// TODO(b/349959175): Test firmware update from rootfs.
 	firmwareUpdateOption := rmaweb.FirmwareUpdateOptionSkip
 
 	defer rmaweb.CleanupShimlessFiles(cleanupCtx, dut)
 
 	if err := firmwareHelper.RequireServo(ctx); err != nil {
 		s.Fatal("Fail to init servo: ", err)
-	}
-
-	s.Log("Setup USB Key")
-	skipFlashUSB := false
-	if skipFlashUSBStr, ok := s.Var("firmware.skipFlashUSB"); ok {
-		var err error
-		skipFlashUSB, err = strconv.ParseBool(skipFlashUSBStr)
-		if err != nil {
-			s.Fatalf("Invalid value for var firmware.skipFlashUSB: got %q, want true/false", skipFlashUSBStr)
-		}
-	}
-	s.Logf("skipFlashUSB is %t", skipFlashUSB)
-
-	// faft-cr50-pool cannot update firmware from USB.
-	// Since we already run Manual test case (removal battery) in skylab and install firmware from USB,
-	// we skip firmware installation in other (e.g. RSU) test cases.
-	// TODO(b/349959175): Test firmware update from rootfs.
-	if wpOption == rmaweb.Manual && !skipFlashUSB {
-		firmwareUpdateOption = rmaweb.FirmwareUpdateOptionUsb
-		s.Log("Flash USB starts")
-		cs := s.CloudStorage()
-		if err := firmwareHelper.SetupUSBKey(ctx, cs); err != nil {
-			s.Fatal("USBKey not working: ", err)
-		}
 	}
 
 	uiHelper, err := rmaweb.NewUIHelper(ctx, dut, firmwareHelper, s.RPCHint(), key, true)
@@ -246,19 +222,8 @@ func DisableHWWP(ctx context.Context, s *testing.State) {
 
 	defer uiHelper.DisposeResource(cleanupCtx)
 
-	storeLogFlag := rmaweb.NotStoreLog
-	if wpOption == rmaweb.Manual && !skipFlashUSB {
-		storeLogFlag = rmaweb.StoreLog
-	}
-
-	if err := uiHelper.RepairCompletedPageOperation(ctx, storeLogFlag); err != nil {
+	if err := uiHelper.RepairCompletedPageOperation(ctx); err != nil {
 		s.Fatal("Fail to navigate to Repair Complete page: ", err)
-	}
-
-	if storeLogFlag == rmaweb.StoreLog {
-		if err := uiHelper.VerifyLogIsSaved(ctx); err != nil {
-			s.Fatal("Fail to verify that the log is saved in usb: ", err)
-		}
 	}
 }
 

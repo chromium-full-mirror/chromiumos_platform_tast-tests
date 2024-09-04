@@ -149,7 +149,7 @@ func Calibration(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	if err := uiHelper.RepairCompletedPageOperation(ctx, rmaweb.NotStoreLog); err != nil {
+	if err := uiHelper.RepairCompletedPageOperation(ctx); err != nil {
 		s.Fatal("Fail to navigate to Repair Complete page: ", err)
 	}
 }
