@@ -42,23 +42,23 @@ func init() {
 		// Demo Mode doesn't support VMs, use "crossystem" to exclude VMs.
 		SoftwareDeps: []string{"chrome", "chrome_internal", "arc", "tpm2", "crossystem"},
 		Params: []testing.Param{{
-			Name: "online_alpha",
-			Val: demoModeSWATestCase{
-				dmServerURL:     policy.DMServerAlphaURL,
-				shouldRunOnline: true,
-			},
-			Fixture: fixture.PostDemoModeOOBEAlpha,
-			// TODO (b/346725308): Refactor to use utility and known dependency list.
-			ExtraSearchFlags: []*testing.StringPair{{
-				Key: "external_dependency", Value: "DMServerAlpha",
-			}},
-		}, {
+			/*	Name: "online_alpha",
+				Val: demoModeSWATestCase{
+					dmServerURL:     policy.DMServerAlphaURL,
+					shouldRunOnline: true,
+				},
+				Fixture: fixture.PostDemoModeOOBEAlpha,
+				// TODO (b/346725308): Refactor to use utility and known dependency list.
+				ExtraSearchFlags: []*testing.StringPair{{
+					Key: "external_dependency", Value: "DMServerAlpha",
+				}},
+			}, { */
 			Name: "online_prod",
 			Val: demoModeSWATestCase{
 				dmServerURL:     policy.DMServerProdURL,
 				shouldRunOnline: true,
 			},
-			Fixture: fixture.PostDemoModeOOBEProd,
+			Fixture: fixture.PostDemoModeOOBESkipResourcesComponentProd,
 			// TODO (b/346725308): Refactor to use utility and known dependency list.
 			ExtraSearchFlags: []*testing.StringPair{{
 				Key: "external_dependency", Value: "DMServerProd",
@@ -67,13 +67,13 @@ func init() {
 			// DMServer URL is irrelevant for offline test case, so we don't have two separate cases
 			Name: "offline",
 			Val: demoModeSWATestCase{
-				dmServerURL:     policy.DMServerAlphaURL,
+				dmServerURL:     policy.DMServerProdURL,
 				shouldRunOnline: false,
 			},
-			Fixture: fixture.PostDemoModeOOBEAlpha,
+			Fixture: fixture.PostDemoModeOOBESkipResourcesComponentProd,
 			// TODO (b/346725308): Refactor to use utility and known dependency list.
 			ExtraSearchFlags: []*testing.StringPair{{
-				Key: "external_dependency", Value: "DMServerAlpha",
+				Key: "external_dependency", Value: "DMServerProd",
 			}},
 		}},
 	})
@@ -94,7 +94,12 @@ func SWA(ctx context.Context, s *testing.State) {
 			// --component-updater=test-request adds a "test-request" parameter to Omaha
 			// update requests, causing the fetched Demo Mode App component to come from a
 			// test cohort.
-			chrome.ExtraArgs("--force-devtools-available", "--component-updater=test-request"),
+			//
+			// --demo-mode-resource-directory is used to skip the demo mode resources
+			// component loading process.
+			chrome.ExtraArgs("--force-devtools-available",
+				"--component-updater=test-request",
+				"--demo-mode-resource-directory"),
 			chrome.DMSPolicy(tc.dmServerURL))
 		if err != nil {
 			return errors.Wrap(err, "failed to restart Chrome")
