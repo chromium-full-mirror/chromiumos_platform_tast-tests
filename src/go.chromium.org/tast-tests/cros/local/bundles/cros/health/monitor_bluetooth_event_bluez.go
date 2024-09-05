@@ -14,12 +14,11 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         MonitorBluetoothEvent,
+		Func:         MonitorBluetoothEventBluez,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Monitors whether Bluetooth events are detected properly when the system is using Bluez",
 		Contacts: []string{
@@ -29,21 +28,8 @@ func init() {
 		BugComponent: "b:982097", // ChromeOS > Platform > Enablement > Health
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"diagnostics"},
-		// Ensure that Bluetooth adapter is present when the system is using Bluez.
-		Params: []testing.Param{{
-			Name:              "bluez_only",
-			ExtraHardwareDeps: hwdep.D(hwdep.Bluetooth()),
-			Fixture:           "crosHealthdRunning",
-		}, {
-			Name:    "bluez_enabled",
-			Fixture: "crosHealthdRunningAndBluetoothEnabledWithBlueZ",
-			// TODO(b/362427717): Promote tast to critical.
-			// Currently `health.MonitorBluetoothEvent` will only be run on bluez
-			// enabled devices due to `hwdep.Bluetooth()`. It will be replaced by the
-			// new test after the new test is stable.
-			ExtraAttr:        []string{"informational", "group:criticalstaging"},
-			ExtraTestBedDeps: []string{tbdep.BluetoothStateNormal},
-		}},
+		Fixture:      "crosHealthdRunningAndBluetoothEnabledWithBlueZ",
+		TestBedDeps:  []string{tbdep.BluetoothStateNormal},
 	})
 }
 
@@ -58,7 +44,7 @@ func initiateBluetoothStatus(ctx context.Context, s *testing.State) error {
 	return nil
 }
 
-func MonitorBluetoothEvent(ctx context.Context, s *testing.State) {
+func MonitorBluetoothEventBluez(ctx context.Context, s *testing.State) {
 	if err := initiateBluetoothStatus(ctx, s); err != nil {
 		s.Fatal("Failed to initiate bluetooth status, err: ", err)
 	}
