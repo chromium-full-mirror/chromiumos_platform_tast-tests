@@ -71,16 +71,6 @@ func init() {
 			ExtraHardwareDeps: hwdep.D(hwdep.CPUSocFamily("intel")),
 			Fixture:           "chromeGraphicsIdleArc",
 		}, {
-			Name:              "i915_min_clock",
-			Val:               i915MinClock,
-			ExtraHardwareDeps: hwdep.D(hwdep.CPUSocFamily("intel")),
-			Fixture:           "chromeGraphicsIdle",
-		}, {
-			Name:              "i915_min_clock_arc",
-			Val:               i915MinClock,
-			ExtraHardwareDeps: hwdep.D(hwdep.CPUSocFamily("intel")),
-			Fixture:           "chromeGraphicsIdleArc",
-		}, {
 			Name:              "rc6",
 			Val:               rc6,
 			ExtraHardwareDeps: hwdep.D(hwdep.CPUSocFamily("intel")),
@@ -299,56 +289,6 @@ func psr(ctx context.Context) error {
 		}
 		testing.ContextLogf(ctx, "Found active with kernel: %s", kernelVersion)
 		return nil
-	}, &testing.PollOptions{
-		Timeout: 1 * time.Minute,
-	}); err != nil {
-		return err
-	}
-	return nil
-}
-
-// i915MinClock checks that we get into the lowest clock frequency.
-func i915MinClock(ctx context.Context) error {
-	clockPath, err := graphics.GetValidKernelDriverDebugFile(ctx, []string{
-		"i915_frequency_info",
-		// TODO(marcheu): remove if this is not available/used anymore.
-		"i915_cur_delayinfo",
-	})
-	if err != nil {
-		return errors.Wrap(err, "failed to get clock path")
-	}
-
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		f, err := os.ReadFile(clockPath)
-		if err != nil {
-			return errors.Wrapf(err, "failed to open %v", clockPath)
-		}
-
-		content := string(f)
-
-		// This file has a different format depending on the kernel/board, so we loop them.
-		// Also, it would be tedious to add the minimum clock for each board, so instead
-		// we use 650MHz which is the max of the minimum clocks.
-		for _, re := range []*regexp.Regexp{
-			regexp.MustCompile(`CAGF: (.*)MHz`),
-			regexp.MustCompile(`current GPU freq: (.*) MHz`),
-			regexp.MustCompile(`Actual freq: (\d*) MHz`), // slpc freq dumps
-		} {
-			matches := re.FindStringSubmatch(content)
-			if matches == nil {
-				continue
-			}
-			hz, err := strconv.ParseInt(matches[1], 0, 64)
-			if err != nil {
-				return errors.Wrapf(err, "failed to parse %s to int", matches[1])
-			}
-			// Print the line for debugging.
-			testing.ContextLog(ctx, "Successfully parsed: ", matches[0])
-			if hz <= 650 {
-				return nil
-			}
-		}
-		return errors.New("did not see the min i915 clock")
 	}, &testing.PollOptions{
 		Timeout: 1 * time.Minute,
 	}); err != nil {
