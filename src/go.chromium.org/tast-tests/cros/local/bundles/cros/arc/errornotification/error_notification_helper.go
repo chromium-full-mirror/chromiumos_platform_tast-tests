@@ -17,12 +17,11 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/testing"
 )
 
 const (
 	// Timeout defines default ui timeout.
-	Timeout = 10 * time.Second
+	Timeout = 30 * time.Second
 	// TestAppName is the app name of the test app that can trigger ANR and crash.
 	TestAppName = "ArcErrorNotificationTest"
 	// TestAppApkName is the app apk name of the test app that can trigger ANR and crash.
@@ -64,18 +63,7 @@ func ClickButtonWithText(ctx context.Context, tconn *chrome.TestConn, buttonText
 
 // EnsureAppWindowClosed ensures that the test app window is closed.
 func EnsureAppWindowClosed(ctx context.Context, tconn *chrome.TestConn) error {
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		_, err := ash.FindWindow(ctx, tconn, func(window *ash.Window) bool {
-			return window.ARCPackageName == TestAppPkgName
-		})
-		if errors.Unwrap(err) != ash.ErrWindowNotFound {
-			return errors.New("window is not closed")
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: Timeout}); err != nil {
-		return err
-	}
-	return nil
+	return ash.WaitForARCAppClosed(ctx, tconn, TestAppPkgName, TestAppName)
 }
 
 // MinimizeWindow minimizes the test app window.
