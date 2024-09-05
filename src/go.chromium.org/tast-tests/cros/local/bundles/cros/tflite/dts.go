@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 
@@ -61,7 +62,8 @@ const (
 )
 
 type mtkNeuronSettings struct {
-	OperationCheckMode operationCheckMode `json:"operation_check_mode"`
+	OperationCheckMode        operationCheckMode `json:"operation_check_mode"`
+	AllowFp16PrecisionForFp32 bool               `json:"allow_fp16_precision_for_fp32"`
 }
 
 type stableDelegateSettings struct {
@@ -70,9 +72,10 @@ type stableDelegateSettings struct {
 }
 
 type testingParam struct {
-	Settings         stableDelegateSettings
-	AccelConfig      string
-	SkipTestPatterns []string
+	Settings                  stableDelegateSettings
+	AccelConfig               string
+	SkipTestPatterns          []string
+	AllowFp16PrecisionForFp32 bool
 }
 
 func localLibraryDirectory() string {
@@ -128,7 +131,8 @@ var neuronSettings = stableDelegateSettings{
 		DelegateName: "mtk_neuron_delegate",
 	},
 	MtkNeuronSettings: &mtkNeuronSettings{
-		OperationCheckMode: preOperationCheck,
+		OperationCheckMode:        preOperationCheck,
+		AllowFp16PrecisionForFp32: true,
 	},
 }
 
@@ -164,7 +168,62 @@ var neuronParam = testingParam{
 
 		// TODO(b/351308835): Neuron delegate failed with node_index out ouf range.
 		"StablehloScatterOpTest.PerformsUpdate",
+
+		// TODO(b/364804438): Neuron delegate failed because of precision loss after
+		// turning on --allow_fp16_precision_for_fp32.
+		"StridedSliceOpTest/0.In1D_Int32End",
+
+		// TODO(b/364804438): Neuron delegate failed with incorrect outputs after
+		// turning on --allow_fp16_precision_for_fp32.
+		"SoftmaxOpTest/SoftmaxOpTest.Softmax4D/0",
+		"SoftmaxOpTest/SoftmaxOpTest.Softmax4D/1",
+		"SoftmaxOpTest/SoftmaxOpTest.Softmax3D/0",
+		"SoftmaxOpTest/SoftmaxOpTest.Softmax3D/1",
+		"SoftmaxOpTest/SoftmaxOpTest.Softmax1DMax/0",
+		"SoftmaxOpTest/SoftmaxOpTest.Softmax1DMax/1",
+		"SoftmaxOpTest/SoftmaxOpTest.Softmax1DInf/0",
+		"SoftmaxOpTest/SoftmaxOpTest.Softmax1DInf/1",
+		"SoftmaxOpTest/SoftmaxOpTest.Softmax2D/0",
+		"SoftmaxOpTest/SoftmaxOpTest.Softmax2D/1",
+		"SoftmaxOpTest/SoftmaxOpTest.Softmax2DMultithreading/0",
+		"SoftmaxOpTest/SoftmaxOpTest.Softmax2DMultithreading/1",
+
+		// TODO(b/364804438): Neuron delegate failed with kTfLiteDelegateError after
+		// turning on --allow_fp16_precision_for_fp32.
+		"HybridFullyConnectedOpTest.SimpleTestQuantizedUint8",
+		"HybridFullyConnectedOpTest.SimpleTestQuantizedInt8",
+		"HybridFullyConnectedOpTest.SimpleTestQuantizedInt8MultiThreaded",
+		"HybridAsymmetricInputFullyConnectedOpTest.SimpleTestQuantizedUint8",
+		"HybridAsymmetricInputFullyConnectedOpTest.SimpleTestQuantizedInt8",
+		"ConvolutionOpTest/ConvolutionOpTest.SimpleTestHybridUint8/0",
+		"ConvolutionOpTest/ConvolutionOpTest.SimpleTestHybridUint8/1",
+		"ConvolutionOpTest/ConvolutionOpTest.SimpleTestHybridUint8/2",
+		"ConvolutionOpTest/ConvolutionOpTest.SimpleTestHybridUint8WithDilation/0",
+		"ConvolutionOpTest/ConvolutionOpTest.SimpleTestHybridUint8WithDilation/1",
+		"ConvolutionOpTest/ConvolutionOpTest.SimpleTestHybridUint8WithDilation/2",
+		"ConvolutionOpTest/ConvolutionOpTest.SimpleTestHybridWithChannelsUint8/0",
+		"ConvolutionOpTest/ConvolutionOpTest.SimpleTestHybridWithChannelsUint8/1",
+		"ConvolutionOpTest/ConvolutionOpTest.SimpleTestHybridWithChannelsUint8/2",
+		"ConvolutionOpTest/ConvolutionOpTest.SimpleTestHybridWithChannelsUint8Grouped/0",
+		"ConvolutionOpTest/ConvolutionOpTest.SimpleTestHybridWithChannelsUint8Grouped/1",
+		"ConvolutionOpTest/ConvolutionOpTest.SimpleTestHybridWithChannelsUint8Grouped/2",
+		"ConvolutionOpTest/ConvolutionOpTest.PointwiseHybridUint8/0",
+		"ConvolutionOpTest/ConvolutionOpTest.PointwiseHybridUint8/1",
+		"ConvolutionOpTest/ConvolutionOpTest.PointwiseHybridUint8/2",
+		"ConvolutionOpTest/ConvolutionOpTest.SimpleTestHybridInt8/0",
+		"ConvolutionOpTest/ConvolutionOpTest.SimpleTestHybridInt8/1",
+		"ConvolutionOpTest/ConvolutionOpTest.SimpleTestHybridInt8/2",
+		"ConvolutionOpTest/ConvolutionOpTest.SimpleTestHybridInt8WithDilation/0",
+		"ConvolutionOpTest/ConvolutionOpTest.SimpleTestHybridInt8WithDilation/1",
+		"ConvolutionOpTest/ConvolutionOpTest.SimpleTestHybridInt8WithDilation/2",
+		"ConvolutionOpTest/ConvolutionOpTest.SimpleTestHybridInt8Big/0",
+		"ConvolutionOpTest/ConvolutionOpTest.SimpleTestHybridInt8Big/1",
+		"ConvolutionOpTest/ConvolutionOpTest.SimpleTestHybridInt8Big/2",
+		"ConvolutionOpTest/ConvolutionOpTest.PointwiseHybridInt8/0",
+		"ConvolutionOpTest/ConvolutionOpTest.PointwiseHybridInt8/1",
+		"ConvolutionOpTest/ConvolutionOpTest.PointwiseHybridInt8/2",
 	},
+	AllowFp16PrecisionForFp32: true,
 }
 
 // TODO(b/332423167): Intel to provide the proper config.
@@ -199,44 +258,11 @@ var openvinoParam = testingParam{
 		"ResizeBilinearOpTest/ResizeBilinearOpTest.VerticalResize/0",
 		"ResizeBilinearOpTest/ResizeBilinearOpTest.TwoDimensionalResizeWithTwoBatches/0",
 		"ResizeBilinearOpTest/ResizeBilinearOpTest.TwoDimensionalResizeWithTwoBatches_HalfPixelCenters/0",
-		"ResizeBilinearOpTest/ResizeBilinearOpTest.ThreeDimensionalResize/0",
 
-		// TODO(b/343621510): There are failures due to FP16 precision loss in the
-		// following tests.
-		"FloatActivationsOpTest.HardSwish",
-		"FloatAddOpModel.NoActivationInplaceInput0",
-		"FloatAddOpModel.NoActivationInplaceInput1",
-		"FloatAddOpModel.NoActivation",
-		"FloatAddOpModel.ActivationRELU_N1_TO_1",
-		"FloatAddOpModel.VariousInputShapes",
-		"FloatAddOpModel.WithBroadcastGeneric",
-		"FloatAddOpModel.MixedBroadcast",
-		"ConcatenationOpTest.FourInputs",
-		"MulOpTest.NoActivationFloatInplaceInput0",
-		"MulOpTest.NoActivationFloatInplaceInput1",
-		"FloatPoolingOpTest.MaxPoolActivationRelu1",
+		// TODO(b/364772332): Openvino delegate output incorrect results.
 		"FloatPoolingOpTest.MaxPoolActivationRelu6",
-		"SoftmaxOpTest.SimpleTest",
-		"SoftmaxOpTest.CompareWithTFminiBetaEq1",
-		"TanhOpTest/TanhOpTest.Tanh/0",
-		"TanhOpTest/TanhOpTest.Tanh/1",
-		"TanhOpTest/TanhOpTest.Tanh/2",
-		"LogisticOpTest/LogisticOpTest.Sigmoid/0",
-		"LogisticOpTest/LogisticOpTest.Sigmoid/1",
-		"LogisticOpTest/LogisticOpTest.Sigmoid/2",
-		"ConstantInputs/MulOpTest.NoActivationFloat/0",
-		"ConstantInputs/MulOpTest.FloatActivationRELU_N1_TO_1/0",
-		"ConstantInputs/MulOpTest.FloatVariousInputShapes/0",
-		"ConstantInputs/MulOpTest.FloatWithBroadcast/0",
-		"ConstantInputs/MulOpTest.FloatMixedBroadcast/0",
-		"ConstantInputs/MulOpTest.FloatWithBroadcast2Elements/0",
-		"TransposeConvOpTest/TransposeConvOpTest.TwoFiltersTest/0",
-		"TransposeConvOpTest/TransposeConvOpTest.TwoFiltersTest/2",
-		"TransposeConvOpTest/TransposeConvOpTest.PaddingValidTest/0",
-		"TransposeConvOpTest/TransposeConvOpTest.PaddingValidTest/2",
-		"TransposeConvOpTest/TransposeConvOpTest.AccuracyTest/0",
-		"TransposeConvOpTest/TransposeConvOpTest.AccuracyTest/2",
 	},
+	AllowFp16PrecisionForFp32: true,
 }
 
 // DTS runs the Tensorflow Lite Stable Delegate Test Suite (DTS).
@@ -286,6 +312,7 @@ func DTS(ctx context.Context, s *testing.State) {
 		gtest.ExtraArgs(
 			"--stable_delegate_settings_file="+settingsPath,
 			"--acceleration_test_config_path="+accelConfigPath,
+			"--allow_fp16_precision_for_fp32="+strconv.FormatBool(param.AllowFp16PrecisionForFp32),
 		),
 	)
 	args, err := test.Args()
