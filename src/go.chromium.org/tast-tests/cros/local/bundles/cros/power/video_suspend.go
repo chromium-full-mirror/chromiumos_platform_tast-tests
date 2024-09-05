@@ -105,7 +105,8 @@ func VideoSuspend(ctx context.Context, s *testing.State) {
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer server.Close()
 
-	conn, err := cr.NewConn(ctx, server.URL+"/video.html")
+	connURL := server.URL + "/video.html"
+	conn, err := cr.NewConn(ctx, connURL)
 	if err != nil {
 		s.Fatal("Failed to open new tab: ", err)
 	}
@@ -130,7 +131,7 @@ func VideoSuspend(ctx context.Context, s *testing.State) {
 	}
 
 	testing.ContextLog(ctx, "Reconnecting to our browser tab")
-	conn, err = cr.NewConnForTarget(ctx, chrome.MatchAllPages())
+	conn, err = cr.NewConnForTarget(ctx, chrome.MatchTargetURL(connURL))
 	defer conn.Close()
 	defer conn.CloseTarget(ctx)
 
