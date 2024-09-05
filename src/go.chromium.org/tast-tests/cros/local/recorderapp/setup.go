@@ -8,17 +8,9 @@ import (
 	"context"
 	"encoding/json"
 	"os"
+	"time"
 
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
 	"go.chromium.org/tast/core/errors"
-)
-
-const (
-	libsoda                 = "libsoda"
-	libsodaEnUS             = "libsoda-model-en-us"
-	summaryModelDLC         = "ml-dlc-73caa678-45cb-4007-abb9-f04e431376da"
-	titleSuggestionModelDLC = "ml-dlc-ee7c31c2-18e5-405a-b54e-f2607130a15d"
-	titleSuggestionLoRADLC  = "ml-dlc-1bdd5282-2d14-413c-bf43-9ea6d55c38a6"
 )
 
 // LaunchConfig is the configuration sent to the app to modify the local
@@ -67,16 +59,31 @@ type RecordingData struct {
 	Title      string               `json:"title"`
 }
 
-func ensureModelInstalled(ctx context.Context, setup Setup) error {
+func (a *App) ensureModelInstalled(ctx context.Context, setup Setup) error {
 	if setup.Config.TranscriptionForceEnabled || setup.Config.SpeakerLabelForceEnabled {
-		if err := launcher.InstallDlc(ctx, []string{libsoda, libsodaEnUS}); err != nil {
-			return errors.Wrap(err, "failed to ensure transcription models installed")
+		if err := a.conn.Eval(ctx, "TestHelper.installTranscriptionModel()", nil); err != nil {
+			return errors.Wrap(err, "failed to install transcription model")
+		}
+		if err := a.conn.WaitForExprWithTimeout(ctx, "TestHelper.isTranscriptionModelInstalled()", time.Minute); err != nil {
+			return errors.Wrap(err, "failed to wait for the transcription model to be installed")
 		}
 	}
 
 	if setup.Config.SummaryForceEnabled {
-		if err := launcher.InstallDlc(ctx, []string{summaryModelDLC, titleSuggestionModelDLC, titleSuggestionLoRADLC}); err != nil {
-			return errors.Wrap(err, "failed to ensure summary models installed")
+		// Install summary model.
+		if err := a.conn.Eval(ctx, "TestHelper.installSummaryModel()", nil); err != nil {
+			return errors.Wrap(err, "failed to install summary model")
+		}
+		if err := a.conn.WaitForExprWithTimeout(ctx, "TestHelper.isSummaryModelInstalled()", time.Minute); err != nil {
+			return errors.Wrap(err, "failed to wait for the summary model to be installed")
+		}
+
+		// Install title suggestion model.
+		if err := a.conn.Eval(ctx, "TestHelper.installTitleSuggestionModel()", nil); err != nil {
+			return errors.Wrap(err, "failed to install title suggestion model")
+		}
+		if err := a.conn.WaitForExprWithTimeout(ctx, "TestHelper.isTitleSuggestionModelInstalled()", time.Minute); err != nil {
+			return errors.Wrap(err, "failed to wait for the title suggestion model to be installed")
 		}
 	}
 	return nil

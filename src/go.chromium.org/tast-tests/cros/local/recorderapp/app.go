@@ -40,10 +40,6 @@ func StartAppWithSetup(ctx context.Context, cr *chrome.Chrome, setup Setup) (app
 	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
 	defer cancel()
 
-	if err := ensureModelInstalled(ctx, setup); err != nil {
-		return nil, errors.Wrap(err, "failed to ensure the necessary DLCs are installed")
-	}
-
 	app, err := openAppToTestPage(ctx, cr)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to launch Recorder app")
@@ -53,6 +49,10 @@ func StartAppWithSetup(ctx context.Context, cr *chrome.Chrome, setup Setup) (app
 			app.Close(cleanupCtx)
 		}
 	}()
+
+	if err := app.ensureModelInstalled(ctx, setup); err != nil {
+		return nil, errors.Wrap(err, "failed to ensure the necessary DLCs are installed")
+	}
 
 	if err := app.performSetup(ctx, setup); err != nil {
 		return nil, errors.Wrap(err, "failed to perform setup")
