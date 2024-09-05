@@ -140,8 +140,7 @@ func init() {
 				enableLacros:      true,
 				enableMempressure: true,
 			},
-			ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
-			Timeout:   30 * time.Minute,
+			Timeout: 30 * time.Minute,
 		}},
 	})
 }
