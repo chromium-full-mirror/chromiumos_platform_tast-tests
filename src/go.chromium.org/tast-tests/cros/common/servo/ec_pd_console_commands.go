@@ -206,12 +206,23 @@ func (s *Servo) SendPowerSwapRequest(ctx context.Context) error {
 
 	testing.ContextLog(ctx, "Sending power swap request: ", cmd)
 
-	out, err := s.RunECCommandGetOutput(ctx, cmd, []string{reEcPdRecv})
+	switch s.dutPDInfo.version {
+	case TCPMv1, TCPMv2:
+		out, err := s.RunECCommandGetOutput(ctx, cmd, []string{reEcPdRecv})
 
-	if err != nil {
-		return errors.Wrap(err, "EC pd command failed")
+		if err != nil {
+			return errors.Wrap(err, "EC pd command failed")
+		}
+		testing.ContextLog(ctx, "PowerSwap reply: ", out)
+	case PDC:
+		err := s.RunECCommand(ctx, cmd)
+
+		if err != nil {
+			return errors.Wrap(err, "EC pdc command failed")
+		}
+	default:
+		panic("Unknown TCPM version")
 	}
-	testing.ContextLog(ctx, "PowerSwap reply: ", out)
 
 	return nil
 }
@@ -234,12 +245,23 @@ func (s *Servo) SendDataSwapRequest(ctx context.Context) error {
 
 	testing.ContextLog(ctx, "Sending data swap request: ", cmd)
 
-	out, err := s.RunECCommandGetOutput(ctx, cmd, []string{reEcPdRecv})
+	switch s.dutPDInfo.version {
+	case TCPMv1, TCPMv2:
+		out, err := s.RunECCommandGetOutput(ctx, cmd, []string{reEcPdRecv})
 
-	if err != nil {
-		return errors.Wrap(err, "EC pd command failed")
+		if err != nil {
+			return errors.Wrap(err, "EC pd command failed")
+		}
+		testing.ContextLog(ctx, "DataSwap reply: ", out)
+	case PDC:
+		err := s.RunECCommand(ctx, cmd)
+
+		if err != nil {
+			return errors.Wrap(err, "EC pdc command failed")
+		}
+	default:
+		panic("Unknown TCPM version")
 	}
-	testing.ContextLog(ctx, "DataSwap reply: ", out)
 
 	return nil
 }
@@ -276,10 +298,7 @@ func (s *Servo) SetPDPowerRole(ctx context.Context, role string) error {
 
 	if string(pdState.PowerRole) != role {
 		if err := s.SendPowerSwapRequest(ctx); err != nil {
-			// PDC does not send receive message over console, so the err msg is always fail.
-			if s.dutPDInfo.version != PDC {
-				return errors.Wrap(err, "send power swap failed")
-			}
+			return errors.Wrap(err, "send power swap failed")
 		}
 
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
@@ -329,10 +348,7 @@ func (s *Servo) RestorePDDataRole(ctx context.Context) error {
 
 	if pdState.DataRole == DataRoleUFP {
 		if err := s.SendDataSwapRequest(ctx); err != nil {
-			// PDC does not send receive message over console, so the err msg is always fail.
-			if s.dutPDInfo.version != PDC {
-				return errors.Wrap(err, "send power swap failed")
-			}
+			return errors.Wrap(err, "send data swap failed")
 		}
 
 		testing.ContextLog(ctx, "check restoration")
