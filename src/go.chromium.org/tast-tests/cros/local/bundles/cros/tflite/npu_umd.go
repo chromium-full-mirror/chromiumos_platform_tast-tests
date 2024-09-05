@@ -19,7 +19,7 @@ func init() {
 		Desc:         "Runs the test of Intel NPU UMD (User Mode Driver)",
 		Contacts:     []string{"cros-odml-foundations-eng@google.com", "shik@chromium.org"},
 		BugComponent: "b:1140119", // ChromeOS > Platform > Technologies > Machine Learning > ML Accelerators > Intel
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"tflite_intel_openvino"},
 	})
 }
