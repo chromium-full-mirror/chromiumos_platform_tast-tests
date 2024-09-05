@@ -26,10 +26,9 @@ func init() {
 		// TODO(b/277548688): Monitor test results and promote stable tests to critical.
 		Params: []testing.Param{{
 			// Contact: weiluanwang@google.com
-			Name:      "ac_power",
-			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineACPower),
-			Fixture:   "crosHealthdRunning",
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			Name:    "ac_power",
+			Val:     croshealthd.NewRoutineParams(croshealthd.RoutineACPower),
+			Fixture: "crosHealthdRunning",
 		}, {
 			// Contact: yycheng@google.com
 			Name:    "urandom",
