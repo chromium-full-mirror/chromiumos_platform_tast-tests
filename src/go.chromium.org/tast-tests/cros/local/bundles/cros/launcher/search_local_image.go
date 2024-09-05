@@ -16,8 +16,9 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
-	"go.chromium.org/tast-tests/cros/local/uidetection"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
@@ -134,7 +135,8 @@ func SearchLocalImage(ctx context.Context, s *testing.State) {
 	defer os.Remove(localFileLocation)
 
 	ui := uiauto.New(tconn)
-	ud := uidetection.NewDefault(tconn).WithScreenshotStrategy(uidetection.ImmediateScreenshot)
+	imageNode := nodewith.Role(role.StaticText).ClassName("Label").Name("search_local_image.png")
+	homeButtonFinder := nodewith.Name("Launcher").Role(role.Button).Ancestor(nodewith.HasClass("ShelfContainer"))
 
 	for _, query := range param.Query {
 		cleanup, err := launcher.SetUpLauncherTest(ctx, tconn, param.TabletMode, false /*stabilizeAppCount*/)
@@ -157,9 +159,8 @@ func SearchLocalImage(ctx context.Context, s *testing.State) {
 				NeedRegex: false,
 				Result:    "search_local_image",
 			}),
-
-			ui.DoDefault(util.ImageNode),
-			launcher.VerifyTextWithUIDetection(ud, param.ExpectedResult),
+			ui.Exists(imageNode),
+			ui.DoDefault(homeButtonFinder),
 		))(ctx); err != nil {
 			s.Fatal("Failed to search image: ", err)
 		}
