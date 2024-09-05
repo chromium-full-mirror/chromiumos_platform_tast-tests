@@ -80,7 +80,7 @@ func init() {
 			"ml-service-team@google.com",
 		},
 		BugComponent:    "b:1281467",
-		Impl:            &launcherSearchFixtureImpl{featureFlags: []string{"ProductivityLauncherImageSearch", "LauncherImageSearch", "LauncherImageSearchOcr", "LauncherSearchControl"}},
+		Impl:            &launcherSearchFixtureImpl{featureFlags: []string{"ProductivityLauncherImageSearch", "LauncherImageSearch", "LauncherImageSearchOcr", "LauncherSearchControl", "LauncherImageSearchIndexingLimit", "LauncherImageSearchDebug"}},
 		SetUpTimeout:    launcherSearchSetUpTestTimeout,
 		PreTestTimeout:  launcherSearchPreTestTimeout,
 		PostTestTimeout: launcherSearchPostTestTimeout,

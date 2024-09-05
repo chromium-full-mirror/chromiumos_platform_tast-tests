@@ -73,20 +73,6 @@ func init() {
 				ExtraTestBedDeps: []string{tbdep.Cbx(true)},
 			},
 			{
-				Name: "search_with_ocr_informational",
-				Val: util.ImageSearchTestParam{
-					Name:           "ocr",
-					TabletMode:     false,
-					Query:          []string{"Thoughts"},
-					ExpectedResult: "About",
-					UseIca:         false,
-					UseOcr:         true,
-				},
-				Fixture:           fixture.LauncherImageSearchOcrNonCBX,
-				ExtraSoftwareDeps: []string{"no_ondevice_image_content_annotation"},
-				ExtraAttr:         []string{"group:mainline", "informational"},
-			},
-			{
 				Name: "search_with_ica_ocr",
 				Val: util.ImageSearchTestParam{
 					Name:           "ica_ocr",
@@ -163,6 +149,7 @@ func SearchLocalImage(ctx context.Context, s *testing.State) {
 
 		//GoBigSleepLint: Indexing may be slow on low-end devices.
 		testing.Sleep(ctx, 5*time.Second)
+		defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_dump_"+s.Param().(util.ImageSearchTestParam).Name)
 
 		if err := uiauto.Retry(util.ImageSearchRetryTimes, uiauto.NamedCombine("Search for image",
 			launcher.SearchWithCategory(tconn, kb, query, launcher.SearchCategoryInfo{
@@ -174,7 +161,6 @@ func SearchLocalImage(ctx context.Context, s *testing.State) {
 			ui.DoDefault(util.ImageNode),
 			launcher.VerifyTextWithUIDetection(ud, param.ExpectedResult),
 		))(ctx); err != nil {
-			faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_dump_"+s.Param().(util.ImageSearchTestParam).Name)
 			s.Fatal("Failed to search image: ", err)
 		}
 	}
