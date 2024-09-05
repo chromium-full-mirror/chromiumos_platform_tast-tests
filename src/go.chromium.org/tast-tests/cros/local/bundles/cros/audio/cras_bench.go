@@ -17,7 +17,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CrasBench,
 		Desc:         "Micro-benchmarks for the ChromeOS audio server",
-		Contacts:     []string{"chromeos-audio-bugs@google.com", "paulhsia@chromium.org", "cychiang@chromium.org"},
+		Contacts:     []string{"chromeos-audio-bugs@google.com", "cychiang@chromium.org"},
 		BugComponent: "b:776546",
 		Attr: []string{
 			"group:mainline",

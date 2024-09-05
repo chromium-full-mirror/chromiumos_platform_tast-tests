@@ -30,7 +30,6 @@ func init() {
 			"chromeos-audio-bugs@google.com", // Media team
 			"judyhsiao@chromium.org",         // Author
 			"cychiang@chromium.org",          // Media team
-			"paulhsia@chromium.org",          // Media team
 		},
 		// ChromeOS > Platform > Virtualization > ARC++ & ARCVM > ARC Audio
 		BugComponent: "b:879188",

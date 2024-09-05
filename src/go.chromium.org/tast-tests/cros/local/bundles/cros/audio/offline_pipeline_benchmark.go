@@ -23,7 +23,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         OfflinePipelineBenchmark,
 		Desc:         "Benchmark audio_processor modules using offline-pipeline",
-		Contacts:     []string{"chromeos-audio-bugs@google.com", "paulhsia@chromium.org", "cychiang@chromium.org"},
+		Contacts:     []string{"chromeos-audio-bugs@google.com", "cychiang@chromium.org"},
 		BugComponent: "b:776546",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		Timeout:      8 * time.Minute,

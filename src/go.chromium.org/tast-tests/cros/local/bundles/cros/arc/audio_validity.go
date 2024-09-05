@@ -21,7 +21,6 @@ func init() {
 		Contacts: []string{
 			"chromeos-audio-bugs@google.com", // Media team
 			"cychiang@chromium.org",          // Media team
-			"paulhsia@chromium.org",          // Media team
 			"judyhsiao@chromium.org",         // Author
 		},
 		// ChromeOS > Platform > Virtualization > ARC++ & ARCVM > ARC Audio

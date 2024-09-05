@@ -2,7 +2,6 @@ set noparent
 
 aaronyu@google.com
 hiroh@chromium.org
-paulhsia@chromium.org
 
 # Tast team for bulk/emergencies
 include /OWNERS.tast

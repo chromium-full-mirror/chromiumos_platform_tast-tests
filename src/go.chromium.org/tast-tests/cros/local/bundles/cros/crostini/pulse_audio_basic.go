@@ -19,7 +19,7 @@ func init() {
 		Func:         PulseAudioBasic,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Runs a basic test on the container's pulseaudio service using a pre-built crostini image",
-		Contacts:     []string{"chromeos-audio-bugs@google.com", "clumptini@google.com", "paulhsia@chromium.org"},
+		Contacts:     []string{"chromeos-audio-bugs@google.com", "clumptini@google.com"},
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "vm_host"},
 		BugComponent: "b:776546",

@@ -49,7 +49,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CrasPerf,
 		Desc:         "Performance measurement of CRAS",
-		Contacts:     []string{"chromeos-audio-bugs@google.com", "yuhsuan@chromium.org", "cychiang@chromium.org", "paulhsia@chromium.org"},
+		Contacts:     []string{"chromeos-audio-bugs@google.com", "yuhsuan@chromium.org", "cychiang@chromium.org"},
 		BugComponent: "b:776546",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		Timeout:      5 * time.Minute,
