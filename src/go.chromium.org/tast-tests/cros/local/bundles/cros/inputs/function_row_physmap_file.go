@@ -6,12 +6,16 @@ package inputs
 
 import (
 	"context"
+	"encoding/binary"
+	"math"
 	"os"
 	"path"
+	"runtime"
 	"strconv"
 	"strings"
 
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -22,11 +26,15 @@ const (
 
 	// path to the function_row_physmap file in the device's sys path
 	functionRowPhysmapDevicePath = "device/function_row_physmap"
+
+	// path to the ARM keyboard's row and columns properties in its device tree
+	armKeyboardRowsPath    = "device/of_node/keypad,num-rows"
+	armKeyboardColumnsPath = "device/of_node/keypad,num-columns"
 )
 
 // Scan codes taken from the action_keymaps array:
 // https://source.chromium.org/chromiumos/chromiumos/codesearch/+/main:src/third_party/coreboot/src/acpi/acpigen_ps2_keybd.c
-var validVivaldiScanCodes = [...]uint8{
+var validAMDScanCodes = [...]uint32{
 	0xea, /* KEY_BACK */
 	0xe9, /* KEY_FORWARD */
 	0xe7, /* KEY_REFRESH */
@@ -52,6 +60,14 @@ var validVivaldiScanCodes = [...]uint8{
 	0xa8, /* KEY_DO_NOT_DISTURB */
 }
 
+// keyboardInfo holds information necessary for validating an ARM keyboard's
+// function_row_physmap file.
+type keyboardInfo struct {
+	numColumns uint32
+	numRows    uint32
+	shift      uint32
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         FunctionRowPhysmapFile,
@@ -65,7 +81,6 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		HardwareDeps: hwdep.D(hwdep.CustomTopRowKeyboard()),
 		SoftwareDeps: []string{
-			"amd64", // TODO(b/351726739): Test ARM64 keyboards as well
 			"custom_top_row_keyboard",
 		},
 	})
@@ -87,7 +102,6 @@ func FunctionRowPhysmapFile(ctx context.Context, s *testing.State) {
 	fileBytes, err := os.ReadFile(functionRowPhysmapFile)
 	if err != nil {
 		// This file will not be present for non-Vivaldi devices.
-		// TODO(b/351726739): Don't run test for non-Vivaldi devices.
 		s.Fatalf("Failed to read function_row_physmap file at %s: %v", functionRowPhysmapFile, err)
 	}
 
@@ -102,23 +116,40 @@ func FunctionRowPhysmapFile(ctx context.Context, s *testing.State) {
 		s.Errorf("Not enough scan codes are present (have %d, need at least %d)", len(scanCodeStrs), minimumNumExpectedCodes)
 	}
 
+	keyboardInfo := &keyboardInfo{}
+	isArmDevice := runtime.GOARCH == "arm" || runtime.GOARCH == "arm64"
+	if isArmDevice {
+		// ARM devices use the keyboard's rows and columns to encode the scancodes, so
+		// this info needs to be retrieved from the keyboard's device tree.
+		err = populateKeyboardInfo(keyboardInfo, keyboardSysPath)
+		if err != nil {
+			s.Fatal("Failed to populate keyboard info: ", err)
+		}
+	}
+
 	nonZero := false
 	for _, scanCodeStr := range scanCodeStrs {
-		// Decode each scan code into a 1-byte hex number.
-		scanCode64, err := strconv.ParseUint(scanCodeStr, 16, 8)
+		// Decode each scan code into a 4-byte hex number.
+		scanCode64, err := strconv.ParseUint(scanCodeStr, 16, 32)
 		if err != nil {
 			s.Errorf("Failed to parse scan code %s: %v", scanCodeStr, err)
 			continue
 		}
 
-		scanCode := uint8(scanCode64)
+		scanCode := uint32(scanCode64)
 		if scanCode != 0 {
 			// Record that not all scan codes are zero.
 			nonZero = true
 		}
 
-		if !isValidVivaldiScanCode(scanCode) {
-			s.Errorf("'%X' is not a valid scan code", scanCode)
+		if isArmDevice {
+			if !isValidARMScanCode(scanCode, keyboardInfo) {
+				s.Errorf("'%X' is not a valid scan code", scanCode)
+			}
+		} else {
+			if !isValidAMDScanCode(scanCode) {
+				s.Errorf("'%X' is not a valid scan code", scanCode)
+			}
 		}
 
 	}
@@ -130,9 +161,50 @@ func FunctionRowPhysmapFile(ctx context.Context, s *testing.State) {
 	}
 }
 
-// isValidVivaldiScanCode checks if the provided scan code is in the array of known Vivaldi scan codes.
-func isValidVivaldiScanCode(scanCode uint8) bool {
-	for _, validScanCode := range validVivaldiScanCodes {
+// populateKeyboardInfo reads the keyboard's rows and columns properties from
+// its device tree and populates the provided keyboardInfo.
+func populateKeyboardInfo(keyboardInfo *keyboardInfo, keyboardSysPath string) error {
+	// Read keyboard rows.
+	keyboardRowsFile := path.Join(keyboardSysPath, armKeyboardRowsPath)
+	numRowsBytes, err := os.ReadFile(keyboardRowsFile)
+	if err != nil {
+		return errors.Wrap(err, "failed to read keyboard's num-rows property")
+	}
+	keyboardInfo.numRows = binary.BigEndian.Uint32(numRowsBytes)
+
+	// Read keyboard columns.
+	keyboardColumnsFile := path.Join(keyboardSysPath, armKeyboardColumnsPath)
+	numColumnsBytes, err := os.ReadFile(keyboardColumnsFile)
+	if err != nil {
+		return errors.Wrap(err, "failed to read keyboard's num-columns property")
+	}
+	keyboardInfo.numColumns = binary.BigEndian.Uint32(numColumnsBytes)
+
+	// Keyboard shift is log2 of the keyboard's columns.
+	keyboardInfo.shift = uint32(math.Log2(float64(keyboardInfo.numColumns)))
+
+	return nil
+}
+
+// isValidARMScanCode decodes the provided ARM-encoded scan code into its row
+// and column and validates that both the row and column are less than the
+// keyboard's total number of rows and columns, respectively.
+//
+// As seen in the MATRIX_SCAN_CODE definition at the link below, each scan code
+// is encoded as follows:
+// scanCode = (row << shift) + col
+//
+// https://source.chromium.org/chromiumos/chromiumos/codesearch/+/main:src/third_party/kernel/upstream/include/linux/input/matrix_keypad.h
+func isValidARMScanCode(scanCode uint32, keyboardInfo *keyboardInfo) bool {
+	row := scanCode >> keyboardInfo.shift
+	col := scanCode & ((1 << keyboardInfo.shift) - 1)
+	return row < keyboardInfo.numRows && col < keyboardInfo.numColumns
+}
+
+// isValidAMDScanCode checks if the provided scan code is in the array of known
+// AMD Vivaldi scan codes.
+func isValidAMDScanCode(scanCode uint32) bool {
+	for _, validScanCode := range validAMDScanCodes {
 		if scanCode == validScanCode {
 			return true
 		}
