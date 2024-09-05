@@ -12,10 +12,12 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/drivefs"
+	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
+	"go.chromium.org/tast-tests/cros/local/policyutil"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -206,6 +208,29 @@ func init() {
 			"drivefs.extensionClientID",
 		},
 	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:         "driveFsManagedWithSkyVault",
+		Desc:         "Ensures DriveFS is mounted with managed user account and SkyVault enabled",
+		Contacts:     []string{"poromov@chromium.org", "cros-commercial-clippy-eng@google.com"},
+		BugComponent: "b:1533988",
+		Impl: &fixture{
+			chromeOptions: []chrome.Option{chrome.EnableFeatures("SkyVault"), chrome.ExtraArgs("--disable-sync")},
+			bt:            browser.TypeAsh,
+			accountPool:   policy.ManagedUserAccountPoolVarName,
+			policies: []policy.Policy{
+				&policy.DownloadDirectory{Val: "${google_drive}"},
+				&policy.ScreenCaptureLocation{Val: "${google_drive}"},
+				&policy.DriveDisabled{Val: false},
+			},
+		},
+		SetUpTimeout:    chrome.GAIALoginTimeout + DriveFsSetupAndTearDownTimeout,
+		ResetTimeout:    DriveFsSetupAndTearDownTimeout,
+		TearDownTimeout: time.Hour,
+		Vars: []string{
+			"drivefs.extensionClientID",
+		},
+	})
 }
 
 // FixtureData is the struct available for tests.
@@ -238,6 +263,8 @@ type fixture struct {
 	bt                browser.Type
 	enableBulkPinning bool
 	fieldTrial        chrome.FieldTrialConfigMode
+	accountPool       string
+	policies          []policy.Policy
 }
 
 func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
@@ -278,8 +305,20 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	}()
 
 	func() {
+		username, password, err := dma.UserPassFromPool(func() string {
+			if f.accountPool == "" {
+				return drivefs.AccountPoolVarName
+			}
+			return f.accountPool
+		}())
+		if err != nil {
+			s.Fatal("Failed to get username and password: ", err)
+		}
 		opts := append(f.chromeOptions,
-			chrome.GAIALoginPool(dma.CredsFromPool(drivefs.AccountPoolVarName)),
+			chrome.GAIALogin(chrome.Creds{
+				User: username,
+				Pass: password,
+			}),
 			chrome.ExtraArgs("--get-access-token-for-test"),
 			chrome.ARCDisabled(),
 			chrome.FieldTrialConfig(f.fieldTrial),
@@ -294,11 +333,18 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 		if f.enableBulkPinning {
 			opts = append(opts, chrome.EnableFeatures("FeatureManagementDriveFsBulkPinning"))
 		}
+		if len(f.policies) > 0 {
+			fdms, err := policyutil.SetUpFakePolicyServer(ctx, s.OutDir(), username, f.policies)
+			if err != nil {
+				s.Fatal("Could not set set up fake policy server: ", err)
+			}
+			defer fdms.Stop(cleanupCtx)
+			opts = append(opts, chrome.DMSPolicy(fdms.URL))
+		}
 
 		ctx, cancel := context.WithTimeout(ctx, chrome.GAIALoginTimeout)
 		defer cancel()
 
-		var err error
 		f.cr, err = chrome.New(ctx, opts...)
 		if err != nil {
 			s.Fatal("Failed to start Chrome: ", err)

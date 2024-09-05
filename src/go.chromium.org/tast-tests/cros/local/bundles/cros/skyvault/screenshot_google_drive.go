@@ -10,11 +10,9 @@ import (
 	"regexp"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/local/apps"
-	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -23,7 +21,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/drivefs"
 	"go.chromium.org/tast-tests/cros/local/input"
-	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -53,49 +50,21 @@ func init() {
 			pci.SearchFlag(&policy.DriveDisabled{}, pci.Served),
 			pci.SearchFlag(&policy.ScreenCaptureLocation{}, pci.Served),
 		},
+		Fixture: "driveFsManagedWithSkyVault",
 	})
 }
 
 // ScreenshotGoogleDrive tests that screenshots are saved to Google Drive when forced by policy.
 func ScreenshotGoogleDrive(ctx context.Context, s *testing.State) {
+	fixt := s.FixtValue().(*drivefs.FixtureData)
+	tconn := fixt.TestAPIConn
+	dfs := fixt.DriveFs
+	driveAPIClient := fixt.APIClient
+
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	username, password, err := dma.UserPassFromPool(policy.ManagedUserAccountPoolVarName)
-	if err != nil {
-		s.Fatal("Failed to get username and password: ", err)
-	}
-
-	policies := []policy.Policy{
-		&policy.ScreenCaptureLocation{Val: "${google_drive}"},
-		&policy.DriveDisabled{Val: false},
-	}
-	fdms, err := policyutil.SetUpFakePolicyServer(ctx, s.OutDir(), username, policies)
-	if err != nil {
-		s.Fatal("Could not set set up fake policy server: ", err)
-	}
-	defer fdms.Stop(cleanupCtx)
-
-	chromeOptions := []chrome.Option{
-		chrome.EnableFeatures("SkyVault"),
-		chrome.DMSPolicy(fdms.URL),
-		chrome.GAIALogin(chrome.Creds{
-			User: username,
-			Pass: password,
-		}),
-	}
-
-	cr, err := chrome.New(ctx, chromeOptions...)
-	if err != nil {
-		s.Fatal("Connect to Chrome: ", err)
-	}
-	defer cr.Close(cleanupCtx)
-
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to create Test API connection: ", err)
-	}
 	kb, err := input.Keyboard(ctx)
 	if err != nil {
 		s.Fatal("Failed to get Keyboard: ", err)
@@ -103,20 +72,6 @@ func ScreenshotGoogleDrive(ctx context.Context, s *testing.State) {
 
 	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "download_google_drive")
 	s.AttachErrorHandlers(handler, handler)
-
-	dfs, err := drivefs.NewDriveFs(ctx, cr.NormalizedUser())
-	if err != nil {
-		s.Fatal("Failed to wait for DriveFS to mount: ", err)
-	}
-	defer dfs.SaveLogsOnError(cleanupCtx, s.HasError)
-
-	driveAPIScopes := []string{"https://www.googleapis.com/auth/drive"}
-	ts := drivefs.NewChromeOSTokenSourceForAccount(ctx, tconn, driveAPIScopes, username)
-	rts := drivefs.RetryTokenSource(ts, drivefs.WithContext(ctx), drivefs.WithDelay(time.Second*5))
-	driveAPIClient, err := drivefs.CreateAPIClient(ctx, rts)
-	if err != nil {
-		s.Fatal("Failed to create a Drive API client: ", err)
-	}
 
 	files, err := filesapp.Launch(ctx, tconn)
 	if err != nil {
