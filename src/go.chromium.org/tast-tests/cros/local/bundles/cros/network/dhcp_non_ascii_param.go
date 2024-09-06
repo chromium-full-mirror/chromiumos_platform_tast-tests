@@ -42,6 +42,9 @@ func DHCPNonASCIIParam(ctx context.Context, s *testing.State) {
 	// Prepare the environment.
 	pool := subnet.NewPool()
 	svc, rt, err := virtualnet.CreateRouterEnv(ctx, manager, pool, virtualnet.EnvOptions{})
+	if err != nil {
+		s.Fatal("Failed to create router env: ", err)
+	}
 	defer func() {
 		if err := rt.Cleanup(cleanupCtx); err != nil {
 			s.Error("Failed to clean up router: ", err)
