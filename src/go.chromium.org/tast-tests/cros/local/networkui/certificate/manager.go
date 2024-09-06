@@ -449,7 +449,8 @@ func (m *Manager) ExportCert(certName, outputFileName string, org Organization, 
 			m.clickMoreActionsButton(certName),
 			m.ui.LeftClick(nodewith.Name("View").Role(role.MenuItem)),
 			m.ui.LeftClick(nodewith.Name("Details").Role(role.Tab).Focusable()),
-			m.ui.LeftClick(nodewith.Name("Export selected certificate").Role(role.Button).Focusable()),
+			// The button might be off-screen if the DUT has a low resolution.
+			m.ui.DoDefault(nodewith.Name("Export selected certificate").Role(role.Button).Focusable()),
 
 			// Expecting the "Save file as" dialog pop up.
 			m.ui.WaitUntilExists(nodewith.Name("Save file as").Role(role.Window)),
