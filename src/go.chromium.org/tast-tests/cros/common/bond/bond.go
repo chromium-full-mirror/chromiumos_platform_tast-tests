@@ -339,7 +339,6 @@ func (c *Client) AddBots(ctx context.Context, meetingCode string, numBots int, t
 		},
 		"media_options": map[string]interface{}{
 			"audio_file_path":  options.audioFilePath,
-			"video_file_path":  options.videoFilePath,
 			"mute_audio":       !options.audio,
 			"video_fps":        options.sendFPS,
 			"mute_video":       !options.video,
@@ -352,9 +351,20 @@ func (c *Client) AddBots(ctx context.Context, meetingCode string, numBots int, t
 		"conference": map[string]string{
 			"conference_code": meetingCode,
 		},
-		"bot_type":                           "MEETINGS",
-		"use_random_video_file_for_playback": (options.videoFilePath == ""),
+		"bot_type": "MEETINGS",
 	}
+
+	if options.videoFilePath != "" {
+		mediaOptions, ok := req["media_options"].(map[string]interface{})
+		if !ok {
+			return nil, 0, errors.New("failed to parse media_options from bot request")
+		}
+		mediaOptions["video_file_path"] = options.videoFilePath
+		req["media_options"] = mediaOptions
+	} else {
+		req["video_selection_strategy"] = "RANDOM_VIDEO_SELECTION_STRATEGY"
+	}
+
 	resp := addBotsResponse{}
 	if err := c.sendWithRetry(ctx, http.MethodPost, c.endpoint+"/v1/conference/"+meetingCode+"/bots:add", req, &resp, longerSendTimeout); err != nil {
 		return nil, 0, err
