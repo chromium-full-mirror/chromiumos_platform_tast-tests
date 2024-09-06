@@ -13,8 +13,8 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/health/utils"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/diagnosticsapp"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -27,8 +27,8 @@ import (
 )
 
 type keyboardEventTestParams struct {
-	// Whether to force laptop mode during the setup.
-	forceLaptopMode bool
+	// Whether to force clamshell mode during the setup.
+	forceClamshellMode bool
 }
 
 func init() {
@@ -52,13 +52,13 @@ func init() {
 		Params: []testing.Param{{
 			Name: "non_tablet_mode_form_factors",
 			Val: keyboardEventTestParams{
-				forceLaptopMode: false,
+				forceClamshellMode: false,
 			},
 			ExtraHardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Clamshell)),
 		}, {
 			Name: "tablet_mode_form_factors",
 			Val: keyboardEventTestParams{
-				forceLaptopMode: true,
+				forceClamshellMode: true,
 			},
 			ExtraHardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Convertible, hwdep.Detachable)),
 		}},
@@ -126,10 +126,10 @@ func MonitorKeyboardDiagnosticEvent(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect Test API: ", err)
 	}
 
-	if testParam.forceLaptopMode {
-		cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, false)
+	if testParam.forceClamshellMode {
+		cleanup, err := utils.EnsureClamshellMode(ctx, tconn)
 		if err != nil {
-			s.Fatal("Failed to ensure in laptop mode: ", err)
+			s.Fatal("Failed to ensure in clamshell mode: ", err)
 		}
 		defer cleanup(cleanupCtx)
 	}

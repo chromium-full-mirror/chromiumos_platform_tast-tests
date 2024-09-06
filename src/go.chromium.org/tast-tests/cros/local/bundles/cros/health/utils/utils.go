@@ -12,6 +12,10 @@ import (
 	"path"
 	"strings"
 
+	"golang.org/x/exp/slices"
+
+	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/crosconfig"
 	"go.chromium.org/tast/core/errors"
 )
@@ -84,4 +88,30 @@ func IsCrosConfigTrue(ctx context.Context, cpath string) (bool, error) {
 	}
 	r := v != nil && *v == "true"
 	return r, nil
+}
+
+// EnsureClamshellMode makes sure that the clamshell mode state is enabled, and
+// returns a function which reverts back to the original state.
+//
+// Typically, this will be used like:
+//
+//	cleanup, err := EnsureClamshellMode(ctx, tconn)
+//	if err != nil {
+//	  s.Fatal("Failed to ensure in clamshell mode: ", err)
+//	}
+//	defer cleanup(ctx)
+func EnsureClamshellMode(ctx context.Context, tconn *chrome.TestConn) (func(ctx context.Context) error, error) {
+	model, err := GetCrosConfig(ctx, "/name")
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get model name")
+	}
+	// The function ash.EnsureTabletModeEnabled doesn't work on some models.
+	// Use ash.EnsureTabletModeDisabledWithKeyboardEnabled, which uses ectool to
+	// control the behavior.
+	// See b/365033439.
+	workaroundModels := []string{"storo360", "kohaku", "joxer"}
+	if slices.Contains(workaroundModels, model) {
+		return ash.EnsureTabletModeDisabledWithKeyboardEnabled(ctx)
+	}
+	return ash.EnsureTabletModeEnabled(ctx, tconn, false)
 }
