@@ -9,11 +9,13 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"strconv"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/tbdep"
+	"go.chromium.org/tast-tests/cros/common/usbutils"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
@@ -36,10 +38,10 @@ func init() {
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"chrome"},
 		TestBedDeps:  []string{tbdep.WifiStateNormal},
-		Fixture:      "chromeLoggedIn.ehide",
+		Fixture:      "chromeLoggedIn",
 		Attr:         []string{"group:intel-wlan"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Vars:         []string{"wifissid", "wifipassword", "iterations"},
+		Vars:         []string{"wifissid", "wifipassword", "iterations", "wifi.usbDetectionName"},
 		Params: []testing.Param{{
 			Name: "quick",
 			Val: urlDetails{
@@ -104,20 +106,43 @@ func Download(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to connect Wi-Fi AP %s: %v", ssid, err)
 	}
 	s.Logf("Wi-Fi AP %s is connected", ssid)
+	var destinationFilePath string
+	usbDeviceName, verifyPendrive := s.Var("wifi.usbDetectionName")
+	if verifyPendrive {
+		// Verify USB pendrive speed.
+		// For local-side dut parameter must be nil
+		usbDevicesList, err := usbutils.ListDevicesInfo(ctx, nil)
+		if err != nil {
+			s.Fatal("Failed to get USB devices list: ", err)
+		}
+		const (
+			mediaRemovable     = "/media/removable/"
+			usbDeviceClassName = "Mass Storage"
+			usbSpeed           = "5000M"
+		)
 
-	downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
-	if err != nil {
-		s.Fatal("Failed to get users Download path: ", err)
+		got := usbutils.NumberOfUSBDevicesConnected(usbDevicesList, usbDeviceClassName, usbSpeed)
+		if want := 1; got < want {
+			s.Fatalf("Unexpected number of USB devices connected: got %d, want %d", got, want)
+		}
+		destinationFilePath = path.Join(mediaRemovable, usbDeviceName)
+		if _, err := os.Stat(destinationFilePath); err != nil {
+			s.Fatal("Invalid USB pendrive path: ", err)
+		}
+	} else {
+		downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
+		if err != nil {
+			s.Fatal("Failed to get users Download path: ", err)
+		}
+		destinationFilePath = downloadsPath
 	}
-
 	for i := 1; i <= iterations; i++ {
 		s.Run(ctx, strconv.Itoa(i), func(ctx context.Context, s *testing.State) {
-			if err := downloadFile(ctx, downloadURL, filepath.Join(downloadsPath, fileName), fileSize); err != nil {
+			if err := downloadFile(ctx, downloadURL, filepath.Join(destinationFilePath, fileName), fileSize); err != nil {
 				s.Fatal("Failed to download file over WiFi: ", err)
 			}
-			defer os.Remove(filepath.Join(downloadsPath, fileName))
-
-			if err := testFile(ctx, fileName, tconn); err != nil {
+			defer os.Remove(filepath.Join(destinationFilePath, fileName))
+			if err := testFile(ctx, fileName, tconn, verifyPendrive, usbDeviceName); err != nil {
 				s.Fatal("Failed to downlaod file over WiFi: ", err)
 			}
 		},
@@ -156,15 +181,21 @@ func downloadFile(ctx context.Context, url, downloadPath string, fileSize int64)
 }
 
 // testFile verifies if the downloaded file is present in Downloads path.
-func testFile(ctx context.Context, fileName string, tconn *chrome.TestConn) error {
+func testFile(ctx context.Context, fileName string, tconn *chrome.TestConn, usbDevice bool, usbDeviceName string) error {
 	files, err := filesapp.Launch(ctx, tconn)
 	if err != nil {
 		return errors.Wrap(err, "failed to launch Files App")
 	}
 	defer files.Close(ctx)
 
-	if err := files.OpenDownloads()(ctx); err != nil {
-		return errors.Wrap(err, "failed to open the downloads folder")
+	if usbDevice {
+		if err := files.OpenUSBDriveWithName(usbDeviceName)(ctx); err != nil {
+			return errors.Wrap(err, "failed to open USB drive")
+		}
+	} else {
+		if err := files.OpenDownloads()(ctx); err != nil {
+			return errors.Wrap(err, "failed to open the downloads folder")
+		}
 	}
 	return files.FileExists(fileName)(ctx)
 }
