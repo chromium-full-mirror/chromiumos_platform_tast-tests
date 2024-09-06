@@ -7,7 +7,6 @@ package fixture
 
 import (
 	"context"
-	"regexp"
 	"strings"
 	"time"
 
@@ -24,10 +23,6 @@ const (
 	GSCOpenCCD = "gscOpenCCD"
 
 	testLabOpenTimeout = 30 * time.Second
-)
-
-var (
-	ccdOpened = regexp.MustCompile("CCD [Oo]pened")
 )
 
 func init() {
@@ -116,7 +111,7 @@ func EnsureTestLabEnabled(ctx context.Context, s TestingState, b *remoteTi50.DUT
 	s.Log("Testlab disabled. Enabling now")
 	gpioSet(ctx, s, b, ti50.GpioTi50ChassisOpen, true)
 
-	runCommand(ctx, s, i, "ccd open")
+	runCommandExpectOutput(ctx, s, i, "ccd open", ti50.CCDOpenedRE)
 
 	isOpen, err := i.IsCCDOpen(ctx)
 	if err != nil {
@@ -150,8 +145,8 @@ func WipeTpmAndOpenCcd(ctx context.Context, s TestingState, b *remoteTi50.DUTCon
 	runCommand(ctx, s, i, "ccd testlab open")
 	runCommand(ctx, s, i, "ccd reset factory")
 	runCommand(ctx, s, i, "ccd set OpenNoTPMWipe ifopened")
-	runCommand(ctx, s, i, "ccd lock")
-	runCommand(ctx, s, i, "ccd open")
+	runCommandExpectOutput(ctx, s, i, "ccd lock", ti50.CCDLockedRE)
+	runCommandExpectOutput(ctx, s, i, "ccd open", ti50.CCDOpenedRE)
 	runCommand(ctx, s, i, "ccd reset factory")
 }
 

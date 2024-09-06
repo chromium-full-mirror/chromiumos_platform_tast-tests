@@ -12,6 +12,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -277,6 +278,7 @@ func needsUpdate(ctx context.Context, s TestingState, board *remoteTi50.DUTContr
 		testing.ContextLogf(ctx, "GSC is running %s not %s", runningVersion, imageVer.String())
 		return false
 	}
+	testing.ContextLogf(ctx, "GSC is running %s, same as image under test", runningVersion)
 	if versionInfo.Build.VersionStr == "" {
 		testing.ContextLog(ctx, "Did not find a valid version string. Running update")
 		return false
@@ -448,4 +450,16 @@ func runCommand(ctx context.Context, s TestingState, image *ti50.CrOSImage, comm
 		s.Fatalf("Running Command `%s` failed: %s", command, err)
 	}
 	return out
+}
+
+func runCommandExpectOutput(ctx context.Context, s TestingState, image *ti50.CrOSImage, command string, expect *regexp.Regexp) []string {
+	out, err := image.Command(ctx, command)
+	if err != nil {
+		s.Fatalf("Running Command `%s` failed: %s", command, err)
+	}
+	match := expect.FindStringSubmatch(out)
+	if match == nil {
+		s.Fatalf("Running Command `%s` unexpected output: %s", command, out)
+	}
+	return match
 }

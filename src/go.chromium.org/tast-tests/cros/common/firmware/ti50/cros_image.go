@@ -79,6 +79,11 @@ var (
 	// regex to find the chip type in H1 sysinfo output
 	h1SysinfoChipRE = regexp.MustCompile(`B2-(D|C)`)
 
+	// regex expectation for output of `ccd lock`
+	CCDLockedRE = regexp.MustCompile(`CCD [Ll]ocked`)
+	// regex expectation for output of `ccd open`
+	CCDOpenedRE = regexp.MustCompile(`CCD [Oo]pened`)
+
 	// regexes to parse the sysinfo output
 	// ex Cr50 output
 	//    Reset flags: 0x00000140 (hibernate wake-pin)
@@ -340,21 +345,25 @@ func (i *CrOSImage) Help(ctx context.Context) (CrOSImageHelpOutput, error) {
 
 // CCDLock uses the `ccd` GSC console command to set the CCD level to locked.
 func (i *CrOSImage) CCDLock(ctx context.Context) error {
-	if _, err := i.Command(ctx, "ccd lock"); err != nil {
+	output, err := i.Command(ctx, "ccd lock")
+	if err != nil {
 		return errors.Wrap(err, "failed to execute ccd lock")
 	}
-	// TODO(b/307544573): Check output string for Ti50 + Cr50
-
+	if CCDLockedRE.FindStringSubmatch(output) == nil {
+		return errors.Errorf("unexpected output to ccd lock: %s", output)
+	}
 	return nil
 }
 
 // CCDOpen uses the `ccd` GSC console command to set the CCD level to open.
 func (i *CrOSImage) CCDOpen(ctx context.Context) error {
-	if _, err := i.Command(ctx, "ccd open"); err != nil {
+	output, err := i.Command(ctx, "ccd open")
+	if err != nil {
 		return errors.Wrap(err, "failed to execute ccd open")
 	}
-	// TODO(b/307544573): Check output string for Ti50 + Cr50
-
+	if CCDOpenedRE.FindStringSubmatch(output) == nil {
+		return errors.Errorf("unexpected output to ccd open: %s", output)
+	}
 	return nil
 }
 
