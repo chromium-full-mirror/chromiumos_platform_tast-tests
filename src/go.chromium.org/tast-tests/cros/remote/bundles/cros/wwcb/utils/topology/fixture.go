@@ -7,8 +7,12 @@ package topology
 import (
 	"context"
 	"net"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
+
+	"google.golang.org/protobuf/encoding/prototext"
 
 	labapi "go.chromium.org/chromiumos/config/go/test/lab/api"
 
@@ -27,6 +31,12 @@ const (
 type topologyParamVal struct {
 	defaultTopology func(*testing.FixtState, string) *labapi.PasitHost
 }
+
+var topologyFileVar = testing.RegisterVarString(
+	"topology.file",
+	"",
+	"A textproto file containing the PASIT testbed topology when running the test manually.",
+)
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
@@ -71,6 +81,15 @@ func init() {
 }
 
 var ipPowerPorts = []int{1}
+
+var marshaller = prototext.MarshalOptions{
+	Multiline: true,
+	Indent:    " ",
+}
+
+var unmarshaller = prototext.UnmarshalOptions{
+	DiscardUnknown: true,
+}
 
 func varOrDefault(s *testing.FixtState, varName, defaultValue string) string {
 	if val, ok := s.Var(varName); ok {
@@ -122,19 +141,33 @@ func (tf *TestFixture) SetUp(ctx context.Context, s *testing.FixtState) interfac
 		hostname = host
 	}
 
-	var pasitTopology *labapi.PasitHost
+	pasitTopology := &labapi.PasitHost{}
 	if dutConfig, err := s.ChromeOSDUTLabConfig(""); err == nil {
 		if dutConfig.GetChromeos().GetPasitHost() != nil {
 			pasitTopology = dutConfig.GetChromeos().GetPasitHost()
 			s.Log("Loaded DUT info from lab config")
 		}
-	}
+	} else if topologyFileVar.Value() != "" {
+		rawText, err := os.ReadFile(topologyFileVar.Value())
+		if err != nil {
+			s.Fatal("Failed to read topology file: ", err)
+		}
 
-	if pasitTopology == nil {
+		if err := unmarshaller.Unmarshal(rawText, pasitTopology); err != nil {
+			s.Fatal("Failed to unmarshal topology file: ", err)
+		}
+		s.Log("Loaded DUT info from textproto file")
+	} else {
 		// No dut topology defined, use default.
 		params := s.Param().(topologyParamVal)
 		pasitTopology = params.defaultTopology(s, hostname)
 		s.Log("Loaded DUT info from CLI args")
+	}
+
+	s.Log("Saving topology to topology.textproto")
+	if err := os.WriteFile(filepath.Join(s.OutDir(), "topology.textproto"), []byte(marshaller.Format(pasitTopology)), 0644); err != nil {
+		// Non fatal error.
+		s.Log("Failed to save topology.textproto: ", err)
 	}
 
 	tf.Helper = NewHelper(pasitTopology, hostname)
