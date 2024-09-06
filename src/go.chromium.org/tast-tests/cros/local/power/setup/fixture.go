@@ -674,6 +674,7 @@ func init() {
 					chrome.ExtraArgs("--use-fake-cras-audio-client-for-dbus"),
 					// Feature flags.
 					chrome.EnableFeatures("CrOSLateBootAudioAPNoiseCancellation"),
+					chrome.DisableFeatures("CrOSLateBootAudioStyleTransfer"),
 				},
 			},
 		),

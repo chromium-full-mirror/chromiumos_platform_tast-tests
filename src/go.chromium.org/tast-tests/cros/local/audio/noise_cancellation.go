@@ -45,6 +45,8 @@ func WithNoiseCancellation(
 	chromeOpts := config.ChromeOpts
 	if config.StyleTransferEnabled {
 		chromeOpts = append(chromeOpts, chrome.EnableFeatures("CrOSLateBootAudioStyleTransfer"))
+	} else {
+		chromeOpts = append(chromeOpts, chrome.DisableFeatures("CrOSLateBootAudioStyleTransfer"))
 	}
 
 	cr, err := chrome.New(ctx, chromeOpts...)
@@ -69,10 +71,8 @@ func WithNoiseCancellation(
 	if err != nil {
 		return errors.Wrap(err, "failed to connect to CRAS")
 	}
-	if config.StyleTransferEnabled {
-		if err := cras.WaitUntilFeatureFlagHasValue(ctx, "CrOSLateBootAudioStyleTransfer", true); err != nil {
-			return errors.Wrap(err, "feature flag not propagated to CRAS")
-		}
+	if err := cras.WaitUntilFeatureFlagHasValue(ctx, "CrOSLateBootAudioStyleTransfer", config.StyleTransferEnabled); err != nil {
+		return errors.Wrap(err, "feature flag not propagated to CRAS")
 	}
 	if err := cras.SetNoiseCancellationEnabled(ctx, config.NoiseCancellationEnabled); err != nil {
 		return errors.Wrap(err, "failed to SetNoiseCancellationEnabled")

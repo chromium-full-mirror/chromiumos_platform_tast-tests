@@ -602,6 +602,7 @@ func init() {
 					"VideoConference",
 					"FeatureManagementVideoConference",
 				),
+				chrome.DisableFeatures("CrOSLateBootAudioStyleTransfer"),
 			},
 			bt:          browser.TypeAsh,
 			docsBlocker: true,

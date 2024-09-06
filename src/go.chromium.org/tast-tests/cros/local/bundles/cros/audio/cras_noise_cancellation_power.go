@@ -98,6 +98,9 @@ func init() {
 						if err := cras.WaitUntilFeatureFlagHasValue(ctx, "CrOSLateBootAudioAPNoiseCancellation", true); err != nil {
 							s.Fatal("Faild to WaitUntilFeatureFlagHasValue: ", err)
 						}
+						if err := cras.WaitUntilFeatureFlagHasValue(ctx, "CrOSLateBootAudioStyleTransfer", false); err != nil {
+							s.Fatal("Faild to WaitUntilFeatureFlagHasValue: ", err)
+						}
 					},
 					extraCrasClientArgs: []string{"--effects=aec"},
 				},

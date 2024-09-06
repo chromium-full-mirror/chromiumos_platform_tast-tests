@@ -33,6 +33,7 @@ var (
 		Parent: fixture.Chrome(
 			chrome.GuestLogin(),
 			chrome.EnableFeatures("CrOSLateBootAudioAPNoiseCancellation"),
+			chrome.DisableFeatures("CrOSLateBootAudioStyleTransfer"),
 			chrome.ExtraArgs("--use-fake-cras-audio-client-for-dbus"),
 		),
 	}.Instance()
