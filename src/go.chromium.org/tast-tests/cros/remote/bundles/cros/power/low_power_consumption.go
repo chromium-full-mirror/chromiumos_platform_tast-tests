@@ -165,7 +165,7 @@ func LowPowerConsumption(ctx context.Context, s *testing.State) {
 	// wait for the device's state to stabilize
 	// GoBigSleepLint: this is a known/static interval of time, after
 	// which we poll the device's state continuously
-	testing.Sleep(ctx, 10*time.Second)
+	testing.Sleep(ctx, 40*time.Second)
 
 	// loop and get accumulator output every 5 seconds, get accumulated mw
 	// and calc approx avg mA from the output
