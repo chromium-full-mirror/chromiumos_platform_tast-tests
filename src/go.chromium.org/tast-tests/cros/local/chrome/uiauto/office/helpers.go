@@ -29,17 +29,27 @@ const OneDriveSettingsPageURL = "oneDrive"
 // office files page in OS settings.
 const OfficeFilesSettingsPageURL = "officeFiles"
 
-// SettingsOneDriveTitleFinder is the title of the Office files Settings subpage.
+// SystemPreferencesSettingsPageURL is the subpage URL to navigate directly to the
+// system preferences page in OS settings.
+const SystemPreferencesSettingsPageURL = "systemPreferences"
+
+// SettingsOneDriveTitleFinder is the title of the OneDrive files Settings subpage.
 var SettingsOneDriveTitleFinder = nodewith.Role(role.Heading).Name("OneDrive")
 
 // SettingsOfficeFilesTitleFinder is the title of the Office files Settings subpage.
 var SettingsOfficeFilesTitleFinder = nodewith.Role(role.Heading).Name("Microsoft 365 files")
+
+// OneDriveSettingsInSystemPreferencesFinder is the link of the OneDrive settings on the SystemPreferences subpage.
+var OneDriveSettingsInSystemPreferencesFinder = nodewith.Role(role.Link).NameContaining("OneDrive")
 
 // LaunchOneDriveSettingsPage opens the OS settings page to the /oneDrive
 // subpage.
 func LaunchOneDriveSettingsPage(cr *chrome.Chrome, tconn *chrome.TestConn) uiauto.Action {
 	return func(ctx context.Context) error {
 		ui := uiauto.New(tconn)
+		if _, err := ossettings.LaunchAtPageURL(ctx, tconn, cr, SystemPreferencesSettingsPageURL, ui.Exists(OneDriveSettingsInSystemPreferencesFinder)); err != nil {
+			return errors.Wrap(err, "failed to find OneDrive in System Preferences")
+		}
 		if _, err := ossettings.LaunchAtPageURL(ctx, tconn, cr, OneDriveSettingsPageURL, ui.Exists(SettingsOneDriveTitleFinder)); err != nil {
 			return errors.Wrap(err, "failed to launch OneDrive settings")
 		}
