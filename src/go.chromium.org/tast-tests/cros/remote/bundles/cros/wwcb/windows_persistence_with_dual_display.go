@@ -43,7 +43,7 @@ func init() {
 		Vars:         []string{"DockingID", "newTestItem"},
 		ServiceDeps:  []string{"tast.cros.wwcb.DisplayService", "tast.cros.apps.AppsService", "tast.cros.browser.ChromeService", "tast.cros.ui.ChromeUIService"},
 		Data:         []string{"Capabilities.json"},
-		Fixture:      "wwcbPasitDock",
+		Fixture:      "wwcb.dock",
 		Timeout:      10 * time.Minute,
 		Params: []testing.Param{
 			{

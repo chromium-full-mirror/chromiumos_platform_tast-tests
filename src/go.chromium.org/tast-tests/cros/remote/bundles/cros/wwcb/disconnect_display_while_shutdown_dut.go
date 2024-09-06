@@ -36,7 +36,7 @@ func init() {
 		Attr:         []string{"group:wwcb", "group:pasit"},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"servo", "newTestItem"},
-		Fixture:      "wwcbPasitDock",
+		Fixture:      "wwcb.dock",
 		ServiceDeps: []string{
 			"tast.cros.browser.ChromeService",
 			"tast.cros.apps.AppsService",

@@ -32,7 +32,7 @@ func init() {
 		Vars:         []string{"servo", "newTestItem"},
 		Data:         []string{"Capabilities.json"},
 		Timeout:      utils.TestingTimeout,
-		Fixture:      "wwcbPasitDock",
+		Fixture:      "wwcb.dock",
 		Params: []testing.Param{{
 			Name: "clamshell_mode",
 			Val:  false,

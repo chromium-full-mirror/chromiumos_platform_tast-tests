@@ -36,7 +36,7 @@ func init() {
 		Attr:         []string{"group:wwcb", "group:pasit", "pasit_storage"},
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{"sample.txt"},
-		Fixture:      "wwcbStorage",
+		Fixture:      "wwcb.storage",
 		ServiceDeps: []string{
 			"tast.cros.browser.ChromeService",
 			"tast.cros.ui.ChromeUIService",

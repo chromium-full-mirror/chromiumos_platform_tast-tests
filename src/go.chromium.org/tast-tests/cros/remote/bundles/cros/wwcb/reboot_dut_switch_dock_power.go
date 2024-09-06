@@ -34,7 +34,7 @@ func init() {
 		ServiceDeps:  []string{"tast.cros.browser.ChromeService"},
 		Vars:         []string{"servo", "newTestItem"},
 		Data:         []string{"Capabilities.json"},
-		Fixture:      "wwcbPasitDock",
+		Fixture:      "wwcb.dock",
 		Timeout:      utils.TestingTimeout,
 		Params: []testing.Param{{
 			Name: "clamshell_mode",

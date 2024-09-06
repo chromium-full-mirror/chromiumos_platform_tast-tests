@@ -38,7 +38,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.nearbyservice.NearbyShareService"},
 		Vars:         []string{"servo"},
-		Fixture:      "wwcbStorage",
+		Fixture:      "wwcb.storage",
 		Params: []testing.Param{{
 			Name: "normal",
 			Val:  false,

@@ -28,7 +28,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"DockingID", "newTestItem"},
 		Data:         []string{"Capabilities.json"},
-		Fixture:      "wwcbPasitDock",
+		Fixture:      "wwcb.dock",
 		Params: []testing.Param{
 			{
 				Name:      "fast",

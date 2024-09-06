@@ -24,74 +24,49 @@ const (
 	postTestTimeout = 2 * time.Minute
 )
 
+type topologyParamVal struct {
+	defaultTopology func(*testing.FixtState, string) *labapi.PasitHost
+}
+
 func init() {
 	testing.AddFixture(&testing.Fixture{
-		Name:            "wwcbStorage",
-		Desc:            "PASIT fixture that initializes storage topology for storage tests",
+		Name:            "wwcb",
+		Desc:            "PASIT fixtures that manage testbed topology",
 		Contacts:        []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent:    "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
-		Impl:            &TestFixture{defaultTopology: defaultStorageTopology},
+		Impl:            &TestFixture{},
 		SetUpTimeout:    setupTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"USBID"},
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name:            "wwcbStorageEnableServoAndDisableTabletMode",
-		Desc:            "PASIT fixture that initializes storage topology for storage tests",
-		Contacts:        []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
-		BugComponent:    "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
-		Impl:            &TestFixture{defaultTopology: defaultStorageTopology},
-		SetUpTimeout:    setupTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-		Parent:          "enableServoAndDisableTabletMode",
-		Vars:            []string{"USBID"},
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name:            "wwcbStorageEnableServoAndTabletMode",
-		Desc:            "PASIT fixture that initializes storage topology for storage tests",
-		Contacts:        []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
-		BugComponent:    "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
-		Impl:            &TestFixture{defaultTopology: defaultStorageTopology},
-		SetUpTimeout:    setupTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-		Parent:          "enableServoAndTabletMode",
-		Vars:            []string{"USBID"},
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name:            "wwcbCamera",
-		Desc:            "PASIT fixture that initializes camera topology for camera tests",
-		Contacts:        []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
-		BugComponent:    "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
-		Impl:            &TestFixture{defaultTopology: defaultCameraTopology},
-		SetUpTimeout:    setupTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ExtCameraID"},
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name:            "wwcbDisplay",
-		Desc:            "PASIT fixture that initializes display topology for display tests",
-		Contacts:        []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
-		BugComponent:    "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
-		Impl:            &TestFixture{defaultTopology: defaultDisplayTopology},
-		SetUpTimeout:    setupTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"DockingID", "ExtDispID1", "ExtDispID2"},
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name:            "wwcbPasitDock",
-		Desc:            "PASIT fixture that initializes pasit full topology for tests",
-		Contacts:        []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
-		BugComponent:    "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
-		Impl:            &TestFixture{defaultTopology: defaultFullTopology},
-		SetUpTimeout:    setupTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"DockingID", "ExtDispID1", "ExtDispID2", "EthernetID", "USBTypeAIDArray"},
+		Vars:            []string{"USBID", "ExtCameraID", "DockingID", "ExtDispID1", "ExtDispID2", "EthernetID", "USBTypeAIDArray"},
+		Params: []testing.FixtureParam{
+			{
+				Name: "storage",
+				Val:  topologyParamVal{defaultTopology: defaultStorageTopology},
+			},
+			{
+				Name:   "storageEnableServoAndDisableTabletMode",
+				Parent: "enableServoAndDisableTabletMode",
+				Val:    topologyParamVal{defaultTopology: defaultStorageTopology},
+			},
+			{
+				Name:   "storageEnableServoAndTabletMode",
+				Parent: "enableServoAndTabletMode",
+				Val:    topologyParamVal{defaultTopology: defaultStorageTopology},
+			},
+			{
+				Name: "camera",
+				Val:  topologyParamVal{defaultTopology: defaultCameraTopology},
+			},
+			{
+				Name: "display",
+				Val:  topologyParamVal{defaultTopology: defaultDisplayTopology},
+			},
+			{
+				Name: "dock",
+				Val:  topologyParamVal{defaultTopology: defaultFullTopology},
+			},
+		},
 	})
 }
 
@@ -137,8 +112,7 @@ func defaultFullTopology(s *testing.FixtState, hostname string) *labapi.PasitHos
 
 // TestFixture is the PASIT test fixture.
 type TestFixture struct {
-	Helper          *Helper
-	defaultTopology func(*testing.FixtState, string) *labapi.PasitHost
+	Helper *Helper
 }
 
 // SetUp configures the fixture.
@@ -156,9 +130,10 @@ func (tf *TestFixture) SetUp(ctx context.Context, s *testing.FixtState) interfac
 		}
 	}
 
-	// No dut topology defined, use default.
 	if pasitTopology == nil {
-		pasitTopology = tf.defaultTopology(s, hostname)
+		// No dut topology defined, use default.
+		params := s.Param().(topologyParamVal)
+		pasitTopology = params.defaultTopology(s, hostname)
 		s.Log("Loaded DUT info from CLI args")
 	}
 

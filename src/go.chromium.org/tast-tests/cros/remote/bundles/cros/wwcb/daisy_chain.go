@@ -42,7 +42,7 @@ func init() {
 			"tast.cros.ui.ChromeUIService",
 		},
 		Data:    []string{"Capabilities.json", utils.VideoFile},
-		Fixture: "wwcbDisplay",
+		Fixture: "wwcb.display",
 	})
 }
 

@@ -30,7 +30,7 @@ func init() {
 		Attr:         []string{"group:wwcb", "group:pasit", "pasit_storage"},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"servo"},
-		Fixture:      "wwcbStorage",
+		Fixture:      "wwcb.storage",
 		ServiceDeps:  []string{"tast.cros.nearbyservice.NearbyShareService"},
 	})
 }

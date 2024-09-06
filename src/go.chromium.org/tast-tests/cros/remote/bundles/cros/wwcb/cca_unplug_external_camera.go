@@ -37,7 +37,7 @@ func init() {
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
 		Attr:         []string{"group:wwcb", "group:pasit", "pasit_camera"},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "wwcbCamera",
+		Fixture:      "wwcb.camera",
 		ServiceDeps: []string{
 			"tast.cros.browser.ChromeService",
 			"tast.cros.apps.AppsService",

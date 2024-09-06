@@ -39,10 +39,10 @@ func init() {
 		Data:         []string{"sample.txt"},
 		Params: []testing.Param{{
 			Name:    "clamshell_mode",
-			Fixture: "wwcbStorageEnableServoAndDisableTabletMode",
+			Fixture: "wwcb.storageEnableServoAndDisableTabletMode",
 		}, {
 			Name:    "tablet_mode",
-			Fixture: "wwcbStorageEnableServoAndTabletMode",
+			Fixture: "wwcb.storageEnableServoAndTabletMode",
 		}},
 	})
 }

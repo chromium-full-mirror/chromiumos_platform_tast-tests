@@ -43,7 +43,7 @@ func init() {
 			"tast.cros.ui.ChromeUIService",
 		},
 		Data:    []string{"Capabilities.json"},
-		Fixture: "wwcbPasitDock",
+		Fixture: "wwcb.dock",
 		Params: []testing.Param{
 			{
 				Name:      "fast",

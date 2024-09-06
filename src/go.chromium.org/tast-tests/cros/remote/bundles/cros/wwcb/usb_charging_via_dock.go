@@ -34,7 +34,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"servo", "newTestItem"},
 		ServiceDeps:  []string{"tast.cros.wwcb.DisplayService", "tast.cros.browser.ChromeService", "tast.cros.ui.ChromeUIService", "tast.cros.ui.ScreenRecorderService"},
-		Fixture:      "wwcbPasitDock",
+		Fixture:      "wwcb.dock",
 		Data:         []string{"Capabilities.json"},
 		Params: []testing.Param{
 			{
