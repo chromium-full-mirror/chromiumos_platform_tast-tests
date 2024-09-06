@@ -22,6 +22,7 @@ import (
 	"go.chromium.org/tast-tests/cros/services/cros/wwcb"
 
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
 )
@@ -149,12 +150,17 @@ func DisconnectDisplayWhileShutdownDUT(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to disconnect the external display: ", err)
 	}
 
-	screenOff, err := utils.GetGamLightingValue(ctx, s, displayIDs.DisplayIds[0])
-	if err != nil {
-		s.Fatal("Failed to get DUT screen light while DUT is shutdown: ", err)
-	}
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		screenOff, err := utils.GetGamLightingValue(ctx, s, displayIDs.DisplayIds[0])
+		if err != nil {
+			return errors.Wrap(err, "failed to get DUT screen light while DUT is shutdown")
+		}
 
-	if screenOff >= screenOn {
-		s.Fatalf("Expect DUT screen light in shutdown state is lower than in turned-on state; shutdown light value: %d, turned-on light value: %d", screenOff, screenOn)
+		if screenOff >= screenOn {
+			return errors.Errorf("expect DUT screen light in shutdown state is lower than in turned-on state; shutdown light value: %d, turned-on light value: %d", screenOff, screenOn)
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 2 * time.Minute, Interval: 5 * time.Second}); err != nil {
+		s.Fatal("Failed to check screen is turned off: ", err)
 	}
 }
