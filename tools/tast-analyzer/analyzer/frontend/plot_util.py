@@ -18,6 +18,9 @@ class PlotKind(enum.StrEnum):
     PLOT_CDF = "plot-cdf"
     """Plots the cumulative distribution function."""
 
+    PLOT_BOX = "plot-box"
+    """Plots the box plot."""
+
 
 def init_plotting() -> None:
     """Initialize plotting."""
@@ -53,6 +56,24 @@ def _plot_cdfs(result: analysis_results.AnalysisResult) -> figure.Figure:
     return fig
 
 
+def _plot_box(result: analysis_results.AnalysisResult) -> figure.Figure:
+    fig, ax = plt.subplots()
+    before_values = result.before_sample.value_map.values()
+    after_values = result.after_sample.value_map.values()
+    sns.boxplot(
+        data={"before": before_values, "after": after_values},
+        color=(0.9, 0.9, 0.9, 0.9),
+        ax=ax,
+    )
+    sns.stripplot(
+        data={"before": before_values, "after": after_values},
+        ax=ax,
+    )
+
+    ax.set_ylabel(result.units())
+    return fig
+
+
 def create_plots(
     *,
     s1_name: str,
@@ -75,10 +96,13 @@ def create_plots(
     for result in results:
         logging.info(f"Creating plots for {result.metric_path()}")
         for plot_kind in plots:
-            assert (
-                plot_kind in PlotKind.PLOT_CDF
-            ), f"Unknown plot kind: {plot_kind}"
-            fig = _plot_cdfs(result)
+            if plot_kind == PlotKind.PLOT_CDF:
+                fig = _plot_cdfs(result)
+            elif plot_kind == PlotKind.PLOT_BOX:
+                fig = _plot_box(result)
+            else:
+                raise ValueError(f"Unknown plot kind: {plot_kind}")
+
             _save_figure_for_result(
                 s1_name, s2_name, result, plot_dir, fig, plot_kind
             )
