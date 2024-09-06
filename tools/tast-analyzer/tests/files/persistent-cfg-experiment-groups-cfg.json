@@ -1,0 +1,10 @@
+{
+  "experiment_groups_cfgs": [
+    {
+      "metric_path_regex_list": [
+        "test1",
+        "test2"
+      ]
+    }
+  ]
+}

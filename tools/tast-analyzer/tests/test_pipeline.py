@@ -120,6 +120,49 @@ class PipelineTest(unittest.TestCase):
         self.assertAlmostEqual(pair.before.bootstrap.bias_estimate, 0.0022606)
         self.assertAlmostEqual(pair.after.bootstrap.bias_estimate, -0.0028447)
 
+    def test_analyze_results_explicit_experiment_group(self) -> None:
+        # Test that explicitly specifying no experiment groups produces no
+        # comparisons for samples with the same label.
+        cfg = analysis_cfg.AnalysisCfg(
+            skip_all_zero_samples=False,
+            alpha=1.0,
+            persistent_cfg=analysis_cfg.PersistentCfg(
+                experiment_groups_cfgs=[]
+            ),
+            multiple_test_cfg=analysis_cfg.MultipleTestCfg.NONE,
+        )
+        results = analyze_results.analyze_results(
+            [
+                FILES_DIR.joinpath("data-complex1.json"),
+            ],
+            cfg,
+        )
+        self.assertEqual(len(results), 0)
+
+        # Test that explicitly specifying experiment groups works. Compare
+        # Ash.Overview.AnimationSmoothness.Enter.ClamshellMode with
+        # Ash.Overview.AnimationSmoothness.Enter.ClamshellMode.2windows.
+        cfg = dataclasses.replace(
+            cfg,
+            persistent_cfg=analysis_cfg.PersistentCfg(
+                experiment_groups_cfgs=[
+                    analysis_cfg.ExperimentGroupsCfg(
+                        metric_path_regex_list=[
+                            "^.*ClamshellMode\.average$",
+                            "^.*ClamshellMode\.2windows\.average$",
+                        ],
+                    )
+                ]
+            ),
+        )
+        results = analyze_results.analyze_results(
+            [
+                FILES_DIR.joinpath("data-complex1.json"),
+            ],
+            cfg,
+        )
+        self.assertEqual(len(results), 1)
+
     def test_analyze_results_persistent_cfg(self) -> None:
         cfg = analysis_cfg.AnalysisCfg(
             skip_all_zero_samples=False,

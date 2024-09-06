@@ -13,9 +13,9 @@ FILES_DIR: pathlib.Path = (
 
 
 class AnalysisCfgTest(unittest.TestCase):
-    def _load_persistent_cfg(self) -> analysis_cfg.PersistentCfg:
+    def _load_persistent_cfg_per_test_cfg(self) -> analysis_cfg.PersistentCfg:
         return analysis_cfg.PersistentCfg.from_json(
-            FILES_DIR.joinpath("persistent-cfg.json").read_text()
+            FILES_DIR.joinpath("persistent-cfg-per-test-cfg.json").read_text()
         )
 
     def _assert_test_metric_allowed(
@@ -35,8 +35,29 @@ class AnalysisCfgTest(unittest.TestCase):
 
         self._assert_test_metric_allowed(cfg, "any", "any")
 
+    def test_experiment_groups_cfg(self) -> None:
+        cfg = analysis_cfg.PersistentCfg.from_json(
+            FILES_DIR.joinpath(
+                "persistent-cfg-experiment-groups-cfg.json"
+            ).read_text()
+        )
+        self.assertEqual(
+            cfg,
+            analysis_cfg.PersistentCfg(
+                experiment_groups_cfgs=[
+                    analysis_cfg.ExperimentGroupsCfg(
+                        metric_path_regex_list=["test1", "test2"]
+                    )
+                ]
+            ),
+        )
+
+    def test_unspecified_experiment_groups_cfg(self) -> None:
+        cfg = self._load_persistent_cfg_per_test_cfg()
+        self.assertIsNone(cfg.experiment_groups_cfgs)
+
     def test_blocked_metrics(self) -> None:
-        cfg = self._load_persistent_cfg()
+        cfg = self._load_persistent_cfg_per_test_cfg()
 
         self._assert_test_metric_blocked(
             cfg, "platform.BootPerfA", "seconds_kernel_to_login"
@@ -62,7 +83,7 @@ class AnalysisCfgTest(unittest.TestCase):
         self._assert_test_metric_blocked(cfg, "any", "any")
 
     def test_allowed_metrics(self) -> None:
-        cfg = self._load_persistent_cfg()
+        cfg = self._load_persistent_cfg_per_test_cfg()
 
         self._assert_test_metric_allowed(
             cfg, "platform.BootPerf", "seconds_kernel_to_login"

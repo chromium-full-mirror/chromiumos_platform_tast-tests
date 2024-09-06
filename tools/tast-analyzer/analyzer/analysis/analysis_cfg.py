@@ -128,7 +128,12 @@ class PersistentCfg:
             A PersistentCfg object.
         """
         d = json.loads(s)
-        d["per_test_cfgs"] = [PerTestCfg(**v) for v in d["per_test_cfgs"]]
+        if "per_test_cfgs" in d:
+            d["per_test_cfgs"] = [PerTestCfg(**v) for v in d["per_test_cfgs"]]
+        if "experiment_groups_cfgs" in d:
+            d["experiment_groups_cfgs"] = [
+                ExperimentGroupsCfg(**v) for v in d["experiment_groups_cfgs"]
+            ]
         return PersistentCfg(**d)
 
 
