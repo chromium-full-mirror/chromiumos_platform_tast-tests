@@ -23,6 +23,7 @@ import (
 	"go.chromium.org/tast-tests/cros/services/cros/wwcb"
 
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
 )
@@ -154,23 +155,31 @@ func SuspendResumeWithExternalDisplay(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	extDispBrightnessSuspend, err := utils.GetGamLightingValue(ctx, s, displayIDs.DisplayIds[1])
-	if err != nil {
-		s.Fatal("Failed to get the external display's brightness when the DUT is suspended: ", err)
-	}
+	var extDispBrightnessSuspend, dutBrightnessSuspend int
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
 
-	dutBrightnessSuspend, err := utils.GetGamLightingValue(ctx, s, displayIDs.DisplayIds[0])
-	if err != nil {
-		s.Fatal("Failed to get the DUT's screen's brightness when the DUT is suspended: ", err)
-	}
+		extDispBrightnessSuspend, err = utils.GetGamLightingValue(ctx, s, displayIDs.DisplayIds[1])
+		if err != nil {
+			return errors.Wrap(err, "failed to get the external display's brightness when the DUT is suspended")
+		}
 
-	// Check the external display & DUT screen to become dark when the DUT is suspended by camera connecting to the host.
-	if extDispBrightnessSuspend >= extDispBrightnessAwake {
-		s.Fatalf("Expect the brightness of the external display to be higher when the DUT is awake than when the DUT is suspended; suspended brightness: %d, awake brightness: %d", extDispBrightnessSuspend, extDispBrightnessAwake)
-	}
+		dutBrightnessSuspend, err = utils.GetGamLightingValue(ctx, s, displayIDs.DisplayIds[0])
+		if err != nil {
+			return errors.Wrap(err, "failed to get the DUT's screen's brightness when the DUT is suspended")
+		}
 
-	if dutBrightnessSuspend >= dutBrightnessAwake {
-		s.Fatalf("Expect the brightness of the DUT to be higher when the DUT is awake than when the DUT is suspended; suspended brightness: %d, awake brightness: %d", dutBrightnessSuspend, dutBrightnessAwake)
+		// Check the external display & DUT screen to become dark when the DUT is suspended by camera connecting to the host.
+		if extDispBrightnessSuspend >= extDispBrightnessAwake {
+			return errors.Errorf("expect the brightness of the external display to be higher when the DUT is awake than when the DUT is suspended; suspended brightness: %d, awake brightness: %d", extDispBrightnessSuspend, extDispBrightnessAwake)
+		}
+
+		if dutBrightnessSuspend >= dutBrightnessAwake {
+			return errors.Errorf("expect the brightness of the DUT to be higher when the DUT is awake than when the DUT is suspended; suspended brightness: %d, awake brightness: %d", dutBrightnessSuspend, dutBrightnessAwake)
+		}
+
+		return nil
+	}, &testing.PollOptions{Timeout: 2 * time.Minute, Interval: 5 * time.Second}); err != nil {
+		s.Fatal("Failed to check screen is turned off: ", err)
 	}
 
 	if err := utils.PowerOnDUT(ctx, pxy, dut); err != nil {
@@ -183,25 +192,30 @@ func SuspendResumeWithExternalDisplay(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	// GoBigSleepLint: Wait for external display screen to show up.
-	testing.Sleep(ctx, 30*time.Second)
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
 
-	extDispBrigthnessResume, err := utils.GetGamLightingValue(ctx, s, displayIDs.DisplayIds[1])
-	if err != nil {
-		s.Fatal("Failed to get the external display's brightness when DUT is resumed: ", err)
+		extDispBrigthnessResume, err := utils.GetGamLightingValue(ctx, s, displayIDs.DisplayIds[1])
+		if err != nil {
+			return errors.Wrap(err, "failed to get the external display's brightness when DUT is resumed")
+		}
+
+		dutBrightnessResume, err := utils.GetGamLightingValue(ctx, s, displayIDs.DisplayIds[0])
+		if err != nil {
+			return errors.Wrap(err, "failed to get the DUT's screen's brightness when DUT is resumed")
+		}
+
+		// Check the external display & DUT screen being turned on when DUT is resumed by the camera connecting to host.
+		if extDispBrightnessSuspend >= extDispBrigthnessResume {
+			return errors.Errorf("expect the brightness of the external display to be higher when the DUT is resumed than when the DUT is suspended; suspended brightness: %d, resumed brightness: %d", extDispBrightnessSuspend, extDispBrigthnessResume)
+		}
+
+		if dutBrightnessSuspend >= dutBrightnessResume {
+			return errors.Errorf("expect the brightness of the DUT to be higher when the DUT is resumed than when the DUT is suspended; suspended brightness: %d, resumed brightness: %d", dutBrightnessSuspend, dutBrightnessResume)
+		}
+
+		return nil
+	}, &testing.PollOptions{Timeout: 2 * time.Minute, Interval: 5 * time.Second}); err != nil {
+		s.Fatal("Failed to check screen is turned on: ", err)
 	}
 
-	dutBrightnessResume, err := utils.GetGamLightingValue(ctx, s, displayIDs.DisplayIds[0])
-	if err != nil {
-		s.Fatal("Failed to get the DUT's screen's brightness when DUT is resumed: ", err)
-	}
-
-	// Check the external display & DUT screen being turned on when DUT is resumed by the camera connecting to host.
-	if extDispBrightnessSuspend >= extDispBrigthnessResume {
-		s.Fatalf("Expect the brightness of the external display to be higher when the DUT is resumed than when the DUT is suspended; suspended brightness: %d, resumed brightness: %d", extDispBrightnessSuspend, extDispBrigthnessResume)
-	}
-
-	if dutBrightnessSuspend >= dutBrightnessResume {
-		s.Fatalf("Expect the brightness of the DUT to be higher when the DUT is resumed than when the DUT is suspended; suspended brightness: %d, resumed brightness: %d", dutBrightnessSuspend, dutBrightnessResume)
-	}
 }
