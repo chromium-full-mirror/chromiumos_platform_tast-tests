@@ -28,7 +28,7 @@ func init() {
 			"cienet-firmware@cienet.corp-partner.google.com",
 		},
 		BugComponent: "b:750299",
-		Attr:         []string{"group:mainline", "informational", "group:firmware", "firmware_unstable"},
+		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level2"},
 		SoftwareDeps: []string{"crossystem", "flashrom"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Timeout:      25 * time.Minute,
