@@ -710,13 +710,13 @@ func (uiHelper *UIHelper) enterIntoTextInput(content, textInputName string) acti
 
 func (uiHelper *UIHelper) disconnectBatteryByCr50() action.Action {
 	return func(ctx context.Context) error {
-		return uiHelper.FirmwareHelper.Servo.RunGSCCommand(ctx, "bpforce disconnect atboot")
+		return uiHelper.FirmwareHelper.Servo.CheckGSCCommandOutput(ctx, "bpforce disconnect atboot", []string{"batt pres:"})
 	}
 }
 
 func (uiHelper *UIHelper) connectBatteryByCr50() action.Action {
 	return func(ctx context.Context) error {
-		return uiHelper.FirmwareHelper.Servo.RunGSCCommand(ctx, "bpforce follow_batt_pres atboot")
+		return uiHelper.FirmwareHelper.Servo.CheckGSCCommandOutput(ctx, "bpforce follow_batt_pres atboot", []string{"batt pres:"})
 	}
 }
 
