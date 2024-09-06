@@ -132,6 +132,19 @@ func (ms *Ms365) InputPassword(password string) uiauto.Action {
 	)
 }
 
+// DoNotSavePassword proceeds through optional "Save password?" Chrome popup shown after entering password.
+func (ms *Ms365) DoNotSavePassword() uiauto.Action {
+	chromeSavePasswordWindow := nodewith.Role(role.Window).Name("Save password?")
+	chromeNeverSaveButton := nodewith.Ancestor(chromeSavePasswordWindow).Role(role.Button).Name("Never")
+
+	return func(ctx context.Context) error {
+		if err := ms.ui.EnsureGoneFor(chromeSavePasswordWindow, 5*time.Second)(ctx); err != nil {
+			return ms.ui.LeftClickUntil(chromeNeverSaveButton, ms.ui.Gone(chromeNeverSaveButton))(ctx)
+		}
+		return nil
+	}
+}
+
 // ConfirmSignIn proceeds through optional Microsoft security information dialog shown after entering login.
 func (ms *Ms365) ConfirmSignIn() uiauto.Action {
 	msConfirmSignInWindow := nodewith.Role(role.RootWebArea).Name("Is your security info still accurate?")
@@ -194,6 +207,7 @@ func (ms *Ms365) LoginToMicrosoft365(setupCompleteDialogFinder *nodewith.Finder,
 			}
 			return uiauto.Combine("Input password and stay signed in",
 				ms.InputPassword(ms.Password),
+				ms.DoNotSavePassword(),
 				ms.ConfirmSignIn(),
 				ms.StaySignedIn(),
 			)(ctx)
@@ -289,6 +303,7 @@ func (ms *Ms365) InstallPWA(ctx context.Context, cr *chrome.Chrome) error {
 		ms.ui.LeftClick(signInButton),
 		ms.InputUserName(ms.UserName),
 		ms.InputPassword(ms.Password),
+		ms.DoNotSavePassword(),
 		ms.StaySignedIn(),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to login to Office site")
