@@ -28,7 +28,7 @@ func init() {
 			"gsc_dt_shield", "gsc_h1_shield", "gsc_ot_shield",
 			"gsc_image_ti50",
 			"gsc_nightly"},
-		Fixture: fixture.GSCUpdate,
+		Fixture: fixture.SystemDevboard,
 	})
 }
 
@@ -41,18 +41,16 @@ func GSCUpdateRollback(ctx context.Context, s *testing.State) {
 
 	f := s.FixtValue().(*fixture.Value)
 
-	// Validate image under test path.
-	if f.ImagePath == "" {
-		s.Fatal("Supply BUILDURL")
-	}
+	// Inform fixture that this test may replace the firmware image in flash.
+	th.MustSucceed(f.ImageMayBeUpdatedByTest(), "image may be updated")
 
 	// Validate debug image is available
-	if f.DebugImagePath == "" {
+	debugImage, err := f.DebugImagePath(ctx)
+	if err != nil {
 		s.Fatal("DUT must have DBG image")
 	}
 
 	currentImage := f.ImagePath
-	debugImage := f.DebugImagePath
 
 	_, currentVer, _, _, err := b.GSCToolBinVersion(ctx, currentImage)
 	th.MustSucceed(err, "Unable to get version from current image "+currentImage)

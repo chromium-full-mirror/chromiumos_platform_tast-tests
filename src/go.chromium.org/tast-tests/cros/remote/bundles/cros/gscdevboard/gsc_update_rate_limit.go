@@ -43,7 +43,7 @@ func init() {
 			"gsc_dt_shield", "gsc_h1_shield", "gsc_ot_shield",
 			"gsc_image_ti50",
 			"gsc_nightly"},
-		Fixture: fixture.GSCUpdate,
+		Fixture: fixture.GSCOpenCCD,
 		Params: []testing.Param{{
 			Name: "reboot",
 			Val: updateConfig{
@@ -61,12 +61,10 @@ func init() {
 }
 
 func reset(ctx context.Context, s *testing.State, b utils.DevboardHelper, i *ti50.CrOSImage, resetType string) {
-
 	var resetFlag uint32
 	switch resetType {
 	case reboot:
 		s.Log("Running reboot")
-		i.CCDOpen(ctx)
 		i.SendConsoleRebootCmd(ctx)
 		resetFlag = rebootFlag
 	case powerOn:
@@ -105,10 +103,8 @@ func GSCUpdateRateLimit(ctx context.Context, s *testing.State) {
 	resetType := testConfig.resetType
 	limitsUpdate := testConfig.limitsUpdate
 
-	// Valid image under test path.
-	if f.ImagePath == "" {
-		s.Fatal("Supply buildurl")
-	}
+	// Inform fixture that this test may replace the firmware image in flash.
+	th.MustSucceed(f.ImageMayBeUpdatedByTest(), "image may be updated")
 
 	imageUnderTest := f.ImagePath
 	_, releaseVer, _, _, err := b.GSCToolBinVersion(ctx, imageUnderTest)

@@ -38,7 +38,7 @@ func init() {
 			"gsc_dt_ab", "gsc_dt_shield", "gsc_ot_shield",
 			"gsc_image_ti50",
 			"gsc_nightly"},
-		Fixture: fixture.GSCUpdate,
+		Fixture: fixture.SystemDevboard,
 	})
 }
 
@@ -50,11 +50,13 @@ func Ti50CCDUpdate(ctx context.Context, s *testing.State) {
 	i := ti50.MustOpenCrOSImage(ctx, b, s)
 	defer i.Close(ctx)
 
-	// Valid image under test path.
-	if f.ImagePath == "" {
-		s.Fatal("Supply buildurl")
+	// Inform fixture that this test may replace the firmware image in flash.
+	th.MustSucceed(f.ImageMayBeUpdatedByTest(), "image may be updated")
+
+	debugImage, err := f.DebugImagePath(ctx)
+	if err != nil {
+		s.Fatal("DUT must have DBG image")
 	}
-	debugImage := f.DebugImagePath
 
 	_, currentVer, _, _, err := b.GSCToolBinVersion(ctx, f.ImagePath)
 	th.MustSucceed(err, "Unable to get version from current image "+f.ImagePath)

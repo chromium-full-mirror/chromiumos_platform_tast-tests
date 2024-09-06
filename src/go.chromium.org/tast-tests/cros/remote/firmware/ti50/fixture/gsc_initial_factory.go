@@ -58,21 +58,14 @@ func (c *initialFactoryImpl) SetUp(ctx context.Context, s *testing.FixtState) in
 	if c.v.ImagePath == "" {
 		s.Fatal("InitialFactory fixture must specify a image (i.e. through buildurl var)")
 	}
-
-	testing.ContextLog(ctx, "Saving images for GSC Initial Factory Fixture")
-	efiImage, err := DownloadEfiImage(ctx, c.v.TestbedProperties)
-	if err != nil {
+	if _, err := c.v.EfiImagePath(ctx); err != nil {
 		s.Fatal(err, "failed to download the efi image")
 	}
-	debugImage, err := DownloadDebugImage(ctx, c.v.TestbedProperties)
-	if err != nil {
+	if _, err := c.v.DebugImagePath(ctx); err != nil {
 		if c.v.TestbedProperties.TestbedType == ti50.GscH1Shield {
 			s.Fatal(err, "failed to download the debug image")
 		}
-		debugImage = ""
 	}
-	c.v.DebugImagePath = debugImage
-	c.v.EfiImagePath = efiImage
 	testing.ContextLog(ctx, "End GSC Initial Factory Setup")
 	return c.v
 }
@@ -154,7 +147,8 @@ func setupImageAndEraseInfo(ctx context.Context, v *Value, s TestingState) {
 		setupCr50Image(ctx, s, b, v.ImagePath, v.FwConfigJsons, v.TestbedProperties, true)
 	} else {
 		testing.ContextLog(ctx, "Flashing EFI image")
-		mustSucceed(s, b.Setup(ctx, v.EfiImagePath, []string{}), "Setup EFI image")
+		efiImagePath, _ := v.EfiImagePath(ctx)
+		mustSucceed(s, b.Setup(ctx, efiImagePath, []string{}), "Setup EFI image")
 		eraseInfoPage(ctx, v, s)
 
 		testing.ContextLog(ctx, "Flashing image under test")
@@ -163,7 +157,7 @@ func setupImageAndEraseInfo(ctx context.Context, v *Value, s TestingState) {
 	}
 }
 
-func (c *initialFactoryImpl) UpdateAndRunEraseFlashInfo(ctx context.Context, s *testing.FixtTestState) {
+func (c *initialFactoryImpl) UpdateAndRunEraseFlashInfo(ctx context.Context, s TestingState) {
 	// Host emulation does not need to erase anything, it always started erased
 	if c.v.TestbedProperties.TestbedType == ti50.GscHostEmulation {
 		return
@@ -180,15 +174,15 @@ func (c *initialFactoryImpl) UpdateAndRunEraseFlashInfo(ctx context.Context, s *
 func (c *initialFactoryImpl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 	testing.ContextLog(ctx, "Start GSC Initial Factory Fixture PreTest")
 
+	// Inform fixture that this test may replace the firmware image in flash.
+	mustSucceed(s, c.v.ImageMayBeUpdatedByTest(), "Failed to mark image as possibly updated")
+
 	c.UpdateAndRunEraseFlashInfo(ctx, s)
 
 	testing.ContextLog(ctx, "Board ready for test")
 }
 
 func (c *initialFactoryImpl) PostTest(ctx context.Context, s *testing.FixtTestState) {
-	testing.ContextLog(ctx, "Start GSC Initial Factory Fixture PostTest")
-
-	c.UpdateAndRunEraseFlashInfo(ctx, s)
 }
 
 func (c *initialFactoryImpl) Reset(ctx context.Context) error {
@@ -196,8 +190,7 @@ func (c *initialFactoryImpl) Reset(ctx context.Context) error {
 }
 
 func (c *initialFactoryImpl) TearDown(ctx context.Context, s *testing.FixtState) {
-	// Let's always make sure that the image from the parent SystemDevboard is
-	// set up correctly after finishing with this fixture since it is possible
-	// in errors cases for the image under test to not on the device anymore.
-	setupImage(ctx, s.ParentValue().(*Value), s)
+	testing.ContextLog(ctx, "Start GSC Initial Factory Fixture TearDown")
+
+	c.UpdateAndRunEraseFlashInfo(ctx, s)
 }

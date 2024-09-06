@@ -21,6 +21,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
 	remoteTi50 "go.chromium.org/tast-tests/cros/remote/firmware/ti50"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -43,7 +44,7 @@ const (
 	resetTimeout    = 5 * time.Second
 	tearDownTimeout = 5 * time.Second
 	preTestTimeout  = 15 * time.Second
-	postTestTimeout = 5 * time.Second
+	postTestTimeout = rescueTwiceTimeout
 )
 
 type extraPreTestMethod func(ctx context.Context, board ti50.DevBoard) error
@@ -95,18 +96,57 @@ func init() {
 
 // Value allows tests to obtain a ti50 devboard.
 type Value struct {
-	grpcConn          *grpc.ClientConn
-	devboard          *remoteTi50.DUTControlAndreiboard
-	ImagePath         string
-	FwConfigJsons     []string
-	TestbedProperties remoteTi50.TestbedProperties
-	EfiImagePath      string
-	DebugImagePath    string
+	grpcConn                *grpc.ClientConn
+	devboard                *remoteTi50.DUTControlAndreiboard
+	ImagePath               string
+	FwConfigJsons           []string
+	TestbedProperties       remoteTi50.TestbedProperties
+	efiImagePath            string
+	debugImagePath          string
+	imageMayBeUpdatedByTest bool
 }
 
 // DevBoard returns the existing DevBoard connection instance.
 func (v *Value) DevBoard() *remoteTi50.DUTControlAndreiboard {
 	return v.devboard
+}
+
+// ImageMayBeUpdatedByTest must be called by test cases which may update (by means of CCD or
+// otherwise) to other firmware images besides the one declared in this fixture.  This method
+// would typically be called at the top of such tests, before any actual test logic runs.
+func (v *Value) ImageMayBeUpdatedByTest() error {
+	if v.ImagePath == "" {
+		return errors.New("Supply buildurl")
+	}
+	v.imageMayBeUpdatedByTest = true
+	return nil
+}
+
+// EfiImagePath returns the path to an EFI image suitable for the current testbed, if one exists.
+func (v *Value) EfiImagePath(ctx context.Context) (string, error) {
+	if v.efiImagePath != "" {
+		return v.efiImagePath, nil
+	}
+	efiImage, err := DownloadEfiImage(ctx, v.TestbedProperties)
+	if err != nil {
+		return "", err
+	}
+	v.efiImagePath = efiImage
+	return v.efiImagePath, nil
+}
+
+// DebugImagePath returns the path to an debug image suitable for the current testbed, if one
+// exists.  Debug image is required for H1, but not strictly required for DT.
+func (v *Value) DebugImagePath(ctx context.Context) (string, error) {
+	if v.debugImagePath != "" {
+		return v.efiImagePath, nil
+	}
+	debugImage, err := DownloadDebugImage(ctx, v.TestbedProperties)
+	if err != nil {
+		return "", err
+	}
+	v.debugImagePath = debugImage
+	return v.debugImagePath, nil
 }
 
 type devboardFixture struct {
@@ -374,6 +414,10 @@ func (i *devboardFixture) PreTest(ctx context.Context, s *testing.FixtTestState)
 	// starting a host emulation instance, or resetting a devboard and its debugger to a known
 	// state.
 	mustSucceed(s, i.v.devboard.StartSession(ctx, ti50.StrapReset), "Start testing session")
+
+	// Reset state variable, allowing this next test to flag if it may update the storage, for
+	// `PostTest()` to inspect.
+	i.v.imageMayBeUpdatedByTest = false
 }
 
 func (i *devboardFixture) logResultInfo(ctx context.Context, s *testing.FixtTestState) {
@@ -388,6 +432,11 @@ func (i *devboardFixture) PostTest(ctx context.Context, s *testing.FixtTestState
 	testing.ContextLog(ctx, "Ending OTT session")
 	if err := b.EndSession(ctx); err != nil {
 		s.Error("Failed to end session: ", err)
+	}
+	if i.v.imageMayBeUpdatedByTest {
+		// Let's make sure that the image from this fixture is set up correctly after
+		// finishing the test since it's possible the test has updated to something else.
+		setupImage(ctx, i.v, s)
 	}
 }
 

@@ -25,7 +25,7 @@ func init() {
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
 		Attr:         []string{"group:gsc", "gsc_image_ti50", "gsc_nightly"},
-		Fixture:      fixture.GSCUpdate,
+		Fixture:      fixture.SystemDevboard,
 		Params: []testing.Param{{
 			Name:      "cr50_0_3_22",
 			Val:       "0.3.22",
@@ -56,19 +56,18 @@ func GSCFactoryUpdate(ctx context.Context, s *testing.State) {
 	f := s.FixtValue().(*fixture.Value)
 	factoryVersion := s.Param().(string)
 
-	// Valid image under test path.
-	if f.ImagePath == "" {
-		s.Fatal("Supply buildurl")
-	}
-	if f.EfiImagePath == "" {
+	// Inform fixture that this test may replace the firmware image in flash.
+	th.MustSucceed(f.ImageMayBeUpdatedByTest(), "image may be updated")
+
+	efiImage, err := f.EfiImagePath(ctx)
+	if err != nil {
 		s.Fatal("Failed to find efi image")
 	}
-	if f.DebugImagePath == "" {
+	debugImage, err := f.DebugImagePath(ctx)
+	if err != nil {
 		s.Fatal("Failed to find debug image")
 	}
 	imageUnderTest := f.ImagePath
-	debugImage := f.DebugImagePath
-	efiImage := f.EfiImagePath
 
 	// Download the factory image image.
 	fwName := fixture.FindFwName(f.TestbedProperties.TestbedType)

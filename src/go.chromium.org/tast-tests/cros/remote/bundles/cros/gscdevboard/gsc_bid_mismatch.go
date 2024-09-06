@@ -51,14 +51,13 @@ func GSCBIDMismatch(ctx context.Context, s *testing.State) {
 
 	f := s.FixtValue().(*fixture.Value)
 
-	// Valid image under test path.
-	if f.ImagePath == "" {
-		s.Fatal("Supply buildurl")
+	// Inform fixture that this test may replace the firmware image in flash.
+	th.MustSucceed(f.ImageMayBeUpdatedByTest(), "image may be updated")
+
+	debugImage, err := f.DebugImagePath(ctx)
+	if err != nil {
+		s.Fatalf("Failed to find debug image: %s", err)
 	}
-	if f.DebugImagePath == "" {
-		s.Fatal("Failed to find debug image")
-	}
-	debugImage := f.DebugImagePath
 
 	_, debugVer, _, _, err := b.GSCToolBinVersion(ctx, debugImage)
 	th.MustSucceed(err, "Unable to get version from "+debugImage)

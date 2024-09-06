@@ -34,7 +34,7 @@ func init() {
 			"gsc_dt_shield", "gsc_h1_shield", "gsc_ot_shield",
 			"gsc_image_ti50",
 			"gsc_nightly"},
-		Fixture: fixture.GSCUpdate,
+		Fixture: fixture.SystemDevboard,
 		Params: []testing.Param{{
 			Name: "i2c",
 			Val:  ti50.TpmBusI2c,
@@ -75,13 +75,12 @@ func GSCUpdatePostReset(ctx context.Context, s *testing.State) {
 	f := s.FixtValue().(*fixture.Value)
 	testBus := s.Param().(ti50.TpmBus)
 
-	// Valid image under test path.
-	if f.ImagePath == "" {
-		s.Fatal("Supply buildurl")
-	}
+	// Inform fixture that this test may replace the firmware image in flash.
+	th.MustSucceed(f.ImageMayBeUpdatedByTest(), "image may be updated")
 
 	currentImage := f.ImagePath
-	debugImage := f.DebugImagePath
+	debugImage, err := f.DebugImagePath(ctx)
+	th.MustSucceed(err, "Failed to find debug image")
 
 	_, currentVer, _, _, err := b.GSCToolBinVersion(ctx, currentImage)
 	th.MustSucceed(err, "Unable to get version from current image "+currentImage)
