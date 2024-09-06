@@ -7,16 +7,25 @@ package secagentdcommon
 
 import (
 	"context"
+	"io"
 	"os"
 	"path/filepath"
+	"strings"
+	"time"
 
 	xdr "go.chromium.org/chromiumos/xdr/secagentd"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/fsutil"
+	"go.chromium.org/tast/core/testing"
 )
 
-const kernelTraceFile = "/sys/kernel/debug/tracing/trace"
+const (
+	// kernelTraceFile where bpf kernel printfs are logged to.
+	kernelTraceFile = "/sys/kernel/debug/tracing/trace"
+	// secagentdLogFile where secagentd service sends logs to.
+	secagentdLogFile = "/var/log/secagentd.log"
+)
 
 // CheckCommon verifies that the common message fields are filled with appropriate values.
 func CheckCommon(common *xdr.CommonEventVariantDataFields) error {
@@ -50,4 +59,40 @@ func OnErrorSaveKernelTrace(ctx context.Context, outDir string, hasError func() 
 
 	}
 	return nil
+}
+
+// ClearSecagentdLog clears out the secagentd.log file.
+func ClearSecagentdLog() error {
+	err := os.Truncate(secagentdLogFile, 0)
+	if err != nil {
+		return errors.Wrap(err, "unable to clear "+secagentdLogFile)
+	}
+	return nil
+}
+
+// WaitForStringInLog waits for a specific string to appear in the secagentd.log
+// The file should be cleared prior to restarting the daemon via ClearSecagentdLog
+// prior to waiting for a string. Failure to do so means that strings from
+// past runs may abort the wait prematurely.
+func WaitForStringInLog(ctx context.Context, text string) error {
+	offset := int64(0)
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		loginfo, err := os.Stat(secagentdLogFile)
+		if err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to stat "+secagentdLogFile))
+		}
+		currentSize := loginfo.Size()
+		buff := make([]byte, currentSize-offset)
+		logFile, err := os.Open(secagentdLogFile)
+		defer logFile.Close()
+		bytesRead, err := logFile.ReadAt(buff, offset)
+		if err != nil && err != io.EOF {
+			return testing.PollBreak(errors.Wrap(err, "failed to read "+secagentdLogFile))
+		}
+		offset += int64(bytesRead)
+		if !strings.Contains(string(buff), text) {
+			return errors.New("could not find " + text + " in " + logFile.Name())
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 15 * time.Second, Interval: 2 * time.Second})
 }
