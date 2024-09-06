@@ -18,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/tape"
 	"go.chromium.org/tast-tests/cros/remote/gaiaenrollment"
+	"go.chromium.org/tast-tests/cros/remote/log"
 	"go.chromium.org/tast-tests/cros/services/cros/graphics"
 	"go.chromium.org/tast-tests/cros/services/cros/hwsec"
 	ps "go.chromium.org/tast-tests/cros/services/cros/policy"
@@ -29,7 +30,7 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-const zeroTouchEnrollmentTimeout = 25 * time.Minute
+const zeroTouchEnrollmentTimeout = 30 * time.Minute
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -45,7 +46,7 @@ func init() {
 		SoftwareDeps: []string{"reboot", "chrome"},
 		ServiceDeps:  []string{"tast.cros.policy.PolicyService", "tast.cros.tape.Service", "tast.cros.hwsec.OwnershipService", "tast.cros.graphics.ScreenshotService"},
 		Fixture:      fixture.CleanOwnership,
-		Timeout:      30 * time.Minute,
+		Timeout:      zeroTouchEnrollmentTimeout,
 		SearchFlags: []*testing.StringPair{{
 			Key: "feature_id",
 			// Zero Touch Enrollment.
@@ -101,6 +102,7 @@ func ZeroTouchEnrollment(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, 20*time.Second)
 	defer cancel()
+	defer log.Collect(cleanupCtx, s.DUT())
 
 	name, err := preProvisionDevice(ctx, serialNumber, hardwareModel, deviceProvisionToken, customerID, batchKey)
 	if err != nil {
@@ -124,15 +126,12 @@ func ZeroTouchEnrollment(ctx context.Context, s *testing.State) {
 	}
 	defer cl.Close(cleanupCtx)
 
-	screenshotService := graphics.NewScreenshotServiceClient(cl.Conn)
-	captureScreenshotOnError := func(ctx context.Context, hasError func() bool) {
-		if !hasError() {
+	defer func() {
+		if !s.HasError() {
 			return
 		}
-
-		screenshotService.CaptureScreenshot(ctx, &graphics.CaptureScreenshotRequest{FilePrefix: "enrollmentError"})
-	}
-	defer captureScreenshotOnError(cleanupCtx, s.HasError)
+		captureScreenshot(cleanupCtx, "test-failure", s)
+	}()
 
 	tapeClient, err := tape.NewClient(ctx, []byte(s.RequiredVar(tape.ServiceAccountVar)))
 	if err != nil {
@@ -162,12 +161,14 @@ func ZeroTouchEnrollment(ctx context.Context, s *testing.State) {
 	// It may take a while for our preprovisioning command to succeed, wait for a bit and then retry ZTE a few times.
 	// GoBigSleepLint: Waiting a bit speeds up the test because provisioning takes time.
 	testing.Sleep(ctx, time.Minute)
+	attempt := 0
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		// Give ZTE attempt 5 minutes to succeed, then retry.
 		oobeCtx, cancel := context.WithTimeout(ctx, 5*time.Minute)
 		defer cancel()
 
 		// Reconnect to the device because cleaning the TPM restarts Chrome.
+		attempt++
 		cl, err = rpc.Dial(oobeCtx, s.DUT(), s.RPCHint())
 		if err != nil {
 			return errors.Wrap(err, "failed to connect to the RPC service on the DUT")
@@ -180,6 +181,9 @@ func ZeroTouchEnrollment(ctx context.Context, s *testing.State) {
 			DmserverURL: dmServerURL,
 			ManifestKey: s.RequiredVar("ui.signinProfileTestExtensionManifestKey"),
 		}); err != nil {
+			s.Logf("Failed to ZTE-enroll on attempt %d with error: %s", attempt, err)
+			captureScreenshot(ctx, fmt.Sprintf("attempt-%d-failure", attempt), s)
+
 			// Clear TPM to reset any state left by the failed ZTE attempt.
 			ownershipClient := hwsec.NewOwnershipServiceClient(cl.Conn)
 
@@ -195,6 +199,17 @@ func ZeroTouchEnrollment(ctx context.Context, s *testing.State) {
 	}, &testing.PollOptions{Interval: 2 * time.Minute}); err != nil {
 		s.Fatal("Failed to ZTE enroll using chrome: ", err)
 	}
+}
+
+func captureScreenshot(ctx context.Context, filename string, s *testing.State) {
+	cl, err := rpc.Dial(ctx, s.DUT(), s.RPCHint())
+	if err != nil {
+		s.Error("Failed to connect to the device to take screenshot: ", err)
+		return
+	}
+	defer cl.Close(ctx)
+	screenshotService := graphics.NewScreenshotServiceClient(cl.Conn)
+	screenshotService.CaptureScreenshot(ctx, &graphics.CaptureScreenshotRequest{FilePrefix: filename})
 }
 
 func setVpdValuesForInitialEnrollment(ctx context.Context, dutConn *ssh.Conn) error {
