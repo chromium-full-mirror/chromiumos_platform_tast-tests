@@ -174,7 +174,6 @@ func (e *Env) Cleanup(ctx context.Context) error {
 		// We observed that in some cases this cmd may eat up all the remaining
 		// time, and thus the following cleanup won't be executed. Set a deadline
 		// explicitly here to avoid it.
-		// TODO(jiejiang): It seems that cmdCtx is not respected in some cases.
 		cmdCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 		defer cancel()
 		if err := testexec.CommandContext(cmdCtx, "ip", "netns", "del", e.NetNSName).Run(testexec.DumpLogOnError); err != nil {

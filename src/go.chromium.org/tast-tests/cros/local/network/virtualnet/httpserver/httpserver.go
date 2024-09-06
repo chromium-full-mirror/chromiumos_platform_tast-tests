@@ -106,7 +106,11 @@ func (h *httpServer) Start(ctx context.Context, env *env.Env) (retErr error) {
 
 // Stop terminates the process running the HTTP server.
 func (h *httpServer) Stop(ctx context.Context) error {
-	h.server.Shutdown(ctx)
+	// Use Close() instead of Shutdown() since the latter will wait for connection
+	// to become idle indefinitely, and we don't need a graceful shutdown here.
+	if err := h.server.Close(); err != nil {
+		return errors.Wrap(err, "failed to close HTTP server")
+	}
 	return nil
 }
 
