@@ -240,9 +240,9 @@ def construct_experiment_groups_list(
     # depending on the configuration. In this case they are processed twice.
     # TODO(b/365684928): Consider how to handle the case if there are duplicated
     # groups lists.
-    if cfg.persistent_cfg.experiment_groups_cfgs is not None:
+    if cfg.experiment_cfg.experiment_groups_cfgs is not None:
         groups_list += _construct_explicit_experiment_groups_list(
-            samples, cfg.persistent_cfg.experiment_groups_cfgs
+            samples, cfg.experiment_cfg.experiment_groups_cfgs
         )
 
     logging.info(

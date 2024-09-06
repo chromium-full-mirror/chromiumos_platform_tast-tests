@@ -174,7 +174,7 @@ class AnalysisTest(unittest.TestCase):
         before_samples = self._load_before_samples()
         before_samples_by_id = self._samples_by_id(before_samples)
         cfg = analysis_cfg.AnalysisCfg(
-            persistent_cfg=analysis_cfg.PersistentCfg(
+            experiment_cfg=analysis_cfg.ExperimentCfg(
                 experiment_groups_cfgs=[
                     analysis_cfg.ExperimentGroupsCfg(
                         metric_path_regex_list=[
@@ -449,15 +449,15 @@ class AnalysisTest(unittest.TestCase):
         self.assertAlmostEqual(pruned[1].pairs[1].hypothesis_result.p, 0.03)
         self.assertAlmostEqual(pruned[1].pairs[2].hypothesis_result.p, 0.03)
 
-    def test_prune_persistent_cfg(self) -> None:
+    def test_prune_experiment_cfg(self) -> None:
         samples = self._load_before_samples()
         samples_by_id = self._samples_by_id(samples)
 
-        cfg = analysis_cfg.PersistentCfg()
-        no_change = analyze_results._prune_persistent_cfg(samples, cfg)
+        cfg = analysis_cfg.ExperimentCfg()
+        no_change = analyze_results._prune_experiment_cfg(samples, cfg)
         self.assertEqual(no_change, samples)
 
-        cfg = analysis_cfg.PersistentCfg(
+        cfg = analysis_cfg.ExperimentCfg(
             per_test_cfgs=[
                 analysis_cfg.PerTestCfg(
                     test_name_regex="ui\\.OverviewPerf",
@@ -465,7 +465,7 @@ class AnalysisTest(unittest.TestCase):
                 )
             ]
         )
-        only_one = analyze_results._prune_persistent_cfg(samples, cfg)
+        only_one = analyze_results._prune_experiment_cfg(samples, cfg)
 
         self.assertEqual(
             only_one, [samples_by_id["before.ui.OverviewPerf.Test.One.average"]]

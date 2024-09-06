@@ -13,37 +13,37 @@ FILES_DIR: pathlib.Path = (
 
 
 class AnalysisCfgTest(unittest.TestCase):
-    def _load_persistent_cfg_per_test_cfg(self) -> analysis_cfg.PersistentCfg:
-        return analysis_cfg.PersistentCfg.from_json(
-            FILES_DIR.joinpath("persistent-cfg-per-test-cfg.json").read_text()
+    def _load_experiment_cfg_per_test_cfg(self) -> analysis_cfg.ExperimentCfg:
+        return analysis_cfg.ExperimentCfg.from_json(
+            FILES_DIR.joinpath("experiment-cfg-per-test-cfg.json").read_text()
         )
 
     def _assert_test_metric_allowed(
-        self, cfg: analysis_cfg.PersistentCfg, test_name: str, metric_name: str
+        self, cfg: analysis_cfg.ExperimentCfg, test_name: str, metric_name: str
     ) -> None:
         per_test_cfg = cfg.compute_per_test_cfg(test_name)
         self.assertTrue(per_test_cfg.metric_allowed(metric_name))
 
     def _assert_test_metric_blocked(
-        self, cfg: analysis_cfg.PersistentCfg, test_name: str, metric_name: str
+        self, cfg: analysis_cfg.ExperimentCfg, test_name: str, metric_name: str
     ) -> None:
         per_test_cfg = cfg.compute_per_test_cfg(test_name)
         self.assertFalse(per_test_cfg.metric_allowed(metric_name))
 
     def test_allow_default(self) -> None:
-        cfg = analysis_cfg.PersistentCfg()
+        cfg = analysis_cfg.ExperimentCfg()
 
         self._assert_test_metric_allowed(cfg, "any", "any")
 
     def test_experiment_groups_cfg(self) -> None:
-        cfg = analysis_cfg.PersistentCfg.from_json(
+        cfg = analysis_cfg.ExperimentCfg.from_json(
             FILES_DIR.joinpath(
-                "persistent-cfg-experiment-groups-cfg.json"
+                "experiment-cfg-experiment-groups-cfg.json"
             ).read_text()
         )
         self.assertEqual(
             cfg,
-            analysis_cfg.PersistentCfg(
+            analysis_cfg.ExperimentCfg(
                 experiment_groups_cfgs=[
                     analysis_cfg.ExperimentGroupsCfg(
                         metric_path_regex_list=["test1", "test2"]
@@ -53,11 +53,11 @@ class AnalysisCfgTest(unittest.TestCase):
         )
 
     def test_unspecified_experiment_groups_cfg(self) -> None:
-        cfg = self._load_persistent_cfg_per_test_cfg()
+        cfg = self._load_experiment_cfg_per_test_cfg()
         self.assertIsNone(cfg.experiment_groups_cfgs)
 
     def test_blocked_metrics(self) -> None:
-        cfg = self._load_persistent_cfg_per_test_cfg()
+        cfg = self._load_experiment_cfg_per_test_cfg()
 
         self._assert_test_metric_blocked(
             cfg, "platform.BootPerfA", "seconds_kernel_to_login"
@@ -83,7 +83,7 @@ class AnalysisCfgTest(unittest.TestCase):
         self._assert_test_metric_blocked(cfg, "any", "any")
 
     def test_allowed_metrics(self) -> None:
-        cfg = self._load_persistent_cfg_per_test_cfg()
+        cfg = self._load_experiment_cfg_per_test_cfg()
 
         self._assert_test_metric_allowed(
             cfg, "platform.BootPerf", "seconds_kernel_to_login"

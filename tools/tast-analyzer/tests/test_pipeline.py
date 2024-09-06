@@ -126,7 +126,7 @@ class PipelineTest(unittest.TestCase):
         cfg = analysis_cfg.AnalysisCfg(
             skip_all_zero_samples=False,
             alpha=1.0,
-            persistent_cfg=analysis_cfg.PersistentCfg(
+            experiment_cfg=analysis_cfg.ExperimentCfg(
                 experiment_groups_cfgs=[]
             ),
             multiple_test_cfg=analysis_cfg.MultipleTestCfg.NONE,
@@ -144,7 +144,7 @@ class PipelineTest(unittest.TestCase):
         # Ash.Overview.AnimationSmoothness.Enter.ClamshellMode.2windows.
         cfg = dataclasses.replace(
             cfg,
-            persistent_cfg=analysis_cfg.PersistentCfg(
+            experiment_cfg=analysis_cfg.ExperimentCfg(
                 experiment_groups_cfgs=[
                     analysis_cfg.ExperimentGroupsCfg(
                         metric_path_regex_list=[
@@ -163,11 +163,11 @@ class PipelineTest(unittest.TestCase):
         )
         self.assertEqual(len(results), 1)
 
-    def test_analyze_results_persistent_cfg(self) -> None:
+    def test_analyze_results_experiment_cfg(self) -> None:
         cfg = analysis_cfg.AnalysisCfg(
             skip_all_zero_samples=False,
             alpha=1.0,
-            persistent_cfg=analysis_cfg.PersistentCfg(per_test_cfgs=[]),
+            experiment_cfg=analysis_cfg.ExperimentCfg(per_test_cfgs=[]),
             multiple_test_cfg=analysis_cfg.MultipleTestCfg.NONE,
         )
         results = analyze_results.analyze_results(
@@ -181,7 +181,7 @@ class PipelineTest(unittest.TestCase):
 
         cfg = dataclasses.replace(
             cfg,
-            persistent_cfg=analysis_cfg.PersistentCfg(
+            experiment_cfg=analysis_cfg.ExperimentCfg(
                 per_test_cfgs=[
                     analysis_cfg.PerTestCfg(
                         test_name_regex="ui\\.Test",

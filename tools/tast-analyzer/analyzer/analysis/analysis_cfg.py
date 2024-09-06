@@ -87,7 +87,7 @@ class ExperimentGroupsCfg:
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True, order=True)
-class PersistentCfg:
+class ExperimentCfg:
     per_test_cfgs: list[PerTestCfg] = dataclasses.field(default_factory=list)
     """List of PerTestCfg."""
 
@@ -118,7 +118,7 @@ class PersistentCfg:
         )
 
     @classmethod
-    def from_json(cls, s: str) -> "PersistentCfg":
+    def from_json(cls, s: str) -> "ExperimentCfg":
         """Loads a PersistentCfg from JSON.
 
         Args:
@@ -134,7 +134,7 @@ class PersistentCfg:
             d["experiment_groups_cfgs"] = [
                 ExperimentGroupsCfg(**v) for v in d["experiment_groups_cfgs"]
             ]
-        return PersistentCfg(**d)
+        return ExperimentCfg(**d)
 
 
 class MultipleTestCfg(enum.StrEnum):
@@ -222,6 +222,6 @@ class AnalysisCfg:
     This uses a simple strategy of removing one maximum and one minimum value
     from each sample."""
 
-    persistent_cfg: PersistentCfg = dataclasses.field(
-        default_factory=PersistentCfg
+    experiment_cfg: ExperimentCfg = dataclasses.field(
+        default_factory=ExperimentCfg
     )

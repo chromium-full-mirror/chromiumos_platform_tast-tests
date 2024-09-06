@@ -206,7 +206,7 @@ def _compare_results(
     default=False,
 )
 @click.option(
-    "--persistent-cfg-path",
+    "--experiment-cfg-path",
     type=click.Path(
         exists=True, dir_okay=False, resolve_path=True, path_type=pathlib.Path
     ),
@@ -229,12 +229,12 @@ def print_results(
     metric_include_regex: str | None,
     metric_exclude_regex: str | None,
     remove_outliers: bool,
-    persistent_cfg_path: pathlib.Path | None,
+    experiment_cfg_path: pathlib.Path | None,
 ) -> None:
-    persistent_cfg = (
-        analysis_cfg.PersistentCfg.from_json(persistent_cfg_path.read_text())
-        if persistent_cfg_path
-        else analysis_cfg.PersistentCfg()
+    experiment_cfg = (
+        analysis_cfg.ExperimentCfg.from_json(experiment_cfg_path.read_text())
+        if experiment_cfg_path
+        else analysis_cfg.ExperimentCfg()
     )
     cfg = analysis_cfg.AnalysisCfg(
         skip_all_zero_samples=skip_all_zero,
@@ -255,7 +255,7 @@ def print_results(
         metric_exclude_regex=metric_exclude_regex,
         metric_include_regex=metric_include_regex,
         remove_outliers=remove_outliers,
-        persistent_cfg=persistent_cfg,
+        experiment_cfg=experiment_cfg,
     )
 
     clicfg = _CliFrontendCfg(cfg=cfg, analyses=analyses)

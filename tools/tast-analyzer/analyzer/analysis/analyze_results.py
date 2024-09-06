@@ -153,8 +153,8 @@ def _prune_regex_exclude(
     return [s for s in samples if not re.search(regex, s.metric_path)]
 
 
-def _prune_persistent_cfg(
-    samples: list[metric_sample.MetricSample], cfg: analysis_cfg.PersistentCfg
+def _prune_experiment_cfg(
+    samples: list[metric_sample.MetricSample], cfg: analysis_cfg.ExperimentCfg
 ) -> list[metric_sample.MetricSample]:
     out_samples = []
     for s in samples:
@@ -206,7 +206,7 @@ def analyze_results(
     if cfg.remove_outliers:
         samples = _prune_outliers(samples)
 
-    samples = _prune_persistent_cfg(samples, cfg.persistent_cfg)
+    samples = _prune_experiment_cfg(samples, cfg.experiment_cfg)
 
     if cfg.metric_include_regex:
         samples = _prune_regex_include(samples, cfg.metric_include_regex)
