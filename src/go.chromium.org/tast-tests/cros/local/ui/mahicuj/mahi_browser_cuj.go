@@ -47,11 +47,9 @@ func BrowserCUJRun(ctx context.Context, cr *chrome.Chrome, proxyScriptPath, loca
 
 	defer mp.Close(closeCtx)
 
-	reset, err := proxy.ConfigureChrome(ctx, mp, cr)
-	if err != nil {
+	if err := mp.Connect(ctx, cr); err != nil {
 		return nil, errors.Wrap(err, "failed to configure chrome for proxy")
 	}
-	defer reset(closeCtx, cr)
 
 	// Set up an about:blank page
 	conn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, chrome.BlankURL)

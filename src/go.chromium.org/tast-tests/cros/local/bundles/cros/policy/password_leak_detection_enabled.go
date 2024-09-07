@@ -85,11 +85,9 @@ func PasswordLeakDetectionEnabled(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start mitmproxy: ", err)
 	}
 	defer mp.Close(cleanupCtx)
-	reset, err := proxy.ConfigureChrome(ctx, mp, cr)
-	if err != nil {
+	if err := mp.Connect(ctx, cr); err != nil {
 		s.Fatal("Failed to configure chrome for proxy: ", err)
 	}
-	defer reset(cleanupCtx, cr)
 
 	for _, param := range passwordleakdetection.TestCases() {
 		s.Run(ctx, param.Name, func(ctx context.Context, s *testing.State) {

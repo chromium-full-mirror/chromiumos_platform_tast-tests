@@ -79,13 +79,6 @@ func generateCustomCA(path, name string, privateKey bool) error {
 	return nil
 }
 
-// ConfigureChrome sets up mitmproxy for Chrome in-session.
-// TODO(b/325270550): Remove this util function once it replaces all the code with Connect.
-func ConfigureChrome(ctx context.Context, p Proxy, cr *chrome.Chrome) (func(context.Context, *chrome.Chrome) error, error) {
-	err := p.Connect(ctx, cr)
-	return func(context.Context, *chrome.Chrome) error { return nil }, err
-}
-
 func setChromeProxy(ctx context.Context, cr *chrome.Chrome, proxyAddress string) error {
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {

@@ -55,11 +55,9 @@ func ResponseMockMitmproxy(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start proxy: ", err)
 	}
 	defer mp.Close(cleanupCtx)
-	reset, err := proxy.ConfigureChrome(ctx, mp, cr)
-	if err != nil {
+	if err := mp.Connect(ctx, cr); err != nil {
 		s.Fatal("Failed to configure chrome for proxy: ", err)
 	}
-	defer reset(cleanupCtx, cr)
 
 	// Execute test logic.
 	conn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, "https://www.example.com")

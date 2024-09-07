@@ -45,11 +45,9 @@ func GalleryCUJRun(ctx context.Context, cr *chrome.Chrome, proxyScriptPath, pdfF
 
 	defer mp.Close(closeCtx)
 
-	reset, err := proxy.ConfigureChrome(ctx, mp, cr)
-	if err != nil {
+	if err := mp.Connect(ctx, cr); err != nil {
 		return nil, errors.Wrap(err, "failed to configure chrome for proxy")
 	}
-	defer reset(closeCtx, cr)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
