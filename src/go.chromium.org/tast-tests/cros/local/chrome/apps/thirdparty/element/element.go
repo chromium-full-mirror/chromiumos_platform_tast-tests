@@ -154,8 +154,8 @@ func (e *Element) loginWithGoogle(ctx context.Context, username string) error {
 	userLink := nodewith.NameContaining(username).Role(role.Link)
 	if err := uiauto.NamedCombine("select user "+username,
 		e.waitForLoginWindowMaximized,
-		e.ui.DoDefaultUntil(userLink,
-			e.ui.WithTimeout(shortUITimeout).WaitUntilGone(userLink),
+		e.ui.WithTimeout(pageLoadTimeout).DoDefaultUntil(userLink,
+			e.ui.WithTimeout(longUITimeout).WaitUntilGone(userLink),
 		),
 	)(ctx); err != nil {
 		return err
