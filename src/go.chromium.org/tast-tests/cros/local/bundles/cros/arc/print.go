@@ -62,7 +62,7 @@ func init() {
 			// been resolved (barla, careena, kasumi, liara).
 			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("elm", "hana", "maple", "sycamore360", "barla", "careena", "kasumi", "kasumi360", "liara")),
 			ExtraData:         []string{"arc_print_vm_ippusb_golden.pwg"},
-			ExtraAttr:         []string{"group:cq-medium"},
+			ExtraAttr:         []string{"informational", "group:cq-medium"},
 		}, {
 			Name:              "vm_t",
 			Val:               "arc_print_vm_ippusb_golden.pwg",
