@@ -23,7 +23,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 const (
@@ -39,7 +38,6 @@ type pnpGoogleMeetFeatureToggleParams struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PNPGoogleMeetFeatureToggle,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Collect power metrics when in a google meet session",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "esker@chromium.org"},
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
@@ -60,100 +58,6 @@ func init() {
 			Name:    "ash_camera_off",
 			Fixture: pnp.StablePowerAshGAIA,
 			Val:     pnpGoogleMeetFeatureToggleParams{cameraOff: true},
-		}, {
-			Name:              "lacros",
-			Fixture:           pnp.StablePowerLacrosGAIA,
-			ExtraSoftwareDeps: []string{caps.BuiltinCamera},
-			Val:               pnpGoogleMeetFeatureToggleParams{},
-		}, {
-			Name:    "lacros_fake_hal",
-			Fixture: pnp.StablePowerLacrosGAIAFakeHAL,
-			Val:     pnpGoogleMeetFeatureToggleParams{},
-		}, {
-			Name:    "lacros_camera_off",
-			Fixture: pnp.StablePowerLacrosGAIA,
-			Val:     pnpGoogleMeetFeatureToggleParams{cameraOff: true},
-		}, {
-			Name:              "lacros_face_gcamae_hdrnet_all_off",
-			Fixture:           pnp.StablePowerLacrosGAIA,
-			ExtraHardwareDeps: hwdep.D(hwdep.CameraFeature(features.HDRnet, features.GcamAE)),
-			ExtraSoftwareDeps: []string{caps.BuiltinMIPICamera},
-			Val: pnpGoogleMeetFeatureToggleParams{
-				featureToggleConf: features.FeatureToggleConf{
-					features.HDRnet:        false,
-					features.GcamAE:        false,
-					features.FaceDetection: false,
-				},
-			},
-		}, {
-			Name:              "lacros_face_on_gcamae_hdrnet_off",
-			Fixture:           pnp.StablePowerLacrosGAIA,
-			ExtraHardwareDeps: hwdep.D(hwdep.CameraFeature(features.HDRnet, features.GcamAE)),
-			ExtraSoftwareDeps: []string{caps.BuiltinMIPICamera},
-			Val: pnpGoogleMeetFeatureToggleParams{
-				featureToggleConf: features.FeatureToggleConf{
-					features.HDRnet:        false,
-					features.GcamAE:        false,
-					features.FaceDetection: true,
-				},
-			},
-		}, {
-			Name:              "lacros_gcamae_on_face_hdrnet_off",
-			Fixture:           pnp.StablePowerLacrosGAIA,
-			ExtraHardwareDeps: hwdep.D(hwdep.CameraFeature(features.HDRnet, features.GcamAE)),
-			ExtraSoftwareDeps: []string{caps.BuiltinMIPICamera},
-			Val: pnpGoogleMeetFeatureToggleParams{
-				featureToggleConf: features.FeatureToggleConf{
-					features.HDRnet:        false,
-					features.GcamAE:        true,
-					features.FaceDetection: false,
-				},
-			},
-		}, {
-			Name:              "lacros_hdrnet_on_face_gcamae_off",
-			Fixture:           pnp.StablePowerLacrosGAIA,
-			ExtraHardwareDeps: hwdep.D(hwdep.CameraFeature(features.HDRnet, features.GcamAE)),
-			ExtraSoftwareDeps: []string{caps.BuiltinMIPICamera},
-			Val: pnpGoogleMeetFeatureToggleParams{
-				featureToggleConf: features.FeatureToggleConf{
-					features.HDRnet:        true,
-					features.GcamAE:        false,
-					features.FaceDetection: false,
-				},
-			},
-		}, {
-			Name:              "lacros_vc_backgroun_blur_on",
-			Fixture:           pnp.StablePowerLacrosGAIA,
-			ExtraSoftwareDeps: []string{"camera_feature_effects"},
-			ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)), // Only enable on CBX devices.
-			Val: pnpGoogleMeetFeatureToggleParams{
-				effectsConf: &pnp.EffectsParams{
-					BlurLevel:      vctray.BackgroundBlurFull,
-					RelightEnabled: false,
-				},
-			},
-		}, {
-			Name:              "lacros_vc_relight_on",
-			Fixture:           pnp.StablePowerLacrosGAIA,
-			ExtraSoftwareDeps: []string{"camera_feature_effects"},
-			ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)), // Only enable on CBX devices.
-			Val: pnpGoogleMeetFeatureToggleParams{
-				effectsConf: &pnp.EffectsParams{
-					BlurLevel:      vctray.BackgroundBlurOff,
-					RelightEnabled: true,
-				},
-			},
-		}, {
-			Name:              "lacros_vc_background_blur_relight_on",
-			Fixture:           pnp.StablePowerLacrosGAIA,
-			ExtraSoftwareDeps: []string{"camera_feature_effects"},
-			ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)), // Only enable on CBX devices.
-			Val: pnpGoogleMeetFeatureToggleParams{
-				effectsConf: &pnp.EffectsParams{
-					BlurLevel:      vctray.BackgroundBlurFull,
-					RelightEnabled: true,
-				},
-			},
 		}},
 	})
 }

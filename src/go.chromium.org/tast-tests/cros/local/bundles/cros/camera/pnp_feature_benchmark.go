@@ -40,7 +40,6 @@ type pnpFeatureBenchmarkParams struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PNPFeatureBenchmark,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Collect benchmark metrics of ChromeOS Camera features",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "esker@chromium.org"},
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
