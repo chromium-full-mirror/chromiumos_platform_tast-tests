@@ -14,7 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/event"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -25,9 +24,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         LaunchAndClose,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Checks using desk API to launch and remove desk",
+		Func: LaunchAndClose,
+		Desc: "Checks using desk API to launch and remove desk",
 		// Chrome OS Server Projects > Enterprise Management > Commercial Productivity
 		BugComponent: "b:1020793",
 		Contacts: []string{
@@ -35,20 +33,10 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 			"aprilzhou@google.com",
 		},
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "gaia"},
 		Timeout:      5 * time.Minute,
-		Params: []testing.Param{{
-			Name:      "ash",
-			Val:       browser.TypeAsh,
-			Fixture:   fixture.DeskAPIAsh,
-			ExtraAttr: []string{"group:hw_agnostic"},
-		}, {
-			Name:              "lacros",
-			Val:               browser.TypeLacros,
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.DeskAPILacros,
-		}},
+		Fixture:      fixture.DeskAPIAsh,
 		// TODO b/346725308 Refactor to use utility and known dependency list.
 		SearchFlags: []*testing.StringPair{{
 			Key: "external_dependency", Value: "DMServerAlpha",
@@ -70,15 +58,6 @@ func LaunchAndClose(ctx context.Context, s *testing.State) {
 
 	var opts []chrome.Option
 
-	// Additional config for lacros
-	if s.Param().(browser.Type) == browser.TypeLacros {
-		var err error
-		opts, err = lacrosfixt.NewConfig().Opts()
-		if err != nil {
-			s.Fatal("Failed to retrieve lacro config: ", err)
-		}
-	}
-
 	// Use the same DMServer endpoint as the in the enrollment
 	opts = append(opts, chrome.KeepState(), chrome.TryReuseSession(), chrome.GAIALogin(chrome.Creds{User: structVal.Username, Pass: structVal.Password}), chrome.DMSPolicy(policy.DMServerAlphaURL))
 	cr, err := chrome.New(ctx, opts...)
@@ -88,7 +67,7 @@ func LaunchAndClose(ctx context.Context, s *testing.State) {
 	defer cr.Close(cleanupCtx)
 
 	// Use the generic browser interface for both lacros and ash.
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
+	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 	if err != nil {
 		s.Fatal("Failed to set up browser: ", err)
 	}

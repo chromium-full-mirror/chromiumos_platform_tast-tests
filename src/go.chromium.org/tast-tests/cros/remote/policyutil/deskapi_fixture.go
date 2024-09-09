@@ -34,26 +34,6 @@ type deskFixt struct {
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
-		Name:            fixture.DeskAPILacros,
-		Desc:            "Fixture providing Desk API feature access for lacros browser",
-		Contacts:        []string{"chromeos-commercial-remote-management@google.com", "cros-commercial-productivity-eng@google.com", "aprilzhou@google.com"},
-		BugComponent:    "b:1020793", // ChromeOS Server Projects > Enterprise Management > Commercial Productivity
-		Impl:            NewDeskAPILacrosFixt(),
-		SetUpTimeout:    15 * time.Minute,
-		TearDownTimeout: 5 * time.Minute,
-		ResetTimeout:    15 * time.Second,
-		ServiceDeps: []string{
-			"tast.cros.policy.PolicyService",
-			"tast.cros.hwsec.OwnershipService",
-			"tast.cros.graphics.ScreenshotService",
-			"tast.cros.tape.Service",
-			"tast.cros.browser.ChromeService",
-		},
-		Vars: []string{
-			tape.ServiceAccountVar,
-		},
-	})
-	testing.AddFixture(&testing.Fixture{
 		Name:            fixture.DeskAPIAsh,
 		Desc:            "Fixture providing Desk API feature access for ash browser",
 		Contacts:        []string{"chromeos-commercial-remote-management@google.com", "cros-commercial-productivity-eng@google.com", "aprilzhou@google.com"},
@@ -78,11 +58,6 @@ func init() {
 // NewDeskAPIAshFixt returns a fixture to run desk API test in ash.
 func NewDeskAPIAshFixt() testing.FixtureImpl {
 	return &deskFixt{isLacros: false}
-}
-
-// NewDeskAPILacrosFixt returns a fixture to run desk API test in lacros.
-func NewDeskAPILacrosFixt() testing.FixtureImpl {
-	return &deskFixt{isLacros: true}
 }
 
 func (e *deskFixt) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
@@ -148,23 +123,6 @@ func (e *deskFixt) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 	}
 	if err := tapeClient.SetPolicy(ctx, policies, []string{"deskApiThirdPartyAccessEnabled", "deskApiThirdPartyAllowlist"}, nil, acc.RequestID); err != nil {
 		s.Fatal("Failed to set the Desk API policy: ", err)
-	}
-
-	// Set Lacros policy.
-	if e.isLacros {
-		policies := &tape.LacrosAvailabilityUsers{
-			LacrosAvailability: tape.LACROSAVAILABILITYENUM_LACROS_AVAILABILITY_ENUM_LACROS_ONLY,
-		}
-		if err := tapeClient.SetPolicy(ctx, policies, []string{"lacrosAvailability"}, nil, acc.RequestID); err != nil {
-			s.Fatal("Failed to enable lacros: ", err)
-		}
-	} else {
-		policies := &tape.LacrosAvailabilityUsers{
-			LacrosAvailability: tape.LACROSAVAILABILITYENUM_LACROS_AVAILABILITY_ENUM_LACROS_DISALLOWED,
-		}
-		if err := tapeClient.SetPolicy(ctx, policies, []string{"lacrosAvailability"}, nil, acc.RequestID); err != nil {
-			s.Fatal("Failed to disable lacros: ", err)
-		}
 	}
 
 	// Perform enroll without login here, as in local test will need to instantiate a chrome session anyway.
