@@ -114,6 +114,21 @@ func init() {
 				Val:       "cbrs",
 				ExtraAttr: []string{"cellular_carrier_cbrs"},
 			},
+			{
+				Name:      "linemo",
+				Val:       "linemo",
+				ExtraAttr: []string{"cellular_carrier_linemo"},
+			},
+			{
+				Name:      "povo",
+				Val:       "povo",
+				ExtraAttr: []string{"cellular_carrier_povo"},
+			},
+			{
+				Name:      "hanshin",
+				Val:       "hanshin",
+				ExtraAttr: []string{"cellular_carrier_hanshin"},
+			},
 		},
 	})
 }
