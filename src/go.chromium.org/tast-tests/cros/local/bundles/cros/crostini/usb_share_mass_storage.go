@@ -29,10 +29,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         USBShareMassStorage,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Share and unshare a virtual usb mass storage device with Crostini, verify read/write to usb mass storage inside Crostini",
-		Contacts:     []string{"clumptini+oncall@google.com"},
+		Func:     USBShareMassStorage,
+		Desc:     "Share and unshare a virtual usb mass storage device with Crostini, verify read/write to usb mass storage inside Crostini",
+		Contacts: []string{"clumptini+oncall@google.com"},
 		// TODO(b/317944073): Re-enable the test after this bug is fixed.
 		// USB mass-storage sharing has not been working correctly since before this test is introduced.
 		Attr:         []string{},

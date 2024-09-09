@@ -21,7 +21,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VerifyAppWayland,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Runs a Wayland crostini application from the terminal and verifies that it renders",
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		Attr:         []string{"group:mainline"},
@@ -35,28 +34,12 @@ func init() {
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBullseye",
 				Timeout:           3 * time.Minute,
-				Val:               browser.TypeAsh,
 			}, {
 				Name:              "bookworm_stable",
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBookworm",
 				Timeout:           3 * time.Minute,
-				Val:               browser.TypeAsh,
-			}, {
-				Name:              "bullseye_stable_lacros",
-				ExtraSoftwareDeps: []string{"dlc", "lacros"},
-				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
-				Fixture:           "crostiniBullseyeWithLacros",
-				Timeout:           3 * time.Minute,
-				Val:               browser.TypeLacros,
-			}, {
-				Name:              "bookworm_stable_lacros",
-				ExtraSoftwareDeps: []string{"dlc", "lacros"},
-				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
-				Fixture:           "crostiniBookwormWithLacros",
-				Timeout:           3 * time.Minute,
-				Val:               browser.TypeLacros,
 			},
 		},
 	})
@@ -76,7 +59,7 @@ func VerifyAppWayland(ctx context.Context, s *testing.State) {
 	s.AttachErrorHandlers(handler, handler)
 
 	// Run Lacros (if specified) as non-focused browser, so that the tested Wayland apps work in this situation.
-	_, cleanup, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
+	_, cleanup, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 	if err != nil {
 		s.Fatal("Failed to set up browser: ", err)
 	}

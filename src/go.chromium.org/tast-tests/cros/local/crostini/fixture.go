@@ -22,7 +22,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	cui "go.chromium.org/tast-tests/cros/local/crostini/ui"
@@ -102,27 +101,6 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeLoggedInForCrostiniWithLacros",
-		Desc:     "Logged into a session and enable Lacros",
-		Contacts: []string{"clumptini+oncall@google.com"},
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			opts := generateChromeOpts(s)
-			if arc.Supported() {
-				opts = append(opts, chrome.ARCEnabled())
-				opts = append(opts, chrome.ExtraArgs(arc.DisableSyncFlags()...))
-			} else {
-				opts = append(opts, chrome.ARCDisabled())
-			}
-			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(opts...)).Opts()
-		}),
-		SetUpTimeout:    chrome.FixtureSetUpTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-		Vars:            []string{"keepState"},
-		BugComponent:    "b:658562", // ChromeOS > Software > GuestOS
-	})
-
-	testing.AddFixture(&testing.Fixture{
 		Name:     "chromeLoggedInForCrostiniWithoutArc",
 		Desc:     "Logged into a session without Arc enabled",
 		Contacts: []string{"clumptini+oncall@google.com"},
@@ -130,22 +108,6 @@ func init() {
 			opts := generateChromeOpts(s)
 			opts = append(opts, chrome.ARCDisabled())
 			return opts, nil
-		}),
-		SetUpTimeout:    chrome.FixtureSetUpTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-		Vars:            []string{"keepState"},
-		BugComponent:    "b:658562", // ChromeOS > Software > GuestOS
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeLoggedInForCrostiniWithLacrosWithoutArc",
-		Desc:     "Logged into a session and enable Lacros without Arc enabled",
-		Contacts: []string{"clumptini+oncall@google.com"},
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			opts := generateChromeOpts(s)
-			opts = append(opts, chrome.ARCDisabled())
-			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(opts...)).Opts()
 		}),
 		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
@@ -320,66 +282,6 @@ func init() {
 		Parent:          "chromeLoggedInForCrostiniWithoutArc",
 		Vars:            []string{"keepState"},
 		Data:            []string{GetContainerMetadataArtifact("bookworm", true), GetContainerRootfsArtifact("bookworm", true)},
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:            "crostiniBullseyeWithLacros",
-		Desc:            "Install Crostini with Bullseye and enable Lacros",
-		Contacts:        []string{"clumptini+oncall@google.com"},
-		BugComponent:    "b:1122570", // ChromeOS > Software > GuestOS > Crostini
-		Impl:            &crostiniFixture{preData: preTestDataBullseye},
-		SetUpTimeout:    installationTimeout + uninstallationTimeout,
-		ResetTimeout:    checkContainerTimeout,
-		PostTestTimeout: postTestTimeout,
-		TearDownTimeout: uninstallationTimeout,
-		Parent:          "chromeLoggedInForCrostiniWithLacros",
-		Vars:            []string{"keepState"},
-		Data:            []string{GetContainerMetadataArtifact("bullseye", false), GetContainerRootfsArtifact("bullseye", false)},
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:            "crostiniBullseyeWithLacrosWithoutArc",
-		Desc:            "Install Crostini with Bullseye and enable Lacros without ARC enabled",
-		Contacts:        []string{"clumptini+oncall@google.com"},
-		BugComponent:    "b:1122570", // ChromeOS > Software > GuestOS > Crostini
-		Impl:            &crostiniFixture{preData: preTestDataBullseye},
-		SetUpTimeout:    installationTimeout + uninstallationTimeout,
-		ResetTimeout:    checkContainerTimeout,
-		PostTestTimeout: postTestTimeout,
-		TearDownTimeout: uninstallationTimeout,
-		Parent:          "chromeLoggedInForCrostiniWithLacrosWithoutArc",
-		Vars:            []string{"keepState"},
-		Data:            []string{GetContainerMetadataArtifact("bullseye", false), GetContainerRootfsArtifact("bullseye", false)},
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:            "crostiniBookwormWithLacros",
-		Desc:            "Install Crostini with Bookworm and enable Lacros",
-		Contacts:        []string{"clumptini+oncall@google.com"},
-		BugComponent:    "b:1122570", // ChromeOS > Software > GuestOS > Crostini
-		Impl:            &crostiniFixture{preData: preTestDataBookworm},
-		SetUpTimeout:    installationTimeout + uninstallationTimeout,
-		ResetTimeout:    checkContainerTimeout,
-		PostTestTimeout: postTestTimeout,
-		TearDownTimeout: uninstallationTimeout,
-		Parent:          "chromeLoggedInForCrostiniWithLacros",
-		Vars:            []string{"keepState"},
-		Data:            []string{GetContainerMetadataArtifact("bookworm", false), GetContainerRootfsArtifact("bookworm", false)},
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:            "crostiniBookwormWithLacrosWithoutArc",
-		Desc:            "Install Crostini with Bookworm and enable Lacros without ARC enabled",
-		Contacts:        []string{"clumptini+oncall@google.com"},
-		BugComponent:    "b:1122570", // ChromeOS > Software > GuestOS > Crostini
-		Impl:            &crostiniFixture{preData: preTestDataBookworm},
-		SetUpTimeout:    installationTimeout + uninstallationTimeout,
-		ResetTimeout:    checkContainerTimeout,
-		PostTestTimeout: postTestTimeout,
-		TearDownTimeout: uninstallationTimeout,
-		Parent:          "chromeLoggedInForCrostiniWithLacrosWithoutArc",
-		Vars:            []string{"keepState"},
-		Data:            []string{GetContainerMetadataArtifact("bookworm", false), GetContainerRootfsArtifact("bookworm", false)},
 	})
 
 	testing.AddFixture(&testing.Fixture{

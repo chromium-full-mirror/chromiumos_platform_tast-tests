@@ -59,7 +59,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/genparams"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/devicemode"
 	"go.chromium.org/tast-tests/cros/local/vm"
 
@@ -143,12 +142,6 @@ type Param struct {
 	// This is used to migrate the tests from precondition to fixture.
 	// TODO (jinrongwu): remove this once the migration is done.
 	UseFixture bool
-
-	// TestLacros controls whether the test case tests Lacros.
-	// If yes, an extra param will be added with fixture crostiniBullseyeWithLacros.
-	// In addition, an extra val of the browser type will
-	// be added to all params of the test case as well.
-	TestLacros bool
 
 	// DeviceMode indicates whether the tests explicitly use use tablet mode
 	// or clamshell mode.
@@ -243,10 +236,8 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 		}
 	}
 
-	var itLacros = []iterator{{debianVersion: vm.DebianBullseye, stable: true}, {debianVersion: vm.DebianBookworm, stable: true}}
-
 	for _, testCase := range baseCases {
-		iterate := func(i iterator, bt browser.Type) {
+		iterate := func(i iterator) {
 			if testCase.LowPerfEligible {
 				if testCase.OnlyStableBoards {
 					log.Fatal("LowPerfEligible and OnlyStableBoards are mutually exclusive")
@@ -380,8 +371,6 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 					fixture = fmt.Sprintf("\"crostini%sLargeContainer%s\"", strings.Title(i.debianVersion.Codename), suffix)
 				} else if testCase.UseGaiaLogin {
 					fixture = fmt.Sprintf("\"crostini%sGaia%s\"", strings.Title(i.debianVersion.Codename), arcStatus)
-				} else if bt == browser.TypeLacros {
-					fixture = fmt.Sprintf("\"crostini%sWithLacros%s\"", strings.Title(i.debianVersion.Codename), arcStatus)
 				} else {
 					fixture = fmt.Sprintf("\"crostini%s%s\"", strings.Title(i.debianVersion.Codename), arcStatus)
 				}
@@ -423,12 +412,6 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 				Val:               testCase.Val,
 			}
 
-			if bt == browser.TypeLacros {
-				testParam.Name = combineName(name, "lacros")
-				testParam.ExtraSoftwareDeps = append(extraSoftwareDeps, "lacros")
-				testParam.Val = "browser.TypeLacros"
-			}
-
 			if testCase.SelfManagedInstall {
 				testParam.Val = fmt.Sprintf("vm.Debian%s", strings.Title(i.debianVersion.Codename))
 			}
@@ -442,12 +425,7 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 		}
 
 		for _, i := range itChrome {
-			iterate(i, "")
-		}
-		if testCase.TestLacros {
-			for _, i := range itLacros {
-				iterate(i, browser.TypeLacros)
-			}
+			iterate(i)
 		}
 	}
 	return genparams.Template(t, template, result)
